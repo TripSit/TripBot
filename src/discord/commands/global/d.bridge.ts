@@ -187,11 +187,15 @@ ${externalChannel.guild.name}'s ${externalChannel}!
   }
 
   externalChannel.send({
-    content: stripIndents`${(interaction.member as GuildMember).displayName} has been requested a bridge between \
+    embeds: [
+      embedTemplate()
+        .setTitle('Bridge')
+        .setDescription(stripIndents`${(interaction.member as GuildMember).displayName} has requested a bridge between \
 ${internalChannel.guild.name}'s ${internalChannel} and ${externalChannel.guild.name}'s ${externalChannel}!
-    If you want to accept this bridge, please use the **/bridge confirm** command here.
-    If this is not expected you can ignore this as it may be a mistake.
-    If this command is being abused please talk to Moonbear on TripSit's Discord guild.`,
+            If you want to accept this bridge, please use the **/bridge confirm** command here.
+            If this is not expected you can ignore this as it may be a mistake.
+            If this command is being abused please talk to Moonbear on TripSit's Discord guild.`),
+    ],
   });
 
   return stripIndents`Initializing bridge between ${internalChannel.guild.name}'s ${internalChannel} and \
@@ -248,11 +252,15 @@ async function confirm(
   const internalChannel = await interaction.client.channels.fetch(bridgedChannel) as TextChannel;
 
   internalChannel.send({
-    content: stripIndents`${(interaction.member as GuildMember).displayName} has confirmed the bridge between \
+    embeds: [
+      embedTemplate()
+        .setTitle('Bridge')
+        .setDescription(stripIndents`${(interaction.member as GuildMember).displayName} has confirmed the bridge between \
 ${internalChannel.guild.name}'s ${internalChannel} and ${externalChannel.guild.name}'s ${externalChannel}!
-    Either side can */bridge pause* and */bridge resume* to temporarily pause/resume the bridge, \
+            Either side can */bridge pause* and */bridge resume* to temporarily pause/resume the bridge, \
 or */bridge delete* to remove the bridge.
-    This is the start of something beautiful, say hi!`,
+            This is the start of something beautiful, say hi!`),
+    ],
   });
 
   return stripIndents`${(interaction.member as GuildMember).displayName} has confirmed the bridge between \

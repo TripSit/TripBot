@@ -24,7 +24,7 @@ import {
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { database } from '../../../global/utils/knex';
-import { checkGuildPermissions } from '../../utils/checkPermissions';
+import { checkChannelPermissions, checkGuildPermissions } from '../../utils/checkPermissions';
 import { ReactionRoles, ReactionRoleType } from '../../../global/@types/database';
 
 export default dReactionRole;
@@ -163,6 +163,18 @@ export const dReactionRole: SlashCommand = {
       return false;
     }
 
+    if (interaction.channel.type !== ChannelType.GuildText) {
+      await interaction.reply({
+        embeds: [
+          embedTemplate()
+            .setDescription('Error: This command can only be used in a text channel!')
+            .setColor(Colors.Red),
+        ],
+        ephemeral: true,
+      });
+      return false;
+    }
+
     // Check that i have permission to add roles
     const guildPerms = await checkGuildPermissions(interaction.guild, [
       'ManageRoles' as PermissionResolvable,
@@ -176,6 +188,26 @@ export const dReactionRole: SlashCommand = {
             In order to setup the reaction roles feature I need:
             Manage Roles - In order to give and take away roles from users
             Note: My role needs to be higher than all other roles you want managed!`)
+            .setColor(Colors.Red),
+        ],
+        ephemeral: true,
+      });
+      return false;
+    }
+
+    const channelPerms = await checkChannelPermissions(interaction.channel, [
+      'ViewChannel' as PermissionResolvable,
+      'SendMessages' as PermissionResolvable,
+    ]);
+    if (!channelPerms.hasPermission) {
+      log.error(F, `Missing channel permission ${channelPerms.permission} in ${interaction.channel}!`);
+      await interaction.reply({
+        embeds: [
+          embedTemplate()
+            .setDescription(stripIndents`Error: Missing ${channelPerms.permission} permission in ${interaction.channel}!
+            In order to setup the reaction roles feature I need:
+            View Channel - In order to see the channel
+            Send Messages - In order to send the reaction role message`)
             .setColor(Colors.Red),
         ],
         ephemeral: true,
