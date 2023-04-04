@@ -47,11 +47,11 @@ export async function bridgeMessage(message: Message): Promise<void> {
         const channel = await message.client.channels.fetch(bridge.external_channel) as TextChannel; // eslint-disable-line no-await-in-loop
         const webhookData = await channel.fetchWebhooks() // eslint-disable-line no-await-in-loop
           .then(webhookList => webhookList.find(webhook => webhook.name === tripsitBridgeName))
-          ?? await channel.createWebhook({ // eslint-disable-line
+          ?? await channel.createWebhook({ // eslint-disable-line no-await-in-loop
             name: tripsitBridgeName,
             reason: tripsitBridgeName,
           })
-            .then(async () => { // eslint-disable-line
+            .then(async () => { // eslint-disable-line @typescript-eslint/no-loop-func
               log.debug(F, 'Created new webhook');
               const updatedWebhookList = await channel.fetchWebhooks();
               return updatedWebhookList.find(webhook => webhook.name === tripsitBridgeName);
