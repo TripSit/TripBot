@@ -5,8 +5,8 @@ import {
   addColors,
   Logger,
 } from 'winston';
-import { Logtail } from '@logtail/node';
-import { LogtailTransport } from '@logtail/winston';
+import { Logtail } from '@logtail/node'; // eslint-disable-line
+import { LogtailTransport } from '@logtail/winston'; // eslint-disable-line
 import { parse } from 'path';
 import { env } from './env.config';
 //
