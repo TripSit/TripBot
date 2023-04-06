@@ -7,8 +7,6 @@ import { startLog } from '../../utils/startLog';
 
 const F = f(__filename);
 
-export default dRecovery;
-
 export const dRecovery: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('recovery')
@@ -22,3 +20,5 @@ export const dRecovery: SlashCommand = {
     return true;
   },
 };
+
+export default dRecovery;

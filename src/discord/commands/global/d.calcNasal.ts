@@ -10,8 +10,6 @@ import { startLog } from '../../utils/startLog';
 
 const F = f(__filename);
 
-export default dCalcNasal;
-
 export const dCalcNasal: SlashCommand = {
 
   data: new SlashCommandBuilder()
@@ -84,3 +82,5 @@ export const dCalcNasal: SlashCommand = {
   },
 
 };
+
+export default dCalcNasal;

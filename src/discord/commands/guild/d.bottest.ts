@@ -1292,8 +1292,6 @@ async function testGuild(
   return results;
 }
 
-export default dBottest;
-
 export const dBottest: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('bottest')
@@ -1348,3 +1346,5 @@ export const dBottest: SlashCommand = {
     return true;
   },
 };
+
+export default dBottest;

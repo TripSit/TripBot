@@ -9,8 +9,6 @@ import { chitragupta } from '../utils/chitragupta';
 
 const F = f(__filename);
 
-export default messageReactionRemove;
-
 export const messageReactionRemove: MessageReactionRemoveEvent = {
   name: 'messageReactionRemove',
   async execute(reaction, user) {
@@ -49,3 +47,5 @@ export const messageReactionRemove: MessageReactionRemoveEvent = {
     chitragupta(reaction, user, -1);
   },
 };
+
+export default messageReactionRemove;

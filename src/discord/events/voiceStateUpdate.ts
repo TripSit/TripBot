@@ -7,8 +7,6 @@ import { pitchTent, teardownTent } from '../utils/tents';
 
 const F = f(__filename); // eslint-disable-line
 
-export default voiceStateUpdate;
-
 export const voiceStateUpdate: VoiceStateUpdateEvent = {
   name: 'voiceStateUpdate',
   async execute(Old: VoiceState, New: VoiceState) {
@@ -40,3 +38,5 @@ export const voiceStateUpdate: VoiceStateUpdateEvent = {
     teardownTent(Old);
   },
 };
+
+export default voiceStateUpdate;

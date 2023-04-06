@@ -11,8 +11,6 @@ const F = f(__filename);
 
 // const karmaQuotes = require('../../../global/assets/data/karma_quotes.json');
 
-export default dKarma;
-
 export const dKarma: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('karma')
@@ -40,3 +38,5 @@ export const dKarma: SlashCommand = {
     return true;
   },
 };
+
+export default dKarma;

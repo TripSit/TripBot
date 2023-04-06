@@ -20,8 +20,6 @@ import { embedTemplate } from '../../utils/embedTemplate';
 
 const F = f(__filename);
 
-export default uUnderban;
-
 export const uUnderban: UserCommand = {
   data: new ContextMenuCommandBuilder()
     .setName('Underban')
@@ -72,3 +70,5 @@ export const uUnderban: UserCommand = {
     return true;
   },
 };
+
+export default uUnderban;

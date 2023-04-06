@@ -16,8 +16,6 @@ import { embedTemplate } from '../../utils/embedTemplate';
 
 const F = f(__filename);
 
-export default dFeedback;
-
 export const dFeedback: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('feedback')
@@ -82,3 +80,5 @@ export const dFeedback: SlashCommand = {
     return true;
   },
 };
+
+export default dFeedback;

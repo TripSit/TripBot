@@ -9,8 +9,6 @@ import { startLog } from '../../utils/startLog';
 // import log from '../../../global/utils/log';
 const F = f(__filename);
 
-export default dHydrate;
-
 export const dHydrate: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('hydrate')
@@ -33,3 +31,5 @@ export const dHydrate: SlashCommand = {
     return true;
   },
 };
+
+export default dHydrate;

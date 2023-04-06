@@ -9,8 +9,6 @@ import { botStats } from '../../../global/commands/g.botstats';
 
 const F = f(__filename);
 
-export default dBotstats;
-
 export const dBotstats: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('botstats')
@@ -67,3 +65,5 @@ export const dBotstats: SlashCommand = {
     return true;
   },
 };
+
+export default dBotstats;

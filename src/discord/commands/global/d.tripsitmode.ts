@@ -41,8 +41,6 @@ const F = f(__filename);
 const guildOnly = 'This must be performed in a guild!';
 const memberOnly = 'This must be performed by a member of a guild!';
 
-export default tripsitmode;
-
 const teamRoles = [
   env.ROLE_DIRECTOR,
   env.ROLE_SUCCESSOR,
@@ -272,3 +270,5 @@ export const tripsitmode: SlashCommand = {
     return true;
   },
 };
+
+export default tripsitmode;

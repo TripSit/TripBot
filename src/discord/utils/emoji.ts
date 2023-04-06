@@ -49,14 +49,28 @@ const F = f(__filename); // eslint-disable-line
 let emojiGuildRPG:Guild;
 let emojiGuildMain:Guild;
 
-export async function emojiCache(client: Client):Promise<void> {
-  emojiGuildRPG = await client.guilds.fetch(env.DISCORD_EMOJI_GUILD_RPG);
-  emojiGuildMain = await client.guilds.fetch(env.DISCORD_EMOJI_GUILD_MAIN);
+export function get(name:string):APIMessageComponentEmoji {
+  if (name.startsWith('<:')) {
+    // log.debug(F, `name.startsWith('<:')`);
+    const emoji = name.match(/<:(.*):(\d+)>/);
+    // log.debug(F, `emoji: ${JSON.stringify(emoji, null, 2)}`);
+    if (!emoji) {
+      throw new Error(`Emoji ${name} not found!`);
+    }
+    return {
+      name: emoji[1],
+      id: emoji[2],
+    };
+  }
 
-  await emojiGuildRPG.emojis.fetch();
-  await emojiGuildMain.emojis.fetch();
+  const emojiName = emojiGuildRPG.emojis.cache.find(emoji => emoji.name === name)
+    ?? emojiGuildMain.emojis.cache.find(emoji => emoji.name === name);
+  // log.debug(F, `emojiName: ${emojiName}`);
+  if (!emojiName) {
+    throw new Error(`Emoji ${name} not found!`);
+  }
 
-  global.emojiGet = get;
+  return emojiName as APIMessageComponentEmoji;
 }
 
 export function customButton(
@@ -88,26 +102,12 @@ export function customButton(
     .setStyle(style || ButtonStyle.Success);
 }
 
-export function get(name:string):APIMessageComponentEmoji {
-  if (name.startsWith('<:')) {
-    // log.debug(F, `name.startsWith('<:')`);
-    const emoji = name.match(/<:(.*):(\d+)>/);
-    // log.debug(F, `emoji: ${JSON.stringify(emoji, null, 2)}`);
-    if (!emoji) {
-      throw new Error(`Emoji ${name} not found!`);
-    }
-    return {
-      name: emoji[1],
-      id: emoji[2],
-    };
-  }
+export async function emojiCache(client: Client):Promise<void> {
+  emojiGuildRPG = await client.guilds.fetch(env.DISCORD_EMOJI_GUILD_RPG);
+  emojiGuildMain = await client.guilds.fetch(env.DISCORD_EMOJI_GUILD_MAIN);
 
-  const emojiName = emojiGuildRPG.emojis.cache.find(emoji => emoji.name === name)
-    ?? emojiGuildMain.emojis.cache.find(emoji => emoji.name === name);
-  // log.debug(F, `emojiName: ${emojiName}`);
-  if (!emojiName) {
-    throw new Error(`Emoji ${name} not found!`);
-  }
+  await emojiGuildRPG.emojis.fetch();
+  await emojiGuildMain.emojis.fetch();
 
-  return emojiName as APIMessageComponentEmoji;
+  global.emojiGet = get;
 }

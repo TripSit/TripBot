@@ -8,8 +8,6 @@ import { startLog } from '../../utils/startLog';
 // import log from '../../../global/utils/log';
 const F = f(__filename);
 
-export default dGrounding;
-
 export const dGrounding: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('grounding')
@@ -23,3 +21,5 @@ export const dGrounding: SlashCommand = {
     return true;
   },
 };
+
+export default dGrounding;

@@ -23,8 +23,6 @@ import {
 
 // const F = f(__filename);
 
-export default guildMemberUpdate;
-
 export const guildMemberUpdate: GuildMemberUpdateEvent = {
   name: 'guildMemberUpdate',
   async execute(oldMember, newMember) {
@@ -87,3 +85,5 @@ export const guildMemberUpdate: GuildMemberUpdateEvent = {
     }
   },
 };
+
+export default guildMemberUpdate;

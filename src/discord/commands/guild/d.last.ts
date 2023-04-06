@@ -11,8 +11,6 @@ import { startLog } from '../../utils/startLog';
 
 const F = f(__filename);
 
-export default dLast;
-
 export const dLast: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('last')
@@ -50,3 +48,5 @@ export const dLast: SlashCommand = {
     return true;
   },
 };
+
+export default dLast;

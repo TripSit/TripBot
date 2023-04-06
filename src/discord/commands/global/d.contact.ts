@@ -11,8 +11,6 @@ import { startLog } from '../../utils/startLog';
 
 const F = f(__filename);
 
-export default dContact;
-
 export const dContact: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('contact')
@@ -44,3 +42,5 @@ export const dContact: SlashCommand = {
     return true;
   },
 };
+
+export default dContact;

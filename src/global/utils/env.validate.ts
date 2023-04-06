@@ -1,6 +1,4 @@
-export default validateEnv;
-
-export const validateEnv = () => {
+export default function validateEnv() {
   const F = f(__filename);
   // log.info(F, `You are in ${process.env.NODE_ENV?.toUpperCase()}`);
   if (!process.env.DISCORD_CLIENT_ID) {
@@ -47,4 +45,4 @@ export const validateEnv = () => {
   }
 
   return true;
-};
+}

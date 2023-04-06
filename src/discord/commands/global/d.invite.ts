@@ -12,8 +12,6 @@ import { startLog } from '../../utils/startLog';
 
 const F = f(__filename);
 
-export default dInvite;
-
 export const dInvite: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('invite')
@@ -52,3 +50,5 @@ export const dInvite: SlashCommand = {
     return true;
   },
 };
+
+export default dInvite;

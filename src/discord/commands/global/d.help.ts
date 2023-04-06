@@ -28,8 +28,6 @@ const buttonList = [
   nextButton,
 ];
 
-export default dHelp;
-
 export const dHelp: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('help')
@@ -113,3 +111,5 @@ export const dHelp: SlashCommand = {
     return true;
   },
 };
+
+export default dHelp;

@@ -15,8 +15,6 @@ import { globalTemplate } from '../../../global/commands/_g.template';
 import { startLog } from '../../utils/startLog';
 import { getUser } from '../../../global/utils/knex';
 
-export default dTemplate;
-
 const F = f(__filename);
 
 export const dTemplate: SlashCommand = {
@@ -148,3 +146,5 @@ export const dTemplate: SlashCommand = {
     return true;
   },
 };
+
+export default dTemplate;

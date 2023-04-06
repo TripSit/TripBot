@@ -9,8 +9,6 @@ import { startLog } from '../../utils/startLog';
 // import log from '../../../global/utils/log';
 const F = f(__filename);
 
-export default dUrbanDefine;
-
 export const dUrbanDefine: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('urban_define')
@@ -39,3 +37,5 @@ export const dUrbanDefine: SlashCommand = {
     return true;
   },
 };
+
+export default dUrbanDefine;

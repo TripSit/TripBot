@@ -8,8 +8,6 @@ import { startLog } from '../../utils/startLog';
 // import log from '../../../global/utils/log';
 const F = f(__filename);
 
-export default dFact;
-
 export const dFact: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('fact')
@@ -31,3 +29,5 @@ export const dFact: SlashCommand = {
     return true;
   },
 };
+
+export default dFact;

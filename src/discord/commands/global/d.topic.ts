@@ -8,8 +8,6 @@ import { startLog } from '../../utils/startLog';
 
 const F = f(__filename);
 
-export default dTopic;
-
 export const dTopic: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('topic')
@@ -22,3 +20,5 @@ export const dTopic: SlashCommand = {
     return true;
   },
 };
+
+export default dTopic;

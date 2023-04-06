@@ -55,8 +55,6 @@ async function getInvites(client: Client) {
   });
 }
 
-export default ready;
-
 export const ready: ReadyEvent = {
   name: 'ready',
   once: true,
@@ -130,3 +128,5 @@ export const ready: ReadyEvent = {
     });
   },
 };
+
+export default ready;

@@ -7,8 +7,6 @@ import { startLog } from '../../utils/startLog';
 // import log from '../../../global/utils/log';
 const F = f(__filename);
 
-export default dCoinflip;
-
 export const dCoinflip: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('coinflip')
@@ -23,3 +21,5 @@ export const dCoinflip: SlashCommand = {
   },
 
 };
+
+export default dCoinflip;

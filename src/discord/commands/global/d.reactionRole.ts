@@ -27,8 +27,6 @@ import { database } from '../../../global/utils/knex';
 import { checkChannelPermissions, checkGuildPermissions } from '../../utils/checkPermissions';
 import { ReactionRoles, ReactionRoleType } from '../../../global/@types/database';
 
-export default dReactionRole;
-
 const F = f(__filename);
 
 const guildError = 'This must be performed in a guild!';
@@ -37,252 +35,6 @@ const memberError = 'This must be performed by a member of a guild!';
 const embedOption = 'What color should the embed be?';
 const creationReason = 'Tripbot Reaction role';
 type RoleDef = { name: string; value: string };
-
-export const dReactionRole: SlashCommand = {
-  data: new SlashCommandBuilder()
-    .setName('reaction_role')
-    .setDescription('Create a reaction role messages')
-    .addSubcommand(subcommand => subcommand
-      .setName('help')
-      .setDescription('Displays info on this command'))
-    .addSubcommand(subcommand => subcommand
-      .setName('custom')
-      .setDescription('Create a custom reaction role message')
-      .addRoleOption(option => option.setName('role')
-        .setRequired(true)
-        .setDescription('What role should be applied?'))
-      .addStringOption(option => option.setName('emoji')
-        .setDescription('What emoji should be used?'))
-      .addStringOption(option => option.setName('label')
-        .setDescription('What should the button label say?'))
-      .addBooleanOption(option => option.setName('intro_message')
-        .setDescription('Do they need to provide an intro message?'))
-      .addChannelOption(option => option.setName('intro_channel')
-        .setDescription('Where should the intro message be posted?'))
-      .addStringOption(option => option.setName('embed_color')
-        .setDescription(embedOption)
-        .setAutocomplete(true)))
-    .addSubcommand(subcommand => subcommand
-      .setName('color')
-      .setDescription('Creates the color reaction role message in this channel')
-      .addStringOption(option => option.setName('embed_color')
-        .setDescription(embedOption)
-        .setAutocomplete(true)))
-    .addSubcommand(subcommand => subcommand
-      .setName('premium_color')
-      .setDescription('Creates the premium color reaction role message in this channel')
-      .addStringOption(option => option.setName('premium_roles')
-        .setDescription('@ mention other roles that should have access to premium colors')
-        .setRequired(true))
-      .addStringOption(option => option.setName('embed_color')
-        .setDescription(embedOption)
-        .setAutocomplete(true)))
-    .addSubcommand(subcommand => subcommand
-      .setName('mindset')
-      .setDescription('Creates the mindset reaction role message in this channel')
-      .addStringOption(option => option.setName('embed_color')
-        .setDescription(embedOption)
-        .setAutocomplete(true)))
-    .addSubcommand(subcommand => subcommand
-      .setName('pronoun')
-      .setDescription('Creates the pronoun reaction role message in this channel')
-      .addStringOption(option => option.setName('embed_color')
-        .setDescription(embedOption)
-        .setAutocomplete(true)))
-    .addSubcommand(subcommand => subcommand
-      .setName('notification')
-      .setDescription('Creates the notification reaction role message in this channel')
-      .addBooleanOption(option => option.setName('include_voice')
-        .setDescription('Include the voice chatter role?'))
-      .addBooleanOption(option => option.setName('include_activities')
-        .setDescription('Include the activities role?'))
-      .addStringOption(option => option.setName('embed_color')
-        .setDescription(embedOption)
-        .setAutocomplete(true))),
-  async execute(interaction) {
-    startlog(F, interaction);
-    if (!interaction.guild) {
-      // log.debug(F, `no guild!`);
-      await interaction.reply(guildError);
-      return false;
-    }
-
-    // Check if the guild is a partner (or the home guild)
-    const guildData = await database.guilds.get(interaction.guild.id);
-    if (interaction.guild.id !== env.DISCORD_GUILD_ID
-      && !guildData.partner
-      && !guildData.supporter) {
-      await interaction.reply({
-        embeds: [
-          embedTemplate()
-            .setDescription('This command can only be used in a partner or supporter guilds! Use /reaction_role help for more info.')
-            .setColor(Colors.Red),
-        ],
-        ephemeral: true,
-      });
-      return false;
-    }
-
-    if (!interaction.member) {
-      // log.debug(F, `no member!`);
-      await interaction.reply(memberError);
-    }
-    if (!(interaction.member as GuildMember).permissions.has('ManageRoles' as PermissionResolvable)) {
-      await interaction.reply({
-        embeds: [
-          embedTemplate()
-            .setDescription('Error: You do not have the ManageRoles permission needed to create a reactionrole message!')
-            .setColor(Colors.Red),
-        ],
-        ephemeral: true,
-      });
-      return false;
-    }
-
-    if (!interaction.guild) {
-      await interaction.reply({
-        embeds: [
-          embedTemplate()
-            .setDescription('Error: This command can only be used in a guild!')
-            .setColor(Colors.Red),
-        ],
-        ephemeral: true,
-      });
-      return false;
-    }
-
-    if (!interaction.channel) {
-      await interaction.reply({
-        embeds: [
-          embedTemplate()
-            .setDescription('Error: This command can only be used in a channel!')
-            .setColor(Colors.Red),
-        ],
-        ephemeral: true,
-      });
-      return false;
-    }
-
-    if (interaction.channel.type !== ChannelType.GuildText) {
-      await interaction.reply({
-        embeds: [
-          embedTemplate()
-            .setDescription('Error: This command can only be used in a text channel!')
-            .setColor(Colors.Red),
-        ],
-        ephemeral: true,
-      });
-      return false;
-    }
-
-    // Check that i have permission to add roles
-    const guildPerms = await checkGuildPermissions(interaction.guild, [
-      'ManageRoles' as PermissionResolvable,
-    ]);
-    if (!guildPerms.hasPermission) {
-      log.error(F, `Missing guild permission ${guildPerms.permission} in ${interaction.guild}!`);
-      await interaction.reply({
-        embeds: [
-          embedTemplate()
-            .setDescription(stripIndents`Error: Missing ${guildPerms.permission} permission in ${interaction.guild}!
-            In order to setup the reaction roles feature I need:
-            Manage Roles - In order to give and take away roles from users
-            Note: My role needs to be higher than all other roles you want managed!`)
-            .setColor(Colors.Red),
-        ],
-        ephemeral: true,
-      });
-      return false;
-    }
-
-    const channelPerms = await checkChannelPermissions(interaction.channel, [
-      'ViewChannel' as PermissionResolvable,
-      'SendMessages' as PermissionResolvable,
-    ]);
-    if (!channelPerms.hasPermission) {
-      log.error(F, `Missing channel permission ${channelPerms.permission} in ${interaction.channel}!`);
-      await interaction.reply({
-        embeds: [
-          embedTemplate()
-            .setDescription(stripIndents`Error: Missing ${channelPerms.permission} permission in ${interaction.channel}!
-            In order to setup the reaction roles feature I need:
-            View Channel - In order to see the channel
-            Send Messages - In order to send the reaction role message`)
-            .setColor(Colors.Red),
-        ],
-        ephemeral: true,
-      });
-      return false;
-    }
-
-    const subcommand = interaction.options.getSubcommand();
-
-    if (subcommand === 'help') {
-      await interaction.reply({
-        embeds: [
-          embedTemplate()
-            .setTitle('Reaction Role Help')
-            .setDescription(stripIndents`This command allows you to create a reaction role message in the current channel.
-              This message will allow users to react to it and get a role assigned to them.
-              
-              If this is your first time using one of the pre-defined reaction templates it will create the necessary roles for you.
-              After the first run you can modify the role name, color and icon to your liking.
-              You can then re-run the command to update the message with your new names and colors!
-
-              Premium colors are available to:
-              * Boosters and Subscribers of your guild, as defined by Discord boosts and subscriptions
-              * Premium roles you define in the setup command, eg, Patreon subscribers or team members
-              * You will need to re-define the premium list if you run the command again!
-
-              Permissions Needed:
-              Manage Roles - In order to give and take away roles from users
-              Note: My role needs to be higher than all other roles you want managed!
-
-              **This command can only be used in a partner or supporter guilds!**
-              Want to be as supporter? Join our patreon!
-              Want to be a partner? Let Moonbear know: this is a very new system and we are still working out the kinks!
-              `)
-            .addFields(
-              {
-                name: 'Usage',
-                value: stripIndents`/reaction_role [subcommand]
-                  /reaction_role help - Displays this message
-                  /reaction_role color - Creates the color reaction role message in this channel
-                  /reaction_role premium_color - Creates the premium color reaction role message in this channel
-                  /reaction_role mindset - Creates the mindset reaction role message in this channel
-                  /reaction_role pronoun - Creates the pronoun reaction role message in this channel
-                  /reaction_role notification - Creates the notification reaction role message in this channel
-                  /reaction_role custom - Creates a custom reaction role message in this channel`,
-                inline: false,
-              },
-              {
-                name: 'Examples',
-                value: stripIndents`
-                  /reaction_role custom Role:@Helper Emoji:🤔 Label:Helper" Intro_message:true Intro_channel:#helpers
-                  This will create a reaction role message in the current channel with the role @Helper, the emoji 🤔 and the label Helper.
-                  When they click on this button they will need to put in an intro message into the modal that pops up.
-                  This intro message will be sent to the #helpers channel.
-
-                  /reaction_role custom Role:@Verified Label:I understand the rules
-                  This will create a reaction role message in the current channel with the @Verified role.
-                  When they click on this the button that says "I understand the rules" they will be given the Verified role.
-                  `,
-                inline: false,
-              },
-            )
-            .setColor(Colors.Blue),
-        ],
-        ephemeral: true,
-      });
-    } else if (subcommand === 'color') await createColorMessage(interaction);
-    else if (subcommand === 'premium_color') await createPremiumColorMessage(interaction);
-    else if (subcommand === 'mindset') await createMindsetMessage(interaction);
-    else if (subcommand === 'pronoun') await createPronounMessage(interaction);
-    else if (subcommand === 'notification') await createNotificationMessage(interaction);
-    else if (subcommand === 'custom') await setupCustomReactionRole(interaction);
-    return true;
-  },
-};
 
 export async function setupCustomReactionRole(
   interaction:ChatInputCommandInteraction,
@@ -1538,6 +1290,252 @@ export async function createNotificationMessage(
   });
 }
 
+export const dReactionRole: SlashCommand = {
+  data: new SlashCommandBuilder()
+    .setName('reaction_role')
+    .setDescription('Create a reaction role messages')
+    .addSubcommand(subcommand => subcommand
+      .setName('help')
+      .setDescription('Displays info on this command'))
+    .addSubcommand(subcommand => subcommand
+      .setName('custom')
+      .setDescription('Create a custom reaction role message')
+      .addRoleOption(option => option.setName('role')
+        .setRequired(true)
+        .setDescription('What role should be applied?'))
+      .addStringOption(option => option.setName('emoji')
+        .setDescription('What emoji should be used?'))
+      .addStringOption(option => option.setName('label')
+        .setDescription('What should the button label say?'))
+      .addBooleanOption(option => option.setName('intro_message')
+        .setDescription('Do they need to provide an intro message?'))
+      .addChannelOption(option => option.setName('intro_channel')
+        .setDescription('Where should the intro message be posted?'))
+      .addStringOption(option => option.setName('embed_color')
+        .setDescription(embedOption)
+        .setAutocomplete(true)))
+    .addSubcommand(subcommand => subcommand
+      .setName('color')
+      .setDescription('Creates the color reaction role message in this channel')
+      .addStringOption(option => option.setName('embed_color')
+        .setDescription(embedOption)
+        .setAutocomplete(true)))
+    .addSubcommand(subcommand => subcommand
+      .setName('premium_color')
+      .setDescription('Creates the premium color reaction role message in this channel')
+      .addStringOption(option => option.setName('premium_roles')
+        .setDescription('@ mention other roles that should have access to premium colors')
+        .setRequired(true))
+      .addStringOption(option => option.setName('embed_color')
+        .setDescription(embedOption)
+        .setAutocomplete(true)))
+    .addSubcommand(subcommand => subcommand
+      .setName('mindset')
+      .setDescription('Creates the mindset reaction role message in this channel')
+      .addStringOption(option => option.setName('embed_color')
+        .setDescription(embedOption)
+        .setAutocomplete(true)))
+    .addSubcommand(subcommand => subcommand
+      .setName('pronoun')
+      .setDescription('Creates the pronoun reaction role message in this channel')
+      .addStringOption(option => option.setName('embed_color')
+        .setDescription(embedOption)
+        .setAutocomplete(true)))
+    .addSubcommand(subcommand => subcommand
+      .setName('notification')
+      .setDescription('Creates the notification reaction role message in this channel')
+      .addBooleanOption(option => option.setName('include_voice')
+        .setDescription('Include the voice chatter role?'))
+      .addBooleanOption(option => option.setName('include_activities')
+        .setDescription('Include the activities role?'))
+      .addStringOption(option => option.setName('embed_color')
+        .setDescription(embedOption)
+        .setAutocomplete(true))),
+  async execute(interaction) {
+    startlog(F, interaction);
+    if (!interaction.guild) {
+      // log.debug(F, `no guild!`);
+      await interaction.reply(guildError);
+      return false;
+    }
+
+    // Check if the guild is a partner (or the home guild)
+    const guildData = await database.guilds.get(interaction.guild.id);
+    if (interaction.guild.id !== env.DISCORD_GUILD_ID
+      && !guildData.partner
+      && !guildData.supporter) {
+      await interaction.reply({
+        embeds: [
+          embedTemplate()
+            .setDescription('This command can only be used in a partner or supporter guilds! Use /reaction_role help for more info.')
+            .setColor(Colors.Red),
+        ],
+        ephemeral: true,
+      });
+      return false;
+    }
+
+    if (!interaction.member) {
+      // log.debug(F, `no member!`);
+      await interaction.reply(memberError);
+    }
+    if (!(interaction.member as GuildMember).permissions.has('ManageRoles' as PermissionResolvable)) {
+      await interaction.reply({
+        embeds: [
+          embedTemplate()
+            .setDescription('Error: You do not have the ManageRoles permission needed to create a reactionrole message!')
+            .setColor(Colors.Red),
+        ],
+        ephemeral: true,
+      });
+      return false;
+    }
+
+    if (!interaction.guild) {
+      await interaction.reply({
+        embeds: [
+          embedTemplate()
+            .setDescription('Error: This command can only be used in a guild!')
+            .setColor(Colors.Red),
+        ],
+        ephemeral: true,
+      });
+      return false;
+    }
+
+    if (!interaction.channel) {
+      await interaction.reply({
+        embeds: [
+          embedTemplate()
+            .setDescription('Error: This command can only be used in a channel!')
+            .setColor(Colors.Red),
+        ],
+        ephemeral: true,
+      });
+      return false;
+    }
+
+    if (interaction.channel.type !== ChannelType.GuildText) {
+      await interaction.reply({
+        embeds: [
+          embedTemplate()
+            .setDescription('Error: This command can only be used in a text channel!')
+            .setColor(Colors.Red),
+        ],
+        ephemeral: true,
+      });
+      return false;
+    }
+
+    // Check that i have permission to add roles
+    const guildPerms = await checkGuildPermissions(interaction.guild, [
+      'ManageRoles' as PermissionResolvable,
+    ]);
+    if (!guildPerms.hasPermission) {
+      log.error(F, `Missing guild permission ${guildPerms.permission} in ${interaction.guild}!`);
+      await interaction.reply({
+        embeds: [
+          embedTemplate()
+            .setDescription(stripIndents`Error: Missing ${guildPerms.permission} permission in ${interaction.guild}!
+            In order to setup the reaction roles feature I need:
+            Manage Roles - In order to give and take away roles from users
+            Note: My role needs to be higher than all other roles you want managed!`)
+            .setColor(Colors.Red),
+        ],
+        ephemeral: true,
+      });
+      return false;
+    }
+
+    const channelPerms = await checkChannelPermissions(interaction.channel, [
+      'ViewChannel' as PermissionResolvable,
+      'SendMessages' as PermissionResolvable,
+    ]);
+    if (!channelPerms.hasPermission) {
+      log.error(F, `Missing channel permission ${channelPerms.permission} in ${interaction.channel}!`);
+      await interaction.reply({
+        embeds: [
+          embedTemplate()
+            .setDescription(stripIndents`Error: Missing ${channelPerms.permission} permission in ${interaction.channel}!
+            In order to setup the reaction roles feature I need:
+            View Channel - In order to see the channel
+            Send Messages - In order to send the reaction role message`)
+            .setColor(Colors.Red),
+        ],
+        ephemeral: true,
+      });
+      return false;
+    }
+
+    const subcommand = interaction.options.getSubcommand();
+
+    if (subcommand === 'help') {
+      await interaction.reply({
+        embeds: [
+          embedTemplate()
+            .setTitle('Reaction Role Help')
+            .setDescription(stripIndents`This command allows you to create a reaction role message in the current channel.
+              This message will allow users to react to it and get a role assigned to them.
+              
+              If this is your first time using one of the pre-defined reaction templates it will create the necessary roles for you.
+              After the first run you can modify the role name, color and icon to your liking.
+              You can then re-run the command to update the message with your new names and colors!
+
+              Premium colors are available to:
+              * Boosters and Subscribers of your guild, as defined by Discord boosts and subscriptions
+              * Premium roles you define in the setup command, eg, Patreon subscribers or team members
+              * You will need to re-define the premium list if you run the command again!
+
+              Permissions Needed:
+              Manage Roles - In order to give and take away roles from users
+              Note: My role needs to be higher than all other roles you want managed!
+
+              **This command can only be used in a partner or supporter guilds!**
+              Want to be as supporter? Join our patreon!
+              Want to be a partner? Let Moonbear know: this is a very new system and we are still working out the kinks!
+              `)
+            .addFields(
+              {
+                name: 'Usage',
+                value: stripIndents`/reaction_role [subcommand]
+                  /reaction_role help - Displays this message
+                  /reaction_role color - Creates the color reaction role message in this channel
+                  /reaction_role premium_color - Creates the premium color reaction role message in this channel
+                  /reaction_role mindset - Creates the mindset reaction role message in this channel
+                  /reaction_role pronoun - Creates the pronoun reaction role message in this channel
+                  /reaction_role notification - Creates the notification reaction role message in this channel
+                  /reaction_role custom - Creates a custom reaction role message in this channel`,
+                inline: false,
+              },
+              {
+                name: 'Examples',
+                value: stripIndents`
+                  /reaction_role custom Role:@Helper Emoji:🤔 Label:Helper" Intro_message:true Intro_channel:#helpers
+                  This will create a reaction role message in the current channel with the role @Helper, the emoji 🤔 and the label Helper.
+                  When they click on this button they will need to put in an intro message into the modal that pops up.
+                  This intro message will be sent to the #helpers channel.
+
+                  /reaction_role custom Role:@Verified Label:I understand the rules
+                  This will create a reaction role message in the current channel with the @Verified role.
+                  When they click on this the button that says "I understand the rules" they will be given the Verified role.
+                  `,
+                inline: false,
+              },
+            )
+            .setColor(Colors.Blue),
+        ],
+        ephemeral: true,
+      });
+    } else if (subcommand === 'color') await createColorMessage(interaction);
+    else if (subcommand === 'premium_color') await createPremiumColorMessage(interaction);
+    else if (subcommand === 'mindset') await createMindsetMessage(interaction);
+    else if (subcommand === 'pronoun') await createPronounMessage(interaction);
+    else if (subcommand === 'notification') await createNotificationMessage(interaction);
+    else if (subcommand === 'custom') await setupCustomReactionRole(interaction);
+    return true;
+  },
+};
+
 // export async function emojiReactionRole(
 //   reaction:MessageReaction,
 //   user:User,
@@ -1637,3 +1635,5 @@ export async function createNotificationMessage(
 //     }
 //   }
 // }
+
+export default dReactionRole;

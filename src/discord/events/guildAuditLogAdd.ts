@@ -12,8 +12,6 @@ const F = f(__filename); // eslint-disable-line
 
 // https://discordjs.guide/popular-topics/audit-logs.html#who-deleted-a-message
 
-export default channelCreate;
-
 export const channelCreate: GuildAuditLogEntryCreateEvent = {
   name: 'guildAuditLogEntryCreate',
   async execute(auditLogEntry, guild) {
@@ -70,3 +68,5 @@ export const channelCreate: GuildAuditLogEntryCreateEvent = {
     await channelAuditlog.send({ embeds: [embed] });
   },
 };
+
+export default channelCreate;

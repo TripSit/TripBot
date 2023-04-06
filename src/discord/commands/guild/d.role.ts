@@ -8,8 +8,6 @@ import { SlashCommand } from '../../@types/commandDef';
 
 const F = f(__filename);
 
-export default dRole;
-
 type RoleDef = { name: string; value: string };
 
 const colorRoles = [
@@ -194,3 +192,5 @@ export const dRole: SlashCommand = {
     return true;
   },
 };
+
+export default dRole;

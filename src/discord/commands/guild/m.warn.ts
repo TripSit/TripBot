@@ -19,8 +19,6 @@ import { UserActionType } from '../../../global/@types/database';
 
 const F = f(__filename);
 
-export default mWarn;
-
 export const mWarn: MessageCommand = {
   data: new ContextMenuCommandBuilder()
     .setName('Warn')
@@ -67,3 +65,5 @@ export const mWarn: MessageCommand = {
     return true;
   },
 };
+
+export default mWarn;

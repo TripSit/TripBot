@@ -7,9 +7,6 @@ import {
 import { getGuild, guildUpdate } from '../../global/utils/knex';
 
 const F = f(__filename);
-
-export default guildCreate;
-
 export const guildCreate: GuildCreateEvent = {
   name: 'guildCreate',
   async execute(guild) {
@@ -38,3 +35,5 @@ export const guildCreate: GuildCreateEvent = {
   // log.debug(F, `finished!`);
   },
 };
+
+export default guildCreate;

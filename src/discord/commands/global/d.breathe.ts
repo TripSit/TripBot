@@ -7,8 +7,6 @@ import { startLog } from '../../utils/startLog';
 // import log from '../../../global/utils/log';
 const F = f(__filename);
 
-export default dBreathe;
-
 export const dBreathe: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('breathe')
@@ -32,3 +30,5 @@ export const dBreathe: SlashCommand = {
     return true;
   },
 };
+
+export default dBreathe;
