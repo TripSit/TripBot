@@ -7,6 +7,8 @@ import {
   TextInputBuilder,
   ActionRowBuilder,
   ModalSubmitInteraction,
+  Colors,
+  User,
 } from 'discord.js';
 import {
   TextInputStyle,
@@ -18,12 +20,17 @@ import { parseDuration } from '../../../global/utils/parseDuration';
 import { moderate, linkThread } from '../../../global/commands/g.moderate';
 import { startLog } from '../../utils/startLog'; // eslint-disable-line
 import { UserActionType } from '../../../global/@types/database';
-import { getDiscordMember } from '../../utils/guildMemberLookup';
+import { getDiscordMember, getDiscordUser } from '../../utils/guildMemberLookup';
 import { getUser } from '../../../global/utils/knex';
+import { embedTemplate } from '../../utils/embedTemplate';
 
 const F = f(__filename);
 
 export default mod;
+
+type ModAction = 'INFO' | 'BAN' | 'WARNING' | 'REPORT' | 'NOTE' | 'TIMEOUT' | 'UN-CONTRIBUTOR_BAN' | 'UN-HELPER_BAN' |
+'FULL_BAN' | 'TICKET_BAN' | 'DISCORD_BOT_BAN' | 'BAN_EVASION' | 'UNDERBAN' | 'HELPER_BAN' | 'CONTRIBUTOR_BAN' | 'LINK' |
+'UN-FULL_BAN' | 'UN-TICKET_BAN' | 'UN-DISCORD_BOT_BAN' | 'UN-BAN_EVASION' | 'UN-UNDERBAN' | 'UN-TIMEOUT' | 'KICK';
 
 export const mod: SlashCommand = {
   data: new SlashCommandBuilder()
@@ -52,6 +59,8 @@ export const mod: SlashCommand = {
           { name: 'Discord Bot Ban', value: 'DISCORD_BOT_BAN' },
           { name: 'Ban Evasion', value: 'BAN_EVASION' },
           { name: 'Underban', value: 'UNDERBAN' },
+          { name: 'Helper Ban', value: 'HELPER_BAN' },
+          { name: 'Contributor Ban', value: 'CONTRIBUTOR_BAN' },
         ))
       .addStringOption(option => option
         .setName('toggle')
@@ -112,19 +121,42 @@ export const mod: SlashCommand = {
       .addBooleanOption(option => option
         .setName('override')
         .setDescription('Override existing threads in the DB'))
-      .setName('link_thread')),
+      .setName('link')),
   async execute(interaction:ChatInputCommandInteraction) {
     startLog(F, interaction);
 
     const actor = interaction.member as GuildMember;
     const targetString = interaction.options.getString('target', true);
-    const target = await getDiscordMember(interaction, targetString);
-    let command = interaction.options.getSubcommand().toUpperCase();
-    if (command === 'BAN') {
-      command = interaction.options.getString('type', true);
+    const targets = await getDiscordMember(interaction, targetString) as GuildMember[];
+
+    if (targets.length > 1) {
+      const embed = embedTemplate()
+        .setColor(Colors.Red)
+        .setTitle('Found more than one user with with that value!')
+        .setDescription(stripIndents`
+        "${targetString}" returned ${targets.length} results!
+
+        Be more specific:
+        > **Mention:** @Moonbear
+        > **Tag:** moonbear#1234
+        > **ID:** 9876581237
+        > **Nickname:** MoonBear`);
+      await interaction.reply({
+        embeds: [embed],
+        ephemeral: true,
+      });
+      return false;
     }
 
-    if (command === 'LINK_THREAD') {
+    // This needs to also be a User because we can ban users who are not in the guild
+    let target = targets[0] as GuildMember | User;
+
+    let command = interaction.options.getSubcommand().toUpperCase() as ModAction;
+    if (command === 'BAN') {
+      command = interaction.options.getString('type', true) as ModAction;
+    }
+
+    if (command === 'LINK') {
       if (!interaction.channel?.isThread()
       || !interaction.channel.parentId
       || interaction.channel.parentId !== env.CHANNEL_MODERATORS) {
@@ -137,14 +169,15 @@ export const mod: SlashCommand = {
 
       const override = interaction.options.getBoolean('override');
 
-      let result = '' as string | null;
+      let result: string | null;
       if (!target) {
         const userData = await getUser(targetString, null, null);
         if (!userData) {
           await interaction.reply({
-            content: 'Failed to link thread, I could not find this user in the guild, and they do not exist in the database!',
+            content: stripIndents`Failed to link thread, I could not find this user in the guild, \
+and they do not exist in the database!`,
             ephemeral: true,
-          });
+          }); // eslint-disable-line max-len
           return false;
         }
         result = await linkThread(targetString, interaction.channelId, override);
@@ -153,10 +186,7 @@ export const mod: SlashCommand = {
       }
 
       if (result === null) {
-        await interaction.reply({
-          content: 'Successfully linked thread!',
-          ephemeral: true,
-        });
+        await interaction.editReply({ content: 'Successfully linked thread!' });
       } else {
         const existingThread = await interaction.client.channels.fetch(result);
         await interaction.reply({
@@ -169,7 +199,48 @@ export const mod: SlashCommand = {
       return true;
     }
 
-    if (!target) return false;
+    if (!target && command !== 'FULL_BAN') {
+      const embed = embedTemplate()
+        .setColor(Colors.Red)
+        .setTitle('Could not find that member/user!')
+        .setDescription(stripIndents`
+        "${targetString}" returned no results!
+
+        Try again with:
+        > **Mention:** @Moonbear
+        > **Tag:** moonbear#1234
+        > **ID:** 9876581237
+        > **Nickname:** MoonBear`);
+      await interaction.reply({
+        embeds: [embed],
+        ephemeral: true,
+      });
+      return false;
+    }
+
+    if (!target && command === 'FULL_BAN') {
+      // Look up the user and use that as the target
+      const discordUserData = await getDiscordUser(targetString);
+      if (!discordUserData) {
+        const embed = embedTemplate()
+          .setColor(Colors.Red)
+          .setTitle('Could not find that member/user!')
+          .setDescription(stripIndents`
+        "${targetString}" returned no results!
+
+        Try again with:
+        > **Mention:** @Moonbear
+        > **Tag:** moonbear#1234
+        > **ID:** 9876581237
+        > **Nickname:** MoonBear`);
+        await interaction.reply({
+          embeds: [embed],
+          ephemeral: true,
+        });
+        return false;
+      }
+      target = discordUserData;
+    }
 
     const toggleCommands = 'FULL_BAN, TICKET_BAN, DISCORD_BOT_BAN, BAN_EVASION, UNDERBAN, TIMEOUT';
     // If the command is ban or timeout, get the value of toggle. If it's null, set it to 'ON'
@@ -178,10 +249,12 @@ export const mod: SlashCommand = {
       : null;
 
     if (toggle === 'OFF' && toggleCommands.includes(command)) {
-      command = `UN-${command}`;
+      command = `UN-${command}` as ModAction;
     }
 
     log.debug(F, `${actor} ran ${command} on ${target}`);
+
+    // log.debug(F, `${actor} ran ${command} on ${target}`);
 
     let verb = '';
     if (command === 'NOTE') verb = 'noting';
@@ -195,14 +268,21 @@ export const mod: SlashCommand = {
     else if (command === 'DISCORD_BOT_BAN') verb = 'discord bot banning';
     else if (command === 'BAN_EVASION') verb = 'evasion banning';
     else if (command === 'UNDERBAN') verb = 'underbanning';
+    else if (command === 'CONTRIBUTOR_BAN') verb = 'banning from Contributor on';
+    else if (command === 'HELPER_BAN') verb = 'banning from Helper on';
+    else if (command === 'UN-HELPER_BAN') verb = 'allowing Helper on ';
+    else if (command === 'UN-CONTRIBUTOR_BAN') verb = 'allowing Contributor on ';
     else if (command === 'UN-TIMEOUT') verb = 'removing timeout on';
     else if (command === 'UN-FULL_BAN') verb = 'removing ban on';
     else if (command === 'UN-TICKET_BAN') verb = 'removing ticket ban on';
-    else if (command === 'UN-DISCORD_BOT_BAN') verb = 'removing discord bot ban on';
+    else if (command === 'UN-DISCORD_BOT_BAN') verb = 'removing bot ban on';
     else if (command === 'UN-BAN_EVASION') verb = 'removing ban evasion on';
     else if (command === 'UN-UNDERBAN') verb = 'removing underban on';
 
+    // log.debug(F, `Verb: ${verb}`);
+
     if (command === 'INFO') {
+      log.debug(F, 'INFO command, deferring reply (ephemeral)');
       await interaction.deferReply({ ephemeral: true });
       await interaction.editReply(await moderate(
         actor,
@@ -217,40 +297,43 @@ export const mod: SlashCommand = {
 
     const modal = new ModalBuilder()
       .setCustomId(`modModal~${command}~${interaction.id}`)
-      .setTitle(`Tripbot ${command}`);
-
-    modal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
-      .setLabel(`Why are you ${verb} this user?`)
-      .setStyle(TextInputStyle.Paragraph)
-      .setPlaceholder('Tell other moderators why you\'re doing this')
-      .setRequired(true)
-      .setCustomId('internalNote')));
+      .setTitle(`Tripbot ${command}`)
+      .addComponents(new ActionRowBuilder<TextInputBuilder>()
+        .addComponents(new TextInputBuilder()
+          .setLabel(`Why are you ${verb} this user?`)
+          .setStyle(TextInputStyle.Paragraph)
+          .setPlaceholder('Tell other moderators why you\'re doing this')
+          .setRequired(true)
+          .setCustomId('internalNote')));
 
     // All commands except INFO, NOTE and REPORT can have a public reason sent to the user
     if (!'INFO NOTE REPORT'.includes(command)) {
-      modal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
-        .setLabel('What should we tell the user?')
-        .setStyle(TextInputStyle.Paragraph)
-        .setPlaceholder('Tell the user why you\'re doing this')
-        .setRequired(command === 'WARNING')
-        .setCustomId('description')));
+      modal.addComponents(new ActionRowBuilder<TextInputBuilder>()
+        .addComponents(new TextInputBuilder()
+          .setLabel('What should we tell the user?')
+          .setStyle(TextInputStyle.Paragraph)
+          .setPlaceholder('Tell the user why you\'re doing this')
+          .setRequired(command === 'WARNING')
+          .setCustomId('description')));
     }
     // Only timeout and full ban can have a duration, but they're different, so separate.
     if (command === 'TIMEOUT') {
-      modal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
-        .setLabel('Timeout for how long?')
-        .setStyle(TextInputStyle.Short)
-        .setPlaceholder('4 days 3hrs 2 mins 30 seconds (Max 7 days, Default 7 days)')
-        .setRequired(false)
-        .setCustomId('duration')));
+      modal.addComponents(new ActionRowBuilder<TextInputBuilder>()
+        .addComponents(new TextInputBuilder()
+          .setLabel('Timeout for how long?')
+          .setStyle(TextInputStyle.Short)
+          .setPlaceholder('4 days 3hrs 2 mins 30 seconds (Max 7 days, Default 7 days)')
+          .setRequired(false)
+          .setCustomId('duration')));
     }
     if (command === 'FULL_BAN') {
-      modal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
-        .setLabel('How many days of msg to remove?')
-        .setStyle(TextInputStyle.Short)
-        .setPlaceholder('4 days 3hrs 2 mins 30 seconds (Max 7 days, Default 0 days)')
-        .setRequired(false)
-        .setCustomId('days')));
+      modal.addComponents(new ActionRowBuilder<TextInputBuilder>()
+        .addComponents(new TextInputBuilder()
+          .setLabel('How many days of msg to remove?')
+          .setStyle(TextInputStyle.Short)
+          .setPlaceholder('4 days 3hrs 2 mins 30 seconds (Max 7 days, Default 0 days)')
+          .setRequired(false)
+          .setCustomId('days')));
     }
 
     await interaction.showModal(modal);
@@ -273,17 +356,17 @@ export const mod: SlashCommand = {
           let dayInput = parseInt(i.fields.getTextInputValue('days'), 10);
 
           // If no input was provided, default to 0 days
-          if (dayInput === null) dayInput = 0;
+          if (Number.isNaN(dayInput)) dayInput = 0;
 
           // If the input is a string, or outside the bounds, tell the user and return
-          if (dayInput && (Number.isNaN(dayInput) || (dayInput < 0 || dayInput > 7))) {
+          if (dayInput && (dayInput < 0 || dayInput > 7)) {
             await i.editReply({ content: 'Ban days must be at least 0 and at most 7!' });
             return;
           }
 
           // Get the millisecond value of the input
           const days = await parseDuration(`${dayInput} days`);
-          log.debug(F, `days: ${days}`);
+          // log.debug(F, `days: ${days}`);
           duration = days;
         }
 
@@ -308,7 +391,7 @@ export const mod: SlashCommand = {
             timeoutInput = `${timeoutInput} days`;
           }
 
-          log.debug(F, `timeoutInput: ${timeoutInput}`);
+          // log.debug(F, `timeoutInput: ${timeoutInput}`);
 
           const timeout = timeoutInput !== null
             ? await parseDuration(timeoutInput)
@@ -320,22 +403,18 @@ export const mod: SlashCommand = {
             return;
           }
 
-          log.debug(F, `timeout: ${timeout}`);
+          // log.debug(F, `timeout: ${timeout}`);
           duration = timeout;
         }
-        log.debug(F, `duration: ${duration}`);
 
-        const modalCommand = i.customId.split('~')[1] as UserActionType;
-        const result = await moderate(
+        await i.editReply(await moderate(
           actor,
-          modalCommand,
+          i.customId.split('~')[1] as UserActionType,
           target,
           internalNote,
           description,
           duration,
-        );
-        log.debug(F, `Result: ${result}`);
-        i.editReply(result);
+        ));
         // i.editReply({ embeds: [embedTemplate()] }); // For testing
       });
 

@@ -16,13 +16,15 @@ async function birthdayGet(
   interaction:ChatInputCommandInteraction,
   member:GuildMember,
 ) {
+  startLog(F, interaction);
+  await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
   const embed = embedTemplate();
 
   const response = await birthday('get', member.id, null, null);
 
   if (response === null) {
     embed.setTitle(`${member.displayName} is immortal! (Or has not set their birthday...)`);
-    await interaction.reply({ embeds: [embed] });
+    await interaction.editReply({ embeds: [embed] });
     return;
   }
   embed.setTitle(`${member.displayName}'s birthday is ${response.toFormat('LLLL d')}`);
@@ -42,7 +44,7 @@ async function birthdayGet(
   } else {
     embed.setDescription(`Only ${daysUntil.toFixed(0)} days left!`);
   }
-  await interaction.reply({ embeds: [embed] });
+  await interaction.editReply({ embeds: [embed] });
 }
 
 async function birthdaySet(
@@ -54,73 +56,71 @@ async function birthdaySet(
   let month = 0 as number;
 
   if (!monthInput) {
-    await interaction.reply({ content: 'You need to specify a month!', ephemeral: true });
+    await interaction.editReply({ content: 'You need to specify a month!' });
     return;
   }
 
   if (!day) {
-    await interaction.reply({ content: 'You need to specify a day!', ephemeral: true });
+    await interaction.editReply({ content: 'You need to specify a day!' });
     return;
   }
 
   const month30 = ['april', 'june', 'september', 'november'];
   const month31 = ['january', 'march', 'may', 'july', 'august', 'october', 'december'];
-  if (monthInput !== undefined && day !== undefined) {
-    if (month30.includes(monthInput.toLowerCase()) && day > 30) {
-      const response = `${monthInput} only has 30 days!`;
-      // log.info(F, `response: ${JSON.stringify(response, null, 2)}`);
-      interaction.reply({ content: response, ephemeral: true });
-      return;
-    }
-    if (month31.includes(monthInput.toLowerCase()) && day > 31) {
-      const response = `${monthInput} only has 31 days!`;
-      // log.info(F, `response: ${JSON.stringify(response, null, 2)}`);
-      interaction.reply({ content: response, ephemeral: true });
-      return;
-    }
-    if (monthInput.toLowerCase() === 'february' && day > 28) {
-      const response = 'February only has 28 days!';
-      // log.info(F, `response: ${JSON.stringify(response, null, 2)}`);
-      interaction.reply({ content: response, ephemeral: true });
-      return;
-    }
-    // const monthDict = {
-    //   'january': 0,
-    //   'february': 1,
-    //   'march': 2,
-    //   'april': 3,
-    //   'may': 4,
-    //   'june': 5,
-    //   'july': 6,
-    //   'august': 7,
-    //   'september': 8,
-    //   'october': 9,
-    //   'november': 10,
-    //   'december': 11,
-    // };
-
-    const monthDict = {
-      january: 1,
-      february: 2,
-      march: 3,
-      april: 4,
-      may: 5,
-      june: 6,
-      july: 7,
-      august: 8,
-      september: 9,
-      october: 10,
-      november: 11,
-      december: 12,
-    };
-
-    month = monthDict[monthInput.toLowerCase() as keyof typeof monthDict];
-
-    const response = await birthday('set', member.id, month, day);
-    const embed = embedTemplate();
-    embed.setTitle(`Set your birthday to ${(response as DateTime).toFormat('LLLL d')}`);
-    await interaction.reply({ embeds: [embed], ephemeral: true });
+  if (month30.includes(monthInput.toLowerCase()) && day > 30) {
+    const response = `${monthInput} only has 30 days!`;
+    // log.info(F, `response: ${JSON.stringify(response, null, 2)}`);
+    await interaction.editReply({ content: response });
+    return;
   }
+  if (month31.includes(monthInput.toLowerCase()) && day > 31) {
+    const response = `${monthInput} only has 31 days!`;
+    // log.info(F, `response: ${JSON.stringify(response, null, 2)}`);
+    await interaction.editReply({ content: response });
+    return;
+  }
+  if (monthInput.toLowerCase() === 'february' && day > 28) {
+    const response = 'February only has 28 days!';
+    // log.info(F, `response: ${JSON.stringify(response, null, 2)}`);
+    await interaction.editReply({ content: response });
+    return;
+  }
+  // const monthDict = {
+  //   'january': 0,
+  //   'february': 1,
+  //   'march': 2,
+  //   'april': 3,
+  //   'may': 4,
+  //   'june': 5,
+  //   'july': 6,
+  //   'august': 7,
+  //   'september': 8,
+  //   'october': 9,
+  //   'november': 10,
+  //   'december': 11,
+  // };
+
+  const monthDict = {
+    january: 1,
+    february: 2,
+    march: 3,
+    april: 4,
+    may: 5,
+    june: 6,
+    july: 7,
+    august: 8,
+    september: 9,
+    october: 10,
+    november: 11,
+    december: 12,
+  };
+
+  month = monthDict[monthInput.toLowerCase() as keyof typeof monthDict];
+
+  const response = await birthday('set', member.id, month, day);
+  const embed = embedTemplate();
+  embed.setTitle(`Set your birthday to ${(response as DateTime).toFormat('LLLL d')}`);
+  await interaction.editReply({ embeds: [embed] });
 }
 
 export default dBirthday;
@@ -134,7 +134,9 @@ export const dBirthday: SlashCommand = {
       .setDescription('Get someone\'s birthday!')
       .addUserOption(option => option
         .setName('user')
-        .setDescription('User to lookup')))
+        .setDescription('User to lookup'))
+      .addBooleanOption(option => option.setName('ephemeral')
+        .setDescription('Set to "True" to show the response only to you')))
     .addSubcommand(subcommand => subcommand
       .setName('set')
       .setDescription('Set your birthday!')
@@ -162,6 +164,7 @@ export const dBirthday: SlashCommand = {
         .setName('day'))),
   async execute(interaction) {
     startLog(F, interaction);
+    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
     let command = interaction.options.getSubcommand() as 'get' | 'set' | undefined;
     let member = interaction.options.getMember('user');
     const monthInput = interaction.options.getString('month');

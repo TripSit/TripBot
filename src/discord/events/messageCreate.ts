@@ -15,6 +15,9 @@ import { getUser } from '../../global/utils/knex';
 import { karma } from '../utils/karma';
 import { ExperienceCategory, ExperienceType } from '../../global/@types/database';
 import { imagesOnly } from '../utils/imagesOnly';
+import { countMessage } from '../commands/guild/d.counting';
+import { bridgeMessage } from '../utils/bridge';
+import { awayMessage } from '../utils/awayMessage';
 // import log from '../../global/utils/log';
 // import {parse} from 'path';
 
@@ -33,6 +36,9 @@ const ignoredRoles = Object.values({
 export const messageCreate: MessageCreateEvent = {
   name: 'messageCreate',
   async execute(message) {
+    messageCommand(message);
+    bridgeMessage(message);
+    awayMessage(message);
     // Only run on Tripsit or DM, we don't want to snoop on other guilds ( ͡~ ͜ʖ ͡°)
     if (message.guild && message.guild.id !== env.DISCORD_GUILD_ID) {
       return;
@@ -45,20 +51,18 @@ export const messageCreate: MessageCreateEvent = {
 
     // log.debug(F, `Message: ${JSON.stringify(message, null, 2)}`);
 
-    // Disabled for testing
-    // thoughtPolice(message);
-
     // This needs to run here because the widget bot peeps will use this and they are "bot users"
     // This handles ~ commands
-    messageCommand(message);
+
+    // Don't run on bots
+    if (message.author.bot) return;
+    countMessage(message);
     youAre(message);
     karma(message);
     imagesOnly(message);
 
-    // Don't run on bots
-    if (message.author.bot) {
-      return;
-    }
+    // Disabled for testing
+    // thoughtPolice(message);
 
     // // If this is a DM, run the modmail function.
     // if (message.channel.type === ChannelType.DM) {
@@ -71,7 +75,6 @@ export const messageCreate: MessageCreateEvent = {
     && message.channel // Was not sent in a channel
     && (message.channel instanceof TextChannel) // Was not sent in a text channel
     && message.guild // Was not sent in a guild
-    && !message.author.bot // Was sent by a bot
     && !ignoredRoles.some(role => message.member?.roles.cache.has(role)) // Has a role that should be ignored
     ) {
       // Determine what kind of experience to give

@@ -16,13 +16,16 @@ export const dAvatar: SlashCommand = {
     .setDescription('Shows a member\'s profile picture in large format.')
     .addUserOption(option => option.setName('user')
       .setDescription('user')
-      .setRequired(true)),
+      .setRequired(true))
+    .addBooleanOption(option => option.setName('ephemeral')
+      .setDescription('Set to "True" to show the response only to you')),
   async execute(interaction) {
     startLog(F, interaction);
+    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
     // log.debug(F, `${JSON.stringify(interaction.options, null, 2)}`);
-    // If this doesnt happen in a guild then ignore it
+    // If this doesn't happen in a guild then ignore it
     if (!interaction.guild) {
-      interaction.reply({ content: 'This command can only be used in a discord guild!', ephemeral: true });
+      await interaction.editReply({ content: 'This command can only be used in a discord guild!' });
       return false;
     }
 
@@ -38,7 +41,7 @@ export const dAvatar: SlashCommand = {
     const embed = embedTemplate()
       .setTitle(`${member.displayName}'s Profile Picture`)
       .setImage(`${member.displayAvatarURL()}?size=4096`);
-    await interaction.reply({ embeds: [embed] });
+    await interaction.editReply({ embeds: [embed] });
     return true;
   },
 };

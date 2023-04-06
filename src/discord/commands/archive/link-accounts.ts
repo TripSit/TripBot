@@ -76,7 +76,7 @@
 //           // Check if the user is authorized in IRC
 //           if (!data.account) {
 //             embed.setDescription(stripIndents`${nickname} is not registered on IRC, please go ~register on IRC!`);
-//             interaction.reply({ embeds: [embed], ephemeral: true });
+//             await interaction.reply({ embeds: [embed], ephemeral: true });
 //             return;
 //           }
 //         // log.debug(F, `${actor} ${data.accountinfo} ${data.account}`);
@@ -85,7 +85,7 @@
 //           // log.debug(F, `actorData.irc: ${actorData.irc}`);
 //           // log.debug(F, `actorData.irc.nickname: ${actorData.irc.nickname}`);
 //             embed.setDescription(stripIndents`Your account is already linked to '${actorData.irc.nickname}'`);
-//             interaction.reply({ embeds: [embed], ephemeral: true });
+//             await interaction.reply({ embeds: [embed], ephemeral: true });
 //             return;
 //           }
 
@@ -101,7 +101,7 @@
 //           Please copy this token and send it to the "TS" bot on IRC next time you're online!
 
 //           If you forget or otherwise lose this token you can rerun this command to generate a new one.`);
-//           interaction.reply({ embeds: [embed], ephemeral: true });
+//           await interaction.reply({ embeds: [embed], ephemeral: true });
 
 //           // log.debug(F, `user whois: ${JSON.stringify(data, null, 2)}`);
 //           actorData.irc = {
@@ -127,7 +127,7 @@
 //       } else {
 //         embed.setDescription(stripIndents`
 //         The IRC client is not connected, please try again later.`);
-//         interaction.reply({ embeds: [embed], ephemeral: true });
+//         await interaction.reply({ embeds: [embed], ephemeral: true });
 //       }
 //     }
 //   },

@@ -81,6 +81,7 @@ export const dIdose: SlashCommand = {
         .setRequired(true))),
   async execute(interaction) {
     startLog(F, interaction);
+    await interaction.deferReply({ ephemeral: (interaction.channel?.type !== ChannelType.DM) });
     const command = interaction.options.getSubcommand() as 'get' | 'set' | 'delete';
     const embed = embedTemplate();
     const book = [] as EmbedBuilder[];
@@ -105,7 +106,7 @@ export const dIdose: SlashCommand = {
     // offset: ${JSON.stringify(offset)}
     // `);
     // Make a new variable that is the current time minus the out variable
-    let date = new Date();
+    const date = new Date();
     if (offset) {
       const out = await parseDuration(offset);
       // log.debug(F, `out: ${out}`);
@@ -126,12 +127,12 @@ export const dIdose: SlashCommand = {
     // log.debug(F, `response: ${JSON.stringify(response, null, 2)}`);
 
     if (response[0] && response[0].name === 'Error') {
-      await interaction.reply({ content: response[0].value, ephemeral: true });
+      await interaction.editReply({ content: response[0].value });
       return false;
     }
 
     if (command === 'delete') {
-      await interaction.reply({ content: response[0].value, ephemeral: true });
+      await interaction.editReply({ content: response[0].value });
     }
     if (command === 'get') {
       if (response.length > 0) {
@@ -182,21 +183,12 @@ export const dIdose: SlashCommand = {
       // log.debug(F, `book.length: ${book.length}`);
       if (book.length > 1) {
         paginationEmbed(interaction, book, buttonList);
-      } else if (!interaction.channel) {
-        interaction.reply({ embeds: [embed], ephemeral: true });
-      } else if (interaction.channel.type === ChannelType.DM) {
-        interaction.reply({ embeds: [embed] });
-        // interaction.user.send({embeds: [embed]});
       } else {
-        interaction.reply({ embeds: [embed], ephemeral: true });
+        await interaction.editReply({ embeds: [embed] });
         // interaction.user.send({embeds: [embed]});
       }
     }
     if (command === 'set') {
-      if (date === null) {
-        date = new Date();
-      }
-
       if (roa === null) {
         return false;
       }
@@ -217,9 +209,9 @@ export const dIdose: SlashCommand = {
       embed.addFields(embedField);
 
       if (interaction.channel?.type === ChannelType.DM) {
-        interaction.reply({ embeds: [embed], ephemeral: false });
+        await interaction.editReply({ embeds: [embed] });
       } else {
-        interaction.reply({ embeds: [embed], ephemeral: true });
+        await interaction.editReply({ embeds: [embed] });
         await interaction.user.send({ embeds: [embed] });
       }
     }

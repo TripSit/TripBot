@@ -28,6 +28,7 @@ export async function paginationEmbed(
   pages:EmbedBuilder[],
   buttonList:ButtonBuilder[],
   timeout = 120000,
+  ephemeral:boolean = false,
 ): Promise<Message> {
   if (!pages) throw new Error('Pages are not given.');
   if (!buttonList) throw new Error('Buttons are not given.');
@@ -43,7 +44,7 @@ export async function paginationEmbed(
   if (buttonList.length !== 2) throw new Error('Need two buttons.');
 
   if (interaction.deferred === false) {
-    await interaction.deferReply();
+    await interaction.deferReply({ ephemeral });
   }
   // log.debug(`${PREFIX} - Paginating ${pages.length} pages.`);
 

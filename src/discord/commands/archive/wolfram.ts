@@ -56,7 +56,7 @@
 //     //         { name: 'Example C', value: data.list[2].example, inline: false },
 //     //     );
 //     // if (!interaction.replied) {
-//     //     interaction.reply({ embeds: [embed] });
+//     //     await interaction.reply({ embeds: [embed] });
 //     // }
 //     // else {
 //     //     interaction.followUp({ embeds: [embed] });

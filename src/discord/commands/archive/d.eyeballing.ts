@@ -14,7 +14,7 @@ export const deyeballing: SlashCommand = {
     .setDescription('Instructions on how to eyeball a dose'),
   async execute(interaction:ChatInputCommandInteraction) {
     // log.debug(F, `starting!`);
-    interaction.reply(await eyeballing());
+    await interaction.reply(await eyeballing());
     return true;
   },
 };

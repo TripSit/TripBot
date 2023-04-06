@@ -41,7 +41,7 @@ export const messageUpdate: MessageUpdateEvent = {
       .setAuthor(null)
       .setFooter(null)
       .setColor(Colors.Yellow)
-      .setTitle(`${newMessage.member?.nickname} edited msg in ${(newMessage.channel as TextChannel).name}`);
+      .setDescription(`**${newMessage.member} edited [message](${newMessage.url}) in ${(newMessage.channel as TextChannel)}**`);
     try {
       embed.setURL(newMessage.url);
       embed.addFields([

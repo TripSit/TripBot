@@ -50,14 +50,14 @@ export const dRadio: SlashCommand = {
 
     // Check if the channel is not a VoiceChannel
     if (!(channel instanceof VoiceChannel) || channel === null) {
-      interaction.reply({ content: 'You must play in a voice channel!', ephemeral: true });
+      await interaction.reply({ content: 'You must play in a voice channel!', ephemeral: true });
       return false;
     }
 
     const existingConnection = getVoiceConnection(channel.guild.id);
 
     if (existingConnection) {
-      interaction.reply({ content: 'The bot is already in use, sorry about that!', ephemeral: true });
+      await interaction.reply({ content: 'The bot is already in use, sorry about that!', ephemeral: true });
     }
 
     const connection = joinVoiceChannel({
@@ -77,7 +77,7 @@ export const dRadio: SlashCommand = {
     connection.on(VoiceConnectionStatus.Ready, () => {
       log.debug(F, 'The connection has entered the Ready state - ready to play audio!');
 
-      interaction.reply({ content: `I have joined ${channel.name} and would start to play ${url}` });
+      await interaction.reply({ content: `I have joined ${channel.name} and would start to play ${url}` });
 
       const player = createAudioPlayer({
         behaviors: {

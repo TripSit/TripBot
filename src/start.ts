@@ -32,8 +32,14 @@ start();
 process.on('unhandledRejection', async (error: Error) => {
   log.error(F, `ERROR: ${error.stack}`);
   if (env.NODE_ENV === 'production') {
-    log.debug(F, `TOKEN: ${env.DISCORD_CLIENT_TOKEN.length}`);
-    const channel = await client.channels.fetch(env.CHANNEL_BOTLOG) as TextChannel;
+    const channel = await client.channels.fetch(env.CHANNEL_BOTERRORS) as TextChannel;
+
+    if ((error as any).code === 10062) {
+      await channel.send(`I just got an "Unknown interaction" error, this is still a problem!
+      Check out <https://github.com/discord/discord-api-docs/issues/5558> for details`);
+      return;
+    }
+
     const guild = await client.guilds.fetch(env.DISCORD_GUILD_ID);
     const role = await guild.roles.fetch(env.ROLE_TRIPBOTDEV);
     await channel.send(`Hey ${role}, I just got an error (start):

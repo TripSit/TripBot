@@ -91,7 +91,7 @@ async function botmodUser(
       .addFields(
         { name: 'User ID', value: target },
       );
-    return { embeds: [embed], ephemeral: true };
+    return { embeds: [embed] };
   }
 
   if (command === 'UNBOTBAN' && !targetUserInfo.discord_bot_ban) {
@@ -101,7 +101,7 @@ async function botmodUser(
       .addFields(
         { name: 'User ID', value: target },
       );
-    return { embeds: [embed], ephemeral: true };
+    return { embeds: [embed] };
   }
 
   // Perform actions
@@ -126,7 +126,7 @@ async function botmodUser(
 
   // Send the message to the mod channel
   const modChan = await global.client.channels.fetch(env.CHANNEL_MODERATORS) as TextChannel;
-  // We must send the mention outside of the embed, cuz mentions dont work in embeds
+  // We must send the mention outside of the embed, cuz mentions don't work in embeds
   const tripsitGuild = await global.client.guilds.fetch(env.DISCORD_GUILD_ID);
   const roleModerator = await tripsitGuild.roles.fetch(env.ROLE_MODERATOR) as Role;
   await modChan.send({ content: `Hey ${roleModerator}`, embeds: [modlogEmbed] });
@@ -141,7 +141,7 @@ async function botmodUser(
     .setColor(Colors.Yellow)
     .setDescription(desc);
   log.info(F, `response: ${JSON.stringify(desc, null, 2)}`);
-  return { embeds: [response], ephemeral: true };
+  return { embeds: [response] };
 }
 
 async function botmodGuild(
@@ -163,7 +163,7 @@ async function botmodGuild(
       .addFields(
         { name: 'Guild ID', value: target },
       );
-    return { embeds: [embed], ephemeral: true };
+    return { embeds: [embed] };
   }
 
   if (command === 'UNBOTBAN' && !targetGuildInfo.is_banned) {
@@ -173,7 +173,7 @@ async function botmodGuild(
       .addFields(
         { name: 'Guild ID', value: target },
       );
-    return { embeds: [embed], ephemeral: true };
+    return { embeds: [embed] };
   }
 
   // Send a message to the user
@@ -238,7 +238,7 @@ async function botmodGuild(
   // Send the message to the mod channel
   if (command !== 'BOTINFO') {
     const modChan = await global.client.channels.fetch(env.CHANNEL_MODERATORS) as TextChannel;
-    // We must send the mention outside of the embed, cuz mentions dont work in embeds
+    // We must send the mention outside of the embed, cuz mentions don't work in embeds
     const tripsitGuild = await global.client.guilds.fetch(env.DISCORD_GUILD_ID);
     const roleModerator = await tripsitGuild.roles.fetch(env.ROLE_MODERATOR) as Role;
     await modChan.send({ content: `Hey ${roleModerator}`, embeds: [modlogEmbed] });
@@ -278,7 +278,7 @@ async function botmodGuild(
 
     try {
       // log.info(F, `response: ${JSON.stringify(infoString, null, 2)}`);
-      return { embeds: [modlogEmbed], ephemeral: true };
+      return { embeds: [modlogEmbed] };
     } catch (err) {
       log.error(F, `Error: ${err}`);
     }
@@ -291,7 +291,7 @@ async function botmodGuild(
     .setColor(Colors.Yellow)
     .setDescription(desc);
   log.info(F, `response: ${JSON.stringify(desc, null, 2)}`);
-  return { embeds: [response], ephemeral: true };
+  return { embeds: [response] };
 }
 
 /**

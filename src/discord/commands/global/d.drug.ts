@@ -79,7 +79,7 @@ async function addClasses(
   return embed;
 }
 
-async function addCrosstolerance(
+async function addCrossTolerance(
   embed: EmbedBuilder,
   drugData: CbSubstance,
 ):Promise<EmbedBuilder> {
@@ -248,11 +248,7 @@ async function addDosages(
     let dosageColumns = 0;
     roaNames.forEach(roaName => {
       if (dosageColumns < 3) {
-        const roaInfo = (drugData.roas as RoaType[]).find((r:RoaType) => r.name === roaName);
-        if (!roaInfo) {
-          log.error(F, `Could not find roaInfo for ${roaName}`);
-          return;
-        }
+        const roaInfo = (drugData.roas as RoaType[]).find((r:RoaType) => r.name === roaName) as RoaType;
         if (roaInfo.dosage) {
           let dosageString = '';
           roaInfo.dosage.forEach(d => {
@@ -292,40 +288,43 @@ export const dDrug: SlashCommand = {
         { name: 'Dosage', value: 'dosage' },
         { name: 'Summary', value: 'summary' },
       ))
-    .addStringOption(option => option.setName('output')
-      .setDescription('Post result publicly in chat? (Defaults to private)')
-      .addChoices(
-        { name: 'Public', value: 'public' },
-        { name: 'Private', value: 'private' },
-      )),
+    .addBooleanOption(option => option.setName('ephemeral')
+      .setDescription('Set to "True" to show the response only to you')),
   async execute(interaction) {
     startLog(F, interaction);
+    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') !== false) });
     let embed = embedTemplate();
     // Check if the interaction is coming from DM
-    const ephemeral = (interaction.options.getString('output') === 'private' || interaction.options.getString('output') === null) ?? false; // eslint-disable-line max-len
-    await interaction.deferReply({ ephemeral });
 
     // log.debug(F, `ephemeral: ${ephemeral} | interaction.channelId: ${interaction.channelId}`);
-    if (interaction.channelId !== null && !ephemeral) {
-      embed.setFooter({ text: 'You can use this command in DM for privacy if you want!' });
-    }
+    // if (interaction.channelId !== null && !ephemeral) {
+    //   embed.setFooter({ text: 'You can use this command in DM for privacy if you want!' });
+    // }
     // log.debug(F, `ephemeral: ${ephemeral}`);
     const drugName = interaction.options.getString('substance', true);
     // if (!drugName) {
     //   embed.setTitle('No drug name was provided');
-    //   interaction.editReply({ embeds: [embed] });
+    //   await interaction.editReply({ embeds: [embed] });
     //   return false;
     // }
-    const drugData = await drug(drugName) as CbSubstance;
-    // log.debug(F, `drugData: ${JSON.stringify(drugData, null, 2)}`);
+    const drugData = await drug(drugName);
 
-    if (drugData === null) {
+    if (!drugData) {
       embed.setTitle(`${drugName} was not found`);
       embed.setDescription(stripIndents`...this shouldn\'t have happened, please tell the developer!`);
       // If this happens then something went wrong with the auto-complete
-      interaction.editReply({ embeds: [embed] });
+      await interaction.editReply({ embeds: [embed] });
       return false;
     }
+    // log.debug(F, `drugData: ${JSON.stringify(drugData, null, 2)}`);
+
+    // if (drugData === null) {
+    //   embed.setTitle(`${drugName} was not found`);
+    //   embed.setDescription(stripIndents`...this shouldn\'t have happened, please tell the developer!`);
+    //   // If this happens then something went wrong with the auto-complete
+    //   await interaction.editReply({ embeds: [embed] });
+    //   return false;
+    // }
 
     const section = interaction.options.getString('section');
 
@@ -337,14 +336,14 @@ export const dDrug: SlashCommand = {
 
     if (section === 'dosage') {
       embed = await addDosages(embed, drugData);
-      interaction.editReply({ embeds: [embed] });
+      await interaction.editReply({ embeds: [embed] });
       return true;
     }
 
     embed = await addSummary(embed, drugData);
 
     if (section === 'summary') {
-      interaction.editReply({ embeds: [embed] });
+      await interaction.editReply({ embeds: [embed] });
       return true;
     }
 
@@ -359,9 +358,9 @@ export const dDrug: SlashCommand = {
       embedRowColumns += 1;
     }
 
-    // CROSS TOLLERANCE
+    // CROSS TOLERANCE
     if (drugData.crossTolerances && drugData.crossTolerances.length >= 1) {
-      embed = await addCrosstolerance(embed, drugData);
+      embed = await addCrossTolerance(embed, drugData);
       embedRowColumns += 1;
     }
 
@@ -413,11 +412,7 @@ export const dDrug: SlashCommand = {
       embedRowColumns = 0;
       roaNames.forEach(roaName => {
         if (embedRowColumns < 3) {
-          const roaInfo = (drugData.roas as RoaType[]).find((r:RoaType) => r.name === roaName);
-          if (!roaInfo) {
-            log.error(F, `Could not find roaInfo for ${roaName}`);
-            return;
-          }
+          const roaInfo = (drugData.roas as RoaType[]).find((r:RoaType) => r.name === roaName) as RoaType;
           if (roaInfo.dosage) {
             let dosageString = '';
             roaInfo.dosage.forEach(d => {
@@ -473,7 +468,7 @@ export const dDrug: SlashCommand = {
     // Experiences
     await addExperiences(embed, drugData);
 
-    interaction.editReply({ embeds: [embed] });
+    await interaction.editReply({ embeds: [embed] });
 
     return true;
   },

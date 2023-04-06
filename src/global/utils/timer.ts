@@ -4,6 +4,7 @@ import {
   ThreadChannel,
 } from 'discord.js';
 import { DateTime } from 'luxon';
+import axios from 'axios';
 import {
   reminderGet,
   reminderDel,
@@ -184,41 +185,44 @@ async function checkTickets() {
       const channel = await guild.channels.fetch(guildData.channel_tripsit) as TextChannel;
       if (channel) {
         // log.debug(F, `Tripsit room: ${channel.name} (${channel.id})`);
-        const perms = await checkChannelPermissions(channel, [
+
+        const tripsitPerms = await checkChannelPermissions(channel, [
+          'ViewChannel' as PermissionResolvable,
           'ManageThreads' as PermissionResolvable,
         ]);
 
-        if (perms.hasPermission) {
-          // log.debug(F, 'Deleting old threads...');
-          const threadList = await channel.threads.fetch({
-            archived: {
-              type: 'private',
-              fetchAll: true,
-              before: new Date().setDate(new Date().getDate() - 7),
-            },
-          });
-          // const threadList = await channel.threads.fetchArchived({ type: 'private', fetchAll: true });
-          // log.debug(F, `Found ${threadList.threads.size} archived threads in Tripsit room`);
-          threadList.threads.forEach(async thread => {
-            // Check if the thread was created over a week ago
-            try {
-              await thread.fetch();
-              if (DateTime.fromJSDate(thread.createdAt as Date) <= DateTime.local().minus({ days: 7 })) {
-                thread.delete();
-                // log.debug(F, `Thread ${thread.id} is deleted`);
-              } else {
-                // log.debug(F, `Thread ${thread.id} is not ready to be deleted ${thread.createdAt}`);
-              }
-            } catch (err) {
-              // Thread was likely manually deleted
-            }
-          });
-        } else {
+        if (!tripsitPerms.hasPermission) {
           const guildOwner = await channel.guild.fetchOwner();
           await guildOwner.send({
-            content: `I am trying to get threads in ${channel} but I don't have the ${perms.permission} permission.`,
+            content: `I am trying to prune threads in ${channel} but I don't have the ${tripsitPerms.permission} permission.`, // eslint-disable-line max-len
           });
+          return;
         }
+
+        // log.debug(F, 'Deleting old threads...');
+        const threadList = await channel.threads.fetch({
+          archived: {
+            type: 'private',
+            fetchAll: true,
+            before: new Date().setDate(new Date().getDate() - 7),
+          },
+        });
+          // const threadList = await channel.threads.fetchArchived({ type: 'private', fetchAll: true });
+          // log.debug(F, `Found ${threadList.threads.size} archived threads in Tripsit room`);
+        threadList.threads.forEach(async thread => {
+          // Check if the thread was created over a week ago
+          try {
+            await thread.fetch();
+            if (DateTime.fromJSDate(thread.createdAt as Date) <= DateTime.local().minus({ days: 7 })) {
+              thread.delete();
+              // log.debug(F, `Thread ${thread.id} is deleted`);
+            } else {
+              // log.debug(F, `Thread ${thread.id} is not ready to be deleted ${thread.createdAt}`);
+            }
+          } catch (err) {
+            // Thread was likely manually deleted
+          }
+        });
       }
     }
   }
@@ -286,6 +290,16 @@ async function checkMindsets() {
 }
 
 /**
+ * This function calls the uptime monitor to tell it that tripbot is alive
+ */
+async function callUptime() {
+  if (env.NODE_ENV !== 'production') return;
+  axios.get('https://uptime.tripsit.me/api/push/UyL8LkDKtG?status=up&msg=OK').catch(e => {
+    log.debug(F, e);
+  });
+}
+
+/**
  * This function is called on start.ts and runs the timers
  */
 export async function runTimer() {
@@ -300,6 +314,7 @@ export async function runTimer() {
         await checkReminders();
         await checkTickets();
         await checkMindsets();
+        await callUptime();
 
         checkTimers();
       },

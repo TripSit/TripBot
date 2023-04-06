@@ -41,19 +41,20 @@ export const dPoll: SlashCommand = {
       .setRequired(true)),
   async execute(interaction) {
     startLog(F, interaction);
+    await interaction.deferReply({ ephemeral: true });
 
     if (!interaction.channel) {
-      await interaction.reply('You need to be in a channel to use this command!');
+      await interaction.editReply('You need to be in a channel to use this command!');
       return false;
     }
 
     if (interaction.channel.type === ChannelType.DM) {
-      await interaction.reply('You can\'t poll yourself!');
+      await interaction.editReply('You can\'t poll yourself!');
       return false;
     }
 
     if (interaction.channel.type === ChannelType.GuildVoice) {
-      await interaction.reply('You can\'t poll a voice channel!');
+      await interaction.editReply('You can\'t poll a voice channel!');
       return false;
     }
 
@@ -64,24 +65,24 @@ export const dPoll: SlashCommand = {
     ]);
 
     if (!perms.hasPermission) {
-      await interaction.reply({ content: `Please make sure I can ${perms.permission} here!`, ephemeral: true });
+      await interaction.editReply({ content: `Please make sure I can ${perms.permission} here!` });
       return false;
     }
 
     // await interaction.deferReply({ephemeral: true});
-    // interaction.reply({ content: 'Creating poll...', ephemeral: true });
+    // interaction.editReply({ content: 'Creating poll...': true });
     let question = interaction.options.getString('question');
     // log.debug(F, `question: ${question}`);
     const optionsString = interaction.options.getString('choices');
     // log.debug(F, `optionsString: ${optionsString}`);
     if (!question || !optionsString) {
-      await interaction.reply('You need to provide a question and options!');
+      await interaction.editReply('You need to provide a question and options!');
       return false;
     }
     const optionsArray = optionsString.split(',');
 
     if (optionsArray.length > 9) {
-      await interaction.reply('You can only have 9 options max!');
+      await interaction.editReply('You can only have 9 options max!');
       return false;
     }
 
@@ -95,48 +96,46 @@ export const dPoll: SlashCommand = {
       .setDescription(stripIndents`${body}`)
       .setFooter({ text: `A poll by ${(interaction.member as GuildMember).displayName}` });
 
-    if (question !== undefined && question !== null && question !== '') {
-      // Check if the question has any mentions.
-      const mentions = question.match(/<.\d+>/g);
-      if (mentions) {
-        // log.debug(F, `mentions: ${mentions}`);
-        // Loop through each mention and replace it.
+    // Check if the question has any mentions.
+    const mentions = question.match(/<.\d+>/g);
+    if (mentions) {
+      // log.debug(F, `mentions: ${mentions}`);
+      // Loop through each mention and replace it.
         for (const mention of mentions) { // eslint-disable-line
-          // log.debug(F, `mention: ${mention}`);
-          const fullId = mention.replace(/[<>]/g, '');
-          // log.debug(F, `fullId: ${fullId}`);
-          // Check to see what kind of prefix the mention has.
-          const prefix = fullId[0];
-          // log.debug(F, `prefix: ${prefix}`);
-          const id = fullId.slice(1);
-          // log.debug(F, `id: ${id}`);
+        // log.debug(F, `mention: ${mention}`);
+        const fullId = mention.replace(/[<>]/g, '');
+        // log.debug(F, `fullId: ${fullId}`);
+        // Check to see what kind of prefix the mention has.
+        const prefix = fullId[0];
+        // log.debug(F, `prefix: ${prefix}`);
+        const id = fullId.slice(1);
+        // log.debug(F, `id: ${id}`);
 
-          let targetString = 'Unknown User' as string;
-          if (prefix === '@') {
+        let targetString = 'Unknown User' as string;
+        if (prefix === '@') {
             const target = await interaction.guild?.members.fetch(id); // eslint-disable-line
-            if (target) {
-              targetString = target.displayName;
-            }
-          } else if (prefix === '#') {
-            const target = await interaction.guild?.channels.fetch(id); // eslint-disable-line
-            if (target) {
-              targetString = target.name;
-            }
-          } else if (prefix === '&') {
-            const target = await interaction.guild?.roles.fetch(id); // eslint-disable-line
-            if (target) {
-              targetString = target.name;
-            }
+          if (target) {
+            targetString = target.displayName;
           }
-
-          // log.debug(F, `targetString: ${targetString}`);
-
-          question = question.replace(mention, targetString);
+        } else if (prefix === '#') {
+            const target = await interaction.guild?.channels.fetch(id); // eslint-disable-line
+          if (target) {
+            targetString = target.name;
+          }
+        } else if (prefix === '&') {
+            const target = await interaction.guild?.roles.fetch(id); // eslint-disable-line
+          if (target) {
+            targetString = target.name;
+          }
         }
+
+        // log.debug(F, `targetString: ${targetString}`);
+
+        question = question.replace(mention, targetString);
       }
-      // log.debug(F, `question: ${question}`);
-      pollEmbed.setTitle(`**${question}**`);
     }
+    // log.debug(F, `question: ${question}`);
+    pollEmbed.setTitle(`**${question}**`);
 
     await interaction.channel.send({ embeds: [pollEmbed] })
       .then(async (msg:Message) => {
@@ -146,7 +145,7 @@ export const dPoll: SlashCommand = {
         }
       });
 
-    await interaction.reply({ content: 'Done!', ephemeral: true });
+    await interaction.editReply({ content: 'Done!' });
     return true;
   },
 };

@@ -164,7 +164,7 @@
 //     .setDescription('Fuck off you filthy animal'),
 
 //   async execute(interaction) {
-//     interaction.reply('On it boss!');
+//     await interaction.reply('On it boss!');
 //     for (let i = 0; i < list.length; i += 1) {
 //       const name = list[i];
 //       // get the member to ban

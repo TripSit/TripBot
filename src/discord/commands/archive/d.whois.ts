@@ -31,7 +31,7 @@ export const discordTemplate: SlashCommand = {
     //     .setDescription(err.message)
     //     .setTitle(`Whois for ${target}`)
     //     .setColor(0x00FF00);
-    //   interaction.reply({
+    //   await interaction.reply({
     //     embeds: [embed],
     //     ephemeral: true,
     //   });

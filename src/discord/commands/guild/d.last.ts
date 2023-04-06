@@ -20,8 +20,12 @@ export const dLast: SlashCommand = {
     .addUserOption(option => option
       .setName('user')
       .setDescription('User to look up')
-      .setRequired(true)),
+      .setRequired(true))
+    .addBooleanOption(option => option.setName('ephemeral')
+      .setDescription('Set to "True" to show the response only to you')),
   async execute(interaction) {
+    startLog(F, interaction);
+    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
     // Only run on Tripsit or DM, we don't want to snoop on other guilds ( ͡~ ͜ʖ ͡°)
     if (interaction.guild) {
       if (interaction.guild.id !== env.DISCORD_GUILD_ID.toString()) {
@@ -30,13 +34,10 @@ export const dLast: SlashCommand = {
     } else {
       return false;
     }
-    startLog(F, interaction);
-
-    interaction.deferReply();
 
     const target = interaction.options.getMember('user') as GuildMember;
     const actor = interaction.member as GuildMember;
-    const roleModerator = await interaction.guild?.roles.fetch(env.ROLE_MODERATOR) as Role;
+    const roleModerator = await interaction.guild.roles.fetch(env.ROLE_MODERATOR) as Role;
     const actorIsMod = actor.roles.cache.has(roleModerator.id);
 
     const response = await last(target);
@@ -44,10 +45,7 @@ export const dLast: SlashCommand = {
     await interaction.editReply({ content: `${response.lastMessage}` });
 
     if (actorIsMod) {
-      await interaction.followUp({
-        content: `Last ${response.messageCount} messages:\n${response.messageList}`,
-        ephemeral: true,
-      });
+      await interaction.followUp({ content: `Last ${response.messageCount} messages:\n${response.messageList}` });
     }
     return true;
   },

@@ -2,25 +2,25 @@ import {
   Colors,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
-import { dCalcdxm } from '../../src/discord/commands/global/d.calcDXM';
-import { executeCommandAndSpyReply, embedContaining, getParsedCommand } from '../utils/testutils';
+import { dCalcDXM } from '../../src/discord/commands/global/d.calcDXM';
+import { executeCommandAndSpyEditReply, embedContaining, getParsedCommand } from '../utils/testutils';
 
-const slashCommand = dCalcdxm;
+const slashCommand = dCalcDXM;
 
 const authorInfo = {
-  iconURL: 'https://fossdroid.com/images/icons/me.tripsit.tripmobile.13.png',
+  iconURL: 'https://i.gyazo.com/b48b08a853fefaafb6393837eec1a501.png',
   name: 'TripSit.Me',
   url: 'http://www.tripsit.me',
 };
 const footerInfo = {
-  iconURL: 'https://imgur.com/b923xK2.png',
+  iconURL: 'https://i.gyazo.com/19276c297cca0761dc9689ac7c320b8e.png',
   text: 'Dose responsibly!',
 };
 const title = 'DXM Dosages';
 
 describe(slashCommand.data.name, () => {
   it(slashCommand.data.description, async () => {
-    expect(await executeCommandAndSpyReply(
+    expect(await executeCommandAndSpyEditReply(
       slashCommand,
       getParsedCommand(
         `/${slashCommand.data.name} calc_weight:200 units:kg taking:RoboCough (ml)`,
@@ -51,7 +51,7 @@ describe(slashCommand.data.name, () => {
       }),
     });
 
-    expect(await executeCommandAndSpyReply(
+    expect(await executeCommandAndSpyEditReply(
       slashCommand,
       getParsedCommand(
         `/${slashCommand.data.name} calc_weight:200 units:kg taking:Robitussin DX (oz)`,
@@ -82,7 +82,7 @@ describe(slashCommand.data.name, () => {
       }),
     });
 
-    expect(await executeCommandAndSpyReply(
+    expect(await executeCommandAndSpyEditReply(
       slashCommand,
       getParsedCommand(
         `/${slashCommand.data.name} calc_weight:200 units:kg taking:Robitussin DX (ml)`,
@@ -113,7 +113,7 @@ describe(slashCommand.data.name, () => {
       }),
     });
 
-    expect(await executeCommandAndSpyReply(
+    expect(await executeCommandAndSpyEditReply(
       slashCommand,
       getParsedCommand(
         `/${slashCommand.data.name} calc_weight:200 units:kg taking:Robitussin Gelcaps (15 mg caps)`,
@@ -144,7 +144,7 @@ describe(slashCommand.data.name, () => {
       }),
     });
 
-    expect(await executeCommandAndSpyReply(
+    expect(await executeCommandAndSpyEditReply(
       slashCommand,
       getParsedCommand(
         `/${slashCommand.data.name} calc_weight:200 units:kg taking:Pure (mg)`,
@@ -175,7 +175,7 @@ describe(slashCommand.data.name, () => {
       }),
     });
 
-    expect(await executeCommandAndSpyReply(
+    expect(await executeCommandAndSpyEditReply(
       slashCommand,
       getParsedCommand(
         `/${slashCommand.data.name} calc_weight:200 units:kg taking:30mg Gelcaps (30 mg caps)`,
@@ -206,7 +206,7 @@ describe(slashCommand.data.name, () => {
       }),
     });
 
-    expect(await executeCommandAndSpyReply(
+    expect(await executeCommandAndSpyEditReply(
       slashCommand,
       getParsedCommand(
         `/${slashCommand.data.name} calc_weight:200 units:kg taking:RoboTablets (30 mg tablets)`,
@@ -237,7 +237,7 @@ describe(slashCommand.data.name, () => {
       }),
     });
 
-    expect(await executeCommandAndSpyReply(
+    expect(await executeCommandAndSpyEditReply(
       slashCommand,
       getParsedCommand(
         `/${slashCommand.data.name} calc_weight:200 units:lbs taking:RoboTablets (30 mg tablets)`,

@@ -18,10 +18,13 @@ export default dH2flow;
 export const dH2flow: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('h2flow')
-    .setDescription('Welcome to the H2Flow Club!'),
+    .setDescription('Welcome to the H2Flow Club!')
+    .addBooleanOption(option => option.setName('ephemeral')
+      .setDescription('Set to "True" to show the response only to you')),
 
   async execute(interaction:ChatInputCommandInteraction) {
     startLog(F, interaction);
+    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
     const data = await h2flow(interaction.user.id);
 
     const sparklePoints = data.sparkle_points;
@@ -29,27 +32,21 @@ export const dH2flow: SlashCommand = {
     const lovePoints = data.empathy_points;
     const totalPoints = sparklePoints + movePoints + lovePoints;
     let platinumClub = 'Non-member =(';
-    if (totalPoints >= 100) {
-      platinumClub = 'Tin Club';
-    } else if (totalPoints >= 200) {
-      platinumClub = 'Copper Club';
-    } else if (totalPoints >= 300) {
-      platinumClub = 'Bronze Club';
-    } else if (totalPoints >= 400) {
-      platinumClub = 'Silver Club';
-    } else if (totalPoints >= 500) {
-      platinumClub = 'Gold Club';
-    } else if (totalPoints >= 600) {
-      platinumClub = 'Platinum Club';
-    } else if (totalPoints >= 700) {
-      platinumClub = 'Emerald Club';
-    } else if (totalPoints >= 800) {
-      platinumClub = 'Sapphire Club';
-    } else if (totalPoints >= 900) {
-      platinumClub = 'Ruby Club';
-    } else if (totalPoints >= 1000) {
-      platinumClub = 'Diamond Club';
-    }
+    if (totalPoints >= 1000) platinumClub = 'Diamond Club';
+    else if (totalPoints >= 900) platinumClub = 'Ruby Club';
+    else if (totalPoints >= 800) platinumClub = 'Sapphire Club';
+    else if (totalPoints >= 700) platinumClub = 'Emerald Club';
+    else if (totalPoints >= 600) platinumClub = 'Platinum Club';
+    else if (totalPoints >= 500) platinumClub = 'Gold Club';
+    else if (totalPoints >= 400) platinumClub = 'Silver Club';
+    else if (totalPoints >= 300) platinumClub = 'Bronze Club';
+    else if (totalPoints >= 200) platinumClub = 'Copper Club';
+    else if (totalPoints >= 100) platinumClub = 'Tin Club';
+    else if (totalPoints >= 50) platinumClub = 'Aluminum Club';
+    else if (totalPoints >= 25) platinumClub = 'Steel Club';
+    else if (totalPoints >= 10) platinumClub = 'Iron Club';
+    else if (totalPoints >= 5) platinumClub = 'Bronze Club';
+    else if (totalPoints >= 1) platinumClub = 'Copper Club';
 
     const embed = embedTemplate()
       .setAuthor({
@@ -90,7 +87,7 @@ export const dH2flow: SlashCommand = {
         },
       );
 
-    interaction.reply({ embeds: [embed] });
+    await interaction.editReply({ embeds: [embed] });
 
     return false;
   },

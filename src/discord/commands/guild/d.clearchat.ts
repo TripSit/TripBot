@@ -25,17 +25,18 @@ export const dClearchat: SlashCommand = {
       .setName('delete-archived-threads')),
   async execute(interaction:ChatInputCommandInteraction) {
     startLog(F, interaction);
+    await interaction.deferReply({ ephemeral: false });
     if (!interaction.channel) {
-      interaction.reply({ content: 'This command can only be used in a server!', ephemeral: true });
+      await interaction.editReply({ content: 'This command can only be used in a server!' });
       return false;
     }
 
     const count = interaction.options.getInteger('count') || 99;
-    const deleteThreads = interaction.options.getBoolean('delete-threads') || true;
-    const deleteArchived = interaction.options.getBoolean('delete-archived-threads') || true;
+    const deleteThreads = interaction.options.getBoolean('delete-threads') === true;
+    const deleteArchived = interaction.options.getBoolean('delete-archived-threads') === true;
 
     // const count = interaction.options.getInteger('count');
-    await interaction.reply({ content: 'Clearing chat...', fetchReply: true })
+    await interaction.editReply({ content: 'Clearing chat...' })
       .then(async msg => {
         await msg.delete();
       });

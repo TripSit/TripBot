@@ -34,9 +34,12 @@ export const dImgur: SlashCommand = {
         { name: 'Week', value: 'week' },
         { name: 'Month', value: 'month' },
         { name: 'Year', value: 'year' },
-      )),
+      ))
+    .addBooleanOption(option => option.setName('ephemeral')
+      .setDescription('Set to "True" to show the response only to you')),
   async execute(interaction) {
     startLog(F, interaction);
+    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
     // Sometimes the API takes a few seconds to respond.
     const search = interaction.options.getString('search');
     const sort = interaction.options.getString('sort') || 'top';
@@ -45,13 +48,11 @@ export const dImgur: SlashCommand = {
     // log.debug(F, `sort: ${sort}`);
     // log.debug(F, `window: ${window}`);
 
-    await interaction.deferReply();
-
     const sortStr = `${sort}/`;
     const windowStr = `${window}/`;
 
     // eslint-disable-next-line max-len
-    const query = `https://api.imgur.com/3/gallery/search/${sort !== null ? sortStr : ''}${window !== null ? windowStr : ''}?q=${search}`;
+    const query = `https://api.imgur.com/3/gallery/search/${sortStr}${windowStr}?q=${search}`;
     // log.debug(F, `query: ${query}`);
 
     const url = await imgurSearch(query);

@@ -17,9 +17,13 @@ export default dDonate;
 export const dDonate: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('donate')
-    .setDescription('Shows different ways to support TripSit!'),
+    .setDescription('Shows different ways to support TripSit!')
+    .addBooleanOption(option => option.setName('ephemeral')
+      .setDescription('Set to "True" to show the response only to you')),
+
   async execute(interaction:ChatInputCommandInteraction) {
     startLog(F, interaction);
+    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
     const donateInfo = await donate();
     const embed = embedTemplate()
       .setColor(Colors.Purple)
@@ -44,7 +48,7 @@ export const dDonate: SlashCommand = {
         );
       }
     });
-    interaction.reply({ embeds: [embed] });
+    await interaction.editReply({ embeds: [embed] });
     return true;
   },
 };

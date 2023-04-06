@@ -4,7 +4,7 @@ import path from 'path';
 
 // import log from '../../global/utils/log';
 
-// const F = f(__filename);
+const F = f(__filename);  // eslint-disable-line
 
 export default registerCommands;
 
@@ -18,7 +18,7 @@ export async function registerCommands(client: Client): Promise<void> {
      *
      * @param {string} commandType The type of command either global or guild
      */
-  async function registerType(commandType:string) {
+  async function registerType(commandType: 'global' | 'guild') {
     client.commands = new Collection(); // eslint-disable-line no-param-reassign
 
     const commandDir = path.join(__dirname, '../commands');
@@ -34,6 +34,5 @@ export async function registerCommands(client: Client): Promise<void> {
         client.commands.set(functionName, command[goodKey]);
       });
   }
-  Promise.all([registerType('global'), registerType('guild')]);
-  // .then(() => log.debug(F, `command loaded!`));
+  await Promise.all([registerType('global'), registerType('guild')]);
 }

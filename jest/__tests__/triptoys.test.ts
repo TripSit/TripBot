@@ -4,23 +4,23 @@ import {
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
 import { dTriptoys } from '../../src/discord/commands/global/d.triptoys';
-import { executeCommandAndSpyReply, embedContaining, getParsedCommand } from '../utils/testutils';
+import { executeCommandAndSpyEditReply, embedContaining, getParsedCommand } from '../utils/testutils';
 
 const slashCommand = dTriptoys;
 
 const authorInfo = {
-  iconURL: 'https://fossdroid.com/images/icons/me.tripsit.tripmobile.13.png',
+  iconURL: 'https://i.gyazo.com/b48b08a853fefaafb6393837eec1a501.png',
   name: 'TripSit.Me',
   url: 'http://www.tripsit.me',
 };
 const footerInfo = {
-  iconURL: 'https://imgur.com/b923xK2.png',
+  iconURL: 'https://i.gyazo.com/19276c297cca0761dc9689ac7c320b8e.png',
   text: 'Dose responsibly!',
 };
 
 describe(slashCommand.data.name, () => {
   it(slashCommand.data.description, async () => {
-    expect(await executeCommandAndSpyReply(
+    expect(await executeCommandAndSpyEditReply(
       slashCommand,
       getParsedCommand(
         `/${slashCommand.data.name}`,
@@ -69,11 +69,11 @@ describe(slashCommand.data.name, () => {
             value: stripIndents`[Create your own mix of background noise](https://asoftmurmur.com/)`,
             inline: true,
           },
-          // {
-          //   name: 'Draw A 3D Mandala',
-          //   value: stripIndents`[Draw a mandala with different colors in 3d](https://askalice.me/mandala)`,
-          //   inline: true,
-          // },
+          {
+            name: 'Patterns',
+            value: stripIndents`[Check out different patterns!](https://csh.bz/)`,
+            inline: true,
+          },
           {
             name: 'A Way To Go',
             value: stripIndents`[Draw lines and walk through a forest while creating music](http://a-way-to-go.com/)`,

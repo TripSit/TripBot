@@ -1,3 +1,4 @@
+/* eslint-disable max-len */
 import {
   SlashCommandBuilder,
 } from 'discord.js';
@@ -5,6 +6,9 @@ import {
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { calcSolvent, calcSubstance } from '../../../global/commands/g.calcNasal';
+import { startLog } from '../../utils/startLog';
+
+const F = f(__filename);
 
 export default dCalcNasal;
 
@@ -16,51 +20,67 @@ export const dCalcNasal: SlashCommand = {
     .addSubcommand(subcommand => subcommand
       .setName('substance')
       .setDescription('Calculate how much of the substance to use for the given amount of solvent')
-      .addNumberOption(option => option.setName('solvent')
+      .addNumberOption(option => option.setName('solvent_amount')
         .setDescription('amount of solvent in ml')
         .setRequired(true))
-      .addNumberOption(option => option.setName('mgpp')
+      .addNumberOption(option => option.setName('desired_mg_per_push')
         .setDescription('Wanted dose per push in mg')
         .setRequired(true))
-      .addNumberOption(option => option.setName('mlpp')
+      .addNumberOption(option => option.setName('ml_per_push')
         .setDescription('Excreted ml per push (look at the packaging)')
-        .setRequired(true)))
+        .setRequired(true))
+      .addBooleanOption(option => option.setName('ephemeral')
+        .setDescription('Set to "True" to show the response only to you')))
     .addSubcommand(subcommand => subcommand
       .setName('solvent')
       .setDescription('Calculate how much solvent to use for the given amount of the substance')
-      .addNumberOption(option => option.setName('substance')
+      .addNumberOption(option => option.setName('substance_amount')
         .setDescription('Amount of the substance in mg')
         .setRequired(true))
-      .addNumberOption(option => option.setName('mgpp')
+      .addNumberOption(option => option.setName('desired_mg_per_push')
         .setDescription('Wanted dose in mg per push')
         .setRequired(true))
-      .addNumberOption(option => option.setName('mlpp')
+      .addNumberOption(option => option.setName('ml_per_push')
         .setDescription('Excreted ml per push (look at the packaging)')
-        .setRequired(true))),
+        .setRequired(true))
+      .addBooleanOption(option => option.setName('ephemeral')
+        .setDescription('Set to "True" to show the response only to you'))),
 
   async execute(interaction) {
+    startLog(F, interaction);
+    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
     const command = interaction.options.getSubcommand();
+    const imageUrl = 'https://user-images.githubusercontent.com/1836049/218758611-c84f1e34-0f5b-43ac-90da-bd89b028f131.png';
+    const embed = embedTemplate()
+      .setTitle('Nasal spray calculator')
+      .setImage(imageUrl);
 
     if (command === 'solvent') {
       // eslint-disable-next-line max-len
-      const solvent = await calcSolvent(interaction.options.getNumber('substance') as number, interaction.options.getNumber('mgpp') as number, interaction.options.getNumber('mlpp') as number);
-      const solventembed = embedTemplate().setTitle('Nasal spray calculator')
-        .setDescription(`You'll need ~${solvent}ml of solvent (water)`);
+      // log.debug(F, `substance_amount: ${interaction.options.getNumber('substance_amount')}`);
+      // log.debug(F, `desired_mg_per_push: ${interaction.options.getNumber('desired_mg_per_push')}`);
+      // log.debug(F, `ml_per_push: ${interaction.options.getNumber('ml_per_push')}`);
+      const solvent = await calcSolvent(
+        interaction.options.getNumber('substance_amount') as number,
+        interaction.options.getNumber('desired_mg_per_push') as number,
+        interaction.options.getNumber('ml_per_push') as number,
+      );
 
-      interaction.reply({ embeds: [solventembed] });
-      return true;
+      embed.setDescription(`You'll need ~${solvent}ml of solvent (water)`);
     }
     if (command === 'substance') {
-      // eslint-disable-next-line max-len
-      const dose = await calcSubstance(interaction.options.getNumber('solvent') as number, interaction.options.getNumber('mgpp') as number, interaction.options.getNumber('mlpp') as number);
-      const substanceembed = embedTemplate()
-        .setTitle('Nasal spray calculator')
-        .setDescription(`You'll need ~${dose}mg of the substance`);
-
-      interaction.reply({ embeds: [substanceembed] });
-      return true;
+      // log.debug(F, `solvent_amount: ${interaction.options.getNumber('solvent_amount')}`);
+      // log.debug(F, `desired_mg_per_push: ${interaction.options.getNumber('desired_mg_per_push')}`);
+      // log.debug(F, `ml_per_push: ${interaction.options.getNumber('ml_per_push')}`);
+      const dose = await calcSubstance(
+        interaction.options.getNumber('solvent_amount') as number,
+        interaction.options.getNumber('desired_mg_per_push') as number,
+        interaction.options.getNumber('ml_per_push') as number,
+      );
+      embed.setDescription(`You'll need ~${dose}mg of the substance`);
     }
-    return false;
+    await interaction.editReply({ embeds: [embed] });
+    return true;
   },
 
 };

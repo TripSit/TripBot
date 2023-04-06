@@ -24,7 +24,7 @@ export const dUrbandefine: SlashCommand = {
     startLog(F, interaction);
     const term = interaction.options.getString('define');
     if (!term) {
-      interaction.reply({ content: 'You must enter a search query.', ephemeral: true });
+      await interaction.reply({ content: 'You must enter a search query.', ephemeral: true });
       return false;
     }
 
@@ -32,7 +32,7 @@ export const dUrbandefine: SlashCommand = {
 
     const embed = embedTemplate()
       .setDescription(stripIndents`${result}`);
-    interaction.reply({ embeds: [embed] });
+    await interaction.reply({ embeds: [embed] });
     return true;
   },
 };

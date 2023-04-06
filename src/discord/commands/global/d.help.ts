@@ -13,19 +13,19 @@ import { paginationEmbed } from '../../utils/pagination';
 
 const F = f(__filename);
 
-const button1 = new ButtonBuilder()
+const previousButton = new ButtonBuilder()
   .setCustomId('previousButton')
   .setLabel('Previous')
   .setStyle(ButtonStyle.Danger);
 
-const button2 = new ButtonBuilder()
+const nextButton = new ButtonBuilder()
   .setCustomId('nextButton')
   .setLabel('Next')
   .setStyle(ButtonStyle.Success);
 
 const buttonList = [
-  button1,
-  button2,
+  previousButton,
+  nextButton,
 ];
 
 export default dHelp;
@@ -33,18 +33,17 @@ export default dHelp;
 export const dHelp: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('help')
-    .setDescription('Information about TripBot Commands'),
+    .setDescription('Information about TripBot Commands')
+    .addBooleanOption(option => option.setName('ephemeral')
+      .setDescription('Set to "True" to show the response only to you')),
+
   async execute(interaction) {
     startLog(F, interaction);
+    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
 
     const globalCommands = await interaction.client.application.commands.fetch();
     const guildCommands = await interaction.client.application.commands.fetch({ guildId: env.DISCORD_GUILD_ID });
 
-    /**
-     * Gets the description of a command
-     * @param {string} commandName
-     * @return {string}
-     */
     function getDesc(commandName:string):string | undefined {
       // log.debug(F, `getDesc: ${commandName}`);
       if (!globalCommands || !guildCommands) return undefined;
@@ -74,7 +73,7 @@ export const dHelp: SlashCommand = {
     hrEmbed.addFields({ name: 'Warmline', value: getDesc('warmline') ?? '', inline: true });
     hrEmbed.addFields({ name: 'KIPP', value: getDesc('kipp') ?? '', inline: true });
     hrEmbed.addFields({ name: 'Hydrate', value: getDesc('hydrate') ?? '', inline: true });
-    hrEmbed.addFields({ name: 'EMS', value: getDesc('ems') ?? '', inline: true });
+    hrEmbed.addFields({ name: 'Crisis', value: getDesc('crisis') ?? '', inline: true });
 
     const funEmbed = embedTemplate();
     funEmbed.setTitle('Other Modules');

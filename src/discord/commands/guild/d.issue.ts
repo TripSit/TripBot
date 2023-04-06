@@ -56,78 +56,64 @@ export const dIssue: SlashCommand = {
       .setName('effort')),
   async execute(interaction:ChatInputCommandInteraction) {
     startLog(F, interaction);
-    // Create the modal
-    const modal = new ModalBuilder()
-      .setCustomId(`issueModal~${interaction.id}`)
-      .setTitle('TripBot Issue Creation');
-    // An action row only holds one text input, so you need one action row per text input.
-    const title = new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
-      .setLabel('Issue Title')
-      .setPlaceholder('Sumarize the issue here!')
-      .setStyle(TextInputStyle.Short)
-      .setRequired(true)
-      .setCustomId('issueTitle'));
-    const body = new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
-      .setLabel('Issue Body')
-      .setPlaceholder(
-        'Please describe the issue in detail! Include steps to reproduce, any specific circumstances, etc.',
-      )
-      .setStyle(TextInputStyle.Paragraph)
-      .setRequired(true)
-    // eslint-disable-next-line max-len
-      .setCustomId(`${interaction.options.getString('type')},${interaction.options.getString('priority')},${interaction.options.getString('effort')},S0: Review Needed`));
-    // Add inputs to the modal
-    modal.addComponents([title, body]);
-    // Show the modal to the user
-    await interaction.showModal(modal);
-    // log.debug(F, `displayed modal!`);
-
-    // Collect a modal submit interaction
+    await interaction.showModal(
+      new ModalBuilder()
+        .setCustomId(`issueModal~${interaction.id}`)
+        .setTitle('TripBot Issue Creation')
+        .addComponents(
+          new ActionRowBuilder<TextInputBuilder>()
+            .addComponents(new TextInputBuilder()
+              .setLabel('Issue Title')
+              .setPlaceholder('Summarize the issue here!')
+              .setStyle(TextInputStyle.Short)
+              .setRequired(true)
+              .setCustomId('issueTitle')),
+          new ActionRowBuilder<TextInputBuilder>()
+            .addComponents(new TextInputBuilder()
+              .setLabel('Issue Body')
+              .setPlaceholder(
+                'Please describe the issue in detail! Include steps to reproduce, any specific circumstances, etc.',
+              )
+              .setStyle(TextInputStyle.Paragraph)
+              .setRequired(true)
+            // eslint-disable-next-line max-len
+              .setCustomId('issueBody')),
+        ),
+    );
     const filter = (i:ModalSubmitInteraction) => i.customId.startsWith('issueModal');
     interaction.awaitModalSubmit({ filter, time: 0 })
       .then(async i => {
         if (i.customId.split('~')[1] !== interaction.id) return;
-        // log.debug(F, `submitted!`);
+        await i.deferReply({ ephemeral: true });
+        const issueBody = `${i.fields.getTextInputValue('issueBody')}
+        
+        This issue was submitted by ${(i.member as GuildMember).displayName} in ${i.guild}`;
 
-        // @ts-ignore https://discord.js.org/#/docs/discord.js/14.6.0/typedef/ModalData
-        let issueBody = i.components[1].components[0].value;
-
-        // log.debug(F, `i.user: ${i.user.id}`);
-        // log.debug(F, `env.DISCORD_OWNER_ID: ${env.DISCORD_OWNER_ID}`);
-        const sentByOwner = i.user.id === env.DISCORD_OWNER_ID;
-        if (!sentByOwner) {
-          issueBody += `\n\nThis issue was submitted by ${(i.member as GuildMember).displayName} in ${i.guild}`;
-        }
-
-        // log.debug(F, `issueBody: ${JSON.stringify(issueBody, null, 2)}`);
-
-        // @ts-ignore https://discord.js.org/#/docs/discord.js/14.6.0/typedef/ModalData
-        const labels = i.components[1].components[0].customId.split(',');
-        const filteredLabels = labels.filter((label:string) => label !== 'null');
+        const labels = [
+          `${interaction.options.getString('type')}`,
+          `${interaction.options.getString('priority')}`,
+          `${interaction.options.getString('effort')}`,
+          'S0: Review Needed',
+        ];
 
         const results = await issue(
           i.fields.getTextInputValue('issueTitle'),
           issueBody,
-          filteredLabels,
+          labels,
         );
 
         // log.debug(F, `results: ${JSON.stringify(results, null, 2)}`);
 
-        if (results) {
-          const embed = embedTemplate()
-            .setColor(0x0099ff)
-            .setTitle('Issue created!')
-            .setDescription(stripIndents`\
-                  Issue #${results.data.number} created on TripSit/tripsit-discord-bot
-                  Click here to view: ${results.data.html_url}`);
-          i.reply({ embeds: [embed], ephemeral: true });
-        } else {
-          const embed = embedTemplate()
-            .setColor(0xff0000)
-            .setTitle('Issue creation failed!')
-            .setDescription('Your issue could not be created on TripSit/tripsit-discord-bot');
-          i.reply({ embeds: [embed] });
-        }
+        await i.editReply({
+          embeds: [
+            embedTemplate()
+              .setColor(0x0099ff)
+              .setTitle('Issue created!')
+              .setDescription(stripIndents`\
+                  Issue #${results.data.number} created on TripSit/TripBot!
+                  Click here to view: ${results.data.html_url}`),
+          ],
+        });
       });
 
     return false;

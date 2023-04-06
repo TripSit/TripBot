@@ -13,7 +13,7 @@ export default dRole;
 type RoleDef = { name: string; value: string };
 
 const colorRoles = [
-  { name: '💖 Tuplp', value: env.ROLE_RED },
+  { name: '💖 Tulip', value: env.ROLE_RED },
   { name: '🧡 Marigold', value: env.ROLE_ORANGE },
   { name: '💛 Daffodil', value: env.ROLE_YELLOW },
   { name: '💚 Waterlily', value: env.ROLE_GREEN },
@@ -91,6 +91,7 @@ export const dRole: SlashCommand = {
         .setDescription('(Mod only, defaults to you) The user to remove the role.'))),
   async execute(interaction) {
     startlog(F, interaction);
+    await interaction.deferReply({ ephemeral: true });
     if (!interaction.guild) return false;
     const command = interaction.options.getSubcommand();
     let role = {} as Role;
@@ -101,7 +102,7 @@ export const dRole: SlashCommand = {
     // Check if roleId contains any letters
     if (/[a-zA-Z]/.test(roleId)) {
       // log.debug(F, 'Role ID is not a number');
-      // If the role provided isnt an ID, try to find it by name
+      // If the role provided isn't an ID, try to find it by name
       const roleName = roleId.includes(' ') ? roleId.split(' ')[1].trim() : roleId;
       // log.debug(F, `Role name: ${roleName}`);
       // log.debug(F, `Role cache: ${interaction.guild.roles.cache}`);
@@ -112,7 +113,7 @@ export const dRole: SlashCommand = {
     }
 
     if (!role) {
-      interaction.reply({ content: 'Role not found! Please use the dropdown menu', ephemeral: true });
+      await interaction.editReply({ content: 'Role not found! Please use the dropdown menu' });
       return false;
     }
 
@@ -127,7 +128,7 @@ export const dRole: SlashCommand = {
     // If you're not a mod or tripsitter, you can't add anything that's not in the "safe" list
     if (!safeRoleList.includes(role.id) && !isMod && !isTs) {
       // log.debug(F, `role.id is ${role.id} and is not in the safe list. (isMod: ${isMod}, isTs: ${isTs})`);
-      interaction.reply({ content: 'You do not have permission to use that role!', ephemeral: true });
+      await interaction.editReply({ content: 'You do not have permission to use that role!' });
       return false;
     }
 
@@ -135,7 +136,7 @@ export const dRole: SlashCommand = {
     if (premiumColorIds.includes(role.id) && !isMod && !isTs && !isDonor && !isPatron) {
       // log.debug(F, `role.id is ${role.id} is a premium role and the user is not premium
       // (isMod: ${isMod}, isTs: ${isTs} isDonor: ${isDonor}, isPatron: ${isPatron})`);
-      interaction.reply({ content: 'You do not have permission to use that role!', ephemeral: true });
+      await interaction.editReply({ content: 'You do not have permission to use that role!' });
       return false;
     }
 
@@ -178,17 +179,17 @@ export const dRole: SlashCommand = {
         await member.roles.remove([...otherMindsetRoles]);
       }
 
-      await interaction.reply({ content: `Added ${role.name} to ${member.displayName}!`, ephemeral: true });
+      await interaction.editReply({ content: `Added ${role.name} to ${member.displayName}!` });
     } else if (command === 'remove') {
       verb = 'removed';
       preposition = 'from';
       await member.roles.remove(role);
-      await interaction.reply({ content: `Removed ${role.name} from ${target}!`, ephemeral: true });
+      await interaction.editReply({ content: `Removed ${role.name} from ${target}!` });
     }
 
-    const targetstring = target !== '' ? ` ${preposition} ${target}` : '';
+    const targetString = target !== '' ? ` ${preposition} ${target}` : '';
     const channelBotlog = await interaction.guild.channels.fetch(env.CHANNEL_BOTLOG) as TextChannel;
-    await channelBotlog.send(`${(interaction.member as GuildMember).displayName} ${verb} ${role.name}${targetstring}`);
+    await channelBotlog.send(`${(interaction.member as GuildMember).displayName} ${verb} ${role.name}${targetString}`);
 
     return true;
   },

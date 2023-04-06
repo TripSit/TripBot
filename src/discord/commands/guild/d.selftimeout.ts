@@ -10,9 +10,9 @@ import { startLog } from '../../utils/startLog'; // eslint-disable-line
 
 const F = f(__filename);
 
-export default selftimeout;
+export default selfTimeout;
 
-export const selftimeout: SlashCommand = {
+export const selfTimeout: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('selftimeout')
     .setDescription('Timeout yourself!')
@@ -30,15 +30,13 @@ export const selftimeout: SlashCommand = {
       .setRequired(true)),
   async execute(interaction:ChatInputCommandInteraction) {
     startLog(F, interaction);
+    await interaction.deferReply({ ephemeral: true });
     if (!interaction.guild) return false;
 
     const confirmation = interaction.options.getString('confirmation');
 
     if (confirmation === 'no') {
-      interaction.reply({
-        content: 'This works exactly like you think it does, try again when you\'re sure!',
-        ephemeral: true,
-      });
+      await interaction.editReply({ content: 'This works exactly like you think it does, try again when you\'re sure!' });
       return false;
     }
 
@@ -49,7 +47,7 @@ export const selftimeout: SlashCommand = {
 
     target.timeout(durationValue, 'Self timeout');
 
-    interaction.reply({ content: `We'll see you in ${duration}!`, ephemeral: true });
+    await interaction.editReply({ content: `We'll see you in ${duration}!` });
 
     const tripsitGuild = await interaction.client.guilds.fetch(env.DISCORD_GUILD_ID);
     const modLog = await tripsitGuild.channels.fetch(env.CHANNEL_MODLOG) as TextChannel;

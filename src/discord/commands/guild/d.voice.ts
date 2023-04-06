@@ -54,6 +54,7 @@ export const dVoice: SlashCommand = {
         .setRequired(true))),
   async execute(interaction) {
     startLog(F, interaction);
+    await interaction.deferReply({ ephemeral: true });
 
     const command = interaction.options.getSubcommand() as 'lock' | 'hide' | 'ban' | 'rename' | 'mute' | 'cohost';
     const member = interaction.member as GuildMember;
@@ -67,35 +68,35 @@ export const dVoice: SlashCommand = {
 
     // Check if user is in a voice channel
     if (voiceChannel === null) {
-      await interaction.reply({ embeds: [embed], ephemeral: true });
+      await interaction.editReply({ embeds: [embed] });
       return false;
     }
 
     // Check if user is in a Tent
     if (voiceChannel.name.includes('⛺') === false) {
-      await interaction.reply({ embeds: [embed], ephemeral: true });
+      await interaction.editReply({ embeds: [embed] });
       return false;
     }
 
     // Check if a user is the one who created it, only users with MoveMembers permission can do this
     if (!voiceChannel.permissionsFor(member).has(PermissionsBitField.Flags.MoveMembers)) {
-      await interaction.reply({ embeds: [embed], ephemeral: true });
+      await interaction.editReply({ embeds: [embed] });
       return false;
     }
 
     // Check the user is trying to act on themselves
     if (target === member) {
-      await interaction.reply({ embeds: [embed.setDescription('Stop playing with yourself!')], ephemeral: true });
+      await interaction.editReply({ embeds: [embed.setDescription('Stop playing with yourself!')] });
       return false;
     }
 
     // // Check if the target user is a moderator
     // if (target.roles.cache.has(env.ROLE_MODERATOR)) {
-    //   await interaction.reply({ embeds: [embed.setDescription('You cannot ban a moderator!')], ephemeral: true });
+    //   await interaction.editReply({ embeds: [embed.setDescription('You cannot ban a moderator!')] });
     //   return false;
     // }
 
-    log.debug(F, `Command: ${command}`);
+    // log.debug(F, `Command: ${command}`);
     if (command === 'rename') {
       embed = await tentRename(voiceChannel, newName);
     }
@@ -120,7 +121,7 @@ export const dVoice: SlashCommand = {
       embed = await tentCohost(voiceChannel, target);
     }
 
-    await interaction.reply({ embeds: [embed], ephemeral: true });
+    await interaction.editReply({ embeds: [embed] });
     return true;
   },
 };
@@ -131,7 +132,7 @@ async function tentRename(
 ):Promise<EmbedBuilder> {
   voiceChannel.setName(`⛺│${newName}`);
 
-  log.debug(F, `${voiceChannel} hab been named to ${newName}`);
+  // log.debug(F, `${voiceChannel} hab been named to ${newName}`);
 
   return embedTemplate()
     .setTitle('Success')
@@ -152,7 +153,7 @@ async function tentLock(
     verb = 'unlocked';
   }
 
-  log.debug(F, `Channel is now ${verb}`);
+  // log.debug(F, `Channel is now ${verb}`);
 
   return embedTemplate()
     .setTitle('Success')
@@ -173,7 +174,7 @@ async function tentHide(
     verb = 'unhidden';
   }
 
-  log.debug(F, `Channel is now ${verb}`);
+  // log.debug(F, `Channel is now ${verb}`);
 
   return embedTemplate()
     .setTitle('Success')
@@ -198,7 +199,7 @@ async function tentBan(
     verb = 'unbanned and unhidden';
   }
 
-  log.debug(F, `${target.displayName} is now ${verb}`);
+  // log.debug(F, `${target.displayName} is now ${verb}`);
 
   return embedTemplate()
     .setTitle('Success')
@@ -215,13 +216,13 @@ async function tentMute(
   if (voiceChannel.permissionsFor(target).has(PermissionsBitField.Flags.Speak) === true) {
     voiceChannel.permissionOverwrites.edit(target, { Speak: false });
     verb = 'muted';
-    log.debug(F, 'User is now muted');
+    // log.debug(F, 'User is now muted');
   } else {
     voiceChannel.permissionOverwrites.edit(target, { Speak: true });
     verb = 'unmuted';
   }
 
-  log.debug(F, `${target.displayName} is now ${verb}`);
+  // log.debug(F, `${target.displayName} is now ${verb}`);
 
   return embedTemplate()
     .setTitle('Success')
@@ -238,13 +239,13 @@ async function tentCohost(
   if (voiceChannel.permissionsFor(target).has(PermissionsBitField.Flags.MoveMembers) === false) {
     voiceChannel.permissionOverwrites.edit(target, { MoveMembers: true });
     verb = 'co-hosted';
-    log.debug(F, 'User is now muted');
+    // log.debug(F, 'User is now muted');
   } else {
     voiceChannel.permissionOverwrites.edit(target, { MoveMembers: false });
     verb = 'removed as a co-host';
   }
 
-  log.debug(F, `${target.displayName} is now ${verb}`);
+  // log.debug(F, `${target.displayName} is now ${verb}`);
 
   return embedTemplate()
     .setTitle('Success')

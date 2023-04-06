@@ -19,18 +19,25 @@ export const dWikipedia: SlashCommand = {
     .addStringOption(option => option
       .setName('query')
       .setDescription('Word to define')
-      .setRequired(true)),
+      .setRequired(true))
+    .addBooleanOption(option => option.setName('ephemeral')
+      .setDescription('Set to "True" to show the response only to you')),
 
   async execute(interaction) {
     startLog(F, interaction);
+    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
 
     const query = (interaction.options.getString('query') as string);
 
+    const wikiData = await wikipedia(query);
     const embed = embedTemplate()
-      .setTitle(`Definition for ${query}`)
-      .setDescription(await wikipedia(query));
+      .setAuthor(null)
+      .setTitle(wikiData.title)
+      .setURL(wikiData.url)
+      .setThumbnail(wikiData.thumbnail)
+      .setDescription(wikiData.description);
 
-    interaction.reply({ embeds: [embed] });
+    await interaction.editReply({ embeds: [embed] });
 
     return true;
   },

@@ -11,6 +11,12 @@ export default testkits;
 export async function testkits():Promise<HelpResource[]> {
   const response = [
     {
+      name: 'DanceSafe',
+      country: 'Worldwide',
+      website: 'https://dancesafe.org/product-category/testing-strips/',
+      description: '[Info on the new test strips](https://dancesafe.org/fentanyl/)',
+    },
+    {
       name: 'Dosetest',
       country: 'Worldwide',
       website: 'https://dosetest.com/',

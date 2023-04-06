@@ -62,7 +62,7 @@ async function checkLpm() {
   await guild.channels.fetch();
 
   async function getLpm(channelId:string, index:number) {
-    // const channel = await guild.channels.fetch(channelId) as TextChannel; // eslint-disable-line no-await-in-loop, max-len
+    // const channel = await guild.channels.fetch(channelId) as TextChannel;
     const channel = guild.channels.cache.get(channelId) as TextChannel;
     const messages = await channel.messages.fetch({ limit: 100 }); // eslint-disable-line no-await-in-loop
 
@@ -96,7 +96,7 @@ async function checkLpm() {
 
     if (lines5) {
       if (global.lpmDict[channelId]) {
-        // log.debug(F, `lpmdict: ${JSON.stringify(global.lpmDict[channelId])}`);
+        // log.debug(F, `lpmDict: ${JSON.stringify(global.lpmDict[channelId])}`);
         if (global.lpmDict[channelId].lp1 === lines1 && global.lpmDict[channelId].lp60 === lines60) {
           return;
         }

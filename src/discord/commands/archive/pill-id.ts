@@ -161,7 +161,7 @@
 //       .then(imgurRes => imgurRes.data.link)
 //       .catch(ex => {
 //         log.error(F, ``, ex);
-//         interaction.reply({
+//         await interaction.reply({
 //           embeds: [embed],
 //           ephemeral: false,
 //         });
@@ -169,7 +169,7 @@
 //       });
 
 //     embed.setThumbnail(imgurUrl);
-//     interaction.reply({
+//     await interaction.reply({
 //       embeds: [embed],
 //       ephemeral: false,
 //     });

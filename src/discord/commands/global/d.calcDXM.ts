@@ -7,7 +7,7 @@ import { SlashCommand } from '../../@types/commandDef';
 import { calcDxm } from '../../../global/commands/g.calcDxm';
 import { startLog } from '../../utils/startLog';
 import { embedTemplate } from '../../utils/embedTemplate';
-// import log from '../../../global/utils/log';
+
 const F = f(__filename);
 
 type DxmDataType = {
@@ -17,9 +17,9 @@ type DxmDataType = {
   Fourth: { min: number, max: number };
 };
 
-export default dCalcdxm;
+export default dCalcDXM;
 
-export const dCalcdxm: SlashCommand = {
+export const dCalcDXM: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('calc_dxm')
     .setDescription('Get DXM dosage information')
@@ -45,9 +45,18 @@ export const dCalcdxm: SlashCommand = {
         { name: 'Pure (mg)', value: 'Pure (mg)' },
         { name: '30mg Gelcaps (30 mg caps)', value: '30mg Gelcaps (30 mg caps)' },
       )
-      .setRequired(true)),
+      .setRequired(true))
+    .addBooleanOption(option => option.setName('ephemeral')
+      .setDescription('Set to "True" to show the response only to you')),
   async execute(interaction) {
+    const startTime = new Date().getTime();
+    // log.info(F, `Command started at ${startTime}`);
     startLog(F, interaction);
+    // log.info(F, `Printed startlog in ${new Date().getTime() - startTime}ms`);
+    // const deferTime = new Date().getTime();
+    // log.info(F, `Started Defer reply at ${deferTime}`);
+    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
+    // log.info(F, `Defer reply took ${new Date().getTime() - deferTime}ms`);
     // Calculate each plat min/max value
     const givenWeight = interaction.options.getNumber('calc_weight', true);
     const weightUnits = interaction.options.getString('units', true);
@@ -70,7 +79,8 @@ export const dCalcdxm: SlashCommand = {
       );
       header = false;
     });
-    interaction.reply({ embeds: [embed] });
+    await interaction.editReply({ embeds: [embed] });
+    log.info(F, `Command finished in ${new Date().getTime() - startTime}ms`);
     return true;
   },
 };

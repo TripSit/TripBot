@@ -1,4 +1,4 @@
-const F = f(__filename);
+const F = f(__filename); // eslint-disable-line
 
 type DxmDataType = {
   First: { min: number, max: number };
@@ -76,6 +76,6 @@ export async function calcDxm(givenWeight:number, weightUnits:string, taking:str
     };
   });
 
-  log.info(F, `response: ${JSON.stringify(data, null, 2)}`);
+  // log.info(F, `response: ${JSON.stringify(data, null, 2)}`);
   return { data, units };
 }

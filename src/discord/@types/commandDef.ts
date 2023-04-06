@@ -5,6 +5,9 @@ import {
   SlashCommandSubcommandsOnlyBuilder,
   MessageContextMenuCommandInteraction,
   UserContextMenuCommandInteraction,
+  // InteractionReplyOptions,
+  // InteractionEditReplyOptions,
+  Message,
 } from 'discord.js';
 
 export interface SlashCommand {
@@ -12,6 +15,13 @@ export interface SlashCommand {
   | Omit<SlashCommandBuilder, 'addSubcommandGroup' | 'addSubcommand'>
   | SlashCommandSubcommandsOnlyBuilder;
   execute: (interaction: ChatInputCommandInteraction) => Promise<boolean>;
+}
+
+export interface SlashCommandBeta {
+  data:
+  | Omit<SlashCommandBuilder, 'addSubcommandGroup' | 'addSubcommand'>
+  | SlashCommandSubcommandsOnlyBuilder;
+  execute: (interaction: ChatInputCommandInteraction) => Promise<Message>;
 }
 
 export interface MessageCommand {

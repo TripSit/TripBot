@@ -20,15 +20,15 @@ import { getUser, reactionroleGet, usersUpdate } from '../../global/utils/knex';
 const mindsetRemovalTime = env.NODE_ENV === 'production' ? 1000 * 60 * 60 * 8 : 1000 * 5;
 
 const mindsetEmojis = [
-  `${env.EMOJI_DRUNK}`,
-  `${env.EMOJI_HIGH}`,
-  `${env.EMOJI_ROLLING}`,
-  `${env.EMOJI_TRIPPING}`,
-  `${env.EMOJI_DISSOCIATING}`,
-  `${env.EMOJI_STIMMING}`,
-  `${env.EMOJI_SEDATED}`,
-  `${env.EMOJI_TALKATIVE}`,
-  `${env.EMOJI_WORKING}`,
+  'Alcohol',
+  'Weed',
+  'Empathogens',
+  'Psychedelics',
+  'Disassociatives',
+  'Stimulants',
+  'Depressants',
+  'Talkative',
+  'Working',
 ];
 
 export default handleReactionRoles;
@@ -75,7 +75,7 @@ export async function handleReactionRoles(
       });
 
       // If this is a mindset emoji, set the end date
-      if (mindsetEmojis.includes(`<:${reaction.emoji.identifier}>`)) {
+      if (mindsetEmojis.includes(`${reaction.emoji.name}`)) {
         // Update the database
         const userData = await getUser(user.id, null, null);
 

@@ -17,23 +17,26 @@ export default dInvite;
 export const dInvite: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('invite')
-    .setDescription('Shows an invite link for this bot!'),
+    .setDescription('Shows an invite link for this bot!')
+    .addBooleanOption(option => option.setName('ephemeral')
+      .setDescription('Set to "True" to show the response only to you')),
   async execute(interaction) {
     startLog(F, interaction);
+    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
     const inviteInfo = await invite();
     const isProd = process.env.NODE_ENV === 'production';
     const devNotice = process.env.NODE_ENV === 'production'
       ? ''
       : 'This is a development version of the bot. Please use the production version for the best experience.';
-    const botname = isProd
+    const botName = isProd
       ? 'TripBot'
       : 'TripBot Dev';
-    const guildname = isProd
+    const guildName = isProd
       ? 'TripSit'
       : 'TripSit Dev';
     const embed = embedTemplate()
       .setColor(Colors.DarkBlue)
-      .setTitle(`Invite ${botname}`)
+      .setTitle(`Invite ${botName}`)
       .setURL(inviteInfo.bot)
       .setDescription(stripIndents`
         ${devNotice}
@@ -42,10 +45,10 @@ export const dInvite: SlashCommand = {
 
         Note: For advanced features you will need to give the bot more permissions.
 
-        The ${isProd ? 'official support' : 'testing'} server is [${guildname} Discord](${inviteInfo.discord}).
+        The ${isProd ? 'official support' : 'testing'} server is [${guildName} Discord](${inviteInfo.discord}).
         If you have issues/questions, join and talk with Moonbear!
       `);
-    interaction.reply({ embeds: [embed] });
+    await interaction.editReply({ embeds: [embed] });
     return true;
   },
 };

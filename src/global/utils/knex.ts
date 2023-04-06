@@ -1,6 +1,8 @@
 import knex from 'knex';
 
 import {
+  Bridges,
+  Counting,
   DiscordGuilds,
   DrugNames,
   ExperienceCategory,
@@ -17,6 +19,7 @@ import {
   UserTickets,
   // TicketStatus,
   // DiscordGuilds,
+  ReactionRoleType,
 } from '../@types/database.d';
  // eslint-disable-line
 
@@ -28,6 +31,76 @@ export const db = knex({
   client: 'pg',
   connection: env.POSTGRES_DB_URL,
 });
+
+export const database = {
+  users: {
+    get: getUser,
+    getMindsets: usersGetMindsets,
+    set: usersUpdate,
+    incrementPoint,
+    incrementKarma,
+  },
+  guilds: {
+    get: getGuild,
+    set: guildUpdate,
+  },
+  tickets: {
+    getOpen: getOpenTicket,
+    get: ticketGet,
+    set: ticketUpdate,
+    del: ticketDel,
+  },
+  reminders: {
+    get: reminderGet,
+    set: reminderSet,
+    del: reminderDel,
+  },
+  rss: {
+    get: rssGet,
+    set: rssSet,
+    del: rssDel,
+  },
+  reactionRoles: {
+    get: reactionroleGet,
+    set: reactionroleSet,
+    del: reactionroleDel,
+  },
+  experience: {
+    get: experienceGet,
+    getTop: experienceGetTop,
+    del: experienceDel,
+    set: experienceUpdate,
+  },
+  doses: {
+    get: idoseGet,
+    set: idoseSet,
+    del: idoseDel,
+  },
+  drugs: {
+    get: drugGet,
+  },
+  actions: {
+    get: useractionsGet,
+    set: useractionsSet,
+  },
+  personas: {
+    get: personaGet,
+    set: personaSet,
+  },
+  inventory: {
+    get: inventoryGet,
+    set: inventorySet,
+  },
+  counting: {
+    get: countingGet,
+    set: countingSet,
+  },
+  bridges: {
+    get: bridgesGet,
+    set: bridgesSet,
+    del: bridgesDel,
+  },
+};
 
 export async function getUser(
   discordId:string | null,
@@ -62,7 +135,7 @@ export async function getUser(
         }
       // log.debug(F, `data2: ${JSON.stringify(data, null, 2)}`);
       } catch (err) {
-        log.error(F, `Error getting user: ${err}`);
+        log.error(F, `Error inserting user: ${err}`);
         log.error(F, `discordId: ${discordId} | userId: ${userId}`);
       }
     }
@@ -85,7 +158,9 @@ export async function getUser(
   return data as Users;
 }
 
-export async function getGuild(guildId:string):Promise<DiscordGuilds> {
+export async function getGuild(
+  guildId:string,
+):Promise<DiscordGuilds> {
   // log.debug(F, `getGuild started with: guildId: ${guildId}`);
 
   if (env.POSTGRES_DB_URL === undefined) {
@@ -183,7 +258,7 @@ export async function getOpenTicket(
         .select('*')
         .where('user_id', userId)
         // .where('type', 'TRIPSIT')
-        .andWhereNot('status', 'CLOSED')
+        // .andWhereNot('status', 'CLOSED')
         .andWhereNot('status', 'RESOLVED')
         .andWhereNot('status', 'DELETED')
         .first();
@@ -347,7 +422,7 @@ export async function usersGetMindsets():Promise<Users[]> {
       .select('*')
       .whereNotNull('mindset_role_expires_at');
   } catch (err) {
-    log.error(F, `Error getting users: ${err}`);
+    log.error(F, `Error getting users (mindsets): ${err}`);
   }
   return users;
 }
@@ -472,26 +547,6 @@ export async function incrementKarma(
     log.error(F, `pointType: ${pointType} | userId: ${userId} | value: ${value}`);
   }
   return karma;
-}
-
-export async function reactionroleGet(
-  messageId:string,
-  reactionId:string,
-):Promise<ReactionRoles | undefined> {
-// log.debug(F, 'reactionroleGet started');
-  if (env.POSTGRES_DB_URL === undefined) return undefined;
-  let reactionRole = undefined as ReactionRoles | undefined;
-  try {
-    reactionRole = await db<ReactionRoles>('reaction_roles')
-      .select('*')
-      .where('message_id', messageId)
-      .andWhere('reaction_id', reactionId)
-      .first();
-  } catch (err) {
-    log.error(F, `Error getting reaction role: ${err}`);
-    log.error(F, `messageId: ${messageId} | reactionId: ${reactionId}`);
-  }
-  return reactionRole;
 }
 
 export async function experienceGet(
@@ -796,7 +851,7 @@ export async function drugGet(
   drugId?:string,
   drugName?:string,
 ):Promise<DrugNames[]> {
-// log.debug(F, 'drugGet started');
+  // log.debug(F, 'drugGet started');
   if (env.POSTGRES_DB_URL === undefined) return [];
   let response = [] as DrugNames[];
   if (drugName) {
@@ -808,17 +863,21 @@ export async function drugGet(
         .orWhere('name', drugName.toUpperCase());
     } catch (err) {
       log.error(F, `Error getting drug: ${err}`);
+      log.error(F, `drugId: ${drugId} (should be null)`);
       log.error(F, `drugName: ${drugName}`);
     }
   }
-  try {
-    response = await db<DrugNames>('drug_names')
-      .select('*')
-      .where('drug_id', drugId)
-      .andWhere('is_default', true);
-  } catch (err) {
-    log.error(F, `Error getting drug: ${err}`);
-    log.error(F, `drugId: ${drugId}`);
+  if (drugId) {
+    try {
+      response = await db<DrugNames>('drug_names')
+        .select('*')
+        .where('drug_id', drugId)
+        .andWhere('is_default', true);
+    } catch (err) {
+      log.error(F, `Error getting drug (id): ${err}`);
+      log.error(F, `drugId: ${drugId}`);
+      log.error(F, `drugName: ${drugName} (should be null)`);
+    }
   }
 
   return response;
@@ -877,20 +936,53 @@ export async function useractionsSet(
 
 export async function personaGet(
   userId:string,
-):Promise<Personas[]> {
+):Promise<Personas> {
 // log.debug(F, 'useractionsGet started');
-  if (env.POSTGRES_DB_URL === undefined) return [];
-  let response = [] as Personas[];
+  if (env.POSTGRES_DB_URL === undefined) {
+    return {
+      id: 'string',
+      user_id: 'string',
+      name: 'string',
+      class: 'string',
+      species: 'string',
+      guild: 'string',
+      tokens: 0,
+      trip_token_multiplier: 0,
+      last_quest: null,
+      last_dungeon: null,
+      last_raid: null,
+      created_at: new Date(),
+    } as Personas;
+  }
+
+  let data = {} as Personas | undefined;
+
   try {
-    response = await db<Personas>('personas')
+    data = await db<Personas>('personas')
       .select('*')
       .where('user_id', userId)
-      .orderBy('created_at', 'desc');
+      .first();
   } catch (err) {
     log.error(F, `Error getting personas: ${err}`);
     log.error(F, `userId: ${userId}`);
   }
-  return response;
+
+  // log.debug(F, `data1: ${JSON.stringify(data, null, 2)}`);
+  if (data === undefined) {
+    try {
+      [data] = (await db<Personas>('personas')
+        .insert({
+          user_id: userId,
+          tokens: 0,
+        })
+        .returning('*'));
+    // log.debug(F, `data2: ${JSON.stringify(data, null, 2)}`);
+    } catch (err) {
+      log.error(F, `Error getting user: ${err}`);
+      log.error(F, `userId: ${userId}`);
+    }
+  }
+  return data as Personas;
 }
 
 export async function personaSet(
@@ -940,4 +1032,156 @@ export async function inventorySet(
     log.error(F, `Error setting inventory: ${err}`);
     log.error(F, `data: ${JSON.stringify(data)}`);
   }
+}
+
+export async function countingGet(
+  channelID:string,
+):Promise<Counting | undefined> {
+// log.debug(F, 'useractionsGet started');
+  if (env.POSTGRES_DB_URL === undefined) return undefined;
+  let response = {} as Counting | undefined;
+  try {
+    response = await db<Counting>('counting')
+      .select('*')
+      .where('channel_id', channelID)
+      .first();
+  } catch (err) {
+    log.error(F, `Error getting counting: ${err}`);
+    log.error(F, `channelID: ${channelID}`);
+  }
+  return response;
+}
+
+export async function countingSet(
+  data:Counting,
+):Promise<void> {
+  if (env.POSTGRES_DB_URL === undefined) return;
+  try {
+    await db<Counting>('counting')
+      .insert(data)
+      .onConflict(['channel_id', 'guild_id'])
+      .merge();
+  } catch (err) {
+    log.error(F, `Error setting counting: ${err}`);
+    log.error(F, `data: ${JSON.stringify(data)}`);
+  }
+}
+
+async function bridgesGet(
+  channelId: string | null,
+):Promise<Bridges[]> {
+  if (env.POSTGRES_DB_URL === undefined) return [] as Bridges[];
+  let data = await db<Bridges>('bridges')
+    .select('*')
+    .where('internal_channel', channelId);
+
+  if (data.length === 0) {
+    data = await db<Bridges>('bridges')
+      .select('*')
+      .where('external_channel', channelId);
+  }
+
+  return data;
+}
+
+async function bridgesSet(
+  data: Bridges[],
+):Promise<void> {
+  if (env.POSTGRES_DB_URL === undefined) return;
+  data.forEach(async bridge => {
+    await db<Bridges>('bridges')
+      .insert(bridge)
+      .onConflict(['internal_channel', 'external_channel'])
+      .merge();
+  });
+}
+
+async function bridgesDel(
+  data: Bridges[],
+):Promise<void> {
+  if (env.POSTGRES_DB_URL === undefined) return;
+  data.forEach(async bridge => {
+    await db<Bridges>('bridges')
+      .delete()
+      .where('id', bridge.id);
+  });
+}
+
+export async function reactionroleGet(
+  guildId:string | null,
+  channelId:string | null,
+  messageId:string | null,
+  type:ReactionRoleType,
+):Promise<ReactionRoles[]> {
+  if (env.POSTGRES_DB_URL === undefined) return [] as ReactionRoles[];
+  // log.debug(F, `
+  //   guildId: ${guildId}
+  //   channelId: ${channelId}
+  //   messageId: ${messageId}
+  //   type: ${type}
+  // `);
+  if (guildId !== null) {
+    if (channelId !== null) {
+      if (messageId !== null) {
+        if (type !== null) {
+          return db<ReactionRoles>('reaction_roles')
+            .select('*')
+            .where('guild_id', guildId)
+            .andWhere('channel_id', channelId)
+            .andWhere('message_id', messageId)
+            .andWhere('type', type);
+        }
+        return db<ReactionRoles>('reaction_roles')
+          .select('*')
+          .where('guild_id', guildId)
+          .andWhere('channel_id', channelId)
+          .andWhere('message_id', messageId);
+      }
+      if (type !== null) {
+        return db<ReactionRoles>('reaction_roles')
+          .select('*')
+          .where('guild_id', guildId)
+          .andWhere('channel_id', channelId)
+          .andWhere('type', type);
+      }
+      return db<ReactionRoles>('reaction_roles')
+        .select('*')
+        .where('guild_id', guildId)
+        .andWhere('channel_id', channelId);
+    }
+    if (type !== null) {
+      return db<ReactionRoles>('reaction_roles')
+        .select('*')
+        .where('guild_id', guildId)
+        .andWhere('type', type);
+    }
+    return db<ReactionRoles>('reaction_roles')
+      .select('*')
+      .where('guild_id', guildId);
+  }
+  return db<ReactionRoles>('reaction_roles')
+    .select('*');
+}
+
+async function reactionroleSet(
+  data: ReactionRoles[],
+):Promise<void> {
+  if (env.POSTGRES_DB_URL === undefined) return;
+  data.forEach(async role => {
+    await db<ReactionRoles>('reaction_roles')
+      .insert(role);
+    // .onConflict(['internal_channel', 'external_channel'])
+    // .merge();
+  });
+}
+
+async function reactionroleDel(
+  data: ReactionRoles[],
+):Promise<void> {
+  if (env.POSTGRES_DB_URL === undefined) return;
+  data.forEach(async role => {
+    await db<ReactionRoles>('reaction_roles')
+      .delete()
+      .where('id', role.id);
+  });
 }

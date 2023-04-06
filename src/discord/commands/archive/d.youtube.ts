@@ -23,14 +23,14 @@ export const dYoutube: SlashCommand = {
     const query = interaction.options.getString('search');
     // log.debug(F, `- query: ${query}`);
     if (!query) {
-      interaction.reply({ content: 'You must enter a search query.', ephemeral: true });
+      await interaction.reply({ content: 'You must enter a search query.', ephemeral: true });
       return false;
     }
 
     const result = await youtube(query);
 
     if (!result) {
-      interaction.reply({ content: `No results for ${query}, make sure you're exact!`, ephemeral: true });
+      await interaction.reply({ content: `No results for ${query}, make sure you're exact!`, ephemeral: true });
       return true;
     }
 
@@ -63,7 +63,7 @@ export const dYoutube: SlashCommand = {
       else if (result.thumbnails.default) embed.setThumbnail(result.thumbnails.default.url);
     }
 
-    interaction.reply({ embeds: [embed] });
+    await interaction.reply({ embeds: [embed] });
     return true;
   },
 };

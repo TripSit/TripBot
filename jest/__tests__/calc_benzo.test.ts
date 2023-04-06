@@ -2,10 +2,10 @@ import {
   Colors,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
-import { dCalcbenzo } from '../../src/discord/commands/global/d.calcBenzo';
-import { executeCommandAndSpyReply, embedContaining, getParsedCommand } from '../utils/testutils';
+import { dCalcBenzo } from '../../src/discord/commands/global/d.calcBenzo';
+import { executeCommandAndSpyEditReply, embedContaining, getParsedCommand } from '../utils/testutils';
 
-const slashCommand = dCalcbenzo;
+const slashCommand = dCalcBenzo;
 
 const benzosNames = [
   { name: 'alprazolam', result: 31.45 },
@@ -43,19 +43,19 @@ const benzosNames = [
 ];
 
 const authorInfo = {
-  iconURL: 'https://fossdroid.com/images/icons/me.tripsit.tripmobile.13.png',
+  iconURL: 'https://i.gyazo.com/b48b08a853fefaafb6393837eec1a501.png',
   name: 'TripSit.Me',
   url: 'http://www.tripsit.me',
 };
 const footerInfo = {
-  iconURL: 'https://imgur.com/b923xK2.png',
+  iconURL: 'https://i.gyazo.com/19276c297cca0761dc9689ac7c320b8e.png',
   text: 'Dose responsibly!',
 };
 
 describe(slashCommand.data.name, () => {
   it(slashCommand.data.description, async () => {
     benzosNames.forEach(async benzo => {
-      expect(await executeCommandAndSpyReply(
+      expect(await executeCommandAndSpyEditReply(
         slashCommand,
         getParsedCommand(
           `/${slashCommand.data.name} i_have:31.45 mg_of:${benzo.name} and_i_want_the_dose_of:alprazolam`,
@@ -75,7 +75,7 @@ describe(slashCommand.data.name, () => {
     });
 
     // Misspell drugA
-    expect(await executeCommandAndSpyReply(
+    expect(await executeCommandAndSpyEditReply(
       slashCommand,
       getParsedCommand(
         `/${slashCommand.data.name} i_have:12.3 mg_of:bromxazepams and_i_want_the_dose_of:clobazam`,
@@ -85,11 +85,10 @@ describe(slashCommand.data.name, () => {
     )).toHaveBeenCalledWith({
       content: stripIndents`There was an error during conversion!
       I've let the developer know, please try again with different parameters!`,
-      ephemeral: true,
     });
 
     // Misspell drugB
-    expect(await executeCommandAndSpyReply(
+    expect(await executeCommandAndSpyEditReply(
       slashCommand,
       getParsedCommand(
         `/${slashCommand.data.name} i_have:12.3 mg_of:bromazepam and_i_want_the_dose_of:clobazams`,
@@ -99,11 +98,10 @@ describe(slashCommand.data.name, () => {
     )).toHaveBeenCalledWith({
       content: stripIndents`There was an error during conversion!
       I've let the developer know, please try again with different parameters!`,
-      ephemeral: true,
     });
 
     // Get wrong kind of drugA
-    expect(await executeCommandAndSpyReply(
+    expect(await executeCommandAndSpyEditReply(
       slashCommand,
       getParsedCommand(
         `/${slashCommand.data.name} i_have:12.3 mg_of:cannabis and_i_want_the_dose_of:clobazams`,
@@ -113,11 +111,10 @@ describe(slashCommand.data.name, () => {
     )).toHaveBeenCalledWith({
       content: stripIndents`There was an error during conversion!
       I've let the developer know, please try again with different parameters!`,
-      ephemeral: true,
     });
 
     // Get wrong kind of drugB
-    expect(await executeCommandAndSpyReply(
+    expect(await executeCommandAndSpyEditReply(
       slashCommand,
       getParsedCommand(
         `/${slashCommand.data.name} i_have:12.3 mg_of:bromazepam and_i_want_the_dose_of:cannabis`,
@@ -127,7 +124,6 @@ describe(slashCommand.data.name, () => {
     )).toHaveBeenCalledWith({
       content: stripIndents`There was an error during conversion!
       I've let the developer know, please try again with different parameters!`,
-      ephemeral: true,
     });
   });
 });

@@ -37,7 +37,7 @@ type RedditFeed = {
 
 const F = f(__filename);
 
-// Value in miliseconds (1000 * 60 = 1 minute)
+// Value in milliseconds (1000 * 60 = 1 minute)
 const interval = env.NODE_ENV === 'production' ? 1000 * 60 : 1000 * 10;
 
 /**
@@ -46,7 +46,7 @@ const interval = env.NODE_ENV === 'production' ? 1000 * 60 : 1000 * 10;
 export async function runRss() {
   /**
    * This timer runs every (INTERVAL) to determine if there are any tasks to perform
-   * This function uses setTimeout so that it can finish runing before the next loop
+   * This function uses setTimeout so that it can finish running before the next loop
    */
   function checkTimers() {
     setTimeout(
@@ -104,16 +104,21 @@ async function checkRss() {
 
       // log.debug(F, `submittedBy: ${submittedBy}`);
 
+      const subreddit = mostRecentPost.link.slice(
+        mostRecentPost.link.indexOf('/r/') + 3,
+        mostRecentPost.link.indexOf('/comments'),
+      );
+
       const embed = embedTemplate();
       try {
-        embed.setAuthor({ name: 'New /r/TripSit post', iconURL: env.TS_ICON_URL });
+        embed.setAuthor({ name: `New /r/${subreddit} post`, iconURL: env.TS_ICON_URL });
         embed.setTitle(`${mostRecentPost.title.slice(0, 256)}`);
         embed.setURL(mostRecentPost.link);
-        embed.setFooter({ text: submittedBy ?? '', iconURL: env.FLAME_ICON_URL });
+        embed.setFooter({ text: submittedBy, iconURL: env.FLAME_ICON_URL });
         embed.setTimestamp(new Date(mostRecentPost.pubDate));
       } catch (error) {
-        log.debug(F, `Error creating embed: ${error}`);
-        log.debug(F, `mostRecentPost: ${JSON.stringify(mostRecentPost, null, 2)}`);
+        // log.debug(F, `Error creating embed: ${error}`);
+        // log.debug(F, `mostRecentPost: ${JSON.stringify(mostRecentPost, null, 2)}`);
         return;
       }
 

@@ -26,6 +26,7 @@ export async function youtube(query:string):Promise<YouTubeSearchResults> {
       }, (err, result) => {
         if (err) {
           reject(err);
+          return;
         }
         if (!result) {
           resolve(null);

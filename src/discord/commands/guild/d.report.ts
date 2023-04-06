@@ -2,8 +2,10 @@ import {
   SlashCommandBuilder,
   ChatInputCommandInteraction,
   GuildMember,
+  Colors,
 } from 'discord.js';
 import { env } from 'process';
+import { stripIndents } from 'common-tags';
 import { SlashCommand } from '../../@types/commandDef';
 import { startLog } from '../../utils/startLog';
 // import {embedTemplate} from '../../utils/embedTemplate';
@@ -11,6 +13,7 @@ import { moderate } from '../../../global/commands/g.moderate';
 // import log from '../../../global/utils/log';
 import { UserActionType } from '../../../global/@types/database';
 import { getDiscordMember } from '../../utils/guildMemberLookup';
+import { embedTemplate } from '../../utils/embedTemplate';
 
 const F = f(__filename);
 
@@ -31,25 +34,62 @@ export const dReport: SlashCommand = {
 
   async execute(interaction: ChatInputCommandInteraction) {
     startLog(F, interaction);
+    await interaction.deferReply({ ephemeral: true });
     // Only run on tripsit
     if (!interaction.guild) {
-      await interaction.reply({ content: 'This command can only be used in a server!', ephemeral: true });
+      await interaction.editReply({ content: 'This command can only be used in a server!' });
       return false;
     }
 
     if (interaction.guild.id !== env.DISCORD_GUILD_ID) {
-      await interaction.reply({ content: 'This command can only be used in the Tripsit server!', ephemeral: true });
+      await interaction.editReply({ content: 'This command can only be used in the Tripsit server!' });
       return false;
     }
 
     const targetString = interaction.options.getString('target', true);
     const reason = interaction.options.getString('reason', true);
 
-    const target = await getDiscordMember(interaction, targetString);
+    const targets = await getDiscordMember(interaction, targetString);
 
-    if (!target) {
+    if (!targets) {
+      const embed = embedTemplate()
+        .setColor(Colors.Red)
+        .setTitle('Could not find that member/user!')
+        .setDescription(stripIndents`
+      "${targetString}" returned no results!
+
+      Try again with:
+      > **Mention:** @Moonbear
+      > **Tag:** moonbear#1234
+      > **ID:** 9876581237
+      > **Nickname:** MoonBear`);
+      await interaction.reply({
+        embeds: [embed],
+        ephemeral: true,
+      });
       return false;
     }
+
+    if (targets.length > 1) {
+      const embed = embedTemplate()
+        .setColor(Colors.Red)
+        .setTitle('Found more than one user with with that value!')
+        .setDescription(stripIndents`
+        "${targetString}" returned ${targets.length} results!
+
+        Be more specific:
+        > **Mention:** @Moonbear
+        > **Tag:** moonbear#1234
+        > **ID:** 9876581237
+        > **Nickname:** MoonBear`);
+      await interaction.reply({
+        embeds: [embed],
+        ephemeral: true,
+      });
+      return false;
+    }
+
+    const [target] = targets;
 
     const result = await moderate(
       interaction.member as GuildMember,
@@ -60,7 +100,7 @@ export const dReport: SlashCommand = {
       null,
     );
       // log.debug(F, `Result: ${result}`);
-    interaction.reply(result);
+    await interaction.editReply(result);
     return true;
   },
 };

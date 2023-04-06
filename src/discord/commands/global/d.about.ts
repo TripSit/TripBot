@@ -7,16 +7,19 @@ import { embedTemplate } from '../../utils/embedTemplate';
 import { about } from '../../../global/commands/g.about';
 import { startLog } from '../../utils/startLog';
 
-const F = f(__filename);
-
 export default dAbout;
+
+const F = f(__filename);
 
 export const dAbout: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('about')
-    .setDescription('Shows information about this bot!'),
+    .setDescription('Shows information about this bot!')
+    .addBooleanOption(option => option.setName('ephemeral')
+      .setDescription('Set to "True" to show the response only to you')),
   async execute(interaction) {
     startLog(F, interaction);
+    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
     const tripsitInfo = await about();
     const embed = embedTemplate()
       .setColor(Colors.DarkBlue)
@@ -45,7 +48,7 @@ export const dAbout: SlashCommand = {
           value: tripsitInfo.credits,
         },
       );
-    interaction.reply({ embeds: [embed] });
+    await interaction.editReply({ embeds: [embed] });
     return true;
   },
 };

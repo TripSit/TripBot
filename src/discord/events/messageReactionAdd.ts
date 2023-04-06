@@ -6,7 +6,6 @@ import {
   MessageReactionAddEvent,
 } from '../@types/eventDef';
 import { chitragupta } from '../utils/chitragupta';
-import { handleReactionRoles } from '../utils/handleReactionRoles';
 import { bestOf } from '../utils/bestOfTripsit';
 // import log from '../../global/utils/log';
 // import {parse} from 'path';
@@ -21,7 +20,7 @@ export const messageReactionAdd: MessageReactionAddEvent = {
     if (messageReaction.message.guild?.id !== env.DISCORD_GUILD_ID) return;
     // log.info(F, `${user} added a reaction`);
 
-    // Dont run on bots
+    // Don't run on bots
     if (user.bot) {
       // log.debug(F, `Ignoring bot interaction`);
       return;
@@ -40,7 +39,6 @@ export const messageReactionAdd: MessageReactionAddEvent = {
     //   return;
     // }
 
-    handleReactionRoles(messageReaction, user, true);
     chitragupta(messageReaction, user, 1);
     bestOf(messageReaction);
     // await communityMod(reaction, user);

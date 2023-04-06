@@ -12,10 +12,13 @@ export default dReagents;
 export const dReagents: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('reagents')
-    .setDescription('Display reagent color chart!'),
+    .setDescription('Display reagent color chart!')
+    .addBooleanOption(option => option.setName('ephemeral')
+      .setDescription('Set to "True" to show the response only to you')),
   async execute(interaction) {
     startLog(F, interaction);
-    interaction.reply(await reagents());
+    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
+    await interaction.editReply({ content: await reagents() });
     return true;
   },
 };

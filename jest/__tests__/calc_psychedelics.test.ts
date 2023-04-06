@@ -4,24 +4,24 @@ import {
   Colors,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
-import { dCalcpsychedelics } from '../../src/discord/commands/global/d.calcPsychedelics';
-import { executeCommandAndSpyReply, embedContaining, getParsedCommand } from '../utils/testutils';
+import { dCalcPsychedelics } from '../../src/discord/commands/global/d.calcPsychedelics';
+import { executeCommandAndSpyEditReply, embedContaining, getParsedCommand } from '../utils/testutils';
 
-const slashCommand = dCalcpsychedelics;
+const slashCommand = dCalcPsychedelics;
 
 const authorInfo = {
-  iconURL: 'https://fossdroid.com/images/icons/me.tripsit.tripmobile.13.png',
+  iconURL: 'https://i.gyazo.com/b48b08a853fefaafb6393837eec1a501.png',
   name: 'TripSit.Me',
   url: 'http://www.tripsit.me',
 };
 const footerInfo = {
-  iconURL: 'https://imgur.com/b923xK2.png',
+  iconURL: 'https://i.gyazo.com/19276c297cca0761dc9689ac7c320b8e.png',
   text: 'Dose responsibly!',
 };
 
 describe(slashCommand.data.name, () => {
   it(slashCommand.data.description, async () => {
-    expect(await executeCommandAndSpyReply(
+    expect(await executeCommandAndSpyEditReply(
       slashCommand,
       getParsedCommand(
         `/${slashCommand.data.name} lsd last_dose:300 days:3 desired_dose:400`,
@@ -42,7 +42,7 @@ describe(slashCommand.data.name, () => {
       }),
     });
 
-    expect(await executeCommandAndSpyReply(
+    expect(await executeCommandAndSpyEditReply(
       slashCommand,
       getParsedCommand(
         `/${slashCommand.data.name} lsd last_dose:300 days:16 desired_dose:1200`,
@@ -63,7 +63,7 @@ describe(slashCommand.data.name, () => {
       }),
     });
 
-    expect(await executeCommandAndSpyReply(
+    expect(await executeCommandAndSpyEditReply(
       slashCommand,
       getParsedCommand(
         `/${slashCommand.data.name} lsd last_dose:900 days:16`,
@@ -84,7 +84,7 @@ describe(slashCommand.data.name, () => {
       }),
     });
 
-    expect(await executeCommandAndSpyReply(
+    expect(await executeCommandAndSpyEditReply(
       slashCommand,
       getParsedCommand(
         `/${slashCommand.data.name} mushrooms last_dose:3.5 days:3 desired_dose:4.5`,
@@ -105,7 +105,7 @@ describe(slashCommand.data.name, () => {
       }),
     });
 
-    expect(await executeCommandAndSpyReply(
+    expect(await executeCommandAndSpyEditReply(
       slashCommand,
       getParsedCommand(
         `/${slashCommand.data.name} mushrooms last_dose:3.5 days:3`,

@@ -1,6 +1,18 @@
 // The TypeScript definitions below are automatically generated.
 // Do not touch them, or risk, your modifications being lost.
 
+export enum BridgeStatus {
+  Pending = 'PENDING',
+  Active = 'ACTIVE',
+  Paused = 'PAUSED',
+}
+
+export enum CountingType {
+  Normal = 'NORMAL',
+  Hardcore = 'HARDCORE',
+  Token = 'TOKEN',
+}
+
 export enum DrugCategoryType {
   Common = 'COMMON',
   Psychoactive = 'PSYCHOACTIVE',
@@ -51,6 +63,15 @@ export enum ExperienceType {
   Voice = 'VOICE',
 }
 
+export enum ReactionRoleType {
+  Color = 'COLOR',
+  PremiumColor = 'PREMIUM_COLOR',
+  Mindset = 'MINDSET',
+  Pronoun = 'PRONOUN',
+  Notification = 'NOTIFICATION',
+  Custom = 'CUSTOM',
+}
+
 export enum TicketStatus {
   Open = 'OPEN',
   Owned = 'OWNED',
@@ -80,9 +101,13 @@ export enum UserActionType {
   Timeout = 'TIMEOUT',
   Report = 'REPORT',
   Kick = 'KICK',
+  HelperBan = 'HELPER_BAN',
+  ContributorBan = 'CONTRIBUTOR_BAN',
 }
 
 export enum Table {
+  Bridges = 'bridges',
+  Counting = 'counting',
   DiscordGuilds = 'discord_guilds',
   DrugArticles = 'drug_articles',
   DrugCategories = 'drug_categories',
@@ -105,6 +130,37 @@ export enum Table {
   Users = 'users',
 }
 
+export type Bridges = {
+  id: string;
+  internal_channel: string;
+  status: BridgeStatus;
+  external_channel: string;
+};
+
+export type Counting = {
+  id: string;
+  guild_id: string;
+  channel_id: string;
+  type: CountingType;
+  current_number: number;
+  current_stakeholders: string | null;
+  current_number_message_id: string;
+  current_number_message_date: Date;
+  current_number_message_author: string;
+  last_number: number | null;
+  last_number_message_id: string | null;
+  last_number_message_date: Date | null;
+  last_number_message_author: string | null;
+  last_number_broken_by: string | null;
+  last_number_broken_date: Date | null;
+  record_number: number;
+  record_number_message_id: string | null;
+  record_number_message_date: Date | null;
+  record_number_message_author: string | null;
+  record_number_broken_by: string | null;
+  record_number_broken_date: Date | null;
+};
+
 export type DiscordGuilds = {
   id: string;
   is_banned: boolean;
@@ -123,6 +179,9 @@ export type DiscordGuilds = {
   removed_at: Date | null;
   joined_at: Date;
   created_at: Date;
+  partner: boolean;
+  supporter: boolean;
+  premium_role_ids: string | null;
 };
 
 export type DrugArticles = {
@@ -234,10 +293,12 @@ export type ReactionRoles = {
   id: string;
   guild_id: string;
   channel_id: string;
-  message_id: string;
-  reaction_id: string;
+  message_id: string | null;
+  reaction_id: string | null;
   role_id: string;
   created_at: Date;
+  type: ReactionRoleType;
+  name: string;
 };
 
 export type RpgInventory = {
@@ -353,4 +414,9 @@ export type Users = {
   joined_at: Date;
   removed_at: Date | null;
   mod_thread_id: string | null;
+  helper_role_ban: boolean;
+  contributor_role_ban: boolean;
+  lastfm_username: string | null;
+  partner: boolean | null;
+  supporter: boolean | null;
 };

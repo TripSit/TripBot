@@ -5,7 +5,6 @@ import {
   ButtonBuilder,
   ActionRowBuilder,
   StringSelectMenuBuilder,
-  // ColorResolvable,
   MessageComponentInteraction,
   time,
   ChatInputCommandInteraction,
@@ -14,20 +13,25 @@ import {
   TextInputBuilder,
   ModalSubmitInteraction,
   StringSelectMenuComponent,
-  // StringSelectMenuInteraction,
   InteractionEditReplyOptions,
   InteractionUpdateOptions,
   SelectMenuComponentOptionData,
   AttachmentBuilder,
   GuildMember,
   TextChannel,
+  ColorResolvable,
+  Emoji,
+  ButtonInteraction,
 } from 'discord.js';
 import {
   APIEmbed,
   APISelectMenuOption,
-  ButtonStyle, TextInputStyle,
+  ButtonStyle,
+  ComponentType,
+  TextInputStyle,
 } from 'discord-api-types/v10';
 import { stripIndents } from 'common-tags';
+import he from 'he';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { getPersonaInfo, setPersonaInfo } from '../../../global/commands/g.rpg';
@@ -37,8 +41,10 @@ import {
 } from '../../../global/utils/knex';
 import { Personas, RpgInventory } from '../../../global/@types/database';
 import { imageGet } from '../../utils/imageGet';
+import { customButton } from '../../utils/emoji';
+import { getProfilePreview } from './d.profile';
 
-export default dRpg;
+const Trivia = require('trivia-api');
 
 const F = f(__filename);
 
@@ -49,108 +55,14 @@ const F = f(__filename);
 //   raid: env.NODE_ENV === 'production' ? 1000 * 60 * 60 * 24 * 7 : 1000 * 1,
 // };
 
-function customButton(
-  customId: string,
-  label: string,
-  emoji: string,
-  style?: ButtonStyle,
-):ButtonBuilder {
-  return new ButtonBuilder()
-    .setCustomId(customId)
-    .setLabel(label)
-    .setEmoji(emoji)
-    .setStyle(style || ButtonStyle.Success);
-}
-
-const buttons = {
-  name: customButton('rpgName', 'Name', '📝'),
-  accept: customButton('rpgAccept', 'Accept', '✅'),
-  decline: customButton('rpgDecline', 'Decline', '❌'),
-  town: customButton('rpgTown', 'Town', '🏘️'),
-  work: customButton('rpgWork', 'Work', '👷'),
-  shop: customButton('rpgShop', 'Shop', '🛒'),
-  arcade: customButton('rpgArcade', 'Arcade', '🎮'),
-  home: customButton('rpgHome', 'Home', '🛖'),
-  quest: customButton('rpgQuest', 'Quest', '🗺️'),
-  dungeon: customButton('rpgDungeon', 'Dungeon', '🏰'),
-  raid: customButton('rpgRaid', 'Raid', '👹'),
-  inventory: customButton('rpgInventory', 'Inventory', '🎒'),
-  stats: customButton('rpgStats', 'Stats', '📊'),
-  guild: customButton('rpgGuild', 'Guild', '🏰'),
-  buy: customButton('rpgShopBuy', 'Buy', '🛒'),
-  slotMachine: customButton('rpgSlots', 'Slots', '🎰'),
-  coinFlip: customButton('rpgCoinFlip', 'CoinFlip', '🪙'),
-  roulette: customButton('rpgRoulette', 'Roulette', '🎲'),
-  blackjack: customButton('rpgBlackjack', 'Blackjack', '🃏'),
-  wager1: customButton('rpgWager1', 'Bet 1', '🪙'),
-  wager10: customButton('rpgWager10', 'Bet 10', '🪙'),
-  wager100: customButton('rpgWager100', 'Bet 100', '🪙'),
-  wager1000: customButton('rpgWager1000', 'Bet 1000', '🪙'),
-  wager10000: customButton('rpgWager10000', 'Bet 10000', '🪙'),
-  wager100000: customButton('rpgWager100000', 'Bet 100000', '🪙'),
-  coinflipHeads: customButton('rpgCoinflipHeads', 'Heads', '🗿'),
-  coinflipTails: customButton('rpgCoinflipTails', 'Tails', '🐍'),
-
-  rouletteRed: customButton('rpgRouletteRed', 'Red', '🟥'),
-  rouletteBlack: customButton('rpgRouletteBlack', 'Black', '⬛'),
-  rouletteFirst: customButton('rpgRouletteFirst', 'First Row', '🥇'),
-  rouletteSecond: customButton('rpgRouletteSecond', 'Second Row', '🥈'),
-  rouletteThird: customButton('rpgRouletteThird', 'Third Row', '🥉'),
-
-  rouletteOdd: customButton('rpgRouletteOdd', 'Odd', '🅰'),
-  rouletteEven: customButton('rpgRouletteEven', 'Even', '🅱'),
-  roulette1to12: customButton('roulette1to12', '1-12', '1️⃣'),
-  roulette13to24: customButton('roulette13to24', '13-24', '3️⃣'),
-  roulette25to36: customButton('roulette25to36', '25-36', '5️⃣'),
-
-  rouletteHigh: customButton('rpgRouletteHigh', 'High', '🔼'),
-  rouletteLow: customButton('rpgRouletteLow', 'Low', '🔽'),
-  rouletteZero: customButton('rpgRouletteZero', '0', '0️⃣'),
-
-  blackjackHit: customButton('rpgBlackjackHit', 'Hit', '🃏'),
-  blackjackStand: customButton('rpgBlackjackStand', 'Stand', '🃏'),
-  blackjackDouble: customButton('rpgBlackjackDouble', 'Double', '🃏'),
-  blackjackSplit: customButton('rpgBlackjackSplit', 'Split', '🃏'),
-  blackjackSurrender: customButton('rpgBlackjackSurrender', 'Surrender', '🃏'),
-} as {
-  [key: string]: ButtonBuilder;
-};
-
-const menus = {
-  item: new StringSelectMenuBuilder()
-    .setCustomId('rpgGeneralSelect')
-    .setPlaceholder('Select an item to buy'),
-  background: new StringSelectMenuBuilder()
-    .setCustomId('rpgBackgroundSelect')
-    .setPlaceholder('Select a background to use.'),
-  name: new StringSelectMenuBuilder()
-    .setCustomId('rpgNameDisplay')
-    .setPlaceholder('No Name!')
-    .setOptions([{
-      label: 'No Name',
-      value: 'nameless',
-      emoji: '👤',
-      default: true,
-    }]),
-  class: new StringSelectMenuBuilder()
-    .setCustomId('rpgClass')
-    .setPlaceholder('Select a class'),
-  species: new StringSelectMenuBuilder()
-    .setCustomId('rpgSpecies')
-    .setPlaceholder('Pick a species'),
-  guild: new StringSelectMenuBuilder()
-    .setCustomId('rpgGuild')
-    .setPlaceholder('Select a guild'),
-} as {
-  [key: string]: StringSelectMenuBuilder;
-};
+const timesUp = 'Time\'s up!';
 
 const items = {
   general: {
     testkit: {
       label: 'TestKit',
       value: 'testkit',
-      description: '10% more TripTokens from all sources!',
+      description: '10% more tokens from all sources!',
       quantity: 1,
       weight: 0,
       cost: 2000,
@@ -158,20 +70,20 @@ const items = {
       consumable: false,
       effect: 'tokenMultiplier',
       effect_value: '0.1',
-      emoji: '🧪',
+      emoji: 'itemBonus',
     },
     scale: {
       label: 'Scale',
       value: 'scale',
-      description: '20% more TripTokens from all sources!',
+      description: '10% more tokens from all sources!',
       quantity: 1,
       weight: 0,
       cost: 3000,
       equipped: true,
       consumable: false,
       effect: 'tokenMultiplier',
-      effect_value: '0.2',
-      emoji: '⚖',
+      effect_value: '0.1',
+      emoji: 'itemBonus',
     },
   },
   backgrounds: {
@@ -230,7 +142,7 @@ const items = {
     DiamondChevron: {
       label: 'DiamondChevron',
       value: 'DiamondChevron',
-      description: 'DiamondChevron',
+      description: 'Background',
       quantity: 1,
       weight: 0,
       cost: 1000,
@@ -238,12 +150,12 @@ const items = {
       consumable: false,
       effect: 'background',
       effect_value: 'DiamondChevron',
-      emoji: '🖼',
+      emoji: 'itemBackground',
     },
     Chevron: {
       label: 'Chevron',
       value: 'Chevron',
-      description: 'Chevron',
+      description: 'Background',
       quantity: 1,
       weight: 0,
       cost: 1000,
@@ -251,12 +163,12 @@ const items = {
       consumable: false,
       effect: 'background',
       effect_value: 'Chevron',
-      emoji: '🖼',
+      emoji: 'itemBackground',
     },
     Concentric: {
       label: 'Concentric',
       value: 'Concentric',
-      description: 'Concentric',
+      description: 'Background',
       quantity: 1,
       weight: 0,
       cost: 1000,
@@ -264,12 +176,12 @@ const items = {
       consumable: false,
       effect: 'background',
       effect_value: 'Concentric',
-      emoji: '🖼',
+      emoji: 'itemBackground',
     },
     CubeTunnels: {
       label: 'CubeTunnels',
       value: 'CubeTunnels',
-      description: 'CubeTunnels',
+      description: 'Background',
       quantity: 1,
       weight: 0,
       cost: 1000,
@@ -277,12 +189,12 @@ const items = {
       consumable: false,
       effect: 'background',
       effect_value: 'CubeTunnels',
-      emoji: '🖼',
+      emoji: 'itemBackground',
     },
     Leaves: {
       label: 'Leaves',
       value: 'Leaves',
-      description: 'Leaves',
+      description: 'Background',
       quantity: 1,
       weight: 0,
       cost: 1000,
@@ -290,12 +202,12 @@ const items = {
       consumable: false,
       effect: 'background',
       effect_value: 'Leaves',
-      emoji: '🖼',
+      emoji: 'itemBackground',
     },
     SquareTwist: {
       label: 'SquareTwist',
       value: 'SquareTwist',
-      description: 'SquareTwist',
+      description: 'Background',
       quantity: 1,
       weight: 0,
       cost: 1000,
@@ -303,12 +215,12 @@ const items = {
       consumable: false,
       effect: 'background',
       effect_value: 'SquareTwist',
-      emoji: '🖼',
+      emoji: 'itemBackground',
     },
     SquareSpiral: {
       label: 'SquareSpiral',
       value: 'SquareSpiral',
-      description: 'SquareSpiral',
+      description: 'Background',
       quantity: 1,
       weight: 0,
       cost: 1000,
@@ -316,12 +228,12 @@ const items = {
       consumable: false,
       effect: 'background',
       effect_value: 'SquareSpiral',
-      emoji: '🖼',
+      emoji: 'itemBackground',
     },
     Noise: {
       label: 'Noise',
       value: 'Noise',
-      description: 'Noise',
+      description: 'Background',
       quantity: 1,
       weight: 0,
       cost: 1000,
@@ -329,12 +241,12 @@ const items = {
       consumable: false,
       effect: 'background',
       effect_value: 'Noise',
-      emoji: '🖼',
+      emoji: 'itemBackground',
     },
     Squiggles: {
       label: 'Squiggles',
       value: 'Squiggles',
-      description: 'Squiggles',
+      description: 'Background',
       quantity: 1,
       weight: 0,
       cost: 1000,
@@ -342,12 +254,12 @@ const items = {
       consumable: false,
       effect: 'background',
       effect_value: 'Squiggles',
-      emoji: '🖼',
+      emoji: 'itemBackground',
     },
     TriangleOverlap: {
       label: 'TriangleOverlap',
       value: 'TriangleOverlap',
-      description: 'TriangleOverlap',
+      description: 'Background',
       quantity: 1,
       weight: 0,
       cost: 1000,
@@ -355,12 +267,12 @@ const items = {
       consumable: false,
       effect: 'background',
       effect_value: 'TriangleOverlap',
-      emoji: '🖼',
+      emoji: 'itemBackground',
     },
     XandO: {
       label: 'XandO',
       value: 'XandO',
-      description: 'XandO',
+      description: 'Background',
       quantity: 1,
       weight: 0,
       cost: 1000,
@@ -368,12 +280,12 @@ const items = {
       consumable: false,
       effect: 'background',
       effect_value: 'XandO',
-      emoji: '🖼',
+      emoji: 'itemBackground',
     },
     Safari: {
       label: 'Safari',
       value: 'Safari',
-      description: 'Safari',
+      description: 'Background',
       quantity: 1,
       weight: 0,
       cost: 1000,
@@ -381,12 +293,12 @@ const items = {
       consumable: false,
       effect: 'background',
       effect_value: 'Safari',
-      emoji: '🖼',
+      emoji: 'itemBackground',
     },
     LineLeaves: {
       label: 'LineLeaves',
       value: 'LineLeaves',
-      description: 'LineLeaves',
+      description: 'Background',
       quantity: 1,
       weight: 0,
       cost: 1000,
@@ -394,12 +306,12 @@ const items = {
       consumable: false,
       effect: 'background',
       effect_value: 'LineLeaves',
-      emoji: '🖼',
+      emoji: 'itemBackground',
     },
     ArcadeCarpet: {
       label: 'ArcadeCarpet',
       value: 'ArcadeCarpet',
-      description: 'ArcadeCarpet',
+      description: 'Background',
       quantity: 1,
       weight: 0,
       cost: 1000,
@@ -407,12 +319,12 @@ const items = {
       consumable: false,
       effect: 'background',
       effect_value: 'ArcadeCarpet',
-      emoji: '🖼',
+      emoji: 'itemBackground',
     },
     Topography: {
       label: 'Topography',
       value: 'Topography',
-      description: 'Topography',
+      description: 'Background',
       quantity: 1,
       weight: 0,
       cost: 1000,
@@ -420,12 +332,12 @@ const items = {
       consumable: false,
       effect: 'background',
       effect_value: 'Topography',
-      emoji: '🖼',
+      emoji: 'itemBackground',
     },
     CoffeeSwirl: {
       label: 'CoffeeSwirl',
       value: 'CoffeeSwirl',
-      description: 'CoffeeSwirl',
+      description: 'Background',
       quantity: 1,
       weight: 0,
       cost: 1000,
@@ -433,12 +345,12 @@ const items = {
       consumable: false,
       effect: 'background',
       effect_value: 'CoffeeSwirl',
-      emoji: '🖼',
+      emoji: 'itemBackground',
     },
     SpaceIcons: {
       label: 'SpaceIcons',
       value: 'SpaceIcons',
-      description: 'SpaceIcons',
+      description: 'Background',
       quantity: 1,
       weight: 0,
       cost: 1000,
@@ -446,12 +358,12 @@ const items = {
       consumable: false,
       effect: 'background',
       effect_value: 'SpaceIcons',
-      emoji: '🖼',
+      emoji: 'itemBackground',
     },
     Plaid: {
       label: 'Plaid',
       value: 'Plaid',
-      description: 'Plaid',
+      description: 'Background',
       quantity: 1,
       weight: 0,
       cost: 1000,
@@ -459,12 +371,12 @@ const items = {
       consumable: false,
       effect: 'background',
       effect_value: 'Plaid',
-      emoji: '🖼',
+      emoji: 'itemBackground',
     },
     Paisley: {
       label: 'Paisley',
       value: 'Paisley',
-      description: 'Paisley',
+      description: 'Background',
       quantity: 1,
       weight: 0,
       cost: 1000,
@@ -472,12 +384,12 @@ const items = {
       consumable: false,
       effect: 'background',
       effect_value: 'Paisley',
-      emoji: '🖼',
+      emoji: 'itemBackground',
     },
     AbstractTriangles: {
       label: 'AbstractTriangles',
       value: 'AbstractTriangles',
-      description: 'AbstractTriangles',
+      description: 'Background',
       quantity: 1,
       weight: 0,
       cost: 1000,
@@ -485,12 +397,12 @@ const items = {
       consumable: false,
       effect: 'background',
       effect_value: 'AbstractTriangles',
-      emoji: '🖼',
+      emoji: 'itemBackground',
     },
     Memphis: {
       label: 'Memphis',
       value: 'Memphis',
-      description: 'Memphis',
+      description: 'Background',
       quantity: 1,
       weight: 0,
       cost: 1000,
@@ -498,12 +410,12 @@ const items = {
       consumable: false,
       effect: 'background',
       effect_value: 'Memphis',
-      emoji: '🖼',
+      emoji: 'itemBackground',
     },
     Connected: {
       label: 'Connected',
       value: 'Connected',
-      description: 'Connected',
+      description: 'Background',
       quantity: 1,
       weight: 0,
       cost: 1000,
@@ -511,12 +423,12 @@ const items = {
       consumable: false,
       effect: 'background',
       effect_value: 'Connected',
-      emoji: '🖼',
+      emoji: 'itemBackground',
     },
     Binary: {
       label: 'Binary',
       value: 'Binary',
-      description: 'Binary',
+      description: 'Background',
       quantity: 1,
       weight: 0,
       cost: 1000,
@@ -524,7 +436,7 @@ const items = {
       consumable: false,
       effect: 'background',
       effect_value: 'Binary',
-      emoji: '🖼',
+      emoji: 'itemBackground',
     },
   },
 } as {
@@ -654,6 +566,64 @@ const genome = {
   }
 };
 
+const BetLossMessageList = [
+  'Let\'s just pretend you didn\'t lose anything.',
+  'Thank you for your donation.',
+  'You lost your bet, but you gained a friend.',
+  'We can still be friends, right?',
+  'Perhaps this is a sign that you should stop gambling.',
+  'Maybe you should try a different game.',
+  'I promise I\'ll spend it wisely.',
+  'I hope you didn\'t need that.',
+  'I\'m sure you\'ll win it back...',
+  'There is probably a better way to spend your money.',
+  'I\'m sure you can find some more under the couch cushions...',
+  'Sheeeeeesh...',
+  'Sometimes you win, sometimes you lose.',
+  'It is what it is.',
+  'That\'s just how the cookie crumbles.',
+  'I promise the odds are perfectly fair!.',
+  'Perhaps it is time to take a break.',
+  'I hope you\'re ok with eating ramen',
+  'I hope you\'re not too upset.',
+  'Was it rigged? Who knows!',
+  'I triple checked the math, and can confirm you\'re just unlucky.',
+  'At least your wallet is a bit easier to carry now.',
+  'I\'ll pretend I didn\'t see that.',
+  'I promise I won\'t tell anyone.',
+  'Try drinking an Elixir of luck next time!',
+  'Maybe go buy a Slushy or something instead.',
+  'I hope you\'re not too Worried.',
+  'Tip: Try not to lose next time.',
+];
+
+const BetWinMessageList = [
+  'Free lunch!',
+  'Wowee!',
+  'I\'m jealous!',
+  'I hope you spend it wisely.',
+  'Looks like you\'re having lobster tonight!',
+  'Someone is feeling lucky!',
+  'Congratulations!',
+  'Gee whiz!',
+  'Time to party!',
+  'Today is your lucky day!',
+  'You\'re gonna spend it wisely, right?',
+  'You\'re gonna buy me something nice, right?',
+  'Luck? Skill? Who knows!',
+  'Sometimes chance favors the prepared mind.',
+  'A.K.A. you\'re a lucky soul.',
+  'Free money!',
+  'It\'s a Christmas miracle!',
+  'You\'re going to need a bigger wallet.',
+  'I\'m so glad we could witness this special moment together.',
+  'Yippee!',
+  'To the Moon! Maybe you\'ll find some bears there.',
+  'Ripe pickings from the money Trees!',
+  'Your pile of tokens will reach Space soon! Apparently there\'s a lady up there.',
+  'You could probably buy up to Seven Cats with that!',
+];
+
 const text = {
   enter: [
     'take a bus to',
@@ -672,29 +642,31 @@ const text = {
     'trek through the lands of middle earth to get to ',
   ],
   quest: [
-    'You find some missing children and return them to their parents.\nThe children give you the {tokens} tokens they found on their adventure.',
-    'You find a lost puppy and return it to its owner.\nAs you were chasing the puppy you found {tokens} tokens on the ground, nice!',
-    'You find a lost cat and return it to its owner.\nThe cat coughs up a hairball.\nOh, that\'s actually {tokens} tokens!\nYou wipe them off and pocket them.',
-    'You find a lost dog and return it to its owner.\nThe dog looks into your eyes and you feel a connection to their soul.\nYour pocket feels {tokens} tokens heavier.',
-    'You find a lost bird and return it to its owner.\nThe bird gives you a really cool feather.\nYou trade the feather to some kid for {tokens} tokens.',
-    'You find a lost fish and return it to its owner.\nHow do you lose a fish?\nYou decide not to ask and leave with your {tokens} tokens as soon as you can.',
-    'You borrow a metal detector and find a lost ring.\nYou return the ring to its owner and they are so grateful they give you {tokens} tokens.',
-    'You find someone worried that their pill could be dangerous.\nYou use one of your fentanyl strips to make sure they can rule that out!\nThey\'re so grateful they give you {tokens} tokens.',
-    'Someone asks if you can help make sure their bag of powder is what they think it is.\nYou use your test kit to help identify for them and they give you {tokens} tokens for keeping them safe.',
-    'You happen upon along with wide pupils and sweating in a t-shirt.\nAfter an enthusiastic conversation that has no point you give them some gatorade that they down almost instantly.\nThey hug you and slip {tokens} tokens into your pocket.',
-    'You do some hunting and bring back some food for the town.\nThe town gives you {tokens} tokens for your troubles.',
-    'You go fishing and bring back some food for the town.\nThe town gives you {tokens} tokens for your troubles.',
-    'You go mining and bring back some ore for the town.\nThe town gives you {tokens} tokens for your troubles.',
-    'You help build a new house in the town.\nThe town gives you {tokens} tokens for your troubles.',
+    'You find some missing children and return them to their parents.\nThe children give you the **{tokens} tokens **they found on their adventure.',
+    'You find a lost puppy and return it to its owner.\nAs you were chasing the puppy you found **{tokens} tokens **on the ground, nice!',
+    'You find a lost cat and return it to its owner.\nThe cat coughs up a hairball.\nOh, that\'s actually **{tokens} tokens!**\nYou wipe them off and pocket them.',
+    'You find a lost dog and return it to its owner.\nThe dog looks into your eyes and you feel a connection to their soul.\nYour pocket feels **{tokens} tokens **heavier.',
+    'You find a lost bird and return it to its owner.\nThe bird gives you a really cool feather.\nYou trade the feather to some kid for **{tokens} tokens.**',
+    'You find a lost fish and return it to its owner.\nHow do you lose a fish?\nYou decide not to ask and leave with your **{tokens} tokens **as soon as you can.',
+    'You borrow a metal detector and find a lost ring.\nYou return the ring to its owner and they are so grateful they give you **{tokens} tokens.**',
+    'You find someone worried that their pill could be dangerous.\nYou use one of your fentanyl strips to make sure they can rule that out!\nThey\'re so grateful they give you **{tokens} tokens.**',
+    'Someone asks if you can help make sure their bag of powder is what they think it is.\nYou use your test kit to help identify for them and they give you **{tokens} tokens **for keeping them safe.',
+    'You happen upon along with wide pupils and sweating in a t-shirt.\nAfter an enthusiastic conversation that has no point you give them some gatorade that they down almost instantly.\nThey hug you and slip **{tokens} tokens **into your pocket.',
+    'You do some hunting and bring back some food for the town.\nThe town gives you **{tokens} tokens **for your troubles.',
+    'You go fishing and bring back some food for the town.\nThe town gives you **{tokens} tokens **for your troubles.',
+    'You go mining and bring back some ore for the town.\nThe town gives you **{tokens} tokens **for your troubles.',
+    'You help build a new house in the town.\nThe town gives you **{tokens} tokens **for your troubles.',
   ],
   dungeon: [
-    'You voyaged to fight the evil wizard in the dark tower!\nBut they\'re just misunderstood and enjoy earth tones.\nThey appreciate the visit and gave you {tokens} tokens for your troubles.',
-    'You were tasked with killing a dragon that has looted the countryside!\nBut it was only feeding its baby dragon.\nYou taught the dragon how to farm and it gave you {tokens} Tokens.',
-    'You attempted to subdue the ogre known for assaulting people!\nBut it turns out they just hug too hard.\nYou taught them about personal boundaries and they gave you {tokens} Tokens.',
-    'You went to the local cave to fight the goblin king!\nBut it turns out he was just a goblin who wanted to be king.\nYou taught him about democracy and he gave you {tokens} Tokens.',
-    'You journey to the dark forest to fight the evil witch!\nBut they turn out to be a gardner with too much property.\nYou taught her about landscapers and she gave you {tokens} Tokens.',
+    'You voyaged to fight the evil wizard in the dark tower!\nBut they\'re just misunderstood and enjoy earth tones.\nThey appreciate the visit and gave you **{tokens} tokens **for your troubles.',
+    'You were tasked with killing a dragon that has looted the countryside!\nBut it was only feeding its baby dragon.\nYou taught the dragon how to farm and it gave you **{tokens} Tokens.**',
+    'You attempted to subdue the ogre known for assaulting people!\nBut it turns out they just hug too hard.\nYou taught them about personal boundaries and they gave you **{tokens} Tokens.**',
+    'You went to the local cave to fight the goblin king!\nBut it turns out he was just a goblin who wanted to be king.\nYou taught him about democracy and he gave you **{tokens} Tokens.**',
+    'You journey to the dark forest to fight the evil witch!\nBut they turn out to be a gardner with too much property.\nYou taught her about landscapers and she gave you **{tokens} Tokens.**',
   ],
 };
+
+export type GameName = 'Coinflip' | 'Roulette' | 'Blackjack' | 'Slots';
 
 const wagers = {} as {
   [key: string]: {
@@ -703,6 +675,128 @@ const wagers = {} as {
   },
 };
 
+const optionDict = {
+  easy: {
+    name: 'Normal',
+    bonus: 1,
+  },
+  medium: {
+    name: 'Hard',
+    bonus: 1.5,
+  },
+  hard: {
+    name: 'Expert',
+    bonus: 2,
+  },
+};
+
+const bonusDict = {
+  5: {
+    perfectBonus: 1.5,
+    perfectBonusMessage: ' *(+50% perfect bonus)*',
+  },
+  10: {
+    perfectBonus: 2,
+    perfectBonusMessage: ' *(+100% perfect bonus)*',
+  },
+  20: {
+    perfectBonus: 3,
+    perfectBonusMessage: ' *(+200% perfect bonus)*',
+  },
+};
+
+type TriviaQuestion = {
+  category: string;
+  type: string;
+  difficulty: string;
+  question: string;
+  correct_answer: string;
+  all_answers: string[];
+};
+
+const bonusMessageDict = {
+  easy: '',
+  medium: ' *(+50% difficulty bonus)*',
+  hard: ' *(+100% difficulty bonus)*',
+};
+
+const gameQuitMessageList = [ // Random messages to display when the user quits the game
+  'If you\'re tired of starting over, stop giving up!',
+  'Believe in yourself more!',
+  'Come back later?',
+  'Did you leave the oven on?',
+  'Sometimes it\'s ok to cut your losses...',
+  'Perhaps another time?',
+  'Perhaps you should try a different game?',
+  'Did I do something wrong?',
+  'Was it something I said?',
+];
+
+const timeOutMessageList = [ // Random messages to display when the user runs out of time
+  'Be faster next time!',
+  'Be a bit quicker next time!',
+  'You were far too slow!',
+  'If you were any slower, you would have been going backwards!',
+  'You were almost as slow as a snail!',
+  'You were slower than a turtle!',
+  'A sloth could have answered that faster!',
+  'Your brain is slower than a Zombie\'s!',
+];
+
+const awfulScoreMessageList = [ // Random messages to display when the user got no questions right
+  'Yikes...',
+  'Ouch...',
+  'That was awful...',
+  'That was terrible...',
+  'That was horrible...',
+  'Were you even trying?',
+  'I\'ll pretend I didn\'t see that...',
+  'Let\'s just forget that ever happened...',
+  '...',
+  'I\'m speechless...',
+  'Sheeeeeesh...',
+  'Perhaps your brain is just a bit Foggy...',
+  'Is your brain feeling a bit Blurry?',
+  'Beep Bop Bloop... Error... Error... Error...',
+  'Tip: A score of 0 is not a good score...',
+];
+
+const badScoreMessageList = [ // Random messages to display when the user got less than half the questions right
+  'Is that all you got?',
+  'You can do better than that!',
+  'Is that the best you can do?',
+  'Better than nothing, I guess...',
+  'You wouldn\'t want to vs my grandma...',
+  'Come on, you can do better than that!',
+  'Try harder next time!',
+  'I\'ve heard eating Kiwifruit can help improve your memory...',
+  'Tip: You get more points for answering correctly!',
+];
+
+const goodScoreMessageList = [ // Random messages to display when the user got more than half the questions right
+  'Not bad!',
+  'Not too shabby!',
+  'Getting close!',
+  'Almost there!',
+  'You\'re getting there!',
+  'Now we\'re talking!',
+  'Let\'s see if you can keep it up!',
+  'Let\'s go for gold next time!',
+  'You\'re a natural!',
+];
+
+const perfectScoreMessageList = [ // Random messages to display when the user got all the questions right
+  'Now that\'s what I call a fine score!',
+  'You\'re a genius!',
+  'You\'re a trivia master!',
+  'You\'re a trivia god!',
+  'Have you ever considered being a professional trivia player?',
+  'That last player could learn a thing or two from you!',
+  'Very impressive!',
+  'You\'re on a roll!',
+  'Is this even Reality?',
+];
+
 function rand(array:string[]):string {
   return array[Math.floor(Math.random() * array.length)];
 }
@@ -710,28 +804,31 @@ function rand(array:string[]):string {
 export const dRpg: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('rpg')
-    .setDescription('A TripSit RPG!')
+    .setDescription('A TripSit RPG (BETA)!')
     .addSubcommand(subcommand => subcommand
       .setName('town')
       .setDescription('Go to TripTown!'))
     .addSubcommand(subcommand => subcommand
-      .setName('shop')
-      .setDescription('Go to the Shop!'))
+      .setName('market')
+      .setDescription('Go to the Market!'))
     .addSubcommand(subcommand => subcommand
       .setName('home')
       .setDescription('Go to your Home!'))
     .addSubcommand(subcommand => subcommand
-      .setName('work')
-      .setDescription('Go to the work center!'))
+      .setName('bounties')
+      .setDescription('Go to the bounty board!'))
+    .addSubcommand(subcommand => subcommand
+      .setName('help')
+      .setDescription('Learn how to play!'))
     .addSubcommand(subcommand => subcommand
       .setName('quest')
-      .setDescription('Quest and earn a token!'))
+      .setDescription('Quest and earn 10 tokens!'))
     .addSubcommand(subcommand => subcommand
       .setName('dungeon')
-      .setDescription('Clear a dungeon and earn 10 tokens!'))
+      .setDescription('Clear a dungeon and earn 50 tokens!'))
     .addSubcommand(subcommand => subcommand
       .setName('raid')
-      .setDescription('Raid a boss and earn 50 tokens!'))
+      .setDescription('Raid a boss and earn 100 tokens!'))
     .addSubcommand(subcommand => subcommand
       .setName('arcade')
       .setDescription('Go to the arcade'))
@@ -741,34 +838,13 @@ export const dRpg: SlashCommand = {
     .addSubcommand(subcommand => subcommand
       .setName('roulette')
       .setDescription('Go to the roulette game')),
+  // .addSubcommand(subcommand => subcommand
+  //   .setName('trivia')
+  //   .setDescription('Go to the trivia parlor')),
   async execute(interaction) {
     startLog(F, interaction);
-    // This command provides a RPG game for the user to play
-    // It starts with the setup subcommand which has the user setup their character including:
-    // - Name - string
-    // - Class - Warrior, Mage, Rogue, Cleric
-    // - Species - Human, Elf, Dwarf, Orc, Gnome, Halfling
-    //
-    // Once setup, the user can generate tokens in a few different ways:
-    // - Quest - Grants .1 TripToken, can only be used once every hour
-    // - Dungeon - Grants 1 TripToken, can only be used once every 24 hours
-    // - Raid - Grants 5 TripToken, can only be used once every 7 days
-    //
-    // The user can also use their tokens to buy items from the shop:
-    // - Test Kit - 10% more tokens every time you gain tokens, costs 100 TripToken
-    // - Scale - 20% more tokens every time you gain tokens, costs 200 TripToken
-    // - Profile border - 30% more tokens every time you gain tokens, costs 300 TripToken
-    // - Profile background - 40% more tokens every time you gain tokens, costs 400 TripToken
-    //
-    // The user can also play some games to earn some tokens:
-    // - Blackjack - Play a game of blackjack
-    // - Coin Flip - Flip a coin or flip a coin 10 times
-    // - Rock, Paper, Scissors - Play a game of rock, paper, scissors
-    //
-    // The user can also view their persona stats:
-    // - Inventory - View their inventory and equip/un-equip items
-    // - Stats - View their stats and level them up
-    // - Guild - View their guild and join/leave a guild
+    const channelRpg = await interaction.guild?.channels.fetch(env.CHANNEL_TRIPTOWN as string) as TextChannel;
+    await interaction.deferReply({ ephemeral: (channelRpg.id !== interaction.channelId) });
     const subcommand = interaction.options.getSubcommand();
 
     // const quietCommands = [
@@ -779,18 +855,8 @@ export const dRpg: SlashCommand = {
     //   'roulette',
     // ];
 
-    const channelRpg = await interaction.guild?.channels.fetch(env.CHANNEL_TRIPTOWN as string) as TextChannel;
-
-    const message = channelRpg.id !== interaction.channelId
-      ? await interaction.reply({ embeds: [embedTemplate().setTitle('Loading...')], ephemeral: true })
-      : await interaction.reply({ embeds: [embedTemplate().setTitle('Loading...')] });
-
-    // Create a collector that will listen to buttons clicked by the user
-    const filter = (i: MessageComponentInteraction) => i.user.id === interaction.user.id;
-    const collector = message.createMessageComponentCollector({ filter, time: 0 });
-
     // Get the user's persona data
-    let [personaData] = await getPersonaInfo(interaction.user.id);
+    let personaData = await getPersonaInfo(interaction.user.id);
     // log.debug(F, `Initial Persona data: ${JSON.stringify(personaData, null, 2)}`);
 
     // If the user doesn't have persona data, create it
@@ -809,14 +875,17 @@ export const dRpg: SlashCommand = {
     if (subcommand === 'town') {
       await interaction.editReply(await rpgTown(interaction));
     }
-    if (subcommand === 'work') {
-      await interaction.editReply(await rpgWork(interaction, null));
+    if (subcommand === 'bounties') {
+      await interaction.editReply(await rpgBounties(interaction, null));
     }
     if (subcommand === 'quest' || subcommand === 'dungeon' || subcommand === 'raid') {
-      await interaction.editReply(await rpgWork(interaction, subcommand));
+      await interaction.editReply(await rpgBounties(interaction, subcommand));
     }
-    if (subcommand === 'shop') {
-      await interaction.editReply(await rpgShop(interaction));
+    if (subcommand === 'market') {
+      await interaction.editReply(await rpgMarket(interaction));
+    }
+    if (subcommand === 'help') {
+      await interaction.editReply(await rpgHelp(interaction));
     }
     if (subcommand === 'home') {
       await interaction.editReply(await rpgHome(interaction, ''));
@@ -830,59 +899,16 @@ export const dRpg: SlashCommand = {
     if (subcommand === 'roulette') {
       await interaction.editReply(await rpgArcadeGame(interaction, 'Roulette'));
     }
+    if (subcommand === 'trivia') {
+      await interaction.editReply(await rpgTrivia(interaction));
+    }
+
     // if (subcommand === 'blackjack') {
     //   await interaction.editReply(await rpgArcade(interaction));
     // }
     // if (subcommand === 'slots') {
     //   await interaction.editReply(await rpgArcade(interaction));
     // }
-
-    // Button collector
-    collector.on('collect', async (i: MessageComponentInteraction) => {
-    // log.debug(F, `Interaction: ${JSON.stringify(i.customId, null, 2)}`);
-      if (i.customId === 'rpgTown') await i.update(await rpgTown(i));
-      else if (i.customId === 'rpgWork') await i.update(await rpgWork(i, null));
-      else if (i.customId === 'rpgShop') await i.update(await rpgShop(i));
-      else if (i.customId === 'rpgArcade') await i.update(await rpgArcade(i));
-      else if (i.customId === 'rpgWager1') await i.update(await rpgArcadeWager(i));
-      else if (i.customId === 'rpgWager10') await i.update(await rpgArcadeWager(i));
-      else if (i.customId === 'rpgWager100') await i.update(await rpgArcadeWager(i));
-      else if (i.customId === 'rpgWager1000') await i.update(await rpgArcadeWager(i));
-      else if (i.customId === 'rpgWager10000') await i.update(await rpgArcadeWager(i));
-      else if (i.customId === 'rpgCoinFlip') await i.update(await rpgArcadeGame(i, 'Coinflip'));
-      else if (i.customId === 'rpgRoulette') await i.update(await rpgArcadeGame(i, 'Roulette'));
-      else if (i.customId === 'rpgRouletteRed') await i.editReply(await rpgArcadeGame(i, 'Roulette', 'red'));
-      else if (i.customId === 'rpgRouletteBlack') await i.editReply(await rpgArcadeGame(i, 'Roulette', 'black'));
-      else if (i.customId === 'rpgRouletteFirst') await i.editReply(await rpgArcadeGame(i, 'Roulette', 'first'));
-      else if (i.customId === 'rpgRouletteSecond') await i.editReply(await rpgArcadeGame(i, 'Roulette', 'second'));
-      else if (i.customId === 'rpgRouletteThird') await i.editReply(await rpgArcadeGame(i, 'Roulette', 'third'));
-
-      else if (i.customId === 'rpgRouletteOdd') await i.editReply(await rpgArcadeGame(i, 'Roulette', 'odds'));
-      else if (i.customId === 'rpgRouletteEven') await i.editReply(await rpgArcadeGame(i, 'Roulette', 'evens'));
-      else if (i.customId === 'roulette1to12') await i.editReply(await rpgArcadeGame(i, 'Roulette', '1-12'));
-      else if (i.customId === 'roulette13to24') await i.editReply(await rpgArcadeGame(i, 'Roulette', '13-24'));
-      else if (i.customId === 'roulette25to36') await i.editReply(await rpgArcadeGame(i, 'Roulette', '25-36'));
-
-      else if (i.customId === 'rpgRouletteHigh') await i.editReply(await rpgArcadeGame(i, 'Roulette', 'high'));
-      else if (i.customId === 'rpgRouletteLow') await i.editReply(await rpgArcadeGame(i, 'Roulette', 'low'));
-      else if (i.customId === 'rpgRouletteZero') await i.editReply(await rpgArcadeGame(i, 'Roulette', '0'));
-
-      else if (i.customId === 'rpgCoinflipHeads') await i.editReply(await rpgArcadeGame(i, 'Coinflip', 'heads'));
-      else if (i.customId === 'rpgCoinflipTails') await i.editReply(await rpgArcadeGame(i, 'Coinflip', 'tails'));
-      else if (i.customId === 'rpgHome') await i.update(await rpgHome(i, ''));
-      else if (i.customId === 'rpgSpecies') await i.update(await rpgHome(i, ''));
-      else if (i.customId === 'rpgClass') await i.update(await rpgHome(i, ''));
-      else if (i.customId === 'rpgGuild') await i.update(await rpgHome(i, ''));
-      else if (i.customId === 'rpgName') await rpgHomeNameChange(i);
-      else if (i.customId === 'rpgAccept') await i.update(await rpgHomeAccept(i));
-      else if (i.customId === 'rpgGeneralSelect') await i.update(await rpgShopChange(i));
-      else if (i.customId === 'rpgShopBuy') await i.update(await rpgShopAccept(i));
-      else if (i.customId === 'rpgBackgroundSelect') await i.update(await rpgHome(i, ''));
-      else if (i.customId === 'rpgQuest' || i.customId === 'rpgDungeon' || i.customId === 'rpgRaid') {
-        await i.update(await rpgWork(i, i.customId.replace('rpg', '').toLowerCase() as 'quest' | 'dungeon' | 'raid'));
-      }
-    });
-
     return true;
   },
 };
@@ -891,21 +917,24 @@ export async function rpgTown(
   interaction:MessageComponentInteraction | ChatInputCommandInteraction,
 ):Promise<InteractionEditReplyOptions | InteractionUpdateOptions> {
   // Check if the user has a persona
-  // const [personaData] = await getPersonaInfo(interaction.user.id);
+  // const personaData = await getPersonaInfo(interaction.user.id);
 
   const rowTown = new ActionRowBuilder<ButtonBuilder>()
     .addComponents(
-      buttons.work,
-      buttons.shop,
-      buttons.arcade,
-      buttons.home,
+      customButton(`rpgBounties,user:${interaction.user.id}`, 'Bounties', 'buttonBounties', ButtonStyle.Primary),
+      customButton(`rpgMarket,user:${interaction.user.id}`, 'Market', 'buttonMarket', ButtonStyle.Primary),
+      customButton(`rpgArcade,user:${interaction.user.id}`, 'Arcade', 'buttonArcade', ButtonStyle.Primary),
+      customButton(`rpgHome,user:${interaction.user.id}`, 'Home', 'buttonHome', ButtonStyle.Primary),
+      customButton(`rpgHelp,user:${interaction.user.id}`, 'Help', 'buttonHelp', ButtonStyle.Primary),
     );
+
+  // log.debug(F, `RPG Town End: ${JSON.stringify(rowTown)}`);
 
   return {
     embeds: [embedTemplate()
       .setAuthor(null)
-      .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG`, iconURL: env.TS_ICON_URL })
-      .setTitle('Town')
+      .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
+      .setTitle(`${emojiGet('buttonTown')} Town`)
       .setDescription(stripIndents`
       You ${rand(text.enter)} TripTown, a new settlement on the edge of Triptopia, the TripSit Kingdom.
 
@@ -913,7 +942,7 @@ export async function rpgTown(
       
       *You get the impression that you're one of the first people to visit.*
       
-      A recruitment center to take on jobs, and a small shop.
+      A recruitment center to take on jobs, and a small market.
   
       What would you like to do?`)
       .setColor(Colors.Green)],
@@ -930,34 +959,34 @@ function getLastMonday(d:Date) {
   return new Date(d);
 }
 
-export async function rpgWork(
+export async function rpgBounties(
   interaction: MessageComponentInteraction | ChatInputCommandInteraction,
   command: 'quest' | 'dungeon' | 'raid' | null,
 ):Promise<InteractionEditReplyOptions | InteractionUpdateOptions> {
   // Check if the user has a persona
-  const [personaData] = await getPersonaInfo(interaction.user.id);
+  const personaData = await getPersonaInfo(interaction.user.id);
 
   // Get the existing inventory data
   const inventoryData = await inventoryGet(personaData.id);
   // log.debug(F, `Persona inventory: ${JSON.stringify(inventoryData, null, 2)}`);
 
-  const rowWork = new ActionRowBuilder<ButtonBuilder>()
+  const rowBounties = new ActionRowBuilder<ButtonBuilder>()
     .addComponents(
-      buttons.quest,
-      buttons.dungeon,
-      buttons.raid,
-      buttons.town,
+      customButton(`rpgQuest,user:${interaction.user.id}`, 'Quest', 'buttonQuest', ButtonStyle.Secondary),
+      customButton(`rpgDungeon,user:${interaction.user.id}`, 'Dungeon', 'buttonDungeon', ButtonStyle.Secondary),
+      customButton(`rpgRaid,user:${interaction.user.id}`, 'Raid', 'buttonRaid', ButtonStyle.Secondary),
+      customButton(`rpgTown,user:${interaction.user.id}`, 'Town', 'buttonTown', ButtonStyle.Primary),
     );
 
   const contracts = {
     quest: {
       success: {
-        title: 'Quest Success',
+        title: `${emojiGet('buttonQuest')} Quest Success`,
         description: stripIndents`${rand(text.quest)}`,
         color: Colors.Green,
       },
       fail: {
-        title: 'Quest Fail',
+        title: `${emojiGet('buttonQuest')} Quest Fail`,
         description: stripIndents`
           There are no more quests available at the moment. New quests are posted every hour!
         `,
@@ -966,12 +995,12 @@ export async function rpgWork(
     },
     dungeon: {
       success: {
-        title: 'Dungeon Success',
+        title: `${emojiGet('buttonDungeon')} Dungeon Success`,
         description: stripIndents`${rand(text.dungeon)}`,
         color: Colors.Green,
       },
       fail: {
-        title: 'Dungeon Fail',
+        title: `${emojiGet('buttonDungeon')} Dungeon Fail`,
         description: stripIndents`
           You already cleared a dungeon today, you're still tired and need to prepare.
         `,
@@ -980,14 +1009,14 @@ export async function rpgWork(
     },
     raid: {
       success: {
-        title: 'Raid Success',
+        title: `${emojiGet('buttonRaid')} Raid Success`,
         description: stripIndents`
           You stormed into Moonbear's office, rustle their jimmies and stole {tokens} TripTokens!
         `,
         color: Colors.Green,
       },
       fail: {
-        title: 'Raid Fail',
+        title: `${emojiGet('buttonRaid')} Raid Fail`,
         description: stripIndents`
           You've already raided Moonbear's office this week, give them a break!
         `,
@@ -998,8 +1027,8 @@ export async function rpgWork(
 
   if (command !== null) {
     const dbKey = `last_${command}`;
-    const lastWork = personaData[dbKey as 'last_quest' | 'last_dungeon' | 'last_raid'] as Date;
-    // log.debug(F, `lastWork: ${lastWork}`);
+    const lastBounties = personaData[dbKey as 'last_quest' | 'last_dungeon' | 'last_raid'] as Date;
+    // log.debug(F, `lastBounties: ${lastBounties}`);
 
     let resetTime = {} as Date;
     let timeout = false;
@@ -1009,10 +1038,10 @@ export async function rpgWork(
 
       resetTime = new Date(new Date().setHours(currentHour + 1, 0, 0, 0));
 
-      if (lastWork) {
-        const lastWorkHour = lastWork ? lastWork.getHours() : 0;
-        // log.debug(F, `lastWorkHour: ${lastWorkHour}`);
-        if (lastWorkHour === currentHour) {
+      if (lastBounties) {
+        const lastBountiesHour = lastBounties.getHours();
+        // log.debug(F, `lastBountiesHour: ${lastBountiesHour}`);
+        if (lastBountiesHour === currentHour) {
           timeout = true;
         }
       }
@@ -1021,13 +1050,13 @@ export async function rpgWork(
       // log.debug(F, `currentDay: ${currentDay}`);
       resetTime = new Date(new Date(new Date().setDate(currentDay + 1)).setHours(0, 0, 0, 0));
 
-      if (lastWork) {
-        const lastWorkDay = lastWork ? lastWork.getDate() : 0;
-        // log.debug(F, `lastWorkDay: ${lastWorkDay}`);
+      if (lastBounties) {
+        const lastBountiesDay = lastBounties.getDate();
+        // log.debug(F, `lastBountiesDay: ${lastBountiesDay}`);
 
         // log.debug(F, `personaData1: ${JSON.stringify(personaData, null, 2)}`);
-        // if (lastWork && (lastWork.getTime() + interval > new Date().getTime())) {
-        if (lastWorkDay === currentDay) {
+        // if (lastBounties && (lastBounties.getTime() + interval > new Date().getTime())) {
+        if (lastBountiesDay === currentDay) {
           timeout = true;
         }
       }
@@ -1036,8 +1065,8 @@ export async function rpgWork(
       // log.debug(F, `lastMonday: ${lastMonday}`);
       resetTime = new Date(new Date(lastMonday.getTime() + 7 * 24 * 60 * 60 * 1000).setHours(0, 0, 0, 0));
 
-      // Check if the last work was done after the last monday
-      if (lastWork && lastWork.getTime() > lastMonday.getTime()) {
+      // Check if the last bounties was done after the last monday
+      if (lastBounties && lastBounties.getTime() > lastMonday.getTime()) {
         timeout = true;
       }
     }
@@ -1049,13 +1078,13 @@ export async function rpgWork(
       return {
         embeds: [embedTemplate()
           .setAuthor(null)
-          .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG`, iconURL: env.TS_ICON_URL })
+          .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
           .setTitle(contracts[command].fail.title)
           .setDescription(stripIndents`${contracts[command].fail.description}
-      You still have ${personaData.tokens} TT$!
-      You can try again ${time(resetTime, 'R')}`)
+            You can try again ${time(resetTime, 'R')}
+            Wallet: ${personaData.tokens} tokens`)
           .setColor(contracts[command].fail.color)],
-        components: [rowWork],
+        components: [rowBounties],
       };
     }
 
@@ -1093,60 +1122,81 @@ export async function rpgWork(
     return {
       embeds: [embedTemplate()
         .setAuthor(null)
-        .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG`, iconURL: env.TS_ICON_URL })
+        .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
         .setTitle(contracts[command].success.title)
         .setDescription(stripIndents`${contracts[command].success.description.replace('{tokens}', tokens.toString())}
-    You now have ${personaData.tokens} TT$!
-    You can try again ${time(resetTime, 'R')}`)
+          You can try again ${time(resetTime, 'R')}.
+          Wallet: ${personaData.tokens} tokens`)
         .setColor(contracts[command].success.color)],
-      components: [rowWork],
+      components: [rowBounties],
     };
   }
 
   return {
     embeds: [embedTemplate()
       .setAuthor(null)
-      .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG`, iconURL: env.TS_ICON_URL })
-      .setTitle('Work')
+      .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
+      .setTitle(`${emojiGet('buttonBounties')} Bounties`)
       .setDescription(stripIndents`
-      You are at work, you can go on a quest, clear a dungeon, or go on a raid.
+      You are at the bounty board, you can go on a quest, clear a dungeon, or go on a raid.
     `)
       .setColor(Colors.Green)],
-    components: [rowWork],
+    components: [rowBounties],
   };
 }
 
-export async function rpgShop(
+export async function rpgMarket(
   interaction: MessageComponentInteraction | ChatInputCommandInteraction,
 ):Promise<InteractionEditReplyOptions | InteractionUpdateOptions> {
-  // Get the info used in the shop
+  // Get the info used in the market
   const {
-    shopInventory,
+    marketInventory,
     personaTokens,
     personaInventory,
-  } = await rpgShopInventory(interaction);
+  } = await rpgMarketInventory(interaction);
 
-  // Create the shop buttons - This is a select menu
+  // log.debug(F, `marketInventory: ${JSON.stringify(marketInventory, null, 2)}`);
+  // log.debug(F, `personaTokens: ${personaTokens}`);
+  // log.debug(F, `personaInventory: ${JSON.stringify(personaInventory, null, 2)}`);
+
+  // Create the market buttons - This is a select menu
   const rowItems = new ActionRowBuilder<StringSelectMenuBuilder>()
-    .addComponents(menus.item.setOptions(shopInventory));
+    .addComponents(
+      new StringSelectMenuBuilder()
+        .setCustomId(`rpgGeneralSelect,user:${interaction.user.id}`)
+        .setPlaceholder('Select an item to buy')
+        .setOptions(marketInventory),
+
+    );
   // This is the row of nav buttons. It starts with the town button.
-  const rowShop = new ActionRowBuilder<ButtonBuilder>()
-    .addComponents(buttons.town);
+  const rowMarket = new ActionRowBuilder<ButtonBuilder>()
+    .addComponents(
+      customButton(`rpgTown,user:${interaction.user.id}`, 'Town', 'buttonTown', ButtonStyle.Primary),
+    );
 
   // Everyone gets the town button, but only people with purchased items get the items select menu
-  const componentList = [rowShop] as ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>[];
-  if (shopInventory.length > 0) { componentList.unshift(rowItems); }
+  const componentList = [rowMarket] as ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>[];
+  // log.debug(F, `marketInventory.length: ${marketInventory.length}`);
+  // log.debug(F, `componentList: ${JSON.stringify(componentList, null, 2)}`);
 
-  // The user has clicked the shop button, send them the shop embed
+  if (marketInventory.length > 0) { componentList.unshift(rowItems); }
+
+  // log.debug(F, `componentList: ${JSON.stringify(componentList, null, 2)}`);
+
+  // The user has clicked the market button, send them the market embed
   return {
     embeds: [embedTemplate()
       .setAuthor(null)
-      .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG`, iconURL: env.TS_ICON_URL })
-      .setTitle('Shop')
+      .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
+      .setTitle(`${emojiGet('buttonMarket')} Market`)
       .setDescription(stripIndents`
-      You are in the shop, you can buy some items to help you on your journey.
+      You are in the local market, you can buy some items to help you on your journey.
 
-      You currently have **${personaTokens}** TripTokens.
+      ${emojiGet('itemBonus')} ***Multipliers*** can be used to increase the amount of tokens you earn.
+      ${emojiGet('itemBackground')} ***Backgrounds*** can be used to personalize your /profile and /levels.
+      ***More items coming soon! Check back later.***
+      
+      Wallet: ${personaTokens} tokens
 
     ${personaInventory}`)
       .setColor(Colors.Gold)],
@@ -1154,15 +1204,15 @@ export async function rpgShop(
   };
 }
 
-export async function rpgShopChange(
+export async function rpgMarketChange(
   interaction:MessageComponentInteraction,
 ):Promise<InteractionUpdateOptions> {
-  // Get the info used in the shop
+  // Get the info used in the market
   const {
-    shopInventory,
+    marketInventory,
     personaTokens,
     personaInventory,
-  } = await rpgShopInventory(interaction);
+  } = await rpgMarketInventory(interaction);
 
   // Get the item the user selected
   let choice = '' as string;
@@ -1178,15 +1228,15 @@ export async function rpgShopChange(
 
   // log.debug(F, `choice: ${choice}`);
 
-  // Get a list of shopInventory where the value does not equal the choice
-  const filteredItems = Object.values(shopInventory).filter(item => item.value !== choice);
+  // Get a list of marketInventory where the value does not equal the choice
+  const filteredItems = Object.values(marketInventory).filter(item => item.value !== choice);
 
-  // Reset the options menu to be empty
-  menus.item.setOptions();
+  const stringMenu = new StringSelectMenuBuilder()
+    .setOptions(filteredItems)
+    .setCustomId(`rpgGeneralSelect,user:${interaction.user.id}`)
+    .setPlaceholder('Select an item to buy');
 
-  menus.item.addOptions(filteredItems);
-
-  // Use shopInventory and find the item that matches the choice, make it default
+  // Use marketInventory and find the item that matches the choice, make it default
   let itemData = {} as {
     label: string;
     value: string;
@@ -1200,10 +1250,10 @@ export async function rpgShopChange(
     effect_value: string;
     emoji: string;
   };
-  const chosenItem = shopInventory.find(shopItem => shopItem.value === choice);
+  const chosenItem = marketInventory.find(marketItem => marketItem.value === choice);
   if (chosenItem) {
     chosenItem.default = true;
-    menus.item.addOptions(chosenItem);
+    stringMenu.addOptions(chosenItem);
     const allItems = [...Object.values(items.general), ...Object.values(items.backgrounds)];
     itemData = allItems.find(item => item.value === chosenItem?.value) as {
       label: string;
@@ -1222,31 +1272,40 @@ export async function rpgShopChange(
   }
 
   const rowItems = new ActionRowBuilder<StringSelectMenuBuilder>()
-    .addComponents(menus.item);
+    .addComponents(stringMenu);
 
-  const rowShop = new ActionRowBuilder<ButtonBuilder>()
+  const rowMarket = new ActionRowBuilder<ButtonBuilder>()
     .addComponents(
-      buttons.town,
+      customButton(`rpgTown,user:${interaction.user.id}`, 'Town', 'buttonTown', ButtonStyle.Primary),
     );
 
-  if (chosenItem) {
-    rowShop.addComponents(
-      buttons.buy.setLabel(`Buy ${chosenItem?.label}`),
+  if (chosenItem && itemData.effect === 'background') {
+    rowMarket.addComponents(
+      customButton(`rpgMarketBuy,user:${interaction.user.id}`, 'Buy', 'buttonBuy', ButtonStyle.Success).setLabel(`Buy ${chosenItem.label}`),
+      customButton(`rpgMarketPreview,user:${interaction.user.id}`, 'Preview', 'buttonPreview', ButtonStyle.Secondary),
+    );
+  } else if (chosenItem) {
+    rowMarket.addComponents(
+      customButton(`rpgMarketBuy,user:${interaction.user.id}`, 'Buy', 'buttonBuy', ButtonStyle.Success).setLabel(`Buy ${chosenItem.label}`),
     );
   }
 
-  const components = menus.item.options.length === 0
-    ? [rowShop]
-    : [rowItems, rowShop];
+  const components = stringMenu.options.length === 0
+    ? [rowMarket]
+    : [rowItems, rowMarket];
 
   const embed = embedTemplate()
     .setAuthor(null)
-    .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG`, iconURL: env.TS_ICON_URL })
-    .setTitle('Shop')
+    .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
+    .setTitle(`${emojiGet('buttonMarket')} Market`)
     .setDescription(stripIndents`
-      You are in the shop, you can buy some items to help you on your journey.
+      You are in the local market, you can buy some items to help you on your journey.
 
-      You currently have **${personaTokens}** TripTokens.
+      ${emojiGet('itemBonus')} ***Multipliers*** can be used to increase the amount of tokens you earn.
+      ${emojiGet('itemBackground')} ***Backgrounds*** can be used to personalize your /profile and /levels.
+      ***More items coming soon! Check back later.***
+
+      Wallet: ${personaTokens} tokens
 
       ${personaInventory}`)
     .setColor(Colors.Gold);
@@ -1266,15 +1325,15 @@ export async function rpgShopChange(
   };
 }
 
-export async function rpgShopInventory(
+export async function rpgMarketInventory(
   interaction:MessageComponentInteraction | ChatInputCommandInteraction,
 ):Promise<{
-    shopInventory:SelectMenuComponentOptionData[];
+    marketInventory:SelectMenuComponentOptionData[];
     personaTokens:number;
     personaInventory:string;
   }> {
   // Check get fresh persona data
-  const [personaData] = await getPersonaInfo(interaction.user.id);
+  const personaData = await getPersonaInfo(interaction.user.id);
 
   // Get the existing inventory data
   const inventoryData = await inventoryGet(personaData.id);
@@ -1284,45 +1343,117 @@ export async function rpgShopInventory(
   const inventoryList = inventoryData.map(item => `**${item.label}** - ${item.description}`).join('\n');
   const inventoryString = inventoryData.length > 0
     ? stripIndents`
-      **Inventory**
+    ${emojiGet('itemInventory')} **Inventory**
       ${inventoryList}
       `
     : '';
 
   // Go through items.general and create a new object of items that the user doesn't have yet
-  const shopInventory = [...Object.values(items.general), ...Object.values(items.backgrounds)]
+  const marketInventory = [...Object.values(items.general), ...Object.values(items.backgrounds)]
     .map(item => {
       if (!inventoryData.find(i => i.value === item.value)) {
+        // log.debug(F, `item: ${JSON.stringify(item, null, 2)}`);
+        // log.debug(F, `item.emoji: ${item.emoji}`);
+        // log.debug(F, `emojiGet(item.emoji): ${emojiGet(item.emoji)}`);
         return {
           label: `${item.label} - ${item.cost} TT$`,
           value: item.value,
-          description: `${item.description} - ${item.cost} TT$`,
-          emoji: item.emoji,
+          description: `${item.description}`,
+          emoji: emojiGet(item.emoji).id,
         };
       }
       return null;
     })
     .filter(item => item !== null) as SelectMenuComponentOptionData[];
-  // log.debug(F, `generalOptions: ${JSON.stringify(shopInventory, null, 2)}`);
+  // log.debug(F, `generalOptions: ${JSON.stringify(marketInventory, null, 2)}`);
   return {
-    shopInventory,
+    marketInventory,
     personaTokens: personaData.tokens,
     personaInventory: inventoryString,
   };
 }
 
-export async function rpgShopAccept(
+export async function rpgMarketPreview(
   interaction:MessageComponentInteraction,
 ):Promise<InteractionUpdateOptions> {
-  // Get the info used in the shop
+  // Get the info used in the market
   // const {
-  //   shopInventory,
+  //   marketInventory,
   //   personaTokens,
   //   personaInventory,
-  // } = await rpgShopInventory(interaction);
+  // } = await rpgMarketInventory(interaction);
 
   // Check get fresh persona data
-  const [personaData] = await getPersonaInfo(interaction.user.id);
+  // const personaData = await getPersonaInfo(interaction.user.id);
+  // log.debug(F, `personaData (Accept): ${JSON.stringify(personaData, null, 2)}`);
+
+  // If the user confirms the information, save the persona information
+  const itemComponent = interaction.message.components[0].components[0];
+  const selectedItem = (itemComponent as StringSelectMenuComponent).options.find(
+    (o:APISelectMenuOption) => o.default === true,
+  );
+  // log.debug(F, `selectedItem (accept): ${JSON.stringify(selectedItem, null, 2)}`);
+
+  const allItems = [...Object.values(items.general), ...Object.values(items.backgrounds)];
+  const itemData = allItems.find(item => item.value === selectedItem?.value) as {
+    label: string;
+    value: string;
+    description: string;
+    quantity: number;
+    weight: number;
+    cost: number;
+    equipped: boolean;
+    consumable: boolean;
+    effect: string;
+    effect_value: string;
+    emoji: string;
+  };
+  // log.debug(F, `itemData (accept): ${JSON.stringify(itemData, null, 2)}`);
+
+  const { embeds, components } = await rpgMarketChange(interaction);
+
+  // This grossness takes the APIEmbed object, turns it into a JSON object, and pulls the description
+  const { description } = JSON.parse(JSON.stringify((embeds as APIEmbed[])[0]));
+
+  const embed = embedTemplate()
+    .setAuthor(null)
+    .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
+    .setTitle(`${emojiGet('buttonMarket')} Market`)
+    .setDescription(stripIndents`
+  
+   ${description}`)
+    .setColor(Colors.Gold);
+
+  const imageFiles = [] as AttachmentBuilder[];
+  if (itemData && itemData.effect === 'background') {
+    const imagePath = await imageGet(itemData.effect_value);
+    const target = interaction.member as GuildMember;
+    const option = 'background';
+    const previewImage = await getProfilePreview(target, imagePath, option);
+    const attachment = new AttachmentBuilder(previewImage, { name: 'tripsit-profile-image.png' });
+    imageFiles.push(attachment);
+    embed.setImage('attachment://tripsit-profile-image.png');
+  }
+
+  return {
+    embeds: [embed],
+    components,
+    files: imageFiles,
+  };
+}
+
+export async function rpgMarketAccept(
+  interaction:MessageComponentInteraction,
+):Promise<InteractionUpdateOptions> {
+  // Get the info used in the market
+  // const {
+  //   marketInventory,
+  //   personaTokens,
+  //   personaInventory,
+  // } = await rpgMarketInventory(interaction);
+
+  // Check get fresh persona data
+  const personaData = await getPersonaInfo(interaction.user.id);
   // log.debug(F, `personaData (Accept): ${JSON.stringify(personaData, null, 2)}`);
 
   // If the user confirms the information, save the persona information
@@ -1352,21 +1483,21 @@ export async function rpgShopAccept(
   if (personaData.tokens < itemData.cost) {
   // log.debug(F, 'Not enough tokens to buy item');
 
-    const { embeds, components } = await rpgShopChange(interaction);
+    const { embeds, components } = await rpgMarketChange(interaction);
 
     // This grossness takes the APIEmbed object, turns it into a JSON object, and pulls the description
     const { description } = JSON.parse(JSON.stringify((embeds as APIEmbed[])[0]));
 
     const embed = embedTemplate()
       .setAuthor(null)
-      .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG`, iconURL: env.TS_ICON_URL })
-      .setTitle('Shop')
+      .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
+      .setTitle(`${emojiGet('buttonMarket')} Market`)
       .setDescription(stripIndents`**You do not have enough tokens to buy this item.**
     
     ${description}`)
       .setColor(Colors.Red);
     const imageFiles = [] as AttachmentBuilder[];
-    if (itemData && itemData.effect === 'background') {
+    if (itemData.effect === 'background') {
       const imagePath = await imageGet(itemData.effect_value);
       // log.debug(F, `imagePath: ${imagePath}`);
       imageFiles.push(new AttachmentBuilder(imagePath));
@@ -1402,7 +1533,7 @@ export async function rpgShopAccept(
 
   await inventorySet(newItem);
 
-  const { embeds, components } = await rpgShopChange(interaction);
+  const { embeds, components } = await rpgMarketChange(interaction);
 
   // This grossness takes the APIEmbed object, turns it into a JSON object, and pulls the description
   const { description } = JSON.parse(JSON.stringify((embeds as APIEmbed[])[0]));
@@ -1410,13 +1541,16 @@ export async function rpgShopAccept(
   return {
     embeds: [embedTemplate()
       .setAuthor(null)
-      .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG`, iconURL: env.TS_ICON_URL })
-      .setTitle('Shop')
-      .setDescription(stripIndents`**You have purchased ${itemData.label} for ${itemData.cost} TripTokens.**
+      .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
+      .setTitle(`${emojiGet('buttonMarket')} Market`)
+      .setDescription(stripIndents`**You have purchased ${itemData.label} for ${itemData.cost} TripTokens.
+      
+      IT was sent to your Home, where you will need to equip it!**
       
       ${description}`)
       .setColor(Colors.Green)],
     components,
+    files: [],
   };
 }
 
@@ -1431,7 +1565,7 @@ export async function rpgHome(
   } = await rpgHomeInventory(interaction);
 
   // Check get fresh persona data
-  const [personaData] = await getPersonaInfo(interaction.user.id);
+  const personaData = await getPersonaInfo(interaction.user.id);
   // log.debug(F, `personaData home (Change) ${JSON.stringify(personaData, null, 2)}`);
 
   // Get the existing inventory data
@@ -1440,7 +1574,7 @@ export async function rpgHome(
 
   let defaultOption = '' as string;
   // Get the equipped background
-  const equippedBackground = inventoryData.find(item => item.equipped === true);
+  const equippedBackground = inventoryData.find(item => item.equipped === true && item.effect === 'background');
   // log.debug(F, `equippedBackground: ${JSON.stringify(equippedBackground, null, 2)} `);
   if (equippedBackground) {
     defaultOption = equippedBackground.value;
@@ -1464,13 +1598,15 @@ export async function rpgHome(
 
   // log.debug(F, `defaultOption2: ${defaultOption}`);
 
-  // Get a list of shopInventory where the value does not equal the choice
+  // Get a list of marketInventory where the value does not equal the choice
   // If there is no choice, it will return all items the user has
   const filteredItems = Object.values(homeInventory).filter(item => item.value !== defaultOption);
 
   // Reset the options menu to be empty
-  menus.background.setOptions();
-  menus.background.addOptions(filteredItems);
+  const backgroundMenu = new StringSelectMenuBuilder()
+    .setCustomId(`rpgBackgroundSelect,user:${interaction.user.id}`)
+    .setPlaceholder('Select a background to use.')
+    .setOptions(filteredItems);
 
   // Get the item the user chose and display that as the default option
   let backgroundData = {} as {
@@ -1489,8 +1625,15 @@ export async function rpgHome(
   const chosenItem = homeInventory.find(item => item.value === defaultOption);
   if (chosenItem) {
     chosenItem.default = true;
-    menus.background.addOptions(chosenItem);
-    const allItems = [...Object.values(items.backgrounds)];
+    backgroundMenu.addOptions(chosenItem);
+    // log.debug(F, `items.backgrounds: ${JSON.stringify(items.backgrounds, null, 2)}`);
+    // convert the emoji property into an emoji using emojiGet
+    const allItems = [...Object.values(items.backgrounds)].map(item => {
+      const newItem = item;
+      newItem.emoji = `<:${emojiGet('itemBackground').identifier}>`;
+      return item;
+    });
+    // log.debug(F, `allItems: ${JSON.stringify(allItems, null, 2)}`);
     backgroundData = allItems.find(item => item.value === chosenItem?.value) as {
       label: string;
       value: string;
@@ -1509,20 +1652,22 @@ export async function rpgHome(
 
   // Set the item row
   const rowBackgrounds = new ActionRowBuilder<StringSelectMenuBuilder>()
-    .addComponents(menus.background);
+    .addComponents(backgroundMenu);
 
+  // log.debug(F, `backgroundData (home change): ${JSON.stringify(backgroundData, null, 2)}`);
+  // log.debug(F, `Button home: ${JSON.stringify(emojiGet('buttonHome'), null, 2)}`);
   // Build the embed
   const embed = embedTemplate()
     .setAuthor(null)
-    .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG`, iconURL: env.TS_ICON_URL })
-    .setTitle('Home')
+    .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
+    .setTitle(`${emojiGet('buttonHome')} Home`)
     .setDescription(stripIndents`${message !== null ? message : ''}
 
       You ${rand(text.enter)} your home.
       
-      You can change your banner here, which impacts your /profile background.
+      You can equip an item by selecting it from the menu below.
 
-      You currently have **${personaTokens}** TripTokens.
+      Wallet: ${personaTokens} tokens
 
       ${personaInventory}
     `)
@@ -1531,11 +1676,21 @@ export async function rpgHome(
   // If the select item has the 'background' effect, add the image to the embed
   const files = [] as AttachmentBuilder[];
   if (equippedBackground) {
-    const imagePath = await imageGet(equippedBackground.value);
-    // log.debug(F, `Equipped background imagePath: ${imagePath}`);
-    files.push(new AttachmentBuilder(imagePath));
-    embed.setThumbnail(`attachment://${equippedBackground.value}.png`);
-  // log.debug(F, 'Set thumbnail!');
+    if ((interaction as ButtonInteraction).customId && (interaction as ButtonInteraction).customId.split(',')[0] === 'rpgHomePreview') {
+      const imagePath = await imageGet(backgroundData.effect_value);
+      const target = interaction.member as GuildMember;
+      const option = 'background';
+      const previewImage = await getProfilePreview(target, imagePath, option);
+      const attachment = new AttachmentBuilder(previewImage, { name: 'tripsit-profile-image.png' });
+      files.push(attachment);
+      embed.setImage('attachment://tripsit-profile-image.png');
+    } else {
+      const imagePath = await imageGet(equippedBackground.value);
+      // log.debug(F, `Equipped background imagePath: ${imagePath}`);
+      files.push(new AttachmentBuilder(imagePath));
+      embed.setThumbnail(`attachment://${equippedBackground.value}.png`);
+      // log.debug(F, 'Set thumbnail!');
+    }
   }
 
   if (interaction.isStringSelectMenu() && backgroundData && backgroundData.effect === 'background') {
@@ -1549,20 +1704,21 @@ export async function rpgHome(
   // Build out the home navigation buttons
   const rowHome = new ActionRowBuilder<ButtonBuilder>()
     .addComponents(
-    // buttons.name,
-    // buttons.accept,
-    // buttons.decline,
-      buttons.town,
+    // customButton(`rpgName,user:${interaction.user.id}`, 'Name', '📝', ButtonStyle.Primary),
+    // customButton(`rpgAccept,user:${interaction.user.id}`, 'Accept', 'buttonAccept', ButtonStyle.Success),
+    // customButton(`rpgDecline,user:${interaction.user.id}`, 'Decline', 'buttonQuit', ButtonStyle.Danger),
+      customButton(`rpgTown,user:${interaction.user.id}`, 'Town', 'buttonTown', ButtonStyle.Primary),
     );
 
-  if (chosenItem && interaction.isStringSelectMenu()) {
+  if (chosenItem && (interaction.isStringSelectMenu() || interaction.isButton())) {
     rowHome.addComponents(
-      buttons.accept,
+      customButton(`rpgAccept,user:${interaction.user.id}`, 'Accept', 'buttonAccept', ButtonStyle.Success),
+      customButton(`rpgHomePreview,user:${interaction.user.id}`, 'Preview', 'buttonPreview', ButtonStyle.Secondary),
     );
   }
 
   // If the user has backgrounds, add the backgrounds row
-  const components = menus.background.options.length === 0
+  const components = backgroundMenu.options.length === 0
     ? [rowHome]
     : [rowBackgrounds, rowHome];
 
@@ -1574,11 +1730,17 @@ export async function rpgHome(
   // const filteredItems = Object.values(genome.species).filter(item => item.value !== choice);
 
   // // Reset the options menu to be empty
-  // menus.species.setOptions();
+  // new StringSelectMenuBuilder()
+  // .setCustomId('rpgSpecies,user:${interaction.user.id}')
+  // .setPlaceholder('Pick a species').setOptions();
 
-  // menus.species.addOptions(filteredItems);
+  // new StringSelectMenuBuilder()
+  // .setCustomId('rpgSpecies,user:${interaction.user.id}')
+  // .setPlaceholder('Pick a species').addOptions(filteredItems);
 
-  // menus.species.addOptions([
+  // new StringSelectMenuBuilder()
+  // .setCustomId('rpgSpecies,user:${interaction.user.id}')
+  // .setPlaceholder('Pick a species').addOptions([
   //   {
   //     label: { ...genome.species }[choice as keyof typeof genome.species].label,
   //     value: { ...genome.species }[choice as keyof typeof genome.species].value,
@@ -1590,7 +1752,15 @@ export async function rpgHome(
 
   // selectSpecies.addOptions(Object.values(speciesDef).filter(s => s.value !== choice));
 
-  // menus.name.setOptions([{
+  //       new StringSelectMenuBuilder()
+  // .setCustomId('rpgNameDisplay,user:${interaction.user.id}')
+  // .setPlaceholder('No Name!')
+  // .setOptions([{
+  //   label: choice,
+  //   value: choice,
+  //   emoji: '👤',
+  //   default: true,
+  // }]);.setOptions([{
   //   label: personaData.name,
   //   value: personaData.name,
   //   emoji: '👤',
@@ -1598,7 +1768,15 @@ export async function rpgHome(
   // }]);
 
   // const rowNameDisplay = new ActionRowBuilder<StringSelectMenuBuilder>()
-  //   .setComponents(menus.name);
+  //   .setComponents(      new StringSelectMenuBuilder()
+  // .setCustomId('rpgNameDisplay,user:${interaction.user.id}')
+  // .setPlaceholder('No Name!')
+  // .setOptions([{
+  //   label: choice,
+  //   value: choice,
+  //   emoji: '👤',
+  //   default: true,
+  // }]););
 
   // log.debug(F, `classDef: ${JSON.stringify(classDef, null, 2)}`);
   // const selectedClassList = { ...genome.classes };
@@ -1606,10 +1784,14 @@ export async function rpgHome(
   // selectedClassList[personaData.class as keyof typeof selectedClassList].default = true;
   // log.debug(F, `selectedClassList2: ${JSON.stringify(selectedClassList, null, 2)}`);
 
-  // menus.class.setOptions(Object.values({ ...selectedClassList }));
+  // new StringSelectMenuBuilder()
+  // .setCustomId('rpgClass,user:${interaction.user.id}')
+  // .setPlaceholder('Select a class').setOptions(Object.values({ ...selectedClassList }));
 
   // const rowChangeClass = new ActionRowBuilder<StringSelectMenuBuilder>()
-  // //   .setComponents(menus.class);
+  // //   .setComponents(new StringSelectMenuBuilder()
+  // .setCustomId('rpgClass,user:${interaction.user.id}')
+  // .setPlaceholder('Select a class'));
 
   // log.debug(F, `speciesDef: ${JSON.stringify(genome.species, null, 2)}`);
   // const selectedSpeciesList = { ...genome.species };
@@ -1618,17 +1800,25 @@ export async function rpgHome(
   // log.debug(F, `selectedSpeciesList2: ${JSON.stringify(selectedSpeciesList, null, 2)}`);
   // log.debug(F, `speciesDef2: ${JSON.stringify(genome.species, null, 2)}`);
 
-  // menus.species.setOptions(Object.values({ ...selectedSpeciesList }));
-  // const rowChangeSpecies = new ActionRowBuilder<StringSelectMenuBuilder>()
-  //   .addComponents(menus.species);
+  // new StringSelectMenuBuilder()
+  //   .setCustomId('rpgSpecies,user:${interaction.user.id}')
+  //   .setPlaceholder('Pick a species').setOptions(Object.values({ ...selectedSpeciesList }));
+  // // const rowChangeSpecies = new ActionRowBuilder<StringSelectMenuBuilder>()
+  //   .addComponents(new StringSelectMenuBuilder()
+  // .setCustomId('rpgSpecies,user:${interaction.user.id}')
+  // .setPlaceholder('Pick a species'));
 
   // const selectedGuildList = { ...genome.guilds };
   // selectedGuildList[personaData.guild as keyof typeof selectedGuildList].default = true;
   // log.debug(F, `Selected guild list: ${JSON.stringify(selectedGuildList, null, 2)}`);
 
-  // menus.guild.setOptions(Object.values(selectedGuildList));
-  // const rowChangeGuild = new ActionRowBuilder<StringSelectMenuBuilder>()
-  //   .addComponents(menus.guild);
+  // new StringSelectMenuBuilder()
+  //   .setCustomId('rpgGuild,user:${interaction.user.id}')
+  //   .setPlaceholder('Select a guild').setOptions(Object.values(selectedGuildList));
+  // // const rowChangeGuild = new ActionRowBuilder<StringSelectMenuBuilder>()
+  // //   .addComponents(new StringSelectMenuBuilder()
+  //   .setCustomId('rpgGuild,user:${interaction.user.id}')
+  //   .setPlaceholder('Select a guild'));
 
   // const { embeds, components } = await rpgHomeChange(interaction);
 
@@ -1643,7 +1833,7 @@ export async function rpgHomeAccept(
   interaction: MessageComponentInteraction,
 ):Promise<InteractionUpdateOptions> {
   // Check get fresh persona data
-  const [personaData] = await getPersonaInfo(interaction.user.id);
+  const personaData = await getPersonaInfo(interaction.user.id);
 
   // If the user confirms the information, save the persona information
   const backgroundComponent = interaction.message.components[0].components[0];
@@ -1724,7 +1914,7 @@ export async function rpgHomeInventory(
     personaInventory:string;
   }> {
   // Check get fresh persona data
-  const [personaData] = await getPersonaInfo(interaction.user.id);
+  const personaData = await getPersonaInfo(interaction.user.id);
 
   // Get the existing inventory data
   const inventoryData = await inventoryGet(personaData.id);
@@ -1734,7 +1924,7 @@ export async function rpgHomeInventory(
   const inventoryList = inventoryData.map(item => `**${item.label}** - ${item.description}`).join('\n');
   const inventoryString = inventoryData.length > 0
     ? stripIndents`
-      **Inventory**
+      ${emojiGet('itemInventory')} **Inventory**
       ${inventoryList}
       `
     : '';
@@ -1746,8 +1936,8 @@ export async function rpgHomeInventory(
         return {
           label: `${item.label} - ${item.cost} TT$`,
           value: item.value,
-          description: `${item.description} - ${item.cost} TT$`,
-          emoji: item.emoji,
+          description: `${item.description}`,
+          emoji: emojiGet(item.emoji).id,
         };
       }
       return null;
@@ -1765,7 +1955,7 @@ export async function rpgHomeNameChange(
   interaction: MessageComponentInteraction,
 ):Promise<void> {
   // Check get fresh persona data
-  const [personaData] = await getPersonaInfo(interaction.user.id);
+  const personaData = await getPersonaInfo(interaction.user.id);
 
   // When this button is clicked, a modal appears where the user can enter their name
   // Create the modal
@@ -1777,7 +1967,7 @@ export async function rpgHomeNameChange(
     .setLabel('What do you want to name your persona?')
     .setStyle(TextInputStyle.Short)
     .setRequired(true)
-    .setCustomId('rpgNewName'));
+    .setCustomId(`rpgNewName,user:${interaction.user.id}`));
   modal.addComponents([body]);
   await interaction.showModal(modal);
 
@@ -1786,46 +1976,43 @@ export async function rpgHomeNameChange(
     && i.customId.split('~')[1] === interaction.id
     && i.guild !== null);
   await interaction.awaitModalSubmit({ filter: modalFilter, time: 0 })
-    .then(async (i):Promise<{
-      embed: EmbedBuilder,
-      components: ActionRowBuilder<StringSelectMenuBuilder | ButtonBuilder>[],
-    }> => {
+    .then(async i => {
+      if (i.customId.split('~')[1] !== interaction.id) return;
       const choice = i.fields.getTextInputValue('rpgNewName');
+      await i.deferReply({ ephemeral: true });
 
       // log.debug(F, `name: ${choice}`);
 
-      menus.name.setOptions([{
-        label: choice,
-        value: choice,
-        emoji: '👤',
-        default: true,
-      }]);
-
-      await i.reply({ content: `Your name has been set to ${choice}`, ephemeral: true });
+      new StringSelectMenuBuilder()
+        .setCustomId(`rpgNameDisplay,user:${interaction.user.id}`)
+        .setPlaceholder('No Name!')
+        .setOptions([{
+          label: choice,
+          value: choice,
+          emoji: '👤',
+          default: true,
+        }]);
 
       const rowHome = new ActionRowBuilder<ButtonBuilder>()
         .addComponents(
-          buttons.name,
-          buttons.accept,
-          buttons.decline,
-          buttons.town,
+          customButton(`rpgName,user:${interaction.user.id}`, 'Name', '📝', ButtonStyle.Primary),
+          customButton(`rpgAccept,user:${interaction.user.id}`, 'Accept', 'buttonAccept', ButtonStyle.Success),
+          customButton(`rpgDecline,user:${interaction.user.id}`, 'Decline', 'buttonQuit', ButtonStyle.Danger),
+          customButton(`rpgTown,user:${interaction.user.id}`, 'Town', 'buttonTown', ButtonStyle.Primary),
         );
 
-      if (!personaData) {
-        return {
-          embed: embedTemplate()
-            .setAuthor(null)
-            .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG`, iconURL: env.TS_ICON_URL })
-            .setTitle('Home')
-            .setDescription(stripIndents`
-            You are in your home, you can change your name, species, class and here.
-          `)
-            .setColor(Colors.Green),
-          components: [rowHome],
-        };
-      }
       const rowChangeNameDisplay = new ActionRowBuilder<StringSelectMenuBuilder>()
-        .addComponents(menus.name);
+        .addComponents(
+          new StringSelectMenuBuilder()
+            .setCustomId(`rpgNameDisplay,user:${interaction.user.id}`)
+            .setPlaceholder('No Name!')
+            .setOptions([{
+              label: choice,
+              value: choice,
+              emoji: '👤',
+              default: true,
+            }]),
+        );
 
       const selectedClassList = { ...genome.classes };
       selectedClassList[personaData.class as keyof typeof selectedClassList].default = true;
@@ -1836,115 +2023,73 @@ export async function rpgHomeNameChange(
       const selectedGuildList = { ...genome.guild };
       selectedGuildList[personaData.guild as keyof typeof selectedGuildList].default = true;
 
-      menus.class.setOptions(Object.values(selectedClassList));
       const rowChangeClass = new ActionRowBuilder<StringSelectMenuBuilder>()
-        .addComponents(menus.class);
+        .addComponents(
+          new StringSelectMenuBuilder()
+            .setCustomId(`rpgClass,user:${interaction.user.id}`)
+            .setPlaceholder('Select a class')
+            .setOptions(Object.values(selectedClassList)),
+        );
 
-      menus.species.setOptions(Object.values(selectedSpeciesList));
       const rowChangeSpecies = new ActionRowBuilder<StringSelectMenuBuilder>()
-        .addComponents(menus.species);
+        .addComponents(
+          new StringSelectMenuBuilder()
+            .setCustomId(`rpgSpecies,user:${interaction.user.id}`)
+            .setPlaceholder('Pick a species')
+            .setOptions(Object.values(selectedSpeciesList)),
+        );
 
-      menus.guild.setOptions(Object.values(selectedGuildList));
       const rowChangeGuild = new ActionRowBuilder<StringSelectMenuBuilder>()
-        .addComponents(menus.guild);
+        .addComponents(
+          new StringSelectMenuBuilder()
+            .setCustomId(`rpgGuild,user:${interaction.user.id}`)
+            .setPlaceholder('Select a guild')
+            .setOptions(Object.values(selectedGuildList)),
+        );
 
-      return {
-        embed: embedTemplate()
-          .setAuthor(null)
-          .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG`, iconURL: env.TS_ICON_URL })
-          .setTitle('Home')
-          .setDescription(stripIndents`
+      await i.editReply({
+        embeds: [
+          embedTemplate()
+            .setAuthor(null)
+            .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG `, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
+            .setTitle('Home')
+            .setDescription(stripIndents`
+            Your name has been set to ${choice}
+
             You are in your home, you can change your name, species, class and here.
           `)
-          .setColor(Colors.Green),
+            .setColor(Colors.Green),
+        ],
         components: [rowChangeNameDisplay, rowChangeSpecies, rowChangeClass, rowChangeGuild, rowHome],
-      };
+      });
     });
 }
 
 export async function rpgArcade(
   interaction: MessageComponentInteraction | ChatInputCommandInteraction,
 ):Promise<InteractionEditReplyOptions | InteractionUpdateOptions> {
-  // Check get fresh persona data
-  // const [personaData] = await getPersonaInfo(interaction.user.id);
-  // log.debug(F, `personaData (Arcade): ${JSON.stringify(personaData, null, 2)}`);
-
-  const rowArcade = new ActionRowBuilder<ButtonBuilder>()
-    .addComponents(
-      buttons.coinFlip,
-      buttons.roulette,
-      // buttons.blackjack,
-      // buttons.slotMachine,
-      buttons.town,
-    );
-
-  // The user has clicked the shop button, send them the shop embed
   return {
     embeds: [embedTemplate()
       .setAuthor(null)
-      .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG`, iconURL: env.TS_ICON_URL })
-      .setTitle('Games')
+      .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
+      .setTitle(`${emojiGet('buttonArcade')} Arcade`)
       .setDescription(stripIndents`
         You ${rand(text.enter)} the arcade and see a variety of games.
+
+        ***More games coming soon!***
       `)
       .setColor(Colors.Green)],
-    components: [rowArcade],
+    components: [new ActionRowBuilder<ButtonBuilder>()
+      .addComponents(
+        customButton(`rpgCoinFlip,user:${interaction.user.id}`, 'CoinFlip', 'buttonCoinflip', ButtonStyle.Secondary),
+        customButton(`rpgRoulette,user:${interaction.user.id}`, 'Roulette', 'buttonRoulette', ButtonStyle.Secondary),
+        // customButton(`rpgTrivia,user:${interaction.user.id}`, 'Trivia', 'buttonTrivia', ButtonStyle.Secondary),
+        // customButton(`rpgBlackjack,user:${interaction.user.id}`, 'Blackjack', '🃏', ButtonStyle.Primary),
+        // customButton(`rpgSlots,user:${interaction.user.id}`, 'Slots', '🎰', ButtonStyle.Primary),
+        customButton(`rpgTown,user:${interaction.user.id}`, 'Town', 'buttonTown', ButtonStyle.Primary),
+      )],
   };
 }
-
-type GameName = 'Coinflip' | 'Roulette' | 'Blackjack' | 'Slots';
-const gameData = {
-  Coinflip: {
-    gameName: 'Coinflip' as GameName,
-    instructions: stripIndents`Click the buttons below to set how many of your tokens you want to bet.
-    Click the heads or tails button to flip the coin, or you can go back to the arcade.
-    If you win, you get the amount you bet.
-    If you lose, you lose the amount you bet.`,
-    object: 'coin',
-    bets: [
-      buttons.coinflipHeads,
-      buttons.coinflipTails,
-    ],
-    options: [
-      'heads',
-      'tails',
-    ],
-  },
-  Roulette: {
-    gameName: 'Roulette' as GameName,
-    instructions: stripIndents`Click the buttons below to set how many of your tokens you want to bet.
-    Click a bet button to place a bet on that outcome, or you can go back to the arcade.
-    
-    Depending on what you picked and where the ball lands, you will win or lose your bet.
-
-    **Odds**
-    "X:1" means you get X coins for every 1 you bet
-    > Red/Black/Even/Odd/High/Low: 1:1
-    > First/Second/Third: 2:1
-    > 1-2/3-4/5-6/7-8: 3:1
-    > 0: 8:1
-    `,
-    object: 'wheel',
-    bets: [
-      buttons.rouletteRed, //
-      buttons.rouletteBlack, //
-      buttons.rouletteFirst, //
-      buttons.rouletteSecond, //
-      buttons.rouletteThird, //
-
-      buttons.rouletteEven, //
-      buttons.rouletteOdd, //
-      buttons.roulette1to12, //
-      buttons.roulette13to24, //
-      buttons.roulette25to36, //
-
-      buttons.rouletteZero, //
-      buttons.rouletteHigh, //
-      buttons.rouletteLow, //
-    ],
-    options: ['00', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30', '31', '32', '33', '34', '35', '36'],
-  },
-};
 
 export async function rpgArcadeGame(
   interaction: MessageComponentInteraction | ChatInputCommandInteraction,
@@ -1955,15 +2100,73 @@ export async function rpgArcadeGame(
   | '1-12' | '13-24' | '25-36',
   message?: string,
 ):Promise<InteractionEditReplyOptions | InteractionUpdateOptions> {
+  // log.debug(F, `Started rpgArcadeGame(${gameName}, ${choice}, ${message})`);
+  const gameData = {
+    Coinflip: {
+      gameName: 'Coinflip' as GameName,
+      instructions: stripIndents`**How to play**
+    - Set a bet amount using the buttons below
+    - You can bet any amount by using a button more than once
+    - Choose heads or tails to flip the coin
+
+    - If you win, you get the amount you bet
+    - If you lose, you lose the amount you bet`,
+      object: 'coin',
+      bets: [
+        customButton(`rpgCoinflipHeads,user:${interaction.user.id}`, 'Heads', 'buttonHeads', ButtonStyle.Secondary),
+        customButton(`rpgCoinflipTails,user:${interaction.user.id}`, 'Tails', 'buttonTails', ButtonStyle.Secondary),
+      ],
+      options: [
+        'heads',
+        'tails',
+      ],
+    },
+    Roulette: {
+      gameName: 'Roulette' as GameName,
+      instructions: stripIndents`**How to play**
+      - Set a bet amount using the buttons below
+      - You can bet any amount by using a button more than once
+      - Choose an option to bet on to spin the wheel
+    
+      - You win or lose depending on what you picked and where the ball lands
+
+      **Odds**
+      Red / Black / Even / Odd / High / Low - 1:1
+      First / Second / Third - 2:1
+      1-2 / 3-4 / 5-6 / 7-8 - 3:1
+      0 -  8:1
+    `,
+      object: 'wheel',
+      bets: [
+        customButton(`rpgRouletteRed,user:${interaction.user.id}`, 'Red', 'buttonHalf', ButtonStyle.Secondary),
+        customButton(`rpgRouletteBlack,user:${interaction.user.id}`, 'Black', 'buttonHalf', ButtonStyle.Secondary),
+        customButton(`rpgRouletteFirst,user:${interaction.user.id}`, 'First Row', 'buttonRows', ButtonStyle.Secondary),
+        customButton(`rpgRouletteSecond,user:${interaction.user.id}`, 'Second Row', 'buttonRows', ButtonStyle.Secondary),
+        customButton(`rpgRouletteThird,user:${interaction.user.id}`, 'Third Row', 'buttonRows', ButtonStyle.Secondary),
+        customButton(`rpgRouletteEven,user:${interaction.user.id}`, 'Even', 'buttonBoxB', ButtonStyle.Secondary),
+        customButton(`rpgRouletteOdd,user:${interaction.user.id}`, 'Odd', 'buttonBoxA', ButtonStyle.Secondary),
+        customButton(`rpgRoulette1to12,user:${interaction.user.id}`, '1-12', 'menuNormal', ButtonStyle.Secondary),
+        customButton(`rpgRoulette13to24,user:${interaction.user.id}`, '13-24', 'menuHard', ButtonStyle.Secondary),
+        customButton(`rpgRoulette25to36,user:${interaction.user.id}`, '25-36', 'menuExpert', ButtonStyle.Secondary),
+        customButton(`rpgRouletteZero,user:${interaction.user.id}`, '0', 'menuEasy', ButtonStyle.Secondary),
+        customButton(`rpgRouletteHigh,user:${interaction.user.id}`, 'High', 'buttonUpDown', ButtonStyle.Secondary),
+        customButton(`rpgRouletteLow,user:${interaction.user.id}`, 'Low', 'buttonUpDown', ButtonStyle.Secondary),
+      ],
+      options: ['00', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30', '31', '32', '33', '34', '35', '36'],
+    },
+  };
+
+  const emojiName = `button${gameName}`;
+
   const { instructions } = gameData[gameName as keyof typeof gameData];
 
   const rowWagers = new ActionRowBuilder<ButtonBuilder>()
     .addComponents(
-      buttons.wager1,
-      buttons.wager10,
-      buttons.wager100,
-      buttons.wager1000,
-      buttons.arcade,
+      customButton(`rpgWager1,user:${interaction.user.id}`, 'Bet 1', 'buttonBetSmall', ButtonStyle.Success),
+      customButton(`rpgWager10,user:${interaction.user.id}`, 'Bet 10', 'buttonBetMedium', ButtonStyle.Success),
+      customButton(`rpgWager100,user:${interaction.user.id}`, 'Bet 100', 'buttonBetLarge', ButtonStyle.Success),
+      customButton(`rpgWager1000,user:${interaction.user.id}`, 'Bet 1000', 'buttonBetHuge', ButtonStyle.Success),
+      customButton(`rpgArcade,user:${interaction.user.id}`, 'Arcade', 'buttonArcade', ButtonStyle.Primary),
     );
 
   const { bets } = gameData[gameName as keyof typeof gameData];
@@ -2005,7 +2208,7 @@ export async function rpgArcadeGame(
   }
 
   // Check get fresh persona data
-  const [personaData] = await getPersonaInfo(interaction.user.id);
+  const personaData = await getPersonaInfo(interaction.user.id);
   // log.debug(F, `personaData (Coinflip): ${JSON.stringify(personaData, null, 2)}`);
 
   const currentBet = wagers[interaction.user.id].tokens;
@@ -2013,21 +2216,20 @@ export async function rpgArcadeGame(
 
   // log.debug(F, `choice: ${choice}`);
   if (choice && currentBet === 0) {
-    const noBetError = {
+    // await (interaction as MessageComponentInteraction).editReply(noBetError);
+    return {
       embeds: [embedTemplate()
         .setAuthor(null)
-        .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG`, iconURL: env.TS_ICON_URL })
+        .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
         .setTitle(gameName)
         .setDescription(stripIndents`
           **You can't start a game without first placing a bet!**
 
-          You can bet ${personaData.tokens} tokens.
+          Wallet: ${personaData.tokens} tokens
         `)
         .setColor(Colors.Gold)],
       components,
     };
-    await (interaction as MessageComponentInteraction).update(noBetError);
-    return noBetError;
   }
 
   if (choice) {
@@ -2057,8 +2259,10 @@ export async function rpgArcadeGame(
     }
 
     // log.debug(F, `result: ${result}`);
+
     if (payout !== 0) {
       // The user won
+      const BetOutcomeMessage = BetWinMessageList[Math.floor(Math.random() * BetWinMessageList.length)];
       personaData.tokens += payout;
       await personaSet(personaData);
       wagers[interaction.user.id] = {
@@ -2069,20 +2273,22 @@ export async function rpgArcadeGame(
         content: null,
         embeds: [embedTemplate()
           .setAuthor(null)
-          .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG`, iconURL: env.TS_ICON_URL })
-          .setTitle(gameName)
+          .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
+          .setTitle(`${emojiGet(emojiName)} ${gameName}`)
           .setDescription(stripIndents`
             The ${object} came up **${result}** and you chose **${choice}**!
 
             **You won ${payout} tokens!**
+            *${BetOutcomeMessage}*
 
-            You can bet ${personaData.tokens} tokens.
+            Wallet: ${personaData.tokens} tokens
           `)
           .setColor(Colors.Gold)],
         components,
       };
     }
     // The user lost
+    const BetOutcomeMessage = BetLossMessageList[Math.floor(Math.random() * BetLossMessageList.length)];
     personaData.tokens -= currentBet;
     await personaSet(personaData);
     wagers[interaction.user.id] = {
@@ -2093,33 +2299,34 @@ export async function rpgArcadeGame(
       content: null,
       embeds: [embedTemplate()
         .setAuthor(null)
-        .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG`, iconURL: env.TS_ICON_URL })
-        .setTitle(gameName)
+        .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
+        .setTitle(`${emojiGet(emojiName)} ${gameName}`)
         .setDescription(stripIndents`
             The ${object} came up **${result}** and you chose **${choice}**!
 
             **You lost ${currentBet} tokens!**
+            *${BetOutcomeMessage}*
 
-            You can bet ${personaData.tokens} tokens.
+            Wallet: ${personaData.tokens} tokens
           `)
         .setColor(Colors.Grey)],
       components,
     };
   }
 
-  // The user has clicked the shop button, send them the shop embed
+  // The user has clicked the market button, send them the market embed
   if (currentBet !== 0) {
   // log.debug(F, 'No choice made, but a bet was made, return the bet screen');
     return {
       content: null,
       embeds: [embedTemplate()
         .setAuthor(null)
-        .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG`, iconURL: env.TS_ICON_URL })
-        .setTitle(gameName)
+        .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
+        .setTitle(`${emojiGet(emojiName)} ${gameName}`)
         .setDescription(stripIndents`${message ?? ''}
           You are betting ${currentBet} tokens.
 
-          You can bet ${personaData.tokens} tokens.
+          Wallet: ${personaData.tokens} tokens
         `)
         .setColor(Colors.Green)],
       components,
@@ -2130,17 +2337,712 @@ export async function rpgArcadeGame(
     content: null,
     embeds: [embedTemplate()
       .setAuthor(null)
-      .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG`, iconURL: env.TS_ICON_URL })
-      .setTitle(gameName)
+      .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
+      .setTitle(`${emojiGet(emojiName)} ${gameName}`)
       .setDescription(stripIndents`You start a game of ${gameName}.
 
         ${instructions}
 
-        You can bet ${personaData.tokens} tokens.
+        Wallet: ${personaData.tokens} tokens
       `)
       .setColor(Colors.Green)],
     components,
   };
+}
+
+export async function getNewTimer(seconds: number) {
+  const currentDate = new Date();
+  return new Date(currentDate.getTime() + seconds * 1000);
+}
+
+type GameState = {
+  [key:string]: {
+    difficultyMenu: StringSelectMenuBuilder,
+    questionsMenu: StringSelectMenuBuilder,
+  }
+};
+
+const gameStates = {} as GameState;
+
+export async function rpgTrivia(
+  interaction: MessageComponentInteraction | ChatInputCommandInteraction,
+):Promise<InteractionEditReplyOptions | InteractionUpdateOptions> {
+  // log.debug(F, `GameStates: ${JSON.stringify(gameStates, null, 2)}`);
+
+  const difficulties = [
+    {
+      label: 'Normal Difficulty',
+      value: 'easy',
+      emoji: 'menuNormal',
+      default: true,
+    },
+    {
+      label: 'Hard Difficulty (50% difficulty bonus)',
+      value: 'medium',
+      emoji: 'menuHard',
+    },
+    {
+      label: 'Expert Difficulty (100% difficulty bonus)',
+      value: 'hard',
+      emoji: 'menuExpert',
+    },
+  ];
+
+  const numberOfQuestions = [
+    {
+      label: '5 Questions (50% perfect bonus)',
+      value: '5',
+      emoji: 'menuShort',
+      default: true,
+    },
+    {
+      label: '10 Questions (100% perfect bonus)',
+      value: '10',
+      emoji: 'menuMedium',
+    },
+    {
+      label: '20 Questions (200% perfect bonus)',
+      value: '20',
+      emoji: 'menuLong',
+    },
+  ];
+
+  const questionsMenu = gameStates[interaction.user.id]
+    ? gameStates[interaction.user.id].questionsMenu
+    : new StringSelectMenuBuilder()
+      .setCustomId(`rpgQuestionLimit,user:${interaction.user.id}`)
+      .setPlaceholder('How many questions?')
+      .setOptions(numberOfQuestions.map(q => ({
+        label: q.label,
+        value: q.value,
+        emoji: `<:${(emojiGet(q.emoji) as Emoji).identifier}>`,
+        default: q.default,
+      })));
+
+  const difficultyMenu = gameStates[interaction.user.id]
+    ? gameStates[interaction.user.id].difficultyMenu
+    : new StringSelectMenuBuilder()
+      .setCustomId(`rpgDifficulty,user:${interaction.user.id}`)
+      .setPlaceholder('Easy')
+      .setOptions(difficulties.map(d => ({
+        label: d.label,
+        value: d.value,
+        emoji: `<:${(emojiGet(d.emoji) as Emoji).identifier}>`,
+        default: d.default,
+      })));
+
+  // log.debug(F, `Questions Menu: ${JSON.stringify(questionsMenu, null, 2)}`);
+  // log.debug(F, `Difficulty Menu: ${JSON.stringify(difficultyMenu, null, 2)}`);
+
+  if (interaction.isButton() && interaction.customId.split(',')[0] === 'rpgStart') {
+    // const channelRpg = await interaction.guild?.channels.fetch(env.CHANNEL_TRIPTOWN as string) as TextChannel;
+    // await interaction.deferReply({ ephemeral: (channelRpg.id !== interaction.channelId) });
+    const difficultyComponent = interaction.message.components[1].components[0];
+    const selectedDifficulty = (difficultyComponent as StringSelectMenuComponent).options.find(
+      (o:APISelectMenuOption) => o.default === true,
+    );
+    const chosenDifficulty = selectedDifficulty?.value ?? 'easy';
+
+    const amountComponent = interaction.message.components[2].components[0];
+    const selectedAmount = (amountComponent as StringSelectMenuComponent).options.find(
+      (o:APISelectMenuOption) => o.default === true,
+    );
+    const amountOfQuestions = parseInt(selectedAmount?.value ?? '5', 10);
+
+    const difficultyName = optionDict[chosenDifficulty as keyof typeof optionDict].name;
+    const { bonus } = optionDict[chosenDifficulty as keyof typeof optionDict];
+    const { perfectBonus } = bonusDict[amountOfQuestions as keyof typeof bonusDict];
+    let questionTimer = {} as Date;
+    // let perfectScore = bonusDict[amountOfQuestions as keyof typeof bonusDict].perfectBonusMessage;
+    let bonusMessage = bonusMessageDict[chosenDifficulty as keyof typeof bonusMessageDict];
+    let questionsCorrect = 0;
+    let streak = 0;
+    let maxStreak = 0;
+    let score = 0;
+    let scoreMessage = '';
+    let timedOut = false as boolean;
+    let gameQuit = false as boolean;
+    let answerColor = Colors.Purple as ColorResolvable;
+    let embedStatus = `Starting trivia with ${amountOfQuestions} questions!`;
+    let questionAnswer = 'You have 30 seconds to answer each question.';
+    const choices = [
+      `<:${emojiGet('buttonBoxA').identifier}>`,
+      `<:${emojiGet('buttonBoxB').identifier}>`,
+      `<:${emojiGet('buttonBoxC').identifier}>`,
+      `<:${emojiGet('buttonBoxD').identifier}>`,
+    ] as string[];
+    // log.debug(F, `Choices: ${choices}`);
+    const choiceEmoji = (choice: string) => { // emoji for the buttons without the emoji name
+      switch (choice) {
+        case `<:${emojiGet('buttonBoxA').identifier}>`:
+          return emojiGet('buttonBoxA').id;
+        case `<:${emojiGet('buttonBoxB').identifier}>`:
+          return emojiGet('buttonBoxB').id;
+        case `<:${emojiGet('buttonBoxC').identifier}>`:
+          return emojiGet('buttonBoxC').id;
+        case `<:${emojiGet('buttonBoxD').identifier}>`:
+          return emojiGet('buttonBoxD').id;
+        default:
+          return '❓';
+      }
+    };
+
+    // Get the user's persona data
+    const personaData = await getPersonaInfo(interaction.user.id);
+    const questionList = await rpgTriviaGetQuestions(amountOfQuestions, chosenDifficulty);
+
+    for (let qNumber = 0; (qNumber < amountOfQuestions); qNumber += 1) {
+      // Get the first question from the array
+      const [questionData] = questionList;
+      const answerMap = new Map(questionData.all_answers.map((answer, index) => [choices[index], `**${choices[index]}** ${answer}`])); // eslint-disable-line max-len
+      questionTimer = await getNewTimer(35); // eslint-disable-line no-await-in-loop
+      let embed = new EmbedBuilder()
+        .setColor(answerColor)
+        .setTitle(`${emojiGet('buttonTrivia')} Trivia *(${difficultyName})*`)
+        .setDescription(`
+        **Question ${qNumber + 1} of ${amountOfQuestions}**
+        ${questionData.question}
+        
+        **Choices**
+        ${[...answerMap.values()].join('\n')}
+
+        Streak: ${streak}
+        **Time's up <t:${Math.floor(questionTimer.getTime() / 1000)}:R>**`)
+        .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() }); // eslint-disable-line max-len
+
+      if (qNumber === 0) {
+        // await (interaction as MessageComponentInteraction).update({}); // eslint-disable-line no-await-in-loop
+        questionTimer = await getNewTimer(6); // eslint-disable-line no-await-in-loop
+        const startingEmbed = new EmbedBuilder()
+          .setColor(answerColor)
+          .setTitle(`${emojiGet('buttonTrivia')} Trivia *(${difficultyName})*`)
+          .setDescription(`
+          **Loading Trivia with ${amountOfQuestions} questions...**
+          
+          **Starting <t:${Math.floor(questionTimer.getTime() / 1000)}:R>**
+          Get ready!`)
+          .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() }); // eslint-disable-line max-len
+        await interaction.editReply({ embeds: [startingEmbed], components: [] }); // eslint-disable-line no-await-in-loop, max-len
+        // If it's the first question, send a new message
+        await sleep(5 * 1000); // eslint-disable-line no-await-in-loop
+        await interaction.editReply({ // eslint-disable-line no-await-in-loop
+          embeds: [embed],
+          components: [
+            new ActionRowBuilder<ButtonBuilder>().addComponents(
+              choices.map(choice => new ButtonBuilder()
+                .setDisabled(false)
+                .setCustomId(`${choice},user:${interaction.user.id}`)
+                .setEmoji(choiceEmoji(choice))
+                .setStyle(ButtonStyle.Secondary))
+                .concat([
+                  customButton(`rpgQuit,user:${interaction.user.id}`, 'Quit', 'buttonQuit', ButtonStyle.Danger).setDisabled(false),
+                ]),
+            ),
+          ],
+        });
+      } else {
+        // await (interaction as MessageComponentInteraction).editReply({}); // eslint-disable-line no-await-in-loop
+        // If not the first question, edit the previous message
+        await sleep(5 * 1000); // eslint-disable-line no-await-in-loop
+        await interaction.editReply({ // eslint-disable-line no-await-in-loop
+          embeds: [embed],
+          components: [
+            new ActionRowBuilder<ButtonBuilder>().addComponents(
+              choices.map(choice => new ButtonBuilder()
+                .setDisabled(false)
+                .setCustomId(`${choice},user:${interaction.user.id}`)
+                .setEmoji(choiceEmoji(choice))
+                .setStyle(ButtonStyle.Secondary))
+                .concat([
+                  customButton(`rpgQuit,user:${interaction.user.id}`, 'Quit', 'buttonQuit', ButtonStyle.Danger).setDisabled(false),
+                ]),
+            ),
+          ],
+        });
+      }
+
+      // Filter for the buttons
+      const filter = (i: MessageComponentInteraction) => i.user.id === interaction.user.id;
+      if (!interaction.channel) throw new Error('Channel not found');
+      let collected = {} as ButtonInteraction;
+      try {
+        collected = await interaction.channel.awaitMessageComponent({ // eslint-disable-line no-await-in-loop
+          filter,
+          time: 30000,
+          componentType: ComponentType.Button,
+        });
+      } catch (err) {
+        // If the user doesn't answer in time
+        // log.debug(F, 'User did not answer in time');
+        embedStatus = timesUp;
+        answerColor = Colors.Red as ColorResolvable;
+        questionAnswer = `The correct answer was **${questionData.correct_answer}.**`;
+        timedOut = true;
+      }
+
+      if (timedOut === true) break;
+      await collected.update({}); // eslint-disable-line no-await-in-loop
+
+      await collected.editReply({ // eslint-disable-line no-await-in-loop
+        components: [
+          new ActionRowBuilder<ButtonBuilder>()
+            .addComponents(
+              choices.map(choice => new ButtonBuilder()
+                .setCustomId(`${choice},user:${interaction.user.id}`)
+                .setDisabled(true)
+                .setEmoji(choice)
+                .setStyle(ButtonStyle.Secondary))
+                .concat([
+                  customButton('rpgQuit', 'Quit', 'buttonQuit', ButtonStyle.Danger).setDisabled(true),
+                ]),
+            )],
+      });
+
+      if (collected.customId.split(',')[0] === 'rpgQuit') {
+        gameQuit = true;
+        // log.debug(F, 'User quit the game');
+        break;
+      }
+
+      let answer = answerMap.get(collected.customId.split(',')[0]); // Get the answer from the map
+      answer = answer?.substring(38);
+      log.debug(F, `User chose: ${answer}`);
+      log.debug(F, `Correct answer was: ${questionData.correct_answer}`);
+
+      if (answer === questionData.correct_answer) { // If the user answers correctly
+        questionTimer = await getNewTimer(6); // eslint-disable-line no-await-in-loop
+        streak += 1;
+        if (streak > maxStreak) {
+          maxStreak = streak;
+        }
+        score += (1 * streak);
+        questionsCorrect += 1;
+        embed = new EmbedBuilder()
+          .setColor(Colors.Green as ColorResolvable)
+          .setTitle(`${emojiGet('buttonTrivia')} Trivia *(${difficultyName})*`)
+          .setDescription(`
+            **Correct!**
+            The answer was **${questionData.correct_answer}.**
+            
+            **Current Score**
+            Correct: ${questionsCorrect} of ${(qNumber + 1)}
+            Streak: ${streak}
+            
+            Next question <t:${Math.floor(questionTimer.getTime() / 1000)}:R>`)
+          .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() }); // eslint-disable-line max-len
+        embedStatus = 'Correct!';
+        questionAnswer = `The answer was **${questionData.correct_answer}.**`;
+        if (interaction.isRepliable()) {
+          await interaction.editReply({ // eslint-disable-line no-await-in-loop
+            embeds: [embed],
+            components: [
+              new ActionRowBuilder<ButtonBuilder>()
+                .addComponents(
+                  choices.map(choice => new ButtonBuilder()
+                    .setDisabled(true)
+                    .setCustomId(`${choice},user:${interaction.user.id}`)
+                    .setEmoji(choiceEmoji(choice))
+                    .setStyle(ButtonStyle.Secondary))
+                    .concat([
+                      customButton(`rpgQuit,user:${interaction.user.id}`, 'Quit', 'buttonQuit', ButtonStyle.Danger).setDisabled(true),
+                    ]),
+                ),
+            ],
+          });
+        } else {
+          embedStatus = timesUp;
+          answerColor = Colors.Red as ColorResolvable;
+          questionAnswer = `The correct answer was **${questionData.correct_answer}.**`;
+          timedOut = true;
+          break; // If the user timed out, break the loop
+        }
+      } else { // If the user answers incorrectly
+        questionTimer = await getNewTimer(6); // eslint-disable-line no-await-in-loop
+        streak = 0;
+        embed = new EmbedBuilder()
+          .setColor(Colors.Grey as ColorResolvable)
+          .setTitle(`${emojiGet('buttonTrivia')} Trivia *(${difficultyName})*`)
+          .setDescription(`
+          **Incorrect!**
+          The correct answer was **${questionData.correct_answer}.**
+          
+          **Current Score**
+          Correct: ${questionsCorrect} of ${(qNumber + 1)}
+          Streak: ${streak}
+          
+          Next question <t:${Math.floor(questionTimer.getTime() / 1000)}:R>`)
+          .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: env.TS_ICON_URL }); // eslint-disable-line max-len
+        embedStatus = 'Incorrect!';
+        questionAnswer = `The correct answer was **${questionData.correct_answer}.**`;
+        if (interaction.isRepliable()) {
+          await interaction.editReply({ // eslint-disable-line no-await-in-loop
+            embeds: [embed],
+            components: [
+              new ActionRowBuilder<ButtonBuilder>().addComponents(
+                choices.map(choice => new ButtonBuilder()
+                  .setDisabled(true)
+                  .setCustomId(`${choice},user:${interaction.user.id}`)
+                  .setEmoji(choiceEmoji(choice))
+                  .setStyle(ButtonStyle.Secondary))
+                  .concat([
+                    customButton(`rpgQuit,user:${interaction.user.id}`, 'Quit', 'buttonQuit', ButtonStyle.Danger).setDisabled(true),
+                  ]),
+              ),
+            ],
+          });
+        } else {
+          embedStatus = timesUp;
+          answerColor = Colors.Red as ColorResolvable;
+          questionAnswer = `The correct answer was **${questionData.correct_answer}.**`;
+          timedOut = true;
+          break; // If the user timed out, break the loop
+        }
+      }
+      questionList.splice(0, 1); // Remove the first question from the array
+    }
+    let payout = 0;
+    // perfectScore = '';
+    if (questionsCorrect !== 0) { // The user got at least one question correct
+      if (questionsCorrect === amountOfQuestions) { // Bonus for getting all questions correct
+        payout = Math.ceil(2 * (score * (bonus + perfectBonus)));
+      } else {
+        payout = Math.ceil(2 * (score * bonus));
+        // perfectScore = '';
+      }
+      // log.debug(F, `Payout: ${payout} tokens`);
+      // log.debug(F, `Rounded Payout: ${payout} tokens`);
+      personaData.tokens += payout;
+      // log.debug(F, `User scored: ${score}`);
+      // log.debug(F, `User earned: ${payout} tokens`);
+      await setPersonaInfo(personaData);
+    } else {
+      bonusMessage = '';
+    }
+
+    if (!timedOut) {
+      if (questionsCorrect === 0) {
+        scoreMessage = awfulScoreMessageList[Math.floor(Math.random() * awfulScoreMessageList.length)];
+      }
+      if (questionsCorrect <= (amountOfQuestions / 2)) {
+        scoreMessage = badScoreMessageList[Math.floor(Math.random() * badScoreMessageList.length)];
+      }
+      if (questionsCorrect > (amountOfQuestions / 2)) {
+        scoreMessage = goodScoreMessageList[Math.floor(Math.random() * goodScoreMessageList.length)];
+      }
+      if (questionsCorrect === amountOfQuestions) {
+        scoreMessage = perfectScoreMessageList[Math.floor(Math.random() * perfectScoreMessageList.length)];
+      }
+      // log.debug(F, `Score Message: ${scoreMessage}`);
+      const embed = new EmbedBuilder()
+        .setColor(answerColor)
+        .setTitle(`${emojiGet('buttonTrivia')} Trivia *(${difficultyName})*`)
+        .setDescription(
+          `**${embedStatus}**
+          ${questionAnswer}
+
+          **Final Scores** 
+          Correct: **${questionsCorrect}** out of **${amountOfQuestions}**
+          Max Streak: **${maxStreak}** correct in a row
+          *${scoreMessage}*
+
+          Earned: **${payout} tokens**${bonusMessage}
+          Wallet: ${(personaData.tokens)} tokens
+          `,
+        )
+        .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() }); // eslint-disable-line max-len
+      return {
+        embeds: [embed],
+        components: [
+          new ActionRowBuilder<ButtonBuilder>()
+            .addComponents(
+              customButton(`rpgStart,user:${interaction.user.id}`, 'Start', 'buttonStart', ButtonStyle.Success),
+              customButton(`rpgArcade,user:${interaction.user.id}`, 'Arcade', 'buttonArcade', ButtonStyle.Primary),
+            ),
+          new ActionRowBuilder<StringSelectMenuBuilder>()
+            .addComponents(
+              difficultyMenu,
+            ),
+          new ActionRowBuilder<StringSelectMenuBuilder>()
+            .addComponents(
+              questionsMenu,
+            ),
+        ],
+      };
+    }
+    if (gameQuit) {
+      const gameQuitMessage = gameQuitMessageList[Math.floor(Math.random() * gameQuitMessageList.length)];
+      const embed = new EmbedBuilder()
+        .setColor(Colors.Purple)
+        .setTitle(`${emojiGet('buttonTrivia')} Trivia *(${difficultyName})*`)
+        .setDescription(
+          `**Game quit.**
+          ${questionAnswer}
+
+          **Final Scores** 
+          Correct: **${questionsCorrect}** out of **${amountOfQuestions}**
+          Max Streak: **${maxStreak}** questions correct in a row
+          *${gameQuitMessage}*
+
+          Earned: **${payout} tokens**${bonusMessage}
+          Wallet: ${(personaData.tokens)} tokens
+          `,
+        )
+        .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() }); // eslint-disable-line max-len
+      return {
+        embeds: [embed],
+        components: [
+          new ActionRowBuilder<ButtonBuilder>()
+            .addComponents(
+              customButton(`rpgStart,user:${interaction.user.id}`, 'Start', 'buttonStart', ButtonStyle.Success),
+              customButton(`rpgArcade,user:${interaction.user.id}`, 'Arcade', 'buttonArcade', ButtonStyle.Primary),
+            ),
+          new ActionRowBuilder<StringSelectMenuBuilder>()
+            .addComponents(
+              difficultyMenu,
+            ),
+          new ActionRowBuilder<StringSelectMenuBuilder>()
+            .addComponents(
+              questionsMenu,
+            ),
+        ],
+      };
+    }
+    const timeOutMessage = timeOutMessageList[Math.floor(Math.random() * timeOutMessageList.length)];
+    const embed = new EmbedBuilder()
+      .setColor(Colors.Purple)
+      .setTitle(`${emojiGet('buttonTrivia')} Trivia *(${difficultyName})*`)
+      .setDescription(
+        `**${embedStatus}**
+        ${questionAnswer}
+
+        **Final Scores** 
+        Correct: **${questionsCorrect}** out of **${amountOfQuestions}**
+        Max Streak: **${maxStreak}** correct in a row
+        *${timeOutMessage}*
+
+        Earned: **${payout} tokens**${bonusMessage}
+        Wallet: ${(personaData.tokens)} tokens
+        `,
+      )
+      .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() }); // eslint-disable-line max-len
+
+    // log.debug(F, 'Trivia Game Ended');
+    // log.debug(F, `Embed: ${JSON.stringify(embed, null, 2)}`);
+    const components = [
+      new ActionRowBuilder<ButtonBuilder>()
+        .addComponents(
+          customButton(`rpgStart,user:${interaction.user.id}`, 'Start', 'buttonStart', ButtonStyle.Success),
+          customButton(`rpgArcade,user:${interaction.user.id}`, 'Arcade', 'buttonArcade', ButtonStyle.Primary),
+        ),
+      new ActionRowBuilder<StringSelectMenuBuilder>()
+        .addComponents(
+          difficultyMenu,
+        ),
+      new ActionRowBuilder<StringSelectMenuBuilder>()
+        .addComponents(
+          questionsMenu,
+        ),
+    ];
+    // log.debug(F, `Components: ${JSON.stringify(components, null, 2)}`);
+    return {
+      embeds: [embed],
+      components,
+    };
+  }
+
+  // Get the item the user selected
+  let selectedOption = '' as string;
+  if (interaction.isStringSelectMenu() && interaction.values) {
+    [selectedOption] = interaction.values;
+  }
+  // log.debug(F, `selectedOption: ${selectedOption}`);
+
+  // Check if the selected option exists in the difficulties list
+  const difficultyOption = Object.values(difficulties.map(d => ({
+    label: d.label,
+    value: d.value,
+    emoji: emojiGet(d.emoji),
+    default: d.default,
+  }))).find(item => item.value === selectedOption);
+  if (difficultyOption) {
+    // log.debug(F, 'difficultyOption is not empty');
+    // Get a list of marketInventory where the value does not equal the choice
+    // If there is no choice, it will return all items the user has
+    const filteredDifficulties = Object.values(difficulties.map(d => ({
+      label: d.label,
+      value: d.value,
+      emoji: `<:${(emojiGet(d.emoji) as Emoji).identifier}>`,
+      default: d.default,
+    })))
+      .filter(item => item.value !== selectedOption)
+      .map(item => ({ ...item, default: false }));
+    difficultyMenu.setOptions(filteredDifficulties);
+    const chosenDifficulty = difficulties.map(d => ({
+      label: d.label,
+      value: d.value,
+      emoji: `<:${(emojiGet(d.emoji) as Emoji).identifier}>`,
+      default: d.default,
+    })).find(item => item.value === selectedOption);
+    if (chosenDifficulty) {
+      chosenDifficulty.default = true;
+      difficultyMenu.addOptions(chosenDifficulty);
+    }
+    // log.debug(F, `difficultyMenu: ${JSON.stringify(difficultyMenu, null, 2)}`);
+    if (gameStates[interaction.user.id]) {
+      gameStates[interaction.user.id].difficultyMenu = difficultyMenu;
+    } else {
+      gameStates[interaction.user.id] = {
+        difficultyMenu,
+        questionsMenu: new StringSelectMenuBuilder()
+          .setCustomId(`rpgQuestionLimit,user:${interaction.user.id}`)
+          .setPlaceholder('How many questions?')
+          .setOptions(numberOfQuestions.map(q => ({
+            label: q.label,
+            value: q.value,
+            emoji: `<:${(emojiGet(q.emoji) as Emoji).identifier}>`,
+            default: q.default,
+          }))),
+      };
+    }
+  }
+
+  // Check if the selected option exists in the number of questions list
+  const amountOption = Object.values(numberOfQuestions.map(q => ({
+    label: q.label,
+    value: q.value,
+    emoji: emojiGet(q.emoji),
+    default: q.default,
+  }))).find(item => item.value === selectedOption);
+  if (amountOption) {
+    // log.debug(F, 'amountOption is not empty');
+    const filteredOptions = Object.values(numberOfQuestions.map(q => ({
+      label: q.label,
+      value: q.value,
+      emoji: `<:${(emojiGet(q.emoji) as Emoji).identifier}>`,
+      default: q.default,
+    })))
+      .filter(item => item.value !== selectedOption)
+      .map(item => ({ ...item, default: false }));
+    questionsMenu.setOptions(filteredOptions);
+    const chosenQuestion = numberOfQuestions.map(q => ({
+      label: q.label,
+      value: q.value,
+      emoji: `<:${(emojiGet(q.emoji) as Emoji).identifier}>`,
+      default: q.default,
+    })).find(item => item.value === selectedOption);
+    if (chosenQuestion) {
+      chosenQuestion.default = true;
+      questionsMenu.addOptions(chosenQuestion);
+    }
+    if (gameStates[interaction.user.id]) {
+      gameStates[interaction.user.id].questionsMenu = questionsMenu;
+    } else {
+      gameStates[interaction.user.id] = {
+        difficultyMenu: new StringSelectMenuBuilder()
+          .setCustomId(`rpgDifficulty,user:${interaction.user.id}`)
+          .setPlaceholder('Easy')
+          .setOptions(difficulties.map(d => ({
+            label: d.label,
+            value: d.value,
+            emoji: `<:${(emojiGet(d.emoji) as Emoji).identifier}>`,
+            default: d.default,
+          }))),
+        questionsMenu,
+      };
+    }
+  }
+
+  const components = [
+    new ActionRowBuilder<ButtonBuilder>()
+      .addComponents(
+        customButton(`rpgStart,user:${interaction.user.id}`, 'Start', 'buttonStart', ButtonStyle.Success),
+        customButton(`rpgArcade,user:${interaction.user.id}`, 'Arcade', 'buttonArcade', ButtonStyle.Primary),
+      ),
+    new ActionRowBuilder<StringSelectMenuBuilder>()
+      .addComponents(
+        difficultyMenu,
+      ),
+    new ActionRowBuilder<StringSelectMenuBuilder>()
+      .addComponents(
+        questionsMenu,
+      ),
+  ];
+
+  // log.debug(F, `Components: ${JSON.stringify(components, null, 2)}`);
+
+  return {
+    embeds: [embedTemplate()
+      .setAuthor(null)
+      .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
+      .setTitle(`${emojiGet('buttonTrivia')} Trivia`)
+      .setDescription(stripIndents`
+        You ${rand(text.enter)} the trivia parlor where you can test your knowledge of random facts!
+
+        **How to play**
+        - All questions are multiple choice
+        - Select a difficulty and number of questions
+        - Answer the questions within 30 seconds
+
+        - Earn 1 token (plus difficulty bonus) for each correct answer
+        - Earn a streak multiplier for each correct answer in a row
+        - Earn more bonus tokens if you get all questions correct
+
+       *(Multiplayer coming soon!)*
+      `)
+      .setColor(Colors.Green)],
+    components,
+  };
+}
+
+export async function rpgTriviaGetQuestions(
+  amount: number,
+  difficulty:string,
+):Promise<TriviaQuestion[]> {
+  // log.debug(F, `Getting question with difficulty: ${difficulty}...`);
+  const trivia = new Trivia({ encoding: 'url3986' });
+
+  const { results } = await trivia.getQuestions({ amount, type: 'multiple', difficulty });
+
+  // log.debug(F, `results: ${JSON.stringify(results, null, 2)}`);
+
+  function anticheat(str: string) {
+    const replacementMap: { [key: string]: string } = {
+      a: 'α',
+      e: 'є',
+      u: 'υ',
+    };
+
+    return str.replace(/[aet]/gi, (replacement: string) => replacementMap[replacement] || replacement);
+  }
+
+  return results.map((questionData:{
+    category: string;
+    type: string;
+    difficulty: string;
+    question: string;
+    correct_answer: string;
+    incorrect_answers: string[];
+  }) => {
+    // const answers = [...questionData.incorrect_answers, questionData.correct_answer];
+    // Unescape HTML entities
+    const Question = anticheat(he.unescape(questionData.question));
+    const CorrectAnswer = anticheat(he.unescape(questionData.correct_answer));
+    const IncorrectAnswers = anticheat(he.unescape(questionData.incorrect_answers.join('| ')));
+    const Answers = [...IncorrectAnswers.split('| '), CorrectAnswer];
+    // log.debug(F, `Broken Question: ${questionData.question}, Fixed Question: ${fixedQuestion}`);
+    // log.debug(F, `Broken Answer: ${answers}, Fixed Answer: ${fixedAnswers}`);
+    // Shuffle the answers (So the correct answer isn't always the last one)
+    Answers.sort(() => Math.random() - 0.5);
+
+    return {
+      category: questionData.category,
+      type: questionData.type,
+      difficulty: questionData.difficulty,
+      question: Question,
+      correct_answer: CorrectAnswer,
+      all_answers: Answers,
+    } as TriviaQuestion;
+  });
 }
 
 export async function rpgArcadeAnimate(
@@ -2148,10 +3050,10 @@ export async function rpgArcadeAnimate(
   gameName: GameName,
 ) {
   // if (env.NODE_ENV === 'development') {
-  //   await (interaction as MessageComponentInteraction).update({
+  //   await (interaction as MessageComponentInteraction).editReply({
   //     embeds: [embedTemplate()
   //       .setAuthor(null)
-  //       .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG`, iconURL: env.TS_ICON_URL })
+  //       .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
   //       .setTitle(gameName),
   //     ],
   //   });
@@ -2159,7 +3061,7 @@ export async function rpgArcadeAnimate(
   // }
 
   if (gameName === 'Coinflip') {
-    await (interaction as MessageComponentInteraction).update({ // eslint-disable-line no-await-in-loop
+    await (interaction as MessageComponentInteraction).editReply({ // eslint-disable-line no-await-in-loop
       embeds: [],
       content: 'https://media.tenor.com/tewn7lzVDgcAAAAC/coin-flip-flip.gif',
       components: [],
@@ -2175,7 +3077,7 @@ export async function rpgArcadeAnimate(
     //     { name: '🪙', value: '🫱' },
     //   ]);
 
-    // await (interaction as MessageComponentInteraction).update({ // eslint-disable-line no-await-in-loop
+    // await (interaction as MessageComponentInteraction).editReply({ // eslint-disable-line no-await-in-loop
     //   embeds: [embed],
     //   components: [],
     // });
@@ -2239,7 +3141,7 @@ export async function rpgArcadeAnimate(
   }
 
   if (gameName === 'Roulette') {
-    await (interaction as MessageComponentInteraction).update({ // eslint-disable-line no-await-in-loop
+    await (interaction as MessageComponentInteraction).editReply({ // eslint-disable-line no-await-in-loop
       embeds: [],
       content: 'https://media2.giphy.com/media/1DEJwfwdknKZq/giphy.gif',
       components: [],
@@ -2269,7 +3171,7 @@ export async function rpgArcadeAnimate(
     //       { name: '⬆️', value: '🟥', inline: true },
     //       ...wheelBottom,
     //     );
-    //   await (interaction as MessageComponentInteraction).update({ embeds: [embed] }); // eslint-disable-line no-await-in-loop
+    //   await (interaction as MessageComponentInteraction).editReply({ embeds: [embed] }); // eslint-disable-line no-await-in-loop
     //   await sleep(0.5 * 1000); // eslint-disable-line no-await-in-loop
 
     //   const arrows = ['↗️', '➡️', '↘️', '⬇️', '↙️', '⬅️', '↖️', '⬆️', '↗️', '➡️', '↘️'];
@@ -2294,7 +3196,7 @@ export async function rpgArcadeWager(
   const bet = parseInt(interaction.customId.slice(8), 10);
   newBet += bet || 0;
 
-  const [personaData] = await getPersonaInfo(interaction.user.id);
+  const personaData = await getPersonaInfo(interaction.user.id);
   if (personaData.tokens < newBet) {
     const notEnough = '**You don\'t have enough to bet that much**\n';
     return rpgArcadeGame(interaction, wagers[interaction.user.id].gameName, undefined, notEnough);
@@ -2310,3 +3212,39 @@ function sleep(ms:number):Promise<void> {
     setTimeout(resolve, ms);
   });
 }
+
+export async function rpgHelp(
+  interaction: MessageComponentInteraction | ChatInputCommandInteraction,
+):Promise<InteractionEditReplyOptions | InteractionUpdateOptions> {
+  return {
+    embeds: [embedTemplate()
+      .setAuthor(null)
+      .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
+      .setTitle(`${emojiGet('buttonHelp')} Help`)
+      .setDescription(stripIndents`
+        You ${rand(text.enter)} the information centre and walk up to the help desk.
+
+        ***Welcome to TripSit's RPG!***
+        TripSit's RPG is a discord based RPG that plays out using discord embeds.
+
+        **How to play**
+        - Earn tokens by heading to the **Bounties** section and completing the tasks.
+        - Earn extra or gamble for more tokens by playing the **Arcade** games.
+        - Spend tokens in the **Market** to buy items for your */profile and /levels*.
+        - Head **Home** to equip items and see your inventory.
+
+        - Use the navigation buttons to move between any sections.
+        - Use the **/rpg** subcommands to quickly access most parts.
+
+        *This is still a work in progress.*
+        *Please report any bugs or suggestions to <@121115330637594625> or <@177537158419054592>.*
+      `)
+      .setColor(Colors.Blue)],
+    components: [new ActionRowBuilder<ButtonBuilder>()
+      .addComponents(
+        customButton(`rpgTown,user:${interaction.user.id}`, 'Town', 'buttonTown', ButtonStyle.Primary),
+      )],
+  };
+}
+
+export default dRpg;

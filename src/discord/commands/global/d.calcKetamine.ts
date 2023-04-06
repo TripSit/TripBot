@@ -6,13 +6,13 @@ import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { calcKetamine } from '../../../global/commands/g.calcKetamine';
 import { startLog } from '../../utils/startLog';
-// import log from '../../../global/utils/log';
+
 const F = f(__filename);
 
-export default dCalcketamine;
+export default dCalcKetamine;
 
 // Calculate insufflated dosages
-export const dCalcketamine: SlashCommand = {
+export const dCalcKetamine: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('calc_ketamine')
     .setDescription('Get ketamine dosage information')
@@ -25,28 +25,25 @@ export const dCalcketamine: SlashCommand = {
         { name: 'kg', value: 'kg' },
         { name: 'lbs', value: 'lbs' },
       )
-      .setRequired(true)),
+      .setRequired(true))
+    .addBooleanOption(option => option.setName('ephemeral')
+      .setDescription('Set to "True" to show the response only to you')),
   async execute(interaction) {
     startLog(F, interaction);
+    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
     const givenWeight = interaction.options.getNumber('weight', true);
 
     const weightUnits = interaction.options.getString('units', true) as 'kg' | 'lbs';
 
     const embed = embedTemplate();
     if (weightUnits === 'kg' && givenWeight > 179) {
-      embed.setTitle('Please enter a weight less than 179 kg.');
-      interaction.reply({
-        embeds: [embed],
-        ephemeral: true,
-      });
+      embed.setTitle('Please enter a weight less than 179 kg.'); // what if a person is 200kg? =(
+      await interaction.editReply({ embeds: [embed] });
       return false;
     }
     if (weightUnits === 'lbs' && givenWeight > 398) {
       embed.setTitle('Please enter a weight less than 398 lbs.');
-      interaction.reply({
-        embeds: [embed],
-        ephemeral: true,
-      });
+      await interaction.editReply({ embeds: [embed] });
       return false;
     }
 
@@ -65,7 +62,7 @@ export const dCalcketamine: SlashCommand = {
       },
     );
 
-    interaction.reply({ embeds: [embed] });
+    await interaction.editReply({ embeds: [embed] });
     return true;
   },
 };

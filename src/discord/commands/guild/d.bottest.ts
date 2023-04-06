@@ -102,7 +102,7 @@ const testableCommands = [ // eslint-disable-line
  * @param {number} ms
  * @return {Promise<void>}
  */
-function sleep(ms:number):Promise<void> {
+export function sleep(ms:number):Promise<void> {
   return new Promise(resolve => {
     setTimeout(resolve, ms);
   });
@@ -162,6 +162,10 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
       // Test getting a blank birthday
       await interaction.channel.send(`> **${commandName}** - Getting existing record`);
       testInteraction.options = {
+        getBoolean: (name:string) => {
+          if (name === 'ephemeral') return true;
+          return null;
+        },
         getString: (name:string) => {
           if (name === 'month') return 'June';
           return null;
@@ -202,6 +206,10 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
       // Set the birthday
       await interaction.channel.send(`> **${commandName}** - Setting new birthdate to ${monthName} ${day}`);
       testInteraction.options = {
+        getBoolean: (name:string) => {
+          if (name === 'ephemeral') return true;
+          return null;
+        },
         getString: (name:string) => {
           if (name === 'month') return monthName;
           return null;
@@ -222,6 +230,10 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
       // Get the new birthday
       await interaction.channel.send(`> **${commandName}** - Getting new birthdate (Should be ${monthName} ${day})`);
       testInteraction.options = {
+        getBoolean: (name:string) => {
+          if (name === 'ephemeral') return true;
+          return null;
+        },
         getString: (name:string) => {
           if (name === 'month') return 'june';
           return null;
@@ -244,6 +256,10 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
     }
     if (commandName === 'breathe') {
       testInteraction.options = {
+        getBoolean: (name:string) => {
+          if (name === 'ephemeral') return true;
+          return null;
+        },
         getString: (name:string) => {
           if (name === 'exercise') return '1';
           return null;
@@ -252,6 +268,10 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
       await command.execute(testInteraction);
       await sleep(2000);
       testInteraction.options = {
+        getBoolean: (name:string) => {
+          if (name === 'ephemeral') return true;
+          return null;
+        },
         getString: (name:string) => {
           if (name === 'exercise') return '2';
           return null;
@@ -260,6 +280,10 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
       await command.execute(testInteraction);
       await sleep(2000);
       testInteraction.options = {
+        getBoolean: (name:string) => {
+          if (name === 'ephemeral') return true;
+          return null;
+        },
         getString: (name:string) => {
           if (name === 'exercise') return '3';
           return null;
@@ -268,6 +292,10 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
       await command.execute(testInteraction);
       await sleep(2000);
       testInteraction.options = {
+        getBoolean: (name:string) => {
+          if (name === 'ephemeral') return true;
+          return null;
+        },
         getString: (name:string) => {
           if (name === 'exercise') return '4';
           return null;
@@ -279,6 +307,10 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
     if (commandName === 'calc_benzo') {
       // await command.execute(interaction, ['10', 'alprazolam', 'ativan']);
       testInteraction.options = {
+        getBoolean: (name:string) => {
+          if (name === 'ephemeral') return true;
+          return null;
+        },
         getString: (name:string) => {
           if (name === 'mg_of') return 'clorazepate';
           if (name === 'and_i_want_the_dose_of') return 'flubromazepam';
@@ -294,6 +326,10 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
     }
     if (commandName === 'calc_dxm') {
       testInteraction.options = {
+        getBoolean: (name:string) => {
+          if (name === 'ephemeral') return true;
+          return null;
+        },
         getString: (name:string) => {
           if (name === 'units') return 'lbs';
           if (name === 'taking') return 'RoboTablets (30 mg tablets)';
@@ -309,6 +345,10 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
     }
     if (commandName === 'calc_ketamine') {
       testInteraction.options = {
+        getBoolean: (name:string) => {
+          if (name === 'ephemeral') return true;
+          return null;
+        },
         getString: (name:string) => {
           if (name === 'units') return 'lbs';
           return null;
@@ -324,6 +364,10 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
     if (commandName === 'calc_psychedelics') {
       // await command.execute(interaction, ['200', '', '4', 'lsd']);
       testInteraction.options = {
+        getBoolean: (name:string) => {
+          if (name === 'ephemeral') return true;
+          return null;
+        },
         getNumber: (name:string) => {
           if (name === 'last_dose') return 2;
           if (name === 'desired_dose') return 4;
@@ -335,6 +379,10 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
       await command.execute(testInteraction);
       await sleep(2000);
       testInteraction.options = {
+        getBoolean: (name:string) => {
+          if (name === 'ephemeral') return true;
+          return null;
+        },
         getNumber: (name:string) => {
           if (name === 'last_dose') return 2;
           if (name === 'desired_dose') return null;
@@ -346,6 +394,10 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
       await command.execute(testInteraction);
       await sleep(2000);
       testInteraction.options = {
+        getBoolean: (name:string) => {
+          if (name === 'ephemeral') return true;
+          return null;
+        },
         getNumber: (name:string) => {
           if (name === 'last_dose') return 200;
           if (name === 'desired_dose') return 400;
@@ -357,6 +409,10 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
       await command.execute(testInteraction);
       await sleep(2000);
       testInteraction.options = {
+        getBoolean: (name:string) => {
+          if (name === 'ephemeral') return true;
+          return null;
+        },
         getNumber: (name:string) => {
           if (name === 'last_dose') return 200;
           if (name === 'desired_dose') return null;
@@ -370,6 +426,10 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
     }
     if (commandName === 'combo') {
       testInteraction.options = {
+        getBoolean: (name:string) => {
+          if (name === 'ephemeral') return true;
+          return null;
+        },
         getString: (name:string) => {
           if (name === 'first_drug') return 'DXM';
           if (name === 'second_drug') return 'MDMA';
@@ -381,6 +441,10 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
     }
     if (commandName === 'convert') {
       testInteraction.options = {
+        getBoolean: (name:string) => {
+          if (name === 'ephemeral') return true;
+          return null;
+        },
         getString: (name:string) => {
           if (name === 'units') return 'km';
           if (name === 'into_units') return 'mi';
@@ -398,6 +462,10 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
       // Test getting the existing drama
       await interaction.channel.send(`> **${commandName}** - Getting existing record`);
       testInteraction.options = {
+        getBoolean: (name:string) => {
+          if (name === 'ephemeral') return true;
+          return null;
+        },
         getString: (name:string) => {
           if (name === 'dramatime') return '';
           if (name === 'dramaissue') return '';
@@ -415,6 +483,10 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
         `> **${commandName}** - Setting new value: 'Testing ${randomValue} - ${randomValue} hours ago`,
       );
       testInteraction.options = {
+        getBoolean: (name:string) => {
+          if (name === 'ephemeral') return true;
+          return null;
+        },
         getString: (name:string) => {
           if (name === 'dramatime') return `${randomValue} hours ago`;
           if (name === 'dramaissue') return `Testing ${randomValue}`;
@@ -428,6 +500,10 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
       // Test getting the existing drama
       await interaction.channel.send(`> **${commandName}** - Get new record, should be the same as above`);
       testInteraction.options = {
+        getBoolean: (name:string) => {
+          if (name === 'ephemeral') return true;
+          return null;
+        },
         getString: (name:string) => {
           if (name === 'dramatime') return '';
           if (name === 'dramaissue') return '';
@@ -440,6 +516,10 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
     }
     if (commandName === 'drug') {
       testInteraction.options = {
+        getBoolean: (name:string) => {
+          if (name === 'ephemeral') return true;
+          return null;
+        },
         getString: (name:string) => {
           if (name === 'substance') return 'DXM';
           return null;
@@ -450,6 +530,10 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
     }
     if (commandName === 'experience') {
       testInteraction.options = {
+        getBoolean: (name:string) => {
+          if (name === 'ephemeral') return true;
+          return null;
+        },
         getMember: () => interaction.member,
       };
       await command.execute(testInteraction);
@@ -460,6 +544,10 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
       await interaction.channel.send(`> **${commandName}** - Getting existing record`);
       const duration = '23 mins ago';
       testInteraction.options = {
+        getBoolean: (name:string) => {
+          if (name === 'ephemeral') return true;
+          return null;
+        },
         getString: (name:string) => {
           if (name === 'substance') return 'Cannabis';
           if (name === 'units') return 'G';
@@ -480,6 +568,10 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
       // Set a dose
       await interaction.channel.send(`> **${commandName}** - Setting record`);
       testInteraction.options = {
+        getBoolean: (name:string) => {
+          if (name === 'ephemeral') return true;
+          return null;
+        },
         getString: (name:string) => {
           if (name === 'substance') return 'Cannabis';
           if (name === 'units') return 'G';
@@ -500,6 +592,10 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
       // Get history
       await interaction.channel.send(`> **${commandName}** - Get records`);
       testInteraction.options = {
+        getBoolean: (name:string) => {
+          if (name === 'ephemeral') return true;
+          return null;
+        },
         getString: (name:string) => {
           if (name === 'substance') return 'Cannabis';
           if (name === 'units') return 'G';
@@ -520,6 +616,10 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
       // Delete record
       await interaction.channel.send(`> **${commandName}** - Deleting record`);
       testInteraction.options = {
+        getBoolean: (name:string) => {
+          if (name === 'ephemeral') return true;
+          return null;
+        },
         getString: (name:string) => {
           if (name === 'substance') return 'Cannabis';
           if (name === 'units') return 'G';
@@ -540,6 +640,10 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
       // Get history
       await interaction.channel.send(`> **${commandName}** - Get records`);
       testInteraction.options = {
+        getBoolean: (name:string) => {
+          if (name === 'ephemeral') return true;
+          return null;
+        },
         getString: (name:string) => {
           if (name === 'substance') return 'Cannabis';
           if (name === 'units') return 'G';
@@ -559,6 +663,10 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
     }
     if (commandName === 'imdb') {
       testInteraction.options = {
+        getBoolean: (name:string) => {
+          if (name === 'ephemeral') return true;
+          return null;
+        },
         getString: (name:string) => {
           if (name === 'title') return 'Jurrassic Park';
           return null;
@@ -569,6 +677,10 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
     }
     if (commandName === 'imgur') {
       testInteraction.options = {
+        getBoolean: (name:string) => {
+          if (name === 'ephemeral') return true;
+          return null;
+        },
         getString: (name:string) => {
           if (name === 'search') return 'Puppies';
           return null;
@@ -579,6 +691,10 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
     }
     if (commandName === 'karma') {
       testInteraction.options = {
+        getBoolean: (name:string) => {
+          if (name === 'ephemeral') return true;
+          return null;
+        },
         getMember: () => interaction.member,
       };
       await command.execute(testInteraction);
@@ -586,6 +702,10 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
     }
     if (commandName === 'last') {
       testInteraction.options = {
+        getBoolean: (name:string) => {
+          if (name === 'ephemeral') return true;
+          return null;
+        },
         getMember: () => interaction.member,
       };
       await command.execute(testInteraction);
@@ -593,6 +713,10 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
     }
     if (commandName === 'leaderboard') {
       testInteraction.options = {
+        getBoolean: (name:string) => {
+          if (name === 'ephemeral') return true;
+          return null;
+        },
         getString: (name:string) => {
           if (name === 'category') return 'OVERALL';
           return null;
@@ -602,6 +726,10 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
       sleep(2000);
 
       testInteraction.options = {
+        getBoolean: (name:string) => {
+          if (name === 'ephemeral') return true;
+          return null;
+        },
         getString: (name:string) => {
           if (name === 'category') return 'TOTAL';
           return null;
@@ -611,6 +739,10 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
       sleep(2000);
 
       testInteraction.options = {
+        getBoolean: (name:string) => {
+          if (name === 'ephemeral') return true;
+          return null;
+        },
         getString: (name:string) => {
           if (name === 'category') return 'GENERAL';
           return null;
@@ -620,6 +752,10 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
       sleep(2000);
 
       testInteraction.options = {
+        getBoolean: (name:string) => {
+          if (name === 'ephemeral') return true;
+          return null;
+        },
         getString: (name:string) => {
           if (name === 'category') return 'TRIPSITTER';
           return null;
@@ -629,6 +765,10 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
       sleep(2000);
 
       testInteraction.options = {
+        getBoolean: (name:string) => {
+          if (name === 'ephemeral') return true;
+          return null;
+        },
         getString: (name:string) => {
           if (name === 'category') return 'DEVELOPER';
           return null;
@@ -638,6 +778,10 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
       sleep(2000);
 
       testInteraction.options = {
+        getBoolean: (name:string) => {
+          if (name === 'ephemeral') return true;
+          return null;
+        },
         getString: (name:string) => {
           if (name === 'category') return 'TEAM';
           return null;
@@ -647,6 +791,10 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
       sleep(2000);
 
       testInteraction.options = {
+        getBoolean: (name:string) => {
+          if (name === 'ephemeral') return true;
+          return null;
+        },
         getString: (name:string) => {
           if (name === 'category') return 'IGNORED';
           return null;
@@ -657,6 +805,10 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
     }
     if (commandName === 'poll') {
       testInteraction.options = {
+        getBoolean: (name:string) => {
+          if (name === 'ephemeral') return true;
+          return null;
+        },
         getString: (name:string) => {
           if (name === 'question') return 'Is TripBot Awesome?';
           if (name === 'choices') return 'Yes,Also Yes,No...but yes';
@@ -670,6 +822,10 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
       // get
       await interaction.channel.send(`> **${commandName}** - Get`);
       testInteraction.options = {
+        getBoolean: (name:string) => {
+          if (name === 'ephemeral') return true;
+          return null;
+        },
         getMember: async (name:string) => {
           if (name === 'user') return interaction.member;
           return null;
@@ -682,6 +838,10 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
       // delete
       await interaction.channel.send(`> **${commandName}** - Delete`);
       testInteraction.options = {
+        getBoolean: (name:string) => {
+          if (name === 'ephemeral') return true;
+          return null;
+        },
         getMember: async (name:string) => {
           if (name === 'user') return interaction.member;
           return null;
@@ -693,6 +853,10 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
     }
     if (commandName === 'profile') {
       testInteraction.options = {
+        getBoolean: (name:string) => {
+          if (name === 'ephemeral') return true;
+          return null;
+        },
         getMember: () => interaction.member,
       };
       await command.execute(testInteraction);
@@ -703,6 +867,10 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
       await interaction.channel.send(`> **${commandName}** - Getting existing record`);
       const reminderA = 'Test reminder A';
       testInteraction.options = {
+        getBoolean: (name:string) => {
+          if (name === 'ephemeral') return true;
+          return null;
+        },
         getString: (name:string) => {
           if (name === 'offset') return '2 mins';
           if (name === 'reminder') return reminderA;
@@ -720,6 +888,10 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
       // Set a dose
       await interaction.channel.send(`> **${commandName}** - Setting record`);
       testInteraction.options = {
+        getBoolean: (name:string) => {
+          if (name === 'ephemeral') return true;
+          return null;
+        },
         getString: (name:string) => {
           if (name === 'offset') return '2 mins';
           if (name === 'reminder') return reminderA;
@@ -737,6 +909,10 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
       // Set a dose
       await interaction.channel.send(`> **${commandName}** - Setting record`);
       testInteraction.options = {
+        getBoolean: (name:string) => {
+          if (name === 'ephemeral') return true;
+          return null;
+        },
         getString: (name:string) => {
           if (name === 'offset') return '3 mins';
           if (name === 'reminder') return 'Test reminder B';
@@ -754,6 +930,10 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
       // Get history
       await interaction.channel.send(`> **${commandName}** - Get records`);
       testInteraction.options = {
+        getBoolean: (name:string) => {
+          if (name === 'ephemeral') return true;
+          return null;
+        },
         getString: (name:string) => {
           if (name === 'offset') return '2 mins';
           if (name === 'reminder') return reminderA;
@@ -771,6 +951,10 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
       // Delete record
       await interaction.channel.send(`> **${commandName}** - Deleting record`);
       testInteraction.options = {
+        getBoolean: (name:string) => {
+          if (name === 'ephemeral') return true;
+          return null;
+        },
         getString: (name:string) => {
           if (name === 'offset') return '2 mins';
           if (name === 'reminder') return reminderA;
@@ -788,6 +972,10 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
       // Get history
       await interaction.channel.send(`> **${commandName}** - Get records`);
       testInteraction.options = {
+        getBoolean: (name:string) => {
+          if (name === 'ephemeral') return true;
+          return null;
+        },
         getString: (name:string) => {
           if (name === 'offset') return '2 mins';
           if (name === 'reminder') return reminderA;
@@ -804,6 +992,13 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
     }
     if (commandName === 'reminder') {
       testInteraction.channel = await interaction.guild?.channels.fetch(env.CHANNEL_TEAMTRIPSIT) as TextChannel;
+      testInteraction.options = {
+        getBoolean: (name:string) => {
+          if (name === 'ephemeral') return true;
+          return null;
+        },
+      };
+
       await command.execute(testInteraction);
       sleep(2000);
 
@@ -817,6 +1012,10 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
     }
     if (commandName === 'say') {
       testInteraction.options = {
+        getBoolean: (name:string) => {
+          if (name === 'ephemeral') return true;
+          return null;
+        },
         getChannel: (name:string) => {
           if (name === 'channel') return interaction.channel;
           return null;
@@ -833,6 +1032,10 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
       // Test getting a blank timezone
       await interaction.channel.send(`> **${commandName}** - Getting existing record`);
       testInteraction.options = {
+        getBoolean: (name:string) => {
+          if (name === 'ephemeral') return true;
+          return null;
+        },
         getString: (name:string) => {
           if (name === 'timezone') return 'Pacific/Tahiti';
           return null;
@@ -849,6 +1052,10 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
       // Set the record
       await interaction.channel.send(`> **${commandName}** - Setting new timezone to 'America/Chicago'`);
       testInteraction.options = {
+        getBoolean: (name:string) => {
+          if (name === 'ephemeral') return true;
+          return null;
+        },
         getString: (name:string) => {
           if (name === 'timezone') return '(GMT-10:00) Hawaii Time';
           return null;
@@ -865,6 +1072,10 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
       // Get the new record
       await interaction.channel.send(`> **${commandName}** - Getting new record (Should be same as above)`);
       testInteraction.options = {
+        getBoolean: (name:string) => {
+          if (name === 'ephemeral') return true;
+          return null;
+        },
         getString: (name:string) => {
           if (name === 'timezone') return '(GMT-09:00) Alaska Time';
           return null;
@@ -880,6 +1091,10 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
       // Set the record
       await interaction.channel.send(`> **${commandName}** - Setting new timezone to 'America/New_York'`);
       testInteraction.options = {
+        getBoolean: (name:string) => {
+          if (name === 'ephemeral') return true;
+          return null;
+        },
         getString: (name:string) => {
           if (name === 'timezone') return '(GMT-08:00) Pacific Time';
           return null;
@@ -896,6 +1111,10 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
       // Get the new record
       await interaction.channel.send(`> **${commandName}** - Getting new record (Should be same as above)`);
       testInteraction.options = {
+        getBoolean: (name:string) => {
+          if (name === 'ephemeral') return true;
+          return null;
+        },
         getString: (name:string) => {
           if (name === 'timezone') return '(GMT-08:00) Pacific Time';
           return null;
@@ -911,6 +1130,10 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
     }
     if (commandName === 'triptoys') {
       testInteraction.options = {
+        getBoolean: (name:string) => {
+          if (name === 'ephemeral') return true;
+          return null;
+        },
         getString: (name:string) => {
           if (name === 'toy') return '25';
           return null;
@@ -949,6 +1172,10 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
     // }
     if (commandName === 'urban_define') {
       testInteraction.options = {
+        getBoolean: (name:string) => {
+          if (name === 'ephemeral') return true;
+          return null;
+        },
         getString: (name:string) => {
           if (name === 'define') return 'TripSit';
           return null;
@@ -959,6 +1186,10 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
     }
     if (commandName === 'youtube') {
       testInteraction.options = {
+        getBoolean: (name:string) => {
+          if (name === 'ephemeral') return true;
+          return null;
+        },
         getString: (name:string) => {
           if (name === 'search') return 'TripSit find the others';
           return null;
@@ -967,6 +1198,13 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
       await command.execute(testInteraction);
       return true;
     }
+
+    testInteraction.options = {
+      getBoolean: (name:string) => {
+        if (name === 'ephemeral') return true;
+        return null;
+      },
+    };
 
     // No-parameter commands fall down here, including:
     // - button, joke, kipp, motivate, ping, topic
@@ -1069,12 +1307,13 @@ export const dBottest: SlashCommand = {
       )),
   async execute(interaction) {
     startLog(F, interaction);
+    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
     if (!interaction.channel) {
-      await interaction.reply('This command must be used in a channel!');
+      await interaction.editReply('This command must be used in a channel!');
       return false;
     }
     // const scope = interaction.options.getString('scope') || 'All';
-    await interaction.reply('Testing commands!');
+    await interaction.editReply('Testing commands!');
 
     const results = {
       total: [] as string[],
@@ -1088,7 +1327,7 @@ export const dBottest: SlashCommand = {
         await testGuild(interaction, globalResults)
           .then(async guildResults => {
             if (!interaction.channel) {
-              await interaction.reply('This command must be used in a channel!');
+              await interaction.editReply('This command must be used in a channel!');
               return false;
             }
             // log.debug(F, `Guild results: ${JSON.stringify(guildResults)}`);

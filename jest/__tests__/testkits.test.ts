@@ -3,23 +3,23 @@ import {
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
 import { dTestkits } from '../../src/discord/commands/global/d.testkits';
-import { executeCommandAndSpyReply, embedContaining, getParsedCommand } from '../utils/testutils';
+import { executeCommandAndSpyEditReply, embedContaining, getParsedCommand } from '../utils/testutils';
 
 const slashCommand = dTestkits;
 
 const authorInfo = {
-  iconURL: 'https://fossdroid.com/images/icons/me.tripsit.tripmobile.13.png',
+  iconURL: 'https://i.gyazo.com/b48b08a853fefaafb6393837eec1a501.png',
   name: 'TripSit.Me',
   url: 'http://www.tripsit.me',
 };
 const footerInfo = {
-  iconURL: 'https://imgur.com/b923xK2.png',
+  iconURL: 'https://i.gyazo.com/19276c297cca0761dc9689ac7c320b8e.png',
   text: 'Dose responsibly!',
 };
 
 describe(slashCommand.data.name, () => {
   it(slashCommand.data.description, async () => {
-    expect(await executeCommandAndSpyReply(
+    expect(await executeCommandAndSpyEditReply(
       slashCommand,
       getParsedCommand(
         `/${slashCommand.data.name}`,
@@ -34,10 +34,17 @@ describe(slashCommand.data.name, () => {
         title: 'Test Kit Resources and information!',
         description: stripIndents`
       [How to use a reagent test kit](https://dancesafe.org/testing-kit-instructions/)
-      [How to use fent strips](https://dancesafe.org/you-may-be-using-fentanyl-testing-strips-incorrectly/)
+      [How to use fentanyl strips](https://dancesafe.org/you-may-be-using-fentanyl-testing-strips-incorrectly/)
       [More testkit resources on the TripSit wiki!](https://wiki.tripsit.me/wiki/Test_Kits)
       `,
         fields: [
+          {
+            name: 'DanceSafe (Worldwide)',
+            value: stripIndents`
+          [Website](https://dancesafe.org/product-category/testing-strips/)            
+          [Info on the new test strips](https://dancesafe.org/fentanyl/)`,
+            inline: true,
+          },
           {
             name: 'Dosetest (Worldwide)',
             value: stripIndents`

@@ -60,19 +60,21 @@ export const dLeaderboard: SlashCommand = {
       .addChoices(
         { name: 'Text', value: 'Text' },
         { name: 'Voice', value: 'Voice' },
-      )),
+      ))
+    .addBooleanOption(option => option.setName('ephemeral')
+      .setDescription('Set to "True" to show the response only to you')),
   async execute(interaction) {
+    startLog(F, interaction);
+    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
     const startTime = Date.now();
     if (!interaction.guild) {
-      interaction.reply('You can only use this command in a guild!');
+      await interaction.editReply('You can only use this command in a guild!');
       return false;
     }
-    startLog(F, interaction);
 
-    await interaction.deferReply();
     const categoryChoice = interaction.options.getString('category') ?? 'All';
     const typeChoice = interaction.options.getString('type') ?? 'All';
-    log.debug(F, `categoryChoice: ${categoryChoice}, typeChoice: ${typeChoice}`);
+    // log.debug(F, `categoryChoice: ${categoryChoice}, typeChoice: ${typeChoice}`);
 
     const leaderboardData = await getLeaderboard();
     const book = [];
@@ -126,12 +128,12 @@ export const dLeaderboard: SlashCommand = {
     }
 
     if (book.length === 0) {
-      interaction.editReply(`No ${typeChoice} ${categoryChoice} found!`);
+      await interaction.editReply(`No ${typeChoice} ${categoryChoice} found!`);
       return false;
     }
 
     if (book.length === 1) {
-      interaction.editReply({ embeds: [book[0]] });
+      await interaction.editReply({ embeds: [book[0]] });
       return true;
     }
 

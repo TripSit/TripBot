@@ -18,6 +18,7 @@ export const dHydrate: SlashCommand = {
 
   async execute(interaction) {
     startLog(F, interaction);
+    await interaction.deferReply({ ephemeral: false });
     const output = stripIndents`
     💧🌊💧🌊💧🌊💧🌊💧🌊💧🌊💧🌊💧🌊
     ⚠️ ＨＹＤＲＡＴＩＯＮ ＲＥＭＩＮＤＥＲ ⚠️
@@ -28,7 +29,7 @@ export const dHydrate: SlashCommand = {
       .setAuthor(null)
       .setFooter(null);
 
-    interaction.reply({ embeds: [embed] });
+    await interaction.editReply({ embeds: [embed] });
     return true;
   },
 };

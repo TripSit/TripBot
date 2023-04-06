@@ -22,14 +22,10 @@ const F = f(__filename);
 
 const guildOnly = 'This command can only be used in a guild!';
 
-/**
- *
- * @param {ButtonInteraction} interaction The interaction that triggered this
- */
 export async function techHelpClick(interaction:ButtonInteraction) {
   // log.debug(F, `Message: ${JSON.stringify(interaction, null, 2)}!`);
   if (!interaction.guild) {
-    interaction.reply({
+    await interaction.reply({
       content: guildOnly,
       ephemeral: true,
     });
@@ -40,32 +36,17 @@ export async function techHelpClick(interaction:ButtonInteraction) {
 
   const guildData = await getGuild(interaction.guild.id);
 
-  if (!guildData) {
-    log.error(F, `- techHelpClick] guild not found: ${interaction.guild.id}`);
-    interaction.reply({
-      content: 'The Guild provided could not be found!',
-      ephemeral: true,
-    });
-    return;
-  }
-
   if (!guildData.role_techhelp) {
     log.error(F, `- techHelpClick] techhelp role not found: ${interaction.guild.id}`);
-    interaction.reply({
-      content: 'The role provided could not be found!',
-      ephemeral: true,
-    });
+    await interaction.reply({ content: 'The role provided could not be found!' });
     return;
   }
 
-  const roleTechreview = await interaction.guild.roles.fetch(guildData.role_techhelp);
+  const roleTechReview = await interaction.guild.roles.fetch(guildData.role_techhelp);
 
-  if (!roleTechreview) {
-    log.error(F, `- techHelpClick] roleTechreview not found: ${interaction.guild.id}`);
-    interaction.reply({
-      content: 'The role provided could not be found!',
-      ephemeral: true,
-    });
+  if (!roleTechReview) {
+    log.error(F, `- techHelpClick] roleTechReview not found: ${interaction.guild.id}`);
+    await interaction.reply({ content: 'The role provided could not be found!' });
     return;
   }
 
@@ -78,39 +59,25 @@ export async function techHelpClick(interaction:ButtonInteraction) {
   } else if (issueType === 'other') {
     placeholder = `I just wanted to say that ${interaction.guild.name} is super cool and I love it!`;
   }
-  // else if (issueType === 'ircConnect') {
-  //   placeholder = 'I\'ve been banned on IRC and I dont know why.\nMy nickname is
-  // Strongbad and my IP is 192.168.100.200';
-  // } else if (issueType === 'ircAppeal') {
-  //   placeholder = 'I was a jerk it, wont happen again. My nickname is Strongbad';
-  // }
-  // Create the modal
-  const modal = new ModalBuilder()
+
+  await interaction.showModal(new ModalBuilder()
     .setCustomId(`techHelpSubmit~${interaction.id}`)
-    .setTitle('TripSit Feedback');
-  const timeoutReason = new TextInputBuilder()
-    .setLabel('What is your issue? Be super detailed!')
-    .setStyle(TextInputStyle.Paragraph)
-    .setPlaceholder(placeholder)
-    .setCustomId(`${issueType}IssueInput`)
-    .setRequired(true);
-  // An action row only holds one text input, so you need one action row per text input.
-  const firstActionRow = new ActionRowBuilder<TextInputBuilder>().addComponents(timeoutReason);
-  // Add inputs to the modal
-  modal.addComponents(firstActionRow);
-  // Show the modal to the user
-  await interaction.showModal(modal);
+    .setTitle('TripSit Feedback')
+    .addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
+      .setLabel('What is your issue? Be super detailed!')
+      .setStyle(TextInputStyle.Paragraph)
+      .setPlaceholder(placeholder)
+      .setCustomId(`${issueType}IssueInput`)
+      .setRequired(true))));
 
   const filter = (i:ModalSubmitInteraction) => i.customId.includes('techHelpSubmit');
   interaction.awaitModalSubmit({ filter, time: 0 })
     .then(async i => {
       if (i.customId.split('~')[1] !== interaction.id) return;
+      await i.deferReply({ ephemeral: true });
 
       if (!i.guild) {
-        interaction.reply({
-          content: guildOnly,
-          ephemeral: true,
-        });
+        await interaction.editReply({ content: guildOnly });
         return;
       }
 
@@ -118,7 +85,7 @@ export async function techHelpClick(interaction:ButtonInteraction) {
       const member = await i.guild.members.fetch(i.user.id);
       // log.debug(F, `member: ${JSON.stringify(member, null, 2)}!`);
       if (member) {
-        // Dont run if the user is on timeout
+        // Don't run if the user is on timeout
         if (member.communicationDisabledUntilTimestamp !== null) {
           await member.send(stripIndents`
           Hey!
@@ -129,7 +96,7 @@ export async function techHelpClick(interaction:ButtonInteraction) {
           return;
         }
       } else {
-        i.reply('Thank you, we will respond to right here when we can!');
+        await i.editReply('Thank you, we will respond to right here when we can!');
       }
 
       // Get whatever they sent in the modal
@@ -143,7 +110,7 @@ export async function techHelpClick(interaction:ButtonInteraction) {
       const ticketThread = await (i.channel as TextChannel).threads.create({
         name: `🧡│${actor.username}'s ${issueType} issue!`,
         autoArchiveDuration: 1440,
-        type: i.guild.premiumTier > 2 ? ChannelType.PrivateThread : ChannelType.PublicThread,
+        type: ChannelType.PrivateThread,
         reason: `${actor.username} submitted a(n) ${issueType} issue`,
       });
       // log.debug(F, `Created meta-thread ${ticketThread.id}`);
@@ -152,10 +119,10 @@ export async function techHelpClick(interaction:ButtonInteraction) {
       embed.setDescription(
         stripIndents`Thank you, check out ${ticketThread} to talk with a team member about your issue!`,
       );
-      i.reply({ embeds: [embed], ephemeral: true });
+      await i.editReply({ embeds: [embed] });
 
       const message = stripIndents`
-        Hey ${roleTechreview}! ${actor} has submitted a new issue:
+        Hey ${roleTechReview}! ${actor} has submitted a new issue:
     
         > ${modalInput}
     
@@ -183,22 +150,21 @@ export async function techHelpClick(interaction:ButtonInteraction) {
  * @param {ButtonInteraction} interaction The button that submitted this
  */
 export async function techHelpOwn(interaction:ButtonInteraction) {
+  await interaction.deferReply({ ephemeral: false });
   if (!interaction.guild) {
-    interaction.reply({
-      content: guildOnly,
-      ephemeral: true,
-    });
+    await interaction.editReply({ content: guildOnly });
     return;
   }
   const issueType = interaction.customId.split('~')[1];
   const targetId = interaction.customId.split('~')[2];
   const target = await interaction.guild.members.fetch(targetId);
 
-  interaction.reply({
+  (interaction.channel as ThreadChannel).setName(`💛│${target.displayName}'s ${issueType} issue!`);
+
+  await interaction.editReply({
     content: stripIndents`${(interaction.member as GuildMember).displayName} has claimed this \
 issue and will either help you or figure out how to get you help!`,
   });
-  (interaction.channel as ThreadChannel).setName(`💛│${target.displayName}'s ${issueType} issue!`);
 }
 
 /**
@@ -206,18 +172,16 @@ issue and will either help you or figure out how to get you help!`,
  * @param {ButtonInteraction} interaction The button that submitted this
  */
 export async function techHelpClose(interaction:ButtonInteraction) {
+  await interaction.deferReply({ ephemeral: false });
   if (!interaction.guild) {
-    interaction.reply({
-      content: guildOnly,
-      ephemeral: true,
-    });
+    await interaction.editReply({ content: guildOnly });
     return;
   }
   const issueType = interaction.customId.split('~')[1];
   const targetId = interaction.customId.split('~')[2];
   const target = await interaction.guild.members.fetch(targetId);
 
-  interaction.reply({
+  await interaction.editReply({
     content: stripIndents`${(interaction.member as GuildMember).displayName} has indicated that \
 this issue has been resolved!`,
   });

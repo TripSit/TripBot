@@ -24,6 +24,8 @@ export async function commandRun(
   interaction: ChatInputCommandInteraction | MessageContextMenuCommandInteraction | UserContextMenuCommandInteraction,
   client: Client,
 ) {
+  const startTime = new Date().getTime();
+  log.info(F, `commandRun started at ${startTime}`);
   const { commandName } = interaction;
 
   const command = client.commands.get(commandName);
@@ -31,17 +33,26 @@ export async function commandRun(
   if (!command) return;
 
   try {
+    log.info(F, `Executed the command in ${new Date().getTime() - startTime}ms`);
     await command.execute(interaction);
+    // log.info(F, `commandRun finished in ${new Date().getTime() - startTime}ms`);
   } catch (error) {
     Error.stackTraceLimit = 25;
     const genericError = 'There was an error while executing this command!';
+    const botlog = await client.channels.fetch(env.CHANNEL_BOTERRORS) as TextChannel;
     if (error instanceof Error) {
       log.error(F, `ERROR: ${error.stack}`);
+      // log.debug(F, `ERROR: ${JSON.stringify(error, null, 2)}`);
+      if ((error as any).code === 10062) {
+        await botlog.send(`I just got an "Unknown interaction" error, this is still a problem!
+        Check out <https://github.com/discord/discord-api-docs/issues/5558> for details`);
+        return;
+      }
       if (!interaction.replied) {
         if (interaction.deferred) {
-          interaction.editReply(genericError);
+          await interaction.editReply(genericError);
         } else {
-          interaction.reply({
+          await interaction.reply({
             content: genericError,
             ephemeral: true,
           });
@@ -53,7 +64,6 @@ export async function commandRun(
         await interaction.editReply({ embeds: [embed] });
       }
       if (env.NODE_ENV === 'production') {
-        const botlog = await client.channels.fetch(env.CHANNEL_BOTLOG) as TextChannel;
         const guild = await client.guilds.fetch(env.DISCORD_GUILD_ID) as Guild;
         const tripbotdevrole = await guild.roles.fetch(env.ROLE_TRIPBOTDEV);
         await botlog.send(`Hey ${tripbotdevrole}, I just got an error (commandRun: ${commandName}):
@@ -62,12 +72,8 @@ export async function commandRun(
       }
     } else {
       log.error(F, `ERROR: ${error}`);
-      interaction.reply({
-        content: 'There was an unexpected error while executing this command!',
-        ephemeral: true,
-      });
+      await interaction.reply({ content: 'There was an unexpected error while executing this command!' });
       if (env.NODE_ENV === 'production') {
-        const botlog = await client.channels.fetch(env.CHANNEL_BOTLOG) as TextChannel;
         const guild = await client.guilds.fetch(env.DISCORD_GUILD_ID) as Guild;
         const tripbotdevrole = await guild.roles.fetch(env.ROLE_TRIPBOTDEV);
         await botlog.send(`Hey ${tripbotdevrole}, I just got an error (commandRun: ${commandName}):

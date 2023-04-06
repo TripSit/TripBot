@@ -15,10 +15,13 @@ export default dTestkits;
 export const dTestkits: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('testkits')
-    .setDescription('Information on how to get a test kit'),
+    .setDescription('Information on how to get a test kit')
+    .addBooleanOption(option => option.setName('ephemeral')
+      .setDescription('Set to "True" to show the response only to you')),
 
   async execute(interaction) {
     startLog(F, interaction);
+    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
     const emsInfo = await testkits();
     const embed = embedTemplate();
 
@@ -39,10 +42,10 @@ export const dTestkits: SlashCommand = {
     });
     embed.setDescription(stripIndents`
         [How to use a reagent test kit](https://dancesafe.org/testing-kit-instructions/)
-        [How to use fent strips](https://dancesafe.org/you-may-be-using-fentanyl-testing-strips-incorrectly/)
+        [How to use fentanyl strips](https://dancesafe.org/you-may-be-using-fentanyl-testing-strips-incorrectly/)
         [More testkit resources on the TripSit wiki!](https://wiki.tripsit.me/wiki/Test_Kits)
         `);
-    interaction.reply({ embeds: [embed] });
+    await interaction.editReply({ embeds: [embed] });
     return true;
   },
 };

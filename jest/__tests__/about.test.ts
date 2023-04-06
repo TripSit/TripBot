@@ -5,23 +5,23 @@ import {
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
 import { dAbout } from '../../src/discord/commands/global/d.about';
-import { executeCommandAndSpyReply, embedContaining, getParsedCommand } from '../utils/testutils';
+import { executeCommandAndSpyEditReply, embedContaining, getParsedCommand } from '../utils/testutils';
 
 const slashCommand = dAbout;
 
 const authorInfo = {
-  iconURL: 'https://fossdroid.com/images/icons/me.tripsit.tripmobile.13.png',
+  iconURL: 'https://i.gyazo.com/b48b08a853fefaafb6393837eec1a501.png',
   name: 'TripSit.Me',
   url: 'http://www.tripsit.me',
 };
 const footerInfo = {
-  iconURL: 'https://imgur.com/b923xK2.png',
+  iconURL: 'https://i.gyazo.com/19276c297cca0761dc9689ac7c320b8e.png',
   text: 'Dose responsibly!',
 };
 
 describe(slashCommand.data.name, () => {
   it(slashCommand.data.description, async () => {
-    expect(await executeCommandAndSpyReply(
+    expect(await executeCommandAndSpyEditReply(
       slashCommand,
       getParsedCommand(
         `/${slashCommand.data.name}`,
@@ -35,13 +35,13 @@ describe(slashCommand.data.name, () => {
         color: Colors.DarkBlue,
         title: 'About TripBot',
         url: 'https://tripsit.me/about/',
-        description: stripIndents`This app is created by TripSit, an organisation which helps to provide factual information        about drugs and how to reduce the harms involved in using them.
+        description: stripIndents`This app is created by TripSit, an organization which helps to provide factual information        about drugs and how to reduce the harms involved in using them.
               The official support server is [TripSit discord](https://discord.gg/TripSit). If you have issues/questions, join and talk with Moonbear!`,
         fields: [
           {
             name: 'Invite',
             value: stripIndents`[Click here to invite TripBot to your own server](https://discord.com/api/oauth2/authorize?client_id=957780726806380545&permissions=18432&scope=bot%20applications.commands).
-                  Note: For advanced features you will need to give the bot more permissions at your discression.`,
+                  Note: For advanced features you will need to give the bot more permissions at your discretion.`,
           },
           {
             name: 'Disclaimer',
@@ -62,7 +62,7 @@ describe(slashCommand.data.name, () => {
           {
             name: 'Credits',
             value: stripIndents`The bot is built using the [Discord.js library](https://discordjs.guide/)
-                  A majority of this code is original, and is available on [GitHub](https://github.com/tripsit/tripsit-discord-bot)
+                  A majority of this code is original, and is available on [GitHub](https://github.com/TripSit/TripBot)
                   The data is sourced from the [TripSit and Psychonaut Wiki API combined](https://github.com/NoahSaso/merge-psychonautwiki-tripsit-data)
                   The DXM calculator comes from [Tripsit](https://github.com/TripSit/DXM-Calculator)
                   The Benzo calculator comes from [Tripsit](https://github.com/TripSit/Benzo-Calculator)
