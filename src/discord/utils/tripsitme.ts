@@ -296,6 +296,7 @@ export async function tripsitmeMeta(
       autoArchiveDuration: 1440,
       type: ChannelType.PrivateThread,
       reason: `${actor.displayName} created meta thread for ${target.displayName}`,
+      invitable: false,
     },
   );
 
@@ -807,6 +808,7 @@ export async function tripSitMe(
     autoArchiveDuration: 1440,
     type: ChannelType.PrivateThread,
     reason: `${target.displayName} requested help`,
+    invitable: false,
   });
   log.debug(F, `threadHelpUser: ${threadHelpUser.name} (${threadHelpUser.id})`);
 

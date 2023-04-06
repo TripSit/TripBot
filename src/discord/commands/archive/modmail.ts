@@ -687,6 +687,7 @@ export async function modmailCreate(
         autoArchiveDuration: 1440,
         type: threadType,
         reason: `${actor.username} submitted a(n) ${issueType} ticket!`,
+        invitable: false,
       });
         // log.debug(F, `Created thread ${ticketThread.id}`);
 

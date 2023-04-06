@@ -113,6 +113,7 @@ export async function techHelpClick(interaction:ButtonInteraction) {
         autoArchiveDuration: 1440,
         type: ChannelType.PrivateThread,
         reason: `${actor.username} submitted a(n) ${issueType} issue`,
+        invitable: false,
       });
       // log.debug(F, `Created meta-thread ${ticketThread.id}`);
 
