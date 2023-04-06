@@ -63,7 +63,7 @@ export async function techHelpClick(interaction:ButtonInteraction) {
 
   await interaction.showModal(new ModalBuilder()
     .setCustomId(`techHelpSubmit~${interaction.id}`)
-    .setTitle('TripSit Feedback')
+    .setTitle(`${interaction.guild.name} Feedback`)
     .addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
       .setLabel('What is your issue? Be super detailed!')
       .setStyle(TextInputStyle.Paragraph)
