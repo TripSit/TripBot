@@ -151,8 +151,6 @@ const modMailIssuePlaceholder = 'I have an issue, can you please help?';
 
 const F = f(__filename);
 
-export default modmail;
-
 async function updateButtons(
   interaction: ButtonInteraction | ChatInputCommandInteraction,
   newButtons: ActionRowBuilder<ButtonBuilder>,
@@ -1017,3 +1015,5 @@ export async function modmailThreadInteraction(message:Message) {
     }
   }
 }
+
+export default modmail;
