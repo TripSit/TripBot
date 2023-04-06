@@ -62,7 +62,7 @@ export const ready: ReadyEvent = {
     await setTimeout(1000);
     const hostGuild = await discordClient.guilds.fetch(env.DISCORD_GUILD_ID);
     await checkGuildPermissions(hostGuild, [
-      'Administrator' as PermissionResolvable,
+      // 'Administrator' as PermissionResolvable,
     ]).then(async result => {
       if (!result.hasPermission) {
         log.error(F, `I do not have the '${result.permission}' permission in ${hostGuild.name}!`);

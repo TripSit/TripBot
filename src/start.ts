@@ -13,18 +13,11 @@ global.bootTime = new Date();
 
 const F = f(__filename);
 
-/**
-* Starts everything in the bot.
-*/
 async function start() {
   log.info(F, 'Initializing service!');
-
-  // log.debug(F, `Token length: ${env.DISCORD_CLIENT_TOKEN.length}`);
-  if (env.DISCORD_CLIENT_TOKEN) {
-    validateEnv('SERVICES');
-    if (validateEnv('DISCORD')) await discordConnect();
-    if (validateEnv('MATRIX')) console.log('v'); await startMatrix();
-  }
+  validateEnv('SERVICES');
+  if (env.DISCORD_CLIENT_TOKEN && validateEnv('DISCORD')) await discordConnect();
+  if (env.MATRIX_ACCESS_TOKEN && validateEnv('MATRIX')) await startMatrix();
 }
 
 start();

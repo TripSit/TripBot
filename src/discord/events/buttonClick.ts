@@ -14,9 +14,9 @@ import {
   tripsitmeResolve,
 } from '../utils/tripsitme';
 import { techHelpClick, techHelpClose, techHelpOwn } from '../utils/techHelp';
-import {
-  modmailCreate, modmailActions,
-} from '../commands/archive/modmail';
+// import {
+//   modmailCreate, modmailActions,
+// } from '../commands/archive/modmail';
 import { verifyButton } from '../utils/verifyButton';
 import { buttonReactionRole } from '../commands/global/d.reactionRole';
 import {
@@ -119,10 +119,10 @@ export async function buttonClick(interaction:ButtonInteraction, discordClient:C
     return;
   }
 
-  if (buttonID.startsWith('modmailIssue')) {
-    await modmailActions(interaction);
-    return;
-  }
+  // if (buttonID.startsWith('modmailIssue')) {
+  //   await modmailActions(interaction);
+  //   return;
+  // }
 
   if (buttonID.startsWith('applicationApprove')) {
     applicationApprove(interaction);
@@ -140,22 +140,22 @@ export async function buttonClick(interaction:ButtonInteraction, discordClient:C
     techHelpClick(interaction);
     return;
   }
-  if (buttonID === 'modmailTripsitter') {
-    modmailCreate(interaction, 'TRIPSIT');
-    return;
-  }
-  if (buttonID === 'modmailFeedback') {
-    modmailCreate(interaction, 'FEEDBACK');
-    return;
-  }
-  if (buttonID === 'modmailTechIssue') {
-    modmailCreate(interaction, 'TECH');
-    return;
-  }
-  if (buttonID === 'modmailBanAppeal') {
-    modmailCreate(interaction, 'APPEAL');
-    return;
-  }
+  // if (buttonID === 'modmailTripsitter') {
+  //   modmailCreate(interaction, 'TRIPSIT');
+  //   return;
+  // }
+  // if (buttonID === 'modmailFeedback') {
+  //   modmailCreate(interaction, 'FEEDBACK');
+  //   return;
+  // }
+  // if (buttonID === 'modmailTechIssue') {
+  //   modmailCreate(interaction, 'TECH');
+  //   return;
+  // }
+  // if (buttonID === 'modmailBanAppeal') {
+  //   modmailCreate(interaction, 'APPEAL');
+  //   return;
+  // }
   if (buttonID === 'memberButton') {
     verifyButton(interaction);
     return;
