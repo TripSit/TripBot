@@ -6,34 +6,24 @@ export default function validateEnv(
 
   if (service === 'DISCORD') {
     if (!process.env.DISCORD_CLIENT_ID) {
-      log.error(F, 'Missing DISCORD_CLIENT_ID: You wont be able to login to discord.');
+      log.error(F, 'Missing DISCORD_CLIENT_ID: You wont be able to login to discord. You get this from the discord developer portal.');
       return false;
     }
 
     if (!process.env.DISCORD_GUILD_ID) {
-      log.error(F, 'Missing DISCORD_GUILD_ID: You get this from your discord bot.');
+      log.error(F, 'Missing DISCORD_GUILD_ID: You get this from your discord guild.');
       return false;
     }
 
     if (!process.env.DISCORD_CLIENT_TOKEN) {
-      log.error(F, 'Missing DISCORD_CLIENT_TOKEN: You wont be able to login to discord.');
+      log.error(F, 'Missing DISCORD_CLIENT_TOKEN: You wont be able to login to discord. You get this from the discord developer portal.');
       return false;
     }
-    // if (!process.env.DISCORD_CLIENT_SECRET) {
-    //   log.warn(F, 'Missing DISCORD_CLIENT_SECRET: I think this is an oauth thing?');
-    // }
   }
 
-  if (service === 'MATRIX') {
-    if (!process.env.MATRIX_HOMESERVER_URL) {
-      log.error(F, 'Missing MATRIX_HOMESERVER_URL, won\'t be able to connect to matrix homeserver.');
-      return false;
-    }
-
-    if (!process.env.MATRIX_ACCESS_TOKEN) {
-      log.error(F, 'Missing MATRIX_ACCESS_TOKEN, you won\'t be able to log into matrix');
-      return false;
-    }
+  if (service === 'MATRIX' && !process.env.MATRIX_ACCESS_TOKEN) {
+    log.error(F, 'Missing MATRIX_ACCESS_TOKEN, you won\'t be able to log into matrix');
+    return false;
   }
 
   if (service === 'SERVICES') {
