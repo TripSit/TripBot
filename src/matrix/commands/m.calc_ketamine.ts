@@ -12,13 +12,13 @@ export const usage = '~calc_ketamine [weight] [kg | lbs]';
 
 const F = f(__filename);
 
-async function mCalcKet(roomId:string, event:any, client:MatrixClient, weight:string, unit:string):Promise<boolean> {
-  if (unit !== 'kg' && unit !== 'lbs') { client.replyNotice(roomId, event, 'Usage: ~calc_ketamine <weight> <kg|lbs>'); return false; }
-  if (unit === 'kg' && Number(weight) > 200) { client.replyNotice(roomId, event, 'Please enter a weight less than 200kg'); return false; }
+async function mCalcKet(roomId:string, event:any, matrixClient:MatrixClient, weight:string, unit:string):Promise<boolean> {
+  if (unit !== 'kg' && unit !== 'lbs') { matrixClient.replyNotice(roomId, event, 'Usage: ~calc_ketamine <weight> <kg|lbs>'); return false; }
+  if (unit === 'kg' && Number(weight) > 200) { matrixClient.replyNotice(roomId, event, 'Please enter a weight less than 200kg'); return false; }
   const ketaDosage = await calcKetamine(Number(weight), unit);
   const html = `<b>&#128067; Insufflated dosage:</b>:<br>${ketaDosage.insufflated}<br><br><b>&#127825; Rectal dosage:</b><br>${ketaDosage.rectal}<br><br><i>Please note that this information may not be 100% accurate. Do not use this as your only information source.</i>`;
   const text = `Insufflated dosage:\n${ketaDosage.insufflated}\n\nRectal dosage:\n${ketaDosage.rectal}\n\nPlease note that this information may not be 100% accurate. Do not use this as your only information source.`;
   const reply = RichReply.createFor(roomId, event, text, html);
-  client.sendMessage(roomId, reply);
+  matrixClient.sendMessage(roomId, reply);
   return true;
 }

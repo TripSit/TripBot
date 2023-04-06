@@ -53,6 +53,119 @@ const rejectionMessages = {
   culture: 'we feel, after careful contemplation, that this would be a poor culture fit. Please do not take this personally as we are relatively selective. You may apply again in the near future once we become better acquainted.',
 };
 
+export async function applicationPermissions(
+  interaction:ChatInputCommandInteraction | SelectMenuInteraction | ButtonInteraction,
+  applicationPostChannel: TextChannel | null,
+  applicationThreadChannel: TextChannel,
+):Promise<boolean> {
+  if (!interaction.guild) {
+    await interaction.reply({ content: 'This command can only be used in a guild!', ephemeral: true });
+    return false;
+  }
+  if (!interaction.member) {
+    // log.debug(F, `no member!`);
+    await interaction.reply({ content: 'This must be performed by a member of a guild!', ephemeral: true });
+    return false;
+  }
+  if (!interaction.channel) {
+    // log.debug(F, `no member!`);
+    await interaction.reply({ content: 'This must be performed inside of a channel!', ephemeral: true });
+    return false;
+  }
+  if (interaction.channel.type !== ChannelType.GuildText) {
+    // log.debug(F, `no member!`);
+    await interaction.reply({ content: 'This must be performed inside of a text channel!', ephemeral: true });
+    return false;
+  }
+
+  // Since different interactions use this function, we need each one to supply the channels
+  // const applicationPostChannel = interaction.channel;
+  // const applicationThreadChannel = interaction.options.getChannel('applications_channel', true);
+
+  // Can't defer cuz there's a modal
+  // await interaction.deferReply({ ephemeral: true });
+
+  // Check guild permissions
+  const guildPerms = await checkGuildPermissions(interaction.guild, [
+    'ManageRoles' as PermissionResolvable,
+  ]);
+  if (!guildPerms.hasPermission) {
+    log.error(F, `Missing TS guild permission ${guildPerms.permission} in ${interaction.guild}!`);
+    await interaction.reply({
+      content: stripIndents`Missing ${guildPerms.permission} permission in ${interaction.guild}!
+    In order to setup the applications feature I need:
+    Manage Roles - To give the role when the application is approved!`,
+      ephemeral: true,
+    });
+    return false;
+  }
+
+  // Approving or rejecting dont need to check permissions on the post channel
+  if (applicationPostChannel) {
+    if (applicationThreadChannel.id === applicationPostChannel.id) {
+      await interaction.reply({
+        content: stripIndents`The application thread channel cannot be the same as the current channel:
+        This prevents accidentally adding the user with a @ mention!`,
+        ephemeral: true,
+      });
+      return false;
+    }
+
+    if (applicationPostChannel.type !== ChannelType.GuildText) {
+      await interaction.reply({
+        content: stripIndents`The application thread channel must be a text channel!`,
+        ephemeral: true,
+      });
+      return false;
+    }
+
+    // Check channel permissions for the application post
+    const channelPerms = await checkChannelPermissions(applicationPostChannel, [
+      'ViewChannel' as PermissionResolvable,
+      'SendMessages' as PermissionResolvable,
+    ]);
+    if (!channelPerms.hasPermission) {
+      log.error(F, `Missing TS channel permission ${channelPerms.permission} in ${applicationPostChannel}!`);
+      await interaction.reply({
+        content: stripIndents`Missing ${channelPerms.permission} permission in ${applicationPostChannel}!
+    In order to setup the application feature I need:
+    View Channel - to see the channel
+    Send Messages - to send the application post
+    `,
+        ephemeral: true,
+  }); // eslint-disable-line
+      return false;
+    }
+  }
+
+  // Check channel permissions for the application threads channel
+  const metaChannelPerms = await checkChannelPermissions(applicationThreadChannel as TextChannel, [
+    'ViewChannel' as PermissionResolvable,
+    'SendMessages' as PermissionResolvable,
+    'SendMessagesInThreads' as PermissionResolvable,
+    // 'CreatePublicThreads' as PermissionResolvable,
+    'CreatePrivateThreads' as PermissionResolvable,
+    // 'ManageMessages' as PermissionResolvable,
+    'ManageThreads' as PermissionResolvable,
+  ]);
+  if (!metaChannelPerms.hasPermission) {
+    log.error(F, `Missing TS channel permission ${metaChannelPerms.permission} in ${applicationThreadChannel}!`);
+    await interaction.reply({
+      content: stripIndents`Missing ${metaChannelPerms.permission} permission in ${applicationThreadChannel}!
+      In order to setup the application feature I need:
+      View Channel - to see the channel
+      Send Messages - to send the application post
+      Send Messages in Threads - to send the application post
+      Create Private Threads - to create the application thread
+      Manage Threads - to manage the application thread, archiving when the application is approved
+      `,
+      ephemeral: true,
+    }); // eslint-disable-line
+    return false;
+  }
+  return true;
+}
+
 export async function applicationSetup(
   interaction:ChatInputCommandInteraction,
 ) {
@@ -608,117 +721,4 @@ export async function applicationApprove(
     `);
   }
   await interaction.editReply('Done!');
-}
-
-export async function applicationPermissions(
-  interaction:ChatInputCommandInteraction | SelectMenuInteraction | ButtonInteraction,
-  applicationPostChannel: TextChannel | null,
-  applicationThreadChannel: TextChannel,
-):Promise<boolean> {
-  if (!interaction.guild) {
-    await interaction.reply({ content: 'This command can only be used in a guild!', ephemeral: true });
-    return false;
-  }
-  if (!interaction.member) {
-    // log.debug(F, `no member!`);
-    await interaction.reply({ content: 'This must be performed by a member of a guild!', ephemeral: true });
-    return false;
-  }
-  if (!interaction.channel) {
-    // log.debug(F, `no member!`);
-    await interaction.reply({ content: 'This must be performed inside of a channel!', ephemeral: true });
-    return false;
-  }
-  if (interaction.channel.type !== ChannelType.GuildText) {
-    // log.debug(F, `no member!`);
-    await interaction.reply({ content: 'This must be performed inside of a text channel!', ephemeral: true });
-    return false;
-  }
-
-  // Since different interactions use this function, we need each one to supply the channels
-  // const applicationPostChannel = interaction.channel;
-  // const applicationThreadChannel = interaction.options.getChannel('applications_channel', true);
-
-  // Can't defer cuz there's a modal
-  // await interaction.deferReply({ ephemeral: true });
-
-  // Check guild permissions
-  const guildPerms = await checkGuildPermissions(interaction.guild, [
-    'ManageRoles' as PermissionResolvable,
-  ]);
-  if (!guildPerms.hasPermission) {
-    log.error(F, `Missing TS guild permission ${guildPerms.permission} in ${interaction.guild}!`);
-    await interaction.reply({
-      content: stripIndents`Missing ${guildPerms.permission} permission in ${interaction.guild}!
-    In order to setup the applications feature I need:
-    Manage Roles - To give the role when the application is approved!`,
-      ephemeral: true,
-    });
-    return false;
-  }
-
-  // Approving or rejecting dont need to check permissions on the post channel
-  if (applicationPostChannel) {
-    if (applicationThreadChannel.id === applicationPostChannel.id) {
-      await interaction.reply({
-        content: stripIndents`The application thread channel cannot be the same as the current channel:
-        This prevents accidentally adding the user with a @ mention!`,
-        ephemeral: true,
-      });
-      return false;
-    }
-
-    if (applicationPostChannel.type !== ChannelType.GuildText) {
-      await interaction.reply({
-        content: stripIndents`The application thread channel must be a text channel!`,
-        ephemeral: true,
-      });
-      return false;
-    }
-
-    // Check channel permissions for the application post
-    const channelPerms = await checkChannelPermissions(applicationPostChannel, [
-      'ViewChannel' as PermissionResolvable,
-      'SendMessages' as PermissionResolvable,
-    ]);
-    if (!channelPerms.hasPermission) {
-      log.error(F, `Missing TS channel permission ${channelPerms.permission} in ${applicationPostChannel}!`);
-      await interaction.reply({
-        content: stripIndents`Missing ${channelPerms.permission} permission in ${applicationPostChannel}!
-    In order to setup the application feature I need:
-    View Channel - to see the channel
-    Send Messages - to send the application post
-    `,
-        ephemeral: true,
-  }); // eslint-disable-line
-      return false;
-    }
-  }
-
-  // Check channel permissions for the application threads channel
-  const metaChannelPerms = await checkChannelPermissions(applicationThreadChannel as TextChannel, [
-    'ViewChannel' as PermissionResolvable,
-    'SendMessages' as PermissionResolvable,
-    'SendMessagesInThreads' as PermissionResolvable,
-    // 'CreatePublicThreads' as PermissionResolvable,
-    'CreatePrivateThreads' as PermissionResolvable,
-    // 'ManageMessages' as PermissionResolvable,
-    'ManageThreads' as PermissionResolvable,
-  ]);
-  if (!metaChannelPerms.hasPermission) {
-    log.error(F, `Missing TS channel permission ${metaChannelPerms.permission} in ${applicationThreadChannel}!`);
-    await interaction.reply({
-      content: stripIndents`Missing ${metaChannelPerms.permission} permission in ${applicationThreadChannel}!
-      In order to setup the application feature I need:
-      View Channel - to see the channel
-      Send Messages - to send the application post
-      Send Messages in Threads - to send the application post
-      Create Private Threads - to create the application thread
-      Manage Threads - to manage the application thread, archiving when the application is approved
-      `,
-      ephemeral: true,
-    }); // eslint-disable-line
-    return false;
-  }
-  return true;
 }

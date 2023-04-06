@@ -40,99 +40,6 @@ function calcTotalPot(
 
 const warnedUsers = [] as string[];
 
-export const counting: SlashCommandBeta = {
-  data: new SlashCommandBuilder()
-    .setName('counting')
-    .setDescription('All things with counting!')
-    .addSubcommand(subcommand => subcommand
-      .setName('setup')
-      .setDescription('Set up a Counting channel!')
-      .addStringOption(option => option
-        .setDescription('What kind of counting game?')
-        .setName('type')
-        .addChoices(
-          { name: 'Hardcore', value: 'HARDCORE' },
-          { name: 'Token', value: 'TOKEN' },
-          { name: 'Normal', value: 'NORMAL' },
-        )))
-    .addSubcommand(subcommand => subcommand
-      .setName('scores')
-      .setDescription('Get the scores for a Counting channel!')
-      .addBooleanOption(option => option.setName('ephemeral')
-        .setDescription('Set to "True" to show the response only to you')))
-    .addSubcommand(subcommand => subcommand
-      .setName('reset')
-      .setDescription('Reset the counting channel!')
-      .addIntegerOption(option => option
-        .setDescription('The number to set the channel to')
-        .setName('number'))
-      .addBooleanOption(option => option
-        .setName('purge')
-        .setDescription('Set to "True" to start completely fresh'))
-      .addStringOption(option => option
-        .setDescription('What kind of counting game?')
-        .setName('type')
-        .addChoices(
-          { name: 'Hardcore', value: 'HARDCORE' },
-          { name: 'Token', value: 'TOKEN' },
-          { name: 'Normal', value: 'NORMAL' },
-        )))
-    .addSubcommand(subcommand => subcommand
-      .setName('end')
-      .setDescription('End the counting game!')),
-  async execute(interaction) {
-    startLog(F, interaction);
-    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') !== false) });
-    const command = interaction.options.getSubcommand();
-    let response = { content: 'This command has not been setup yet!' } as InteractionEditReplyOptions;
-    if (command === 'setup') {
-      // Check if the user can manage the channel role
-      if (!await checkChannelPermissions(
-        (interaction.channel as TextChannel),
-        [
-          'ManageChannel' as PermissionResolvable,
-        ],
-      )) {
-        // log.debug(`${PREFIX} bot does NOT has permission to post in !`);
-        return interaction.editReply({
-          embeds: [embedTemplate()
-            .setTitle('You do not have permission to use this command!')
-            .setColor(Colors.Red)],
-        });
-      }
-      response = await countingSetup(
-        interaction.channel as TextChannel,
-        (interaction.options.getString('type') ?? 'NORMAL') as 'HARDCORE' | 'TOKEN' | 'NORMAL',
-        0,
-        false,
-        true,
-      );
-    }
-    if (command === 'scores') {
-      response = await countingScores(interaction);
-    }
-    if (command === 'reset') {
-      // Check if the user can manage the channel role
-      if (!await checkChannelPermissions(
-        (interaction.channel as TextChannel),
-        [
-          'ManageChannel' as PermissionResolvable,
-        ],
-      )) {
-        // log.debug(`${PREFIX} bot does NOT has permission to post in !`);
-        return interaction.editReply({
-          embeds: [embedTemplate()
-            .setTitle('You do not have permission to use this command!')
-            .setColor(Colors.Red)],
-        });
-      }
-
-      response = await countingReset(interaction);
-    }
-    return interaction.editReply(response);
-  },
-};
-
 export async function countingSetup(
   channel:TextChannel,
   type: 'HARDCORE' | 'TOKEN' | 'NORMAL',
@@ -548,5 +455,98 @@ export async function countMessage(message: Message): Promise<void> {
 
   // log.debug(F, `countingData: ${JSON.stringify(countingData, null, 2)}`);
 }
+
+export const counting: SlashCommandBeta = {
+  data: new SlashCommandBuilder()
+    .setName('counting')
+    .setDescription('All things with counting!')
+    .addSubcommand(subcommand => subcommand
+      .setName('setup')
+      .setDescription('Set up a Counting channel!')
+      .addStringOption(option => option
+        .setDescription('What kind of counting game?')
+        .setName('type')
+        .addChoices(
+          { name: 'Hardcore', value: 'HARDCORE' },
+          { name: 'Token', value: 'TOKEN' },
+          { name: 'Normal', value: 'NORMAL' },
+        )))
+    .addSubcommand(subcommand => subcommand
+      .setName('scores')
+      .setDescription('Get the scores for a Counting channel!')
+      .addBooleanOption(option => option.setName('ephemeral')
+        .setDescription('Set to "True" to show the response only to you')))
+    .addSubcommand(subcommand => subcommand
+      .setName('reset')
+      .setDescription('Reset the counting channel!')
+      .addIntegerOption(option => option
+        .setDescription('The number to set the channel to')
+        .setName('number'))
+      .addBooleanOption(option => option
+        .setName('purge')
+        .setDescription('Set to "True" to start completely fresh'))
+      .addStringOption(option => option
+        .setDescription('What kind of counting game?')
+        .setName('type')
+        .addChoices(
+          { name: 'Hardcore', value: 'HARDCORE' },
+          { name: 'Token', value: 'TOKEN' },
+          { name: 'Normal', value: 'NORMAL' },
+        )))
+    .addSubcommand(subcommand => subcommand
+      .setName('end')
+      .setDescription('End the counting game!')),
+  async execute(interaction) {
+    startLog(F, interaction);
+    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') !== false) });
+    const command = interaction.options.getSubcommand();
+    let response = { content: 'This command has not been setup yet!' } as InteractionEditReplyOptions;
+    if (command === 'setup') {
+      // Check if the user can manage the channel role
+      if (!await checkChannelPermissions(
+        (interaction.channel as TextChannel),
+        [
+          'ManageChannel' as PermissionResolvable,
+        ],
+      )) {
+        // log.debug(`${PREFIX} bot does NOT has permission to post in !`);
+        return interaction.editReply({
+          embeds: [embedTemplate()
+            .setTitle('You do not have permission to use this command!')
+            .setColor(Colors.Red)],
+        });
+      }
+      response = await countingSetup(
+        interaction.channel as TextChannel,
+        (interaction.options.getString('type') ?? 'NORMAL') as 'HARDCORE' | 'TOKEN' | 'NORMAL',
+        0,
+        false,
+        true,
+      );
+    }
+    if (command === 'scores') {
+      response = await countingScores(interaction);
+    }
+    if (command === 'reset') {
+      // Check if the user can manage the channel role
+      if (!await checkChannelPermissions(
+        (interaction.channel as TextChannel),
+        [
+          'ManageChannel' as PermissionResolvable,
+        ],
+      )) {
+        // log.debug(`${PREFIX} bot does NOT has permission to post in !`);
+        return interaction.editReply({
+          embeds: [embedTemplate()
+            .setTitle('You do not have permission to use this command!')
+            .setColor(Colors.Red)],
+        });
+      }
+
+      response = await countingReset(interaction);
+    }
+    return interaction.editReply(response);
+  },
+};
 
 export default counting;

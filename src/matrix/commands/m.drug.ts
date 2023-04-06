@@ -27,7 +27,7 @@ type RoaType = {
   }[],
 };
 
-async function mDrug(roomId: string, event:any, client:MatrixClient, substance:string, section:string = '') {
+async function mDrug(roomId: string, event:any, matrixClient:MatrixClient, substance:string, section:string = '') {
   let reply:any;
 
   const drugData = await gDrug(substance);
@@ -35,7 +35,7 @@ async function mDrug(roomId: string, event:any, client:MatrixClient, substance:s
     const text = `Task failed successfully!\n\nSorry, i don't know that substance "${substance}". Perhaps check your spelling?`;
     const html = `<b>Task failed successfully!</b> &#129302;<br><br>Sorry, i don't know that substance "${substance}".<br>Perhaps check your spelling?`;
     reply = RichReply.createFor(roomId, event, text, html);
-    return client.sendMessage(roomId, reply);
+    return matrixClient.sendMessage(roomId, reply);
   }
 
   function getDosage() {
@@ -176,49 +176,49 @@ async function mDrug(roomId: string, event:any, client:MatrixClient, substance:s
   if (section === 'summary') {
     const summary = getSummary();
     reply = RichReply.createFor(roomId, event, summary[0], summary[1]);
-    client.sendMessage(roomId, reply);
+    matrixClient.sendMessage(roomId, reply);
     return true;
   }
   if (section === 'dosage') {
     const dosage = getDosage();
-    if (dosage === false) { client.replyNotice(roomId, event, `Sorry, i could not provide dosage information on ${drugData.name}`); return false; }
+    if (dosage === false) { matrixClient.replyNotice(roomId, event, `Sorry, i could not provide dosage information on ${drugData.name}`); return false; }
     reply = RichReply.createFor(roomId, event, dosage[0], dosage[1]);
-    client.sendMessage(roomId, reply);
+    matrixClient.sendMessage(roomId, reply);
     return true;
   }
   if (section === 'duration') {
     if (drugData.roas) {
       const duration = getDuration();
-      if (duration === false) { client.replyNotice(roomId, event, `Sorry, i could not get duration information on ${drugData.name}`); return false; }
+      if (duration === false) { matrixClient.replyNotice(roomId, event, `Sorry, i could not get duration information on ${drugData.name}`); return false; }
       reply = RichReply.createFor(roomId, event, duration[0], duration[1]);
-      client.sendMessage(roomId, reply);
+      matrixClient.sendMessage(roomId, reply);
       return true;
     }
     const html = `<b>Task failed successfully!</b><br><br>Sorry, i could not provide duration information on ${substance}`;
     const text = `Task failed successfully!\n\nSorry, i could not provide duration information on ${substance}`;
     reply = RichReply.createFor(roomId, event, text, html);
-    client.sendMessage(roomId, reply);
+    matrixClient.sendMessage(roomId, reply);
     return false;
   }
   if (section === 'addiction') {
     const addiction = getAddictionPotential();
-    if (addiction === false) return client.replyNotice(roomId, event, `Sorry, i could not provide information on the addiction potential of ${drugData.name}`);
+    if (addiction === false) return matrixClient.replyNotice(roomId, event, `Sorry, i could not provide information on the addiction potential of ${drugData.name}`);
     reply = RichReply.createFor(roomId, event, addiction[0], addiction[1]);
-    client.sendMessage(roomId, reply);
+    matrixClient.sendMessage(roomId, reply);
     return true;
   }
   if (section === 'crosstolerances') {
     const crossTolerances = getCrossTolerances();
-    if (crossTolerances === false) { client.replyNotice(roomId, event, `Sorry, i could not get information on cross tolerances from ${drugData.name}`); return false; }
+    if (crossTolerances === false) { matrixClient.replyNotice(roomId, event, `Sorry, i could not get information on cross tolerances from ${drugData.name}`); return false; }
     reply = RichReply.createFor(roomId, event, crossTolerances[0], crossTolerances[1]);
-    client.sendMessage(roomId, reply);
+    matrixClient.sendMessage(roomId, reply);
     return true;
   }
   if (section === 'toxicity') {
     const toxicity = getToxicity();
-    if (toxicity === false) { client.replyNotice(roomId, event, `Sorry, i was unable to get toxicity information on ${drugData.name}`); return false; }
+    if (toxicity === false) { matrixClient.replyNotice(roomId, event, `Sorry, i was unable to get toxicity information on ${drugData.name}`); return false; }
     reply = RichReply.createFor(roomId, event, toxicity[0], toxicity[1]);
-    client.sendMessage(roomId, reply);
+    matrixClient.sendMessage(roomId, reply);
     return true;
   }
 
@@ -238,7 +238,7 @@ async function mDrug(roomId: string, event:any, client:MatrixClient, substance:s
     });
 
     reply = RichReply.createFor(roomId, event, text, html);
-    return client.sendMessage(roomId, reply);
+    return matrixClient.sendMessage(roomId, reply);
   }
 
   return false;

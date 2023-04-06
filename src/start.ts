@@ -5,7 +5,7 @@ import { getVoiceConnection } from '@discordjs/voice';
 import { env } from './global/utils/env.config';
 import { log } from './global/utils/log';
 import { discordConnect } from './discord/discord'; // eslint-disable-line
-import { validateEnv } from './global/utils/env.validate'; // eslint-disable-line
+import validateEnv from './global/utils/env.validate'; // eslint-disable-line
 import { startLog } from './discord/utils/startLog'; // eslint-disable-line
 import startMatrix from './matrix/matrix';
 
@@ -23,7 +23,7 @@ async function start() {
   if (env.DISCORD_CLIENT_TOKEN) {
     validateEnv('SERVICES');
     if (validateEnv('DISCORD')) await discordConnect();
-    // if (validateEnv('MATRIX')) await startMatrix();
+    if (validateEnv('MATRIX')) await startMatrix();
   }
 }
 

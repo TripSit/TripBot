@@ -366,6 +366,26 @@ export async function executeCommandAndSpyReply(
   return spy;
 }
 
+export function mockInteractionAndSpyShowModal(command:{
+  // interaction.client.emit('modalSubmit', modalInteraction);
+  context: 'tripsit' | 'guild' | 'dm',
+  id: string;
+  name: string;
+  type: number;
+  options: ToAPIApplicationCommandOptions[] | {
+    name: string;
+    type: number;
+    options: ToAPIApplicationCommandOptions[];
+  }[];
+}) {
+  const discord = new MockDiscord({ command });
+  // console.log(discord);
+  const interaction = discord.getInteraction() as ChatInputCommandInteraction;
+  // console.log(interaction);
+  const spy = jest.spyOn(interaction, 'showModal');
+  return { interaction, spy };
+}
+
 export async function executeCommandModalAndSpyEditReply(
   Command:SlashCommand,
   content:{
@@ -428,8 +448,8 @@ export async function executeCommandModalAndSpyEditReply(
   return jest.spyOn(modalInteraction, 'editReply');
 }
 
-export function mockInteractionAndSpyShowModal(command:{
-  // interaction.client.emit('modalSubmit', modalInteraction);
+/* Spy 'editReply' */
+export function mockInteractionAndSpyEditReply(command:{
   context: 'tripsit' | 'guild' | 'dm',
   id: string;
   name: string;
@@ -444,7 +464,7 @@ export function mockInteractionAndSpyShowModal(command:{
   // console.log(discord);
   const interaction = discord.getInteraction() as ChatInputCommandInteraction;
   // console.log(interaction);
-  const spy = jest.spyOn(interaction, 'showModal');
+  const spy = jest.spyOn(interaction, 'editReply');
   return { interaction, spy };
 }
 
@@ -466,26 +486,6 @@ export async function executeCommandAndSpyEditReply(
   // const commandInstance = new Command(interaction, { ...defaultConfig, ...config });
   await Command.execute(interaction);
   return spy;
-}
-
-/* Spy 'editReply' */
-export function mockInteractionAndSpyEditReply(command:{
-  context: 'tripsit' | 'guild' | 'dm',
-  id: string;
-  name: string;
-  type: number;
-  options: ToAPIApplicationCommandOptions[] | {
-    name: string;
-    type: number;
-    options: ToAPIApplicationCommandOptions[];
-  }[];
-}) {
-  const discord = new MockDiscord({ command });
-  // console.log(discord);
-  const interaction = discord.getInteraction() as ChatInputCommandInteraction;
-  // console.log(interaction);
-  const spy = jest.spyOn(interaction, 'editReply');
-  return { interaction, spy };
 }
 
 /* Spy channel 'send' with mock options */

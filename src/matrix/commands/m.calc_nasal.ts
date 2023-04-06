@@ -17,7 +17,7 @@ export const usage = 'To calculate how much of the substance you need:\n ~calc_n
 
 const F = f(__filename);
 
-async function mCalcNasal(roomId:string, event:any, client:MatrixClient, func:string = '', x:string = '', mgpp:string = '', mlpp:string = ''):Promise<boolean> {
+async function mCalcNasal(roomId:string, event:any, matrixClient:MatrixClient, func:string = '', x:string = '', mgpp:string = '', mlpp:string = ''):Promise<boolean> {
   const cMlpp = Number(mlpp.replace(/[^\d.-]/g, ''));
   const cMgpp = Number(mgpp.replace(/[^\d.-]/g, ''));
   const cSubstanceOrSolvent = Number(x.replace(/[^\d.-]/g, ''));
@@ -27,7 +27,7 @@ async function mCalcNasal(roomId:string, event:any, client:MatrixClient, func:st
       const text = `To excreed ${cMgpp} mg of whatever substance you want to use with your nasal spray that excreeds ${cMlpp} ml of mixture per push, you'll need to add ${result} mg of that substance to the ${cSubstanceOrSolvent} ml solvent.\n\nPlease note that this information may not be 100% accurate. Do not use this as your only information source.`;
       const html = `To excreed <b>${cMgpp} mg</b> of whatever substance you want to use with your nasal spray that excreeds <b>${cMlpp} ml</b> of mixture per push, you'll need to add <b>${result} mg</b> of that substance to the <b>${cSubstanceOrSolvent} ml</b> solvent.<br><br><i>Please note that this information may not be 100% accurate. Do not use this as your only information source.</i>`;
       const reply = RichReply.createFor(roomId, event, text, html);
-      client.sendMessage(roomId, reply);
+      matrixClient.sendMessage(roomId, reply);
       return true;
     }
     if (func.toLowerCase() === 'solvent') {
@@ -35,11 +35,11 @@ async function mCalcNasal(roomId:string, event:any, client:MatrixClient, func:st
       const text = `To excreed ${cMgpp} mg per push from the ${cSubstanceOrSolvent} mg of your substance of choice, add ${result} ml of water or your solvent of choice.\n\nPlease note that this information may not be 100% accurate. Do not use this as your only information source.`;
       const html = `To excreed <b>${cMgpp} mg</b> per push from the <b>${cSubstanceOrSolvent} mg</b> of your substance of choice, add <b>${result} ml</b> of water or your solvent of choice.<br><br><i>Please note that this information may not be 100% accurate. Do not use this as your only information source.</i>`;
       const reply = RichReply.createFor(roomId, event, text, html);
-      client.sendMessage(roomId, reply);
+      matrixClient.sendMessage(roomId, reply);
       return true;
     }
   } else {
-    client.replyNotice(roomId, event, `This is a calculator for mixing drugs with nasal spray. You can calculete  how much of a solvent to use for a given amount of a substance or how much of a substance to use for a given amount of solvent. It works like this:\n\n${usage}`);
+    matrixClient.replyNotice(roomId, event, `This is a calculator for mixing drugs with nasal spray. You can calculete  how much of a solvent to use for a given amount of a substance or how much of a substance to use for a given amount of solvent. It works like this:\n\n${usage}`);
     return false;
   }
   return false;

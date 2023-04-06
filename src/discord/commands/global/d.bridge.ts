@@ -21,95 +21,6 @@ const F = f(__filename);
 
 const noBridgeError = 'Error: No bridges found for this channel.';
 
-export const dBridge: SlashCommand = {
-  data: new SlashCommandBuilder()
-    .setName('bridge')
-    .setDescription('Manage the bridge between two discord channels')
-    .addSubcommand(subcommand => subcommand
-      .setName('create')
-      .setDescription('Create a bridge between two discord channels')
-      .addStringOption(option => option.setName('external_channel')
-        .setDescription('Channel ID on the other guild')
-        .setRequired(true))
-      .addBooleanOption(option => option.setName('override')
-        .setDescription('Redo an existing bridge')
-        .setRequired(false)))
-    .addSubcommand(subcommand => subcommand
-      .setName('confirm')
-      .setDescription('Confirm a bridge creation between two discord channels'))
-    .addSubcommand(subcommand => subcommand
-      .setName('pause')
-      .setDescription('Pause a bridge between two discord channels'))
-    .addSubcommand(subcommand => subcommand
-      .setName('resume')
-      .setDescription('Resume a bridge between two discord channels'))
-    .addSubcommand(subcommand => subcommand
-      .setName('info')
-      .setDescription('Get info on this bridge setup'))
-    .addSubcommand(subcommand => subcommand
-      .setName('remove')
-      .setDescription('Remove a bridge between two discord channels')
-      .addStringOption(option => option.setName('confirmation')
-        .setDescription('Confirmation Code'))),
-  async execute(interaction) {
-    startLog(F, interaction);
-    await interaction.deferReply({ ephemeral: false });
-    const embed = embedTemplate()
-      .setTitle('Bridge')
-      .setColor(Colors.DarkPurple);
-    if (!interaction.guild || !interaction.member) {
-      await interaction.editReply({
-        embeds: [
-          embed
-            .setDescription('This command can only be used in a guild.')
-            .setColor(Colors.Red),
-        ],
-      });
-      return false;
-    }
-
-    // Check if the guild is a partner (or the home guild)
-    const guildData = await database.guilds.get(interaction.guild.id);
-    if (interaction.guild.id !== env.DISCORD_GUILD_ID
-      && !guildData.partner
-      && !guildData.supporter) {
-      await interaction.editReply({
-        embeds: [
-          embed
-            .setDescription(`This command can only be used in a partner guild!
-            If you are a partner and this is an error, please contact Moonbear.
-            If you are not a partner, tell Moonbear you're interested:
-            This is a new system and we're still figuring out how it works.`)
-            .setColor(Colors.Red),
-        ],
-      });
-      return false;
-    }
-
-    const command = interaction.options.getSubcommand();
-
-    if (command === 'create') {
-      embed.setDescription(await create(interaction));
-    } else if (command === 'confirm') {
-      embed.setDescription(await confirm(interaction));
-    } else if (command === 'pause') {
-      embed.setDescription(await pause(interaction));
-    } else if (command === 'resume') {
-      embed.setDescription(await resume(interaction));
-    } else if (command === 'remove') {
-      embed.setDescription(await remove(interaction));
-    } else if (command === 'info') {
-      embed.setDescription(await info(interaction));
-    }
-
-    await interaction.editReply({
-      embeds: [embed],
-    });
-
-    return true;
-  },
-};
-
 async function create(
   interaction:ChatInputCommandInteraction,
 ):Promise<string> {
@@ -439,5 +350,94 @@ async function info(
 
   return stripIndents`This room is connected to ${guild} - ${internalChannel}`;
 }
+
+export const dBridge: SlashCommand = {
+  data: new SlashCommandBuilder()
+    .setName('bridge')
+    .setDescription('Manage the bridge between two discord channels')
+    .addSubcommand(subcommand => subcommand
+      .setName('create')
+      .setDescription('Create a bridge between two discord channels')
+      .addStringOption(option => option.setName('external_channel')
+        .setDescription('Channel ID on the other guild')
+        .setRequired(true))
+      .addBooleanOption(option => option.setName('override')
+        .setDescription('Redo an existing bridge')
+        .setRequired(false)))
+    .addSubcommand(subcommand => subcommand
+      .setName('confirm')
+      .setDescription('Confirm a bridge creation between two discord channels'))
+    .addSubcommand(subcommand => subcommand
+      .setName('pause')
+      .setDescription('Pause a bridge between two discord channels'))
+    .addSubcommand(subcommand => subcommand
+      .setName('resume')
+      .setDescription('Resume a bridge between two discord channels'))
+    .addSubcommand(subcommand => subcommand
+      .setName('info')
+      .setDescription('Get info on this bridge setup'))
+    .addSubcommand(subcommand => subcommand
+      .setName('remove')
+      .setDescription('Remove a bridge between two discord channels')
+      .addStringOption(option => option.setName('confirmation')
+        .setDescription('Confirmation Code'))),
+  async execute(interaction) {
+    startLog(F, interaction);
+    await interaction.deferReply({ ephemeral: false });
+    const embed = embedTemplate()
+      .setTitle('Bridge')
+      .setColor(Colors.DarkPurple);
+    if (!interaction.guild || !interaction.member) {
+      await interaction.editReply({
+        embeds: [
+          embed
+            .setDescription('This command can only be used in a guild.')
+            .setColor(Colors.Red),
+        ],
+      });
+      return false;
+    }
+
+    // Check if the guild is a partner (or the home guild)
+    const guildData = await database.guilds.get(interaction.guild.id);
+    if (interaction.guild.id !== env.DISCORD_GUILD_ID
+      && !guildData.partner
+      && !guildData.supporter) {
+      await interaction.editReply({
+        embeds: [
+          embed
+            .setDescription(`This command can only be used in a partner guild!
+            If you are a partner and this is an error, please contact Moonbear.
+            If you are not a partner, tell Moonbear you're interested:
+            This is a new system and we're still figuring out how it works.`)
+            .setColor(Colors.Red),
+        ],
+      });
+      return false;
+    }
+
+    const command = interaction.options.getSubcommand();
+
+    if (command === 'create') {
+      embed.setDescription(await create(interaction));
+    } else if (command === 'confirm') {
+      embed.setDescription(await confirm(interaction));
+    } else if (command === 'pause') {
+      embed.setDescription(await pause(interaction));
+    } else if (command === 'resume') {
+      embed.setDescription(await resume(interaction));
+    } else if (command === 'remove') {
+      embed.setDescription(await remove(interaction));
+    } else if (command === 'info') {
+      embed.setDescription(await info(interaction));
+    }
+
+    await interaction.editReply({
+      embeds: [embed],
+    });
+
+    return true;
+  },
+};
 
 export default dBridge;

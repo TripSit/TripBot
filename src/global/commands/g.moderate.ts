@@ -169,6 +169,109 @@ const warnButtons = new ActionRowBuilder<ButtonBuilder>().addComponents(
     .setStyle(ButtonStyle.Danger),
 );
 
+export async function userInfoEmbed(target:GuildMember | User, targetData:Users, command: string):Promise<EmbedBuilder> {
+  const targetActionList = {
+    NOTE: [] as string[],
+    WARNING: [] as string[],
+    REPORT: [] as string[],
+    TIMEOUT: [] as string[],
+    KICK: [] as string[],
+    FULL_BAN: [] as string[],
+    UNDERBAN: [] as string[],
+    TICKET_BAN: [] as string[],
+    DISCORD_BOT_BAN: [] as string[],
+    HELPER_BAN: [] as string[],
+    CONTRIBUTOR_BAN: [] as string[],
+  };
+  // Populate targetActionList from the db
+
+  const targetActionListRaw = await useractionsGet(targetData.id);
+
+  // log.debug(F, `targetActionListRaw: ${JSON.stringify(targetActionListRaw, null, 2)}`);
+
+  // for (const action of targetActionListRaw) {
+  targetActionListRaw.forEach(action => {
+    // log.debug(F, `action: ${JSON.stringify(action, null, 2)}`);
+    const actionString = `${action.type} (${time(action.created_at, 'R')}) - ${action.internal_note
+      ?? 'No note provided'}`;
+    // log.debug(F, `actionString: ${actionString}`);
+    targetActionList[action.type as keyof typeof targetActionList].push(actionString);
+  });
+
+  // log.debug(F, `targetActionList: ${JSON.stringify(targetActionList, null, 2)}`);
+  const displayName = (target as GuildMember).displayName ?? (target as User).username;
+  const tag = (target as GuildMember).user ? (target as GuildMember).user.tag : (target as User).tag;
+  const iconUrl = (target as GuildMember).user ? (target as GuildMember).user.displayAvatarURL() : (target as User).displayAvatarURL();
+  const modlogEmbed = embedTemplate()
+    // eslint-disable-next-line
+    .setFooter(null)
+    .setAuthor({ name: `${displayName} (${tag})`, iconURL: iconUrl })
+    .setColor(embedVariables[command as keyof typeof embedVariables].embedColor)
+    .addFields(
+      { name: 'Created', value: `${time(((target as GuildMember).user ?? (target as User)).createdAt, 'R')}`, inline: true },
+      { name: 'Joined', value: `${(target as GuildMember).joinedAt ? time((target as GuildMember).joinedAt as Date, 'R') : 'Unknown'}`, inline: true },
+      { name: 'ID', value: `${target.id}`, inline: true },
+    );
+  if (targetActionList.NOTE.length > 0) {
+    modlogEmbed.addFields({ name: '# of Notes', value: `${targetActionList.NOTE.length}`, inline: true });
+  }
+  if (targetActionList.WARNING.length > 0) {
+    modlogEmbed.addFields({ name: '# of Warns', value: `${targetActionList.WARNING.length}`, inline: true });
+  }
+  if (targetActionList.REPORT.length > 0) {
+    modlogEmbed.addFields({ name: '# of Reports', value: `${targetActionList.REPORT.length}`, inline: true });
+  }
+  if (targetActionList.TIMEOUT.length > 0) {
+    modlogEmbed.addFields({ name: '# of Timeouts', value: `${targetActionList.TIMEOUT.length}`, inline: true });
+  }
+  if (targetActionList.KICK.length > 0) {
+    modlogEmbed.addFields({ name: '# of Kicks', value: `${targetActionList.KICK.length}`, inline: true });
+  }
+  if (targetActionList.FULL_BAN.length > 0) {
+    modlogEmbed.addFields({ name: '# of Bans', value: `${targetActionList.FULL_BAN.length}`, inline: true });
+  }
+  if (targetActionList.UNDERBAN.length > 0) {
+    modlogEmbed.addFields({ name: '# of Underbans', value: `${targetActionList.UNDERBAN.length}`, inline: true });
+  }
+
+  if (command === 'INFO') {
+    let infoString = stripIndents`
+      ${targetActionList.FULL_BAN.length > 0 ? `**Bans**\n${targetActionList.FULL_BAN.join('\n')}` : ''}
+      ${targetActionList.UNDERBAN.length > 0 ? `**Underbans**\n${targetActionList.UNDERBAN.join('\n')}` : ''}
+      ${targetActionList.KICK.length > 0 ? `**Kicks**\n${targetActionList.KICK.join('\n')}` : ''}
+      ${targetActionList.TIMEOUT.length > 0 ? `**Timeouts**\n${targetActionList.TIMEOUT.join('\n')}` : ''}
+      ${targetActionList.WARNING.length > 0 ? `**Warns**\n${targetActionList.WARNING.join('\n')}` : ''}
+      ${targetActionList.REPORT.length > 0 ? `**Reports**\n${targetActionList.REPORT.join('\n')}` : ''}
+      ${targetActionList.NOTE.length > 0 ? `**Notes**\n${targetActionList.NOTE.join('\n')}` : ''}
+    `;
+    if (infoString.length === 0) {
+      infoString = 'Squeaky clean!';
+    }
+    // log.debug(F, `infoString: ${infoString}`);
+    modlogEmbed.setDescription(infoString);
+  }
+
+  return modlogEmbed;
+}
+
+export async function linkThread(
+  discordId: string,
+  threadId: string,
+  override: boolean | null,
+):Promise<string | null> {
+  // Get the targetData from the db
+  const targetData = await getUser(discordId, null, null);
+
+  if (targetData.mod_thread_id === null || override) {
+    // log.debug(F, `targetData.mod_thread_id is null, updating it`);
+    targetData.mod_thread_id = threadId;
+    await usersUpdate(targetData);
+    return null;
+  }
+  // log.debug(F, `targetData.mod_thread_id is not null, not updating it`);
+  return targetData.mod_thread_id;
+}
+
 export async function moderate(
   actor: GuildMember,
   command: UserActionType | 'INFO' | 'UN-FULL_BAN' | 'UN-TICKET_BAN' | 'UN-DISCORD_BOT_BAN' | 'UN-UNDERBAN' | 'UN-BAN_EVASION' | 'UN-TIMEOUT' | 'UN-HELPER_BAN' | 'UN-CONTRIBUTOR_BAN',
@@ -724,107 +827,4 @@ export async function moderate(
   // Take the existing description from response and add to it:
   response.setDescription(`${response.data.description}\nYou can access their thread here: ${modThread}`);
   return { embeds: [response] };
-}
-
-export async function userInfoEmbed(target:GuildMember | User, targetData:Users, command: string):Promise<EmbedBuilder> {
-  const targetActionList = {
-    NOTE: [] as string[],
-    WARNING: [] as string[],
-    REPORT: [] as string[],
-    TIMEOUT: [] as string[],
-    KICK: [] as string[],
-    FULL_BAN: [] as string[],
-    UNDERBAN: [] as string[],
-    TICKET_BAN: [] as string[],
-    DISCORD_BOT_BAN: [] as string[],
-    HELPER_BAN: [] as string[],
-    CONTRIBUTOR_BAN: [] as string[],
-  };
-  // Populate targetActionList from the db
-
-  const targetActionListRaw = await useractionsGet(targetData.id);
-
-  // log.debug(F, `targetActionListRaw: ${JSON.stringify(targetActionListRaw, null, 2)}`);
-
-  // for (const action of targetActionListRaw) {
-  targetActionListRaw.forEach(action => {
-    // log.debug(F, `action: ${JSON.stringify(action, null, 2)}`);
-    const actionString = `${action.type} (${time(action.created_at, 'R')}) - ${action.internal_note
-      ?? 'No note provided'}`;
-    // log.debug(F, `actionString: ${actionString}`);
-    targetActionList[action.type as keyof typeof targetActionList].push(actionString);
-  });
-
-  // log.debug(F, `targetActionList: ${JSON.stringify(targetActionList, null, 2)}`);
-  const displayName = (target as GuildMember).displayName ?? (target as User).username;
-  const tag = (target as GuildMember).user ? (target as GuildMember).user.tag : (target as User).tag;
-  const iconUrl = (target as GuildMember).user ? (target as GuildMember).user.displayAvatarURL() : (target as User).displayAvatarURL();
-  const modlogEmbed = embedTemplate()
-    // eslint-disable-next-line
-    .setFooter(null)
-    .setAuthor({ name: `${displayName} (${tag})`, iconURL: iconUrl })
-    .setColor(embedVariables[command as keyof typeof embedVariables].embedColor)
-    .addFields(
-      { name: 'Created', value: `${time(((target as GuildMember).user ?? (target as User)).createdAt, 'R')}`, inline: true },
-      { name: 'Joined', value: `${(target as GuildMember).joinedAt ? time((target as GuildMember).joinedAt as Date, 'R') : 'Unknown'}`, inline: true },
-      { name: 'ID', value: `${target.id}`, inline: true },
-    );
-  if (targetActionList.NOTE.length > 0) {
-    modlogEmbed.addFields({ name: '# of Notes', value: `${targetActionList.NOTE.length}`, inline: true });
-  }
-  if (targetActionList.WARNING.length > 0) {
-    modlogEmbed.addFields({ name: '# of Warns', value: `${targetActionList.WARNING.length}`, inline: true });
-  }
-  if (targetActionList.REPORT.length > 0) {
-    modlogEmbed.addFields({ name: '# of Reports', value: `${targetActionList.REPORT.length}`, inline: true });
-  }
-  if (targetActionList.TIMEOUT.length > 0) {
-    modlogEmbed.addFields({ name: '# of Timeouts', value: `${targetActionList.TIMEOUT.length}`, inline: true });
-  }
-  if (targetActionList.KICK.length > 0) {
-    modlogEmbed.addFields({ name: '# of Kicks', value: `${targetActionList.KICK.length}`, inline: true });
-  }
-  if (targetActionList.FULL_BAN.length > 0) {
-    modlogEmbed.addFields({ name: '# of Bans', value: `${targetActionList.FULL_BAN.length}`, inline: true });
-  }
-  if (targetActionList.UNDERBAN.length > 0) {
-    modlogEmbed.addFields({ name: '# of Underbans', value: `${targetActionList.UNDERBAN.length}`, inline: true });
-  }
-
-  if (command === 'INFO') {
-    let infoString = stripIndents`
-      ${targetActionList.FULL_BAN.length > 0 ? `**Bans**\n${targetActionList.FULL_BAN.join('\n')}` : ''}
-      ${targetActionList.UNDERBAN.length > 0 ? `**Underbans**\n${targetActionList.UNDERBAN.join('\n')}` : ''}
-      ${targetActionList.KICK.length > 0 ? `**Kicks**\n${targetActionList.KICK.join('\n')}` : ''}
-      ${targetActionList.TIMEOUT.length > 0 ? `**Timeouts**\n${targetActionList.TIMEOUT.join('\n')}` : ''}
-      ${targetActionList.WARNING.length > 0 ? `**Warns**\n${targetActionList.WARNING.join('\n')}` : ''}
-      ${targetActionList.REPORT.length > 0 ? `**Reports**\n${targetActionList.REPORT.join('\n')}` : ''}
-      ${targetActionList.NOTE.length > 0 ? `**Notes**\n${targetActionList.NOTE.join('\n')}` : ''}
-    `;
-    if (infoString.length === 0) {
-      infoString = 'Squeaky clean!';
-    }
-    // log.debug(F, `infoString: ${infoString}`);
-    modlogEmbed.setDescription(infoString);
-  }
-
-  return modlogEmbed;
-}
-
-export async function linkThread(
-  discordId: string,
-  threadId: string,
-  override: boolean | null,
-):Promise<string | null> {
-  // Get the targetData from the db
-  const targetData = await getUser(discordId, null, null);
-
-  if (targetData.mod_thread_id === null || override) {
-    // log.debug(F, `targetData.mod_thread_id is null, updating it`);
-    targetData.mod_thread_id = threadId;
-    await usersUpdate(targetData);
-    return null;
-  }
-  // log.debug(F, `targetData.mod_thread_id is not null, not updating it`);
-  return targetData.mod_thread_id;
 }

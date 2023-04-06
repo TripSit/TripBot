@@ -9,7 +9,6 @@ import { parseDuration } from '../../../global/utils/parseDuration';
 import { startLog } from '../../utils/startLog'; // eslint-disable-line
 
 const F = f(__filename);
-
 export const selfTimeout: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('selftimeout')

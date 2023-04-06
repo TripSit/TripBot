@@ -11,7 +11,7 @@ export const usage = '~grounding';
 
 const F = f(__filename);
 
-async function mGrounding(roomId:string, event:any, client:MatrixClient):Promise<boolean> {
-  client.replyNotice(roomId, event, await grounding());
+async function mGrounding(roomId:string, event:any, matrixClient:MatrixClient):Promise<boolean> {
+  matrixClient.replyNotice(roomId, event, await grounding());
   return true;
 }

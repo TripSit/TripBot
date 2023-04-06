@@ -12,118 +12,6 @@ import { startLog } from '../../utils/startLog';
 
 const F = f(__filename);
 
-export const dVoice: SlashCommand = {
-  data: new SlashCommandBuilder()
-    .setName('voice')
-    .setDescription('Control your Campfire Tent')
-    .addSubcommand(subcommand => subcommand
-      .setName('rename')
-      .setDescription('Rename your Tent')
-      .addStringOption(option => option
-        .setName('name')
-        .setDescription('The new name for your Tent')
-        .setRequired(true)))
-    .addSubcommand(subcommand => subcommand
-      .setName('lock')
-      .setDescription('Lock the Tent from new users'))
-    .addSubcommand(subcommand => subcommand
-      .setName('hide')
-      .setDescription('Hide the Tent from the channel list'))
-    .addSubcommand(subcommand => subcommand
-      .setName('ban')
-      .setDescription('Ban and hide a user from your Tent')
-      .addUserOption(option => option
-        .setName('target')
-        .setDescription('The user to ban')
-        .setRequired(true)))
-    .addSubcommand(subcommand => subcommand
-      .setName('mute')
-      .setDescription('Mute a user in your Tent')
-      .addUserOption(option => option
-        .setName('target')
-        .setDescription('The user to mute')
-        .setRequired(true)))
-    .addSubcommand(subcommand => subcommand
-      .setName('cohost')
-      .setDescription('Make another member a co-host in your Tent')
-      .addUserOption(option => option
-        .setName('target')
-        .setDescription('The user to make co-host')
-        .setRequired(true))),
-  async execute(interaction) {
-    startLog(F, interaction);
-    await interaction.deferReply({ ephemeral: true });
-
-    const command = interaction.options.getSubcommand() as 'lock' | 'hide' | 'ban' | 'rename' | 'mute' | 'cohost';
-    const member = interaction.member as GuildMember;
-    const target = interaction.options.getMember('target') as GuildMember;
-    const newName = interaction.options.getString('name') as string;
-    const voiceChannel = member.voice.channel;
-    let embed = embedTemplate()
-      .setTitle('Error')
-      .setColor(Colors.Red)
-      .setDescription('You can only use this command in a voice channel Tent that you own!');
-
-    // Check if user is in a voice channel
-    if (voiceChannel === null) {
-      await interaction.editReply({ embeds: [embed] });
-      return false;
-    }
-
-    // Check if user is in a Tent
-    if (voiceChannel.name.includes('⛺') === false) {
-      await interaction.editReply({ embeds: [embed] });
-      return false;
-    }
-
-    // Check if a user is the one who created it, only users with MoveMembers permission can do this
-    if (!voiceChannel.permissionsFor(member).has(PermissionsBitField.Flags.MoveMembers)) {
-      await interaction.editReply({ embeds: [embed] });
-      return false;
-    }
-
-    // Check the user is trying to act on themselves
-    if (target === member) {
-      await interaction.editReply({ embeds: [embed.setDescription('Stop playing with yourself!')] });
-      return false;
-    }
-
-    // // Check if the target user is a moderator
-    // if (target.roles.cache.has(env.ROLE_MODERATOR)) {
-    //   await interaction.editReply({ embeds: [embed.setDescription('You cannot ban a moderator!')] });
-    //   return false;
-    // }
-
-    // log.debug(F, `Command: ${command}`);
-    if (command === 'rename') {
-      embed = await tentRename(voiceChannel, newName);
-    }
-
-    if (command === 'lock') {
-      embed = await tentLock(voiceChannel);
-    }
-
-    if (command === 'hide') {
-      embed = await tentHide(voiceChannel);
-    }
-
-    if (command === 'ban') {
-      embed = await tentBan(voiceChannel, target);
-    }
-
-    if (command === 'mute') {
-      embed = await tentMute(voiceChannel, target);
-    }
-
-    if (command === 'cohost') {
-      embed = await tentCohost(voiceChannel, target);
-    }
-
-    await interaction.editReply({ embeds: [embed] });
-    return true;
-  },
-};
-
 async function tentRename(
   voiceChannel: VoiceBasedChannel,
   newName: string,
@@ -250,5 +138,117 @@ async function tentCohost(
     .setColor(Colors.Green)
     .setDescription(`${target} has been ${verb} in ${voiceChannel}`);
 }
+
+export const dVoice: SlashCommand = {
+  data: new SlashCommandBuilder()
+    .setName('voice')
+    .setDescription('Control your Campfire Tent')
+    .addSubcommand(subcommand => subcommand
+      .setName('rename')
+      .setDescription('Rename your Tent')
+      .addStringOption(option => option
+        .setName('name')
+        .setDescription('The new name for your Tent')
+        .setRequired(true)))
+    .addSubcommand(subcommand => subcommand
+      .setName('lock')
+      .setDescription('Lock the Tent from new users'))
+    .addSubcommand(subcommand => subcommand
+      .setName('hide')
+      .setDescription('Hide the Tent from the channel list'))
+    .addSubcommand(subcommand => subcommand
+      .setName('ban')
+      .setDescription('Ban and hide a user from your Tent')
+      .addUserOption(option => option
+        .setName('target')
+        .setDescription('The user to ban')
+        .setRequired(true)))
+    .addSubcommand(subcommand => subcommand
+      .setName('mute')
+      .setDescription('Mute a user in your Tent')
+      .addUserOption(option => option
+        .setName('target')
+        .setDescription('The user to mute')
+        .setRequired(true)))
+    .addSubcommand(subcommand => subcommand
+      .setName('cohost')
+      .setDescription('Make another member a co-host in your Tent')
+      .addUserOption(option => option
+        .setName('target')
+        .setDescription('The user to make co-host')
+        .setRequired(true))),
+  async execute(interaction) {
+    startLog(F, interaction);
+    await interaction.deferReply({ ephemeral: true });
+
+    const command = interaction.options.getSubcommand() as 'lock' | 'hide' | 'ban' | 'rename' | 'mute' | 'cohost';
+    const member = interaction.member as GuildMember;
+    const target = interaction.options.getMember('target') as GuildMember;
+    const newName = interaction.options.getString('name') as string;
+    const voiceChannel = member.voice.channel;
+    let embed = embedTemplate()
+      .setTitle('Error')
+      .setColor(Colors.Red)
+      .setDescription('You can only use this command in a voice channel Tent that you own!');
+
+    // Check if user is in a voice channel
+    if (voiceChannel === null) {
+      await interaction.editReply({ embeds: [embed] });
+      return false;
+    }
+
+    // Check if user is in a Tent
+    if (voiceChannel.name.includes('⛺') === false) {
+      await interaction.editReply({ embeds: [embed] });
+      return false;
+    }
+
+    // Check if a user is the one who created it, only users with MoveMembers permission can do this
+    if (!voiceChannel.permissionsFor(member).has(PermissionsBitField.Flags.MoveMembers)) {
+      await interaction.editReply({ embeds: [embed] });
+      return false;
+    }
+
+    // Check the user is trying to act on themselves
+    if (target === member) {
+      await interaction.editReply({ embeds: [embed.setDescription('Stop playing with yourself!')] });
+      return false;
+    }
+
+    // // Check if the target user is a moderator
+    // if (target.roles.cache.has(env.ROLE_MODERATOR)) {
+    //   await interaction.editReply({ embeds: [embed.setDescription('You cannot ban a moderator!')] });
+    //   return false;
+    // }
+
+    // log.debug(F, `Command: ${command}`);
+    if (command === 'rename') {
+      embed = await tentRename(voiceChannel, newName);
+    }
+
+    if (command === 'lock') {
+      embed = await tentLock(voiceChannel);
+    }
+
+    if (command === 'hide') {
+      embed = await tentHide(voiceChannel);
+    }
+
+    if (command === 'ban') {
+      embed = await tentBan(voiceChannel, target);
+    }
+
+    if (command === 'mute') {
+      embed = await tentMute(voiceChannel, target);
+    }
+
+    if (command === 'cohost') {
+      embed = await tentCohost(voiceChannel, target);
+    }
+
+    await interaction.editReply({ embeds: [embed] });
+    return true;
+  },
+};
 
 export default dVoice;

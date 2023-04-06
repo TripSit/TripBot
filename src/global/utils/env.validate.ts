@@ -1,6 +1,4 @@
-export default validateEnv;
-
-export function validateEnv(
+export default function validateEnv(
   service: 'DISCORD' | 'MATRIX' | 'SERVICES',
 ) {
   const F = f(__filename);

@@ -19,7 +19,7 @@ export default discordConnect;
  * eslint disable-next-line
  */
 export async function discordConnect(): Promise<void> {
-  const client = new Client({
+  const discordClient = new Client({
     intents: [
       GatewayIntentBits.MessageContent,
       GatewayIntentBits.Guilds,
@@ -49,9 +49,10 @@ export async function discordConnect(): Promise<void> {
     ],
   });
 
-  global.client = client;
+  global.discordClient = discordClient;
+  global.client = discordClient;
 
-  Promise.all([registerCommands(client), registerEvents(client)])
-    .then(() => client.login(env.DISCORD_CLIENT_TOKEN))
-    .then(() => log.info(F, `${client.user?.username} logged in!`));
+  Promise.all([registerCommands(discordClient), registerEvents(discordClient)])
+    .then(() => discordClient.login(env.DISCORD_CLIENT_TOKEN))
+    .then(() => log.info(F, `${discordClient.user?.username} logged in!`));
 }

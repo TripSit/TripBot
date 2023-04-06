@@ -25,26 +25,26 @@ async function handleCommand(roomId: string, event: any) {
   await getUser(null, event.sender, null);
   // Don't handle unhelpful events (ones that aren't text messages, are redacted, or sent by us)
   if (event.content?.msgtype !== 'm.text') return;
-  if (event.sender === await client.getUserId()) return;
+  if (event.sender === await matrixClient.getUserId()) return;
 
   // ensure we're receiving a command
   if (event.content.body.startsWith('~') === false) return;
   const list = event.content.body.replace('~', ' ').match(/(?:[^\s"]+|"[^"]*")+/g);
   const command = list[0];
   // look if the command exists
-  if (command in commands === false) { await client.replyNotice(roomId, event, `${command} not found`); return; }
+  if (command in commands === false) { await matrixClient.replyNotice(roomId, event, `${command} not found`); return; }
 
   try {
     // remove the 1st element of the list and only keep the args, also remove quotes
     list.shift();
     const args = list.map((arg:string) => arg.replace(/['"]+/g, ''));
     // inject required arguments
-    args.unshift(roomId, event, client);
+    args.unshift(roomId, event, matrixClient);
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await (commands as any)[command].default.apply(null, args); // run the command
     return;
-    // await client.replyNotice(roomId, event, resp); // send the message in response to the user
+    // await matrixClient.replyNotice(roomId, event, resp); // send the message in response to the user
   } catch (e) {
     log.error(F, e as string);
   }
@@ -54,16 +54,16 @@ async function handleCommand(roomId: string, event: any) {
  * Start the matrix bot
  */
 async function startMatrix() {
-  // create the client and make it auto-join rooms on invite
-  const client:MatrixClient = new MatrixClient(env.MATRIX_HOMESERVER_URL, env.MATRIX_ACCESS_TOKEN, storage);
-  AutojoinRoomsMixin.setupOnClient(client);
+  // create the matrixClient and make it auto-join rooms on invite
+  const matrixClient:MatrixClient = new MatrixClient(env.MATRIX_HOMESERVER_URL, env.MATRIX_ACCESS_TOKEN, storage);
+  AutojoinRoomsMixin.setupOnClient(matrixClient);
 
   // Before we start the bot, register our command handler
-  client.on('room.message', await handleCommand);
+  matrixClient.on('room.message', await handleCommand);
 
   // Now that everything is set up, start the bot. This will start the sync loop and run until killed.
-  await client.start().then(async () => {
+  await matrixClient.start().then(async () => {
     log.info(F, 'Matrix-Bot started!');
-    console.log(await client.getWhoAmI());
+    console.log(await matrixClient.getWhoAmI());
   });
 }

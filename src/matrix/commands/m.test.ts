@@ -11,7 +11,7 @@ export const name = 'test';
 export const description = ' ';
 export const usage = ' ';
 
-async function test(roomId:string, event:any, client:MatrixClient, id:string):Promise<Boolean> {
-  client.replyHtmlNotice(roomId, event, `<code> ${JSON.stringify(await getRoleMembers(id))}</code>`);
+async function test(roomId:string, event:any, matrixClient:MatrixClient, id:string):Promise<Boolean> {
+  matrixClient.replyHtmlNotice(roomId, event, `<code> ${JSON.stringify(await getRoleMembers(id))}</code>`);
   return true;
 }
