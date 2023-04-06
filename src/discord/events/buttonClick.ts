@@ -27,7 +27,7 @@ const F = f(__filename);
 
 export default buttonClick;
 
-export async function buttonClick(interaction:ButtonInteraction, client:Client) {
+export async function buttonClick(interaction:ButtonInteraction, discordClient:Client) {
   startLog(F, interaction);
   log.debug(F, 'Interaction deferred!');
   const buttonID = interaction.customId;
@@ -161,7 +161,7 @@ export async function buttonClick(interaction:ButtonInteraction, client:Client) 
     return;
   }
 
-  const command = client.commands.get(interaction.customId);
+  const command = discordClient.commands.get(interaction.customId);
 
   if (!command) return;
 

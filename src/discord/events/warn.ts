@@ -8,7 +8,7 @@ const F = f(__filename);
 export const warn: WarnEvent = {
   name: 'warn',
   async execute(info) {
-    const botlog = await client.channels.fetch(env.CHANNEL_BOTERRORS) as TextChannel;
+    const botlog = await discordClient.channels.fetch(env.CHANNEL_BOTERRORS) as TextChannel;
     await botlog.send(info);
     log.error(F, `${info}`);
   },

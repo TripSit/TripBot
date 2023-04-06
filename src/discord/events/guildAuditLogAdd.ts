@@ -24,7 +24,7 @@ export const channelCreate: GuildAuditLogEntryCreateEvent = {
 
     // log.debug(F, `auditLogEntry: ${JSON.stringify(auditLogEntry, null, 2)}`);
 
-    const channelAuditlog = await client.channels.fetch(env.CHANNEL_AUDITLOG) as TextChannel;
+    const channelAuditlog = await discordClient.channels.fetch(env.CHANNEL_AUDITLOG) as TextChannel;
 
     const changeString = auditLogEntry.changes
       .map(change => `\n${change.key}: ${change.old ?? '<none>'} -> ${change.new ?? '<none>'}`)

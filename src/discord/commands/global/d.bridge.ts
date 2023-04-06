@@ -330,7 +330,7 @@ async function info(
     let message = stripIndents`This room is connected to ${bridges.length} other rooms:`;
 
     bridges.forEach(async bridge => {
-      const channel = await client.channels.fetch(bridge.external_channel) as TextChannel;
+      const channel = await discordClient.channels.fetch(bridge.external_channel) as TextChannel;
 
       message += stripIndents`
       - ${channel.guild.name} - ${channel.name}`;
@@ -345,7 +345,7 @@ async function info(
     return noBridgeError;
   }
 
-  const internalChannel = await client.channels.fetch(bridge.internal_channel);
+  const internalChannel = await discordClient.channels.fetch(bridge.internal_channel);
   const { guild } = internalChannel as TextChannel;
 
   return stripIndents`This room is connected to ${guild} - ${internalChannel}`;

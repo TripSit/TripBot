@@ -19,7 +19,7 @@ export const rateLimit: RateLimitEvent = {
     URL: ${rateLimitData.url}
     `;
 
-    const botlog = await client.channels.fetch(env.CHANNEL_BOTERRORS) as TextChannel;
+    const botlog = await discordClient.channels.fetch(env.CHANNEL_BOTERRORS) as TextChannel;
     await botlog.send(response);
     log.error(F, `${response}`);
   },

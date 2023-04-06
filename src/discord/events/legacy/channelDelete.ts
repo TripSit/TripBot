@@ -26,7 +26,7 @@ export const channelDelete: ChannelDeleteEvent = {
     if (channel.guild.id !== env.DISCORD_GUILD_ID) return;
     log.info(F, `Channel ${channel.name} was deleted.`);
 
-    const channelAuditlog = await client.channels.fetch(env.CHANNEL_AUDITLOG) as TextChannel;
+    const channelAuditlog = await discordClient.channels.fetch(env.CHANNEL_AUDITLOG) as TextChannel;
 
     const channelPerms = await checkChannelPermissions(channelAuditlog, [
       'ViewChannel' as PermissionResolvable,

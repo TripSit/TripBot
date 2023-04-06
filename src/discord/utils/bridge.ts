@@ -20,7 +20,7 @@ export async function sendMessageToChannel(
 
   // If the webhook isn't found in the cache...
   if (!webhookData) {
-    const channel = await client.channels.fetch(channelId) as TextChannel;
+    const channel = await discordClient.channels.fetch(channelId) as TextChannel;
     log.debug(F, 'Fetching webhooks');
     webhookData = (await channel.fetchWebhooks())
       .find(webhook => webhook.name === tripsitBridgeName);

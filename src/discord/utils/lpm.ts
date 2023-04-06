@@ -58,7 +58,7 @@ async function checkLpm() {
     global.lpmDict = {};
   }
 
-  const guild = await client.guilds.fetch(env.DISCORD_GUILD_ID);
+  const guild = await discordClient.guilds.fetch(env.DISCORD_GUILD_ID);
   await guild.channels.fetch();
 
   async function getLpm(channelId:string, index:number) {

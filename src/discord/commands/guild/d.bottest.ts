@@ -116,7 +116,7 @@ export function sleep(ms:number):Promise<void> {
 async function runCommand(interaction:ChatInputCommandInteraction, commandName:string):Promise<boolean | null> {
   const testInteraction = {
     options: {},
-    client: interaction.client,
+    discordClient: interaction.client,
     guild: interaction.guild,
     user: interaction.user,
     member: interaction.member,
@@ -1226,7 +1226,7 @@ async function testGlobal(
 ):Promise<ResultsObject> {
   const scope = interaction.options.getString('scope') || 'All';
   if (scope === 'All' || scope === 'Global') {
-    await client.application?.commands.fetch({ force: true })
+    await discordClient.application?.commands.fetch({ force: true })
       .then(async globalCommands => {
         await interaction.followUp(`> Testing ${globalCommands.size} global commands!`);
         for (const command of globalCommands) { // eslint-disable-line no-restricted-syntax

@@ -17,18 +17,18 @@ export default commandRun;
 /**
  * Runs a slash command
  * @param {ChatInputCommandInteraction} interaction The interaction that spawned this commend
- * @param {Client} client The Client that manages this interaction
+ * @param {Client} discordClient The Client that manages this interaction
  * @return {Discord.MessageEmbed}
  */
 export async function commandRun(
   interaction: ChatInputCommandInteraction | MessageContextMenuCommandInteraction | UserContextMenuCommandInteraction,
-  client: Client,
+  discordClient: Client,
 ) {
   const startTime = new Date().getTime();
   log.info(F, `commandRun started at ${startTime}`);
   const { commandName } = interaction;
 
-  const command = client.commands.get(commandName);
+  const command = discordClient.commands.get(commandName);
 
   if (!command) return;
 
@@ -39,7 +39,7 @@ export async function commandRun(
   } catch (error) {
     Error.stackTraceLimit = 25;
     const genericError = 'There was an error while executing this command!';
-    const botlog = await client.channels.fetch(env.CHANNEL_BOTERRORS) as TextChannel;
+    const botlog = await discordClient.channels.fetch(env.CHANNEL_BOTERRORS) as TextChannel;
     if (error instanceof Error) {
       log.error(F, `ERROR: ${error.stack}`);
       // log.debug(F, `ERROR: ${JSON.stringify(error, null, 2)}`);
@@ -64,7 +64,7 @@ export async function commandRun(
         await interaction.editReply({ embeds: [embed] });
       }
       if (env.NODE_ENV === 'production') {
-        const guild = await client.guilds.fetch(env.DISCORD_GUILD_ID) as Guild;
+        const guild = await discordClient.guilds.fetch(env.DISCORD_GUILD_ID) as Guild;
         const tripbotdevrole = await guild.roles.fetch(env.ROLE_TRIPBOTDEV);
         await botlog.send(`Hey ${tripbotdevrole}, I just got an error (commandRun: ${commandName}):
         ${error.stack}
@@ -74,7 +74,7 @@ export async function commandRun(
       log.error(F, `ERROR: ${error}`);
       await interaction.reply({ content: 'There was an unexpected error while executing this command!' });
       if (env.NODE_ENV === 'production') {
-        const guild = await client.guilds.fetch(env.DISCORD_GUILD_ID) as Guild;
+        const guild = await discordClient.guilds.fetch(env.DISCORD_GUILD_ID) as Guild;
         const tripbotdevrole = await guild.roles.fetch(env.ROLE_TRIPBOTDEV);
         await botlog.send(`Hey ${tripbotdevrole}, I just got an error (commandRun: ${commandName}):
         ${error}

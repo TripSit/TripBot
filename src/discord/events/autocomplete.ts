@@ -474,7 +474,7 @@ export default autocomplete;
 /**
  * Handles autocomplete information
  * @param {AutocompleteInteraction} interaction
- * @param {Client} client
+ * @param {Client} discordClient
  * @return {Promise<void>}
  */
 export async function autocomplete(interaction:AutocompleteInteraction):Promise<void> {

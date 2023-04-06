@@ -48,21 +48,21 @@ export default startStatusLoop;
 
 /**
  * This changes the status of the bot every 5 minutes
- * @param {Client} client The client running the bot
+ * @param {Client} discordClient The discordClient running the bot
  */
-export async function startStatusLoop(client:Client) {
-  client.user?.setActivity('with a test kit', { type: ActivityType.Playing });
+export async function startStatusLoop(discordClient:Client) {
+  discordClient.user?.setActivity('with a test kit', { type: ActivityType.Playing });
   // let state = 0;
   // let presence = activities[state];
   // log.debug(F, `Setting presence to ${presence.message}`);
   // log.debug(F, `Setting presence type to ${presence.type}`);
   // @ts-ignore
-  // client.user?.setActivity(presence.message, {type: presence.type});
+  // discordClient.user?.setActivity(presence.message, {type: presence.type});
   // setInterval(() => {
   //   state = (state + 1) % activities.length;
   //   presence = activities[state];
   //   // log.debug(F, `Setting activity to ${presence.type} ${presence.message}`);
   //   // @ts-ignore
-  //   client.user?.setActivity(presence.message, {type: presence.type});
+  //   discordClient.user?.setActivity(presence.message, {type: presence.type});
   // }, delay);
 }

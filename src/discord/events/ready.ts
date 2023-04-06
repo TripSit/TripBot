@@ -30,12 +30,12 @@ global.guildInvites = new Collection();
 /**
  * This gets invites from the guild and stores them in the global.guildInvites object.
  * This must be done onReady because otherwise the Guild isn't ready
- * @param {Client} client
+ * @param {Client} discordClient
  */
-async function getInvites(client: Client) {
+async function getInvites(discordClient: Client) {
   // Loop over all the guilds
-  client.guilds.fetch();
-  client.guilds.cache.forEach(async (guild:Guild) => {
+  discordClient.guilds.fetch();
+  discordClient.guilds.cache.forEach(async (guild:Guild) => {
     if (guild.id !== env.DISCORD_GUILD_ID) return;
     const perms = await checkGuildPermissions(guild, [
       'ManageGuild' as PermissionResolvable,
@@ -60,7 +60,7 @@ export const ready: ReadyEvent = {
   once: true,
   async execute(client) {
     await setTimeout(1000);
-    const hostGuild = await client.guilds.fetch(env.DISCORD_GUILD_ID);
+    const hostGuild = await discordClient.guilds.fetch(env.DISCORD_GUILD_ID);
     await checkGuildPermissions(hostGuild, [
       'Administrator' as PermissionResolvable,
     ]).then(async result => {
@@ -82,11 +82,11 @@ export const ready: ReadyEvent = {
         const bootDuration = (new Date().getTime() - global.bootTime.getTime()) / 1000;
         log.info(F, `Discord finished booting in ${bootDuration}s!`);
         if (env.NODE_ENV !== 'development') {
-          const channelTripbot = await client.channels.fetch(env.CHANNEL_TRIPBOT) as TextChannel;
+          const channelTripbot = await discordClient.channels.fetch(env.CHANNEL_TRIPBOT) as TextChannel;
           // log.debug(F, `channelTripbot: ${JSON.stringify(channelTripbot, null, 2)}`);
-          const botOwner = await client.users.fetch(env.DISCORD_OWNER_ID);
+          const botOwner = await discordClient.users.fetch(env.DISCORD_OWNER_ID);
           // log.debug(F, `botOwner: ${JSON.stringify(botOwner, null, 2)}`);
-          // const guild = await client.guilds.fetch(env.DISCORD_GUILD_ID);
+          // const guild = await discordClient.guilds.fetch(env.DISCORD_GUILD_ID);
           // const tripbotDevRole = await guild.roles.fetch(env.ROLE_TRIPBOTDEV);
           const newFact = await fact();
           const statData = await botStats();

@@ -17,7 +17,7 @@ export default verifyButton;
 
 /**
  * Template
- * @param {Client} client The Client that manages this interaction
+ * @param {Client} discordClient The Client that manages this interaction
  * @return {Promise<void>}
 * */
 export async function verifyButton(interaction:ButtonInteraction): Promise<void> {
