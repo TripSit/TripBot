@@ -23,7 +23,7 @@ async function start() {
   if (env.DISCORD_CLIENT_TOKEN) {
     validateEnv('SERVICES');
     if (validateEnv('DISCORD')) await discordConnect();
-    if (validateEnv('MATRIX')) await startMatrix();
+    if (validateEnv('MATRIX')) console.log('v'); await startMatrix();
   }
 }
 

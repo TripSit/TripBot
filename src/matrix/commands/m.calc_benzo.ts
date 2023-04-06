@@ -12,7 +12,7 @@ export const usage = '~calc_benzo [dose_of_benzoA] [benzoA] [benzoB]';
 
 const F = f(__filename);
 
-async function mCalcBenzo(roomId:string, event:any, matrixClient:MatrixClient, dose:string, benzoA:string, benzoB:string):Promise<boolean> {
+async function mCalcBenzo(roomId:string, event:any, dose:string, benzoA:string, benzoB:string):Promise<boolean> {
   const doseB = await calcBenzo(Number(dose), benzoA, benzoB);
   const html = `<b>${dose} mg ${benzoA} equals ${doseB} mg ${benzoB}.</b><br><i>Please note that this information may not be 100% accurate. Do not use this as your only information source.</i>`;
   const text = `${dose} mg ${benzoA} equals ${doseB} mg ${benzoB}.\nPlease note that this information may not be 100% accurate. Do not use this as your only information source.`;

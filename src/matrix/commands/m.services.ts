@@ -10,7 +10,7 @@ export const usage = '~services';
 
 const F = f(__filename);
 
-async function mServices(roomId:string, event:any, matrixClient:MatrixClient):Promise<boolean> {
+async function mServices(roomId:string, event:any):Promise<boolean> {
   matrixClient.replyNotice(roomId, event, 'Hello world!');
   log.debug(F, 'I did thing');
   return true;

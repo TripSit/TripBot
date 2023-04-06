@@ -39,7 +39,7 @@ async function handleCommand(roomId: string, event: any) {
     list.shift();
     const args = list.map((arg:string) => arg.replace(/['"]+/g, ''));
     // inject required arguments
-    args.unshift(roomId, event, matrixClient);
+    args.unshift(roomId, event);
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await (commands as any)[command].default.apply(null, args); // run the command
@@ -53,11 +53,12 @@ async function handleCommand(roomId: string, event: any) {
 /**
  * Start the matrix bot
  */
-async function startMatrix() {
+async function startMatrix():Promise<void> {
   // create the matrixClient and make it auto-join rooms on invite
   const matrixClient:MatrixClient = new MatrixClient(env.MATRIX_HOMESERVER_URL, env.MATRIX_ACCESS_TOKEN, storage);
   AutojoinRoomsMixin.setupOnClient(matrixClient);
 
+  global.matrixClient = matrixClient;
   // Before we start the bot, register our command handler
   matrixClient.on('room.message', await handleCommand);
 

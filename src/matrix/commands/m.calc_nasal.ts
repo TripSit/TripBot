@@ -17,7 +17,7 @@ export const usage = 'To calculate how much of the substance you need:\n ~calc_n
 
 const F = f(__filename);
 
-async function mCalcNasal(roomId:string, event:any, matrixClient:MatrixClient, func:string = '', x:string = '', mgpp:string = '', mlpp:string = ''):Promise<boolean> {
+async function mCalcNasal(roomId:string, event:any, func:string = '', x:string = '', mgpp:string = '', mlpp:string = ''):Promise<boolean> {
   const cMlpp = Number(mlpp.replace(/[^\d.-]/g, ''));
   const cMgpp = Number(mgpp.replace(/[^\d.-]/g, ''));
   const cSubstanceOrSolvent = Number(x.replace(/[^\d.-]/g, ''));

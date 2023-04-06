@@ -11,7 +11,7 @@ export const usage = '~combochart';
 
 const F = f(__filename);
 
-async function mCommand(roomId:string, event:any, matrixClient:MatrixClient):Promise<boolean> {
+async function mCommand(roomId:string, event:any):Promise<boolean> {
   matrixClient.replyNotice(roomId, event, await combochart());
   log.debug(F, 'I did thing');
   return true;

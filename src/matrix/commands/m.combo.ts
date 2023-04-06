@@ -12,7 +12,7 @@ export const usage = '~combo [drugA] [drugB]';
 
 const F = f(__filename);
 
-async function mCombo(roomId:string, event:any, matrixClient:MatrixClient, drugA:string, drugB:string):Promise<boolean> {
+async function mCombo(roomId:string, event:any, drugA:string, drugB:string):Promise<boolean> {
   let text = '';
   let html = '';
   const comboResponse = await gCombo(drugA, drugB);

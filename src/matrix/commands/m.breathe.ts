@@ -11,7 +11,7 @@ export const usage = '~breathe (1 | 2 | 3 | 4)';
 
 const F = f(__filename);
 
-async function mBreathe(roomId:string, event:any, matrixClient:MatrixClient, choice:string | null):Promise<boolean> {
+async function mBreathe(roomId:string, event:any, choice:string | null):Promise<boolean> {
   const url = await breathe(choice);
   matrixClient.replyNotice(roomId, event, `Click on the image below:\n${url}`);
   return true;

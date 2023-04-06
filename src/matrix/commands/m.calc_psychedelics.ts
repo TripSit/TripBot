@@ -13,7 +13,7 @@ export const usage = '~calc_psychedelics [ LSD | Mushrooms ] [last dose (number)
 
 const F = f(__filename);
 
-async function mCalcPsychedelics(roomId:string, event:any, matrixClient:MatrixClient, substance:string = '', lastDose:string = '', days:string = '', desiredDose:string = ''):Promise<boolean> {
+async function mCalcPsychedelics(roomId:string, event:any, substance:string = '', lastDose:string = '', days:string = '', desiredDose:string = ''):Promise<boolean> {
   // free params from all non-numeric characters and convert to numbers
   const cLDose = Number(lastDose.replace(/[^\d.-]/g, ''));
   const cDays = Number(days.replace(/[^\d.-]/g, ''));

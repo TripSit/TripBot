@@ -12,7 +12,7 @@ export const usage = '~calc_ketamine [weight] [kg | lbs]';
 
 const F = f(__filename);
 
-async function mCalcKet(roomId:string, event:any, matrixClient:MatrixClient, weight:string, unit:string):Promise<boolean> {
+async function mCalcKet(roomId:string, event:any, weight:string, unit:string):Promise<boolean> {
   if (unit !== 'kg' && unit !== 'lbs') { matrixClient.replyNotice(roomId, event, 'Usage: ~calc_ketamine <weight> <kg|lbs>'); return false; }
   if (unit === 'kg' && Number(weight) > 200) { matrixClient.replyNotice(roomId, event, 'Please enter a weight less than 200kg'); return false; }
   const ketaDosage = await calcKetamine(Number(weight), unit);

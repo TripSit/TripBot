@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 /* eslint-disable sonarjs/no-nested-template-literals */
 /* eslint-disable max-len */
-import { MatrixClient, RichReply } from 'matrix-bot-sdk';
+import { RichReply } from 'matrix-bot-sdk';
 import { stripIndents } from 'common-tags';
 import gDrug from '../../global/commands/g.drug';
 
@@ -27,7 +27,7 @@ type RoaType = {
   }[],
 };
 
-async function mDrug(roomId: string, event:any, matrixClient:MatrixClient, substance:string, section:string = '') {
+async function mDrug(roomId: string, event:any, substance:string, section:string = '') {
   let reply:any;
 
   const drugData = await gDrug(substance);
