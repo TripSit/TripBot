@@ -26,8 +26,6 @@ import { embedTemplate } from '../../utils/embedTemplate';
 
 const F = f(__filename);
 
-export default mod;
-
 type ModAction = 'INFO' | 'BAN' | 'WARNING' | 'REPORT' | 'NOTE' | 'TIMEOUT' | 'UN-CONTRIBUTOR_BAN' | 'UN-HELPER_BAN' |
 'FULL_BAN' | 'TICKET_BAN' | 'DISCORD_BOT_BAN' | 'BAN_EVASION' | 'UNDERBAN' | 'HELPER_BAN' | 'CONTRIBUTOR_BAN' | 'LINK' |
 'UN-FULL_BAN' | 'UN-TICKET_BAN' | 'UN-DISCORD_BOT_BAN' | 'UN-BAN_EVASION' | 'UN-UNDERBAN' | 'UN-TIMEOUT' | 'KICK';
@@ -421,3 +419,5 @@ and they do not exist in the database!`,
     return false;
   },
 };
+
+export default mod;

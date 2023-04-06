@@ -15,8 +15,6 @@ import { inventoryGet } from '../../../global/utils/knex';
 import { imageGet } from '../../utils/imageGet';
 import { Personas } from '../../../global/@types/database';
 
-export default dProfile;
-
 const F = f(__filename);
 
 Canvas.GlobalFonts.registerFromPath(
@@ -744,3 +742,5 @@ export async function getProfilePreview(target: GuildMember, imagePath: string, 
 
   return (canvasObj.encode('png'));
 }
+
+export default dProfile;

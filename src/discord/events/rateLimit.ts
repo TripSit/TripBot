@@ -5,8 +5,6 @@ import { RateLimitEvent } from '../@types/eventDef';
 
 const F = f(__filename);
 
-export default rateLimit;
-
 export const rateLimit: RateLimitEvent = {
   name: 'rateLimit',
   async execute(rateLimitData) {
@@ -26,3 +24,5 @@ export const rateLimit: RateLimitEvent = {
     log.error(F, `${response}`);
   },
 };
+
+export default rateLimit;

@@ -11,8 +11,6 @@ const heartEmojis = [
   '💝', '💖', '💗', '💘', '💕', '💞', '💓', '💟', '❣',
 ];
 
-export default dlovebomb;
-
 export const dlovebomb: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('lovebomb')
@@ -27,3 +25,5 @@ export const dlovebomb: SlashCommand = {
     return true;
   },
 };
+
+export default dlovebomb;

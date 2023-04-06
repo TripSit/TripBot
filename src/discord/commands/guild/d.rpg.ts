@@ -666,6 +666,12 @@ const text = {
   ],
 };
 
+function sleep(ms:number):Promise<void> {
+  return new Promise(resolve => {
+    setTimeout(resolve, ms);
+  });
+}
+
 export type GameName = 'Coinflip' | 'Roulette' | 'Blackjack' | 'Slots';
 
 const wagers = {} as {
@@ -799,156 +805,6 @@ const perfectScoreMessageList = [ // Random messages to display when the user go
 
 function rand(array:string[]):string {
   return array[Math.floor(Math.random() * array.length)];
-}
-
-export const dRpg: SlashCommand = {
-  data: new SlashCommandBuilder()
-    .setName('rpg')
-    .setDescription('A TripSit RPG (BETA)!')
-    .addSubcommand(subcommand => subcommand
-      .setName('town')
-      .setDescription('Go to TripTown!'))
-    .addSubcommand(subcommand => subcommand
-      .setName('market')
-      .setDescription('Go to the Market!'))
-    .addSubcommand(subcommand => subcommand
-      .setName('home')
-      .setDescription('Go to your Home!'))
-    .addSubcommand(subcommand => subcommand
-      .setName('bounties')
-      .setDescription('Go to the bounty board!'))
-    .addSubcommand(subcommand => subcommand
-      .setName('help')
-      .setDescription('Learn how to play!'))
-    .addSubcommand(subcommand => subcommand
-      .setName('quest')
-      .setDescription('Quest and earn 10 tokens!'))
-    .addSubcommand(subcommand => subcommand
-      .setName('dungeon')
-      .setDescription('Clear a dungeon and earn 50 tokens!'))
-    .addSubcommand(subcommand => subcommand
-      .setName('raid')
-      .setDescription('Raid a boss and earn 100 tokens!'))
-    .addSubcommand(subcommand => subcommand
-      .setName('arcade')
-      .setDescription('Go to the arcade'))
-    .addSubcommand(subcommand => subcommand
-      .setName('coinflip')
-      .setDescription('Go to the coinflip game'))
-    .addSubcommand(subcommand => subcommand
-      .setName('roulette')
-      .setDescription('Go to the roulette game')),
-  // .addSubcommand(subcommand => subcommand
-  //   .setName('trivia')
-  //   .setDescription('Go to the trivia parlor')),
-  async execute(interaction) {
-    startLog(F, interaction);
-    const channelRpg = await interaction.guild?.channels.fetch(env.CHANNEL_TRIPTOWN as string) as TextChannel;
-    await interaction.deferReply({ ephemeral: (channelRpg.id !== interaction.channelId) });
-    const subcommand = interaction.options.getSubcommand();
-
-    // const quietCommands = [
-    //   'quest',
-    //   'dungeon',
-    //   'raid',
-    //   'coinflip',
-    //   'roulette',
-    // ];
-
-    // Get the user's persona data
-    let personaData = await getPersonaInfo(interaction.user.id);
-    // log.debug(F, `Initial Persona data: ${JSON.stringify(personaData, null, 2)}`);
-
-    // If the user doesn't have persona data, create it
-    if (!personaData) {
-      const userData = await getUser(interaction.user.id, null);
-      personaData = {
-        user_id: userData.id,
-        tokens: 0,
-      } as Personas;
-
-      // log.debug(F, `Setting Persona data: ${JSON.stringify(personaData, null, 2)}`);
-
-      await setPersonaInfo(personaData);
-      // await interaction.editReply({ embeds: [embedStart], components: states.setup.components });
-    }
-    if (subcommand === 'town') {
-      await interaction.editReply(await rpgTown(interaction));
-    }
-    if (subcommand === 'bounties') {
-      await interaction.editReply(await rpgBounties(interaction, null));
-    }
-    if (subcommand === 'quest' || subcommand === 'dungeon' || subcommand === 'raid') {
-      await interaction.editReply(await rpgBounties(interaction, subcommand));
-    }
-    if (subcommand === 'market') {
-      await interaction.editReply(await rpgMarket(interaction));
-    }
-    if (subcommand === 'help') {
-      await interaction.editReply(await rpgHelp(interaction));
-    }
-    if (subcommand === 'home') {
-      await interaction.editReply(await rpgHome(interaction, ''));
-    }
-    if (subcommand === 'arcade') {
-      await interaction.editReply(await rpgArcade(interaction));
-    }
-    if (subcommand === 'coinflip') {
-      await interaction.editReply(await rpgArcadeGame(interaction, 'Coinflip'));
-    }
-    if (subcommand === 'roulette') {
-      await interaction.editReply(await rpgArcadeGame(interaction, 'Roulette'));
-    }
-    if (subcommand === 'trivia') {
-      await interaction.editReply(await rpgTrivia(interaction));
-    }
-
-    // if (subcommand === 'blackjack') {
-    //   await interaction.editReply(await rpgArcade(interaction));
-    // }
-    // if (subcommand === 'slots') {
-    //   await interaction.editReply(await rpgArcade(interaction));
-    // }
-    return true;
-  },
-};
-
-export async function rpgTown(
-  interaction:MessageComponentInteraction | ChatInputCommandInteraction,
-):Promise<InteractionEditReplyOptions | InteractionUpdateOptions> {
-  // Check if the user has a persona
-  // const personaData = await getPersonaInfo(interaction.user.id);
-
-  const rowTown = new ActionRowBuilder<ButtonBuilder>()
-    .addComponents(
-      customButton(`rpgBounties,user:${interaction.user.id}`, 'Bounties', 'buttonBounties', ButtonStyle.Primary),
-      customButton(`rpgMarket,user:${interaction.user.id}`, 'Market', 'buttonMarket', ButtonStyle.Primary),
-      customButton(`rpgArcade,user:${interaction.user.id}`, 'Arcade', 'buttonArcade', ButtonStyle.Primary),
-      customButton(`rpgHome,user:${interaction.user.id}`, 'Home', 'buttonHome', ButtonStyle.Primary),
-      customButton(`rpgHelp,user:${interaction.user.id}`, 'Help', 'buttonHelp', ButtonStyle.Primary),
-    );
-
-  // log.debug(F, `RPG Town End: ${JSON.stringify(rowTown)}`);
-
-  return {
-    embeds: [embedTemplate()
-      .setAuthor(null)
-      .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
-      .setTitle(`${emojiGet('buttonTown')} Town`)
-      .setDescription(stripIndents`
-      You ${rand(text.enter)} TripTown, a new settlement on the edge of Triptopia, the TripSit Kingdom.
-
-      The town is still under construction with only a few buildings.
-      
-      *You get the impression that you're one of the first people to visit.*
-      
-      A recruitment center to take on jobs, and a small market.
-  
-      What would you like to do?`)
-      .setColor(Colors.Green)],
-    components: [rowTown],
-    files: [],
-  };
 }
 
 function getLastMonday(d:Date) {
@@ -1145,6 +1001,54 @@ export async function rpgBounties(
   };
 }
 
+export async function rpgMarketInventory(
+  interaction:MessageComponentInteraction | ChatInputCommandInteraction,
+):Promise<{
+    marketInventory:SelectMenuComponentOptionData[];
+    personaTokens:number;
+    personaInventory:string;
+  }> {
+  // Check get fresh persona data
+  const personaData = await getPersonaInfo(interaction.user.id);
+
+  // Get the existing inventory data
+  const inventoryData = await inventoryGet(personaData.id);
+  // log.debug(F, `Persona inventory: ${JSON.stringify(inventoryData, null, 2)}`);
+
+  // Get a string display of the user's inventory
+  const inventoryList = inventoryData.map(item => `**${item.label}** - ${item.description}`).join('\n');
+  const inventoryString = inventoryData.length > 0
+    ? stripIndents`
+    ${emojiGet('itemInventory')} **Inventory**
+      ${inventoryList}
+      `
+    : '';
+
+  // Go through items.general and create a new object of items that the user doesn't have yet
+  const marketInventory = [...Object.values(items.general), ...Object.values(items.backgrounds)]
+    .map(item => {
+      if (!inventoryData.find(i => i.value === item.value)) {
+        // log.debug(F, `item: ${JSON.stringify(item, null, 2)}`);
+        // log.debug(F, `item.emoji: ${item.emoji}`);
+        // log.debug(F, `emojiGet(item.emoji): ${emojiGet(item.emoji)}`);
+        return {
+          label: `${item.label} - ${item.cost} TT$`,
+          value: item.value,
+          description: `${item.description}`,
+          emoji: emojiGet(item.emoji).id,
+        };
+      }
+      return null;
+    })
+    .filter(item => item !== null) as SelectMenuComponentOptionData[];
+  // log.debug(F, `generalOptions: ${JSON.stringify(marketInventory, null, 2)}`);
+  return {
+    marketInventory,
+    personaTokens: personaData.tokens,
+    personaInventory: inventoryString,
+  };
+}
+
 export async function rpgMarket(
   interaction: MessageComponentInteraction | ChatInputCommandInteraction,
 ):Promise<InteractionEditReplyOptions | InteractionUpdateOptions> {
@@ -1322,54 +1226,6 @@ export async function rpgMarketChange(
     embeds: [embed],
     components,
     files: imageFiles,
-  };
-}
-
-export async function rpgMarketInventory(
-  interaction:MessageComponentInteraction | ChatInputCommandInteraction,
-):Promise<{
-    marketInventory:SelectMenuComponentOptionData[];
-    personaTokens:number;
-    personaInventory:string;
-  }> {
-  // Check get fresh persona data
-  const personaData = await getPersonaInfo(interaction.user.id);
-
-  // Get the existing inventory data
-  const inventoryData = await inventoryGet(personaData.id);
-  // log.debug(F, `Persona inventory: ${JSON.stringify(inventoryData, null, 2)}`);
-
-  // Get a string display of the user's inventory
-  const inventoryList = inventoryData.map(item => `**${item.label}** - ${item.description}`).join('\n');
-  const inventoryString = inventoryData.length > 0
-    ? stripIndents`
-    ${emojiGet('itemInventory')} **Inventory**
-      ${inventoryList}
-      `
-    : '';
-
-  // Go through items.general and create a new object of items that the user doesn't have yet
-  const marketInventory = [...Object.values(items.general), ...Object.values(items.backgrounds)]
-    .map(item => {
-      if (!inventoryData.find(i => i.value === item.value)) {
-        // log.debug(F, `item: ${JSON.stringify(item, null, 2)}`);
-        // log.debug(F, `item.emoji: ${item.emoji}`);
-        // log.debug(F, `emojiGet(item.emoji): ${emojiGet(item.emoji)}`);
-        return {
-          label: `${item.label} - ${item.cost} TT$`,
-          value: item.value,
-          description: `${item.description}`,
-          emoji: emojiGet(item.emoji).id,
-        };
-      }
-      return null;
-    })
-    .filter(item => item !== null) as SelectMenuComponentOptionData[];
-  // log.debug(F, `generalOptions: ${JSON.stringify(marketInventory, null, 2)}`);
-  return {
-    marketInventory,
-    personaTokens: personaData.tokens,
-    personaInventory: inventoryString,
   };
 }
 
@@ -1552,6 +1408,165 @@ export async function rpgMarketAccept(
     components,
     files: [],
   };
+}
+
+export async function rpgHomeInventory(
+  interaction:MessageComponentInteraction | ChatInputCommandInteraction,
+):Promise<{
+    homeInventory:SelectMenuComponentOptionData[];
+    personaTokens:number;
+    personaInventory:string;
+  }> {
+  // Check get fresh persona data
+  const personaData = await getPersonaInfo(interaction.user.id);
+
+  // Get the existing inventory data
+  const inventoryData = await inventoryGet(personaData.id);
+  // log.debug(F, `Persona home inventory: ${JSON.stringify(inventoryData, null, 2)}`);
+
+  // Get a string display of the user's inventory
+  const inventoryList = inventoryData.map(item => `**${item.label}** - ${item.description}`).join('\n');
+  const inventoryString = inventoryData.length > 0
+    ? stripIndents`
+      ${emojiGet('itemInventory')} **Inventory**
+      ${inventoryList}
+      `
+    : '';
+
+  // Go through items.general and create a new object of items that the user doesn't have yet
+  const homeInventory = [...Object.values(items.backgrounds)]
+    .map(item => {
+      if (inventoryData.find(i => i.value === item.value)) {
+        return {
+          label: `${item.label} - ${item.cost} TT$`,
+          value: item.value,
+          description: `${item.description}`,
+          emoji: emojiGet(item.emoji).id,
+        };
+      }
+      return null;
+    })
+    .filter(item => item !== null) as SelectMenuComponentOptionData[];
+  // log.debug(F, `generalOptions: ${JSON.stringify(homeInventory, null, 2)}`);
+  return {
+    homeInventory,
+    personaTokens: personaData.tokens,
+    personaInventory: inventoryString,
+  };
+}
+
+export async function rpgHomeNameChange(
+  interaction: MessageComponentInteraction,
+):Promise<void> {
+  // Check get fresh persona data
+  const personaData = await getPersonaInfo(interaction.user.id);
+
+  // When this button is clicked, a modal appears where the user can enter their name
+  // Create the modal
+  const modal = new ModalBuilder()
+    .setCustomId(`rpgNameModal~${interaction.id}`)
+    .setTitle('Setup your TripSit room!');
+
+  const body = new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
+    .setLabel('What do you want to name your persona?')
+    .setStyle(TextInputStyle.Short)
+    .setRequired(true)
+    .setCustomId(`rpgNewName,user:${interaction.user.id}`));
+  modal.addComponents([body]);
+  await interaction.showModal(modal);
+
+  // Collect a modal submit interaction
+  const modalFilter = (i:ModalSubmitInteraction) => (i.customId.startsWith('rpgNameModal')
+    && i.customId.split('~')[1] === interaction.id
+    && i.guild !== null);
+  await interaction.awaitModalSubmit({ filter: modalFilter, time: 0 })
+    .then(async i => {
+      if (i.customId.split('~')[1] !== interaction.id) return;
+      const choice = i.fields.getTextInputValue('rpgNewName');
+      await i.deferReply({ ephemeral: true });
+
+      // log.debug(F, `name: ${choice}`);
+
+      new StringSelectMenuBuilder()
+        .setCustomId(`rpgNameDisplay,user:${interaction.user.id}`)
+        .setPlaceholder('No Name!')
+        .setOptions([{
+          label: choice,
+          value: choice,
+          emoji: '👤',
+          default: true,
+        }]);
+
+      const rowHome = new ActionRowBuilder<ButtonBuilder>()
+        .addComponents(
+          customButton(`rpgName,user:${interaction.user.id}`, 'Name', '📝', ButtonStyle.Primary),
+          customButton(`rpgAccept,user:${interaction.user.id}`, 'Accept', 'buttonAccept', ButtonStyle.Success),
+          customButton(`rpgDecline,user:${interaction.user.id}`, 'Decline', 'buttonQuit', ButtonStyle.Danger),
+          customButton(`rpgTown,user:${interaction.user.id}`, 'Town', 'buttonTown', ButtonStyle.Primary),
+        );
+
+      const rowChangeNameDisplay = new ActionRowBuilder<StringSelectMenuBuilder>()
+        .addComponents(
+          new StringSelectMenuBuilder()
+            .setCustomId(`rpgNameDisplay,user:${interaction.user.id}`)
+            .setPlaceholder('No Name!')
+            .setOptions([{
+              label: choice,
+              value: choice,
+              emoji: '👤',
+              default: true,
+            }]),
+        );
+
+      const selectedClassList = { ...genome.classes };
+      selectedClassList[personaData.class as keyof typeof selectedClassList].default = true;
+
+      const selectedSpeciesList = { ...genome.species };
+      selectedSpeciesList[personaData.species as keyof typeof selectedSpeciesList].default = true;
+
+      const selectedGuildList = { ...genome.guild };
+      selectedGuildList[personaData.guild as keyof typeof selectedGuildList].default = true;
+
+      const rowChangeClass = new ActionRowBuilder<StringSelectMenuBuilder>()
+        .addComponents(
+          new StringSelectMenuBuilder()
+            .setCustomId(`rpgClass,user:${interaction.user.id}`)
+            .setPlaceholder('Select a class')
+            .setOptions(Object.values(selectedClassList)),
+        );
+
+      const rowChangeSpecies = new ActionRowBuilder<StringSelectMenuBuilder>()
+        .addComponents(
+          new StringSelectMenuBuilder()
+            .setCustomId(`rpgSpecies,user:${interaction.user.id}`)
+            .setPlaceholder('Pick a species')
+            .setOptions(Object.values(selectedSpeciesList)),
+        );
+
+      const rowChangeGuild = new ActionRowBuilder<StringSelectMenuBuilder>()
+        .addComponents(
+          new StringSelectMenuBuilder()
+            .setCustomId(`rpgGuild,user:${interaction.user.id}`)
+            .setPlaceholder('Select a guild')
+            .setOptions(Object.values(selectedGuildList)),
+        );
+
+      await i.editReply({
+        embeds: [
+          embedTemplate()
+            .setAuthor(null)
+            .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG `, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
+            .setTitle('Home')
+            .setDescription(stripIndents`
+            Your name has been set to ${choice}
+
+            You are in your home, you can change your name, species, class and here.
+          `)
+            .setColor(Colors.Green),
+        ],
+        components: [rowChangeNameDisplay, rowChangeSpecies, rowChangeClass, rowChangeGuild, rowHome],
+      });
+    });
 }
 
 export async function rpgHome(
@@ -1906,165 +1921,6 @@ export async function rpgHomeAccept(
   };
 }
 
-export async function rpgHomeInventory(
-  interaction:MessageComponentInteraction | ChatInputCommandInteraction,
-):Promise<{
-    homeInventory:SelectMenuComponentOptionData[];
-    personaTokens:number;
-    personaInventory:string;
-  }> {
-  // Check get fresh persona data
-  const personaData = await getPersonaInfo(interaction.user.id);
-
-  // Get the existing inventory data
-  const inventoryData = await inventoryGet(personaData.id);
-  // log.debug(F, `Persona home inventory: ${JSON.stringify(inventoryData, null, 2)}`);
-
-  // Get a string display of the user's inventory
-  const inventoryList = inventoryData.map(item => `**${item.label}** - ${item.description}`).join('\n');
-  const inventoryString = inventoryData.length > 0
-    ? stripIndents`
-      ${emojiGet('itemInventory')} **Inventory**
-      ${inventoryList}
-      `
-    : '';
-
-  // Go through items.general and create a new object of items that the user doesn't have yet
-  const homeInventory = [...Object.values(items.backgrounds)]
-    .map(item => {
-      if (inventoryData.find(i => i.value === item.value)) {
-        return {
-          label: `${item.label} - ${item.cost} TT$`,
-          value: item.value,
-          description: `${item.description}`,
-          emoji: emojiGet(item.emoji).id,
-        };
-      }
-      return null;
-    })
-    .filter(item => item !== null) as SelectMenuComponentOptionData[];
-  // log.debug(F, `generalOptions: ${JSON.stringify(homeInventory, null, 2)}`);
-  return {
-    homeInventory,
-    personaTokens: personaData.tokens,
-    personaInventory: inventoryString,
-  };
-}
-
-export async function rpgHomeNameChange(
-  interaction: MessageComponentInteraction,
-):Promise<void> {
-  // Check get fresh persona data
-  const personaData = await getPersonaInfo(interaction.user.id);
-
-  // When this button is clicked, a modal appears where the user can enter their name
-  // Create the modal
-  const modal = new ModalBuilder()
-    .setCustomId(`rpgNameModal~${interaction.id}`)
-    .setTitle('Setup your TripSit room!');
-
-  const body = new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
-    .setLabel('What do you want to name your persona?')
-    .setStyle(TextInputStyle.Short)
-    .setRequired(true)
-    .setCustomId(`rpgNewName,user:${interaction.user.id}`));
-  modal.addComponents([body]);
-  await interaction.showModal(modal);
-
-  // Collect a modal submit interaction
-  const modalFilter = (i:ModalSubmitInteraction) => (i.customId.startsWith('rpgNameModal')
-    && i.customId.split('~')[1] === interaction.id
-    && i.guild !== null);
-  await interaction.awaitModalSubmit({ filter: modalFilter, time: 0 })
-    .then(async i => {
-      if (i.customId.split('~')[1] !== interaction.id) return;
-      const choice = i.fields.getTextInputValue('rpgNewName');
-      await i.deferReply({ ephemeral: true });
-
-      // log.debug(F, `name: ${choice}`);
-
-      new StringSelectMenuBuilder()
-        .setCustomId(`rpgNameDisplay,user:${interaction.user.id}`)
-        .setPlaceholder('No Name!')
-        .setOptions([{
-          label: choice,
-          value: choice,
-          emoji: '👤',
-          default: true,
-        }]);
-
-      const rowHome = new ActionRowBuilder<ButtonBuilder>()
-        .addComponents(
-          customButton(`rpgName,user:${interaction.user.id}`, 'Name', '📝', ButtonStyle.Primary),
-          customButton(`rpgAccept,user:${interaction.user.id}`, 'Accept', 'buttonAccept', ButtonStyle.Success),
-          customButton(`rpgDecline,user:${interaction.user.id}`, 'Decline', 'buttonQuit', ButtonStyle.Danger),
-          customButton(`rpgTown,user:${interaction.user.id}`, 'Town', 'buttonTown', ButtonStyle.Primary),
-        );
-
-      const rowChangeNameDisplay = new ActionRowBuilder<StringSelectMenuBuilder>()
-        .addComponents(
-          new StringSelectMenuBuilder()
-            .setCustomId(`rpgNameDisplay,user:${interaction.user.id}`)
-            .setPlaceholder('No Name!')
-            .setOptions([{
-              label: choice,
-              value: choice,
-              emoji: '👤',
-              default: true,
-            }]),
-        );
-
-      const selectedClassList = { ...genome.classes };
-      selectedClassList[personaData.class as keyof typeof selectedClassList].default = true;
-
-      const selectedSpeciesList = { ...genome.species };
-      selectedSpeciesList[personaData.species as keyof typeof selectedSpeciesList].default = true;
-
-      const selectedGuildList = { ...genome.guild };
-      selectedGuildList[personaData.guild as keyof typeof selectedGuildList].default = true;
-
-      const rowChangeClass = new ActionRowBuilder<StringSelectMenuBuilder>()
-        .addComponents(
-          new StringSelectMenuBuilder()
-            .setCustomId(`rpgClass,user:${interaction.user.id}`)
-            .setPlaceholder('Select a class')
-            .setOptions(Object.values(selectedClassList)),
-        );
-
-      const rowChangeSpecies = new ActionRowBuilder<StringSelectMenuBuilder>()
-        .addComponents(
-          new StringSelectMenuBuilder()
-            .setCustomId(`rpgSpecies,user:${interaction.user.id}`)
-            .setPlaceholder('Pick a species')
-            .setOptions(Object.values(selectedSpeciesList)),
-        );
-
-      const rowChangeGuild = new ActionRowBuilder<StringSelectMenuBuilder>()
-        .addComponents(
-          new StringSelectMenuBuilder()
-            .setCustomId(`rpgGuild,user:${interaction.user.id}`)
-            .setPlaceholder('Select a guild')
-            .setOptions(Object.values(selectedGuildList)),
-        );
-
-      await i.editReply({
-        embeds: [
-          embedTemplate()
-            .setAuthor(null)
-            .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG `, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
-            .setTitle('Home')
-            .setDescription(stripIndents`
-            Your name has been set to ${choice}
-
-            You are in your home, you can change your name, species, class and here.
-          `)
-            .setColor(Colors.Green),
-        ],
-        components: [rowChangeNameDisplay, rowChangeSpecies, rowChangeClass, rowChangeGuild, rowHome],
-      });
-    });
-}
-
 export async function rpgArcade(
   interaction: MessageComponentInteraction | ChatInputCommandInteraction,
 ):Promise<InteractionEditReplyOptions | InteractionUpdateOptions> {
@@ -2089,6 +1945,150 @@ export async function rpgArcade(
         customButton(`rpgTown,user:${interaction.user.id}`, 'Town', 'buttonTown', ButtonStyle.Primary),
       )],
   };
+}
+
+export async function rpgArcadeAnimate(
+  interaction: MessageComponentInteraction | ChatInputCommandInteraction,
+  gameName: GameName,
+) {
+  // if (env.NODE_ENV === 'development') {
+  //   await (interaction as MessageComponentInteraction).editReply({
+  //     embeds: [embedTemplate()
+  //       .setAuthor(null)
+  //       .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
+  //       .setTitle(gameName),
+  //     ],
+  //   });
+  //   return;
+  // }
+
+  if (gameName === 'Coinflip') {
+    await (interaction as MessageComponentInteraction).editReply({ // eslint-disable-line no-await-in-loop
+      embeds: [],
+      content: 'https://media.tenor.com/tewn7lzVDgcAAAAC/coin-flip-flip.gif',
+      components: [],
+    });
+
+    await sleep(4 * 1000);
+
+    // const spaceField = { name: '\u200B', value: '\u200B' };
+    // const embed = embedTemplate()
+    //   .setAuthor(null)
+    //   .setFooter(null)
+    //   .setFields([
+    //     { name: '🪙', value: '🫱' },
+    //   ]);
+
+    // await (interaction as MessageComponentInteraction).editReply({ // eslint-disable-line no-await-in-loop
+    //   embeds: [embed],
+    //   components: [],
+    // });
+
+    // await sleep(1 * 1000);
+
+    // await (interaction as MessageComponentInteraction).editReply({ // eslint-disable-line no-await-in-loop
+    //   embeds: [embed.setFields([
+    //     { name: '🪙', value: '👍' },
+    //   ])],
+    // });
+
+    // await sleep(0.5 * 1000);
+
+    // let height = 1;
+    // const ceiling = 3;
+    // while (height < ceiling) {
+    //   await sleep(0.25 * 1000); // eslint-disable-line no-await-in-loop
+    //   embed.setFields([{ name: '\u200B', value: '🪙' }]);
+    //   const spaceArray = Array(height).fill(spaceField);
+    //   if (spaceArray && spaceArray.length > 0) {
+    //     embed.addFields(spaceArray);
+    //   }
+    //   embed.addFields([{ name: '\u200B', value: '🫴' }]);
+
+    //   await (interaction as MessageComponentInteraction).editReply({ // eslint-disable-line no-await-in-loop
+    //     embeds: [embed],
+    //   });
+    //   height += 1;
+    //   // log.debug(F, `height up: ${height}`);
+    // }
+    // while (height > 0) {
+    //   await sleep(0.25 * 1000); // eslint-disable-line no-await-in-loop
+    //   embed.setFields([{ name: '\u200B', value: '🪙' }]);
+    //   const spaceArray = Array(height).fill({ name: '\u200B', value: '\u200B' });
+    //   if (spaceArray && spaceArray.length > 0) {
+    //     embed.addFields(spaceArray);
+    //   }
+    //   embed.addFields([{ name: '\u200B', value: '🫴' }]);
+
+    //   await (interaction as MessageComponentInteraction).editReply({ // eslint-disable-line no-await-in-loop
+    //     embeds: [embed],
+    //   });
+    //   height -= 1;
+    //   // log.debug(F, `height down: ${height}`);
+    // }
+
+    // await (interaction as MessageComponentInteraction).editReply({ // eslint-disable-line no-await-in-loop
+    //   embeds: [embed.setFields([
+    //     { name: '🪙', value: '🫴' },
+    //   ])],
+    // });
+    // await sleep(0.5 * 1000);
+
+    // await (interaction as MessageComponentInteraction).editReply({ // eslint-disable-line no-await-in-loop
+    //   embeds: [embed.setFields([
+    //     { name: '🪙', value: '🫴', inline: true },
+    //   ])],
+    // });
+    // await sleep(1 * 1000);
+  }
+
+  if (gameName === 'Roulette') {
+    await (interaction as MessageComponentInteraction).editReply({ // eslint-disable-line no-await-in-loop
+      embeds: [],
+      content: 'https://media2.giphy.com/media/1DEJwfwdknKZq/giphy.gif',
+      components: [],
+    });
+
+    await sleep(4 * 1000);
+    //   // Make an animation out of embeds that shows an arrow spinning
+
+    //   const wheelTop = [
+    //     { name: '\u200B', value: '⬛', inline: true },
+    //     { name: '\u200B', value: '🟥', inline: true },
+    //     { name: '\u200B', value: '⬛', inline: true },
+    //     { name: '🟥', value: '⬛', inline: true },
+    //   ];
+    //   const wheelBottom = [
+    //     { name: '🟥', value: '⬛', inline: true },
+    //     // { name: '🟥', value: '\u200B', inline: true },
+    //     // { name: '⬛', value: '\u200B', inline: true },
+    //     // { name: '🟥', value: '\u200B', inline: true },
+    //   ];
+
+    //   const embed = embedTemplate()
+    //     .setAuthor(null)
+    //     .setFooter(null)
+    //     .setFields(
+    //       ...wheelTop,
+    //       { name: '⬆️', value: '🟥', inline: true },
+    //       ...wheelBottom,
+    //     );
+    //   await (interaction as MessageComponentInteraction).editReply({ embeds: [embed] }); // eslint-disable-line no-await-in-loop
+    //   await sleep(0.5 * 1000); // eslint-disable-line no-await-in-loop
+
+    //   const arrows = ['↗️', '➡️', '↘️', '⬇️', '↙️', '⬅️', '↖️', '⬆️', '↗️', '➡️', '↘️'];
+    //   for (const arrow of arrows) { // eslint-disable-line no-restricted-syntax
+    //     embed.setFields(
+    //       ...wheelTop,
+    //       { name: arrow, value: '🟥', inline: true },
+    //       ...wheelBottom,
+    //     );
+    //     await (interaction as MessageComponentInteraction).editReply({ embeds: [embed], components: [] }); // eslint-disable-line no-await-in-loop
+    //     // await sleep(0.1 * 1000); // eslint-disable-line no-await-in-loop
+    //   }
+
+  //   await sleep(2 * 1000);
+  }
 }
 
 export async function rpgArcadeGame(
@@ -2363,6 +2363,57 @@ type GameState = {
 };
 
 const gameStates = {} as GameState;
+
+export async function rpgTriviaGetQuestions(
+  amount: number,
+  difficulty:string,
+):Promise<TriviaQuestion[]> {
+  // log.debug(F, `Getting question with difficulty: ${difficulty}...`);
+  const trivia = new Trivia({ encoding: 'url3986' });
+
+  const { results } = await trivia.getQuestions({ amount, type: 'multiple', difficulty });
+
+  // log.debug(F, `results: ${JSON.stringify(results, null, 2)}`);
+
+  function anticheat(str: string) {
+    const replacementMap: { [key: string]: string } = {
+      a: 'α',
+      e: 'є',
+      u: 'υ',
+    };
+
+    return str.replace(/[aet]/gi, (replacement: string) => replacementMap[replacement] || replacement);
+  }
+
+  return results.map((questionData:{
+    category: string;
+    type: string;
+    difficulty: string;
+    question: string;
+    correct_answer: string;
+    incorrect_answers: string[];
+  }) => {
+    // const answers = [...questionData.incorrect_answers, questionData.correct_answer];
+    // Unescape HTML entities
+    const Question = anticheat(he.unescape(questionData.question));
+    const CorrectAnswer = anticheat(he.unescape(questionData.correct_answer));
+    const IncorrectAnswers = anticheat(he.unescape(questionData.incorrect_answers.join('| ')));
+    const Answers = [...IncorrectAnswers.split('| '), CorrectAnswer];
+    // log.debug(F, `Broken Question: ${questionData.question}, Fixed Question: ${fixedQuestion}`);
+    // log.debug(F, `Broken Answer: ${answers}, Fixed Answer: ${fixedAnswers}`);
+    // Shuffle the answers (So the correct answer isn't always the last one)
+    Answers.sort(() => Math.random() - 0.5);
+
+    return {
+      category: questionData.category,
+      type: questionData.type,
+      difficulty: questionData.difficulty,
+      question: Question,
+      correct_answer: CorrectAnswer,
+      all_answers: Answers,
+    } as TriviaQuestion;
+  });
+}
 
 export async function rpgTrivia(
   interaction: MessageComponentInteraction | ChatInputCommandInteraction,
@@ -2994,201 +3045,6 @@ export async function rpgTrivia(
   };
 }
 
-export async function rpgTriviaGetQuestions(
-  amount: number,
-  difficulty:string,
-):Promise<TriviaQuestion[]> {
-  // log.debug(F, `Getting question with difficulty: ${difficulty}...`);
-  const trivia = new Trivia({ encoding: 'url3986' });
-
-  const { results } = await trivia.getQuestions({ amount, type: 'multiple', difficulty });
-
-  // log.debug(F, `results: ${JSON.stringify(results, null, 2)}`);
-
-  function anticheat(str: string) {
-    const replacementMap: { [key: string]: string } = {
-      a: 'α',
-      e: 'є',
-      u: 'υ',
-    };
-
-    return str.replace(/[aet]/gi, (replacement: string) => replacementMap[replacement] || replacement);
-  }
-
-  return results.map((questionData:{
-    category: string;
-    type: string;
-    difficulty: string;
-    question: string;
-    correct_answer: string;
-    incorrect_answers: string[];
-  }) => {
-    // const answers = [...questionData.incorrect_answers, questionData.correct_answer];
-    // Unescape HTML entities
-    const Question = anticheat(he.unescape(questionData.question));
-    const CorrectAnswer = anticheat(he.unescape(questionData.correct_answer));
-    const IncorrectAnswers = anticheat(he.unescape(questionData.incorrect_answers.join('| ')));
-    const Answers = [...IncorrectAnswers.split('| '), CorrectAnswer];
-    // log.debug(F, `Broken Question: ${questionData.question}, Fixed Question: ${fixedQuestion}`);
-    // log.debug(F, `Broken Answer: ${answers}, Fixed Answer: ${fixedAnswers}`);
-    // Shuffle the answers (So the correct answer isn't always the last one)
-    Answers.sort(() => Math.random() - 0.5);
-
-    return {
-      category: questionData.category,
-      type: questionData.type,
-      difficulty: questionData.difficulty,
-      question: Question,
-      correct_answer: CorrectAnswer,
-      all_answers: Answers,
-    } as TriviaQuestion;
-  });
-}
-
-export async function rpgArcadeAnimate(
-  interaction: MessageComponentInteraction | ChatInputCommandInteraction,
-  gameName: GameName,
-) {
-  // if (env.NODE_ENV === 'development') {
-  //   await (interaction as MessageComponentInteraction).editReply({
-  //     embeds: [embedTemplate()
-  //       .setAuthor(null)
-  //       .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
-  //       .setTitle(gameName),
-  //     ],
-  //   });
-  //   return;
-  // }
-
-  if (gameName === 'Coinflip') {
-    await (interaction as MessageComponentInteraction).editReply({ // eslint-disable-line no-await-in-loop
-      embeds: [],
-      content: 'https://media.tenor.com/tewn7lzVDgcAAAAC/coin-flip-flip.gif',
-      components: [],
-    });
-
-    await sleep(4 * 1000);
-
-    // const spaceField = { name: '\u200B', value: '\u200B' };
-    // const embed = embedTemplate()
-    //   .setAuthor(null)
-    //   .setFooter(null)
-    //   .setFields([
-    //     { name: '🪙', value: '🫱' },
-    //   ]);
-
-    // await (interaction as MessageComponentInteraction).editReply({ // eslint-disable-line no-await-in-loop
-    //   embeds: [embed],
-    //   components: [],
-    // });
-
-    // await sleep(1 * 1000);
-
-    // await (interaction as MessageComponentInteraction).editReply({ // eslint-disable-line no-await-in-loop
-    //   embeds: [embed.setFields([
-    //     { name: '🪙', value: '👍' },
-    //   ])],
-    // });
-
-    // await sleep(0.5 * 1000);
-
-    // let height = 1;
-    // const ceiling = 3;
-    // while (height < ceiling) {
-    //   await sleep(0.25 * 1000); // eslint-disable-line no-await-in-loop
-    //   embed.setFields([{ name: '\u200B', value: '🪙' }]);
-    //   const spaceArray = Array(height).fill(spaceField);
-    //   if (spaceArray && spaceArray.length > 0) {
-    //     embed.addFields(spaceArray);
-    //   }
-    //   embed.addFields([{ name: '\u200B', value: '🫴' }]);
-
-    //   await (interaction as MessageComponentInteraction).editReply({ // eslint-disable-line no-await-in-loop
-    //     embeds: [embed],
-    //   });
-    //   height += 1;
-    //   // log.debug(F, `height up: ${height}`);
-    // }
-    // while (height > 0) {
-    //   await sleep(0.25 * 1000); // eslint-disable-line no-await-in-loop
-    //   embed.setFields([{ name: '\u200B', value: '🪙' }]);
-    //   const spaceArray = Array(height).fill({ name: '\u200B', value: '\u200B' });
-    //   if (spaceArray && spaceArray.length > 0) {
-    //     embed.addFields(spaceArray);
-    //   }
-    //   embed.addFields([{ name: '\u200B', value: '🫴' }]);
-
-    //   await (interaction as MessageComponentInteraction).editReply({ // eslint-disable-line no-await-in-loop
-    //     embeds: [embed],
-    //   });
-    //   height -= 1;
-    //   // log.debug(F, `height down: ${height}`);
-    // }
-
-    // await (interaction as MessageComponentInteraction).editReply({ // eslint-disable-line no-await-in-loop
-    //   embeds: [embed.setFields([
-    //     { name: '🪙', value: '🫴' },
-    //   ])],
-    // });
-    // await sleep(0.5 * 1000);
-
-    // await (interaction as MessageComponentInteraction).editReply({ // eslint-disable-line no-await-in-loop
-    //   embeds: [embed.setFields([
-    //     { name: '🪙', value: '🫴', inline: true },
-    //   ])],
-    // });
-    // await sleep(1 * 1000);
-  }
-
-  if (gameName === 'Roulette') {
-    await (interaction as MessageComponentInteraction).editReply({ // eslint-disable-line no-await-in-loop
-      embeds: [],
-      content: 'https://media2.giphy.com/media/1DEJwfwdknKZq/giphy.gif',
-      components: [],
-    });
-
-    await sleep(4 * 1000);
-    //   // Make an animation out of embeds that shows an arrow spinning
-
-    //   const wheelTop = [
-    //     { name: '\u200B', value: '⬛', inline: true },
-    //     { name: '\u200B', value: '🟥', inline: true },
-    //     { name: '\u200B', value: '⬛', inline: true },
-    //     { name: '🟥', value: '⬛', inline: true },
-    //   ];
-    //   const wheelBottom = [
-    //     { name: '🟥', value: '⬛', inline: true },
-    //     // { name: '🟥', value: '\u200B', inline: true },
-    //     // { name: '⬛', value: '\u200B', inline: true },
-    //     // { name: '🟥', value: '\u200B', inline: true },
-    //   ];
-
-    //   const embed = embedTemplate()
-    //     .setAuthor(null)
-    //     .setFooter(null)
-    //     .setFields(
-    //       ...wheelTop,
-    //       { name: '⬆️', value: '🟥', inline: true },
-    //       ...wheelBottom,
-    //     );
-    //   await (interaction as MessageComponentInteraction).editReply({ embeds: [embed] }); // eslint-disable-line no-await-in-loop
-    //   await sleep(0.5 * 1000); // eslint-disable-line no-await-in-loop
-
-    //   const arrows = ['↗️', '➡️', '↘️', '⬇️', '↙️', '⬅️', '↖️', '⬆️', '↗️', '➡️', '↘️'];
-    //   for (const arrow of arrows) { // eslint-disable-line no-restricted-syntax
-    //     embed.setFields(
-    //       ...wheelTop,
-    //       { name: arrow, value: '🟥', inline: true },
-    //       ...wheelBottom,
-    //     );
-    //     await (interaction as MessageComponentInteraction).editReply({ embeds: [embed], components: [] }); // eslint-disable-line no-await-in-loop
-    //     // await sleep(0.1 * 1000); // eslint-disable-line no-await-in-loop
-    //   }
-
-  //   await sleep(2 * 1000);
-  }
-}
-
 export async function rpgArcadeWager(
   interaction: MessageComponentInteraction,
 ):Promise<InteractionUpdateOptions> {
@@ -3207,10 +3063,42 @@ export async function rpgArcadeWager(
   return rpgArcadeGame(interaction, wagers[interaction.user.id].gameName);
 }
 
-function sleep(ms:number):Promise<void> {
-  return new Promise(resolve => {
-    setTimeout(resolve, ms);
-  });
+export async function rpgTown(
+  interaction:MessageComponentInteraction | ChatInputCommandInteraction,
+):Promise<InteractionEditReplyOptions | InteractionUpdateOptions> {
+  // Check if the user has a persona
+  // const personaData = await getPersonaInfo(interaction.user.id);
+
+  const rowTown = new ActionRowBuilder<ButtonBuilder>()
+    .addComponents(
+      customButton(`rpgBounties,user:${interaction.user.id}`, 'Bounties', 'buttonBounties', ButtonStyle.Primary),
+      customButton(`rpgMarket,user:${interaction.user.id}`, 'Market', 'buttonMarket', ButtonStyle.Primary),
+      customButton(`rpgArcade,user:${interaction.user.id}`, 'Arcade', 'buttonArcade', ButtonStyle.Primary),
+      customButton(`rpgHome,user:${interaction.user.id}`, 'Home', 'buttonHome', ButtonStyle.Primary),
+      customButton(`rpgHelp,user:${interaction.user.id}`, 'Help', 'buttonHelp', ButtonStyle.Primary),
+    );
+
+  // log.debug(F, `RPG Town End: ${JSON.stringify(rowTown)}`);
+
+  return {
+    embeds: [embedTemplate()
+      .setAuthor(null)
+      .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
+      .setTitle(`${emojiGet('buttonTown')} Town`)
+      .setDescription(stripIndents`
+      You ${rand(text.enter)} TripTown, a new settlement on the edge of Triptopia, the TripSit Kingdom.
+
+      The town is still under construction with only a few buildings.
+      
+      *You get the impression that you're one of the first people to visit.*
+      
+      A recruitment center to take on jobs, and a small market.
+  
+      What would you like to do?`)
+      .setColor(Colors.Green)],
+    components: [rowTown],
+    files: [],
+  };
 }
 
 export async function rpgHelp(
@@ -3246,5 +3134,117 @@ export async function rpgHelp(
       )],
   };
 }
+
+export const dRpg: SlashCommand = {
+  data: new SlashCommandBuilder()
+    .setName('rpg')
+    .setDescription('A TripSit RPG (BETA)!')
+    .addSubcommand(subcommand => subcommand
+      .setName('town')
+      .setDescription('Go to TripTown!'))
+    .addSubcommand(subcommand => subcommand
+      .setName('market')
+      .setDescription('Go to the Market!'))
+    .addSubcommand(subcommand => subcommand
+      .setName('home')
+      .setDescription('Go to your Home!'))
+    .addSubcommand(subcommand => subcommand
+      .setName('bounties')
+      .setDescription('Go to the bounty board!'))
+    .addSubcommand(subcommand => subcommand
+      .setName('help')
+      .setDescription('Learn how to play!'))
+    .addSubcommand(subcommand => subcommand
+      .setName('quest')
+      .setDescription('Quest and earn 10 tokens!'))
+    .addSubcommand(subcommand => subcommand
+      .setName('dungeon')
+      .setDescription('Clear a dungeon and earn 50 tokens!'))
+    .addSubcommand(subcommand => subcommand
+      .setName('raid')
+      .setDescription('Raid a boss and earn 100 tokens!'))
+    .addSubcommand(subcommand => subcommand
+      .setName('arcade')
+      .setDescription('Go to the arcade'))
+    .addSubcommand(subcommand => subcommand
+      .setName('coinflip')
+      .setDescription('Go to the coinflip game'))
+    .addSubcommand(subcommand => subcommand
+      .setName('roulette')
+      .setDescription('Go to the roulette game')),
+  // .addSubcommand(subcommand => subcommand
+  //   .setName('trivia')
+  //   .setDescription('Go to the trivia parlor')),
+  async execute(interaction) {
+    startLog(F, interaction);
+    const channelRpg = await interaction.guild?.channels.fetch(env.CHANNEL_TRIPTOWN as string) as TextChannel;
+    await interaction.deferReply({ ephemeral: (channelRpg.id !== interaction.channelId) });
+    const subcommand = interaction.options.getSubcommand();
+
+    // const quietCommands = [
+    //   'quest',
+    //   'dungeon',
+    //   'raid',
+    //   'coinflip',
+    //   'roulette',
+    // ];
+
+    // Get the user's persona data
+    let personaData = await getPersonaInfo(interaction.user.id);
+    // log.debug(F, `Initial Persona data: ${JSON.stringify(personaData, null, 2)}`);
+
+    // If the user doesn't have persona data, create it
+    if (!personaData) {
+      const userData = await getUser(interaction.user.id, null);
+      personaData = {
+        user_id: userData.id,
+        tokens: 0,
+      } as Personas;
+
+      // log.debug(F, `Setting Persona data: ${JSON.stringify(personaData, null, 2)}`);
+
+      await setPersonaInfo(personaData);
+      // await interaction.editReply({ embeds: [embedStart], components: states.setup.components });
+    }
+    if (subcommand === 'town') {
+      await interaction.editReply(await rpgTown(interaction));
+    }
+    if (subcommand === 'bounties') {
+      await interaction.editReply(await rpgBounties(interaction, null));
+    }
+    if (subcommand === 'quest' || subcommand === 'dungeon' || subcommand === 'raid') {
+      await interaction.editReply(await rpgBounties(interaction, subcommand));
+    }
+    if (subcommand === 'market') {
+      await interaction.editReply(await rpgMarket(interaction));
+    }
+    if (subcommand === 'help') {
+      await interaction.editReply(await rpgHelp(interaction));
+    }
+    if (subcommand === 'home') {
+      await interaction.editReply(await rpgHome(interaction, ''));
+    }
+    if (subcommand === 'arcade') {
+      await interaction.editReply(await rpgArcade(interaction));
+    }
+    if (subcommand === 'coinflip') {
+      await interaction.editReply(await rpgArcadeGame(interaction, 'Coinflip'));
+    }
+    if (subcommand === 'roulette') {
+      await interaction.editReply(await rpgArcadeGame(interaction, 'Roulette'));
+    }
+    if (subcommand === 'trivia') {
+      await interaction.editReply(await rpgTrivia(interaction));
+    }
+
+    // if (subcommand === 'blackjack') {
+    //   await interaction.editReply(await rpgArcade(interaction));
+    // }
+    // if (subcommand === 'slots') {
+    //   await interaction.editReply(await rpgArcade(interaction));
+    // }
+    return true;
+  },
+};
 
 export default dRpg;

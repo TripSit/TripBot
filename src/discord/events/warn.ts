@@ -5,8 +5,6 @@ import { WarnEvent } from '../@types/eventDef';
 
 const F = f(__filename);
 
-export default warn;
-
 export const warn: WarnEvent = {
   name: 'warn',
   async execute(info) {
@@ -15,3 +13,5 @@ export const warn: WarnEvent = {
     log.error(F, `${info}`);
   },
 };
+
+export default warn;

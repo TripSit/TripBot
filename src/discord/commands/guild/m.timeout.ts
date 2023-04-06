@@ -19,9 +19,6 @@ import { moderate } from '../../../global/commands/g.moderate';
 import { UserActionType } from '../../../global/@types/database';
 
 const F = f(__filename);
-
-export default mTimeout;
-
 export const mTimeout: MessageCommand = {
   data: new ContextMenuCommandBuilder()
     .setName('Timeout')
@@ -83,3 +80,5 @@ export const mTimeout: MessageCommand = {
     return true;
   },
 };
+
+export default mTimeout;

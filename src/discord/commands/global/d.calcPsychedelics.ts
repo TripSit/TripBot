@@ -10,8 +10,6 @@ import { startLog } from '../../utils/startLog';
 
 const F = f(__filename);
 
-export default dCalcPsychedelics;
-
 export const dCalcPsychedelics: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('calc_psychedelics')
@@ -79,3 +77,5 @@ export const dCalcPsychedelics: SlashCommand = {
     return true;
   },
 };
+
+export default dCalcPsychedelics;

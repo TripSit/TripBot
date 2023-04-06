@@ -7,8 +7,6 @@ import { startLog } from '../../utils/startLog';
 
 const F = f(__filename);
 
-export default dMagick8ball;
-
 export const dMagick8ball: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('magick8ball')
@@ -22,3 +20,5 @@ export const dMagick8ball: SlashCommand = {
     return true;
   },
 };
+
+export default dMagick8ball;

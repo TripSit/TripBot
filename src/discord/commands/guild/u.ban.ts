@@ -19,8 +19,6 @@ import { UserActionType } from '../../../global/@types/database';
 
 const F = f(__filename);
 
-export default uBan;
-
 export const uBan: UserCommand = {
   data: new ContextMenuCommandBuilder()
     .setName('Ban')
@@ -76,3 +74,5 @@ export const uBan: UserCommand = {
     return true;
   },
 };
+
+export default uBan;

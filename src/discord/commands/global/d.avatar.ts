@@ -8,8 +8,6 @@ import { embedTemplate } from '../../utils/embedTemplate';
 
 const F = f(__filename);
 
-export default dAvatar;
-
 export const dAvatar: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('avatar')
@@ -45,3 +43,5 @@ export const dAvatar: SlashCommand = {
     return true;
   },
 };
+
+export default dAvatar;

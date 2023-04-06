@@ -22,8 +22,6 @@ const buttonList = [
   new ButtonBuilder().setCustomId('nextButton').setLabel('Next').setStyle(ButtonStyle.Success),
 ];
 
-export default dRemindme;
-
 export const dRemindme: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('remind_me')
@@ -158,3 +156,5 @@ export const dRemindme: SlashCommand = {
     return true;
   },
 };
+
+export default dRemindme;

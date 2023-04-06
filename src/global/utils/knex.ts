@@ -32,76 +32,6 @@ export const db = knex({
   connection: env.POSTGRES_DB_URL,
 });
 
-export const database = {
-  users: {
-    get: getUser,
-    getMindsets: usersGetMindsets,
-    set: usersUpdate,
-    incrementPoint,
-    incrementKarma,
-  },
-  guilds: {
-    get: getGuild,
-    set: guildUpdate,
-  },
-  tickets: {
-    getOpen: getOpenTicket,
-    get: ticketGet,
-    set: ticketUpdate,
-    del: ticketDel,
-  },
-  reminders: {
-    get: reminderGet,
-    set: reminderSet,
-    del: reminderDel,
-  },
-  rss: {
-    get: rssGet,
-    set: rssSet,
-    del: rssDel,
-  },
-  reactionRoles: {
-    get: reactionroleGet,
-    set: reactionroleSet,
-    del: reactionroleDel,
-  },
-  experience: {
-    get: experienceGet,
-    getTop: experienceGetTop,
-    del: experienceDel,
-    set: experienceUpdate,
-  },
-  doses: {
-    get: idoseGet,
-    set: idoseSet,
-    del: idoseDel,
-  },
-  drugs: {
-    get: drugGet,
-  },
-  actions: {
-    get: useractionsGet,
-    set: useractionsSet,
-  },
-  personas: {
-    get: personaGet,
-    set: personaSet,
-  },
-  inventory: {
-    get: inventoryGet,
-    set: inventorySet,
-  },
-  counting: {
-    get: countingGet,
-    set: countingSet,
-  },
-  bridges: {
-    get: bridgesGet,
-    set: bridgesSet,
-    del: bridgesDel,
-  },
-};
-
 export async function getUser(
   discordId:string | null,
   userId:string | null,
@@ -1178,3 +1108,73 @@ async function reactionroleDel(
       .where('id', role.id);
   });
 }
+
+export const database = {
+  users: {
+    get: getUser,
+    getMindsets: usersGetMindsets,
+    set: usersUpdate,
+    incrementPoint,
+    incrementKarma,
+  },
+  guilds: {
+    get: getGuild,
+    set: guildUpdate,
+  },
+  tickets: {
+    getOpen: getOpenTicket,
+    get: ticketGet,
+    set: ticketUpdate,
+    del: ticketDel,
+  },
+  reminders: {
+    get: reminderGet,
+    set: reminderSet,
+    del: reminderDel,
+  },
+  rss: {
+    get: rssGet,
+    set: rssSet,
+    del: rssDel,
+  },
+  reactionRoles: {
+    get: reactionroleGet,
+    set: reactionroleSet,
+    del: reactionroleDel,
+  },
+  experience: {
+    get: experienceGet,
+    getTop: experienceGetTop,
+    del: experienceDel,
+    set: experienceUpdate,
+  },
+  doses: {
+    get: idoseGet,
+    set: idoseSet,
+    del: idoseDel,
+  },
+  drugs: {
+    get: drugGet,
+  },
+  actions: {
+    get: useractionsGet,
+    set: useractionsSet,
+  },
+  personas: {
+    get: personaGet,
+    set: personaSet,
+  },
+  inventory: {
+    get: inventoryGet,
+    set: inventorySet,
+  },
+  counting: {
+    get: countingGet,
+    set: countingSet,
+  },
+  bridges: {
+    get: bridgesGet,
+    set: bridgesSet,
+    del: bridgesDel,
+  },
+};

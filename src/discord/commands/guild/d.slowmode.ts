@@ -8,8 +8,6 @@ import { startLog } from '../../utils/startLog';
 
 const F = f(__filename);
 
-export default dSlowMode;
-
 export const dSlowMode: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('slowmode')
@@ -63,3 +61,5 @@ export const dSlowMode: SlashCommand = {
     return true;
   },
 };
+
+export default dSlowMode;

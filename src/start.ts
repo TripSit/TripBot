@@ -5,7 +5,7 @@ import { getVoiceConnection } from '@discordjs/voice';
 import { env } from './global/utils/env.config';
 import { log } from './global/utils/log';
 import { discordConnect } from './discord/discord'; // eslint-disable-line
-import { validateEnv } from './global/utils/env.validate'; // eslint-disable-line
+import validateEnv from './global/utils/env.validate'; // eslint-disable-line
 import { startLog } from './discord/utils/startLog'; // eslint-disable-line
 
 global.bootTime = new Date();

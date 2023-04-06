@@ -10,8 +10,6 @@ const F = f(__filename); // eslint-disable-line @typescript-eslint/no-unused-var
 
 // https://discordjs.guide/popular-topics/audit-logs.html#who-deleted-a-message
 
-export default threadDelete;
-
 export const threadDelete: ThreadDeleteEvent = {
   name: 'threadDelete',
   async execute(thread) {
@@ -32,3 +30,5 @@ export const threadDelete: ThreadDeleteEvent = {
     }
   },
 };
+
+export default threadDelete;

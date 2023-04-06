@@ -8,8 +8,6 @@ import { startLog } from '../../utils/startLog';
 
 const F = f(__filename);
 
-export default dClearchat;
-
 export const dClearchat: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('clear-chat')
@@ -82,3 +80,5 @@ export const dClearchat: SlashCommand = {
     return true;
   },
 };
+
+export default dClearchat;

@@ -7,8 +7,6 @@ import { reagents } from '../../../global/commands/g.reagents';
 // import log from '../../../global/utils/log';
 const F = f(__filename);
 
-export default dReagents;
-
 export const dReagents: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('reagents')
@@ -22,3 +20,5 @@ export const dReagents: SlashCommand = {
     return true;
   },
 };
+
+export default dReagents;

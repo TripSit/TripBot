@@ -19,8 +19,6 @@ import { embedTemplate } from '../../utils/embedTemplate';
 
 const F = f(__filename);
 
-export default dIssue;
-
 export const dIssue: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('issue')
@@ -119,3 +117,5 @@ export const dIssue: SlashCommand = {
     return false;
   },
 };
+
+export default dIssue;

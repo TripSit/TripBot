@@ -10,8 +10,6 @@ import { startLog } from '../../utils/startLog';
 
 const F = f(__filename);
 
-export default dWikipedia;
-
 export const dWikipedia: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('wikipedia')
@@ -42,3 +40,5 @@ export const dWikipedia: SlashCommand = {
     return true;
   },
 };
+
+export default dWikipedia;

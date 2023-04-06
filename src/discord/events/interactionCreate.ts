@@ -18,8 +18,6 @@ import { botBannedUsers } from '../utils/populateBotBans';
 
 const F = f(__filename);  // eslint-disable-line
 
-export default interactionCreate;
-
 export const interactionCreate: InteractionCreateEvent = {
   name: 'interactionCreate',
   async execute(interaction) {
@@ -106,3 +104,5 @@ export const interactionCreate: InteractionCreateEvent = {
     }
   },
 };
+
+export default interactionCreate;

@@ -40,26 +40,6 @@ const F = f(__filename);
 // Value in milliseconds (1000 * 60 = 1 minute)
 const interval = env.NODE_ENV === 'production' ? 1000 * 60 : 1000 * 10;
 
-/**
- * This function is called on start.ts and runs the timers
- */
-export async function runRss() {
-  /**
-   * This timer runs every (INTERVAL) to determine if there are any tasks to perform
-   * This function uses setTimeout so that it can finish running before the next loop
-   */
-  function checkTimers() {
-    setTimeout(
-      async () => {
-        await checkRss();
-        checkTimers();
-      },
-      interval,
-    );
-  }
-  checkTimers();
-}
-
 const parser: Parser<RedditFeed, RedditItem> = new Parser();
 
 async function checkRss() {
@@ -136,4 +116,24 @@ async function checkRss() {
       await rssSet(newFeed);
     });
   })();
+}
+
+/**
+ * This function is called on start.ts and runs the timers
+ */
+export async function runRss() {
+  /**
+   * This timer runs every (INTERVAL) to determine if there are any tasks to perform
+   * This function uses setTimeout so that it can finish running before the next loop
+   */
+  function checkTimers() {
+    setTimeout(
+      async () => {
+        await checkRss();
+        checkTimers();
+      },
+      interval,
+    );
+  }
+  checkTimers();
 }

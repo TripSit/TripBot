@@ -9,8 +9,6 @@ import { startLog } from '../../utils/startLog';
 
 const F = f(__filename);
 
-export default dCalcKetamine;
-
 // Calculate insufflated dosages
 export const dCalcKetamine: SlashCommand = {
   data: new SlashCommandBuilder()
@@ -66,3 +64,5 @@ export const dCalcKetamine: SlashCommand = {
     return true;
   },
 };
+
+export default dCalcKetamine;

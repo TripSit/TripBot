@@ -18,8 +18,6 @@ import { UserActionType } from '../../../global/@types/database';
 
 const F = f(__filename);
 
-export default uKick;
-
 export const uKick: UserCommand = {
   data: new ContextMenuCommandBuilder()
     .setName('Kick')
@@ -60,3 +58,5 @@ export const uKick: UserCommand = {
     return true;
   },
 };
+
+export default uKick;

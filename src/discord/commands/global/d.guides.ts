@@ -8,8 +8,6 @@ import { startLog } from '../../utils/startLog';
 
 const F = f(__filename);
 
-export default dGuides;
-
 export const dGuides: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('guides')
@@ -38,3 +36,5 @@ export const dGuides: SlashCommand = {
     return true;
   },
 };
+
+export default dGuides;

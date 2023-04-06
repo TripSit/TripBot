@@ -10,40 +10,6 @@ import axios from 'axios';
 
 export default imageGet;
 
-export async function imageGet(
-  imageName: string,
-): Promise<string> {
-  // This function will use imageName to look up the data in the imageDef object
-  // It will use that information and check the path to see if the imageName exists at that location
-  // If it does not exist, it will download it from the internet and save it to that location
-  // Either way, it will return a working path to the image
-  const { path, url } = imageDef[imageName];
-  // log.debug(F, `Checking ${path}`);
-  if (!fs.existsSync(path)) {
-    // log.debug(F, `Downloading ${url} to ${path}`);
-    await downloadImage(url, path);
-  } else {
-    // log.debug(F, `Found ${path}`);
-  }
-  return path;
-}
-
-export async function downloadImage(
-  url:string,
-  filepath:string,
-):Promise<void> {
-  const response = await axios({
-    url,
-    method: 'GET',
-    responseType: 'stream',
-  });
-  return new Promise((resolve, reject) => {
-    response.data.pipe(fs.createWriteStream(filepath))
-      .on('error', reject)
-      .once('close', () => resolve());
-  });
-}
-
 const imageDef = {
   nasal_spray_dosage: { path: './src/discord/assets/img/nasal_spray_dosage.png', url: 'https://user-images.githubusercontent.com/1836049/218758611-c84f1e34-0f5b-43ac-90da-bd89b028f131.png' },
   icon_online: { path: './src/discord/assets/img/icons/online.png', url: 'https://i.gyazo.com/cd7b9e018d4818e4b6588cab5d5b019d.png' },
@@ -110,3 +76,37 @@ const imageDef = {
     url: string;
   };
 };
+
+export async function downloadImage(
+  url:string,
+  filepath:string,
+):Promise<void> {
+  const response = await axios({
+    url,
+    method: 'GET',
+    responseType: 'stream',
+  });
+  return new Promise((resolve, reject) => {
+    response.data.pipe(fs.createWriteStream(filepath))
+      .on('error', reject)
+      .once('close', () => resolve());
+  });
+}
+
+export async function imageGet(
+  imageName: string,
+): Promise<string> {
+  // This function will use imageName to look up the data in the imageDef object
+  // It will use that information and check the path to see if the imageName exists at that location
+  // If it does not exist, it will download it from the internet and save it to that location
+  // Either way, it will return a working path to the image
+  const { path, url } = imageDef[imageName];
+  // log.debug(F, `Checking ${path}`);
+  if (!fs.existsSync(path)) {
+    // log.debug(F, `Downloading ${url} to ${path}`);
+    await downloadImage(url, path);
+  } else {
+    // log.debug(F, `Found ${path}`);
+  }
+  return path;
+}

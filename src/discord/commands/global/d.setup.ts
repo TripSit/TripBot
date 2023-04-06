@@ -33,121 +33,6 @@ const noChannel = 'how to tripsit: no channel';
 const roleQuestion = 'What role are people applying for?';
 const reviewerQuestion = 'What role reviews those applications?';
 
-export const prompt: SlashCommand = {
-  data: new SlashCommandBuilder()
-    .setName('setup')
-    .setDescription('Set up various channels and prompts!')
-    .addSubcommand(subcommand => subcommand
-      .setDescription('Tripsit info!')
-      .addRoleOption(option => option
-        .setDescription('What is your Tripsitter role?')
-        .setName('tripsitter')
-        .setRequired(true))
-      .addRoleOption(option => option
-        .setDescription('What is your Needshelp role?')
-        .setName('needshelp')
-        .setRequired(true))
-      .addChannelOption(option => option
-        .setDescription('What is your Meta-tripsit channel?')
-        .setName('metatripsit')
-        .setRequired(true))
-      .addRoleOption(option => option
-        .setDescription('What is your Helper role?')
-        .setName('helper'))
-      .setName('tripsit'))
-    .addSubcommand(subcommand => subcommand
-      .setDescription('Set up the application post in this channel. 5 roles max!')
-      .addChannelOption(option => option
-        .setDescription('What channel will have application threads?')
-        .setName('applications_channel')
-        .setRequired(true))
-      .addRoleOption(option => option
-        .setDescription(roleQuestion)
-        .setName('application_role_a')
-        .setRequired(true))
-      .addRoleOption(option => option
-        .setDescription(reviewerQuestion)
-        .setName('application_reviewer_a')
-        .setRequired(true))
-      .addRoleOption(option => option
-        .setDescription(roleQuestion)
-        .setName('application_role_b'))
-      .addRoleOption(option => option
-        .setDescription(reviewerQuestion)
-        .setName('application_reviewer_b'))
-      .addRoleOption(option => option
-        .setDescription(roleQuestion)
-        .setName('application_role_c'))
-      .addRoleOption(option => option
-        .setDescription(reviewerQuestion)
-        .setName('application_reviewer_c'))
-      .addRoleOption(option => option
-        .setDescription(roleQuestion)
-        .setName('application_role_d'))
-      .addRoleOption(option => option
-        .setDescription(reviewerQuestion)
-        .setName('application_reviewer_d'))
-      .addRoleOption(option => option
-        .setDescription(roleQuestion)
-        .setName('application_role_e'))
-      .addRoleOption(option => option
-        .setDescription(reviewerQuestion)
-        .setName('application_reviewer_e'))
-      .setName('applications'))
-    .addSubcommand(subcommand => subcommand
-      .setDescription('techhelp info!')
-      .addRoleOption(option => option
-        .setDescription('What role responds to tickets here?')
-        .setName('roletechreviewer')
-        .setRequired(true))
-      .addChannelOption(option => option
-        .setDescription('Do you have a tripsit room?')
-        .setName('tripsit'))
-      .setName('techhelp'))
-    .addSubcommand(subcommand => subcommand
-      .setDescription('rules info!')
-      .setName('rules'))
-    .addSubcommand(subcommand => subcommand
-      .setDescription('ticketbooth info!')
-      .setName('ticketbooth'))
-    .addSubcommand(subcommand => subcommand
-      .setDescription('Help on using the setup command!')
-      .setName('help')),
-  async execute(interaction:ChatInputCommandInteraction) {
-    startLog(F, interaction);
-    // We cannot defer because some of the setup commands have modals
-    // await interaction.deferReply({ ephemeral: true });
-
-    if (!interaction.channel) {
-      log.error(F, noChannel);
-      await interaction.reply(channelOnly);
-      return false;
-    }
-
-    if (!interaction.guild) {
-      log.error(F, 'how to tripsit: no guild');
-      await interaction.reply(guildOnly);
-      return false;
-    }
-
-    const command = interaction.options.getSubcommand();
-    if (command === 'applications') {
-      await applicationSetup(interaction);
-    } else if (command === 'techhelp') {
-      await techhelp(interaction);
-    } else if (command === 'rules') {
-      await rules(interaction);
-    } else if (command === 'tripsit') {
-      await tripsit(interaction);
-    } else if (command === 'ticketbooth') {
-      await ticketbooth(interaction);
-    } else if (command === 'help') {
-      await help(interaction);
-    }
-    return true;
-  },
-};
-
 export async function help(
   interaction:ChatInputCommandInteraction,
 ) {
@@ -662,3 +547,118 @@ export async function ticketbooth(
   // Create a new button
   await (interaction.channel as TextChannel).send({ content: buttonText, components: [row] });
 }
+
+export const prompt: SlashCommand = {
+  data: new SlashCommandBuilder()
+    .setName('setup')
+    .setDescription('Set up various channels and prompts!')
+    .addSubcommand(subcommand => subcommand
+      .setDescription('Tripsit info!')
+      .addRoleOption(option => option
+        .setDescription('What is your Tripsitter role?')
+        .setName('tripsitter')
+        .setRequired(true))
+      .addRoleOption(option => option
+        .setDescription('What is your Needshelp role?')
+        .setName('needshelp')
+        .setRequired(true))
+      .addChannelOption(option => option
+        .setDescription('What is your Meta-tripsit channel?')
+        .setName('metatripsit')
+        .setRequired(true))
+      .addRoleOption(option => option
+        .setDescription('What is your Helper role?')
+        .setName('helper'))
+      .setName('tripsit'))
+    .addSubcommand(subcommand => subcommand
+      .setDescription('Set up the application post in this channel. 5 roles max!')
+      .addChannelOption(option => option
+        .setDescription('What channel will have application threads?')
+        .setName('applications_channel')
+        .setRequired(true))
+      .addRoleOption(option => option
+        .setDescription(roleQuestion)
+        .setName('application_role_a')
+        .setRequired(true))
+      .addRoleOption(option => option
+        .setDescription(reviewerQuestion)
+        .setName('application_reviewer_a')
+        .setRequired(true))
+      .addRoleOption(option => option
+        .setDescription(roleQuestion)
+        .setName('application_role_b'))
+      .addRoleOption(option => option
+        .setDescription(reviewerQuestion)
+        .setName('application_reviewer_b'))
+      .addRoleOption(option => option
+        .setDescription(roleQuestion)
+        .setName('application_role_c'))
+      .addRoleOption(option => option
+        .setDescription(reviewerQuestion)
+        .setName('application_reviewer_c'))
+      .addRoleOption(option => option
+        .setDescription(roleQuestion)
+        .setName('application_role_d'))
+      .addRoleOption(option => option
+        .setDescription(reviewerQuestion)
+        .setName('application_reviewer_d'))
+      .addRoleOption(option => option
+        .setDescription(roleQuestion)
+        .setName('application_role_e'))
+      .addRoleOption(option => option
+        .setDescription(reviewerQuestion)
+        .setName('application_reviewer_e'))
+      .setName('applications'))
+    .addSubcommand(subcommand => subcommand
+      .setDescription('techhelp info!')
+      .addRoleOption(option => option
+        .setDescription('What role responds to tickets here?')
+        .setName('roletechreviewer')
+        .setRequired(true))
+      .addChannelOption(option => option
+        .setDescription('Do you have a tripsit room?')
+        .setName('tripsit'))
+      .setName('techhelp'))
+    .addSubcommand(subcommand => subcommand
+      .setDescription('rules info!')
+      .setName('rules'))
+    .addSubcommand(subcommand => subcommand
+      .setDescription('ticketbooth info!')
+      .setName('ticketbooth'))
+    .addSubcommand(subcommand => subcommand
+      .setDescription('Help on using the setup command!')
+      .setName('help')),
+  async execute(interaction:ChatInputCommandInteraction) {
+    startLog(F, interaction);
+    // We cannot defer because some of the setup commands have modals
+    // await interaction.deferReply({ ephemeral: true });
+
+    if (!interaction.channel) {
+      log.error(F, noChannel);
+      await interaction.reply(channelOnly);
+      return false;
+    }
+
+    if (!interaction.guild) {
+      log.error(F, 'how to tripsit: no guild');
+      await interaction.reply(guildOnly);
+      return false;
+    }
+
+    const command = interaction.options.getSubcommand();
+    if (command === 'applications') {
+      await applicationSetup(interaction);
+    } else if (command === 'techhelp') {
+      await techhelp(interaction);
+    } else if (command === 'rules') {
+      await rules(interaction);
+    } else if (command === 'tripsit') {
+      await tripsit(interaction);
+    } else if (command === 'ticketbooth') {
+      await ticketbooth(interaction);
+    } else if (command === 'help') {
+      await help(interaction);
+    }
+    return true;
+  },
+};

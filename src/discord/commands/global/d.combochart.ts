@@ -7,8 +7,6 @@ import { startLog } from '../../utils/startLog';
 
 const F = f(__filename);
 
-export default dCombochart;
-
 export const dCombochart: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('combochart')
@@ -22,3 +20,5 @@ export const dCombochart: SlashCommand = {
     return true;
   },
 };
+
+export default dCombochart;

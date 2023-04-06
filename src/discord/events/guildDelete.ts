@@ -8,8 +8,6 @@ import { getGuild, guildUpdate } from '../../global/utils/knex';
 
 const F = f(__filename);
 
-export default guildDelete;
-
 export const guildDelete: GuildDeleteEvent = {
   name: 'guildDelete',
   async execute(guild) {
@@ -32,3 +30,5 @@ export const guildDelete: GuildDeleteEvent = {
     `);
   },
 };
+
+export default guildDelete;

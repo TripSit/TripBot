@@ -10,8 +10,6 @@ import { startLog } from '../../utils/startLog';
 
 const F = f(__filename);
 
-export default dTestkits;
-
 export const dTestkits: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('testkits')
@@ -49,3 +47,5 @@ export const dTestkits: SlashCommand = {
     return true;
   },
 };
+
+export default dTestkits;

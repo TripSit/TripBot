@@ -8,8 +8,6 @@ import { embedTemplate } from '../../utils/embedTemplate';
 // import log from '../../../global/utils/log';
 const F = f(__filename);
 
-export default dTriptoys;
-
 const weavesilk = 'Weavesilk';
 const arkadia = 'Arkadia';
 const chromoscope = 'Chromoscope';
@@ -149,3 +147,5 @@ export const dTriptoys: SlashCommand = {
     return true;
   },
 };
+
+export default dTriptoys;

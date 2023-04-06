@@ -9,8 +9,6 @@ import { startLog } from '../../utils/startLog';
 // import log from '../../../global/utils/log';
 const F = f(__filename);
 
-export default dWarmline;
-
 export const dWarmline: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('warmline')
@@ -48,3 +46,5 @@ export const dWarmline: SlashCommand = {
     return true;
   },
 };
+
+export default dWarmline;

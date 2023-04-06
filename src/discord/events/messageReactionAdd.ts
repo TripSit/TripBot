@@ -11,8 +11,6 @@ import { bestOf } from '../utils/bestOfTripsit';
 // import {parse} from 'path';
 const F = f(__filename); // eslint-disable-line @typescript-eslint/no-unused-vars
 
-export default messageReactionAdd;
-
 export const messageReactionAdd: MessageReactionAddEvent = {
   name: 'messageReactionAdd',
   async execute(messageReaction, user) {
@@ -44,3 +42,5 @@ export const messageReactionAdd: MessageReactionAddEvent = {
     // await communityMod(reaction, user);
   },
 };
+
+export default messageReactionAdd;

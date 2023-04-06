@@ -25,8 +25,6 @@ const buttonList = [
   new ButtonBuilder().setCustomId('nextButton').setLabel('Next').setStyle(ButtonStyle.Success),
 ];
 
-export default dIdose;
-
 export const dIdose: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('idose')
@@ -218,3 +216,5 @@ export const dIdose: SlashCommand = {
     return true;
   },
 };
+
+export default dIdose;

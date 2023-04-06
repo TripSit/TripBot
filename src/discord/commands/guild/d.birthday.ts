@@ -123,8 +123,6 @@ async function birthdaySet(
   await interaction.editReply({ embeds: [embed] });
 }
 
-export default dBirthday;
-
 export const dBirthday: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('birthday')
@@ -194,3 +192,5 @@ export const dBirthday: SlashCommand = {
     return true;
   },
 };
+
+export default dBirthday;

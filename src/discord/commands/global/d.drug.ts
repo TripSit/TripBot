@@ -12,8 +12,6 @@ import { CbSubstance } from '../../../global/@types/combined.d';
 
 const F = f(__filename);
 
-export default dDrug;
-
 type RoaType = {
   name: string,
   dosage?: {
@@ -473,3 +471,5 @@ export const dDrug: SlashCommand = {
     return true;
   },
 };
+
+export default dDrug;

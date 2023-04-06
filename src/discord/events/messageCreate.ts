@@ -21,8 +21,6 @@ import { awayMessage } from '../utils/awayMessage';
 // import log from '../../global/utils/log';
 // import {parse} from 'path';
 
-export default messageCreate;
-
 const F = f(__filename); // eslint-disable-line
 
 const ignoredRoles = Object.values({
@@ -32,6 +30,40 @@ const ignoredRoles = Object.values({
   muted: [env.ROLE_MUTED],
   tempvoice: [env.ROLE_TEMPVOICE],
 }).flat();
+
+async function getCategory(channel:TextChannel):Promise<ExperienceCategory> {
+  let experienceCategory = '';
+  if (channel.parent) {
+    // log.debug(F, `parent: ${channel.parent.name} ${channel.parent.id}`);
+    if (channel.parent.parent) {
+      // log.debug(F, `parent-parent: ${channel.parent.parent.name} ${channel.parent.parent.id}`);
+      if (channel.parent.parent.id === env.CATEGORY_TEAMTRIPSIT) {
+        experienceCategory = 'TEAM' as ExperienceCategory;
+      } else if (channel.parent.parent.id === env.CATEGORY_DEVELOPMENT) {
+        experienceCategory = 'DEVELOPER' as ExperienceCategory;
+      } else if (channel.parent.parent.id === env.CATEGORY_HARMREDUCTIONCENTRE) {
+        experienceCategory = 'TRIPSITTER' as ExperienceCategory;
+      } else if (channel.parent.parent.id === env.CATEGORY_GATEWAY) {
+        experienceCategory = 'IGNORED' as ExperienceCategory;
+      } else {
+        experienceCategory = 'GENERAL' as ExperienceCategory;
+      }
+    } else if (channel.parent.id === env.CATEGORY_TEAMTRIPSIT) {
+      experienceCategory = 'TEAM' as ExperienceCategory;
+    } else if (channel.parent.id === env.CATEGORY_DEVELOPMENT) {
+      experienceCategory = 'DEVELOPER' as ExperienceCategory;
+    } else if (channel.parent.id === env.CATEGORY_HARMREDUCTIONCENTRE) {
+      experienceCategory = 'TRIPSITTER' as ExperienceCategory;
+    } else if (channel.parent.id === env.CATEGORY_GATEWAY) {
+      experienceCategory = 'IGNORED' as ExperienceCategory;
+    } else {
+      experienceCategory = 'GENERAL' as ExperienceCategory;
+    }
+  } else {
+    experienceCategory = 'IGNORED' as ExperienceCategory;
+  }
+  return experienceCategory as ExperienceCategory;
+}
 
 export const messageCreate: MessageCreateEvent = {
   name: 'messageCreate',
@@ -93,36 +125,4 @@ export const messageCreate: MessageCreateEvent = {
   },
 };
 
-async function getCategory(channel:TextChannel):Promise<ExperienceCategory> {
-  let experienceCategory = '';
-  if (channel.parent) {
-    // log.debug(F, `parent: ${channel.parent.name} ${channel.parent.id}`);
-    if (channel.parent.parent) {
-      // log.debug(F, `parent-parent: ${channel.parent.parent.name} ${channel.parent.parent.id}`);
-      if (channel.parent.parent.id === env.CATEGORY_TEAMTRIPSIT) {
-        experienceCategory = 'TEAM' as ExperienceCategory;
-      } else if (channel.parent.parent.id === env.CATEGORY_DEVELOPMENT) {
-        experienceCategory = 'DEVELOPER' as ExperienceCategory;
-      } else if (channel.parent.parent.id === env.CATEGORY_HARMREDUCTIONCENTRE) {
-        experienceCategory = 'TRIPSITTER' as ExperienceCategory;
-      } else if (channel.parent.parent.id === env.CATEGORY_GATEWAY) {
-        experienceCategory = 'IGNORED' as ExperienceCategory;
-      } else {
-        experienceCategory = 'GENERAL' as ExperienceCategory;
-      }
-    } else if (channel.parent.id === env.CATEGORY_TEAMTRIPSIT) {
-      experienceCategory = 'TEAM' as ExperienceCategory;
-    } else if (channel.parent.id === env.CATEGORY_DEVELOPMENT) {
-      experienceCategory = 'DEVELOPER' as ExperienceCategory;
-    } else if (channel.parent.id === env.CATEGORY_HARMREDUCTIONCENTRE) {
-      experienceCategory = 'TRIPSITTER' as ExperienceCategory;
-    } else if (channel.parent.id === env.CATEGORY_GATEWAY) {
-      experienceCategory = 'IGNORED' as ExperienceCategory;
-    } else {
-      experienceCategory = 'GENERAL' as ExperienceCategory;
-    }
-  } else {
-    experienceCategory = 'IGNORED' as ExperienceCategory;
-  }
-  return experienceCategory as ExperienceCategory;
-}
+export default messageCreate;
