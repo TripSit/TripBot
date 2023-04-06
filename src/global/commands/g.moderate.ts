@@ -807,7 +807,7 @@ export async function moderate(
   const desc = stripIndents`
     ${anonSummary}
     **Reason:** ${internalNote ?? noReason}
-    **Note sent to user:** ${(description !== '' && description !== null && !vendorBan && targetIsMember) ? description : '*No message sent to user*'}
+     ${(description !== '' && description !== null && !vendorBan && targetIsMember) ? `\n\n**Note sent to user: ${description}**` : ''}
   `;
 
   const response = embedTemplate()
@@ -825,6 +825,6 @@ export async function moderate(
 
   // log.info(F, `response: ${JSON.stringify(desc, null, 2)}`);
   // Take the existing description from response and add to it:
-  response.setDescription(`${response.data.description}\nYou can access their thread here: ${modThread}`);
+  if (command !== 'REPORT') response.setDescription(`${response.data.description}\nYou can access their thread here: ${modThread}`);
   return { embeds: [response] };
 }
