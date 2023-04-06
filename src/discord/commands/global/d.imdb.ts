@@ -9,8 +9,6 @@ import { startLog } from '../../utils/startLog';
 
 const F = f(__filename);
 
-export default dImdb;
-
 export const dImdb: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('imdb')
@@ -59,3 +57,5 @@ export const dImdb: SlashCommand = {
     return true;
   },
 };
+
+export default dImdb;

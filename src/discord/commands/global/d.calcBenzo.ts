@@ -11,8 +11,6 @@ import { startLog } from '../../utils/startLog';
 
 const F = f(__filename);
 
-export default dCalcBenzo;
-
 export const dCalcBenzo: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('calc_benzo')
@@ -58,3 +56,5 @@ export const dCalcBenzo: SlashCommand = {
     return true;
   },
 };
+
+export default dCalcBenzo;

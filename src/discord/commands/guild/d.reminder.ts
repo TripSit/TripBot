@@ -52,8 +52,6 @@ const reminderDict = {
   ],
 };
 
-export default dReminder;
-
 export const dReminder: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('reminder')
@@ -100,3 +98,5 @@ export const dReminder: SlashCommand = {
     return true;
   },
 };
+
+export default dReminder;

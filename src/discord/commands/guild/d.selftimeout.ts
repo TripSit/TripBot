@@ -10,8 +10,6 @@ import { startLog } from '../../utils/startLog'; // eslint-disable-line
 
 const F = f(__filename);
 
-export default selfTimeout;
-
 export const selfTimeout: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('selftimeout')
@@ -56,3 +54,5 @@ export const selfTimeout: SlashCommand = {
     return true;
   },
 };
+
+export default selfTimeout;

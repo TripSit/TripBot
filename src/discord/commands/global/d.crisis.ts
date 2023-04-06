@@ -9,8 +9,6 @@ import { startLog } from '../../utils/startLog';
 // import log from '../../../global/utils/log';
 const F = f(__filename);
 
-export default dCrisis;
-
 export const dCrisis: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('crisis')
@@ -46,3 +44,5 @@ export const dCrisis: SlashCommand = {
     return true;
   },
 };
+
+export default dCrisis;

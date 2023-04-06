@@ -10,8 +10,6 @@ import { embedTemplate } from '../utils/embedTemplate';
 
 const F = f(__filename);
 
-export default guildMemberRemove;
-
 export const guildMemberRemove: GuildMemberRemoveEvent = {
   name: 'guildMemberRemove',
   async execute(member) {
@@ -69,3 +67,5 @@ export const guildMemberRemove: GuildMemberRemoveEvent = {
     await usersUpdate(userData);
   },
 };
+
+export default guildMemberRemove;

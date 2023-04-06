@@ -39,8 +39,6 @@ const buttonList = [
 //   [key: string]: RankType[],
 // };
 
-export default dLeaderboard;
-
 export const dLeaderboard: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('leaderboard')
@@ -142,3 +140,5 @@ export const dLeaderboard: SlashCommand = {
     return true;
   },
 };
+
+export default dLeaderboard;

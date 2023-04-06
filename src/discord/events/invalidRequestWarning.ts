@@ -5,8 +5,6 @@ import { InvalidRequestWarningEvent } from '../@types/eventDef';
 
 const F = f(__filename);
 
-export default invalidRequestWarning;
-
 export const invalidRequestWarning: InvalidRequestWarningEvent = {
   name: 'invalidRequestWarning',
   async execute(invalidRequestWarningData) {
@@ -16,3 +14,5 @@ export const invalidRequestWarning: InvalidRequestWarningEvent = {
     log.error(F, `${response}`);
   },
 };
+
+export default invalidRequestWarning;

@@ -56,9 +56,9 @@ export async function findUser(identifier: string): Promise<any | false> {
 }
 
 /**
- * 
- * @param {String} identifier 
- * @returns {RoleMappings} 
+ *
+ * @param {String} identifier
+ * @returns {RoleMappings}
  */
 export async function getUserRoleMappings(identifier:string):Promise<any | false> {
   // Find the user by identifier
@@ -146,9 +146,9 @@ export async function getUserAttribute(identifier:string, attributeName:string):
 }
 
 /**
- * 
- * @param {String} identifier 
- * @param {String} attributeName 
+ *
+ * @param {String} identifier
+ * @param {String} attributeName
  * @returns {Boolean}
  */
 export async function deleteUserAttribute(identifier: string, attributeName: string): Promise<boolean> {

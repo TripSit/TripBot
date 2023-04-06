@@ -27,8 +27,6 @@ import { database } from '../../../global/utils/knex';
 import { checkChannelPermissions, checkGuildPermissions } from '../../utils/checkPermissions';
 import { ReactionRoles, ReactionRoleType } from '../../../global/@types/database';
 
-export default dReactionRole;
-
 const F = f(__filename);
 
 const guildError = 'This must be performed in a guild!';
@@ -544,7 +542,7 @@ export async function buttonReactionRole(
     return;
   }
 
-  const userData = await database.users.get(target.id, null);
+  const userData = await database.users.get(target.id, null, null);
 
   // If the role being requested is the Helper or Contributor role, check if they have been banned first
   if (role.id === env.ROLE_HELPER && userData.helper_role_ban) {

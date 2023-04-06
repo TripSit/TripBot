@@ -17,8 +17,6 @@ import { startLog } from '../../utils/startLog';
 import { database } from '../../../global/utils/knex';
 import { checkChannelPermissions } from '../../utils/checkPermissions';
 
-export default dBridge;
-
 const F = f(__filename);
 
 const noBridgeError = 'Error: No bridges found for this channel.';
@@ -441,3 +439,5 @@ async function info(
 
   return stripIndents`This room is connected to ${guild} - ${internalChannel}`;
 }
+
+export default dBridge;

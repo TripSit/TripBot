@@ -8,8 +8,6 @@ import { startLog } from '../../utils/startLog';
 
 const F = f(__filename);
 
-export default dKipp;
-
 export const dKipp: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('kipp')
@@ -42,3 +40,5 @@ export const dKipp: SlashCommand = {
     return true;
   },
 };
+
+export default dKipp;

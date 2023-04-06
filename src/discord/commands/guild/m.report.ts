@@ -19,8 +19,6 @@ import { UserActionType } from '../../../global/@types/database';
 
 const F = f(__filename);
 
-export default mReport;
-
 export const mReport: MessageCommand = {
   data: new ContextMenuCommandBuilder()
     .setName('Report')
@@ -60,3 +58,5 @@ export const mReport: MessageCommand = {
     return true;
   },
 };
+
+export default mReport;

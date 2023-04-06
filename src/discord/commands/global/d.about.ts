@@ -7,8 +7,6 @@ import { embedTemplate } from '../../utils/embedTemplate';
 import { about } from '../../../global/commands/g.about';
 import { startLog } from '../../utils/startLog';
 
-export default dAbout;
-
 const F = f(__filename);
 
 export const dAbout: SlashCommand = {
@@ -52,3 +50,5 @@ export const dAbout: SlashCommand = {
     return true;
   },
 };
+
+export default dAbout;

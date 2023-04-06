@@ -8,8 +8,6 @@ import { startLog } from '../../utils/startLog';
 // import log from '../../../global/utils/log';
 const F = f(__filename);
 
-export default dJoke;
-
 type Single = {
   type: 'single';
   joke: string;
@@ -41,3 +39,5 @@ export const dJoke: SlashCommand = {
     return true;
   },
 };
+
+export default dJoke;

@@ -9,8 +9,6 @@ import { startLog } from '../../utils/startLog';
 
 const F = f(__filename);
 
-export default dCombo;
-
 export const dCombo: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('combo')
@@ -43,3 +41,5 @@ export const dCombo: SlashCommand = {
     return true;
   },
 };
+
+export default dCombo;

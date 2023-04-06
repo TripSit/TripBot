@@ -31,7 +31,7 @@ async function mDrug(roomId: string, event:any, client:MatrixClient, substance:s
   let reply:any;
 
   const drugData = await gDrug(substance);
-  if (drugData === null) {
+  if (!drugData) {
     const text = `Task failed successfully!\n\nSorry, i don't know that substance "${substance}". Perhaps check your spelling?`;
     const html = `<b>Task failed successfully!</b> &#129302;<br><br>Sorry, i don't know that substance "${substance}".<br>Perhaps check your spelling?`;
     reply = RichReply.createFor(roomId, event, text, html);

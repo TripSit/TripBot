@@ -14,8 +14,6 @@ import { embedTemplate } from '../utils/embedTemplate';
 
 const F = f(__filename);
 
-export default guildMemberAdd;
-
 export const guildMemberAdd: GuildMemberAddEvent = {
   name: 'guildMemberAdd',
   async execute(member) {
@@ -102,3 +100,5 @@ export const guildMemberAdd: GuildMemberAddEvent = {
     }
   },
 };
+
+export default guildMemberAdd;

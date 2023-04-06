@@ -21,8 +21,6 @@ import { awayMessage } from '../utils/awayMessage';
 // import log from '../../global/utils/log';
 // import {parse} from 'path';
 
-export default messageCreate;
-
 const F = f(__filename); // eslint-disable-line
 
 const ignoredRoles = Object.values({
@@ -126,3 +124,5 @@ async function getCategory(channel:TextChannel):Promise<ExperienceCategory> {
   }
   return experienceCategory as ExperienceCategory;
 }
+
+export default messageCreate;

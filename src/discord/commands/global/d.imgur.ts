@@ -7,8 +7,6 @@ import { startLog } from '../../utils/startLog';
 // import log from '../../../global/utils/log';
 const F = f(__filename);
 
-export default dImgur;
-
 export const dImgur: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('imgur')
@@ -63,3 +61,5 @@ export const dImgur: SlashCommand = {
     return true;
   },
 };
+
+export default dImgur;

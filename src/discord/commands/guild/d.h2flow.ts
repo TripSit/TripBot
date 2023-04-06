@@ -13,8 +13,6 @@ import { h2flow } from '../../../global/commands/g.h2flow';
 
 const F = f(__filename);
 
-export default dH2flow;
-
 export const dH2flow: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('h2flow')
@@ -92,3 +90,5 @@ export const dH2flow: SlashCommand = {
     return false;
   },
 };
+
+export default dH2flow;

@@ -13,10 +13,6 @@ export default startMatrix;
 // using simple FS storage for now, as postgresql doesn't work in codespaces anyway
 const storage = new SimpleFsStorageProvider('cache/tripbot.json');
 
-// create the client and make it auto-join rooms on invite
-const client:MatrixClient = new MatrixClient(env.MATRIX_HOMESERVER_URL, env.MATRIX_ACCESS_TOKEN, storage);
-AutojoinRoomsMixin.setupOnClient(client);
-
 /**
  * Handle incoming commands
  * @param roomId
@@ -58,7 +54,11 @@ async function handleCommand(roomId: string, event: any) {
  * Start the matrix bot
  */
 async function startMatrix() {
-// Before we start the bot, register our command handler
+  // create the client and make it auto-join rooms on invite
+  const client:MatrixClient = new MatrixClient(env.MATRIX_HOMESERVER_URL, env.MATRIX_ACCESS_TOKEN, storage);
+  AutojoinRoomsMixin.setupOnClient(client);
+
+  // Before we start the bot, register our command handler
   client.on('room.message', await handleCommand);
 
   // Now that everything is set up, start the bot. This will start the sync loop and run until killed.

@@ -17,8 +17,6 @@ type DxmDataType = {
   Fourth: { min: number, max: number };
 };
 
-export default dCalcDXM;
-
 export const dCalcDXM: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('calc_dxm')
@@ -84,3 +82,5 @@ export const dCalcDXM: SlashCommand = {
     return true;
   },
 };
+
+export default dCalcDXM;

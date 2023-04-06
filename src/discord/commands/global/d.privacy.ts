@@ -9,8 +9,6 @@ import { startLog } from '../../utils/startLog';
 
 const F = f(__filename);
 
-export default dPrivacy;
-
 export const dPrivacy: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('privacy')
@@ -62,3 +60,5 @@ export const dPrivacy: SlashCommand = {
     return true;
   },
 };
+
+export default dPrivacy;

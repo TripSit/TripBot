@@ -10,8 +10,6 @@ import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { startLog } from '../../utils/startLog';
 
-export default dVoice;
-
 const F = f(__filename);
 
 export const dVoice: SlashCommand = {
@@ -252,3 +250,5 @@ async function tentCohost(
     .setColor(Colors.Green)
     .setDescription(`${target} has been ${verb} in ${voiceChannel}`);
 }
+
+export default dVoice;

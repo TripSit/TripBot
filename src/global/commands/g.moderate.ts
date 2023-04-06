@@ -185,8 +185,8 @@ export async function moderate(
   description: ${description}
   duration: ${duration}`);
 
-  const actorData = await getUser(actor.id, null);
-  const targetData = await getUser(target.id, null);
+  const actorData = await getUser(actor.id, null, null);
+  const targetData = await getUser(target.id, null, null);
   const targetIsMember = (target as GuildMember).user !== undefined;
   const targetUser = (target as GuildMember).user ?? (target as User);
   const vendorBan = internalNote?.toLowerCase().includes('vendor');

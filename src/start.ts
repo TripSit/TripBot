@@ -18,12 +18,12 @@ const F = f(__filename);
 */
 async function start() {
   log.info(F, 'Initializing service!');
-  if (!validateEnv()) return;
 
   // log.debug(F, `Token length: ${env.DISCORD_CLIENT_TOKEN.length}`);
   if (env.DISCORD_CLIENT_TOKEN) {
-    // await discordConnect();
-    await startMatrix();
+    validateEnv('SERVICES');
+    if (validateEnv('DISCORD')) await discordConnect();
+    // if (validateEnv('MATRIX')) await startMatrix();
   }
 }
 

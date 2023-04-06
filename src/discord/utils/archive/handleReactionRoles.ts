@@ -9,7 +9,7 @@ import {
 
 // import { stripIndents } from 'common-tags';
 import { stripIndents } from 'common-tags';
-import { getUser, reactionroleGet, usersUpdate } from '../../global/utils/knex';
+import { getUser, reactionroleGet, usersUpdate } from '../../../global/utils/knex';
 // import {
 //   Users,
 // } from '../../global/@types/database.d';

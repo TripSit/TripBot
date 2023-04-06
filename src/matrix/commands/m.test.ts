@@ -1,5 +1,9 @@
 import { MatrixClient } from 'matrix-bot-sdk';
-import { findUser, getRoleMembers, hasRole } from '../../global/utils/keycloak';
+import {
+  // findUser,
+  getRoleMembers,
+  // hasRole,
+} from '../../global/utils/keycloak';
 
 export default test;
 

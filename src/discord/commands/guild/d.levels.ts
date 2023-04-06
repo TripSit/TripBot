@@ -22,8 +22,6 @@ import { Personas } from '../../../global/@types/database';
 
 // import { getTotalLevel } from '../../../global/utils/experience';
 
-export default dLevels;
-
 const F = f(__filename);
 
 type LevelData = {
@@ -572,3 +570,5 @@ const colorDefs = {
     textColor: string;
   };
 };
+
+export default dLevels;

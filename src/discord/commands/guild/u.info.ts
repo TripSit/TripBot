@@ -12,8 +12,6 @@ import { startLog } from '../../utils/startLog';
 
 const F = f(__filename);
 
-export default uInfo;
-
 export const uInfo: UserCommand = {
   data: new ContextMenuCommandBuilder()
     .setName('Info')
@@ -32,3 +30,5 @@ export const uInfo: UserCommand = {
     return true;
   },
 };
+
+export default uInfo;

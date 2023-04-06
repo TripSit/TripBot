@@ -8,8 +8,6 @@ import { embedTemplate } from '../../utils/embedTemplate';
 
 const F = f(__filename);
 
-export default dConvert;
-
 export const dConvert: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('convert')
@@ -48,3 +46,5 @@ export const dConvert: SlashCommand = {
     return true;
   },
 };
+
+export default dConvert;

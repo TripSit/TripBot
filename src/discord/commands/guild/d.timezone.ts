@@ -9,8 +9,6 @@ import { startLog } from '../../utils/startLog';
 // import log from '../../../global/utils/log';
 const F = f(__filename);
 
-export default dTimezone;
-
 export const dTimezone: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('timezone')
@@ -62,3 +60,5 @@ export const dTimezone: SlashCommand = {
     return true;
   },
 };
+
+export default dTimezone;

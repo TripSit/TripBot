@@ -12,8 +12,6 @@ import { parseDuration } from '../../../global/utils/parseDuration';
 
 const F = f(__filename);
 
-export default dDramacounter;
-
 export const dDramacounter: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('dramacounter')
@@ -95,3 +93,5 @@ export const dDramacounter: SlashCommand = {
     return true;
   },
 };
+
+export default dDramacounter;

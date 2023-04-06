@@ -8,8 +8,6 @@ import { startLog } from '../../utils/startLog'; // eslint-disable-line @typescr
 
 const F = f(__filename);
 
-export default dSay;
-
 export const dSay: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('say')
@@ -48,3 +46,5 @@ in ${channel ? channel.toString() : interaction.channel?.toString()}`);
     return true;
   },
 };
+
+export default dSay;

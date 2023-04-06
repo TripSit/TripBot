@@ -19,8 +19,6 @@ import { UserActionType } from '../../../global/@types/database';
 
 const F = f(__filename);
 
-export default mNote;
-
 export const mNote: MessageCommand = {
   data: new ContextMenuCommandBuilder()
     .setName('Note')
@@ -59,3 +57,5 @@ export const mNote: MessageCommand = {
     return true;
   },
 };
+
+export default mNote;

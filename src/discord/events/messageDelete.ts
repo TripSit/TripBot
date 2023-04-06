@@ -19,8 +19,6 @@ const F = f(__filename); // eslint-disable-line @typescript-eslint/no-unused-var
 
 // https://discordjs.guide/popular-topics/audit-logs.html#who-deleted-a-message
 
-export default messageDelete;
-
 export const messageDelete: MessageDeleteEvent = {
   name: 'messageDelete',
   async execute(message) {
@@ -145,3 +143,5 @@ export const messageDelete: MessageDeleteEvent = {
     await msglogChannel.send({ embeds: [embed] });
   },
 };
+
+export default messageDelete;

@@ -5,8 +5,6 @@ import { getGuild } from '../../global/utils/knex';
 
 const F = f(__filename);
 
-export default guildUpdate;
-
 export const guildUpdate: GuildUpdateEvent = {
   name: 'guildUpdate',
   async execute(guild) {
@@ -22,3 +20,5 @@ export const guildUpdate: GuildUpdateEvent = {
     log.info(F, `${guild} was updated`);
   },
 };
+
+export default guildUpdate;

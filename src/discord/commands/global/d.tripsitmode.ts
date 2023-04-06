@@ -41,8 +41,6 @@ const F = f(__filename);
 const guildOnly = 'This must be performed in a guild!';
 const memberOnly = 'This must be performed by a member of a guild!';
 
-export default tripsitmode;
-
 const teamRoles = [
   env.ROLE_DIRECTOR,
   env.ROLE_SUCCESSOR,
@@ -123,7 +121,7 @@ export const tripsitmode: SlashCommand = {
 
       // const showMentions = actorIsAdmin ? [] : ['users', 'roles'] as MessageMentionTypes[];
 
-      const userData = await getUser(target.id, null);
+      const userData = await getUser(target.id, null, null);
 
       const ticketData = await getOpenTicket(userData.id, null);
 
@@ -274,3 +272,5 @@ export const tripsitmode: SlashCommand = {
     return true;
   },
 };
+
+export default tripsitmode;

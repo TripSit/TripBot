@@ -12,8 +12,6 @@ import { startLog } from '../../utils/startLog';
 
 const F = f(__filename);
 
-export default dDonate;
-
 export const dDonate: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('donate')
@@ -52,3 +50,5 @@ export const dDonate: SlashCommand = {
     return true;
   },
 };
+
+export default dDonate;

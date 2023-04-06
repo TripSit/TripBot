@@ -17,8 +17,6 @@ import { embedTemplate } from '../../utils/embedTemplate';
 
 const F = f(__filename);
 
-export default dReport;
-
 export const dReport: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('report')
@@ -104,3 +102,5 @@ export const dReport: SlashCommand = {
     return true;
   },
 };
+
+export default dReport;

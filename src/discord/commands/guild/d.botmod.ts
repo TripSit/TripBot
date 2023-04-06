@@ -19,8 +19,6 @@ const F = f(__filename);
 type GuildActionType = 'BOTKICK' | 'BOTBAN' | 'UNBOTBAN' | 'BOTWARNING' | 'BOTNOTE' | 'BOTINFO';
 type UserActionType = 'BOTBAN' | 'UNBOTBAN';
 
-export default dTemplate;
-
 export const dTemplate: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('botmod')
@@ -176,3 +174,5 @@ export const dTemplate: SlashCommand = {
     return false;
   },
 };
+
+export default dTemplate;
