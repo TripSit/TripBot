@@ -255,9 +255,6 @@ export async function tripsit(
     return;
   }
 
-  const channelSanctuary = interaction.options.getChannel('sanctuary');
-  const channelGeneral = interaction.options.getChannel('general');
-
   const titleText = '**Need to talk with a TripSitter? Click the button below!**';
   const footerText = '🛑 Please do not message anyone directly! 🛑';
   const modalText = stripIndents`
@@ -325,6 +322,9 @@ export async function tripsit(
 
       const guildData = await getGuild((interaction.guild as Guild).id);
 
+      const channelSanctuary = interaction.options.getChannel('sanctuary');
+      const channelGeneral = interaction.options.getChannel('general');
+
       guildData.id = (interaction.guild as Guild).id;
       guildData.channel_sanctuary = channelSanctuary ? channelSanctuary.id : null;
       guildData.channel_general = channelGeneral ? channelGeneral.id : null;
@@ -367,66 +367,131 @@ export async function tripsit(
 export async function techhelp(
   interaction:ChatInputCommandInteraction,
 ) {
-  await interaction.deferReply({ ephemeral: true });
-  if (!await checkChannelPermissions(
-    (interaction.channel as TextChannel),
-    [
-      'ViewChannel' as PermissionResolvable,
-      'SendMessages' as PermissionResolvable,
-      'CreatePrivateThreads' as PermissionResolvable,
-      'CreatePublicThreads' as PermissionResolvable,
-      'SendMessagesInThreads' as PermissionResolvable,
-      'EmbedLinks' as PermissionResolvable,
-    ],
-  )) {
-    // log.debug(`${PREFIX} bot does NOT has permission to post in !`);
+  if (!interaction.guild) return;
+  if (!interaction.channel) return;
+  if (interaction.channel.type !== ChannelType.GuildText) return;
+
+  // Can't defer cuz there's a modal
+  // await interaction.deferReply({ ephemeral: true });
+  const channelPerms = await checkChannelPermissions(interaction.channel, [
+    'ViewChannel' as PermissionResolvable,
+    'SendMessages' as PermissionResolvable,
+    'SendMessagesInThreads' as PermissionResolvable,
+    // 'CreatePublicThreads' as PermissionResolvable,
+    'CreatePrivateThreads' as PermissionResolvable,
+    'ManageMessages' as PermissionResolvable,
+    'ManageThreads' as PermissionResolvable,
+    // 'EmbedLinks' as PermissionResolvable,
+  ]);
+  if (!channelPerms.hasPermission) {
+    log.error(F, `Missing TS channel permission ${channelPerms.permission} in ${interaction.channel}!`);
+    await interaction.reply({
+      content: stripIndents`Missing ${channelPerms.permission} permission in ${interaction.channel}!
+    In order to setup the tripsitting feature I need:
+    View Channel - to see the channel
+    Send Messages - to send messages
+    Create Private Threads - to create private threads
+    Send Messages in Threads - to send messages in threads
+    Manage Threads - to delete threads when they're done
+    Manage Messages - to pin the "im good" message to the top of the thread
+    `,
+      ephemeral: true,
+  }); // eslint-disable-line
     return;
   }
 
-  const guildData = await getGuild((interaction.guild as Guild).id);
+  const titleText = `**Welcome to ${interaction.guild.name}'s technical help channel!**`;
+  const footerText = '🛑 Please do not message anyone directly! 🛑';
+  let modalText = stripIndents`
+      This channel can be used to get in contact with the ${interaction.guild.name}'s team for **technical** assistance/feedback!
 
-  guildData.id = (interaction.guild as Guild).id;
+      **Discord-specific issues, feedback or questions** can be discussed with the team via the **blue🟦button**.
+
+      **Other issues, questions, feedback** can be privately discussed with the team with the **grey button**.
+      
+      We value your input, no matter how small. Please let us know if you have any questions or feedback!
+      
+      Thanks for reading, stay safe!
+    `;
+
+  const guildData = await getGuild(interaction.guild.id);
   guildData.role_techhelp = interaction.options.getRole('roletechreviewer', true).id;
 
   // Save this info to the DB
   await guildUpdate(guildData);
 
-  let text = stripIndents`
-    Welcome to ${(interaction.guild as Guild).name}'s technical help channel!
-
-    This channel can be used to get in contact with the ${(interaction.guild as Guild).name}'s team for **technical** assistance/feedback!`;
-
-  const channelTripsit = interaction.options.getChannel('tripsit');
-  if (channelTripsit) {
-    text += `\n\n**If you need psychological help try ${channelTripsit.toString()}!**`;
+  if (guildData.channel_tripsit) {
+    const channelTripsit = interaction.guild.channels.fetch(guildData.channel_tripsit);
+    modalText += `\n\n**If you need psychological help try ${channelTripsit.toString()}!**`;
   }
-  text += `\n\n**Discord-specific issues, feedback or questions** can be discussed with the team via the **blue🟦button**.
 
-**Other issues, questions, feedback** can be privately discussed with the team with the **grey button**.
-
-We value your input, no matter how small. Please let us know if you have any questions or feedback!
-
-Thanks for reading, stay safe!
-  `;
-
-  // Get the moderator role
-  // const roleModerator = interaction.options.getRole('moderator') as Role;
-
-  // Create buttons
-  const row = new ActionRowBuilder<ButtonBuilder>()
+  await interaction.showModal(new ModalBuilder()
+    .setCustomId(`helpdeskModal~${interaction.id}`)
+    .setTitle('Setup your HelpDesk room!')
     .addComponents(
-      new ButtonBuilder()
-        .setCustomId('techHelpClick~discord')
-        .setLabel('Discord issue/feedback!')
-        .setStyle(ButtonStyle.Primary),
-      new ButtonBuilder()
-        .setCustomId('techHelpClick~other')
-        .setLabel('I have something else!')
-        .setStyle(ButtonStyle.Secondary),
-    );
+      new ActionRowBuilder<TextInputBuilder>()
+        .addComponents(
+          new TextInputBuilder()
+            .setLabel('Title')
+            .setValue(stripIndents`${titleText}`)
+            .setStyle(TextInputStyle.Short)
+            .setRequired(true)
+            .setCustomId('titleMessage'),
+        ),
+      new ActionRowBuilder<TextInputBuilder>()
+        .addComponents(
+          new TextInputBuilder()
+            .setLabel('Intro Message')
+            .setValue(stripIndents`${modalText}`)
+            .setStyle(TextInputStyle.Paragraph)
+            .setRequired(true)
+            .setCustomId('introMessage'),
+        ),
+      new ActionRowBuilder<TextInputBuilder>()
+        .addComponents(
+          new TextInputBuilder()
+            .setLabel('Footer')
+            .setValue(stripIndents`${footerText}`)
+            .setStyle(TextInputStyle.Short)
+            .setRequired(true)
+            .setCustomId('footerMessage'),
+        ),
+    ));
 
-  // Create a new button
-  await (interaction.channel as TextChannel).send({ content: text, components: [row] });
+  const filter = (i:ModalSubmitInteraction) => i.customId.startsWith('helpdeskModal');
+  interaction.awaitModalSubmit({ filter, time: 0 })
+    .then(async i => {
+      if (i.customId.split('~')[1] !== interaction.id) return;
+      if (!i.guild) return;
+      await i.deferReply({ ephemeral: true });
+
+      const introMessage = i.fields.getTextInputValue('introMessage');
+      const titleMessage = i.fields.getTextInputValue('titleMessage');
+      const footerMessage = i.fields.getTextInputValue('footerMessage');
+
+      // Create a new button embed
+      const row = new ActionRowBuilder<ButtonBuilder>()
+        .addComponents(
+          new ButtonBuilder()
+            .setCustomId('techHelpClick~discord')
+            .setLabel('Discord issue!')
+            .setStyle(ButtonStyle.Primary),
+          new ButtonBuilder()
+            .setCustomId('techHelpClick~other')
+            .setLabel('I have something else!')
+            .setStyle(ButtonStyle.Secondary),
+        );
+
+      const embed = new EmbedBuilder()
+        .setTitle(titleMessage)
+        .setFooter({ text: footerMessage })
+        .setDescription(introMessage)
+        .setColor(Colors.Blue);
+
+      // We need to send the message, otherwise it has the "user used /setup tripsit" at the top
+      await (i.channel as TextChannel).send({ embeds: [embed], components: [row] });
+      await i.editReply({ content: 'Setup complete!' });
+    });
 }
 
 export async function rules(

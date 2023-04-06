@@ -151,8 +151,6 @@ const modMailIssuePlaceholder = 'I have an issue, can you please help?';
 
 const F = f(__filename);
 
-export default modmail;
-
 async function updateButtons(
   interaction: ButtonInteraction | ChatInputCommandInteraction,
   newButtons: ActionRowBuilder<ButtonBuilder>,
@@ -689,6 +687,7 @@ export async function modmailCreate(
         autoArchiveDuration: 1440,
         type: threadType,
         reason: `${actor.username} submitted a(n) ${issueType} ticket!`,
+        invitable: false,
       });
         // log.debug(F, `Created thread ${ticketThread.id}`);
 
@@ -1017,3 +1016,5 @@ export async function modmailThreadInteraction(message:Message) {
     }
   }
 }
+
+export default modmail;

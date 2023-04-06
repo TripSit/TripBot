@@ -356,7 +356,7 @@ export async function applicationStart(
         autoArchiveDuration: 1440,
         type: ChannelType.PrivateThread,
         reason: `${actor.displayName} submitted an application!`,
-        invitable: env.NODE_ENV === 'production' ? false : undefined,
+        invitable: false,
       });
 
       let columns = 1;

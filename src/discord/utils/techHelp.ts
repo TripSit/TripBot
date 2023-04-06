@@ -8,6 +8,8 @@ import {
   GuildMember,
   ThreadChannel,
   ModalSubmitInteraction,
+  Colors,
+  EmbedBuilder,
 } from 'discord.js';
 import {
   ChannelType,
@@ -15,7 +17,6 @@ import {
   ButtonStyle,
 } from 'discord-api-types/v10';
 import { stripIndents } from 'common-tags';
-import { embedTemplate } from './embedTemplate';
 import { getGuild } from '../../global/utils/knex';
 
 const F = f(__filename);
@@ -62,7 +63,7 @@ export async function techHelpClick(interaction:ButtonInteraction) {
 
   await interaction.showModal(new ModalBuilder()
     .setCustomId(`techHelpSubmit~${interaction.id}`)
-    .setTitle('TripSit Feedback')
+    .setTitle(`${interaction.guild.name} Feedback`)
     .addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
       .setLabel('What is your issue? Be super detailed!')
       .setStyle(TextInputStyle.Paragraph)
@@ -112,10 +113,11 @@ export async function techHelpClick(interaction:ButtonInteraction) {
         autoArchiveDuration: 1440,
         type: ChannelType.PrivateThread,
         reason: `${actor.username} submitted a(n) ${issueType} issue`,
+        invitable: false,
       });
       // log.debug(F, `Created meta-thread ${ticketThread.id}`);
 
-      const embed = embedTemplate();
+      const embed = new EmbedBuilder();
       embed.setDescription(
         stripIndents`Thank you, check out ${ticketThread} to talk with a team member about your issue!`,
       );
@@ -150,20 +152,32 @@ export async function techHelpClick(interaction:ButtonInteraction) {
  * @param {ButtonInteraction} interaction The button that submitted this
  */
 export async function techHelpOwn(interaction:ButtonInteraction) {
-  await interaction.deferReply({ ephemeral: false });
-  if (!interaction.guild) {
-    await interaction.editReply({ content: guildOnly });
-    return;
-  }
+  if (!interaction.guild) return;
   const issueType = interaction.customId.split('~')[1];
   const targetId = interaction.customId.split('~')[2];
   const target = await interaction.guild.members.fetch(targetId);
 
+  if (interaction.member === target) {
+    await interaction.reply({
+      embeds: [
+        new EmbedBuilder()
+          .setDescription('You can\'t claim your own issue!')
+          .setColor(Colors.Yellow),
+      ],
+      ephemeral: true,
+    });
+    return;
+  }
+
   (interaction.channel as ThreadChannel).setName(`💛│${target.displayName}'s ${issueType} issue!`);
 
-  await interaction.editReply({
-    content: stripIndents`${(interaction.member as GuildMember).displayName} has claimed this \
-issue and will either help you or figure out how to get you help!`,
+  await interaction.reply({
+    embeds: [
+      new EmbedBuilder()
+        .setDescription(stripIndents`${(interaction.member as GuildMember).displayName} has claimed this \
+        issue and will either help you or figure out how to get you help!`)
+        .setColor(Colors.Green),
+    ],
   });
 }
 
@@ -172,18 +186,28 @@ issue and will either help you or figure out how to get you help!`,
  * @param {ButtonInteraction} interaction The button that submitted this
  */
 export async function techHelpClose(interaction:ButtonInteraction) {
-  await interaction.deferReply({ ephemeral: false });
-  if (!interaction.guild) {
-    await interaction.editReply({ content: guildOnly });
-    return;
-  }
+  if (!interaction.guild) return;
+  if (!interaction.member) return;
+
   const issueType = interaction.customId.split('~')[1];
   const targetId = interaction.customId.split('~')[2];
   const target = await interaction.guild.members.fetch(targetId);
 
-  await interaction.editReply({
-    content: stripIndents`${(interaction.member as GuildMember).displayName} has indicated that \
-this issue has been resolved!`,
+  const message = interaction.member === target
+    ? stripIndents`${interaction.member.displayName} has indicated that they no longer need help!`
+    : stripIndents`${(interaction.member as GuildMember).displayName} has indicated that this issue has been resolved!`;
+
+  if (interaction.member === target) {
+    (interaction.channel as ThreadChannel).setName(`💚│${target.displayName}'s ${issueType} issue!`);
+  } else {
+    (interaction.channel as ThreadChannel).setName(`💙│${target.displayName}'s ${issueType} issue!`);
+  }
+
+  await interaction.reply({
+    embeds: [
+      new EmbedBuilder()
+        .setDescription(message)
+        .setColor(Colors.Green),
+    ],
   });
-  (interaction.channel as ThreadChannel).setName(`💚│${target.displayName}'s ${issueType} issue!`);
 }
