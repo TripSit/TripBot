@@ -7,7 +7,7 @@ import {
 import { env } from 'process';
 import { stripIndents } from 'common-tags';
 import { SlashCommand } from '../../@types/commandDef';
-import { startLog } from '../../utils/startLog';
+import { commandContext } from '../../utils/context';
 // import {embedTemplate} from '../../utils/embedTemplate';
 import { moderate } from '../../../global/commands/g.moderate';
 // import log from '../../../global/utils/log';
@@ -31,7 +31,15 @@ export const dReport: SlashCommand = {
       .setName('reason')),
 
   async execute(interaction: ChatInputCommandInteraction) {
-    startLog(F, interaction);
+    log.info(F, await commandContext(interaction));
+    if (!interaction.guild) {
+      await interaction.reply({
+        embeds: [embedTemplate()
+          .setColor(Colors.Red)
+          .setTitle('This command can only be used in a server!')],
+        ephemeral: true,
+      });
+    }
     await interaction.deferReply({ ephemeral: true });
     // Only run on tripsit
     if (!interaction.guild) {

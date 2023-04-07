@@ -12,7 +12,7 @@ import {
 } from 'discord-api-types/v10';
 import { botmod } from '../../../global/commands/g.botmod';
 import { SlashCommand } from '../../@types/commandDef';
-import { startLog } from '../../utils/startLog';
+import { commandContext } from '../../utils/context';
 
 const F = f(__filename);
 
@@ -98,7 +98,7 @@ export const dBotmod: SlashCommand = {
           .setRequired(true)))),
 
   async execute(interaction) {
-    startLog(F, interaction);
+    log.info(F, await commandContext(interaction));
 
     const group = interaction.options.getSubcommandGroup() as 'user' | 'guild';
     const actor = interaction.member as GuildMember;

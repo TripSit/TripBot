@@ -5,7 +5,7 @@ import {
 } from 'discord.js';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
-import { startLog } from '../../utils/startLog';
+import { commandContext } from '../../utils/context';
 // import log from '../../../global/utils/log';
 const F = f(__filename);
 
@@ -15,7 +15,7 @@ export const dHydrate: SlashCommand = {
     .setDescription('Remember to hydrate!'),
 
   async execute(interaction) {
-    startLog(F, interaction);
+    log.info(F, await commandContext(interaction));
     await interaction.deferReply({ ephemeral: false });
     const output = stripIndents`
     💧🌊💧🌊💧🌊💧🌊💧🌊💧🌊💧🌊💧🌊

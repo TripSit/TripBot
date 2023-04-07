@@ -3,7 +3,7 @@ import {
 } from 'discord.js';
 
 import { SlashCommand } from '../../@types/commandDef';
-import { startLog } from '../../utils/startLog';
+import { commandContext } from '../../utils/context';
 import { embedTemplate } from '../../utils/embedTemplate';
 
 const F = f(__filename);
@@ -18,7 +18,7 @@ export const dAvatar: SlashCommand = {
     .addBooleanOption(option => option.setName('ephemeral')
       .setDescription('Set to "True" to show the response only to you')),
   async execute(interaction) {
-    startLog(F, interaction);
+    log.info(F, await commandContext(interaction));
     await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
     // log.debug(F, `${JSON.stringify(interaction.options, null, 2)}`);
     // If this doesn't happen in a guild then ignore it

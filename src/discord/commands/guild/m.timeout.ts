@@ -13,7 +13,7 @@ import {
 import { stripIndents } from 'common-tags';
 import { MessageCommand } from '../../@types/commandDef';
 import { parseDuration } from '../../../global/utils/parseDuration';
-import { startLog } from '../../utils/startLog';
+import { commandContext } from '../../utils/context';
 // import log from '../../../global/utils/log';
 import { moderate } from '../../../global/commands/g.moderate';
 import { UserActionType } from '../../../global/@types/database';
@@ -24,7 +24,7 @@ export const mTimeout: MessageCommand = {
     .setName('Timeout')
     .setType(ApplicationCommandType.Message),
   async execute(interaction) {
-    startLog(F, interaction);
+    log.info(F, await commandContext(interaction));
     await interaction.showModal(new ModalBuilder()
       .setCustomId(`timeoutModal~${interaction.id}`)
       .setTitle('Tripbot Timeout')

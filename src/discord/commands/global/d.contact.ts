@@ -6,7 +6,7 @@ import { stripIndents } from 'common-tags';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { contact } from '../../../global/commands/g.contact';
-import { startLog } from '../../utils/startLog';
+import { commandContext } from '../../utils/context';
 // import log from '../../../global/utils/log';
 
 const F = f(__filename);
@@ -19,7 +19,7 @@ export const dContact: SlashCommand = {
       .setDescription('Set to "True" to show the response only to you')),
 
   async execute(interaction) {
-    startLog(F, interaction);
+    log.info(F, await commandContext(interaction));
     await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
     const contactInfo = await contact();
     const embed = embedTemplate()

@@ -3,7 +3,7 @@ import {
 } from 'discord.js';
 import convert from 'convert-units';
 import { SlashCommand } from '../../@types/commandDef';
-import { startLog } from '../../utils/startLog';
+import { commandContext } from '../../utils/context';
 import { embedTemplate } from '../../utils/embedTemplate';
 
 const F = f(__filename);
@@ -27,7 +27,7 @@ export const dConvert: SlashCommand = {
       .setDescription('Set to "True" to show the response only to you')),
 
   async execute(interaction) {
-    startLog(F, interaction);
+    log.info(F, await commandContext(interaction));
     await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
     const value = interaction.options.getNumber('value', true);
     const units = interaction.options.getString('units', true);

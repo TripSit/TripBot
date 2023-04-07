@@ -7,7 +7,7 @@ import {
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
 import { SlashCommand } from '../../@types/commandDef';
-import { startLog } from '../../utils/startLog';
+import { commandContext } from '../../utils/context';
 import { embedTemplate } from '../../utils/embedTemplate'; // eslint-disable-line
 import { checkChannelPermissions } from '../../utils/checkPermissions';
 
@@ -38,7 +38,7 @@ export const dPoll: SlashCommand = {
       .setDescription('CSV of options, EG: "Red, Blue, Green"')
       .setRequired(true)),
   async execute(interaction) {
-    startLog(F, interaction);
+    log.info(F, await commandContext(interaction));
     await interaction.deferReply({ ephemeral: true });
 
     if (!interaction.channel) {

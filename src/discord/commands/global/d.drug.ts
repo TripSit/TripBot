@@ -7,7 +7,7 @@ import { stripIndents } from 'common-tags';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { drug } from '../../../global/commands/g.drug';
-import { startLog } from '../../utils/startLog';
+import { commandContext } from '../../utils/context';
 import { CbSubstance } from '../../../global/@types/combined.d';
 
 const F = f(__filename);
@@ -289,7 +289,7 @@ export const dDrug: SlashCommand = {
     .addBooleanOption(option => option.setName('ephemeral')
       .setDescription('Set to "True" to show the response only to you')),
   async execute(interaction) {
-    startLog(F, interaction);
+    log.info(F, await commandContext(interaction));
     await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') !== false) });
     let embed = embedTemplate();
     // Check if the interaction is coming from DM

@@ -20,7 +20,7 @@ import { embedTemplate } from '../../discord/utils/embedTemplate';
 import {
   getGuild, getUser, guildUpdate, usersUpdate,
 } from '../utils/knex';
-import { startLog } from '../../discord/utils/startLog';
+import { commandContext } from '../../discord/utils/context';
 
 const F = f(__filename);
 
@@ -312,7 +312,7 @@ export async function botmod(
   privReason: string | null,
   pubReason: string | null,
 ):Promise<InteractionReplyOptions> {
-  startLog(F, interaction);
+  log.info(F, await commandContext(interaction));
   let response = {} as InteractionReplyOptions;
   if (group === 'user') {
     response = await botmodUser(interaction, actor, (command as UserActionType), target, privReason, pubReason);

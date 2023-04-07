@@ -13,7 +13,7 @@ import {
 import { stripIndents } from 'common-tags';
 import { SlashCommand } from '../../@types/commandDef';
 import { issue } from '../../../global/commands/g.issue';
-import { startLog } from '../../utils/startLog';
+import { commandContext } from '../../utils/context';
 import { embedTemplate } from '../../utils/embedTemplate';
 // import log from '../../../global/utils/log';
 
@@ -53,7 +53,7 @@ export const dIssue: SlashCommand = {
       )
       .setName('effort')),
   async execute(interaction:ChatInputCommandInteraction) {
-    startLog(F, interaction);
+    log.info(F, await commandContext(interaction));
     await interaction.showModal(
       new ModalBuilder()
         .setCustomId(`issueModal~${interaction.id}`)

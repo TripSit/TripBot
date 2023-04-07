@@ -4,7 +4,7 @@ import {
   TextChannel,
 } from 'discord.js';
 import { SlashCommand } from '../../@types/commandDef';
-import { startLog } from '../../utils/startLog';
+import { commandContext } from '../../utils/context';
 
 const F = f(__filename);
 
@@ -22,7 +22,7 @@ export const dClearchat: SlashCommand = {
       .setDescription('Delete threads? (default: true)')
       .setName('delete-archived-threads')),
   async execute(interaction:ChatInputCommandInteraction) {
-    startLog(F, interaction);
+    log.info(F, await commandContext(interaction));
     await interaction.deferReply({ ephemeral: false });
     if (!interaction.channel) {
       await interaction.editReply({ content: 'This command can only be used in a server!' });
