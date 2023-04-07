@@ -35,7 +35,7 @@ import {
 } from '../../../global/@types/database';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
-import { startLog } from '../../utils/startLog';
+import { commandContext } from '../../utils/context';
 
 /* Test script
 1a) Init !
@@ -187,7 +187,7 @@ async function updateButtons(
 export async function modmailActions(
   interaction:ButtonInteraction | ChatInputCommandInteraction,
 ) {
-  startLog(F, interaction);
+  log.info(F, await commandContext(interaction));
   let command = '';
   if (interaction.isButton()) {
     const varArray = interaction.customId.split('~');
@@ -442,7 +442,7 @@ export const modmail: SlashCommand = {
       .setDescription('Put the ticket on hold')
       .setName('pause')),
   async execute(interaction:ChatInputCommandInteraction) {
-    startLog(F, interaction);
+    log.info(F, await commandContext(interaction));
     await modmailActions(interaction);
     return true;
   },

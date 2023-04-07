@@ -8,7 +8,7 @@ import {
 } from 'discord.js';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
-import { startLog } from '../../utils/startLog';
+import { commandContext } from '../../utils/context';
 // import log from '../../../global/utils/log'; // eslint-disable-line no-unused-vars
 
 const F = f(__filename);
@@ -57,7 +57,7 @@ export const dReminder: SlashCommand = {
     .setName('reminder')
     .setDescription('Sends a reminder on what the channel is for!'),
   async execute(interaction) {
-    startLog(F, interaction);
+    log.info(F, await commandContext(interaction));
     await interaction.deferReply({ ephemeral: true });
     if (!interaction.guild) {
       await interaction.editReply({ content: 'This command can only be used in a server!' });

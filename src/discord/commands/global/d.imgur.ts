@@ -3,7 +3,7 @@ import {
 } from 'discord.js';
 import { SlashCommand } from '../../@types/commandDef';
 import { imgurSearch } from '../../../global/commands/g.imgur';
-import { startLog } from '../../utils/startLog';
+import { commandContext } from '../../utils/context';
 // import log from '../../../global/utils/log';
 const F = f(__filename);
 
@@ -36,7 +36,7 @@ export const dImgur: SlashCommand = {
     .addBooleanOption(option => option.setName('ephemeral')
       .setDescription('Set to "True" to show the response only to you')),
   async execute(interaction) {
-    startLog(F, interaction);
+    log.info(F, await commandContext(interaction));
     await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
     // Sometimes the API takes a few seconds to respond.
     const search = interaction.options.getString('search');

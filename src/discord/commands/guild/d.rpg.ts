@@ -35,7 +35,7 @@ import he from 'he';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { getPersonaInfo, setPersonaInfo } from '../../../global/commands/g.rpg';
-import { startLog } from '../../utils/startLog';
+import { commandContext } from '../../utils/context';
 import {
   getUser, inventoryGet, inventorySet, personaSet,
 } from '../../../global/utils/knex';
@@ -3176,7 +3176,7 @@ export const dRpg: SlashCommand = {
   //   .setName('trivia')
   //   .setDescription('Go to the trivia parlor')),
   async execute(interaction) {
-    startLog(F, interaction);
+    log.info(F, await commandContext(interaction));
     const channelRpg = await interaction.guild?.channels.fetch(env.CHANNEL_TRIPTOWN as string) as TextChannel;
     await interaction.deferReply({ ephemeral: (channelRpg.id !== interaction.channelId) });
     const subcommand = interaction.options.getSubcommand();

@@ -5,11 +5,15 @@ import {
   addColors,
   Logger,
 } from 'winston';
-import { Logtail } from '@logtail/node'; // eslint-disable-line
-import { LogtailTransport } from '@logtail/winston'; // eslint-disable-line
+// import { Logtail } from '@logtail/node'; // eslint-disable-line
+// import { LogtailTransport } from '@logtail/winston'; // eslint-disable-line
 import { parse } from 'path';
+// import Rollbar, { Level } from 'rollbar';
+import * as Sentry from '@sentry/node'; // eslint-disable-line
+// import SentryTransport from 'winston-transport-sentry-node'; // eslint-disable-line
 import { env } from './env.config';
-//
+
+// const RollbarTransport = require('winston-transport-rollbar-3');
 
 const {
   combine,
@@ -57,25 +61,69 @@ const myFormat = printf(({
   return msg;
 });
 
+// const rollbarConfig = {
+//   accessToken: env.ROLLBAR_TOKEN,
+//   captureUncaught: true,
+//   captureUnhandledRejections: true,
+//   logLevel: 'error' as Level,
+// };
+
+// global.rollbar = new Rollbar(rollbarConfig);
+
+const sentryConfig = {
+  dsn: env.SENTRY_TOKEN,
+  level: 'error',
+  tracesSampleRate: 1.0,
+  environment: env.NODE_ENV,
+  integrations: [
+    // enable HTTP calls tracing
+    new Sentry.Integrations.Http({ tracing: true }),
+    // Automatically instrument Node.js libraries and frameworks
+    ...Sentry.autoDiscoverNodePerformanceMonitoringIntegrations(),
+  ],
+};
+
+Sentry.init(sentryConfig);
+
+// const sentryTransportConfig = {
+//   sentry: sentryConfig,
+//   skipSentryInit: true,
+//   level: 'error',
+// };
+
+global.sentry = Sentry;
+
+const transportOptions = [
+  new transports.Console(),
+  // new RollbarTransport({ rollbarConfig }),
+  // new SentryTransport(sentryTransportConfig),
+];
+
 // We only want logtail logs in production
-let transportOptions = [];
-if (env.NODE_ENV === 'production') {
-  // if (env.LOGTAIL_TOKEN) {
-  //   transportOptions = [
-  //     new transports.Console(),
-  //     new LogtailTransport(new Logtail(env.LOGTAIL_TOKEN)),
-  //   ];
-  // } else {
-  console.error('No Logtail token found, not logging to Logtail'); // eslint-disable-line no-console
-  transportOptions = [
-    new transports.Console(),
-  ];
-  // }
-} else {
-  transportOptions = [
-    new transports.Console(),
-  ];
-}
+// let transportOptions = [];
+// if (env.NODE_ENV === 'production') {
+//   // if (env.LOGTAIL_TOKEN) {
+//   //   transportOptions = [
+//   //     new transports.Console(),
+//   //     new LogtailTransport(new Logtail(env.LOGTAIL_TOKEN)),
+//   //   ];
+//   // } else {
+//   // console.error('No Logtail token found, not logging to Logtail'); // eslint-disable-line no-console
+//   transportOptions = [
+//     new transports.Console(),
+//     new RollbarTransport({
+//       rollbarConfig,
+//     }),
+//   ];
+//   // }
+// } else {
+//   transportOptions = [
+//     new transports.Console(),
+//     new RollbarTransport({
+//       rollbarConfig,
+//     }),
+//   ];
+// }
 
 export const logger = createLogger({
   level: env.DEBUG_LEVEL,

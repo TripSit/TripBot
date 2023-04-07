@@ -3,7 +3,7 @@ import {
   SlashCommandBuilder,
 } from 'discord.js';
 import { SlashCommand } from '../../@types/commandDef';
-import { startLog } from '../../utils/startLog';
+import { commandContext } from '../../utils/context';
 import { embedTemplate } from '../../utils/embedTemplate';
 // import log from '../../../global/utils/log';
 const F = f(__filename);
@@ -68,7 +68,7 @@ export const dTriptoys: SlashCommand = {
     .addBooleanOption(option => option.setName('ephemeral')
       .setDescription('Set to "True" to show the response only to you')),
   async execute(interaction) {
-    startLog(F, interaction);
+    log.info(F, await commandContext(interaction));
     await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
     const toyName = interaction.options.getString('toy') || '25';
     const toyId = parseInt(toyName, 10);

@@ -5,7 +5,7 @@ import { stripIndents } from 'common-tags';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { urbandefine } from '../../../global/commands/archive/g.urbandefine';
-import { startLog } from '../../utils/startLog';
+import { commandContext } from '../../utils/context';
 // import log from '../../../global/utils/log';
 const F = f(__filename);
 
@@ -21,7 +21,7 @@ export const dUrbandefine: SlashCommand = {
       .setRequired(true)),
 
   async execute(interaction) {
-    startLog(F, interaction);
+    log.info(F, await commandContext(interaction));
     const term = interaction.options.getString('define');
     if (!term) {
       await interaction.reply({ content: 'You must enter a search query.', ephemeral: true });

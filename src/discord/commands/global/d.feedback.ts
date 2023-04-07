@@ -11,7 +11,7 @@ import {
   TextInputStyle,
 } from 'discord-api-types/v10';
 import { SlashCommand } from '../../@types/commandDef';
-import { startLog } from '../../utils/startLog';
+import { commandContext } from '../../utils/context';
 import { embedTemplate } from '../../utils/embedTemplate';
 
 const F = f(__filename);
@@ -21,7 +21,7 @@ export const dFeedback: SlashCommand = {
     .setName('feedback')
     .setDescription('Share feedback or report a bug to the TripBot dev team!'),
   async execute(interaction) {
-    startLog(F, interaction);
+    log.info(F, await commandContext(interaction));
     await interaction.showModal(
       new ModalBuilder()
         .setCustomId(`feedbackReportModal~${interaction.id}`)

@@ -18,7 +18,7 @@ import { SlashCommand } from '../../@types/commandDef';
 // import {embedTemplate} from '../../utils/embedTemplate';
 import { parseDuration } from '../../../global/utils/parseDuration';
 import { moderate, linkThread } from '../../../global/commands/g.moderate';
-import { startLog } from '../../utils/startLog'; // eslint-disable-line
+import { commandContext } from '../../utils/context'; // eslint-disable-line
 import { UserActionType } from '../../../global/@types/database';
 import { getDiscordMember, getDiscordUser } from '../../utils/guildMemberLookup';
 import { getUser } from '../../../global/utils/knex';
@@ -121,7 +121,7 @@ export const mod: SlashCommand = {
         .setDescription('Override existing threads in the DB'))
       .setName('link')),
   async execute(interaction:ChatInputCommandInteraction) {
-    startLog(F, interaction);
+    log.info(F, await commandContext(interaction));
 
     const actor = interaction.member as GuildMember;
     const targetString = interaction.options.getString('target', true);

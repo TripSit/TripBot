@@ -25,7 +25,7 @@ import {
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { globalTemplate } from '../../../global/commands/_g.template';
-import { startLog } from '../../utils/startLog';
+import { commandContext } from '../../utils/context';
 
 const F = f(__filename);
 
@@ -42,7 +42,7 @@ export const dRadio: SlashCommand = {
         .setDescription('The Soundcloud URL of the track.')
         .setRequired(true))),
   async execute(interaction) {
-    startLog(F, interaction);
+    log.info(F, await commandContext(interaction));
     // This is a music bot command system that will take urls and play that music in a voice channel
 
     const url = interaction.options.getString('url');

@@ -13,7 +13,7 @@ import {
 import { UserCommand } from '../../@types/commandDef';
 // import log from '../../../global/utils/log';
 import { moderate } from '../../../global/commands/g.moderate';
-import { startLog } from '../../utils/startLog';
+import { commandContext } from '../../utils/context';
 // import {startLog} from '../../utils/startLog';
 import { UserActionType } from '../../../global/@types/database';
 import { embedTemplate } from '../../utils/embedTemplate';
@@ -25,7 +25,7 @@ export const uUnderban: UserCommand = {
     .setName('Underban')
     .setType(ApplicationCommandType.User),
   async execute(interaction) {
-    startLog(F, interaction);
+    log.info(F, await commandContext(interaction));
     await interaction.showModal(new ModalBuilder()
       .setCustomId(`underbanModal~${interaction.id}`)
       .setTitle('Tripbot Ban')

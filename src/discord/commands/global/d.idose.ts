@@ -16,7 +16,7 @@ import { embedTemplate } from '../../utils/embedTemplate';
 import { parseDuration } from '../../../global/utils/parseDuration';
 import { paginationEmbed } from '../../utils/pagination';
 import { DrugRoa, DrugMassUnit } from '../../../global/@types/database';
-import { startLog } from '../../utils/startLog';
+import { commandContext } from '../../utils/context';
 
 const F = f(__filename);
 
@@ -78,7 +78,8 @@ export const dIdose: SlashCommand = {
         .setDescription('Which record? (0, 1, 2, etc)')
         .setRequired(true))),
   async execute(interaction) {
-    startLog(F, interaction);
+    log.info(F, await commandContext(interaction));
+
     await interaction.deferReply({ ephemeral: (interaction.channel?.type !== ChannelType.DM) });
     const command = interaction.options.getSubcommand() as 'get' | 'set' | 'delete';
     const embed = embedTemplate();

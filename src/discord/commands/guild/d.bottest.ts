@@ -12,7 +12,7 @@ import {
 } from 'discord-api-types/v10';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
-import { startLog } from '../../utils/startLog';
+import { commandContext } from '../../utils/context';
 // import fs from 'fs/promises'; // eslint-disable-line
 const F = f(__filename);
 // import drugDataAll from '../../../global/assets/data/drug_db_combined.json';
@@ -1304,7 +1304,7 @@ export const dBottest: SlashCommand = {
         { name: 'Global', value: 'Global' },
       )),
   async execute(interaction) {
-    startLog(F, interaction);
+    log.info(F, await commandContext(interaction));
     await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
     if (!interaction.channel) {
       await interaction.editReply('This command must be used in a channel!');

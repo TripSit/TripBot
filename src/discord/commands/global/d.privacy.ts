@@ -5,7 +5,7 @@ import { stripIndents } from 'common-tags';
 import { SlashCommand } from '../../@types/commandDef';
 import { privacy } from '../../../global/commands/g.privacy';
 import { embedTemplate } from '../../utils/embedTemplate';
-import { startLog } from '../../utils/startLog';
+import { commandContext } from '../../utils/context';
 
 const F = f(__filename);
 
@@ -22,7 +22,7 @@ export const dPrivacy: SlashCommand = {
       .addStringOption(option => option.setName('confirmation')
         .setDescription('Enter your confirmation code to delete your data!'))),
   async execute(interaction) {
-    startLog(F, interaction);
+    log.info(F, await commandContext(interaction));
     await interaction.deferReply({ ephemeral: true });
     const command = interaction.options.getSubcommand() as 'get' | 'delete';
     const embed = embedTemplate();

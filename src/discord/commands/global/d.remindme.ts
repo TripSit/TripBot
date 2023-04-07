@@ -9,7 +9,7 @@ import {
   ButtonStyle,
 } from 'discord-api-types/v10';
 import { remindMe } from '../../../global/commands/g.remindme';
-import { startLog } from '../../utils/startLog';
+import { commandContext } from '../../utils/context';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { parseDuration } from '../../../global/utils/parseDuration';
@@ -45,7 +45,7 @@ export const dRemindme: SlashCommand = {
         .setRequired(true))
       .setName('delete')),
   async execute(interaction) {
-    startLog(F, interaction);
+    log.info(F, await commandContext(interaction));
     await interaction.deferReply({ ephemeral: true });
     const command = interaction.options.getSubcommand() as 'get' | 'set' | 'delete';
     const offset = interaction.options.getString('offset');

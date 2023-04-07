@@ -5,7 +5,7 @@ import {
 } from 'discord.js';
 import { SlashCommand } from '../../@types/commandDef';
 import { last } from '../../../global/commands/g.last';
-import { startLog } from '../../utils/startLog';
+import { commandContext } from '../../utils/context';
 
 // import log from '../../../global/utils/logger';
 
@@ -22,7 +22,7 @@ export const dLast: SlashCommand = {
     .addBooleanOption(option => option.setName('ephemeral')
       .setDescription('Set to "True" to show the response only to you')),
   async execute(interaction) {
-    startLog(F, interaction);
+    log.info(F, await commandContext(interaction));
     await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
     // Only run on Tripsit or DM, we don't want to snoop on other guilds ( ͡~ ͜ʖ ͡°)
     if (interaction.guild) {

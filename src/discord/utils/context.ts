@@ -8,25 +8,18 @@ import {
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
 
-export default startLog;
+export default commandContext;
 
-/**
- * @param {string} prefix
- * @param {ChatInputCommandInteraction} interaction
- * @return {Promise<void>}
-* */
-export async function startLog(
-  prefix: string,
+export async function commandContext(
   interaction: ChatInputCommandInteraction
   | UserContextMenuCommandInteraction
   | MessageContextMenuCommandInteraction
   | ButtonInteraction
   | SelectMenuInteraction
   | ModalSubmitInteraction,
-): Promise<void> {
-  const guild = interaction.guild ? `in ${interaction.guild.name} (${interaction.guild.id})` : 'in DM';
-  let message = `[${prefix}] via ${interaction.user.tag} (${interaction.user.id}) \
-${guild}`;
+) {
+  const source = interaction.guild ? `${interaction.guild.name}` : 'DM';
+  let message = `via ${interaction.user.username} in ${source}`;
   if (Object.hasOwn(interaction, 'options')) {
     const interactionOptions = (interaction as ChatInputCommandInteraction).options;
     if (interactionOptions.data && interactionOptions.data.length > 0) {
@@ -49,5 +42,6 @@ ${guild}`;
   if ((interaction as SelectMenuInteraction).customId) {
     message += ` with customId: ${(interaction as ButtonInteraction).customId}`;
   }
-  logger.info(stripIndents`${message}`);
+  // logger.info(stripIndents`[${prefix}] ${message}`);
+  return stripIndents`${message}`;
 }
