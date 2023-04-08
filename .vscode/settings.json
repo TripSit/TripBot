@@ -8,4 +8,5 @@
         "typescript",
     ],
     "editor.tabSize": 2,
+    "deepscan.ignoreConfirmWarning": true,
 }

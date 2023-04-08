@@ -1,0 +1,26 @@
+name: versionMinor
+
+on:
+  pull_request:
+    branches:
+      - main
+    types:
+      - closed
+
+jobs:
+  versionMinor:
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.merged == true
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      with:
+        token: ${{ secrets.MB_ACCESS_TOKEN }}
+    - name: Set up Git user
+      run: |
+        git config --global user.name "${{ github.actor }}"
+        git config --global user.email "${{ github.actor }}@users.noreply.github.com"
+    - name: Increment patch version
+      run: npm version minor -m "[RELEASE] %s"
+    - name: Git push
+      run: git push origin main --follow-tags --force
