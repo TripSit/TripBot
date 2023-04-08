@@ -13,6 +13,7 @@ import { commandContext } from './context';
 const F = f(__filename);
 
 const error10062 = 'Error 10062: (Unknown Interaction Error)[https://github.com/discord/discord-api-docs/issues/5558] for details'; // eslint-disable-line max-len
+// const genericError = 'There was an error while executing this command!';
 
 const dataSensitiveCommands = [
   'idose',
@@ -25,18 +26,18 @@ export default commandRun;
 /**
  * Runs a slash command
  * @param {ChatInputCommandInteraction} interaction The interaction that spawned this commend
- * @param {Client} client The Client that manages this interaction
+ * @param {Client} discordClient The Client that manages this interaction
  * @return {Discord.MessageEmbed}
  */
 export async function commandRun(
   interaction: ChatInputCommandInteraction | MessageContextMenuCommandInteraction | UserContextMenuCommandInteraction,
-  client: Client,
+  discordClient: Client,
 ) {
   const startTime = new Date().getTime();
   log.info(F, `commandRun started at ${startTime}`);
   const { commandName } = interaction;
 
-  const command = client.commands.get(commandName);
+  const command = discordClient.commands.get(commandName);
 
   if (!command) return;
 
@@ -78,7 +79,7 @@ export async function commandRun(
       });
 
       // Get channel we send errors to
-      const channel = await client.channels.fetch(env.CHANNEL_BOTERRORS) as TextChannel;
+      const channel = await discordClient.channels.fetch(env.CHANNEL_BOTERRORS) as TextChannel;
 
       // If the error is a 10062, we know it's a Discord API error, to kind of ignore it =/
       if ((error as any).code === 10062) { // eslint-disable-line @typescript-eslint/no-explicit-any

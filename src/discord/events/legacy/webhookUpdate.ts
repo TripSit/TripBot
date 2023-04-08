@@ -39,7 +39,7 @@ export const webhookUpdate: WebhookUpdateEvent = {
     // Since there's only 1 audit log entry in this collection, grab the first one
     const auditLog = fetchedLogs.entries.first();
 
-    const channelAuditlog = await client.channels.fetch(env.CHANNEL_AUDITLOG) as TextChannel;
+    const channelAuditlog = await discordClient.channels.fetch(env.CHANNEL_AUDITLOG) as TextChannel;
     const channelPerms = await checkChannelPermissions(channelAuditlog, [
       'ViewChannel' as PermissionResolvable,
       'SendMessages' as PermissionResolvable,

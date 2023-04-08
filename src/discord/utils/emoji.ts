@@ -102,9 +102,9 @@ export function customButton(
     .setStyle(style || ButtonStyle.Success);
 }
 
-export async function emojiCache(client: Client):Promise<void> {
-  emojiGuildRPG = await client.guilds.fetch(env.DISCORD_EMOJI_GUILD_RPG);
-  emojiGuildMain = await client.guilds.fetch(env.DISCORD_EMOJI_GUILD_MAIN);
+export async function emojiCache(discordClient: Client):Promise<void> {
+  emojiGuildRPG = await discordClient.guilds.fetch(env.DISCORD_EMOJI_GUILD_RPG);
+  emojiGuildMain = await discordClient.guilds.fetch(env.DISCORD_EMOJI_GUILD_MAIN);
 
   await emojiGuildRPG.emojis.fetch();
   await emojiGuildMain.emojis.fetch();

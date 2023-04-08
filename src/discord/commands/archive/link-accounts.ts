@@ -126,7 +126,7 @@
 //         });
 //       } else {
 //         embed.setDescription(stripIndents`
-//         The IRC client is not connected, please try again later.`);
+//         The IRC discordClient is not connected, please try again later.`);
 //         await interaction.reply({ embeds: [embed], ephemeral: true });
 //       }
 //     }

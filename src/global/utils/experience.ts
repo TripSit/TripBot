@@ -65,7 +65,7 @@ export async function getTotalLevel(
 async function giveMilestone(
   member:GuildMember,
 ) {
-  const userData = await getUser(member.id, null);
+  const userData = await getUser(member.id, null, null);
 
   const allExpData = await experienceGet(undefined, undefined, 'TEXT' as ExperienceType, userData.id);
 
@@ -236,7 +236,7 @@ export async function experience(
   type:ExperienceType,
   channel: TextChannel | VoiceChannel,
 ) {
-  const userData = await getUser(member.id, null);
+  const userData = await getUser(member.id, null, null);
   // log.debug(F, `userData: ${JSON.stringify(userData, null, 2)}`);
 
   const [experienceData] = await experienceGet(undefined, category, type, userData.id);

@@ -319,7 +319,7 @@ export async function countMessage(message: Message): Promise<void> {
     if (countingData.type === 'TOKEN') {
       // If the channel is token then take tokens from the pot
 
-      const userData = await getUser(message.author.id, null);
+      const userData = await getUser(message.author.id, null, null);
       const personaData = await personaGet(userData.id);
 
       personaData.tokens += totalPot;
@@ -427,7 +427,7 @@ export async function countMessage(message: Message): Promise<void> {
     // Give each of those personas a fraction of the pot: (totalPot / currentData.current_stakeholders.length)
     const stakeholderIds = countingData.current_stakeholders.split(',');
     await Promise.all(stakeholderIds.map(async discordId => {
-      const userData = await getUser(discordId, null);
+      const userData = await getUser(discordId, null, null);
       const persona = await personaGet(userData.id);
       persona.tokens += potPerUser;
       await personaSet(persona);

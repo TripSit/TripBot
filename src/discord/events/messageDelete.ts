@@ -104,7 +104,7 @@ export const messageDelete: MessageDeleteEvent = {
     // log.debug(F, `Author Name: ${authorName}`);
     // const channelName = message.channel ? (message.channel as TextChannel).name : 'Unknown';
 
-    // // const channel = await client.channels.fetch((deletionLog?.extra as { channel: string, count: number }).channel) as TextChannel;
+    // // const channel = await discordClient.channels.fetch((deletionLog?.extra as { channel: string, count: number }).channel) as TextChannel;
     // const messageRecord = (message.channel as TextChannel).messages.cache.find(m => m.id === message.id);
     // if (messageRecord) {
     //   authorName = message.author.username;

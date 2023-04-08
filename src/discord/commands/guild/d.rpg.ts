@@ -3195,7 +3195,7 @@ export const dRpg: SlashCommand = {
 
     // If the user doesn't have persona data, create it
     if (!personaData) {
-      const userData = await getUser(interaction.user.id, null);
+      const userData = await getUser(interaction.user.id, null, null);
       personaData = {
         user_id: userData.id,
         tokens: 0,

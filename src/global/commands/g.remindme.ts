@@ -42,7 +42,7 @@ export async function remindMe(
     }
     // log.debug(F, `Deleting record ${recordNumber}`);
 
-    const userData = await getUser(userId, null);
+    const userData = await getUser(userId, null, null);
 
     const unsortedData = await reminderGet(userData.id);
 
@@ -88,7 +88,7 @@ export async function remindMe(
     log.info(F, `response: ${JSON.stringify(response, null, 2)}`);
   }
   if (command === 'get') {
-    const userData = await getUser(userId, null);
+    const userData = await getUser(userId, null, null);
 
     const unsortedData = await reminderGet(userData.id);
 
@@ -138,7 +138,7 @@ export async function remindMe(
       log.info(F, `response: ${JSON.stringify(response, null, 2)}`);
       return response;
     }
-    const userData = await getUser(userId, null);
+    const userData = await getUser(userId, null, null);
 
     await reminderSet({
       user_id: userData.id,

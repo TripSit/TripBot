@@ -10,7 +10,7 @@ export default h2flow;
  * @return {any}
  */
 export async function h2flow(userId:string):Promise<Users> {
-  const response = await getUser(userId, null);
+  const response = await getUser(userId, null, null);
   log.info(F, `response: ${JSON.stringify(response, null, 2)}`);
   return response;
 }

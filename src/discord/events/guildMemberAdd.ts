@@ -26,7 +26,7 @@ export const guildMemberAdd: GuildMemberAddEvent = {
     const invite = newInvites.find(i => <number > i.uses > cachedInvites.get(i.code));
     let inviteInfo = '';
     if (invite) {
-      const inviter = await client.users.fetch(invite.inviter?.id as UserResolvable);
+      const inviter = await discordClient.users.fetch(invite.inviter?.id as UserResolvable);
       inviteInfo = inviter
         ? `Joined via ${inviter.tag}'s invite to ${invite.channel?.name} (${invite.code}-${invite.uses})`
         : 'Joined via the vanity url';
@@ -37,7 +37,7 @@ export const guildMemberAdd: GuildMemberAddEvent = {
       new Collection(newInvites.map(inviteEntry => [inviteEntry.code, inviteEntry.uses])),
     );
 
-    const userData = await getUser(member.id, null);
+    const userData = await getUser(member.id, null, null);
     userData.discord_id = member.id;
     userData.joined_at = new Date();
 
@@ -94,7 +94,7 @@ export const guildMemberAdd: GuildMemberAddEvent = {
     if (inviteInfo) {
       embed.setFooter({ text: inviteInfo });
     }
-    const auditlog = await client.channels.fetch(env.CHANNEL_AUDITLOG) as TextChannel;
+    const auditlog = await discordClient.channels.fetch(env.CHANNEL_AUDITLOG) as TextChannel;
     if (auditlog) {
       await auditlog.send({ embeds: [embed] });
     }

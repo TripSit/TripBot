@@ -216,7 +216,7 @@ export async function modmailActions(
     }
     ticketData = ticketDataRaw;
   } else if (interaction.channel && interaction.channel.type === ChannelType.DM) {
-    const actorUserData = await getUser(actor.id, null);
+    const actorUserData = await getUser(actor.id, null, null);
     const ticketDataRaw = await getOpenTicket(actorUserData.id, null);
 
     if (!ticketDataRaw) {
@@ -230,7 +230,7 @@ export async function modmailActions(
 
   const ticketChannel = await interaction.client.channels.fetch(ticketData.thread_id) as ThreadChannel;
 
-  const targetUserData = await getUser(null, ticketData.user_id);
+  const targetUserData = await getUser(null, null, ticketData.user_id);
   if (!targetUserData.discord_id) {
     log.error(F, `No discord_id found for user ${ticketData.user_id}!`);
     return;
@@ -597,7 +597,7 @@ export async function modmailCreate(
     },
   };
 
-  const userData = await getUser(actor.id, null);
+  const userData = await getUser(actor.id, null, null);
 
   // const ticketData = await getOpenTicket(userData.id, null);
 
@@ -869,7 +869,7 @@ export async function modmailDMInteraction(message:Message) {
     return;
   }
 
-  const userData = await getUser(message.author.id, null);
+  const userData = await getUser(message.author.id, null, null);
   // log.debug(F, `userData: ${JSON.stringify(userData, null, 2)}!`);
 
   if (userData.ticket_ban) {
@@ -972,7 +972,7 @@ export async function modmailThreadInteraction(message:Message) {
           return;
         }
 
-        const userData = await getUser(null, ticketData.user_id);
+        const userData = await getUser(null, null, ticketData.user_id);
         if (!userData.discord_id) {
           log.error(F, `No discord_id found for user ${ticketData.user_id}!`);
           return;

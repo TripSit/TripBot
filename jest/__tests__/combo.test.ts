@@ -32,7 +32,7 @@ describe(slashCommand.data.name, () => {
         thumbnail: {
           url: 'https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/samsung/320/up-right-arrow_2197-fe0f.png', // eslint-disable-line
         },
-        title: 'Mixing **MDMA** and **Ketamine**: ↗ Low Risk & Synergy ↗',
+        title: 'Mixing MDMA and Ketamine: ↗ Low Risk & Synergy ↗',
         description: stripIndents`These drugs work together to cause an effect greater than the sum of its parts, and they aren't likely to cause an adverse or undesirable reaction when used carefully. Additional research should always be done before combining drugs.`, // eslint-disable-line
       }),
     });
@@ -52,7 +52,7 @@ describe(slashCommand.data.name, () => {
         thumbnail: {
           url: 'https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/samsung/320/skull-and-crossbones_2620-fe0f.png', // eslint-disable-line
         },
-        title: 'Mixing **booze** and **xanax**: ☠️ Dangerous ☠️',
+        title: 'Mixing booze and xanax: ☠️ Dangerous ☠️',
         description: stripIndents`These combinations are considered extremely harmful and should always be avoided. Reactions to these drugs taken in combination are highly unpredictable and have a potential to cause death.`, // eslint-disable-line
       }),
     });
@@ -72,7 +72,7 @@ describe(slashCommand.data.name, () => {
         thumbnail: {
           url: 'https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/samsung/320/caution-sign_2621.png', // eslint-disable-line
         },
-        title: 'Mixing **booze** and **Methamphetamine**: ⚠️ Caution ⚠️',
+        title: 'Mixing booze and Methamphetamine: ⚠️ Caution ⚠️',
         description: stripIndents`These combinations are not usually physically harmful, but may produce undesirable  effects, such as physical discomfort or overstimulation. Extreme use may cause physical health issues. Synergistic effects may be unpredictable. Care should be taken when choosing to use this combination.`, // eslint-disable-line
       }),
     });
@@ -92,7 +92,7 @@ describe(slashCommand.data.name, () => {
         thumbnail: {
           url: 'https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/samsung/320/caution-sign_2621.png', // eslint-disable-line
         },
-        title: 'Mixing **Methamphetamine** and **booze**: ⚠️ Caution ⚠️',
+        title: 'Mixing Methamphetamine and booze: ⚠️ Caution ⚠️',
         description: stripIndents`These combinations are not usually physically harmful, but may produce undesirable  effects, such as physical discomfort or overstimulation. Extreme use may cause physical health issues. Synergistic effects may be unpredictable. Care should be taken when choosing to use this combination.`, // eslint-disable-line
       }),
     });
@@ -112,7 +112,7 @@ describe(slashCommand.data.name, () => {
         thumbnail: {
           url: 'https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/samsung/320/skull-and-crossbones_2620-fe0f.png', // eslint-disable-line
         },
-        title: 'Mixing **Alcohol** and **Oxycodone**: ☠️ Dangerous ☠️',
+        title: 'Mixing Alcohol and Oxycodone: ☠️ Dangerous ☠️',
         description: stripIndents`These combinations are considered extremely harmful and should always be avoided. Reactions to these drugs taken in combination are highly unpredictable and have a potential to cause death.`, // eslint-disable-line
       }),
     });
@@ -132,7 +132,7 @@ describe(slashCommand.data.name, () => {
         thumbnail: {
           url: 'https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/samsung/320/skull-and-crossbones_2620-fe0f.png', // eslint-disable-line
         },
-        title: 'Mixing **Oxycodone** and **Alcohol**: ☠️ Dangerous ☠️',
+        title: 'Mixing Oxycodone and Alcohol: ☠️ Dangerous ☠️',
         description: stripIndents`These combinations are considered extremely harmful and should always be avoided. Reactions to these drugs taken in combination are highly unpredictable and have a potential to cause death.`, // eslint-disable-line
       }),
     });
@@ -152,7 +152,7 @@ describe(slashCommand.data.name, () => {
         thumbnail: {
           url: 'https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/samsung/320/caution-sign_2621.png', // eslint-disable-line
         },
-        title: 'Mixing **amphetamines** and **booze**: ⚠️ Caution ⚠️',
+        title: 'Mixing amphetamines and booze: ⚠️ Caution ⚠️',
         description: stripIndents`These combinations are not usually physically harmful, but may produce undesirable  effects, such as physical discomfort or overstimulation. Extreme use may cause physical health issues. Synergistic effects may be unpredictable. Care should be taken when choosing to use this combination.`, // eslint-disable-line
       }),
     });
@@ -172,7 +172,7 @@ describe(slashCommand.data.name, () => {
         thumbnail: {
           url: 'https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/samsung/320/skull-and-crossbones_2620-fe0f.png', // eslint-disable-line
         },
-        title: 'Mixing **booze** and **diazepam**: ☠️ Dangerous ☠️',
+        title: 'Mixing booze and diazepam: ☠️ Dangerous ☠️',
         description: stripIndents`These combinations are considered extremely harmful and should always be avoided. Reactions to these drugs taken in combination are highly unpredictable and have a potential to cause death.`, // eslint-disable-line
       }),
     });
@@ -192,7 +192,7 @@ describe(slashCommand.data.name, () => {
         thumbnail: {
           url: 'https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/samsung/320/skull-and-crossbones_2620-fe0f.png', // eslint-disable-line
         },
-        title: 'Mixing **diazepam** and **booze**: ☠️ Dangerous ☠️',
+        title: 'Mixing diazepam and booze: ☠️ Dangerous ☠️',
         description: stripIndents`These combinations are considered extremely harmful and should always be avoided. Reactions to these drugs taken in combination are highly unpredictable and have a potential to cause death.`, // eslint-disable-line
       }),
     });

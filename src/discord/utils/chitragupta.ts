@@ -45,7 +45,7 @@ export async function chitragupta(
   // Increment karma of the actor
   await incrementKarma('karma_given', actor.id, action);
 
-  const actorData = await getUser(actor.id, null);
+  const actorData = await getUser(actor.id, null, null);
 
   if (actorData.karma_given === undefined) {
     // User doesn't exist in the database
@@ -60,7 +60,7 @@ export async function chitragupta(
 
   // Increment the karma of the target
   await incrementKarma('karma_received', target.id, action);
-  const targetData = await getUser(target.id, null);
+  const targetData = await getUser(target.id, null, null);
 
   if (targetData.karma_given === undefined) {
     // User doesn't exist in the database

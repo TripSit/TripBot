@@ -66,20 +66,20 @@ export const guildMemberUpdate: GuildMemberUpdateEvent = {
       // log.debug(F, `${newMember.displayName} ${action} ${roleName}`);
 
       // const userInfo = await getUserInfo(newMember.id);
-      const auditlog = await client.channels.fetch(env.CHANNEL_AUDITLOG) as TextChannel;
+      const auditlog = await discordClient.channels.fetch(env.CHANNEL_AUDITLOG) as TextChannel;
       await auditlog.send(`${newMember.displayName} ${action} ${role.name}`);
 
       // Check if the role added was a donator role
       if (role.id === env.ROLE_BOOSTER && action === 'added') {
         // log.debug(F, `${newMember.displayName} boosted the server!`);
-        const channelGoldlounge = await client.channels.fetch(env.CHANNEL_GOLDLOUNGE) as TextChannel;
+        const channelGoldlounge = await discordClient.channels.fetch(env.CHANNEL_GOLDLOUNGE) as TextChannel;
         await channelGoldlounge.send(`Hey @here, ${newMember} just boosted the server, give them a big thank you for helping to keep this place awesome!`); // eslint-disable-line max-len
       }
 
       // Check if the role added was a donator role
       if (role.id === env.ROLE_PATRON && action === 'added') {
         // log.debug(F, `${newMember.displayName} became a patron!`);
-        const channelGoldlounge = await client.channels.fetch(env.CHANNEL_GOLDLOUNGE) as TextChannel;
+        const channelGoldlounge = await discordClient.channels.fetch(env.CHANNEL_GOLDLOUNGE) as TextChannel;
         await channelGoldlounge.send(`Hey @here, ${newMember} just became a patron, give them a big thank you for helping us keep the lights on and expand!`); // eslint-disable-line max-len
       }
     }

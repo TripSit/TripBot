@@ -64,7 +64,7 @@ export const dTemplate: SlashCommand = {
     // const role = interaction.options.getRole('role');
     // const mentionable = interaction.options.getMentionable('mentionable');
     // const response = await globalTemplate();
-    // const userData = await getUser(i.user.id, null);
+    // const userData = await getUser(i.user.id, null, null);
     // const embed = embedTemplate()
     //   .setTitle('Modal')
     //   .setColor(Colors.Blurple)
@@ -121,7 +121,7 @@ export const dTemplate: SlashCommand = {
         const mentionable = interaction.options.getMentionable('mentionable');
 
         const response = await globalTemplate();
-        const userData = await getUser(i.user.id, null);
+        const userData = await getUser(i.user.id, null, null);
 
         const embed = embedTemplate()
           .setTitle('Modal')

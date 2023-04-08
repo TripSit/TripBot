@@ -13,7 +13,7 @@ export default karma;
 export async function karma(
   memberId: string,
 ):Promise<Users> {
-  const userData = await getUser(memberId, null);
+  const userData = await getUser(memberId, null, null);
   log.info(F, `userData: ${JSON.stringify(userData, null, 2)}`);
   return userData;
 }

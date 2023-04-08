@@ -183,7 +183,7 @@ export async function combo(
 
   const response = {
     success: true,
-    title: `Mixing **${drugA}** and **${drugB}**: ${output}`,
+    title: `Mixing ${drugA} and ${drugB}: ${output}`,
     description: definition,
     thumbnail,
     color,

@@ -260,7 +260,7 @@ export async function linkThread(
   override: boolean | null,
 ):Promise<string | null> {
   // Get the targetData from the db
-  const targetData = await getUser(discordId, null);
+  const targetData = await getUser(discordId, null, null);
 
   if (targetData.mod_thread_id === null || override) {
     // log.debug(F, `targetData.mod_thread_id is null, updating it`);
@@ -288,8 +288,8 @@ export async function moderate(
   description: ${description}
   duration: ${duration}`);
 
-  const actorData = await getUser(actor.id, null);
-  const targetData = await getUser(target.id, null);
+  const actorData = await getUser(actor.id, null, null);
+  const targetData = await getUser(target.id, null, null);
   const targetIsMember = (target as GuildMember).user !== undefined;
   const targetUser = (target as GuildMember).user ?? (target as User);
   const vendorBan = internalNote?.toLowerCase().includes('vendor');

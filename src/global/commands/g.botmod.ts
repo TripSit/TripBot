@@ -82,7 +82,7 @@ async function botmodUser(
   pubReason: string | null,
 ):Promise<InteractionReplyOptions> {
   const targetUser = await interaction.client.users.fetch(target);
-  const targetUserInfo = await getUser(targetUser.id, null);
+  const targetUserInfo = await getUser(targetUser.id, null, null);
 
   if (command === 'BOTBAN' && targetUserInfo.discord_bot_ban) {
     const embed = embedTemplate()

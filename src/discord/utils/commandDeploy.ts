@@ -28,7 +28,7 @@ async function getCommands(commandType: string): Promise<SlashCommand[]> {
     .map(command => command[Object.keys(command).find(key => command[key].data !== undefined) as string].data.toJSON());
 }
 
-if (validateEnv()) {
+if (validateEnv('DISCORD')) {
 // log.debug(F, `discordClientId: ${env.DISCORD_CLIENT_ID}`);
 // log.debug(F, `discordGuildId: ${env.DISCORD_GUILD_ID}`);
 

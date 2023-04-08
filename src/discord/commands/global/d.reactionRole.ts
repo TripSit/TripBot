@@ -296,7 +296,7 @@ export async function buttonReactionRole(
     return;
   }
 
-  const userData = await database.users.get(target.id, null);
+  const userData = await database.users.get(target.id, null, null);
 
   // If the role being requested is the Helper or Contributor role, check if they have been banned first
   if (role.id === env.ROLE_HELPER && userData.helper_role_ban) {
@@ -1573,7 +1573,7 @@ export const dReactionRole: SlashCommand = {
 //       // If this is a mindset emoji, set the end date
 //       if (mindsetEmojis.includes(`${reaction.emoji.name}`)) {
 //         // Update the database
-//         const userData = await getUser(user.id, null);
+//         const userData = await getUser(user.id, null, null);
 
 //         userData.discord_id = user.id;
 //         userData.mindset_role = role.id;

@@ -71,7 +71,7 @@ export const interactionCreate: InteractionCreateEvent = {
       // Slash command
       // log.debug(F, `Interaction isChatInputCommand!`);
       log.info(F, `Decided to run slash command in ${new Date().getTime() - startTime}ms`);
-      commandRun(interaction, client);
+      commandRun(interaction, discordClient);
       return;
     }
 
@@ -79,7 +79,7 @@ export const interactionCreate: InteractionCreateEvent = {
       // Right click command
       && interaction.isContextMenuCommand()) {
       log.debug(F, `interaction.isContextMenuCommand(): ${interaction.isContextMenuCommand()}`);
-      commandRun(interaction, client);
+      commandRun(interaction, discordClient);
       return;
     }
 
@@ -90,7 +90,7 @@ export const interactionCreate: InteractionCreateEvent = {
 
     if (interaction.type === InteractionType.MessageComponent) {
       if (interaction.isContextMenuCommand()) {
-        commandRun(interaction, client);
+        commandRun(interaction, discordClient);
         return;
       }
       if (interaction.isStringSelectMenu()) {
@@ -98,7 +98,7 @@ export const interactionCreate: InteractionCreateEvent = {
         return;
       }
       if (interaction.isButton()) {
-        buttonClick(interaction, client);
+        buttonClick(interaction, discordClient);
       }
       // log.debug(F, `Unknown interaction!`);
     }

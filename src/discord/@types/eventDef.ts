@@ -54,7 +54,7 @@ export interface ChannelPinsUpdateEvent {
 export interface ReadyEvent {
   name: string;
   once: boolean;
-  execute: (client: Client) => Promise<void>;
+  execute: (discordClient: Client) => Promise<void>;
 }
 
 export interface DebugEvent {

@@ -40,7 +40,7 @@ export const channelCreate: ChannelCreateEvent = {
 
     const creationLog = fetchedLogs.entries.first();
 
-    const channelAuditlog = await client.channels.fetch(env.CHANNEL_AUDITLOG) as TextChannel;
+    const channelAuditlog = await discordClient.channels.fetch(env.CHANNEL_AUDITLOG) as TextChannel;
 
     const channelPerms = await checkChannelPermissions(channelAuditlog, [
       'ViewChannel' as PermissionResolvable,

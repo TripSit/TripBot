@@ -13,7 +13,7 @@ export default profile;
 export async function profile(
   memberId: string,
 ):Promise<ProfileData> {
-  const userData = await getUser(memberId, null);
+  const userData = await getUser(memberId, null, null);
   // log.debug(F, `userData: ${JSON.stringify(userData, null, 2)}`);
 
   const values = await Promise.allSettled([

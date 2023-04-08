@@ -16,7 +16,7 @@ export const debug: DebugEvent = {
   async execute(info) {
     if (!enable) return;
     // log.debug(F, `info: ${info}`);
-    const botlog = await client.channels.fetch(env.CHANNEL_BOTERRORS) as TextChannel;
+    const botlog = await discordClient.channels.fetch(env.CHANNEL_BOTLOG) as TextChannel;
     await botlog.send(info);
   },
 };

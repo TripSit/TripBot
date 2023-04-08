@@ -33,7 +33,7 @@ export async function timezone(
     }
     // log.debug(F, `actor.id: ${actor.id}`);
 
-    const userData = await getUser(memberId, null);
+    const userData = await getUser(memberId, null, null);
 
     userData.timezone = tzCode;
 
@@ -43,7 +43,7 @@ export async function timezone(
   }
   let gmtValue = '';
 
-  const userData = await getUser(memberId, null);
+  const userData = await getUser(memberId, null, null);
 
   // log.debug(F, `userData: ${JSON.stringify(userData, null, 2)}`);
 

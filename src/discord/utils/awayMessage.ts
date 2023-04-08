@@ -12,7 +12,7 @@ export async function awayMessage(message:Message): Promise<void> {
   // Check if the message mentions the bot owner
   if (!message.mentions.users.has(env.DISCORD_OWNER_ID)) return;
 
-  const userData = await getUser(message.author.id, null);
+  const userData = await getUser(message.author.id, null, null);
   if (userData.timezone) {
     // Check if it is after 8pm, or before 7am
     const userTime = new Date().toLocaleString('en-US', { timeZone: userData.timezone });

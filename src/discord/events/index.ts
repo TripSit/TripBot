@@ -7,10 +7,10 @@ import path from 'path';
 export default registerEvents;
 
 /**
- * @param {client} client The discord client
+ * @param {client} discordClient The discord discordClient
  * @return {Promise<Command[]>} The list of commands
  */
-export async function registerEvents(client: Client): Promise<void> {
+export async function registerEvents(discordClient: Client): Promise<void> {
   const eventDir = path.join(__dirname, '../events');
   // log.debug(F, `eventDir: ${eventDir}`);
   const eventFiles = await fs.readdir(eventDir);
@@ -19,7 +19,7 @@ export async function registerEvents(client: Client): Promise<void> {
     .map((file) => require(`${eventDir}/${file}`)) // eslint-disable-line
     .forEach(event => {
       const fileName = Object.keys(event)[0];
-      if (event[fileName].once) client.once(event[fileName].name, (...args) => event[fileName].execute(...args));
-      else client.on(event[fileName].name, (...args) => event[fileName].execute(...args, client));
+      if (event[fileName].once) discordClient.once(event[fileName].name, (...args) => event[fileName].execute(...args));
+      else discordClient.on(event[fileName].name, (...args) => event[fileName].execute(...args, discordClient));
     });
 }

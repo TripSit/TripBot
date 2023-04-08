@@ -42,7 +42,7 @@ export const guildBanRemove: GuildBanRemoveEvent = {
     // Since there's only 1 audit log entry in this collection, grab the first one
     const creationLog = fetchedLogs.entries.first();
 
-    const channel = await client.channels.fetch(env.CHANNEL_AUDITLOG) as TextChannel;
+    const channel = await discordClient.channels.fetch(env.CHANNEL_AUDITLOG) as TextChannel;
 
     const channelPerms = await checkChannelPermissions(channel, [
       'ViewChannel' as PermissionResolvable,

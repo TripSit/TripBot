@@ -19,7 +19,7 @@ export async function privacy(
   userId: string,
 ):Promise<string> {
   let response = '';
-  const userData = await getUser(userId, null);
+  const userData = await getUser(userId, null, null);
   // const userActions = await db<UserActions>('user_actions')
   //   .where('user_id', userData.id);
   const userDrugDoses = await idoseGet(userData.id);

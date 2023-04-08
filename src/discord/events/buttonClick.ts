@@ -14,9 +14,9 @@ import {
   tripsitmeResolve,
 } from '../utils/tripsitme';
 import { techHelpClick, techHelpClose, techHelpOwn } from '../utils/techHelp';
-import {
-  modmailCreate, modmailActions,
-} from '../commands/archive/modmail';
+// import {
+//   modmailCreate, modmailActions,
+// } from '../commands/archive/modmail';
 import { verifyButton } from '../utils/verifyButton';
 import { buttonReactionRole } from '../commands/global/d.reactionRole';
 import {
@@ -27,7 +27,7 @@ const F = f(__filename);
 
 export default buttonClick;
 
-export async function buttonClick(interaction:ButtonInteraction, client:Client) {
+export async function buttonClick(interaction:ButtonInteraction, discordClient:Client) {
   log.info(F, await commandContext(interaction));
   log.debug(F, 'Interaction deferred!');
   const buttonID = interaction.customId;
@@ -119,10 +119,10 @@ export async function buttonClick(interaction:ButtonInteraction, client:Client) 
     return;
   }
 
-  if (buttonID.startsWith('modmailIssue')) {
-    await modmailActions(interaction);
-    return;
-  }
+  // if (buttonID.startsWith('modmailIssue')) {
+  //   await modmailActions(interaction);
+  //   return;
+  // }
 
   if (buttonID.startsWith('applicationApprove')) {
     applicationApprove(interaction);
@@ -140,28 +140,28 @@ export async function buttonClick(interaction:ButtonInteraction, client:Client) 
     techHelpClick(interaction);
     return;
   }
-  if (buttonID === 'modmailTripsitter') {
-    modmailCreate(interaction, 'TRIPSIT');
-    return;
-  }
-  if (buttonID === 'modmailFeedback') {
-    modmailCreate(interaction, 'FEEDBACK');
-    return;
-  }
-  if (buttonID === 'modmailTechIssue') {
-    modmailCreate(interaction, 'TECH');
-    return;
-  }
-  if (buttonID === 'modmailBanAppeal') {
-    modmailCreate(interaction, 'APPEAL');
-    return;
-  }
+  // if (buttonID === 'modmailTripsitter') {
+  //   modmailCreate(interaction, 'TRIPSIT');
+  //   return;
+  // }
+  // if (buttonID === 'modmailFeedback') {
+  //   modmailCreate(interaction, 'FEEDBACK');
+  //   return;
+  // }
+  // if (buttonID === 'modmailTechIssue') {
+  //   modmailCreate(interaction, 'TECH');
+  //   return;
+  // }
+  // if (buttonID === 'modmailBanAppeal') {
+  //   modmailCreate(interaction, 'APPEAL');
+  //   return;
+  // }
   if (buttonID === 'memberButton') {
     verifyButton(interaction);
     return;
   }
 
-  const command = client.commands.get(interaction.customId);
+  const command = discordClient.commands.get(interaction.customId);
 
   if (!command) return;
 

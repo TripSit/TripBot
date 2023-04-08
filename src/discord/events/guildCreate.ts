@@ -7,6 +7,7 @@ import {
 import { getGuild, guildUpdate } from '../../global/utils/knex';
 
 const F = f(__filename);
+
 export const guildCreate: GuildCreateEvent = {
   name: 'guildCreate',
   async execute(guild) {
@@ -23,8 +24,8 @@ export const guildCreate: GuildCreateEvent = {
     guildData.joined_at = new Date();
     await guildUpdate(guildData);
 
-    const auditlog = await client.channels.fetch(env.CHANNEL_AUDITLOG) as TextChannel;
-    client.guilds.fetch();
+    const auditlog = await discordClient.channels.fetch(env.CHANNEL_AUDITLOG) as TextChannel;
+    discordClient.guilds.fetch();
     await auditlog.send(`I just joined a guild! I am now in ${client.guilds.cache.size} guilds!
     ${guild.name} (id: ${guild.id})
     Created at: ${guild.createdAt}

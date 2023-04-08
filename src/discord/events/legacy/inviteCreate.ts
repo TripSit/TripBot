@@ -31,7 +31,7 @@ export const inviteCreate: InviteCreateEvent = {
     // Since there's only 1 audit log entry in this collection, grab the first one
     const creationLog = fetchedLogs.entries.first();
 
-    const auditlog = await client.channels.fetch(env.CHANNEL_AUDITLOG) as TextChannel;
+    const auditlog = await discordClient.channels.fetch(env.CHANNEL_AUDITLOG) as TextChannel;
 
     // Perform a coherence check to make sure that there's *something*
     if (!creationLog) {

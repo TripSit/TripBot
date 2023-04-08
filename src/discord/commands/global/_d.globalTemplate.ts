@@ -120,7 +120,7 @@ export const dTemplate: SlashCommand = {
         const mentionable = interaction.options.getMentionable('mentionable');
 
         const response = await globalTemplate();
-        const userData = await getUser(i.user.id, null);
+        const userData = await getUser(i.user.id, null, null);
 
         await i.editReply({
           embeds: [

@@ -32,7 +32,7 @@
 //         return;
 //       }
 
-//       const [targetData, targetFbid] = message.client.guilds.resolve(DISCORD_GUILD_ID);
+//       const [targetData, targetFbid] = message.discordClient.guilds.resolve(DISCORD_GUILD_ID);
 
 //       let karmaValue = 1;
 //       // Transform guild data
@@ -61,7 +61,7 @@
 //     // log.debug(F, `Word before --: ${wordBeforePlus}`);
 
 //       // Extract guild data
-//       const tripsitGuild = message.client.guilds.resolve(DISCORD_GUILD_ID);
+//       const tripsitGuild = message.discordClient.guilds.resolve(DISCORD_GUILD_ID);
 //       const [targetData, targetFbid] = await getGuildInfo(tripsitGuild);
 
 //       let karmaValue = 1;

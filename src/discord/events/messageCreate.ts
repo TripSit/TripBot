@@ -76,7 +76,7 @@ export const messageCreate: MessageCreateEvent = {
       return;
     }
 
-    const userData = await getUser(message.author.id, null);
+    const userData = await getUser(message.author.id, null, null);
     if (userData && userData.discord_bot_ban) {
       return;
     }

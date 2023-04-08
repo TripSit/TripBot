@@ -57,10 +57,10 @@ export const guildMemberRemove: GuildMemberRemoveEvent = {
       embed.setDescription(`${member} has left the guild`);
     }
 
-    const auditlog = await client.channels.fetch(env.CHANNEL_AUDITLOG) as TextChannel;
+    const auditlog = await discordClient.channels.fetch(env.CHANNEL_AUDITLOG) as TextChannel;
     await auditlog.send({ embeds: [embed] });
 
-    const userData = await getUser(member.id, null);
+    const userData = await getUser(member.id, null, null);
     userData.removed_at = new Date();
     userData.discord_id = member.id;
 
