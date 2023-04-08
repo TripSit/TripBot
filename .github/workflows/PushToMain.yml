@@ -9,7 +9,6 @@ jobs:
   testScan:
     name: Test and Scan
     runs-on: ubuntu-latest
-    if: github.event.pull_request.merged == true
     steps:
     - uses: actions/checkout@v3
     - name: Use Node.js '16.17.1'
@@ -33,7 +32,6 @@ jobs:
   codeql:
     name: CodeQL
     runs-on: ubuntu-latest
-    if: github.event.pull_request.merged == true
     permissions:
       actions: read
       contents: read
@@ -58,7 +56,6 @@ jobs:
   # version:
   #   name: Version
   #   runs-on: ubuntu-latest
-  #   if: github.event.pull_request.merged == true
   #   steps:
   #   - name: Checkout code
   #     uses: actions/checkout@v3
