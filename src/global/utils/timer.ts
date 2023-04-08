@@ -20,6 +20,7 @@ import {
   TicketStatus, UserTickets, TicketType,
 } from '../@types/database.d';
 import { checkChannelPermissions } from '../../discord/utils/checkPermissions';
+import botStats from '../commands/g.botstats';
 
 const F = f(__filename);
 
@@ -294,7 +295,8 @@ async function checkMindsets() {
  */
 async function callUptime() {
   if (env.NODE_ENV !== 'production') return;
-  axios.get('https://uptime.tripsit.me/api/push/UyL8LkDKtG?status=up&msg=OK').catch(e => {
+  const { ping } = await botStats();
+  axios.get(`https://uptime.tripsit.me/api/push/UyL8LkDKtG?status=up&msg=OK?ping=${ping}`).catch(e => {
     log.debug(F, e);
   });
 }
