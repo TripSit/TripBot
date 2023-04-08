@@ -1,3 +1,4 @@
+/* eslint-disable */
 import {
   cpu,
   drive,
@@ -11,7 +12,7 @@ import drugDataCombined from '../assets/data/drug_db_combined.json';
 
 export default botStats;
 
-const F = f(__filename); // eslint-disable-line
+const F = f(__filename);
 
 type BotStats = {
   tsDbSize: number;
@@ -37,6 +38,7 @@ type BotStats = {
 
 export async function botStats():Promise<BotStats> {
   const response = {} as BotStats;
+ 
   // Get drug db stats
   response.tsDbSize = Object.keys(drugDataTripsit).length;
   response.tsPwDbSize = Object.keys(drugDataCombined).length;

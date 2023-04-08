@@ -77,6 +77,7 @@ async function handleCommand(roomId: string, event: any) {
  * Start the matrix bot
  */
 async function startMatrix():Promise<void> {
+  log.info(F, 'Starting Matrix-Bot...');
   // create the matrixClient and make it auto-join rooms on invite
   const matrixClient:MatrixClient = new MatrixClient(env.MATRIX_HOMESERVER_URL, env.MATRIX_ACCESS_TOKEN, storage);
   AutojoinRoomsMixin.setupOnClient(matrixClient);
@@ -86,8 +87,12 @@ async function startMatrix():Promise<void> {
   matrixClient.on('room.message', await handleCommand);
 
   // Now that everything is set up, start the bot. This will start the sync loop and run until killed.
-  await matrixClient.start().then(async () => {
-    log.info(F, 'Matrix-Bot started!');
-    console.log(await matrixClient.getWhoAmI());
-  });
+  await matrixClient.start()
+    .then(async () => {
+      const botInfo = await matrixClient.getWhoAmI();
+      log.info(F, `Matrix-Bot logged in as ${botInfo.user_id}`);
+    })
+    .catch(e => {
+      log.error(F, e);
+    });
 }

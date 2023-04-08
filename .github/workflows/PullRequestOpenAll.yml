@@ -1,0 +1,71 @@
+name: PullRequestOpen
+
+on:
+  pull_request:
+    branches:
+      - main
+      - development
+    types:
+      - opened
+      - synchronize
+      - reopened
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Use Node.js '16.17.1'
+      uses: actions/setup-node@v3
+      with:
+        node-version: '16.17.1'
+        cache: 'npm'
+    - name: Update npm
+      run: npm install -g npm && npm --version
+    - name: Install eslint
+      run: npm install eslint eslint-config-airbnb-base eslint-config-airbnb-typescript eslint-config-google eslint-import-resolver-typescript eslint-plugin-import --save-dev && npx eslint --version
+    - name: Linting
+      run: npx eslint --ext .ts,.js .
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Use Node.js '16.17.1'
+      uses: actions/setup-node@v3
+      with:
+        node-version: '16.17.1'
+        cache: 'npm'
+    - name: Update npm
+      run: npm install -g npm && npm --version
+    - name: Install dependencies
+      run: npm ci
+    - name: Copy env
+      run: cp .env.example .env
+    - name: Test
+      run: npm test
+  codeql:
+    name: CodeQL
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [ 'javascript' ]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v2
+        with:
+          languages: ${{ matrix.language }}
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v2
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v2
+        with:
+          category: "/language:${{matrix.language}}"

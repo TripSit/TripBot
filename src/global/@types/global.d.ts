@@ -1,6 +1,9 @@
 import { Client } from 'discord.js';
 import { MatrixClient } from 'matrix-bot-sdk';
 
+// import Rollbar from 'rollbar';
+import Sentry from '@sentry/node';
+
 declare global {
   var guildInvites: Collection; // eslint-disable-line
   var reactionRoles: { [key: string]: any };// eslint-disable-line
@@ -11,6 +14,8 @@ declare global {
   var announcements: string[]; // eslint-disable-line
   var lpmDict: LpmDict; // eslint-disable-line
   var lpmTime: number[]; // eslint-disable-line
+  // var rollbar: Rollbar; // eslint-disable-line
+  var sentry: Sentry; // eslint-disable-line
   // var emojiGuildRPG: Guild; // eslint-disable-line
   // var emojiGuildMain: Guild; // eslint-disable-line
   var emojiGet: (name:string) => Emoji; // eslint-disable-line

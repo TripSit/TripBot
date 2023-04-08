@@ -6,7 +6,7 @@ import { stripIndents } from 'common-tags';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { calcPsychedelics } from '../../../global/commands/g.calcPsychedelics';
-import { startLog } from '../../utils/startLog';
+import { commandContext } from '../../utils/context';
 
 const F = f(__filename);
 
@@ -41,7 +41,7 @@ export const dCalcPsychedelics: SlashCommand = {
       .addBooleanOption(option => option.setName('ephemeral')
         .setDescription('Set to "True" to show the response only to you'))),
   async execute(interaction) {
-    startLog(F, interaction);
+    log.info(F, await commandContext(interaction));
     await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
     // log.debug(F, `${JSON.stringify(interaction.options, null, 2)}`);
     const lastDose = interaction.options.getNumber('last_dose', true);

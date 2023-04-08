@@ -88,7 +88,7 @@ export const dRole: SlashCommand = {
       .addUserOption(option => option.setName('user')
         .setDescription('(Mod only, defaults to you) The user to remove the role.'))),
   async execute(interaction) {
-    startlog(F, interaction);
+    log.info(F, await commandContext(interaction));
     await interaction.deferReply({ ephemeral: true });
     if (!interaction.guild) return false;
     const command = interaction.options.getSubcommand();

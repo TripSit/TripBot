@@ -4,7 +4,7 @@ import {
 import { SlashCommand } from '../../@types/commandDef';
 // import { embedTemplate } from '../../utils/embedTemplate';
 import { topic } from '../../../global/commands/g.topic';
-import { startLog } from '../../utils/startLog';
+import { commandContext } from '../../utils/context';
 
 const F = f(__filename);
 
@@ -13,7 +13,7 @@ export const dTopic: SlashCommand = {
     .setName('topic')
     .setDescription('Sends a random topic!'),
   async execute(interaction) {
-    startLog(F, interaction);
+    log.info(F, await commandContext(interaction));
     await interaction.deferReply({ ephemeral: false });
     // interaction.editReply({ embeds: [embedTemplate().setDescription(await topic())] });
     await interaction.editReply(`Random New Topic: **${await topic()}**`);

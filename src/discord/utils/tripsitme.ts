@@ -40,7 +40,7 @@ import {
   UserTickets,
   TicketStatus,
 } from '../../global/@types/database.d';
-import { startLog } from './startLog';
+import { commandContext } from './context';
 import { embedTemplate } from './embedTemplate';
 import { checkChannelPermissions, checkGuildPermissions } from './checkPermissions';
 
@@ -296,6 +296,7 @@ export async function tripsitmeMeta(
       autoArchiveDuration: 1440,
       type: ChannelType.PrivateThread,
       reason: `${actor.displayName} created meta thread for ${target.displayName}`,
+      invitable: false,
     },
   );
 
@@ -421,7 +422,7 @@ export async function tripsitmeBackup(
 export async function tripsitmeClose(
   interaction:ButtonInteraction,
 ) {
-  startLog(F, interaction);
+  log.info(F, await commandContext(interaction));
   await interaction.deferReply({ ephemeral: true });
   if (!interaction.guild) {
     // log.debug(F, `no guild!`);
@@ -537,7 +538,7 @@ export async function tripsitmeClose(
 export async function tripsitmeResolve(
   interaction:ButtonInteraction,
 ) {
-  startLog(F, interaction);
+  log.info(F, await commandContext(interaction));
   if (interaction.channel
       && (interaction.channel as ThreadChannel).archived) {
     await (interaction.channel as ThreadChannel).setArchived(false);
@@ -725,7 +726,7 @@ export async function tripSitMe(
   triage:string,
   intro:string,
 ):Promise<ThreadChannel | null> {
-  await startLog('tripSitMe', interaction);
+  log.info(F, await commandContext(interaction));
   // await interaction.deferReply({ ephemeral: true });
 
   // Lookup guild information for variables
@@ -807,6 +808,7 @@ export async function tripSitMe(
     autoArchiveDuration: 1440,
     type: ChannelType.PrivateThread,
     reason: `${target.displayName} requested help`,
+    invitable: false,
   });
   log.debug(F, `threadHelpUser: ${threadHelpUser.name} (${threadHelpUser.id})`);
 
@@ -951,7 +953,7 @@ export async function tripSitMe(
 export async function tripsitmeButton(
   interaction:ButtonInteraction,
 ) {
-  startLog(F, interaction);
+  log.info(F, await commandContext(interaction));
   const target = interaction.member as GuildMember;
 
   // log.debug(F, `target: ${JSON.stringify(target, null, 2)}`);

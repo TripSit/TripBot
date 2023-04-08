@@ -13,7 +13,7 @@ import { embedTemplate } from '../../utils/embedTemplate';
 import {
   bridgeConfirm, bridgeCreate, bridgePause, bridgeRemove, bridgeResume,
 } from '../../../global/commands/g.bridge';
-import { startLog } from '../../utils/startLog';
+import { commandContext } from '../../utils/context';
 import { database } from '../../../global/utils/knex';
 import { checkChannelPermissions } from '../../utils/checkPermissions';
 
@@ -382,7 +382,7 @@ export const dBridge: SlashCommand = {
       .addStringOption(option => option.setName('confirmation')
         .setDescription('Confirmation Code'))),
   async execute(interaction) {
-    startLog(F, interaction);
+    log.info(F, await commandContext(interaction));
     await interaction.deferReply({ ephemeral: false });
     const embed = embedTemplate()
       .setTitle('Bridge')

@@ -1,50 +1,67 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
-import { TextChannel } from 'discord.js';
+import { Colors, EmbedBuilder, TextChannel } from 'discord.js';
 import { getVoiceConnection } from '@discordjs/voice';
+// import { stripIndents } from 'common-tags';
 import { env } from './global/utils/env.config';
 import { log } from './global/utils/log';
 import { discordConnect } from './discord/discord'; // eslint-disable-line
 import validateEnv from './global/utils/env.validate'; // eslint-disable-line
-import { startLog } from './discord/utils/startLog'; // eslint-disable-line
+import { commandContext } from './discord/utils/context'; // eslint-disable-line
 import startMatrix from './matrix/matrix';
 
 global.bootTime = new Date();
 
 const F = f(__filename);
 
-/**
-* Starts everything in the bot.
-*/
+const error10062 = 'Error 10062: (Unknown Interaction Error)[https://github.com/discord/discord-api-docs/issues/5558] for details'; // eslint-disable-line max-len
+
 async function start() {
   log.info(F, 'Initializing service!');
-
-  // log.debug(F, `Token length: ${env.DISCORD_CLIENT_TOKEN.length}`);
-  if (env.DISCORD_CLIENT_TOKEN) {
-    validateEnv('SERVICES');
-    if (validateEnv('DISCORD')) await discordConnect();
-    if (validateEnv('MATRIX')) console.log('v'); await startMatrix();
-  }
+  validateEnv('SERVICES');
+  if (env.DISCORD_CLIENT_TOKEN && validateEnv('DISCORD')) await discordConnect();
+  if (env.MATRIX_ACCESS_TOKEN && validateEnv('MATRIX') && env.NODE_ENV !== 'production') await startMatrix();
 }
 
 start();
 
 process.on('unhandledRejection', async (error: Error) => {
-  log.error(F, `ERROR: ${error.stack}`);
+  Error.stackTraceLimit = 50;
+  const errorStack = error.stack || JSON.stringify(error, null, 2);
+
+  // Log the error locally
+  log.error(F, `${errorStack}`);
+
+  // If this is production, send a message to the channel and alert the developers
   if (env.NODE_ENV === 'production') {
+    sentry.captureException(error);
+
+    // Construct the embed
+    const embed = new EmbedBuilder()
+      .setColor(Colors.Red)
+      .setDescription(errorStack);
+
+    // Get channel we send errors to
     const channel = await client.channels.fetch(env.CHANNEL_BOTERRORS) as TextChannel;
 
-    if ((error as any).code === 10062) {
-      await channel.send(`I just got an "Unknown interaction" error, this is still a problem!
-      Check out <https://github.com/discord/discord-api-docs/issues/5558> for details`);
+    // If the error is a 10062, we know it's a Discord API error, to kind of ignore it =/
+    if ((error as any).code === 10062) { // eslint-disable-line @typescript-eslint/no-explicit-any
+      await channel.send({
+        embeds: [
+          embed.setDescription(error10062), // eslint-disable-line max-len
+        ],
+      });
       return;
     }
 
+    // Get the role we want to ping
     const guild = await client.guilds.fetch(env.DISCORD_GUILD_ID);
     const role = await guild.roles.fetch(env.ROLE_TRIPBOTDEV);
-    await channel.send(`Hey ${role}, I just got an error (start):
-    ${error.stack}
-    `);
+
+    // Alert the developers
+    await channel.send({
+      embeds: [
+        embed.setDescription(`**unhandled Error\`\`\`${errorStack}\`\`\`${role} should check this out!`),
+      ],
+    });
   }
 });
 
@@ -71,8 +88,8 @@ declare global {
   // eslint-disable-next-line no-var, vars-on-top
   // var env:any; // NOSONAR
   // eslint-disable-next-line no-var, vars-on-top
-  var startlog:any; // NOSONAR
+  var commandContext:any; // NOSONAR
 }
 
 global.env = env;
-global.startlog = startLog;
+global.commandContext = commandContext;

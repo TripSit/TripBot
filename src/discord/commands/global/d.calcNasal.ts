@@ -6,7 +6,7 @@ import {
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { calcSolvent, calcSubstance } from '../../../global/commands/g.calcNasal';
-import { startLog } from '../../utils/startLog';
+import { commandContext } from '../../utils/context';
 
 const F = f(__filename);
 
@@ -45,7 +45,7 @@ export const dCalcNasal: SlashCommand = {
         .setDescription('Set to "True" to show the response only to you'))),
 
   async execute(interaction) {
-    startLog(F, interaction);
+    log.info(F, await commandContext(interaction));
     await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
     const command = interaction.options.getSubcommand();
     const imageUrl = 'https://user-images.githubusercontent.com/1836049/218758611-c84f1e34-0f5b-43ac-90da-bd89b028f131.png';

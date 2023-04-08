@@ -5,7 +5,7 @@ import {
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { youtube } from '../../../global/commands/g.youtube';
-import { startLog } from '../../utils/startLog';
+import { commandContext } from '../../utils/context';
 // import log from '../../../global/utils/log';
 const F = f(__filename);
 
@@ -19,7 +19,7 @@ export const dYoutube: SlashCommand = {
       .setName('search')),
 
   async execute(interaction:ChatInputCommandInteraction) {
-    startLog(F, interaction);
+    log.info(F, await commandContext(interaction));
     const query = interaction.options.getString('search');
     // log.debug(F, `- query: ${query}`);
     if (!query) {

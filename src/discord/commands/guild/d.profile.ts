@@ -8,7 +8,7 @@ import Canvas from '@napi-rs/canvas';
 import * as path from 'path';
 import { SlashCommand } from '../../@types/commandDef';
 import { profile, ProfileData } from '../../../global/commands/g.profile';
-import { startLog } from '../../utils/startLog';
+import { commandContext } from '../../utils/context';
 import { expForNextLevel, getTotalLevel } from '../../../global/utils/experience';
 import { getPersonaInfo } from '../../../global/commands/g.rpg';
 import { inventoryGet } from '../../../global/utils/knex';
@@ -189,7 +189,7 @@ export const dProfile: SlashCommand = {
   async execute(
     interaction,
   ) {
-    startLog(F, interaction);
+    log.info(F, await commandContext(interaction));
     await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
     const startTime = Date.now();
     if (!interaction.guild) {

@@ -1352,7 +1352,7 @@ export const dReactionRole: SlashCommand = {
         .setDescription(embedOption)
         .setAutocomplete(true))),
   async execute(interaction) {
-    startlog(F, interaction);
+    log.info(F, await commandContext(interaction));
     if (!interaction.guild) {
       // log.debug(F, `no guild!`);
       await interaction.reply(guildError);

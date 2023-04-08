@@ -6,7 +6,7 @@ import {
 } from 'discord.js';
 import { SlashCommand } from '../../@types/commandDef';
 import { parseDuration } from '../../../global/utils/parseDuration';
-import { startLog } from '../../utils/startLog'; // eslint-disable-line
+import { commandContext } from '../../utils/context'; // eslint-disable-line
 
 const F = f(__filename);
 export const selfTimeout: SlashCommand = {
@@ -26,7 +26,7 @@ export const selfTimeout: SlashCommand = {
       )
       .setRequired(true)),
   async execute(interaction:ChatInputCommandInteraction) {
-    startLog(F, interaction);
+    log.info(F, await commandContext(interaction));
     await interaction.deferReply({ ephemeral: true });
     if (!interaction.guild) return false;
 

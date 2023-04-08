@@ -35,7 +35,7 @@ import {
 } from '../../../global/@types/database';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
-import { startLog } from '../../utils/startLog';
+import { commandContext } from '../../utils/context';
 
 /* Test script
 1a) Init !
@@ -151,8 +151,6 @@ const modMailIssuePlaceholder = 'I have an issue, can you please help?';
 
 const F = f(__filename);
 
-export default modmail;
-
 async function updateButtons(
   interaction: ButtonInteraction | ChatInputCommandInteraction,
   newButtons: ActionRowBuilder<ButtonBuilder>,
@@ -189,7 +187,7 @@ async function updateButtons(
 export async function modmailActions(
   interaction:ButtonInteraction | ChatInputCommandInteraction,
 ) {
-  startLog(F, interaction);
+  log.info(F, await commandContext(interaction));
   let command = '';
   if (interaction.isButton()) {
     const varArray = interaction.customId.split('~');
@@ -444,7 +442,7 @@ export const modmail: SlashCommand = {
       .setDescription('Put the ticket on hold')
       .setName('pause')),
   async execute(interaction:ChatInputCommandInteraction) {
-    startLog(F, interaction);
+    log.info(F, await commandContext(interaction));
     await modmailActions(interaction);
     return true;
   },
@@ -689,6 +687,7 @@ export async function modmailCreate(
         autoArchiveDuration: 1440,
         type: threadType,
         reason: `${actor.username} submitted a(n) ${issueType} ticket!`,
+        invitable: false,
       });
         // log.debug(F, `Created thread ${ticketThread.id}`);
 
@@ -1017,3 +1016,5 @@ export async function modmailThreadInteraction(message:Message) {
     }
   }
 }
+
+export default modmail;

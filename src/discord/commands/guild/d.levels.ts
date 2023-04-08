@@ -13,7 +13,7 @@ import { profile, ProfileData } from '../../../global/commands/g.profile';
 import { getPersonaInfo } from '../../../global/commands/g.rpg';
 import { inventoryGet } from '../../../global/utils/knex';
 import { imageGet } from '../../utils/imageGet';
-import { startLog } from '../../utils/startLog';
+import { commandContext } from '../../utils/context';
 import { numFormatter, numFormatterVoice } from './d.profile';
 import { Personas } from '../../../global/@types/database';
 // import { expForNextLevel, getTotalLevel } from '../../../global/utils/experience';
@@ -199,7 +199,7 @@ export const dLevels: SlashCommand = {
   async execute(
     interaction:ChatInputCommandInteraction,
   ) {
-    startLog(F, interaction);
+    log.info(F, await commandContext(interaction));
     const startTime = Date.now();
     if (!interaction.guild) {
       await interaction.editReply('You can only use this command in a guild!');

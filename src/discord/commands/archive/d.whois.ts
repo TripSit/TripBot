@@ -4,7 +4,7 @@ import {
 } from 'discord.js';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
-import { startLog } from '../../utils/startLog';
+import { commandContext } from '../../utils/context';
 // import {whoisIRC} from '../../../global/commands/archive/g.whois';
 
 const F = f(__filename);
@@ -19,7 +19,7 @@ export const discordTemplate: SlashCommand = {
       .setName('target')),
 
   async execute(interaction:ChatInputCommandInteraction) {
-    startLog(F, interaction);
+    log.info(F, await commandContext(interaction));
     // const target = interaction.options.getString('target');
 
     // let body;

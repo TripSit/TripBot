@@ -32,7 +32,7 @@ import {
 } from 'discord-api-types/v10';
 import { stripIndents } from 'common-tags';
 import { embedTemplate } from './embedTemplate';
-import { startLog } from './startLog'; // eslint-disable-line @typescript-eslint/no-unused-vars
+import { commandContext } from './context'; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { getGuild, guildUpdate } from '../../global/utils/knex';
 import { checkChannelPermissions, checkGuildPermissions } from './checkPermissions';
 
@@ -276,7 +276,7 @@ export async function applicationSetup(
 export async function applicationStart(
   interaction: SelectMenuInteraction,
 ): Promise<void> {
-  startLog(F, interaction);
+  log.info(F, await commandContext(interaction));
   if (interaction.values[0] === 'none') {
     await interaction.reply({
       content: 'No application selected.',
@@ -356,7 +356,7 @@ export async function applicationStart(
         autoArchiveDuration: 1440,
         type: ChannelType.PrivateThread,
         reason: `${actor.displayName} submitted an application!`,
-        invitable: env.NODE_ENV === 'production' ? false : undefined,
+        invitable: false,
       });
 
       let columns = 1;
@@ -516,7 +516,7 @@ export async function applicationStart(
 export async function applicationReject(
   interaction: SelectMenuInteraction,
 ): Promise<void> {
-  startLog(F, interaction);
+  log.info(F, await commandContext(interaction));
   if (!interaction.guild) return;
   if (!interaction.channel) return;
   if (!interaction.member) return;
@@ -586,7 +586,7 @@ export async function applicationReject(
 export async function applicationApprove(
   interaction: ButtonInteraction,
 ): Promise<void> {
-  startLog(F, interaction);
+  log.info(F, await commandContext(interaction));
   if (!interaction.guild) return;
   if (!interaction.channel) return;
   if (!interaction.member) return;
