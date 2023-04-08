@@ -13,7 +13,7 @@ import { commandContext } from './context';
 const F = f(__filename);
 
 const error10062 = 'Error 10062: (Unknown Interaction Error)[https://github.com/discord/discord-api-docs/issues/5558] for details'; // eslint-disable-line max-len
-const genericError = 'There was an error while executing this command!';
+// const genericError = 'There was an error while executing this command!';
 
 const dataSensitiveCommands = [
   'idose',

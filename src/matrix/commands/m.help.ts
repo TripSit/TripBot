@@ -10,9 +10,9 @@ export default async function mHelp(roomId: string, event: any): Promise<boolean
   let html = '&#128218; <b>TripBot Commands:</b><br><br>';
   let text = 'TripBot Commands:\n\n';
 
-  Object.values(commands).forEach(({ name, description, usage }) => {
-    html += `• <b>${name}</b>:<br>${description}<br><code>${usage}</code><br><br>`;
-    text += `${name}:\n${description}\nUsage:\n${usage}\n\n`;
+  Object.values(commands).forEach(command => {
+    html += `• <b>${command.name}</b>:<br>${command.description}<br><code>${command.usage}</code><br><br>`;
+    text += `${command.name}:\n${command.description}\nUsage:\n${command.usage}\n\n`;
   });
 
   await matrixClient.sendMessage(roomId, RichReply.createFor(roomId, event, text, html));
