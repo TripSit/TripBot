@@ -11,14 +11,14 @@ import {
 
 const enable = false;
 
+export default debug;
+
 export const debug: DebugEvent = {
   name: 'debug',
   async execute(info) {
     if (!enable) return;
     // log.debug(F, `info: ${info}`);
-    const botlog = await discordClient.channels.fetch(env.CHANNEL_BOTERRORS) as TextChannel;
+    const botlog = await discordClient.channels.fetch(env.CHANNEL_BOTLOG) as TextChannel;
     await botlog.send(info);
   },
 };
-
-export default debug;

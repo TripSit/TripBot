@@ -10,7 +10,7 @@ export const usage = '~command <required_arg> [optional arg]';
 
 const F = f(__filename);
 
-async function mCommand(roomId:string, event:any, matrixClient:MatrixClient):Promise<boolean> {
+async function mCommand(roomId:string, event:any):Promise<boolean> {
   matrixClient.replyNotice(roomId, event, 'Hello world!');
   log.debug(F, 'I did thing');
   return true;

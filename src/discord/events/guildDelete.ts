@@ -8,6 +8,8 @@ import { getGuild, guildUpdate } from '../../global/utils/knex';
 
 const F = f(__filename);
 
+export default guildDelete;
+
 export const guildDelete: GuildDeleteEvent = {
   name: 'guildDelete',
   async execute(guild) {
@@ -23,12 +25,10 @@ export const guildDelete: GuildDeleteEvent = {
 
     const auditlog = await discordClient.channels.fetch(env.CHANNEL_AUDITLOG) as TextChannel;
     discordClient.guilds.fetch();
-    await auditlog.send(`I just left a guild! I am now in ${client.guilds.cache.size} guilds!
+    await auditlog.send(`I just left a guild! I am now in ${discordClient.guilds.cache.size} guilds!
       ${guild.name} (id: ${guild.id})
       Member count: ${guild.memberCount}
       Description: ${guild.description ? guild.description : 'No description'}
     `);
   },
 };
-
-export default guildDelete;

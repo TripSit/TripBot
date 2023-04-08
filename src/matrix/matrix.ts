@@ -3,8 +3,9 @@ import {
   SimpleFsStorageProvider,
   AutojoinRoomsMixin,
 } from 'matrix-bot-sdk';
+import { Users } from '../global/@types/database';
 
-import { getUser } from '../global/utils/knex';
+import { getUser, userExists, usersUpdate } from '../global/utils/knex';
 import * as commands from './commands';
 
 const F = f(__filename);
@@ -21,8 +22,30 @@ const storage = new SimpleFsStorageProvider('cache/tripbot.json');
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function handleCommand(roomId: string, event: any) {
+  console.log(event);
   // this creates an entry in the database for every user tripbot receives a message from, if it doesn't exist already.
-  await getUser(null, event.sender, null);
+  log.debug(F, `Actor: ${event.sender}`);
+  /**  let userData:Users = await getUser(null, event.sender, null);
+  if (!userData.matrix_id) {
+    userData.matrix_id = event.sender;
+    userData.joined_at = new Date();
+    await usersUpdate(userData);
+  } else {
+    log.debug(F, 'actor known!');
+    console.log(userData);
+  } */
+
+  if (await userExists(null, event.sender, null)) {
+    log.debug(F, 'I know this guy!');
+    // console.log(await getUser(null, event.sender, null));
+  } else {
+    log.debug(F, 'dunno this guy, just created');
+    const userData = await getUser(null, event.sender, null);
+    userData.matrix_id = event.sender;
+    userData.joined_at = new Date();
+    await usersUpdate(userData);
+  }
+
   // Don't handle unhelpful events (ones that aren't text messages, are redacted, or sent by us)
   if (event.content?.msgtype !== 'm.text') return;
   if (event.sender === await matrixClient.getUserId()) return;
@@ -46,7 +69,7 @@ async function handleCommand(roomId: string, event: any) {
     return;
     // await matrixClient.replyNotice(roomId, event, resp); // send the message in response to the user
   } catch (e) {
-    log.error(F, e as string);
+    console.log(e);
   }
 }
 

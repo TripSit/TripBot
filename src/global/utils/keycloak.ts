@@ -61,6 +61,7 @@ export async function findUser(identifier: string): Promise<any | false> {
  * @returns {RoleMappings}
  */
 export async function getUserRoleMappings(identifier:string):Promise<any | false> {
+  await ensureAuthentication();
   // Find the user by identifier
   const user = await findUser(identifier);
 
@@ -79,6 +80,7 @@ export async function getUserRoleMappings(identifier:string):Promise<any | false
  * @param  {String} roleName human-readable name of the role (case sensitive!)
  */
 export async function hasRole(identifier:string, roleName:string):Promise<Boolean> {
+  await ensureAuthentication();
   const userRoleMappings = await getUserRoleMappings(identifier);
   if (!userRoleMappings) return false;
   return userRoleMappings.some((role: { name: string; }) => role.name === roleName);
@@ -116,6 +118,7 @@ export async function getRoleMembers(roleName:string):Promise<any> {
  *  @returns {Boolean}
  */
 export async function setUserAttribute(identifier:string, attributeName:string, attributeValue:string):Promise<Boolean> {
+  await ensureAuthentication();
   try {
     await kcAdminClient.users.update(
       { id: ((await findUser(identifier)).id) },

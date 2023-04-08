@@ -6,6 +6,8 @@ import { ErrorEvent } from '../@types/eventDef';
 
 const F = f(__filename);
 
+export default error;
+
 export const error: ErrorEvent = {
   name: 'error',
   async execute(errorObj) {
@@ -14,14 +16,12 @@ export const error: ErrorEvent = {
     // log.error(F, `errorObj.message: ${errorObj.message}`);
     log.error(F, `ERROR: ${errorObj.stack}`);
     if (env.NODE_ENV === 'production') {
-      const botlog = await discordClient.channels.fetch(env.CHANNEL_BOTERRORS) as TextChannel;
+      const botlog = await discordClient.channels.fetch(env.CHANNEL_BOTLOG) as TextChannel;
       const guild = await discordClient.guilds.fetch(env.DISCORD_GUILD_ID) as Guild;
-      const tripbotDevRole = await guild.roles.fetch(env.ROLE_TRIPBOTDEV);
-      await botlog.send(`Hey ${tripbotDevRole}, I just got an error (error):
+      const tripbotdevrole = await guild.roles.fetch(env.ROLE_TRIPBOTDEV);
+      await botlog.send(`Hey ${tripbotdevrole}, I just got an error (error):
       ${errorObj.stack}
       `);
     }
   },
 };
-
-export default error;
