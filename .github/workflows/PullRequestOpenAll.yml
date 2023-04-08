@@ -43,8 +43,8 @@ jobs:
       run: npm ci
     - name: Copy env
       run: cp .env.example .env
-    # - name: Test
-    #   run: npm test
+    - name: Test
+      run: npm test
   codeql:
     name: CodeQL
     runs-on: ubuntu-latest

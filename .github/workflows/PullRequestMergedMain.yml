@@ -8,6 +8,73 @@ on:
       - closed
 
 jobs:
+  version:
+    name: Version
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.merged == true
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      with:
+        token: ${{ secrets.MB_ACCESS_TOKEN }}
+    - name: Set up Git user
+      run: |
+        git config --global user.name "${{ github.actor }}"
+        git config --global user.email "${{ github.actor }}@users.noreply.github.com"
+    - name: Increment minor version
+      run: npm version minor -m "[RELEASE] %s"
+    - name: Git push
+      run: git push origin main --follow-tags --force
+  testScan:
+    name: Test and Scan
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.merged == true
+    steps:
+    - uses: actions/checkout@v3
+    - name: Use Node.js '16.17.1'
+      uses: actions/setup-node@v3
+      with:
+        node-version: '16.17.1'
+        cache: 'npm'
+    - name: Update npm
+      run: npm install -g npm && npm --version
+    - name: Install dependencies
+      run: npm ci
+    - name: Copy env
+      run: cp .env.example .env
+    - name: Test
+      run: npm test
+    - name: Scan
+      uses: sonarsource/sonarqube-scan-action@master
+      env:
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+  codeql:
+    name: CodeQL
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.merged == true
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [ 'javascript' ]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v2
+        with:
+          languages: ${{ matrix.language }}
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v2
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v2
+        with:
+          category: "/language:${{matrix.language}}"
+
   PullRequestMerged:
     name: PullRequestMerged
     runs-on: ubuntu-latest
@@ -44,11 +111,9 @@ jobs:
       run: cp .env.example .env
     - name: Test
       run: npm test 
-    - name: Scan
-      uses: sonarsource/sonarqube-scan-action@master
-      env:
-        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+
+
+
     - name: Initialize CodeQL
       uses: github/codeql-action/init@v2
       with:
