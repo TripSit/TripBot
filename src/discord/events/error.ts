@@ -6,8 +6,6 @@ import { ErrorEvent } from '../@types/eventDef';
 
 const F = f(__filename);
 
-export default error;
-
 export const error: ErrorEvent = {
   name: 'error',
   async execute(errorObj) {
@@ -25,3 +23,5 @@ export const error: ErrorEvent = {
     }
   },
 };
+
+export default error;

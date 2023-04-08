@@ -14,8 +14,6 @@ const F = f(__filename);
 
 // https://discordjs.guide/popular-topics/audit-logs.html#who-deleted-a-message
 
-export default threadUpdate;
-
 export const threadUpdate: ThreadUpdateEvent = {
   name: 'threadUpdate',
   async execute(oldThread, newThread) {
@@ -75,3 +73,5 @@ export const threadUpdate: ThreadUpdateEvent = {
     await channel.send(response);
   },
 };
+
+export default threadUpdate;

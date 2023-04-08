@@ -14,8 +14,6 @@ const F = f(__filename);
 
 // https://discordjs.guide/popular-topics/audit-logs.html#who-deleted-a-message
 
-export default stickerDelete;
-
 export const stickerDelete: StickerDeleteEvent = {
   name: 'stickerDelete',
   async execute(sticker) {
@@ -68,3 +66,5 @@ export const stickerDelete: StickerDeleteEvent = {
     await channel.send(response);
   },
 };
+
+export default stickerDelete;

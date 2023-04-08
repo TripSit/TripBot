@@ -11,8 +11,6 @@ import {
 
 const enable = false;
 
-export default debug;
-
 export const debug: DebugEvent = {
   name: 'debug',
   async execute(info) {
@@ -22,3 +20,5 @@ export const debug: DebugEvent = {
     await botlog.send(info);
   },
 };
+
+export default debug;
