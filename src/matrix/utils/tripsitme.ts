@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-shadow */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable no-case-declarations */
 /* eslint-disable max-len */
 import { MatrixClient, RichReply } from 'matrix-bot-sdk';
@@ -96,6 +98,7 @@ async function ownTicket(event:any, roomId:string, tripsitee:string | null):Prom
     await ticketUpdate(ticketData as UserTickets);
     matrixClient.sendStateEvent(ticketData.thread_id, 'm.room.name', '', { name: `💛 | ${localpart}'s room.` });
 
+    // eslint-disable-next-line @typescript-eslint/no-shadow
     const text = `You've claimed ${tripsitee}'s ticket!`;
     const html = `✅ You've claimed ${tripsitee}'s ticket!`;
     const reply = RichReply.createFor(roomId, event, text, html);
@@ -111,6 +114,7 @@ async function ownTicket(event:any, roomId:string, tripsitee:string | null):Prom
     };
     await matrixClient.sendEvent(ticketData.thread_id, 'm.room.message', tripsitMessageEvent);
   } else {
+    // ...
   }
 }
 
@@ -122,6 +126,7 @@ async function ownTicket(event:any, roomId:string, tripsitee:string | null):Prom
  * @param {string|null} tripsitee matrixID of the tripsitee (optional)
  */
 export default async function tripsitme(roomId:string, event:any, subcommand:string | null, target:string | null):Promise<void> {
+  // eslint-disable-next-line sonarjs/no-small-switch
   switch (subcommand?.toLowerCase()) {
     case 'own':
       await ownTicket(event, roomId, target);

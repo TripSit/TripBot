@@ -3,7 +3,6 @@ import {
   SimpleFsStorageProvider,
   AutojoinRoomsMixin,
 } from 'matrix-bot-sdk';
-import { Users } from '../global/@types/database';
 
 import { getUser, userExists, usersUpdate } from '../global/utils/knex';
 import * as commands from './commands';
