@@ -4,7 +4,7 @@ import {
 } from 'discord.js';
 import { rpgHome, rpgMarketChange } from '../commands/guild/d.rpg';
 import { applicationStart, applicationReject } from '../utils/application';
-import { commandContext } from '../utils/context';
+import commandContext from '../utils/context';
 // import log from '../../global/utils/log';
 // import {parse} from 'path';
 const F = f(__filename);

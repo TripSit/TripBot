@@ -5,7 +5,7 @@ import {
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { imdb } from '../../../global/commands/g.imdb';
-import { commandContext } from '../../utils/context';
+import commandContext from '../../utils/context';
 
 const F = f(__filename);
 

@@ -6,7 +6,7 @@ import {
 import { stripIndents } from 'common-tags';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
-import { commandContext } from '../../utils/context';
+import commandContext from '../../utils/context';
 import { h2flow } from '../../../global/commands/g.h2flow';
 
 // import log from '../../../global/utils/log';

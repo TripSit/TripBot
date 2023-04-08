@@ -12,7 +12,7 @@ import {
 } from 'discord-api-types/v10';
 import { botmod } from '../../../global/commands/g.botmod';
 import { SlashCommand } from '../../@types/commandDef';
-import { commandContext } from '../../utils/context';
+import commandContext from '../../utils/context';
 
 const F = f(__filename);
 

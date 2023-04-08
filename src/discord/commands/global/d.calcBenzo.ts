@@ -7,7 +7,7 @@ import { stripIndents } from 'common-tags';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { calcBenzo } from '../../../global/commands/g.calcBenzo';
-import { commandContext } from '../../utils/context';
+import commandContext from '../../utils/context';
 
 const F = f(__filename);
 

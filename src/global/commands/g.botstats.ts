@@ -44,16 +44,16 @@ export async function botStats():Promise<BotStats> {
   response.tsPwDbSize = Object.keys(drugDataCombined).length;
 
   // Get discord stats
-  response.guildCount = client.guilds.cache.size;
-  response.userCount = client.users.cache.size;
-  response.channelCount = client.channels.cache.size;
-  response.commandCount = client.commands.size;
+  response.guildCount = discordClient.guilds.cache.size;
+  response.userCount = discordClient.users.cache.size;
+  response.channelCount = discordClient.channels.cache.size;
+  response.commandCount = discordClient.commands.size;
   response.uptime = global.bootTime
     ? (new Date().getTime() - global.bootTime.getTime())
     : 0;
 
   // Get server stats
-  response.ping = client.ws.ping;
+  response.ping = discordClient.ws.ping;
 
   response.cpuUsage = Math.round(await cpu.usage() * 100);
   response.cpuCount = cpu.count();

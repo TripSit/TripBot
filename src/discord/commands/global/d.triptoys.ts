@@ -3,7 +3,7 @@ import {
   SlashCommandBuilder,
 } from 'discord.js';
 import { SlashCommand } from '../../@types/commandDef';
-import { commandContext } from '../../utils/context';
+import commandContext from '../../utils/context';
 import { embedTemplate } from '../../utils/embedTemplate';
 // import log from '../../../global/utils/log';
 const F = f(__filename);

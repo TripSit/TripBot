@@ -3,10 +3,12 @@ import { getVoiceConnection } from '@discordjs/voice';
 // import { stripIndents } from 'common-tags';
 import { env } from './global/utils/env.config';
 import { log } from './global/utils/log';
-import { discordConnect } from './discord/discord'; // eslint-disable-line
 import validateEnv from './global/utils/env.validate'; // eslint-disable-line
-import { commandContext } from './discord/utils/context'; // eslint-disable-line
+import commandContext from './discord/utils/context'; // eslint-disable-line
+import discordConnect from './discord/discord'; // eslint-disable-line
 import startMatrix from './matrix/matrix';
+import ircConnect from './irc/irc';
+import telegramConnect from './telegram/telegram';
 
 global.bootTime = new Date();
 
@@ -19,6 +21,8 @@ async function start() {
   validateEnv('SERVICES');
   if (env.DISCORD_CLIENT_TOKEN && validateEnv('DISCORD')) await discordConnect();
   if (env.MATRIX_ACCESS_TOKEN && validateEnv('MATRIX') && env.NODE_ENV !== 'production') await startMatrix();
+  if (env.IRC_PASSWORD && validateEnv('IRC') && env.NODE_ENV !== 'production') ircConnect();
+  if (env.TELEGRAM_TOKEN && validateEnv('TELEGRAM') && env.NODE_ENV !== 'production') await telegramConnect();
 }
 
 start();
@@ -40,7 +44,7 @@ process.on('unhandledRejection', async (error: Error) => {
       .setDescription(errorStack);
 
     // Get channel we send errors to
-    const channel = await client.channels.fetch(env.CHANNEL_BOTERRORS) as TextChannel;
+    const channel = await discordClient.channels.fetch(env.CHANNEL_BOTERRORS) as TextChannel;
 
     // If the error is a 10062, we know it's a Discord API error, to kind of ignore it =/
     if ((error as any).code === 10062) { // eslint-disable-line @typescript-eslint/no-explicit-any
@@ -53,7 +57,7 @@ process.on('unhandledRejection', async (error: Error) => {
     }
 
     // Get the role we want to ping
-    const guild = await client.guilds.fetch(env.DISCORD_GUILD_ID);
+    const guild = await discordClient.guilds.fetch(env.DISCORD_GUILD_ID);
     const role = await guild.roles.fetch(env.ROLE_TRIPBOTDEV);
 
     // Alert the developers

@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, shrink-to-fit=no"
+    />
+    <link rel="stylesheet" href="../css/bootstrap.min.css" />
+    <link rel="stylesheet" href="../css/main.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
+    />
+    <link rel="icon" href="../assets/img/favicon.png" />
+    <title>TripBot</title>
+  </head>
+
+  <body>
+    <!-- Begin header -->
+    <header-component></header-component>
+
+    <!-- Begin body -->
+    <div class="jumbotron text-left bg-transparent lead ltext">
+      <h1 class="commandstitle">Discord Info</h1>
+      <h2>Introduction</h2>
+      New to discord, or want to know how TripSits discord works in detail? This
+      is the page for you!
+      <h2>Definitions</h2>
+      Guild<br />
+      What discord calls a collection of discord channels. <br />
+      EG: Instead of joining an IRC server, you join a discord guild.<br />
+      <br />
+      Role<br />
+      A set of permissions.<br />
+      EG: People can be given the Moderator role, which gives them the ability
+      to kick/ban users.<br />
+      <br />
+      Channel<br />
+      Another name for a chat room.<br />
+      EG: The lounge channel is a fun place to chat<br />
+      <br />
+      Member / User<br />
+      The someone who belongs to a guild<br />
+      EG: I like this member, they’re a positive influence<br />
+      <br />
+      Experience / Level 2 / VIP<br />
+      As users talk they generate "experience points" that determine their
+      “level”, just like a videogame. Different levels have different
+      rewards.<br />
+      See Levels<br />
+      <br />
+      Embed<br />
+      A type of message sent by bots that allows creative formatting<br />
+      EG: Normal users send messages but when i do the /about command the
+      formatted message is an embed<br />
+      <br />
+      Ephemeral<br />
+      This describes a type of message from the bot that can only be seen by the
+      user who did the command.<br />
+      EG: If you do /idose you will see the following message, note the final
+      words that appear at the very bottom:<br />
+      <br />
+      Thread-only mode (forum mode)<br />
+      When a channel does not allow you to type, but you can make a new thread
+      to post a message that can be responded to like a normal chat room.<br />
+      EG: #drug-questions room does not allow messages, but allows the user to
+      click + and make a new thread to ask a question<br />
+      <h2>Bridges</h2>
+      <div class="jumbotron bg-transparent lead ltext">
+        <style type="text/css">
+          .tg {
+            border-collapse: collapse;
+            border-spacing: 0;
+          }
+          .tg td {
+            border-color: black;
+            border-style: solid;
+            border-width: 1px;
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+            overflow: hidden;
+            padding: 10px 5px;
+            word-break: normal;
+          }
+          .tg th {
+            border-color: black;
+            border-style: solid;
+            border-width: 1px;
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+            font-weight: normal;
+            overflow: hidden;
+            padding: 10px 5px;
+            word-break: normal;
+          }
+          .tg .tg-uyi7 {
+            background-color: #963400;
+            border-color: inherit;
+            text-align: left;
+            vertical-align: top;
+          }
+          .tg .tg-oduv {
+            background-color: #963400;
+            border-color: inherit;
+            text-align: left;
+            vertical-align: bottom;
+          }
+          .tg .tg-ttet {
+            background-color: #000000;
+            border-color: inherit;
+            text-align: left;
+            vertical-align: bottom;
+          }
+          .tg .tg-r183 {
+            background-color: #036400;
+            border-color: inherit;
+            font-weight: bold;
+            text-align: left;
+            vertical-align: bottom;
+          }
+          .tg .tg-biqb {
+            background-color: #036400;
+            border-color: inherit;
+            font-style: italic;
+            text-align: left;
+            vertical-align: bottom;
+          }
+          .tg .tg-fvua {
+            background-color: #036400;
+            border-color: inherit;
+            text-align: left;
+            vertical-align: top;
+          }
+          .tg .tg-0pky {
+            border-color: inherit;
+            text-align: left;
+            vertical-align: top;
+          }
+          .tg .tg-fdkc {
+            background-color: #000000;
+            border-color: inherit;
+            font-weight: bold;
+            text-align: left;
+            vertical-align: bottom;
+          }
+          .tg .tg-3trw {
+            background-color: #036400;
+            border-color: inherit;
+            text-align: left;
+            vertical-align: bottom;
+          }
+          .tg .tg-0bm2 {
+            background-color: #963400;
+            border-color: inherit;
+            font-style: italic;
+            text-align: left;
+            vertical-align: bottom;
+          }
+        </style>
+        <table class="tg">
+          <thead>
+            <tr>
+              <th class="tg-fvua">Bridged</th>
+              <th class="tg-0pky"></th>
+              <th class="tg-uyi7">Not Bridged</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="tg-fdkc">Category</td>
+              <td class="tg-fdkc">IRC Channel</td>
+              <td class="tg-fdkc">Discord Room</td>
+            </tr>
+            <tr>
+              <td class="tg-fdkc">
+                <span style="font-weight: normal">A) HR Center</span>
+              </td>
+              <td class="tg-r183">
+                <span style="font-weight: normal">#sanctuary</span>
+              </td>
+              <td class="tg-r183">
+                <span style="font-weight: normal">#sanctuary</span>
+              </td>
+            </tr>
+            <tr>
+              <td class="tg-ttet">
+                <span style="font-weight: normal">A) HR Center</span>
+              </td>
+              <td class="tg-3trw">
+                <span style="font-weight: normal">#tripsit</span>
+              </td>
+              <td class="tg-biqb">
+                <span style="font-weight: normal">#open-tripsit</span>
+              </td>
+            </tr>
+            <tr>
+              <td class="tg-ttet">
+                <span style="font-weight: normal">A) HR Center</span>
+              </td>
+              <td class="tg-3trw">
+                <span style="font-weight: normal">#tripsit1</span>
+              </td>
+              <td class="tg-biqb">
+                <span style="font-weight: normal">#open-tripsit1</span>
+              </td>
+            </tr>
+            <tr>
+              <td class="tg-ttet">
+                <span style="font-weight: normal">A) HR Center</span>
+              </td>
+              <td class="tg-3trw">
+                <span style="font-weight: normal">#tripsit2</span>
+              </td>
+              <td class="tg-biqb">
+                <span style="font-weight: normal">#open-tripsit2</span>
+              </td>
+            </tr>
+            <tr>
+              <td class="tg-ttet">
+                <span style="font-weight: normal">A) HR Center</span>
+              </td>
+              <td class="tg-3trw">
+                <span style="font-weight: normal">#tripsit3</span>
+              </td>
+              <td class="tg-biqb">
+                <span style="font-weight: normal">#closed-tripsit</span>
+              </td>
+            </tr>
+            <tr>
+              <td class="tg-ttet">
+                <span style="font-weight: normal">A) HR Center</span>
+              </td>
+              <td class="tg-3trw">
+                <span style="font-weight: normal">#tripsitters</span>
+              </td>
+              <td class="tg-3trw">
+                <span style="font-weight: normal">#tripsitters</span>
+              </td>
+            </tr>
+            <tr>
+              <td class="tg-ttet">
+                <span style="font-weight: normal">B) Campground</span>
+              </td>
+              <td class="tg-oduv">
+                <span style="font-weight: normal">#music</span>
+              </td>
+              <td class="tg-biqb">
+                <span style="font-weight: normal">#music</span>
+              </td>
+            </tr>
+            <tr>
+              <td class="tg-ttet">
+                <span style="font-weight: normal">B) Campground</span>
+              </td>
+              <td class="tg-oduv">
+                <span style="font-weight: normal">#science</span>
+              </td>
+              <td class="tg-biqb">
+                <span style="font-weight: normal">#science</span>
+              </td>
+            </tr>
+            <tr>
+              <td class="tg-ttet">
+                <span style="font-weight: normal">B) Campground</span>
+              </td>
+              <td class="tg-oduv">
+                <span style="font-weight: normal">#gaming</span>
+              </td>
+              <td class="tg-biqb">
+                <span style="font-weight: normal">#gaming</span>
+              </td>
+            </tr>
+            <tr>
+              <td class="tg-ttet">
+                <span style="font-weight: normal">B) Campground</span>
+              </td>
+              <td class="tg-oduv">
+                <span style="font-weight: normal">#cooking</span>
+              </td>
+              <td class="tg-biqb">
+                <span style="font-weight: normal">#food</span>
+              </td>
+            </tr>
+            <tr>
+              <td class="tg-ttet">
+                <span style="font-weight: normal">B) Campground</span>
+              </td>
+              <td class="tg-oduv">
+                <span style="font-weight: normal">#pets</span>
+              </td>
+              <td class="tg-biqb">
+                <span style="font-weight: normal">#pets</span>
+              </td>
+            </tr>
+            <tr>
+              <td class="tg-ttet">
+                <span style="font-weight: normal">B) Campground</span>
+              </td>
+              <td class="tg-oduv">
+                <span style="font-weight: normal">#creative</span>
+              </td>
+              <td class="tg-biqb">
+                <span style="font-weight: normal">#creative</span>
+              </td>
+            </tr>
+            <tr>
+              <td class="tg-ttet">
+                <span style="font-weight: normal">B) Campground</span>
+              </td>
+              <td class="tg-oduv">
+                <span style="font-weight: normal">#movies</span>
+              </td>
+              <td class="tg-biqb">
+                <span style="font-weight: normal">#movies</span>
+              </td>
+            </tr>
+            <tr>
+              <td class="tg-ttet">
+                <span style="font-weight: normal">C) Backstage</span>
+              </td>
+              <td class="tg-3trw">
+                <span style="font-weight: normal">#opiates</span>
+              </td>
+              <td class="tg-biqb">
+                <span style="font-weight: normal">#opiates</span>
+              </td>
+            </tr>
+            <tr>
+              <td class="tg-ttet">
+                <span style="font-weight: normal">C) Backstage</span>
+              </td>
+              <td class="tg-3trw">
+                <span style="font-weight: normal">#depressants</span>
+              </td>
+              <td class="tg-biqb">
+                <span style="font-weight: normal">#depressants</span>
+              </td>
+            </tr>
+            <tr>
+              <td class="tg-ttet">
+                <span style="font-weight: normal">C) Backstage</span>
+              </td>
+              <td class="tg-3trw">
+                <span style="font-weight: normal">#dissociatives</span>
+              </td>
+              <td class="tg-biqb">
+                <span style="font-weight: normal">#dissociatives</span>
+              </td>
+            </tr>
+            <tr>
+              <td class="tg-ttet">
+                <span style="font-weight: normal">C) Backstage</span>
+              </td>
+              <td class="tg-3trw">
+                <span style="font-weight: normal">#psychedelics</span>
+              </td>
+              <td class="tg-biqb">
+                <span style="font-weight: normal">#psychedelics</span>
+              </td>
+            </tr>
+            <tr>
+              <td class="tg-ttet">
+                <span style="font-weight: normal">C) Backstage</span>
+              </td>
+              <td class="tg-3trw">
+                <span style="font-weight: normal">#stimulants</span>
+              </td>
+              <td class="tg-biqb">#stimchat</td>
+            </tr>
+            <tr>
+              <td class="tg-ttet">
+                <span style="font-weight: normal">C) Backstage</span>
+              </td>
+              <td class="tg-3trw">
+                <span style="font-weight: normal">#lounge</span>
+              </td>
+              <td class="tg-3trw">
+                <span style="font-weight: normal">#lounge</span>
+              </td>
+            </tr>
+            <tr>
+              <td class="tg-ttet">
+                <span style="font-weight: normal">D) VIP</span>
+              </td>
+              <td class="tg-oduv">
+                <span style="font-weight: normal">#tripsitvip</span>
+              </td>
+              <td class="tg-0bm2">#vip-lounge</td>
+            </tr>
+            <tr>
+              <td class="tg-ttet">
+                <span style="font-weight: normal">D) VIP</span>
+              </td>
+              <td class="tg-oduv">#gold-lounge</td>
+              <td class="tg-oduv">#gold-lounge</td>
+            </tr>
+            <tr>
+              <td class="tg-ttet">
+                <span style="font-weight: normal">D) VIP</span>
+              </td>
+              <td class="tg-3trw">
+                <span style="font-weight: normal">#psychonaut</span>
+              </td>
+              <td class="tg-3trw">
+                <span style="font-weight: normal">#psychonaut</span>
+              </td>
+            </tr>
+            <tr>
+              <td class="tg-ttet">
+                <span style="font-weight: normal">D) VIP</span>
+              </td>
+              <td class="tg-3trw">
+                <span style="font-weight: normal">#dissonaut</span>
+              </td>
+              <td class="tg-3trw">
+                <span style="font-weight: normal">#dissonaut</span>
+              </td>
+            </tr>
+            <tr>
+              <td class="tg-ttet">
+                <span style="font-weight: normal">D) VIP</span>
+              </td>
+              <td class="tg-oduv">
+                <span style="font-weight: normal">#minecraft</span>
+              </td>
+              <td class="tg-0bm2">#minecraft</td>
+            </tr>
+            <tr>
+              <td class="tg-ttet">
+                <span style="font-weight: normal">D) VIP</span>
+              </td>
+              <td class="tg-oduv">
+                <span style="font-weight: normal">#recovery</span>
+              </td>
+              <td class="tg-0bm2">#clearmind</td>
+            </tr>
+            <tr>
+              <td class="tg-ttet">
+                <span style="font-weight: normal">E) Development</span>
+              </td>
+              <td class="tg-oduv">
+                <span style="font-weight: normal">#compsci</span>
+              </td>
+              <td class="tg-0bm2">#dev-off-topic</td>
+            </tr>
+            <tr>
+              <td class="tg-ttet">
+                <span style="font-weight: normal">E) Development</span>
+              </td>
+              <td class="tg-3trw">
+                <span style="font-weight: normal">#tripsit-dev</span>
+              </td>
+              <td class="tg-3trw">
+                <span style="font-weight: normal">#development</span>
+              </td>
+            </tr>
+            <tr>
+              <td class="tg-ttet">
+                <span style="font-weight: normal">E) Development</span>
+              </td>
+              <td class="tg-3trw">
+                <span style="font-weight: normal">#content</span>
+              </td>
+              <td class="tg-3trw">
+                <span style="font-weight: normal">#wikicontent</span>
+              </td>
+            </tr>
+            <tr>
+              <td class="tg-ttet">
+                <span style="font-weight: normal">F) Volunteer</span>
+              </td>
+              <td class="tg-3trw">
+                <span style="font-weight: normal">#teamtripsit</span>
+              </td>
+              <td class="tg-3trw">
+                <span style="font-weight: normal">#teamtripsit</span>
+              </td>
+            </tr>
+            <tr>
+              <td class="tg-ttet">
+                <span style="font-weight: normal">F) Volunteer</span>
+              </td>
+              <td class="tg-3trw">
+                <span style="font-weight: normal">#moderators</span>
+              </td>
+              <td class="tg-3trw">
+                <span style="font-weight: normal">#moderators</span>
+              </td>
+            </tr>
+            <tr>
+              <td class="tg-ttet">
+                <span style="font-weight: normal">F) Volunteer</span>
+              </td>
+              <td class="tg-3trw">
+                <span style="font-weight: normal">#tripsit.me</span>
+              </td>
+              <td class="tg-3trw">
+                <span style="font-weight: normal">#tripsit-me</span>
+              </td>
+            </tr>
+            <tr>
+              <td class="tg-ttet">
+                <span style="font-weight: normal">F) Volunteer</span>
+              </td>
+              <td class="tg-3trw">
+                <span style="font-weight: normal">#modhaven</span>
+              </td>
+              <td class="tg-3trw">
+                <span style="font-weight: normal">#modhaven</span>
+              </td>
+            </tr>
+            <tr>
+              <td class="tg-ttet">
+                <span style="font-weight: normal">F) Volunteer</span>
+              </td>
+              <td class="tg-3trw">
+                <span style="font-weight: normal">#operations</span>
+              </td>
+              <td class="tg-3trw">
+                <span style="font-weight: normal">#operators</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <h1>Discord Specific Policies</h1>
+      <div>
+        Threads<br />
+        Use the little + icon in most channels to make a temporary channel
+        (thread) to discuss a topic. <br />
+        This allows us to keep our thoughts organized instead of all in one big
+        channel. Please use threads as much as possible!<br />
+        <br />
+        Text-in-voice-channels<br />
+        Voice channels have a partner text channel that can be used to type
+        instead of talk!<br />
+        Underban<br />
+        When someone is found to be under 18 they have all their roles removed,
+        have their Mee6 experience reset, and have the Newbie applied.<br />
+        This restricts them from seeing any channels besides the harm reduction
+        center channels.<br />
+        <br />
+        Depending on if the user is trustworthy or not we can unban the user
+        when they say they have come of age.<br />
+        I want to make an age verification system >.><br />
+        <br />
+      </div>
+      <h1>Experience</h1>
+      As users talk they generate "experience points" that determine their
+      “level”, just like a videogame. Different levels have different
+      rewards.<br />
+      Rewards for leveling up:<br />
+      Level 5 - Given the VIP role<br />
+      Level 10 - Given the DJ role<br />
+      <br />
+      <h1>Roles</h1>
+      Roles<br />
+      Things to know about Roles:<br />
+      <br />
+      Roles exist in a hierarchy so that you will gain permissions/customization
+      from the highest role you have.<br />
+      IE: All staff members will always have the given icon next to their
+      name<br />
+      EG: If you're a Moderator, you will always have a 🛡️ next to your name,
+      even if you pick one of the roles that give a different icon.<br />
+      <br />
+      The only roles with colors are the color-roles<br />
+      IE: All users can choose a color for their name<br />
+      EG: As an Admin you don't need to have the Purple color, you can pick
+      whatever you want to express yourself!<br />
+      <br />
+      Mindset roles are higher than functional roles<br />
+      IE: As a user, the mindset you pick will override whatever functional role
+      you have<br />
+      EG: If you have the Helper role you'll have a 🐕‍🦺 next to your name, but if
+      you pick the Drunk role the 🍺 will take priority. <br />
+      So you will be in the 🏥│tripsit room helping people while having a drunk
+      icon next to your name.<br />
+      Note: This is kind of controversial, even though no one has complained
+      yet. We can certainly talk about if a Helper should be able to broadcast
+      that they're drunk.<br />
+      <br />
+      Donator roles are at the bottom:<br />
+      IE: These roles don't do anything besides the icon<br />
+      EG: If you've donated to the site, any of the other roles will take
+      priority.<br />
+      <br />
+      Team Roles<br />
+      Director<br />
+      Given to Teknos/Moonbear as the founder and generally oversees everything,
+      everywhere, all at once. <br />
+      Successor<br />
+      Bequeathed to Reality as a trusted individual in case something happens to
+      the Director<br />
+      Sysadmin<br />
+      Assigned to Winter as they oversee all technical projects in our
+      organization<br />
+      IRC Admin<br />
+      Appointed to Potato as the main person who knows the IRC network
+      back-end.<br />
+      Discord Admin<br />
+      Stolen by Rooni as someone who can fix or modify the discord server when
+      needed.<br />
+      Moderator🛡️<br />
+      This role has access to the 🧙│moderators room, and can perform mod
+      actions across the org<br />
+      Tripsitter🚑<br />
+      This role can perform mod actions in the Harm Reduction category<br />
+      Developer<br />
+      This role signifies that the person is a trusted member of the team and
+      can make certain decisions.<br />
+      Team Tripsit<br />
+      This role is given to anyone who can be described as part of the team.<br />
+      This will give access to the staff meeting room and general rooms, but not
+      moderation/tripsit rooms.<br />
+      Bot Roles<br />
+      See “Bots” section below for specifics. Each bot has its own
+      permissions.<br />
+      Mindset roles:<br />
+      These put an icon next to your name if you select them in the
+      🌟│start-here room<br />
+      Drunk🍺<br />
+      High🍀 <br />
+      Rolling😍 <br />
+      Tripping🤩 <br />
+      Dissociating👾 <br />
+      Stimming😬 <br />
+      Depressants😴 <br />
+      Busy💻 <br />
+      Talkative❤️ <br />
+      Functional Roles:<br />
+      Needshelp ⁉️<br />
+      This role is given to users with the /tripsit USERNAME command<br />
+      This role can be taken away by doing /tripsit USERNAME OFF<br />
+      Helper🐕‍🦺 <br />
+      This role is self-assigned via the 🌟│start-here room!<br />
+      This gives the user access to the 🏥│tripsit and 🚑│tripsitters rooms<br />
+      Patron<br />
+      When you give money via patreon, gives you access to the #gold-lounge<br />
+      <br />
+      Booster💎 <br />
+      Have boosted the server via discord, gives you access to the
+      #gold-lounge<br />
+      VIP⭐<br />
+      This role gives access to #lounge and #important-info and is given when a
+      user reaches level 5.<br />
+      DJ🎙️<br />
+      This role controls the various radio bots and is given when a user reaches
+      level 10.<br />
+      IRC Verified<br />
+      This is given to those who complete the /link-account IRC action!<br />
+      Coder - 💻 <br />
+      This role can be chosen in the #start-here room and allows the user to
+      a<br />
+      Clearmind<br />
+      This is given to those whio want access to #clearmind<br />
+      Researcher<br />
+      Given to those who want to access wiki-content<br />
+      TempVoice<br />
+      This role can be given to users by @Tripsitter and gives them access to
+      the Private-Tripsit-Call room <br />
+      Muted<br />
+      This is basically read-only mode and is maintained by the mee6 bot<br />
+      <br />
+      Presentation Roles<br />
+      These are experimental roles if we ever have any kind of
+      presentation/talk<br />
+      HR Presenter<br />
+      HR Listener<br />
+      HR Moderator<br />
+      Newbie<br />
+      This role is given to underage users, it restricts them from gaining
+      experience and limits them to certain channels<br />
+      When someone is found to be under 18 they have all their roles removed,
+      have their Mee6 experience reset, and have this role applied.<br />
+      This restricts them from seeing any channels besides the harm reduction
+      center channels.<br />
+      <br />
+      Depending on if the user is trustworthy or not we can unban the user when
+      they say they have come of age.<br />
+      I dont want to make an age verification system >.><br />
+      Color roles:<br />
+      These change the color of your name if you select them in the
+      🌟│start-here room<br />
+      White<br />
+      Black<br />
+      Red<br />
+      Orange<br />
+      Yellow<br />
+      Green<br />
+      Blue<br />
+      Purple<br />
+      PPink - Potato pink<br />
+      Pink<br />
+      Everyone<br />
+      By default, you start with this role, and it's very restrictive <br />
+      <br />
+      <h1>Channels</h1>
+      Channels<br />
+      Channels are organized by Categories<br />
+      Gateway<br />
+      📣│announcements <br />
+      This channel will be used when we want to announce things to the general
+      public. <br />
+      🌟│start-here <br />
+      This is where users can perform reactions to messages to get roles
+      assigned to them to change their icon and color.<br />
+      Kind of like on IRC how people would do Nickname|Drug, and allows them to
+      choose a color<br />
+      We're limited to 20 reaction roles so we can't do every drug<br />
+      We can do custom emojis and make more fitting icons for each state<br />
+      🤖│bot-spam <br />
+      All things spammy and bot related.<br />
+      It's suggested to mute this channel<br />
+      This room is used to send the "level up" notifications and generally be
+      noisy for bot outputs<br />
+      📕│rules <br />
+      This displays our rules, no messages may be sent here.<br />
+      We can set up a reaction role so that people need to acknowledge the
+      rules, be given a role, and then they can access the rest of the
+      network.<br />
+      Right now it's just a static page of rules and advice.<br />
+      🧮│irc<br />
+      This room is thread-only mode and allows users to talk about IRC.<br />
+      Harm Reduction Center<br />
+      ❗│how-to-tripsit<br />
+      This channel explain the tripsitting process and has the following
+      information:<br />
+      <br />
+      ❓│drug-questions<br />
+      This room is for people to ask questions on harm reduction and such.<br />
+      This room is in thread-only mode<br />
+      🚑│tripsitters <br />
+      This is the "meta-tripsit" room to talk about encounters in 🏥│tripsit
+      <br />
+      It also has an RSS feed from /r/tripsit<br />
+      🏥│tripsit <br />
+      This room is in "thread-only" mode so that people will see the notice
+      posted and be forced to click the button or make a new thread.<br />
+      🏥│open-tripsit <br />
+      This room links to #tripsit1 on IRC<br />
+      ⛪│sanctuary<br />
+      This is a chill room, it has a 5s enforced delay between messages, make
+      your Enter key count!<br />
+      private-tripsit-room<br />
+      This is a room only accessible to Tripsitters+ and those with the "Temp
+      Voice" role<br />
+      Tripsitters can use the /voice user command to give users the ability to
+      join this room <br />
+      Campground<br />
+      💬│general<br />
+      This is is the main room for people to socialize in <br />
+      Pets<br />
+      Food<br />
+      <br />
+      🎶│music<br />
+      You must pick up the Listener role in #start-here to access this room<br />
+      🎮│gaming<br />
+      You must pick up the Gamer role in #start-here to access this room<br />
+      🧬│science<br />
+      SCIENCE!<br />
+      🎨│creative<br />
+      Art and other creative stuff<br />
+      Psychedelic<br />
+      Campground<br />
+      👥│vip-welcome <br />
+      Basically the new tripsit-vip<br />
+      You must be a VIP role to access this room<br />
+      👥│vip-lounge <br />
+      Basically the new tripsit-vip<br />
+      You must be a VIP role to access this room<br />
+      💭│talk-to-tripsit <br />
+      You must be a VIP role to access this room<br />
+      This channel is in "thread-only" mode so each suggestion is in a separate
+      thread. <br />
+      This allows us to have a clean list of suggestions and compartmentalize
+      our thoughts. <br />
+      Each thread is archived after 7 days of inactivity, but I believe it can
+      be bumped with activity.<br />
+      <br />
+      🧐│gold-lounge<br />
+      This room is only available to those who donate via patreon or do discord
+      boosts.<br />
+      │clear-mind<br />
+      │psychonaut<br />
+      │dissonaut<br />
+      Hub - Join to create<br />
+      Join this room to create your own personal voice room as needed.<br />
+      <br />
+      24/7 Radio<br />
+      Beataroo<br />
+      The music room will play chill songs 24/7 on loop via the Mee6/TripSitBot
+      <br />
+      Users with the DJ role can control most aspects of the bot.<br />
+      Otherwise there is no talking in this room.<br />
+      Loopalooza<br />
+      This bot will continuously play lofi radio.<br />
+      It can be configured by the DJ role<br />
+      Thank @𝙍 𝙤 𝙤 𝙣 𝙞 for this one<br />
+      Electronic Forest<br />
+      Another music room<br />
+      afk<br />
+      People AFK in voice chat will be sent here<br />
+      Development<br />
+      This entire category is locked behind the Coder/Developer role, you do not
+      get access to these rooms with VIP<br />
+      🦆│dev-off-topic<br />
+      Off topic dev discussion<br />
+      💻│development<br />
+      Where we talk about development projects<br />
+      📱│tripmobile<br />
+      Connects to the TripMobileExpo github repo and posts updates<br />
+      🛸│tripcord<br />
+      Discussion of the tripsit discord!<br />
+      🤖│tripbot<br />
+      Connects to the tripsit-discord-bot github and posts updates<br />
+      <br />
+      👽│trippit<br />
+      Discussion about reddit bot<br />
+      📰│content<br />
+      To talk about wiki and drug information<br />
+      Sandbox<br />
+      This channel connects to IRC<br />
+      New-rules<br />
+      <br />
+      Online Members<br />
+      Stats channel showing currently online members<br />
+      Peak Online<br />
+      Stats channel showing record online members<br />
+      VIP Users<br />
+      Stats channel showing VIP members<br />
+      Volunteer Booths<br />
+      💬│meeting-room <br />
+      Meeting room for staff members<br />
+      I hope to add the scriptly bot back to this room to transcribe voice<br />
+      📜│modlog <br />
+      Modlog is discord specific and records actions taken by users on the
+      discord network<br />
+      🗣│modhaven <br />
+      Social room for staff members<br />
+      🌌│teamtripsit <br />
+      Talk as a team<br />
+      🧙│moderators <br />
+      Talk about mod actions<br />
+      🔧│operators <br />
+      Talk about oper actions<br />
+      🗿│tripsit-me<br />
+      Allows users to talk to staff<br />
+      Not implemented on discord<br />
+      <br />
+      <h1>Bots</h1>
+      Bots<br />
+      We have a few bots helping us out<br />
+      @TSModBot <br />
+      This is a Mee6 bot that does a lot of the moderation tools on discord.<br />
+      @Tripbot <br />
+      This is a discord-specific bot Moonbear is working on<br />
+      <br />
+      @Bridge <br />
+      This is the relay between IRC and discord, using matterbridge<br />
+      @HelperBot <br />
+      This is how the WIP sopel plugin will perform moderator actions from
+      IRC<br />
+      @Activities<br />
+      This is a bot for spawning various activities:
+      https://discord.bots.gg/bots/819778342818414632<br />
+      @Lofi Radio <br />
+      This bot was donated by hipperooni and plays lofi radio all day<br />
+      <br />
+    </div>
+
+    <!-- Begin footer -->
+    <footer-component></footer-component>
+
+    <!-- Begin scripts -->
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-ygbV9kiqUc6oa4msXn9868pTtWMgiQaeYH7/t7LECLbyPA2x65Kgf80OJFdroafW"
+      crossorigin="anonymous"
+    ></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="../js/main.js"></script>
+    <script src="../components/header.js" type="text/javascript" defer></script>
+    <script src="../components/footer.js" type="text/javascript" defer></script>
+  </body>
+</html>

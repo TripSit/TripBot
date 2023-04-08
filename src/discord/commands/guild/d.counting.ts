@@ -19,7 +19,7 @@ import { stripIndents } from 'common-tags';
 import { SlashCommandBeta } from '../../@types/commandDef';
 // import { embedTemplate } from '../../utils/embedTemplate';
 // import { globalTemplate } from '../../../global/commands/_g.template';
-import { commandContext } from '../../utils/context';
+import commandContext from '../../utils/context';
 import { countingGetG, countingSetG } from '../../../global/commands/g.counting';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { Counting } from '../../../global/@types/database';

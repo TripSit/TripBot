@@ -2,7 +2,7 @@ import {
   SlashCommandBuilder,
 } from 'discord.js';
 import { SlashCommand } from '../../@types/commandDef';
-import { commandContext } from '../../utils/context';
+import commandContext from '../../utils/context';
 import { reagents } from '../../../global/commands/g.reagents';
 // import log from '../../../global/utils/log';
 const F = f(__filename);

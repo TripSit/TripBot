@@ -7,7 +7,7 @@ import { stripIndents } from 'common-tags';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { drug } from '../../../global/commands/g.drug';
-import { commandContext } from '../../utils/context';
+import commandContext from '../../utils/context';
 import { CbSubstance } from '../../../global/@types/combined.d';
 
 const F = f(__filename);

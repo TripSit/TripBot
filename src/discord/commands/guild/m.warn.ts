@@ -14,7 +14,7 @@ import { stripIndents } from 'common-tags';
 import { MessageCommand } from '../../@types/commandDef';
 // import log from '../../../global/utils/log';
 import { moderate } from '../../../global/commands/g.moderate';
-import { commandContext } from '../../utils/context';
+import commandContext from '../../utils/context';
 import { UserActionType } from '../../../global/@types/database';
 
 const F = f(__filename);

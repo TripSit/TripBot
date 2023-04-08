@@ -7,7 +7,7 @@ import {
 import { env } from 'process';
 import { stripIndents } from 'common-tags';
 import { SlashCommand } from '../../@types/commandDef';
-import { commandContext } from '../../utils/context';
+import commandContext from '../../utils/context';
 // import {embedTemplate} from '../../utils/embedTemplate';
 import { moderate } from '../../../global/commands/g.moderate';
 // import log from '../../../global/utils/log';

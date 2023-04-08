@@ -35,7 +35,7 @@ import he from 'he';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { getPersonaInfo, setPersonaInfo } from '../../../global/commands/g.rpg';
-import { commandContext } from '../../utils/context';
+import commandContext from '../../utils/context';
 import {
   getUser, inventoryGet, inventorySet, personaSet,
 } from '../../../global/utils/knex';

@@ -12,7 +12,7 @@ describe(slashCommand.data.name, () => {
     const commandData = slashCommand.data;
     const stringCommand = `/${commandData.name} kittens`;
     const command = getParsedCommand(stringCommand, commandData);
-    // log.debug(`[${PREFIX}] command: ${JSON.stringify(command, null, 2)}`);
+    // log.debug(F, `command: ${JSON.stringify(command, null, 2)}`);
     const spy = await executeCommandAndSpyEditReply(slashCommand, command);
     expect(spy).toHaveBeenCalledWith('https://i.imgur.com/tbtmFGJ.png');
   });

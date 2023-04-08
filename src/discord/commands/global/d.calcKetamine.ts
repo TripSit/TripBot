@@ -5,7 +5,7 @@ import { stripIndents } from 'common-tags';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { calcKetamine } from '../../../global/commands/g.calcKetamine';
-import { commandContext } from '../../utils/context';
+import commandContext from '../../utils/context';
 
 const F = f(__filename);
 

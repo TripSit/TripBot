@@ -178,16 +178,16 @@ export default class MockDiscord {
     // // Register global commands
     // const globalCommands = path.join(__dirname, '../../discord/commands/global');
     // const globalFiles = fs.readdirSync(globalCommands);
-    // // log.debug(`[${PREFIX}] Global command files: ${globalFiles}`);
+    // // log.debug(F, `Global command files: ${globalFiles}`);
     // globalFiles.forEach(file => {
     //   const filePath = path.join(globalCommands, file);
-    //   // log.debug(`[${PREFIX}] Loading global command: ${filePath}`);
+    //   // log.debug(F, `Loading global command: ${filePath}`);
     //   const command = require(filePath); // eslint-disable-line
-    //   // log.debug(`[${PREFIX}] Command: ${JSON.stringify(command, null, 2)}`);
+    //   // log.debug(F, `Command: ${JSON.stringify(command, null, 2)}`);
     //   const commandData = command[Object.keys(command).find(
     // key => command[key].data !== undefined) as string].data.toJSON();
-    //   // log.debug(`[${PREFIX}] Command data: ${JSON.stringify(commandData, null, 2)}`);
-    //   // log.debug(`[${PREFIX}] Loaded global command: ${commandData.name}`);
+    //   // log.debug(F, `Command data: ${JSON.stringify(commandData, null, 2)}`);
+    //   // log.debug(F, `Loaded global command: ${commandData.name}`);
     //   // this.client.commands.set(commandData, command);
     //   // this.client.application?.commands.create(commandData);
     // });
@@ -195,16 +195,16 @@ export default class MockDiscord {
     // // Register guild commands
     // const guildCommands = path.join(__dirname, '../../discord/commands/guild');
     // const guildFiles = fs.readdirSync(guildCommands);
-    // // log.debug(`[${PREFIX}] Guild command files: ${guildFiles}`);
+    // // log.debug(F, `Guild command files: ${guildFiles}`);
     // guildFiles.forEach(file => {
     //   const filePath = path.join(guildCommands, file);
-    //   // log.debug(`[${PREFIX}] Loading global command: ${filePath}`);
+    //   // log.debug(F, `Loading global command: ${filePath}`);
     //   const command = require(filePath); // eslint-disable-line
-    //   // log.debug(`[${PREFIX}] Command: ${JSON.stringify(command, null, 2)}`);
+    //   // log.debug(F, `Command: ${JSON.stringify(command, null, 2)}`);
     //   const commandData = command[Object.keys(command).find(
     // key => command[key].data !== undefined) as string].data.toJSON();  // eslint-disable-line
-    //   // log.debug(`[${PREFIX}] Command data: ${JSON.stringify(commandData, null, 2)}`);
-    //   // log.debug(`[${PREFIX}] Loaded global command: ${commandData.name}`);
+    //   // log.debug(F, `Command data: ${JSON.stringify(commandData, null, 2)}`);
+    //   // log.debug(F, `Loaded global command: ${commandData.name}`);
     //   // this.client.commands.set(commandData, command);
     //   // this.client.application?.commands.create(commandData);
     // });
@@ -219,12 +219,12 @@ export default class MockDiscord {
     // Register global commands
     const globalCommands = path.join(__dirname, '../../src/discord/commands/global');
     const globalFiles = fs.readdirSync(globalCommands);
-    // log.debug(`[${PREFIX}] Global command files: ${globalFiles}`);
+    // log.debug(F, `Global command files: ${globalFiles}`);
     globalFiles.forEach(file => {
       const filePath = path.join(globalCommands, file);
-      // log.debug(`[${PREFIX}] Loading global command: ${filePath}`);
+      // log.debug(F, `Loading global command: ${filePath}`);
       const command = require(filePath); // eslint-disable-line
-      // log.debug(`[${PREFIX}] Command: ${JSON.stringify(command, null, 2)}`);
+      // log.debug(F, `Command: ${JSON.stringify(command, null, 2)}`);
       const commandData = command[Object.keys(command).find(
         key => command[key].data !== undefined,
       ) as string].data.toJSON();
@@ -237,12 +237,12 @@ export default class MockDiscord {
     // Register guild commands
     const guildCommands = path.join(__dirname, '../../src/discord/commands/guild');
     const guildFiles = fs.readdirSync(guildCommands);
-    // log.debug(`[${PREFIX}] Guild command files: ${guildFiles}`);
+    // log.debug(F, `Guild command files: ${guildFiles}`);
     guildFiles.forEach(file => {
       const filePath = path.join(guildCommands, file);
-      // log.debug(`[${PREFIX}] Loading global command: ${filePath}`);
+      // log.debug(F, `Loading global command: ${filePath}`);
       const command = require(filePath); // eslint-disable-line
-      // log.debug(`[${PREFIX}] Command: ${JSON.stringify(command, null, 2)}`);
+      // log.debug(F, `Command: ${JSON.stringify(command, null, 2)}`);
       const commandData = command[Object.keys(command).find(
         key => command[key].data !== undefined) as string].data.toJSON();  // eslint-disable-line
       // log.debug(F, `Command data: ${JSON.stringify(commandData, null, 2)}`);
@@ -601,10 +601,10 @@ export default class MockDiscord {
     // (this.interaction.options as CommandInteractionOptionResolver).getString = jest.fn().mockImplementation(
     //   (name:string) => {
     //     const options = command.options as ToAPIApplicationCommandOptions[];
-    //     // log.debug(`[${PREFIX}] getString: ${name} - ${JSON.stringify(options, null, 2)}`);
+    //     // log.debug(F, `getString: ${name} - ${JSON.stringify(options, null, 2)}`);
     //     const option = options.find(opt => (opt as any).name === name);
     //     if (!option) return null;
-    //     // log.debug(`[${PREFIX}] option ${JSON.stringify((option as any).value, null, 2)}`);
+    //     // log.debug(F, `option ${JSON.stringify((option as any).value, null, 2)}`);
     //     return (option as any).value;
     //   },
     // );

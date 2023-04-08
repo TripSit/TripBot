@@ -8,7 +8,7 @@ import {
   EmbedBuilder,
 } from 'discord.js';
 // import {SlashCommand} from './commandDef';
-import { commandContext } from './context';
+import commandContext from './context';
 
 const F = f(__filename);
 
@@ -92,7 +92,7 @@ export async function commandRun(
       }
 
       // Get the role we want to ping
-      const guild = await client.guilds.fetch(env.DISCORD_GUILD_ID);
+      const guild = await discordClient.guilds.fetch(env.DISCORD_GUILD_ID);
       const role = await guild.roles.fetch(env.ROLE_TRIPBOTDEV);
       const context = dataSensitiveCommands.includes(commandName) ? '' : await commandContext(interaction);
 

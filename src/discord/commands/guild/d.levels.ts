@@ -13,7 +13,7 @@ import { profile, ProfileData } from '../../../global/commands/g.profile';
 import { getPersonaInfo } from '../../../global/commands/g.rpg';
 import { inventoryGet } from '../../../global/utils/knex';
 import { imageGet } from '../../utils/imageGet';
-import { commandContext } from '../../utils/context';
+import commandContext from '../../utils/context';
 import { numFormatter, numFormatterVoice } from './d.profile';
 import { Personas } from '../../../global/@types/database';
 // import { expForNextLevel, getTotalLevel } from '../../../global/utils/experience';

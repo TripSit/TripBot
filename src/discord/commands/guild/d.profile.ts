@@ -8,7 +8,7 @@ import Canvas from '@napi-rs/canvas';
 import * as path from 'path';
 import { SlashCommand } from '../../@types/commandDef';
 import { profile, ProfileData } from '../../../global/commands/g.profile';
-import { commandContext } from '../../utils/context';
+import commandContext from '../../utils/context';
 import { expForNextLevel, getTotalLevel } from '../../../global/utils/experience';
 import { getPersonaInfo } from '../../../global/commands/g.rpg';
 import { inventoryGet } from '../../../global/utils/knex';

@@ -12,7 +12,7 @@ import {
 } from 'discord-api-types/v10';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
-import { commandContext } from '../../utils/context';
+import commandContext from '../../utils/context';
 // import fs from 'fs/promises'; // eslint-disable-line
 const F = f(__filename);
 // import drugDataAll from '../../../global/assets/data/drug_db_combined.json';

@@ -3,7 +3,7 @@ import {
 } from 'discord.js';
 import { SlashCommand } from '../../@types/commandDef';
 import { magick8Ball } from '../../../global/commands/g.magick8Ball';
-import { commandContext } from '../../utils/context';
+import commandContext from '../../utils/context';
 
 const F = f(__filename);
 

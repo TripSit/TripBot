@@ -5,7 +5,7 @@ import {
 } from 'discord.js';
 import { SlashCommand } from '../../@types/commandDef';
 import { timezone } from '../../../global/commands/g.timezone';
-import { commandContext } from '../../utils/context';
+import commandContext from '../../utils/context';
 // import log from '../../../global/utils/log';
 const F = f(__filename);
 
