@@ -15,7 +15,7 @@ import Parser from 'rss-parser';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { rssCreate, rssList, rssDelete } from '../../../global/commands/g.rss';
-import { startLog } from '../../utils/startLog';
+import { commandContext } from '../../utils/context';
 
 const F = f(__filename);
 
@@ -44,7 +44,7 @@ export const dRss: SlashCommand = {
       .setName('list')
       .setDescription('List all RSS feeds')),
   async execute(interaction) {
-    startLog(F, interaction);
+    log.info(F, await commandContext(interaction));
     await interaction.deferReply({ ephemeral: true });
 
     if (!interaction.guild) {

@@ -6,7 +6,7 @@ import {
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { wikipedia } from '../../../global/commands/g.wikipedia';
-import { startLog } from '../../utils/startLog';
+import { commandContext } from '../../utils/context';
 
 const F = f(__filename);
 
@@ -22,7 +22,7 @@ export const dWikipedia: SlashCommand = {
       .setDescription('Set to "True" to show the response only to you')),
 
   async execute(interaction) {
-    startLog(F, interaction);
+    log.info(F, await commandContext(interaction));
     await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
 
     const query = (interaction.options.getString('query') as string);

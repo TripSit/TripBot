@@ -4,7 +4,7 @@ import {
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 // import log from '../../../global/utils/log';
-import { startLog } from '../../utils/startLog';
+import { commandContext } from '../../utils/context';
 
 const F = f(__filename);
 
@@ -14,7 +14,7 @@ export const dKipp: SlashCommand = {
     .setDescription('Keep it positive please!'),
 
   async execute(interaction) {
-    startLog(F, interaction);
+    log.info(F, await commandContext(interaction));
     await interaction.deferReply({ ephemeral: false });
     const happyEmojis = [
       '😀', '😃', '😄', '😊', '😁', '🥰', '😇', '😍', '😂', '🤣',

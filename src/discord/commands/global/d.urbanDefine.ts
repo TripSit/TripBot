@@ -5,7 +5,7 @@ import { stripIndents } from 'common-tags';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { urbanDefine } from '../../../global/commands/g.urbanDefine';
-import { startLog } from '../../utils/startLog';
+import { commandContext } from '../../utils/context';
 // import log from '../../../global/utils/log';
 const F = f(__filename);
 
@@ -21,7 +21,7 @@ export const dUrbanDefine: SlashCommand = {
       .setDescription('Set to "True" to show the response only to you')),
 
   async execute(interaction) {
-    startLog(F, interaction);
+    log.info(F, await commandContext(interaction));
     await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
     const term = interaction.options.getString('define');
     if (!term) {

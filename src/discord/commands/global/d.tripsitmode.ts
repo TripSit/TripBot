@@ -79,7 +79,7 @@ export const tripsitmode: SlashCommand = {
         .setDescription('Member to modify')
         .setRequired(true))),
   async execute(interaction:ChatInputCommandInteraction) {
-    startlog(F, interaction);
+    log.info(F, await commandContext(interaction));
     const enable = interaction.options.getSubcommand() as 'on' | 'off';
 
     const target = interaction.options.getMember('user') as GuildMember;

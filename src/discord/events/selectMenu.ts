@@ -4,7 +4,7 @@ import {
 } from 'discord.js';
 import { rpgHome, rpgMarketChange } from '../commands/guild/d.rpg';
 import { applicationStart, applicationReject } from '../utils/application';
-import { startLog } from '../utils/startLog';
+import { commandContext } from '../utils/context';
 // import log from '../../global/utils/log';
 // import {parse} from 'path';
 const F = f(__filename);
@@ -13,7 +13,7 @@ export default selectMenu;
 
 export async function selectMenu(interaction:StringSelectMenuInteraction): Promise<void> {
   const { customId } = interaction;
-  startLog(F, interaction);
+  log.info(F, await commandContext(interaction));
 
   const menuID = interaction.customId;
 

@@ -4,7 +4,7 @@ import {
   TextChannel,
 } from 'discord.js';
 import { SlashCommand } from '../../@types/commandDef';
-import { startLog } from '../../utils/startLog'; // eslint-disable-line @typescript-eslint/no-unused-vars
+import { commandContext } from '../../utils/context'; // eslint-disable-line @typescript-eslint/no-unused-vars
 
 const F = f(__filename);
 
@@ -19,7 +19,7 @@ export const dSay: SlashCommand = {
       .setDescription('Where should I say it? (Default: \'here\')')
       .setName('channel')),
   async execute(interaction) {
-    startLog(F, interaction);
+    log.info(F, await commandContext(interaction));
     await interaction.deferReply({ ephemeral: true });
     if (!interaction.guild) {
       await interaction.editReply({ content: 'This command can only be used in a server!' });

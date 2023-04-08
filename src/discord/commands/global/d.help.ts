@@ -8,7 +8,7 @@ import {
 } from 'discord-api-types/v10';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
-import { startLog } from '../../utils/startLog';
+import { commandContext } from '../../utils/context';
 import { paginationEmbed } from '../../utils/pagination';
 
 const F = f(__filename);
@@ -36,7 +36,7 @@ export const dHelp: SlashCommand = {
       .setDescription('Set to "True" to show the response only to you')),
 
   async execute(interaction) {
-    startLog(F, interaction);
+    log.info(F, await commandContext(interaction));
     await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
 
     const globalCommands = await interaction.client.application.commands.fetch();

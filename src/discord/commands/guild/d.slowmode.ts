@@ -4,7 +4,7 @@ import {
   GuildMember,
 } from 'discord.js';
 import { SlashCommand } from '../../@types/commandDef';
-import { startLog } from '../../utils/startLog';
+import { commandContext } from '../../utils/context';
 
 const F = f(__filename);
 
@@ -32,7 +32,7 @@ export const dSlowMode: SlashCommand = {
       .setName('off')
       .setDescription('Turn off slowmode')),
   async execute(interaction) {
-    startLog(F, interaction);
+    log.info(F, await commandContext(interaction));
     await interaction.deferReply({ ephemeral: true });
 
     const toggle = interaction.options.getSubcommand();

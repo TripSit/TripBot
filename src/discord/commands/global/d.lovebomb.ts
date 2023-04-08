@@ -2,7 +2,7 @@ import {
   SlashCommandBuilder,
 } from 'discord.js';
 import { SlashCommand } from '../../@types/commandDef';
-import { startLog } from '../../utils/startLog';
+import { commandContext } from '../../utils/context';
 // import log from '../../../global/utils/log';
 const F = f(__filename);
 
@@ -17,7 +17,7 @@ export const dlovebomb: SlashCommand = {
     .setDescription('Spread some love'),
 
   async execute(interaction) {
-    startLog(F, interaction);
+    log.info(F, await commandContext(interaction));
     await interaction.deferReply({ ephemeral: false });
     const message = `${[...heartEmojis].sort(() => 0.5 - Math.random()).slice(0, 30).join(' ')}`;
     await interaction.editReply(message);

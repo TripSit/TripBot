@@ -5,7 +5,7 @@ import {
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { imdb } from '../../../global/commands/g.imdb';
-import { startLog } from '../../utils/startLog';
+import { commandContext } from '../../utils/context';
 
 const F = f(__filename);
 
@@ -21,7 +21,7 @@ export const dImdb: SlashCommand = {
       .setDescription('Set to "True" to show the response only to you')),
 
   async execute(interaction:ChatInputCommandInteraction) {
-    startLog(F, interaction);
+    log.info(F, await commandContext(interaction));
     await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
 
     const title = interaction.options.getString('title', true);

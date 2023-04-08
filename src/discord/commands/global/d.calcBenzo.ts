@@ -7,7 +7,7 @@ import { stripIndents } from 'common-tags';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { calcBenzo } from '../../../global/commands/g.calcBenzo';
-import { startLog } from '../../utils/startLog';
+import { commandContext } from '../../utils/context';
 
 const F = f(__filename);
 
@@ -30,7 +30,7 @@ export const dCalcBenzo: SlashCommand = {
       .setDescription('Set to "True" to show the response only to you')),
 
   async execute(interaction) {
-    startLog(F, interaction);
+    log.info(F, await commandContext(interaction));
     await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
     const dosage = interaction.options.getNumber('i_have', true);
     const drugA = interaction.options.getString('mg_of', true);

@@ -5,7 +5,7 @@ import {
 import { DateTime } from 'luxon';
 import { stripIndents } from 'common-tags';
 import { dramacounter } from '../../../global/commands/g.dramacounter';
-import { startLog } from '../../utils/startLog';
+import { commandContext } from '../../utils/context';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { SlashCommand } from '../../@types/commandDef';
 import { parseDuration } from '../../../global/utils/parseDuration';
@@ -33,7 +33,7 @@ export const dDramacounter: SlashCommand = {
         .setDescription('What was the drama? Be descriptive, or cryptic.')
         .setRequired(true))),
   async execute(interaction) {
-    startLog(F, interaction);
+    log.info(F, await commandContext(interaction));
     await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
     const command = interaction.options.getSubcommand() as 'get' | 'set';
 

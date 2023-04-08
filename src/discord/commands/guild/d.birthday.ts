@@ -6,7 +6,7 @@ import {
 import { DateTime } from 'luxon';
 import { SlashCommand } from '../../@types/commandDef';
 import { birthday } from '../../../global/commands/g.birthday';
-import { startLog } from '../../utils/startLog';
+import { commandContext } from '../../utils/context';
 import { embedTemplate } from '../../utils/embedTemplate';
 // import log from '../../../global/utils/log';
 
@@ -16,7 +16,7 @@ async function birthdayGet(
   interaction:ChatInputCommandInteraction,
   member:GuildMember,
 ) {
-  startLog(F, interaction);
+  log.info(F, await commandContext(interaction));
   await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
   const embed = embedTemplate();
 
@@ -161,7 +161,7 @@ export const dBirthday: SlashCommand = {
         .setDescription('Day value')
         .setName('day'))),
   async execute(interaction) {
-    startLog(F, interaction);
+    log.info(F, await commandContext(interaction));
     await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
     let command = interaction.options.getSubcommand() as 'get' | 'set' | undefined;
     let member = interaction.options.getMember('user');

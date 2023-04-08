@@ -19,7 +19,7 @@ import { stripIndents } from 'common-tags';
 import { SlashCommandBeta } from '../../@types/commandDef';
 // import { embedTemplate } from '../../utils/embedTemplate';
 // import { globalTemplate } from '../../../global/commands/_g.template';
-import { startLog } from '../../utils/startLog';
+import { commandContext } from '../../utils/context';
 import { countingGetG, countingSetG } from '../../../global/commands/g.counting';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { Counting } from '../../../global/@types/database';
@@ -497,7 +497,7 @@ export const counting: SlashCommandBeta = {
       .setName('end')
       .setDescription('End the counting game!')),
   async execute(interaction) {
-    startLog(F, interaction);
+    log.info(F, await commandContext(interaction));
     await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') !== false) });
     const command = interaction.options.getSubcommand();
     let response = { content: 'This command has not been setup yet!' } as InteractionEditReplyOptions;

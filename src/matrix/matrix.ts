@@ -64,8 +64,12 @@ async function startMatrix():Promise<void> {
   matrixClient.on('room.message', await handleCommand);
 
   // Now that everything is set up, start the bot. This will start the sync loop and run until killed.
-  await matrixClient.start().then(async () => {
-    const botInfo = await matrixClient.getWhoAmI();
-    log.info(F, `Matrix-Bot logged in as ${botInfo.user_id}`);
-  });
+  await matrixClient.start()
+    .then(async () => {
+      const botInfo = await matrixClient.getWhoAmI();
+      log.info(F, `Matrix-Bot logged in as ${botInfo.user_id}`);
+    })
+    .catch(e => {
+      log.error(F, e);
+    });
 }

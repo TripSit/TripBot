@@ -5,7 +5,7 @@ import {
 } from 'discord.js';
 import { SlashCommand } from '../../@types/commandDef';
 import { calcDxm } from '../../../global/commands/g.calcDxm';
-import { startLog } from '../../utils/startLog';
+import { commandContext } from '../../utils/context';
 import { embedTemplate } from '../../utils/embedTemplate';
 
 const F = f(__filename);
@@ -49,7 +49,7 @@ export const dCalcDXM: SlashCommand = {
   async execute(interaction) {
     const startTime = new Date().getTime();
     // log.info(F, `Command started at ${startTime}`);
-    startLog(F, interaction);
+    log.info(F, await commandContext(interaction));
     // log.info(F, `Printed startlog in ${new Date().getTime() - startTime}ms`);
     // const deferTime = new Date().getTime();
     // log.info(F, `Started Defer reply at ${deferTime}`);
