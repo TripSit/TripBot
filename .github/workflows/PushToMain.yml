@@ -6,23 +6,6 @@ on:
       - main
 
 jobs:
-  # version:
-  #   name: Version
-  #   runs-on: ubuntu-latest
-  #   if: github.event.pull_request.merged == true
-  #   steps:
-  #   - name: Checkout code
-  #     uses: actions/checkout@v3
-  #     with:
-  #       token: ${{ secrets.MB_ACCESS_TOKEN }}
-  #   - name: Set up Git user
-  #     run: |
-  #       git config --global user.name "${{ github.actor }}"
-  #       git config --global user.email "${{ github.actor }}@users.noreply.github.com"
-  #   - name: Increment patch version
-  #     run: npm version patch -m "[PATCH] %s"
-  #   - name: Git push
-  #     run: git push origin main --follow-tags --force
   testScan:
     name: Test and Scan
     runs-on: ubuntu-latest
@@ -72,3 +55,20 @@ jobs:
         uses: github/codeql-action/analyze@v2
         with:
           category: "/language:${{matrix.language}}"
+  # version:
+  #   name: Version
+  #   runs-on: ubuntu-latest
+  #   if: github.event.pull_request.merged == true
+  #   steps:
+  #   - name: Checkout code
+  #     uses: actions/checkout@v3
+  #     with:
+  #       token: ${{ secrets.MB_ACCESS_TOKEN }}
+  #   - name: Set up Git user
+  #     run: |
+  #       git config --global user.name "${{ github.actor }}"
+  #       git config --global user.email "${{ github.actor }}@users.noreply.github.com"
+  #   - name: Increment patch version
+  #     run: npm version patch -m "[PATCH] %s"
+  #   - name: Git push
+  #     run: git push origin main --follow-tags --force
