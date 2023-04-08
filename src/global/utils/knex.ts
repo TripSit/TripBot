@@ -40,34 +40,46 @@ export async function getUser(
   // log.debug(F, `getUser started with: discordId: ${discordId} | userId: ${userId}`);
   let data = {} as Users | undefined;
 
-  if (discordId || matrixId) {
+  if (discordId) {
     try {
       data = await db<Users>('users')
         .select('*')
-        .where('discord_id', discordId).orWhere('matrix_id', matrixId)
+        .where('discord_id', discordId)
         .first();
     } catch (err) {
       log.error(F, `Error getting user: ${err}`);
       log.error(F, `discordId: ${discordId} | matrixId: ${matrixId} userId: ${userId}`);
     }
-
-    // log.debug(F, `data1: ${JSON.stringify(data, null, 2)}`);
-    if (data === undefined) {
-      try {
-        if (discordId) {
-          [data] = (await db<Users>('users')
-            .insert({ discord_id: discordId })
-            .returning('*'));
-        } else if (matrixId) {
-          [data] = (await db<Users>('users')
-            .insert({ matrix_id: matrixId })
-            .returning('*'));
-        }
-      // log.debug(F, `data2: ${JSON.stringify(data, null, 2)}`);
-      } catch (err) {
-        log.error(F, `Error inserting user: ${err}`);
-        log.error(F, `discordId: ${discordId} | userId: ${userId}`);
+  }
+  if (matrixId) {
+    try {
+      data = await db<Users>('users')
+        .select('*')
+        .where('matrix_id', matrixId)
+        .first();
+    } catch (err) {
+      log.error(F, `Error getting user: ${err}`);
+      log.error(F, `discordId: ${discordId} | matrixId: ${matrixId} userId: ${userId}`);
+    }
+  }
+  // log.debug(F, `data1: ${JSON.stringify(data, null, 2)}`);
+  if (data === undefined) {
+    try {
+      if (discordId) {
+        [data] = (await db<Users>('users')
+          .insert({ discord_id: discordId })
+          .returning('*'));
       }
+      if (matrixId) {
+        [data] = (await db<Users>('users')
+          .insert({ matrix_id: matrixId })
+          .returning('*'));
+      }
+
+      // log.debug(F, `data2: ${JSON.stringify(data, null, 2)}`);
+    } catch (err) {
+      log.error(F, `Error inserting user: ${err}`);
+      log.error(F, `discordId: ${discordId} | userId: ${userId}`);
     }
   }
   if (userId) {
@@ -86,6 +98,10 @@ export async function getUser(
   // log.debug(F, `data4: ${JSON.stringify(data, null, 2)}`);
 
   return data as Users;
+}
+
+export async function userExists(discordId:string | null, matrixId:string | null, userId:string | null):Promise<boolean> {
+  return (await getUser(discordId, matrixId, userId) !== undefined);
 }
 
 export async function getGuild(

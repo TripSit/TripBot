@@ -13,7 +13,7 @@ const F = 'check'; // eslint-disable-line
 
 /**
  * Template
- * @param {Client} discordClient The Client that manages this interaction
+ * @param {Client} client The Client that manages this interaction
  * @return {Promise<void>}
 * */
 export async function checkGuildPermissions(
@@ -24,7 +24,7 @@ export async function checkGuildPermissions(
     permission?: PermissionResolvable,
   }> {
   const guildObj = await discordClient.guilds.fetch(guild.id);
-  const member = await guildObj.members.fetch(client.user?.id as string);
+  const member = await guildObj.members.fetch(discordClient.user?.id as string);
 
   // Loop through the permissions and check if the bot has them
   for (const permission of permissionList) { // eslint-disable-line no-restricted-syntax
