@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - versioning
 
 jobs:
   PushToMain:
@@ -14,6 +15,10 @@ jobs:
       contents: read
       security-events: write
     if: (!contains(github.event.head_commit.message, '[PATCH]')) && (!contains(github.event.head_commit.message, '[RELEASE]')) && (!contains(github.event.head_commit.message, 'Merge pull request'))
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [ 'javascript' ]
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
