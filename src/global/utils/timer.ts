@@ -26,6 +26,10 @@ import { checkChannelPermissions } from '../../discord/utils/checkPermissions';
 
 const F = f(__filename);
 
+const lastReminder = {} as {
+  [key: string]: DateTime;
+};
+
 // Value in milliseconds (1000 * 60 = 1 minute)
 const interval = env.NODE_ENV === 'production' ? 1000 * 30 : 1000 * 10;
 
@@ -202,14 +206,19 @@ async function checkTickets() {
           ]);
 
           if (!tripsitPerms.hasPermission) {
-            // const guildOwner = await channel.guild.fetchOwner();
-            // await guildOwner.send({
-            //   content: `I am trying to prune threads in ${channel} but I don't have the ${tripsitPerms.permission} permission.`, // eslint-disable-line max-len
-            // });
-            const botOwner = await global.client.users.fetch(env.DISCORD_OWNER_ID);
-            await botOwner.send({
-              content: `I am trying to prune threads in ${channel} but I don't have the ${tripsitPerms.permission} permission.`, // eslint-disable-line max-len
-            });
+            // Check if you have reminder the guild owner in the last 24 hours
+            const lastRemdinerSent = lastReminder[guild.id];
+            if (!lastRemdinerSent || lastRemdinerSent < DateTime.local().minus({ hours: 24 })) {
+              log.debug(F, `Sending reminder to ${(await guild.fetchOwner()).user.username}...`);
+              // const guildOwner = await channel.guild.fetchOwner();
+              // await guildOwner.send({
+              //   content: `I am trying to prune threads in ${channel} but I don't have the ${tripsitPerms.permission} permission.`, // eslint-disable-line max-len
+              // });
+              const botOwner = await global.client.users.fetch(env.DISCORD_OWNER_ID);
+              await botOwner.send({
+                content: `I am trying to prune threads in ${channel} of ${channel.guild.name} but I don't have the ${tripsitPerms.permission} permission.`, // eslint-disable-line max-len
+              });
+            }
             return;
           }
 
