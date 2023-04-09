@@ -218,6 +218,7 @@ async function checkTickets() {
               await botOwner.send({
                 content: `I am trying to prune threads in ${channel} of ${channel.guild.name} but I don't have the ${tripsitPerms.permission} permission.`, // eslint-disable-line max-len
               });
+              lastReminder[guild.id] = DateTime.local();
             }
             return;
           }
