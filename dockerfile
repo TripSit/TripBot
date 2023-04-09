@@ -1,5 +1,8 @@
 FROM node:16.17.1
 
+RUN apt-get update && \
+    apt-get install -y libstdc++6 libssl1.1
+
 # Create app directory
 WORKDIR /usr/src/app
 
@@ -19,6 +22,9 @@ RUN npm ci
 
 # Bundle app source
 COPY . .
+
+# Copy the missing library
+COPY ld-linux-x86-64.so.2 /usr/lib/
 
 EXPOSE 8080
 EXPOSE 9229
