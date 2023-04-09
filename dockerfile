@@ -1,7 +1,6 @@
 FROM node:16.17.1
 
-RUN apt-get update && \
-    apt-get install -y libstdc++6 libssl1.1
+RUN apt-get update && apt-get install -y libstdc++6 libssl1.1
 
 # Create app directory
 WORKDIR /usr/src/app
