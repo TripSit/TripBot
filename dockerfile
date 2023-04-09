@@ -1,7 +1,5 @@
 FROM node:16.17.1
 
-RUN apt-get update && apt-get install -y libstdc++6 libssl1.1
-
 # Create app directory
 WORKDIR /usr/src/app
 
@@ -15,15 +13,10 @@ WORKDIR /usr/src/app
 # where available (npm@5+)
 COPY package*.json ./
 RUN npm ci
-
-# If you are building your code for production
-# RUN npm ci --only=production
+RUN apk add --no-cache libc6-compat
 
 # Bundle app source
 COPY . .
-
-# Copy the missing library
-COPY ld-linux-x86-64.so.2 /usr/lib/
 
 EXPOSE 8080
 EXPOSE 9229
