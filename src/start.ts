@@ -6,7 +6,7 @@ import { log } from './global/utils/log';
 import { discordConnect } from './discord/discord'; // eslint-disable-line
 import validateEnv from './global/utils/env.validate'; // eslint-disable-line
 import { commandContext } from './discord/utils/context'; // eslint-disable-line
-import startMatrix from './matrix/matrix';
+// import startMatrix from './matrix/matrix';
 
 global.bootTime = new Date();
 
@@ -18,7 +18,7 @@ async function start() {
   log.info(F, 'Initializing service!');
   validateEnv('SERVICES');
   if (env.DISCORD_CLIENT_TOKEN && validateEnv('DISCORD')) await discordConnect();
-  if (env.MATRIX_ACCESS_TOKEN && validateEnv('MATRIX') && env.NODE_ENV !== 'production') await startMatrix();
+  // if (env.MATRIX_ACCESS_TOKEN && validateEnv('MATRIX') && env.NODE_ENV !== 'production') await startMatrix();
 }
 
 start();
