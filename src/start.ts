@@ -1,4 +1,4 @@
-// import { Colors, EmbedBuilder, TextChannel } from 'discord.js';
+import { Colors, EmbedBuilder, TextChannel } from 'discord.js';
 import { getVoiceConnection } from '@discordjs/voice';
 // import { stripIndents } from 'common-tags';
 import { env } from './global/utils/env.config';
@@ -12,7 +12,7 @@ global.bootTime = new Date();
 
 const F = f(__filename);
 
-// const error10062 = 'Error 10062: (Unknown Interaction Error)[https://github.com/discord/discord-api-docs/issues/5558] for details'; // eslint-disable-line max-len
+const error10062 = 'Error 10062: (Unknown Interaction Error)[https://github.com/discord/discord-api-docs/issues/5558] for details'; // eslint-disable-line max-len
 
 async function start() {
   log.info(F, 'Initializing service!');
@@ -31,38 +31,38 @@ process.on('unhandledRejection', async (error: Error) => {
   log.error(F, `${errorStack}`);
 
   // If this is production, send a message to the channel and alert the developers
-  //   if (env.NODE_ENV === 'production') {
-  //     sentry.captureException(error);
+  if (env.NODE_ENV === 'production') {
+    sentry.captureException(error);
 
-  //     // Construct the embed
-  //     const embed = new EmbedBuilder()
-  //       .setColor(Colors.Red)
-  //       .setDescription(errorStack);
+    // Construct the embed
+    const embed = new EmbedBuilder()
+      .setColor(Colors.Red)
+      .setDescription(errorStack);
 
-  //     // Get channel we send errors to
-  //     const channel = await client.channels.fetch(env.CHANNEL_BOTERRORS) as TextChannel;
+    // Get channel we send errors to
+    const channel = await client.channels.fetch(env.CHANNEL_BOTERRORS) as TextChannel;
 
-  //     // If the error is a 10062, we know it's a Discord API error, to kind of ignore it =/
-  //     if ((error as any).code === 10062) { // eslint-disable-line @typescript-eslint/no-explicit-any
-  //       await channel.send({
-  //         embeds: [
-  //           embed.setDescription(error10062), // eslint-disable-line max-len
-  //         ],
-  //       });
-  //       return;
-  //     }
+    // If the error is a 10062, we know it's a Discord API error, to kind of ignore it =/
+    if ((error as any).code === 10062) { // eslint-disable-line @typescript-eslint/no-explicit-any
+      await channel.send({
+        embeds: [
+          embed.setDescription(error10062), // eslint-disable-line max-len
+        ],
+      });
+      return;
+    }
 
-  //     // Get the role we want to ping
-  //     const guild = await client.guilds.fetch(env.DISCORD_GUILD_ID);
-  //     const role = await guild.roles.fetch(env.ROLE_TRIPBOTDEV);
+    // Get the role we want to ping
+    const guild = await client.guilds.fetch(env.DISCORD_GUILD_ID);
+    const role = await guild.roles.fetch(env.ROLE_TRIPBOTDEV);
 
-//     // Alert the developers
-//     await channel.send({
-//       embeds: [
-//         embed.setDescription(`**unhandled Error\`\`\`${errorStack}\`\`\`${role} should check this out!`),
-//       ],
-//     });
-//   }
+    // Alert the developers
+    await channel.send({
+      embeds: [
+        embed.setDescription(`**unhandled Error\`\`\`${errorStack}\`\`\`${role} should check this out!`),
+      ],
+    });
+  }
 });
 
 // Stop the bot when the process is closed (via Ctrl-C).
