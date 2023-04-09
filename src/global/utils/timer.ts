@@ -1,4 +1,5 @@
 import {
+  Guild,
   GuildMember,
   PermissionResolvable,
   TextChannel,
@@ -182,7 +183,13 @@ async function checkTickets() {
     guildDataList.forEach(async guildData => {
       // log.debug(F, `Checking guild  room for old threads...`);
       // As a failsafe, loop through the Tripsit room and delete any threads that are older than 7 days and are archived
-      const guild = await global.client.guilds.fetch(guildData.id);
+      let guild = {} as Guild;
+      try {
+        guild = await global.client.guilds.fetch(guildData.id);
+      } catch (err) {
+        // Guild was likely deleted
+        return;
+      }
       if (guild && guildData.channel_tripsit) {
         // log.debug(F, 'Checking Tripsit room for old threads...');
         // log.debug(F, `Tripsit room: ${guildData.channel_tripsit}`);
@@ -195,8 +202,12 @@ async function checkTickets() {
           ]);
 
           if (!tripsitPerms.hasPermission) {
-            const guildOwner = await channel.guild.fetchOwner();
-            await guildOwner.send({
+            // const guildOwner = await channel.guild.fetchOwner();
+            // await guildOwner.send({
+            //   content: `I am trying to prune threads in ${channel} but I don't have the ${tripsitPerms.permission} permission.`, // eslint-disable-line max-len
+            // });
+            const botOwner = await global.client.users.fetch(env.DISCORD_OWNER_ID);
+            await botOwner.send({
               content: `I am trying to prune threads in ${channel} but I don't have the ${tripsitPerms.permission} permission.`, // eslint-disable-line max-len
             });
             return;
