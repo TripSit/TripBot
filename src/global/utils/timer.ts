@@ -1,4 +1,5 @@
 import {
+  GuildMember,
   PermissionResolvable,
   TextChannel,
   ThreadChannel,
@@ -15,9 +16,10 @@ import {
   ticketUpdate,
   usersGetMindsets,
   usersUpdate,
+  db,
 } from './knex';
 import {
-  TicketStatus, UserTickets, TicketType,
+  TicketStatus, UserTickets, TicketType, DiscordGuilds,
 } from '../@types/database.d';
 import { checkChannelPermissions } from '../../discord/utils/checkPermissions';
 
@@ -106,40 +108,40 @@ async function checkTickets() {
         // Restore roles on the user
         const userData = await getUser(null, null, ticket.user_id);
         if (userData.discord_id) {
-          const discordUser = await global.client.users.fetch(userData.discord_id);
+          const discordUser = await discordClient.users.fetch(userData.discord_id);
           if (discordUser) {
-            const guild = await global.client.guilds.fetch(env.DISCORD_GUILD_ID);
-            if (guild) {
-              const searchResults = await guild.members.search({ query: discordUser.username });
-              // log.debug(F, `searchResults: ${JSON.stringify(searchResults)}`);
-              if (searchResults.size > 0) {
-                const member = await guild.members.fetch(discordUser);
-                if (member) {
-                  const myMember = await guild.members.fetch(env.DISCORD_CLIENT_ID);
-                  const myRole = myMember.roles.highest;
+            const threadChannel = await discordClient.channels.fetch(ticket.thread_id) as ThreadChannel;
+            const guild = await discordClient.guilds.fetch(threadChannel.guild.id);
+            const guildData = await getGuild(guild.id);
+            const searchResults = await guild.members.search({ query: discordUser.username });
+            // log.debug(F, `searchResults: ${JSON.stringify(searchResults)}`);
+            if (searchResults.size > 0) {
+              const member = await guild.members.fetch(discordUser);
+              if (member) {
+                const myMember = guild.members.me as GuildMember;
+                const myRole = myMember.roles.highest;
 
-                  // Restore the old roles
-                  if (userData.roles) {
-                    // log.debug(F, `Restoring ${userData.discord_id}'s roles: ${userData.roles}`);
-                    const roles = userData.roles.split(',');
-                    // for (const role of roles) {
-                    roles.forEach(async role => {
-                      const roleObj = await guild.roles.fetch(role);
-                      if (roleObj && roleObj.name !== '@everyone'
-                              && roleObj.id !== env.ROLE_NEEDSHELP
+                // Restore the old roles
+                if (userData.roles) {
+                  // log.debug(F, `Restoring ${userData.discord_id}'s roles: ${userData.roles}`);
+                  const roles = userData.roles.split(',');
+                  // for (const role of roles) {
+                  roles.forEach(async role => {
+                    const roleObj = await guild.roles.fetch(role);
+                    if (roleObj && roleObj.name !== '@everyone'
+                              && roleObj.id !== guildData.role_needshelp
                               && roleObj.comparePositionTo(myRole) < 0
-                      ) {
-                        // Check if the bot has permission to add the role
-                        // log.debug(F, `Adding ${userData.discord_id}'s ${role} role`);
-                        await member.roles.add(roleObj);
-                      }
-                    });
-
-                    // Remove the needshelp role
-                    const needshelpRole = await guild.roles.fetch(env.ROLE_NEEDSHELP);
-                    if (needshelpRole && needshelpRole.comparePositionTo(myRole) < 0) {
-                      await member.roles.remove(needshelpRole);
+                    ) {
+                      // Check if the bot has permission to add the role
+                      // log.debug(F, `Adding ${userData.discord_id}'s ${role} role`);
+                      await member.roles.add(roleObj);
                     }
+                  });
+
+                  // Remove the needshelp role
+                  const needshelpRole = await guild.roles.fetch(guildData.role_needshelp as string);
+                  if (needshelpRole && needshelpRole.comparePositionTo(myRole) < 0) {
+                    await member.roles.remove(needshelpRole);
                   }
                 }
               }
@@ -175,56 +177,58 @@ async function checkTickets() {
     });
   }
 
-  // As a failsafe, loop through the Tripsit room and delete any threads that are older than 7 days and are archived
-  const guild = await global.client.guilds.fetch(env.DISCORD_GUILD_ID);
-  if (guild) {
-    // log.debug(F, 'Checking Tripsit room for old threads...');
-    const guildData = await getGuild(guild.id);
-    if (guildData && guildData.channel_tripsit) {
-      // log.debug(F, `Tripsit room: ${guildData.channel_tripsit}`);
-      const channel = await guild.channels.fetch(guildData.channel_tripsit) as TextChannel;
-      if (channel) {
-        // log.debug(F, `Tripsit room: ${channel.name} (${channel.id})`);
+  const guildDataList = await db<DiscordGuilds>('discord_guilds').select('*');
+  if (guildDataList.length > 0) {
+    guildDataList.forEach(async guildData => {
+      // log.debug(F, `Checking guild  room for old threads...`);
+      // As a failsafe, loop through the Tripsit room and delete any threads that are older than 7 days and are archived
+      const guild = await global.client.guilds.fetch(guildData.id);
+      if (guild && guildData.channel_tripsit) {
+        // log.debug(F, 'Checking Tripsit room for old threads...');
+        // log.debug(F, `Tripsit room: ${guildData.channel_tripsit}`);
+        const channel = await guild.channels.fetch(guildData.channel_tripsit) as TextChannel;
+        if (channel) {
+          // log.debug(F, `Tripsit room: ${channel.name} (${channel.id})`);
+          const tripsitPerms = await checkChannelPermissions(channel, [
+            'ViewChannel' as PermissionResolvable,
+            'ManageThreads' as PermissionResolvable,
+          ]);
 
-        const tripsitPerms = await checkChannelPermissions(channel, [
-          'ViewChannel' as PermissionResolvable,
-          'ManageThreads' as PermissionResolvable,
-        ]);
-
-        if (!tripsitPerms.hasPermission) {
-          const guildOwner = await channel.guild.fetchOwner();
-          await guildOwner.send({
-            content: `I am trying to prune threads in ${channel} but I don't have the ${tripsitPerms.permission} permission.`, // eslint-disable-line max-len
-          });
-          return;
-        }
-
-        // log.debug(F, 'Deleting old threads...');
-        const threadList = await channel.threads.fetch({
-          archived: {
-            type: 'private',
-            fetchAll: true,
-            before: new Date().setDate(new Date().getDate() - 7),
-          },
-        });
-          // const threadList = await channel.threads.fetchArchived({ type: 'private', fetchAll: true });
-          // log.debug(F, `Found ${threadList.threads.size} archived threads in Tripsit room`);
-        threadList.threads.forEach(async thread => {
-          // Check if the thread was created over a week ago
-          try {
-            await thread.fetch();
-            if (DateTime.fromJSDate(thread.createdAt as Date) <= DateTime.local().minus({ days: 7 })) {
-              thread.delete();
-              // log.debug(F, `Thread ${thread.id} is deleted`);
-            } else {
-              // log.debug(F, `Thread ${thread.id} is not ready to be deleted ${thread.createdAt}`);
-            }
-          } catch (err) {
-            // Thread was likely manually deleted
+          if (!tripsitPerms.hasPermission) {
+            const guildOwner = await channel.guild.fetchOwner();
+            await guildOwner.send({
+              content: `I am trying to prune threads in ${channel} but I don't have the ${tripsitPerms.permission} permission.`, // eslint-disable-line max-len
+            });
+            return;
           }
-        });
+
+          // log.debug(F, 'Deleting old threads...');
+          const threadList = await channel.threads.fetch({
+            archived: {
+              type: 'private',
+              fetchAll: true,
+              before: new Date().setDate(new Date().getDate() - 7),
+            },
+          });
+            // const threadList = await channel.threads.fetchArchived({ type: 'private', fetchAll: true });
+            // log.debug(F, `Found ${threadList.threads.size} archived threads in Tripsit room`);
+          threadList.threads.forEach(async thread => {
+            // Check if the thread was created over a week ago
+            try {
+              await thread.fetch();
+              if (DateTime.fromJSDate(thread.createdAt as Date) <= DateTime.local().minus({ days: 7 })) {
+                thread.delete();
+                // log.debug(F, `Thread ${thread.id} is deleted`);
+              } else {
+                // log.debug(F, `Thread ${thread.id} is not ready to be deleted ${thread.createdAt}`);
+              }
+            } catch (err) {
+              // Thread was likely manually deleted
+            }
+          });
+        }
       }
-    }
+    });
   }
 }
 
