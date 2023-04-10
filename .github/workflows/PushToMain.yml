@@ -11,8 +11,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-      with:
-        fetch-depth: 0
     # - name: Use Node.js '16.17.1'
     #   uses: actions/setup-node@v3
     #   with:
@@ -29,14 +27,19 @@ jobs:
     #   run: npm ci
     # - name: Copy env
     #   run: cp .env.example .env
-    # - name: Test
-    #   run: npm test
-    - name: Scan
-      uses: sonarsource/sonarqube-scan-action@master
-      env:
-        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-        test:
+    - name: Test
+      run: npm test
+  sonar:
+    name: SonarScan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+      - uses: sonarsource/sonarqube-scan-action@master
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
   codeql:
     name: CodeQL
     runs-on: ubuntu-latest
