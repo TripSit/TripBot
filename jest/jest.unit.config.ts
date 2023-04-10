@@ -10,7 +10,8 @@ const jestConfig: Config = {
   ],
   collectCoverage: true,
   collectCoverageFrom: [
-    './src/**/*',
+    './src/discord/**/*',
+    './src/global/**/*',
   ],
   coveragePathIgnorePatterns: [
     '/node_modules/',
