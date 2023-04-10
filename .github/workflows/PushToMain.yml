@@ -11,18 +11,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-      with:
-        fetch-depth: 0
+      # with:
+      #   fetch-depth: 0
     - name: Use Node.js '16.17.1'
       uses: actions/setup-node@v3
       with:
         node-version: '16.17.1'
         cache: 'npm'
-    - name: Setup Java JDK
-      uses: actions/setup-java@v3.6.0
-      with:
-        java-version: '8'
-        distribution: 'adopt'
+    # - name: Setup Java JDK
+    #   uses: actions/setup-java@v3.6.0
+    #   with:
+    #     java-version: '8'
+    #     distribution: 'adopt'
     - name: Update npm
       run: npm install -g npm && npm --version
     - name: Install dependencies
