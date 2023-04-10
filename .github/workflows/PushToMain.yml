@@ -23,12 +23,10 @@ jobs:
     #     distribution: 'adopt'
     - name: Update npm
       run: npm install -g npm && npm --version
-    - name: Install jest
-      run: npm install -g jest
-    # - name: Install dependencies
-    #   run: npm ci
-    # - name: Copy env
-    #   run: cp .env.example .env
+    - name: Install dependencies
+      run: npm ci
+    - name: Copy env
+      run: cp .env.example .env
     - name: Test
       run: npm test
   sonar:
