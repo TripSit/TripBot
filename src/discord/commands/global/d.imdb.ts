@@ -1,6 +1,7 @@
 import {
   SlashCommandBuilder,
   ChatInputCommandInteraction,
+  Colors,
 } from 'discord.js';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
@@ -26,13 +27,28 @@ export const dImdb: SlashCommand = {
 
     const title = interaction.options.getString('title', true);
     if (!title) {
-      await interaction.editReply({ content: 'You must enter a title.' });
+      await interaction.editReply({
+        embeds: [
+          embedTemplate()
+            .setTitle('Error')
+            .setDescription('Please provide a title to search for')
+            .setColor(Colors.Red),
+        ],
+      });
       return false;
     }
     const result = await imdb(title);
 
     if (!result.title) {
-      await interaction.editReply({ content: `Could not find ${title}, make sure you're exact!` });
+      await interaction.editReply({
+        embeds: [
+          embedTemplate()
+            .setTitle('Error')
+            .setDescription(`Could not find **${title}**!
+            This API is kind of dumb, you need to be *exact*!`)
+            .setColor(Colors.Red),
+        ],
+      });
       return true;
     }
 

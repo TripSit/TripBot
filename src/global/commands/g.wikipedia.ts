@@ -34,6 +34,15 @@ export async function wikipedia(query: string):Promise<WikiData> {
       };
     }
 
+    if (result.data.type === 'disambiguation') {
+      return {
+        title: 'CHS returned multiple results, please be more specific!',
+        thumbnail: '',
+        url: '',
+        description: '',
+      };
+    }
+
     log.debug(F, `result: ${JSON.stringify(result.data.extract, null, 2)}`);
 
     const extract = result.data.extract_html;

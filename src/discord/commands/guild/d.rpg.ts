@@ -3048,7 +3048,7 @@ export async function rpgTrivia(
 export async function rpgArcadeWager(
   interaction: MessageComponentInteraction,
 ):Promise<InteractionUpdateOptions> {
-  let newBet = wagers[interaction.user.id].tokens;
+  let newBet = wagers[interaction.user.id] ? wagers[interaction.user.id].tokens : 0;
   const bet = parseInt(interaction.customId.slice(8), 10);
   newBet += bet || 0;
 
