@@ -59,8 +59,8 @@
     "fuse.js": "^6.6.2",
     "he": "^1.2.0",
     "imdb-api": "^4.4.1",
-    "knex": "^2.4.2",
     "keycloak-admin": "^1.14.22",
+    "knex": "^2.4.2",
     "luxon": "^3.3.0",
     "matrix-bot-sdk": "^0.6.4",
     "matrix-org-irc": "^1.5.0",
@@ -97,6 +97,7 @@
     "jest": "^29.5.0",
     "knex-types": "^0.5.0",
     "nodemon": "^2.0.22",
+    "ts-jest": "^29.1.0",
     "typescript": "^5.0.4"
   }
 }
