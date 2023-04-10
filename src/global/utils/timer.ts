@@ -318,8 +318,8 @@ async function checkMindsets() {
  * This function calls the uptime monitor to tell it that tripbot is alive
  */
 async function callUptime() {
-  if (env.NODE_ENV !== 'production') return;
-  axios.get('https://uptime.tripsit.me/api/push/UyL8LkDKtG?status=up&msg=OK').catch(e => {
+  // if (env.NODE_ENV !== 'production') return;
+  axios.get(`https://uptime.tripsit.me/api/push/UyL8LkDKtG?status=up&msg=OK?ping=${discordClient.ws.ping}`).catch(e => {
     log.debug(F, e);
   });
 }
