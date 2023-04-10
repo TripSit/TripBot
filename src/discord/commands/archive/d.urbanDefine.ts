@@ -5,7 +5,7 @@ import { stripIndents } from 'common-tags';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { urbandefine } from '../../../global/commands/archive/g.urbandefine';
-import { commandContext } from '../../utils/context';
+import commandContext from '../../utils/context';
 // import log from '../../../global/utils/log';
 const F = f(__filename);
 

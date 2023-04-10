@@ -3,7 +3,7 @@ import {
 } from 'discord.js';
 import convert from 'convert-units';
 import { SlashCommand } from '../../@types/commandDef';
-import { commandContext } from '../../utils/context';
+import commandContext from '../../utils/context';
 import { embedTemplate } from '../../utils/embedTemplate';
 
 const F = f(__filename);

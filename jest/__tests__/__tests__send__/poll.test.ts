@@ -21,7 +21,7 @@ describe(slashCommand.data.name, () => {
     const commandData = slashCommand.data;
     const stringCommand = `/${commandData.name} question:Test choices:One,Two,Three`;
     const command = getParsedCommand(stringCommand, commandData);
-    // log.debug(`[${PREFIX}] command: ${JSON.stringify(command, null, 2)}`);
+    // log.debug(F, `command: ${JSON.stringify(command, null, 2)}`);
     const spy = await executeCommandWithMockOptionsAndSpySentMessage(slashCommand, command);
     expect(spy).toHaveBeenCalledWith('Done!');
     // expect(spy).toHaveBeenCalledWith(embedContaining({

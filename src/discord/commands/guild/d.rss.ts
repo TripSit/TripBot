@@ -15,7 +15,7 @@ import Parser from 'rss-parser';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { rssCreate, rssList, rssDelete } from '../../../global/commands/g.rss';
-import { commandContext } from '../../utils/context';
+import commandContext from '../../utils/context';
 
 const F = f(__filename);
 

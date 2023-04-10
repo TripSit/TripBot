@@ -35,7 +35,7 @@ import {
 } from '../../../global/@types/database';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
-import { commandContext } from '../../utils/context';
+import commandContext from '../../utils/context';
 
 /* Test script
 1a) Init !

@@ -9,7 +9,7 @@ import {
   ButtonStyle,
 } from 'discord-api-types/v10';
 import { remindMe } from '../../../global/commands/g.remindme';
-import { commandContext } from '../../utils/context';
+import commandContext from '../../utils/context';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { parseDuration } from '../../../global/utils/parseDuration';

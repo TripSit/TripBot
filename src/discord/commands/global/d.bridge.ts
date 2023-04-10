@@ -13,7 +13,7 @@ import { embedTemplate } from '../../utils/embedTemplate';
 import {
   bridgeConfirm, bridgeCreate, bridgePause, bridgeRemove, bridgeResume,
 } from '../../../global/commands/g.bridge';
-import { commandContext } from '../../utils/context';
+import commandContext from '../../utils/context';
 import { database } from '../../../global/utils/knex';
 import { checkChannelPermissions } from '../../utils/checkPermissions';
 

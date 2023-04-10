@@ -3,7 +3,7 @@ import {
   ButtonInteraction,
   Client,
 } from 'discord.js';
-import { commandContext } from '../utils/context';
+import commandContext from '../utils/context';
 import { applicationApprove } from '../utils/application';
 import {
   tripsitmeButton,

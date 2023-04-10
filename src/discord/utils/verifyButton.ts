@@ -37,7 +37,7 @@ export async function verifyButton(interaction:ButtonInteraction): Promise<void>
     // log.debug(F, `member: ${member.roles.cache}`);
 
     // log.debug(`Verified button clicked by ${interaction.user.username}#${interaction.user.discriminator}`);
-    const channelTripbotlogs = await global.client.channels.fetch(env.CHANNEL_BOTLOG) as TextChannel;
+    const channelTripbotlogs = await global.discordClient.channels.fetch(env.CHANNEL_BOTLOG) as TextChannel;
     await channelTripbotlogs.send({
       content: `Verified button clicked by ${interaction.user.username}#${interaction.user.discriminator}`,
     });

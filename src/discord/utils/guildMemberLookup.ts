@@ -93,7 +93,7 @@ export async function getDiscordUser(
   if (string.startsWith('<@') && string.endsWith('>')) {
     // log.debug(F, `${string} is a mention!`);
     try {
-      user = await client.users.fetch(string.replace(/[<@!>]/g, ''));
+      user = await discordClient.users.fetch(string.replace(/[<@!>]/g, ''));
     } catch (error) {
       // log.debug(F, `Error fetching user with ID ${string}, they may have left the guild!`);
       return null;
@@ -101,7 +101,7 @@ export async function getDiscordUser(
   } else if (string.match(/^\d+$/)) {
     // log.debug(F, `${string} is an ID!`);
     try {
-      user = await client.users.fetch(string);
+      user = await discordClient.users.fetch(string);
     } catch (error) {
       // log.debug(F, `Error fetching user with ID ${string}, they may have left the guild!`);
       return null;

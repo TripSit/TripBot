@@ -1,5 +1,5 @@
 export default function validateEnv(
-  service: 'DISCORD' | 'MATRIX' | 'SERVICES',
+  service: 'DISCORD' | 'MATRIX' | 'IRC' | 'TELEGRAM' | 'SERVICES',
 ) {
   const F = f(__filename);
   // log.info(F, `You are in ${process.env.NODE_ENV?.toUpperCase()}`);

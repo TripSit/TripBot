@@ -4,7 +4,7 @@ import {
   GuildMember,
 } from 'discord.js';
 import { SlashCommand } from '../../@types/commandDef';
-import { commandContext } from '../../utils/context';
+import commandContext from '../../utils/context';
 
 const F = f(__filename);
 

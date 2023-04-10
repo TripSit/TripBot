@@ -8,7 +8,7 @@ import {
 } from 'discord-api-types/v10';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
-import { commandContext } from '../../utils/context';
+import commandContext from '../../utils/context';
 import { paginationEmbed } from '../../utils/pagination';
 
 const F = f(__filename);

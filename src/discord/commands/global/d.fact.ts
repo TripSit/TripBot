@@ -4,7 +4,7 @@ import {
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { fact } from '../../../global/commands/g.fact';
-import { commandContext } from '../../utils/context';
+import commandContext from '../../utils/context';
 // import log from '../../../global/utils/log';
 const F = f(__filename);
 
