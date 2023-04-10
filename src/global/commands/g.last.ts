@@ -66,7 +66,7 @@ export async function last(
           }),
         )
           .then(async () => {
-            // logger.debug(`[${PREFIX}] messageInfo: ${JSON.stringify(messageInfo, null, 2)}`);
+            // logger.debug(F, `messageInfo: ${JSON.stringify(messageInfo, null, 2)}`);
             if (messageInfo.length === 0) {
               resolve({
                 lastMessage: 'No messages found',

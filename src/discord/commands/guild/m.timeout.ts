@@ -13,7 +13,7 @@ import {
 import { stripIndents } from 'common-tags';
 import { MessageCommand } from '../../@types/commandDef';
 import { parseDuration } from '../../../global/utils/parseDuration';
-import { commandContext } from '../../utils/context';
+import commandContext from '../../utils/context';
 // import log from '../../../global/utils/log';
 import { moderate } from '../../../global/commands/g.moderate';
 import { UserActionType } from '../../../global/@types/database';

@@ -12,7 +12,7 @@ import {
   getLeaderboard,
   // leaderboard,
 } from '../../../global/commands/g.leaderboard';
-import { commandContext } from '../../utils/context';
+import commandContext from '../../utils/context';
 import { embedTemplate } from '../../utils/embedTemplate'; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { getTotalLevel } from '../../../global/utils/experience';
 import { paginationEmbed } from '../../utils/pagination';

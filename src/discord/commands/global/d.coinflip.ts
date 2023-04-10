@@ -3,7 +3,7 @@ import {
 } from 'discord.js';
 import { SlashCommand } from '../../@types/commandDef';
 import { coinflip } from '../../../global/commands/g.coinflip';
-import { commandContext } from '../../utils/context';
+import commandContext from '../../utils/context';
 // import log from '../../../global/utils/log';
 const F = f(__filename);
 

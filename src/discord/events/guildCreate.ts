@@ -26,7 +26,7 @@ export const guildCreate: GuildCreateEvent = {
 
     const auditlog = await discordClient.channels.fetch(env.CHANNEL_AUDITLOG) as TextChannel;
     discordClient.guilds.fetch();
-    await auditlog.send(`I just joined a guild! I am now in ${client.guilds.cache.size} guilds!
+    await auditlog.send(`I just joined a guild! I am now in ${discordClient.guilds.cache.size} guilds!
     ${guild.name} (id: ${guild.id})
     Created at: ${guild.createdAt}
     Member count: ${guild.memberCount}

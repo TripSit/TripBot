@@ -5,7 +5,7 @@ import {
 } from 'discord.js';
 import { SlashCommand } from '../../@types/commandDef';
 import { last } from '../../../global/commands/g.last';
-import { commandContext } from '../../utils/context';
+import commandContext from '../../utils/context';
 
 // import log from '../../../global/utils/logger';
 

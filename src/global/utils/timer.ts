@@ -51,7 +51,7 @@ async function checkReminders() {
 
           // Send the user a message
           if (userData && userData.discord_id) {
-            const user = await global.client.users.fetch(userData.discord_id);
+            const user = await global.discordClient.users.fetch(userData.discord_id);
             if (user) {
               await user.send(`Hey ${user.username}, you asked me to remind you: ${reminder.reminder_text}`);
             }
@@ -103,7 +103,7 @@ async function checkTickets() {
         // Archive the thread on discord
         if (ticket.thread_id) {
           try {
-            const thread = await global.client.channels.fetch(ticket.thread_id) as ThreadChannel;
+            const thread = await global.discordClient.channels.fetch(ticket.thread_id) as ThreadChannel;
             await thread.setArchived(true);
           } catch (err) {
             // Thread was likely manually deleted
@@ -170,7 +170,7 @@ async function checkTickets() {
         // Delete the thread on discord
         if (ticket.thread_id) {
           try {
-            const thread = await global.client.channels.fetch(ticket.thread_id) as ThreadChannel;
+            const thread = await global.discordClient.channels.fetch(ticket.thread_id) as ThreadChannel;
             await thread.delete();
           } catch (err) {
             // Thread was likely manually deleted
@@ -189,7 +189,7 @@ async function checkTickets() {
       // As a failsafe, loop through the Tripsit room and delete any threads that are older than 7 days and are archived
       let guild = {} as Guild;
       try {
-        guild = await global.client.guilds.fetch(guildData.id);
+        guild = await discordClient.guilds.fetch(guildData.id);
       } catch (err) {
         // Guild was likely deleted
         return;
@@ -214,7 +214,7 @@ async function checkTickets() {
               // await guildOwner.send({
               //   content: `I am trying to prune threads in ${channel} but I don't have the ${tripsitPerms.permission} permission.`, // eslint-disable-line max-len
               // });
-              const botOwner = await global.client.users.fetch(env.DISCORD_OWNER_ID);
+              const botOwner = await discordClient.users.fetch(env.DISCORD_OWNER_ID);
               await botOwner.send({
                 content: `I am trying to prune threads in ${channel} of ${channel.guild.name} but I don't have the ${tripsitPerms.permission} permission.`, // eslint-disable-line max-len
               });
@@ -274,8 +274,8 @@ async function checkMindsets() {
         // Check if the user's mindset role has expired
         // Get the user's discord id
         // Get the user's discord object
-        const user = await global.client.users.fetch(mindsetUser.discord_id);
-        const guild = await global.client.guilds.fetch(env.DISCORD_GUILD_ID);
+        const user = await global.discordClient.users.fetch(mindsetUser.discord_id);
+        const guild = await global.discordClient.guilds.fetch(env.DISCORD_GUILD_ID);
         if (user && guild) {
           const searchResults = await guild.members.search({ query: user.username });
           // log.debug(F, `searchResults: ${JSON.stringify(searchResults)}`);

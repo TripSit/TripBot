@@ -20,7 +20,7 @@ import { embedTemplate } from '../../discord/utils/embedTemplate';
 import {
   getGuild, getUser, guildUpdate, usersUpdate,
 } from '../utils/knex';
-import { commandContext } from '../../discord/utils/context';
+import commandContext from '../../discord/utils/context';
 
 const F = f(__filename);
 
@@ -125,12 +125,12 @@ async function botmodUser(
     `);
 
   // Send the message to the mod channel
-  const modChan = await global.client.channels.fetch(env.CHANNEL_MODERATORS) as TextChannel;
+  const modChan = await global.discordClient.channels.fetch(env.CHANNEL_MODERATORS) as TextChannel;
   // We must send the mention outside of the embed, cuz mentions don't work in embeds
-  const tripsitGuild = await global.client.guilds.fetch(env.DISCORD_GUILD_ID);
+  const tripsitGuild = await global.discordClient.guilds.fetch(env.DISCORD_GUILD_ID);
   const roleModerator = await tripsitGuild.roles.fetch(env.ROLE_MODERATOR) as Role;
   await modChan.send({ content: `Hey ${roleModerator}`, embeds: [modlogEmbed] });
-  const modlog = await global.client.channels.fetch(env.CHANNEL_MODLOG) as TextChannel;
+  const modlog = await global.discordClient.channels.fetch(env.CHANNEL_MODLOG) as TextChannel;
   modlog.send({ embeds: [modlogEmbed] });
   // log.debug(F, `sent a message to the moderators room`);
 
@@ -237,12 +237,12 @@ async function botmodGuild(
 
   // Send the message to the mod channel
   if (command !== 'BOTINFO') {
-    const modChan = await global.client.channels.fetch(env.CHANNEL_MODERATORS) as TextChannel;
+    const modChan = await global.discordClient.channels.fetch(env.CHANNEL_MODERATORS) as TextChannel;
     // We must send the mention outside of the embed, cuz mentions don't work in embeds
-    const tripsitGuild = await global.client.guilds.fetch(env.DISCORD_GUILD_ID);
+    const tripsitGuild = await global.discordClient.guilds.fetch(env.DISCORD_GUILD_ID);
     const roleModerator = await tripsitGuild.roles.fetch(env.ROLE_MODERATOR) as Role;
     await modChan.send({ content: `Hey ${roleModerator}`, embeds: [modlogEmbed] });
-    const modlog = await global.client.channels.fetch(env.CHANNEL_MODLOG) as TextChannel;
+    const modlog = await global.discordClient.channels.fetch(env.CHANNEL_MODLOG) as TextChannel;
     modlog.send({ embeds: [modlogEmbed] });
     // log.debug(F, `sent a message to the moderators room`);
   }

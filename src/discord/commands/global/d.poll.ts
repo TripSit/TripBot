@@ -7,7 +7,7 @@ import {
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
 import { SlashCommand } from '../../@types/commandDef';
-import { commandContext } from '../../utils/context';
+import commandContext from '../../utils/context';
 import { embedTemplate } from '../../utils/embedTemplate'; // eslint-disable-line
 import { checkChannelPermissions } from '../../utils/checkPermissions';
 

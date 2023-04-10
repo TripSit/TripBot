@@ -3,19 +3,17 @@ import {
   UserContextMenuCommandInteraction,
   MessageContextMenuCommandInteraction,
   ButtonInteraction,
-  SelectMenuInteraction,
+  StringSelectMenuInteraction,
   ModalSubmitInteraction,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
 
-export default commandContext;
-
-export async function commandContext(
+export default async function commandContext(
   interaction: ChatInputCommandInteraction
   | UserContextMenuCommandInteraction
   | MessageContextMenuCommandInteraction
   | ButtonInteraction
-  | SelectMenuInteraction
+  | StringSelectMenuInteraction
   | ModalSubmitInteraction,
 ) {
   const source = interaction.guild ? `${interaction.guild.name}` : 'DM';
@@ -39,7 +37,7 @@ export async function commandContext(
   if ((interaction as ButtonInteraction).customId) {
     message += ` with customId: ${(interaction as ButtonInteraction).customId}`;
   }
-  if ((interaction as SelectMenuInteraction).customId) {
+  if ((interaction as StringSelectMenuInteraction).customId) {
     message += ` with customId: ${(interaction as ButtonInteraction).customId}`;
   }
   // logger.info(stripIndents`[${prefix}] ${message}`);

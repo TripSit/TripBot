@@ -1,0 +1,23 @@
+{
+  "userName": "",
+  "realName": "TripSit Mod Relay",
+  "password": "",
+  "port": 6667,
+  "channels": [""],
+  "autoConnect": true,
+  "autoRejoin": true,
+  "autoRenick": true,
+  "renickDelay": 60000,
+  "retryDelay": 2000,
+  "secure": false,
+  "selfSigned": true,
+  "certExpired": true,
+  "floodProtection": false,
+  "sasl": true,
+  "stripColors": false,
+  "channelPrefixes": "#",
+  "messageSplit": 512,
+  "encoding": "UTF-8",
+  "debug": false,
+  "log": false
+}

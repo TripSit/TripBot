@@ -65,7 +65,7 @@ export default async function handleError(
     }
 
     // Get channel we send errors to
-    const channel = await client.channels.fetch(env.CHANNEL_BOTERRORS) as TextChannel;
+    const channel = await discordClient.channels.fetch(env.CHANNEL_BOTERRORS) as TextChannel;
 
     // If the error is a 10062, we know it's a Discord API error, to kind of ignore it =/
     if ((errorData as DiscordAPIError).code === 10062) { // eslint-disable-line @typescript-eslint/no-explicit-any
@@ -78,7 +78,7 @@ export default async function handleError(
     }
 
     // Get the role we want to ping
-    const guild = await client.guilds.fetch(env.DISCORD_GUILD_ID);
+    const guild = await discordClient.guilds.fetch(env.DISCORD_GUILD_ID);
     const role = await guild.roles.fetch(env.ROLE_TRIPBOTDEV);
     let message = `\`\`\`${errorStack}\`\`\``;
     if (interaction && commandName) {
