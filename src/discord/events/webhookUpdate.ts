@@ -11,8 +11,6 @@ import { checkChannelPermissions, checkGuildPermissions } from '../utils/checkPe
 // import {parse} from 'path';
 const F = f(__filename);
 
-export default webhookUpdate;
-
 export const webhookUpdate: WebhookUpdateEvent = {
   name: 'webhookUpdate',
   async execute(channel) {
@@ -71,3 +69,5 @@ export const webhookUpdate: WebhookUpdateEvent = {
     await channelAuditlog.send(response);
   },
 };
+
+export default webhookUpdate;

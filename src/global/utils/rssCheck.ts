@@ -45,7 +45,7 @@ const parser: Parser<RedditFeed, RedditItem> = new Parser();
 async function checkRss() {
   // log.info(F, 'Checking rss...');
   (async () => {
-    const guild = await global.client.guilds.fetch(env.DISCORD_GUILD_ID);
+    const guild = await global.discordClient.guilds.fetch(env.DISCORD_GUILD_ID);
 
     // log.debug(F, `guild: ${JSON.stringify(guild, null, 2)}\n`);
     const rssData = await rssGet(guild.id);

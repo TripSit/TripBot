@@ -5,7 +5,7 @@ import {
 import { DateTime } from 'luxon';
 import { stripIndents } from 'common-tags';
 import { dramacounter } from '../../../global/commands/g.dramacounter';
-import { commandContext } from '../../utils/context';
+import commandContext from '../../utils/context';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { SlashCommand } from '../../@types/commandDef';
 import { parseDuration } from '../../../global/utils/parseDuration';

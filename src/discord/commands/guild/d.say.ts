@@ -4,7 +4,7 @@ import {
   TextChannel,
 } from 'discord.js';
 import { SlashCommand } from '../../@types/commandDef';
-import { commandContext } from '../../utils/context'; // eslint-disable-line @typescript-eslint/no-unused-vars
+import commandContext from '../../utils/context'; // eslint-disable-line @typescript-eslint/no-unused-vars
 
 const F = f(__filename);
 

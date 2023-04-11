@@ -213,14 +213,14 @@ ${roleHelper}. Can you start off by telling us how much you took and the details
       }
 
       // Look for the ping and then take everything after that
-      const action = message.content.split(`<@${client.user?.id}>`)[1];
+      const action = message.content.split(`<@${discordClient.user?.id}>`)[1];
       if (action) {
       // Replace all instances of "your" with "my", make the action first person
         const actionFirstPerson = action.replace(/your/g, 'my');
       await message.channel.send(stripIndents`Sure thing ${displayName}! I will${actionFirstPerson}!`); // eslint-disable-line
       }
     } else {
-      await message.react('<:ts_heart:1085657783069851658>');
+      await message.react(emojiGet('ts_heart'));
     }
   } else if (
     // If 'tripbot' is mentioned in text
@@ -231,7 +231,7 @@ ${roleHelper}. Can you start off by telling us how much you took and the details
       // log.debug(F, `Ignoring bot interaction`);
       return;
     }
-    await message.react('<:ts_heart:1085657783069851658>');
+    await message.react(emojiGet('ts_heart'));
     // const responses = [
     //   '*boops quietly*',
     //   '*beeps quietly*',

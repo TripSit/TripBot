@@ -27,7 +27,7 @@ export const messageDelete: MessageDeleteEvent = {
     if (message.guild.id !== env.DISCORD_GUILD_ID) return;
     const startTime = Date.now();
     log.info(F, `Message in ${message.channel} was deleted.`);
-    log.debug(F, `message: ${JSON.stringify(message, null, 2)}`);
+    // log.debug(F, `message: ${JSON.stringify(message, null, 2)}`);
 
     // Get the channel this will be posted in
     const msglogChannel = await message.client.channels.fetch(env.CHANNEL_MSGLOG) as TextChannel;
@@ -116,7 +116,7 @@ export const messageDelete: MessageDeleteEvent = {
       .setFooter(null)
       .setColor(Colors.Red);
 
-    log.debug(F, `Author Name: ${authorName}, Content: ${content}`);
+    // log.debug(F, `Author Name: ${authorName}, Content: ${content}`);
 
     if (authorName === 'Unknown Author' && content === 'No content') {
       embed.addFields([

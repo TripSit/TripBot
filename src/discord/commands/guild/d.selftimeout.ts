@@ -6,7 +6,7 @@ import {
 } from 'discord.js';
 import { SlashCommand } from '../../@types/commandDef';
 import { parseDuration } from '../../../global/utils/parseDuration';
-import { commandContext } from '../../utils/context'; // eslint-disable-line
+import commandContext from '../../utils/context'; // eslint-disable-line
 
 const F = f(__filename);
 export const selfTimeout: SlashCommand = {

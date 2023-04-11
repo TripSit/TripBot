@@ -7,7 +7,7 @@ import {
 
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
-import { commandContext } from '../../utils/context';
+import commandContext from '../../utils/context';
 
 export default dLpm;
 
@@ -63,6 +63,26 @@ export const dLpm: SlashCommand = {
     return true;
   },
 };
+
+
+export type LpmDict = {
+  [key: string]: {
+    position: number;
+    name: string;
+    alert: number;
+    lp1: number;
+    lp1Max: number;
+    lp5: number;
+    lp5Max: number;
+    lp10: number;
+    lp10Max: number;
+    lp30: number;
+    lp30Max: number;
+    lp60: number;
+    lp60Max: number;
+  }
+};
+
 
 async function constructEmbed():Promise<EmbedBuilder> {
   const embed = embedTemplate()

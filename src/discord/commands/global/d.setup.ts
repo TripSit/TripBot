@@ -18,7 +18,7 @@ import {
 } from 'discord-api-types/v10';
 import { stripIndents } from 'common-tags';
 import { getGuild, guildUpdate } from '../../../global/utils/knex';
-import { commandContext } from '../../utils/context';
+import commandContext from '../../utils/context';
 import { SlashCommand } from '../../@types/commandDef';
 import { checkChannelPermissions, checkGuildPermissions } from '../../utils/checkPermissions';
 import { applicationSetup } from '../../utils/application';

@@ -20,7 +20,7 @@ export default runStats;
 async function checkStats() {
   // log.debug(F, 'Checking stats...');
   // Determine how many people are in the tripsit guild
-  const tripsitGuild = await global.client.guilds.fetch(env.DISCORD_GUILD_ID);
+  const tripsitGuild = await global.discordClient.guilds.fetch(env.DISCORD_GUILD_ID);
   if (!tripsitGuild) return;
 
   const { memberCount } = tripsitGuild;

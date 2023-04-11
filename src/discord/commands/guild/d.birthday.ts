@@ -6,7 +6,7 @@ import {
 import { DateTime } from 'luxon';
 import { SlashCommand } from '../../@types/commandDef';
 import { birthday } from '../../../global/commands/g.birthday';
-import { commandContext } from '../../utils/context';
+import commandContext from '../../utils/context';
 import { embedTemplate } from '../../utils/embedTemplate';
 // import log from '../../../global/utils/log';
 

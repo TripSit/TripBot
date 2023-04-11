@@ -15,8 +15,6 @@ const F = f(__filename);
 
 // https://discordjs.guide/popular-topics/audit-logs.html#who-deleted-a-message
 
-export default channelDelete;
-
 export const channelDelete: ChannelDeleteEvent = {
   name: 'channelDelete',
   async execute(channel) {
@@ -66,3 +64,5 @@ export const channelDelete: ChannelDeleteEvent = {
     // await channelAuditlog.send(response);
   },
 };
+
+export default channelDelete;

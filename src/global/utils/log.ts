@@ -125,7 +125,7 @@ const transportOptions = [
 //   ];
 // }
 
-export const logger = createLogger({
+const logger = createLogger({
   level: env.DEBUG_LEVEL,
   format: combine(
     format.colorize({ all: true }),
@@ -138,8 +138,6 @@ export const logger = createLogger({
 
 declare global {
   type Log = Logger;
-  // eslint-disable-next-line no-var, vars-on-top
-  var logger: Log; // NOSONAR
   // eslint-disable-next-line no-var, vars-on-top
   var log: { // NOSONAR
     info: (prefix:string, message:string) => Log,
@@ -161,7 +159,6 @@ export const log = {
 };
 
 global.log = log;
-global.logger = logger;
 
 global.f = function f(filename: string) {
   return `${parse(filename).name}`;

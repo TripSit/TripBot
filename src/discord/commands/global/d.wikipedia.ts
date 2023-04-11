@@ -6,7 +6,7 @@ import {
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { wikipedia } from '../../../global/commands/g.wikipedia';
-import { commandContext } from '../../utils/context';
+import commandContext from '../../utils/context';
 
 const F = f(__filename);
 
@@ -30,10 +30,11 @@ export const dWikipedia: SlashCommand = {
     const wikiData = await wikipedia(query);
     const embed = embedTemplate()
       .setAuthor(null)
-      .setTitle(wikiData.title)
-      .setURL(wikiData.url)
-      .setThumbnail(wikiData.thumbnail)
-      .setDescription(wikiData.description);
+      .setTitle(wikiData.title !== '' ? wikiData.title : null)
+      .setURL(wikiData.url !== '' ? wikiData.url : null)
+      .setThumbnail(wikiData.thumbnail !== '' ? wikiData.thumbnail : null)
+      .setDescription(wikiData.description !== '' ? wikiData.description : null)
+      .setFooter(null);
 
     await interaction.editReply({ embeds: [embed] });
 

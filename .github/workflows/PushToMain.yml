@@ -6,8 +6,8 @@ on:
       - main
 
 jobs:
-  testScan:
-    name: Test and Scan
+  test:
+    name: Test
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
@@ -24,11 +24,17 @@ jobs:
       run: cp .env.example .env
     - name: Test
       run: npm test
-    - name: Scan
-      uses: sonarsource/sonarqube-scan-action@master
-      env:
-        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+  sonar:
+    name: SonarScan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+      - uses: sonarsource/sonarqube-scan-action@master
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
   codeql:
     name: CodeQL
     runs-on: ubuntu-latest
@@ -36,36 +42,16 @@ jobs:
       actions: read
       contents: read
       security-events: write
-    strategy:
-      fail-fast: false
-      matrix:
-        language: [ 'javascript' ]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v2
         with:
-          languages: ${{ matrix.language }}
+          languages: javascript
       - name: Autobuild
         uses: github/codeql-action/autobuild@v2
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v2
         with:
-          category: "/language:${{matrix.language}}"
-  # version:
-  #   name: Version
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #   - name: Checkout code
-  #     uses: actions/checkout@v3
-  #     with:
-  #       token: ${{ secrets.MB_ACCESS_TOKEN }}
-  #   - name: Set up Git user
-  #     run: |
-  #       git config --global user.name "${{ github.actor }}"
-  #       git config --global user.email "${{ github.actor }}@users.noreply.github.com"
-  #   - name: Increment patch version
-  #     run: npm version patch -m "[PATCH] %s"
-  #   - name: Git push
-  #     run: git push origin main --follow-tags --force
+          category: "/language:javascript"

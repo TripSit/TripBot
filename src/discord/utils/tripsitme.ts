@@ -40,7 +40,7 @@ import {
   UserTickets,
   TicketStatus,
 } from '../../global/@types/database.d';
-import { commandContext } from './context';
+import commandContext from './context';
 import { embedTemplate } from './embedTemplate';
 import { checkChannelPermissions, checkGuildPermissions } from './checkPermissions';
 

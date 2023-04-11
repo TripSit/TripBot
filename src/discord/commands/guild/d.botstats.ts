@@ -4,7 +4,7 @@ import {
 import ms from 'ms';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
-import { commandContext } from '../../utils/context';
+import commandContext from '../../utils/context';
 import { botStats } from '../../../global/commands/g.botstats';
 
 const F = f(__filename);
