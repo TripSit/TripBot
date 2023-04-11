@@ -33,7 +33,7 @@ export async function testkits():Promise<HelpResource[]> {
 
   return response;
 }
-
+// this probably should go to the @types/ dir?
 type HelpResource = {
   name: string;
   country: string;

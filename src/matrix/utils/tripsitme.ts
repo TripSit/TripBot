@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-shadow */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable no-case-declarations */
@@ -22,6 +23,7 @@ const F = f(__filename);
  */
 async function createRoom(event:any, user:Users):Promise<string> {
   const localpart = (user.matrix_id as string).split(':')[0].substring(1);
+
   const roomId = await matrixClient.createRoom({
     visibility: 'private',
     invite: [user.matrix_id as string],
@@ -42,6 +44,7 @@ async function createRoom(event:any, user:Users):Promise<string> {
   } as UserTickets;
 
   await ticketUpdate(ticketData);
+
   return roomId;
 }
 
@@ -75,8 +78,9 @@ async function inviteHelperteam(roomId: string):Promise<void> {
 }
 
 async function ownTicket(event:any, roomId:string, tripsitee:string | null):Promise<void> {
-  let text;
-  let html;
+  let text:string;
+  let html:string;
+  let reply:RichReply;
   if (tripsitee === null) {
     text = 'Please mention a user in your command!';
     html = '❌ Please mention a user in your command! ❌ ';
@@ -88,7 +92,7 @@ async function ownTicket(event:any, roomId:string, tripsitee:string | null):Prom
   if (await hasRole(senderLocalpart, 'tripsitter') === false && await hasRole(senderLocalpart, 'helper') === false) {
     text = "You're not a Helper/Tripsitter and therefore not allowed to own a ticket.";
     html = "❌ You're not a Helper/Tripsitter and therefore not allowed to own a ticket. ❌";
-    const reply = RichReply.createFor(roomId, event, text, html);
+    reply = RichReply.createFor(roomId, event, text, html);
     matrixClient.sendMessage(roomId, reply);
   }
   const userData = await getUser(null, tripsitee, null);
@@ -96,16 +100,16 @@ async function ownTicket(event:any, roomId:string, tripsitee:string | null):Prom
   if (ticketData !== undefined) {
     (ticketData as UserTickets).status = 'OWNED' as TicketStatus;
     await ticketUpdate(ticketData as UserTickets);
+
     matrixClient.sendStateEvent(ticketData.thread_id, 'm.room.name', '', { name: `💛 | ${localpart}'s room.` });
 
-    // eslint-disable-next-line @typescript-eslint/no-shadow
-    const text = `You've claimed ${tripsitee}'s ticket!`;
-    const html = `✅ You've claimed ${tripsitee}'s ticket!`;
-    const reply = RichReply.createFor(roomId, event, text, html);
+    text = `You've indicated that someone is taking care of ${tripsitee}'s ticket!`;
+    html = `✅ You've indicated that someone is taking care of ${tripsitee}'s ticket!`;
+    reply = RichReply.createFor(roomId, event, text, html);
     matrixClient.sendMessage(roomId, reply);
 
-    const tripsitHTML = `${event.sender} has claimed your ticket and will be with you. ❤️`;
-    const tripsitText = `${event.sender} has claimed your ticket and will be with you.`;
+    const tripsitHTML = 'Your ticket got claimed by one of our TripSitters/Helpers. They will be with you. ❤️';
+    const tripsitText = 'Your ticket got claimed by one of our TripSitters/Helpers. They will be with you.';
     const tripsitMessageEvent = {
       body: tripsitText,
       formatted_body: tripsitHTML,
@@ -114,7 +118,39 @@ async function ownTicket(event:any, roomId:string, tripsitee:string | null):Prom
     };
     await matrixClient.sendEvent(ticketData.thread_id, 'm.room.message', tripsitMessageEvent);
   } else {
-    // ...
+    text = 'I could not find an open tripsit ticket for this user.';
+    html = '❌ I could not find an open tripsit ticket for this user. ❌';
+    reply = RichReply;
+  }
+}
+
+/**
+ * ~tripsit off (<user>)
+ * @param {string} target
+ */
+async function closeTicket(roomId:string, event:any, target: string | null):Promise<void> {
+  const localpart = event.sender.split(':')[0].substring(1);
+  let text:string;
+  let html:string;
+  let reply:RichReply;
+
+  if (target !== event.sender && !await hasRole(localpart, 'tripsitter') && !await hasRole(localpart, 'helper')) {
+    text = 'You are not a Tripsitter/Helper and therefore not allowed to close a ticket of somebody else.';
+    html = '❌ You are not a Tripsitter/Helper and therefore not allowed to close a ticket of somebody else. ❌';
+    reply = RichReply.createFor(roomId, event, text, html);
+    await matrixClient.sendMessage(roomId, reply);
+  }
+
+  const ticketData = await getOpenTicket((await getUser(null, target, null)).id, null);
+
+  if (ticketData !== undefined) {
+    ticketData.status = 'CLOSED' as TicketStatus;
+    ticketUpdate(ticketData);
+  } else {
+    text = `${target} does not currently have an open TripSit-Ticket!`;
+    html = `❌ ${target} does not currently have an open TripSit-Ticket! ❌`;
+    reply = RichReply.createFor(roomId, event, text, html);
+    await matrixClient.sendMessage(roomId, reply);
   }
 }
 
@@ -123,24 +159,32 @@ async function ownTicket(event:any, roomId:string, tripsitee:string | null):Prom
  * @param {string} roomId
  * @param {any} event
  * @param {string|null} subcommand subcommand (optional)
- * @param {string|null} tripsitee matrixID of the tripsitee (optional)
+ * @param {string|null} target matrixID of the tripsitee (optional)
  */
 export default async function tripsitme(roomId:string, event:any, subcommand:string | null, target:string | null):Promise<void> {
-  // eslint-disable-next-line sonarjs/no-small-switch
+  let tripsitee;
+  if (!target) {
+    tripsitee = event.sender;
+  } else {
+    tripsitee = target;
+  }
+  const user = await getUser(null, tripsitee, null);
+  const localpart = (user.matrix_id as string).split(':')[0].substring(1);
+
   switch (subcommand?.toLowerCase()) {
+    case 'off':
+      if (!target) {
+        // eslint-disable-next-line no-param-reassign
+        target = event.sender;
+      }
+
+      await closeTicket(roomId, event, target);
+      break;
     case 'own':
       await ownTicket(event, roomId, target);
       break;
 
     default:
-      let tripsitee;
-      if (!target) {
-        tripsitee = event.sender;
-      } else {
-        tripsitee = target;
-      }
-      const user = await getUser(null, tripsitee, null);
-      const localpart = (user.matrix_id as string).split(':')[0].substring(1);
       const tripsitRoom = await createRoom(event, user);
       await greetUser(tripsitRoom, event, localpart);
       await inviteHelperteam(tripsitRoom);
