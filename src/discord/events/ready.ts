@@ -17,7 +17,7 @@ import { runRss } from '../../global/utils/rssCheck'; // eslint-disable-line
 import { runVoiceCheck } from '../../global/utils/voiceExp'; // eslint-disable-line
 import { startStatusLoop } from '../utils/statusLoop'; // eslint-disable-line
 import { emojiCache } from '../utils/emoji';
-import { populateBans } from '../utils/populateBotBans';
+import { populateBans } from '../utils/populateBotBans'; // eslint-disable-line
 import { fact } from '../../global/commands/g.fact';
 import { botStats } from '../../global/commands/g.botstats';
 // import { runLpm } from '../utils/lpm';
@@ -71,11 +71,12 @@ export const ready: ReadyEvent = {
       Promise.all([
         startStatusLoop(client),
         getInvites(client),
-        runTimer(),
         runStats(),
         runVoiceCheck(),
-        runRss(),
         emojiCache(client),
+        // DB Stuff
+        runRss(),
+        runTimer(),
         populateBans(),
         // runLpm(),
       ]).then(async () => {
