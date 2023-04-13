@@ -1,11 +1,11 @@
 {
   "name": "tripsit-tripbot",
-  "version": "6.2.0",
+  "version": "6.3.0",
   "description": "A bot for TripSit (and maybe the world)",
   "main": "start.ts",
   "engines": {
-    "node": "v16.17.1",
-    "npm": "9.6.1"
+    "node": "v18.15.0",
+    "npm": "9.5.0"
   },
   "scripts": {
     "start": "npm run deploy && ts-node --transpile-only src/start.ts",
