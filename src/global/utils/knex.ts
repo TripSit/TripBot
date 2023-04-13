@@ -353,7 +353,7 @@ export async function ticketUpdate(
       .merge();
   } catch (err) {
     log.error(F, `Error updating ticket: ${err}`);
-    log.error(F, `value: ${value}`);
+    log.error(F, `value: ${JSON.stringify(value, null, 2)}`);
   }
 }
 
@@ -385,7 +385,7 @@ export async function usersUpdate(
       .merge();
   } catch (err) {
     log.error(F, `Error updating user: ${err}`);
-    log.error(F, `value: ${value}`);
+    log.error(F, `value: ${JSON.stringify(value, null, 2)}`);
   }
 }
 
@@ -436,7 +436,7 @@ export async function rssSet(
       .merge();
   } catch (err) {
     log.error(F, `Error setting rss: ${err}`);
-    log.error(F, `value: ${value}`);
+    log.error(F, `value: ${JSON.stringify(value, null, 2)}`);
   }
 }
 
@@ -471,7 +471,7 @@ export async function incrementPoint(
       .returning('*');
   } catch (err) {
     log.error(F, `Error incrementing point: ${err}`);
-    log.error(F, `pointType: ${pointType} | userId: ${userId} | value: ${value}`);
+    log.error(F, `pointType: ${pointType} | userId: ${userId} | value: ${JSON.stringify(value, null, 2)}`);
   }
 }
 
@@ -490,7 +490,7 @@ export async function incrementKarma(
       .returning(['karma_received', 'karma_given']);
   } catch (err) {
     log.error(F, `Error incrementing karma: ${err}`);
-    log.error(F, `pointType: ${pointType} | userId: ${userId} | value: ${value}`);
+    log.error(F, `pointType: ${pointType} | userId: ${userId} | value: ${JSON.stringify(value, null, 2)}`);
   }
   return karma;
 }
