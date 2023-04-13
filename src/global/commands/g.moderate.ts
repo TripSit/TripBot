@@ -292,7 +292,8 @@ export async function moderate(
   const targetData = await getUser(target.id, null, null);
   const targetIsMember = (target as GuildMember).user !== undefined;
   const targetUser = (target as GuildMember).user ?? (target as User);
-  const vendorBan = internalNote?.toLowerCase().includes('vendor');
+  const vendorBan = internalNote?.toLowerCase().includes('vendor')
+  && command === 'FULL_BAN';
 
   if (internalNote?.includes('MEP') || description?.includes('MEP')) {
     return {
@@ -446,7 +447,7 @@ export async function moderate(
         const response = await last((target as GuildMember));
         extraMessage = `${(target as GuildMember).displayName}'s last ${response.messageCount} (out of ${response.totalMessages}) messages before being banned :\n${response.messageList}`;
       }
-      const targetGuild = await global.discordClient.guilds.fetch(env.DISCORD_GUILD_ID);
+      const targetGuild = await discordClient.guilds.fetch(env.DISCORD_GUILD_ID);
       // log.debug(F, `Days to delete: ${deleteMessageValue}`);
       log.info(F, `target: ${targetUser.id} | deleteMessageValue: ${deleteMessageValue} | internalNote: ${internalNote ?? noReason}`);
       targetGuild.bans.create(targetUser, { deleteMessageSeconds: deleteMessageValue / 1000, reason: internalNote ?? noReason });
@@ -468,7 +469,7 @@ export async function moderate(
     actionData.repealed_by = actorData.id;
 
     try {
-      const targetGuild = await global.discordClient.guilds.fetch(env.DISCORD_GUILD_ID);
+      const targetGuild = await discordClient.guilds.fetch(env.DISCORD_GUILD_ID);
       await targetGuild.bans.fetch();
       await targetGuild.bans.remove(targetUser, internalNote ?? noReason);
     } catch (err) {
@@ -479,7 +480,7 @@ export async function moderate(
     targetData.removed_at = new Date();
     await usersUpdate(targetData);
     try {
-      const targetGuild = await global.discordClient.guilds.fetch(env.DISCORD_GUILD_ID);
+      const targetGuild = await discordClient.guilds.fetch(env.DISCORD_GUILD_ID);
       targetGuild.bans.create(targetUser, { reason: internalNote ?? noReason });
     } catch (err) {
       log.error(F, `Error: ${err}`);
@@ -497,7 +498,7 @@ export async function moderate(
     actionData.repealed_by = actorData.id;
 
     try {
-      const targetGuild = await global.discordClient.guilds.fetch(env.DISCORD_GUILD_ID);
+      const targetGuild = await discordClient.guilds.fetch(env.DISCORD_GUILD_ID);
       await targetGuild.bans.fetch();
       await targetGuild.bans.remove(targetUser, internalNote ?? noReason);
     } catch (err) {
@@ -748,7 +749,7 @@ export async function moderate(
     return { embeds: [modlogEmbed] };
   }
 
-  const tripsitGuild = await global.discordClient.guilds.fetch(env.DISCORD_GUILD_ID);
+  const tripsitGuild = await discordClient.guilds.fetch(env.DISCORD_GUILD_ID);
   const roleModerator = await tripsitGuild.roles.fetch(env.ROLE_MODERATOR) as Role;
   // const modPing = `Hey ${roleModerator}`;
   const timeoutDuration = duration ? ` for ${ms(duration, { long: true })}` : '';
@@ -775,7 +776,7 @@ export async function moderate(
     // If the user we're banning is a vendor, don't make a new one
     // Create a new thread in the mod channel
     log.debug(F, 'creating mod thread');
-    const modChan = await global.discordClient.channels.fetch(env.CHANNEL_MODERATORS) as TextChannel;
+    const modChan = await discordClient.channels.fetch(env.CHANNEL_MODERATORS) as TextChannel;
     modThread = await modChan.threads.create({
       name: `${(target as GuildMember).displayName ?? (target as User).username}`,
       autoArchiveDuration: 60,
@@ -816,7 +817,7 @@ export async function moderate(
     .setDescription(desc)
     .setFooter(null);
 
-  const modlog = await global.discordClient.channels.fetch(env.CHANNEL_MODLOG) as TextChannel;
+  const modlog = await discordClient.channels.fetch(env.CHANNEL_MODLOG) as TextChannel;
   modlog.send({ embeds: [response] });
   // log.debug(F, `sent a message to the modlog room`);
 

@@ -17,7 +17,7 @@ async function birthdayGet(
   member:GuildMember,
 ) {
   log.info(F, await commandContext(interaction));
-  await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
+  // await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
   const embed = embedTemplate();
 
   const response = await birthday('get', member.id, null, null);
