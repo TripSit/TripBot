@@ -18,6 +18,7 @@ import {
   usersGetMindsets,
   usersUpdate,
   db,
+  database,
 } from './knex';
 import {
   TicketStatus, UserTickets, TicketType, DiscordGuilds,
@@ -197,57 +198,65 @@ async function checkTickets() {
       if (guild && guildData.channel_tripsit) {
         // log.debug(F, 'Checking Tripsit room for old threads...');
         // log.debug(F, `Tripsit room: ${guildData.channel_tripsit}`);
-        const channel = await guild.channels.fetch(guildData.channel_tripsit) as TextChannel;
-        if (channel) {
-          // log.debug(F, `Tripsit room: ${channel.name} (${channel.id})`);
-          const tripsitPerms = await checkChannelPermissions(channel, [
-            'ViewChannel' as PermissionResolvable,
-            'ManageThreads' as PermissionResolvable,
-          ]);
+        let channel = {} as TextChannel;
+        try {
+          channel = await guild.channels.fetch(guildData.channel_tripsit) as TextChannel;
+        } catch (err) {
+          // Channel was likely deleted, remove it from the db
+          const newGuildData = guildData;
+          newGuildData.channel_tripsit = null;
 
-          if (!tripsitPerms.hasPermission) {
-            // Check if you have reminder the guild owner in the last 24 hours
-            const lastRemdinerSent = lastReminder[guild.id];
-            if (!lastRemdinerSent || lastRemdinerSent < DateTime.local().minus({ hours: 24 })) {
-              log.debug(F, `Sending reminder to ${(await guild.fetchOwner()).user.username}...`);
-              // const guildOwner = await channel.guild.fetchOwner();
-              // await guildOwner.send({
-              //   content: `I am trying to prune threads in ${channel} but I don't have the ${tripsitPerms.permission} permission.`, // eslint-disable-line max-len
-              // });
-              const botOwner = await discordClient.users.fetch(env.DISCORD_OWNER_ID);
-              await botOwner.send({
-                content: `I am trying to prune threads in ${channel} of ${channel.guild.name} but I don't have the ${tripsitPerms.permission} permission.`, // eslint-disable-line max-len
-              });
-              lastReminder[guild.id] = DateTime.local();
-            }
-            return;
-          }
-
-          // log.debug(F, 'Deleting old threads...');
-          const threadList = await channel.threads.fetch({
-            archived: {
-              type: 'private',
-              fetchAll: true,
-              before: new Date().setDate(new Date().getDate() - 7),
-            },
-          });
-            // const threadList = await channel.threads.fetchArchived({ type: 'private', fetchAll: true });
-            // log.debug(F, `Found ${threadList.threads.size} archived threads in Tripsit room`);
-          threadList.threads.forEach(async thread => {
-            // Check if the thread was created over a week ago
-            try {
-              await thread.fetch();
-              if (DateTime.fromJSDate(thread.createdAt as Date) <= DateTime.local().minus({ days: 7 })) {
-                thread.delete();
-                // log.debug(F, `Thread ${thread.id} is deleted`);
-              } else {
-                // log.debug(F, `Thread ${thread.id} is not ready to be deleted ${thread.createdAt}`);
-              }
-            } catch (err) {
-              // Thread was likely manually deleted
-            }
-          });
+          await database.guilds.set(newGuildData);
+          return;
         }
+        // log.debug(F, `Tripsit room: ${channel.name} (${channel.id})`);
+        const tripsitPerms = await checkChannelPermissions(channel, [
+          'ViewChannel' as PermissionResolvable,
+          'ManageThreads' as PermissionResolvable,
+        ]);
+
+        if (!tripsitPerms.hasPermission) {
+          // Check if you have reminder the guild owner in the last 24 hours
+          const lastRemdinerSent = lastReminder[guild.id];
+          if (!lastRemdinerSent || lastRemdinerSent < DateTime.local().minus({ hours: 24 })) {
+            log.debug(F, `Sending reminder to ${(await guild.fetchOwner()).user.username}...`);
+            // const guildOwner = await channel.guild.fetchOwner();
+            // await guildOwner.send({
+            //   content: `I am trying to prune threads in ${channel} but I don't have the ${tripsitPerms.permission} permission.`, // eslint-disable-line max-len
+            // });
+            const botOwner = await discordClient.users.fetch(env.DISCORD_OWNER_ID);
+            await botOwner.send({
+              content: `I am trying to prune threads in ${channel} of ${channel.guild.name} but I don't have the ${tripsitPerms.permission} permission.`, // eslint-disable-line max-len
+            });
+            lastReminder[guild.id] = DateTime.local();
+          }
+          return;
+        }
+
+        // log.debug(F, 'Deleting old threads...');
+        const threadList = await channel.threads.fetch({
+          archived: {
+            type: 'private',
+            fetchAll: true,
+            before: new Date().setDate(new Date().getDate() - 7),
+          },
+        });
+        // const threadList = await channel.threads.fetchArchived({ type: 'private', fetchAll: true });
+        // log.debug(F, `Found ${threadList.threads.size} archived threads in Tripsit room`);
+        threadList.threads.forEach(async thread => {
+          // Check if the thread was created over a week ago
+          try {
+            await thread.fetch();
+            if (DateTime.fromJSDate(thread.createdAt as Date) <= DateTime.local().minus({ days: 7 })) {
+              thread.delete();
+              // log.debug(F, `Thread ${thread.id} is deleted`);
+            } else {
+              // log.debug(F, `Thread ${thread.id} is not ready to be deleted ${thread.createdAt}`);
+            }
+          } catch (err) {
+            // Thread was likely manually deleted
+          }
+        });
       }
     });
   }
