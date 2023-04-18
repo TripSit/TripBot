@@ -21,31 +21,38 @@ const F = f(__filename);
  * @param {any} event
  * @param {Users} user
  */
-async function createRoom(event:any, user:Users):Promise<string> {
-  const localpart = (user.matrix_id as string).split(':')[0].substring(1);
+export async function createRoom(user: Users | null, nickname: string | null): Promise<string> {
+  let roomId;
 
-  const roomId = await matrixClient.createRoom({
-    visibility: 'private',
-    invite: [user.matrix_id as string],
-    name: `🧡 ${localpart}'s room`,
-  });
+  if (user) {
+    const userNick = (user.matrix_id as string).split(':')[0].substring(1);
 
-  const deleteTime = new Date(Date.now() + (7 * 24 * 60 * 60 * 1000));
+    roomId = await matrixClient.createRoom({
+      visibility: 'private',
+      invite: [user.matrix_id as string],
+      name: `🧡 ${userNick}'s room`,
+    });
 
-  const ticketData = {
-    user_id: user.id,
-    description: '',
-    thread_id: roomId,
-    type: 'TRIPSIT',
-    status: 'OPEN',
-    first_message_id: '',
-    archived_at: deleteTime,
-    deleted_at: deleteTime,
-  } as UserTickets;
+    const deleteTime = new Date(Date.now() + (7 * 24 * 60 * 60 * 1000));
 
-  await ticketUpdate(ticketData);
+    await ticketUpdate({
+      user_id: user.id,
+      description: '',
+      thread_id: roomId,
+      type: 'TRIPSIT',
+      status: 'OPEN',
+      first_message_id: '',
+      archived_at: deleteTime,
+      deleted_at: deleteTime,
+    } as UserTickets);
+  } else if (nickname) {
+    roomId = await matrixClient.createRoom({
+      visibility: 'private',
+      name: `🧡 ${nickname}'s room`,
+    });
+  }
 
-  return roomId;
+  return roomId as string;
 }
 
 /**
@@ -54,7 +61,7 @@ async function createRoom(event:any, user:Users):Promise<string> {
  * @param {any} event
  * @param {string} tripsitee
  */
-async function greetUser(roomId:string, event:any, tripsitee:string):Promise<void> {
+export async function greetUser(roomId:string, event:any, tripsitee:string):Promise<void> {
   const text = `Hey ${tripsitee},\n Thank you for asking for assistance! <3\nOne of our Helpers/Tripsitters will be with you as soon as they're available.\nIn the meantime, you can tell us what you might have taken (when and how much of it) and whatever else you want to share.\n\nIf this is a medical emergency, please contact your local Emergency Services. We can not give any medical advice and we can not call emergency services on behalf of anyone!`;
   const html = `Hey ${tripsitee} 👋,<br> Thank you for asking for assistance! <3<br>One of our Helpers/Tripsitters will be with you as soon as they're available. ❤️<br><br>👉 In the meantime, you can tell us what you might have taken (when and how much of it) and whatever else you want to share.<br><br>🚑 If this is a medical emergency, please contact your local Emergency Services. We can not give any medical advice and we can not call emergency services on behalf of anyone!`;
   const messageEvent = {
@@ -71,13 +78,13 @@ async function greetUser(roomId:string, event:any, tripsitee:string):Promise<voi
  * @param roomId
  * @returns {Promise<String>}
  */
-async function inviteHelperteam(roomId: string):Promise<void> {
+export async function inviteHelperteam(roomId: string):Promise<void> {
   const [helperRoleMembers, tripsitterRoleMembers] = await Promise.all([getRoleMembers('helper'), getRoleMembers('tripsitter')]);
   const matrixIds = [...helperRoleMembers, ...tripsitterRoleMembers].map(username => `@${username}:tripsit.me`);
   await Promise.all(matrixIds.map(matrixId => matrixClient.inviteUser(matrixId, roomId)));
 }
 
-async function ownTicket(event:any, roomId:string, tripsitee:string | null):Promise<void> {
+export async function ownTicket(event:any, roomId:string, tripsitee:string | null):Promise<void> {
   let text:string;
   let html:string;
   let reply:RichReply;
@@ -128,7 +135,7 @@ async function ownTicket(event:any, roomId:string, tripsitee:string | null):Prom
  * ~tripsit off (<user>)
  * @param {string} target
  */
-async function closeTicket(roomId:string, event:any, target: string | null):Promise<void> {
+export async function closeTicket(roomId:string, event:any, target: string | null):Promise<void> {
   const localpart = event.sender.split(':')[0].substring(1);
   let text:string;
   let html:string;
@@ -185,7 +192,7 @@ export default async function tripsitme(roomId:string, event:any, subcommand:str
       break;
 
     default:
-      const tripsitRoom = await createRoom(event, user);
+      const tripsitRoom = await createRoom(user, null);
       await greetUser(tripsitRoom, event, localpart);
       await inviteHelperteam(tripsitRoom);
       break;

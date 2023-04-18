@@ -1,5 +1,6 @@
+/* eslint-disable max-len */
 export default function validateEnv(
-  service: 'DISCORD' | 'MATRIX' | 'IRC' | 'TELEGRAM' | 'SERVICES',
+  service: 'DISCORD' | 'MATRIX' | 'IRC' | 'TELEGRAM' | 'API' | 'SERVICES',
 ) {
   const F = f(__filename);
   // log.info(F, `You are in ${process.env.NODE_ENV?.toUpperCase()}`);
@@ -24,6 +25,10 @@ export default function validateEnv(
   if (service === 'MATRIX' && !process.env.MATRIX_ACCESS_TOKEN) {
     log.error(F, 'Missing MATRIX_ACCESS_TOKEN, you won\'t be able to log into matrix');
     return false;
+  }
+
+  if (service === 'API' && (!process.env.TRIPBOT_API_SECRET || !process.env.TRIPBOT_API_PORT)) {
+    log.warn(F, 'Missing TRIPBOT_API_PORT or TRIPBOT_API_SECRET: You won\'t be able to use the API');
   }
 
   if (service === 'SERVICES') {
