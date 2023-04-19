@@ -36,3 +36,9 @@ app.post('/api/updateTicket', async (req, res) => {
 app.post('/api/closeTicket', async (req, res) => {
 
 });
+
+export default async function startAPI():Promise<void> {
+  app.listen(env.TRIPBOT_API_PORT, () => {
+    log.info(F, `API started on port ${env.TRIPBOT_API_PORT}`);
+  });
+}
