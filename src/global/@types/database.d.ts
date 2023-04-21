@@ -376,6 +376,7 @@ export type UserTickets = {
   user_id: string;
   description: string;
   thread_id: string;
+  matrix_room: string | null;
   meta_thread_id: string | null;
   first_message_id: string;
   type: TicketType;
