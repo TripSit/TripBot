@@ -35,17 +35,9 @@ export default async function handleError(
   // Log the error locally
   log.error(F, `${errorStack}`);
 
-  // Construct the public/default message
-  const errorMessage = env.NODE_ENV === 'production'
-    ? `There was an error while executing this command!
-
-  The developers have been alerted, you can try again with new parameters maybe?`
-    : errorStack;
-
   // Construct the embed
   const embed = new EmbedBuilder()
-    .setColor(Colors.Red)
-    .setDescription(errorMessage);
+    .setColor(Colors.Red);
 
   // If this is production, send a message to the channel and alert the developers
   if (env.NODE_ENV === 'production') {
@@ -96,6 +88,14 @@ export default async function handleError(
   }
 
   if (interaction) {
+    const errorMessage = env.NODE_ENV === 'production'
+      ? `There was an error while executing this command!
+
+    The developers have been alerted, you can try again with new parameters maybe?`
+      : errorStack;
+
+    embed.setDescription(errorMessage);
+
     // Respond to the user. We don't know how this command was invoked, so we need to check and respond accordingly
     if (!interaction.replied) {
       if (interaction.deferred) {
