@@ -100,18 +100,22 @@ export async function getUser(
   return data as Users;
 }
 
-export async function userExists(discordId:string | null, matrixId:string | null, userId:string | null):Promise<boolean> {
+export async function userExists(
+  discordId:string | null,
+  matrixId:string | null,
+  userId:string | null,
+):Promise<boolean> {
   return (await getUser(discordId, matrixId, userId) !== undefined);
 }
 
 export async function getGuild(
-  guildId:string,
+  guildId?:string,
 ):Promise<DiscordGuilds> {
   // log.debug(F, `getGuild started with: guildId: ${guildId}`);
 
   if (env.POSTGRES_DB_URL === undefined) {
     return {
-      id: 'abc-123-xyz',
+      id: 'abc-123-xyz1',
       is_banned: false,
       last_drama_at: null,
       drama_reason: null,
@@ -132,7 +136,6 @@ export async function getGuild(
   }
 
   let data = {} as DiscordGuilds | undefined;
-
   try {
     data = await db<DiscordGuilds>('discord_guilds')
       .select('*')
@@ -153,6 +156,44 @@ export async function getGuild(
     }
   }
   return data as DiscordGuilds;
+}
+
+export async function getAllGuilds(
+  guildId?:string,
+):Promise<DiscordGuilds[]> {
+  // log.debug(F, `getGuild started with: guildId: ${guildId}`);
+
+  if (env.POSTGRES_DB_URL === undefined) {
+    return [{
+      id: 'abc-123-xyz',
+      is_banned: false,
+      last_drama_at: null,
+      drama_reason: null,
+      max_online_members: null,
+      channel_sanctuary: null,
+      channel_general: null,
+      channel_tripsit: null,
+      channel_tripsitmeta: null,
+      channel_applications: null,
+      role_needshelp: null,
+      role_tripsitter: null,
+      role_helper: null,
+      role_techhelp: null,
+      removed_at: null,
+      joined_at: new Date(),
+      created_at: new Date(),
+    }] as DiscordGuilds[];
+  }
+
+  let data = {} as DiscordGuilds[];
+  try {
+    data = await db<DiscordGuilds>('discord_guilds')
+      .select('*');
+  } catch (err) {
+    log.error(F, `Error getting guild: ${err}`);
+    log.error(F, `guildId: ${guildId}`);
+  }
+  return data;
 }
 
 export async function getOpenTicket(
@@ -1142,6 +1183,7 @@ export const database = {
   },
   guilds: {
     get: getGuild,
+    getAll: getAllGuilds,
     set: guildUpdate,
   },
   tickets: {

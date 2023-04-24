@@ -17,7 +17,7 @@ import {
   ButtonStyle, ChannelType, TextInputStyle,
 } from 'discord-api-types/v10';
 import { stripIndents } from 'common-tags';
-import { getGuild, guildUpdate } from '../../../global/utils/knex';
+import { database } from '../../../global/utils/knex';
 import commandContext from '../../utils/context';
 import { SlashCommand } from '../../@types/commandDef';
 import { checkChannelPermissions, checkGuildPermissions } from '../../utils/checkPermissions';
@@ -320,7 +320,7 @@ export async function tripsit(
       const channelTripsitmeta = interaction.options.getChannel('metatripsit');
       const channelTripsit = interaction.channel as TextChannel;
 
-      const guildData = await getGuild((interaction.guild as Guild).id);
+      const guildData = await database.guilds.get((interaction.guild as Guild).id);
 
       const channelSanctuary = interaction.options.getChannel('sanctuary');
       const channelGeneral = interaction.options.getChannel('general');
@@ -336,7 +336,7 @@ export async function tripsit(
 
       // Save this info to the DB
 
-      await guildUpdate(guildData);
+      await database.guilds.set(guildData);
 
       const introMessage = i.fields.getTextInputValue('introMessage');
       const titleMessage = i.fields.getTextInputValue('titleMessage');
@@ -414,11 +414,12 @@ export async function techhelp(
       Thanks for reading, stay safe!
     `;
 
-  const guildData = await getGuild(interaction.guild.id);
+  const guildData = await database.guilds.get(interaction.guild.id);
   guildData.role_techhelp = interaction.options.getRole('roletechreviewer', true).id;
+  guildData.mod_helpdesk_room_id = interaction.channel.id;
 
   // Save this info to the DB
-  await guildUpdate(guildData);
+  await database.guilds.set(guildData);
 
   if (guildData.channel_tripsit) {
     const channelTripsit = interaction.guild.channels.fetch(guildData.channel_tripsit);
@@ -490,6 +491,8 @@ export async function techhelp(
 
       // We need to send the message, otherwise it has the "user used /setup tripsit" at the top
       await (i.channel as TextChannel).send({ embeds: [embed], components: [row] });
+
+      await database.guilds.set(guildData);
       await i.editReply({ content: 'Setup complete!' });
     });
 }

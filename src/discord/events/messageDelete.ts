@@ -59,16 +59,16 @@ export const messageDelete: MessageDeleteEvent = {
       type: AuditLogEvent.MessageDelete,
     })).entries.last() as GuildAuditLogsEntry<AuditLogEvent.MessageDelete, 'Delete', 'Message', AuditLogEvent.MessageDelete>; // eslint-disable-line
 
-    // log.debug(F, `Deletion Log: ${JSON.stringify(deletionLog, null, 2)}`);
+    log.debug(F, `Deletion Log: ${JSON.stringify(deletionLog, null, 2)}`);
 
     // Perform a coherence check to make sure that there's *something*
     let executorUser = {} as User;
     let content = 'No content'; // eslint-disable-line
     let { author } = message;
-    // log.debug(F, `Author: ${JSON.stringify(author, null, 2)}`);
-    // log.debug(F, `Target: ${JSON.stringify(deletionLog?.target, null, 2)}`);
+    log.debug(F, `Author: ${JSON.stringify(author, null, 2)}`);
+    log.debug(F, `Target: ${JSON.stringify(deletionLog?.target, null, 2)}`);
     if (deletionLog && author && deletionLog.target.id === author.id && deletionLog.createdTimestamp > (startTime - 1)) {
-      // log.debug(F, `Found relevant audit log: ${JSON.stringify(deletionLog, null, 2)}`);
+      log.debug(F, `Found relevant audit log: ${JSON.stringify(deletionLog, null, 2)}`);
       if (deletionLog.executor) {
         executorUser = deletionLog.executor;
         if (message.content) {
@@ -88,17 +88,17 @@ export const messageDelete: MessageDeleteEvent = {
           content = messageRecord.content;
           author = messageRecord.author;
         } else {
-          // log.debug(F, 'Message not found in cache');
+          log.debug(F, 'Message not found in cache');
         }
       }
       // await msglogChannel.send(`A message by ${message.author.tag} was deleted, but no relevant audit logs were found.`);
       // return;
     }
 
-    // log.debug(F, `Executor: ${JSON.stringify(executorUser, null, 2)}, Content: ${content}`);
+    log.debug(F, `Executor: ${JSON.stringify(executorUser, null, 2)}, Content: ${content}`);
 
     const executorMember = await message.guild.members.fetch(executorUser.id);
-    // log.debug(F, `Executor Member: ${JSON.stringify(executorMember, null, 2)}, Content: ${content}`);
+    log.debug(F, `Executor Member: ${JSON.stringify(executorMember, null, 2)}, Content: ${content}`);
 
     const authorName = author ? author.username : 'Unknown Author';
     // log.debug(F, `Author Name: ${authorName}`);
@@ -124,7 +124,7 @@ export const messageDelete: MessageDeleteEvent = {
       ]);
     }
 
-    // log.debug(F, `content.length: ${content.length}`);
+    log.debug(F, `content.length: ${content.length}`);
     if (content.length > 0 && content !== 'No content') {
       embed.addFields([
         { name: authorName, value: content.slice(0, 1023), inline: true },

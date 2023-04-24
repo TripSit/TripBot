@@ -179,9 +179,15 @@ export type DiscordGuilds = {
   removed_at: Date | null;
   joined_at: Date;
   created_at: Date;
-  partner: boolean;
-  supporter: boolean;
+  partner: boolean | null;
+  supporter: boolean | null;
   premium_role_ids: string | null;
+  coop_mod_room_id: string | null;
+  mod_room_id: string | null;
+  mod_log_room_id: string | null;
+  mod_helpdesk_room_id: string | null;
+  mod_role_id: string | null;
+  team_role_id: string | null;
 };
 
 export type DrugArticles = {
@@ -417,6 +423,6 @@ export type Users = {
   helper_role_ban: boolean;
   contributor_role_ban: boolean;
   lastfm_username: string | null;
-  partner: boolean | null;
-  supporter: boolean | null;
+  partner: boolean;
+  supporter: boolean;
 };
