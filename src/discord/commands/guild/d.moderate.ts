@@ -146,6 +146,25 @@ export const mod: SlashCommand = {
       return false;
     }
 
+    if (targets.length === 0) {
+      const embed = embedTemplate()
+        .setColor(Colors.Red)
+        .setTitle('Found no users with that value!')
+        .setDescription(stripIndents`
+          "${interaction.options.getString('user', true)}" returned no results!
+  
+          Be more specific:
+          > **Mention:** @Moonbear
+          > **Tag:** moonbear#1234
+          > **ID:** 9876581237
+          > **Nickname:** MoonBear`);
+      await interaction.reply({
+        embeds: [embed],
+        ephemeral: true,
+      });
+      return false;
+    }
+
     // This needs to also be a User because we can ban users who are not in the guild
     let target = targets[0] as GuildMember | User;
 

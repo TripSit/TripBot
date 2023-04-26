@@ -20,6 +20,9 @@ export const env = {
   IRC_PASSWORD: process.env.IRC_PASSWORD,
   IRC_USERNAME: 'TripBot',
 
+  MOODLE_TOKEN: process.env.MOODLE_TOKEN,
+  MOODLE_URL: 'https://learn.pantheon.tripsit.me',
+
   TELEGRAM_TOKEN: process.env.TELEGRAM_TOKEN,
 
   // ROLLBAR_TOKEN: process.env.ROLLBAR_TOKEN,
