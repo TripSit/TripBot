@@ -122,7 +122,7 @@ async function getMoodleUser(
   username?:string,
   email?:string,
 ):Promise<MoodleUser> {
-  log.debug(F, `getMoodleUser | username: ${username} | email: ${email}`);
+  // log.debug(F, `getMoodleUser | username: ${username} | email: ${email}`);
 
   let url = `${env.MOODLE_URL}/webservice/rest/server.php?wstoken=${env.MOODLE_TOKEN}\
 &wsfunction=core_user_get_users_by_field\
@@ -137,7 +137,7 @@ async function getMoodleUser(
     throw new Error('No user ID or email provided.');
   }
 
-  log.debug(F, `url: ${url}`);
+  // log.debug(F, `url: ${url}`);
 
   return new Promise((resolve, reject) => {
     https.get(url, response => {
@@ -149,7 +149,7 @@ async function getMoodleUser(
 
       response.on('end', () => {
         const result = JSON.parse(data) as MoodleUser[];
-        log.debug(F, `Result: ${JSON.stringify(result, null, 2)}`);
+        // log.debug(F, `Result: ${JSON.stringify(result, null, 2)}`);
         if (result.length > 1) {
           log.error(F, `Multiple users with email ${email} found.`);
           reject(new Error(`Multiple users with email ${email} found.`));
@@ -157,7 +157,7 @@ async function getMoodleUser(
           // log.debug(F, `moodleUser: ${JSON.stringify(moodleUser, null, 2)}`);
           resolve(result[0]);
         } else {
-          log.debug(F, `User with email ${email} or username ${username} not found.`);
+          // log.debug(F, `User with email ${email} or username ${username} not found.`);
           reject(new Error(`User with email ${email} or username ${username} not found.`));
         }
       });
@@ -175,7 +175,7 @@ async function getMoodleEnrollments(
 &wsfunction=core_enrol_get_users_courses\
 &userid=${moodleUser.id}\
 &moodlewsrestformat=json`;
-  log.debug(F, `url: ${url}`);
+  // log.debug(F, `url: ${url}`);
 
   return new Promise((resolve, reject) => {
     https.get(url, response => {
@@ -195,7 +195,7 @@ async function getMoodleEnrollments(
         }
       });
     }).on('error', error => {
-      log.debug(F, `Error: ${error.message}`);
+      // log.debug(F, `Error: ${error.message}`);
       reject(error);
     });
   });
@@ -218,7 +218,7 @@ async function getMoodleCourseCompletion(
 &courseid=${moodleCourse.id}\
 &moodlewsrestformat=json`;
 
-    log.debug(F, `url: ${url}`);
+    // log.debug(F, `url: ${url}`);
 
     return new Promise((resolve, reject) => {
       https.get(url, response => {
@@ -238,7 +238,7 @@ async function getMoodleCourseCompletion(
           resolve(result);
         });
       }).on('error', error => {
-        log.debug(F, `Error: ${error.message}`);
+        // log.debug(F, `Error: ${error.message}`);
         reject(error);
       });
     });
@@ -284,17 +284,17 @@ export async function link(
   discordId?:string,
   matrixId?:string,
 ):Promise<string> {
-  log.debug(F, `Link started with moodleUsername: ${moodleUsername}, discordId: ${discordId}, matrixId: ${matrixId}`);
+  // log.debug(F, `Link started with moodleUsername: ${moodleUsername}, discordId: ${discordId}, matrixId: ${matrixId}`);
   const userData = discordId
     ? await database.users.get(discordId, null, null)
     : await database.users.get(null, matrixId as string, null);
-  log.debug(F, `userData: ${JSON.stringify(userData)}`);
+  // log.debug(F, `userData: ${JSON.stringify(userData)}`);
 
   const moodleUserData = email
     ? await getMoodleUser(undefined, email).catch(() => ({} as MoodleUser))
     : await getMoodleUser(moodleUsername, undefined).catch(() => ({} as MoodleUser));
 
-  log.debug(F, `moodleUserData: ${JSON.stringify(moodleUserData)}`);
+  // log.debug(F, `moodleUserData: ${JSON.stringify(moodleUserData)}`);
 
   if (!moodleUserData.username) {
     return 'No user found with that email address.';
@@ -316,7 +316,7 @@ export async function unlink(
   discordId?:string,
   matrixId?:string,
 ):Promise<string> {
-  log.debug(F, `Unlink started with discordId: ${discordId}, matrixId: ${matrixId}`);
+  // log.debug(F, `Unlink started with discordId: ${discordId}, matrixId: ${matrixId}`);
   const userData = discordId
     ? await database.users.get(discordId, null, null)
     : await database.users.get(null, matrixId as string, null);
@@ -330,7 +330,7 @@ export async function profile(
   discordId?:string,
   matrixId?:string,
 ):Promise<MoodleProfile> {
-  log.debug(F, `Profile started with discordId: ${discordId}, matrixId: ${matrixId}`);
+  // log.debug(F, `Profile started with discordId: ${discordId}, matrixId: ${matrixId}`);
 
   let moodleProfile = {} as MoodleProfile;
 
@@ -343,9 +343,11 @@ export async function profile(
   }
 
   const moodleUserData = await getMoodleUser(userData.moodle_id);
-  log.debug(F, `moodleUserData: ${JSON.stringify(moodleUserData, null, 2)}`);
+  // log.debug(F, `moodleUserData: ${JSON.stringify(moodleUserData, null, 2)}`);
   const moodleEnrollments = await getMoodleEnrollments(moodleUserData);
+  // log.debug(F, `moodleEnrollments: ${JSON.stringify(moodleEnrollments, null, 2)}`);
   const moodleCourseCompletionData = await getMoodleCourseCompletion(moodleUserData, moodleEnrollments);
+  // log.debug(F, `moodleCourseCompletionData: ${JSON.stringify(moodleCourseCompletionData, null, 2)}`);
 
   // Get an array of courses the user has completed
   const completedCourses = moodleCourseCompletionData

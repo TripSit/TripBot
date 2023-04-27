@@ -100,6 +100,21 @@ export async function getUser(
   return data as Users;
 }
 
+export async function getMoodleUsers():Promise<Users[]> {
+  // log.debug(F, `getAllUsers started`);
+  let data = [] as Users[];
+
+  try {
+    data = await db<Users>('users')
+      .select('*')
+      .whereNot('moodle_id', null);
+  } catch (err) {
+    log.error(F, `Error getting all users: ${err}`);
+  }
+
+  return data;
+}
+
 export async function userExists(discordId:string | null, matrixId:string | null, userId:string | null):Promise<boolean> {
   return (await getUser(discordId, matrixId, userId) !== undefined);
 }
@@ -1135,6 +1150,7 @@ async function reactionroleDel(
 export const database = {
   users: {
     get: getUser,
+    getMoodleUsers,
     getMindsets: usersGetMindsets,
     set: usersUpdate,
     incrementPoint,
