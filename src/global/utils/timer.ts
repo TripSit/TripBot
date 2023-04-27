@@ -886,7 +886,7 @@ async function checkMoodle() {
   // It will loop through each of those users and check their enrollments and course status in moodle
   // If the user has completed a course, it will attempt to give that user a role in discord
 
-  log.debug(F, 'Checking Moodle...');
+  // log.debug(F, 'Checking Moodle...');
   const userDataList = await database.users.getMoodleUsers();
   // log.debug(F, `userDataList: ${JSON.stringify(userDataList, null, 2)}`);
 
@@ -901,16 +901,16 @@ async function checkMoodle() {
   userDataList.forEach(async user => {
     const moodleProfile = await profile(user.discord_id as string);
     const member = await guild.members.fetch(user.discord_id as string);
-    log.debug(F, `Checking ${member.user.username}...`);
+    // log.debug(F, `Checking ${member.user.username}...`);
     if (moodleProfile.completedCourses.length > 0) {
       moodleProfile.completedCourses.forEach(async course => {
-        log.debug(F, `Checking ${member.user.username} for ${course}...`);
+        // log.debug(F, `Checking ${member.user.username} for ${course}...`);
         const roleId = courseRoleMap[course as keyof typeof courseRoleMap];
         const role = await guild.roles.fetch(roleId);
         if (role) {
           // check if the member already has the role
           if (member.roles.cache.has(role.id)) {
-            log.debug(F, `${member.user.username} already has the ${role.name} role`);
+            // log.debug(F, `${member.user.username} already has the ${role.name} role`);
             return;
           }
 
@@ -959,7 +959,7 @@ async function checkMoodle() {
         }
       });
     } else {
-      log.debug(F, 'No completed courses found');
+      // log.debug(F, 'No completed courses found');
     }
   });
 }

@@ -17,10 +17,6 @@ import {
 import commandContext from '../../utils/context';
 import { getDiscordMember } from '../../utils/guildMemberLookup';
 
-/* TODO
-Add timer that checks for course completions and adds a role
-*/
-
 const F = f(__filename);
 
 async function moodleHelp():Promise<EmbedBuilder> {
