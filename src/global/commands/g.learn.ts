@@ -284,17 +284,17 @@ export async function link(
   discordId?:string,
   matrixId?:string,
 ):Promise<string> {
-  // log.debug(F, `Link started with moodleUsername: ${moodleUsername}, discordId: ${discordId}, matrixId: ${matrixId}`);
+  log.debug(F, `Link started with moodleUsername: ${moodleUsername}, discordId: ${discordId}, matrixId: ${matrixId}`);
   const userData = discordId
     ? await database.users.get(discordId, null, null)
     : await database.users.get(null, matrixId as string, null);
-  // log.debug(F, `userData: ${JSON.stringify(userData)}`);
+  log.debug(F, `userData: ${JSON.stringify(userData)}`);
 
   const moodleUserData = email
     ? await getMoodleUser(undefined, email).catch(() => ({} as MoodleUser))
     : await getMoodleUser(moodleUsername, undefined).catch(() => ({} as MoodleUser));
 
-  // log.debug(F, `moodleUserData: ${JSON.stringify(moodleUserData)}`);
+  log.debug(F, `moodleUserData: ${JSON.stringify(moodleUserData)}`);
 
   if (!moodleUserData.username) {
     return 'No user found with that email address.';
