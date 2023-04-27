@@ -126,7 +126,7 @@ async function moodleProfile(
 
   const [discordMember] = targets;
 
-  log.debug(F, `discordMember: ${JSON.stringify(discordMember)}`);
+  // log.debug(F, `discordMember: ${JSON.stringify(discordMember)}`);
 
   if (!discordMember) {
     return new EmbedBuilder()
@@ -134,7 +134,7 @@ async function moodleProfile(
   }
 
   const moodleProfileData = await profile(discordMember.id);
-  log.debug(F, `moodleProfileData: ${JSON.stringify(moodleProfileData)}`);
+  // log.debug(F, `moodleProfileData: ${JSON.stringify(moodleProfileData)}`);
 
   if (!moodleProfileData.fullName) {
     return new EmbedBuilder()

@@ -122,7 +122,7 @@ async function getMoodleUser(
   username?:string,
   email?:string,
 ):Promise<MoodleUser> {
-  log.debug(F, `getMoodleUser | username: ${username} | email: ${email}`);
+  // log.debug(F, `getMoodleUser | username: ${username} | email: ${email}`);
 
   let url = `${env.MOODLE_URL}/webservice/rest/server.php?wstoken=${env.MOODLE_TOKEN}\
 &wsfunction=core_user_get_users_by_field\
@@ -137,7 +137,7 @@ async function getMoodleUser(
     throw new Error('No user ID or email provided.');
   }
 
-  log.debug(F, `url: ${url}`);
+  // log.debug(F, `url: ${url}`);
 
   return new Promise((resolve, reject) => {
     https.get(url, response => {
@@ -149,15 +149,15 @@ async function getMoodleUser(
 
       response.on('end', () => {
         const result = JSON.parse(data) as MoodleUser[];
-        log.debug(F, `Result: ${JSON.stringify(result, null, 2)}`);
+        // log.debug(F, `Result: ${JSON.stringify(result, null, 2)}`);
         if (result.length > 1) {
           log.error(F, `Multiple users with email ${email} found.`);
           reject(new Error(`Multiple users with email ${email} found.`));
         } else if (result.length === 1) {
-          log.debug(F, `moodleUser: ${JSON.stringify(result, null, 2)}`);
+          // log.debug(F, `moodleUser: ${JSON.stringify(result, null, 2)}`);
           resolve(result[0]);
         } else {
-          log.debug(F, `User with email ${email} or username ${username} not found.`);
+          // log.debug(F, `User with email ${email} or username ${username} not found.`);
           reject(new Error(`User with email ${email} or username ${username} not found.`));
         }
       });
@@ -284,17 +284,17 @@ export async function link(
   discordId?:string,
   matrixId?:string,
 ):Promise<string> {
-  log.debug(F, `Link started with moodleUsername: ${moodleUsername}, discordId: ${discordId}, matrixId: ${matrixId}`);
+  // log.debug(F, `Link started with moodleUsername: ${moodleUsername}, discordId: ${discordId}, matrixId: ${matrixId}`);
   const userData = discordId
     ? await database.users.get(discordId, null, null)
     : await database.users.get(null, matrixId as string, null);
-  log.debug(F, `userData: ${JSON.stringify(userData)}`);
+  // log.debug(F, `userData: ${JSON.stringify(userData)}`);
 
   const moodleUserData = email
     ? await getMoodleUser(undefined, email).catch(() => ({} as MoodleUser))
     : await getMoodleUser(moodleUsername, undefined).catch(() => ({} as MoodleUser));
 
-  log.debug(F, `moodleUserData: ${JSON.stringify(moodleUserData)}`);
+  // log.debug(F, `moodleUserData: ${JSON.stringify(moodleUserData)}`);
 
   if (!moodleUserData.username) {
     return 'No user found with that email address.';
