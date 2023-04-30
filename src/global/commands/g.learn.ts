@@ -195,11 +195,7 @@ async function getMoodleEnrollments(
       response.on('end', () => {
         const result = JSON.parse(data);
         // log.debug(F, `Result: ${JSON.stringify(result, null, 2)}`);
-        if (result.length > 0) {
-          resolve(result);
-        } else {
-          reject(new Error('User is not enrolled in any courses found.'));
-        }
+        resolve(result);
       });
     }).on('error', error => {
       // log.debug(F, `Error: ${error.message}`);
@@ -352,19 +348,24 @@ export async function profile(
   const moodleUserData = await getMoodleUser(userData.moodle_id);
   // log.debug(F, `moodleUserData: ${JSON.stringify(moodleUserData, null, 2)}`);
   const moodleEnrollments = await getMoodleEnrollments(moodleUserData);
-  // log.debug(F, `moodleEnrollments: ${JSON.stringify(moodleEnrollments, null, 2)}`);
-  const moodleCourseCompletionData = await getMoodleCourseCompletion(moodleUserData, moodleEnrollments);
-  // log.debug(F, `moodleCourseCompletionData: ${JSON.stringify(moodleCourseCompletionData, null, 2)}`);
 
-  // Get an array of courses the user has completed
-  const completedCourses = moodleCourseCompletionData
-    .filter(ccData => ccData.completion.completionstatus.completed)
-    .map(course => course.course.fullname);
+  let completedCourses:string[] = [];
+  let incompleteCourses:string[] = [];
+  if (moodleEnrollments.length > 0) {
+    // log.debug(F, `moodleEnrollments: ${JSON.stringify(moodleEnrollments, null, 2)}`);
+    const moodleCourseCompletionData = await getMoodleCourseCompletion(moodleUserData, moodleEnrollments);
+    // log.debug(F, `moodleCourseCompletionData: ${JSON.stringify(moodleCourseCompletionData, null, 2)}`);
 
-  // Get an array of courses the user has NOT completed
-  const incompleteCourses = moodleCourseCompletionData
-    .filter(ccData => !ccData.completion.completionstatus.completed)
-    .map(course => course.course.fullname);
+    // Get an array of courses the user has completed
+    completedCourses = moodleCourseCompletionData
+      .filter(ccData => ccData.completion.completionstatus.completed)
+      .map(course => course.course.fullname);
+
+    // Get an array of courses the user has NOT completed
+    incompleteCourses = moodleCourseCompletionData
+      .filter(ccData => !ccData.completion.completionstatus.completed)
+      .map(course => course.course.fullname);
+  }
 
   moodleProfile = {
     fullName: `${moodleUserData.firstname} ${moodleUserData.lastname}`,
