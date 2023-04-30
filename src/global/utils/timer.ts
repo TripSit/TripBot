@@ -881,7 +881,7 @@ async function checkLpm() { // eslint-disable-line
   // log.debug(F, `LPM check took ${Date.now() - startTime}ms`);
 }
 
-async function checkMoodle() {
+async function checkMoodle() { // eslint-disable-line
   // This function will pull all users from postgres that have a moodle_id
   // It will loop through each of those users and check their enrollments and course status in moodle
   // If the user has completed a course, it will attempt to give that user a role in discord
@@ -1000,7 +1000,7 @@ async function runTimer() {
     { callback: changeStatus, interval: env.NODE_ENV === 'production' ? hours24 : seconds5 },
     { callback: checkStats, interval: env.NODE_ENV === 'production' ? minutes5 : seconds5 },
     // { callback: checkLpm, interval: env.NODE_ENV === 'production' ? seconds10 : seconds5 },
-    { callback: checkMoodle, interval: env.NODE_ENV === 'production' ? seconds60 : seconds10 },
+    // { callback: checkMoodle, interval: env.NODE_ENV === 'production' ? seconds60 : seconds10 },
   ];
 
   timers.forEach(timer => {
