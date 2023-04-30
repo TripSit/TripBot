@@ -148,7 +148,14 @@ async function getMoodleUser(
       });
 
       response.on('end', () => {
-        const result = JSON.parse(data) as MoodleUser[];
+        let result = [] as MoodleUser[];
+        try {
+          result = JSON.parse(data) as MoodleUser[];
+        } catch (error:unknown) {
+          // log.error(F, `Error: ${(error as Error).message}`);
+          log.debug(F, 'Improper JSON returned from Moodle, is it alive?');
+          return;
+        }
         // log.debug(F, `Result: ${JSON.stringify(result, null, 2)}`);
         if (result.length > 1) {
           log.error(F, `Multiple users with email ${email} found.`);
@@ -156,11 +163,10 @@ async function getMoodleUser(
         } else if (result.length === 1) {
           // log.debug(F, `moodleUser: ${JSON.stringify(result, null, 2)}`);
           resolve(result[0]);
+        } else {
+          // log.debug(F, `User with email ${email} or username ${username} not found.`);
+          reject(new Error(`User with email ${email} or username ${username} not found.`));
         }
-        // else {
-        //   // log.debug(F, `User with email ${email} or username ${username} not found.`);
-        //   reject(new Error(`User with email ${email} or username ${username} not found.`));
-        // }
       });
     }).on('error', error => {
       log.error(F, `Error: ${error.message}`);
