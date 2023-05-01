@@ -220,7 +220,12 @@ ${roleHelper}. Can you start off by telling us how much you took and the details
       await message.channel.send(stripIndents`Sure thing ${displayName}! I will${actionFirstPerson}!`); // eslint-disable-line
       }
     } else {
-      await message.react(emojiGet('ts_heart'));
+      try {
+        await message.react(emojiGet('ts_heart'));
+      } catch (e) {
+        log.error(F, `Error reacting to message: ${e}`);
+        await message.react('💜');
+      }
     }
   } else if (
     // If 'tripbot' is mentioned in text
@@ -231,7 +236,12 @@ ${roleHelper}. Can you start off by telling us how much you took and the details
       // log.debug(F, `Ignoring bot interaction`);
       return;
     }
-    await message.react(emojiGet('ts_heart'));
+    try {
+      await message.react(emojiGet('ts_heart'));
+    } catch (e) {
+      log.error(F, `Error reacting to message: ${e}`);
+      await message.react('💜');
+    }
     // const responses = [
     //   '*boops quietly*',
     //   '*beeps quietly*',
