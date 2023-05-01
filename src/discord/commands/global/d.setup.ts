@@ -12,18 +12,23 @@ import {
   Guild,
   Colors,
   EmbedBuilder,
+  ButtonInteraction,
+  GuildMember,
+  Role,
+  // CategoryChannel,
 } from 'discord.js';
 import {
   ButtonStyle, ChannelType, TextInputStyle,
 } from 'discord-api-types/v10';
 import { stripIndents } from 'common-tags';
-import { getGuild, guildUpdate } from '../../../global/utils/knex';
+import { database, getGuild, guildUpdate } from '../../../global/utils/knex';
 import commandContext from '../../utils/context';
 import { SlashCommand } from '../../@types/commandDef';
 import { checkChannelPermissions, checkGuildPermissions } from '../../utils/checkPermissions';
 import { applicationSetup } from '../../utils/application';
 import { paginationEmbed } from '../../utils/pagination';
 import { embedTemplate } from '../../utils/embedTemplate';
+import { profile } from '../../../global/commands/g.learn';
 
 const F = f(__filename);
 
@@ -32,8 +37,9 @@ const guildOnly = 'You must run this in the guild you want the prompt to be in!'
 const noChannel = 'how to tripsit: no channel';
 const roleQuestion = 'What role are people applying for?';
 const reviewerQuestion = 'What role reviews those applications?';
+// const memberError = 'This must be performed by a member of a guild!';
 
-export async function help(
+async function help(
   interaction:ChatInputCommandInteraction,
 ) {
   const previousButton = new ButtonBuilder()
@@ -174,7 +180,7 @@ export async function help(
   paginationEmbed(interaction, book, buttonList, 0);
 }
 
-export async function tripsit(
+async function tripsit(
   interaction:ChatInputCommandInteraction,
 ) {
   if (!interaction.guild) return;
@@ -364,7 +370,7 @@ export async function tripsit(
     });
 }
 
-export async function techhelp(
+async function techhelp(
   interaction:ChatInputCommandInteraction,
 ) {
   if (!interaction.guild) return;
@@ -494,7 +500,7 @@ export async function techhelp(
     });
 }
 
-export async function rules(
+async function rules(
   interaction:ChatInputCommandInteraction,
 ) {
   await interaction.deferReply({ ephemeral: true });
@@ -572,7 +578,7 @@ If you do not agree to this policy, do not use this site.
   });
 }
 
-export async function ticketbooth(
+async function ticketbooth(
   interaction:ChatInputCommandInteraction,
 ) {
   await interaction.deferReply({ ephemeral: true });
@@ -613,7 +619,213 @@ export async function ticketbooth(
   await (interaction.channel as TextChannel).send({ content: buttonText, components: [row] });
 }
 
-export const prompt: SlashCommand = {
+async function helper(
+  interaction:ChatInputCommandInteraction,
+) {
+  await interaction.deferReply({ ephemeral: true });
+  if (!interaction.guild) return;
+  const guildData = await database.guilds.get(interaction.guild?.id);
+
+  if (!guildData.channel_tripsit || !guildData.channel_tripsitmeta) {
+    await interaction.editReply({
+      content: stripIndents`This server has not setup the tripsit room. Use \`/setup tripsit\` first`,
+    });
+    return;
+  }
+
+  if (!guildData.role_helper) {
+    await interaction.editReply({
+      content: stripIndents`This server has not setup the helper role. Use \`/setup tripsit\` first`,
+    });
+    return;
+  }
+
+  const channelTripsit = await interaction.client.channels.fetch(guildData.channel_tripsit) as TextChannel;
+  // const channelMetatripsit = await interaction.client.channels.fetch(guildData.channel_tripsitmeta) as TextChannel;
+
+  const messageText = stripIndents`
+   ${interaction.guild?.name} is run by volunteers and we're always looking for people who want to help out!
+  
+  While we do value lived/living experience with drug use it is not required to be an effective Helper: \
+as long as you have a general understanding of how drugs work and how hey interact with mental health conditions we do not require a formal education for users interested in taking on the helper role. 
+  
+  > In order to ensure quality for the participants, we have built a training program that we ask all helpers to complete. Please visit the [Trip Sit Learn](${env.MOODLE_URL}) portal and complete the Intro to Tripsitting course.
+
+  Then use \`/learn link\` to link your Trip Sit Learn account to your Discord account, and once you complete the course you'll get permissions to click the button below.
+  
+  **While the Helper is not a formal team position, it's a way to signify you want to help out and potentially become a tripsitter.**
+  `;
+
+  await (interaction.channel as TextChannel).send({
+    // content: messageText,
+    embeds: [
+      new EmbedBuilder()
+        .setTitle(`Interested in helping out in ${channelTripsit}?`)
+        .setDescription(messageText)
+        .setFooter({ text: 'Once you complete the course, click the button below!' }),
+    ],
+    components: [
+      new ActionRowBuilder<ButtonBuilder>()
+        .addComponents(
+          new ButtonBuilder()
+            .setCustomId('helperButton')
+            .setLabel('I\'ve completed the course and want to be a helper!')
+            .setEmoji(emojiGet('Helper').id)
+            .setStyle(ButtonStyle.Success),
+        ),
+    ],
+  });
+
+  await interaction.editReply({
+    content: 'Done!',
+  });
+}
+
+export async function helperButton(
+  interaction:ButtonInteraction,
+) {
+  if (!interaction.guild) return;
+  if (!interaction.member) return;
+  // Check that the user has completed the course and wasnt just given the role
+
+  const guildData = await database.guilds.get(interaction.guild?.id);
+  const userData = await database.users.get(interaction.user.id, null, null);
+  const target = interaction.member as GuildMember;
+
+  if (!guildData.role_helper) {
+    await interaction.reply({
+      content: stripIndents`This server has not setup the helper role. Use \`/setup tripsit\` first`,
+      ephemeral: true,
+    });
+    return;
+  }
+
+  if (!guildData.channel_tripsitmeta) {
+    await interaction.reply({
+      content: stripIndents`This server has not setup the tripsit meta room. Use \`/setup tripsit\` first`,
+      ephemeral: true,
+    });
+    return;
+  }
+
+  const moodleProfile = await profile(interaction.user.id);
+  log.debug(F, `Moodle Profile: ${JSON.stringify(moodleProfile, null, 2)}`);
+  if (!moodleProfile.fullName) {
+    await interaction.reply({
+      content: stripIndents`You need to link your Trip Sit Learn account to your Discord account first!
+      
+      Visit [Trip Sit Learn](<${env.MOODLE_URL}>) to create an account and then use \`/learn link\``,
+      ephemeral: true,
+    });
+    return;
+  }
+
+  if (moodleProfile.completedCourses.toString().indexOf('Intro to Tripsitting') === -1) {
+    await interaction.reply({
+      content: stripIndents`You need to complete the Intro to Tripsitting course first! Visit [Trip Sit Learn](<${env.MOODLE_URL}>)!`,
+      ephemeral: true,
+    });
+    return;
+  }
+
+  // Do everything else
+  const role = await interaction.guild?.roles.fetch(guildData.role_helper);
+
+  if (!role) {
+    await interaction.reply({
+      content: stripIndents`It looks like the guilds helper role was deleted, talk to the server admin about this! They may need to re-run \`/setup tripsit\``,
+      ephemeral: true,
+    });
+    return;
+  }
+
+  if (target.roles.cache.has(role.id)) {
+    await interaction.reply({
+      content: stripIndents`You already have the helper role!`,
+      ephemeral: true,
+    });
+    return;
+  }
+
+  // If the role being requested is the Helper or Contributor role, check if they have been banned first
+  if (role.id === guildData.role_helper && userData.helper_role_ban) {
+    await interaction.editReply({ content: 'Unable to add this role. If you feel this is an error, please talk to the team!' });
+    return;
+  }
+
+  const modal = new ModalBuilder()
+    .setCustomId(`"ID":"RR","II":"${interaction.id}"`)
+    .setTitle(`${role.name} Introduction`);
+  modal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
+    .setCustomId('introduction')
+    .setRequired(true)
+    .setLabel('Tell us a bit about yourself!')
+  .setPlaceholder(`Why do you want to be a ${role.name}? This will be sent to the channel!`) // eslint-disable-line
+    .setMaxLength(1900)
+    .setStyle(TextInputStyle.Paragraph)));
+  await interaction.showModal(modal);
+
+  // Collect a modal submit interaction
+  const filter = (i:ModalSubmitInteraction) => i.customId.startsWith('"ID":"RR"');
+  interaction.awaitModalSubmit({ filter, time: 0 })
+    .then(async i => {
+      // log.debug(F, `${JSON.stringify(i.customId)}`);
+      await i.deferReply({ ephemeral: true });
+      const {
+        II,
+      } = JSON.parse(`{${i.customId}}`);
+      await (interaction.member as GuildMember).roles.add(role);
+
+      // log.debug(F, `II: ${II}`);
+
+      if (II !== interaction.id) return;
+      if (!i.guild) return;
+      if (!i.member) return;
+      if (!guildData.channel_tripsitmeta) return;
+      if (!guildData.channel_tripsit) return;
+      if (!guildData.role_tripsitter) return;
+
+      let introMessage = i.fields.getTextInputValue('introduction');
+      // log.debug(F, `introMessage: ${introMessage}`);
+
+      // Put a > in front of each line on introMessage
+      introMessage = introMessage.replace(/^(.*)$/gm, '> $1');
+
+      await target.roles.add(role);
+      await i.editReply({ content: `Added role ${role.name}` });
+
+      const channel = await i.guild?.channels.fetch(guildData.channel_tripsitmeta) as TextChannel;
+
+      const rolTripsitter = await i.guild?.roles.fetch(guildData.role_tripsitter) as Role;
+
+      if (channel.id === guildData.channel_tripsitmeta) {
+        const intro = stripIndents`
+      Hey ${rolTripsitter} team, ${target} has joined as a ${role.name}, please welcome them!
+      A little about them:
+      ${introMessage}`;
+        await channel.send(intro);
+        const followup = stripIndents`Some important information for you ${target}!
+      # For a refresher on tripsitting please see the following resources:
+      - <https://docs.google.com/document/d/1vE3jl9imdT3o62nNGn19k5HZVOkECF3jhjra8GkgvwE>
+      - <https://wiki.tripsit.me/wiki/How_To_Tripsit_Online>
+      - Check the pins in this channel!
+      # If you're overwhelmed, ask for backup
+      - Giving no information is better than giving the wrong information!
+      # If someone is underage you can ping a Moderator and finish the session if you're comfortable. 
+      - Underage users can use the web-chat anonymously but are not allowed to socialize, moderator will take care of this.
+      # We are NOT here to give medical advice, diagnose, or treat; or handle suicidal or self-harm situations.
+      - We're here to give harm reduction facts and *mild* mental health support, no one here is qualified to handle suicide of self-harm.
+      - If it seems like someone could use mental health services you can refer them to:
+      **Huddle Humans** - Mental health support <https://discord.gg/mentalhealth>
+      **HealthyGamer** - Mental health with a gaming twist - <https://discord.com/invite/H3yRwc7>
+
+      **If you have any questions, please reach out!**`;
+        await channel.send(followup);
+      }
+    });
+}
+
+export const setup: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('setup')
     .setDescription('Set up various channels and prompts!')
@@ -692,7 +904,10 @@ export const prompt: SlashCommand = {
       .setName('ticketbooth'))
     .addSubcommand(subcommand => subcommand
       .setDescription('Help on using the setup command!')
-      .setName('help')),
+      .setName('help'))
+    .addSubcommand(subcommand => subcommand
+      .setDescription('Info on how to become a helper')
+      .setName('helper')),
   async execute(interaction:ChatInputCommandInteraction) {
     log.info(F, await commandContext(interaction));
     // We cannot defer because some of the setup commands have modals
@@ -723,7 +938,11 @@ export const prompt: SlashCommand = {
       await ticketbooth(interaction);
     } else if (command === 'help') {
       await help(interaction);
+    } else if (command === 'helper') {
+      await helper(interaction);
     }
     return true;
   },
 };
+
+export default setup;
