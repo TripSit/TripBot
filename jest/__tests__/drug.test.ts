@@ -52,7 +52,7 @@ describe(slashCommand.data.name, () => {
         author: authorInfo,
         footer: footerInfo,
         title: stripIndents`🌐 DMT Information`,
-        url: stripIndents`https://wiki.tripsit.me/wiki/DMT`,
+        url: stripIndents`https://psychonautwiki.org/wiki/DMT`,
         description: stripIndents`A popular and powerful psychedelic, typically used in two ways; either it is vapourised for a short 'breakthrough' experience, or it is taken in combination with an enzyme inhibitor for a long, intense trip (this is also known as ayahuasca or pharmahuasca).`, // eslint-disable-line
         fields: [
           {
@@ -161,7 +161,7 @@ describe(slashCommand.data.name, () => {
         author: authorInfo,
         footer: footerInfo,
         title: stripIndents`🌐 DMT Information`,
-        url: stripIndents`https://wiki.tripsit.me/wiki/DMT`,
+        url: stripIndents`https://psychonautwiki.org/wiki/DMT`,
         description: stripIndents`A popular and powerful psychedelic, typically used in two ways; either it is vapourised for a short 'breakthrough' experience, or it is taken in combination with an enzyme inhibitor for a long, intense trip (this is also known as ayahuasca or pharmahuasca).`, // eslint-disable-line
         fields: [
           {
@@ -270,7 +270,7 @@ describe(slashCommand.data.name, () => {
         author: authorInfo,
         footer: footerInfo,
         title: stripIndents`🌐 DMT Information`,
-        url: stripIndents`https://wiki.tripsit.me/wiki/DMT`,
+        url: stripIndents`https://psychonautwiki.org/wiki/DMT`,
         description: stripIndents`A popular and powerful psychedelic, typically used in two ways; either it is vapourised for a short 'breakthrough' experience, or it is taken in combination with an enzyme inhibitor for a long, intense trip (this is also known as ayahuasca or pharmahuasca).`, // eslint-disable-line
       }),
     });
@@ -289,7 +289,7 @@ describe(slashCommand.data.name, () => {
         author: authorInfo,
         footer: footerInfo,
         title: stripIndents`🌐 DMT Information`,
-        url: stripIndents`https://wiki.tripsit.me/wiki/DMT`,
+        url: stripIndents`https://psychonautwiki.org/wiki/DMT`,
         fields: [
           {
             name: dosageLabelSmoked,
@@ -337,7 +337,7 @@ describe(slashCommand.data.name, () => {
         author: authorInfo,
         footer: footerInfo,
         title: stripIndents`🌐 Alcohol Information`,
-        url: stripIndents`https://wiki.tripsit.me/wiki/Alcohol`,
+        url: stripIndents`https://psychonautwiki.org/wiki/Alcohol`,
         description: stripIndents`Alcohol is a CNS depressant that acts through the GABAₐ receptor, and is one of the most common strong psychoactives used by humans. It has a long history of use and its intoxicating effects are well-studied and documented. It remains legal in most parts of the world.`, // eslint-disable-line
         fields: [
           {
@@ -429,7 +429,7 @@ describe(slashCommand.data.name, () => {
         author: authorInfo,
         footer: footerInfo,
         title: stripIndents`🌐 25N-NBOMe Information`,
-        url: stripIndents`https://wiki.tripsit.me/wiki/25N-NBOMe`,
+        url: stripIndents`https://psychonautwiki.org/wiki/25N-NBOMe`,
             description: stripIndents`A rare, highly potent and yellow psychedelic phenethylamine and derivative of 2C-N. Effects are similar to other NBOMe compounds, with hallucinations, intense body load, stimulation and vasoconstriction. At high doses vasoconstriction can be dangerous, exercise caution.`, // eslint-disable-line
         fields: [
           {
