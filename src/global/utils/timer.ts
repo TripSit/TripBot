@@ -901,20 +901,23 @@ async function checkMoodle() { // eslint-disable-line
   userDataList.forEach(async user => {
     const moodleProfile = await profile(user.discord_id as string);
     const member = await guild.members.fetch(user.discord_id as string);
-    // log.debug(F, `Checking ${member.user.username}...`);
+    log.debug(F, `Checking ${member.user.username}...`);
     if (moodleProfile.completedCourses.length > 0) {
       moodleProfile.completedCourses.forEach(async course => {
-        // log.debug(F, `Checking ${member.user.username} for ${course}...`);
+        log.debug(F, `${member.user.username} completed ${course}...`);
         const roleId = courseRoleMap[course as keyof typeof courseRoleMap];
         const role = await guild.roles.fetch(roleId);
+
         if (role) {
+          log.debug(F, `Found role: ${JSON.stringify(role, null, 2)}`);
           // check if the member already has the role
           if (member.roles.cache.has(role.id)) {
-            // log.debug(F, `${member.user.username} already has the ${role.name} role`);
+            log.debug(F, `${member.user.username} already has the ${role.name} role`);
             return;
           }
 
           if (channelContent) {
+            log.debug(F, `Sending message to ${channelContent.name}`);
             (channelContent as TextChannel).send({
               embeds: [
                 embedTemplate()
@@ -926,7 +929,6 @@ async function checkMoodle() { // eslint-disable-line
           }
 
           member.roles.add(role);
-
           log.info(F, `Gave ${member.user.username} the ${role.name} role`);
 
           member.user.send({
@@ -954,8 +956,7 @@ async function checkMoodle() { // eslint-disable-line
                 `),
             ],
           });
-
-          log.info(F, 'Sent the user a message!');
+          log.debug(F, `Sent ${member.user.username} a message!`);
         }
       });
     } else {
