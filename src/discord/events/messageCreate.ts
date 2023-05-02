@@ -35,20 +35,7 @@ async function getCategory(channel:TextChannel):Promise<ExperienceCategory> {
   let experienceCategory = '';
   if (channel.parent) {
     // log.debug(F, `parent: ${channel.parent.name} ${channel.parent.id}`);
-    if (channel.parent.parent) {
-      // log.debug(F, `parent-parent: ${channel.parent.parent.name} ${channel.parent.parent.id}`);
-      if (channel.parent.parent.id === env.CATEGORY_TEAMTRIPSIT) {
-        experienceCategory = 'TEAM' as ExperienceCategory;
-      } else if (channel.parent.parent.id === env.CATEGORY_DEVELOPMENT) {
-        experienceCategory = 'DEVELOPER' as ExperienceCategory;
-      } else if (channel.parent.parent.id === env.CATEGORY_HARMREDUCTIONCENTRE) {
-        experienceCategory = 'TRIPSITTER' as ExperienceCategory;
-      } else if (channel.parent.parent.id === env.CATEGORY_GATEWAY) {
-        experienceCategory = 'IGNORED' as ExperienceCategory;
-      } else {
-        experienceCategory = 'GENERAL' as ExperienceCategory;
-      }
-    } else if (channel.parent.id === env.CATEGORY_TEAMTRIPSIT) {
+    if (channel.parent.id === env.CATEGORY_TEAMTRIPSIT) {
       experienceCategory = 'TEAM' as ExperienceCategory;
     } else if (channel.parent.id === env.CATEGORY_DEVELOPMENT) {
       experienceCategory = 'DEVELOPER' as ExperienceCategory;
