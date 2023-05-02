@@ -100,9 +100,8 @@ async function moodleProfile(
         > **Tag:** moonbear#1234
         > **ID:** 9876581237
         > **Nickname:** MoonBear`);
-    await interaction.reply({
+    await interaction.editReply({
       embeds: [embed],
-      ephemeral: true,
     });
   }
 
@@ -118,9 +117,8 @@ async function moodleProfile(
         > **Tag:** moonbear#1234
         > **ID:** 9876581237
         > **Nickname:** MoonBear`);
-    await interaction.reply({
+    await interaction.editReply({
       embeds: [embed],
-      ephemeral: true,
     });
   }
 
