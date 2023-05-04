@@ -171,8 +171,12 @@ async function checkTickets() { // eslint-disable-line @typescript-eslint/no-unu
                               && roleObj.comparePositionTo(myRole) < 0
                     ) {
                       // Check if the bot has permission to add the role
-                      // log.debug(F, `Adding ${userData.discord_id}'s ${role} role`);
-                      await member.roles.add(roleObj);
+                      log.debug(F, `Adding ${userData.discord_id}'s ${role} role`);
+                      try {
+                        await member.roles.add(roleObj);
+                      } catch (err) {
+                        log.error(F, `Failed to add ${member.displayName}'s ${roleObj.name} role in ${member.guild.name}: ${err}`);
+                      }
                     }
                   });
 
