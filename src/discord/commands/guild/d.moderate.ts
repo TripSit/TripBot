@@ -203,7 +203,7 @@ and they do not exist in the database!`,
       }
 
       if (result === null) {
-        await interaction.editReply({ content: 'Successfully linked thread!' });
+        await interaction.reply({ content: 'Successfully linked thread!' });
       } else {
         const existingThread = await interaction.client.channels.fetch(result);
         await interaction.reply({
