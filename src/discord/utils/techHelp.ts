@@ -189,18 +189,24 @@ export async function techHelpClose(interaction:ButtonInteraction) {
   if (!interaction.guild) return;
   if (!interaction.member) return;
 
-  const issueType = interaction.customId.split('~')[1];
   const targetId = interaction.customId.split('~')[2];
-  const target = await interaction.guild.members.fetch(targetId);
+
+  let target = {} as GuildMember;
+  try {
+    target = await interaction.guild.members.fetch(targetId);
+  } catch (e) {
+    log.debug(F, `Failed to fetch member ${targetId}! They probably left the guild.`);
+  }
 
   const message = interaction.member === target
     ? stripIndents`${interaction.member.displayName} has indicated that they no longer need help!`
     : stripIndents`${(interaction.member as GuildMember).displayName} has indicated that this issue has been resolved!`;
 
   if (interaction.member === target) {
-    (interaction.channel as ThreadChannel).setName(`💚│${target.displayName}'s ${issueType} issue!`);
+    // Replace the first character of the channel name with a green heart
+    (interaction.channel as ThreadChannel).setName(`💚|${(interaction.channel as ThreadChannel).name.slice(1)}`);
   } else {
-    (interaction.channel as ThreadChannel).setName(`💙│${target.displayName}'s ${issueType} issue!`);
+    (interaction.channel as ThreadChannel).setName(`💙|${(interaction.channel as ThreadChannel).name.slice(1)}`);
   }
 
   await interaction.reply({
