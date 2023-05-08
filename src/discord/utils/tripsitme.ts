@@ -139,28 +139,32 @@ export async function needsHelpMode(
 
   const myMember = await interaction.guild?.members.fetch(interaction.client.user.id) as GuildMember;
   const myRole = myMember.roles.highest;
+
+  // Patch for BlueLight: They don't want to remove roles from the target at all
+  if (target.guild.id !== env.DISCORD_BL_ID) {
   // Remove all roles, except team and vanity, from the target
-  target.roles.cache.forEach(async role => {
+    target.roles.cache.forEach(async role => {
     // log.debug(F, `role: ${role.name} - ${role.id}`);
 
-    if (!ignoredRoles.includes(role.id)
+      if (!ignoredRoles.includes(role.id)
     && !role.name.includes('@everyone')
     && role.id !== roleNeedshelp.id
     && role.comparePositionTo(myRole)) {
-      log.debug(F, `Removing role ${role.name} from ${target.displayName}`);
-      try {
-        await target.roles.remove(role);
-      } catch (err) {
-        log.error(F, `Error removing role from target: ${err}`);
-        const guildOwner = await interaction.guild?.fetchOwner();
-        await guildOwner?.send({
-          content: stripIndents`There was an error removing ${role.name} from ${target.displayName}!
+        log.debug(F, `Removing role ${role.name} from ${target.displayName}`);
+        try {
+          await target.roles.remove(role);
+        } catch (err) {
+          log.error(F, `Error removing role from target: ${err}`);
+          const guildOwner = await interaction.guild?.fetchOwner();
+          await guildOwner?.send({
+            content: stripIndents`There was an error removing ${role.name} from ${target.displayName}!
             Please make sure I have the Manage Roles permission, or put this role above mine so I don't try to remove it.
             If there's any questions please contact Moonbear#1024 on TripSit!` }); // eslint-disable-line
-        log.error(F, `Missing permission ${perms.permission} in ${interaction.guild}! Sent the guild owner a DM!`);
+          log.error(F, `Missing permission ${perms.permission} in ${interaction.guild}! Sent the guild owner a DM!`);
+        }
       }
-    }
-  });
+    });
+  }
 
   // Add the needsHelp role to the target
   try {

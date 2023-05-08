@@ -89,7 +89,7 @@ async function moodleProfile(
     : [interaction.member as GuildMember];
 
   if (targets.length > 1) {
-    const embed = embedTemplate()
+    return embedTemplate()
       .setColor(Colors.Red)
       .setTitle('Found more than one user with with that value!')
       .setDescription(stripIndents`
@@ -100,14 +100,10 @@ async function moodleProfile(
         > **Tag:** moonbear#1234
         > **ID:** 9876581237
         > **Nickname:** MoonBear`);
-    await interaction.reply({
-      embeds: [embed],
-      ephemeral: true,
-    });
   }
 
   if (targets.length === 0) {
-    const embed = embedTemplate()
+    return embedTemplate()
       .setColor(Colors.Red)
       .setTitle('Found no users with that value!')
       .setDescription(stripIndents`
@@ -118,10 +114,6 @@ async function moodleProfile(
         > **Tag:** moonbear#1234
         > **ID:** 9876581237
         > **Nickname:** MoonBear`);
-    await interaction.reply({
-      embeds: [embed],
-      ephemeral: true,
-    });
   }
 
   const [discordMember] = targets;
@@ -157,7 +149,7 @@ async function moodleProfile(
 
   const profileEmbed = new EmbedBuilder()
     .setAuthor({
-      name: `${moodleProfileData.fullName}${moodleProfileData.department && moodleProfileData.institution ? title : ''}`,
+      name: `${discordMember.displayName}${moodleProfileData.department && moodleProfileData.institution ? title : ''}`,
       url: env.MOODLE_URL,
     })
     .setThumbnail(moodleProfileData.profileImage);
