@@ -171,8 +171,12 @@ async function checkTickets() { // eslint-disable-line @typescript-eslint/no-unu
                               && roleObj.comparePositionTo(myRole) < 0
                     ) {
                       // Check if the bot has permission to add the role
-                      // log.debug(F, `Adding ${userData.discord_id}'s ${role} role`);
-                      await member.roles.add(roleObj);
+                      log.debug(F, `Adding ${userData.discord_id}'s ${role} role`);
+                      try {
+                        await member.roles.add(roleObj);
+                      } catch (err) {
+                        log.error(F, `Failed to add ${member.displayName}'s ${roleObj.name} role in ${member.guild.name}: ${err}`);
+                      }
                     }
                   });
 
@@ -904,10 +908,12 @@ async function checkMoodle() { // eslint-disable-line
     // log.debug(F, `Checking ${member.user.username}...`);
     if (moodleProfile.completedCourses.length > 0) {
       moodleProfile.completedCourses.forEach(async course => {
-        // log.debug(F, `Checking ${member.user.username} for ${course}...`);
+        // log.debug(F, `${member.user.username} completed ${course}...`);
         const roleId = courseRoleMap[course as keyof typeof courseRoleMap];
         const role = await guild.roles.fetch(roleId);
+
         if (role) {
+          // log.debug(F, `Found role: ${JSON.stringify(role, null, 2)}`);
           // check if the member already has the role
           if (member.roles.cache.has(role.id)) {
             // log.debug(F, `${member.user.username} already has the ${role.name} role`);
@@ -915,6 +921,7 @@ async function checkMoodle() { // eslint-disable-line
           }
 
           if (channelContent) {
+            // log.debug(F, `Sending message to ${channelContent.name}`);
             (channelContent as TextChannel).send({
               embeds: [
                 embedTemplate()
@@ -926,7 +933,6 @@ async function checkMoodle() { // eslint-disable-line
           }
 
           member.roles.add(role);
-
           log.info(F, `Gave ${member.user.username} the ${role.name} role`);
 
           member.user.send({
@@ -954,8 +960,7 @@ async function checkMoodle() { // eslint-disable-line
                 `),
             ],
           });
-
-          log.info(F, 'Sent the user a message!');
+          // log.debug(F, `Sent ${member.user.username} a message!`);
         }
       });
     } else {
