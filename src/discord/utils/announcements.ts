@@ -73,7 +73,7 @@ type MessageCounterType = {
  * @param {Message} message
  */
 export async function announcements(message:Message) {
-  const channelStart = await message.client.channels.fetch(env.CHANNEL_START) as TextChannel;
+  // const channelStart = await message.client.channels.fetch(env.CHANNEL_START) as TextChannel;
   const channelAnnouncements = await message.client.channels.fetch(env.CHANNEL_ANNOUNCEMENTS) as TextChannel;
   const channelRules = await message.client.channels.fetch(env.CHANNEL_RULES) as TextChannel;
   const channelBotspam = await message.client.channels.fetch(env.CHANNEL_BOTSPAM) as TextChannel;
@@ -126,7 +126,7 @@ export async function announcements(message:Message) {
   ];
 
   const chanAnnouncements = [
-    `You can change your color and mindset in the ${channelStart.toString()}`,
+    // `You can change your color and mindset in the ${channelStart.toString()}`,
     `Stay up to date with TripSit news in ${channelAnnouncements.toString()}`,
     `Make sure to follow the ${channelRules.toString()}!`,
     `Test out bot commands in ${channelBotspam.toString()}!`,
