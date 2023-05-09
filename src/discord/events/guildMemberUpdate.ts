@@ -10,6 +10,7 @@ import {
 } from '../@types/eventDef';
 // import embedTemplate from '../utils/embedTemplate';
 import { fact } from '../../global/commands/g.fact';
+import { database } from '../../global/utils/knex';
 // import {
 //   ReactionRoleList,
 // } from '../../global/@types/database';
@@ -44,13 +45,15 @@ export const guildMemberUpdate: GuildMemberUpdateEvent = {
       // log.debug(F, `oldRoles: ${oldRoles}`);
       // log.debug(F, `newRoles: ${newRoles}`);
 
+      const guildData = await database.guilds.get(newMember.guild.id);
+
       // Find the difference between the two arrays
       const rolesAdded = newRoles.filter(x => !oldRoles.includes(x));
       const rolesRemoved = oldRoles.filter(x => !newRoles.includes(x));
 
       const auditlog = await discordClient.channels.fetch(env.CHANNEL_AUDITLOG) as TextChannel;
       if (rolesAdded.length > 0) {
-        log.debug(F, `roles added: ${rolesAdded}`);
+        // log.debug(F, `roles added: ${rolesAdded}`);
         // Go through each role added, and check if it's a mindset role
         rolesAdded.forEach(async roleId => {
           // If the role added is a mindset role
@@ -214,10 +217,28 @@ export const guildMemberUpdate: GuildMemberUpdateEvent = {
           await auditlog.send(`${newMember.displayName} added ${role.name}`);
         });
       } else if (rolesRemoved.length > 0) {
-        log.debug(F, `roles removed: ${rolesRemoved}`);
+        // log.debug(F, `roles removed: ${rolesRemoved}`);
         rolesRemoved.forEach(async roleId => {
           const role = await newMember.guild.roles.fetch(roleId) as Role;
           await auditlog.send(`${newMember.displayName} removed ${role.name}`);
+
+          // If the role removed was a helper/tripsitter role, we need to remove them from threads they are in
+          if (guildData.channel_tripsit
+            && (roleId === guildData.role_helper
+              || roleId === guildData.role_tripsitter
+            )
+          ) {
+            log.debug(F, `${newMember.displayName} was a helper/tripsitter!`);
+            const channelTripsit = await discordClient.channels.fetch(guildData.channel_tripsit) as TextChannel;
+
+            const fetchedThreads = await channelTripsit.threads.fetch();
+            fetchedThreads.threads.forEach(async thread => {
+              if (thread) {
+                log.debug(F, `Removing ${newMember.displayName} from ${thread.name}`);
+                await thread.members.remove(newMember.id, 'Helper/Tripsitter role removed');
+              }
+            });
+          }
         });
       }
     }
