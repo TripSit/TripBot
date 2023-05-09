@@ -31,8 +31,6 @@ export const defaultConfig = {
   id: '11',
   lang: 'en',
   prefix: '.',
-  almanaxChannel: 'almanax',
-  partyChannel: 'listagem-de-grupos',
   buildPreview: 'enabled',
 };
 
@@ -460,6 +458,7 @@ export function mockInteractionAndSpyEditReply(command:{
     options: ToAPIApplicationCommandOptions[];
   }[];
 }) {
+  // log.debug(F, `command: ${JSON.stringify(command, null, 2)}`);
   const discord = new MockDiscord({ command });
   // console.log(discord);
   const interaction = discord.getInteraction() as ChatInputCommandInteraction;
@@ -502,7 +501,6 @@ export function mockInteractionWithOptionsAndSpyChannelSend(command:{
 }) {
   const discord = new MockDiscord({ command });
   const interaction = discord.getInteraction() as ChatInputCommandInteraction;
-  // const channel = discord.getBotPartyTextChannel();
   if (!interaction.channel) throw new Error('Channel not found');
   const spy = jest.spyOn(interaction.channel, 'send');
   return { interaction, spy };
@@ -543,7 +541,7 @@ export function mockMessageWithOptionsAndSpyEdit(command:{
 }) {
   const discord = new MockDiscord({ command });
   const interaction = discord.getInteraction() as ChatInputCommandInteraction;
-  const channel = discord.getBotPartyTextChannel();
+  const channel = discord.getTextChannel();
   const lastMessage = channel.messages.cache.last() as Message;
   const spy = jest.spyOn(lastMessage, 'edit');
   return { interaction, spy };
@@ -569,48 +567,3 @@ export async function executeCommandWithMockOptionsAndSpyEdit(
   await Command.execute(interaction);
   return spy;
 }
-
-/* Spy 'edit' with mock options for a party reaction */
-export function mockPartyReactionAndSpyEdit(command:{
-  context: 'tripsit' | 'guild' | 'dm',
-  id: string;
-  name: string;
-  type: number;
-  options: ToAPIApplicationCommandOptions[] | {
-    name: string;
-    type: number;
-    options: ToAPIApplicationCommandOptions[];
-  }[];
-}) {
-  const discord = new MockDiscord({ command });
-  const channel = discord.getBotPartyTextChannel();
-  const lastMessage = channel.messages.cache.last() as Message;
-  const userMessage = discord.getMessage();
-  const userReaction = discord.getReaction();
-  const user = discord.getReactionUser();
-  const spy = jest.spyOn(lastMessage, 'edit');
-  return {
-    userMessage, spy, reaction: userReaction, user,
-  };
-}
-
-// export async function executePartyReactionAndSpyEdit(
-//   Command:SlashCommand,
-//   action:any,
-//   options:{
-//     id: string;
-//     name: string;
-//     type: number;
-//     options: ToAPIApplicationCommandOptions[] | {
-//       name: string;
-//       type: number;
-//       options: ToAPIApplicationCommandOptions[];
-//     }[];
-//   },
-//   config = {},
-// ) {
-//   const { spy, reaction, user } = mockPartyReactionAndSpyEdit(options);
-//   const commandInstance = new Command(reaction, user, { ...defaultConfig, ...config });
-//   await commandInstance.execute(action);
-//   return spy;
-// }

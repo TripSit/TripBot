@@ -52,12 +52,6 @@ export default class MockDiscord {
 
   public interaction!: CommandInteraction;
 
-  private botPartyChannel!: Channel;
-
-  private botPartyGuildChannel!: GuildChannel;
-
-  private botPartyTextChannel!: TextChannel;
-
   private reaction!: MessageReaction;
 
   private reactionUser!: User;
@@ -111,14 +105,6 @@ export default class MockDiscord {
 
   public getGuildChannel(): GuildChannel {
     return this.guildChannel;
-  }
-
-  public getBotPartyGuildChannel(): GuildChannel {
-    return this.botPartyGuildChannel;
-  }
-
-  public getBotPartyTextChannel(): TextChannel {
-    return this.botPartyTextChannel;
   }
 
   public getTextChannel(): TextChannel {
@@ -381,19 +367,9 @@ export default class MockDiscord {
         {
           id: mockChannelId,
         },
-
       ]);
       (this.channel as TextChannel).send = jest.fn();
     }
-  }
-
-  private mockPartyChannel(): void {
-    this.botPartyChannel = Reflect.construct(BaseChannel, [
-      this.client,
-      {
-        id: 'party-channel-id',
-      },
-    ]);
   }
 
   private mockGuildChannel(
@@ -409,36 +385,9 @@ export default class MockDiscord {
           parent_id: '123456789',
           permission_overwrites: [],
         },
+        this.client,
       ]);
     }
-  }
-
-  private mockBotPartyTextChannel(): void {
-    this.botPartyTextChannel = Reflect.construct(TextChannel, [
-      this.guild,
-      {
-        ...this.botPartyGuildChannel,
-        topic: 'topic',
-        nsfw: false,
-        last_message_id: '123456789',
-        lastPinTimestamp: new Date('2019-01-01').getTime(),
-        rate_limit_per_user: 0,
-      },
-    ]);
-    this.botPartyTextChannel.messages.fetch = jest.fn().mockResolvedValue(this.botPartyTextChannel.messages.cache);
-  }
-
-  private mockBotPartyGuildChannel(): void {
-    this.botPartyGuildChannel = Reflect.construct(GuildChannel, [
-      this.guild,
-      {
-        ...this.botPartyChannel,
-        name: 'listagem-de-grupos',
-        position: 2,
-        parent_id: '2',
-        permission_overwrites: [],
-      },
-    ]);
   }
 
   private mockTextChannel(
@@ -455,7 +404,9 @@ export default class MockDiscord {
           lastPinTimestamp: new Date('2019-01-01').getTime(),
           rate_limit_per_user: 0,
         },
+        this.client,
       ]);
+      this.textChannel.messages.fetch = jest.fn().mockResolvedValue(this.textChannel.messages.cache);
     }
   }
 
@@ -516,7 +467,7 @@ export default class MockDiscord {
     }
   }
 
-  private mockPartyMessages(messages:Message[]): void {
+  private mockMessages(messages:Message[]): void {
     messages.forEach((message:Message) => {
       const msg = Reflect.construct(Message, [
         this.client,
@@ -539,10 +490,10 @@ export default class MockDiscord {
           mention_everyone: [],
           hit: false,
         },
-        this.botPartyTextChannel,
+        this.textChannel,
       ]);
-      msg.channelId = this.botPartyTextChannel.id;
-      this.botPartyTextChannel.messages.cache.set(msg.id, msg);
+      msg.channelId = this.textChannel.id;
+      this.textChannel.messages.cache.set(msg.id, msg);
     });
   }
 
