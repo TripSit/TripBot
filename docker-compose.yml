@@ -1,13 +1,13 @@
 version: '3.9'
 services:
-  tripbot:
+  discord.js:
     build:
       context: ./
       dockerfile: ./Dockerfile
     container_name: tripsit_tripbot
     restart: unless-stopped
     ports:
-      - "9229:9229"
+      - "1337:1337"
     network_mode: "host"
     volumes:
       - ./:/usr/src/app

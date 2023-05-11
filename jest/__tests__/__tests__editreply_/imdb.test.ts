@@ -51,7 +51,7 @@ describe(slashCommand.data.name, () => {
     // } as imdbApi.Movie);
     const commandData = slashCommand.data;
     const stringCommand = `/${commandData.name} title:Jurrassic Park`;
-    const command = getParsedCommand(stringCommand, commandData);
+    const command = getParsedCommand(stringCommand, commandData, 'tripsit');
     // log.debug(F, `command: ${JSON.stringify(command, null, 2)}`);
     const spy = await executeCommandAndSpyEditReply(slashCommand, command);
     expect(spy).toHaveBeenCalledWith(embedContaining({
