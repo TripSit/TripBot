@@ -31,28 +31,22 @@ const F = f(__filename);
 export const guildMemberUpdate: GuildMemberUpdateEvent = {
   name: 'guildMemberUpdate',
   async execute(oldMember, newMember) {
-    // Only run on Tripsit, we don't want to snoop on other guilds ( ͡~ ͜ʖ ͡°)
-    if (newMember.guild.id !== env.DISCORD_GUILD_ID) return;
     // log.info(F, `${newMember} was updated`);
-
     const oldRoles = oldMember.roles.cache.map(role => role.id);
-
     const newRoles = newMember.roles.cache.map(role => role.id);
 
     // If the oldRoles don't match the new roles
     if (oldRoles.toString() !== newRoles.toString()) {
-      log.debug(F, `roles changed on ${newMember.displayName}!`);
+      // log.debug(F, `roles changed on ${newMember.displayName}!`);
       // log.debug(F, `oldRoles: ${oldRoles}`);
       // log.debug(F, `newRoles: ${newRoles}`);
-
-      const guildData = await database.guilds.get(newMember.guild.id);
 
       // Find the difference between the two arrays
       const rolesAdded = newRoles.filter(x => !oldRoles.includes(x));
       const rolesRemoved = oldRoles.filter(x => !newRoles.includes(x));
-
-      const auditlog = await discordClient.channels.fetch(env.CHANNEL_AUDITLOG) as TextChannel;
       if (rolesAdded.length > 0) {
+        if (newMember.guild.id !== env.DISCORD_GUILD_ID) return;
+        const auditlog = await discordClient.channels.fetch(env.CHANNEL_AUDITLOG) as TextChannel;
         // log.debug(F, `roles added: ${rolesAdded}`);
         // Go through each role added, and check if it's a mindset role
         rolesAdded.forEach(async roleId => {
@@ -218,9 +212,10 @@ export const guildMemberUpdate: GuildMemberUpdateEvent = {
         });
       } else if (rolesRemoved.length > 0) {
         // log.debug(F, `roles removed: ${rolesRemoved}`);
+        const guildData = await database.guilds.get(newMember.guild.id);
+
         rolesRemoved.forEach(async roleId => {
           const role = await newMember.guild.roles.fetch(roleId) as Role;
-          await auditlog.send(`${newMember.displayName} removed ${role.name}`);
 
           // If the role removed was a helper/tripsitter role, we need to remove them from threads they are in
           if (guildData.channel_tripsit
@@ -239,6 +234,10 @@ export const guildMemberUpdate: GuildMemberUpdateEvent = {
               }
             });
           }
+
+          if (newMember.guild.id !== env.DISCORD_GUILD_ID) return;
+          const auditlog = await discordClient.channels.fetch(env.CHANNEL_AUDITLOG) as TextChannel;
+          await auditlog.send(`${newMember.displayName} removed ${role.name}`);
         });
       }
     }
