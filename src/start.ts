@@ -8,6 +8,7 @@ import discordConnect from './discord/discord'; // eslint-disable-line
 // import startMatrix from './matrix/matrix';
 // import ircConnect from './irc/irc';
 // import telegramConnect from './telegram/telegram';
+import api from './api/api';
 
 global.bootTime = new Date();
 
@@ -16,6 +17,7 @@ const F = f(__filename);
 async function start() {
   log.info(F, 'Initializing service!');
   validateEnv('SERVICES');
+  api();
   if (env.DISCORD_CLIENT_TOKEN && validateEnv('DISCORD')) await discordConnect();
   // if (env.MATRIX_ACCESS_TOKEN && validateEnv('MATRIX') && env.NODE_ENV !== 'production') await startMatrix();
   // if (env.IRC_PASSWORD && validateEnv('IRC') && env.NODE_ENV !== 'production') ircConnect();

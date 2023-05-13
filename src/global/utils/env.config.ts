@@ -29,6 +29,9 @@ export const env = {
   // ROLLBAR_TOKEN: process.env.ROLLBAR_TOKEN,
   SENTRY_TOKEN: process.env.SENTRY_TOKEN,
 
+  VUE_APP_PASSWORD: process.env.VUE_APP_PASSWORD,
+  VUE_APP_USERNAME: process.env.VUE_APP_USERNAME,
+
   MATRIX_HOMESERVER_URL: 'https://matrix.tripsit.me',
   MATRIX_ACCESS_TOKEN: process.env.MATRIX_ACCESS_TOKEN,
 

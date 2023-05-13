@@ -1,16 +1,27 @@
 version: '3.9'
 services:
   discord.js:
+    container_name: tripsit_tripbot
+    restart: unless-stopped
     build:
       context: ./
       dockerfile: ./Dockerfile
-    container_name: tripsit_tripbot
-    restart: unless-stopped
     ports:
-      - "1337:1337"
-    network_mode: "host"
+      - 1887:1887
+    networks:
+        - frontend
+        - backend
+    # network_mode: host
     volumes:
       - ./:/usr/src/app
-    working_dir: /usr/src/app
     env_file:
       - .env
+    working_dir: /usr/src/app
+
+networks: 
+  frontend:
+    driver: bridge
+    name: tripbot_frontend
+  backend:
+    driver: bridge
+    name: tripbot_backend
