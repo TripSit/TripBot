@@ -228,7 +228,8 @@ export const guildMemberUpdate: GuildMemberUpdateEvent = {
 
             const fetchedThreads = await channelTripsit.threads.fetch();
             fetchedThreads.threads.forEach(async thread => {
-              if (thread) {
+              if (thread
+                && thread.parentId === guildData.channel_tripsit) {
                 log.debug(F, `Removing ${newMember.displayName} from ${thread.name}`);
                 await thread.members.remove(newMember.id, 'Helper/Tripsitter role removed');
               }
