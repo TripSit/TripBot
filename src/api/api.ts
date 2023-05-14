@@ -11,10 +11,10 @@ async function checkAuth(
   req: Request,
   res: Response,
 ):Promise<boolean> {
-  log.debug(F, 'Checking auth');
+  // log.debug(F, 'Checking auth');
   // Check the authorization header
   const authHeader = req.headers.authorization;
-  log.debug(F, `${JSON.stringify(authHeader, null, 2)}`);
+  // log.debug(F, `${JSON.stringify(authHeader, null, 2)}`);
   if (!authHeader) {
     log.error(F, 'No authorization header');
     res.status(401).send('No authorization header');
