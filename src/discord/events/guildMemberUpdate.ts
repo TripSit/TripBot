@@ -11,6 +11,7 @@ import {
 // import embedTemplate from '../utils/embedTemplate';
 import { fact } from '../../global/commands/g.fact';
 import { database } from '../../global/utils/knex';
+import topic from '../../global/commands/g.topic';
 // import {
 //   ReactionRoleList,
 // } from '../../global/@types/database';
@@ -203,7 +204,7 @@ export const guildMemberUpdate: GuildMemberUpdateEvent = {
 
                                     Be safe, have fun, /report any issues!
                                     
-                                    *Did you know? ${await fact()}*`,
+                                    *${await topic()}*`,
             });
           }
 
