@@ -28,10 +28,22 @@ export const dSay: SlashCommand = {
 
     const channel = interaction.options.getChannel('channel') as TextChannel;
     const say = interaction.options.getString('say', true);
+    const style = interaction.options.getString('style');
 
     if (channel) {
+      // display typing status
+
+      await channel.sendTyping();
+      // wait 2 seconds
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      // send message
       await channel.send(say);
     } else {
+      // display typing status
+      await interaction.channel?.sendTyping();
+      // wait 2 seconds
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      // send message
       await interaction.channel?.send(say);
     }
 

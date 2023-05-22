@@ -367,3 +367,4 @@ eslint-report.json
 coverage/
 src/discord/assets/img/*/*.png
 src/matrix/cache/tripbot.json
+.env.example
