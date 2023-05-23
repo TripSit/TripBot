@@ -1,6 +1,6 @@
 {
   "name": "tripsit-tripbot",
-  "version": "6.3.1",
+  "version": "6.3.2",
   "description": "A bot for TripSit (and maybe the world)",
   "main": "start.ts",
   "engines": {
@@ -8,19 +8,13 @@
     "npm": "9.6.4"
   },
   "scripts": {
-    "start": "npm run deploy && ts-node --transpile-only src/start.ts",
-    "dev": "npm run lint && npm run patch && npm run nodemon",
+    "start": "docker compose up -d --force-recreate --build",
     "logs": "docker container logs tripsit_tripbot -f -n 100",
-    "setup": "npm run lint && npm run patch && npm run docker-build && npm run docker-run",
     "test": "NODE_ENV=test jest --silent -c ./jest/jest.unit.config.ts",
     "lint": "eslint --fix --ext .ts,.js .",
-    "lintO": "eslint --format json --output-file ./eslint-report.json --fix --ext .ts,.js .",
-    "patch": "npm version patch -git-tag-version false",
-    "nodemon": "nodemon --config ./nodemon.json",
-    "docker-run": "docker compose up -d ",
-    "docker-rebuild": "docker compose up -d --force-recreate --build",
     "deploy": "ts-node --transpile-only ./src/discord/utils/commandDeploy.ts",
-    "sonar-scanner": "sonar-scanner -D SONAR_TOKEN=$SONAR_TOKEN"
+    "prod": "npm run deploy && ts-node --transpile-only src/start.ts",
+    "dev": "npm run deploy && nodemon --config ./nodemon.json"
   },
   "repository": {
     "type": "git",

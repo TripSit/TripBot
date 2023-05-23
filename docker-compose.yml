@@ -6,9 +6,6 @@ services:
       dockerfile: ./Dockerfile
     container_name: tripsit_tripbot
     restart: unless-stopped
-    ports:
-      - "1337:1337"
-    network_mode: "host"
     volumes:
       - ./:/usr/src/app
     working_dir: /usr/src/app

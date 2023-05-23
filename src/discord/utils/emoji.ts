@@ -103,11 +103,19 @@ export function customButton(
 }
 
 export async function emojiCache(discordClient: Client):Promise<void> {
-  emojiGuildRPG = await discordClient.guilds.fetch(env.DISCORD_EMOJI_GUILD_RPG);
-  emojiGuildMain = await discordClient.guilds.fetch(env.DISCORD_EMOJI_GUILD_MAIN);
+  try {
+    emojiGuildRPG = await discordClient.guilds.fetch(env.DISCORD_EMOJI_GUILD_RPG);
+    await emojiGuildRPG.emojis.fetch();
+  } catch (err) {
+    log.error(F, `Error fetching RPG Emojis, is the bot in the emoji guild?: ${err}`);
+  }
 
-  await emojiGuildRPG.emojis.fetch();
-  await emojiGuildMain.emojis.fetch();
+  try {
+    emojiGuildMain = await discordClient.guilds.fetch(env.DISCORD_EMOJI_GUILD_MAIN);
+    await emojiGuildMain.emojis.fetch();
+  } catch (err) {
+    log.error(F, `Error fetching Main Emojis, is the bot in the emoji guild?: ${err}`);
+  }
 
   global.emojiGet = get;
 }
