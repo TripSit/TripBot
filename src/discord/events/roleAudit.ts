@@ -21,7 +21,8 @@ const mindsetRoles = [
   env.ROLE_DISSOCIATING,
   env.ROLE_STIMMING,
   env.ROLE_SEDATED,
-  env.ROLE_SOBER,
+  env.ROLE_TALKATIVE,
+  env.ROLE_VOICECHATTY,
 ];
 
 const TTSmindsetRoles = [
@@ -32,7 +33,8 @@ const TTSmindsetRoles = [
   env.ROLE_TTS_DISSOCIATING,
   env.ROLE_TTS_STIMMING,
   env.ROLE_TTS_SEDATED,
-  env.ROLE_TTS_SOBER,
+  env.ROLE_TTS_TALKATIVE,
+  env.ROLE_TTS_VOICECHATTY,
 ];
 
 const colorRoles = [
@@ -107,7 +109,7 @@ export const guildMemberUpdate: GuildMemberUpdateEvent = {
           if (mindsetRoles.includes(roleId)) {
             // log.debug(F, `mindset role added: ${roleId}`);
             // If it does, check if the user also has team tripsit role
-            if (oldMember.roles.cache.has(env.ROLE_TEAMTRIPSIT))
+            if (newMember.roles.cache.has(env.ROLE_TEAMTRIPSIT)) {
               // If so, replace the mindset role with the TTS equivalent
               log.debug(F, `User added a mindset role while being a TTS!`);
 
@@ -132,6 +134,7 @@ export const guildMemberUpdate: GuildMemberUpdateEvent = {
                 }
               }
             }
+          }
           }
         });
       }
