@@ -45,7 +45,7 @@ COPY --chown=node:node . .
 # ENV NODE_ENV production
 
 # Running `npm ci` removes the existing node_modules directory and passing in --only=production ensures that only the production dependencies are installed. This ensures that the node_modules directory is as optimized as possible
-RUN if [ $NODE_ENV = production ] ; then npm ci --only=production && npm cache clean --force ; fi
+RUN if [ $NODE_ENV = "production" ] ; then npm ci --only=production && npm cache clean --force ; fi
 
 USER node
 
@@ -60,4 +60,4 @@ COPY --chown=node:node --from=build /usr/src/app/node_modules ./node_modules
 # COPY --chown=node:node --from=build /usr/src/app/dist ./dist
 
 # Start the server using the production build
-CMD if [ $NODE_ENV = production ] ; then npm prod ; else npm run dev ; fi
+CMD if [ $NODE_ENV = "production" ] ; then npm run deploy && npx ts-node --transpile-only src/start.ts ; else npm run deploy && npx nodemon --config ./nodemon.json; fi
