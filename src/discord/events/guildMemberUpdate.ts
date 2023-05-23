@@ -168,12 +168,9 @@ async function teamMindsetCheck(
     // If so, replace the mindset role with the TTS equivalent
     log.debug(F, 'User added a mindset role while being a TTS!');
 
-    // Go through the mindsetRoles and find the object matching roleId
-    const mindsetData = Object.entries(mindsetRoles).find(async ([, value]) => {
-      log.debug(F, `value: ${value}`);
-      log.debug(F, `roleId: ${roleId}`);
-      return value === roleId;
-    });
+    const mindsetData = Object.entries(mindsetRoles).find(([, value]) => value === roleId);
+
+    log.debug(F, `mindsetData: ${mindsetData}`);
 
     if (mindsetData) {
       const [key] = mindsetData;
@@ -202,7 +199,10 @@ async function teamMindsetRemove(
     && newMember.roles.cache.has(env.ROLE_TEAMTRIPSIT)) {
     // Remove all TTS mindsets
     // Check if the member has any of the TTSmindsetRoles
-    const mindsetData = Object.entries(mindsetRoles).find(async ([, value]) => value === roleId);
+
+    const mindsetData = Object.entries(mindsetRoles).find(([, value]) => value === roleId);
+
+    log.debug(F, `mindsetData: ${mindsetData}`);
 
     if (mindsetData) {
       const [key] = mindsetData;
@@ -422,6 +422,7 @@ export const guildMemberUpdate: GuildMemberUpdateEvent = {
       // Find the difference between the two arrays
       const rolesAdded = newRoles.filter(x => !oldRoles.includes(x));
       if (rolesAdded.length > 0) {
+        log.debug(F, `${rolesAdded.length} roles added`);
         await roleAddProcess(newMember, oldMember, rolesAdded);
       }
       const rolesRemoved = oldRoles.filter(x => !newRoles.includes(x));
