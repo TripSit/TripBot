@@ -169,7 +169,11 @@ async function teamMindsetCheck(
     log.debug(F, 'User added a mindset role while being a TTS!');
 
     // Go through the mindsetRoles and find the object matching roleId
-    const mindsetData = Object.entries(mindsetRoles).find(async ([, value]) => value === roleId);
+    const mindsetData = Object.entries(mindsetRoles).find(async ([, value]) => {
+      log.debug(F, `value: ${value}`);
+      log.debug(F, `roleId: ${roleId}`);
+      return value === roleId;
+    });
 
     if (mindsetData) {
       const [key] = mindsetData;
