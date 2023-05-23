@@ -60,4 +60,4 @@ COPY --chown=node:node --from=build /usr/src/app/node_modules ./node_modules
 # COPY --chown=node:node --from=build /usr/src/app/dist ./dist
 
 # Start the server using the production build
-CMD if [ $NODE_ENV = production ] ; then npm prod ; else npm run dev ; fi
+CMD if [ $NODE_ENV = production ] ; then npm prod ; else npm run deploy && npx nodemon --config ./nodemon.json; fi

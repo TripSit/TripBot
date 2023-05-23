@@ -52,6 +52,10 @@ Copy env.example to .env and fill in these fields. You only /need/ the discord s
 
 If you need to update the container (like if you update the .env), use this command again
 
+3: **View logs**
+
+```npm run logs```
+
 ## Contribute
 
 If you want to contribute to TripBot, that's super cool and highly appreciated.<br>To get in touch, it's currently the easiest way to [Join our Discord guild](https://discord.gg/tripsit). 

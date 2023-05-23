@@ -9,7 +9,7 @@
   },
   "scripts": {
     "start": "npm run deploy && ts-node --transpile-only src/start.ts",
-    "dev": "npm run deploy && nodemon --config ./nodemon.json",
+    "dev": "docker compose up -d --force-recreate --build",
     "logs": "docker container logs tripsit_tripbot -f -n 100",
     "test": "NODE_ENV=test jest --silent -c ./jest/jest.unit.config.ts",
     "lint": "eslint --fix --ext .ts,.js .",
