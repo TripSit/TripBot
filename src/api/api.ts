@@ -1,6 +1,5 @@
 import Express, { Request, Response } from 'express';
 import https from 'https';
-import cors from 'cors';
 import fs from 'fs';
 import bodyParser from 'body-parser';
 import appeal from './modules/appeal';
@@ -103,15 +102,15 @@ export async function webserverConnect(): Promise<void> {
   // app.use(Express.static(`${__dirname}\\`));
   // app.use(Express.static(`${__dirname}/`)); // Production is linux so we need to use the forward slash
 
-  // Allow all cross-origin requests
-  app.use(cors());
-
-  // Allow only specific origins
-  // app.use(cors({
-  //   origin: 'https://localhost:8080',
-  //   methods: ['GET', 'POST'],
-  //   allowedHeaders: ['Content-Type', 'Authorization'],
-  // }));
+  // Add Access Control Allow Origin headers
+  app.use((req, res, next) => {
+    res.setHeader('Access-Control-Allow-Origin', 'http://127.0.0.1:5173');
+    res.header(
+      'Access-Control-Allow-Headers',
+      'Origin, X-Requested-With, Content-Type, Accept, Authorization',
+    );
+    next();
+  });
 
   /* Handle GET Requests */
   app.get('/', (req, res) => {

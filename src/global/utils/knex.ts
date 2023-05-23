@@ -20,6 +20,7 @@ import {
   // TicketStatus,
   // DiscordGuilds,
   ReactionRoleType,
+  Appeals,
 } from '../@types/database.d';
  // eslint-disable-line
 
@@ -1147,6 +1148,40 @@ async function reactionroleDel(
   });
 }
 
+async function appealsGet(
+  userId: string,
+  guildId: string,
+):Promise<Appeals[]> {
+  if (env.POSTGRES_DB_URL === undefined) return [] as Appeals[];
+  return db<Appeals>('appeals')
+    .select('*')
+    .where('user_id', userId)
+    .andWhere('guild_id', guildId);
+}
+
+async function appealsSet(
+  data: Appeals[],
+):Promise<void> {
+  if (env.POSTGRES_DB_URL === undefined) return;
+  data.forEach(async appeal => {
+    await db<Appeals>('appeals')
+      .insert(appeal)
+      .onConflict(['user_id', 'guild_id'])
+      .merge();
+  });
+}
+
+async function appealsDel(
+  data: Appeals[],
+):Promise<void> {
+  if (env.POSTGRES_DB_URL === undefined) return;
+  data.forEach(async appeal => {
+    await db<Appeals>('appeals')
+      .delete()
+      .where('id', appeal.id);
+  });
+}
+
 export const database = {
   users: {
     get: getUser,
@@ -1215,5 +1250,10 @@ export const database = {
     get: bridgesGet,
     set: bridgesSet,
     del: bridgesDel,
+  },
+  appeals: {
+    get: appealsGet,
+    set: appealsSet,
+    del: appealsDel,
   },
 };

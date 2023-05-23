@@ -5,10 +5,19 @@ import {
   ButtonBuilder,
   ButtonInteraction,
   ButtonStyle,
-  ChannelType, EmbedBuilder, Guild, GuildBan, GuildMember, PermissionsBitField, TextChannel, ThreadChannel, time,
+  ChannelType,
+  EmbedBuilder,
+  Guild,
+  GuildBan,
+  GuildMember,
+  PermissionsBitField,
+  TextChannel,
+  ThreadChannel,
+  time,
 } from 'discord.js';
 // import { stripIndents } from 'common-tags';
 import { stripIndents } from 'common-tags';
+import { DateTime, Interval } from 'luxon';
 import { database } from '../../global/utils/knex';
 import { UserActions } from '../../global/@types/database';
 // import { database } from '../../global/utils/knex';
@@ -18,6 +27,42 @@ const F = f(__filename);
 // Will run when there are any incoming POST requests to https://localhost:(port)/user.
 // Note that a POST request is different from a GET request
 // so this won't exactly work when you actually visit https://localhost:(port)/user
+
+async function getModThread(
+  guild: Guild,
+  userId: string,
+  username: string,
+):Promise<ThreadChannel<boolean>> {
+  // Get the user data from the database
+  const userData = await database.users.get(userId, null, null);
+  // log.debug(F, `userData: ${JSON.stringify(userData, null, 2)}`);
+  // Get/create the mod thread for the user
+  let modThread = {} as ThreadChannel;
+  if (userData.mod_thread_id) {
+    log.debug(F, `Mod thread id exists: ${userData.mod_thread_id}`);
+    try {
+      modThread = await guild.channels.fetch(userData.mod_thread_id) as ThreadChannel;
+      log.debug(F, 'Got the mod thread from discord!');
+    } catch (err) {
+      modThread = {} as ThreadChannel;
+      log.debug(F, 'Mod thread not found on discord, it was likely deleted!');
+    }
+  }
+  if (!modThread.id) {
+    // Create a new thread in the mod channel
+    const modChan = await discordClient.channels.fetch(env.CHANNEL_MODERATORS) as TextChannel;
+    modThread = await modChan.threads.create({
+      name: `${username}`,
+      autoArchiveDuration: 60,
+    });
+    log.debug(F, 'created mod thread');
+
+    userData.mod_thread_id = modThread.id;
+    await database.users.set(userData);
+    log.debug(F, 'saved mod thread id to user');
+  }
+  return modThread;
+}
 
 export default async function appeal(
   req: Request,
@@ -39,9 +84,21 @@ export default async function appeal(
     email: string;
   };
 
-  // const guildData = await database.guilds.get(body.guild);
+  // Get guild from DB
+  const guildData = await database.guilds.get(body.guild);
+  if (!guildData) {
+    log.error(F, `Could not find guild with id ${body.guild}`);
+    res.status(500).send(`Could not find guild with id ${body.guild}`);
+    return;
+  }
+  if (!guildData.partner) {
+    log.error(F, `Guild with id ${body.guild} is not a partner`);
+    res.status(500).send(`Guild with id ${body.guild} is not a partner`);
+    return;
+  }
   // log.debug(F, `guildData: ${JSON.stringify(guildData, null, 2)}`);
 
+  // Get guild from discord
   let guild = {} as Guild;
   try {
     guild = await discordClient.guilds.fetch(body.guild);
@@ -52,15 +109,13 @@ export default async function appeal(
   }
   // log.debug(F, `guild: ${JSON.stringify(guild, null, 2)}`);
 
-  // log.debug(F, `modRole: ${JSON.stringify(roleMod, null, 2)}`);
-
+  // Get the moderation channel from discord
   const channelModerators = await guild.channels.fetch(env.CHANNEL_MODERATORS);
   if (!channelModerators) {
     log.error(F, `Could not find channel with id ${env.CHANNEL_MODERATORS}`);
     res.status(500).send(`Could not find channel with id ${env.CHANNEL_MODERATORS}`);
     return;
   }
-
   if (channelModerators.type !== ChannelType.GuildText) {
     log.error(F, `Channel with id ${env.CHANNEL_MODERATORS} is not a text channel`);
     res.status(500).send(`Channel with id ${env.CHANNEL_MODERATORS} is not a text channel`);
@@ -76,37 +131,60 @@ export default async function appeal(
     res.status(418).send(`You are not banned from ${guild.name}`);
     return;
   }
+  // log.debug(F, `banInfo: ${JSON.stringify(banInfo, null, 2)}`);
 
-  let modThread = {} as ThreadChannel;
-  const userData = await database.users.get(body.userId, null, null);
-  // log.debug(F, `userData: ${JSON.stringify(userData, null, 2)}`);
-  if (userData.mod_thread_id) {
-    log.debug(F, `Mod thread id exists: ${userData.mod_thread_id}`);
-    try {
-      modThread = await guild.channels.fetch(userData.mod_thread_id) as ThreadChannel;
-      log.debug(F, 'Mod thread exists');
-    } catch (err) {
-      modThread = {} as ThreadChannel;
-      log.debug(F, 'Mod thread does not exist');
+  // Get the appeal data from the database
+  const [appealData] = await database.appeals.get(body.userId, body.guild);
+  log.debug(F, `appealData: ${JSON.stringify(appealData, null, 2)}`);
+
+  // If an appeal exists and was created in the last 3 months, return the status of the appeal
+
+  if (appealData) {
+    const createdDate = DateTime.fromJSDate(appealData.created_at);
+    const lastThreeMonthsInterval = Interval.fromDateTimes(
+      createdDate.minus({ months: 3 }),
+      createdDate,
+    );
+    if (lastThreeMonthsInterval.contains(DateTime.now())) {
+      if (appealData.status === 'OPEN') {
+        // If the appeal is still open, and the appeal was created over a week ago, we send a reminder to the guild
+        let lastWeekInterval = {} as Interval;
+        if (appealData.reminded_at) {
+          const remindedDate = DateTime.fromJSDate(appealData.reminded_at);
+          lastWeekInterval = Interval.fromDateTimes(
+            remindedDate.minus({ weeks: 1 }),
+            remindedDate,
+          );
+        } else {
+          lastWeekInterval = Interval.fromDateTimes(
+            createdDate.minus({ weeks: 1 }),
+            createdDate,
+          );
+        }
+
+        if (lastWeekInterval.contains(DateTime.now())) {
+          // Send a reminder to the guild
+          const modThread = await getModThread(guild, body.userId, body.username);
+          await modThread.send('hey fuckos, check my appeal');
+          res.status(418).send('Thank you for asking, your appeal is still undecided, and it\'s been over a week so I sent a reminder to the guild.');
+          return;
+        }
+
+        res.status(418).send('Thank you for asking, you have an existing appeal that is still open. Please be patient.');
+        return;
+      }
+      if (appealData.status === 'ACCEPTED') {
+        res.status(418).send('You have an existing appeal that was accepted');
+        return;
+      }
+      if (appealData.status === 'DENIED') {
+        res.status(418).send('You have an existing appeal that was denied');
+        return;
+      }
     }
   }
 
-  if (!modThread.id) {
-    // If the mod thread doesn't exist for whatever reason, maybe it got deleted, make a new one
-    // If the user we're banning is a vendor, don't make a new one
-    // Create a new thread in the mod channel
-    log.debug(F, 'creating mod thread');
-    const modChan = await discordClient.channels.fetch(env.CHANNEL_MODERATORS) as TextChannel;
-    modThread = await modChan.threads.create({
-      name: `${body.username}`,
-      autoArchiveDuration: 60,
-    });
-    // log.debug(F, 'created mod thread');
-    // Save the thread id to the user
-    userData.mod_thread_id = modThread.id;
-    await database.users.set(userData);
-    log.debug(F, 'saved mod thread id to user');
-  }
+  const modThread = await getModThread(guild, body.userId, body.username);
 
   // Get a date that is 24 hours in the future
   const expiresAtDate = new Date();
