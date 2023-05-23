@@ -42,7 +42,7 @@ export async function getUser(
 
   if (env.POSTGRES_DB_URL === undefined) {
     return {
-      id: 'abc-123-xyz',
+      id: 'abc-123-123',
       discord_id: '123-456-xyz',
       discord_bot_ban: false,
     } as Users;
