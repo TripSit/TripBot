@@ -441,7 +441,7 @@ async function checkRss() { // eslint-disable-line @typescript-eslint/no-unused-
 
 async function callUptime() { // eslint-disable-line @typescript-eslint/no-unused-vars
   // log.debug(F, 'Calling uptime...');
-  // if (env.NODE_ENV !== 'production') return;
+  if (env.NODE_ENV !== 'production') return;
   axios.get(`https://uptime.tripsit.me/api/push/UyL8LkDKtG?status=up&msg=OK?ping=${discordClient.ws.ping}`).catch(e => {
     log.debug(F, `Error when calling uptime monitor! ${e}`);
   });
