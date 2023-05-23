@@ -423,6 +423,7 @@ export type Users = {
   helper_role_ban: boolean;
   contributor_role_ban: boolean;
   lastfm_username: string | null;
-  partner: boolean;
-  supporter: boolean;
+  partner: boolean | null;
+  supporter: boolean | null;
+  moodle_id: string | null;
 };

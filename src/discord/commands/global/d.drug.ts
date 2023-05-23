@@ -330,7 +330,8 @@ export const dDrug: SlashCommand = {
 
     embed.setColor(Colors.Purple);
     embed.setTitle(`🌐 ${drugData.name} Information`);
-    embed.setURL(`https://wiki.tripsit.me/wiki/${drugName}`);
+    // embed.setURL(`https://wiki.tripsit.me/wiki/${drugName.replaceAll(' ', '_')}`);
+    embed.setURL(drugData.url);
 
     if (section === 'dosage') {
       embed = await addDosages(embed, drugData);
@@ -339,6 +340,8 @@ export const dDrug: SlashCommand = {
     }
 
     embed = await addSummary(embed, drugData);
+
+    log.debug(F, `Embed: ${JSON.stringify(embed, null, 2)}`);
 
     if (section === 'summary') {
       await interaction.editReply({ embeds: [embed] });

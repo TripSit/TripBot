@@ -40,6 +40,14 @@ export async function getUser(
   // log.debug(F, `getUser started with: discordId: ${discordId} | userId: ${userId}`);
   let data = {} as Users | undefined;
 
+  if (env.POSTGRES_DB_URL === undefined) {
+    return {
+      id: 'abc-123-123',
+      discord_id: '123-456-xyz',
+      discord_bot_ban: false,
+    } as Users;
+  }
+
   if (discordId) {
     try {
       data = await db<Users>('users')
@@ -100,11 +108,24 @@ export async function getUser(
   return data as Users;
 }
 
-export async function userExists(
-  discordId:string | null,
-  matrixId:string | null,
-  userId:string | null,
-):Promise<boolean> {
+export async function getMoodleUsers():Promise<Users[]> {
+  // log.debug(F, `getAllUsers started`);
+  let data = [] as Users[];
+
+  if (env.POSTGRES_DB_URL === undefined) return data;
+
+  try {
+    data = await db<Users>('users')
+      .select('*')
+      .whereNot('moodle_id', null);
+  } catch (err) {
+    log.error(F, `Error getting all users: ${err}`);
+  }
+
+  return data;
+}
+
+export async function userExists(discordId:string | null, matrixId:string | null, userId:string | null):Promise<boolean> {
   return (await getUser(discordId, matrixId, userId) !== undefined);
 }
 
@@ -1176,6 +1197,7 @@ async function reactionroleDel(
 export const database = {
   users: {
     get: getUser,
+    getMoodleUsers,
     getMindsets: usersGetMindsets,
     set: usersUpdate,
     incrementPoint,

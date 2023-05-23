@@ -20,7 +20,7 @@ export async function pitchTent(
   New.member?.guild.channels.create({
     name: `⛺│ ${New.member.displayName}'s tent`,
     type: ChannelType.GuildVoice,
-    parent: env.CATEGORY_CAMPGROUND,
+    parent: env.CATEGORY_VOICE,
     permissionOverwrites: [
       {
         id: New.member.id,
@@ -99,7 +99,7 @@ To undo a command, just type it again.`);
 export async function teardownTent(
   Old:VoiceState,
 ): Promise<void> {
-  const tempVoiceCategory = await Old.guild.channels.fetch(env.CATEGORY_CAMPGROUND) as CategoryChannel;
+  const tempVoiceCategory = await Old.guild.channels.fetch(env.CATEGORY_VOICE) as CategoryChannel;
   tempVoiceCategory.children.cache.forEach(channel => {
     // Get the number of humans in the channel
     const humans = channel.members.filter(member => !member.user.bot).size;

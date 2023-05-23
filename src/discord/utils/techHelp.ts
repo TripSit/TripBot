@@ -82,24 +82,6 @@ export async function techHelpClick(interaction:ButtonInteraction) {
         return;
       }
 
-      // Respond right away cuz the rest of this doesn't matter
-      const member = await i.guild.members.fetch(i.user.id);
-      // log.debug(F, `member: ${JSON.stringify(member, null, 2)}!`);
-      if (member) {
-        // Don't run if the user is on timeout
-        if (member.communicationDisabledUntilTimestamp !== null) {
-          await member.send(stripIndents`
-          Hey!
-    
-          Looks like you're on timeout =/
-    
-          You can't use the modmail while on timeout.`);
-          return;
-        }
-      } else {
-        await i.editReply('Thank you, we will respond to right here when we can!');
-      }
-
       // Get whatever they sent in the modal
       const modalInput = i.fields.getTextInputValue(`${issueType}IssueInput`);
       // log.debug(F, `modalInput: ${modalInput}!`);
@@ -116,12 +98,6 @@ export async function techHelpClick(interaction:ButtonInteraction) {
         invitable: false,
       });
       // log.debug(F, `Created meta-thread ${ticketThread.id}`);
-
-      const embed = new EmbedBuilder();
-      embed.setDescription(
-        stripIndents`Thank you, check out ${ticketThread} to talk with a team member about your issue!`,
-      );
-      await i.editReply({ embeds: [embed] });
 
       const message = stripIndents`
         Hey ${roleTechReview}! ${actor} has submitted a new issue:
@@ -143,6 +119,13 @@ export async function techHelpClick(interaction:ButtonInteraction) {
         );
 
       await ticketThread.send({ content: message, components: [techHelpButtons] });
+
+      const embed = new EmbedBuilder();
+      embed.setDescription(
+        stripIndents`Thank you, check out ${ticketThread} to talk with a team member about your issue!`,
+      );
+      await i.editReply({ embeds: [embed] });
+
     // log.debug(F, `Sent intro message to meta-thread ${ticketThread.id}`);
     });
 }
@@ -189,18 +172,24 @@ export async function techHelpClose(interaction:ButtonInteraction) {
   if (!interaction.guild) return;
   if (!interaction.member) return;
 
-  const issueType = interaction.customId.split('~')[1];
   const targetId = interaction.customId.split('~')[2];
-  const target = await interaction.guild.members.fetch(targetId);
+
+  let target = {} as GuildMember;
+  try {
+    target = await interaction.guild.members.fetch(targetId);
+  } catch (e) {
+    log.debug(F, `Failed to fetch member ${targetId}! They probably left the guild.`);
+  }
 
   const message = interaction.member === target
     ? stripIndents`${interaction.member.displayName} has indicated that they no longer need help!`
     : stripIndents`${(interaction.member as GuildMember).displayName} has indicated that this issue has been resolved!`;
 
   if (interaction.member === target) {
-    (interaction.channel as ThreadChannel).setName(`💚│${target.displayName}'s ${issueType} issue!`);
+    // Replace the first character of the channel name with a green heart
+    (interaction.channel as ThreadChannel).setName(`💚|${(interaction.channel as ThreadChannel).name.slice(1)}`);
   } else {
-    (interaction.channel as ThreadChannel).setName(`💙│${target.displayName}'s ${issueType} issue!`);
+    (interaction.channel as ThreadChannel).setName(`💙|${(interaction.channel as ThreadChannel).name.slice(1)}`);
   }
 
   await interaction.reply({

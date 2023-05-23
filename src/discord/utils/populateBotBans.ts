@@ -11,6 +11,7 @@ const F = f(__filename); // eslint-disable-line
 export const botBannedUsers: string[] = [];
 
 export async function populateBans():Promise<void> {
+  if (env.POSTGRES_DB_URL === undefined) return;
   // On bot startup, query the db and populate botBannedUsers with all users who are banned
   const bannedUsers = await db<Users>('users')
     .select(db.ref('discord_id').as('discord_id'))

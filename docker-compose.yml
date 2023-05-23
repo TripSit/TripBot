@@ -1,32 +1,13 @@
-version: '3.7'
+version: '3.9'
 services:
-  tripbot:
+  discord.js:
     build:
       context: ./
       dockerfile: ./Dockerfile
-    container_name: tripsit_discord_bot
+    container_name: tripsit_tripbot
     restart: unless-stopped
-    # depends_on:
-    #   - "http-api"
-    ports:
-      - "8080:8080"
-      - "9229:9229"
-    network_mode: "host"
     volumes:
       - ./:/usr/src/app
     working_dir: /usr/src/app
     env_file:
       - .env
-    environment:
-      - DISCORD_CLIENT_ID=${DISCORD_CLIENT_ID}
-      - DISCORD_GUILD_ID=${DISCORD_GUILD_ID}
-      - DISCORD_CLIENT_SECRET=${DISCORD_CLIENT_SECRET}
-      - DISCORD_CLIENT_TOKEN=${DISCORD_CLIENT_TOKEN}
-      - DISCORD_CLIENT_REDIRECT_URI=${DISCORD_CLIENT_REDIRECT_URI}
-      - GITHUB_TOKEN=${GITHUB_TOKEN}
-      - RAPID_TOKEN=${RAPID_TOKEN}
-      - WOLFRAM_TOKEN=${WOLFRAM_TOKEN}
-      - IMGUR_ID=${IMGUR_ID}
-      - IMGUR_SECRET=${IMGUR_SECRET}
-      - YOUTUBE_TOKEN=${YOUTUBE_TOKEN}
-      - IMDB_TOKEN=${IMDB_TOKEN}

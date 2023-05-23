@@ -1,26 +1,63 @@
-FROM node:18.15
+###################
+# BUILD FOR LOCAL DEVELOPMENT
+###################
+
+FROM node:20.1-alpine As development
 
 # Create app directory
 WORKDIR /usr/src/app
 
-# Update npm
-# RUN npm install npm@5.3.0
-# RUN rm -rf /usr/local/lib/node_modules/npm
-# RUN mv node_modules/npm /usr/local/lib/node_modules/npm
+# Copy application dependency manifests to the container image.
+# A wildcard is used to ensure copying both package.json AND package-lock.json (when available).
+# Copying this first prevents re-running npm install on every code change.
+COPY --chown=node:node package*.json ./
 
-# Install app dependencies
-# A wildcard is used to ensure both package.json AND package-lock.json are copied
-# where available (npm@5+)
-COPY package*.json ./
+# Install app dependencies using the `npm ci` command instead of `npm install`
 RUN npm ci
 
-# If you are building your code for production
-# RUN npm ci --only=production
-
 # Bundle app source
-COPY . .
+COPY --chown=node:node . .
 
-EXPOSE 8080
-EXPOSE 9229
+# Use the node user from the image (instead of the root user)
+USER node
 
-CMD if [ $NODE_ENV = production ] ; then npm start ; else npm run nodemon ; fi
+# CMD if [ $NODE_ENV = development ] ; then npm run nodemon ; fi
+
+###################
+# BUILD FOR PRODUCTION
+###################
+
+FROM node:20.1-alpine As build
+
+WORKDIR /usr/src/app
+
+COPY --chown=node:node package*.json ./
+
+# In order to run `npm run build` we need access to the Nest CLI which is a dev dependency. In the previous development stage we ran `npm ci` which installed all dependencies, so we can copy over the node_modules directory from the development image
+COPY --chown=node:node --from=development /usr/src/app/node_modules ./node_modules
+
+COPY --chown=node:node . .
+
+# Run the build command which creates the production bundle
+# RUN npm run build
+
+# Set NODE_ENV environment variable
+# ENV NODE_ENV production
+
+# Running `npm ci` removes the existing node_modules directory and passing in --only=production ensures that only the production dependencies are installed. This ensures that the node_modules directory is as optimized as possible
+RUN if [ $NODE_ENV = "production" ] ; then npm ci --only=production && npm cache clean --force ; fi
+
+USER node
+
+###################
+# PRODUCTION
+###################
+
+FROM node:20.1-alpine As production
+
+# Copy the bundled code from the build stage to the production image
+COPY --chown=node:node --from=build /usr/src/app/node_modules ./node_modules
+# COPY --chown=node:node --from=build /usr/src/app/dist ./dist
+
+# Start the server using the production build
+CMD if [ $NODE_ENV = "production" ] ; then npm run deploy && npx ts-node --transpile-only src/start.ts ; else npm run deploy && npx nodemon --config ./nodemon.json; fi

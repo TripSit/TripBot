@@ -7,14 +7,12 @@ import {
 
 const F = f(__filename); // eslint-disable-line @typescript-eslint/no-unused-vars
 
-export default getDiscordMember;
-
 export async function getDiscordMember(
   interaction:ChatInputCommandInteraction | UserContextMenuCommandInteraction,
   string:string,
-):Promise<GuildMember[] | null> {
+):Promise<GuildMember[]> {
   const members = [] as GuildMember[];
-  if (!interaction.guild) return null;
+  if (!interaction.guild) return members;
   if (string.startsWith('<@') && string.endsWith('>')) {
     // log.debug(F, `${string} is a mention!`);
     const id = string.replace(/[<@!>]/g, '');
