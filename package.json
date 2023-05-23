@@ -8,13 +8,12 @@
     "npm": "9.6.4"
   },
   "scripts": {
-    "start": "docker compose up -d --force-recreate --build",
+    "start": "npm run deploy && ts-node --transpile-only src/start.ts",
+    "dev": "npm run deploy && nodemon --config ./nodemon.json",
     "logs": "docker container logs tripsit_tripbot -f -n 100",
     "test": "NODE_ENV=test jest --silent -c ./jest/jest.unit.config.ts",
     "lint": "eslint --fix --ext .ts,.js .",
-    "deploy": "ts-node --transpile-only ./src/discord/utils/commandDeploy.ts",
-    "prod": "npm run deploy && ts-node --transpile-only src/start.ts",
-    "dev": "npm run deploy && nodemon --config ./nodemon.json"
+    "deploy": "ts-node --transpile-only ./src/discord/utils/commandDeploy.ts"
   },
   "repository": {
     "type": "git",
