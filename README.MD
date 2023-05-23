@@ -32,7 +32,7 @@ Dockerized
 
 + If you want to host your own instance of the bot, your best bet is to use the tripsit-dev repo to setup everything you need. You may be able to run this bot stand-alone, but it's not recommended nor supported.
 
-0: **Setup postgres**
+0: **(Optional) Setup postgres**
 1) Install postgres
 2) Create a database called tripsit
 3) Create a user called tripsit_api with password P@ssw0rd
@@ -42,7 +42,7 @@ Dockerized
 
 Clone the repository
 
-``` git clone https://github.com/tripsit-tripit-dicord-bot```
+``` git clone https://github.com/TripSit/TripBot.git```
 
 Copy env.example to .env and fill in these fields. You only /need/ the discord stuff
 
@@ -50,13 +50,11 @@ Copy env.example to .env and fill in these fields. You only /need/ the discord s
 
 ```npm run dev```
 
-This starts the bot in development mode
-- This runs nodemon, which will update on every change
-If you need to update the container, use
+If you need to update the container (like if you update the .env), use this command again
 
-```npm run docker-rebuild```
+3: **View logs**
 
-This *should* work, but your best bet is to run the /tripsit-dev code space that will set you up with everything, including a TripSit Postgres Database.
+```npm run logs```
 
 ## Contribute
 

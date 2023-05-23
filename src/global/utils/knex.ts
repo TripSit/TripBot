@@ -41,6 +41,14 @@ export async function getUser(
   // log.debug(F, `getUser started with: discordId: ${discordId} | userId: ${userId}`);
   let data = {} as Users | undefined;
 
+  if (env.POSTGRES_DB_URL === undefined) {
+    return {
+      id: 'abc-123-123',
+      discord_id: '123-456-xyz',
+      discord_bot_ban: false,
+    } as Users;
+  }
+
   if (discordId) {
     try {
       data = await db<Users>('users')
@@ -104,6 +112,8 @@ export async function getUser(
 export async function getMoodleUsers():Promise<Users[]> {
   // log.debug(F, `getAllUsers started`);
   let data = [] as Users[];
+
+  if (env.POSTGRES_DB_URL === undefined) return data;
 
   try {
     data = await db<Users>('users')

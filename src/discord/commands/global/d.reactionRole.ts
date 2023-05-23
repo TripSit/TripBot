@@ -463,7 +463,7 @@ export async function buttonReactionRole(
     //   ? (interaction.member as GuildMember).roles.cache.some(r => (guildData.team_role_ids as string).indexOf(r.id) >= 0)
     //   : false;
 
-    const isPremium = guildData.premium_role_ids !== null
+    const isPremium = guildData.premium_role_ids
       ? (interaction.member as GuildMember).roles.cache.some(r => (guildData.premium_role_ids as string).indexOf(r.id) >= 0)
       : false;
 
