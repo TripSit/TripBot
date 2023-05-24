@@ -62,6 +62,7 @@ const donorColorRoles = [
 const donorRoles = [
   env.ROLE_BOOSTER,
   env.ROLE_PATRON,
+  env.ROLE_TEAMTRIPSIT,
 ];
 
 const F = f(__filename);
@@ -93,7 +94,7 @@ export const guildMemberUpdate: GuildMemberUpdateEvent = {
           if (donorColorRoles.includes(roleId)) {
             // log.debug(F, `donor color role added: ${roleId}`);
             // If it does, check if the user also has a donor role
-            if (oldMember.roles.cache.has(env.ROLE_BOOSTER) || oldMember.roles.cache.has(env.ROLE_PATRON)) {
+            if (oldMember.roles.cache.has(env.ROLE_BOOSTER) || oldMember.roles.cache.has(env.ROLE_PATRON) || oldMember.roles.cache.has(env.ROLE_TEAMTRIPSIT)) {
               log.debug(F, `Donor added a color role!`);
             }
             else {
