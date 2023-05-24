@@ -13,6 +13,7 @@
     "logs": "docker container logs tripsit_tripbot -f -n 100",
     "test": "NODE_ENV=test jest --silent -c ./jest/jest.unit.config.ts",
     "lint": "eslint --fix --ext .ts,.js .",
+    "nodemon": "nodemon --config ./nodemon.json",
     "deploy": "ts-node --transpile-only ./src/discord/utils/commandDeploy.ts"
   },
   "repository": {
