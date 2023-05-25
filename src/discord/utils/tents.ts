@@ -104,10 +104,10 @@ export async function teardownTent(
     // Get the number of humans in the channel
     const humans = channel.members.filter(member => !member.user.bot).size;
 
-    // If the channel is a voice channel, and it's not the campfire, and there are no humans in it delete it
+    // If the channel is a voice channel, and it's a tent, and there are no humans in it delete it
     if (channel.type === ChannelType.GuildVoice
-      && (channel.id !== env.CHANNEL_CAMPFIRE || channel.id !== env.CHANNEL_FUTON)
-      && humans < 1) {
+      && (channel.name.includes('⛺'))
+      && (humans < 1)) {
       channel.delete('Removing temporary voice chan!');
       // log.debug(F, `deleted an empty temporary voice channel`);
     }
