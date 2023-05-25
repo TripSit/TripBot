@@ -325,7 +325,11 @@ export async function announcements(message:Message) {
         embed.setDescription(randomGenAnnouncement);
       }
 
-      await sleep(3000);
+      await sleep(1500);
+      // display typing status
+      await message.channel.sendTyping();
+      // wait 2 seconds
+      await new Promise(resolve => setTimeout(resolve, 2500));
 
       await message.channel.send({ embeds: [embed] });
     }
