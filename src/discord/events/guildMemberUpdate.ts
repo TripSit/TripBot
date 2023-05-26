@@ -108,11 +108,13 @@ const donorColorRoles = {
 
 type DonorNames =
 | 'ROLE_BOOSTER'
-| 'ROLE_PATRON';
+| 'ROLE_PATRON'
+| 'ROLE_TEAMTRIPSIT';
 
 const donorRoles = {
   ROLE_BOOSTER: env.ROLE_BOOSTER,
   ROLE_PATRON: env.ROLE_PATRON,
+  ROLE_TEAMTRIPSIT: env.ROLE_TEAMTRIPSIT,
 } as {
   [key in DonorNames]: string;
 };
@@ -128,7 +130,7 @@ async function donorColorCheck(
   if (Object.values(donorColorRoles).includes(roleId)) {
     // log.debug(F, `donor color role added: ${roleId}`);
     // If it does, check if the user also has a donor role
-    if (oldMember.roles.cache.has(env.ROLE_BOOSTER) || oldMember.roles.cache.has(env.ROLE_PATRON)) {
+    if (oldMember.roles.cache.has(env.ROLE_BOOSTER) || oldMember.roles.cache.has(env.ROLE_PATRON) || oldMember.roles.cache.has(env.ROLE_TEAMTRIPSIT)) {
       log.debug(F, 'Donor added a color role!');
     } else {
       // If they don't, remove the color role
