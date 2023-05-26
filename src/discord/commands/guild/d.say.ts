@@ -35,14 +35,14 @@ export const dSay: SlashCommand = {
 
       await channel.sendTyping();
       // wait 2 seconds
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      await new Promise(resolve => setTimeout(resolve, 3000));
       // send message
       await channel.send(say);
     } else {
       // display typing status
       await interaction.channel?.sendTyping();
       // wait 2 seconds
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      await new Promise(resolve => setTimeout(resolve, 3000));
       // send message
       await interaction.channel?.send(say);
     }
