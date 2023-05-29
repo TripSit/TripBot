@@ -225,8 +225,8 @@ export async function tripsitmeOwned(
     ]);
     if (!channelPerms.hasPermission) {
       const guildOwner = await interaction.guild.fetchOwner();
-      await guildOwner.send({ content: `Please make sure I can ${channelPerms.permission} in ${metaChannel} so I can run ${F}!` }); // eslint-disable-line
-      log.error(F, `Missing permission ${channelPerms.permission} in ${metaChannel}!`);
+      await guildOwner.send({ content: `Please make sure I can ${channelPerms.permission} in ${metaChannel.name} so I can run ${F}!` }); // eslint-disable-line
+      log.error(F, `Missing permission ${channelPerms.permission} in ${metaChannel.name}!`);
       return;
     }
 
@@ -285,7 +285,7 @@ export async function tripsitmeMeta(
   const ticketData = await getOpenTicket(userData.id, null);
 
   if (!ticketData) {
-    const rejectMessage = `Hey ${interaction.member}, ${target.displayName} not have an open session!`;
+    const rejectMessage = `Hey ${(interaction.member as GuildMember).displayName}, ${target.displayName} not have an open session!`;
     const embed = embedTemplate().setColor(Colors.DarkBlue);
     embed.setDescription(rejectMessage);
     // log.debug(F, `target ${target} does not need help!`);
@@ -475,7 +475,7 @@ export async function tripsitmeClose(
   log.debug(F, `ticketData: ${JSON.stringify(ticketData, null, 2)}`);
 
   if (!ticketData) {
-    const rejectMessage = `Hey ${interaction.member}, ${target.displayName} not have an open session!`;
+    const rejectMessage = `Hey ${(interaction.member as GuildMember).displayName}, ${target.displayName} not have an open session!`;
     const embed = embedTemplate().setColor(Colors.DarkBlue);
     embed.setDescription(rejectMessage);
     // log.debug(F, `target ${target} does not need help!`);
@@ -600,7 +600,9 @@ export async function tripsitmeResolve(
     }
 
     // readd each role to the target
-    if (targetRoles.length > 0) {
+    // Patch for BlueLight: Since we didn't remove roles, don't re-add them
+    if (target.guild.id !== env.DISCORD_BL_ID
+      && targetRoles.length > 0) {
       targetRoles.forEach(async roleId => {
         // log.debug(F, `Re-adding roleId: ${roleId}`);
         if (!interaction.guild) {
@@ -609,10 +611,10 @@ export async function tripsitmeResolve(
         }
         const roleObj = await interaction.guild.roles.fetch(roleId) as Role;
         if (roleObj
-          && !ignoredRoles.includes(roleObj.id)
-          && roleObj.name !== '@everyone'
-          && roleObj.id !== roleNeedshelp.id
-          && roleObj.comparePositionTo(myRole) < 0) {
+            && !ignoredRoles.includes(roleObj.id)
+            && roleObj.name !== '@everyone'
+            && roleObj.id !== roleNeedshelp.id
+            && roleObj.comparePositionTo(myRole) < 0) {
           await target.roles.add(roleObj);
         }
       });
@@ -626,7 +628,7 @@ export async function tripsitmeResolve(
   log.debug(F, `ticketData: ${JSON.stringify(ticketData, null, 2)}`);
 
   if (ticketData === undefined || Object.entries(ticketData).length === 0) {
-    const rejectMessage = `Hey ${interaction.member}, you do not have an open session!`;
+    const rejectMessage = `Hey ${(interaction.member as GuildMember).displayName}, you do not have an open session!`;
     const embed = embedTemplate().setColor(Colors.DarkBlue);
     embed.setDescription(rejectMessage);
     // log.debug(F, `target ${target} does not need help!`);
@@ -830,7 +832,7 @@ export async function tripSitMe(
       
       When you're feeling better you can use the "I'm Good" button to let the team know you're okay.
 
-      **Not in an emergency, but still want to talk to a mental health advisor? Warmlines provide non-crisis mental health support and guidance from trained volunteers. https://warmline.org/warmdir.html#directory**
+      **Not in an emergency, but still want to talk to a mental health advisor? Warm lines provide non-crisis mental health support and guidance from trained volunteers. https://warmline.org/warmdir.html#directory**
 
       **The wonderful people at the Fireside project can also help you through a rough trip. You can check them out: https://firesideproject.org/**
       `;
@@ -1016,7 +1018,7 @@ export async function tripsitmeButton(
     // 'EmbedLinks' as PermissionResolvable,
   ]);
   if (!channelPerms.hasPermission) {
-    log.error(F, `Missing TS channel permission ${channelPerms.permission} in ${tripsitChannel}!`);
+    log.error(F, `Missing TS channel permission ${channelPerms.permission} in ${tripsitChannel.name}!`);
     const guildOwner = await interaction.guild?.fetchOwner() as GuildMember;
     await guildOwner.send({
       content: stripIndents`Missing permissions in ${tripsitChannel}!
@@ -1027,7 +1029,7 @@ export async function tripsitmeButton(
       Send Messages in Threads - to send messages in threads
       Manage Threads - to delete threads when they're done
       `}); // eslint-disable-line
-    log.error(F, `Missing TS channel permission ${channelPerms.permission} in ${tripsitChannel}!`);
+    log.error(F, `Missing TS channel permission ${channelPerms.permission} in ${tripsitChannel.name}!`);
     return;
   }
 
@@ -1046,7 +1048,7 @@ export async function tripsitmeButton(
     // 'EmbedLinks' as PermissionResolvable,
   ]);
   if (!metaPerms.hasPermission) {
-    log.error(F, `Missing TS channel permission ${channelPerms.permission} in ${channelTripsitmeta}!`);
+    log.error(F, `Missing TS channel permission ${channelPerms.permission} in ${channelTripsitmeta.name}!`);
     const guildOwner = await interaction.guild?.fetchOwner() as GuildMember;
     await guildOwner.send({
       content: stripIndents`Missing permissions in ${channelTripsitmeta}!
@@ -1057,7 +1059,7 @@ export async function tripsitmeButton(
         Send Messages in Threads - to send messages in threads
         Manage Threads - to delete threads when they're done
         `}); // eslint-disable-line
-    log.error(F, `Missing permission ${metaPerms.permission} in ${tripsitChannel}!`);
+    log.error(F, `Missing permission ${metaPerms.permission} in ${tripsitChannel.name}!`);
     return;
   }
 
