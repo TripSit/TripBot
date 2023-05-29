@@ -21,11 +21,11 @@ let bigFrequencyCounter = 0;
  * @param {number} ms
  * @return {Promise<void>}
  */
-function sleep(ms:number):Promise<void> {
-  return new Promise(resolve => {
-    setTimeout(resolve, ms);
-  });
-}
+// function sleep(ms:number):Promise<void> {
+//   return new Promise(resolve => {
+//     setTimeout(resolve, ms);
+//   });
+// }
 
 const waterAndTeaEmojis = [
   // '🏊', '🏊🏻', '🏊🏼', '🏊🏽', '🏊🏾', '🏊🏿',
@@ -324,10 +324,10 @@ export async function announcements(message:Message) {
         // log.debug(F, `randomGenAnnouncement: ${randomGenAnnouncement}`);
         embed.setDescription(randomGenAnnouncement);
       }
-
-      await sleep(3000);
-
-      await message.channel.send({ embeds: [embed] });
+      await message.channel.sendTyping(); // This method automatically stops typing after 10 seconds, or when a message is sent.
+      setTimeout(async () => {
+        await (message.channel.send({ embeds: [embed] }));
+      }, 3000);
     }
   }
 }

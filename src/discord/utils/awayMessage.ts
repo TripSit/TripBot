@@ -1,6 +1,7 @@
 /* eslint-disable no-unused-vars */
 
 import { Message, TextChannel } from 'discord.js';
+import { stripIndents } from 'common-tags';
 import { getUser } from '../../global/utils/knex';
 import { sleep } from '../commands/guild/d.bottest';
 
@@ -26,13 +27,10 @@ export async function awayMessage(message:Message): Promise<void> {
 
       await message.channel.sendTyping();
       await sleep(1000);
-      message.channel.send(
-        `Hey ${message.member?.displayName}, Moonbear is probably sleeping, but they will get back to you when they can!`,
+      await message.channel.send(
+        stripIndents`Hey ${message.member?.displayName}, Moonbear is probably sleeping, \
+        but they will get back to you when they can!`,
       );
     }
   }
-
-  // if (chicagoHour >= 16 || chicagoHour <= 20) {
-  //   message.channel.send(`Hey ${message.member?.displayName} Moonbear is probably busy. Maybe send them a DM and they will get back to you when they can!`);
-  // }
 }

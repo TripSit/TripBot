@@ -33,8 +33,13 @@ export const dSay: SlashCommand = {
       ? interaction.options.getChannel('channel')
       : interaction.channel;
 
+    if (!channel) {
+      await interaction.editReply({ content: 'Channel not found!' });
+      return false;
+    }
+
     // Ensure that the channel used is a text channel
-    if (channel && channel.type !== ChannelType.GuildText) {
+    if (channel.type !== ChannelType.GuildText) {
       await interaction.editReply({ content: 'This command can only be used in a server!' });
       return false;
     }
@@ -43,9 +48,7 @@ export const dSay: SlashCommand = {
     channel = channel as TextChannel;
 
     await channel.sendTyping(); // This method automatically stops typing after 10 seconds, or when a message is sent.
-    setTimeout(async () => {
-      await (channel as TextChannel).send(say);
-    }, 1500);
+    setTimeout(async () => (channel as TextChannel).send(say), 3000);
 
     await interaction.editReply({ content: `I said '${say}' in ${channel.name}` }); // eslint-disable-line max-len
 

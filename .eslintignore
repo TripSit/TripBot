@@ -1,2 +1,5 @@
 **/database.d.ts
 **/archive
+**/src/matrix/**
+**/src/telegram/**
+**/src/irc/**

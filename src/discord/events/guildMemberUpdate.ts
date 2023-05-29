@@ -15,7 +15,8 @@ type MindsetNames =
 | 'ROLE_STIMMING'
 | 'ROLE_SEDATED'
 | 'ROLE_TALKATIVE'
-| 'ROLE_VOICECHATTY';
+| 'ROLE_VOICECHATTY'
+| 'ROLE_BUSY';
 
 const mindsetRoles = {
   ROLE_DRUNK: env.ROLE_DRUNK,
@@ -27,6 +28,7 @@ const mindsetRoles = {
   ROLE_SEDATED: env.ROLE_SEDATED,
   ROLE_TALKATIVE: env.ROLE_TALKATIVE,
   ROLE_VOICECHATTY: env.ROLE_VOICECHATTY,
+  ROLE_BUSY: env.ROLE_BUSY,
 } as {
   [key in MindsetNames]: string;
 };
@@ -40,7 +42,8 @@ type TeamMindsetNames =
 | 'ROLE_TTS_STIMMING'
 | 'ROLE_TTS_SEDATED'
 | 'ROLE_TTS_TALKATIVE'
-| 'ROLE_TTS_VOICECHATTY';
+| 'ROLE_TTS_VOICECHATTY'
+| 'ROLE_TTS_BUSY';
 
 const TTSMindsetRoles = {
   ROLE_TTS_DRUNK: env.ROLE_TTS_DRUNK,
@@ -52,6 +55,7 @@ const TTSMindsetRoles = {
   ROLE_TTS_SEDATED: env.ROLE_TTS_SEDATED,
   ROLE_TTS_TALKATIVE: env.ROLE_TTS_TALKATIVE,
   ROLE_TTS_VOICECHATTY: env.ROLE_TTS_VOICECHATTY,
+  ROLE_TTS_BUSY: env.ROLE_TTS_BUSY,
 } as {
   [key in TeamMindsetNames]: string;
 };
@@ -104,11 +108,13 @@ const donorColorRoles = {
 
 type DonorNames =
 | 'ROLE_BOOSTER'
-| 'ROLE_PATRON';
+| 'ROLE_PATRON'
+| 'ROLE_TEAMTRIPSIT';
 
 const donorRoles = {
   ROLE_BOOSTER: env.ROLE_BOOSTER,
   ROLE_PATRON: env.ROLE_PATRON,
+  ROLE_TEAMTRIPSIT: env.ROLE_TEAMTRIPSIT,
 } as {
   [key in DonorNames]: string;
 };
@@ -124,7 +130,9 @@ async function donorColorCheck(
   if (Object.values(donorColorRoles).includes(roleId)) {
     // log.debug(F, `donor color role added: ${roleId}`);
     // If it does, check if the user also has a donor role
-    if (oldMember.roles.cache.has(env.ROLE_BOOSTER) || oldMember.roles.cache.has(env.ROLE_PATRON)) {
+    if (oldMember.roles.cache.has(env.ROLE_BOOSTER)
+    || oldMember.roles.cache.has(env.ROLE_PATRON)
+    || oldMember.roles.cache.has(env.ROLE_TEAMTRIPSIT)) {
       log.debug(F, 'Donor added a color role!');
     } else {
       // If they don't, remove the color role
@@ -185,7 +193,7 @@ async function teamMindsetCheck(
       // Get the role from the guild
       const role = await newMember.guild.roles.fetch(ttsMindsetRoleId) as Role;
       // Add the role to the user
-      newMember.roles.add(role);
+      await newMember.roles.add(role);
     }
   }
 }
@@ -217,7 +225,7 @@ async function teamMindsetRemove(
       // Get the role from the guild
       const role = await newMember.guild.roles.fetch(ttsMindsetRoleId) as Role;
       // Add the role to the user
-      newMember.roles.remove(role);
+      await newMember.roles.remove(role);
     }
   }
 }
@@ -238,8 +246,7 @@ async function removeExTeamFromThreads(
 
     const fetchedThreads = await channelTripsit.threads.fetch();
     fetchedThreads.threads.forEach(async thread => {
-      if (thread
-                && thread.parentId === guildData.channel_tripsit) {
+      if (thread && thread.parentId === guildData.channel_tripsit) {
         log.debug(F, `Removing ${newMember.displayName} from ${thread.name}`);
         await thread.members.remove(newMember.id, 'Helper/Tripsitter role removed');
       }
