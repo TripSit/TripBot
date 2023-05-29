@@ -57,13 +57,6 @@ export async function messageCommand(message: Message): Promise<void> {
   if (!message.guild) return; // If not in a guild then ignore all messages
   // if (message.guild.id !== env.DISCORD_GUILD_ID) return; // If not in tripsit ignore all messages
   const displayName = message.member ? message.member.displayName : message.author.username;
-
-  // log.debug(F, `Message : ${JSON.stringify(message, null, 2)}`);
-  // log.debug(F, `sadStuff.some(word => (message.cleanContent.includes(word): ${sadStuff.some(word => message.cleanContent.includes(word))}`); // eslint-disable-line
-  // log.debug(F, `!(message.cleanContent.substring(message.cleanContent.indexOf(':') + 1).includes(':')): ${!(message.cleanContent.substring(message.cleanContent.indexOf(':') + 1).includes(':'))}`); // eslint-disable-line
-  // log.debug(F, `message.channel.type !== ChannelType.DM: ${message.channel.type !== ChannelType.DM}`); // eslint-disable-line
-  // log.debug(F, `message.guild.id !== env.DISCORD_GUILD_ID: ${message.guild.id} !== ${env.DISCORD_SERVER_ID}`); // eslint-disable-line
-
   // log.debug(F, `message.reference: ${JSON.stringify(message.content, null, 2)}`);
 
   // log.debug(stripIndents`[${PREFIX}] ${displayName} said\
@@ -73,7 +66,7 @@ export async function messageCommand(message: Message): Promise<void> {
     // If you try to use the old tripbot command prefix while inside of the tripsit guild
     if (message.guild.id !== env.DISCORD_GUILD_ID) return;
 
-    // This doesnt work cuz webchat users are bots
+    // This doesn't work cuz webchat users are bots
     // if (message.author.bot) return;
 
     // Find the word that appears after ~
@@ -180,7 +173,7 @@ ${roleHelper}. Can you start off by telling us how much you took and the details
       }
       await message.channel.send(stripIndents`Hey ${displayName}, uploading emojis...`); // eslint-disable-line
 
-      log.debug(F, `message.stickers: ${message.stickers}`);
+      log.debug(F, `message.stickers: ${JSON.stringify(message.stickers, null, 2)}`);
       // Upload all the stickers in the message to the guild
       const stickers = message.content.match(/<a?:\w+:\d+>/g);
       log.debug(F, `stickers: ${stickers}`);

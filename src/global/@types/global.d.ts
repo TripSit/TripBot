@@ -1,6 +1,6 @@
 import { Client as DiscordClient } from 'discord.js';
-import { MatrixClient } from 'matrix-bot-sdk';
-import { Client as IRCClient } from 'matrix-org-irc';
+// import { MatrixClient } from 'matrix-bot-sdk';
+// import { Client as IRCClient } from 'matrix-org-irc';
 import { Telegraf as TelegramClient } from 'telegraf';
 import Sentry from '@sentry/node';
 

@@ -130,7 +130,9 @@ async function donorColorCheck(
   if (Object.values(donorColorRoles).includes(roleId)) {
     // log.debug(F, `donor color role added: ${roleId}`);
     // If it does, check if the user also has a donor role
-    if (oldMember.roles.cache.has(env.ROLE_BOOSTER) || oldMember.roles.cache.has(env.ROLE_PATRON) || oldMember.roles.cache.has(env.ROLE_TEAMTRIPSIT)) {
+    if (oldMember.roles.cache.has(env.ROLE_BOOSTER)
+    || oldMember.roles.cache.has(env.ROLE_PATRON)
+    || oldMember.roles.cache.has(env.ROLE_TEAMTRIPSIT)) {
       log.debug(F, 'Donor added a color role!');
     } else {
       // If they don't, remove the color role
@@ -191,7 +193,7 @@ async function teamMindsetCheck(
       // Get the role from the guild
       const role = await newMember.guild.roles.fetch(ttsMindsetRoleId) as Role;
       // Add the role to the user
-      newMember.roles.add(role);
+      await newMember.roles.add(role);
     }
   }
 }
@@ -223,7 +225,7 @@ async function teamMindsetRemove(
       // Get the role from the guild
       const role = await newMember.guild.roles.fetch(ttsMindsetRoleId) as Role;
       // Add the role to the user
-      newMember.roles.remove(role);
+      await newMember.roles.remove(role);
     }
   }
 }
@@ -244,8 +246,7 @@ async function removeExTeamFromThreads(
 
     const fetchedThreads = await channelTripsit.threads.fetch();
     fetchedThreads.threads.forEach(async thread => {
-      if (thread
-                && thread.parentId === guildData.channel_tripsit) {
+      if (thread && thread.parentId === guildData.channel_tripsit) {
         log.debug(F, `Removing ${newMember.displayName} from ${thread.name}`);
         await thread.members.remove(newMember.id, 'Helper/Tripsitter role removed');
       }

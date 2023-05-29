@@ -1,3 +1,5 @@
+import { stripIndents } from 'common-tags';
+
 export default function validateEnv(
   service: 'DISCORD' | 'MATRIX' | 'IRC' | 'TELEGRAM' | 'SERVICES',
 ) {
@@ -6,7 +8,8 @@ export default function validateEnv(
 
   if (service === 'DISCORD') {
     if (!process.env.DISCORD_CLIENT_ID) {
-      log.error(F, 'Missing DISCORD_CLIENT_ID: You wont be able to login to discord. You get this from the discord developer portal.');
+      log.error(F, stripIndents`Missing DISCORD_CLIENT_ID: You wont be able to login to discord. \
+      You get this from the discord developer portal.`);
       return false;
     }
 
@@ -16,7 +19,8 @@ export default function validateEnv(
     }
 
     if (!process.env.DISCORD_CLIENT_TOKEN) {
-      log.error(F, 'Missing DISCORD_CLIENT_TOKEN: You wont be able to login to discord. You get this from the discord developer portal.');
+      log.error(F, stripIndents`Missing DISCORD_CLIENT_TOKEN: You wont be able to login to discord.\
+       You get this from the discord developer portal.`);
       return false;
     }
 
@@ -40,7 +44,10 @@ export default function validateEnv(
       log.warn(F, 'Missing POSTGRES_DB_URL: You wont be able to use the database!');
     }
 
-    if (!process.env.KEYCLOAK_BASE_URL || !process.env.KEYCLOAK_REALM_NAME || !process.env.KEYCLOAK_CLIENT_ID || !process.env.KEYCLOAK_CLIENT_SECRET) {
+    if (!process.env.KEYCLOAK_BASE_URL
+      || !process.env.KEYCLOAK_REALM_NAME
+      || !process.env.KEYCLOAK_CLIENT_ID
+      || !process.env.KEYCLOAK_CLIENT_SECRET) {
       log.warn(F, 'Missing keycloak credentials: You won\'t be able to interact with KeyCloak.');
     }
 

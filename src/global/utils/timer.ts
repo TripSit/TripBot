@@ -1,3 +1,4 @@
+/* eslint-disable max-len */
 import {
   ActivityType,
   CategoryChannel,
@@ -82,7 +83,7 @@ async function checkReminders() { // eslint-disable-line @typescript-eslint/no-u
           const userData = await getUser(null, null, reminder.user_id);
 
           // Send the user a message
-          if (userData && userData.discord_id) {
+          if (userData?.discord_id) {
             const user = await global.discordClient.users.fetch(userData.discord_id);
             if (user) {
               await user.send(`Hey ${user.username}, you asked me to remind you: ${reminder.reminder_text}`);
@@ -175,7 +176,8 @@ async function checkTickets() { // eslint-disable-line @typescript-eslint/no-unu
                       try {
                         await member.roles.add(roleObj);
                       } catch (err) {
-                        log.error(F, `Failed to add ${member.displayName}'s ${roleObj.name} role in ${member.guild.name}: ${err}`);
+                        log.error(F, stripIndents`Failed to add ${member.displayName}'s ${roleObj.name}\
+                         role in ${member.guild.name}: ${err}`);
                       }
                     }
                   });
@@ -260,7 +262,8 @@ async function checkTickets() { // eslint-disable-line @typescript-eslint/no-unu
             log.debug(F, `Sending reminder to ${(await guild.fetchOwner()).user.username}...`);
             // const guildOwner = await channel.guild.fetchOwner();
             // await guildOwner.send({
-            //   content: `I am trying to prune threads in ${channel} but I don't have the ${tripsitPerms.permission} permission.`, // eslint-disable-line max-len
+            //   content: `I am trying to prune threads in ${channel} but
+            //  I don't have the ${tripsitPerms.permission} permission.`, // eslint-disable-line max-len
             // });
             const botOwner = await discordClient.users.fetch(env.DISCORD_OWNER_ID);
             await botOwner.send({
@@ -747,145 +750,145 @@ async function checkStats() {
   // }
 }
 
-async function checkLpm() { // eslint-disable-line
-  const channels = [
-    env.CHANNEL_LOUNGE,
-    // env.CATEGORY_HARMREDUCTIONCENTRE,
-    env.CHANNEL_TRIPSITMETA,
-    env.CHANNEL_TRIPSIT,
-    env.CHANNEL_OPENTRIPSIT1,
-    env.CHANNEL_OPENTRIPSIT2,
-    env.CHANNEL_WEBTRIPSIT1,
-    env.CHANNEL_WEBTRIPSIT2,
-    env.CHANNEL_CLOSEDTRIPSIT,
-    env.CHANNEL_RTRIPSIT,
-    // env.CATEGORY_BACKSTAGE,
-    env.CHANNEL_PETS,
-    env.CHANNEL_FOOD,
-    env.CHANNEL_OCCULT,
-    env.CHANNEL_MUSIC,
-    env.CHANNEL_MEMES,
-    env.CHANNEL_MOVIES,
-    env.CHANNEL_GAMING,
-    env.CHANNEL_SCIENCE,
-    env.CHANNEL_CREATIVE,
-    env.CHANNEL_COMPSCI,
-    env.CHANNEL_REPLICATIONS,
-    env.CHANNEL_PHOTOGRAPHY,
-    // env.CHANNEL_RECOVERY,
-    // env.CATEGORY_CAMPGROUND,
-    env.CHANNEL_VIPLOUNGE,
-    env.CHANNEL_GOLDLOUNGE,
-    env.CHANNEL_SANCTUARY,
-    env.CHANNEL_TREES,
-    env.CHANNEL_OPIATES,
-    env.CHANNEL_STIMULANTS,
-    env.CHANNEL_DEPRESSANTS,
-    env.CHANNEL_DISSOCIATIVES,
-    env.CHANNEL_PSYCHEDELICS,
-  ];
+// async function checkLpm() { // eslint-disable-line
+//   const channels = [
+//     env.CHANNEL_LOUNGE,
+//     // env.CATEGORY_HARMREDUCTIONCENTRE,
+//     env.CHANNEL_TRIPSITMETA,
+//     env.CHANNEL_TRIPSIT,
+//     env.CHANNEL_OPENTRIPSIT1,
+//     env.CHANNEL_OPENTRIPSIT2,
+//     env.CHANNEL_WEBTRIPSIT1,
+//     env.CHANNEL_WEBTRIPSIT2,
+//     env.CHANNEL_CLOSEDTRIPSIT,
+//     env.CHANNEL_RTRIPSIT,
+//     // env.CATEGORY_BACKSTAGE,
+//     env.CHANNEL_PETS,
+//     env.CHANNEL_FOOD,
+//     env.CHANNEL_OCCULT,
+//     env.CHANNEL_MUSIC,
+//     env.CHANNEL_MEMES,
+//     env.CHANNEL_MOVIES,
+//     env.CHANNEL_GAMING,
+//     env.CHANNEL_SCIENCE,
+//     env.CHANNEL_CREATIVE,
+//     env.CHANNEL_COMPSCI,
+//     env.CHANNEL_REPLICATIONS,
+//     env.CHANNEL_PHOTOGRAPHY,
+//     // env.CHANNEL_RECOVERY,
+//     // env.CATEGORY_CAMPGROUND,
+//     env.CHANNEL_VIPLOUNGE,
+//     env.CHANNEL_GOLDLOUNGE,
+//     env.CHANNEL_SANCTUARY,
+//     env.CHANNEL_TREES,
+//     env.CHANNEL_OPIATES,
+//     env.CHANNEL_STIMULANTS,
+//     env.CHANNEL_DEPRESSANTS,
+//     env.CHANNEL_DISSOCIATIVES,
+//     env.CHANNEL_PSYCHEDELICS,
+//   ];
 
-  const startTime = Date.now();
-  // log.debug(F, 'Checking LPM...');
+//   const startTime = Date.now();
+//   // log.debug(F, 'Checking LPM...');
 
-  if (!global.lpmDict) {
-    global.lpmDict = {};
-  }
+//   if (!global.lpmDict) {
+//     global.lpmDict = {};
+//   }
 
-  const guild = await discordClient.guilds.fetch(env.DISCORD_GUILD_ID);
-  await guild.channels.fetch();
+//   const guild = await discordClient.guilds.fetch(env.DISCORD_GUILD_ID);
+//   await guild.channels.fetch();
 
-  async function getLpm(channelId:string, index:number) {
-    // const channel = await guild.channels.fetch(channelId) as TextChannel;
-    const channel = guild.channels.cache.get(channelId) as TextChannel;
-    const messages = await channel.messages.fetch({ limit: 100 }); // eslint-disable-line no-await-in-loop
+//   async function getLpm(channelId:string, index:number) {
+//     // const channel = await guild.channels.fetch(channelId) as TextChannel;
+//     const channel = guild.channels.cache.get(channelId) as TextChannel;
+//     const messages = await channel.messages.fetch({ limit: 100 }); // eslint-disable-line no-await-in-loop
 
-    // Filter bots out of messages
-    const filteredMessages = messages.filter(message => !message.author.bot);
+//     // Filter bots out of messages
+//     const filteredMessages = messages.filter(message => !message.author.bot);
 
-    const lines1 = filteredMessages.reduce((acc, cur) => {
-      if (Date.now() - cur.createdTimestamp > 1000 * 60) return acc;
-      return acc + cur.content.split('\n').length;
-    }, 0);
+//     const lines1 = filteredMessages.reduce((acc, cur) => {
+//       if (Date.now() - cur.createdTimestamp > 1000 * 60) return acc;
+//       return acc + cur.content.split('\n').length;
+//     }, 0);
 
-    const lines5 = filteredMessages.reduce((acc, cur) => {
-      if (Date.now() - cur.createdTimestamp > 1000 * 60 * 5) return acc;
-      return acc + cur.content.split('\n').length;
-    }, 0);
+//     const lines5 = filteredMessages.reduce((acc, cur) => {
+//       if (Date.now() - cur.createdTimestamp > 1000 * 60 * 5) return acc;
+//       return acc + cur.content.split('\n').length;
+//     }, 0);
 
-    const lines10 = filteredMessages.reduce((acc, cur) => {
-      if (Date.now() - cur.createdTimestamp > 1000 * 60 * 10) return acc;
-      return acc + cur.content.split('\n').length;
-    }, 0);
+//     const lines10 = filteredMessages.reduce((acc, cur) => {
+//       if (Date.now() - cur.createdTimestamp > 1000 * 60 * 10) return acc;
+//       return acc + cur.content.split('\n').length;
+//     }, 0);
 
-    const lines30 = filteredMessages.reduce((acc, cur) => {
-      if (Date.now() - cur.createdTimestamp > 1000 * 60 * 30) return acc;
-      return acc + cur.content.split('\n').length;
-    }, 0);
+//     const lines30 = filteredMessages.reduce((acc, cur) => {
+//       if (Date.now() - cur.createdTimestamp > 1000 * 60 * 30) return acc;
+//       return acc + cur.content.split('\n').length;
+//     }, 0);
 
-    const lines60 = filteredMessages.reduce((acc, cur) => {
-      if (Date.now() - cur.createdTimestamp > 1000 * 60 * 60) return acc;
-      return acc + cur.content.split('\n').length;
-    }, 0);
+//     const lines60 = filteredMessages.reduce((acc, cur) => {
+//       if (Date.now() - cur.createdTimestamp > 1000 * 60 * 60) return acc;
+//       return acc + cur.content.split('\n').length;
+//     }, 0);
 
-    if (lines5) {
-      if (global.lpmDict[channelId]) {
-        // log.debug(F, `lpmDict: ${JSON.stringify(global.lpmDict[channelId])}`);
-        if (global.lpmDict[channelId].lp1 === lines1 && global.lpmDict[channelId].lp60 === lines60) {
-          return;
-        }
-        if (global.lpmDict[channelId].lp1Max < lines1) {
-          global.lpmDict[channelId].lp1Max = lines1;
-        }
-        if (global.lpmDict[channelId].lp5Max < lines5) {
-          global.lpmDict[channelId].lp5Max = lines5;
-        }
-        if (global.lpmDict[channelId].lp10Max < lines10) {
-          global.lpmDict[channelId].lp10Max = lines10;
-        }
-        if (global.lpmDict[channelId].lp30Max < lines30) {
-          global.lpmDict[channelId].lp30Max = lines30;
-        }
-        if (global.lpmDict[channelId].lp60Max < lines60) {
-          global.lpmDict[channelId].lp60Max = lines60;
-        }
-        global.lpmDict[channelId].position = index;
-        global.lpmDict[channelId].name = channel.name;
-        global.lpmDict[channelId].lp1 = lines1;
-        global.lpmDict[channelId].lp5 = lines5;
-        global.lpmDict[channelId].lp10 = lines10;
-        global.lpmDict[channelId].lp30 = lines30;
-        global.lpmDict[channelId].lp60 = lines60;
-      } else {
-        global.lpmDict[channelId] = {
-          position: index,
-          name: channel.name,
-          alert: 0,
-          lp1: lines1,
-          lp1Max: lines1,
-          lp5: lines5,
-          lp5Max: lines5,
-          lp10: lines10,
-          lp10Max: lines10,
-          lp30: lines30,
-          lp30Max: lines30,
-          lp60: lines60,
-          lp60Max: lines60,
-        };
-      }
-    }
-  }
+//     if (lines5) {
+//       if (global.lpmDict[channelId]) {
+//         // log.debug(F, `lpmDict: ${JSON.stringify(global.lpmDict[channelId])}`);
+//         if (global.lpmDict[channelId].lp1 === lines1 && global.lpmDict[channelId].lp60 === lines60) {
+//           return;
+//         }
+//         if (global.lpmDict[channelId].lp1Max < lines1) {
+//           global.lpmDict[channelId].lp1Max = lines1;
+//         }
+//         if (global.lpmDict[channelId].lp5Max < lines5) {
+//           global.lpmDict[channelId].lp5Max = lines5;
+//         }
+//         if (global.lpmDict[channelId].lp10Max < lines10) {
+//           global.lpmDict[channelId].lp10Max = lines10;
+//         }
+//         if (global.lpmDict[channelId].lp30Max < lines30) {
+//           global.lpmDict[channelId].lp30Max = lines30;
+//         }
+//         if (global.lpmDict[channelId].lp60Max < lines60) {
+//           global.lpmDict[channelId].lp60Max = lines60;
+//         }
+//         global.lpmDict[channelId].position = index;
+//         global.lpmDict[channelId].name = channel.name;
+//         global.lpmDict[channelId].lp1 = lines1;
+//         global.lpmDict[channelId].lp5 = lines5;
+//         global.lpmDict[channelId].lp10 = lines10;
+//         global.lpmDict[channelId].lp30 = lines30;
+//         global.lpmDict[channelId].lp60 = lines60;
+//       } else {
+//         global.lpmDict[channelId] = {
+//           position: index,
+//           name: channel.name,
+//           alert: 0,
+//           lp1: lines1,
+//           lp1Max: lines1,
+//           lp5: lines5,
+//           lp5Max: lines5,
+//           lp10: lines10,
+//           lp10Max: lines10,
+//           lp30: lines30,
+//           lp30Max: lines30,
+//           lp60: lines60,
+//           lp60Max: lines60,
+//         };
+//       }
+//     }
+//   }
 
-  await Promise.all(channels.map(async (channelId, index) => {
-    await getLpm(channelId, index + 1);
-  }));
-  if (global.lpmTime) {
-    global.lpmTime.push(Date.now() - startTime);
-  } else {
-    global.lpmTime = [Date.now() - startTime];
-  }
-  // log.debug(F, `LPM check took ${Date.now() - startTime}ms`);
-}
+//   await Promise.all(channels.map(async (channelId, index) => {
+//     await getLpm(channelId, index + 1);
+//   }));
+//   if (global.lpmTime) {
+//     global.lpmTime.push(Date.now() - startTime);
+//   } else {
+//     global.lpmTime = [Date.now() - startTime];
+//   }
+//   // log.debug(F, `LPM check took ${Date.now() - startTime}ms`);
+// }
 
 async function checkMoodle() { // eslint-disable-line
   // This function will pull all users from postgres that have a moodle_id
@@ -940,6 +943,7 @@ async function checkMoodle() { // eslint-disable-line
           member.roles.add(role);
           log.info(F, `Gave ${member.user.username} the ${role.name} role`);
 
+          // eslint-disable max-len
           member.user.send({
             embeds: [
               embedTemplate()

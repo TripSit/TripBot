@@ -125,7 +125,11 @@ export async function getMoodleUsers():Promise<Users[]> {
   return data;
 }
 
-export async function userExists(discordId:string | null, matrixId:string | null, userId:string | null):Promise<boolean> {
+export async function userExists(
+  discordId:string | null,
+  matrixId:string | null,
+  userId:string | null,
+):Promise<boolean> {
   return (await getUser(discordId, matrixId, userId) !== undefined);
 }
 
@@ -529,7 +533,7 @@ export async function experienceGet(
   // log.debug(F,
   // `experienceGet started with: limit: ${limit}, category: ${category}, type: ${type}, userId: ${userId}`);
 
-  const limit = limitInput || 1000000;
+  const limit = limitInput ?? 1000000;
   if (env.POSTGRES_DB_URL === undefined) return [];
   if (category) {
     if (type) {
@@ -655,7 +659,7 @@ export async function experienceGetTop(
 ):Promise<LeaderboardList> {
 // log.debug(F, 'experienceGetTop started');
   if (env.POSTGRES_DB_URL === undefined) return [] as LeaderboardList;
-  const limit = limitInput || 1000000;
+  const limit = limitInput ?? 1000000;
   if (category) {
     if (type) { // NOSONAR
       try {
