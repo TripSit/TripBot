@@ -19,6 +19,15 @@ export default function validateEnv(
       log.error(F, 'Missing DISCORD_CLIENT_TOKEN: You wont be able to login to discord. You get this from the discord developer portal.');
       return false;
     }
+
+    // Check that the discord token is a valid token
+    if (process.env.DISCORD_CLIENT_TOKEN === 'In your Discord Developer Portal') {
+      log.error(F, `Welcome to TripBot. This is likely your first run, congrats on making it this far!
+
+      
+      Make sure to update the .env file with your discord token, and other services you want to use!`);
+      return false;
+    }
   }
 
   if (service === 'MATRIX' && !process.env.MATRIX_ACCESS_TOKEN) {

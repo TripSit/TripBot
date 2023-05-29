@@ -28,7 +28,7 @@ const mindsetRoles = {
   ROLE_SEDATED: env.ROLE_SEDATED,
   ROLE_TALKATIVE: env.ROLE_TALKATIVE,
   ROLE_VOICECHATTY: env.ROLE_VOICECHATTY,
-  ROLE_BUSY: env.ROLE_BUSY
+  ROLE_BUSY: env.ROLE_BUSY,
 } as {
   [key in MindsetNames]: string;
 };

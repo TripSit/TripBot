@@ -1,5 +1,5 @@
 {
-  "watch": ["src"],
+  "watch": ["src",".env"],
   "ext": ".ts",
   "ignore": ["src/assets/*", "backups/*"],
   "exec": "node -r ts-node/register src/start.ts",

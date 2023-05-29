@@ -63,14 +63,21 @@ export function get(name:string):APIMessageComponentEmoji {
     };
   }
 
-  const emojiName = emojiGuildRPG.emojis.cache.find(emoji => emoji.name === name)
+  try {
+    const emojiName = emojiGuildRPG.emojis.cache.find(emoji => emoji.name === name)
     ?? emojiGuildMain.emojis.cache.find(emoji => emoji.name === name);
-  // log.debug(F, `emojiName: ${emojiName}`);
-  if (!emojiName) {
-    throw new Error(`Emoji ${name} not found!`);
+    // log.debug(F, `emojiName: ${emojiName}`);
+    if (!emojiName) {
+      throw new Error(`Emoji ${name} not found!`);
+    }
+    return emojiName as APIMessageComponentEmoji;
+  } catch (err) {
+    log.error(F, `Error fetching emoji ${name}: ${err}`);
+    return {
+      name: 'ts_heart',
+      id: '978649029200216085',
+    };
   }
-
-  return emojiName as APIMessageComponentEmoji;
 }
 
 export function customButton(
@@ -103,11 +110,19 @@ export function customButton(
 }
 
 export async function emojiCache(discordClient: Client):Promise<void> {
-  emojiGuildRPG = await discordClient.guilds.fetch(env.DISCORD_EMOJI_GUILD_RPG);
-  emojiGuildMain = await discordClient.guilds.fetch(env.DISCORD_EMOJI_GUILD_MAIN);
+  try {
+    emojiGuildRPG = await discordClient.guilds.fetch(env.DISCORD_EMOJI_GUILD_RPG);
+    await emojiGuildRPG.emojis.fetch();
+  } catch (err) {
+    log.error(F, `Error fetching RPG Emojis, is the bot in the emoji guild?: ${err}`);
+  }
 
-  await emojiGuildRPG.emojis.fetch();
-  await emojiGuildMain.emojis.fetch();
+  try {
+    emojiGuildMain = await discordClient.guilds.fetch(env.DISCORD_EMOJI_GUILD_MAIN);
+    await emojiGuildMain.emojis.fetch();
+  } catch (err) {
+    log.error(F, `Error fetching Main Emojis, is the bot in the emoji guild?: ${err}`);
+  }
 
   global.emojiGet = get;
 }
