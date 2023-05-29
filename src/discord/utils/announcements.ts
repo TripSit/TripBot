@@ -324,14 +324,10 @@ export async function announcements(message:Message) {
         // log.debug(F, `randomGenAnnouncement: ${randomGenAnnouncement}`);
         embed.setDescription(randomGenAnnouncement);
       }
-
-      await sleep(1500);
-      // display typing status
-      await message.channel.sendTyping();
-      // wait 2 seconds
-      await new Promise(resolve => setTimeout(resolve, 2500));
-
-      await message.channel.send({ embeds: [embed] });
+      await message.channel.sendTyping(); // This method automatically stops typing after 10 seconds, or when a message is sent.
+      setTimeout(async () => {
+        await (message.channel.send({ embeds: [embed] }));
+      }, 3000);
     }
   }
 }

@@ -47,7 +47,14 @@ export const dSay: SlashCommand = {
       await interaction.channel?.send(say);
     }
 
-    await interaction.editReply({ content: `I said '${say}' in ${channel ? channel.toString() : interaction.channel?.toString()}` }); // eslint-disable-line max-len
+    // Set the type so it's not an API channel
+
+    await channel.sendTyping(); // This method automatically stops typing after 10 seconds, or when a message is sent.
+    setTimeout(async () => {
+      await (channel as TextChannel).send(say);
+    }, 3000);
+
+    await interaction.editReply({ content: `I said '${say}' in ${channel.name}` }); // eslint-disable-line max-len
 
     const channelBotlog = await interaction.guild.channels.fetch(env.CHANNEL_BOTLOG) as TextChannel;
     if (channelBotlog) {
