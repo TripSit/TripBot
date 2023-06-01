@@ -168,8 +168,9 @@ async function checkTickets() { // eslint-disable-line @typescript-eslint/no-unu
                   roles.forEach(async role => {
                     const roleObj = await guild.roles.fetch(role);
                     if (roleObj && roleObj.name !== '@everyone'
-                              && roleObj.id !== guildData.role_needshelp
-                              && roleObj.comparePositionTo(myRole) < 0
+                        && roleObj.id !== guildData.role_needshelp
+                        && roleObj.comparePositionTo(myRole) < 0
+                        && member.guild.id !== env.DISCORD_BL_ID // Patch for BL not to re-add roles
                     ) {
                       // Check if the bot has permission to add the role
                       log.debug(F, `Adding ${userData.discord_id}'s ${role} role`);
