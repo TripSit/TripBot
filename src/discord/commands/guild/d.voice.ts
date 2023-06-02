@@ -31,11 +31,11 @@ async function tentLock(
 ):Promise<EmbedBuilder> {
   let verb = '';
 
-  if (voiceChannel.permissionsFor(env.ROLE_VERIFIED).has(PermissionsBitField.Flags.Connect) === true) {
-    voiceChannel.permissionOverwrites.edit(env.ROLE_VERIFIED, { Connect: false });
+  if (voiceChannel.permissionsFor(voiceChannel.guild.roles.everyone).has(PermissionsBitField.Flags.Connect) === true) {
+    voiceChannel.permissionOverwrites.edit(voiceChannel.guild.roles.everyone, { Connect: false });
     verb = 'locked';
   } else {
-    voiceChannel.permissionOverwrites.edit(env.ROLE_VERIFIED, { Connect: true });
+    voiceChannel.permissionOverwrites.edit(voiceChannel.guild.roles.everyone, { Connect: true });
     verb = 'unlocked';
   }
 
@@ -52,11 +52,11 @@ async function tentHide(
 ):Promise<EmbedBuilder> {
   let verb = '';
 
-  if (voiceChannel.permissionsFor(env.ROLE_VERIFIED).has(PermissionsBitField.Flags.ViewChannel) === true) {
-    voiceChannel.permissionOverwrites.edit(env.ROLE_VERIFIED, { ViewChannel: false });
+  if (voiceChannel.permissionsFor(voiceChannel.guild.roles.everyone).has(PermissionsBitField.Flags.ViewChannel) === true) {
+    voiceChannel.permissionOverwrites.edit(voiceChannel.guild.roles.everyone, { ViewChannel: false });
     verb = 'hidden';
   } else {
-    voiceChannel.permissionOverwrites.edit(env.ROLE_VERIFIED, { ViewChannel: true });
+    voiceChannel.permissionOverwrites.edit(voiceChannel.guild.roles.everyone, { ViewChannel: true });
     verb = 'unhidden';
   }
 

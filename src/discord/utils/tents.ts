@@ -18,7 +18,7 @@ export async function pitchTent(
   New:VoiceState,
 ): Promise<void> {
   New.member?.guild.channels.create({
-    name: `⛺│ ${New.member.displayName}'s tent`,
+    name: `⛺│${New.member.displayName}'s tent`,
     type: ChannelType.GuildVoice,
     parent: env.CATEGORY_VOICE,
     permissionOverwrites: [
@@ -43,7 +43,7 @@ export async function pitchTent(
         ],
       },
       {
-        id: env.ROLE_VERIFIED,
+        id: New.member.guild.roles.everyone,
         allow: [
           PermissionsBitField.Flags.ViewChannel,
           PermissionsBitField.Flags.Connect,
@@ -59,6 +59,31 @@ export async function pitchTent(
           PermissionsBitField.Flags.UseApplicationCommands,
         ],
       },
+      {
+        id: env.ROLE_MODERATOR,
+        allow: [
+          PermissionsBitField.Flags.ViewChannel,
+        ],
+      },
+      {
+        id: env.ROLE_NEEDSHELP,
+        deny: [
+          PermissionsBitField.Flags.ViewChannel,
+        ],
+      },
+      {
+        id: env.ROLE_VERIFYING,
+        deny: [
+          PermissionsBitField.Flags.ViewChannel,
+        ],
+      },
+      {
+        id: env.ROLE_UNVERIFIED,
+        deny: [
+          PermissionsBitField.Flags.ViewChannel,
+        ],
+      },
+      
     ],
   }).then(async newChannel => {
     New.member?.voice.setChannel(newChannel.id);
@@ -76,7 +101,12 @@ export async function pitchTent(
     //   **/voice cohost @user** - Allows another user to use these commands
     //   `);
     await newChannel.fetch();
-    await newChannel.send(`## Welcome to your tent, <@${New.member?.id}>!
+    await newChannel.send(`## Welcome to your tent, <@${New.member?.id}>
+
+- **Looking for others to join?**
+ - Pick up the 'Voice Chatty' role in <id:customize>
+ - This icon indicates you're looking for joiners in chat
+
 - **Moderate your tent with commands**
  - \`/voice lock\`- Locks your tent so no one else can join it
  - \`/voice hide\` - Hides your tent from the list of voice channels
