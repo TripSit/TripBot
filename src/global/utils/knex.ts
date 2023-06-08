@@ -342,6 +342,7 @@ export async function ticketGet(
       try {
         tickets = await db<UserTickets>('user_tickets')
           .select('*')
+          .where('user_id', user_id)
           .where('type', 'TRIPSIT')
           .orderBy('thread_id', 'desc');
       } catch (err) {

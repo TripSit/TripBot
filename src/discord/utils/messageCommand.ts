@@ -4,6 +4,8 @@ import {
   // GuildTextBasedChannel,
   Role,
   PermissionResolvable,
+  TextChannel,
+  ThreadChannel,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
 import { sleep } from '../commands/guild/d.bottest';
@@ -220,9 +222,7 @@ ${roleHelper}. Can you start off by telling us how much you took and the details
         await message.react('💜');
       }
     }
-  } else if (
-    // If 'tripbot' is mentioned in text
-    message.content.toLowerCase().includes('tripbot')
+  } else if (message.content.toLowerCase().includes('tripbot')
     && message.channel.type !== ChannelType.DM) {
     if (message.author.bot) {
       // Keep this here because web bots need to be able to use ~tripsit
@@ -240,13 +240,38 @@ ${roleHelper}. Can you start off by telling us how much you took and the details
     //   '*beeps quietly*',
     // ];
     // await message.channel.send(responses[Math.floor(Math.random() * responses.length)]);
-  } else if (
-    sadStuff.some(word => (message.cleanContent.includes(word)
+  } else if (sadStuff.some(word => (message.cleanContent.includes(word)
      && !(message.cleanContent.substring(message.cleanContent.indexOf(':') + 1).includes(':'))))
     && message.channel.type !== ChannelType.DM) {
     if (message.author.bot) return;
     if (message.guild.id !== env.DISCORD_GUILD_ID) return;
     // log.debug(F, 'Sad stuff detected');
     await message.react(heartEmojis[Math.floor(Math.random() * heartEmojis.length)]);
+  } else if (
+    message.content.match(/(?:anyone|someone+there|here)\b/)
+    && (message.channel as ThreadChannel).parent?.parentId !== env.CATEGORY_HARMREDUCTIONCENTRE
+    && (message.channel as TextChannel).parentId !== env.CATEGORY_HARMREDUCTIONCENTRE
+  ) {
+    // Find when the last message in that channel was sent
+    const lastMessage = await message.channel.messages.fetch({
+      before: message.id,
+      limit: 1,
+    });
+    const lastMessageDate = lastMessage.first()?.createdAt;
+
+    // Check if the last message was send in the last 10 minutes
+    if (lastMessageDate && lastMessageDate.valueOf() > Date.now() - 1000 * 60 * 10) {
+      // If it was, then don't send the message
+      return;
+    }
+
+    await message.channel.sendTyping();
+    setTimeout(async () => {
+      await (message.channel.send({
+        content: stripIndents`Hey ${message.member?.displayName}! 
+        Sometimes chat slows down, but go ahead and ask your question: Someone will get back to you when they can!
+        Who knows, maybe someone is lurking and waiting for the right question... :eyes: `,
+      }));
+    }, 2000);
   }
 }
