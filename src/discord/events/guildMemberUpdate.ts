@@ -3,7 +3,7 @@ import { stripIndents } from 'common-tags';
 import {
   GuildMemberUpdateEvent,
 } from '../@types/eventDef';
-import { database } from '../../global/utils/knex';
+import { database, getOpenTicket } from '../../global/utils/knex';
 import { topic } from '../../global/commands/g.topic';
 
 type MindsetNames =
@@ -15,6 +15,8 @@ type MindsetNames =
 | 'ROLE_STIMMING'
 | 'ROLE_SEDATED'
 | 'ROLE_TALKATIVE'
+| 'ROLE_VOICECHATTY'
+| 'ROLE_BUSY';
 | 'ROLE_VOICECHATTY'
 | 'ROLE_BUSY';
 
@@ -243,10 +245,15 @@ async function removeExTeamFromThreads(
   ) {
     log.debug(F, `${newMember.displayName} was a helper/tripsitter!`);
     const channelTripsit = await discordClient.channels.fetch(guildData.channel_tripsit) as TextChannel;
+    const userData = await database.users.get(newMember.id, null, null);
+
+    const ticketData = await getOpenTicket(userData.id, null);
 
     const fetchedThreads = await channelTripsit.threads.fetch();
     fetchedThreads.threads.forEach(async thread => {
-      if (thread && thread.parentId === guildData.channel_tripsit) {
+      if (thread
+        && thread.parentId === guildData.channel_tripsit
+        && thread.id !== ticketData?.thread_id) {
         log.debug(F, `Removing ${newMember.displayName} from ${thread.name}`);
         await thread.members.remove(newMember.id, 'Helper/Tripsitter role removed');
       }

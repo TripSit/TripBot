@@ -83,7 +83,7 @@ export async function pitchTent(
           PermissionsBitField.Flags.ViewChannel,
         ],
       },
-      
+
     ],
   }).then(async newChannel => {
     New.member?.voice.setChannel(newChannel.id);

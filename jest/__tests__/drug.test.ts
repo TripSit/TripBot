@@ -61,7 +61,7 @@ describe(slashCommand.data.name, () => {
             inline: false,
           },
           {
-            name: 'ℹ Class',
+            name: 'ℹ️ Class',
             value: stripIndents`**Chemical**: Substituted tryptamines
             **Physical**: Substituted tryptamines`,
             inline: true,
@@ -170,7 +170,7 @@ describe(slashCommand.data.name, () => {
             inline: false,
           },
           {
-            name: 'ℹ Class',
+            name: 'ℹ️ Class',
             value: stripIndents`**Chemical**: Substituted tryptamines
             **Physical**: Substituted tryptamines`,
             inline: true,
@@ -351,7 +351,7 @@ describe(slashCommand.data.name, () => {
             inline: false,
           },
           {
-            name: 'ℹ Class',
+            name: 'ℹ️ Class',
             value: stripIndents`**Chemical**: Alcohol
             **Physical**: Alcohol`,
             inline: true,
@@ -438,7 +438,7 @@ describe(slashCommand.data.name, () => {
             inline: false,
           },
           {
-            name: 'ℹ Class',
+            name: 'ℹ️ Class',
             value: stripIndents`**Chemical**: Substituted phenethylamines
                 **Physical**: Substituted phenethylamines`,
             inline: true,

@@ -72,7 +72,7 @@ async function addClasses(
     if (drugData.classes.psychoactive) {
       classInfo += `**Physical**: ${drugData.classes.chemical}\n`;
     }
-    embed.addFields({ name: 'ℹ Class', value: stripIndents`${classInfo}`, inline: true });
+    embed.addFields({ name: 'ℹ️ Class', value: stripIndents`${classInfo}`, inline: true });
   }
   return embed;
 }

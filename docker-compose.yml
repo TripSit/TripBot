@@ -1,13 +1,23 @@
 version: '3.9'
 services:
   discord.js:
+    container_name: tripsit_tripbot
     build:
       context: ./
       dockerfile: ./Dockerfile
-    container_name: tripsit_tripbot
     restart: unless-stopped
     volumes:
       - ./:/usr/src/app
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
     working_dir: /usr/src/app
     env_file:
       - .env
+    environment:
+      - TZ=America/Chicago
+    networks:
+        - tripbot-net
+
+networks:
+  tripbot-net:
+    name: tripbot-net
