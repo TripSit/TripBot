@@ -4,6 +4,9 @@
 
 FROM node:20.2-alpine As development
 
+ENV TZ="America/Chicago"
+RUN date
+
 # Create app directory
 WORKDIR /usr/src/app
 
@@ -32,6 +35,9 @@ USER node
 
 FROM node:20.2-alpine As build
 
+ENV TZ="America/Chicago"
+RUN date
+
 WORKDIR /usr/src/app
 
 COPY --chown=node:node package*.json ./
@@ -57,6 +63,9 @@ USER node
 ###################
 
 FROM node:20.2-alpine As production
+
+ENV TZ="America/Chicago"
+RUN date
 
 # Copy the bundled code from the build stage to the production image
 COPY --chown=node:node --from=build /usr/src/app/node_modules ./node_modules
