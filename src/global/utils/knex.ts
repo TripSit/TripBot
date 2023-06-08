@@ -234,7 +234,7 @@ export async function getOpenTicket(
         .where('user_id', userId)
         // .where('type', 'TRIPSIT')
         // .andWhereNot('status', 'CLOSED')
-        .andWhereNot('status', 'RESOLVED')
+        // .andWhereNot('status', 'RESOLVED')
         .andWhereNot('status', 'DELETED')
         .first();
     } catch (err) {
@@ -316,40 +316,60 @@ export async function reminderDel(
 
 export async function ticketGet(
   user_id?:string,
-):Promise<UserTickets[] | UserTickets | undefined> {
-// log.debug(F, 'ticketGet started');
+  status?:string,
+):Promise<UserTickets[]> {
+  log.debug(F, `ticketGet started with user_id: ${user_id}, status: ${status}`);
   if (env.POSTGRES_DB_URL === undefined) {
     return [] as UserTickets[];
   }
-  let tickets = {} as UserTickets[] | UserTickets | undefined;
+
+  let tickets = [] as UserTickets[];
+
   if (user_id) {
+    if (status) {
+      try {
+        tickets = await db<UserTickets>('user_tickets')
+          .select('*')
+          .where('user_id', user_id)
+          .where('type', 'TRIPSIT')
+          .andWhere('status', status)
+          .orderBy('thread_id', 'desc');
+      } catch (err) {
+        log.error(F, `Error getting tickets: ${err}`);
+        log.error(F, `user_id: ${user_id}`);
+      }
+    } else {
+      try {
+        tickets = await db<UserTickets>('user_tickets')
+          .select('*')
+          .where('type', 'TRIPSIT')
+          .orderBy('thread_id', 'desc');
+      } catch (err) {
+        log.error(F, `Error getting tickets: ${err}`);
+        log.error(F, `user_id: ${user_id}`);
+      }
+    }
+  } else if (status) {
     try {
       tickets = await db<UserTickets>('user_tickets')
         .select('*')
         .where('user_id', user_id)
         .where('type', 'TRIPSIT')
-        .andWhereNot('status', 'CLOSED')
-        .andWhereNot('status', 'RESOLVED')
-        .andWhereNot('status', 'DELETED')
-        .first();
+        .andWhere('status', status)
+        .orderBy('thread_id', 'desc');
     } catch (err) {
       log.error(F, `Error getting tickets: ${err}`);
       log.error(F, `user_id: ${user_id}`);
     }
-  }
-  try {
-    tickets = await db<UserTickets>('user_tickets')
-      .select(
-        db.ref('id'),
-        db.ref('archived_at'),
-        db.ref('status'),
-        db.ref('thread_id'),
-        db.ref('user_id'),
-        db.ref('deleted_at'),
-      );
-  } catch (err) {
-    log.error(F, `Error getting tickets: ${err}`);
-    log.error(F, `user_id: ${user_id}`);
+  } else {
+    try {
+      tickets = await db<UserTickets>('user_tickets')
+        .select('*')
+        .orderBy('thread_id', 'desc');
+    } catch (err) {
+      log.error(F, `Error getting tickets: ${err}`);
+      log.error(F, `user_id: ${user_id}`);
+    }
   }
 
   return tickets;

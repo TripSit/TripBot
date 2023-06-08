@@ -33,7 +33,7 @@ import { embedTemplate } from '../../utils/embedTemplate';
 // import {stripIndents} from 'common-tags';
 // import env from '../../../global/utils/env.config';
 // import log from '../../../global/utils/log';
-import { needsHelpMode, tripSitMe, tripsitmeResolve } from '../../utils/tripsitme';
+import { needsHelpMode, tripSitMe, tripsitmeUserClose } from '../../utils/tripsitme';
 // import { modmailDMInteraction } from '../archive/modmail';
 
 const F = f(__filename);
@@ -267,7 +267,7 @@ export const tripsitmode: SlashCommand = {
         showModal: modal => interaction.showModal(modal),
         awaitModalSubmit: params => interaction.awaitModalSubmit(params),
       } as ButtonInteraction;
-      tripsitmeResolve(testInteraction);
+      tripsitmeUserClose(testInteraction);
     }
     return true;
   },
