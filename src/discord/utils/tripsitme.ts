@@ -212,9 +212,9 @@ export async function needsHelpMode(
 
   // Patch for BlueLight: They don't want to remove roles from the target at all
   if (
-    target.guild.id !== env.DISCORD_BL_ID 
+    target.guild.id !== env.DISCORD_BL_ID
     // && target.guild.id !== env.DISCORD_GUILD_ID // For testing
-    ) {
+  ) {
   // Remove all roles, except team and vanity, from the target
     target.roles.cache.forEach(async role => {
     // log.debug(F, `role: ${role.name} - ${role.id}`);
@@ -736,7 +736,7 @@ export async function tripsitmeUserClose(
     // Patch for BlueLight: Since we didn't remove roles, don't re-add them
     && target.guild.id !== env.DISCORD_BL_ID
     // && target.guild.id !== env.DISCORD_GUILD_ID // For testing
-    ) {
+  ) {
     const myMember = await interaction.guild.members.fetch(interaction.client.user.id);
     const myRole = myMember.roles.highest;
     const targetRoles:string[] = userData.roles.split(',') || [];
