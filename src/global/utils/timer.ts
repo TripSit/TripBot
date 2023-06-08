@@ -109,7 +109,7 @@ async function checkTickets() { // eslint-disable-line @typescript-eslint/no-unu
     ticketData.forEach(async ticket => {
       const archiveDate = DateTime.fromJSDate(ticket.archived_at);
       const deleteDate = DateTime.fromJSDate(ticket.deleted_at);
-      log.debug(F, `Ticket: ${ticket.id} archives on ${archiveDate.toLocaleString(DateTime.DATETIME_FULL)} deletes on ${deleteDate.toLocaleString(DateTime.DATETIME_FULL)}`);
+      // log.debug(F, `Ticket: ${ticket.id} archives on ${archiveDate.toLocaleString(DateTime.DATETIME_FULL)} deletes on ${deleteDate.toLocaleString(DateTime.DATETIME_FULL)}`);
       // Check if the ticket is ready to be archived
       if (ticket.archived_at
         && ticket.status !== 'ARCHIVED'

@@ -13,6 +13,12 @@ global.bootTime = new Date();
 
 const F = f(__filename);
 
+const net = require("net");
+// work around a node v20 bug: https://github.com/nodejs/node/issues/47822#issuecomment-1564708870
+if (net.setDefaultAutoSelectFamily) {
+  net.setDefaultAutoSelectFamily(false);
+}
+
 async function start() {
   log.info(F, 'Initializing service!');
   validateEnv('SERVICES');
