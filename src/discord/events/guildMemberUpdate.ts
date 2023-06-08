@@ -17,8 +17,6 @@ type MindsetNames =
 | 'ROLE_TALKATIVE'
 | 'ROLE_VOICECHATTY'
 | 'ROLE_BUSY';
-| 'ROLE_VOICECHATTY'
-| 'ROLE_BUSY';
 
 const mindsetRoles = {
   ROLE_DRUNK: env.ROLE_DRUNK,
