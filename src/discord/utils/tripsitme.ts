@@ -22,6 +22,7 @@ import {
   ChatInputCommandInteraction,
   PermissionResolvable,
   Guild,
+  PermissionsBitField,
 } from 'discord.js';
 import {
   TextInputStyle,
@@ -1152,21 +1153,22 @@ export async function tripsitmeButton(
   // but we'll change the output down below to make it clear this is a test.
   let targetIsTeamMember = false;
   // if (!actorIsAdmin) {
-  target.roles.cache.forEach(async role => {
-    if (teamRoles.includes(role.id)) {
-      targetIsTeamMember = true;
+  if (!target.permissions.has(PermissionsBitField.Flags.Administrator)) {
+    target.roles.cache.forEach(async role => {
+      if (teamRoles.includes(role.id)) {
+        targetIsTeamMember = true;
+      }
+    });
+    if (targetIsTeamMember) {
+      // log.debug(F, `Target is a team member!`);
+      const teamMessage = stripIndents`You are a member of the team and cannot be publicly helped!`;
+      const embed = embedTemplate()
+        .setColor(Colors.DarkBlue)
+        .setDescription(teamMessage);
+      await interaction.reply({ embeds: [embed] });
+      return;
     }
-  });
-  if (targetIsTeamMember) {
-    // log.debug(F, `Target is a team member!`);
-    const teamMessage = stripIndents`You are a member of the team and cannot be publicly helped!`;
-    const embed = embedTemplate()
-      .setColor(Colors.DarkBlue)
-      .setDescription(teamMessage);
-    await interaction.reply({ embeds: [embed] });
-    return;
   }
-  // }
 
   const guildData = await getGuild(interaction.guild?.id as string);
 

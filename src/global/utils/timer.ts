@@ -928,8 +928,16 @@ async function checkMoodle() { // eslint-disable-line
   const channelContent = await guild.channels.fetch(env.CHANNEL_CONTENT);
 
   userDataList.forEach(async user => {
+    let member = {} as GuildMember;
+    try {
+      member = await guild.members.fetch(user.discord_id as string);
+    } catch (error) {
+      // log.debug(F, `Error fetching member: ${error}`);
+      return;
+    }
+
     const moodleProfile = await profile(user.discord_id as string);
-    const member = await guild.members.fetch(user.discord_id as string);
+
     // log.debug(F, `Checking ${member.user.username}...`);
     if (moodleProfile.completedCourses.length > 0) {
       moodleProfile.completedCourses.forEach(async course => {
