@@ -8,6 +8,8 @@ steps:
     settings:
       repo: tripsit/tripbot
       dockerfile: dockerfile
+      dry_run: true
+      purge: false
     networks:
       - tripbot-net
     environment:
@@ -19,6 +21,16 @@ steps:
         from_secret: DISCORD_GUILD_ID
       DISCORD_OWNER_ID:
         from_secret: DISCORD_OWNER_ID
+
+trigger:
+  branch:
+  - main
+trigger:
+  event:
+  - push
+
+workspace:
+  path: /usr/src/app
 
 networks:
   - name: tripbot-net
