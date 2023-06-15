@@ -6,7 +6,7 @@ steps:
   - name: build-docker-image
     image: plugins/docker
     settings:
-      repo: TripSit/tripbot
+      repo: tripsit/tripbot
       dockerfile: dockerfile
     networks:
       - tripbot-net
