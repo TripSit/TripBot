@@ -1,0 +1,25 @@
+kind: pipeline
+type: docker
+name: deploy
+
+steps:
+  - name: build-docker-image
+    image: plugins/docker
+    settings:
+      repo: TripSit/TripBot
+      dockerfile: Dockerfile
+    networks:
+      - tripbot-net
+    environment:
+      DISCORD_CLIENT_ID:
+        from_secret: DISCORD_CLIENT_ID
+      DISCORD_CLIENT_TOKEN:
+        from_secret: DISCORD_CLIENT_TOKEN
+      DISCORD_GUILD_ID:
+        from_secret: DISCORD_GUILD_ID
+      DISCORD_OWNER_ID:
+        from_secret: DISCORD_OWNER_ID
+
+networks:
+  - name: tripbot-net
+    driver: bridge
