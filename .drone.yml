@@ -7,7 +7,7 @@ steps:
     image: plugins/docker
     settings:
       repo: TripSit/TripBot
-      dockerfile: Dockerfile
+      dockerfile: dockerfile
     networks:
       - tripbot-net
     environment:
