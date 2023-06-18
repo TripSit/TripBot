@@ -318,7 +318,7 @@ export async function ticketGet(
   user_id?:string,
   status?:string,
 ):Promise<UserTickets[]> {
-  log.debug(F, `ticketGet started with user_id: ${user_id}, status: ${status}`);
+  // log.debug(F, `ticketGet started with user_id: ${user_id}, status: ${status}`);
   if (env.POSTGRES_DB_URL === undefined) {
     return [] as UserTickets[];
   }

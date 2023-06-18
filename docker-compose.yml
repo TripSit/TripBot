@@ -5,9 +5,17 @@ services:
     build:
       context: ./
       dockerfile: ./Dockerfile
+      # Only will build development stage from our dockerfile
+      # target: development
     restart: unless-stopped
     volumes:
-      - ./:/usr/src/app
+      - ./src:/usr/src/app/src # Needed for hot-reloading
+      - ./jest:/usr/jest/app/jest # Needed for hot-reloading
+      - ./coverage:/usr/coverage/app/coverage # Needed for hot-reloading
+      - ./.env:/usr/jest/app/.env # Needed for hot-reloading
+      - ./tsconfig.json:/usr/jest/app/tsconfig.json # Needed for hot-reloading
+      - ./.eslintrc:/usr/jest/app/.eslintrc # Needed for hot-reloading
+      - ./.eslintignore:/usr/jest/app/.eslintignore # Needed for hot-reloading
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
     working_dir: /usr/src/app
@@ -17,6 +25,8 @@ services:
       - TZ=America/Chicago
     networks:
         - tripbot-net
+    # Run a command against the development stage of the image
+    # command: npx nodemon --config ./nodemon.json
 
 networks:
   tripbot-net:

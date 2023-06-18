@@ -3,14 +3,28 @@
     "files": true
   },
   "include": [
-    "./repos/**/*.ts",
-    "./scripts/**/*.ts",
-    "./src/**/*.ts",
-    "./jest/**/*.ts",
+    // "./repos/**/*.ts",
+    // "./scripts/**/*.ts",
+    // "./src/**/*.ts",
+    // "./jest/**/*.ts",
+    "./src/*.ts", // start.ts
+    "./src/global/**/*.ts", // Global stuff
+    "./src/discord/**/*.ts", // Discord stuff
   ],
   "exclude": [
+    "./jest/**/*.ts",
+    // "./jest/__tests__/__tests__editreply_/*.ts",
+    // "./jest/__tests__/__tests__integration__/*.ts",
+    // "./jest/__tests__/__tests__modals__/*.ts",
+    // "./jest/__tests__/__tests__send__/*.ts",
+    // "./jest/__tests__/__tests__todo__/*.ts",
     "*/node_modules",
-    "*/dist"
+    "*/dist",
+    "*/telegram/*",
+    "*/irc/*",
+    "*/matrix/*",
+    "**/archive/**",
+    "**/legacy/**",
   ],
   "compilerOptions": {
     /* Visit https://aka.ms/tsconfig to read more about this file */
@@ -72,10 +86,10 @@
     // "declaration": true,                              /* Generate .d.ts files from TypeScript and JavaScript files in your project. */
     // "declarationMap": true,                           /* Create sourcemaps for d.ts files. */
     // "emitDeclarationOnly": true,                      /* Only output d.ts files and not JavaScript files. */
-    // "sourceMap": true,                                /* Create source map files for emitted JavaScript files. */
+    "sourceMap": true,                                /* Create source map files for emitted JavaScript files. */
     // "inlineSourceMap": true,                          /* Include sourcemap files inside the emitted JavaScript. */
     // "outFile": "./",                                  /* Specify a file that bundles all outputs into one JavaScript file. If 'declaration' is true, also designates a file that bundles all .d.ts output. */
-    // "outDir": "./dist/",                                 /* Specify an output folder for all emitted files. */
+    "outDir": "./dist/",                                 /* Specify an output folder for all emitted files. */
     // "removeComments": true,                           /* Disable emitting comments. */
     // "noEmit": true,                                   /* Disable emitting files from a compilation. */
     // "importHelpers": true,                            /* Allow importing helper functions from tslib once per project, instead of including them per-file. */

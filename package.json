@@ -8,14 +8,12 @@
     "npm": "9.6.6"
   },
   "scripts": {
-    "start": "npm run deploy && npx ts-node --transpile-only src/start.ts",
-    "dev": "docker compose up -d --force-recreate --build",
+    "start": "docker compose up -d --force-recreate --build",
     "logs": "docker container logs tripsit_tripbot -f -n 100",
-    "test": "NODE_ENV=test jest --silent -c ./jest/jest.unit.config.ts",
-    "lint": "eslint --fix --ext .ts,.js .",
-    "nodemon": "nodemon --config ./nodemon.json",
-    "deploy": "ts-node --transpile-only ./src/discord/utils/commandDeploy.ts",
-    "stop": "docker compose down"
+    "test": "docker exec -it tripsit_tripbot jest --silent -c ./jest/jest.unit.config.ts",
+    "lint": "docker exec -it tripsit_tripbot eslint --fix --ext .ts,.js .",
+    "deploy": "docker exec -it tripsit_tripbot ts-node --transpile-only ./src/discord/utils/commandDeploy.ts",
+    "stop": "docker stop tripsit_tripbot"
   },
   "repository": {
     "type": "git",
@@ -41,6 +39,7 @@
   "dependencies": {
     "@discordjs/voice": "^0.16.0",
     "@napi-rs/canvas": "^0.1.41",
+    "@napi-rs/canvas-linux-x64-musl": "^0.1.41",
     "@octokit/types": "^9.2.3",
     "@octokit/webhooks-types": "^6.11.0",
     "@sentry/node": "^7.53.0",
@@ -82,14 +81,14 @@
     "@types/underscore": "^1.11.4",
     "@typescript-eslint/eslint-plugin": "^5.59.7",
     "@typescript-eslint/parser": "^5.59.7",
+    "axios-mock-adapter": "^1.21.4",
     "eslint": "^8.41.0",
     "eslint-config-airbnb-base": "^15.0.0",
     "eslint-config-airbnb-typescript": "^17.0.0",
     "eslint-import-resolver-typescript": "^3.5.5",
     "eslint-plugin-import": "^2.27.5",
-    "eslint-plugin-sonarjs": "^0.19.0",
     "eslint-plugin-jest": "^27.2.1",
-    "axios-mock-adapter": "^1.21.4",
+    "eslint-plugin-sonarjs": "^0.19.0",
     "jest": "^29.5.0",
     "knex-types": "^0.5.0",
     "nodemon": "^2.0.22",
