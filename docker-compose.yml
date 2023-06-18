@@ -9,13 +9,13 @@ services:
       # target: development
     restart: unless-stopped
     volumes:
-      - ./src:/usr/src/app/src # Needed for hot-reloading
-      - ./jest:/usr/jest/app/jest # Needed for hot-reloading
-      - ./coverage:/usr/coverage/app/coverage # Needed for hot-reloading
-      - ./.env:/usr/jest/app/.env # Needed for hot-reloading
-      - ./tsconfig.json:/usr/jest/app/tsconfig.json # Needed for hot-reloading
-      - ./.eslintrc:/usr/jest/app/.eslintrc # Needed for hot-reloading
-      - ./.eslintignore:/usr/jest/app/.eslintignore # Needed for hot-reloading
+      # - ./src:/usr/src/app/src # Needed for hot-reloading
+      # - ./jest:/usr/jest/app/jest # Needed for hot-reloading
+      # - ./coverage:/usr/coverage/app/coverage # Needed for hot-reloading
+      # - ./.env:/usr/jest/app/.env # Needed for hot-reloading
+      # - ./tsconfig.json:/usr/jest/app/tsconfig.json # Needed for hot-reloading
+      # - ./.eslintrc:/usr/jest/app/.eslintrc # Needed for hot-reloading
+      # - ./.eslintignore:/usr/jest/app/.eslintignore # Needed for hot-reloading
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
     working_dir: /usr/src/app

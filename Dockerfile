@@ -27,15 +27,15 @@ COPY --chown=node:node package*.json ./
 RUN npm ci
 
 # CMD if [ $NODE_ENV = "production" ] ; then npm run deploy && npx ts-node --transpile-only src/start.ts ; else npm run deploy && npx nodemon --config ./nodemon.json; fi
-RUN npm install -g --save-dev jest
-RUN npm install -g --save-dev eslint
-RUN npm install -g --save-dev ts-node
+# RUN npm install -g --save-dev jest
+# RUN npm install -g --save-dev eslint
+# RUN npm install -g --save-dev ts-node
 
 # Bundle app source
 COPY --chown=node:node . .
 
 # Deploy the commands
-RUN ts-node --transpile-only ./src/discord/utils/commandDeploy.ts
+# RUN ts-node --transpile-only ./src/discord/utils/commandDeploy.ts
 
 # Use the node user from the image (instead of the root user)
 USER node
@@ -95,16 +95,18 @@ WORKDIR /usr/src/app
 
 # # Copy the bundled code from the build stage to the production image
 COPY --chown=node:node --from=build /usr/src/app/node_modules ./node_modules
-# COPY --chown=node:node --from=build /usr/src/app/dist ./dist
+COPY --chown=node:node --from=build /usr/src/app/dist ./dist
 
-RUN npm install -g --save-dev ts-node
-CMD npx ts-node --transpile-only src/start.ts;
+# RUN npm install -g --save-dev ts-node
+# CMD npx ts-node --transpile-only src/start.ts;
 
 # For container development, the following command runs forever, so we can inspect the container
 # CMD tail -f /dev/null
 
 # Start the bot using the production build
 # CMD if [ $NODE_ENV = "production" ] ; then npm run deploy && npx ts-node --transpile-only src/start.ts ; else npm run deploy && npx nodemon --config ./nodemon.json; fi
+
+CMD npx node dist/start.js;
 
 # Install pm2
 # RUN npm install pm2 -g
