@@ -8,6 +8,7 @@
 FROM node:20.2-alpine As development
 
 ENV TZ="America/Chicago"
+ENV NODE_ENV=development
 RUN date
 
 # Create app directory
@@ -26,19 +27,20 @@ COPY --chown=node:node package*.json ./
 # Use NPM CI even though this may be your first time, cuz package-lock already thinks you installed stuff
 RUN npm ci
 
-RUN npm install -g --save-dev jest
-# Needed for testing and deploying commands
-RUN npm install -g --save-dev ts-node
-RUN npm install -g --save-dev eslint
+# This is necessary to run canvas in the docker container
+RUN npm install @napi-rs/canvas-linux-x64-musl
+
+# RUN if [ $NODE_ENV != "production" ] ; then npm install -g --save-dev jest ts-node eslint pm2; fi
+RUN npm install -g --save-dev jest ts-node eslint pm2
 
 # Bundle app source
 COPY --chown=node:node . .
 
 # Deploy the commands
-# RUN ts-node --transpile-only ./src/discord/utils/commandDeploy.ts
+RUN ts-node --transpile-only ./src/discord/utils/commandDeploy.ts
 
 # Use the node user from the image (instead of the root user)
-USER node
+# USER node
 
 # For container development, the following command runs forever, so we can inspect the container
 # CMD tail -f /dev/null
@@ -55,6 +57,7 @@ USER node
 FROM node:20.2-alpine As build
 
 ENV TZ="America/Chicago"
+ENV NODE_ENV=production
 RUN date
 
 WORKDIR /usr/src/app
@@ -72,8 +75,10 @@ RUN tsc
 
 # Running `npm ci` removes the existing node_modules directory and passing in --only=production ensures that only the production dependencies are installed. This ensures that the node_modules directory is as optimized as possible
 RUN npm ci --only=production && npm cache clean --force
+# This is necessary to run canvas in the docker container
+RUN npm install @napi-rs/canvas-linux-x64-musl
 
-USER node
+# USER node
 
 # For container development, the following command runs forever, so we can inspect the container
 # CMD tail -f /dev/null
@@ -83,30 +88,25 @@ USER node
 ###################
 # This stage creates the final, small-as-can-be, production image
 # We copy over the node_modules directory from the build stage
-# Then we ONLY copy over the /dist folder with the js files
+# Then we ONLY copy over the /build folder with the js files
 # We already deployed before, so the only thing left to do is run the bot with PM2
 
 FROM node:20.2-alpine As production
 
 ENV TZ="America/Chicago"
+ENV NODE_ENV=production
 RUN date
 
 WORKDIR /usr/src/app
 
 # # Copy the bundled code from the build stage to the production image
 COPY --chown=node:node --from=build /usr/src/app/node_modules ./node_modules
-COPY --chown=node:node --from=build /usr/src/app/dist ./dist
-
-# For container development, the following command runs forever, so we can inspect the container
-# CMD tail -f /dev/null
-
-# Start the bot using the production build
-# CMD if [ $NODE_ENV = "production" ] ; then npm run deploy && npx ts-node --transpile-only src/start.ts ; else npm run deploy && npx nodemon --config ./nodemon.json; fi
-
-# CMD npx node dist/start.js;
+COPY --chown=node:node --from=build /usr/src/app/build ./build
 
 # Install pm2
 RUN npm install pm2 -g
 
+USER node
+
 # Start the bot using the production build
-CMD ["pm2-runtime", "dist/start.js"]
+CMD ["pm2-runtime", "build/start.js"]

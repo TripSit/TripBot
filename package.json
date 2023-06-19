@@ -39,7 +39,6 @@
   "dependencies": {
     "@discordjs/voice": "^0.16.0",
     "@napi-rs/canvas": "^0.1.41",
-    "@napi-rs/canvas-linux-x64-musl": "^0.1.41",
     "@octokit/types": "^9.2.3",
     "@octokit/webhooks-types": "^6.11.0",
     "@sentry/node": "^7.53.0",
@@ -62,9 +61,7 @@
     "pg": "^8.11.0",
     "rss-parser": "^3.13.0",
     "sonar-scanner": "^3.1.0",
-    "telegraf": "^4.12.2",
     "trivia-api": "^1.0.1",
-    "ts-node": "^10.9.1",
     "underscore": "^1.13.6",
     "winston": "^3.8.2",
     "youtube-search": "^1.1.6",
@@ -93,6 +90,9 @@
     "knex-types": "^0.5.0",
     "nodemon": "^2.0.22",
     "ts-jest": "^29.1.0",
+    "ts-node": "^10.9.1",
+    "tsc-watch": "^6.0.4",
+    "telegraf": "^4.12.2",
     "typescript": "^5.0.4"
   }
 }
