@@ -55,7 +55,7 @@ export const ready: ReadyEvent = {
   name: 'ready',
   once: true,
   async execute(client) {
-    log.debug(F, 'ready event fired');
+    // log.debug(F, 'ready event fired');
     await setTimeout(1000);
     const hostGuild = await discordClient.guilds.fetch(env.DISCORD_GUILD_ID);
     await checkGuildPermissions(hostGuild, [
