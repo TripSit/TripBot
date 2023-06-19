@@ -14,8 +14,8 @@ RUN date
 WORKDIR /usr/src/app
 
 # For the oracle server?
-RUN apk add --update python3 make g++\
-   && rm -rf /var/cache/apk/*
+# RUN apk add --update python3 make g++\
+#    && rm -rf /var/cache/apk/*
 
 # Copy application dependency manifests to the container image.
 # A wildcard is used to ensure copying both package.json AND package-lock.json (when available).
@@ -26,10 +26,10 @@ COPY --chown=node:node package*.json ./
 # Use NPM CI even though this may be your first time, cuz package-lock already thinks you installed stuff
 RUN npm ci
 
-# CMD if [ $NODE_ENV = "production" ] ; then npm run deploy && npx ts-node --transpile-only src/start.ts ; else npm run deploy && npx nodemon --config ./nodemon.json; fi
-# RUN npm install -g --save-dev jest
-# RUN npm install -g --save-dev eslint
-# RUN npm install -g --save-dev ts-node
+RUN npm install -g --save-dev jest
+# Needed for testing and deploying commands
+RUN npm install -g --save-dev ts-node
+RUN npm install -g --save-dev eslint
 
 # Bundle app source
 COPY --chown=node:node . .
@@ -97,19 +97,16 @@ WORKDIR /usr/src/app
 COPY --chown=node:node --from=build /usr/src/app/node_modules ./node_modules
 COPY --chown=node:node --from=build /usr/src/app/dist ./dist
 
-# RUN npm install -g --save-dev ts-node
-# CMD npx ts-node --transpile-only src/start.ts;
-
 # For container development, the following command runs forever, so we can inspect the container
 # CMD tail -f /dev/null
 
 # Start the bot using the production build
 # CMD if [ $NODE_ENV = "production" ] ; then npm run deploy && npx ts-node --transpile-only src/start.ts ; else npm run deploy && npx nodemon --config ./nodemon.json; fi
 
-CMD npx node dist/start.js;
+# CMD npx node dist/start.js;
 
 # Install pm2
-# RUN npm install pm2 -g
+RUN npm install pm2 -g
 
 # Start the bot using the production build
-# CMD ["pm2-runtime", "dist/start.js"]
+CMD ["pm2-runtime", "dist/start.js"]
