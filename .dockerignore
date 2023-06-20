@@ -12,7 +12,7 @@ node_modules
 # Files
 .dockerignore
 .drone.yml
-# .env - We should def move to docker secrets 
+.env - We should def move to docker secrets 
 .env.example
 # .eslintignore
 # .eslintrc
