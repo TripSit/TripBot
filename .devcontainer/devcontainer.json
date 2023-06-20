@@ -41,9 +41,9 @@
 			//"devPort": {},
 			// Specify which VS Code extensions to install (List of IDs)
 			"extensions": [
-				"dbaeumer.vscode-eslint",
-				"GitHub.copilot",
-				"mikestead.dotenv"
+				// "dbaeumer.vscode-eslint",
+				// "GitHub.copilot",
+				// "mikestead.dotenv"
 			]
 		}
 	},
@@ -59,8 +59,12 @@
 	// "forwardPorts": [],
 
 	// Use 'postCreateCommand' to run commands after the container is created.
-	"postCreateCommand": "npm install -g npm && npm install && cp .env.example .env",
-
+	"postCreateCommand": [
+		"",
+		"npm install",
+		"echo 'i like potatos'",
+		""
+	]
 	// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
 	// "remoteUser": "root"
 }

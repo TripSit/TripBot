@@ -13,7 +13,10 @@
     "test": "docker exec -it tripsit_tripbot jest --silent -c ./jest/jest.unit.config.ts",
     "lint": "docker exec -it tripsit_tripbot eslint --fix --ext .ts,.js .",
     "deploy": "docker exec -it tripsit_tripbot ts-node --transpile-only ./src/discord/utils/commandDeploy.ts",
-    "stop": "docker stop tripsit_tripbot"
+    "stop": "docker stop tripsit_tripbot",
+    "## Codespaces": "",
+    "cs-deploy": "npx ts-node --transpile-only ./src/discord/utils/commandDeploy.ts",
+    "cs-start": "npx tsc-watch --onSuccess 'npx nodemon --config ./nodemon.json'"
   },
   "repository": {
     "type": "git",
