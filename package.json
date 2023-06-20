@@ -9,11 +9,11 @@
   },
   "scripts": {
     "start": "docker compose up -d --force-recreate --build",
-    "logs": "docker container logs tripsit_tripbot -f -n 100",
-    "test": "docker exec -it tripsit_tripbot jest --silent -c ./jest/jest.unit.config.ts",
-    "lint": "docker exec -it tripsit_tripbot eslint --fix --ext .ts,.js .",
-    "deploy": "docker exec -it tripsit_tripbot ts-node --transpile-only ./src/discord/utils/commandDeploy.ts",
-    "stop": "docker stop tripsit_tripbot"
+    "logs": "docker container logs tripbot -f -n 100",
+    "test": "docker exec -it tripbot jest --silent -c ./jest/jest.unit.config.ts",
+    "lint": "docker exec -it tripbot eslint --fix --ext .ts,.js .",
+    "deploy": "docker exec -it tripbot ts-node --transpile-only ./src/discord/utils/commandDeploy.ts",
+    "stop": "docker stop tripbot"
   },
   "repository": {
     "type": "git",
