@@ -43,7 +43,7 @@ RUN ts-node --transpile-only ./src/discord/utils/commandDeploy.ts
 # USER node
 
 # For container development, the following command runs forever, so we can inspect the container
-# CMD tail -f /dev/null
+CMD tail -f /dev/null
 
 ###################
 # BUILD FOR PRODUCTION

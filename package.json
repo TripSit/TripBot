@@ -1,5 +1,5 @@
 {
-  "name": "tripsit-tripbot",
+  "name": "tripbot",
   "version": "6.3.2",
   "description": "A bot for TripSit (and maybe the world)",
   "main": "start.ts",
@@ -13,7 +13,10 @@
     "test": "docker exec -it tripbot jest --silent -c ./jest/jest.unit.config.ts",
     "lint": "docker exec -it tripbot eslint --fix --ext .ts,.js .",
     "deploy": "docker exec -it tripbot ts-node --transpile-only ./src/discord/utils/commandDeploy.ts",
-    "stop": "docker stop tripbot"
+    "stop": "docker stop tripbot",
+    "## Codespaces": "",
+    "cs-deploy": "npx ts-node --transpile-only ./src/discord/utils/commandDeploy.ts",
+    "cs-start": "npx tsc-watch --onSuccess 'npx nodemon --config ./nodemon.json'"
   },
   "repository": {
     "type": "git",
