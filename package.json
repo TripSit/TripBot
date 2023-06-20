@@ -48,7 +48,7 @@
     "axios": "^1.4.0",
     "common-tags": "^1.8.2",
     "convert-units": "^2.3.4",
-    "discord-api-types": "^0.37.42",
+    "discord-api-types": "^0.37.43",
     "discord.js": "^14.11.0",
     "dotenv": "^16.0.3",
     "fuse.js": "^6.6.2",
