@@ -8,6 +8,7 @@ services:
       # Only will build development stage from our dockerfile
       target: development
     restart: unless-stopped
+    working_dir: /usr/src/app
     volumes:
       - ./src:/usr/src/app/src # Needed for hot-reloading of source code
       - ./jest:/usr/src/app/jest # Needed for hot-reloading of tests
@@ -17,11 +18,9 @@ services:
       - ./package-lock.json:/usr/src/app/package-lock.json # Needed for saving changes to package.json
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
-    working_dir: /usr/src/app
     env_file:
       - .env
     environment:
-      - NODE_ENV
       - TZ=America/Chicago
     networks:
         - tripbot-net
