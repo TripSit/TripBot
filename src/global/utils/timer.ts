@@ -1038,7 +1038,7 @@ async function runTimer() {
     { callback: checkVoice, interval: env.NODE_ENV === 'production' ? seconds60 : seconds5 },
     { callback: changeStatus, interval: env.NODE_ENV === 'production' ? hours24 : seconds5 },
     { callback: checkStats, interval: env.NODE_ENV === 'production' ? minutes5 : seconds5 },
-    { callback: checkMoodle, interval: env.NODE_ENV === 'production' ? seconds60 : seconds10 },
+    // { callback: checkMoodle, interval: env.NODE_ENV === 'production' ? seconds60 : seconds10 },
     // { callback: checkLpm, interval: env.NODE_ENV === 'production' ? seconds10 : seconds5 },
   ];
 
