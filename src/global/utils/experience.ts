@@ -214,15 +214,8 @@ async function giveMilestone(
   if (!member.roles.cache.has(role.id)) {
     // log.debug(F, `Giving ${member.displayName} role ${role.name} (${role.id})`);
     await member.roles.add(role);
-    if (levelTier >= 2) {
-      const channel = await member.guild?.channels.fetch(env.CHANNEL_VIPLOUNGE) as TextChannel;
-      await channel.send(`${emojis} **${member} has reached Total Text level ${levelTier}0!** ${emojis}`);
-    }
-    // if (totalLevel >= 20) {
-    // log.debug(F, `${emojis} **${member} has reached Total Text level ${totalLevel}!** ${emojis}`);
-    //   // const channel = await member.guild?.channels.fetch(env.CHANNEL_VIPLOUNGE) as TextChannel;
-    //   // await channel.send(`${emojis} **${member} has reached Total Text level ${totalLevel}!** ${emojis}`);
-    // }
+    const channel = await member.guild?.channels.fetch(env.CHANNEL_VIPLOUNGE) as TextChannel;
+    await channel.send(`${emojis} **${member} has reached Total Text level ${levelTier}0!** ${emojis}`);
   }
 }
 
