@@ -16,6 +16,14 @@ steps:
         from_secret: DOCKER_HOST
       DOCKER_BUILDKIT:
         from_secret: DOCKER_BUILDKIT
+      DISCORD_CLIENT_ID:
+        from_secret: DISCORD_CLIENT_ID
+      DISCORD_CLIENT_TOKEN:
+        from_secret: DISCORD_CLIENT_TOKEN
+      DISCORD_GUILD_ID:
+        from_secret: DISCORD_GUILD_ID
+      DISCORD_OWNER_ID:
+        from_secret: DISCORD_OWNER_ID
 
   - name: discord notification
     image: appleboy/drone-discord
