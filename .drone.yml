@@ -29,7 +29,8 @@ steps:
     image: appleboy/drone-discord
     settings:
       webhook_id: 1123644407434973255
-      webhook_token: 73CXRJKNIwOUHyiVWQiJ4lxUllY2__BMH_lIrB6_XdTDH7dAPk0b_MZ3-TQAXiAj7cH6
+      webhook_token:
+        from_secret: WEBHOOK_TOKEN
       avatar_url: https://i.imgur.com/tnw3I34.png
       username: 'Drone CI'
       message: |
