@@ -4,6 +4,7 @@ import {
   // GuildTextBasedChannel,
   Role,
   PermissionResolvable,
+  EmbedBuilder,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
 import { sleep } from '../commands/guild/d.bottest';
@@ -88,10 +89,30 @@ give people a chance to answer 😄 If no one answers in 5 minutes you can try a
       }
       const roleTripsitter = await message.guild.roles.fetch(env.ROLE_TRIPSITTER) as Role;
       const roleHelper = await message.guild.roles.fetch(env.ROLE_HELPER) as Role;
-      await message.channel.send(
-        `Hey ${displayName}, thank you for asking for help! We've notified our ${roleTripsitter} and\
-${roleHelper}. Can you start off by telling us how much you took and the details of your problem?`,
-      );
+      await message.channel.send(`Hey ${displayName}, someone from the ${roleTripsitter} and/or ${roleHelper} team will be with you as soon as they're available!
+
+        If you’re in the right mindset please start by telling us what you took, at what dose and route, how long ago, along with any concerns you may have.
+
+        **If this is a medical emergency** please contact your local emergency services: we do not call EMS on behalf of anyone.
+
+      `);
+
+      const embed = new EmbedBuilder()
+        .setTitle('Other Resources')
+        .setDescription(`**Not in an emergency, but still want to talk to a mental health advisor?**
+        The [Warm line directory](https://warmline.org/warmdir.html#directory) provides non-crisis mental health support and guidance from trained volunteers.
+
+        **Want to text or voice chat with someone?**
+        The wonderful people at the [Fireside Project](https://firesideproject.org) can also help you through a rough trip.
+        
+        **Need LGBT support?**
+        The [LGBT Hotline](https://www.lgbthotline.org) and [The Trevor Project](https://www.thetrevorproject.org/) are great resources.
+        
+        **Check the pins and use </crisis:1088811157185372180> for other info!!**`);
+
+      await message.channel.send({
+        embeds: [embed],
+      });
       // Update helpCounter with the current date that the user sent this command
       helpCounter.set(message.author.id, Date.now().valueOf());
     } else {
