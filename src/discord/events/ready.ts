@@ -71,7 +71,7 @@ export const ready: ReadyEvent = {
         populateBans(),
 
         // Timers
-        runTimer(),
+        // runTimer(),
       ]).then(async () => {
         const bootDuration = (new Date().getTime() - global.bootTime.getTime()) / 1000;
         log.info(F, `Discord finished booting in ${bootDuration}s!`);
