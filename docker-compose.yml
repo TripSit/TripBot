@@ -50,8 +50,8 @@ services:
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
     labels:
-    # - com.centurylinklabs.watchtower.enable=true
-    - traefik.enable=true
+    - com.centurylinklabs.watchtower.enable=false
+    - traefik.enable=false
     # Run a command against the development stage of the image
     command: npx tsc-watch --onSuccess "npx nodemon --config ./nodemon.json"
 
