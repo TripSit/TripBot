@@ -9,7 +9,7 @@ steps:
       - apk update
       - apk upgrade
       - apk add --no-cache git
-      - docker compose -f docker-compose.host.yml --project-name tripsit-live up tripbot -d --force-recreate --build
+      - docker compose -f docker-compose.host.yml --project-name tripsit-live-apps up tripbot -d --force-recreate --build
       # - tail -f /dev/null
     environment:
       NODE_ENV: development
