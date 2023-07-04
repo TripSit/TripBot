@@ -12,6 +12,7 @@ steps:
       - docker compose -f docker-compose.host.yml --project-name tripsit-live up tripbot -d --force-recreate --build
       # - tail -f /dev/null
     environment:
+      NODE_ENV: development
       DOCKER_HOST:
         from_secret: DOCKER_HOST
       DOCKER_BUILDKIT:
@@ -24,6 +25,34 @@ steps:
         from_secret: DISCORD_GUILD_ID
       DISCORD_OWNER_ID:
         from_secret: DISCORD_OWNER_ID
+      DISCORD_CLIENT_SECRET:
+        from_secret: DISCORD_CLIENT_SECRET
+      DISCORD_CLIENT_REDIRECT_URI:
+        from_secret: DISCORD_CLIENT_REDIRECT_URI
+      GITHUB_TOKEN:
+        from_secret: GITHUB_TOKEN
+      RAPID_TOKEN:
+        from_secret: RAPID_TOKEN
+      IMGUR_ID:
+        from_secret: IMGUR_ID
+      IMGUR_SECRET:
+        from_secret: IMGUR_SECRET
+      YOUTUBE_TOKEN:
+        from_secret: YOUTUBE_TOKEN
+      MATRIX_BOT_PASSWORD:
+        from_secret: MATRIX_BOT_PASSWORD
+      MOODLE_TOKEN:
+        from_secret: MOODLE_TOKEN
+      REVOLT_BOT_TOKEN:
+        from_secret: REVOLT_BOT_TOKEN
+      WOLFRAM_TOKEN:
+        from_secret: WOLFRAM_TOKEN
+      IMDB_TOKEN:
+        from_secret: IMDB_TOKEN
+      SENTRY_TOKEN:
+        from_secret: SENTRY_TOKEN
+      POSTGRES_DB_URL:
+        from_secret: SENTRY_TOKEN
 
   - name: discord notification
     image: appleboy/drone-discord
