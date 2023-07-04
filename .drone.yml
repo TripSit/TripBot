@@ -52,7 +52,7 @@ steps:
       SENTRY_TOKEN:
         from_secret: SENTRY_TOKEN
       POSTGRES_DB_URL:
-        from_secret: SENTRY_TOKEN
+        from_secret: POSTGRES_DB_URL
 
   - name: discord notification
     image: appleboy/drone-discord
