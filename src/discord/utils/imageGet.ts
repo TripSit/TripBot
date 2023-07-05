@@ -6,7 +6,7 @@ import axios from 'axios';
 //   Client,
 // } from 'discord.js';
 
-// const F = f(__filename);
+const F = f(__filename);
 
 export default imageGet;
 
@@ -29,7 +29,7 @@ const imageDef = {
   badgeVip10: { path: './src/discord/assets/img/badges/vip10.png', url: 'https://i.gyazo.com/4428c08aaf82b7363fb7a327ce27a4c3.png' },
   cardBirthday: { path: './src/discord/assets/img/cards/birthday.png', url: 'https://i.gyazo.com/b7504ea55bd7935f97b286407a1bc259.png' },
   campIconA: { path: './src/discord/assets/img/campIconA.png', url: 'https://i.gyazo.com/62a9db6c42ca3c03cc892b28f5d8b367.png' },
-  cardIcons: { path: './src/discord/assets/img/cards/icons.png', url: 'https://i.gyazo.com/6669a36a7adf68996354bd7586cd7083.png' },
+  cardIcons: { path: './src/discord/assets/img/cards/icons.png', url: 'https://i.gyazogyazo.com/6669a36a7adf68996354bd7586cd7083.png' },
   cardLevelIcons: { path: './src/discord/assets/img/cards/levelIcons.png', url: 'https://i.gyazo.com/69d030886df6d0d260e2a293a6bc7894.png' },
   // cardBackground: { path: './src/discord/assets/img/cards/background.png', url: 'https://i.gyazo.com/b7504ea55bd7935f97b286407a1bc259.png' },
   // cardBirthdayOverlay: { path: './src/discord/assets/img/cards/birthdayOverlay.png', url: 'https://i.gyazo.com/b7504ea55bd7935f97b286407a1bc259.png' },
@@ -101,12 +101,12 @@ export async function imageGet(
   // If it does not exist, it will download it from the internet and save it to that location
   // Either way, it will return a working path to the image
   const { path, url } = imageDef[imageName];
-  // log.debug(F, `Checking ${path}`);
+  log.debug(F, `Checking ${path}`);
   if (!fs.existsSync(path)) {
-    // log.debug(F, `Downloading ${url} to ${path}`);
+    log.debug(F, `Downloading ${url} to ${path}`);
     await downloadImage(url, path);
   } else {
-    // log.debug(F, `Found ${path}`);
+    log.debug(F, `Found ${path}`);
   }
   return path;
 }
