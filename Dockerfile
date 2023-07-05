@@ -18,6 +18,17 @@ WORKDIR /usr/src/app
 # RUN apk add --update python3 make g++\
 #    && rm -rf /var/cache/apk/*
 
+# This is necessary to run canvas in the docker container
+RUN npm install @napi-rs/canvas-linux-x64-musl
+
+# RUN if [ $NODE_ENV != "production" ] ; then npm install -g --save-dev jest ts-node eslint pm2; fi
+RUN npm install -g --save-dev jest ts-node eslint pm2
+
+# We need to copy this asset over so that the bot can use it
+COPY --chown=node:node ./src/discord/assets/Futura.otf ./build/discord/assets/Futura.otf
+
+# Do all of the above first so that the layers can run faster next time
+
 # Copy application dependency manifests to the container image.
 # A wildcard is used to ensure copying both package.json AND package-lock.json (when available).
 # Copying this first prevents re-running npm install on every code change.
@@ -26,12 +37,6 @@ COPY --chown=node:node package*.json ./
 # Install app dependencies using the `npm ci` command instead of `npm install`
 # Use NPM CI even though this may be your first time, cuz package-lock already thinks you installed stuff
 RUN npm ci
-
-# This is necessary to run canvas in the docker container
-RUN npm install @napi-rs/canvas-linux-x64-musl
-
-# RUN if [ $NODE_ENV != "production" ] ; then npm install -g --save-dev jest ts-node eslint pm2; fi
-RUN npm install -g --save-dev jest ts-node eslint pm2
 
 # Bundle app source
 COPY --chown=node:node . .
