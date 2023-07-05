@@ -3,21 +3,9 @@
     "files": true
   },
   "include": [
-    // "./repos/**/*.ts",
-    // "./scripts/**/*.ts",
-    // "./src/**/*.ts",
-    // "./jest/**/*.ts",
-    "./src/*.ts", // start.ts
-    "./src/global/**/*.ts", // Global stuff
-    "./src/discord/**/*.ts", // Discord stuff
+    "src/",
   ],
   "exclude": [
-    "./jest/**/*.ts",
-    // "./jest/__tests__/__tests__editreply_/*.ts",
-    // "./jest/__tests__/__tests__integration__/*.ts",
-    // "./jest/__tests__/__tests__modals__/*.ts",
-    // "./jest/__tests__/__tests__send__/*.ts",
-    // "./jest/__tests__/__tests__todo__/*.ts",
     "*/node_modules",
     "*/dist",
     "*/telegram/*",
