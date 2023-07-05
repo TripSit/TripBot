@@ -102,6 +102,7 @@ WORKDIR /usr/src/app
 # # Copy the bundled code from the build stage to the production image
 COPY --chown=node:node --from=build /usr/src/app/node_modules ./node_modules
 COPY --chown=node:node --from=build /usr/src/app/build ./build
+COPY --chown=node:node ./src/discord/assets/Futura.otf ./build/discord/assets/Futura.otf
 
 # Install pm2
 RUN npm install pm2 -g
