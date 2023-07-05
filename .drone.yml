@@ -81,7 +81,7 @@ steps:
 
 trigger:
   branch:
-  - Docker-update
+  - main
 trigger:
   event:
   # - cron
