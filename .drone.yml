@@ -12,7 +12,8 @@ steps:
       - docker compose -f docker-compose.host.yml --project-name tripsit-live-apps up tripbot -d --force-recreate --build
       # - tail -f /dev/null
     environment:
-      NODE_ENV: development
+      NODE_ENV:
+        from_secret: NODE_ENV
       DOCKER_HOST:
         from_secret: DOCKER_HOST
       DOCKER_BUILDKIT:
@@ -82,6 +83,7 @@ steps:
 trigger:
   branch:
   - main
+  - Docker-update
 trigger:
   event:
   # - cron
