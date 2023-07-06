@@ -499,30 +499,67 @@ async function checkVoice() {
       { category: 'DEVELOPER' as ExperienceCategory, id: env.CATEGORY_DEVELOPMENT },
     ];
 
+    log.debug('voiceExp', 'Checking voice channels...');
+
     // For each of the above types, check each voice channel in the category
     categoryDefs.forEach(async categoryDef => {
-      // log.debug(F, `Checking ${categoryDef.category} voice channels...`);
       const category = await discordClient.channels.fetch(categoryDef.id) as CategoryChannel;
       category.children.cache.forEach(async channel => {
-        // log.debug(F, `Checking ${channel.name}...`);
         if (channel.type === ChannelType.GuildVoice
         && channel.id !== env.CHANNEL_CAMPFIRE
         /* && channel.members.size > 1 */) { // For testing
           // Check to see if the people in the channel meet the right requirements
-          const humansInChat = channel.members.filter(member => (
-            !(member.user.bot
-            || member.voice.selfDeaf
-            || member.voice.serverDeaf
-            || member.voice.selfMute
-            || member.voice.serverMute
-            || member.voice.streaming
-            || member.voice.suppress
-            || member.roles.cache.has(env.ROLE_NEEDS_HELP)
-            )
-          ));
+          if (channel.members.size < 1) {
+            return;
+          }
+          log.debug('voiceExp', `${channel.name} has ${channel.members.size} people in it`);
+          const humansInChat = channel.members.filter(member => {
+            if (member.user.bot) {
+              log.debug('voiceExp', `${member.displayName} is a bot`);
+              return false;
+            }
+            if (member.voice.selfDeaf) {
+              log.debug('voiceExp', `${member.displayName} is self deafened`);
+              return false;
+            }
+            if (member.voice.serverDeaf) {
+              log.debug('voiceExp', `${member.displayName} is server deafened`);
+              return false;
+            }
+            if (member.voice.selfMute) {
+              log.debug('voiceExp', `${member.displayName} is self muted`);
+              return false;
+            }
+            if (member.voice.serverMute) {
+              log.debug('voiceExp', `${member.displayName} is server muted`);
+              return false;
+            }
+            if (member.voice.streaming) {
+              log.debug('voiceExp', `${member.displayName} is streaming`);
+              return false;
+            }
+            if (member.voice.suppress) {
+              log.debug('voiceExp', `${member.displayName} is suppressed`);
+              return false;
+            }
+            if (member.voice.channel?.type === ChannelType.GuildStageVoice) {
+              log.debug('voiceExp', `${member.displayName} is in a stage channel`);
+              return false;
+            }
+            if (member.roles.cache.has(env.ROLE_NEEDS_HELP)) {
+              log.debug('voiceExp', `${member.displayName} has the NeedsHelp role`);
+              return false;
+            }
+            if (channel.members.size < 2 && env.NODE_ENV === 'production') {
+              log.debug('voiceExp', `${member.displayName} is alone in the channel`);
+              return false;
+            }
+            return true;
+          });
+          log.debug('voiceExp', `${channel.name} has ${humansInChat.size} people actively chatting in it`);
           if ((env.NODE_ENV === 'production' && humansInChat && humansInChat.size > 1)
           || (env.NODE_ENV !== 'production' && humansInChat && humansInChat.size > 0)) {
-            // log.debug(F, `There are ${humansInChat.size} humans in ${channel.name}`);
+            log.debug('voiceExp', `Attempting to give experience to ${humansInChat.size} people in ${channel.name}: ${humansInChat.map(member => member.displayName).join(', ')}`);
             // For each human in chat, check if they have been awarded voice exp in the last 5 minutes
             // If they have not, award them voice exp
             humansInChat.forEach(async member => {
