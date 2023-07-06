@@ -40,9 +40,9 @@ import { profile } from '../commands/g.learn';
 
 const F = f(__filename);
 
-const lastReminder = {} as {
-  [key: string]: DateTime;
-};
+// const lastReminder = {} as {
+//   [key: string]: DateTime;
+// };
 
 const newRecordString = '🎈🎉🎊 New Record 🎊🎉🎈';
 
@@ -269,21 +269,21 @@ async function checkTickets() { // eslint-disable-line @typescript-eslint/no-unu
         ]);
 
         if (!tripsitPerms.hasPermission) {
-          // Check if you have reminder the guild owner in the last 24 hours
-          const lastRemdinerSent = lastReminder[guild.id];
-          if (!lastRemdinerSent || lastRemdinerSent < DateTime.local().minus({ hours: 24 })) {
-            log.debug(F, `Sending reminder to ${(await guild.fetchOwner()).user.username}...`);
-            // const guildOwner = await channel.guild.fetchOwner();
-            // await guildOwner.send({
-            //   content: `I am trying to prune threads in ${channel} but
-            //  I don't have the ${tripsitPerms.permission} permission.`, // eslint-disable-line max-len
-            // });
-            const botOwner = await discordClient.users.fetch(env.DISCORD_OWNER_ID);
-            await botOwner.send({
-              content: `I am trying to prune threads in ${channel} of ${channel.guild.name} but I don't have the ${tripsitPerms.permission} permission.`, // eslint-disable-line max-len
-            });
-            lastReminder[guild.id] = DateTime.local();
-          }
+          // // Check if you have reminder the guild owner in the last 24 hours
+          // const lastRemdinerSent = lastReminder[guild.id];
+          // if (!lastRemdinerSent || lastRemdinerSent < DateTime.local().minus({ hours: 24 })) {
+          //   // log.debug(F, `Sending reminder to ${(await guild.fetchOwner()).user.username}...`);
+          //   // const guildOwner = await channel.guild.fetchOwner();
+          //   // await guildOwner.send({
+          //   //   content: `I am trying to prune threads in ${channel} but
+          //   //  I don't have the ${tripsitPerms.permission} permission.`, // eslint-disable-line max-len
+          //   // });
+          //   const botOwner = await discordClient.users.fetch(env.DISCORD_OWNER_ID);
+          //   await botOwner.send({
+          //     content: `I am trying to prune threads in ${channel} of ${channel.guild.name} but I don't have the ${tripsitPerms.permission} permission.`, // eslint-disable-line max-len
+          //   });
+          //   lastReminder[guild.id] = DateTime.local();
+          // }
           return;
         }
 
@@ -462,7 +462,7 @@ async function checkRss() { // eslint-disable-line @typescript-eslint/no-unused-
 async function callUptime() { // eslint-disable-line @typescript-eslint/no-unused-vars
   log.debug(F, 'Calling uptime...');
   if (env.NODE_ENV !== 'production') return;
-  axios.get(`https://uptime.tripsit.io/api/push/jKcz4FCbzW?status=up&msg=OK&ping=${discordClient.ws.ping}`).catch(e => {
+  axios.get(`https://uptime.tripsit.io/api/push/SP4qJtHZ6j?status=up&msg=OK&ping=${discordClient.ws.ping}`).catch(e => {
     log.debug(F, `Error when calling uptime monitor! ${e}`);
   });
 }
