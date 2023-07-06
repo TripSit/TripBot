@@ -472,15 +472,14 @@ async function checkVoice() {
   // If someone satisfies the following conditions, they will be awarded voice exp
   // 1. They are not a bot
   // 2. They are in a voice channel
-  // 3. They have been in the voice channel for at least 5 minutes
   // 4. They have not been awarded voice exp in the last 5 minutes
   // 5. Are not AFK
   // 6. Are not deafened
   // 7. Are not muted
   // 8. Are not streaming
   // 9. Are not in a stage channel
-  // 10. With another human in the channel
-  // 11. Dot not have the NeedsHelp role
+  // 10. Do not have the NeedsHelp role
+  // 10. With another human in the channel that also meets these conditions
 
   // The type of voice exp is determined by the category the voice channel is in
   // GENERAL = Campground and Backstage
