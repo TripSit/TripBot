@@ -141,10 +141,10 @@ export async function remindMe(
     const userData = await getUser(userId, null, null);
 
     await reminderSet({
-      user_id: userData.id,
-      reminder_text: reminderText,
-      trigger_at: triggerAt,
-    } as UserReminders);
+      userId: userData.id,
+      reminderText,
+      triggerAt,
+    } as unknown as UserReminders);
 
     response = `I will remind you to ${reminderText} at ${triggerAt}!`;
     log.info(F, `response: ${JSON.stringify(response, null, 2)}`);

@@ -1,6 +1,10 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the
+// README at: https://github.com/devcontainers/templates/tree/main/src/typescript-node
+
 {
-	"name": "Ubuntu",
-	"image": "mcr.microsoft.com/devcontainers/javascript-node:20",
+	"name": "TripBot Dev",
+	"image": "mcr.microsoft.com/devcontainers/typescript-node:1-20-bullseye",
+	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
 
 	// Configure tool-specific properties.
 	"customizations": {
@@ -41,15 +45,14 @@
 			//"devPort": {},
 			// Specify which VS Code extensions to install (List of IDs)
 			"extensions": [
-				"dbaeumer.vscode-eslint",
-				"GitHub.copilot",
-				"mikestead.dotenv"
+				// "dbaeumer.vscode-eslint",
+				// "GitHub.copilot",
+				// "mikestead.dotenv"
 			]
 		}
 	},
 	"features": {
-		"ghcr.io/devcontainers/features/node:1": {"version": "20.2.0"},
-		"ghcr.io/devcontainers-contrib/features/typescript:1": {}
+		"ghcr.io/devcontainers/features/github-cli:1": {},
 	},
 
 	// Features to add to the dev container. More info: https://containers.dev/features.
@@ -59,8 +62,7 @@
 	// "forwardPorts": [],
 
 	// Use 'postCreateCommand' to run commands after the container is created.
-	"postCreateCommand": "npm install -g npm && npm install && cp .env.example .env",
-
+	"postCreateCommand": ["npm install"]
 	// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
 	// "remoteUser": "root"
 }

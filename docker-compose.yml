@@ -1,23 +1,62 @@
 version: '3.9'
+
+name: tripsit-dev
+
+########################### EXTENSION FIELDS
+# Common environment values
+x-environment: &default-tz-puid-pgid
+  TZ: $TZ
+  PUID: $PUID
+  PGID: $PGID
+ 
+# Keys common to some of the core services that we always to automatically restart on failure
+x-common-keys-core: &common-keys-core
+  security_opt:
+    - no-new-privileges:true
+  restart: always
+
+# Keys common to some of the dependent services/apps
+x-common-keys-apps: &common-keys-apps
+  security_opt:
+    - no-new-privileges:true
+  restart: unless-stopped
+
+########################### SERVICES
 services:
-  discord.js:
-    container_name: tripsit_tripbot
+  tripbot:
+    <<: *common-keys-apps
     build:
       context: ./
       dockerfile: ./Dockerfile
-    restart: unless-stopped
-    volumes:
-      - ./:/usr/src/app
-      - /etc/timezone:/etc/timezone:ro
-      - /etc/localtime:/etc/localtime:ro
+      # Only will build development stage from our dockerfile
+      target: development
+    container_name: tripbot
+    profiles: ["apps", "frontend", "tripbot", "all"]
     working_dir: /usr/src/app
     env_file:
       - .env
     environment:
-      - TZ=America/Chicago
+      <<: *default-tz-puid-pgid
     networks:
-        - tripbot-net
+      - tripbot-net
+      - database-net
+    volumes:
+      - ./src:/usr/src/app/src # Needed for hot-reloading of source code
+      - ./jest:/usr/src/app/jest # Needed for hot-reloading of tests
+      - ./coverage:/usr/src/app/coverage # Needed for extracting the coverage report
+      - ./.env:/usr/src/app/.env # Needed for hot-reloading the .env
+      - ./package.json:/usr/src/app/package.json # Needed for saving changes to package.json
+      - ./package-lock.json:/usr/src/app/package-lock.json # Needed for saving changes to package.json
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    labels:
+    - com.centurylinklabs.watchtower.enable=false
+    - traefik.enable=false
+    # Run a command against the development stage of the image
+    command: npx tsc-watch --onSuccess "npx nodemon --config ./nodemon.json"
 
 networks:
   tripbot-net:
     name: tripbot-net
+  database-net:
+    name: database-net

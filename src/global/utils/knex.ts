@@ -280,7 +280,7 @@ export async function reminderSet(
 // log.debug(F, 'reminderSet started');
   if (env.POSTGRES_DB_URL === undefined) return;
   try {
-    await db<UserReminders>('user_reminders')
+    await db<UserReminders>('userReminders')
       .insert(reminder);
   } catch (err) {
     log.error(F, `Error setting reminder: ${err}`);
@@ -318,7 +318,7 @@ export async function ticketGet(
   user_id?:string,
   status?:string,
 ):Promise<UserTickets[]> {
-  log.debug(F, `ticketGet started with user_id: ${user_id}, status: ${status}`);
+  // log.debug(F, `ticketGet started with user_id: ${user_id}, status: ${status}`);
   if (env.POSTGRES_DB_URL === undefined) {
     return [] as UserTickets[];
   }
