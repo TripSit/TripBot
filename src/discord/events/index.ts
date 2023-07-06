@@ -2,7 +2,7 @@ import { Client } from 'discord.js';
 import fs from 'fs/promises';
 import path from 'path';
 // import log from '../../global/utils/log';
-// const F = f(__filename);
+const F = f(__filename); // eslint-disable-line
 
 export default registerEvents;
 
@@ -15,7 +15,7 @@ export async function registerEvents(discordClient: Client): Promise<void> {
   // log.debug(F, `eventDir: ${eventDir}`);
   const eventFiles = await fs.readdir(eventDir);
   eventFiles
-    .filter(file => file.endsWith('.ts') && !file.endsWith('index.ts'))
+    .filter(file => (file.endsWith('.ts') || file.endsWith('.js')) && !file.startsWith('index'))
     .map((file) => require(`${eventDir}/${file}`)) // eslint-disable-line
     .forEach(event => {
       const fileName = Object.keys(event)[0];

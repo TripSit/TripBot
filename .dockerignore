@@ -1,5 +1,32 @@
-Dockerfile
-.dockerignore
+# Folders
+.devcontainer
+.github
+.vscode
+cache
+# coverage
+# dist - This is where the compiled code is, MUST be included in the container
+# jest
 node_modules
-npm-debug.log
-dist
+# src - This is where the code is, MUST be included in the container
+
+# Files
+.dockerignore
+.drone.yml
+# .env - We should def move to docker secrets 
+# .env.example
+# .eslintignore
+# .eslintrc
+.gitattributes
+.gitignore
+.gitpod.yml
+captain-definition
+# docker-compose.yml - Not needed, but is good for reference if anyone wants to inspect the container
+# Dockerfile - Same
+FIRSTRUN.MD
+# nodemon.json - We need this to run the container in development mode
+# package-lock.json - We need this to install the dependencies!
+# package.json - Same!
+README.MD
+sonar-project.properties
+tempStorage.json
+# tsconfig.json - We need this to compile the code!
