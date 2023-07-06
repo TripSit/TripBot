@@ -14,10 +14,6 @@ RUN date
 # Create app directory
 WORKDIR /usr/src/app
 
-# For the oracle server?
-# RUN apk add --update python3 make g++\
-#    && rm -rf /var/cache/apk/*
-
 # This is necessary to run canvas in the docker container
 RUN npm install @napi-rs/canvas-linux-x64-musl
 
@@ -40,9 +36,6 @@ RUN npm ci
 
 # Bundle app source
 COPY --chown=node:node . .
-
-# Deploy the commands
-RUN ts-node --transpile-only ./src/discord/utils/commandDeploy.ts
 
 # Use the node user from the image (instead of the root user)
 # USER node
@@ -67,21 +60,27 @@ RUN date
 
 WORKDIR /usr/src/app
 
-COPY --chown=node:node package*.json ./
-
-# In order to run `npm run build` we need access to the Nest CLI which is a dev dependency. In the previous development stage we ran `npm ci` which installed all dependencies, so we can copy over the node_modules directory from the development image
-COPY --chown=node:node --from=development /usr/src/app/node_modules ./node_modules
-COPY --chown=node:node . .
-
 # Run the build command which creates the production bundle
 # This comes before the next command cuz ts is a dev requirement and we don't want it in the production image
 RUN npm install -g --save-dev typescript
-RUN tsc
 
-# Running `npm ci` removes the existing node_modules directory and passing in --only=production ensures that only the production dependencies are installed. This ensures that the node_modules directory is as optimized as possible
-RUN npm ci --only=production && npm cache clean --force
 # This is necessary to run canvas in the docker container
 RUN npm install @napi-rs/canvas-linux-x64-musl
+
+# In order to run `npm run build` we need access to the Nest CLI which is a dev dependency. In the previous development stage we ran `npm ci` which installed all dependencies, so we can copy over the node_modules directory from the development image
+COPY --chown=node:node --from=development /usr/src/app/node_modules ./node_modules
+COPY --chown=node:node package*.json ./
+
+# Running `npm ci` removes the existing node_modules directory and passing in --only=production ensures that only the production dependencies are installed. This ensures that the node_modules directory is as optimized as possible
+RUN npm ci --omit:dev && npm cache clean --force
+
+COPY --chown=node:node . .
+
+# Deploy the commands
+RUN ts-node --transpile-only ./src/discord/utils/commandDeploy.ts
+
+# Build the code
+RUN tsc
 
 # USER node
 
@@ -104,13 +103,13 @@ RUN date
 
 WORKDIR /usr/src/app
 
+# Install pm2
+RUN npm install pm2 -g
+
 # # Copy the bundled code from the build stage to the production image
 COPY --chown=node:node --from=build /usr/src/app/node_modules ./node_modules
 COPY --chown=node:node --from=build /usr/src/app/build ./build
 COPY --chown=node:node ./src/discord/assets/Futura.otf ./build/discord/assets/Futura.otf
-
-# Install pm2
-RUN npm install pm2 -g
 
 USER node
 
