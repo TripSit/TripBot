@@ -13,7 +13,7 @@ import {
 } from 'discord.js';
 import Parser from 'rss-parser';
 import { DateTime } from 'luxon';
-import axios from 'axios';
+import axios from 'axios'; // eslint-disable-line
 import { stripIndents } from 'common-tags';
 import {
   reminderGet,
@@ -459,13 +459,13 @@ async function checkRss() { // eslint-disable-line @typescript-eslint/no-unused-
   })();
 }
 
-async function callUptime() { // eslint-disable-line @typescript-eslint/no-unused-vars
-  log.debug(F, 'Calling uptime...');
-  if (env.NODE_ENV !== 'production') return;
-  axios.get(`https://uptime.tripsit.io/api/push/SP4qJtHZ6j?status=up&msg=OK&ping=${discordClient.ws.ping}`).catch(e => {
-    log.debug(F, `Error when calling uptime monitor! ${e}`);
-  });
-}
+// async function callUptime() { // eslint-disable-line @typescript-eslint/no-unused-vars
+//   log.debug(F, 'Calling uptime...');
+//   if (env.NODE_ENV !== 'production') return;
+//   axios.get(`https://uptime.tripsit.io/api/push/SP4qJtHZ6j?status=up&msg=OK&ping=${discordClient.ws.ping}`).catch(e => {
+//     log.debug(F, `Error when calling uptime monitor! ${e}`);
+//   });
+// }
 
 async function checkVoice() {
   // This function will run every minute and check every voice channel on the guild
@@ -490,7 +490,7 @@ async function checkVoice() {
 
   // The amount of of voice gained is ((A random value between 15 and 25) / 2)
 
-  log.debug('voiceExp', 'Checking voice channels...');
+  log.info('voiceExp', 'Checking voice channels...');
   (async () => {
     // Define each category type and the category channel id
     const categoryDefs = [
@@ -501,7 +501,6 @@ async function checkVoice() {
       { category: 'DEVELOPER' as ExperienceCategory, id: env.CATEGORY_DEVELOPMENT },
     ];
 
-    log.debug('voiceExp', 'Checking voice channels!!!');
     // For each of the above types, check each voice channel in the category
     categoryDefs.forEach(async categoryDef => {
       const category = await discordClient.channels.fetch(categoryDef.id) as CategoryChannel;
@@ -513,54 +512,54 @@ async function checkVoice() {
           if (channel.members.size < 1) {
             return;
           }
-          log.debug('voiceExp', `${channel.name} has ${channel.members.size} people in it`);
+          log.info('voiceExp', `${channel.name} has ${channel.members.size} people in it`);
           const humansInChat = channel.members.filter(member => {
             if (member.user.bot) {
-              log.debug('voiceExp', `${member.displayName} is a bot`);
+              log.info('voiceExp', `${member.displayName} is a bot`);
               return false;
             }
             if (member.voice.selfDeaf) {
-              log.debug('voiceExp', `${member.displayName} is self deafened`);
+              log.info('voiceExp', `${member.displayName} is self deafened`);
               return false;
             }
             if (member.voice.serverDeaf) {
-              log.debug('voiceExp', `${member.displayName} is server deafened`);
+              log.info('voiceExp', `${member.displayName} is server deafened`);
               return false;
             }
             if (member.voice.selfMute) {
-              log.debug('voiceExp', `${member.displayName} is self muted`);
+              log.info('voiceExp', `${member.displayName} is self muted`);
               return false;
             }
             if (member.voice.serverMute) {
-              log.debug('voiceExp', `${member.displayName} is server muted`);
+              log.info('voiceExp', `${member.displayName} is server muted`);
               return false;
             }
             if (member.voice.streaming) {
-              log.debug('voiceExp', `${member.displayName} is streaming`);
+              log.info('voiceExp', `${member.displayName} is streaming`);
               return false;
             }
             if (member.voice.suppress) {
-              log.debug('voiceExp', `${member.displayName} is suppressed`);
+              log.info('voiceExp', `${member.displayName} is suppressed`);
               return false;
             }
             if (member.voice.channel?.type === ChannelType.GuildStageVoice) {
-              log.debug('voiceExp', `${member.displayName} is in a stage channel`);
+              log.info('voiceExp', `${member.displayName} is in a stage channel`);
               return false;
             }
             if (member.roles.cache.has(env.ROLE_NEEDS_HELP)) {
-              log.debug('voiceExp', `${member.displayName} has the NeedsHelp role`);
+              log.info('voiceExp', `${member.displayName} has the NeedsHelp role`);
               return false;
             }
             if (channel.members.size < 2 && env.NODE_ENV === 'production') {
-              log.debug('voiceExp', `${member.displayName} is alone in the channel`);
+              log.info('voiceExp', `${member.displayName} is alone in the channel`);
               return false;
             }
             return true;
           });
-          log.debug('voiceExp', `${channel.name} has ${humansInChat.size} people actively chatting in it`);
+          log.info('voiceExp', `${channel.name} has ${humansInChat.size} people actively chatting in it`);
           if ((env.NODE_ENV === 'production' && humansInChat && humansInChat.size > 1)
           || (env.NODE_ENV !== 'production' && humansInChat && humansInChat.size > 0)) {
-            log.debug('voiceExp', `Attempting to give experience to ${humansInChat.size} people in ${channel.name}: ${humansInChat.map(member => member.displayName).join(', ')}`);
+            log.info('voiceExp', `Attempting to give experience to ${humansInChat.size} people in ${channel.name}: ${humansInChat.map(member => member.displayName).join(', ')}`);
             // For each human in chat, check if they have been awarded voice exp in the last 5 minutes
             // If they have not, award them voice exp
             humansInChat.forEach(async member => {
@@ -591,7 +590,7 @@ async function checkVoice() {
 // }
 
 async function checkStats() {
-  log.debug(F, 'Checking stats...');
+  // log.debug(F, 'Checking stats...');
   // Determine how many people are in the tripsit guild
   const tripsitGuild = await global.discordClient.guilds.fetch(env.DISCORD_GUILD_ID);
   if (!tripsitGuild) return;
@@ -1071,7 +1070,7 @@ async function runTimer() {
     { callback: checkReminders, interval: env.NODE_ENV === 'production' ? seconds10 : seconds5 },
     { callback: checkTickets, interval: env.NODE_ENV === 'production' ? seconds60 : seconds10 },
     { callback: checkMindsets, interval: env.NODE_ENV === 'production' ? seconds60 : seconds5 },
-    { callback: callUptime, interval: env.NODE_ENV === 'production' ? seconds60 : seconds5 },
+    // { callback: callUptime, interval: env.NODE_ENV === 'production' ? seconds60 : seconds5 },
     { callback: checkRss, interval: env.NODE_ENV === 'production' ? seconds30 : seconds5 },
     { callback: checkVoice, interval: env.NODE_ENV === 'production' ? seconds60 : seconds5 },
     // { callback: changeStatus, interval: env.NODE_ENV === 'production' ? hours24 : seconds5 },
