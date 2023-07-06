@@ -495,6 +495,7 @@ async function checkVoice() {
     // Define each category type and the category channel id
     const categoryDefs = [
       { category: 'GENERAL' as ExperienceCategory, id: env.CATEGORY_CAMPGROUND },
+      { category: 'GENERAL' as ExperienceCategory, id: env.CATEGORY_VOICE },
       { category: 'GENERAL' as ExperienceCategory, id: env.CATEGORY_BACKSTAGE },
       { category: 'TEAM' as ExperienceCategory, id: env.CATEGORY_TEAMTRIPSIT },
       { category: 'TRIPSITTER' as ExperienceCategory, id: env.CATEGORY_HARMREDUCTIONCENTRE },
