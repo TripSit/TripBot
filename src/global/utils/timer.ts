@@ -70,7 +70,7 @@ type RedditFeed = {
 export default runTimer;
 
 async function checkReminders() { // eslint-disable-line @typescript-eslint/no-unused-vars
-  // log.debug(F, 'Checking reminders...');
+  log.debug(F, 'Checking reminders...');
   // Process reminders
   const reminderData = await reminderGet();
   if (reminderData.length > 0) {
@@ -102,7 +102,7 @@ async function checkReminders() { // eslint-disable-line @typescript-eslint/no-u
 }
 
 async function checkTickets() { // eslint-disable-line @typescript-eslint/no-unused-vars
-  // log.debug(F, 'Checking tickets...');
+  log.debug(F, 'Checking tickets...');
   // Process tickets
   const ticketData = await ticketGet() as UserTickets[];
   // Loop through each ticket
@@ -321,7 +321,7 @@ async function checkTickets() { // eslint-disable-line @typescript-eslint/no-unu
 }
 
 async function checkMindsets() { // eslint-disable-line @typescript-eslint/no-unused-vars
-  // log.debug(F, 'Checking mindsets...');
+  log.debug(F, 'Checking mindsets...');
   // Process mindset roles
   const mindsetRoleData = await usersGetMindsets();
   if (mindsetRoleData.length > 0) {
@@ -383,7 +383,7 @@ async function checkMindsets() { // eslint-disable-line @typescript-eslint/no-un
 }
 
 async function checkRss() { // eslint-disable-line @typescript-eslint/no-unused-vars
-  // log.debug(F, 'Checking rss...');
+  log.debug(F, 'Checking rss...');
   const parser: Parser<RedditFeed, RedditItem> = new Parser();
   (async () => {
     const guild = await global.discordClient.guilds.fetch(env.DISCORD_GUILD_ID);
@@ -460,9 +460,9 @@ async function checkRss() { // eslint-disable-line @typescript-eslint/no-unused-
 }
 
 async function callUptime() { // eslint-disable-line @typescript-eslint/no-unused-vars
-  // log.debug(F, 'Calling uptime...');
+  log.debug(F, 'Calling uptime...');
   if (env.NODE_ENV !== 'production') return;
-  axios.get(`https://uptime.tripsit.io/api/push/GrjbCBrwwq?status=up&msg=OK&ping=${discordClient.ws.ping}`).catch(e => {
+  axios.get(`https://uptime.tripsit.io/api/push/jKcz4FCbzW?status=up&msg=OK&ping=${discordClient.ws.ping}`).catch(e => {
     log.debug(F, `Error when calling uptime monitor! ${e}`);
   });
 }
@@ -590,7 +590,7 @@ async function changeStatus() {
 }
 
 async function checkStats() {
-  // log.debug(F, 'Checking stats...');
+  log.debug(F, 'Checking stats...');
   // Determine how many people are in the tripsit guild
   const tripsitGuild = await global.discordClient.guilds.fetch(env.DISCORD_GUILD_ID);
   if (!tripsitGuild) return;
@@ -949,7 +949,7 @@ async function checkMoodle() { // eslint-disable-line
   // It will loop through each of those users and check their enrollments and course status in moodle
   // If the user has completed a course, it will attempt to give that user a role in discord
 
-  // log.debug(F, 'Checking Moodle...');
+  log.debug(F, 'Checking Moodle...');
 
   const userDataList = env.POSTGRES_DB_URL
     ? await database.users.getMoodleUsers()
@@ -1058,7 +1058,7 @@ async function runTimer() {
    * This timer runs every (INTERVAL) to determine if there are any tasks to perform
    * This function uses setTimeout so that it can finish running before the next loop
    */
-  // log.debug(F, `Database URL: ${env.POSTGRES_DB_URL}`);
+  log.debug(F, 'Starting timers...');
   const seconds5 = 1000 * 5;
   const seconds10 = 1000 * 10;
   const seconds30 = 1000 * 30;
