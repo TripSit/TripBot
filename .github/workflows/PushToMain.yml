@@ -23,7 +23,7 @@ jobs:
     - name: Copy env
       run: cp .env.example .env
     - name: Test
-      run: npm test
+      run: npm local:test
   sonar:
     name: SonarScan
     runs-on: ubuntu-latest
