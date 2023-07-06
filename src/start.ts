@@ -1,5 +1,6 @@
 import { getVoiceConnection } from '@discordjs/voice';
 // import { stripIndents } from 'common-tags';
+import sourceMap from 'source-map-support'; // eslint-disable-line
 import { env } from './global/utils/env.config';
 import { log } from './global/utils/log';
 import validateEnv from './global/utils/env.validate'; // eslint-disable-line
@@ -8,6 +9,7 @@ import discordConnect from './discord/discord'; // eslint-disable-line
 // import startMatrix from './matrix/matrix';
 // import ircConnect from './irc/irc';
 // import telegramConnect from './telegram/telegram';
+sourceMap.install();
 
 global.bootTime = new Date();
 

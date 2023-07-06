@@ -1,6 +1,6 @@
 version: '3.9'
 
-name: tripsit-dev
+name: tripsit-dev-apps
 
 ########################### EXTENSION FIELDS
 # Common environment values
