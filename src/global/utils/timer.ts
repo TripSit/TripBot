@@ -70,7 +70,7 @@ type RedditFeed = {
 export default runTimer;
 
 async function checkReminders() { // eslint-disable-line @typescript-eslint/no-unused-vars
-  log.debug(F, 'Checking reminders...');
+  // log.debug(F, 'Checking reminders...');
   // Process reminders
   const reminderData = await reminderGet();
   if (reminderData.length > 0) {
@@ -102,7 +102,7 @@ async function checkReminders() { // eslint-disable-line @typescript-eslint/no-u
 }
 
 async function checkTickets() { // eslint-disable-line @typescript-eslint/no-unused-vars
-  log.debug(F, 'Checking tickets...');
+  // log.debug(F, 'Checking tickets...');
   // Process tickets
   const ticketData = await ticketGet() as UserTickets[];
   // Loop through each ticket
@@ -321,7 +321,7 @@ async function checkTickets() { // eslint-disable-line @typescript-eslint/no-unu
 }
 
 async function checkMindsets() { // eslint-disable-line @typescript-eslint/no-unused-vars
-  log.debug(F, 'Checking mindsets...');
+  // log.debug(F, 'Checking mindsets...');
   // Process mindset roles
   const mindsetRoleData = await usersGetMindsets();
   if (mindsetRoleData.length > 0) {
@@ -383,7 +383,7 @@ async function checkMindsets() { // eslint-disable-line @typescript-eslint/no-un
 }
 
 async function checkRss() { // eslint-disable-line @typescript-eslint/no-unused-vars
-  log.debug(F, 'Checking rss...');
+  // log.debug(F, 'Checking rss...');
   const parser: Parser<RedditFeed, RedditItem> = new Parser();
   (async () => {
     const guild = await global.discordClient.guilds.fetch(env.DISCORD_GUILD_ID);
@@ -489,6 +489,8 @@ async function checkVoice() {
   // DEVELOPER = Development
 
   // The amount of of voice gained is ((A random value between 15 and 25) / 2)
+
+  log.debug('voiceExp', 'Checking voice channels...');
   (async () => {
     // Define each category type and the category channel id
     const categoryDefs = [
@@ -499,8 +501,7 @@ async function checkVoice() {
       { category: 'DEVELOPER' as ExperienceCategory, id: env.CATEGORY_DEVELOPMENT },
     ];
 
-    log.debug('voiceExp', 'Checking voice channels...');
-
+    log.debug('voiceExp', 'Checking voice channels!!!');
     // For each of the above types, check each voice channel in the category
     categoryDefs.forEach(async categoryDef => {
       const category = await discordClient.channels.fetch(categoryDef.id) as CategoryChannel;
@@ -572,22 +573,22 @@ async function checkVoice() {
   })();
 }
 
-async function changeStatus() {
-  discordClient.user?.setActivity('with a test kit', { type: ActivityType.Playing });
-  // let state = 0;
-  // let presence = activities[state];
-  // log.debug(F, `Setting presence to ${presence.message}`);
-  // log.debug(F, `Setting presence type to ${presence.type}`);
-  // @ts-ignore
-  // discordClient.user?.setActivity(presence.message, {type: presence.type});
-  // setInterval(() => {
-  //   state = (state + 1) % activities.length;
-  //   presence = activities[state];
-  //   // log.debug(F, `Setting activity to ${presence.type} ${presence.message}`);
-  //   // @ts-ignore
-  //   discordClient.user?.setActivity(presence.message, {type: presence.type});
-  // }, delay);
-}
+// async function changeStatus() {
+//   discordClient.user?.setActivity('with a test kit', { type: ActivityType.Playing });
+//   // let state = 0;
+//   // let presence = activities[state];
+//   // log.debug(F, `Setting presence to ${presence.message}`);
+//   // log.debug(F, `Setting presence type to ${presence.type}`);
+//   // @ts-ignore
+//   // discordClient.user?.setActivity(presence.message, {type: presence.type});
+//   // setInterval(() => {
+//   //   state = (state + 1) % activities.length;
+//   //   presence = activities[state];
+//   //   // log.debug(F, `Setting activity to ${presence.type} ${presence.message}`);
+//   //   // @ts-ignore
+//   //   discordClient.user?.setActivity(presence.message, {type: presence.type});
+//   // }, delay);
+// }
 
 async function checkStats() {
   log.debug(F, 'Checking stats...');
@@ -949,7 +950,7 @@ async function checkMoodle() { // eslint-disable-line
   // It will loop through each of those users and check their enrollments and course status in moodle
   // If the user has completed a course, it will attempt to give that user a role in discord
 
-  log.debug(F, 'Checking Moodle...');
+  // log.debug(F, 'Checking Moodle...');
 
   const userDataList = env.POSTGRES_DB_URL
     ? await database.users.getMoodleUsers()
@@ -1058,13 +1059,13 @@ async function runTimer() {
    * This timer runs every (INTERVAL) to determine if there are any tasks to perform
    * This function uses setTimeout so that it can finish running before the next loop
    */
-  log.debug(F, 'Starting timers...');
+  discordClient.user?.setActivity('with a test kit', { type: ActivityType.Playing });
   const seconds5 = 1000 * 5;
   const seconds10 = 1000 * 10;
   const seconds30 = 1000 * 30;
   const seconds60 = 1000 * 60;
   const minutes5 = 1000 * 60 * 5;
-  const hours24 = 1000 * 60 * 60 * 24;
+  // const hours24 = 1000 * 60 * 60 * 24;
 
   const timers = [
     { callback: checkReminders, interval: env.NODE_ENV === 'production' ? seconds10 : seconds5 },
@@ -1073,7 +1074,7 @@ async function runTimer() {
     { callback: callUptime, interval: env.NODE_ENV === 'production' ? seconds60 : seconds5 },
     { callback: checkRss, interval: env.NODE_ENV === 'production' ? seconds30 : seconds5 },
     { callback: checkVoice, interval: env.NODE_ENV === 'production' ? seconds60 : seconds5 },
-    { callback: changeStatus, interval: env.NODE_ENV === 'production' ? hours24 : seconds5 },
+    // { callback: changeStatus, interval: env.NODE_ENV === 'production' ? hours24 : seconds5 },
     { callback: checkStats, interval: env.NODE_ENV === 'production' ? minutes5 : seconds5 },
     { callback: checkMoodle, interval: env.NODE_ENV === 'production' ? seconds60 : seconds10 },
     // { callback: checkLpm, interval: env.NODE_ENV === 'production' ? seconds10 : seconds5 },
