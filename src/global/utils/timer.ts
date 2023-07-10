@@ -489,7 +489,7 @@ async function checkVoice() {
 
   // The amount of of voice gained is ((A random value between 15 and 25) / 2)
 
-  log.info('voiceExp', 'Checking voice channels...');
+  // log.info('voiceExp', 'Checking voice channels...');
   (async () => {
     // Define each category type and the category channel id
     const categoryDefs = [
