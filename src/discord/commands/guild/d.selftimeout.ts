@@ -33,7 +33,9 @@ export const selfTimeout: SlashCommand = {
     const confirmation = interaction.options.getString('confirmation');
 
     if (confirmation === 'no') {
-      await interaction.editReply({ content: 'This works exactly like you think it does, try again when you\'re sure!' });
+      await interaction.editReply({
+        content: 'This works exactly like you think it does, try again when you\'re sure!',
+      });
       return false;
     }
 
@@ -42,13 +44,13 @@ export const selfTimeout: SlashCommand = {
 
     const durationValue = await parseDuration(`${duration}`);
 
-    target.timeout(durationValue, 'Self timeout');
+    await target.timeout(durationValue, 'Self timeout');
 
     await interaction.editReply({ content: `We'll see you in ${duration}!` });
 
     const tripsitGuild = await interaction.client.guilds.fetch(env.DISCORD_GUILD_ID);
     const modLog = await tripsitGuild.channels.fetch(env.CHANNEL_MODLOG) as TextChannel;
-    modLog.send(`**${target.user.tag}** self timed out for **${duration}**!`);
+    await modLog.send(`**${target.user.tag}** self timed out for **${duration}**!`);
 
     return true;
   },

@@ -63,14 +63,21 @@ export function get(name:string):APIMessageComponentEmoji {
     };
   }
 
-  const emojiName = emojiGuildRPG.emojis.cache.find(emoji => emoji.name === name)
+  try {
+    const emojiName = emojiGuildRPG.emojis.cache.find(emoji => emoji.name === name)
     ?? emojiGuildMain.emojis.cache.find(emoji => emoji.name === name);
-  // log.debug(F, `emojiName: ${emojiName}`);
-  if (!emojiName) {
-    throw new Error(`Emoji ${name} not found!`);
+    // log.debug(F, `emojiName: ${emojiName}`);
+    if (!emojiName) {
+      throw new Error(`Emoji ${name} not found!`);
+    }
+    return emojiName as APIMessageComponentEmoji;
+  } catch (err) {
+    log.error(F, `Error fetching emoji ${name}: ${err}`);
+    return {
+      name: 'ts_heart',
+      id: '978649029200216085',
+    };
   }
-
-  return emojiName as APIMessageComponentEmoji;
 }
 
 export function customButton(

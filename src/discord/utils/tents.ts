@@ -18,7 +18,7 @@ export async function pitchTent(
   New:VoiceState,
 ): Promise<void> {
   New.member?.guild.channels.create({
-    name: `⛺│ ${New.member.displayName}'s tent`,
+    name: `⛺│${New.member.displayName}'s tent`,
     type: ChannelType.GuildVoice,
     parent: env.CATEGORY_VOICE,
     permissionOverwrites: [
@@ -43,7 +43,7 @@ export async function pitchTent(
         ],
       },
       {
-        id: env.ROLE_VERIFIED,
+        id: New.member.guild.roles.everyone,
         allow: [
           PermissionsBitField.Flags.ViewChannel,
           PermissionsBitField.Flags.Connect,
@@ -59,6 +59,31 @@ export async function pitchTent(
           PermissionsBitField.Flags.UseApplicationCommands,
         ],
       },
+      {
+        id: env.ROLE_MODERATOR,
+        allow: [
+          PermissionsBitField.Flags.ViewChannel,
+        ],
+      },
+      {
+        id: env.ROLE_NEEDSHELP,
+        deny: [
+          PermissionsBitField.Flags.ViewChannel,
+        ],
+      },
+      {
+        id: env.ROLE_VERIFYING,
+        deny: [
+          PermissionsBitField.Flags.ViewChannel,
+        ],
+      },
+      {
+        id: env.ROLE_UNVERIFIED,
+        deny: [
+          PermissionsBitField.Flags.ViewChannel,
+        ],
+      },
+
     ],
   }).then(async newChannel => {
     New.member?.voice.setChannel(newChannel.id);
@@ -76,16 +101,20 @@ export async function pitchTent(
     //   **/voice cohost @user** - Allows another user to use these commands
     //   `);
     await newChannel.fetch();
-    await newChannel.send(`Welcome to your tent <@${New.member?.id}>!
-Manage your tent:
+    await newChannel.send(`## Welcome to your tent, <@${New.member?.id}>
 
-**/voice lock** - Locks your tent so no one else can join it
-**/voice hide** - Hides your tent from the list of voice channels
-**/voice rename** - Changes the name of your tent
-**/voice mute @user** - Mutes a user for everyone in your tent
-**/voice ban @user** - Bans a user from joining and seeing your tent
-**/voice cohost @user** - Allows another user to use these commands
-To undo a command, just type it again.`);
+- **Looking for others to join?**
+ - Pick up the 'Voice Chatty' role in <id:customize>
+ - This icon indicates you're looking for joiners in chat
+
+- **Moderate your tent with commands**
+ - \`/voice lock\`- Locks your tent so no one else can join it
+ - \`/voice hide\` - Hides your tent from the list of voice channels
+ - \`/voice rename\` - Choose a new name for your tent
+ - \`/voice mute\` - Mutes a user for everyone in your tent
+ - \`/voice ban\` - Bans a user from joining and seeing your tent
+ - \`/voice cohost\` - Allows another user to use these commands
+***To undo a command, just use it again.***`);
     // await newChannel.send({ embeds: [embed] });
   });
 }
@@ -104,9 +133,9 @@ export async function teardownTent(
     // Get the number of humans in the channel
     const humans = channel.members.filter(member => !member.user.bot).size;
 
-    // If the channel is a voice channel, and it's not the campfire, and there are no humans in it delete it
+    // If the channel is a voice channel, and it's a tent, and there are no humans in it delete it
     if (channel.type === ChannelType.GuildVoice
-      && channel.id !== env.CHANNEL_CAMPFIRE
+      && channel.name.includes('⛺')
       && humans < 1) {
       channel.delete('Removing temporary voice chan!');
       // log.debug(F, `deleted an empty temporary voice channel`);

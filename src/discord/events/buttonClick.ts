@@ -10,8 +10,8 @@ import {
   tripsitmeOwned,
   tripsitmeMeta,
   tripsitmeBackup,
-  tripsitmeClose,
-  tripsitmeResolve,
+  tripsitmeTeamClose,
+  tripsitmeUserClose,
 } from '../utils/tripsitme';
 import { techHelpClick, techHelpClose, techHelpOwn } from '../utils/techHelp';
 // import {
@@ -105,13 +105,13 @@ export async function buttonClick(interaction:ButtonInteraction, discordClient:C
     return;
   }
 
-  if (buttonID.startsWith('tripsitmeClose')) {
-    tripsitmeClose(interaction);
+  if (buttonID.startsWith('tripsitmeTeamClose')) {
+    tripsitmeTeamClose(interaction);
     return;
   }
 
-  if (buttonID.startsWith('tripsitmeResolve')) {
-    tripsitmeResolve(interaction);
+  if (buttonID.startsWith('tripsitmeUserClose')) {
+    tripsitmeUserClose(interaction);
     return;
   }
 

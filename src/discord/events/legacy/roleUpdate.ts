@@ -12,8 +12,6 @@ import {
 
 // https://discordjs.guide/popular-topics/audit-logs.html#who-deleted-a-message
 
-export default roleUpdate;
-
 export const roleUpdate: RoleUpdateEvent = {
   name: 'roleUpdate',
   async execute(/** oldRole, newRole* */) {
@@ -30,7 +28,9 @@ export const roleUpdate: RoleUpdateEvent = {
 
     // if (!perms.hasPermission) {
     //   const guildOwner = await sticker.guild.fetchOwner();
-    //   await guildOwner.send({ content: `Please make sure I can ${perms.permission} in ${sticker.guild} so I can run ${F}!` }); // eslint-disable-line
+    //   await guildOwner.send({
+    //   content: `Please make sure I can ${perms.permission} in ${sticker.guild} so I can run ${F}!`,
+    // });
     //   log.error(F, `Missing permission ${perms.permission} in ${sticker.guild}!`);
     //   return;
     // }
@@ -50,7 +50,9 @@ export const roleUpdate: RoleUpdateEvent = {
     // ]);
     // if (!channelPerms.hasPermission) {
     //   const guildOwner = await channel.guild.fetchOwner();
-    //   await guildOwner.send({ content: `Please make sure I can ${channelPerms.permission} in ${channel} so I can run ${F}!` }); // eslint-disable-line
+    //   await guildOwner.send({
+    //   content: `Please make sure I can ${channelPerms.permission} in ${channel} so I can run ${F}!`,
+    // });
     //   log.error(F, `Missing permission ${channelPerms.permission} in ${channel}!`);
     //   return;
     // }
@@ -74,3 +76,5 @@ export const roleUpdate: RoleUpdateEvent = {
     // await channel.send(response);
   },
 };
+
+export default roleUpdate;

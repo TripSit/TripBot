@@ -117,7 +117,11 @@ export async function getRoleMembers(roleName:string):Promise<any> {
  *
  *  @returns {Boolean}
  */
-export async function setUserAttribute(identifier:string, attributeName:string, attributeValue:string):Promise<Boolean> {
+export async function setUserAttribute(
+  identifier:string,
+  attributeName:string,
+  attributeValue:string,
+):Promise<Boolean> {
   await ensureAuthentication();
   try {
     await kcAdminClient.users.update(
