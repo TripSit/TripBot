@@ -21,7 +21,7 @@ async function getCommands(commandType: string): Promise<SlashCommand[]> {
   const files = await fs.readdir(path.join(commandDir, commandType));
   // log.debug(F, `${commandType} command files: ${files}`);
   return files
-    .filter(file => file.endsWith('.ts') && !file.endsWith('index.ts'))
+    .filter(file => (file.endsWith('.ts') || file.endsWith('.js')) && !file.startsWith('index'))
     .map(file =>
       // log.debug(F, `${commandType} command file: ${file}`);
        require(`${commandDir}/${commandType}/${file}`)) // eslint-disable-line

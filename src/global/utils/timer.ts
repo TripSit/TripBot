@@ -1,4 +1,5 @@
 /* eslint-disable max-len */
+/* eslint-disable max-len */
 import {
   ActivityType,
   CategoryChannel,
@@ -12,7 +13,7 @@ import {
 } from 'discord.js';
 import Parser from 'rss-parser';
 import { DateTime } from 'luxon';
-import axios from 'axios';
+import axios from 'axios'; // eslint-disable-line
 import { stripIndents } from 'common-tags';
 import {
   reminderGet,
@@ -39,9 +40,9 @@ import { profile } from '../commands/g.learn';
 
 const F = f(__filename);
 
-const lastReminder = {} as {
-  [key: string]: DateTime;
-};
+// const lastReminder = {} as {
+//   [key: string]: DateTime;
+// };
 
 const newRecordString = '🎈🎉🎊 New Record 🎊🎉🎈';
 
@@ -105,10 +106,11 @@ async function checkTickets() { // eslint-disable-line @typescript-eslint/no-unu
   // Process tickets
   const ticketData = await ticketGet() as UserTickets[];
   // Loop through each ticket
-  // for (const ticket of ticketData) {
   if (ticketData.length > 0) {
     ticketData.forEach(async ticket => {
-      // log.debug(F, `Ticket: ${ticket.id} archives on ${ticket.archived_at} deletes on ${ticket.deleted_at}`);
+      // const archiveDate = DateTime.fromJSDate(ticket.archived_at);
+      // const deleteDate = DateTime.fromJSDate(ticket.deleted_at);
+      // log.debug(F, `Ticket: ${ticket.id} archives on ${archiveDate.toLocaleString(DateTime.DATETIME_FULL)} deletes on ${deleteDate.toLocaleString(DateTime.DATETIME_FULL)}`);
       // Check if the ticket is ready to be archived
       if (ticket.archived_at
         && ticket.status !== 'ARCHIVED'
@@ -121,7 +123,9 @@ async function checkTickets() { // eslint-disable-line @typescript-eslint/no-unu
 
         const updatedTicket = ticket;
         updatedTicket.status = 'ARCHIVED' as TicketStatus;
-        updatedTicket.deleted_at = DateTime.local().plus({ days: 7 }).toJSDate();
+        updatedTicket.deleted_at = env.NODE_ENV === 'production'
+          ? DateTime.local().plus({ days: 7 }).toJSDate()
+          : DateTime.local().plus({ minutes: 1 }).toJSDate();
         if (!updatedTicket.description) {
           updatedTicket.description = 'Ticket archived';
         }
@@ -139,6 +143,7 @@ async function checkTickets() { // eslint-disable-line @typescript-eslint/no-unu
           try {
             const thread = await global.discordClient.channels.fetch(ticket.thread_id) as ThreadChannel;
             await thread.setArchived(true);
+            log.debug(F, `Archived thread ${thread.name}`);
           } catch (err) {
             // Thread was likely manually deleted
           }
@@ -149,60 +154,64 @@ async function checkTickets() { // eslint-disable-line @typescript-eslint/no-unu
         if (userData.discord_id) {
           const discordUser = await discordClient.users.fetch(userData.discord_id);
           if (discordUser) {
-            const threadChannel = await discordClient.channels.fetch(ticket.thread_id) as ThreadChannel;
-            const guild = await discordClient.guilds.fetch(threadChannel.guild.id);
-            const guildData = await getGuild(guild.id);
-            const searchResults = await guild.members.search({ query: discordUser.username });
-            // log.debug(F, `searchResults: ${JSON.stringify(searchResults)}`);
-            if (searchResults.size > 0) {
-              const member = await guild.members.fetch(discordUser);
-              if (member) {
-                const myMember = guild.members.me as GuildMember;
-                const myRole = myMember.roles.highest;
+            let threadChannel = {} as ThreadChannel;
+            try {
+              threadChannel = await discordClient.channels.fetch(ticket.thread_id) as ThreadChannel;
+              const guild = await discordClient.guilds.fetch(threadChannel.guild.id);
+              const guildData = await getGuild(guild.id);
+              const searchResults = await guild.members.search({ query: discordUser.username });
+              // log.debug(F, `searchResults: ${JSON.stringify(searchResults)}`);
+              if (searchResults.size > 0) {
+                const member = await guild.members.fetch(discordUser);
+                if (member) {
+                  const myMember = guild.members.me as GuildMember;
+                  const myRole = myMember.roles.highest;
 
-                // Restore the old roles
-                if (userData.roles) {
-                  // log.debug(F, `Restoring ${userData.discord_id}'s roles: ${userData.roles}`);
-                  const roles = userData.roles.split(',');
-                  // for (const role of roles) {
-                  roles.forEach(async role => {
-                    const roleObj = await guild.roles.fetch(role);
-                    if (roleObj && roleObj.name !== '@everyone'
-                              && roleObj.id !== guildData.role_needshelp
-                              && roleObj.comparePositionTo(myRole) < 0
-                    ) {
-                      // Check if the bot has permission to add the role
-                      log.debug(F, `Adding ${userData.discord_id}'s ${role} role`);
-                      try {
-                        await member.roles.add(roleObj);
-                      } catch (err) {
-                        log.error(F, stripIndents`Failed to add ${member.displayName}'s ${roleObj.name}\
-                         role in ${member.guild.name}: ${err}`);
+                  // Restore the old roles
+                  if (userData.roles) {
+                    // log.debug(F, `Restoring ${userData.discord_id}'s roles: ${userData.roles}`);
+                    const roles = userData.roles.split(',');
+                    // for (const role of roles) {
+                    roles.forEach(async role => {
+                      const roleObj = await guild.roles.fetch(role);
+                      if (roleObj && roleObj.name !== '@everyone'
+                          && roleObj.id !== guildData.role_needshelp
+                          && roleObj.comparePositionTo(myRole) < 0
+                          && member.guild.id !== env.DISCORD_BL_ID
+                          // && member.guild.id !== env.DISCORD_GUILD_ID // Patch for BL not to re-add roles
+                      ) {
+                        // Check if the bot has permission to add the role
+                        log.debug(F, `Adding ${userData.discord_id}'s ${role} role`);
+                        try {
+                          await member.roles.add(roleObj);
+                        } catch (err) {
+                          log.error(F, stripIndents`Failed to add ${member.displayName}'s ${roleObj.name}\
+                           role in ${member.guild.name}: ${err}`);
+                        }
                       }
-                    }
-                  });
+                    });
 
-                  // Remove the needshelp role
-                  const needshelpRole = await guild.roles.fetch(guildData.role_needshelp as string);
-                  if (needshelpRole && needshelpRole.comparePositionTo(myRole) < 0) {
-                    await member.roles.remove(needshelpRole);
+                    // Remove the needshelp role
+                    const needshelpRole = await guild.roles.fetch(guildData.role_needshelp as string);
+                    if (needshelpRole && needshelpRole.comparePositionTo(myRole) < 0) {
+                      await member.roles.remove(needshelpRole);
+                    }
                   }
                 }
               }
+            } catch (err) {
+              // Thread was likely manually deleted
             }
           }
         }
-      } else if (ticket.status === 'ARCHIVED') {
-        // log.debug(F, `Ticket ${ticket.id} is already archived`);
-      } else {
-        // log.debug(F, `Ticket ${ticket.id} is not ready to be archived`);
       }
 
       // Check if the ticket is ready to be deleted
       if (ticket.deleted_at
+        && ticket.status === 'ARCHIVED'
         && DateTime.fromJSDate(ticket.deleted_at) <= DateTime.local()
       ) {
-        // log.debug(F, `Deleting ticket ${ticket.id}...`);
+        log.debug(F, `Deleting ticket ${ticket.id}...`);
         // Delete the ticket
         await ticketDel(ticket.id);
 
@@ -211,23 +220,27 @@ async function checkTickets() { // eslint-disable-line @typescript-eslint/no-unu
           try {
             const thread = await global.discordClient.channels.fetch(ticket.thread_id) as ThreadChannel;
             await thread.delete();
+            log.debug(F, `Thread ${ticket.thread_id} was deleted`);
           } catch (err) {
             // Thread was likely manually deleted
+            log.debug(F, `Thread ${ticket.thread_id} was likely manually deleted`);
           }
         }
-      } else {
-        // log.debug(F, `Ticket ${ticket.id} is not ready to be deleted`);
+
+        const updatedTicket = ticket;
+        updatedTicket.status = 'DELETED' as TicketStatus;
+        await ticketUpdate(updatedTicket);
       }
     });
   }
 
+  // As a failsafe, loop through the Tripsit room and delete any threads that are older than 7 days and are archived
   const guildDataList = env.POSTGRES_DB_URL
     ? await db<DiscordGuilds>('discord_guilds').select('*')
     : [];
   if (guildDataList.length > 0) {
     guildDataList.forEach(async guildData => {
       // log.debug(F, `Checking guild  room for old threads...`);
-      // As a failsafe, loop through the Tripsit room and delete any threads that are older than 7 days and are archived
       let guild = {} as Guild;
       try {
         guild = await discordClient.guilds.fetch(guildData.id);
@@ -256,21 +269,21 @@ async function checkTickets() { // eslint-disable-line @typescript-eslint/no-unu
         ]);
 
         if (!tripsitPerms.hasPermission) {
-          // Check if you have reminder the guild owner in the last 24 hours
-          const lastRemdinerSent = lastReminder[guild.id];
-          if (!lastRemdinerSent || lastRemdinerSent < DateTime.local().minus({ hours: 24 })) {
-            log.debug(F, `Sending reminder to ${(await guild.fetchOwner()).user.username}...`);
-            // const guildOwner = await channel.guild.fetchOwner();
-            // await guildOwner.send({
-            //   content: `I am trying to prune threads in ${channel} but
-            //  I don't have the ${tripsitPerms.permission} permission.`, // eslint-disable-line max-len
-            // });
-            const botOwner = await discordClient.users.fetch(env.DISCORD_OWNER_ID);
-            await botOwner.send({
-              content: `I am trying to prune threads in ${channel} of ${channel.guild.name} but I don't have the ${tripsitPerms.permission} permission.`, // eslint-disable-line max-len
-            });
-            lastReminder[guild.id] = DateTime.local();
-          }
+          // // Check if you have reminder the guild owner in the last 24 hours
+          // const lastRemdinerSent = lastReminder[guild.id];
+          // if (!lastRemdinerSent || lastRemdinerSent < DateTime.local().minus({ hours: 24 })) {
+          //   // log.debug(F, `Sending reminder to ${(await guild.fetchOwner()).user.username}...`);
+          //   // const guildOwner = await channel.guild.fetchOwner();
+          //   // await guildOwner.send({
+          //   //   content: `I am trying to prune threads in ${channel} but
+          //   //  I don't have the ${tripsitPerms.permission} permission.`, // eslint-disable-line max-len
+          //   // });
+          //   const botOwner = await discordClient.users.fetch(env.DISCORD_OWNER_ID);
+          //   await botOwner.send({
+          //     content: `I am trying to prune threads in ${channel} of ${channel.guild.name} but I don't have the ${tripsitPerms.permission} permission.`, // eslint-disable-line max-len
+          //   });
+          //   lastReminder[guild.id] = DateTime.local();
+          // }
           return;
         }
 
@@ -288,11 +301,15 @@ async function checkTickets() { // eslint-disable-line @typescript-eslint/no-unu
           // Check if the thread was created over a week ago
           try {
             await thread.fetch();
-            if (DateTime.fromJSDate(thread.createdAt as Date) <= DateTime.local().minus({ days: 7 })) {
+
+            // Get the last message sent int he thread
+            const messages = await thread.messages.fetch({ limit: 1 });
+            const lastMessage = messages.first();
+
+            // Determine if this message was sent longer than a week ago
+            if (lastMessage && DateTime.fromJSDate(lastMessage.createdAt) >= DateTime.local().minus({ days: 7 })) {
               thread.delete();
-              // log.debug(F, `Thread ${thread.id} is deleted`);
-            } else {
-              // log.debug(F, `Thread ${thread.id} is not ready to be deleted ${thread.createdAt}`);
+              log.debug(F, `Deleted thread ${thread.name} in ${channel.name} because the last message was sent over a week ago`);
             }
           } catch (err) {
             // Thread was likely manually deleted
@@ -442,28 +459,27 @@ async function checkRss() { // eslint-disable-line @typescript-eslint/no-unused-
   })();
 }
 
-async function callUptime() { // eslint-disable-line @typescript-eslint/no-unused-vars
-  // log.debug(F, 'Calling uptime...');
-  if (env.NODE_ENV !== 'production') return;
-  axios.get(`https://uptime.tripsit.me/api/push/UyL8LkDKtG?status=up&msg=OK?ping=${discordClient.ws.ping}`).catch(e => {
-    log.debug(F, `Error when calling uptime monitor! ${e}`);
-  });
-}
+// async function callUptime() { // eslint-disable-line @typescript-eslint/no-unused-vars
+//   log.debug(F, 'Calling uptime...');
+//   if (env.NODE_ENV !== 'production') return;
+//   axios.get(`https://uptime.tripsit.io/api/push/SP4qJtHZ6j?status=up&msg=OK&ping=${discordClient.ws.ping}`).catch(e => {
+//     log.debug(F, `Error when calling uptime monitor! ${e}`);
+//   });
+// }
 
 async function checkVoice() {
   // This function will run every minute and check every voice channel on the guild
   // If someone satisfies the following conditions, they will be awarded voice exp
   // 1. They are not a bot
   // 2. They are in a voice channel
-  // 3. They have been in the voice channel for at least 5 minutes
   // 4. They have not been awarded voice exp in the last 5 minutes
   // 5. Are not AFK
   // 6. Are not deafened
   // 7. Are not muted
   // 8. Are not streaming
   // 9. Are not in a stage channel
-  // 10. With another human in the channel
-  // 11. Dot not have the NeedsHelp role
+  // 10. Do not have the NeedsHelp role
+  // 10. With another human in the channel that also meets these conditions
 
   // The type of voice exp is determined by the category the voice channel is in
   // GENERAL = Campground and Backstage
@@ -472,10 +488,13 @@ async function checkVoice() {
   // DEVELOPER = Development
 
   // The amount of of voice gained is ((A random value between 15 and 25) / 2)
+
+  // log.info('voiceExp', 'Checking voice channels...');
   (async () => {
     // Define each category type and the category channel id
     const categoryDefs = [
       { category: 'GENERAL' as ExperienceCategory, id: env.CATEGORY_CAMPGROUND },
+      { category: 'GENERAL' as ExperienceCategory, id: env.CATEGORY_VOICE },
       { category: 'GENERAL' as ExperienceCategory, id: env.CATEGORY_BACKSTAGE },
       { category: 'TEAM' as ExperienceCategory, id: env.CATEGORY_TEAMTRIPSIT },
       { category: 'TRIPSITTER' as ExperienceCategory, id: env.CATEGORY_HARMREDUCTIONCENTRE },
@@ -484,28 +503,63 @@ async function checkVoice() {
 
     // For each of the above types, check each voice channel in the category
     categoryDefs.forEach(async categoryDef => {
-      // log.debug(F, `Checking ${categoryDef.category} voice channels...`);
       const category = await discordClient.channels.fetch(categoryDef.id) as CategoryChannel;
       category.children.cache.forEach(async channel => {
-        // log.debug(F, `Checking ${channel.name}...`);
         if (channel.type === ChannelType.GuildVoice
         && channel.id !== env.CHANNEL_CAMPFIRE
         /* && channel.members.size > 1 */) { // For testing
           // Check to see if the people in the channel meet the right requirements
-          const humansInChat = channel.members.filter(member => (
-            !(member.user.bot
-            || member.voice.selfDeaf
-            || member.voice.serverDeaf
-            || member.voice.selfMute
-            || member.voice.serverMute
-            || member.voice.streaming
-            || member.voice.suppress
-            || member.roles.cache.has(env.ROLE_NEEDS_HELP)
-            )
-          ));
+          if (channel.members.size < 1) {
+            return;
+          }
+          log.info('voiceExp', `${channel.name} has ${channel.members.size} people in it`);
+          const humansInChat = channel.members.filter(member => {
+            if (member.user.bot) {
+              log.info('voiceExp', `${member.displayName} is a bot`);
+              return false;
+            }
+            if (member.voice.selfDeaf) {
+              log.info('voiceExp', `${member.displayName} is self deafened`);
+              return false;
+            }
+            if (member.voice.serverDeaf) {
+              log.info('voiceExp', `${member.displayName} is server deafened`);
+              return false;
+            }
+            if (member.voice.selfMute) {
+              log.info('voiceExp', `${member.displayName} is self muted`);
+              return false;
+            }
+            if (member.voice.serverMute) {
+              log.info('voiceExp', `${member.displayName} is server muted`);
+              return false;
+            }
+            if (member.voice.streaming) {
+              log.info('voiceExp', `${member.displayName} is streaming`);
+              return false;
+            }
+            if (member.voice.suppress) {
+              log.info('voiceExp', `${member.displayName} is suppressed`);
+              return false;
+            }
+            if (member.voice.channel?.type === ChannelType.GuildStageVoice) {
+              log.info('voiceExp', `${member.displayName} is in a stage channel`);
+              return false;
+            }
+            if (member.roles.cache.has(env.ROLE_NEEDS_HELP)) {
+              log.info('voiceExp', `${member.displayName} has the NeedsHelp role`);
+              return false;
+            }
+            if (channel.members.size < 2 && env.NODE_ENV === 'production') {
+              log.info('voiceExp', `${member.displayName} is alone in the channel`);
+              return false;
+            }
+            return true;
+          });
+          log.info('voiceExp', `${channel.name} has ${humansInChat.size} people actively chatting in it`);
           if ((env.NODE_ENV === 'production' && humansInChat && humansInChat.size > 1)
           || (env.NODE_ENV !== 'production' && humansInChat && humansInChat.size > 0)) {
-            // log.debug(F, `There are ${humansInChat.size} humans in ${channel.name}`);
+            log.info('voiceExp', `Attempting to give experience to ${humansInChat.size} people in ${channel.name}: ${humansInChat.map(member => member.displayName).join(', ')}`);
             // For each human in chat, check if they have been awarded voice exp in the last 5 minutes
             // If they have not, award them voice exp
             humansInChat.forEach(async member => {
@@ -518,22 +572,22 @@ async function checkVoice() {
   })();
 }
 
-async function changeStatus() {
-  discordClient.user?.setActivity('with a test kit', { type: ActivityType.Playing });
-  // let state = 0;
-  // let presence = activities[state];
-  // log.debug(F, `Setting presence to ${presence.message}`);
-  // log.debug(F, `Setting presence type to ${presence.type}`);
-  // @ts-ignore
-  // discordClient.user?.setActivity(presence.message, {type: presence.type});
-  // setInterval(() => {
-  //   state = (state + 1) % activities.length;
-  //   presence = activities[state];
-  //   // log.debug(F, `Setting activity to ${presence.type} ${presence.message}`);
-  //   // @ts-ignore
-  //   discordClient.user?.setActivity(presence.message, {type: presence.type});
-  // }, delay);
-}
+// async function changeStatus() {
+//   discordClient.user?.setActivity('with a test kit', { type: ActivityType.Playing });
+//   // let state = 0;
+//   // let presence = activities[state];
+//   // log.debug(F, `Setting presence to ${presence.message}`);
+//   // log.debug(F, `Setting presence type to ${presence.type}`);
+//   // @ts-ignore
+//   // discordClient.user?.setActivity(presence.message, {type: presence.type});
+//   // setInterval(() => {
+//   //   state = (state + 1) % activities.length;
+//   //   presence = activities[state];
+//   //   // log.debug(F, `Setting activity to ${presence.type} ${presence.message}`);
+//   //   // @ts-ignore
+//   //   discordClient.user?.setActivity(presence.message, {type: presence.type});
+//   // }, delay);
+// }
 
 async function checkStats() {
   // log.debug(F, 'Checking stats...');
@@ -911,8 +965,16 @@ async function checkMoodle() { // eslint-disable-line
   const channelContent = await guild.channels.fetch(env.CHANNEL_CONTENT);
 
   userDataList.forEach(async user => {
+    let member = {} as GuildMember;
+    try {
+      member = await guild.members.fetch(user.discord_id as string);
+    } catch (error) {
+      // log.debug(F, `Error fetching member: ${error}`);
+      return;
+    }
+
     const moodleProfile = await profile(user.discord_id as string);
-    const member = await guild.members.fetch(user.discord_id as string);
+
     // log.debug(F, `Checking ${member.user.username}...`);
     if (moodleProfile.completedCourses.length > 0) {
       moodleProfile.completedCourses.forEach(async course => {
@@ -996,26 +1058,25 @@ async function runTimer() {
    * This timer runs every (INTERVAL) to determine if there are any tasks to perform
    * This function uses setTimeout so that it can finish running before the next loop
    */
-  // log.debug(F, `Database URL: ${env.POSTGRES_DB_URL}`);
+  discordClient.user?.setActivity('with a test kit', { type: ActivityType.Playing });
   const seconds5 = 1000 * 5;
   const seconds10 = 1000 * 10;
   const seconds30 = 1000 * 30;
   const seconds60 = 1000 * 60;
   const minutes5 = 1000 * 60 * 5;
-  const hours24 = 1000 * 60 * 60 * 24;
+  // const hours24 = 1000 * 60 * 60 * 24;
 
   const timers = [
     { callback: checkReminders, interval: env.NODE_ENV === 'production' ? seconds10 : seconds5 },
-    { callback: checkTickets, interval: env.NODE_ENV === 'production' ? seconds60 : seconds5 },
+    { callback: checkTickets, interval: env.NODE_ENV === 'production' ? seconds60 : seconds10 },
     { callback: checkMindsets, interval: env.NODE_ENV === 'production' ? seconds60 : seconds5 },
-    { callback: callUptime, interval: env.NODE_ENV === 'production' ? seconds60 : seconds5 },
+    // { callback: callUptime, interval: env.NODE_ENV === 'production' ? seconds60 : seconds5 },
     { callback: checkRss, interval: env.NODE_ENV === 'production' ? seconds30 : seconds5 },
     { callback: checkVoice, interval: env.NODE_ENV === 'production' ? seconds60 : seconds5 },
-    { callback: changeStatus, interval: env.NODE_ENV === 'production' ? hours24 : seconds5 },
+    // { callback: changeStatus, interval: env.NODE_ENV === 'production' ? hours24 : seconds5 },
     { callback: checkStats, interval: env.NODE_ENV === 'production' ? minutes5 : seconds5 },
     { callback: checkMoodle, interval: env.NODE_ENV === 'production' ? seconds60 : seconds10 },
     // { callback: checkLpm, interval: env.NODE_ENV === 'production' ? seconds10 : seconds5 },
-
   ];
 
   timers.forEach(timer => {

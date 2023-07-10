@@ -1,5 +1,8 @@
 **/database.d.ts
-**/archive
+**/archive/**
+**/legacy/**
 **/src/matrix/**
 **/src/telegram/**
 **/src/irc/**
+**/jest/**
+**/build/**
