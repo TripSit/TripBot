@@ -95,7 +95,7 @@ ${externalChannel.guild.name}'s ${externalChannel}!
     return bridgeInitialized;
   }
 
-  externalChannel.send({
+  await externalChannel.send({
     embeds: [
       embedTemplate()
         .setTitle('Bridge')
@@ -160,11 +160,12 @@ async function confirm(
 
   const internalChannel = await interaction.client.channels.fetch(bridgedChannel) as TextChannel;
 
-  internalChannel.send({
+  await internalChannel.send({
     embeds: [
       embedTemplate()
         .setTitle('Bridge')
-        .setDescription(stripIndents`${(interaction.member as GuildMember).displayName} has confirmed the bridge between \
+        .setDescription(stripIndents`
+        ${(interaction.member as GuildMember).displayName} has confirmed the bridge between \
 ${internalChannel.guild.name}'s ${internalChannel} and ${externalChannel.guild.name}'s ${externalChannel}!
             Either side can */bridge pause* and */bridge resume* to temporarily pause/resume the bridge, \
 or */bridge delete* to remove the bridge.

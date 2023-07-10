@@ -19,7 +19,7 @@ describe(slashCommand.data.name, () => {
       getParsedCommand(
         `/${slashCommand.data.name} exercise:1`,
         slashCommand.data,
-        'dm',
+        'tripsit',
       ),
     )).toHaveBeenCalledWith({ content: 'https://i.imgur.com/n5jBp45.gif' });
 
@@ -28,7 +28,7 @@ describe(slashCommand.data.name, () => {
       getParsedCommand(
         `/${slashCommand.data.name} exercise:2`,
         slashCommand.data,
-        'dm',
+        'guild',
       ),
     )).toHaveBeenCalledWith({ content: 'https://i.imgur.com/XbH6gP4.gif' });
 

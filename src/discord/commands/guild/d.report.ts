@@ -32,21 +32,18 @@ export const dReport: SlashCommand = {
 
   async execute(interaction: ChatInputCommandInteraction) {
     log.info(F, await commandContext(interaction));
+    await interaction.deferReply({ ephemeral: true });
+
     if (!interaction.guild) {
-      await interaction.reply({
+      await interaction.editReply({
         embeds: [embedTemplate()
           .setColor(Colors.Red)
           .setTitle('This command can only be used in a server!')],
-        ephemeral: true,
       });
-    }
-    await interaction.deferReply({ ephemeral: true });
-    // Only run on tripsit
-    if (!interaction.guild) {
-      await interaction.editReply({ content: 'This command can only be used in a server!' });
       return false;
     }
 
+    // Only run on tripsit
     if (interaction.guild.id !== env.DISCORD_GUILD_ID) {
       await interaction.editReply({ content: 'This command can only be used in the Tripsit server!' });
       return false;
@@ -69,9 +66,8 @@ export const dReport: SlashCommand = {
       > **Tag:** moonbear#1234
       > **ID:** 9876581237
       > **Nickname:** MoonBear`);
-      await interaction.reply({
+      await interaction.editReply({
         embeds: [embed],
-        ephemeral: true,
       });
       return false;
     }
@@ -88,9 +84,8 @@ export const dReport: SlashCommand = {
         > **Tag:** moonbear#1234
         > **ID:** 9876581237
         > **Nickname:** MoonBear`);
-      await interaction.reply({
+      await interaction.editReply({
         embeds: [embed],
-        ephemeral: true,
       });
       return false;
     }

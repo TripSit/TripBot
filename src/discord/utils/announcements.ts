@@ -21,11 +21,11 @@ let bigFrequencyCounter = 0;
  * @param {number} ms
  * @return {Promise<void>}
  */
-function sleep(ms:number):Promise<void> {
-  return new Promise(resolve => {
-    setTimeout(resolve, ms);
-  });
-}
+// function sleep(ms:number):Promise<void> {
+//   return new Promise(resolve => {
+//     setTimeout(resolve, ms);
+//   });
+// }
 
 const waterAndTeaEmojis = [
   // '🏊', '🏊🏻', '🏊🏼', '🏊🏽', '🏊🏾', '🏊🏿',
@@ -73,7 +73,7 @@ type MessageCounterType = {
  * @param {Message} message
  */
 export async function announcements(message:Message) {
-  const channelStart = await message.client.channels.fetch(env.CHANNEL_START) as TextChannel;
+  // const channelStart = await message.client.channels.fetch(env.CHANNEL_START) as TextChannel;
   const channelAnnouncements = await message.client.channels.fetch(env.CHANNEL_ANNOUNCEMENTS) as TextChannel;
   const channelRules = await message.client.channels.fetch(env.CHANNEL_RULES) as TextChannel;
   const channelBotspam = await message.client.channels.fetch(env.CHANNEL_BOTSPAM) as TextChannel;
@@ -126,7 +126,7 @@ export async function announcements(message:Message) {
   ];
 
   const chanAnnouncements = [
-    `You can change your color and mindset in the ${channelStart.toString()}`,
+    // `You can change your color and mindset in the ${channelStart.toString()}`,
     `Stay up to date with TripSit news in ${channelAnnouncements.toString()}`,
     `Make sure to follow the ${channelRules.toString()}!`,
     `Test out bot commands in ${channelBotspam.toString()}!`,
@@ -324,10 +324,10 @@ export async function announcements(message:Message) {
         // log.debug(F, `randomGenAnnouncement: ${randomGenAnnouncement}`);
         embed.setDescription(randomGenAnnouncement);
       }
-
-      await sleep(3000);
-
-      await message.channel.send({ embeds: [embed] });
+      await message.channel.sendTyping(); // This method automatically stops typing after 10 seconds, or when a message is sent.
+      setTimeout(async () => {
+        await (message.channel.send({ embeds: [embed] }));
+      }, 3000);
     }
   }
 }

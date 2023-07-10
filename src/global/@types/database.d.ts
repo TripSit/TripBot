@@ -420,4 +420,5 @@ export type Users = {
   lastfm_username: string | null;
   partner: boolean | null;
   supporter: boolean | null;
+  moodle_id: string | null;
 };

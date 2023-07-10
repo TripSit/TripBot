@@ -2,6 +2,7 @@ import {
   Colors,
   TextChannel,
 } from 'discord.js';
+import { stripIndents } from 'common-tags';
 import {
   MessageUpdateEvent,
 } from '../@types/eventDef';
@@ -39,7 +40,8 @@ export const messageUpdate: MessageUpdateEvent = {
       .setAuthor(null)
       .setFooter(null)
       .setColor(Colors.Yellow)
-      .setDescription(`**${newMessage.member} edited [message](${newMessage.url}) in ${(newMessage.channel as TextChannel)}**`);
+      .setDescription(stripIndents`**${newMessage.member} edited [message](${newMessage.url}) in\
+      ${(newMessage.channel as TextChannel)}**`);
     try {
       embed.setURL(newMessage.url);
       embed.addFields([

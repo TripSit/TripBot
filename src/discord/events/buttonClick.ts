@@ -10,8 +10,8 @@ import {
   tripsitmeOwned,
   tripsitmeMeta,
   tripsitmeBackup,
-  tripsitmeClose,
-  tripsitmeResolve,
+  tripsitmeTeamClose,
+  tripsitmeUserClose,
 } from '../utils/tripsitme';
 import { techHelpClick, techHelpClose, techHelpOwn } from '../utils/techHelp';
 // import {
@@ -22,6 +22,7 @@ import { buttonReactionRole } from '../commands/global/d.reactionRole';
 import {
   rpgArcade, rpgArcadeGame, rpgArcadeWager, rpgBounties, rpgHelp, rpgHome, rpgHomeAccept, rpgHomeNameChange, rpgMarket, rpgMarketAccept, rpgMarketPreview, rpgTown, rpgTrivia,
 } from '../commands/guild/d.rpg';
+import { helperButton } from '../commands/global/d.setup';
 
 const F = f(__filename);
 
@@ -84,6 +85,11 @@ export async function buttonClick(interaction:ButtonInteraction, discordClient:C
     return;
   }
 
+  if (buttonID.startsWith('helperButton')) {
+    await helperButton(interaction);
+    return;
+  }
+
   if (buttonID.startsWith('"ID":"RR"')) {
     await buttonReactionRole(interaction);
     return;
@@ -99,13 +105,13 @@ export async function buttonClick(interaction:ButtonInteraction, discordClient:C
     return;
   }
 
-  if (buttonID.startsWith('tripsitmeClose')) {
-    tripsitmeClose(interaction);
+  if (buttonID.startsWith('tripsitmeTeamClose')) {
+    tripsitmeTeamClose(interaction);
     return;
   }
 
-  if (buttonID.startsWith('tripsitmeResolve')) {
-    tripsitmeResolve(interaction);
+  if (buttonID.startsWith('tripsitmeUserClose')) {
+    tripsitmeUserClose(interaction);
     return;
   }
 

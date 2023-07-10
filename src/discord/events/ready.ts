@@ -11,11 +11,7 @@ import { stripIndents } from 'common-tags';
 import ms from 'ms';
 import { ReadyEvent } from '../@types/eventDef';
 import { checkGuildPermissions } from '../utils/checkPermissions';
-import { runTimer } from '../../global/utils/timer'; // eslint-disable-line
-import { runStats } from '../utils/stats'; // eslint-disable-line
-import { runRss } from '../../global/utils/rssCheck'; // eslint-disable-line
-import { runVoiceCheck } from '../../global/utils/voiceExp'; // eslint-disable-line
-import { startStatusLoop } from '../utils/statusLoop'; // eslint-disable-line
+import runTimer from '../../global/utils/timer'; // eslint-disable-line
 import { emojiCache } from '../utils/emoji';
 import { populateBans } from '../utils/populateBotBans'; // eslint-disable-line
 import { fact } from '../../global/commands/g.fact';
@@ -59,6 +55,7 @@ export const ready: ReadyEvent = {
   name: 'ready',
   once: true,
   async execute(client) {
+    // log.debug(F, 'ready event fired');
     await setTimeout(1000);
     const hostGuild = await discordClient.guilds.fetch(env.DISCORD_GUILD_ID);
     await checkGuildPermissions(hostGuild, [
@@ -69,16 +66,12 @@ export const ready: ReadyEvent = {
         process.exit(1);
       }
       Promise.all([
-        startStatusLoop(client),
         getInvites(client),
-        runStats(),
-        runVoiceCheck(),
         emojiCache(client),
-        // DB Stuff
-        runRss(),
-        runTimer(),
         populateBans(),
-        // runLpm(),
+
+        // Timers
+        runTimer(),
       ]).then(async () => {
         const bootDuration = (new Date().getTime() - global.bootTime.getTime()) / 1000;
         log.info(F, `Discord finished booting in ${bootDuration}s!`);

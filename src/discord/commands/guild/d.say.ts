@@ -1,4 +1,5 @@
 import {
+  ChannelType,
   GuildMember,
   SlashCommandBuilder,
   TextChannel,
@@ -26,21 +27,35 @@ export const dSay: SlashCommand = {
       return false;
     }
 
-    const channel = interaction.options.getChannel('channel') as TextChannel;
     const say = interaction.options.getString('say', true);
 
-    if (channel) {
-      await channel.send(say);
-    } else {
-      await interaction.channel?.send(say);
+    let channel = interaction.options.getChannel('channel')
+      ? interaction.options.getChannel('channel')
+      : interaction.channel;
+
+    if (!channel) {
+      await interaction.editReply({ content: 'Channel not found!' });
+      return false;
     }
 
-    await interaction.editReply({ content: `I said '${say}' in ${channel ? channel.toString() : interaction.channel?.toString()}` }); // eslint-disable-line max-len
+    // Ensure that the channel used is a text channel
+    if (channel.type !== ChannelType.GuildText) {
+      await interaction.editReply({ content: 'This command can only be used in a server!' });
+      return false;
+    }
+
+    // Set the type so it's not an API channel
+    channel = channel as TextChannel;
+
+    await channel.sendTyping(); // This method automatically stops typing after 10 seconds, or when a message is sent.
+    setTimeout(async () => (channel as TextChannel).send(say), 3000);
+
+    await interaction.editReply({ content: `I said '${say}' in ${channel.name}` }); // eslint-disable-line max-len
 
     const channelBotlog = await interaction.guild.channels.fetch(env.CHANNEL_BOTLOG) as TextChannel;
     if (channelBotlog) {
       await channelBotlog.send(`${(interaction.member as GuildMember).displayName} made me say '${say}' \
-in ${channel ? channel.toString() : interaction.channel?.toString()}`);
+in ${channel.name}`);
     }
 
     return true;
