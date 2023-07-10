@@ -988,6 +988,18 @@ export async function tripSitMe(
   });
   log.debug(F, `threadHelpUser: ${threadHelpUser.name} (${threadHelpUser.id})`);
 
+  // Team check - Cannot be run on team members
+  // If this user is a developer then this is a test run and ignore this check,
+  // but we'll change the output down below to make it clear this is a test.
+  let targetIsTeamMember = false;
+  target.roles.cache.forEach(async role => {
+    if (teamRoles.includes(role.id)) {
+      targetIsTeamMember = true;
+    }
+  });
+
+  log.debug(F, `targetIsTeamMember: ${targetIsTeamMember}`);
+
   const noInfo = '\n*No info given*';
   const firstMessage = stripIndents`
       Hey ${target}, thank you for asking for assistance!
@@ -996,7 +1008,7 @@ export async function tripSitMe(
 
       Your issue: ${intro ? `\n${intro}` : noInfo}
 
-      Someone from the ${roleTripsitter} ${guildData.role_helper ? `and/or ${roleHelper}` : ''} team will be with you as soon as they're available!
+      Someone from the ${roleTripsitter} ${guildData.role_helper && !targetIsTeamMember ? `and/or ${roleHelper}` : ''} team will be with you as soon as they're available!
 
       If this is a medical emergency please contact your local emergency services: we do not call EMS on behalf of anyone.
       
@@ -1147,28 +1159,6 @@ export async function tripsitmeButton(
   // if (guildData.role_helper) {
   //   roleHelper = await interaction.guild.roles.fetch(guildData.role_helper) as Role;
   // }
-
-  // Team check - Cannot be run on team members
-  // If this user is a developer then this is a test run and ignore this check,
-  // but we'll change the output down below to make it clear this is a test.
-  let targetIsTeamMember = false;
-  // if (!actorIsAdmin) {
-  if (!target.permissions.has(PermissionsBitField.Flags.Administrator)) {
-    target.roles.cache.forEach(async role => {
-      if (teamRoles.includes(role.id)) {
-        targetIsTeamMember = true;
-      }
-    });
-    if (targetIsTeamMember) {
-      // log.debug(F, `Target is a team member!`);
-      const teamMessage = stripIndents`You are a member of the team and cannot be publicly helped!`;
-      const embed = embedTemplate()
-        .setColor(Colors.DarkBlue)
-        .setDescription(teamMessage);
-      await interaction.reply({ embeds: [embed] });
-      return;
-    }
-  }
 
   const guildData = await getGuild(interaction.guild?.id as string);
 

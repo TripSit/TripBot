@@ -16,7 +16,7 @@ import {
   // MessageReaction,
   // User,
   // ChatInputCommandInteraction,
-  PermissionsBitField,
+  // PermissionsBitField,
   // TextChannel,
   // MessageFlags,
   // MessageMentionTypes,
@@ -44,23 +44,6 @@ import { checkChannelPermissions } from '../../utils/checkPermissions';
 // import { modmailDMInteraction } from '../archive/modmail';
 
 const F = f(__filename);
-
-const teamRoles = [
-  env.ROLE_DIRECTOR,
-  env.ROLE_SUCCESSOR,
-  env.ROLE_SYSADMIN,
-  env.ROLE_LEADDEV,
-  env.ROLE_IRCADMIN,
-  env.ROLE_DISCORDADMIN,
-  env.ROLE_IRCOP,
-  env.ROLE_MODERATOR,
-  env.ROLE_TRIPSITTER,
-  env.ROLE_TEAMTRIPSIT,
-  env.ROLE_TRIPBOT2,
-  env.ROLE_TRIPBOT,
-  env.ROLE_BOT,
-  env.ROLE_DEVELOPER,
-];
 
 async function tripsitmodeOn(
   interaction:ChatInputCommandInteraction,
@@ -346,29 +329,6 @@ export const tripsitmode: SlashCommand = {
     const enable = interaction.options.getSubcommand() as 'on' | 'off';
 
     const target = interaction.options.getMember('user') as GuildMember;
-
-    // Team check - Cannot be run on team members
-    // If this user is a developer then this is a test run and ignore this check,
-    // but we'll change the output down below to make it clear this is a test.
-    let targetIsTeamMember = false;
-    if (!target.permissions.has(PermissionsBitField.Flags.Administrator)) {
-      target.roles.cache.forEach(async role => {
-        if (teamRoles.includes(role.id)) {
-          targetIsTeamMember = true;
-        }
-      });
-      if (targetIsTeamMember) {
-        // log.debug(F, `Target is a team member!`);
-        const teamMessage = stripIndents`You are a member of the team and cannot be publicly helped!`;
-        const embed = embedTemplate()
-          .setColor(Colors.DarkBlue)
-          .setDescription(teamMessage);
-        if (!interaction.replied) {
-          await interaction.reply({ embeds: [embed] });
-        }
-        return false;
-      }
-    }
 
     if (enable === 'on') {
       tripsitmodeOn(interaction, target);
