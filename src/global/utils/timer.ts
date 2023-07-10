@@ -13,7 +13,7 @@ import {
 } from 'discord.js';
 import Parser from 'rss-parser';
 import { DateTime } from 'luxon';
-import axios from 'axios';
+import axios from 'axios'; // eslint-disable-line
 import { stripIndents } from 'common-tags';
 import {
   reminderGet,
@@ -40,9 +40,9 @@ import { profile } from '../commands/g.learn';
 
 const F = f(__filename);
 
-const lastReminder = {} as {
-  [key: string]: DateTime;
-};
+// const lastReminder = {} as {
+//   [key: string]: DateTime;
+// };
 
 const newRecordString = '🎈🎉🎊 New Record 🎊🎉🎈';
 
@@ -269,21 +269,21 @@ async function checkTickets() { // eslint-disable-line @typescript-eslint/no-unu
         ]);
 
         if (!tripsitPerms.hasPermission) {
-          // Check if you have reminder the guild owner in the last 24 hours
-          const lastRemdinerSent = lastReminder[guild.id];
-          if (!lastRemdinerSent || lastRemdinerSent < DateTime.local().minus({ hours: 24 })) {
-            log.debug(F, `Sending reminder to ${(await guild.fetchOwner()).user.username}...`);
-            // const guildOwner = await channel.guild.fetchOwner();
-            // await guildOwner.send({
-            //   content: `I am trying to prune threads in ${channel} but
-            //  I don't have the ${tripsitPerms.permission} permission.`, // eslint-disable-line max-len
-            // });
-            const botOwner = await discordClient.users.fetch(env.DISCORD_OWNER_ID);
-            await botOwner.send({
-              content: `I am trying to prune threads in ${channel} of ${channel.guild.name} but I don't have the ${tripsitPerms.permission} permission.`, // eslint-disable-line max-len
-            });
-            lastReminder[guild.id] = DateTime.local();
-          }
+          // // Check if you have reminder the guild owner in the last 24 hours
+          // const lastRemdinerSent = lastReminder[guild.id];
+          // if (!lastRemdinerSent || lastRemdinerSent < DateTime.local().minus({ hours: 24 })) {
+          //   // log.debug(F, `Sending reminder to ${(await guild.fetchOwner()).user.username}...`);
+          //   // const guildOwner = await channel.guild.fetchOwner();
+          //   // await guildOwner.send({
+          //   //   content: `I am trying to prune threads in ${channel} but
+          //   //  I don't have the ${tripsitPerms.permission} permission.`, // eslint-disable-line max-len
+          //   // });
+          //   const botOwner = await discordClient.users.fetch(env.DISCORD_OWNER_ID);
+          //   await botOwner.send({
+          //     content: `I am trying to prune threads in ${channel} of ${channel.guild.name} but I don't have the ${tripsitPerms.permission} permission.`, // eslint-disable-line max-len
+          //   });
+          //   lastReminder[guild.id] = DateTime.local();
+          // }
           return;
         }
 
@@ -459,28 +459,27 @@ async function checkRss() { // eslint-disable-line @typescript-eslint/no-unused-
   })();
 }
 
-async function callUptime() { // eslint-disable-line @typescript-eslint/no-unused-vars
-  // log.debug(F, 'Calling uptime...');
-  if (env.NODE_ENV !== 'production') return;
-  axios.get(`https://uptime.tripsit.io/api/push/GrjbCBrwwq?status=up&msg=OK&ping=${discordClient.ws.ping}`).catch(e => {
-    log.debug(F, `Error when calling uptime monitor! ${e}`);
-  });
-}
+// async function callUptime() { // eslint-disable-line @typescript-eslint/no-unused-vars
+//   log.debug(F, 'Calling uptime...');
+//   if (env.NODE_ENV !== 'production') return;
+//   axios.get(`https://uptime.tripsit.io/api/push/SP4qJtHZ6j?status=up&msg=OK&ping=${discordClient.ws.ping}`).catch(e => {
+//     log.debug(F, `Error when calling uptime monitor! ${e}`);
+//   });
+// }
 
 async function checkVoice() {
   // This function will run every minute and check every voice channel on the guild
   // If someone satisfies the following conditions, they will be awarded voice exp
   // 1. They are not a bot
   // 2. They are in a voice channel
-  // 3. They have been in the voice channel for at least 5 minutes
   // 4. They have not been awarded voice exp in the last 5 minutes
   // 5. Are not AFK
   // 6. Are not deafened
   // 7. Are not muted
   // 8. Are not streaming
   // 9. Are not in a stage channel
-  // 10. With another human in the channel
-  // 11. Dot not have the NeedsHelp role
+  // 10. Do not have the NeedsHelp role
+  // 10. With another human in the channel that also meets these conditions
 
   // The type of voice exp is determined by the category the voice channel is in
   // GENERAL = Campground and Backstage
@@ -489,10 +488,13 @@ async function checkVoice() {
   // DEVELOPER = Development
 
   // The amount of of voice gained is ((A random value between 15 and 25) / 2)
+
+  // log.info('voiceExp', 'Checking voice channels...');
   (async () => {
     // Define each category type and the category channel id
     const categoryDefs = [
       { category: 'GENERAL' as ExperienceCategory, id: env.CATEGORY_CAMPGROUND },
+      { category: 'GENERAL' as ExperienceCategory, id: env.CATEGORY_VOICE },
       { category: 'GENERAL' as ExperienceCategory, id: env.CATEGORY_BACKSTAGE },
       { category: 'TEAM' as ExperienceCategory, id: env.CATEGORY_TEAMTRIPSIT },
       { category: 'TRIPSITTER' as ExperienceCategory, id: env.CATEGORY_HARMREDUCTIONCENTRE },
@@ -501,28 +503,63 @@ async function checkVoice() {
 
     // For each of the above types, check each voice channel in the category
     categoryDefs.forEach(async categoryDef => {
-      // log.debug(F, `Checking ${categoryDef.category} voice channels...`);
       const category = await discordClient.channels.fetch(categoryDef.id) as CategoryChannel;
       category.children.cache.forEach(async channel => {
-        // log.debug(F, `Checking ${channel.name}...`);
         if (channel.type === ChannelType.GuildVoice
         && channel.id !== env.CHANNEL_CAMPFIRE
         /* && channel.members.size > 1 */) { // For testing
           // Check to see if the people in the channel meet the right requirements
-          const humansInChat = channel.members.filter(member => (
-            !(member.user.bot
-            || member.voice.selfDeaf
-            || member.voice.serverDeaf
-            || member.voice.selfMute
-            || member.voice.serverMute
-            || member.voice.streaming
-            || member.voice.suppress
-            || member.roles.cache.has(env.ROLE_NEEDS_HELP)
-            )
-          ));
+          if (channel.members.size < 1) {
+            return;
+          }
+          log.info('voiceExp', `${channel.name} has ${channel.members.size} people in it`);
+          const humansInChat = channel.members.filter(member => {
+            if (member.user.bot) {
+              log.info('voiceExp', `${member.displayName} is a bot`);
+              return false;
+            }
+            if (member.voice.selfDeaf) {
+              log.info('voiceExp', `${member.displayName} is self deafened`);
+              return false;
+            }
+            if (member.voice.serverDeaf) {
+              log.info('voiceExp', `${member.displayName} is server deafened`);
+              return false;
+            }
+            if (member.voice.selfMute) {
+              log.info('voiceExp', `${member.displayName} is self muted`);
+              return false;
+            }
+            if (member.voice.serverMute) {
+              log.info('voiceExp', `${member.displayName} is server muted`);
+              return false;
+            }
+            if (member.voice.streaming) {
+              log.info('voiceExp', `${member.displayName} is streaming`);
+              return false;
+            }
+            if (member.voice.suppress) {
+              log.info('voiceExp', `${member.displayName} is suppressed`);
+              return false;
+            }
+            if (member.voice.channel?.type === ChannelType.GuildStageVoice) {
+              log.info('voiceExp', `${member.displayName} is in a stage channel`);
+              return false;
+            }
+            if (member.roles.cache.has(env.ROLE_NEEDS_HELP)) {
+              log.info('voiceExp', `${member.displayName} has the NeedsHelp role`);
+              return false;
+            }
+            if (channel.members.size < 2 && env.NODE_ENV === 'production') {
+              log.info('voiceExp', `${member.displayName} is alone in the channel`);
+              return false;
+            }
+            return true;
+          });
+          log.info('voiceExp', `${channel.name} has ${humansInChat.size} people actively chatting in it`);
           if ((env.NODE_ENV === 'production' && humansInChat && humansInChat.size > 1)
           || (env.NODE_ENV !== 'production' && humansInChat && humansInChat.size > 0)) {
-            // log.debug(F, `There are ${humansInChat.size} humans in ${channel.name}`);
+            log.info('voiceExp', `Attempting to give experience to ${humansInChat.size} people in ${channel.name}: ${humansInChat.map(member => member.displayName).join(', ')}`);
             // For each human in chat, check if they have been awarded voice exp in the last 5 minutes
             // If they have not, award them voice exp
             humansInChat.forEach(async member => {
@@ -535,22 +572,22 @@ async function checkVoice() {
   })();
 }
 
-async function changeStatus() {
-  discordClient.user?.setActivity('with a test kit', { type: ActivityType.Playing });
-  // let state = 0;
-  // let presence = activities[state];
-  // log.debug(F, `Setting presence to ${presence.message}`);
-  // log.debug(F, `Setting presence type to ${presence.type}`);
-  // @ts-ignore
-  // discordClient.user?.setActivity(presence.message, {type: presence.type});
-  // setInterval(() => {
-  //   state = (state + 1) % activities.length;
-  //   presence = activities[state];
-  //   // log.debug(F, `Setting activity to ${presence.type} ${presence.message}`);
-  //   // @ts-ignore
-  //   discordClient.user?.setActivity(presence.message, {type: presence.type});
-  // }, delay);
-}
+// async function changeStatus() {
+//   discordClient.user?.setActivity('with a test kit', { type: ActivityType.Playing });
+//   // let state = 0;
+//   // let presence = activities[state];
+//   // log.debug(F, `Setting presence to ${presence.message}`);
+//   // log.debug(F, `Setting presence type to ${presence.type}`);
+//   // @ts-ignore
+//   // discordClient.user?.setActivity(presence.message, {type: presence.type});
+//   // setInterval(() => {
+//   //   state = (state + 1) % activities.length;
+//   //   presence = activities[state];
+//   //   // log.debug(F, `Setting activity to ${presence.type} ${presence.message}`);
+//   //   // @ts-ignore
+//   //   discordClient.user?.setActivity(presence.message, {type: presence.type});
+//   // }, delay);
+// }
 
 async function checkStats() {
   // log.debug(F, 'Checking stats...');
@@ -1021,22 +1058,22 @@ async function runTimer() {
    * This timer runs every (INTERVAL) to determine if there are any tasks to perform
    * This function uses setTimeout so that it can finish running before the next loop
    */
-  // log.debug(F, `Database URL: ${env.POSTGRES_DB_URL}`);
+  discordClient.user?.setActivity('with a test kit', { type: ActivityType.Playing });
   const seconds5 = 1000 * 5;
   const seconds10 = 1000 * 10;
   const seconds30 = 1000 * 30;
   const seconds60 = 1000 * 60;
   const minutes5 = 1000 * 60 * 5;
-  const hours24 = 1000 * 60 * 60 * 24;
+  // const hours24 = 1000 * 60 * 60 * 24;
 
   const timers = [
     { callback: checkReminders, interval: env.NODE_ENV === 'production' ? seconds10 : seconds5 },
     { callback: checkTickets, interval: env.NODE_ENV === 'production' ? seconds60 : seconds10 },
     { callback: checkMindsets, interval: env.NODE_ENV === 'production' ? seconds60 : seconds5 },
-    { callback: callUptime, interval: env.NODE_ENV === 'production' ? seconds60 : seconds5 },
+    // { callback: callUptime, interval: env.NODE_ENV === 'production' ? seconds60 : seconds5 },
     { callback: checkRss, interval: env.NODE_ENV === 'production' ? seconds30 : seconds5 },
     { callback: checkVoice, interval: env.NODE_ENV === 'production' ? seconds60 : seconds5 },
-    { callback: changeStatus, interval: env.NODE_ENV === 'production' ? hours24 : seconds5 },
+    // { callback: changeStatus, interval: env.NODE_ENV === 'production' ? hours24 : seconds5 },
     { callback: checkStats, interval: env.NODE_ENV === 'production' ? minutes5 : seconds5 },
     { callback: checkMoodle, interval: env.NODE_ENV === 'production' ? seconds60 : seconds10 },
     // { callback: checkLpm, interval: env.NODE_ENV === 'production' ? seconds10 : seconds5 },
