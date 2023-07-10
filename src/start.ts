@@ -1,18 +1,26 @@
 import { getVoiceConnection } from '@discordjs/voice';
 // import { stripIndents } from 'common-tags';
+import sourceMap from 'source-map-support'; // eslint-disable-line
 import { env } from './global/utils/env.config';
 import { log } from './global/utils/log';
 import validateEnv from './global/utils/env.validate'; // eslint-disable-line
 import commandContext from './discord/utils/context'; // eslint-disable-line
-import discordConnect from './discord/discord'; // eslint-disable-line
+import discordConnect from './discord/discord';
+import api from './api/api'; // eslint-disable-line
 // import startMatrix from './matrix/matrix';
 // import ircConnect from './irc/irc';
 // import telegramConnect from './telegram/telegram';
-import api from './api/api';
+sourceMap.install();
 
 global.bootTime = new Date();
 
 const F = f(__filename);
+
+const net = require('net');
+// work around a node v20 bug: https://github.com/nodejs/node/issues/47822#issuecomment-1564708870
+if (net.setDefaultAutoSelectFamily) {
+  net.setDefaultAutoSelectFamily(false);
+}
 
 async function start() {
   log.info(F, 'Initializing service!');

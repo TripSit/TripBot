@@ -126,7 +126,11 @@ export async function getMoodleUsers():Promise<Users[]> {
   return data;
 }
 
-export async function userExists(discordId:string | null, matrixId:string | null, userId:string | null):Promise<boolean> {
+export async function userExists(
+  discordId:string | null,
+  matrixId:string | null,
+  userId:string | null,
+):Promise<boolean> {
   return (await getUser(discordId, matrixId, userId) !== undefined);
 }
 
@@ -231,7 +235,7 @@ export async function getOpenTicket(
         .where('user_id', userId)
         // .where('type', 'TRIPSIT')
         // .andWhereNot('status', 'CLOSED')
-        .andWhereNot('status', 'RESOLVED')
+        // .andWhereNot('status', 'RESOLVED')
         .andWhereNot('status', 'DELETED')
         .first();
     } catch (err) {
@@ -277,7 +281,7 @@ export async function reminderSet(
 // log.debug(F, 'reminderSet started');
   if (env.POSTGRES_DB_URL === undefined) return;
   try {
-    await db<UserReminders>('user_reminders')
+    await db<UserReminders>('userReminders')
       .insert(reminder);
   } catch (err) {
     log.error(F, `Error setting reminder: ${err}`);
@@ -313,40 +317,61 @@ export async function reminderDel(
 
 export async function ticketGet(
   user_id?:string,
-):Promise<UserTickets[] | UserTickets | undefined> {
-// log.debug(F, 'ticketGet started');
+  status?:string,
+):Promise<UserTickets[]> {
+  // log.debug(F, `ticketGet started with user_id: ${user_id}, status: ${status}`);
   if (env.POSTGRES_DB_URL === undefined) {
     return [] as UserTickets[];
   }
-  let tickets = {} as UserTickets[] | UserTickets | undefined;
+
+  let tickets = [] as UserTickets[];
+
   if (user_id) {
+    if (status) {
+      try {
+        tickets = await db<UserTickets>('user_tickets')
+          .select('*')
+          .where('user_id', user_id)
+          .where('type', 'TRIPSIT')
+          .andWhere('status', status)
+          .orderBy('thread_id', 'desc');
+      } catch (err) {
+        log.error(F, `Error getting tickets: ${err}`);
+        log.error(F, `user_id: ${user_id}`);
+      }
+    } else {
+      try {
+        tickets = await db<UserTickets>('user_tickets')
+          .select('*')
+          .where('user_id', user_id)
+          .where('type', 'TRIPSIT')
+          .orderBy('thread_id', 'desc');
+      } catch (err) {
+        log.error(F, `Error getting tickets: ${err}`);
+        log.error(F, `user_id: ${user_id}`);
+      }
+    }
+  } else if (status) {
     try {
       tickets = await db<UserTickets>('user_tickets')
         .select('*')
         .where('user_id', user_id)
         .where('type', 'TRIPSIT')
-        .andWhereNot('status', 'CLOSED')
-        .andWhereNot('status', 'RESOLVED')
-        .andWhereNot('status', 'DELETED')
-        .first();
+        .andWhere('status', status)
+        .orderBy('thread_id', 'desc');
     } catch (err) {
       log.error(F, `Error getting tickets: ${err}`);
       log.error(F, `user_id: ${user_id}`);
     }
-  }
-  try {
-    tickets = await db<UserTickets>('user_tickets')
-      .select(
-        db.ref('id'),
-        db.ref('archived_at'),
-        db.ref('status'),
-        db.ref('thread_id'),
-        db.ref('user_id'),
-        db.ref('deleted_at'),
-      );
-  } catch (err) {
-    log.error(F, `Error getting tickets: ${err}`);
-    log.error(F, `user_id: ${user_id}`);
+  } else {
+    try {
+      tickets = await db<UserTickets>('user_tickets')
+        .select('*')
+        .orderBy('thread_id', 'desc');
+    } catch (err) {
+      log.error(F, `Error getting tickets: ${err}`);
+      log.error(F, `user_id: ${user_id}`);
+    }
   }
 
   return tickets;
@@ -530,7 +555,7 @@ export async function experienceGet(
   // log.debug(F,
   // `experienceGet started with: limit: ${limit}, category: ${category}, type: ${type}, userId: ${userId}`);
 
-  const limit = limitInput || 1000000;
+  const limit = limitInput ?? 1000000;
   if (env.POSTGRES_DB_URL === undefined) return [];
   if (category) {
     if (type) {
@@ -656,7 +681,7 @@ export async function experienceGetTop(
 ):Promise<LeaderboardList> {
 // log.debug(F, 'experienceGetTop started');
   if (env.POSTGRES_DB_URL === undefined) return [] as LeaderboardList;
-  const limit = limitInput || 1000000;
+  const limit = limitInput ?? 1000000;
   if (category) {
     if (type) { // NOSONAR
       try {

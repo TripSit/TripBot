@@ -47,8 +47,8 @@ export async function profile(
   return {
     birthday: userData.birthday,
     timezone: userData.timezone,
-    karma_given: userData.karma_given,
-    karma_received: userData.karma_received,
+    karma_given: userData.karma_given ?? 0,
+    karma_received: userData.karma_received ?? 0,
     totalTextExp,
     totalVoiceExp,
     tokens,

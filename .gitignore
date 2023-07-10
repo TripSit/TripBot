@@ -17,6 +17,7 @@
 mono_crash.*
 
 # Build results
+build
 [Dd]ebug/
 [Dd]ebugPublic/
 [Rr]elease/
@@ -367,3 +368,4 @@ eslint-report.json
 coverage/
 src/discord/assets/img/*/*.png
 src/matrix/cache/tripbot.json
+.env.example

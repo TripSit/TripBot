@@ -22,6 +22,7 @@ import {
   ChatInputCommandInteraction,
   PermissionResolvable,
   Guild,
+  PermissionsBitField,
 } from 'discord.js';
 import {
   TextInputStyle,
@@ -29,7 +30,9 @@ import {
   ButtonStyle,
 } from 'discord-api-types/v10';
 import { stripIndents } from 'common-tags';
+import { DateTime } from 'luxon';
 import {
+  database,
   getGuild,
   getOpenTicket,
   getUser,
@@ -100,6 +103,68 @@ const ignoredRoles = `${teamRoles},${colorRoles},${mindsetRoles}`;
 const guildOnly = 'This must be performed in a guild!';
 const memberOnly = 'This must be performed by a member of a guild!';
 
+/* Testing Scripts
+
+# Initialize
+* As a user, create a new ticket
+  Click the I need help button
+  FIll in information
+  Click submit
+  - On BL your roles are not removed
+  - On other guilds your roles are removed
+  A thread is created
+  The user, helpers and tripsitters are invited to that thread
+* As a team member, can't create ticket
+  Click the I need help button
+  Bot responds "As a member of the team you cannot be publicly helped!"
+
+# During
+* As a user, continue a ticket that has not been deleted
+  Click the I need help button
+  Bot responds "As a member of the team you cannot be publicly helped!"
+* As a user, talk in the thread
+  Open the thread and talk
+* As a team member, talk in the thread
+  Open the thread and talk
+* As a team member, Meta button works
+  Click the Meta button
+  A new thread is created that matches the existing threads name
+* As a team member, Owned button works
+  Click the Owned button
+  Channel name is updated to a yellow heart
+  Meta channel name is updated to a yellow heart
+* As a team member, Backup button works
+  Click the Backup button
+  Bot sends a notification to the channel that you need help
+  - If a meta channel exists, it pings there instead
+
+# End
+* As a team member, prompt to end ticket
+  Click the "they're good now" button
+  Bot responds "Hey <user>, it looks like you're doing somewhat better!"
+  Bot responds with a button that lets the user close the session
+  Bot updates the name of the channel with a blue heart
+* As the system, update the meta thread name when the team prompts to end the session
+  Click the "they're good now" button
+  Bot updates the name of the channel with a blue heart
+* As a user, end ticket
+  Click the "im good now"
+  Bot updates the name of the channel with a green heart
+  - On most guilds your roles are returned
+  - On BL your roles are not removed
+* As the system, update the meta thread name when the user ends the session
+  Click the "im good now"
+  Bot updates the name of the meta channel with a green heart
+* As the system, archive the ticket after a period of time
+  After 7 days since the user last talked, the channel is archived
+* As the system, delete the ticket after a period of time
+  After 14 days since the user last talked, the channel is deleted
+* As the system, archive the meta thread after a period of time
+  After 7 days since the user last talked, the meta channel is archived
+* As the system, delete the meta thread after a period of time
+  After 14 days since the user last talked, the meta channel is deleted
+*/
+
 /**
  * Applies the NeedHelp role on a user and removes their other roles
  * @param {GuildMember} interaction
@@ -124,7 +189,13 @@ export async function needsHelpMode(
 
   let roleNeedshelp = {} as Role;
   if (guildData.role_needshelp) {
-    roleNeedshelp = await guild.roles.fetch(guildData.role_needshelp) as Role;
+    try {
+      roleNeedshelp = await guild.roles.fetch(guildData.role_needshelp) as Role;
+    } catch (err) {
+      const guildOwner = await guild.fetchOwner();
+      await guildOwner.send({ content: `The 'needshelp' role has been deleted, please remake the #tripsit channel with the new role!` }); // eslint-disable-line
+      return;
+    }
   }
 
   // Save the user's roles to the DB
@@ -141,7 +212,10 @@ export async function needsHelpMode(
   const myRole = myMember.roles.highest;
 
   // Patch for BlueLight: They don't want to remove roles from the target at all
-  if (target.guild.id !== env.DISCORD_BL_ID) {
+  if (
+    target.guild.id !== env.DISCORD_BL_ID
+    // && target.guild.id !== env.DISCORD_GUILD_ID // For testing
+  ) {
   // Remove all roles, except team and vanity, from the target
     target.roles.cache.forEach(async role => {
     // log.debug(F, `role: ${role.name} - ${role.id}`);
@@ -207,7 +281,7 @@ export async function tripsitmeOwned(
   // log.debug(F, `ticketData: ${JSON.stringify(ticketData, null, 2)}`);
 
   if (!ticketData) {
-    const rejectMessage = `Hey ${interaction.member}, ${target.displayName} not have an open session!`;
+    const rejectMessage = `Hey ${interaction.member}, ${target.displayName} does not have an open session!`;
     const embed = embedTemplate().setColor(Colors.DarkBlue);
     embed.setDescription(rejectMessage);
     // log.debug(F, `target ${target} does not need help!`);
@@ -218,29 +292,40 @@ export async function tripsitmeOwned(
   const metaChannelId = ticketData.meta_thread_id ?? guildData.channel_tripsitmeta;
   if (metaChannelId) {
     // log.debug(F, `metaChannelId: ${metaChannelId}`);
-    const metaChannel = await interaction.guild.channels.fetch(metaChannelId) as TextChannel;
-
-    const channelPerms = await checkChannelPermissions(metaChannel, [
-      'SendMessages' as PermissionResolvable,
-    ]);
-    if (!channelPerms.hasPermission) {
-      const guildOwner = await interaction.guild.fetchOwner();
-      await guildOwner.send({ content: `Please make sure I can ${channelPerms.permission} in ${metaChannel} so I can run ${F}!` }); // eslint-disable-line
-      log.error(F, `Missing permission ${channelPerms.permission} in ${metaChannel}!`);
-      return;
+    let metaChannel = {} as TextChannel;
+    try {
+      metaChannel = await interaction.guild.channels.fetch(metaChannelId) as TextChannel;
+    } catch (err) {
+      // Meta channel deleted
     }
 
-    await metaChannel.send({
-      content: stripIndents`${actor.displayName} has indicated that ${target.toString()} is receiving help!`,
-    });
-    if (metaChannelId !== guildData.channel_tripsitmeta) {
-      metaChannel.setName(`💛│${target.displayName}'s discussion!`);
+    if (metaChannel.id) {
+      const channelPerms = await checkChannelPermissions(metaChannel, [
+        'SendMessages' as PermissionResolvable,
+      ]);
+      if (!channelPerms.hasPermission) {
+        const guildOwner = await interaction.guild.fetchOwner();
+        await guildOwner.send({ content: `Please make sure I can ${channelPerms.permission} in ${metaChannel.name} so I can run ${F}!` }); // eslint-disable-line
+        log.error(F, `Missing permission ${channelPerms.permission} in ${metaChannel.name}!`);
+        return;
+      }
+
+      await metaChannel.send({
+        content: stripIndents`${actor.displayName} has indicated that ${target.toString()} is receiving help!`,
+      });
+      if (metaChannelId !== guildData.channel_tripsitmeta) {
+        metaChannel.setName(`💛│${target.displayName}'s discussion!`);
+      }
     }
   }
 
   // Update the ticket's name
-  const channel = await interaction.guild.channels.fetch(ticketData.thread_id) as TextChannel;
-  channel.setName(`💛│${target.displayName}'s channel!`);
+  try {
+    const channel = await interaction.guild.channels.fetch(ticketData.thread_id) as TextChannel;
+    channel.setName(`💛│${target.displayName}'s channel!`);
+  } catch (err) {
+    // Thread likely deleted
+  }
 
   // Update the ticket's status in the DB
   ticketData.status = 'OWNED' as TicketStatus;
@@ -285,7 +370,7 @@ export async function tripsitmeMeta(
   const ticketData = await getOpenTicket(userData.id, null);
 
   if (!ticketData) {
-    const rejectMessage = `Hey ${interaction.member}, ${target.displayName} not have an open session!`;
+    const rejectMessage = `Hey ${(interaction.member as GuildMember).displayName}, ${target.displayName} does not have an open session!`;
     const embed = embedTemplate().setColor(Colors.DarkBlue);
     embed.setDescription(rejectMessage);
     // log.debug(F, `target ${target} does not need help!`);
@@ -334,7 +419,7 @@ export async function tripsitmeMeta(
         .setLabel('Owned')
         .setStyle(ButtonStyle.Primary),
       new ButtonBuilder()
-        .setCustomId(`tripsitmeClose~${target.id}`)
+        .setCustomId(`tripsitmeTeamClose~${target.id}`)
         .setLabel('They\'re good now!')
         .setStyle(ButtonStyle.Success),
       new ButtonBuilder()
@@ -382,7 +467,7 @@ export async function tripsitmeBackup(
   const ticketData = await getOpenTicket(userData.id, null);
 
   if (!ticketData) {
-    const rejectMessage = `Hey ${interaction.member}, ${target.displayName} not have an open session!`;
+    const rejectMessage = `Hey ${interaction.member}, ${target.displayName} does not have an open session!`;
     const embed = embedTemplate().setColor(Colors.DarkBlue);
     embed.setDescription(rejectMessage);
     // log.debug(F, `target ${target} does not need help!`);
@@ -410,8 +495,14 @@ export async function tripsitmeBackup(
   Be sure to read the log so you have the context!`;
 
   if (ticketData.meta_thread_id) {
-    const metaThread = await interaction.guild.channels.fetch(ticketData.meta_thread_id) as ThreadChannel;
-    await metaThread.send(backupMessage);
+    try {
+      const metaThread = await interaction.guild.channels.fetch(ticketData.meta_thread_id) as ThreadChannel;
+      await metaThread.send(backupMessage);
+    } catch (err) {
+      // meta thread deleted
+      ticketData.meta_thread_id = null;
+      await ticketUpdate(ticketData);
+    }
   } else {
     await interaction.channel.send(backupMessage);
   }
@@ -423,44 +514,19 @@ export async function tripsitmeBackup(
  * Handles removing of the NeedsHelp mode
  * @param {ButtonInteraction} interaction
  */
-export async function tripsitmeClose(
+export async function tripsitmeTeamClose(
   interaction:ButtonInteraction,
 ) {
+  if (!interaction.guild) return;
+  if (!interaction.member) return;
+  if (!interaction.channel) return;
   log.info(F, await commandContext(interaction));
   await interaction.deferReply({ ephemeral: true });
-  if (!interaction.guild) {
-    // log.debug(F, `no guild!`);
-    await interaction.editReply(guildOnly);
-    return;
-  }
-  if (!interaction.member) {
-    // log.debug(F, `no member!`);
-    await interaction.editReply(memberOnly);
-    return;
-  }
-
-  // log.debug(F, `tripsitmeClose`);
-  // log.debug(F, `interaction.customId: ${interaction.customId}`);
 
   const targetId = interaction.customId.split('~')[1];
 
-  // log.debug(F, `targetId: ${targetId}`);
-
-  // const guildData = await getGuild(interaction.guild.id);
-
-  // let roleNeedshelp = {} as Role;
-  // let channelTripsitmeta = {} as TextChannel;
-  // if (guildData.role_needshelp) {
-  //   roleNeedshelp = await interaction.guild.roles.fetch(guildData.role_needshelp) as Role;
-  // }
-  // if (guildData.channel_tripsitmeta) {
-  //   channelTripsitmeta = await interaction.guild.channels.fetch(guildData.channel_tripsitmeta) as TextChannel;
-  // }
-
   const target = await interaction.guild.members.fetch(targetId);
   const actor = interaction.member as GuildMember;
-
-  // log.debug(F, `actor.id: ${actor.id}`);
 
   if (targetId === actor.id) {
     // log.debug(F, `not the target!`);
@@ -469,13 +535,24 @@ export async function tripsitmeClose(
   }
 
   const userData = await getUser(target.id, null, null);
+  log.debug(F, `userData: ${JSON.stringify(userData, null, 2)}`);
   const ticketData = await getOpenTicket(userData.id, null);
-  const guildData = await getGuild(interaction.guild.id);
-
   log.debug(F, `ticketData: ${JSON.stringify(ticketData, null, 2)}`);
+  const guildData = await getGuild(interaction.guild.id);
+  log.debug(F, `guildData: ${JSON.stringify(guildData, null, 2)}`);
 
   if (!ticketData) {
-    const rejectMessage = `Hey ${interaction.member}, ${target.displayName} not have an open session!`;
+    const rejectMessage = `Hey ${(interaction.member as GuildMember).displayName}, ${target.displayName} does not have an open session!`;
+    const embed = embedTemplate().setColor(Colors.DarkBlue);
+    embed.setDescription(rejectMessage);
+    // log.debug(F, `target ${target} does not need help!`);
+    await interaction.editReply({ embeds: [embed] });
+    return;
+  }
+
+  // log.debug(F, `ticketData: ${JSON.stringify(ticketData, null, 2)}`);
+  if (Object.entries(ticketData).length === 0) {
+    const rejectMessage = `Hey ${(interaction.member as GuildMember).displayName}, ${target.displayName} does not have an open session!`;
     const embed = embedTemplate().setColor(Colors.DarkBlue);
     embed.setDescription(rejectMessage);
     // log.debug(F, `target ${target} does not need help!`);
@@ -492,9 +569,16 @@ export async function tripsitmeClose(
     // log.debug(F, `There was an error updating the help thread, it was likely deleted:\n ${err}`);
     // Update the ticket status to closed
     ticketData.status = 'DELETED' as TicketStatus;
-
-    await ticketUpdate(ticketData);
+    ticketData.archived_at = new Date();
+    ticketData.deleted_at = new Date();
+    await database.tickets.set(ticketData);
+    interaction.editReply({ content: 'It looks like this thread was deleted, so consider this closed!' });
   // log.debug(F, `Updated ticket status to DELETED`);
+  }
+
+  if (threadHelpUser.archived) {
+    await threadHelpUser.setArchived(false);
+    log.debug(F, `Un-archived ${threadHelpUser.name}`);
   }
 
   const closeMessage = stripIndents`Hey ${target}, it looks like you're doing somewhat better!
@@ -506,7 +590,7 @@ export async function tripsitmeClose(
   const row = new ActionRowBuilder<ButtonBuilder>()
     .addComponents(
       new ButtonBuilder()
-        .setCustomId(`tripsitmeResolve~${target.id}`)
+        .setCustomId(`tripsitmeUserClose~${target.id}`)
         .setLabel('I\'m good now!')
         .setStyle(ButtonStyle.Success),
     );
@@ -518,18 +602,35 @@ export async function tripsitmeClose(
 
   const metaChannelId = ticketData.meta_thread_id ?? guildData.channel_tripsitmeta;
   if (metaChannelId) {
-    const metaChannel = await interaction.guild.channels.fetch(metaChannelId) as TextChannel;
-    await metaChannel.send({
-      content: stripIndents`${actor.displayName} has indicated that ${target.toString()} no longer needs help!`,
-    });
-    if (metaChannelId !== guildData.channel_tripsitmeta) {
-      metaChannel.setName(`💙│${target.displayName}'s discussion!`);
+    try {
+      const metaChannel = await interaction.guild.channels.fetch(metaChannelId) as TextChannel;
+      await metaChannel.send({
+        content: stripIndents`${actor.displayName} has indicated that ${target.toString()} no longer needs help!`,
+      });
+      if (metaChannelId !== guildData.channel_tripsitmeta) {
+        metaChannel.setName(`💙│${target.displayName}'s discussion!`);
+      }
+    } catch (err) {
+      if (metaChannelId === ticketData.meta_thread_id) {
+        // Meta thread likely doesn't exist
+        ticketData.meta_thread_id = null;
+        await database.tickets.set(ticketData);
+      }
     }
   }
 
-  // Update the ticket status to closed
-  ticketData.status = 'CLOSED' as TicketStatus;
-  await ticketUpdate(ticketData);
+  // Update the ticket status to resolved
+  ticketData.status = 'RESOLVED' as TicketStatus;
+  ticketData.archived_at = env.NODE_ENV === 'production'
+    ? DateTime.local().plus({ days: 7 }).toJSDate()
+    : DateTime.local().plus({ minutes: 1 }).toJSDate();
+
+  ticketData.deleted_at = env.NODE_ENV === 'production'
+    ? DateTime.local().plus({ days: 14 }).toJSDate()
+    : DateTime.local().plus({ minutes: 2 }).toJSDate();
+
+  await database.tickets.set(ticketData);
+  log.debug(F, 'Updated ticket status to RESOLVED');
 
   // log.debug(F, `${target.user.tag} (${target.user.id}) is no longer being helped!`);
   await interaction.editReply({ content: 'Done!' });
@@ -539,37 +640,21 @@ export async function tripsitmeClose(
  * Handles removing of the NeedsHelp mode
  * @param {ButtonInteraction} interaction
  */
-export async function tripsitmeResolve(
+export async function tripsitmeUserClose(
   interaction:ButtonInteraction,
 ) {
+  if (!interaction.guild) return;
+  if (!interaction.member) return;
+  if (!interaction.channel) return;
   log.info(F, await commandContext(interaction));
-  if (interaction.channel
-      && (interaction.channel as ThreadChannel).archived) {
-    await (interaction.channel as ThreadChannel).setArchived(false);
-  }
 
-  await interaction.deferReply({ ephemeral: true });
-  if (!interaction.guild) {
-    // log.debug(F, `no guild!`);
-    await interaction.editReply(guildOnly);
-    return;
-  }
-  if (!interaction.member) {
-    // log.debug(F, `no member!`);
-    await interaction.editReply(memberOnly);
-    return;
-  }
+  await interaction.deferReply({ ephemeral: false });
 
-  // log.debug(F, `interaction.customId: ${interaction.customId}`);
   const targetId = interaction.customId.split('~')[1];
-  // log.debug(F, `targetId: ${targetId}`);
   const override = interaction.customId.split('~')[0] === 'tripsitmodeOffOverride';
-  // log.debug(F, `override: ${override}`);
 
   const target = await interaction.guild.members.fetch(targetId);
   const actor = interaction.member as GuildMember;
-
-  // log.debug(F, `${interaction.deferred} ${interaction.replied} ${interaction.ephemeral}`);
 
   if (targetId !== actor.id && !override) {
     // log.debug(F, `not the target!`);
@@ -577,27 +662,85 @@ export async function tripsitmeResolve(
     return;
   }
 
-  let roleNeedshelp = {} as Role;
-  let channelTripsitmeta = {} as TextChannel;
-  const guildData = await getGuild(interaction.guild.id);
-  if (guildData.role_needshelp) {
-    roleNeedshelp = await interaction.guild.roles.fetch(guildData.role_needshelp) as Role;
-  }
-  if (guildData.channel_tripsitmeta) {
-    channelTripsitmeta = await interaction.guild.channels.fetch(guildData.channel_tripsitmeta) as TextChannel;
-  }
-
   const userData = await getUser(target.id, null, null);
+  log.debug(F, `userData: ${JSON.stringify(userData, null, 2)}`);
+  const ticketData = await getOpenTicket(userData.id, null);
+  log.debug(F, `ticketData: ${JSON.stringify(ticketData, null, 2)}`);
+  const guildData = await getGuild(interaction.guild.id);
+  log.debug(F, `guildData: ${JSON.stringify(guildData, null, 2)}`);
 
-  if (userData.roles) {
+  if (!ticketData) {
+    const rejectMessage = stripIndents`Hey ${(interaction.member as GuildMember).displayName}, you do not have an open session!
+    If you need help, please click the button again!`;
+    const embed = embedTemplate().setColor(Colors.DarkBlue);
+    embed.setDescription(rejectMessage);
+    // log.debug(F, `target ${target} does not need help!`);
+    await interaction.editReply({ embeds: [embed] });
+    return;
+  }
+
+  // log.debug(F, `ticketData: ${JSON.stringify(ticketData, null, 2)}`);
+  if (Object.entries(ticketData).length === 0) {
+    const rejectMessage = stripIndents`Hey ${(interaction.member as GuildMember).displayName}, you do not have an open session!
+    If you need help, please click the button again!`;
+    const embed = embedTemplate().setColor(Colors.DarkBlue);
+    embed.setDescription(rejectMessage);
+    // log.debug(F, `target ${target} does not need help!`);
+    await interaction.editReply({ embeds: [embed] });
+    return;
+  }
+
+  // log.debug(F, `ticketData: ${JSON.stringify(ticketData, null, 2)}`);
+  if (ticketData.status === 'CLOSED') {
+    const rejectMessage = stripIndents`Hey ${(interaction.member as GuildMember).displayName}, you already closed this session!`;
+    const embed = embedTemplate().setColor(Colors.DarkBlue);
+    embed.setDescription(rejectMessage);
+    // log.debug(F, `target ${target} does not have an open session!`);
+    await interaction.editReply({ embeds: [embed] });
+    return;
+  }
+
+  // Remove the needshelp role
+  let roleNeedshelp = {} as Role;
+  if (guildData.role_needshelp) {
+    try {
+      roleNeedshelp = await interaction.guild.roles.fetch(guildData.role_needshelp) as Role;
+      const myMember = await interaction.guild.members.fetch(interaction.client.user.id);
+      const myRole = myMember.roles.highest;
+      if (roleNeedshelp && roleNeedshelp.comparePositionTo(myRole) < 0) {
+        // log.debug(F, `Removing ${roleNeedshelp.name} from ${target.displayName}`);
+        await target.roles.remove(roleNeedshelp);
+      }
+    } catch (err) {
+      // log.debug(F, `There was an error fetching the needshelp role, it was likely deleted:\n ${err}`);
+      // Update the ticket status to closed
+      guildData.role_needshelp = null;
+      await database.guilds.set(guildData);
+    }
+  }
+
+  // Remove the needshelp role
+  let channelTripsitmeta = {} as TextChannel;
+  if (guildData.channel_tripsitmeta) {
+    try {
+      channelTripsitmeta = await interaction.guild.channels.fetch(guildData.channel_tripsitmeta) as TextChannel;
+    } catch (err) {
+      // log.debug(F, `There was an error fetching the meta channel, it was likely deleted:\n ${err}`);
+      // Update the ticket status to closed
+      guildData.channel_tripsitmeta = null;
+      await database.guilds.set(guildData);
+    }
+  }
+
+  // Readd old roles
+  if (userData.roles
+    // Patch for BlueLight: Since we didn't remove roles, don't re-add them
+    && target.guild.id !== env.DISCORD_BL_ID
+    // && target.guild.id !== env.DISCORD_GUILD_ID // For testing
+  ) {
     const myMember = await interaction.guild.members.fetch(interaction.client.user.id);
     const myRole = myMember.roles.highest;
     const targetRoles:string[] = userData.roles.split(',') || [];
-
-    if (roleNeedshelp && roleNeedshelp.comparePositionTo(myRole) < 0) {
-      // log.debug(F, `Removing ${roleNeedshelp.name} from ${target.displayName}`);
-      await target.roles.remove(roleNeedshelp);
-    }
 
     // readd each role to the target
     if (targetRoles.length > 0) {
@@ -609,56 +752,70 @@ export async function tripsitmeResolve(
         }
         const roleObj = await interaction.guild.roles.fetch(roleId) as Role;
         if (roleObj
-          && !ignoredRoles.includes(roleObj.id)
-          && roleObj.name !== '@everyone'
-          && roleObj.id !== roleNeedshelp.id
-          && roleObj.comparePositionTo(myRole) < 0) {
+            && !ignoredRoles.includes(roleObj.id)
+            && roleObj.name !== '@everyone'
+            && roleObj.id !== roleNeedshelp.id
+            && roleObj.comparePositionTo(myRole) < 0) {
           await target.roles.add(roleObj);
         }
       });
     }
   }
 
-  // log.debug(F, `targetLastHelpedThreadId: ${targetLastHelpedThreadId}`);
-
-  const ticketData = await getOpenTicket(userData.id, null);
-
-  log.debug(F, `ticketData: ${JSON.stringify(ticketData, null, 2)}`);
-
-  if (ticketData === undefined || Object.entries(ticketData).length === 0) {
-    const rejectMessage = `Hey ${interaction.member}, you do not have an open session!`;
-    const embed = embedTemplate().setColor(Colors.DarkBlue);
-    embed.setDescription(rejectMessage);
-    // log.debug(F, `target ${target} does not need help!`);
-    await interaction.editReply({ embeds: [embed] });
-    return;
-  }
-
-  // Get the channel objects for the help thread
+  // Change the channel icon
   let threadHelpUser = {} as ThreadChannel;
   try {
     threadHelpUser = await interaction.guild.channels.fetch(ticketData.thread_id) as ThreadChannel;
-    threadHelpUser.setName(`💚│${target.displayName}'s channel!`);
   } catch (err) {
     // log.debug(F, `There was an error updating the help thread, it was likely deleted:\n ${err}`);
     // Update the ticket status to closed
     ticketData.status = 'DELETED' as TicketStatus;
+    ticketData.archived_at = new Date();
+    ticketData.deleted_at = new Date();
+    await database.tickets.set(ticketData);
     await ticketUpdate(ticketData);
+    await interaction.editReply({ content: 'Could not find this help thread, it was likely deleted manually!' });
+    return;
   // log.debug(F, `Updated ticket status to DELETED`);
   }
 
-  const endHelpMessage = stripIndents`Hey ${target}, we're glad you're doing better!
+  if (threadHelpUser.archived) {
+    await threadHelpUser.setArchived(false);
+    log.debug(F, `Un-archived ${threadHelpUser.name}`);
+  }
+
+  // Let the meta channel know the user has been helped
+  const metaChannelId = ticketData.meta_thread_id ?? guildData.channel_tripsitmeta;
+  if (metaChannelId) {
+    try {
+      const metaChannel = await interaction.guild.channels.fetch(metaChannelId) as TextChannel;
+      await metaChannel.send({
+        content: stripIndents`${actor.displayName} has indicated that they no longer need help!`,
+      });
+      if (metaChannelId !== guildData.channel_tripsitmeta) {
+        metaChannel.setName(`💚│${target.displayName}'s discussion!`);
+      }
+    } catch (err) {
+      // Meta thread likely doesn't exist
+      if (metaChannelId === ticketData.meta_thread_id) {
+        ticketData.meta_thread_id = null;
+        await ticketUpdate(ticketData);
+      }
+    }
+  }
+
+  // Send the end message to the user
+  try {
+    await interaction.editReply(stripIndents`Hey ${target}, we're glad you're doing better!
     We've restored your old roles back to normal <3
     This thread will remain here for a day if you want to follow up tomorrow.
-    After 7 days, or on request, it will be deleted to preserve your privacy =)`;
-
-  try {
-    await threadHelpUser.send(endHelpMessage);
+    After 7 days, or on request, it will be deleted to preserve your privacy =)`);
   } catch (err) {
     log.error(F, `Error sending end help message to ${threadHelpUser}`);
     log.error(F, err as string);
   }
 
+  // Send the survey
   let message:Message;
   await threadHelpUser.send(stripIndents`
       ${emojiGet('Invisible')}
@@ -698,23 +855,23 @@ export async function tripsitmeResolve(
       });
     });
 
-  const metaChannelId = ticketData.meta_thread_id ?? guildData.channel_tripsitmeta;
-  if (metaChannelId) {
-    const metaChannel = await interaction.guild.channels.fetch(metaChannelId) as TextChannel;
-    await metaChannel.send({
-      content: stripIndents`${actor.displayName} has indicated that they no longer need help!`,
-    });
-    if (metaChannelId !== guildData.channel_tripsitmeta) {
-      metaChannel.setName(`💚│${target.displayName}'s discussion!`);
-    }
-  }
-
-  // Update the ticket status to resolved
-  ticketData.status = 'RESOLVED' as TicketStatus;
-  await ticketUpdate(ticketData);
+  // Do this last because it looks weird to have it happen in-between messages
+  threadHelpUser.setName(`💚│${target.displayName}'s channel!`);
 
   // log.debug(F, `${target.user.tag} (${target.user.id}) is no longer being helped!`);
-  await interaction.editReply({ content: 'Done!' });
+  // await interaction.editReply({ content: 'Done!' });
+
+  // Update the ticket status to closed
+  ticketData.status = 'CLOSED' as TicketStatus;
+  ticketData.archived_at = env.NODE_ENV === 'production'
+    ? DateTime.local().plus({ days: 7 }).toJSDate()
+    : DateTime.local().plus({ minutes: 1 }).toJSDate();
+
+  ticketData.deleted_at = env.NODE_ENV === 'production'
+    ? DateTime.local().plus({ days: 14 }).toJSDate()
+    : DateTime.local().plus({ minutes: 2 }).toJSDate();
+  await database.tickets.set(ticketData);
+  log.debug(F, 'Updated ticket status to CLOSED');
 }
 
 /**
@@ -762,7 +919,14 @@ export async function tripSitMe(
     // backupMessage += `<@&${roleHelper.id}> `;
   }
   if (guildData.channel_tripsitmeta) {
-    channelTripsitmeta = await interaction.guild.channels.fetch(guildData.channel_tripsitmeta) as TextChannel;
+    try {
+      channelTripsitmeta = await interaction.guild.channels.fetch(guildData.channel_tripsitmeta) as TextChannel;
+    } catch (err) {
+      // log.debug(F, `There was an error fetching the meta channel, it was likely deleted:\n ${err}`);
+      // Update the ticket status to closed
+      guildData.channel_tripsitmeta = null;
+      await database.guilds.set(guildData);
+    }
   }
   log.debug(F, `roleTripsitter: ${roleTripsitter.name} (${roleTripsitter.id})`);
   log.debug(F, `roleHelper: ${roleHelper.name} (${roleHelper.id})`);
@@ -795,9 +959,17 @@ export async function tripSitMe(
   await needsHelpMode(interaction, target);
 
   // Get the tripsit channel from the guild
-  const tripsitChannel = guildData.channel_tripsit
-    ? await interaction.guild.channels.fetch(guildData.channel_tripsit) as TextChannel
-    : {} as TextChannel;
+  let tripsitChannel = {} as TextChannel;
+  try {
+    if (guildData.channel_tripsit) {
+      tripsitChannel = await interaction.guild.channels.fetch(guildData.channel_tripsit) as TextChannel;
+    }
+  } catch (err) {
+    // log.debug(F, `There was an error fetching the tripsit channel, it was likely deleted:\n ${err}`);
+    // Update the ticket status to closed
+    guildData.channel_tripsit = null;
+    await database.guilds.set(guildData);
+  }
 
   if (!tripsitChannel.id) {
     // log.debug(F, `no tripsit channel!`);
@@ -816,6 +988,18 @@ export async function tripSitMe(
   });
   log.debug(F, `threadHelpUser: ${threadHelpUser.name} (${threadHelpUser.id})`);
 
+  // Team check - Cannot be run on team members
+  // If this user is a developer then this is a test run and ignore this check,
+  // but we'll change the output down below to make it clear this is a test.
+  let targetIsTeamMember = false;
+  target.roles.cache.forEach(async role => {
+    if (teamRoles.includes(role.id)) {
+      targetIsTeamMember = true;
+    }
+  });
+
+  log.debug(F, `targetIsTeamMember: ${targetIsTeamMember}`);
+
   const noInfo = '\n*No info given*';
   const firstMessage = stripIndents`
       Hey ${target}, thank you for asking for assistance!
@@ -824,13 +1008,13 @@ export async function tripSitMe(
 
       Your issue: ${intro ? `\n${intro}` : noInfo}
 
-      Someone from the ${roleTripsitter} ${guildData.role_helper ? `and/or ${roleHelper}` : ''} team will be with you as soon as they're available!
+      Someone from the ${roleTripsitter} ${guildData.role_helper && !targetIsTeamMember ? `and/or ${roleHelper}` : ''} team will be with you as soon as they're available!
 
       If this is a medical emergency please contact your local emergency services: we do not call EMS on behalf of anyone.
       
       When you're feeling better you can use the "I'm Good" button to let the team know you're okay.
 
-      **Not in an emergency, but still want to talk to a mental health advisor? Warmlines provide non-crisis mental health support and guidance from trained volunteers. https://warmline.org/warmdir.html#directory**
+      **Not in an emergency, but still want to talk to a mental health advisor? Warm lines provide non-crisis mental health support and guidance from trained volunteers. https://warmline.org/warmdir.html#directory**
 
       **The wonderful people at the Fireside project can also help you through a rough trip. You can check them out: https://firesideproject.org/**
       `;
@@ -838,7 +1022,7 @@ export async function tripSitMe(
   const row = new ActionRowBuilder<ButtonBuilder>()
     .addComponents(
       new ButtonBuilder()
-        .setCustomId(`tripsitmeResolve~${target.id}`)
+        .setCustomId(`tripsitmeUserClose~${target.id}`)
         .setLabel('I\'m good now!')
         .setStyle(ButtonStyle.Success),
     );
@@ -894,7 +1078,7 @@ export async function tripSitMe(
         .setLabel('Owned')
         .setStyle(ButtonStyle.Primary),
       new ButtonBuilder()
-        .setCustomId(`tripsitmeClose~${target.id}`)
+        .setCustomId(`tripsitmeTeamClose~${target.id}`)
         .setLabel('They\'re good now!')
         .setStyle(ButtonStyle.Success),
       new ButtonBuilder()
@@ -917,16 +1101,15 @@ export async function tripSitMe(
   });
   // log.debug(F, `Sent message to ${channelTripsitmeta.name} (${channelTripsitmeta.id})`);
 
-  const threadArchiveTime = new Date();
-  // define one week in milliseconds
-  // const thirtySec = 1000 * 30;
-  const tenMins = 1000 * 60 * 10;
-  const oneDay = 1000 * 60 * 60 * 24;
   const archiveTime = env.NODE_ENV === 'production'
-    ? threadArchiveTime.getTime() + oneDay
-    : threadArchiveTime.getTime() + tenMins;
-  threadArchiveTime.setTime(archiveTime);
-  // log.debug(F, `threadArchiveTime: ${threadArchiveTime}`);
+    ? DateTime.local().plus({ days: 7 })
+    : DateTime.local().plus({ minutes: 1 });
+
+  const deleteTime = env.NODE_ENV === 'production'
+    ? DateTime.local().plus({ days: 14 })
+    : DateTime.local().plus({ minutes: 2 });
+
+  log.debug(F, `Ticket archives on ${archiveTime.toLocaleString(DateTime.DATETIME_FULL)} deletes on ${deleteTime.toLocaleString(DateTime.DATETIME_FULL)}`);
 
   const userData = await getUser(target.id, null, null);
 
@@ -942,8 +1125,8 @@ export async function tripSitMe(
     type: 'TRIPSIT',
     status: 'OPEN',
     first_message_id: '',
-    archived_at: threadArchiveTime,
-    deleted_at: new Date(threadArchiveTime.getTime() + 1000 * 60 * 60 * 24 * 7),
+    archived_at: archiveTime.toJSDate(),
+    deleted_at: deleteTime.toJSDate(),
   } as UserTickets;
 
   // log.debug(F, `newTicketData: ${JSON.stringify(newTicketData, null, 2)}`);
@@ -977,33 +1160,20 @@ export async function tripsitmeButton(
   //   roleHelper = await interaction.guild.roles.fetch(guildData.role_helper) as Role;
   // }
 
-  // Team check - Cannot be run on team members
-  // If this user is a developer then this is a test run and ignore this check,
-  // but we'll change the output down below to make it clear this is a test.
-  let targetIsTeamMember = false;
-  // if (!actorIsAdmin) {
-  target.roles.cache.forEach(async role => {
-    if (teamRoles.includes(role.id)) {
-      targetIsTeamMember = true;
-    }
-  });
-  if (targetIsTeamMember) {
-    // log.debug(F, `Target is a team member!`);
-    const teamMessage = stripIndents`You are a member of the team and cannot be publicly helped!`;
-    const embed = embedTemplate()
-      .setColor(Colors.DarkBlue)
-      .setDescription(teamMessage);
-    await interaction.reply({ embeds: [embed] });
-    return;
-  }
-  // }
-
   const guildData = await getGuild(interaction.guild?.id as string);
 
   // Get the tripsit channel from the guild
-  const tripsitChannel = guildData.channel_tripsit
-    ? await interaction.guild?.channels.fetch(guildData.channel_tripsit) as TextChannel
-    : {} as TextChannel;
+  let tripsitChannel = {} as TextChannel;
+  try {
+    if (guildData.channel_tripsit) {
+      tripsitChannel = await interaction.guild?.channels.fetch(guildData.channel_tripsit) as TextChannel;
+    }
+  } catch (err) {
+    // log.debug(F, `There was an error fetching the tripsit channel, it was likely deleted:\n ${err}`);
+    // Update the ticket status to closed
+    guildData.channel_tripsit = null;
+    await database.guilds.set(guildData);
+  }
 
   const channelPerms = await checkChannelPermissions(tripsitChannel, [
     'ViewChannel' as PermissionResolvable,
@@ -1016,7 +1186,7 @@ export async function tripsitmeButton(
     // 'EmbedLinks' as PermissionResolvable,
   ]);
   if (!channelPerms.hasPermission) {
-    log.error(F, `Missing TS channel permission ${channelPerms.permission} in ${tripsitChannel}!`);
+    log.error(F, `Missing TS channel permission ${channelPerms.permission} in ${tripsitChannel.name}!`);
     const guildOwner = await interaction.guild?.fetchOwner() as GuildMember;
     await guildOwner.send({
       content: stripIndents`Missing permissions in ${tripsitChannel}!
@@ -1027,13 +1197,23 @@ export async function tripsitmeButton(
       Send Messages in Threads - to send messages in threads
       Manage Threads - to delete threads when they're done
       `}); // eslint-disable-line
-    log.error(F, `Missing TS channel permission ${channelPerms.permission} in ${tripsitChannel}!`);
+    log.error(F, `Missing TS channel permission ${channelPerms.permission} in ${tripsitChannel.name}!`);
     return;
   }
 
-  const channelTripsitmeta = guildData.channel_tripsitmeta
-    ? await interaction.guild?.channels.fetch(guildData.channel_tripsitmeta) as TextChannel
-    : {} as TextChannel;
+  // Get the tripsit meta channel from the guild
+  let channelTripsitmeta = {} as TextChannel;
+  try {
+    // log.debug(F, `guildData.channel_tripsitmeta: ${guildData.channel_tripsitmeta}`);
+    if (guildData.channel_tripsitmeta) {
+      channelTripsitmeta = await interaction.guild?.channels.fetch(guildData.channel_tripsitmeta) as TextChannel;
+    }
+  } catch (err) {
+    // log.debug(F, `There was an error fetching the tripsit channel, it was likely deleted:\n ${err}`);
+    // Update the ticket status to closed
+    guildData.channel_tripsitmeta = null;
+    await database.guilds.set(guildData);
+  }
 
   const metaPerms = await checkChannelPermissions(channelTripsitmeta, [
     'ViewChannel' as PermissionResolvable,
@@ -1046,7 +1226,7 @@ export async function tripsitmeButton(
     // 'EmbedLinks' as PermissionResolvable,
   ]);
   if (!metaPerms.hasPermission) {
-    log.error(F, `Missing TS channel permission ${channelPerms.permission} in ${channelTripsitmeta}!`);
+    log.error(F, `Missing TS channel permission ${channelPerms.permission} in ${channelTripsitmeta.name}!`);
     const guildOwner = await interaction.guild?.fetchOwner() as GuildMember;
     await guildOwner.send({
       content: stripIndents`Missing permissions in ${channelTripsitmeta}!
@@ -1057,29 +1237,35 @@ export async function tripsitmeButton(
         Send Messages in Threads - to send messages in threads
         Manage Threads - to delete threads when they're done
         `}); // eslint-disable-line
-    log.error(F, `Missing permission ${metaPerms.permission} in ${tripsitChannel}!`);
+    log.error(F, `Missing permission ${metaPerms.permission} in ${tripsitChannel.name}!`);
     return;
   }
 
+  log.debug(F, `Target: ${target.displayName} (${target.id})`);
+
   const userData = await getUser(target.id, null, null);
 
-  const ticketData = await getOpenTicket(userData.id, null);
+  log.debug(F, `Target userData: ${JSON.stringify(userData, null, 2)}`);
 
-  // log.debug(F, `Target ticket data: ${JSON.stringify(ticketData, null, 2)}`);
+  const [ticketData] = await database.tickets.get(userData.id);
+
+  log.debug(F, `Target ticket data: ${JSON.stringify(ticketData, null, 2)}`);
 
   if (ticketData !== undefined) {
-    // log.debug(F, `Target has open ticket: ${JSON.stringify(ticketData, null, 2)}`);
-
+    log.debug(F, `Target has tickets: ${JSON.stringify(ticketData, null, 2)}`);
     let threadHelpUser = {} as ThreadChannel;
     try {
       threadHelpUser = await interaction.guild?.channels.fetch(ticketData.thread_id) as ThreadChannel;
     } catch (err) {
-    // log.debug(F, `There was an error updating the help thread, it was likely deleted`);
+      log.debug(F, 'There was an error updating the help thread, it was likely deleted');
       // Update the ticket status to closed
       ticketData.status = 'DELETED' as TicketStatus;
+      ticketData.archived_at = new Date();
+      ticketData.deleted_at = new Date();
+      await database.tickets.set(ticketData);
       await ticketUpdate(ticketData);
-    // log.debug(F, `Updated ticket status to DELETED`);
-    // log.debug(F, `Ticket: ${JSON.stringify(ticketData, null, 2)}`);
+      log.debug(F, 'Updated ticket status to DELETED');
+      log.debug(F, `Ticket: ${JSON.stringify(ticketData, null, 2)}`);
     }
 
     log.debug(F, `ThreadHelpUser: ${threadHelpUser.name}`);
@@ -1132,6 +1318,7 @@ export async function tripsitmeButton(
         },
       });
       log.debug(F, 'Pinged user in help thread');
+      threadHelpUser.setName(`🧡│${target.displayName}'s channel!`);
 
       if (ticketData.meta_thread_id) {
         let metaMessage = '';
@@ -1141,17 +1328,40 @@ export async function tripsitmeButton(
         } else {
           metaMessage = `${target.toString()} has indicated they need assistance!`;
         }
-        const metaThread = await interaction.guild?.channels.fetch(ticketData.meta_thread_id) as ThreadChannel;
-        metaThread.setName(`💛│${target.displayName}'s discussion!`);
-        await metaThread.send({
-          content: metaMessage,
-          allowedMentions: {
-            // parse: showMentions,
-            parse: ['users', 'roles'] as MessageMentionTypes[],
-          },
-        });
-        log.debug(F, 'Pinged team in meta thread!');
+        // Get the tripsit meta channel from the guild
+        let metaThread = {} as ThreadChannel;
+        try {
+          if (ticketData.meta_thread_id) {
+            metaThread = await interaction.guild?.channels.fetch(ticketData.meta_thread_id) as ThreadChannel;
+          }
+          metaThread.setName(`🧡│${target.displayName}'s discussion!`);
+          await metaThread.send({
+            content: metaMessage,
+            allowedMentions: {
+              // parse: showMentions,
+              parse: ['users', 'roles'] as MessageMentionTypes[],
+            },
+          });
+          log.debug(F, 'Pinged team in meta thread!');
+        } catch (err) {
+          // log.debug(F, `There was an error fetching the tripsit channel, it was likely deleted:\n ${err}`);
+          // Update the ticket status to closed
+          ticketData.meta_thread_id = null;
+          await database.tickets.set(ticketData);
+        }
       }
+
+      ticketData.status = 'OPEN' as TicketStatus;
+      ticketData.reopened_at = new Date();
+      ticketData.archived_at = env.NODE_ENV === 'production'
+        ? DateTime.local().plus({ days: 7 }).toJSDate()
+        : DateTime.local().plus({ minutes: 1 }).toJSDate();
+
+      ticketData.deleted_at = env.NODE_ENV === 'production'
+        ? DateTime.local().plus({ days: 14 }).toJSDate()
+        : DateTime.local().plus({ minutes: 2 }).toJSDate();
+      await database.tickets.set(ticketData);
+
       return;
     }
   }

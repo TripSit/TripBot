@@ -1,7 +1,7 @@
 {
-  "watch": ["src"],
-  "ext": ".ts",
+  "watch": ["build",".env"],
+  "ext": ".js",
   "ignore": ["src/assets/*", "backups/*"],
-  "exec": "node -r ts-node/register src/start.ts",
+  "exec": "node -r ./build/start.js",
   "legacyWatch": true
 }

@@ -44,7 +44,7 @@ jobs:
     - name: Copy env
       run: cp .env.example .env
     - name: Test
-      run: npm test
+      run: npx jest --silent -c ./jest/jest.unit.config.ts
   codeql:
     name: CodeQL
     runs-on: ubuntu-latest
