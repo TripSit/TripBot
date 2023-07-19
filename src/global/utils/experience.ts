@@ -162,14 +162,15 @@ async function giveMilestone(
     // log.debug(F, `Removing ${member} role ${previousRole.name} (${previousRole.id})`);
     //   member?.roles.remove(previousRole);
     // }
+    // Check if the member already has the resulting role, and if not, add it
   }
-
-  // Check if the member already has the resulting role, and if not, add it
   if (!member.roles.cache.has(role.id)) {
     // log.debug(F, `Giving ${member.displayName} role ${role.name} (${role.id})`);
     await member.roles.add(role);
-    const channel = await member.guild?.channels.fetch(env.CHANNEL_VIPLOUNGE) as TextChannel;
-    await channel.send(`${emojis} **${member} has reached Total Text level ${levelTier}0!** ${emojis}`);
+    if (levelTier >= 1) {
+      const channel = await member.guild?.channels.fetch(env.CHANNEL_VIPLOUNGE) as TextChannel;
+      await channel.send(`${emojis} **${member} has reached Total Text level ${levelTier}0!** ${emojis}`);
+    }
   }
 }
 
