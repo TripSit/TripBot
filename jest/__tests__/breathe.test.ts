@@ -12,7 +12,7 @@ describe(slashCommand.data.name, () => {
         slashCommand.data,
         'dm',
       ),
-    )).toHaveBeenCalledWith({ content: 'https://i.imgur.com/n5jBp45.gif' });
+    )).toHaveBeenCalledWith({ content: 'https://tenor.com/view/breathing-gif-15523921' });
 
     expect(await executeCommandAndSpyEditReply(
       slashCommand,
@@ -21,7 +21,7 @@ describe(slashCommand.data.name, () => {
         slashCommand.data,
         'tripsit',
       ),
-    )).toHaveBeenCalledWith({ content: 'https://i.imgur.com/n5jBp45.gif' });
+    )).toHaveBeenCalledWith({ content: 'https://tenor.com/view/breathing-gif-15523921' });
 
     expect(await executeCommandAndSpyEditReply(
       slashCommand,
