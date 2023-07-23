@@ -23,7 +23,7 @@ import {
   rpgArcade, rpgArcadeGame, rpgArcadeWager, rpgBounties, rpgHelp, rpgHome, rpgHomeAccept, rpgHomeNameChange, rpgMarket, rpgMarketAccept, rpgMarketPreview, rpgTown, rpgTrivia,
 } from '../commands/guild/d.rpg';
 import { helperButton } from '../commands/global/d.setup';
-import { appealAccept, appealReject } from '../../api/modules/appeal';
+import { appealAccept, appealReject } from '../utils/appeal';
 
 const F = f(__filename);
 
