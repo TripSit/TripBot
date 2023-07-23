@@ -21,7 +21,7 @@ import {
   // DiscordGuilds,
   ReactionRoleType,
   Appeals,
-} from '../@types/database.d';
+} from '../@types/database';
  // eslint-disable-line
 
 const F = f(__filename); // eslint-disable-line
@@ -1201,7 +1201,7 @@ async function appealsSet(
   data.forEach(async appeal => {
     await db<Appeals>('appeals')
       .insert(appeal)
-      .onConflict(['user_id', 'guild_id'])
+      .onConflict(['user_id', 'guild_id', 'appeal_number'])
       .merge();
   });
 }

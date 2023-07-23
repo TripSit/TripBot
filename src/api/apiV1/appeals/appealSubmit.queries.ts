@@ -15,7 +15,7 @@ import {
 import { stripIndents } from 'common-tags';
 import { DateTime, Interval } from 'luxon';
 import { database } from '../../../global/utils/knex';
-import { type Users, type Appeals } from '../../../global/@types/database.d'
+import { AppealStatus, Appeals, Users } from '../../../global/@types/database';
 
 const F = f(__filename);
 
@@ -212,9 +212,25 @@ export default {
   
     await post.react(emojiGet('ts_thumbup'));
     await post.react(emojiGet('ts_thumbdown'));
+
+    // Save the appeal to the database
+    await database.appeals.set([{
+      guild_id: body.newAppealData.guild,
+      user_id: body.userData.id,
+      appeal_number: 1,
+      reason: body.newAppealData.reason,
+      solution: body.newAppealData.solution,
+      future: body.newAppealData.future,
+      extra: body.newAppealData.extra,
+      status: AppealStatus.Open,
+      appeal_message_id: post.id,
+      response_message: null,
+      created_at: new Date(),
+      reminded_at: null,
+      decided_at: null,
+    } as Appeals]);
   
-    // If the userData has a mod_thread_id, then use that thread, otherwise send a new message to the appeals room
-    // res.status(200).send('okay');
+    return true;
   }
 };
 

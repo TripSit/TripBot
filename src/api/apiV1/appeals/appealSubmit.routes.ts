@@ -11,9 +11,9 @@ router.post('/', async (req, res, next) => {
   if (await checkAuth(req, res)) {
     try {
       const result = await appeals.handle(req, res);
-      // if (result) {
-      //   return res.json(result);
-      // }
+      if (result) {
+        return res.json("Donezo");
+      }
       return next();
     } catch (error) {
       return next(error);

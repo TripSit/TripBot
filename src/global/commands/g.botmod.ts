@@ -13,7 +13,6 @@ import {
 import {
   ButtonStyle,
 } from 'discord-api-types/v10';
-// import {ModActionDict} from '../@types/database.d';
 
 import { stripIndents } from 'common-tags';
 import { embedTemplate } from '../../discord/utils/embedTemplate';

@@ -32,7 +32,7 @@ import {
 } from './knex';
 import {
   TicketStatus, UserTickets, TicketType, DiscordGuilds, ExperienceCategory, ExperienceType,
-} from '../@types/database.d';
+} from '../@types/database';
 import { checkChannelPermissions } from '../../discord/utils/checkPermissions';
 import { embedTemplate } from '../../discord/utils/embedTemplate';
 import { experience } from './experience';
