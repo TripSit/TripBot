@@ -21,6 +21,7 @@ import { stripIndents } from 'common-tags';
 import ms from 'ms';
 import { embedTemplate } from '../../discord/utils/embedTemplate';
 import {
+  database,
   getUser, useractionsGet, useractionsSet, usersUpdate,
 } from '../utils/knex';
 import {
@@ -275,7 +276,7 @@ export async function linkThread(
 export async function moderate(
   actor: GuildMember,
   command: UserActionType | 'INFO' | 'UN-FULL_BAN' | 'UN-TICKET_BAN' | 'UN-DISCORD_BOT_BAN' | 'UN-UNDERBAN' | 'UN-BAN_EVASION' | 'UN-TIMEOUT' | 'UN-HELPER_BAN' | 'UN-CONTRIBUTOR_BAN',
-  target: GuildMember | User,
+  targetId: string,
   internalNote: string | null,
   description: string | null,
   duration: number | null,
@@ -283,15 +284,32 @@ export async function moderate(
   log.info(F, `
   actor: ${actor}
   command: ${command}
-  target: ${target}
+  targetId: ${targetId}
   internalNote: ${internalNote}
   description: ${description}
   duration: ${duration}`);
 
-  const actorData = await getUser(actor.id, null, null);
-  const targetData = await getUser(target.id, null, null);
-  const targetIsMember = (target as GuildMember).user !== undefined;
-  const targetUser = (target as GuildMember).user ?? (target as User);
+  const actorData = await database.users.get(actor.id, null, null);
+
+  const targetData = await database.users.get(targetId, null, null);
+  let discordMember = {} as GuildMember;
+  let targetIsMember = false;
+  try {
+    discordMember = await actor.guild.members.fetch(targetId);
+    targetIsMember = true;
+  } catch (err) {
+    // Ignore
+  }
+
+  let discordUser = await discordClient.users.fetch(targetId);
+  let targetIsUser = false;
+  try {
+    discordMember = await actor.guild.members.fetch(targetId);
+    targetIsUser = true;
+  } catch (err) {
+    // Ignore
+  }
+
   const vendorBan = internalNote?.toLowerCase().includes('vendor')
   && command === 'FULL_BAN';
 
@@ -312,7 +330,7 @@ export async function moderate(
       .setTitle(embedVariables[command as keyof typeof embedVariables].embedTitle);
 
     let body = stripIndents`
-      Hey ${target}, I'm sorry to inform that you've been ${embedVariables[command as keyof typeof embedVariables].verb}${duration && command === 'TIMEOUT' ? ` for ${ms(duration, { long: true })}` : ''} by Team TripSit:
+      Hey ${discordUser}, I'm sorry to inform that you've been ${embedVariables[command as keyof typeof embedVariables].verb}${duration && command === 'TIMEOUT' ? ` for ${ms(duration, { long: true })}` : ''} by Team TripSit:
 
       ${description}
 
@@ -320,7 +338,8 @@ export async function moderate(
     `;
 
     if ('FULL_BAN, BAN_EVASION, UNDERBAN'.includes(command)) {
-      body = stripIndents`${body}\n\nYou can send an email to appeals@tripsit.me to appeal this ban! Evasion bans are permanent, and underban bans are permanent until you turn 18.`;
+      body = stripIndents`${body}\n\nYou can appeal this decision via the bot dashboard at https://${env.BOT_DOMAIN}! 
+      Evasion bans are permanent, and underban bans are until you turn 18 (based on whatever you said in chat`;
     }
 
     if ('WARNING, TICKET_BAN, DISCORD_BOT_BAN, TIMEOUT, KICK'.includes(command)) {
@@ -345,8 +364,8 @@ export async function moderate(
 
     if ('WARNING, TIMEOUT'.includes(command)) {
       try {
-        const message = await (target as GuildMember).user.send({ embeds: [embed], components: [warnButtons] });
-        const filter = (i: MessageComponentInteraction) => i.user.id === (target as GuildMember).user.id;
+        const message = await discordMember.user.send({ embeds: [embed], components: [warnButtons] });
+        const filter = (i: MessageComponentInteraction) => i.user.id === discordMember.user.id;
         const collector = message.createMessageComponentCollector({ filter, time: 0 });
 
         collector.on('collect', async (i: MessageComponentInteraction) => {
@@ -356,7 +375,7 @@ export async function moderate(
               await targetChan.send({
                 embeds: [embedTemplate()
                   .setColor(Colors.Green)
-                  .setDescription(`${(target as GuildMember).user.username} has acknowledged their warning.`)],
+                  .setDescription(`${discordMember.user.username} has acknowledged their warning.`)],
               });
             }
             // remove the components from the message
@@ -367,13 +386,13 @@ export async function moderate(
             await targetChan.send({
               embeds: [embedTemplate()
                 .setColor(Colors.Red)
-                .setDescription(`${targetUser.username} has refused their warning and was kicked.`)],
+                .setDescription(`${discordUser.username} has refused their warning and was kicked.`)],
             });
             // remove the components from the message
             await i.update({ components: [] });
             i.user.send('Thanks for admitting this, you\'ve been removed from the guild. You can rejoin if you ever decide to cooperate.');
             const guild = await discordClient.guilds.fetch(env.DISCORD_GUILD_ID);
-            await guild.members.kick(targetUser, 'Refused to acknowledge warning');
+            await guild.members.kick(discordUser, 'Refused to acknowledge warning');
           }
         });
       } catch (error) {
@@ -382,7 +401,7 @@ export async function moderate(
     } else {
       try {
         if (!vendorBan && targetIsMember) {
-          await (target as GuildMember).user.send({ embeds: [embed] });
+          await discordMember.user.send({ embeds: [embed] });
         }
       } catch (error) {
         // Ignore
@@ -412,7 +431,7 @@ export async function moderate(
     actionData.type = 'TIMEOUT' as UserActionType;
     actionData.expires_at = new Date(Date.now() + (duration as number));
     try {
-      await (target as GuildMember).timeout(duration, internalNote ?? noReason);
+      await discordMember.timeout(duration, internalNote ?? noReason);
     } catch (err) {
       log.error(F, `Error: ${err}`);
     }
@@ -430,7 +449,7 @@ export async function moderate(
     actionData.repealed_by = actorData.id;
 
     try {
-      await (target as GuildMember).timeout(0, internalNote ?? noReason);
+      await discordMember.timeout(0, internalNote ?? noReason);
       // log.debug(F, `I untimeouted ${target.displayName} because\n '${internalNote}'!`);
     } catch (err) {
       log.error(F, `Error: ${err}`);
@@ -444,13 +463,13 @@ export async function moderate(
       const deleteMessageValue = duration ?? 0;
       if (deleteMessageValue > 0 && targetIsMember) {
       // log.debug(F, `I am deleting ${deleteMessageValue} days of messages!`);
-        const response = await last((target as GuildMember));
-        extraMessage = `${(target as GuildMember).displayName}'s last ${response.messageCount} (out of ${response.totalMessages}) messages before being banned :\n${response.messageList}`;
+        const response = await last(discordMember);
+        extraMessage = `${discordMember.displayName}'s last ${response.messageCount} (out of ${response.totalMessages}) messages before being banned :\n${response.messageList}`;
       }
       const targetGuild = await discordClient.guilds.fetch(env.DISCORD_GUILD_ID);
       // log.debug(F, `Days to delete: ${deleteMessageValue}`);
-      log.info(F, `target: ${targetUser.id} | deleteMessageValue: ${deleteMessageValue} | internalNote: ${internalNote ?? noReason}`);
-      targetGuild.bans.create(targetUser, { deleteMessageSeconds: deleteMessageValue / 1000, reason: internalNote ?? noReason });
+      log.info(F, `target: ${discordUser.id} | deleteMessageValue: ${deleteMessageValue} | internalNote: ${internalNote ?? noReason}`);
+      targetGuild.bans.create(discordUser, { deleteMessageSeconds: deleteMessageValue / 1000, reason: internalNote ?? noReason });
     } catch (err) {
       log.error(F, `Error: ${err}`);
     }
@@ -471,7 +490,7 @@ export async function moderate(
     try {
       const targetGuild = await discordClient.guilds.fetch(env.DISCORD_GUILD_ID);
       await targetGuild.bans.fetch();
-      await targetGuild.bans.remove(targetUser, internalNote ?? noReason);
+      await targetGuild.bans.remove(discordUser, internalNote ?? noReason);
     } catch (err) {
       log.error(F, `Error: ${err}`);
     }
@@ -481,7 +500,7 @@ export async function moderate(
     await usersUpdate(targetData);
     try {
       const targetGuild = await discordClient.guilds.fetch(env.DISCORD_GUILD_ID);
-      targetGuild.bans.create(targetUser, { reason: internalNote ?? noReason });
+      targetGuild.bans.create(discordUser, { reason: internalNote ?? noReason });
     } catch (err) {
       log.error(F, `Error: ${err}`);
     }
@@ -500,7 +519,7 @@ export async function moderate(
     try {
       const targetGuild = await discordClient.guilds.fetch(env.DISCORD_GUILD_ID);
       await targetGuild.bans.fetch();
-      await targetGuild.bans.remove(targetUser, internalNote ?? noReason);
+      await targetGuild.bans.remove(discordUser, internalNote ?? noReason);
     } catch (err) {
       log.error(F, `Error: ${err}`);
     }
@@ -524,7 +543,7 @@ export async function moderate(
     actionData.type = 'DISCORD_BOT_BAN' as UserActionType;
     targetData.discord_bot_ban = true;
     await usersUpdate(targetData);
-    botBannedUsers.push(target.id);
+    botBannedUsers.push(targetId);
   } else if (command === 'UN-DISCORD_BOT_BAN') {
     actionData.type = 'DISCORD_BOT_BAN' as UserActionType;
     targetData.discord_bot_ban = false;
@@ -538,7 +557,7 @@ export async function moderate(
     actionData.repealed_by = actorData.id;
 
     // Remove the user from the botBannedUsers list
-    const index = botBannedUsers.indexOf(target.id);
+    const index = botBannedUsers.indexOf(targetId);
     if (index > -1) {
       botBannedUsers.splice(index, 1);
     }
@@ -564,7 +583,7 @@ export async function moderate(
   } else if (command === 'KICK') {
     actionData.type = 'KICK' as UserActionType;
     try {
-      await (target as GuildMember).kick();
+      await discordMember.kick();
     } catch (err) {
       log.error(F, `Error: ${err}`);
     }
@@ -574,7 +593,7 @@ export async function moderate(
     actionData.type = 'HELPER_BAN' as UserActionType;
     targetData.helper_role_ban = true;
     await usersUpdate(targetData);
-    botBannedUsers.push(target.id);
+    botBannedUsers.push(targetId);
   } else if (command === 'UN-HELPER_BAN') {
     actionData.type = 'HELPER_BAN' as UserActionType;
     targetData.helper_role_ban = false;
@@ -590,7 +609,7 @@ export async function moderate(
     actionData.type = 'CONTRIBUTOR_BAN' as UserActionType;
     targetData.contributor_role_ban = true;
     await usersUpdate(targetData);
-    botBannedUsers.push(target.id);
+    botBannedUsers.push(targetId);
   } else if (command === 'UN-CONTRIBUTOR_BAN') {
     actionData.type = 'CONTRIBUTOR_BAN' as UserActionType;
     targetData.contributor_role_ban = false;
@@ -609,7 +628,7 @@ export async function moderate(
     await useractionsSet(actionData);
   }
 
-  const modlogEmbed = await userInfoEmbed(target, targetData, command);
+  const modlogEmbed = await userInfoEmbed(discordUser, targetData, command);
 
   // If this is the info command then return with info
   if (command === 'INFO') {
@@ -620,7 +639,7 @@ export async function moderate(
 
     // Calculate how like it is that this user is a troll.
     // This is based off of factors like, how old is their account, do they have a profile picture, how many other guilds are they in, etc.
-    const diff = Math.abs(Date.now() - Date.parse((target as GuildMember).user.createdAt.toString()));
+    const diff = Math.abs(Date.now() - Date.parse(discordMember.user.createdAt.toString()));
     const years = Math.floor(diff / (1000 * 60 * 60 * 24 * 365));
     const months = Math.floor(diff / (1000 * 60 * 60 * 24 * 30));
     const weeks = Math.floor(diff / (1000 * 60 * 60 * 24 * 7));
@@ -651,7 +670,7 @@ export async function moderate(
       tsReasoning += '+6 | Account was created seconds ago\n';
     }
 
-    if ((target as GuildMember).user.avatarURL()) {
+    if (discordMember.user.avatarURL()) {
       trollScore += 0;
       tsReasoning += '+0 | Account has a profile picture\n';
     } else {
@@ -659,7 +678,7 @@ export async function moderate(
       tsReasoning += '+1 | Account does not have a profile picture\n';
     }
 
-    if ((target as GuildMember).user.bannerURL()) {
+    if (discordMember.user.bannerURL()) {
       trollScore += 0;
       tsReasoning += '+0 | Account has a banner\n';
     } else {
@@ -667,7 +686,7 @@ export async function moderate(
       tsReasoning += '+1 | Account does not have a banner\n';
     }
 
-    if ((target as GuildMember).premiumSince) {
+    if (discordMember.premiumSince) {
       trollScore -= 1;
       tsReasoning += '-1 | Account is boosting the guild\n';
     } else {
@@ -682,7 +701,7 @@ export async function moderate(
     await discordClient.guilds.fetch();
     const memberTest = await Promise.all(discordClient.guilds.cache.map(async guild => {
       try {
-        await guild.members.fetch(target.id);
+        await guild.members.fetch(targetId);
         // log.debug(F, `User is in guild: ${guild.name}`);
         return guild.name;
       } catch (err:any) { // eslint-disable-line @typescript-eslint/no-explicit-any
@@ -709,7 +728,7 @@ export async function moderate(
 
     const bannedTest = await Promise.all(discordClient.guilds.cache.map(async guild => {
       try {
-        await guild.bans.fetch(target.id);
+        await guild.bans.fetch(targetId);
         // log.debug(F, `User is banned in guild: ${guild.name}`);
         return guild.name;
       } catch (err:any) { // eslint-disable-line @typescript-eslint/no-explicit-any
@@ -753,8 +772,8 @@ export async function moderate(
   const roleModerator = await tripsitGuild.roles.fetch(env.ROLE_MODERATOR) as Role;
   // const modPing = `Hey ${roleModerator}`;
   const timeoutDuration = duration ? ` for ${ms(duration, { long: true })}` : '';
-  const summary = `${actor.displayName} ${embedVariables[command as keyof typeof embedVariables].verb} ${(target as GuildMember).displayName ?? (target as User).username}${command === 'TIMEOUT' ? timeoutDuration : ''}!`;
-  const anonSummary = `${(target as GuildMember).displayName ?? (target as User).username} was ${embedVariables[command as keyof typeof embedVariables].verb}${command === 'TIMEOUT' ? timeoutDuration : ''}!`;
+  const summary = `${actor.displayName} ${embedVariables[command as keyof typeof embedVariables].verb} ${discordMember.displayName ?? discordUser.username}${command === 'TIMEOUT' ? timeoutDuration : ''}!`;
+  const anonSummary = `${discordMember.displayName ?? discordUser.username} was ${embedVariables[command as keyof typeof embedVariables].verb}${command === 'TIMEOUT' ? timeoutDuration : ''}!`;
 
   let modThread = {} as ThreadChannel;
   if (targetData.mod_thread_id) {
@@ -778,7 +797,7 @@ export async function moderate(
     log.debug(F, 'creating mod thread');
     const modChan = await discordClient.channels.fetch(env.CHANNEL_MODERATORS) as TextChannel;
     modThread = await modChan.threads.create({
-      name: `${(target as GuildMember).displayName ?? (target as User).username}`,
+      name: `${discordMember.displayName ?? discordUser.username}`,
       autoArchiveDuration: 60,
     });
     // log.debug(F, 'created mod thread');

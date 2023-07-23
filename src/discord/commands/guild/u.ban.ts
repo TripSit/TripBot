@@ -25,6 +25,10 @@ export const uBan: UserCommand = {
     .setType(ApplicationCommandType.User),
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
+
+    log.debug(F, `interaction.targetId: ${interaction.targetId}`);
+
+
     await interaction.showModal(new ModalBuilder()
       .setCustomId(`banModal~${interaction.id}`)
       .setTitle('Tripbot Ban')
@@ -65,7 +69,7 @@ export const uBan: UserCommand = {
         await i.editReply(await moderate(
           interaction.member as GuildMember,
           'FULL_BAN' as UserActionType,
-          interaction.targetMember as GuildMember,
+          interaction.targetId,
           i.fields.getTextInputValue('internalNote'),
           i.fields.getTextInputValue('description'),
           duration,

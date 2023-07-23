@@ -42,7 +42,7 @@ export const mNote: MessageCommand = {
         await i.editReply(await moderate(
           interaction.member as GuildMember,
           'NOTE' as UserActionType,
-          interaction.targetMessage.member ?? interaction.targetMessage.author,
+          interaction.targetMessage.member?.id ?? interaction.targetMessage.author.id,
           stripIndents`
             ${i.fields.getTextInputValue('internalNote')}
         
