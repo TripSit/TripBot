@@ -102,7 +102,7 @@ export async function downloadImage(
 
   return new Promise((resolve, reject) => {
     response.data.pipe(fs.createWriteStream(filepath))
-      .on('error', (err:any) => {
+      .on('error', (err:Error) => {
         log.error(F, `Error saving ${url} to ${filepath}`);
         reject(err);
       })

@@ -22,7 +22,6 @@ import {
   ChatInputCommandInteraction,
   PermissionResolvable,
   Guild,
-  PermissionsBitField,
 } from 'discord.js';
 import {
   TextInputStyle,

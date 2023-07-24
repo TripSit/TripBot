@@ -1,6 +1,14 @@
 import { getVoiceConnection } from '@discordjs/voice';
 // import { stripIndents } from 'common-tags';
 import sourceMap from 'source-map-support'; // eslint-disable-line
+import {
+  ChatInputCommandInteraction,
+  UserContextMenuCommandInteraction,
+  MessageContextMenuCommandInteraction,
+  ButtonInteraction,
+  StringSelectMenuInteraction,
+  ModalSubmitInteraction,
+} from 'discord.js';
 import { env } from './global/utils/env.config';
 import { log } from './global/utils/log';
 import validateEnv from './global/utils/env.validate'; // eslint-disable-line
@@ -57,7 +65,14 @@ declare global {
   // eslint-disable-next-line no-var, vars-on-top
   // var env:any; // NOSONAR
   // eslint-disable-next-line no-var, vars-on-top
-  var commandContext:any; // NOSONAR
+  var commandContext:(
+    interaction: ChatInputCommandInteraction
+    | UserContextMenuCommandInteraction
+    | MessageContextMenuCommandInteraction
+    | ButtonInteraction
+    | StringSelectMenuInteraction
+    | ModalSubmitInteraction,
+  ) => Promise<string>;
 }
 
 global.env = env;

@@ -1,7 +1,6 @@
 import {
   AuditLogEvent,
   ButtonInteraction,
-  GuildBan,
   GuildMember,
   PermissionsBitField,
   time,
@@ -17,7 +16,7 @@ export async function appealAccept(
 ) {
   if (!interaction.guild) return;
   await interaction.deferReply();
-  const [customId, userId, email] = interaction.customId.split('~');
+  const [customId, userId] = interaction.customId.split('~');
   log.debug(`${F} - appealAccept`, `customId: ${customId}`);
   log.debug(`${F} - appealAccept`, `userId: ${userId}`);
   // log.debug(`${F} - appealAccept`, `email: ${email}`);
@@ -26,7 +25,8 @@ export async function appealAccept(
   if (interaction.createdTimestamp > Date.now() - 86400000
   && !(interaction.member as GuildMember).permissions.has(PermissionsBitField.Flags.Administrator)) {
     await interaction.editReply({
-      content: stripIndents`This appeal is too new to accept, it will unlock in ${time(new Date(interaction.createdTimestamp + 86400000), 'R')}.
+      content: stripIndents`This appeal is too new to accept, \
+      it will unlock in ${time(new Date(interaction.createdTimestamp + 86400000), 'R')}.
 
       If you believe this is an error, please contact an administrator.`,
     });
@@ -40,15 +40,15 @@ export async function appealAccept(
   await database.users.set(userData);
 
   // Get the ban info from discord
-  let banInfo = {} as GuildBan;
-  try {
-    banInfo = await interaction.guild.bans.fetch(userId);
-  } catch (err) {
-    await interaction.editReply({
-      content: `This user is no longer banned from ${interaction.guild.name}. Did someone undo it manually?`,
-    });
-    return;
-  }
+  // let banInfo = {} as GuildBan;
+  // try {
+  //   banInfo = await interaction.guild.bans.fetch(userId);
+  // } catch (err) {
+  //   await interaction.editReply({
+  //     content: `This user is no longer banned from ${interaction.guild.name}. Did someone undo it manually?`,
+  //   });
+  //   return;
+  // }
 
   // Look up the audit logs to see when this user was banned
   const banLogs = await interaction.guild.fetchAuditLogs({
@@ -119,7 +119,7 @@ export async function appealAccept(
   // Get and modify the appeal record
   let appealRecords = await database.appeals.get(userData.id, interaction.guild?.id);
   appealRecords = appealRecords.filter(record => record.status === AppealStatus.Open);
-  let appealRecord = appealRecords[0];
+  const appealRecord = appealRecords[0];
   log.debug(F, `appealRecord: ${JSON.stringify(appealRecord, null, 2)}`);
   appealRecord.status = AppealStatus.Accepted;
   appealRecord.decided_at = new Date();
@@ -145,7 +145,8 @@ export async function appealReject(
   if (interaction.createdTimestamp > Date.now() - 86400000
   && !(interaction.member as GuildMember).permissions.has(PermissionsBitField.Flags.Administrator)) {
     await interaction.editReply({
-      content: stripIndents`This appeal is too new to accept, it will unlock in ${time(new Date(interaction.createdTimestamp + 86400000), 'R')}.
+      content: stripIndents`This appeal is too new to accept, \
+      it will unlock in ${time(new Date(interaction.createdTimestamp + 86400000), 'R')}.
 
       If you believe this is an error, please contact an administrator.`,
     });
@@ -160,18 +161,19 @@ export async function appealReject(
   log.debug(F, `appealRecord: ${JSON.stringify(appealRecord, null, 2)}`);
 
   if (!appealRecord) {
-    const appealRecords = await database.appeals.get(userData.id, interaction.guild?.id);
-    appealRecord = appealRecords[0];
+    appealRecords = await database.appeals.get(userData.id, interaction.guild?.id);
+    [appealRecord] = appealRecords;
 
     if (!appealRecord.decided_at) {
       await interaction.editReply({
-        content: stripIndents`Hey <@${env.DISCORD_OWNER_ID}>, this user doesn't have an active appeal, but also doesn't have any closed appeals, what gives?`,
+        content: stripIndents`Hey <@${env.DISCORD_OWNER_ID}>, this user doesn't have an active appeal, \
+        but also doesn't have any closed appeals, what gives?`,
       });
       return;
     }
 
     await interaction.editReply({
-      content: stripIndents`This appeal was already decided ${time(appealRecord.decided_at, "R")}.
+      content: stripIndents`This appeal was already decided ${time(appealRecord.decided_at, 'R')}.
       If you believe this is an error, please contact an administrator.`,
     });
     return;
@@ -187,7 +189,8 @@ export async function appealReject(
   if (user) {
     // Send them a DM letting them know they've been unbanned
     try {
-      await user.send(stripIndents`I'm sorry to inform you that your appeal to ${interaction.guild.name} has been rejected.`);
+      await user.send(stripIndents`I'm sorry to inform you that your appeal to ${interaction.guild.name} \
+      has been rejected.`);
       contactMethod = 'DM';
     } catch (err) {
       // log.error(F, `Error: ${err}`);
@@ -200,10 +203,8 @@ export async function appealReject(
 
   // Send a message to the mod thread letting them know the appeal was accepted
   const contactString = contactMethod !== ''
-  ? `I let them know via ${contactMethod}!`
-  : 'I was unable to contact them, please do so manually.';
-
-
+    ? `I let them know via ${contactMethod}!`
+    : 'I was unable to contact them, please do so manually.';
 
   await interaction.editReply({
     content: stripIndents`User <@${userId}> was not unbanned from ${interaction.guild.name}.

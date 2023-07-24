@@ -1,4 +1,5 @@
 import KeycloakAdminClient from 'keycloak-admin';
+import UserRepresentation from 'keycloak-admin/lib/defs/userRepresentation';
 
 const F = f(__filename);
 
@@ -41,7 +42,7 @@ async function ensureAuthentication(): Promise<void> {
 * @param {string} identifier
 * @returns any
 * */
-export async function findUser(identifier: string): Promise<any | false> {
+export async function findUser(identifier: string): Promise<UserRepresentation | false> {
   await ensureAuthentication();
   const usersByUsername = await kcAdminClient.users.find({ username: identifier });
   const usersByEmail = await kcAdminClient.users.find({ email: identifier });
@@ -66,6 +67,10 @@ export async function getUserRoleMappings(identifier:string):Promise<any | false
   const user = await findUser(identifier);
 
   if (!user) {
+    return false;
+  }
+
+  if (!user.id) {
     return false;
   }
 

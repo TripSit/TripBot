@@ -28,7 +28,6 @@ export const uBan: UserCommand = {
 
     log.debug(F, `interaction.targetId: ${interaction.targetId}`);
 
-
     await interaction.showModal(new ModalBuilder()
       .setCustomId(`banModal~${interaction.id}`)
       .setTitle('Tripbot Ban')

@@ -1,6 +1,6 @@
-import Express, { Request, Response } from 'express';
+import { Request, Response } from 'express';
 
-const F = f(__filename); 
+const F = f(__filename);
 
 export default async function checkAuth(
   req: Request,
@@ -57,6 +57,6 @@ export default async function checkAuth(
     return false;
   }
 
-  log.debug(F, 'Authorization token is valid!')
+  log.debug(F, 'Authorization token is valid!');
   return true;
 }

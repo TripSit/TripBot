@@ -301,11 +301,11 @@ export async function moderate(
     // Ignore
   }
 
-  let discordUser = await discordClient.users.fetch(targetId);
-  let targetIsUser = false;
+  const discordUser = await discordClient.users.fetch(targetId);
+  // let targetIsUser = false;
   try {
     discordMember = await actor.guild.members.fetch(targetId);
-    targetIsUser = true;
+    // targetIsUser = true;
   } catch (err) {
     // Ignore
   }

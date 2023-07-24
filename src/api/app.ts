@@ -1,17 +1,17 @@
-import express, { Request, Response } from 'express';
-import { log } from '../global/utils/log';
+import express from 'express';
 import bodyParser from 'body-parser';
 import morgan from 'morgan';
 
 import helmet from 'helmet';
+import { log } from '../global/utils/log';
 
-import {notFound, errorHandler} from './middlewares';
+import { notFound, errorHandler } from './middlewares';
 
 import api1 from './apiV1';
 
 const F = f(__filename);
 
-log.info(F, `Started!`);
+log.info(F, 'Started!');
 
 const app = express();
 
