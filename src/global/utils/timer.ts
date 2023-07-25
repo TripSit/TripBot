@@ -1023,7 +1023,7 @@ async function checkMoodle() { // eslint-disable-line
                 Maybe you'll inspire someone else to learn too!
 
                 No tripbot? No problem!
-                Anyone can [verify the code on your certificate](https://learn.pantheon.tripsit.me/mod/customcert/verify_certificate.php) to see you completed the course.
+                Anyone can [verify the code on your certificate](https://learn.tripsit.me/mod/customcert/verify_certificate.php) to see you completed the course.
 
                 Finally, if you have any feedback on the course, please let us know in the ${channelContent} channel, or on the forum in the course!
 
