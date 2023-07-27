@@ -71,8 +71,7 @@ async function giveMilestone(
 
   // Calculate total experience points
   const totalExp = allExpData
-    .filter(exp => exp.type !== 'VOICE'
-      && exp.category !== 'TOTAL'
+    .filter(exp => exp.category !== 'TOTAL'
       && exp.category !== 'IGNORED')
     .reduce((acc, exp) => acc + exp.total_points, 0);
 
