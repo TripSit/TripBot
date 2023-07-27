@@ -50,6 +50,14 @@ type LeaderboardList = { discord_id: string, total_points: number }[];
 type LeaderboardDataType = 'TEXT' | 'VOICE';
 
 type LeaderboardData = {
+  ALL: {
+    TOTAL: LeaderboardList,
+    TRIPSITTER: LeaderboardList,
+    GENERAL: LeaderboardList,
+    DEVELOPER: LeaderboardList,
+    TEAM: LeaderboardList,
+    IGNORED: LeaderboardList,
+  },
   TEXT: {
     TOTAL: LeaderboardList,
     TRIPSITTER: LeaderboardList,
@@ -66,15 +74,6 @@ type LeaderboardData = {
     TEAM: LeaderboardList,
     IGNORED: LeaderboardList,
   },
-};
-
-type NewLeaderboardData = {
-  TOTAL: LeaderboardList,
-  TRIPSITTER: LeaderboardList,
-  GENERAL: LeaderboardList,
-  DEVELOPER: LeaderboardList,
-  TEAM: LeaderboardList,
-  IGNORED: LeaderboardList,
 };
 
 async function createBook(
@@ -125,81 +124,10 @@ async function createBook(
   return book;
 }
 
-async function combineLeaderboardData(
-  interaction: Interaction,
-  leaderboardData: LeaderboardData,
-  categoryChoice: ExpCategory,
-):Promise<EmbedBuilder[]> {
-  const combinedLeaderboard: NewLeaderboardData = {
-    TOTAL: [],
-    TRIPSITTER: [],
-    GENERAL: [],
-    DEVELOPER: [],
-    TEAM: [],
-    IGNORED: [],
-  };
-
-  const book = [];
-
-  // Go through each category
-  for (const category in combinedLeaderboard) { // eslint-disable-line no-restricted-syntax
-    if (!Object.prototype.hasOwnProperty.call(combinedLeaderboard, category)) {
-      continue; // eslint-disable-line no-continue
-    }
-
-    // Go through each Text experience record for that category
-    for (const textData of leaderboardData.TEXT[category as keyof typeof leaderboardData.TEXT]) {
-      // if (textData.discord_id !== '271857135350972416' && textData.discord_id !== '577467602897600522') {
-      //   continue;
-      // }
-
-      // Find if that user exists in the leaderboardData.VOICE for that category
-      const voiceData = leaderboardData.VOICE[category as keyof typeof leaderboardData.VOICE]
-        .find(user => user.discord_id === textData.discord_id);
-
-      const totalPoints = Number(textData.total_points) + Number((voiceData?.total_points ?? 0));
-
-      // if (textData.discord_id === '271857135350972416') log.debug(F, `totalPoints (${category}): ${totalPoints}`);
-
-      // Combine the two data, and add that to the combinedLeaderboard for that category
-      combinedLeaderboard[category as keyof typeof combinedLeaderboard].push({
-        discord_id: textData.discord_id,
-        total_points: totalPoints,
-      });
-
-      if (textData.discord_id === '271857135350972416' || textData.discord_id === '577467602897600522') {
-        log.debug(F, `Pushed to ${category} leaderboard: ${JSON.stringify({
-          discord_id: textData.discord_id,
-          total_points: totalPoints,
-        })}`);
-      }
-    }
-    // Go through each remaining Voice experience record for that category
-    for (const voiceData of leaderboardData.VOICE[category as keyof typeof leaderboardData.VOICE]) {
-      // Find if that user exists in the combinedLeaderboard for that category, and if so, skip this record
-      const combinedData = combinedLeaderboard[category as keyof typeof combinedLeaderboard]
-        .find(user => user.discord_id === voiceData.discord_id);
-      if (combinedData) {
-        continue;
-      }
-
-      // Add the voiceData to the combinedLeaderboard for that category
-      combinedLeaderboard[category as keyof typeof combinedLeaderboard].push({
-        discord_id: voiceData.discord_id,
-        total_points: voiceData.total_points,
-      });
-    }
-  }
-
-  book.push(...await createBook(interaction, combinedLeaderboard, undefined, categoryChoice));
-
-  return book;
-}
-
 async function createLeaderboard(
   interaction: Interaction,
   leaderboardData: LeaderboardData,
-  typeChoice: 'TEXT' | 'VOICE',
+  typeChoice: 'TEXT' | 'VOICE' | 'ALL',
   categoryChoice: ExpCategory,
 ):Promise<EmbedBuilder[]> {
   const book = [] as EmbedBuilder[];
@@ -250,16 +178,11 @@ export const dLeaderboard: SlashCommand = {
       ?? 'ALL') as ExpType;
     log.debug(F, `categoryChoice: ${categoryChoice}, typeChoice: ${typeChoice}`);
 
-    const leaderboardData = await getLeaderboard();
-    const book: EmbedBuilder[] = [];
-
     await interaction.guild?.members.fetch();
 
-    if (typeChoice === 'ALL') {
-      book.push(...await combineLeaderboardData(interaction, leaderboardData, categoryChoice));
-    } else {
-      book.push(...await createLeaderboard(interaction, leaderboardData, typeChoice, categoryChoice));
-    }
+    const leaderboardData = await getLeaderboard();
+
+    const book: EmbedBuilder[] = await createLeaderboard(interaction, leaderboardData, typeChoice, categoryChoice);
 
     if (book.length === 0) {
       await interaction.editReply(`No ${typeChoice} ${categoryChoice} found!`);
