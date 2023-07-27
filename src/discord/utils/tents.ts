@@ -2,10 +2,11 @@ import {
   VoiceState,
   ChannelType,
   CategoryChannel,
-  PermissionsBitField,
+  // PermissionsBitField,
+  VoiceChannel,
 } from 'discord.js';
 
-// const F = f(__filename);
+const F = f(__filename); // eslint-disable-line
 
 /**
  * Template
@@ -17,89 +18,15 @@ export async function pitchTent(
   Old:VoiceState,
   New:VoiceState,
 ): Promise<void> {
+  const channelCampfire = await New.guild.channels.fetch(env.CHANNEL_CAMPFIRE) as VoiceChannel;
+
   New.member?.guild.channels.create({
     name: `⛺│${New.member.displayName}'s tent`,
     type: ChannelType.GuildVoice,
     parent: env.CATEGORY_VOICE,
-    permissionOverwrites: [
-      {
-        id: New.member.id,
-        allow: [
-          PermissionsBitField.Flags.ViewChannel,
-          PermissionsBitField.Flags.Connect,
-          PermissionsBitField.Flags.Speak,
-          PermissionsBitField.Flags.UseEmbeddedActivities,
-          PermissionsBitField.Flags.UseVAD,
-          // PermissionsBitField.Flags.MuteMembers,
-          // PermissionsBitField.Flags.DeafenMembers,
-          PermissionsBitField.Flags.MoveMembers,
-          PermissionsBitField.Flags.SendMessages,
-          PermissionsBitField.Flags.EmbedLinks,
-          PermissionsBitField.Flags.AttachFiles,
-          PermissionsBitField.Flags.AddReactions,
-          PermissionsBitField.Flags.UseExternalStickers,
-          PermissionsBitField.Flags.UseExternalEmojis,
-          PermissionsBitField.Flags.UseApplicationCommands,
-        ],
-      },
-      {
-        id: New.member.guild.roles.everyone,
-        allow: [
-          PermissionsBitField.Flags.ViewChannel,
-          PermissionsBitField.Flags.Connect,
-          PermissionsBitField.Flags.Speak,
-          PermissionsBitField.Flags.UseEmbeddedActivities,
-          PermissionsBitField.Flags.UseVAD,
-          PermissionsBitField.Flags.SendMessages,
-          PermissionsBitField.Flags.EmbedLinks,
-          PermissionsBitField.Flags.AttachFiles,
-          PermissionsBitField.Flags.AddReactions,
-          PermissionsBitField.Flags.UseExternalStickers,
-          PermissionsBitField.Flags.UseExternalEmojis,
-          PermissionsBitField.Flags.UseApplicationCommands,
-        ],
-      },
-      {
-        id: env.ROLE_MODERATOR,
-        allow: [
-          PermissionsBitField.Flags.ViewChannel,
-        ],
-      },
-      {
-        id: env.ROLE_NEEDSHELP,
-        deny: [
-          PermissionsBitField.Flags.ViewChannel,
-        ],
-      },
-      {
-        id: env.ROLE_VERIFYING,
-        deny: [
-          PermissionsBitField.Flags.ViewChannel,
-        ],
-      },
-      {
-        id: env.ROLE_UNVERIFIED,
-        deny: [
-          PermissionsBitField.Flags.ViewChannel,
-        ],
-      },
-
-    ],
+    permissionOverwrites: channelCampfire.permissionOverwrites.cache,
   }).then(async newChannel => {
     New.member?.voice.setChannel(newChannel.id);
-    // const embed = embedTemplate()
-    //   .setAuthor(null)
-    //   .setColor(env.Colors_Green)
-    //   .setTitle('Commands for your tent')
-    //   .setDescription(` To undo a command, just type it again.
-    //   **/voice lock** - Locks your tent so no one else can join it
-    //   **/voice hide** - Hides your tent from the list of voice channels
-    //   **/voice rename** - Changes the name of your tent
-    //
-    //   **/voice mute @user** - Mutes a user for everyone in your tent
-    //   **/voice ban @user** - Bans a user from joining and seeing your tent
-    //   **/voice cohost @user** - Allows another user to use these commands
-    //   `);
     await newChannel.fetch();
     await newChannel.send(`## Welcome to your tent, <@${New.member?.id}>
 
@@ -111,7 +38,7 @@ export async function pitchTent(
 - **Looking for others to join?**
  - Pick up the 'Voice Chatty' role in <id:customize>
  - This icon indicates you're looking for joiners in chat
- - You can (infrequently) mention the \`<@&${env.ROLE_JOINVC}>\` role to see if anyone wants to join!
+ - You can (infrequently) mention the <@&${env.ROLE_JOINVC}> role to see if anyone wants to join!
  - You can pick up this role in <id:customize>
 
 - **Moderate your tent with commands**
