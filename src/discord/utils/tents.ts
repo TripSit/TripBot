@@ -38,8 +38,6 @@ export async function pitchTent(
 - **Looking for others to join?**
  - Pick up the 'Voice Chatty' role in <id:customize>
  - This icon indicates you're looking for joiners in chat
- - You can (infrequently) mention the <@&${env.ROLE_JOINVC}> role to see if anyone wants to join!
- - You can pick up this role in <id:customize>
 
 - **Moderate your tent with commands**
  - \`/voice lock\`- Locks your tent so no one else can join it
