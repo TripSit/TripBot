@@ -2,8 +2,8 @@ import {
   VoiceState,
   ChannelType,
   CategoryChannel,
-  // PermissionsBitField,
-  VoiceChannel,
+  PermissionsBitField,
+  // VoiceChannel,
 } from 'discord.js';
 
 const F = f(__filename); // eslint-disable-line
@@ -18,13 +18,77 @@ export async function pitchTent(
   Old:VoiceState,
   New:VoiceState,
 ): Promise<void> {
-  const categoryVoice = await New.guild.channels.fetch(env.CATEGORY_VOICE) as VoiceChannel;
+  // const categoryVoice = await New.guild.channels.fetch(env.CATEGORY_VOICE) as VoiceChannel;
+  // const permissions = categoryVoice.permissionOverwrites.cache;
 
   New.member?.guild.channels.create({
     name: `⛺│${New.member.displayName}'s tent`,
     type: ChannelType.GuildVoice,
     parent: env.CATEGORY_VOICE,
-    permissionOverwrites: categoryVoice.permissionOverwrites.cache,
+    permissionOverwrites: [
+      {
+        id: New.member.id,
+        allow: [
+          PermissionsBitField.Flags.ViewChannel,
+          PermissionsBitField.Flags.Connect,
+          PermissionsBitField.Flags.Speak,
+          PermissionsBitField.Flags.UseEmbeddedActivities,
+          PermissionsBitField.Flags.UseVAD,
+          // PermissionsBitField.Flags.MuteMembers,
+          // PermissionsBitField.Flags.DeafenMembers,
+          PermissionsBitField.Flags.MoveMembers,
+          PermissionsBitField.Flags.SendMessages,
+          PermissionsBitField.Flags.EmbedLinks,
+          PermissionsBitField.Flags.AttachFiles,
+          PermissionsBitField.Flags.AddReactions,
+          PermissionsBitField.Flags.UseExternalStickers,
+          PermissionsBitField.Flags.UseExternalEmojis,
+          PermissionsBitField.Flags.UseApplicationCommands,
+        ],
+      },
+      {
+        id: New.member.guild.roles.everyone,
+        allow: [
+          PermissionsBitField.Flags.ViewChannel,
+          PermissionsBitField.Flags.Connect,
+          PermissionsBitField.Flags.Speak,
+          PermissionsBitField.Flags.UseEmbeddedActivities,
+          PermissionsBitField.Flags.UseVAD,
+          PermissionsBitField.Flags.SendMessages,
+          PermissionsBitField.Flags.EmbedLinks,
+          PermissionsBitField.Flags.AttachFiles,
+          PermissionsBitField.Flags.AddReactions,
+          PermissionsBitField.Flags.UseExternalStickers,
+          PermissionsBitField.Flags.UseExternalEmojis,
+          PermissionsBitField.Flags.UseApplicationCommands,
+        ],
+      },
+      {
+        id: env.ROLE_MODERATOR,
+        allow: [
+          PermissionsBitField.Flags.ViewChannel,
+        ],
+      },
+      {
+        id: env.ROLE_NEEDSHELP,
+        deny: [
+          PermissionsBitField.Flags.ViewChannel,
+        ],
+      },
+      {
+        id: env.ROLE_VERIFYING,
+        deny: [
+          PermissionsBitField.Flags.ViewChannel,
+        ],
+      },
+      {
+        id: env.ROLE_UNVERIFIED,
+        deny: [
+          PermissionsBitField.Flags.ViewChannel,
+        ],
+      },
+
+    ],
   }).then(async newChannel => {
     New.member?.voice.setChannel(newChannel.id);
     await newChannel.fetch();
