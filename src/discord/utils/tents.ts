@@ -18,13 +18,13 @@ export async function pitchTent(
   Old:VoiceState,
   New:VoiceState,
 ): Promise<void> {
-  const channelCampfire = await New.guild.channels.fetch(env.CHANNEL_CAMPFIRE) as VoiceChannel;
+  const categoryVoice = await New.guild.channels.fetch(env.CATEGORY_VOICE) as VoiceChannel;
 
   New.member?.guild.channels.create({
     name: `⛺│${New.member.displayName}'s tent`,
     type: ChannelType.GuildVoice,
     parent: env.CATEGORY_VOICE,
-    permissionOverwrites: channelCampfire.permissionOverwrites.cache,
+    permissionOverwrites: categoryVoice.permissionOverwrites.cache,
   }).then(async newChannel => {
     New.member?.voice.setChannel(newChannel.id);
     await newChannel.fetch();
