@@ -1,8 +1,8 @@
 /* eslint-disable no-unused-vars */
 /* eslint-disable max-len */
 import fs from 'fs';
-import axios from 'axios';
 import fp from 'path';
+import axios from 'axios';
 // import {
 //   Client,
 // } from 'discord.js';

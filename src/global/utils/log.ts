@@ -1,3 +1,4 @@
+import { parse } from 'path';
 import {
   createLogger,
   format,
@@ -7,7 +8,6 @@ import {
 } from 'winston';
 // import { Logtail } from '@logtail/node'; // eslint-disable-line
 // import { LogtailTransport } from '@logtail/winston'; // eslint-disable-line
-import { parse } from 'path';
 // import Rollbar, { Level } from 'rollbar';
 // import * as Sentry from '@sentry/node'; // eslint-disable-line
 // import SentryTransport from 'winston-transport-sentry-node'; // eslint-disable-line
