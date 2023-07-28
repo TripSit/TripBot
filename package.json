@@ -5,7 +5,7 @@
   "main": "start.ts",
   "engines": {
     "node": "v20.5.0",
-    "npm": "9.6.7"
+    "npm": "9.8.0"
   },
   "scripts": {
     "start": "docker compose --project-name tripbot up tripbot -d --force-recreate --build",
