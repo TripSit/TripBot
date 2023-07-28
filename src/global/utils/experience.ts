@@ -67,12 +67,11 @@ async function giveMilestone(
 ) {
   const userData = await getUser(member.id, null, null);
 
-  const allExpData = await experienceGet(undefined, undefined, 'TEXT' as ExperienceType, userData.id);
+  const allExpData = await experienceGet(undefined, undefined, undefined, userData.id);
 
   // Calculate total experience points
   const totalExp = allExpData
-    .filter(exp => exp.type !== 'VOICE'
-      && exp.category !== 'TOTAL'
+    .filter(exp => exp.category !== 'TOTAL'
       && exp.category !== 'IGNORED')
     .reduce((acc, exp) => acc + exp.total_points, 0);
 
@@ -82,7 +81,7 @@ async function giveMilestone(
   // Pretend that the total exp would get the same exp as the category
   // Get the total level
   const totalData = await getTotalLevel(totalExp);
-  // log.debug(F, `${member.displayName} is total Text level ${totalData.level}`);
+  log.debug(F, `${member.displayName} is total Text level ${totalData.level}`);
 
   // Determine the first digit of the level
   const levelTier = Math.floor(totalData.level / 10);
@@ -169,7 +168,7 @@ async function giveMilestone(
     await member.roles.add(role);
     if (levelTier >= 1) {
       const channel = await member.guild?.channels.fetch(env.CHANNEL_VIPLOUNGE) as TextChannel;
-      await channel.send(`${emojis} **${member} has reached Total Text level ${levelTier}0!** ${emojis}`);
+      await channel.send(`${emojis} **${member} has reached Total level ${levelTier}0!** ${emojis}`);
     }
   }
 }
