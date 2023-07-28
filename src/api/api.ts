@@ -6,7 +6,7 @@ const F = f(__filename);
 
 const port = process.env.PORT || 1337;
 
-// const host = env.NODE_ENV === 'production' ? 'api.tripsit.io' : 'api.tripsit.us';
+// const host = env.NODE_ENV === 'production' ? 'api.tripsit.me' : 'api.tripsit.us';
 
 export default async function api(): Promise<void> {
   app.listen(port, () => {

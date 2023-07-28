@@ -41,20 +41,20 @@ export default async function handleError(
 
   // If this is production, send a message to the channel and alert the developers
   if (env.NODE_ENV === 'production') {
-    if (interaction) {
-      sentry.captureException(errorData, {
-        tags: {
-          command: commandName,
-          context: await commandContext(interaction),
-        },
-        user: {
-          id: interaction.user.id,
-          username: interaction.user.username,
-        },
-      });
-    } else {
-      sentry.captureException(errorData);
-    }
+    // if (interaction) {
+    //   sentry.captureException(errorData, {
+    //     tags: {
+    //       command: commandName,
+    //       context: await commandContext(interaction),
+    //     },
+    //     user: {
+    //       id: interaction.user.id,
+    //       username: interaction.user.username,
+    //     },
+    //   });
+    // } else {
+    //   sentry.captureException(errorData);
+    // }
 
     // Get channel we send errors to
     const channel = await discordClient.channels.fetch(env.CHANNEL_BOTERRORS) as TextChannel;

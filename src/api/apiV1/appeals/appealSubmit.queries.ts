@@ -13,6 +13,7 @@ import {
   time,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
+import escape from 'escape-html';
 import { database } from '../../../global/utils/knex';
 import { AppealStatus, Appeals, Users } from '../../../global/@types/database';
 
@@ -92,12 +93,12 @@ export default {
     const guildData = await database.guilds.get(body.newAppealData.guild);
     if (!guildData) {
       log.error(F, `Could not find guild with id ${body.newAppealData.guild}`);
-      res.status(500).send(`Could not find guild with id ${body.newAppealData.guild}`);
+      res.status(500).send(`Could not find guild with id ${escape(body.newAppealData.guild)}`);
       return;
     }
     if (!guildData.partner) {
       log.error(F, `Guild with id ${body.newAppealData.guild} is not a partner`);
-      res.status(500).send(`Guild with id ${body.newAppealData.guild} is not a partner`);
+      res.status(500).send(`Guild with id ${escape(body.newAppealData.guild)} is not a partner`);
       return;
     }
     // log.debug(F, `guildData: ${JSON.stringify(guildData, null, 2)}`);
@@ -108,8 +109,8 @@ export default {
     try {
       guild = await discordClient.guilds.fetch(body.newAppealData.guild);
     } catch (e) {
-      log.error(F, `Could not find guild with id ${body.newAppealData.guild}`);
-      res.status(500).send(`Could not find guild with id ${body.newAppealData.guild}`);
+      log.error(F, `Could not find guild with id ${escape(body.newAppealData.guild)}`);
+      res.status(500).send(`Could not find guild with id ${escape(body.newAppealData.guild)}`);
       return;
     }
     // log.debug(F, `guild: ${JSON.stringify(guild, null, 2)}`);
@@ -194,7 +195,7 @@ export default {
     //   }
     // }
 
-    const modThread = await getModThread(guild, body.newAppealData.userId, body.newAppealData.username);
+    const modThread = await getModThread(guild, escape(body.newAppealData.userId), escape(body.newAppealData.username));
 
     // Get a date that is 24 hours in the future
     const expiresAtDate = new Date();

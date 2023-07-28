@@ -9,7 +9,7 @@ import {
 // import { LogtailTransport } from '@logtail/winston'; // eslint-disable-line
 import { parse } from 'path';
 // import Rollbar, { Level } from 'rollbar';
-import * as Sentry from '@sentry/node'; // eslint-disable-line
+// import * as Sentry from '@sentry/node'; // eslint-disable-line
 // import SentryTransport from 'winston-transport-sentry-node'; // eslint-disable-line
 import { env } from './env.config';
 
@@ -70,20 +70,23 @@ const myFormat = printf(({
 
 // global.rollbar = new Rollbar(rollbarConfig);
 
-const sentryConfig = {
-  dsn: env.SENTRY_TOKEN,
-  level: 'error',
-  tracesSampleRate: 1.0,
-  environment: env.NODE_ENV,
-  integrations: [
-    // enable HTTP calls tracing
-    new Sentry.Integrations.Http({ tracing: true }),
-    // Automatically instrument Node.js libraries and frameworks
-    ...Sentry.autoDiscoverNodePerformanceMonitoringIntegrations(),
-  ],
-};
+// const sentryConfig = {
+//   dsn: env.SENTRY_TOKEN,
+//   debug: true, // Enable debug mode to         log internal transactions
+//   // level: 'error',
+//   tracesSampleRate: 1.0,
+//   // environment: env.NODE_ENV,
+//   // integrations: [
+//   //   // enable HTTP calls tracing
+//   //   new Sentry.Integrations.Http({ tracing: true }),
+//   //   // Automatically instrument Node.js libraries and frameworks
+//   //   ...Sentry.autoDiscoverNodePerformanceMonitoringIntegrations(),
+//   // ],
+// };
 
-Sentry.init(sentryConfig);
+// console.log(`sentryConfig: ${JSON.stringify(sentryConfig)}`); // eslint-disable-line no-console
+
+// Sentry.init(sentryConfig);
 
 // const sentryTransportConfig = {
 //   sentry: sentryConfig,
@@ -91,7 +94,26 @@ Sentry.init(sentryConfig);
 //   level: 'error',
 // };
 
-global.sentry = Sentry;
+// global.sentry = Sentry;
+
+// const transaction = Sentry.startTransaction({
+//   op: 'test',
+//   name: 'My First Test Transaction',
+// });
+
+// setTimeout(() => {
+//   try {
+//     console.log('foo');
+//     // @ts-ignore
+//     foo(); // eslint-disable-line
+//     console.log('bar');
+//   } catch (e) {
+//     console.log('error');
+//     Sentry.captureException(e);
+//   } finally {
+//     transaction.finish();
+//   }
+// }, 99);
 
 const transportOptions = [
   new transports.Console(),

@@ -49,10 +49,6 @@ export default async function checkAuth(
 
   if (authToken !== myToken) {
     log.error(F, 'Authorization token is not valid');
-    log.error(F, `authToken: ${authToken}`);
-    log.error(F, `myToken: ${myToken}`);
-    log.error(F, `env.API_USERNAME: ${env.API_USERNAME}`);
-    log.error(F, `env.API_PASSWORD: ${env.API_PASSWORD}`);
     res.status(401).send('Authorization token is not valid');
     return false;
   }

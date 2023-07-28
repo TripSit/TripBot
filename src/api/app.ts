@@ -3,6 +3,7 @@ import bodyParser from 'body-parser';
 import morgan from 'morgan';
 
 import helmet from 'helmet';
+import RateLimit from 'express-rate-limit';
 import { log } from '../global/utils/log';
 
 import { notFound, errorHandler } from './middlewares';
@@ -46,5 +47,14 @@ app.use('/api/v1', api1);
 
 app.use(notFound);
 app.use(errorHandler);
+
+// set up rate limiter: maximum of five requests per minute
+const limiter = RateLimit({
+  windowMs: 1 * 60 * 1000, // 1 minute
+  max: 5,
+});
+
+// apply rate limiter to all requests
+app.use(limiter);
 
 export default app;

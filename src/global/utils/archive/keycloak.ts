@@ -137,7 +137,7 @@ export async function setUserAttribute(
   } catch (error) {
     log.error(F, `Failed to set attribute "${attributeName}" for user ${identifier}":`);
     // eslint-disable-next-line no-console
-    console.log(error);
+    // console.log(error);
     return false;
   }
 }

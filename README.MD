@@ -24,7 +24,7 @@ Full Typescript support
 Postgres database support
 Discord.js 14.8
 Jest testing support
-Sonarqube scanning
+Sonar scanning
 Dockerized
 
 ## 🎈 How to use 
