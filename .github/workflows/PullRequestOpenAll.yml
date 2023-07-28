@@ -16,15 +16,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-    - name: Use Node.js '16.17.1'
+    - name: Use Node.js '18.17.0'
       uses: actions/setup-node@v3
       with:
-        node-version: '16.17.1'
+        node-version: '18.17.0'
         cache: 'npm'
     - name: Update npm
       run: npm install -g npm && npm --version
     - name: Install eslint
-      run: npm install eslint eslint-config-airbnb-base eslint-config-airbnb-typescript eslint-config-google eslint-import-resolver-typescript eslint-plugin-import --save-dev && npx eslint --version
+      run: npm install eslint @typescript-eslint/eslint-plugin @typescript-eslint/parser eslint-config-airbnb-base eslint-config-airbnb-typescript eslint-config-google eslint-import-resolver-typescript eslint-plugin-import eslint-plugin-jest eslint-plugin-sonarjs --save-dev && npx eslint --version
     - name: Linting
       run: npx eslint --ext .ts,.js .
   test:
@@ -32,10 +32,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-    - name: Use Node.js '16.17.1'
+    - name: Use Node.js '18.17.0'
       uses: actions/setup-node@v3
       with:
-        node-version: '16.17.1'
+        node-version: '18.17.0'
         cache: 'npm'
     - name: Update npm
       run: npm install -g npm && npm --version

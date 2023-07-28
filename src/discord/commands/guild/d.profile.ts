@@ -1,11 +1,11 @@
 /* eslint-disable max-len */
+import * as path from 'path';
 import {
   SlashCommandBuilder,
   GuildMember,
   AttachmentBuilder,
 } from 'discord.js';
 import Canvas from '@napi-rs/canvas';
-import * as path from 'path';
 import { SlashCommand } from '../../@types/commandDef';
 import { profile, ProfileData } from '../../../global/commands/g.profile';
 import commandContext from '../../utils/context';

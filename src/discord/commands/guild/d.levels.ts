@@ -1,3 +1,4 @@
+import * as path from 'path';
 import {
   SlashCommandBuilder,
   ChatInputCommandInteraction,
@@ -6,7 +7,6 @@ import {
   AttachmentBuilder,
 } from 'discord.js';
 import Canvas from '@napi-rs/canvas';
-import * as path from 'path';
 import { SlashCommand } from '../../@types/commandDef';
 import { levels } from '../../../global/commands/g.levels';
 import { profile, ProfileData } from '../../../global/commands/g.profile';

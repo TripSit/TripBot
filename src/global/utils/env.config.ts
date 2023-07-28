@@ -18,8 +18,11 @@ export const env = {
   DISCORD_EMOJI_GUILD_RPG: '1052632098646798476',
   DISCORD_EMOJI_GUILD_MAIN: '1047246735216480296',
 
-  IRC_PASSWORD: process.env.IRC_PASSWORD,
+  API_USERNAME: process.env.API_USERNAME,
+  API_PASSWORD: process.env.API_PASSWORD,
+
   IRC_USERNAME: 'TripBot',
+  IRC_PASSWORD: process.env.IRC_PASSWORD,
 
   MOODLE_TOKEN: process.env.MOODLE_TOKEN,
   MOODLE_URL: 'https://learn.tripsit.me',
@@ -28,6 +31,9 @@ export const env = {
 
   // ROLLBAR_TOKEN: process.env.ROLLBAR_TOKEN,
   SENTRY_TOKEN: process.env.SENTRY_TOKEN,
+
+  VUE_APP_PASSWORD: process.env.VUE_APP_PASSWORD,
+  VUE_APP_USERNAME: process.env.VUE_APP_USERNAME,
 
   MATRIX_HOMESERVER_URL: 'https://matrix.tripsit.me',
   MATRIX_ACCESS_TOKEN: process.env.MATRIX_ACCESS_TOKEN,
