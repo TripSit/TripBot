@@ -261,20 +261,21 @@ async function getMoodleCourseCompletion(
 export async function help():Promise<MoodleInfo> {
   return {
     title: 'TripSitLearn Info',
-    description: stripIndents`TripSitLearn is TripSit's learning portal where we host courses for our members.
+    description: stripIndents`[TripSit Learn: Your Gateway to Harm Reduction Knowledge](${env.MOODLE_URL})
 
-    These are free courses that anyone is allowed to take, and we encourage you to do so!
+    Join us on a transformative journey of learning and growth! At TripSit, we're committed to fostering a responsible understanding of drug use. With this in mind, we're excited to present our pioneering course—"How to Be a TripSitter", which is entirely free and open for everyone.
 
-    You can use /learn link to link your TripSitLearn account with your Discord account.
-    Note: Your email is only used to verify your account, and is not stored in the bot or posted anywhere.
-
-    Then you can use /learn profile to show your learning profile, including which courses you've completed!
-    Note: This will make your "full name" from the learn site public.
-
-    This works discord-wide, anywhere that TripBot is, so you can take your learning profile with you anywhere! 
+    With the /learn profile command, you can proudly display your educational journey, featuring the courses you've triumphantly completed
     
-    Other communities are welcome to talk with TripSit and add their own learning courses to our platform:
-    If you're interested in that, please reach out to us!
+    **As the beauty of learning knows no bounds, your learn profile is available discord-wide, wherever TripBot is present.**
+    
+    Therefore, you can take your learning profile anywhere on the Discord platform, showcasing your commitment to harm reduction wherever you go!
+
+    Simply use the /learn command to pair your TripSit Learn account with your Discord account. Don't worry, your email is solely for account validation, guaranteeing that it won't be stored in the bot or shared anywhere else.
+
+    (In fact: If you've hidden your email on the moodle, the bot won't be able to verify your account. Make sure to make your email public for the bot to be able to verify your account, and then you can make it private again!)
+    
+    We heartily welcome other communities to join hands with TripSit and contribute their unique learning courses to our thriving platform. If this sounds exciting to you, we would love to hear from you. Please, don't hesitate to reach out!
     `,
     url: env.MOODLE_URL,
     footer: 'Thanks for your interest!',
