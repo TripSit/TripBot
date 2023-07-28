@@ -4,7 +4,7 @@
   "description": "A bot for TripSit (and maybe the world)",
   "main": "start.ts",
   "engines": {
-    "node": "v18.17.0",
+    "node": "v20.5.0",
     "npm": "9.6.7"
   },
   "scripts": {
