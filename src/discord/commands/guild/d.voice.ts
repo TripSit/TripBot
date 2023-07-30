@@ -101,7 +101,7 @@ async function tentBan(
     return embedTemplate()
       .setTitle('Error')
       .setColor(Colors.Red)
-      .setDescription(`You cannot ban bots`);
+      .setDescription('You cannot ban bots');
   }
 
   // Disallow banning mods
@@ -109,7 +109,7 @@ async function tentBan(
     return embedTemplate()
       .setTitle('Error')
       .setColor(Colors.Red)
-      .setDescription(`You cannot ban mods`);
+      .setDescription('You cannot ban mods');
   }
 
   // log.debug(F, `${target.displayName} is now ${verb}`);
@@ -171,7 +171,6 @@ async function tentRadio(
   stationid: string,
   guild: Guild,
 ):Promise<EmbedBuilder> {
-
   const radioChannels: { [key: string]: string } = {
     '830530156048285716': env.CHANNEL_LOFIRADIO,
     '861363156568113182': env.CHANNEL_JAZZRADIO,
@@ -182,12 +181,12 @@ async function tentRadio(
   // If the station choice was "none", send the radio back to the radio room
   if (stationid === 'none') {
     // Check if any radio bots are in the Tent
-    const radioBot = voiceChannel.members.find((m) => Object.keys(radioChannels).includes(m.user.id));
+    const radioBot = voiceChannel.members.find(m => Object.keys(radioChannels).includes(m.user.id));
     if (!radioBot) {
       return embedTemplate()
-      .setTitle('Error')
-      .setColor(Colors.Red)
-      .setDescription(`There is already no radio in this Tent`);
+        .setTitle('Error')
+        .setColor(Colors.Red)
+        .setDescription('There is already no radio in this Tent');
     }
     // Find what radio bot is in the Tent and use the corresponding radio channel from the radioChannels object
     // Check if the current channel has a radio bot in it by checking if any bots in the channel are in the radioChannels object
@@ -207,9 +206,9 @@ async function tentRadio(
       }
     }
     return embedTemplate()
-    .setTitle('Success')
-    .setColor(Colors.Green)
-    .setDescription(`The radio has been returned to the radio room`);
+      .setTitle('Success')
+      .setColor(Colors.Green)
+      .setDescription('The radio has been returned to the radio room');
   }
 
   const station = voiceChannel.guild.members.cache.get(stationid) as GuildMember;
@@ -217,31 +216,31 @@ async function tentRadio(
   // If the station returns invalid (not on the server)
   if (!station) {
     return embedTemplate()
-    .setTitle('Error')
-    .setColor(Colors.Red)
-    .setDescription(`This radio wasn't found! Please report this to the mods`);
+      .setTitle('Error')
+      .setColor(Colors.Red)
+      .setDescription('This radio wasn\'t found! Please report this to the mods');
   }
 
   // If the radio is offline
   if (!station.voice.channel) {
     return embedTemplate()
-    .setTitle('Error')
-    .setColor(Colors.Red)
-    .setDescription(`This radio is currently offline, please report this to the mods`);
+      .setTitle('Error')
+      .setColor(Colors.Red)
+      .setDescription('This radio is currently offline, please report this to the mods');
   }
   // If the radio is already in another Tent
   if (station.voice.channel?.parent?.id === env.CATEGORY_CAMPGROUND && station.voice.channelId !== voiceChannel.id) {
     return embedTemplate()
-    .setTitle('Error')
-    .setColor(Colors.Red)
-    .setDescription(`This radio is already being borrowed in another Tent`);
+      .setTitle('Error')
+      .setColor(Colors.Red)
+      .setDescription('This radio is already being borrowed in another Tent');
   }
   // If the radio is already in the Tent
   if (station.voice.channelId === voiceChannel.id) {
     return embedTemplate()
-    .setTitle('Error')
-    .setColor(Colors.Red)
-    .setDescription(`This radio is already in your Tent`);
+      .setTitle('Error')
+      .setColor(Colors.Red)
+      .setDescription('This radio is already in your Tent');
   }
   // If the radio is available, move it to the Tent
   if (station.voice.channel?.parent?.id === env.CATEGORY_RADIO) {
@@ -251,9 +250,9 @@ async function tentRadio(
     const radioChannel = station.guild.channels.cache.get(radioChannelId) as VoiceChannel;
 
     return embedTemplate()
-    .setTitle('Success')
-    .setColor(Colors.Green)
-    .setDescription(`${station} has been borrowed to your Tent`);
+      .setTitle('Success')
+      .setColor(Colors.Green)
+      .setDescription(`${station} has been borrowed to your Tent`);
   }
   // If the Tent already has a radio, find its corresonding channel in the radioChannels object and move it back before moving the new radio in
   const botMember = station.voice.channel.members.find(member => member.user.bot && Object.keys(radioChannels).includes(member.user.id));
@@ -268,11 +267,10 @@ async function tentRadio(
         if (member.user.bot) {
           member.voice.setChannel(radioChannel);
         }
-      });      
+      });
     }
     await station.voice.setChannel(voiceChannel);
   }
-
 
   // log.debug(F, `${target.displayName} is now ${verb}`);
 
@@ -286,14 +284,13 @@ async function tentBitrate(
   voiceChannel: VoiceBasedChannel,
   bitrate: string,
 ):Promise<EmbedBuilder> {
-
-  const bitrateNumber = parseInt(bitrate);
+  const bitrateNumber = parseInt(bitrate, 10);
   // Check if the bitrate is the same as the current bitrate
   if (voiceChannel.bitrate === bitrateNumber * 1000) {
     return embedTemplate()
-    .setTitle('Error')
-    .setColor(Colors.Red)
-    .setDescription(`The bitrate is already set to ${bitrate}kbps`);
+      .setTitle('Error')
+      .setColor(Colors.Red)
+      .setDescription(`The bitrate is already set to ${bitrate}kbps`);
   }
   // Change the bitrate
   await voiceChannel.setBitrate(bitrateNumber * 1000);
@@ -302,7 +299,6 @@ async function tentBitrate(
     .setColor(Colors.Green)
     .setDescription(`The bitrate has been set to ${bitrate}kbps`);
 }
-
 
 export const dVoice: SlashCommand = {
   data: new SlashCommandBuilder()
@@ -354,10 +350,8 @@ export const dVoice: SlashCommand = {
           { name: 'Jazz', value: '861363156568113182' },
           { name: 'Synthwave', value: '833406944387268670' },
           { name: 'Sleepy', value: '831623165632577587' },
-          { name: 'None', value: 'none'}
-        ),
-      )
-    )
+          { name: 'None', value: 'none' },
+        )))
     .addSubcommand(subcommand => subcommand
       .setName('bitrate')
       .setDescription('Change the bitrate of your Tent')
@@ -372,9 +366,7 @@ export const dVoice: SlashCommand = {
           { name: 'Medium (128kbps)', value: '128' },
           { name: 'High (256kbps)', value: '256' },
           { name: 'Ultra (384kbps)', value: '384' },
-        ),
-      )
-    ),
+        ))),
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
     await interaction.deferReply({ ephemeral: true });

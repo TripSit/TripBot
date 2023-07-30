@@ -162,6 +162,6 @@ export async function teardownTent(
         }
       }
       channel.delete('Removing temporary voice chan!');
-    }        
+    }
   });
 }
