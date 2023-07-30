@@ -5,7 +5,7 @@
 # We stop at the end of this step in development, so it also includes the deploy command
 # We install jest, eslint and ts-node so we can run tests and lint.
 
-FROM node:20.3-alpine As development
+FROM node:20.5.0-alpine AS development
 
 ENV TZ="America/Chicago"
 ENV NODE_ENV=development
@@ -55,7 +55,7 @@ CMD tail -f /dev/null
 # We run the build command which creates the production bundle
 # We run npm ci --only=production to ensure that only the production dependencies are installed
 
-FROM node:20.3-alpine As build
+FROM node:20.5.0-alpine AS build
 
 ENV TZ="America/Chicago"
 ENV NODE_ENV=production
@@ -94,7 +94,7 @@ RUN npm ci --omit:dev && npm cache clean --force
 # Then we ONLY copy over the /build folder with the js files
 # We already deployed before, so the only thing left to do is run the bot with PM2
 
-FROM node:20.3-alpine As production
+FROM node:20.5.0-alpine AS production
 
 ENV TZ="America/Chicago"
 ENV NODE_ENV=production

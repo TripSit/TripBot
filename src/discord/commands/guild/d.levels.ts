@@ -1,3 +1,4 @@
+import * as path from 'path';
 import {
   SlashCommandBuilder,
   ChatInputCommandInteraction,
@@ -6,7 +7,6 @@ import {
   AttachmentBuilder,
 } from 'discord.js';
 import Canvas from '@napi-rs/canvas';
-import * as path from 'path';
 import { SlashCommand } from '../../@types/commandDef';
 import { levels } from '../../../global/commands/g.levels';
 import { profile, ProfileData } from '../../../global/commands/g.profile';
@@ -25,6 +25,22 @@ import { Personas } from '../../../global/@types/database';
 const F = f(__filename);
 
 type LevelData = {
+  ALL: {
+    TOTAL: {
+      level: number,
+      level_exp: number,
+      nextLevel: number,
+      total_exp: number,
+      rank: number,
+    },
+    [key: string]: {
+      level: number,
+      level_exp: number,
+      nextLevel: number,
+      total_exp: number,
+      rank: number,
+    },
+  },
   TEXT: {
     TOTAL: {
       level: number,
@@ -377,7 +393,9 @@ export const dLevels: SlashCommand = {
     context.fillText(`${target.displayName}`, 146, 76);
 
     // Progress Bars Calculate
-    const progressText = levelData.TEXT.TOTAL.level_exp / levelData.TEXT.TOTAL.nextLevel;
+    // const progressText = levelData.TEXT.TOTAL.level_exp / levelData.TEXT.TOTAL.nextLevel;
+    const progressTotal = levelData.ALL.TOTAL.level_exp / levelData.TEXT.TOTAL.nextLevel;
+
     const progressVoice = levelData.VOICE.TOTAL
       ? levelData.VOICE.TOTAL.level_exp / levelData.VOICE.TOTAL.nextLevel
       : 0;
@@ -406,7 +424,7 @@ export const dLevels: SlashCommand = {
     context.roundRect(87, 497, 579, 51, [19]);
     context.clip();
     context.beginPath();
-    context.roundRect(87, 172, (progressText) * 579, 76, [19]);
+    context.roundRect(87, 172, (progressTotal) * 579, 76, [19]);
     context.roundRect(87, 257, (progressGeneral) * 579, 51, [19]);
     context.roundRect(87, 317, (progressVoice) * 579, 51, [19]);
     if (layout > 1) {
@@ -425,7 +443,7 @@ export const dLevels: SlashCommand = {
     context.fillStyle = '#ffffff';
     context.textBaseline = 'middle';
     context.textAlign = 'right';
-    context.fillText(`${levelData.TEXT.TOTAL.level}`, 657, 213);
+    context.fillText(`${levelData.ALL.TOTAL.level}`, 657, 213);
     context.font = '25px futura';
     context.fillText(`${levelData.TEXT.GENERAL ? levelData.TEXT.GENERAL.level : 0}`, 657, 284);
     context.fillText(`${levelData.VOICE.TOTAL ? levelData.VOICE.TOTAL.level : 0}`, 657, 344);

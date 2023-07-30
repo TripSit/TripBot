@@ -2,7 +2,7 @@ import { Client as DiscordClient } from 'discord.js';
 // import { MatrixClient } from 'matrix-bot-sdk';
 // import { Client as IRCClient } from 'matrix-org-irc';
 // import { Telegraf as TelegramClient } from 'telegraf';
-import Sentry from '@sentry/node';
+// import Sentry from '@sentry/node';
 
 declare global {
   var guildInvites: Collection; // eslint-disable-line
@@ -15,7 +15,7 @@ declare global {
   var announcements: string[]; // eslint-disable-line
   var lpmDict: LpmDict; // eslint-disable-line
   var lpmTime: number[]; // eslint-disable-line
-  var sentry: Sentry; // eslint-disable-line
+  // var sentry: Sentry; // eslint-disable-line
   var emojiGet: (name:string) => Emoji; // eslint-disable-line
 }
 

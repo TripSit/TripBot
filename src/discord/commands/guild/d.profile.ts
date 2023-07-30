@@ -1,11 +1,11 @@
 /* eslint-disable max-len */
+import * as path from 'path';
 import {
   SlashCommandBuilder,
   GuildMember,
   AttachmentBuilder,
 } from 'discord.js';
 import Canvas from '@napi-rs/canvas';
-import * as path from 'path';
 import { SlashCommand } from '../../@types/commandDef';
 import { profile, ProfileData } from '../../../global/commands/g.profile';
 import commandContext from '../../utils/context';
@@ -395,7 +395,7 @@ export const dProfile: SlashCommand = {
     context.fillText(`${numFormatter(profileData.tokens)}`, 648, 250);
 
     // Level Text
-    const totalTextData = await getTotalLevel(profileData.totalTextExp);
+    const totalTextData = await getTotalLevel(profileData.totalTextExp + profileData.totalVoiceExp);
     context.fillText(`${totalTextData.level}`, 894, 250);
 
     // Choose and Draw the Level Image

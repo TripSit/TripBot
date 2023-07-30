@@ -3,9 +3,10 @@ import {
   ChannelType,
   CategoryChannel,
   PermissionsBitField,
+  // VoiceChannel,
 } from 'discord.js';
 
-// const F = f(__filename);
+const F = f(__filename); // eslint-disable-line
 
 /**
  * Template
@@ -17,6 +18,9 @@ export async function pitchTent(
   Old:VoiceState,
   New:VoiceState,
 ): Promise<void> {
+  // const categoryVoice = await New.guild.channels.fetch(env.CATEGORY_VOICE) as VoiceChannel;
+  // const permissions = categoryVoice.permissionOverwrites.cache;
+
   New.member?.guild.channels.create({
     name: `⛺│${New.member.displayName}'s tent`,
     type: ChannelType.GuildVoice,
@@ -87,25 +91,19 @@ export async function pitchTent(
     ],
   }).then(async newChannel => {
     New.member?.voice.setChannel(newChannel.id);
-    // const embed = embedTemplate()
-    //   .setAuthor(null)
-    //   .setColor(env.Colors_Green)
-    //   .setTitle('Commands for your tent')
-    //   .setDescription(` To undo a command, just type it again.
-    //   **/voice lock** - Locks your tent so no one else can join it
-    //   **/voice hide** - Hides your tent from the list of voice channels
-    //   **/voice rename** - Changes the name of your tent
-    //
-    //   **/voice mute @user** - Mutes a user for everyone in your tent
-    //   **/voice ban @user** - Bans a user from joining and seeing your tent
-    //   **/voice cohost @user** - Allows another user to use these commands
-    //   `);
     await newChannel.fetch();
     await newChannel.send(`## Welcome to your tent, <@${New.member?.id}>
+
+- **Webcam Chat (WC) is available for level 10 and up!**
+ - The normal rules are still in effect:
+ - Don't show off drugs, porn, gore, weapons or anything a reasonable person would consider offensive on camera.
+ - Consumption of mild psychoactive (nicotine, caffeine, alcohol, weed) substances is allowed.
 
 - **Looking for others to join?**
  - Pick up the 'Voice Chatty' role in <id:customize>
  - This icon indicates you're looking for joiners in chat
+ - You can (infrequently) mention the \`@Join VC\` role to see if anyone wants to join!
+ - You can pick up this role in <id:customize>
 
 - **Moderate your tent with commands**
  - \`/voice lock\`- Locks your tent so no one else can join it

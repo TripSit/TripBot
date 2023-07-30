@@ -12,7 +12,7 @@ import { stripIndents } from 'common-tags';
 import { getUser, reactionroleGet, usersUpdate } from '../../../global/utils/knex';
 // import {
 //   Users,
-// } from '../../global/@types/database.d';
+// } from '../../global/@types/database';
 // import log from '../../global/utils/log';
 
 // const F = f(__filename);

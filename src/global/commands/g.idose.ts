@@ -9,7 +9,7 @@ import {
   DrugRoa,
   DrugMassUnit,
   UserDrugDoses,
-} from '../@types/database.d';
+} from '../@types/database';
 
 const F = f(__filename);
 
