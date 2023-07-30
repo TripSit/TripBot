@@ -1,5 +1,6 @@
 import {
   VoiceState,
+  VoiceChannel,
   ChannelType,
   CategoryChannel,
   PermissionsBitField,
@@ -133,12 +134,32 @@ export async function teardownTent(
     // Get the number of humans in the channel
     const humans = channel.members.filter(member => !member.user.bot).size;
 
+    const radioChannels: { [key: string]: string } = {
+      '830530156048285716': env.CHANNEL_LOFIRADIO,
+      '861363156568113182': env.CHANNEL_JAZZRADIO,
+      '833406944387268670': env.CHANNEL_SYNTHWAVERADIO,
+      '831623165632577587': env.CHANNEL_SLEEPYRADIO,
+    };
+
     // If the channel is a voice channel, and it's a tent, and there are no humans in it delete it
-    if (channel.type === ChannelType.GuildVoice
-      && channel.name.includes('⛺')
-      && humans < 1) {
+    if (channel.type === ChannelType.GuildVoice && channel.name.includes('⛺') && humans < 1) {
+      // Check if the current channel has a radio bot in it by checking if any bots in the channel are in the radioChannels object
+      const botMember = channel.members.find(member => member.user.bot && Object.keys(radioChannels).includes(member.user.id));
+      if (botMember) {
+        // If it does, find the corresponding radio channel from the bot id and move the bot to it
+        const radioChannelId = radioChannels[botMember.user.id];
+        // Get the radio channel from cache
+        const radioChannel = Old.guild.channels.cache.get(radioChannelId) as VoiceChannel;
+        // If the radio channel exists, and is a voice channel, move the bot to it
+        if (radioChannel && radioChannel.type === ChannelType.GuildVoice) {
+          channel.members.forEach(member => {
+            if (member.user.bot) {
+              member.voice.setChannel(radioChannel.id);
+            }
+          });
+        }
+      }
       channel.delete('Removing temporary voice chan!');
-      // log.debug(F, `deleted an empty temporary voice channel`);
-    }
+    }        
   });
 }
