@@ -59,7 +59,11 @@ async function tentHide(
 ):Promise<EmbedBuilder> {
   let verb = '';
 
-  if (voiceChannel.permissionsFor(voiceChannel.guild.roles.everyone).has(PermissionsBitField.Flags.ViewChannel) === true) {
+  if (
+    voiceChannel
+      .permissionsFor(voiceChannel.guild.roles.everyone)
+      .has(PermissionsBitField.Flags.ViewChannel) === true
+  ) {
     voiceChannel.permissionOverwrites.edit(voiceChannel.guild.roles.everyone, { ViewChannel: false });
     verb = 'hidden';
   } else {

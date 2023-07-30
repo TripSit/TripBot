@@ -8,7 +8,7 @@ import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { drug } from '../../../global/commands/g.drug';
 import commandContext from '../../utils/context';
-import { CbSubstance } from '../../../global/@types/combined.d';
+import { CbSubstance } from '../../../global/@types/combined';
 
 const F = f(__filename);
 

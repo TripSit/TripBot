@@ -10,6 +10,22 @@ export default levels;
 const F = f(__filename); // eslint-disable-line
 
 type LevelData = {
+  ALL: {
+    TOTAL: {
+      level: number,
+      level_exp: number,
+      nextLevel: number,
+      total_exp: number,
+      rank: number,
+    },
+    [key: string]: {
+      level: number,
+      level_exp: number,
+      nextLevel: number,
+      total_exp: number,
+      rank: number,
+    },
+  },
   TEXT: {
     TOTAL: {
       level: number,
@@ -50,6 +66,15 @@ export async function levels(
   const leaderboardData = await getLeaderboard();
 
   const results = {
+    ALL: {
+      TOTAL: {
+        level: 0,
+        level_exp: 0,
+        nextLevel: 0,
+        total_exp: 0,
+        rank: 0,
+      },
+    },
     TEXT: {
       TOTAL: {
         level: 0,
@@ -77,6 +102,7 @@ export async function levels(
     for (const category of Object.keys(typeData)) {
       const categoryKey = category as keyof typeof typeData;
       const categoryData = typeData[categoryKey];
+
       // log.debug(F, `categoryKey: ${categoryKey}, categoryData: ${JSON.stringify(categoryData, null, 2)}`);
       if (categoryData.length === 0) {
         continue;

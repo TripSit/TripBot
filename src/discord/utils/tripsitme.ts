@@ -22,7 +22,6 @@ import {
   ChatInputCommandInteraction,
   PermissionResolvable,
   Guild,
-  PermissionsBitField,
 } from 'discord.js';
 import {
   TextInputStyle,
@@ -42,7 +41,7 @@ import {
 import {
   UserTickets,
   TicketStatus,
-} from '../../global/@types/database.d';
+} from '../../global/@types/database';
 import commandContext from './context';
 import { embedTemplate } from './embedTemplate';
 import { checkChannelPermissions, checkGuildPermissions } from './checkPermissions';

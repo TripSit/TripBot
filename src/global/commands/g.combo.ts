@@ -1,5 +1,5 @@
 import { stripIndents } from 'common-tags';
-import { CbSubstance, Interaction } from '../@types/combined.d';
+import { CbSubstance, Interaction } from '../@types/combined';
 import drugDataAll from '../assets/data/drug_db_combined.json';
 import comboDefs from '../assets/data/combo_definitions.json';
 

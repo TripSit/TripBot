@@ -1,11 +1,11 @@
+import fs from 'fs/promises';
+import path from 'path';
 import {
   REST,
 } from 'discord.js';
 import {
   Routes,
 } from 'discord-api-types/v10';
-import fs from 'fs/promises';
-import path from 'path';
 import { log } from '../../global/utils/log';
 import { SlashCommand } from '../@types/commandDef';
 import validateEnv from '../../global/utils/env.validate';

@@ -23,6 +23,7 @@ import {
   rpgArcade, rpgArcadeGame, rpgArcadeWager, rpgBounties, rpgHelp, rpgHome, rpgHomeAccept, rpgHomeNameChange, rpgMarket, rpgMarketAccept, rpgMarketPreview, rpgTown, rpgTrivia,
 } from '../commands/guild/d.rpg';
 import { helperButton } from '../commands/global/d.setup';
+import { appealAccept, appealReject } from '../utils/appeal';
 
 const F = f(__filename);
 
@@ -82,6 +83,16 @@ export async function buttonClick(interaction:ButtonInteraction, discordClient:C
     else if (interaction.customId.split(',')[0] === 'rpgQuest') await interaction.editReply(await rpgBounties(interaction, interaction.customId.split(',')[0].replace('rpg', '').toLowerCase() as 'quest' | 'dungeon' | 'raid'));
     else if (interaction.customId.split(',')[0] === 'rpgDungeon') await interaction.editReply(await rpgBounties(interaction, interaction.customId.split(',')[0].replace('rpg', '').toLowerCase() as 'quest' | 'dungeon' | 'raid'));
     else if (interaction.customId.split(',')[0] === 'rpgRaid') await interaction.editReply(await rpgBounties(interaction, interaction.customId.split(',')[0].replace('rpg', '').toLowerCase() as 'quest' | 'dungeon' | 'raid'));
+    return;
+  }
+
+  if (buttonID.startsWith('appealAccept')) {
+    await appealAccept(interaction);
+    return;
+  }
+
+  if (buttonID.startsWith('appealReject')) {
+    await appealReject(interaction);
     return;
   }
 
