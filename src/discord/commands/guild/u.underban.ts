@@ -53,7 +53,7 @@ export const uUnderban: UserCommand = {
           await i.editReply(await moderate(
             interaction.member as GuildMember,
             'UNDERBAN' as UserActionType,
-            interaction.targetMember as GuildMember,
+            (interaction.targetMember as GuildMember).id,
             i.fields.getTextInputValue('internalNote'),
             i.fields.getTextInputValue('description'),
             null,

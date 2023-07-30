@@ -1,6 +1,6 @@
-import { Client, Collection } from 'discord.js';
 import fs from 'fs/promises';
 import path from 'path';
+import { Client, Collection } from 'discord.js';
 
 // import log from '../../global/utils/log';
 

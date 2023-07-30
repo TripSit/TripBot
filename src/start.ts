@@ -1,13 +1,21 @@
 import { getVoiceConnection } from '@discordjs/voice';
 // import { stripIndents } from 'common-tags';
 import sourceMap from 'source-map-support'; // eslint-disable-line
+import {
+  ChatInputCommandInteraction,
+  UserContextMenuCommandInteraction,
+  MessageContextMenuCommandInteraction,
+  ButtonInteraction,
+  StringSelectMenuInteraction,
+  ModalSubmitInteraction,
+} from 'discord.js';
 import { env } from './global/utils/env.config';
 import { log } from './global/utils/log';
 import validateEnv from './global/utils/env.validate'; // eslint-disable-line
 import commandContext from './discord/utils/context'; // eslint-disable-line
-import discordConnect from './discord/discord'; // eslint-disable-line
-import startMatrix from './matrix/matrix';
-import startAPI from './api/api';
+import discordConnect from './discord/discord';
+import api from './api/api'; // eslint-disable-line
+// import startMatrix from './matrix/matrix';
 // import ircConnect from './irc/irc';
 // import telegramConnect from './telegram/telegram';
 sourceMap.install();
@@ -25,6 +33,7 @@ if (net.setDefaultAutoSelectFamily) {
 async function start() {
   log.info(F, 'Initializing service!');
   validateEnv('SERVICES');
+  api();
   if (env.DISCORD_CLIENT_TOKEN && validateEnv('DISCORD')) await discordConnect();
   if (env.MATRIX_ACCESS_TOKEN && validateEnv('MATRIX') && env.NODE_ENV !== 'production') await startMatrix();
   if (env.TRIPBOT_API_SECRET && validateEnv('API')) await startAPI();
@@ -57,7 +66,14 @@ declare global {
   // eslint-disable-next-line no-var, vars-on-top
   // var env:any; // NOSONAR
   // eslint-disable-next-line no-var, vars-on-top
-  var commandContext:any; // NOSONAR
+  var commandContext:(
+    interaction: ChatInputCommandInteraction
+    | UserContextMenuCommandInteraction
+    | MessageContextMenuCommandInteraction
+    | ButtonInteraction
+    | StringSelectMenuInteraction
+    | ModalSubmitInteraction,
+  ) => Promise<string>;
 }
 
 global.env = env;

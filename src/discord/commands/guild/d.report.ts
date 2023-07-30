@@ -1,10 +1,10 @@
+import { env } from 'process';
 import {
   SlashCommandBuilder,
   ChatInputCommandInteraction,
   GuildMember,
   Colors,
 } from 'discord.js';
-import { env } from 'process';
 import { stripIndents } from 'common-tags';
 import { SlashCommand } from '../../@types/commandDef';
 import commandContext from '../../utils/context';
@@ -95,7 +95,7 @@ export const dReport: SlashCommand = {
     const result = await moderate(
       interaction.member as GuildMember,
       'REPORT' as UserActionType,
-      target,
+      target.id,
       reason,
       null,
       null,
