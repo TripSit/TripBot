@@ -1,3 +1,4 @@
+import { setTimeout } from 'timers/promises';
 import {
   Client,
   Collection,
@@ -6,7 +7,6 @@ import {
   PermissionResolvable,
   TextChannel,
 } from 'discord.js';
-import { setTimeout } from 'timers/promises';
 import { stripIndents } from 'common-tags';
 import ms from 'ms';
 import { ReadyEvent } from '../@types/eventDef';

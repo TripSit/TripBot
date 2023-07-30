@@ -32,7 +32,7 @@ import {
 } from './knex';
 import {
   TicketStatus, UserTickets, TicketType, DiscordGuilds, ExperienceCategory, ExperienceType,
-} from '../@types/database.d';
+} from '../@types/database';
 import { checkChannelPermissions } from '../../discord/utils/checkPermissions';
 import { embedTemplate } from '../../discord/utils/embedTemplate';
 import { experience } from './experience';
@@ -462,7 +462,7 @@ async function checkRss() { // eslint-disable-line @typescript-eslint/no-unused-
 // async function callUptime() { // eslint-disable-line @typescript-eslint/no-unused-vars
 //   log.debug(F, 'Calling uptime...');
 //   if (env.NODE_ENV !== 'production') return;
-//   axios.get(`https://uptime.tripsit.io/api/push/SP4qJtHZ6j?status=up&msg=OK&ping=${discordClient.ws.ping}`).catch(e => {
+//   axios.get(`https://uptime.tripsit.me/api/push/SP4qJtHZ6j?status=up&msg=OK&ping=${discordClient.ws.ping}`).catch(e => {
 //     log.debug(F, `Error when calling uptime monitor! ${e}`);
 //   });
 // }
@@ -512,54 +512,50 @@ async function checkVoice() {
           if (channel.members.size < 1) {
             return;
           }
-          log.info('voiceExp', `${channel.name} has ${channel.members.size} people in it`);
+          // log.info('voiceExp', `${channel.name} has ${channel.members.size} people in it`);
           const humansInChat = channel.members.filter(member => {
             if (member.user.bot) {
-              log.info('voiceExp', `${member.displayName} is a bot`);
+              // log.info('voiceExp', `${member.displayName} is a bot`);
               return false;
             }
             if (member.voice.selfDeaf) {
-              log.info('voiceExp', `${member.displayName} is self deafened`);
+              // log.info('voiceExp', `${member.displayName} is self deafened`);
               return false;
             }
             if (member.voice.serverDeaf) {
-              log.info('voiceExp', `${member.displayName} is server deafened`);
+              // log.info('voiceExp', `${member.displayName} is server deafened`);
               return false;
             }
             if (member.voice.selfMute) {
-              log.info('voiceExp', `${member.displayName} is self muted`);
+              // log.info('voiceExp', `${member.displayName} is self muted`);
               return false;
             }
             if (member.voice.serverMute) {
-              log.info('voiceExp', `${member.displayName} is server muted`);
+              // log.info('voiceExp', `${member.displayName} is server muted`);
               return false;
             }
             if (member.voice.streaming) {
-              log.info('voiceExp', `${member.displayName} is streaming`);
+              // log.info('voiceExp', `${member.displayName} is streaming`);
               return false;
             }
             if (member.voice.suppress) {
-              log.info('voiceExp', `${member.displayName} is suppressed`);
+              // log.info('voiceExp', `${member.displayName} is suppressed`);
               return false;
             }
             if (member.voice.channel?.type === ChannelType.GuildStageVoice) {
-              log.info('voiceExp', `${member.displayName} is in a stage channel`);
+              // log.info('voiceExp', `${member.displayName} is in a stage channel`);
               return false;
             }
             if (member.roles.cache.has(env.ROLE_NEEDS_HELP)) {
-              log.info('voiceExp', `${member.displayName} has the NeedsHelp role`);
+              // log.info('voiceExp', `${member.displayName} has the NeedsHelp role`);
               return false;
             }
-            if (channel.members.size < 2 && env.NODE_ENV === 'production') {
-              log.info('voiceExp', `${member.displayName} is alone in the channel`);
-              return false;
-            }
-            return true;
+            return !(channel.members.size < 2 && env.NODE_ENV === 'production');
           });
-          log.info('voiceExp', `${channel.name} has ${humansInChat.size} people actively chatting in it`);
+          // log.info('voiceExp', `${channel.name} has ${humansInChat.size} people actively chatting in it`);
           if ((env.NODE_ENV === 'production' && humansInChat && humansInChat.size > 1)
           || (env.NODE_ENV !== 'production' && humansInChat && humansInChat.size > 0)) {
-            log.info('voiceExp', `Attempting to give experience to ${humansInChat.size} people in ${channel.name}: ${humansInChat.map(member => member.displayName).join(', ')}`);
+            // log.info('voiceExp', `Attempting to give experience to ${humansInChat.size} people in ${channel.name}: ${humansInChat.map(member => member.displayName).join(', ')}`);
             // For each human in chat, check if they have been awarded voice exp in the last 5 minutes
             // If they have not, award them voice exp
             humansInChat.forEach(async member => {
@@ -1023,7 +1019,7 @@ async function checkMoodle() { // eslint-disable-line
                 Maybe you'll inspire someone else to learn too!
 
                 No tripbot? No problem!
-                Anyone can [verify the code on your certificate](https://learn.pantheon.tripsit.me/mod/customcert/verify_certificate.php) to see you completed the course.
+                Anyone can [verify the code on your certificate](https://learn.tripsit.me/mod/customcert/verify_certificate.php) to see you completed the course.
 
                 Finally, if you have any feedback on the course, please let us know in the ${channelContent} channel, or on the forum in the course!
 

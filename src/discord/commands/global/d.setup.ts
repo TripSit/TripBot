@@ -72,7 +72,7 @@ async function help(
     The user can then talk to the Tripsitters and Helpers in the thread.
     When the user is done with their session, they can click  and the bot will reassign their roles.
     
-    Full details on how to use this system can be found [on our learning portal](https://learn.pantheon.tripsit.me/mod/lesson/view.php?id=24)!
+    Full details on how to use this system can be found [on our learning portal](https://learn.tripsit.me/mod/lesson/view.php?id=24)!
 
     ** How do I set it up? **
     1. Create a room where you want a message posted and threads created (Tripsit)

@@ -1,6 +1,13 @@
 // The TypeScript definitions below are automatically generated.
 // Do not touch them, or risk, your modifications being lost.
 
+export enum AppealStatus {
+  Open = 'OPEN',
+  Received = 'RECEIVED',
+  Accepted = 'ACCEPTED',
+  Denied = 'DENIED',
+}
+
 export enum BridgeStatus {
   Pending = 'PENDING',
   Active = 'ACTIVE',
@@ -22,7 +29,6 @@ export enum DrugCategoryType {
 export enum DrugMassUnit {
   Mg = 'MG',
   Ml = 'ML',
-  G = 'µG',
   G = 'G',
   Oz = 'OZ',
   Floz = 'FLOZ',
@@ -106,6 +112,7 @@ export enum UserActionType {
 }
 
 export enum Table {
+  Appeals = 'appeals',
   Bridges = 'bridges',
   Counting = 'counting',
   DiscordGuilds = 'discord_guilds',
@@ -129,6 +136,49 @@ export enum Table {
   UserTickets = 'user_tickets',
   Users = 'users',
 }
+
+export type Tables = {
+  'appeals': Appeals,
+  'bridges': Bridges,
+  'counting': Counting,
+  'discord_guilds': DiscordGuilds,
+  'drug_articles': DrugArticles,
+  'drug_categories': DrugCategories,
+  'drug_category_drugs': DrugCategoryDrugs,
+  'drug_names': DrugNames,
+  'drug_variant_roas': DrugVariantRoas,
+  'drug_variants': DrugVariants,
+  'drugs': Drugs,
+  'knex_migrations': KnexMigrations,
+  'knex_migrations_lock': KnexMigrationsLock,
+  'personas': Personas,
+  'reaction_roles': ReactionRoles,
+  'rpg_inventory': RpgInventory,
+  'rss': Rss,
+  'user_actions': UserActions,
+  'user_drug_doses': UserDrugDoses,
+  'user_experience': UserExperience,
+  'user_reminders': UserReminders,
+  'user_tickets': UserTickets,
+  'users': Users,
+};
+
+export type Appeals = {
+  id: string;
+  guild_id: string;
+  user_id: string;
+  appeal_number: number;
+  reason: string;
+  solution: string;
+  future: string;
+  extra: string | null;
+  status: AppealStatus;
+  appeal_message_id: string;
+  response_message: string | null;
+  created_at: Date;
+  reminded_at: Date | null;
+  decided_at: Date | null;
+};
 
 export type Bridges = {
   id: string;
@@ -211,6 +261,7 @@ export type DrugCategories = {
 };
 
 export type DrugCategoryDrugs = {
+  id: string;
   drug_id: string;
   drug_category_id: string;
 };
@@ -299,8 +350,8 @@ export type ReactionRoles = {
   id: string;
   guild_id: string;
   channel_id: string;
-  message_id: string | null;
-  reaction_id: string | null;
+  message_id: string;
+  reaction_id: string;
   role_id: string;
   created_at: Date;
   type: ReactionRoleType;
