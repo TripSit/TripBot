@@ -189,8 +189,10 @@ async function tentRadio(
         .setDescription('There is already no radio in this Tent');
     }
     // Find what radio bot is in the Tent and use the corresponding radio channel from the radioChannels object
-    // Check if the current channel has a radio bot in it by checking if any bots in the channel are in the radioChannels object
-    const botMember = voiceChannel.members.find(member => member.user.bot && Object.keys(radioChannels).includes(member.user.id));
+    // Check if the current channel has a radio bot in it
+    //  by checking if any bots in the channel are in the radioChannels object
+    const botMember = voiceChannel.members
+      .find(member => member.user.bot && Object.keys(radioChannels).includes(member.user.id));
     if (botMember) {
       // If it does, find the corresponding radio channel from the bot id and move the bot to it
       const radioChannelId = radioChannels[botMember.user.id];
@@ -254,8 +256,10 @@ async function tentRadio(
       .setColor(Colors.Green)
       .setDescription(`${station} has been borrowed to your Tent`);
   }
-  // If the Tent already has a radio, find its corresonding channel in the radioChannels object and move it back before moving the new radio in
-  const botMember = station.voice.channel.members.find(member => member.user.bot && Object.keys(radioChannels).includes(member.user.id));
+  // If the Tent already has a radio
+  // find its corresonding channel in the radioChannels object and move it back before moving the new radio in
+  const botMember = station.voice.channel.members
+    .find(member => member.user.bot && Object.keys(radioChannels).includes(member.user.id));
   if (botMember) {
     // If it does, find the corresponding radio channel from the bot id and move the bot to it
     const radioChannelId = radioChannels[botMember.user.id];
