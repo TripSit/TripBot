@@ -108,10 +108,14 @@ export async function pitchTent(
  - Pick up the 'Voice Chatty' role in <id:customize>
  - This icon indicates you're looking for joiners in chat
 
-- **Moderate your tent with commands**
+- **Modify your tent**
+ - \`/voice radio\` - Borrow a radio bot for your tent
+ - \`/voice bitrate\` - Change the bitrate of your tent
+ - \`/voice rename\` - Choose a new name for your tent
+
+- **Moderate your tent**
  - \`/voice lock\`- Locks your tent so no one else can join it
  - \`/voice hide\` - Hides your tent from the list of voice channels
- - \`/voice rename\` - Choose a new name for your tent
  - \`/voice mute\` - Mutes a user for everyone in your tent
  - \`/voice ban\` - Bans a user from joining and seeing your tent
  - \`/voice cohost\` - Allows another user to use these commands

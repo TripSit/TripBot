@@ -167,7 +167,6 @@ async function tentRadio(
   stationid: string,
   guild: Guild,
 ):Promise<EmbedBuilder> {
-  let verb = '';
 
   const radioChannels: { [key: string]: string } = {
     '830530156048285716': env.CHANNEL_LOFIRADIO,
@@ -268,7 +267,7 @@ async function tentRadio(
       });      
     }
     await station.voice.setChannel(voiceChannel);
-  }  
+  }
 
 
   // log.debug(F, `${target.displayName} is now ${verb}`);
@@ -277,6 +276,27 @@ async function tentRadio(
     .setTitle('Success')
     .setColor(Colors.Green)
     .setDescription(`${station} has been borrowed to your Tent`);
+}
+
+async function tentBitrate(
+  voiceChannel: VoiceBasedChannel,
+  bitrate: string,
+):Promise<EmbedBuilder> {
+
+  const bitrateNumber = parseInt(bitrate);
+  // Check if the bitrate is the same as the current bitrate
+  if (voiceChannel.bitrate === bitrateNumber * 1000) {
+    return embedTemplate()
+    .setTitle('Error')
+    .setColor(Colors.Red)
+    .setDescription(`The bitrate is already set to ${bitrate}kbps`);
+  }
+  // Change the bitrate
+  await voiceChannel.setBitrate(bitrateNumber * 1000);
+  return embedTemplate()
+    .setTitle('Success')
+    .setColor(Colors.Green)
+    .setDescription(`The bitrate has been set to ${bitrate}kbps`);
 }
 
 
@@ -333,17 +353,35 @@ export const dVoice: SlashCommand = {
           { name: 'None', value: 'none'}
         ),
       )
+    )
+    .addSubcommand(subcommand => subcommand
+      .setName('bitrate')
+      .setDescription('Change the bitrate of your Tent')
+      .addStringOption(option => option
+        .setName('bitrate')
+        .setDescription('The bitrate to set')
+        .setRequired(true)
+        .addChoices(
+          { name: 'Potato (8kbps)', value: '8' },
+          { name: 'Low (32kbps)', value: '16' },
+          { name: 'Default (64kbps)', value: '64' },
+          { name: 'Medium (128kbps)', value: '128' },
+          { name: 'High (256kbps)', value: '256' },
+          { name: 'Ultra (384kbps)', value: '384' },
+        ),
+      )
     ),
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
     await interaction.deferReply({ ephemeral: true });
 
-    const command = interaction.options.getSubcommand() as 'lock' | 'hide' | 'ban' | 'rename' | 'mute' | 'cohost' | 'radio';
+    const command = interaction.options.getSubcommand() as 'lock' | 'hide' | 'ban' | 'rename' | 'mute' | 'cohost' | 'radio' | 'bitrate';
     const member = interaction.member as GuildMember;
     const target = interaction.options.getMember('target') as GuildMember;
     const newName = interaction.options.getString('name') as string;
     const stationid = interaction.options.getString('station') as string;
     const guild = interaction.guild as Guild;
+    const bitrate = interaction.options.getString('bitrate') as string;
     const voiceChannel = member.voice.channel;
     let embed = embedTemplate()
       .setTitle('Error')
@@ -407,6 +445,10 @@ export const dVoice: SlashCommand = {
 
     if (command === 'radio') {
       embed = await tentRadio(voiceChannel, stationid, guild);
+    }
+
+    if (command === 'bitrate') {
+      embed = await tentBitrate(voiceChannel, bitrate);
     }
 
     await interaction.editReply({ embeds: [embed] });
