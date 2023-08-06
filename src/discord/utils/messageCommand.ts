@@ -72,17 +72,20 @@ async function isMentioningTripbot(message:Message):Promise<boolean> {
   || message.content.toLowerCase().includes('tripbot');
 }
 
-async function isAIMessage(message:Message):Promise<boolean> {
-  if (message.guild && message.guild.id !== env.DISCORD_GUILD_ID) return false;
-  if (message.member) {
-    // log.debug(F, `message is verified: ${message.member?.roles.cache.has(env.ROLE_VERIFIED)}`);
-    // log.debug(F, `message.channel.parentId: ${(message.channel as TextChannel).parentId !== env.CATEGORY_HARMREDUCTIONCENTRE}`);
-    // log.debug(F, `message.channel.parentId: ${(message.channel as TextChannel).parent?.parentId !== env.CATEGORY_HARMREDUCTIONCENTRE}`);
-    return message.member?.roles.cache.has(env.ROLE_VERIFIED)
-    && (message.channel as TextChannel).parentId !== env.CATEGORY_HARMREDUCTIONCENTRE
+async function isVerifiedMember(message:Message):Promise<boolean> {
+  if (!message.member) return false;
+  return message.member?.roles.cache.has(env.ROLE_VERIFIED);
+}
+
+async function isGeneralRoom(message:Message):Promise<boolean> {
+  log.debug(F, `Category HR Center: ${env.CATEGORY_HARMREDUCTIONCENTRE}`);
+  log.debug(F, `message.channel.parentId: ${(message.channel as TextChannel).parentId}`);
+  log.debug(F, `message.channel.parent.parentId: ${(message.channel as TextChannel).parent?.parentId}`);
+
+  log.debug(F, `message.channel.parentId: ${(message.channel as TextChannel).parentId === env.CATEGORY_HARMREDUCTIONCENTRE}`);
+  log.debug(F, `message.channel.parentId: ${(message.channel as TextChannel).parent?.parentId === env.CATEGORY_HARMREDUCTIONCENTRE}`);
+  return (message.channel as TextChannel).parentId !== env.CATEGORY_HARMREDUCTIONCENTRE
     && (message.channel as TextChannel).parent?.parentId !== env.CATEGORY_HARMREDUCTIONCENTRE;
-  }
-  return false;
 }
 
 /**
@@ -245,7 +248,7 @@ give people a chance to answer 😄 If no one answers in 5 minutes you can try a
           await message.channel.send(`Uploaded ${stickerList.join(' ')} to ${message.guild.name}!`); // eslint-disable-line
         }
       }
-    } else if (await isAIMessage(message)) {
+    } else if (await isGeneralRoom(message) && await isVerifiedMember(message)) {
       await message.channel.send(await aiChat([message]));
     } else if (message.author.id === env.DISCORD_OWNER_ID) {
       // Just for fun, stuff that only moonbear can trigger
@@ -285,8 +288,9 @@ give people a chance to answer 😄 If no one answers in 5 minutes you can try a
   } else {
     if (message.author.bot) return; // Dont respond to self
     if (message.guild.id !== env.DISCORD_GUILD_ID) return; // Dont do this off tripsit
-    if (((Math.floor(Math.random() * (51)) / 1) !== 1)) return; // Only do this 2% of the time
-    if (!isAIMessage(message)) return; // Dont do this in the tripsitchannels
+    // if (((Math.floor(Math.random() * (51)) / 1) !== 1)) return; // Only do this 2% of the time
+    if (!await isVerifiedMember(message)) return; // Dont do this in the tripsitchannels
+    if (!await isGeneralRoom(message)) return; // Dont do this in the tripsitchannels
     // Get the last 3 messages sent in the channel
     const messageHistory = await message.channel.messages.fetch({ limit: 3 });
     await message.channel.send(await aiChat([...messageHistory.values()]));
