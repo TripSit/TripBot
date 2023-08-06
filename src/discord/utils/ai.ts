@@ -171,7 +171,7 @@ export async function aiChat(
     await messages[0].channel.sendTyping();
     const chatCompletion = await openai.createChatCompletion({
       model: 'gpt-3.5-turbo',
-      temperature: 1.6,
+      temperature: 1.5,
       max_tokens: 500,
       messages: [prompt, ...inputMessages] as ChatCompletionRequestMessage[],
     });
