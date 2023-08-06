@@ -41,7 +41,7 @@ services:
       <<: *default-tz-puid-pgid
     networks:
       - tripbot-net
-      - database-net
+      - tripbot_database-net
       - tripbot_website-net
     volumes:
       - ./src:/usr/src/app/src # Needed for hot-reloading of source code
@@ -68,8 +68,8 @@ services:
 networks:
   tripbot-net:
     name: tripbot-net
-  database-net:
-    name: database-net
+  tripbot_database-net:
+    name: tripbot_database-net
   tripbot_website-net:
     name: tripbot_website-net
     external: true 

@@ -1,15 +1,18 @@
 /* eslint-disable max-len */
 
 import {
-  ChannelType,
+  // ChannelType,
   Message,
   // GuildTextBasedChannel,
   Role,
   PermissionResolvable,
   EmbedBuilder,
+  TextChannel,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
 import { sleep } from '../commands/guild/d.bottest';
+import { aiChat } from './ai';
+
 // import log from '../../global/utils/log';
 // import {parse} from 'path';
 const F = f(__filename); // eslint-disable-line
@@ -51,8 +54,39 @@ const heartEmojis = [
   '❤', '🧡', '💛', '💚', '💙', '💜', '💝', '💖', '💗', '💘', '💕', '💞', '💓', '💟', '❣', '🫂',
 ];
 
+async function isSadMessage(message:Message):Promise<boolean> {
+  return sadStuff.some(word => (message.cleanContent.includes(word)
+  && !(message.cleanContent.substring(message.cleanContent.indexOf(':') + 1).includes(':'))));
+}
+
+async function isIrcCommand(message:Message):Promise<boolean> {
+  return message.cleanContent.startsWith('~');
+}
+
+async function isPokingTripbot(message:Message):Promise<boolean> {
+  return message.content.startsWith(`_pokes <@${env.DISCORD_CLIENT_ID}>_`);
+}
+
+async function isMentioningTripbot(message:Message):Promise<boolean> {
+  return message.mentions.has(env.DISCORD_CLIENT_ID)
+  || message.content.toLowerCase().includes('tripbot');
+}
+
+async function isAIMessage(message:Message):Promise<boolean> {
+  if (message.guild && message.guild.id !== env.DISCORD_GUILD_ID) return false;
+  if (message.member) {
+    // log.debug(F, `message is verified: ${message.member?.roles.cache.has(env.ROLE_VERIFIED)}`);
+    // log.debug(F, `message.channel.parentId: ${(message.channel as TextChannel).parentId !== env.CATEGORY_HARMREDUCTIONCENTRE}`);
+    // log.debug(F, `message.channel.parentId: ${(message.channel as TextChannel).parent?.parentId !== env.CATEGORY_HARMREDUCTIONCENTRE}`);
+    return message.member?.roles.cache.has(env.ROLE_VERIFIED)
+    && (message.channel as TextChannel).parentId !== env.CATEGORY_HARMREDUCTIONCENTRE
+    && (message.channel as TextChannel).parent?.parentId !== env.CATEGORY_HARMREDUCTIONCENTRE;
+  }
+  return false;
+}
+
 /**
- * Template
+ * Message Command
  * @param {Message} message The message that was sent
  * @return {Promise<void>}
 * */
@@ -62,10 +96,10 @@ export async function messageCommand(message: Message): Promise<void> {
   const displayName = message.member ? message.member.displayName : message.author.username;
   // log.debug(F, `message.reference: ${JSON.stringify(message.content, null, 2)}`);
 
-  // log.debug(stripIndents`[${PREFIX}] ${displayName} said\
-  // ${message.content} in ${(message.channel as GuildTextBasedChannel).name}!`);
+  // Ignore messages that start with ~~, these are usually strikethrough messages
   if (message.content.startsWith('~~')) { return; }
-  if (message.content.startsWith('~')) {
+
+  if (await isIrcCommand(message)) {
     // If you try to use the old tripbot command prefix while inside of the tripsit guild
     if (message.guild.id !== env.DISCORD_GUILD_ID) return;
 
@@ -119,7 +153,7 @@ give people a chance to answer 😄 If no one answers in 5 minutes you can try a
     } else {
       await message.channel.send(`Hey ${displayName}, use /help to get a list of commands on discord!`);
     }
-  } else if (message.content.startsWith(`_pokes <@${env.DISCORD_CLIENT_ID}>_`)) {
+  } else if (await isPokingTripbot(message)) {
     // If you poke tripbot
     const faces = [
       '( ͡° ͜ʖ ͡°)',
@@ -131,86 +165,89 @@ give people a chance to answer 😄 If no one answers in 5 minutes you can try a
       '🤨',
     ];
     await message.channel.send(faces[Math.floor(Math.random() * faces.length)]);
-  } else if (message.mentions.has(env.DISCORD_CLIENT_ID)) {
+  } else if (await isMentioningTripbot(message)) {
     // If the bot was mentioned
+    // log.debug(F, `Bot was mentioned in ${message.guild.name}!`); // eslint-disable-line
 
-    // Check if the user sending the message is the bot owner
     if ((message.content.toLowerCase().includes('upload')
     || message.content.toLowerCase().includes('steal')
     || message.content.toLowerCase().includes('fetch')
-    ) && message.content.toLowerCase().includes('emoji')) {
-      // Check if the user has the ManageEmojis permission
-      if (!message.member?.permissions.has('ManageEmojisAndStickers' as PermissionResolvable)) {
-        await message.channel.send(stripIndents`Hey ${displayName}, you don't have the permission to upload emojis to this guild!`); // eslint-disable-line
-        return;
-      }
+    )) {
+      if (message.content.toLowerCase().includes('emoji')) {
+        // Check if the user has the ManageEmojis permission
+        if (!message.member?.permissions.has('ManageEmojisAndStickers' as PermissionResolvable)) {
+          await message.channel.send(stripIndents`Hey ${displayName}, you don't have the permission to upload emojis to this guild!`); // eslint-disable-line
+          return;
+        }
 
-      // Upload all the emojis in the message to the guild
-      let emojis = message.content.match(/<a?:\w+:\d+>/g);
+        // Upload all the emojis in the message to the guild
+        let emojis = message.content.match(/<a?:\w+:\d+>/g);
 
-      if (!emojis && message.reference && message.reference.messageId) {
-        // try to get emojis from the message reference
-        const referencedMessage = await message.channel.messages.fetch(message.reference.messageId);
-        emojis = referencedMessage.content.match(/<a?:\w+:\d+>/g);
-      }
+        if (!emojis && message.reference && message.reference.messageId) {
+          // try to get emojis from the message reference
+          const referencedMessage = await message.channel.messages.fetch(message.reference.messageId);
+          emojis = referencedMessage.content.match(/<a?:\w+:\d+>/g);
+        }
 
-      if (emojis) {
-        const replyMessage = await message.channel.send(stripIndents`Hey ${displayName}, uploading emojis...`); // eslint-disable-line
-        const emojiSuccessList = [];
-        const emojiFailList = [];
-        for (const emoji of emojis) { // eslint-disable-line
-          log.debug(F, `emoji: ${emoji}`);
-          const emojiId = emoji.split(':')[2].slice(0, -1);
-          log.debug(F, `emojiId: ${emojiId}`);
-          const emojiName = emoji.split(':')[1];
-          log.debug(F, `emojiName: ${emojiName}`);
-          const emojiAnimated = emoji.startsWith('<a:');
-          log.debug(F, `emojiAnimated: ${emojiAnimated}`);
-          const emojiUrl = `https://cdn.discordapp.com/emojis/${emojiId}.${emojiAnimated ? 'gif' : 'png'}`;
-          log.debug(F, `emojiUrl: ${emojiUrl}`);
-          try {
-            const emojiData = await message.guild.emojis.create({name: emojiName, attachment: emojiUrl}); // eslint-disable-line
+        if (emojis) {
+          const replyMessage = await message.channel.send(stripIndents`Hey ${displayName}, uploading emojis...`); // eslint-disable-line
+          const emojiSuccessList = [];
+          const emojiFailList = [];
+          for (const emoji of emojis) { // eslint-disable-line
+            log.debug(F, `emoji: ${emoji}`);
+            const emojiId = emoji.split(':')[2].slice(0, -1);
+            log.debug(F, `emojiId: ${emojiId}`);
+            const emojiName = emoji.split(':')[1];
+            log.debug(F, `emojiName: ${emojiName}`);
+            const emojiAnimated = emoji.startsWith('<a:');
+            log.debug(F, `emojiAnimated: ${emojiAnimated}`);
+            const emojiUrl = `https://cdn.discordapp.com/emojis/${emojiId}.${emojiAnimated ? 'gif' : 'png'}`;
+            log.debug(F, `emojiUrl: ${emojiUrl}`);
+            try {
+              const emojiData = await message.guild.emojis.create({name: emojiName, attachment: emojiUrl}); // eslint-disable-line
 
-            emojiSuccessList.push(`<${emojiAnimated ? 'a' : ''}:${emojiData.name}:${emojiData.id}>`);
-          } catch (e) {
-            log.error(F, `Error creating emoji: ${e}`);
-            emojiFailList.push(emoji);
+              emojiSuccessList.push(`<${emojiAnimated ? 'a' : ''}:${emojiData.name}:${emojiData.id}>`);
+            } catch (e) {
+              log.error(F, `Error creating emoji: ${e}`);
+              emojiFailList.push(emoji);
+            }
+            // So we don't hit limits by doing this too often
+            sleep(1000);
           }
-          // So we don't hit limits by doing this too often
-          sleep(1000);
+          const failedString = emojiFailList.length > 0
+            ? `\nFailed to upload ${emojiFailList.join(' ')} to ${message.guild.name}!`
+            : '';
+          await replyMessage.edit(stripIndents`Uploaded ${emojiSuccessList.join(' ')} to ${message.guild.name}!${failedString}`); // eslint-disable-line
         }
-        const failedString = emojiFailList.length > 0
-          ? `\nFailed to upload ${emojiFailList.join(' ')} to ${message.guild.name}!`
-          : '';
-        await replyMessage.edit(stripIndents`Uploaded ${emojiSuccessList.join(' ')} to ${message.guild.name}!${failedString}`); // eslint-disable-line
       }
-    } else if ((message.content.toLowerCase().includes('upload')
-    || message.content.toLowerCase().includes('steal')
-    || message.content.toLowerCase().includes('fetch')
-    ) && message.content.toLowerCase().includes('sticker')) {
-      // Check if the user has the ManageEmojis permission
-      if (!message.member?.permissions.has('ManageEmojisAndStickers' as PermissionResolvable)) {
-        await message.channel.send(stripIndents`Hey ${displayName}, you don't have the permission to upload stickers to this guild!`); // eslint-disable-line
-        return;
-      }
-      await message.channel.send(stripIndents`Hey ${displayName}, uploading emojis...`); // eslint-disable-line
-
-      log.debug(F, `message.stickers: ${JSON.stringify(message.stickers, null, 2)}`);
-      // Upload all the stickers in the message to the guild
-      const stickers = message.content.match(/<a?:\w+:\d+>/g);
-      log.debug(F, `stickers: ${stickers}`);
-      if (message.stickers) {
-        const stickerList = [];
-        for (const sticker of message.stickers.values()) { // eslint-disable-line
-          log.debug(F, `sticker: ${JSON.stringify(sticker, null, 2)}`);
-          const stickerData = await message.guild.stickers.create({name: sticker.name, file: sticker.url, tags: 'grinning'}); // eslint-disable-line
-          stickerList.push(sticker.name);
+      if (message.content.toLowerCase().includes('sticker')) {
+        // Check if the user has the ManageEmojis permission
+        if (!message.member?.permissions.has('ManageEmojisAndStickers' as PermissionResolvable)) {
+          await message.channel.send(stripIndents`Hey ${displayName}, you don't have the permission to upload stickers to this guild!`); // eslint-disable-line
+          return;
         }
-        log.debug(F, `stickerList: ${stickerList}`);
-        log.debug(F, `stickerList: ${stickerList.join(' ')}`);
+        await message.channel.send(stripIndents`Hey ${displayName}, uploading emojis...`); // eslint-disable-line
 
-        await message.channel.send(`Uploaded ${stickerList.join(' ')} to ${message.guild.name}!`); // eslint-disable-line
+        log.debug(F, `message.stickers: ${JSON.stringify(message.stickers, null, 2)}`);
+        // Upload all the stickers in the message to the guild
+        const stickers = message.content.match(/<a?:\w+:\d+>/g);
+        log.debug(F, `stickers: ${stickers}`);
+        if (message.stickers) {
+          const stickerList = [];
+          for (const sticker of message.stickers.values()) { // eslint-disable-line
+            log.debug(F, `sticker: ${JSON.stringify(sticker, null, 2)}`);
+            const stickerData = await message.guild.stickers.create({name: sticker.name, file: sticker.url, tags: 'grinning'}); // eslint-disable-line
+            stickerList.push(sticker.name);
+          }
+          log.debug(F, `stickerList: ${stickerList}`);
+          log.debug(F, `stickerList: ${stickerList.join(' ')}`);
+
+          await message.channel.send(`Uploaded ${stickerList.join(' ')} to ${message.guild.name}!`); // eslint-disable-line
+        }
       }
+    } else if (await isAIMessage(message)) {
+      // If the user is a tripsit team member
+      await message.channel.send(await aiChat([message]));
     } else if (message.author.id === env.DISCORD_OWNER_ID) {
       // Just for fun, stuff that only moonbear can trigger
       if (message.content.toLowerCase().includes('phoenix')) {
@@ -224,15 +261,14 @@ give people a chance to answer 😄 If no one answers in 5 minutes you can try a
         await sleep(3000);
         await phoenixMessage.delete();
         await message.delete();
-        return;
-      }
-
-      // Look for the ping and then take everything after that
-      const action = message.content.split(`<@${discordClient.user?.id}>`)[1];
-      if (action) {
-      // Replace all instances of "your" with "my", make the action first person
-        const actionFirstPerson = action.replace(/your/g, 'my');
-      await message.channel.send(stripIndents`Sure thing ${displayName}! I will${actionFirstPerson}!`); // eslint-disable-line
+        // return;
+      } else {
+        try {
+          await message.react(emojiGet('ts_heart'));
+        } catch (e) {
+          log.error(F, `Error reacting to message: ${e}`);
+          await message.react('💜');
+        }
       }
     } else {
       try {
@@ -242,33 +278,18 @@ give people a chance to answer 😄 If no one answers in 5 minutes you can try a
         await message.react('💜');
       }
     }
-  } else if (
-    // If 'tripbot' is mentioned in text
-    message.content.toLowerCase().includes('tripbot')
-    && message.channel.type !== ChannelType.DM) {
-    if (message.author.bot) {
-      // Keep this here because web bots need to be able to use ~tripsit
-      // log.debug(F, `Ignoring bot interaction`);
-      return;
-    }
-    try {
-      await message.react(emojiGet('ts_heart'));
-    } catch (e) {
-      log.error(F, `Error reacting to message: ${e}`);
-      await message.react('💜');
-    }
-    // const responses = [
-    //   '*boops quietly*',
-    //   '*beeps quietly*',
-    // ];
-    // await message.channel.send(responses[Math.floor(Math.random() * responses.length)]);
-  } else if (
-    sadStuff.some(word => (message.cleanContent.includes(word)
-     && !(message.cleanContent.substring(message.cleanContent.indexOf(':') + 1).includes(':'))))
-    && message.channel.type !== ChannelType.DM) {
+  } else if (await isSadMessage(message)) {
     if (message.author.bot) return;
     if (message.guild.id !== env.DISCORD_GUILD_ID) return;
     // log.debug(F, 'Sad stuff detected');
     await message.react(heartEmojis[Math.floor(Math.random() * heartEmojis.length)]);
+  } else {
+    if (message.author.bot) return; // Dont respond to self
+    if (message.guild.id !== env.DISCORD_GUILD_ID) return; // Dont do this off tripsit
+    if (((Math.floor(Math.random() * (51)) / 1) !== 1)) return; // Only do this 2% of the time
+    if (!isAIMessage(message)) return; // Dont do this in the tripsitchannels
+    // Get the last 3 messages sent in the channel
+    const messageHistory = await message.channel.messages.fetch({ limit: 3 });
+    await message.channel.send(await aiChat([...messageHistory.values()]));
   }
 }
