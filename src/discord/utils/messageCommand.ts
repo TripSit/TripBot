@@ -11,7 +11,7 @@ import {
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
 import { sleep } from '../commands/guild/d.bottest';
-import { aiChat } from './ai';
+// import { aiChat } from './ai';
 
 // import log from '../../global/utils/log';
 // import {parse} from 'path';
@@ -246,8 +246,7 @@ give people a chance to answer 😄 If no one answers in 5 minutes you can try a
         }
       }
     } else if (await isAIMessage(message)) {
-      // If the user is a tripsit team member
-      await message.channel.send(await aiChat([message]));
+      // await message.channel.send(await aiChat([message]));
     } else if (message.author.id === env.DISCORD_OWNER_ID) {
       // Just for fun, stuff that only moonbear can trigger
       if (message.content.toLowerCase().includes('phoenix')) {
@@ -283,13 +282,14 @@ give people a chance to answer 😄 If no one answers in 5 minutes you can try a
     if (message.guild.id !== env.DISCORD_GUILD_ID) return;
     // log.debug(F, 'Sad stuff detected');
     await message.react(heartEmojis[Math.floor(Math.random() * heartEmojis.length)]);
-  } else {
-    if (message.author.bot) return; // Dont respond to self
-    if (message.guild.id !== env.DISCORD_GUILD_ID) return; // Dont do this off tripsit
-    if (((Math.floor(Math.random() * (51)) / 1) !== 1)) return; // Only do this 2% of the time
-    if (!isAIMessage(message)) return; // Dont do this in the tripsitchannels
-    // Get the last 3 messages sent in the channel
-    const messageHistory = await message.channel.messages.fetch({ limit: 3 });
-    await message.channel.send(await aiChat([...messageHistory.values()]));
   }
+  //  else {
+  //   if (message.author.bot) return; // Dont respond to self
+  //   if (message.guild.id !== env.DISCORD_GUILD_ID) return; // Dont do this off tripsit
+  //   if (((Math.floor(Math.random() * (51)) / 1) !== 1)) return; // Only do this 2% of the time
+  //   if (!isAIMessage(message)) return; // Dont do this in the tripsitchannels
+  //   // Get the last 3 messages sent in the channel
+  //   // const messageHistory = await message.channel.messages.fetch({ limit: 3 });
+  //   // await message.channel.send(await aiChat([...messageHistory.values()]));
+  // }
 }
