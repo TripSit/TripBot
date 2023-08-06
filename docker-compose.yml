@@ -72,3 +72,4 @@ networks:
     name: database-net
   tripbot_website-net:
     name: tripbot_website-net
+    external: true 
