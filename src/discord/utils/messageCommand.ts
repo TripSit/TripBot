@@ -85,7 +85,8 @@ async function isGeneralRoom(message:Message):Promise<boolean> {
   log.debug(F, `message.channel.parentId: ${(message.channel as TextChannel).parentId === env.CATEGORY_HARMREDUCTIONCENTRE}`);
   log.debug(F, `message.channel.parentId: ${(message.channel as TextChannel).parent?.parentId === env.CATEGORY_HARMREDUCTIONCENTRE}`);
   return (message.channel as TextChannel).parentId !== env.CATEGORY_HARMREDUCTIONCENTRE
-    && (message.channel as TextChannel).parent?.parentId !== env.CATEGORY_HARMREDUCTIONCENTRE;
+    && (message.channel as TextChannel).parent?.parentId !== env.CATEGORY_HARMREDUCTIONCENTRE
+    && (message.channel as TextChannel).parentId !== env.CATEGORY_TEAMTRIPSIT;
 }
 
 /**
