@@ -289,7 +289,7 @@ give people a chance to answer 😄 If no one answers in 5 minutes you can try a
   } else {
     if (message.author.bot) return; // Dont respond to self
     if (message.guild.id !== env.DISCORD_GUILD_ID) return; // Dont do this off tripsit
-    if (((Math.floor(Math.random() * (101)) / 1) !== 1)) return; // Only do this 1% of the time
+    if (((Math.floor(Math.random() * (201)) / 1) !== 1)) return; // Only do this .5% of the time
     if (!await isVerifiedMember(message)) return; // Dont do this in the tripsitchannels
     if (!await isGeneralRoom(message)) return; // Dont do this in the tripsitchannels
     // Get the last 3 messages sent in the channel
