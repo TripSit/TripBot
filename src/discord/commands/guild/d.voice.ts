@@ -29,30 +29,30 @@ async function tentRename(
     .setDescription(`${voiceChannel} has been renamed to ${newName}`);
 }
 
-async function tentLock(
-  voiceChannel: VoiceBasedChannel,
-):Promise<EmbedBuilder> {
-  let verb = '';
+// async function tentLock(
+//   voiceChannel: VoiceBasedChannel,
+// ):Promise<EmbedBuilder> {
+//   let verb = '';
 
-  if (
-    voiceChannel
-      .permissionsFor(voiceChannel.guild.roles.everyone)
-      .has(PermissionsBitField.Flags.ViewChannel) === true
-  ) {
-    voiceChannel.permissionOverwrites.edit(voiceChannel.guild.roles.everyone, { ViewChannel: false });
-    verb = 'hidden';
-  } else {
-    voiceChannel.permissionOverwrites.edit(voiceChannel.guild.roles.everyone, { ViewChannel: true });
-    verb = 'unhidden';
-  }
+//   if (
+//     voiceChannel
+//       .permissionsFor(voiceChannel.guild.roles.everyone)
+//       .has(PermissionsBitField.Flags.ViewChannel) === true
+//   ) {
+//     voiceChannel.permissionOverwrites.edit(voiceChannel.guild.roles.everyone, { ViewChannel: false });
+//     verb = 'hidden';
+//   } else {
+//     voiceChannel.permissionOverwrites.edit(voiceChannel.guild.roles.everyone, { ViewChannel: true });
+//     verb = 'unhidden';
+//   }
 
-  // log.debug(F, `Channel is now ${verb}`);
+//   // log.debug(F, `Channel is now ${verb}`);
 
-  return embedTemplate()
-    .setTitle('Success')
-    .setColor(Colors.Green)
-    .setDescription(`${voiceChannel} has been ${verb}`);
-}
+//   return embedTemplate()
+//     .setTitle('Success')
+//     .setColor(Colors.Green)
+//     .setDescription(`${voiceChannel} has been ${verb}`);
+// }
 
 async function tentHide(
   voiceChannel: VoiceBasedChannel,
@@ -248,8 +248,8 @@ async function tentRadio(
   if (station.voice.channel?.parent?.id === env.CATEGORY_RADIO) {
     await station.voice.setChannel(voiceChannel);
     // Edit the corresponding radio channels name to indicate it is in use
-    const radioChannelId = radioChannels[station.user.id];
-    const radioChannel = station.guild.channels.cache.get(radioChannelId) as VoiceChannel;
+    // const radioChannelId = radioChannels[station.user.id];
+    // const radioChannel = station.guild.channels.cache.get(radioChannelId) as VoiceChannel;
 
     return embedTemplate()
       .setTitle('Success')
@@ -315,9 +315,6 @@ export const dVoice: SlashCommand = {
         .setName('name')
         .setDescription('The new name for your Tent')
         .setRequired(true)))
-    .addSubcommand(subcommand => subcommand
-      .setName('lock')
-      .setDescription('Lock/Unlock the Tent from new users'))
     .addSubcommand(subcommand => subcommand
       .setName('hide')
       .setDescription('Hide/Unhide the Tent from the channel list'))
@@ -423,9 +420,9 @@ export const dVoice: SlashCommand = {
       embed = await tentRename(voiceChannel, newName);
     }
 
-    if (command === 'lock') {
-      embed = await tentLock(voiceChannel);
-    }
+    // if (command === 'lock') {
+    //   embed = await tentLock(voiceChannel);
+    // }
 
     if (command === 'hide') {
       embed = await tentHide(voiceChannel);
