@@ -3,7 +3,7 @@ import {
   Colors,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
-import { dTriptoys } from '../../src/discord/commands/global/d.triptoys';
+import { dTriptoys } from '../../discord/commands/global/d.triptoys';
 import { executeCommandAndSpyEditReply, embedContaining, getParsedCommand } from '../utils/testutils';
 
 const slashCommand = dTriptoys;

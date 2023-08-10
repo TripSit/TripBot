@@ -2,7 +2,7 @@ import {
   Colors,
 } from 'discord.js';
 import axios from 'axios';
-import { dJoke } from '../../src/discord/commands/global/d.joke';
+import { dJoke } from '../../discord/commands/global/d.joke';
 import { executeCommandAndSpyEditReply, embedContaining, getParsedCommand } from '../utils/testutils';
 
 const slashCommand = dJoke;

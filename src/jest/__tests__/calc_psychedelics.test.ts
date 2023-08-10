@@ -4,7 +4,7 @@ import {
   Colors,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
-import { dCalcPsychedelics } from '../../src/discord/commands/global/d.calcPsychedelics';
+import { dCalcPsychedelics } from '../../discord/commands/global/d.calcPsychedelics';
 import { executeCommandAndSpyEditReply, embedContaining, getParsedCommand } from '../utils/testutils';
 
 const slashCommand = dCalcPsychedelics;

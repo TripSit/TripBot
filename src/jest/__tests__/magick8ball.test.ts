@@ -1,7 +1,7 @@
 import { parse } from 'path';
-import { dMagick8ball } from '../../src/discord/commands/global/d.magick8ball';
+import { dMagick8ball } from '../../discord/commands/global/d.magick8ball';
 import { executeCommandAndSpyEditReply, getParsedCommand } from '../utils/testutils';
-import log from '../../src/global/utils/log'; // eslint-disable-line
+import log from '../../global/utils/log'; // eslint-disable-line
 
 const PREFIX = parse(__filename).name; // eslint-disable-line
 

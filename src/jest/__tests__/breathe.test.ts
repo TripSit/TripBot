@@ -1,4 +1,4 @@
-import { dBreathe } from '../../src/discord/commands/global/d.breathe';
+import { dBreathe } from '../../discord/commands/global/d.breathe';
 import { executeCommandAndSpyEditReply, getParsedCommand } from '../utils/testutils';
 
 const slashCommand = dBreathe;

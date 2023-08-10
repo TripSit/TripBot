@@ -2,7 +2,7 @@ import {
   Colors,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
-import { dCrisis } from '../../src/discord/commands/global/d.crisis';
+import { dCrisis } from '../../discord/commands/global/d.crisis';
 import { executeCommandAndSpyEditReply, embedContaining, getParsedCommand } from '../utils/testutils';
 
 const slashCommand = dCrisis;

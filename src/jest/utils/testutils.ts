@@ -22,7 +22,7 @@ import {
   // APIChatInputApplicationCommandInteractionData,
   // APIApplicationCommandInteractionData,
 } from 'discord.js';
-import { SlashCommand } from '../../src/discord/@types/commandDef';
+import { SlashCommand } from '../../discord/@types/commandDef';
 import MockDiscord from './mockDiscord';
 
 const F = f(__filename); // eslint-disable-line

@@ -1,4 +1,4 @@
-import { dReagents } from '../../src/discord/commands/global/d.reagents';
+import { dReagents } from '../../discord/commands/global/d.reagents';
 import { executeCommandAndSpyEditReply, getParsedCommand } from '../utils/testutils';
 
 const F = f(__filename); // eslint-disable-line

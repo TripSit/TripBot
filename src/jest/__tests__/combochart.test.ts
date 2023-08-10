@@ -1,4 +1,4 @@
-import { dCombochart } from '../../src/discord/commands/global/d.combochart';
+import { dCombochart } from '../../discord/commands/global/d.combochart';
 import { executeCommandAndSpyEditReply, getParsedCommand } from '../utils/testutils';
 
 const slashCommand = dCombochart;

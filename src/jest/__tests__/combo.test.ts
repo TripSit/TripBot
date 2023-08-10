@@ -1,6 +1,6 @@
 import { stripIndents } from 'common-tags';
 import { Colors } from 'discord.js';
-import { dCombo } from '../../src/discord/commands/global/d.combo';
+import { dCombo } from '../../discord/commands/global/d.combo';
 import { executeCommandAndSpyEditReply, embedContaining, getParsedCommand } from '../utils/testutils';
 
 const slashCommand = dCombo;

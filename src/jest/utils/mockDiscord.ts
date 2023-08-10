@@ -1,3 +1,5 @@
+import fs from 'fs';
+import path from 'path';
 import {
   Client,
   Guild,
@@ -22,8 +24,6 @@ import {
   // FetchApplicationCommandOptions,
   // ApplicationCommandDataResolvable,
 } from 'discord.js';
-import fs from 'fs';
-import path from 'path';
 // import { SlashCommand } from '../../discord/@types/commandDef';
 
 const F = f(__filename);  // eslint-disable-line
@@ -203,7 +203,7 @@ export default class MockDiscord {
     ]);
 
     // Register global commands
-    const globalCommands = path.join(__dirname, '../../src/discord/commands/global');
+    const globalCommands = path.join(__dirname, '../../discord/commands/global');
     const globalFiles = fs.readdirSync(globalCommands);
     // log.debug(F, `Global command files: ${globalFiles}`);
     globalFiles.forEach(file => {
@@ -221,7 +221,7 @@ export default class MockDiscord {
     });
 
     // Register guild commands
-    const guildCommands = path.join(__dirname, '../../src/discord/commands/guild');
+    const guildCommands = path.join(__dirname, '../../discord/commands/guild');
     const guildFiles = fs.readdirSync(guildCommands);
     // log.debug(F, `Guild command files: ${guildFiles}`);
     guildFiles.forEach(file => {

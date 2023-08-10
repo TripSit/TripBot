@@ -2,7 +2,7 @@ import {
   Colors,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
-import { dCalcDXM } from '../../src/discord/commands/global/d.calcDXM';
+import { dCalcDXM } from '../../discord/commands/global/d.calcDXM';
 import { executeCommandAndSpyEditReply, embedContaining, getParsedCommand } from '../utils/testutils';
 
 const slashCommand = dCalcDXM;

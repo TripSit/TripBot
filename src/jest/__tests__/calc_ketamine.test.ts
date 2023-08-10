@@ -2,7 +2,7 @@ import {
   Colors,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
-import { dCalcKetamine } from '../../src/discord/commands/global/d.calcKetamine';
+import { dCalcKetamine } from '../../discord/commands/global/d.calcKetamine';
 import { executeCommandAndSpyEditReply, embedContaining, getParsedCommand } from '../utils/testutils';
 
 const slashCommand = dCalcKetamine;

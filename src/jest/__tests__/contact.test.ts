@@ -2,7 +2,7 @@ import {
   Colors,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
-import { dContact } from '../../src/discord/commands/global/d.contact';
+import { dContact } from '../../discord/commands/global/d.contact';
 import { executeCommandAndSpyEditReply, embedContaining, getParsedCommand } from '../utils/testutils';
 
 const slashCommand = dContact;

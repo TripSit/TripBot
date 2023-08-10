@@ -4,7 +4,7 @@ import {
   Colors,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
-import { dInvite } from '../../src/discord/commands/global/d.invite';
+import { dInvite } from '../../discord/commands/global/d.invite';
 import { executeCommandAndSpyEditReply, embedContaining, getParsedCommand } from '../utils/testutils';
 
 const slashCommand = dInvite;

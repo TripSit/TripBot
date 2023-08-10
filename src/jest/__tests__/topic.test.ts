@@ -1,4 +1,4 @@
-import { dTopic } from '../../src/discord/commands/global/d.topic';
+import { dTopic } from '../../discord/commands/global/d.topic';
 import { executeCommandAndSpyEditReply, getParsedCommand } from '../utils/testutils';
 
 const F = f(__filename); // eslint-disable-line

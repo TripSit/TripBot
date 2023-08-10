@@ -2,7 +2,7 @@ import {
   Colors,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
-import { dDonate } from '../../src/discord/commands/global/d.donate';
+import { dDonate } from '../../discord/commands/global/d.donate';
 import { executeCommandAndSpyEditReply, embedContaining, getParsedCommand } from '../utils/testutils';
 
 const slashCommand = dDonate;

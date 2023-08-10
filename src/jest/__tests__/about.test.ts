@@ -4,7 +4,7 @@ import {
   Colors,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
-import { dAbout } from '../../src/discord/commands/global/d.about';
+import { dAbout } from '../../discord/commands/global/d.about';
 import { executeCommandAndSpyEditReply, embedContaining, getParsedCommand } from '../utils/testutils';
 
 const slashCommand = dAbout;

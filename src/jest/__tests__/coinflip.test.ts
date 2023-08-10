@@ -1,5 +1,5 @@
 /* eslint-disable max-len */
-import { dCoinflip } from '../../src/discord/commands/global/d.coinflip';
+import { dCoinflip } from '../../discord/commands/global/d.coinflip';
 import { executeCommandAndSpyEditReply, getParsedCommand } from '../utils/testutils';
 
 const slashCommand = dCoinflip;

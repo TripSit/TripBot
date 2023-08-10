@@ -6,7 +6,7 @@ import {
 import { stripIndents } from 'common-tags';
 import axios from 'axios';
 import MockAdapter from 'axios-mock-adapter';
-import { dFact } from '../../src/discord/commands/global/d.fact';
+import { dFact } from '../../discord/commands/global/d.fact';
 import { executeCommandAndSpyEditReply, embedContaining, getParsedCommand } from '../utils/testutils';
 
 const slashCommand = dFact;

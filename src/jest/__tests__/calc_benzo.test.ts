@@ -2,7 +2,7 @@ import {
   Colors,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
-import { dCalcBenzo } from '../../src/discord/commands/global/d.calcBenzo';
+import { dCalcBenzo } from '../../discord/commands/global/d.calcBenzo';
 import { executeCommandAndSpyEditReply, embedContaining, getParsedCommand } from '../utils/testutils';
 
 const slashCommand = dCalcBenzo;

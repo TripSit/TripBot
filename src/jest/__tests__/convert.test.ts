@@ -1,7 +1,7 @@
 import {
   Colors,
 } from 'discord.js';
-import { dConvert } from '../../src/discord/commands/global/d.convert';
+import { dConvert } from '../../discord/commands/global/d.convert';
 import { executeCommandAndSpyEditReply, embedContaining, getParsedCommand } from '../utils/testutils';
 
 const slashCommand = dConvert;

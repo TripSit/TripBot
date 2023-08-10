@@ -1,4 +1,4 @@
-import { dRecovery } from '../../src/discord/commands/global/d.recovery';
+import { dRecovery } from '../../discord/commands/global/d.recovery';
 import { executeCommandAndSpyEditReply, getParsedCommand } from '../utils/testutils';
 
 const slashCommand = dRecovery;

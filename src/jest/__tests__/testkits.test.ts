@@ -2,7 +2,7 @@ import {
   Colors,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
-import { dTestkits } from '../../src/discord/commands/global/d.testkits';
+import { dTestkits } from '../../discord/commands/global/d.testkits';
 import { executeCommandAndSpyEditReply, embedContaining, getParsedCommand } from '../utils/testutils';
 
 const slashCommand = dTestkits;

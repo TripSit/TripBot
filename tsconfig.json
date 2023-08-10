@@ -9,7 +9,6 @@
     "**/archive/**",
     "*/dist",
     "*/irc/*",
-    "*/jest/*",
     "**/legacy/**",
     "*/matrix/*",
     "*/node_modules",

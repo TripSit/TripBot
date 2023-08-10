@@ -2,7 +2,7 @@ import {
   Colors,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
-import { dWarmline } from '../../src/discord/commands/global/d.warmline';
+import { dWarmline } from '../../discord/commands/global/d.warmline';
 import { executeCommandAndSpyEditReply, embedContaining, getParsedCommand } from '../utils/testutils';
 
 const slashCommand = dWarmline;

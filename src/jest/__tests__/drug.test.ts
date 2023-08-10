@@ -2,7 +2,7 @@ import {
   Colors,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
-import { dDrug } from '../../src/discord/commands/global/d.drug';
+import { dDrug } from '../../discord/commands/global/d.drug';
 import { executeCommandAndSpyEditReply, embedContaining, getParsedCommand } from '../utils/testutils';
 
 const slashCommand = dDrug;

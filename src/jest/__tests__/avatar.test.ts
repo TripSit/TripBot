@@ -1,6 +1,6 @@
 import { stripIndents } from 'common-tags';
 import { Colors } from 'discord.js';
-import { dAvatar } from '../../src/discord/commands/global/d.avatar';
+import { dAvatar } from '../../discord/commands/global/d.avatar';
 import { executeCommandAndSpyEditReply, embedContaining, getParsedCommand } from '../utils/testutils';
 
 const slashCommand = dAvatar;
