@@ -157,6 +157,11 @@ const embedVariables = {
     embedTitle: 'Info!',
     verb: 'got info on',
   },
+  FLAGGED: {
+    embedColor: Colors.Red,
+    embedTitle: 'Flagged!',
+    verb: 'flagged',
+  },
 };
 
 const warnButtons = new ActionRowBuilder<ButtonBuilder>().addComponents(
