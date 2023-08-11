@@ -5,10 +5,9 @@
 # We stop at the end of this step in development, so it also includes the deploy command
 # We install jest, eslint and ts-node so we can run tests and lint.
 
-FROM node:20.5 AS development
+FROM node:20.5
 
 ENV TZ="America/Chicago"
-ENV NODE_ENV=development
 RUN date
 
 # Create app directory
