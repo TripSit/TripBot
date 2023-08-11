@@ -1,0 +1,536 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("POSTGRES_DB_URL")
+}
+
+model bridges {
+  id               String        @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  internal_channel String
+  status           bridge_status @default(PENDING)
+  external_channel String
+
+  @@unique([internal_channel, external_channel], map: "bridges_internal_channel_external_channel_unique")
+}
+
+model counting {
+  id                            String         @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  guild_id                      String
+  channel_id                    String
+  type                          counting_type  @default(NORMAL)
+  current_number                Int            @default(0)
+  current_stakeholders          String?
+  current_number_message_id     String         @default("")
+  current_number_message_date   DateTime       @default(now()) @db.Timestamptz(6)
+  current_number_message_author String         @default("")
+  last_number                   Int?
+  last_number_message_id        String?
+  last_number_message_date      DateTime?      @db.Timestamptz(6)
+  last_number_message_author    String?
+  last_number_broken_by         String?
+  last_number_broken_date       DateTime?      @db.Timestamptz(6)
+  record_number                 Int            @default(0)
+  record_number_message_id      String?
+  record_number_message_date    DateTime?      @db.Timestamptz(6)
+  record_number_message_author  String?
+  record_number_broken_by       String?
+  record_number_broken_date     DateTime?      @db.Timestamptz(6)
+  discord_guilds                discord_guilds @relation(fields: [guild_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "counting_guildid_foreign")
+
+  @@unique([guild_id, channel_id], map: "counting_guildid_channelid_unique")
+}
+
+model drugs {
+  id                      String                @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  summary                 String?
+  psychonaut_wiki_url     String?
+  errowid_experiences_url String?
+  last_updated_by         String                @db.Uuid
+  updated_at              DateTime              @default(now()) @db.Timestamptz(6)
+  created_at              DateTime              @default(now()) @db.Timestamptz(6)
+  drug_articles           drug_articles[]
+  drug_category_drugs     drug_category_drugs[]
+  drug_names              drug_names[]
+  drug_variants           drug_variants[]
+  users                   users                 @relation(fields: [last_updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "drugs_lastupdatedby_foreign")
+  user_drug_doses         user_drug_doses[]
+}
+
+model knex_migrations {
+  id             Int       @id @default(autoincrement())
+  name           String?   @db.VarChar(255)
+  batch          Int?
+  migration_time DateTime? @db.Timestamptz(6)
+}
+
+model knex_migrations_lock {
+  index     Int  @id @default(autoincrement())
+  is_locked Int?
+}
+
+model personas {
+  id                    String          @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  user_id               String          @unique(map: "personas_userid_unique") @db.Uuid
+  name                  String          @default("No Name")
+  class                 String          @default("jobless")
+  species               String          @default("formless")
+  guild                 String          @default("guildless")
+  tokens                Int             @default(0)
+  trip_token_multiplier Int             @default(1)
+  last_quest            DateTime?       @db.Timestamptz(6)
+  last_dungeon          DateTime?       @db.Timestamptz(6)
+  last_raid             DateTime?       @db.Timestamptz(6)
+  created_at            DateTime        @default(now()) @db.Timestamptz(6)
+  users                 users           @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "personas_userid_foreign")
+  rpg_inventory         rpg_inventory[]
+}
+
+model reaction_roles {
+  id             String             @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  guild_id       String
+  channel_id     String
+  message_id     String
+  reaction_id    String
+  role_id        String
+  created_at     DateTime           @default(now()) @db.Timestamptz(6)
+  type           reaction_role_type @default(CUSTOM)
+  name           String             @default("custom")
+  discord_guilds discord_guilds     @relation(fields: [guild_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "reactionroles_guildid_foreign")
+
+  @@unique([role_id, reaction_id], map: "reactionroles_roleid_reactionid_unique")
+}
+
+model rss {
+  id           String @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  guild_id     String
+  url          String
+  last_post_id String
+  destination  String
+
+  @@unique([guild_id, destination], map: "rss_guildid_destination_unique")
+}
+
+model users {
+  id                                                        String            @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  email                                                     String?           @unique(map: "users_email_unique") @db.VarChar(320)
+  username                                                  String?           @unique(map: "users_username_unique") @db.VarChar(320)
+  password_hash                                             String?
+  discord_id                                                String?           @unique(map: "users_discordid_unique")
+  irc_id                                                    String?
+  matrix_id                                                 String?
+  timezone                                                  String?
+  birthday                                                  DateTime?         @db.Timestamptz(6)
+  roles                                                     String?
+  mindset_role                                              String?
+  mindset_role_expires_at                                   DateTime?         @db.Timestamptz(6)
+  karma_given                                               Int               @default(0)
+  karma_received                                            Int               @default(0)
+  sparkle_points                                            Int               @default(0)
+  move_points                                               Int               @default(0)
+  empathy_points                                            Int               @default(0)
+  discord_bot_ban                                           Boolean           @default(false)
+  ticket_ban                                                Boolean           @default(false)
+  last_seen_at                                              DateTime          @default(now()) @db.Timestamptz(6)
+  last_seen_in                                              String?
+  joined_at                                                 DateTime          @default(now()) @db.Timestamptz(6)
+  removed_at                                                DateTime?         @db.Timestamptz(6)
+  mod_thread_id                                             String?
+  helper_role_ban                                           Boolean           @default(false)
+  contributor_role_ban                                      Boolean           @default(false)
+  lastfm_username                                           String?
+  partner                                                   Boolean?          @default(true)
+  supporter                                                 Boolean?          @default(true)
+  moodle_id                                                 String?
+  ai_personas                                               ai_personas[]
+  appeals                                                   appeals[]
+  drug_articles_drug_articles_last_modified_byTousers       drug_articles[]   @relation("drug_articles_last_modified_byTousers")
+  drug_articles_drug_articles_posted_byTousers              drug_articles[]   @relation("drug_articles_posted_byTousers")
+  drug_variants                                             drug_variants[]
+  drugs                                                     drugs[]
+  personas                                                  personas?
+  user_actions_user_actions_ban_evasion_related_userTousers user_actions[]    @relation("user_actions_ban_evasion_related_userTousers")
+  user_actions_user_actions_created_byTousers               user_actions[]    @relation("user_actions_created_byTousers")
+  user_actions_user_actions_repealed_byTousers              user_actions[]    @relation("user_actions_repealed_byTousers")
+  user_actions_user_actions_user_idTousers                  user_actions[]    @relation("user_actions_user_idTousers")
+  user_drug_doses                                           user_drug_doses[]
+  user_experience                                           user_experience[]
+  user_reminders                                            user_reminders[]
+  user_tickets_user_tickets_closed_byTousers                user_tickets[]    @relation("user_tickets_closed_byTousers")
+  user_tickets_user_tickets_reopened_byTousers              user_tickets[]    @relation("user_tickets_reopened_byTousers")
+  user_tickets_user_tickets_user_idTousers                  user_tickets[]    @relation("user_tickets_user_idTousers")
+}
+
+model discord_guilds {
+  id                   String           @id
+  is_banned            Boolean          @default(false)
+  last_drama_at        DateTime?        @db.Timestamptz(6)
+  drama_reason         String?
+  max_online_members   Int?
+  channel_sanctuary    String?
+  channel_general      String?
+  channel_tripsit      String?
+  channel_tripsitmeta  String?
+  channel_applications String?
+  role_needshelp       String?
+  role_tripsitter      String?
+  role_helper          String?
+  role_techhelp        String?
+  removed_at           DateTime?        @db.Timestamptz(6)
+  joined_at            DateTime         @default(now()) @db.Timestamptz(6)
+  created_at           DateTime         @default(now()) @db.Timestamptz(6)
+  partner              Boolean          @default(true)
+  supporter            Boolean          @default(true)
+  premium_role_ids     String?
+  appeals              appeals[]
+  counting             counting[]
+  reaction_roles       reaction_roles[]
+}
+
+model drug_articles {
+  id                                          String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  drug_id                                     String    @db.Uuid
+  url                                         String    @db.VarChar(2048)
+  title                                       String
+  description                                 String?
+  published_at                                DateTime? @db.Timestamptz(6)
+  last_modified_by                            String    @db.Uuid
+  last_modified_at                            DateTime  @default(now()) @db.Timestamptz(6)
+  posted_by                                   String    @db.Uuid
+  created_at                                  DateTime  @default(now()) @db.Timestamptz(6)
+  drugs                                       drugs     @relation(fields: [drug_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "drugarticles_drugid_foreign")
+  users_drug_articles_last_modified_byTousers users     @relation("drug_articles_last_modified_byTousers", fields: [last_modified_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "drugarticles_lastmodifiedby_foreign")
+  users_drug_articles_posted_byTousers        users     @relation("drug_articles_posted_byTousers", fields: [posted_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "drugarticles_postedby_foreign")
+}
+
+model drug_categories {
+  id                  String                @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  name                String                @unique(map: "drugcategories_name_unique")
+  type                drug_category_type
+  created_at          DateTime              @default(now()) @db.Timestamptz(6)
+  drug_category_drugs drug_category_drugs[]
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model drug_category_drugs {
+  id               String          @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  drug_id          String          @db.Uuid
+  drug_category_id String          @db.Uuid
+  drug_categories  drug_categories @relation(fields: [drug_category_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "drugcategorydrugs_drugcategoryid_foreign")
+  drugs            drugs           @relation(fields: [drug_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "drugcategorydrugs_drugid_foreign")
+}
+
+model drug_names {
+  id         String         @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  drug_id    String         @db.Uuid
+  name       String
+  is_default Boolean        @default(false)
+  type       drug_name_type
+  drugs      drugs          @relation(fields: [drug_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "drugnames_drugid_foreign")
+}
+
+model drug_variant_roas {
+  id                         String        @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  drug_variant_id            String        @db.Uuid
+  route                      drug_roa
+  dose_threshold             Float?        @db.Real
+  dose_light                 Float?        @db.Real
+  dose_common                Float?        @db.Real
+  dose_strong                Float?        @db.Real
+  dose_heavy                 Float?        @db.Real
+  dose_warning               String?
+  duration_total_min         Float?        @db.Real
+  duration_total_max         Float?        @db.Real
+  duration_onset_min         Float?        @db.Real
+  duration_onset_max         Float?        @db.Real
+  duration_comeup_min        Float?        @db.Real
+  duration_comeup_max        Float?        @db.Real
+  duration_peak_min          Float?        @db.Real
+  duration_peak_max          Float?        @db.Real
+  duration_offset_min        Float?        @db.Real
+  duration_offset_max        Float?        @db.Real
+  duration_after_effects_min Float?        @db.Real
+  duration_after_effects_max Float?        @db.Real
+  drug_variants              drug_variants @relation(fields: [drug_variant_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "drugvariantroas_drugvariantid_foreign")
+}
+
+model drug_variants {
+  id                String              @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  drug_id           String              @db.Uuid
+  name              String?
+  description       String?
+  default           Boolean             @default(false)
+  last_updated_by   String              @db.Uuid
+  updated_at        DateTime            @default(now()) @db.Timestamptz(6)
+  created_at        DateTime            @default(now()) @db.Timestamptz(6)
+  drug_variant_roas drug_variant_roas[]
+  drugs             drugs               @relation(fields: [drug_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "drugvariants_drugid_foreign")
+  users             users               @relation(fields: [last_updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "drugvariants_lastupdatedby_foreign")
+}
+
+model rpg_inventory {
+  id           String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  persona_id   String   @db.Uuid
+  label        String
+  value        String
+  description  String
+  quantity     Int
+  weight       Int
+  cost         Int
+  equipped     Boolean
+  consumable   Boolean
+  effect       String   @db.VarChar(255)
+  effect_value String   @db.VarChar(255)
+  emoji        String   @db.VarChar(255)
+  created_at   DateTime @default(now()) @db.Timestamptz(6)
+  personas     personas @relation(fields: [persona_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "rpginventory_personaid_foreign")
+
+  @@unique([persona_id, value], map: "rpginventory_personaid_value_unique")
+}
+
+model user_actions {
+  id                                                 String           @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  user_id                                            String           @db.Uuid
+  type                                               user_action_type
+  ban_evasion_related_user                           String?          @db.Uuid
+  description                                        String?
+  internal_note                                      String
+  expires_at                                         DateTime?        @db.Timestamptz(6)
+  repealed_by                                        String?          @db.Uuid
+  repealed_at                                        DateTime?        @db.Timestamptz(6)
+  created_by                                         String           @db.Uuid
+  created_at                                         DateTime         @default(now()) @db.Timestamptz(6)
+  users_user_actions_ban_evasion_related_userTousers users?           @relation("user_actions_ban_evasion_related_userTousers", fields: [ban_evasion_related_user], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "useractions_banevasionrelateduser_foreign")
+  users_user_actions_created_byTousers               users            @relation("user_actions_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "useractions_createdby_foreign")
+  users_user_actions_repealed_byTousers              users?           @relation("user_actions_repealed_byTousers", fields: [repealed_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "useractions_repealedby_foreign")
+  users_user_actions_user_idTousers                  users            @relation("user_actions_user_idTousers", fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "useractions_userid_foreign")
+}
+
+model user_drug_doses {
+  id         String         @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  user_id    String         @db.Uuid
+  drug_id    String         @db.Uuid
+  route      drug_roa
+  dose       Float          @db.Real
+  units      drug_mass_unit
+  created_at DateTime       @default(now()) @db.Timestamptz(6)
+  drugs      drugs          @relation(fields: [drug_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "userdrugdoses_drugid_foreign")
+  users      users          @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "userdrugdoses_userid_foreign")
+}
+
+model user_experience {
+  id                   String              @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  user_id              String              @db.Uuid
+  category             experience_category
+  level                Int                 @default(0)
+  level_points         Int                 @default(0)
+  total_points         Int                 @default(0)
+  last_message_at      DateTime            @default(now()) @db.Timestamptz(6)
+  last_message_channel String
+  created_at           DateTime            @default(now()) @db.Timestamptz(6)
+  type                 experience_type     @default(TEXT)
+  users                users               @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "userexperience_userid_foreign")
+
+  @@unique([user_id, category, type], map: "userexperience_userid_category_type_unique")
+}
+
+model user_reminders {
+  id            String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  user_id       String   @db.Uuid
+  reminder_text String?
+  trigger_at    DateTime @db.Timestamptz(6)
+  created_at    DateTime @default(now()) @db.Timestamptz(6)
+  users         users    @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "userreminders_userid_foreign")
+}
+
+model user_tickets {
+  id                                    String        @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  user_id                               String        @db.Uuid
+  description                           String
+  thread_id                             String
+  meta_thread_id                        String?
+  first_message_id                      String
+  type                                  ticket_type
+  status                                ticket_status @default(OPEN)
+  closed_by                             String?       @db.Uuid
+  closed_at                             DateTime?     @db.Timestamptz(6)
+  reopened_by                           String?       @db.Uuid
+  reopened_at                           DateTime?     @db.Timestamptz(6)
+  archived_at                           DateTime      @default(dbgenerated("(CURRENT_TIMESTAMP + '1 day'::interval)")) @db.Timestamptz(6)
+  deleted_at                            DateTime      @default(dbgenerated("(CURRENT_TIMESTAMP + '7 days'::interval)")) @db.Timestamptz(6)
+  created_at                            DateTime      @default(now()) @db.Timestamptz(6)
+  users_user_tickets_closed_byTousers   users?        @relation("user_tickets_closed_byTousers", fields: [closed_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "usertickets_closedby_foreign")
+  users_user_tickets_reopened_byTousers users?        @relation("user_tickets_reopened_byTousers", fields: [reopened_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "usertickets_reopenedby_foreign")
+  users_user_tickets_user_idTousers     users         @relation("user_tickets_user_idTousers", fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "usertickets_userid_foreign")
+}
+
+model appeals {
+  id                String         @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  guild_id          String
+  user_id           String         @db.Uuid
+  appeal_number     Int
+  reason            String
+  solution          String
+  future            String
+  extra             String?
+  status            appeal_status
+  appeal_message_id String
+  response_message  String?
+  created_at        DateTime       @default(now()) @db.Timestamptz(6)
+  reminded_at       DateTime?      @db.Timestamptz(6)
+  decided_at        DateTime?      @db.Timestamptz(6)
+  discord_guilds    discord_guilds @relation(fields: [guild_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "appeals_guildid_foreign")
+  users             users          @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "appeals_userid_foreign")
+
+  @@unique([user_id, guild_id, appeal_number], map: "appeals_user_id_guild_id_appeal_number_unique")
+}
+
+model ai_personas {
+  id                String        @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  name              String        @unique(map: "aipersonas_name_unique")
+  ai_model          ai_model
+  prompt            String
+  temperature       Float?        @db.Real
+  top_p             Float?        @db.Real
+  presence_penalty  Float         @db.Real
+  frequency_penalty Float         @db.Real
+  logit_bias        String?       @db.VarChar(255)
+  max_tokens        Int
+  total_tokens      Int           @default(0)
+  created_at        DateTime      @default(now()) @db.Timestamptz(6)
+  created_by        String        @db.Uuid
+  ai_channels       ai_channels[]
+  users             users         @relation(fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "aipersonas_createdby_foreign")
+}
+
+model ai_channels {
+  id          String      @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  channel_id  String
+  persona_id  String      @db.Uuid
+  ai_personas ai_personas @relation(fields: [persona_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "aichannels_personaid_foreign")
+
+  @@unique([channel_id, persona_id], map: "aichannels_channelid_personaid_unique")
+}
+
+enum bridge_status {
+  PENDING
+  ACTIVE
+  PAUSED
+}
+
+enum counting_type {
+  NORMAL
+  HARDCORE
+  TOKEN
+}
+
+enum drug_category_type {
+  COMMON
+  PSYCHOACTIVE
+  CHEMICAL
+}
+
+enum drug_mass_unit {
+  MG
+  ML
+  MICRO_G @map("µG")
+  G
+  OZ
+  FLOZ
+}
+
+enum drug_name_type {
+  BRAND
+  COMMON
+  SUBSTITUTIVE
+  SYSTEMATIC
+}
+
+enum drug_roa {
+  ORAL
+  INSUFFLATED
+  INHALED
+  TOPICAL
+  SUBLINGUAL
+  BUCCAL
+  RECTAL
+  INTRAMUSCULAR
+  INTRAVENOUS
+  SUBCUTANIOUS
+  TRANSDERMAL
+}
+
+enum experience_category {
+  TOTAL
+  GENERAL
+  TRIPSITTER
+  DEVELOPER
+  TEAM
+  IGNORED
+}
+
+enum experience_type {
+  TEXT
+  VOICE
+}
+
+enum reaction_role_type {
+  COLOR
+  PREMIUM_COLOR
+  MINDSET
+  PRONOUN
+  NOTIFICATION
+  CUSTOM
+}
+
+enum ticket_status {
+  OPEN
+  OWNED
+  BLOCKED
+  PAUSED
+  CLOSED
+  RESOLVED
+  ARCHIVED
+  DELETED
+}
+
+enum ticket_type {
+  APPEAL
+  TRIPSIT
+  TECH
+  FEEDBACK
+}
+
+enum user_action_type {
+  NOTE
+  WARNING
+  FULL_BAN
+  TICKET_BAN
+  DISCORD_BOT_BAN
+  BAN_EVASION
+  UNDERBAN
+  TIMEOUT
+  REPORT
+  KICK
+  HELPER_BAN
+  CONTRIBUTOR_BAN
+}
+
+enum appeal_status {
+  OPEN
+  RECEIVED
+  ACCEPTED
+  DENIED
+}
+
+enum ai_model {
+  GPT_4         @map("GPT-4")
+  GPT_3_5_TURBO @map("GPT-3.5-TURBO")
+  DAVINCI
+  CURIE
+  BABBAGE
+  ADA
+}
