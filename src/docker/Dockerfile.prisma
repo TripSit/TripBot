@@ -24,10 +24,11 @@ COPY --chown=node:node package*.json ./
 RUN npm ci
 
 # Bundle app source
-COPY --chown=node:node .eslintrc ./
-COPY --chown=node:node tsconfig.json ./
-
-# RUN npx prisma migrate dev
+COPY --chown=node:node .eslintrc .eslintrc
+COPY --chown=node:node tsconfig.json tsconfig.json
+COPY --chown=node:node ./src/global ./src/global
+COPY --chown=node:node ./src/knex/ ./src/knex/
+COPY --chown=node:node ./src/prisma/ ./src/prisma/
 
 # For container development, the following command runs forever, so we can inspect the container
 CMD npm run knex

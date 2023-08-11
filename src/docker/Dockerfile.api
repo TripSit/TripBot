@@ -30,7 +30,7 @@ COPY --chown=node:node . .
 RUN npx prisma generate --schema=./src/prisma/schema.prisma
 
 # For container development, the following command runs forever, so we can inspect the container
-CMD tail -f /dev/null
+CMD npx tsc-watch --onSuccess "npx nodemon --config ./src/api/nodemon.json"
 
 ###################
 # BUILD FOR PRODUCTION
@@ -99,4 +99,4 @@ RUN npx prisma generate
 USER node
 
 # Start the bot using the production build
-CMD ["pm2-runtime", "build/start.js"]
+CMD ["pm2-runtime", "build/api/start.js"]
