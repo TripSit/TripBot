@@ -477,23 +477,34 @@ export async function aiAudit(
       },
     });
 
-    const embed = await makePersonaEmbed(cleanPersona);
+    // const embed = await makePersonaEmbed(cleanPersona);
+    const embed = embedTemplate();
 
     // Construct the message
     embed.setFooter({ text: 'What are tokens? https://platform.openai.com/tokenizer' });
+
+    const messageOutput = messages
+      .reverse()
+      .map(message => `${message.url} ${message.member?.displayName}: ${message.cleanContent}`)
+      .join('\n')
+      .slice(0, 1024);
+
+    log.debug(F, `messageOutput: ${messageOutput}`);
+
+    const responseOutput = chatResponse.slice(0, 1023);
+    log.debug(F, `responseOutput: ${responseOutput}`);
+
     embed.spliceFields(
       0,
       0,
       {
         name: 'Messages',
-        value: messages
-          .map(message => `${message.url} ${message.member?.displayName}: ${message.cleanContent}`)
-          .join('\n'),
+        value: stripIndents`${messageOutput}`,
         inline: false,
       },
       {
         name: 'Result',
-        value: stripIndents`${chatResponse}`,
+        value: stripIndents`${responseOutput}`,
         inline: false,
       },
     );
@@ -674,6 +685,15 @@ export async function chat(
 
   const result = await aiChat(aiPersona, inputMessages);
 
+  await aiAudit(
+    aiPersona,
+    cleanMessages,
+    result.response,
+    null,
+    result.promptTokens,
+    result.completionTokens,
+  );
+
   await messages[0].channel.sendTyping();
 
   // Sleep for a bit to simulate typing in production
@@ -687,16 +707,22 @@ export async function chat(
     await sleep(sleepTime * 1000);
   }
 
-  await aiAudit(
-    aiPersona,
-    cleanMessages,
-    result.response,
-    null,
-    result.promptTokens,
-    result.completionTokens,
-  );
-
-  await messages[0].reply(result.response);
+  try {
+    await messages[0].reply(result.response.slice(0, 2000));
+  } catch (e) {
+    log.error(F, `Error: ${e}`);
+    const channelAi = await discordClient.channels.fetch(env.CHANNEL_AILOG) as TextChannel;
+    await channelAi.send({
+      content: `Hey <@${env.DISCORD_OWNER_ID}> I couldn't send a message to <#${messages[0].channel.id}>`,
+      embeds: [embedTemplate()
+        .setTitle('Error')
+        .setColor(Colors.Red)
+        .setDescription(stripIndents`
+          **Error:** ${e}
+          **Message:** ${result.response}
+        `)],
+    });
+  }
 }
 
 export const aiCommand: SlashCommand = {

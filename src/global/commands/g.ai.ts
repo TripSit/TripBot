@@ -33,37 +33,39 @@ const objectiveTruths = {
 
   The discord admin is Hipperooni, or Rooni.
   The moderators are: Foggy, Aida, Elixir, Spacelady, Hipperooni, WorriedHobbiton, Zombie and Trees.
+  
+  Keep all responses under 2000 characters at maximum.
 `,
 } as ChatCompletionRequestMessage;
 
 // # Example dummy function hard coded to return the same weather
 // # In production, this could be your backend API or an external API
-async function getCurrentWeather(location:string, unit = 'fahrenheit') {
-  return {
-    location,
-    temperature: '72',
-    unit,
-    forecast: ['sunny', 'windy'],
-  };
-}
+// async function getCurrentWeather(location:string, unit = 'fahrenheit') {
+//   return {
+//     location,
+//     temperature: '72',
+//     unit,
+//     forecast: ['sunny', 'windy'],
+//   };
+// }
 
-const aiFunctions = [
-  {
-    name: 'getCurrentWeather',
-    description: 'Get the current weather in a given location',
-    parameters: {
-      type: 'object',
-      properties: {
-        location: {
-          type: 'string',
-          description: 'The city and state, e.g. San Francisco, CA',
-        },
-        unit: { type: 'string', enum: ['celsius', 'fahrenheit'] },
-      },
-      required: ['location'],
-    },
-  },
-];
+// const aiFunctions = [
+//   {
+//     name: 'getCurrentWeather',
+//     description: 'Get the current weather in a given location',
+//     parameters: {
+//       type: 'object',
+//       properties: {
+//         location: {
+//           type: 'string',
+//           description: 'The city and state, e.g. San Francisco, CA',
+//         },
+//         unit: { type: 'string', enum: ['celsius', 'fahrenheit'] },
+//       },
+//       required: ['location'],
+//     },
+//   },
+// ];
 
 /**
  * Modifies a persona
@@ -275,8 +277,8 @@ export async function aiChat(
     ...restOfAiPersona,
     model,
     messages,
-    functions: aiFunctions,
-    function_call: 'auto',
+    // functions: aiFunctions,
+    // function_call: 'auto',
   } as CreateChatCompletionRequest;
 
   log.debug(F, `payload: ${JSON.stringify(payload, null, 2)}`);
@@ -284,52 +286,52 @@ export async function aiChat(
   log.debug(F, `chatCompletion: ${JSON.stringify(chatCompletion.data, null, 2)}`);
   // responseData = chatCompletion.data;
   if (chatCompletion.data.choices[0].message) {
-    let responseMessage = chatCompletion.data.choices[0].message;
+    const responseMessage = chatCompletion.data.choices[0].message;
 
     // Sum up the existing tokens
     promptTokens = chatCompletion.data.usage?.prompt_tokens ?? 0;
     completionTokens = chatCompletion.data.usage?.completion_tokens ?? 0;
 
-    // # Step 2: check if GPT wanted to call a function
-    if (responseMessage.function_call) {
-      // log.debug(F, `responseMessage.function_call: ${JSON.stringify(responseMessage.function_call, null, 2)}`);
-      // # Step 3: call the function
-      // # Note: the JSON response may not always be valid; be sure to handle errors
+    // // # Step 2: check if GPT wanted to call a function
+    // if (responseMessage.function_call) {
+    //   // log.debug(F, `responseMessage.function_call: ${JSON.stringify(responseMessage.function_call, null, 2)}`);
+    //   // # Step 3: call the function
+    //   // # Note: the JSON response may not always be valid; be sure to handle errors
 
-      const availableFunctions = {
-        getCurrentWeather,
-      };
-      const functionName = responseMessage.function_call.name;
-      log.debug(F, `functionName: ${functionName}`);
-      const fuctionToCall = availableFunctions[functionName as keyof typeof availableFunctions];
-      const functionArgs = JSON.parse(responseMessage.function_call.arguments as string);
-      const functionResponse = await fuctionToCall(
-        functionArgs.location,
-        functionArgs.unit,
-      );
-      // log.debug(F, `functionResponse: ${JSON.stringify(functionResponse, null, 2)}`);
+    //   const availableFunctions = {
+    //     getCurrentWeather,
+    //   };
+    //   const functionName = responseMessage.function_call.name;
+    //   log.debug(F, `functionName: ${functionName}`);
+    //   const fuctionToCall = availableFunctions[functionName as keyof typeof availableFunctions];
+    //   const functionArgs = JSON.parse(responseMessage.function_call.arguments as string);
+    //   const functionResponse = await fuctionToCall(
+    //     functionArgs.location,
+    //     functionArgs.unit,
+    //   );
+    //   // log.debug(F, `functionResponse: ${JSON.stringify(functionResponse, null, 2)}`);
 
-      // # Step 4: send the info on the function call and function response to GPT
-      payload.messages.push({
-        role: 'function',
-        name: functionName,
-        content: JSON.stringify(functionResponse),
-      });
+    //   // # Step 4: send the info on the function call and function response to GPT
+    //   payload.messages.push({
+    //     role: 'function',
+    //     name: functionName,
+    //     content: JSON.stringify(functionResponse),
+    //   });
 
-      const chatFunctionCompletion = await openai.createChatCompletion(payload);
+    //   const chatFunctionCompletion = await openai.createChatCompletion(payload);
 
-      // responseData = chatFunctionCompletion.data;
+    //   // responseData = chatFunctionCompletion.data;
 
-      log.debug(F, `chatFunctionCompletion: ${JSON.stringify(chatFunctionCompletion.data, null, 2)}`);
+    //   log.debug(F, `chatFunctionCompletion: ${JSON.stringify(chatFunctionCompletion.data, null, 2)}`);
 
-      if (chatFunctionCompletion.data.choices[0].message) {
-        responseMessage = chatFunctionCompletion.data.choices[0].message;
+    //   if (chatFunctionCompletion.data.choices[0].message) {
+    //     responseMessage = chatFunctionCompletion.data.choices[0].message;
 
-        // Sum up the new tokens
-        promptTokens += chatCompletion.data.usage?.prompt_tokens ?? 0;
-        completionTokens += chatCompletion.data.usage?.completion_tokens ?? 0;
-      }
-    }
+    //     // Sum up the new tokens
+    //     promptTokens += chatCompletion.data.usage?.prompt_tokens ?? 0;
+    //     completionTokens += chatCompletion.data.usage?.completion_tokens ?? 0;
+    //   }
+    // }
 
     response = responseMessage.content ?? 'Sorry, I\'m not sure how to respond to that.';
   }
