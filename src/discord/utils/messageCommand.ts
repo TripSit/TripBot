@@ -279,7 +279,7 @@ give people a chance to answer 😄 If no one answers in 5 minutes you can try a
     // log.debug(F, 'Sad stuff detected');
     await message.react(heartEmojis[Math.floor(Math.random() * heartEmojis.length)]);
   }
-  //  else if (
+  // else if (
   //   message.content.match(/(?:anyone|someone+there|here)\b/)
   //   && (message.channel as ThreadChannel).parent?.parentId !== env.CATEGORY_HARMREDUCTIONCENTRE
   //   && (message.channel as TextChannel).parentId !== env.CATEGORY_HARMREDUCTIONCENTRE
@@ -305,5 +305,15 @@ give people a chance to answer 😄 If no one answers in 5 minutes you can try a
   //       Who knows, maybe someone is lurking and waiting for the right question... :eyes: `,
   //     }));
   //   }, 2000);
+  // }
+  // else {
+  //   if (message.author.bot) return; // Dont respond to self
+  //   if (message.guild.id !== env.DISCORD_GUILD_ID) return; // Dont do this off tripsit
+  //   if (((Math.floor(Math.random() * (201)) / 1) !== 1)) return; // Only do this .5% of the time
+  //   if (!await isVerifiedMember(message)) return; // Dont do this in the tripsitchannels
+  //   if (!await isGeneralRoom(message)) return; // Dont do this in the tripsitchannels
+  //   // Get the last 3 messages sent in the channel
+  //   const messageHistory = await message.channel.messages.fetch({ limit: 3 });
+  //   await message.channel.send(await aiChat([...messageHistory.values()]));
   // }
 }
