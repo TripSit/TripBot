@@ -2,6 +2,9 @@ import {
   VoiceChannel,
   ChannelType,
   Guild,
+  VoiceChannel,
+  ChannelType,
+  Guild,
   Colors,
   SlashCommandBuilder,
   GuildMember,
@@ -96,22 +99,6 @@ async function tentBan(
     verb = 'unbanned and unhidden';
   }
 
-  // Disallow banning bots
-  if (target.user.bot) {
-    return embedTemplate()
-      .setTitle('Error')
-      .setColor(Colors.Red)
-      .setDescription('You cannot ban bots');
-  }
-
-  // Disallow banning mods
-  if (target.roles.cache.has(env.ROLE_MODERATOR) === true) {
-    return embedTemplate()
-      .setTitle('Error')
-      .setColor(Colors.Red)
-      .setDescription('You cannot ban mods');
-  }
-
   // log.debug(F, `${target.displayName} is now ${verb}`);
 
   return embedTemplate()
@@ -164,132 +151,6 @@ async function tentCohost(
     .setTitle('Success')
     .setColor(Colors.Green)
     .setDescription(`${target} has been ${verb} in ${voiceChannel}`);
-}
-
-async function tentRadio(
-  voiceChannel: VoiceBasedChannel,
-  stationid: string,
-  guild: Guild,
-):Promise<EmbedBuilder> {
-  const radioChannels: { [key: string]: string } = {
-    '830530156048285716': env.CHANNEL_LOFIRADIO,
-    '861363156568113182': env.CHANNEL_JAZZRADIO,
-    '833406944387268670': env.CHANNEL_SYNTHWAVERADIO,
-    '831623165632577587': env.CHANNEL_SLEEPYRADIO,
-  };
-
-  // If the station choice was "none", send the radio back to the radio room
-  if (stationid === 'none') {
-    // Check if any radio bots are in the Tent
-    const radioBot = voiceChannel.members.find(m => Object.keys(radioChannels).includes(m.user.id));
-    if (!radioBot) {
-      return embedTemplate()
-        .setTitle('Error')
-        .setColor(Colors.Red)
-        .setDescription('There is already no radio in this Tent');
-    }
-    // Find what radio bot is in the Tent and use the corresponding radio channel from the radioChannels object
-    // Check if the current channel has a radio bot in it
-    //  by checking if any bots in the channel are in the radioChannels object
-    const botMember = voiceChannel.members
-      .find(member => member.user.bot && Object.keys(radioChannels).includes(member.user.id));
-    if (botMember) {
-      // If it does, find the corresponding radio channel from the bot id and move the bot to it
-      const radioChannelId = radioChannels[botMember.user.id];
-      // Get the radio channel from cache
-      const radioChannel = guild.channels.cache.get(radioChannelId) as VoiceChannel;
-      // If the radio channel exists, and is a voice channel, move the bot to it
-      if (radioChannel && radioChannel.type === ChannelType.GuildVoice) {
-        voiceChannel.members.forEach(member => {
-          if (member.user.bot) {
-            member.voice.setChannel(radioChannel.id);
-          }
-        });
-      }
-    }
-    return embedTemplate()
-      .setTitle('Success')
-      .setColor(Colors.Green)
-      .setDescription('The radio has been returned to the radio room');
-  }
-
-  const station = voiceChannel.guild.members.cache.get(stationid) as GuildMember;
-
-  // If the station returns invalid (not on the server)
-  if (!station) {
-    return embedTemplate()
-      .setTitle('Error')
-      .setColor(Colors.Red)
-      .setDescription('This radio wasn\'t found! Please report this to the mods');
-  }
-
-  // If the radio is offline
-  if (!station.voice.channel) {
-    return embedTemplate()
-      .setTitle('Error')
-      .setColor(Colors.Red)
-      .setDescription('This radio is currently offline, please report this to the mods');
-  }
-  // If the radio is already in another Tent
-  if (station.voice.channel?.parent?.id === env.CATEGORY_CAMPGROUND && station.voice.channelId !== voiceChannel.id) {
-    return embedTemplate()
-      .setTitle('Error')
-      .setColor(Colors.Red)
-      .setDescription('This radio is already being borrowed in another Tent');
-  }
-  // If the radio is already in the Tent
-  if (station.voice.channelId === voiceChannel.id) {
-    return embedTemplate()
-      .setTitle('Error')
-      .setColor(Colors.Red)
-      .setDescription('This radio is already in your Tent');
-  }
-  // If the radio is available, move it to the Tent
-  if (station.voice.channel?.parent?.id === env.CATEGORY_RADIO) {
-
-    // Before moving, check if there is already another bot
-    const botMember = station.voice.channel.members
-    .find(member => member.user.bot && Object.keys(radioChannels).includes(member.user.id));
-    if (botMember) {
-      // If there is, find the corresponding radio channel from the bot id and move the bot to it
-      const radioChannelId = radioChannels[botMember.user.id];
-      // Get the radio channel from cache
-      const radioChannel = guild.channels.cache.get(radioChannelId) as VoiceChannel;
-      // If the radio channel exists, and is a voice channel, move the bot to it
-      if (radioChannel && radioChannel.type === ChannelType.GuildVoice) {
-        station.voice.setChannel(radioChannel.id);
-      }
-    }
-    await station.voice.setChannel(voiceChannel);
-    // Edit the corresponding radio channels name to indicate it is in use
-    // const radioChannelId = radioChannels[station.user.id];
-    // const radioChannel = station.guild.channels.cache.get(radioChannelId) as VoiceChannel;
-
-    return embedTemplate()
-      .setTitle('Success')
-      .setColor(Colors.Green)
-      .setDescription(`${station} has been borrowed to your Tent`);
-  }
-}
-
-async function tentBitrate(
-  voiceChannel: VoiceBasedChannel,
-  bitrate: string,
-):Promise<EmbedBuilder> {
-  const bitrateNumber = parseInt(bitrate, 10);
-  // Check if the bitrate is the same as the current bitrate
-  if (voiceChannel.bitrate === bitrateNumber * 1000) {
-    return embedTemplate()
-      .setTitle('Error')
-      .setColor(Colors.Red)
-      .setDescription(`The bitrate is already set to ${bitrate}kbps`);
-  }
-  // Change the bitrate
-  await voiceChannel.setBitrate(bitrateNumber * 1000);
-  return embedTemplate()
-    .setTitle('Success')
-    .setColor(Colors.Green)
-    .setDescription(`The bitrate has been set to ${bitrate}kbps`);
 }
 
 export const dVoice: SlashCommand = {
