@@ -10,6 +10,7 @@ import drugDataAll from '../../global/assets/data/drug_db_combined.json';
 import drugDataTripsit from '../../global/assets/data/drug_db_tripsit.json';
 import timezones from '../../global/assets/data/timezones.json';
 import unitsOfMeasurement from '../../global/assets/data/units_of_measurement.json';
+import db from '../../global/utils/db';
 
 const F = f(__filename); // eslint-disable-line
 
@@ -470,6 +471,78 @@ async function autocompleteColors(interaction:AutocompleteInteraction) {
   }
 }
 
+async function autocompleteAiModels(interaction:AutocompleteInteraction) {
+  const options = {
+    shouldSort: true,
+    keys: [
+      'name',
+    ],
+  };
+  const modelList = [
+    { name: 'GPT_3_5_TURBO' },
+    { name: 'GPT_4' },
+    { name: 'DAVINCI' },
+    { name: 'CURIE' },
+    { name: 'BABBAGE' },
+    { name: 'ADA' },
+  ];
+
+  const fuse = new Fuse(modelList, options);
+  const focusedValue = interaction.options.getFocused();
+  // log.debug(F, `focusedValue: ${focusedValue}`);
+  const results = fuse.search(focusedValue);
+  // log.debug(F, `Autocomplete results: ${results}`);
+  if (results.length > 0) {
+    const top25 = results.slice(0, 20);
+    const listResults = top25.map(choice => ({
+      name: choice.item.name,
+      value: choice.item.name,
+    }));
+      // log.debug(F, `list_results: ${listResults}`);
+    interaction.respond(listResults);
+  } else {
+    const defaultDiscordColors = modelList.slice(0, 25);
+    const listResults = defaultDiscordColors.map(choice => ({ name: choice.name, value: choice.name }));
+    // log.debug(F, `list_results: ${listResults}`);
+    interaction.respond(listResults);
+  }
+}
+
+async function autocompleteAiNames(interaction:AutocompleteInteraction) {
+  const options = {
+    shouldSort: true,
+    keys: [
+      'name',
+    ],
+  };
+
+  const nameList = await db.ai_personas.findMany({
+    select: {
+      name: true,
+    },
+  });
+
+  const fuse = new Fuse(nameList, options);
+  const focusedValue = interaction.options.getFocused();
+  // log.debug(F, `focusedValue: ${focusedValue}`);
+  const results = fuse.search(focusedValue);
+  // log.debug(F, `Autocomplete results: ${results}`);
+  if (results.length > 0) {
+    const top25 = results.slice(0, 20);
+    const listResults = top25.map(choice => ({
+      name: choice.item.name,
+      value: choice.item.name,
+    }));
+      // log.debug(F, `list_results: ${listResults}`);
+    interaction.respond(listResults);
+  } else {
+    const defaultDiscordColors = nameList.slice(0, 25);
+    const listResults = defaultDiscordColors.map(choice => ({ name: choice.name, value: choice.name }));
+    // log.debug(F, `list_results: ${listResults}`);
+    interaction.respond(listResults);
+  }
+}
+
 export default autocomplete;
 /**
  * Handles autocomplete information
@@ -491,6 +564,14 @@ export async function autocomplete(interaction:AutocompleteInteraction):Promise<
     autocompleteConvert(interaction);
   } else if (interaction.commandName === 'reaction_role') {
     autocompleteColors(interaction);
+  } else if (interaction.commandName === 'ai') {
+    const focusedOption = interaction.options.getFocused(true).name;
+    if (focusedOption === 'model') {
+      autocompleteAiModels(interaction);
+    }
+    if (focusedOption === 'name') {
+      autocompleteAiNames(interaction);
+    }
   } else { // If you don't need a specific autocomplete, return a list of drug names
     await autocompleteDrugNames(interaction);
   }

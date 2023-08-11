@@ -1,0 +1,5 @@
+# All this does is copy the init script into the container so it can run on first start
+
+FROM dpage/pgadmin4
+
+COPY ./src/pgadmin4/servers.json /pgadmin4/servers.json

@@ -14,7 +14,7 @@ import { log } from './global/utils/log';
 import validateEnv from './global/utils/env.validate'; // eslint-disable-line
 import commandContext from './discord/utils/context'; // eslint-disable-line
 import discordConnect from './discord/discord';
-import api from './api/api'; // eslint-disable-line
+import api from './discord/api/api'; // eslint-disable-line
 // import startMatrix from './matrix/matrix';
 // import ircConnect from './irc/irc';
 // import telegramConnect from './telegram/telegram';
