@@ -6,8 +6,8 @@ import {
   time,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
-import { database } from '../../global/utils/knex';
-import { AppealStatus, UserActions } from '../../global/@types/database';
+import { appeal_status, user_action_type, user_actions } from '@prisma/client';
+import db from '../../global/utils/db';
 
 const F = f(__filename);
 
@@ -34,10 +34,19 @@ export async function appealAccept(
   }
 
   // Modify the user in the database
-  const userData = await database.users.get(userId, null, null);
+  const userData = await db.users.findUniqueOrThrow({
+    where: {
+      id: userId,
+    },
+  });
   // log.debug(`${F} - appealAccept`, `userData: ${JSON.stringify(userData, null, 2)}`);
   userData.removed_at = null;
-  await database.users.set(userData);
+  await db.users.update({
+    where: {
+      id: userId,
+    },
+    data: userData,
+  });
 
   // Get the ban info from discord
   // let banInfo = {} as GuildBan;
@@ -60,19 +69,34 @@ export async function appealAccept(
   log.debug(F, `banLog: ${JSON.stringify(banLog, null, 2)}`);
 
   // Construct an action in case this doesn't exist
-  let actionData = {} as UserActions;
+  let actionData = {} as user_actions;
   // Check if the user already has a FULL_BAN action in the dictionary
-  const banRecords = await database.actions.get(userData.id, 'FULL_BAN');
+  const banRecords = await db.user_actions.findFirst({
+    where: {
+      user_id: userId,
+      type: user_action_type.FULL_BAN,
+      repealed_at: null,
+    },
+  });
   // If so, then use that action
-  if (banRecords.length > 0) {
-    [actionData] = banRecords;
+  if (banRecords) {
+    actionData = banRecords;
     // Ensure that these fields are updated to unban
     actionData.repealed_at = new Date();
-    actionData.repealed_by = (await database.users.get(interaction.user.id, null, null)).id;
+    actionData.repealed_by = (await db.users.findFirstOrThrow({
+      where: {
+        discord_id: interaction.user.id,
+      },
+    })).id;
     actionData.expires_at = null;
     log.debug(F, `actionData: ${JSON.stringify(actionData, null, 2)}`);
     // Set those fields in the database
-    await database.actions.set(actionData);
+    await db.user_actions.update({
+      where: {
+        id: actionData.id,
+      },
+      data: actionData,
+    });
   }
 
   // Actually unban the user from the discord
@@ -117,13 +141,22 @@ export async function appealAccept(
     : 'I was unable to contact them, please do so manually.';
 
   // Get and modify the appeal record
-  let appealRecords = await database.appeals.get(userData.id, interaction.guild?.id);
-  appealRecords = appealRecords.filter(record => record.status === AppealStatus.Open);
-  const appealRecord = appealRecords[0];
+  const appealRecord = await db.appeals.findFirstOrThrow({
+    where: {
+      user_id: userData.id,
+      guild_id: interaction.guild.id,
+      status: appeal_status.OPEN,
+    },
+  });
   log.debug(F, `appealRecord: ${JSON.stringify(appealRecord, null, 2)}`);
-  appealRecord.status = AppealStatus.Accepted;
+  appealRecord.status = appeal_status.ACCEPTED;
   appealRecord.decided_at = new Date();
-  await database.appeals.set([appealRecord]);
+  await db.appeals.update({
+    where: {
+      id: appealRecord.id,
+    },
+    data: appealRecord,
+  });
 
   await interaction.editReply({
     content: stripIndents`User <@${userId}> has been unbanned from ${interaction.guild.name}.
@@ -154,17 +187,29 @@ export async function appealReject(
   }
 
   // Get and modify the appeal record
-  const userData = await database.users.get(userId, null, null);
-  let appealRecords = await database.appeals.get(userData.id, interaction.guild?.id);
-  appealRecords = appealRecords.filter(record => record.status === AppealStatus.Open);
-  let appealRecord = appealRecords[0];
-  log.debug(F, `appealRecord: ${JSON.stringify(appealRecord, null, 2)}`);
+  const userData = await db.users.findFirstOrThrow({
+    where: {
+      id: userId,
+    },
+  });
+  const openAppealRecord = await db.appeals.findFirstOrThrow({
+    where: {
+      user_id: userData.id,
+      guild_id: interaction.guild.id,
+      status: appeal_status.OPEN,
+    },
+  });
+  log.debug(F, `openAppealRecord: ${JSON.stringify(openAppealRecord, null, 2)}`);
 
-  if (!appealRecord) {
-    appealRecords = await database.appeals.get(userData.id, interaction.guild?.id);
-    [appealRecord] = appealRecords;
+  if (!openAppealRecord) {
+    const closedAppealRecord = await db.appeals.findFirstOrThrow({
+      where: {
+        user_id: userData.id,
+        guild_id: interaction.guild.id,
+      },
+    });
 
-    if (!appealRecord.decided_at) {
+    if (!closedAppealRecord.decided_at) {
       await interaction.editReply({
         content: stripIndents`Hey <@${env.DISCORD_OWNER_ID}>, this user doesn't have an active appeal, \
         but also doesn't have any closed appeals, what gives?`,
@@ -173,15 +218,20 @@ export async function appealReject(
     }
 
     await interaction.editReply({
-      content: stripIndents`This appeal was already decided ${time(appealRecord.decided_at, 'R')}.
+      content: stripIndents`This appeal was already decided ${time(closedAppealRecord.decided_at, 'R')}.
       If you believe this is an error, please contact an administrator.`,
     });
     return;
   }
 
-  appealRecord.status = AppealStatus.Denied;
-  appealRecord.decided_at = new Date();
-  await database.appeals.set([appealRecord]);
+  openAppealRecord.status = appeal_status.DENIED;
+  openAppealRecord.decided_at = new Date();
+  await db.appeals.update({
+    where: {
+      id: openAppealRecord.id,
+    },
+    data: openAppealRecord,
+  });
 
   // Try to find the user in the bot's cache - this can only happen if the user still shares a guild with the bot
   const user = await discordClient.users.fetch(userId);

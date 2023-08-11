@@ -6,13 +6,13 @@ import {
   // GuildTextBasedChannel,
   Role,
   PermissionResolvable,
-  ThreadChannel,
+  // ThreadChannel,
   EmbedBuilder,
-  TextChannel,
+  // TextChannel,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
 import { sleep } from '../commands/guild/d.bottest';
-import { aiChat } from './ai';
+import { chat } from '../commands/guild/d.ai';
 
 // import log from '../../global/utils/log';
 // import {parse} from 'path';
@@ -73,21 +73,19 @@ async function isMentioningTripbot(message:Message):Promise<boolean> {
   || message.content.toLowerCase().includes('tripbot');
 }
 
-async function isVerifiedMember(message:Message):Promise<boolean> {
-  if (!message.member) return false;
-  return message.member?.roles.cache.has(env.ROLE_VERIFIED);
+async function isUploadMessage(message:Message):Promise<boolean> {
+  return message.content.toLowerCase().includes('upload')
+    || message.content.toLowerCase().includes('steal')
+    || message.content.toLowerCase().includes('fetch');
 }
 
-async function isGeneralRoom(message:Message):Promise<boolean> {
-  log.debug(F, `Category HR Center: ${env.CATEGORY_HARMREDUCTIONCENTRE}`);
-  log.debug(F, `message.channel.parentId: ${(message.channel as TextChannel).parentId}`);
-  log.debug(F, `message.channel.parent.parentId: ${(message.channel as TextChannel).parent?.parentId}`);
+async function isAiEnabledGuild(message:Message):Promise<boolean> {
+  // log.debug(F, `message.guild?.id: ${message.guild?.id}`);
+  return message.guild?.id === env.DISCORD_GUILD_ID;
+}
 
-  log.debug(F, `message.channel.parentId: ${(message.channel as TextChannel).parentId === env.CATEGORY_HARMREDUCTIONCENTRE}`);
-  log.debug(F, `message.channel.parentId: ${(message.channel as TextChannel).parent?.parentId === env.CATEGORY_HARMREDUCTIONCENTRE}`);
-  return (message.channel as TextChannel).parentId !== env.CATEGORY_HARMREDUCTIONCENTRE
-    && (message.channel as TextChannel).parent?.parentId !== env.CATEGORY_HARMREDUCTIONCENTRE
-    && (message.channel as TextChannel).parentId !== env.CATEGORY_TEAMTRIPSIT;
+async function isBotOwner(message:Message):Promise<boolean> {
+  return message.author.id === env.DISCORD_OWNER_ID;
 }
 
 /**
@@ -174,10 +172,21 @@ give people a chance to answer 😄 If no one answers in 5 minutes you can try a
     // If the bot was mentioned
     // log.debug(F, `Bot was mentioned in ${message.guild.name}!`); // eslint-disable-line
 
-    if ((message.content.toLowerCase().includes('upload')
-    || message.content.toLowerCase().includes('steal')
-    || message.content.toLowerCase().includes('fetch')
-    )) {
+    if (await isBotOwner(message) && message.content.toLowerCase().includes('phoenix')) {
+      const phoenixMessage = await message.channel.send('Phoenix protocol initiated... ');
+      await sleep(1000);
+      await phoenixMessage.edit('Phoenix protocol initiated... 35%');
+      await sleep(1000);
+      await phoenixMessage.edit('Phoenix protocol initiated... 68%');
+      await sleep(1000);
+      await phoenixMessage.edit(`Phoenix protocol deployed. Good luck ${message.member?.displayName} <3`);
+      await sleep(3000);
+      await phoenixMessage.delete();
+      await message.delete();
+      return;
+    }
+
+    if (await isUploadMessage(message)) {
       if (message.content.toLowerCase().includes('emoji')) {
         // Check if the user has the ManageEmojis permission
         if (!message.member?.permissions.has('ManageEmojisAndStickers' as PermissionResolvable)) {
@@ -250,30 +259,12 @@ give people a chance to answer 😄 If no one answers in 5 minutes you can try a
           await message.channel.send(`Uploaded ${stickerList.join(' ')} to ${message.guild.name}!`); // eslint-disable-line
         }
       }
-    } else if (await isGeneralRoom(message) && await isVerifiedMember(message)) {
-      await message.channel.send(await aiChat([message]));
-    } else if (message.author.id === env.DISCORD_OWNER_ID) {
-      // Just for fun, stuff that only moonbear can trigger
-      if (message.content.toLowerCase().includes('phoenix')) {
-        const phoenixMessage = await message.channel.send('Phoenix protocol initiated... ');
-        await sleep(1000);
-        await phoenixMessage.edit('Phoenix protocol initiated... 35%');
-        await sleep(1000);
-        await phoenixMessage.edit('Phoenix protocol initiated... 68%');
-        await sleep(1000);
-        await phoenixMessage.edit(`Phoenix protocol deployed. Good luck ${message.member?.displayName} <3`);
-        await sleep(3000);
-        await phoenixMessage.delete();
-        await message.delete();
-        // return;
-      } else {
-        try {
-          await message.react(emojiGet('ts_heart'));
-        } catch (e) {
-          log.error(F, `Error reacting to message: ${e}`);
-          await message.react('💜');
-        }
-      }
+    } else if (await isAiEnabledGuild(message)) {
+      // log.debug(F, 'AI enabled guild detected');
+      // Get the last 5 messages in the channel
+      const messages = await message.channel.messages.fetch({ limit: 10 });
+      // log.debug(F, `messages: ${JSON.stringify(messages, null, 2)}`);
+      await chat([...messages.values()]);
     } else {
       try {
         await message.react(emojiGet('ts_heart'));
@@ -287,33 +278,34 @@ give people a chance to answer 😄 If no one answers in 5 minutes you can try a
     if (message.guild.id !== env.DISCORD_GUILD_ID) return;
     // log.debug(F, 'Sad stuff detected');
     await message.react(heartEmojis[Math.floor(Math.random() * heartEmojis.length)]);
-  } else if (
-    message.content.match(/(?:anyone|someone+there|here)\b/)
-    && (message.channel as ThreadChannel).parent?.parentId !== env.CATEGORY_HARMREDUCTIONCENTRE
-    && (message.channel as TextChannel).parentId !== env.CATEGORY_HARMREDUCTIONCENTRE
-  ) {
-    // Find when the last message in that channel was sent
-    const lastMessage = await message.channel.messages.fetch({
-      before: message.id,
-      limit: 1,
-    });
-    const lastMessageDate = lastMessage.first()?.createdAt;
-
-    // Check if the last message was send in the last 10 minutes
-    if (lastMessageDate && lastMessageDate.valueOf() > Date.now() - 1000 * 60 * 10) {
-      // If it was, then don't send the message
-      return;
-    }
-
-    await message.channel.sendTyping();
-    setTimeout(async () => {
-      await (message.channel.send({
-        content: stripIndents`Hey ${message.member?.displayName}! 
-        Sometimes chat slows down, but go ahead and ask your question: Someone will get back to you when they can!
-        Who knows, maybe someone is lurking and waiting for the right question... :eyes: `,
-      }));
-    }, 2000);
   }
+  // else if (
+  //   message.content.match(/(?:anyone|someone+there|here)\b/)
+  //   && (message.channel as ThreadChannel).parent?.parentId !== env.CATEGORY_HARMREDUCTIONCENTRE
+  //   && (message.channel as TextChannel).parentId !== env.CATEGORY_HARMREDUCTIONCENTRE
+  // ) {
+  //   // Find when the last message in that channel was sent
+  //   const lastMessage = await message.channel.messages.fetch({
+  //     before: message.id,
+  //     limit: 1,
+  //   });
+  //   const lastMessageDate = lastMessage.first()?.createdAt;
+
+  //   // Check if the last message was send in the last 10 minutes
+  //   if (lastMessageDate && lastMessageDate.valueOf() > Date.now() - 1000 * 60 * 10) {
+  //     // If it was, then don't send the message
+  //     return;
+  //   }
+
+  //   await message.channel.sendTyping();
+  //   setTimeout(async () => {
+  //     await (message.channel.send({
+  //       content: stripIndents`Hey ${message.member?.displayName}!
+  //       Sometimes chat slows down, but go ahead and ask your question: Someone will get back to you when they can!
+  //       Who knows, maybe someone is lurking and waiting for the right question... :eyes: `,
+  //     }));
+  //   }, 2000);
+  // }
   // else {
   //   if (message.author.bot) return; // Dont respond to self
   //   if (message.guild.id !== env.DISCORD_GUILD_ID) return; // Dont do this off tripsit
