@@ -14,6 +14,12 @@
     "*/node_modules",
     "node_modules",
     "*/telegram/*",
+    "**/__tests__editreply_/*",
+    "**/__tests__integration__/*",
+    "**/__tests__modals__/*",
+    "**/__tests__send__/*",
+    "**/__tests__todo__/*",
+    "**/placeholder/*",
   ],
   "compilerOptions": {
     /* Visit https://aka.ms/tsconfig to read more about this file */

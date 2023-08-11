@@ -8,6 +8,7 @@ import {
   PermissionResolvable,
   ThreadChannel,
   EmbedBuilder,
+  TextChannel,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
 import { sleep } from '../commands/guild/d.bottest';
