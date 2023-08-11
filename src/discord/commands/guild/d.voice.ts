@@ -246,6 +246,20 @@ async function tentRadio(
   }
   // If the radio is available, move it to the Tent
   if (station.voice.channel?.parent?.id === env.CATEGORY_RADIO) {
+
+    // Before moving, check if there is already another bot
+    const botMember = station.voice.channel.members
+    .find(member => member.user.bot && Object.keys(radioChannels).includes(member.user.id));
+    if (botMember) {
+      // If there is, find the corresponding radio channel from the bot id and move the bot to it
+      const radioChannelId = radioChannels[botMember.user.id];
+      // Get the radio channel from cache
+      const radioChannel = guild.channels.cache.get(radioChannelId) as VoiceChannel;
+      // If the radio channel exists, and is a voice channel, move the bot to it
+      if (radioChannel && radioChannel.type === ChannelType.GuildVoice) {
+        station.voice.setChannel(radioChannel.id);
+      }
+    }
     await station.voice.setChannel(voiceChannel);
     // Edit the corresponding radio channels name to indicate it is in use
     // const radioChannelId = radioChannels[station.user.id];
@@ -256,32 +270,6 @@ async function tentRadio(
       .setColor(Colors.Green)
       .setDescription(`${station} has been borrowed to your Tent`);
   }
-  // If the Tent already has a radio
-  // find its corresonding channel in the radioChannels object and move it back before moving the new radio in
-  const botMember = station.voice.channel.members
-    .find(member => member.user.bot && Object.keys(radioChannels).includes(member.user.id));
-  if (botMember) {
-    // If it does, find the corresponding radio channel from the bot id and move the bot to it
-    const radioChannelId = radioChannels[botMember.user.id];
-    // Get the radio channel from cache
-    const radioChannel = station.guild.channels.cache.get(radioChannelId) as VoiceChannel;
-    // If the radio channel exists, and is a voice channel, move the bot to it
-    if (radioChannel && radioChannel.type === ChannelType.GuildVoice) {
-      radioChannel.members.forEach((member: GuildMember) => {
-        if (member.user.bot) {
-          member.voice.setChannel(radioChannel);
-        }
-      });
-    }
-    await station.voice.setChannel(voiceChannel);
-  }
-
-  // log.debug(F, `${target.displayName} is now ${verb}`);
-
-  return embedTemplate()
-    .setTitle('Success')
-    .setColor(Colors.Green)
-    .setDescription(`${station} has been borrowed to your Tent`);
 }
 
 async function tentBitrate(
