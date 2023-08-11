@@ -212,6 +212,31 @@ export async function aiLink(
     return `Success: The link between ${name} and <#${channelId}> was deleted!`;
   }
 
+  // Check if the channel is linked to a persona
+  const aiLinkData = await db.ai_channels.findFirst({
+    where: {
+      channel_id: channelId,
+    },
+  });
+
+  if (aiLinkData) {
+    try {
+      await db.ai_channels.update({
+        where: {
+          id: aiLinkData.id,
+        },
+        data: {
+          channel_id: channelId,
+          persona_id: existingPersona.id,
+        },
+      });
+    } catch (error:any) {
+      log.error(F, `Error: ${error.message}`);
+      return `Error: ${error.message}`;
+    }
+    return `Success: The link between ${name} and <#${channelId}> was updated!`;
+  }
+
   try {
     await db.ai_channels.create({
       data: {

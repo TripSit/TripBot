@@ -296,11 +296,77 @@ async function get(
 ):Promise<void> {
   const visible = interaction.options.getBoolean('ephemeral') !== false;
   await interaction.deferReply({ ephemeral: !visible });
-  const modelName = interaction.options.getString('name') ?? interaction.user.username;
-  const response = await aiGet(modelName);
-  // log.debug(F, `response: ${JSON.stringify(response, null, 2)}`);
+  const modelName = interaction.options.getString('name');
+  const channel = interaction.options.getChannel('channel') ?? interaction.channel;
 
-  if (!response) {
+  let aiPersona = '' as string | ai_personas;
+  let description = '' as string;
+  if (modelName) {
+    aiPersona = await aiGet(modelName);
+  } else if (channel) {
+    // Check if the channel is linked to a persona
+    let aiLinkData = {} as {
+      id: string;
+      channel_id: string;
+      persona_id: string;
+    } | null;
+    aiLinkData = await db.ai_channels.findFirst({
+      where: {
+        channel_id: channel.id,
+      },
+    });
+    if (aiLinkData) {
+      log.debug(F, `Found aiLinkData on first go: ${JSON.stringify(aiLinkData, null, 2)}`);
+      aiPersona = await db.ai_personas.findUniqueOrThrow({
+        where: {
+          id: aiLinkData.persona_id,
+        },
+      });
+      description = `Channel ${(channel as TextChannel).name} is linked with the **"${aiPersona.name}"** persona:`;
+    }
+
+    if (!aiLinkData && (channel as ThreadChannel).parent) {
+      log.debug(F, 'Channel is a Thread');
+      // If the channel isnt listed in the database, check the parent
+      aiLinkData = await db.ai_channels.findFirst({
+        where: {
+          channel_id: (channel as ThreadChannel).parent?.id,
+        },
+      });
+      if (aiLinkData) {
+        aiPersona = await db.ai_personas.findUniqueOrThrow({
+          where: {
+            id: aiLinkData.persona_id,
+          },
+        });
+        // eslint-disable-next-line max-len
+        description = `Channel ${(channel as ThreadChannel).parent} is linked with the **"${aiPersona.name}"** persona:`;
+      }
+    }
+
+    if (!aiLinkData && (channel as ThreadChannel).parent && (channel as ThreadChannel).parent?.parent) {
+      log.debug(F, 'Channel is a Thread, and no channel was set');
+      // Threads have a parent channel, which has a parent category
+      aiLinkData = await db.ai_channels.findFirst({
+        where: {
+          channel_id: (channel as ThreadChannel).parent?.parent?.id,
+        },
+      });
+      if (aiLinkData) {
+        aiPersona = await db.ai_personas.findUniqueOrThrow({
+          where: {
+            id: aiLinkData.persona_id,
+          },
+        });
+        // eslint-disable-next-line max-len
+        description = `Category ${(channel as ThreadChannel).parent?.parent} is linked with the **"${aiPersona.name}"** persona:`;
+      }
+    }
+  }
+
+  log.debug(F, `aiPersona: ${JSON.stringify(aiPersona, null, 2)}`);
+
+  if (typeof aiPersona === 'string') {
     await interaction.editReply({
       embeds: [embedTemplate()
         .setTitle('Modal')
@@ -314,18 +380,8 @@ async function get(
     return;
   }
 
-  if (typeof response === 'string') {
-    await interaction.editReply({
-      embeds: [embedTemplate()
-        .setTitle('Modal')
-        .setColor(Colors.Red)
-        .setDescription(response)],
-
-    });
-    return;
-  }
-
-  const personaEmbed = await makePersonaEmbed(response);
+  const personaEmbed = await makePersonaEmbed(aiPersona);
+  if (description) personaEmbed.setDescription(description);
   await interaction.editReply({
     embeds: [personaEmbed],
   });
@@ -800,6 +856,8 @@ export const aiCommand: SlashCommand = {
       .addStringOption(option => option.setName('name')
         .setAutocomplete(true)
         .setDescription('Which AI persona to get information on.'))
+      .addChannelOption(option => option.setName('channel')
+        .setDescription('Which channel to get info on.'))
       .addBooleanOption(option => option.setName('ephemeral')
         .setDescription(ephemeralExplanation))
       .setName('get'))

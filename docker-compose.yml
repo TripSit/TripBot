@@ -60,8 +60,6 @@ services:
       - traefik.http.routers.tripbot-rtr.entrypoints=websecure
       - traefik.http.routers.tripbot-rtr.tls=true
       - traefik.http.routers.tripbot-rtr.middlewares=default@file
-    # Run a command against the development stage of the image
-    command: npx tsc-watch --onSuccess "npx nodemon --config ./nodemon.json"
 
   tripbot_database:
     <<: *common-keys-apps

@@ -259,7 +259,7 @@ give people a chance to answer 😄 If no one answers in 5 minutes you can try a
           await message.channel.send(`Uploaded ${stickerList.join(' ')} to ${message.guild.name}!`); // eslint-disable-line
         }
       }
-    } else if (await isAiEnabledGuild(message)) {
+    } else if (await isAiEnabledGuild(message) && !message.author.bot) {
       // log.debug(F, 'AI enabled guild detected');
       // Get the last 5 messages in the channel
       const messages = await message.channel.messages.fetch({ limit: 10 });
