@@ -17,6 +17,7 @@ import {
 } from 'discord.js';
 import {
   APIEmbedField,
+  ChannelType,
   TextInputStyle,
 } from 'discord-api-types/v10';
 import { stripIndents } from 'common-tags';
@@ -50,6 +51,7 @@ const maxHistoryLength = 5;
 
 const ephemeralExplanation = 'Set to "True" to show the response only to you';
 const confirmationCodes = new Map<string, string>();
+const tripbotUAT = '@TripBot UAT (Moonbear)';
 
 // Costs per 1k tokens
 const aiCosts = {
@@ -540,7 +542,6 @@ export async function aiAudit(
     embed.setFooter({ text: 'What are tokens? https://platform.openai.com/tokenizer' });
 
     const messageOutput = messages
-      .reverse()
       .map(message => `${message.url} ${message.member?.displayName}: ${message.cleanContent}`)
       .join('\n')
       .slice(0, 1024);
@@ -659,7 +660,7 @@ export async function moderate(
 ):Promise<void> {
   // Remove "TripBot UAT (Moonbear)" from the message
   const cleanMessage = message.cleanContent
-    .replace('@TripBot UAT (Moonbear)', '')
+    .replace(tripbotUAT, '')
     .replace('tripbot', '');
   // log.debug(F, `cleanMessage: ${cleanMessage}`);
 
@@ -674,6 +675,9 @@ export async function chat(
   // log.debug(F, `messages: ${JSON.stringify(messages, null, 2)}`);
 
   if (!isVerifiedMember(messages[0])) return;
+  if (messages[0].author.bot) return;
+  if (messages[0].cleanContent.length < 1) return;
+  if (messages[0].channel.type === ChannelType.DM) return;
 
   const textChannel = messages[0].channel as TextChannel;
   const threadChannel = messages[0].channel as ThreadChannel;
@@ -704,7 +708,7 @@ export async function chat(
   }
 
   if (!aiLinkData) return;
-  log.debug(F, `aiLinkData: ${JSON.stringify(aiLinkData, null, 2)}`);
+  // log.debug(F, `aiLinkData: ${JSON.stringify(aiLinkData, null, 2)}`);
 
   // Get persona details
   const aiPersona = await db.ai_personas.findUniqueOrThrow({
@@ -718,26 +722,72 @@ export async function chat(
     role: 'system' as ChatCompletionRequestMessageRoleEnum,
     content: aiPersona.prompt,
   }] as ChatCompletionRequestMessage[];
-
-  // Get the last 3 messages that are not empty or from other bots
   const cleanMessages = [] as Message[];
-  messages.forEach(message => {
-    if (message.cleanContent.length > 0
-      && cleanMessages.length < maxHistoryLength) { // +2 for the prompt and the system message
-      cleanMessages.push(message);
-    }
-  });
+  let reponseChannel = {} as TextChannel | ThreadChannel;
 
-  cleanMessages.reverse(); // So that the first messages come first
-  cleanMessages.forEach(message => {
-    inputMessages.push({
-      role: message.author.bot ? 'assistant' : 'user' as ChatCompletionRequestMessageRoleEnum,
-      content: message.cleanContent
-        .replace('@TripBot UAT (Moonbear)', '')
-        .replace('tripbot', ''),
+  // startMessage: User says hi to tripbot
+  // replyMessage: Tripbot replies to the user
+  // message[0]  : User replies to the bot
+  // The bot opens a thread and responds
+
+  // Check if the first message is a reply
+  let isThread = false as boolean;
+  if (messages[0].reference?.messageId) {
+    const replyMessage = await messages[0].channel.messages.fetch(messages[0].reference?.messageId);
+    // log.debug(F, `replyMessage: ${JSON.stringify(replyMessage, null, 2)}`);
+    // Check if the message is replying to a bot
+    if (replyMessage.author.bot) {
+      isThread = true;
+      // If the reply is from the bot, get the message that started the chain
+      const startMessage = await messages[0].channel.messages.fetch(replyMessage.reference?.messageId as string);
+      // log.debug(F, `startMessage: ${JSON.stringify(startMessage, null, 2)}`);
+      inputMessages.push({
+        role: 'user' as ChatCompletionRequestMessageRoleEnum,
+        content: startMessage.cleanContent
+          .replace(tripbotUAT, '')
+          .replace('tripbot', '')
+          .trim(),
+      });
+      cleanMessages.push(startMessage);
+      inputMessages.push({
+        role: 'assistant' as ChatCompletionRequestMessageRoleEnum,
+        content: replyMessage.cleanContent
+          .replace(tripbotUAT, '')
+          .replace('tripbot', '')
+          .trim(),
+      });
+      cleanMessages.push(replyMessage);
+      inputMessages.push({
+        role: 'user' as ChatCompletionRequestMessageRoleEnum,
+        content: messages[0].cleanContent
+          .replace(tripbotUAT, '')
+          .replace('tripbot', '')
+          .trim(),
+      });
+      cleanMessages.push(messages[0]);
+    }
+  } else {
+    // Get the last 3 messages that are not empty or from other bots
+    messages.forEach(message => {
+      if (message.cleanContent.length > 0
+      && cleanMessages.length < maxHistoryLength) { // +2 for the prompt and the system message
+        cleanMessages.push(message);
+      }
     });
-  });
-  // log.debug(F, `inputMessages: ${JSON.stringify(inputMessages, null, 2)}`);
+
+    cleanMessages.reverse(); // So that the first messages come first
+    cleanMessages.forEach(message => {
+      inputMessages.push({
+        role: message.author.bot ? 'assistant' : 'user' as ChatCompletionRequestMessageRoleEnum,
+        content: message.cleanContent
+          .replace(tripbotUAT, '')
+          .replace('tripbot', '')
+          .trim(),
+      });
+    });
+    reponseChannel = messages[0].channel as TextChannel;
+    // log.debug(F, `inputMessages: ${JSON.stringify(inputMessages, null, 2)}`);
+  }
 
   const result = await aiChat(aiPersona, inputMessages);
 
@@ -750,21 +800,37 @@ export async function chat(
     result.completionTokens,
   );
 
-  await messages[0].channel.sendTyping();
-
-  // Sleep for a bit to simulate typing in production
-  if (env.NODE_ENV === 'production') {
-    // Determine how many words are in the response
-    const wordCount = result.response.split(' ').length;
-    // log.debug(F, `wordCount: ${wordCount}`);
-    // TripBot types at 60 words per minute, sleep for 1 second per 10 words
-    const sleepTime = Math.ceil(wordCount / 10);
-    // log.debug(F, `sleepTime: ${sleepTime}`);
-    await sleep(sleepTime * 1000);
-  }
-
   try {
-    await messages[0].reply(result.response.slice(0, 2000));
+    if (isThread) {
+      reponseChannel = await (messages[0].channel as TextChannel).threads.create(
+        {
+          name: `${messages[0].member?.displayName}'s conversation`,
+          autoArchiveDuration: 60,
+          type: ChannelType.PublicThread,
+          reason: `${messages[0].member?.displayName} created an AI thread`,
+          invitable: false,
+        },
+      );
+      await reponseChannel.sendTyping();
+
+      // Sleep for a bit to simulate typing in production
+      if (env.NODE_ENV === 'production') {
+        const wordCount = result.response.split(' ').length;
+        const sleepTime = Math.ceil(wordCount / 10);
+        await sleep(sleepTime * 1000);
+      }
+      await reponseChannel.send(result.response.slice(0, 2000));
+    } else {
+      await messages[0].channel.sendTyping();
+
+      // Sleep for a bit to simulate typing in production
+      if (env.NODE_ENV === 'production') {
+        const wordCount = result.response.split(' ').length;
+        const sleepTime = Math.ceil(wordCount / 10);
+        await sleep(sleepTime * 1000);
+      }
+      await messages[0].reply(result.response.slice(0, 2000));
+    }
   } catch (e) {
     log.error(F, `Error: ${e}`);
     const channelAi = await discordClient.channels.fetch(env.CHANNEL_AILOG) as TextChannel;

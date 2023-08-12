@@ -1,7 +1,6 @@
 import {
   ChatCompletionRequestMessage,
   Configuration, CreateChatCompletionRequest,
-  // CreateChatCompletionResponse,
   CreateModerationResponseResultsInner,
   OpenAIApi,
 } from 'openai';
@@ -307,59 +306,74 @@ export async function aiChat(
   } as CreateChatCompletionRequest;
 
   log.debug(F, `payload: ${JSON.stringify(payload, null, 2)}`);
-  const chatCompletion = await openai.createChatCompletion(payload);
-  log.debug(F, `chatCompletion: ${JSON.stringify(chatCompletion.data, null, 2)}`);
-  // responseData = chatCompletion.data;
-  if (chatCompletion.data.choices[0].message) {
-    const responseMessage = chatCompletion.data.choices[0].message;
+  let responseMessage = {} as ChatCompletionRequestMessage;
+  try {
+    const chatCompletion = await openai.createChatCompletion(payload);
+    log.debug(F, `chatCompletion: ${JSON.stringify(chatCompletion.data, null, 2)}`);
+    if (chatCompletion.data.choices[0].message) {
+      responseMessage = chatCompletion.data.choices[0].message;
 
-    // Sum up the existing tokens
-    promptTokens = chatCompletion.data.usage?.prompt_tokens ?? 0;
-    completionTokens = chatCompletion.data.usage?.completion_tokens ?? 0;
+      // Sum up the existing tokens
+      promptTokens = chatCompletion.data.usage?.prompt_tokens ?? 0;
+      completionTokens = chatCompletion.data.usage?.completion_tokens ?? 0;
 
-    // // # Step 2: check if GPT wanted to call a function
-    // if (responseMessage.function_call) {
-    //   // log.debug(F, `responseMessage.function_call: ${JSON.stringify(responseMessage.function_call, null, 2)}`);
-    //   // # Step 3: call the function
-    //   // # Note: the JSON response may not always be valid; be sure to handle errors
+      // // # Step 2: check if GPT wanted to call a function
+      // if (responseMessage.function_call) {
+      //   // log.debug(F, `responseMessage.function_call: ${JSON.stringify(responseMessage.function_call, null, 2)}`);
+      //   // # Step 3: call the function
+      //   // # Note: the JSON response may not always be valid; be sure to handle errors
 
-    //   const availableFunctions = {
-    //     getCurrentWeather,
-    //   };
-    //   const functionName = responseMessage.function_call.name;
-    //   log.debug(F, `functionName: ${functionName}`);
-    //   const fuctionToCall = availableFunctions[functionName as keyof typeof availableFunctions];
-    //   const functionArgs = JSON.parse(responseMessage.function_call.arguments as string);
-    //   const functionResponse = await fuctionToCall(
-    //     functionArgs.location,
-    //     functionArgs.unit,
-    //   );
-    //   // log.debug(F, `functionResponse: ${JSON.stringify(functionResponse, null, 2)}`);
+      //   const availableFunctions = {
+      //     getCurrentWeather,
+      //   };
+      //   const functionName = responseMessage.function_call.name;
+      //   log.debug(F, `functionName: ${functionName}`);
+      //   const fuctionToCall = availableFunctions[functionName as keyof typeof availableFunctions];
+      //   const functionArgs = JSON.parse(responseMessage.function_call.arguments as string);
+      //   const functionResponse = await fuctionToCall(
+      //     functionArgs.location,
+      //     functionArgs.unit,
+      //   );
+      //   // log.debug(F, `functionResponse: ${JSON.stringify(functionResponse, null, 2)}`);
 
-    //   // # Step 4: send the info on the function call and function response to GPT
-    //   payload.messages.push({
-    //     role: 'function',
-    //     name: functionName,
-    //     content: JSON.stringify(functionResponse),
-    //   });
+      //   // # Step 4: send the info on the function call and function response to GPT
+      //   payload.messages.push({
+      //     role: 'function',
+      //     name: functionName,
+      //     content: JSON.stringify(functionResponse),
+      //   });
 
-    //   const chatFunctionCompletion = await openai.createChatCompletion(payload);
+      //   const chatFunctionCompletion = await openai.createChatCompletion(payload);
 
-    //   // responseData = chatFunctionCompletion.data;
+      //   // responseData = chatFunctionCompletion.data;
 
-    //   log.debug(F, `chatFunctionCompletion: ${JSON.stringify(chatFunctionCompletion.data, null, 2)}`);
+      //   log.debug(F, `chatFunctionCompletion: ${JSON.stringify(chatFunctionCompletion.data, null, 2)}`);
 
-    //   if (chatFunctionCompletion.data.choices[0].message) {
-    //     responseMessage = chatFunctionCompletion.data.choices[0].message;
+      //   if (chatFunctionCompletion.data.choices[0].message) {
+      //     responseMessage = chatFunctionCompletion.data.choices[0].message;
 
-    //     // Sum up the new tokens
-    //     promptTokens += chatCompletion.data.usage?.prompt_tokens ?? 0;
-    //     completionTokens += chatCompletion.data.usage?.completion_tokens ?? 0;
-    //   }
-    // }
+      //     // Sum up the new tokens
+      //     promptTokens += chatCompletion.data.usage?.prompt_tokens ?? 0;
+      //     completionTokens += chatCompletion.data.usage?.completion_tokens ?? 0;
+      //   }
+      // }
 
-    response = responseMessage.content ?? 'Sorry, I\'m not sure how to respond to that.';
+      response = responseMessage.content ?? 'Sorry, I\'m not sure how to respond to that.';
+    }
+  } catch (error:any) {
+    if (error.response) {
+      log.error(F, `Error: ${error.response.status}`);
+      log.error(F, `Error: ${JSON.stringify(error.response.data, null, 2)}`);
+    } else {
+      log.error(F, `Error: ${error.message}`);
+    }
+    return {
+      response: 'Sorry, I\'m not sure how to respond to that.',
+      promptTokens,
+      completionTokens,
+    };
   }
+  // responseData = chatCompletion.data;
 
   // log.debug(F, `responseData: ${JSON.stringify(responseData, null, 2)}`);
 
