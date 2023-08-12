@@ -731,40 +731,48 @@ export async function chat(
   // The bot opens a thread and responds
 
   // Check if the first message is a reply
-  let isThread = false as boolean;
+  let isChain = false as boolean;
   if (messages[0].reference?.messageId) {
     const replyMessage = await messages[0].channel.messages.fetch(messages[0].reference?.messageId);
     // log.debug(F, `replyMessage: ${JSON.stringify(replyMessage, null, 2)}`);
     // Check if the message is replying to a bot
     if (replyMessage.author.bot) {
-      isThread = true;
+      isChain = true;
       // If the reply is from the bot, get the message that started the chain
       const startMessage = await messages[0].channel.messages.fetch(replyMessage.reference?.messageId as string);
       // log.debug(F, `startMessage: ${JSON.stringify(startMessage, null, 2)}`);
-      inputMessages.push({
-        role: 'user' as ChatCompletionRequestMessageRoleEnum,
-        content: startMessage.cleanContent
-          .replace(tripbotUAT, '')
-          .replace('tripbot', '')
-          .trim(),
-      });
-      cleanMessages.push(startMessage);
-      inputMessages.push({
-        role: 'assistant' as ChatCompletionRequestMessageRoleEnum,
-        content: replyMessage.cleanContent
-          .replace(tripbotUAT, '')
-          .replace('tripbot', '')
-          .trim(),
-      });
-      cleanMessages.push(replyMessage);
-      inputMessages.push({
-        role: 'user' as ChatCompletionRequestMessageRoleEnum,
-        content: messages[0].cleanContent
-          .replace(tripbotUAT, '')
-          .replace('tripbot', '')
-          .trim(),
-      });
-      cleanMessages.push(messages[0]);
+      if (startMessage.cleanContent) {
+        inputMessages.push({
+          role: 'user' as ChatCompletionRequestMessageRoleEnum,
+          content: startMessage.cleanContent
+            .replace(tripbotUAT, '')
+            .replace('tripbot', '')
+            .trim(),
+        });
+        cleanMessages.push(startMessage);
+      }
+
+      if (replyMessage.cleanContent) {
+        inputMessages.push({
+          role: 'assistant' as ChatCompletionRequestMessageRoleEnum,
+          content: replyMessage.cleanContent
+            .replace(tripbotUAT, '')
+            .replace('tripbot', '')
+            .trim(),
+        });
+        cleanMessages.push(replyMessage);
+      }
+
+      if (messages[0].cleanContent) {
+        inputMessages.push({
+          role: 'user' as ChatCompletionRequestMessageRoleEnum,
+          content: messages[0].cleanContent
+            .replace(tripbotUAT, '')
+            .replace('tripbot', '')
+            .trim(),
+        });
+        cleanMessages.push(messages[0]);
+      }
     }
   } else {
     // Get the last 3 messages that are not empty or from other bots
@@ -801,16 +809,21 @@ export async function chat(
   );
 
   try {
-    if (isThread) {
-      reponseChannel = await (messages[0].channel as TextChannel).threads.create(
-        {
-          name: `${messages[0].member?.displayName}'s conversation`,
-          autoArchiveDuration: 60,
-          type: ChannelType.PublicThread,
-          reason: `${messages[0].member?.displayName} created an AI thread`,
-          invitable: false,
-        },
-      );
+    if (isChain) {
+      try {
+        reponseChannel = await (messages[0].channel as TextChannel).threads.create(
+          {
+            name: `${messages[0].member?.displayName}'s conversation`,
+            autoArchiveDuration: 60,
+            type: ChannelType.PublicThread,
+            reason: `${messages[0].member?.displayName} created an AI thread`,
+            invitable: false,
+          },
+        );
+      } catch (e) {
+        // log.error(F, `Error creating thread: ${e}`);
+      }
+
       await reponseChannel.sendTyping();
 
       // Sleep for a bit to simulate typing in production
