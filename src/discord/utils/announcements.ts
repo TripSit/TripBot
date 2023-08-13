@@ -12,8 +12,8 @@ import { fact } from '../../global/commands/g.fact';
 // import {parse} from 'path';
 const F = f(__filename); // eslint-disable-line
 
-const frequency = env.NODE_ENV === 'production' ? 50 : 10;
-const bigFrequency = env.NODE_ENV === 'production' ? 250 : 20;
+const frequency = env.NODE_ENV === 'production' ? 50 : 1000;
+const bigFrequency = env.NODE_ENV === 'production' ? 250 : 2000;
 const messageCounter = {} as MessageCounterType;
 let bigFrequencyCounter = 0;
 

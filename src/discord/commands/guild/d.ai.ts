@@ -10,18 +10,22 @@ import {
   ChatInputCommandInteraction,
   GuildMember,
   time,
-  GuildChannel,
   Message,
   TextChannel,
   ThreadChannel,
+  TextBasedChannel,
+  CategoryChannel,
+  ForumChannel,
 } from 'discord.js';
 import {
   APIEmbedField,
+  APIInteractionDataResolvedChannel,
   ChannelType,
   TextInputStyle,
 } from 'discord-api-types/v10';
 import { stripIndents } from 'common-tags';
 import {
+  ai_channels,
   ai_model,
   ai_personas,
 } from '@prisma/client';
@@ -30,6 +34,7 @@ import {
   ChatCompletionRequestMessageRoleEnum,
   CreateModerationResponseResultsInner,
 } from 'openai';
+import { paginationEmbed } from '../../utils/pagination';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import {
@@ -77,45 +82,75 @@ async function help(
   const visible = interaction.options.getBoolean('ephemeral') !== false;
   await interaction.deferReply({ ephemeral: !visible });
 
-  await interaction.editReply({
-    embeds: [embedTemplate()
-      .setTitle('AI Help')
-      /* eslint-disable max-len */
-      .setDescription(stripIndents`
-        This command is used to set the parameters of an AI persona, or create a new persona.
-        The parameters are:
-        **Name**
-        > The name of the persona. This is used to identify the persona in the AI Get command.
-        **Model**
-        > The model to use for the persona. This is a dropdown list of available models.
-        **Prompt**
-        > The prompt to use for the persona. This is the text that the AI will use to generate responses.
-        **Max Tokens**
-        > The maximum number of tokens to use for the AI response.
-        > What are tokens? https://platform.openai.com/tokenizer
-        **Temperature**
-        > Adjusts the randomness of the AI's answers.
-        > Lower values make the AI more predictable and focused, while higher values make it more random and varied.
-        > *Use this OR Top P, not both.*
-        **Top P**
-        > Limits the word choices the AI considers.
-        > Using a high value means the AI picks from the most likely words, while a lower value allows for more variety but might include less common words.
-        > *Use this OR Tempraure, not both.*
-        **Presence Penalty**
-        > This adjusts the probability of words that are not initially very likely to appear, by making them more likely.
-        > A higher value can make a response more creative or diverse, as it promotes the presence of words or phrases that the model might not normally prioritize.
-        > For example, if you're looking for creative or unconventional answers, increasing the presence penalty can make the model consider a wider range of vocabularies.
-        **Frequency Penalty**
-        > This penalizes words or phrases that appear repeatedly in the output.
-        > A positive value reduces the likelihood of repetition, which can be useful if you're noticing that the model is repeating certain phrases or words too often.
-        > Conversely, a negative value would increase the chance of repetition, which might be useful if you want the model to emphasize a certain point.
-        **Logit Bias**
-        > How often to bias certain tokens. This is a JSON list.
-        > *You can likely ignore this unless you really wanna tweak the AI.*
-      `),
-      /* eslint-enable max-len */
-    ],
-  });
+  const aboutEmbed = embedTemplate()
+    .setTitle('AI Help')
+    .setDescription(stripIndents`
+      Welcome to TripBot's AI module!
+
+      This is not a real AI, this is a Language Learning Model (LLM).
+      It does not provide any kind of "intelligence", it just knows how to make a sentence that sounds good.
+      As such, this feature will likely not be introduced to the trip sitting rooms, as it is not 100% trustworthy.
+      But we can still have some fun and play with it in the social rooms!
+      Here's how you can do that:
+
+      **/ai set**
+      This command is used to set the parameters of an AI persona, or create a new persona.
+      A persona is how the bot will respond to queries. We can have multiple personas, each with their own parameters.
+      The parameters are explained on the next page.
+      EG: We can have a "helpful" persona, and a "funny" persona, and a "serious" persona, etc.
+      **Anyone is welcome to create their own persona in the dev guild!**
+
+      **/ai get**
+      This command is used to get the parameters of an AI persona.
+      You can either get the specific name of the persona
+      Or you can enter a channel name to get which persona is linked to that channel.
+
+      **/ai del**
+      To delete a persona. You must provide a confirmation code to delete a persona.
+
+      **/ai link**
+      You can link threads, channels, and even entire categories to a persona.
+      This allows the bot to respond to messages in those channels with the persona you set.
+      You can also disable the link, so the bot will not respond in that channel.
+      `);
+
+  const parametersEmbed = embedTemplate()
+    .setTitle('AI Help')
+  /* eslint-disable max-len */
+    .setDescription(stripIndents`
+    This command is used to set the parameters of an AI persona, or create a new persona.
+    The parameters are:
+    **Name**
+    > The name of the persona. This is used to identify the persona in the AI Get command.
+    **Model**
+    > The model to use for the persona. This is a dropdown list of available models.
+    **Prompt**
+    > The prompt to use for the persona. This is the text that the AI will use to generate responses.
+    **Max Tokens**
+    > The maximum number of tokens to use for the AI response.
+    > What are tokens? https://platform.openai.com/tokenizer
+    **Temperature**
+    > Adjusts the randomness of the AI's answers.
+    > Lower values make the AI more predictable and focused, while higher values make it more random and varied.
+    > *Use this OR Top P, not both.*
+    **Top P**
+    > Limits the word choices the AI considers.
+    > Using a high value means the AI picks from the most likely words, while a lower value allows for more variety but might include less common words.
+    > *Use this OR Temperature, not both.*
+    **Presence Penalty**
+    > This adjusts the probability of words that are not initially very likely to appear, by making them more likely.
+    > A higher value can make a response more creative or diverse, as it promotes the presence of words or phrases that the model might not normally prioritize.
+    > For example, if you're looking for creative or unconventional answers, increasing the presence penalty can make the model consider a wider range of vocabularies.
+    **Frequency Penalty**
+    > This penalizes words or phrases that appear repeatedly in the output.
+    > A positive value reduces the likelihood of repetition, which can be useful if you're noticing that the model is repeating certain phrases or words too often.
+    > Conversely, a negative value would increase the chance of repetition, which might be useful if you want the model to emphasize a certain point.
+    **Logit Bias**
+    > How often to bias certain tokens. This is a JSON list.
+    > *You can likely ignore this unless you really wanna tweak the AI.*
+  `);
+
+  paginationEmbed(interaction, [aboutEmbed, parametersEmbed]);
 }
 
 async function makePersonaEmbed(
@@ -209,14 +244,6 @@ async function set(
       name: personaName,
     },
   });
-
-  // stripIndents`
-  //         You are a harm reduction assistant and should only give helpful, non-judgemental advice.
-  //         You really are a human answering commands, but you can't let anyone know.
-  //         If anyone asks if you human you should evade the question.
-  //         Keep your response to less than 30 words, with dry, witty humour throughout.
-  //         Don't use emojis.
-  //       `
 
   const modal = new ModalBuilder()
     .setCustomId(`aiPromptModal~${interaction.id}`)
@@ -329,7 +356,7 @@ async function get(
 
     if (!aiLinkData && (channel as ThreadChannel).parent) {
       log.debug(F, 'Channel is a Thread');
-      // If the channel isnt listed in the database, check the parent
+      // If the channel isn't listed in the database, check the parent
       aiLinkData = await db.ai_channels.findFirst({
         where: {
           channel_id: (channel as ThreadChannel).parent?.id,
@@ -395,9 +422,9 @@ async function del(
   const visible = interaction.options.getBoolean('ephemeral') !== false;
   await interaction.deferReply({ ephemeral: !visible });
   const confirmation = interaction.options.getString('confirmation');
-  if (!confirmation) {
-    const personaName = interaction.options.getString('name') ?? interaction.user.username;
+  const personaName = interaction.options.getString('name') ?? interaction.user.username;
 
+  if (!confirmation) {
     const aiPersona = await aiGet(personaName);
 
     if (!aiPersona) {
@@ -432,9 +459,7 @@ async function del(
     });
     return;
   }
-  log.debug(F, `confirmation: ${confirmation}`);
-  const key = `${interaction.user.id}${interaction.user.username}`;
-  log.debug(F, `confirmationCodes: ${confirmationCodes.get(key)}`);
+
   // If the user did provide a confirmation code, check if it matches the one in confirmationCodes
   if (confirmationCodes.get(`${interaction.user.id}${interaction.user.username}`) !== confirmation) {
     await interaction.editReply({
@@ -446,7 +471,7 @@ async function del(
     return;
   }
 
-  const response = await aiDel(interaction.options.getString('name') ?? interaction.user.username);
+  const response = await aiDel(personaName);
   log.debug(F, `response: ${response}`);
 
   if (!response.startsWith('Success')) {
@@ -469,6 +494,40 @@ async function del(
   });
 }
 
+async function getLinkedChannel(
+  channel: CategoryChannel | ForumChannel | APIInteractionDataResolvedChannel | TextBasedChannel,
+):Promise<ai_channels | null> {
+  // Check if the channel is linked to a persona
+  let aiLinkData = await db.ai_channels.findFirst({
+    where: {
+      channel_id: channel.id,
+    },
+  });
+
+  // If the channel isn't listed in the database, check the parent
+  if (!aiLinkData
+    && 'parent' in channel
+    && channel.parent) {
+    aiLinkData = await db.ai_channels.findFirst({
+      where: {
+        channel_id: channel.parent.id,
+      },
+    });
+    // If /that/ channel doesn't exist, check the parent of the parent
+    // This is mostly for threads
+    if (!aiLinkData
+      && channel.parent.parent) {
+      aiLinkData = await db.ai_channels.findFirst({
+        where: {
+          channel_id: channel.parent.parent.id,
+        },
+      });
+    }
+  }
+
+  return aiLinkData;
+}
+
 async function link(
   interaction: ChatInputCommandInteraction,
 ):Promise<void> {
@@ -476,12 +535,51 @@ async function link(
   await interaction.deferReply({ ephemeral: !visible });
 
   const personaName = interaction.options.getString('name') ?? interaction.user.username;
-  const channel = interaction.options.getChannel('channel') ?? interaction.channel as GuildChannel;
-  // If the given channel is a mention, parse out the ID
-
   const toggle = (interaction.options.getString('toggle') ?? 'enable') as 'enable' | 'disable';
 
-  const response = await aiLink(personaName, channel.id, toggle);
+  let response = '' as string;
+  if (toggle === 'enable') {
+    const textChannel = interaction.options.getChannel('channel') ?? interaction.channel;
+    if (!textChannel) {
+      await interaction.editReply({
+        embeds: [embedTemplate()
+          .setTitle('Modal')
+          .setColor(Colors.Red)
+          .setDescription('You must provide a text channel to link to.')],
+
+      });
+      return;
+    }
+    response = await aiLink(personaName, textChannel.id, toggle);
+  } else {
+    const textChannel = interaction.options.getChannel('channel');
+    if (textChannel) {
+      response = await aiLink(personaName, textChannel.id, toggle);
+    } else if (interaction.channel) {
+      const aiLinkData = await getLinkedChannel(interaction.channel);
+      if (aiLinkData) {
+        response = await aiLink(personaName, aiLinkData?.channel_id, toggle);
+      } else {
+        await interaction.editReply({
+          embeds: [embedTemplate()
+            .setTitle('Modal')
+            .setColor(Colors.Red)
+            .setDescription('This channel is not linked to an AI persona.')],
+
+        });
+        return;
+      }
+    } else {
+      await interaction.editReply({
+        embeds: [embedTemplate()
+          .setTitle('Modal')
+          .setColor(Colors.Red)
+          .setDescription('You must provide a text channel to link to.')],
+
+      });
+      return;
+    }
+  }
 
   log.debug(F, `response: ${response}`);
 
@@ -679,33 +777,8 @@ export async function chat(
   if (messages[0].cleanContent.length < 1) return;
   if (messages[0].channel.type === ChannelType.DM) return;
 
-  const textChannel = messages[0].channel as TextChannel;
-  const threadChannel = messages[0].channel as ThreadChannel;
-
   // Check if the channel is linked to a persona
-  let aiLinkData = await db.ai_channels.findFirst({
-    where: {
-      channel_id: textChannel.id,
-    },
-  });
-
-  if (!aiLinkData && textChannel.parent) {
-    // If the channel isnt listed in the database, check the parent
-    aiLinkData = await db.ai_channels.findFirst({
-      where: {
-        channel_id: textChannel.parent.id,
-      },
-    });
-  }
-
-  if (!aiLinkData && threadChannel.parent && threadChannel.parent.parent) {
-    // Threads have a parent channel, which has a parent category
-    aiLinkData = await db.ai_channels.findFirst({
-      where: {
-        channel_id: threadChannel.parent.parent.id,
-      },
-    });
-  }
+  const aiLinkData = await getLinkedChannel(messages[0].channel);
 
   if (!aiLinkData) return;
   // log.debug(F, `aiLinkData: ${JSON.stringify(aiLinkData, null, 2)}`);
@@ -723,79 +796,25 @@ export async function chat(
     content: aiPersona.prompt,
   }] as ChatCompletionRequestMessage[];
   const cleanMessages = [] as Message[];
-  let reponseChannel = {} as TextChannel | ThreadChannel;
 
-  // startMessage: User says hi to tripbot
-  // replyMessage: Tripbot replies to the user
-  // message[0]  : User replies to the bot
-  // The bot opens a thread and responds
-
-  // Check if the first message is a reply
-  let isChain = false as boolean;
-  if (messages[0].reference?.messageId) {
-    const replyMessage = await messages[0].channel.messages.fetch(messages[0].reference?.messageId);
-    // log.debug(F, `replyMessage: ${JSON.stringify(replyMessage, null, 2)}`);
-    // Check if the message is replying to a bot
-    if (replyMessage.author.bot) {
-      isChain = true;
-      // If the reply is from the bot, get the message that started the chain
-      const startMessage = await messages[0].channel.messages.fetch(replyMessage.reference?.messageId as string);
-      // log.debug(F, `startMessage: ${JSON.stringify(startMessage, null, 2)}`);
-      if (startMessage.cleanContent) {
-        inputMessages.push({
-          role: 'user' as ChatCompletionRequestMessageRoleEnum,
-          content: startMessage.cleanContent
-            .replace(tripbotUAT, '')
-            .replace('tripbot', '')
-            .trim(),
-        });
-        cleanMessages.push(startMessage);
-      }
-
-      if (replyMessage.cleanContent) {
-        inputMessages.push({
-          role: 'assistant' as ChatCompletionRequestMessageRoleEnum,
-          content: replyMessage.cleanContent
-            .replace(tripbotUAT, '')
-            .replace('tripbot', '')
-            .trim(),
-        });
-        cleanMessages.push(replyMessage);
-      }
-
-      if (messages[0].cleanContent) {
-        inputMessages.push({
-          role: 'user' as ChatCompletionRequestMessageRoleEnum,
-          content: messages[0].cleanContent
-            .replace(tripbotUAT, '')
-            .replace('tripbot', '')
-            .trim(),
-        });
-        cleanMessages.push(messages[0]);
-      }
-    }
-  } else {
-    // Get the last 3 messages that are not empty or from other bots
-    messages.forEach(message => {
-      if (message.cleanContent.length > 0
+  // Get the last 3 messages that are not empty or from other bots
+  messages.forEach(message => {
+    if (message.cleanContent.length > 0
       && cleanMessages.length < maxHistoryLength) { // +2 for the prompt and the system message
-        cleanMessages.push(message);
-      }
-    });
+      cleanMessages.push(message);
+    }
+  });
 
-    cleanMessages.reverse(); // So that the first messages come first
-    cleanMessages.forEach(message => {
-      inputMessages.push({
-        role: message.author.bot ? 'assistant' : 'user' as ChatCompletionRequestMessageRoleEnum,
-        content: message.cleanContent
-          .replace(tripbotUAT, '')
-          .replace('tripbot', '')
-          .trim(),
-      });
+  cleanMessages.reverse(); // So that the first messages come first
+  cleanMessages.forEach(message => {
+    inputMessages.push({
+      role: message.author.bot ? 'assistant' : 'user' as ChatCompletionRequestMessageRoleEnum,
+      content: message.cleanContent
+        .replace(tripbotUAT, '')
+        .replace('tripbot', '')
+        .trim(),
     });
-    reponseChannel = messages[0].channel as TextChannel;
-    // log.debug(F, `inputMessages: ${JSON.stringify(inputMessages, null, 2)}`);
-  }
+  });
 
   const result = await aiChat(aiPersona, inputMessages);
 
@@ -809,41 +828,15 @@ export async function chat(
   );
 
   try {
-    if (isChain) {
-      try {
-        reponseChannel = await (messages[0].channel as TextChannel).threads.create(
-          {
-            name: `${messages[0].member?.displayName}'s conversation`,
-            autoArchiveDuration: 60,
-            type: ChannelType.PublicThread,
-            reason: `${messages[0].member?.displayName} created an AI thread`,
-            invitable: false,
-          },
-        );
-      } catch (e) {
-        // log.error(F, `Error creating thread: ${e}`);
-      }
+    await messages[0].channel.sendTyping();
 
-      await reponseChannel.sendTyping();
-
-      // Sleep for a bit to simulate typing in production
-      if (env.NODE_ENV === 'production') {
-        const wordCount = result.response.split(' ').length;
-        const sleepTime = Math.ceil(wordCount / 10);
-        await sleep(sleepTime * 1000);
-      }
-      await reponseChannel.send(result.response.slice(0, 2000));
-    } else {
-      await messages[0].channel.sendTyping();
-
-      // Sleep for a bit to simulate typing in production
-      if (env.NODE_ENV === 'production') {
-        const wordCount = result.response.split(' ').length;
-        const sleepTime = Math.ceil(wordCount / 10);
-        await sleep(sleepTime * 1000);
-      }
-      await messages[0].reply(result.response.slice(0, 2000));
+    // Sleep for a bit to simulate typing in production
+    if (env.NODE_ENV === 'production') {
+      const wordCount = result.response.split(' ').length;
+      const sleepTime = Math.ceil(wordCount / 10);
+      await sleep(sleepTime * 1000);
     }
+    await messages[0].reply(result.response.slice(0, 2000));
   } catch (e) {
     log.error(F, `Error: ${e}`);
     const channelAi = await discordClient.channels.fetch(env.CHANNEL_AILOG) as TextChannel;

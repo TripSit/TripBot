@@ -1,32 +1,13 @@
 /* eslint-disable max-len */
 import {
   SlashCommandBuilder,
-  ButtonBuilder,
 } from 'discord.js';
-import {
-  ButtonStyle,
-} from 'discord-api-types/v10';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import commandContext from '../../utils/context';
 import { paginationEmbed } from '../../utils/pagination';
 
 const F = f(__filename);
-
-const previousButton = new ButtonBuilder()
-  .setCustomId('previousButton')
-  .setLabel('Previous')
-  .setStyle(ButtonStyle.Danger);
-
-const nextButton = new ButtonBuilder()
-  .setCustomId('nextButton')
-  .setLabel('Next')
-  .setStyle(ButtonStyle.Success);
-
-const buttonList = [
-  previousButton,
-  nextButton,
-];
 
 export const dHelp: SlashCommand = {
   data: new SlashCommandBuilder()
@@ -107,7 +88,7 @@ export const dHelp: SlashCommand = {
       funEmbed,
       tripsitEmbed,
     ];
-    paginationEmbed(interaction, book, buttonList, 0);
+    paginationEmbed(interaction, book);
     return true;
   },
 };

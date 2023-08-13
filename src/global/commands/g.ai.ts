@@ -180,6 +180,8 @@ export async function aiLink(
   log.debug(F, `channelId: ${channelId}`);
   log.debug(F, `toggle: ${toggle}`);
 
+  let personaName = name;
+
   const existingPersona = await db.ai_personas.findUnique({
     where: {
       name,
@@ -191,12 +193,33 @@ export async function aiLink(
   }
 
   if (toggle === 'disable') {
-    const existingLink = await db.ai_channels.findFirstOrThrow({
+    let existingLink = await db.ai_channels.findFirst({
       where: {
         channel_id: channelId,
         persona_id: existingPersona.id,
       },
     });
+
+    if (!existingLink) {
+      existingLink = await db.ai_channels.findFirst({
+        where: {
+          channel_id: channelId,
+        },
+      });
+
+      if (!existingLink) {
+        return `Error: No link to <#${channelId}> found!`;
+      }
+      const personaData = await db.ai_personas.findUnique({
+        where: {
+          id: existingLink.persona_id,
+        },
+      });
+      if (!personaData) {
+        return 'Error: No persona found for this link!';
+      }
+      personaName = personaData.name;
+    }
 
     try {
       await db.ai_channels.delete({
@@ -208,7 +231,7 @@ export async function aiLink(
       log.error(F, `Error: ${error.message}`);
       return `Error: ${error.message}`;
     }
-    return `Success: The link between ${name} and <#${channelId}> was deleted!`;
+    return `Success: The link between ${personaName} and <#${channelId}> was deleted!`;
   }
 
   // Check if the channel is linked to a persona

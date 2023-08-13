@@ -42,21 +42,6 @@ const reviewerQuestion = 'What role reviews those applications?';
 async function help(
   interaction:ChatInputCommandInteraction,
 ) {
-  const previousButton = new ButtonBuilder()
-    .setCustomId('previousButton')
-    .setLabel('Previous')
-    .setStyle(ButtonStyle.Danger);
-
-  const nextButton = new ButtonBuilder()
-    .setCustomId('nextButton')
-    .setLabel('Next')
-    .setStyle(ButtonStyle.Success);
-
-  const buttonList = [
-    previousButton,
-    nextButton,
-  ];
-
   const tripsitEmbed = embedTemplate()
     .setTitle('How To Setup TripSit Sessions')
     .setDescription(stripIndents`
@@ -177,7 +162,7 @@ async function help(
     rulesEmbed,
     ticketboothEmbed,
   ];
-  paginationEmbed(interaction, book, buttonList, 0);
+  paginationEmbed(interaction, book);
 }
 
 async function tripsit(
