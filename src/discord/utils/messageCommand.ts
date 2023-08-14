@@ -270,7 +270,11 @@ give people a chance to answer 😄 If no one answers in 5 minutes you can try a
         await message.react(emojiGet('ts_heart'));
       } catch (e) {
         log.error(F, `Error reacting to message: ${e}`);
-        await message.react('💜');
+        try {
+          await message.react('💜');
+        } catch (er) {
+          // log.error(F, `Error reacting to message: ${er}`);
+        }
       }
     }
   } else if (await isSadMessage(message)) {
