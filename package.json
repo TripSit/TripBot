@@ -76,7 +76,7 @@
   "homepage": "https://github.com/TripSit/TripBot#readme",
   "dependencies": {
     "@discordjs/voice": "^0.16.0",
-    "@napi-rs/canvas": "^0.1.42",
+    "@napi-rs/canvas": "^0.1.43",
     "@octokit/types": "^11.1.0",
     "@octokit/webhooks-types": "^7.2.0",
     "@prisma/client": "^5.1.1",
