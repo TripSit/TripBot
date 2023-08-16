@@ -69,8 +69,7 @@ async function isPokingTripbot(message:Message):Promise<boolean> {
 }
 
 async function isMentioningTripbot(message:Message):Promise<boolean> {
-  return message.mentions.has(env.DISCORD_CLIENT_ID)
-  || message.content.toLowerCase().includes('tripbot');
+  return message.mentions.has(env.DISCORD_CLIENT_ID);
 }
 
 async function isUploadMessage(message:Message):Promise<boolean> {
