@@ -90,7 +90,7 @@
     "cross-fetch": "^4.0.0",
     "databank": "^1.0.9",
     "databank-redis": "^0.18.0",
-    "discord-api-types": "^0.37.52",
+    "discord-api-types": "^0.37.53",
     "discord.js": "^14.12.1",
     "dotenv": "^16.3.1",
     "escape-html": "^1.0.3",
