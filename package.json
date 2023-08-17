@@ -8,7 +8,7 @@
     "npm": "9.6.6"
   },
   "scripts": {
-    "start": "docker compose --project-name tripsit-dev-apps up tripbot -d --force-recreate --build",
+    "start": "docker compose --project-name tripbot up tripbot -d --force-recreate --build",
     "## Docker": "",
     "docker:logs": "docker container logs tripbot -f -n 100",
     "docker:test": "docker exec -it tripbot npm run local:test",
