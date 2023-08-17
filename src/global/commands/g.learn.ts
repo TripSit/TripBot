@@ -193,9 +193,13 @@ async function getMoodleEnrollments(
       });
 
       response.on('end', () => {
-        const result = JSON.parse(data);
-        // log.debug(F, `Result: ${JSON.stringify(result, null, 2)}`);
-        resolve(result);
+        try {
+          const result = JSON.parse(data);
+          // log.debug(F, `Result: ${JSON.stringify(result, null, 2)}`);
+          resolve(result);
+        } catch (error) {
+          reject(error);
+        }
       });
     }).on('error', error => {
       // log.debug(F, `Error: ${error.message}`);
