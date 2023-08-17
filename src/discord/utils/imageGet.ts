@@ -1,8 +1,8 @@
 /* eslint-disable no-unused-vars */
 /* eslint-disable max-len */
 import fs from 'fs';
-import axios from 'axios';
 import fp from 'path';
+import axios from 'axios';
 // import {
 //   Client,
 // } from 'discord.js';
@@ -102,7 +102,7 @@ export async function downloadImage(
 
   return new Promise((resolve, reject) => {
     response.data.pipe(fs.createWriteStream(filepath))
-      .on('error', (err:any) => {
+      .on('error', (err:Error) => {
         log.error(F, `Error saving ${url} to ${filepath}`);
         reject(err);
       })

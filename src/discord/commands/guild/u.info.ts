@@ -22,7 +22,7 @@ export const uInfo: UserCommand = {
     await interaction.editReply(await moderate(
       interaction.member as GuildMember,
       'INFO',
-      interaction.options.data[0].member as GuildMember,
+      (interaction.options.data[0].member as GuildMember).id,
       null,
       null,
       null,

@@ -1,6 +1,22 @@
 // The TypeScript definitions below are automatically generated.
 // Do not touch them, or risk, your modifications being lost.
 
+export enum AiModel {
+  Gpt4 = 'GPT-4',
+  Gpt35Turbo = 'GPT-3.5-TURBO',
+  Davinci = 'DAVINCI',
+  Curie = 'CURIE',
+  Babbage = 'BABBAGE',
+  Ada = 'ADA',
+}
+
+export enum AppealStatus {
+  Open = 'OPEN',
+  Received = 'RECEIVED',
+  Accepted = 'ACCEPTED',
+  Denied = 'DENIED',
+}
+
 export enum BridgeStatus {
   Pending = 'PENDING',
   Active = 'ACTIVE',
@@ -106,6 +122,9 @@ export enum UserActionType {
 }
 
 export enum Table {
+  AiChannels = 'ai_channels',
+  AiPersonas = 'ai_personas',
+  Appeals = 'appeals',
   Bridges = 'bridges',
   Counting = 'counting',
   DiscordGuilds = 'discord_guilds',
@@ -129,6 +148,73 @@ export enum Table {
   UserTickets = 'user_tickets',
   Users = 'users',
 }
+
+export type Tables = {
+  'ai_channels': AiChannels,
+  'ai_personas': AiPersonas,
+  'appeals': Appeals,
+  'bridges': Bridges,
+  'counting': Counting,
+  'discord_guilds': DiscordGuilds,
+  'drug_articles': DrugArticles,
+  'drug_categories': DrugCategories,
+  'drug_category_drugs': DrugCategoryDrugs,
+  'drug_names': DrugNames,
+  'drug_variant_roas': DrugVariantRoas,
+  'drug_variants': DrugVariants,
+  'drugs': Drugs,
+  'knex_migrations': KnexMigrations,
+  'knex_migrations_lock': KnexMigrationsLock,
+  'personas': Personas,
+  'reaction_roles': ReactionRoles,
+  'rpg_inventory': RpgInventory,
+  'rss': Rss,
+  'user_actions': UserActions,
+  'user_drug_doses': UserDrugDoses,
+  'user_experience': UserExperience,
+  'user_reminders': UserReminders,
+  'user_tickets': UserTickets,
+  'users': Users,
+};
+
+export type AiChannels = {
+  id: string;
+  channel_id: string;
+  persona_id: string;
+};
+
+export type AiPersonas = {
+  id: string;
+  name: string;
+  ai_model: AiModel;
+  prompt: string;
+  temperature: number | null;
+  top_p: number | null;
+  presence_penalty: number;
+  frequency_penalty: number;
+  logit_bias: string | null;
+  max_tokens: number;
+  total_tokens: number;
+  created_at: Date;
+  created_by: string;
+};
+
+export type Appeals = {
+  id: string;
+  guild_id: string;
+  user_id: string;
+  appeal_number: number;
+  reason: string;
+  solution: string;
+  future: string;
+  extra: string | null;
+  status: AppealStatus;
+  appeal_message_id: string;
+  response_message: string | null;
+  created_at: Date;
+  reminded_at: Date | null;
+  decided_at: Date | null;
+};
 
 export type Bridges = {
   id: string;
@@ -205,6 +291,7 @@ export type DrugCategories = {
 };
 
 export type DrugCategoryDrugs = {
+  id: string;
   drug_id: string;
   drug_category_id: string;
 };
@@ -293,8 +380,8 @@ export type ReactionRoles = {
   id: string;
   guild_id: string;
   channel_id: string;
-  message_id: string | null;
-  reaction_id: string | null;
+  message_id: string;
+  reaction_id: string;
   role_id: string;
   created_at: Date;
   type: ReactionRoleType;

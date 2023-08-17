@@ -22,7 +22,6 @@ import {
   ChatInputCommandInteraction,
   PermissionResolvable,
   Guild,
-  // PermissionsBitField,
 } from 'discord.js';
 import {
   TextInputStyle,
@@ -42,7 +41,7 @@ import {
 import {
   UserTickets,
   TicketStatus,
-} from '../../global/@types/database.d';
+} from '../../global/@types/database';
 import commandContext from './context';
 import { embedTemplate } from './embedTemplate';
 import { checkChannelPermissions, checkGuildPermissions } from './checkPermissions';
@@ -1169,11 +1168,13 @@ export async function tripsitmeButton(
       tripsitChannel = await interaction.guild?.channels.fetch(guildData.channel_tripsit) as TextChannel;
     }
   } catch (err) {
-    // log.debug(F, `There was an error fetching the tripsit channel, it was likely deleted:\n ${err}`);
+    log.debug(F, `There was an error fetching the tripsit channel, it was likely deleted:\n ${err}`);
     // Update the ticket status to closed
     guildData.channel_tripsit = null;
     await database.guilds.set(guildData);
   }
+
+  log.debug(F, `tripsitChannel: ${JSON.stringify(tripsitChannel, null, 2)}`);
 
   const channelPerms = await checkChannelPermissions(tripsitChannel, [
     'ViewChannel' as PermissionResolvable,

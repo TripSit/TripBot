@@ -32,7 +32,7 @@ import {
 } from './knex';
 import {
   TicketStatus, UserTickets, TicketType, DiscordGuilds, ExperienceCategory, ExperienceType,
-} from '../@types/database.d';
+} from '../@types/database';
 import { checkChannelPermissions } from '../../discord/utils/checkPermissions';
 import { embedTemplate } from '../../discord/utils/embedTemplate';
 import { experience } from './experience';
@@ -459,13 +459,12 @@ async function checkRss() { // eslint-disable-line @typescript-eslint/no-unused-
   })();
 }
 
-// async function callUptime() { // eslint-disable-line @typescript-eslint/no-unused-vars
-//   log.debug(F, 'Calling uptime...');
-//   if (env.NODE_ENV !== 'production') return;
-//   axios.get(`https://uptime.tripsit.io/api/push/SP4qJtHZ6j?status=up&msg=OK&ping=${discordClient.ws.ping}`).catch(e => {
-//     log.debug(F, `Error when calling uptime monitor! ${e}`);
-//   });
-// }
+async function callUptime() { // eslint-disable-line @typescript-eslint/no-unused-vars
+  if (env.NODE_ENV !== 'production') return;
+  axios.get(`https://uptime.tripsit.me/api/push/B11H5MbsKx?status=up&msg=OK&ping=${discordClient.ws.ping}`).catch(e => {
+    log.debug(F, `Error when calling uptime monitor! ${e}`);
+  });
+}
 
 async function checkVoice() {
   // This function will run every minute and check every voice channel on the guild
@@ -1066,7 +1065,7 @@ async function runTimer() {
     { callback: checkReminders, interval: env.NODE_ENV === 'production' ? seconds10 : seconds5 },
     { callback: checkTickets, interval: env.NODE_ENV === 'production' ? seconds60 : seconds10 },
     { callback: checkMindsets, interval: env.NODE_ENV === 'production' ? seconds60 : seconds5 },
-    // { callback: callUptime, interval: env.NODE_ENV === 'production' ? seconds60 : seconds5 },
+    { callback: callUptime, interval: env.NODE_ENV === 'production' ? seconds60 : seconds5 },
     { callback: checkRss, interval: env.NODE_ENV === 'production' ? seconds30 : seconds5 },
     { callback: checkVoice, interval: env.NODE_ENV === 'production' ? seconds60 : seconds5 },
     // { callback: changeStatus, interval: env.NODE_ENV === 'production' ? hours24 : seconds5 },
