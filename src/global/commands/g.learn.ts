@@ -198,6 +198,7 @@ async function getMoodleEnrollments(
           // log.debug(F, `Result: ${JSON.stringify(result, null, 2)}`);
           resolve(result);
         } catch (error) {
+          log.debug(F, `Data: ${JSON.stringify(data, null, 2)}`);
           reject(error);
         }
       });
