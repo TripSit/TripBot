@@ -220,13 +220,13 @@ networks:
     name: tripbot_redis-net
   tripbot_prisma-net:
     name: tripbot_prisma-net
-    external: true
+    # external: true
   tripbot_website-net:
     name: tripbot_website-net
-    external: true
+    # external: true
   tripbot_api-net:
     name: tripbot_api-net
-    external: true
+    # external: true
   tripbot_pgadmin-net:
     name: tripbot_pgadmin-net
-    external: true
+    # external: true
