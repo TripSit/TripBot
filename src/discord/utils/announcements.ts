@@ -214,9 +214,7 @@ export async function announcements(message:Message) {
 
   const embed = embedTemplate();
 
-  const genAnnouncements = hrAnnouncements.concat(
-    // chanAnnouncements,
-  );
+  const genAnnouncements = hrAnnouncements;
 
   // const allAnnouncements = [
   //   genAnnouncements,

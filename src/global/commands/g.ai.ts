@@ -85,6 +85,7 @@ export async function aiSet(
       await db.ai_personas.create({
         data: personaData,
       });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error:any) {
       log.error(F, `Error: ${error.message}`);
       return `Error: ${error.message}`;
@@ -99,6 +100,7 @@ export async function aiSet(
       },
       data: personaData,
     });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error:any) {
     log.error(F, `Error: ${error.message}`);
     return `Error: ${error.message}`;
@@ -160,6 +162,7 @@ export async function aiDel(
         name,
       },
     });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error:any) {
     log.error(F, `Error: ${error.message}`);
     return `Error: ${error.message}`;
@@ -227,6 +230,7 @@ export async function aiLink(
           id: existingLink.id,
         },
       });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error:any) {
       log.error(F, `Error: ${error.message}`);
       return `Error: ${error.message}`;
@@ -252,6 +256,7 @@ export async function aiLink(
           persona_id: existingPersona.id,
         },
       });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error:any) {
       log.error(F, `Error: ${error.message}`);
       return `Error: ${error.message}`;
@@ -266,6 +271,7 @@ export async function aiLink(
         persona_id: existingPersona.id,
       },
     });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error:any) {
     log.error(F, `Error: ${error.message}`);
     return `Error: ${error.message}`;
@@ -383,6 +389,7 @@ export async function aiChat(
 
       response = responseMessage.content ?? 'Sorry, I\'m not sure how to respond to that.';
     }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error:any) {
     if (error.response) {
       log.error(F, `Error: ${error.response.status}`);

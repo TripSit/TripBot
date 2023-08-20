@@ -1,3 +1,4 @@
+/* eslint-disable max-len */
 import https from 'https';
 import { stripIndents } from 'common-tags';
 import { database } from '../utils/knex';
