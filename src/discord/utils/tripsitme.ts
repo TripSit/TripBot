@@ -22,6 +22,7 @@ import {
   ChatInputCommandInteraction,
   PermissionResolvable,
   Guild,
+  AllowedThreadTypeForTextChannel,
 } from 'discord.js';
 import {
   TextInputStyle,
@@ -382,7 +383,7 @@ export async function tripsitmeMeta(
     {
       name: `💛│${target.displayName}'s discussion!`,
       autoArchiveDuration: 1440,
-      type: ChannelType.PrivateThread,
+      type: ChannelType.PrivateThread as AllowedThreadTypeForTextChannel,
       reason: `${actor.displayName} created meta thread for ${target.displayName}`,
       invitable: false,
     },
@@ -981,7 +982,7 @@ export async function tripSitMe(
   const threadHelpUser = await tripsitChannel.threads.create({
     name: `🧡│${target.displayName}'s channel!`,
     autoArchiveDuration: 1440,
-    type: ChannelType.PrivateThread,
+    type: ChannelType.PrivateThread as AllowedThreadTypeForTextChannel,
     reason: `${target.displayName} requested help`,
     invitable: false,
   });
