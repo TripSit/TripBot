@@ -1,19 +1,14 @@
-import {
-  ChatCompletionRequestMessage,
-  Configuration, CreateChatCompletionRequest,
-  CreateModerationResponseResultsInner,
-  OpenAIApi,
-} from 'openai';
+import OpenAI from 'openai';
 import { ai_personas } from '@prisma/client';
+import { Moderation } from 'openai/resources';
 import db from '../utils/db';
 
 const F = f(__filename);
 
-const configuration = new Configuration({
+const openai = new OpenAI({
   organization: 'org-h4Jvunqw3MmHmIgeLHpr1a3Y',
   apiKey: env.OPENAI_API_KEY,
 });
-const openai = new OpenAIApi(configuration);
 const errorPersonaNotFound = 'Error: The requested persona does not exist!';
 export default aiChat;
 
@@ -35,7 +30,7 @@ const objectiveTruths = {
   
   Keep all responses under 2000 characters at maximum.
 `,
-} as ChatCompletionRequestMessage;
+} as OpenAI.Chat.CreateChatCompletionRequestMessage;
 
 // # Example dummy function hard coded to return the same weather
 // # In production, this could be your backend API or an external API
@@ -286,7 +281,7 @@ export async function aiLink(
  */
 export async function aiChat(
   aiPersona:ai_personas,
-  messages: ChatCompletionRequestMessage[],
+  messages: OpenAI.Chat.CreateChatCompletionRequestMessage[],
 ):Promise<{
     response: string,
     promptTokens: number,
@@ -332,19 +327,19 @@ export async function aiChat(
     messages,
     // functions: aiFunctions,
     // function_call: 'auto',
-  } as CreateChatCompletionRequest;
+  } as OpenAI.Chat.CompletionCreateParamsNonStreaming;
 
   log.debug(F, `payload: ${JSON.stringify(payload, null, 2)}`);
-  let responseMessage = {} as ChatCompletionRequestMessage;
+  let responseMessage = {} as OpenAI.Chat.CreateChatCompletionRequestMessage;
   try {
-    const chatCompletion = await openai.createChatCompletion(payload);
-    log.debug(F, `chatCompletion: ${JSON.stringify(chatCompletion.data, null, 2)}`);
-    if (chatCompletion.data.choices[0].message) {
-      responseMessage = chatCompletion.data.choices[0].message;
+    const chatCompletion = await openai.chat.completions.create(payload);
+    log.debug(F, `chatCompletion: ${JSON.stringify(chatCompletion, null, 2)}`);
+    if (chatCompletion.choices[0].message) {
+      responseMessage = chatCompletion.choices[0].message;
 
       // Sum up the existing tokens
-      promptTokens = chatCompletion.data.usage?.prompt_tokens ?? 0;
-      completionTokens = chatCompletion.data.usage?.completion_tokens ?? 0;
+      promptTokens = chatCompletion.usage?.prompt_tokens ?? 0;
+      completionTokens = chatCompletion.usage?.completion_tokens ?? 0;
 
       // // # Step 2: check if GPT wanted to call a function
       // if (responseMessage.function_call) {
@@ -430,14 +425,14 @@ export async function aiChat(
  */
 export async function aiModerate(
   message: string,
-):Promise<CreateModerationResponseResultsInner[]> {
-  let results = [] as CreateModerationResponseResultsInner[];
+):Promise<Moderation[]> {
+  let results = [] as Moderation[];
   try {
-    const moderation = await openai.createModeration({
+    const moderation = await openai.moderations.create({
       input: message,
     });
-    if (moderation.data.results) {
-      results = moderation.data.results;
+    if (moderation.results) {
+      results = moderation.results;
       // log.debug(F, `response: ${JSON.stringify(moderation.data.results, null, 2)}`);
     }
   } catch (error:any) { // eslint-disable-line

@@ -29,11 +29,8 @@ import {
   ai_model,
   ai_personas,
 } from '@prisma/client';
-import {
-  ChatCompletionRequestMessage,
-  ChatCompletionRequestMessageRoleEnum,
-  CreateModerationResponseResultsInner,
-} from 'openai';
+import OpenAI from 'openai';
+import { Moderation } from 'openai/resources';
 import { paginationEmbed } from '../../utils/pagination';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
@@ -612,7 +609,7 @@ export async function aiAudit(
   aiPersona: ai_personas | null,
   messages: Message[],
   chatResponse: string | null,
-  modResponse: CreateModerationResponseResultsInner | null,
+  modResponse: Moderation | null,
   promptTokens: number,
   completionTokens: number,
 ) {
@@ -792,9 +789,9 @@ export async function chat(
   // log.debug(F, `aiPersona: ${aiPersona.name}`);
 
   const inputMessages = [{
-    role: 'system' as ChatCompletionRequestMessageRoleEnum,
+    role: 'system',
     content: aiPersona.prompt,
-  }] as ChatCompletionRequestMessage[];
+  }] as OpenAI.Chat.CreateChatCompletionRequestMessage[];
   const cleanMessages = [] as Message[];
 
   // Get the last 3 messages that are not empty or from other bots
@@ -808,7 +805,7 @@ export async function chat(
   cleanMessages.reverse(); // So that the first messages come first
   cleanMessages.forEach(message => {
     inputMessages.push({
-      role: message.author.bot ? 'assistant' : 'user' as ChatCompletionRequestMessageRoleEnum,
+      role: message.author.bot ? 'assistant' : 'user',
       content: message.cleanContent
         .replace(tripbotUAT, '')
         .replace('tripbot', '')
