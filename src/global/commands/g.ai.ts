@@ -331,72 +331,69 @@ export async function aiChat(
 
   log.debug(F, `payload: ${JSON.stringify(payload, null, 2)}`);
   let responseMessage = {} as OpenAI.Chat.CreateChatCompletionRequestMessage;
-  try {
-    const chatCompletion = await openai.chat.completions.create(payload);
-    log.debug(F, `chatCompletion: ${JSON.stringify(chatCompletion, null, 2)}`);
-    if (chatCompletion.choices[0].message) {
-      responseMessage = chatCompletion.choices[0].message;
+  const chatCompletion = await openai.chat.completions
+    .create(payload)
+    .catch(err => {
+      if (err instanceof OpenAI.APIError) {
+        log.error(F, `${err.status}`); // 400
+        log.error(F, `${err.name}`); // BadRequestError
 
-      // Sum up the existing tokens
-      promptTokens = chatCompletion.usage?.prompt_tokens ?? 0;
-      completionTokens = chatCompletion.usage?.completion_tokens ?? 0;
+        log.error(F, `${err.headers}`); // {server: 'nginx', ...}
+      } else {
+        throw err;
+      }
+    });
+  log.debug(F, `chatCompletion: ${JSON.stringify(chatCompletion, null, 2)}`);
 
-      // // # Step 2: check if GPT wanted to call a function
-      // if (responseMessage.function_call) {
-      //   // log.debug(F, `responseMessage.function_call: ${JSON.stringify(responseMessage.function_call, null, 2)}`);
-      //   // # Step 3: call the function
-      //   // # Note: the JSON response may not always be valid; be sure to handle errors
+  if (chatCompletion && chatCompletion.choices[0].message) {
+    responseMessage = chatCompletion.choices[0].message;
 
-      //   const availableFunctions = {
-      //     getCurrentWeather,
-      //   };
-      //   const functionName = responseMessage.function_call.name;
-      //   log.debug(F, `functionName: ${functionName}`);
-      //   const fuctionToCall = availableFunctions[functionName as keyof typeof availableFunctions];
-      //   const functionArgs = JSON.parse(responseMessage.function_call.arguments as string);
-      //   const functionResponse = await fuctionToCall(
-      //     functionArgs.location,
-      //     functionArgs.unit,
-      //   );
-      //   // log.debug(F, `functionResponse: ${JSON.stringify(functionResponse, null, 2)}`);
+    // Sum up the existing tokens
+    promptTokens = chatCompletion.usage?.prompt_tokens ?? 0;
+    completionTokens = chatCompletion.usage?.completion_tokens ?? 0;
 
-      //   // # Step 4: send the info on the function call and function response to GPT
-      //   payload.messages.push({
-      //     role: 'function',
-      //     name: functionName,
-      //     content: JSON.stringify(functionResponse),
-      //   });
+    // // # Step 2: check if GPT wanted to call a function
+    // if (responseMessage.function_call) {
+    //   // log.debug(F, `responseMessage.function_call: ${JSON.stringify(responseMessage.function_call, null, 2)}`);
+    //   // # Step 3: call the function
+    //   // # Note: the JSON response may not always be valid; be sure to handle errors
 
-      //   const chatFunctionCompletion = await openai.createChatCompletion(payload);
+    //   const availableFunctions = {
+    //     getCurrentWeather,
+    //   };
+    //   const functionName = responseMessage.function_call.name;
+    //   log.debug(F, `functionName: ${functionName}`);
+    //   const fuctionToCall = availableFunctions[functionName as keyof typeof availableFunctions];
+    //   const functionArgs = JSON.parse(responseMessage.function_call.arguments as string);
+    //   const functionResponse = await fuctionToCall(
+    //     functionArgs.location,
+    //     functionArgs.unit,
+    //   );
+    //   // log.debug(F, `functionResponse: ${JSON.stringify(functionResponse, null, 2)}`);
 
-      //   // responseData = chatFunctionCompletion.data;
+    //   // # Step 4: send the info on the function call and function response to GPT
+    //   payload.messages.push({
+    //     role: 'function',
+    //     name: functionName,
+    //     content: JSON.stringify(functionResponse),
+    //   });
 
-      //   log.debug(F, `chatFunctionCompletion: ${JSON.stringify(chatFunctionCompletion.data, null, 2)}`);
+    //   const chatFunctionCompletion = await openai.createChatCompletion(payload);
 
-      //   if (chatFunctionCompletion.data.choices[0].message) {
-      //     responseMessage = chatFunctionCompletion.data.choices[0].message;
+    //   // responseData = chatFunctionCompletion.data;
 
-      //     // Sum up the new tokens
-      //     promptTokens += chatCompletion.data.usage?.prompt_tokens ?? 0;
-      //     completionTokens += chatCompletion.data.usage?.completion_tokens ?? 0;
-      //   }
-      // }
+    //   log.debug(F, `chatFunctionCompletion: ${JSON.stringify(chatFunctionCompletion.data, null, 2)}`);
 
-      response = responseMessage.content ?? 'Sorry, I\'m not sure how to respond to that.';
-    }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } catch (error:any) {
-    if (error.response) {
-      log.error(F, `Error: ${error.response.status}`);
-      log.error(F, `Error: ${JSON.stringify(error.response.data, null, 2)}`);
-    } else {
-      log.error(F, `Error: ${error.message}`);
-    }
-    return {
-      response: 'Sorry, I\'m not sure how to respond to that.',
-      promptTokens,
-      completionTokens,
-    };
+    //   if (chatFunctionCompletion.data.choices[0].message) {
+    //     responseMessage = chatFunctionCompletion.data.choices[0].message;
+
+    //     // Sum up the new tokens
+    //     promptTokens += chatCompletion.data.usage?.prompt_tokens ?? 0;
+    //     completionTokens += chatCompletion.data.usage?.completion_tokens ?? 0;
+    //   }
+    // }
+
+    response = responseMessage.content ?? 'Sorry, I\'m not sure how to respond to that.';
   }
   // responseData = chatCompletion.data;
 
@@ -427,21 +424,23 @@ export async function aiModerate(
   message: string,
 ):Promise<Moderation[]> {
   let results = [] as Moderation[];
-  try {
-    const moderation = await openai.moderations.create({
+  const moderation = await openai.moderations
+    .create({
       input: message,
+    })
+    .catch(err => {
+      if (err instanceof OpenAI.APIError) {
+        log.error(F, `${err.status}`); // 400
+        log.error(F, `${err.name}`); // BadRequestError
+
+        log.error(F, `${err.headers}`); // {server: 'nginx', ...}
+      } else {
+        throw err;
+      }
     });
-    if (moderation.results) {
-      results = moderation.results;
-      // log.debug(F, `response: ${JSON.stringify(moderation.data.results, null, 2)}`);
-    }
-  } catch (error:any) { // eslint-disable-line
-    if (error.response) {
-      log.error(F, `Error: ${error.response.status}`);
-      log.error(F, `Error: ${JSON.stringify(error.response.data, null, 2)}`);
-    } else {
-      log.error(F, `Error: ${error.message}`);
-    }
+  if (moderation && moderation.results) {
+    results = moderation.results;
+    // log.debug(F, `response: ${JSON.stringify(moderation.data.results, null, 2)}`);
   }
   return results;
 }
