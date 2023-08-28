@@ -5,12 +5,6 @@ import db from '../utils/db';
 
 const F = f(__filename);
 
-log.debug(F, `API Key: ${env.OPENAI_API_KEY}`);
-
-const openai = new OpenAI({
-  organization: 'org-h4Jvunqw3MmHmIgeLHpr1a3Y',
-  apiKey: env.OPENAI_API_KEY,
-});
 const errorPersonaNotFound = 'Error: The requested persona does not exist!';
 export default aiChat;
 
@@ -333,6 +327,10 @@ export async function aiChat(
 
   log.debug(F, `payload: ${JSON.stringify(payload, null, 2)}`);
   let responseMessage = {} as OpenAI.Chat.CreateChatCompletionRequestMessage;
+  const openai = new OpenAI({
+    organization: 'org-h4Jvunqw3MmHmIgeLHpr1a3Y',
+    apiKey: env.OPENAI_API_KEY,
+  });
   const chatCompletion = await openai.chat.completions
     .create(payload)
     .catch(err => {
@@ -426,6 +424,10 @@ export async function aiModerate(
   message: string,
 ):Promise<Moderation[]> {
   let results = [] as Moderation[];
+  const openai = new OpenAI({
+    organization: 'org-h4Jvunqw3MmHmIgeLHpr1a3Y',
+    apiKey: env.OPENAI_API_KEY,
+  });
   const moderation = await openai.moderations
     .create({
       input: message,
