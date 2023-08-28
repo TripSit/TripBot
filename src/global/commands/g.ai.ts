@@ -5,6 +5,8 @@ import db from '../utils/db';
 
 const F = f(__filename);
 
+log.debug(F, `API Key: ${env.OPENAI_API_KEY}`);
+
 const openai = new OpenAI({
   organization: 'org-h4Jvunqw3MmHmIgeLHpr1a3Y',
   apiKey: env.OPENAI_API_KEY,
