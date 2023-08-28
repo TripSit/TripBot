@@ -238,13 +238,18 @@ async function getMoodleCourseCompletion(
         });
 
         response.on('end', () => {
-          const result = JSON.parse(data) as MoodleCompletionStatus;
-          // log.debug(F, `Result: ${JSON.stringify(result, null, 2)}`);
-          completionStatuses.push({
-            course: moodleCourse,
-            completion: result,
-          });
-          resolve(result);
+          try {
+            const result = JSON.parse(data) as MoodleCompletionStatus;
+            // log.debug(F, `Result: ${JSON.stringify(result, null, 2)}`);
+            completionStatuses.push({
+              course: moodleCourse,
+              completion: result,
+            });
+            resolve(result);
+          } catch (error) {
+            log.debug(F, `Data: ${JSON.stringify(data, null, 2)}`);
+            reject(error);
+          }
         });
       }).on('error', error => {
         // log.debug(F, `Error: ${error.message}`);
