@@ -946,6 +946,21 @@ async function checkMoodle() { // eslint-disable-line
 
   // log.debug(F, 'Checking Moodle...');
 
+  // Set the connection status on first run
+  if (!global.moodleConnection) {
+    global.moodleConnection = {
+      status: true,
+      date: DateTime.now(),
+    };
+  }
+
+  // If the connection is bad and it has been less than 5 minutes, return;
+  if (!global.moodleConnection.status
+    && DateTime.now().diff(global.moodleConnection.date, 'minutes').minutes <= 5) {
+    // log.debug(F, 'Connection is bad and it has been less than 5 minutes, returning...');
+    return;
+  }
+
   const userDataList = env.POSTGRES_DB_URL
     ? await database.users.getMoodleUsers()
     : [];

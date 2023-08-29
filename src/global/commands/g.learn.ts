@@ -1,6 +1,7 @@
 /* eslint-disable max-len */
 import https from 'https';
 import { stripIndents } from 'common-tags';
+import { DateTime } from 'luxon';
 import { database } from '../utils/knex';
 
 const F = f(__filename);
@@ -152,11 +153,20 @@ async function getMoodleUser(
         let result = [] as MoodleUser[];
         try {
           result = JSON.parse(data) as MoodleUser[];
+          global.moodleConnection = {
+            status: true,
+            date: DateTime.now(),
+          };
         } catch (error:unknown) {
           log.error(F, 'getMoodleUser | Improper JSON returned from Moodle, is it alive?');
           log.error(F, `getMoodleUser | Error: ${(error as Error).message}`);
           log.error(F, `getMoodleUser | username: ${username} | email: ${email}`);
           log.error(F, `getMoodleUser | Data: ${JSON.stringify(data, null, 2)}`);
+          log.error(F, `getMoodleUser | URL: ${url}`);
+          global.moodleConnection = {
+            status: false,
+            date: DateTime.now(),
+          };
           reject(error);
         }
         // log.debug(F, `Result: ${JSON.stringify(result, null, 2)}`);
@@ -199,12 +209,20 @@ async function getMoodleEnrollments(
         try {
           const result = JSON.parse(data);
           // log.debug(F, `Result: ${JSON.stringify(result, null, 2)}`);
+          global.moodleConnection = {
+            status: true,
+            date: DateTime.now(),
+          };
           resolve(result);
         } catch (error) {
           log.error(F, 'getMoodleEnrollments | Improper JSON returned from Moodle, is it alive?');
           log.error(F, `getMoodleEnrollments | Error: ${(error as Error).message}`);
           log.error(F, `getMoodleEnrollments | moodleUser: ${JSON.stringify(moodleUser, null, 2)}`);
           log.error(F, `getMoodleEnrollments | Data: ${JSON.stringify(data, null, 2)}`);
+          global.moodleConnection = {
+            status: false,
+            date: DateTime.now(),
+          };
           reject(error);
         }
       });
@@ -245,6 +263,10 @@ async function getMoodleCourseCompletion(
               course: moodleCourse,
               completion: result,
             });
+            global.moodleConnection = {
+              status: true,
+              date: DateTime.now(),
+            };
             resolve(result);
           } catch (error) {
             log.error(F, 'getMoodleCourses | Improper JSON returned from Moodle, is it alive?');
@@ -252,6 +274,10 @@ async function getMoodleCourseCompletion(
             log.error(F, `getMoodleCourses | moodleUser: ${JSON.stringify(moodleUser, null, 2)}`);
             log.error(F, `getMoodleCourses | moodleEnrollments: ${JSON.stringify(moodleEnrollments, null, 2)}`);
             log.error(F, `getMoodleCourses | Data: ${JSON.stringify(data, null, 2)}`);
+            global.moodleConnection = {
+              status: false,
+              date: DateTime.now(),
+            };
             reject(error);
           }
         });

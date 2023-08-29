@@ -1,4 +1,5 @@
 import { Client as DiscordClient } from 'discord.js';
+import { DateTime } from 'luxon';
 // import { MatrixClient } from 'matrix-bot-sdk';
 // import { Client as IRCClient } from 'matrix-org-irc';
 // import { Telegraf as TelegramClient } from 'telegraf';
@@ -17,6 +18,10 @@ declare global {
   var lpmTime: number[]; // eslint-disable-line
   // var sentry: Sentry; // eslint-disable-line
   var emojiGet: (name:string) => Emoji; // eslint-disable-line
+  var moodleConnection: { // eslint-disable-line
+    status: Boolean,
+    date: DateTime,
+  };
 }
 
 export {};

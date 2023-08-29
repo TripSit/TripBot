@@ -27,7 +27,7 @@ export const env = {
   IRC_PASSWORD: process.env.IRC_PASSWORD,
 
   MOODLE_TOKEN: process.env.MOODLE_TOKEN,
-  MOODLE_URL: 'https://learn.tripsit.me',
+  MOODLE_URL: isProd ? 'https://learn.tripsit.me' : 'https://learn.tripsit.io',
 
   TELEGRAM_TOKEN: process.env.TELEGRAM_TOKEN,
 
