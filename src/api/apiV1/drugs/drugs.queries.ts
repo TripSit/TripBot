@@ -179,10 +179,10 @@ export default {
 
   async getDrug(drugName:string):Promise<any> {
     return new Promise(resolve => {
-      log.debug(F, `getDrug2 | drugName: ${drugName}`);
+      // log.debug(F, `getDrug2 | drugName: ${drugName}`);
       const name = drugName.toLowerCase();
       db.read('drugs', name, (err, drug) => {
-        log.debug(F, `getDrug2 | drugName: ${drugName}, drug: ${JSON.stringify(drug)}`);
+        // log.debug(F, `getDrug2 | drugName: ${drugName}, drug: ${JSON.stringify(drug)}`);
         if (!drug) {
           log.debug(F, `${name} not found in keys, doing a scan!`);
           db.scan('drugs', dMatch => {
