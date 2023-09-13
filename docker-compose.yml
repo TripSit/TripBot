@@ -31,10 +31,10 @@ services:
       # Only will build development stage from our dockerfile
       target: development
     container_name: tripbot
-    profiles: ["apps", "frontend", "tripbot", "all"]
+    depends_on:
+      - tripbot_database
+      - tripbot_prisma
     working_dir: /usr/src/app
-    #ports:
-    #  - 1337:1337
     env_file:
       - .env
     environment:
@@ -111,11 +111,11 @@ services:
       - traefik.docker.network=tripbot_prisma-net
       - traefik.http.services.tripbot_prisma-svc.loadbalancer.server.port=5555
 
-      - traefik.http.routers.tripbot_prisma-cloudflare.rule=Host(`prisma.${DNS_DOMAIN}`)
-      - traefik.http.routers.tripbot_prisma-cloudflare.entrypoints=websecure
-      - traefik.http.routers.tripbot_prisma-cloudflare.tls.certresolver=letsencrypt
-      - traefik.http.routers.tripbot_prisma-cloudflare.service=tripbot_prisma-svc
-      - traefik.http.routers.tripbot_prisma-cloudflare.middlewares=googleAuth@file
+      - traefik.http.routers.tripbot_prisma.rule=Host(`prisma.${DNS_DOMAIN}`)
+      - traefik.http.routers.tripbot_prisma.entrypoints=websecure
+      - traefik.http.routers.tripbot_prisma.tls.certresolver=letsencrypt
+      - traefik.http.routers.tripbot_prisma.service=tripbot_prisma-svc
+      - traefik.http.routers.tripbot_prisma.middlewares=googleAuth@file
 
   tripbot_pgadmin:
     build:
@@ -141,11 +141,11 @@ services:
       - traefik.docker.network=tripbot_pgadmin-net
       - traefik.http.services.tripbot_pgadmin-svc.loadbalancer.server.port=80
 
-      - traefik.http.routers.tripbot_pgadmin-cloudflare.rule=Host(`database.${DNS_DOMAIN}`, `db.${DNS_DOMAIN}`, `pgadmin.${DNS_DOMAIN}`)
-      - traefik.http.routers.tripbot_pgadmin-cloudflare.entrypoints=websecure
-      - traefik.http.routers.tripbot_pgadmin-cloudflare.tls.certresolver=letsencrypt
-      - traefik.http.routers.tripbot_pgadmin-cloudflare.service=tripbot_pgadmin-svc
-      - traefik.http.routers.tripbot_pgadmin-cloudflare.middlewares=default@file
+      - traefik.http.routers.tripbot_pgadmin.rule=Host(`database.${DNS_DOMAIN}`, `db.${DNS_DOMAIN}`, `pgadmin.${DNS_DOMAIN}`)
+      - traefik.http.routers.tripbot_pgadmin.entrypoints=websecure
+      - traefik.http.routers.tripbot_pgadmin.tls.certresolver=letsencrypt
+      - traefik.http.routers.tripbot_pgadmin.service=tripbot_pgadmin-svc
+      - traefik.http.routers.tripbot_pgadmin.middlewares=default@file
 
   tripbot_redis:
     <<: *common-keys-core
@@ -198,17 +198,11 @@ services:
       - traefik.docker.network=tripbot_api-net
       - traefik.http.services.tripbot_api-svc.loadbalancer.server.port=5000
 
-      - traefik.http.routers.tripbot_api-cloudflare.rule=Host(`tripbot.${DNS_DOMAIN}`) && PathPrefix(`/api`) || Host(`api.${DNS_DOMAIN}`)
-      - traefik.http.routers.tripbot_api-cloudflare.entrypoints=websecure
-      - traefik.http.routers.tripbot_api-cloudflare.tls.certresolver=letsencrypt
-      - traefik.http.routers.tripbot_api-cloudflare.service=tripbot_api-svc
-      - traefik.http.routers.tripbot_api-cloudflare.middlewares=default@file
-        
-      - traefik.http.routers.tripbot_api-namecheap.rule=Host(`tripbot.tripsit.me`) && PathPrefix(`/api`) || Host(`api.tripsit.me`)
-      - traefik.http.routers.tripbot_api-namecheap.entrypoints=websecure
-      - traefik.http.routers.tripbot_api-namecheap.tls.certresolver=letsencrypt-legacy
-      - traefik.http.routers.tripbot_api-namecheap.service=tripbot_api-svc
-      - traefik.http.routers.tripbot_api-namecheap.middlewares=default@file
+      - traefik.http.routers.tripbot_api.rule=Host(`tripbot.${DNS_DOMAIN}`) && PathPrefix(`/api`) || Host(`api.${DNS_DOMAIN}`)
+      - traefik.http.routers.tripbot_api.entrypoints=websecure
+      - traefik.http.routers.tripbot_api.tls.certresolver=letsencrypt
+      - traefik.http.routers.tripbot_api.service=tripbot_api-svc
+      - traefik.http.routers.tripbot_api.middlewares=default@file
     command: npx tsc-watch --onSuccess "npx nodemon --config ./src/api/nodemon.json"
 
 networks:
