@@ -18,6 +18,8 @@ import commandContext from '../../utils/context';
 
 const F = f(__filename);
 
+type VoiceActions = 'lock' | 'hide' | 'ban' | 'rename' | 'mute' | 'cohost' | 'radio' | 'bitrate';
+
 async function tentRename(
   voiceChannel: VoiceBasedChannel,
   newName: string,
@@ -221,7 +223,7 @@ export const dVoice: SlashCommand = {
     log.info(F, await commandContext(interaction));
     await interaction.deferReply({ ephemeral: true });
 
-    const command = interaction.options.getSubcommand() as 'lock' | 'hide' | 'ban' | 'rename' | 'mute' | 'cohost' | 'radio' | 'bitrate';
+    const command = interaction.options.getSubcommand() as VoiceActions;
     const member = interaction.member as GuildMember;
     const target = interaction.options.getMember('target') as GuildMember;
     const newName = interaction.options.getString('name') as string;

@@ -1,20 +1,10 @@
-import {
-  ChatCompletionRequestMessage,
-  Configuration, CreateChatCompletionRequest,
-  // CreateChatCompletionResponse,
-  CreateModerationResponseResultsInner,
-  OpenAIApi,
-} from 'openai';
+import OpenAI from 'openai';
 import { ai_personas } from '@prisma/client';
+import { Moderation } from 'openai/resources';
 import db from '../utils/db';
 
 const F = f(__filename);
 
-const configuration = new Configuration({
-  organization: 'org-h4Jvunqw3MmHmIgeLHpr1a3Y',
-  apiKey: env.OPENAI_API_KEY,
-});
-const openai = new OpenAIApi(configuration);
 const errorPersonaNotFound = 'Error: The requested persona does not exist!';
 export default aiChat;
 
@@ -33,37 +23,39 @@ const objectiveTruths = {
 
   The discord admin is Hipperooni, or Rooni.
   The moderators are: Foggy, Aida, Elixir, Spacelady, Hipperooni, WorriedHobbiton, Zombie and Trees.
+  
+  Keep all responses under 2000 characters at maximum.
 `,
-} as ChatCompletionRequestMessage;
+} as OpenAI.Chat.CreateChatCompletionRequestMessage;
 
 // # Example dummy function hard coded to return the same weather
 // # In production, this could be your backend API or an external API
-async function getCurrentWeather(location:string, unit = 'fahrenheit') {
-  return {
-    location,
-    temperature: '72',
-    unit,
-    forecast: ['sunny', 'windy'],
-  };
-}
+// async function getCurrentWeather(location:string, unit = 'fahrenheit') {
+//   return {
+//     location,
+//     temperature: '72',
+//     unit,
+//     forecast: ['sunny', 'windy'],
+//   };
+// }
 
-const aiFunctions = [
-  {
-    name: 'getCurrentWeather',
-    description: 'Get the current weather in a given location',
-    parameters: {
-      type: 'object',
-      properties: {
-        location: {
-          type: 'string',
-          description: 'The city and state, e.g. San Francisco, CA',
-        },
-        unit: { type: 'string', enum: ['celsius', 'fahrenheit'] },
-      },
-      required: ['location'],
-    },
-  },
-];
+// const aiFunctions = [
+//   {
+//     name: 'getCurrentWeather',
+//     description: 'Get the current weather in a given location',
+//     parameters: {
+//       type: 'object',
+//       properties: {
+//         location: {
+//           type: 'string',
+//           description: 'The city and state, e.g. San Francisco, CA',
+//         },
+//         unit: { type: 'string', enum: ['celsius', 'fahrenheit'] },
+//       },
+//       required: ['location'],
+//     },
+//   },
+// ];
 
 /**
  * Modifies a persona
@@ -84,6 +76,7 @@ export async function aiSet(
       await db.ai_personas.create({
         data: personaData,
       });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error:any) {
       log.error(F, `Error: ${error.message}`);
       return `Error: ${error.message}`;
@@ -98,6 +91,7 @@ export async function aiSet(
       },
       data: personaData,
     });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error:any) {
     log.error(F, `Error: ${error.message}`);
     return `Error: ${error.message}`;
@@ -159,6 +153,7 @@ export async function aiDel(
         name,
       },
     });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error:any) {
     log.error(F, `Error: ${error.message}`);
     return `Error: ${error.message}`;
@@ -179,6 +174,8 @@ export async function aiLink(
   log.debug(F, `channelId: ${channelId}`);
   log.debug(F, `toggle: ${toggle}`);
 
+  let personaName = name;
+
   const existingPersona = await db.ai_personas.findUnique({
     where: {
       name,
@@ -190,12 +187,33 @@ export async function aiLink(
   }
 
   if (toggle === 'disable') {
-    const existingLink = await db.ai_channels.findFirstOrThrow({
+    let existingLink = await db.ai_channels.findFirst({
       where: {
         channel_id: channelId,
         persona_id: existingPersona.id,
       },
     });
+
+    if (!existingLink) {
+      existingLink = await db.ai_channels.findFirst({
+        where: {
+          channel_id: channelId,
+        },
+      });
+
+      if (!existingLink) {
+        return `Error: No link to <#${channelId}> found!`;
+      }
+      const personaData = await db.ai_personas.findUnique({
+        where: {
+          id: existingLink.persona_id,
+        },
+      });
+      if (!personaData) {
+        return 'Error: No persona found for this link!';
+      }
+      personaName = personaData.name;
+    }
 
     try {
       await db.ai_channels.delete({
@@ -203,11 +221,38 @@ export async function aiLink(
           id: existingLink.id,
         },
       });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error:any) {
       log.error(F, `Error: ${error.message}`);
       return `Error: ${error.message}`;
     }
-    return `Success: The link between ${name} and <#${channelId}> was deleted!`;
+    return `Success: The link between ${personaName} and <#${channelId}> was deleted!`;
+  }
+
+  // Check if the channel is linked to a persona
+  const aiLinkData = await db.ai_channels.findFirst({
+    where: {
+      channel_id: channelId,
+    },
+  });
+
+  if (aiLinkData) {
+    try {
+      await db.ai_channels.update({
+        where: {
+          id: aiLinkData.id,
+        },
+        data: {
+          channel_id: channelId,
+          persona_id: existingPersona.id,
+        },
+      });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error:any) {
+      log.error(F, `Error: ${error.message}`);
+      return `Error: ${error.message}`;
+    }
+    return `Success: The link between ${name} and <#${channelId}> was updated!`;
   }
 
   try {
@@ -217,6 +262,7 @@ export async function aiLink(
         persona_id: existingPersona.id,
       },
     });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error:any) {
     log.error(F, `Error: ${error.message}`);
     return `Error: ${error.message}`;
@@ -231,7 +277,7 @@ export async function aiLink(
  */
 export async function aiChat(
   aiPersona:ai_personas,
-  messages: ChatCompletionRequestMessage[],
+  messages: OpenAI.Chat.CreateChatCompletionRequestMessage[],
 ):Promise<{
     response: string,
     promptTokens: number,
@@ -275,64 +321,81 @@ export async function aiChat(
     ...restOfAiPersona,
     model,
     messages,
-    functions: aiFunctions,
-    function_call: 'auto',
-  } as CreateChatCompletionRequest;
+    // functions: aiFunctions,
+    // function_call: 'auto',
+  } as OpenAI.Chat.CompletionCreateParamsNonStreaming;
 
   log.debug(F, `payload: ${JSON.stringify(payload, null, 2)}`);
-  const chatCompletion = await openai.createChatCompletion(payload);
-  log.debug(F, `chatCompletion: ${JSON.stringify(chatCompletion.data, null, 2)}`);
-  // responseData = chatCompletion.data;
-  if (chatCompletion.data.choices[0].message) {
-    let responseMessage = chatCompletion.data.choices[0].message;
+  let responseMessage = {} as OpenAI.Chat.CreateChatCompletionRequestMessage;
+  const openai = new OpenAI({
+    organization: 'org-h4Jvunqw3MmHmIgeLHpr1a3Y',
+    apiKey: env.OPENAI_API_KEY,
+  });
+  const chatCompletion = await openai.chat.completions
+    .create(payload)
+    .catch(err => {
+      if (err instanceof OpenAI.APIError) {
+        log.error(F, `${err.status}`); // 400
+        log.error(F, `${err.name}`); // BadRequestError
+
+        log.error(F, `${err.headers}`); // {server: 'nginx', ...}
+      } else {
+        throw err;
+      }
+    });
+  log.debug(F, `chatCompletion: ${JSON.stringify(chatCompletion, null, 2)}`);
+
+  if (chatCompletion && chatCompletion.choices[0].message) {
+    responseMessage = chatCompletion.choices[0].message;
 
     // Sum up the existing tokens
-    promptTokens = chatCompletion.data.usage?.prompt_tokens ?? 0;
-    completionTokens = chatCompletion.data.usage?.completion_tokens ?? 0;
+    promptTokens = chatCompletion.usage?.prompt_tokens ?? 0;
+    completionTokens = chatCompletion.usage?.completion_tokens ?? 0;
 
-    // # Step 2: check if GPT wanted to call a function
-    if (responseMessage.function_call) {
-      // log.debug(F, `responseMessage.function_call: ${JSON.stringify(responseMessage.function_call, null, 2)}`);
-      // # Step 3: call the function
-      // # Note: the JSON response may not always be valid; be sure to handle errors
+    // // # Step 2: check if GPT wanted to call a function
+    // if (responseMessage.function_call) {
+    //   // log.debug(F, `responseMessage.function_call: ${JSON.stringify(responseMessage.function_call, null, 2)}`);
+    //   // # Step 3: call the function
+    //   // # Note: the JSON response may not always be valid; be sure to handle errors
 
-      const availableFunctions = {
-        getCurrentWeather,
-      };
-      const functionName = responseMessage.function_call.name;
-      log.debug(F, `functionName: ${functionName}`);
-      const fuctionToCall = availableFunctions[functionName as keyof typeof availableFunctions];
-      const functionArgs = JSON.parse(responseMessage.function_call.arguments as string);
-      const functionResponse = await fuctionToCall(
-        functionArgs.location,
-        functionArgs.unit,
-      );
-      // log.debug(F, `functionResponse: ${JSON.stringify(functionResponse, null, 2)}`);
+    //   const availableFunctions = {
+    //     getCurrentWeather,
+    //   };
+    //   const functionName = responseMessage.function_call.name;
+    //   log.debug(F, `functionName: ${functionName}`);
+    //   const fuctionToCall = availableFunctions[functionName as keyof typeof availableFunctions];
+    //   const functionArgs = JSON.parse(responseMessage.function_call.arguments as string);
+    //   const functionResponse = await fuctionToCall(
+    //     functionArgs.location,
+    //     functionArgs.unit,
+    //   );
+    //   // log.debug(F, `functionResponse: ${JSON.stringify(functionResponse, null, 2)}`);
 
-      // # Step 4: send the info on the function call and function response to GPT
-      payload.messages.push({
-        role: 'function',
-        name: functionName,
-        content: JSON.stringify(functionResponse),
-      });
+    //   // # Step 4: send the info on the function call and function response to GPT
+    //   payload.messages.push({
+    //     role: 'function',
+    //     name: functionName,
+    //     content: JSON.stringify(functionResponse),
+    //   });
 
-      const chatFunctionCompletion = await openai.createChatCompletion(payload);
+    //   const chatFunctionCompletion = await openai.createChatCompletion(payload);
 
-      // responseData = chatFunctionCompletion.data;
+    //   // responseData = chatFunctionCompletion.data;
 
-      log.debug(F, `chatFunctionCompletion: ${JSON.stringify(chatFunctionCompletion.data, null, 2)}`);
+    //   log.debug(F, `chatFunctionCompletion: ${JSON.stringify(chatFunctionCompletion.data, null, 2)}`);
 
-      if (chatFunctionCompletion.data.choices[0].message) {
-        responseMessage = chatFunctionCompletion.data.choices[0].message;
+    //   if (chatFunctionCompletion.data.choices[0].message) {
+    //     responseMessage = chatFunctionCompletion.data.choices[0].message;
 
-        // Sum up the new tokens
-        promptTokens += chatCompletion.data.usage?.prompt_tokens ?? 0;
-        completionTokens += chatCompletion.data.usage?.completion_tokens ?? 0;
-      }
-    }
+    //     // Sum up the new tokens
+    //     promptTokens += chatCompletion.data.usage?.prompt_tokens ?? 0;
+    //     completionTokens += chatCompletion.data.usage?.completion_tokens ?? 0;
+    //   }
+    // }
 
     response = responseMessage.content ?? 'Sorry, I\'m not sure how to respond to that.';
   }
+  // responseData = chatCompletion.data;
 
   // log.debug(F, `responseData: ${JSON.stringify(responseData, null, 2)}`);
 
@@ -359,23 +422,29 @@ export async function aiChat(
  */
 export async function aiModerate(
   message: string,
-):Promise<CreateModerationResponseResultsInner[]> {
-  let results = [] as CreateModerationResponseResultsInner[];
-  try {
-    const moderation = await openai.createModeration({
+):Promise<Moderation[]> {
+  let results = [] as Moderation[];
+  const openai = new OpenAI({
+    organization: 'org-h4Jvunqw3MmHmIgeLHpr1a3Y',
+    apiKey: env.OPENAI_API_KEY,
+  });
+  const moderation = await openai.moderations
+    .create({
       input: message,
+    })
+    .catch(err => {
+      if (err instanceof OpenAI.APIError) {
+        log.error(F, `${err.status}`); // 400
+        log.error(F, `${err.name}`); // BadRequestError
+
+        log.error(F, `${err.headers}`); // {server: 'nginx', ...}
+      } else {
+        throw err;
+      }
     });
-    if (moderation.data.results) {
-      results = moderation.data.results;
-      // log.debug(F, `response: ${JSON.stringify(moderation.data.results, null, 2)}`);
-    }
-  } catch (error:any) { // eslint-disable-line
-    if (error.response) {
-      log.error(F, `Error: ${error.response.status}`);
-      log.error(F, `Error: ${JSON.stringify(error.response.data, null, 2)}`);
-    } else {
-      log.error(F, `Error: ${error.message}`);
-    }
+  if (moderation && moderation.results) {
+    results = moderation.results;
+    // log.debug(F, `response: ${JSON.stringify(moderation.data.results, null, 2)}`);
   }
   return results;
 }

@@ -2613,15 +2613,15 @@ export async function rpgTrivia(
       }
 
       // Filter for the buttons
-      const filter = (i: MessageComponentInteraction) => i.user.id === interaction.user.id;
+      const filter = (i: MessageComponentInteraction) => i.user.id === interaction.user.id
+          && i.componentType === ComponentType.Button;
       if (!interaction.channel) throw new Error('Channel not found');
       let collected = {} as ButtonInteraction;
       try {
         collected = await interaction.channel.awaitMessageComponent({ // eslint-disable-line no-await-in-loop
           filter,
           time: 30000,
-          componentType: ComponentType.Button,
-        });
+        }) as ButtonInteraction;
       } catch (err) {
         // If the user doesn't answer in time
         // log.debug(F, 'User did not answer in time');

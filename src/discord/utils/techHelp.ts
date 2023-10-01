@@ -10,6 +10,7 @@ import {
   ModalSubmitInteraction,
   Colors,
   EmbedBuilder,
+  AllowedThreadTypeForTextChannel,
 } from 'discord.js';
 import {
   ChannelType,
@@ -93,7 +94,7 @@ export async function techHelpClick(interaction:ButtonInteraction) {
       const ticketThread = await (i.channel as TextChannel).threads.create({
         name: `🧡│${actor.username}'s ${issueType} issue!`,
         autoArchiveDuration: 1440,
-        type: ChannelType.PrivateThread,
+        type: ChannelType.PrivateThread as AllowedThreadTypeForTextChannel,
         reason: `${actor.username} submitted a(n) ${issueType} issue`,
         invitable: false,
       });

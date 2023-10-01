@@ -1,5 +1,7 @@
+/* eslint-disable max-len */
 import https from 'https';
 import { stripIndents } from 'common-tags';
+import { DateTime } from 'luxon';
 import { database } from '../utils/knex';
 
 const F = f(__filename);
@@ -151,10 +153,21 @@ async function getMoodleUser(
         let result = [] as MoodleUser[];
         try {
           result = JSON.parse(data) as MoodleUser[];
+          global.moodleConnection = {
+            status: true,
+            date: DateTime.now(),
+          };
         } catch (error:unknown) {
-          // log.error(F, `Error: ${(error as Error).message}`);
-          log.debug(F, 'Improper JSON returned from Moodle, is it alive?');
-          return;
+          log.error(F, 'getMoodleUser | Improper JSON returned from Moodle, is it alive?');
+          log.error(F, `getMoodleUser | Error: ${(error as Error).message}`);
+          log.error(F, `getMoodleUser | username: ${username} | email: ${email}`);
+          log.error(F, `getMoodleUser | Data: ${JSON.stringify(data, null, 2)}`);
+          log.error(F, `getMoodleUser | URL: ${url}`);
+          global.moodleConnection = {
+            status: false,
+            date: DateTime.now(),
+          };
+          reject(error);
         }
         // log.debug(F, `Result: ${JSON.stringify(result, null, 2)}`);
         if (result.length > 1) {
@@ -193,9 +206,25 @@ async function getMoodleEnrollments(
       });
 
       response.on('end', () => {
-        const result = JSON.parse(data);
-        // log.debug(F, `Result: ${JSON.stringify(result, null, 2)}`);
-        resolve(result);
+        try {
+          const result = JSON.parse(data);
+          // log.debug(F, `Result: ${JSON.stringify(result, null, 2)}`);
+          global.moodleConnection = {
+            status: true,
+            date: DateTime.now(),
+          };
+          resolve(result);
+        } catch (error) {
+          log.error(F, 'getMoodleEnrollments | Improper JSON returned from Moodle, is it alive?');
+          log.error(F, `getMoodleEnrollments | Error: ${(error as Error).message}`);
+          log.error(F, `getMoodleEnrollments | moodleUser: ${JSON.stringify(moodleUser, null, 2)}`);
+          log.error(F, `getMoodleEnrollments | Data: ${JSON.stringify(data, null, 2)}`);
+          global.moodleConnection = {
+            status: false,
+            date: DateTime.now(),
+          };
+          reject(error);
+        }
       });
     }).on('error', error => {
       // log.debug(F, `Error: ${error.message}`);
@@ -208,9 +237,6 @@ async function getMoodleCourseCompletion(
   moodleUser:MoodleUser,
   moodleEnrollments:MoodleCourse[],
 ):Promise<MoodleCourseCompletion[]> {
-  // log.debug(F, `getMoodleCourses | moodleUser: ${JSON.stringify(moodleUser, null, 2)}`);
-  // log.debug(F, `getMoodleCourses | moodleEnrollments: ${JSON.stringify(moodleEnrollments, null, 2)}`);
-
   const completionStatuses = [] as MoodleCourseCompletion[];
   // For each moodle course, get the course info. This needs to be async so that we can return the results
   // once all the promises have been resolved.
@@ -221,8 +247,6 @@ async function getMoodleCourseCompletion(
 &courseid=${moodleCourse.id}\
 &moodlewsrestformat=json`;
 
-    // log.debug(F, `url: ${url}`);
-
     return new Promise((resolve, reject) => {
       https.get(url, response => {
         let data = '';
@@ -232,13 +256,30 @@ async function getMoodleCourseCompletion(
         });
 
         response.on('end', () => {
-          const result = JSON.parse(data) as MoodleCompletionStatus;
-          // log.debug(F, `Result: ${JSON.stringify(result, null, 2)}`);
-          completionStatuses.push({
-            course: moodleCourse,
-            completion: result,
-          });
-          resolve(result);
+          try {
+            const result = JSON.parse(data) as MoodleCompletionStatus;
+            // log.debug(F, `Result: ${JSON.stringify(result, null, 2)}`);
+            completionStatuses.push({
+              course: moodleCourse,
+              completion: result,
+            });
+            global.moodleConnection = {
+              status: true,
+              date: DateTime.now(),
+            };
+            resolve(result);
+          } catch (error) {
+            log.error(F, 'getMoodleCourses | Improper JSON returned from Moodle, is it alive?');
+            log.error(F, `getMoodleCourses | Error: ${(error as Error).message}`);
+            log.error(F, `getMoodleCourses | moodleUser: ${JSON.stringify(moodleUser, null, 2)}`);
+            log.error(F, `getMoodleCourses | moodleEnrollments: ${JSON.stringify(moodleEnrollments, null, 2)}`);
+            log.error(F, `getMoodleCourses | Data: ${JSON.stringify(data, null, 2)}`);
+            global.moodleConnection = {
+              status: false,
+              date: DateTime.now(),
+            };
+            reject(error);
+          }
         });
       }).on('error', error => {
         // log.debug(F, `Error: ${error.message}`);
