@@ -15,34 +15,34 @@ import {
 
 export default paginationEmbed;
 
+const previousButton = new ButtonBuilder()
+  .setCustomId('previousButton')
+  .setLabel('Previous')
+  .setStyle(ButtonStyle.Danger);
+
+const nextButton = new ButtonBuilder()
+  .setCustomId('nextButton')
+  .setLabel('Next')
+  .setStyle(ButtonStyle.Success);
+
+const buttonList = [
+  previousButton,
+  nextButton,
+];
+
 /**
  * Creates a pagination embed
  * @param {BaseCommandInteraction} interaction The interaction to paginate
  * @param {EmbedBuilder[]} pages The pages to paginate
- * @param {ButtonComponent[]} buttonList The buttons to paginate
  * @param {number} timeout The timeout in milliseconds to wait for reactions
  * @return {Promise<void>}
  */
 export async function paginationEmbed(
   interaction:CommandInteraction,
   pages:EmbedBuilder[],
-  buttonList:ButtonBuilder[],
   timeout = 120000,
   ephemeral:boolean = false,
 ): Promise<Message> {
-  if (!pages) throw new Error('Pages are not given.');
-  if (!buttonList) throw new Error('Buttons are not given.');
-
-  if (
-    buttonList[0].data.style === ButtonStyle.Link
-    || buttonList[1].data.style === ButtonStyle.Link
-  ) {
-    throw new Error(
-      'Link buttons are not supported with discordjs-button-pagination',
-    );
-  }
-  if (buttonList.length !== 2) throw new Error('Need two buttons.');
-
   if (interaction.deferred === false) {
     await interaction.deferReply({ ephemeral });
   }

@@ -69,8 +69,7 @@ async function isPokingTripbot(message:Message):Promise<boolean> {
 }
 
 async function isMentioningTripbot(message:Message):Promise<boolean> {
-  return message.mentions.has(env.DISCORD_CLIENT_ID)
-  || message.content.toLowerCase().includes('tripbot');
+  return message.mentions.has(env.DISCORD_CLIENT_ID);
 }
 
 async function isUploadMessage(message:Message):Promise<boolean> {
@@ -259,7 +258,7 @@ give people a chance to answer 😄 If no one answers in 5 minutes you can try a
           await message.channel.send(`Uploaded ${stickerList.join(' ')} to ${message.guild.name}!`); // eslint-disable-line
         }
       }
-    } else if (await isAiEnabledGuild(message)) {
+    } else if (await isAiEnabledGuild(message) && !message.author.bot) {
       // log.debug(F, 'AI enabled guild detected');
       // Get the last 5 messages in the channel
       const messages = await message.channel.messages.fetch({ limit: 10 });
@@ -270,7 +269,11 @@ give people a chance to answer 😄 If no one answers in 5 minutes you can try a
         await message.react(emojiGet('ts_heart'));
       } catch (e) {
         log.error(F, `Error reacting to message: ${e}`);
-        await message.react('💜');
+        try {
+          await message.react('💜');
+        } catch (er) {
+          // log.error(F, `Error reacting to message: ${er}`);
+        }
       }
     }
   } else if (await isSadMessage(message)) {

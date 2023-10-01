@@ -1,8 +1,6 @@
 /* eslint-disable no-await-in-loop, no-restricted-syntax, no-continue */
 
 import {
-  ButtonBuilder,
-  ButtonStyle,
   Colors,
   EmbedBuilder,
   Interaction,
@@ -20,21 +18,6 @@ import { getTotalLevel } from '../../../global/utils/experience';
 import { paginationEmbed } from '../../utils/pagination';
 
 const F = f(__filename);
-
-const button1 = new ButtonBuilder()
-  .setCustomId('previousButton')
-  .setLabel('Previous')
-  .setStyle(ButtonStyle.Danger);
-
-const button2 = new ButtonBuilder()
-  .setCustomId('nextButton')
-  .setLabel('Next')
-  .setStyle(ButtonStyle.Success);
-
-const buttonList = [
-  button1,
-  button2,
-];
 
 // type RankType = { 'rank': number, 'id': string, 'level': number };
 // type LeaderboardType = {
@@ -194,7 +177,7 @@ export const dLeaderboard: SlashCommand = {
       return true;
     }
 
-    paginationEmbed(interaction, book, buttonList, 0);
+    paginationEmbed(interaction, book);
     log.info(F, `Total Time: ${Date.now() - startTime}ms`);
     return true;
   },

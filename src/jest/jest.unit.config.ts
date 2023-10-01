@@ -2,11 +2,11 @@ import type { Config } from 'jest';
 
 const jestConfig: Config = {
   setupFilesAfterEnv: [
-    '<rootDir>/global/utils/log.ts',
-    '<rootDir>/global/utils/env.config.ts',
+    '<rootDir>/src/global/utils/log.ts',
+    '<rootDir>/src/global/utils/env.config.ts',
   ],
   testMatch: [
-    '<rootDir>/jest/__tests__/*.test.ts',
+    '<rootDir>/src/jest/__tests__/*.test.ts',
   ],
   collectCoverage: true,
   collectCoverageFrom: [
@@ -15,27 +15,27 @@ const jestConfig: Config = {
   ],
   coveragePathIgnorePatterns: [
     '/node_modules/',
-    '<rootDir>/start.ts',
-    '<rootDir>/global/@types/*',
-    '<rootDir>/global/utils/*',
-    '<rootDir>/global/assets/*',
-    '<rootDir>/global/commands/index.ts',
-    '<rootDir>/global/commands/_g.template.ts',
-    '<rootDir>/global/commands/archive/*',
-    '<rootDir>/discord/utils/*',
-    '<rootDir>/discord/events/*',
-    '<rootDir>/discord/dscrd.ts',
-    '<rootDir>/discord/commands/index.ts',
-    '<rootDir>/discord/commands/archive/*',
-    '<rootDir>/discord/commands/global/_d.globalTemplate.ts',
-    '<rootDir>/discord/commands/guild/_d.guildTemplate.ts',
+    '<rootDir>/src/start.ts',
+    '<rootDir>/src/global/@types/*',
+    '<rootDir>/src/global/utils/*',
+    '<rootDir>/src/global/assets/*',
+    '<rootDir>/src/global/commands/index.ts',
+    '<rootDir>/src/global/commands/_g.template.ts',
+    '<rootDir>/src/global/commands/archive/*',
+    '<rootDir>/src/discord/utils/*',
+    '<rootDir>/src/discord/events/*',
+    '<rootDir>/src/discord/dscrd.ts',
+    '<rootDir>/src/discord/commands/index.ts',
+    '<rootDir>/src/discord/commands/archive/*',
+    '<rootDir>/src/discord/commands/global/_d.globalTemplate.ts',
+    '<rootDir>/src/discord/commands/guild/_d.guildTemplate.ts',
   ],
   testEnvironment: 'node',
   clearMocks: true,
   transform: {
     '\\.ts$': 'ts-jest',
   },
-  rootDir: '../',
+  rootDir: '../../',
 };
 
 export default jestConfig;

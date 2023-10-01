@@ -42,21 +42,6 @@ const reviewerQuestion = 'What role reviews those applications?';
 async function help(
   interaction:ChatInputCommandInteraction,
 ) {
-  const previousButton = new ButtonBuilder()
-    .setCustomId('previousButton')
-    .setLabel('Previous')
-    .setStyle(ButtonStyle.Danger);
-
-  const nextButton = new ButtonBuilder()
-    .setCustomId('nextButton')
-    .setLabel('Next')
-    .setStyle(ButtonStyle.Success);
-
-  const buttonList = [
-    previousButton,
-    nextButton,
-  ];
-
   const tripsitEmbed = embedTemplate()
     .setTitle('How To Setup TripSit Sessions')
     .setDescription(stripIndents`
@@ -177,7 +162,7 @@ async function help(
     rulesEmbed,
     ticketboothEmbed,
   ];
-  paginationEmbed(interaction, book, buttonList, 0);
+  paginationEmbed(interaction, book);
 }
 
 async function tripsit(
@@ -755,14 +740,45 @@ export async function helperButton(
 
   const modal = new ModalBuilder()
     .setCustomId(`"ID":"RR","II":"${interaction.id}"`)
-    .setTitle(`${role.name} Introduction`);
-  modal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
-    .setCustomId('introduction')
-    .setRequired(true)
-    .setLabel('Tell us a bit about yourself!')
-  .setPlaceholder(`Why do you want to be a ${role.name}? This will be sent to the channel!`) // eslint-disable-line
-    .setMaxLength(1900)
-    .setStyle(TextInputStyle.Paragraph)));
+    .setTitle(`${role.name} Introduction`)
+    .addComponents(
+      new ActionRowBuilder<TextInputBuilder>().addComponents(
+        new TextInputBuilder()
+          .setCustomId('introduction')
+          .setRequired(true)
+          .setLabel('Tell us a bit about yourself!')
+          .setPlaceholder(`Why do you want to be a ${role.name}? All responses will be sent to the channel!`)
+          .setMaxLength(600)
+          .setStyle(TextInputStyle.Paragraph),
+      ),
+      new ActionRowBuilder<TextInputBuilder>().addComponents(
+        new TextInputBuilder()
+          .setCustomId('strengths')
+          .setRequired(true)
+          .setLabel('What are you good at?')
+          .setPlaceholder('What makes you awesome?')
+          .setMaxLength(500)
+          .setStyle(TextInputStyle.Paragraph),
+      ),
+      new ActionRowBuilder<TextInputBuilder>().addComponents(
+        new TextInputBuilder()
+          .setCustomId('weaknesses')
+          .setRequired(true)
+          .setLabel('What about you could be better?')
+          .setPlaceholder('No one is perfect <3')
+          .setMaxLength(500)
+          .setStyle(TextInputStyle.Paragraph),
+      ),
+      new ActionRowBuilder<TextInputBuilder>().addComponents(
+        new TextInputBuilder()
+          .setCustomId('animal')
+          .setRequired(true)
+          .setLabel('What is your favorite animal?')
+          .setPlaceholder('This is the only question that anyone really cares about, pick carefully!')
+          .setMaxLength(100)
+          .setStyle(TextInputStyle.Paragraph),
+      ),
+    );
   await interaction.showModal(modal);
 
   // Collect a modal submit interaction
@@ -785,42 +801,74 @@ export async function helperButton(
       if (!guildData.channel_tripsit) return;
       if (!guildData.role_tripsitter) return;
 
-      let introMessage = i.fields.getTextInputValue('introduction');
+      const introMessage = i.fields.getTextInputValue('introduction');
+      const strengthMessage = i.fields.getTextInputValue('strengths');
+      const weaknessMessage = i.fields.getTextInputValue('weaknesses');
+      const animalMessage = i.fields.getTextInputValue('animal');
       // log.debug(F, `introMessage: ${introMessage}`);
 
-      // Put a > in front of each line on introMessage
-      introMessage = introMessage.replace(/^(.*)$/gm, '> $1');
-
       await target.roles.add(role);
-      await i.editReply({ content: `Added role ${role.name}` });
+      const metaChannel = await i.guild?.channels.fetch(guildData.channel_tripsitmeta) as TextChannel;
+      await i.editReply({ content: `Added role ${role.name}, go check out ${metaChannel}!` });
 
-      const channel = await i.guild?.channels.fetch(guildData.channel_tripsitmeta) as TextChannel;
+      if (metaChannel.id === guildData.channel_tripsitmeta) {
+        const introString = `
+        Please welcome ${target.displayName} as a ${role.name}!
 
-      const rolTripsitter = await i.guild?.roles.fetch(guildData.role_tripsitter) as Role;
+        > Intro
+        \`\`\`${introMessage}\`\`\`
+        > Strengths
+        \`\`\`${strengthMessage}\`\`\`
+        > Opportunities
+        \`\`\`${weaknessMessage}\`\`\`
+        > Animal
+        \`\`\`${animalMessage}\`\`\`
+        
+        `;
 
-      if (channel.id === guildData.channel_tripsitmeta) {
+        log.debug(F, `introString Length: ${introString.length}`);
         const intro = stripIndents`
-      Hey ${rolTripsitter} team, ${target} has joined as a ${role.name}, please welcome them!
-      A little about them:
-      ${introMessage}`;
-        await channel.send(intro);
-        const followup = stripIndents`Some important information for you ${target}!
-      # For a refresher on tripsitting please see the following resources:
-      - <https://docs.google.com/document/d/1vE3jl9imdT3o62nNGn19k5HZVOkECF3jhjra8GkgvwE>
-      - <https://wiki.tripsit.me/wiki/How_To_Tripsit_Online>
-      - Check the pins in this channel!
-      # If you're overwhelmed, ask for backup
-      - Giving no information is better than giving the wrong information!
-      # If someone is underage you can ping a Moderator and finish the session if you're comfortable. 
-      - Underage users can use the web-chat anonymously but are not allowed to socialize, moderator will take care of this.
-      # We are NOT here to give medical advice, diagnose, or treat; or handle suicidal or self-harm situations.
-      - We're here to give harm reduction facts and *mild* mental health support, no one here is qualified to handle suicide of self-harm.
-      - If it seems like someone could use mental health services you can refer them to:
-      **Huddle Humans** - Mental health support <https://discord.gg/mentalhealth>
-      **HealthyGamer** - Mental health with a gaming twist - <https://discord.com/invite/H3yRwc7>
+          Please welcome ${target.displayName} as a ${role.name}!
 
-      **If you have any questions, please reach out!**`;
-        await channel.send(followup);
+          > Intro
+          \`\`\`${introMessage}\`\`\`
+          > Strengths
+          \`\`\`${strengthMessage}\`\`\`
+          > Opportunities
+          \`\`\`${weaknessMessage}\`\`\`
+          > Animal
+          \`\`\`${animalMessage}\`\`\`
+          
+          `;
+        await metaChannel.send(intro);
+
+        await metaChannel.send(stripIndents`
+          Some important information for you ${target}!
+          ### For a refresher on tripsitting please see the following resources:
+
+          - [TripSit Learning Portal](https://learn.tripsit.me>)
+          - [BlueLight's How To Tripsit](<https://docs.google.com/document/d/1vE3jl9imdT3o62nNGn19k5HZVOkECF3jhjra8GkgvwE>)
+          - [TripSit's How to Tripsit](<https://wiki.tripsit.me/wiki/How_To_Tripsit_Online>)
+          - Check the pins in this channel!
+          ### If you're overwhelmed, ask for backup
+          - Giving no information is better than giving the wrong information!
+          ### If someone is underage you can ping a Moderator and finish the session if you're comfortable. 
+          - Underage users can use the web-chat anonymously but are not allowed to socialize, moderator will take care of this.
+          ### We are NOT here to give medical advice, diagnose, or treat; or handle suicidal or self-harm situations.
+          - We're here to give harm reduction facts and *mild* mental health support, no one here is qualified to handle suicide of self-harm.
+          - If it seems like someone could use mental health services you can refer them to:
+          **Huddle Humans** - [Mental health support](<https://discord.gg/mentalhealth>)
+          **HealthyGamer** - [Mental health with a gaming twist](<https://discord.com/invite/H3yRwc7>)
+    
+          **If you have any questions, please reach out!**
+        `);
+      }
+
+      if (i.guild.id === env.DISCORD_GUILD_ID) {
+        const channelTripsitters = await i.guild?.channels.fetch(env.CHANNEL_TRIPSITTERS) as TextChannel;
+        const roleTripsitter = await i.guild?.roles.fetch(guildData.role_tripsitter) as Role;
+
+        await channelTripsitters.send(stripIndents`Hey ${roleTripsitter}, ${target.displayName} has joined as a ${role.name}`);
       }
     });
 }
