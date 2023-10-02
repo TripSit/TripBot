@@ -94,11 +94,11 @@ const mindsetRoles = [
   env.ROLE_SOBER,
 ];
 
-// const otherRoles = [
-//   env.ROLE_VERIFIED,
-// ];
+const otherRoles = [
+  env.ROLE_VERIFIED,
+];
 
-const ignoredRoles = `${teamRoles},${colorRoles},${mindsetRoles}`;
+const ignoredRoles = `${teamRoles},${colorRoles},${mindsetRoles},${otherRoles}`;
 
 const guildOnly = 'This must be performed in a guild!';
 const memberOnly = 'This must be performed by a member of a guild!';
