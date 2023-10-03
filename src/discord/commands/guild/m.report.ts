@@ -32,6 +32,7 @@ export const mReport: MessageCommand = {
         .setLabel('Why are you reporting this?')
         .setStyle(TextInputStyle.Paragraph)
         .setPlaceholder('Please be descriptive!')
+        .setMaxLength(1000)
         .setRequired(true)
         .setCustomId('internalNote'))));
     const filter = (i:ModalSubmitInteraction) => i.customId.includes('reportModal');
