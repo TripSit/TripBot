@@ -320,6 +320,7 @@ and they do not exist in the database!`,
           .setLabel(`Why are you ${verb} this user?`)
           .setStyle(TextInputStyle.Paragraph)
           .setPlaceholder('Tell other moderators why you\'re doing this')
+          .setMaxLength(1000)
           .setRequired(true)
           .setCustomId('internalNote')));
 
@@ -330,6 +331,7 @@ and they do not exist in the database!`,
           .setLabel('What should we tell the user?')
           .setStyle(TextInputStyle.Paragraph)
           .setPlaceholder('Tell the user why you\'re doing this')
+          .setMaxLength(1000)
           .setRequired(command === 'WARNING')
           .setCustomId('description')));
     }
