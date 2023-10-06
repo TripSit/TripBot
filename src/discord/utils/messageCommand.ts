@@ -1,14 +1,10 @@
 /* eslint-disable max-len */
 
 import {
-  // ChannelType,
   Message,
-  // GuildTextBasedChannel,
   Role,
   PermissionResolvable,
-  ThreadChannel,
   EmbedBuilder,
-  TextChannel,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
 import { sleep } from '../commands/guild/d.bottest';
@@ -281,32 +277,6 @@ give people a chance to answer 😄 If no one answers in 5 minutes you can try a
     if (message.guild.id !== env.DISCORD_GUILD_ID) return;
     // log.debug(F, 'Sad stuff detected');
     await message.react(heartEmojis[Math.floor(Math.random() * heartEmojis.length)]);
-  } else if (
-    message.content.match(/(?:anyone|someone+there|here)\b/)
-    && (message.channel as ThreadChannel).parent?.parentId !== env.CATEGORY_HARMREDUCTIONCENTRE
-    && (message.channel as TextChannel).parentId !== env.CATEGORY_HARMREDUCTIONCENTRE
-  ) {
-    // Find when the last message in that channel was sent
-    const lastMessage = await message.channel.messages.fetch({
-      before: message.id,
-      limit: 1,
-    });
-    const lastMessageDate = lastMessage.first()?.createdAt;
-
-    // Check if the last message was send in the last 10 minutes
-    if (lastMessageDate && lastMessageDate.valueOf() > Date.now() - 1000 * 60 * 10) {
-      // If it was, then don't send the message
-      return;
-    }
-
-    await message.channel.sendTyping();
-    setTimeout(async () => {
-      await (message.channel.send({
-        content: stripIndents`Hey ${message.member?.displayName}! 
-        Sometimes chat slows down, but go ahead and ask your question: Someone will get back to you when they can!
-        Who knows, maybe someone is lurking and waiting for the right question... :eyes: `,
-      }));
-    }, 2000);
   }
   // else if (
   //   message.content.match(/(?:anyone|someone+there|here)\b/)

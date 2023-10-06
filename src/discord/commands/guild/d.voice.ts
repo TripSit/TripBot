@@ -1,7 +1,5 @@
 import {
-  VoiceChannel,
-  ChannelType,
-  Guild,
+  // Guild,
   Colors,
   SlashCommandBuilder,
   GuildMember,
@@ -83,14 +81,14 @@ async function tentHide(
 //   target: GuildMember,
 // ):Promise<EmbedBuilder> {
 //   let verb = '';
-// 
+//
 //   if (voiceChannel.permissionsFor(target).has(PermissionsBitField.Flags.ViewChannel) === false){
 //     return embedTemplate()
 //       .setTitle('Error')
 //       .setColor(Colors.Red)
 //       .setDescription(`${target} is banned from ${voiceChannel}, unban them first!`);
 //   }
-// 
+//
 //   if (!voiceChannel.permissionsFor(target).has(PermissionsBitField.Flags.ViewChannel) === true){
 //     voiceChannel.permissionOverwrites.create(target, { ViewChannel: true, Connect: true });
 //     verb = 'added';
@@ -99,7 +97,7 @@ async function tentHide(
 //     verb = 'unadded';
 //   }
 //   // log.debug(F, `${target.displayName} is now ${verb}`);
-// 
+//
 //   return embedTemplate()
 //     .setTitle('Success')
 //     .setColor(Colors.Green)
@@ -119,7 +117,7 @@ async function tentBan(
     }
     verb = 'banned and disconnected';
   } else {
-    voiceChannel.permissionOverwrites.delete(target);;
+    voiceChannel.permissionOverwrites.delete(target);
     verb = 'unbanned';
   }
 
@@ -259,9 +257,9 @@ export const dVoice: SlashCommand = {
     const member = interaction.member as GuildMember;
     const target = interaction.options.getMember('target') as GuildMember;
     const newName = interaction.options.getString('name') as string;
-    const stationid = interaction.options.getString('station') as string;
-    const guild = interaction.guild as Guild;
-    const bitrate = interaction.options.getString('bitrate') as string;
+    // const stationid = interaction.options.getString('station') as string;
+    // const guild = interaction.guild as Guild;
+    // const bitrate = interaction.options.getString('bitrate') as string;
     const voiceChannel = member.voice.channel;
     let embed = embedTemplate()
       .setTitle('Error')
@@ -293,11 +291,9 @@ export const dVoice: SlashCommand = {
     }
 
     // Check if the target user is a moderator
-    if (target){
-      if (target.roles.cache.has(env.ROLE_MODERATOR)) {
-        await interaction.editReply({ embeds: [embed.setDescription('You cannot do that to a moderator!')] });
-        return false;
-      }
+    if (target && target.roles.cache.has(env.ROLE_MODERATOR)) {
+      await interaction.editReply({ embeds: [embed.setDescription('You cannot do that to a moderator!')] });
+      return false;
     }
 
     // log.debug(F, `Command: ${command}`);

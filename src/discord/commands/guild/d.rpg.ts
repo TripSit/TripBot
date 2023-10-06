@@ -3173,8 +3173,8 @@ export const dRpg: SlashCommand = {
       .setName('roulette')
       .setDescription('Go to the roulette game'))
     .addSubcommand(subcommand => subcommand
-     .setName('trivia')
-     .setDescription('Go to the trivia parlor')),
+      .setName('trivia')
+      .setDescription('Go to the trivia parlor')),
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
     const channelRpg = await interaction.guild?.channels.fetch(env.CHANNEL_TRIPTOWN as string) as TextChannel;
