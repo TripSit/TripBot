@@ -1939,7 +1939,7 @@ export async function rpgArcade(
       .addComponents(
         customButton(`rpgCoinFlip,user:${interaction.user.id}`, 'CoinFlip', 'buttonCoinflip', ButtonStyle.Secondary),
         customButton(`rpgRoulette,user:${interaction.user.id}`, 'Roulette', 'buttonRoulette', ButtonStyle.Secondary),
-        // customButton(`rpgTrivia,user:${interaction.user.id}`, 'Trivia', 'buttonTrivia', ButtonStyle.Secondary),
+        customButton(`rpgTrivia,user:${interaction.user.id}`, 'Trivia', 'buttonTrivia', ButtonStyle.Secondary),
         // customButton(`rpgBlackjack,user:${interaction.user.id}`, 'Blackjack', '🃏', ButtonStyle.Primary),
         // customButton(`rpgSlots,user:${interaction.user.id}`, 'Slots', '🎰', ButtonStyle.Primary),
         customButton(`rpgTown,user:${interaction.user.id}`, 'Town', 'buttonTown', ButtonStyle.Primary),
@@ -3171,10 +3171,10 @@ export const dRpg: SlashCommand = {
       .setDescription('Go to the coinflip game'))
     .addSubcommand(subcommand => subcommand
       .setName('roulette')
-      .setDescription('Go to the roulette game')),
-  // .addSubcommand(subcommand => subcommand
-  //   .setName('trivia')
-  //   .setDescription('Go to the trivia parlor')),
+      .setDescription('Go to the roulette game'))
+    .addSubcommand(subcommand => subcommand
+      .setName('trivia')
+      .setDescription('Go to the trivia parlor')),
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
     const channelRpg = await interaction.guild?.channels.fetch(env.CHANNEL_TRIPTOWN as string) as TextChannel;

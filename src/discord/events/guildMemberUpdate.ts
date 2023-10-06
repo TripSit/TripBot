@@ -340,7 +340,7 @@ async function addedVerified(
     await channelLounge.send({
       content: stripIndents`**${greeting}**
   
-      Be safe, have fun, /report any issues!
+      Be safe, have fun, and don't forget to visit the <id:guide> for more information!
       
       *${await topic()}*`,
     });

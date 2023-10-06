@@ -1,14 +1,10 @@
 /* eslint-disable max-len */
 
 import {
-  // ChannelType,
   Message,
-  // GuildTextBasedChannel,
   Role,
   PermissionResolvable,
-  // ThreadChannel,
   EmbedBuilder,
-  // TextChannel,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
 import { sleep } from '../commands/guild/d.bottest';
