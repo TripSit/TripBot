@@ -24,6 +24,10 @@ import {
 } from '../commands/guild/d.rpg';
 import { helperButton } from '../commands/global/d.setup';
 import { appealAccept, appealReject } from '../utils/appeal';
+import {
+  werewolfDiary,
+  werewolfHow, werewolfJoin, werewolfLeave, werewolfStart,
+} from '../commands/guild/d.werewolf';
 
 const F = f(__filename);
 
@@ -31,7 +35,7 @@ export default buttonClick;
 
 export async function buttonClick(interaction:ButtonInteraction, discordClient:Client) {
   log.info(F, await commandContext(interaction));
-  log.debug(F, 'Interaction deferred!');
+  // log.debug(F, 'Interaction deferred!');
   const buttonID = interaction.customId;
 
   if (buttonID.startsWith('rpg')) {
@@ -83,6 +87,31 @@ export async function buttonClick(interaction:ButtonInteraction, discordClient:C
     else if (interaction.customId.split(',')[0] === 'rpgQuest') await interaction.editReply(await rpgBounties(interaction, interaction.customId.split(',')[0].replace('rpg', '').toLowerCase() as 'quest' | 'dungeon' | 'raid'));
     else if (interaction.customId.split(',')[0] === 'rpgDungeon') await interaction.editReply(await rpgBounties(interaction, interaction.customId.split(',')[0].replace('rpg', '').toLowerCase() as 'quest' | 'dungeon' | 'raid'));
     else if (interaction.customId.split(',')[0] === 'rpgRaid') await interaction.editReply(await rpgBounties(interaction, interaction.customId.split(',')[0].replace('rpg', '').toLowerCase() as 'quest' | 'dungeon' | 'raid'));
+    return;
+  }
+
+  if (buttonID.startsWith('werewolf')) {
+    log.debug(F, 'Werewolf button clicked');
+
+    if (buttonID.toLowerCase().includes('how')) {
+      await werewolfHow(interaction);
+      return;
+    }
+
+    if (buttonID.toLowerCase().includes('diary')) {
+      await werewolfDiary(interaction);
+      return;
+    }
+
+    if (buttonID.toLowerCase().includes('start')) {
+      await werewolfStart(interaction);
+      return;
+    }
+
+    await interaction.deferUpdate();
+
+    if (buttonID.toLowerCase().includes('join')) await interaction.editReply(await werewolfJoin(interaction));
+    else if (buttonID.toLowerCase().includes('leave')) await interaction.editReply(await werewolfLeave(interaction));
     return;
   }
 

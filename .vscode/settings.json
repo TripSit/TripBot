@@ -14,9 +14,10 @@
         "bottest",
         "logit",
         "modlog",
-        "Moonbear",
         "moodle",
+        "Moonbear",
         "openai",
-        "tripbot"
+        "tripbot",
+        "WOLFDEN"
     ],
 }
