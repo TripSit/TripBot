@@ -107,7 +107,6 @@ export async function pitchTent(
  - You can pick up this role in <id:customize>
 
 - **Modify your tent**
- - \`/voice radio\` - Borrow a radio bot for your tent
  - \`/voice bitrate\` - Change the bitrate of your tent
  - \`/voice rename\` - Choose a new name for your tent
 
