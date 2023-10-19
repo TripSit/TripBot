@@ -24,6 +24,7 @@ import {
 } from '../commands/guild/d.rpg';
 import { helperButton } from '../commands/global/d.setup';
 import { appealAccept, appealReject } from '../utils/appeal';
+import { mushroomPageOne, mushroomPageTwo } from '../commands/global/d.mushroom_info';
 
 const F = f(__filename);
 
@@ -33,6 +34,20 @@ export async function buttonClick(interaction:ButtonInteraction, discordClient:C
   log.info(F, await commandContext(interaction));
   log.debug(F, 'Interaction deferred!');
   const buttonID = interaction.customId;
+
+  if (buttonID.startsWith('mushroom')) {
+    // log.debug(F, 'Werewolf button clicked');
+
+    if (buttonID.toLowerCase().includes('pageone')) {
+      await mushroomPageOne(interaction);
+      return;
+    }
+
+    if (buttonID.toLowerCase().includes('pagetwo')) {
+      await mushroomPageTwo(interaction);
+      return;
+    }
+  }
 
   if (buttonID.startsWith('rpg')) {
     if (!buttonID.includes(interaction.user.id)) {
