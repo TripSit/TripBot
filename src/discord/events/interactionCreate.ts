@@ -22,7 +22,7 @@ export const interactionCreate: InteractionCreateEvent = {
   name: 'interactionCreate',
   async execute(interaction) {
     const startTime = new Date().getTime();
-    log.info(F, `interactionCreate event started at ${startTime}`);
+    // log.info(F, `interactionCreate event started at ${startTime}`);
 
     // Don't run anything if the interaction is from a bot
     if (interaction.user.bot) return;
@@ -70,7 +70,7 @@ export const interactionCreate: InteractionCreateEvent = {
     if (interaction.isChatInputCommand()) {
       // Slash command
       // log.debug(F, `Interaction isChatInputCommand!`);
-      log.info(F, `Decided to run slash command in ${new Date().getTime() - startTime}ms`);
+      // log.info(F, `Decided to run slash command in ${new Date().getTime() - startTime}ms`);
       commandRun(interaction, discordClient);
       return;
     }
@@ -78,7 +78,7 @@ export const interactionCreate: InteractionCreateEvent = {
     if (interaction.type === InteractionType.ApplicationCommand
       // Right click command
       && interaction.isContextMenuCommand()) {
-      log.debug(F, `interaction.isContextMenuCommand(): ${interaction.isContextMenuCommand()}`);
+      // log.debug(F, `interaction.isContextMenuCommand(): ${interaction.isContextMenuCommand()}`);
       commandRun(interaction, discordClient);
       return;
     }
