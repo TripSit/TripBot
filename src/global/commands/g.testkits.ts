@@ -9,7 +9,7 @@ export default testkits;
  * @return {any} an object with information about the bot
  */
 export async function testkits():Promise<HelpResource[]> {
-  const response = [
+  return [
     {
       name: 'DanceSafe',
       country: 'Worldwide',
@@ -19,19 +19,28 @@ export async function testkits():Promise<HelpResource[]> {
     {
       name: 'Dosetest',
       country: 'Worldwide',
-      website: 'https://dosetest.com/',
-      description: '20% off test kits with code TripSit!',
+      website: 'https://dosetest.com/tripsit',
+      description: '20% off test kits with code TripSit (Affiliate link)',
+    },
+    {
+      name: 'Protest',
+      country: 'Europe',
+      website: 'https://protestkit.eu/shop/?coupon_code=tripsit',
+      description: '10% off test kits with code TripSit! (Affiliate code)',
     },
     {
       name: 'ReagentTests UK',
       country: 'UK & EU',
       website: 'https://www.reagent-tests.uk/shop/',
-      description: '10% off with code tripsitwiki!',
+      description: '10% off with code tripsitwiki',
+    },
+    {
+      name: 'ES Test',
+      country: 'Australia',
+      website: 'http://ez-test.com.au/',
+      description: '10% off TripsitAusOct\n15% off with TripsitAusNov',
     },
   ];
-  log.info(F, `response: ${JSON.stringify(response, null, 2)}`);
-
-  return response;
 }
 
 type HelpResource = {

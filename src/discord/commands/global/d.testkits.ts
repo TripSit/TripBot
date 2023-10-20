@@ -12,7 +12,7 @@ const F = f(__filename);
 
 export const dTestkits: SlashCommand = {
   data: new SlashCommandBuilder()
-    .setName('testkits')
+    .setName('drug_testkits')
     .setDescription('Information on how to get a test kit')
     .addBooleanOption(option => option.setName('ephemeral')
       .setDescription('Set to "True" to show the response only to you')),
