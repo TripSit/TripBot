@@ -33,7 +33,7 @@ export async function testkits():Promise<HelpResource[]> {
       description: '10% off with code tripsitwiki',
     },
     {
-      name: 'ES Test',
+      name: 'EZ Test',
       country: 'Australia',
       website: 'http://ez-test.com.au/',
       description: '10% off TripsitAusOct\n15% off with TripsitAusNov',
