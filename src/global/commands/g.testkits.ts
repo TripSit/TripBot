@@ -1,7 +1,5 @@
 /* eslint-disable max-len */
 
-const F = f(__filename);
-
 export default testkits;
 
 /**
