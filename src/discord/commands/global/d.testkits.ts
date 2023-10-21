@@ -4,13 +4,13 @@ import {
 import { stripIndents } from 'common-tags';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
-import { testkits } from '../../../global/commands/g.testkits';
+import testkits from '../../../global/commands/g.testkits';
 import commandContext from '../../utils/context';
 // import log from '../../../global/utils/log';
 
 const F = f(__filename);
 
-export const dTestkits: SlashCommand = {
+export default {
   data: new SlashCommandBuilder()
     .setName('drug_testkits')
     .setDescription('Information on how to get a test kit')
@@ -46,6 +46,4 @@ export const dTestkits: SlashCommand = {
     await interaction.editReply({ embeds: [embed] });
     return true;
   },
-};
-
-export default dTestkits;
+} as SlashCommand;

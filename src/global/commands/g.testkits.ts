@@ -1,12 +1,16 @@
-/* eslint-disable max-len */
-
-export default testkits;
+type HelpResource = {
+  name: string;
+  country: string;
+  website: string;
+  description: string;
+};
 
 /**
  * Information about contacting the team!
  * @return {any} an object with information about the bot
  */
-export async function testkits():Promise<HelpResource[]> {
+
+export default async function testkits():Promise<HelpResource[]> {
   return [
     {
       name: 'DanceSafe',
@@ -18,13 +22,13 @@ export async function testkits():Promise<HelpResource[]> {
       name: 'Dosetest',
       country: 'Worldwide',
       website: 'https://dosetest.com/tripsit',
-      description: '20% off test kits with code TripSit (Affiliate link)',
+      description: '20% off with code TripSit (Affiliate link)',
     },
     {
       name: 'Protest',
       country: 'Europe',
       website: 'https://protestkit.eu/shop/?coupon_code=tripsit',
-      description: '10% off test kits with code TripSit! (Affiliate code)',
+      description: '10% off with code TripSit (Affiliate code)',
     },
     {
       name: 'ReagentTests UK',
@@ -36,22 +40,13 @@ export async function testkits():Promise<HelpResource[]> {
       name: 'EZ Test',
       country: 'Australia',
       website: 'http://ez-test.com.au/',
-      description: '10% off TripsitAusOct\n15% off with TripsitAusNov',
+      description: '10% off with TripsitAusOct\n15% off with TripsitAusNov',
+    },
+    {
+      name: 'Test Drogue',
+      country: 'France',
+      website: 'https://www.testdrogue.fr/',
+      description: '',
     },
   ];
 }
-
-type HelpResource = {
-  name: string;
-  country: string;
-  website: string;
-  description: string;
-};
-
-const template = // eslint-disable-line
-{
-  name: '',
-  country: '',
-  website: '',
-  description: '',
-};
