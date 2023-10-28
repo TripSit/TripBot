@@ -131,7 +131,7 @@ async function donorColorCheck(
     // log.debug(F, `donor color role added: ${roleId}`);
     // If it does, check if the user also has a donor role
     if (oldMember.roles.cache.has(env.ROLE_BOOSTER)
-    || oldMember.roles.cache.has(env.ROLE_PATRON)
+    || oldMember.roles.cache.has(env.ROLE_PREMIUM)
     || oldMember.roles.cache.has(env.ROLE_TEAMTRIPSIT)) {
       log.debug(F, 'Donor added a color role!');
     } else {
@@ -153,8 +153,8 @@ async function donorColorRemove(
 ) {
   // log.debug(F, `donor color role removed: ${roleId}`);
   // log.debug(F, `${Object.keys(donorRoles)}`);
-  // Check if it's a donor role
-  if (Object.values(donorRoles).includes(roleId)) {
+  // Check if it's the booster role, if it is, remove colour role if they don't also have the premium role
+  if (roleId === env.ROLE_BOOSTER && !newMember.roles.cache.has(env.ROLE_PREMIUM) || (roleId === env.ROLE_PREMIUM)){
     // log.debug(F, `donor role removed: ${roleId}`);
     // If it does, check if the user also has a role id matching a donorColorRole and if so, remove it
     const donorColorRole = newMember.roles.cache.find(role => Object.values(donorColorRoles).includes(role.id));
@@ -354,8 +354,8 @@ async function addedBooster(
   // Check if the role added was a donator role
   if (roleId === env.ROLE_BOOSTER) {
     // log.debug(F, `${newMember.displayName} boosted the server!`);
-    const channelGoldlounge = await discordClient.channels.fetch(env.CHANNEL_GOLDLOUNGE) as TextChannel;
-    await channelGoldlounge.send(`Hey @here, ${newMember} just boosted the server, give them a big thank you for helping to keep this place awesome!`); // eslint-disable-line max-len
+    const channelviplounge = await discordClient.channels.fetch(env.CHANNEL_VIPLOUNGE) as TextChannel;
+    await channelviplounge.send(`${newMember} just boosted the server, give them a big thank you for helping to keep this place awesome!`); // eslint-disable-line max-len
   }
 }
 
@@ -364,11 +364,13 @@ async function addedPatreon(
   roleId: string,
 ) {
   // Check if the role added was a donator role
-  if (roleId === env.ROLE_PATRON) {
+  if (roleId === env.ROLE_PREMIUM) {
     // log.debug(F, `${newMember.displayName} became a patron!`);
-    const channelGoldlounge = await discordClient.channels.fetch(env.CHANNEL_GOLDLOUNGE) as TextChannel;
+    const channelviplounge = await discordClient.channels.fetch(env.CHANNEL_VIPLOUNGE) as TextChannel;
     const isProd = env.NODE_ENV === 'production';
-    await channelGoldlounge.send(`Hey ${isProd ? '@here' : 'here'}, ${newMember} just became a patron, give them a big thank you for helping us keep the lights on and expand!`); // eslint-disable-line max-len
+    // Give them the "Premium Member role"
+    await newMember.roles.add(env.ROLE_PREMIUM);
+    await channelviplounge.send(`${newMember} just became a Premium Member by donating via [Patreon](https://www.patreon.com/TripSit) or [KoFi](KOFI URL HERE!), give them a big **thank you** for helping us keep the lights on and expand!`); // eslint-disable-line max-len
   }
 }
 
