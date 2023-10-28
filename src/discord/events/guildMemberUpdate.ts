@@ -370,7 +370,7 @@ async function addedPatreon(
     const isProd = env.NODE_ENV === 'production';
     // Give them the "Premium Member role"
     await newMember.roles.add(env.ROLE_PREMIUM);
-    await channelviplounge.send(`${newMember} just became a Premium Member by donating via [Patreon](https://www.patreon.com/TripSit) or [KoFi](KOFI URL HERE!), give them a big **thank you** for helping us keep the lights on and expand!`); // eslint-disable-line max-len
+    await channelviplounge.send(`${newMember} just became a Premium Member by donating via [Patreon](https://www.patreon.com/TripSit) or [KoFi](https://ko-fi.com/tripsit), give them a big **thank you** for helping us keep the lights on and expand!`); // eslint-disable-line max-len
   }
 }
 
