@@ -36,12 +36,14 @@ export const uBan: UserCommand = {
           .setLabel('Why are you banning this user?')
           .setStyle(TextInputStyle.Paragraph)
           .setPlaceholder('Tell the team why you are banning this user.')
+          .setMaxLength(1000)
           .setRequired(true)
           .setCustomId('internalNote')),
         new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
           .setLabel('What should we tell the user?')
           .setStyle(TextInputStyle.Paragraph)
           .setPlaceholder('This will be sent to the user!')
+          .setMaxLength(1000)
           .setRequired(false)
           .setCustomId('description')),
         new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()

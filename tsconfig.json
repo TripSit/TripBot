@@ -13,7 +13,7 @@
     "*/matrix/*",
     "*/node_modules",
     "node_modules",
-    "*/telegram/*",
+    // "*/telegram/*",
     "**/__tests__editreply_/*",
     "**/__tests__integration__/*",
     "**/__tests__modals__/*",
