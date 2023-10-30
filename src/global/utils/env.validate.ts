@@ -6,6 +6,12 @@ export default function validateEnv(
   const F = f(__filename);
   // log.info(F, `You are in ${process.env.NODE_ENV?.toUpperCase()}`);
 
+  if (service === 'TELEGRAM' && !process.env.TELEGRAM_TOKEN) {
+    log.error(F, stripIndents`Missing TELEGRAM_TOKEN: You wont be able to login to Telegram. \
+      You get this from messaging bot father.`);
+    return false;
+  }
+
   if (service === 'DISCORD') {
     if (!process.env.DISCORD_CLIENT_ID) {
       log.error(F, stripIndents`Missing DISCORD_CLIENT_ID: You wont be able to login to discord. \

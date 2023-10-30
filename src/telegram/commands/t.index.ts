@@ -1,20 +1,34 @@
 /* eslint-disable global-require */
-import { Composer } from 'telegraf';
+import start from './t.start';
+import drug from './t.drug';
+import topic from './t.topic';
+import combo from './t.combo';
+import breathe from './t.breathe';
+import combochart from './t.combochart';
+import irc from './t.irc';
+import ban from './t.ban';
+import moderateChat from './t.moderateChat';
+import gban from './t.gban';
+import about from './t.about';
+import recovery from './t.recovery';
+import calcMushrooms from './t.calc-mushrooms';
+import calcLsd from './t.calc-lsd';
 
-export default Composer.compose([
-  require('./t.start'),
-  require('./t.drug'),
-  require('./t.topic'),
-  require('./t.combo'),
-  require('./t.breathe'),
-  require('./t.combochart'),
-  require('./t.irc'),
-  require('./t.ban'),
-  require('./t.moderateChat'),
-  require('./t.gban'),
-  // require('./t.eightball'),
-  require('./t.about'),
-  require('./t.recovery'),
-  require('./t.calc-mushrooms'),
-  require('./t.calc-lsd'),
-]);
+
+export default [
+  start,
+  drug,
+  topic,
+  combo,
+  breathe,
+  combochart,
+  irc,
+  ban,
+  moderateChat,
+  gban,
+  // eightball,
+  about,
+  recovery,
+  calcMushrooms,
+  calcLsd,
+]

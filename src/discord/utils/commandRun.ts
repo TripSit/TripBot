@@ -7,7 +7,7 @@ import {
 // import {SlashCommand} from './commandDef';
 import handleError from '../events/error';
 
-const F = f(__filename);
+// const F = f(__filename);
 
 export default commandRun;
 
@@ -21,8 +21,8 @@ export async function commandRun(
   interaction: ChatInputCommandInteraction | MessageContextMenuCommandInteraction | UserContextMenuCommandInteraction,
   discordClient: Client,
 ) {
-  const startTime = new Date().getTime();
-  log.info(F, `commandRun started at ${startTime}`);
+  // const startTime = new Date().getTime();
+  // log.info(F, `commandRun started at ${startTime}`);
   const { commandName } = interaction;
 
   const command = discordClient.commands.get(commandName);
@@ -30,7 +30,7 @@ export async function commandRun(
   if (!command) return;
 
   try {
-    log.info(F, `Executed the command in ${new Date().getTime() - startTime}ms`);
+    // log.info(F, `Executed the command in ${new Date().getTime() - startTime}ms`);
     await command.execute(interaction);
     // log.info(F, `commandRun finished in ${new Date().getTime() - startTime}ms`);
   } catch (error) {

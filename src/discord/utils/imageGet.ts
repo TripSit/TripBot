@@ -75,6 +75,8 @@ const imageDef = {
   Memphis: { path: `${assetsDirectory}/img/backgrounds/Memphis.png`, url: 'https://drive.google.com/uc?export=view&id=117XLPb59h6V9op7GG7A6FFSvh07Any7-' },
   Connected: { path: `${assetsDirectory}/img/backgrounds/Connected.png`, url: 'https://drive.google.com/uc?export=view&id=11AVKT7xrjI2ZgIpxz7j0zstBkD6XOD4m' },
   Binary: { path: `${assetsDirectory}/img/backgrounds/Binary.png`, url: 'https://drive.google.com/uc?export=view&id=11Ocm9oq5jCqnWleZEZyk9yPsdSpQl6oK' },
+  mushroomInfoA: { path: `${assetsDirectory}/img/mushroomInfoA.png`, url: 'https://i.gyazo.com/233df47085a0ac5493d8378111512b3d.png' },
+  mushroomInfoB: { path: `${assetsDirectory}/img/mushroomInfoB.png`, url: 'https://i.gyazo.com/2aae45e843da99867b82e9b1ad07d22b.png' },
 } as {
   [key: string]: { path: string;
     url: string;
@@ -121,13 +123,14 @@ export async function imageGet(
   // If it does not exist, it will download it from the internet and save it to that location
   // Either way, it will return a working path to the image
   const { path, url } = imageDef[imageName];
-  log.debug(F, `Checking ${path}`);
+  // log.debug(F, `Checking ${path}`);
   if (!fs.existsSync(path)) {
-    log.debug(F, `Downloading ${url} to ${path}`);
+    // log.debug(F, `Downloading ${url} to ${path}`);
     await downloadImage(url, path);
-    log.debug(F, `Downloaded ${url} to ${path}`);
-  } else {
-    log.debug(F, `Found ${path}`);
+    // log.debug(F, `Downloaded ${url} to ${path}`);
   }
+  // else {
+  //   log.debug(F, `Found ${path}`);
+  // }
   return path;
 }
