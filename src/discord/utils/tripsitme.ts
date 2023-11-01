@@ -96,6 +96,9 @@ const mindsetRoles = [
 
 const otherRoles = [
   env.ROLE_VERIFIED,
+  env.ROLE_PREMIUM,
+  env.ROLE_BOOSTER,
+  env.ROLE_PATRON,
 ];
 
 const ignoredRoles = `${teamRoles},${colorRoles},${mindsetRoles},${otherRoles}`;
