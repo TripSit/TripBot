@@ -387,14 +387,21 @@ async function addedPatreon(
   newMember: GuildMember,
   roleId: string,
 ) {
-  if (roleId === env.ROLE_PREMIUM) {
+  if (roleId === env.ROLE_PATRON && !newMember.roles.cache.has(env.ROLE_PREMIUM)) {
+    // Check if the user already has the premium role
+    // If they don't add it, and send the message, remove the patreon role
+    const role = await newMember.guild.roles.fetch(env.ROLE_PREMIUM) as Role;
+    // log.debug(F, `Adding ${role.name} from ${newMember.displayName}`);
+    await newMember.roles.add(role);
+    // log.debug(F, `Added ${role.name} from ${newMember.displayName}`);
+
     const channelviplounge = await discordClient.channels.fetch(env.CHANNEL_VIPLOUNGE) as TextChannel;
     await channelviplounge.send(stripIndents`
-    ** ${donorEmoji} ${newMember} just became a Premium Member by donating via [Patreon](<https://www.patreon.com/TripSit>) or [KoFi](<https://ko-fi.com/tripsit>)! ${donorEmoji} **
-
-     ${thankYouPhrases[Math.floor(Math.random() * thankYouPhrases.length)]}
-
-     ${donationTagline}`);
+      ** ${donorEmoji} ${newMember} just became a Premium Member by donating via [Patreon](<https://www.patreon.com/TripSit>) or [KoFi](<https://ko-fi.com/tripsit>)! ${donorEmoji} **
+  
+        ${thankYouPhrases[Math.floor(Math.random() * thankYouPhrases.length)]}
+  
+        ${donationTagline}`);
   }
 }
 
