@@ -106,18 +106,36 @@ const donorColorRoles = {
   [key in DonorColorNames]: string;
 };
 
-type DonorNames =
-| 'ROLE_BOOSTER'
-| 'ROLE_PATRON'
-| 'ROLE_TEAMTRIPSIT';
+// type DonorNames =
+// | 'ROLE_BOOSTER'
+// | 'ROLE_PATRON'
+// | 'ROLE_TEAMTRIPSIT';
 
-const donorRoles = {
-  ROLE_BOOSTER: env.ROLE_BOOSTER,
-  ROLE_PATRON: env.ROLE_PATRON,
-  ROLE_TEAMTRIPSIT: env.ROLE_TEAMTRIPSIT,
-} as {
-  [key in DonorNames]: string;
-};
+// const donorRoles = {
+//   ROLE_BOOSTER: env.ROLE_BOOSTER,
+//   ROLE_PATRON: env.ROLE_PATRON,
+//   ROLE_TEAMTRIPSIT: env.ROLE_TEAMTRIPSIT,
+// } as {
+//   [key in DonorNames]: string;
+// };
+
+const thankYouPhrases = [
+  'A heartfelt thanks for their generous contribution. Your support is invaluable!',
+  "Big shout out for their donation. We couldn't do it without you!",
+  'Thank you for your incredible support. Your contribution makes a world of difference.',
+  'Our gratitude knows no bounds. Thank you for helping us grow and thrive.',
+  "We're over the moon with your donation. Your generosity warms our hearts.",
+  'A round of applause! Your donation keeps our mission alive and thriving.',
+  'A standing ovation! Your support illuminates our path forward.',
+  "With your donation, you've become a crucial part of our journey. Thank you!",
+  'Thank you for being a beacon of support. You light up our endeavors.',
+  "Our deepest gratitude for their contribution. Together, we'll reach new heights.",
+];
+
+const donationTagline = '*`/donate` to TripSit to access special username colors and the snazzy Gold Lounge!*';
+
+const boostEmoji = env.NODE_ENV === 'production' ? '<:ts_boost:981799280396353596>' : '<:ts_boost:1168968973082185800>';
+const donorEmoji = env.NODE_ENV === 'production' ? '<:ts_donor:1121625178774966272>' : '<:ts_donor:1168969578836144233>';
 
 const F = f(__filename);
 
@@ -154,7 +172,8 @@ async function donorColorRemove(
   // log.debug(F, `donor color role removed: ${roleId}`);
   // log.debug(F, `${Object.keys(donorRoles)}`);
   // Check if it's the booster role, if it is, remove colour role if they don't also have the premium role
-  if (roleId === env.ROLE_BOOSTER && !newMember.roles.cache.has(env.ROLE_PREMIUM) || (roleId === env.ROLE_PREMIUM)){
+  if ((roleId === env.ROLE_BOOSTER && !newMember.roles.cache.has(env.ROLE_PREMIUM))
+  || (roleId === env.ROLE_PREMIUM && !newMember.roles.cache.has(env.ROLE_BOOSTER))) {
     // log.debug(F, `donor role removed: ${roleId}`);
     // If it does, check if the user also has a role id matching a donorColorRole and if so, remove it
     const donorColorRole = newMember.roles.cache.find(role => Object.values(donorColorRoles).includes(role.id));
@@ -355,7 +374,12 @@ async function addedBooster(
   if (roleId === env.ROLE_BOOSTER) {
     // log.debug(F, `${newMember.displayName} boosted the server!`);
     const channelviplounge = await discordClient.channels.fetch(env.CHANNEL_VIPLOUNGE) as TextChannel;
-    await channelviplounge.send(`${newMember} just boosted the server, give them a big thank you for helping to keep this place awesome!`); // eslint-disable-line max-len
+    await channelviplounge.send(stripIndents`
+        ** ${boostEmoji} ${newMember.toString()} just boosted the server! ${boostEmoji} **
+
+        ${thankYouPhrases[Math.floor(Math.random() * thankYouPhrases.length)]}
+
+        ${donationTagline}`);
   }
 }
 
@@ -363,14 +387,14 @@ async function addedPatreon(
   newMember: GuildMember,
   roleId: string,
 ) {
-  // Check if the role added was a donator role
   if (roleId === env.ROLE_PREMIUM) {
-    // log.debug(F, `${newMember.displayName} became a patron!`);
     const channelviplounge = await discordClient.channels.fetch(env.CHANNEL_VIPLOUNGE) as TextChannel;
-    const isProd = env.NODE_ENV === 'production';
-    // Give them the "Premium Member role"
-    await newMember.roles.add(env.ROLE_PREMIUM);
-    await channelviplounge.send(`${newMember} just became a Premium Member by donating via [Patreon](https://www.patreon.com/TripSit) or [KoFi](https://ko-fi.com/tripsit), give them a big **thank you** for helping us keep the lights on and expand!`); // eslint-disable-line max-len
+    await channelviplounge.send(stripIndents`
+    ** ${donorEmoji} ${newMember} just became a Premium Member by donating via [Patreon](<https://www.patreon.com/TripSit>) or [KoFi](<https://ko-fi.com/tripsit>)! ${donorEmoji} **
+
+     ${thankYouPhrases[Math.floor(Math.random() * thankYouPhrases.length)]}
+
+     ${donationTagline}`);
   }
 }
 
