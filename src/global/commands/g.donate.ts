@@ -9,16 +9,16 @@ export default donate;
 export async function donate():Promise<DonateResource[]> {
   const response = [
     {
-      name: 'Patreon (Preferred)',
+      name: 'Patreon Subscription',
       value: 'https://patreon.com/tripsit',
+    },
+    {
+      name: 'KoFi Tips',
+      value: 'https://ko-fi.com/tripsit',
     },
     {
       name: 'Discord Boosts',
       value: 'http://discord.gg/TripSit',
-    },
-    {
-      name: '\u200B',
-      value: '\u200B',
     },
     {
       name: 'Spreadshop',
