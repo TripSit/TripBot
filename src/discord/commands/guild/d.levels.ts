@@ -367,14 +367,16 @@ export const dLevels: SlashCommand = {
     }
     // Overly complicated avatar clip
     context.save();
-    if (isPremium === true){
+    // If user is rather premium or legacy, draw the hole for the icon
+    if (isPremium === true || isLegacy === true){
     context.beginPath();
     context.arc(110, 112, 21, 0, Math.PI * 2);
     context.arc(73, 73, 55, 0, Math.PI * 2, true);
     context.closePath();
     context.clip();
     }
-    if (isLegacy === true){
+    // If user is both premium and legacy, draw the extra left hand hole
+    if (isPremium === true && isLegacy === true){
     context.beginPath();
     context.arc(36, 112, 21, 0, Math.PI * 2);
     context.arc(73, 73, 55, 0, Math.PI * 2, true);
@@ -392,7 +394,11 @@ export const dLevels: SlashCommand = {
     if (isPremium === true) {
       context.drawImage(premiumIcon, 94, 97, 32, 32);
     }
-    if (isLegacy === true){
+    if (isLegacy === true && isPremium === false){
+      context.drawImage(legacyIcon, 94, 97, 32, 32);
+    }
+    // If both premium and legacy, move the legacy icon to the second slot, on the left
+    if (isLegacy === true && isPremium === true){
       context.drawImage(legacyIcon, 20, 97, 32, 32);
     }
 
