@@ -25,7 +25,7 @@ RUN npm ci
 
 # Bundle app source
 COPY --chown=node:node /src/prisma/ ./prisma/
-COPY --chown=node:node .env ./.env
+# COPY --chown=node:node .env ./.env
 
 # Initialize the first migration and then run studio
 CMD npx prisma migrate deploy && npx prisma studio
