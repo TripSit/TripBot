@@ -24,7 +24,7 @@ COPY --chown=node:node package*.json ./
 RUN npm ci
 
 # Bundle app source
-COPY --chown=node:node /src/prisma/ ./prisma/
+COPY --chown=node:node /src/prisma/ ./src/prisma/
 # COPY --chown=node:node .env ./.env
 
 # Initialize the first migration and then run studio
@@ -78,7 +78,7 @@ WORKDIR /usr/src/app
 # # Copy the bundled code from the build stage to the production image
 COPY --chown=node:node --from=build /usr/src/app/node_modules ./node_modules
 COPY --chown=node:node --from=build /usr/src/app/package*.json ./
-COPY --chown=node:node /src/prisma/ ./prisma/
+COPY --chown=node:node /src/prisma/ ./src/prisma/
 # COPY --chown=node:node .env ./.env
 
 USER node
