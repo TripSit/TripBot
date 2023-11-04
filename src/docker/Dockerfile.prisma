@@ -77,13 +77,14 @@ WORKDIR /usr/src/app
 
 # # Copy the bundled code from the build stage to the production image
 COPY --chown=node:node --from=build /usr/src/app/node_modules ./node_modules
+COPY --chown=node:node --from=build /usr/src/app/package*.json ./
 COPY --chown=node:node /src/prisma/ ./prisma/
 # COPY --chown=node:node .env ./.env
 
 USER node
 
 # Deploy migrations and then run studio
-# CMD npx prisma migrate deploy && npx prisma studio
+CMD npx prisma migrate deploy && npx prisma studio
 # CMD npx prisma studio
-CMD tail -f /dev/null
+# CMD tail -f /dev/null
 
