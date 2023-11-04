@@ -84,5 +84,6 @@ USER node
 
 # Deploy migrations and then run studio
 # CMD npx prisma migrate deploy && npx prisma studio
-CMD npx prisma studio
+# CMD npx prisma studio
+CMD tail -f /dev/null
 
