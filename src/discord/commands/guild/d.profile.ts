@@ -218,6 +218,8 @@ export const dProfile: SlashCommand = {
       await Canvas.loadImage(target.user.displayAvatarURL({ extension: 'jpg' })),
       // Get the birthday card overlay
       await Canvas.loadImage(await imageGet('cardBirthday')),
+      await Canvas.loadImage(await imageGet('premiumIcon')),
+      await Canvas.loadImage(await imageGet('legacyIcon')),
     ]);
 
     const profileData = values[0].status === 'fulfilled' ? values[0].value : {} as ProfileData;
@@ -226,6 +228,18 @@ export const dProfile: SlashCommand = {
     // const StatusIcon = values[3].status === 'fulfilled' ? values[3].value : {} as Canvas.Image;
     const avatar = values[3].status === 'fulfilled' ? values[3].value : {} as Canvas.Image;
     const birthdayOverlay = values[4].status === 'fulfilled' ? values[4].value : {} as Canvas.Image;
+    const premiumIcon = values[5].status === 'fulfilled' ? values[5].value : {} as Canvas.Image;
+    const legacyIcon = values[6].status === 'fulfilled' ? values[6].value : {} as Canvas.Image;
+
+    let isPremium = false
+    let isLegacy = false
+
+    if (target.roles.cache.has(env.ROLE_PREMIUM)) {
+      isPremium = true
+    }
+    if (target.roles.cache.has(env.ROLE_LEGACY)) {
+      isLegacy = true
+    }
 
     // Create Canvas and Context
     const canvasWidth = 921;
@@ -308,21 +322,41 @@ export const dProfile: SlashCommand = {
     context.stroke();
     context.restore(); */
 
-    // Overly complicated avatar clip (STATUS CLIP COMMENTED OUT)
+        // Overly complicated avatar clip
     context.save();
-    // context.beginPath();
-    // context.arc(110, 112, 21, 0, Math.PI * 2);
-    // context.arc(73, 73, 55, 0, Math.PI * 2, true);
-    // context.closePath();
-    // context.clip();
+    if (isPremium === true || isLegacy === true){
+    context.beginPath();
+    context.arc(110, 112, 21, 0, Math.PI * 2);
+    context.arc(73, 73, 55, 0, Math.PI * 2, true);
+    context.closePath();
+    context.clip();
+    }
+    // If user is both premium and legacy, draw the extra left hand hole
+    if (isPremium === true && isLegacy === true){
+    context.beginPath();
+    context.arc(36, 112, 21, 0, Math.PI * 2);
+    context.arc(73, 73, 55, 0, Math.PI * 2, true);
+    context.closePath();
+    context.clip();
+    }
     context.beginPath();
     context.arc(73, 73, 54, 0, Math.PI * 2, true);
     // context.closePath();
     context.clip();
-    // Avatar Image
+
     context.drawImage(avatar, 18, 18, 109, 109);
     context.restore();
-    // context.drawImage(StatusIcon, 90, 92);
+
+    if (isPremium === true) {
+      context.drawImage(premiumIcon, 94, 97, 32, 32);
+    }
+    if (isLegacy === true && isPremium === false){
+      context.drawImage(legacyIcon, 94, 97, 32, 32);
+    }
+    // If both premium and legacy, move the legacy icon to the second slot, on the left
+    if (isLegacy === true && isPremium === true){
+      context.drawImage(legacyIcon, 20, 97, 32, 32);
+    }
 
     // WIP: Camp Icon
     // const CampIcon = await Canvas.loadImage(await imageGet('campIconA'));
@@ -392,7 +426,7 @@ export const dProfile: SlashCommand = {
     context.fillText(`${numFormatter(profileData.karma_received)}`, 648, 190);
 
     // Tokens Text
-    context.fillText(`${numFormatter(profileData.tokens)}`, 648, 250);
+    // context.fillText(`${numFormatter(profileData.tokens)}`, 648, 250);
 
     // Level Text
     const totalTextData = await getTotalLevel(profileData.totalTextExp + profileData.totalVoiceExp);

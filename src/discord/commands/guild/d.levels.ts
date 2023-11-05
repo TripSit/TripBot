@@ -242,6 +242,8 @@ export const dLevels: SlashCommand = {
       // await Canvas.loadImage(await imageGet(`icon_${target.presence?.status ?? 'offline'}`)),
       // Get the avatar image
       await Canvas.loadImage(target.user.displayAvatarURL({ extension: 'jpg' })),
+      await Canvas.loadImage(await imageGet('premiumIcon')),
+      await Canvas.loadImage(await imageGet('legacyIcon')),
     ]);
 
     const profileData = values[1].status === 'fulfilled' ? values[1].value : {} as ProfileData;
@@ -250,6 +252,8 @@ export const dLevels: SlashCommand = {
     const Icons = values[4].status === 'fulfilled' ? values[4].value : {} as Canvas.Image;
     // const StatusIcon = values[5].status === 'fulfilled' ? values[5].value : {} as Canvas.Image;
     const avatar = values[5].status === 'fulfilled' ? values[5].value : {} as Canvas.Image;
+    const premiumIcon = values[6].status === 'fulfilled' ? values[6].value : {} as Canvas.Image;
+    const legacyIcon = values[7].status === 'fulfilled' ? values[7].value : {} as Canvas.Image;
 
     // log.debug(F, `levelData: ${JSON.stringify(levelData, null, 2)}`);
 
@@ -258,6 +262,8 @@ export const dLevels: SlashCommand = {
     // const layout = 4;
     let layoutHeight = 386;
     let layout = 1;
+    let isPremium = false
+    let isLegacy = false
     if (target.roles.cache.has(env.ROLE_TEAMTRIPSIT)) {
       layoutHeight = 566;
       layout = 4;
@@ -270,6 +276,13 @@ export const dLevels: SlashCommand = {
       layoutHeight = 446;
       layout = 2;
       // log.debug(F, 'is helper');
+    }
+
+    if (target.roles.cache.has(env.ROLE_PREMIUM)) {
+      isPremium = true
+    }
+    if (target.roles.cache.has(env.ROLE_LEGACY)) {
+      isLegacy = true
     }
 
     // Create Canvas and Context
@@ -301,7 +314,6 @@ export const dLevels: SlashCommand = {
     // Top Right Chips
     context.fillStyle = chipColor;
     context.beginPath();
-    // context.arc(612, 73, 54, 0, Math.PI * 2, true); // CAMP ICON CHIP
     context.roundRect(702, 18, 201, 51, [19]);
     context.roundRect(702, 78, 201, 51, [19]);
     // Label Chips
@@ -353,13 +365,24 @@ export const dLevels: SlashCommand = {
         context.restore();
       }
     }
-    // Overly complicated avatar clip (STATUS CLIP COMMENTED OUT)
+    // Overly complicated avatar clip
     context.save();
-    // context.beginPath();
-    // context.arc(110, 112, 21, 0, Math.PI * 2);
-    // context.arc(73, 73, 55, 0, Math.PI * 2, true);
-    // context.closePath();
-    // context.clip();
+    // If user is rather premium or legacy, draw the hole for the icon
+    if (isPremium === true || isLegacy === true){
+    context.beginPath();
+    context.arc(110, 112, 21, 0, Math.PI * 2);
+    context.arc(73, 73, 55, 0, Math.PI * 2, true);
+    context.closePath();
+    context.clip();
+    }
+    // If user is both premium and legacy, draw the extra left hand hole
+    if (isPremium === true && isLegacy === true){
+    context.beginPath();
+    context.arc(36, 112, 21, 0, Math.PI * 2);
+    context.arc(73, 73, 55, 0, Math.PI * 2, true);
+    context.closePath();
+    context.clip();
+    }
     context.beginPath();
     context.arc(73, 73, 54, 0, Math.PI * 2, true);
     // context.closePath();
@@ -367,9 +390,17 @@ export const dLevels: SlashCommand = {
 
     context.drawImage(avatar, 18, 18, 109, 109);
     context.restore();
-    // context.drawImage(StatusIcon, 90, 92);
 
-    // context.drawImage(CampIcon, 556, 17);
+    if (isPremium === true) {
+      context.drawImage(premiumIcon, 94, 97, 32, 32);
+    }
+    if (isLegacy === true && isPremium === false){
+      context.drawImage(legacyIcon, 94, 97, 32, 32);
+    }
+    // If both premium and legacy, move the legacy icon to the second slot, on the left
+    if (isLegacy === true && isPremium === true){
+      context.drawImage(legacyIcon, 20, 97, 32, 32);
+    }
 
     // WIP: Check to see if a user has bought a title in the shop
     // If so, move Username Text up so the title can fit underneath
@@ -381,7 +412,7 @@ export const dLevels: SlashCommand = {
       do {
         fontSize -= 2;
         usernameContext.font = `${fontSize}px futura`;
-      } while (usernameContext.measureText(text).width > 530);// LARGER LENGTH WHILE CAMP ISN'T ENABLED (DEFAULT IS 380)
+      } while (usernameContext.measureText(text).width > 530);
       return usernameContext.font;
     };
 
@@ -471,7 +502,7 @@ export const dLevels: SlashCommand = {
       do {
         fontSize -= 1;
         rankContext.font = `${fontSize}px futura`;
-      } while (rankContext.measureText(text).width > 114);// LARGER LENGTH WHILE CAMP ISN'T ENABLED (DEFAULT IS 380)
+      } while (rankContext.measureText(text).width > 114);
       return rankContext.font;
     };
     context.font = '40px futura';
