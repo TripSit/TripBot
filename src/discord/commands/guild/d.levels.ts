@@ -262,8 +262,8 @@ export const dLevels: SlashCommand = {
     // const layout = 4;
     let layoutHeight = 386;
     let layout = 1;
-    let isPremium = false
-    let isLegacy = false
+    let isPremium = false;
+    let isLegacy = false;
     if (target.roles.cache.has(env.ROLE_TEAMTRIPSIT)) {
       layoutHeight = 566;
       layout = 4;
@@ -279,10 +279,10 @@ export const dLevels: SlashCommand = {
     }
 
     if (target.roles.cache.has(env.ROLE_PREMIUM)) {
-      isPremium = true
+      isPremium = true;
     }
     if (target.roles.cache.has(env.ROLE_LEGACY)) {
-      isLegacy = true
+      isLegacy = true;
     }
 
     // Create Canvas and Context
@@ -368,20 +368,20 @@ export const dLevels: SlashCommand = {
     // Overly complicated avatar clip
     context.save();
     // If user is rather premium or legacy, draw the hole for the icon
-    if (isPremium === true || isLegacy === true){
-    context.beginPath();
-    context.arc(110, 112, 21, 0, Math.PI * 2);
-    context.arc(73, 73, 55, 0, Math.PI * 2, true);
-    context.closePath();
-    context.clip();
+    if (isPremium === true || isLegacy === true) {
+      context.beginPath();
+      context.arc(110, 112, 21, 0, Math.PI * 2);
+      context.arc(73, 73, 55, 0, Math.PI * 2, true);
+      context.closePath();
+      context.clip();
     }
     // If user is both premium and legacy, draw the extra left hand hole
-    if (isPremium === true && isLegacy === true){
-    context.beginPath();
-    context.arc(36, 112, 21, 0, Math.PI * 2);
-    context.arc(73, 73, 55, 0, Math.PI * 2, true);
-    context.closePath();
-    context.clip();
+    if (isPremium === true && isLegacy === true) {
+      context.beginPath();
+      context.arc(36, 112, 21, 0, Math.PI * 2);
+      context.arc(73, 73, 55, 0, Math.PI * 2, true);
+      context.closePath();
+      context.clip();
     }
     context.beginPath();
     context.arc(73, 73, 54, 0, Math.PI * 2, true);
@@ -394,11 +394,11 @@ export const dLevels: SlashCommand = {
     if (isPremium === true) {
       context.drawImage(premiumIcon, 94, 97, 32, 32);
     }
-    if (isLegacy === true && isPremium === false){
+    if (isLegacy === true && isPremium === false) {
       context.drawImage(legacyIcon, 94, 97, 32, 32);
     }
     // If both premium and legacy, move the legacy icon to the second slot, on the left
-    if (isLegacy === true && isPremium === true){
+    if (isLegacy === true && isPremium === true) {
       context.drawImage(legacyIcon, 20, 97, 32, 32);
     }
 
