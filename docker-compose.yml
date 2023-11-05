@@ -63,33 +63,32 @@ services:
 
   tripbot_database:
     <<: *common-keys-apps
-    build:
-      context: ./
-      dockerfile: ./src/docker/Dockerfile.postgres
+    # image: docker.io/bitnami/postgresql:15.4.0
+    image: postgres:15.4
     container_name: tripbot_database
     # Uncomment this if you want the DB to persist between rebuilds
     # volumes:
     #   - ${DOCKERDIR}/appdata/database/data:/var/lib/postgresql/data
-    # ports:
-    #   - 5432:5432
     networks:
       - tripbot_database-net
     environment:
-      POSTGRES_USER: tripsit
-      POSTGRES_DB: tripsit
-      POSTGRES_PASSWORD: ${POSTGRESS_ROOT}
-      # POSTGRES_HOST_AUTH_METHOD: trust
+      <<: *default-tz-puid-pgid
+      POSTGRESQL_DATABASE: tripsit
+      POSTGRESQL_PASSWORD: ${POSTGRESQL_PASSWORD}
     labels:
       - com.centurylinklabs.watchtower.enable=false
       - traefik.docker.network=tripbot_database-net
       - traefik.enable=false
 
   tripbot_prisma:
-    # <<: *common-keys-apps
+    <<: *common-keys-apps
     build:
+    #   context: https://github.com/tripsit/tripbot.git#main
       context: ./
       dockerfile: ./src/docker/Dockerfile.prisma
+      target: development
     container_name: tripbot_prisma
+    working_dir: /usr/src/app
     depends_on:
       - tripbot_database
     networks:
@@ -97,14 +96,11 @@ services:
       - tripbot_prisma-net
     volumes:
       - ./src/prisma/:/usr/src/app/src/prisma/
-      - ./src/knex/:/usr/src/app/src/knex/
-      - ./src/global/:/usr/src/app/src/global/
-      - ./src/global/@types/database.d.ts:/usr/src/app/src/types/database.d.ts
     environment:
       <<: *default-tz-puid-pgid
       PORT: 5000
       TZ: America/Chicago
-      POSTGRES_DB_URL: postgres://tripsit:${POSTGRESS_ROOT}@tripbot_database:5432/tripsit
+      POSTGRES_DB_URL: postgres://tripsit:${POSTGRESQL_PASSWORD}@tripbot_database:5432/tripsit
     labels:
       - com.centurylinklabs.watchtower.enable=false
       - traefik.enable=true
@@ -118,15 +114,13 @@ services:
       - traefik.http.routers.tripbot_prisma.middlewares=googleAuth@file
 
   tripbot_pgadmin:
-    build:
-      context: ./
-      dockerfile: ./src/docker/Dockerfile.pgadmin
+    image: dpage/pgadmin4:latest
     restart: unless-stopped
     container_name: tripbot_pgadmin
     depends_on:
       - tripbot_database
-    # ports:
-    #   - 8081:80
+    volumes:
+      - ./src/pgadmin4/servers.json:/pgadmin4/servers.json
     networks:
       - tripbot_pgadmin-net
       - tripbot_database-net
@@ -134,7 +128,7 @@ services:
       <<: *default-tz-puid-pgid
       TZ: America/Chicago
       PGADMIN_DEFAULT_EMAIL: admin@tripsit.me
-      PGADMIN_DEFAULT_PASSWORD: ${POSTGRESS_ADMIN_PASS}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD}
     labels:
       - com.centurylinklabs.watchtower.enable=false
       - traefik.enable=true
@@ -191,7 +185,7 @@ services:
       <<: *default-tz-puid-pgid
       PORT: 5000
       TZ: America/Chicago
-      DATABASE_URL: postgres://tripsit:${POSTGRESS_ROOT}@tripbot_database:5432/tripsit
+      DATABASE_URL: postgres://tripsit:${POSTGRESQL_PASSWORD}@tripbot_database:5432/tripsit
     labels:
       - com.centurylinklabs.watchtower.enable=false
       - traefik.enable=true

@@ -129,6 +129,14 @@ If you wanted to do this in telegram, you would figure out how to take input val
 
 ## Database Development ##
 
+TripBot's database runs on Postgres, which is a relational database.
+
+You make changes to the schema.prisma, and then run the ```npm run prisma:migrate``` to create the migration file
+
+When this file is pushed to production, the database will be updated automatically.
+
+One of the goals is to convert the knex queries in tripbot into Prisma Client queries.
+
 ### Postgres ###
 ```npm run postgres```
 We use postgres for our database.
@@ -140,7 +148,8 @@ By itself, it does nothing, you need another utility, like Prisma, to interact w
 Prisma runs the necessary setup to fill in the database tables and columns.
 You just need to run this container once and you can forget about it.
 Previously we used Knex so you'll still see some knex code, but we're moving away from that.
-There is a webserver (prisma studio)that starts as part of this container.
+There is a webserver (prisma studio) that starts as part of this container.
+You can access it via http://localhost:5555
 If you're worried about this, exit the prisma container after it finishes running.
 It only needs to run once to setup the DB.
 
@@ -148,6 +157,7 @@ It only needs to run once to setup the DB.
 ```npm run pgadmin```
 This is a webserver that allows you to view the database.
 It's not necessary, but it's nice to have.
+You can access it via http://localhost:80 (maybe idk)
 
 ### API ###
 ```npm run api```
