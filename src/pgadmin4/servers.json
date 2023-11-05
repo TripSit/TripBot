@@ -4,7 +4,7 @@
           "Name": "TripSit",
           "Group": "Servers",
           "Port": 5432,
-          "Username": "tripsit",
+          "Username": "postgres",
           "Host": "tripbot_database",
           "SSLMode": "prefer",
           "MaintenanceDB": "postgres"

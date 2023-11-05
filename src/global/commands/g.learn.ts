@@ -178,7 +178,7 @@ async function getMoodleUser(
           resolve(result[0]);
         } else {
           // log.debug(F, `User with email ${email} or username ${username} not found.`);
-          reject(new Error(`User with email ${email} or username ${username} not found.`));
+          // reject(new Error(`User with email ${email} or username ${username} not found.`));
         }
       });
     }).on('error', error => {

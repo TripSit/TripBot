@@ -5,7 +5,7 @@
 # We stop at the end of this step in development, so it also includes the deploy command
 # We install jest, eslint and ts-node so we can run tests and lint.
 
-FROM node:20.5 AS development
+FROM node:21.1.0-alpine AS development
 
 ENV TZ="America/Chicago"
 ENV NODE_ENV=development
@@ -41,7 +41,7 @@ CMD npx tsc-watch --onSuccess "npx nodemon --config ./src/api/nodemon.json"
 # We run the build command which creates the production bundle
 # We run npm ci --only=production to ensure that only the production dependencies are installed
 
-FROM node:20.5-alpine AS build
+FROM node:21.1.0-alpine AS build
 
 ENV TZ="America/Chicago"
 ENV NODE_ENV=production
@@ -79,7 +79,7 @@ CMD tail -f /dev/null
 # Then we ONLY copy over the /build folder with the js files
 # We already deployed before, so the only thing left to do is run the bot with PM2
 
-FROM node:20.5-alpine AS production
+FROM node:21.1.0-alpine AS production
 
 ENV TZ="America/Chicago"
 ENV NODE_ENV=production
