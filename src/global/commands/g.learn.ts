@@ -183,6 +183,7 @@ async function getMoodleUser(
       });
     }).on('error', error => {
       log.error(F, `Error: ${error.message}`);
+      log.error(F, `URL: ${url}`);
       reject(error);
     });
   });
