@@ -226,14 +226,6 @@ export const dLevels: SlashCommand = {
     const target = interaction.options.getMember('target')
       ? interaction.options.getMember('target') as GuildMember
       : interaction.member as GuildMember;
-    log.debug(F, `target id: ${target.id}`);
-    const targetUser = interaction.options.getUser('target')
-    log.debug(F, `targetUser: ${targetUser}`);
-    await interaction.options.getUser('target')?.fetch();
-
-    if (targetUser) {
-      log.debug(F, `bannerURL: ${targetUser.avatarDecorationURL()}`);
-    }
 
     // log.debug(F, `target id: ${target.id}`);
     // log.debug(F, `levelData: ${JSON.stringify(target, null, 2)}`);
