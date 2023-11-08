@@ -37,17 +37,19 @@ RUN npm ci
 # Bundle app source
 COPY --chown=node:node . .
 
-# Generate the prisma client
-RUN npx prisma generate --schema=./src/prisma/schema.prisma
+# RUN npx prisma migrate deploy
 
-# Use the node user from the image (instead of the root user)
-# USER node
+# Generate prisma client
+# This needs to happen before the next command for some reason
+RUN npx prisma generate
+RUN npx prisma generate --schema=./src/prisma/moodle/schema.prisma
 
 # Deploy the commands
-RUN ts-node --transpile-only ./src/discord/utils/commandDeploy.ts
+RUN npx ts-node --transpile-only ./src/discord/utils/commandDeploy.ts
 
 # For container development, the following command runs forever, so we can inspect the container
-CMD npx tsc-watch --onSuccess "npx nodemon --config ./nodemon.json"
+CMD npx prisma migrate deploy && npx tsc-watch --onSuccess "npx nodemon --config ./nodemon.json"
+# CMD npx tsc-watch --onSuccess "npx nodemon --config ./nodemon.json"
 
 ###################
 # BUILD FOR PRODUCTION
@@ -114,7 +116,11 @@ COPY --chown=node:node --from=build /usr/src/app/node_modules ./node_modules
 COPY --chown=node:node --from=build /usr/src/app/build ./build
 COPY --chown=node:node ./src/discord/assets/Futura.otf ./build/discord/assets/Futura.otf
 
+# Generate prisma client
+RUN npx prisma generate
+RUN npx prisma generate --schema=./src/prisma/moodle/schema.prisma
+
 USER node
 
 # Start the bot using the production build
-CMD ["pm2-runtime", "build/start.js"]
+CMD npx prisma migrate deploy && ["pm2-runtime", "build/start.js"]

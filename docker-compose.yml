@@ -33,7 +33,6 @@ services:
     container_name: tripbot
     depends_on:
       - tripbot_database
-      - tripbot_prisma
     working_dir: /usr/src/app
     env_file:
       - .env
@@ -43,11 +42,10 @@ services:
       - tripbot-net
       - tripbot_database-net
       - tripbot_website-net
+      - moodle_data-net
     volumes:
       - ./src:/usr/src/app/src # Needed for hot-reloading of source code
       - ./.env:/usr/src/app/.env # Needed for hot-reloading the .env
-      - ./package.json:/usr/src/app/package.json # Needed for saving changes to package.json
-      - ./package-lock.json:/usr/src/app/package-lock.json # Needed for saving changes to package.json
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
     labels:
@@ -63,55 +61,22 @@ services:
 
   tripbot_database:
     <<: *common-keys-apps
-    # image: docker.io/bitnami/postgresql:15.4.0
     image: postgres:15.4
     container_name: tripbot_database
     # Uncomment this if you want the DB to persist between rebuilds
-    # volumes:
-    #   - ${DOCKERDIR}/appdata/database/data:/var/lib/postgresql/data
+    volumes:
+      - ${DOCKERDIR}/appdata/database/data:/var/lib/postgresql/data
     networks:
       - tripbot_database-net
     environment:
       <<: *default-tz-puid-pgid
-      POSTGRESQL_DATABASE: tripsit
-      POSTGRESQL_PASSWORD: ${POSTGRESQL_PASSWORD}
+      POSTGRES_DB: tripsit
+      POSTGRES_USER: tripsit
+      POSTGRES_PASSWORD: ${POSTGRESQL_PASSWORD}
     labels:
       - com.centurylinklabs.watchtower.enable=false
       - traefik.docker.network=tripbot_database-net
       - traefik.enable=false
-
-  tripbot_prisma:
-    <<: *common-keys-apps
-    build:
-    #   context: https://github.com/tripsit/tripbot.git#main
-      context: ./
-      dockerfile: ./src/docker/Dockerfile.prisma
-      target: development
-    container_name: tripbot_prisma
-    working_dir: /usr/src/app
-    depends_on:
-      - tripbot_database
-    networks:
-      - tripbot_database-net
-      - tripbot_prisma-net
-    volumes:
-      - ./src/prisma/:/usr/src/app/src/prisma/
-    environment:
-      <<: *default-tz-puid-pgid
-      PORT: 5000
-      TZ: America/Chicago
-      POSTGRES_DB_URL: postgres://tripsit:${POSTGRESQL_PASSWORD}@tripbot_database:5432/tripsit
-    labels:
-      - com.centurylinklabs.watchtower.enable=false
-      - traefik.enable=true
-      - traefik.docker.network=tripbot_prisma-net
-      - traefik.http.services.tripbot_prisma-svc.loadbalancer.server.port=5555
-
-      - traefik.http.routers.tripbot_prisma.rule=Host(`prisma.${DNS_DOMAIN}`)
-      - traefik.http.routers.tripbot_prisma.entrypoints=websecure
-      - traefik.http.routers.tripbot_prisma.tls.certresolver=letsencrypt
-      - traefik.http.routers.tripbot_prisma.service=tripbot_prisma-svc
-      - traefik.http.routers.tripbot_prisma.middlewares=googleAuth@file
 
   tripbot_pgadmin:
     image: dpage/pgadmin4:latest
@@ -217,4 +182,7 @@ networks:
     # external: true
   tripbot_pgadmin-net:
     name: tripbot_pgadmin-net
+    # external: true
+  moodle_data-net:
+    name: moodle_data-net
     # external: true

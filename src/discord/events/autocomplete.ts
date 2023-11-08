@@ -98,7 +98,7 @@ async function autocompleteBenzos(interaction:AutocompleteInteraction) {
   const drugNames = Object.keys(drugDataTripsit);
   const benzoNames = drugNames.filter(drugName => {
     const props = drugDataTripsit[drugName as keyof typeof drugDataTripsit].properties;
-    return Object.prototype.hasOwnProperty.call(props, 'dose_to_diazepam');
+    return Object.hasOwn(props, 'dose_to_diazepam');
   });
 
   // log.debug(F, `benzoNames: ${benzoNames}`);
@@ -108,7 +108,7 @@ async function autocompleteBenzos(interaction:AutocompleteInteraction) {
       name: drugName,
       aliases: [] as string[],
     };
-    if (Object.prototype.hasOwnProperty.call(drugDataTripsit[drugName as keyof typeof drugDataTripsit], 'aliases')) {
+    if (Object.hasOwn(drugDataTripsit[drugName as keyof typeof drugDataTripsit], 'aliases')) {
       // @ts-ignore
       drugObj.aliases = drugDataTripsit[drugName as keyof typeof drugDataTripsit].aliases;
     }
@@ -530,13 +530,15 @@ async function autocompleteAiNames(interaction:AutocompleteInteraction) {
   if (results.length > 0) {
     const top25 = results.slice(0, 20);
     const listResults = top25.map(choice => ({
-      name: choice.item.name,
-      value: choice.item.name,
+      name: (choice.item as any).name,
+      value: (choice.item as any).name,
     }));
       // log.debug(F, `list_results: ${listResults}`);
     interaction.respond(listResults);
   } else {
-    const defaultDiscordColors = nameList.slice(0, 25);
+    const defaultDiscordColors = nameList.slice(0, 25) as {
+      name: string;
+    }[];
     const listResults = defaultDiscordColors.map(choice => ({ name: choice.name, value: choice.name }));
     // log.debug(F, `list_results: ${listResults}`);
     interaction.respond(listResults);

@@ -347,8 +347,8 @@ async function get(
         where: {
           id: aiLinkData.persona_id,
         },
-      });
-      description = `Channel ${(channel as TextChannel).name} is linked with the **"${aiPersona.name}"** persona:`;
+      }) as ai_personas;
+      description = `Channel ${(channel as TextChannel).name} is linked with the **"${aiPersona.name ?? aiPersona}"** persona:`;
     }
 
     if (!aiLinkData && (channel as ThreadChannel).parent) {
@@ -364,7 +364,7 @@ async function get(
           where: {
             id: aiLinkData.persona_id,
           },
-        });
+        }) as ai_personas;
         // eslint-disable-next-line max-len
         description = `Channel ${(channel as ThreadChannel).parent} is linked with the **"${aiPersona.name}"** persona:`;
       }
@@ -383,7 +383,7 @@ async function get(
           where: {
             id: aiLinkData.persona_id,
           },
-        });
+        }) as ai_personas;
         // eslint-disable-next-line max-len
         description = `Category ${(channel as ThreadChannel).parent?.parent} is linked with the **"${aiPersona.name}"** persona:`;
       }
@@ -661,8 +661,8 @@ export async function aiAudit(
       },
     );
 
-    const promptCost = (promptTokens / 1000) * aiCosts[cleanPersona.ai_model].input;
-    const completionCost = (completionTokens / 1000) * aiCosts[cleanPersona.ai_model].output;
+    const promptCost = (promptTokens / 1000) * aiCosts[cleanPersona.ai_model as keyof typeof aiCosts].input;
+    const completionCost = (completionTokens / 1000) * aiCosts[cleanPersona.ai_model as keyof typeof aiCosts].output;
     log.debug(F, `promptCost: ${promptCost}, completionCost: ${completionCost}`);
 
     embed.spliceFields(

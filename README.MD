@@ -36,21 +36,14 @@ Dockerized
 If you want to contribute to TripBot, that's super cool and highly appreciated.<br>To get in touch, it's currently the easiest way to [Join our Discord guild](https://discord.gg/tripsit). 
 
 ## How to build
-+ If you want to host your own instance of the bot, first talk to Moonbear to see if these instructions are valid. If they are, then you can follow these steps to get your own instance of the bot running.
+Building the bot is only supported if you are assisting with development, otherwise, good luck!
 
 0: **Requirements**
 1) Docker. You can get it [here](https://www.docker.com/products/docker-desktop).
 2) A discord bot application. You can get one [here](https://discord.com/developers/applications).
 - Save your client ID and Token to the .env file (after you make it via copying env.example)
-3) A discord guild to test the bot in. 
-- It's preferred that you use the TripSit dev guild, but you can use your own if you want.
-- If you use your own, you'll need to update the env.config file with your channel/roles IDs.
-- Save your guild ID to the .env file
-4) A discord bot application invite link. You can get this from your discord bot application.
-- For basic functionality you dont need a ton of permissions
+4) Invite the discord bot to the dev guild
 - Moonbear will give your bot permissions on the dev guild
-- On you own private guild just give it admin permissions
-- There are permission checks but they're a bit wonky.
 
 1: **Setup the bot**
 
@@ -70,7 +63,7 @@ In general, if something isnt working right, rebuild the container.
 
 2: **Deploy commands**
 
-```npm run tripbot:deploy```
+```npm run tripbot:deployCommands```
 
 As part of the build process it will  to register the bot commands with discord.
 If you modify or create a new commands you'll need to run this script again, or rebuild the container.
@@ -129,29 +122,25 @@ If you wanted to do this in telegram, you would figure out how to take input val
 
 ## Database Development ##
 
-TripBot's database runs on Postgres, which is a relational database.
+TripBot's database runs on Postgres, which is a relational database, not a JSON file.
 
-You make changes to the schema.prisma, and then run the ```npm run prisma:migrate``` to create the migration file
+When TripBot starts, it will automatically create the tripbot_database container and run the migrations.
 
-When this file is pushed to production, the database will be updated automatically.
+This gives you a copy of the production table schema on your local machine.
 
-One of the goals is to convert the knex queries in tripbot into Prisma Client queries.
+To make changes to the database, you need to use the Prisma ORM and make changes to the schema.prisma file.
+
+Run the ```db:migrateDev``` to create new migration files based on the changes you made to the schema.prisma file.
+
+When these migration files are pushed to production, the database will be updated automatically.
+
+Prisma documentation is excellent, check out guides like: https://www.prisma.io/docs/concepts/components/prisma-migrate/migrate-development-production
 
 ### Postgres ###
 ```npm run postgres```
 We use postgres for our database.
 This is just a simple container that basically sits there being a stable database.
 By itself, it does nothing, you need another utility, like Prisma, to interact with it.
-
-### Prisma ###
-```npm run prisma```
-Prisma runs the necessary setup to fill in the database tables and columns.
-You just need to run this container once and you can forget about it.
-Previously we used Knex so you'll still see some knex code, but we're moving away from that.
-There is a webserver (prisma studio) that starts as part of this container.
-You can access it via http://localhost:5555
-If you're worried about this, exit the prisma container after it finishes running.
-It only needs to run once to setup the DB.
 
 ### PG Admin ###
 ```npm run pgadmin```

@@ -4,32 +4,27 @@
   "description": "A bot for TripSit (and maybe the world)",
   "main": "start.ts",
   "prisma": {
-    "schema": "src/prisma/schema.prisma"
+    "schema": "src/prisma/tripbot/schema.prisma"
   },
   "engines": {
     "node": "v21.1.0",
     "npm": "10.2.0"
   },
   "scripts": {
-    "## START ## ": "",
-    "all": "docker compose --project-name tripbot up -d --force-recreate --build",
+    "all:start": "docker compose --project-name tripbot up -d --force-recreate --build",
     "## TRIPBOT ##": "",
-    "tripbot": "docker compose --project-name tripbot up -d --force-recreate --build tripbot ",
+    "tripbot:start": "docker compose --project-name tripbot up -d --force-recreate --build tripbot ",
     "tripbot:logs": "docker container logs tripbot -f -n 100",
     "tripbot:test": "docker exec -it tripbot npx jest --silent -c ./src/jest/jest.unit.config.ts",
     "tripbot:lint": "docker exec -it tripbot npx eslint --fix --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts . --cache",
-    "tripbot:deploy": "docker exec -it tripbot ts-node --transpile-only ./src/discord/utils/commandDeploy.ts",
-    "tripbot:dbPull": "docker exec -it tripbot npx prisma db pull && npx prisma generate",
-    "## PRISMA ##": "",
-    "prisma": "docker compose --project-name tripbot up -d --force-recreate --build tripbot_prisma",
-    "prisma:logs": "docker container logs tripbot_prisma -f -n 100",
-    "prisma:init": "npx prisma migrate dev --name init && ",
-    "prisma:migrate": "docker exec -it tripbot_prisma npx prisma migrate dev",
-    "prisma:validate": "docker exec -it tripbot_prisma npx prisma validate",
-    "prisma:format": "docker exec -it tripbot_prisma npx prisma format",
-    "## POSTGRES ##": "",
-    "postgres": "docker compose --project-name tripbot up -d --force-recreate --build tripbot_database",
-    "postgres:logs": "docker container logs tripbot_database -f -n 100",
+    "tripbot:deployCommands": "docker exec -it tripbot ts-node --transpile-only ./src/discord/utils/commandDeploy.ts",
+    "## DATABASE ##": "",
+    "db:start": "docker compose --project-name tripbot up -d --force-recreate --build tripbot_database",
+    "db:logs": "docker container logs tripbot_database -f -n 100",
+    "db:formatSchema": "docker exec -it tripbot npx prisma format",
+    "db:validateSchema": "docker exec -it tripbot npx prisma validate",
+    "db:generateClient": "npx prisma generate && docker exec -it tripbot npx prisma generate",
+    "db:migrateDev": "docker exec -it tripbot npx prisma migrate dev",
     "## PGADMIN ##": "",
     "pgadmin": "docker compose --project-name tripbot up -d --force-recreate --build tripbot_pgadmin",
     "pgadmin:logs": "docker container logs tripbot_pgadmin -f -n 100",
@@ -41,7 +36,8 @@
     "api:lint": "npx eslint --fix --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts . --cache",
     "## CODESPACE ##": "",
     "codespace:start": "npx tsc-watch --onSuccess 'npx nodemon --config ./nodemon.json'",
-    "codespace:deploy": "npx ts-node --transpile-only ./src/discord/utils/commandDeploy.ts"
+    "codespace:deploy": "npx ts-node --transpile-only ./src/discord/utils/commandDeploy.ts",
+    "tripbot:moodle:generate": "npx prisma generate --schema src/prisma/moodle/schema.prisma && docker exec -it tripbot npx prisma generate --schema src/prisma/moodle/schema.prisma"
   },
   "repository": {
     "type": "git",
