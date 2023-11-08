@@ -1,8 +1,8 @@
 generator client {
   provider        = "prisma-client-js"
-  // output          = "./@prisma-moodle/client"
+  output          = "./@prisma-moodle/client"
   // output          = "/usr/src/app/node_modules/@prisma-moodle/client"
-  output          = "./../../../node_modules/@prisma-moodle/client"
+  // output          = "./../../../node_modules/@prisma-moodle/client"
   previewFeatures = ["fullTextIndex"]
   binaryTargets   = ["native", "linux-musl-openssl-3.0.x"]
 }
