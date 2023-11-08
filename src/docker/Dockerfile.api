@@ -27,7 +27,7 @@ RUN npm ci
 COPY --chown=node:node . .
 
 # Generate the prisma client
-RUN npx prisma generate --schema=./src/prisma/schema.prisma
+RUN npx prisma generate
 
 # For container development, the following command runs forever, so we can inspect the container
 CMD npx tsc-watch --onSuccess "npx nodemon --config ./src/api/nodemon.json"
