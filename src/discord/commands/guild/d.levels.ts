@@ -372,18 +372,18 @@ export const dLevels: SlashCommand = {
     }[];
 
     // Check if user has voice xp, if so add it to the list to be assigned a xp bar slot
-    // if (levelData.VOICE.TOTAL) {
-    //   const progressVoice = levelData.VOICE.TOTAL
-    //   ? levelData.VOICE.TOTAL.level_exp / levelData.VOICE.TOTAL.nextLevel
-    //   : 0;
-    //   xpBarList.push({
-    //     image: voiceBar,
-    //     dataName: 'Voice',
-    //     progress: progressVoice,
-    //     level: levelData.VOICE.TOTAL ? levelData.VOICE.TOTAL.level : 0,
-    //     rank: levelData.VOICE.TOTAL.rank
-    //   });
-    // }
+    if (levelData.VOICE.TOTAL) {
+      const progressVoice = levelData.VOICE.TOTAL
+      ? levelData.VOICE.TOTAL.level_exp / levelData.VOICE.TOTAL.nextLevel
+      : 0;
+      xpBarList.push({
+        image: voiceBar,
+        dataName: 'Voice',
+        progress: progressVoice,
+        level: levelData.VOICE.TOTAL ? levelData.VOICE.TOTAL.level : 0,
+        rank: levelData.VOICE.TOTAL.rank
+      });
+    }
     // Check if user has Helper or Tripsitter role
     if (target.roles.cache.has(env.ROLE_HELPER) || target.roles.cache.has(env.ROLE_TRIPSITTER)) {
       const progressTripsitter = levelData.TEXT.TRIPSITTER
@@ -601,9 +601,9 @@ export const dLevels: SlashCommand = {
     // If so, move Username Text up so the title can fit underneath
 
     // Username Text Resize to fit
+    let fontSize = 40;
     const applyUsername = (canvas:Canvas.Canvas, text:string) => {
       const usernameContext = canvas.getContext('2d');
-      let fontSize = 40;
       do {
         fontSize -= 2;
         usernameContext.font = `${fontSize}px futura`;
@@ -612,11 +612,25 @@ export const dLevels: SlashCommand = {
     };
 
     // Username Text
-    context.font = applyUsername(canvasObj, `${target.displayName}`);
+    // Temporary code for user flairs
     context.fillStyle = textColor;
     context.textAlign = 'left';
+    let flair = null
+    let usernameHeight = 76;
     context.textBaseline = 'middle';
-    context.fillText(`${target.displayName}`, 146, 76);
+    if (flair) {
+      usernameHeight = 72;
+      fontSize = 25;
+      context.font = '25px futura';
+      context.textBaseline = 'top';
+      context.font = applyUsername(canvasObj, `${flair}`);
+      context.fillText(`${flair}`, 146, 90);
+      context.textBaseline = 'bottom';
+    }
+    fontSize = 40;
+    context.font = applyUsername(canvasObj, `${target.displayName}`);
+    context.fillText(`${target.displayName}`, 146, usernameHeight);
+    
 
     // Progress Bars Draw
     context.fillStyle = barColor;
