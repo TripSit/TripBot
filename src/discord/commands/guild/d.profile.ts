@@ -506,7 +506,7 @@ export const dProfile: SlashCommand = {
     context.fillText(`${numFormatter(profileData.karma_received)}`, 648, 190);
 
     // Tokens Text
-    // context.fillText(`${numFormatter(profileData.tokens)}`, 648, 250);
+    context.fillText(`${numFormatter(profileData.tokens)}`, 648, 250);
 
     // Level Text
     const totalTextData = await getTotalLevel(profileData.totalTextExp + profileData.totalVoiceExp);
