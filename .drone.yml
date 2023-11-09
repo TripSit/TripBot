@@ -10,7 +10,6 @@ steps:
       - apk update
       - apk upgrade
       - apk add --no-cache git
-      - docker compose -f docker-compose.host.yml --project-name tripbot up tripbot_database -d --force-recreate --build
       - docker compose -f docker-compose.host.yml --project-name tripbot up tripbot_prisma -d --force-recreate --build
       # - tail -f /dev/null
     environment:

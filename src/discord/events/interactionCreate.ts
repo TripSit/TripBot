@@ -21,7 +21,7 @@ const F = f(__filename);  // eslint-disable-line
 export const interactionCreate: InteractionCreateEvent = {
   name: 'interactionCreate',
   async execute(interaction) {
-    const startTime = new Date().getTime();
+    // const startTime = new Date().getTime();
     // log.info(F, `interactionCreate event started at ${startTime}`);
 
     // Don't run anything if the interaction is from a bot
