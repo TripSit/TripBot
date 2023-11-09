@@ -41,7 +41,7 @@ const imageDef = {
   badgeVip10: { path: `${assetsDirectory}/img/badges/vip10.png`, url: 'https://i.gyazo.com/4428c08aaf82b7363fb7a327ce27a4c3.png' },
   cardBirthday: { path: `${assetsDirectory}/img/cards/birthday.png`, url: 'https://i.gyazo.com/b7504ea55bd7935f97b286407a1bc259.png' },
   campIconA: { path: `${assetsDirectory}/img/campIconA.png`, url: 'https://i.gyazo.com/62a9db6c42ca3c03cc892b28f5d8b367.png' },
-  cardIcons: { path: `${assetsDirectory}/img/cards/icons.png`, url: 'https://i.gyazo.com/6669a36a7adf68996354bd7586cd7083.png' },
+  cardIcons: { path: `${assetsDirectory}/img/cards/icons.png`, url: 'https://i.gyazo.com/96d2d2b44b0cea949bd247f29040eca0.png' },
   cardLevelIcons: { path: `${assetsDirectory}/img/cards/levelIcons.png`, url: 'https://i.gyazo.com/739f8b68658b9aeeedfb6d5aaf07dc68.png' },
   // cardBackground: { path: `${assetsDirectory}/img/cards/background.png`, url: 'https://i.gyazo.com/b7504ea55bd7935f97b286407a1bc259.png' },
   // cardBirthdayOverlay: { path: `${assetsDirectory}/img/cards/birthdayOverlay.png`, url: 'https://i.gyazo.com/b7504ea55bd7935f97b286407a1bc259.png' },

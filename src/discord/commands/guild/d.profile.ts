@@ -361,7 +361,7 @@ export const dProfile: SlashCommand = {
       }
     }
 
-    context.drawImage(Icons, 5, -2, 913, 292);
+    context.drawImage(Icons, 0, 0);
 
     /* TEST: Border item
     context.save();
