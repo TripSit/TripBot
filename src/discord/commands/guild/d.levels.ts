@@ -304,7 +304,7 @@ export const dLevels: SlashCommand = {
     const avatarIconRolesArray = Object.entries(avatarIconRoles)
       .filter(([key, value]) => target.roles.cache.has(key))
       .sort((a, b) => a[1].hierarchy - b[1].hierarchy);
-    
+
     // From the list, assign each one to a slot in numerical order
     if (avatarIconRolesArray.length > 0) {
       avatarIconSlot1 = {
@@ -332,7 +332,7 @@ export const dLevels: SlashCommand = {
     const progressTotal = levelData.ALL.TOTAL.level_exp / levelData.TEXT.TOTAL.nextLevel;
     const progressGeneral = levelData.TEXT.GENERAL
       ? levelData.TEXT.GENERAL.level_exp / levelData.TEXT.GENERAL.nextLevel
-      : 0;      
+      : 0;
 
     let xpBarSlot1 = {} as {
       image: Canvas.Image;
@@ -387,8 +387,8 @@ export const dLevels: SlashCommand = {
     // Check if user has Helper or Tripsitter role
     if (target.roles.cache.has(env.ROLE_HELPER) || target.roles.cache.has(env.ROLE_TRIPSITTER)) {
       const progressTripsitter = levelData.TEXT.TRIPSITTER
-      ? levelData.TEXT.TRIPSITTER.level_exp / levelData.TEXT.TRIPSITTER.nextLevel
-      : 0;
+        ? levelData.TEXT.TRIPSITTER.level_exp / levelData.TEXT.TRIPSITTER.nextLevel
+        : 0;
       xpBarList.push({
         image: tripsitterBar,
         dataName: 'Tripsitter',
@@ -400,8 +400,8 @@ export const dLevels: SlashCommand = {
     // Check if user has Developer or Contributor role
     if (target.roles.cache.has(env.ROLE_DEVELOPER) || target.roles.cache.has(env.ROLE_CONTRIBUTOR)) {
       const progressDeveloper = levelData.TEXT.DEVELOPER
-      ? levelData.TEXT.DEVELOPER.level_exp / levelData.TEXT.DEVELOPER.nextLevel
-      : 0;
+        ? levelData.TEXT.DEVELOPER.level_exp / levelData.TEXT.DEVELOPER.nextLevel
+        : 0;
       xpBarList.push({
         image: developerBar,
         dataName: 'Developer',
@@ -413,8 +413,8 @@ export const dLevels: SlashCommand = {
     // Check if user has Teamtripsit role
     if (target.roles.cache.has(env.ROLE_TEAMTRIPSIT)) {
       const progressTeam = levelData.TEXT.TEAM
-      ? levelData.TEXT.TEAM.level_exp / levelData.TEXT.TEAM.nextLevel
-      : 0;  
+        ? levelData.TEXT.TEAM.level_exp / levelData.TEXT.TEAM.nextLevel
+        : 0;
       xpBarList.push({
         image: teamtripsitBar,
         dataName: 'Team',
@@ -426,7 +426,7 @@ export const dLevels: SlashCommand = {
 
     // Assign the xp bars to slots and decide the canvas height based on how many bars there are
     // let layoutHeight = 386;
-    let layout = 1
+    let layout = 1;
     let layoutHeight = 326;
 
     if (xpBarList.length > 0) {
@@ -698,32 +698,32 @@ export const dLevels: SlashCommand = {
     startingFontSize = 25;
     context.font = applyRank(canvasObj, `#${levelData.TEXT.GENERAL ? levelData.TEXT.GENERAL.rank : 0}`);
     context.fillText(`#${levelData.TEXT.GENERAL ? levelData.TEXT.GENERAL.rank : 0}`, 711, 284);
-    
+
     if (xpBarSlot1.image && xpBarSlot1.rank) {
       context.font = applyRank(canvasObj, `#${xpBarSlot1.rank}`);
       context.fillText(`#${xpBarSlot1.rank}`, 711, 344);
-    } else if (xpBarSlot1.image && !xpBarSlot1.rank){
+    } else if (xpBarSlot1.image && !xpBarSlot1.rank) {
       context.font = applyRank(canvasObj, '#0');
       context.fillText('#0', 711, 344);
     }
     if (xpBarSlot2.image && xpBarSlot2.rank) {
       context.font = applyRank(canvasObj, `#${xpBarSlot2.rank}`);
       context.fillText(`#${xpBarSlot2.rank}`, 711, 404);
-    } else if (xpBarSlot2.image && !xpBarSlot2.rank){
+    } else if (xpBarSlot2.image && !xpBarSlot2.rank) {
       context.font = applyRank(canvasObj, '#0');
       context.fillText('#0', 711, 404);
     }
     if (xpBarSlot3.image && xpBarSlot3.rank) {
       context.font = applyRank(canvasObj, `#${xpBarSlot3.rank}`);
       context.fillText(`#${xpBarSlot3.rank}`, 711, 464);
-    } else if (xpBarSlot3.image && !xpBarSlot3.rank){
+    } else if (xpBarSlot3.image && !xpBarSlot3.rank) {
       context.font = applyRank(canvasObj, '#0');
       context.fillText('#0', 711, 464);
     }
     if (xpBarSlot4.image && xpBarSlot4.rank) {
       context.font = applyRank(canvasObj, `#${xpBarSlot4.rank}`);
       context.fillText(`#${xpBarSlot4.rank}`, 711, 524);
-    } else if (xpBarSlot4.image && !xpBarSlot4.rank){
+    } else if (xpBarSlot4.image && !xpBarSlot4.rank) {
       context.font = applyRank(canvasObj, '#0');
       context.fillText('#0', 711, 524);
     }

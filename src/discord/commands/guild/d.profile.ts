@@ -274,7 +274,7 @@ export const dProfile: SlashCommand = {
     const avatarIconRolesArray = Object.entries(avatarIconRoles)
       .filter(([key, value]) => target.roles.cache.has(key))
       .sort((a, b) => a[1].hierarchy - b[1].hierarchy);
-    
+
     // From the list, assign each one to a slot in numerical order
     if (avatarIconRolesArray.length > 0) {
       avatarIconSlot1 = {
@@ -506,7 +506,7 @@ export const dProfile: SlashCommand = {
     context.fillText(`${numFormatter(profileData.karma_received)}`, 648, 190);
 
     // Tokens Text
-    context.fillText(`${numFormatter(profileData.tokens)}`, 648, 250);
+    // context.fillText(`${numFormatter(profileData.tokens)}`, 648, 250);
 
     // Level Text
     const totalTextData = await getTotalLevel(profileData.totalTextExp + profileData.totalVoiceExp);

@@ -499,12 +499,12 @@ export const guildMemberUpdate: GuildMemberUpdateEvent = {
       // Find the difference between the two arrays
       const rolesAdded = newRoles.filter(x => !oldRoles.includes(x));
       if (rolesAdded.length > 0) {
-        log.debug(F, `${rolesAdded.length} roles added`);
+        // log.debug(F, `${rolesAdded.length} roles added`);
         await roleAddProcess(newMember, oldMember, rolesAdded);
       }
       const rolesRemoved = oldRoles.filter(x => !newRoles.includes(x));
       if (rolesRemoved.length > 0) {
-        log.debug(F, `${rolesRemoved.length} roles removed`);
+        // log.debug(F, `${rolesRemoved.length} roles removed`);
         await roleRemProcess(newMember, rolesRemoved);
       }
     }
