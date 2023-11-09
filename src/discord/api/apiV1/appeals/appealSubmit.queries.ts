@@ -14,8 +14,11 @@ import {
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
 import escape from 'escape-html';
-import { appeal_status, appeals, users } from '@prisma/client';
-import db from '../../../../global/utils/db';
+import {
+  PrismaClient, appeal_status, appeals, users,
+} from '@prisma/client';
+
+const db = new PrismaClient({ log: ['error', 'info', 'query', 'warn'] });
 
 const F = f(__filename);
 

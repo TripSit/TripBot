@@ -25,6 +25,7 @@ import {
 } from 'discord-api-types/v10';
 import { stripIndents } from 'common-tags';
 import {
+  PrismaClient,
   ai_channels,
   ai_model,
   ai_personas,
@@ -43,9 +44,10 @@ import {
   aiModerate,
 } from '../../../global/commands/g.ai';
 import commandContext from '../../utils/context';
-import db from '../../../global/utils/db';
 import { userInfoEmbed } from '../../../global/commands/g.moderate';
 import { sleep } from './d.bottest';
+
+const db = new PrismaClient({ log: ['error', 'info', 'query', 'warn'] });
 
 const F = f(__filename);
 

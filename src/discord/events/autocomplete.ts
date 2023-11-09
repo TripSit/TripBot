@@ -4,13 +4,15 @@ import {
 } from 'discord.js';
 import Fuse from 'fuse.js';
 
+import { PrismaClient } from '@prisma/client';
 import pillColors from '../../global/assets/data/pill_colors.json';
 import pillShapes from '../../global/assets/data/pill_shapes.json';
 import drugDataAll from '../../global/assets/data/drug_db_combined.json';
 import drugDataTripsit from '../../global/assets/data/drug_db_tripsit.json';
 import timezones from '../../global/assets/data/timezones.json';
 import unitsOfMeasurement from '../../global/assets/data/units_of_measurement.json';
-import db from '../../global/utils/db';
+
+const db = new PrismaClient({ log: ['error', 'info', 'query', 'warn'] });
 
 const F = f(__filename); // eslint-disable-line
 
