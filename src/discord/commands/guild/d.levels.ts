@@ -706,8 +706,8 @@ export const dLevels: SlashCommand = {
 
     // Rank Text
     context.textAlign = 'left';
-    context.font = applyRank(canvasObj, `#${levelData.TEXT.TOTAL.rank}`);
-    context.fillText(`#${levelData.TEXT.TOTAL.rank}`, 711, 213);
+    context.font = applyRank(canvasObj, `#${levelData.ALL.TOTAL.rank}`);
+    context.fillText(`#${levelData.ALL.TOTAL.rank}`, 711, 213);
 
     startingFontSize = 25;
     context.font = applyRank(canvasObj, `#${levelData.TEXT.GENERAL ? levelData.TEXT.GENERAL.rank : 0}`);
