@@ -1,0 +1,8 @@
+**/archive/**
+**/legacy/**
+**/src/matrix/**
+**/src/telegram/**
+**/src/irc/**
+**/jest/**
+**/build/**
+**/@prisma-moodle/**

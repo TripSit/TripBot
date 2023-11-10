@@ -50,6 +50,8 @@ jobs:
   codeql:
     name: CodeQL
     runs-on: ubuntu-latest
+    env:
+      NODE_OPTIONS: --max-old-space-size=7168
     permissions:
       actions: read
       contents: read
