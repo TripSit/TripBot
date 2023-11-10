@@ -1,10 +1,12 @@
 import { GuildMember, Role, TextChannel } from 'discord.js';
 import { stripIndents } from 'common-tags';
+import { PrismaClient } from '@prisma/client';
 import {
   GuildMemberUpdateEvent,
 } from '../@types/eventDef';
-import { database, getOpenTicket } from '../../global/utils/knex';
 import { topic } from '../../global/commands/g.topic';
+
+const db = new PrismaClient({ log: ['error', 'info', 'query', 'warn'] });
 
 type MindsetNames =
 | 'ROLE_DRUNK'
@@ -253,7 +255,11 @@ async function removeExTeamFromThreads(
   newMember: GuildMember,
   roleId: string,
 ) {
-  const guildData = await database.guilds.get(newMember.guild.id);
+  const guildData = await db.discord_guilds.findUniqueOrThrow({
+    where: {
+      id: newMember.guild.id,
+    },
+  });
   // If the role removed was a helper/tripsitter role, we need to remove them from threads they are in
   if (guildData.channel_tripsit
       && (roleId === guildData.role_helper
@@ -262,9 +268,26 @@ async function removeExTeamFromThreads(
   ) {
     log.debug(F, `${newMember.displayName} was a helper/tripsitter!`);
     const channelTripsit = await discordClient.channels.fetch(guildData.channel_tripsit) as TextChannel;
-    const userData = await database.users.get(newMember.id, null, null);
+    const userData = await db.users.upsert({
+      where: {
+        discord_id: newMember.user.id,
+      },
+      create: {
+        discord_id: newMember.user.id,
+      },
+      update: {},
+    });
 
-    const ticketData = await getOpenTicket(userData.id, null);
+    const ticketData = await db.user_tickets.findFirst({
+      where: {
+        user_id: userData.id,
+        status: {
+          not: {
+            in: ['CLOSED', 'RESOLVED', 'DELETED'],
+          },
+        },
+      },
+    });
 
     const fetchedThreads = await channelTripsit.threads.fetch();
     fetchedThreads.threads.forEach(async thread => {

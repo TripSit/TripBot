@@ -1,5 +1,6 @@
-import { rssDel, rssGet, rssSet } from '../utils/knex';
-import { Rss } from '../@types/database';
+import { PrismaClient, rss } from '@prisma/client';
+
+const db = new PrismaClient({ log: ['error', 'info', 'query', 'warn'] });
 
 const F = f(__filename); // eslint-disable-line
 
@@ -14,12 +15,26 @@ export async function rssCreate(
 ):Promise<void> {
   // log.debug(F, `rssCreate(${channelId}, ${guildId}, ${url})`);
 
-  await rssSet({
-    guild_id: guildId,
-    url,
-    last_post_id: '0000',
-    destination: channelId,
-  } as Rss);
+  await db.rss.upsert({
+    where: {
+      guild_id_destination: {
+        guild_id: guildId,
+        destination: channelId,
+      },
+    },
+    create: {
+      guild_id: guildId,
+      url,
+      last_post_id: '0000',
+      destination: channelId,
+    },
+    update: {
+      guild_id: guildId,
+      url,
+      last_post_id: '0000',
+      destination: channelId,
+    },
+  });
 }
 
 /**
@@ -28,8 +43,13 @@ export async function rssCreate(
  */
 export async function rssList(
   guildId:string,
-):Promise<Rss[]> {
-  return rssGet(guildId);
+):Promise<rss[]> {
+  // return rssGet(guildId);
+  return db.rss.findMany({
+    where: {
+      guild_id: guildId,
+    },
+  });
 }
 
 /**
@@ -40,5 +60,12 @@ export async function rssDelete(
   channelId:string,
   guildId:string,
 ):Promise<void> {
-  await rssDel(channelId, guildId);
+  await db.rss.delete({
+    where: {
+      guild_id_destination: {
+        guild_id: guildId,
+        destination: channelId,
+      },
+    },
+  });
 }

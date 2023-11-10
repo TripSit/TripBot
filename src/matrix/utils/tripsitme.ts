@@ -7,10 +7,10 @@ import { TicketStatus, Users, UserTickets } from '../../global/@types/database';
 import {
   getRoleMembers, getUserAttribute, getUserRoleMappings, hasRole,
 } from '../../global/utils/keycloak';
-import {
-  getOpenTicket,
-  getUser, ticketDel, ticketGet, ticketUpdate,
-} from '../../global/utils/knex';
+import { PrismaClient } from '@prisma/client';
+
+const db = new PrismaClient({ log: ['error', 'info', 'query', 'warn'] });
+
 
 const F = f(__filename);
 

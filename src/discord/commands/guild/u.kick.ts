@@ -10,11 +10,11 @@ import {
   ApplicationCommandType,
   TextInputStyle,
 } from 'discord-api-types/v10';
+import { user_action_type } from '@prisma/client';
 import { UserCommand } from '../../@types/commandDef';
 // import log from '../../../global/utils/log';
 import { moderate } from '../../../global/commands/g.moderate';
 import commandContext from '../../utils/context';
-import { UserActionType } from '../../../global/@types/database';
 
 const F = f(__filename);
 
@@ -50,7 +50,7 @@ export const uKick: UserCommand = {
         await i.deferReply({ ephemeral: true });
         await i.editReply(await moderate(
           interaction.member as GuildMember,
-          'KICK' as UserActionType,
+          'KICK' as user_action_type,
           (interaction.targetMember as GuildMember).id,
           i.fields.getTextInputValue('internalNote'),
           i.fields.getTextInputValue('description'),

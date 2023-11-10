@@ -21,11 +21,12 @@ import {
   ChannelType,
   PermissionResolvable,
 } from 'discord.js';
+import { PrismaClient, reaction_role_type, reaction_roles } from '@prisma/client';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
-import { database } from '../../../global/utils/knex';
 import { checkChannelPermissions, checkGuildPermissions } from '../../utils/checkPermissions';
-import { ReactionRoles, ReactionRoleType } from '../../../global/@types/database';
+
+const db = new PrismaClient({ log: ['error', 'info', 'query', 'warn'] });
 
 const F = f(__filename);
 
@@ -296,7 +297,11 @@ export async function buttonReactionRole(
     return;
   }
 
-  const userData = await database.users.get(target.id, null, null);
+  const userData = await db.users.findUniqueOrThrow({
+    where: {
+      discord_id: target.id,
+    },
+  });
 
   // If the role being requested is the Helper or Contributor role, check if they have been banned first
   if (role.id === env.ROLE_HELPER && userData.helper_role_ban) {
@@ -457,7 +462,11 @@ export async function buttonReactionRole(
     // Post intro message to the channel
     channel.send(`${target} has joined as a ${role.name}, please welcome them!`);
   } else {
-    const guildData = await database.guilds.get(interaction.guild.id);
+    const guildData = await db.discord_guilds.findUniqueOrThrow({
+      where: {
+        id: interaction.guild.id,
+      },
+    });
 
     // const isTeam = guildData.team_role_ids !== null
     //   ? (interaction.member as GuildMember).roles.cache.some(r => (guildData.team_role_ids as string).indexOf(r.id) >= 0)
@@ -475,38 +484,39 @@ export async function buttonReactionRole(
       roleData => roleData.tags?.availableForPurchase === true,
     ) !== undefined;
 
-    const reactionrolePremiumColorData = await database.reactionRoles.get(
-      interaction.guild.id,
-      interaction.channel.id,
-      null,
-      'PREMIUM_COLOR' as ReactionRoleType,
-    );
+    const reactionrolePremiumColorData = await db.reaction_roles.findMany({
+      where: {
+        guild_id: interaction.guild.id,
+        channel_id: interaction.channel.id,
+        type: 'PREMIUM_COLOR',
+      },
+    });
 
     const premiumColorRoles = [];
     if (reactionrolePremiumColorData.length > 0) {
       const roleDonorRed = await interaction.guild.roles.fetch(
-        (reactionrolePremiumColorData.find(roleData => roleData.name === 'Ruby') as ReactionRoles).role_id,
+        (reactionrolePremiumColorData.find(roleData => roleData.name === 'Ruby') as reaction_roles).role_id,
       ) as Role;
       const roleDonorOrange = await interaction.guild.roles.fetch(
-        (reactionrolePremiumColorData.find(roleData => roleData.name === 'Sunstone') as ReactionRoles).role_id,
+        (reactionrolePremiumColorData.find(roleData => roleData.name === 'Sunstone') as reaction_roles).role_id,
       ) as Role;
       const roleDonorYellow = await interaction.guild.roles.fetch(
-        (reactionrolePremiumColorData.find(roleData => roleData.name === 'Citrine') as ReactionRoles).role_id,
+        (reactionrolePremiumColorData.find(roleData => roleData.name === 'Citrine') as reaction_roles).role_id,
       ) as Role;
       const roleDonorGreen = await interaction.guild.roles.fetch(
-        (reactionrolePremiumColorData.find(roleData => roleData.name === 'Jade') as ReactionRoles).role_id,
+        (reactionrolePremiumColorData.find(roleData => roleData.name === 'Jade') as reaction_roles).role_id,
       ) as Role;
       const roleDonorBlue = await interaction.guild.roles.fetch(
-        (reactionrolePremiumColorData.find(roleData => roleData.name === 'Sapphire') as ReactionRoles).role_id,
+        (reactionrolePremiumColorData.find(roleData => roleData.name === 'Sapphire') as reaction_roles).role_id,
       ) as Role;
       const roleDonorPurple = await interaction.guild.roles.fetch(
-        (reactionrolePremiumColorData.find(roleData => roleData.name === 'Amethyst') as ReactionRoles).role_id,
+        (reactionrolePremiumColorData.find(roleData => roleData.name === 'Amethyst') as reaction_roles).role_id,
       ) as Role;
       const roleDonorPink = await interaction.guild.roles.fetch(
-        (reactionrolePremiumColorData.find(roleData => roleData.name === 'Pezzottaite') as ReactionRoles).role_id,
+        (reactionrolePremiumColorData.find(roleData => roleData.name === 'Pezzottaite') as reaction_roles).role_id,
       ) as Role;
       const roleDonorBlack = await interaction.guild.roles.fetch(
-        (reactionrolePremiumColorData.find(roleData => roleData.name === 'Labradorite') as ReactionRoles).role_id,
+        (reactionrolePremiumColorData.find(roleData => roleData.name === 'Labradorite') as reaction_roles).role_id,
       ) as Role;
 
       premiumColorRoles.push({ name: `💖 ${roleDonorRed.name}`, value: roleDonorRed.id });
@@ -534,38 +544,39 @@ export async function buttonReactionRole(
     await target.roles.add(role);
     await interaction.editReply({ content: `Added role ${role.name}` });
 
-    const reactionroleColorData = await database.reactionRoles.get(
-      interaction.guild.id,
-      interaction.channel.id,
-      null,
-      'COLOR' as ReactionRoleType,
-    );
+    const reactionroleColorData = await db.reaction_roles.findMany({
+      where: {
+        guild_id: interaction.guild.id,
+        channel_id: interaction.channel.id,
+        type: 'COLOR',
+      },
+    });
 
     const colorRoles = [];
     if (reactionroleColorData.length > 0) {
       const roleRed = await interaction.guild.roles.fetch(
-        (reactionroleColorData.find(roleData => roleData.name === 'Tulip') as ReactionRoles).role_id,
+        (reactionroleColorData.find(roleData => roleData.name === 'Tulip') as reaction_roles).role_id,
       ) as Role;
       const roleOrange = await interaction.guild.roles.fetch(
-        (reactionroleColorData.find(roleData => roleData.name === 'Marigold') as ReactionRoles).role_id,
+        (reactionroleColorData.find(roleData => roleData.name === 'Marigold') as reaction_roles).role_id,
       ) as Role;
       const roleYellow = await interaction.guild.roles.fetch(
-        (reactionroleColorData.find(roleData => roleData.name === 'Daffodil') as ReactionRoles).role_id,
+        (reactionroleColorData.find(roleData => roleData.name === 'Daffodil') as reaction_roles).role_id,
       ) as Role;
       const roleGreen = await interaction.guild.roles.fetch(
-        (reactionroleColorData.find(roleData => roleData.name === 'Waterlily') as ReactionRoles).role_id,
+        (reactionroleColorData.find(roleData => roleData.name === 'Waterlily') as reaction_roles).role_id,
       ) as Role;
       const roleBlue = await interaction.guild.roles.fetch(
-        (reactionroleColorData.find(roleData => roleData.name === 'Bluebell') as ReactionRoles).role_id,
+        (reactionroleColorData.find(roleData => roleData.name === 'Bluebell') as reaction_roles).role_id,
       ) as Role;
       const rolePurple = await interaction.guild.roles.fetch(
-        (reactionroleColorData.find(roleData => roleData.name === 'Hyacinth') as ReactionRoles).role_id,
+        (reactionroleColorData.find(roleData => roleData.name === 'Hyacinth') as reaction_roles).role_id,
       ) as Role;
       const rolePink = await interaction.guild.roles.fetch(
-        (reactionroleColorData.find(roleData => roleData.name === 'Azalea') as ReactionRoles).role_id,
+        (reactionroleColorData.find(roleData => roleData.name === 'Azalea') as reaction_roles).role_id,
       ) as Role;
       const roleWhite = await interaction.guild.roles.fetch(
-        (reactionroleColorData.find(roleData => roleData.name === 'Snowdrop') as ReactionRoles).role_id,
+        (reactionroleColorData.find(roleData => roleData.name === 'Snowdrop') as reaction_roles).role_id,
       ) as Role;
 
       colorRoles.push({ name: `💖 ${roleRed.name}`, value: roleRed.id });
@@ -596,40 +607,41 @@ export async function buttonReactionRole(
       await target.roles.remove([...otherPremiumColorRoles, ...colorIds]);
     }
 
-    const reactionroleData = await database.reactionRoles.get(
-      interaction.guild.id,
-      interaction.channel.id,
-      null,
-      'MINDSET' as ReactionRoleType,
-    );
+    const reactionroleData = await db.reaction_roles.findMany({
+      where: {
+        guild_id: interaction.guild.id,
+        channel_id: interaction.channel.id,
+        type: 'MINDSET',
+      },
+    });
 
     if (reactionroleData.length > 0) {
       const roleDrunk = await interaction.guild.roles.fetch(
-        (reactionroleData.find(roleData => roleData.name === 'Drunk') as ReactionRoles).role_id,
+        (reactionroleData.find(roleData => roleData.name === 'Drunk') as reaction_roles).role_id,
       ) as Role;
       const roleHigh = await interaction.guild.roles.fetch(
-        (reactionroleData.find(roleData => roleData.name === 'High') as ReactionRoles).role_id,
+        (reactionroleData.find(roleData => roleData.name === 'High') as reaction_roles).role_id,
       ) as Role;
       const roleRolling = await interaction.guild.roles.fetch(
-        (reactionroleData.find(roleData => roleData.name === 'Rolling') as ReactionRoles).role_id,
+        (reactionroleData.find(roleData => roleData.name === 'Rolling') as reaction_roles).role_id,
       ) as Role;
       const roleTripping = await interaction.guild.roles.fetch(
-        (reactionroleData.find(roleData => roleData.name === 'Tripping') as ReactionRoles).role_id,
+        (reactionroleData.find(roleData => roleData.name === 'Tripping') as reaction_roles).role_id,
       ) as Role;
       const roleDissociating = await interaction.guild.roles.fetch(
-        (reactionroleData.find(roleData => roleData.name === 'Dissociated') as ReactionRoles).role_id,
+        (reactionroleData.find(roleData => roleData.name === 'Dissociated') as reaction_roles).role_id,
       ) as Role;
       const roleStimming = await interaction.guild.roles.fetch(
-        (reactionroleData.find(roleData => roleData.name === 'Stimming') as ReactionRoles).role_id,
+        (reactionroleData.find(roleData => roleData.name === 'Stimming') as reaction_roles).role_id,
       ) as Role;
       const roleSedated = await interaction.guild.roles.fetch(
-        (reactionroleData.find(roleData => roleData.name === 'Sedated') as ReactionRoles).role_id,
+        (reactionroleData.find(roleData => roleData.name === 'Sedated') as reaction_roles).role_id,
       ) as Role;
       const roleTalkative = await interaction.guild.roles.fetch(
-        (reactionroleData.find(roleData => roleData.name === 'Talkative') as ReactionRoles).role_id,
+        (reactionroleData.find(roleData => roleData.name === 'Talkative') as reaction_roles).role_id,
       ) as Role;
       const roleWorking = await interaction.guild.roles.fetch(
-        (reactionroleData.find(roleData => roleData.name === 'Working') as ReactionRoles).role_id,
+        (reactionroleData.find(roleData => roleData.name === 'Working') as reaction_roles).role_id,
       ) as Role;
 
       const mindsetRoles = [
@@ -666,10 +678,10 @@ export async function buttonReactionRole(
 }
 
 async function createRoles(
-  type: ReactionRoleType,
+  type: reaction_role_type,
   data: { name: string; emoji: string; color: string }[],
   interaction: ChatInputCommandInteraction,
-):Promise<ReactionRoles[]> {
+):Promise<reaction_roles[]> {
   await Promise.allSettled(data.map(async roleData => {
     const newRole = await interaction.guild?.roles.create( // eslint-disable-line no-await-in-loop
       {
@@ -681,22 +693,36 @@ async function createRoles(
         permissions: [],
       },
     ) as Role;
-    await database.reactionRoles.set([{ // eslint-disable-line no-await-in-loop
-      guild_id: interaction.guild?.id,
-      channel_id: interaction.channel?.id,
-      // message_id: reactionMessage.id,
-      role_id: newRole.id,
-      type,
-      name: roleData.name,
-    } as ReactionRoles]);
+
+    await db.reaction_roles.upsert({
+      where: {
+        role_id_reaction_id: {
+          role_id: newRole.id,
+          reaction_id: '',
+        },
+      },
+      create: {
+        guild_id: interaction.guild?.id as string,
+        channel_id: interaction.channel?.id as string,
+        message_id: '',
+        reaction_id: '',
+        role_id: newRole.id,
+        type,
+        name: roleData.name,
+      },
+      update: {
+        role_id: newRole.id,
+      },
+    });
   }));
 
-  return database.reactionRoles.get(
-    interaction.guild?.id as string,
-    interaction.channel?.id as string,
-    null,
-    'COLOR' as ReactionRoleType,
-  );
+  return db.reaction_roles.findMany({
+    where: {
+      guild_id: interaction.guild?.id as string,
+      channel_id: interaction.channel?.id as string,
+      type: 'COLOR',
+    },
+  });
 }
 
 const roleDefinitions = {
@@ -750,36 +776,38 @@ const roleDefinitions = {
 };
 
 async function getGuildRole(
-  roleType: ReactionRoleType,
+  roleType: reaction_role_type,
   roleName: string,
   interaction: ChatInputCommandInteraction,
 ):Promise<Role> {
   if (!interaction.guild) return {} as Role;
   if (!interaction.channel) return {} as Role;
   let returnRole: Role;
-  let reactionroleData = await database.reactionRoles.get(
-    interaction.guild.id,
-    interaction.channel.id,
-    null,
-    roleType,
-  );
+
+  let reactionroleData = await db.reaction_roles.findMany({
+    where: {
+      guild_id: interaction.guild.id,
+      channel_id: interaction.channel.id,
+      type: roleType,
+    },
+  });
   try {
     log.debug(F, `Pulling role ${roleName} from database`);
     returnRole = await interaction.guild?.roles.fetch(
-      (reactionroleData.find(role => role.name === roleName) as ReactionRoles).role_id,
+      (reactionroleData.find(role => role.name === roleName) as reaction_roles).role_id,
     ) as Role;
     log.debug(F, `Role ${returnRole} found in guild`);
   } catch (err) {
     log.debug(F, `Role ${roleName} not found in database`);
     reactionroleData = reactionroleData.filter(role => role.name !== roleName);
     reactionroleData.push(...await createRoles(
-      'COLOR' as ReactionRoleType,
+      'COLOR' as reaction_role_type,
       [{ name: 'Tulip', emoji: 'TulipCircle', color: 'ff5f60' }],
       interaction,
     ));
     // log.debug(F, `RoleData: ${JSON.stringify(reactionroleData, null, 2)}`);
     returnRole = await interaction.guild.roles.fetch(
-      (reactionroleData.find(role => role.name === 'Tulip') as ReactionRoles).role_id,
+      (reactionroleData.find(role => role.name === 'Tulip') as reaction_roles).role_id,
     ) as Role;
     log.debug(F, `Role ${returnRole} found in guild`);
   }
@@ -796,17 +824,18 @@ export async function createColorMessage(
 
   // const reactionMessage = await (interaction.channel as TextChannel).send({ content: loadingMessage });
 
-  let reactionroleData = await database.reactionRoles.get(
-    interaction.guild.id,
-    interaction.channel.id,
-    null,
-    'COLOR' as ReactionRoleType,
-  );
+  let reactionroleData = await db.reaction_roles.findMany({
+    where: {
+      guild_id: interaction.guild.id,
+      channel_id: interaction.channel.id,
+      type: 'COLOR',
+    },
+  });
 
   if (reactionroleData.length === 0) {
     // Create the roles and store them in the db
     reactionroleData = await createRoles(
-      'COLOR' as ReactionRoleType,
+      'COLOR' as reaction_role_type,
       roleDefinitions.COLOR,
       interaction,
     );
@@ -814,14 +843,14 @@ export async function createColorMessage(
 
   log.debug(F, `Reaction role data: ${JSON.stringify(reactionroleData, null, 2)}`);
 
-  const roleRed = await getGuildRole('COLOR' as ReactionRoleType, 'Tulip', interaction);
-  const roleOrange = await getGuildRole('COLOR' as ReactionRoleType, 'Marigold', interaction);
-  const roleYellow = await getGuildRole('COLOR' as ReactionRoleType, 'Daffodil', interaction);
-  const roleGreen = await getGuildRole('COLOR' as ReactionRoleType, 'Waterlily', interaction);
-  const roleBlue = await getGuildRole('COLOR' as ReactionRoleType, 'Bluebell', interaction);
-  const rolePurple = await getGuildRole('COLOR' as ReactionRoleType, 'Hyacinth', interaction);
-  const rolePink = await getGuildRole('COLOR' as ReactionRoleType, 'Azalea', interaction);
-  const roleWhite = await getGuildRole('COLOR' as ReactionRoleType, 'Snowdrop', interaction);
+  const roleRed = await getGuildRole('COLOR' as reaction_role_type, 'Tulip', interaction);
+  const roleOrange = await getGuildRole('COLOR' as reaction_role_type, 'Marigold', interaction);
+  const roleYellow = await getGuildRole('COLOR' as reaction_role_type, 'Daffodil', interaction);
+  const roleGreen = await getGuildRole('COLOR' as reaction_role_type, 'Waterlily', interaction);
+  const roleBlue = await getGuildRole('COLOR' as reaction_role_type, 'Bluebell', interaction);
+  const rolePurple = await getGuildRole('COLOR' as reaction_role_type, 'Hyacinth', interaction);
+  const rolePink = await getGuildRole('COLOR' as reaction_role_type, 'Azalea', interaction);
+  const roleWhite = await getGuildRole('COLOR' as reaction_role_type, 'Snowdrop', interaction);
 
   const embed = embedTemplate()
     .setAuthor({ name: 'Colors' })
@@ -898,17 +927,18 @@ export async function createPremiumColorMessage(
 
   // const reactionMessage = await (interaction.channel as TextChannel).send({ content: loadingMessage });
 
-  let reactionroleData = await database.reactionRoles.get(
-    interaction.guild.id,
-    interaction.channel.id,
-    null,
-    'PREMIUM_COLOR' as ReactionRoleType,
-  );
+  let reactionroleData = await db.reaction_roles.findMany({
+    where: {
+      guild_id: interaction.guild.id,
+      channel_id: interaction.channel.id,
+      type: 'PREMIUM_COLOR',
+    },
+  });
 
   if (reactionroleData.length === 0) {
     // Create the roles and store them in the db
     reactionroleData = await createRoles(
-      'PREMIUM_COLOR' as ReactionRoleType,
+      'PREMIUM_COLOR' as reaction_role_type,
       roleDefinitions.PREMIUM_COLOR,
       interaction,
     );
@@ -922,19 +952,30 @@ export async function createPremiumColorMessage(
       .split(' ')
       .map(role => role.replace(/[<@&>]/g, ''))
       .join(',');
-    const guildData = await database.guilds.get(interaction.guild.id);
+    const guildData = await db.discord_guilds.findUniqueOrThrow({
+      where: {
+        id: interaction.guild.id,
+      },
+    });
     guildData.premium_role_ids = roleMentions;
-    await database.guilds.set(guildData);
+    await db.discord_guilds.update({
+      where: {
+        id: interaction.guild.id,
+      },
+      data: {
+        premium_role_ids: roleMentions,
+      },
+    });
   }
 
-  const roleDonorRed = await getGuildRole('PREMIUM_COLOR' as ReactionRoleType, 'Ruby', interaction);
-  const roleDonorOrange = await getGuildRole('PREMIUM_COLOR' as ReactionRoleType, 'Sunstone', interaction);
-  const roleDonorYellow = await getGuildRole('PREMIUM_COLOR' as ReactionRoleType, 'Citrine', interaction);
-  const roleDonorGreen = await getGuildRole('PREMIUM_COLOR' as ReactionRoleType, 'Jade', interaction);
-  const roleDonorBlue = await getGuildRole('PREMIUM_COLOR' as ReactionRoleType, 'Sapphire', interaction);
-  const roleDonorPurple = await getGuildRole('PREMIUM_COLOR' as ReactionRoleType, 'Amethyst', interaction);
-  const roleDonorPink = await getGuildRole('PREMIUM_COLOR' as ReactionRoleType, 'Pezzottaite', interaction);
-  const roleDonorBlack = await getGuildRole('PREMIUM_COLOR' as ReactionRoleType, 'Labradorite', interaction);
+  const roleDonorRed = await getGuildRole('PREMIUM_COLOR' as reaction_role_type, 'Ruby', interaction);
+  const roleDonorOrange = await getGuildRole('PREMIUM_COLOR' as reaction_role_type, 'Sunstone', interaction);
+  const roleDonorYellow = await getGuildRole('PREMIUM_COLOR' as reaction_role_type, 'Citrine', interaction);
+  const roleDonorGreen = await getGuildRole('PREMIUM_COLOR' as reaction_role_type, 'Jade', interaction);
+  const roleDonorBlue = await getGuildRole('PREMIUM_COLOR' as reaction_role_type, 'Sapphire', interaction);
+  const roleDonorPurple = await getGuildRole('PREMIUM_COLOR' as reaction_role_type, 'Amethyst', interaction);
+  const roleDonorPink = await getGuildRole('PREMIUM_COLOR' as reaction_role_type, 'Pezzottaite', interaction);
+  const roleDonorBlack = await getGuildRole('PREMIUM_COLOR' as reaction_role_type, 'Labradorite', interaction);
 
   const embed = embedTemplate()
     .setDescription(stripIndents`Boosters and Patrons can access new colors!
@@ -1011,19 +1052,20 @@ export async function createMindsetMessage(
 
   // const reactionMessage = await (interaction.channel as TextChannel).send({ content: loadingMessage });
 
-  let reactionroleData = await database.reactionRoles.get(
-    interaction.guild.id,
-    interaction.channel.id,
-    null,
-    'MINDSET' as ReactionRoleType,
-  );
+  let reactionroleData = await db.reaction_roles.findMany({
+    where: {
+      guild_id: interaction.guild.id,
+      channel_id: interaction.channel.id,
+      type: 'MINDSET',
+    },
+  });
 
   log.debug(F, `reactionRoleData: ${JSON.stringify(reactionroleData, null, 2)}`);
 
   if (reactionroleData.length === 0) {
     // Create the roles and store them in the db
     reactionroleData = await createRoles(
-      'MINDSET' as ReactionRoleType,
+      'MINDSET' as reaction_role_type,
       roleDefinitions.MINDSET,
       interaction,
     );
@@ -1031,15 +1073,15 @@ export async function createMindsetMessage(
 
   log.debug(F, `reactionRoleData: ${JSON.stringify(reactionroleData, null, 2)}`);
 
-  const roleDrunk = await getGuildRole('MINDSET' as ReactionRoleType, 'Drunk', interaction);
-  const roleHigh = await getGuildRole('MINDSET' as ReactionRoleType, 'High', interaction);
-  const roleRolling = await getGuildRole('MINDSET' as ReactionRoleType, 'Rolling', interaction);
-  const roleTripping = await getGuildRole('MINDSET' as ReactionRoleType, 'Tripping', interaction);
-  const roleDissociating = await getGuildRole('MINDSET' as ReactionRoleType, 'Dissociated', interaction);
-  const roleStimming = await getGuildRole('MINDSET' as ReactionRoleType, 'Stimming', interaction);
-  const roleSedated = await getGuildRole('MINDSET' as ReactionRoleType, 'Sedated', interaction);
-  const roleTalkative = await getGuildRole('MINDSET' as ReactionRoleType, 'Talkative', interaction);
-  const roleWorking = await getGuildRole('MINDSET' as ReactionRoleType, 'Working', interaction);
+  const roleDrunk = await getGuildRole('MINDSET' as reaction_role_type, 'Drunk', interaction);
+  const roleHigh = await getGuildRole('MINDSET' as reaction_role_type, 'High', interaction);
+  const roleRolling = await getGuildRole('MINDSET' as reaction_role_type, 'Rolling', interaction);
+  const roleTripping = await getGuildRole('MINDSET' as reaction_role_type, 'Tripping', interaction);
+  const roleDissociating = await getGuildRole('MINDSET' as reaction_role_type, 'Dissociated', interaction);
+  const roleStimming = await getGuildRole('MINDSET' as reaction_role_type, 'Stimming', interaction);
+  const roleSedated = await getGuildRole('MINDSET' as reaction_role_type, 'Sedated', interaction);
+  const roleTalkative = await getGuildRole('MINDSET' as reaction_role_type, 'Talkative', interaction);
+  const roleWorking = await getGuildRole('MINDSET' as reaction_role_type, 'Working', interaction);
 
   const embed = embedTemplate()
     .setAuthor({ name: 'Mindsets' })
@@ -1128,19 +1170,20 @@ export async function createPronounMessage(
 
   // const reactionMessage = await (interaction.channel as TextChannel).send({ content: loadingMessage });
 
-  let reactionroleData = await database.reactionRoles.get(
-    interaction.guild.id,
-    interaction.channel.id,
-    null,
-    'PRONOUN' as ReactionRoleType,
-  );
+  let reactionroleData = await db.reaction_roles.findMany({
+    where: {
+      guild_id: interaction.guild.id,
+      channel_id: interaction.channel.id,
+      type: 'PRONOUN',
+    },
+  });
 
   log.debug(F, `Reactionrole data: ${JSON.stringify(reactionroleData)}`);
 
   if (reactionroleData.length === 0) {
     // Create the roles and store them in the db
     reactionroleData = await createRoles(
-      'PRONOUN' as ReactionRoleType,
+      'PRONOUN' as reaction_role_type,
       roleDefinitions.PRONOUN,
       interaction,
     );
@@ -1148,11 +1191,11 @@ export async function createPronounMessage(
 
   log.debug(F, `Reactionrole data: ${JSON.stringify(reactionroleData)}`);
 
-  const rolePronounAsk = await getGuildRole('PRONOUN' as ReactionRoleType, 'AskMe', interaction);
-  const rolePronounAny = await getGuildRole('PRONOUN' as ReactionRoleType, 'AnyPronouns', interaction);
-  const rolePronounThey = await getGuildRole('PRONOUN' as ReactionRoleType, 'TheyThem', interaction);
-  const rolePronounShe = await getGuildRole('PRONOUN' as ReactionRoleType, 'SheHer', interaction);
-  const rolePronounHe = await getGuildRole('PRONOUN' as ReactionRoleType, 'HeHim', interaction);
+  const rolePronounAsk = await getGuildRole('PRONOUN' as reaction_role_type, 'AskMe', interaction);
+  const rolePronounAny = await getGuildRole('PRONOUN' as reaction_role_type, 'AnyPronouns', interaction);
+  const rolePronounThey = await getGuildRole('PRONOUN' as reaction_role_type, 'TheyThem', interaction);
+  const rolePronounShe = await getGuildRole('PRONOUN' as reaction_role_type, 'SheHer', interaction);
+  const rolePronounHe = await getGuildRole('PRONOUN' as reaction_role_type, 'HeHim', interaction);
 
   const embed = embedTemplate()
     .setAuthor({ name: 'Pronouns' })
@@ -1213,25 +1256,26 @@ export async function createNotificationMessage(
   // const reactionMessage = await (interaction.channel as TextChannel).send({ content: loadingMessage });
   const isHome = interaction.guild.id === env.DISCORD_GUILD_ID;
 
-  let reactionroleData = await database.reactionRoles.get(
-    interaction.guild.id,
-    interaction.channel.id,
-    null,
-    'NOTIFICATION' as ReactionRoleType,
-  );
+  let reactionroleData = await db.reaction_roles.findMany({
+    where: {
+      guild_id: interaction.guild.id,
+      channel_id: interaction.channel.id,
+      type: 'NOTIFICATION',
+    },
+  });
 
   if (reactionroleData.length === 0) {
     // Create the roles and store them in the db
     reactionroleData = await createRoles(
-      'NOTIFICATION' as ReactionRoleType,
+      'NOTIFICATION' as reaction_role_type,
       roleDefinitions.NOTIFICATION,
       interaction,
     );
   }
 
-  const roleAnnouncements = await getGuildRole('NOTIFICATION' as ReactionRoleType, 'Announcements', interaction);
-  const roleVoiceChatter = await getGuildRole('NOTIFICATION' as ReactionRoleType, 'Voice Chatter', interaction);
-  const roleActivityCrew = await getGuildRole('NOTIFICATION' as ReactionRoleType, 'Activity Crew', interaction);
+  const roleAnnouncements = await getGuildRole('NOTIFICATION' as reaction_role_type, 'Announcements', interaction);
+  const roleVoiceChatter = await getGuildRole('NOTIFICATION' as reaction_role_type, 'Voice Chatter', interaction);
+  const roleActivityCrew = await getGuildRole('NOTIFICATION' as reaction_role_type, 'Activity Crew', interaction);
 
   const embed = embedTemplate()
     .setAuthor({ name: 'Notifications' })
@@ -1259,8 +1303,8 @@ export async function createNotificationMessage(
     );
 
   if (isHome) {
-    const roleTripbotUpdates = await getGuildRole('NOTIFICATION' as ReactionRoleType, 'TripBot Updates', interaction);
-    const roleTriptownUpdates = await getGuildRole('NOTIFICATION' as ReactionRoleType, 'TripTown Updates', interaction);
+    const roleTripbotUpdates = await getGuildRole('NOTIFICATION' as reaction_role_type, 'TripBot Updates', interaction);
+    const roleTriptownUpdates = await getGuildRole('NOTIFICATION' as reaction_role_type, 'TripTown Updates', interaction);
     row1
       .addComponents(
         new ButtonBuilder()
@@ -1360,7 +1404,11 @@ export const dReactionRole: SlashCommand = {
     }
 
     // Check if the guild is a partner (or the home guild)
-    const guildData = await database.guilds.get(interaction.guild.id);
+    const guildData = await db.discord_guilds.findUniqueOrThrow({
+      where: {
+        id: interaction.guild.id,
+      },
+    });
     if (interaction.guild.id !== env.DISCORD_GUILD_ID
       && !guildData.partner
       && !guildData.supporter) {

@@ -2,7 +2,9 @@ import {
   Collection,
   Message, MessageMentionTypes, TextChannel, Webhook,
 } from 'discord.js';
-import { database } from '../../global/utils/knex';
+import { PrismaClient } from '@prisma/client';
+
+const db = new PrismaClient({ log: ['error', 'info', 'query', 'warn'] });
 
 export default bridgeMessage;
 
@@ -69,7 +71,12 @@ export async function bridgeMessage(message: Message): Promise<void> {
 
   // Internal message
   if (message.guildId === env.DISCORD_GUILD_ID) {
-    const internalBridgeDb = await database.bridges.get(message.channel.id);
+    const internalBridgeDb = await db.bridges.findMany({
+      where: {
+        internal_channel: message.channel.id,
+      },
+    });
+
     if (internalBridgeDb.length === 0) return; // If there is no bridge config for this channel then ignore the message
     log.debug(F, `Message is from tripsit in ${(message.channel as TextChannel).name}`);
 
@@ -84,7 +91,11 @@ export async function bridgeMessage(message: Message): Promise<void> {
 
   // External message
   if (message.guildId !== env.DISCORD_GUILD_ID) {
-    const externalBridgeDb = await database.bridges.get(message.channel.id);
+    const externalBridgeDb = await db.bridges.findMany({
+      where: {
+        external_channel: message.channel.id,
+      },
+    });
     if (externalBridgeDb.length === 0) return; // If there is no bridge config for this channel then ignore the message
     const bridgeConfig = externalBridgeDb.find(bridge => bridge.status === 'ACTIVE');
     if (!bridgeConfig) return; // If there is no bridge config for this channel then ignore the message
@@ -92,7 +103,14 @@ export async function bridgeMessage(message: Message): Promise<void> {
 
     await sendMessageToChannel(bridgeConfig.internal_channel, message);
 
-    const internalBridgeDb = await database.bridges.get(bridgeConfig.internal_channel);
+    // const internalBridgeDb = await database.bridges.get(bridgeConfig.internal_channel);
+
+    const internalBridgeDb = await db.bridges.findMany({
+      where: {
+        internal_channel: bridgeConfig.internal_channel,
+      },
+    });
+
     await Promise.all(internalBridgeDb.map(async bridge => {
       if (bridge.status === 'ACTIVE'
         && bridge.external_channel.toString() !== message.channel.id.toString()

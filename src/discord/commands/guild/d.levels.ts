@@ -7,18 +7,18 @@ import {
   AttachmentBuilder,
 } from 'discord.js';
 import Canvas from '@napi-rs/canvas';
+import { PrismaClient, personas } from '@prisma/client';
 import { SlashCommand } from '../../@types/commandDef';
 import { levels } from '../../../global/commands/g.levels';
 import { profile, ProfileData } from '../../../global/commands/g.profile';
 import { getPersonaInfo } from '../../../global/commands/g.rpg';
-import { inventoryGet } from '../../../global/utils/knex';
 import { imageGet } from '../../utils/imageGet';
 import commandContext from '../../utils/context';
 import { numFormatter, numFormatterVoice } from './d.profile';
-import { Personas } from '../../../global/@types/database';
 // import { expForNextLevel, getTotalLevel } from '../../../global/utils/experience';
-// import { inventoryGet } from '../../../global/utils/knex';
 // import { imageGet } from '../../utils/imageGet';
+
+const db = new PrismaClient({ log: ['error', 'info', 'query', 'warn'] });
 
 // import { getTotalLevel } from '../../../global/utils/experience';
 
@@ -247,7 +247,7 @@ export const dLevels: SlashCommand = {
     ]);
 
     const profileData = values[1].status === 'fulfilled' ? values[1].value : {} as ProfileData;
-    const personaData = values[2].status === 'fulfilled' ? values[2].value : {} as Personas;
+    const personaData = values[2].status === 'fulfilled' ? values[2].value : {} as personas;
     const levelData = values[3].status === 'fulfilled' ? values[3].value : {} as LevelData;
     const Icons = values[4].status === 'fulfilled' ? values[4].value : {} as Canvas.Image;
     // const StatusIcon = values[5].status === 'fulfilled' ? values[5].value : {} as Canvas.Image;
@@ -346,7 +346,11 @@ export const dLevels: SlashCommand = {
 
     if (personaData) {
       // Get the existing inventory data
-      const inventoryData = await inventoryGet(personaData.id);
+      const inventoryData = await db.rpg_inventory.findMany({
+        where: {
+          persona_id: personaData.id,
+        },
+      });
       // log.debug(F, `Persona home inventory (change): ${JSON.stringify(inventoryData, null, 2)}`);
 
       const equippedBackground = inventoryData.find(item => item.equipped === true && item.effect === 'background');

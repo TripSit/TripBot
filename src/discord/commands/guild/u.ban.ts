@@ -10,12 +10,12 @@ import {
   ApplicationCommandType,
   TextInputStyle,
 } from 'discord-api-types/v10';
+import { user_action_type } from '@prisma/client';
 import { parseDuration } from '../../../global/utils/parseDuration';
 import { UserCommand } from '../../@types/commandDef';
 // import log from '../../../global/utils/log';
 import { moderate } from '../../../global/commands/g.moderate';
 import commandContext from '../../utils/context';
-import { UserActionType } from '../../../global/@types/database';
 
 const F = f(__filename);
 
@@ -69,7 +69,7 @@ export const uBan: UserCommand = {
 
         await i.editReply(await moderate(
           interaction.member as GuildMember,
-          'FULL_BAN' as UserActionType,
+          'FULL_BAN' as user_action_type,
           interaction.targetId,
           i.fields.getTextInputValue('internalNote'),
           i.fields.getTextInputValue('description'),

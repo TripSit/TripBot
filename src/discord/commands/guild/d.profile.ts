@@ -6,14 +6,15 @@ import {
   AttachmentBuilder,
 } from 'discord.js';
 import Canvas from '@napi-rs/canvas';
+import { PrismaClient, personas } from '@prisma/client';
 import { SlashCommand } from '../../@types/commandDef';
 import { profile, ProfileData } from '../../../global/commands/g.profile';
 import commandContext from '../../utils/context';
 import { expForNextLevel, getTotalLevel } from '../../../global/utils/experience';
 import { getPersonaInfo } from '../../../global/commands/g.rpg';
-import { inventoryGet } from '../../../global/utils/knex';
 import { imageGet } from '../../utils/imageGet';
-import { Personas } from '../../../global/@types/database';
+
+const db = new PrismaClient({ log: ['error', 'info', 'query', 'warn'] });
 
 const F = f(__filename);
 
@@ -223,7 +224,7 @@ export const dProfile: SlashCommand = {
     ]);
 
     const profileData = values[0].status === 'fulfilled' ? values[0].value : {} as ProfileData;
-    const personaData = values[1].status === 'fulfilled' ? values[1].value : {} as Personas;
+    const personaData = values[1].status === 'fulfilled' ? values[1].value : {} as personas;
     const Icons = values[2].status === 'fulfilled' ? values[2].value : {} as Canvas.Image;
     // const StatusIcon = values[3].status === 'fulfilled' ? values[3].value : {} as Canvas.Image;
     const avatar = values[3].status === 'fulfilled' ? values[3].value : {} as Canvas.Image;
@@ -285,7 +286,11 @@ export const dProfile: SlashCommand = {
 
     if (personaData) {
       // Get the existing inventory data
-      const inventoryData = await inventoryGet(personaData.id);
+      const inventoryData = await db.rpg_inventory.findMany({
+        where: {
+          persona_id: personaData.id,
+        },
+      });
       // log.debug(F, `Persona home inventory (change): ${JSON.stringify(inventoryData, null, 2)}`);
 
       const equippedBackground = inventoryData.find(item => item.equipped === true && item.effect === 'background');

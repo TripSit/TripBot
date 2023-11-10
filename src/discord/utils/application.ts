@@ -20,7 +20,6 @@ import {
   CategoryChannel,
   PermissionResolvable,
   StringSelectMenuBuilder,
-  Guild,
   ChatInputCommandInteraction,
   MessageMentionTypes,
 } from 'discord.js';
@@ -31,10 +30,12 @@ import {
   PermissionFlagsBits,
 } from 'discord-api-types/v10';
 import { stripIndents } from 'common-tags';
+import { PrismaClient } from '@prisma/client';
 import { embedTemplate } from './embedTemplate';
 import commandContext from './context'; // eslint-disable-line @typescript-eslint/no-unused-vars
-import { getGuild, guildUpdate } from '../../global/utils/knex';
 import { checkChannelPermissions, checkGuildPermissions } from './checkPermissions';
+
+const db = new PrismaClient({ log: ['error', 'info', 'query', 'warn'] });
 
 const F = f(__filename);
 
@@ -211,12 +212,16 @@ export async function applicationSetup(
       if (i.customId.split('~')[1] !== interaction.id) return;
       await i.deferReply({ ephemeral: true });
 
-      const guildData = await getGuild((interaction.guild as Guild).id);
-      guildData.id = (interaction.guild as Guild).id;
-      guildData.channel_applications = applicationThreadChannel.id;
-
-      // Save this info to the DB
-      await guildUpdate(guildData);
+      await db.discord_guilds.upsert({
+        where: {
+          id: i.guild?.id as string,
+        },
+        create: {
+          id: i.guild?.id as string,
+          channel_applications: applicationThreadChannel.id,
+        },
+        update: { channel_applications: applicationThreadChannel.id },
+      });
 
       const roleRequestedA = interaction.options.getRole('application_role_a');
       const roleReviewerA = interaction.options.getRole('application_reviewer_a');
@@ -288,7 +293,17 @@ export async function applicationStart(
   if (!interaction.channel) return;
 
   // Get the application channel from the db
-  const channelApplicationsId = (await getGuild(interaction.guild.id)).channel_applications;
+  const guildData = await db.discord_guilds.upsert({
+    where: {
+      id: interaction.guild.id,
+    },
+    create: {
+      id: interaction.guild.id,
+    },
+    update: {},
+  });
+
+  const channelApplicationsId = guildData.channel_applications;
 
   if (!channelApplicationsId) {
     await interaction.reply({

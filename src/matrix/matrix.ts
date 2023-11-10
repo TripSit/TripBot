@@ -3,11 +3,15 @@ import {
   SimpleFsStorageProvider,
   AutojoinRoomsMixin,
 } from 'matrix-bot-sdk';
+import { PrismaClient } from '@prisma/client';
 
-import { getUser, userExists, usersUpdate } from '../global/utils/knex';
+const db = new PrismaClient({ log: ['error', 'info', 'query', 'warn'] });
+
+
 import * as commands from './commands';
 
 const F = f(__filename);
+
 export default startMatrix;
 
 // using simple FS storage for now, as postgresql doesn't work in codespaces anyway

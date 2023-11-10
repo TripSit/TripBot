@@ -16,27 +16,14 @@ import { DateTime } from 'luxon';
 import axios from 'axios'; // eslint-disable-line
 import { stripIndents } from 'common-tags';
 import {
-  reminderGet,
-  reminderDel,
-  ticketGet,
-  ticketDel,
-  getGuild,
-  getUser,
-  ticketUpdate,
-  usersGetMindsets,
-  usersUpdate,
-  db,
-  database,
-  rssGet,
-  rssSet,
-} from './knex';
-import {
-  TicketStatus, UserTickets, TicketType, DiscordGuilds, ExperienceCategory, ExperienceType,
-} from '../@types/database';
+  PrismaClient, experience_category, experience_type, ticket_status, ticket_type,
+} from '@prisma/client';
 import { checkChannelPermissions } from '../../discord/utils/checkPermissions';
 import { embedTemplate } from '../../discord/utils/embedTemplate';
 import { experience } from './experience';
 import { profile } from '../commands/g.learn';
+
+const db = new PrismaClient({ log: ['error', 'info', 'query', 'warn'] });
 
 const F = f(__filename);
 
@@ -72,7 +59,8 @@ export default runTimer;
 async function checkReminders() { // eslint-disable-line @typescript-eslint/no-unused-vars
   // log.debug(F, 'Checking reminders...');
   // Process reminders
-  const reminderData = await reminderGet();
+  // const reminderData = await reminderGet();
+  const reminderData = await db.user_reminders.findMany();
   if (reminderData.length > 0) {
     // Loop through each reminder
     // for (const reminder of reminderData) {
@@ -81,7 +69,15 @@ async function checkReminders() { // eslint-disable-line @typescript-eslint/no-u
       if (reminder.trigger_at) {
         if (DateTime.fromJSDate(reminder.trigger_at) <= DateTime.local()) {
           // Get the user's discord id
-          const userData = await getUser(null, null, reminder.user_id);
+          const userData = await db.users.upsert({
+            where: {
+              discord_id: reminder.user_id,
+            },
+            create: {
+              discord_id: reminder.user_id,
+            },
+            update: {},
+          });
 
           // Send the user a message
           if (userData?.discord_id) {
@@ -92,7 +88,11 @@ async function checkReminders() { // eslint-disable-line @typescript-eslint/no-u
           }
 
           // Delete the reminder from the database
-          await reminderDel(reminder.id);
+          await db.user_reminders.delete({
+            where: {
+              id: reminder.id,
+            },
+          });
         }
       } else {
         log.error(F, `Reminder ${reminder.id} has no trigger date!`);
@@ -104,7 +104,7 @@ async function checkReminders() { // eslint-disable-line @typescript-eslint/no-u
 async function checkTickets() { // eslint-disable-line @typescript-eslint/no-unused-vars
   // log.debug(F, 'Checking tickets...');
   // Process tickets
-  const ticketData = await ticketGet() as UserTickets[];
+  const ticketData = await db.user_tickets.findMany();
   // Loop through each ticket
   if (ticketData.length > 0) {
     ticketData.forEach(async ticket => {
@@ -122,7 +122,7 @@ async function checkTickets() { // eslint-disable-line @typescript-eslint/no-unu
         // Archive the ticket set the deleted time to 1 week from now
 
         const updatedTicket = ticket;
-        updatedTicket.status = 'ARCHIVED' as TicketStatus;
+        updatedTicket.status = 'ARCHIVED' as ticket_status;
         updatedTicket.deleted_at = env.NODE_ENV === 'production'
           ? DateTime.local().plus({ days: 7 }).toJSDate()
           : DateTime.local().plus({ minutes: 1 }).toJSDate();
@@ -130,13 +130,25 @@ async function checkTickets() { // eslint-disable-line @typescript-eslint/no-unu
           updatedTicket.description = 'Ticket archived';
         }
         if (!updatedTicket.type) {
-          updatedTicket.type = 'TRIPSIT' as TicketType;
+          updatedTicket.type = 'TRIPSIT' as ticket_type;
         }
         if (!updatedTicket.first_message_id) {
           updatedTicket.first_message_id = '123';
         }
 
-        await ticketUpdate(updatedTicket);
+        // await ticketUpdate(updatedTicket);
+        await db.user_tickets.update({
+          where: {
+            id: updatedTicket.id,
+          },
+          data: {
+            status: updatedTicket.status,
+            deleted_at: updatedTicket.deleted_at,
+            description: updatedTicket.description,
+            type: updatedTicket.type,
+            first_message_id: updatedTicket.first_message_id,
+          },
+        });
 
         // Archive the thread on discord
         if (ticket.thread_id) {
@@ -150,7 +162,15 @@ async function checkTickets() { // eslint-disable-line @typescript-eslint/no-unu
         }
 
         // Restore roles on the user
-        const userData = await getUser(null, null, ticket.user_id);
+        const userData = await db.users.upsert({
+          where: {
+            discord_id: ticket.user_id,
+          },
+          create: {
+            discord_id: ticket.user_id,
+          },
+          update: {},
+        });
         if (userData.discord_id) {
           const discordUser = await discordClient.users.fetch(userData.discord_id);
           if (discordUser) {
@@ -158,7 +178,15 @@ async function checkTickets() { // eslint-disable-line @typescript-eslint/no-unu
             try {
               threadChannel = await discordClient.channels.fetch(ticket.thread_id) as ThreadChannel;
               const guild = await discordClient.guilds.fetch(threadChannel.guild.id);
-              const guildData = await getGuild(guild.id);
+              const guildData = await db.discord_guilds.upsert({
+                where: {
+                  id: guild.id,
+                },
+                create: {
+                  id: guild.id,
+                },
+                update: {},
+              });
               const searchResults = await guild.members.search({ query: discordUser.username });
               // log.debug(F, `searchResults: ${JSON.stringify(searchResults)}`);
               if (searchResults.size > 0) {
@@ -213,7 +241,11 @@ async function checkTickets() { // eslint-disable-line @typescript-eslint/no-unu
       ) {
         log.debug(F, `Deleting ticket ${ticket.id}...`);
         // Delete the ticket
-        await ticketDel(ticket.id);
+        await db.user_tickets.delete({
+          where: {
+            id: ticket.id,
+          },
+        });
 
         // Delete the thread on discord
         if (ticket.thread_id) {
@@ -228,16 +260,21 @@ async function checkTickets() { // eslint-disable-line @typescript-eslint/no-unu
         }
 
         const updatedTicket = ticket;
-        updatedTicket.status = 'DELETED' as TicketStatus;
-        await ticketUpdate(updatedTicket);
+        updatedTicket.status = 'DELETED' as ticket_status;
+        await db.user_tickets.update({
+          where: {
+            id: updatedTicket.id,
+          },
+          data: {
+            status: updatedTicket.status,
+          },
+        });
       }
     });
   }
 
   // As a failsafe, loop through the Tripsit room and delete any threads that are older than 7 days and are archived
-  const guildDataList = env.POSTGRES_DB_URL
-    ? await db<DiscordGuilds>('discord_guilds').select('*')
-    : [];
+  const guildDataList = await db.discord_guilds.findMany();
   if (guildDataList.length > 0) {
     guildDataList.forEach(async guildData => {
       // log.debug(F, `Checking guild  room for old threads...`);
@@ -259,7 +296,14 @@ async function checkTickets() { // eslint-disable-line @typescript-eslint/no-unu
           const newGuildData = guildData;
           newGuildData.channel_tripsit = null;
 
-          await database.guilds.set(newGuildData);
+          await db.discord_guilds.update({
+            where: {
+              id: newGuildData.id,
+            },
+            data: {
+              channel_tripsit: newGuildData.channel_tripsit,
+            },
+          });
           return;
         }
         // log.debug(F, `Tripsit room: ${channel.name} (${channel.id})`);
@@ -323,7 +367,13 @@ async function checkTickets() { // eslint-disable-line @typescript-eslint/no-unu
 async function checkMindsets() { // eslint-disable-line @typescript-eslint/no-unused-vars
   // log.debug(F, 'Checking mindsets...');
   // Process mindset roles
-  const mindsetRoleData = await usersGetMindsets();
+  const mindsetRoleData = await db.users.findMany({
+    where: {
+      mindset_role: {
+        not: null,
+      },
+    },
+  });
   if (mindsetRoleData.length > 0) {
     // Loop through each user
     // for (const user of mindsetRoleData) {
@@ -373,7 +423,18 @@ async function checkMindsets() { // eslint-disable-line @typescript-eslint/no-un
               updatedUser.mindset_role = null;
               updatedUser.mindset_role_expires_at = null;
 
-              await usersUpdate(updatedUser);
+              // await usersUpdate(updatedUser);
+              if (updatedUser.discord_id) {
+                await db.users.update({
+                  where: {
+                    discord_id: updatedUser.discord_id,
+                  },
+                  data: {
+                    mindset_role: updatedUser.mindset_role,
+                    mindset_role_expires_at: updatedUser.mindset_role_expires_at,
+                  },
+                });
+              }
             }
           }
         }
@@ -389,7 +450,11 @@ async function checkRss() { // eslint-disable-line @typescript-eslint/no-unused-
     const guild = await global.discordClient.guilds.fetch(env.DISCORD_GUILD_ID);
 
     // log.debug(F, `guild: ${JSON.stringify(guild, null, 2)}\n`);
-    const rssData = await rssGet(guild.id);
+    const rssData = await db.rss.findMany({
+      where: {
+        guild_id: guild.id,
+      },
+    });
     // log.debug(F, `rssData: ${JSON.stringify(rssData, null, 2)}\n`);
 
     rssData.forEach(async feed => {
@@ -454,7 +519,14 @@ async function checkRss() { // eslint-disable-line @typescript-eslint/no-unused-
       const newFeed = feed;
       newFeed.last_post_id = mostRecentPost.id;
 
-      await rssSet(newFeed);
+      await db.rss.update({
+        where: {
+          id: newFeed.id,
+        },
+        data: {
+          last_post_id: newFeed.last_post_id,
+        },
+      });
     });
   })();
 }
@@ -492,12 +564,12 @@ async function checkVoice() {
   (async () => {
     // Define each category type and the category channel id
     const categoryDefs = [
-      { category: 'GENERAL' as ExperienceCategory, id: env.CATEGORY_CAMPGROUND },
-      { category: 'GENERAL' as ExperienceCategory, id: env.CATEGORY_VOICE },
-      { category: 'GENERAL' as ExperienceCategory, id: env.CATEGORY_BACKSTAGE },
-      { category: 'TEAM' as ExperienceCategory, id: env.CATEGORY_TEAMTRIPSIT },
-      { category: 'TRIPSITTER' as ExperienceCategory, id: env.CATEGORY_HARMREDUCTIONCENTRE },
-      { category: 'DEVELOPER' as ExperienceCategory, id: env.CATEGORY_DEVELOPMENT },
+      { category: 'GENERAL' as experience_category, id: env.CATEGORY_CAMPGROUND },
+      { category: 'GENERAL' as experience_category, id: env.CATEGORY_VOICE },
+      { category: 'GENERAL' as experience_category, id: env.CATEGORY_BACKSTAGE },
+      { category: 'TEAM' as experience_category, id: env.CATEGORY_TEAMTRIPSIT },
+      { category: 'TRIPSITTER' as experience_category, id: env.CATEGORY_HARMREDUCTIONCENTRE },
+      { category: 'DEVELOPER' as experience_category, id: env.CATEGORY_DEVELOPMENT },
     ];
 
     // For each of the above types, check each voice channel in the category
@@ -558,7 +630,7 @@ async function checkVoice() {
             // For each human in chat, check if they have been awarded voice exp in the last 5 minutes
             // If they have not, award them voice exp
             humansInChat.forEach(async member => {
-              await experience(member, categoryDef.category, 'VOICE' as ExperienceType, channel);
+              await experience(member, categoryDef.category, 'VOICE' as experience_type, channel);
             });
           }
         }
@@ -961,9 +1033,13 @@ async function checkMoodle() { // eslint-disable-line
     return;
   }
 
-  const userDataList = env.POSTGRES_DB_URL
-    ? await database.users.getMoodleUsers()
-    : [];
+  const userDataList = await db.users.findMany({
+    where: {
+      moodle_id: {
+        not: null,
+      },
+    },
+  });
   // log.debug(F, `userDataList: ${JSON.stringify(userDataList, null, 2)}`);
 
   const courseRoleMap = {

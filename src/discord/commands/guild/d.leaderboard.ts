@@ -7,30 +7,18 @@ import {
   // GuildMember,
   SlashCommandBuilder,
 } from 'discord.js';
+import { experience_category, experience_type, PrismaClient } from '@prisma/client';
 import { SlashCommand } from '../../@types/commandDef';
-import {
-  getLeaderboard,
-  // leaderboard,
-} from '../../../global/commands/g.leaderboard';
 import commandContext from '../../utils/context';
 import { embedTemplate } from '../../utils/embedTemplate'; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { getTotalLevel } from '../../../global/utils/experience';
 import { paginationEmbed } from '../../utils/pagination';
 
+const db = new PrismaClient({ log: ['error', 'info', 'query', 'warn'] });
+
 const F = f(__filename);
 
-// type RankType = { 'rank': number, 'id': string, 'level': number };
-// type LeaderboardType = {
-//   [key: string]: RankType[],
-// };
-
-type ExpCategory = 'ALL' | 'TOTAL' | 'GENERAL' | 'TRIPSITTER' | 'DEVELOPER' | 'TEAM';
-
-type ExpType = 'ALL' | 'TEXT' | 'VOICE';
-
 type LeaderboardList = { discord_id: string, total_points: number }[];
-
-type LeaderboardDataType = 'TEXT' | 'VOICE';
 
 type LeaderboardData = {
   ALL: {
@@ -59,68 +47,60 @@ type LeaderboardData = {
   },
 };
 
-async function createBook(
-  interaction: Interaction,
-  data: LeaderboardData[keyof LeaderboardData],
-  typeChoice: LeaderboardDataType | undefined,
-  categoryChoice: ExpCategory,
-):Promise<EmbedBuilder[]> {
-  const book = [] as EmbedBuilder[];
-  for (const category of Object.keys(data)) {
-    if (categoryChoice && categoryChoice !== 'ALL' && categoryChoice.toUpperCase() !== category) {
-      continue;
-    }
-    const categoryKey = category as keyof typeof data;
-    const categoryData = data[categoryKey];
-    // log.debug(F, `categoryKey: ${categoryKey}, categoryData: ${JSON.stringify(categoryData, null, 2)}`);
-    if (categoryData.length === 0) {
-      continue;
-    }
-    // eslint-disable-next-line @typescript-eslint/no-loop-func
-    const descriptionText = await Promise.all(categoryData.map(async user => {
-      const member = interaction.guild?.members.cache.filter(m => m.id === user.discord_id);
-      if (member && member.size > 0) {
-        const levelData = await getTotalLevel(user.total_points);
-        return `Lvl ${levelData.level} <@${user.discord_id}> (${user.total_points} XP)`;
-      }
-      return null;
-    }));
-
-    // prune null values, add rank #, and limit to 10
-    const filteredList = descriptionText
-      .filter(value => value !== null)
-      .map((value, index) => `#${index + 1} ${value}`)
-      .slice(0, 20);
-
-    // Lowercase everything and then capitalize the first letter of type and category
-    const categoryString = category.charAt(0).toUpperCase() + category.slice(1).toLowerCase();
-    const typeString = typeChoice ? `${typeChoice.charAt(0).toUpperCase()}${typeChoice.slice(1).toLowerCase()} `
-      : typeChoice;
-
-    const embed = embedTemplate()
-      .setTitle(`${typeString ?? ''}${categoryString} Leaderboard!`)
-      .setColor(Colors.Gold)
-      .setDescription(filteredList.join('\n'));
-
-    book.push(embed);
-  }
-  return book;
-}
-
 async function createLeaderboard(
   interaction: Interaction,
   leaderboardData: LeaderboardData,
-  typeChoice: 'TEXT' | 'VOICE' | 'ALL',
-  categoryChoice: ExpCategory,
+  typeChoice: experience_type | 'ALL',
+  categoryChoice: experience_category | 'ALL',
 ):Promise<EmbedBuilder[]> {
   const book = [] as EmbedBuilder[];
-  for (const type of Object.keys(leaderboardData) as LeaderboardDataType[]) {
+  for (const type of Object.keys(leaderboardData) as experience_type[]) {
     if (typeChoice.toUpperCase() !== type) {
       continue; // eslint-disable-line no-continue
     }
     const typeData = leaderboardData[type];
     // log.debug(F, `typeKey: ${typeKey}, typeData: ${JSON.stringify(typeData, null, 2)}`);
-    book.push(...await createBook(interaction, typeData, type, categoryChoice));
+    const pages = [] as EmbedBuilder[];
+    for (const category of Object.keys(typeData) as experience_category[]) {
+      if (categoryChoice && categoryChoice !== 'ALL' && categoryChoice.toUpperCase() !== category) {
+        continue;
+      }
+      const categoryKey = category as keyof typeof typeData;
+      const categoryData = typeData[categoryKey];
+      // log.debug(F, `categoryKey: ${categoryKey}, categoryData: ${JSON.stringify(categoryData, null, 2)}`);
+      if (categoryData.length === 0) {
+        continue;
+      }
+      // eslint-disable-next-line @typescript-eslint/no-loop-func
+      const descriptionText = await Promise.all(categoryData.map(async user => {
+        const member = interaction.guild?.members.cache.filter(m => m.id === user.discord_id);
+        if (member && member.size > 0) {
+          const levelData = await getTotalLevel(user.total_points);
+          return `Lvl ${levelData.level} <@${user.discord_id}> (${user.total_points} XP)`;
+        }
+        return null;
+      }));
+
+      // prune null values, add rank #, and limit to 10
+      const filteredList = descriptionText
+        .filter(value => value !== null)
+        .map((value, index) => `#${index + 1} ${value}`)
+        .slice(0, 20);
+
+      // Lowercase everything and then capitalize the first letter of type and category
+      const categoryString = category.charAt(0).toUpperCase() + category.slice(1).toLowerCase();
+      const typeString = typeChoice ? `${typeChoice.charAt(0).toUpperCase()}${typeChoice.slice(1).toLowerCase()} `
+        : typeChoice;
+
+      const embed = embedTemplate()
+        .setTitle(`${typeString ?? ''}${categoryString} Leaderboard!`)
+        .setColor(Colors.Gold)
+        .setDescription(filteredList.join('\n'));
+
+      pages.push(embed);
+    }
+
+    book.push(...pages);
   }
   return book;
 }
@@ -156,14 +136,94 @@ export const dLeaderboard: SlashCommand = {
     }
 
     const categoryChoice = (interaction.options.getString('category')
-      ?? 'ALL') as ExpCategory;
+      ?? 'ALL') as experience_category;
     const typeChoice = (interaction.options.getString('type')
-      ?? 'ALL') as ExpType;
+      ?? 'ALL') as experience_type;
     log.debug(F, `categoryChoice: ${categoryChoice}, typeChoice: ${typeChoice}`);
 
     await interaction.guild?.members.fetch();
 
-    const leaderboardData = await getLeaderboard();
+    const leaderboardData = {
+      ALL: {
+        TOTAL: [],
+        TRIPSITTER: [],
+        GENERAL: [],
+        DEVELOPER: [],
+        TEAM: [],
+        IGNORED: [],
+      },
+      TEXT: {
+        TOTAL: [],
+        TRIPSITTER: [],
+        GENERAL: [],
+        DEVELOPER: [],
+        TEAM: [],
+        IGNORED: [],
+      },
+      VOICE: {
+        TOTAL: [],
+        TRIPSITTER: [],
+        GENERAL: [],
+        DEVELOPER: [],
+        TEAM: [],
+        IGNORED: [],
+      },
+    } as LeaderboardData;
+
+    const categories: experience_category[] = [
+      experience_category.TRIPSITTER,
+      experience_category.GENERAL,
+      experience_category.DEVELOPER,
+      experience_category.TEAM,
+      experience_category.IGNORED,
+    ];
+    const types: experience_type[] = [
+      experience_type.TEXT,
+      experience_type.VOICE,
+    ];
+
+    // eslint-disable-next-line no-restricted-syntax
+    for (const type of ['ALL', ...types]) {
+    // eslint-disable-next-line no-restricted-syntax
+      for (const category of ['TOTAL', ...categories]) {
+        const lookupType = type as experience_type | 'ALL';
+        const lookupCategory = category as experience_category | 'TOTAL';
+
+        const whereClause = {} as {
+          type?: experience_type,
+          category?: experience_category,
+        };
+
+        if (lookupCategory !== 'TOTAL') {
+          whereClause.category = lookupCategory;
+        }
+
+        if (lookupType !== 'ALL') {
+          whereClause.type = lookupType;
+        }
+
+        const users = await db.user_experience.findMany({
+          where: whereClause,
+          orderBy: {
+            total_points: 'desc',
+          },
+          include: {
+            users: {
+              select: {
+                discord_id: true,
+              },
+            },
+          },
+        });
+
+        const userList = users.map(user => ({
+          discord_id: user.users.discord_id,
+          total_points: user.total_points,
+        })) as LeaderboardList;
+
+        leaderboardData[type as experience_type][category as experience_category] = userList;
+      }
+    }
 
     const book: EmbedBuilder[] = await createLeaderboard(interaction, leaderboardData, typeChoice, categoryChoice);
 

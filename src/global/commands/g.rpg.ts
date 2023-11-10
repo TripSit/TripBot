@@ -1,17 +1,40 @@
-import { Personas } from '../@types/database';
-import { getUser, personaGet, personaSet } from '../utils/knex';
+import { PrismaClient, personas } from '@prisma/client';
+
+const db = new PrismaClient({ log: ['error', 'info', 'query', 'warn'] });
 
 const F = f(__filename); // eslint-disable-line
 
 export async function getPersonaInfo(
   discordId: string,
-):Promise<Personas> {
-  const userData = await getUser(discordId, null, null);
-  return personaGet(userData.id);
+):Promise<personas> {
+  const userData = await db.users.upsert({
+    where: {
+      discord_id: discordId,
+    },
+    create: {
+      discord_id: discordId,
+    },
+    update: {},
+  });
+  return db.personas.upsert({
+    where: {
+      user_id: userData.id,
+    },
+    create: {
+      user_id: userData.id,
+    },
+    update: {},
+  });
 }
 
 export async function setPersonaInfo(
-  personaData: Personas,
-):Promise<void> {
-  return personaSet(personaData);
+  personaData: personas,
+):Promise<personas> {
+  return db.personas.upsert({
+    where: {
+      id: personaData.id,
+    },
+    create: personaData,
+    update: personaData,
+  });
 }

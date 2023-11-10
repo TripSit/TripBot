@@ -2,11 +2,13 @@ import {
   Colors,
   TextChannel,
 } from 'discord.js';
+import { PrismaClient } from '@prisma/client';
 import {
   GuildMemberRemoveEvent,
 } from '../@types/eventDef';
-import { getUser, usersUpdate } from '../../global/utils/knex';
 import { embedTemplate } from '../utils/embedTemplate';
+
+const db = new PrismaClient({ log: ['error', 'info', 'query', 'warn'] });
 
 const F = f(__filename);
 
@@ -60,11 +62,18 @@ export const guildMemberRemove: GuildMemberRemoveEvent = {
     const auditlog = await discordClient.channels.fetch(env.CHANNEL_AUDITLOG) as TextChannel;
     await auditlog.send({ embeds: [embed] });
 
-    const userData = await getUser(member.id, null, null);
-    userData.removed_at = new Date();
-    userData.discord_id = member.id;
-
-    await usersUpdate(userData);
+    await db.users.upsert({
+      where: {
+        discord_id: member.id,
+      },
+      create: {
+        discord_id: member.id,
+        removed_at: new Date(),
+      },
+      update: {
+        removed_at: new Date(),
+      },
+    });
   },
 };
 

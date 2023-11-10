@@ -1,15 +1,10 @@
+import { drug_mass_unit, drug_roa, PrismaClient } from '@prisma/client';
 import {
   time,
 } from 'discord.js';
 import { DateTime } from 'luxon';
-import {
-  drugGet, getUser, idoseDel, idoseGet, idoseSet,
-} from '../utils/knex';
-import {
-  DrugRoa,
-  DrugMassUnit,
-  UserDrugDoses,
-} from '../@types/database';
+
+const db = new PrismaClient({ log: ['error', 'info', 'query', 'warn'] });
 
 const F = f(__filename);
 
@@ -33,8 +28,8 @@ export async function idose(
   userId: string,
   substance: string | null,
   volume: number | null,
-  units: DrugMassUnit | null,
-  roa: DrugRoa | null,
+  units: drug_mass_unit | null,
+  roa: drug_roa | null,
   date: Date | null,
 ):Promise<{
     name: string,
@@ -53,11 +48,23 @@ export async function idose(
     }
     // log.debug(F, `Deleting record ${recordNumber}`);
 
-    const userData = await getUser(userId, null, null);
+    const userData = await db.users.upsert({
+      where: {
+        discord_id: userId,
+      },
+      create: {
+        discord_id: userId,
+      },
+      update: {},
+    });
 
-    const unsortedData = await idoseGet(userData.id);
+    const doseData = await db.user_drug_doses.findMany({
+      where: {
+        user_id: userData.id,
+      },
+    });
 
-    if (unsortedData.length === 0) {
+    if (doseData.length === 0) {
       return [{
         name: 'Error',
         value: 'You have no dose records, you can use /idose to add some!',
@@ -65,7 +72,7 @@ export async function idose(
     }
 
     // Sort data based on the created_at property
-    const data = [...unsortedData].sort((a, b) => {
+    const data = [...doseData].sort((a, b) => {
       if (a.created_at < b.created_at) {
         return -1;
       }
@@ -88,7 +95,12 @@ export async function idose(
     const timeVal = DateTime.fromISO(doseDate);
     const drugId = record.drug_id;
 
-    const drugData = await drugGet(drugId);
+    const drugData = await db.drug_names.findMany({
+      where: {
+        drug_id: drugId,
+      },
+    });
+
     if (drugData.length === 0) {
       return [{
         name: 'Error',
@@ -103,7 +115,11 @@ export async function idose(
     // ${record.dose} ${record.units} of ${drugName} ${route}
     // `);
 
-    await idoseDel(recordId);
+    await db.user_drug_doses.delete({
+      where: {
+        id: recordId,
+      },
+    });
 
     response = [{
       name: 'Success',
@@ -114,13 +130,25 @@ export async function idose(
     }];
   }
   if (command === 'get') {
-    const userData = await getUser(userId, null, null);
+    const userData = await db.users.upsert({
+      where: {
+        discord_id: userId,
+      },
+      create: {
+        discord_id: userId,
+      },
+      update: {},
+    });
 
     // log.debug(F, `Getting data for ${userData.id}...`);
 
-    const unsortedData = await idoseGet(userData.id);
+    const doseData = await db.user_drug_doses.findMany({
+      where: {
+        user_id: userData.id,
+      },
+    });
 
-    if (unsortedData.length === 0) {
+    if (doseData.length === 0) {
       return [{
         name: 'Error',
         value: 'You have no dose records, you can use /idose to add some!',
@@ -130,7 +158,7 @@ export async function idose(
     // log.debug(F, `Data: ${JSON.stringify(unsortedData, null, 2)}`);
 
     // Sort data based on the created_at property
-    const data = [...unsortedData].sort((a, b) => {
+    const data = [...doseData].sort((a, b) => {
       if (a.created_at < b.created_at) {
         return -1;
       }
@@ -155,7 +183,14 @@ export async function idose(
       const timeVal = DateTime.fromISO(doseDate);
       const drugId = dose.drug_id;
 
-      const drugName = (await drugGet(drugId))[0].name; // eslint-disable-line no-await-in-loop
+      // eslint-disable-next-line no-await-in-loop
+      const drugData = await db.drug_names.findFirstOrThrow({
+        where: {
+          drug_id: drugId,
+        },
+      });
+
+      const drugName = drugData.name; // eslint-disable-line no-await-in-loop
 
       // Lowercase everything but the first letter
       const route = dose.route.charAt(0).toUpperCase() + dose.route.slice(1).toLowerCase();
@@ -188,11 +223,17 @@ export async function idose(
 
     // log.debug(F, `Substance: ${substance}`);
 
-    const data = await drugGet('', substance);
+    const drugData = await db.drug_names.findMany({
+      where: {
+        name: {
+          in: [substance, substance.toLowerCase(), substance.toUpperCase()],
+        },
+      },
+    });
 
     // log.debug(F, `Data: ${JSON.stringify(data, null, 2)}`);
 
-    if (data.length === 0) {
+    if (drugData.length === 0) {
       // log.debug(`name = ${substance} not found in 'drugNames'`);
       return [{
         name: 'Error',
@@ -200,20 +241,29 @@ export async function idose(
       }];
     }
 
-    const drugId = data[0].drug_id;
+    const drugId = drugData[0].drug_id;
 
     // log.debug(F, `drugId: ${drugId}`);
+    const userData = await db.users.upsert({
+      where: {
+        discord_id: userId,
+      },
+      create: {
+        discord_id: userId,
+      },
+      update: {},
+    });
 
-    const userData = await getUser(userId, null, null);
-
-    await idoseSet({
-      user_id: userData.id,
-      drug_id: drugId,
-      route: roa,
-      dose: volume,
-      units,
-      created_at: date,
-    } as UserDrugDoses);
+    await db.user_drug_doses.create({
+      data: {
+        user_id: userData.id,
+        drug_id: drugId,
+        route: roa,
+        dose: volume,
+        units,
+        created_at: date,
+      },
+    });
 
     response = [{
       name: 'Success',

@@ -8,9 +8,10 @@ import {
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
 import {
-  experienceGet, experienceUpdate, getUser,
-} from './knex';
-import { UserExperience, ExperienceType, ExperienceCategory } from '../@types/database';
+  PrismaClient, experience_category, experience_type, user_experience,
+} from '@prisma/client';
+
+const db = new PrismaClient({ log: ['error', 'info', 'query', 'warn'] });
 
 const F = f(__filename); // eslint-disable-line
 
@@ -65,9 +66,21 @@ export async function getTotalLevel(
 async function giveMilestone(
   member:GuildMember,
 ) {
-  const userData = await getUser(member.id, null, null);
+  const userData = await db.users.upsert({
+    where: {
+      discord_id: member.id,
+    },
+    create: {
+      discord_id: member.id,
+    },
+    update: {},
+  });
 
-  const allExpData = await experienceGet(undefined, undefined, undefined, userData.id);
+  const allExpData = await db.user_experience.findMany({
+    where: {
+      user_id: userData.id,
+    },
+  });
 
   // Calculate total experience points
   const totalExp = allExpData
@@ -179,14 +192,29 @@ async function giveMilestone(
  */
 export async function experience(
   member:GuildMember,
-  category:ExperienceCategory,
-  type:ExperienceType,
+  category:experience_category,
+  type:experience_type,
   channel: TextChannel | VoiceChannel,
 ) {
-  const userData = await getUser(member.id, null, null);
+  const userData = await db.users.upsert({
+    where: {
+      discord_id: member.id,
+    },
+    create: {
+      discord_id: member.id,
+    },
+    update: {},
+  });
+
   // log.debug(F, `userData: ${JSON.stringify(userData, null, 2)}`);
 
-  const [experienceData] = await experienceGet(undefined, category, type, userData.id);
+  const experienceData = await db.user_experience.findFirst({
+    where: {
+      user_id: userData.id,
+      category,
+      type,
+    },
+  });
 
   // If the user has no experience, insert it, and we're done here
   if (!experienceData) {
@@ -203,13 +231,16 @@ export async function experience(
       total_points: expPoints,
       last_message_at: new Date(),
       last_message_channel: channel.id,
-    } as UserExperience;
+    } as user_experience;
     // log.debug(F, `Adding new user to voice exp table: ${JSON.stringify(newUser)}`);
     // log.debug(
     //   F,
     //   `[${channel.name}] ${member.displayName}: 0 + ${expPoints} = ${expPoints} / ${expToLevel} > 1`, // eslint-disable-line max-len
     // );
-    await experienceUpdate(newUser);
+    // await experienceUpdate(newUser);
+    await db.user_experience.create({
+      data: newUser,
+    });
     if (type === 'TEXT') {
       // Give the user the VIP 0 role the first time they talk
       const role = await channel.guild?.roles.fetch(env.ROLE_VIP_0) as Role;
@@ -251,15 +282,15 @@ export async function experience(
       let id = '' as string;
       // log.debug(F, `category: ${category}`);
       // log.debug(F, `experienceCategory: ${experienceCategory}`);
-      if (category === 'GENERAL' as ExperienceCategory) {
+      if (category === 'GENERAL' as experience_category) {
         id = env.CHANNEL_LOUNGE;
-      } else if (category === 'TRIPSITTER' as ExperienceCategory) {
+      } else if (category === 'TRIPSITTER' as experience_category) {
         id = env.CHANNEL_TRIPSITMETA;
-      } else if (category === 'DEVELOPER' as ExperienceCategory) {
+      } else if (category === 'DEVELOPER' as experience_category) {
         id = env.CHANNEL_DEVELOPMENT;
-      } else if (category === 'TEAM' as ExperienceCategory) {
+      } else if (category === 'TEAM' as experience_category) {
         id = env.CHANNEL_TEAMTRIPSIT;
-      } else if (category === 'IGNORED' as ExperienceCategory) {
+      } else if (category === 'IGNORED' as experience_category) {
         id = env.CHANNEL_BOTSPAM;
       }
       // log.debug(F, `id: ${id}`);
@@ -272,7 +303,18 @@ export async function experience(
   experienceData.last_message_at = new Date();
   experienceData.last_message_channel = channel.id;
 
-  await experienceUpdate(experienceData);
+  await db.user_experience.update({
+    where: {
+      id: experienceData.id,
+    },
+    data: {
+      level: experienceData.level,
+      level_points: experienceData.level_points,
+      total_points: experienceData.total_points,
+      last_message_at: experienceData.last_message_at,
+      last_message_channel: experienceData.last_message_channel,
+    },
+  });
 
   // Try to give the appropriate role
   await giveMilestone(member);

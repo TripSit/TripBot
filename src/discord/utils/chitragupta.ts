@@ -3,9 +3,9 @@ import {
   MessageReaction,
   User,
 } from 'discord.js';
-import {
-  getUser, incrementKarma, usersUpdate,
-} from '../../global/utils/knex';
+import { PrismaClient } from '@prisma/client';
+
+const db = new PrismaClient({ log: ['error', 'info', 'query', 'warn'] });
 
 // const F = f(__filename);
 
@@ -43,34 +43,37 @@ export async function chitragupta(
   if (!reaction.emoji.name.includes('upvote')) return;
 
   // Increment karma of the actor
-  await incrementKarma('karma_given', actor.id, action);
+  await db.users.upsert({
+    where: { discord_id: actor.id },
+    create: {
+      discord_id: actor.id,
+      karma_given: action,
+      karma_received: 0,
+    },
+    update: {
+      karma_given: {
+        increment: action,
+      },
+    },
+  });
 
-  const actorData = await getUser(actor.id, null, null);
-
-  if (actorData.karma_given === undefined) {
-    // User doesn't exist in the database
-    // log.debug(F, `User doesn't exist in the database: ${actor.id}`);
-    // Create new user
-    actorData.discord_id = actor.id;
-    actorData.karma_given = action;
-    actorData.karma_received = 0;
-
-    await usersUpdate(actorData);
-  }
+  // const actorData = await getUser(actor.id, null, null);
 
   // Increment the karma of the target
-  await incrementKarma('karma_received', target.id, action);
-  const targetData = await getUser(target.id, null, null);
+  await db.users.upsert({
+    where: { discord_id: target.id },
+    create: {
+      discord_id: target.id,
+      karma_given: 0,
+      karma_received: action,
+    },
+    update: {
+      karma_given: {
+        increment: action,
+      },
+    },
+  });
 
-  if (targetData.karma_given === undefined) {
-    // User doesn't exist in the database
-    // log.debug(F, `User doesn't exist in the database: ${actor.id}`);
-    // Create new user
-    targetData.discord_id = target.id;
-    targetData.karma_given = 0;
-    targetData.karma_received = action;
-    await usersUpdate(targetData);
-  }
   // log.debug(F, `actorKarma ${JSON.stringify(actorKarma)}!`);
   // log.debug(F, `targetKarma ${JSON.stringify(targetKarma)}!`);
   // log.debug(F, `${user.username} (R:${actorKarma[0].karma_received}|G:${actorKarma[0].karma_given}) ${verb} ${target.username} (R:${targetKarma[0].karma_received}|G:${targetKarma[0].karma_given}) in ${(reaction.message.channel as TextChannel).name}!`);

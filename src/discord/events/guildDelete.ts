@@ -1,10 +1,12 @@
 import {
   TextChannel,
 } from 'discord.js';
+import { PrismaClient } from '@prisma/client';
 import {
   GuildDeleteEvent,
 } from '../@types/eventDef';
-import { getGuild, guildUpdate } from '../../global/utils/knex';
+
+const db = new PrismaClient({ log: ['error', 'info', 'query', 'warn'] });
 
 const F = f(__filename);
 
@@ -13,11 +15,18 @@ export const guildDelete: GuildDeleteEvent = {
   async execute(guild) {
     log.info(F, `Left guild: ${guild.name} (id: ${guild.id})`);
 
-    const guildData = await getGuild(guild.id);
-
-    guildData.removed_at = new Date();
-
-    await guildUpdate(guildData);
+    await db.discord_guilds.upsert({
+      where: {
+        id: guild.id,
+      },
+      create: {
+        id: guild.id,
+        removed_at: new Date(),
+      },
+      update: {
+        removed_at: new Date(),
+      },
+    });
 
     if (guild.id === '1026942722612924518') return;
 

@@ -9,11 +9,13 @@ import {
 import {
   TextInputStyle,
 } from 'discord-api-types/v10';
+import { PrismaClient } from '@prisma/client';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { globalTemplate } from '../../../global/commands/_g.template';
 import commandContext from '../../utils/context';
-import { getUser } from '../../../global/utils/knex';
+
+const db = new PrismaClient({ log: ['error', 'info', 'query', 'warn'] });
 
 const F = f(__filename);
 
@@ -120,7 +122,36 @@ export const dTemplate: SlashCommand = {
         const mentionable = interaction.options.getMentionable('mentionable');
 
         const response = await globalTemplate();
-        const userData = await getUser(i.user.id, null, null);
+        const userData = await db.users.upsert({
+          where: {
+            discord_id: i.user.id,
+          },
+          create: {
+            discord_id: i.user.id,
+          },
+          update: {},
+        });
+
+        // const ticketData = await db.user_tickets.findFirst({
+        //   where: {
+        //     user_id: userData.id,
+        //     status: {
+        //       not: {
+        //         in: ['CLOSED', 'RESOLVED', 'DELETED'],
+        //       },
+        //     },
+        //   },
+        // });
+
+        // const guildData = await db.discord_guilds.upsert({
+        //   where: {
+        //     id: interaction.guild?.id,
+        //   },
+        //   create: {
+        //     id: interaction.guild?.id,
+        //   },
+        //   update: {},
+        // });
 
         await i.editReply({
           embeds: [

@@ -2,11 +2,13 @@ import {
   SlashCommandBuilder,
   GuildMember,
 } from 'discord.js';
+import { PrismaClient } from '@prisma/client';
 import { SlashCommand } from '../../@types/commandDef';
-import { karma } from '../../../global/commands/g.karma';
 import commandContext from '../../utils/context';
 import { embedTemplate } from '../../utils/embedTemplate';
 // import log from '../../../global/utils/log';
+
+const db = new PrismaClient({ log: ['error', 'info', 'query', 'warn'] });
 const F = f(__filename);
 
 // const karmaQuotes = require('../../../global/assets/data/karma_quotes.json');
@@ -26,9 +28,17 @@ export const dKarma: SlashCommand = {
     await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
     const member = interaction.options.getMember('user') as GuildMember;
 
-    const response = await karma(member.id);
+    const userData = await db.users.upsert({
+      where: {
+        discord_id: member.id,
+      },
+      create: {
+        discord_id: member.id,
+      },
+      update: {},
+    });
 
-    const message = `${member.displayName} has received ${response.karma_received} karma and given ${response.karma_given} karma`; // eslint-disable-line max-len
+    const message = `${member.displayName} has received ${userData.karma_received} karma and given ${userData.karma_given} karma`; // eslint-disable-line max-len
 
     // const quote = karmaQuotes[Math.floor(Math.random() * karmaQuotes.length)];
     const embed = embedTemplate()

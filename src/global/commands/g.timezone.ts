@@ -1,7 +1,9 @@
 /* eslint-disable max-len */
 
+import { PrismaClient } from '@prisma/client';
 import timezones from '../assets/data/timezones.json';
-import { getUser, usersUpdate } from '../utils/knex';
+
+const db = new PrismaClient({ log: ['error', 'info', 'query', 'warn'] });
 
 const F = f(__filename);
 
@@ -33,17 +35,42 @@ export async function timezone(
     }
     // log.debug(F, `actor.id: ${actor.id}`);
 
-    const userData = await getUser(memberId, null, null);
+    const userData = await db.users.upsert({
+      where: {
+        discord_id: memberId,
+      },
+      create: {
+        discord_id: memberId,
+      },
+      update: {},
+    });
 
     userData.timezone = tzCode;
 
-    await usersUpdate(userData);
+    // await usersUpdate(userData);
+
+    await db.users.update({
+      where: {
+        discord_id: memberId,
+      },
+      data: {
+        timezone: tzCode,
+      },
+    });
 
     return `I updated your timezone to ${tzvalue}`;
   }
   let gmtValue = '';
 
-  const userData = await getUser(memberId, null, null);
+  const userData = await db.users.upsert({
+    where: {
+      discord_id: memberId,
+    },
+    create: {
+      discord_id: memberId,
+    },
+    update: {},
+  });
 
   // log.debug(F, `userData: ${JSON.stringify(userData, null, 2)}`);
 

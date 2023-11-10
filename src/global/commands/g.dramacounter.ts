@@ -1,5 +1,6 @@
-import { getGuild, guildUpdate } from '../utils/knex';
+import { PrismaClient } from '@prisma/client';
 
+const db = new PrismaClient({ log: ['error', 'info', 'query', 'warn'] });
 const F = f(__filename);
 
 export default dramacounter;
@@ -22,7 +23,15 @@ export async function dramacounter(
     dramaReason: string;
     lastDramaAt: Date;
   };
-  const guildData = await getGuild(guildId);
+  const guildData = await db.discord_guilds.upsert({
+    where: {
+      id: guildId,
+    },
+    create: {
+      id: guildId,
+    },
+    update: {},
+  });
 
   if (command === 'get') {
     if (guildData.last_drama_at) {
@@ -38,7 +47,16 @@ export async function dramacounter(
   } else if (command === 'set') {
     guildData.last_drama_at = lastDramaAt;
     guildData.drama_reason = dramaReason;
-    await guildUpdate(guildData);
+    // await guildUpdate(guildData);
+    await db.discord_guilds.update({
+      where: {
+        id: guildId,
+      },
+      data: {
+        last_drama_at: lastDramaAt,
+        drama_reason: dramaReason,
+      },
+    });
     response = { dramaReason, lastDramaAt };
   }
 

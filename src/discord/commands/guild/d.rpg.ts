@@ -32,17 +32,15 @@ import {
 } from 'discord-api-types/v10';
 import { stripIndents } from 'common-tags';
 import he from 'he';
+import { PrismaClient, rpg_inventory } from '@prisma/client';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
-import { getPersonaInfo, setPersonaInfo } from '../../../global/commands/g.rpg';
 import commandContext from '../../utils/context';
-import {
-  getUser, inventoryGet, inventorySet, personaSet,
-} from '../../../global/utils/knex';
-import { Personas, RpgInventory } from '../../../global/@types/database';
 import { imageGet } from '../../utils/imageGet';
 import { customButton } from '../../utils/emoji';
 import { getProfilePreview } from './d.profile';
+
+const db = new PrismaClient({ log: ['error', 'info', 'query', 'warn'] });
 
 const Trivia = require('trivia-api');
 
@@ -768,10 +766,33 @@ export async function rpgBounties(
   command: 'quest' | 'dungeon' | 'raid' | null,
 ):Promise<InteractionEditReplyOptions | InteractionUpdateOptions> {
   // Check if the user has a persona
-  const personaData = await getPersonaInfo(interaction.user.id);
+
+  const userData = await db.users.upsert({
+    where: {
+      discord_id: interaction.user.id,
+    },
+    create: {
+      discord_id: interaction.user.id,
+    },
+    update: {},
+  });
+  const personaData = await db.personas.upsert({
+    where: {
+      user_id: userData.id,
+    },
+    create: {
+      user_id: userData.id,
+    },
+    update: {},
+  });
 
   // Get the existing inventory data
-  const inventoryData = await inventoryGet(personaData.id);
+  const inventoryData = await db.rpg_inventory.findMany({
+    where: {
+      persona_id: personaData.id,
+    },
+  });
+
   // log.debug(F, `Persona inventory: ${JSON.stringify(inventoryData, null, 2)}`);
 
   const rowBounties = new ActionRowBuilder<ButtonBuilder>()
@@ -921,7 +942,13 @@ export async function rpgBounties(
     personaData[dbKey as 'last_quest' | 'last_dungeon' | 'last_raid'] = new Date();
 
     // log.debug(F, `personaData2: ${JSON.stringify(personaData, null, 2)}`);
-    await setPersonaInfo(personaData);
+    await db.personas.upsert({
+      where: {
+        id: personaData.id,
+      },
+      create: personaData,
+      update: personaData,
+    });
 
     return {
       embeds: [embedTemplate()
@@ -957,10 +984,31 @@ export async function rpgMarketInventory(
     personaInventory:string;
   }> {
   // Check get fresh persona data
-  const personaData = await getPersonaInfo(interaction.user.id);
+  const userData = await db.users.upsert({
+    where: {
+      discord_id: interaction.user.id,
+    },
+    create: {
+      discord_id: interaction.user.id,
+    },
+    update: {},
+  });
+  const personaData = await db.personas.upsert({
+    where: {
+      user_id: userData.id,
+    },
+    create: {
+      user_id: userData.id,
+    },
+    update: {},
+  });
 
   // Get the existing inventory data
-  const inventoryData = await inventoryGet(personaData.id);
+  const inventoryData = await db.rpg_inventory.findMany({
+    where: {
+      persona_id: personaData.id,
+    },
+  });
   // log.debug(F, `Persona inventory: ${JSON.stringify(inventoryData, null, 2)}`);
 
   // Get a string display of the user's inventory
@@ -1255,7 +1303,24 @@ export async function rpgMarketAccept(
   // } = await rpgMarketInventory(interaction);
 
   // Check get fresh persona data
-  const personaData = await getPersonaInfo(interaction.user.id);
+  const userData = await db.users.upsert({
+    where: {
+      discord_id: interaction.user.id,
+    },
+    create: {
+      discord_id: interaction.user.id,
+    },
+    update: {},
+  });
+  const personaData = await db.personas.upsert({
+    where: {
+      user_id: userData.id,
+    },
+    create: {
+      user_id: userData.id,
+    },
+    update: {},
+  });
   // log.debug(F, `personaData (Accept): ${JSON.stringify(personaData, null, 2)}`);
 
   // If the user confirms the information, save the persona information
@@ -1314,7 +1379,13 @@ export async function rpgMarketAccept(
   }
 
   personaData.tokens -= itemData.cost;
-  await personaSet(personaData);
+  await db.personas.upsert({
+    where: {
+      id: personaData.id,
+    },
+    create: personaData,
+    update: personaData,
+  });
 
   // Add the item to the user's inventory
   const newItem = {
@@ -1330,10 +1401,13 @@ export async function rpgMarketAccept(
     effect: itemData.effect,
     effect_value: itemData.effect_value,
     emoji: itemData.emoji,
-  } as RpgInventory;
+  } as rpg_inventory;
   // log.debug(F, `personaInventory: ${JSON.stringify(newItem, null, 2)}`);
 
-  await inventorySet(newItem);
+  // await inventorySet(newItem);
+  await db.rpg_inventory.create({
+    data: newItem,
+  });
 
   const { embeds, components } = await rpgMarketChange(interaction);
 
@@ -1364,10 +1438,32 @@ export async function rpgHomeInventory(
     personaInventory:string;
   }> {
   // Check get fresh persona data
-  const personaData = await getPersonaInfo(interaction.user.id);
+  const userData = await db.users.upsert({
+    where: {
+      discord_id: interaction.user.id,
+    },
+    create: {
+      discord_id: interaction.user.id,
+    },
+    update: {},
+  });
+  const personaData = await db.personas.upsert({
+    where: {
+      user_id: userData.id,
+    },
+    create: {
+      user_id: userData.id,
+    },
+    update: {},
+  });
 
   // Get the existing inventory data
-  const inventoryData = await inventoryGet(personaData.id);
+  const inventoryData = await db.rpg_inventory.findMany({
+    where: {
+      persona_id: personaData.id,
+    },
+  });
+
   // log.debug(F, `Persona home inventory: ${JSON.stringify(inventoryData, null, 2)}`);
 
   // Get a string display of the user's inventory
@@ -1405,8 +1501,24 @@ export async function rpgHomeNameChange(
   interaction: MessageComponentInteraction,
 ):Promise<void> {
   // Check get fresh persona data
-  const personaData = await getPersonaInfo(interaction.user.id);
-
+  const userData = await db.users.upsert({
+    where: {
+      discord_id: interaction.user.id,
+    },
+    create: {
+      discord_id: interaction.user.id,
+    },
+    update: {},
+  });
+  const personaData = await db.personas.upsert({
+    where: {
+      user_id: userData.id,
+    },
+    create: {
+      user_id: userData.id,
+    },
+    update: {},
+  });
   // When this button is clicked, a modal appears where the user can enter their name
   // Create the modal
   const modal = new ModalBuilder()
@@ -1526,11 +1638,34 @@ export async function rpgHome(
   } = await rpgHomeInventory(interaction);
 
   // Check get fresh persona data
-  const personaData = await getPersonaInfo(interaction.user.id);
+  const userData = await db.users.upsert({
+    where: {
+      discord_id: interaction.user.id,
+    },
+    create: {
+      discord_id: interaction.user.id,
+    },
+    update: {},
+  });
+  const personaData = await db.personas.upsert({
+    where: {
+      user_id: userData.id,
+    },
+    create: {
+      user_id: userData.id,
+    },
+    update: {},
+  });
   // log.debug(F, `personaData home (Change) ${JSON.stringify(personaData, null, 2)}`);
 
   // Get the existing inventory data
-  const inventoryData = await inventoryGet(personaData.id);
+  // const inventoryData = await inventoryGet(personaData.id);
+  const inventoryData = await db.rpg_inventory.findMany({
+    where: {
+      persona_id: personaData.id,
+    },
+  });
+
   // log.debug(F, `Persona home inventory (change): ${JSON.stringify(inventoryData, null, 2)}`);
 
   let defaultOption = '' as string;
@@ -1794,8 +1929,24 @@ export async function rpgHomeAccept(
   interaction: MessageComponentInteraction,
 ):Promise<InteractionUpdateOptions> {
   // Check get fresh persona data
-  const personaData = await getPersonaInfo(interaction.user.id);
-
+  const userData = await db.users.upsert({
+    where: {
+      discord_id: interaction.user.id,
+    },
+    create: {
+      discord_id: interaction.user.id,
+    },
+    update: {},
+  });
+  const personaData = await db.personas.upsert({
+    where: {
+      user_id: userData.id,
+    },
+    create: {
+      user_id: userData.id,
+    },
+    update: {},
+  });
   // If the user confirms the information, save the persona information
   const backgroundComponent = interaction.message.components[0].components[0];
   const selectedItem = (backgroundComponent as StringSelectMenuComponent).options.find(
@@ -1827,7 +1978,12 @@ export async function rpgHomeAccept(
   // log.debug(F, `selectedGuild: ${JSON.stringify(selectedGuild, null, 2)}`);
 
   // Get the existing inventory data
-  const inventoryData = await inventoryGet(personaData.id);
+  // const inventoryData = await inventoryGet(personaData.id);
+  const inventoryData = await db.rpg_inventory.findMany({
+    where: {
+      persona_id: personaData.id,
+    },
+  });
   // log.debug(F, `Persona home inventory (accept): ${JSON.stringify(inventoryData, null, 2)}`);
 
   // Find the selectedItem in the inventoryData
@@ -1836,17 +1992,22 @@ export async function rpgHomeAccept(
   // Equip the item
   if (chosenItem) {
     chosenItem.equipped = true;
-    await inventorySet(chosenItem);
+    // await inventorySet(chosenItem);
+    await db.rpg_inventory.create({
+      data: chosenItem,
+    });
   } else {
     log.error(F, `Item not found in inventory: ${JSON.stringify(chosenItem, null, 2)}`);
   }
 
   // Un-equip all other items
   const otherItems = inventoryData.filter(item => item.value !== selectedItem?.value);
-  otherItems.forEach(item => {
+  otherItems.forEach(async item => {
     const newItem = item;
     newItem.equipped = false;
-    inventorySet(newItem);
+    await db.rpg_inventory.create({
+      data: newItem,
+    });
   });
 
   // Set persona data
@@ -2154,7 +2315,24 @@ export async function rpgArcadeGame(
   }
 
   // Check get fresh persona data
-  const personaData = await getPersonaInfo(interaction.user.id);
+  const userData = await db.users.upsert({
+    where: {
+      discord_id: interaction.user.id,
+    },
+    create: {
+      discord_id: interaction.user.id,
+    },
+    update: {},
+  });
+  const personaData = await db.personas.upsert({
+    where: {
+      user_id: userData.id,
+    },
+    create: {
+      user_id: userData.id,
+    },
+    update: {},
+  });
   // log.debug(F, `personaData (Coinflip): ${JSON.stringify(personaData, null, 2)}`);
 
   const currentBet = wagers[interaction.user.id].tokens;
@@ -2210,7 +2388,14 @@ export async function rpgArcadeGame(
       // The user won
       const BetOutcomeMessage = BetWinMessageList[Math.floor(Math.random() * BetWinMessageList.length)];
       personaData.tokens += payout;
-      await personaSet(personaData);
+      await db.personas.upsert({
+        where: {
+          user_id: userData.id,
+        },
+        create: personaData,
+        update: personaData,
+      });
+
       wagers[interaction.user.id] = {
         tokens: 0,
         gameName,
@@ -2236,7 +2421,13 @@ export async function rpgArcadeGame(
     // The user lost
     const BetOutcomeMessage = BetLossMessageList[Math.floor(Math.random() * BetLossMessageList.length)];
     personaData.tokens -= currentBet;
-    await personaSet(personaData);
+    await db.personas.upsert({
+      where: {
+        user_id: userData.id,
+      },
+      create: personaData,
+      update: personaData,
+    });
     wagers[interaction.user.id] = {
       tokens: 0,
       gameName,
@@ -2485,8 +2676,24 @@ export async function rpgTrivia(
     };
 
     // Get the user's persona data
-    const personaData = await getPersonaInfo(interaction.user.id);
-    const questionList = await rpgTriviaGetQuestions(amountOfQuestions, chosenDifficulty);
+    const userData = await db.users.upsert({
+      where: {
+        discord_id: interaction.user.id,
+      },
+      create: {
+        discord_id: interaction.user.id,
+      },
+      update: {},
+    });
+    const personaData = await db.personas.upsert({
+      where: {
+        user_id: userData.id,
+      },
+      create: {
+        user_id: userData.id,
+      },
+      update: {},
+    }); const questionList = await rpgTriviaGetQuestions(amountOfQuestions, chosenDifficulty);
 
     for (let qNumber = 0; (qNumber < amountOfQuestions); qNumber += 1) {
       // Get the first question from the array
@@ -2711,7 +2918,13 @@ export async function rpgTrivia(
       personaData.tokens += payout;
       // log.debug(F, `User scored: ${score}`);
       // log.debug(F, `User earned: ${payout} tokens`);
-      await setPersonaInfo(personaData);
+      await db.personas.upsert({
+        where: {
+          user_id: userData.id,
+        },
+        create: personaData,
+        update: personaData,
+      });
     } else {
       bonusMessage = '';
     }
@@ -2998,7 +3211,24 @@ export async function rpgArcadeWager(
   const bet = parseInt(interaction.customId.slice(8), 10);
   newBet += bet || 0;
 
-  const personaData = await getPersonaInfo(interaction.user.id);
+  const userData = await db.users.upsert({
+    where: {
+      discord_id: interaction.user.id,
+    },
+    create: {
+      discord_id: interaction.user.id,
+    },
+    update: {},
+  });
+  const personaData = await db.personas.upsert({
+    where: {
+      user_id: userData.id,
+    },
+    create: {
+      user_id: userData.id,
+    },
+    update: {},
+  });
   if (personaData.tokens < newBet) {
     const notEnough = '**You don\'t have enough to bet that much**\n';
     return rpgArcadeGame(interaction, wagers[interaction.user.id].gameName, undefined, notEnough);
@@ -3136,22 +3366,26 @@ export const dRpg: SlashCommand = {
     // ];
 
     // Get the user's persona data
-    let personaData = await getPersonaInfo(interaction.user.id);
+    const userData = await db.users.upsert({
+      where: {
+        discord_id: interaction.user.id,
+      },
+      create: {
+        discord_id: interaction.user.id,
+      },
+      update: {},
+    });
+    await db.personas.upsert({
+      where: {
+        user_id: userData.id,
+      },
+      create: {
+        user_id: userData.id,
+      },
+      update: {},
+    });
     // log.debug(F, `Initial Persona data: ${JSON.stringify(personaData, null, 2)}`);
 
-    // If the user doesn't have persona data, create it
-    if (!personaData) {
-      const userData = await getUser(interaction.user.id, null, null);
-      personaData = {
-        user_id: userData.id,
-        tokens: 0,
-      } as Personas;
-
-      // log.debug(F, `Setting Persona data: ${JSON.stringify(personaData, null, 2)}`);
-
-      await setPersonaInfo(personaData);
-      // await interaction.editReply({ embeds: [embedStart], components: states.setup.components });
-    }
     if (subcommand === 'town') {
       await interaction.editReply(await rpgTown(interaction));
     }

@@ -14,15 +14,16 @@ import {
   TextInputStyle,
 } from 'discord-api-types/v10';
 import { stripIndents } from 'common-tags';
+import { PrismaClient, user_action_type } from '@prisma/client';
 import { SlashCommand } from '../../@types/commandDef';
 // import {embedTemplate} from '../../utils/embedTemplate';
 import { parseDuration } from '../../../global/utils/parseDuration';
 import { moderate, linkThread } from '../../../global/commands/g.moderate';
 import commandContext from '../../utils/context'; // eslint-disable-line
-import { UserActionType } from '../../../global/@types/database';
 import { getDiscordMember, getDiscordUser } from '../../utils/guildMemberLookup';
-import { getUser } from '../../../global/utils/knex';
 import { embedTemplate } from '../../utils/embedTemplate';
+
+const db = new PrismaClient({ log: ['error', 'info', 'query', 'warn'] });
 
 const F = f(__filename);
 
@@ -188,7 +189,16 @@ export const mod: SlashCommand = {
 
       let result: string | null;
       if (!target) {
-        const userData = await getUser(targetString, null, null);
+        const userData = await db.users.upsert({
+          where: {
+            discord_id: targetString,
+          },
+          create: {
+            discord_id: targetString,
+          },
+          update: {},
+        });
+
         if (!userData) {
           await interaction.reply({
             content: stripIndents`Failed to link thread, I could not find this user in the guild, \
@@ -428,7 +438,7 @@ and they do not exist in the database!`,
 
         await i.editReply(await moderate(
           actor,
-          i.customId.split('~')[1] as UserActionType,
+          i.customId.split('~')[1] as user_action_type,
           target.id,
           internalNote,
           description,
