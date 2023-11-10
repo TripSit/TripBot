@@ -9,6 +9,15 @@ on:
       - opened
       - synchronize
       - reopened
+    paths-ignore:
+      - '**/archive/**'
+      - '**/legacy/**'
+      - '**/matrix/**'
+      - '**/telegram/**'
+      - '**/irc/**'
+      - '**/jest/**'
+      - '**/build/**'
+      - '**/@prisma-moodle/**'
 
 jobs:
   lint:
@@ -47,9 +56,11 @@ jobs:
   #     run: cp .env.example .env
   #   - name: Test
   #     run: npx jest --silent -c ./src/jest/jest.unit.config.ts
-  codeql:
+  codeql:    
     name: CodeQL
     runs-on: ubuntu-latest
+    env:
+      NODE_OPTIONS: --max-old-space-size=7168
     permissions:
       actions: read
       contents: read

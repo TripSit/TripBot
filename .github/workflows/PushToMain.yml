@@ -4,7 +4,15 @@ on:
   push:
     branches:
       - main
-
+    paths-ignore:
+      - '**/archive/**'
+      - '**/legacy/**'
+      - '**/matrix/**'
+      - '**/telegram/**'
+      - '**/irc/**'
+      - '**/jest/**'
+      - '**/build/**'
+      - '**/@prisma-moodle/**'
 jobs:
   lint:
     name: Lint

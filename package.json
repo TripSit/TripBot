@@ -18,6 +18,7 @@
     "tripbot:test": "docker exec -it tripbot npx jest --silent -c ./src/jest/jest.unit.config.ts",
     "tripbot:lint": "docker exec -it tripbot npx eslint --fix --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts . --cache",
     "tripbot:deployCommands": "docker exec -it tripbot ts-node --transpile-only ./src/discord/utils/commandDeploy.ts",
+    "tripbot:db:generate": "npx prisma generate && npx prisma generate --schema src/prisma/moodle/schema.prisma && docker exec -it tripbot npx prisma generate && docker exec -it tripbot npx prisma generate --schema src/prisma/moodle/schema.prisma",
     "## DATABASE ##": "",
     "db:start": "docker compose --project-name tripbot up -d --force-recreate --build tripbot_database",
     "db:logs": "docker container logs tripbot_database -f -n 100",
@@ -36,8 +37,7 @@
     "api:lint": "npx eslint --fix --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts . --cache",
     "## CODESPACE ##": "",
     "codespace:start": "npx tsc-watch --onSuccess 'npx nodemon --config ./nodemon.json'",
-    "codespace:deploy": "npx ts-node --transpile-only ./src/discord/utils/commandDeploy.ts",
-    "tripbot:moodle:generate": "npx prisma generate --schema src/prisma/moodle/schema.prisma && docker exec -it tripbot npx prisma generate --schema src/prisma/moodle/schema.prisma"
+    "codespace:deploy": "npx ts-node --transpile-only ./src/discord/utils/commandDeploy.ts"
   },
   "repository": {
     "type": "git",
