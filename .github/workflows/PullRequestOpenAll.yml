@@ -9,8 +9,6 @@ on:
       - opened
       - synchronize
       - reopened
-    paths:
-      - src
     paths-ignore:
       - '**/archive/**'
       - '**/legacy/**'
