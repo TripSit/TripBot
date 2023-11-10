@@ -13,9 +13,9 @@ on:
 jobs:
   lint:
     name: Lint
+    runs-on: ubuntu-latest
     env:
       NODE_OPTIONS: --max-old-space-size=7168
-    runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
     - name: Use Node.js '21.1.0'
