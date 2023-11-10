@@ -24,6 +24,8 @@ import { Personas } from '../../../global/@types/database';
 
 const F = f(__filename);
 
+const fontSizeFamily = '25px futura';
+
 type LevelData = {
   ALL: {
     TOTAL: {
@@ -302,7 +304,7 @@ export const dLevels: SlashCommand = {
 
     // Check if user has any roles that have an avatar icon. Put all of them in an array and sort them by hierarchy
     const avatarIconRolesArray = Object.entries(avatarIconRoles)
-      .filter(([key, value]) => target.roles.cache.has(key))
+      .filter(([key]) => target.roles.cache.has(key))
       .sort((a, b) => a[1].hierarchy - b[1].hierarchy);
 
     // From the list, assign each one to a slot in numerical order
@@ -374,14 +376,14 @@ export const dLevels: SlashCommand = {
     // Check if user has voice xp, if so add it to the list to be assigned a xp bar slot
     if (levelData.VOICE.TOTAL) {
       const progressVoice = levelData.VOICE.TOTAL
-      ? levelData.VOICE.TOTAL.level_exp / levelData.VOICE.TOTAL.nextLevel
-      : 0;
+        ? levelData.VOICE.TOTAL.level_exp / levelData.VOICE.TOTAL.nextLevel
+        : 0;
       xpBarList.push({
         image: voiceBar,
         dataName: 'Voice',
         progress: progressVoice,
         level: levelData.VOICE.TOTAL ? levelData.VOICE.TOTAL.level : 0,
-        rank: levelData.VOICE.TOTAL.rank
+        rank: levelData.VOICE.TOTAL.rank,
       });
     }
     // Check if user has Helper or Tripsitter role
@@ -431,25 +433,25 @@ export const dLevels: SlashCommand = {
 
     if (xpBarList.length > 0) {
       // Assign the first one to slot 1
-      xpBarSlot1 = xpBarList[0];
+      [xpBarSlot1] = xpBarList;
       layoutHeight = 395;
       layout = 2;
     }
     if (xpBarList.length > 1) {
       // Assign the second one to slot 2
-      xpBarSlot2 = xpBarList[1];
+      [,xpBarSlot2] = xpBarList;
       layoutHeight = 446;
       layout = 3;
     }
     if (xpBarList.length > 2) {
       // Assign the third one to slot 3
-      xpBarSlot3 = xpBarList[2];
+      [,,xpBarSlot3] = xpBarList;
       layoutHeight = 506;
       layout = 4;
     }
     if (xpBarList.length > 3) {
       // Assign the fourth one to slot 4
-      xpBarSlot4 = xpBarList[3];
+      [,,,xpBarSlot4] = xpBarList;
       layoutHeight = 566;
       layout = 5;
     }
@@ -615,13 +617,13 @@ export const dLevels: SlashCommand = {
     // Temporary code for user flairs
     context.fillStyle = textColor;
     context.textAlign = 'left';
-    let flair = null
+    const flair = null;
     let usernameHeight = 76;
     context.textBaseline = 'middle';
     if (flair) {
       usernameHeight = 72;
       fontSize = 25;
-      context.font = '25px futura';
+      context.font = fontSizeFamily;
       context.textBaseline = 'top';
       context.font = applyUsername(canvasObj, `${flair}`);
       context.fillText(`${flair}`, 146, 90);
@@ -630,7 +632,6 @@ export const dLevels: SlashCommand = {
     fontSize = 40;
     context.font = applyUsername(canvasObj, `${target.displayName}`);
     context.fillText(`${target.displayName}`, 146, usernameHeight);
-    
 
     // Progress Bars Draw
     context.fillStyle = barColor;
@@ -667,7 +668,7 @@ export const dLevels: SlashCommand = {
     context.textBaseline = 'middle';
     context.textAlign = 'right';
     context.fillText(`${levelData.ALL.TOTAL.level}`, 657, 213);
-    context.font = '25px futura';
+    context.font = fontSizeFamily;
     context.fillText(`${levelData.TEXT.GENERAL ? levelData.TEXT.GENERAL.level : 0}`, 657, 284);
     if (xpBarSlot1.image) {
       context.fillText(`${xpBarSlot1.level}`, 657, 344);
@@ -686,7 +687,7 @@ export const dLevels: SlashCommand = {
     let startingFontSize = 40;
     const applyRank = (canvas:Canvas.Canvas, text:string) => {
       const rankContext = canvas.getContext('2d');
-      let fontSize = startingFontSize;
+      fontSize = startingFontSize;
       do {
         fontSize -= 1;
         rankContext.font = `${fontSize}px futura`;
@@ -745,7 +746,7 @@ export const dLevels: SlashCommand = {
     // Bar Labels
     context.textAlign = 'center';
     context.fillStyle = '#ffffff';
-    context.font = '25px futura';
+    context.font = fontSizeFamily;
     context.save();
     context.translate(921, 0);
     context.rotate((90 * Math.PI) / 180);

@@ -397,11 +397,11 @@ async function addedPatreon(
           ${donationTagline}`);
     } else {
     // If added as a first time Patron and donator, give them the premium role and send the message
-    const role = await newMember.guild.roles.fetch(env.ROLE_PREMIUM) as Role;
-    await newMember.roles.add(role);
+      const role = await newMember.guild.roles.fetch(env.ROLE_PREMIUM) as Role;
+      await newMember.roles.add(role);
 
-    const channelviplounge = await discordClient.channels.fetch(env.CHANNEL_VIPLOUNGE) as TextChannel;
-    await channelviplounge.send(stripIndents`
+      const channelviplounge = await discordClient.channels.fetch(env.CHANNEL_VIPLOUNGE) as TextChannel;
+      await channelviplounge.send(stripIndents`
       ** ${donorEmoji} ${newMember} just became a Supporter and Premium Member (first time donator) by signing up via [Patreon](<https://www.patreon.com/TripSit>)! ${donorEmoji} **
   
         ${thankYouPhrases[Math.floor(Math.random() * thankYouPhrases.length)]}
@@ -424,10 +424,10 @@ async function addedPatreon(
           ${donationTagline}`);
     } else {
     // If donated on Kofi and for the first time, give them the premium role and send the message
-    const role = await newMember.guild.roles.fetch(env.ROLE_PREMIUM) as Role;
-    await newMember.roles.add(role);
-    const channelviplounge = await discordClient.channels.fetch(env.CHANNEL_VIPLOUNGE) as TextChannel;
-    await channelviplounge.send(stripIndents`
+      const role = await newMember.guild.roles.fetch(env.ROLE_PREMIUM) as Role;
+      await newMember.roles.add(role);
+      const channelviplounge = await discordClient.channels.fetch(env.CHANNEL_VIPLOUNGE) as TextChannel;
+      await channelviplounge.send(stripIndents`
       ** ${donorEmoji} ${newMember} just became a Premium Member (first time donator) by donating via [KoFi](<https://ko-fi.com/tripsit>)! ${donorEmoji} **
   
         ${thankYouPhrases[Math.floor(Math.random() * thankYouPhrases.length)]}

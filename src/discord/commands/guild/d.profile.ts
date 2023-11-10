@@ -272,7 +272,7 @@ export const dProfile: SlashCommand = {
 
     // Check if user has any roles that have an avatar icon. Put all of them in an array and sort them by hierarchy
     const avatarIconRolesArray = Object.entries(avatarIconRoles)
-      .filter(([key, value]) => target.roles.cache.has(key))
+      .filter(([key]) => target.roles.cache.has(key))
       .sort((a, b) => a[1].hierarchy - b[1].hierarchy);
 
     // From the list, assign each one to a slot in numerical order
