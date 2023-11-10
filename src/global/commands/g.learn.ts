@@ -1,9 +1,8 @@
 /* eslint-disable max-len */
 import { stripIndents } from 'common-tags';
 import { PrismaClient as PrismaClientTripbot } from '@prisma/client';
-// import { PrismaClient as PrismaClientMoodle } from '@prisma-moodle/client';
-// eslint-disable-next-line import/no-relative-packages, import/no-useless-path-segments
-import { PrismaClient as PrismaClientMoodle } from '../../../src/prisma/moodle/@prisma-moodle/client';
+// eslint-disable-next-line import/no-extraneous-dependencies
+import { PrismaClient as PrismaClientMoodle } from '@prisma-moodle/client';
 
 const moodleDb = new PrismaClientMoodle();
 const tripbotDb = new PrismaClientTripbot();
