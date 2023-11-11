@@ -9,6 +9,7 @@
 *.user
 *.userosscache
 *.sln.docstates
+.vscode
 
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
@@ -369,3 +370,4 @@ coverage/
 src/discord/assets/img/*/*.png
 src/matrix/cache/tripbot.json
 .env.example
+src/prisma/moodle/@prisma-moodle/client/libquery_engine-linux-musl-openssl-3.0.x.so.node

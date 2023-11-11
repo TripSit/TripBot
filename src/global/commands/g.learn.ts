@@ -1,112 +1,31 @@
 /* eslint-disable max-len */
-import https from 'https';
 import { stripIndents } from 'common-tags';
+import { PrismaClient as PrismaClientTripbot } from '@prisma/client';
+// eslint-disable-next-line import/no-extraneous-dependencies
+import { PrismaClient as PrismaClientMoodle } from '@prisma-moodle/client';
 import { DateTime } from 'luxon';
-import { database } from '../utils/knex';
 
+const moodleDb = new PrismaClientMoodle();
+const tripbotDb = new PrismaClientTripbot();
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const F = f(__filename);
 
 type MoodleProfile = {
   fullName: string,
   institution: string | null,
   department: string | null,
-  profileImage: string,
   completedCourses: string[],
   incompleteCourses: string[],
 };
 
-type MoodleUser = {
-  id: number,
-  username: string,
-  firstname: string,
-  lastname: string,
-  fullname: string,
-  email: string,
-  department: string,
-  institution: string,
-  firstAccess: number,
-  lastAccess: number,
-  auth: string,
-  suspended: boolean,
-  confirmed: boolean,
-  lang: string,
-  theme: string,
-  timezone: string,
-  mailFormat: number,
-  description: string,
-  descriptionFormat: number,
-  city: string,
-  country: string,
-  profileimageurlsmall: string,
-  profileimageurl: string,
-};
-
-type MoodleFile = {
-  filename: string,
-  filepath: string,
-  filesize: number,
-  fileurl: string,
-  timemodified: number,
-  mimetype: string,
-};
-
-type MoodleCourse = {
-  id: string,
-  shortname: string,
-  fullname: string,
-  displayname: string,
-  enrolledusercount: number,
-  idnumber: string,
-  visible: number,
-  summary: string,
-  summaryformat: number,
-  format: string,
-  showgrades: boolean,
-  lang: string,
-  enablecompletion: boolean,
-  completionhascriteria: boolean,
-  completionusertracked: boolean,
-  category: number,
-  progress: number,
-  completed: boolean,
-  startdate: number,
-  enddate: number,
-  marker: number,
-  lastaccess: number,
-  isfavourite: boolean,
-  hidden: boolean,
-  overviewfiles: MoodleFile[],
-  showactivitydates: boolean,
-  showcompletionconditions: boolean,
-  timemodified: number,
-};
-
-type MoodleActivityInfo = {
-  type: string,
-  criteria: string,
-  requirement: string,
-  status: string,
-};
-
-type MoodleActivityCompletion = {
-  type: number,
-  title: string,
-  status: string,
-  complete: boolean,
-  timecompleted: number,
-  details: MoodleActivityInfo,
-};
-
-type MoodleCompletionInfo = {
-  completed: boolean,
-  aggregation: number,
-  completions: Array<MoodleActivityCompletion>,
-};
-
-type MoodleCompletionStatus = {
-  completionstatus: MoodleCompletionInfo,
-  warnings: Array<string>,
-};
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function bigIntSanitize(key: any, value: any) {
+  if (typeof value === 'bigint') {
+    return value.toString(); // or alternatively `Number(value)` if the value is within the safe integer range for JavaScript
+  }
+  return value; // return the unchanged property value.
+}
 
 type MoodleInfo = {
   title: string,
@@ -114,191 +33,6 @@ type MoodleInfo = {
   url: string,
   footer: string,
 };
-
-type MoodleCourseCompletion = {
-  course:MoodleCourse,
-  completion:MoodleCompletionStatus,
-};
-
-async function getMoodleUser(
-  username?:string,
-  email?:string,
-):Promise<MoodleUser> {
-  // log.debug(F, `getMoodleUser | username: ${username} | email: ${email}`);
-
-  let url = `${env.MOODLE_URL}/webservice/rest/server.php?wstoken=${env.MOODLE_TOKEN}\
-&wsfunction=core_user_get_users_by_field\
-&moodlewsrestformat=json`;
-
-  if (username) {
-    url += `&field=username&values[]=${username}`;
-  } else if (email) {
-    url += `&field=email&values[]=${email}`;
-  } else {
-    log.error(F, 'No user ID or email provided.');
-    throw new Error('No user ID or email provided.');
-  }
-
-  // log.debug(F, `url: ${url}`);
-
-  return new Promise((resolve, reject) => {
-    https.get(url, response => {
-      let data = '';
-
-      response.on('data', chunk => {
-        data += chunk;
-      });
-
-      response.on('end', () => {
-        let result = [] as MoodleUser[];
-        try {
-          result = JSON.parse(data) as MoodleUser[];
-          global.moodleConnection = {
-            status: true,
-            date: DateTime.now(),
-          };
-        } catch (error:unknown) {
-          log.error(F, 'getMoodleUser | Improper JSON returned from Moodle, is it alive?');
-          log.error(F, `getMoodleUser | Error: ${(error as Error).message}`);
-          log.error(F, `getMoodleUser | username: ${username} | email: ${email}`);
-          log.error(F, `getMoodleUser | Data: ${JSON.stringify(data, null, 2)}`);
-          log.error(F, `getMoodleUser | URL: ${url}`);
-          global.moodleConnection = {
-            status: false,
-            date: DateTime.now(),
-          };
-          reject(error);
-        }
-        // log.debug(F, `Result: ${JSON.stringify(result, null, 2)}`);
-        if (result.length > 1) {
-          log.error(F, `Multiple users with email ${email} found.`);
-          reject(new Error(`Multiple users with email ${email} found.`));
-        } else if (result.length === 1) {
-          // log.debug(F, `moodleUser: ${JSON.stringify(result, null, 2)}`);
-          resolve(result[0]);
-        } else {
-          // log.debug(F, `User with email ${email} or username ${username} not found.`);
-          // reject(new Error(`User with email ${email} or username ${username} not found.`));
-        }
-      });
-    }).on('error', error => {
-      log.error(F, `Error: ${error.message}`);
-      log.error(F, `URL: ${url}`);
-      reject(error);
-    });
-  });
-}
-
-async function getMoodleEnrollments(
-  moodleUser:MoodleUser,
-):Promise<MoodleCourse[]> {
-  const url = `${env.MOODLE_URL}/webservice/rest/server.php?wstoken=${env.MOODLE_TOKEN}\
-&wsfunction=core_enrol_get_users_courses\
-&userid=${moodleUser.id}\
-&moodlewsrestformat=json`;
-  // log.debug(F, `url: ${url}`);
-
-  return new Promise((resolve, reject) => {
-    https.get(url, response => {
-      let data = '';
-
-      response.on('data', chunk => {
-        data += chunk;
-      });
-
-      response.on('end', () => {
-        try {
-          const result = JSON.parse(data);
-          // log.debug(F, `Result: ${JSON.stringify(result, null, 2)}`);
-          global.moodleConnection = {
-            status: true,
-            date: DateTime.now(),
-          };
-          resolve(result);
-        } catch (error) {
-          log.error(F, 'getMoodleEnrollments | Improper JSON returned from Moodle, is it alive?');
-          log.error(F, `getMoodleEnrollments | Error: ${(error as Error).message}`);
-          log.error(F, `getMoodleEnrollments | moodleUser: ${JSON.stringify(moodleUser, null, 2)}`);
-          log.error(F, `getMoodleEnrollments | Data: ${JSON.stringify(data, null, 2)}`);
-          global.moodleConnection = {
-            status: false,
-            date: DateTime.now(),
-          };
-          reject(error);
-        }
-      });
-    }).on('error', error => {
-      // log.debug(F, `Error: ${error.message}`);
-      reject(error);
-    });
-  });
-}
-
-async function getMoodleCourseCompletion(
-  moodleUser:MoodleUser,
-  moodleEnrollments:MoodleCourse[],
-):Promise<MoodleCourseCompletion[]> {
-  const completionStatuses = [] as MoodleCourseCompletion[];
-  // For each moodle course, get the course info. This needs to be async so that we can return the results
-  // once all the promises have been resolved.
-  const promises = moodleEnrollments.map(async (moodleCourse:MoodleCourse) => {
-    const url = `${env.MOODLE_URL}/webservice/rest/server.php?wstoken=${env.MOODLE_TOKEN}\
-&wsfunction=core_completion_get_course_completion_status\
-&userid=${moodleUser.id}\
-&courseid=${moodleCourse.id}\
-&moodlewsrestformat=json`;
-
-    return new Promise((resolve, reject) => {
-      https.get(url, response => {
-        let data = '';
-
-        response.on('data', chunk => {
-          data += chunk;
-        });
-
-        response.on('end', () => {
-          try {
-            const result = JSON.parse(data) as MoodleCompletionStatus;
-            // log.debug(F, `Result: ${JSON.stringify(result, null, 2)}`);
-            completionStatuses.push({
-              course: moodleCourse,
-              completion: result,
-            });
-            global.moodleConnection = {
-              status: true,
-              date: DateTime.now(),
-            };
-            resolve(result);
-          } catch (error) {
-            log.error(F, 'getMoodleCourses | Improper JSON returned from Moodle, is it alive?');
-            log.error(F, `getMoodleCourses | Error: ${(error as Error).message}`);
-            log.error(F, `getMoodleCourses | moodleUser: ${JSON.stringify(moodleUser, null, 2)}`);
-            log.error(F, `getMoodleCourses | moodleEnrollments: ${JSON.stringify(moodleEnrollments, null, 2)}`);
-            log.error(F, `getMoodleCourses | Data: ${JSON.stringify(data, null, 2)}`);
-            global.moodleConnection = {
-              status: false,
-              date: DateTime.now(),
-            };
-            reject(error);
-          }
-        });
-      }).on('error', error => {
-        // log.debug(F, `Error: ${error.message}`);
-        reject(error);
-      });
-    });
-  });
-
-  return new Promise((resolve, reject) => {
-    Promise.all(promises).then(() => {
-      // log.debug(F, `completionStatuses: ${JSON.stringify(completionStatuses, null, 2)}`);
-      resolve(completionStatuses);
-    }).catch(error => {
-      log.error(F, `Error: ${error.message}`);
-      reject(error);
-    });
-  });
-}
 
 export async function help():Promise<MoodleInfo> {
   return {
@@ -332,23 +66,61 @@ export async function link(
 ):Promise<string> {
   // log.debug(F, `Link started with moodleUsername: ${moodleUsername}, \
   // discordId: ${discordId}, matrixId: ${matrixId}`);
+
   const userData = discordId
-    ? await database.users.get(discordId, null, null)
-    : await database.users.get(null, matrixId as string, null);
+    ? await tripbotDb.users.findUnique({
+      where: {
+        discord_id: discordId,
+      },
+    })
+    : await tripbotDb.users.findFirst({
+      where: {
+        matrix_id: matrixId as string,
+      },
+    });
+
   // log.debug(F, `userData: ${JSON.stringify(userData)}`);
 
-  const moodleUserData = email
-    ? await getMoodleUser(undefined, email).catch(() => ({} as MoodleUser))
-    : await getMoodleUser(moodleUsername).catch(() => ({} as MoodleUser));
+  if (!userData) {
+    return 'No user found with that Discord or Matrix ID.';
+  }
 
-  // log.debug(F, `moodleUserData: ${JSON.stringify(moodleUserData)}`);
+  const moodleUserData = moodleUsername
+    ? await moodleDb.mdl_user.findUnique({
+      where: {
+        mnethostid_username: {
+          username: moodleUsername,
+          mnethostid: 1,
+        },
+      },
+    })
+    : await moodleDb.mdl_user.findFirst({
+      where: {
+        email,
+      },
+    });
 
-  if (!moodleUserData.username) {
+  // const [moodleUserData] = await moodleDb.mdl_user.findMany();
+
+  if (!moodleUserData) {
+    if (moodleUsername) {
+      return 'No user found with that username.';
+    }
     return 'No user found with that email address.';
   }
 
+  // log.debug(F, `moodleUserData: ${JSON.stringify(moodleUserData.username)}`);
+
   userData.moodle_id = moodleUserData.username;
-  await database.users.set(userData);
+
+  tripbotDb.users.update({
+    where: {
+      id: userData.id,
+    },
+    data: {
+      moodle_id: userData.moodle_id,
+    },
+  });
 
   if (moodleUsername) {
     return stripIndents`You have linked this Discord account with TripSitLearn!
@@ -364,11 +136,32 @@ export async function unlink(
   matrixId?:string,
 ):Promise<string> {
   // log.debug(F, `Unlink started with discordId: ${discordId}, matrixId: ${matrixId}`);
+
   const userData = discordId
-    ? await database.users.get(discordId, null, null)
-    : await database.users.get(null, matrixId as string, null);
-  userData.moodle_id = null;
-  await database.users.set(userData);
+    ? await tripbotDb.users.findUnique({
+      where: {
+        discord_id: discordId,
+      },
+    })
+    : await tripbotDb.users.findFirst({
+      where: {
+        matrix_id: matrixId as string,
+      },
+    });
+
+  if (!userData) {
+    return 'No user found with that Discord or Matrix ID.';
+  }
+
+  tripbotDb.users.update({
+    where: {
+      id: userData.id,
+    },
+    data: {
+      moodle_id: null,
+    },
+  });
+
   return stripIndents`You have unlinked your Discord account with TripSitLearn!
   Use the /learn link command if you ever want to link your account again!`;
 }
@@ -382,42 +175,93 @@ export async function profile(
   let moodleProfile = {} as MoodleProfile;
 
   const userData = discordId
-    ? await database.users.get(discordId, null, null)
-    : await database.users.get(null, matrixId as string, null);
+    ? await tripbotDb.users.findUnique({
+      where: {
+        discord_id: discordId,
+      },
+    })
+    : await tripbotDb.users.findFirst({
+      where: {
+        matrix_id: matrixId as string,
+      },
+    });
 
-  if (!userData.moodle_id) {
+  // log.debug(F, `userData: ${JSON.stringify(userData, null, 2)}`);
+
+  if (!userData || !userData.moodle_id) {
     return moodleProfile;
   }
 
-  const moodleUserData = await getMoodleUser(userData.moodle_id);
-  // log.debug(F, `moodleUserData: ${JSON.stringify(moodleUserData, null, 2)}`);
-  const moodleEnrollments = await getMoodleEnrollments(moodleUserData);
+  try {
+    await moodleDb.mdl_user.findMany();
+  } catch (err) {
+    global.moodleConnection = {
+      status: false,
+      date: DateTime.now(),
+    };
+    return moodleProfile;
+  }
+
+  const moodleUserData = await moodleDb.mdl_user.findUnique({
+    where: {
+      mnethostid_username: {
+        username: userData.moodle_id,
+        mnethostid: 1,
+      },
+    },
+  });
+
+  if (!moodleUserData) {
+    return moodleProfile;
+  }
+
+  // log.debug(F, `moodleUserData: ${JSON.stringify(moodleUserData, bigIntSanitize, 2)}`);
+
+  const moodleEnrollments = await moodleDb.mdl_user_enrolments.findMany({
+    where: {
+      userid: moodleUserData.id,
+    },
+    include: {
+      enrol: {
+        include: {
+          course: {
+            include: {
+              completions: {
+                where: {
+                  userid: moodleUserData.id,
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  });
 
   let completedCourses:string[] = [];
   let incompleteCourses:string[] = [];
   if (moodleEnrollments.length > 0) {
     // log.debug(F, `moodleEnrollments: ${JSON.stringify(moodleEnrollments, null, 2)}`);
-    const moodleCourseCompletionData = await getMoodleCourseCompletion(moodleUserData, moodleEnrollments);
     // log.debug(F, `moodleCourseCompletionData: ${JSON.stringify(moodleCourseCompletionData, null, 2)}`);
 
     // Get an array of courses the user has completed
-    completedCourses = moodleCourseCompletionData
-      .filter(ccData => ccData.completion.completionstatus.completed)
-      .map(course => course.course.fullname);
+    completedCourses = moodleEnrollments
+      .filter(enrollments => enrollments.enrol.course.completions[0].timecompleted !== null)
+      .map(enrollments => enrollments.enrol.course.fullname);
 
-    // Get an array of courses the user has NOT completed
-    incompleteCourses = moodleCourseCompletionData
-      .filter(ccData => !ccData.completion.completionstatus.completed)
-      .map(course => course.course.fullname);
+    incompleteCourses = moodleEnrollments
+      .filter(enrollments => enrollments.enrol.course.completions[0].timecompleted === null)
+      .map(enrollments => enrollments.enrol.course.fullname);
   }
 
   moodleProfile = {
     fullName: `${moodleUserData.firstname} ${moodleUserData.lastname}`,
     institution: moodleUserData.institution,
     department: moodleUserData.department,
-    profileImage: moodleUserData.profileimageurl,
     completedCourses,
     incompleteCourses,
   };
+
+  // log.debug(F, `moodleProfile: ${JSON.stringify(moodleProfile, null, 2)}`);
   return moodleProfile;
 }

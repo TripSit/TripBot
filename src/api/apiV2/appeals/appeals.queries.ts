@@ -1,5 +1,6 @@
-import db from '../../../global/utils/db';
+import { PrismaClient } from '@prisma/client';
 
+const db = new PrismaClient({ log: ['error'] });
 const F = f(__filename);
 
 export default {
