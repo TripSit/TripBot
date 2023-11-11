@@ -191,6 +191,16 @@ export async function profile(
     return moodleProfile;
   }
 
+  try {
+    await moodleDb.mdl_user.findMany();
+  } catch (err) {
+    global.moodleConnection = {
+      status: false,
+      date: DateTime.now(),
+    };
+    return moodleProfile;
+  }
+
   const moodleUserData = await moodleDb.mdl_user.findUnique({
     where: {
       mnethostid_username: {
