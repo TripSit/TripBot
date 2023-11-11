@@ -9,17 +9,28 @@ on:
       - opened
       - synchronize
       - reopened
+    paths-ignore:
+      - '**/archive/**'
+      - '**/legacy/**'
+      - '**/matrix/**'
+      - '**/telegram/**'
+      - '**/irc/**'
+      - '**/jest/**'
+      - '**/build/**'
+      - '**/@prisma-moodle/**'
 
 jobs:
   lint:
     name: Lint
     runs-on: ubuntu-latest
+    env:
+      NODE_OPTIONS: --max-old-space-size=7168
     steps:
     - uses: actions/checkout@v3
-    - name: Use Node.js '20.5.0'
+    - name: Use Node.js '21.1.0'
       uses: actions/setup-node@v3
       with:
-        node-version: '20.5.0'
+        node-version: '21.1.0'
         cache: 'npm'
     - name: Update npm
       run: npm install -g npm && npm --version
@@ -45,9 +56,11 @@ jobs:
   #     run: cp .env.example .env
   #   - name: Test
   #     run: npx jest --silent -c ./src/jest/jest.unit.config.ts
-  codeql:
+  codeql:    
     name: CodeQL
     runs-on: ubuntu-latest
+    env:
+      NODE_OPTIONS: --max-old-space-size=7168
     permissions:
       actions: read
       contents: read

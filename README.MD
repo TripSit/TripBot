@@ -2,97 +2,108 @@
 
 ## Table of contents 
 + [About](#about)
-+ [How to use](#how-to-use)
++ [How to use](#invite)
 + [Contribute](#contribute)
 + [Authors](#contributors)
 
-
-## 🧐 About
-TripBot is an over-complicated (**multi-platform**(!)) bot that is a major part of our project **[TripSit](https://tripsit.me)** providing open discussion of and education about safer use and harm reduction techniques, If you want, you can [read more](https://tripsit.me/about/) about our mission. 
-
-This bot's code is open source in the interest of helping people. We use it a lot, there's active development happening, and you can use it on your guild too!
+## About
+TripBot is multi-platform open-source bot that is a major part of the **[TripSit](https://tripsit.me)** project. 
+It is primarily a discord bot, but has been built modularly to allow for easy expansion to other platforms such as IRC, Matrix, and Telegram. 
+This bot's code is open source in the interest of helping people learn code, and to encourage people to contribute to the project.
 
 The goals with this bot are:
-1) Provide for the needs of TripSit's community and make it an awesome place to be!
-2) Spread access to TripSit's information by allowing greater access to our wiki on discord.
+1) Provide for the needs of TripSit's community such as drug information, harm reduction, and community support.
+2) Spread access to TripSit's Harm Reduction information by encouraging other Discord guilds to use our bot.
 3) Get traffic back to our discord, ultimately to gather more information that can be spread further and help more people!
-4) Allow other guilds to host their own "tripsit" service?
-5) Allow the bot to be a "remote tripsit" service??
 
-## Features
-Full Typescript support
-Postgres database support
-Prisma integration support
-Discord.js 14.8
-Jest testing support
-Sonar scanning
-Dockerized
-
-## 🎈 How to use 
+## Invite
 + We run an instance of the bot that you can add to your guild following [this link](https://discord.com/api/oauth2/authorize?client_id=957780726806380545&permissions=18432&scope=bot%20applications.commands)
 
-## Contribute
+## Development
 
-If you want to contribute to TripBot, that's super cool and highly appreciated.<br>To get in touch, it's currently the easiest way to [Join our Discord guild](https://discord.gg/tripsit). 
+Want to help out?
 
-## How to build
-+ If you want to host your own instance of the bot, first talk to Moonbear to see if these instructions are valid. If they are, then you can follow these steps to get your own instance of the bot running.
+Contributing to TripBot is super appreciated, and it's easy to get involved: [Join our Discord guild](https://discord.gg/tripsit) and check out the Development sections to get started.
 
-0: **Requirements**
+### Features
+Fully Typescript
+Postgres Relational Database
+Prisma ORM and Client
+Discord.js
+Jest Testing
+SonarQube Code Quality
+Docker Containerized
+ESlint Linting
+Nodemon Hot Reloading
+TSC Auto Building
+Drone Continuous Integration
+
+### How to build
+
+**Requirements**
 1) Docker. You can get it [here](https://www.docker.com/products/docker-desktop).
 2) A discord bot application. You can get one [here](https://discord.com/developers/applications).
-- Save your client ID and Token to the .env file (after you make it via copying env.example)
-3) A discord guild to test the bot in. 
-- It's preferred that you use the TripSit dev guild, but you can use your own if you want.
-- If you use your own, you'll need to update the env.config file with your channel/roles IDs.
-- Save your guild ID to the .env file
-4) A discord bot application invite link. You can get this from your discord bot application.
-- For basic functionality you dont need a ton of permissions
-- Moonbear will give your bot permissions on the dev guild
-- On you own private guild just give it admin permissions
-- There are permission checks but they're a bit wonky.
 
-1: **Setup the bot**
+
+**Optional**
+1) VSCode. You can get it [here](https://code.visualstudio.com/).
+2) ESLint extension for VSCode. You can get it [here](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint).
+3) Invite the discord bot to the tripsit dev guild. Ask Moonbear for an invite link. The bot will not work properly without doing this.
+
+**Setup the bot**
 
 Clone the repository
 
 ``` git clone https://github.com/TripSit/TripBot.git```
 
-Copy env.example to .env and fill in these fields. You only /need/ the discord stuff
+Copy env.example to .env and fill in these fields. You only /need/ the discord stuff like the token and client ID
 
-2: **Start the tripbot container** 
+Install the dependencies locally so that VSCode can use them for linting and intellisense.
 
-```npm run tripbot```
+```npm install```
 
-This will start the container and build the bot. It will also run the bot in the container.
-If you need to update the container (like if you update the .env), use this command again.
-In general, if something isnt working right, rebuild the container.
+**Start the bot** 
 
-2: **Deploy commands**
+This will start up the tripbot_database, build the bot, and run the bot in a container.
+The database container just basically sits there being a stable database, you don't need to check it's logs or anything.
 
-```npm run tripbot:deploy```
+```npm run tripbot:start```
 
-As part of the build process it will  to register the bot commands with discord.
-If you modify or create a new commands you'll need to run this script again, or rebuild the container.
+You will likely want to immediately check the logs of the container to make sure it started up correctly.
 
-3: **View logs**
+**View logs**
 
-```npm run logs```
+```npm run tripbot:logs```
 
 This will show you the logs of tripbot from inside the container.
-When i develop i have this running in a separate terminal window so i can see the logs as i work.
 
-4: **Develop!**
+**Deploy commands**
+
+This command will happen automatically when you build the TripBot container and tells discord what commands are available.
+
+```npm run tripbot:deployCommands```
+
+**If you create a new command, or modify the options in an existing command, you'll need to deploy commands again.**
+
+**Develop**
 
 The container will watch the /src folder for changes and rebuild the bot when you save a file.
-If you create or update a command, make sure to run the deploy script again
 
-5: **Test/Lint**
+**Lint**
 
 It's /highly/ recommended to use the eslint extension, and allow vscode the auto-fix your linting errors.
 Jest tests are a WIP.
 
-## Folder Structure ##
+```npm run tripbot:lint```
+
+**Test**
+
+Jest tests are a WIP and while appreciated it's not required to add tests to your code
+
+```npm run tripbot:test```
+
+### Folder Structure ##
+```
 src/         : This is where all the code lives
 src/api      : External API endpoints, see "API" below
 src/api/v1   : Legacy json endpoint
@@ -108,8 +119,9 @@ src/pgadmin4 : PGAdmin4 webserver, used in database development, see "Database D
 src/postgres : Postgres startup script, used in database development, see "Database Development" below.
 src/prisma   : Prisma database code, see "Database Development" below.
 src/telegram : Telegram specific code, see "How commands work" below.
+```
 
-## How Commands Work
+### How Commands Work
 Most commands are built with a global core function, and then have a UI function that interacts with that global function.
 For example: We have the /birthday command on discord.
 When someone runs the /birthday set command on discord, they enter their birth month and day.
@@ -127,43 +139,48 @@ If you wanted to do this in telegram, you would figure out how to take input val
 |         |       |            |       |            |       |             |       |         |
 +---------+       +------------+       +------------+       +-------------+       +---------+
 
-## Database Development ##
+### Database Development ##
 
-TripBot's database runs on Postgres, which is a relational database.
+TripBot's database runs on Postgres, which is a relational database, not a JSON file.
 
-You make changes to the schema.prisma, and then run the ```npm run prisma:migrate``` to create the migration file
+When TripBot starts, it will automatically create the tripbot_database container and run the migrations.
 
-When this file is pushed to production, the database will be updated automatically.
+This gives you a copy of the production table schema on your local machine.
 
-One of the goals is to convert the knex queries in tripbot into Prisma Client queries.
+To make changes to the database, you need to use the Prisma ORM and make changes to the schema.prisma file.
 
-### Postgres ###
+Run the ```db:migrateDev``` to create new migration files based on the changes you made to the schema.prisma file.
+
+When these migration files are pushed to production, the database will be updated automatically.
+
+Prisma documentation is excellent, check out guides like: https://www.prisma.io/docs/concepts/components/prisma-migrate/migrate-development-production
+
+#### Postgres ###
+
 ```npm run postgres```
+
 We use postgres for our database.
+
 This is just a simple container that basically sits there being a stable database.
+
 By itself, it does nothing, you need another utility, like Prisma, to interact with it.
 
-### Prisma ###
-```npm run prisma```
-Prisma runs the necessary setup to fill in the database tables and columns.
-You just need to run this container once and you can forget about it.
-Previously we used Knex so you'll still see some knex code, but we're moving away from that.
-There is a webserver (prisma studio) that starts as part of this container.
-You can access it via http://localhost:5555
-If you're worried about this, exit the prisma container after it finishes running.
-It only needs to run once to setup the DB.
+#### PG Admin ###
 
-### PG Admin ###
 ```npm run pgadmin```
+
 This is a webserver that allows you to view the database.
+
 It's not necessary, but it's nice to have.
+
 You can access it via http://localhost:80 (maybe idk)
 
-### API ###
-```npm run api```
-This is a simple API that allows you to interact with the database.
-There's a bit of neuance to the api:
-V1 : legacy tripbot APi that interacts with static .json files
-V2 : the new prisma api that interacts with postgres for the appeal system
+#### API ###
 
-There is also an api endpoint within tripbot that receives webhooks from the appeal system.
+```npm run api```
+
+This is a simple API that allows you to interact with the database.
+
+V1 : legacy tripbot APi that interacts with static .json files
+
+V2 : the new prisma api that interacts with postgres for the appeal system
