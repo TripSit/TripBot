@@ -1,5 +1,0 @@
-# All this does is copy the init script into the container so it can run on first start
-
-FROM postgres
-
-COPY ./src/postgres/init-db.sh ./docker-entrypoint-initdb.d/initialize-database.sh

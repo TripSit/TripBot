@@ -1,13 +1,9 @@
 import {
   SlashCommandBuilder,
   time,
-  ButtonBuilder,
   EmbedBuilder,
   EmbedField,
 } from 'discord.js';
-import {
-  ButtonStyle,
-} from 'discord-api-types/v10';
 import { remindMe } from '../../../global/commands/g.remindme';
 import commandContext from '../../utils/context';
 import { SlashCommand } from '../../@types/commandDef';
@@ -16,11 +12,6 @@ import { parseDuration } from '../../../global/utils/parseDuration';
 import { paginationEmbed } from '../../utils/pagination';
 // import log from '../../../global/utils/log';
 const F = f(__filename);
-
-const buttonList = [
-  new ButtonBuilder().setCustomId('previousButton').setLabel('Previous').setStyle(ButtonStyle.Danger),
-  new ButtonBuilder().setCustomId('nextButton').setLabel('Next').setStyle(ButtonStyle.Success),
-];
 
 export const dRemindme: SlashCommand = {
   data: new SlashCommandBuilder()
@@ -137,7 +128,7 @@ export const dRemindme: SlashCommand = {
       }
       // log.debug(F, `book.length: ${book.length}`);
       if (book.length > 1) {
-        paginationEmbed(interaction, book, buttonList);
+        paginationEmbed(interaction, book);
       } else {
         await interaction.editReply({ embeds: [embed] });
         // interaction.user.send({embeds: [embed]});

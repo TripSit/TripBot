@@ -59,110 +59,84 @@ const timesUp = 'Time\'s up!';
 
 const items = {
   general: {
-    testkit: {
-      label: 'TestKit',
-      value: 'testkit',
-      description: '10% more tokens from all sources!',
-      quantity: 1,
-      weight: 0,
-      cost: 2000,
-      equipped: true,
-      consumable: false,
-      effect: 'tokenMultiplier',
-      effect_value: '0.1',
-      emoji: 'itemBonus',
-    },
-    scale: {
-      label: 'Scale',
-      value: 'scale',
-      description: '10% more tokens from all sources!',
-      quantity: 1,
-      weight: 0,
-      cost: 3000,
-      equipped: true,
-      consumable: false,
-      effect: 'tokenMultiplier',
-      effect_value: '0.1',
-      emoji: 'itemBonus',
-    },
+    // testkit: {
+    //   label: 'TestKit',
+    //   value: 'testkit',
+    //   description: '10% more tokens from all sources!',
+    //   quantity: 1,
+    //   weight: 0,
+    //   cost: 2000,
+    //   equipped: true,
+    //   consumable: false,
+    //   effect: 'tokenMultiplier',
+    //   effect_value: '0.1',
+    //   emoji: 'itemBonus',
+    // },
+    // scale: {
+    //   label: 'Scale',
+    //   value: 'scale',
+    //   description: '10% more tokens from all sources!',
+    //   quantity: 1,
+    //   weight: 0,
+    //   cost: 3000,
+    //   equipped: true,
+    //   consumable: false,
+    //   effect: 'tokenMultiplier',
+    //   effect_value: '0.1',
+    //   emoji: 'itemBonus',
+    // },
   },
   backgrounds: {
-    // Geolines: {
-    //   label: 'Geolines',
-    //   value: 'Geolines',
-    //   description: 'Geolines',
-    //   quantity: 1,
-    //   weight: 0,
-    //   cost: 1000,
-    //   equipped: false,
-    //   consumable: false,
-    //   effect: 'background',
-    //   effect_value: 'Geolines',
-    //   emoji: '🖼',
-    // },
-    // Waves: {
-    //   label: 'Waves',
-    //   value: 'Waves',
-    //   description: 'Waves',
-    //   quantity: 1,
-    //   weight: 0,
-    //   cost: 1000,
-    //   equipped: false,
-    //   consumable: false,
-    //   effect: 'background',
-    //   effect_value: 'Waves',
-    //   emoji: '🖼',
-    // },
-    // LiquidMaze: {
-    //   label: 'LiquidMaze',
-    //   value: 'LiquidMaze',
-    //   description: 'LiquidMaze',
-    //   quantity: 1,
-    //   weight: 0,
-    //   cost: 1000,
-    //   equipped: false,
-    //   consumable: false,
-    //   effect: 'background',
-    //   effect_value: 'LiquidMaze',
-    //   emoji: '🖼',
-    // },
-    // Flow: {
-    //   label: 'Flow',
-    //   value: 'Flow',
-    //   description: 'Flow',
-    //   quantity: 1,
-    //   weight: 0,
-    //   cost: 1000,
-    //   equipped: false,
-    //   consumable: false,
-    //   effect: 'background',
-    //   effect_value: 'Flow',
-    //   emoji: '🖼',
-    // },
-    DiamondChevron: {
-      label: 'DiamondChevron',
-      value: 'DiamondChevron',
-      description: 'Background',
+    Geolines: {
+      label: 'Geolines',
+      value: 'Geolines',
+      description: 'Geolines',
       quantity: 1,
       weight: 0,
       cost: 1000,
       equipped: false,
       consumable: false,
       effect: 'background',
-      effect_value: 'DiamondChevron',
+      effect_value: 'Geolines',
       emoji: 'itemBackground',
     },
-    Chevron: {
-      label: 'Chevron',
-      value: 'Chevron',
-      description: 'Background',
+    Waves: {
+      label: 'Waves',
+      value: 'Waves',
+      description: 'Waves',
       quantity: 1,
       weight: 0,
       cost: 1000,
       equipped: false,
       consumable: false,
       effect: 'background',
-      effect_value: 'Chevron',
+      effect_value: 'Waves',
+      emoji: 'itemBackground',
+    },
+    LiquidMaze: {
+      label: 'LiquidMaze',
+      value: 'LiquidMaze',
+      description: 'LiquidMaze',
+      quantity: 1,
+      weight: 0,
+      cost: 1000,
+      equipped: false,
+      consumable: false,
+      effect: 'background',
+      effect_value: 'LiquidMaze',
+      emoji: 'itemBackground',
+    },
+    Flow: {
+      label: 'Flow',
+      value: 'Flow',
+      description: 'Flow',
+      quantity: 1,
+      weight: 0,
+      cost: 1000,
+      equipped: false,
+      consumable: false,
+      effect: 'background',
+      effect_value: 'Flow',
       emoji: 'itemBackground',
     },
     Concentric: {
@@ -215,19 +189,6 @@ const items = {
       consumable: false,
       effect: 'background',
       effect_value: 'SquareTwist',
-      emoji: 'itemBackground',
-    },
-    SquareSpiral: {
-      label: 'SquareSpiral',
-      value: 'SquareSpiral',
-      description: 'Background',
-      quantity: 1,
-      weight: 0,
-      cost: 1000,
-      equipped: false,
-      consumable: false,
-      effect: 'background',
-      effect_value: 'SquareSpiral',
       emoji: 'itemBackground',
     },
     Noise: {
@@ -423,19 +384,6 @@ const items = {
       consumable: false,
       effect: 'background',
       effect_value: 'Connected',
-      emoji: 'itemBackground',
-    },
-    Binary: {
-      label: 'Binary',
-      value: 'Binary',
-      description: 'Background',
-      quantity: 1,
-      weight: 0,
-      cost: 1000,
-      equipped: false,
-      consumable: false,
-      effect: 'background',
-      effect_value: 'Binary',
       emoji: 'itemBackground',
     },
   },
@@ -1096,7 +1044,6 @@ export async function rpgMarket(
       .setDescription(stripIndents`
       You are in the local market, you can buy some items to help you on your journey.
 
-      ${emojiGet('itemBonus')} ***Multipliers*** can be used to increase the amount of tokens you earn.
       ${emojiGet('itemBackground')} ***Backgrounds*** can be used to personalize your /profile and /levels.
       ***More items coming soon! Check back later.***
       
@@ -1205,7 +1152,6 @@ export async function rpgMarketChange(
     .setDescription(stripIndents`
       You are in the local market, you can buy some items to help you on your journey.
 
-      ${emojiGet('itemBonus')} ***Multipliers*** can be used to increase the amount of tokens you earn.
       ${emojiGet('itemBackground')} ***Backgrounds*** can be used to personalize your /profile and /levels.
       ***More items coming soon! Check back later.***
 
@@ -1939,7 +1885,7 @@ export async function rpgArcade(
       .addComponents(
         customButton(`rpgCoinFlip,user:${interaction.user.id}`, 'CoinFlip', 'buttonCoinflip', ButtonStyle.Secondary),
         customButton(`rpgRoulette,user:${interaction.user.id}`, 'Roulette', 'buttonRoulette', ButtonStyle.Secondary),
-        // customButton(`rpgTrivia,user:${interaction.user.id}`, 'Trivia', 'buttonTrivia', ButtonStyle.Secondary),
+        customButton(`rpgTrivia,user:${interaction.user.id}`, 'Trivia', 'buttonTrivia', ButtonStyle.Secondary),
         // customButton(`rpgBlackjack,user:${interaction.user.id}`, 'Blackjack', '🃏', ButtonStyle.Primary),
         // customButton(`rpgSlots,user:${interaction.user.id}`, 'Slots', '🎰', ButtonStyle.Primary),
         customButton(`rpgTown,user:${interaction.user.id}`, 'Town', 'buttonTown', ButtonStyle.Primary),
@@ -2613,15 +2559,15 @@ export async function rpgTrivia(
       }
 
       // Filter for the buttons
-      const filter = (i: MessageComponentInteraction) => i.user.id === interaction.user.id;
+      const filter = (i: MessageComponentInteraction) => i.user.id === interaction.user.id
+          && i.componentType === ComponentType.Button;
       if (!interaction.channel) throw new Error('Channel not found');
       let collected = {} as ButtonInteraction;
       try {
         collected = await interaction.channel.awaitMessageComponent({ // eslint-disable-line no-await-in-loop
           filter,
           time: 30000,
-          componentType: ComponentType.Button,
-        });
+        }) as ButtonInteraction;
       } catch (err) {
         // If the user doesn't answer in time
         // log.debug(F, 'User did not answer in time');
@@ -3171,10 +3117,10 @@ export const dRpg: SlashCommand = {
       .setDescription('Go to the coinflip game'))
     .addSubcommand(subcommand => subcommand
       .setName('roulette')
-      .setDescription('Go to the roulette game')),
-  // .addSubcommand(subcommand => subcommand
-  //   .setName('trivia')
-  //   .setDescription('Go to the trivia parlor')),
+      .setDescription('Go to the roulette game'))
+    .addSubcommand(subcommand => subcommand
+      .setName('trivia')
+      .setDescription('Go to the trivia parlor')),
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
     const channelRpg = await interaction.guild?.channels.fetch(env.CHANNEL_TRIPTOWN as string) as TextChannel;

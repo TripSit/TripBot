@@ -32,6 +32,7 @@ export const mNote: MessageCommand = {
         .setLabel('What are you noting about this person?')
         .setStyle(TextInputStyle.Paragraph)
         .setPlaceholder('Tell the team why you are noting this user.')
+        .setMaxLength(1000)
         .setRequired(true)
         .setCustomId('internalNote'))));
     const filter = (i:ModalSubmitInteraction) => i.customId.includes('noteModal');

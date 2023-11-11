@@ -27,6 +27,7 @@ export const dReport: SlashCommand = {
       .setName('target'))
     .addStringOption(option => option
       .setDescription('Reason for reporting!')
+      .setMaxLength(1000)
       .setRequired(true)
       .setName('reason')),
 

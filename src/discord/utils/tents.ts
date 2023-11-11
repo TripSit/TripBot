@@ -107,7 +107,6 @@ export async function pitchTent(
  - You can pick up this role in <id:customize>
 
 - **Modify your tent**
- - \`/voice radio\` - Borrow a radio bot for your tent
  - \`/voice bitrate\` - Change the bitrate of your tent
  - \`/voice rename\` - Choose a new name for your tent
 
@@ -145,8 +144,10 @@ export async function teardownTent(
 
     // If the channel is a voice channel, and it's a tent, and there are no humans in it delete it
     if (channel.type === ChannelType.GuildVoice && channel.name.includes('⛺') && humans < 1) {
-      // Check if the current channel has a radio bot in it by checking if any bots in the channel are in the radioChannels object
-      const botMember = channel.members.find(member => member.user.bot && Object.keys(radioChannels).includes(member.user.id));
+      // Check if the current channel has a radio bot in it
+      // Checkif any bots in the channel are in the radioChannels object
+      const botMember = channel.members.find(member => member.user.bot
+        && Object.keys(radioChannels).includes(member.user.id));
       if (botMember) {
         // If it does, find the corresponding radio channel from the bot id and move the bot to it
         const radioChannelId = radioChannels[botMember.user.id];

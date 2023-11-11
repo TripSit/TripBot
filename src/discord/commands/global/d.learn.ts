@@ -151,8 +151,7 @@ async function moodleProfile(
     .setAuthor({
       name: `${discordMember.displayName}${moodleProfileData.department && moodleProfileData.institution ? title : ''}`,
       url: env.MOODLE_URL,
-    })
-    .setThumbnail(moodleProfileData.profileImage);
+    });
 
   if (completedCourses.length > 0) {
     profileEmbed.addFields([

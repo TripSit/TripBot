@@ -218,6 +218,10 @@ export const dProfile: SlashCommand = {
       await Canvas.loadImage(target.user.displayAvatarURL({ extension: 'jpg' })),
       // Get the birthday card overlay
       await Canvas.loadImage(await imageGet('cardBirthday')),
+      await Canvas.loadImage(await imageGet('teamtripsitIcon')),
+      await Canvas.loadImage(await imageGet('premiumIcon')),
+      await Canvas.loadImage(await imageGet('boosterIcon')),
+      await Canvas.loadImage(await imageGet('legacyIcon')),
     ]);
 
     const profileData = values[0].status === 'fulfilled' ? values[0].value : {} as ProfileData;
@@ -226,6 +230,72 @@ export const dProfile: SlashCommand = {
     // const StatusIcon = values[3].status === 'fulfilled' ? values[3].value : {} as Canvas.Image;
     const avatar = values[3].status === 'fulfilled' ? values[3].value : {} as Canvas.Image;
     const birthdayOverlay = values[4].status === 'fulfilled' ? values[4].value : {} as Canvas.Image;
+    const teamtripsitIcon = values[5].status === 'fulfilled' ? values[5].value : {} as Canvas.Image;
+    const premiumIcon = values[6].status === 'fulfilled' ? values[6].value : {} as Canvas.Image;
+    const boosterIcon = values[7].status === 'fulfilled' ? values[7].value : {} as Canvas.Image;
+    const legacyIcon = values[8].status === 'fulfilled' ? values[8].value : {} as Canvas.Image;
+
+    const avatarIconRoles = {
+      [env.ROLE_TEAMTRIPSIT]: {
+        image: teamtripsitIcon,
+        hierarchy: 1,
+      },
+      [env.ROLE_PREMIUM]: {
+        image: premiumIcon,
+        hierarchy: 2,
+      },
+      [env.ROLE_BOOSTER]: {
+        image: boosterIcon,
+        hierarchy: 3,
+      },
+      [env.ROLE_LEGACY]: {
+        image: legacyIcon,
+        hierarchy: 4,
+      },
+    };
+
+    let avatarIconSlot1 = {} as {
+      image: Canvas.Image;
+    };
+
+    let avatarIconSlot2 = {} as {
+      image: Canvas.Image;
+    };
+
+    let avatarIconSlot3 = {} as {
+      image: Canvas.Image;
+    };
+
+    let avatarIconSlot4 = {} as {
+      image: Canvas.Image;
+    };
+
+    // Check if user has any roles that have an avatar icon. Put all of them in an array and sort them by hierarchy
+    const avatarIconRolesArray = Object.entries(avatarIconRoles)
+      .filter(([key]) => target.roles.cache.has(key))
+      .sort((a, b) => a[1].hierarchy - b[1].hierarchy);
+
+    // From the list, assign each one to a slot in numerical order
+    if (avatarIconRolesArray.length > 0) {
+      avatarIconSlot1 = {
+        image: avatarIconRolesArray[0][1].image,
+      };
+    }
+    if (avatarIconRolesArray.length > 1) {
+      avatarIconSlot2 = {
+        image: avatarIconRolesArray[1][1].image,
+      };
+    }
+    if (avatarIconRolesArray.length > 2) {
+      avatarIconSlot3 = {
+        image: avatarIconRolesArray[2][1].image,
+      };
+    }
+    if (avatarIconRolesArray.length > 3) {
+      avatarIconSlot4 = {
+        image: avatarIconRolesArray[3][1].image,
+      };
+    }
 
     // Create Canvas and Context
     const canvasWidth = 921;
@@ -291,7 +361,7 @@ export const dProfile: SlashCommand = {
       }
     }
 
-    context.drawImage(Icons, 5, -2, 913, 292);
+    context.drawImage(Icons, 0, 0);
 
     /* TEST: Border item
     context.save();
@@ -308,21 +378,65 @@ export const dProfile: SlashCommand = {
     context.stroke();
     context.restore(); */
 
-    // Overly complicated avatar clip (STATUS CLIP COMMENTED OUT)
+    // Overly complicated avatar clip
     context.save();
-    // context.beginPath();
-    // context.arc(110, 112, 21, 0, Math.PI * 2);
-    // context.arc(73, 73, 55, 0, Math.PI * 2, true);
-    // context.closePath();
-    // context.clip();
+    // If avatarIconSlot1 has an image, draw the hole for the icon
+    if (avatarIconSlot1.image) {
+      context.beginPath();
+      context.arc(115, 117, 21, 0, Math.PI * 2);
+      context.arc(73, 73, 55, 0, Math.PI * 2, true);
+      context.closePath();
+      context.clip();
+    }
+    // If avatarIconSlot2 has an image, draw the hole for the icon
+    if (avatarIconSlot2.image) {
+      context.beginPath();
+      context.arc(31, 117, 21, 0, Math.PI * 2);
+      context.arc(73, 73, 55, 0, Math.PI * 2, true);
+      context.closePath();
+      context.clip();
+    }
+    // If avatarIconSlot3 has an image, draw the hole for the icon
+    if (avatarIconSlot3.image) {
+      context.beginPath();
+      context.arc(115, 28, 21, 0, Math.PI * 2);
+      context.arc(73, 73, 55, 0, Math.PI * 2, true);
+      context.closePath();
+      context.clip();
+    }
+    // If avatarIconSlot4 has an image, draw the hole for the icon
+    if (avatarIconSlot4.image) {
+      context.beginPath();
+      context.arc(31, 28, 21, 0, Math.PI * 2);
+      context.arc(73, 73, 55, 0, Math.PI * 2, true);
+      context.closePath();
+      context.clip();
+    }
     context.beginPath();
     context.arc(73, 73, 54, 0, Math.PI * 2, true);
     // context.closePath();
     context.clip();
-    // Avatar Image
+
     context.drawImage(avatar, 18, 18, 109, 109);
     context.restore();
-    // context.drawImage(StatusIcon, 90, 92);
+
+    // Draw the avatar icons
+    // If avatarIconSlot1 has an image, draw it
+    if (avatarIconSlot1.image) {
+      context.drawImage(avatarIconSlot1.image, 99, 102, 32, 32);
+    }
+    // If avatarIconSlot2 has an image, draw it
+    if (avatarIconSlot2.image) {
+      context.drawImage(avatarIconSlot2.image, 15, 102, 32, 32);
+    }
+    // If avatarIconSlot3 has an image, draw it
+    if (avatarIconSlot3.image) {
+      context.drawImage(avatarIconSlot3.image, 99, 12, 32, 32);
+    }
+    // If avatarIconSlot4 has an image, draw it
+    if (avatarIconSlot4.image) {
+      context.drawImage(avatarIconSlot4.image, 15, 12, 32, 32);
+    }
 
     // WIP: Camp Icon
     // const CampIcon = await Canvas.loadImage(await imageGet('campIconA'));

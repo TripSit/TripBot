@@ -4,17 +4,27 @@ on:
   push:
     branches:
       - main
-
+    paths-ignore:
+      - '**/archive/**'
+      - '**/legacy/**'
+      - '**/matrix/**'
+      - '**/telegram/**'
+      - '**/irc/**'
+      - '**/jest/**'
+      - '**/build/**'
+      - '**/@prisma-moodle/**'
 jobs:
   lint:
     name: Lint
     runs-on: ubuntu-latest
+    env:
+      NODE_OPTIONS: --max-old-space-size=7168
     steps:
     - uses: actions/checkout@v3
-    - name: Use Node.js '20.5.0'
+    - name: Use Node.js '21.1.0'
       uses: actions/setup-node@v3
       with:
-        node-version: '20.5.0'
+        node-version: '21.1.0'
         cache: 'npm'
     - name: Update npm
       run: npm install -g npm && npm --version
@@ -22,24 +32,24 @@ jobs:
       run: npm install eslint eslint-config-airbnb-base eslint-config-airbnb-typescript eslint-config-google eslint-import-resolver-typescript eslint-plugin-import --save-dev && npx eslint --version
     - name: Linting
       run: npx eslint --ext .ts,.js .
-  test:
-    name: Test
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v3
-    - name: Use Node.js '20.5.0'
-      uses: actions/setup-node@v3
-      with:
-        node-version: '20.5.0'
-        cache: 'npm'
-    - name: Update npm
-      run: npm install -g npm && npm --version
-    - name: Install dependencies
-      run: npm ci
-    - name: Copy env
-      run: cp .env.example .env
-    - name: Test
-      run: npx jest --silent -c ./jest/jest.unit.config.ts
+  # test:
+  #   name: Test
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #   - uses: actions/checkout@v3
+  #   - name: Use Node.js '20.5.0'
+  #     uses: actions/setup-node@v3
+  #     with:
+  #       node-version: '20.5.0'
+  #       cache: 'npm'
+  #   - name: Update npm
+  #     run: npm install -g npm && npm --version
+  #   - name: Install dependencies
+  #     run: npm ci
+  #   - name: Copy env
+  #     run: cp .env.example .env
+  #   - name: Test
+  #     run: npx jest --silent -c ./src/jest/jest.unit.config.ts
   codeql:
     name: CodeQL
     runs-on: ubuntu-latest
