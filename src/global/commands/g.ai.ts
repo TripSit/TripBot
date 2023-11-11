@@ -2,7 +2,7 @@ import OpenAI from 'openai';
 import { PrismaClient, ai_personas } from '@prisma/client';
 import { Moderation } from 'openai/resources';
 
-const db = new PrismaClient({ log: ['error', 'info', 'query', 'warn'] });
+const db = new PrismaClient({ log: ['error'] });
 
 const F = f(__filename);
 
@@ -326,7 +326,7 @@ export async function aiChat(
     // function_call: 'auto',
   } as OpenAI.Chat.CompletionCreateParamsNonStreaming;
 
-  log.debug(F, `payload: ${JSON.stringify(payload, null, 2)}`);
+  // log.debug(F, `payload: ${JSON.stringify(payload, null, 2)}`);
   let responseMessage = {} as OpenAI.Chat.CreateChatCompletionRequestMessage;
   const openai = new OpenAI({
     organization: 'org-h4Jvunqw3MmHmIgeLHpr1a3Y',
@@ -344,7 +344,7 @@ export async function aiChat(
         throw err;
       }
     });
-  log.debug(F, `chatCompletion: ${JSON.stringify(chatCompletion, null, 2)}`);
+  // log.debug(F, `chatCompletion: ${JSON.stringify(chatCompletion, null, 2)}`);
 
   if (chatCompletion && chatCompletion.choices[0].message) {
     responseMessage = chatCompletion.choices[0].message;

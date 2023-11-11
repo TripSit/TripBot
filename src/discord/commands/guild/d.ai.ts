@@ -47,7 +47,7 @@ import commandContext from '../../utils/context';
 import { userInfoEmbed } from '../../../global/commands/g.moderate';
 import { sleep } from './d.bottest';
 
-const db = new PrismaClient({ log: ['error', 'info', 'query', 'warn'] });
+const db = new PrismaClient({ log: ['error'] });
 
 const F = f(__filename);
 
@@ -643,10 +643,10 @@ export async function aiAudit(
       .join('\n')
       .slice(0, 1024);
 
-    log.debug(F, `messageOutput: ${messageOutput}`);
+    // log.debug(F, `messageOutput: ${messageOutput}`);
 
     const responseOutput = chatResponse.slice(0, 1023);
-    log.debug(F, `responseOutput: ${responseOutput}`);
+    // log.debug(F, `responseOutput: ${responseOutput}`);
 
     embed.spliceFields(
       0,
@@ -665,7 +665,7 @@ export async function aiAudit(
 
     const promptCost = (promptTokens / 1000) * aiCosts[cleanPersona.ai_model as keyof typeof aiCosts].input;
     const completionCost = (completionTokens / 1000) * aiCosts[cleanPersona.ai_model as keyof typeof aiCosts].output;
-    log.debug(F, `promptCost: ${promptCost}, completionCost: ${completionCost}`);
+    // log.debug(F, `promptCost: ${promptCost}, completionCost: ${completionCost}`);
 
     embed.spliceFields(
       2,
