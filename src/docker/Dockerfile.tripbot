@@ -118,8 +118,8 @@ COPY --chown=node:node ./src/discord/assets/Futura.otf ./build/discord/assets/Fu
 COPY --chown=node:node ./src/prisma/ ./src/prisma
 
 # Generate prisma client
-# RUN npx prisma generate
-# RUN npx prisma generate --schema=./src/prisma/moodle/schema.prisma
+RUN npx prisma generate
+RUN npx prisma generate --schema=./src/prisma/moodle/schema.prisma
 
 USER node
 
