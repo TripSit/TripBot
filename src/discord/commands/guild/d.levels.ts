@@ -18,7 +18,7 @@ import { numFormatter, numFormatterVoice } from './d.profile';
 // import { expForNextLevel, getTotalLevel } from '../../../global/utils/experience';
 // import { imageGet } from '../../utils/imageGet';
 
-const db = new PrismaClient({ log: ['error', 'info', 'query', 'warn'] });
+const db = new PrismaClient({ log: ['error'] });
 
 // import { getTotalLevel } from '../../../global/utils/experience';
 

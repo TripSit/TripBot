@@ -17,7 +17,7 @@ import {
 import commandContext from '../../utils/context';
 import { checkChannelPermissions } from '../../utils/checkPermissions';
 
-const db = new PrismaClient({ log: ['error', 'info', 'query', 'warn'] });
+const db = new PrismaClient({ log: ['error'] });
 
 const F = f(__filename);
 

@@ -5,7 +5,7 @@ import {
   getTotalLevel,
 } from '../utils/experience';
 
-const db = new PrismaClient({ log: ['error', 'info', 'query', 'warn'] });
+const db = new PrismaClient({ log: ['error'] });
 
 export default levels;
 

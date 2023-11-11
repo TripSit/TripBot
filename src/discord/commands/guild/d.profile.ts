@@ -14,7 +14,7 @@ import { expForNextLevel, getTotalLevel } from '../../../global/utils/experience
 import { getPersonaInfo } from '../../../global/commands/g.rpg';
 import { imageGet } from '../../utils/imageGet';
 
-const db = new PrismaClient({ log: ['error', 'info', 'query', 'warn'] });
+const db = new PrismaClient({ log: ['error'] });
 
 const F = f(__filename);
 

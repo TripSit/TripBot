@@ -3,7 +3,7 @@ import {
   GuildUpdateEvent,
 } from '../@types/eventDef';
 
-const db = new PrismaClient({ log: ['error', 'info', 'query', 'warn'] });
+const db = new PrismaClient({ log: ['error'] });
 
 const F = f(__filename);
 

@@ -14,7 +14,7 @@ import { embedTemplate } from '../../utils/embedTemplate'; // eslint-disable-lin
 import { getTotalLevel } from '../../../global/utils/experience';
 import { paginationEmbed } from '../../utils/pagination';
 
-const db = new PrismaClient({ log: ['error', 'info', 'query', 'warn'] });
+const db = new PrismaClient({ log: ['error'] });
 
 const F = f(__filename);
 

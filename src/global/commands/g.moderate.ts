@@ -26,7 +26,7 @@ import { embedTemplate } from '../../discord/utils/embedTemplate';
 import { last } from './g.last';
 import { botBannedUsers } from '../../discord/utils/populateBotBans';
 
-const db = new PrismaClient({ log: ['error', 'info', 'query', 'warn'] });
+const db = new PrismaClient({ log: ['error'] });
 
 export default moderate;
 

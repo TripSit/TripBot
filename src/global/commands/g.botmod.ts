@@ -19,7 +19,7 @@ import { PrismaClient } from '@prisma/client';
 import { embedTemplate } from '../../discord/utils/embedTemplate';
 import commandContext from '../../discord/utils/context';
 
-const db = new PrismaClient({ log: ['error', 'info', 'query', 'warn'] });
+const db = new PrismaClient({ log: ['error'] });
 
 const F = f(__filename);
 

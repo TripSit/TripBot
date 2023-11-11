@@ -20,7 +20,7 @@ import {
 import { stripIndents } from 'common-tags';
 import { PrismaClient } from '@prisma/client';
 
-const db = new PrismaClient({ log: ['error', 'info', 'query', 'warn'] });
+const db = new PrismaClient({ log: ['error'] });
 
 const F = f(__filename);
 

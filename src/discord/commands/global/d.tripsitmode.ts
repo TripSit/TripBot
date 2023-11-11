@@ -38,7 +38,7 @@ import { needsHelpMode, tripSitMe, tripsitmeUserClose } from '../../utils/tripsi
 import { checkChannelPermissions } from '../../utils/checkPermissions';
 // import { modmailDMInteraction } from '../archive/modmail';
 
-const db = new PrismaClient({ log: ['error', 'info', 'query', 'warn'] });
+const db = new PrismaClient({ log: ['error'] });
 const F = f(__filename);
 
 async function tripsitmodeOn(

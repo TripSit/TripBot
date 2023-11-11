@@ -23,7 +23,7 @@ import { embedTemplate } from '../../discord/utils/embedTemplate';
 import { experience } from './experience';
 import { profile } from '../commands/g.learn';
 
-const db = new PrismaClient({ log: ['error', 'info', 'query', 'warn'] });
+const db = new PrismaClient({ log: ['error'] });
 
 const F = f(__filename);
 

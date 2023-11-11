@@ -2,7 +2,7 @@ import OpenAI from 'openai';
 import { PrismaClient, ai_personas } from '@prisma/client';
 import { Moderation } from 'openai/resources';
 
-const db = new PrismaClient({ log: ['error', 'info', 'query', 'warn'] });
+const db = new PrismaClient({ log: ['error'] });
 
 const F = f(__filename);
 

@@ -18,7 +18,7 @@ import {
   PrismaClient, appeal_status, appeals, users,
 } from '@prisma/client';
 
-const db = new PrismaClient({ log: ['error', 'info', 'query', 'warn'] });
+const db = new PrismaClient({ log: ['error'] });
 
 const F = f(__filename);
 

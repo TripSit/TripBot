@@ -40,7 +40,7 @@ import { imageGet } from '../../utils/imageGet';
 import { customButton } from '../../utils/emoji';
 import { getProfilePreview } from './d.profile';
 
-const db = new PrismaClient({ log: ['error', 'info', 'query', 'warn'] });
+const db = new PrismaClient({ log: ['error'] });
 
 const Trivia = require('trivia-api');
 

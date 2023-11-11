@@ -4,7 +4,7 @@ import {
 } from 'discord.js';
 import { DateTime } from 'luxon';
 
-const db = new PrismaClient({ log: ['error', 'info', 'query', 'warn'] });
+const db = new PrismaClient({ log: ['error'] });
 
 const F = f(__filename);
 

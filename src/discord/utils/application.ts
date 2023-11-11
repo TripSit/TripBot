@@ -35,7 +35,7 @@ import { embedTemplate } from './embedTemplate';
 import commandContext from './context'; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { checkChannelPermissions, checkGuildPermissions } from './checkPermissions';
 
-const db = new PrismaClient({ log: ['error', 'info', 'query', 'warn'] });
+const db = new PrismaClient({ log: ['error'] });
 
 const F = f(__filename);
 

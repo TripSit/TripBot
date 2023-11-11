@@ -1,6 +1,6 @@
 import { PrismaClient, personas } from '@prisma/client';
 
-const db = new PrismaClient({ log: ['error', 'info', 'query', 'warn'] });
+const db = new PrismaClient({ log: ['error'] });
 
 export default profile;
 

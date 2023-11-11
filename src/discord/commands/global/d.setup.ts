@@ -30,7 +30,7 @@ import { paginationEmbed } from '../../utils/pagination';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { profile } from '../../../global/commands/g.learn';
 
-const db = new PrismaClient({ log: ['error', 'info', 'query', 'warn'] });
+const db = new PrismaClient({ log: ['error'] });
 
 const F = f(__filename);
 

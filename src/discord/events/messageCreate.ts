@@ -21,7 +21,7 @@ import { bridgeMessage } from '../utils/bridge';
 // import log from '../../global/utils/log';
 // import {parse} from 'path';
 
-const db = new PrismaClient({ log: ['error', 'info', 'query', 'warn'] });
+const db = new PrismaClient({ log: ['error'] });
 
 const F = f(__filename); // eslint-disable-line
 

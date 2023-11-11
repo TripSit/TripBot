@@ -6,7 +6,7 @@ import {
 } from '../@types/eventDef';
 import { topic } from '../../global/commands/g.topic';
 
-const db = new PrismaClient({ log: ['error', 'info', 'query', 'warn'] });
+const db = new PrismaClient({ log: ['error'] });
 
 type MindsetNames =
 | 'ROLE_DRUNK'

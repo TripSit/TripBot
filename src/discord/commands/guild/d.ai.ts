@@ -47,7 +47,7 @@ import commandContext from '../../utils/context';
 import { userInfoEmbed } from '../../../global/commands/g.moderate';
 import { sleep } from './d.bottest';
 
-const db = new PrismaClient({ log: ['error', 'info', 'query', 'warn'] });
+const db = new PrismaClient({ log: ['error'] });
 
 const F = f(__filename);
 
