@@ -1,5 +1,6 @@
 generator client {
   provider      = "prisma-client-js"
+  // output          = "/usr/src/app/node_modules/@prisma-tripbot/client"
   binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
 }
 

@@ -25,6 +25,7 @@ import {
 } from 'discord-api-types/v10';
 import { stripIndents } from 'common-tags';
 import {
+  PrismaClient,
   ai_channels,
   ai_model,
   ai_personas,
@@ -43,9 +44,10 @@ import {
   aiModerate,
 } from '../../../global/commands/g.ai';
 import commandContext from '../../utils/context';
-import db from '../../../global/utils/db';
 import { userInfoEmbed } from '../../../global/commands/g.moderate';
 import { sleep } from './d.bottest';
+
+const db = new PrismaClient({ log: ['error'] });
 
 const F = f(__filename);
 
@@ -347,8 +349,8 @@ async function get(
         where: {
           id: aiLinkData.persona_id,
         },
-      });
-      description = `Channel ${(channel as TextChannel).name} is linked with the **"${aiPersona.name}"** persona:`;
+      }) as ai_personas;
+      description = `Channel ${(channel as TextChannel).name} is linked with the **"${aiPersona.name ?? aiPersona}"** persona:`;
     }
 
     if (!aiLinkData && (channel as ThreadChannel).parent) {
@@ -364,7 +366,7 @@ async function get(
           where: {
             id: aiLinkData.persona_id,
           },
-        });
+        }) as ai_personas;
         // eslint-disable-next-line max-len
         description = `Channel ${(channel as ThreadChannel).parent} is linked with the **"${aiPersona.name}"** persona:`;
       }
@@ -383,7 +385,7 @@ async function get(
           where: {
             id: aiLinkData.persona_id,
           },
-        });
+        }) as ai_personas;
         // eslint-disable-next-line max-len
         description = `Category ${(channel as ThreadChannel).parent?.parent} is linked with the **"${aiPersona.name}"** persona:`;
       }
@@ -641,10 +643,10 @@ export async function aiAudit(
       .join('\n')
       .slice(0, 1024);
 
-    log.debug(F, `messageOutput: ${messageOutput}`);
+    // log.debug(F, `messageOutput: ${messageOutput}`);
 
     const responseOutput = chatResponse.slice(0, 1023);
-    log.debug(F, `responseOutput: ${responseOutput}`);
+    // log.debug(F, `responseOutput: ${responseOutput}`);
 
     embed.spliceFields(
       0,
@@ -661,9 +663,9 @@ export async function aiAudit(
       },
     );
 
-    const promptCost = (promptTokens / 1000) * aiCosts[cleanPersona.ai_model].input;
-    const completionCost = (completionTokens / 1000) * aiCosts[cleanPersona.ai_model].output;
-    log.debug(F, `promptCost: ${promptCost}, completionCost: ${completionCost}`);
+    const promptCost = (promptTokens / 1000) * aiCosts[cleanPersona.ai_model as keyof typeof aiCosts].input;
+    const completionCost = (completionTokens / 1000) * aiCosts[cleanPersona.ai_model as keyof typeof aiCosts].output;
+    // log.debug(F, `promptCost: ${promptCost}, completionCost: ${completionCost}`);
 
     embed.spliceFields(
       2,
