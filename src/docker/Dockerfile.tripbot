@@ -124,4 +124,4 @@ COPY --chown=node:node ./src/prisma/ ./src/prisma
 USER node
 
 # Start the bot using the production build
-CMD npx prisma migrate deploy && ["pm2-runtime", "build/start.js"]
+CMD ["pm2-runtime", "build/start.js"]
