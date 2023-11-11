@@ -944,10 +944,11 @@ async function checkMoodle() { // eslint-disable-line
   // It will loop through each of those users and check their enrollments and course status in moodle
   // If the user has completed a course, it will attempt to give that user a role in discord
 
-  // log.debug(F, 'Checking Moodle...');
+  // log.debug(F, 'Starting checkMoodle');
 
   // Set the connection status on first run
-  if (!global.moodleConnection) {
+  if (global.moodleConnection === undefined) {
+    // log.debug(F, 'moodleConnection is undefined setting it to true and now');
     global.moodleConnection = {
       status: true,
       date: DateTime.now(),
@@ -964,7 +965,7 @@ async function checkMoodle() { // eslint-disable-line
   const userDataList = env.POSTGRES_DB_URL
     ? await database.users.getMoodleUsers()
     : [];
-  // log.debug(F, `userDataList: ${JSON.stringify(userDataList, null, 2)}`);
+  // log.debug(F, `userDataList: ${userDataList.length}`);
 
   const courseRoleMap = {
     'Intro to Tripsitting': env.ROLE_TS100,
@@ -974,6 +975,7 @@ async function checkMoodle() { // eslint-disable-line
   const channelHowToVolunteer = await guild.channels.fetch(env.CHANNEL_HOW_TO_VOLUNTEER);
   const channelContent = await guild.channels.fetch(env.CHANNEL_CONTENT);
 
+  // log.debug(F, 'Starting to check each user');
   userDataList.forEach(async user => {
     let member = {} as GuildMember;
     try {
@@ -986,7 +988,7 @@ async function checkMoodle() { // eslint-disable-line
     const moodleProfile = await profile(user.discord_id as string);
 
     // log.debug(F, `Checking ${member.user.username}...`);
-    if (moodleProfile.completedCourses.length > 0) {
+    if (moodleProfile.completedCourses && moodleProfile.completedCourses.length > 0) {
       moodleProfile.completedCourses.forEach(async course => {
         // log.debug(F, `${member.user.username} completed ${course}...`);
         const roleId = courseRoleMap[course as keyof typeof courseRoleMap];
@@ -1044,10 +1046,15 @@ async function checkMoodle() { // eslint-disable-line
           // log.debug(F, `Sent ${member.user.username} a message!`);
         }
       });
-    } else {
-      // log.debug(F, 'No completed courses found');
     }
   });
+
+  // log.debug(F, 'Finished checking moodle!');
+  // log.debug(F, `connection: ${JSON.stringify(global.moodleConnection, null, 2)}`);
+
+  // if (!global.moodleConnection.status) {
+  //   log.debug(F, 'moodleConnection failed, hopefully you\'re in dev LMAO');
+  // }
 }
 
 async function checkEvery(

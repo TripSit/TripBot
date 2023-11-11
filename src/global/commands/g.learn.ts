@@ -3,6 +3,7 @@ import { stripIndents } from 'common-tags';
 import { PrismaClient as PrismaClientTripbot } from '@prisma/client';
 // eslint-disable-next-line import/no-extraneous-dependencies
 import { PrismaClient as PrismaClientMoodle } from '@prisma-moodle/client';
+import { DateTime } from 'luxon';
 
 const moodleDb = new PrismaClientMoodle();
 const tripbotDb = new PrismaClientTripbot();
@@ -188,6 +189,16 @@ export async function profile(
   // log.debug(F, `userData: ${JSON.stringify(userData, null, 2)}`);
 
   if (!userData || !userData.moodle_id) {
+    return moodleProfile;
+  }
+
+  try {
+    await moodleDb.mdl_user.findMany();
+  } catch (err) {
+    global.moodleConnection = {
+      status: false,
+      date: DateTime.now(),
+    };
     return moodleProfile;
   }
 
