@@ -374,7 +374,7 @@ export const dLevels: SlashCommand = {
     }[];
 
     // Check if user has voice xp, if so add it to the list to be assigned a xp bar slot
-    if (levelData.VOICE.TOTAL) {
+    if (levelData.VOICE.TOTAL.level > 0) {
       const progressVoice = levelData.VOICE.TOTAL
         ? levelData.VOICE.TOTAL.level_exp / levelData.VOICE.TOTAL.nextLevel
         : 0;
