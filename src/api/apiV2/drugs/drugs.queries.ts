@@ -1,4 +1,6 @@
-import db from '../../../global/utils/db';
+import { PrismaClient } from '@prisma/client';
+
+const db = new PrismaClient({ log: ['error'] });
 
 export default {
   getAllDrugs() {
