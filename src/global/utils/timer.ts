@@ -547,7 +547,6 @@ async function checkVoice() {
   // 5. Are not AFK
   // 6. Are not deafened
   // 7. Are not muted
-  // 8. Are not streaming
   // 9. Are not in a stage channel
   // 10. Do not have the NeedsHelp role
   // 10. With another human in the channel that also meets these conditions
@@ -605,10 +604,10 @@ async function checkVoice() {
               // log.info('voiceExp', `${member.displayName} is server muted`);
               return false;
             }
-            if (member.voice.streaming) {
-              // log.info('voiceExp', `${member.displayName} is streaming`);
-              return false;
-            }
+            // if (member.voice.streaming) {
+            //   // log.info('voiceExp', `${member.displayName} is streaming`);
+            //   return false;
+            // }
             if (member.voice.suppress) {
               // log.info('voiceExp', `${member.displayName} is suppressed`);
               return false;
