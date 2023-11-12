@@ -434,11 +434,14 @@ export const dBridge: SlashCommand = {
     }
 
     // Check if the guild is a partner (or the home guild)
-    // const guildData = await database.guilds.get(interaction.guild.id);
-    const guildData = await db.discord_guilds.findFirstOrThrow({
+    const guildData = await db.discord_guilds.upsert({
       where: {
         id: interaction.guild.id,
       },
+      create: {
+        id: interaction.guild.id,
+      },
+      update: {},
     });
 
     if (interaction.guild.id !== env.DISCORD_GUILD_ID

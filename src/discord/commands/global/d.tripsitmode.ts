@@ -48,10 +48,14 @@ async function tripsitmodeOn(
   if (!interaction.guild) return false;
   if (!interaction.member) return false;
 
-  const guildData = await db.discord_guilds.findUniqueOrThrow({
+  let guildData = await db.discord_guilds.upsert({
     where: {
-      id: interaction.guild.id,
+      id: interaction.guild?.id,
     },
+    create: {
+      id: interaction.guild?.id,
+    },
+    update: {},
   });
 
   // Get the tripsit channel from the guild
@@ -63,7 +67,7 @@ async function tripsitmodeOn(
   } catch (err) {
     // log.debug(F, `There was an error fetching the tripsit channel, it was likely deleted:\n ${err}`);
     // Update the ticket status to closed
-    await db.discord_guilds.update({
+    guildData = await db.discord_guilds.update({
       where: {
         id: interaction.guild.id,
       },
@@ -109,7 +113,7 @@ async function tripsitmodeOn(
   } catch (err) {
     // log.debug(F, `There was an error fetching the tripsit channel, it was likely deleted:\n ${err}`);
     // Update the ticket status to closed
-    await db.discord_guilds.update({
+    guildData = await db.discord_guilds.update({
       where: {
         id: interaction.guild.id,
       },
@@ -157,10 +161,13 @@ async function tripsitmodeOn(
     update: {},
   });
   log.debug(F, `Target userData: ${JSON.stringify(userData, null, 2)}`);
-  const ticketData = await db.user_tickets.findFirst({
+  let ticketData = await db.user_tickets.findFirst({
     where: {
       user_id: userData.id,
-      status: 'OPEN',
+      type: 'TRIPSIT',
+    },
+    orderBy: {
+      thread_id: 'desc',
     },
   });
   log.debug(F, `Target ticket data: ${JSON.stringify(ticketData, null, 2)}`);
@@ -174,7 +181,7 @@ async function tripsitmodeOn(
       threadHelpUser = await interaction.guild?.channels.fetch(ticketData.thread_id) as ThreadChannel;
     } catch (err) {
       log.debug(F, 'There was an error updating the help thread, it was likely deleted');
-      await db.user_tickets.update({
+      ticketData = await db.user_tickets.update({
         where: {
           id: ticketData.id,
         },
@@ -263,7 +270,7 @@ async function tripsitmodeOn(
         } catch (err) {
           // log.debug(F, `There was an error fetching the tripsit channel, it was likely deleted:\n ${err}`);
           // Update the ticket status to closed
-          await db.user_tickets.update({
+          ticketData = await db.user_tickets.update({
             where: {
               id: ticketData.id,
             },
@@ -274,24 +281,19 @@ async function tripsitmodeOn(
         }
       }
 
-      ticketData.status = 'OPEN' as ticket_status;
-      ticketData.reopened_at = new Date();
-      ticketData.archived_at = env.NODE_ENV === 'production'
-        ? DateTime.local().plus({ days: 7 }).toJSDate()
-        : DateTime.local().plus({ minutes: 1 }).toJSDate();
-
-      ticketData.deleted_at = env.NODE_ENV === 'production'
-        ? DateTime.local().plus({ days: 14 }).toJSDate()
-        : DateTime.local().plus({ minutes: 2 }).toJSDate();
-      await db.user_tickets.update({
+      ticketData = await db.user_tickets.update({
         where: {
           id: ticketData.id,
         },
         data: {
-          status: ticketData.status,
-          reopened_at: ticketData.reopened_at,
-          archived_at: ticketData.archived_at,
-          deleted_at: ticketData.deleted_at,
+          status: 'OPEN' as ticket_status,
+          reopened_at: new Date(),
+          archived_at: env.NODE_ENV === 'production'
+            ? DateTime.local().plus({ days: 7 }).toJSDate()
+            : DateTime.local().plus({ minutes: 1 }).toJSDate(),
+          deleted_at: env.NODE_ENV === 'production'
+            ? DateTime.local().plus({ days: 14 }).toJSDate()
+            : DateTime.local().plus({ minutes: 2 }).toJSDate(),
         },
       });
 

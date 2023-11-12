@@ -123,10 +123,14 @@ export const dTemplate: SlashCommand = {
         const mentionable = interaction.options.getMentionable('mentionable');
 
         const response = await globalTemplate();
-        const userData = await db.users.findUniqueOrThrow({
+        const userData = await db.users.upsert({
           where: {
-            id: i.user.id,
+            discord_id: i.user.id,
           },
+          create: {
+            discord_id: i.user.id,
+          },
+          update: {},
         });
 
         const embed = embedTemplate()

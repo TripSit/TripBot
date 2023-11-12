@@ -409,18 +409,12 @@ async function techhelp(
     `;
 
   // const guildData = await getGuild(interaction.guild.id);
-  await db.discord_guilds.update({
+  const guildData = await db.discord_guilds.update({
     where: {
       id: interaction.guild.id,
     },
     data: {
       role_techhelp: interaction.options.getRole('roletechreviewer', true).id,
-    },
-  });
-
-  const guildData = await db.discord_guilds.findUniqueOrThrow({
-    where: {
-      id: interaction.guild.id,
     },
   });
 
@@ -622,10 +616,14 @@ async function helper(
 ) {
   await interaction.deferReply({ ephemeral: true });
   if (!interaction.guild) return;
-  const guildData = await db.discord_guilds.findUniqueOrThrow({
+  const guildData = await db.discord_guilds.upsert({
     where: {
-      id: interaction.guild.id,
+      id: interaction.guild?.id,
     },
+    create: {
+      id: interaction.guild?.id,
+    },
+    update: {},
   });
 
   if (!guildData.channel_tripsit || !guildData.channel_tripsitmeta) {
@@ -690,16 +688,24 @@ export async function helperButton(
   if (!interaction.member) return;
   // Check that the user has completed the course and wasnt just given the role
 
-  const guildData = await db.discord_guilds.findUniqueOrThrow({
+  const guildData = await db.discord_guilds.upsert({
     where: {
-      id: interaction.guild.id,
+      id: interaction.guild?.id,
     },
+    create: {
+      id: interaction.guild?.id,
+    },
+    update: {},
   });
 
-  const userData = await db.users.findUniqueOrThrow({
+  const userData = await db.users.upsert({
     where: {
       discord_id: interaction.user.id,
     },
+    create: {
+      discord_id: interaction.user.id,
+    },
+    update: {},
   });
   const target = interaction.member as GuildMember;
 

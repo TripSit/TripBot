@@ -253,10 +253,14 @@ async function removeExTeamFromThreads(
   newMember: GuildMember,
   roleId: string,
 ) {
-  const guildData = await db.discord_guilds.findUniqueOrThrow({
+  const guildData = await db.discord_guilds.upsert({
     where: {
-      id: newMember.guild.id,
+      id: newMember.guild?.id,
     },
+    create: {
+      id: newMember.guild?.id,
+    },
+    update: {},
   });
   // If the role removed was a helper/tripsitter role, we need to remove them from threads they are in
   if (guildData.channel_tripsit

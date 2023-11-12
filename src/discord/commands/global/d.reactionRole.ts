@@ -297,10 +297,14 @@ export async function buttonReactionRole(
     return;
   }
 
-  const userData = await db.users.findUniqueOrThrow({
+  const userData = await db.users.upsert({
     where: {
       discord_id: target.id,
     },
+    create: {
+      discord_id: target.id,
+    },
+    update: {},
   });
 
   // If the role being requested is the Helper or Contributor role, check if they have been banned first
@@ -462,10 +466,14 @@ export async function buttonReactionRole(
     // Post intro message to the channel
     channel.send(`${target} has joined as a ${role.name}, please welcome them!`);
   } else {
-    const guildData = await db.discord_guilds.findUniqueOrThrow({
+    const guildData = await db.discord_guilds.upsert({
       where: {
         id: interaction.guild.id,
       },
+      create: {
+        id: interaction.guild.id,
+      },
+      update: {},
     });
 
     // const isTeam = guildData.team_role_ids !== null
@@ -711,7 +719,13 @@ async function createRoles(
         name: roleData.name,
       },
       update: {
+        guild_id: interaction.guild?.id as string,
+        channel_id: interaction.channel?.id as string,
+        message_id: '',
+        reaction_id: '',
         role_id: newRole.id,
+        type,
+        name: roleData.name,
       },
     });
   }));
@@ -952,10 +966,14 @@ export async function createPremiumColorMessage(
       .split(' ')
       .map(role => role.replace(/[<@&>]/g, ''))
       .join(',');
-    const guildData = await db.discord_guilds.findUniqueOrThrow({
+    const guildData = await db.discord_guilds.upsert({
       where: {
-        id: interaction.guild.id,
+        id: interaction.guild?.id,
       },
+      create: {
+        id: interaction.guild?.id,
+      },
+      update: {},
     });
     guildData.premium_role_ids = roleMentions;
     await db.discord_guilds.update({
@@ -1404,10 +1422,14 @@ export const dReactionRole: SlashCommand = {
     }
 
     // Check if the guild is a partner (or the home guild)
-    const guildData = await db.discord_guilds.findUniqueOrThrow({
+    const guildData = await db.discord_guilds.upsert({
       where: {
-        id: interaction.guild.id,
+        id: interaction.guild?.id,
       },
+      create: {
+        id: interaction.guild?.id,
+      },
+      update: {},
     });
     if (interaction.guild.id !== env.DISCORD_GUILD_ID
       && !guildData.partner

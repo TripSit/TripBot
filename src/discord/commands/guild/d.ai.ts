@@ -155,7 +155,15 @@ async function help(
 async function makePersonaEmbed(
   persona: ai_personas,
 ) {
-  const createdBy = await db.users.findUniqueOrThrow({ where: { id: persona.created_by } });
+  const createdBy = await db.users.upsert({
+    where: {
+      id: persona.created_by,
+    },
+    create: {
+      id: persona.created_by,
+    },
+    update: {},
+  });
   const guild = await discordClient.guilds.fetch(env.DISCORD_GUILD_ID);
   const createdByMember = await guild.members.fetch(createdBy.discord_id as string);
 
@@ -286,7 +294,15 @@ async function set(
         temperature = 1;
       }
 
-      const userData = await db.users.findUniqueOrThrow({ where: { discord_id: interaction.user.id } });
+      const userData = await db.users.upsert({
+        where: {
+          discord_id: interaction.user.id,
+        },
+        create: {
+          discord_id: interaction.user.id,
+        },
+        update: {},
+      });
 
       const aiPersona = {
         name: personaName,
@@ -702,10 +718,14 @@ export async function aiAudit(
     const message = messages[0];
     const guildMember = message.member as GuildMember;
 
-    const targetData = await db.users.findUniqueOrThrow({
+    const targetData = await db.users.upsert({
       where: {
         discord_id: guildMember.id,
       },
+      create: {
+        discord_id: guildMember.id,
+      },
+      update: {},
     });
 
     const modlogEmbed = await userInfoEmbed(guildMember, targetData, 'FLAGGED');

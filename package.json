@@ -50,10 +50,9 @@
   ],
   "author": "Eric / Moonbear / Teknos <eric@tripsit.me>",
   "contributors": [
-    "Ajar",
-    "Change",
     "Hipperooni",
-    "SevenCats"
+    "Ajar",
+    "Change"
   ],
   "license": "MIT",
   "bugs": {
@@ -87,8 +86,6 @@
     "helmet": "^7.1.0",
     "imdb-api": "^4.4.1",
     "keycloak-admin": "^1.14.22",
-    "knex": "^3.0.1",
-    "knex-types": "^0.5.0",
     "luxon": "^3.4.3",
     "morgan": "^1.10.0",
     "ms": "^2.1.3",

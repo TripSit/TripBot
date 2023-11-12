@@ -132,6 +132,8 @@ export const dTemplate: SlashCommand = {
           update: {},
         });
 
+        if (!interaction.guild) return;
+
         // const ticketData = await db.user_tickets.findFirst({
         //   where: {
         //     user_id: userData.id,
@@ -143,15 +145,16 @@ export const dTemplate: SlashCommand = {
         //   },
         // });
 
-        // const guildData = await db.discord_guilds.upsert({
-        //   where: {
-        //     id: interaction.guild?.id,
-        //   },
-        //   create: {
-        //     id: interaction.guild?.id,
-        //   },
-        //   update: {},
-        // });
+        const guildData = await db.discord_guilds.upsert({
+          where: {
+            id: interaction.guild?.id,
+          },
+          create: {
+            id: interaction.guild?.id,
+          },
+          update: {},
+        });
+        log.debug(F, `guildData: ${JSON.stringify(guildData)}`);
 
         await i.editReply({
           embeds: [
