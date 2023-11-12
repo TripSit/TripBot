@@ -533,10 +533,10 @@ async function checkVoice() {
               // log.info('voiceExp', `${member.displayName} is server muted`);
               return false;
             }
-            if (member.voice.streaming) {
-              // log.info('voiceExp', `${member.displayName} is streaming`);
-              return false;
-            }
+            // if (member.voice.streaming) {
+            //   // log.info('voiceExp', `${member.displayName} is streaming`);
+            //   return false;
+            // }
             if (member.voice.suppress) {
               // log.info('voiceExp', `${member.displayName} is suppressed`);
               return false;
