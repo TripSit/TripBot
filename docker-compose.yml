@@ -162,7 +162,6 @@ services:
       - traefik.http.routers.tripbot_api.tls.certresolver=letsencrypt
       - traefik.http.routers.tripbot_api.service=tripbot_api-svc
       - traefik.http.routers.tripbot_api.middlewares=default@file
-    command: npx tsc-watch --onSuccess "npx nodemon --config ./src/api/nodemon.json"
 
 networks:
   tripbot-net:
