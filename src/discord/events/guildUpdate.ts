@@ -18,9 +18,7 @@ export const guildUpdate: GuildUpdateEvent = {
         id: guild.id,
         joined_at: new Date(),
       },
-      update: {
-        joined_at: new Date(),
-      },
+      update: {},
     });
 
     if (guildData.is_banned) {

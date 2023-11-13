@@ -47,7 +47,9 @@ export const guildMemberAdd: GuildMemberAddEvent = {
         discord_id: member.id,
         joined_at: new Date(),
       },
-      update: {},
+      update: {
+        joined_at: new Date(),
+      },
     });
 
     // log.debug(F, `Date.now(): ${Date.now()}`);

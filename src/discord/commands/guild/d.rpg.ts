@@ -1993,8 +1993,12 @@ export async function rpgHomeAccept(
   if (chosenItem) {
     chosenItem.equipped = true;
     // await inventorySet(chosenItem);
-    await db.rpg_inventory.create({
-      data: chosenItem,
+    await db.rpg_inventory.upsert({
+      where: {
+        id: chosenItem.id,
+      },
+      create: chosenItem,
+      update: chosenItem,
     });
   } else {
     log.error(F, `Item not found in inventory: ${JSON.stringify(chosenItem, null, 2)}`);
@@ -2005,8 +2009,12 @@ export async function rpgHomeAccept(
   otherItems.forEach(async item => {
     const newItem = item;
     newItem.equipped = false;
-    await db.rpg_inventory.create({
-      data: newItem,
+    await db.rpg_inventory.upsert({
+      where: {
+        id: newItem.id,
+      },
+      create: newItem,
+      update: newItem,
     });
   });
 
