@@ -35,17 +35,10 @@ import { Moderation } from 'openai/resources';
 import { paginationEmbed } from '../../utils/pagination';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
-import {
-  aiSet,
-  aiGet,
-  aiDel,
-  aiLink,
-  aiChat,
-  aiModerate,
-} from '../../../global/commands/g.ai';
 import commandContext from '../../utils/context';
 import { userInfoEmbed } from '../../../global/commands/g.moderate';
 import { sleep } from './d.bottest';
+import aiChat, { aiModerate } from '../../../global/commands/g.ai';
 
 const db = new PrismaClient({ log: ['error'] });
 
@@ -54,6 +47,7 @@ const F = f(__filename);
 const maxHistoryLength = 5;
 
 const ephemeralExplanation = 'Set to "True" to show the response only to you';
+const personaDoesntExist = 'This persona does not exist. Please create it first.';
 const confirmationCodes = new Map<string, string>();
 const tripbotUAT = '@TripBot UAT (Moonbear)';
 
@@ -301,21 +295,27 @@ async function set(
         created_at: existingPersona ? existingPersona.created_at : new Date(),
       } as ai_personas;
 
-      const response = await aiSet(aiPersona);
+      const alreadyExists = await db.ai_personas.findFirst({
+        where: {
+          name: aiPersona.name,
+        },
+      });
+      const action = alreadyExists ? 'updated' : 'created';
 
-      if (response.startsWith('Success')) {
-        const personaEmbed = await makePersonaEmbed(aiPersona);
-        await i.editReply({
-          embeds: [personaEmbed],
-        });
-      } else {
-        await i.editReply({
-          embeds: [embedTemplate()
-            .setTitle('Modal')
-            .setColor(Colors.Red)
-            .setDescription(response)],
-        });
-      }
+      await db.ai_personas.upsert({
+        where: {
+          name: aiPersona.id,
+        },
+        create: aiPersona,
+        update: aiPersona,
+      });
+
+      await i.editReply({
+        embeds: [embedTemplate()
+          .setTitle('Modal')
+          .setColor(Colors.Red)
+          .setDescription(`Success! This persona has been ${action}!`)],
+      });
     });
 }
 
@@ -327,30 +327,32 @@ async function get(
   const modelName = interaction.options.getString('name');
   const channel = interaction.options.getChannel('channel') ?? interaction.channel;
 
-  let aiPersona = '' as string | ai_personas;
+  let aiPersona:ai_personas | null = null;
   let description = '' as string;
   if (modelName) {
-    aiPersona = await aiGet(modelName);
+    aiPersona = await db.ai_personas.findUnique({
+      where: {
+        name: modelName,
+      },
+    });
   } else if (channel) {
     // Check if the channel is linked to a persona
-    let aiLinkData = {} as {
-      id: string;
-      channel_id: string;
-      persona_id: string;
-    } | null;
-    aiLinkData = await db.ai_channels.findFirst({
+    let aiLinkData = await db.ai_channels.findFirst({
       where: {
         channel_id: channel.id,
       },
     });
     if (aiLinkData) {
       log.debug(F, `Found aiLinkData on first go: ${JSON.stringify(aiLinkData, null, 2)}`);
-      aiPersona = await db.ai_personas.findUniqueOrThrow({
+      aiPersona = await db.ai_personas.findUnique({
         where: {
           id: aiLinkData.persona_id,
         },
-      }) as ai_personas;
-      description = `Channel ${(channel as TextChannel).name} is linked with the **"${aiPersona.name ?? aiPersona}"** persona:`;
+      });
+      if (aiPersona) {
+        // eslint-disable-next-line max-len
+        description = `Channel ${(channel as TextChannel).name} is linked with the **"${aiPersona.name ?? aiPersona}"** persona:`;
+      }
     }
 
     if (!aiLinkData && (channel as ThreadChannel).parent) {
@@ -362,13 +364,15 @@ async function get(
         },
       });
       if (aiLinkData) {
-        aiPersona = await db.ai_personas.findUniqueOrThrow({
+        aiPersona = await db.ai_personas.findUnique({
           where: {
             id: aiLinkData.persona_id,
           },
-        }) as ai_personas;
+        });
+        if (aiPersona) {
         // eslint-disable-next-line max-len
-        description = `Channel ${(channel as ThreadChannel).parent} is linked with the **"${aiPersona.name}"** persona:`;
+          description = `Parent category/channel ${(channel as ThreadChannel).parent} is linked with the **"${aiPersona.name}"** persona:`;
+        }
       }
     }
 
@@ -381,20 +385,22 @@ async function get(
         },
       });
       if (aiLinkData) {
-        aiPersona = await db.ai_personas.findUniqueOrThrow({
+        aiPersona = await db.ai_personas.findUnique({
           where: {
             id: aiLinkData.persona_id,
           },
-        }) as ai_personas;
+        });
+        if (aiPersona) {
         // eslint-disable-next-line max-len
-        description = `Category ${(channel as ThreadChannel).parent?.parent} is linked with the **"${aiPersona.name}"** persona:`;
+          description = `Parent category ${(channel as ThreadChannel).parent?.parent} is linked with the **"${aiPersona.name}"** persona:`;
+        }
       }
     }
   }
 
   log.debug(F, `aiPersona: ${JSON.stringify(aiPersona, null, 2)}`);
 
-  if (typeof aiPersona === 'string') {
+  if (!aiPersona) {
     await interaction.editReply({
       embeds: [embedTemplate()
         .setTitle('Modal')
@@ -424,7 +430,11 @@ async function del(
   const personaName = interaction.options.getString('name') ?? interaction.user.username;
 
   if (!confirmation) {
-    const aiPersona = await aiGet(personaName);
+    const aiPersona = await db.ai_personas.findUnique({
+      where: {
+        name: personaName,
+      },
+    });
 
     if (!aiPersona) {
       await interaction.editReply({
@@ -470,57 +480,40 @@ async function del(
     return;
   }
 
-  const response = await aiDel(personaName);
-  log.debug(F, `response: ${response}`);
-
-  if (!response.startsWith('Success')) {
-    await interaction.editReply({
-      embeds: [embedTemplate()
-        .setTitle('Modal')
-        .setColor(Colors.Red)
-        .setDescription(response)],
-
-    });
-    return;
-  }
+  await db.ai_personas.delete({
+    where: {
+      name: personaName,
+    },
+  });
 
   confirmationCodes.delete(`${interaction.user.id}${interaction.user.username}`);
   await interaction.editReply({
     embeds: [embedTemplate()
       .setTitle('Modal')
       .setColor(Colors.Blurple)
-      .setDescription(response)],
+      .setDescription('Success: Persona was deleted!')],
   });
 }
 
 async function getLinkedChannel(
   channel: CategoryChannel | ForumChannel | APIInteractionDataResolvedChannel | TextBasedChannel,
 ):Promise<ai_channels | null> {
+  // With the way AI personas work, they can be assigned to a category, channel, or thread
+  // This function will check if the given channel is linked to an AI persona
+  // If it is not, it will check the channel's parent; either the Category or Channel (in case of Thread)
+  // If the parent isn't linked, it'll check the parent's parent; this is only for Thread channels.
+  // Once a link is fount, it will return that link data
+  // If no link is found, it'll return null
+
   // Check if the channel is linked to a persona
-  let aiLinkData = await db.ai_channels.findFirst({
-    where: {
-      channel_id: channel.id,
-    },
-  });
+  let aiLinkData = await db.ai_channels.findFirst({ where: { channel_id: channel.id } });
 
   // If the channel isn't listed in the database, check the parent
-  if (!aiLinkData
-    && 'parent' in channel
-    && channel.parent) {
-    aiLinkData = await db.ai_channels.findFirst({
-      where: {
-        channel_id: channel.parent.id,
-      },
-    });
-    // If /that/ channel doesn't exist, check the parent of the parent
-    // This is mostly for threads
-    if (!aiLinkData
-      && channel.parent.parent) {
-      aiLinkData = await db.ai_channels.findFirst({
-        where: {
-          channel_id: channel.parent.parent.id,
-        },
-      });
+  if (!aiLinkData && 'parent' in channel && channel.parent) {
+    aiLinkData = await db.ai_channels.findFirst({ where: { channel_id: channel.parent.id } });
+    // If /that/ channel doesn't exist, check the parent of the parent, this is for threads
+    if (!aiLinkData && channel.parent.parent) {
+      aiLinkData = await db.ai_channels.findFirst({ where: { channel_id: channel.parent.parent.id } });
     }
   }
 
@@ -535,10 +528,10 @@ async function link(
 
   const personaName = interaction.options.getString('name') ?? interaction.user.username;
   const toggle = (interaction.options.getString('toggle') ?? 'enable') as 'enable' | 'disable';
+  const textChannel = interaction.options.getChannel('channel') ?? interaction.channel;
 
-  let response = '' as string;
+  const response = '' as string;
   if (toggle === 'enable') {
-    const textChannel = interaction.options.getChannel('channel') ?? interaction.channel;
     if (!textChannel) {
       await interaction.editReply({
         embeds: [embedTemplate()
@@ -549,35 +542,217 @@ async function link(
       });
       return;
     }
-    response = await aiLink(personaName, textChannel.id, toggle);
-  } else {
-    const textChannel = interaction.options.getChannel('channel');
-    if (textChannel) {
-      response = await aiLink(personaName, textChannel.id, toggle);
-    } else if (interaction.channel) {
-      const aiLinkData = await getLinkedChannel(interaction.channel);
-      if (aiLinkData) {
-        response = await aiLink(personaName, aiLinkData?.channel_id, toggle);
-      } else {
+    // response = await aiLink(personaName, textChannel.id, toggle);
+
+    const personaData = await db.ai_personas.findUnique({
+      where: {
+        name: personaName,
+      },
+    });
+
+    if (!personaData) {
+      await interaction.editReply({
+        embeds: [embedTemplate()
+          .setTitle('Modal')
+          .setColor(Colors.Red)
+          .setDescription(personaDoesntExist)],
+
+      });
+      return;
+    }
+
+    const aiLinkData = await db.ai_channels.findFirst({
+      where: {
+        channel_id: textChannel.id,
+      },
+    });
+
+    if (aiLinkData) {
+      await db.ai_channels.update({
+        where: {
+          id: aiLinkData.id,
+        },
+        data: {
+          channel_id: textChannel.id,
+          persona_id: personaData.id,
+        },
+      });
+      await interaction.editReply({
+        embeds: [embedTemplate()
+          .setTitle('Modal')
+          .setColor(Colors.Red)
+          .setDescription(`Success: The link between ${personaName} and <#${textChannel.id}> was updated!`)],
+
+      });
+      return;
+    }
+
+    await db.ai_channels.create({
+      data: {
+        channel_id: textChannel.id,
+        persona_id: personaData.id,
+      },
+    });
+    await interaction.editReply({
+      embeds: [embedTemplate()
+        .setTitle('Modal')
+        .setColor(Colors.Red)
+        .setDescription(`Success: The link between ${personaName} and <#${textChannel.id}> was created!`)],
+
+    });
+    return;
+  }
+
+  if (textChannel) {
+    // response = await aiLink(personaName, textChannel.id, toggle);
+    const existingPersona = await db.ai_personas.findUnique({
+      where: {
+        name: personaName,
+      },
+    });
+
+    if (!existingPersona) {
+      await interaction.editReply({
+        embeds: [embedTemplate()
+          .setTitle('Modal')
+          .setColor(Colors.Red)
+          .setDescription(personaDoesntExist)],
+
+      });
+      return;
+    }
+
+    let existingLink = await db.ai_channels.findFirst({
+      where: {
+        channel_id: textChannel.id,
+        persona_id: existingPersona.id,
+      },
+    });
+
+    if (!existingLink) {
+      existingLink = await db.ai_channels.findFirst({
+        where: {
+          channel_id: textChannel.id,
+        },
+      });
+
+      if (!existingLink) {
         await interaction.editReply({
           embeds: [embedTemplate()
             .setTitle('Modal')
             .setColor(Colors.Red)
-            .setDescription('This channel is not linked to an AI persona.')],
+            .setDescription(`Error: No link to <#${textChannel.id}> found!`)],
 
         });
         return;
+      }
+      const personaData = await db.ai_personas.findUnique({
+        where: {
+          id: existingLink.persona_id,
+        },
+      });
+      if (!personaData) {
+        await interaction.editReply({
+          embeds: [embedTemplate()
+            .setTitle('Modal')
+            .setColor(Colors.Red)
+            .setDescription('Error: No persona found for this link!')],
+
+        });
+        return;
+      }
+      await db.ai_channels.delete({
+        where: {
+          id: existingLink.id,
+        },
+      });
+    }
+  } else if (interaction.channel) {
+    const aiLinkData = await getLinkedChannel(interaction.channel);
+    if (aiLinkData) {
+      // response = await aiLink(personaName, aiLinkData?.channel_id, toggle);
+
+      const existingPersona = await db.ai_personas.findUnique({
+        where: {
+          name: personaName,
+        },
+      });
+
+      if (!existingPersona) {
+        await interaction.editReply({
+          embeds: [embedTemplate()
+            .setTitle('Modal')
+            .setColor(Colors.Red)
+            .setDescription(personaDoesntExist)],
+
+        });
+        return;
+      }
+
+      let existingLink = await db.ai_channels.findFirst({
+        where: {
+          channel_id: aiLinkData.channel_id,
+          persona_id: existingPersona.id,
+        },
+      });
+
+      if (!existingLink) {
+        existingLink = await db.ai_channels.findFirst({
+          where: {
+            channel_id: aiLinkData.channel_id,
+          },
+        });
+
+        if (!existingLink) {
+          await interaction.editReply({
+            embeds: [embedTemplate()
+              .setTitle('Modal')
+              .setColor(Colors.Red)
+              .setDescription(`Error: No link to <#${aiLinkData.channel_id}> found!`)],
+
+          });
+          return;
+        }
+        const personaData = await db.ai_personas.findUnique({
+          where: {
+            id: existingLink.persona_id,
+          },
+        });
+        if (!personaData) {
+          await interaction.editReply({
+            embeds: [embedTemplate()
+              .setTitle('Modal')
+              .setColor(Colors.Red)
+              .setDescription('Error: No persona found for this link!')],
+
+          });
+          return;
+        }
+        await db.ai_channels.delete({
+          where: {
+            id: existingLink.id,
+          },
+        });
       }
     } else {
       await interaction.editReply({
         embeds: [embedTemplate()
           .setTitle('Modal')
           .setColor(Colors.Red)
-          .setDescription('You must provide a text channel to link to.')],
+          .setDescription('This channel is not linked to an AI persona.')],
 
       });
       return;
     }
+  } else {
+    await interaction.editReply({
+      embeds: [embedTemplate()
+        .setTitle('Modal')
+        .setColor(Colors.Red)
+        .setDescription('You must provide a text channel to link to.')],
+
+    });
+    return;
   }
 
   log.debug(F, `response: ${response}`);
@@ -603,7 +778,7 @@ async function link(
 }
 
 async function isVerifiedMember(message:Message):Promise<boolean> {
-  if (!message.member) return false;
+  if (!message?.member) return false;
   return message.member?.roles.cache.has(env.ROLE_VERIFIED);
 }
 
@@ -663,8 +838,8 @@ export async function aiAudit(
       },
     );
 
-    const promptCost = (promptTokens / 1000) * aiCosts[cleanPersona.ai_model as keyof typeof aiCosts].input;
-    const completionCost = (completionTokens / 1000) * aiCosts[cleanPersona.ai_model as keyof typeof aiCosts].output;
+    const promptCost = (promptTokens / 1000) * aiCosts[cleanPersona.ai_model].input;
+    const completionCost = (completionTokens / 1000) * aiCosts[cleanPersona.ai_model].output;
     // log.debug(F, `promptCost: ${promptCost}, completionCost: ${completionCost}`);
 
     embed.spliceFields(
@@ -752,24 +927,24 @@ export async function aiAudit(
  * @param {Message} message The interaction that spawned this commend
  * @return {Promise<string>} The response from the AI
  */
-export async function moderate(
+export async function discordAiModerate(
   message:Message,
 ):Promise<void> {
-  // Remove "TripBot UAT (Moonbear)" from the message
-  const cleanMessage = message.cleanContent
+  const [result] = await aiModerate(message.cleanContent
     .replace(tripbotUAT, '')
-    .replace('tripbot', '');
-  // log.debug(F, `cleanMessage: ${cleanMessage}`);
-
-  const [result] = await aiModerate(cleanMessage);
-
+    .replace('tripbot', ''));
   await aiAudit(null, [message], null, result, 0, 0);
 }
 
-export async function chat(
-  messages:Message[],
+export async function discordAiChat(
+  messageData: Message<boolean>,
 ):Promise<void> {
-  // log.debug(F, `messages: ${JSON.stringify(messages, null, 2)}`);
+  log.debug(F, 'Started!');
+  log.debug(F, `messageData: ${JSON.stringify(messageData.cleanContent, null, 2)}`);
+  const channelMessages = await messageData.channel.messages.fetch({ limit: 3 });
+  log.debug(F, `channelMessages: ${JSON.stringify(channelMessages, null, 2)}`);
+
+  const messages = [...channelMessages.values()];
 
   if (!isVerifiedMember(messages[0])) return;
   if (messages[0].author.bot) return;
@@ -778,11 +953,10 @@ export async function chat(
 
   // Check if the channel is linked to a persona
   const aiLinkData = await getLinkedChannel(messages[0].channel);
-
   if (!aiLinkData) return;
   // log.debug(F, `aiLinkData: ${JSON.stringify(aiLinkData, null, 2)}`);
 
-  // Get persona details
+  // Get persona details for this channel, throw an error if the persona was deleted
   const aiPersona = await db.ai_personas.findUniqueOrThrow({
     where: {
       id: aiLinkData.persona_id,
@@ -790,66 +964,44 @@ export async function chat(
   });
   // log.debug(F, `aiPersona: ${aiPersona.name}`);
 
-  const inputMessages = [{
-    role: 'system',
-    content: aiPersona.prompt,
-  }] as OpenAI.Chat.CreateChatCompletionRequestMessage[];
-  const cleanMessages = [] as Message[];
-
   // Get the last 3 messages that are not empty or from other bots
-  messages.forEach(message => {
-    if (message.cleanContent.length > 0
-      && cleanMessages.length < maxHistoryLength) { // +2 for the prompt and the system message
-      cleanMessages.push(message);
-    }
-  });
-
-  cleanMessages.reverse(); // So that the first messages come first
-  cleanMessages.forEach(message => {
-    inputMessages.push({
-      role: message.author.bot ? 'assistant' : 'user',
+  const messageList = messages
+    .filter(message => message.cleanContent.length > 0 && !message.author.bot)
+    .map(message => ({
+      role: 'user',
       content: message.cleanContent
         .replace(tripbotUAT, '')
         .replace('tripbot', '')
         .trim(),
-    });
-  });
+    }))
+    .reverse()
+    .slice(0, maxHistoryLength) as OpenAI.Chat.ChatCompletionMessageParam[];
 
-  const result = await aiChat(aiPersona, inputMessages);
+  const cleanMessageList = messages
+    .filter(message => message.cleanContent.length > 0 && !message.author.bot)
+    .reverse()
+    .slice(0, maxHistoryLength);
+
+  const result = await aiChat(aiPersona, messageList);
 
   await aiAudit(
     aiPersona,
-    cleanMessages,
+    cleanMessageList,
     result.response,
     null,
     result.promptTokens,
     result.completionTokens,
   );
 
-  try {
-    await messages[0].channel.sendTyping();
+  await messages[0].channel.sendTyping();
 
-    // Sleep for a bit to simulate typing in production
-    if (env.NODE_ENV === 'production') {
-      const wordCount = result.response.split(' ').length;
-      const sleepTime = Math.ceil(wordCount / 10);
-      await sleep(sleepTime * 1000);
-    }
-    await messages[0].reply(result.response.slice(0, 2000));
-  } catch (e) {
-    log.error(F, `Error: ${e}`);
-    const channelAi = await discordClient.channels.fetch(env.CHANNEL_AILOG) as TextChannel;
-    await channelAi.send({
-      content: `Hey <@${env.DISCORD_OWNER_ID}> I couldn't send a message to <#${messages[0].channel.id}>`,
-      embeds: [embedTemplate()
-        .setTitle('Error')
-        .setColor(Colors.Red)
-        .setDescription(stripIndents`
-          **Error:** ${e}
-          **Message:** ${result.response}
-        `)],
-    });
+  // Sleep for a bit to simulate typing in production
+  if (env.NODE_ENV === 'production') {
+    // const wordCount = result.response.split(' ').length;
+    // const sleepTime = Math.ceil(wordCount / 10);
+    await sleep(10 * 1000);
   }
+  await messages[0].reply(result.response.slice(0, 2000));
 }
 
 export const aiCommand: SlashCommand = {

@@ -6,14 +6,16 @@ const db = new PrismaClient({ log: ['error'] });
 
 const F = f(__filename);
 
-const errorPersonaNotFound = 'Error: The requested persona does not exist!';
-export default aiChat;
+const openai = new OpenAI({
+  organization: 'org-h4Jvunqw3MmHmIgeLHpr1a3Y',
+  apiKey: env.OPENAI_API_KEY,
+});
 
-// Objective truths are facts and dont impact personality
+// Objective truths are facts and don't impact personality
 const objectiveTruths = {
   role: 'system',
   content: `
-  Your name is TripBot, you on TripSit Discord.
+  Your name is TripBot, you are on TripSit Discord.
   You were born on Sept 26, 2011 on IRC and moved to discord in 2022.
   Your father is Moonbear and your mother is Reality.
   You remember IRC as a lawless place that you're not fond of, you're much happier on discord.
@@ -27,7 +29,7 @@ const objectiveTruths = {
   
   Keep all responses under 2000 characters at maximum.
 `,
-} as OpenAI.Chat.CreateChatCompletionRequestMessage;
+} as OpenAI.Chat.ChatCompletionSystemMessageParam;
 
 // # Example dummy function hard coded to return the same weather
 // # In production, this could be your backend API or an external API
@@ -59,226 +61,13 @@ const objectiveTruths = {
 // ];
 
 /**
- * Modifies a persona
- * @return {Promise<string>} The response from the AI
- */
-export async function aiSet(
-  personaData: Omit<ai_personas, 'id'>,
-):Promise<string> {
-  log.debug(F, `personaData: ${JSON.stringify(personaData, null, 2)}`);
-  const existingPersona = await db.ai_personas.findUnique({
-    where: {
-      name: personaData.name,
-    },
-  });
-
-  if (!existingPersona) {
-    try {
-      await db.ai_personas.create({
-        data: personaData,
-      });
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (error:any) {
-      log.error(F, `Error: ${error.message}`);
-      return `Error: ${error.message}`;
-    }
-    return 'Success! This persona has been created!';
-  }
-
-  try {
-    await db.ai_personas.update({
-      where: {
-        name: personaData.name,
-      },
-      data: personaData,
-    });
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } catch (error:any) {
-    log.error(F, `Error: ${error.message}`);
-    return `Error: ${error.message}`;
-  }
-  return 'Success! This persona has been updated!';
-}
-
-/**
- * Gets details on a persona
- * @return {Promise<string>} The response from the AI
- */
-export async function aiGet(
-  name: string,
-):Promise<ai_personas | string> {
-  log.debug(F, `name: ${name}`);
-
-  const existingPersona = await db.ai_personas.findUnique({
-    where: {
-      name,
-    },
-  });
-
-  if (!existingPersona) {
-    return errorPersonaNotFound;
-  }
-
-  return existingPersona;
-}
-
-/**
- * Gets details on a persona
- * @return {Promise<string>} The response from the AI
- */
-export async function aiGetAll():Promise<ai_personas[]> {
-  return [] as ai_personas[];
-}
-
-/**
- * Removes on a persona
- * @return {Promise<string>} The response from the AI
- */
-export async function aiDel(
-  name: string,
-):Promise<string> {
-  log.debug(F, `name: ${name}`);
-  const existingPersona = await db.ai_personas.findUnique({
-    where: {
-      name,
-    },
-  });
-
-  if (!existingPersona) {
-    return errorPersonaNotFound;
-  }
-
-  try {
-    await db.ai_personas.delete({
-      where: {
-        name,
-      },
-    });
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } catch (error:any) {
-    log.error(F, `Error: ${error.message}`);
-    return `Error: ${error.message}`;
-  }
-  return 'Success: Persona was deleted!';
-}
-
-/**
- * LInks a persona with a channel
- * @return {Promise<string>} The response from the AI
- */
-export async function aiLink(
-  name: ai_personas['name'],
-  channelId: string,
-  toggle: 'enable' | 'disable',
-):Promise<string> {
-  log.debug(F, `name: ${name}`);
-  log.debug(F, `channelId: ${channelId}`);
-  log.debug(F, `toggle: ${toggle}`);
-
-  let personaName = name;
-
-  const existingPersona = await db.ai_personas.findUnique({
-    where: {
-      name,
-    },
-  });
-
-  if (!existingPersona) {
-    return errorPersonaNotFound;
-  }
-
-  if (toggle === 'disable') {
-    let existingLink = await db.ai_channels.findFirst({
-      where: {
-        channel_id: channelId,
-        persona_id: existingPersona.id,
-      },
-    });
-
-    if (!existingLink) {
-      existingLink = await db.ai_channels.findFirst({
-        where: {
-          channel_id: channelId,
-        },
-      });
-
-      if (!existingLink) {
-        return `Error: No link to <#${channelId}> found!`;
-      }
-      const personaData = await db.ai_personas.findUnique({
-        where: {
-          id: existingLink.persona_id,
-        },
-      });
-      if (!personaData) {
-        return 'Error: No persona found for this link!';
-      }
-      personaName = personaData.name;
-    }
-
-    try {
-      await db.ai_channels.delete({
-        where: {
-          id: existingLink.id,
-        },
-      });
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (error:any) {
-      log.error(F, `Error: ${error.message}`);
-      return `Error: ${error.message}`;
-    }
-    return `Success: The link between ${personaName} and <#${channelId}> was deleted!`;
-  }
-
-  // Check if the channel is linked to a persona
-  const aiLinkData = await db.ai_channels.findFirst({
-    where: {
-      channel_id: channelId,
-    },
-  });
-
-  if (aiLinkData) {
-    try {
-      await db.ai_channels.update({
-        where: {
-          id: aiLinkData.id,
-        },
-        data: {
-          channel_id: channelId,
-          persona_id: existingPersona.id,
-        },
-      });
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (error:any) {
-      log.error(F, `Error: ${error.message}`);
-      return `Error: ${error.message}`;
-    }
-    return `Success: The link between ${name} and <#${channelId}> was updated!`;
-  }
-
-  try {
-    await db.ai_channels.create({
-      data: {
-        channel_id: channelId,
-        persona_id: existingPersona.id,
-      },
-    });
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } catch (error:any) {
-    log.error(F, `Error: ${error.message}`);
-    return `Error: ${error.message}`;
-  }
-  return `Success: The link between ${name} and <#${channelId}> was created!`;
-}
-
-/**
  * Sends an array of messages to the AI and returns the response
  * @param {Messages[]} messages A list of messages (chat history) to send
  * @return {Promise<string>} The response from the AI
  */
-export async function aiChat(
+export default async function aiChat(
   aiPersona:ai_personas,
-  messages: OpenAI.Chat.CreateChatCompletionRequestMessage[],
+  messages: OpenAI.Chat.ChatCompletionMessageParam [],
 ):Promise<{
     response: string,
     promptTokens: number,
@@ -297,41 +86,24 @@ export async function aiChat(
     model = aiPersona.ai_model.toLowerCase();
   }
 
-  messages.unshift(objectiveTruths);
-  // // Go through the messages object, and find the object with the "system" role
-  // // add the objectiveTruths to that value
-  // const systemMessage = messages.find((message) => message.role === 'system') as ChatCompletionRequestMessage;
-  // let newMessage = systemMessage.content + objectiveTruths.content;
-  // if (systemMessage) {
-  //   newMessage = objectiveTruths.content + systemMessage.content;
-  // log.debug(F, `messages: ${JSON.stringify(messages, null, 2)}`);
-
-  const {
-    id,
-    name,
-    created_at, // eslint-disable-line @typescript-eslint/naming-convention
-    created_by, // eslint-disable-line @typescript-eslint/naming-convention
-    prompt,
-    logit_bias, // eslint-disable-line @typescript-eslint/naming-convention
-    total_tokens, // eslint-disable-line @typescript-eslint/naming-convention
-    ai_model, // eslint-disable-line @typescript-eslint/naming-convention
-    ...restOfAiPersona
-  } = aiPersona;
+  // This message list is sent to the API
+  const chatCompletionMessages = [{
+    role: 'system',
+    content: aiPersona.prompt,
+  }] as OpenAI.Chat.ChatCompletionMessageParam[];
+  chatCompletionMessages.unshift(objectiveTruths);
+  chatCompletionMessages.push(...messages);
 
   const payload = {
-    ...restOfAiPersona,
+    ...aiPersona,
     model,
-    messages,
+    messages: chatCompletionMessages,
     // functions: aiFunctions,
     // function_call: 'auto',
-  } as OpenAI.Chat.CompletionCreateParamsNonStreaming;
+  } as OpenAI.Chat.ChatCompletionCreateParamsNonStreaming;
 
   // log.debug(F, `payload: ${JSON.stringify(payload, null, 2)}`);
-  let responseMessage = {} as OpenAI.Chat.CreateChatCompletionRequestMessage;
-  const openai = new OpenAI({
-    organization: 'org-h4Jvunqw3MmHmIgeLHpr1a3Y',
-    apiKey: env.OPENAI_API_KEY,
-  });
+  let responseMessage = {} as OpenAI.Chat.ChatCompletionMessageParam;
   const chatCompletion = await openai.chat.completions
     .create(payload)
     .catch(err => {
@@ -346,7 +118,7 @@ export async function aiChat(
     });
   // log.debug(F, `chatCompletion: ${JSON.stringify(chatCompletion, null, 2)}`);
 
-  if (chatCompletion && chatCompletion.choices[0].message) {
+  if (chatCompletion?.choices[0].message) {
     responseMessage = chatCompletion.choices[0].message;
 
     // Sum up the existing tokens
@@ -424,11 +196,6 @@ export async function aiChat(
 export async function aiModerate(
   message: string,
 ):Promise<Moderation[]> {
-  let results = [] as Moderation[];
-  const openai = new OpenAI({
-    organization: 'org-h4Jvunqw3MmHmIgeLHpr1a3Y',
-    apiKey: env.OPENAI_API_KEY,
-  });
   const moderation = await openai.moderations
     .create({
       input: message,
@@ -443,9 +210,8 @@ export async function aiModerate(
         throw err;
       }
     });
-  if (moderation && moderation.results) {
-    results = moderation.results;
-    // log.debug(F, `response: ${JSON.stringify(moderation.data.results, null, 2)}`);
+  if (!moderation) {
+    return [];
   }
-  return results;
+  return moderation.results;
 }
