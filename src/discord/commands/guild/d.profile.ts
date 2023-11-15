@@ -514,25 +514,25 @@ export const dProfile: SlashCommand = {
 
     // Choose and Draw the Level Image
     let LevelImagePath = '' as string;
-    if (totalTextData.level < 10) {
+    if (totalTextData.level <= 9) {
       LevelImagePath = 'badgeVip0';
-    } else if (totalTextData.level < 20) {
+    } else if (totalTextData.level <= 19) {
       LevelImagePath = 'badgeVip1';
-    } else if (totalTextData.level < 30) {
+    } else if (totalTextData.level <= 29) {
       LevelImagePath = 'badgeVip2';
-    } else if (totalTextData.level < 40) {
+    } else if (totalTextData.level <= 39) {
       LevelImagePath = 'badgeVip3';
-    } else if (totalTextData.level < 50) {
+    } else if (totalTextData.level <= 49) {
       LevelImagePath = 'badgeVip4';
-    } else if (totalTextData.level < 60) {
+    } else if (totalTextData.level <= 59) {
       LevelImagePath = 'badgeVip5';
-    } else if (totalTextData.level < 70) {
+    } else if (totalTextData.level <= 69) {
       LevelImagePath = 'badgeVip6';
-    } else if (totalTextData.level < 80) {
+    } else if (totalTextData.level <= 79) {
       LevelImagePath = 'badgeVip7';
-    } else if (totalTextData.level < 90) {
+    } else if (totalTextData.level <= 89) {
       LevelImagePath = 'badgeVip8';
-    } else if (totalTextData.level < 100) {
+    } else if (totalTextData.level <= 99) {
       LevelImagePath = 'badgeVip9';
     } else if (totalTextData.level >= 100) {
       LevelImagePath = 'badgeVip10';
