@@ -681,7 +681,7 @@ export async function getProfilePreview(target: GuildMember, imagePath: string, 
     context.restore();
   }
 
-  context.drawImage(Icons, 5, -2, 913, 292);
+  context.drawImage(Icons, 0, 0);
 
   // Overly complicated avatar clip (STATUS CLIP COMMENTED OUT)
   context.save();

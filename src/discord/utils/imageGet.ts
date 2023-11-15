@@ -96,6 +96,10 @@ const imageDef = {
   Sprinkles: { path: `${assetsDirectory}/img/backgrounds/Sprinkles.png`, url: 'https://i.gyazo.com/c7fda9a04850bfc504e2a9fe895045f6.png' },
   Stimming: { path: `${assetsDirectory}/img/backgrounds/Stimming.png`, url: 'https://i.gyazo.com/78c8675c2113502b8feb9f715b5279da.png' },
   Tripping: { path: `${assetsDirectory}/img/backgrounds/Tripping.png`, url: 'https://i.gyazo.com/4dc61d4745de62fea7a61188bb77c096.png' },
+  Emoticons: { path: `${assetsDirectory}/img/backgrounds/Emoticons.png`, url: 'https://i.gyazo.com/898db3d481c303f4c38d74973d5e4a14.png' },
+  Equations: { path: `${assetsDirectory}/img/backgrounds/Equations.png`, url: 'https://i.gyazo.com/561e9cd1ca3b02608c7f9e5f1908d6d9.png' },
+  Flowers: { path: `${assetsDirectory}/img/backgrounds/Flowers.png`, url: 'https://i.gyazo.com/2e1d47f128305b2f12fe2c4bb7db75d2.png' },
+  Paws: { path: `${assetsDirectory}/img/backgrounds/Paws.png`, url: 'https://i.gyazo.com/83b9f275af87372edc610da449220a4c.png' },
   mushroomInfoA: { path: `${assetsDirectory}/img/mushroomInfoA.png`, url: 'https://i.gyazo.com/233df47085a0ac5493d8378111512b3d.png' },
   mushroomInfoB: { path: `${assetsDirectory}/img/mushroomInfoB.png`, url: 'https://i.gyazo.com/2aae45e843da99867b82e9b1ad07d22b.png' },
 } as {
