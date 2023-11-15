@@ -37,7 +37,7 @@ import { embedTemplate } from '../../utils/embedTemplate';
 import { getPersonaInfo, setPersonaInfo } from '../../../global/commands/g.rpg';
 import commandContext from '../../utils/context';
 import {
-  getUser, inventoryGet, inventorySet, personaSet,
+  getUser, inventoryGet, inventorySet, inventoryDel, personaSet,
 } from '../../../global/utils/knex';
 import { Personas, RpgInventory } from '../../../global/@types/database';
 import { imageGet } from '../../utils/imageGet';
@@ -1721,6 +1721,8 @@ export async function rpgHomeInventory(
           label: `${item.label} - ${item.cost} TT$`,
           value: item.value,
           description: `${item.description}`,
+          cost: item.cost,
+          equipped: item.equipped,
           emoji: emojiGet(item.emoji).id,
         };
       }
@@ -1918,6 +1920,14 @@ export async function rpgHome(
     emoji: string;
   };
   const chosenItem = homeInventory.find(item => item.value === defaultOption);
+  let sellPrice = 0;
+  let equipped = (inventoryData.find(item => item.value === chosenItem?.value)?.equipped as boolean);
+  let equippedButtonText = 'Equip';
+  if (equipped) {
+    equippedButtonText = 'Equipped';
+  }
+  
+
   if (chosenItem) {
     chosenItem.default = true;
     backgroundMenu.addOptions(chosenItem);
@@ -1942,8 +1952,12 @@ export async function rpgHome(
       effect_value: string;
       emoji: string;
     };
+    sellPrice = (allItems.find(item => item.value === chosenItem?.value)?.cost as number) / 4;
+    log.debug(F, `equipped: ${equipped}`);
+    log.debug(F, `sellPrice: ${sellPrice}`);
   // log.debug(F, `backgroundData (home change): ${JSON.stringify(backgroundData, null, 2)}`);
   }
+  log.debug(F, `chosenItem: ${JSON.stringify(chosenItem, null, 2)}`);
 
   // Set the item row
   const rowBackgrounds = new ActionRowBuilder<StringSelectMenuBuilder>()
@@ -2005,12 +2019,22 @@ export async function rpgHome(
       customButton(`rpgTown,user:${interaction.user.id}`, 'Town', 'buttonTown', ButtonStyle.Primary),
     );
 
-  if (chosenItem && (interaction.isStringSelectMenu() || interaction.isButton())) {
-    rowHome.addComponents(
-      customButton(`rpgAccept,user:${interaction.user.id}`, 'Accept', 'buttonAccept', ButtonStyle.Success),
-      customButton(`rpgHomePreview,user:${interaction.user.id}`, 'Preview', 'buttonPreview', ButtonStyle.Secondary),
-    );
-  }
+    // if item is not equipped, show equip button
+
+    if (chosenItem && (equipped === false)) {
+      rowHome.addComponents(
+        customButton(`rpgAccept,user:${interaction.user.id}`, `${equippedButtonText}`, 'buttonAccept', ButtonStyle.Success).setDisabled(equipped),
+        customButton(`rpgSell,user:${interaction.user.id}`, `Sell +${sellPrice} TT$`, 'buttonBetHuge', ButtonStyle.Danger),
+        customButton(`rpgHomePreview,user:${interaction.user.id}`, 'Preview', 'buttonPreview', ButtonStyle.Secondary),
+      );
+    } else if (chosenItem && (equipped === true)) { // else show unequip button
+      rowHome.addComponents(
+        customButton(`rpgDecline,user:${interaction.user.id}`, `Unequip`, 'buttonQuit', ButtonStyle.Danger),
+        customButton(`rpgSell,user:${interaction.user.id}`, `Sell +${sellPrice} TT$`, 'buttonBetHuge', ButtonStyle.Danger),
+        customButton(`rpgHomePreview,user:${interaction.user.id}`, 'Preview', 'buttonPreview', ButtonStyle.Secondary),
+      );
+    }
+
 
   // If the user has backgrounds, add the backgrounds row
   const components = backgroundMenu.options.length === 0
@@ -2175,8 +2199,8 @@ export async function rpgHomeAccept(
     log.error(F, `Item not found in inventory: ${JSON.stringify(chosenItem, null, 2)}`);
   }
 
-  // Un-equip all other items
-  const otherItems = inventoryData.filter(item => item.value !== selectedItem?.value);
+  // Un-equip all other backgrounds
+  const otherItems = inventoryData.filter(item => item.effect === 'background' && item.value !== selectedItem?.value);
   otherItems.forEach(item => {
     const newItem = item;
     newItem.equipped = false;
@@ -2194,6 +2218,55 @@ export async function rpgHomeAccept(
 
   // await personaSet(personaData);
   const { embeds, components, files } = await rpgHome(interaction, `**You have equipped ${chosenItem?.label}!**\n`);
+  return {
+    embeds,
+    components,
+    files,
+  };
+}
+
+export async function rpgHomeDecline(
+  interaction: MessageComponentInteraction,
+  ):Promise<InteractionUpdateOptions> {
+  // Check get fresh persona data
+  const personaData = await getPersonaInfo(interaction.user.id);
+  const itemComponent = interaction.message.components[0].components[0];
+  const selectedItem = (itemComponent as StringSelectMenuComponent).options.find(
+    (o:APISelectMenuOption) => o.default === true,
+  );
+  
+  const inventoryData = await inventoryGet(personaData.id);
+  const chosenItem = inventoryData.find(item => item.value === selectedItem?.value);
+  if (chosenItem) {
+    chosenItem.equipped = false;
+    await inventorySet(chosenItem);
+  }
+  const { embeds, components, files } = await rpgHome(interaction, `**You have unequipped ${chosenItem?.label}.**\n`);
+  return {
+    embeds,
+    components,
+    files,
+  };
+}
+
+export async function rpgHomeSell(
+  interaction: MessageComponentInteraction,
+  ):Promise<InteractionUpdateOptions> {
+  // Check get fresh persona data
+  const personaData = await getPersonaInfo(interaction.user.id);
+  const inventoryData = await inventoryGet(personaData.id);
+  const itemComponent = interaction.message.components[0].components[0];
+  const selectedItem = (itemComponent as StringSelectMenuComponent).options.find(
+    (o:APISelectMenuOption) => o.default === true,
+  );
+  const itemName = inventoryData.find(item => item.value === selectedItem?.value)?.label;
+  const sellPrice = Math.floor(Object.values(items.backgrounds).find(item => item.value === selectedItem?.value)?.cost as number) / 4;
+  await inventoryDel(personaData.id, selectedItem?.value as string)
+
+  personaData.tokens += sellPrice;
+  await personaSet(personaData);
+  log.debug(F, `itemName: ${JSON.stringify(itemName, null, 2)}`);
+  const { embeds, components, files } = await rpgHome(interaction, `**You have sold ${itemName} for ${sellPrice} TripTokens!**\n`);
   return {
     embeds,
     components,
