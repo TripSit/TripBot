@@ -1,3 +1,4 @@
+/* eslint-disable no-restricted-syntax */
 /* eslint-disable max-len */
 import {
   Colors,
@@ -59,32 +60,32 @@ const timesUp = 'Time\'s up!';
 
 const items = {
   general: {
-   // testkit: {
-   //   label: 'TestKit',
-   //   value: 'testkit',
-   //   description: '10% more tokens from all sources!',
-   //   quantity: 1,
-   //   weight: 0,
-   //   cost: 2000,
-   //   equipped: true,
-   //   consumable: false,
-   //   effect: 'tokenMultiplier',
-   //   effect_value: '0.1',
-   //   emoji: 'itemBonus',
-   // },
-   // scale: {
-   //   label: 'Scale',
-   //   value: 'scale',
-   //   description: '10% more tokens from all sources!',
-   //   quantity: 1,
-   //   weight: 0,
-   //   cost: 3000,
-   //   equipped: true,
-   //   consumable: false,
-   //   effect: 'tokenMultiplier',
-   //   effect_value: '0.1',
-   //   emoji: 'itemBonus',
-   // },
+    // testkit: {
+    //   label: 'TestKit',
+    //   value: 'testkit',
+    //   description: '10% more tokens from all sources!',
+    //   quantity: 1,
+    //   weight: 0,
+    //   cost: 2000,
+    //   equipped: true,
+    //   consumable: false,
+    //   effect: 'tokenMultiplier',
+    //   effect_value: '0.1',
+    //   emoji: 'itemBonus',
+    // },
+    // scale: {
+    //   label: 'Scale',
+    //   value: 'scale',
+    //   description: '10% more tokens from all sources!',
+    //   quantity: 1,
+    //   weight: 0,
+    //   cost: 3000,
+    //   equipped: true,
+    //   consumable: false,
+    //   effect: 'tokenMultiplier',
+    //   effect_value: '0.1',
+    //   emoji: 'itemBonus',
+    // },
   },
   // fonts: {
   //   Arial: {
@@ -1236,7 +1237,7 @@ export async function rpgMarketInventory(
           value: item.value,
           description: `${item.description}`,
           emoji: emojiGet(item.emoji).id,
-          category: category,
+          category,
         });
       }
     }
@@ -1267,29 +1268,27 @@ export async function rpgMarket(
 
   // Everyone gets the town button, but only people with purchased items get the items select menu
   const componentList = [rowMarket] as ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>[];
-  
+
   interface MarketItem extends SelectMenuComponentOptionData {
     category: string;
   }
-  
+
   // Group marketInventory items by their category property
-  const groups = (marketInventory as MarketItem[]).reduce((groups: Record<string, MarketItem[]>, item) => {
-    const key = item.category;
-    if (!groups[key]) {
-      groups[key] = [];
-    }
-    groups[key].push(item);
-    return groups;
+  const groups = (marketInventory as MarketItem[]).reduce((groupData: Record<string, MarketItem[]>, item) => {
+    const { category } = item;
+    const newGroupData = { ...groupData };
+    newGroupData[category] = newGroupData[category] ? [...newGroupData[category], item] : [item];
+    return newGroupData;
   }, {});
-  
+
   // For each group, split the group into chunks of 20 items each and create a new rowItems for each chunk
-  for (const [group, items] of Object.entries(groups)) {
+  for (const [group, itemsData] of Object.entries(groups)) {
     // Create chunks of 20 items each
     const chunks = [];
-    for (let i = 0; i < items.length; i += 25) {
-      chunks.push(items.slice(i, i + 25));
+    for (let i = 0; i < itemsData.length; i += 25) {
+      chunks.push(itemsData.slice(i, i + 25));
     }
-  
+
     // Create a new rowItems for each chunk
     for (const [index, chunk] of chunks.entries()) {
       const rowItems = new ActionRowBuilder<StringSelectMenuBuilder>()
@@ -1337,7 +1336,7 @@ export async function rpgMarketChange(
   // Get the item the user selected
   let choice = '' as string;
   if (interaction.isButton()) {
-    const itemComponent = interaction.message.components[0].components[0];
+    // const itemComponent = interaction.message.components[0].components[0];
     let selectedItem: APISelectMenuOption | undefined;
     for (const component of interaction.message.components) {
       for (const subComponent of component.components) {
@@ -1362,7 +1361,7 @@ export async function rpgMarketChange(
   // log.debug(F, `choice: ${choice}`);
 
   // Get a list of marketInventory where the value does not equal the choice
-  const filteredItems = Object.values(marketInventory).filter(item => item.value !== choice);
+  // const filteredItems = Object.values(marketInventory).filter(item => item.value !== choice);
 
   const stringMenu = new StringSelectMenuBuilder()
     .setCustomId(`rpgGeneralSelect,user:${interaction.user.id}`)
@@ -1421,39 +1420,37 @@ export async function rpgMarketChange(
 
   const components = [rowMarket] as ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>[];
 
-    interface MarketItem extends SelectMenuComponentOptionData {
-      category: string;
+  interface MarketItem extends SelectMenuComponentOptionData {
+    category: string;
+  }
+
+  const groups = (marketInventory as MarketItem[]).reduce((groupData: Record<string, MarketItem[]>, item) => {
+    const { category } = item;
+    const newGroupData = { ...groupData };
+    newGroupData[category] = newGroupData[category] ? [...newGroupData[category], item] : [item];
+    return newGroupData;
+  }, {});
+
+  // For each group, split the group into chunks of 25 items each and create a new rowItems for each chunk
+  for (const [group, itemsData] of Object.entries(groups)) {
+    // Create chunks of 25 items each
+    const chunks = [];
+    for (let i = 0; i < itemsData.length; i += 25) {
+      chunks.push(itemsData.slice(i, i + 25));
     }
 
-    const groups = (marketInventory as MarketItem[]).reduce((groups: Record<string, MarketItem[]>, item) => {
-      const key = item.category;
-      if (!groups[key]) {
-        groups[key] = [];
-      }
-      groups[key].push(item);
-      return groups;
-    }, {});
-    
-    // For each group, split the group into chunks of 25 items each and create a new rowItems for each chunk
-    for (const [group, items] of Object.entries(groups)) {
-      // Create chunks of 25 items each
-      const chunks = [];
-      for (let i = 0; i < items.length; i += 25) {
-        chunks.push(items.slice(i, i + 25));
-      }
-    
-      // Create a new rowItems for each chunk
-      for (const [index, chunk] of chunks.entries()) {
-        const rowItems = new ActionRowBuilder<StringSelectMenuBuilder>()
-          .addComponents(
-            new StringSelectMenuBuilder()
-              .setCustomId(`rpgGeneralSelect,user:${interaction.user.id},group:${group},chunk:${index}`)
-              .setPlaceholder(`${group.charAt(0).toUpperCase() + group.slice(1)} Page ${index + 1}`)
-              .addOptions(chunk),
-          );
-        components.push(rowItems);
-      }
+    // Create a new rowItems for each chunk
+    for (const [index, chunk] of chunks.entries()) {
+      const rowItems = new ActionRowBuilder<StringSelectMenuBuilder>()
+        .addComponents(
+          new StringSelectMenuBuilder()
+            .setCustomId(`rpgGeneralSelect,user:${interaction.user.id},group:${group},chunk:${index}`)
+            .setPlaceholder(`${group.charAt(0).toUpperCase() + group.slice(1)} Page ${index + 1}`)
+            .addOptions(chunk),
+        );
+      components.push(rowItems);
     }
+  }
   const embed = embedTemplate()
     .setAuthor(null)
     .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
@@ -1597,7 +1594,7 @@ export async function rpgMarketAccept(
       break;
     }
   }
-   log.debug(F, `selectedItem (accept): ${JSON.stringify(selectedItem, null, 2)}`);
+  log.debug(F, `selectedItem (accept): ${JSON.stringify(selectedItem, null, 2)}`);
 
   const allItems = [...Object.values(items.general), ...Object.values(items.backgrounds)];
   const itemData = allItems.find(item => item.value === selectedItem?.value) as {
@@ -1921,12 +1918,11 @@ export async function rpgHome(
   };
   const chosenItem = homeInventory.find(item => item.value === defaultOption);
   let sellPrice = 0;
-  let equipped = (inventoryData.find(item => item.value === chosenItem?.value)?.equipped as boolean);
+  const equipped = (inventoryData.find(item => item.value === chosenItem?.value)?.equipped as boolean);
   let equippedButtonText = 'Equip';
   if (equipped) {
     equippedButtonText = 'Equipped';
   }
-  
 
   if (chosenItem) {
     chosenItem.default = true;
@@ -2019,22 +2015,21 @@ export async function rpgHome(
       customButton(`rpgTown,user:${interaction.user.id}`, 'Town', 'buttonTown', ButtonStyle.Primary),
     );
 
-    // if item is not equipped, show equip button
+  // if item is not equipped, show equip button
 
-    if (chosenItem && (equipped === false)) {
-      rowHome.addComponents(
-        customButton(`rpgAccept,user:${interaction.user.id}`, `${equippedButtonText}`, 'buttonAccept', ButtonStyle.Success).setDisabled(equipped),
-        customButton(`rpgSell,user:${interaction.user.id}`, `Sell +${sellPrice} TT$`, 'buttonBetHuge', ButtonStyle.Danger),
-        customButton(`rpgHomePreview,user:${interaction.user.id}`, 'Preview', 'buttonPreview', ButtonStyle.Secondary),
-      );
-    } else if (chosenItem && (equipped === true)) { // else show unequip button
-      rowHome.addComponents(
-        customButton(`rpgDecline,user:${interaction.user.id}`, `Unequip`, 'buttonQuit', ButtonStyle.Danger),
-        customButton(`rpgSell,user:${interaction.user.id}`, `Sell +${sellPrice} TT$`, 'buttonBetHuge', ButtonStyle.Danger),
-        customButton(`rpgHomePreview,user:${interaction.user.id}`, 'Preview', 'buttonPreview', ButtonStyle.Secondary),
-      );
-    }
-
+  if (chosenItem && (equipped === false)) {
+    rowHome.addComponents(
+      customButton(`rpgAccept,user:${interaction.user.id}`, `${equippedButtonText}`, 'buttonAccept', ButtonStyle.Success).setDisabled(equipped),
+      customButton(`rpgSell,user:${interaction.user.id}`, `Sell +${sellPrice} TT$`, 'buttonBetHuge', ButtonStyle.Danger),
+      customButton(`rpgHomePreview,user:${interaction.user.id}`, 'Preview', 'buttonPreview', ButtonStyle.Secondary),
+    );
+  } else if (chosenItem && (equipped === true)) { // else show unequip button
+    rowHome.addComponents(
+      customButton(`rpgDecline,user:${interaction.user.id}`, 'Unequip', 'buttonQuit', ButtonStyle.Danger),
+      customButton(`rpgSell,user:${interaction.user.id}`, `Sell +${sellPrice} TT$`, 'buttonBetHuge', ButtonStyle.Danger),
+      customButton(`rpgHomePreview,user:${interaction.user.id}`, 'Preview', 'buttonPreview', ButtonStyle.Secondary),
+    );
+  }
 
   // If the user has backgrounds, add the backgrounds row
   const components = backgroundMenu.options.length === 0
@@ -2227,14 +2222,14 @@ export async function rpgHomeAccept(
 
 export async function rpgHomeDecline(
   interaction: MessageComponentInteraction,
-  ):Promise<InteractionUpdateOptions> {
+):Promise<InteractionUpdateOptions> {
   // Check get fresh persona data
   const personaData = await getPersonaInfo(interaction.user.id);
   const itemComponent = interaction.message.components[0].components[0];
   const selectedItem = (itemComponent as StringSelectMenuComponent).options.find(
     (o:APISelectMenuOption) => o.default === true,
   );
-  
+
   const inventoryData = await inventoryGet(personaData.id);
   const chosenItem = inventoryData.find(item => item.value === selectedItem?.value);
   if (chosenItem) {
@@ -2251,7 +2246,7 @@ export async function rpgHomeDecline(
 
 export async function rpgHomeSell(
   interaction: MessageComponentInteraction,
-  ):Promise<InteractionUpdateOptions> {
+):Promise<InteractionUpdateOptions> {
   // Check get fresh persona data
   const personaData = await getPersonaInfo(interaction.user.id);
   const inventoryData = await inventoryGet(personaData.id);
@@ -2261,7 +2256,7 @@ export async function rpgHomeSell(
   );
   const itemName = inventoryData.find(item => item.value === selectedItem?.value)?.label;
   const sellPrice = Math.floor(Object.values(items.backgrounds).find(item => item.value === selectedItem?.value)?.cost as number) / 4;
-  await inventoryDel(personaData.id, selectedItem?.value as string)
+  await inventoryDel(personaData.id, selectedItem?.value as string);
 
   personaData.tokens += sellPrice;
   await personaSet(personaData);
