@@ -189,6 +189,7 @@ model discord_guilds {
   appeals              appeals[]
   counting             counting[]
   reaction_roles       reaction_roles[]
+  ai_moderation        ai_moderation?
 }
 
 model drug_articles {
@@ -416,6 +417,26 @@ model ai_channels {
   @@unique([channel_id, persona_id], map: "aichannels_channelid_personaid_unique")
 }
 
+model ai_moderation {
+  id                     String  @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  guild_id               String?
+  harassment             Float   @default(0.01)
+  harassment_threatening Float   @default(0.01) @map("harassment/threatening")
+  hate                   Float   @default(0.01)
+  hate_threatening       Float   @default(0.01) @map("hate/threatening")
+  self_harm              Float   @default(0.01) @map("self-harm")
+  self_harm_instructions Float   @default(0.01) @map("self-harm/instructions")
+  self_harm_intent       Float   @default(0.01) @map("self-harm/intent")
+  sexual                 Float   @default(0.01)
+  sexual_minors          Float   @default(0.01) @map("sexual/minors")
+  violence               Float   @default(0.01)
+  violence_graphic       Float   @default(0.01) @map("violence/graphic")
+
+  discord_guilds discord_guilds? @relation(fields: [guild_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "appeals_guildid_foreign")
+
+  @@unique([guild_id], map: "aimoderation_guildid_unique")
+}
+
 enum bridge_status {
   PENDING
   ACTIVE
@@ -528,10 +549,11 @@ enum appeal_status {
 }
 
 enum ai_model {
-  GPT_4         @map("GPT-4")
-  GPT_3_5_TURBO @map("GPT-3.5-TURBO")
-  DAVINCI
-  CURIE
-  BABBAGE
-  ADA
+  GPT_3_5_TURBO             @map("GPT-3.5-TURBO")
+  GPT_3_5_TURBO_1106        @map("GPT-3.5-TURBO-1106")
+  GPT_4                     @map("GPT-4")
+  GPT_4_1106_PREVIEW        @map("GPT-4-1106-PREVIEW")
+  GPT_4_1106_VISION_PREVIEW @map("GPT-4-1106-VISION-PREVIEW")
+  DALL_E_2                  @map("DALL-E-2")
+  DALL_E_3                  @map("DALL-E-3")
 }
