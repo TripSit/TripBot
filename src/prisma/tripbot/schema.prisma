@@ -556,4 +556,8 @@ enum ai_model {
   GPT_4_1106_VISION_PREVIEW @map("GPT-4-1106-VISION-PREVIEW")
   DALL_E_2                  @map("DALL-E-2")
   DALL_E_3                  @map("DALL-E-3")
+  DAVINCI
+  CURIE
+  BABBAGE
+  ADA
 }
