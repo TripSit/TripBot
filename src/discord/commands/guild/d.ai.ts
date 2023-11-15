@@ -1563,8 +1563,12 @@ export async function discordAiModerate(
     );
 
   const modAiModifyButtons = [] as ActionRowBuilder<ButtonBuilder>[];
+  let pingMessage = '';
   // For each of the sortedCategoryScores, add a field
   modResults.forEach(result => {
+    if (result.value > 0.90) {
+      pingMessage = `Please review <@${env.DISCORD_OWNER_ID}>`;
+    }
     aiEmbed.addFields(
       {
         name: result.category,
@@ -1636,10 +1640,9 @@ export async function discordAiModerate(
 
   // Get the channel to send the message to
   const channelAiModLog = await discordClient.channels.fetch(env.CHANNEL_AIMOD_LOG) as TextChannel;
-
   // Send the message
   await channelAiModLog.send({
-    content: `${targetMember} was flagged by AI for ${activeFlags.join(', ')} in ${messageData.url} <@${env.DISCORD_OWNER_ID}>`,
+    content: `${targetMember} was flagged by AI for ${activeFlags.join(', ')} in ${messageData.url} ${pingMessage}`,
     embeds: [aiEmbed],
     components: [userActions, ...modAiModifyButtons],
   });

@@ -1,5 +1,3 @@
-// alerts when something is higher than 90
-
 import OpenAI from 'openai';
 import { PrismaClient, ai_personas } from '@prisma/client';
 import { ModerationCreateResponse } from 'openai/resources';
