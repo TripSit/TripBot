@@ -1410,6 +1410,7 @@ export async function rpgMarketChange(
       You are in the local market, you can buy some items to help you on your journey.
 
       ${emojiGet('itemBackground')} ***Backgrounds*** can be used to personalize your /profile and /levels.
+      [Click here to see all backgrounds.](https://drive.google.com/drive/folders/1F1s0uQt0nGDCCaVANVdrEQKwameo8eHI?usp=drive_link)
       ***More items coming soon! Check back later.***
 
       Wallet: ${personaTokens} tokens
