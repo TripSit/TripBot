@@ -205,6 +205,49 @@ Canvas.GlobalFonts.registerFromPath(
   'futura',
 );
 
+// ??? TO BE MOVED TO A DEDICATED FILE, OR IMAGEGET.TS ???
+// Load external fonts from web
+import fetch from 'node-fetch';
+import fs from 'fs';
+import { promisify } from 'util';
+const writeFile = promisify(fs.writeFile);
+
+async function downloadAndRegisterFont(url: string, filename: string, fontName: string): Promise<void> {
+  const response = await fetch(url);
+  const buffer = await response.buffer();
+  return new Promise((resolve, reject) => {
+    fs.writeFile(filename, buffer, (err) => {
+      if (err) {
+        reject(err);
+      } else {
+        Canvas.GlobalFonts.registerFromPath(filename, fontName);
+        resolve();
+      }
+    });
+  });
+}
+
+// Make an array of font names and urls
+const fonts = {
+  Acme: {filename: 'Acme.woff2', url: 'https://fonts.gstatic.com/s/acme/v25/RrQfboBx-C5_XxrBbg.woff2'},
+  Agbalumo: {filename: 'Agbalumo.woff2', url: 'https://fonts.gstatic.com/s/agbalumo/v2/55xvey5uMdT2N37KZfMCgLg.woff2'},
+  Lobster: {filename: 'Lobster.woff2', url: 'https://fonts.gstatic.com/s/lobster/v30/neILzCirqoswsqX9zoKmMw.woff2'},
+  AbrilFatFace: {filename: 'AbrilFatFace.woff2', url: 'https://fonts.gstatic.com/s/abrilfatface/v23/zOL64pLDlL1D99S8g8PtiKchq-dmjQ.woff2'},
+  Satisfy: {filename: 'Satisfy.woff2', url: 'https://fonts.gstatic.com/s/satisfy/v21/rP2Hp2yn6lkG50LoCZOIHQ.woff2'},
+  IndieFlower: {filename: 'IndieFlower.woff2', url: 'https://fonts.gstatic.com/s/indieflower/v21/m8JVjfNVeKWVnh3QMuKkFcZVaUuH.woff2'},
+  BlackOpsOne: {filename: 'BlackOpsOne.woff2', url: 'https://fonts.gstatic.com/s/blackopsone/v20/qWcsB6-ypo7xBdr6Xshe96H3aDvbtw.woff2'},
+  LilitaOne: {filename: 'LilitaOne.woff2', url: 'https://fonts.gstatic.com/s/lilitaone/v15/i7dPIFZ9Zz-WBtRtedDbYEF8RQ.woff2'},
+  PressStart2P: {filename: 'PressStart2P.woff2', url: 'https://fonts.gstatic.com/s/pressstart2p/v15/e3t4euO8T-267oIAQAu6jDQyK3nVivM.woff2'},
+  Creepster: {filename: 'Creepster.woff2', url: 'https://fonts.gstatic.com/s/creepster/v13/AlZy_zVUqJz4yMrniH4Rcn35.woff2'},
+  SpecialElite: {filename: 'SpecialElite.woff2', url: 'https://fonts.gstatic.com/s/specialelite/v18/XLYgIZbkc4JPUL5CVArUVL0ntnAOSA.woff2'},
+  AudioWide: {filename: 'AudioWide.woff2', url: 'https://fonts.gstatic.com/s/audiowide/v20/l7gdbjpo0cum0ckerWCdlg_O.woff2'},
+  CabinSketch: {filename: 'CabinSketch.woff2', url: 'https://fonts.gstatic.com/s/cabinsketch/v21/QGY2z_kZZAGCONcK2A4bGOj0I_1Y5tjz.woff2'},
+  Rye: {filename: 'Rye.woff2', url: 'https://fonts.gstatic.com/s/rye/v15/r05XGLJT86YzEZ7t.woff2'},
+  FontdinerSwanky: {filename: 'FontdinerSwanky.woff2', url: 'https://fonts.gstatic.com/s/fontdinerswanky/v23/ijwOs4XgRNsiaI5-hcVb4hQgMvCD0uYVKw.woff2'},
+  Barcode: {filename: 'Barcode.woff2', url: 'https://fonts.gstatic.com/s/librebarcode39/v21/-nFnOHM08vwC6h8Li1eQnP_AHzI2G_Bx0g.woff2'},
+};
+
+
 export const dLevels: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('levels')
@@ -516,13 +559,14 @@ export const dLevels: SlashCommand = {
     // Purchased Background
     // Check get fresh persona data
     // log.debug(F, `personaData home (Change) ${JSON.stringify(personaData, null, 2)}`);
-
+    let userFont = 'futura';
     if (personaData) {
       // Get the existing inventory data
       const inventoryData = await inventoryGet(personaData.id);
       // log.debug(F, `Persona home inventory (change): ${JSON.stringify(inventoryData, null, 2)}`);
 
       const equippedBackground = inventoryData.find(item => item.equipped === true && item.effect === 'background');
+      const equippedFont = inventoryData.find(item => item.equipped === true && item.effect === 'font');
       // log.debug(F, `equippedBackground: ${JSON.stringify(equippedBackground, null, 2)} `);
       if (equippedBackground) {
         const imagePath = await imageGet(equippedBackground.value);
@@ -536,6 +580,14 @@ export const dLevels: SlashCommand = {
         context.clip();
         context.drawImage(Background, 0, 0);
         context.restore();
+      }
+      if (equippedFont) {
+        // Get the font url from const fonts
+        const fontUrl = fonts[equippedFont.value as keyof typeof fonts].url;
+        const fontFilename = fonts[equippedFont.value as keyof typeof fonts].filename;
+        // Download and register the font
+        await downloadAndRegisterFont(fontUrl, fontFilename, equippedFont.value);
+        userFont = equippedFont.value;
       }
     }
 
@@ -608,14 +660,16 @@ export const dLevels: SlashCommand = {
       const usernameContext = canvas.getContext('2d');
       do {
         fontSize -= 2;
-        usernameContext.font = `${fontSize}px futura`;
+        usernameContext.font = `${fontSize}px ${userFont}`;
       } while (usernameContext.measureText(text).width > 530);
       return usernameContext.font;
     };
 
     // Username Text
     // Temporary code for user flairs
+    const filteredDisplayName = target.displayName.replace(/[^A-Za-z0-9]/g, '');
     context.fillStyle = textColor;
+    context.font = `40px ${userFont}`;
     context.textAlign = 'left';
     const flair = null;
     let usernameHeight = 76;
@@ -630,8 +684,8 @@ export const dLevels: SlashCommand = {
       context.textBaseline = 'bottom';
     }
     fontSize = 40;
-    context.font = applyUsername(canvasObj, `${target.displayName}`);
-    context.fillText(`${target.displayName}`, 146, usernameHeight);
+    context.font = applyUsername(canvasObj, `${filteredDisplayName}`);
+    context.fillText(`${filteredDisplayName}`, 146, usernameHeight);
 
     // Progress Bars Draw
     context.fillStyle = barColor;
