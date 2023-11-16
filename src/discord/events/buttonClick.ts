@@ -25,6 +25,7 @@ import {
 import { helperButton } from '../commands/global/d.setup';
 import { appealAccept, appealReject } from '../utils/appeal';
 import { mushroomPageOne, mushroomPageTwo } from '../commands/global/d.mushroom_info';
+import { aiModButton } from '../commands/guild/d.ai';
 
 const F = f(__filename);
 
@@ -32,7 +33,7 @@ export default buttonClick;
 
 export async function buttonClick(interaction:ButtonInteraction, discordClient:Client) {
   log.info(F, await commandContext(interaction));
-  log.debug(F, 'Interaction deferred!');
+  // log.debug(F, 'Interaction deferred!');
   const buttonID = interaction.customId;
 
   if (buttonID.startsWith('mushroom')) {
@@ -47,6 +48,12 @@ export async function buttonClick(interaction:ButtonInteraction, discordClient:C
       await mushroomPageTwo(interaction);
       return;
     }
+  }
+
+  if (buttonID.startsWith('aiMod')) {
+    // log.debug(F, 'aiMod button clicked');
+    await aiModButton(interaction);
+    return;
   }
 
   if (buttonID.startsWith('rpg')) {

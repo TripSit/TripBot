@@ -17,7 +17,7 @@ import { ExperienceCategory, ExperienceType } from '../../global/@types/database
 import { imagesOnly } from '../utils/imagesOnly';
 import { countMessage } from '../commands/guild/d.counting';
 import { bridgeMessage } from '../utils/bridge';
-// import { aiModerate } from '../utils/ai';
+import { discordAiModerate } from '../commands/guild/d.ai';
 // import { awayMessage } from '../utils/awayMessage';
 // import log from '../../global/utils/log';
 // import {parse} from 'path';
@@ -80,7 +80,7 @@ export const messageCreate: MessageCreateEvent = {
     youAre(message);
     karma(message);
     imagesOnly(message);
-    // aiModerate(message);
+    discordAiModerate(message);
 
     // Disabled for testing
     // thoughtPolice(message);

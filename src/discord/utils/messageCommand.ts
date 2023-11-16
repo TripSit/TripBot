@@ -8,7 +8,7 @@ import {
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
 import { sleep } from '../commands/guild/d.bottest';
-import { chat } from '../commands/guild/d.ai';
+import { discordAiChat } from '../commands/guild/d.ai';
 
 // import log from '../../global/utils/log';
 // import {parse} from 'path';
@@ -255,11 +255,7 @@ give people a chance to answer 😄 If no one answers in 5 minutes you can try a
         }
       }
     } else if (await isAiEnabledGuild(message) && !message.author.bot) {
-      // log.debug(F, 'AI enabled guild detected');
-      // Get the last 5 messages in the channel
-      const messages = await message.channel.messages.fetch({ limit: 10 });
-      // log.debug(F, `messages: ${JSON.stringify(messages, null, 2)}`);
-      await chat([...messages.values()]);
+      await discordAiChat(message);
     } else {
       try {
         await message.react(emojiGet('ts_heart'));
