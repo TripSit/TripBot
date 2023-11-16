@@ -3,6 +3,7 @@
 import fs from 'fs';
 import fp from 'path';
 import axios from 'axios';
+import Canvas from '@napi-rs/canvas';
 // import {
 //   Client,
 // } from 'discord.js';
@@ -12,9 +13,7 @@ const F = f(__filename);
 // "get the path to this folder, and then join with /assets"
 const assetsDirectory = fp.join(fp.dirname(__dirname), 'assets');
 
-export default imageGet;
-
-const imageDef = {
+const assetDef = {
   nasal_spray_dosage: { path: `${assetsDirectory}/img/nasal_spray_dosage.png`, url: 'https://user-images.githubusercontent.com/1836049/218758611-c84f1e34-0f5b-43ac-90da-bd89b028f131.png' },
   icon_online: { path: `${assetsDirectory}/img/icons/online.png`, url: 'https://i.gyazo.com/cd7b9e018d4818e4b6588cab5d5b019d.png' },
   icon_offline: { path: `${assetsDirectory}/img/icons/offline.png`, url: 'https://i.gyazo.com/b2b1bf7d91acdb4ccc72dfde3d7075fc.png' },
@@ -102,13 +101,29 @@ const imageDef = {
   Paws: { path: `${assetsDirectory}/img/backgrounds/Paws.png`, url: 'https://i.gyazo.com/83b9f275af87372edc610da449220a4c.png' },
   mushroomInfoA: { path: `${assetsDirectory}/img/mushroomInfoA.png`, url: 'https://i.gyazo.com/233df47085a0ac5493d8378111512b3d.png' },
   mushroomInfoB: { path: `${assetsDirectory}/img/mushroomInfoB.png`, url: 'https://i.gyazo.com/2aae45e843da99867b82e9b1ad07d22b.png' },
+  Acme: { path: `${assetsDirectory}/font/Acme.woff2`, url: 'https://fonts.gstatic.com/s/acme/v25/RrQfboBx-C5_XxrBbg.woff2' },
+  Agbalumo: { path: `${assetsDirectory}/font/Agbalumo.woff2`, url: 'https://fonts.gstatic.com/s/agbalumo/v2/55xvey5uMdT2N37KZfMCgLg.woff2' },
+  Lobster: { path: `${assetsDirectory}/font/Lobster.woff2`, url: 'https://fonts.gstatic.com/s/lobster/v30/neILzCirqoswsqX9zoKmMw.woff2' },
+  AbrilFatFace: { path: `${assetsDirectory}/font/AbrilFatFace.woff2`, url: 'https://fonts.gstatic.com/s/abrilfatface/v23/zOL64pLDlL1D99S8g8PtiKchq-dmjQ.woff2' },
+  Satisfy: { path: `${assetsDirectory}/font/Satisfy.woff2`, url: 'https://fonts.gstatic.com/s/satisfy/v21/rP2Hp2yn6lkG50LoCZOIHQ.woff2' },
+  IndieFlower: { path: `${assetsDirectory}/font/IndieFlower.woff2`, url: 'https://fonts.gstatic.com/s/indieflower/v21/m8JVjfNVeKWVnh3QMuKkFcZVaUuH.woff2' },
+  BlackOpsOne: { path: `${assetsDirectory}/font/BlackOpsOne.woff2`, url: 'https://fonts.gstatic.com/s/blackopsone/v20/qWcsB6-ypo7xBdr6Xshe96H3aDvbtw.woff2' },
+  LilitaOne: { path: `${assetsDirectory}/font/LilitaOne.woff2`, url: 'https://fonts.gstatic.com/s/lilitaone/v15/i7dPIFZ9Zz-WBtRtedDbYEF8RQ.woff2' },
+  PressStart2P: { path: `${assetsDirectory}/font/PressStart2P.woff2`, url: 'https://fonts.gstatic.com/s/pressstart2p/v15/e3t4euO8T-267oIAQAu6jDQyK3nVivM.woff2' },
+  Creepster: { path: `${assetsDirectory}/font/Creepster.woff2`, url: 'https://fonts.gstatic.com/s/creepster/v13/AlZy_zVUqJz4yMrniH4Rcn35.woff2' },
+  SpecialElite: { path: `${assetsDirectory}/font/SpecialElite.woff2`, url: 'https://fonts.gstatic.com/s/specialelite/v18/XLYgIZbkc4JPUL5CVArUVL0ntnAOSA.woff2' },
+  AudioWide: { path: `${assetsDirectory}/font/AudioWide.woff2`, url: 'https://fonts.gstatic.com/s/audiowide/v20/l7gdbjpo0cum0ckerWCdlg_O.woff2' },
+  CabinSketch: { path: `${assetsDirectory}/font/CabinSketch.woff2`, url: 'https://fonts.gstatic.com/s/cabinsketch/v21/QGY2z_kZZAGCONcK2A4bGOj0I_1Y5tjz.woff2' },
+  Rye: { path: `${assetsDirectory}/font/Rye.woff2`, url: 'https://fonts.gstatic.com/s/rye/v15/r05XGLJT86YzEZ7t.woff2' },
+  FontdinerSwanky: { path: `${assetsDirectory}/font/FontdinerSwanky.woff2`, url: 'https://fonts.gstatic.com/s/fontdinerswanky/v23/ijwOs4XgRNsiaI5-hcVb4hQgMvCD0uYVKw.woff2' },
+  Barcode: { path: `${assetsDirectory}/font/Barcode.woff2`, url: 'https://fonts.gstatic.com/s/librebarcode39/v21/-nFnOHM08vwC6h8Li1eQnP_AHzI2G_Bx0g.woff2' },
 } as {
   [key: string]: { path: string;
     url: string;
   };
 };
 
-export async function downloadImage(
+export async function downloadAsset(
   url:string,
   filepath:string,
 ):Promise<void> {
@@ -140,22 +155,25 @@ export async function downloadImage(
   });
 }
 
-export async function imageGet(
-  imageName: string,
+export default async function getAsset(
+  assetName: string,
 ): Promise<string> {
   // This function will use imageName to look up the data in the imageDef object
   // It will use that information and check the path to see if the imageName exists at that location
   // If it does not exist, it will download it from the internet and save it to that location
   // Either way, it will return a working path to the image
-  const { path, url } = imageDef[imageName];
+  const { path, url } = assetDef[assetName];
   // log.debug(F, `Checking ${path}`);
   if (!fs.existsSync(path)) {
     // log.debug(F, `Downloading ${url} to ${path}`);
-    await downloadImage(url, path);
-    // log.debug(F, `Downloaded ${url} to ${path}`);
+    await downloadAsset(url, path);
+
+    // If it's a font, register it to canvas
+    if (path.includes('.woff2')) {
+      Canvas.GlobalFonts.registerFromPath(path, assetName);
+      log.debug(F, `Registered ${assetName} to canvas`);
+    }
   }
-  // else {
-  //   log.debug(F, `Found ${path}`);
-  // }
+
   return path;
 }

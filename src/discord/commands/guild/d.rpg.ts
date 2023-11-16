@@ -41,11 +41,14 @@ import {
   getUser, inventoryGet, inventorySet, inventoryDel, personaSet,
 } from '../../../global/utils/knex';
 import { Personas, RpgInventory } from '../../../global/@types/database';
-import { imageGet } from '../../utils/imageGet';
+import getAsset from '../../utils/getAsset';
 import { customButton } from '../../utils/emoji';
 import { getProfilePreview } from './d.profile';
 
 const Trivia = require('trivia-api');
+
+const tripSitProfileImage = 'tripsit-profile-image.png';
+const tripSitProfileImageAttachment = 'attachment://tripsit-profile-image.png';
 
 const F = f(__filename);
 
@@ -1427,8 +1430,12 @@ export async function rpgMarketInventory(
   // Check if they have the Premium Member role
   // Define the discount types
   const discountTypes = [
-    { roleId: env.ROLE_PREMIUM, discount: 0.2, name: 'Premium Member', amount: '20%' },
-    { roleId: env.ROLE_BOOSTER, discount: 0.1, name: 'Server Booster', amount: '10%' },
+    {
+      roleId: env.ROLE_PREMIUM, discount: 0.2, name: 'Premium Member', amount: '20%',
+    },
+    {
+      roleId: env.ROLE_BOOSTER, discount: 0.1, name: 'Server Booster', amount: '10%',
+    },
     // Add more discount types here
   ];
 
@@ -1446,9 +1453,9 @@ export async function rpgMarketInventory(
 
   // Add the "Discounts" heading if there are any discounts
   if (discountString) {
-    discountString = `${emojiGet('itemDiscount')} **Discounts**\n` + discountString;
+    discountString = `${emojiGet('itemDiscount')} **Discounts**\n${discountString}`;
   }
-  
+
   // Get a string display of the user's inventory
   const inventoryList = inventoryData.map(item => `**${item.label}** - ${item.description}`).join('\n');
   const inventoryString = inventoryData.length > 0
@@ -1707,13 +1714,13 @@ export async function rpgMarketChange(
   const imageFiles = [] as AttachmentBuilder[];
   // if the option is a background, run profile preview as the embed image
   if (itemData && itemData.effect === 'background') {
-    const imagePath = await imageGet(itemData.effect_value);
+    const imagePath = await getAsset(itemData.effect_value);
     const target = interaction.member as GuildMember;
     const option = 'background';
-    const previewImage = await getProfilePreview(target, option, imagePath,);
-    const attachment = new AttachmentBuilder(previewImage, { name: 'tripsit-profile-image.png' });
+    const previewImage = await getProfilePreview(target, option, imagePath);
+    const attachment = new AttachmentBuilder(previewImage, { name: tripSitProfileImage });
     imageFiles.push(attachment);
-    embed.setImage('attachment://tripsit-profile-image.png');
+    embed.setImage(tripSitProfileImageAttachment);
   }
   // if the option is a font, run profile preview as the embed image
   if (itemData && itemData.effect === 'font') {
@@ -1721,9 +1728,9 @@ export async function rpgMarketChange(
     const fontName = itemData.effect_value;
     const option = 'font';
     const previewImage = await getProfilePreview(target, option, undefined, fontName);
-    const attachment = new AttachmentBuilder(previewImage, { name: 'tripsit-profile-image.png' });
+    const attachment = new AttachmentBuilder(previewImage, { name: tripSitProfileImage });
     imageFiles.push(attachment);
-    embed.setImage('attachment://tripsit-profile-image.png');
+    embed.setImage(tripSitProfileImageAttachment);
   }
 
   return {
@@ -1798,21 +1805,21 @@ export async function rpgMarketPreview(
 
   const imageFiles = [] as AttachmentBuilder[];
   if (itemData && itemData.effect === 'background') {
-    const imagePath = await imageGet(itemData.effect_value);
+    const imagePath = await getAsset(itemData.effect_value);
     const target = interaction.member as GuildMember;
     const option = 'background';
-    const previewImage = await getProfilePreview(target, option, imagePath,);
-    const attachment = new AttachmentBuilder(previewImage, { name: 'tripsit-profile-image.png' });
+    const previewImage = await getProfilePreview(target, option, imagePath);
+    const attachment = new AttachmentBuilder(previewImage, { name: tripSitProfileImage });
     imageFiles.push(attachment);
-    embed.setImage('attachment://tripsit-profile-image.png');
+    embed.setImage(tripSitProfileImageAttachment);
   } else if (itemData && itemData.effect === 'font') {
     const target = interaction.member as GuildMember;
     const fontName = itemData.effect_value;
     const option = 'font';
     const previewImage = await getProfilePreview(target, option, undefined, fontName);
-    const attachment = new AttachmentBuilder(previewImage, { name: 'tripsit-profile-image.png' });
+    const attachment = new AttachmentBuilder(previewImage, { name: tripSitProfileImage });
     imageFiles.push(attachment);
-    embed.setImage('attachment://tripsit-profile-image.png');
+    embed.setImage(tripSitProfileImageAttachment);
     log.debug(F, `font: ${fontName}`);
   }
 
@@ -1922,7 +1929,7 @@ export async function rpgMarketAccept(
       .setColor(Colors.Red);
     const imageFiles = [] as AttachmentBuilder[];
     if (itemData.effect === 'background') {
-      const imagePath = await imageGet(itemData.effect_value);
+      const imagePath = await getAsset(itemData.effect_value);
       // log.debug(F, `imagePath: ${imagePath}`);
       imageFiles.push(new AttachmentBuilder(imagePath));
       embed.setImage(`attachment://${itemData.effect_value}.png`);
@@ -2273,13 +2280,13 @@ export async function rpgHome(
   const files = [] as AttachmentBuilder[];
 
   if (interaction.isStringSelectMenu() && backgroundData && backgroundData.effect === 'background') {
-    const imagePath = await imageGet(backgroundData.effect_value);
+    const imagePath = await getAsset(backgroundData.effect_value);
     const target = interaction.member as GuildMember;
     const option = 'background';
-    const previewImage = await getProfilePreview(target, option, imagePath,);
-    const attachment = new AttachmentBuilder(previewImage, { name: 'tripsit-profile-image.png' });
+    const previewImage = await getProfilePreview(target, option, imagePath);
+    const attachment = new AttachmentBuilder(previewImage, { name: tripSitProfileImage });
     files.push(attachment);
-    embed.setImage('attachment://tripsit-profile-image.png');
+    embed.setImage(tripSitProfileImageAttachment);
   // log.debug(F, 'Set image!');
   }
 
@@ -2289,9 +2296,9 @@ export async function rpgHome(
     const fontName = backgroundData.effect_value;
     const option = 'font';
     const previewImage = await getProfilePreview(target, option, undefined, fontName);
-    const attachment = new AttachmentBuilder(previewImage, { name: 'tripsit-profile-image.png' });
+    const attachment = new AttachmentBuilder(previewImage, { name: tripSitProfileImage });
     files.push(attachment);
-    embed.setImage('attachment://tripsit-profile-image.png');
+    embed.setImage(tripSitProfileImageAttachment);
     log.debug(F, `font: ${fontName}`);
   }
 

@@ -12,15 +12,10 @@ import { levels } from '../../../global/commands/g.levels';
 import { profile, ProfileData } from '../../../global/commands/g.profile';
 import { getPersonaInfo } from '../../../global/commands/g.rpg';
 import { inventoryGet } from '../../../global/utils/knex';
-import { imageGet } from '../../utils/imageGet';
+import getAsset from '../../utils/getAsset';
 import commandContext from '../../utils/context';
 import { numFormatter, numFormatterVoice } from './d.profile';
 import { Personas } from '../../../global/@types/database';
-// import { expForNextLevel, getTotalLevel } from '../../../global/utils/experience';
-// import { inventoryGet } from '../../../global/utils/knex';
-// import { imageGet } from '../../utils/imageGet';
-
-// import { getTotalLevel } from '../../../global/utils/experience';
 
 const F = f(__filename);
 
@@ -205,49 +200,6 @@ Canvas.GlobalFonts.registerFromPath(
   'futura',
 );
 
-// ??? TO BE MOVED TO A DEDICATED FILE, OR IMAGEGET.TS ???
-// Load external fonts from web
-import fetch from 'node-fetch';
-import fs from 'fs';
-import { promisify } from 'util';
-const writeFile = promisify(fs.writeFile);
-
-async function downloadAndRegisterFont(url: string, filename: string, fontName: string): Promise<void> {
-  const response = await fetch(url);
-  const buffer = await response.buffer();
-  return new Promise((resolve, reject) => {
-    fs.writeFile(filename, buffer, (err) => {
-      if (err) {
-        reject(err);
-      } else {
-        Canvas.GlobalFonts.registerFromPath(filename, fontName);
-        resolve();
-      }
-    });
-  });
-}
-
-// Make an array of font names and urls
-const fonts = {
-  Acme: {filename: 'Acme.woff2', url: 'https://fonts.gstatic.com/s/acme/v25/RrQfboBx-C5_XxrBbg.woff2'},
-  Agbalumo: {filename: 'Agbalumo.woff2', url: 'https://fonts.gstatic.com/s/agbalumo/v2/55xvey5uMdT2N37KZfMCgLg.woff2'},
-  Lobster: {filename: 'Lobster.woff2', url: 'https://fonts.gstatic.com/s/lobster/v30/neILzCirqoswsqX9zoKmMw.woff2'},
-  AbrilFatFace: {filename: 'AbrilFatFace.woff2', url: 'https://fonts.gstatic.com/s/abrilfatface/v23/zOL64pLDlL1D99S8g8PtiKchq-dmjQ.woff2'},
-  Satisfy: {filename: 'Satisfy.woff2', url: 'https://fonts.gstatic.com/s/satisfy/v21/rP2Hp2yn6lkG50LoCZOIHQ.woff2'},
-  IndieFlower: {filename: 'IndieFlower.woff2', url: 'https://fonts.gstatic.com/s/indieflower/v21/m8JVjfNVeKWVnh3QMuKkFcZVaUuH.woff2'},
-  BlackOpsOne: {filename: 'BlackOpsOne.woff2', url: 'https://fonts.gstatic.com/s/blackopsone/v20/qWcsB6-ypo7xBdr6Xshe96H3aDvbtw.woff2'},
-  LilitaOne: {filename: 'LilitaOne.woff2', url: 'https://fonts.gstatic.com/s/lilitaone/v15/i7dPIFZ9Zz-WBtRtedDbYEF8RQ.woff2'},
-  PressStart2P: {filename: 'PressStart2P.woff2', url: 'https://fonts.gstatic.com/s/pressstart2p/v15/e3t4euO8T-267oIAQAu6jDQyK3nVivM.woff2'},
-  Creepster: {filename: 'Creepster.woff2', url: 'https://fonts.gstatic.com/s/creepster/v13/AlZy_zVUqJz4yMrniH4Rcn35.woff2'},
-  SpecialElite: {filename: 'SpecialElite.woff2', url: 'https://fonts.gstatic.com/s/specialelite/v18/XLYgIZbkc4JPUL5CVArUVL0ntnAOSA.woff2'},
-  AudioWide: {filename: 'AudioWide.woff2', url: 'https://fonts.gstatic.com/s/audiowide/v20/l7gdbjpo0cum0ckerWCdlg_O.woff2'},
-  CabinSketch: {filename: 'CabinSketch.woff2', url: 'https://fonts.gstatic.com/s/cabinsketch/v21/QGY2z_kZZAGCONcK2A4bGOj0I_1Y5tjz.woff2'},
-  Rye: {filename: 'Rye.woff2', url: 'https://fonts.gstatic.com/s/rye/v15/r05XGLJT86YzEZ7t.woff2'},
-  FontdinerSwanky: {filename: 'FontdinerSwanky.woff2', url: 'https://fonts.gstatic.com/s/fontdinerswanky/v23/ijwOs4XgRNsiaI5-hcVb4hQgMvCD0uYVKw.woff2'},
-  Barcode: {filename: 'Barcode.woff2', url: 'https://fonts.gstatic.com/s/librebarcode39/v21/-nFnOHM08vwC6h8Li1eQnP_AHzI2G_Bx0g.woff2'},
-};
-
-
 export const dLevels: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('levels')
@@ -283,16 +235,16 @@ export const dLevels: SlashCommand = {
       // Get the levels of the user
       await levels(target.id),
       // Load Images
-      await Canvas.loadImage(await imageGet('cardLevelIcons')),
+      await Canvas.loadImage(await getAsset('cardLevelIcons')),
       await Canvas.loadImage(target.user.displayAvatarURL({ extension: 'jpg' })),
-      await Canvas.loadImage(await imageGet('teamtripsitIcon')),
-      await Canvas.loadImage(await imageGet('premiumIcon')),
-      await Canvas.loadImage(await imageGet('boosterIcon')),
-      await Canvas.loadImage(await imageGet('legacyIcon')),
-      await Canvas.loadImage(await imageGet('voiceBar')),
-      await Canvas.loadImage(await imageGet('tripsitterBar')),
-      await Canvas.loadImage(await imageGet('developerBar')),
-      await Canvas.loadImage(await imageGet('teamtripsitBar')),
+      await Canvas.loadImage(await getAsset('teamtripsitIcon')),
+      await Canvas.loadImage(await getAsset('premiumIcon')),
+      await Canvas.loadImage(await getAsset('boosterIcon')),
+      await Canvas.loadImage(await getAsset('legacyIcon')),
+      await Canvas.loadImage(await getAsset('voiceBar')),
+      await Canvas.loadImage(await getAsset('tripsitterBar')),
+      await Canvas.loadImage(await getAsset('developerBar')),
+      await Canvas.loadImage(await getAsset('teamtripsitBar')),
     ]);
 
     const profileData = values[1].status === 'fulfilled' ? values[1].value : {} as ProfileData;
@@ -569,7 +521,7 @@ export const dLevels: SlashCommand = {
       const equippedFont = inventoryData.find(item => item.equipped === true && item.effect === 'font');
       // log.debug(F, `equippedBackground: ${JSON.stringify(equippedBackground, null, 2)} `);
       if (equippedBackground) {
-        const imagePath = await imageGet(equippedBackground.value);
+        const imagePath = await getAsset(equippedBackground.value);
         const Background = await Canvas.loadImage(imagePath);
         context.save();
         context.globalCompositeOperation = 'lighter';
@@ -582,11 +534,7 @@ export const dLevels: SlashCommand = {
         context.restore();
       }
       if (equippedFont) {
-        // Get the font url from const fonts
-        const fontUrl = fonts[equippedFont.value as keyof typeof fonts].url;
-        const fontFilename = fonts[equippedFont.value as keyof typeof fonts].filename;
-        // Download and register the font
-        await downloadAndRegisterFont(fontUrl, fontFilename, equippedFont.value);
+        await getAsset(equippedFont.value);
         userFont = equippedFont.value;
       }
     }
@@ -867,7 +815,7 @@ export const dLevels: SlashCommand = {
     } else if (levelData.ALL.TOTAL.level >= 100) {
       LevelImagePath = 'badgeVip10';
     }
-    const LevelImage = await Canvas.loadImage(await imageGet(LevelImagePath));
+    const LevelImage = await Canvas.loadImage(await getAsset(LevelImagePath));
     context.drawImage(LevelImage, 97, 181, 58, 58);
 
     // Process The Entire Card and Send it to Discord
