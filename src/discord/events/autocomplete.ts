@@ -4,7 +4,7 @@ import {
 } from 'discord.js';
 import Fuse from 'fuse.js';
 
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, ai_model } from '@prisma/client';
 import pillColors from '../../global/assets/data/pill_colors.json';
 import pillShapes from '../../global/assets/data/pill_shapes.json';
 import drugDataAll from '../../global/assets/data/drug_db_combined.json';
@@ -480,14 +480,7 @@ async function autocompleteAiModels(interaction:AutocompleteInteraction) {
       'name',
     ],
   };
-  const modelList = [
-    { name: 'GPT_3_5_TURBO' },
-    { name: 'GPT_4' },
-    { name: 'DAVINCI' },
-    { name: 'CURIE' },
-    { name: 'BABBAGE' },
-    { name: 'ADA' },
-  ];
+  const modelList = Object.keys(ai_model).map(model => ({ name: model }));
 
   const fuse = new Fuse(modelList, options);
   const focusedValue = interaction.options.getFocused();
