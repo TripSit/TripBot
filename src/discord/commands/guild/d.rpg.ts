@@ -1,3 +1,4 @@
+/* eslint-disable no-restricted-syntax */
 /* eslint-disable max-len */
 import {
   Colors,
@@ -84,62 +85,25 @@ const items = {
     //   emoji: 'itemBonus',
     // },
   },
+  // fonts: {
+  //   Arial: {
+  //     label: 'Arial',
+  //     value: 'Arial',
+  //     description: 'Font',
+  //     quantity: 1,
+  //     weight: 0,
+  //     cost: 500,
+  //     equipped: false,
+  //     consumable: false,
+  //     effect: 'font',
+  //     effect_value: 'Arial',
+  //     emoji: 'itemBackground',
+  //   },
+  // },
   backgrounds: {
-    Geolines: {
-      label: 'Geolines',
-      value: 'Geolines',
-      description: 'Geolines',
-      quantity: 1,
-      weight: 0,
-      cost: 1000,
-      equipped: false,
-      consumable: false,
-      effect: 'background',
-      effect_value: 'Geolines',
-      emoji: 'itemBackground',
-    },
-    Waves: {
-      label: 'Waves',
-      value: 'Waves',
-      description: 'Waves',
-      quantity: 1,
-      weight: 0,
-      cost: 1000,
-      equipped: false,
-      consumable: false,
-      effect: 'background',
-      effect_value: 'Waves',
-      emoji: 'itemBackground',
-    },
-    LiquidMaze: {
-      label: 'LiquidMaze',
-      value: 'LiquidMaze',
-      description: 'LiquidMaze',
-      quantity: 1,
-      weight: 0,
-      cost: 1000,
-      equipped: false,
-      consumable: false,
-      effect: 'background',
-      effect_value: 'LiquidMaze',
-      emoji: 'itemBackground',
-    },
-    Flow: {
-      label: 'Flow',
-      value: 'Flow',
-      description: 'Flow',
-      quantity: 1,
-      weight: 0,
-      cost: 1000,
-      equipped: false,
-      consumable: false,
-      effect: 'background',
-      effect_value: 'Flow',
-      emoji: 'itemBackground',
-    },
-    Concentric: {
-      label: 'Concentric',
-      value: 'Concentric',
+    AbstractTriangles: {
+      label: 'AbstractTriangles',
+      value: 'AbstractTriangles',
       description: 'Background',
       quantity: 1,
       weight: 0,
@@ -147,124 +111,7 @@ const items = {
       equipped: false,
       consumable: false,
       effect: 'background',
-      effect_value: 'Concentric',
-      emoji: 'itemBackground',
-    },
-    CubeTunnels: {
-      label: 'CubeTunnels',
-      value: 'CubeTunnels',
-      description: 'Background',
-      quantity: 1,
-      weight: 0,
-      cost: 1000,
-      equipped: false,
-      consumable: false,
-      effect: 'background',
-      effect_value: 'CubeTunnels',
-      emoji: 'itemBackground',
-    },
-    Leaves: {
-      label: 'Leaves',
-      value: 'Leaves',
-      description: 'Background',
-      quantity: 1,
-      weight: 0,
-      cost: 1000,
-      equipped: false,
-      consumable: false,
-      effect: 'background',
-      effect_value: 'Leaves',
-      emoji: 'itemBackground',
-    },
-    SquareTwist: {
-      label: 'SquareTwist',
-      value: 'SquareTwist',
-      description: 'Background',
-      quantity: 1,
-      weight: 0,
-      cost: 1000,
-      equipped: false,
-      consumable: false,
-      effect: 'background',
-      effect_value: 'SquareTwist',
-      emoji: 'itemBackground',
-    },
-    Noise: {
-      label: 'Noise',
-      value: 'Noise',
-      description: 'Background',
-      quantity: 1,
-      weight: 0,
-      cost: 1000,
-      equipped: false,
-      consumable: false,
-      effect: 'background',
-      effect_value: 'Noise',
-      emoji: 'itemBackground',
-    },
-    Squiggles: {
-      label: 'Squiggles',
-      value: 'Squiggles',
-      description: 'Background',
-      quantity: 1,
-      weight: 0,
-      cost: 1000,
-      equipped: false,
-      consumable: false,
-      effect: 'background',
-      effect_value: 'Squiggles',
-      emoji: 'itemBackground',
-    },
-    TriangleOverlap: {
-      label: 'TriangleOverlap',
-      value: 'TriangleOverlap',
-      description: 'Background',
-      quantity: 1,
-      weight: 0,
-      cost: 1000,
-      equipped: false,
-      consumable: false,
-      effect: 'background',
-      effect_value: 'TriangleOverlap',
-      emoji: 'itemBackground',
-    },
-    XandO: {
-      label: 'XandO',
-      value: 'XandO',
-      description: 'Background',
-      quantity: 1,
-      weight: 0,
-      cost: 1000,
-      equipped: false,
-      consumable: false,
-      effect: 'background',
-      effect_value: 'XandO',
-      emoji: 'itemBackground',
-    },
-    Safari: {
-      label: 'Safari',
-      value: 'Safari',
-      description: 'Background',
-      quantity: 1,
-      weight: 0,
-      cost: 1000,
-      equipped: false,
-      consumable: false,
-      effect: 'background',
-      effect_value: 'Safari',
-      emoji: 'itemBackground',
-    },
-    LineLeaves: {
-      label: 'LineLeaves',
-      value: 'LineLeaves',
-      description: 'Background',
-      quantity: 1,
-      weight: 0,
-      cost: 1000,
-      equipped: false,
-      consumable: false,
-      effect: 'background',
-      effect_value: 'LineLeaves',
+      effect_value: 'AbstractTriangles',
       emoji: 'itemBackground',
     },
     ArcadeCarpet: {
@@ -280,9 +127,9 @@ const items = {
       effect_value: 'ArcadeCarpet',
       emoji: 'itemBackground',
     },
-    Topography: {
-      label: 'Topography',
-      value: 'Topography',
+    CircuitBoard: {
+      label: 'CircuitBoard',
+      value: 'CircuitBoard',
       description: 'Background',
       quantity: 1,
       weight: 0,
@@ -290,7 +137,7 @@ const items = {
       equipped: false,
       consumable: false,
       effect: 'background',
-      effect_value: 'Topography',
+      effect_value: 'CircuitBoard',
       emoji: 'itemBackground',
     },
     CoffeeSwirl: {
@@ -306,9 +153,9 @@ const items = {
       effect_value: 'CoffeeSwirl',
       emoji: 'itemBackground',
     },
-    SpaceIcons: {
-      label: 'SpaceIcons',
-      value: 'SpaceIcons',
+    Concentric: {
+      label: 'Concentric',
+      value: 'Concentric',
       description: 'Background',
       quantity: 1,
       weight: 0,
@@ -316,12 +163,12 @@ const items = {
       equipped: false,
       consumable: false,
       effect: 'background',
-      effect_value: 'SpaceIcons',
+      effect_value: 'Concentric',
       emoji: 'itemBackground',
     },
-    Plaid: {
-      label: 'Plaid',
-      value: 'Plaid',
+    Connected: {
+      label: 'Connected',
+      value: 'Connected',
       description: 'Background',
       quantity: 1,
       weight: 0,
@@ -329,12 +176,12 @@ const items = {
       equipped: false,
       consumable: false,
       effect: 'background',
-      effect_value: 'Plaid',
+      effect_value: 'Connected',
       emoji: 'itemBackground',
     },
-    Paisley: {
-      label: 'Paisley',
-      value: 'Paisley',
+    CubeTunnels: {
+      label: 'CubeTunnels',
+      value: 'CubeTunnels',
       description: 'Background',
       quantity: 1,
       weight: 0,
@@ -342,12 +189,12 @@ const items = {
       equipped: false,
       consumable: false,
       effect: 'background',
-      effect_value: 'Paisley',
+      effect_value: 'CubeTunnels',
       emoji: 'itemBackground',
     },
-    AbstractTriangles: {
-      label: 'AbstractTriangles',
-      value: 'AbstractTriangles',
+    DiamondChevron: {
+      label: 'DiamondChevron',
+      value: 'DiamondChevron',
       description: 'Background',
       quantity: 1,
       weight: 0,
@@ -355,7 +202,176 @@ const items = {
       equipped: false,
       consumable: false,
       effect: 'background',
-      effect_value: 'AbstractTriangles',
+      effect_value: 'DiamondChevron',
+      emoji: 'itemBackground',
+    },
+    Dissociating: {
+      label: 'Dissociating',
+      value: 'Dissociating',
+      description: 'Background',
+      quantity: 1,
+      weight: 0,
+      cost: 1000,
+      equipped: false,
+      consumable: false,
+      effect: 'background',
+      effect_value: 'Dissociating',
+      emoji: 'itemBackground',
+    },
+    DotnDash: {
+      label: 'DotnDash',
+      value: 'DotnDash',
+      description: 'Background',
+      quantity: 1,
+      weight: 0,
+      cost: 1000,
+      equipped: false,
+      consumable: false,
+      effect: 'background',
+      effect_value: 'DotnDash',
+      emoji: 'itemBackground',
+    },
+    Drunk: {
+      label: 'Drunk',
+      value: 'Drunk',
+      description: 'Background',
+      quantity: 1,
+      weight: 0,
+      cost: 1000,
+      equipped: false,
+      consumable: false,
+      effect: 'background',
+      effect_value: 'Drunk',
+      emoji: 'itemBackground',
+    },
+    Emoticons: {
+      label: 'Emoticons',
+      value: 'Emoticons',
+      description: 'Background',
+      quantity: 1,
+      weight: 0,
+      cost: 1000,
+      equipped: false,
+      consumable: false,
+      effect: 'background',
+      effect_value: 'Emoticons',
+      emoji: 'itemBackground',
+    },
+    Equations: {
+      label: 'Equations',
+      value: 'Equations',
+      description: 'Background',
+      quantity: 1,
+      weight: 0,
+      cost: 1000,
+      equipped: false,
+      consumable: false,
+      effect: 'background',
+      effect_value: 'Equations',
+      emoji: 'itemBackground',
+    },
+    Flow: {
+      label: 'Flow',
+      value: 'Flow',
+      description: 'Background',
+      quantity: 1,
+      weight: 0,
+      cost: 1000,
+      equipped: false,
+      consumable: false,
+      effect: 'background',
+      effect_value: 'Flow',
+      emoji: 'itemBackground',
+    },
+    Flowers: {
+      label: 'Flowers',
+      value: 'Flowers',
+      description: 'Background',
+      quantity: 1,
+      weight: 0,
+      cost: 1000,
+      equipped: false,
+      consumable: false,
+      effect: 'background',
+      effect_value: 'Flowers',
+      emoji: 'itemBackground',
+    },
+    Geolines: {
+      label: 'Geolines',
+      value: 'Geolines',
+      description: 'Background',
+      quantity: 1,
+      weight: 0,
+      cost: 1000,
+      equipped: false,
+      consumable: false,
+      effect: 'background',
+      effect_value: 'Geolines',
+      emoji: 'itemBackground',
+    },
+    Halftone: {
+      label: 'Halftone',
+      value: 'Halftone',
+      description: 'Background',
+      quantity: 1,
+      weight: 0,
+      cost: 1000,
+      equipped: false,
+      consumable: false,
+      effect: 'background',
+      effect_value: 'Halftone',
+      emoji: 'itemBackground',
+    },
+    High: {
+      label: 'High',
+      value: 'High',
+      description: 'Background',
+      quantity: 1,
+      weight: 0,
+      cost: 1000,
+      equipped: false,
+      consumable: false,
+      effect: 'background',
+      effect_value: 'High',
+      emoji: 'itemBackground',
+    },
+    Leaves: {
+      label: 'Leaves',
+      value: 'Leaves',
+      description: 'Background',
+      quantity: 1,
+      weight: 0,
+      cost: 1000,
+      equipped: false,
+      consumable: false,
+      effect: 'background',
+      effect_value: 'Leaves',
+      emoji: 'itemBackground',
+    },
+    LineLeaves: {
+      label: 'LineLeaves',
+      value: 'LineLeaves',
+      description: 'Background',
+      quantity: 1,
+      weight: 0,
+      cost: 1000,
+      equipped: false,
+      consumable: false,
+      effect: 'background',
+      effect_value: 'LineLeaves',
+      emoji: 'itemBackground',
+    },
+    LiquidMaze: {
+      label: 'LiquidMaze',
+      value: 'LiquidMaze',
+      description: 'Background',
+      quantity: 1,
+      weight: 0,
+      cost: 1000,
+      equipped: false,
+      consumable: false,
+      effect: 'background',
+      effect_value: 'LiquidMaze',
       emoji: 'itemBackground',
     },
     Memphis: {
@@ -371,9 +387,9 @@ const items = {
       effect_value: 'Memphis',
       emoji: 'itemBackground',
     },
-    Connected: {
-      label: 'Connected',
-      value: 'Connected',
+    Mindsets: {
+      label: 'Mindsets',
+      value: 'Mindsets',
       description: 'Background',
       quantity: 1,
       weight: 0,
@@ -381,7 +397,241 @@ const items = {
       equipped: false,
       consumable: false,
       effect: 'background',
-      effect_value: 'Connected',
+      effect_value: 'Mindsets',
+      emoji: 'itemBackground',
+    },
+    Noise: {
+      label: 'Noise',
+      value: 'Noise',
+      description: 'Background',
+      quantity: 1,
+      weight: 0,
+      cost: 1000,
+      equipped: false,
+      consumable: false,
+      effect: 'background',
+      effect_value: 'Noise',
+      emoji: 'itemBackground',
+    },
+    Paisley: {
+      label: 'Paisley',
+      value: 'Paisley',
+      description: 'Background',
+      quantity: 1,
+      weight: 0,
+      cost: 1000,
+      equipped: false,
+      consumable: false,
+      effect: 'background',
+      effect_value: 'Paisley',
+      emoji: 'itemBackground',
+    },
+    Paws: {
+      label: 'Paws',
+      value: 'Paws',
+      description: 'Background',
+      quantity: 1,
+      weight: 0,
+      cost: 1000,
+      equipped: false,
+      consumable: false,
+      effect: 'background',
+      effect_value: 'Paws',
+      emoji: 'itemBackground',
+    },
+    PixelCamo: {
+      label: 'PixelCamo',
+      value: 'PixelCamo',
+      description: 'Background',
+      quantity: 1,
+      weight: 0,
+      cost: 1000,
+      equipped: false,
+      consumable: false,
+      effect: 'background',
+      effect_value: 'PixelCamo',
+      emoji: 'itemBackground',
+    },
+    Plaid: {
+      label: 'Plaid',
+      value: 'Plaid',
+      description: 'Background',
+      quantity: 1,
+      weight: 0,
+      cost: 1000,
+      equipped: false,
+      consumable: false,
+      effect: 'background',
+      effect_value: 'Plaid',
+      emoji: 'itemBackground',
+    },
+    Rolling: {
+      label: 'Rolling',
+      value: 'Rolling',
+      description: 'Background',
+      quantity: 1,
+      weight: 0,
+      cost: 1000,
+      equipped: false,
+      consumable: false,
+      effect: 'background',
+      effect_value: 'Rolling',
+      emoji: 'itemBackground',
+    },
+    Safari: {
+      label: 'Safari',
+      value: 'Safari',
+      description: 'Background',
+      quantity: 1,
+      weight: 0,
+      cost: 1000,
+      equipped: false,
+      consumable: false,
+      effect: 'background',
+      effect_value: 'Safari',
+      emoji: 'itemBackground',
+    },
+    Sedated: {
+      label: 'Sedated',
+      value: 'Sedated',
+      description: 'Background',
+      quantity: 1,
+      weight: 0,
+      cost: 1000,
+      equipped: false,
+      consumable: false,
+      effect: 'background',
+      effect_value: 'Sedated',
+      emoji: 'itemBackground',
+    },
+    SpaceIcons: {
+      label: 'SpaceIcons',
+      value: 'SpaceIcons',
+      description: 'Background',
+      quantity: 1,
+      weight: 0,
+      cost: 1000,
+      equipped: false,
+      consumable: false,
+      effect: 'background',
+      effect_value: 'SpaceIcons',
+      emoji: 'itemBackground',
+    },
+    Sprinkles: {
+      label: 'Sprinkles',
+      value: 'Sprinkles',
+      description: 'Background',
+      quantity: 1,
+      weight: 0,
+      cost: 1000,
+      equipped: false,
+      consumable: false,
+      effect: 'background',
+      effect_value: 'Sprinkles',
+      emoji: 'itemBackground',
+    },
+    SquareTwist: {
+      label: 'SquareTwist',
+      value: 'SquareTwist',
+      description: 'Background',
+      quantity: 1,
+      weight: 0,
+      cost: 1000,
+      equipped: false,
+      consumable: false,
+      effect: 'background',
+      effect_value: 'SquareTwist',
+      emoji: 'itemBackground',
+    },
+    Squiggles: {
+      label: 'Squiggles',
+      value: 'Squiggles',
+      description: 'Background',
+      quantity: 1,
+      weight: 0,
+      cost: 1000,
+      equipped: false,
+      consumable: false,
+      effect: 'background',
+      effect_value: 'Squiggles',
+      emoji: 'itemBackground',
+    },
+    Stimming: {
+      label: 'Stimming',
+      value: 'Stimming',
+      description: 'Background',
+      quantity: 1,
+      weight: 0,
+      cost: 1000,
+      equipped: false,
+      consumable: false,
+      effect: 'background',
+      effect_value: 'Stimming',
+      emoji: 'itemBackground',
+    },
+    Topography: {
+      label: 'Topography',
+      value: 'Topography',
+      description: 'Background',
+      quantity: 1,
+      weight: 0,
+      cost: 1000,
+      equipped: false,
+      consumable: false,
+      effect: 'background',
+      effect_value: 'Topography',
+      emoji: 'itemBackground',
+    },
+    TriangleOverlap: {
+      label: 'TriangleOverlap',
+      value: 'TriangleOverlap',
+      description: 'Background',
+      quantity: 1,
+      weight: 0,
+      cost: 1000,
+      equipped: false,
+      consumable: false,
+      effect: 'background',
+      effect_value: 'TriangleOverlap',
+      emoji: 'itemBackground',
+    },
+    Tripping: {
+      label: 'Tripping',
+      value: 'Tripping',
+      description: 'Background',
+      quantity: 1,
+      weight: 0,
+      cost: 1000,
+      equipped: false,
+      consumable: false,
+      effect: 'background',
+      effect_value: 'Tripping',
+      emoji: 'itemBackground',
+    },
+    Waves: {
+      label: 'Waves',
+      value: 'Waves',
+      description: 'Background',
+      quantity: 1,
+      weight: 0,
+      cost: 1000,
+      equipped: false,
+      consumable: false,
+      effect: 'background',
+      effect_value: 'Waves',
+      emoji: 'itemBackground',
+    },
+    XandO: {
+      label: 'XandO',
+      value: 'XandO',
+      description: 'Background',
+      quantity: 1,
+      weight: 0,
+      cost: 1000,
+      equipped: false,
+      consumable: false,
+      effect: 'background',
+      effect_value: 'XandO',
       emoji: 'itemBackground',
     },
   },
@@ -1020,24 +1270,27 @@ export async function rpgMarketInventory(
       `
     : '';
 
-  // Go through items.general and create a new object of items that the user doesn't have yet
-  const marketInventory = [...Object.values(items.general), ...Object.values(items.backgrounds)]
-    .map(item => {
+  interface MarketItem extends SelectMenuComponentOptionData {
+    category: string;
+  }
+
+  // Go through items.general and items.backgrounds and create a new object of items that the user doesn't have yet
+  const marketInventory: MarketItem[] = [];
+
+  for (const [category, categoryItems] of Object.entries(items)) {
+    for (const item of Object.values(categoryItems)) {
       if (!inventoryData.find(i => i.value === item.value)) {
-        // log.debug(F, `item: ${JSON.stringify(item, null, 2)}`);
-        // log.debug(F, `item.emoji: ${item.emoji}`);
-        // log.debug(F, `emojiGet(item.emoji): ${emojiGet(item.emoji)}`);
-        return {
+        marketInventory.push({
           label: `${item.label} - ${item.cost} TT$`,
           value: item.value,
           description: `${item.description}`,
           emoji: emojiGet(item.emoji).id,
-        };
+          category,
+        });
       }
-      return null;
-    })
-    .filter(item => item !== null) as SelectMenuComponentOptionData[];
-  // log.debug(F, `generalOptions: ${JSON.stringify(marketInventory, null, 2)}`);
+    }
+  }
+
   return {
     marketInventory,
     personaTokens: personaData.tokens,
@@ -1055,19 +1308,6 @@ export async function rpgMarket(
     personaInventory,
   } = await rpgMarketInventory(interaction);
 
-  // log.debug(F, `marketInventory: ${JSON.stringify(marketInventory, null, 2)}`);
-  // log.debug(F, `personaTokens: ${personaTokens}`);
-  // log.debug(F, `personaInventory: ${JSON.stringify(personaInventory, null, 2)}`);
-
-  // Create the market buttons - This is a select menu
-  const rowItems = new ActionRowBuilder<StringSelectMenuBuilder>()
-    .addComponents(
-      new StringSelectMenuBuilder()
-        .setCustomId(`rpgGeneralSelect,user:${interaction.user.id}`)
-        .setPlaceholder('Select an item to buy')
-        .setOptions(marketInventory),
-
-    );
   // This is the row of nav buttons. It starts with the town button.
   const rowMarket = new ActionRowBuilder<ButtonBuilder>()
     .addComponents(
@@ -1076,12 +1316,39 @@ export async function rpgMarket(
 
   // Everyone gets the town button, but only people with purchased items get the items select menu
   const componentList = [rowMarket] as ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>[];
-  // log.debug(F, `marketInventory.length: ${marketInventory.length}`);
-  // log.debug(F, `componentList: ${JSON.stringify(componentList, null, 2)}`);
 
-  if (marketInventory.length > 0) { componentList.unshift(rowItems); }
+  interface MarketItem extends SelectMenuComponentOptionData {
+    category: string;
+  }
 
-  // log.debug(F, `componentList: ${JSON.stringify(componentList, null, 2)}`);
+  // Group marketInventory items by their category property
+  const groups = (marketInventory as MarketItem[]).reduce((groupData: Record<string, MarketItem[]>, item) => {
+    const { category } = item;
+    const newGroupData = { ...groupData };
+    newGroupData[category] = newGroupData[category] ? [...newGroupData[category], item] : [item];
+    return newGroupData;
+  }, {});
+
+  // For each group, split the group into chunks of 20 items each and create a new rowItems for each chunk
+  for (const [group, itemsData] of Object.entries(groups)) {
+    // Create chunks of 20 items each
+    const chunks = [];
+    for (let i = 0; i < itemsData.length; i += 25) {
+      chunks.push(itemsData.slice(i, i + 25));
+    }
+
+    // Create a new rowItems for each chunk
+    for (const [index, chunk] of chunks.entries()) {
+      const rowItems = new ActionRowBuilder<StringSelectMenuBuilder>()
+        .addComponents(
+          new StringSelectMenuBuilder()
+            .setCustomId(`rpgGeneralSelect,user:${interaction.user.id},group:${group},chunk:${index}`)
+            .setPlaceholder(`${group.charAt(0).toUpperCase() + group.slice(1)} Page ${index + 1}`)
+            .addOptions(chunk),
+        );
+      componentList.push(rowItems);
+    }
+  }
 
   // The user has clicked the market button, send them the market embed
   return {
@@ -1093,6 +1360,7 @@ export async function rpgMarket(
       You are in the local market, you can buy some items to help you on your journey.
 
       ${emojiGet('itemBackground')} ***Backgrounds*** can be used to personalize your /profile and /levels.
+      [Click here to see all backgrounds.](https://drive.google.com/drive/folders/1F1s0uQt0nGDCCaVANVdrEQKwameo8eHI?usp=drive_link)
       ***More items coming soon! Check back later.***
       
       Wallet: ${personaTokens} tokens
@@ -1116,10 +1384,23 @@ export async function rpgMarketChange(
   // Get the item the user selected
   let choice = '' as string;
   if (interaction.isButton()) {
-    const itemComponent = interaction.message.components[0].components[0];
-    const selectedItem = (itemComponent as StringSelectMenuComponent).options.find(
-      (o:APISelectMenuOption) => o.default === true,
-    );
+    // const itemComponent = interaction.message.components[0].components[0];
+    let selectedItem: APISelectMenuOption | undefined;
+    for (const component of interaction.message.components) {
+      for (const subComponent of component.components) {
+        if (subComponent.type === ComponentType.SelectMenu) {
+          selectedItem = (subComponent as StringSelectMenuComponent).options.find(
+            (o:APISelectMenuOption) => o.default === true,
+          );
+          if (selectedItem) {
+            break;
+          }
+        }
+      }
+      if (selectedItem) {
+        break;
+      }
+    }
     choice = selectedItem?.value ?? '';
   } else if (interaction.isStringSelectMenu()) {
     [choice] = interaction.values;
@@ -1128,10 +1409,9 @@ export async function rpgMarketChange(
   // log.debug(F, `choice: ${choice}`);
 
   // Get a list of marketInventory where the value does not equal the choice
-  const filteredItems = Object.values(marketInventory).filter(item => item.value !== choice);
+  // const filteredItems = Object.values(marketInventory).filter(item => item.value !== choice);
 
   const stringMenu = new StringSelectMenuBuilder()
-    .setOptions(filteredItems)
     .setCustomId(`rpgGeneralSelect,user:${interaction.user.id}`)
     .setPlaceholder('Select an item to buy');
 
@@ -1170,9 +1450,6 @@ export async function rpgMarketChange(
   // log.debug(F, `itemData (change): ${JSON.stringify(itemData, null, 2)}`);
   }
 
-  const rowItems = new ActionRowBuilder<StringSelectMenuBuilder>()
-    .addComponents(stringMenu);
-
   const rowMarket = new ActionRowBuilder<ButtonBuilder>()
     .addComponents(
       customButton(`rpgTown,user:${interaction.user.id}`, 'Town', 'buttonTown', ButtonStyle.Primary),
@@ -1189,10 +1466,39 @@ export async function rpgMarketChange(
     );
   }
 
-  const components = stringMenu.options.length === 0
-    ? [rowMarket]
-    : [rowItems, rowMarket];
+  const components = [rowMarket] as ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>[];
 
+  interface MarketItem extends SelectMenuComponentOptionData {
+    category: string;
+  }
+
+  const groups = (marketInventory as MarketItem[]).reduce((groupData: Record<string, MarketItem[]>, item) => {
+    const { category } = item;
+    const newGroupData = { ...groupData };
+    newGroupData[category] = newGroupData[category] ? [...newGroupData[category], item] : [item];
+    return newGroupData;
+  }, {});
+
+  // For each group, split the group into chunks of 25 items each and create a new rowItems for each chunk
+  for (const [group, itemsData] of Object.entries(groups)) {
+    // Create chunks of 25 items each
+    const chunks = [];
+    for (let i = 0; i < itemsData.length; i += 25) {
+      chunks.push(itemsData.slice(i, i + 25));
+    }
+
+    // Create a new rowItems for each chunk
+    for (const [index, chunk] of chunks.entries()) {
+      const rowItems = new ActionRowBuilder<StringSelectMenuBuilder>()
+        .addComponents(
+          new StringSelectMenuBuilder()
+            .setCustomId(`rpgGeneralSelect,user:${interaction.user.id},group:${group},chunk:${index}`)
+            .setPlaceholder(`${group.charAt(0).toUpperCase() + group.slice(1)} Page ${index + 1}`)
+            .addOptions(chunk),
+        );
+      components.push(rowItems);
+    }
+  }
   const embed = embedTemplate()
     .setAuthor(null)
     .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
@@ -1201,6 +1507,7 @@ export async function rpgMarketChange(
       You are in the local market, you can buy some items to help you on your journey.
 
       ${emojiGet('itemBackground')} ***Backgrounds*** can be used to personalize your /profile and /levels.
+      [Click here to see all backgrounds.](https://drive.google.com/drive/folders/1F1s0uQt0nGDCCaVANVdrEQKwameo8eHI?usp=drive_link)
       ***More items coming soon! Check back later.***
 
       Wallet: ${personaTokens} tokens
@@ -1238,10 +1545,22 @@ export async function rpgMarketPreview(
   // log.debug(F, `personaData (Accept): ${JSON.stringify(personaData, null, 2)}`);
 
   // If the user confirms the information, save the persona information
-  const itemComponent = interaction.message.components[0].components[0];
-  const selectedItem = (itemComponent as StringSelectMenuComponent).options.find(
-    (o:APISelectMenuOption) => o.default === true,
-  );
+  let selectedItem: APISelectMenuOption | undefined;
+  for (const component of interaction.message.components) {
+    for (const subComponent of component.components) {
+      if (subComponent.type === ComponentType.SelectMenu) {
+        selectedItem = (subComponent as StringSelectMenuComponent).options.find(
+          (o:APISelectMenuOption) => o.default === true,
+        );
+        if (selectedItem) {
+          break;
+        }
+      }
+    }
+    if (selectedItem) {
+      break;
+    }
+  }
   // log.debug(F, `selectedItem (accept): ${JSON.stringify(selectedItem, null, 2)}`);
 
   const allItems = [...Object.values(items.general), ...Object.values(items.backgrounds)];
@@ -1324,11 +1643,23 @@ export async function rpgMarketAccept(
   // log.debug(F, `personaData (Accept): ${JSON.stringify(personaData, null, 2)}`);
 
   // If the user confirms the information, save the persona information
-  const itemComponent = interaction.message.components[0].components[0];
-  const selectedItem = (itemComponent as StringSelectMenuComponent).options.find(
-    (o:APISelectMenuOption) => o.default === true,
-  );
-  // log.debug(F, `selectedItem (accept): ${JSON.stringify(selectedItem, null, 2)}`);
+  let selectedItem: APISelectMenuOption | undefined;
+  for (const component of interaction.message.components) {
+    for (const subComponent of component.components) {
+      if (subComponent.type === ComponentType.SelectMenu) {
+        selectedItem = (subComponent as StringSelectMenuComponent).options.find(
+          (o:APISelectMenuOption) => o.default === true,
+        );
+        if (selectedItem) {
+          break;
+        }
+      }
+    }
+    if (selectedItem) {
+      break;
+    }
+  }
+  log.debug(F, `selectedItem (accept): ${JSON.stringify(selectedItem, null, 2)}`);
 
   const allItems = [...Object.values(items.general), ...Object.values(items.backgrounds)];
   const itemData = allItems.find(item => item.value === selectedItem?.value) as {
@@ -1483,6 +1814,8 @@ export async function rpgHomeInventory(
           label: `${item.label} - ${item.cost} TT$`,
           value: item.value,
           description: `${item.description}`,
+          cost: item.cost,
+          equipped: item.equipped,
           emoji: emojiGet(item.emoji).id,
         };
       }
@@ -1719,6 +2052,13 @@ export async function rpgHome(
     emoji: string;
   };
   const chosenItem = homeInventory.find(item => item.value === defaultOption);
+  let sellPrice = 0;
+  const equipped = (inventoryData.find(item => item.value === chosenItem?.value)?.equipped as boolean);
+  let equippedButtonText = 'Equip';
+  if (equipped) {
+    equippedButtonText = 'Equipped';
+  }
+
   if (chosenItem) {
     chosenItem.default = true;
     backgroundMenu.addOptions(chosenItem);
@@ -1743,8 +2083,12 @@ export async function rpgHome(
       effect_value: string;
       emoji: string;
     };
+    sellPrice = (allItems.find(item => item.value === chosenItem?.value)?.cost as number) / 4;
+    log.debug(F, `equipped: ${equipped}`);
+    log.debug(F, `sellPrice: ${sellPrice}`);
   // log.debug(F, `backgroundData (home change): ${JSON.stringify(backgroundData, null, 2)}`);
   }
+  log.debug(F, `chosenItem: ${JSON.stringify(chosenItem, null, 2)}`);
 
   // Set the item row
   const rowBackgrounds = new ActionRowBuilder<StringSelectMenuBuilder>()
@@ -1806,9 +2150,18 @@ export async function rpgHome(
       customButton(`rpgTown,user:${interaction.user.id}`, 'Town', 'buttonTown', ButtonStyle.Primary),
     );
 
-  if (chosenItem && (interaction.isStringSelectMenu() || interaction.isButton())) {
+  // if item is not equipped, show equip button
+
+  if (chosenItem && (equipped === false)) {
     rowHome.addComponents(
-      customButton(`rpgAccept,user:${interaction.user.id}`, 'Accept', 'buttonAccept', ButtonStyle.Success),
+      customButton(`rpgAccept,user:${interaction.user.id}`, `${equippedButtonText}`, 'buttonAccept', ButtonStyle.Success).setDisabled(equipped),
+      customButton(`rpgSell,user:${interaction.user.id}`, `Sell +${sellPrice} TT$`, 'buttonBetHuge', ButtonStyle.Danger),
+      customButton(`rpgHomePreview,user:${interaction.user.id}`, 'Preview', 'buttonPreview', ButtonStyle.Secondary),
+    );
+  } else if (chosenItem && (equipped === true)) { // else show unequip button
+    rowHome.addComponents(
+      customButton(`rpgDecline,user:${interaction.user.id}`, 'Unequip', 'buttonQuit', ButtonStyle.Danger),
+      customButton(`rpgSell,user:${interaction.user.id}`, `Sell +${sellPrice} TT$`, 'buttonBetHuge', ButtonStyle.Danger),
       customButton(`rpgHomePreview,user:${interaction.user.id}`, 'Preview', 'buttonPreview', ButtonStyle.Secondary),
     );
   }
@@ -2004,8 +2357,8 @@ export async function rpgHomeAccept(
     log.error(F, `Item not found in inventory: ${JSON.stringify(chosenItem, null, 2)}`);
   }
 
-  // Un-equip all other items
-  const otherItems = inventoryData.filter(item => item.value !== selectedItem?.value);
+  // Un-equip all other backgrounds
+  const otherItems = inventoryData.filter(item => item.effect === 'background' && item.value !== selectedItem?.value);
   otherItems.forEach(async item => {
     const newItem = item;
     newItem.equipped = false;
@@ -2029,6 +2382,118 @@ export async function rpgHomeAccept(
 
   // await personaSet(personaData);
   const { embeds, components, files } = await rpgHome(interaction, `**You have equipped ${chosenItem?.label}!**\n`);
+  return {
+    embeds,
+    components,
+    files,
+  };
+}
+
+export async function rpgHomeDecline(
+  interaction: MessageComponentInteraction,
+):Promise<InteractionUpdateOptions> {
+  // Check get fresh persona data
+  const userData = await db.users.upsert({
+    where: {
+      discord_id: interaction.user.id,
+    },
+    create: {
+      discord_id: interaction.user.id,
+    },
+    update: {},
+  });
+  const personaData = await db.personas.upsert({
+    where: {
+      user_id: userData.id,
+    },
+    create: {
+      user_id: userData.id,
+    },
+    update: {},
+  });
+  const itemComponent = interaction.message.components[0].components[0];
+  const selectedItem = (itemComponent as StringSelectMenuComponent).options.find(
+    (o:APISelectMenuOption) => o.default === true,
+  );
+
+  const inventoryData = await db.rpg_inventory.findMany({
+    where: {
+      persona_id: personaData.id,
+    },
+  });
+  const chosenItem = inventoryData.find(item => item.value === selectedItem?.value);
+  if (chosenItem) {
+    chosenItem.equipped = false;
+    await db.rpg_inventory.upsert({
+      where: {
+        id: chosenItem.id,
+      },
+      create: chosenItem,
+      update: chosenItem,
+    });
+  }
+  const { embeds, components, files } = await rpgHome(interaction, `**You have unequipped ${chosenItem?.label}.**\n`);
+  return {
+    embeds,
+    components,
+    files,
+  };
+}
+
+export async function rpgHomeSell(
+  interaction: MessageComponentInteraction,
+):Promise<InteractionUpdateOptions> {
+  // Check get fresh persona data
+  const userData = await db.users.upsert({
+    where: {
+      discord_id: interaction.user.id,
+    },
+    create: {
+      discord_id: interaction.user.id,
+    },
+    update: {},
+  });
+  let personaData = await db.personas.upsert({
+    where: {
+      user_id: userData.id,
+    },
+    create: {
+      user_id: userData.id,
+    },
+    update: {},
+  });
+  const inventoryData = await db.rpg_inventory.findMany({
+    where: {
+      persona_id: personaData.id,
+    },
+  });
+  const itemComponent = interaction.message.components[0].components[0];
+  const selectedItem = (itemComponent as StringSelectMenuComponent).options.find(
+    (o:APISelectMenuOption) => o.default === true,
+  );
+  const itemName = inventoryData.find(item => item.value === selectedItem?.value)?.label;
+  const sellPrice = Math.floor(Object.values(items.backgrounds).find(item => item.value === selectedItem?.value)?.cost as number) / 4;
+
+  await db.rpg_inventory.delete({
+    where: {
+      persona_id_value: {
+        persona_id: personaData.id,
+        value: selectedItem?.value as string,
+      },
+    },
+  });
+
+  personaData.tokens += sellPrice;
+
+  personaData = await db.personas.upsert({
+    where: {
+      user_id: userData.id,
+    },
+    create: personaData,
+    update: personaData,
+  });
+  log.debug(F, `itemName: ${JSON.stringify(itemName, null, 2)}`);
+  const { embeds, components, files } = await rpgHome(interaction, `**You have sold ${itemName} for ${sellPrice} TripTokens!**\n`);
   return {
     embeds,
     components,

@@ -7,7 +7,6 @@
 
 FROM node:21.1.0-alpine AS development
 
-ENV TZ="America/Chicago"
 ENV NODE_ENV=development
 RUN date
 
@@ -62,7 +61,6 @@ CMD npx prisma migrate deploy && npx tsc-watch --onSuccess "npx nodemon --config
 
 FROM node:21.1.0-alpine AS build
 
-ENV TZ="America/Chicago"
 ENV NODE_ENV=production
 RUN date
 
@@ -102,7 +100,6 @@ RUN npm ci --omit:dev && npm cache clean --force
 
 FROM node:21.1.0-alpine AS production
 
-ENV TZ="America/Chicago"
 ENV NODE_ENV=production
 RUN date
 

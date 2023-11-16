@@ -1032,6 +1032,23 @@ export async function inventorySet(
   }
 }
 
+export async function inventoryDel(
+  personaId:string,
+  value:string,
+):Promise<void> {
+// log.debug(F, 'useractionsGet started');
+  if (env.POSTGRES_DB_URL === undefined) return;
+  try {
+    await db<RpgInventory>('rpg_inventory')
+      .delete()
+      .where('persona_id', personaId)
+      .andWhere('value', value);
+  } catch (err) {
+    log.error(F, `Error deleting inventory: ${err}`);
+    log.error(F, `personaId: ${personaId} | value: ${value}`);
+  }
+}
+
 export async function countingGet(
   channelID:string,
 ):Promise<Counting | undefined> {

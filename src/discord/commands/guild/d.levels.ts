@@ -331,7 +331,7 @@ export const dLevels: SlashCommand = {
 
     // Default Progress Bars Calculate
     // const progressText = levelData.TEXT.TOTAL.level_exp / levelData.TEXT.TOTAL.nextLevel;
-    const progressTotal = levelData.ALL.TOTAL.level_exp / levelData.TEXT.TOTAL.nextLevel;
+    const progressTotal = levelData.ALL.TOTAL.level_exp / levelData.ALL.TOTAL.nextLevel;
     const progressGeneral = levelData.TEXT.GENERAL
       ? levelData.TEXT.GENERAL.level_exp / levelData.TEXT.GENERAL.nextLevel
       : 0;
@@ -794,27 +794,27 @@ export const dLevels: SlashCommand = {
 
     // Choose and Draw the Level Image
     let LevelImagePath = '' as string;
-    if (levelData.TEXT.TOTAL.level < 10) {
+    if (levelData.ALL.TOTAL.level <= 9) {
       LevelImagePath = 'badgeVip0';
-    } else if (levelData.TEXT.TOTAL.level < 20) {
+    } else if (levelData.ALL.TOTAL.level <= 19) {
       LevelImagePath = 'badgeVip1';
-    } else if (levelData.TEXT.TOTAL.level < 30) {
+    } else if (levelData.ALL.TOTAL.level <= 29) {
       LevelImagePath = 'badgeVip2';
-    } else if (levelData.TEXT.TOTAL.level < 40) {
+    } else if (levelData.ALL.TOTAL.level <= 39) {
       LevelImagePath = 'badgeVip3';
-    } else if (levelData.TEXT.TOTAL.level < 50) {
+    } else if (levelData.ALL.TOTAL.level <= 49) {
       LevelImagePath = 'badgeVip4';
-    } else if (levelData.TEXT.TOTAL.level < 60) {
+    } else if (levelData.ALL.TOTAL.level <= 59) {
       LevelImagePath = 'badgeVip5';
-    } else if (levelData.TEXT.TOTAL.level < 70) {
+    } else if (levelData.ALL.TOTAL.level <= 69) {
       LevelImagePath = 'badgeVip6';
-    } else if (levelData.TEXT.TOTAL.level < 80) {
+    } else if (levelData.ALL.TOTAL.level <= 79) {
       LevelImagePath = 'badgeVip7';
-    } else if (levelData.TEXT.TOTAL.level < 90) {
+    } else if (levelData.ALL.TOTAL.level <= 89) {
       LevelImagePath = 'badgeVip8';
-    } else if (levelData.TEXT.TOTAL.level < 100) {
+    } else if (levelData.ALL.TOTAL.level <= 99) {
       LevelImagePath = 'badgeVip9';
-    } else if (levelData.TEXT.TOTAL.level >= 100) {
+    } else if (levelData.ALL.TOTAL.level >= 100) {
       LevelImagePath = 'badgeVip10';
     }
     const LevelImage = await Canvas.loadImage(await imageGet(LevelImagePath));
