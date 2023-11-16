@@ -1,5 +1,4 @@
-// TODO: logit bias
-
+/* eslint-disable sonarjs/no-duplicate-string */
 import {
   ActionRowBuilder,
   ModalBuilder,
@@ -16,9 +15,16 @@ import {
   TextBasedChannel,
   CategoryChannel,
   ForumChannel,
+  ButtonBuilder,
+  ButtonStyle,
+  ButtonInteraction,
+  APIEmbedField,
+  EmbedBuilder,
+  APIButtonComponent,
+  APIActionRowComponent,
+  APIMessageComponentEmoji,
 } from 'discord.js';
 import {
-  APIEmbedField,
   APIInteractionDataResolvedChannel,
   ChannelType,
   TextInputStyle,
@@ -32,21 +38,15 @@ import {
   ai_personas,
 } from '@prisma/client';
 import OpenAI from 'openai';
-import { Moderation } from 'openai/resources';
 import { paginationEmbed } from '../../utils/pagination';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
-import {
-  aiSet,
-  aiGet,
-  aiDel,
-  aiLink,
-  aiChat,
-  aiModerate,
-} from '../../../global/commands/g.ai';
 import commandContext from '../../utils/context';
-import { userInfoEmbed } from '../../../global/commands/g.moderate';
+import { moderate } from '../../../global/commands/g.moderate';
 import { sleep } from './d.bottest';
+import aiChat, { aiModerate } from '../../../global/commands/g.ai';
+import { UserActionType } from '../../../global/@types/database';
+import { parseDuration } from '../../../global/utils/parseDuration';
 
 const db = new PrismaClient({ log: ['error'] });
 
@@ -55,6 +55,7 @@ const F = f(__filename);
 const maxHistoryLength = 5;
 
 const ephemeralExplanation = 'Set to "True" to show the response only to you';
+const personaDoesntExist = 'This persona does not exist. Please create it first.';
 const confirmationCodes = new Map<string, string>();
 const tripbotUAT = '@TripBot UAT (Moonbear)';
 
@@ -63,6 +64,30 @@ const aiCosts = {
   GPT_3_5_TURBO: {
     input: 0.0015,
     output: 0.002,
+  },
+  GPT_3_5_TURBO_1106: {
+    input: 0.001,
+    output: 0.002,
+  },
+  GPT_4: {
+    input: 0.03,
+    output: 0.06,
+  },
+  GPT_4_1106_PREVIEW: {
+    input: 0.01,
+    output: 0.03,
+  },
+  GPT_4_1106_VISION_PREVIEW: {
+    input: 0.01,
+    output: 0.03,
+  },
+  DALL_E_2: {
+    input: 0.00,
+    output: 0.04,
+  },
+  DALL_E_3: {
+    input: 0.00,
+    output: 0.02,
   },
 } as AiCosts;
 
@@ -74,7 +99,7 @@ type AiCosts = {
   }
 };
 
-type AiAction = 'HELP' | 'NEW' | 'GET' | 'SET' | 'DEL' | 'LINK';
+type AiAction = 'HELP' | 'UPSERT' | 'GET' | 'DEL' | 'LINK' | 'MOD';
 
 async function help(
   interaction: ChatInputCommandInteraction,
@@ -224,7 +249,7 @@ async function makePersonaEmbed(
     ]);
 }
 
-async function set(
+async function upsert(
   interaction: ChatInputCommandInteraction,
 ):Promise<void> {
   const personaName = interaction.options.getString('name') ?? interaction.user.username;
@@ -269,11 +294,11 @@ async function set(
       // Get values
       let temperature = interaction.options.getNumber('temperature');
       const topP = interaction.options.getNumber('top_p');
-      log.debug(F, `temperature: ${temperature}, top_p: ${topP}`);
+      // log.debug(F, `temperature: ${temperature}, top_p: ${topP}`);
 
       // If both temperature and top_p are set, throw an error
       if (temperature && topP) {
-        log.debug(F, 'Both temperature and top_p are set');
+        // log.debug(F, 'Both temperature and top_p are set');
         embedTemplate()
           .setTitle('Modal')
           .setColor(Colors.Red)
@@ -283,11 +308,15 @@ async function set(
 
       // If both temperature and top_p are NOT set, set temperature to 1
       if (!temperature && !topP) {
-        log.debug(F, 'Neither temperature nor top_p are set');
+        // log.debug(F, 'Neither temperature nor top_p are set');
         temperature = 1;
       }
 
-      const userData = await db.users.findUniqueOrThrow({ where: { discord_id: interaction.user.id } });
+      const userData = await db.users.upsert({
+        where: { discord_id: interaction.user.id },
+        create: { discord_id: interaction.user.id },
+        update: { discord_id: interaction.user.id },
+      });
 
       const aiPersona = {
         name: personaName,
@@ -302,21 +331,27 @@ async function set(
         created_at: existingPersona ? existingPersona.created_at : new Date(),
       } as ai_personas;
 
-      const response = await aiSet(aiPersona);
+      const alreadyExists = await db.ai_personas.findFirst({
+        where: {
+          name: aiPersona.name,
+        },
+      });
+      const action = alreadyExists ? 'updated' : 'created';
 
-      if (response.startsWith('Success')) {
-        const personaEmbed = await makePersonaEmbed(aiPersona);
-        await i.editReply({
-          embeds: [personaEmbed],
-        });
-      } else {
-        await i.editReply({
-          embeds: [embedTemplate()
-            .setTitle('Modal')
-            .setColor(Colors.Red)
-            .setDescription(response)],
-        });
-      }
+      await db.ai_personas.upsert({
+        where: {
+          name: aiPersona.name,
+        },
+        create: aiPersona,
+        update: aiPersona,
+      });
+
+      await i.editReply({
+        embeds: [embedTemplate()
+          .setTitle('Modal')
+          .setColor(Colors.Red)
+          .setDescription(`Success! This persona has been ${action}!`)],
+      });
     });
 }
 
@@ -328,30 +363,32 @@ async function get(
   const modelName = interaction.options.getString('name');
   const channel = interaction.options.getChannel('channel') ?? interaction.channel;
 
-  let aiPersona = '' as string | ai_personas;
+  let aiPersona:ai_personas | null = null;
   let description = '' as string;
   if (modelName) {
-    aiPersona = await aiGet(modelName);
+    aiPersona = await db.ai_personas.findUnique({
+      where: {
+        name: modelName,
+      },
+    });
   } else if (channel) {
     // Check if the channel is linked to a persona
-    let aiLinkData = {} as {
-      id: string;
-      channel_id: string;
-      persona_id: string;
-    } | null;
-    aiLinkData = await db.ai_channels.findFirst({
+    let aiLinkData = await db.ai_channels.findFirst({
       where: {
         channel_id: channel.id,
       },
     });
     if (aiLinkData) {
       log.debug(F, `Found aiLinkData on first go: ${JSON.stringify(aiLinkData, null, 2)}`);
-      aiPersona = await db.ai_personas.findUniqueOrThrow({
+      aiPersona = await db.ai_personas.findUnique({
         where: {
           id: aiLinkData.persona_id,
         },
-      }) as ai_personas;
-      description = `Channel ${(channel as TextChannel).name} is linked with the **"${aiPersona.name ?? aiPersona}"** persona:`;
+      });
+      if (aiPersona) {
+        // eslint-disable-next-line max-len
+        description = `Channel ${(channel as TextChannel).name} is linked with the **"${aiPersona.name ?? aiPersona}"** persona:`;
+      }
     }
 
     if (!aiLinkData && (channel as ThreadChannel).parent) {
@@ -363,13 +400,15 @@ async function get(
         },
       });
       if (aiLinkData) {
-        aiPersona = await db.ai_personas.findUniqueOrThrow({
+        aiPersona = await db.ai_personas.findUnique({
           where: {
             id: aiLinkData.persona_id,
           },
-        }) as ai_personas;
+        });
+        if (aiPersona) {
         // eslint-disable-next-line max-len
-        description = `Channel ${(channel as ThreadChannel).parent} is linked with the **"${aiPersona.name}"** persona:`;
+          description = `Parent category/channel ${(channel as ThreadChannel).parent} is linked with the **"${aiPersona.name}"** persona:`;
+        }
       }
     }
 
@@ -382,20 +421,22 @@ async function get(
         },
       });
       if (aiLinkData) {
-        aiPersona = await db.ai_personas.findUniqueOrThrow({
+        aiPersona = await db.ai_personas.findUnique({
           where: {
             id: aiLinkData.persona_id,
           },
-        }) as ai_personas;
+        });
+        if (aiPersona) {
         // eslint-disable-next-line max-len
-        description = `Category ${(channel as ThreadChannel).parent?.parent} is linked with the **"${aiPersona.name}"** persona:`;
+          description = `Parent category ${(channel as ThreadChannel).parent?.parent} is linked with the **"${aiPersona.name}"** persona:`;
+        }
       }
     }
   }
 
-  log.debug(F, `aiPersona: ${JSON.stringify(aiPersona, null, 2)}`);
+  // log.debug(F, `aiPersona: ${JSON.stringify(aiPersona, null, 2)}`);
 
-  if (typeof aiPersona === 'string') {
+  if (!aiPersona) {
     await interaction.editReply({
       embeds: [embedTemplate()
         .setTitle('Modal')
@@ -425,7 +466,11 @@ async function del(
   const personaName = interaction.options.getString('name') ?? interaction.user.username;
 
   if (!confirmation) {
-    const aiPersona = await aiGet(personaName);
+    const aiPersona = await db.ai_personas.findUnique({
+      where: {
+        name: personaName,
+      },
+    });
 
     if (!aiPersona) {
       await interaction.editReply({
@@ -471,57 +516,40 @@ async function del(
     return;
   }
 
-  const response = await aiDel(personaName);
-  log.debug(F, `response: ${response}`);
-
-  if (!response.startsWith('Success')) {
-    await interaction.editReply({
-      embeds: [embedTemplate()
-        .setTitle('Modal')
-        .setColor(Colors.Red)
-        .setDescription(response)],
-
-    });
-    return;
-  }
+  await db.ai_personas.delete({
+    where: {
+      name: personaName,
+    },
+  });
 
   confirmationCodes.delete(`${interaction.user.id}${interaction.user.username}`);
   await interaction.editReply({
     embeds: [embedTemplate()
       .setTitle('Modal')
       .setColor(Colors.Blurple)
-      .setDescription(response)],
+      .setDescription('Success: Persona was deleted!')],
   });
 }
 
 async function getLinkedChannel(
   channel: CategoryChannel | ForumChannel | APIInteractionDataResolvedChannel | TextBasedChannel,
 ):Promise<ai_channels | null> {
+  // With the way AI personas work, they can be assigned to a category, channel, or thread
+  // This function will check if the given channel is linked to an AI persona
+  // If it is not, it will check the channel's parent; either the Category or Channel (in case of Thread)
+  // If the parent isn't linked, it'll check the parent's parent; this is only for Thread channels.
+  // Once a link is fount, it will return that link data
+  // If no link is found, it'll return null
+
   // Check if the channel is linked to a persona
-  let aiLinkData = await db.ai_channels.findFirst({
-    where: {
-      channel_id: channel.id,
-    },
-  });
+  let aiLinkData = await db.ai_channels.findFirst({ where: { channel_id: channel.id } });
 
   // If the channel isn't listed in the database, check the parent
-  if (!aiLinkData
-    && 'parent' in channel
-    && channel.parent) {
-    aiLinkData = await db.ai_channels.findFirst({
-      where: {
-        channel_id: channel.parent.id,
-      },
-    });
-    // If /that/ channel doesn't exist, check the parent of the parent
-    // This is mostly for threads
-    if (!aiLinkData
-      && channel.parent.parent) {
-      aiLinkData = await db.ai_channels.findFirst({
-        where: {
-          channel_id: channel.parent.parent.id,
-        },
-      });
+  if (!aiLinkData && 'parent' in channel && channel.parent) {
+    aiLinkData = await db.ai_channels.findFirst({ where: { channel_id: channel.parent.id } });
+    // If /that/ channel doesn't exist, check the parent of the parent, this is for threads
+    if (!aiLinkData && channel.parent.parent) {
+      aiLinkData = await db.ai_channels.findFirst({ where: { channel_id: channel.parent.parent.id } });
     }
   }
 
@@ -536,10 +564,10 @@ async function link(
 
   const personaName = interaction.options.getString('name') ?? interaction.user.username;
   const toggle = (interaction.options.getString('toggle') ?? 'enable') as 'enable' | 'disable';
+  const textChannel = interaction.options.getChannel('channel') ?? interaction.channel;
 
-  let response = '' as string;
+  const response = '' as string;
   if (toggle === 'enable') {
-    const textChannel = interaction.options.getChannel('channel') ?? interaction.channel;
     if (!textChannel) {
       await interaction.editReply({
         embeds: [embedTemplate()
@@ -550,35 +578,217 @@ async function link(
       });
       return;
     }
-    response = await aiLink(personaName, textChannel.id, toggle);
-  } else {
-    const textChannel = interaction.options.getChannel('channel');
-    if (textChannel) {
-      response = await aiLink(personaName, textChannel.id, toggle);
-    } else if (interaction.channel) {
-      const aiLinkData = await getLinkedChannel(interaction.channel);
-      if (aiLinkData) {
-        response = await aiLink(personaName, aiLinkData?.channel_id, toggle);
-      } else {
+    // response = await aiLink(personaName, textChannel.id, toggle);
+
+    const personaData = await db.ai_personas.findUnique({
+      where: {
+        name: personaName,
+      },
+    });
+
+    if (!personaData) {
+      await interaction.editReply({
+        embeds: [embedTemplate()
+          .setTitle('Modal')
+          .setColor(Colors.Red)
+          .setDescription(personaDoesntExist)],
+
+      });
+      return;
+    }
+
+    const aiLinkData = await db.ai_channels.findFirst({
+      where: {
+        channel_id: textChannel.id,
+      },
+    });
+
+    if (aiLinkData) {
+      await db.ai_channels.update({
+        where: {
+          id: aiLinkData.id,
+        },
+        data: {
+          channel_id: textChannel.id,
+          persona_id: personaData.id,
+        },
+      });
+      await interaction.editReply({
+        embeds: [embedTemplate()
+          .setTitle('Modal')
+          .setColor(Colors.Red)
+          .setDescription(`Success: The link between ${personaName} and <#${textChannel.id}> was updated!`)],
+
+      });
+      return;
+    }
+
+    await db.ai_channels.create({
+      data: {
+        channel_id: textChannel.id,
+        persona_id: personaData.id,
+      },
+    });
+    await interaction.editReply({
+      embeds: [embedTemplate()
+        .setTitle('Modal')
+        .setColor(Colors.Red)
+        .setDescription(`Success: The link between ${personaName} and <#${textChannel.id}> was created!`)],
+
+    });
+    return;
+  }
+
+  if (textChannel) {
+    // response = await aiLink(personaName, textChannel.id, toggle);
+    const existingPersona = await db.ai_personas.findUnique({
+      where: {
+        name: personaName,
+      },
+    });
+
+    if (!existingPersona) {
+      await interaction.editReply({
+        embeds: [embedTemplate()
+          .setTitle('Modal')
+          .setColor(Colors.Red)
+          .setDescription(personaDoesntExist)],
+
+      });
+      return;
+    }
+
+    let existingLink = await db.ai_channels.findFirst({
+      where: {
+        channel_id: textChannel.id,
+        persona_id: existingPersona.id,
+      },
+    });
+
+    if (!existingLink) {
+      existingLink = await db.ai_channels.findFirst({
+        where: {
+          channel_id: textChannel.id,
+        },
+      });
+
+      if (!existingLink) {
         await interaction.editReply({
           embeds: [embedTemplate()
             .setTitle('Modal')
             .setColor(Colors.Red)
-            .setDescription('This channel is not linked to an AI persona.')],
+            .setDescription(`Error: No link to <#${textChannel.id}> found!`)],
 
         });
         return;
+      }
+      const personaData = await db.ai_personas.findUnique({
+        where: {
+          id: existingLink.persona_id,
+        },
+      });
+      if (!personaData) {
+        await interaction.editReply({
+          embeds: [embedTemplate()
+            .setTitle('Modal')
+            .setColor(Colors.Red)
+            .setDescription('Error: No persona found for this link!')],
+
+        });
+        return;
+      }
+      await db.ai_channels.delete({
+        where: {
+          id: existingLink.id,
+        },
+      });
+    }
+  } else if (interaction.channel) {
+    const aiLinkData = await getLinkedChannel(interaction.channel);
+    if (aiLinkData) {
+      // response = await aiLink(personaName, aiLinkData?.channel_id, toggle);
+
+      const existingPersona = await db.ai_personas.findUnique({
+        where: {
+          name: personaName,
+        },
+      });
+
+      if (!existingPersona) {
+        await interaction.editReply({
+          embeds: [embedTemplate()
+            .setTitle('Modal')
+            .setColor(Colors.Red)
+            .setDescription(personaDoesntExist)],
+
+        });
+        return;
+      }
+
+      let existingLink = await db.ai_channels.findFirst({
+        where: {
+          channel_id: aiLinkData.channel_id,
+          persona_id: existingPersona.id,
+        },
+      });
+
+      if (!existingLink) {
+        existingLink = await db.ai_channels.findFirst({
+          where: {
+            channel_id: aiLinkData.channel_id,
+          },
+        });
+
+        if (!existingLink) {
+          await interaction.editReply({
+            embeds: [embedTemplate()
+              .setTitle('Modal')
+              .setColor(Colors.Red)
+              .setDescription(`Error: No link to <#${aiLinkData.channel_id}> found!`)],
+
+          });
+          return;
+        }
+        const personaData = await db.ai_personas.findUnique({
+          where: {
+            id: existingLink.persona_id,
+          },
+        });
+        if (!personaData) {
+          await interaction.editReply({
+            embeds: [embedTemplate()
+              .setTitle('Modal')
+              .setColor(Colors.Red)
+              .setDescription('Error: No persona found for this link!')],
+
+          });
+          return;
+        }
+        await db.ai_channels.delete({
+          where: {
+            id: existingLink.id,
+          },
+        });
       }
     } else {
       await interaction.editReply({
         embeds: [embedTemplate()
           .setTitle('Modal')
           .setColor(Colors.Red)
-          .setDescription('You must provide a text channel to link to.')],
+          .setDescription('This channel is not linked to an AI persona.')],
 
       });
       return;
     }
+  } else {
+    await interaction.editReply({
+      embeds: [embedTemplate()
+        .setTitle('Modal')
+        .setColor(Colors.Red)
+        .setDescription('You must provide a text channel to link to.')],
+
+    });
+    return;
   }
 
   log.debug(F, `response: ${response}`);
@@ -1226,8 +1436,7 @@ async function banUser(
 export async function aiAudit(
   aiPersona: ai_personas | null,
   messages: Message[],
-  chatResponse: string | null,
-  modResponse: Moderation | null,
+  chatResponse: string,
   promptTokens: number,
   completionTokens: number,
 ) {
@@ -1238,91 +1447,102 @@ export async function aiAudit(
   const channelAiLog = await discordClient.channels.fetch(env.CHANNEL_AILOG) as TextChannel;
 
   // Check if this is a chat completion response, else, it's a moderation response
-  if (chatResponse) {
-    if (!aiPersona) return;
-    // Get fresh persona data after tokens
+  if (!aiPersona) return;
+  // Get fresh persona data after tokens
 
-    const cleanPersona = await db.ai_personas.findUniqueOrThrow({
-      where: {
-        id: aiPersona.id,
-      },
-    });
+  const cleanPersona = await db.ai_personas.findUniqueOrThrow({
+    where: {
+      id: aiPersona.id,
+    },
+  });
 
-    // const embed = await makePersonaEmbed(cleanPersona);
-    const embed = embedTemplate();
+  // const embed = await makePersonaEmbed(cleanPersona);
+  const embed = embedTemplate();
 
-    // Construct the message
-    embed.setFooter({ text: 'What are tokens? https://platform.openai.com/tokenizer' });
+  // Construct the message
+  embed.setFooter({ text: 'What are tokens? https://platform.openai.com/tokenizer' });
 
-    const messageOutput = messages
-      .map(message => `${message.url} ${message.member?.displayName}: ${message.cleanContent}`)
-      .join('\n')
-      .slice(0, 1024);
+  const messageOutput = messages
+    .map(message => `${message.url} ${message.member?.displayName}: ${message.cleanContent}`)
+    .join('\n')
+    .slice(0, 1024);
 
-    // log.debug(F, `messageOutput: ${messageOutput}`);
+  // log.debug(F, `messageOutput: ${messageOutput}`);
 
-    const responseOutput = chatResponse.slice(0, 1023);
-    // log.debug(F, `responseOutput: ${responseOutput}`);
+  const responseOutput = chatResponse.slice(0, 1023);
+  // log.debug(F, `responseOutput: ${responseOutput}`);
 
-    embed.spliceFields(
-      0,
-      0,
-      {
-        name: 'Messages',
-        value: stripIndents`${messageOutput}`,
-        inline: false,
-      },
-      {
-        name: 'Result',
-        value: stripIndents`${responseOutput}`,
-        inline: false,
-      },
-    );
+  embed.spliceFields(
+    0,
+    0,
+    {
+      name: 'Model',
+      value: stripIndents`${aiPersona.ai_model}`,
+      inline: false,
+    },
+    {
+      name: 'Messages',
+      value: stripIndents`${messageOutput}`,
+      inline: false,
+    },
+    {
+      name: 'Result',
+      value: stripIndents`${responseOutput}`,
+      inline: false,
+    },
+  );
 
-    const promptCost = (promptTokens / 1000) * aiCosts[cleanPersona.ai_model as keyof typeof aiCosts].input;
-    const completionCost = (completionTokens / 1000) * aiCosts[cleanPersona.ai_model as keyof typeof aiCosts].output;
-    // log.debug(F, `promptCost: ${promptCost}, completionCost: ${completionCost}`);
+  const promptCost = (promptTokens / 1000) * aiCosts[cleanPersona.ai_model].input;
+  const completionCost = (completionTokens / 1000) * aiCosts[cleanPersona.ai_model].output;
+  // log.debug(F, `promptCost: ${promptCost}, completionCost: ${completionCost}`);
 
-    embed.spliceFields(
-      2,
-      0,
-      {
-        name: 'Prompt Cost',
-        value: `$${promptCost.toFixed(6)}\n(${promptTokens} tokens)`,
-        inline: true,
-      },
-      {
-        name: 'Completion Cost',
-        value: `$${completionCost.toFixed(6)}\n(${completionTokens} tokens)`,
-        inline: true,
-      },
-      {
-        name: 'Total Cost',
-        value: `$${(promptCost + completionCost).toFixed(6)}\n(${promptTokens + completionTokens} tokens)`,
-        inline: true,
-      },
-    );
+  embed.spliceFields(
+    2,
+    0,
+    {
+      name: 'Prompt Cost',
+      value: `$${promptCost.toFixed(6)}\n(${promptTokens} tokens)`,
+      inline: true,
+    },
+    {
+      name: 'Completion Cost',
+      value: `$${completionCost.toFixed(6)}\n(${completionTokens} tokens)`,
+      inline: true,
+    },
+    {
+      name: 'Total Cost',
+      value: `$${(promptCost + completionCost).toFixed(6)}\n(${promptTokens + completionTokens} tokens)`,
+      inline: true,
+    },
+  );
 
-    // Send the message
-    await channelAiLog.send({ embeds: [embed] });
-  } else if (modResponse) {
-    if (!modResponse.flagged) return;
-    // Check which of the modData.categories are true
-    const activeFlags = [] as string[];
-    Object.entries(modResponse.categories).forEach(([key, val]) => {
-      if (val) {
-        activeFlags.push(key);
-      }
-    });
+  // Send the message
+  await channelAiLog.send({ embeds: [embed] });
+}
 
-    const message = messages[0];
-    const guildMember = message.member as GuildMember;
+export async function discordAiModerate(
+  messageData:Message,
+):Promise<void> {
+  if (messageData.author.bot) return;
+  if (messageData.cleanContent.length < 1) return;
+  if (messageData.channel.type === ChannelType.DM) return;
+  if (!messageData.guild) return;
 
-    const targetData = await db.users.findUniqueOrThrow({
-      where: {
-        discord_id: guildMember.id,
-      },
-    });
+  const modResults = await aiModerate(
+    messageData.cleanContent.replace(tripbotUAT, '').replace('tripbot', ''),
+    messageData.guild.id,
+  );
+
+  if (modResults.length === 0) return;
+
+  const activeFlags = modResults.map(modResult => modResult.category);
+
+  const targetMember = messageData.member as GuildMember;
+  // const userData = await db.users.upsert({
+  //   where: { discord_id: guildMember.id },
+  //   create: { discord_id: guildMember.id },
+  //   update: {},
+  // });
 
   // const aiEmbed = await userInfoEmbed(guildMember, userData, 'FLAGGED');
   const aiEmbed = new EmbedBuilder()
@@ -1443,34 +1663,24 @@ export async function aiAudit(
 export async function discordAiChat(
   messageData: Message<boolean>,
 ):Promise<void> {
-  // Remove "TripBot UAT (Moonbear)" from the message
-  const cleanMessage = message.cleanContent
-    .replace(tripbotUAT, '')
-    .replace('tripbot', '');
-  // log.debug(F, `cleanMessage: ${cleanMessage}`);
+  // log.debug(F, `discordAiChat - messageData: ${JSON.stringify(messageData.cleanContent, null, 2)}`);
+  const channelMessages = await messageData.channel.messages.fetch({ limit: 10 });
+  // log.debug(F, `channelMessages: ${JSON.stringify(channelMessages.map(message => message.cleanContent), null, 2)}`);
 
-  const [result] = await aiModerate(cleanMessage);
+  const messages = [...channelMessages.values()];
 
-  await aiAudit(null, [message], null, result, 0, 0);
-}
-
-export async function chat(
-  messages:Message[],
-):Promise<void> {
-  // log.debug(F, `messages: ${JSON.stringify(messages, null, 2)}`);
-
-  if (!isVerifiedMember(messages[0])) return;
+  if (!messages[0].member?.roles.cache.has(env.ROLE_VERIFIED)) return;
   if (messages[0].author.bot) return;
   if (messages[0].cleanContent.length < 1) return;
   if (messages[0].channel.type === ChannelType.DM) return;
 
   // Check if the channel is linked to a persona
   const aiLinkData = await getLinkedChannel(messages[0].channel);
-
+  // log.debug(F, `aiLinkData: ${JSON.stringify(aiLinkData, null, 2)}`);
   if (!aiLinkData) return;
   // log.debug(F, `aiLinkData: ${JSON.stringify(aiLinkData, null, 2)}`);
 
-  // Get persona details
+  // Get persona details for this channel, throw an error if the persona was deleted
   const aiPersona = await db.ai_personas.findUniqueOrThrow({
     where: {
       id: aiLinkData.persona_id,
@@ -1478,65 +1688,73 @@ export async function chat(
   });
   // log.debug(F, `aiPersona: ${aiPersona.name}`);
 
-  const inputMessages = [{
-    role: 'system',
-    content: aiPersona.prompt,
-  }] as OpenAI.Chat.CreateChatCompletionRequestMessage[];
-  const cleanMessages = [] as Message[];
-
   // Get the last 3 messages that are not empty or from other bots
-  messages.forEach(message => {
-    if (message.cleanContent.length > 0
-      && cleanMessages.length < maxHistoryLength) { // +2 for the prompt and the system message
-      cleanMessages.push(message);
-    }
-  });
-
-  cleanMessages.reverse(); // So that the first messages come first
-  cleanMessages.forEach(message => {
-    inputMessages.push({
-      role: message.author.bot ? 'assistant' : 'user',
+  const messageList = messages
+    .filter(message => message.cleanContent.length > 0 && !message.author.bot)
+    .map(message => ({
+      role: 'user',
       content: message.cleanContent
         .replace(tripbotUAT, '')
         .replace('tripbot', '')
         .trim(),
-    });
-  });
+    }))
+    .reverse()
+    .slice(0, maxHistoryLength) as OpenAI.Chat.ChatCompletionMessageParam[];
 
-  const result = await aiChat(aiPersona, inputMessages);
+  const cleanMessageList = messages
+    .filter(message => message.cleanContent.length > 0 && !message.author.bot)
+    .reverse()
+    .slice(0, maxHistoryLength);
+
+  const result = await aiChat(aiPersona, messageList);
 
   await aiAudit(
     aiPersona,
-    cleanMessages,
+    cleanMessageList,
     result.response,
-    null,
     result.promptTokens,
     result.completionTokens,
   );
 
-  try {
-    await messages[0].channel.sendTyping();
+  await messages[0].channel.sendTyping();
 
-    // Sleep for a bit to simulate typing in production
-    if (env.NODE_ENV === 'production') {
-      const wordCount = result.response.split(' ').length;
-      const sleepTime = Math.ceil(wordCount / 10);
-      await sleep(sleepTime * 1000);
-    }
-    await messages[0].reply(result.response.slice(0, 2000));
-  } catch (e) {
-    log.error(F, `Error: ${e}`);
-    const channelAi = await discordClient.channels.fetch(env.CHANNEL_AILOG) as TextChannel;
-    await channelAi.send({
-      content: `Hey <@${env.DISCORD_OWNER_ID}> I couldn't send a message to <#${messages[0].channel.id}>`,
-      embeds: [embedTemplate()
-        .setTitle('Error')
-        .setColor(Colors.Red)
-        .setDescription(stripIndents`
-          **Error:** ${e}
-          **Message:** ${result.response}
-        `)],
-    });
+  // Sleep for a bit to simulate typing in production
+  if (env.NODE_ENV === 'production') {
+    // const wordCount = result.response.split(' ').length;
+    // const sleepTime = Math.ceil(wordCount / 10);
+    await sleep(10 * 1000);
+  }
+  await messages[0].reply(result.response.slice(0, 2000));
+}
+
+export async function aiModButton(
+  interaction: ButtonInteraction,
+) {
+  const buttonID = interaction.customId;
+  log.debug(F, `buttonID: ${buttonID}`);
+  const [,buttonAction] = buttonID.split('~');
+
+  switch (buttonAction) {
+    case 'adjust':
+      await adjustThreshold(interaction);
+      break;
+    case 'save':
+      await saveThreshold(interaction);
+      break;
+    case 'note':
+      await noteUser(interaction);
+      break;
+    case 'warn':
+      await warnUser(interaction);
+      break;
+    case 'timeout':
+      await muteUser(interaction);
+      break;
+    case 'ban':
+      await banUser(interaction);
+      break;
+    default:
+      break;
   }
 }
 
@@ -1548,42 +1766,10 @@ export const aiCommand: SlashCommand = {
       .setDescription('Information on the AI persona.')
       .setName('help'))
     .addSubcommand(subcommand => subcommand
-      .setDescription('Create a new AI persona.')
-      .addStringOption(option => option.setName('name')
-        .setDescription('Name of the AI persona.'))
-      .addStringOption(option => option.setName('model')
-        .setDescription('Which model to use.')
-        .setAutocomplete(true))
-      .addStringOption(option => option.setName('channels')
-        .setDescription('CSV of channel/category IDs.'))
-      .addNumberOption(option => option.setName('tokens')
-        .setDescription('Maximum tokens to use for this request (Default: 500).')
-        .setMaxValue(1000)
-        .setMinValue(100))
-      .addNumberOption(option => option.setName('temperature')
-        .setDescription('Temperature value for the model.')
-        .setMaxValue(2)
-        .setMinValue(0))
-      .addNumberOption(option => option.setName('top_p')
-        .setDescription('Top % value for the model.')
-        .setMaxValue(2)
-        .setMinValue(0))
-      .addNumberOption(option => option.setName('presence_penalty')
-        .setDescription('Presence penalty value for the model.')
-        .setMaxValue(2)
-        .setMinValue(-2))
-      .addNumberOption(option => option.setName('frequency_penalty')
-        .setDescription('Frequency penalty value for the model.')
-        .setMaxValue(2)
-        .setMinValue(-2))
-      .addBooleanOption(option => option.setName('ephemeral')
-        .setDescription(ephemeralExplanation))
-      .setName('new'))
-    .addSubcommand(subcommand => subcommand
-      .setDescription('Set a setting on an AI persona')
+      .setDescription('Set a create or update an AI persona')
       .addStringOption(option => option.setName('name')
         .setAutocomplete(true)
-        .setDescription('Name of the AI persona to modify.'))
+        .setDescription('Name of the AI persona to modify/create.'))
       .addStringOption(option => option.setName('model')
         .setAutocomplete(true)
         .setDescription('Which model to use.'))
@@ -1596,7 +1782,7 @@ export const aiCommand: SlashCommand = {
         .setMaxValue(2)
         .setMinValue(0))
       .addNumberOption(option => option.setName('top_p')
-        .setDescription('Top % value for the model.')
+        .setDescription('Top % value for the model. Use this OR temp.')
         .setMaxValue(2)
         .setMinValue(0))
       .addNumberOption(option => option.setName('presence_penalty')
@@ -1609,7 +1795,7 @@ export const aiCommand: SlashCommand = {
         .setMinValue(-2))
       .addBooleanOption(option => option.setName('ephemeral')
         .setDescription(ephemeralExplanation))
-      .setName('set'))
+      .setName('upsert'))
     .addSubcommand(subcommand => subcommand
       .setDescription('Get information on the AI')
       .addStringOption(option => option.setName('name')
@@ -1645,7 +1831,32 @@ export const aiCommand: SlashCommand = {
         ))
       .addBooleanOption(option => option.setName('ephemeral')
         .setDescription(ephemeralExplanation))
-      .setName('link')),
+      .setName('link'))
+    .addSubcommand(subcommand => subcommand
+      .setDescription('Change moderation parameters.')
+      .addNumberOption(option => option.setName('harassment')
+        .setDescription('Set harassment limit.'))
+      .addNumberOption(option => option.setName('harassment_threatening')
+        .setDescription('Set harassment_threatening limit.'))
+      .addNumberOption(option => option.setName('hate')
+        .setDescription('Set hate limit.'))
+      .addNumberOption(option => option.setName('hate_threatening')
+        .setDescription('Set hate_threatening limit.'))
+      .addNumberOption(option => option.setName('self_harm')
+        .setDescription('Set self_harm limit.'))
+      .addNumberOption(option => option.setName('self_harm_instructions')
+        .setDescription('Set self_harm_instructions limit.'))
+      .addNumberOption(option => option.setName('self_harm_intent')
+        .setDescription('Set self_harm_intent limit.'))
+      .addNumberOption(option => option.setName('sexual')
+        .setDescription('Set sexual limit.'))
+      .addNumberOption(option => option.setName('sexual_minors')
+        .setDescription('Set sexual_minors limit.'))
+      .addNumberOption(option => option.setName('violence')
+        .setDescription('Set violence limit.'))
+      .addNumberOption(option => option.setName('violence_graphic')
+        .setDescription('Set violence_graphic limit.'))
+      .setName('mod')),
 
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
@@ -1655,20 +1866,20 @@ export const aiCommand: SlashCommand = {
       case 'HELP':
         await help(interaction);
         break;
-      case 'NEW':
-        await set(interaction);
-        break;
       case 'GET':
         await get(interaction);
         break;
-      case 'SET':
-        await set(interaction);
+      case 'UPSERT':
+        await upsert(interaction);
         break;
       case 'LINK':
         await link(interaction);
         break;
       case 'DEL':
         await del(interaction);
+        break;
+      case 'MOD':
+        await mod(interaction);
         break;
       default:
         help(interaction);
