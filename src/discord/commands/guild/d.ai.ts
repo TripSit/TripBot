@@ -1654,7 +1654,7 @@ export async function discordAiModerate(
   const channelAiModLog = await discordClient.channels.fetch(env.CHANNEL_AIMOD_LOG) as TextChannel;
   // Send the message
   await channelAiModLog.send({
-    content: `${targetMember} was flagged by AI for ${activeFlags.join(', ')} in ${messageData.url} ${pingMessage}`,
+    content: `${targetMember.displayName} was flagged by AI for ${activeFlags.join(', ')} in ${messageData.url} ${pingMessage}`,
     embeds: [aiEmbed],
     components: [userActions, ...modAiModifyButtons],
   });
