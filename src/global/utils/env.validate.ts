@@ -48,11 +48,11 @@ export default function validateEnv(
       return false;
     }
 
-    if (!process.env.POSTGRESQL_PASSWORD) {
-      log.error(F, stripIndents`Missing POSTGRESQL_PASSWORD: You wont be able to use the database.\
-       By default this should be set to 'SuperSecure123'.`);
-      return false;
-    }
+    // if (!process.env.POSTGRESQL_PASSWORD) {
+    //   log.error(F, stripIndents`Missing POSTGRESQL_PASSWORD: You wont be able to use the database.\
+    //    By default this should be set to 'SuperSecure123'.`);
+    //   return false;
+    // }
 
     // Check that the discord token is a valid token
     if (process.env.DISCORD_CLIENT_TOKEN === 'In your Discord Developer Portal') {
