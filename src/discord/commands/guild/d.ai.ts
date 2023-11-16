@@ -34,6 +34,7 @@ import {
   PrismaClient,
   ai_channels,
   ai_model,
+  ai_moderation,
   ai_personas,
 } from '@prisma/client';
 import OpenAI from 'openai';
@@ -866,10 +867,17 @@ async function saveThreshold(
   const categoryRow = buttonRows.find(row => row.components.find(button => (button as any).custom_id?.includes(category))) as APIActionRowComponent<APIButtonComponent>;
   // log.debug(F, `categoryRow: ${JSON.stringify(categoryRow, null, 2)}`);
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const saveButton = categoryRow?.components.find(button => (button as any).custom_id?.includes('save'));
+
+  const labelBreakdown = saveButton?.label?.split(' ') as string[];
+  labelBreakdown.splice(0, 1, 'Saved');
+  const newLabel = labelBreakdown.join(' ');
+
   // Replace the save button with the new value
   categoryRow.components?.splice(4, 1, {
     custom_id: `aiMod~save~${category}~${amountFloat}`,
-    label: `Saved ${category} to ${amountFloat.toFixed(2)}`,
+    label: newLabel,
     emoji: '💾' as APIMessageComponentEmoji,
     style: ButtonStyle.Success,
     type: 2,
@@ -919,8 +927,8 @@ async function adjustThreshold(
   interaction: ButtonInteraction,
 ):Promise<void> {
   log.debug(F, 'adjustThreshold started');
-  const buttonID = interaction.customId;
-  log.debug(F, `buttonID: ${buttonID}`);
+  // const buttonID = interaction.customId;
+  // log.debug(F, `buttonID: ${buttonID}`);
 
   const [,, category, amount] = interaction.customId.split('~');
   const amountFloat = parseFloat(amount);
@@ -938,13 +946,14 @@ async function adjustThreshold(
   log.debug(F, `saveButton: ${JSON.stringify(saveButton, null, 2)}`);
 
   const saveValue = parseFloat(saveButton?.label?.split(' ')[3] as string);
-  // log.debug(F, `saveValue: ${JSON.stringify(saveValue, null, 2)}`);
+  log.debug(F, `saveValue: ${JSON.stringify(saveValue, null, 2)}`);
 
   const newValue = saveValue + amountFloat;
   log.debug(F, `newValue: ${JSON.stringify(newValue.toFixed(2), null, 2)}`);
 
-  const newLabel = `Save ${category} at ${newValue.toFixed(2)}`;
-  log.debug(F, `newLabel: ${JSON.stringify(newLabel, null, 2)}`);
+  const labelBreakdown = saveButton?.label?.split(' ') as string[];
+  labelBreakdown.splice(3, 1, newValue.toFixed(2));
+  const newLabel = labelBreakdown.join(' ');
 
   // Replace the save button with the new value
   categoryRow.components?.splice(4, 1, {
@@ -1566,6 +1575,9 @@ export async function discordAiModerate(
   let pingMessage = '';
   // For each of the sortedCategoryScores, add a field
   modResults.forEach(result => {
+    const safeCategoryName = result.category
+      .replace('/', '_')
+      .replace('-', '_') as keyof ai_moderation;
     if (result.value > 0.90) {
       pingMessage = `Please review <@${env.DISCORD_OWNER_ID}>`;
     }
@@ -1588,27 +1600,27 @@ export async function discordAiModerate(
     );
     modAiModifyButtons.push(new ActionRowBuilder<ButtonBuilder>().addComponents(
       new ButtonBuilder()
-        .setCustomId(`aiMod~adjust~${result.category}~-0.10`)
+        .setCustomId(`aiMod~adjust~${safeCategoryName}~-0.10`)
         .setLabel('-0.10')
         .setEmoji('⏪')
         .setStyle(ButtonStyle.Danger),
       new ButtonBuilder()
-        .setCustomId(`aiMod~adjust~${result.category}~-0.01`)
+        .setCustomId(`aiMod~adjust~${safeCategoryName}~-0.01`)
         .setLabel('-0.01')
         .setEmoji('◀️')
         .setStyle(ButtonStyle.Danger),
       new ButtonBuilder()
-        .setCustomId(`aiMod~adjust~${result.category}~+0.01`)
+        .setCustomId(`aiMod~adjust~${safeCategoryName}~+0.01`)
         .setLabel('+0.01')
         .setEmoji('▶️')
         .setStyle(ButtonStyle.Success),
       new ButtonBuilder()
-        .setCustomId(`aiMod~adjust~${result.category}~+0.10`)
+        .setCustomId(`aiMod~adjust~${safeCategoryName}~+0.10`)
         .setLabel('+0.10')
         .setEmoji('⏩')
         .setStyle(ButtonStyle.Success),
       new ButtonBuilder()
-        .setCustomId(`aiMod~save~${result.category}~${result.limit}`)
+        .setCustomId(`aiMod~save~${safeCategoryName}~${result.limit}`)
         .setLabel(`Save ${result.category} at ${result.limit.toFixed(2)}`)
         .setEmoji('💾')
         .setStyle(ButtonStyle.Primary),
