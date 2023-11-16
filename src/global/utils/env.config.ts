@@ -21,8 +21,8 @@ export const env = {
   API_USERNAME: process.env.API_USERNAME,
   API_PASSWORD: process.env.API_PASSWORD,
 
-  OPENAI_API_ORG: process.env.OPENAI_API_ORG,
-  OPENAI_API_KEY: process.env.OPENAI_API_KEY,
+  OPENAI_API_ORG: process.env.OPENAI_API_ORG ?? '',
+  OPENAI_API_KEY: process.env.OPENAI_API_KEY ?? '',
 
   IRC_USERNAME: 'TripBot',
   IRC_PASSWORD: process.env.IRC_PASSWORD,

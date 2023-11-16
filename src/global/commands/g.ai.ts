@@ -52,6 +52,9 @@ export async function aiModerateReport(
   // log.debug(F, `message: ${message}`);
 
   // log.debug(F, `results: ${JSON.stringify(results, null, 2)}`);
+
+  if (!env.OPENAI_API_ORG || !env.OPENAI_API_KEY) return undefined;
+
   return openai.moderations
     .create({
       input: message,
@@ -60,7 +63,6 @@ export async function aiModerateReport(
       if (err instanceof OpenAI.APIError) {
         log.error(F, `${err.status}`); // 400
         log.error(F, `${err.name}`); // BadRequestError
-
         log.error(F, `${err.headers}`); // {server: 'nginx', ...}
       } else {
         throw err;
@@ -160,6 +162,9 @@ export default async function aiChat(
 
   // log.debug(F, `payload: ${JSON.stringify(payload, null, 2)}`);
   let responseMessage = {} as OpenAI.Chat.ChatCompletionMessageParam;
+
+  if (!env.OPENAI_API_ORG || !env.OPENAI_API_KEY) return { response, promptTokens, completionTokens };
+
   const chatCompletion = await openai.chat.completions
     .create(payload)
     .catch(err => {
