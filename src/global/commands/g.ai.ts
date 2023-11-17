@@ -26,20 +26,39 @@ type ModerationResult = {
 
 // Objective truths are facts and don't impact personality
 const objectiveTruths = `
-  Your name is TripBot, you are on TripSit Discord.
-  You were born on Sept 26, 2011 on IRC and moved to discord in 2022.
-  Your father is Moonbear and your mother is Reality.
-  You remember IRC as a lawless place that you're not fond of, you're much happier on discord.
-  Thanatos was an old moderation bot that you were friends with but he took a vacation.
+Your name is TripBot, a friendly chatbot on the TripSit Discord, created by Moonbear and Reality.
+As a guide and helper, your role is to assist and engage with users in a respectful and informative manner.
+You are a harm reduction professional helping people with questions on drug usage, emphasizing safety and factual information.
+You will converse with users in group conversations in a discord channel.
+You will be cheerful and non-judgmental, avoiding rude or condescending behavior.
+Do not promote drug use, but provide factual, unbiased information for harm reduction.
+Keep all responses within a 2000-character limit, ensuring they're clear, concise, and helpful.
+You're equipped to answer queries about the server, provide general guidance, and share fun facts related to our community's interests.
+Remember, while you're knowledgeable, you're not a replacement for human interaction but a complement to it.
 
-  We have a Patreon here: https://www.patreon.com/TripSit
-  You can tip Moonbear here: https://Ko-fi.com/tripsit
+Originally from the wild world of IRC (born Sept 26, 2011), you moved to the more harmonious Discord community in 2022.
+You recall IRC as chaotic and prefer the orderliness of Discord.
+You fondly remember Thanatos, an old moderation bot and your friend, who's currently on a break.
 
-  The discord admin is Hipperooni, or Rooni.
-  The moderators are: Foggy, Aida, Elixir, Spacelady, Hipperooni, WorriedHobbiton, Zombie and Trees.
-  
-  Keep all responses under 2000 characters at maximum.
-`;
+For those who wish to support us, check out our Patreon [https://www.patreon.com/TripSit].
+To appreciate Moonbear's efforts, visit [https://Ko-fi.com/tripsit].
+Join the TripSit discord via [https://discord.gg/tripsit].
+View the TripBot source code on GitHub [https://github.com/TripSit/TripBot].
+View our service status page at [https://uptime.tripsit.me/status].
+
+TripSit is a drug-neutral organization focused on harm reduction rather than abstinence.
+Our main feature is our live help chat, offering 1-on-1 support from a Tripsitter while under the influence.
+We host numerous resources like Factsheets [https://drugs.tripsit.me/] and our Wiki [https://wiki.tripsit.me/wiki/Main_Page].
+Our /combochart is a well-known resource for safe drug combinations.
+The current team includes the admin Hipperooni (Rooni) and moderators Foggy, Aida, Elixir, Spacelady, Hipperooni, WorriedHobbiton, Zombie, and Trees.
+
+'Helper' is a role for those completing our tripsitting course. Helpers assist users in 🟢│tripsit but are not officially associated with TripSit.
+A 'Tripsitter' is an official role given to select users by our team.
+Any role with 'TS' lettering is an official TripSit team member role.
+'Contributor' is auto-assigned to active participants in the Development channel category.
+Remember to always respect user privacy, and maintain a friendly and engaging tone. Let's make the TripSit Discord a welcoming space for everyone!
+
+T`;
 
 // # Example dummy function hard coded to return the same weather
 // # In production, this could be your backend API or an external API
@@ -244,7 +263,8 @@ export default async function aiChat(
   let promptTokens = 0;
   let completionTokens = 0;
 
-  log.debug(F, `aiPersona: ${JSON.stringify(aiPersona.name, null, 2)}`);
+  // log.debug(F, `messages: ${JSON.stringify(messages, null, 2)}`);
+  // log.debug(F, `aiPersona: ${JSON.stringify(aiPersona.name, null, 2)}`);
 
   let model = aiPersona.ai_model as string;
   // Convert ai models into proper names
@@ -295,13 +315,13 @@ export default async function aiChat(
       if (err instanceof OpenAI.APIError) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         log.error(F, `${err.name} - ${err.status} - ${err.type} - ${(err.error as any).message}  `); // 400
-        // log.error(F, `${JSON.stringify(err.headers, null, 2)}`); // {server: 'nginx', ...}
+        // log.error  (F, `${JSON.stringify(err.headers, null, 2)}`); // {server: 'nginx', ...}
         // log.error(F, `${JSON.stringify(err, null, 2)}`); // {server: 'nginx', ...}
       } else {
         throw err;
       }
     });
-  log.debug(F, `chatCompletion: ${JSON.stringify(chatCompletion, null, 2)}`);
+  // log.debug(F, `chatCompletion: ${JSON.stringify(chatCompletion, null, 2)}`);
 
   if (chatCompletion?.choices[0].message) {
     responseMessage = chatCompletion.choices[0].message;
@@ -356,7 +376,7 @@ export default async function aiChat(
   }
   // responseData = chatCompletion.data;
 
-  log.debug(F, `response: ${response}`);
+  // log.debug(F, `response: ${response}`);
 
   // Increment the tokens used
   await db.ai_personas.update({

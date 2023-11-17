@@ -1705,13 +1705,15 @@ export async function discordAiChat(
         .replace('tripbot', '')
         .trim(),
     }))
-    .reverse()
-    .slice(0, maxHistoryLength) as OpenAI.Chat.ChatCompletionMessageParam[];
+    .slice(0, maxHistoryLength)
+    .reverse() as OpenAI.Chat.ChatCompletionMessageParam[];
+
+  // log.debug(F, `messageList: ${JSON.stringify(messageList, null, 2)}`);
 
   const cleanMessageList = messages
     .filter(message => message.cleanContent.length > 0 && !message.author.bot)
-    .reverse()
-    .slice(0, maxHistoryLength);
+    .slice(0, maxHistoryLength)
+    .reverse();
 
   const result = await aiChat(aiPersona, messageList);
 
@@ -1725,12 +1727,11 @@ export async function discordAiChat(
 
   await messages[0].channel.sendTyping();
 
-  // Sleep for a bit to simulate t yping in production
-  if (env.NODE_ENV === 'production') {
-    // const wordCount = result.response.split(' ').length;
-    // const sleepTime = Math.ceil(wordCount / 10);
-    await sleep(10 * 1000);
-  }
+  const wpm = 60;
+  const wordCount = result.response.split(' ').length;
+  const sleepTime = (wordCount / wpm) * 60000;
+  // log.debug(F, `Typing ${wordCount} at ${wpm} wpm will take ${sleepTime / 1000} seconds`);
+  await sleep(sleepTime > 10000 ? 10000 : sleepTime); // Dont wait more than 10 seconds
   await messages[0].reply(result.response.slice(0, 2000));
 }
 
