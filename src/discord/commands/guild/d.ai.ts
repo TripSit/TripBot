@@ -23,6 +23,7 @@ import {
   APIButtonComponent,
   APIActionRowComponent,
   APIMessageComponentEmoji,
+  Events,
 } from 'discord.js';
 import {
   APIInteractionDataResolvedChannel,
@@ -38,13 +39,17 @@ import {
   ai_personas,
 } from '@prisma/client';
 import OpenAI from 'openai';
+import { Run } from 'openai/resources/beta/threads/runs/runs';
+import { MessageContentText } from 'openai/resources/beta/threads/messages/messages';
 import { paginationEmbed } from '../../utils/pagination';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import commandContext from '../../utils/context';
 import { moderate } from '../../../global/commands/g.moderate';
 import { sleep } from './d.bottest';
-import aiChat, { aiModerate } from '../../../global/commands/g.ai';
+import aiChat, {
+  aiModerate, createMessage, getAssistant, getMessages, getThread, readRun, runThread,
+} from '../../../global/commands/g.ai';
 import { UserActionType } from '../../../global/@types/database';
 import { parseDuration } from '../../../global/utils/parseDuration';
 
@@ -1664,6 +1669,8 @@ export async function discordAiChat(
   messageData: Message<boolean>,
 ):Promise<void> {
   // log.debug(F, `discordAiChat - messageData: ${JSON.stringify(messageData.cleanContent, null, 2)}`);
+  if (!env.OPENAI_API_ORG || !env.OPENAI_API_KEY) return;
+
   const channelMessages = await messageData.channel.messages.fetch({ limit: 10 });
   // log.debug(F, `channelMessages: ${JSON.stringify(channelMessages.map(message => message.cleanContent), null, 2)}`);
 
@@ -1698,13 +1705,15 @@ export async function discordAiChat(
         .replace('tripbot', '')
         .trim(),
     }))
-    .reverse()
-    .slice(0, maxHistoryLength) as OpenAI.Chat.ChatCompletionMessageParam[];
+    .slice(0, maxHistoryLength)
+    .reverse() as OpenAI.Chat.ChatCompletionMessageParam[];
+
+  // log.debug(F, `messageList: ${JSON.stringify(messageList, null, 2)}`);
 
   const cleanMessageList = messages
     .filter(message => message.cleanContent.length > 0 && !message.author.bot)
-    .reverse()
-    .slice(0, maxHistoryLength);
+    .slice(0, maxHistoryLength)
+    .reverse();
 
   const result = await aiChat(aiPersona, messageList);
 
@@ -1718,13 +1727,161 @@ export async function discordAiChat(
 
   await messages[0].channel.sendTyping();
 
-  // Sleep for a bit to simulate typing in production
-  if (env.NODE_ENV === 'production') {
-    // const wordCount = result.response.split(' ').length;
-    // const sleepTime = Math.ceil(wordCount / 10);
-    await sleep(10 * 1000);
-  }
+  const wpm = 60;
+  const wordCount = result.response.split(' ').length;
+  const sleepTime = (wordCount / wpm) * 60000;
+  // log.debug(F, `Typing ${wordCount} at ${wpm} wpm will take ${sleepTime / 1000} seconds`);
+  await sleep(sleepTime > 10000 ? 10000 : sleepTime); // Dont wait more than 10 seconds
   await messages[0].reply(result.response.slice(0, 2000));
+}
+
+export async function discordAiConversate(
+  messageData: Message<boolean>,
+):Promise<void> {
+  if (!env.OPENAI_API_ORG || !env.OPENAI_API_KEY) return;
+  log.debug(F, `discordAiConversate - messageData: ${JSON.stringify(messageData.cleanContent, null, 2)}`);
+
+  if (!messageData.member?.roles.cache.has(env.ROLE_VERIFIED)) return;
+  if (messageData.author.bot) return;
+  if (messageData.cleanContent.length < 1) return;
+  if (messageData.channel.type === ChannelType.DM) return;
+  if (messageData.author.id !== env.DISCORD_OWNER_ID) return;
+
+  // Get the assistant for this channel.
+  // Right now the only assistant is the 'tripsitter' assistant
+  const assistant = await getAssistant('tripsitter');
+  // log.debug(F, `assistant: ${JSON.stringify(assistant, null, 2)}`);
+
+  // Get the thread for the user who said something
+  const thread = await getThread('thread_GXG53Z1LS3ZdKBcOHRfRsd70');
+  // log.debug(F, `thread: ${JSON.stringify(thread, null, 2)}`);
+
+  // Add the message to the thread
+  await createMessage(
+    thread,
+    {
+      role: 'user',
+      content: messageData.cleanContent,
+    },
+  );
+
+  // Function to handle the logic after waiting
+  const handleTimeout = async () => {
+    // Your logic here
+    log.debug(F, 'Continuing after wait...');
+
+    // This parses out some values from the assistant object
+    // There's probably a better way to do this
+    const {
+      id,
+      name,
+      created_at, // eslint-disable-line @typescript-eslint/naming-convention
+      description,
+      file_ids, // eslint-disable-line @typescript-eslint/naming-convention
+      object,
+      ...restOfAssistant
+    } = assistant;
+
+    // Run the thread
+    const run = await runThread(
+      thread,
+      {
+        assistant_id: assistant.id,
+        ...restOfAssistant,
+      },
+    );
+
+    // Wait for the run to complete
+    let runStatus = 'queued' as Run['status'];
+    while (['queued', 'in_progress'].includes(runStatus)) {
+    // TODO: If the user starts typing again, cancel the run and wait for them to either stop typing or send a message
+
+      // Send the typing indicator to show tripbot is thinking
+      // eslint-disable-next-line no-await-in-loop
+      await messageData.channel.sendTyping();
+
+      // eslint-disable-next-line no-await-in-loop
+      await sleep(1000);
+      // eslint-disable-next-line no-await-in-loop
+      const runStatusResponse = await readRun(thread, run);
+      // log.debug(F, `runStatusResponse: ${JSON.stringify(runStatusResponse, null, 2)}`);
+      runStatus = runStatusResponse.status;
+    }
+
+    // log.debug(F, `runStatus: ${runStatus}`);
+
+    const devRoom = await discordClient.channels.fetch(env.CHANNEL_BOTERRORS) as TextChannel;
+
+    // Depending on how the run ended, do something
+    switch (runStatus) {
+      case 'completed': {
+      // This should pull the thread and then get the last message in the thread, which should be from the assistant
+        const messagePage = await getMessages(thread, { limit: 10 });
+        // log.debug(F, `messagePage: ${JSON.stringify(messagePage, null, 2)}`);
+        const messages = messagePage.getPaginatedItems();
+        const message = messages[0];
+        const [messageContent] = message.content;
+        if ((messageContent as MessageContentText).text) {
+          log.debug(F, `messageContent: ${JSON.stringify(messageContent, null, 2)}`);
+
+          // Send the result to the dev room
+          await devRoom.send(`AI Conversation succeeded: ${JSON.stringify(messageContent, null, 2)}`);
+
+          // await messages[0].reply(result.response.slice(0, 2000));
+          await messageData.reply((messageContent as MessageContentText).text.value);
+        }
+
+        break;
+      }
+      case 'requires_action':
+      // No way to support additional actions at this time
+        break;
+      case 'expired':
+      // This will happen if the requires_action doesnt geta  response in time, so this isnt supported either
+        break;
+      case 'cancelling':
+      // This would only happen if i manually cancel the request, which isnt supported
+        break;
+      case 'cancelled':
+      // Takea  guess =D
+        break;
+      case 'failed': {
+      // This should send an error to the dev
+        await devRoom.send(`AI Conversation failed: ${JSON.stringify(run, null, 2)}`);
+        await messageData.reply('**sad trombone**');
+        break;
+      }
+      default:
+        break;
+    }
+  };
+
+  // Set a timer for 5 seconds
+  const timer = setTimeout(handleTimeout, 5000);
+
+  // Function to reset the timer
+  // const resetTimer = () => {
+  //   clearTimeout(timer);
+  //   timer = setTimeout(handleTimeout, 10000);
+  // };
+
+  // Listen for typing event
+  // This doesnt work for some reason
+  // discordClient.on(Events.TypingStart, interaction => {
+  //   // if (interaction.user.id === messageData.author.id && interaction.channel.id === messageData.channel.id) {
+  //   log.debug(F, `Typing started: ${interaction.user.id}`);
+  //   resetTimer();
+  //   // }
+  // });
+
+  // Handling additional messages
+  discordClient.on(Events.MessageCreate, (newMessage: Message) => {
+    if (newMessage.author.id === messageData.author.id && newMessage.channel.id === messageData.channel.id) {
+      log.debug(F, 'New message clearing timeout');
+      clearTimeout(timer);
+      // Process the new message as required
+    }
+  });
 }
 
 export async function aiModButton(
