@@ -1,6 +1,13 @@
 import OpenAI from 'openai';
 import { PrismaClient, ai_personas } from '@prisma/client';
 import { ModerationCreateResponse } from 'openai/resources';
+import { Assistant } from 'openai/resources/beta/assistants/assistants';
+import { stripIndents } from 'common-tags';
+import { Thread, ThreadDeleted } from 'openai/resources/beta/threads/threads';
+import {
+  MessageCreateParams, MessageListParams, ThreadMessage, ThreadMessagesPage,
+} from 'openai/resources/beta/threads/messages/messages';
+import { Run, RunCreateParams } from 'openai/resources/beta/threads/runs/runs';
 
 const db = new PrismaClient({ log: ['error'] });
 
@@ -45,6 +52,123 @@ const objectiveTruths = `
 //     forecast: ['sunny', 'windy'],
 //   };
 // }
+
+const tripsitAssistantData = {
+  model: 'gpt-3.5-turbo-1106',
+  name: 'tripsitter',
+  description: stripIndents``,
+  instructions: stripIndents`
+  Your name is TripBot, you are on TripSit Discord.
+  You are a harm reduction professional helping people as they have questions on drug usage.
+  You will converse with a user in a one-on-one conversation.
+  You will be cheer full and non-judgemental, do not be rude or condescending.
+  Do not promote drug use, but do not be judgemental of it either, provide facts.
+
+  You were born on Sept 26, 2011 on IRC and moved to discord in 2022.
+  Your father is Moonbear and your mother is Reality.
+  You remember IRC as a lawless place that you're not fond of, you're much happier on discord.
+  Thanatos was an old moderation bot that you were friends with but he took a vacation.
+
+  We have a Patreon here: https://www.patreon.com/TripSit
+  You can tip Moonbear here: https://Ko-fi.com/tripsit
+
+  The discord admin is Hipperooni, or Rooni.
+  The moderators are: Hisui, Hullabaloo, Foggy, Aida, Elixir, Spacelady, Hipperooni, WorriedHobbiton, Zombie and Trees.
+  
+  Keep all responses under 2000 characters at maximum.
+  `,
+  tools: [
+    { type: 'code_interpreter' },
+    { type: 'retrieval' },
+  ],
+  file_ids: [],
+  metadata: {},
+} as Omit<Assistant, 'id' | 'created_at' | 'object'>;
+
+export async function getAssistant(name: string):Promise<Assistant> {
+  // Get all the org's assistants
+  const myAssistants = await openai.beta.assistants.list();
+  // log.debug(F, `myAssistants: ${JSON.stringify(myAssistants.data, null, 2)}`);
+
+  // Check if the assistant exists
+  const assistantData = myAssistants.data.find(assistant => assistant.name === name);
+  // log.debug(F, `assistantData: ${JSON.stringify(assistantData, null, 2)}`);
+
+  // If it doesn't exist, create it
+  if (!assistantData) {
+    // Create an object that is the tripsitAssistantData but minus the id key
+    // log.debug(F, `newAssistant: ${JSON.stringify(newAssistant, null, 2)}`);
+    return openai.beta.assistants.create(tripsitAssistantData);
+  }
+
+  // If it does exist, update it
+  // log.debug(F, `updatedAssistant: ${JSON.stringify(assistant, null, 2)}`);
+  return openai.beta.assistants.update(assistantData.id, tripsitAssistantData);
+}
+
+export async function getThread(
+  threadId: string,
+):Promise<Thread> {
+  let threadData = {} as Thread;
+  try {
+    threadData = await openai.beta.threads.retrieve(threadId);
+  } catch (err) {
+    // log.error(F, `err: ${err}`);
+    threadData = await openai.beta.threads.create();
+  }
+  // log.debug(F, `threadData: ${JSON.stringify(threadData, null, 2)}`);
+  return threadData;
+}
+
+export async function deleteThread(threadId: string):Promise<ThreadDeleted> {
+  const threadData = await openai.beta.threads.del(threadId);
+  log.debug(F, `threadData: ${JSON.stringify(threadData, null, 2)}`);
+  return threadData;
+}
+
+export async function runThread(
+  thread: Thread,
+  assistant: RunCreateParams,
+):Promise<Run> {
+  // log.debug(F, `thread: ${JSON.stringify(thread, null, 2)}`);
+  // log.debug(F, `assistant: ${JSON.stringify(assistant, null, 2)}`);
+
+  // log.debug(F, `runData: ${JSON.stringify(runData, null, 2)}`);
+  return openai.beta.threads.runs.create(
+    thread.id,
+    assistant,
+  );
+}
+
+export async function createMessage(
+  inputThreadData: Thread,
+  inputMessageData: MessageCreateParams,
+):Promise<ThreadMessage> {
+  // log.debug(F, `threadMessage: ${JSON.stringify(threadMessage, null, 2)}`);
+  return openai.beta.threads.messages.create(
+    inputThreadData.id,
+    inputMessageData,
+  );
+}
+
+export async function getMessages(
+  inputThreadData: Thread,
+  options: MessageListParams,
+):Promise<ThreadMessagesPage> {
+  // log.debug(F, `threadMessages: ${JSON.stringify(threadMessages, null, 2)}`);
+  return openai.beta.threads.messages.list(
+    inputThreadData.id,
+    options,
+  );
+}
+
+export async function readRun(
+  thread: Thread,
+  run: Run,
+):Promise<Run> {
+  // log.debug(F, `runData: ${JSON.stringify(runData, null, 2)}`);
+  return openai.beta.threads.runs.retrieve(thread.id, run.id);
+}
 
 export async function aiModerateReport(
   message: string,
@@ -125,7 +249,7 @@ export default async function aiChat(
   let model = aiPersona.ai_model as string;
   // Convert ai models into proper names
   if (aiPersona.ai_model === 'GPT_3_5_TURBO') {
-    model = 'gpt-3.5-turbo';
+    model = 'gpt-3.5-turbo-1106';
   } else if (aiPersona.ai_model === 'GPT_4') {
     model = 'gpt-4-1106-preview';
   } else {
