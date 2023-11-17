@@ -12,15 +12,10 @@ import { levels } from '../../../global/commands/g.levels';
 import { profile, ProfileData } from '../../../global/commands/g.profile';
 import { getPersonaInfo } from '../../../global/commands/g.rpg';
 import { inventoryGet } from '../../../global/utils/knex';
-import { imageGet } from '../../utils/imageGet';
+import getAsset from '../../utils/getAsset';
 import commandContext from '../../utils/context';
 import { numFormatter, numFormatterVoice } from './d.profile';
 import { Personas } from '../../../global/@types/database';
-// import { expForNextLevel, getTotalLevel } from '../../../global/utils/experience';
-// import { inventoryGet } from '../../../global/utils/knex';
-// import { imageGet } from '../../utils/imageGet';
-
-// import { getTotalLevel } from '../../../global/utils/experience';
 
 const F = f(__filename);
 
@@ -240,16 +235,16 @@ export const dLevels: SlashCommand = {
       // Get the levels of the user
       await levels(target.id),
       // Load Images
-      await Canvas.loadImage(await imageGet('cardLevelIcons')),
+      await Canvas.loadImage(await getAsset('cardLevelIcons')),
       await Canvas.loadImage(target.user.displayAvatarURL({ extension: 'jpg' })),
-      await Canvas.loadImage(await imageGet('teamtripsitIcon')),
-      await Canvas.loadImage(await imageGet('premiumIcon')),
-      await Canvas.loadImage(await imageGet('boosterIcon')),
-      await Canvas.loadImage(await imageGet('legacyIcon')),
-      await Canvas.loadImage(await imageGet('voiceBar')),
-      await Canvas.loadImage(await imageGet('tripsitterBar')),
-      await Canvas.loadImage(await imageGet('developerBar')),
-      await Canvas.loadImage(await imageGet('teamtripsitBar')),
+      await Canvas.loadImage(await getAsset('teamtripsitIcon')),
+      await Canvas.loadImage(await getAsset('premiumIcon')),
+      await Canvas.loadImage(await getAsset('boosterIcon')),
+      await Canvas.loadImage(await getAsset('legacyIcon')),
+      await Canvas.loadImage(await getAsset('voiceBar')),
+      await Canvas.loadImage(await getAsset('tripsitterBar')),
+      await Canvas.loadImage(await getAsset('developerBar')),
+      await Canvas.loadImage(await getAsset('teamtripsitBar')),
     ]);
 
     const profileData = values[1].status === 'fulfilled' ? values[1].value : {} as ProfileData;
@@ -516,16 +511,17 @@ export const dLevels: SlashCommand = {
     // Purchased Background
     // Check get fresh persona data
     // log.debug(F, `personaData home (Change) ${JSON.stringify(personaData, null, 2)}`);
-
+    let userFont = 'futura';
     if (personaData) {
       // Get the existing inventory data
       const inventoryData = await inventoryGet(personaData.id);
       // log.debug(F, `Persona home inventory (change): ${JSON.stringify(inventoryData, null, 2)}`);
 
       const equippedBackground = inventoryData.find(item => item.equipped === true && item.effect === 'background');
+      const equippedFont = inventoryData.find(item => item.equipped === true && item.effect === 'font');
       // log.debug(F, `equippedBackground: ${JSON.stringify(equippedBackground, null, 2)} `);
       if (equippedBackground) {
-        const imagePath = await imageGet(equippedBackground.value);
+        const imagePath = await getAsset(equippedBackground.value);
         const Background = await Canvas.loadImage(imagePath);
         context.save();
         context.globalCompositeOperation = 'lighter';
@@ -536,6 +532,10 @@ export const dLevels: SlashCommand = {
         context.clip();
         context.drawImage(Background, 0, 0);
         context.restore();
+      }
+      if (equippedFont) {
+        await getAsset(equippedFont.value);
+        userFont = equippedFont.value;
       }
     }
 
@@ -608,14 +608,16 @@ export const dLevels: SlashCommand = {
       const usernameContext = canvas.getContext('2d');
       do {
         fontSize -= 2;
-        usernameContext.font = `${fontSize}px futura`;
+        usernameContext.font = `${fontSize}px ${userFont}`;
       } while (usernameContext.measureText(text).width > 530);
       return usernameContext.font;
     };
 
     // Username Text
     // Temporary code for user flairs
+    const filteredDisplayName = target.displayName.replace(/[^A-Za-z0-9]/g, '');
     context.fillStyle = textColor;
+    context.font = `40px ${userFont}`;
     context.textAlign = 'left';
     const flair = null;
     let usernameHeight = 76;
@@ -630,8 +632,8 @@ export const dLevels: SlashCommand = {
       context.textBaseline = 'bottom';
     }
     fontSize = 40;
-    context.font = applyUsername(canvasObj, `${target.displayName}`);
-    context.fillText(`${target.displayName}`, 146, usernameHeight);
+    context.font = applyUsername(canvasObj, `${filteredDisplayName}`);
+    context.fillText(`${filteredDisplayName}`, 146, usernameHeight);
 
     // Progress Bars Draw
     context.fillStyle = barColor;
@@ -813,7 +815,7 @@ export const dLevels: SlashCommand = {
     } else if (levelData.ALL.TOTAL.level >= 100) {
       LevelImagePath = 'badgeVip10';
     }
-    const LevelImage = await Canvas.loadImage(await imageGet(LevelImagePath));
+    const LevelImage = await Canvas.loadImage(await getAsset(LevelImagePath));
     context.drawImage(LevelImage, 97, 181, 58, 58);
 
     // Process The Entire Card and Send it to Discord
