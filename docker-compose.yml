@@ -6,8 +6,8 @@ name: tripsit-dev-apps
 # Common environment values
 x-environment: &default-tz-puid-pgid
   TZ: $TZ
-  PUID: $PUID
-  PGID: $PGID
+  PUID: 1000
+  PGID: 1000
  
 # Keys common to some of the core services that we always to automatically restart on failure
 x-common-keys-core: &common-keys-core
@@ -46,8 +46,6 @@ services:
     volumes:
       - ./src:/usr/src/app/src # Needed for hot-reloading of source code
       - ./.env:/usr/src/app/.env # Needed for hot-reloading the .env
-      - /etc/timezone:/etc/timezone:ro
-      - /etc/localtime:/etc/localtime:ro
     labels:
       - com.centurylinklabs.watchtower.enable=false
       - traefik.enable=true
@@ -91,7 +89,6 @@ services:
       - tripbot_database-net
     environment:
       <<: *default-tz-puid-pgid
-      TZ: America/Chicago
       PGADMIN_DEFAULT_EMAIL: admin@tripsit.me
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD}
     labels:
@@ -144,12 +141,9 @@ services:
       - tripbot_redis-net
     volumes:
       - ./src:/usr/src/app/src # Needed for hot-reloading of source code
-      - /etc/timezone:/etc/timezone:ro
-      - /etc/localtime:/etc/localtime:ro
     environment:
       <<: *default-tz-puid-pgid
       PORT: 5000
-      TZ: America/Chicago
       DATABASE_URL: postgres://tripsit:${POSTGRESQL_PASSWORD}@tripbot_database:5432/tripsit
     labels:
       - com.centurylinklabs.watchtower.enable=false
@@ -162,7 +156,6 @@ services:
       - traefik.http.routers.tripbot_api.tls.certresolver=letsencrypt
       - traefik.http.routers.tripbot_api.service=tripbot_api-svc
       - traefik.http.routers.tripbot_api.middlewares=default@file
-    command: npx tsc-watch --onSuccess "npx nodemon --config ./src/api/nodemon.json"
 
 networks:
   tripbot-net:

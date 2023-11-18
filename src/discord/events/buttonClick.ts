@@ -20,7 +20,7 @@ import { techHelpClick, techHelpClose, techHelpOwn } from '../utils/techHelp';
 import { verifyButton } from '../utils/verifyButton';
 import { buttonReactionRole } from '../commands/global/d.reactionRole';
 import {
-  rpgArcade, rpgArcadeGame, rpgArcadeWager, rpgBounties, rpgHelp, rpgHome, rpgHomeAccept, rpgHomeNameChange, rpgMarket, rpgMarketAccept, rpgMarketPreview, rpgTown, rpgTrivia,
+  rpgArcade, rpgArcadeGame, rpgArcadeWager, rpgBounties, rpgHelp, rpgHome, rpgHomeAccept, rpgHomeDecline, rpgHomeSell, rpgHomeNameChange, rpgMarket, rpgMarketAccept, rpgMarketPreview, rpgTown, rpgTrivia,
 } from '../commands/guild/d.rpg';
 import { helperButton } from '../commands/global/d.setup';
 import { appealAccept, appealReject } from '../utils/appeal';
@@ -29,6 +29,7 @@ import {
   werewolfDiary,
   werewolfHow, werewolfJoin, werewolfLeave, werewolfStart,
 } from '../commands/guild/d.werewolf';
+import { aiModButton } from '../commands/guild/d.ai';
 
 const F = f(__filename);
 
@@ -51,6 +52,12 @@ export async function buttonClick(interaction:ButtonInteraction, discordClient:C
       await mushroomPageTwo(interaction);
       return;
     }
+  }
+
+  if (buttonID.startsWith('aiMod')) {
+    // log.debug(F, 'aiMod button clicked');
+    await aiModButton(interaction);
+    return;
   }
 
   if (buttonID.startsWith('rpg')) {
@@ -96,6 +103,8 @@ export async function buttonClick(interaction:ButtonInteraction, discordClient:C
     else if (interaction.customId.split(',')[0] === 'rpgGuild') await interaction.editReply(await rpgHome(interaction, ''));
     else if (interaction.customId.split(',')[0] === 'rpgName') await rpgHomeNameChange(interaction);
     else if (interaction.customId.split(',')[0] === 'rpgAccept') await interaction.editReply(await rpgHomeAccept(interaction));
+    else if (interaction.customId.split(',')[0] === 'rpgDecline') await interaction.editReply(await rpgHomeDecline(interaction));
+    else if (interaction.customId.split(',')[0] === 'rpgSell') await interaction.editReply(await rpgHomeSell(interaction));
     else if (interaction.customId.split(',')[0] === 'rpgMarketBuy') await interaction.editReply(await rpgMarketAccept(interaction));
     else if (interaction.customId.split(',')[0] === 'rpgMarketPreview') await interaction.editReply(await rpgMarketPreview(interaction));
     else if (interaction.customId.split(',')[0] === 'rpgMarket') await interaction.editReply(await rpgMarket(interaction));
