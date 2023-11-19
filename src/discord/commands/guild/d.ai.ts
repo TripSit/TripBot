@@ -1773,11 +1773,12 @@ export async function discordAiChat(
   if (messages[0].cleanContent.length < 1) return;
   if (messages[0].channel.type === ChannelType.DM) return;
 
+  log.debug(F, `${messageData.member?.displayName} is patron: ${messageData.member?.roles.cache.has(env.ROLE_PATRON)}`);
+  log.debug(F, `${messageData.member?.displayName} is team: ${messageData.member?.roles.cache.has(env.ROLE_TEAMTRIPSIT)}`);
+
   if (messageData.cleanContent.includes('imagen')) {
     if (!messageData.member?.roles.cache.has(env.ROLE_PATRON)
-    && messageData.author.id !== env.ROLE_TEAMTRIPSIT
-    && !messageData.member?.roles.cache.has(env.TEAM_TRIPSIT)
-
+    && !messageData.member?.roles.cache.has(env.ROLE_TEAMTRIPSIT)
     ) {
       await messageData.reply('This beta feature is exclusive to active TripSit [Patreon](https://www.patreon.com/tripsit) subscribers.');
       return;
@@ -1817,13 +1818,20 @@ export async function discordAiChat(
 
     let waitingOnGen = true;
     createImage(
-      messageData.cleanContent.replace('imgen', '').trim(),
+      messageData.cleanContent.replace('imagen', '').trim(),
       messageData.author.id,
     )
       .then(async response => {
         waitingOnGen = false;
         const { data } = response;
         const [image] = data;
+
+        await aiImageAudit(
+          'DALL_E_3' as ai_model,
+          messageData,
+          image,
+        );
+
         if (image.url) {
           await messageData.reply(
             {
@@ -1833,11 +1841,6 @@ export async function discordAiChat(
                 .setImage(image.url)
                 .setFooter({ text: `Beta feature only available to active TripSit Patreon subscribers (${imageLimit - imagesThisMonth} images left).` })],
             },
-          );
-          await aiImageAudit(
-            'DALL_E_3' as ai_model,
-            messageData,
-            image,
           );
         }
       });

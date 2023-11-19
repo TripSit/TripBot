@@ -1,6 +1,6 @@
 import OpenAI from 'openai';
 import { PrismaClient, ai_model, ai_personas } from '@prisma/client';
-import { ModerationCreateResponse } from 'openai/resources';
+import { ImagesResponse, ModerationCreateResponse } from 'openai/resources';
 import { Assistant } from 'openai/resources/beta/assistants/assistants';
 import { stripIndents } from 'common-tags';
 import { Thread, ThreadDeleted } from 'openai/resources/beta/threads/threads';
@@ -234,7 +234,7 @@ export async function readRun(
 export async function createImage(
   prompt: string,
   user: string,
-) {
+):Promise<ImagesResponse> {
   log.debug(F, `createImage | prompt: ${prompt}`);
   // log.debug(F, `image: ${JSON.stringify(image, null, 2)}`);
 
@@ -263,6 +263,15 @@ export async function createImage(
     },
   });
 
+  if (env.NODE_ENV === 'development') {
+    log.debug(F, 'createImage | returning dev image');
+    return {
+      created: 0,
+      data: [{
+        url: 'https://picsum.photos/1024/1024',
+      }],
+    } as ImagesResponse;
+  }
   return openai.images.generate({
     prompt,
     model: 'dall-e-3',
