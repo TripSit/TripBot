@@ -1544,7 +1544,7 @@ export async function aiImageAudit(
 
   // const embed = await makePersonaEmbed(cleanPersona);
   const embed = embedTemplate()
-    .setThumbnail(message.author.displayAvatarURL())
+    .setAuthor({ name: message.author.username, url: message.url, iconURL: message.author.displayAvatarURL() })
     .setColor(Colors.Yellow);
 
   embed.addFields(
@@ -1763,9 +1763,7 @@ export async function discordAiChat(
 
   if (messageData.cleanContent.includes('imagen')) {
     if (!messageData.member?.roles.cache.has(env.ROLE_PATRON)
-    && messageData.author.id !== env.ROLE_TEAMTRIPSIT
-    && !messageData.member?.roles.cache.has(env.TEAM_TRIPSIT)
-
+    && !messageData.member?.roles.cache.has(env.ROLE_TEAMTRIPSIT)
     ) {
       await messageData.reply('This beta feature is exclusive to active TripSit [Patreon](https://www.patreon.com/tripsit) subscribers.');
       return;
@@ -1803,15 +1801,23 @@ export async function discordAiChat(
       return;
     }
 
+    const tripbotLog = await discordClient.channels.fetch(env.CHANNEL_BOTLOG) as TextChannel;
+    await tripbotLog.send(`${messageData.author.toString()} generated an image in ${messageData.url}`);
+
     let waitingOnGen = true;
     createImage(
-      messageData.cleanContent.replace('imgen', '').trim(),
+      messageData.cleanContent.replace('imgen', '').replace(tripbotUAT, '').replace('tripbot', '').trim(),
       messageData.author.id,
     )
       .then(async response => {
         waitingOnGen = false;
         const { data } = response;
         const [image] = data;
+        await aiImageAudit(
+          'DALL_E_3' as ai_model,
+          messageData,
+          image,
+        );
         if (image.url) {
           await messageData.reply(
             {
@@ -1822,11 +1828,8 @@ export async function discordAiChat(
                 .setFooter({ text: `Beta feature only available to active TripSit Patreon subscribers (${imageLimit - imagesThisMonth} images left).` })],
             },
           );
-          await aiImageAudit(
-            'DALL_E_3' as ai_model,
-            messageData,
-            image,
-          );
+        } else {
+          await tripbotLog.send(`Error generating image: ${JSON.stringify(image, null, 2)}`);
         }
       });
     // While the above function is running, send the typing function
