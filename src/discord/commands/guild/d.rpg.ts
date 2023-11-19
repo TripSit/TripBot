@@ -105,7 +105,7 @@ const items = {
   },
   fonts: {
     AbrilFatFace: {
-      label: 'AbrilFatFace',
+      label: 'Abril Fatface',
       value: 'AbrilFatFace',
       description: 'Font',
       quantity: 1,
@@ -144,7 +144,7 @@ const items = {
       emoji: 'itemFont',
     },
     AudioWide: {
-      label: 'AudioWide',
+      label: 'Audio Wide',
       value: 'AudioWide',
       description: 'Font',
       quantity: 1,
@@ -157,7 +157,7 @@ const items = {
       emoji: 'itemFont',
     },
     BlackOpsOne: {
-      label: 'BlackOpsOne',
+      label: 'Black Ops One',
       value: 'BlackOpsOne',
       description: 'Font',
       quantity: 1,
@@ -170,7 +170,7 @@ const items = {
       emoji: 'itemFont',
     },
     CabinSketch: {
-      label: 'CabinSketch',
+      label: 'Cabin Sketch',
       value: 'CabinSketch',
       description: 'Font',
       quantity: 1,
@@ -196,7 +196,7 @@ const items = {
       emoji: 'itemFont',
     },
     FontdinerSwanky: {
-      label: 'FontdinerSwanky',
+      label: 'Fontdiner Swanky',
       value: 'FontdinerSwanky',
       description: 'Font',
       quantity: 1,
@@ -209,7 +209,7 @@ const items = {
       emoji: 'itemFont',
     },
     IndieFlower: {
-      label: 'IndieFlower',
+      label: 'Indie Flower',
       value: 'IndieFlower',
       description: 'Font',
       quantity: 1,
@@ -222,7 +222,7 @@ const items = {
       emoji: 'itemFont',
     },
     LilitaOne: {
-      label: 'LilitaOne',
+      label: 'Lilita One',
       value: 'LilitaOne',
       description: 'Font',
       quantity: 1,
@@ -248,7 +248,7 @@ const items = {
       emoji: 'itemFont',
     },
     PressStart2P: {
-      label: 'PressStart2P',
+      label: 'Press Start 2P',
       value: 'PressStart2P',
       description: 'Font',
       quantity: 1,
@@ -287,7 +287,7 @@ const items = {
       emoji: 'itemFont',
     },
     SpecialElite: {
-      label: 'SpecialElite',
+      label: 'Special Elite',
       value: 'SpecialElite',
       description: 'Font',
       quantity: 1,
@@ -315,7 +315,7 @@ const items = {
   },
   backgrounds: {
     AbstractTriangles: {
-      label: 'AbstractTriangles',
+      label: 'Abstract Triangles',
       value: 'AbstractTriangles',
       description: 'Background',
       quantity: 1,
@@ -328,7 +328,7 @@ const items = {
       emoji: 'itemBackground',
     },
     ArcadeCarpet: {
-      label: 'ArcadeCarpet',
+      label: 'Arcade Carpet',
       value: 'ArcadeCarpet',
       description: 'Background',
       quantity: 1,
@@ -341,7 +341,7 @@ const items = {
       emoji: 'itemBackground',
     },
     CircuitBoard: {
-      label: 'CircuitBoard',
+      label: 'Circuit Board',
       value: 'CircuitBoard',
       description: 'Background',
       quantity: 1,
@@ -354,7 +354,7 @@ const items = {
       emoji: 'itemBackground',
     },
     CoffeeSwirl: {
-      label: 'CoffeeSwirl',
+      label: 'Coffee Swirl',
       value: 'CoffeeSwirl',
       description: 'Background',
       quantity: 1,
@@ -393,7 +393,7 @@ const items = {
       emoji: 'itemBackground',
     },
     CubeTunnels: {
-      label: 'CubeTunnels',
+      label: 'Cube Tunnels',
       value: 'CubeTunnels',
       description: 'Background',
       quantity: 1,
@@ -406,7 +406,7 @@ const items = {
       emoji: 'itemBackground',
     },
     DiamondChevron: {
-      label: 'DiamondChevron',
+      label: 'Diamond Chevron',
       value: 'DiamondChevron',
       description: 'Background',
       quantity: 1,
@@ -432,7 +432,7 @@ const items = {
       emoji: 'itemBackground',
     },
     DotnDash: {
-      label: 'DotnDash',
+      label: 'Dot n Dash',
       value: 'DotnDash',
       description: 'Background',
       quantity: 1,
@@ -562,7 +562,7 @@ const items = {
       emoji: 'itemBackground',
     },
     LineLeaves: {
-      label: 'LineLeaves',
+      label: 'Line Leaves',
       value: 'LineLeaves',
       description: 'Background',
       quantity: 1,
@@ -575,7 +575,7 @@ const items = {
       emoji: 'itemBackground',
     },
     LiquidMaze: {
-      label: 'LiquidMaze',
+      label: 'Liquid Maze',
       value: 'LiquidMaze',
       description: 'Background',
       quantity: 1,
@@ -653,7 +653,7 @@ const items = {
       emoji: 'itemBackground',
     },
     PixelCamo: {
-      label: 'PixelCamo',
+      label: 'Pixel Camo',
       value: 'PixelCamo',
       description: 'Background',
       quantity: 1,
@@ -718,7 +718,7 @@ const items = {
       emoji: 'itemBackground',
     },
     SpaceIcons: {
-      label: 'SpaceIcons',
+      label: 'Space Icons',
       value: 'SpaceIcons',
       description: 'Background',
       quantity: 1,
@@ -744,7 +744,7 @@ const items = {
       emoji: 'itemBackground',
     },
     SquareTwist: {
-      label: 'SquareTwist',
+      label: 'Square Twist',
       value: 'SquareTwist',
       description: 'Background',
       quantity: 1,
@@ -796,7 +796,7 @@ const items = {
       emoji: 'itemBackground',
     },
     TriangleOverlap: {
-      label: 'TriangleOverlap',
+      label: 'Triangle Overlap',
       value: 'TriangleOverlap',
       description: 'Background',
       quantity: 1,
@@ -1541,7 +1541,7 @@ export async function rpgMarket(
         .addComponents(
           new StringSelectMenuBuilder()
             .setCustomId(`rpgGeneralSelect,user:${interaction.user.id},group:${group},chunk:${index}`)
-            .setPlaceholder(`${group.charAt(0).toUpperCase() + group.slice(1)} Page ${index + 1}`)
+            .setPlaceholder(chunks.length === 1 ? `${group.charAt(0).toUpperCase() + group.slice(1)}` : `${group.charAt(0).toUpperCase() + group.slice(1)} ${index + 1}`)
             .addOptions(chunk),
         );
       componentList.push(rowItems);
@@ -1688,12 +1688,13 @@ export async function rpgMarketChange(
         .addComponents(
           new StringSelectMenuBuilder()
             .setCustomId(`rpgGeneralSelect,user:${interaction.user.id},group:${group},chunk:${index}`)
-            .setPlaceholder(`${group.charAt(0).toUpperCase() + group.slice(1)} Page ${index + 1}`)
+            .setPlaceholder(chunks.length === 1 ? `${group.charAt(0).toUpperCase() + group.slice(1)}` : `${group.charAt(0).toUpperCase() + group.slice(1)} ${index + 1}`)
             .addOptions(chunk),
         );
       components.push(rowItems);
     }
   }
+
   const embed = embedTemplate()
     .setAuthor(null)
     .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
@@ -3753,6 +3754,76 @@ export async function rpgTown(
   };
 }
 
+async function rpgGift(interaction: ChatInputCommandInteraction) {
+    const commandUser = interaction.user;
+    const targetUser = interaction.options.getUser('target');
+    const giftAmount = interaction.options.getInteger('amount') ?? 0;
+
+    if (!targetUser) throw new Error('Target user not found');
+    if (targetUser === commandUser) {
+      return {
+        embeds: [embedTemplate()
+          .setAuthor(null)
+          .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
+          .setTitle(`${emojiGet('buttonBetHuge')} Gift Unsuccessful`)
+          .setDescription(stripIndents`
+            **You can't gift tokens to yourself!**
+          `)
+          .setColor(Colors.Red)],
+        components: [],
+      };
+    }
+
+    const targetData = await getPersonaInfo(targetUser.id);
+    const userData = await getPersonaInfo(commandUser.id);
+
+    // Get the current token amounts for the command user and the target user
+    const commandUserTokens = userData.tokens;
+    const targetUserTokens = targetData.tokens;
+
+    // Check if the command user has enough tokens
+    if (commandUserTokens < giftAmount) {
+      return {
+        embeds: [embedTemplate()
+          .setAuthor(null)
+          .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
+          .setTitle(`${emojiGet('buttonBetHuge')} Gift Unsuccessful`)
+          .setDescription(stripIndents`
+            **You don't have enough tokens!**
+
+            ${emojiGet('buttonBetSmall')} **Wallet:** ${userData.tokens}
+          `)
+          .setColor(Colors.Red)],
+        components: [],
+      }
+     } else {
+      // Remove the tokens from the command user
+      userData.tokens -= giftAmount;
+      // Add the tokens to the target user
+      targetData.tokens += giftAmount;
+      // Save the data
+      await setPersonaInfo(userData);
+      await setPersonaInfo(targetData);
+    }
+
+    return {
+      embeds: [embedTemplate()
+        .setAuthor(null)
+        .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
+        .setTitle(`${emojiGet('buttonBetHuge')} Gift Successful`)
+        .setDescription(stripIndents`
+          **You gifted ${giftAmount} ${giftAmount === 1 ? 'token' : 'tokens'} to ${targetUser?.username}**
+
+          ${emojiGet('buttonBetSmall')} **${targetUser?.displayName}'s Wallet:** ${targetData.tokens}
+          ${emojiGet('buttonBetSmall')} **Your Wallet:** ${userData.tokens}
+        `)
+        .setColor(Colors.Green)],
+      components: [],
+    };
+}
+
+
+
 export async function rpgHelp(
   interaction: MessageComponentInteraction | ChatInputCommandInteraction,
 ):Promise<InteractionEditReplyOptions | InteractionUpdateOptions> {
@@ -3826,7 +3897,19 @@ export const dRpg: SlashCommand = {
       .setDescription('Go to the roulette game'))
     .addSubcommand(subcommand => subcommand
       .setName('trivia')
-      .setDescription('Go to the trivia parlor')),
+      .setDescription('Go to the trivia parlor'))
+    .addSubcommand(subcommand => subcommand
+      .setName('gift')
+      .setDescription('Gift tokens to another user')
+      .addUserOption(option => option
+        .setName('target')
+        .setDescription('User to gift tokens to')
+        .setRequired(true))
+      .addIntegerOption(option => option
+        .setName('amount')
+        .setDescription('Amount of tokens to gift')
+        .setRequired(true))),
+
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
     const channelRpg = await interaction.guild?.channels.fetch(env.CHANNEL_TRIPTOWN as string) as TextChannel;
@@ -3887,6 +3970,9 @@ export const dRpg: SlashCommand = {
     }
     if (subcommand === 'trivia') {
       await interaction.editReply(await rpgTrivia(interaction));
+    }
+    if (subcommand === 'gift') {
+      await interaction.editReply(await rpgGift(interaction));
     }
 
     // if (subcommand === 'blackjack') {
