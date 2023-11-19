@@ -3755,74 +3755,71 @@ export async function rpgTown(
 }
 
 async function rpgGift(interaction: ChatInputCommandInteraction) {
-    const commandUser = interaction.user;
-    const targetUser = interaction.options.getUser('target');
-    const giftAmount = interaction.options.getInteger('amount') ?? 0;
+  const commandUser = interaction.user;
+  const targetUser = interaction.options.getUser('target');
+  const giftAmount = interaction.options.getInteger('amount') ?? 0;
 
-    if (!targetUser) throw new Error('Target user not found');
-    if (targetUser === commandUser) {
-      return {
-        embeds: [embedTemplate()
-          .setAuthor(null)
-          .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
-          .setTitle(`${emojiGet('buttonBetHuge')} Gift Unsuccessful`)
-          .setDescription(stripIndents`
-            **You can't gift tokens to yourself!**
-          `)
-          .setColor(Colors.Red)],
-        components: [],
-      };
-    }
-
-    const targetData = await getPersonaInfo(targetUser.id);
-    const userData = await getPersonaInfo(commandUser.id);
-
-    // Get the current token amounts for the command user and the target user
-    const commandUserTokens = userData.tokens;
-    const targetUserTokens = targetData.tokens;
-
-    // Check if the command user has enough tokens
-    if (commandUserTokens < giftAmount) {
-      return {
-        embeds: [embedTemplate()
-          .setAuthor(null)
-          .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
-          .setTitle(`${emojiGet('buttonBetHuge')} Gift Unsuccessful`)
-          .setDescription(stripIndents`
-            **You don't have enough tokens!**
-
-            ${emojiGet('buttonBetSmall')} **Wallet:** ${userData.tokens}
-          `)
-          .setColor(Colors.Red)],
-        components: [],
-      }
-     } else {
-      // Remove the tokens from the command user
-      userData.tokens -= giftAmount;
-      // Add the tokens to the target user
-      targetData.tokens += giftAmount;
-      // Save the data
-      await setPersonaInfo(userData);
-      await setPersonaInfo(targetData);
-    }
-
+  if (!targetUser) throw new Error('Target user not found');
+  if (targetUser === commandUser) {
     return {
       embeds: [embedTemplate()
         .setAuthor(null)
         .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
-        .setTitle(`${emojiGet('buttonBetHuge')} Gift Successful`)
+        .setTitle(`${emojiGet('buttonBetHuge')} Gift Unsuccessful`)
         .setDescription(stripIndents`
+            **You can't gift tokens to yourself!**
+          `)
+        .setColor(Colors.Red)],
+      components: [],
+    };
+  }
+
+  const targetData = await getPersonaInfo(targetUser.id);
+  const userData = await getPersonaInfo(commandUser.id);
+
+  // Get the current token amounts for the command user and the target user
+  const commandUserTokens = userData.tokens;
+  // const targetUserTokens = targetData.tokens;
+
+  // Check if the command user has enough tokens
+  if (commandUserTokens < giftAmount) {
+    return {
+      embeds: [embedTemplate()
+        .setAuthor(null)
+        .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
+        .setTitle(`${emojiGet('buttonBetHuge')} Gift Unsuccessful`)
+        .setDescription(stripIndents`
+            **You don't have enough tokens!**
+
+            ${emojiGet('buttonBetSmall')} **Wallet:** ${userData.tokens}
+          `)
+        .setColor(Colors.Red)],
+      components: [],
+    };
+  }
+  // Remove the tokens from the command user
+  userData.tokens -= giftAmount;
+  // Add the tokens to the target user
+  targetData.tokens += giftAmount;
+  // Save the data
+  await setPersonaInfo(userData);
+  await setPersonaInfo(targetData);
+
+  return {
+    embeds: [embedTemplate()
+      .setAuthor(null)
+      .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
+      .setTitle(`${emojiGet('buttonBetHuge')} Gift Successful`)
+      .setDescription(stripIndents`
           **You gifted ${giftAmount} ${giftAmount === 1 ? 'token' : 'tokens'} to ${targetUser?.username}**
 
           ${emojiGet('buttonBetSmall')} **${targetUser?.displayName}'s Wallet:** ${targetData.tokens}
           ${emojiGet('buttonBetSmall')} **Your Wallet:** ${userData.tokens}
         `)
-        .setColor(Colors.Green)],
-      components: [],
-    };
+      .setColor(Colors.Green)],
+    components: [],
+  };
 }
-
-
 
 export async function rpgHelp(
   interaction: MessageComponentInteraction | ChatInputCommandInteraction,
