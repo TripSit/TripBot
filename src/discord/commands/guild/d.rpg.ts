@@ -1946,7 +1946,11 @@ export async function rpgMarketAccept(
   // log.debug(F, `itemData (accept): ${JSON.stringify(itemData, null, 2)}`);
 
   // Check that the user has less than 25 items in their inventory
-  const inventoryData = await inventoryGet(personaData.id);
+  const inventoryData = await db.rpg_inventory.findMany({
+    where: {
+      persona_id: personaData.id,
+    },
+  });
   if (inventoryData.length >= 20) {
     const { embeds, components } = await rpgMarketChange(interaction);
 
@@ -2637,7 +2641,7 @@ export async function rpgHomeAccept(
   // Find the selectedItem in the inventoryData
   const chosenItem = inventoryData.find(item => item.value === selectedItem?.value);
   // Find the item type from inventoryData
-  const itemType = inventoryData.find(item => item.value === selectedItem?.value)?.effect;
+  // const itemType = inventoryData.find(item => item.value === selectedItem?.value)?.effect;
 
   // Equip the item
   if (chosenItem) {
@@ -4067,11 +4071,48 @@ async function rpgGift(interaction: ChatInputCommandInteraction) {
     };
   }
 
-  const targetData = await getPersonaInfo(targetUser.id);
-  const userData = await getPersonaInfo(commandUser.id);
+  const userData = await db.users.upsert({
+    where: {
+      discord_id: commandUser.id,
+    },
+    create: {
+      discord_id: commandUser.id,
+    },
+    update: {},
+  });
+
+  const userPersona = await db.personas.upsert({
+    where: {
+      user_id: userData.id,
+    },
+    create: {
+      user_id: userData.id,
+    },
+    update: {},
+  });
+
+  const targetData = await db.users.upsert({
+    where: {
+      discord_id: targetUser.id,
+    },
+    create: {
+      discord_id: targetUser.id,
+    },
+    update: {},
+  });
+
+  const targetPersona = await db.personas.upsert({
+    where: {
+      user_id: targetData.id,
+    },
+    create: {
+      user_id: targetData.id,
+    },
+    update: {},
+  });
 
   // Get the current token amounts for the command user and the target user
-  const commandUserTokens = userData.tokens;
+  const commandUserTokens = userPersona.tokens;
   // const targetUserTokens = targetData.tokens;
 
   // Check if the command user has enough tokens
@@ -4084,19 +4125,33 @@ async function rpgGift(interaction: ChatInputCommandInteraction) {
         .setDescription(stripIndents`
             **You don't have enough tokens!**
 
-            ${emojiGet('buttonBetSmall')} **Wallet:** ${userData.tokens}
+            ${emojiGet('buttonBetSmall')} **Wallet:** ${userPersona.tokens}
           `)
         .setColor(Colors.Red)],
       components: [],
     };
   }
   // Remove the tokens from the command user
-  userData.tokens -= giftAmount;
+  userPersona.tokens -= giftAmount;
   // Add the tokens to the target user
-  targetData.tokens += giftAmount;
+  targetPersona.tokens += giftAmount;
   // Save the data
-  await setPersonaInfo(userData);
-  await setPersonaInfo(targetData);
+
+  await db.personas.upsert({
+    where: {
+      user_id: userData.id,
+    },
+    create: userPersona,
+    update: userPersona,
+  });
+
+  await db.personas.upsert({
+    where: {
+      user_id: targetData.id,
+    },
+    create: targetPersona,
+    update: targetPersona,
+  });
 
   return {
     embeds: [embedTemplate()
@@ -4106,8 +4161,8 @@ async function rpgGift(interaction: ChatInputCommandInteraction) {
       .setDescription(stripIndents`
           **You gifted ${giftAmount} ${giftAmount === 1 ? 'token' : 'tokens'} to ${targetUser?.username}**
 
-          ${emojiGet('buttonBetSmall')} **${targetUser?.displayName}'s Wallet:** ${targetData.tokens}
-          ${emojiGet('buttonBetSmall')} **Your Wallet:** ${userData.tokens}
+          ${emojiGet('buttonBetSmall')} **${targetUser?.displayName}'s Wallet:** ${targetPersona.tokens}
+          ${emojiGet('buttonBetSmall')} **Your Wallet:** ${userPersona.tokens}
         `)
       .setColor(Colors.Green)],
     components: [],

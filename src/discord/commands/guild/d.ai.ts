@@ -52,7 +52,6 @@ import { sleep } from './d.bottest';
 import aiChat, {
   aiModerate, createImage, createMessage, getAssistant, getMessages, getThread, readRun, runThread,
 } from '../../../global/commands/g.ai';
-import { UserActionType } from '../../../global/@types/database';
 import { parseDuration } from '../../../global/utils/parseDuration';
 
 const db = new PrismaClient({ log: ['error'] });
