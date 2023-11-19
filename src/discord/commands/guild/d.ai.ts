@@ -41,6 +41,7 @@ import {
 import OpenAI from 'openai';
 import { Run } from 'openai/resources/beta/threads/runs/runs';
 import { MessageContentText } from 'openai/resources/beta/threads/messages/messages';
+import { DateTime } from 'luxon';
 import { paginationEmbed } from '../../utils/pagination';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
@@ -48,7 +49,7 @@ import commandContext from '../../utils/context';
 import { moderate } from '../../../global/commands/g.moderate';
 import { sleep } from './d.bottest';
 import aiChat, {
-  aiModerate, createMessage, getAssistant, getMessages, getThread, readRun, runThread,
+  aiModerate, createImage, createMessage, getAssistant, getMessages, getThread, readRun, runThread,
 } from '../../../global/commands/g.ai';
 import { UserActionType } from '../../../global/@types/database';
 import { parseDuration } from '../../../global/utils/parseDuration';
@@ -63,6 +64,7 @@ const ephemeralExplanation = 'Set to "True" to show the response only to you';
 const personaDoesntExist = 'This persona does not exist. Please create it first.';
 const confirmationCodes = new Map<string, string>();
 const tripbotUAT = '@TripBot UAT (Moonbear)';
+const imageLimit = 25;
 
 // Costs per 1k tokens
 const aiCosts = {
@@ -991,6 +993,8 @@ async function noteUser(
   const buttonID = interaction.customId;
   log.debug(F, `buttonID: ${buttonID}`);
 
+  if (!(interaction.member as GuildMember).roles.cache.has(env.ROLE_MODERATOR)) return;
+
   const embed = interaction.message.embeds[0].toJSON();
 
   const flagsField = embed.fields?.find(field => field.name === 'Flags') as APIEmbedField;
@@ -1084,6 +1088,7 @@ async function muteUser(
   log.debug(F, 'muteUser started');
   const buttonID = interaction.customId;
   log.debug(F, `buttonID: ${buttonID}`);
+  if (!(interaction.member as GuildMember).roles.cache.has(env.ROLE_MODERATOR)) return;
 
   const embed = interaction.message.embeds[0].toJSON();
 
@@ -1207,6 +1212,7 @@ async function warnUser(
   log.debug(F, 'warnUser started');
   const buttonID = interaction.customId;
   log.debug(F, `buttonID: ${buttonID}`);
+  if (!(interaction.member as GuildMember).roles.cache.has(env.ROLE_MODERATOR)) return;
 
   const embed = interaction.message.embeds[0].toJSON();
 
@@ -1314,6 +1320,7 @@ async function banUser(
   log.debug(F, 'banUser started');
   const buttonID = interaction.customId;
   log.debug(F, `buttonID: ${buttonID}`);
+  if (!(interaction.member as GuildMember).roles.cache.has(env.ROLE_MODERATOR)) return;
 
   const embed = interaction.message.embeds[0].toJSON();
 
@@ -1439,7 +1446,7 @@ async function banUser(
 // };
 
 export async function aiAudit(
-  aiPersona: ai_personas | null,
+  aiPersona: ai_personas,
   messages: Message[],
   chatResponse: string,
   promptTokens: number,
@@ -1448,81 +1455,155 @@ export async function aiAudit(
   // This function takes what was sent and returned from the API and sends it to a discord channel
   // for review. This is to ensure that the AI is not being used to break the rules.
 
-  // Get the channel to send the message to
-  const channelAiLog = await discordClient.channels.fetch(env.CHANNEL_AILOG) as TextChannel;
-
-  // Check if this is a chat completion response, else, it's a moderation response
-  if (!aiPersona) return;
-  // Get fresh persona data after tokens
-
-  const cleanPersona = await db.ai_personas.findUniqueOrThrow({
-    where: {
-      id: aiPersona.id,
-    },
-  });
-
   // const embed = await makePersonaEmbed(cleanPersona);
-  const embed = embedTemplate();
 
-  // Construct the message
-  embed.setFooter({ text: 'What are tokens? https://platform.openai.com/tokenizer' });
+  const promptMessage = messages[messages.length - 1];
+  const contextMessages = messages.slice(0, messages.length - 1);
 
-  const messageOutput = messages
+  const embed = embedTemplate()
+    .setFooter({ text: 'What are tokens? https://platform.openai.com/tokenizer' })
+    // .setThumbnail(promptMessage.author.displayAvatarURL())
+    .setColor(Colors.Yellow);
+
+  const contextMessageOutput = contextMessages
     .map(message => `${message.url} ${message.member?.displayName}: ${message.cleanContent}`)
     .join('\n')
     .slice(0, 1024);
 
-  // log.debug(F, `messageOutput: ${messageOutput}`);
+  const promptCost = (promptTokens / 1000) * aiCosts[aiPersona.ai_model].input;
+  const completionCost = (completionTokens / 1000) * aiCosts[aiPersona.ai_model].output;
 
-  const responseOutput = chatResponse.slice(0, 1023);
-  // log.debug(F, `responseOutput: ${responseOutput}`);
+  const userData = await db.users.upsert({
+    where: { discord_id: promptMessage.author.id },
+    create: { discord_id: promptMessage.author.id },
+    update: { discord_id: promptMessage.author.id },
+  });
 
-  embed.spliceFields(
-    0,
-    0,
+  const aiUsageData = await db.ai_usage.upsert({
+    where: {
+      user_id: userData.id,
+    },
+    create: {
+      user_id: userData.id,
+    },
+    update: {},
+  });
+
+  embed.addFields(
     {
-      name: 'Model',
-      value: stripIndents`${aiPersona.ai_model}`,
+      name: 'Persona',
+      value: stripIndents`**${aiPersona.name} (${aiPersona.ai_model})** - ${aiPersona.prompt}`,
       inline: false,
     },
     {
-      name: 'Messages',
-      value: stripIndents`${messageOutput}`,
+      name: 'Context',
+      value: stripIndents`${contextMessageOutput}`,
+      inline: false,
+    },
+    {
+      name: 'Prompt',
+      value: stripIndents`${promptMessage.url} ${promptMessage.member?.displayName}: ${promptMessage.cleanContent}`,
       inline: false,
     },
     {
       name: 'Result',
-      value: stripIndents`${responseOutput}`,
+      value: stripIndents`${chatResponse.slice(0, 1023)}`,
+      inline: false,
+    },
+    {
+      name: 'Chat Tokens',
+      value: stripIndents`${promptTokens + completionTokens} Tokens \n($${(promptCost + completionCost).toFixed(6)})`,
+      inline: true,
+    },
+    {
+      name: 'User Tokens',
+      value: `${aiUsageData.tokens} Tokens\n($${((aiUsageData.tokens / 1000) * aiCosts[aiPersona.ai_model].output).toFixed(6)})`,
+      inline: true,
+    },
+    {
+      name: 'Persona Tokens',
+      value: `${aiPersona.total_tokens} Tokens\n($${((aiPersona.total_tokens / 1000) * aiCosts[aiPersona.ai_model].output).toFixed(6)})`,
+      inline: true,
+    },
+  );
+
+  // Get the channel to send the message to
+  const channelAiLog = await discordClient.channels.fetch(env.CHANNEL_AILOG) as TextChannel;
+
+  // Send the message
+  await channelAiLog.send({ embeds: [embed] });
+}
+
+export async function aiImageAudit(
+  imageGenerator: ai_model,
+  message: Message,
+  image: OpenAI.Images.Image,
+) {
+  // This function takes what was sent and returned from the API and sends it to a discord channel
+  // for review. This is to ensure that the AI is not being used to break the rules.
+
+  // const embed = await makePersonaEmbed(cleanPersona);
+  const embed = embedTemplate()
+    .setThumbnail(message.author.displayAvatarURL())
+    .setColor(Colors.Yellow);
+
+  embed.addFields(
+    {
+      name: 'Prompt',
+      value: stripIndents`${message.cleanContent}`,
+      inline: false,
+    },
+    {
+      name: 'Revised Prompt',
+      value: stripIndents`${image.revised_prompt}`,
       inline: false,
     },
   );
 
-  const promptCost = (promptTokens / 1000) * aiCosts[cleanPersona.ai_model].input;
-  const completionCost = (completionTokens / 1000) * aiCosts[cleanPersona.ai_model].output;
-  // log.debug(F, `promptCost: ${promptCost}, completionCost: ${completionCost}`);
+  const userData = await db.users.upsert({
+    where: { discord_id: message.author.id },
+    create: { discord_id: message.author.id },
+    update: { discord_id: message.author.id },
+  });
 
-  embed.spliceFields(
-    2,
-    0,
+  const aiUsageData = await db.ai_usage.upsert({
+    where: {
+      user_id: userData.id,
+    },
+    create: {
+      user_id: userData.id,
+    },
+    update: {},
+  });
+  const imagesGenerated = aiUsageData.images.length;
+
+  const allUsageData = await db.ai_usage.findMany();
+  const totalImagesGenerated = allUsageData.reduce((acc, cur) => acc + cur.images.length, 0);
+
+  embed.addFields(
     {
-      name: 'Prompt Cost',
-      value: `$${promptCost.toFixed(6)}\n(${promptTokens} tokens)`,
+      name: 'Model',
+      value: stripIndents`${imageGenerator}`,
       inline: true,
     },
     {
-      name: 'Completion Cost',
-      value: `$${completionCost.toFixed(6)}\n(${completionTokens} tokens)`,
+      name: 'User Images Generated',
+      value: `${imagesGenerated} ($${imagesGenerated * 0.04})`,
       inline: true,
     },
     {
-      name: 'Total Cost',
-      value: `$${(promptCost + completionCost).toFixed(6)}\n(${promptTokens + completionTokens} tokens)`,
+      name: 'Total Images Generated',
+      value: `${totalImagesGenerated} ($${totalImagesGenerated * 0.04})`,
       inline: true,
     },
   );
 
+  embed.setImage(image.url as string);
+
+  // Get the channel to send the message to
+  const channelAiImageLog = await discordClient.channels.fetch(env.CHANNEL_AIIMAGELOG) as TextChannel;
   // Send the message
-  await channelAiLog.send({ embeds: [embed] });
+  await channelAiImageLog.send({ embeds: [embed] });
 }
 
 export async function discordAiModerate(
@@ -1577,14 +1658,13 @@ export async function discordAiModerate(
     );
 
   const modAiModifyButtons = [] as ActionRowBuilder<ButtonBuilder>[];
-  let pingMessage = '';
   // For each of the sortedCategoryScores, add a field
   modResults.forEach(result => {
     const safeCategoryName = result.category
       .replace('/', '_')
       .replace('-', '_') as keyof ai_moderation;
     if (result.value > 0.90) {
-      pingMessage = `Please review <@${env.DISCORD_OWNER_ID}>`;
+      aiEmbed.setColor(Colors.Red);
     }
     aiEmbed.addFields(
       {
@@ -1659,7 +1739,7 @@ export async function discordAiModerate(
   const channelAiModLog = await discordClient.channels.fetch(env.CHANNEL_AIMOD_LOG) as TextChannel;
   // Send the message
   await channelAiModLog.send({
-    content: `${targetMember.displayName} was flagged by AI for ${activeFlags.join(', ')} in ${messageData.url} ${pingMessage}`,
+    content: `${targetMember.displayName} was flagged by AI for ${activeFlags.join(', ')} in ${messageData.url}`,
     embeds: [aiEmbed],
     components: [userActions, ...modAiModifyButtons],
   });
@@ -1668,7 +1748,7 @@ export async function discordAiModerate(
 export async function discordAiChat(
   messageData: Message<boolean>,
 ):Promise<void> {
-  // log.debug(F, `discordAiChat - messageData: ${JSON.stringify(messageData.cleanContent, null, 2)}`);
+  log.debug(F, `discordAiChat - messageData: ${JSON.stringify(messageData.cleanContent, null, 2)}`);
   if (!env.OPENAI_API_ORG || !env.OPENAI_API_KEY) return;
 
   const channelMessages = await messageData.channel.messages.fetch({ limit: 10 });
@@ -1680,6 +1760,85 @@ export async function discordAiChat(
   if (messages[0].author.bot) return;
   if (messages[0].cleanContent.length < 1) return;
   if (messages[0].channel.type === ChannelType.DM) return;
+
+  if (messageData.cleanContent.includes('imagen')) {
+    if (!messageData.member?.roles.cache.has(env.ROLE_PATRON)
+    && messageData.author.id !== env.ROLE_TEAMTRIPSIT
+    && !messageData.member?.roles.cache.has(env.TEAM_TRIPSIT)
+
+    ) {
+      await messageData.reply('This beta feature is exclusive to active TripSit [Patreon](https://www.patreon.com/tripsit) subscribers.');
+      return;
+    }
+
+    const userData = await db.users.upsert({
+      where: { discord_id: messageData.author.id },
+      create: { discord_id: messageData.author.id },
+      update: { discord_id: messageData.author.id },
+    });
+
+    const aiUsageData = await db.ai_usage.upsert({
+      where: {
+        user_id: userData.id,
+      },
+      create: {
+        user_id: userData.id,
+      },
+      update: {},
+    });
+
+    // The usageData.images is a list of dates when images were generated
+    // Users are limited to 25 images a month, which is roughly 1$ a month
+    // So we create a list of images that were generated this month, and if it's
+    // greater than 25, we let the user know.
+    const imagesThisMonth = aiUsageData.images.filter(imageDate => {
+      // log.debug(F, `imageDate: ${imageDate}`);
+      const givenDate = DateTime.fromJSDate(imageDate);
+      const oneMonthAgo = DateTime.now().minus({ months: 1 });
+      return givenDate > oneMonthAgo;
+    }).length;
+
+    if (imagesThisMonth > imageLimit && messageData.author.id !== env.DISCORD_OWNER_ID) {
+      await messageData.reply(`While I love the enthusiasm, you have already generated ${imageLimit} images this month, and this API is rather expensive. Please try again next month.`);
+      return;
+    }
+
+    let waitingOnGen = true;
+    createImage(
+      messageData.cleanContent.replace('imgen', '').trim(),
+      messageData.author.id,
+    )
+      .then(async response => {
+        waitingOnGen = false;
+        const { data } = response;
+        const [image] = data;
+        if (image.url) {
+          await messageData.reply(
+            {
+              embeds: [embedTemplate()
+                .setAuthor(null)
+                .setColor(null)
+                .setImage(image.url)
+                .setFooter({ text: `Beta feature only available to active TripSit Patreon subscribers (${imageLimit - imagesThisMonth} images left).` })],
+            },
+          );
+          await aiImageAudit(
+            'DALL_E_3' as ai_model,
+            messageData,
+            image,
+          );
+        }
+      });
+    // While the above function is running, send the typing function
+    while (waitingOnGen) {
+      // eslint-disable-next-line no-await-in-loop
+      await messageData.channel.sendTyping();
+      // eslint-disable-next-line no-await-in-loop
+      await sleep(5000);
+    }
+
+    return;
+  }
 
   // Check if the channel is linked to a persona
   const aiLinkData = await getLinkedChannel(messages[0].channel);
@@ -1715,7 +1874,7 @@ export async function discordAiChat(
     .slice(0, maxHistoryLength)
     .reverse();
 
-  const result = await aiChat(aiPersona, messageList);
+  const result = await aiChat(aiPersona, messageList, messageData.author.id);
 
   await aiAudit(
     aiPersona,
