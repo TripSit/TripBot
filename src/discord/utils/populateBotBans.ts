@@ -12,7 +12,6 @@ const F = f(__filename); // eslint-disable-line
 export const botBannedUsers: string[] = [];
 
 export async function populateBans():Promise<void> {
-  if (env.POSTGRES_DB_URL === undefined) return;
   const bannedUsers = await db.users.findMany({
     select: {
       discord_id: true,

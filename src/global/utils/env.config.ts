@@ -54,8 +54,6 @@ export const env = {
   IMDB_TOKEN: process.env.IMDB_TOKEN,
   LOGTAIL_TOKEN: process.env.LOGTAIL_TOKEN,
 
-  POSTGRES_DB_URL: process.env.POSTGRES_DB_URL,
-
   SONAR_URL: process.env.SONAR_URL,
   SONAR_TOKEN: process.env.SONAR_TOKEN,
 
