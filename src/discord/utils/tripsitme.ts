@@ -22,6 +22,7 @@ import {
   ChatInputCommandInteraction,
   PermissionResolvable,
   Guild,
+  AllowedThreadTypeForTextChannel,
 } from 'discord.js';
 import {
   TextInputStyle,
@@ -93,11 +94,14 @@ const mindsetRoles = [
   env.ROLE_SOBER,
 ];
 
-// const otherRoles = [
-//   env.ROLE_VERIFIED,
-// ];
+const otherRoles = [
+  env.ROLE_VERIFIED,
+  env.ROLE_PREMIUM,
+  env.ROLE_BOOSTER,
+  env.ROLE_PATRON,
+];
 
-const ignoredRoles = `${teamRoles},${colorRoles},${mindsetRoles}`;
+const ignoredRoles = `${teamRoles},${colorRoles},${mindsetRoles},${otherRoles}`;
 
 const guildOnly = 'This must be performed in a guild!';
 const memberOnly = 'This must be performed by a member of a guild!';
@@ -382,7 +386,7 @@ export async function tripsitmeMeta(
     {
       name: `💛│${target.displayName}'s discussion!`,
       autoArchiveDuration: 1440,
-      type: ChannelType.PrivateThread,
+      type: ChannelType.PrivateThread as AllowedThreadTypeForTextChannel,
       reason: `${actor.displayName} created meta thread for ${target.displayName}`,
       invitable: false,
     },
@@ -981,7 +985,7 @@ export async function tripSitMe(
   const threadHelpUser = await tripsitChannel.threads.create({
     name: `🧡│${target.displayName}'s channel!`,
     autoArchiveDuration: 1440,
-    type: ChannelType.PrivateThread,
+    type: ChannelType.PrivateThread as AllowedThreadTypeForTextChannel,
     reason: `${target.displayName} requested help`,
     invitable: false,
   });
@@ -1168,11 +1172,13 @@ export async function tripsitmeButton(
       tripsitChannel = await interaction.guild?.channels.fetch(guildData.channel_tripsit) as TextChannel;
     }
   } catch (err) {
-    // log.debug(F, `There was an error fetching the tripsit channel, it was likely deleted:\n ${err}`);
+    log.debug(F, `There was an error fetching the tripsit channel, it was likely deleted:\n ${err}`);
     // Update the ticket status to closed
     guildData.channel_tripsit = null;
     await database.guilds.set(guildData);
   }
+
+  log.debug(F, `tripsitChannel: ${JSON.stringify(tripsitChannel, null, 2)}`);
 
   const channelPerms = await checkChannelPermissions(tripsitChannel, [
     'ViewChannel' as PermissionResolvable,

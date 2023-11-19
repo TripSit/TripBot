@@ -131,6 +131,7 @@ export const dBirthday: SlashCommand = {
       .setName('get')
       .setDescription('Get someone\'s birthday!')
       .addUserOption(option => option
+        // .setRequired(true) If nothing is provided it defaults to the user who ran the command
         .setName('user')
         .setDescription('User to lookup'))
       .addBooleanOption(option => option.setName('ephemeral')

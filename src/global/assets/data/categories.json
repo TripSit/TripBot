@@ -1,0 +1,112 @@
+{
+  "stimulant": {
+    "name": "stimulant",
+    "description": "Stimulants excite the nervous system and increase physiological function.",
+    "wiki": "https://wiki.tripsit.me/wiki/Stimulants",
+    "tips": []
+  },
+  "supplements": {
+    "name": "supplements",
+    "description": "",
+    "wiki": "",
+    "tips": []
+  },
+  "supplement": {
+    "name": "supplement",
+    "description": "",
+    "wiki": "",
+    "tips": []
+  },
+  "depressant": {
+    "name": "depressant",
+    "description": "Depressants are drugs which reduce arousal and stimulation in the user, characterised by a depressing of mental and physical functions.",
+    "wiki": "https://wiki.tripsit.me/wiki/Depressants",
+    "tips": []
+  },
+  "psychedelic": {
+    "name": "psychedelic",
+    "description": "Psychedelics are drugs which alter the perception, causing a number of mental effects which manifest in many forms including altered states of consciousness, visual or tactile effects.",
+    "wiki": "https://wiki.tripsit.me/wiki/Psychedelics",
+    "tips": [
+      "don't",
+      "don't",
+      "don't be a dingus"
+    ],
+    "pretty_name": ""
+  },
+  "empathogen": {
+    "name": "empathogen",
+    "description": "",
+    "wiki": "",
+    "tips": []
+  },
+  "opioid": {
+    "name": "opioid",
+    "description": "Opioids are pain-killing depressants which may also cause euphoria.",
+    "wiki": "https://wiki.tripsit.me/wiki/Opioids",
+    "tips": []
+  },
+  "deliriant": {
+    "name": "deliriant",
+    "description": "Deliriants are considered to be true hallucinogens, because the visuals they produce are hard or impossible to tell apart from reality; they are also known for negative physical effects.",
+    "wiki": "https://wiki.tripsit.me/wiki/Deliriants",
+    "tips": []
+  },
+  "nootropic": {
+    "name": "nootropic",
+    "description": "Nootropics, otherwise known as \"Smart Drugs\" or \"Cognitive Enhancers,\" are substances that can improve cognitive function, memory, creativity, motivation and can also aid in decreasing anxiety.",
+    "wiki": "",
+    "tips": []
+  },
+  "inactive": {
+    "name": "inactive",
+    "description": "An inactive substance is something which doesn't have any perceivable effect on your mind or body. An example of an inactive substance is EFLEA which is inactive on its own but is used as a prodrug to create EDMA.",
+    "wiki": "",
+    "tips": []
+  },
+  "dissociative": {
+    "name": "dissociative",
+    "description": "Dissociatives are mostly NMDA receptor antagonists, these substances are hallucinogenic but different than psychedelics. As per the name, these substances create a distance between the user and reality.",
+    "wiki": "https://wiki.tripsit.me/wiki/Dissociatives",
+    "tips": []
+  },
+  "barbiturate": {
+    "name": "barbiturate",
+    "description": "",
+    "pretty_name": "",
+    "tips": [],
+    "wiki": ""
+  },
+  "benzodiazepine": {
+    "name": "benzodiazepine",
+    "description": "Benzodiazepines are generally hypnotic or anxiolytic depressant drugs.",
+    "wiki": "https://wiki.tripsit.me/wiki/Benzodiazepines",
+    "tips": [],
+    "pretty_name": ""
+  },
+  "common": {
+    "name": "common",
+    "description": "Common drugs are those which are well known and widely used among the drug community. This doesn't necessarily mean they are safe, but it usually comes with a longer relative history of use in humans with which to establish a safety profile.",
+    "wiki": "",
+    "tips": []
+  },
+  "habit-forming": {
+    "name": "habit-forming",
+    "description": "These drugs pose a higher risk of causing habit forming behaviour, take particular care with the amount and frequency they are taken.",
+    "wiki": "https://wiki.tripsit.me/wiki/Addiction",
+    "tips": []
+  },
+  "research-chemical": {
+    "name": "research-chemical",
+    "description": "Research chemicals are drugs with relatively little history of human use, and thus particular care should be taken if choosing to ingest them.",
+    "wiki": "https://wiki.tripsit.me/wiki/Research_Chemicals",
+    "tips": [],
+    "pretty_name": "Research Chemical"
+  },
+  "tentative": {
+    "name": "tentative",
+    "description": "Drugs marked as tentative are those our team wasn't able to find much reliable information about. This is often because the drug is very new. Information listed under these drugs should not be entirely trusted.",
+    "wiki": "",
+    "tips": []
+  }
+}

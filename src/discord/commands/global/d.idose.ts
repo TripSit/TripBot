@@ -2,13 +2,11 @@ import {
   SlashCommandBuilder,
   time,
   Colors,
-  ButtonBuilder,
   EmbedBuilder,
   EmbedField,
 } from 'discord.js';
 import {
   ChannelType,
-  ButtonStyle,
 } from 'discord-api-types/v10';
 import { idose } from '../../../global/commands/g.idose';
 import { SlashCommand } from '../../@types/commandDef';
@@ -19,11 +17,6 @@ import { DrugRoa, DrugMassUnit } from '../../../global/@types/database';
 import commandContext from '../../utils/context';
 
 const F = f(__filename);
-
-const buttonList = [
-  new ButtonBuilder().setCustomId('previousButton').setLabel('Previous').setStyle(ButtonStyle.Danger),
-  new ButtonBuilder().setCustomId('nextButton').setLabel('Next').setStyle(ButtonStyle.Success),
-];
 
 export const dIdose: SlashCommand = {
   data: new SlashCommandBuilder()
@@ -181,7 +174,7 @@ export const dIdose: SlashCommand = {
       }
       // log.debug(F, `book.length: ${book.length}`);
       if (book.length > 1) {
-        paginationEmbed(interaction, book, buttonList);
+        paginationEmbed(interaction, book);
       } else {
         await interaction.editReply({ embeds: [embed] });
         // interaction.user.send({embeds: [embed]});

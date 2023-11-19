@@ -81,7 +81,7 @@ async function giveMilestone(
   // Pretend that the total exp would get the same exp as the category
   // Get the total level
   const totalData = await getTotalLevel(totalExp);
-  log.debug(F, `${member.displayName} is total Text level ${totalData.level}`);
+  // log.debug(F, `${member.displayName} is total Text level ${totalData.level}`);
 
   // Determine the first digit of the level
   const levelTier = Math.floor(totalData.level / 10);
@@ -228,7 +228,7 @@ export async function experience(
 
   // If the user has been awarded voice exp in the last 5 minutes, do nothing
   if (experienceData.last_message_at.getTime() + expInterval > new Date().getTime()) {
-    log.debug(F, `[${channel.name}] ${member.displayName} has already been given experience recently!`);
+    // log.debug(F, `[${channel.name}] ${member.displayName} has already been given experience recently!`);
     return;
   }
   const categoryName = category.charAt(0).toUpperCase() + category.slice(1).toLowerCase(); // eslint-disable-line max-len
@@ -238,13 +238,13 @@ export async function experience(
   experienceData.level_points += expPoints;
   experienceData.total_points += expPoints;
 
-  log.debug(F, `${member.displayName} earned ${expPoints} ${experienceData.type} exp, has ${experienceData.level_points} of ${expToLevel} to reach lvl ${experienceData.level + 1}`);
+  // log.debug(F, `${member.displayName} earned ${expPoints} ${experienceData.type} exp, has ${experienceData.level_points} of ${expToLevel} to reach lvl ${experienceData.level + 1}`);
 
   if (expToLevel <= experienceData.level_points) {
     experienceData.level += 1;
     const channelTripbotLogs = await channel.guild.channels.fetch(env.CHANNEL_BOTLOG) as TextChannel;
     await channelTripbotLogs.send(stripIndents`${member.displayName} has leveled up to ${categoryName} ${typeName} level ${experienceData.level}!`);
-    log.debug(F, `${member.displayName} has leveled up to ${categoryName} ${typeName} level ${experienceData.level}!`);
+    // log.debug(F, `${member.displayName} has leveled up to ${categoryName} ${typeName} level ${experienceData.level}!`);
     experienceData.level_points -= expToLevel;
 
     if (experienceData.level % 10 === 0) {

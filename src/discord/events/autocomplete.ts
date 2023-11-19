@@ -4,12 +4,15 @@ import {
 } from 'discord.js';
 import Fuse from 'fuse.js';
 
+import { PrismaClient, ai_model } from '@prisma/client';
 import pillColors from '../../global/assets/data/pill_colors.json';
 import pillShapes from '../../global/assets/data/pill_shapes.json';
 import drugDataAll from '../../global/assets/data/drug_db_combined.json';
 import drugDataTripsit from '../../global/assets/data/drug_db_tripsit.json';
 import timezones from '../../global/assets/data/timezones.json';
 import unitsOfMeasurement from '../../global/assets/data/units_of_measurement.json';
+
+const db = new PrismaClient({ log: ['error'] });
 
 const F = f(__filename); // eslint-disable-line
 
@@ -97,7 +100,7 @@ async function autocompleteBenzos(interaction:AutocompleteInteraction) {
   const drugNames = Object.keys(drugDataTripsit);
   const benzoNames = drugNames.filter(drugName => {
     const props = drugDataTripsit[drugName as keyof typeof drugDataTripsit].properties;
-    return Object.prototype.hasOwnProperty.call(props, 'dose_to_diazepam');
+    return Object.hasOwn(props, 'dose_to_diazepam');
   });
 
   // log.debug(F, `benzoNames: ${benzoNames}`);
@@ -107,7 +110,7 @@ async function autocompleteBenzos(interaction:AutocompleteInteraction) {
       name: drugName,
       aliases: [] as string[],
     };
-    if (Object.prototype.hasOwnProperty.call(drugDataTripsit[drugName as keyof typeof drugDataTripsit], 'aliases')) {
+    if (Object.hasOwn(drugDataTripsit[drugName as keyof typeof drugDataTripsit], 'aliases')) {
       // @ts-ignore
       drugObj.aliases = drugDataTripsit[drugName as keyof typeof drugDataTripsit].aliases;
     }
@@ -470,6 +473,73 @@ async function autocompleteColors(interaction:AutocompleteInteraction) {
   }
 }
 
+async function autocompleteAiModels(interaction:AutocompleteInteraction) {
+  const options = {
+    shouldSort: true,
+    keys: [
+      'name',
+    ],
+  };
+  const modelList = Object.keys(ai_model).map(model => ({ name: model }));
+
+  const fuse = new Fuse(modelList, options);
+  const focusedValue = interaction.options.getFocused();
+  // log.debug(F, `focusedValue: ${focusedValue}`);
+  const results = fuse.search(focusedValue);
+  // log.debug(F, `Autocomplete results: ${results}`);
+  if (results.length > 0) {
+    const top25 = results.slice(0, 20);
+    const listResults = top25.map(choice => ({
+      name: choice.item.name,
+      value: choice.item.name,
+    }));
+      // log.debug(F, `list_results: ${listResults}`);
+    interaction.respond(listResults);
+  } else {
+    const defaultDiscordColors = modelList.slice(0, 25);
+    const listResults = defaultDiscordColors.map(choice => ({ name: choice.name, value: choice.name }));
+    // log.debug(F, `list_results: ${listResults}`);
+    interaction.respond(listResults);
+  }
+}
+
+async function autocompleteAiNames(interaction:AutocompleteInteraction) {
+  const options = {
+    shouldSort: true,
+    keys: [
+      'name',
+    ],
+  };
+
+  const nameList = await db.ai_personas.findMany({
+    select: {
+      name: true,
+    },
+  });
+
+  const fuse = new Fuse(nameList, options);
+  const focusedValue = interaction.options.getFocused();
+  // log.debug(F, `focusedValue: ${focusedValue}`);
+  const results = fuse.search(focusedValue);
+  // log.debug(F, `Autocomplete results: ${results}`);
+  if (results.length > 0) {
+    const top25 = results.slice(0, 20);
+    const listResults = top25.map(choice => ({
+      name: (choice.item as any).name,
+      value: (choice.item as any).name,
+    }));
+      // log.debug(F, `list_results: ${listResults}`);
+    interaction.respond(listResults);
+  } else {
+    const defaultDiscordColors = nameList.slice(0, 25) as {
+      name: string;
+    }[];
+    const listResults = defaultDiscordColors.map(choice => ({ name: choice.name, value: choice.name }));
+    // log.debug(F, `list_results: ${listResults}`);
+    interaction.respond(listResults);
+  }
+}
+
 export default autocomplete;
 /**
  * Handles autocomplete information
@@ -491,6 +561,14 @@ export async function autocomplete(interaction:AutocompleteInteraction):Promise<
     autocompleteConvert(interaction);
   } else if (interaction.commandName === 'reaction_role') {
     autocompleteColors(interaction);
+  } else if (interaction.commandName === 'ai') {
+    const focusedOption = interaction.options.getFocused(true).name;
+    if (focusedOption === 'model') {
+      autocompleteAiModels(interaction);
+    }
+    if (focusedOption === 'name') {
+      autocompleteAiNames(interaction);
+    }
   } else { // If you don't need a specific autocomplete, return a list of drug names
     await autocompleteDrugNames(interaction);
   }

@@ -1,18 +1,21 @@
-import { Telegraf as TelegramClient } from 'telegraf';
-
-const commands = require('./commands/t.index');
+import { Telegraf } from 'telegraf';
+import commands from './commands/t.index';
 
 const F = f(__filename);
 
 export default async function telegramConnect() {
   log.debug(F, 'Connecting to Telegram...');
 
-  const bot = new TelegramClient(env.TELEGRAM_TOKEN);
+  const bot = new Telegraf(env.TELEGRAM_TOKEN);
 
   // load bot commands
-  bot.use(commands);
+  bot.use(...commands);
 
   bot.launch();
+
+  bot.catch((err: any) => {
+    log.error(F, `Error in Telegram bot: ${err}`);
+  });
 
   global.telegramClient = bot;
 
@@ -21,5 +24,5 @@ export default async function telegramConnect() {
 }
 
 declare global {
-  var telegramClient: TelegramClient; // eslint-disable-line
+  var telegramClient: Telegraf;
 }

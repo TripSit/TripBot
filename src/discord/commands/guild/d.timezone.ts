@@ -17,6 +17,7 @@ export const dTimezone: SlashCommand = {
       .setName('get')
       .setDescription('Get someone\'s timezone!')
       .addUserOption(option => option
+        // .setRequired(true) If nothing is provided it defaults to the user who ran the command
         .setName('user')
         .setDescription('User to lookup'))
       .addBooleanOption(option => option.setName('ephemeral')

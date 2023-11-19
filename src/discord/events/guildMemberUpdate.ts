@@ -106,18 +106,36 @@ const donorColorRoles = {
   [key in DonorColorNames]: string;
 };
 
-type DonorNames =
-| 'ROLE_BOOSTER'
-| 'ROLE_PATRON'
-| 'ROLE_TEAMTRIPSIT';
+// type DonorNames =
+// | 'ROLE_BOOSTER'
+// | 'ROLE_PATRON'
+// | 'ROLE_TEAMTRIPSIT';
 
-const donorRoles = {
-  ROLE_BOOSTER: env.ROLE_BOOSTER,
-  ROLE_PATRON: env.ROLE_PATRON,
-  ROLE_TEAMTRIPSIT: env.ROLE_TEAMTRIPSIT,
-} as {
-  [key in DonorNames]: string;
-};
+// const donorRoles = {
+//   ROLE_BOOSTER: env.ROLE_BOOSTER,
+//   ROLE_PATRON: env.ROLE_PATRON,
+//   ROLE_TEAMTRIPSIT: env.ROLE_TEAMTRIPSIT,
+// } as {
+//   [key in DonorNames]: string;
+// };
+
+const thankYouPhrases = [
+  'A heartfelt thanks for their generous contribution. Your support is invaluable!',
+  "Big shout out for their donation. We couldn't do it without you!",
+  'Thank you for your incredible support. Your contribution makes a world of difference.',
+  'Our gratitude knows no bounds. Thank you for helping us grow and thrive.',
+  "We're over the moon with your donation. Your generosity warms our hearts.",
+  'A round of applause! Your donation keeps our mission alive and thriving.',
+  'A standing ovation! Your support illuminates our path forward.',
+  "With your donation, you've become a crucial part of our journey. Thank you!",
+  'Thank you for being a beacon of support. You light up our endeavors.',
+  "Our deepest gratitude for their contribution. Together, we'll reach new heights.",
+];
+
+const donationTagline = '*`/donate` to TripSit to access special username colors and the snazzy Gold Lounge!*';
+
+const boostEmoji = env.NODE_ENV === 'production' ? '<:ts_boost:981799280396353596>' : '<:ts_boost:1168968973082185800>';
+const donorEmoji = env.NODE_ENV === 'production' ? '<:ts_donor:1121625178774966272>' : '<:ts_donor:1168969578836144233>';
 
 const F = f(__filename);
 
@@ -131,7 +149,7 @@ async function donorColorCheck(
     // log.debug(F, `donor color role added: ${roleId}`);
     // If it does, check if the user also has a donor role
     if (oldMember.roles.cache.has(env.ROLE_BOOSTER)
-    || oldMember.roles.cache.has(env.ROLE_PATRON)
+    || oldMember.roles.cache.has(env.ROLE_PREMIUM)
     || oldMember.roles.cache.has(env.ROLE_TEAMTRIPSIT)) {
       log.debug(F, 'Donor added a color role!');
     } else {
@@ -153,10 +171,9 @@ async function donorColorRemove(
 ) {
   // log.debug(F, `donor color role removed: ${roleId}`);
   // log.debug(F, `${Object.keys(donorRoles)}`);
-  // Check if it's a donor role
-  if (Object.values(donorRoles).includes(roleId)) {
-    // log.debug(F, `donor role removed: ${roleId}`);
-    // If it does, check if the user also has a role id matching a donorColorRole and if so, remove it
+  // Check if the roleId matches a donor role, and if so, check if the user has another donor role
+  if ((roleId === env.ROLE_BOOSTER || roleId === env.ROLE_PREMIUM || roleId === env.ROLE_TEAMTRIPSIT) && !newMember.roles.cache.has(env.ROLE_BOOSTER) && !newMember.roles.cache.has(env.ROLE_PREMIUM) && !newMember.roles.cache.has(env.ROLE_TEAMTRIPSIT)) {
+    // If they don't, find and remove the donor colour role
     const donorColorRole = newMember.roles.cache.find(role => Object.values(donorColorRoles).includes(role.id));
     if (donorColorRole) {
       await newMember.roles.remove(donorColorRole);
@@ -340,7 +357,7 @@ async function addedVerified(
     await channelLounge.send({
       content: stripIndents`**${greeting}**
   
-      Be safe, have fun, /report any issues!
+      Be safe, have fun, and don't forget to visit the <id:guide> for more information!
       
       *${await topic()}*`,
     });
@@ -354,8 +371,13 @@ async function addedBooster(
   // Check if the role added was a donator role
   if (roleId === env.ROLE_BOOSTER) {
     // log.debug(F, `${newMember.displayName} boosted the server!`);
-    const channelGoldlounge = await discordClient.channels.fetch(env.CHANNEL_GOLDLOUNGE) as TextChannel;
-    await channelGoldlounge.send(`Hey @here, ${newMember} just boosted the server, give them a big thank you for helping to keep this place awesome!`); // eslint-disable-line max-len
+    const channelviplounge = await discordClient.channels.fetch(env.CHANNEL_VIPLOUNGE) as TextChannel;
+    await channelviplounge.send(stripIndents`
+        ** ${boostEmoji} ${newMember.toString()} just boosted the server! ${boostEmoji} **
+
+        ${thankYouPhrases[Math.floor(Math.random() * thankYouPhrases.length)]}
+
+        ${donationTagline}`);
   }
 }
 
@@ -363,12 +385,55 @@ async function addedPatreon(
   newMember: GuildMember,
   roleId: string,
 ) {
-  // Check if the role added was a donator role
   if (roleId === env.ROLE_PATRON) {
-    // log.debug(F, `${newMember.displayName} became a patron!`);
-    const channelGoldlounge = await discordClient.channels.fetch(env.CHANNEL_GOLDLOUNGE) as TextChannel;
-    const isProd = env.NODE_ENV === 'production';
-    await channelGoldlounge.send(`Hey ${isProd ? '@here' : 'here'}, ${newMember} just became a patron, give them a big thank you for helping us keep the lights on and expand!`); // eslint-disable-line max-len
+    // Check if they already have donated before, if so send a special message
+    if (newMember.roles.cache.has(env.ROLE_PREMIUM)) {
+      const channelviplounge = await discordClient.channels.fetch(env.CHANNEL_VIPLOUNGE) as TextChannel;
+      await channelviplounge.send(stripIndents`
+        ** ${donorEmoji} ${newMember} just contributed further and became a Supporter by signing up via [Patreon](<https://www.patreon.com/TripSit>)! ${donorEmoji} **
+    
+          ${thankYouPhrases[Math.floor(Math.random() * thankYouPhrases.length)]}
+    
+          ${donationTagline}`);
+    } else {
+    // If added as a first time Patron and donator, give them the premium role and send the message
+      const role = await newMember.guild.roles.fetch(env.ROLE_PREMIUM) as Role;
+      await newMember.roles.add(role);
+
+      const channelviplounge = await discordClient.channels.fetch(env.CHANNEL_VIPLOUNGE) as TextChannel;
+      await channelviplounge.send(stripIndents`
+      ** ${donorEmoji} ${newMember} just became a Supporter and Premium Member (first time donator) by signing up via [Patreon](<https://www.patreon.com/TripSit>)! ${donorEmoji} **
+  
+        ${thankYouPhrases[Math.floor(Math.random() * thankYouPhrases.length)]}
+  
+        ${donationTagline}`);
+    }
+  }
+  if (roleId === env.ROLE_DONATIONTRIGGER) {
+    // If donated on KoFi, remove the trigger role
+    const roleTrigger = await newMember.guild.roles.fetch(env.ROLE_DONATIONTRIGGER) as Role;
+    await newMember.roles.remove(roleTrigger);
+    // Check if they already have already donated, if so send a special message
+    if (newMember.roles.cache.has(env.ROLE_PREMIUM)) {
+      const channelviplounge = await discordClient.channels.fetch(env.CHANNEL_VIPLOUNGE) as TextChannel;
+      await channelviplounge.send(stripIndents`
+        ** ${donorEmoji} ${newMember} just made a further contribution by donating via [KoFi](<https://ko-fi.com/tripsit>)! ${donorEmoji} **
+    
+          ${thankYouPhrases[Math.floor(Math.random() * thankYouPhrases.length)]}
+    
+          ${donationTagline}`);
+    } else {
+    // If donated on Kofi and for the first time, give them the premium role and send the message
+      const role = await newMember.guild.roles.fetch(env.ROLE_PREMIUM) as Role;
+      await newMember.roles.add(role);
+      const channelviplounge = await discordClient.channels.fetch(env.CHANNEL_VIPLOUNGE) as TextChannel;
+      await channelviplounge.send(stripIndents`
+      ** ${donorEmoji} ${newMember} just became a Premium Member (first time donator) by donating via [KoFi](<https://ko-fi.com/tripsit>)! ${donorEmoji} **
+  
+        ${thankYouPhrases[Math.floor(Math.random() * thankYouPhrases.length)]}
+  
+        ${donationTagline}`);
+    }
   }
 }
 
@@ -434,12 +499,12 @@ export const guildMemberUpdate: GuildMemberUpdateEvent = {
       // Find the difference between the two arrays
       const rolesAdded = newRoles.filter(x => !oldRoles.includes(x));
       if (rolesAdded.length > 0) {
-        log.debug(F, `${rolesAdded.length} roles added`);
+        // log.debug(F, `${rolesAdded.length} roles added`);
         await roleAddProcess(newMember, oldMember, rolesAdded);
       }
       const rolesRemoved = oldRoles.filter(x => !newRoles.includes(x));
       if (rolesRemoved.length > 0) {
-        log.debug(F, `${rolesRemoved.length} roles removed`);
+        // log.debug(F, `${rolesRemoved.length} roles removed`);
         await roleRemProcess(newMember, rolesRemoved);
       }
     }

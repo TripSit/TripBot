@@ -1,19 +1,24 @@
 import express from 'express';
 
-import appeals from './appeals/appealSubmit.routes';
+import drugs from './drugs/drugs.routes';
 
 const router = express.Router();
 
 router.get('/', (req, res) => {
   res.json({
-    welecome: 'Welcome to TripBot API',
-    description: 'This is an internal API and you should probably not be able to see this',
-    privateEndpoints: [
-      '/appeals',
+    wecome: 'Welcome to TripSit\'s original API, preserved for legacy purposes.',
+    publicEndpoints: [
+      '/getInteraction',
+      '/getDrug',
+      '/getAllDrugNames',
+      '/getAllDrugNamesByCategory',
+      '/getAllDrugs',
+      '/getAllCategories',
+      '/getAllDrugAliases',
     ],
   });
 });
 
-router.use('/appeals', appeals);
+router.use('/', drugs);
 
 export default router;

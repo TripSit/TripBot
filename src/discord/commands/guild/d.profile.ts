@@ -12,8 +12,11 @@ import commandContext from '../../utils/context';
 import { expForNextLevel, getTotalLevel } from '../../../global/utils/experience';
 import { getPersonaInfo } from '../../../global/commands/g.rpg';
 import { inventoryGet } from '../../../global/utils/knex';
-import { imageGet } from '../../utils/imageGet';
+import getAsset from '../../utils/getAsset';
 import { Personas } from '../../../global/@types/database';
+
+// ??? TO BE MOVED TO A DEDICATED FILE, OR IMAGEGET.TS ???
+// Load external fonts from web
 
 const F = f(__filename);
 
@@ -30,17 +33,6 @@ export function numFormatter(num:number):string {
     return `${(num / 1000000).toFixed(2)}M`;
   }
   return num.toFixed(0);
-}
-
-// Username Text Resize to fit
-export function applyUsername(canvas:Canvas.Canvas, text:string) {
-  const usernameContext = canvas.getContext('2d');
-  let fontSize = 40;
-  do {
-    fontSize -= 2;
-    usernameContext.font = `${fontSize}px futura`;
-  } while (usernameContext.measureText(text).width > 530); // LARGER LENGTH LIMIT WHILE CAMP ICON ISN'T ENABLED (DEFAULT IS 380)
-  return usernameContext.font;
 }
 
 // Number Formatter Voice
@@ -211,13 +203,17 @@ export const dProfile: SlashCommand = {
       // Check get fresh persona data
       await getPersonaInfo(target.user.id),
       // Load Icon Images
-      await Canvas.loadImage(await imageGet('cardIcons')),
+      await Canvas.loadImage(await getAsset('cardIcons')),
       // Get the status icon
       // await Canvas.loadImage(await imageGet(`icon_${target.presence?.status ?? 'offline'}`)),
       // Get the avatar image
       await Canvas.loadImage(target.user.displayAvatarURL({ extension: 'jpg' })),
       // Get the birthday card overlay
-      await Canvas.loadImage(await imageGet('cardBirthday')),
+      await Canvas.loadImage(await getAsset('cardBirthday')),
+      await Canvas.loadImage(await getAsset('teamtripsitIcon')),
+      await Canvas.loadImage(await getAsset('premiumIcon')),
+      await Canvas.loadImage(await getAsset('boosterIcon')),
+      await Canvas.loadImage(await getAsset('legacyIcon')),
     ]);
 
     const profileData = values[0].status === 'fulfilled' ? values[0].value : {} as ProfileData;
@@ -226,6 +222,72 @@ export const dProfile: SlashCommand = {
     // const StatusIcon = values[3].status === 'fulfilled' ? values[3].value : {} as Canvas.Image;
     const avatar = values[3].status === 'fulfilled' ? values[3].value : {} as Canvas.Image;
     const birthdayOverlay = values[4].status === 'fulfilled' ? values[4].value : {} as Canvas.Image;
+    const teamtripsitIcon = values[5].status === 'fulfilled' ? values[5].value : {} as Canvas.Image;
+    const premiumIcon = values[6].status === 'fulfilled' ? values[6].value : {} as Canvas.Image;
+    const boosterIcon = values[7].status === 'fulfilled' ? values[7].value : {} as Canvas.Image;
+    const legacyIcon = values[8].status === 'fulfilled' ? values[8].value : {} as Canvas.Image;
+
+    const avatarIconRoles = {
+      [env.ROLE_TEAMTRIPSIT]: {
+        image: teamtripsitIcon,
+        hierarchy: 1,
+      },
+      [env.ROLE_PREMIUM]: {
+        image: premiumIcon,
+        hierarchy: 2,
+      },
+      [env.ROLE_BOOSTER]: {
+        image: boosterIcon,
+        hierarchy: 3,
+      },
+      [env.ROLE_LEGACY]: {
+        image: legacyIcon,
+        hierarchy: 4,
+      },
+    };
+
+    let avatarIconSlot1 = {} as {
+      image: Canvas.Image;
+    };
+
+    let avatarIconSlot2 = {} as {
+      image: Canvas.Image;
+    };
+
+    let avatarIconSlot3 = {} as {
+      image: Canvas.Image;
+    };
+
+    let avatarIconSlot4 = {} as {
+      image: Canvas.Image;
+    };
+
+    // Check if user has any roles that have an avatar icon. Put all of them in an array and sort them by hierarchy
+    const avatarIconRolesArray = Object.entries(avatarIconRoles)
+      .filter(([key]) => target.roles.cache.has(key))
+      .sort((a, b) => a[1].hierarchy - b[1].hierarchy);
+
+    // From the list, assign each one to a slot in numerical order
+    if (avatarIconRolesArray.length > 0) {
+      avatarIconSlot1 = {
+        image: avatarIconRolesArray[0][1].image,
+      };
+    }
+    if (avatarIconRolesArray.length > 1) {
+      avatarIconSlot2 = {
+        image: avatarIconRolesArray[1][1].image,
+      };
+    }
+    if (avatarIconRolesArray.length > 2) {
+      avatarIconSlot3 = {
+        image: avatarIconRolesArray[2][1].image,
+      };
+    }
+    if (avatarIconRolesArray.length > 3) {
+      avatarIconSlot4 = {
+        image: avatarIconRolesArray[3][1].image,
+      };
+    }
 
     // Create Canvas and Context
     const canvasWidth = 921;
@@ -268,16 +330,17 @@ export const dProfile: SlashCommand = {
     // WIP: Purchased Background
 
     // log.debug(F, `personaData home (Change) ${JSON.stringify(personaData, null, 2)}`);
-
+    let userFont = 'futura';
     if (personaData) {
       // Get the existing inventory data
       const inventoryData = await inventoryGet(personaData.id);
       // log.debug(F, `Persona home inventory (change): ${JSON.stringify(inventoryData, null, 2)}`);
 
       const equippedBackground = inventoryData.find(item => item.equipped === true && item.effect === 'background');
+      const equippedFont = inventoryData.find(item => item.equipped === true && item.effect === 'font');
       // log.debug(F, `equippedBackground: ${JSON.stringify(equippedBackground, null, 2)} `);
       if (equippedBackground) {
-        const imagePath = await imageGet(equippedBackground.value);
+        const imagePath = await getAsset(equippedBackground.value);
         const Background = await Canvas.loadImage(imagePath);
         context.save();
         context.globalCompositeOperation = 'lighter';
@@ -289,9 +352,13 @@ export const dProfile: SlashCommand = {
         context.drawImage(Background, 0, 0);
         context.restore();
       }
+      if (equippedFont) {
+        await getAsset(equippedFont.value);
+        userFont = equippedFont.value;
+      }
     }
 
-    context.drawImage(Icons, 5, -2, 913, 292);
+    context.drawImage(Icons, 0, 0);
 
     /* TEST: Border item
     context.save();
@@ -308,21 +375,65 @@ export const dProfile: SlashCommand = {
     context.stroke();
     context.restore(); */
 
-    // Overly complicated avatar clip (STATUS CLIP COMMENTED OUT)
+    // Overly complicated avatar clip
     context.save();
-    // context.beginPath();
-    // context.arc(110, 112, 21, 0, Math.PI * 2);
-    // context.arc(73, 73, 55, 0, Math.PI * 2, true);
-    // context.closePath();
-    // context.clip();
+    // If avatarIconSlot1 has an image, draw the hole for the icon
+    if (avatarIconSlot1.image) {
+      context.beginPath();
+      context.arc(115, 117, 21, 0, Math.PI * 2);
+      context.arc(73, 73, 55, 0, Math.PI * 2, true);
+      context.closePath();
+      context.clip();
+    }
+    // If avatarIconSlot2 has an image, draw the hole for the icon
+    if (avatarIconSlot2.image) {
+      context.beginPath();
+      context.arc(31, 117, 21, 0, Math.PI * 2);
+      context.arc(73, 73, 55, 0, Math.PI * 2, true);
+      context.closePath();
+      context.clip();
+    }
+    // If avatarIconSlot3 has an image, draw the hole for the icon
+    if (avatarIconSlot3.image) {
+      context.beginPath();
+      context.arc(115, 28, 21, 0, Math.PI * 2);
+      context.arc(73, 73, 55, 0, Math.PI * 2, true);
+      context.closePath();
+      context.clip();
+    }
+    // If avatarIconSlot4 has an image, draw the hole for the icon
+    if (avatarIconSlot4.image) {
+      context.beginPath();
+      context.arc(31, 28, 21, 0, Math.PI * 2);
+      context.arc(73, 73, 55, 0, Math.PI * 2, true);
+      context.closePath();
+      context.clip();
+    }
     context.beginPath();
     context.arc(73, 73, 54, 0, Math.PI * 2, true);
     // context.closePath();
     context.clip();
-    // Avatar Image
+
     context.drawImage(avatar, 18, 18, 109, 109);
     context.restore();
-    // context.drawImage(StatusIcon, 90, 92);
+
+    // Draw the avatar icons
+    // If avatarIconSlot1 has an image, draw it
+    if (avatarIconSlot1.image) {
+      context.drawImage(avatarIconSlot1.image, 99, 102, 32, 32);
+    }
+    // If avatarIconSlot2 has an image, draw it
+    if (avatarIconSlot2.image) {
+      context.drawImage(avatarIconSlot2.image, 15, 102, 32, 32);
+    }
+    // If avatarIconSlot3 has an image, draw it
+    if (avatarIconSlot3.image) {
+      context.drawImage(avatarIconSlot3.image, 99, 12, 32, 32);
+    }
+    // If avatarIconSlot4 has an image, draw it
+    if (avatarIconSlot4.image) {
+      context.drawImage(avatarIconSlot4.image, 15, 12, 32, 32);
+    }
 
     // WIP: Camp Icon
     // const CampIcon = await Canvas.loadImage(await imageGet('campIconA'));
@@ -331,11 +442,24 @@ export const dProfile: SlashCommand = {
     // WIP: Check to see if a user has bought a title in the shop
     // If so, move Username Text up so the title can fit underneath
 
+    // Username Text Resize to fit
+    let fontSize = 40;
+    const applyUsername = (canvas:Canvas.Canvas, text:string) => {
+      const usernameContext = canvas.getContext('2d');
+      do {
+        fontSize -= 2;
+        usernameContext.font = `${fontSize}px ${userFont}`;
+      } while (usernameContext.measureText(text).width > 530);
+      return usernameContext.font;
+    };
+
     // Username Text
-    context.font = applyUsername(canvasObj, `${target.displayName}`);
+    const filteredDisplayName = target.displayName.replace(/[^A-Za-z0-9]/g, '');
+    context.font = `40px ${userFont}`;
     context.fillStyle = textColor;
     context.textBaseline = 'middle';
-    context.fillText(`${target.displayName}`, 146, 76);
+    context.font = applyUsername(canvasObj, `${filteredDisplayName}`);
+    context.fillText(`${filteredDisplayName}`, 146, 76);
 
     // User Timezone
     context.font = '25px futura';
@@ -400,31 +524,31 @@ export const dProfile: SlashCommand = {
 
     // Choose and Draw the Level Image
     let LevelImagePath = '' as string;
-    if (totalTextData.level < 10) {
+    if (totalTextData.level <= 9) {
       LevelImagePath = 'badgeVip0';
-    } else if (totalTextData.level < 20) {
+    } else if (totalTextData.level <= 19) {
       LevelImagePath = 'badgeVip1';
-    } else if (totalTextData.level < 30) {
+    } else if (totalTextData.level <= 29) {
       LevelImagePath = 'badgeVip2';
-    } else if (totalTextData.level < 40) {
+    } else if (totalTextData.level <= 39) {
       LevelImagePath = 'badgeVip3';
-    } else if (totalTextData.level < 50) {
+    } else if (totalTextData.level <= 49) {
       LevelImagePath = 'badgeVip4';
-    } else if (totalTextData.level < 60) {
+    } else if (totalTextData.level <= 59) {
       LevelImagePath = 'badgeVip5';
-    } else if (totalTextData.level < 70) {
+    } else if (totalTextData.level <= 69) {
       LevelImagePath = 'badgeVip6';
-    } else if (totalTextData.level < 80) {
+    } else if (totalTextData.level <= 79) {
       LevelImagePath = 'badgeVip7';
-    } else if (totalTextData.level < 90) {
+    } else if (totalTextData.level <= 89) {
       LevelImagePath = 'badgeVip8';
-    } else if (totalTextData.level < 100) {
+    } else if (totalTextData.level <= 99) {
       LevelImagePath = 'badgeVip9';
     } else if (totalTextData.level >= 100) {
       LevelImagePath = 'badgeVip10';
     }
     // log.debug(F, `LevelImagePath: ${LevelImagePath}`);
-    const LevelImage = await Canvas.loadImage(await imageGet(LevelImagePath));
+    const LevelImage = await Canvas.loadImage(await getAsset(LevelImagePath));
     context.drawImage(LevelImage, 758, 57);
 
     // Level Bar Circle BG
@@ -481,7 +605,7 @@ export const dProfile: SlashCommand = {
   },
 };
 
-export async function getProfilePreview(target: GuildMember, imagePath: string, option: string): Promise<Buffer> {
+export async function getProfilePreview(target: GuildMember, option: string, imagePath?: string, fontName?: string): Promise<Buffer> {
   const values = await Promise.allSettled([
 
     // Get the target's profile data from the database
@@ -490,7 +614,7 @@ export async function getProfilePreview(target: GuildMember, imagePath: string, 
     // await getPersonaInfo(target.user.id),
     // Load Icon Images
 
-    await Canvas.loadImage(await imageGet('cardIcons')),
+    await Canvas.loadImage(await getAsset('cardIcons')),
     // Get the status icon
     // await Canvas.loadImage(await imageGet(`icon_${target.presence?.status ?? 'offline'}`)),
     // Get the avatar image
@@ -498,7 +622,6 @@ export async function getProfilePreview(target: GuildMember, imagePath: string, 
     // Get the birthday card overlay
     // await Canvas.loadImage(await imageGet('cardBirthday')),
   ]);
-
   // const profileData = values[0].status === 'fulfilled' ? values[0].value : {} as ProfileData;
   // const [personaData] = values[1].status === 'fulfilled' ? values[1].value : [];
   const Icons = values[0].status === 'fulfilled' ? values[0].value : {} as Canvas.Image;
@@ -554,7 +677,7 @@ export async function getProfilePreview(target: GuildMember, imagePath: string, 
 
   // const equippedBackground = inventoryData.find(item => item.equipped === true && item.effect === 'background');
 
-  if (option === 'background') {
+  if (option === 'background' && imagePath) {
     const Background = await Canvas.loadImage(imagePath.toString());
     context.save();
     context.globalCompositeOperation = 'lighter';
@@ -567,7 +690,7 @@ export async function getProfilePreview(target: GuildMember, imagePath: string, 
     context.restore();
   }
 
-  context.drawImage(Icons, 5, -2, 913, 292);
+  context.drawImage(Icons, 0, 0);
 
   // Overly complicated avatar clip (STATUS CLIP COMMENTED OUT)
   context.save();
@@ -591,19 +714,34 @@ export async function getProfilePreview(target: GuildMember, imagePath: string, 
 
   // WIP: Check to see if a user has bought a title in the shop
   // If so, move Username Text up so the title can fit underneath
-
+  let userFont = 'futura';
+  if (option === 'font' && fontName) {
+    await getAsset(fontName);
+    userFont = fontName;
+  }
+  const filteredDisplayName = target.displayName.replace(/[^A-Za-z0-9]/g, '');
   // Username Text
-  context.font = applyUsername(canvasObj, `${target.displayName}`);
+  let fontSize = 40;
+  // eslint-disable-next-line sonarjs/no-identical-functions
+  const applyUsername = (canvas:Canvas.Canvas, text:string) => {
+    const usernameContext = canvas.getContext('2d');
+    do {
+      fontSize -= 2;
+      usernameContext.font = `${fontSize}px ${userFont}`;
+    } while (usernameContext.measureText(text).width > 530);
+    return usernameContext.font;
+  };
+  context.font = applyUsername(canvasObj, `${filteredDisplayName}`);
   context.fillStyle = textColor;
   if (option === 'profileTitle') {
     context.textBaseline = 'bottom';
-    context.fillText(`${target.displayName}`, 146, 76);
+    context.fillText(`${filteredDisplayName}`, 146, 76);
     context.font = '30px futura';
     context.textBaseline = 'top';
     context.fillText('Your Custom Title Here', 146, 86);
   } else {
     context.textBaseline = 'middle';
-    context.fillText(`${target.displayName}`, 146, 76);
+    context.fillText(`${filteredDisplayName}`, 146, 76);
   }
 
   /* User Timezone

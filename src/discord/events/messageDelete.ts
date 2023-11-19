@@ -4,6 +4,7 @@ import {
   PermissionResolvable,
   User,
   GuildAuditLogsEntry,
+  GuildMember,
 } from 'discord.js';
 import {
 // ChannelType,
@@ -98,8 +99,14 @@ export const messageDelete: MessageDeleteEvent = {
 
     log.debug(F, `Executor: ${JSON.stringify(executorUser, null, 2)}, Content: ${content}`);
 
-    const executorMember = await message.guild.members.fetch(executorUser.id);
-    log.debug(F, `Executor Member: ${JSON.stringify(executorMember, null, 2)}, Content: ${content}`);
+    let executorMember = {} as GuildMember;
+    try {
+      executorMember = await message.guild.members.fetch(executorUser.id);
+    } catch (err) {
+      // log.error(F, `Error fetching executor member: ${err}`);
+      return;
+    }
+    // log.debug(F, `Executor Member: ${JSON.stringify(executorMember, null, 2)}, Content: ${content}`);
 
     const authorName = author ? author.username : 'Unknown Author';
     // log.debug(F, `Author Name: ${authorName}`);
