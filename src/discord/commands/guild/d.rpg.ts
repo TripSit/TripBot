@@ -105,7 +105,7 @@ const items = {
   },
   fonts: {
     AbrilFatFace: {
-      label: 'Abril Fat Face',
+      label: 'Abril Fatface',
       value: 'AbrilFatFace',
       description: 'Font',
       quantity: 1,
@@ -144,7 +144,7 @@ const items = {
       emoji: 'itemFont',
     },
     AudioWide: {
-      label: 'Audio ide',
+      label: 'Audio Wide',
       value: 'AudioWide',
       description: 'Font',
       quantity: 1,
@@ -3754,6 +3754,73 @@ export async function rpgTown(
   };
 }
 
+async function rpgGift(interaction: ChatInputCommandInteraction) {
+  const commandUser = interaction.user;
+  const targetUser = interaction.options.getUser('target');
+  const giftAmount = interaction.options.getInteger('amount') ?? 0;
+
+  if (!targetUser) throw new Error('Target user not found');
+  if (targetUser === commandUser) {
+    return {
+      embeds: [embedTemplate()
+        .setAuthor(null)
+        .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
+        .setTitle(`${emojiGet('buttonBetHuge')} Gift Unsuccessful`)
+        .setDescription(stripIndents`
+            **You can't gift tokens to yourself!**
+          `)
+        .setColor(Colors.Red)],
+      components: [],
+    };
+  }
+
+  const targetData = await getPersonaInfo(targetUser.id);
+  const userData = await getPersonaInfo(commandUser.id);
+
+  // Get the current token amounts for the command user and the target user
+  const commandUserTokens = userData.tokens;
+  // const targetUserTokens = targetData.tokens;
+
+  // Check if the command user has enough tokens
+  if (commandUserTokens < giftAmount) {
+    return {
+      embeds: [embedTemplate()
+        .setAuthor(null)
+        .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
+        .setTitle(`${emojiGet('buttonBetHuge')} Gift Unsuccessful`)
+        .setDescription(stripIndents`
+            **You don't have enough tokens!**
+
+            ${emojiGet('buttonBetSmall')} **Wallet:** ${userData.tokens}
+          `)
+        .setColor(Colors.Red)],
+      components: [],
+    };
+  }
+  // Remove the tokens from the command user
+  userData.tokens -= giftAmount;
+  // Add the tokens to the target user
+  targetData.tokens += giftAmount;
+  // Save the data
+  await setPersonaInfo(userData);
+  await setPersonaInfo(targetData);
+
+  return {
+    embeds: [embedTemplate()
+      .setAuthor(null)
+      .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
+      .setTitle(`${emojiGet('buttonBetHuge')} Gift Successful`)
+      .setDescription(stripIndents`
+          **You gifted ${giftAmount} ${giftAmount === 1 ? 'token' : 'tokens'} to ${targetUser?.username}**
+
+          ${emojiGet('buttonBetSmall')} **${targetUser?.displayName}'s Wallet:** ${targetData.tokens}
+          ${emojiGet('buttonBetSmall')} **Your Wallet:** ${userData.tokens}
+        `)
+      .setColor(Colors.Green)],
+    components: [],
+  };
+}
+
 export async function rpgHelp(
   interaction: MessageComponentInteraction | ChatInputCommandInteraction,
 ):Promise<InteractionEditReplyOptions | InteractionUpdateOptions> {
@@ -3827,7 +3894,19 @@ export const dRpg: SlashCommand = {
       .setDescription('Go to the roulette game'))
     .addSubcommand(subcommand => subcommand
       .setName('trivia')
-      .setDescription('Go to the trivia parlor')),
+      .setDescription('Go to the trivia parlor'))
+    .addSubcommand(subcommand => subcommand
+      .setName('gift')
+      .setDescription('Gift tokens to another user')
+      .addUserOption(option => option
+        .setName('target')
+        .setDescription('User to gift tokens to')
+        .setRequired(true))
+      .addIntegerOption(option => option
+        .setName('amount')
+        .setDescription('Amount of tokens to gift')
+        .setRequired(true))),
+
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
     const channelRpg = await interaction.guild?.channels.fetch(env.CHANNEL_TRIPTOWN as string) as TextChannel;
@@ -3888,6 +3967,9 @@ export const dRpg: SlashCommand = {
     }
     if (subcommand === 'trivia') {
       await interaction.editReply(await rpgTrivia(interaction));
+    }
+    if (subcommand === 'gift') {
+      await interaction.editReply(await rpgGift(interaction));
     }
 
     // if (subcommand === 'blackjack') {

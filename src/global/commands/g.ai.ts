@@ -1,5 +1,5 @@
 import OpenAI from 'openai';
-import { PrismaClient, ai_personas } from '@prisma/client';
+import { PrismaClient, ai_model, ai_personas } from '@prisma/client';
 import { ModerationCreateResponse } from 'openai/resources';
 import { Assistant } from 'openai/resources/beta/assistants/assistants';
 import { stripIndents } from 'common-tags';
@@ -22,6 +22,46 @@ type ModerationResult = {
   category: string,
   value: number,
   limit: number,
+};
+
+// Costs per 1k tokens
+const aiCosts = {
+  GPT_3_5_TURBO: {
+    input: 0.0015,
+    output: 0.002,
+  },
+  GPT_3_5_TURBO_1106: {
+    input: 0.001,
+    output: 0.002,
+  },
+  GPT_4: {
+    input: 0.03,
+    output: 0.06,
+  },
+  GPT_4_1106_PREVIEW: {
+    input: 0.01,
+    output: 0.03,
+  },
+  GPT_4_1106_VISION_PREVIEW: {
+    input: 0.01,
+    output: 0.03,
+  },
+  DALL_E_2: {
+    input: 0.00,
+    output: 0.04,
+  },
+  DALL_E_3: {
+    input: 0.00,
+    output: 0.02,
+  },
+} as AiCosts;
+
+// define an object as series of keys (AiModel) and value that looks like {input: number, output: number}
+type AiCosts = {
+  [key in ai_model]: {
+    input: number,
+    output: number,
+  }
 };
 
 // const system = `
@@ -191,6 +231,49 @@ export async function readRun(
   return openai.beta.threads.runs.retrieve(thread.id, run.id);
 }
 
+export async function createImage(
+  prompt: string,
+  user: string,
+) {
+  log.debug(F, `createImage | prompt: ${prompt}`);
+  // log.debug(F, `image: ${JSON.stringify(image, null, 2)}`);
+
+  const userData = await db.users.upsert({
+    where: { discord_id: user },
+    create: { discord_id: user },
+    update: { discord_id: user },
+  });
+
+  await db.ai_usage.upsert({
+    where: {
+      user_id: userData.id,
+    },
+    create: {
+      user_id: userData.id,
+      images: [new Date()],
+      usd: 0.04,
+    },
+    update: {
+      images: {
+        push: new Date(),
+      },
+      usd: {
+        increment: 0.04,
+      },
+    },
+  });
+
+  return openai.images.generate({
+    prompt,
+    model: 'dall-e-3',
+    quality: 'standard',
+    response_format: 'url',
+    size: '1024x1024',
+    style: 'natural',
+    user,
+  });
+}
+
 export async function aiModerateReport(
   message: string,
 ):Promise<ModerationCreateResponse | void> {
@@ -255,6 +338,7 @@ export async function aiModerateReport(
 export default async function aiChat(
   aiPersona:ai_personas,
   messages: OpenAI.Chat.ChatCompletionMessageParam [],
+  user: string,
 ):Promise<{
     response: string,
     promptTokens: number,
@@ -294,7 +378,7 @@ export default async function aiChat(
     prompt,
     logit_bias, // eslint-disable-line @typescript-eslint/naming-convention
     total_tokens, // eslint-disable-line @typescript-eslint/naming-convention
-    ai_model, // eslint-disable-line @typescript-eslint/naming-convention
+    ai_model: modelName, // eslint-disable-line @typescript-eslint/naming-convention
     ...restOfAiPersona
   } = aiPersona;
 
@@ -304,12 +388,38 @@ export default async function aiChat(
     messages: chatCompletionMessages,
     // functions: aiFunctions,
     // function_call: 'auto',
+    user,
   } as OpenAI.Chat.ChatCompletionCreateParamsNonStreaming;
 
   // log.debug(F, `payload: ${JSON.stringify(payload, null, 2)}`);
   let responseMessage = {} as OpenAI.Chat.ChatCompletionMessageParam;
 
   if (!env.OPENAI_API_ORG || !env.OPENAI_API_KEY) return { response, promptTokens, completionTokens };
+
+  const userData = await db.users.upsert({
+    where: { discord_id: user },
+    create: { discord_id: user },
+    update: { discord_id: user },
+  });
+
+  await db.ai_usage.upsert({
+    where: {
+      user_id: userData.id,
+    },
+    create: {
+      user_id: userData.id,
+      images: [new Date()],
+      usd: 0.04,
+    },
+    update: {
+      images: {
+        push: new Date(),
+      },
+      usd: {
+        increment: 0.04,
+      },
+    },
+  });
 
   const chatCompletion = await openai.chat.completions
     .create(payload)
@@ -391,6 +501,32 @@ export default async function aiChat(
       },
     },
   });
+
+  const costUsd = (aiCosts[aiPersona.ai_model as keyof typeof aiCosts].input * promptTokens)
+  + (aiCosts[aiPersona.ai_model as keyof typeof aiCosts].output * completionTokens);
+
+  await db.ai_usage.upsert({
+    where: {
+      user_id: userData.id,
+    },
+    create: {
+      user_id: userData.id,
+      tokens: completionTokens + promptTokens,
+      usd: costUsd,
+    },
+    update: {
+      images: {
+        push: new Date(),
+      },
+      usd: {
+        increment: costUsd,
+      },
+      tokens: {
+        increment: completionTokens + promptTokens,
+      },
+    },
+  });
+
   return { response, promptTokens, completionTokens };
 }
 
