@@ -7,8 +7,11 @@ import {
   EmbedBuilder,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
+import { PrismaClient } from '@prisma/client';
 import { sleep } from '../commands/guild/d.bottest';
 import { discordAiChat } from '../commands/guild/d.ai';
+
+const db = new PrismaClient({ log: ['error'] });
 
 // import log from '../../global/utils/log';
 // import {parse} from 'path';
@@ -166,6 +169,50 @@ give people a chance to answer 😄 If no one answers in 5 minutes you can try a
   } else if (await isMentioningTripbot(message)) {
     // If the bot was mentioned
     // log.debug(F, `Bot was mentioned in ${message.guild.name}!`); // eslint-disable-line
+
+    if (await isBotOwner(message) && message.content.toLowerCase().includes('tokens') && message.content.toLowerCase().includes('give')) {
+      // use regex to find the number in the message.cleanContent
+      const amount = parseInt(message.cleanContent.match(/(\d+)/)?.[0] ?? '0', 10);
+
+      const recipients = message.mentions.users;
+
+      recipients.forEach(async recipient => {
+        if (recipient.bot) return;
+
+        const recipientMember = await message.guild?.members.fetch(recipient.id);
+
+        if (!recipientMember) {
+          await message.channel.send('The user you mentioned is not a member of this guild!');
+          return;
+        }
+
+        const userData = await db.users.upsert({
+          where: { discord_id: recipient.id },
+          create: { discord_id: recipient.id },
+          update: {},
+        });
+
+        const personaData = await db.personas.upsert({
+          where: { user_id: userData.id },
+          create: {
+            user_id: userData.id,
+            tokens: amount,
+          },
+          update: {
+            tokens: {
+              increment: amount,
+            },
+          },
+        });
+        log.debug(F, `Gave ${amount} tokens to ${recipientMember.displayName}!`);
+
+        await message.channel.send(stripIndents`Gave ${amount} tokens to ${recipientMember.displayName}!
+        
+        They now have ${personaData.tokens} tokens!`);
+      });
+
+      return;
+    }
 
     if (await isBotOwner(message) && message.content.toLowerCase().includes('phoenix')) {
       const phoenixMessage = await message.channel.send('Phoenix protocol initiated... ');

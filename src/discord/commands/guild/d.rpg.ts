@@ -37,13 +37,16 @@ import { PrismaClient, rpg_inventory } from '@prisma/client';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import commandContext from '../../utils/context';
-import { imageGet } from '../../utils/imageGet';
+import getAsset from '../../utils/getAsset';
 import { customButton } from '../../utils/emoji';
 import { getProfilePreview } from './d.profile';
 
 const db = new PrismaClient({ log: ['error'] });
 
 const Trivia = require('trivia-api');
+
+const tripSitProfileImage = 'tripsit-profile-image.png';
+const tripSitProfileImageAttachment = 'attachment://tripsit-profile-image.png';
 
 const F = f(__filename);
 
@@ -58,6 +61,19 @@ const timesUp = 'Time\'s up!';
 
 const items = {
   general: {
+    // giftcard: {
+    //   label: 'Gift Card',
+    //   value: 'giftcard',
+    //   description: 'A gift card to gift to someone else',
+    //   quantity: 1,
+    //   weight: 0,
+    //   cost: 0,
+    //   equipped: false,
+    //   consumable: false,
+    //   effect: 'tokens',
+    //   effect_value: '100',
+    //   emoji: 'buttonBetHuge',
+    // },
     // testkit: {
     //   label: 'TestKit',
     //   value: 'testkit',
@@ -85,24 +101,219 @@ const items = {
     //   emoji: 'itemBonus',
     // },
   },
-  // fonts: {
-  //   Arial: {
-  //     label: 'Arial',
-  //     value: 'Arial',
-  //     description: 'Font',
-  //     quantity: 1,
-  //     weight: 0,
-  //     cost: 500,
-  //     equipped: false,
-  //     consumable: false,
-  //     effect: 'font',
-  //     effect_value: 'Arial',
-  //     emoji: 'itemBackground',
-  //   },
-  // },
+  fonts: {
+    AbrilFatFace: {
+      label: 'Abril Fatface',
+      value: 'AbrilFatFace',
+      description: 'Font',
+      quantity: 1,
+      weight: 0,
+      cost: 700,
+      equipped: false,
+      consumable: false,
+      effect: 'font',
+      effect_value: 'AbrilFatFace',
+      emoji: 'itemFont',
+    },
+    Acme: {
+      label: 'Acme',
+      value: 'Acme',
+      description: 'Font',
+      quantity: 1,
+      weight: 0,
+      cost: 700,
+      equipped: false,
+      consumable: false,
+      effect: 'font',
+      effect_value: 'Acme',
+      emoji: 'itemFont',
+    },
+    Agbalumo: {
+      label: 'Agbalumo',
+      value: 'Agbalumo',
+      description: 'Font',
+      quantity: 1,
+      weight: 0,
+      cost: 700,
+      equipped: false,
+      consumable: false,
+      effect: 'font',
+      effect_value: 'Agbalumo',
+      emoji: 'itemFont',
+    },
+    AudioWide: {
+      label: 'Audio Wide',
+      value: 'AudioWide',
+      description: 'Font',
+      quantity: 1,
+      weight: 0,
+      cost: 700,
+      equipped: false,
+      consumable: false,
+      effect: 'font',
+      effect_value: 'AudioWide',
+      emoji: 'itemFont',
+    },
+    BlackOpsOne: {
+      label: 'Black Ops One',
+      value: 'BlackOpsOne',
+      description: 'Font',
+      quantity: 1,
+      weight: 0,
+      cost: 700,
+      equipped: false,
+      consumable: false,
+      effect: 'font',
+      effect_value: 'BlackOpsOne',
+      emoji: 'itemFont',
+    },
+    CabinSketch: {
+      label: 'Cabin Sketch',
+      value: 'CabinSketch',
+      description: 'Font',
+      quantity: 1,
+      weight: 0,
+      cost: 700,
+      equipped: false,
+      consumable: false,
+      effect: 'font',
+      effect_value: 'CabinSketch',
+      emoji: 'itemFont',
+    },
+    Creepster: {
+      label: 'Creepster',
+      value: 'Creepster',
+      description: 'Font',
+      quantity: 1,
+      weight: 0,
+      cost: 700,
+      equipped: false,
+      consumable: false,
+      effect: 'font',
+      effect_value: 'Creepster',
+      emoji: 'itemFont',
+    },
+    FontdinerSwanky: {
+      label: 'Fontdiner Swanky',
+      value: 'FontdinerSwanky',
+      description: 'Font',
+      quantity: 1,
+      weight: 0,
+      cost: 700,
+      equipped: false,
+      consumable: false,
+      effect: 'font',
+      effect_value: 'FontdinerSwanky',
+      emoji: 'itemFont',
+    },
+    IndieFlower: {
+      label: 'Indie Flower',
+      value: 'IndieFlower',
+      description: 'Font',
+      quantity: 1,
+      weight: 0,
+      cost: 700,
+      equipped: false,
+      consumable: false,
+      effect: 'font',
+      effect_value: 'IndieFlower',
+      emoji: 'itemFont',
+    },
+    LilitaOne: {
+      label: 'Lilita One',
+      value: 'LilitaOne',
+      description: 'Font',
+      quantity: 1,
+      weight: 0,
+      cost: 700,
+      equipped: false,
+      consumable: false,
+      effect: 'font',
+      effect_value: 'LilitaOne',
+      emoji: 'itemFont',
+    },
+    Lobster: {
+      label: 'Lobster',
+      value: 'Lobster',
+      description: 'Font',
+      quantity: 1,
+      weight: 0,
+      cost: 700,
+      equipped: false,
+      consumable: false,
+      effect: 'font',
+      effect_value: 'Lobster',
+      emoji: 'itemFont',
+    },
+    PressStart2P: {
+      label: 'Press Start 2P',
+      value: 'PressStart2P',
+      description: 'Font',
+      quantity: 1,
+      weight: 0,
+      cost: 700,
+      equipped: false,
+      consumable: false,
+      effect: 'font',
+      effect_value: 'PressStart2P',
+      emoji: 'itemFont',
+    },
+    Rye: {
+      label: 'Rye',
+      value: 'Rye',
+      description: 'Font',
+      quantity: 1,
+      weight: 0,
+      cost: 700,
+      equipped: false,
+      consumable: false,
+      effect: 'font',
+      effect_value: 'Rye',
+      emoji: 'itemFont',
+    },
+    Satisfy: {
+      label: 'Satisfy',
+      value: 'Satisfy',
+      description: 'Font',
+      quantity: 1,
+      weight: 0,
+      cost: 700,
+      equipped: false,
+      consumable: false,
+      effect: 'font',
+      effect_value: 'Satisfy',
+      emoji: 'itemFont',
+    },
+    SpecialElite: {
+      label: 'Special Elite',
+      value: 'SpecialElite',
+      description: 'Font',
+      quantity: 1,
+      weight: 0,
+      cost: 700,
+      equipped: false,
+      consumable: false,
+      effect: 'font',
+      effect_value: 'SpecialElite',
+      emoji: 'itemFont',
+    },
+    Barcode: {
+      label: 'Barcode',
+      value: 'Barcode',
+      description: 'Font',
+      quantity: 1,
+      weight: 0,
+      cost: 7500,
+      equipped: false,
+      consumable: false,
+      effect: 'font',
+      effect_value: 'Barcode',
+      emoji: 'itemFont',
+    },
+  },
   backgrounds: {
     AbstractTriangles: {
-      label: 'AbstractTriangles',
+      label: 'Abstract Triangles',
       value: 'AbstractTriangles',
       description: 'Background',
       quantity: 1,
@@ -115,7 +326,7 @@ const items = {
       emoji: 'itemBackground',
     },
     ArcadeCarpet: {
-      label: 'ArcadeCarpet',
+      label: 'Arcade Carpet',
       value: 'ArcadeCarpet',
       description: 'Background',
       quantity: 1,
@@ -128,7 +339,7 @@ const items = {
       emoji: 'itemBackground',
     },
     CircuitBoard: {
-      label: 'CircuitBoard',
+      label: 'Circuit Board',
       value: 'CircuitBoard',
       description: 'Background',
       quantity: 1,
@@ -141,7 +352,7 @@ const items = {
       emoji: 'itemBackground',
     },
     CoffeeSwirl: {
-      label: 'CoffeeSwirl',
+      label: 'Coffee Swirl',
       value: 'CoffeeSwirl',
       description: 'Background',
       quantity: 1,
@@ -180,7 +391,7 @@ const items = {
       emoji: 'itemBackground',
     },
     CubeTunnels: {
-      label: 'CubeTunnels',
+      label: 'Cube Tunnels',
       value: 'CubeTunnels',
       description: 'Background',
       quantity: 1,
@@ -193,7 +404,7 @@ const items = {
       emoji: 'itemBackground',
     },
     DiamondChevron: {
-      label: 'DiamondChevron',
+      label: 'Diamond Chevron',
       value: 'DiamondChevron',
       description: 'Background',
       quantity: 1,
@@ -219,7 +430,7 @@ const items = {
       emoji: 'itemBackground',
     },
     DotnDash: {
-      label: 'DotnDash',
+      label: 'Dot n Dash',
       value: 'DotnDash',
       description: 'Background',
       quantity: 1,
@@ -349,7 +560,7 @@ const items = {
       emoji: 'itemBackground',
     },
     LineLeaves: {
-      label: 'LineLeaves',
+      label: 'Line Leaves',
       value: 'LineLeaves',
       description: 'Background',
       quantity: 1,
@@ -362,7 +573,7 @@ const items = {
       emoji: 'itemBackground',
     },
     LiquidMaze: {
-      label: 'LiquidMaze',
+      label: 'Liquid Maze',
       value: 'LiquidMaze',
       description: 'Background',
       quantity: 1,
@@ -440,7 +651,7 @@ const items = {
       emoji: 'itemBackground',
     },
     PixelCamo: {
-      label: 'PixelCamo',
+      label: 'Pixel Camo',
       value: 'PixelCamo',
       description: 'Background',
       quantity: 1,
@@ -505,7 +716,7 @@ const items = {
       emoji: 'itemBackground',
     },
     SpaceIcons: {
-      label: 'SpaceIcons',
+      label: 'Space Icons',
       value: 'SpaceIcons',
       description: 'Background',
       quantity: 1,
@@ -531,7 +742,7 @@ const items = {
       emoji: 'itemBackground',
     },
     SquareTwist: {
-      label: 'SquareTwist',
+      label: 'Square Twist',
       value: 'SquareTwist',
       description: 'Background',
       quantity: 1,
@@ -583,7 +794,7 @@ const items = {
       emoji: 'itemBackground',
     },
     TriangleOverlap: {
-      label: 'TriangleOverlap',
+      label: 'Triangle Overlap',
       value: 'TriangleOverlap',
       description: 'Background',
       quantity: 1,
@@ -1056,12 +1267,12 @@ export async function rpgBounties(
   const contracts = {
     quest: {
       success: {
-        title: `${emojiGet('buttonQuest')} Quest Success`,
+        title: `${emojiGet('buttonQuest')} Quest Success (Hourly)`,
         description: stripIndents`${rand(text.quest)}`,
         color: Colors.Green,
       },
       fail: {
-        title: `${emojiGet('buttonQuest')} Quest Fail`,
+        title: `${emojiGet('buttonQuest')} Quest Fail (Hourly)`,
         description: stripIndents`
           There are no more quests available at the moment. New quests are posted every hour!
         `,
@@ -1070,12 +1281,12 @@ export async function rpgBounties(
     },
     dungeon: {
       success: {
-        title: `${emojiGet('buttonDungeon')} Dungeon Success`,
+        title: `${emojiGet('buttonDungeon')} Dungeon Success (Daily)`,
         description: stripIndents`${rand(text.dungeon)}`,
         color: Colors.Green,
       },
       fail: {
-        title: `${emojiGet('buttonDungeon')} Dungeon Fail`,
+        title: `${emojiGet('buttonDungeon')} Dungeon Fail (Daily)`,
         description: stripIndents`
           You already cleared a dungeon today, you're still tired and need to prepare.
         `,
@@ -1084,14 +1295,14 @@ export async function rpgBounties(
     },
     raid: {
       success: {
-        title: `${emojiGet('buttonRaid')} Raid Success`,
+        title: `${emojiGet('buttonRaid')} Raid Success (Weekly)`,
         description: stripIndents`
           You stormed into Moonbear's office, rustle their jimmies and stole {tokens} TripTokens!
         `,
         color: Colors.Green,
       },
       fail: {
-        title: `${emojiGet('buttonRaid')} Raid Fail`,
+        title: `${emojiGet('buttonRaid')} Raid Fail (Weekly)`,
         description: stripIndents`
           You've already raided Moonbear's office this week, give them a break!
         `,
@@ -1157,7 +1368,7 @@ export async function rpgBounties(
           .setTitle(contracts[command].fail.title)
           .setDescription(stripIndents`${contracts[command].fail.description}
             You can try again ${time(resetTime, 'R')}
-            Wallet: ${personaData.tokens} tokens`)
+            ${emojiGet('buttonBetSmall')} **Wallet:** ${personaData.tokens}`)
           .setColor(contracts[command].fail.color)],
         components: [rowBounties],
       };
@@ -1207,7 +1418,7 @@ export async function rpgBounties(
         .setTitle(contracts[command].success.title)
         .setDescription(stripIndents`${contracts[command].success.description.replace('{tokens}', tokens.toString())}
           You can try again ${time(resetTime, 'R')}.
-          Wallet: ${personaData.tokens} tokens`)
+          ${emojiGet('buttonBetSmall')} **Wallet:** ${personaData.tokens}`)
         .setColor(contracts[command].success.color)],
       components: [rowBounties],
     };
@@ -1232,6 +1443,8 @@ export async function rpgMarketInventory(
     marketInventory:SelectMenuComponentOptionData[];
     personaTokens:number;
     personaInventory:string;
+    personaDiscounts:string;
+    personaDiscount:number;
   }> {
   // Check get fresh persona data
   const userData = await db.users.upsert({
@@ -1261,11 +1474,41 @@ export async function rpgMarketInventory(
   });
   // log.debug(F, `Persona inventory: ${JSON.stringify(inventoryData, null, 2)}`);
 
+  // Get a string display of the user's discounts
+  // Check if they have the Premium Member role
+  // Define the discount types
+  const discountTypes = [
+    {
+      roleId: env.ROLE_PREMIUM, discount: 0.2, name: 'Premium Member', amount: '20%',
+    },
+    {
+      roleId: env.ROLE_BOOSTER, discount: 0.1, name: 'Server Booster', amount: '10%',
+    },
+    // Add more discount types here
+  ];
+
+  let discount = 0;
+  let discountString = '';
+  const member = await interaction.guild?.members.fetch(interaction.user.id);
+
+  // Iterate over the discount types
+  for (const discountType of discountTypes) {
+    if (member?.roles.cache.has(discountType.roleId)) {
+      discount += discountType.discount;
+      discountString += `**${discountType.name}** - ${discountType.amount} off\n`;
+    }
+  }
+
+  // Add the "Discounts" heading if there are any discounts
+  if (discountString) {
+    discountString = `${emojiGet('itemDiscount')} **Discounts**\n${discountString}`;
+  }
+
   // Get a string display of the user's inventory
   const inventoryList = inventoryData.map(item => `**${item.label}** - ${item.description}`).join('\n');
   const inventoryString = inventoryData.length > 0
     ? stripIndents`
-    ${emojiGet('itemInventory')} **Inventory**
+    ${emojiGet('itemInventory')} **Inventory (${inventoryData.length}/20)**
       ${inventoryList}
       `
     : '';
@@ -1281,7 +1524,7 @@ export async function rpgMarketInventory(
     for (const item of Object.values(categoryItems)) {
       if (!inventoryData.find(i => i.value === item.value)) {
         marketInventory.push({
-          label: `${item.label} - ${item.cost} TT$`,
+          label: `${item.label} - ${(item.cost - (discount * item.cost))} TT$`,
           value: item.value,
           description: `${item.description}`,
           emoji: emojiGet(item.emoji).id,
@@ -1295,6 +1538,8 @@ export async function rpgMarketInventory(
     marketInventory,
     personaTokens: personaData.tokens,
     personaInventory: inventoryString,
+    personaDiscounts: discountString,
+    personaDiscount: discount,
   };
 }
 
@@ -1306,6 +1551,7 @@ export async function rpgMarket(
     marketInventory,
     personaTokens,
     personaInventory,
+    personaDiscounts,
   } = await rpgMarketInventory(interaction);
 
   // This is the row of nav buttons. It starts with the town button.
@@ -1343,7 +1589,7 @@ export async function rpgMarket(
         .addComponents(
           new StringSelectMenuBuilder()
             .setCustomId(`rpgGeneralSelect,user:${interaction.user.id},group:${group},chunk:${index}`)
-            .setPlaceholder(`${group.charAt(0).toUpperCase() + group.slice(1)} Page ${index + 1}`)
+            .setPlaceholder(chunks.length === 1 ? `${group.charAt(0).toUpperCase() + group.slice(1)}` : `${group.charAt(0).toUpperCase() + group.slice(1)} ${index + 1}`)
             .addOptions(chunk),
         );
       componentList.push(rowItems);
@@ -1359,12 +1605,13 @@ export async function rpgMarket(
       .setDescription(stripIndents`
       You are in the local market, you can buy some items to help you on your journey.
 
-      ${emojiGet('itemBackground')} ***Backgrounds*** can be used to personalize your /profile and /levels.
-      [Click here to see all backgrounds.](https://drive.google.com/drive/folders/1F1s0uQt0nGDCCaVANVdrEQKwameo8eHI?usp=drive_link)
+      ${emojiGet('itemFont')} ***Fonts*** change the font of your /profile username
+      ${emojiGet('itemBackground')} ***Backgrounds*** change the background of your /profile
+      
       ***More items coming soon! Check back later.***
       
-      Wallet: ${personaTokens} tokens
-
+      ${emojiGet('buttonBetSmall')} **Wallet:** ${personaTokens}
+      ${personaDiscounts ? `\n${personaDiscounts}` : ''}
     ${personaInventory}`)
       .setColor(Colors.Gold)],
     components: componentList,
@@ -1379,6 +1626,7 @@ export async function rpgMarketChange(
     marketInventory,
     personaTokens,
     personaInventory,
+    personaDiscounts,
   } = await rpgMarketInventory(interaction);
 
   // Get the item the user selected
@@ -1433,7 +1681,7 @@ export async function rpgMarketChange(
   if (chosenItem) {
     chosenItem.default = true;
     stringMenu.addOptions(chosenItem);
-    const allItems = [...Object.values(items.general), ...Object.values(items.backgrounds)];
+    const allItems = [...Object.values(items.general), ...Object.values(items.fonts), ...Object.values(items.backgrounds)];
     itemData = allItems.find(item => item.value === chosenItem?.value) as {
       label: string;
       value: string;
@@ -1455,12 +1703,7 @@ export async function rpgMarketChange(
       customButton(`rpgTown,user:${interaction.user.id}`, 'Town', 'buttonTown', ButtonStyle.Primary),
     );
 
-  if (chosenItem && itemData.effect === 'background') {
-    rowMarket.addComponents(
-      customButton(`rpgMarketBuy,user:${interaction.user.id}`, 'Buy', 'buttonBuy', ButtonStyle.Success).setLabel(`Buy ${chosenItem.label}`),
-      customButton(`rpgMarketPreview,user:${interaction.user.id}`, 'Preview', 'buttonPreview', ButtonStyle.Secondary),
-    );
-  } else if (chosenItem) {
+  if (chosenItem) {
     rowMarket.addComponents(
       customButton(`rpgMarketBuy,user:${interaction.user.id}`, 'Buy', 'buttonBuy', ButtonStyle.Success).setLabel(`Buy ${chosenItem.label}`),
     );
@@ -1493,12 +1736,13 @@ export async function rpgMarketChange(
         .addComponents(
           new StringSelectMenuBuilder()
             .setCustomId(`rpgGeneralSelect,user:${interaction.user.id},group:${group},chunk:${index}`)
-            .setPlaceholder(`${group.charAt(0).toUpperCase() + group.slice(1)} Page ${index + 1}`)
+            .setPlaceholder(chunks.length === 1 ? `${group.charAt(0).toUpperCase() + group.slice(1)}` : `${group.charAt(0).toUpperCase() + group.slice(1)} ${index + 1}`)
             .addOptions(chunk),
         );
       components.push(rowItems);
     }
   }
+
   const embed = embedTemplate()
     .setAuthor(null)
     .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
@@ -1506,21 +1750,36 @@ export async function rpgMarketChange(
     .setDescription(stripIndents`
       You are in the local market, you can buy some items to help you on your journey.
 
-      ${emojiGet('itemBackground')} ***Backgrounds*** can be used to personalize your /profile and /levels.
-      [Click here to see all backgrounds.](https://drive.google.com/drive/folders/1F1s0uQt0nGDCCaVANVdrEQKwameo8eHI?usp=drive_link)
+      ${emojiGet('itemFont')} ***Fonts*** change the font of your /profile username
+      ${emojiGet('itemBackground')} ***Backgrounds*** change the background of your /profile
+      
       ***More items coming soon! Check back later.***
 
-      Wallet: ${personaTokens} tokens
-
+      ${emojiGet('buttonBetSmall')} **Wallet:** ${personaTokens}
+      ${personaDiscounts ? `\n${personaDiscounts}` : ''}
       ${personaInventory}`)
     .setColor(Colors.Gold);
 
   const imageFiles = [] as AttachmentBuilder[];
+  // if the option is a background, run profile preview as the embed image
   if (itemData && itemData.effect === 'background') {
-    const imagePath = await imageGet(itemData.effect_value);
-    // log.debug(F, `imagePath: ${imagePath}`);
-    imageFiles.push(new AttachmentBuilder(imagePath));
-    embed.setImage(`attachment://${itemData.effect_value}.png`);
+    const imagePath = await getAsset(itemData.effect_value);
+    const target = interaction.member as GuildMember;
+    const option = 'background';
+    const previewImage = await getProfilePreview(target, option, imagePath);
+    const attachment = new AttachmentBuilder(previewImage, { name: tripSitProfileImage });
+    imageFiles.push(attachment);
+    embed.setImage(tripSitProfileImageAttachment);
+  }
+  // if the option is a font, run profile preview as the embed image
+  if (itemData && itemData.effect === 'font') {
+    const target = interaction.member as GuildMember;
+    const fontName = itemData.effect_value;
+    const option = 'font';
+    const previewImage = await getProfilePreview(target, option, undefined, fontName);
+    const attachment = new AttachmentBuilder(previewImage, { name: tripSitProfileImage });
+    imageFiles.push(attachment);
+    embed.setImage(tripSitProfileImageAttachment);
   }
 
   return {
@@ -1563,7 +1822,7 @@ export async function rpgMarketPreview(
   }
   // log.debug(F, `selectedItem (accept): ${JSON.stringify(selectedItem, null, 2)}`);
 
-  const allItems = [...Object.values(items.general), ...Object.values(items.backgrounds)];
+  const allItems = [...Object.values(items.general), ...Object.values(items.fonts), ...Object.values(items.backgrounds)];
   const itemData = allItems.find(item => item.value === selectedItem?.value) as {
     label: string;
     value: string;
@@ -1595,13 +1854,22 @@ export async function rpgMarketPreview(
 
   const imageFiles = [] as AttachmentBuilder[];
   if (itemData && itemData.effect === 'background') {
-    const imagePath = await imageGet(itemData.effect_value);
+    const imagePath = await getAsset(itemData.effect_value);
     const target = interaction.member as GuildMember;
     const option = 'background';
-    const previewImage = await getProfilePreview(target, imagePath, option);
-    const attachment = new AttachmentBuilder(previewImage, { name: 'tripsit-profile-image.png' });
+    const previewImage = await getProfilePreview(target, option, imagePath);
+    const attachment = new AttachmentBuilder(previewImage, { name: tripSitProfileImage });
     imageFiles.push(attachment);
-    embed.setImage('attachment://tripsit-profile-image.png');
+    embed.setImage(tripSitProfileImageAttachment);
+  } else if (itemData && itemData.effect === 'font') {
+    const target = interaction.member as GuildMember;
+    const fontName = itemData.effect_value;
+    const option = 'font';
+    const previewImage = await getProfilePreview(target, option, undefined, fontName);
+    const attachment = new AttachmentBuilder(previewImage, { name: tripSitProfileImage });
+    imageFiles.push(attachment);
+    embed.setImage(tripSitProfileImageAttachment);
+    log.debug(F, `font: ${fontName}`);
   }
 
   return {
@@ -1661,7 +1929,7 @@ export async function rpgMarketAccept(
   }
   log.debug(F, `selectedItem (accept): ${JSON.stringify(selectedItem, null, 2)}`);
 
-  const allItems = [...Object.values(items.general), ...Object.values(items.backgrounds)];
+  const allItems = [...Object.values(items.general), ...Object.values(items.fonts), ...Object.values(items.backgrounds)];
   const itemData = allItems.find(item => item.value === selectedItem?.value) as {
     label: string;
     value: string;
@@ -1677,8 +1945,39 @@ export async function rpgMarketAccept(
   };
   // log.debug(F, `itemData (accept): ${JSON.stringify(itemData, null, 2)}`);
 
+  // Check that the user has less than 25 items in their inventory
+  const inventoryData = await inventoryGet(personaData.id);
+  if (inventoryData.length >= 20) {
+    const { embeds, components } = await rpgMarketChange(interaction);
+
+    // This grossness takes the APIEmbed object, turns it into a JSON object, and pulls the description
+    const { description } = JSON.parse(JSON.stringify((embeds as APIEmbed[])[0]));
+
+    const embed = embedTemplate()
+      .setAuthor(null)
+      .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
+      .setTitle(`${emojiGet('buttonMarket')} Market`)
+      .setDescription(stripIndents`**You cannot buy this item because your inventory is full. Sell some items from your home inventory to make room!**
+    
+    ${description}`)
+      .setColor(Colors.Red);
+    const imageFiles = [] as AttachmentBuilder[];
+
+    return {
+      embeds: [embed],
+      components,
+      files: imageFiles,
+    };
+  }
+
+  const {
+    personaDiscount,
+  } = await rpgMarketInventory(interaction);
+
+  const itemCost = (itemData.cost - (itemData.cost * personaDiscount));
+
   // Check if the user has enough tokens to buy the item
-  if (personaData.tokens < itemData.cost) {
+  if (personaData.tokens < itemCost) {
   // log.debug(F, 'Not enough tokens to buy item');
 
     const { embeds, components } = await rpgMarketChange(interaction);
@@ -1696,7 +1995,7 @@ export async function rpgMarketAccept(
       .setColor(Colors.Red);
     const imageFiles = [] as AttachmentBuilder[];
     if (itemData.effect === 'background') {
-      const imagePath = await imageGet(itemData.effect_value);
+      const imagePath = await getAsset(itemData.effect_value);
       // log.debug(F, `imagePath: ${imagePath}`);
       imageFiles.push(new AttachmentBuilder(imagePath));
       embed.setImage(`attachment://${itemData.effect_value}.png`);
@@ -1750,9 +2049,9 @@ export async function rpgMarketAccept(
       .setAuthor(null)
       .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
       .setTitle(`${emojiGet('buttonMarket')} Market`)
-      .setDescription(stripIndents`**You have purchased ${itemData.label} for ${itemData.cost} TripTokens.
+      .setDescription(stripIndents`**You have purchased ${itemData.label} for ${itemCost} TripTokens.
       
-      IT was sent to your Home, where you will need to equip it!**
+      Your item has been delivered to your Home, where you will need to equip it!**
       
       ${description}`)
       .setColor(Colors.Green)],
@@ -1801,17 +2100,17 @@ export async function rpgHomeInventory(
   const inventoryList = inventoryData.map(item => `**${item.label}** - ${item.description}`).join('\n');
   const inventoryString = inventoryData.length > 0
     ? stripIndents`
-      ${emojiGet('itemInventory')} **Inventory**
+      ${emojiGet('itemInventory')} **Inventory (${inventoryData.length}/20)**
       ${inventoryList}
       `
     : '';
 
   // Go through items.general and create a new object of items that the user doesn't have yet
-  const homeInventory = [...Object.values(items.backgrounds)]
+  const homeInventory = [...Object.values(items.fonts), ...Object.values(items.backgrounds)]
     .map(item => {
       if (inventoryData.find(i => i.value === item.value)) {
         return {
-          label: `${item.label} - ${item.cost} TT$`,
+          label: `${item.label} - ${(item.cost / 4)} TT$`,
           value: item.value,
           description: `${item.description}`,
           cost: item.cost,
@@ -2034,7 +2333,7 @@ export async function rpgHome(
   // Reset the options menu to be empty
   const backgroundMenu = new StringSelectMenuBuilder()
     .setCustomId(`rpgBackgroundSelect,user:${interaction.user.id}`)
-    .setPlaceholder('Select a background to use.')
+    .setPlaceholder('Select an item to use')
     .setOptions(filteredItems);
 
   // Get the item the user chose and display that as the default option
@@ -2064,7 +2363,7 @@ export async function rpgHome(
     backgroundMenu.addOptions(chosenItem);
     // log.debug(F, `items.backgrounds: ${JSON.stringify(items.backgrounds, null, 2)}`);
     // convert the emoji property into an emoji using emojiGet
-    const allItems = [...Object.values(items.backgrounds)].map(item => {
+    const allItems = [...Object.values(items.fonts), ...Object.values(items.backgrounds)].map(item => {
       const newItem = item;
       newItem.emoji = `<:${emojiGet('itemBackground').identifier}>`;
       return item;
@@ -2107,7 +2406,7 @@ export async function rpgHome(
       
       You can equip an item by selecting it from the menu below.
 
-      Wallet: ${personaTokens} tokens
+      ${emojiGet('buttonBetSmall')} **Wallet:** ${personaTokens}
 
       ${personaInventory}
     `)
@@ -2115,30 +2414,28 @@ export async function rpgHome(
 
   // If the select item has the 'background' effect, add the image to the embed
   const files = [] as AttachmentBuilder[];
-  if (equippedBackground) {
-    if ((interaction as ButtonInteraction).customId && (interaction as ButtonInteraction).customId.split(',')[0] === 'rpgHomePreview') {
-      const imagePath = await imageGet(backgroundData.effect_value);
-      const target = interaction.member as GuildMember;
-      const option = 'background';
-      const previewImage = await getProfilePreview(target, imagePath, option);
-      const attachment = new AttachmentBuilder(previewImage, { name: 'tripsit-profile-image.png' });
-      files.push(attachment);
-      embed.setImage('attachment://tripsit-profile-image.png');
-    } else {
-      const imagePath = await imageGet(equippedBackground.value);
-      // log.debug(F, `Equipped background imagePath: ${imagePath}`);
-      files.push(new AttachmentBuilder(imagePath));
-      embed.setThumbnail(`attachment://${equippedBackground.value}.png`);
-      // log.debug(F, 'Set thumbnail!');
-    }
-  }
 
   if (interaction.isStringSelectMenu() && backgroundData && backgroundData.effect === 'background') {
-    const imagePath = await imageGet(backgroundData.effect_value);
-    // log.debug(F, `imagePath: ${imagePath}`);
-    files.push(new AttachmentBuilder(imagePath));
-    embed.setImage(`attachment://${backgroundData.effect_value}.png`);
+    const imagePath = await getAsset(backgroundData.effect_value);
+    const target = interaction.member as GuildMember;
+    const option = 'background';
+    const previewImage = await getProfilePreview(target, option, imagePath);
+    const attachment = new AttachmentBuilder(previewImage, { name: tripSitProfileImage });
+    files.push(attachment);
+    embed.setImage(tripSitProfileImageAttachment);
   // log.debug(F, 'Set image!');
+  }
+
+  // If the select item has the 'font' effect, add the image to the embed
+  if (interaction.isStringSelectMenu() && backgroundData && backgroundData.effect === 'font') {
+    const target = interaction.member as GuildMember;
+    const fontName = backgroundData.effect_value;
+    const option = 'font';
+    const previewImage = await getProfilePreview(target, option, undefined, fontName);
+    const attachment = new AttachmentBuilder(previewImage, { name: tripSitProfileImage });
+    files.push(attachment);
+    embed.setImage(tripSitProfileImageAttachment);
+    log.debug(F, `font: ${fontName}`);
   }
 
   // Build out the home navigation buttons
@@ -2156,13 +2453,11 @@ export async function rpgHome(
     rowHome.addComponents(
       customButton(`rpgAccept,user:${interaction.user.id}`, `${equippedButtonText}`, 'buttonAccept', ButtonStyle.Success).setDisabled(equipped),
       customButton(`rpgSell,user:${interaction.user.id}`, `Sell +${sellPrice} TT$`, 'buttonBetHuge', ButtonStyle.Danger),
-      customButton(`rpgHomePreview,user:${interaction.user.id}`, 'Preview', 'buttonPreview', ButtonStyle.Secondary),
     );
   } else if (chosenItem && (equipped === true)) { // else show unequip button
     rowHome.addComponents(
       customButton(`rpgDecline,user:${interaction.user.id}`, 'Unequip', 'buttonQuit', ButtonStyle.Danger),
       customButton(`rpgSell,user:${interaction.user.id}`, `Sell +${sellPrice} TT$`, 'buttonBetHuge', ButtonStyle.Danger),
-      customButton(`rpgHomePreview,user:${interaction.user.id}`, 'Preview', 'buttonPreview', ButtonStyle.Secondary),
     );
   }
 
@@ -2341,6 +2636,8 @@ export async function rpgHomeAccept(
 
   // Find the selectedItem in the inventoryData
   const chosenItem = inventoryData.find(item => item.value === selectedItem?.value);
+  // Find the item type from inventoryData
+  const itemType = inventoryData.find(item => item.value === selectedItem?.value)?.effect;
 
   // Equip the item
   if (chosenItem) {
@@ -2472,7 +2769,7 @@ export async function rpgHomeSell(
     (o:APISelectMenuOption) => o.default === true,
   );
   const itemName = inventoryData.find(item => item.value === selectedItem?.value)?.label;
-  const sellPrice = Math.floor(Object.values(items.backgrounds).find(item => item.value === selectedItem?.value)?.cost as number) / 4;
+  const sellPrice = ((inventoryData.find(item => item.value === selectedItem?.value)?.cost as number) / 4);
 
   await db.rpg_inventory.delete({
     where: {
@@ -2822,7 +3119,7 @@ export async function rpgArcadeGame(
         .setDescription(stripIndents`
           **You can't start a game without first placing a bet!**
 
-          Wallet: ${personaData.tokens} tokens
+          ${emojiGet('buttonBetSmall')} **Wallet:** ${personaData.tokens}
         `)
         .setColor(Colors.Gold)],
       components,
@@ -2885,7 +3182,7 @@ export async function rpgArcadeGame(
             **You won ${payout} tokens!**
             *${BetOutcomeMessage}*
 
-            Wallet: ${personaData.tokens} tokens
+            ${emojiGet('buttonBetSmall')} **Wallet:** ${personaData.tokens}
           `)
           .setColor(Colors.Gold)],
         components,
@@ -2917,7 +3214,7 @@ export async function rpgArcadeGame(
             **You lost ${currentBet} tokens!**
             *${BetOutcomeMessage}*
 
-            Wallet: ${personaData.tokens} tokens
+            ${emojiGet('buttonBetSmall')} **Wallet:** ${personaData.tokens}
           `)
         .setColor(Colors.Grey)],
       components,
@@ -2936,7 +3233,7 @@ export async function rpgArcadeGame(
         .setDescription(stripIndents`${message ?? ''}
           You are betting ${currentBet} tokens.
 
-          Wallet: ${personaData.tokens} tokens
+          ${emojiGet('buttonBetSmall')} **Wallet:** ${personaData.tokens}
         `)
         .setColor(Colors.Green)],
       components,
@@ -2953,7 +3250,7 @@ export async function rpgArcadeGame(
 
         ${instructions}
 
-        Wallet: ${personaData.tokens} tokens
+        ${emojiGet('buttonBetSmall')} **Wallet:** ${personaData.tokens}
       `)
       .setColor(Colors.Green)],
     components,
@@ -3429,7 +3726,7 @@ export async function rpgTrivia(
           *${scoreMessage}*
 
           Earned: **${payout} tokens**${bonusMessage}
-          Wallet: ${(personaData.tokens)} tokens
+          ${emojiGet('buttonBetSmall')} **Wallet:** ${personaData.tokens}
           `,
         )
         .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() }); // eslint-disable-line max-len
@@ -3467,7 +3764,7 @@ export async function rpgTrivia(
           *${gameQuitMessage}*
 
           Earned: **${payout} tokens**${bonusMessage}
-          Wallet: ${(personaData.tokens)} tokens
+          ${emojiGet('buttonBetSmall')} **Wallet:** ${personaData.tokens}
           `,
         )
         .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() }); // eslint-disable-line max-len
@@ -3504,7 +3801,7 @@ export async function rpgTrivia(
         *${timeOutMessage}*
 
         Earned: **${payout} tokens**${bonusMessage}
-        Wallet: ${(personaData.tokens)} tokens
+        ${emojiGet('buttonBetSmall')} **Wallet:** ${personaData.tokens}
         `,
       )
       .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() }); // eslint-disable-line max-len
@@ -3750,6 +4047,73 @@ export async function rpgTown(
   };
 }
 
+async function rpgGift(interaction: ChatInputCommandInteraction) {
+  const commandUser = interaction.user;
+  const targetUser = interaction.options.getUser('target');
+  const giftAmount = interaction.options.getInteger('amount') ?? 0;
+
+  if (!targetUser) throw new Error('Target user not found');
+  if (targetUser === commandUser) {
+    return {
+      embeds: [embedTemplate()
+        .setAuthor(null)
+        .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
+        .setTitle(`${emojiGet('buttonBetHuge')} Gift Unsuccessful`)
+        .setDescription(stripIndents`
+            **You can't gift tokens to yourself!**
+          `)
+        .setColor(Colors.Red)],
+      components: [],
+    };
+  }
+
+  const targetData = await getPersonaInfo(targetUser.id);
+  const userData = await getPersonaInfo(commandUser.id);
+
+  // Get the current token amounts for the command user and the target user
+  const commandUserTokens = userData.tokens;
+  // const targetUserTokens = targetData.tokens;
+
+  // Check if the command user has enough tokens
+  if (commandUserTokens < giftAmount) {
+    return {
+      embeds: [embedTemplate()
+        .setAuthor(null)
+        .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
+        .setTitle(`${emojiGet('buttonBetHuge')} Gift Unsuccessful`)
+        .setDescription(stripIndents`
+            **You don't have enough tokens!**
+
+            ${emojiGet('buttonBetSmall')} **Wallet:** ${userData.tokens}
+          `)
+        .setColor(Colors.Red)],
+      components: [],
+    };
+  }
+  // Remove the tokens from the command user
+  userData.tokens -= giftAmount;
+  // Add the tokens to the target user
+  targetData.tokens += giftAmount;
+  // Save the data
+  await setPersonaInfo(userData);
+  await setPersonaInfo(targetData);
+
+  return {
+    embeds: [embedTemplate()
+      .setAuthor(null)
+      .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
+      .setTitle(`${emojiGet('buttonBetHuge')} Gift Successful`)
+      .setDescription(stripIndents`
+          **You gifted ${giftAmount} ${giftAmount === 1 ? 'token' : 'tokens'} to ${targetUser?.username}**
+
+          ${emojiGet('buttonBetSmall')} **${targetUser?.displayName}'s Wallet:** ${targetData.tokens}
+          ${emojiGet('buttonBetSmall')} **Your Wallet:** ${userData.tokens}
+        `)
+      .setColor(Colors.Green)],
+    components: [],
+  };
+}
+
 export async function rpgHelp(
   interaction: MessageComponentInteraction | ChatInputCommandInteraction,
 ):Promise<InteractionEditReplyOptions | InteractionUpdateOptions> {
@@ -3823,7 +4187,19 @@ export const dRpg: SlashCommand = {
       .setDescription('Go to the roulette game'))
     .addSubcommand(subcommand => subcommand
       .setName('trivia')
-      .setDescription('Go to the trivia parlor')),
+      .setDescription('Go to the trivia parlor'))
+    .addSubcommand(subcommand => subcommand
+      .setName('gift')
+      .setDescription('Gift tokens to another user')
+      .addUserOption(option => option
+        .setName('target')
+        .setDescription('User to gift tokens to')
+        .setRequired(true))
+      .addIntegerOption(option => option
+        .setName('amount')
+        .setDescription('Amount of tokens to gift')
+        .setRequired(true))),
+
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
     const channelRpg = await interaction.guild?.channels.fetch(env.CHANNEL_TRIPTOWN as string) as TextChannel;
@@ -3888,6 +4264,9 @@ export const dRpg: SlashCommand = {
     }
     if (subcommand === 'trivia') {
       await interaction.editReply(await rpgTrivia(interaction));
+    }
+    if (subcommand === 'gift') {
+      await interaction.editReply(await rpgGift(interaction));
     }
 
     // if (subcommand === 'blackjack') {

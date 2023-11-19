@@ -16,6 +16,7 @@ import { karma } from '../utils/karma';
 import { imagesOnly } from '../utils/imagesOnly';
 import { countMessage } from '../commands/guild/d.counting';
 import { bridgeMessage } from '../utils/bridge';
+// import { discordAiConversate, discordAiModerate } from '../commands/guild/d.ai';
 import { discordAiModerate } from '../commands/guild/d.ai';
 // import { awayMessage } from '../utils/awayMessage';
 // import log from '../../global/utils/log';
@@ -91,6 +92,7 @@ export const messageCreate: MessageCreateEvent = {
     karma(message);
     imagesOnly(message);
     discordAiModerate(message);
+    // discordAiConversate(message);
 
     // Disabled for testing
     // thoughtPolice(message);

@@ -11,7 +11,7 @@ import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 // import mushroomInfo from '../../../global/commands/g.mushroomInfo';
 import commandContext from '../../utils/context';
-import { imageGet } from '../../utils/imageGet';
+import getAsset from '../../utils/getAsset';
 
 const F = f(__filename);
 
@@ -28,7 +28,7 @@ async function mushroomPageOneEmbed() {
     
         For more information check out [the source](${source}) and [this article](${article}).`)
       .setImage('attachment://mushroomInfoA.png')],
-    files: [new AttachmentBuilder(await imageGet('mushroomInfoA'))],
+    files: [new AttachmentBuilder(await getAsset('mushroomInfoA'))],
 
     components: [new ActionRowBuilder<ButtonBuilder>().addComponents(
       new ButtonBuilder()
@@ -48,7 +48,7 @@ async function mushroomPageTwoEmbed() {
     
         For more information check out [the source](${source}) and [this article](${article}).`)
       .setImage('attachment://mushroomInfoB.png')],
-    files: [new AttachmentBuilder(await imageGet('mushroomInfoB'))],
+    files: [new AttachmentBuilder(await getAsset('mushroomInfoB'))],
 
     components: [new ActionRowBuilder<ButtonBuilder>().addComponents(
       new ButtonBuilder()
