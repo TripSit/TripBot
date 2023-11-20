@@ -1831,6 +1831,10 @@ export async function discordAiChat(
         } else {
           await tripbotLog.send(`Error generating image: ${JSON.stringify(image, null, 2)}`);
         }
+      })
+      .catch(async error => {
+        waitingOnGen = false;
+        await tripbotLog.send(`Error generating image: ${JSON.stringify(error, null, 2)}`);
       });
     // While the above function is running, send the typing function
     while (waitingOnGen) {
