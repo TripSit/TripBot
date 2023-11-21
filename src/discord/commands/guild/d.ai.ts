@@ -1810,6 +1810,7 @@ export async function discordAiChat(
       messageData.author.id,
     )
       .then(async response => {
+        log.debug(F, `createImage response: ${JSON.stringify(response, null, 2)}`);
         waitingOnGen = false;
         const { data } = response;
         const [image] = data;
