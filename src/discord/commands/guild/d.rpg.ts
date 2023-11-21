@@ -3781,6 +3781,21 @@ async function rpgGift(interaction: ChatInputCommandInteraction) {
   const commandUserTokens = userData.tokens;
   // const targetUserTokens = targetData.tokens;
 
+  // Check if the amount is negative
+  if (giftAmount < 0) {
+    return {
+      embeds: [embedTemplate()
+        .setAuthor(null)
+        .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
+        .setTitle(`${emojiGet('buttonBetHuge')} Gift Unsuccessful`)
+        .setDescription(stripIndents`
+            **You can't gift negative tokens!**
+          `)
+        .setColor(Colors.Red)],
+      components: [],
+    };
+  }
+
   // Check if the command user has enough tokens
   if (commandUserTokens < giftAmount) {
     return {
