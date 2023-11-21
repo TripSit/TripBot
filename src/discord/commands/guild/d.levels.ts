@@ -236,7 +236,7 @@ export const dLevels: SlashCommand = {
       await levels(target.id),
       // Load Images
       await Canvas.loadImage(await getAsset('cardLevelIcons')),
-      await Canvas.loadImage(target.user.displayAvatarURL({ extension: 'jpg' })),
+      await Canvas.loadImage(target.displayAvatarURL({ extension: 'jpg' })),
       await Canvas.loadImage(await getAsset('teamtripsitIcon')),
       await Canvas.loadImage(await getAsset('premiumIcon')),
       await Canvas.loadImage(await getAsset('boosterIcon')),
@@ -607,15 +607,15 @@ export const dLevels: SlashCommand = {
     const applyUsername = (canvas:Canvas.Canvas, text:string) => {
       const usernameContext = canvas.getContext('2d');
       do {
-        fontSize -= 2;
+        fontSize -= 1;
         usernameContext.font = `${fontSize}px ${userFont}`;
-      } while (usernameContext.measureText(text).width > 530);
+      } while (usernameContext.measureText(text).width > 508);
       return usernameContext.font;
     };
 
     // Username Text
     // Temporary code for user flairs
-    const filteredDisplayName = target.displayName.replace(/[^A-Za-z0-9]/g, '');
+    const filteredDisplayName = target.displayName.replace(/[^\x20-\x7E]/g, '');
     context.fillStyle = textColor;
     context.font = `40px ${userFont}`;
     context.textAlign = 'left';

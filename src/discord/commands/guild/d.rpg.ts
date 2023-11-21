@@ -1343,7 +1343,7 @@ export async function rpgBounties(
       return {
         embeds: [embedTemplate()
           .setAuthor(null)
-          .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
+          .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).displayAvatarURL() })
           .setTitle(contracts[command].fail.title)
           .setDescription(stripIndents`${contracts[command].fail.description}
             You can try again ${time(resetTime, 'R')}
@@ -1387,7 +1387,7 @@ export async function rpgBounties(
     return {
       embeds: [embedTemplate()
         .setAuthor(null)
-        .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
+        .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).displayAvatarURL() })
         .setTitle(contracts[command].success.title)
         .setDescription(stripIndents`${contracts[command].success.description.replace('{tokens}', tokens.toString())}
           You can try again ${time(resetTime, 'R')}.
@@ -1400,7 +1400,7 @@ export async function rpgBounties(
   return {
     embeds: [embedTemplate()
       .setAuthor(null)
-      .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
+      .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).displayAvatarURL() })
       .setTitle(`${emojiGet('buttonBounties')} Bounties`)
       .setDescription(stripIndents`
       You are at the bounty board, you can go on a quest, clear a dungeon, or go on a raid.
@@ -1552,7 +1552,7 @@ export async function rpgMarket(
   return {
     embeds: [embedTemplate()
       .setAuthor(null)
-      .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
+      .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).displayAvatarURL() })
       .setTitle(`${emojiGet('buttonMarket')} Market`)
       .setDescription(stripIndents`
       You are in the local market, you can buy some items to help you on your journey.
@@ -1697,7 +1697,7 @@ export async function rpgMarketChange(
 
   const embed = embedTemplate()
     .setAuthor(null)
-    .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
+    .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).displayAvatarURL() })
     .setTitle(`${emojiGet('buttonMarket')} Market`)
     .setDescription(stripIndents`
       You are in the local market, you can buy some items to help you on your journey.
@@ -1797,7 +1797,7 @@ export async function rpgMarketPreview(
 
   const embed = embedTemplate()
     .setAuthor(null)
-    .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
+    .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).displayAvatarURL() })
     .setTitle(`${emojiGet('buttonMarket')} Market`)
     .setDescription(stripIndents`
   
@@ -1890,7 +1890,7 @@ export async function rpgMarketAccept(
 
     const embed = embedTemplate()
       .setAuthor(null)
-      .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
+      .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).displayAvatarURL() })
       .setTitle(`${emojiGet('buttonMarket')} Market`)
       .setDescription(stripIndents`**You cannot buy this item because your inventory is full. Sell some items from your home inventory to make room!**
     
@@ -1922,7 +1922,7 @@ export async function rpgMarketAccept(
 
     const embed = embedTemplate()
       .setAuthor(null)
-      .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
+      .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).displayAvatarURL() })
       .setTitle(`${emojiGet('buttonMarket')} Market`)
       .setDescription(stripIndents`**You do not have enough tokens to buy this item.**
     
@@ -1973,7 +1973,7 @@ export async function rpgMarketAccept(
   return {
     embeds: [embedTemplate()
       .setAuthor(null)
-      .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
+      .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).displayAvatarURL() })
       .setTitle(`${emojiGet('buttonMarket')} Market`)
       .setDescription(stripIndents`**You have purchased ${itemData.label} for ${itemCost} TripTokens.
       
@@ -2263,7 +2263,7 @@ export async function rpgHome(
   // Build the embed
   const embed = embedTemplate()
     .setAuthor(null)
-    .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
+    .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).displayAvatarURL() })
     .setTitle(`${emojiGet('buttonHome')} Home`)
     .setDescription(stripIndents`${message !== null ? message : ''}
 
@@ -2580,7 +2580,7 @@ export async function rpgArcade(
   return {
     embeds: [embedTemplate()
       .setAuthor(null)
-      .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
+      .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).displayAvatarURL() })
       .setTitle(`${emojiGet('buttonArcade')} Arcade`)
       .setDescription(stripIndents`
         You ${rand(text.enter)} the arcade and see a variety of games.
@@ -2608,7 +2608,7 @@ export async function rpgArcadeAnimate(
   //   await (interaction as MessageComponentInteraction).editReply({
   //     embeds: [embedTemplate()
   //       .setAuthor(null)
-  //       .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
+  //       .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).displayAvatarURL() })
   //       .setTitle(gameName),
   //     ],
   //   });
@@ -2873,7 +2873,7 @@ export async function rpgArcadeGame(
     return {
       embeds: [embedTemplate()
         .setAuthor(null)
-        .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
+        .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).displayAvatarURL() })
         .setTitle(gameName)
         .setDescription(stripIndents`
           **You can't start a game without first placing a bet!**
@@ -2926,7 +2926,7 @@ export async function rpgArcadeGame(
         content: null,
         embeds: [embedTemplate()
           .setAuthor(null)
-          .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
+          .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).displayAvatarURL() })
           .setTitle(`${emojiGet(emojiName)} ${gameName}`)
           .setDescription(stripIndents`
             The ${object} came up **${result}** and you chose **${choice}**!
@@ -2952,7 +2952,7 @@ export async function rpgArcadeGame(
       content: null,
       embeds: [embedTemplate()
         .setAuthor(null)
-        .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
+        .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).displayAvatarURL() })
         .setTitle(`${emojiGet(emojiName)} ${gameName}`)
         .setDescription(stripIndents`
             The ${object} came up **${result}** and you chose **${choice}**!
@@ -2974,7 +2974,7 @@ export async function rpgArcadeGame(
       content: null,
       embeds: [embedTemplate()
         .setAuthor(null)
-        .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
+        .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).displayAvatarURL() })
         .setTitle(`${emojiGet(emojiName)} ${gameName}`)
         .setDescription(stripIndents`${message ?? ''}
           You are betting ${currentBet} tokens.
@@ -2990,7 +2990,7 @@ export async function rpgArcadeGame(
     content: null,
     embeds: [embedTemplate()
       .setAuthor(null)
-      .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
+      .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).displayAvatarURL() })
       .setTitle(`${emojiGet(emojiName)} ${gameName}`)
       .setDescription(stripIndents`You start a game of ${gameName}.
 
@@ -3212,7 +3212,7 @@ export async function rpgTrivia(
 
         Streak: ${streak}
         **Time's up <t:${Math.floor(questionTimer.getTime() / 1000)}:R>**`)
-        .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() }); // eslint-disable-line max-len
+        .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).displayAvatarURL() }); // eslint-disable-line max-len
 
       if (qNumber === 0) {
         // await (interaction as MessageComponentInteraction).update({}); // eslint-disable-line no-await-in-loop
@@ -3225,7 +3225,7 @@ export async function rpgTrivia(
           
           **Starting <t:${Math.floor(questionTimer.getTime() / 1000)}:R>**
           Get ready!`)
-          .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() }); // eslint-disable-line max-len
+          .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).displayAvatarURL() }); // eslint-disable-line max-len
         await interaction.editReply({ embeds: [startingEmbed], components: [] }); // eslint-disable-line no-await-in-loop, max-len
         // If it's the first question, send a new message
         await sleep(5 * 1000); // eslint-disable-line no-await-in-loop
@@ -3333,7 +3333,7 @@ export async function rpgTrivia(
             Streak: ${streak}
             
             Next question <t:${Math.floor(questionTimer.getTime() / 1000)}:R>`)
-          .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() }); // eslint-disable-line max-len
+          .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).displayAvatarURL() }); // eslint-disable-line max-len
         embedStatus = 'Correct!';
         questionAnswer = `The answer was **${questionData.correct_answer}.**`;
         if (interaction.isRepliable()) {
@@ -3453,7 +3453,7 @@ export async function rpgTrivia(
           ${emojiGet('buttonBetSmall')} **Wallet:** ${personaData.tokens}
           `,
         )
-        .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() }); // eslint-disable-line max-len
+        .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).displayAvatarURL() }); // eslint-disable-line max-len
       return {
         embeds: [embed],
         components: [
@@ -3491,7 +3491,7 @@ export async function rpgTrivia(
           ${emojiGet('buttonBetSmall')} **Wallet:** ${personaData.tokens}
           `,
         )
-        .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() }); // eslint-disable-line max-len
+        .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).displayAvatarURL() }); // eslint-disable-line max-len
       return {
         embeds: [embed],
         components: [
@@ -3528,7 +3528,7 @@ export async function rpgTrivia(
         ${emojiGet('buttonBetSmall')} **Wallet:** ${personaData.tokens}
         `,
       )
-      .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() }); // eslint-disable-line max-len
+      .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).displayAvatarURL() }); // eslint-disable-line max-len
 
     // log.debug(F, 'Trivia Game Ended');
     // log.debug(F, `Embed: ${JSON.stringify(embed, null, 2)}`);
@@ -3677,7 +3677,7 @@ export async function rpgTrivia(
   return {
     embeds: [embedTemplate()
       .setAuthor(null)
-      .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
+      .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).displayAvatarURL() })
       .setTitle(`${emojiGet('buttonTrivia')} Trivia`)
       .setDescription(stripIndents`
         You ${rand(text.enter)} the trivia parlor where you can test your knowledge of random facts!
@@ -3736,7 +3736,7 @@ export async function rpgTown(
   return {
     embeds: [embedTemplate()
       .setAuthor(null)
-      .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
+      .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).displayAvatarURL() })
       .setTitle(`${emojiGet('buttonTown')} Town`)
       .setDescription(stripIndents`
       You ${rand(text.enter)} TripTown, a new settlement on the edge of Triptopia, the TripSit Kingdom.
@@ -3764,7 +3764,7 @@ async function rpgGift(interaction: ChatInputCommandInteraction) {
     return {
       embeds: [embedTemplate()
         .setAuthor(null)
-        .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
+        .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).displayAvatarURL() })
         .setTitle(`${emojiGet('buttonBetHuge')} Gift Unsuccessful`)
         .setDescription(stripIndents`
             **You can't gift tokens to yourself!**
@@ -3781,12 +3781,27 @@ async function rpgGift(interaction: ChatInputCommandInteraction) {
   const commandUserTokens = userData.tokens;
   // const targetUserTokens = targetData.tokens;
 
+  // Check if the amount is negative
+  if (giftAmount < 0) {
+    return {
+      embeds: [embedTemplate()
+        .setAuthor(null)
+        .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).displayAvatarURL() })
+        .setTitle(`${emojiGet('buttonBetHuge')} Gift Unsuccessful`)
+        .setDescription(stripIndents`
+            **You can't gift negative tokens!**
+          `)
+        .setColor(Colors.Red)],
+      components: [],
+    };
+  }
+
   // Check if the command user has enough tokens
   if (commandUserTokens < giftAmount) {
     return {
       embeds: [embedTemplate()
         .setAuthor(null)
-        .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
+        .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).displayAvatarURL() })
         .setTitle(`${emojiGet('buttonBetHuge')} Gift Unsuccessful`)
         .setDescription(stripIndents`
             **You don't have enough tokens!**
@@ -3808,7 +3823,7 @@ async function rpgGift(interaction: ChatInputCommandInteraction) {
   return {
     embeds: [embedTemplate()
       .setAuthor(null)
-      .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
+      .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).displayAvatarURL() })
       .setTitle(`${emojiGet('buttonBetHuge')} Gift Successful`)
       .setDescription(stripIndents`
           **You gifted ${giftAmount} ${giftAmount === 1 ? 'token' : 'tokens'} to ${targetUser?.username}**
@@ -3827,7 +3842,7 @@ export async function rpgHelp(
   return {
     embeds: [embedTemplate()
       .setAuthor(null)
-      .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
+      .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).displayAvatarURL() })
       .setTitle(`${emojiGet('buttonHelp')} Help`)
       .setDescription(stripIndents`
         You ${rand(text.enter)} the information centre and walk up to the help desk.

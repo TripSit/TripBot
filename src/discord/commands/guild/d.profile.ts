@@ -207,7 +207,7 @@ export const dProfile: SlashCommand = {
       // Get the status icon
       // await Canvas.loadImage(await imageGet(`icon_${target.presence?.status ?? 'offline'}`)),
       // Get the avatar image
-      await Canvas.loadImage(target.user.displayAvatarURL({ extension: 'jpg' })),
+      await Canvas.loadImage(target.displayAvatarURL({ extension: 'jpg' })),
       // Get the birthday card overlay
       await Canvas.loadImage(await getAsset('cardBirthday')),
       await Canvas.loadImage(await getAsset('teamtripsitIcon')),
@@ -447,14 +447,14 @@ export const dProfile: SlashCommand = {
     const applyUsername = (canvas:Canvas.Canvas, text:string) => {
       const usernameContext = canvas.getContext('2d');
       do {
-        fontSize -= 2;
+        fontSize -= 1;
         usernameContext.font = `${fontSize}px ${userFont}`;
-      } while (usernameContext.measureText(text).width > 530);
+      } while (usernameContext.measureText(text).width > 508);
       return usernameContext.font;
     };
 
     // Username Text
-    const filteredDisplayName = target.displayName.replace(/[^A-Za-z0-9]/g, '');
+    const filteredDisplayName = target.displayName.replace(/[^\x20-\x7E]/g, '');
     context.font = `40px ${userFont}`;
     context.fillStyle = textColor;
     context.textBaseline = 'middle';
