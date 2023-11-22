@@ -860,6 +860,7 @@ async function saveThreshold(
   interaction: ButtonInteraction,
 ):Promise<void> {
   log.debug(F, 'saveThreshold started');
+  if (!(interaction.member as GuildMember).roles.cache.has(env.DISCORD_OWNER_ID)) return;
   const buttonID = interaction.customId;
   log.debug(F, `buttonID: ${buttonID}`);
   if (!interaction.guild) return;
@@ -934,6 +935,7 @@ async function adjustThreshold(
   interaction: ButtonInteraction,
 ):Promise<void> {
   log.debug(F, 'adjustThreshold started');
+  if (!(interaction.member as GuildMember).roles.cache.has(env.DISCORD_OWNER_ID)) return;
   // const buttonID = interaction.customId;
   // log.debug(F, `buttonID: ${buttonID}`);
 
