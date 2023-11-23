@@ -103,7 +103,7 @@ const colorDefs = {
     barColor: '#b3b3b3',
     textColor: '#dadada',
   },
-  [env.ROLE_BLACK]: {
+  [env.ROLE_DONOR_BLACK]: {
     cardDarkColor: '#0e0e0e',
     cardLightColor: '#181818',
     chipColor: '#262626',
@@ -723,7 +723,7 @@ export async function getProfilePreview(target: GuildMember, option: string, ima
   }
   const filteredDisplayName = target.displayName.replace(/[^A-Za-z0-9]/g, '');
   // Username Text
-  let fontSize = 40;
+  let fontSize = 50;
   // eslint-disable-next-line sonarjs/no-identical-functions
   const applyUsername = (canvas:Canvas.Canvas, text:string) => {
     const usernameContext = canvas.getContext('2d');
