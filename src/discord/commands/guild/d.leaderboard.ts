@@ -1,11 +1,12 @@
 /* eslint-disable no-await-in-loop, no-restricted-syntax, no-continue */
-
+import * as path from 'path';
 import {
   Colors,
   EmbedBuilder,
   Interaction,
   // GuildMember,
   SlashCommandBuilder,
+  AttachmentBuilder,
 } from 'discord.js';
 import { SlashCommand } from '../../@types/commandDef';
 import {
@@ -16,8 +17,17 @@ import commandContext from '../../utils/context';
 import { embedTemplate } from '../../utils/embedTemplate'; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { getTotalLevel } from '../../../global/utils/experience';
 import { paginationEmbed } from '../../utils/pagination';
+import Canvas from '@napi-rs/canvas';
+import { getPersonaInfo } from '../../../global/commands/g.rpg';
+import { inventoryGet } from '../../../global/utils/knex';
+import getAsset from '../../utils/getAsset';
 
 const F = f(__filename);
+
+Canvas.GlobalFonts.registerFromPath(
+  path.resolve(__dirname, '../../assets/Futura.otf'),
+  'futura',
+);
 
 // type RankType = { 'rank': number, 'id': string, 'level': number };
 // type LeaderboardType = {
@@ -58,6 +68,138 @@ type LeaderboardData = {
     IGNORED: LeaderboardList,
   },
 };
+
+const colorDefs = {
+  [env.ROLE_PURPLE]: {
+    cardDarkColor: '#19151e',
+    cardLightColor: '#2d2636',
+    chipColor: '#47335f',
+    barColor: '#9661d9',
+    textColor: '#b072ff',
+  },
+  [env.ROLE_BLUE]: {
+    cardDarkColor: '#161d1f',
+    cardLightColor: '#283438',
+    chipColor: '#3a5760',
+    barColor: '#4baccc',
+    textColor: '#5acff5',
+  },
+  [env.ROLE_GREEN]: {
+    cardDarkColor: '#151a16',
+    cardLightColor: '#252e28',
+    chipColor: '#31543d',
+    barColor: '#59b879',
+    textColor: '#6de194',
+  },
+  [env.ROLE_PINK]: {
+    cardDarkColor: '#1e151b',
+    cardLightColor: '#352530',
+    chipColor: '#5f324f',
+    barColor: '#d95dae',
+    textColor: '#ff6dcd',
+  },
+  [env.ROLE_RED]: {
+    cardDarkColor: '#1f1616',
+    cardLightColor: '#382727',
+    chipColor: '#613838',
+    barColor: '#d95152',
+    textColor: '#ff5f60',
+  },
+  [env.ROLE_ORANGE]: {
+    cardDarkColor: '#1d1814',
+    cardLightColor: '#342b24',
+    chipColor: '#5f422e',
+    barColor: '#d98b51',
+    textColor: '#ffa45f',
+  },
+  [env.ROLE_YELLOW]: {
+    cardDarkColor: '#1d1b14',
+    cardLightColor: '#333024',
+    chipColor: '#5e532d',
+    barColor: '#a6903d',
+    textColor: '#ffdd5d',
+  },
+  [env.ROLE_WHITE]: {
+    cardDarkColor: '#242424',
+    cardLightColor: '#404040',
+    chipColor: '#666666',
+    barColor: '#b3b3b3',
+    textColor: '#dadada',
+  },
+  [env.ROLE_BLACK]: {
+    cardDarkColor: '#0e0e0e',
+    cardLightColor: '#181818',
+    chipColor: '#262626',
+    barColor: '#595959',
+    textColor: '#626262',
+  },
+  [env.ROLE_DONOR_PURPLE]: {
+    cardDarkColor: '#1f1b25',
+    cardLightColor: '#372e42',
+    chipColor: '#432767',
+    barColor: '#7f38d9',
+    textColor: '#9542ff',
+  },
+  [env.ROLE_DONOR_BLUE]: {
+    cardDarkColor: '#161d1f',
+    cardLightColor: '#283438',
+    chipColor: '#3a5760',
+    barColor: '#1da2cc',
+    textColor: '#22bef0',
+  },
+  [env.ROLE_DONOR_GREEN]: {
+    cardDarkColor: '#1a211c',
+    cardLightColor: '#2d3b32',
+    chipColor: '#275c39',
+    barColor: '#36b360',
+    textColor: '#45e47b',
+  },
+  [env.ROLE_DONOR_PINK]: {
+    cardDarkColor: '#261c23',
+    cardLightColor: '#44303d',
+    chipColor: '#682b52',
+    barColor: '#d93fa4',
+    textColor: '#ff4ac1',
+  },
+  [env.ROLE_DONOR_RED]: {
+    cardDarkColor: '#241b1b',
+    cardLightColor: '#412e2e',
+    chipColor: '#662526',
+    barColor: '#d93335',
+    textColor: '#ff3c3e',
+  },
+  [env.ROLE_DONOR_ORANGE]: {
+    cardDarkColor: '#241f1b',
+    cardLightColor: '#41362e',
+    chipColor: '#664225',
+    barColor: '#d96c36',
+    textColor: '#ff913b',
+  },
+  [env.ROLE_DONOR_YELLOW]: {
+    cardDarkColor: '#23211a',
+    cardLightColor: '#3f3b2c',
+    chipColor: '#655721',
+    barColor: '#d9bc4f',
+    textColor: '#ffd431',
+  },
+} as {
+  [key: string]: {
+    cardDarkColor: string;
+    cardLightColor: string;
+    chipColor: string;
+    barColor: string;
+    textColor: string;
+  };
+};
+
+const categoryChoices = [
+  { name: 'Total', value: 'TOTAL' },
+  { name: 'Chat', value: 'GENERAL' },
+  { name: 'Voice', value: 'VOICE'},
+  { name: 'Harm Reduction', value: 'TRIPSITTER' },
+  { name: 'Development', value: 'DEVELOPER' },
+  { name: 'Team Tripsit', value: 'TEAM' },
+];
 
 async function createBook(
   interaction: Interaction,
@@ -130,19 +272,14 @@ export const dLeaderboard: SlashCommand = {
     .setName('leaderboard')
     .setDescription('Show the experience leaderboard')
     .addStringOption(option => option.setName('category')
-      .setDescription('What category of experience? (Default: All)')
+      .setDescription('What category of experience?')
       .addChoices(
-        { name: 'Total', value: 'TOTAL' },
-        { name: 'General', value: 'GENERAL' },
-        { name: 'Tripsitter', value: 'TRIPSITTER' },
-        { name: 'Developer', value: 'DEVELOPER' },
+        { name: 'Total (Default)', value: 'TOTAL' },
+        { name: 'Chat', value: 'GENERAL' },
+        { name: 'Voice', value: 'VOICE'},
+        { name: 'Harm Reduction', value: 'TRIPSITTER' },
+        { name: 'Development', value: 'DEVELOPER' },
         { name: 'Team Tripsit', value: 'TEAM' },
-      ))
-    .addStringOption(option => option.setName('type')
-      .setDescription('What type of experience? (Default: All)')
-      .addChoices(
-        { name: 'Text', value: 'TEXT' },
-        { name: 'Voice', value: 'VOICE' },
       ))
     .addBooleanOption(option => option.setName('ephemeral')
       .setDescription('Set to "True" to show the response only to you')),
@@ -155,29 +292,225 @@ export const dLeaderboard: SlashCommand = {
       return false;
     }
 
-    const categoryChoice = (interaction.options.getString('category')
-      ?? 'ALL') as ExpCategory;
-    const typeChoice = (interaction.options.getString('type')
-      ?? 'ALL') as ExpType;
-    log.debug(F, `categoryChoice: ${categoryChoice}, typeChoice: ${typeChoice}`);
+    // Choose color based on user's role
+    // const cardLightColor = colorDefs[target.roles.color?.id as keyof typeof colorDefs]?.cardLightColor || '#232323';
+    // const cardDarkColor = colorDefs[target.roles.color?.id as keyof typeof colorDefs]?.cardDarkColor || '#141414';
+    // const chipColor = colorDefs[target.roles.color?.id as keyof typeof colorDefs]?.chipColor || '#393939';
+    // const barColor = colorDefs[target.roles.color?.id as keyof typeof colorDefs]?.barColor || '#b3b3b3';
+    // const textColor = colorDefs[target.roles.color?.id as keyof typeof colorDefs]?.textColor || '#ffffff';
+
+    const canvasWidth = 921;
+    const canvasHeight = 447;
+    const canvasObj = Canvas.createCanvas(canvasWidth, canvasHeight);
+    const context = canvasObj.getContext('2d');
+
+    context.fillStyle = '#232323';
+    context.fillRect(0, 0, canvasWidth, canvasHeight);
+    context.fillStyle = '#141414';
+    context.beginPath();
+    context.roundRect(0, 0, 552, 447, [19]);
+    context.fill();
+
+    //context.fillStyle = '#44303d';
+    //context.beginPath();
+    //context.roundRect(18, 183, 516, 76, [19]);
+    //context.roundRect(18, 268, 516, 76, [19]);
+    //context.roundRect(18, 353, 516, 76, [19]);
+    //
+    //context.roundRect(570, 18, 333, 51, [19]);
+    //context.roundRect(570, 78, 333, 51, [19]);
+    //context.roundRect(570, 138, 333, 51, [19]);
+    //context.roundRect(570, 198, 333, 51, [19]);
+    //context.roundRect(570, 258, 333, 51, [19]);
+    //context.roundRect(570, 318, 333, 51, [19]);
+    //context.roundRect(570, 378, 333, 51, [19]);
+    //context.fill();
+
+    context.fillStyle = '#FFFFFF';
+    context.font = 'bold 40px futura';
+    context.textBaseline = 'middle';
+    context.textAlign = 'center';
+    context.fillText('LEADERBOARD', 285, 45);
+
+    
+
+    let categoryChoice = interaction.options.getString('category') ?? 'TOTAL';
+    let typeChoice = 'ALL' as ExpType;
+    // if the category choice is voice, set the type choice to voice (as to treat it as a category, not a type)
+    if (categoryChoice === 'VOICE') {
+      typeChoice = 'VOICE';
+    }
+    // if the category choice is voice, set the category choice to total (as to treat it as a category, not a type)
+    if (categoryChoice === 'VOICE') {
+      categoryChoice = 'TOTAL';
+    }
+    categoryChoice = categoryChoice as ExpCategory;
+    const categoryValue = interaction.options.getString('category') ?? 'TOTAL';
+    const categoryName = categoryChoices.find(choice => choice.value === categoryValue)?.name || 'Total';
+
+    context.fillText(`${categoryName.toUpperCase()}`, 285, 110);
 
     await interaction.guild?.members.fetch();
-
     const leaderboardData = await getLeaderboard();
+    log.debug(F, `leaderboardData: ${JSON.stringify(leaderboardData, null, 2)}`);
 
-    const book: EmbedBuilder[] = await createLeaderboard(interaction, leaderboardData, typeChoice, categoryChoice);
+    // Directly access the selected type in the leaderboardData object
+    const typeData = leaderboardData[typeChoice.toUpperCase() as keyof typeof leaderboardData];
+    log.debug(F, `typeData: ${JSON.stringify(typeData, null, 2)}`);
 
-    if (book.length === 0) {
-      await interaction.editReply(`No ${typeChoice} ${categoryChoice} found!`);
-      return false;
+    // Check if the typeData exists before proceeding
+    if (typeData) {
+      // Directly access the selected category in the typeData object
+      const categoryData = typeData[categoryChoice.toUpperCase() as keyof typeof typeData];
+      log.debug(F, `categoryData: ${JSON.stringify(categoryData, null, 2)}`);
+      
+      // Define the coordinates for the bars
+      const barCoordinates = [
+        { x: 18, y: 183, width: 516, height: 76 },
+        { x: 18, y: 268, width: 516, height: 76 },
+        { x: 18, y: 353, width: 516, height: 76 },
+        { x: 570, y: 18, width: 333, height: 51 },
+        { x: 570, y: 78, width: 333, height: 51 },
+        { x: 570, y: 138, width: 333, height: 51 },
+        { x: 570, y: 198, width: 333, height: 51 },
+        { x: 570, y: 258, width: 333, height: 51 },
+        { x: 570, y: 318, width: 333, height: 51 },
+        { x: 570, y: 378, width: 333, height: 51 },
+      ];
+
+      // Check if the categoryData exists before proceeding
+      if (categoryData) {
+        for (let i = 0; i < categoryData.length; i++) {
+          const user = categoryData[i];
+          const memberCollection = interaction.guild?.members.cache.filter(m => m.id === user.discord_id);
+          if (memberCollection && memberCollection.size > 0) {
+            const member = memberCollection.first(); // Get the first member from the collection
+            const userLevel = await getTotalLevel(user.total_points);
+            const userDarkBarColor = colorDefs[member?.roles.color?.id as keyof typeof colorDefs]?.cardDarkColor || '#232323';
+            const userLightBarColor = colorDefs[member?.roles.color?.id as keyof typeof colorDefs]?.cardLightColor || '#393939';
+            const userNameColor = colorDefs[member?.roles.color?.id as keyof typeof colorDefs]?.textColor || '#ffffff';
+            const userName = member?.displayName.replace(/[^\x20-\x7E]/g, '') || 'Unknown User';
+            const bar = barCoordinates[i % barCoordinates.length];
+            const personaData = await getPersonaInfo(user.discord_id);
+
+            
+            // Draw the bar
+            context.fillStyle = userLightBarColor;
+            context.beginPath();
+            context.roundRect(bar.x, bar.y, bar.width, bar.height, [19]);
+            context.fill();
+
+            let userFont = 'futura';
+            let levelTextWidth = 0;
+            if (personaData) {
+              // Get the existing inventory data
+              const inventoryData = await inventoryGet(personaData.id);
+              // log.debug(F, `Persona home inventory (change): ${JSON.stringify(inventoryData, null, 2)}`);
+        
+              const equippedBackground = inventoryData.find(item => item.equipped === true && item.effect === 'background');
+              log.debug(F, `equippedBackground: ${JSON.stringify(equippedBackground, null, 2)}`);
+              const equippedFont = inventoryData.find(item => item.equipped === true && item.effect === 'font');
+              if (equippedFont) {
+                await getAsset(equippedFont.value);
+                userFont = equippedFont.value;
+              }
+                // Calculate the width of the level text to subtract from the bar width
+                context.font = `30px futura`;
+                levelTextWidth = context.measureText(`${userLevel.level}`).width;
+                // Draw the dark part of the bar 
+                context.fillStyle = userDarkBarColor;
+                context.beginPath();
+                context.roundRect(bar.x, bar.y, bar.width - levelTextWidth - 18, bar.height, [19]);
+                context.fill();
+
+                // // Draw the dark part of the bar, starting from centre of the avatar
+                // context.fillStyle = userDarkBarColor;
+                // context.beginPath();
+                // context.roundRect(bar.x + 100, bar.y, bar.width - levelTextWidth - 18 - 100, bar.height, [19]);
+                // context.fill();
+
+              if (equippedBackground) {
+                const imagePath = await getAsset(equippedBackground.value);
+                const Background = await Canvas.loadImage(imagePath);
+                context.save();
+                context.globalCompositeOperation = 'lighter';
+                context.globalAlpha = 0.03;
+                context.beginPath();
+                // Make a clip for the users bar
+                context.roundRect(bar.x, bar.y, bar.width, bar.height, [19]);
+                context.clip();
+                // Draw the background based off the bar width
+                context.drawImage(Background, bar.x, bar.y, bar.width, bar.width);
+                context.restore();
+
+              }
+            } else {
+              // Calculate the width of the level text
+              context.font = `30px futura`;
+              levelTextWidth = context.measureText(`${userLevel.level}`).width;
+              context.fillStyle = userDarkBarColor;
+              context.beginPath();
+              context.roundRect(bar.x, bar.y, bar.width - levelTextWidth - 18, bar.height, [19]);
+              context.fill();
+            }
+            // Draw the rank number
+            // If rank is 1-3, change the color to gold, silver, or bronze
+            if (i === 0) {
+              context.fillStyle = '#d4af37';
+            } else if (i === 1) {
+              context.fillStyle = '#a8a9ad';
+            } else if (i === 2) {
+              context.fillStyle = '#aa7042';
+            } else {
+              context.fillStyle = '#ffffff';
+            }
+            context.font = '30px futura';
+            context.textBaseline = 'middle';
+            context.textAlign = 'left';
+            context.fillText(`#${i + 1}`, bar.x + 9, bar.y + bar.height / 2);
+            // Draw the level number
+            context.fillStyle = '#ffffff';
+            context.font = '30px futura';
+            context.textBaseline = 'middle';
+            context.textAlign = 'right';
+            context.fillText(`${userLevel.level}`, bar.x + bar.width - 9, bar.y + bar.height / 2);
+
+            // Draw the user's avatar in a circle to the right of the rank number, with a radius of bar.height
+            const avatar = await Canvas.loadImage(member?.displayAvatarURL({ extension: 'jpg' }) || '');
+            context.save();
+            context.beginPath();
+            context.arc(bar.x + 100, bar.y + bar.height / 2, bar.height / 2, 0, Math.PI * 2, true);
+            context.closePath();
+            context.clip();
+            context.drawImage(avatar, bar.x + 100 - bar.height / 2, bar.y, bar.height, bar.height);
+            context.restore();
+            // Draw the user's name to the right of the avatar
+            // Username Text Resize to fit
+            let fontSize = 40;
+            const applyUsername = (canvas:Canvas.Canvas, text:string) => {
+              const usernameContext = canvas.getContext('2d');
+              do {
+                fontSize -= 1;
+                usernameContext.font = `${fontSize}px ${userFont}`;
+              } while (usernameContext.measureText(text).width > bar.width - (levelTextWidth + 18) - (bar.x + 100 + (bar.height / 2)));
+              return usernameContext.font;
+            };
+            context.fillStyle = userNameColor;
+            context.font = applyUsername(canvasObj, userName);
+            context.textBaseline = 'middle';
+            context.textAlign = 'left';
+            context.fillText(userName, bar.x + 100 + (bar.height / 2) + 9, bar.y + bar.height / 2);
+
+          }
+        }
+      }
     }
 
-    if (book.length === 1) {
-      await interaction.editReply({ embeds: [book[0]] });
-      return true;
-    }
+    const date = new Date();
+    const formattedDate = date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' }).replace(/ /g, '-');
+    const attachment = new AttachmentBuilder(await canvasObj.encode('png'), { name: `TS_Leaderboard_${categoryName}_${formattedDate}.png` });
+    await interaction.editReply({ files: [attachment] });
 
-    paginationEmbed(interaction, book);
     log.info(F, `Total Time: ${Date.now() - startTime}ms`);
     return true;
   },
