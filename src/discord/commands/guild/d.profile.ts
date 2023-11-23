@@ -443,7 +443,7 @@ export const dProfile: SlashCommand = {
     // If so, move Username Text up so the title can fit underneath
 
     // Username Text Resize to fit
-    let fontSize = 40;
+    let fontSize = 50;
     const applyUsername = (canvas:Canvas.Canvas, text:string) => {
       const usernameContext = canvas.getContext('2d');
       do {
@@ -455,7 +455,7 @@ export const dProfile: SlashCommand = {
 
     // Username Text
     const filteredDisplayName = target.displayName.replace(/[^\x20-\x7E]/g, '');
-    context.font = `40px ${userFont}`;
+    context.font = `50px ${userFont}`;
     context.fillStyle = textColor;
     context.textBaseline = 'middle';
     context.font = applyUsername(canvasObj, `${filteredDisplayName}`);

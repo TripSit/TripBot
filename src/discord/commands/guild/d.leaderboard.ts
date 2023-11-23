@@ -193,12 +193,12 @@ const colorDefs = {
 };
 
 const categoryChoices = [
-  { name: 'Total', value: 'TOTAL' },
-  { name: 'Chat', value: 'GENERAL' },
-  { name: 'Voice', value: 'VOICE'},
-  { name: 'Harm Reduction', value: 'TRIPSITTER' },
-  { name: 'Development', value: 'DEVELOPER' },
-  { name: 'Team Tripsit', value: 'TEAM' },
+  { name: 'Total Lvl', value: 'TOTAL' },
+  { name: 'Chat Lvl', value: 'GENERAL' },
+  { name: 'Voice Lvl', value: 'VOICE'},
+  { name: 'Harm Reduction Lvl', value: 'TRIPSITTER' },
+  { name: 'Development Lvl', value: 'DEVELOPER' },
+  { name: 'Team Tripsit Lvl', value: 'TEAM' },
 ];
 
 async function createBook(
@@ -304,11 +304,17 @@ export const dLeaderboard: SlashCommand = {
     const canvasObj = Canvas.createCanvas(canvasWidth, canvasHeight);
     const context = canvasObj.getContext('2d');
 
-    context.fillStyle = '#232323';
-    context.fillRect(0, 0, canvasWidth, canvasHeight);
-    context.fillStyle = '#141414';
+    context.fillStyle = '#181818';
+    context.beginPath();
+    context.roundRect(0, 0, 921, 447, [19]);
+    context.fill();
+    context.fillStyle = '#0e0e0e';
     context.beginPath();
     context.roundRect(0, 0, 552, 447, [19]);
+    context.fill();
+    context.fillStyle = '#262626';
+    context.beginPath();
+    context.roundRect(18, 18, 516, 147, [19]);
     context.fill();
 
     //context.fillStyle = '#44303d';
@@ -327,10 +333,10 @@ export const dLeaderboard: SlashCommand = {
     //context.fill();
 
     context.fillStyle = '#FFFFFF';
-    context.font = 'bold 40px futura';
+    context.font = '40px futura';
     context.textBaseline = 'middle';
     context.textAlign = 'center';
-    context.fillText('LEADERBOARD', 285, 45);
+    context.fillText('LEADERBOARD', 330, 72);
 
     
 
@@ -347,8 +353,12 @@ export const dLeaderboard: SlashCommand = {
     categoryChoice = categoryChoice as ExpCategory;
     const categoryValue = interaction.options.getString('category') ?? 'TOTAL';
     const categoryName = categoryChoices.find(choice => choice.value === categoryValue)?.name || 'Total';
+    
+    context.font = '30px futura';
+    context.fillText(`${categoryName.toUpperCase()}`, 330, 122);
 
-    context.fillText(`${categoryName.toUpperCase()}`, 285, 110);
+    const chatIcon = await Canvas.loadImage('https://i.gyazo.com/0f0a85e9fb0332d42e6e36e316886d98.png');
+    context.drawImage(chatIcon, 54, 54, 75, 75);
 
     await interaction.guild?.members.fetch();
     const leaderboardData = await getLeaderboard();
@@ -423,11 +433,11 @@ export const dLeaderboard: SlashCommand = {
                 context.roundRect(bar.x, bar.y, bar.width - levelTextWidth - 18, bar.height, [19]);
                 context.fill();
 
-                // // Draw the dark part of the bar, starting from centre of the avatar
-                // context.fillStyle = userDarkBarColor;
-                // context.beginPath();
-                // context.roundRect(bar.x + 100, bar.y, bar.width - levelTextWidth - 18 - 100, bar.height, [19]);
-                // context.fill();
+                //// Draw the dark part of the bar, starting from centre of the avatar
+                //context.fillStyle = userDarkBarColor;
+                //context.beginPath();
+                //context.roundRect(bar.x + 100, bar.y, bar.width - levelTextWidth - 18 - 100, bar.height, [19]);
+                //context.fill();
 
               if (equippedBackground) {
                 const imagePath = await getAsset(equippedBackground.value);

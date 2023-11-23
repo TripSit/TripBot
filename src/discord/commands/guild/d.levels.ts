@@ -603,7 +603,7 @@ export const dLevels: SlashCommand = {
     // If so, move Username Text up so the title can fit underneath
 
     // Username Text Resize to fit
-    let fontSize = 40;
+    let fontSize = 50;
     const applyUsername = (canvas:Canvas.Canvas, text:string) => {
       const usernameContext = canvas.getContext('2d');
       do {
@@ -617,7 +617,7 @@ export const dLevels: SlashCommand = {
     // Temporary code for user flairs
     const filteredDisplayName = target.displayName.replace(/[^\x20-\x7E]/g, '');
     context.fillStyle = textColor;
-    context.font = `40px ${userFont}`;
+    context.font = `50px ${userFont}`;
     context.textAlign = 'left';
     const flair = null;
     let usernameHeight = 76;
@@ -631,7 +631,7 @@ export const dLevels: SlashCommand = {
       context.fillText(`${flair}`, 146, 90);
       context.textBaseline = 'bottom';
     }
-    fontSize = 40;
+    fontSize = 50;
     context.font = applyUsername(canvasObj, `${filteredDisplayName}`);
     context.fillText(`${filteredDisplayName}`, 146, usernameHeight);
 
