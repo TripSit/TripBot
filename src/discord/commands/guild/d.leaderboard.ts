@@ -126,12 +126,12 @@ const colorDefs = {
     barColor: '#b3b3b3',
     textColor: '#dadada',
   },
-  [env.ROLE_BLACK]: {
-    cardDarkColor: '#0e0e0e',
-    cardLightColor: '#181818',
+  [env.ROLE_DONOR_BLACK]: {
+    cardDarkColor: '#262626',
+    cardLightColor: '#404040',
     chipColor: '#262626',
     barColor: '#595959',
-    textColor: '#626262',
+    textColor: '#727272',
   },
   [env.ROLE_DONOR_PURPLE]: {
     cardDarkColor: '#1f1b25',
