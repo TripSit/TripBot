@@ -358,7 +358,7 @@ export const dLeaderboard: SlashCommand = {
     context.fillText(`${categoryName.toUpperCase()}`, 330, 119);
 
     const chatIcon = await Canvas.loadImage('https://i.gyazo.com/0f0a85e9fb0332d42e6e36e316886d98.png');
-    context.drawImage(chatIcon, 54, 54, 75, 75);
+    context.drawImage(chatIcon, 88, 54, 75, 75);
 
     await interaction.guild?.members.fetch();
     const leaderboardData = await getLeaderboard();
@@ -444,7 +444,7 @@ export const dLeaderboard: SlashCommand = {
                 const Background = await Canvas.loadImage(imagePath);
                 context.save();
                 context.globalCompositeOperation = 'lighter';
-                context.globalAlpha = 0.03;
+                context.globalAlpha = 0.05;
                 context.beginPath();
                 // Make a clip for the users bar
                 context.roundRect(bar.x + avatarOffset, bar.y, bar.width - avatarOffset, bar.height, [19]);

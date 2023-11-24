@@ -1965,6 +1965,28 @@ export async function rpgMarketAccept(
 
   await inventorySet(newItem);
 
+  // if the item is a background or font, automatically equip it and unequip the other items of the same type
+  if (itemData.effect === 'background' || itemData.effect === 'font') {
+    const inventory = await inventoryGet(personaData.id);
+    const itemIndex = inventory.findIndex(i => i.value === itemData.value);
+    // log.debug(F, `itemIndex: ${itemIndex}`);
+
+    // Unequip all items of the same type
+    const unequipItems = inventory.filter(i => i.effect === itemData.effect && i.equipped === true);
+    // log.debug(F, `unequipItems: ${JSON.stringify(unequipItems, null, 2)}`);
+    for (const item of unequipItems) {
+      // log.debug(F, `item: ${JSON.stringify(item, null, 2)}`);
+      item.equipped = false;
+      await inventorySet(item);
+    }
+
+    // Equip the new item
+    const equipItem = inventory[itemIndex];
+    // log.debug(F, `equipItem: ${JSON.stringify(equipItem, null, 2)}`);
+    equipItem.equipped = true;
+    await inventorySet(equipItem);
+  }
+
   const { embeds, components } = await rpgMarketChange(interaction);
 
   // This grossness takes the APIEmbed object, turns it into a JSON object, and pulls the description
@@ -1977,7 +1999,7 @@ export async function rpgMarketAccept(
       .setTitle(`${emojiGet('buttonMarket')} Market`)
       .setDescription(stripIndents`**You have purchased ${itemData.label} for ${itemCost} TripTokens.
       
-      Your item has been delivered to your Home, where you will need to equip it!**
+      Your item has automatically been equipped! Head home to unequip it or change items.**
       
       ${description}`)
       .setColor(Colors.Green)],

@@ -344,7 +344,7 @@ export const dProfile: SlashCommand = {
         const Background = await Canvas.loadImage(imagePath);
         context.save();
         context.globalCompositeOperation = 'lighter';
-        context.globalAlpha = 0.03;
+        context.globalAlpha = 0.05;
         context.beginPath();
         context.roundRect(0, 0, 675, 292, [19]);
         context.roundRect(684, 0, 237, 292, [19]);
@@ -683,7 +683,7 @@ export async function getProfilePreview(target: GuildMember, option: string, ima
     const Background = await Canvas.loadImage(imagePath.toString());
     context.save();
     context.globalCompositeOperation = 'lighter';
-    context.globalAlpha = 0.03;
+    context.globalAlpha = 0.05;
     context.beginPath();
     context.roundRect(0, 0, 675, 292, [19]);
     context.roundRect(684, 0, 237, 292, [19]);
