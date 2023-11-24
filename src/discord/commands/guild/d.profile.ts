@@ -721,7 +721,7 @@ export async function getProfilePreview(target: GuildMember, option: string, ima
     await getAsset(fontName);
     userFont = fontName;
   }
-  const filteredDisplayName = target.displayName.replace(/[^A-Za-z0-9]/g, '');
+  const filteredDisplayName = target.displayName.replace(/[^\x20-\x7E]/g, '');
   // Username Text
   let fontSize = 50;
   // eslint-disable-next-line sonarjs/no-identical-functions
