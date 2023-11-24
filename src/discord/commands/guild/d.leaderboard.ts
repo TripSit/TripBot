@@ -281,6 +281,14 @@ export const dLeaderboard: SlashCommand = {
         { name: 'Development', value: 'DEVELOPER' },
         { name: 'Team Tripsit', value: 'TEAM' },
       ))
+    // .addStringOption(option => option.setName('time')
+    //   .setDescription('What time period?')
+    //   .addChoices(
+    //     { name: 'All Time (Default)', value: 'ALL' },
+    //     { name: 'Yearly', value: 'YEAR' },
+    //     { name: 'Monthly', value: 'MONTH' },
+    //     { name: 'Weekly', value: 'WEEK' },
+    //   ))
     .addBooleanOption(option => option.setName('ephemeral')
       .setDescription('Set to "True" to show the response only to you')),
   async execute(interaction) {
@@ -450,7 +458,7 @@ export const dLeaderboard: SlashCommand = {
                 context.roundRect(bar.x + avatarOffset, bar.y, bar.width - avatarOffset, bar.height, [19]);
                 context.clip();
                 // Draw the background based off the bar width
-                context.drawImage(Background, bar.x, bar.y, bar.width, bar.width);
+                context.drawImage(Background, bar.x + avatarOffset, bar.y, bar.width - avatarOffset, bar.width - avatarOffset);
                 context.restore();
 
               }
