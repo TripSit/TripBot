@@ -343,15 +343,17 @@ export const dLeaderboard: SlashCommand = {
     categoryChoice = categoryChoice as ExpCategory;
     const categoryValue = interaction.options.getString('category') ?? 'TOTAL';
     const categoryName = categoryChoices.find(choice => choice.value === categoryValue)?.name || 'Total';
-    
-    context.font = '50px futura';
-    context.fillText(`${categoryName.toUpperCase()}`, 330, 69);
-    
-    context.font = '40px futura';
-    context.fillText('ALL TIME', 330, 119);
 
-    const chatIcon = await Canvas.loadImage('https://i.gyazo.com/0f0a85e9fb0332d42e6e36e316886d98.png');
-    context.drawImage(chatIcon, 88, 54, 75, 75);
+    context.font = resizeText(canvasObj, `${categoryName.toUpperCase()}`, 40, 'futura', 498);
+    context.fillText(`${categoryName.toUpperCase()}`, 276, 54);
+    
+    // UPDATE THIS WHEN TIME PERIOD IS ADDED
+    const timePeriod = 'ALL TIME';
+    context.font = resizeText(canvasObj, `TOP OF ${timePeriod}`, 40, 'futura', 498);
+    context.fillText(`TOP OF ${timePeriod}`, 276, 128);
+
+    // const chatIcon = await Canvas.loadImage('https://i.gyazo.com/0f0a85e9fb0332d42e6e36e316886d98.png');
+    // context.drawImage(chatIcon, 88, 54, 75, 75);
 
     await interaction.guild?.members.fetch();
     const leaderboardData = await getLeaderboard();
@@ -381,21 +383,22 @@ export const dLeaderboard: SlashCommand = {
       // Check if the categoryData exists before proceeding
       if (categoryData) {
         let count = 0;
+        let userCount = 0;
         while (count < 10) {
-          const user = categoryData[count % categoryData.length];
-          const memberCollection = interaction.guild?.members.cache.filter(m => m.id === user.discord_id);
-          if (memberCollection && memberCollection.size > 0) {
+          const user = userCount < categoryData.length ? categoryData[userCount] : null;
+          const avatarOffset = count > 2 ? 66 : 91;
+          const bar = barCoordinates[count % barCoordinates.length];
+          const rankFontSize = count > 2 ? (count === 9 ? 20 : 30) : 40;
+          if (user) {
+            const memberCollection = interaction.guild?.members.cache.filter(m => m.id === user.discord_id);
+            if (memberCollection && memberCollection.size > 0) {
             const member = memberCollection.first(); // Get the first member from the collection
             const userLevel = await getTotalLevel(user.total_points);
             const userDarkBarColor = colorDefs[member?.roles.color?.id as keyof typeof colorDefs]?.cardDarkColor || '#232323';
             const userNameColor = colorDefs[member?.roles.color?.id as keyof typeof colorDefs]?.textColor || '#ffffff';
             const userName = await deFuckifyText(member?.displayName || '');
             const userFontSize = count > 2 ? 25 : 35;
-            const rankFontSize = count > 2 ? (count === 9 ? 20 : 30) : 40;
-            const avatarOffset = count > 2 ? 66 : 91;
-            const bar = barCoordinates[count % barCoordinates.length];
             const personaData = await getPersonaInfo(user.discord_id);
-
             
             // Draw the under bar
             context.fillStyle = userDarkBarColor;
@@ -479,12 +482,34 @@ export const dLeaderboard: SlashCommand = {
             context.font = resizeText(canvasObj, userName, fontSize, userFont, maxLength);
             context.textAlign = 'left';
             context.fillText(userName, bar.x + avatarOffset + (bar.height / 2) + 9, bar.y + bar.height / 2);
-            count++;
-
           }
+          userCount++;
+        } else {
+          // Draw a plain bar without any user data
+          context.fillStyle = '#232323';
+          context.beginPath();
+          context.roundRect(bar.x + (avatarOffset - (bar.height / 2)), bar.y, bar.width - (avatarOffset - (bar.height / 2)), bar.height, [bar.height / 2, 19, 19, bar.height / 2]);
+          context.fill();
+          context.fillStyle = '#ffffff';
+          context.textBaseline = 'middle';
+          context.textAlign = 'left';
+          context.font = `${rankFontSize}px futura`;
+          if (count === 0) {
+            context.fillStyle = '#d4af37';
+          } else if (count === 1) {
+            context.fillStyle = '#a8a9ad';
+          } else if (count === 2) {
+            context.fillStyle = '#aa7042';
+          } else {
+            context.fillStyle = `#ffffff`;
+          }
+          context.fillText(`#${count + 1}`, bar.x - 9, bar.y + bar.height / 2);
         }
+        count++;
       }
     }
+  }
+
 
     const date = new Date();
     const formattedDate = date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' }).replace(/ /g, '-');
