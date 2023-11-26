@@ -14,7 +14,7 @@ import { getPersonaInfo } from '../../../global/commands/g.rpg';
 import { inventoryGet } from '../../../global/utils/knex';
 import getAsset from '../../utils/getAsset';
 import { Personas } from '../../../global/@types/database';
-import { resizeText, deFuckifyText} from '../../utils/canvasUtils';
+import { resizeText, deFuckifyText } from '../../utils/canvasUtils';
 
 // ??? TO BE MOVED TO A DEDICATED FILE, OR IMAGEGET.TS ???
 // Load external fonts from web
@@ -459,7 +459,7 @@ export const dProfile: SlashCommand = {
     context.fillStyle = textColor;
     context.textBaseline = 'middle';
     let fontSize = 50;
-    let maxLength = 508;
+    const maxLength = 508;
     context.font = resizeText(canvasObj, filteredDisplayName, fontSize, userFont, maxLength);
     context.fillText(`${filteredDisplayName}`, 146, 76);
 
@@ -728,8 +728,8 @@ export async function getProfilePreview(target: GuildMember, option: string, ima
   context.font = `50px ${userFont}`;
   context.fillStyle = textColor;
   context.textBaseline = 'middle';
-  let fontSize = 50;
-  let maxLength = 508;
+  const fontSize = 50;
+  const maxLength = 508;
   context.font = resizeText(canvasObj, filteredDisplayName, fontSize, userFont, maxLength);
   context.fillText(`${filteredDisplayName}`, 146, 76);
   context.fillStyle = textColor;

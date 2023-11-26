@@ -23,7 +23,6 @@ type MindsetNames =
 | 'ROLE_H_REINDEER'
 | 'ROLE_H_SNOWFLAKE';
 
-
 const mindsetRoles = {
   ROLE_DRUNK: env.ROLE_DRUNK,
   ROLE_HIGH: env.ROLE_HIGH,

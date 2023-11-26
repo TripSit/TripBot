@@ -2,7 +2,7 @@ import Canvas from '@napi-rs/canvas';
 
 export function resizeText(canvas: Canvas.Canvas, text: string, startingSize: number, textFont: string, maxLength: number): string {
   const context = canvas.getContext('2d');
-  let fontSize = startingSize
+  let fontSize = startingSize;
   do {
     fontSize -= 1;
     context.font = `${fontSize}px ${textFont}`;

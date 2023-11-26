@@ -1977,7 +1977,7 @@ export async function rpgMarketAccept(
     for (const item of unequipItems) {
       // log.debug(F, `item: ${JSON.stringify(item, null, 2)}`);
       item.equipped = false;
-      await inventorySet(item);
+      inventorySet(item);
     }
 
     // Equip the new item

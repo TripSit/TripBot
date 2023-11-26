@@ -16,7 +16,7 @@ import getAsset from '../../utils/getAsset';
 import commandContext from '../../utils/context';
 import { numFormatter, numFormatterVoice } from './d.profile';
 import { Personas } from '../../../global/@types/database';
-import { resizeText, deFuckifyText} from '../../utils/canvasUtils';
+import { resizeText, deFuckifyText } from '../../utils/canvasUtils';
 
 const F = f(__filename);
 
@@ -610,7 +610,7 @@ export const dLevels: SlashCommand = {
     context.font = `50px ${userFont}`;
     context.textAlign = 'left';
     // const flair = null;
-    let usernameHeight = 76;
+    const usernameHeight = 76;
     context.textBaseline = 'middle';
     // if (flair) {
     //   usernameHeight = 72;
@@ -622,7 +622,7 @@ export const dLevels: SlashCommand = {
     //   context.textBaseline = 'bottom';
     // }
     let fontSize = 50;
-    let maxLength = 508;
+    const maxLength = 508;
     context.font = resizeText(canvasObj, filteredDisplayName, fontSize, userFont, maxLength);
     context.fillText(`${filteredDisplayName}`, 146, usernameHeight);
 
