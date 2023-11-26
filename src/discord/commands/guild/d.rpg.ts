@@ -2940,6 +2940,10 @@ export async function rpgArcadeGame(
       const BetOutcomeMessage = BetWinMessageList[Math.floor(Math.random() * BetWinMessageList.length)];
       personaData.tokens += payout;
       await personaSet(personaData);
+      // Get TripBot's persona data
+      const tripbotData = await getPersonaInfo('957780726806380545');
+      tripbotData.tokens -= payout;
+      await personaSet(tripbotData);
       wagers[interaction.user.id] = {
         tokens: 0,
         gameName,
@@ -2966,6 +2970,10 @@ export async function rpgArcadeGame(
     const BetOutcomeMessage = BetLossMessageList[Math.floor(Math.random() * BetLossMessageList.length)];
     personaData.tokens -= currentBet;
     await personaSet(personaData);
+    // Get TripBot's persona data
+    const tripbotData = await getPersonaInfo('957780726806380545');
+    tripbotData.tokens += currentBet;
+    await personaSet(tripbotData);
     wagers[interaction.user.id] = {
       tokens: 0,
       gameName,
