@@ -21,7 +21,7 @@ import Canvas from '@napi-rs/canvas';
 import { getPersonaInfo } from '../../../global/commands/g.rpg';
 import { inventoryGet } from '../../../global/utils/knex';
 import getAsset from '../../utils/getAsset';
-import deFuckifyText from '../../utils/deFuckifyText';
+import { resizeText, deFuckifyText} from '../../utils/canvasUtils';
 
 const F = f(__filename);
 
@@ -323,32 +323,13 @@ export const dLeaderboard: SlashCommand = {
     context.fill();
     context.fillStyle = '#262626';
     context.beginPath();
-    context.roundRect(18, 18, 516, 147, [19]);
+    context.roundRect(18, 18, 516, 69, [19]);
+    context.roundRect(18, 94, 516, 69, [19]);
     context.fill();
 
-    //context.fillStyle = '#44303d';
-    //context.beginPath();
-    //context.roundRect(18, 183, 516, 76, [19]);
-    //context.roundRect(18, 268, 516, 76, [19]);
-    //context.roundRect(18, 353, 516, 76, [19]);
-    //
-    //context.roundRect(570, 18, 333, 51, [19]);
-    //context.roundRect(570, 78, 333, 51, [19]);
-    //context.roundRect(570, 138, 333, 51, [19]);
-    //context.roundRect(570, 198, 333, 51, [19]);
-    //context.roundRect(570, 258, 333, 51, [19]);
-    //context.roundRect(570, 318, 333, 51, [19]);
-    //context.roundRect(570, 378, 333, 51, [19]);
-    //context.fill();
-
     context.fillStyle = '#FFFFFF';
-   
     context.textBaseline = 'middle';
     context.textAlign = 'center';
-
-
-    
-
     let categoryChoice = interaction.options.getString('category') ?? 'TOTAL';
     let typeChoice = 'ALL' as ExpType;
     // if the category choice is voice, set the type choice to voice (as to treat it as a category, not a type)
@@ -492,18 +473,10 @@ export const dLeaderboard: SlashCommand = {
             // Draw the user's name to the right of the avatar
             // Username Text Resize to fit
             let fontSize = userFontSize;
-            const maxUsernameLength = (bar.width - (levelTextWidth + 18) - (18 + avatarOffset + (bar.height / 2)));
-            log.debug(F, `maxUsernameLength: ${maxUsernameLength}`);
-            const applyUsername = (canvas:Canvas.Canvas, text:string) => {
-              const usernameContext = canvas.getContext('2d');
-              do {
-                fontSize -= 1;
-                usernameContext.font = `${fontSize}px ${userFont}`;
-              } while (usernameContext.measureText(text).width > maxUsernameLength);
-              return usernameContext.font;
-            };
+            let maxLength = (bar.width - (levelTextWidth + 18) - (18 + avatarOffset + (bar.height / 2)));
+            context.font = `${fontSize}px ${userFont}`;
             context.fillStyle = userNameColor;
-            context.font = applyUsername(canvasObj, userName);
+            context.font = resizeText(canvasObj, userName, fontSize, userFont, maxLength);
             context.textAlign = 'left';
             context.fillText(userName, bar.x + avatarOffset + (bar.height / 2) + 9, bar.y + bar.height / 2);
             count++;

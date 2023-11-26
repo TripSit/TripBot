@@ -16,7 +16,7 @@ import getAsset from '../../utils/getAsset';
 import commandContext from '../../utils/context';
 import { numFormatter, numFormatterVoice } from './d.profile';
 import { Personas } from '../../../global/@types/database';
-import deFuckifyText from '../../utils/deFuckifyText';
+import { resizeText, deFuckifyText} from '../../utils/canvasUtils';
 
 const F = f(__filename);
 
@@ -603,37 +603,27 @@ export const dLevels: SlashCommand = {
     // WIP: Check to see if a user has bought a title in the shop
     // If so, move Username Text up so the title can fit underneath
 
-    // Username Text Resize to fit
-    let fontSize = 50;
-    const applyUsername = (canvas:Canvas.Canvas, text:string) => {
-      const usernameContext = canvas.getContext('2d');
-      do {
-        fontSize -= 1;
-        usernameContext.font = `${fontSize}px ${userFont}`;
-      } while (usernameContext.measureText(text).width > 508);
-      return usernameContext.font;
-    };
-
     // Username Text
     // Temporary code for user flairs
     const filteredDisplayName = await deFuckifyText(target.displayName);
     context.fillStyle = textColor;
     context.font = `50px ${userFont}`;
     context.textAlign = 'left';
-    const flair = null;
+    // const flair = null;
     let usernameHeight = 76;
     context.textBaseline = 'middle';
-    if (flair) {
-      usernameHeight = 72;
-      fontSize = 25;
-      context.font = fontSizeFamily;
-      context.textBaseline = 'top';
-      context.font = applyUsername(canvasObj, `${flair}`);
-      context.fillText(`${flair}`, 146, 90);
-      context.textBaseline = 'bottom';
-    }
-    fontSize = 50;
-    context.font = applyUsername(canvasObj, `${filteredDisplayName}`);
+    // if (flair) {
+    //   usernameHeight = 72;
+    //   fontSize = 25;
+    //   context.font = fontSizeFamily;
+    //   context.textBaseline = 'top';
+    //   context.font = applyUsername(canvasObj, `${flair}`);
+    //   context.fillText(`${flair}`, 146, 90);
+    //   context.textBaseline = 'bottom';
+    // }
+    let fontSize = 50;
+    let maxLength = 508;
+    context.font = resizeText(canvasObj, filteredDisplayName, fontSize, userFont, maxLength);
     context.fillText(`${filteredDisplayName}`, 146, usernameHeight);
 
     // Progress Bars Draw

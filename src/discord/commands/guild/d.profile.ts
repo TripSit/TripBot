@@ -14,7 +14,7 @@ import { getPersonaInfo } from '../../../global/commands/g.rpg';
 import { inventoryGet } from '../../../global/utils/knex';
 import getAsset from '../../utils/getAsset';
 import { Personas } from '../../../global/@types/database';
-import deFuckifyText from '../../utils/deFuckifyText';
+import { resizeText, deFuckifyText} from '../../utils/canvasUtils';
 
 // ??? TO BE MOVED TO A DEDICATED FILE, OR IMAGEGET.TS ???
 // Load external fonts from web
@@ -444,7 +444,6 @@ export const dProfile: SlashCommand = {
     // If so, move Username Text up so the title can fit underneath
 
     // Username Text Resize to fit
-    let fontSize = 50;
     const applyUsername = (canvas:Canvas.Canvas, text:string) => {
       const usernameContext = canvas.getContext('2d');
       do {
@@ -459,7 +458,9 @@ export const dProfile: SlashCommand = {
     context.font = `50px ${userFont}`;
     context.fillStyle = textColor;
     context.textBaseline = 'middle';
-    context.font = applyUsername(canvasObj, `${filteredDisplayName}`);
+    let fontSize = 50;
+    let maxLength = 508;
+    context.font = resizeText(canvasObj, filteredDisplayName, fontSize, userFont, maxLength);
     context.fillText(`${filteredDisplayName}`, 146, 76);
 
     // User Timezone
@@ -722,19 +723,15 @@ export async function getProfilePreview(target: GuildMember, option: string, ima
     await getAsset(fontName);
     userFont = fontName;
   }
-  const filteredDisplayName = target.displayName.replace(/[^\x20-\x7E]/g, '');
   // Username Text
+  const filteredDisplayName = await deFuckifyText(target.displayName);
+  context.font = `50px ${userFont}`;
+  context.fillStyle = textColor;
+  context.textBaseline = 'middle';
   let fontSize = 50;
-  // eslint-disable-next-line sonarjs/no-identical-functions
-  const applyUsername = (canvas:Canvas.Canvas, text:string) => {
-    const usernameContext = canvas.getContext('2d');
-    do {
-      fontSize -= 2;
-      usernameContext.font = `${fontSize}px ${userFont}`;
-    } while (usernameContext.measureText(text).width > 530);
-    return usernameContext.font;
-  };
-  context.font = applyUsername(canvasObj, `${filteredDisplayName}`);
+  let maxLength = 508;
+  context.font = resizeText(canvasObj, filteredDisplayName, fontSize, userFont, maxLength);
+  context.fillText(`${filteredDisplayName}`, 146, 76);
   context.fillStyle = textColor;
   if (option === 'profileTitle') {
     context.textBaseline = 'bottom';
