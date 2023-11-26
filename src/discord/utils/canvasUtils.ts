@@ -49,25 +49,20 @@ const fancyAlphabets = [
 ];
 
 export function deFuckifyText(text: string): string {
-  let normalText = '';
   const normalAlphabetArray = Array.from(normalAlphabet);
-  for (const char of Array.from(text)) {
+  return Array.from(text).map(char => {
     if (/^[\x20-\x7E]$/g.test(char)) {
-      normalText += char;
-    } else {
-      let found = false;
-      for (const fancyAlphabet of fancyAlphabets) {
-        const index = fancyAlphabet.indexOf(char);
-        if (index !== -1) {
-          normalText += normalAlphabetArray[index];
-          found = true;
-          break;
-        }
-      }
-      if (!found && normalAlphabet.includes(char)) {
-        normalText += char;
+      return char;
+    }
+    for (let i = 0; i < fancyAlphabets.length; i += 1) {
+      const index = fancyAlphabets[i].indexOf(char);
+      if (index !== -1) {
+        return normalAlphabetArray[index];
       }
     }
-  }
-  return normalText;
+    if (normalAlphabet.includes(char)) {
+      return char;
+    }
+    return '';
+  }).join('');
 }

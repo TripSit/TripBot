@@ -443,22 +443,12 @@ export const dProfile: SlashCommand = {
     // WIP: Check to see if a user has bought a title in the shop
     // If so, move Username Text up so the title can fit underneath
 
-    // Username Text Resize to fit
-    const applyUsername = (canvas:Canvas.Canvas, text:string) => {
-      const usernameContext = canvas.getContext('2d');
-      do {
-        fontSize -= 1;
-        usernameContext.font = `${fontSize}px ${userFont}`;
-      } while (usernameContext.measureText(text).width > 508);
-      return usernameContext.font;
-    };
-
     // Username Text
     const filteredDisplayName = await deFuckifyText(target.displayName);
     context.font = `50px ${userFont}`;
     context.fillStyle = textColor;
     context.textBaseline = 'middle';
-    let fontSize = 50;
+    const fontSize = 50;
     const maxLength = 508;
     context.font = resizeText(canvasObj, filteredDisplayName, fontSize, userFont, maxLength);
     context.fillText(`${filteredDisplayName}`, 146, 76);
