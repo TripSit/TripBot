@@ -16,6 +16,7 @@ import getAsset from '../../utils/getAsset';
 import commandContext from '../../utils/context';
 import { numFormatter, numFormatterVoice } from './d.profile';
 import { Personas } from '../../../global/@types/database';
+import deFuckifyText from '../../utils/deFuckifyText';
 
 const F = f(__filename);
 
@@ -525,7 +526,7 @@ export const dLevels: SlashCommand = {
         const Background = await Canvas.loadImage(imagePath);
         context.save();
         context.globalCompositeOperation = 'lighter';
-        context.globalAlpha = 0.03;
+        context.globalAlpha = 0.05;
         context.beginPath();
         context.roundRect(0, 0, 921, 145, [19]);
         context.roundRect(0, 154, 921, (layoutHeight - 154), [19]);
@@ -615,7 +616,7 @@ export const dLevels: SlashCommand = {
 
     // Username Text
     // Temporary code for user flairs
-    const filteredDisplayName = target.displayName.replace(/[^\x20-\x7E]/g, '');
+    const filteredDisplayName = await deFuckifyText(target.displayName);
     context.fillStyle = textColor;
     context.font = `50px ${userFont}`;
     context.textAlign = 'left';

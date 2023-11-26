@@ -21,6 +21,7 @@ import Canvas from '@napi-rs/canvas';
 import { getPersonaInfo } from '../../../global/commands/g.rpg';
 import { inventoryGet } from '../../../global/utils/knex';
 import getAsset from '../../utils/getAsset';
+import deFuckifyText from '../../utils/deFuckifyText';
 
 const F = f(__filename);
 
@@ -341,10 +342,10 @@ export const dLeaderboard: SlashCommand = {
     //context.fill();
 
     context.fillStyle = '#FFFFFF';
-    context.font = '30px futura';
+   
     context.textBaseline = 'middle';
     context.textAlign = 'center';
-    context.fillText('LEADERBOARD', 330, 69);
+
 
     
 
@@ -362,8 +363,11 @@ export const dLeaderboard: SlashCommand = {
     const categoryValue = interaction.options.getString('category') ?? 'TOTAL';
     const categoryName = categoryChoices.find(choice => choice.value === categoryValue)?.name || 'Total';
     
+    context.font = '50px futura';
+    context.fillText(`${categoryName.toUpperCase()}`, 330, 69);
+    
     context.font = '40px futura';
-    context.fillText(`${categoryName.toUpperCase()}`, 330, 119);
+    context.fillText('ALL TIME', 330, 119);
 
     const chatIcon = await Canvas.loadImage('https://i.gyazo.com/0f0a85e9fb0332d42e6e36e316886d98.png');
     context.drawImage(chatIcon, 88, 54, 75, 75);
@@ -403,9 +407,8 @@ export const dLeaderboard: SlashCommand = {
             const member = memberCollection.first(); // Get the first member from the collection
             const userLevel = await getTotalLevel(user.total_points);
             const userDarkBarColor = colorDefs[member?.roles.color?.id as keyof typeof colorDefs]?.cardDarkColor || '#232323';
-            const userLightBarColor = colorDefs[member?.roles.color?.id as keyof typeof colorDefs]?.cardLightColor || '#393939';
             const userNameColor = colorDefs[member?.roles.color?.id as keyof typeof colorDefs]?.textColor || '#ffffff';
-            const userName = member?.displayName.replace(/[^\x20-\x7E]/g, '') || 'Unknown User';
+            const userName = await deFuckifyText(member?.displayName || '');
             const userFontSize = count > 2 ? 25 : 35;
             const rankFontSize = count > 2 ? (count === 9 ? 20 : 30) : 40;
             const avatarOffset = count > 2 ? 66 : 91;
@@ -414,7 +417,7 @@ export const dLeaderboard: SlashCommand = {
 
             
             // Draw the under bar
-            context.fillStyle = userLightBarColor;
+            context.fillStyle = userDarkBarColor;
             context.beginPath();
             context.roundRect(bar.x + avatarOffset, bar.y, bar.width - avatarOffset, bar.height, [0, 19, 19, 0]);
             context.fill();
@@ -432,20 +435,6 @@ export const dLeaderboard: SlashCommand = {
                 await getAsset(equippedFont.value);
                 userFont = equippedFont.value;
               }
-                // Calculate the width of the level text to subtract from the bar width
-                context.font = `${userFontSize}px futura`;
-                levelTextWidth = context.measureText(`${userLevel.level}`).width;
-                // Draw the dark part of the bar 
-                context.fillStyle = userDarkBarColor;
-                context.beginPath();
-                context.roundRect(bar.x + avatarOffset, bar.y, bar.width - levelTextWidth - avatarOffset - 18, bar.height, [0, 19, 19, 0]);
-                context.fill();
-
-                //// Draw the dark part of the bar, starting from centre of the avatar
-                //context.fillStyle = userDarkBarColor;
-                //context.beginPath();
-                //context.roundRect(bar.x + 100, bar.y, bar.width - levelTextWidth - 18 - 100, bar.height, [19]);
-                //context.fill();
 
               if (equippedBackground) {
                 const imagePath = await getAsset(equippedBackground.value);
@@ -462,15 +451,11 @@ export const dLeaderboard: SlashCommand = {
                 context.restore();
 
               }
-            } else {
-              // Calculate the width of the level text
-              context.font = `${userFontSize}px futura`;
-              levelTextWidth = context.measureText(`${userLevel.level}`).width;
-              context.fillStyle = userDarkBarColor;
-              context.beginPath();
-              context.roundRect(bar.x + avatarOffset, bar.y, bar.width - levelTextWidth - avatarOffset - 18, bar.height, [0, 19, 19, 0]);
-              context.fill();
             }
+            // Calculate the width of the level text to determine the username's font size later
+            context.font = `${userFontSize}px futura`;
+            levelTextWidth = context.measureText(`${userLevel.level}`).width;
+
             // Draw the rank number
             // If rank is 1-3, change the color to gold, silver, or bronze
             if (count === 0) {
@@ -489,9 +474,11 @@ export const dLeaderboard: SlashCommand = {
             context.font = `${userFontSize}px futura`;
             // Draw the level number
             context.fillStyle = `#ffffff`;
+            context.globalAlpha = 0.60;
             context.textAlign = 'right';
             context.fillText(`${userLevel.level}`, bar.x + bar.width - 9, bar.y + bar.height / 2);
             context.fillStyle = `${userNameColor}`;
+            context.globalAlpha = 1;
 
             // Draw the user's avatar in a circle to the right of the rank number, with a radius of bar.height
             const avatar = await Canvas.loadImage(member?.displayAvatarURL({ extension: 'jpg' }) || '');

@@ -14,6 +14,7 @@ import { getPersonaInfo } from '../../../global/commands/g.rpg';
 import { inventoryGet } from '../../../global/utils/knex';
 import getAsset from '../../utils/getAsset';
 import { Personas } from '../../../global/@types/database';
+import deFuckifyText from '../../utils/deFuckifyText';
 
 // ??? TO BE MOVED TO A DEDICATED FILE, OR IMAGEGET.TS ???
 // Load external fonts from web
@@ -454,7 +455,7 @@ export const dProfile: SlashCommand = {
     };
 
     // Username Text
-    const filteredDisplayName = target.displayName.replace(/[^\x20-\x7E]/g, '');
+    const filteredDisplayName = await deFuckifyText(target.displayName);
     context.font = `50px ${userFont}`;
     context.fillStyle = textColor;
     context.textBaseline = 'middle';
