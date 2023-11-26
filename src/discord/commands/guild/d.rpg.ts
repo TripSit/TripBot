@@ -3090,7 +3090,7 @@ export async function rpgTriviaGetQuestions(
   });
 }
 
-export async function rpgTrivia(
+export async function rpgTrivia( // eslint-disable-line
   interaction: MessageComponentInteraction | ChatInputCommandInteraction,
 ):Promise<InteractionEditReplyOptions | InteractionUpdateOptions> {
   // log.debug(F, `GameStates: ${JSON.stringify(gameStates, null, 2)}`);
