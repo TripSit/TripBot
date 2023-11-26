@@ -1000,9 +1000,6 @@ const BetLossMessageList = [
   'At least your wallet is a bit easier to carry now.',
   'I\'ll pretend I didn\'t see that.',
   'I promise I won\'t tell anyone.',
-  'Try drinking an Elixir of luck next time!',
-  'Maybe go buy a Slushy or something instead.',
-  'I hope you\'re not too Worried.',
   'Tip: Try not to lose next time.',
 ];
 
@@ -1027,10 +1024,6 @@ const BetWinMessageList = [
   'You\'re going to need a bigger wallet.',
   'I\'m so glad we could witness this special moment together.',
   'Yippee!',
-  'To the Moon! Maybe you\'ll find some bears there.',
-  'Ripe pickings from the money Trees!',
-  'Your pile of tokens will reach Space soon! Apparently there\'s a lady up there.',
-  'You could probably buy up to Seven Cats with that!',
 ];
 
 const text = {
@@ -1155,7 +1148,6 @@ const timeOutMessageList = [ // Random messages to display when the user runs ou
   'You were almost as slow as a snail!',
   'You were slower than a turtle!',
   'A sloth could have answered that faster!',
-  'Your brain is slower than a Zombie\'s!',
 ];
 
 const awfulScoreMessageList = [ // Random messages to display when the user got no questions right
@@ -1170,8 +1162,6 @@ const awfulScoreMessageList = [ // Random messages to display when the user got 
   '...',
   'I\'m speechless...',
   'Sheeeeeesh...',
-  'Perhaps your brain is just a bit Foggy...',
-  'Is your brain feeling a bit Blurry?',
   'Beep Bop Bloop... Error... Error... Error...',
   'Tip: A score of 0 is not a good score...',
 ];
@@ -1184,7 +1174,6 @@ const badScoreMessageList = [ // Random messages to display when the user got le
   'You wouldn\'t want to vs my grandma...',
   'Come on, you can do better than that!',
   'Try harder next time!',
-  'I\'ve heard eating Kiwifruit can help improve your memory...',
   'Tip: You get more points for answering correctly!',
 ];
 
@@ -1209,7 +1198,6 @@ const perfectScoreMessageList = [ // Random messages to display when the user go
   'That last player could learn a thing or two from you!',
   'Very impressive!',
   'You\'re on a roll!',
-  'Is this even Reality?',
 ];
 
 function rand(array:string[]):string {
