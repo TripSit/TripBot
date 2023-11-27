@@ -3773,8 +3773,8 @@ export async function rpgTown(
 }
 
 async function rpgGift(interaction: ChatInputCommandInteraction) {
-  const commandUser = interaction.user;
-  const targetUser = interaction.options.getUser('target');
+  const commandUser = interaction.member as GuildMember;
+  const targetUser = interaction.options.getMember('target') as GuildMember;
   const giftAmount = interaction.options.getInteger('amount') ?? 0;
 
   if (!targetUser) throw new Error('Target user not found');
@@ -3792,8 +3792,8 @@ async function rpgGift(interaction: ChatInputCommandInteraction) {
     };
   }
 
-  const targetData = await getPersonaInfo(targetUser.id);
-  const userData = await getPersonaInfo(commandUser.id);
+  const targetData = await getPersonaInfo(targetUser.user.id);
+  const userData = await getPersonaInfo(commandUser.user.id);
 
   // Get the current token amounts for the command user and the target user
   const commandUserTokens = userData.tokens;
@@ -3844,7 +3844,7 @@ async function rpgGift(interaction: ChatInputCommandInteraction) {
       .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).displayAvatarURL() })
       .setTitle(`${emojiGet('buttonBetHuge')} Gift Successful`)
       .setDescription(stripIndents`
-          **You gifted ${giftAmount} ${giftAmount === 1 ? 'token' : 'tokens'} to ${targetUser?.username}**
+          **You gifted ${giftAmount} ${giftAmount === 1 ? 'token' : 'tokens'} to ${targetUser?.displayName}**
 
           ${emojiGet('buttonBetSmall')} **${targetUser?.displayName}'s Wallet:** ${targetData.tokens}
           ${emojiGet('buttonBetSmall')} **Your Wallet:** ${userData.tokens}
