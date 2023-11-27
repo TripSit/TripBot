@@ -101,8 +101,6 @@ const assetDef = {
   Paws: { path: `${assetsDirectory}/img/backgrounds/Paws.png`, url: 'https://i.gyazo.com/83b9f275af87372edc610da449220a4c.png' },
   mushroomInfoA: { path: `${assetsDirectory}/img/mushroomInfoA.png`, url: 'https://i.gyazo.com/233df47085a0ac5493d8378111512b3d.png' },
   mushroomInfoB: { path: `${assetsDirectory}/img/mushroomInfoB.png`, url: 'https://i.gyazo.com/2aae45e843da99867b82e9b1ad07d22b.png' },
-  Acme: { path: `${assetsDirectory}/font/Acme.woff2`, url: 'https://fonts.gstatic.com/s/acme/v25/RrQfboBx-C5_XxrBbg.woff2' },
-  Agbalumo: { path: `${assetsDirectory}/font/Agbalumo.woff2`, url: 'https://fonts.gstatic.com/s/agbalumo/v2/55xvey5uMdT2N37KZfMCgLg.woff2' },
   Lobster: { path: `${assetsDirectory}/font/Lobster.woff2`, url: 'https://fonts.gstatic.com/s/lobster/v30/neILzCirqoswsqX9zoKmMw.woff2' },
   AbrilFatFace: { path: `${assetsDirectory}/font/AbrilFatFace.woff2`, url: 'https://fonts.gstatic.com/s/abrilfatface/v23/zOL64pLDlL1D99S8g8PtiKchq-dmjQ.woff2' },
   Satisfy: { path: `${assetsDirectory}/font/Satisfy.woff2`, url: 'https://fonts.gstatic.com/s/satisfy/v21/rP2Hp2yn6lkG50LoCZOIHQ.woff2' },
@@ -117,6 +115,14 @@ const assetDef = {
   Rye: { path: `${assetsDirectory}/font/Rye.woff2`, url: 'https://fonts.gstatic.com/s/rye/v15/r05XGLJT86YzEZ7t.woff2' },
   FontdinerSwanky: { path: `${assetsDirectory}/font/FontdinerSwanky.woff2`, url: 'https://fonts.gstatic.com/s/fontdinerswanky/v23/ijwOs4XgRNsiaI5-hcVb4hQgMvCD0uYVKw.woff2' },
   Barcode: { path: `${assetsDirectory}/font/Barcode.woff2`, url: 'https://fonts.gstatic.com/s/librebarcode39/v21/-nFnOHM08vwC6h8Li1eQnP_AHzI2G_Bx0g.woff2' },
+  ReggaeOne: { path: `${assetsDirectory}/font/ReggaeOne.woff2`, url: 'https://fonts.gstatic.com/s/reggaeone/v16/7r3DqX5msMIkeuwJwOJtzalB5w.woff2' },
+  SpicyRice: { path: `${assetsDirectory}/font/SpicyRice.woff2`, url: 'https://fonts.gstatic.com/s/spicyrice/v25/uK_24rSEd-Uqwk4jY1RyKvi8Ww.woff2' },
+  Fascinate: { path: `${assetsDirectory}/font/Fascinate.woff2`, url: 'https://fonts.gstatic.com/s/fascinate/v21/z7NWdRrufC8XJK0IIElS07zR.woff2' },
+  KumarOne: { path: `${assetsDirectory}/font/KumarOne.woff2`, url: 'https://fonts.gstatic.com/s/kumarone/v21/bMr1mS-P958wYi6YaGe2M-SX.woff2' },
+  RubikGlitch: { path: `${assetsDirectory}/font/RubikGlitch.woff2`, url: 'https://fonts.gstatic.com/s/rubikglitch/v2/qkBSXv8b_srFRYQVYrDKh9ZfnyTG.woff2' },
+  SedwickAve: { path: `${assetsDirectory}/font/SedwickAve.woff2`, url: 'https://fonts.gstatic.com/s/sedgwickavedisplay/v21/xfuu0XPgU3jZPUoUo3ScvmPi-NapQ8OxM1c0fec.woff2' },
+  Mogra: { path: `${assetsDirectory}/font/Mogra.woff2`, url: 'https://fonts.gstatic.com/s/mogra/v19/f0X40eSs8c95TCo_BPM.woff2' },
+  Graduate: { path: `${assetsDirectory}/font/Graduate.woff2`, url: 'https://fonts.gstatic.com/s/graduate/v17/C8cg4cs3o2n15t_2YygW43w.woff2' },
 } as {
   [key: string]: { path: string;
     url: string;
