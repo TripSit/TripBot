@@ -5,6 +5,7 @@ import {
 } from 'discord.js';
 import { SlashCommand } from '../../@types/commandDef';
 import { timezone } from '../../../global/commands/g.timezone';
+import { embedTemplate } from '../../utils/embedTemplate';
 import commandContext from '../../utils/context';
 // import log from '../../../global/utils/log';
 const F = f(__filename);
@@ -32,8 +33,12 @@ export const dTimezone: SlashCommand = {
         .setAutocomplete(true))),
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
-    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
     let command = interaction.options.getSubcommand() as 'get' | 'set' | undefined;
+    if (command === 'set') {
+      await interaction.deferReply({ ephemeral: true });
+    } else {
+      await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
+    }
     const tzValue = interaction.options.getString('timezone');
     let member = interaction.options.getMember('user') as GuildMember | null;
 
@@ -45,15 +50,20 @@ export const dTimezone: SlashCommand = {
       member = interaction.member as GuildMember;
     }
 
-    const response = await timezone(command, member.id, tzValue);
+    const response = await timezone(command, member.id, tzValue, interaction);
 
     // log.debug(F, `response: ${response}`);
 
     if (command === 'get') {
-      if (response === null) {
-        await interaction.editReply({ content: `${member.displayName} is a timeless treasure <3 (and has not set a time zone)` });
+      const embed = embedTemplate();
+      if (response === '') {
+        embed.setTitle(`${member.displayName} is a timeless treasure <3\n(Has not set a time zone)`);
+        await interaction.editReply({ embeds: [embed] });
+        // await interaction.editReply({ content: `${member.displayName} is a timeless treasure <3 (and has not set a time zone)` });
       } else {
-        await interaction.editReply({ content: `${response} wherever ${member.displayName} is located.` });
+        embed.setTitle(`${response} wherever ${member.displayName} is located`);
+        await interaction.editReply({ embeds: [embed] });
+        // await interaction.editReply({ content: `${response} wherever ${member.displayName} is located.` });
       }
     } else {
       await interaction.editReply({ content: response as string });

@@ -2,6 +2,7 @@
 
 import timezones from '../assets/data/timezones.json';
 import { getUser, usersUpdate } from '../utils/knex';
+import { embedTemplate } from '../../discord/utils/embedTemplate';
 
 const F = f(__filename);
 
@@ -18,11 +19,13 @@ export async function timezone(
   command: 'get' | 'set',
   memberId: string,
   tzvalue?:string | null,
+  interaction?:any,
 ):Promise<string | null> {
   // log.debug(F, `tzvalue: ${command} ${memberId} ${tzvalue}`);
 
   let response = '' as string | null;
   if (command === 'set') {
+    const embed = embedTemplate();
     // define offset as the value from the timezones array
     let tzCode = '';
     for (const zone of timezones) { // eslint-disable-line no-restricted-syntax
@@ -30,6 +33,11 @@ export async function timezone(
         tzCode = zone.tzCode;
         // log.debug(F, `tzCode: ${tzCode}`);
       }
+    }
+    if (tzCode === '') {
+      embed.setTitle('Invalid timezone!\nPlease only use the options from the autocomplete list.');
+      await interaction.editReply({ embeds: [embed] });
+      return null;
     }
     // log.debug(F, `actor.id: ${actor.id}`);
 
@@ -39,7 +47,9 @@ export async function timezone(
 
     await usersUpdate(userData);
 
-    return `I updated your timezone to ${tzvalue}`;
+    embed.setTitle(`I updated your timezone to ${tzvalue}`);
+    await interaction.editReply({ embeds: [embed] });
+    return null;
   }
   let gmtValue = '';
 
@@ -56,8 +66,8 @@ export async function timezone(
       }
     }
     // get the user's timezone from the database
-    const timestring = new Date().toLocaleTimeString('en-US', { timeZone: tzCode });
-    response = `It is likely ${timestring} (GMT${gmtValue})`;
+    const timestring = new Date().toLocaleTimeString('en-US', { timeZone: tzCode, hour: '2-digit', minute: '2-digit' });
+    response = `It's ${timestring} (GMT${gmtValue})`;
     log.info(F, `response: ${JSON.stringify(response, null, 2)}`);
   }
   log.info(F, `response: ${JSON.stringify(response, null, 2)}`);
