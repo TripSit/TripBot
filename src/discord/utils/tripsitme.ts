@@ -81,6 +81,13 @@ const colorRoles = [
   // env.ROLE_BROWN,
   env.ROLE_BLACK,
   env.ROLE_WHITE,
+  env.ROLE_DONOR_RED,
+  env.ROLE_DONOR_ORANGE,
+  env.ROLE_DONOR_YELLOW,
+  env.ROLE_DONOR_GREEN,
+  env.ROLE_DONOR_BLUE,
+  env.ROLE_DONOR_PURPLE,
+  env.ROLE_DONOR_PINK,
 ];
 
 const mindsetRoles = [

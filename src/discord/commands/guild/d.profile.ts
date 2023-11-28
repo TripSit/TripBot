@@ -14,6 +14,7 @@ import { getPersonaInfo } from '../../../global/commands/g.rpg';
 import { inventoryGet } from '../../../global/utils/knex';
 import getAsset from '../../utils/getAsset';
 import { Personas } from '../../../global/@types/database';
+import { resizeText, deFuckifyText } from '../../utils/canvasUtils';
 
 // ??? TO BE MOVED TO A DEDICATED FILE, OR IMAGEGET.TS ???
 // Load external fonts from web
@@ -103,7 +104,7 @@ const colorDefs = {
     barColor: '#b3b3b3',
     textColor: '#dadada',
   },
-  [env.ROLE_BLACK]: {
+  [env.ROLE_DONOR_BLACK]: {
     cardDarkColor: '#0e0e0e',
     cardLightColor: '#181818',
     chipColor: '#262626',
@@ -344,7 +345,7 @@ export const dProfile: SlashCommand = {
         const Background = await Canvas.loadImage(imagePath);
         context.save();
         context.globalCompositeOperation = 'lighter';
-        context.globalAlpha = 0.03;
+        context.globalAlpha = 0.05;
         context.beginPath();
         context.roundRect(0, 0, 675, 292, [19]);
         context.roundRect(684, 0, 237, 292, [19]);
@@ -442,23 +443,14 @@ export const dProfile: SlashCommand = {
     // WIP: Check to see if a user has bought a title in the shop
     // If so, move Username Text up so the title can fit underneath
 
-    // Username Text Resize to fit
-    let fontSize = 40;
-    const applyUsername = (canvas:Canvas.Canvas, text:string) => {
-      const usernameContext = canvas.getContext('2d');
-      do {
-        fontSize -= 1;
-        usernameContext.font = `${fontSize}px ${userFont}`;
-      } while (usernameContext.measureText(text).width > 508);
-      return usernameContext.font;
-    };
-
     // Username Text
-    const filteredDisplayName = target.displayName.replace(/[^\x20-\x7E]/g, '');
-    context.font = `40px ${userFont}`;
+    const filteredDisplayName = await deFuckifyText(target.displayName);
+    context.font = `50px ${userFont}`;
     context.fillStyle = textColor;
     context.textBaseline = 'middle';
-    context.font = applyUsername(canvasObj, `${filteredDisplayName}`);
+    const fontSize = 50;
+    const maxLength = 508;
+    context.font = resizeText(canvasObj, filteredDisplayName, fontSize, userFont, maxLength);
     context.fillText(`${filteredDisplayName}`, 146, 76);
 
     // User Timezone
@@ -597,7 +589,9 @@ export const dProfile: SlashCommand = {
     }
 
     // Process The Entire Card and Send it to Discord
-    const attachment = new AttachmentBuilder(await canvasObj.encode('png'), { name: 'tripsit-profile-image.png' });
+    const date = new Date();
+    const formattedDate = date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' }).replace(/ /g, '-');
+    const attachment = new AttachmentBuilder(await canvasObj.encode('png'), { name: `TS_Profile_${filteredDisplayName}_${formattedDate}.png` });
     await interaction.editReply({ files: [attachment] });
 
     log.info(F, `Total Time: ${Date.now() - startTime}ms`);
@@ -681,7 +675,7 @@ export async function getProfilePreview(target: GuildMember, option: string, ima
     const Background = await Canvas.loadImage(imagePath.toString());
     context.save();
     context.globalCompositeOperation = 'lighter';
-    context.globalAlpha = 0.03;
+    context.globalAlpha = 0.05;
     context.beginPath();
     context.roundRect(0, 0, 675, 292, [19]);
     context.roundRect(684, 0, 237, 292, [19]);
@@ -719,19 +713,15 @@ export async function getProfilePreview(target: GuildMember, option: string, ima
     await getAsset(fontName);
     userFont = fontName;
   }
-  const filteredDisplayName = target.displayName.replace(/[^A-Za-z0-9]/g, '');
   // Username Text
-  let fontSize = 40;
-  // eslint-disable-next-line sonarjs/no-identical-functions
-  const applyUsername = (canvas:Canvas.Canvas, text:string) => {
-    const usernameContext = canvas.getContext('2d');
-    do {
-      fontSize -= 2;
-      usernameContext.font = `${fontSize}px ${userFont}`;
-    } while (usernameContext.measureText(text).width > 530);
-    return usernameContext.font;
-  };
-  context.font = applyUsername(canvasObj, `${filteredDisplayName}`);
+  const filteredDisplayName = await deFuckifyText(target.displayName);
+  context.font = `50px ${userFont}`;
+  context.fillStyle = textColor;
+  context.textBaseline = 'middle';
+  const fontSize = 50;
+  const maxLength = 508;
+  context.font = resizeText(canvasObj, filteredDisplayName, fontSize, userFont, maxLength);
+  context.fillText(`${filteredDisplayName}`, 146, 76);
   context.fillStyle = textColor;
   if (option === 'profileTitle') {
     context.textBaseline = 'bottom';

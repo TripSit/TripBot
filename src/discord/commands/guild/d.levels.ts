@@ -16,6 +16,7 @@ import getAsset from '../../utils/getAsset';
 import commandContext from '../../utils/context';
 import { numFormatter, numFormatterVoice } from './d.profile';
 import { Personas } from '../../../global/@types/database';
+import { resizeText, deFuckifyText } from '../../utils/canvasUtils';
 
 const F = f(__filename);
 
@@ -129,7 +130,7 @@ const colorDefs = {
     barColor: '#b3b3b3',
     textColor: '#dadada',
   },
-  [env.ROLE_BLACK]: {
+  [env.ROLE_DONOR_BLACK]: {
     cardDarkColor: '#0e0e0e',
     cardLightColor: '#181818',
     chipColor: '#262626',
@@ -525,7 +526,7 @@ export const dLevels: SlashCommand = {
         const Background = await Canvas.loadImage(imagePath);
         context.save();
         context.globalCompositeOperation = 'lighter';
-        context.globalAlpha = 0.03;
+        context.globalAlpha = 0.05;
         context.beginPath();
         context.roundRect(0, 0, 921, 145, [19]);
         context.roundRect(0, 154, 921, (layoutHeight - 154), [19]);
@@ -602,37 +603,27 @@ export const dLevels: SlashCommand = {
     // WIP: Check to see if a user has bought a title in the shop
     // If so, move Username Text up so the title can fit underneath
 
-    // Username Text Resize to fit
-    let fontSize = 40;
-    const applyUsername = (canvas:Canvas.Canvas, text:string) => {
-      const usernameContext = canvas.getContext('2d');
-      do {
-        fontSize -= 1;
-        usernameContext.font = `${fontSize}px ${userFont}`;
-      } while (usernameContext.measureText(text).width > 508);
-      return usernameContext.font;
-    };
-
     // Username Text
     // Temporary code for user flairs
-    const filteredDisplayName = target.displayName.replace(/[^\x20-\x7E]/g, '');
+    const filteredDisplayName = await deFuckifyText(target.displayName);
     context.fillStyle = textColor;
-    context.font = `40px ${userFont}`;
+    context.font = `50px ${userFont}`;
     context.textAlign = 'left';
-    const flair = null;
-    let usernameHeight = 76;
+    // const flair = null;
+    const usernameHeight = 76;
     context.textBaseline = 'middle';
-    if (flair) {
-      usernameHeight = 72;
-      fontSize = 25;
-      context.font = fontSizeFamily;
-      context.textBaseline = 'top';
-      context.font = applyUsername(canvasObj, `${flair}`);
-      context.fillText(`${flair}`, 146, 90);
-      context.textBaseline = 'bottom';
-    }
-    fontSize = 40;
-    context.font = applyUsername(canvasObj, `${filteredDisplayName}`);
+    // if (flair) {
+    //   usernameHeight = 72;
+    //   fontSize = 25;
+    //   context.font = fontSizeFamily;
+    //   context.textBaseline = 'top';
+    //   context.font = applyUsername(canvasObj, `${flair}`);
+    //   context.fillText(`${flair}`, 146, 90);
+    //   context.textBaseline = 'bottom';
+    // }
+    let fontSize = 50;
+    const maxLength = 508;
+    context.font = resizeText(canvasObj, filteredDisplayName, fontSize, userFont, maxLength);
     context.fillText(`${filteredDisplayName}`, 146, usernameHeight);
 
     // Progress Bars Draw
@@ -819,7 +810,9 @@ export const dLevels: SlashCommand = {
     context.drawImage(LevelImage, 97, 181, 58, 58);
 
     // Process The Entire Card and Send it to Discord
-    const attachment = new AttachmentBuilder(await canvasObj.encode('png'), { name: 'tripsit-levels-image.png' });
+    const date = new Date();
+    const formattedDate = date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' }).replace(/ /g, '-');
+    const attachment = new AttachmentBuilder(await canvasObj.encode('png'), { name: `TS_Levels_${filteredDisplayName}_${formattedDate}.png` });
     await interaction.editReply({ files: [attachment] });
 
     log.info(F, `Total Time: ${Date.now() - startTime}ms`);

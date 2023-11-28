@@ -63,18 +63,18 @@ const timesUp = 'Time\'s up!';
 
 const items = {
   general: {
-    // giftcard: {
-    //   label: 'Gift Card',
-    //   value: 'giftcard',
-    //   description: 'A gift card to gift to someone else',
+    // userflair: {
+    //   label: 'User Flair',
+    //   value: 'userflair',
+    //   description: 'A flair that appears next to your name.',
     //   quantity: 1,
     //   weight: 0,
-    //   cost: 0,
+    //   cost: 1000,
     //   equipped: false,
     //   consumable: false,
-    //   effect: 'tokens',
-    //   effect_value: '100',
-    //   emoji: 'buttonBetHuge',
+    //   effect: 'userflair',
+    //   effect_value: 'userflair',
+    //   emoji: 'itemDiscount',
     // },
     // testkit: {
     //   label: 'TestKit',
@@ -115,32 +115,6 @@ const items = {
       consumable: false,
       effect: 'font',
       effect_value: 'AbrilFatFace',
-      emoji: 'itemFont',
-    },
-    Acme: {
-      label: 'Acme',
-      value: 'Acme',
-      description: 'Font',
-      quantity: 1,
-      weight: 0,
-      cost: 700,
-      equipped: false,
-      consumable: false,
-      effect: 'font',
-      effect_value: 'Acme',
-      emoji: 'itemFont',
-    },
-    Agbalumo: {
-      label: 'Agbalumo',
-      value: 'Agbalumo',
-      description: 'Font',
-      quantity: 1,
-      weight: 0,
-      cost: 700,
-      equipped: false,
-      consumable: false,
-      effect: 'font',
-      effect_value: 'Agbalumo',
       emoji: 'itemFont',
     },
     AudioWide: {
@@ -195,6 +169,19 @@ const items = {
       effect_value: 'Creepster',
       emoji: 'itemFont',
     },
+    Fascinate: {
+      label: 'Fascinate',
+      value: 'Fascinate',
+      description: 'Font',
+      quantity: 1,
+      weight: 0,
+      cost: 700,
+      equipped: false,
+      consumable: false,
+      effect: 'font',
+      effect_value: 'Fascinate',
+      emoji: 'itemFont',
+    },
     FontdinerSwanky: {
       label: 'Fontdiner Swanky',
       value: 'FontdinerSwanky',
@@ -208,6 +195,19 @@ const items = {
       effect_value: 'FontdinerSwanky',
       emoji: 'itemFont',
     },
+    Graduate: {
+      label: 'Graduate',
+      value: 'Graduate',
+      description: 'Font',
+      quantity: 1,
+      weight: 0,
+      cost: 700,
+      equipped: false,
+      consumable: false,
+      effect: 'font',
+      effect_value: 'Graduate',
+      emoji: 'itemFont',
+    },
     IndieFlower: {
       label: 'Indie Flower',
       value: 'IndieFlower',
@@ -219,6 +219,19 @@ const items = {
       consumable: false,
       effect: 'font',
       effect_value: 'IndieFlower',
+      emoji: 'itemFont',
+    },
+    KumarOne: {
+      label: 'Kumar One',
+      value: 'KumarOne',
+      description: 'Font',
+      quantity: 1,
+      weight: 0,
+      cost: 700,
+      equipped: false,
+      consumable: false,
+      effect: 'font',
+      effect_value: 'KumarOne',
       emoji: 'itemFont',
     },
     LilitaOne: {
@@ -247,6 +260,19 @@ const items = {
       effect_value: 'Lobster',
       emoji: 'itemFont',
     },
+    Mogra: {
+      label: 'Mogra',
+      value: 'Mogra',
+      description: 'Font',
+      quantity: 1,
+      weight: 0,
+      cost: 700,
+      equipped: false,
+      consumable: false,
+      effect: 'font',
+      effect_value: 'Mogra',
+      emoji: 'itemFont',
+    },
     PressStart2P: {
       label: 'Press Start 2P',
       value: 'PressStart2P',
@@ -258,6 +284,32 @@ const items = {
       consumable: false,
       effect: 'font',
       effect_value: 'PressStart2P',
+      emoji: 'itemFont',
+    },
+    ReggaeOne: {
+      label: 'Reggae One',
+      value: 'ReggaeOne',
+      description: 'Font',
+      quantity: 1,
+      weight: 0,
+      cost: 700,
+      equipped: false,
+      consumable: false,
+      effect: 'font',
+      effect_value: 'ReggaeOne',
+      emoji: 'itemFont',
+    },
+    RubikGlitch: {
+      label: 'Rubik Glitch',
+      value: 'RubikGlitch',
+      description: 'Font',
+      quantity: 1,
+      weight: 0,
+      cost: 700,
+      equipped: false,
+      consumable: false,
+      effect: 'font',
+      effect_value: 'RubikGlitch',
       emoji: 'itemFont',
     },
     Rye: {
@@ -286,6 +338,19 @@ const items = {
       effect_value: 'Satisfy',
       emoji: 'itemFont',
     },
+    SedwickAve: {
+      label: 'Sedwick Ave',
+      value: 'SedwickAve',
+      description: 'Font',
+      quantity: 1,
+      weight: 0,
+      cost: 700,
+      equipped: false,
+      consumable: false,
+      effect: 'font',
+      effect_value: 'SedwickAve',
+      emoji: 'itemFont',
+    },
     SpecialElite: {
       label: 'Special Elite',
       value: 'SpecialElite',
@@ -297,6 +362,19 @@ const items = {
       consumable: false,
       effect: 'font',
       effect_value: 'SpecialElite',
+      emoji: 'itemFont',
+    },
+    SpicyRice: {
+      label: 'Spicy Rice',
+      value: 'SpicyRice',
+      description: 'Font',
+      quantity: 1,
+      weight: 0,
+      cost: 700,
+      equipped: false,
+      consumable: false,
+      effect: 'font',
+      effect_value: 'SpicyRice',
       emoji: 'itemFont',
     },
     Barcode: {
@@ -1000,9 +1078,6 @@ const BetLossMessageList = [
   'At least your wallet is a bit easier to carry now.',
   'I\'ll pretend I didn\'t see that.',
   'I promise I won\'t tell anyone.',
-  'Try drinking an Elixir of luck next time!',
-  'Maybe go buy a Slushy or something instead.',
-  'I hope you\'re not too Worried.',
   'Tip: Try not to lose next time.',
 ];
 
@@ -1027,10 +1102,6 @@ const BetWinMessageList = [
   'You\'re going to need a bigger wallet.',
   'I\'m so glad we could witness this special moment together.',
   'Yippee!',
-  'To the Moon! Maybe you\'ll find some bears there.',
-  'Ripe pickings from the money Trees!',
-  'Your pile of tokens will reach Space soon! Apparently there\'s a lady up there.',
-  'You could probably buy up to Seven Cats with that!',
 ];
 
 const text = {
@@ -1155,7 +1226,6 @@ const timeOutMessageList = [ // Random messages to display when the user runs ou
   'You were almost as slow as a snail!',
   'You were slower than a turtle!',
   'A sloth could have answered that faster!',
-  'Your brain is slower than a Zombie\'s!',
 ];
 
 const awfulScoreMessageList = [ // Random messages to display when the user got no questions right
@@ -1170,8 +1240,6 @@ const awfulScoreMessageList = [ // Random messages to display when the user got 
   '...',
   'I\'m speechless...',
   'Sheeeeeesh...',
-  'Perhaps your brain is just a bit Foggy...',
-  'Is your brain feeling a bit Blurry?',
   'Beep Bop Bloop... Error... Error... Error...',
   'Tip: A score of 0 is not a good score...',
 ];
@@ -1184,7 +1252,6 @@ const badScoreMessageList = [ // Random messages to display when the user got le
   'You wouldn\'t want to vs my grandma...',
   'Come on, you can do better than that!',
   'Try harder next time!',
-  'I\'ve heard eating Kiwifruit can help improve your memory...',
   'Tip: You get more points for answering correctly!',
 ];
 
@@ -1209,7 +1276,6 @@ const perfectScoreMessageList = [ // Random messages to display when the user go
   'That last player could learn a thing or two from you!',
   'Very impressive!',
   'You\'re on a roll!',
-  'Is this even Reality?',
 ];
 
 function rand(array:string[]):string {
@@ -1965,6 +2031,28 @@ export async function rpgMarketAccept(
 
   await inventorySet(newItem);
 
+  // if the item is a background or font, automatically equip it and unequip the other items of the same type
+  if (itemData.effect === 'background' || itemData.effect === 'font') {
+    const inventory = await inventoryGet(personaData.id);
+    const itemIndex = inventory.findIndex(i => i.value === itemData.value);
+    // log.debug(F, `itemIndex: ${itemIndex}`);
+
+    // Unequip all items of the same type
+    const unequipItems = inventory.filter(i => i.effect === itemData.effect && i.equipped === true);
+    // log.debug(F, `unequipItems: ${JSON.stringify(unequipItems, null, 2)}`);
+    for (const item of unequipItems) {
+      // log.debug(F, `item: ${JSON.stringify(item, null, 2)}`);
+      item.equipped = false;
+      inventorySet(item);
+    }
+
+    // Equip the new item
+    const equipItem = inventory[itemIndex];
+    // log.debug(F, `equipItem: ${JSON.stringify(equipItem, null, 2)}`);
+    equipItem.equipped = true;
+    await inventorySet(equipItem);
+  }
+
   const { embeds, components } = await rpgMarketChange(interaction);
 
   // This grossness takes the APIEmbed object, turns it into a JSON object, and pulls the description
@@ -1977,7 +2065,7 @@ export async function rpgMarketAccept(
       .setTitle(`${emojiGet('buttonMarket')} Market`)
       .setDescription(stripIndents`**You have purchased ${itemData.label} for ${itemCost} TripTokens.
       
-      Your item has been delivered to your Home, where you will need to equip it!**
+      Your item has automatically been equipped! Head home to unequip it or change items.**
       
       ${description}`)
       .setColor(Colors.Green)],
@@ -2918,6 +3006,10 @@ export async function rpgArcadeGame(
       const BetOutcomeMessage = BetWinMessageList[Math.floor(Math.random() * BetWinMessageList.length)];
       personaData.tokens += payout;
       await personaSet(personaData);
+      // Get TripBot's persona data
+      const tripbotData = await getPersonaInfo('957780726806380545');
+      tripbotData.tokens -= payout;
+      await personaSet(tripbotData);
       wagers[interaction.user.id] = {
         tokens: 0,
         gameName,
@@ -2944,6 +3036,10 @@ export async function rpgArcadeGame(
     const BetOutcomeMessage = BetLossMessageList[Math.floor(Math.random() * BetLossMessageList.length)];
     personaData.tokens -= currentBet;
     await personaSet(personaData);
+    // Get TripBot's persona data
+    const tripbotData = await getPersonaInfo('957780726806380545');
+    tripbotData.tokens += currentBet;
+    await personaSet(tripbotData);
     wagers[interaction.user.id] = {
       tokens: 0,
       gameName,
@@ -3068,7 +3164,7 @@ export async function rpgTriviaGetQuestions(
   });
 }
 
-export async function rpgTrivia(
+export async function rpgTrivia( // eslint-disable-line
   interaction: MessageComponentInteraction | ChatInputCommandInteraction,
 ):Promise<InteractionEditReplyOptions | InteractionUpdateOptions> {
   // log.debug(F, `GameStates: ${JSON.stringify(gameStates, null, 2)}`);
@@ -3755,8 +3851,8 @@ export async function rpgTown(
 }
 
 async function rpgGift(interaction: ChatInputCommandInteraction) {
-  const commandUser = interaction.user;
-  const targetUser = interaction.options.getUser('target');
+  const commandUser = interaction.member as GuildMember;
+  const targetUser = interaction.options.getMember('target') as GuildMember;
   const giftAmount = interaction.options.getInteger('amount') ?? 0;
 
   if (!targetUser) throw new Error('Target user not found');
@@ -3774,8 +3870,8 @@ async function rpgGift(interaction: ChatInputCommandInteraction) {
     };
   }
 
-  const targetData = await getPersonaInfo(targetUser.id);
-  const userData = await getPersonaInfo(commandUser.id);
+  const targetData = await getPersonaInfo(targetUser.user.id);
+  const userData = await getPersonaInfo(commandUser.user.id);
 
   // Get the current token amounts for the command user and the target user
   const commandUserTokens = userData.tokens;
@@ -3826,7 +3922,7 @@ async function rpgGift(interaction: ChatInputCommandInteraction) {
       .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).displayAvatarURL() })
       .setTitle(`${emojiGet('buttonBetHuge')} Gift Successful`)
       .setDescription(stripIndents`
-          **You gifted ${giftAmount} ${giftAmount === 1 ? 'token' : 'tokens'} to ${targetUser?.username}**
+          **You gifted ${giftAmount} ${giftAmount === 1 ? 'token' : 'tokens'} to ${targetUser?.displayName}**
 
           ${emojiGet('buttonBetSmall')} **${targetUser?.displayName}'s Wallet:** ${targetData.tokens}
           ${emojiGet('buttonBetSmall')} **Your Wallet:** ${userData.tokens}
