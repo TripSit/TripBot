@@ -7,7 +7,7 @@ import { SlashCommand } from '../../@types/commandDef';
 import { timezone } from '../../../global/commands/g.timezone';
 import { embedTemplate } from '../../utils/embedTemplate';
 import commandContext from '../../utils/context';
-// import log from '../../../global/utils/log';
+
 const F = f(__filename);
 
 export const dTimezone: SlashCommand = {
@@ -50,7 +50,7 @@ export const dTimezone: SlashCommand = {
       member = interaction.member as GuildMember;
     }
 
-    const response = await timezone(command, member.id, tzValue, interaction);
+    const response = await timezone(command, member.id, tzValue);
 
     // log.debug(F, `response: ${response}`);
 
@@ -59,7 +59,12 @@ export const dTimezone: SlashCommand = {
       if (response === '') {
         embed.setTitle(`${member.displayName} is a timeless treasure <3\n(Has not set a time zone)`);
         await interaction.editReply({ embeds: [embed] });
-        // await interaction.editReply({ content: `${member.displayName} is a timeless treasure <3 (and has not set a time zone)` });
+      } else if (response === 'invalid') {
+        embed.setTitle('Invalid timezone!\nPlease only use the options from the autocomplete list.');
+        await interaction.editReply({ embeds: [embed] });
+      } else if (response === 'updated') {
+        embed.setTitle(`I updated your timezone to ${tzValue}`);
+        await interaction.editReply({ embeds: [embed] });
       } else {
         embed.setTitle(`${response} wherever ${member.displayName} is located`);
         await interaction.editReply({ embeds: [embed] });
