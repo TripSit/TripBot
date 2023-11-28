@@ -101,6 +101,8 @@ const assetDef = {
   Paws: { path: `${assetsDirectory}/img/backgrounds/Paws.png`, url: 'https://i.gyazo.com/83b9f275af87372edc610da449220a4c.png' },
   mushroomInfoA: { path: `${assetsDirectory}/img/mushroomInfoA.png`, url: 'https://i.gyazo.com/233df47085a0ac5493d8378111512b3d.png' },
   mushroomInfoB: { path: `${assetsDirectory}/img/mushroomInfoB.png`, url: 'https://i.gyazo.com/2aae45e843da99867b82e9b1ad07d22b.png' },
+  Acme: { path: `${assetsDirectory}/font/Acme.woff2`, url: 'https://fonts.gstatic.com/s/acme/v25/RrQfboBx-C5_XxrBbg.woff2' },
+  Agbalumo: { path: `${assetsDirectory}/font/Agbalumo.woff2`, url: 'https://fonts.gstatic.com/s/agbalumo/v2/55xvey5uMdT2N37KZfMCgLg.woff2' },
   Lobster: { path: `${assetsDirectory}/font/Lobster.woff2`, url: 'https://fonts.gstatic.com/s/lobster/v30/neILzCirqoswsqX9zoKmMw.woff2' },
   AbrilFatFace: { path: `${assetsDirectory}/font/AbrilFatFace.woff2`, url: 'https://fonts.gstatic.com/s/abrilfatface/v23/zOL64pLDlL1D99S8g8PtiKchq-dmjQ.woff2' },
   Satisfy: { path: `${assetsDirectory}/font/Satisfy.woff2`, url: 'https://fonts.gstatic.com/s/satisfy/v21/rP2Hp2yn6lkG50LoCZOIHQ.woff2' },
