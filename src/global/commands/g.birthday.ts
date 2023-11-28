@@ -38,7 +38,7 @@ export async function birthday(
     if (userData.birthday !== null) {
       const birthDateRaw = userData.birthday;
       // log.debug(F, `birthDate: ${birthDate}`);
-      const birthDate = DateTime.fromJSDate(birthDateRaw, { zone: 'utc' });
+      const birthDate = DateTime.fromJSDate(birthDateRaw);
       // log.debug(F, `birthday: ${birthday}`);
       response = birthDate;
     } else {
