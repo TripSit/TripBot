@@ -22,7 +22,7 @@ export async function birthday(
   let response = {} as DateTime | null;
   if (command === 'set') {
     // log.debug(F, `${command} ${memberId} ${month} ${day}`);
-    const birthDate = DateTime.utc(2000, month as number, day as number);
+    const birthDate = DateTime.local(2000, month as number, day as number);
 
     // log.debug(F, `Setting birthDate for ${memberId} to ${birthDate}`);
 

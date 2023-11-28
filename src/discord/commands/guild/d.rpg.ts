@@ -63,18 +63,18 @@ const timesUp = 'Time\'s up!';
 
 const items = {
   general: {
-    // giftcard: {
-    //   label: 'Gift Card',
-    //   value: 'giftcard',
-    //   description: 'A gift card to gift to someone else',
+    // userflair: {
+    //   label: 'User Flair',
+    //   value: 'userflair',
+    //   description: 'A flair that appears next to your name.',
     //   quantity: 1,
     //   weight: 0,
-    //   cost: 0,
+    //   cost: 1000,
     //   equipped: false,
     //   consumable: false,
-    //   effect: 'tokens',
-    //   effect_value: '100',
-    //   emoji: 'buttonBetHuge',
+    //   effect: 'userflair',
+    //   effect_value: 'userflair',
+    //   emoji: 'itemDiscount',
     // },
     // testkit: {
     //   label: 'TestKit',
