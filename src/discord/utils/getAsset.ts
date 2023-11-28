@@ -168,6 +168,11 @@ export default async function getAsset(
   // It will use that information and check the path to see if the imageName exists at that location
   // If it does not exist, it will download it from the internet and save it to that location
   // Either way, it will return a working path to the image
+
+  if (!assetDef[assetName]) {
+    // Handle the error or return a default value
+    throw new Error(`Asset not found: ${assetName}`);
+  }
   const { path, url } = assetDef[assetName];
   // log.debug(F, `Checking ${path}`);
   if (!fs.existsSync(path)) {
