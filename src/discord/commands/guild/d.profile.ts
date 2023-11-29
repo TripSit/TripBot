@@ -14,7 +14,7 @@ import { getPersonaInfo } from '../../../global/commands/g.rpg';
 import { inventoryGet } from '../../../global/utils/knex';
 import getAsset from '../../utils/getAsset';
 import { Personas } from '../../../global/@types/database';
-import { resizeText, deFuckifyText } from '../../utils/canvasUtils';
+import { resizeText, deFuckifyText, colorDefs } from '../../utils/canvasUtils';
 
 // ??? TO BE MOVED TO A DEDICATED FILE, OR IMAGEGET.TS ???
 // Load external fonts from web
@@ -46,129 +46,6 @@ export function numFormatterVoice(num:number):string {
   }
   return num.toFixed(1);
 }
-
-const colorDefs = {
-  [env.ROLE_PURPLE]: {
-    cardDarkColor: '#19151e',
-    cardLightColor: '#2d2636',
-    chipColor: '#47335f',
-    barColor: '#9661d9',
-    textColor: '#b072ff',
-  },
-  [env.ROLE_BLUE]: {
-    cardDarkColor: '#161d1f',
-    cardLightColor: '#283438',
-    chipColor: '#3a5760',
-    barColor: '#4baccc',
-    textColor: '#5acff5',
-  },
-  [env.ROLE_GREEN]: {
-    cardDarkColor: '#151a16',
-    cardLightColor: '#252e28',
-    chipColor: '#31543d',
-    barColor: '#59b879',
-    textColor: '#6de194',
-  },
-  [env.ROLE_PINK]: {
-    cardDarkColor: '#1e151b',
-    cardLightColor: '#352530',
-    chipColor: '#5f324f',
-    barColor: '#d95dae',
-    textColor: '#ff6dcd',
-  },
-  [env.ROLE_RED]: {
-    cardDarkColor: '#1f1616',
-    cardLightColor: '#382727',
-    chipColor: '#613838',
-    barColor: '#d95152',
-    textColor: '#ff5f60',
-  },
-  [env.ROLE_ORANGE]: {
-    cardDarkColor: '#1d1814',
-    cardLightColor: '#342b24',
-    chipColor: '#5f422e',
-    barColor: '#d98b51',
-    textColor: '#ffa45f',
-  },
-  [env.ROLE_YELLOW]: {
-    cardDarkColor: '#1d1b14',
-    cardLightColor: '#333024',
-    chipColor: '#5e532d',
-    barColor: '#a6903d',
-    textColor: '#ffdd5d',
-  },
-  [env.ROLE_WHITE]: {
-    cardDarkColor: '#242424',
-    cardLightColor: '#404040',
-    chipColor: '#666666',
-    barColor: '#b3b3b3',
-    textColor: '#dadada',
-  },
-  [env.ROLE_DONOR_BLACK]: {
-    cardDarkColor: '#0e0e0e',
-    cardLightColor: '#181818',
-    chipColor: '#262626',
-    barColor: '#595959',
-    textColor: '#626262',
-  },
-  [env.ROLE_DONOR_PURPLE]: {
-    cardDarkColor: '#1f1b25',
-    cardLightColor: '#372e42',
-    chipColor: '#432767',
-    barColor: '#7f38d9',
-    textColor: '#9542ff',
-  },
-  [env.ROLE_DONOR_BLUE]: {
-    cardDarkColor: '#161d1f',
-    cardLightColor: '#283438',
-    chipColor: '#3a5760',
-    barColor: '#1da2cc',
-    textColor: '#22bef0',
-  },
-  [env.ROLE_DONOR_GREEN]: {
-    cardDarkColor: '#1a211c',
-    cardLightColor: '#2d3b32',
-    chipColor: '#275c39',
-    barColor: '#36b360',
-    textColor: '#45e47b',
-  },
-  [env.ROLE_DONOR_PINK]: {
-    cardDarkColor: '#261c23',
-    cardLightColor: '#44303d',
-    chipColor: '#682b52',
-    barColor: '#d93fa4',
-    textColor: '#ff4ac1',
-  },
-  [env.ROLE_DONOR_RED]: {
-    cardDarkColor: '#241b1b',
-    cardLightColor: '#412e2e',
-    chipColor: '#662526',
-    barColor: '#d93335',
-    textColor: '#ff3c3e',
-  },
-  [env.ROLE_DONOR_ORANGE]: {
-    cardDarkColor: '#241f1b',
-    cardLightColor: '#41362e',
-    chipColor: '#664225',
-    barColor: '#d96c36',
-    textColor: '#ff913b',
-  },
-  [env.ROLE_DONOR_YELLOW]: {
-    cardDarkColor: '#23211a',
-    cardLightColor: '#3f3b2c',
-    chipColor: '#655721',
-    barColor: '#d9bc4f',
-    textColor: '#ffd431',
-  },
-} as {
-  [key: string]: {
-    cardDarkColor: string;
-    cardLightColor: string;
-    chipColor: string;
-    barColor: string;
-    textColor: string;
-  };
-};
 
 export const dProfile: SlashCommand = {
   data: new SlashCommandBuilder()
@@ -315,19 +192,6 @@ export const dProfile: SlashCommand = {
     context.roundRect(684, 0, 237, 205, [19]);
     context.fill();
 
-    // Draw the chips
-    context.fillStyle = chipColor;
-    context.beginPath();
-    context.roundRect(18, 163, 201, 51, [19]);
-    context.roundRect(18, 223, 201, 51, [19]);
-    context.roundRect(237, 163, 201, 51, [19]);
-    context.roundRect(237, 223, 201, 51, [19]);
-    context.roundRect(456, 163, 201, 51, [19]);
-    context.roundRect(456, 223, 201, 51, [19]);
-    context.roundRect(702, 223, 201, 51, [19]);
-    // context.arc(603, 73, 54, 0, Math.PI * 2, true); // CAMP ICON CHIP
-    context.fill();
-
     // WIP: Purchased Background
 
     // log.debug(F, `personaData home (Change) ${JSON.stringify(personaData, null, 2)}`);
@@ -358,6 +222,19 @@ export const dProfile: SlashCommand = {
         userFont = equippedFont.value;
       }
     }
+
+    // Draw the chips
+    context.fillStyle = chipColor;
+    context.beginPath();
+    context.roundRect(18, 163, 201, 51, [19]);
+    context.roundRect(18, 223, 201, 51, [19]);
+    context.roundRect(237, 163, 201, 51, [19]);
+    context.roundRect(237, 223, 201, 51, [19]);
+    context.roundRect(456, 163, 201, 51, [19]);
+    context.roundRect(456, 223, 201, 51, [19]);
+    context.roundRect(702, 223, 201, 51, [19]);
+    // context.arc(603, 73, 54, 0, Math.PI * 2, true); // CAMP ICON CHIP
+    context.fill();
 
     context.drawImage(Icons, 0, 0);
 
@@ -648,19 +525,6 @@ export async function getProfilePreview(target: GuildMember, option: string, ima
   context.roundRect(684, 0, 237, 205, [19]);
   context.fill();
 
-  // Draw the chips
-  context.fillStyle = chipColor;
-  context.beginPath();
-  context.roundRect(18, 163, 201, 51, [19]);
-  context.roundRect(18, 223, 201, 51, [19]);
-  context.roundRect(237, 163, 201, 51, [19]);
-  context.roundRect(237, 223, 201, 51, [19]);
-  context.roundRect(456, 163, 201, 51, [19]);
-  context.roundRect(456, 223, 201, 51, [19]);
-  context.roundRect(702, 223, 201, 51, [19]);
-  // context.arc(603, 73, 54, 0, Math.PI * 2, true); // CAMP ICON CHIP
-  context.fill();
-
   // WIP: Purchased Background
 
   // log.debug(F, `personaData home (Change) ${JSON.stringify(personaData, null, 2)}`);
@@ -683,6 +547,19 @@ export async function getProfilePreview(target: GuildMember, option: string, ima
     context.drawImage(Background, 0, 0);
     context.restore();
   }
+
+  // Draw the chips
+  context.fillStyle = chipColor;
+  context.beginPath();
+  context.roundRect(18, 163, 201, 51, [19]);
+  context.roundRect(18, 223, 201, 51, [19]);
+  context.roundRect(237, 163, 201, 51, [19]);
+  context.roundRect(237, 223, 201, 51, [19]);
+  context.roundRect(456, 163, 201, 51, [19]);
+  context.roundRect(456, 223, 201, 51, [19]);
+  context.roundRect(702, 223, 201, 51, [19]);
+  // context.arc(603, 73, 54, 0, Math.PI * 2, true); // CAMP ICON CHIP
+  context.fill();
 
   context.drawImage(Icons, 0, 0);
 

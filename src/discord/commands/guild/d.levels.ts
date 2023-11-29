@@ -16,7 +16,7 @@ import getAsset from '../../utils/getAsset';
 import commandContext from '../../utils/context';
 import { numFormatter, numFormatterVoice } from './d.profile';
 import { Personas } from '../../../global/@types/database';
-import { resizeText, deFuckifyText } from '../../utils/canvasUtils';
+import { resizeText, deFuckifyText, colorDefs } from '../../utils/canvasUtils';
 
 const F = f(__filename);
 
@@ -71,129 +71,6 @@ type LevelData = {
       rank: number,
     },
   },
-};
-
-const colorDefs = {
-  [env.ROLE_PURPLE]: {
-    cardDarkColor: '#19151e',
-    cardLightColor: '#2d2636',
-    chipColor: '#47335f',
-    barColor: '#9661d9',
-    textColor: '#b072ff',
-  },
-  [env.ROLE_BLUE]: {
-    cardDarkColor: '#161d1f',
-    cardLightColor: '#283438',
-    chipColor: '#3a5760',
-    barColor: '#4baccc',
-    textColor: '#5acff5',
-  },
-  [env.ROLE_GREEN]: {
-    cardDarkColor: '#151a16',
-    cardLightColor: '#252e28',
-    chipColor: '#31543d',
-    barColor: '#59b879',
-    textColor: '#6de194',
-  },
-  [env.ROLE_PINK]: {
-    cardDarkColor: '#1e151b',
-    cardLightColor: '#352530',
-    chipColor: '#5f324f',
-    barColor: '#d95dae',
-    textColor: '#ff6dcd',
-  },
-  [env.ROLE_RED]: {
-    cardDarkColor: '#1f1616',
-    cardLightColor: '#382727',
-    chipColor: '#613838',
-    barColor: '#d95152',
-    textColor: '#ff5f60',
-  },
-  [env.ROLE_ORANGE]: {
-    cardDarkColor: '#1d1814',
-    cardLightColor: '#342b24',
-    chipColor: '#5f422e',
-    barColor: '#d98b51',
-    textColor: '#ffa45f',
-  },
-  [env.ROLE_YELLOW]: {
-    cardDarkColor: '#1d1b14',
-    cardLightColor: '#333024',
-    chipColor: '#5e532d',
-    barColor: '#a6903d',
-    textColor: '#ffdd5d',
-  },
-  [env.ROLE_WHITE]: {
-    cardDarkColor: '#242424',
-    cardLightColor: '#404040',
-    chipColor: '#666666',
-    barColor: '#b3b3b3',
-    textColor: '#dadada',
-  },
-  [env.ROLE_DONOR_BLACK]: {
-    cardDarkColor: '#0e0e0e',
-    cardLightColor: '#181818',
-    chipColor: '#262626',
-    barColor: '#595959',
-    textColor: '#626262',
-  },
-  [env.ROLE_DONOR_PURPLE]: {
-    cardDarkColor: '#1f1b25',
-    cardLightColor: '#372e42',
-    chipColor: '#432767',
-    barColor: '#7f38d9',
-    textColor: '#9542ff',
-  },
-  [env.ROLE_DONOR_BLUE]: {
-    cardDarkColor: '#161d1f',
-    cardLightColor: '#283438',
-    chipColor: '#3a5760',
-    barColor: '#1da2cc',
-    textColor: '#22bef0',
-  },
-  [env.ROLE_DONOR_GREEN]: {
-    cardDarkColor: '#1a211c',
-    cardLightColor: '#2d3b32',
-    chipColor: '#275c39',
-    barColor: '#36b360',
-    textColor: '#45e47b',
-  },
-  [env.ROLE_DONOR_PINK]: {
-    cardDarkColor: '#261c23',
-    cardLightColor: '#44303d',
-    chipColor: '#682b52',
-    barColor: '#d93fa4',
-    textColor: '#ff4ac1',
-  },
-  [env.ROLE_DONOR_RED]: {
-    cardDarkColor: '#241b1b',
-    cardLightColor: '#412e2e',
-    chipColor: '#662526',
-    barColor: '#d93335',
-    textColor: '#ff3c3e',
-  },
-  [env.ROLE_DONOR_ORANGE]: {
-    cardDarkColor: '#241f1b',
-    cardLightColor: '#41362e',
-    chipColor: '#664225',
-    barColor: '#d96c36',
-    textColor: '#ff913b',
-  },
-  [env.ROLE_DONOR_YELLOW]: {
-    cardDarkColor: '#23211a',
-    cardLightColor: '#3f3b2c',
-    chipColor: '#655721',
-    barColor: '#d9bc4f',
-    textColor: '#ffd431',
-  },
-} as {
-  [key: string]: {
-    cardDarkColor: string;
-    cardLightColor: string;
-    chipColor: string;
-    barColor: string;
-    textColor: string;
-  };
 };
 
 Canvas.GlobalFonts.registerFromPath(
@@ -478,36 +355,6 @@ export const dLevels: SlashCommand = {
     context.roundRect(0, 0, 684, 145, [19]);
     context.roundRect(0, 154, 684, (layoutHeight - 154), [19]);
     context.fill();
-    // Top Right Chips
-    context.fillStyle = chipColor;
-    context.beginPath();
-    context.roundRect(702, 18, 201, 51, [19]);
-    context.roundRect(702, 78, 201, 51, [19]);
-    // Label Chips
-    context.roundRect(18, 172, 51, (layoutHeight - 190), [19]);
-    context.roundRect(852, 172, 51, (layoutHeight - 190), [19]);
-    // Level Bar and Rank Chips
-    context.roundRect(87, 172, 579, 76, [19]);
-    context.roundRect(702, 172, 132, 76, [19]);
-    context.roundRect(87, 257, 579, 51, [19]);
-    context.roundRect(702, 257, 132, 51, [19]);
-    if (layout >= 2) {
-      context.roundRect(87, 317, 579, 51, [19]);
-      context.roundRect(702, 317, 132, 51, [19]);
-    }
-    if (layout >= 3) {
-      context.roundRect(87, 377, 579, 51, [19]);
-      context.roundRect(702, 377, 132, 51, [19]);
-    }
-    if (layout >= 4) {
-      context.roundRect(87, 437, 579, 51, [19]);
-      context.roundRect(702, 437, 132, 51, [19]);
-    }
-    if (layout >= 5) {
-      context.roundRect(87, 497, 579, 51, [19]);
-      context.roundRect(702, 497, 132, 51, [19]);
-    }
-    context.fill();
 
     // Purchased Background
     // Check get fresh persona data
@@ -539,6 +386,36 @@ export const dLevels: SlashCommand = {
         userFont = equippedFont.value;
       }
     }
+    // Top Right Chips
+    context.fillStyle = chipColor;
+    context.beginPath();
+    context.roundRect(702, 18, 201, 51, [19]);
+    context.roundRect(702, 78, 201, 51, [19]);
+    // Label Chips
+    context.roundRect(18, 172, 51, (layoutHeight - 190), [19]);
+    context.roundRect(852, 172, 51, (layoutHeight - 190), [19]);
+    // Level Bar and Rank Chips
+    context.roundRect(87, 172, 579, 76, [19]);
+    context.roundRect(702, 172, 132, 76, [19]);
+    context.roundRect(87, 257, 579, 51, [19]);
+    context.roundRect(702, 257, 132, 51, [19]);
+    if (layout >= 2) {
+      context.roundRect(87, 317, 579, 51, [19]);
+      context.roundRect(702, 317, 132, 51, [19]);
+    }
+    if (layout >= 3) {
+      context.roundRect(87, 377, 579, 51, [19]);
+      context.roundRect(702, 377, 132, 51, [19]);
+    }
+    if (layout >= 4) {
+      context.roundRect(87, 437, 579, 51, [19]);
+      context.roundRect(702, 437, 132, 51, [19]);
+    }
+    if (layout >= 5) {
+      context.roundRect(87, 497, 579, 51, [19]);
+      context.roundRect(702, 497, 132, 51, [19]);
+    }
+    context.fill();
 
     // Overly complicated avatar clip
     context.save();
