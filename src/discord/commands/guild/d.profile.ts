@@ -525,19 +525,6 @@ export async function getProfilePreview(target: GuildMember, option: string, ima
   context.roundRect(684, 0, 237, 205, [19]);
   context.fill();
 
-  // Draw the chips
-  context.fillStyle = chipColor;
-  context.beginPath();
-  context.roundRect(18, 163, 201, 51, [19]);
-  context.roundRect(18, 223, 201, 51, [19]);
-  context.roundRect(237, 163, 201, 51, [19]);
-  context.roundRect(237, 223, 201, 51, [19]);
-  context.roundRect(456, 163, 201, 51, [19]);
-  context.roundRect(456, 223, 201, 51, [19]);
-  context.roundRect(702, 223, 201, 51, [19]);
-  // context.arc(603, 73, 54, 0, Math.PI * 2, true); // CAMP ICON CHIP
-  context.fill();
-
   // WIP: Purchased Background
 
   // log.debug(F, `personaData home (Change) ${JSON.stringify(personaData, null, 2)}`);
@@ -560,6 +547,19 @@ export async function getProfilePreview(target: GuildMember, option: string, ima
     context.drawImage(Background, 0, 0);
     context.restore();
   }
+
+  // Draw the chips
+  context.fillStyle = chipColor;
+  context.beginPath();
+  context.roundRect(18, 163, 201, 51, [19]);
+  context.roundRect(18, 223, 201, 51, [19]);
+  context.roundRect(237, 163, 201, 51, [19]);
+  context.roundRect(237, 223, 201, 51, [19]);
+  context.roundRect(456, 163, 201, 51, [19]);
+  context.roundRect(456, 223, 201, 51, [19]);
+  context.roundRect(702, 223, 201, 51, [19]);
+  // context.arc(603, 73, 54, 0, Math.PI * 2, true); // CAMP ICON CHIP
+  context.fill();
 
   context.drawImage(Icons, 0, 0);
 
