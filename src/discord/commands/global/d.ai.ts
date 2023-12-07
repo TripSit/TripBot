@@ -41,15 +41,13 @@ import {
 import OpenAI from 'openai';
 import { Run } from 'openai/resources/beta/threads/runs/runs';
 import { MessageContentText } from 'openai/resources/beta/threads/messages/messages';
-import { DateTime } from 'luxon';
-import { paginationEmbed } from '../../utils/pagination';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import commandContext from '../../utils/context';
 import { moderate } from '../../../global/commands/g.moderate';
-import { sleep } from './d.bottest';
+import { sleep } from '../guild/d.bottest';
 import aiChat, {
-  aiModerate, createImage, createMessage, getAssistant, getMessages, getThread, readRun, runThread,
+  aiModerate, createMessage, getAssistant, getMessages, getThread, readRun, runThread,
 } from '../../../global/commands/g.ai';
 import { UserActionType } from '../../../global/@types/database';
 import { parseDuration } from '../../../global/utils/parseDuration';
@@ -61,10 +59,8 @@ const F = f(__filename);
 const maxHistoryLength = 5;
 
 const ephemeralExplanation = 'Set to "True" to show the response only to you';
-const personaDoesntExist = 'This persona does not exist. Please create it first.';
-const confirmationCodes = new Map<string, string>();
+const personaDoesNotExist = 'This persona does not exist. Please create it first.';
 const tripbotUAT = '@TripBot UAT (Moonbear)';
-const imageLimit = 25;
 
 // Costs per 1k tokens
 const aiCosts = {
@@ -96,10 +92,7 @@ const aiCosts = {
     input: 0.00,
     output: 0.02,
   },
-} as AiCosts;
-
-// define an object as series of keys (AiModel) and value that looks like {input: number, output: number}
-type AiCosts = {
+} as {
   [key in ai_model]: {
     input: number,
     output: number,
@@ -113,76 +106,25 @@ async function help(
 ):Promise<void> {
   const visible = interaction.options.getBoolean('ephemeral') !== false;
   await interaction.deferReply({ ephemeral: !visible });
-
-  const aboutEmbed = embedTemplate()
-    .setTitle('AI Help')
-    .setDescription(stripIndents`
-      Welcome to TripBot's AI module!
-
-      This is not a real AI, this is a Language Learning Model (LLM).
-      It does not provide any kind of "intelligence", it just knows how to make a sentence that sounds good.
-      As such, this feature will likely not be introduced to the trip sitting rooms, as it is not 100% trustworthy.
-      But we can still have some fun and play with it in the social rooms!
-      Here's how you can do that:
-
-      **/ai set**
-      This command is used to set the parameters of an AI persona, or create a new persona.
-      A persona is how the bot will respond to queries. We can have multiple personas, each with their own parameters.
-      The parameters are explained on the next page.
-      EG: We can have a "helpful" persona, and a "funny" persona, and a "serious" persona, etc.
-      **Anyone is welcome to create their own persona in the dev guild!**
-
-      **/ai get**
-      This command is used to get the parameters of an AI persona.
-      You can either get the specific name of the persona
-      Or you can enter a channel name to get which persona is linked to that channel.
-
-      **/ai del**
-      To delete a persona. You must provide a confirmation code to delete a persona.
-
-      **/ai link**
-      You can link threads, channels, and even entire categories to a persona.
-      This allows the bot to respond to messages in those channels with the persona you set.
-      You can also disable the link, so the bot will not respond in that channel.
-      `);
-
-  const parametersEmbed = embedTemplate()
-    .setTitle('AI Help')
-  /* eslint-disable max-len */
-    .setDescription(stripIndents`
-    This command is used to set the parameters of an AI persona, or create a new persona.
-    The parameters are:
-    **Name**
-    > The name of the persona. This is used to identify the persona in the AI Get command.
-    **Model**
-    > The model to use for the persona. This is a dropdown list of available models.
-    **Prompt**
-    > The prompt to use for the persona. This is the text that the AI will use to generate responses.
-    **Max Tokens**
-    > The maximum number of tokens to use for the AI response.
-    > What are tokens? https://platform.openai.com/tokenizer
-    **Temperature**
-    > Adjusts the randomness of the AI's answers.
-    > Lower values make the AI more predictable and focused, while higher values make it more random and varied.
-    > *Use this OR Top P, not both.*
-    **Top P**
-    > Limits the word choices the AI considers.
-    > Using a high value means the AI picks from the most likely words, while a lower value allows for more variety but might include less common words.
-    > *Use this OR Temperature, not both.*
-    **Presence Penalty**
-    > This adjusts the probability of words that are not initially very likely to appear, by making them more likely.
-    > A higher value can make a response more creative or diverse, as it promotes the presence of words or phrases that the model might not normally prioritize.
-    > For example, if you're looking for creative or unconventional answers, increasing the presence penalty can make the model consider a wider range of vocabularies.
-    **Frequency Penalty**
-    > This penalizes words or phrases that appear repeatedly in the output.
-    > A positive value reduces the likelihood of repetition, which can be useful if you're noticing that the model is repeating certain phrases or words too often.
-    > Conversely, a negative value would increase the chance of repetition, which might be useful if you want the model to emphasize a certain point.
-    **Logit Bias**
-    > How often to bias certain tokens. This is a JSON list.
-    > *You can likely ignore this unless you really wanna tweak the AI.*
-  `);
-
-  paginationEmbed(interaction, [aboutEmbed, parametersEmbed]);
+  await interaction.editReply({
+    embeds: [embedTemplate()
+      .setTitle('AI Help')
+      .setDescription(stripIndents`
+        Welcome to TripBot's AI module!
+  
+        This is not a real AI, this is a Language Learning Model (LLM) that uses OpenAI's API.
+        It does not provide any kind of "intelligence", it just knows how to make a sentence that sounds good.
+        As such, **do not trust the responses as 100% fact, there is no human oversight to them.**
+        GPT3.5 is pretty smart, and chances are it's correct, but it's not guaranteed.
+  
+        Want to enable the AI in your guild?
+  
+        **/ai link optional:<channel/thread/category> optional:<toggle>**
+        You can link threads, channels, and even entire categories with the AI. (Default: current channel)
+        You can toggle the link on or off with the toggle option. (Default: on)
+        If you don't provide any options, it will return the current link status of the current channel.
+        `)],
+  });
 }
 
 async function makePersonaEmbed(
@@ -254,112 +196,6 @@ async function makePersonaEmbed(
         inline: true,
       },
     ]);
-}
-
-async function upsert(
-  interaction: ChatInputCommandInteraction,
-):Promise<void> {
-  const personaName = interaction.options.getString('name') ?? interaction.user.username;
-
-  // Validations on the given information
-  // Name must be < 50 characters
-  if (personaName.length > 50) {
-    embedTemplate()
-      .setTitle('Modal')
-      .setColor(Colors.Red)
-      .setDescription('The name of the AI persona must be less than 50 characters.');
-    return;
-  }
-
-  const existingPersona = await db.ai_personas.findFirst({
-    where: {
-      name: personaName,
-    },
-  });
-
-  const modal = new ModalBuilder()
-    .setCustomId(`aiPromptModal~${interaction.id}`)
-    .setTitle('Modal')
-    .addComponents(new ActionRowBuilder<TextInputBuilder>()
-      .addComponents(new TextInputBuilder()
-        .setCustomId('prompt')
-        .setPlaceholder(stripIndents`
-          You are a harm reduction assistant and should only give helpful, non-judgemental advice.
-        `)
-        .setValue(existingPersona?.prompt ?? '')
-        .setLabel('Prompt (Personality)')
-        .setStyle(TextInputStyle.Paragraph)));
-
-  await interaction.showModal(modal);
-
-  const filter = (i:ModalSubmitInteraction) => i.customId.includes('aiPromptModal');
-  interaction.awaitModalSubmit({ filter, time: 0 })
-    .then(async i => {
-      if (i.customId.split('~')[1] !== interaction.id) return;
-      await i.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
-
-      // Get values
-      let temperature = interaction.options.getNumber('temperature');
-      const topP = interaction.options.getNumber('top_p');
-      // log.debug(F, `temperature: ${temperature}, top_p: ${topP}`);
-
-      // If both temperature and top_p are set, throw an error
-      if (temperature && topP) {
-        // log.debug(F, 'Both temperature and top_p are set');
-        embedTemplate()
-          .setTitle('Modal')
-          .setColor(Colors.Red)
-          .setDescription('You can only set one of temperature or top_p.');
-        return;
-      }
-
-      // If both temperature and top_p are NOT set, set temperature to 1
-      if (!temperature && !topP) {
-        // log.debug(F, 'Neither temperature nor top_p are set');
-        temperature = 1;
-      }
-
-      const userData = await db.users.upsert({
-        where: { discord_id: interaction.user.id },
-        create: { discord_id: interaction.user.id },
-        update: { discord_id: interaction.user.id },
-      });
-
-      const aiPersona = {
-        name: personaName,
-        ai_model: interaction.options.getString('model') as ai_model ?? 'GPT_3_5_TURBO',
-        prompt: i.fields.getTextInputValue('prompt'),
-        temperature,
-        top_p: topP,
-        presence_penalty: interaction.options.getNumber('presence_penalty') ?? 0,
-        frequency_penalty: interaction.options.getNumber('frequency_penalty') ?? 0,
-        max_tokens: interaction.options.getNumber('tokens') ?? 500,
-        created_by: existingPersona ? existingPersona.created_by : userData.id,
-        created_at: existingPersona ? existingPersona.created_at : new Date(),
-      } as ai_personas;
-
-      const alreadyExists = await db.ai_personas.findFirst({
-        where: {
-          name: aiPersona.name,
-        },
-      });
-      const action = alreadyExists ? 'updated' : 'created';
-
-      await db.ai_personas.upsert({
-        where: {
-          name: aiPersona.name,
-        },
-        create: aiPersona,
-        update: aiPersona,
-      });
-
-      await i.editReply({
-        embeds: [embedTemplate()
-          .setTitle('Modal')
-          .setColor(Colors.Red)
-          .setDescription(`Success! This persona has been ${action}!`)],
-      });
-    });
 }
 
 async function get(
@@ -464,80 +300,6 @@ async function get(
   });
 }
 
-async function del(
-  interaction: ChatInputCommandInteraction,
-):Promise<void> {
-  const visible = interaction.options.getBoolean('ephemeral') !== false;
-  await interaction.deferReply({ ephemeral: !visible });
-  const confirmation = interaction.options.getString('confirmation');
-  const personaName = interaction.options.getString('name') ?? interaction.user.username;
-
-  if (!confirmation) {
-    const aiPersona = await db.ai_personas.findUnique({
-      where: {
-        name: personaName,
-      },
-    });
-
-    if (!aiPersona) {
-      await interaction.editReply({
-        embeds: [embedTemplate()
-          .setTitle('AI Del')
-          .setDescription(stripIndents`
-            The **"${personaName}"** persona does not exist! 
-            
-            Make sure you /ai set it first!         
-          `)],
-      });
-      return;
-    }
-
-    // If the user did not provide a confirmation code, generate a new code and assign it to the user
-    const code = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-    confirmationCodes.set(`${interaction.user.id}${interaction.user.username}`, code);
-    await interaction.editReply({
-      embeds: [embedTemplate()
-        .setTitle('AI Del')
-        .setDescription(`
-        Are you sure you want to delete the "${personaName}" AI persona?
-
-        This action is irreversible, don't regret it later!
-
-        If you're sure, please run the command again with the confirmation code: 
-        
-        **${code}**
-        
-        `)],
-    });
-    return;
-  }
-
-  // If the user did provide a confirmation code, check if it matches the one in confirmationCodes
-  if (confirmationCodes.get(`${interaction.user.id}${interaction.user.username}`) !== confirmation) {
-    await interaction.editReply({
-      embeds: [embedTemplate()
-        .setTitle('AI Del')
-        .setDescription(stripIndents`The confirmation code you provided was incorrect.
-      If you want to delete this AI persona, please run the command again and provide the correct code.`)],
-    });
-    return;
-  }
-
-  await db.ai_personas.delete({
-    where: {
-      name: personaName,
-    },
-  });
-
-  confirmationCodes.delete(`${interaction.user.id}${interaction.user.username}`);
-  await interaction.editReply({
-    embeds: [embedTemplate()
-      .setTitle('Modal')
-      .setColor(Colors.Blurple)
-      .setDescription('Success: Persona was deleted!')],
-  });
-}
-
 async function getLinkedChannel(
   channel: CategoryChannel | ForumChannel | APIInteractionDataResolvedChannel | TextBasedChannel,
 ):Promise<ai_channels | null> {
@@ -563,13 +325,696 @@ async function getLinkedChannel(
   return aiLinkData;
 }
 
+async function saveThreshold(
+  interaction: ButtonInteraction,
+):Promise<void> {
+  log.debug(F, 'saveThreshold started');
+  if (!(interaction.member as GuildMember).roles.cache.has(env.DISCORD_OWNER_ID)) return;
+  const buttonID = interaction.customId;
+  log.debug(F, `buttonID: ${buttonID}`);
+  if (!interaction.guild) return;
+
+  const [,, category, amount] = interaction.customId.split('~');
+  const amountFloat = parseFloat(amount);
+
+  const buttonRows = interaction.message.components
+    .map(row => row.toJSON() as APIActionRowComponent<APIButtonComponent>);
+  // log.debug(F, `buttonRows: ${JSON.stringify(buttonRows, null, 2)}`);
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const categoryRow = buttonRows
+    .find(row => row.components
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .find(button => (button as any).custom_id?.includes(category))) as APIActionRowComponent<APIButtonComponent>;
+  // log.debug(F, `categoryRow: ${JSON.stringify(categoryRow, null, 2)}`);
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const saveButton = categoryRow.components
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    .find(button => (button as any).custom_id?.includes('save')) as APIButtonComponent;
+
+  const labelBreakdown = (saveButton.label as string).split(' ') as string[];
+  labelBreakdown.splice(0, 1, 'Saved');
+  const newLabel = labelBreakdown.join(' ');
+
+  // Replace the save button with the new value
+  categoryRow.components.splice(4, 1, {
+    custom_id: `aiMod~save~${category}~${amountFloat}`,
+    label: newLabel,
+    emoji: '💾' as APIMessageComponentEmoji,
+    style: ButtonStyle.Success,
+    type: 2,
+  } as APIButtonComponent);
+
+  // Replace the category row with the new buttons
+  buttonRows.splice(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    buttonRows.findIndex(row => row.components.find(button => (button as any).custom_id?.includes(category))),
+    1,
+    categoryRow,
+  );
+
+  const moderationData = await db.ai_moderation.upsert({
+    where: {
+      guild_id: interaction.guild.id,
+    },
+    create: {
+      guild_id: interaction.guild.id,
+    },
+    update: {},
+  });
+
+  const oldValue = moderationData[category as keyof typeof moderationData];
+
+  await db.ai_moderation.update({
+    where: {
+      guild_id: interaction.guild.id,
+    },
+    data: {
+      [category]: amountFloat,
+    },
+  });
+
+  // Get the channel to send the message to
+  const channelAiModLog = await discordClient.channels.fetch(env.CHANNEL_AIMOD_LOG) as TextChannel;
+  await channelAiModLog.send({
+    content: `${interaction.member} adjusted the ${category} limit from ${oldValue} to ${amountFloat}`,
+  });
+
+  await interaction.update({
+    components: buttonRows,
+  });
+}
+
+async function adjustThreshold(
+  interaction: ButtonInteraction,
+):Promise<void> {
+  log.debug(F, 'adjustThreshold started');
+  if (!(interaction.member as GuildMember).roles.cache.has(env.DISCORD_OWNER_ID)) return;
+  // const buttonID = interaction.customId;
+  // log.debug(F, `buttonID: ${buttonID}`);
+
+  const [,, category, amount] = interaction.customId.split('~');
+  const amountFloat = parseFloat(amount);
+
+  // Go through the components on the message and find the button that has a customID that includes 'save'
+  const buttonRows = interaction.message.components
+    .map(row => row.toJSON() as APIActionRowComponent<APIButtonComponent>);
+  // log.debug(F, `buttonRows: ${JSON.stringify(buttonRows, null, 2)}`);
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const categoryRow = buttonRows
+    .find(row => row.components
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .find(button => (button as any).custom_id?.includes(category))) as APIActionRowComponent<APIButtonComponent>;
+  // log.debug(F, `categoryRow: ${JSON.stringify(categoryRow, null, 2)}`);
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const saveButton = categoryRow.components
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    .find(button => (button as any).custom_id?.includes('save')) as APIButtonComponent;
+  log.debug(F, `saveButton: ${JSON.stringify(saveButton, null, 2)}`);
+
+  const saveValue = parseFloat((saveButton.label as string).split(' ')[3] as string);
+  log.debug(F, `saveValue: ${JSON.stringify(saveValue, null, 2)}`);
+
+  const newValue = saveValue + amountFloat;
+  log.debug(F, `newValue: ${JSON.stringify(newValue.toFixed(2), null, 2)}`);
+
+  const labelBreakdown = (saveButton.label as string).split(' ') as string[];
+  labelBreakdown.splice(3, 1, newValue.toFixed(2));
+  const newLabel = labelBreakdown.join(' ');
+
+  // Replace the save button with the new value
+  categoryRow.components.splice(4, 1, {
+    custom_id: `aiMod~save~${category}~${newValue}`,
+    label: newLabel,
+    emoji: '💾' as APIMessageComponentEmoji,
+    style: ButtonStyle.Primary,
+    type: 2,
+  } as APIButtonComponent);
+
+  // Replace the category row with the new buttons
+  buttonRows.splice(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    buttonRows.findIndex(row => row.components.find(button => (button as any).custom_id?.includes(category))),
+    1,
+    categoryRow,
+  );
+
+  // const newComponentList = newRows.map(row => ActionRowBuilder.from(row));
+
+  await interaction.update({
+    components: buttonRows,
+  });
+}
+
+async function noteUser(
+  interaction: ButtonInteraction,
+):Promise<void> {
+  log.debug(F, 'noteUser started');
+  const buttonID = interaction.customId;
+  log.debug(F, `buttonID: ${buttonID}`);
+
+  if (!(interaction.member as GuildMember).roles.cache.has(env.ROLE_MODERATOR)) return;
+
+  const embed = interaction.message.embeds[0].toJSON();
+
+  const flagsField = (embed.fields as APIEmbedField[]).find(field => field.name === 'Flags') as APIEmbedField;
+
+  await interaction.showModal(new ModalBuilder()
+    .setCustomId(`noteModal~${interaction.id}`)
+    .setTitle('Tripbot Note')
+    .addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
+      .setLabel('What are you noting about this person?')
+      .setStyle(TextInputStyle.Paragraph)
+      .setPlaceholder('Tell the team why you are noting this user.')
+      .setValue(`This user's message was flagged by the AI for ${flagsField.value}`)
+      .setMaxLength(1000)
+      .setRequired(true)
+      .setCustomId('internalNote'))));
+  const filter = (i:ModalSubmitInteraction) => i.customId.includes('noteModal');
+
+  interaction.awaitModalSubmit({ filter, time: 0 })
+    .then(async i => {
+      if (i.customId.split('~')[1] !== interaction.id) return;
+      await i.deferReply({ ephemeral: true });
+
+      const messageField = (embed.fields as APIEmbedField[]).find(field => field.name === 'Message') as APIEmbedField;
+      const memberField = (embed.fields as APIEmbedField[]).find(field => field.name === 'Member') as APIEmbedField;
+      const urlField = (embed.fields as APIEmbedField[]).find(field => field.name === 'Channel') as APIEmbedField;
+
+      await moderate(
+        interaction.member as GuildMember,
+        'NOTE' as UserActionType,
+        memberField.value.slice(2, -1),
+        stripIndents`
+        ${i.fields.getTextInputValue('internalNote')}
+    
+        **The offending message**
+        > ${messageField.value}
+        ${urlField.value}
+      `,
+        null,
+        null,
+      );
+
+      const buttonRows = interaction.message.components.map(row => ActionRowBuilder.from(row.toJSON()));
+
+      const actionField = embed.fields?.find(field => field.name === 'Actions');
+
+      if (actionField) {
+        // Add the action to the list of actions
+        const newActionFiled = actionField?.value.concat(`
+        
+        ${interaction.user.toString()} noted this user:
+        > ${i.fields.getTextInputValue('internalNote')}
+        
+        Message sent to user:
+        > **No message sent to user on notes**
+        `);
+        // log.debug(F, `newActionFiled: ${newActionFiled}`);
+
+        // Replace the action field with the new one
+        embed.fields?.splice(embed.fields?.findIndex(field => field.name === 'Actions'), 1, {
+          name: 'Actions',
+          value: newActionFiled,
+          inline: true,
+        });
+      } else {
+        embed.fields?.push(
+          {
+            name: 'Actions',
+            value: stripIndents`${interaction.user.toString()} noted this user:
+            > ${i.fields.getTextInputValue('internalNote')}
+        
+            Message sent to user:
+            > ${i.fields.getTextInputValue('description')}`,
+            inline: true,
+          },
+        );
+      }
+      embed.color = Colors.Green;
+
+      await i.editReply('User was noted');
+
+      await interaction.message.edit({
+        embeds: [embed],
+        components: buttonRows as ActionRowBuilder<ButtonBuilder>[],
+      });
+    });
+}
+
+async function muteUser(
+  interaction: ButtonInteraction,
+):Promise<void> {
+  log.debug(F, 'muteUser started');
+  const buttonID = interaction.customId;
+  log.debug(F, `buttonID: ${buttonID}`);
+  if (!(interaction.member as GuildMember).roles.cache.has(env.ROLE_MODERATOR)) return;
+
+  const embed = interaction.message.embeds[0].toJSON();
+
+  const flagsField = (embed.fields as APIEmbedField[]).find(field => field.name === 'Flags') as APIEmbedField;
+  const messageField = (embed.fields as APIEmbedField[]).find(field => field.name === 'Message') as APIEmbedField;
+  const memberField = (embed.fields as APIEmbedField[]).find(field => field.name === 'Member') as APIEmbedField;
+  const urlField = (embed.fields as APIEmbedField[]).find(field => field.name === 'Channel') as APIEmbedField;
+
+  await interaction.showModal(new ModalBuilder()
+    .setCustomId(`timeoutModal~${interaction.id}`)
+    .setTitle('Tripbot Timeout')
+    .addComponents(
+      new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
+        .setLabel('Why are you muting this person?')
+        .setStyle(TextInputStyle.Paragraph)
+        .setPlaceholder('Tell the team why you are muting this user.')
+        .setValue(`This user breaks TripSit's policies regarding ${flagsField.value} topics.`)
+        .setMaxLength(1000)
+        .setRequired(true)
+        .setCustomId('internalNote')),
+      new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
+        .setLabel('What should we tell the user?')
+        .setStyle(TextInputStyle.Paragraph)
+        .setPlaceholder('This will be sent to the user!')
+        .setValue(stripIndents`
+        Your recent messages have broken TripSit's policies regarding ${flagsField.value} topics.
+        
+        The offending message
+        > ${messageField.value}
+        ${urlField.value}`)
+        .setMaxLength(1000)
+        .setRequired(false)
+        .setCustomId('description')),
+      new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
+        .setLabel('Timeout for how long? (Max/default 7 days)')
+        .setStyle(TextInputStyle.Short)
+        .setPlaceholder('4 days 3hrs 2 mins 30 seconds')
+        .setRequired(false)
+        .setCustomId('timeoutDuration')),
+    ));
+  const filter = (i:ModalSubmitInteraction) => i.customId.includes('timeoutModal');
+
+  interaction.awaitModalSubmit({ filter, time: 0 })
+    .then(async i => {
+      if (i.customId.split('~')[1] !== interaction.id) return;
+      await i.deferReply({ ephemeral: true });
+
+      const duration = i.fields.getTextInputValue('timeoutDuration')
+        ? await parseDuration(i.fields.getTextInputValue('timeoutDuration'))
+        : 604800000;
+
+      if (duration > 604800000) {
+        await i.editReply('Cannot remove messages older than 7 days.');
+        return;
+      }
+
+      await moderate(
+        interaction.member as GuildMember,
+        'TIMEOUT' as UserActionType,
+        memberField.value.slice(2, -1),
+        stripIndents`
+        ${i.fields.getTextInputValue('internalNote')}
+    
+        **The offending message**
+        > ${messageField.value}
+        ${urlField.value}
+      `,
+        i.fields.getTextInputValue('description'),
+        duration,
+      );
+
+      const buttonRows = interaction.message.components.map(row => ActionRowBuilder.from(row.toJSON()));
+
+      const actionField = embed.fields?.find(field => field.name === 'Actions');
+
+      if (actionField) {
+        // Add the action to the list of actions
+        const newActionFiled = actionField?.value.concat(`
+        
+        ${interaction.user.toString()} muted this user:
+        > ${i.fields.getTextInputValue('internalNote')}
+        
+        Message sent to user:
+        > ${i.fields.getTextInputValue('description')}`);
+        // log.debug(F, `newActionFiled: ${newActionFiled}`);
+
+        // Replace the action field with the new one
+        embed.fields?.splice(embed.fields?.findIndex(field => field.name === 'Actions'), 1, {
+          name: 'Actions',
+          value: newActionFiled,
+          inline: true,
+        });
+      } else {
+        embed.fields?.push(
+          {
+            name: 'Actions',
+            value: stripIndents`${interaction.user.toString()} muted this user:
+            > ${i.fields.getTextInputValue('internalNote')}
+        
+            Message sent to user:
+            > ${i.fields.getTextInputValue('description')}`,
+            inline: true,
+          },
+        );
+      }
+      embed.color = Colors.Green;
+
+      await i.editReply('User was muted');
+
+      await interaction.message.edit({
+        embeds: [embed],
+        components: buttonRows as ActionRowBuilder<ButtonBuilder>[],
+      });
+    });
+}
+
+async function warnUser(
+  interaction: ButtonInteraction,
+):Promise<void> {
+  log.debug(F, 'warnUser started');
+  const buttonID = interaction.customId;
+  log.debug(F, `buttonID: ${buttonID}`);
+  if (!(interaction.member as GuildMember).roles.cache.has(env.ROLE_MODERATOR)) return;
+
+  const embed = interaction.message.embeds[0].toJSON();
+
+  const flagsField = (embed.fields as APIEmbedField[]).find(field => field.name === 'Flags') as APIEmbedField;
+  const messageField = (embed.fields as APIEmbedField[]).find(field => field.name === 'Message') as APIEmbedField;
+  const memberField = (embed.fields as APIEmbedField[]).find(field => field.name === 'Member') as APIEmbedField;
+  const urlField = (embed.fields as APIEmbedField[]).find(field => field.name === 'Channel') as APIEmbedField;
+
+  await interaction.showModal(new ModalBuilder()
+    .setCustomId(`warnModal~${interaction.id}`)
+    .setTitle('Tripbot Warn')
+    .addComponents(
+      new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
+        .setLabel('Why are you warning this person?')
+        .setStyle(TextInputStyle.Paragraph)
+        .setPlaceholder('Tell the team why you are warning this user.')
+        .setValue(`This user breaks TripSit's policies regarding ${flagsField.value} topics.`)
+        .setMaxLength(1000)
+        .setRequired(true)
+        .setCustomId('internalNote')),
+      new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
+        .setLabel('What should we tell the user?')
+        .setStyle(TextInputStyle.Paragraph)
+        .setPlaceholder('This will be sent to the user!')
+        .setValue(stripIndents`Your recent messages have broken TripSit's policies regarding ${flagsField.value} topics.
+        
+        The offending message
+        > ${messageField.value}
+        ${urlField.value}`)
+        .setMaxLength(1000)
+        .setRequired(true)
+        .setCustomId('description')),
+    ));
+  const filter = (i:ModalSubmitInteraction) => i.customId.includes('warnModal');
+
+  interaction.awaitModalSubmit({ filter, time: 0 })
+    .then(async i => {
+      if (i.customId.split('~')[1] !== interaction.id) return;
+      await i.deferReply({ ephemeral: true });
+
+      await moderate(
+        interaction.member as GuildMember,
+        'WARNING' as UserActionType,
+        memberField.value.slice(2, -1),
+        stripIndents`
+        ${i.fields.getTextInputValue('internalNote')}
+    
+        **The offending message**
+        > ${messageField.value}
+        ${urlField.value}
+      `,
+        i.fields.getTextInputValue('description'),
+        null,
+      );
+
+      const buttonRows = interaction.message.components.map(row => ActionRowBuilder.from(row.toJSON()));
+
+      const actionField = embed.fields?.find(field => field.name === 'Actions');
+
+      if (actionField) {
+        // Add the action to the list of actions
+        const newActionFiled = actionField?.value.concat(`
+        
+        ${interaction.user.toString()} warned this user:
+        > ${i.fields.getTextInputValue('internalNote')}
+        
+        Message sent to user:
+        > ${i.fields.getTextInputValue('description')}`);
+        // log.debug(F, `newActionFiled: ${newActionFiled}`);
+
+        // Replace the action field with the new one
+        embed.fields?.splice(embed.fields?.findIndex(field => field.name === 'Actions'), 1, {
+          name: 'Actions',
+          value: newActionFiled,
+          inline: true,
+        });
+      } else {
+        embed.fields?.push(
+          {
+            name: 'Actions',
+            value: stripIndents`${interaction.user.toString()} warned this user:
+            > ${i.fields.getTextInputValue('internalNote')}
+        
+            Message sent to user:
+            > ${i.fields.getTextInputValue('description')}`,
+            inline: true,
+          },
+        );
+      }
+      embed.color = Colors.Green;
+
+      await i.editReply('User was warned');
+
+      await interaction.message.edit({
+        embeds: [embed],
+        components: buttonRows as ActionRowBuilder<ButtonBuilder>[],
+      });
+    });
+}
+
+async function banUser(
+  interaction: ButtonInteraction,
+):Promise<void> {
+  log.debug(F, 'banUser started');
+  const buttonID = interaction.customId;
+  log.debug(F, `buttonID: ${buttonID}`);
+  if (!(interaction.member as GuildMember).roles.cache.has(env.ROLE_MODERATOR)) return;
+
+  const embed = interaction.message.embeds[0].toJSON();
+
+  const flagsField = (embed.fields as APIEmbedField[]).find(field => field.name === 'Flags') as APIEmbedField;
+  const messageField = (embed.fields as APIEmbedField[]).find(field => field.name === 'Message') as APIEmbedField;
+  const memberField = (embed.fields as APIEmbedField[]).find(field => field.name === 'Member') as APIEmbedField;
+  const urlField = (embed.fields as APIEmbedField[]).find(field => field.name === 'Channel') as APIEmbedField;
+
+  await interaction.showModal(new ModalBuilder()
+    .setCustomId(`banModal~${interaction.id}`)
+    .setTitle('Tripbot Ban')
+    .addComponents(
+      new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
+        .setLabel('Why are you banning this user?')
+        .setStyle(TextInputStyle.Paragraph)
+        .setPlaceholder('Tell the team why you are banning this user.')
+        .setValue(`This user breaks TripSit's policies regarding ${flagsField.value} topics.`)
+        .setMaxLength(1000)
+        .setRequired(true)
+        .setCustomId('internalNote')),
+      new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
+        .setLabel('What should we tell the user?')
+        .setStyle(TextInputStyle.Paragraph)
+        .setPlaceholder('This will be sent to the user!')
+        .setValue(stripIndents`Your recent messages have broken TripSit's policies regarding ${flagsField.value} topics.
+        
+        The offending message
+        > ${messageField.value}
+        ${urlField.value}`)
+        .setMaxLength(1000)
+        .setRequired(false)
+        .setCustomId('description')),
+      new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
+        .setLabel('How many days of msg to remove?')
+        .setStyle(TextInputStyle.Short)
+        .setPlaceholder('Between 0 and 7 days (Default 0)')
+        .setRequired(false)
+        .setCustomId('duration')),
+    ));
+  const filter = (i:ModalSubmitInteraction) => i.customId.includes('banModal');
+
+  interaction.awaitModalSubmit({ filter, time: 0 })
+    .then(async i => {
+      if (i.customId.split('~')[1] !== interaction.id) return;
+      await i.deferReply({ ephemeral: true });
+
+      const duration = i.fields.getTextInputValue('duration')
+        ? await parseDuration(i.fields.getTextInputValue('duration'))
+        : 0;
+
+      if (duration > 604800000) {
+        await i.editReply('Cannot remove messages older than 7 days.');
+        return;
+      }
+
+      await moderate(
+        interaction.member as GuildMember,
+        'FULL_BAN' as UserActionType,
+        memberField.value.slice(2, -1),
+        stripIndents`
+        ${i.fields.getTextInputValue('internalNote')}
+    
+        **The offending message**
+        > ${messageField.value}
+        ${urlField.value}
+      `,
+        i.fields.getTextInputValue('description'),
+        duration,
+      );
+
+      const buttonRows = interaction.message.components.map(row => ActionRowBuilder.from(row.toJSON()));
+
+      const actionField = embed.fields?.find(field => field.name === 'Actions');
+
+      if (actionField) {
+        // Add the action to the list of actions
+        const newActionFiled = actionField?.value.concat(`
+        
+        ${interaction.user.toString()} banned this user:
+        > ${i.fields.getTextInputValue('internalNote')}
+        
+        Message sent to user:
+        > ${i.fields.getTextInputValue('description')}`);
+        // log.debug(F, `newActionFiled: ${newActionFiled}`);
+
+        // Replace the action field with the new one
+        embed.fields?.splice(embed.fields?.findIndex(field => field.name === 'Actions'), 1, {
+          name: 'Actions',
+          value: newActionFiled,
+          inline: true,
+        });
+      } else {
+        embed.fields?.push(
+          {
+            name: 'Actions',
+            value: stripIndents`${interaction.user.toString()} noted this user:
+            > ${i.fields.getTextInputValue('internalNote')}
+        
+            Message sent to user:
+            > ${i.fields.getTextInputValue('description')}`,
+            inline: true,
+          },
+        );
+      }
+      embed.color = Colors.Green;
+
+      await i.editReply('User was banned');
+
+      await interaction.message.edit({
+        embeds: [embed],
+        components: buttonRows as ActionRowBuilder<ButtonBuilder>[],
+      });
+    });
+}
+
+async function aiAudit(
+  aiPersona: ai_personas,
+  messages: Message[],
+  chatResponse: string,
+  promptTokens: number,
+  completionTokens: number,
+) {
+  // This function takes what was sent and returned from the API and sends it to a discord channel
+  // for review. This is to ensure that the AI is not being used to break the rules.
+
+  // const embed = await makePersonaEmbed(cleanPersona);
+
+  const promptMessage = messages[messages.length - 1];
+  const contextMessages = messages.slice(0, messages.length - 1);
+
+  const embed = embedTemplate()
+    .setFooter({ text: 'What are tokens? <https://platform.openai.com/tokenizer>' })
+    // .setThumbnail(promptMessage.author.displayAvatarURL())
+    .setColor(Colors.Yellow);
+
+  const contextMessageOutput = contextMessages
+    .map(message => `${message.url} ${message.member?.displayName}: ${message.cleanContent}`)
+    .join('\n')
+    .slice(0, 1024);
+
+  const promptCost = (promptTokens / 1000) * aiCosts[aiPersona.ai_model].input;
+  const completionCost = (completionTokens / 1000) * aiCosts[aiPersona.ai_model].output;
+
+  const userData = await db.users.upsert({
+    where: { discord_id: promptMessage.author.id },
+    create: { discord_id: promptMessage.author.id },
+    update: { discord_id: promptMessage.author.id },
+  });
+
+  const aiUsageData = await db.ai_usage.upsert({
+    where: {
+      user_id: userData.id,
+    },
+    create: {
+      user_id: userData.id,
+    },
+    update: {},
+  });
+
+  embed.addFields(
+    {
+      name: 'Persona',
+      value: stripIndents`**${aiPersona.name} (${aiPersona.ai_model})** - ${aiPersona.prompt}`,
+      inline: false,
+    },
+    {
+      name: 'Context',
+      value: stripIndents`${contextMessageOutput}`,
+      inline: false,
+    },
+    {
+      name: 'Prompt',
+      value: stripIndents`${promptMessage.url} ${promptMessage.member?.displayName}: ${promptMessage.cleanContent}`,
+      inline: false,
+    },
+    {
+      name: 'Result',
+      value: stripIndents`${chatResponse.slice(0, 1023)}`,
+      inline: false,
+    },
+    {
+      name: 'Chat Tokens',
+      value: stripIndents`${promptTokens + completionTokens} Tokens \n($${(promptCost + completionCost).toFixed(6)})`,
+      inline: true,
+    },
+    {
+      name: 'User Tokens',
+      value: `${aiUsageData.tokens} Tokens\n($${((aiUsageData.tokens / 1000)
+      * aiCosts[aiPersona.ai_model].output).toFixed(6)})`,
+      inline: true,
+    },
+    {
+      name: 'Persona Tokens',
+      value: `${aiPersona.total_tokens} Tokens\n($${((aiPersona.total_tokens / 1000)
+      * aiCosts[aiPersona.ai_model].output).toFixed(6)})`,
+      inline: true,
+    },
+  );
+
+  // Get the channel to send the message to
+  const channelAiLog = await discordClient.channels.fetch(env.CHANNEL_AILOG) as TextChannel;
+
+  // Send the message
+  await channelAiLog.send({ embeds: [embed] });
+}
+
 async function link(
   interaction: ChatInputCommandInteraction,
 ):Promise<void> {
   const visible = interaction.options.getBoolean('ephemeral') !== false;
   await interaction.deferReply({ ephemeral: !visible });
 
-  const personaName = interaction.options.getString('name') ?? interaction.user.username;
+  const personaName = interaction.options.getString('name') ?? 'tripbot';
   const toggle = (interaction.options.getString('toggle') ?? 'enable') as 'enable' | 'disable';
   const textChannel = interaction.options.getChannel('channel') ?? interaction.channel;
 
@@ -598,7 +1043,7 @@ async function link(
         embeds: [embedTemplate()
           .setTitle('Modal')
           .setColor(Colors.Red)
-          .setDescription(personaDoesntExist)],
+          .setDescription(personaDoesNotExist)],
 
       });
       return;
@@ -659,7 +1104,7 @@ async function link(
         embeds: [embedTemplate()
           .setTitle('Modal')
           .setColor(Colors.Red)
-          .setDescription(personaDoesntExist)],
+          .setDescription(personaDoesNotExist)],
 
       });
       return;
@@ -726,7 +1171,7 @@ async function link(
           embeds: [embedTemplate()
             .setTitle('Modal')
             .setColor(Colors.Red)
-            .setDescription(personaDoesntExist)],
+            .setDescription(personaDoesNotExist)],
 
         });
         return;
@@ -811,801 +1256,12 @@ async function link(
     return;
   }
 
-  confirmationCodes.delete(`${interaction.user.id}${interaction.user.username}`);
   await interaction.editReply({
     embeds: [embedTemplate()
       .setTitle('Modal')
       .setColor(Colors.Blurple)
       .setDescription(response)],
   });
-}
-
-async function mod(
-  interaction: ChatInputCommandInteraction,
-):Promise<void> {
-  if (!interaction.guild) return;
-  await interaction.deferReply({ ephemeral: true });
-
-  const moderationData = await db.ai_moderation.upsert({
-    where: {
-      guild_id: interaction.guild.id,
-    },
-    create: {
-      guild_id: interaction.guild.id,
-    },
-    update: {},
-  });
-
-  await db.ai_moderation.update({
-    where: {
-      guild_id: interaction.guild.id,
-    },
-    data: {
-      harassment: interaction.options.getNumber('harassment') ?? moderationData.harassment,
-      harassment_threatening: interaction.options.getNumber('harassment_threatening') ?? moderationData.harassment_threatening,
-      hate: interaction.options.getNumber('hate') ?? moderationData.hate,
-      hate_threatening: interaction.options.getNumber('hate_threatening') ?? moderationData.hate_threatening,
-      self_harm: interaction.options.getNumber('self_harm') ?? moderationData.self_harm,
-      self_harm_instructions: interaction.options.getNumber('self_harm_instructions') ?? moderationData.self_harm_instructions,
-      self_harm_intent: interaction.options.getNumber('self_harm_intent') ?? moderationData.self_harm_intent,
-      sexual: interaction.options.getNumber('sexual') ?? moderationData.sexual,
-      sexual_minors: interaction.options.getNumber('sexual_minors') ?? moderationData.sexual_minors,
-      violence: interaction.options.getNumber('violence') ?? moderationData.violence,
-      violence_graphic: interaction.options.getNumber('violence_graphic') ?? moderationData.violence_graphic,
-    },
-  });
-}
-
-async function saveThreshold(
-  interaction: ButtonInteraction,
-):Promise<void> {
-  log.debug(F, 'saveThreshold started');
-  if (!(interaction.member as GuildMember).roles.cache.has(env.DISCORD_OWNER_ID)) return;
-  const buttonID = interaction.customId;
-  log.debug(F, `buttonID: ${buttonID}`);
-  if (!interaction.guild) return;
-
-  const [,, category, amount] = interaction.customId.split('~');
-  const amountFloat = parseFloat(amount);
-
-  const buttonRows = interaction.message.components.map(row => row.toJSON() as APIActionRowComponent<APIButtonComponent>);
-  // log.debug(F, `buttonRows: ${JSON.stringify(buttonRows, null, 2)}`);
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const categoryRow = buttonRows.find(row => row.components.find(button => (button as any).custom_id?.includes(category))) as APIActionRowComponent<APIButtonComponent>;
-  // log.debug(F, `categoryRow: ${JSON.stringify(categoryRow, null, 2)}`);
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const saveButton = categoryRow?.components.find(button => (button as any).custom_id?.includes('save'));
-
-  const labelBreakdown = saveButton?.label?.split(' ') as string[];
-  labelBreakdown.splice(0, 1, 'Saved');
-  const newLabel = labelBreakdown.join(' ');
-
-  // Replace the save button with the new value
-  categoryRow.components?.splice(4, 1, {
-    custom_id: `aiMod~save~${category}~${amountFloat}`,
-    label: newLabel,
-    emoji: '💾' as APIMessageComponentEmoji,
-    style: ButtonStyle.Success,
-    type: 2,
-  } as APIButtonComponent);
-
-  // Replace the category row with the new buttons
-  buttonRows.splice(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    buttonRows.findIndex(row => row.components.find(button => (button as any).custom_id?.includes(category))),
-    1,
-    categoryRow,
-  );
-
-  const moderationData = await db.ai_moderation.upsert({
-    where: {
-      guild_id: interaction.guild.id,
-    },
-    create: {
-      guild_id: interaction.guild.id,
-    },
-    update: {},
-  });
-
-  const oldValue = moderationData[category as keyof typeof moderationData];
-
-  await db.ai_moderation.update({
-    where: {
-      guild_id: interaction.guild.id,
-    },
-    data: {
-      [category]: amountFloat,
-    },
-  });
-
-  // Get the channel to send the message to
-  const channelAiModLog = await discordClient.channels.fetch(env.CHANNEL_AIMOD_LOG) as TextChannel;
-  await channelAiModLog.send({
-    content: `${interaction.member} adjusted the ${category} limit from ${oldValue} to ${amountFloat}`,
-  });
-
-  await interaction.update({
-    components: buttonRows,
-  });
-}
-
-async function adjustThreshold(
-  interaction: ButtonInteraction,
-):Promise<void> {
-  log.debug(F, 'adjustThreshold started');
-  if (!(interaction.member as GuildMember).roles.cache.has(env.DISCORD_OWNER_ID)) return;
-  // const buttonID = interaction.customId;
-  // log.debug(F, `buttonID: ${buttonID}`);
-
-  const [,, category, amount] = interaction.customId.split('~');
-  const amountFloat = parseFloat(amount);
-
-  // Go through the components on the message and find the button that has a customID that includes 'save'
-  const buttonRows = interaction.message.components.map(row => row.toJSON() as APIActionRowComponent<APIButtonComponent>);
-  // log.debug(F, `buttonRows: ${JSON.stringify(buttonRows, null, 2)}`);
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const categoryRow = buttonRows.find(row => row.components.find(button => (button as any).custom_id?.includes(category))) as APIActionRowComponent<APIButtonComponent>;
-  // log.debug(F, `categoryRow: ${JSON.stringify(categoryRow, null, 2)}`);
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const saveButton = categoryRow?.components.find(button => (button as any).custom_id?.includes('save'));
-  log.debug(F, `saveButton: ${JSON.stringify(saveButton, null, 2)}`);
-
-  const saveValue = parseFloat(saveButton?.label?.split(' ')[3] as string);
-  log.debug(F, `saveValue: ${JSON.stringify(saveValue, null, 2)}`);
-
-  const newValue = saveValue + amountFloat;
-  log.debug(F, `newValue: ${JSON.stringify(newValue.toFixed(2), null, 2)}`);
-
-  const labelBreakdown = saveButton?.label?.split(' ') as string[];
-  labelBreakdown.splice(3, 1, newValue.toFixed(2));
-  const newLabel = labelBreakdown.join(' ');
-
-  // Replace the save button with the new value
-  categoryRow.components?.splice(4, 1, {
-    custom_id: `aiMod~save~${category}~${newValue}`,
-    label: newLabel,
-    emoji: '💾' as APIMessageComponentEmoji,
-    style: ButtonStyle.Primary,
-    type: 2,
-  } as APIButtonComponent);
-
-  // Replace the category row with the new buttons
-  buttonRows.splice(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    buttonRows.findIndex(row => row.components.find(button => (button as any).custom_id?.includes(category))),
-    1,
-    categoryRow,
-  );
-
-  // const newComponentList = newRows.map(row => ActionRowBuilder.from(row));
-
-  await interaction.update({
-    components: buttonRows,
-  });
-}
-
-async function noteUser(
-  interaction: ButtonInteraction,
-):Promise<void> {
-  log.debug(F, 'noteUser started');
-  const buttonID = interaction.customId;
-  log.debug(F, `buttonID: ${buttonID}`);
-
-  if (!(interaction.member as GuildMember).roles.cache.has(env.ROLE_MODERATOR)) return;
-
-  const embed = interaction.message.embeds[0].toJSON();
-
-  const flagsField = embed.fields?.find(field => field.name === 'Flags') as APIEmbedField;
-
-  await interaction.showModal(new ModalBuilder()
-    .setCustomId(`noteModal~${interaction.id}`)
-    .setTitle('Tripbot Note')
-    .addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
-      .setLabel('What are you noting about this person?')
-      .setStyle(TextInputStyle.Paragraph)
-      .setPlaceholder('Tell the team why you are noting this user.')
-      .setValue(`This user's message was flagged by the AI for ${flagsField.value}`)
-      .setMaxLength(1000)
-      .setRequired(true)
-      .setCustomId('internalNote'))));
-  const filter = (i:ModalSubmitInteraction) => i.customId.includes('noteModal');
-
-  interaction.awaitModalSubmit({ filter, time: 0 })
-    .then(async i => {
-      if (i.customId.split('~')[1] !== interaction.id) return;
-      await i.deferReply({ ephemeral: true });
-
-      const messageField = embed.fields?.find(field => field.name === 'Message') as APIEmbedField;
-      const memberField = embed.fields?.find(field => field.name === 'Member') as APIEmbedField;
-      const urlField = embed.fields?.find(field => field.name === 'Channel') as APIEmbedField;
-
-      await moderate(
-        interaction.member as GuildMember,
-        'NOTE' as UserActionType,
-        memberField.value.slice(2, -1),
-        stripIndents`
-        ${i.fields.getTextInputValue('internalNote')}
-    
-        **The offending message**
-        > ${messageField.value}
-        ${urlField.value}
-      `,
-        null,
-        null,
-      );
-
-      const buttonRows = interaction.message.components.map(row => ActionRowBuilder.from(row.toJSON()));
-
-      const actionField = embed.fields?.find(field => field.name === 'Actions');
-
-      if (actionField) {
-        // Add the action to the list of actions
-        const newActionFiled = actionField?.value.concat(`
-        
-        ${interaction.user.toString()} noted this user:
-        > ${i.fields.getTextInputValue('internalNote')}
-        
-        Message sent to user:
-        > **No message sent to user on notes**
-        `);
-        // log.debug(F, `newActionFiled: ${newActionFiled}`);
-
-        // Replace the action field with the new one
-        embed.fields?.splice(embed.fields?.findIndex(field => field.name === 'Actions'), 1, {
-          name: 'Actions',
-          value: newActionFiled,
-          inline: true,
-        });
-      } else {
-        embed.fields?.push(
-          {
-            name: 'Actions',
-            value: stripIndents`${interaction.user.toString()} noted this user:
-            > ${i.fields.getTextInputValue('internalNote')}
-        
-            Message sent to user:
-            > ${i.fields.getTextInputValue('description')}`,
-            inline: true,
-          },
-        );
-      }
-      embed.color = Colors.Green;
-
-      await i.editReply('User was noted');
-
-      await interaction.message.edit({
-        embeds: [embed],
-        components: buttonRows as ActionRowBuilder<ButtonBuilder>[],
-      });
-    });
-}
-
-async function muteUser(
-  interaction: ButtonInteraction,
-):Promise<void> {
-  log.debug(F, 'muteUser started');
-  const buttonID = interaction.customId;
-  log.debug(F, `buttonID: ${buttonID}`);
-  if (!(interaction.member as GuildMember).roles.cache.has(env.ROLE_MODERATOR)) return;
-
-  const embed = interaction.message.embeds[0].toJSON();
-
-  const flagsField = embed.fields?.find(field => field.name === 'Flags') as APIEmbedField;
-  const messageField = embed.fields?.find(field => field.name === 'Message') as APIEmbedField;
-  const urlField = embed.fields?.find(field => field.name === 'Channel') as APIEmbedField;
-
-  await interaction.showModal(new ModalBuilder()
-    .setCustomId(`timeoutModal~${interaction.id}`)
-    .setTitle('Tripbot Timeout')
-    .addComponents(
-      new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
-        .setLabel('Why are you muting this person?')
-        .setStyle(TextInputStyle.Paragraph)
-        .setPlaceholder('Tell the team why you are muting this user.')
-        .setValue(`This user breaks TripSit's policies regarding ${flagsField.value} topics.`)
-        .setMaxLength(1000)
-        .setRequired(true)
-        .setCustomId('internalNote')),
-      new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
-        .setLabel('What should we tell the user?')
-        .setStyle(TextInputStyle.Paragraph)
-        .setPlaceholder('This will be sent to the user!')
-        .setValue(stripIndents`
-        Your recent messages have broken TripSit's policies regarding ${flagsField.value} topics.
-        
-        The offending message
-        > ${messageField.value}
-        ${urlField.value}`)
-        .setMaxLength(1000)
-        .setRequired(false)
-        .setCustomId('description')),
-      new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
-        .setLabel('Timeout for how long? (Max/default 7 days)')
-        .setStyle(TextInputStyle.Short)
-        .setPlaceholder('4 days 3hrs 2 mins 30 seconds')
-        .setRequired(false)
-        .setCustomId('timeoutDuration')),
-    ));
-  const filter = (i:ModalSubmitInteraction) => i.customId.includes('timeoutModal');
-
-  interaction.awaitModalSubmit({ filter, time: 0 })
-    .then(async i => {
-      if (i.customId.split('~')[1] !== interaction.id) return;
-      await i.deferReply({ ephemeral: true });
-
-      const duration = i.fields.getTextInputValue('timeoutDuration')
-        ? await parseDuration(i.fields.getTextInputValue('timeoutDuration'))
-        : 604800000;
-
-      if (duration > 604800000) {
-        await i.editReply('Cannot remove messages older than 7 days.');
-        return;
-      }
-
-      const memberField = embed.fields?.find(field => field.name === 'Member') as APIEmbedField;
-
-      await moderate(
-        interaction.member as GuildMember,
-        'TIMEOUT' as UserActionType,
-        memberField.value.slice(2, -1),
-        stripIndents`
-        ${i.fields.getTextInputValue('internalNote')}
-    
-        **The offending message**
-        > ${messageField.value}
-        ${urlField.value}
-      `,
-        i.fields.getTextInputValue('description'),
-        duration,
-      );
-
-      const buttonRows = interaction.message.components.map(row => ActionRowBuilder.from(row.toJSON()));
-
-      const actionField = embed.fields?.find(field => field.name === 'Actions');
-
-      if (actionField) {
-        // Add the action to the list of actions
-        const newActionFiled = actionField?.value.concat(`
-        
-        ${interaction.user.toString()} muted this user:
-        > ${i.fields.getTextInputValue('internalNote')}
-        
-        Message sent to user:
-        > ${i.fields.getTextInputValue('description')}`);
-        // log.debug(F, `newActionFiled: ${newActionFiled}`);
-
-        // Replace the action field with the new one
-        embed.fields?.splice(embed.fields?.findIndex(field => field.name === 'Actions'), 1, {
-          name: 'Actions',
-          value: newActionFiled,
-          inline: true,
-        });
-      } else {
-        embed.fields?.push(
-          {
-            name: 'Actions',
-            value: stripIndents`${interaction.user.toString()} muted this user:
-            > ${i.fields.getTextInputValue('internalNote')}
-        
-            Message sent to user:
-            > ${i.fields.getTextInputValue('description')}`,
-            inline: true,
-          },
-        );
-      }
-      embed.color = Colors.Green;
-
-      await i.editReply('User was muted');
-
-      await interaction.message.edit({
-        embeds: [embed],
-        components: buttonRows as ActionRowBuilder<ButtonBuilder>[],
-      });
-    });
-}
-
-async function warnUser(
-  interaction: ButtonInteraction,
-):Promise<void> {
-  log.debug(F, 'warnUser started');
-  const buttonID = interaction.customId;
-  log.debug(F, `buttonID: ${buttonID}`);
-  if (!(interaction.member as GuildMember).roles.cache.has(env.ROLE_MODERATOR)) return;
-
-  const embed = interaction.message.embeds[0].toJSON();
-
-  const flagsField = embed.fields?.find(field => field.name === 'Flags') as APIEmbedField;
-  const urlField = embed.fields?.find(field => field.name === 'Channel') as APIEmbedField;
-  const messageField = embed.fields?.find(field => field.name === 'Message') as APIEmbedField;
-
-  await interaction.showModal(new ModalBuilder()
-    .setCustomId(`warnModal~${interaction.id}`)
-    .setTitle('Tripbot Warn')
-    .addComponents(
-      new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
-        .setLabel('Why are you warning this person?')
-        .setStyle(TextInputStyle.Paragraph)
-        .setPlaceholder('Tell the team why you are warning this user.')
-        .setValue(`This user breaks TripSit's policies regarding ${flagsField.value} topics.`)
-        .setMaxLength(1000)
-        .setRequired(true)
-        .setCustomId('internalNote')),
-      new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
-        .setLabel('What should we tell the user?')
-        .setStyle(TextInputStyle.Paragraph)
-        .setPlaceholder('This will be sent to the user!')
-        .setValue(stripIndents`Your recent messages have broken TripSit's policies regarding ${flagsField.value} topics.
-        
-        The offending message
-        > ${messageField.value}
-        ${urlField.value}`)
-        .setMaxLength(1000)
-        .setRequired(true)
-        .setCustomId('description')),
-    ));
-  const filter = (i:ModalSubmitInteraction) => i.customId.includes('warnModal');
-
-  interaction.awaitModalSubmit({ filter, time: 0 })
-    .then(async i => {
-      if (i.customId.split('~')[1] !== interaction.id) return;
-      await i.deferReply({ ephemeral: true });
-
-      const memberField = embed.fields?.find(field => field.name === 'Member') as APIEmbedField;
-
-      await moderate(
-        interaction.member as GuildMember,
-        'WARNING' as UserActionType,
-        memberField.value.slice(2, -1),
-        stripIndents`
-        ${i.fields.getTextInputValue('internalNote')}
-    
-        **The offending message**
-        > ${messageField.value}
-        ${urlField.value}
-      `,
-        i.fields.getTextInputValue('description'),
-        null,
-      );
-
-      const buttonRows = interaction.message.components.map(row => ActionRowBuilder.from(row.toJSON()));
-
-      const actionField = embed.fields?.find(field => field.name === 'Actions');
-
-      if (actionField) {
-        // Add the action to the list of actions
-        const newActionFiled = actionField?.value.concat(`
-        
-        ${interaction.user.toString()} warned this user:
-        > ${i.fields.getTextInputValue('internalNote')}
-        
-        Message sent to user:
-        > ${i.fields.getTextInputValue('description')}`);
-        // log.debug(F, `newActionFiled: ${newActionFiled}`);
-
-        // Replace the action field with the new one
-        embed.fields?.splice(embed.fields?.findIndex(field => field.name === 'Actions'), 1, {
-          name: 'Actions',
-          value: newActionFiled,
-          inline: true,
-        });
-      } else {
-        embed.fields?.push(
-          {
-            name: 'Actions',
-            value: stripIndents`${interaction.user.toString()} warned this user:
-            > ${i.fields.getTextInputValue('internalNote')}
-        
-            Message sent to user:
-            > ${i.fields.getTextInputValue('description')}`,
-            inline: true,
-          },
-        );
-      }
-      embed.color = Colors.Green;
-
-      await i.editReply('User was warned');
-
-      await interaction.message.edit({
-        embeds: [embed],
-        components: buttonRows as ActionRowBuilder<ButtonBuilder>[],
-      });
-    });
-}
-
-async function banUser(
-  interaction: ButtonInteraction,
-):Promise<void> {
-  log.debug(F, 'banUser started');
-  const buttonID = interaction.customId;
-  log.debug(F, `buttonID: ${buttonID}`);
-  if (!(interaction.member as GuildMember).roles.cache.has(env.ROLE_MODERATOR)) return;
-
-  const embed = interaction.message.embeds[0].toJSON();
-
-  const flagsField = embed.fields?.find(field => field.name === 'Flags') as APIEmbedField;
-  const urlField = embed.fields?.find(field => field.name === 'Channel') as APIEmbedField;
-  const messageField = embed.fields?.find(field => field.name === 'Message') as APIEmbedField;
-
-  await interaction.showModal(new ModalBuilder()
-    .setCustomId(`banModal~${interaction.id}`)
-    .setTitle('Tripbot Ban')
-    .addComponents(
-      new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
-        .setLabel('Why are you banning this user?')
-        .setStyle(TextInputStyle.Paragraph)
-        .setPlaceholder('Tell the team why you are banning this user.')
-        .setValue(`This user breaks TripSit's policies regarding ${flagsField.value} topics.`)
-        .setMaxLength(1000)
-        .setRequired(true)
-        .setCustomId('internalNote')),
-      new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
-        .setLabel('What should we tell the user?')
-        .setStyle(TextInputStyle.Paragraph)
-        .setPlaceholder('This will be sent to the user!')
-        .setValue(stripIndents`Your recent messages have broken TripSit's policies regarding ${flagsField.value} topics.
-        
-        The offending message
-        > ${messageField.value}
-        ${urlField.value}`)
-        .setMaxLength(1000)
-        .setRequired(false)
-        .setCustomId('description')),
-      new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
-        .setLabel('How many days of msg to remove?')
-        .setStyle(TextInputStyle.Short)
-        .setPlaceholder('Between 0 and 7 days (Default 0)')
-        .setRequired(false)
-        .setCustomId('duration')),
-    ));
-  const filter = (i:ModalSubmitInteraction) => i.customId.includes('banModal');
-
-  interaction.awaitModalSubmit({ filter, time: 0 })
-    .then(async i => {
-      if (i.customId.split('~')[1] !== interaction.id) return;
-      await i.deferReply({ ephemeral: true });
-
-      const duration = i.fields.getTextInputValue('duration')
-        ? await parseDuration(i.fields.getTextInputValue('duration'))
-        : 0;
-
-      if (duration > 604800000) {
-        await i.editReply('Cannot remove messages older than 7 days.');
-        return;
-      }
-
-      const memberField = embed.fields?.find(field => field.name === 'Member') as APIEmbedField;
-
-      await moderate(
-        interaction.member as GuildMember,
-        'FULL_BAN' as UserActionType,
-        memberField.value.slice(2, -1),
-        stripIndents`
-        ${i.fields.getTextInputValue('internalNote')}
-    
-        **The offending message**
-        > ${messageField.value}
-        ${urlField.value}
-      `,
-        i.fields.getTextInputValue('description'),
-        duration,
-      );
-
-      const buttonRows = interaction.message.components.map(row => ActionRowBuilder.from(row.toJSON()));
-
-      const actionField = embed.fields?.find(field => field.name === 'Actions');
-
-      if (actionField) {
-        // Add the action to the list of actions
-        const newActionFiled = actionField?.value.concat(`
-        
-        ${interaction.user.toString()} banned this user:
-        > ${i.fields.getTextInputValue('internalNote')}
-        
-        Message sent to user:
-        > ${i.fields.getTextInputValue('description')}`);
-        // log.debug(F, `newActionFiled: ${newActionFiled}`);
-
-        // Replace the action field with the new one
-        embed.fields?.splice(embed.fields?.findIndex(field => field.name === 'Actions'), 1, {
-          name: 'Actions',
-          value: newActionFiled,
-          inline: true,
-        });
-      } else {
-        embed.fields?.push(
-          {
-            name: 'Actions',
-            value: stripIndents`${interaction.user.toString()} noted this user:
-            > ${i.fields.getTextInputValue('internalNote')}
-        
-            Message sent to user:
-            > ${i.fields.getTextInputValue('description')}`,
-            inline: true,
-          },
-        );
-      }
-      embed.color = Colors.Green;
-
-      await i.editReply('User was banned');
-
-      await interaction.message.edit({
-        embeds: [embed],
-        components: buttonRows as ActionRowBuilder<ButtonBuilder>[],
-      });
-    });
-}
-
-// export async function aiModResults(
-
-// ) {
-//   const moderation = await aiModResults(message);
-
-//   if (moderation.length === 0) return;
-// };
-
-export async function aiAudit(
-  aiPersona: ai_personas,
-  messages: Message[],
-  chatResponse: string,
-  promptTokens: number,
-  completionTokens: number,
-) {
-  // This function takes what was sent and returned from the API and sends it to a discord channel
-  // for review. This is to ensure that the AI is not being used to break the rules.
-
-  // const embed = await makePersonaEmbed(cleanPersona);
-
-  const promptMessage = messages[messages.length - 1];
-  const contextMessages = messages.slice(0, messages.length - 1);
-
-  const embed = embedTemplate()
-    .setFooter({ text: 'What are tokens? https://platform.openai.com/tokenizer' })
-    // .setThumbnail(promptMessage.author.displayAvatarURL())
-    .setColor(Colors.Yellow);
-
-  const contextMessageOutput = contextMessages
-    .map(message => `${message.url} ${message.member?.displayName}: ${message.cleanContent}`)
-    .join('\n')
-    .slice(0, 1024);
-
-  const promptCost = (promptTokens / 1000) * aiCosts[aiPersona.ai_model].input;
-  const completionCost = (completionTokens / 1000) * aiCosts[aiPersona.ai_model].output;
-
-  const userData = await db.users.upsert({
-    where: { discord_id: promptMessage.author.id },
-    create: { discord_id: promptMessage.author.id },
-    update: { discord_id: promptMessage.author.id },
-  });
-
-  const aiUsageData = await db.ai_usage.upsert({
-    where: {
-      user_id: userData.id,
-    },
-    create: {
-      user_id: userData.id,
-    },
-    update: {},
-  });
-
-  embed.addFields(
-    {
-      name: 'Persona',
-      value: stripIndents`**${aiPersona.name} (${aiPersona.ai_model})** - ${aiPersona.prompt}`,
-      inline: false,
-    },
-    {
-      name: 'Context',
-      value: stripIndents`${contextMessageOutput}`,
-      inline: false,
-    },
-    {
-      name: 'Prompt',
-      value: stripIndents`${promptMessage.url} ${promptMessage.member?.displayName}: ${promptMessage.cleanContent}`,
-      inline: false,
-    },
-    {
-      name: 'Result',
-      value: stripIndents`${chatResponse.slice(0, 1023)}`,
-      inline: false,
-    },
-    {
-      name: 'Chat Tokens',
-      value: stripIndents`${promptTokens + completionTokens} Tokens \n($${(promptCost + completionCost).toFixed(6)})`,
-      inline: true,
-    },
-    {
-      name: 'User Tokens',
-      value: `${aiUsageData.tokens} Tokens\n($${((aiUsageData.tokens / 1000) * aiCosts[aiPersona.ai_model].output).toFixed(6)})`,
-      inline: true,
-    },
-    {
-      name: 'Persona Tokens',
-      value: `${aiPersona.total_tokens} Tokens\n($${((aiPersona.total_tokens / 1000) * aiCosts[aiPersona.ai_model].output).toFixed(6)})`,
-      inline: true,
-    },
-  );
-
-  // Get the channel to send the message to
-  const channelAiLog = await discordClient.channels.fetch(env.CHANNEL_AILOG) as TextChannel;
-
-  // Send the message
-  await channelAiLog.send({ embeds: [embed] });
-}
-
-export async function aiImageAudit(
-  imageGenerator: ai_model,
-  message: Message,
-  image: OpenAI.Images.Image,
-) {
-  // This function takes what was sent and returned from the API and sends it to a discord channel
-  // for review. This is to ensure that the AI is not being used to break the rules.
-
-  // const embed = await makePersonaEmbed(cleanPersona);
-  const embed = embedTemplate()
-    .setAuthor({ name: message.author.username, url: message.url, iconURL: message.author.displayAvatarURL() })
-    .setColor(Colors.Yellow);
-
-  embed.addFields(
-    {
-      name: 'Prompt',
-      value: stripIndents`${message.cleanContent}`,
-      inline: false,
-    },
-    {
-      name: 'Revised Prompt',
-      value: stripIndents`${image.revised_prompt}`,
-      inline: false,
-    },
-  );
-
-  const userData = await db.users.upsert({
-    where: { discord_id: message.author.id },
-    create: { discord_id: message.author.id },
-    update: { discord_id: message.author.id },
-  });
-
-  const aiUsageData = await db.ai_usage.upsert({
-    where: {
-      user_id: userData.id,
-    },
-    create: {
-      user_id: userData.id,
-    },
-    update: {},
-  });
-  const imagesGenerated = aiUsageData.images.length;
-
-  const allUsageData = await db.ai_usage.findMany();
-  const totalImagesGenerated = allUsageData.reduce((acc, cur) => acc + cur.images.length, 0);
-
-  embed.addFields(
-    {
-      name: 'Model',
-      value: stripIndents`${imageGenerator}`,
-      inline: true,
-    },
-    {
-      name: 'User Images Generated',
-      value: `${imagesGenerated} ($${imagesGenerated * 0.04})`,
-      inline: true,
-    },
-    {
-      name: 'Total Images Generated',
-      value: `${totalImagesGenerated} ($${totalImagesGenerated * 0.04})`,
-      inline: true,
-    },
-  );
-
-  embed.setImage(image.url as string);
-
-  // Get the channel to send the message to
-  const channelAiImageLog = await discordClient.channels.fetch(env.CHANNEL_AIIMAGELOG) as TextChannel;
-  // Send the message
-  await channelAiImageLog.send({ embeds: [embed] });
 }
 
 export async function discordAiModerate(
@@ -1763,93 +1419,6 @@ export async function discordAiChat(
   if (messages[0].cleanContent.length < 1) return;
   if (messages[0].channel.type === ChannelType.DM) return;
 
-  if (messageData.cleanContent.includes('imagen')) {
-    if (!messageData.member?.roles.cache.has(env.ROLE_PATRON)
-    && !messageData.member?.roles.cache.has(env.ROLE_TEAMTRIPSIT)
-    ) {
-      await messageData.reply('This beta feature is exclusive to active TripSit [Patreon](https://www.patreon.com/tripsit) subscribers.');
-      return;
-    }
-
-    const userData = await db.users.upsert({
-      where: { discord_id: messageData.author.id },
-      create: { discord_id: messageData.author.id },
-      update: { discord_id: messageData.author.id },
-    });
-
-    const aiUsageData = await db.ai_usage.upsert({
-      where: {
-        user_id: userData.id,
-      },
-      create: {
-        user_id: userData.id,
-      },
-      update: {},
-    });
-
-    // The usageData.images is a list of dates when images were generated
-    // Users are limited to 25 images a month, which is roughly 1$ a month
-    // So we create a list of images that were generated this month, and if it's
-    // greater than 25, we let the user know.
-    const imagesThisMonth = aiUsageData.images.filter(imageDate => {
-      // log.debug(F, `imageDate: ${imageDate}`);
-      const givenDate = DateTime.fromJSDate(imageDate);
-      const oneMonthAgo = DateTime.now().minus({ months: 1 });
-      return givenDate > oneMonthAgo;
-    }).length;
-
-    if (imagesThisMonth > imageLimit && messageData.author.id !== env.DISCORD_OWNER_ID) {
-      await messageData.reply(`While I love the enthusiasm, you have already generated ${imageLimit} images this month, and this API is rather expensive. Please try again next month.`);
-      return;
-    }
-
-    const tripbotLog = await discordClient.channels.fetch(env.CHANNEL_BOTLOG) as TextChannel;
-    await tripbotLog.send(`${messageData.author.toString()} generated an image in ${messageData.url}`);
-
-    let waitingOnGen = true;
-    createImage(
-      messageData.cleanContent.replace('imgen', '').replace(tripbotUAT, '').replace('tripbot', '').trim(),
-      messageData.author.id,
-    )
-      .then(async response => {
-        log.debug(F, `createImage response: ${JSON.stringify(response, null, 2)}`);
-        waitingOnGen = false;
-        const { data } = response;
-        const [image] = data;
-        await aiImageAudit(
-          'DALL_E_3' as ai_model,
-          messageData,
-          image,
-        );
-        if (image.url) {
-          await messageData.reply(
-            {
-              embeds: [embedTemplate()
-                .setAuthor(null)
-                .setColor(null)
-                .setImage(image.url)
-                .setFooter({ text: `Beta feature only available to active TripSit Patreon subscribers (${imageLimit - imagesThisMonth} images left).` })],
-            },
-          );
-        } else {
-          await tripbotLog.send(`Error generating image: ${JSON.stringify(image, null, 2)}`);
-        }
-      })
-      .catch(async error => {
-        waitingOnGen = false;
-        await tripbotLog.send(`Error generating image: ${JSON.stringify(error, null, 2)}`);
-      });
-    // While the above function is running, send the typing function
-    while (waitingOnGen) {
-      // eslint-disable-next-line no-await-in-loop
-      await messageData.channel.sendTyping();
-      // eslint-disable-next-line no-await-in-loop
-      await sleep(5000);
-    }
-
-    return;
-  }
-
   // Check if the channel is linked to a persona
   const aiLinkData = await getLinkedChannel(messages[0].channel);
   // log.debug(F, `aiLinkData: ${JSON.stringify(aiLinkData, null, 2)}`);
@@ -1884,24 +1453,64 @@ export async function discordAiChat(
     .slice(0, maxHistoryLength)
     .reverse();
 
-  const result = await aiChat(aiPersona, messageList, messageData.author.id);
+  const { response, promptTokens, completionTokens } = await aiChat(aiPersona, messageList, messageData.author.id);
+
+  // Increment the tokens used
+  await db.ai_personas.update({
+    where: {
+      id: aiPersona.id,
+    },
+    data: {
+      total_tokens: {
+        increment: completionTokens + promptTokens,
+      },
+    },
+  });
+
+  const costUsd = (aiCosts[aiPersona.ai_model as keyof typeof aiCosts].input * promptTokens)
+  + (aiCosts[aiPersona.ai_model as keyof typeof aiCosts].output * completionTokens);
+
+  const userData = await db.users.upsert({
+    where: { discord_id: messageData.author.id },
+    create: { discord_id: messageData.author.id },
+    update: {},
+  });
+
+  await db.ai_usage.upsert({
+    where: {
+      user_id: userData.id,
+    },
+    create: {
+      user_id: userData.id,
+      tokens: completionTokens + promptTokens,
+      usd: costUsd,
+    },
+    update: {
+      usd: {
+        increment: costUsd,
+      },
+      tokens: {
+        increment: completionTokens + promptTokens,
+      },
+    },
+  });
 
   await aiAudit(
     aiPersona,
     cleanMessageList,
-    result.response,
-    result.promptTokens,
-    result.completionTokens,
+    response,
+    promptTokens,
+    completionTokens,
   );
 
   await messages[0].channel.sendTyping();
 
   const wpm = 60;
-  const wordCount = result.response.split(' ').length;
+  const wordCount = response.split(' ').length;
   const sleepTime = (wordCount / wpm) * 60000;
   // log.debug(F, `Typing ${wordCount} at ${wpm} wpm will take ${sleepTime / 1000} seconds`);
-  await sleep(sleepTime > 10000 ? 10000 : sleepTime); // Dont wait more than 10 seconds
-  await messages[0].reply(result.response.slice(0, 2000));
+  await sleep(sleepTime > 10000 ? 10000 : sleepTime); // Don't wait more than 10 seconds
+  await messages[0].reply(response.slice(0, 2000));
 }
 
 export async function discordAiConversate(
@@ -2006,13 +1615,13 @@ export async function discordAiConversate(
       // No way to support additional actions at this time
         break;
       case 'expired':
-      // This will happen if the requires_action doesnt geta  response in time, so this isnt supported either
+      // This will happen if the requires_action doesn't get a  response in time, so this isn't supported either
         break;
       case 'cancelling':
-      // This would only happen if i manually cancel the request, which isnt supported
+      // This would only happen if i manually cancel the request, which isn't supported
         break;
       case 'cancelled':
-      // Takea  guess =D
+      // Take a guess =D
         break;
       case 'failed': {
       // This should send an error to the dev
@@ -2035,7 +1644,7 @@ export async function discordAiConversate(
   // };
 
   // Listen for typing event
-  // This doesnt work for some reason
+  // This doesn't work for some reason
   // discordClient.on(Events.TypingStart, interaction => {
   //   // if (interaction.user.id === messageData.author.id && interaction.channel.id === messageData.channel.id) {
   //   log.debug(F, `Typing started: ${interaction.user.id}`);
@@ -2087,41 +1696,10 @@ export async function aiModButton(
 export const aiCommand: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('ai')
-    .setDescription('Information and commands for TripBot\'s AI personas.')
+    .setDescription('TripBot\'s AI')
     .addSubcommand(subcommand => subcommand
       .setDescription('Information on the AI persona.')
       .setName('help'))
-    .addSubcommand(subcommand => subcommand
-      .setDescription('Set a create or update an AI persona')
-      .addStringOption(option => option.setName('name')
-        .setAutocomplete(true)
-        .setDescription('Name of the AI persona to modify/create.'))
-      .addStringOption(option => option.setName('model')
-        .setAutocomplete(true)
-        .setDescription('Which model to use.'))
-      .addNumberOption(option => option.setName('tokens')
-        .setDescription('Maximum tokens to use for this request (Default: 500).')
-        .setMaxValue(1000)
-        .setMinValue(100))
-      .addNumberOption(option => option.setName('temperature')
-        .setDescription('Temperature value for the model.')
-        .setMaxValue(2)
-        .setMinValue(0))
-      .addNumberOption(option => option.setName('top_p')
-        .setDescription('Top % value for the model. Use this OR temp.')
-        .setMaxValue(2)
-        .setMinValue(0))
-      .addNumberOption(option => option.setName('presence_penalty')
-        .setDescription('Presence penalty value for the model.')
-        .setMaxValue(2)
-        .setMinValue(-2))
-      .addNumberOption(option => option.setName('frequency_penalty')
-        .setDescription('Frequency penalty value for the model.')
-        .setMaxValue(2)
-        .setMinValue(-2))
-      .addBooleanOption(option => option.setName('ephemeral')
-        .setDescription(ephemeralExplanation))
-      .setName('upsert'))
     .addSubcommand(subcommand => subcommand
       .setDescription('Get information on the AI')
       .addStringOption(option => option.setName('name')
@@ -2132,16 +1710,6 @@ export const aiCommand: SlashCommand = {
       .addBooleanOption(option => option.setName('ephemeral')
         .setDescription(ephemeralExplanation))
       .setName('get'))
-    .addSubcommand(subcommand => subcommand
-      .setDescription('Remove an AI model.')
-      .addStringOption(option => option.setName('name')
-        .setDescription('Name of the AI persona to delete.')
-        .setAutocomplete(true))
-      .addStringOption(option => option.setName('confirmation')
-        .setDescription('Code to confirm you want to delete'))
-      .addBooleanOption(option => option.setName('ephemeral')
-        .setDescription(ephemeralExplanation))
-      .setName('del'))
     .addSubcommand(subcommand => subcommand
       .setDescription('Link an AI model to a channel.')
       .addStringOption(option => option.setName('name')
@@ -2157,32 +1725,7 @@ export const aiCommand: SlashCommand = {
         ))
       .addBooleanOption(option => option.setName('ephemeral')
         .setDescription(ephemeralExplanation))
-      .setName('link'))
-    .addSubcommand(subcommand => subcommand
-      .setDescription('Change moderation parameters.')
-      .addNumberOption(option => option.setName('harassment')
-        .setDescription('Set harassment limit.'))
-      .addNumberOption(option => option.setName('harassment_threatening')
-        .setDescription('Set harassment_threatening limit.'))
-      .addNumberOption(option => option.setName('hate')
-        .setDescription('Set hate limit.'))
-      .addNumberOption(option => option.setName('hate_threatening')
-        .setDescription('Set hate_threatening limit.'))
-      .addNumberOption(option => option.setName('self_harm')
-        .setDescription('Set self_harm limit.'))
-      .addNumberOption(option => option.setName('self_harm_instructions')
-        .setDescription('Set self_harm_instructions limit.'))
-      .addNumberOption(option => option.setName('self_harm_intent')
-        .setDescription('Set self_harm_intent limit.'))
-      .addNumberOption(option => option.setName('sexual')
-        .setDescription('Set sexual limit.'))
-      .addNumberOption(option => option.setName('sexual_minors')
-        .setDescription('Set sexual_minors limit.'))
-      .addNumberOption(option => option.setName('violence')
-        .setDescription('Set violence limit.'))
-      .addNumberOption(option => option.setName('violence_graphic')
-        .setDescription('Set violence_graphic limit.'))
-      .setName('mod')),
+      .setName('link')),
 
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
@@ -2195,17 +1738,8 @@ export const aiCommand: SlashCommand = {
       case 'GET':
         await get(interaction);
         break;
-      case 'UPSERT':
-        await upsert(interaction);
-        break;
       case 'LINK':
         await link(interaction);
-        break;
-      case 'DEL':
-        await del(interaction);
-        break;
-      case 'MOD':
-        await mod(interaction);
         break;
       default:
         help(interaction);

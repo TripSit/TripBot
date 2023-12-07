@@ -9,7 +9,7 @@ import {
 import { stripIndents } from 'common-tags';
 import { PrismaClient } from '@prisma/client';
 import { sleep } from '../commands/guild/d.bottest';
-import { discordAiChat } from '../commands/guild/d.ai';
+import { discordAiChat } from '../commands/global/d.ai';
 
 const db = new PrismaClient({ log: ['error'] });
 

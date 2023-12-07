@@ -511,11 +511,15 @@ async function autocompleteAiNames(interaction:AutocompleteInteraction) {
     ],
   };
 
-  const nameList = await db.ai_personas.findMany({
-    select: {
-      name: true,
-    },
-  });
+  const nameList = interaction.guild?.id === env.DISCORD_GUILD_ID
+    ? await db.ai_personas.findMany({
+      select: {
+        name: true,
+      },
+    })
+    : [{
+      name: 'tripbot',
+    }];
 
   const fuse = new Fuse(nameList, options);
   const focusedValue = interaction.options.getFocused();
@@ -561,7 +565,7 @@ export async function autocomplete(interaction:AutocompleteInteraction):Promise<
     autocompleteConvert(interaction);
   } else if (interaction.commandName === 'reaction_role') {
     autocompleteColors(interaction);
-  } else if (interaction.commandName === 'ai') {
+  } else if (interaction.commandName === 'ai' || interaction.commandName === 'ai_manage') {
     const focusedOption = interaction.options.getFocused(true).name;
     if (focusedOption === 'model') {
       autocompleteAiModels(interaction);
