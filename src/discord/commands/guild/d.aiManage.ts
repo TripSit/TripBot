@@ -32,8 +32,6 @@ const F = f(__filename);
 const ephemeralExplanation = 'Set to "True" to show the response only to you';
 const confirmationCodes = new Map<string, string>();
 
-type AiAction = 'HELP' | 'UPSERT' | 'GET' | 'DEL' | 'LINK' | 'MOD';
-
 // Costs per 1k tokens
 const aiCosts = {
   GPT_3_5_TURBO: {
@@ -71,14 +69,14 @@ const aiCosts = {
   }
 };
 
-async function help(
+async function manageHelp(
   interaction: ChatInputCommandInteraction,
 ):Promise<void> {
   const visible = interaction.options.getBoolean('ephemeral') !== false;
   await interaction.deferReply({ ephemeral: !visible });
 
   const aboutEmbed = embedTemplate()
-    .setTitle('AI Help')
+    .setTitle('AI Manage Help')
     .setDescription(stripIndents`
       Welcome to TripBot's AI module!
 
@@ -614,10 +612,10 @@ export const aiCommand: SlashCommand = {
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
 
-    const command = interaction.options.getSubcommand().toUpperCase() as AiAction;
+    const command = interaction.options.getSubcommand().toUpperCase() as 'HELP' | 'UPSERT' | 'GET' | 'DEL' | 'MOD';
     switch (command) {
       case 'HELP':
-        await help(interaction);
+        await manageHelp(interaction);
         break;
       case 'GET':
         await get(interaction);
@@ -632,7 +630,7 @@ export const aiCommand: SlashCommand = {
         await mod(interaction);
         break;
       default:
-        help(interaction);
+        manageHelp(interaction);
         break;
     }
 

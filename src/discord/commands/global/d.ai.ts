@@ -99,31 +99,46 @@ const aiCosts = {
   }
 };
 
-type AiAction = 'HELP' | 'UPSERT' | 'GET' | 'DEL' | 'LINK' | 'MOD';
-
 async function help(
   interaction: ChatInputCommandInteraction,
 ):Promise<void> {
   const visible = interaction.options.getBoolean('ephemeral') !== false;
-  await interaction.deferReply({ ephemeral: !visible });
+  await interaction.deferReply({ ephemeral: visible });
   await interaction.editReply({
     embeds: [embedTemplate()
       .setTitle('AI Help')
-      .setDescription(stripIndents`
-        Welcome to TripBot's AI module!
-  
-        This is not a real AI, this is a Language Learning Model (LLM) that uses OpenAI's API.
-        It does not provide any kind of "intelligence", it just knows how to make a sentence that sounds good.
-        As such, **do not trust the responses as 100% fact, there is no human oversight to them.**
-        GPT3.5 is pretty smart, and chances are it's correct, but it's not guaranteed.
-  
-        Want to enable the AI in your guild?
-  
-        **/ai link optional:<channel/thread/category> optional:<toggle>**
-        You can link threads, channels, and even entire categories with the AI. (Default: current channel)
-        You can toggle the link on or off with the toggle option. (Default: on)
-        If you don't provide any options, it will return the current link status of the current channel.
-        `)],
+      .setDescription(`
+      🤖 Welcome to TripBot's AI Module! 🤖
+
+      🌐 Powered by OpenAI's API, this module is a Language Learning Model (LLM) – a sophisticated tool for crafting \
+      sentences, but not a sentient AI. It's like having a super-smart writing assistant at your fingertips!
+      
+      🚦 A Word of Caution: While GPT-3.5 can be impressively accurate, it's not infallible. Treat its responses as \
+      suggestions rather than hard facts. There's no human behind its words, so always apply your own judgment.
+
+      👥 How It Works:
+      An **AI Persona** defines the AI's interaction style, including tone and content length.
+      We've tailored our **TripBot** persona to provide harm reduction info with a touch of quirkiness.
+      Currently, TripBot is the sole persona available outside of TripSit. But there's more to come!
+      Eager to work with the AI? Join us in the TripSit guild and chat in <#${env.CHANNEL_TRIPBOT}>!
+      
+      🔗 Bring AI to Your Guild:
+      Simple Integration: Want this AI wizardry in your server? Just a single command away!
+\`\`\`
+/ai link 
+  channel:(optional - defaults to current channel)
+  toggle:(optional  - defaults to 'on')
+\`\`\`
+      *You can link entire categories if you want!*
+      
+      Lost track of linked channels? Run \`/ai get\` to check how an AI Persona is linked that channel.
+
+      📝 Audit responses:
+      You can help us improve the AI by auditing its responses. If you see a response that's excellent or improper, \\
+      react to it with the provided thumbs. If enough people agree, we'll take note and try to improve the bot behavior.
+      
+      🚀 Embark on an AI-Enhanced Journey: Prepare for a new era of AI-driven conversations!
+      `)],
   });
 }
 
@@ -1406,7 +1421,7 @@ export async function discordAiModerate(
 export async function discordAiChat(
   messageData: Message<boolean>,
 ):Promise<void> {
-  log.debug(F, `discordAiChat - messageData: ${JSON.stringify(messageData.cleanContent, null, 2)}`);
+  // log.debug(F, `discordAiChat - messageData: ${JSON.stringify(messageData.cleanContent, null, 2)}`);
   if (!env.OPENAI_API_ORG || !env.OPENAI_API_KEY) return;
 
   const channelMessages = await messageData.channel.messages.fetch({ limit: 10 });
@@ -1414,7 +1429,7 @@ export async function discordAiChat(
 
   const messages = [...channelMessages.values()];
 
-  if (!messages[0].member?.roles.cache.has(env.ROLE_VERIFIED)) return;
+  // if (!messages[0].member?.roles.cache.has(env.ROLE_VERIFIED)) return;
   if (messages[0].author.bot) return;
   if (messages[0].cleanContent.length < 1) return;
   if (messages[0].channel.type === ChannelType.DM) return;
@@ -1431,7 +1446,7 @@ export async function discordAiChat(
       id: aiLinkData.persona_id,
     },
   });
-  // log.debug(F, `aiPersona: ${aiPersona.name}`);
+  log.debug(F, `aiPersona: ${aiPersona.name}`);
 
   // Get the last 3 messages that are not empty or from other bots
   const messageList = messages
@@ -1505,19 +1520,23 @@ export async function discordAiChat(
 
   await messages[0].channel.sendTyping();
 
-  const wpm = 60;
+  const wpm = 120;
   const wordCount = response.split(' ').length;
   const sleepTime = (wordCount / wpm) * 60000;
-  // log.debug(F, `Typing ${wordCount} at ${wpm} wpm will take ${sleepTime / 1000} seconds`);
-  await sleep(sleepTime > 10000 ? 10000 : sleepTime); // Don't wait more than 10 seconds
-  await messages[0].reply(response.slice(0, 2000));
+  log.debug(F, `Typing ${wordCount} at ${wpm} wpm will take ${sleepTime / 1000} seconds`);
+  await sleep(sleepTime > 10000 ? 5000 : sleepTime); // Don't wait more than 5 seconds
+  const replyMessage = await messages[0].reply(response.slice(0, 2000));
+
+  // React to that message with thumbs up and thumbs down emojis
+  await replyMessage.react(env.EMOJI_THUMB_UP);
+  await replyMessage.react(env.EMOJI_THUMB_DOWN);
 }
 
 export async function discordAiConversate(
   messageData: Message<boolean>,
 ):Promise<void> {
   if (!env.OPENAI_API_ORG || !env.OPENAI_API_KEY) return;
-  log.debug(F, `discordAiConversate - messageData: ${JSON.stringify(messageData.cleanContent, null, 2)}`);
+  // log.debug(F, `discordAiConversate - messageData: ${JSON.stringify(messageData.cleanContent, null, 2)}`);
 
   if (!messageData.member?.roles.cache.has(env.ROLE_VERIFIED)) return;
   if (messageData.author.bot) return;
@@ -1713,12 +1732,12 @@ export const aiCommand: SlashCommand = {
     .addSubcommand(subcommand => subcommand
       .setDescription('Link an AI model to a channel.')
       .addStringOption(option => option.setName('name')
-        .setDescription('Name of the AI persona to link.')
+        .setDescription('AI persona to link. (Default: TripBot)')
         .setAutocomplete(true))
       .addChannelOption(option => option.setName('channel')
-        .setDescription('ID or channel mention of the channel to link.'))
+        .setDescription('Channel, thread or category. (Default: This channel)'))
       .addStringOption(option => option.setName('toggle')
-        .setDescription('Should we enable to disable this link?')
+        .setDescription('Enable to disable this link? (Default: Enable)')
         .setChoices(
           { name: 'Enable', value: 'enable' },
           { name: 'Disable', value: 'disable' },
@@ -1730,7 +1749,7 @@ export const aiCommand: SlashCommand = {
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
 
-    const command = interaction.options.getSubcommand().toUpperCase() as AiAction;
+    const command = interaction.options.getSubcommand().toUpperCase() as 'HELP' | 'GET' | 'LINK';
     switch (command) {
       case 'HELP':
         await help(interaction);

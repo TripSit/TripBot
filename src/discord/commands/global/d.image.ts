@@ -39,21 +39,34 @@ async function help(
   await interaction.deferReply({ ephemeral: !visible });
   await interaction.editReply({
     embeds: [embedTemplate()
-      .setTitle('AI Help')
+      .setTitle('Image Generation Help')
       .setDescription(stripIndents`
-        Welcome to TripBot's AI module!
-  
-        This is not a real AI, this is a Language Learning Model (LLM) that uses OpenAI's API.
-        It does not provide any kind of "intelligence", it just knows how to make a sentence that sounds good.
-        As such, **do not trust the responses as 100% fact, there is no human oversight to them.**
-        GPT3.5 is pretty smart, and chances are it's correct, but it's not guaranteed.
-  
-        Want to enable the AI in your guild?
-  
-        **/ai link optional:<channel/thread/category> optional:<toggle>**
-        You can link threads, channels, and even entire categories with the AI. (Default: current channel)
-        You can toggle the link on or off with the toggle option. (Default: on)
-        If you don't provide any options, it will return the current link status of the current channel.
+      🌟 Welcome to TripBot's Advanced Image Generation! 🌟
+
+      🎨 Harnessing the power of Dall-E 3, we transform your descriptions into stunning visuals. \
+      Imagine the possibilities!
+      
+      🔒 Exclusive Access for Our Supporters: This feature is a special thank you to our active TripSit Patreon \
+      subscribers. Your support helps us cover the higher costs of this advanced technology (just 4 cents per image!).
+
+      🔄 Fair Usage Policy: As a Patreon subscriber, you're entitled to X images per rolling month. \
+      Think of it as a 'credit' system: each image you generate counts against your monthly quota, \
+      and you regain that 'credit' 30 days after each generation. This ensures fair access for everyone – \
+      it's not a monthly reset, but a continuous cycle of creativity!
+      
+      🧠 Enhanced for Creativity: To ensure the best results, we fine-tune your requests for optimal AI compatibility. \
+      Expect more vivid and accurate interpretations of your ideas!
+      
+      📜 Play by the Rules: All requests must comply with OpenAI's terms and conditions. Let's keep creativity \
+      responsible!
+      
+      🔍 Respect and Responsibility: We log all requests for accountability. Misuse of this amazing tool will lead \
+      to a ban from the bot. Let's maintain a respectful and imaginative community!
+
+      🛠️ Control for Server Owners: Discord server owners have the power to enable or disable this command through the \
+      app menu. We believe in giving you the control to tailor the experience to your community's needs.
+      
+      Happy imagining! 🚀
         `)],
   });
 }
