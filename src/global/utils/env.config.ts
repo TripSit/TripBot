@@ -21,6 +21,9 @@ export const env = {
   API_USERNAME: process.env.API_USERNAME,
   API_PASSWORD: process.env.API_PASSWORD,
 
+  EMOJI_THUMB_UP: isProd ? '979721167332052992' : '👍',
+  EMOJI_THUMB_DOWN: isProd ? '979721915390369822' : '👎',
+
   OPENAI_API_ORG: process.env.OPENAI_API_ORG ?? '',
   OPENAI_API_KEY: process.env.OPENAI_API_KEY ?? '',
 
