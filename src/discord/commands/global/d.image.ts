@@ -25,11 +25,11 @@ const F = f(__filename);
 const ephemeralExplanation = 'Set to "True" to show the response only to you';
 const imageLimits = {
   [env.ROLE_TEAMTRIPSIT]: 20,
-  [env.ROLE_PATREON_TIER_0]: 20,
-  [env.ROLE_PATREON_TIER_1]: 40,
-  [env.ROLE_PATREON_TIER_2]: 60,
-  [env.ROLE_PATREON_TIER_3]: 80,
-  [env.ROLE_PATREON_TIER_4]: 100,
+  [env.ROLE_PATRON_TIER_0]: 20,
+  [env.ROLE_PATRON_TIER_1]: 40,
+  [env.ROLE_PATRON_TIER_2]: 60,
+  [env.ROLE_PATRON_TIER_3]: 80,
+  [env.ROLE_PATRON_TIER_4]: 100,
 };
 
 async function help(
