@@ -535,7 +535,15 @@ export async function tripsitmeTeamClose(
 
   const targetId = interaction.customId.split('~')[1];
 
-  const target = await interaction.guild.members.fetch(targetId);
+  let target = null as GuildMember | null;
+  try {
+    target = await interaction.guild.members.fetch(targetId);
+  } catch (err) {
+    // log.debug(F, `There was an error fetching the target, it was likely deleted:\n ${err}`);
+    // await interaction.editReply({ content: 'Sorry, this user has left the guild.' });
+    // return;
+  }
+
   const actor = interaction.member as GuildMember;
 
   if (targetId === actor.id) {
@@ -544,7 +552,7 @@ export async function tripsitmeTeamClose(
     return;
   }
 
-  const userData = await getUser(target.id, null, null);
+  const userData = await getUser(targetId, null, null);
   log.debug(F, `userData: ${JSON.stringify(userData, null, 2)}`);
   const ticketData = await getOpenTicket(userData.id, null);
   log.debug(F, `ticketData: ${JSON.stringify(ticketData, null, 2)}`);
@@ -552,7 +560,7 @@ export async function tripsitmeTeamClose(
   log.debug(F, `guildData: ${JSON.stringify(guildData, null, 2)}`);
 
   if (!ticketData) {
-    const rejectMessage = `Hey ${(interaction.member as GuildMember).displayName}, ${target.displayName} does not have an open session!`;
+    const rejectMessage = `Hey ${(interaction.member as GuildMember).displayName}, ${target ? target.displayName : 'this user'} does not have an open session!`;
     const embed = embedTemplate().setColor(Colors.DarkBlue);
     embed.setDescription(rejectMessage);
     // log.debug(F, `target ${target} does not need help!`);
@@ -562,7 +570,7 @@ export async function tripsitmeTeamClose(
 
   // log.debug(F, `ticketData: ${JSON.stringify(ticketData, null, 2)}`);
   if (Object.entries(ticketData).length === 0) {
-    const rejectMessage = `Hey ${(interaction.member as GuildMember).displayName}, ${target.displayName} does not have an open session!`;
+    const rejectMessage = `Hey ${(interaction.member as GuildMember).displayName}, ${target ? target.displayName : 'this user'} does not have an open session!`;
     const embed = embedTemplate().setColor(Colors.DarkBlue);
     embed.setDescription(rejectMessage);
     // log.debug(F, `target ${target} does not need help!`);
@@ -574,7 +582,9 @@ export async function tripsitmeTeamClose(
   let threadHelpUser = {} as ThreadChannel;
   try {
     threadHelpUser = await interaction.guild.channels.fetch(ticketData.thread_id) as ThreadChannel;
-    threadHelpUser.setName(`💙│${target.displayName}'s channel!`);
+
+    // Replace the first character of the channel name with a blue heart using slice to preserve the rest of the name
+    await threadHelpUser.setName(`💙${threadHelpUser.name.slice(1)}`);
   } catch (err) {
     // log.debug(F, `There was an error updating the help thread, it was likely deleted:\n ${err}`);
     // Update the ticket status to closed
@@ -600,7 +610,7 @@ export async function tripsitmeTeamClose(
   const row = new ActionRowBuilder<ButtonBuilder>()
     .addComponents(
       new ButtonBuilder()
-        .setCustomId(`tripsitmeUserClose~${target.id}`)
+        .setCustomId(`tripsitmeUserClose~${targetId}`)
         .setLabel('I\'m good now!')
         .setStyle(ButtonStyle.Success),
     );
@@ -615,10 +625,10 @@ export async function tripsitmeTeamClose(
     try {
       const metaChannel = await interaction.guild.channels.fetch(metaChannelId) as TextChannel;
       await metaChannel.send({
-        content: stripIndents`${actor.displayName} has indicated that ${target.toString()} no longer needs help!`,
+        content: stripIndents`${actor.displayName} has indicated that ${target ? target.displayName : 'this user'} no longer needs help!`,
       });
       if (metaChannelId !== guildData.channel_tripsitmeta) {
-        metaChannel.setName(`💙│${target.displayName}'s discussion!`);
+        await metaChannel.setName(`💙${threadHelpUser.name.slice(1)}`);
       }
     } catch (err) {
       if (metaChannelId === ticketData.meta_thread_id) {
