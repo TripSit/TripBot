@@ -1411,11 +1411,20 @@ export async function discordAiModerate(
   // Get the channel to send the message to
   const channelAiModLog = await discordClient.channels.fetch(env.CHANNEL_AIMOD_LOG) as TextChannel;
   // Send the message
-  await channelAiModLog.send({
-    content: `${targetMember.displayName} was flagged by AI for ${activeFlags.join(', ')} in ${messageData.url}`,
-    embeds: [aiEmbed],
-    components: [userActions, ...modAiModifyButtons],
-  });
+  try {
+    await channelAiModLog.send({
+      content: `${targetMember.displayName} was flagged by AI for ${activeFlags.join(', ')} in ${messageData.url}`,
+      embeds: [aiEmbed],
+      components: [userActions, ...modAiModifyButtons],
+    });
+  } catch (err) {
+    log.error(F, `Error sending message: ${err}`);
+    log.error(F, `${JSON.stringify({
+      content: `${targetMember.displayName} was flagged by AI for ${activeFlags.join(', ')} in ${messageData.url}`,
+      embeds: [aiEmbed],
+      components: [userActions, ...modAiModifyButtons],
+    }, null, 2)}`);
+  }
 }
 
 export async function discordAiChat(
