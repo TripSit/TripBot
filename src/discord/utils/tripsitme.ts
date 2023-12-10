@@ -776,7 +776,12 @@ export async function tripsitmeUserClose(
             && roleObj.name !== '@everyone'
             && roleObj.id !== roleNeedshelp.id
             && roleObj.comparePositionTo(myRole) < 0) {
-          await target.roles.add(roleObj);
+          try {
+            await target.roles.add(roleObj);
+          } catch (err) {
+            log.error(F, `Error adding role to target: ${err}`);
+            log.error(F, `${roleObj.name} to ${target.displayName} in ${interaction.guild}!`);
+          }
         }
       });
     }
