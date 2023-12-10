@@ -1471,8 +1471,10 @@ export async function discordAiModerate(
 export async function discordAiChat(
   messageData: Message<boolean>,
 ):Promise<void> {
-  // log.debug(F, `discordAiChat - messageData: ${JSON.stringify(messageData.cleanContent, null, 2)}`);
   if (!env.OPENAI_API_ORG || !env.OPENAI_API_KEY) return;
+  await messageData.fetch();
+
+  log.debug(F, `messageData: ${JSON.stringify(messageData, null, 2)}`);
 
   const channelMessages = await messageData.channel.messages.fetch({ limit: 10 });
   // log.debug(F, `channelMessages: ${JSON.stringify(channelMessages.map(message => message.cleanContent), null, 2)}`);
@@ -1480,11 +1482,20 @@ export async function discordAiChat(
   const messages = [...channelMessages.values()];
 
   // if (!messages[0].member?.roles.cache.has(env.ROLE_VERIFIED)) return;
-  if (messages[0].author.bot) return;
-  if (messages[0].cleanContent.length < 1) return;
-  if (messages[0].channel.type === ChannelType.DM) return;
+  if (messageData.author.bot) {
+    log.debug(F, 'Message was from a bot, returning');
+    return;
+  }
+  if (messageData.cleanContent.length < 1) {
+    log.debug(F, 'Message was empty, returning');
+    return;
+  }
+  if (messageData.channel.type === ChannelType.DM) {
+    log.debug(F, 'Message was from a DM, returning');
+    return;
+  }
 
-  log.debug(F, ` ${messages[0].author.displayName} asked me ${messages[0].cleanContent}`);
+  log.debug(F, ` ${messageData.author.displayName} asked me ${messageData.cleanContent}`);
 
   // Check if the channel is linked to a persona
   const aiLinkData = await getLinkedChannel(messages[0].channel);
@@ -1498,7 +1509,7 @@ export async function discordAiChat(
       id: aiLinkData.persona_id,
     },
   });
-  log.debug(F, `aiPersona: ${aiPersona.name}`);
+  // log.debug(F, `aiPersona: ${aiPersona.name}`);
 
   // Get the last 3 messages that are not empty or from other bots
   const messageList = messages
@@ -1579,7 +1590,7 @@ export async function discordAiChat(
   const wpm = 120;
   const wordCount = response.split(' ').length;
   const sleepTime = (wordCount / wpm) * 60000;
-  log.debug(F, `Typing ${wordCount} at ${wpm} wpm will take ${sleepTime / 1000} seconds`);
+  // log.debug(F, `Typing ${wordCount} at ${wpm} wpm will take ${sleepTime / 1000} seconds`);
   await sleep(sleepTime > 10000 ? 5000 : sleepTime); // Don't wait more than 5 seconds
   const replyMessage = await messages[0].reply(response.slice(0, 2000));
 
