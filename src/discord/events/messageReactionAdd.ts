@@ -18,8 +18,19 @@ const F = f(__filename); // eslint-disable-line @typescript-eslint/no-unused-var
 export const messageReactionAdd: MessageReactionAddEvent = {
   name: 'messageReactionAdd',
   async execute(messageReaction, user) {
-    await messageReaction.fetch();
-    await messageReaction.message.fetch(); // Get the message object so that we can do stuff between restarts
+    try {
+      await messageReaction.fetch();
+    } catch (e) {
+      log.error(F, 'Failed to fetch messageReaction');
+      // return;
+    }
+    try {
+      await messageReaction.message.fetch(); // Get the message object so that we can do stuff between restarts
+    } catch (e) {
+      log.error(F, 'Failed to fetch message data');
+      // return;
+    }
+
     if (!messageReaction.message.guild) return; // Ignore DMs
     log.info(F, stripIndents`${user} added ${messageReaction.emoji.name} on to \
         ${messageReaction.message.author?.displayName}'s message`);
