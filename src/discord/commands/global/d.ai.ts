@@ -1474,7 +1474,7 @@ export async function discordAiChat(
   if (!env.OPENAI_API_ORG || !env.OPENAI_API_KEY) return;
   await messageData.fetch();
 
-  log.debug(F, `messageData: ${JSON.stringify(messageData, null, 2)}`);
+  // log.debug(F, `messageData: ${JSON.stringify(messageData, null, 2)}`);
 
   const channelMessages = await messageData.channel.messages.fetch({ limit: 10 });
   // log.debug(F, `channelMessages: ${JSON.stringify(channelMessages.map(message => message.cleanContent), null, 2)}`);

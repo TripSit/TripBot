@@ -97,6 +97,10 @@ export async function messageCommand(message: Message): Promise<void> {
   const displayName = message.member ? message.member.displayName : message.author.username;
   // log.debug(F, `message: ${JSON.stringify(message, null, 2)}`);
 
+  if (message.guild.id === env.DISCORD_GUILD_ID) {
+    log.debug(F, `message: ${JSON.stringify(message, null, 2)}`);
+  } // Log messages from tripsit for debugging
+
   // Ignore messages that start with ~~, these are usually strikethrough messages
   if (message.content.startsWith('~~')) { return; }
 
