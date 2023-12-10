@@ -976,45 +976,49 @@ async function aiAudit(
     update: {},
   });
 
-  embed.addFields(
-    {
-      name: 'Persona',
-      value: stripIndents`**${aiPersona.name} (${aiPersona.ai_model})** - ${aiPersona.prompt}`,
-      inline: false,
-    },
-    {
-      name: 'Context',
-      value: stripIndents`${contextMessageOutput}`,
-      inline: false,
-    },
-    {
-      name: 'Prompt',
-      value: stripIndents`${promptMessage.url} ${promptMessage.member?.displayName}: ${promptMessage.cleanContent}`,
-      inline: false,
-    },
-    {
-      name: 'Result',
-      value: stripIndents`${chatResponse.slice(0, 1023)}`,
-      inline: false,
-    },
-    {
-      name: 'Chat Tokens',
-      value: stripIndents`${promptTokens + completionTokens} Tokens \n($${(promptCost + completionCost).toFixed(6)})`,
-      inline: true,
-    },
-    {
-      name: 'User Tokens',
-      value: `${aiUsageData.tokens} Tokens\n($${((aiUsageData.tokens / 1000)
-      * aiCosts[aiPersona.ai_model].output).toFixed(6)})`,
-      inline: true,
-    },
-    {
-      name: 'Persona Tokens',
-      value: `${aiPersona.total_tokens} Tokens\n($${((aiPersona.total_tokens / 1000)
-      * aiCosts[aiPersona.ai_model].output).toFixed(6)})`,
-      inline: true,
-    },
-  );
+  try {
+    embed.addFields(
+      {
+        name: 'Persona',
+        value: stripIndents`**${aiPersona.name} (${aiPersona.ai_model})** - ${aiPersona.prompt}`,
+        inline: false,
+      },
+      {
+        name: 'Context',
+        value: stripIndents`${contextMessageOutput || 'No context'}`,
+        inline: false,
+      },
+      {
+        name: 'Prompt',
+        value: stripIndents`${promptMessage.url} ${promptMessage.member?.displayName}: ${promptMessage.cleanContent}`,
+        inline: false,
+      },
+      {
+        name: 'Result',
+        value: stripIndents`${chatResponse.slice(0, 1023)}`,
+        inline: false,
+      },
+      {
+        name: 'Chat Tokens',
+        value: stripIndents`${promptTokens + completionTokens} Tokens \n($${(promptCost + completionCost).toFixed(6)})`,
+        inline: true,
+      },
+      {
+        name: 'User Tokens',
+        value: `${aiUsageData.tokens} Tokens\n($${((aiUsageData.tokens / 1000)
+        * aiCosts[aiPersona.ai_model].output).toFixed(6)})`,
+        inline: true,
+      },
+      {
+        name: 'Persona Tokens',
+        value: `${aiPersona.total_tokens} Tokens\n($${((aiPersona.total_tokens / 1000)
+        * aiCosts[aiPersona.ai_model].output).toFixed(6)})`,
+        inline: true,
+      },
+    );
+  } catch (error) {
+    log.error(F, `${error}`);
+  }
 
   // Get the channel to send the message to
   const channelAiLog = await discordClient.channels.fetch(env.CHANNEL_AILOG) as TextChannel;
