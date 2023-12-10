@@ -32,8 +32,8 @@ export const messageReactionAdd: MessageReactionAddEvent = {
     }
 
     if (!messageReaction.message.guild) return; // Ignore DMs
-    log.info(F, stripIndents`${user} added ${messageReaction.emoji.name} on to \
-        ${messageReaction.message.author?.displayName}'s message`);
+    // log.info(F, stripIndents`${user} added ${messageReaction.emoji.name} on to \
+    //     ${messageReaction.message.author?.displayName}'s message`);
     // AI audit stuff comes first cuz this can happen on other guilds
     // We want to collect every message tripbot sends that gets three thumbs downs
     const thumbsUpEmojis = ['👍', '👍🏻', '👍🏼', '👍🏽', '👍🏾', '👍🏿', 'ts_thumbup'];
@@ -43,12 +43,12 @@ export const messageReactionAdd: MessageReactionAddEvent = {
         || thumbsDownEmojis.includes(messageReaction.emoji.name as string)
       )
     ) {
-      log.debug(F, `Someone reacted to tripbot's message with an audit emoji (${messageReaction.emoji.name})`);
+      // log.debug(F, `Someone reacted to tripbot's message with an audit emoji (${messageReaction.emoji.name})`);
 
       const auditLimit = env.NODE_ENV === 'production' ? 4 : 2;
-      log.debug(F, `Audit limit is ${auditLimit}, emoji count is ${messageReaction.count}`);
+      // log.debug(F, `Audit limit is ${auditLimit}, emoji count is ${messageReaction.count}`);
       if (messageReaction.count === auditLimit) {
-        log.debug(F, `Audit limit reached (${auditLimit})`);
+        // log.debug(F, `Audit limit reached (${auditLimit})`);
 
         const action = thumbsUpEmojis.includes(messageReaction.emoji.name as string) ? 'approve' : 'reject';
         const message = thumbsUpEmojis.includes(messageReaction.emoji.name as string)

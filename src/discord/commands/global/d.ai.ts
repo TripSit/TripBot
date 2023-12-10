@@ -1018,6 +1018,43 @@ async function aiAudit(
     );
   } catch (error) {
     log.error(F, `${error}`);
+    log.error(F, `${JSON.stringify({
+      name: 'Persona',
+      value: stripIndents`**${aiPersona.name} (${aiPersona.ai_model})** - ${aiPersona.prompt}`,
+      inline: false,
+    }, null, 2)}`);
+    log.error(F, `${JSON.stringify({
+      name: 'Context',
+      value: stripIndents`${contextMessageOutput || 'No context'}`,
+      inline: false,
+    }, null, 2)}`);
+    log.error(F, `${JSON.stringify({
+      name: 'Prompt',
+      value: stripIndents`${promptMessage.url} ${promptMessage.member?.displayName}: ${promptMessage.cleanContent}`,
+      inline: false,
+    }, null, 2)}`);
+    log.error(F, `${JSON.stringify({
+      name: 'Result',
+      value: stripIndents`${chatResponse.slice(0, 1023)}`,
+      inline: false,
+    }, null, 2)}`);
+    log.error(F, `${JSON.stringify({
+      name: 'Chat Tokens',
+      value: stripIndents`${promptTokens + completionTokens} Tokens \n($${(promptCost + completionCost).toFixed(6)})`,
+      inline: true,
+    }, null, 2)}`);
+    log.error(F, `${JSON.stringify({
+      name: 'User Tokens',
+      value: `${aiUsageData.tokens} Tokens\n($${((aiUsageData.tokens / 1000)
+      * aiCosts[aiPersona.ai_model].output).toFixed(6)})`,
+      inline: true,
+    }, null, 2)}`);
+    log.error(F, `${JSON.stringify({
+      name: 'Persona Tokens',
+      value: `${aiPersona.total_tokens} Tokens\n($${((aiPersona.total_tokens / 1000)
+      * aiCosts[aiPersona.ai_model].output).toFixed(6)})`,
+      inline: true,
+    }, null, 2)}`);
   }
 
   // Get the channel to send the message to
@@ -1447,6 +1484,8 @@ export async function discordAiChat(
   if (messages[0].cleanContent.length < 1) return;
   if (messages[0].channel.type === ChannelType.DM) return;
 
+  log.debug(F, ` ${messages[0].author.displayName} asked me ${messages[0].cleanContent}`);
+
   // Check if the channel is linked to a persona
   const aiLinkData = await getLinkedChannel(messages[0].channel);
   // log.debug(F, `aiLinkData: ${JSON.stringify(aiLinkData, null, 2)}`);
@@ -1482,6 +1521,10 @@ export async function discordAiChat(
     .reverse();
 
   const { response, promptTokens, completionTokens } = await aiChat(aiPersona, messageList, messageData.author.id);
+
+  log.debug(F, `response: ${response}`);
+  // log.debug(F, `promptTokens: ${promptTokens}`);
+  // log.debug(F, `completionTokens: ${completionTokens}`);
 
   // Increment the tokens used
   await db.ai_personas.update({
@@ -1541,8 +1584,13 @@ export async function discordAiChat(
   const replyMessage = await messages[0].reply(response.slice(0, 2000));
 
   // React to that message with thumbs up and thumbs down emojis
-  await replyMessage.react(env.EMOJI_THUMB_UP);
-  await replyMessage.react(env.EMOJI_THUMB_DOWN);
+  try {
+    await replyMessage.react(env.EMOJI_THUMB_UP);
+    await replyMessage.react(env.EMOJI_THUMB_DOWN);
+  } catch (error) {
+    log.error(F, `Error reacting to message: ${messages[0].url}`);
+    log.error(F, `${error}`);
+  }
 }
 
 export async function discordAiConversate(
