@@ -63,6 +63,7 @@ export const env = {
   SONAR_TOKEN: process.env.SONAR_TOKEN,
 
   HTTP_PORT: '8080',
+  API_PORT: '1337',
 
   TS_ICON_URL: 'https://i.gyazo.com/b48b08a853fefaafb6393837eec1a501.png',
   FLAME_ICON_URL: 'https://i.gyazo.com/19276c297cca0761dc9689ac7c320b8e.png',

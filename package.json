@@ -11,7 +11,6 @@
     "npm": "10.2.0"
   },
   "scripts": {
-    "all:start": "docker compose --project-name tripbot up -d --force-recreate --build",
     "## TRIPBOT ##": "",
     "tripbot:start": "docker compose --project-name tripbot up -d --force-recreate --build tripbot ",
     "tripbot:logs": "docker container logs tripbot -f -n 100",
@@ -30,12 +29,6 @@
     "## PGADMIN ##": "",
     "pgadmin": "docker compose --project-name tripbot up -d --force-recreate --build tripbot_pgadmin",
     "pgadmin:logs": "docker container logs tripbot_pgadmin -f -n 100",
-    "# API #": "",
-    "api": "docker compose --project-name tripbot up -d --force-recreate --build tripbot_api",
-    "api:start": "rimraf dist && swc ./src -d ./dist && node --inspect=0.0.0.0 dist/index.js",
-    "api:logs": "docker logs tripbot_api -f -n 100",
-    "api:test": "jest --silent -c ./src/testing/jest.unit.config.ts --detectOpenHandles",
-    "api:lint": "npx eslint --fix --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts . --cache",
     "## CODESPACE ##": "",
     "codespace:start": "npx tsc-watch --onSuccess 'npx nodemon --config ./nodemon.json'",
     "codespace:deploy": "npx ts-node --transpile-only ./src/discord/utils/commandDeploy.ts"
@@ -102,6 +95,7 @@
     "sonar-scanner": "^3.1.0",
     "source-map-support": "^0.5.21",
     "telegraf": "^4.15.3",
+    "tripsit_drug_db": "github:tripsit/drugs",
     "trivia-api": "^1.0.1",
     "underscore": "^1.13.6",
     "winston": "^3.11.0",
