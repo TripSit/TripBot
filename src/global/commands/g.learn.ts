@@ -87,7 +87,7 @@ export async function link(
     return 'No user found with that email address.';
   }
 
-  log.debug(F, `moodleUserData: ${JSON.stringify(moodleUserData)}`);
+  log.debug(F, `moodleUserData: ${JSON.stringify(moodleUserData.username)}`);
 
   tripbotDb.users.update({
     where: {
