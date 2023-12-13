@@ -71,7 +71,7 @@ export async function link(
     },
   });
 
-  // log.debug(F, `userData: ${JSON.stringify(userData)}`);
+  log.debug(F, `userData: ${JSON.stringify(userData)}`);
 
   if (!userData) {
     return 'No user found with that Discord or Matrix ID.';
@@ -83,13 +83,11 @@ export async function link(
     },
   });
 
-  // const [moodleUserData] = await moodleDb.mdl_user.findMany();
-
   if (!moodleUserData) {
     return 'No user found with that email address.';
   }
 
-  // log.debug(F, `moodleUserData: ${JSON.stringify(moodleUserData.username)}`);
+  log.debug(F, `moodleUserData: ${JSON.stringify(moodleUserData)}`);
 
   tripbotDb.users.update({
     where: {
@@ -100,8 +98,8 @@ export async function link(
     },
   });
 
-  return stripIndents`You have linked your Discord account with TripSitLearn!
-  Use the /learn profile command to see your profile!`;
+  return stripIndents`You have linked the moodle account - ${email} (${moodleUserData.username}) - with Discord account ${discordId}
+  Use the /learn profile command to see the profile!`;
 }
 
 export async function unlink(
