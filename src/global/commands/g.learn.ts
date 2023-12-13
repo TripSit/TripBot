@@ -89,7 +89,7 @@ export async function link(
 
   log.debug(F, `moodleUserData: ${JSON.stringify(moodleUserData.username)}`);
 
-  tripbotDb.users.update({
+  const result = await tripbotDb.users.update({
     where: {
       id: userData.id,
     },
@@ -97,6 +97,8 @@ export async function link(
       moodle_id: moodleUserData.username,
     },
   });
+
+  log.debug(F, `result: ${JSON.stringify(result)}`);
 
   return stripIndents`You have linked the moodle account - ${email} (${moodleUserData.username}) - with Discord account ${discordId}
   Use the /learn profile command to see the profile!`;
