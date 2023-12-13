@@ -32,18 +32,25 @@ async function moodleHelp():Promise<EmbedBuilder> {
 async function moodleLink(
   interaction:ChatInputCommandInteraction,
 ):Promise<EmbedBuilder> {
-  // Check if the admin_only option was used
-  if (interaction.options.getString('admin_only')) {
+  // Check if the discordId option was used
+  if (interaction.options.getString('discordId')) {
     if (interaction.user.id !== env.DISCORD_OWNER_ID) {
       return embedTemplate()
         .setColor(Colors.Red)
         .setDescription('You are not allowed to use this option!');
     }
+
+    // Check if the email given is valid
+    if (!interaction.options.getString('email', true).includes('@')) {
+      return embedTemplate()
+        .setColor(Colors.Red)
+        .setDescription('That doesn\'t look like a valid email address!');
+    }
+
     return embedTemplate()
       .setDescription(await link(
-        undefined,
         interaction.options.getString('email', true),
-        interaction.options.getString('admin_only', true),
+        interaction.options.getString('discordId', true),
       ));
   }
 
@@ -57,7 +64,6 @@ async function moodleLink(
   return embedTemplate()
     .setDescription(await link(
       interaction.options.getString('email', true),
-      undefined,
       interaction.user.id,
     ));
 }
@@ -65,7 +71,7 @@ async function moodleLink(
 async function moodleUnlink(
   interaction:ChatInputCommandInteraction,
 ):Promise<EmbedBuilder> {
-  if (interaction.options.getString('admin_only')) {
+  if (interaction.options.getString('discordId')) {
     if (interaction.user.id !== env.DISCORD_OWNER_ID) {
       return embedTemplate()
         .setColor(Colors.Red)
@@ -73,7 +79,7 @@ async function moodleUnlink(
     }
     return embedTemplate()
       .setDescription(await unlink(
-        interaction.options.getString('admin_only', true),
+        interaction.options.getString('discordId', true),
       ));
   }
 
@@ -192,12 +198,12 @@ export const dLearn: SlashCommand = {
       .addStringOption(option => option.setName('email')
         .setDescription('What email did you use to register on moodle?')
         .setRequired(true))
-      .addStringOption(option => option.setName('admin_only')
+      .addStringOption(option => option.setName('discordId')
         .setDescription('Ignore this, admin use only!')))
     .addSubcommand(subcommand => subcommand
       .setName('unlink')
       .setDescription('Unlink your discord with your TripSitLearn account')
-      .addStringOption(option => option.setName('admin_only')
+      .addStringOption(option => option.setName('discordId')
         .setDescription('Ignore this, admin use only!')))
     .addSubcommand(subcommand => subcommand
       .setName('profile')
