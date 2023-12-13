@@ -32,8 +32,8 @@ async function moodleHelp():Promise<EmbedBuilder> {
 async function moodleLink(
   interaction:ChatInputCommandInteraction,
 ):Promise<EmbedBuilder> {
-  // Check if the discordId option was used
-  if (interaction.options.getString('discordId')) {
+  // Check if the discord_id option was used
+  if (interaction.options.getString('discord_id')) {
     if (interaction.user.id !== env.DISCORD_OWNER_ID) {
       return embedTemplate()
         .setColor(Colors.Red)
@@ -50,7 +50,7 @@ async function moodleLink(
     return embedTemplate()
       .setDescription(await link(
         interaction.options.getString('email', true),
-        interaction.options.getString('discordId', true),
+        interaction.options.getString('discord_id', true),
       ));
   }
 
@@ -71,7 +71,7 @@ async function moodleLink(
 async function moodleUnlink(
   interaction:ChatInputCommandInteraction,
 ):Promise<EmbedBuilder> {
-  if (interaction.options.getString('discordId')) {
+  if (interaction.options.getString('discord_id')) {
     if (interaction.user.id !== env.DISCORD_OWNER_ID) {
       return embedTemplate()
         .setColor(Colors.Red)
@@ -79,7 +79,7 @@ async function moodleUnlink(
     }
     return embedTemplate()
       .setDescription(await unlink(
-        interaction.options.getString('discordId', true),
+        interaction.options.getString('discord_id', true),
       ));
   }
 
@@ -198,12 +198,12 @@ export const dLearn: SlashCommand = {
       .addStringOption(option => option.setName('email')
         .setDescription('What email did you use to register on moodle?')
         .setRequired(true))
-      .addStringOption(option => option.setName('discordId')
+      .addStringOption(option => option.setName('discord_id')
         .setDescription('Ignore this, admin use only!')))
     .addSubcommand(subcommand => subcommand
       .setName('unlink')
       .setDescription('Unlink your discord with your TripSitLearn account')
-      .addStringOption(option => option.setName('discordId')
+      .addStringOption(option => option.setName('discord_id')
         .setDescription('Ignore this, admin use only!')))
     .addSubcommand(subcommand => subcommand
       .setName('profile')
