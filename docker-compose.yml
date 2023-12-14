@@ -44,6 +44,7 @@ services:
       - tripbot_website-net
       - moodle_data-net
     volumes:
+      - ./assets:/usr/src/app/assets # Needed for hot-reloading of source code
       - ./src:/usr/src/app/src # Needed for hot-reloading of source code
       - ./.env:/usr/src/app/.env # Needed for hot-reloading the .env
     labels:
@@ -57,8 +58,7 @@ services:
       - traefik.http.routers.tripbot.service=tripbot
       - traefik.http.routers.tripbot.entrypoints=websecure
       - traefik.http.routers.tripbot.tls=true
-      - traefik.http.routers.tripbot.middlewares=tripbot@file
-
+      - traefik.http.routers.tripbot.middlewares=tripbot@file,redirectApi@file
 
   tripbot_database:
     <<: *common-keys-apps

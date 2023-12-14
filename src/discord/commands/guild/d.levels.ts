@@ -74,7 +74,7 @@ type LevelData = {
 };
 
 Canvas.GlobalFonts.registerFromPath(
-  path.resolve(__dirname, '../../assets/Futura.otf'),
+  path.resolve(__dirname, '../../../../assets/font/Futura.otf'),
   'futura',
 );
 

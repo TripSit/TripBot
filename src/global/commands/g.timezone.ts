@@ -1,6 +1,6 @@
 /* eslint-disable max-len */
 
-import timezones from '../assets/data/timezones.json';
+import timezones from '../../../assets/data/timezones.json';
 import { getUser, usersUpdate } from '../utils/knex';
 
 const F = f(__filename);
