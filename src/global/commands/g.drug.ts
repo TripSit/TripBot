@@ -1,5 +1,5 @@
 import { CbSubstance } from '../@types/combined';
-import drugDataAll from '../assets/data/drug_db_combined.json';
+import drugDataAll from '../../../assets/data/drug_db_combined.json';
 
 const F = f(__filename); // eslint-disable-line
 

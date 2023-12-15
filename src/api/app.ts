@@ -44,20 +44,51 @@ app.set('trust proxy', 2);
 // Simple IP return to test reverse proxy and "hello world" the api
 app.get('/api/ip', (request, response) => response.send(request.ip));
 
-app.get('/', (req, res) => {
-  res.json({
-    message: 'This is TripBot`s API',
-  });
-});
-
 app.get('/api', (req, res) => {
   res.json({
     welcome: 'Welcome to TripSit\'s API endpoint.',
     description: 'You likely want one of the below endpoints.',
-    development: 'Interested in helping out? Join the https://discord.gg/tripsit chat and ask for Moonbear.',
-    endpoints: [
-      '/tripsit',
-    ],
+    development: 'Interested in helping out?',
+    discord: 'Join the discord https://discord.gg/tripsit and check out the development rooms.',
+    github: 'Check out the code on the github: https://github.com/TripSit/TripBot/tree/main/src/api',
+    endpoints: {
+      '/tripsit': {
+        description: 'TripSit\'s original API, preserved for legacy purposes.',
+        endpoints: [
+          '/getInteraction',
+          '/getDrug',
+          '/getAllDrugNames',
+          '/getAllDrugNamesByCategory',
+          '/getAllDrugs',
+          '/getAllCategories',
+          '/getAllDrugAliases',
+        ],
+      },
+      '/v1': {
+        description: 'Same as /tripsit, just renamed to v1 for consistency.',
+        endpoints: [
+          '/getInteraction',
+          '/getDrug',
+          '/getAllDrugNames',
+          '/getAllDrugNamesByCategory',
+          '/getAllDrugs',
+          '/getAllCategories',
+          '/getAllDrugAliases',
+        ],
+      },
+      '/v2': {
+        description: 'TripSit\'s new API, under active development.',
+        warning: 'This does not work, don\'t use it',
+        endpoints: [
+          '/drugs',
+          '/interactions',
+          '/combinations',
+          '/categories',
+          '/aliases',
+          '/search',
+        ],
+      },
+    },
   });
 });
 

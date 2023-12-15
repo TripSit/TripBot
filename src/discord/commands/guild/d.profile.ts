@@ -22,7 +22,7 @@ import { resizeText, deFuckifyText, colorDefs } from '../../utils/canvasUtils';
 const F = f(__filename);
 
 Canvas.GlobalFonts.registerFromPath(
-  path.resolve(__dirname, '../../assets/Futura.otf'),
+  path.resolve(__dirname, '../../../assets/font/Futura.otf'),
   'futura',
 );
 
@@ -60,6 +60,9 @@ export const dProfile: SlashCommand = {
     interaction,
   ) {
     log.info(F, await commandContext(interaction));
+
+    const test = path.resolve(__dirname, '../../../assets/font/Futura.otf');
+    log.debug(F, `Path ${test}`);
     await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
     const startTime = Date.now();
     if (!interaction.guild) {

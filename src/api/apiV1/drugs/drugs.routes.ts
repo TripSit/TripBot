@@ -17,7 +17,7 @@ const limiter = RateLimit({
 // apply rate limiter to all requests
 router.use(limiter);
 
-// getInteraction
+// getInteraction - readme
 router.get('/getInteraction', (req, res) => {
   res.json({
     endpoint: 'getInteraction',
@@ -28,6 +28,8 @@ router.get('/getInteraction', (req, res) => {
     example: '/getInteraction/DXM/MDMA',
   });
 });
+
+// getInteraction - function
 router.get('/getInteraction/:drugAName/:drugBName', async (req, res, next) => {
   const { drugAName, drugBName } = req.params;
   // console.log('drugAName', drugAName);
@@ -49,7 +51,7 @@ router.get('/getInteraction/:drugAName/:drugBName', async (req, res, next) => {
   }
 });
 
-// getDrug
+// getDrug - readme
 router.get('/getDrug', (req, res) => {
   res.json({
     endpoint: 'getDrug',
@@ -59,6 +61,8 @@ router.get('/getDrug', (req, res) => {
     example: '/getDrug/DXM',
   });
 });
+
+// getDrug - function
 router.get('/getDrug/:name', async (req, res, next) => {
   const { name } = req.params;
   // log.debug(F, `name: ${name}`);
@@ -104,6 +108,7 @@ router.get('/getAllDrugNamesByCategory', (req, res) => {
     example: '/getAllDrugNamesByCategory/stimulants',
   });
 });
+
 router.get('/getAllDrugNamesByCategory/:category', async (req, res, next) => {
   const { category } = req.params;
   // console.log('category', category);

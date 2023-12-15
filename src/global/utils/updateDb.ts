@@ -2,18 +2,19 @@ import axios from 'axios';
 import fs from 'fs';
 import { Drug } from 'tripsit_drug_db';
 import path from 'path';
+import { GraphQLClient } from 'graphql-request';
 import { PwSubstance } from '../@types/psychonaut';
 
 const F = f(__filename);
 
 const useCache = false;
 
-async function updateDb():Promise<void> {
+async function updateDb(): Promise<void> {
   // log.debug(F, 'Updating database');
 
   // log.debug(F, '[getTSData] Starting!');
 
-  const tsFilePath = path.join(__dirname, '../assets/data', 'tripsit_drug_db.json');
+  const tsFilePath = path.join(__dirname, '../../../assets/data', 'drug_db_tripsit.json');
 
   // Check if the cache exists, and if so, use it.
   if (useCache && fs.existsSync(tsFilePath)) {
@@ -26,7 +27,7 @@ async function updateDb():Promise<void> {
 
   const data = await axios.get('https://raw.githubusercontent.com/TripSit/drugs/main/drugs.json');
   const tsDrugData = data.data as {
-    [key: string]: Drug;
+    [key: string]: Drug
   };
 
   log.info(F, `Got ${Object.values(tsDrugData).length} drugs from TripSit API!`);
@@ -37,15 +38,14 @@ async function updateDb():Promise<void> {
     }
   });
 
-  const pwFilePath = path.join(__dirname, '../assets/data', 'psychonaut_drug_db.json');
+  // log.debug(F, `Saved data to ${tsFilePath}!`);
 
-  if (useCache && fs.existsSync(tsFilePath)) {
+  const pwFilePath = path.join(__dirname, '../../../assets/data', 'drug_db_psychonaut.json');
+
+  if (useCache && fs.existsSync(pwFilePath)) {
     const rawData = fs.readFileSync(pwFilePath);
     const pwData = JSON.parse(rawData.toString());
-    return new Promise(resolve => {
-      resolve(pwData);
-      log.info(F, `Using ${Object.keys(pwData).length} drugs from Psychonaut Cache!`);
-    });
+    log.info(F, `Using ${Object.keys(pwData).length} drugs from Psychonaut Cache!`);
   }
 
   const pwResponse = await new GraphQLClient('https://api.psychonautwiki.org').request(`
@@ -65,17 +65,19 @@ async function updateDb():Promise<void> {
       dangerousInteractions {name}
       roa {oral {name dose {units threshold heavy common {min max} light {min max} strong {min max}} duration { afterglow {min max units} comeup {min max units} duration {min max units} offset {min max units} onset {min max units} peak {min max units} total {min max units}} bioavailability {min max}} sublingual {name dose {units threshold heavy common {min max} light {min max} strong {min max}} duration { afterglow {min max units} comeup {min max units} duration {min max units} offset {min max units} onset {min max units} peak {min max units} total {min max units}} bioavailability {min max}} buccal {name dose {units threshold heavy common {min max} light {min max} strong {min max}} duration { afterglow {min max units} comeup {min max units} duration {min max units} offset {min max units} onset {min max units} peak {min max units} total {min max units}} bioavailability {min max}} insufflated {name dose {units threshold heavy common {min max} light {min max} strong {min max}} duration { afterglow {min max units} comeup {min max units} duration {min max units} offset {min max units} onset {min max units} peak {min max units} total {min max units}} bioavailability {min max}} rectal {name dose {units threshold heavy common {min max} light {min max} strong {min max}} duration { afterglow {min max units} comeup {min max units} duration {min max units} offset {min max units} onset {min max units} peak {min max units} total {min max units}} bioavailability {min max}} transdermal {name dose {units threshold heavy common {min max} light {min max} strong {min max}} duration { afterglow {min max units} comeup {min max units} duration {min max units} offset {min max units} onset {min max units} peak {min max units} total {min max units}} bioavailability {min max}} subcutaneous {name dose {units threshold heavy common {min max} light {min max} strong {min max}} duration { afterglow {min max units} comeup {min max units} duration {min max units} offset {min max units} onset {min max units} peak {min max units} total {min max units}} bioavailability {min max}} intramuscular {name dose {units threshold heavy common {min max} light {min max} strong {min max}} duration { afterglow {min max units} comeup {min max units} duration {min max units} offset {min max units} onset {min max units} peak {min max units} total {min max units}} bioavailability {min max}} intravenous {name dose {units threshold heavy common {min max} light {min max} strong {min max}} duration { afterglow {min max units} comeup {min max units} duration {min max units} offset {min max units} onset {min max units} peak {min max units} total {min max units}} bioavailability {min max}} smoked {name dose {units threshold heavy common {min max} light {min max} strong {min max}} duration { afterglow {min max units} comeup {min max units} duration {min max units} offset {min max units} onset {min max units} peak {min max units} total {min max units}} bioavailability {min max}}}    }
   }
-  `);
+  `) as any;
 
   const pwDrugData = pwResponse.substances as PwSubstance[];
 
   log.info(F, `Using ${pwDrugData.length} drugs from Psychonaut API!`);
 
-  fs.writeFile(tsFilePath, JSON.stringify(pwDrugData, null, 2), err => {
+  fs.writeFile(pwFilePath, JSON.stringify(pwDrugData, null, 2), err => {
     if (err) {
       log.debug(F, `${err}`);
     }
   });
+
+  // log.debug(F, `Saved data to ${pwFilePath}!`);
 }
 
 export default updateDb;

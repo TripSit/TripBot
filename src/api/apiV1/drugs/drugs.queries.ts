@@ -1,120 +1,79 @@
 import _ from 'underscore';
-import drugData from '../../../global/assets/data/drug_db_tripsit.json';
-import categoryData from '../../../global/assets/data/categories.json';
-import comboData from '../../../global/assets/data/combo.json';
+import drugData from '../../../../assets/data/drug_db_tripsit.json';
+import categoryData from '../../../../assets/data/categories.json';
+import comboData from '../../../../assets/data/combo.json';
 
-const F = f(__filename);
+// const F = f(__filename);
 
 // The rest of this code is copied from tripbot, with some minor modifications
 // I did as few changes as possible to get rid of the critical errors to let this run
 // I have no intention of updating this API, so I don't care if it's not perfect
 // We will work on a new API with standardized data
 export default {
-  async getInteraction(
-    drugAInput:string,
-    drugBInput:string,
-  ):Promise<any> {
+  async getAllDrugs():Promise<any> {
+    return drugData;
+
+    // return new Promise(async resolve => {
+    //   // log.debug(F, 'getAllDrugs');
+    //   const names = await this.getAllDrugNames();
+    //   const drugs = {};
+    //   for (const name of names) {
+    //     if (!_.isUndefined(name)) {
+    //       const drug = await this.getDrug(name);
+    //       drugs[name] = drug;
+    //     }
+    //   }
+    //   resolve(drugs);
+    // });
+  },
+
+  async getAllDrugNames():Promise<any> {
+    return new Promise(resolve => {
+      resolve({ err: true, msg: 'Drug A not found.' });
+      //       // log.debug(F, 'getAllDrugNames');
+      //       const names = [];
+      //       db.scan('drugs', drug => {
+      //         if (drug) {
+      //           names.push(drug.name);
+      //         }
+      //       }, () => resolve(names));
+    });
+  },
+
+  async getAllDrugAliases():Promise<any> {
     return new Promise(async resolve => {
       resolve({ err: true, msg: 'Drug A not found.' });
-      //   log.debug(F, `getInteraction | drugA: ${drugAInput}, drugB: ${drugBInput}`);
-
-      //   let drugAName = drugAInput.toLowerCase();
-      //   let drugBName = drugBInput.toLowerCase(); drugAName = drugAName.toLowerCase();
-      //   drugBName = drugBName.toLowerCase();
-
-      //   if (drugAName === 'ssri' || drugAName === 'snri' || drugAName === 'snris') {
-      //     drugAName = 'ssris';
-      //   } else if (drugAName === 'maoi') {
-      //     drugAName = 'maois';
-      //   }
-
-      //   if (drugBName === 'ssri' || drugBName === 'snri' || drugBName === 'snris') {
-      //     drugBName = 'ssris';
-      //   } else if (drugBName === 'maoi') {
-      //     drugBName = 'maois';
-      //   }
-
-      //   const drugA = await this.getDrug(drugAName);
-      //   // log.debug(F, `drugA: ${JSON.stringify(drugA)}`);
-      //   if (!_.has(drugA, 'err') || _.has(comboData, drugAName)) {
-      //     log.debug(F, 'Drug A found.');
-      //     const drugB = await this.getDrug(drugBName);
-      //     // log.debug(F, `drugB: ${JSON.stringify(drugA)}`);
-      //     if (!_.has(drugB, 'err') || _.has(comboData, drugBName)) {
-      //       log.debug(F, 'Drug B found.');
-      //       let safetyCategoryA = null;
-      //       let safetyCategoryB = null;
-
-      //       if (_.has(drugB.combos, drugAName)) {
-      //         safetyCategoryA = drugAName;
-      //       } else if (_.has(comboData, drugA.name)) {
-      //         safetyCategoryA = drugA.name;
-      //       } else if (drugA.name.match(/^do.$/i)) {
-      //         safetyCategoryA = 'dox';
-      //       } else if (drugA.name.match(/^2c-.$/i)) {
-      //         safetyCategoryA = '2c-x';
-      //       } else if (drugA.name.match(/^25.-nbome/i)) {
-      //         safetyCategoryA = 'nbomes';
-      //       } else if (drugA.name.match(/^5-meo-..t$/i)) {
-      //         safetyCategoryA = '5-meo-xxt';
-      //       } else if (_.include(drugA.categories, 'benzodiazepine')) {
-      //         safetyCategoryA = 'benzodiazepines';
-      //       } else if (_.include(drugA.categories, 'opioid')) {
-      //         safetyCategoryA = 'opioids';
-      //       } else if (_.include(drugB.categories, 'benzos')) {
-      //         safetyCategoryB = 'benzodiazepines';
-      //       } else if (drugA.name === 'ghb' || drugA.name === 'gbl') {
-      //         safetyCategoryA = 'ghb/gbl';
+      //       // log.debug(F, 'getAllDrugAliases');
+      //       const names = await this.getAllDrugNames();
+      //       let fullNames = [];
+      //       for (const name of names) {
+      //         if (!_.isUndefined(name)) {
+      //           const drug = await this.getDrug(name);
+      //           fullNames.push(name);
+      //           fullNames = _.union(fullNames, drug.aliases);
+      //         }
       //       }
-      //       if (_.has(drugA.combos, drugBName)) {
-      //         safetyCategoryB = drugBName;
-      //       } else if (_.has(drugA.combos, drugB.name)) {
-      //         safetyCategoryB = drugB.name;
-      //       } else if (drugB.name.match(/^do.$/i)) {
-      //         safetyCategoryB = 'dox';
-      //       } else if (drugB.name.match(/^2c-.$/i)) {
-      //         safetyCategoryB = '2c-x';
-      //       } else if (drugB.name.match(/^25.-nbome/i)) {
-      //         safetyCategoryB = 'nbomes';
-      //       } else if (drugB.name.match(/^5-meo-..t$/i)) {
-      //         safetyCategoryB = '5-meo-xxt';
-      //       } else if (_.include(drugB.categories, 'benzodiazepine')) {
-      //         safetyCategoryB = 'benzodiazepines';
-      //       } else if (_.include(drugB.categories, 'opioid')) {
-      //         safetyCategoryB = 'opioids';
-      //       } else if (_.include(drugB.categories, 'benzos')) {
-      //         safetyCategoryB = 'benzodiazepines';
-      //       } else if (drugB.name === 'ghb' || drugB.name === 'gbl') {
-      //         safetyCategoryB = 'ghb/gbl';
-      //       }
+      //       resolve(fullNames);
+    });
+  },
 
-      //       log.debug(F, 'Safety categories found.');
-      //       log.debug(F, `safetyCategoryA: ${safetyCategoryA}, safetyCategoryB: ${safetyCategoryB}`);
-      //       log.debug(F, `drugA.combos: ${JSON.stringify(drugA.combos)}`);
-      //       log.debug(F, `drugB.combos: ${JSON.stringify(drugB.combos)}`);
+  async getAllCategories():Promise<any> {
+    return new Promise(resolve => {
+      resolve({ err: true, msg: 'Drug A not found.' });
+      //       // log.debug(F, 'getAllCategories');
+      //       const categories = {};
+      //       db.scan('drug_categories', cat => {
+      //         // console.log(`cat: ${JSON.stringify(cat)}`);
+      //         categories[cat.name] = cat;
+      //       }, () => resolve(categories));
+    });
+  },
 
-    //       if (safetyCategoryA && safetyCategoryB) {
-    //         if (safetyCategoryA !== safetyCategoryB) {
-    //           const result = _.clone(comboData[safetyCategoryA][safetyCategoryB]);
-    //           log.debug(F, `result: ${JSON.stringify(result)}`);
-    //           resolve({
-    //             result,
-    //             interactionCategoryA: safetyCategoryA,
-    //             interactionCategoryB: safetyCategoryB,
-    //           });
-    //         }
-    //         if (safetyCategoryA === 'benzodiazepines') {
-    //           resolve({ err: true, code: 'ssb', msg: 'Drug A and B are the same safety category.' });
-    //         }
-    //         resolve({ err: true, code: 'ssc', msg: 'Drug A and B are the same safety category.' });
-    //       }
-    //       resolve({ err: true, msg: 'Unknown interaction. This does not mean it is safe, it means we dont have information on it!' });
-    //     }
-    //     resolve({ err: true, msg: 'Drug B not found.' });
-    //   } else {
-    //     log.debug(F, 'Drug A not found.');
-    //     resolve({ err: true, msg: 'Drug A not found.' });
-    //   }
+  async getAllDrugNamesByCategory(category:string):Promise<any> {
+    return new Promise(async resolve => {
+      resolve({ err: true, msg: 'Drug A not found.' });
+      //       // log.debug(F, `getAllDrugNamesByCategory | Category: ${category}`);
+      //       resolve(await this.getAllDrugs(names => _.pluck(_.filter(names, a => _.include(a.categories, category)), 'name')));
     });
   },
 
@@ -428,69 +387,112 @@ export default {
     });
   },
 
-  async getAllDrugNames():Promise<any> {
-    return new Promise(resolve => {
-      resolve({ err: true, msg: 'Drug A not found.' });
-      //       // log.debug(F, 'getAllDrugNames');
-      //       const names = [];
-      //       db.scan('drugs', drug => {
-      //         if (drug) {
-      //           names.push(drug.name);
-      //         }
-      //       }, () => resolve(names));
-    });
-  },
-
-  async getAllDrugNamesByCategory(category:string):Promise<any> {
+  async getInteraction(
+    drugAInput:string,
+    drugBInput:string,
+  ):Promise<any> {
     return new Promise(async resolve => {
       resolve({ err: true, msg: 'Drug A not found.' });
-      //       // log.debug(F, `getAllDrugNamesByCategory | Category: ${category}`);
-      //       resolve(await this.getAllDrugs(names => _.pluck(_.filter(names, a => _.include(a.categories, category)), 'name')));
-    });
-  },
+      //   log.debug(F, `getInteraction | drugA: ${drugAInput}, drugB: ${drugBInput}`);
 
-  async getAllDrugs():Promise<any> {
-    return new Promise(async resolve => {
-      resolve({ err: true, msg: 'Drug A not found.' });
-      //       // log.debug(F, 'getAllDrugs');
-      //       const names = await this.getAllDrugNames();
-      //       const drugs = {};
-      //       for (const name of names) {
-      //         if (!_.isUndefined(name)) {
-      //           const drug = await this.getDrug(name);
-      //           drugs[name] = drug;
-      //         }
+      //   let drugAName = drugAInput.toLowerCase();
+      //   let drugBName = drugBInput.toLowerCase(); drugAName = drugAName.toLowerCase();
+      //   drugBName = drugBName.toLowerCase();
+
+      //   if (drugAName === 'ssri' || drugAName === 'snri' || drugAName === 'snris') {
+      //     drugAName = 'ssris';
+      //   } else if (drugAName === 'maoi') {
+      //     drugAName = 'maois';
+      //   }
+
+      //   if (drugBName === 'ssri' || drugBName === 'snri' || drugBName === 'snris') {
+      //     drugBName = 'ssris';
+      //   } else if (drugBName === 'maoi') {
+      //     drugBName = 'maois';
+      //   }
+
+      //   const drugA = await this.getDrug(drugAName);
+      //   // log.debug(F, `drugA: ${JSON.stringify(drugA)}`);
+      //   if (!_.has(drugA, 'err') || _.has(comboData, drugAName)) {
+      //     log.debug(F, 'Drug A found.');
+      //     const drugB = await this.getDrug(drugBName);
+      //     // log.debug(F, `drugB: ${JSON.stringify(drugA)}`);
+      //     if (!_.has(drugB, 'err') || _.has(comboData, drugBName)) {
+      //       log.debug(F, 'Drug B found.');
+      //       let safetyCategoryA = null;
+      //       let safetyCategoryB = null;
+
+      //       if (_.has(drugB.combos, drugAName)) {
+      //         safetyCategoryA = drugAName;
+      //       } else if (_.has(comboData, drugA.name)) {
+      //         safetyCategoryA = drugA.name;
+      //       } else if (drugA.name.match(/^do.$/i)) {
+      //         safetyCategoryA = 'dox';
+      //       } else if (drugA.name.match(/^2c-.$/i)) {
+      //         safetyCategoryA = '2c-x';
+      //       } else if (drugA.name.match(/^25.-nbome/i)) {
+      //         safetyCategoryA = 'nbomes';
+      //       } else if (drugA.name.match(/^5-meo-..t$/i)) {
+      //         safetyCategoryA = '5-meo-xxt';
+      //       } else if (_.include(drugA.categories, 'benzodiazepine')) {
+      //         safetyCategoryA = 'benzodiazepines';
+      //       } else if (_.include(drugA.categories, 'opioid')) {
+      //         safetyCategoryA = 'opioids';
+      //       } else if (_.include(drugB.categories, 'benzos')) {
+      //         safetyCategoryB = 'benzodiazepines';
+      //       } else if (drugA.name === 'ghb' || drugA.name === 'gbl') {
+      //         safetyCategoryA = 'ghb/gbl';
       //       }
-      //       resolve(drugs);
-    });
-  },
-
-  async getAllCategories():Promise<any> {
-    return new Promise(resolve => {
-      resolve({ err: true, msg: 'Drug A not found.' });
-      //       // log.debug(F, 'getAllCategories');
-      //       const categories = {};
-      //       db.scan('drug_categories', cat => {
-      //         // console.log(`cat: ${JSON.stringify(cat)}`);
-      //         categories[cat.name] = cat;
-      //       }, () => resolve(categories));
-    });
-  },
-
-  async getAllDrugAliases():Promise<any> {
-    return new Promise(async resolve => {
-      resolve({ err: true, msg: 'Drug A not found.' });
-      //       // log.debug(F, 'getAllDrugAliases');
-      //       const names = await this.getAllDrugNames();
-      //       let fullNames = [];
-      //       for (const name of names) {
-      //         if (!_.isUndefined(name)) {
-      //           const drug = await this.getDrug(name);
-      //           fullNames.push(name);
-      //           fullNames = _.union(fullNames, drug.aliases);
-      //         }
+      //       if (_.has(drugA.combos, drugBName)) {
+      //         safetyCategoryB = drugBName;
+      //       } else if (_.has(drugA.combos, drugB.name)) {
+      //         safetyCategoryB = drugB.name;
+      //       } else if (drugB.name.match(/^do.$/i)) {
+      //         safetyCategoryB = 'dox';
+      //       } else if (drugB.name.match(/^2c-.$/i)) {
+      //         safetyCategoryB = '2c-x';
+      //       } else if (drugB.name.match(/^25.-nbome/i)) {
+      //         safetyCategoryB = 'nbomes';
+      //       } else if (drugB.name.match(/^5-meo-..t$/i)) {
+      //         safetyCategoryB = '5-meo-xxt';
+      //       } else if (_.include(drugB.categories, 'benzodiazepine')) {
+      //         safetyCategoryB = 'benzodiazepines';
+      //       } else if (_.include(drugB.categories, 'opioid')) {
+      //         safetyCategoryB = 'opioids';
+      //       } else if (_.include(drugB.categories, 'benzos')) {
+      //         safetyCategoryB = 'benzodiazepines';
+      //       } else if (drugB.name === 'ghb' || drugB.name === 'gbl') {
+      //         safetyCategoryB = 'ghb/gbl';
       //       }
-      //       resolve(fullNames);
+
+      //       log.debug(F, 'Safety categories found.');
+      //       log.debug(F, `safetyCategoryA: ${safetyCategoryA}, safetyCategoryB: ${safetyCategoryB}`);
+      //       log.debug(F, `drugA.combos: ${JSON.stringify(drugA.combos)}`);
+      //       log.debug(F, `drugB.combos: ${JSON.stringify(drugB.combos)}`);
+
+    //       if (safetyCategoryA && safetyCategoryB) {
+    //         if (safetyCategoryA !== safetyCategoryB) {
+    //           const result = _.clone(comboData[safetyCategoryA][safetyCategoryB]);
+    //           log.debug(F, `result: ${JSON.stringify(result)}`);
+    //           resolve({
+    //             result,
+    //             interactionCategoryA: safetyCategoryA,
+    //             interactionCategoryB: safetyCategoryB,
+    //           });
+    //         }
+    //         if (safetyCategoryA === 'benzodiazepines') {
+    //           resolve({ err: true, code: 'ssb', msg: 'Drug A and B are the same safety category.' });
+    //         }
+    //         resolve({ err: true, code: 'ssc', msg: 'Drug A and B are the same safety category.' });
+    //       }
+    //       resolve({ err: true, msg: 'Unknown interaction. This does not mean it is safe, it means we dont have information on it!' });
+    //     }
+    //     resolve({ err: true, msg: 'Drug B not found.' });
+    //   } else {
+    //     log.debug(F, 'Drug A not found.');
+    //     resolve({ err: true, msg: 'Drug A not found.' });
+    //   }
     });
   },
+
 };
