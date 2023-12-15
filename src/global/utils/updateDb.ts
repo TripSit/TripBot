@@ -14,7 +14,7 @@ async function updateDb(): Promise<void> {
 
   // log.debug(F, '[getTSData] Starting!');
 
-  const tsFilePath = path.join(__dirname, '../../../assets/data', 'drug_db_tripsit.json');
+  const tsFilePath = path.join(__dirname, '../assets/data', 'drug_db_tripsit.json');
 
   // Check if the cache exists, and if so, use it.
   if (useCache && fs.existsSync(tsFilePath)) {
@@ -40,7 +40,7 @@ async function updateDb(): Promise<void> {
 
   // log.debug(F, `Saved data to ${tsFilePath}!`);
 
-  const pwFilePath = path.join(__dirname, '../../../assets/data', 'drug_db_psychonaut.json');
+  const pwFilePath = path.join(__dirname, '../assets/data', 'drug_db_psychonaut.json');
 
   if (useCache && fs.existsSync(pwFilePath)) {
     const rawData = fs.readFileSync(pwFilePath);

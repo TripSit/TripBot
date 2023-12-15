@@ -1,7 +1,7 @@
 import _ from 'underscore';
-import drugData from '../../../../assets/data/drug_db_tripsit.json';
-import categoryData from '../../../../assets/data/categories.json';
-import comboData from '../../../../assets/data/combo.json';
+import drugData from '../../../global/assets/data/drug_db_tripsit.json';
+import categoryData from '../../../global/assets/data/categories.json';
+import comboData from '../../../global/assets/data/combo.json';
 
 // const F = f(__filename);
 
