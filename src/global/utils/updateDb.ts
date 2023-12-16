@@ -4,29 +4,33 @@ import { Drug } from 'tripsit_drug_db';
 import path from 'path';
 import { GraphQLClient } from 'graphql-request';
 import { PwSubstance } from '../@types/psychonaut';
+import { Combos } from '../@types/tripsitCombos';
 
 const F = f(__filename);
 
 const useCache = false;
+
+const dataDir = '../assets/data';
 
 async function updateDb(): Promise<void> {
   // log.debug(F, 'Updating database');
 
   // log.debug(F, '[getTSData] Starting!');
 
-  const tsFilePath = path.join(__dirname, '../assets/data', 'drug_db_tripsit.json');
+  const tsFilePath = path.join(__dirname, dataDir, 'drug_db_tripsit.json');
 
   // Check if the cache exists, and if so, use it.
   if (useCache && fs.existsSync(tsFilePath)) {
     const rawData = fs.readFileSync(tsFilePath);
     const data = JSON.parse(rawData.toString());
     log.info(F, `Using ${Object.keys(data).length} drugs from TripSit Cache!`);
+    return;
   }
 
   // log.debug(F, 'Getting data from TripSit API!');
 
-  const data = await axios.get('https://raw.githubusercontent.com/TripSit/drugs/main/drugs.json');
-  const tsDrugData = data.data as {
+  const tsDrugResponse = await axios.get('https://raw.githubusercontent.com/TripSit/drugs/main/drugs.json');
+  const tsDrugData = tsDrugResponse.data as {
     [key: string]: Drug
   };
 
@@ -40,7 +44,32 @@ async function updateDb(): Promise<void> {
 
   // log.debug(F, `Saved data to ${tsFilePath}!`);
 
-  const pwFilePath = path.join(__dirname, '../assets/data', 'drug_db_psychonaut.json');
+  const tsComboFilePath = path.join(__dirname, dataDir, 'combo.json');
+
+  // Check if the cache exists, and if so, use it.
+  if (useCache && fs.existsSync(tsComboFilePath)) {
+    const rawData = fs.readFileSync(tsComboFilePath);
+    const tsComboData = JSON.parse(rawData.toString());
+    log.info(F, `Using ${Object.keys(tsComboData).length} drugs from TripSit Cache!`);
+    return;
+  }
+
+  // log.debug(F, 'Getting data from TripSit API!');
+
+  const tsComboResponse = await axios.get('https://raw.githubusercontent.com/TripSit/drugs/main/combos.json');
+  const tsComboData = tsComboResponse.data as Combos;
+
+  log.info(F, `Got ${Object.values(tsComboData).length} combos from TripSit API!`);
+
+  fs.writeFile(tsComboFilePath, JSON.stringify(tsComboData, null, 2), err => {
+    if (err) {
+      log.debug(F, `${err}`);
+    }
+  });
+
+  // log.debug(F, `Saved combo data to ${tsComboFilePath}!`);
+
+  const pwFilePath = path.join(__dirname, dataDir, 'drug_db_psychonaut.json');
 
   if (useCache && fs.existsSync(pwFilePath)) {
     const rawData = fs.readFileSync(pwFilePath);

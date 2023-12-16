@@ -1,3 +1,8 @@
+/* eslint-disable max-len */
+
+// Add return types
+// Make tests
+
 import express from 'express';
 import bodyParser from 'body-parser';
 import morgan from 'morgan';
@@ -48,9 +53,10 @@ app.get('/api', (req, res) => {
   res.json({
     welcome: 'Welcome to TripSit\'s API endpoint.',
     description: 'You likely want one of the below endpoints.',
-    development: 'Interested in helping out?',
-    discord: 'Join the discord https://discord.gg/tripsit and check out the development rooms.',
-    github: 'Check out the code on the github: https://github.com/TripSit/TripBot/tree/main/src/api',
+    developers: 'Want type definitions? npm install tripsit/drugs and import { Drug, Interaction, Category } from \'tripsit_drug_db\';',
+    data: 'Want to change the data here? Check out the drug database repo at https://github.com/tripsit/drugs',
+    discord: 'Want to discuss this API or other TripSit projects? Join the discord https://discord.gg/tripsit and check out the development rooms.',
+    github: 'Want to help improve the API? Check out the code on the github: https://github.com/TripSit/TripBot/tree/main/src/api',
     endpoints: {
       '/tripsit': {
         description: 'TripSit\'s original API, preserved for legacy purposes.',
