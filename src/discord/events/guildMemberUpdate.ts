@@ -296,93 +296,93 @@ async function removeExTeamFromThreads(
   }
 }
 
-async function addedVerified(
-  newMember: GuildMember,
-  roleId: string,
-) {
-  // Check if this was the verified role
-  if (roleId === env.ROLE_VERIFIED) {
-    // log.debug(F, `${newMember.displayName} verified!`);
-    // let colorValue = 1;
+// async function addedVerified(
+//   newMember: GuildMember,
+//   roleId: string,
+// ) {
+//   // Check if this was the verified role
+//   if (roleId === env.ROLE_VERIFIED) {
+//     // log.debug(F, `${newMember.displayName} verified!`);
+//     // let colorValue = 1;
 
-    // log.debug(F, `member: ${member.roles.cache}`);
+//     // log.debug(F, `member: ${member.roles.cache}`);
 
-    // log.debug(`Verified button clicked by ${interaction.user.username}#${interaction.user.discriminator}`);
-    const channelTripbotLogs = await global.discordClient.channels.fetch(env.CHANNEL_BOTLOG) as TextChannel;
-    await channelTripbotLogs.send({
-      content: `Verified button clicked by ${newMember.user.username}#${newMember.user.discriminator}`,
-    });
+//     // log.debug(`Verified button clicked by ${interaction.user.username}#${interaction.user.discriminator}`);
+//     const channelTripbotLogs = await global.discordClient.channels.fetch(env.CHANNEL_BOTLOG) as TextChannel;
+//     await channelTripbotLogs.send({
+//       content: `Verified button clicked by ${newMember.user.username}#${newMember.user.discriminator}`,
+//     });
 
-    // NOTE: Can be simplified with luxon
-    // const diff = Math.abs(Date.now() - Date.parse(newMember.user.createdAt.toString()));
-    // const years = Math.floor(diff / (1000 * 60 * 60 * 24 * 365));
-    // const months = Math.floor(diff / (1000 * 60 * 60 * 24 * 30));
-    // const weeks = Math.floor(diff / (1000 * 60 * 60 * 24 * 7));
-    // const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-    // const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    // const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-    // const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+//     // NOTE: Can be simplified with luxon
+//     // const diff = Math.abs(Date.now() - Date.parse(newMember.user.createdAt.toString()));
+//     // const years = Math.floor(diff / (1000 * 60 * 60 * 24 * 365));
+//     // const months = Math.floor(diff / (1000 * 60 * 60 * 24 * 30));
+//     // const weeks = Math.floor(diff / (1000 * 60 * 60 * 24 * 7));
+//     // const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+//     // const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+//     // const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+//     // const seconds = Math.floor((diff % (1000 * 60)) / 1000);
 
-    // if (years > 0) {
-    //   colorValue = Colors.White;
-    // } else if (years === 0 && months > 0) {
-    //   colorValue = Colors.Purple;
-    // } else if (months === 0 && weeks > 0) {
-    //   colorValue = Colors.Blue;
-    // } else if (weeks === 0 && days > 0) {
-    //   colorValue = Colors.Green;
-    // } else if (days === 0 && hours > 0) {
-    //   colorValue = Colors.Yellow;
-    // } else if (hours === 0 && minutes > 0) {
-    //   colorValue = Colors.Orange;
-    // } else if (minutes === 0 && seconds > 0) {
-    //   colorValue = Colors.Red;
-    // }
-    // log.debug(F, `coloValue: ${colorValue}`);
-    // const channelStart = await newMember.client.channels.fetch(env.CHANNEL_START);
-    // const channelTechhelp = await newMember.client.channels.fetch(env.CHANNEL_HELPDESK);
-    // const channelBotspam = await newMember.client.channels.fetch(env.CHANNEL_BOTSPAM);
-    // const channelRules = await newMember.client.channels.fetch(env.CHANNEL_RULES);
-    // const channelTripsit = await member.client.channels.fetch(CHANNEL_TRIPSIT);
-    // const embed = embedTemplate()
-    //   .setAuthor(null)
-    //   .setColor(colorValue)
-    //   .setThumbnail(newMember.user.displayAvatarURL())
-    //   .setFooter(null)
-    //   .setDescription(stripIndents`
-    //             **Please welcome ${newMember.toString()} to the guild!**
-    //             Be safe, have fun, /report any issues!`);
+//     // if (years > 0) {
+//     //   colorValue = Colors.White;
+//     // } else if (years === 0 && months > 0) {
+//     //   colorValue = Colors.Purple;
+//     // } else if (months === 0 && weeks > 0) {
+//     //   colorValue = Colors.Blue;
+//     // } else if (weeks === 0 && days > 0) {
+//     //   colorValue = Colors.Green;
+//     // } else if (days === 0 && hours > 0) {
+//     //   colorValue = Colors.Yellow;
+//     // } else if (hours === 0 && minutes > 0) {
+//     //   colorValue = Colors.Orange;
+//     // } else if (minutes === 0 && seconds > 0) {
+//     //   colorValue = Colors.Red;
+//     // }
+//     // log.debug(F, `coloValue: ${colorValue}`);
+//     // const channelStart = await newMember.client.channels.fetch(env.CHANNEL_START);
+//     // const channelTechhelp = await newMember.client.channels.fetch(env.CHANNEL_HELPDESK);
+//     // const channelBotspam = await newMember.client.channels.fetch(env.CHANNEL_BOTSPAM);
+//     // const channelRules = await newMember.client.channels.fetch(env.CHANNEL_RULES);
+//     // const channelTripsit = await member.client.channels.fetch(CHANNEL_TRIPSIT);
+//     // const embed = embedTemplate()
+//     //   .setAuthor(null)
+//     //   .setColor(colorValue)
+//     //   .setThumbnail(newMember.user.displayAvatarURL())
+//     //   .setFooter(null)
+//     //   .setDescription(stripIndents`
+//     //             **Please welcome ${newMember.toString()} to the guild!**
+//     //             Be safe, have fun, /report any issues!`);
 
-    const greetingList = [
-      `Welcome to the guild, ${newMember}!`,
-      `I'm proud to announce that ${newMember} has joined our guild!`,
-      `Please welcome ${newMember} to our guild!`,
-      `Hello, ${newMember}! Welcome to our guild!`,
-      `Welcome to the family, ${newMember}! We're so glad you're here.`,
-      `Welcome to the guild, ${newMember}!`,
-      `We're excited to have ${newMember} as part of our guild!`,
-      `Say hello to our newest member, ${newMember}!`,
-      `Let's give a warm welcome to ${newMember}!`,
-      `It's great to see you here, ${newMember}!`,
-      `Welcome aboard, ${newMember}!`,
-      `We're happy to have ${newMember} join us!`,
-      `Say hi to ${newMember}, our newest member!`,
-      `Join us in welcoming ${newMember} to our guild!`,
-      `A big welcome to ${newMember}!`,
-    ];
+//     const greetingList = [
+//       `Welcome to the guild, ${newMember}!`,
+//       `I'm proud to announce that ${newMember} has joined our guild!`,
+//       `Please welcome ${newMember} to our guild!`,
+//       `Hello, ${newMember}! Welcome to our guild!`,
+//       `Welcome to the family, ${newMember}! We're so glad you're here.`,
+//       `Welcome to the guild, ${newMember}!`,
+//       `We're excited to have ${newMember} as part of our guild!`,
+//       `Say hello to our newest member, ${newMember}!`,
+//       `Let's give a warm welcome to ${newMember}!`,
+//       `It's great to see you here, ${newMember}!`,
+//       `Welcome aboard, ${newMember}!`,
+//       `We're happy to have ${newMember} join us!`,
+//       `Say hi to ${newMember}, our newest member!`,
+//       `Join us in welcoming ${newMember} to our guild!`,
+//       `A big welcome to ${newMember}!`,
+//     ];
 
-    const greeting = greetingList[Math.floor(Math.random() * greetingList.length)];
+//     const greeting = greetingList[Math.floor(Math.random() * greetingList.length)];
 
-    const channelLounge = await newMember.client.channels.fetch(env.CHANNEL_LOUNGE) as TextChannel;
-    await channelLounge.send({
-      content: stripIndents`**${greeting}**
-  
-      Be safe, have fun, and don't forget to visit the <id:guide> for more information!
-      
-      *${await topic()}*`,
-    });
-  }
-}
+//     const channelLounge = await newMember.client.channels.fetch(env.CHANNEL_LOUNGE) as TextChannel;
+//     await channelLounge.send({
+//       content: stripIndents`**${greeting}**
+
+//       Be safe, have fun, and don't forget to visit the <id:guide> for more information!
+
+//       *${await topic()}*`,
+//     });
+//   }
+// }
 
 async function addedBooster(
   newMember: GuildMember,
