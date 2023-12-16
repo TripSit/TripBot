@@ -4,7 +4,7 @@ import {
   GuildMemberUpdateEvent,
 } from '../@types/eventDef';
 import { database, getOpenTicket } from '../../global/utils/knex';
-import { topic } from '../../global/commands/g.topic';
+// import { topic } from '../../global/commands/g.topic';
 
 type MindsetNames =
 | 'ROLE_DRUNK'
