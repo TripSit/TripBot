@@ -472,7 +472,8 @@ async function roleAddProcess(
   rolesAdded.forEach(async roleId => {
     await donorColorCheck(newMember, oldMember, roleId);
     await teamMindsetCheck(newMember, roleId);
-    await addedVerified(newMember, roleId);
+    // DISABLED DUE TO WELCOME MESSAGE SPAM
+    // await addedVerified(newMember, roleId);
     await addedBooster(newMember, roleId);
     await addedPatreon(newMember, roleId);
 
