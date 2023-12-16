@@ -112,7 +112,7 @@ const topics = {
   107: 'Would you rather be the funniest or smartest person in the room?',
   108: 'Would you rather be able to run at 100 miles per hour or fly at 10 miles per hour?',
   109: 'Would you rather be a superhero or the world\'s best chef?',
-  110: 'Would you rather be an Olympic gold medallist or an astronaut?',
+  110: 'Would you rather be an Olympic gold medalist or an astronaut?',
 };
 
 export default topic;
