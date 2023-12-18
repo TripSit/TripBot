@@ -1,7 +1,7 @@
 /* eslint-disable max-len */
 
 // Add return types
-// Make tests
+// Fix tests
 
 import express from 'express';
 import bodyParser from 'body-parser';
@@ -10,10 +10,10 @@ import morgan from 'morgan';
 import helmet from 'helmet';
 import RateLimit from 'express-rate-limit';
 
-import { notFound, errorHandler } from './middlewares';
+import { notFound, errorHandler } from './middlewares/middlewares';
 
-import api1 from './apiV1';
-import api2 from './apiV2';
+import api1 from './v1';
+import api2 from './v2';
 
 const F = f(__filename);
 
@@ -21,34 +21,53 @@ log.info(F, 'Started!');
 
 const app = express();
 
-/* Configure the app */
-
-app.use(morgan('tiny'));
-app.use(helmet());
-app.use(express.json());
-
-app.use(express.urlencoded({ extended: false })); // configure the app to parse requests with urlencoded payloads
-app.use(express.json()); // configure the app to parse requests with JSON payloads
-app.use(bodyParser.text()); // configure the app to be able to read text
-app.use(bodyParser.json()); // configure the app to be able to read json
-
-// from TB: Add Access Control Allow Origin headers
+// Middleware to log before rate limiting
 app.use((req, res, next) => {
-  res.setHeader('Access-Control-Allow-Origin', `https://${env.DNS_DOMAIN}`);
-  res.setHeader('Access-Control-Allow-Origin', `https://${env.BOT_DOMAIN}`);
-  res.header(
-    'Access-Control-Allow-Headers',
-    'Origin, X-Requested-With, Content-Type, Accept, Authorization',
-  );
+  console.log(`Incoming request for ${req.method} ${req.url}`);
   next();
 });
+
+// set up rate limiter: maximum of five requests per minute
+const limiter = RateLimit({
+  windowMs: 1 * 60 * 1000, // 1 minute
+  max: 60,
+  handler: (req, res /* next */) => {
+    console.log(`Hey fucko, rate limit exceeded for ${req.method} ${req.url}`);
+    res.status(429).send('Hey fucko, too many requests, please try again later.');
+  },
+});
+
+// Apply rate limiter to all requests
+app.use(limiter);
 
 // For traefik reverse proxy
 app.set('trust proxy', 2);
 
-// Simple IP return to test reverse proxy and "hello world" the api
-app.get('/api/ip', (request, response) => response.send(request.ip));
+// Standard middleware
+app.use(morgan('tiny'));
+app.use(helmet());
+app.use(express.json()); // configure the app to parse requests with JSON payloads
+app.use(express.urlencoded({ extended: false })); // configure the app to parse requests with urlencoded payloads
+app.use(bodyParser.text()); // configure the app to be able to read text
 
+// CORS middleware
+app.use((req, res, next) => {
+  const allowedOrigins = [`https://${env.DNS_DOMAIN}`, `https://${env.BOT_DOMAIN}`];
+  const { origin } = req.headers;
+  if (origin) {
+    if (allowedOrigins.includes(origin)) {
+      res.setHeader('Access-Control-Allow-Origin', origin);
+    }
+    res.header(
+      'Access-Control-Allow-Headers',
+      'Origin, X-Requested-With, Content-Type, Accept, Authorization',
+    );
+  }
+  next();
+});
+
+// Routes
+app.get('/api/ip', (request, response) => response.send(request.ip));
 app.get('/api', (req, res) => {
   res.json({
     welcome: 'Welcome to TripSit\'s API endpoint.',
@@ -97,21 +116,12 @@ app.get('/api', (req, res) => {
     },
   });
 });
-
 app.use('/api/tripsit', api1);
 app.use('/api/v1', api1);
 app.use('/api/v2', api2);
 
+// Error handling
 app.use(notFound);
 app.use(errorHandler);
-
-// set up rate limiter: maximum of five requests per minute
-const limiter = RateLimit({
-  windowMs: 1 * 60 * 1000, // 1 minute
-  max: 5,
-});
-
-// apply rate limiter to all requests
-app.use(limiter);
 
 export default app;
