@@ -64,18 +64,27 @@ export default {
     };
   },
 
-  async getDrug(drugName:string):Promise<Drug> {
-    return (drugData as DrugData)[drugName.toLowerCase()] as Drug;
+  async getDrug(drugName:string):Promise<Drug | {
+    err: boolean;
+    msg: string;
+    options?: string[];
+  }> {
+    const drug = (drugData as DrugData)[drugName.toLowerCase()] as Drug;
+
+    if (drug) {
+      return drug;
+    }
+    return {
+      err: true,
+      msg: 'Drug with that name not found, please try again.',
+      options: await this.getAllDrugNames(),
+    };
   },
 
   async getInteraction(
     drugAInput:string,
     drugBInput:string,
   ):Promise<{
-      err: boolean;
-      msg: string;
-      options?: string[];
-    } | {
       result: string;
       interactionCategoryA: string;
       interactionCategoryB: string;
@@ -84,6 +93,10 @@ export default {
       color: string;
       note?: string;
       // source?: string;
+    } | {
+      err: boolean;
+      msg: string;
+      options?: string[];
     }> {
     log.debug(F, `getInteraction | drugA: ${drugAInput}, drugB: ${drugBInput}`);
     return combo(drugAInput, drugBInput);

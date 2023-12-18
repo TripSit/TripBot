@@ -4,7 +4,7 @@ import RateLimit from 'express-rate-limit';
 
 import queries from './drugs.queries';
 
-const F = f(__filename);
+const F = f(__filename); // eslint-disable-line
 
 const router = express.Router();
 
@@ -20,12 +20,28 @@ router.use(limiter);
 // getInteraction - readme
 router.get('/getInteraction', (req, res) => {
   res.json({
-    endpoint: 'getInteraction',
-    properties: [
-      '/drugAName',
-      '/drugBName',
-    ],
+    input: {
+      drugA: 'string',
+      drugB: 'string',
+    },
     example: '/getInteraction/DXM/MDMA',
+    output: {
+      success: {
+        result: 'string',
+        interactionCategoryA: 'string',
+        interactionCategoryB: 'string',
+        definition: 'string?',
+        thumbnail: 'string?',
+        color: 'string?',
+        note: 'string?',
+        source: 'string?',
+      },
+      error: {
+        err: 'boolean',
+        msg: 'string',
+        options: 'string[]',
+      },
+    },
   });
 });
 
@@ -54,11 +70,18 @@ router.get('/getInteraction/:drugAName/:drugBName', async (req, res, next) => {
 // getDrug - readme
 router.get('/getDrug', (req, res) => {
   res.json({
-    endpoint: 'getDrug',
-    properties: [
-      '/name',
-    ],
+    input: {
+      drugName: 'string',
+    },
     example: '/getDrug/DXM',
+    output: {
+      success: 'Drug Object, see github./com/tripsit/drugs for type info',
+      error: {
+        err: 'boolean',
+        msg: 'string',
+        options: 'string[]',
+      },
+    },
   });
 });
 
