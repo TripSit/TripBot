@@ -159,14 +159,13 @@ const logger = createLogger({
 });
 
 declare global {
-  type Log = Logger;
   // eslint-disable-next-line no-var, vars-on-top
   var log: { // NOSONAR
-    info: (prefix:string, message:string) => Log,
-    error: (prefix:string, message:string) => Log,
-    warn: (prefix:string, message:string) => Log,
-    debug: (prefix:string, message:string) => Log,
-    http: (prefix:string, message:string) => Log,
+    info: (prefix:string, message:string) => Logger,
+    error: (prefix:string, message:string) => Logger,
+    warn: (prefix:string, message:string) => Logger,
+    debug: (prefix:string, message:string) => Logger,
+    http: (prefix:string, message:string) => Logger,
   };
   // eslint-disable-next-line no-var, vars-on-top
   var f:(filename:string) => string; // NOSONAR

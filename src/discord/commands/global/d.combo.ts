@@ -32,11 +32,36 @@ export const dCombo: SlashCommand = {
 
     const results = await combo(drugA, drugB);
 
+    if ((results as {
+      err: boolean;
+      msg: string;
+      options?: string[];
+    }).err) {
+      await interaction.editReply((results as {
+        err: boolean;
+        msg: string;
+        options?: string[];
+      }).msg);
+      return false;
+    }
+
+    const resultsData = results as {
+      result: string;
+      definition: string;
+      thumbnail: string;
+      color: string;
+      emoji: string;
+      interactionCategoryA: string;
+      interactionCategoryB: string;
+      note?: string;
+      source?: string;
+    };
+
     const embed = embedTemplate()
-      .setTitle(results.title)
-      .setDescription(results.description);
-    if (results.thumbnail) embed.setThumbnail(results.thumbnail);
-    if (results.color) embed.setColor(Colors[results.color as keyof typeof Colors]);
+      .setTitle(`Mixing ${drugA} and ${drugB}: ${resultsData.emoji} ${resultsData.result} ${resultsData.emoji}`)
+      .setDescription(resultsData.definition);
+    if (resultsData.thumbnail) embed.setThumbnail(resultsData.thumbnail);
+    if (resultsData.color) embed.setColor(Colors[resultsData.color as keyof typeof Colors]);
     await interaction.editReply({ embeds: [embed] });
     return true;
   },
