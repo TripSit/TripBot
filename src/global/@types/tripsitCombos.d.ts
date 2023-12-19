@@ -28,7 +28,7 @@ export interface Combos {
   tramadol: Interactions;
 }
 
-export interface Interaction {
+export interface Interactions {
   '2c-t-x': ComboData;
   '2c-x': ComboData;
   '5-meo-xxt': ComboData;

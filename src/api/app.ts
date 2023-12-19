@@ -20,7 +20,7 @@ const app = express();
 
 // Middleware to log before rate limiting
 app.use((req, res, next) => {
-  console.log(`Incoming request for ${req.method} ${req.url}`);
+  // console.log(`Incoming request for ${req.method} ${req.url}`);
   next();
 });
 
@@ -29,8 +29,7 @@ const limiter = RateLimit({
   windowMs: 1 * 60 * 1000, // 1 minute
   max: 60,
   handler: (req, res /* next */) => {
-    console.log(`Hey fucko, rate limit exceeded for ${req.method} ${req.url}`);
-    res.status(429).send('Hey fucko, too many requests, please try again later.');
+    res.status(429).send('Too many requests, please try again later.');
   },
 });
 
