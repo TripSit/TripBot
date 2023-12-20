@@ -145,6 +145,7 @@ async function help(
 async function makePersonaEmbed(
   persona: ai_personas,
 ) {
+  log.debug(F, `makePersonaEmbed started with persona: ${JSON.stringify(persona, null, 2)}`);
   const createdBy = await db.users.findUniqueOrThrow({ where: { id: persona.created_by } });
   const guild = await discordClient.guilds.fetch(env.DISCORD_GUILD_ID);
   const createdByMember = await guild.members.fetch(createdBy.discord_id as string);
@@ -152,14 +153,15 @@ async function makePersonaEmbed(
   const totalCost = (persona.total_tokens / 1000) * aiCosts[persona.ai_model].output;
 
   return embedTemplate()
-    .setTitle(`Interaction with '${persona.name}' persona:`)
+    .setTitle(`Info on '${persona.name}' persona:`)
     .setColor(Colors.Blurple)
+    .setDescription(persona.prompt)
     .setFields([
-      {
-        name: 'Prompt',
-        value: persona.prompt,
-        inline: false,
-      },
+      // {
+      //   name: 'Prompt',
+      //   value: persona.prompt,
+      //   inline: false,
+      // },
       {
         name: 'Model',
         value: persona.ai_model,
@@ -245,7 +247,7 @@ async function get(
       });
       if (aiPersona) {
         // eslint-disable-next-line max-len
-        description = `Channel ${(channel as TextChannel).name} is linked with the **"${aiPersona.name ?? aiPersona}"** persona:`;
+        description = `Channel ${(channel as TextChannel).name} is linked with the **"${aiPersona.name ?? aiPersona}"** persona: ${aiPersona.prompt.slice(0, 4000)}`;
       }
     }
 
