@@ -56,7 +56,7 @@ const db = new PrismaClient({ log: ['error'] });
 
 const F = f(__filename);
 
-const maxHistoryLength = 5;
+const maxHistoryLength = 3;
 
 const ephemeralExplanation = 'Set to "True" to show the response only to you';
 const personaDoesNotExist = 'This persona does not exist. Please create it first.';
@@ -948,7 +948,7 @@ async function aiAudit(
   const contextMessages = messages.slice(0, messages.length - 1);
 
   const embed = embedTemplate()
-    .setFooter({ text: 'What are tokens? <https://platform.openai.com/tokenizer>' })
+    .setFooter({ text: 'What are tokens? https://platform.openai.com/tokenizer' })
     // .setThumbnail(promptMessage.author.displayAvatarURL())
     .setColor(Colors.Yellow);
 
@@ -1020,7 +1020,7 @@ async function aiAudit(
     log.error(F, `${error}`);
     log.error(F, `${JSON.stringify({
       name: 'Persona',
-      value: stripIndents`**${aiPersona.name} (${aiPersona.ai_model})** - ${aiPersona.prompt}`,
+      value: stripIndents`**${aiPersona.name} (${aiPersona.ai_model})**`,
       inline: false,
     }, null, 2)}`);
     log.error(F, `${JSON.stringify({
