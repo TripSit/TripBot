@@ -101,7 +101,7 @@ const aiCosts = {
 
 async function help(
   interaction: ChatInputCommandInteraction,
-):Promise<void> {
+): Promise<void> {
   const visible = interaction.options.getBoolean('ephemeral') !== false;
   await interaction.deferReply({ ephemeral: visible });
   await interaction.editReply({
@@ -215,13 +215,13 @@ async function makePersonaEmbed(
 
 async function get(
   interaction: ChatInputCommandInteraction,
-):Promise<void> {
+): Promise<void> {
   const visible = interaction.options.getBoolean('ephemeral') !== false;
   await interaction.deferReply({ ephemeral: !visible });
   const modelName = interaction.options.getString('name');
   const channel = interaction.options.getChannel('channel') ?? interaction.channel;
 
-  let aiPersona:ai_personas | null = null;
+  let aiPersona: ai_personas | null = null;
   let description = '' as string;
   if (modelName) {
     aiPersona = await db.ai_personas.findUnique({
@@ -264,7 +264,7 @@ async function get(
           },
         });
         if (aiPersona) {
-        // eslint-disable-next-line max-len
+          // eslint-disable-next-line max-len
           description = `Parent category/channel ${(channel as ThreadChannel).parent} is linked with the **"${aiPersona.name}"** persona:`;
         }
       }
@@ -285,7 +285,7 @@ async function get(
           },
         });
         if (aiPersona) {
-        // eslint-disable-next-line max-len
+          // eslint-disable-next-line max-len
           description = `Parent category ${(channel as ThreadChannel).parent?.parent} is linked with the **"${aiPersona.name}"** persona:`;
         }
       }
@@ -317,7 +317,7 @@ async function get(
 
 async function getLinkedChannel(
   channel: CategoryChannel | ForumChannel | APIInteractionDataResolvedChannel | TextBasedChannel,
-):Promise<ai_channels | null> {
+): Promise<ai_channels | null> {
   // With the way AI personas work, they can be assigned to a category, channel, or thread
   // This function will check if the given channel is linked to an AI persona
   // If it is not, it will check the channel's parent; either the Category or Channel (in case of Thread)
@@ -342,14 +342,14 @@ async function getLinkedChannel(
 
 async function saveThreshold(
   interaction: ButtonInteraction,
-):Promise<void> {
+): Promise<void> {
   log.debug(F, 'saveThreshold started');
   if (!(interaction.member as GuildMember).roles.cache.has(env.DISCORD_OWNER_ID)) return;
   const buttonID = interaction.customId;
   log.debug(F, `buttonID: ${buttonID}`);
   if (!interaction.guild) return;
 
-  const [,, category, amount] = interaction.customId.split('~');
+  const [, , category, amount] = interaction.customId.split('~');
   const amountFloat = parseFloat(amount);
 
   const buttonRows = interaction.message.components
@@ -365,7 +365,7 @@ async function saveThreshold(
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const saveButton = categoryRow.components
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     .find(button => (button as any).custom_id?.includes('save')) as APIButtonComponent;
 
   const labelBreakdown = (saveButton.label as string).split(' ') as string[];
@@ -423,13 +423,13 @@ async function saveThreshold(
 
 async function adjustThreshold(
   interaction: ButtonInteraction,
-):Promise<void> {
+): Promise<void> {
   log.debug(F, 'adjustThreshold started');
   if (!(interaction.member as GuildMember).roles.cache.has(env.DISCORD_OWNER_ID)) return;
   // const buttonID = interaction.customId;
   // log.debug(F, `buttonID: ${buttonID}`);
 
-  const [,, category, amount] = interaction.customId.split('~');
+  const [, , category, amount] = interaction.customId.split('~');
   const amountFloat = parseFloat(amount);
 
   // Go through the components on the message and find the button that has a customID that includes 'save'
@@ -446,7 +446,7 @@ async function adjustThreshold(
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const saveButton = categoryRow.components
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     .find(button => (button as any).custom_id?.includes('save')) as APIButtonComponent;
   log.debug(F, `saveButton: ${JSON.stringify(saveButton, null, 2)}`);
 
@@ -486,7 +486,7 @@ async function adjustThreshold(
 
 async function noteUser(
   interaction: ButtonInteraction,
-):Promise<void> {
+): Promise<void> {
   log.debug(F, 'noteUser started');
   const buttonID = interaction.customId;
   log.debug(F, `buttonID: ${buttonID}`);
@@ -508,7 +508,7 @@ async function noteUser(
       .setMaxLength(1000)
       .setRequired(true)
       .setCustomId('internalNote'))));
-  const filter = (i:ModalSubmitInteraction) => i.customId.includes('noteModal');
+  const filter = (i: ModalSubmitInteraction) => i.customId.includes('noteModal');
 
   interaction.awaitModalSubmit({ filter, time: 0 })
     .then(async i => {
@@ -582,7 +582,7 @@ async function noteUser(
 
 async function muteUser(
   interaction: ButtonInteraction,
-):Promise<void> {
+): Promise<void> {
   log.debug(F, 'muteUser started');
   const buttonID = interaction.customId;
   log.debug(F, `buttonID: ${buttonID}`);
@@ -627,7 +627,7 @@ async function muteUser(
         .setRequired(false)
         .setCustomId('timeoutDuration')),
     ));
-  const filter = (i:ModalSubmitInteraction) => i.customId.includes('timeoutModal');
+  const filter = (i: ModalSubmitInteraction) => i.customId.includes('timeoutModal');
 
   interaction.awaitModalSubmit({ filter, time: 0 })
     .then(async i => {
@@ -705,7 +705,7 @@ async function muteUser(
 
 async function warnUser(
   interaction: ButtonInteraction,
-):Promise<void> {
+): Promise<void> {
   log.debug(F, 'warnUser started');
   const buttonID = interaction.customId;
   log.debug(F, `buttonID: ${buttonID}`);
@@ -743,7 +743,7 @@ async function warnUser(
         .setRequired(true)
         .setCustomId('description')),
     ));
-  const filter = (i:ModalSubmitInteraction) => i.customId.includes('warnModal');
+  const filter = (i: ModalSubmitInteraction) => i.customId.includes('warnModal');
 
   interaction.awaitModalSubmit({ filter, time: 0 })
     .then(async i => {
@@ -812,7 +812,7 @@ async function warnUser(
 
 async function banUser(
   interaction: ButtonInteraction,
-):Promise<void> {
+): Promise<void> {
   log.debug(F, 'banUser started');
   const buttonID = interaction.customId;
   log.debug(F, `buttonID: ${buttonID}`);
@@ -856,7 +856,7 @@ async function banUser(
         .setRequired(false)
         .setCustomId('duration')),
     ));
-  const filter = (i:ModalSubmitInteraction) => i.customId.includes('banModal');
+  const filter = (i: ModalSubmitInteraction) => i.customId.includes('banModal');
 
   interaction.awaitModalSubmit({ filter, time: 0 })
     .then(async i => {
@@ -977,45 +977,11 @@ async function aiAudit(
   });
 
   try {
-    embed.addFields(
-      {
-        name: 'Persona',
-        value: stripIndents`**${aiPersona.name} (${aiPersona.ai_model})** - ${aiPersona.prompt}`,
-        inline: false,
-      },
-      {
-        name: 'Context',
-        value: stripIndents`${contextMessageOutput || 'No context'}`,
-        inline: false,
-      },
-      {
-        name: 'Prompt',
-        value: stripIndents`${promptMessage.url} ${promptMessage.member?.displayName}: ${promptMessage.cleanContent}`,
-        inline: false,
-      },
-      {
-        name: 'Result',
-        value: stripIndents`${chatResponse.slice(0, 1023)}`,
-        inline: false,
-      },
-      {
-        name: 'Chat Tokens',
-        value: stripIndents`${promptTokens + completionTokens} Tokens \n($${(promptCost + completionCost).toFixed(6)})`,
-        inline: true,
-      },
-      {
-        name: 'User Tokens',
-        value: `${aiUsageData.tokens} Tokens\n($${((aiUsageData.tokens / 1000)
-        * aiCosts[aiPersona.ai_model].output).toFixed(6)})`,
-        inline: true,
-      },
-      {
-        name: 'Persona Tokens',
-        value: `${aiPersona.total_tokens} Tokens\n($${((aiPersona.total_tokens / 1000)
-        * aiCosts[aiPersona.ai_model].output).toFixed(6)})`,
-        inline: true,
-      },
-    );
+    embed.addFields({
+      name: 'Persona',
+      value: stripIndents`**${aiPersona.name} (${aiPersona.ai_model})** - ${aiPersona.prompt}`,
+      inline: false,
+    });
   } catch (error) {
     log.error(F, `${error}`);
     log.error(F, `${JSON.stringify({
@@ -1023,36 +989,98 @@ async function aiAudit(
       value: stripIndents`**${aiPersona.name} (${aiPersona.ai_model})**`,
       inline: false,
     }, null, 2)}`);
+  }
+
+  try {
+    embed.addFields({
+      name: 'Context',
+      value: stripIndents`${contextMessageOutput || 'No context'}`,
+      inline: false,
+    });
+  } catch (error) {
+    log.error(F, `${error}`);
     log.error(F, `${JSON.stringify({
       name: 'Context',
       value: stripIndents`${contextMessageOutput || 'No context'}`,
       inline: false,
     }, null, 2)}`);
+  }
+
+  try {
+    embed.addFields({
+      name: 'Prompt',
+      value: stripIndents`${promptMessage.url} ${promptMessage.member?.displayName}: ${promptMessage.cleanContent}`,
+      inline: false,
+    });
+  } catch (error) {
+    log.error(F, `${error}`);
     log.error(F, `${JSON.stringify({
       name: 'Prompt',
       value: stripIndents`${promptMessage.url} ${promptMessage.member?.displayName}: ${promptMessage.cleanContent}`,
       inline: false,
     }, null, 2)}`);
+  }
+
+  try {
+    embed.addFields({
+      name: 'Result',
+      value: stripIndents`${chatResponse.slice(0, 1023)}`,
+      inline: false,
+    });
+  } catch (error) {
+    log.error(F, `${error}`);
     log.error(F, `${JSON.stringify({
       name: 'Result',
       value: stripIndents`${chatResponse.slice(0, 1023)}`,
       inline: false,
     }, null, 2)}`);
+  }
+
+  try {
+    embed.addFields({
+      name: 'Chat Tokens',
+      value: stripIndents`${promptTokens + completionTokens} Tokens \n($${(promptCost + completionCost).toFixed(6)})`,
+      inline: true,
+    });
+  } catch (error) {
+    log.error(F, `${error}`);
     log.error(F, `${JSON.stringify({
       name: 'Chat Tokens',
       value: stripIndents`${promptTokens + completionTokens} Tokens \n($${(promptCost + completionCost).toFixed(6)})`,
       inline: true,
     }, null, 2)}`);
+  }
+
+  try {
+    embed.addFields({
+      name: 'User Tokens',
+      value: `${aiUsageData.tokens} Tokens\n($${((aiUsageData.tokens / 1000)
+        * aiCosts[aiPersona.ai_model].output).toFixed(6)})`,
+      inline: true,
+    });
+  } catch (error) {
+    log.error(F, `${error}`);
     log.error(F, `${JSON.stringify({
       name: 'User Tokens',
       value: `${aiUsageData.tokens} Tokens\n($${((aiUsageData.tokens / 1000)
-      * aiCosts[aiPersona.ai_model].output).toFixed(6)})`,
+        * aiCosts[aiPersona.ai_model].output).toFixed(6)})`,
       inline: true,
     }, null, 2)}`);
+  }
+
+  try {
+    embed.addFields({
+      name: 'Persona Tokens',
+      value: `${aiPersona.total_tokens} Tokens\n($${((aiPersona.total_tokens / 1000)
+        * aiCosts[aiPersona.ai_model].output).toFixed(6)})`,
+      inline: true,
+    });
+  } catch (error) {
+    log.error(F, `${error}`);
     log.error(F, `${JSON.stringify({
       name: 'Persona Tokens',
       value: `${aiPersona.total_tokens} Tokens\n($${((aiPersona.total_tokens / 1000)
-      * aiCosts[aiPersona.ai_model].output).toFixed(6)})`,
+        * aiCosts[aiPersona.ai_model].output).toFixed(6)})`,
       inline: true,
     }, null, 2)}`);
   }
@@ -1066,7 +1094,7 @@ async function aiAudit(
 
 async function link(
   interaction: ChatInputCommandInteraction,
-):Promise<void> {
+): Promise<void> {
   const visible = interaction.options.getBoolean('ephemeral') !== false;
   await interaction.deferReply({ ephemeral: !visible });
 
@@ -1321,8 +1349,8 @@ async function link(
 }
 
 export async function discordAiModerate(
-  messageData:Message,
-):Promise<void> {
+  messageData: Message,
+): Promise<void> {
   if (messageData.author.bot) return;
   if (messageData.cleanContent.length < 1) return;
   if (messageData.channel.type === ChannelType.DM) return;
@@ -1470,7 +1498,7 @@ export async function discordAiModerate(
 
 export async function discordAiChat(
   messageData: Message<boolean>,
-):Promise<void> {
+): Promise<void> {
   if (!env.OPENAI_API_ORG || !env.OPENAI_API_KEY) return;
   await messageData.fetch();
 
@@ -1550,7 +1578,7 @@ export async function discordAiChat(
   });
 
   const costUsd = (aiCosts[aiPersona.ai_model as keyof typeof aiCosts].input * promptTokens)
-  + (aiCosts[aiPersona.ai_model as keyof typeof aiCosts].output * completionTokens);
+    + (aiCosts[aiPersona.ai_model as keyof typeof aiCosts].output * completionTokens);
 
   const userData = await db.users.upsert({
     where: { discord_id: messageData.author.id },
@@ -1606,7 +1634,7 @@ export async function discordAiChat(
 
 export async function discordAiConversate(
   messageData: Message<boolean>,
-):Promise<void> {
+): Promise<void> {
   if (!env.OPENAI_API_ORG || !env.OPENAI_API_KEY) return;
   // log.debug(F, `discordAiConversate - messageData: ${JSON.stringify(messageData.cleanContent, null, 2)}`);
 
@@ -1663,7 +1691,7 @@ export async function discordAiConversate(
     // Wait for the run to complete
     let runStatus = 'queued' as Run['status'];
     while (['queued', 'in_progress'].includes(runStatus)) {
-    // TODO: If the user starts typing again, cancel the run and wait for them to either stop typing or send a message
+      // TODO: If the user starts typing again, cancel the run and wait for them to either stop typing or send a message
 
       // Send the typing indicator to show tripbot is thinking
       // eslint-disable-next-line no-await-in-loop
@@ -1684,7 +1712,7 @@ export async function discordAiConversate(
     // Depending on how the run ended, do something
     switch (runStatus) {
       case 'completed': {
-      // This should pull the thread and then get the last message in the thread, which should be from the assistant
+        // This should pull the thread and then get the last message in the thread, which should be from the assistant
         const messagePage = await getMessages(thread, { limit: 10 });
         // log.debug(F, `messagePage: ${JSON.stringify(messagePage, null, 2)}`);
         const messages = messagePage.getPaginatedItems();
@@ -1703,19 +1731,19 @@ export async function discordAiConversate(
         break;
       }
       case 'requires_action':
-      // No way to support additional actions at this time
+        // No way to support additional actions at this time
         break;
       case 'expired':
-      // This will happen if the requires_action doesn't get a  response in time, so this isn't supported either
+        // This will happen if the requires_action doesn't get a  response in time, so this isn't supported either
         break;
       case 'cancelling':
-      // This would only happen if i manually cancel the request, which isn't supported
+        // This would only happen if i manually cancel the request, which isn't supported
         break;
       case 'cancelled':
-      // Take a guess =D
+        // Take a guess =D
         break;
       case 'failed': {
-      // This should send an error to the dev
+        // This should send an error to the dev
         await devRoom.send(`AI Conversation failed: ${JSON.stringify(run, null, 2)}`);
         await messageData.reply('**sad trombone**');
         break;
@@ -1758,7 +1786,7 @@ export async function aiModButton(
 ) {
   const buttonID = interaction.customId;
   log.debug(F, `buttonID: ${buttonID}`);
-  const [,buttonAction] = buttonID.split('~');
+  const [, buttonAction] = buttonID.split('~');
 
   switch (buttonAction) {
     case 'adjust':
