@@ -979,7 +979,7 @@ async function aiAudit(
   try {
     embed.addFields({
       name: 'Persona',
-      value: stripIndents`**${aiPersona.name} (${aiPersona.ai_model})** - ${aiPersona.prompt}`,
+      value: stripIndents`**${aiPersona.name} (${aiPersona.ai_model})**`,
       inline: false,
     });
   } catch (error) {
@@ -1103,7 +1103,6 @@ async function link(
   const toggle = (interaction.options.getString('toggle') ?? 'enable') as 'enable' | 'disable';
   const textChannel = interaction.options.getChannel('channel') ?? interaction.channel;
 
-  const response = '' as string;
   if (toggle === 'enable') {
     if (!textChannel) {
       await interaction.editReply({
@@ -1115,7 +1114,6 @@ async function link(
       });
       return;
     }
-    // response = await aiLink(personaName, textChannel.id, toggle);
 
     const personaData = await db.ai_personas.findUnique({
       where: {
@@ -1175,182 +1173,118 @@ async function link(
 
     const channelAiLog = await discordClient.channels.fetch(env.CHANNEL_AILOG) as TextChannel;
     await channelAiLog.send({
-      content: `New AI link between ${personaName} and <#${textChannel.id}> on the ${interaction.guild.name} server ${interaction.member} (<@${env.DISCORD_OWNER_ID}>)`,
+      content: `AI link between ${personaName} and <#${textChannel.id}> on the ${interaction.guild.name} server ${verb} (<@${env.DISCORD_OWNER_ID}>)`,
     });
     return;
   }
 
-  if (textChannel) {
-    // response = await aiLink(personaName, textChannel.id, toggle);
-    const existingPersona = await db.ai_personas.findUnique({
+  const aiLinkData = textChannel
+    ? await getLinkedChannel(textChannel as TextChannel)
+    : await getLinkedChannel(interaction.channel as TextChannel);
+
+  log.debug(F, `aiLinkData: ${JSON.stringify(aiLinkData, null, 2)}`);
+  if (aiLinkData) {
+    await db.ai_channels.delete({
       where: {
-        name: personaName,
+        id: aiLinkData.id,
       },
     });
-
-    if (!existingPersona) {
-      await interaction.editReply({
-        embeds: [embedTemplate()
-          .setTitle('Modal')
-          .setColor(Colors.Red)
-          .setDescription(personaDoesNotExist)],
-
-      });
-      return;
-    }
-
-    let existingLink = await db.ai_channels.findFirst({
-      where: {
-        channel_id: textChannel.id,
-        persona_id: existingPersona.id,
-      },
+    await interaction.editReply({
+      embeds: [embedTemplate()
+        .setTitle('Modal')
+        .setColor(Colors.Red)
+        .setDescription(`Link between <#${aiLinkData.channel_id}> and ${personaName} was removed!`)],
     });
-
-    if (!existingLink) {
-      existingLink = await db.ai_channels.findFirst({
-        where: {
-          channel_id: textChannel.id,
-        },
-      });
-
-      if (!existingLink) {
-        await interaction.editReply({
-          embeds: [embedTemplate()
-            .setTitle('Modal')
-            .setColor(Colors.Red)
-            .setDescription(`Error: No link to <#${textChannel.id}> found!`)],
-
-        });
-        return;
-      }
-      const personaData = await db.ai_personas.findUnique({
-        where: {
-          id: existingLink.persona_id,
-        },
-      });
-      if (!personaData) {
-        await interaction.editReply({
-          embeds: [embedTemplate()
-            .setTitle('Modal')
-            .setColor(Colors.Red)
-            .setDescription('Error: No persona found for this link!')],
-
-        });
-        return;
-      }
-      await db.ai_channels.delete({
-        where: {
-          id: existingLink.id,
-        },
-      });
-    }
-  } else if (interaction.channel) {
-    const aiLinkData = await getLinkedChannel(interaction.channel);
-    if (aiLinkData) {
-      // response = await aiLink(personaName, aiLinkData?.channel_id, toggle);
-
-      const existingPersona = await db.ai_personas.findUnique({
-        where: {
-          name: personaName,
-        },
-      });
-
-      if (!existingPersona) {
-        await interaction.editReply({
-          embeds: [embedTemplate()
-            .setTitle('Modal')
-            .setColor(Colors.Red)
-            .setDescription(personaDoesNotExist)],
-
-        });
-        return;
-      }
-
-      let existingLink = await db.ai_channels.findFirst({
-        where: {
-          channel_id: aiLinkData.channel_id,
-          persona_id: existingPersona.id,
-        },
-      });
-
-      if (!existingLink) {
-        existingLink = await db.ai_channels.findFirst({
-          where: {
-            channel_id: aiLinkData.channel_id,
-          },
-        });
-
-        if (!existingLink) {
-          await interaction.editReply({
-            embeds: [embedTemplate()
-              .setTitle('Modal')
-              .setColor(Colors.Red)
-              .setDescription(`Error: No link to <#${aiLinkData.channel_id}> found!`)],
-
-          });
-          return;
-        }
-        const personaData = await db.ai_personas.findUnique({
-          where: {
-            id: existingLink.persona_id,
-          },
-        });
-        if (!personaData) {
-          await interaction.editReply({
-            embeds: [embedTemplate()
-              .setTitle('Modal')
-              .setColor(Colors.Red)
-              .setDescription('Error: No persona found for this link!')],
-
-          });
-          return;
-        }
-        await db.ai_channels.delete({
-          where: {
-            id: existingLink.id,
-          },
-        });
-      }
-    } else {
-      await interaction.editReply({
-        embeds: [embedTemplate()
-          .setTitle('Modal')
-          .setColor(Colors.Red)
-          .setDescription('This channel is not linked to an AI persona.')],
-
-      });
-      return;
-    }
+    const channelAiLog = await discordClient.channels.fetch(env.CHANNEL_AILOG) as TextChannel;
+    await channelAiLog.send({
+      content: `AI link between ${personaName} and <#${aiLinkData.channel_id}> on the ${interaction.guild.name} server deleted (<@${env.DISCORD_OWNER_ID}>)`,
+    });
   } else {
     await interaction.editReply({
       embeds: [embedTemplate()
         .setTitle('Modal')
         .setColor(Colors.Red)
-        .setDescription('You must provide a text channel to link to.')],
+        .setDescription('This channel is not linked to an AI persona.')],
 
     });
-    return;
   }
 
-  log.debug(F, `response: ${response}`);
+  // // For toggle off
+  // if (textChannel) {
+  //   // response = await aiLink(personaName, textChannel.id, toggle);
+  //   const existingPersona = await db.ai_personas.findUnique({
+  //     where: {
+  //       name: personaName,
+  //     },
+  //   });
 
-  if (!response.startsWith('Success')) {
-    await interaction.editReply({
-      embeds: [embedTemplate()
-        .setTitle('Modal')
-        .setColor(Colors.Red)
-        .setDescription(response)],
+  //   if (!existingPersona) {
+  //     await interaction.editReply({
+  //       embeds: [embedTemplate()
+  //         .setTitle('Modal')
+  //         .setColor(Colors.Red)
+  //         .setDescription(personaDoesNotExist)],
 
-    });
-    return;
-  }
+  //     });
+  //     return;
+  //   }
 
-  await interaction.editReply({
-    embeds: [embedTemplate()
-      .setTitle('Modal')
-      .setColor(Colors.Blurple)
-      .setDescription(response)],
-  });
+  //   let existingLink = await db.ai_channels.findFirst({
+  //     where: {
+  //       channel_id: textChannel.id,
+  //       persona_id: existingPersona.id,
+  //     },
+  //   });
+
+  //   if (!existingLink) {
+  //     existingLink = await db.ai_channels.findFirst({
+  //       where: {
+  //         channel_id: textChannel.id,
+  //       },
+  //     });
+
+  //     if (!existingLink) {
+  //       await interaction.editReply({
+  //         embeds: [embedTemplate()
+  //           .setTitle('Modal')
+  //           .setColor(Colors.Red)
+  //           .setDescription(`Error: No link to <#${textChannel.id}> found!`)],
+
+  //       });
+  //       return;
+  //     }
+  //     const personaData = await db.ai_personas.findUnique({
+  //       where: {
+  //         id: existingLink.persona_id,
+  //       },
+  //     });
+  //     if (!personaData) {
+  //       await interaction.editReply({
+  //         embeds: [embedTemplate()
+  //           .setTitle('Modal')
+  //           .setColor(Colors.Red)
+  //           .setDescription('Error: No persona found for this link!')],
+
+  //       });
+  //       return;
+  //     }
+  //     await db.ai_channels.delete({
+  //       where: {
+  //         id: existingLink.id,
+  //       },
+  //     });
+  //   }
+  // } else if (interaction.channel) {
+
+  // } else {
+  //   await interaction.editReply({
+  //     embeds: [embedTemplate()
+  //       .setTitle('Modal')
+  //       .setColor(Colors.Red)
+  //       .setDescription('Could not find a channel to unlnk')],
+
+  //   });
+  // }
 }
 
 export async function discordAiModerate(
