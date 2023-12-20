@@ -1,5 +1,4 @@
 /* eslint-disable max-len */
-import * as path from 'path';
 import {
   SlashCommandBuilder,
   GuildMember,
@@ -16,15 +15,7 @@ import getAsset from '../../utils/getAsset';
 import { Personas } from '../../../global/@types/database';
 import { resizeText, deFuckifyText, colorDefs } from '../../utils/canvasUtils';
 
-// ??? TO BE MOVED TO A DEDICATED FILE, OR IMAGEGET.TS ???
-// Load external fonts from web
-
 const F = f(__filename);
-
-Canvas.GlobalFonts.registerFromPath(
-  path.resolve(__dirname, '../../../assets/font/Futura.otf'),
-  'futura',
-);
 
 export function numFormatter(num:number):string {
   if (num > 999 && num < 1000000) {
@@ -60,9 +51,6 @@ export const dProfile: SlashCommand = {
     interaction,
   ) {
     log.info(F, await commandContext(interaction));
-
-    const test = path.resolve(__dirname, '../../../assets/font/Futura.otf');
-    log.debug(F, `Path ${test}`);
     await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
     const startTime = Date.now();
     if (!interaction.guild) {

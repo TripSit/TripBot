@@ -73,11 +73,6 @@ type LevelData = {
   },
 };
 
-Canvas.GlobalFonts.registerFromPath(
-  path.resolve(__dirname, '../../../../assets/font/Futura.otf'),
-  'futura',
-);
-
 export const dLevels: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('levels')
@@ -247,15 +242,13 @@ export const dLevels: SlashCommand = {
     }[];
 
     // Check if user has voice xp, if so add it to the list to be assigned a xp bar slot
-    if (levelData.VOICE.TOTAL.level > 0) {
-      const progressVoice = levelData.VOICE.TOTAL
-        ? levelData.VOICE.TOTAL.level_exp / levelData.VOICE.TOTAL.nextLevel
-        : 0;
+    if (levelData.VOICE.TOTAL.level) {
+      const progressVoice = levelData.VOICE.TOTAL.level_exp / levelData.VOICE.TOTAL.nextLevel;
       xpBarList.push({
         image: voiceBar,
         dataName: 'Voice',
         progress: progressVoice,
-        level: levelData.VOICE.TOTAL ? levelData.VOICE.TOTAL.level : 0,
+        level: levelData.VOICE.TOTAL.level,
         rank: levelData.VOICE.TOTAL.rank,
       });
     }

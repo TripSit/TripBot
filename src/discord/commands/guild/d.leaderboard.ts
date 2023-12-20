@@ -1,5 +1,4 @@
 /* eslint-disable no-await-in-loop, no-restricted-syntax, no-continue */
-import * as path from 'path';
 import {
   // Colors,
   // EmbedBuilder,
@@ -24,11 +23,6 @@ import getAsset from '../../utils/getAsset';
 import { resizeText, deFuckifyText, colorDefs } from '../../utils/canvasUtils';
 
 const F = f(__filename);
-
-Canvas.GlobalFonts.registerFromPath(
-  path.resolve(__dirname, '../../../../assets/font/Futura.otf'),
-  'futura',
-);
 
 // type RankType = { 'rank': number, 'id': string, 'level': number };
 // type LeaderboardType = {

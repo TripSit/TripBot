@@ -9,6 +9,8 @@ import {
   StringSelectMenuInteraction,
   ModalSubmitInteraction,
 } from 'discord.js';
+import * as path from 'path';
+import Canvas from '@napi-rs/canvas';
 import { env } from './global/utils/env.config';
 import { log } from './global/utils/log';
 import validateEnv from './global/utils/env.validate'; // eslint-disable-line
@@ -23,6 +25,11 @@ import updateDb from './global/utils/updateDb';
 sourceMap.install();
 
 global.bootTime = new Date();
+
+Canvas.GlobalFonts.registerFromPath(
+  path.resolve(__dirname, './global/assets/font/Futura.otf'),
+  'futura',
+);
 
 const F = f(__filename);
 
