@@ -187,11 +187,24 @@ async function upsert(
     .then(async i => {
       if (i.customId.split('~')[1] !== interaction.id) return;
       await i.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
+      let updatedValues = '';
 
       // Get values
-      let temperature = interaction.options.getNumber('temperature');
-      const topP = interaction.options.getNumber('top_p');
-      // log.debug(F, `temperature: ${temperature}, top_p: ${topP}`);
+      let temperature = existingPersona ? existingPersona.temperature : null;
+      if (interaction.options.getNumber('temperature')) {
+        temperature = interaction.options.getNumber('temperature', true);
+        if (existingPersona?.temperature) {
+          updatedValues += `Temperature: ${existingPersona.temperature} -> ${temperature}\n`;
+        }
+      }
+
+      let topP = existingPersona ? existingPersona.top_p : null;
+      if (interaction.options.getNumber('top_p')) {
+        topP = interaction.options.getNumber('top_p', true);
+        if (existingPersona?.top_p) {
+          updatedValues += `Top P: ${existingPersona.top_p} -> ${topP}\n`;
+        }
+      }
 
       // If both temperature and top_p are set, throw an error
       if (temperature && topP) {
@@ -209,6 +222,46 @@ async function upsert(
         temperature = 1;
       }
 
+      let presencePenalty = existingPersona ? existingPersona.presence_penalty : 0;
+      if (interaction.options.getNumber('presence_penalty')) {
+        presencePenalty = interaction.options.getNumber('presence_penalty', true);
+        if (existingPersona?.presence_penalty) {
+          updatedValues += `Presence Penalty: ${existingPersona.presence_penalty} -> ${presencePenalty}\n`;
+        }
+      }
+
+      let frequencyPenalty = existingPersona ? existingPersona.frequency_penalty : 0;
+      if (interaction.options.getNumber('frequency_penalty')) {
+        frequencyPenalty = interaction.options.getNumber('frequency_penalty', true);
+        if (existingPersona?.frequency_penalty) {
+          updatedValues += `Frequency Penalty: ${existingPersona.frequency_penalty} -> ${frequencyPenalty}\n`;
+        }
+      }
+
+      let maxTokens = existingPersona ? existingPersona.max_tokens : 500;
+      if (interaction.options.getNumber('tokens')) {
+        maxTokens = interaction.options.getNumber('tokens', true);
+        if (existingPersona?.max_tokens) {
+          updatedValues += `Max Tokens: ${existingPersona.max_tokens} -> ${maxTokens}\n`;
+        }
+      }
+
+      let model = existingPersona ? existingPersona.ai_model : 'GPT_3_5_TURBO';
+      if (interaction.options.getString('model')) {
+        model = interaction.options.getString('model', true) as ai_model;
+        if (existingPersona?.ai_model) {
+          updatedValues += `Model: ${existingPersona.ai_model} -> ${model}\n`;
+        }
+      }
+
+      let prompt = existingPersona ? existingPersona.prompt : '';
+      if (i.fields.getTextInputValue('prompt')) {
+        prompt = i.fields.getTextInputValue('prompt');
+        if (existingPersona?.prompt !== prompt) {
+          updatedValues += `Prompt: ${existingPersona?.prompt} -> ${prompt}\n`;
+        }
+      }
+
       const userData = await db.users.upsert({
         where: { discord_id: interaction.user.id },
         create: { discord_id: interaction.user.id },
@@ -217,13 +270,13 @@ async function upsert(
 
       const aiPersona = {
         name: personaName,
-        ai_model: interaction.options.getString('model') as ai_model ?? 'GPT_3_5_TURBO',
-        prompt: i.fields.getTextInputValue('prompt'),
+        ai_model: model,
+        prompt,
         temperature,
         top_p: topP,
-        presence_penalty: interaction.options.getNumber('presence_penalty') ?? 0,
-        frequency_penalty: interaction.options.getNumber('frequency_penalty') ?? 0,
-        max_tokens: interaction.options.getNumber('tokens') ?? 500,
+        presence_penalty: presencePenalty,
+        frequency_penalty: frequencyPenalty,
+        max_tokens: maxTokens,
         created_by: existingPersona ? existingPersona.created_by : userData.id,
         created_at: existingPersona ? existingPersona.created_at : new Date(),
       } as ai_personas;
@@ -247,7 +300,20 @@ async function upsert(
         embeds: [embedTemplate()
           .setTitle('Modal')
           .setColor(Colors.Red)
-          .setDescription(`Success! This persona has been ${action}!`)],
+          .setDescription(`Success! ${personaName} has been ${action}!
+          
+          ${updatedValues}`)],
+      });
+
+      const channelAiLog = await interaction.guild?.channels.fetch(env.CHANNEL_AILOG) as TextChannel;
+      await channelAiLog.send({
+        content: `Hey <@${env.DISCORD_OWNER_ID}>, ${interaction.user.username} ${action} the ${personaName} AI Persona!`,
+        embeds: [embedTemplate()
+          .setTitle('AI Persona')
+          .setColor(Colors.Blurple)
+          .setDescription(stripIndents`
+              ${updatedValues}
+            `)],
       });
     });
 }
