@@ -1096,6 +1096,7 @@ async function link(
   interaction: ChatInputCommandInteraction,
 ): Promise<void> {
   const visible = interaction.options.getBoolean('ephemeral') !== false;
+  if (!interaction.guild) return;
   await interaction.deferReply({ ephemeral: !visible });
 
   const personaName = interaction.options.getString('name') ?? 'tripbot';
@@ -1139,38 +1140,42 @@ async function link(
       },
     });
 
-    if (aiLinkData) {
-      await db.ai_channels.update({
-        where: {
-          id: aiLinkData.id,
-        },
-        data: {
+    const verb = aiLinkData ? 'updated' : 'created';
+
+    await db.ai_channels.upsert({
+      where: {
+        channel_id_persona_id: {
           channel_id: textChannel.id,
           persona_id: personaData.id,
         },
-      });
-      await interaction.editReply({
-        embeds: [embedTemplate()
-          .setTitle('Modal')
-          .setColor(Colors.Red)
-          .setDescription(`Success: The link between ${personaName} and <#${textChannel.id}> was updated!`)],
-
-      });
-      return;
-    }
-
-    await db.ai_channels.create({
-      data: {
+      },
+      create: {
+        channel_id: textChannel.id,
+        persona_id: personaData.id,
+      },
+      update: {
         channel_id: textChannel.id,
         persona_id: personaData.id,
       },
     });
+
     await interaction.editReply({
       embeds: [embedTemplate()
         .setTitle('Modal')
         .setColor(Colors.Red)
-        .setDescription(`Success: The link between ${personaName} and <#${textChannel.id}> was created!`)],
+        .setDescription(`Success: The link between ${personaName} and <#${textChannel.id}> was ${verb}!`)],
+    });
 
+    await interaction.editReply({
+      embeds: [embedTemplate()
+        .setTitle('Modal')
+        .setColor(Colors.Red)
+        .setDescription(`Success: The link between ${personaName} and <#${textChannel.id}> was ${verb}!`)],
+    });
+
+    const channelAiLog = await discordClient.channels.fetch(env.CHANNEL_AILOG) as TextChannel;
+    await channelAiLog.send({
+      content: `New AI link between ${personaName} and <#${textChannel.id}> on the ${interaction.guild.name} server ${interaction.member} (<@${env.DISCORD_OWNER_ID}>)`,
     });
     return;
   }
