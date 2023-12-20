@@ -86,11 +86,25 @@ export async function combo(
     }
 
     // Convert any of the following to their respective categories
+    if (drugName.includes('amphetamine' as Category)) {
+      return 'amphetamines';
+    }
+
+    if (Object.keys(drugData).includes(drugName.toLowerCase())) {
+      const drug = (drugData as DrugData)[drugName.toLowerCase()] as Drug;
+      if (drug.aliases?.join().includes('amphetamine')) {
+        return 'amphetamines';
+      }
+    }
+
     if (/^do.$/i.test(drugName)) {
       return 'dox';
     }
     if (/^2c-.$/i.test(drugName)) {
       return '2c-x';
+    }
+    if (/^25.-nbome/i.test(drugName)) {
+      return '2c-t-x';
     }
     if (/^25.-nbome/i.test(drugName)) {
       return 'nbomes';
