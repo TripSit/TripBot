@@ -19,10 +19,10 @@ log.info(F, 'Started!');
 const app = express();
 
 // Middleware to log before rate limiting
-app.use((req, res, next) => {
-  // console.log(`Incoming request for ${req.method} ${req.url}`);
-  next();
-});
+// app.use((req, res, next) => {
+//   // console.log(`Incoming request for ${req.method} ${req.url}`);
+//   next();
+// });
 
 // set up rate limiter: maximum of five requests per minute
 const limiter = RateLimit({
