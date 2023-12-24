@@ -1,5 +1,5 @@
 import { Category, Drug } from 'tripsit_drug_db';
-import drugJsonData from '../../../global/assets/data/drug_db_tripsit.json';
+import drugJsonData from '../../../global/assets/data/tripsitDB.json';
 import { combo } from '../../../global/commands/g.combo';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars

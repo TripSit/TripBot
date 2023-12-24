@@ -1,9 +1,9 @@
 // import { stripIndents } from 'common-tags';
 import { Category, Combo, Drug } from 'tripsit_drug_db';
 // import { CbSubstance, Interaction } from '../@types/combined';
-// import drugDataAll from '../assets/data/drug_db_combined.json';
-import comboJsonData from '../assets/data/combo.json';
-import drugJsonData from '../assets/data/drug_db_tripsit.json';
+// import drugDataAll from '../../../assets/data/combine dDB.json';
+import comboJsonData from '../assets/data/tripsitCombos.json';
+import drugJsonData from '../assets/data/tripsitDB.json';
 import comboDefs from '../assets/data/combo_definitions.json';
 
 const F = f(__filename);
@@ -56,6 +56,32 @@ export async function combo(
 
   // Because users can input whatever they want, we need to clean the input
   function cleanDrugName(drugName:string):string {
+    // These matches need to come first because otherwise "2x-b" woould be found in the drug DB but not have any interaction info
+    if (/^do.$/i.test(drugName)) {
+      return 'dox';
+    }
+    if (/^2c-.$/i.test(drugName)) {
+      return '2c-x';
+    }
+    if (/^25.-nbome/i.test(drugName)) {
+      return '2c-t-x';
+    }
+    if (/^25.-nbome/i.test(drugName)) {
+      return 'nbomes';
+    }
+    if (/^5-meo-..t$/i.test(drugName)) {
+      return '5-meo-xxt';
+    }
+    if (drugName === 'ghb' || drugName === 'gbl') {
+      return 'ghb/gbl';
+    }
+    if (drugName === 'ssri' || drugName === 'snri' || drugName === 'snris') {
+      return 'ssris';
+    }
+    if (drugName === 'maoi') {
+      return 'maois';
+    }
+
     // First, check if the given name exists in the drug database, if so, we should try to use that info
     if (Object.keys(drugData).includes(drugName.toLowerCase())) {
       const drug = (drugData as DrugData)[drugName.toLowerCase()] as Drug;
@@ -97,31 +123,6 @@ export async function combo(
       }
     }
 
-    if (/^do.$/i.test(drugName)) {
-      return 'dox';
-    }
-    if (/^2c-.$/i.test(drugName)) {
-      return '2c-x';
-    }
-    if (/^25.-nbome/i.test(drugName)) {
-      return '2c-t-x';
-    }
-    if (/^25.-nbome/i.test(drugName)) {
-      return 'nbomes';
-    }
-    if (/^5-meo-..t$/i.test(drugName)) {
-      return '5-meo-xxt';
-    }
-    if (drugName === 'ghb' || drugName === 'gbl') {
-      return 'ghb/gbl';
-    }
-    if (drugName === 'ssri' || drugName === 'snri' || drugName === 'snris') {
-      return 'ssris';
-    }
-    if (drugName === 'maoi') {
-      return 'maois';
-    }
-
     return drugName;
   }
 
@@ -139,6 +140,7 @@ export async function combo(
   // If the drug is in the drugDB, we can use the combo data from there
   // If the drug is not in the drugDB, we can use the combo data from the comboDB
   // Either way, it's the same format, so they're interchangeable
+  // log.debug(F, `drugAName: ${drugAName}`);
   const drugAComboData = Object.keys(drugData).includes(drugAName.toLowerCase())
     ? (drugData[drugAName.toLowerCase()]).combos
     : comboData[drugAName.toLowerCase() as keyof typeof comboData];
