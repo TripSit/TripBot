@@ -46,7 +46,7 @@ RUN npx prisma generate --schema=./src/prisma/moodle/schema.prisma
 # Deploy the commands
 # RUN npx ts-node --transpile-only ./src/discord/utils/commandDeploy.ts
 
-CMD npx prisma migrate deploy && npx tsc-watch --onSuccess "npx nodemon --config ./nodemon.json"
+CMD npx prisma migrate deploy && npx tsc-watch --onSuccess "node ./build/start.js"
 
 # For container development, the following command runs forever, so we can inspect the container
 # CMD tail -f /dev/null
@@ -114,6 +114,7 @@ COPY --chown=node:node --from=build /usr/src/app/node_modules ./node_modules
 COPY --chown=node:node --from=build /usr/src/app/build ./build
 COPY --chown=node:node ./src/discord/assets/Futura.otf ./build/global/assets/font/Futura.otf
 COPY --chown=node:node ./src/prisma/ ./src/prisma
+COPY --chown=node:node ./assets /usr/src/app/assets
 COPY --chown=node:node package*.json ./
 
 # Generate prisma client

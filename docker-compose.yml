@@ -44,7 +44,7 @@ services:
       - tripbot_website-net
       - moodle_data-net
     volumes:
-      - ./src/global/assets:/usr/src/app/src/global/assets # For viewing downloaded assets in development
+      - ./assets:/usr/src/app/src/global/assets # For viewing downloaded assets in development
       - ./src:/usr/src/app/src # Needed for hot-reloading of source code
       - ./.env:/usr/src/app/.env # Needed for hot-reloading the .env
     labels:
