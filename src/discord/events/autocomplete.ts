@@ -5,12 +5,20 @@ import {
 import Fuse from 'fuse.js';
 
 import { PrismaClient, ai_model } from '@prisma/client';
+import { Drug } from 'tripsit_drug_db';
 import pillColors from '../../global/assets/data/pill_colors.json';
 import pillShapes from '../../global/assets/data/pill_shapes.json';
-import drugDataAll from '../../global/assets/data/drug_db_combined.json';
-import drugDataTripsit from '../../global/assets/data/drug_db_tripsit.json';
+import cbData from '../../global/assets/data/combinedDB.json';
+import tsData from '../../global/assets/data/tripsitDB.json';
 import timezones from '../../global/assets/data/timezones.json';
 import unitsOfMeasurement from '../../global/assets/data/units_of_measurement.json';
+import { CbSubstance } from '../../global/@types/combined';
+
+const drugDataTripsit = tsData as {
+  [key: string]: Drug;
+};
+
+const drugDataAll = cbData as CbSubstance[];
 
 const db = new PrismaClient({ log: ['error'] });
 

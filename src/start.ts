@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { getVoiceConnection } from '@discordjs/voice';
 // import { stripIndents } from 'common-tags';
 import sourceMap from 'source-map-support'; // eslint-disable-line
@@ -41,13 +42,14 @@ const F = f(__filename);
 
 async function start() {
   log.info(F, 'Initializing service!');
-  validateEnv('SERVICES');
-  api();
-  updateDb();
-  if (env.DISCORD_CLIENT_TOKEN && validateEnv('DISCORD')) await discordConnect();
-  // if (env.MATRIX_ACCESS_TOKEN && validateEnv('MATRIX') && env.NODE_ENV !== 'production') await startMatrix();
-  // if (env.IRC_PASSWORD && validateEnv('IRC') && env.NODE_ENV !== 'production') ircConnect();
-  // if (env.TELEGRAM_TOKEN && validateEnv('TELEGRAM')) await telegramConnect();
+  if (validateEnv('SERVICES')) {
+    api();
+    await updateDb();
+    if (env.DISCORD_CLIENT_TOKEN && await validateEnv('DISCORD')) await discordConnect();
+    // if (env.MATRIX_ACCESS_TOKEN && validateEnv( 'MATRIX') && env.NODE_ENV !== 'production') await startMatrix();
+    // if (env.IRC_PASSWORD && validateEnv('IRC') && env.NODE_ENV !== 'production') ircConnect();
+    // if (env.TELEGRAM_TOKEN && validateEnv('TELEGRAM')) await telegramConnect();
+  }
 }
 
 start();
