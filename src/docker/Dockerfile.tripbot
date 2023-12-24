@@ -114,6 +114,7 @@ COPY --chown=node:node --from=build /usr/src/app/node_modules ./node_modules
 COPY --chown=node:node --from=build /usr/src/app/build ./build
 COPY --chown=node:node ./src/discord/assets/Futura.otf ./build/global/assets/font/Futura.otf
 COPY --chown=node:node ./src/prisma/ ./src/prisma
+COPY --chown=node:node ./assets /usr/src/app/assets
 COPY --chown=node:node package*.json ./
 
 # Generate prisma client
