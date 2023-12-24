@@ -37,6 +37,18 @@ export const dCombo: SlashCommand = {
       msg: string;
       options?: string[];
     }).err) {
+      if ((results as {
+        err: boolean;
+        msg: string;
+        options?: string[];
+      }).msg === '') {
+        await interaction.editReply((results as {
+          err: boolean;
+          msg: string;
+          options?: string[];
+        }).msg);
+        return false;
+      }
       await interaction.editReply((results as {
         err: boolean;
         msg: string;

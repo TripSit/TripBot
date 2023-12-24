@@ -51,6 +51,17 @@
     "ketamine": {
       "status": "Low Risk & Synergy"
     },
+    "lithium": {
+      "note": "There is a large number of reports indicating a high seizure and psychosis risk from this combination.",
+      "sources": [
+        "https://pubmed.ncbi.nlm.nih.gov/34348413/",
+        "https://erowid.org/chemicals/lsd/lsd_interactions.shtml",
+        "https://erowid.org/experiences/exp.php?ID=93681",
+        "https://erowid.org/experiences/exp.php?ID=110780",
+        "https://www.sciencedirect.com/science/article/pii/S0165032723000915"
+      ],
+      "status": "Dangerous"
+    },
     "lsd": {
       "status": "Low Risk & Synergy"
     },
@@ -140,6 +151,17 @@
     },
     "ketamine": {
       "status": "Low Risk & Synergy"
+    },
+    "lithium": {
+      "note": "There is a large number of reports indicating a high seizure and psychosis risk from this combination.",
+      "sources": [
+        "https://pubmed.ncbi.nlm.nih.gov/34348413/",
+        "https://erowid.org/chemicals/lsd/lsd_interactions.shtml",
+        "https://erowid.org/experiences/exp.php?ID=93681",
+        "https://erowid.org/experiences/exp.php?ID=110780",
+        "https://www.sciencedirect.com/science/article/pii/S0165032723000915"
+      ],
+      "status": "Dangerous"
     },
     "lsd": {
       "status": "Low Risk & Synergy"
@@ -444,8 +466,13 @@
       "status": "Dangerous"
     },
     "mdma": {
-      "note": "Amphetamines increase the neurotoxic effects of MDMA",
-      "status": "Low Risk & Synergy"
+      "note": "This combination of stimulants will increase strain on the heart, may cause some physical discomfort, and has the chance to cause cardiovascular issues. The anxiogenic and focusing effects of stimulants can increase the chance of unpleasant thought loops and make the experience more uncomfortable, this combination raises these chances. Amphetamines will increase the neurotoxic effects of MDMA, in addition to causing further concerns of hyperthermia due to the inherent nature of the combination. It will also raise one's body temperature, also likely making the combination more neurotoxic.",
+      "sources": [
+        "https://onlinelibrary.wiley.com/doi/abs/10.1080/09595230601036945",
+        "https://pubmed.ncbi.nlm.nih.gov/16884865/",
+        "https://onlinelibrary.wiley.com/doi/10.1111/j.0953-816X.2004.03453.x"
+      ],
+      "status": "Caution"
     },
     "mescaline": {
       "note": "The focus and anxiety caused by stimulants is magnified by psychedelics and results in an increased risk of thought loops",
@@ -1011,6 +1038,17 @@
     "ketamine": {
       "status": "Low Risk & Synergy"
     },
+    "lithium": {
+      "note": "There is a large number of reports indicating a high seizure and psychosis risk from this combination.",
+      "sources": [
+        "https://pubmed.ncbi.nlm.nih.gov/34348413/",
+        "https://erowid.org/chemicals/lsd/lsd_interactions.shtml",
+        "https://erowid.org/experiences/exp.php?ID=93681",
+        "https://erowid.org/experiences/exp.php?ID=110780",
+        "https://www.sciencedirect.com/science/article/pii/S0165032723000915"
+      ],
+      "status": "Dangerous"
+    },
     "lsd": {
       "status": "Low Risk & Synergy"
     },
@@ -1102,6 +1140,17 @@
     "ketamine": {
       "note": "Ketamine and psychedelics tend to potentiate each other - go slowly.",
       "status": "Low Risk & Synergy"
+    },
+    "lithium": {
+      "note": "There is a large number of reports indicating a high seizure and psychosis risk from this combination.",
+      "sources": [
+        "https://pubmed.ncbi.nlm.nih.gov/34348413/",
+        "https://erowid.org/chemicals/lsd/lsd_interactions.shtml",
+        "https://erowid.org/experiences/exp.php?ID=93681",
+        "https://erowid.org/experiences/exp.php?ID=110780",
+        "https://www.sciencedirect.com/science/article/pii/S0165032723000915"
+      ],
+      "status": "Dangerous"
     },
     "lsd": {
       "status": "Low Risk & Synergy"
@@ -1428,6 +1477,96 @@
       "status": "Dangerous"
     }
   },
+  "lithium": {
+    "2c-t-x": {
+      "note": "There is a large number of reports indicating a high seizure and psychosis risk from this combination.",
+      "sources": [
+        "https://pubmed.ncbi.nlm.nih.gov/34348413/",
+        "https://erowid.org/chemicals/lsd/lsd_interactions.shtml",
+        "https://erowid.org/experiences/exp.php?ID=93681",
+        "https://erowid.org/experiences/exp.php?ID=110780",
+        "https://www.sciencedirect.com/science/article/pii/S0165032723000915"
+      ],
+      "status": "Dangerous"
+    },
+    "2c-x": {
+      "note": "There is a large number of reports indicating a high seizure and psychosis risk from this combination.",
+      "sources": [
+        "https://pubmed.ncbi.nlm.nih.gov/34348413/",
+        "https://erowid.org/chemicals/lsd/lsd_interactions.shtml",
+        "https://erowid.org/experiences/exp.php?ID=93681",
+        "https://erowid.org/experiences/exp.php?ID=110780",
+        "https://www.sciencedirect.com/science/article/pii/S0165032723000915"
+      ],
+      "status": "Dangerous"
+    },
+    "dmt": {
+      "note": "There is a large number of reports indicating a high seizure and psychosis risk from this combination.",
+      "sources": [
+        "https://pubmed.ncbi.nlm.nih.gov/34348413/",
+        "https://erowid.org/chemicals/lsd/lsd_interactions.shtml",
+        "https://erowid.org/experiences/exp.php?ID=93681",
+        "https://erowid.org/experiences/exp.php?ID=110780",
+        "https://www.sciencedirect.com/science/article/pii/S0165032723000915"
+      ],
+      "status": "Dangerous"
+    },
+    "dox": {
+      "note": "There is a large number of reports indicating a high seizure and psychosis risk from this combination.",
+      "sources": [
+        "https://pubmed.ncbi.nlm.nih.gov/34348413/",
+        "https://erowid.org/chemicals/lsd/lsd_interactions.shtml",
+        "https://erowid.org/experiences/exp.php?ID=93681",
+        "https://erowid.org/experiences/exp.php?ID=110780",
+        "https://www.sciencedirect.com/science/article/pii/S0165032723000915"
+      ],
+      "status": "Dangerous"
+    },
+    "lsd": {
+      "note": "There is a large number of reports indicating a high seizure and psychosis risk from this combination.",
+      "sources": [
+        "https://pubmed.ncbi.nlm.nih.gov/34348413/",
+        "https://erowid.org/chemicals/lsd/lsd_interactions.shtml",
+        "https://erowid.org/experiences/exp.php?ID=93681",
+        "https://erowid.org/experiences/exp.php?ID=110780",
+        "https://www.sciencedirect.com/science/article/pii/S0165032723000915"
+      ],
+      "status": "Dangerous"
+    },
+    "mescaline": {
+      "note": "There is a large number of reports indicating a high seizure and psychosis risk from this combination.",
+      "sources": [
+        "https://pubmed.ncbi.nlm.nih.gov/34348413/",
+        "https://erowid.org/chemicals/lsd/lsd_interactions.shtml",
+        "https://erowid.org/experiences/exp.php?ID=93681",
+        "https://erowid.org/experiences/exp.php?ID=110780",
+        "https://www.sciencedirect.com/science/article/pii/S0165032723000915"
+      ],
+      "status": "Dangerous"
+    },
+    "mushrooms": {
+      "note": "There is a large number of reports indicating a high seizure and psychosis risk from this combination.",
+      "sources": [
+        "https://pubmed.ncbi.nlm.nih.gov/34348413/",
+        "https://erowid.org/chemicals/lsd/lsd_interactions.shtml",
+        "https://erowid.org/experiences/exp.php?ID=93681",
+        "https://erowid.org/experiences/exp.php?ID=110780",
+        "https://www.sciencedirect.com/science/article/pii/S0165032723000915"
+      ],
+      "status": "Dangerous"
+    },
+    "nbomes": {
+      "note": "There is a large number of reports indicating a high seizure and psychosis risk from this combination.",
+      "sources": [
+        "https://pubmed.ncbi.nlm.nih.gov/34348413/",
+        "https://erowid.org/chemicals/lsd/lsd_interactions.shtml",
+        "https://erowid.org/experiences/exp.php?ID=93681",
+        "https://erowid.org/experiences/exp.php?ID=110780",
+        "https://www.sciencedirect.com/science/article/pii/S0165032723000915"
+      ],
+      "status": "Dangerous"
+    }
+  },
   "lsd": {
     "2c-t-x": {
       "status": "Low Risk & Synergy"
@@ -1476,6 +1615,17 @@
     },
     "ketamine": {
       "status": "Low Risk & Synergy"
+    },
+    "lithium": {
+      "note": "There is a large number of reports indicating a high seizure and psychosis risk from this combination.",
+      "sources": [
+        "https://pubmed.ncbi.nlm.nih.gov/34348413/",
+        "https://erowid.org/chemicals/lsd/lsd_interactions.shtml",
+        "https://erowid.org/experiences/exp.php?ID=93681",
+        "https://erowid.org/experiences/exp.php?ID=110780",
+        "https://www.sciencedirect.com/science/article/pii/S0165032723000915"
+      ],
+      "status": "Dangerous"
     },
     "lsd": {
       "status": "Self"
@@ -1628,8 +1778,13 @@
       "status": "Caution"
     },
     "amphetamines": {
-      "note": "Amphetamines increase the neurotoxic effects of MDMA",
-      "status": "Low Risk & Synergy"
+      "note": "This combination of stimulants will increase strain on the heart, may cause some physical discomfort, and has the chance to cause cardiovascular issues. The anxiogenic and focusing effects of stimulants can increase the chance of unpleasant thought loops and make the experience more uncomfortable, this combination raises these chances. Amphetamines will increase the neurotoxic effects of MDMA, in addition to causing further concerns of hyperthermia due to the inherent nature of the combination. It will also raise one's body temperature, also likely making the combination more neurotoxic.",
+      "sources": [
+        "https://onlinelibrary.wiley.com/doi/abs/10.1080/09595230601036945",
+        "https://pubmed.ncbi.nlm.nih.gov/16884865/",
+        "https://onlinelibrary.wiley.com/doi/10.1111/j.0953-816X.2004.03453.x"
+      ],
+      "status": "Caution"
     },
     "amt": {
       "status": "Dangerous"
@@ -1759,6 +1914,17 @@
     "ketamine": {
       "status": "Low Risk & Synergy"
     },
+    "lithium": {
+      "note": "There is a large number of reports indicating a high seizure and psychosis risk from this combination.",
+      "sources": [
+        "https://pubmed.ncbi.nlm.nih.gov/34348413/",
+        "https://erowid.org/chemicals/lsd/lsd_interactions.shtml",
+        "https://erowid.org/experiences/exp.php?ID=93681",
+        "https://erowid.org/experiences/exp.php?ID=110780",
+        "https://www.sciencedirect.com/science/article/pii/S0165032723000915"
+      ],
+      "status": "Dangerous"
+    },
     "lsd": {
       "status": "Low Risk & Synergy"
     },
@@ -1845,6 +2011,17 @@
     },
     "ketamine": {
       "status": "Low Risk & Synergy"
+    },
+    "lithium": {
+      "note": "There is a large number of reports indicating a high seizure and psychosis risk from this combination.",
+      "sources": [
+        "https://pubmed.ncbi.nlm.nih.gov/34348413/",
+        "https://erowid.org/chemicals/lsd/lsd_interactions.shtml",
+        "https://erowid.org/experiences/exp.php?ID=93681",
+        "https://erowid.org/experiences/exp.php?ID=110780",
+        "https://www.sciencedirect.com/science/article/pii/S0165032723000915"
+      ],
+      "status": "Dangerous"
     },
     "lsd": {
       "status": "Low Risk & Synergy"
@@ -2031,6 +2208,17 @@
     },
     "ketamine": {
       "status": "Low Risk & Synergy"
+    },
+    "lithium": {
+      "note": "There is a large number of reports indicating a high seizure and psychosis risk from this combination.",
+      "sources": [
+        "https://pubmed.ncbi.nlm.nih.gov/34348413/",
+        "https://erowid.org/chemicals/lsd/lsd_interactions.shtml",
+        "https://erowid.org/experiences/exp.php?ID=93681",
+        "https://erowid.org/experiences/exp.php?ID=110780",
+        "https://www.sciencedirect.com/science/article/pii/S0165032723000915"
+      ],
+      "status": "Dangerous"
     },
     "lsd": {
       "status": "Low Risk & Synergy"

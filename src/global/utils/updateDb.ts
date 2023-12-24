@@ -39,9 +39,9 @@ const useCache = false;
 
 const F = f(__filename);
 
-const assetFolder = path.join(__dirname, '../assets');
+const assetFolder = path.join(__dirname, '../../../assets');
 
-const dataFolder = path.join(__dirname, '../assets/data');
+const dataFolder = path.join(__dirname, '../../../assets/data');
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function saveData(data: any, fileName: string): Promise<string> {

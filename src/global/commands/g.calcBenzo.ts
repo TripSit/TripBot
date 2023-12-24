@@ -1,4 +1,4 @@
-import drugDataTripsit from '../assets/data/tripsitDB.json';
+import drugDataTripsit from '../../../assets/data/tripsitDB.json';
 
 const F = f(__filename);
 

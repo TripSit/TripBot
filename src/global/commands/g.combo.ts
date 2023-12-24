@@ -2,8 +2,8 @@
 import { Category, Combo, Drug } from 'tripsit_drug_db';
 // import { CbSubstance, Interaction } from '../@types/combined';
 // import drugDataAll from '../../../assets/data/combine dDB.json';
-import comboJsonData from '../assets/data/tripsitCombos.json';
-import drugJsonData from '../assets/data/tripsitDB.json';
+import comboJsonData from '../../../assets/data/tripsitCombos.json';
+import drugJsonData from '../../../assets/data/tripsitDB.json';
 import comboDefs from '../assets/data/combo_definitions.json';
 
 const F = f(__filename);
