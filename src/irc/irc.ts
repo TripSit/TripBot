@@ -1,5 +1,4 @@
 import { Client } from 'matrix-org-irc';
-import ircConfig from './assets/config/irc_config.json';
 import registerEvents from './utils/registerEvents';
 
 const F = f(__filename);
@@ -40,9 +39,30 @@ export default async function ircConnect(): Promise<void> {
     ];
   }
 
-  ircConfig.userName = env.IRC_USERNAME;
-  ircConfig.password = env.IRC_PASSWORD;
-  ircConfig.channels = ircChannels;
+  const ircConfig = {
+    "userName": env.IRC_USERNAME,
+    "realName": "TripSit Mod Relay",
+    "password": env.IRC_PASSWORD,
+    "port": 6667,
+    "channels": ircChannels,
+    "autoConnect": true,
+    "autoRejoin": true,
+    "autoRenick": true,
+    "renickDelay": 60000,
+    "retryDelay": 2000,
+    "secure": false,
+    "selfSigned": true,
+    "certExpired": true,
+    "floodProtection": false,
+    "sasl": true,
+    "stripColors": false,
+    "channelPrefixes": "#",
+    "messageSplit": 512,
+    "encoding": "UTF-8",
+    "debug": false,
+    "log": false
+  }
+  
 
   global.ircClient = new Client(env.IRC_SERVER, env.IRC_USERNAME, ircConfig);
   registerEvents();

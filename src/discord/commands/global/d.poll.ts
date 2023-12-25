@@ -4,6 +4,7 @@ import {
   Message,
   ChannelType,
   PermissionResolvable,
+  MessageReaction,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
 import { SlashCommand } from '../../@types/commandDef';
@@ -35,7 +36,7 @@ export const dPoll: SlashCommand = {
       .setRequired(true))
     .addStringOption(option => option
       .setName('choices')
-      .setDescription('CSV of options, EG: "Red, Blue, Green"')
+      .setDescription('List of up to 9 options separated by commas, EG: Red, Blue, Green')
       .setRequired(true)),
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
@@ -77,7 +78,7 @@ export const dPoll: SlashCommand = {
       await interaction.editReply('You need to provide a question and options!');
       return false;
     }
-    const optionsArray = optionsString.split(',');
+    const optionsArray = optionsString.split(',').map(option => option.trim());
 
     if (optionsArray.length > 9) {
       await interaction.editReply('You can only have 9 options max!');
@@ -149,3 +150,40 @@ export const dPoll: SlashCommand = {
 };
 
 export default dPoll;
+
+export async function updatePollEmbed({ message, emoji: { name: emojiName } }: MessageReaction) {
+  log.debug(F, 'updatePollEmbed triggered');
+  if (emojiName && message.embeds[0] && message.embeds[0]?.footer?.text?.includes('A poll by')) {
+    const { description, title, footer } = message.embeds[0];
+    if (description) {
+      const totalVotes = message.reactions.cache.reduce((total, reaction) => total + reaction.count - 1, 0); // subtract one from the total votes to account for the bot's vote
+      const descriptionArray = description.split('\n');
+      const newDescriptionArray = descriptionArray.map((line, index) => {
+        const emoji = Object.values(emojiDict)[index];
+        const reaction = message.reactions.cache.get(emoji);
+        if (reaction) {
+          const percentageRegex = / - (\d+(\.\d+)?%)?$/; // matches a percentage number at the end of the line after a dash
+          if (totalVotes === 0) {
+            return line.replace(percentageRegex, ''); // remove the percentage numbers
+          }
+          const percentage = (((reaction.count - 1) / totalVotes) * 100).toFixed(0); // subtract one from the count of each reaction
+          if (percentageRegex.test(line)) {
+            return line.replace(percentageRegex, ` - ${percentage}%`); // replace the existing percentage with the new percentage
+          }
+          return `${line} - ${percentage}%`; // append the new percentage to the line
+        }
+        return line;
+      });
+      const newDescription = newDescriptionArray.join('\n');
+      // Create a new embed with the updated description, title and footer
+      const pollEmbed = embedTemplate()
+        .setAuthor(null)
+        .setTitle(title)
+        .setDescription(newDescription)
+        .setFooter({ text: footer?.text, iconURL: footer?.iconURL });
+      // Edit the message to use the new embed
+      await message.edit({ embeds: [pollEmbed] });
+      // log.debug(F, `Updated poll embed`);
+    }
+  }
+}

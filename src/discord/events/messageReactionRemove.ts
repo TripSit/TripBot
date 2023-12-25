@@ -6,6 +6,7 @@ import {
   MessageReactionRemoveEvent,
 } from '../@types/eventDef';
 import { chitragupta } from '../utils/chitragupta';
+import { updatePollEmbed } from '../commands/global/d.poll';
 
 const F = f(__filename);
 
@@ -45,6 +46,7 @@ export const messageReactionRemove: MessageReactionRemoveEvent = {
     //   return;
     // }
     chitragupta(reaction, user, -1);
+    updatePollEmbed(reaction);
   },
 };
 

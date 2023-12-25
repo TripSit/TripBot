@@ -2,6 +2,7 @@ import {
   SlashCommandBuilder,
   Colors,
 } from 'discord.js';
+import { stripIndents } from 'common-tags';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { combo } from '../../../global/commands/g.combo';
@@ -32,11 +33,55 @@ export const dCombo: SlashCommand = {
 
     const results = await combo(drugA, drugB);
 
+    if ((results as {
+      err: boolean;
+      msg: string;
+      options?: string[];
+    }).err) {
+      const errorResults = results as {
+        err: boolean;
+        msg: string;
+        options?: string[];
+      };
+      if (errorResults.msg.includes('not found')) {
+        await interaction.editReply(stripIndents`${drugA} and ${drugB} have no known interactions!
+
+        This does not mean combining them is safe: this means we don't have information on it!`);
+        return false;
+      }
+      await interaction.editReply(errorResults.msg);
+      return false;
+    }
+
+    const resultsData = results as {
+      result: string;
+      definition: string;
+      thumbnail: string;
+      color: string;
+      emoji: string;
+      interactionCategoryA: string;
+      interactionCategoryB: string;
+      note?: string;
+      sources?: string[];
+    };
+
+    const noteString = resultsData.note ? `\n\nNote: ${resultsData.note}` : '';
+
+    let sourceString = '' as string;
+    if (resultsData.sources) {
+      const sourceArray = resultsData.sources.map(url => {
+        // Make a markdown URL that uses the domain as the text
+        const urlObj = new URL(url);
+        return `[${urlObj.hostname}](${url})`;
+      });
+      sourceString = `\n\nSources: ${sourceArray.join(', ')}`;
+    }
+
     const embed = embedTemplate()
-      .setTitle(results.title)
-      .setDescription(results.description);
-    if (results.thumbnail) embed.setThumbnail(results.thumbnail);
-    if (results.color) embed.setColor(Colors[results.color as keyof typeof Colors]);
+      .setTitle(`Mixing ${drugA} and ${drugB}: ${resultsData.emoji} ${resultsData.result} ${resultsData.emoji}`)
+      .setDescription(`${resultsData.definition}${noteString}${sourceString}`);
+    if (resultsData.thumbnail) embed.setThumbnail(resultsData.thumbnail);
+    if (resultsData.color) embed.setColor(Colors[resultsData.color as keyof typeof Colors]);
     await interaction.editReply({ embeds: [embed] });
     return true;
   },
