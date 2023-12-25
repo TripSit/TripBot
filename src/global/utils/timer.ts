@@ -1093,7 +1093,7 @@ async function runTimer() {
     { callback: checkStats, interval: env.NODE_ENV === 'production' ? minutes5 : seconds5 },
     { callback: checkMoodle, interval: env.NODE_ENV === 'production' ? seconds60 : seconds5 },
     // { callback: checkLpm, interval: env.NODE_ENV === 'production' ? seconds10 : seconds5 },
-    { callback: updateDb, interval: env.NODE_ENV === 'production' ? hours24 : seconds5 },
+    { callback: updateDb, interval: env.NODE_ENV === 'production' ? hours24 : minutes5 },
   ];
 
   timers.forEach(timer => {
