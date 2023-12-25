@@ -2,6 +2,7 @@ import {
   SlashCommandBuilder,
   Colors,
 } from 'discord.js';
+import { stripIndents } from 'common-tags';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { combo } from '../../../global/commands/g.combo';
@@ -37,11 +38,19 @@ export const dCombo: SlashCommand = {
       msg: string;
       options?: string[];
     }).err) {
-      await interaction.editReply((results as {
+      const errorResults = results as {
         err: boolean;
         msg: string;
         options?: string[];
-      }).msg);
+      };
+      if (errorResults.msg.includes('not found')) {
+        await interaction.editReply(stripIndents`${drugA} and ${drugB} have no known interactions!
+
+        This does not mean combining them is safe: this means we don't have information on it!`);
+        return false;
+      }
+
+      await interaction.editReply(errorResults.msg);
       return false;
     }
 
