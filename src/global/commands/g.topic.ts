@@ -6,7 +6,7 @@ const topics = {
   1: 'What did you eat for breakfast?',
   2: 'How many cups of coffee, tea, or beverage-of-choice do you have each morning?',
   3: 'Are you an early bird or night owl?',
-  4: 'Do you prefer showing at morning or night?',
+  4: 'Do you prefer showering at morning or night?',
   5: 'What\'s your favorite flower or plant?',
   6: 'What\'s your caffeinated beverage of choice? Coffee? Cola? Tea?',
   7: 'What\'s your favorite scent?',
@@ -112,7 +112,7 @@ const topics = {
   107: 'Would you rather be the funniest or smartest person in the room?',
   108: 'Would you rather be able to run at 100 miles per hour or fly at 10 miles per hour?',
   109: 'Would you rather be a superhero or the world\'s best chef?',
-  110: 'Would you rather be an Olympic gold medallist or an astronaut?',
+  110: 'Would you rather be an Olympic gold medalist or an astronaut?',
 };
 
 export default topic;

@@ -1,4 +1,3 @@
-import * as path from 'path';
 import {
   SlashCommandBuilder,
   ChatInputCommandInteraction,
@@ -16,6 +15,7 @@ import getAsset from '../../utils/getAsset';
 import commandContext from '../../utils/context';
 import { numFormatter, numFormatterVoice } from './d.profile';
 import { Personas } from '../../../global/@types/database';
+import { resizeText, deFuckifyText, colorDefs } from '../../utils/canvasUtils';
 
 const F = f(__filename);
 
@@ -72,134 +72,6 @@ type LevelData = {
   },
 };
 
-const colorDefs = {
-  [env.ROLE_PURPLE]: {
-    cardDarkColor: '#19151e',
-    cardLightColor: '#2d2636',
-    chipColor: '#47335f',
-    barColor: '#9661d9',
-    textColor: '#b072ff',
-  },
-  [env.ROLE_BLUE]: {
-    cardDarkColor: '#161d1f',
-    cardLightColor: '#283438',
-    chipColor: '#3a5760',
-    barColor: '#4baccc',
-    textColor: '#5acff5',
-  },
-  [env.ROLE_GREEN]: {
-    cardDarkColor: '#151a16',
-    cardLightColor: '#252e28',
-    chipColor: '#31543d',
-    barColor: '#59b879',
-    textColor: '#6de194',
-  },
-  [env.ROLE_PINK]: {
-    cardDarkColor: '#1e151b',
-    cardLightColor: '#352530',
-    chipColor: '#5f324f',
-    barColor: '#d95dae',
-    textColor: '#ff6dcd',
-  },
-  [env.ROLE_RED]: {
-    cardDarkColor: '#1f1616',
-    cardLightColor: '#382727',
-    chipColor: '#613838',
-    barColor: '#d95152',
-    textColor: '#ff5f60',
-  },
-  [env.ROLE_ORANGE]: {
-    cardDarkColor: '#1d1814',
-    cardLightColor: '#342b24',
-    chipColor: '#5f422e',
-    barColor: '#d98b51',
-    textColor: '#ffa45f',
-  },
-  [env.ROLE_YELLOW]: {
-    cardDarkColor: '#1d1b14',
-    cardLightColor: '#333024',
-    chipColor: '#5e532d',
-    barColor: '#a6903d',
-    textColor: '#ffdd5d',
-  },
-  [env.ROLE_WHITE]: {
-    cardDarkColor: '#242424',
-    cardLightColor: '#404040',
-    chipColor: '#666666',
-    barColor: '#b3b3b3',
-    textColor: '#dadada',
-  },
-  [env.ROLE_BLACK]: {
-    cardDarkColor: '#0e0e0e',
-    cardLightColor: '#181818',
-    chipColor: '#262626',
-    barColor: '#595959',
-    textColor: '#626262',
-  },
-  [env.ROLE_DONOR_PURPLE]: {
-    cardDarkColor: '#1f1b25',
-    cardLightColor: '#372e42',
-    chipColor: '#432767',
-    barColor: '#7f38d9',
-    textColor: '#9542ff',
-  },
-  [env.ROLE_DONOR_BLUE]: {
-    cardDarkColor: '#161d1f',
-    cardLightColor: '#283438',
-    chipColor: '#3a5760',
-    barColor: '#1da2cc',
-    textColor: '#22bef0',
-  },
-  [env.ROLE_DONOR_GREEN]: {
-    cardDarkColor: '#1a211c',
-    cardLightColor: '#2d3b32',
-    chipColor: '#275c39',
-    barColor: '#36b360',
-    textColor: '#45e47b',
-  },
-  [env.ROLE_DONOR_PINK]: {
-    cardDarkColor: '#261c23',
-    cardLightColor: '#44303d',
-    chipColor: '#682b52',
-    barColor: '#d93fa4',
-    textColor: '#ff4ac1',
-  },
-  [env.ROLE_DONOR_RED]: {
-    cardDarkColor: '#241b1b',
-    cardLightColor: '#412e2e',
-    chipColor: '#662526',
-    barColor: '#d93335',
-    textColor: '#ff3c3e',
-  },
-  [env.ROLE_DONOR_ORANGE]: {
-    cardDarkColor: '#241f1b',
-    cardLightColor: '#41362e',
-    chipColor: '#664225',
-    barColor: '#d96c36',
-    textColor: '#ff913b',
-  },
-  [env.ROLE_DONOR_YELLOW]: {
-    cardDarkColor: '#23211a',
-    cardLightColor: '#3f3b2c',
-    chipColor: '#655721',
-    barColor: '#d9bc4f',
-    textColor: '#ffd431',
-  },
-} as {
-  [key: string]: {
-    cardDarkColor: string;
-    cardLightColor: string;
-    chipColor: string;
-    barColor: string;
-    textColor: string;
-  };
-};
-
-Canvas.GlobalFonts.registerFromPath(
-  path.resolve(__dirname, '../../assets/Futura.otf'),
-  'futura',
-);
-
 export const dLevels: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('levels')
@@ -236,7 +108,7 @@ export const dLevels: SlashCommand = {
       await levels(target.id),
       // Load Images
       await Canvas.loadImage(await getAsset('cardLevelIcons')),
-      await Canvas.loadImage(target.user.displayAvatarURL({ extension: 'jpg' })),
+      await Canvas.loadImage(target.displayAvatarURL({ extension: 'jpg' })),
       await Canvas.loadImage(await getAsset('teamtripsitIcon')),
       await Canvas.loadImage(await getAsset('premiumIcon')),
       await Canvas.loadImage(await getAsset('boosterIcon')),
@@ -369,15 +241,13 @@ export const dLevels: SlashCommand = {
     }[];
 
     // Check if user has voice xp, if so add it to the list to be assigned a xp bar slot
-    if (levelData.VOICE.TOTAL.level > 0) {
-      const progressVoice = levelData.VOICE.TOTAL
-        ? levelData.VOICE.TOTAL.level_exp / levelData.VOICE.TOTAL.nextLevel
-        : 0;
+    if (levelData.VOICE.TOTAL.level) {
+      const progressVoice = levelData.VOICE.TOTAL.level_exp / levelData.VOICE.TOTAL.nextLevel;
       xpBarList.push({
         image: voiceBar,
         dataName: 'Voice',
         progress: progressVoice,
-        level: levelData.VOICE.TOTAL ? levelData.VOICE.TOTAL.level : 0,
+        level: levelData.VOICE.TOTAL.level,
         rank: levelData.VOICE.TOTAL.rank,
       });
     }
@@ -477,6 +347,37 @@ export const dLevels: SlashCommand = {
     context.roundRect(0, 0, 684, 145, [19]);
     context.roundRect(0, 154, 684, (layoutHeight - 154), [19]);
     context.fill();
+
+    // Purchased Background
+    // Check get fresh persona data
+    // log.debug(F, `personaData home (Change) ${JSON.stringify(personaData, null, 2)}`);
+    let userFont = 'futura';
+    if (personaData) {
+      // Get the existing inventory data
+      const inventoryData = await inventoryGet(personaData.id);
+      // log.debug(F, `Persona home inventory (change): ${JSON.stringify(inventoryData, null, 2)}`);
+
+      const equippedBackground = inventoryData.find(item => item.equipped === true && item.effect === 'background');
+      const equippedFont = inventoryData.find(item => item.equipped === true && item.effect === 'font');
+      // log.debug(F, `equippedBackground: ${JSON.stringify(equippedBackground, null, 2)} `);
+      if (equippedBackground) {
+        const imagePath = await getAsset(equippedBackground.value);
+        const Background = await Canvas.loadImage(imagePath);
+        context.save();
+        context.globalCompositeOperation = 'lighter';
+        context.globalAlpha = 0.05;
+        context.beginPath();
+        context.roundRect(0, 0, 921, 145, [19]);
+        context.roundRect(0, 154, 921, (layoutHeight - 154), [19]);
+        context.clip();
+        context.drawImage(Background, 0, 0);
+        context.restore();
+      }
+      if (equippedFont) {
+        await getAsset(equippedFont.value);
+        userFont = equippedFont.value;
+      }
+    }
     // Top Right Chips
     context.fillStyle = chipColor;
     context.beginPath();
@@ -507,37 +408,6 @@ export const dLevels: SlashCommand = {
       context.roundRect(702, 497, 132, 51, [19]);
     }
     context.fill();
-
-    // Purchased Background
-    // Check get fresh persona data
-    // log.debug(F, `personaData home (Change) ${JSON.stringify(personaData, null, 2)}`);
-    let userFont = 'futura';
-    if (personaData) {
-      // Get the existing inventory data
-      const inventoryData = await inventoryGet(personaData.id);
-      // log.debug(F, `Persona home inventory (change): ${JSON.stringify(inventoryData, null, 2)}`);
-
-      const equippedBackground = inventoryData.find(item => item.equipped === true && item.effect === 'background');
-      const equippedFont = inventoryData.find(item => item.equipped === true && item.effect === 'font');
-      // log.debug(F, `equippedBackground: ${JSON.stringify(equippedBackground, null, 2)} `);
-      if (equippedBackground) {
-        const imagePath = await getAsset(equippedBackground.value);
-        const Background = await Canvas.loadImage(imagePath);
-        context.save();
-        context.globalCompositeOperation = 'lighter';
-        context.globalAlpha = 0.03;
-        context.beginPath();
-        context.roundRect(0, 0, 921, 145, [19]);
-        context.roundRect(0, 154, 921, (layoutHeight - 154), [19]);
-        context.clip();
-        context.drawImage(Background, 0, 0);
-        context.restore();
-      }
-      if (equippedFont) {
-        await getAsset(equippedFont.value);
-        userFont = equippedFont.value;
-      }
-    }
 
     // Overly complicated avatar clip
     context.save();
@@ -602,37 +472,27 @@ export const dLevels: SlashCommand = {
     // WIP: Check to see if a user has bought a title in the shop
     // If so, move Username Text up so the title can fit underneath
 
-    // Username Text Resize to fit
-    let fontSize = 40;
-    const applyUsername = (canvas:Canvas.Canvas, text:string) => {
-      const usernameContext = canvas.getContext('2d');
-      do {
-        fontSize -= 2;
-        usernameContext.font = `${fontSize}px ${userFont}`;
-      } while (usernameContext.measureText(text).width > 530);
-      return usernameContext.font;
-    };
-
     // Username Text
     // Temporary code for user flairs
-    const filteredDisplayName = target.displayName.replace(/[^A-Za-z0-9]/g, '');
+    const filteredDisplayName = await deFuckifyText(target.displayName);
     context.fillStyle = textColor;
-    context.font = `40px ${userFont}`;
+    context.font = `50px ${userFont}`;
     context.textAlign = 'left';
-    const flair = null;
-    let usernameHeight = 76;
+    // const flair = null;
+    const usernameHeight = 76;
     context.textBaseline = 'middle';
-    if (flair) {
-      usernameHeight = 72;
-      fontSize = 25;
-      context.font = fontSizeFamily;
-      context.textBaseline = 'top';
-      context.font = applyUsername(canvasObj, `${flair}`);
-      context.fillText(`${flair}`, 146, 90);
-      context.textBaseline = 'bottom';
-    }
-    fontSize = 40;
-    context.font = applyUsername(canvasObj, `${filteredDisplayName}`);
+    // if (flair) {
+    //   usernameHeight = 72;
+    //   fontSize = 25;
+    //   context.font = fontSizeFamily;
+    //   context.textBaseline = 'top';
+    //   context.font = applyUsername(canvasObj, `${flair}`);
+    //   context.fillText(`${flair}`, 146, 90);
+    //   context.textBaseline = 'bottom';
+    // }
+    let fontSize = 50;
+    const maxLength = 508;
+    context.font = resizeText(canvasObj, filteredDisplayName, fontSize, userFont, maxLength);
     context.fillText(`${filteredDisplayName}`, 146, usernameHeight);
 
     // Progress Bars Draw
@@ -819,7 +679,9 @@ export const dLevels: SlashCommand = {
     context.drawImage(LevelImage, 97, 181, 58, 58);
 
     // Process The Entire Card and Send it to Discord
-    const attachment = new AttachmentBuilder(await canvasObj.encode('png'), { name: 'tripsit-levels-image.png' });
+    const date = new Date();
+    const formattedDate = date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' }).replace(/ /g, '-');
+    const attachment = new AttachmentBuilder(await canvasObj.encode('png'), { name: `TS_Levels_${filteredDisplayName}_${formattedDate}.png` });
     await interaction.editReply({ files: [attachment] });
 
     log.info(F, `Total Time: ${Date.now() - startTime}ms`);

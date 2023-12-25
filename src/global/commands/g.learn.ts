@@ -59,76 +59,49 @@ export async function help():Promise<MoodleInfo> {
 }
 
 export async function link(
-  email?:string,
-  moodleUsername?:string,
-  discordId?:string,
-  matrixId?:string,
+  email:string,
+  discordId:string,
 ):Promise<string> {
   // log.debug(F, `Link started with moodleUsername: ${moodleUsername}, \
   // discordId: ${discordId}, matrixId: ${matrixId}`);
 
-  const userData = discordId
-    ? await tripbotDb.users.findUnique({
-      where: {
-        discord_id: discordId,
-      },
-    })
-    : await tripbotDb.users.findFirst({
-      where: {
-        matrix_id: matrixId as string,
-      },
-    });
+  const userData = await tripbotDb.users.findUnique({
+    where: {
+      discord_id: discordId,
+    },
+  });
 
-  // log.debug(F, `userData: ${JSON.stringify(userData)}`);
+  log.debug(F, `userData: ${JSON.stringify(userData)}`);
 
   if (!userData) {
     return 'No user found with that Discord or Matrix ID.';
   }
 
-  const moodleUserData = moodleUsername
-    ? await moodleDb.mdl_user.findUnique({
-      where: {
-        mnethostid_username: {
-          username: moodleUsername,
-          mnethostid: 1,
-        },
-      },
-    })
-    : await moodleDb.mdl_user.findFirst({
-      where: {
-        email,
-      },
-    });
-
-  // const [moodleUserData] = await moodleDb.mdl_user.findMany();
+  const moodleUserData = await moodleDb.mdl_user.findFirst({
+    where: {
+      email,
+    },
+  });
 
   if (!moodleUserData) {
-    if (moodleUsername) {
-      return 'No user found with that username.';
-    }
     return 'No user found with that email address.';
   }
 
-  // log.debug(F, `moodleUserData: ${JSON.stringify(moodleUserData.username)}`);
+  log.debug(F, `moodleUserData: ${JSON.stringify(moodleUserData.username)}`);
 
-  userData.moodle_id = moodleUserData.username;
-
-  tripbotDb.users.update({
+  const result = await tripbotDb.users.update({
     where: {
       id: userData.id,
     },
     data: {
-      moodle_id: userData.moodle_id,
+      moodle_id: moodleUserData.username,
     },
   });
 
-  if (moodleUsername) {
-    return stripIndents`You have linked this Discord account with TripSitLearn!
-    Use the /learn profile command to see their profile!`;
-  }
+  log.debug(F, `result: ${JSON.stringify(result)}`);
 
-  return stripIndents`You have linked your Discord account with TripSitLearn!
-  Use the /learn profile command to see your profile!`;
+  return stripIndents`You have linked the moodle account - ${email} (${moodleUserData.username}) - with Discord account ${discordId}
+  Use the /learn profile command to see the profile!`;
 }
 
 export async function unlink(

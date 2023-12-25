@@ -1,7 +1,0 @@
-{
-  "watch": ["build/api",".env"],
-  "ext": ".js",
-  "ignore": ["dist/"],
-  "exec": "node -r ./build/api/start.js",
-  "legacyWatch": true
-}

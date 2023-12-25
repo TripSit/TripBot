@@ -15,7 +15,7 @@ import { embedTemplate } from '../../utils/embedTemplate';
 import commandContext from '../../utils/context';
 // import fs from 'fs/promises'; // eslint-disable-line
 const F = f(__filename);
-// import drugDataAll from '../../../global/assets/data/drug_db_combined.json';
+// import drugDataAll from '../../../../assets/data/tripsitDB.json';
 // const drugNames = drugDataAll.map((d) => d.name);
 type ResultsObject = {
   total: string[]

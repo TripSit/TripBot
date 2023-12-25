@@ -9,7 +9,7 @@ import {
 import { stripIndents } from 'common-tags';
 import { PrismaClient } from '@prisma/client';
 import { sleep } from '../commands/guild/d.bottest';
-import { discordAiChat } from '../commands/guild/d.ai';
+import { discordAiChat } from '../commands/global/d.ai';
 
 const db = new PrismaClient({ log: ['error'] });
 
@@ -68,7 +68,7 @@ async function isPokingTripbot(message:Message):Promise<boolean> {
 }
 
 async function isMentioningTripbot(message:Message):Promise<boolean> {
-  return message.mentions.has(env.DISCORD_CLIENT_ID);
+  return message.mentions.users.has(env.DISCORD_CLIENT_ID) || message.mentions.roles.has(env.ROLE_TRIPBOT);
 }
 
 async function isUploadMessage(message:Message):Promise<boolean> {
@@ -77,10 +77,10 @@ async function isUploadMessage(message:Message):Promise<boolean> {
     || message.content.toLowerCase().includes('fetch');
 }
 
-async function isAiEnabledGuild(message:Message):Promise<boolean> {
-  // log.debug(F, `message.guild?.id: ${message.guild?.id}`);
-  return message.guild?.id === env.DISCORD_GUILD_ID;
-}
+// async function isAiEnabledGuild(message:Message):Promise<boolean> {
+//   // log.debug(F, `message.guild?.id: ${message.guild?.id}`);
+//   return message.guild?.id === env.DISCORD_GUILD_ID;
+// }
 
 async function isBotOwner(message:Message):Promise<boolean> {
   return message.author.id === env.DISCORD_OWNER_ID;
@@ -95,7 +95,11 @@ export async function messageCommand(message: Message): Promise<void> {
   if (!message.guild) return; // If not in a guild then ignore all messages
   // if (message.guild.id !== env.DISCORD_GUILD_ID) return; // If not in tripsit ignore all messages
   const displayName = message.member ? message.member.displayName : message.author.username;
-  // log.debug(F, `message.reference: ${JSON.stringify(message.content, null, 2)}`);
+  // log.debug(F, `message: ${JSON.stringify(message, null, 2)}`);
+
+  // if (message.guild.id === env.DISCORD_GUILD_ID) {
+  //   log.debug(F, `message: ${JSON.stringify(message, null, 2)}`);
+  // } // Log messages from tripsit for debugging
 
   // Ignore messages that start with ~~, these are usually strikethrough messages
   if (message.content.startsWith('~~')) { return; }
@@ -301,7 +305,7 @@ give people a chance to answer 😄 If no one answers in 5 minutes you can try a
           await message.channel.send(`Uploaded ${stickerList.join(' ')} to ${message.guild.name}!`); // eslint-disable-line
         }
       }
-    } else if (await isAiEnabledGuild(message) && !message.author.bot) {
+    } else if (!message.author.bot) {
       await discordAiChat(message);
     } else {
       try {

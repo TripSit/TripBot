@@ -5,12 +5,20 @@ import {
 import Fuse from 'fuse.js';
 
 import { PrismaClient, ai_model } from '@prisma/client';
-import pillColors from '../../global/assets/data/pill_colors.json';
-import pillShapes from '../../global/assets/data/pill_shapes.json';
-import drugDataAll from '../../global/assets/data/drug_db_combined.json';
-import drugDataTripsit from '../../global/assets/data/drug_db_tripsit.json';
-import timezones from '../../global/assets/data/timezones.json';
-import unitsOfMeasurement from '../../global/assets/data/units_of_measurement.json';
+import { Drug } from 'tripsit_drug_db';
+import pillColors from '../../../assets/data/pill_colors.json';
+import pillShapes from '../../../assets/data/pill_shapes.json';
+import cbData from '../../../assets/data/combinedDB.json';
+import tsData from '../../../assets/data/tripsitDB.json';
+import timezones from '../../../assets/data/timezones.json';
+import unitsOfMeasurement from '../../../assets/data/units_of_measurement.json';
+import { CbSubstance } from '../../global/@types/combined';
+
+const drugDataTripsit = tsData as {
+  [key: string]: Drug;
+};
+
+const drugDataAll = cbData as CbSubstance[];
 
 const db = new PrismaClient({ log: ['error'] });
 
@@ -41,6 +49,12 @@ for (const shape of pillShapes) { // eslint-disable-line
 }
 const defaultShapes = pillShapeNames.slice(0, 25);
 // log.debug(F, `pill_shape_names: ${pill_shape_names}`);
+
+// Get a list of drug names and aliases from drugDataAll
+const drugNames = drugDataAll.map(drug => ({
+  name: drug.name.slice(0, 1).toUpperCase() + drug.name.slice(1),
+  aliases: drug.aliases?.map(alias => alias.slice(0, 1).toUpperCase() + alias.slice(1)),
+}));
 
 async function autocompletePills(interaction:AutocompleteInteraction) {
   const focusedOption = interaction.options.getFocused(true).name;
@@ -97,8 +111,8 @@ async function autocompleteBenzos(interaction:AutocompleteInteraction) {
     return;
   }
 
-  const drugNames = Object.keys(drugDataTripsit);
-  const benzoNames = drugNames.filter(drugName => {
+  const tsDrugNames = Object.keys(drugDataTripsit);
+  const benzoNames = tsDrugNames.filter(drugName => {
     const props = drugDataTripsit[drugName as keyof typeof drugDataTripsit].properties;
     return Object.hasOwn(props, 'dose_to_diazepam');
   });
@@ -225,12 +239,6 @@ async function autocompleteConvert(interaction:AutocompleteInteraction) {
     interaction.respond(listResults);
   }
 }
-
-// Get a list of drug names and aliases from drugDataAll
-const drugNames = drugDataAll.map(drug => ({
-  name: drug.name,
-  aliases: drug.aliases,
-}));
 
 async function autocompleteDrugNames(interaction:AutocompleteInteraction) {
   const options = {
@@ -511,11 +519,15 @@ async function autocompleteAiNames(interaction:AutocompleteInteraction) {
     ],
   };
 
-  const nameList = await db.ai_personas.findMany({
-    select: {
-      name: true,
-    },
-  });
+  const nameList = interaction.guild?.id === env.DISCORD_GUILD_ID
+    ? await db.ai_personas.findMany({
+      select: {
+        name: true,
+      },
+    })
+    : [{
+      name: 'tripbot',
+    }];
 
   const fuse = new Fuse(nameList, options);
   const focusedValue = interaction.options.getFocused();
@@ -561,7 +573,7 @@ export async function autocomplete(interaction:AutocompleteInteraction):Promise<
     autocompleteConvert(interaction);
   } else if (interaction.commandName === 'reaction_role') {
     autocompleteColors(interaction);
-  } else if (interaction.commandName === 'ai') {
+  } else if (interaction.commandName === 'ai' || interaction.commandName === 'ai_manage') {
     const focusedOption = interaction.options.getFocused(true).name;
     if (focusedOption === 'model') {
       autocompleteAiModels(interaction);

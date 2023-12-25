@@ -44,18 +44,22 @@ services:
       - tripbot_website-net
       - moodle_data-net
     volumes:
+      # - ./src/global/assets:/usr/src/app/assets/data # For viewing downloaded assets in development
+      - ./assets:/usr/src/app/build/assets # For viewing downloaded assets in development
       - ./src:/usr/src/app/src # Needed for hot-reloading of source code
       - ./.env:/usr/src/app/.env # Needed for hot-reloading the .env
     labels:
       - com.centurylinklabs.watchtower.enable=false
       - traefik.enable=true
       - traefik.docker.network=tripbot-net
-      - traefik.http.services.tripbot-svc.loadbalancer.server.port=1337
-      - traefik.http.routers.tripbot-rtr.rule=Host(`api.${BOT_DOMAIN}`)
-      - traefik.http.routers.tripbot-rtr.service=tripbot-svc
-      - traefik.http.routers.tripbot-rtr.entrypoints=websecure
-      - traefik.http.routers.tripbot-rtr.tls=true
-      - traefik.http.routers.tripbot-rtr.middlewares=default@file
+      - traefik.http.services.tripbot.loadbalancer.server.port=1337
+      - traefik.http.routers.tripbot.rule=Host(`api.${BOT_DOMAIN}`)
+      - traefik.http.routers.tripbot.rule=Host(`tripbot.${DNS_DOMAIN}`) && PathPrefix(`/api`) || Host(`api.${DNS_DOMAIN}`) || Host(`${DNS_DOMAIN}`) && PathPrefix(`/api`)
+
+      - traefik.http.routers.tripbot.service=tripbot
+      - traefik.http.routers.tripbot.entrypoints=websecure
+      - traefik.http.routers.tripbot.tls=true
+      - traefik.http.routers.tripbot.middlewares=tripbot@file,redirectApi@file
 
   tripbot_database:
     <<: *common-keys-apps
@@ -103,59 +107,59 @@ services:
       - traefik.http.routers.tripbot_pgadmin.service=tripbot_pgadmin-svc
       - traefik.http.routers.tripbot_pgadmin.middlewares=default@file
 
-  tripbot_redis:
-    <<: *common-keys-core
-    image: bitnami/redis:latest
-    container_name: tripbot_redis
-    user: root
-    # ports:
-    #   - 6379:6379
-    networks:
-      - tripbot_redis-net
-    environment:
-      # - REDIS_PASSWORD=Password123
-      - ALLOW_EMPTY_PASSWORD=yes
-      - REDIS_DISABLE_COMMANDS=FLUSHDB,FLUSHALL
-    labels:
-      - com.centurylinklabs.watchtower.enable=false
-      - traefik.docker.network=tripbot_redis-net
-      - traefik.enable=false
+  # tripbot_redis:
+  #   <<: *common-keys-core
+  #   image: bitnami/redis:latest
+  #   container_name: tripbot_redis
+  #   user: root
+  #   # ports:
+  #   #   - 6379:6379
+  #   networks:
+  #     - tripbot_redis-net
+  #   environment:
+  #     # - REDIS_PASSWORD=Password123
+  #     - ALLOW_EMPTY_PASSWORD=yes
+  #     - REDIS_DISABLE_COMMANDS=FLUSHDB,FLUSHALL
+  #   labels:
+  #     - com.centurylinklabs.watchtower.enable=false
+  #     - traefik.docker.network=tripbot_redis-net
+  #     - traefik.enable=false
 
-  tripbot_api:
-    <<: *common-keys-apps
-    build:
-      context: ./
-      dockerfile: ./src/docker/Dockerfile.api
-      # Only will build development stage from our dockerfile
-      target: development
-    container_name: tripbot_api
-    depends_on:
-      - tripbot_database
-      - tripbot_redis
-    # ports:
-    #   - 5000:5000
-    #   - 9229:9229
-    networks:
-      - tripbot_api-net
-      - tripbot_database-net
-      - tripbot_redis-net
-    volumes:
-      - ./src:/usr/src/app/src # Needed for hot-reloading of source code
-    environment:
-      <<: *default-tz-puid-pgid
-      PORT: 5000
-      DATABASE_URL: postgres://tripsit:${POSTGRESQL_PASSWORD}@tripbot_database:5432/tripsit
-    labels:
-      - com.centurylinklabs.watchtower.enable=false
-      - traefik.enable=true
-      - traefik.docker.network=tripbot_api-net
-      - traefik.http.services.tripbot_api-svc.loadbalancer.server.port=5000
+  # tripbot_api:
+  #   <<: *common-keys-apps
+  #   build:
+  #     context: ./
+  #     dockerfile: ./src/docker/Dockerfile.api
+  #     # Only will build development stage from our dockerfile
+  #     target: development
+  #   container_name: tripbot_api
+  #   depends_on:
+  #     - tripbot_database
+  #     - tripbot_redis
+  #   # ports:
+  #   #   - 5000:5000
+  #   #   - 9229:9229
+  #   networks:
+  #     - tripbot_api-net
+  #     - tripbot_database-net
+  #     - tripbot_redis-net
+  #   volumes:
+  #     - ./src:/usr/src/app/src # Needed for hot-reloading of source code
+  #   environment:
+  #     <<: *default-tz-puid-pgid
+  #     PORT: 5000
+  #     DATABASE_URL: postgres://tripsit:${POSTGRESQL_PASSWORD}@tripbot_database:5432/tripsit
+  #   labels:
+  #     - com.centurylinklabs.watchtower.enable=false
+  #     - traefik.enable=true
+  #     - traefik.docker.network=tripbot_api-net
+  #     - traefik.http.services.tripbot_api-svc.loadbalancer.server.port=5000
 
-      - traefik.http.routers.tripbot_api.rule=Host(`tripbot.${DNS_DOMAIN}`) && PathPrefix(`/api`) || Host(`api.${DNS_DOMAIN}`)
-      - traefik.http.routers.tripbot_api.entrypoints=websecure
-      - traefik.http.routers.tripbot_api.tls.certresolver=letsencrypt
-      - traefik.http.routers.tripbot_api.service=tripbot_api-svc
-      - traefik.http.routers.tripbot_api.middlewares=default@file
+  #     - traefik.http.routers.tripbot_api.rule=Host(`tripbot.${DNS_DOMAIN}`) && PathPrefix(`/api`) || Host(`api.${DNS_DOMAIN}`)
+  #     - traefik.http.routers.tripbot_api.entrypoints=websecure
+  #     - traefik.http.routers.tripbot_api.tls.certresolver=letsencrypt
+  #     - traefik.http.routers.tripbot_api.service=tripbot_api-svc
+  #     - traefik.http.routers.tripbot_api.middlewares=default@file
 
 networks:
   tripbot-net:

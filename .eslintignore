@@ -5,4 +5,5 @@
 **/src/irc/**
 **/jest/**
 **/build/**
+**/tests/**
 **/@prisma-moodle/**

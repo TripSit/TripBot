@@ -29,7 +29,7 @@ import {
   werewolfDiary,
   werewolfHow, werewolfJoin, werewolfLeave, werewolfStart,
 } from '../commands/guild/d.werewolf';
-import { aiModButton } from '../commands/guild/d.ai';
+import { aiModButton } from '../commands/global/d.ai';
 
 const F = f(__filename);
 

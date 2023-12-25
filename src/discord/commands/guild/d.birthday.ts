@@ -163,8 +163,12 @@ export const dBirthday: SlashCommand = {
         .setName('day'))),
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
-    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
     let command = interaction.options.getSubcommand() as 'get' | 'set' | undefined;
+    if (command === 'set') {
+      await interaction.deferReply({ ephemeral: true });
+    } else {
+      await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
+    }
     let member = interaction.options.getMember('user');
     const monthInput = interaction.options.getString('month');
     const day = interaction.options.getInteger('day');
