@@ -7,8 +7,8 @@ import {
   os,
   NetStatMetrics,
 } from 'node-os-utils';
-import drugDataTripsit from '../assets/data/tripsitDB.json';
-import drugDataCombined from '../assets/data/combinedDB.json';
+import drugDataTripsit from '../../../assets/data/tripsitDB.json';
+import drugDataCombined from '../../../assets/data/combinedDB.json';
 
 export default botStats;
 

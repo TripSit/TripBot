@@ -28,7 +28,7 @@ sourceMap.install();
 global.bootTime = new Date();
 
 Canvas.GlobalFonts.registerFromPath(
-  path.resolve(__dirname, './global/assets/font/Futura.otf'),
+  path.resolve(__dirname, '../assets/font/Futura.otf'),
   'futura',
 );
 

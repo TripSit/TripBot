@@ -8,19 +8,16 @@
   ],
   "exclude": [
     "**/archive/**",
-    "*/dist",
-    "*/irc/*",
+    "**/irc/*",
     "**/legacy/**",
-    "*/matrix/*",
-    "*/node_modules",
-    "node_modules",
-    "*/telegram/*",
+    "**/matrix/*",
+    "**/telegram/*",
+    "**/placeholder/*",
     "**/__tests__editreply_/*",
     "**/__tests__integration__/*",
     "**/__tests__modals__/*",
     "**/__tests__send__/*",
     "**/__tests__todo__/*",
-    "**/placeholder/*",
   ],
   "compilerOptions": {
     /* Visit https://aka.ms/tsconfig to read more about this file */

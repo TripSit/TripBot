@@ -2,8 +2,8 @@
 import { Category, Drug } from 'tripsit_drug_db';
 import fs from 'fs';
 import path from 'path';
-import drugs from './global/assets/data/tripsitDB.json';
-import combos from './global/assets/data/combo.json';
+import drugs from '../assets/data/tripsitDB.json';
+import combos from '../assets/data/combo.json';
 import { Combos } from './global/@types/tripsitCombos';
 
 const drugData = drugs as {
