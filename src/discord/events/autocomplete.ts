@@ -50,6 +50,12 @@ for (const shape of pillShapes) { // eslint-disable-line
 const defaultShapes = pillShapeNames.slice(0, 25);
 // log.debug(F, `pill_shape_names: ${pill_shape_names}`);
 
+// Get a list of drug names and aliases from drugDataAll
+const drugNames = drugDataAll.map(drug => ({
+  name: drug.name.slice(0, 1).toUpperCase() + drug.name.slice(1),
+  aliases: drug.aliases?.map(alias => alias.slice(0, 1).toUpperCase() + alias.slice(1)),
+}));
+
 async function autocompletePills(interaction:AutocompleteInteraction) {
   const focusedOption = interaction.options.getFocused(true).name;
   const options = {
@@ -105,8 +111,8 @@ async function autocompleteBenzos(interaction:AutocompleteInteraction) {
     return;
   }
 
-  const drugNames = Object.keys(drugDataTripsit);
-  const benzoNames = drugNames.filter(drugName => {
+  const tsDrugNames = Object.keys(drugDataTripsit);
+  const benzoNames = tsDrugNames.filter(drugName => {
     const props = drugDataTripsit[drugName as keyof typeof drugDataTripsit].properties;
     return Object.hasOwn(props, 'dose_to_diazepam');
   });
@@ -233,12 +239,6 @@ async function autocompleteConvert(interaction:AutocompleteInteraction) {
     interaction.respond(listResults);
   }
 }
-
-// Get a list of drug names and aliases from drugDataAll
-const drugNames = drugDataAll.map(drug => ({
-  name: drug.name,
-  aliases: drug.aliases,
-}));
 
 async function autocompleteDrugNames(interaction:AutocompleteInteraction) {
   const options = {
