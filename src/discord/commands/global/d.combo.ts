@@ -49,7 +49,6 @@ export const dCombo: SlashCommand = {
         This does not mean combining them is safe: this means we don't have information on it!`);
         return false;
       }
-
       await interaction.editReply(errorResults.msg);
       return false;
     }
@@ -63,12 +62,24 @@ export const dCombo: SlashCommand = {
       interactionCategoryA: string;
       interactionCategoryB: string;
       note?: string;
-      source?: string;
+      sources?: string[];
     };
+
+    const noteString = resultsData.note ? `\n\nNote: ${resultsData.note}` : '';
+
+    let sourceString = '' as string;
+    if (resultsData.sources) {
+      const sourceArray = resultsData.sources.map(url => {
+        // Make a markdown URL that uses the domain as the text
+        const urlObj = new URL(url);
+        return `[${urlObj.hostname}](${url})`;
+      });
+      sourceString = `\n\nSources: ${sourceArray.join(', ')}`;
+    }
 
     const embed = embedTemplate()
       .setTitle(`Mixing ${drugA} and ${drugB}: ${resultsData.emoji} ${resultsData.result} ${resultsData.emoji}`)
-      .setDescription(resultsData.definition);
+      .setDescription(`${resultsData.definition}${noteString}${sourceString}`);
     if (resultsData.thumbnail) embed.setThumbnail(resultsData.thumbnail);
     if (resultsData.color) embed.setColor(Colors[resultsData.color as keyof typeof Colors]);
     await interaction.editReply({ embeds: [embed] });

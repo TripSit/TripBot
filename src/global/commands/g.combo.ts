@@ -200,7 +200,7 @@ export async function combo(
     color: comboDef.color,
     emoji: comboDef.emoji,
     note: comboInfo.note,
-    // source?: string;
+    sources: comboInfo.sources,
   };
 
   log.info(F, `response: ${JSON.stringify(response, null, 2)}`);
