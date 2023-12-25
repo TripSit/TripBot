@@ -19,8 +19,8 @@ RUN npm install @napi-rs/canvas-linux-x64-musl
 # RUN if [ $NODE_ENV != "production" ] ; then npm install -g --save-dev jest ts-node eslint pm2; fi
 RUN npm install -g --save-dev jest ts-node eslint pm2
 
-# We need to copy this asset over so that the bot can use it
-COPY --chown=node:node ./src/discord/assets/Futura.otf ./build/global/assets/font/Futura.otf
+# We need to copy the assets over so that the bot can use it
+COPY --chown=node:node ./assets ./build/assets
 
 # Do all of the above first so that the layers can run faster next time
 
@@ -112,9 +112,9 @@ RUN npm install pm2 -g
 # # Copy the bundled code from the build stage to the production image
 COPY --chown=node:node --from=build /usr/src/app/node_modules ./node_modules
 COPY --chown=node:node --from=build /usr/src/app/build ./build
-COPY --chown=node:node ./src/discord/assets/Futura.otf ./build/global/assets/font/Futura.otf
+  # This needs to be in the SRC folder because that's what package.json says
 COPY --chown=node:node ./src/prisma/ ./src/prisma
-COPY --chown=node:node ./assets /usr/src/app/assets
+COPY --chown=node:node ./assets ./build/assets
 COPY --chown=node:node package*.json ./
 
 # Generate prisma client
@@ -124,4 +124,4 @@ RUN npx prisma generate --schema=./src/prisma/moodle/schema.prisma
 USER node
 
 # Start the bot using the production build
-CMD npx prisma migrate deploy && pm2-runtime build/start.js
+CMD npx prisma migrate deploy && pm2-runtime build/src/start.js
