@@ -359,7 +359,11 @@ export const dLevels: SlashCommand = {
     let userFont = 'futura';
     if (personaData) {
       // Get the existing inventory data
-      const inventoryData = await inventoryGet(personaData.id);
+      const inventoryData = await db.rpg_inventory.findMany({
+        where: {
+          persona_id: personaData.id,
+        },
+      });
       // log.debug(F, `Persona home inventory (change): ${JSON.stringify(inventoryData, null, 2)}`);
 
       const equippedBackground = inventoryData.find(item => item.equipped === true && item.effect === 'background');

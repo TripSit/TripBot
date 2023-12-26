@@ -14,10 +14,10 @@ import Parser from 'rss-parser';
 import { DateTime } from 'luxon';
 import axios from 'axios'; // eslint-disable-line
 import { stripIndents } from 'common-tags';
-import updateDb from './updateDb';
 import {
   PrismaClient, experience_category, experience_type, ticket_status, ticket_type,
 } from '@prisma/client';
+import updateDb from './updateDb';
 import { checkChannelPermissions } from '../../discord/utils/checkPermissions';
 import { embedTemplate } from '../../discord/utils/embedTemplate';
 import { experience } from './experience';

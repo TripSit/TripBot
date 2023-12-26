@@ -1,6 +1,6 @@
 import OpenAI from 'openai';
 import { PrismaClient, ai_personas } from '@prisma/client';
-import { ImagesResponse, ImagesResponse, ModerationCreateResponse } from 'openai/resources';
+import { ImagesResponse, ModerationCreateResponse } from 'openai/resources';
 import { Assistant } from 'openai/resources/beta/assistants/assistants';
 import { stripIndents } from 'common-tags';
 import { Thread, ThreadDeleted } from 'openai/resources/beta/threads/threads';
@@ -213,40 +213,7 @@ export async function createImage(
       ],
     };
   }
-  const userData = await db.users.upsert({
-    where: { discord_id: user },
-    create: { discord_id: user },
-    update: { discord_id: user },
-  });
 
-  await db.ai_usage.upsert({
-    where: {
-      user_id: userData.id,
-    },
-    create: {
-      user_id: userData.id,
-      images: [new Date()],
-      usd: 0.04,
-    },
-    update: {
-      images: {
-        push: new Date(),
-      },
-      usd: {
-        increment: 0.04,
-      },
-    },
-  });
-
-  if (env.NODE_ENV === 'development') {
-    log.debug(F, 'createImage | returning dev image');
-    return {
-      created: 0,
-      data: [{
-        url: 'https://picsum.photos/1024/1024',
-      }],
-    } as ImagesResponse;
-  }
   return openai.images.generate({
     prompt,
     model: 'dall-e-3',
