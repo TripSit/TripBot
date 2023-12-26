@@ -25,7 +25,7 @@ import {
 import { helperButton } from '../commands/global/d.setup';
 import { appealAccept, appealReject } from '../utils/appeal';
 import { mushroomPageOne, mushroomPageTwo } from '../commands/global/d.mushroom_info';
-import { aiModButton } from '../commands/guild/d.ai';
+import { aiModButton } from '../commands/global/d.ai';
 
 const F = f(__filename);
 

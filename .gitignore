@@ -3,6 +3,24 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
 
+
+# Project specific
+!backups/
+backups/
+backups/*.json
+cert/
+built/
+node_modules_bak
+.scannerwork/
+eslint-report.json
+coverage/
+assets/img/*/*.png
+assets/img/*.png
+src/matrix/cache/tripbot.json
+.env.example
+src/prisma/moodle/@prisma-moodle/client/libquery_engine-linux-musl-openssl-3.0.x.so.node
+
+
 # User-specific files
 *.rsuser
 *.suo
@@ -356,18 +374,3 @@ examples/
 src/example/
 src/assets/ts_data.json
 src/assets/reminders.json
-
-# Project specific
-!backups/
-backups/
-backups/*.json
-cert/
-built/
-node_modules_bak
-.scannerwork/
-eslint-report.json
-coverage/
-src/discord/assets/img/*/*.png
-src/matrix/cache/tripbot.json
-.env.example
-src/prisma/moodle/@prisma-moodle/client/libquery_engine-linux-musl-openssl-3.0.x.so.node

@@ -1,5 +1,4 @@
 /* eslint-disable max-len */
-/* eslint-disable max-len */
 import {
   ActivityType,
   CategoryChannel,
@@ -15,6 +14,7 @@ import Parser from 'rss-parser';
 import { DateTime } from 'luxon';
 import axios from 'axios'; // eslint-disable-line
 import { stripIndents } from 'common-tags';
+import updateDb from './updateDb';
 import {
   PrismaClient, experience_category, experience_type, ticket_status, ticket_type,
 } from '@prisma/client';
@@ -1156,7 +1156,7 @@ async function runTimer() {
   const seconds30 = 1000 * 30;
   const seconds60 = 1000 * 60;
   const minutes5 = 1000 * 60 * 5;
-  // const hours24 = 1000 * 60 * 60 * 24;
+  const hours24 = 1000 * 60 * 60 * 24;
 
   const timers = [
     { callback: checkReminders, interval: env.NODE_ENV === 'production' ? seconds10 : seconds5 },
@@ -1169,6 +1169,7 @@ async function runTimer() {
     { callback: checkStats, interval: env.NODE_ENV === 'production' ? minutes5 : seconds5 },
     { callback: checkMoodle, interval: env.NODE_ENV === 'production' ? seconds60 : seconds5 },
     // { callback: checkLpm, interval: env.NODE_ENV === 'production' ? seconds10 : seconds5 },
+    { callback: updateDb, interval: env.NODE_ENV === 'production' ? hours24 : minutes5 },
   ];
 
   timers.forEach(timer => {

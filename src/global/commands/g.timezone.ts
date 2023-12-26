@@ -1,7 +1,7 @@
 /* eslint-disable max-len */
 
 import { PrismaClient } from '@prisma/client';
-import timezones from '../assets/data/timezones.json';
+import timezones from '../../../assets/data/timezones.json';
 
 const db = new PrismaClient({ log: ['error'] });
 
@@ -20,10 +20,10 @@ export async function timezone(
   command: 'get' | 'set',
   memberId: string,
   tzvalue?:string | null,
-):Promise<string | null> {
+):Promise<string> {
   // log.debug(F, `tzvalue: ${command} ${memberId} ${tzvalue}`);
 
-  let response = '' as string | null;
+  let response = '' as string;
   if (command === 'set') {
     // define offset as the value from the timezones array
     let tzCode = '';
@@ -32,6 +32,10 @@ export async function timezone(
         tzCode = zone.tzCode;
         // log.debug(F, `tzCode: ${tzCode}`);
       }
+    }
+    if (tzCode === '') {
+      // embed.setTitle('Invalid timezone!\nPlease only use the options from the autocomplete list.');
+      return 'invalid';
     }
     // log.debug(F, `actor.id: ${actor.id}`);
 
@@ -47,7 +51,14 @@ export async function timezone(
 
     userData.timezone = tzCode;
 
-    // await usersUpdate(userData);
+    await db.users.update({
+      where: {
+        discord_id: memberId,
+      },
+      data: {
+        timezone: tzCode,
+      },
+    });
 
     await db.users.update({
       where: {
@@ -58,7 +69,8 @@ export async function timezone(
       },
     });
 
-    return `I updated your timezone to ${tzvalue}`;
+    // embed.setTitle(`I updated your timezone to ${tzvalue}`);
+    return 'updated';
   }
   let gmtValue = '';
 
@@ -83,9 +95,8 @@ export async function timezone(
       }
     }
     // get the user's timezone from the database
-    const timestring = new Date().toLocaleTimeString('en-US', { timeZone: tzCode });
-    response = `It is likely ${timestring} (GMT${gmtValue})`;
-    log.info(F, `response: ${JSON.stringify(response, null, 2)}`);
+    const timestring = new Date().toLocaleTimeString('en-US', { timeZone: tzCode, hour: '2-digit', minute: '2-digit' });
+    response = `It's ${timestring} (GMT${gmtValue})`;
   }
   log.info(F, `response: ${JSON.stringify(response, null, 2)}`);
   return response;

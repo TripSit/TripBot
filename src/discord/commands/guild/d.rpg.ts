@@ -61,18 +61,18 @@ const timesUp = 'Time\'s up!';
 
 const items = {
   general: {
-    // giftcard: {
-    //   label: 'Gift Card',
-    //   value: 'giftcard',
-    //   description: 'A gift card to gift to someone else',
+    // userflair: {
+    //   label: 'User Flair',
+    //   value: 'userflair',
+    //   description: 'A flair that appears next to your name.',
     //   quantity: 1,
     //   weight: 0,
-    //   cost: 0,
+    //   cost: 1000,
     //   equipped: false,
     //   consumable: false,
-    //   effect: 'tokens',
-    //   effect_value: '100',
-    //   emoji: 'buttonBetHuge',
+    //   effect: 'userflair',
+    //   effect_value: 'userflair',
+    //   emoji: 'itemDiscount',
     // },
     // testkit: {
     //   label: 'TestKit',
@@ -113,32 +113,6 @@ const items = {
       consumable: false,
       effect: 'font',
       effect_value: 'AbrilFatFace',
-      emoji: 'itemFont',
-    },
-    Acme: {
-      label: 'Acme',
-      value: 'Acme',
-      description: 'Font',
-      quantity: 1,
-      weight: 0,
-      cost: 700,
-      equipped: false,
-      consumable: false,
-      effect: 'font',
-      effect_value: 'Acme',
-      emoji: 'itemFont',
-    },
-    Agbalumo: {
-      label: 'Agbalumo',
-      value: 'Agbalumo',
-      description: 'Font',
-      quantity: 1,
-      weight: 0,
-      cost: 700,
-      equipped: false,
-      consumable: false,
-      effect: 'font',
-      effect_value: 'Agbalumo',
       emoji: 'itemFont',
     },
     AudioWide: {
@@ -193,6 +167,19 @@ const items = {
       effect_value: 'Creepster',
       emoji: 'itemFont',
     },
+    Fascinate: {
+      label: 'Fascinate',
+      value: 'Fascinate',
+      description: 'Font',
+      quantity: 1,
+      weight: 0,
+      cost: 700,
+      equipped: false,
+      consumable: false,
+      effect: 'font',
+      effect_value: 'Fascinate',
+      emoji: 'itemFont',
+    },
     FontdinerSwanky: {
       label: 'Fontdiner Swanky',
       value: 'FontdinerSwanky',
@@ -206,6 +193,19 @@ const items = {
       effect_value: 'FontdinerSwanky',
       emoji: 'itemFont',
     },
+    Graduate: {
+      label: 'Graduate',
+      value: 'Graduate',
+      description: 'Font',
+      quantity: 1,
+      weight: 0,
+      cost: 700,
+      equipped: false,
+      consumable: false,
+      effect: 'font',
+      effect_value: 'Graduate',
+      emoji: 'itemFont',
+    },
     IndieFlower: {
       label: 'Indie Flower',
       value: 'IndieFlower',
@@ -217,6 +217,19 @@ const items = {
       consumable: false,
       effect: 'font',
       effect_value: 'IndieFlower',
+      emoji: 'itemFont',
+    },
+    KumarOne: {
+      label: 'Kumar One',
+      value: 'KumarOne',
+      description: 'Font',
+      quantity: 1,
+      weight: 0,
+      cost: 700,
+      equipped: false,
+      consumable: false,
+      effect: 'font',
+      effect_value: 'KumarOne',
       emoji: 'itemFont',
     },
     LilitaOne: {
@@ -245,6 +258,19 @@ const items = {
       effect_value: 'Lobster',
       emoji: 'itemFont',
     },
+    Mogra: {
+      label: 'Mogra',
+      value: 'Mogra',
+      description: 'Font',
+      quantity: 1,
+      weight: 0,
+      cost: 700,
+      equipped: false,
+      consumable: false,
+      effect: 'font',
+      effect_value: 'Mogra',
+      emoji: 'itemFont',
+    },
     PressStart2P: {
       label: 'Press Start 2P',
       value: 'PressStart2P',
@@ -256,6 +282,32 @@ const items = {
       consumable: false,
       effect: 'font',
       effect_value: 'PressStart2P',
+      emoji: 'itemFont',
+    },
+    ReggaeOne: {
+      label: 'Reggae One',
+      value: 'ReggaeOne',
+      description: 'Font',
+      quantity: 1,
+      weight: 0,
+      cost: 700,
+      equipped: false,
+      consumable: false,
+      effect: 'font',
+      effect_value: 'ReggaeOne',
+      emoji: 'itemFont',
+    },
+    RubikGlitch: {
+      label: 'Rubik Glitch',
+      value: 'RubikGlitch',
+      description: 'Font',
+      quantity: 1,
+      weight: 0,
+      cost: 700,
+      equipped: false,
+      consumable: false,
+      effect: 'font',
+      effect_value: 'RubikGlitch',
       emoji: 'itemFont',
     },
     Rye: {
@@ -284,6 +336,19 @@ const items = {
       effect_value: 'Satisfy',
       emoji: 'itemFont',
     },
+    SedwickAve: {
+      label: 'Sedwick Ave',
+      value: 'SedwickAve',
+      description: 'Font',
+      quantity: 1,
+      weight: 0,
+      cost: 700,
+      equipped: false,
+      consumable: false,
+      effect: 'font',
+      effect_value: 'SedwickAve',
+      emoji: 'itemFont',
+    },
     SpecialElite: {
       label: 'Special Elite',
       value: 'SpecialElite',
@@ -295,6 +360,19 @@ const items = {
       consumable: false,
       effect: 'font',
       effect_value: 'SpecialElite',
+      emoji: 'itemFont',
+    },
+    SpicyRice: {
+      label: 'Spicy Rice',
+      value: 'SpicyRice',
+      description: 'Font',
+      quantity: 1,
+      weight: 0,
+      cost: 700,
+      equipped: false,
+      consumable: false,
+      effect: 'font',
+      effect_value: 'SpicyRice',
       emoji: 'itemFont',
     },
     Barcode: {
@@ -998,9 +1076,6 @@ const BetLossMessageList = [
   'At least your wallet is a bit easier to carry now.',
   'I\'ll pretend I didn\'t see that.',
   'I promise I won\'t tell anyone.',
-  'Try drinking an Elixir of luck next time!',
-  'Maybe go buy a Slushy or something instead.',
-  'I hope you\'re not too Worried.',
   'Tip: Try not to lose next time.',
 ];
 
@@ -1025,10 +1100,6 @@ const BetWinMessageList = [
   'You\'re going to need a bigger wallet.',
   'I\'m so glad we could witness this special moment together.',
   'Yippee!',
-  'To the Moon! Maybe you\'ll find some bears there.',
-  'Ripe pickings from the money Trees!',
-  'Your pile of tokens will reach Space soon! Apparently there\'s a lady up there.',
-  'You could probably buy up to Seven Cats with that!',
 ];
 
 const text = {
@@ -1153,7 +1224,6 @@ const timeOutMessageList = [ // Random messages to display when the user runs ou
   'You were almost as slow as a snail!',
   'You were slower than a turtle!',
   'A sloth could have answered that faster!',
-  'Your brain is slower than a Zombie\'s!',
 ];
 
 const awfulScoreMessageList = [ // Random messages to display when the user got no questions right
@@ -1168,8 +1238,6 @@ const awfulScoreMessageList = [ // Random messages to display when the user got 
   '...',
   'I\'m speechless...',
   'Sheeeeeesh...',
-  'Perhaps your brain is just a bit Foggy...',
-  'Is your brain feeling a bit Blurry?',
   'Beep Bop Bloop... Error... Error... Error...',
   'Tip: A score of 0 is not a good score...',
 ];
@@ -1182,7 +1250,6 @@ const badScoreMessageList = [ // Random messages to display when the user got le
   'You wouldn\'t want to vs my grandma...',
   'Come on, you can do better than that!',
   'Try harder next time!',
-  'I\'ve heard eating Kiwifruit can help improve your memory...',
   'Tip: You get more points for answering correctly!',
 ];
 
@@ -1207,7 +1274,6 @@ const perfectScoreMessageList = [ // Random messages to display when the user go
   'That last player could learn a thing or two from you!',
   'Very impressive!',
   'You\'re on a roll!',
-  'Is this even Reality?',
 ];
 
 function rand(array:string[]):string {
@@ -1364,7 +1430,7 @@ export async function rpgBounties(
       return {
         embeds: [embedTemplate()
           .setAuthor(null)
-          .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
+          .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).displayAvatarURL() })
           .setTitle(contracts[command].fail.title)
           .setDescription(stripIndents`${contracts[command].fail.description}
             You can try again ${time(resetTime, 'R')}
@@ -1414,7 +1480,7 @@ export async function rpgBounties(
     return {
       embeds: [embedTemplate()
         .setAuthor(null)
-        .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
+        .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).displayAvatarURL() })
         .setTitle(contracts[command].success.title)
         .setDescription(stripIndents`${contracts[command].success.description.replace('{tokens}', tokens.toString())}
           You can try again ${time(resetTime, 'R')}.
@@ -1427,7 +1493,7 @@ export async function rpgBounties(
   return {
     embeds: [embedTemplate()
       .setAuthor(null)
-      .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
+      .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).displayAvatarURL() })
       .setTitle(`${emojiGet('buttonBounties')} Bounties`)
       .setDescription(stripIndents`
       You are at the bounty board, you can go on a quest, clear a dungeon, or go on a raid.
@@ -1600,7 +1666,7 @@ export async function rpgMarket(
   return {
     embeds: [embedTemplate()
       .setAuthor(null)
-      .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
+      .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).displayAvatarURL() })
       .setTitle(`${emojiGet('buttonMarket')} Market`)
       .setDescription(stripIndents`
       You are in the local market, you can buy some items to help you on your journey.
@@ -1745,7 +1811,7 @@ export async function rpgMarketChange(
 
   const embed = embedTemplate()
     .setAuthor(null)
-    .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
+    .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).displayAvatarURL() })
     .setTitle(`${emojiGet('buttonMarket')} Market`)
     .setDescription(stripIndents`
       You are in the local market, you can buy some items to help you on your journey.
@@ -1845,7 +1911,7 @@ export async function rpgMarketPreview(
 
   const embed = embedTemplate()
     .setAuthor(null)
-    .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
+    .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).displayAvatarURL() })
     .setTitle(`${emojiGet('buttonMarket')} Market`)
     .setDescription(stripIndents`
   
@@ -1959,7 +2025,7 @@ export async function rpgMarketAccept(
 
     const embed = embedTemplate()
       .setAuthor(null)
-      .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
+      .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).displayAvatarURL() })
       .setTitle(`${emojiGet('buttonMarket')} Market`)
       .setDescription(stripIndents`**You cannot buy this item because your inventory is full. Sell some items from your home inventory to make room!**
     
@@ -1991,7 +2057,7 @@ export async function rpgMarketAccept(
 
     const embed = embedTemplate()
       .setAuthor(null)
-      .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
+      .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).displayAvatarURL() })
       .setTitle(`${emojiGet('buttonMarket')} Market`)
       .setDescription(stripIndents`**You do not have enough tokens to buy this item.**
     
@@ -2043,6 +2109,28 @@ export async function rpgMarketAccept(
     data: newItem,
   });
 
+  // if the item is a background or font, automatically equip it and unequip the other items of the same type
+  if (itemData.effect === 'background' || itemData.effect === 'font') {
+    const inventory = await inventoryGet(personaData.id);
+    const itemIndex = inventory.findIndex(i => i.value === itemData.value);
+    // log.debug(F, `itemIndex: ${itemIndex}`);
+
+    // Unequip all items of the same type
+    const unequipItems = inventory.filter(i => i.effect === itemData.effect && i.equipped === true);
+    // log.debug(F, `unequipItems: ${JSON.stringify(unequipItems, null, 2)}`);
+    for (const item of unequipItems) {
+      // log.debug(F, `item: ${JSON.stringify(item, null, 2)}`);
+      item.equipped = false;
+      inventorySet(item);
+    }
+
+    // Equip the new item
+    const equipItem = inventory[itemIndex];
+    // log.debug(F, `equipItem: ${JSON.stringify(equipItem, null, 2)}`);
+    equipItem.equipped = true;
+    await inventorySet(equipItem);
+  }
+
   const { embeds, components } = await rpgMarketChange(interaction);
 
   // This grossness takes the APIEmbed object, turns it into a JSON object, and pulls the description
@@ -2051,11 +2139,11 @@ export async function rpgMarketAccept(
   return {
     embeds: [embedTemplate()
       .setAuthor(null)
-      .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
+      .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).displayAvatarURL() })
       .setTitle(`${emojiGet('buttonMarket')} Market`)
       .setDescription(stripIndents`**You have purchased ${itemData.label} for ${itemCost} TripTokens.
       
-      Your item has been delivered to your Home, where you will need to equip it!**
+      Your item has automatically been equipped! Head home to unequip it or change items.**
       
       ${description}`)
       .setColor(Colors.Green)],
@@ -2402,7 +2490,7 @@ export async function rpgHome(
   // Build the embed
   const embed = embedTemplate()
     .setAuthor(null)
-    .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
+    .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).displayAvatarURL() })
     .setTitle(`${emojiGet('buttonHome')} Home`)
     .setDescription(stripIndents`${message !== null ? message : ''}
 
@@ -2808,7 +2896,7 @@ export async function rpgArcade(
   return {
     embeds: [embedTemplate()
       .setAuthor(null)
-      .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
+      .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).displayAvatarURL() })
       .setTitle(`${emojiGet('buttonArcade')} Arcade`)
       .setDescription(stripIndents`
         You ${rand(text.enter)} the arcade and see a variety of games.
@@ -2836,7 +2924,7 @@ export async function rpgArcadeAnimate(
   //   await (interaction as MessageComponentInteraction).editReply({
   //     embeds: [embedTemplate()
   //       .setAuthor(null)
-  //       .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
+  //       .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).displayAvatarURL() })
   //       .setTitle(gameName),
   //     ],
   //   });
@@ -3118,7 +3206,7 @@ export async function rpgArcadeGame(
     return {
       embeds: [embedTemplate()
         .setAuthor(null)
-        .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
+        .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).displayAvatarURL() })
         .setTitle(gameName)
         .setDescription(stripIndents`
           **You can't start a game without first placing a bet!**
@@ -3178,7 +3266,7 @@ export async function rpgArcadeGame(
         content: null,
         embeds: [embedTemplate()
           .setAuthor(null)
-          .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
+          .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).displayAvatarURL() })
           .setTitle(`${emojiGet(emojiName)} ${gameName}`)
           .setDescription(stripIndents`
             The ${object} came up **${result}** and you chose **${choice}**!
@@ -3210,7 +3298,7 @@ export async function rpgArcadeGame(
       content: null,
       embeds: [embedTemplate()
         .setAuthor(null)
-        .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
+        .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).displayAvatarURL() })
         .setTitle(`${emojiGet(emojiName)} ${gameName}`)
         .setDescription(stripIndents`
             The ${object} came up **${result}** and you chose **${choice}**!
@@ -3232,7 +3320,7 @@ export async function rpgArcadeGame(
       content: null,
       embeds: [embedTemplate()
         .setAuthor(null)
-        .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
+        .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).displayAvatarURL() })
         .setTitle(`${emojiGet(emojiName)} ${gameName}`)
         .setDescription(stripIndents`${message ?? ''}
           You are betting ${currentBet} tokens.
@@ -3248,7 +3336,7 @@ export async function rpgArcadeGame(
     content: null,
     embeds: [embedTemplate()
       .setAuthor(null)
-      .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
+      .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).displayAvatarURL() })
       .setTitle(`${emojiGet(emojiName)} ${gameName}`)
       .setDescription(stripIndents`You start a game of ${gameName}.
 
@@ -3326,7 +3414,7 @@ export async function rpgTriviaGetQuestions(
   });
 }
 
-export async function rpgTrivia(
+export async function rpgTrivia( // eslint-disable-line
   interaction: MessageComponentInteraction | ChatInputCommandInteraction,
 ):Promise<InteractionEditReplyOptions | InteractionUpdateOptions> {
   // log.debug(F, `GameStates: ${JSON.stringify(gameStates, null, 2)}`);
@@ -3486,7 +3574,7 @@ export async function rpgTrivia(
 
         Streak: ${streak}
         **Time's up <t:${Math.floor(questionTimer.getTime() / 1000)}:R>**`)
-        .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() }); // eslint-disable-line max-len
+        .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).displayAvatarURL() }); // eslint-disable-line max-len
 
       if (qNumber === 0) {
         // await (interaction as MessageComponentInteraction).update({}); // eslint-disable-line no-await-in-loop
@@ -3499,7 +3587,7 @@ export async function rpgTrivia(
           
           **Starting <t:${Math.floor(questionTimer.getTime() / 1000)}:R>**
           Get ready!`)
-          .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() }); // eslint-disable-line max-len
+          .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).displayAvatarURL() }); // eslint-disable-line max-len
         await interaction.editReply({ embeds: [startingEmbed], components: [] }); // eslint-disable-line no-await-in-loop, max-len
         // If it's the first question, send a new message
         await sleep(5 * 1000); // eslint-disable-line no-await-in-loop
@@ -3607,7 +3695,7 @@ export async function rpgTrivia(
             Streak: ${streak}
             
             Next question <t:${Math.floor(questionTimer.getTime() / 1000)}:R>`)
-          .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() }); // eslint-disable-line max-len
+          .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).displayAvatarURL() }); // eslint-disable-line max-len
         embedStatus = 'Correct!';
         questionAnswer = `The answer was **${questionData.correct_answer}.**`;
         if (interaction.isRepliable()) {
@@ -3733,7 +3821,7 @@ export async function rpgTrivia(
           ${emojiGet('buttonBetSmall')} **Wallet:** ${personaData.tokens}
           `,
         )
-        .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() }); // eslint-disable-line max-len
+        .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).displayAvatarURL() }); // eslint-disable-line max-len
       return {
         embeds: [embed],
         components: [
@@ -3771,7 +3859,7 @@ export async function rpgTrivia(
           ${emojiGet('buttonBetSmall')} **Wallet:** ${personaData.tokens}
           `,
         )
-        .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() }); // eslint-disable-line max-len
+        .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).displayAvatarURL() }); // eslint-disable-line max-len
       return {
         embeds: [embed],
         components: [
@@ -3808,7 +3896,7 @@ export async function rpgTrivia(
         ${emojiGet('buttonBetSmall')} **Wallet:** ${personaData.tokens}
         `,
       )
-      .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() }); // eslint-disable-line max-len
+      .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).displayAvatarURL() }); // eslint-disable-line max-len
 
     // log.debug(F, 'Trivia Game Ended');
     // log.debug(F, `Embed: ${JSON.stringify(embed, null, 2)}`);
@@ -3957,7 +4045,7 @@ export async function rpgTrivia(
   return {
     embeds: [embedTemplate()
       .setAuthor(null)
-      .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
+      .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).displayAvatarURL() })
       .setTitle(`${emojiGet('buttonTrivia')} Trivia`)
       .setDescription(stripIndents`
         You ${rand(text.enter)} the trivia parlor where you can test your knowledge of random facts!
@@ -4033,7 +4121,7 @@ export async function rpgTown(
   return {
     embeds: [embedTemplate()
       .setAuthor(null)
-      .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
+      .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).displayAvatarURL() })
       .setTitle(`${emojiGet('buttonTown')} Town`)
       .setDescription(stripIndents`
       You ${rand(text.enter)} TripTown, a new settlement on the edge of Triptopia, the TripSit Kingdom.
@@ -4052,8 +4140,8 @@ export async function rpgTown(
 }
 
 async function rpgGift(interaction: ChatInputCommandInteraction) {
-  const commandUser = interaction.user;
-  const targetUser = interaction.options.getUser('target');
+  const commandUser = interaction.member as GuildMember;
+  const targetUser = interaction.options.getMember('target') as GuildMember;
   const giftAmount = interaction.options.getInteger('amount') ?? 0;
 
   if (!targetUser) throw new Error('Target user not found');
@@ -4061,7 +4149,7 @@ async function rpgGift(interaction: ChatInputCommandInteraction) {
     return {
       embeds: [embedTemplate()
         .setAuthor(null)
-        .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
+        .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).displayAvatarURL() })
         .setTitle(`${emojiGet('buttonBetHuge')} Gift Unsuccessful`)
         .setDescription(stripIndents`
             **You can't gift tokens to yourself!**
@@ -4115,12 +4203,27 @@ async function rpgGift(interaction: ChatInputCommandInteraction) {
   const commandUserTokens = userPersona.tokens;
   // const targetUserTokens = targetData.tokens;
 
+  // Check if the amount is negative
+  if (giftAmount < 0) {
+    return {
+      embeds: [embedTemplate()
+        .setAuthor(null)
+        .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).displayAvatarURL() })
+        .setTitle(`${emojiGet('buttonBetHuge')} Gift Unsuccessful`)
+        .setDescription(stripIndents`
+            **You can't gift negative tokens!**
+          `)
+        .setColor(Colors.Red)],
+      components: [],
+    };
+  }
+
   // Check if the command user has enough tokens
   if (commandUserTokens < giftAmount) {
     return {
       embeds: [embedTemplate()
         .setAuthor(null)
-        .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
+        .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).displayAvatarURL() })
         .setTitle(`${emojiGet('buttonBetHuge')} Gift Unsuccessful`)
         .setDescription(stripIndents`
             **You don't have enough tokens!**
@@ -4156,10 +4259,10 @@ async function rpgGift(interaction: ChatInputCommandInteraction) {
   return {
     embeds: [embedTemplate()
       .setAuthor(null)
-      .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
+      .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).displayAvatarURL() })
       .setTitle(`${emojiGet('buttonBetHuge')} Gift Successful`)
       .setDescription(stripIndents`
-          **You gifted ${giftAmount} ${giftAmount === 1 ? 'token' : 'tokens'} to ${targetUser?.username}**
+          **You gifted ${giftAmount} ${giftAmount === 1 ? 'token' : 'tokens'} to ${targetUser?.displayName}**
 
           ${emojiGet('buttonBetSmall')} **${targetUser?.displayName}'s Wallet:** ${targetPersona.tokens}
           ${emojiGet('buttonBetSmall')} **Your Wallet:** ${userPersona.tokens}
@@ -4175,7 +4278,7 @@ export async function rpgHelp(
   return {
     embeds: [embedTemplate()
       .setAuthor(null)
-      .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).user.displayAvatarURL() })
+      .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).displayAvatarURL() })
       .setTitle(`${emojiGet('buttonHelp')} Help`)
       .setDescription(stripIndents`
         You ${rand(text.enter)} the information centre and walk up to the help desk.

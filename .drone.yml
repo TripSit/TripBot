@@ -3,21 +3,6 @@ type: docker
 name: Deploy TripBot
 
 steps:
-  - name: Rebuild API
-    image: docker
-    privileged: true
-    commands:      
-      - apk update
-      - apk upgrade
-      - apk add --no-cache git
-      - docker compose -f docker-compose.host.yml --project-name tripbot up tripbot_api -d --force-recreate --build
-      # - tail -f /dev/null
-    environment:
-      DOCKER_HOST:
-        from_secret: DOCKER_HOST
-      DOCKER_BUILDKIT:
-        from_secret: DOCKER_BUILDKIT
-
   - name: Rebuild TripBot
     image: docker
     commands:

@@ -164,6 +164,7 @@ model users {
   user_tickets_user_tickets_reopened_byTousers              user_tickets[]    @relation("user_tickets_reopened_byTousers")
   user_tickets_user_tickets_user_idTousers                  user_tickets[]    @relation("user_tickets_user_idTousers")
   ai_usage                                                  ai_usage[]
+  ai_images                                                 ai_images[]
 }
 
 model discord_guilds {
@@ -439,17 +440,28 @@ model ai_moderation {
 }
 
 model ai_usage {
-  id         String     @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  user_id    String     @db.Uuid
-  tokens     Int        @default(0)
-  images     DateTime[] @default([])
-  usd        Float      @default(0)
-  created_at DateTime   @default(now()) @db.Timestamptz(6)
-  updated_at DateTime   @default(now()) @db.Timestamptz(6)
+  id         String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  user_id    String   @db.Uuid
+  tokens     Int      @default(0)
+  usd        Float    @default(0)
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  updated_at DateTime @default(now()) @db.Timestamptz(6)
 
   users users @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "aiusage_userid_foreign")
 
   @@unique([user_id], map: "aiusage_userid_unique")
+}
+
+model ai_images {
+  id             String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  user_id        String   @db.Uuid
+  prompt         String
+  revised_prompt String
+  image_url      String
+  model          ai_model
+  created_at     DateTime @default(now()) @db.Timestamptz(6)
+
+  users users @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "aiimages_userid_foreign")
 }
 
 enum bridge_status {

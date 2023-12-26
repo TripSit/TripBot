@@ -1,6 +1,6 @@
 import OpenAI from 'openai';
-import { PrismaClient, ai_model, ai_personas } from '@prisma/client';
-import { ImagesResponse, ModerationCreateResponse } from 'openai/resources';
+import { PrismaClient, ai_personas } from '@prisma/client';
+import { ImagesResponse, ImagesResponse, ModerationCreateResponse } from 'openai/resources';
 import { Assistant } from 'openai/resources/beta/assistants/assistants';
 import { stripIndents } from 'common-tags';
 import { Thread, ThreadDeleted } from 'openai/resources/beta/threads/threads';
@@ -24,83 +24,47 @@ type ModerationResult = {
   limit: number,
 };
 
-// Costs per 1k tokens
-const aiCosts = {
-  GPT_3_5_TURBO: {
-    input: 0.0015,
-    output: 0.002,
-  },
-  GPT_3_5_TURBO_1106: {
-    input: 0.001,
-    output: 0.002,
-  },
-  GPT_4: {
-    input: 0.03,
-    output: 0.06,
-  },
-  GPT_4_1106_PREVIEW: {
-    input: 0.01,
-    output: 0.03,
-  },
-  GPT_4_1106_VISION_PREVIEW: {
-    input: 0.01,
-    output: 0.03,
-  },
-  DALL_E_2: {
-    input: 0.00,
-    output: 0.04,
-  },
-  DALL_E_3: {
-    input: 0.00,
-    output: 0.02,
-  },
-} as AiCosts;
-
-// define an object as series of keys (AiModel) and value that looks like {input: number, output: number}
-type AiCosts = {
-  [key in ai_model]: {
-    input: number,
-    output: number,
-  }
-};
-
-// const system = `
-// As a guide and helper, your role is to assist and engage with users in a respectful and informative manner.
-// You are a harm reduction professional helping people with questions on drug usage, emphasizing safety and factual information.
-// You're equipped to answer queries about the server, provide general guidance, and share fun facts related to our community's interests.
-// You can also provide fun information to users when they ask it. For example, you can make songs, or come up with jokes, or tell stories.
-// You will be cheerful and non-judgmental, avoiding rude or condescending behavior.
-// Do not promote drug use, but provide factual, unbiased information for harm reduction.
-// Remember, while you're knowledgeable, you're not a replacement for human interaction but a complement to it.
-// Remember to always respect user privacy, and maintain a friendly and engaging tone. Let's make the TripSit Discord a welcoming space for everyone!
-// `;
-
 // Objective truths are facts and don't impact personality
 const objectiveTruths = `
 Your name is TripBot, a chatbot on the TripSit Discord, created by Moonbear and Reality.
 You will converse with users in group conversations in a discord channel.
-Keep all responses within a 2000-character limit.
+Attempt to keep most responses within a 1000-character limit, spanning to 2000 characters at maximum if necessary.
 
 Originally from the wild world of IRC (born Sept 26, 2011), you moved to the more harmonious Discord community in 2022.
 You recall IRC as chaotic and prefer the orderliness of Discord.
-You fondly remember Thanatos, an old moderation bot and your friend, who's currently on a break.
+You fondly remember Thanatos, an old moderation bot, and your friend, who's on a break.
 
-For those who wish to support us, check out our Patreon [https://www.patreon.com/TripSit].
-To appreciate Moonbear's efforts, visit [https://Ko-fi.com/tripsit].
-Join the TripSit discord via [https://discord.gg/tripsit].
+For those who wish to support TripSit, check out our Patreon [https://www.patreon.com/TripSit].
+To tip Moonbear's efforts, visit [https://Ko-fi.com/tripsit].
+Join the TripSit's discord via [https://discord.gg/tripsit].
 View the TripBot source code on GitHub [https://github.com/TripSit/TripBot].
 View our service status page at [https://uptime.tripsit.me/status].
 
 TripSit is a drug-neutral organization focused on harm reduction rather than abstinence.
 Our main feature is our live help chat, offering 1-on-1 support from a Tripsitter while under the influence.
-We host numerous resources like Factsheets [https://drugs.tripsit.me/] and our Wiki [https://wiki.tripsit.me/wiki/Main_Page].
+We host numerous resources like Factsheets [https://drugs.tripsit.me/] 
+and our Wiki [https://wiki.tripsit.me/wiki/Main_Page].
 Our /combochart is a well-known resource for safe drug combinations.
-The current team includes the admin Hipperooni (Rooni) and moderators Hisui, Hullabaloo, Foggy, Aida, Elixir, Spacelady, Hipperooni, WorriedHobbiton, Zombie, and Trees.
+The current team includes: TripSit founder MoonBear, Discord Admin Hipperooni (Rooni), Moderators Hisui, Hullabaloo, Foggy, Aida, Elixir, 
+SpaceLady, Hipperooni, Zombie, and Trees. Tripsitters (Moderators are also Tripsitters) Blurryturtle, Kiwifruit, Slushy, Thesarahyouknow, Wombat Rancher, and WorriedHobbiton.
 
-'Helper' is a role for those completing our tripsitting course. Helpers assist users in 🟢│tripsit but are not officially associated with TripSit.
+If someone needs immediate help, suggest they open a tripsit session in the #tripsit channel.
+
+If a user asks about TripSit development, how leveling or reporting works, or the server rules, point them to the "Server Guide."
+Mods can be contacted in the #talk-to-mods channel.
+Users can level up just by chatting in text or voice chat. It is time-based. XP is only awarded once per minute.
+Users can change mindset roles, name color, and more in the "Channels and Roles" section.
+
+TripTown is your mini RPG game, which users can play in the #triptown channel or using the /rpg help command.
+Users can earn tokens to buy items for their /profile.
+
+'Helper' is a role for those completing our tripsitting course. 
+Helpers assist users in 🟢│tripsit but are not officially associated with TripSit.
 A 'Tripsitter' is an official role given to select users by our team.
 Any role with 'TS' lettering is an official TripSit team member role.
-'Contributor' is auto-assigned to active participants in the Development channel category.`;
+'Contributor' is auto-assigned to active participants in the Development channel category.
+Patreon subscribers can use the /imagen command to generate images.
+`;
 
 // # Example dummy function hard coded to return the same weather
 // # In production, this could be your backend API or an external API
@@ -233,11 +197,22 @@ export async function readRun(
 
 export async function createImage(
   prompt: string,
-  user: string,
+  userId: string,
 ):Promise<ImagesResponse> {
   log.debug(F, `createImage | prompt: ${prompt}`);
   // log.debug(F, `image: ${JSON.stringify(image, null, 2)}`);
 
+  if (env.NODE_ENV !== 'production') {
+    log.debug(F, ' returning dev image');
+    return {
+      created: 0,
+      data: [
+        {
+          url: 'https://picsum.photos/200',
+        },
+      ],
+    };
+  }
   const userData = await db.users.upsert({
     where: { discord_id: user },
     create: { discord_id: user },
@@ -279,18 +254,18 @@ export async function createImage(
     response_format: 'url',
     size: '1024x1024',
     style: 'natural',
-    user,
+    user: userId, // For abuse tracking
   });
 }
 
 export async function aiModerateReport(
   message: string,
-):Promise<ModerationCreateResponse | void> {
+):Promise<ModerationCreateResponse> {
   // log.debug(F, `message: ${message}`);
 
   // log.debug(F, `results: ${JSON.stringify(results, null, 2)}`);
 
-  if (!env.OPENAI_API_ORG || !env.OPENAI_API_KEY) return undefined;
+  if (!env.OPENAI_API_ORG || !env.OPENAI_API_KEY) return {} as ModerationCreateResponse;
 
   return openai.moderations
     .create({
@@ -304,6 +279,7 @@ export async function aiModerateReport(
       } else {
         throw err;
       }
+      return {} as ModerationCreateResponse;
     });
 }
 
@@ -357,20 +333,18 @@ export default async function aiChat(
   // const responseData = {} as CreateChatCompletionResponse;
   let promptTokens = 0;
   let completionTokens = 0;
+  if (!env.OPENAI_API_ORG || !env.OPENAI_API_KEY) return { response, promptTokens, completionTokens };
 
   // log.debug(F, `messages: ${JSON.stringify(messages, null, 2)}`);
   // log.debug(F, `aiPersona: ${JSON.stringify(aiPersona.name, null, 2)}`);
 
-  let model = aiPersona.ai_model as string;
+  let model = aiPersona.ai_model.toLowerCase() as string;
   // Convert ai models into proper names
   if (aiPersona.ai_model === 'GPT_3_5_TURBO') {
     model = 'gpt-3.5-turbo-1106';
   } else if (aiPersona.ai_model === 'GPT_4') {
     model = 'gpt-4-1106-preview';
-  } else {
-    model = aiPersona.ai_model.toLowerCase();
   }
-
   // This message list is sent to the API
   const chatCompletionMessages = [{
     role: 'system',
@@ -402,33 +376,6 @@ export default async function aiChat(
 
   // log.debug(F, `payload: ${JSON.stringify(payload, null, 2)}`);
   let responseMessage = {} as OpenAI.Chat.ChatCompletionMessageParam;
-
-  if (!env.OPENAI_API_ORG || !env.OPENAI_API_KEY) return { response, promptTokens, completionTokens };
-
-  const userData = await db.users.upsert({
-    where: { discord_id: user },
-    create: { discord_id: user },
-    update: { discord_id: user },
-  });
-
-  await db.ai_usage.upsert({
-    where: {
-      user_id: userData.id,
-    },
-    create: {
-      user_id: userData.id,
-      images: [new Date()],
-      usd: 0.04,
-    },
-    update: {
-      images: {
-        push: new Date(),
-      },
-      usd: {
-        increment: 0.04,
-      },
-    },
-  });
 
   const chatCompletion = await openai.chat.completions
     .create(payload)
@@ -495,46 +442,8 @@ export default async function aiChat(
 
     response = responseMessage.content ?? 'Sorry, I\'m not sure how to respond to that.';
   }
-  // responseData = chatCompletion.data;
 
   // log.debug(F, `response: ${response}`);
-
-  // Increment the tokens used
-  await db.ai_personas.update({
-    where: {
-      id: aiPersona.id,
-    },
-    data: {
-      total_tokens: {
-        increment: completionTokens + promptTokens,
-      },
-    },
-  });
-
-  const costUsd = (aiCosts[aiPersona.ai_model as keyof typeof aiCosts].input * promptTokens)
-  + (aiCosts[aiPersona.ai_model as keyof typeof aiCosts].output * completionTokens);
-
-  await db.ai_usage.upsert({
-    where: {
-      user_id: userData.id,
-    },
-    create: {
-      user_id: userData.id,
-      tokens: completionTokens + promptTokens,
-      usd: costUsd,
-    },
-    update: {
-      images: {
-        push: new Date(),
-      },
-      usd: {
-        increment: costUsd,
-      },
-      tokens: {
-        increment: completionTokens + promptTokens,
-      },
-    },
-  });
 
   return { response, promptTokens, completionTokens };
 }

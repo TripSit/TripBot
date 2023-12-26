@@ -199,6 +199,9 @@ async function addDurations(
   let columns = 0;
   roaNames.forEach(roaName => {
     if (columns < 3) {
+      if (!drugData.roas) {
+        return;
+      }
       const roaInfo = drugData.roas.find(r => r.name === roaName);
       if (roaInfo && roaInfo.duration) {
         let durationString = '';

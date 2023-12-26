@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { getVoiceConnection } from '@discordjs/voice';
 // import { stripIndents } from 'common-tags';
 import sourceMap from 'source-map-support'; // eslint-disable-line
@@ -9,12 +10,15 @@ import {
   StringSelectMenuInteraction,
   ModalSubmitInteraction,
 } from 'discord.js';
+import * as path from 'path';
+import Canvas from '@napi-rs/canvas';
 import { env } from './global/utils/env.config';
 import { log } from './global/utils/log';
 import validateEnv from './global/utils/env.validate'; // eslint-disable-line
 import commandContext from './discord/utils/context'; // eslint-disable-line
 import discordConnect from './discord/discord';
-import api from './discord/api/api'; // eslint-disable-line
+import api from './api/api'; // eslint-disable-line
+import updateDb from './global/utils/updateDb';
 // import startMatrix from './matrix/matrix';
 // import ircConnect from './irc/irc';
 // import telegramConnect from './telegram/telegram';
@@ -23,22 +27,29 @@ sourceMap.install();
 
 global.bootTime = new Date();
 
+Canvas.GlobalFonts.registerFromPath(
+  path.resolve(__dirname, '../assets/font/Futura.otf'),
+  'futura',
+);
+
 const F = f(__filename);
 
-const net = require('net');
+// const net = require('net');
 // work around a node v20 bug: https://github.com/nodejs/node/issues/47822#issuecomment-1564708870
-if (net.setDefaultAutoSelectFamily) {
-  net.setDefaultAutoSelectFamily(false);
-}
+// if (net.setDefaultAutoSelectFamily) {
+//   net.setDefaultAutoSelectFamily(false);
+// }
 
 async function start() {
   log.info(F, 'Initializing service!');
-  validateEnv('SERVICES');
-  api();
-  if (env.DISCORD_CLIENT_TOKEN && validateEnv('DISCORD')) await discordConnect();
-  // if (env.MATRIX_ACCESS_TOKEN && validateEnv('MATRIX') && env.NODE_ENV !== 'production') await startMatrix();
-  // if (env.IRC_PASSWORD && validateEnv('IRC') && env.NODE_ENV !== 'production') ircConnect();
-  // if (env.TELEGRAM_TOKEN && validateEnv('TELEGRAM')) await telegramConnect();
+  if (validateEnv('SERVICES')) {
+    api();
+    await updateDb();
+    if (env.DISCORD_CLIENT_TOKEN && await validateEnv('DISCORD')) await discordConnect();
+    // if (env.MATRIX_ACCESS_TOKEN && validateEnv( 'MATRIX') && env.NODE_ENV !== 'production') await startMatrix();
+    // if (env.IRC_PASSWORD && validateEnv('IRC') && env.NODE_ENV !== 'production') ircConnect();
+    // if (env.TELEGRAM_TOKEN && validateEnv('TELEGRAM')) await telegramConnect();
+  }
 }
 
 start();
