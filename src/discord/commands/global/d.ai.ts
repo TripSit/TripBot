@@ -56,7 +56,7 @@ const db = new PrismaClient({ log: ['error'] });
 
 const F = f(__filename);
 
-const maxHistoryLength = 3;
+// const maxHistoryLength = 3;
 
 const ephemeralExplanation = 'Set to "True" to show the response only to you';
 const personaDoesNotExist = 'This persona does not exist. Please create it first.';
@@ -1445,10 +1445,10 @@ export async function discordAiChat(
 
   // log.debug(F, `messageData: ${JSON.stringify(messageData, null, 2)}`);
 
-  const channelMessages = await messageData.channel.messages.fetch({ limit: 10 });
+  // const channelMessages = await messageData.channel.messages.fetch({ limit: 10 });
   // log.debug(F, `channelMessages: ${JSON.stringify(channelMessages.map(message => message.cleanContent), null, 2)}`);
 
-  const messages = [...channelMessages.values()];
+  // const messages = [...channelMessages.values()];
 
   // if (!messages[0].member?.roles.cache.has(env.ROLE_VERIFIED)) return;
   if (messageData.author.bot) {
@@ -1467,7 +1467,7 @@ export async function discordAiChat(
   log.debug(F, ` ${messageData.author.displayName} asked me ${messageData.cleanContent}`);
 
   // Check if the channel is linked to a persona
-  const aiLinkData = await getLinkedChannel(messages[0].channel);
+  const aiLinkData = await getLinkedChannel(messageData.channel);
   // log.debug(F, `aiLinkData: ${JSON.stringify(aiLinkData, null, 2)}`);
   if (!aiLinkData) return;
   // log.debug(F, `aiLinkData: ${JSON.stringify(aiLinkData, null, 2)}`);
@@ -1481,24 +1481,34 @@ export async function discordAiChat(
   // log.debug(F, `aiPersona: ${aiPersona.name}`);
 
   // Get the last 3 messages that are not empty or from other bots
-  const messageList = messages
-    .filter(message => message.cleanContent.length > 0 && !message.author.bot)
-    .map(message => ({
-      role: 'user',
-      content: message.cleanContent
-        .replace(tripbotUAT, '')
-        .replace('tripbot', '')
-        .trim(),
-    }))
-    .slice(0, maxHistoryLength)
-    .reverse() as OpenAI.Chat.ChatCompletionMessageParam[];
+  // const messageList = messages
+  //   .filter(message => message.cleanContent.length > 0 && !message.author.bot)
+  //   .map(message => ({
+  //     role: 'user',
+  //     content: message.cleanContent
+  //       .replace(tripbotUAT, '')
+  //       .replace('tripbot', '')
+  //       .trim(),
+  //   }))
+  //   .slice(0, maxHistoryLength)
+  //   .reverse() as OpenAI.Chat.ChatCompletionMessageParam[];
 
   // log.debug(F, `messageList: ${JSON.stringify(messageList, null, 2)}`);
 
-  const cleanMessageList = messages
-    .filter(message => message.cleanContent.length > 0 && !message.author.bot)
-    .slice(0, maxHistoryLength)
-    .reverse();
+  // const cleanMessageList = messages
+  //   .filter(message => message.cleanContent.length > 0 && !message.author.bot)
+  //   .slice(0, maxHistoryLength)
+  //   .reverse();
+
+  const cleanMessageList = [messageData];
+
+  const messageList = [{
+    role: 'user',
+    content: messageData.cleanContent
+      .replace(tripbotUAT, '')
+      .replace('tripbot', '')
+      .trim(),
+  }] as OpenAI.Chat.ChatCompletionMessageParam[];
 
   const { response, promptTokens, completionTokens } = await aiChat(aiPersona, messageList, messageData.author.id);
 
@@ -1554,21 +1564,21 @@ export async function discordAiChat(
     completionTokens,
   );
 
-  await messages[0].channel.sendTyping();
+  await messageData.channel.sendTyping();
 
   const wpm = 120;
   const wordCount = response.split(' ').length;
   const sleepTime = (wordCount / wpm) * 60000;
   // log.debug(F, `Typing ${wordCount} at ${wpm} wpm will take ${sleepTime / 1000} seconds`);
   await sleep(sleepTime > 10000 ? 5000 : sleepTime); // Don't wait more than 5 seconds
-  const replyMessage = await messages[0].reply(response.slice(0, 2000));
+  const replyMessage = await messageData.reply(response.slice(0, 2000));
 
   // React to that message with thumbs up and thumbs down emojis
   try {
     await replyMessage.react(env.EMOJI_THUMB_UP);
     await replyMessage.react(env.EMOJI_THUMB_DOWN);
   } catch (error) {
-    log.error(F, `Error reacting to message: ${messages[0].url}`);
+    log.error(F, `Error reacting to message: ${messageData.url}`);
     log.error(F, `${error}`);
   }
 }
