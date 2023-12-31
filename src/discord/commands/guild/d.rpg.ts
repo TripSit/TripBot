@@ -1,3 +1,4 @@
+/* eslint-disable no-await-in-loop */
 /* eslint-disable no-restricted-syntax */
 /* eslint-disable max-len */
 import {
@@ -2111,7 +2112,11 @@ export async function rpgMarketAccept(
 
   // if the item is a background or font, automatically equip it and unequip the other items of the same type
   if (itemData.effect === 'background' || itemData.effect === 'font') {
-    const inventory = await inventoryGet(personaData.id);
+    const inventory = await db.rpg_inventory.findMany({
+      where: {
+        persona_id: personaData.id,
+      },
+    });
     const itemIndex = inventory.findIndex(i => i.value === itemData.value);
     // log.debug(F, `itemIndex: ${itemIndex}`);
 
@@ -2121,14 +2126,26 @@ export async function rpgMarketAccept(
     for (const item of unequipItems) {
       // log.debug(F, `item: ${JSON.stringify(item, null, 2)}`);
       item.equipped = false;
-      inventorySet(item);
+      await db.rpg_inventory.upsert({
+        where: {
+          id: item.id,
+        },
+        create: item,
+        update: item,
+      });
     }
 
     // Equip the new item
     const equipItem = inventory[itemIndex];
     // log.debug(F, `equipItem: ${JSON.stringify(equipItem, null, 2)}`);
     equipItem.equipped = true;
-    await inventorySet(equipItem);
+    await db.rpg_inventory.upsert({
+      where: {
+        id: equipItem.id,
+      },
+      create: equipItem,
+      update: equipItem,
+    });
   }
 
   const { embeds, components } = await rpgMarketChange(interaction);

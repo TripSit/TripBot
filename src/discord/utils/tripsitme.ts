@@ -653,10 +653,10 @@ export async function tripsitmeTeamClose(
 
   const userData = await db.users.upsert({
     where: {
-      discord_id: target.id,
+      discord_id: targetId,
     },
     create: {
-      discord_id: target.id,
+      discord_id: targetId,
     },
     update: {},
   });
