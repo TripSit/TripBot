@@ -4,7 +4,8 @@
   "description": "A bot for TripSit (and maybe the world)",
   "main": "start.ts",
   "prisma": {
-    "schema": "src/prisma/tripbot/schema.prisma"
+    "schema": "src/prisma/tripbot/schema.prisma",
+    "seed": "ts-node ./src/prisma/seed.ts"
   },
   "engines": {
     "node": "v21.4.0",
