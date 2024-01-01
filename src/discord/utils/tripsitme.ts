@@ -31,18 +31,7 @@ import {
 } from 'discord-api-types/v10';
 import { stripIndents } from 'common-tags';
 import { DateTime } from 'luxon';
-import {
-  database,
-  getGuild,
-  getOpenTicket,
-  getUser,
-  ticketUpdate,
-  usersUpdate,
-} from '../../global/utils/knex';
-import {
-  UserTickets,
-  TicketStatus,
-} from '../../global/@types/database';
+import { ticket_status, user_tickets } from '@prisma/client';
 import commandContext from './context';
 import { embedTemplate } from './embedTemplate';
 import { checkChannelPermissions, checkGuildPermissions } from './checkPermissions';
@@ -185,7 +174,15 @@ export async function needsHelpMode(
   target: GuildMember,
 ) {
   const guild = interaction.guild as Guild;
-  const guildData = await getGuild(guild.id);
+  const guildData = await db.discord_guilds.upsert({
+    where: {
+      id: guild.id,
+    },
+    create: {
+      id: guild.id,
+    },
+    update: {},
+  });
 
   const perms = await checkGuildPermissions(guild, [
     'ManageRoles' as PermissionResolvable,
@@ -213,10 +210,18 @@ export async function needsHelpMode(
   const targetRoleIds = target.roles.cache.map(role => role.id);
   // log.debug(F, `targetRoleIds: ${targetRoleIds}`);
 
-  const userData = await getUser(target.id, null, null);
-  userData.roles = targetRoleIds.toString();
-
-  await usersUpdate(userData);
+  await db.users.upsert({
+    where: {
+      discord_id: target.id,
+    },
+    create: {
+      discord_id: target.id,
+      roles: targetRoleIds.toString(),
+    },
+    update: {
+      roles: targetRoleIds.toString(),
+    },
+  });
 
   const myMember = await interaction.guild?.members.fetch(interaction.client.user.id) as GuildMember;
   const myRole = myMember.roles.highest;
@@ -284,9 +289,36 @@ export async function tripsitmeOwned(
 
   const target = await interaction.guild.members.fetch(userId);
 
-  const userData = await getUser(userId, null, null);
-  const ticketData = await getOpenTicket(userData.id, null);
-  const guildData = await getGuild(interaction.guild.id);
+  const userData = await db.users.upsert({
+    where: {
+      discord_id: userId,
+    },
+    create: {
+      discord_id: userId,
+    },
+    update: {},
+  });
+
+  const ticketData = await db.user_tickets.findFirst({
+    where: {
+      user_id: userData.id,
+      status: {
+        not: {
+          in: ['CLOSED', 'RESOLVED', 'DELETED'],
+        },
+      },
+    },
+  });
+
+  const guildData = await db.discord_guilds.upsert({
+    where: {
+      id: interaction.guild?.id,
+    },
+    create: {
+      id: interaction.guild?.id,
+    },
+    update: {},
+  });
 
   // log.debug(F, `ticketData: ${JSON.stringify(ticketData, null, 2)}`);
 
@@ -338,9 +370,16 @@ export async function tripsitmeOwned(
   }
 
   // Update the ticket's status in the DB
-  ticketData.status = 'OWNED' as TicketStatus;
+  ticketData.status = 'OWNED' as ticket_status;
 
-  await ticketUpdate(ticketData);
+  await db.user_tickets.update({
+    where: {
+      id: ticketData.id,
+    },
+    data: {
+      status: 'OWNED' as ticket_status,
+    },
+  });
 
   // Reply to the user
   await interaction.editReply({ content: 'Thanks!' });
@@ -376,8 +415,26 @@ export async function tripsitmeMeta(
     return;
   }
 
-  const userData = await getUser(userId, null, null);
-  const ticketData = await getOpenTicket(userData.id, null);
+  const userData = await db.users.upsert({
+    where: {
+      discord_id: userId,
+    },
+    create: {
+      discord_id: userId,
+    },
+    update: {},
+  });
+
+  const ticketData = await db.user_tickets.findFirst({
+    where: {
+      user_id: userData.id,
+      status: {
+        not: {
+          in: ['CLOSED', 'RESOLVED', 'DELETED'],
+        },
+      },
+    },
+  });
 
   if (!ticketData) {
     const rejectMessage = `Hey ${(interaction.member as GuildMember).displayName}, ${target.displayName} does not have an open session!`;
@@ -401,7 +458,15 @@ export async function tripsitmeMeta(
 
   ticketData.meta_thread_id = metaChannel.id;
 
-  await ticketUpdate(ticketData);
+  // await ticketUpdate(ticketData);
+  await db.user_tickets.update({
+    where: {
+      id: ticketData.id,
+    },
+    data: {
+      meta_thread_id: metaChannel.id,
+    },
+  });
 
   // Send an embed to the meta room
   const embedTripsitter = embedTemplate()
@@ -473,8 +538,26 @@ export async function tripsitmeBackup(
   const actor = interaction.member as GuildMember;
   const target = await interaction.guild.members.fetch(userId);
 
-  const userData = await getUser(userId, null, null);
-  const ticketData = await getOpenTicket(userData.id, null);
+  const userData = await db.users.upsert({
+    where: {
+      discord_id: userId,
+    },
+    create: {
+      discord_id: userId,
+    },
+    update: {},
+  });
+
+  const ticketData = await db.user_tickets.findFirst({
+    where: {
+      user_id: userData.id,
+      status: {
+        not: {
+          in: ['CLOSED', 'RESOLVED', 'DELETED'],
+        },
+      },
+    },
+  });
 
   if (!ticketData) {
     const rejectMessage = `Hey ${interaction.member}, ${target.displayName} does not have an open session!`;
@@ -485,7 +568,15 @@ export async function tripsitmeBackup(
     return;
   }
 
-  const guildData = await getGuild(interaction.guild.id);
+  const guildData = await db.discord_guilds.upsert({
+    where: {
+      id: interaction.guild?.id,
+    },
+    create: {
+      id: interaction.guild?.id,
+    },
+    update: {},
+  });
 
   let backupMessage = 'Hey ';
   // Get the roles we'll be referencing
@@ -510,8 +601,14 @@ export async function tripsitmeBackup(
       await metaThread.send(backupMessage);
     } catch (err) {
       // meta thread deleted
-      ticketData.meta_thread_id = null;
-      await ticketUpdate(ticketData);
+      await db.user_tickets.update({
+        where: {
+          id: ticketData.id,
+        },
+        data: {
+          meta_thread_id: null,
+        },
+      });
     }
   } else {
     await interaction.channel.send(backupMessage);
@@ -552,11 +649,35 @@ export async function tripsitmeTeamClose(
     return;
   }
 
-  const userData = await getUser(targetId, null, null);
-  log.debug(F, `userData: ${JSON.stringify(userData, null, 2)}`);
-  const ticketData = await getOpenTicket(userData.id, null);
-  log.debug(F, `ticketData: ${JSON.stringify(ticketData, null, 2)}`);
-  const guildData = await getGuild(interaction.guild.id);
+  const userData = await db.users.upsert({
+    where: {
+      discord_id: targetId,
+    },
+    create: {
+      discord_id: targetId,
+    },
+    update: {},
+  });
+
+  const ticketData = await db.user_tickets.findFirst({
+    where: {
+      user_id: userData.id,
+      status: {
+        not: {
+          in: ['CLOSED', 'RESOLVED', 'DELETED'],
+        },
+      },
+    },
+  });
+  const guildData = await db.discord_guilds.upsert({
+    where: {
+      id: interaction.guild?.id,
+    },
+    create: {
+      id: interaction.guild?.id,
+    },
+    update: {},
+  });
   log.debug(F, `guildData: ${JSON.stringify(guildData, null, 2)}`);
 
   if (!ticketData) {
@@ -588,10 +709,16 @@ export async function tripsitmeTeamClose(
   } catch (err) {
     // log.debug(F, `There was an error updating the help thread, it was likely deleted:\n ${err}`);
     // Update the ticket status to closed
-    ticketData.status = 'DELETED' as TicketStatus;
-    ticketData.archived_at = new Date();
-    ticketData.deleted_at = new Date();
-    await database.tickets.set(ticketData);
+    await db.user_tickets.update({
+      where: {
+        id: ticketData.id,
+      },
+      data: {
+        status: 'DELETED' as ticket_status,
+        archived_at: new Date(),
+        deleted_at: new Date(),
+      },
+    });
     interaction.editReply({ content: 'It looks like this thread was deleted, so consider this closed!' });
   // log.debug(F, `Updated ticket status to DELETED`);
   }
@@ -632,15 +759,21 @@ export async function tripsitmeTeamClose(
       }
     } catch (err) {
       if (metaChannelId === ticketData.meta_thread_id) {
-        // Meta thread likely doesn't exist
-        ticketData.meta_thread_id = null;
-        await database.tickets.set(ticketData);
+        // await database.tickets.set(ticketData);
+        await db.user_tickets.update({
+          where: {
+            id: ticketData.id,
+          },
+          data: {
+            meta_thread_id: null,
+          },
+        });
       }
     }
   }
 
   // Update the ticket status to resolved
-  ticketData.status = 'RESOLVED' as TicketStatus;
+  ticketData.status = 'RESOLVED' as ticket_status;
   ticketData.archived_at = env.NODE_ENV === 'production'
     ? DateTime.local().plus({ days: 7 }).toJSDate()
     : DateTime.local().plus({ minutes: 1 }).toJSDate();
@@ -649,7 +782,18 @@ export async function tripsitmeTeamClose(
     ? DateTime.local().plus({ days: 14 }).toJSDate()
     : DateTime.local().plus({ minutes: 2 }).toJSDate();
 
-  await database.tickets.set(ticketData);
+  // await database.tickets.set(ticketData);
+  await db.user_tickets.update({
+    where: {
+      id: ticketData.id,
+    },
+    data: {
+      status: 'RESOLVED' as ticket_status,
+      archived_at: ticketData.archived_at,
+      deleted_at: ticketData.deleted_at,
+    },
+  });
+
   log.debug(F, 'Updated ticket status to RESOLVED');
 
   // log.debug(F, `${target.user.tag} (${target.user.id}) is no longer being helped!`);
@@ -682,12 +826,36 @@ export async function tripsitmeUserClose(
     return;
   }
 
-  const userData = await getUser(target.id, null, null);
-  log.debug(F, `userData: ${JSON.stringify(userData, null, 2)}`);
-  const ticketData = await getOpenTicket(userData.id, null);
-  log.debug(F, `ticketData: ${JSON.stringify(ticketData, null, 2)}`);
-  const guildData = await getGuild(interaction.guild.id);
-  log.debug(F, `guildData: ${JSON.stringify(guildData, null, 2)}`);
+  const userData = await db.users.upsert({
+    where: {
+      discord_id: target.id,
+    },
+    create: {
+      discord_id: target.id,
+    },
+    update: {},
+  });
+
+  const ticketData = await db.user_tickets.findFirst({
+    where: {
+      user_id: userData.id,
+      status: {
+        not: {
+          in: ['CLOSED', 'RESOLVED', 'DELETED'],
+        },
+      },
+    },
+  });
+
+  const guildData = await db.discord_guilds.upsert({
+    where: {
+      id: interaction.guild?.id,
+    },
+    create: {
+      id: interaction.guild?.id,
+    },
+    update: {},
+  });
 
   if (!ticketData) {
     const rejectMessage = stripIndents`Hey ${(interaction.member as GuildMember).displayName}, you do not have an open session!
@@ -734,8 +902,14 @@ export async function tripsitmeUserClose(
     } catch (err) {
       // log.debug(F, `There was an error fetching the needshelp role, it was likely deleted:\n ${err}`);
       // Update the ticket status to closed
-      guildData.role_needshelp = null;
-      await database.guilds.set(guildData);
+      await db.discord_guilds.update({
+        where: {
+          id: guildData.id,
+        },
+        data: {
+          role_needshelp: null,
+        },
+      });
     }
   }
 
@@ -747,8 +921,14 @@ export async function tripsitmeUserClose(
     } catch (err) {
       // log.debug(F, `There was an error fetching the meta channel, it was likely deleted:\n ${err}`);
       // Update the ticket status to closed
-      guildData.channel_tripsitmeta = null;
-      await database.guilds.set(guildData);
+      await db.discord_guilds.update({
+        where: {
+          id: guildData.id,
+        },
+        data: {
+          channel_tripsitmeta: null,
+        },
+      });
     }
   }
 
@@ -794,11 +974,16 @@ export async function tripsitmeUserClose(
   } catch (err) {
     // log.debug(F, `There was an error updating the help thread, it was likely deleted:\n ${err}`);
     // Update the ticket status to closed
-    ticketData.status = 'DELETED' as TicketStatus;
-    ticketData.archived_at = new Date();
-    ticketData.deleted_at = new Date();
-    await database.tickets.set(ticketData);
-    await ticketUpdate(ticketData);
+    await db.user_tickets.update({
+      where: {
+        id: ticketData.id,
+      },
+      data: {
+        status: 'DELETED' as ticket_status,
+        archived_at: ticketData.archived_at,
+        deleted_at: ticketData.deleted_at,
+      },
+    });
     await interaction.editReply({ content: 'Could not find this help thread, it was likely deleted manually!' });
     return;
   // log.debug(F, `Updated ticket status to DELETED`);
@@ -824,7 +1009,15 @@ export async function tripsitmeUserClose(
       // Meta thread likely doesn't exist
       if (metaChannelId === ticketData.meta_thread_id) {
         ticketData.meta_thread_id = null;
-        await ticketUpdate(ticketData);
+        // await ticketUpdate(ticketData);
+        await db.user_tickets.update({
+          where: {
+            id: ticketData.id,
+          },
+          data: {
+            meta_thread_id: null,
+          },
+        });
       }
     }
   }
@@ -887,7 +1080,7 @@ export async function tripsitmeUserClose(
   // await interaction.editReply({ content: 'Done!' });
 
   // Update the ticket status to closed
-  ticketData.status = 'CLOSED' as TicketStatus;
+  ticketData.status = 'CLOSED' as ticket_status;
   ticketData.archived_at = env.NODE_ENV === 'production'
     ? DateTime.local().plus({ days: 7 }).toJSDate()
     : DateTime.local().plus({ minutes: 1 }).toJSDate();
@@ -895,7 +1088,17 @@ export async function tripsitmeUserClose(
   ticketData.deleted_at = env.NODE_ENV === 'production'
     ? DateTime.local().plus({ days: 14 }).toJSDate()
     : DateTime.local().plus({ minutes: 2 }).toJSDate();
-  await database.tickets.set(ticketData);
+
+  await db.user_tickets.update({
+    where: {
+      id: ticketData.id,
+    },
+    data: {
+      status: 'CLOSED' as ticket_status,
+      archived_at: ticketData.archived_at,
+      deleted_at: ticketData.deleted_at,
+    },
+  });
   log.debug(F, 'Updated ticket status to CLOSED');
 }
 
@@ -928,7 +1131,15 @@ export async function tripSitMe(
   }
 
   // const actor = interaction.member;
-  const guildData = await getGuild(interaction.guild.id);
+  const guildData = await db.discord_guilds.upsert({
+    where: {
+      id: interaction.guild?.id,
+    },
+    create: {
+      id: interaction.guild?.id,
+    },
+    update: {},
+  });
 
   // let backupMessage = 'Hey ';
   // Get the roles we'll be referencing
@@ -949,8 +1160,14 @@ export async function tripSitMe(
     } catch (err) {
       // log.debug(F, `There was an error fetching the meta channel, it was likely deleted:\n ${err}`);
       // Update the ticket status to closed
-      guildData.channel_tripsitmeta = null;
-      await database.guilds.set(guildData);
+      await db.discord_guilds.update({
+        where: {
+          id: guildData.id,
+        },
+        data: {
+          channel_tripsitmeta: null,
+        },
+      });
     }
   }
   log.debug(F, `roleTripsitter: ${roleTripsitter.name} (${roleTripsitter.id})`);
@@ -992,8 +1209,14 @@ export async function tripSitMe(
   } catch (err) {
     // log.debug(F, `There was an error fetching the tripsit channel, it was likely deleted:\n ${err}`);
     // Update the ticket status to closed
-    guildData.channel_tripsit = null;
-    await database.guilds.set(guildData);
+    await db.discord_guilds.update({
+      where: {
+        id: guildData.id,
+      },
+      data: {
+        channel_tripsit: null,
+      },
+    });
   }
 
   if (!tripsitChannel.id) {
@@ -1136,7 +1359,15 @@ export async function tripSitMe(
 
   log.debug(F, `Ticket archives on ${archiveTime.toLocaleString(DateTime.DATETIME_FULL)} deletes on ${deleteTime.toLocaleString(DateTime.DATETIME_FULL)}`);
 
-  const userData = await getUser(target.id, null, null);
+  const userData = await db.users.upsert({
+    where: {
+      discord_id: target.id,
+    },
+    create: {
+      discord_id: target.id,
+    },
+    update: {},
+  });
 
   // Set ticket information
   const introStr = intro ? `\n${intro}` : noInfo;
@@ -1152,12 +1383,23 @@ export async function tripSitMe(
     first_message_id: '',
     archived_at: archiveTime.toJSDate(),
     deleted_at: deleteTime.toJSDate(),
-  } as UserTickets;
+  } as user_tickets;
 
   // log.debug(F, `newTicketData: ${JSON.stringify(newTicketData, null, 2)}`);
 
   // Update the ticket in the DB
-  await ticketUpdate(newTicketData);
+  await db.user_tickets.create({
+    data: {
+      user_id: newTicketData.user_id,
+      description: newTicketData.description,
+      thread_id: newTicketData.thread_id,
+      type: newTicketData.type,
+      status: newTicketData.status,
+      first_message_id: newTicketData.first_message_id,
+      archived_at: newTicketData.archived_at,
+      deleted_at: newTicketData.deleted_at,
+    },
+  });
 
   return threadHelpUser;
 }
@@ -1185,7 +1427,15 @@ export async function tripsitmeButton(
   //   roleHelper = await interaction.guild.roles.fetch(guildData.role_helper) as Role;
   // }
 
-  const guildData = await getGuild(interaction.guild?.id as string);
+  const guildData = await db.discord_guilds.upsert({
+    where: {
+      id: interaction.guild?.id,
+    },
+    create: {
+      id: interaction.guild?.id as string,
+    },
+    update: {},
+  });
 
   // Get the tripsit channel from the guild
   let tripsitChannel = {} as TextChannel;
@@ -1196,8 +1446,14 @@ export async function tripsitmeButton(
   } catch (err) {
     log.debug(F, `There was an error fetching the tripsit channel, it was likely deleted:\n ${err}`);
     // Update the ticket status to closed
-    guildData.channel_tripsit = null;
-    await database.guilds.set(guildData);
+    await db.discord_guilds.update({
+      where: {
+        id: guildData.id,
+      },
+      data: {
+        channel_tripsit: null,
+      },
+    });
   }
 
   log.debug(F, `tripsitChannel: ${JSON.stringify(tripsitChannel, null, 2)}`);
@@ -1239,7 +1495,15 @@ export async function tripsitmeButton(
     // log.debug(F, `There was an error fetching the tripsit channel, it was likely deleted:\n ${err}`);
     // Update the ticket status to closed
     guildData.channel_tripsitmeta = null;
-    await database.guilds.set(guildData);
+    // await database.guilds.set(guildData);
+    await db.discord_guilds.update({
+      where: {
+        id: guildData.id,
+      },
+      data: {
+        channel_tripsitmeta: null,
+      },
+    });
   }
 
   const metaPerms = await checkChannelPermissions(channelTripsitmeta, [
@@ -1270,15 +1534,31 @@ export async function tripsitmeButton(
 
   log.debug(F, `Target: ${target.displayName} (${target.id})`);
 
-  const userData = await getUser(target.id, null, null);
-
+  const userData = await db.users.upsert({
+    where: {
+      discord_id: target.id,
+    },
+    create: {
+      discord_id: target.id,
+    },
+    update: {},
+  });
   log.debug(F, `Target userData: ${JSON.stringify(userData, null, 2)}`);
 
-  const [ticketData] = await database.tickets.get(userData.id);
+  const ticketData = await db.user_tickets.findFirst({
+    where: {
+      user_id: userData.id,
+      status: {
+        not: {
+          in: ['CLOSED', 'RESOLVED', 'DELETED'],
+        },
+      },
+    },
+  });
 
   log.debug(F, `Target ticket data: ${JSON.stringify(ticketData, null, 2)}`);
 
-  if (ticketData !== undefined) {
+  if (ticketData) {
     log.debug(F, `Target has tickets: ${JSON.stringify(ticketData, null, 2)}`);
     let threadHelpUser = {} as ThreadChannel;
     try {
@@ -1286,11 +1566,17 @@ export async function tripsitmeButton(
     } catch (err) {
       log.debug(F, 'There was an error updating the help thread, it was likely deleted');
       // Update the ticket status to closed
-      ticketData.status = 'DELETED' as TicketStatus;
-      ticketData.archived_at = new Date();
-      ticketData.deleted_at = new Date();
-      await database.tickets.set(ticketData);
-      await ticketUpdate(ticketData);
+
+      await db.user_tickets.update({
+        where: {
+          id: ticketData.id,
+        },
+        data: {
+          status: 'DELETED' as ticket_status,
+          archived_at: ticketData.archived_at,
+          deleted_at: ticketData.deleted_at,
+        },
+      });
       log.debug(F, 'Updated ticket status to DELETED');
       log.debug(F, `Ticket: ${JSON.stringify(ticketData, null, 2)}`);
     }
@@ -1373,12 +1659,18 @@ export async function tripsitmeButton(
         } catch (err) {
           // log.debug(F, `There was an error fetching the tripsit channel, it was likely deleted:\n ${err}`);
           // Update the ticket status to closed
-          ticketData.meta_thread_id = null;
-          await database.tickets.set(ticketData);
+          await db.user_tickets.update({
+            where: {
+              id: ticketData.id,
+            },
+            data: {
+              meta_thread_id: null,
+            },
+          });
         }
       }
 
-      ticketData.status = 'OPEN' as TicketStatus;
+      ticketData.status = 'OPEN' as ticket_status;
       ticketData.reopened_at = new Date();
       ticketData.archived_at = env.NODE_ENV === 'production'
         ? DateTime.local().plus({ days: 7 }).toJSDate()
@@ -1387,7 +1679,19 @@ export async function tripsitmeButton(
       ticketData.deleted_at = env.NODE_ENV === 'production'
         ? DateTime.local().plus({ days: 14 }).toJSDate()
         : DateTime.local().plus({ minutes: 2 }).toJSDate();
-      await database.tickets.set(ticketData);
+      // await database.tickets.set(ticketData);
+
+      await db.user_tickets.update({
+        where: {
+          id: ticketData.id,
+        },
+        data: {
+          status: 'OPEN' as ticket_status,
+          reopened_at: ticketData.reopened_at,
+          archived_at: ticketData.archived_at,
+          deleted_at: ticketData.deleted_at,
+        },
+      });
 
       return;
     }

@@ -8,7 +8,6 @@ import { stripIndents } from 'common-tags';
 import {
   GuildMemberAddEvent,
 } from '../@types/eventDef';
-import { database, getUser, usersUpdate } from '../../global/utils/knex';
 import { tripSitTrollScore, userInfoEmbed } from '../commands/guild/d.moderate';
 import { sendCooperativeMessage } from '../commands/guild/d.cooperative';
 
@@ -43,11 +42,18 @@ export const guildMemberAdd: GuildMemberAddEvent = {
       new Collection(newInvites.map(inviteEntry => [inviteEntry.code, inviteEntry.uses])),
     );
 
-    const userData = await getUser(member.id, null, null);
-    userData.discord_id = member.id;
-    userData.joined_at = new Date();
-
-    await usersUpdate(userData);
+    await db.users.upsert({
+      where: {
+        discord_id: member.id,
+      },
+      create: {
+        discord_id: member.id,
+        joined_at: new Date(),
+      },
+      update: {
+        joined_at: new Date(),
+      },
+    });
 
     const embed = await userInfoEmbed(
       member,

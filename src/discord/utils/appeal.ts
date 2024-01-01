@@ -7,10 +7,8 @@ import {
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
 import {
-  PrismaClient, appeal_status, user_action_type, user_actions,
+  appeal_status, user_action_type, user_actions,
 } from '@prisma/client';
-
-const db = new PrismaClient({ log: ['error'] });
 
 const F = f(__filename);
 
@@ -37,10 +35,14 @@ export async function appealAccept(
   }
 
   // Modify the user in the database
-  const userData = await db.users.findUniqueOrThrow({
+  const userData = await db.users.upsert({
     where: {
-      id: userId,
+      discord_id: userId,
     },
+    create: {
+      discord_id: userId,
+    },
+    update: {},
   });
   // log.debug(`${F} - appealAccept`, `userData: ${JSON.stringify(userData, null, 2)}`);
   userData.removed_at = null;

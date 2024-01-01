@@ -1,5 +1,4 @@
 import { DateTime } from 'luxon';
-import { getUser, usersUpdate } from '../utils/knex';
 
 const F = f(__filename);
 
@@ -26,15 +25,30 @@ export async function birthday(
 
     // log.debug(F, `Setting birthDate for ${memberId} to ${birthDate}`);
 
-    const userData = await getUser(memberId, null, null);
-
-    userData.birthday = birthDate.toJSDate();
-
-    await usersUpdate(userData);
+    await db.users.upsert({
+      where: {
+        discord_id: memberId,
+      },
+      create: {
+        discord_id: memberId,
+        birthday: birthDate.toJSDate(),
+      },
+      update: {
+        birthday: birthDate.toJSDate(),
+      },
+    });
 
     response = birthDate;
   } else if (command === 'get') {
-    const userData = await getUser(memberId, null, null);
+    const userData = await db.users.upsert({
+      where: {
+        discord_id: memberId,
+      },
+      create: {
+        discord_id: memberId,
+      },
+      update: {},
+    });
     if (userData.birthday !== null) {
       const birthDateRaw = userData.birthday;
       // log.debug(F, `birthDate: ${birthDate}`);

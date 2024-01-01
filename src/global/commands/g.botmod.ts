@@ -16,9 +16,6 @@ import {
 
 import { stripIndents } from 'common-tags';
 import { embedTemplate } from '../../discord/utils/embedTemplate';
-import {
-  getGuild, getUser, guildUpdate, usersUpdate,
-} from '../utils/knex';
 import commandContext from '../../discord/utils/context';
 
 const F = f(__filename);
@@ -81,9 +78,17 @@ async function botmodUser(
   pubReason: string | null,
 ):Promise<InteractionReplyOptions> {
   const targetUser = await interaction.client.users.fetch(target);
-  const targetUserInfo = await getUser(targetUser.id, null, null);
+  const userData = await db.users.upsert({
+    where: {
+      discord_id: targetUser.id,
+    },
+    create: {
+      discord_id: targetUser.id,
+    },
+    update: {},
+  });
 
-  if (command === 'BOTBAN' && targetUserInfo.discord_bot_ban) {
+  if (command === 'BOTBAN' && userData.discord_bot_ban) {
     const embed = embedTemplate()
       .setColor(Colors.Green)
       .setTitle('User Already Banned')
@@ -93,7 +98,7 @@ async function botmodUser(
     return { embeds: [embed] };
   }
 
-  if (command === 'UNBOTBAN' && !targetUserInfo.discord_bot_ban) {
+  if (command === 'UNBOTBAN' && !userData.discord_bot_ban) {
     const embed = embedTemplate()
       .setColor(Colors.Green)
       .setTitle('User Not Banned')
@@ -105,14 +110,21 @@ async function botmodUser(
 
   // Perform actions
   if (command === 'BOTBAN') {
-    targetUserInfo.discord_bot_ban = true;
+    userData.discord_bot_ban = true;
   } else if (command === 'UNBOTBAN') {
-    targetUserInfo.discord_bot_ban = false;
+    userData.discord_bot_ban = false;
   }
 
   // log.debug(F, `targetUserInfo: ${JSON.stringify(targetUserInfo, null, 2)}`);
 
-  await usersUpdate(targetUserInfo);
+  await db.users.update({
+    where: {
+      discord_id: targetUser.id,
+    },
+    data: {
+      discord_bot_ban: userData.discord_bot_ban,
+    },
+  });
 
   const noReason = 'No reason provided';
   const modlogEmbed = embedTemplate()
@@ -153,9 +165,17 @@ async function botmodGuild(
 ):Promise<InteractionReplyOptions> {
   const targetGuild = await interaction.client.guilds.fetch(target);
   const targetGuildOwner = await targetGuild.members.fetch(targetGuild.ownerId);
-  const targetGuildInfo = await getGuild(targetGuild.id);
+  const guildData = await db.discord_guilds.upsert({
+    where: {
+      id: targetGuild.id,
+    },
+    create: {
+      id: targetGuild.id,
+    },
+    update: {},
+  });
 
-  if (command === 'BOTBAN' && targetGuildInfo.is_banned) {
+  if (command === 'BOTBAN' && guildData.is_banned) {
     const embed = embedTemplate()
       .setColor(Colors.Green)
       .setTitle('Guild Already Banned')
@@ -165,7 +185,7 @@ async function botmodGuild(
     return { embeds: [embed] };
   }
 
-  if (command === 'UNBOTBAN' && !targetGuildInfo.is_banned) {
+  if (command === 'UNBOTBAN' && !guildData.is_banned) {
     const embed = embedTemplate()
       .setColor(Colors.Green)
       .setTitle('Guild Not Banned')
@@ -211,10 +231,10 @@ async function botmodGuild(
 
   // Perform actions
   if (command === 'BOTBAN') {
-    targetGuildInfo.is_banned = true;
+    guildData.is_banned = true;
     targetGuild.leave();
   } else if (command === 'UNBOTBAN') {
-    targetGuildInfo.is_banned = false;
+    guildData.is_banned = false;
   } else if (command === 'BOTKICK') {
     targetGuild.leave();
   }
@@ -222,7 +242,14 @@ async function botmodGuild(
   if (command !== 'BOTINFO') {
   // log.debug(F, `actionData: ${JSON.stringify(actionData, null, 2)}`);
 
-    await guildUpdate(targetGuildInfo);
+    await db.discord_guilds.update({
+      where: {
+        id: targetGuild.id,
+      },
+      data: {
+        is_banned: guildData.is_banned,
+      },
+    });
   }
 
   const noReason = 'No reason provided';
@@ -265,7 +292,7 @@ async function botmodGuild(
         { name: 'Owner Name', value: `${targetGuildOwner.user.tag}`, inline: true },
       )
       .addFields(
-        { name: 'Banned', value: `${targetGuildInfo.is_banned}`, inline: true },
+        { name: 'Banned', value: `${guildData.is_banned}`, inline: true },
         { name: 'Large', value: `${targetGuild.large}`, inline: true },
         { name: 'NSFW', value: `${targetGuild.nsfwLevel}`, inline: true },
       )

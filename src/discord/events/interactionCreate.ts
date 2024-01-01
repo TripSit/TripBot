@@ -12,7 +12,6 @@ import { commandRun } from '../utils/commandRun';
 import { buttonClick } from './buttonClick';
 import { selectMenu } from './selectMenu';
 import { autocomplete } from './autocomplete';
-import { db, getUser } from '../../global/utils/knex'; // eslint-disable-line
 // import { Users } from '../../global/@types/database';
 import { botBannedUsers } from '../utils/populateBotBans';
 

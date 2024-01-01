@@ -20,8 +20,6 @@ declare global {
       IMDB_TOKEN: string | undefined;
       LOGTAIL_TOKEN: string | undefined;
 
-      POSTGRES_DB_URL: string;
-
       SONAR_URL: string | undefined;
       SONAR_TOKEN: string | undefined;
 

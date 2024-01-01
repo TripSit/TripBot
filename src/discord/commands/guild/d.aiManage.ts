@@ -16,7 +16,6 @@ import {
 } from 'discord-api-types/v10';
 import { stripIndents } from 'common-tags';
 import {
-  PrismaClient,
   ai_model,
   ai_personas,
 } from '@prisma/client';
@@ -24,8 +23,6 @@ import { paginationEmbed } from '../../utils/pagination';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import commandContext from '../../utils/context';
-
-const db = new PrismaClient({ log: ['error'] });
 
 const F = f(__filename);
 

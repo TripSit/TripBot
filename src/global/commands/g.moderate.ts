@@ -16,19 +16,13 @@ import {
 import {
   ButtonStyle,
 } from 'discord-api-types/v10';
+import {
+  user_action_type, user_actions, users,
+} from '@prisma/client';
 
 import { stripIndents } from 'common-tags';
 import ms from 'ms';
 import { embedTemplate } from '../../discord/utils/embedTemplate';
-import {
-  database,
-  getUser, useractionsGet, useractionsSet, usersUpdate,
-} from '../utils/knex';
-import {
-  UserActions,
-  UserActionType,
-  Users,
-} from '../@types/database';
 import { last } from './g.last';
 import { botBannedUsers } from '../../discord/utils/populateBotBans';
 
@@ -175,7 +169,7 @@ const warnButtons = new ActionRowBuilder<ButtonBuilder>().addComponents(
     .setStyle(ButtonStyle.Danger),
 );
 
-export async function userInfoEmbed(target:GuildMember | User, targetData:Users, command: string):Promise<EmbedBuilder> {
+export async function userInfoEmbed(target:GuildMember | User, targetData:users, command: string):Promise<EmbedBuilder> {
   const targetActionList = {
     NOTE: [] as string[],
     WARNING: [] as string[],
@@ -191,7 +185,14 @@ export async function userInfoEmbed(target:GuildMember | User, targetData:Users,
   };
   // Populate targetActionList from the db
 
-  const targetActionListRaw = await useractionsGet(targetData.id);
+  const targetActionListRaw = await db.user_actions.findMany({
+    where: {
+      user_id: targetData.id,
+    },
+    orderBy: {
+      created_at: 'desc',
+    },
+  });
 
   // log.debug(F, `targetActionListRaw: ${JSON.stringify(targetActionListRaw, null, 2)}`);
 
@@ -266,21 +267,35 @@ export async function linkThread(
   override: boolean | null,
 ):Promise<string | null> {
   // Get the targetData from the db
-  const targetData = await getUser(discordId, null, null);
+  const userData = await db.users.upsert({
+    where: {
+      discord_id: discordId,
+    },
+    create: {
+      discord_id: discordId,
+    },
+    update: {},
+  });
 
-  if (targetData.mod_thread_id === null || override) {
+  if (userData.mod_thread_id === null || override) {
     // log.debug(F, `targetData.mod_thread_id is null, updating it`);
-    targetData.mod_thread_id = threadId;
-    await usersUpdate(targetData);
+    await db.users.update({
+      where: {
+        id: userData.id,
+      },
+      data: {
+        mod_thread_id: threadId,
+      },
+    });
     return null;
   }
   // log.debug(F, `targetData.mod_thread_id is not null, not updating it`);
-  return targetData.mod_thread_id;
+  return userData.mod_thread_id;
 }
 
 export async function moderate(
   actor: GuildMember,
-  command: UserActionType | 'INFO' | 'UN-FULL_BAN' | 'UN-TICKET_BAN' | 'UN-DISCORD_BOT_BAN' | 'UN-UNDERBAN' | 'UN-BAN_EVASION' | 'UN-TIMEOUT' | 'UN-HELPER_BAN' | 'UN-CONTRIBUTOR_BAN',
+  command: user_action_type | 'INFO' | 'UN-FULL_BAN' | 'UN-TICKET_BAN' | 'UN-DISCORD_BOT_BAN' | 'UN-UNDERBAN' | 'UN-BAN_EVASION' | 'UN-TIMEOUT' | 'UN-HELPER_BAN' | 'UN-CONTRIBUTOR_BAN',
   targetId: string,
   internalNote: string | null,
   description: string | null,
@@ -294,9 +309,26 @@ export async function moderate(
   description: ${description}
   duration: ${duration}`);
 
-  const actorData = await database.users.get(actor.id, null, null);
+  const actorData = await db.users.upsert({
+    where: {
+      discord_id: actor.id,
+    },
+    create: {
+      discord_id: actor.id,
+    },
+    update: {},
+  });
 
-  const targetData = await database.users.get(targetId, null, null);
+  const targetData = await db.users.upsert({
+    where: {
+      discord_id: targetId,
+    },
+    create: {
+      discord_id: targetId,
+    },
+    update: {},
+  });
+
   let discordMember = {} as GuildMember;
   let targetIsMember = false;
   try {
@@ -418,9 +450,8 @@ export async function moderate(
   let extraMessage = '';
 
   let actionData = {
-    id: undefined as string | undefined,
     user_id: targetData.id,
-    type: {} as UserActionType,
+    type: {} as user_action_type,
     ban_evasion_related_user: null as string | null,
     description,
     internal_note: internalNote,
@@ -429,11 +460,11 @@ export async function moderate(
     repealed_at: null as Date | null,
     created_by: actorData.id,
     created_at: new Date(),
-  } as UserActions;
+  } as user_actions;
 
   // Perform actions
   if (command === 'TIMEOUT') {
-    actionData.type = 'TIMEOUT' as UserActionType;
+    actionData.type = 'TIMEOUT' as user_action_type;
     actionData.expires_at = new Date(Date.now() + (duration as number));
     try {
       await discordMember.timeout(duration, internalNote ?? noReason);
@@ -441,10 +472,19 @@ export async function moderate(
       log.error(F, `Error: ${err}`);
     }
   } else if (command === 'UN-TIMEOUT') {
-    actionData.type = 'TIMEOUT' as UserActionType;
+    actionData.type = 'TIMEOUT' as user_action_type;
     // Get the current timeout record from the DB
 
-    const record = await useractionsGet(targetData.id, 'TIMEOUT');
+    const record = await db.user_actions.findMany({
+      where: {
+        user_id: targetData.id,
+        repealed_at: null,
+        type: 'TIMEOUT',
+      },
+      orderBy: {
+        created_at: 'desc',
+      },
+    });
 
     if (record.length > 0) {
       [actionData] = record;
@@ -460,9 +500,17 @@ export async function moderate(
       log.error(F, `Error: ${err}`);
     }
   } else if (command === 'FULL_BAN') {
-    actionData.type = 'FULL_BAN' as UserActionType;
+    actionData.type = 'FULL_BAN' as user_action_type;
     targetData.removed_at = new Date();
-    await usersUpdate(targetData);
+    // await usersUpdate(targetData);
+    await db.users.update({
+      where: {
+        id: targetData.id,
+      },
+      data: {
+        removed_at: new Date(),
+      },
+    });
 
     try {
       const deleteMessageValue = duration ?? 0;
@@ -479,12 +527,29 @@ export async function moderate(
       log.error(F, `Error: ${err}`);
     }
   } else if (command === 'UN-FULL_BAN') {
-    actionData.type = 'FULL_BAN' as UserActionType;
+    actionData.type = 'FULL_BAN' as user_action_type;
 
     targetData.removed_at = null;
-    await usersUpdate(targetData);
 
-    const record = await useractionsGet(targetData.id, 'FULL_BAN');
+    await db.users.update({
+      where: {
+        id: targetData.id,
+      },
+      data: {
+        removed_at: null,
+      },
+    });
+
+    const record = await db.user_actions.findMany({
+      where: {
+        user_id: targetData.id,
+        repealed_at: null,
+        type: 'FULL_BAN',
+      },
+      orderBy: {
+        created_at: 'desc',
+      },
+    });
 
     if (record.length > 0) {
       [actionData] = record;
@@ -500,9 +565,18 @@ export async function moderate(
       log.error(F, `Error: ${err}`);
     }
   } else if (command === 'UNDERBAN') {
-    actionData.type = 'UNDERBAN' as UserActionType;
+    actionData.type = 'UNDERBAN' as user_action_type;
     targetData.removed_at = new Date();
-    await usersUpdate(targetData);
+
+    await db.users.update({
+      where: {
+        id: targetData.id,
+      },
+      data: {
+        removed_at: new Date(),
+      },
+    });
+
     try {
       const targetGuild = await discordClient.guilds.fetch(env.DISCORD_GUILD_ID);
       targetGuild.bans.create(discordUser, { reason: internalNote ?? noReason });
@@ -510,11 +584,29 @@ export async function moderate(
       log.error(F, `Error: ${err}`);
     }
   } else if (command === 'UN-UNDERBAN') {
-    actionData.type = 'UNDERBAN' as UserActionType;
+    actionData.type = 'UNDERBAN' as user_action_type;
     targetData.removed_at = null;
-    await usersUpdate(targetData);
 
-    const record = await useractionsGet(targetData.id, 'UNDERBAN');
+    await db.users.update({
+      where: {
+        id: targetData.id,
+      },
+      data: {
+        removed_at: null,
+      },
+    });
+
+    const record = await db.user_actions.findMany({
+      where: {
+        user_id: targetData.id,
+        repealed_at: null,
+        type: 'UNDERBAN',
+      },
+      orderBy: {
+        created_at: 'desc',
+      },
+    });
+
     if (record.length > 0) {
       [actionData] = record;
     }
@@ -529,32 +621,82 @@ export async function moderate(
       log.error(F, `Error: ${err}`);
     }
   } else if (command === 'TICKET_BAN') {
-    actionData.type = 'TICKET_BAN' as UserActionType;
-    targetData.ticket_ban = true;
-    await usersUpdate(targetData);
+    actionData.type = 'TICKET_BAN' as user_action_type;
+
+    await db.users.update({
+      where: {
+        id: targetData.id,
+      },
+      data: {
+        ticket_ban: true,
+      },
+    });
   } else if (command === 'UN-TICKET_BAN') {
-    actionData.type = 'TICKET_BAN' as UserActionType;
+    actionData.type = 'TICKET_BAN' as user_action_type;
     targetData.ticket_ban = false;
 
-    await usersUpdate(targetData);
+    await db.users.update({
+      where: {
+        id: targetData.id,
+      },
+      data: {
+        ticket_ban: false,
+      },
+    });
 
-    const record = await useractionsGet(targetData.id, 'UNDERBAN');
+    const record = await db.user_actions.findMany({
+      where: {
+        user_id: targetData.id,
+        repealed_at: null,
+        type: 'TICKET_BAN',
+      },
+      orderBy: {
+        created_at: 'desc',
+      },
+    });
+
     if (record.length > 0) {
       [actionData] = record;
     }
     actionData.repealed_at = new Date();
     actionData.repealed_by = actorData.id;
   } else if (command === 'DISCORD_BOT_BAN') {
-    actionData.type = 'DISCORD_BOT_BAN' as UserActionType;
+    actionData.type = 'DISCORD_BOT_BAN' as user_action_type;
     targetData.discord_bot_ban = true;
-    await usersUpdate(targetData);
+
+    await db.users.update({
+      where: {
+        id: targetData.id,
+      },
+      data: {
+        discord_bot_ban: true,
+      },
+    });
+
     botBannedUsers.push(targetId);
   } else if (command === 'UN-DISCORD_BOT_BAN') {
-    actionData.type = 'DISCORD_BOT_BAN' as UserActionType;
-    targetData.discord_bot_ban = false;
-    await usersUpdate(targetData);
+    actionData.type = 'DISCORD_BOT_BAN' as user_action_type;
 
-    const record = await useractionsGet(targetData.id, actionData.type);
+    await db.users.update({
+      where: {
+        id: targetData.id,
+      },
+      data: {
+        discord_bot_ban: false,
+      },
+    });
+
+    const record = await db.user_actions.findMany({
+      where: {
+        user_id: targetData.id,
+        repealed_at: null,
+        type: 'DISCORD_BOT_BAN',
+      },
+      orderBy: {
+        created_at: 'desc',
+      },
+    });
+
     if (record.length > 0) {
       [actionData] = record;
     }
@@ -567,60 +709,130 @@ export async function moderate(
       botBannedUsers.splice(index, 1);
     }
   } else if (command === 'BAN_EVASION') {
-    actionData.type = 'BAN_EVASION' as UserActionType;
-    targetData.removed_at = new Date();
-    await usersUpdate(targetData);
-  } else if (command === 'UN-BAN_EVASION') {
-    actionData.type = 'BAN_EVASION' as UserActionType;
-    targetData.removed_at = null;
-    await usersUpdate(targetData);
+    actionData.type = 'BAN_EVASION' as user_action_type;
 
-    const record = await useractionsGet(targetData.id, actionData.type);
+    await db.users.update({
+      where: {
+        id: targetData.id,
+      },
+      data: {
+        removed_at: new Date(),
+      },
+    });
+  } else if (command === 'UN-BAN_EVASION') {
+    actionData.type = 'BAN_EVASION' as user_action_type;
+    await db.users.update({
+      where: {
+        id: targetData.id,
+      },
+      data: {
+        removed_at: null,
+      },
+    });
+
+    const record = await db.user_actions.findMany({
+      where: {
+        user_id: targetData.id,
+        repealed_at: null,
+        type: 'BAN_EVASION',
+      },
+      orderBy: {
+        created_at: 'desc',
+      },
+    });
+
     if (record.length > 0) {
       [actionData] = record;
     }
     actionData.repealed_at = new Date();
     actionData.repealed_by = actorData.id;
   } else if (command === 'NOTE') {
-    actionData.type = 'NOTE' as UserActionType;
+    actionData.type = 'NOTE' as user_action_type;
   } else if (command === 'REPORT') {
-    actionData.type = 'REPORT' as UserActionType;
+    actionData.type = 'REPORT' as user_action_type;
   } else if (command === 'KICK') {
-    actionData.type = 'KICK' as UserActionType;
+    actionData.type = 'KICK' as user_action_type;
     try {
       await discordMember.kick();
     } catch (err) {
       log.error(F, `Error: ${err}`);
     }
   } else if (command === 'WARNING') {
-    actionData.type = 'WARNING' as UserActionType;
+    actionData.type = 'WARNING' as user_action_type;
   } else if (command === 'HELPER_BAN') {
-    actionData.type = 'HELPER_BAN' as UserActionType;
-    targetData.helper_role_ban = true;
-    await usersUpdate(targetData);
+    actionData.type = 'HELPER_BAN' as user_action_type;
+    await db.users.update({
+      where: {
+        id: targetData.id,
+      },
+      data: {
+        helper_role_ban: true,
+      },
+    });
     botBannedUsers.push(targetId);
   } else if (command === 'UN-HELPER_BAN') {
-    actionData.type = 'HELPER_BAN' as UserActionType;
-    targetData.helper_role_ban = false;
-    await usersUpdate(targetData);
+    actionData.type = 'HELPER_BAN' as user_action_type;
 
-    const record = await useractionsGet(targetData.id, actionData.type);
+    await db.users.update({
+      where: {
+        id: targetData.id,
+      },
+      data: {
+        helper_role_ban: false,
+      },
+    });
+
+    const record = await db.user_actions.findMany({
+      where: {
+        user_id: targetData.id,
+        repealed_at: null,
+        type: 'HELPER_BAN',
+      },
+      orderBy: {
+        created_at: 'desc',
+      },
+    });
+
     if (record.length > 0) {
       [actionData] = record;
     }
     actionData.repealed_at = new Date();
     actionData.repealed_by = actorData.id;
   } else if (command === 'CONTRIBUTOR_BAN') {
-    actionData.type = 'CONTRIBUTOR_BAN' as UserActionType;
+    actionData.type = 'CONTRIBUTOR_BAN' as user_action_type;
     targetData.contributor_role_ban = true;
-    await usersUpdate(targetData);
+    await db.users.update({
+      where: {
+        id: targetData.id,
+      },
+      data: {
+        contributor_role_ban: true,
+      },
+    });
     botBannedUsers.push(targetId);
   } else if (command === 'UN-CONTRIBUTOR_BAN') {
-    actionData.type = 'CONTRIBUTOR_BAN' as UserActionType;
+    actionData.type = 'CONTRIBUTOR_BAN' as user_action_type;
     targetData.contributor_role_ban = false;
-    await usersUpdate(targetData);
+    await db.users.update({
+      where: {
+        id: targetData.id,
+      },
+      data: {
+        contributor_role_ban: false,
+      },
+    });
 
-    const record = await useractionsGet(targetData.id, actionData.type);
+    const record = await db.user_actions.findMany({
+      where: {
+        user_id: targetData.id,
+        repealed_at: null,
+        type: 'CONTRIBUTOR_BAN',
+      },
+      orderBy: {
+        created_at: 'desc',
+      },
+    });
+
     if (record.length > 0) {
       [actionData] = record;
     }
@@ -630,7 +842,20 @@ export async function moderate(
 
   if (command !== 'INFO') {
     // This needs to happen before creating the modlog embed
-    await useractionsSet(actionData);
+    // await useractionsSet(actionData);
+    if (actionData.id) {
+      await db.user_actions.upsert({
+        where: {
+          id: actionData.id,
+        },
+        create: actionData,
+        update: actionData,
+      });
+    } else {
+      await db.user_actions.create({
+        data: actionData,
+      });
+    }
   }
 
   const modlogEmbed = await userInfoEmbed(discordUser, targetData, command);
@@ -808,7 +1033,15 @@ export async function moderate(
     // log.debug(F, 'created mod thread');
     // Save the thread id to the user
     targetData.mod_thread_id = modThread.id;
-    await usersUpdate(targetData);
+    // await usersUpdate(targetData);
+    await db.users.update({
+      where: {
+        id: targetData.id,
+      },
+      data: {
+        mod_thread_id: modThread.id,
+      },
+    });
     log.debug(F, 'saved mod thread id to user');
     newModThread = true;
   }

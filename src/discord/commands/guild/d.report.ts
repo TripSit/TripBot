@@ -6,12 +6,12 @@ import {
   Colors,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
+import { user_action_type } from '@prisma/client';
 import { SlashCommand } from '../../@types/commandDef';
 import commandContext from '../../utils/context';
 // import {embedTemplate} from '../../utils/embedTemplate';
 import { moderate } from '../../../global/commands/g.moderate';
 // import log from '../../../global/utils/log';
-import { UserActionType } from '../../../global/@types/database';
 import { getDiscordMember } from '../../utils/guildMemberLookup';
 import { embedTemplate } from '../../utils/embedTemplate';
 
@@ -95,7 +95,7 @@ export const dReport: SlashCommand = {
 
     const result = await moderate(
       interaction.member as GuildMember,
-      'REPORT' as UserActionType,
+      'REPORT' as user_action_type,
       target.id,
       reason,
       null,

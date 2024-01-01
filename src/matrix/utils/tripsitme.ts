@@ -7,10 +7,6 @@ import { TicketStatus, Users, UserTickets } from '../../global/@types/database';
 import {
   getRoleMembers, getUserAttribute, getUserRoleMappings, hasRole,
 } from '../../global/utils/keycloak';
-import {
-  getOpenTicket,
-  getUser, ticketDel, ticketGet, ticketUpdate,
-} from '../../global/utils/knex';
 
 const F = f(__filename);
 

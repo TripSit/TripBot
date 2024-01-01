@@ -14,7 +14,6 @@ import {
   bridgeConfirm, bridgeCreate, bridgePause, bridgeRemove, bridgeResume,
 } from '../../../global/commands/g.bridge';
 import commandContext from '../../utils/context';
-import { database } from '../../../global/utils/knex';
 import { checkChannelPermissions } from '../../utils/checkPermissions';
 
 const F = f(__filename);
@@ -190,7 +189,11 @@ async function pause(
 
   if (interaction.guild?.id === env.DISCORD_GUILD_ID) {
     // Get the bridges from the database that use this internal_channel
-    const bridges = await database.bridges.get((interaction.channel as TextChannel).id);
+    const bridges = await db.bridges.findMany({
+      where: {
+        internal_channel: (interaction.channel as TextChannel).id,
+      },
+    });
 
     if (bridges.length === 0) {
       return noBridgeError;
@@ -207,7 +210,11 @@ async function pause(
     return stripIndents`Paused ${bridges.length} bridge(s) connected to this room.`;
   }
   // Get the bridges from the database that use this external_channel
-  const [bridge] = await database.bridges.get((interaction.channel as TextChannel).id);
+  const bridge = await db.bridges.findFirst({
+    where: {
+      internal_channel: (interaction.channel as TextChannel).id,
+    },
+  });
 
   if (!bridge) {
     return noBridgeError;
@@ -232,7 +239,11 @@ async function resume(
 
   if (interaction.guild?.id === env.DISCORD_GUILD_ID) {
     // Get the bridges from the database that use this internal_channel
-    const bridges = await database.bridges.get((interaction.channel as TextChannel).id);
+    const bridges = await db.bridges.findMany({
+      where: {
+        internal_channel: (interaction.channel as TextChannel).id,
+      },
+    });
 
     if (bridges.length === 0) {
       return noBridgeError;
@@ -250,7 +261,11 @@ async function resume(
     return stripIndents`Resumed ${bridges.length} bridge(s) connected to this room.`;
   }
   // Get the bridges from the database that use this external_channel
-  const [bridge] = await database.bridges.get((interaction.channel as TextChannel).id);
+  const bridge = await db.bridges.findFirst({
+    where: {
+      internal_channel: (interaction.channel as TextChannel).id,
+    },
+  });
 
   if (!bridge) {
     return noBridgeError;
@@ -278,7 +293,11 @@ async function remove(
 
   if (interaction.guild?.id === env.DISCORD_GUILD_ID) {
     // Get the bridges from the database that use this internal_channel
-    const bridges = await database.bridges.get((interaction.channel as TextChannel).id);
+    const bridges = await db.bridges.findMany({
+      where: {
+        internal_channel: (interaction.channel as TextChannel).id,
+      },
+    });
 
     if (bridges.length === 0) {
       return noBridgeError;
@@ -295,7 +314,11 @@ async function remove(
     return stripIndents`Removed ${bridges.length} bridge(s) connected to this room.`;
   }
   // Get the bridges from the database that use this external_channel
-  const [bridge] = await database.bridges.get((interaction.channel as TextChannel).id);
+  const bridge = await db.bridges.findFirst({
+    where: {
+      internal_channel: (interaction.channel as TextChannel).id,
+    },
+  });
 
   if (!bridge) {
     return noBridgeError;
@@ -322,7 +345,11 @@ async function info(
 
   if (interaction.guild?.id === env.DISCORD_GUILD_ID) {
     // Get the bridges from the database that use this internal_channel
-    const bridges = await database.bridges.get((interaction.channel as TextChannel).id);
+    const bridges = await db.bridges.findMany({
+      where: {
+        internal_channel: (interaction.channel as TextChannel).id,
+      },
+    });
 
     if (bridges.length === 0) {
       return noBridgeError;
@@ -340,7 +367,11 @@ async function info(
     return message;
   }
   // Get the bridges from the database that use this external_channel
-  const [bridge] = await database.bridges.get((interaction.channel as TextChannel).id);
+  const bridge = await db.bridges.findFirst({
+    where: {
+      internal_channel: (interaction.channel as TextChannel).id,
+    },
+  });
 
   if (!bridge) {
     return noBridgeError;
@@ -400,7 +431,16 @@ export const dBridge: SlashCommand = {
     }
 
     // Check if the guild is a partner (or the home guild)
-    const guildData = await database.guilds.get(interaction.guild.id);
+    const guildData = await db.discord_guilds.upsert({
+      where: {
+        id: interaction.guild.id,
+      },
+      create: {
+        id: interaction.guild.id,
+      },
+      update: {},
+    });
+
     if (interaction.guild.id !== env.DISCORD_GUILD_ID
       && !guildData.partner
       && !guildData.supporter) {

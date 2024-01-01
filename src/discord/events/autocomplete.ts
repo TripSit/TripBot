@@ -4,7 +4,7 @@ import {
 } from 'discord.js';
 import Fuse from 'fuse.js';
 
-import { PrismaClient, ai_model } from '@prisma/client';
+import { ai_model } from '@prisma/client';
 import { Drug } from 'tripsit_drug_db';
 import pillColors from '../../../assets/data/pill_colors.json';
 import pillShapes from '../../../assets/data/pill_shapes.json';
@@ -19,8 +19,6 @@ const drugDataTripsit = tsData as {
 };
 
 const drugDataAll = cbData as CbSubstance[];
-
-const db = new PrismaClient({ log: ['error'] });
 
 const F = f(__filename); // eslint-disable-line
 

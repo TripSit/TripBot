@@ -1,27 +1,28 @@
+import { discord_guilds, user_tickets, users } from '@prisma/client';
 import knex from 'knex';
 
-import {
-  Bridges,
-  Counting,
-  DiscordGuilds,
-  DrugNames,
-  ExperienceCategory,
-  ExperienceType,
-  Personas,
-  ReactionRoles,
-  RpgInventory,
-  Rss,
-  UserActions,
-  UserDrugDoses,
-  UserExperience,
-  UserReminders,
-  Users,
-  UserTickets,
-  // TicketStatus,
-  // DiscordGuilds,
-  ReactionRoleType,
-  Appeals,
-} from '../@types/database';
+// import {
+//   Bridges,
+//   Counting,
+//   discord_guilds,
+//   DrugNames,
+//   ExperienceCategory,
+//   ExperienceType,
+//   Personas,
+//   ReactionRoles,
+//   RpgInventory,
+//   Rss,
+//   UserActions,
+//   UserDrugDoses,
+//   UserExperience,
+//   UserReminders,
+//   users,
+//   user_tickets,
+//   // TicketStatus,
+//   // discord_guilds,
+//   ReactionRoleType,
+//   Appeals,
+// } from '../@types/database';
  // eslint-disable-line
 
 const F = f(__filename); // eslint-disable-line
@@ -37,21 +38,21 @@ export async function getUser(
   discordId:string | null,
   matrixId: string | null,
   userId:string | null,
-):Promise<Users> {
+):Promise<users> {
   // log.debug(F, `getUser started with: discordId: ${discordId} | userId: ${userId}`);
-  let data = {} as Users | undefined;
+  let data = {} as users | undefined;
 
   if (env.POSTGRES_DB_URL === undefined) {
     return {
       id: 'abc-123-123',
       discord_id: '123-456-xyz',
       discord_bot_ban: false,
-    } as Users;
+    } as users;
   }
 
   if (discordId) {
     try {
-      data = await db<Users>('users')
+      data = await db<users>('users')
         .select('*')
         .where('discord_id', discordId)
         .first();
@@ -62,7 +63,7 @@ export async function getUser(
   }
   if (matrixId) {
     try {
-      data = await db<Users>('users')
+      data = await db<users>('users')
         .select('*')
         .where('matrix_id', matrixId)
         .first();
@@ -75,12 +76,12 @@ export async function getUser(
   if (data === undefined) {
     try {
       if (discordId) {
-        [data] = (await db<Users>('users')
+        [data] = (await db<users>('users')
           .insert({ discord_id: discordId })
           .returning('*'));
       }
       if (matrixId) {
-        [data] = (await db<Users>('users')
+        [data] = (await db<users>('users')
           .insert({ matrix_id: matrixId })
           .returning('*'));
       }
@@ -93,7 +94,7 @@ export async function getUser(
   }
   if (userId) {
     try {
-      data = await db<Users>('users')
+      data = await db<users>('users')
         .select('*')
         .where('id', userId)
         .first();
@@ -106,17 +107,17 @@ export async function getUser(
 
   // log.debug(F, `data4: ${JSON.stringify(data, null, 2)}`);
 
-  return data as Users;
+  return data as users;
 }
 
-export async function getMoodleUsers():Promise<Users[]> {
+export async function getMoodleUsers():Promise<users[]> {
   // log.debug(F, `getAllUsers started`);
-  let data = [] as Users[];
+  let data = [] as users[];
 
   if (env.POSTGRES_DB_URL === undefined) return data;
 
   try {
-    data = await db<Users>('users')
+    data = await db<users>('users')
       .select('*')
       .whereNot('moodle_id', null);
   } catch (err) {
@@ -135,62 +136,12 @@ export async function userExists(
 }
 
 export async function getGuild(
-  guildId?:string,
-):Promise<DiscordGuilds> {
+  guildId:string,
+):Promise<discord_guilds> {
   // log.debug(F, `getGuild started with: guildId: ${guildId}`);
 
   if (env.POSTGRES_DB_URL === undefined) {
     return {
-      id: 'abc-123-xyz1',
-      is_banned: false,
-      last_drama_at: null,
-      drama_reason: null,
-      max_online_members: null,
-      channel_sanctuary: null,
-      channel_general: null,
-      channel_tripsit: null,
-      channel_tripsitmeta: null,
-      channel_applications: null,
-      role_needshelp: null,
-      role_tripsitter: null,
-      role_helper: null,
-      role_techhelp: null,
-      removed_at: null,
-      joined_at: new Date(),
-      created_at: new Date(),
-    } as DiscordGuilds;
-  }
-
-  let data = {} as DiscordGuilds | undefined;
-  try {
-    data = await db<DiscordGuilds>('discord_guilds')
-      .select('*')
-      .where('id', guildId)
-      .first();
-  } catch (err) {
-    log.error(F, `Error getting guild: ${err}`);
-    log.error(F, `guildId: ${guildId}`);
-  }
-  if (!data) {
-    try {
-      [data] = (await db<DiscordGuilds>('discord_guilds')
-        .insert({ id: guildId })
-        .returning('*'));
-    } catch (err) {
-      log.error(F, `Error getting guild: ${err}`);
-      log.error(F, `guildId: ${guildId}`);
-    }
-  }
-  return data as DiscordGuilds;
-}
-
-export async function getAllGuilds(
-  guildId?:string,
-):Promise<DiscordGuilds[]> {
-  // log.debug(F, `getGuild started with: guildId: ${guildId}`);
-
-  if (env.POSTGRES_DB_URL === undefined) {
-    return [{
       id: 'abc-123-xyz',
       is_banned: false,
       last_drama_at: null,
@@ -208,27 +159,40 @@ export async function getAllGuilds(
       removed_at: null,
       joined_at: new Date(),
       created_at: new Date(),
-    }] as DiscordGuilds[];
+    } as discord_guilds;
   }
 
-  let data = {} as DiscordGuilds[];
+  let data = {} as discord_guilds | undefined;
+
   try {
-    data = await db<DiscordGuilds>('discord_guilds')
-      .select('*');
+    data = await db<discord_guilds>('discord_guilds')
+      .select('*')
+      .where('id', guildId)
+      .first();
   } catch (err) {
     log.error(F, `Error getting guild: ${err}`);
     log.error(F, `guildId: ${guildId}`);
   }
-  return data;
+  if (!data) {
+    try {
+      [data] = (await db<discord_guilds>('discord_guilds')
+        .insert({ id: guildId })
+        .returning('*'));
+    } catch (err) {
+      log.error(F, `Error getting guild: ${err}`);
+      log.error(F, `guildId: ${guildId}`);
+    }
+  }
+  return data as discord_guilds;
 }
 
 export async function getOpenTicket(
   userId: string | null,
   threadId: string | null,
-):Promise<UserTickets | undefined> {
+):Promise<user_tickets | undefined> {
   log.info(F, `getOpenTicket started with: userId: ${userId} | threadId: ${threadId}`);
 
-  let ticketData = {} as UserTickets | undefined;
+  let ticketData = {} as user_tickets | undefined;
 
   if (env.POSTGRES_DB_URL === undefined) {
     return {
@@ -247,12 +211,12 @@ export async function getOpenTicket(
       archived_at: new Date(),
       deleted_at: new Date(),
       created_at: new Date(),
-    } as UserTickets;
+    } as user_tickets;
   }
 
   if (threadId) {
     try {
-      ticketData = await db<UserTickets>('user_tickets')
+      ticketData = await db<user_tickets>('user_tickets')
         .select('*')
         .where('thread_id', threadId)
         // .where('type', 'TRIPSIT')
@@ -267,7 +231,7 @@ export async function getOpenTicket(
   }
   if (userId) {
     try {
-      ticketData = await db<UserTickets>('user_tickets')
+      ticketData = await db<user_tickets>('user_tickets')
         .select('*')
         .where('user_id', userId)
         // .where('type', 'TRIPSIT')
@@ -355,18 +319,18 @@ export async function reminderDel(
 export async function ticketGet(
   user_id?:string,
   status?:string,
-):Promise<UserTickets[]> {
+):Promise<user_tickets[]> {
   // log.debug(F, `ticketGet started with user_id: ${user_id}, status: ${status}`);
   if (env.POSTGRES_DB_URL === undefined) {
-    return [] as UserTickets[];
+    return [] as user_tickets[];
   }
 
-  let tickets = [] as UserTickets[];
+  let tickets = [] as user_tickets[];
 
   if (user_id) {
     if (status) {
       try {
-        tickets = await db<UserTickets>('user_tickets')
+        tickets = await db<user_tickets>('user_tickets')
           .select('*')
           .where('user_id', user_id)
           .where('type', 'TRIPSIT')
@@ -378,7 +342,7 @@ export async function ticketGet(
       }
     } else {
       try {
-        tickets = await db<UserTickets>('user_tickets')
+        tickets = await db<user_tickets>('user_tickets')
           .select('*')
           .where('user_id', user_id)
           .where('type', 'TRIPSIT')
@@ -390,7 +354,7 @@ export async function ticketGet(
     }
   } else if (status) {
     try {
-      tickets = await db<UserTickets>('user_tickets')
+      tickets = await db<user_tickets>('user_tickets')
         .select('*')
         .where('user_id', user_id)
         .where('type', 'TRIPSIT')
@@ -402,7 +366,7 @@ export async function ticketGet(
     }
   } else {
     try {
-      tickets = await db<UserTickets>('user_tickets')
+      tickets = await db<user_tickets>('user_tickets')
         .select('*')
         .orderBy('thread_id', 'desc');
     } catch (err) {
@@ -420,7 +384,7 @@ export async function ticketDel(
 // log.debug(F, `ticketDel started with: id: ${id}`);
   if (env.POSTGRES_DB_URL === undefined) return;
   try {
-    await db<UserTickets>('user_reminders')
+    await db<user_tickets>('user_reminders')
       .delete()
       .where('id', id);
   } catch (err) {
@@ -430,12 +394,12 @@ export async function ticketDel(
 }
 
 export async function ticketUpdate(
-  value:UserTickets,
+  value:user_tickets,
 ):Promise<void> {
   // log.debug(F, `ticketUpdate started with: value: ${JSON.stringify(value)}`);
   if (env.POSTGRES_DB_URL === undefined) return;
   try {
-    await db<UserTickets>('user_tickets')
+    await db<user_tickets>('user_tickets')
       .insert(value)
       .onConflict('id')
       .merge();
@@ -445,14 +409,14 @@ export async function ticketUpdate(
   }
 }
 
-export async function usersGetMindsets():Promise<Users[]> {
+export async function usersGetMindsets():Promise<users[]> {
 // log.debug(F, 'usersGetMindsets started');
   if (env.POSTGRES_DB_URL === undefined) {
-    return [] as Users[];
+    return [] as users[];
   }
-  let users = [] as Users[];
+  let users = [] as users[];
   try {
-    users = await db<Users>('users')
+    users = await db<users>('users')
       .select('*')
       .whereNotNull('mindset_role_expires_at');
   } catch (err) {
@@ -462,12 +426,12 @@ export async function usersGetMindsets():Promise<Users[]> {
 }
 
 export async function usersUpdate(
-  value:Users,
+  value:users,
 ):Promise<void> {
 // log.debug(F, `usersUpdate started with: value: ${value}`);
   if (env.POSTGRES_DB_URL === undefined) return;
   try {
-    await db<Users>('users')
+    await db<users>('users')
       .insert(value)
       .onConflict('discord_id')
       .merge();
@@ -478,12 +442,12 @@ export async function usersUpdate(
 }
 
 export async function guildUpdate(
-  value:DiscordGuilds,
+  value:discord_guilds,
 ):Promise<void> {
 // log.debug(F, `guildUpdate started with: value: ${value}`);
   if (env.POSTGRES_DB_URL === undefined) return;
   try {
-    await db<DiscordGuilds>('discord_guilds')
+    await db<discord_guilds>('discord_guilds')
       .insert(value)
       .onConflict('id')
       .merge();
@@ -553,7 +517,7 @@ export async function incrementPoint(
 // log.debug(F, 'incrementPoint started');
   if (env.POSTGRES_DB_URL === undefined) return;
   try {
-    await db<Users>('users')
+    await db<users>('users')
       .increment(pointType, value)
       .where('discord_id', userId)
       .returning('*');
@@ -572,7 +536,7 @@ export async function incrementKarma(
   if (env.POSTGRES_DB_URL === undefined) return [];
   let karma = [] as string[];
   try {
-    karma = await db<Users>('users')
+    karma = await db<users>('users')
       .increment(pointType, value)
       .where('discord_id', userId)
       .returning(['karma_received', 'karma_given']);
@@ -1282,7 +1246,6 @@ export const database = {
   },
   guilds: {
     get: getGuild,
-    getAll: getAllGuilds,
     set: guildUpdate,
   },
   tickets: {

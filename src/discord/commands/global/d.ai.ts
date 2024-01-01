@@ -32,11 +32,11 @@ import {
 } from 'discord-api-types/v10';
 import { stripIndents } from 'common-tags';
 import {
-  PrismaClient,
   ai_channels,
   ai_model,
   ai_moderation,
   ai_personas,
+  user_action_type,
 } from '@prisma/client';
 import OpenAI from 'openai';
 import { Run } from 'openai/resources/beta/threads/runs/runs';
@@ -49,10 +49,7 @@ import { sleep } from '../guild/d.bottest';
 import aiChat, {
   aiModerate, createMessage, getAssistant, getMessages, getThread, readRun, runThread,
 } from '../../../global/commands/g.ai';
-import { UserActionType } from '../../../global/@types/database';
 import { parseDuration } from '../../../global/utils/parseDuration';
-
-const db = new PrismaClient({ log: ['error'] });
 
 const F = f(__filename);
 
@@ -523,7 +520,7 @@ async function noteUser(
 
       await moderate(
         interaction.member as GuildMember,
-        'NOTE' as UserActionType,
+        'NOTE' as user_action_type,
         memberField.value.slice(2, -1),
         stripIndents`
         ${i.fields.getTextInputValue('internalNote')}
@@ -647,7 +644,7 @@ async function muteUser(
 
       await moderate(
         interaction.member as GuildMember,
-        'TIMEOUT' as UserActionType,
+        'TIMEOUT' as user_action_type,
         memberField.value.slice(2, -1),
         stripIndents`
         ${i.fields.getTextInputValue('internalNote')}
@@ -754,7 +751,7 @@ async function warnUser(
 
       await moderate(
         interaction.member as GuildMember,
-        'WARNING' as UserActionType,
+        'WARNING' as user_action_type,
         memberField.value.slice(2, -1),
         stripIndents`
         ${i.fields.getTextInputValue('internalNote')}
@@ -876,7 +873,7 @@ async function banUser(
 
       await moderate(
         interaction.member as GuildMember,
-        'FULL_BAN' as UserActionType,
+        'FULL_BAN' as user_action_type,
         memberField.value.slice(2, -1),
         stripIndents`
         ${i.fields.getTextInputValue('internalNote')}

@@ -5,6 +5,7 @@ import {
 import {
   ApplicationCommandType,
 } from 'discord-api-types/v10';
+import { user_action_type } from '@prisma/client';
 import { UserCommand } from '../../@types/commandDef';
 import commandContext from '../../utils/context';
 import { kick } from './d.moderate';

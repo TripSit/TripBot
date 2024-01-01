@@ -1,5 +1,4 @@
-import { Personas } from '../@types/database';
-import { experienceGet, getUser, personaGet } from '../utils/knex';
+import { personas } from '@prisma/client';
 
 export default profile;
 
@@ -13,18 +12,34 @@ export default profile;
 export async function profile(
   memberId: string,
 ):Promise<ProfileData> {
-  const userData = await getUser(memberId, null, null);
+  const userData = await db.users.upsert({
+    where: {
+      discord_id: memberId,
+    },
+    create: {
+      discord_id: memberId,
+    },
+    update: {},
+  });
   // log.debug(F, `userData: ${JSON.stringify(userData, null, 2)}`);
 
   const values = await Promise.allSettled([
-    await experienceGet(undefined, undefined, undefined, userData.id),
-    await personaGet(userData.id),
+    await db.user_experience.findMany({
+      where: {
+        user_id: userData.id,
+      },
+    }),
+    await db.personas.findFirst({
+      where: {
+        user_id: userData.id,
+      },
+    }),
   ]);
 
   // log.debug(F, `values: ${JSON.stringify(values, null, 2)} `);
 
   const expData = values[0].status === 'fulfilled' ? values[0].value : [];
-  const personaData = values[1].status === 'fulfilled' ? values[1].value : {} as Personas;
+  const personaData = values[1].status === 'fulfilled' ? values[1].value : {} as personas;
 
   // log.debug(F, `expData: ${JSON.stringify(expData, null, 2)}`);
   // log.debug(F, `personaData: ${JSON.stringify(personaData, null, 2)}`);

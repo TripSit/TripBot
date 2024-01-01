@@ -28,12 +28,12 @@ import {
   TextInputStyle,
 } from 'discord-api-types/v10';
 import { stripIndents } from 'common-tags';
+import { user_action_type } from '@prisma/client';
 import { SlashCommand } from '../../@types/commandDef';
 import { parseDuration } from '../../../global/utils/parseDuration';
-import commandContext from '../../utils/context';
-import { UserActions, UserActionType, Users } from '../../../global/@types/database';
+import { moderate, linkThread } from '../../../global/commands/g.moderate';
+import commandContext from '../../utils/context'; // eslint-disable-line
 import { getDiscordMember, getDiscordUser } from '../../utils/guildMemberLookup';
-import { database } from '../../../global/utils/knex';
 import { last } from '../../../global/commands/g.last';
 import { botBannedUsers } from '../../utils/populateBotBans';
 import { embedTemplate } from '../../utils/embedTemplate';
