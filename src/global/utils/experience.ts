@@ -8,10 +8,8 @@ import {
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
 import {
-  PrismaClient, experience_category, experience_type, user_experience,
+  experience_category, experience_type, user_experience,
 } from '@prisma/client';
-
-const db = new PrismaClient({ log: ['error'] });
 
 const F = f(__filename); // eslint-disable-line
 

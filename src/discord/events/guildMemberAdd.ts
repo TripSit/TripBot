@@ -6,13 +6,10 @@ import {
   Collection,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
-import { PrismaClient } from '@prisma/client';
 import {
   GuildMemberAddEvent,
 } from '../@types/eventDef';
 import { embedTemplate } from '../utils/embedTemplate';
-
-const db = new PrismaClient({ log: ['error'] });
 
 const F = f(__filename);
 

@@ -1,3 +1,4 @@
+import { PrismaClient } from '@prisma/client';
 import { Client as DiscordClient } from 'discord.js';
 import { DateTime } from 'luxon';
 // import { MatrixClient } from 'matrix-bot-sdk';
@@ -22,6 +23,7 @@ declare global {
     status: Boolean,
     date: DateTime,
   };
+  var db: PrismaClient; // eslint-disable-line
 }
 
 export {};

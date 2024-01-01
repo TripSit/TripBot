@@ -1,10 +1,8 @@
-import { drug_mass_unit, drug_roa, PrismaClient } from '@prisma/client';
+import { drug_mass_unit, drug_roa } from '@prisma/client';
 import {
   time,
 } from 'discord.js';
 import { DateTime } from 'luxon';
-
-const db = new PrismaClient({ log: ['error'] });
 
 type IDoseResponse = {
   name: string,

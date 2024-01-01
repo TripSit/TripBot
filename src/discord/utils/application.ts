@@ -30,12 +30,9 @@ import {
   PermissionFlagsBits,
 } from 'discord-api-types/v10';
 import { stripIndents } from 'common-tags';
-import { PrismaClient } from '@prisma/client';
 import { embedTemplate } from './embedTemplate';
 import commandContext from './context'; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { checkChannelPermissions, checkGuildPermissions } from './checkPermissions';
-
-const db = new PrismaClient({ log: ['error'] });
 
 const F = f(__filename);
 

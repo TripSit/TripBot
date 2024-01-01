@@ -34,15 +34,13 @@ import {
 } from 'discord-api-types/v10';
 import { stripIndents } from 'common-tags';
 import he from 'he';
-import { PrismaClient, rpg_inventory } from '@prisma/client';
+import { rpg_inventory } from '@prisma/client';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import commandContext from '../../utils/context';
 import getAsset from '../../utils/getAsset';
 import { customButton } from '../../utils/emoji';
 import { getProfilePreview } from './d.profile';
-
-const db = new PrismaClient({ log: ['error'] });
 
 const Trivia = require('trivia-api');
 

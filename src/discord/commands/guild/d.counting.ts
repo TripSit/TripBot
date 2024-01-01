@@ -11,14 +11,11 @@ import {
   Collection,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
-import { PrismaClient } from '@prisma/client';
 import { SlashCommandBeta } from '../../@types/commandDef';
 import commandContext from '../../utils/context';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { checkChannelPermissions } from '../../utils/checkPermissions';
 import { sleep } from './d.bottest';
-
-const db = new PrismaClient({ log: ['error'] });
 
 const F = f(__filename);
 

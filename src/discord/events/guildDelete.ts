@@ -1,12 +1,9 @@
 import {
   TextChannel,
 } from 'discord.js';
-import { PrismaClient } from '@prisma/client';
 import {
   GuildDeleteEvent,
 } from '../@types/eventDef';
-
-const db = new PrismaClient({ log: ['error'] });
 
 const F = f(__filename);
 

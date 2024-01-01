@@ -1,11 +1,9 @@
 /* eslint-disable no-await-in-loop, no-restricted-syntax, no-continue */
-import { PrismaClient, experience_category, experience_type } from '@prisma/client';
+import { experience_category, experience_type } from '@prisma/client';
 import {
   expForNextLevel,
   getTotalLevel,
 } from '../utils/experience';
-
-const db = new PrismaClient({ log: ['error'] });
 
 export default levels;
 

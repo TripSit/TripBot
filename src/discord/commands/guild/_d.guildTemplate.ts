@@ -9,13 +9,10 @@ import {
 import {
   TextInputStyle,
 } from 'discord-api-types/v10';
-import { PrismaClient } from '@prisma/client';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { globalTemplate } from '../../../global/commands/_g.template';
 import commandContext from '../../utils/context';
-
-const db = new PrismaClient({ log: ['error'] });
 
 const F = f(__filename);
 

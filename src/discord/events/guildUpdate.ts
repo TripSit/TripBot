@@ -1,9 +1,6 @@
-import { PrismaClient } from '@prisma/client';
 import {
   GuildUpdateEvent,
 } from '../@types/eventDef';
-
-const db = new PrismaClient({ log: ['error'] });
 
 const F = f(__filename);
 

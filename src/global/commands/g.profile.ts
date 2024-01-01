@@ -1,6 +1,4 @@
-import { PrismaClient, personas } from '@prisma/client';
-
-const db = new PrismaClient({ log: ['error'] });
+import { personas } from '@prisma/client';
 
 export default profile;
 

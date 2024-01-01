@@ -1,9 +1,6 @@
-import { PrismaClient } from '@prisma/client';
 import {
   ThreadDeleteEvent,
 } from '../@types/eventDef';
-
-const db = new PrismaClient({ log: ['error'] });
 
 const F = f(__filename); // eslint-disable-line @typescript-eslint/no-unused-vars
 

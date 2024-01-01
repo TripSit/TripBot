@@ -1,5 +1,5 @@
 import OpenAI from 'openai';
-import { PrismaClient, ai_personas } from '@prisma/client';
+import { ai_personas } from '@prisma/client';
 import { ImagesResponse, ModerationCreateResponse } from 'openai/resources';
 import { Assistant } from 'openai/resources/beta/assistants/assistants';
 import { stripIndents } from 'common-tags';
@@ -8,8 +8,6 @@ import {
   MessageCreateParams, MessageListParams, ThreadMessage, ThreadMessagesPage,
 } from 'openai/resources/beta/threads/messages/messages';
 import { Run, RunCreateParams } from 'openai/resources/beta/threads/runs/runs';
-
-const db = new PrismaClient({ log: ['error'] });
 
 const F = f(__filename);
 

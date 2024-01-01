@@ -1,12 +1,9 @@
 import { GuildMember, Role, TextChannel } from 'discord.js';
 import { stripIndents } from 'common-tags';
-import { PrismaClient } from '@prisma/client';
 import {
   GuildMemberUpdateEvent,
 } from '../@types/eventDef';
 // import { topic } from '../../global/commands/g.topic';
-
-const db = new PrismaClient({ log: ['error'] });
 
 type MindsetNames =
 | 'ROLE_DRUNK'

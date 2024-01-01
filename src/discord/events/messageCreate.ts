@@ -2,7 +2,7 @@
 //   ChannelType,
 // } from 'discord-api-types/v10';
 import { TextChannel } from 'discord.js';
-import { PrismaClient, experience_category, experience_type } from '@prisma/client';
+import { experience_category, experience_type } from '@prisma/client';
 import {
   MessageCreateEvent,
 } from '../@types/eventDef';
@@ -21,8 +21,6 @@ import { discordAiModerate } from '../commands/global/d.ai';
 // import { awayMessage } from '../utils/awayMessage';
 // import log from '../../global/utils/log';
 // import {parse} from 'path';
-
-const db = new PrismaClient({ log: ['error'] });
 
 const F = f(__filename); // eslint-disable-line
 

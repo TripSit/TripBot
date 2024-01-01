@@ -17,7 +17,7 @@ import {
   ButtonStyle,
 } from 'discord-api-types/v10';
 import {
-  PrismaClient, user_action_type, user_actions, users,
+  user_action_type, user_actions, users,
 } from '@prisma/client';
 
 import { stripIndents } from 'common-tags';
@@ -25,8 +25,6 @@ import ms from 'ms';
 import { embedTemplate } from '../../discord/utils/embedTemplate';
 import { last } from './g.last';
 import { botBannedUsers } from '../../discord/utils/populateBotBans';
-
-const db = new PrismaClient({ log: ['error'] });
 
 export default moderate;
 

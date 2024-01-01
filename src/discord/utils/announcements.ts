@@ -5,11 +5,8 @@ import {
   TextChannel,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
-import { PrismaClient } from '@prisma/client';
 import { embedTemplate } from './embedTemplate';
 import { fact } from '../../global/commands/g.fact';
-
-const db = new PrismaClient({ log: ['error'] });
 
 const F = f(__filename); // eslint-disable-line
 

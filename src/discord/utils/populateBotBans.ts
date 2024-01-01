@@ -1,9 +1,3 @@
-/* eslint-disable no-unused-vars */
-
-import { PrismaClient } from '@prisma/client';
-
-const db = new PrismaClient({ log: ['error'] });
-
 export default populateBans;
 
 const F = f(__filename); // eslint-disable-line

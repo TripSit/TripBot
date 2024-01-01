@@ -31,12 +31,10 @@ import {
 } from 'discord-api-types/v10';
 import { stripIndents } from 'common-tags';
 import { DateTime } from 'luxon';
-import { PrismaClient, ticket_status, user_tickets } from '@prisma/client';
+import { ticket_status, user_tickets } from '@prisma/client';
 import commandContext from './context';
 import { embedTemplate } from './embedTemplate';
 import { checkChannelPermissions, checkGuildPermissions } from './checkPermissions';
-
-const db = new PrismaClient({ log: ['error'] });
 
 const F = f(__filename);
 

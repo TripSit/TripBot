@@ -15,15 +15,13 @@ import { DateTime } from 'luxon';
 import axios from 'axios'; // eslint-disable-line
 import { stripIndents } from 'common-tags';
 import {
-  PrismaClient, experience_category, experience_type, ticket_status, ticket_type,
+  experience_category, experience_type, ticket_status, ticket_type,
 } from '@prisma/client';
 import updateDb from './updateDb';
 import { checkChannelPermissions } from '../../discord/utils/checkPermissions';
 import { embedTemplate } from '../../discord/utils/embedTemplate';
 import { experience } from './experience';
 import { profile } from '../commands/g.learn';
-
-const db = new PrismaClient({ log: ['error'] });
 
 const F = f(__filename);
 

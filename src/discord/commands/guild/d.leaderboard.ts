@@ -7,7 +7,7 @@ import {
   SlashCommandBuilder,
   AttachmentBuilder,
 } from 'discord.js';
-import { experience_category, experience_type, PrismaClient } from '@prisma/client';
+import { experience_category, experience_type } from '@prisma/client';
 import Canvas from '@napi-rs/canvas';
 import { SlashCommand } from '../../@types/commandDef';
 import commandContext from '../../utils/context';
@@ -17,8 +17,6 @@ import { getPersonaInfo } from '../../../global/commands/g.rpg';
 import getAsset from '../../utils/getAsset';
 import { resizeText, deFuckifyText, colorDefs } from '../../utils/canvasUtils';
 // import { paginationEmbed } from '../../utils/pagination';
-
-const db = new PrismaClient({ log: ['error'] });
 
 const F = f(__filename);
 

@@ -2,13 +2,11 @@ import {
   SlashCommandBuilder,
   GuildMember,
 } from 'discord.js';
-import { PrismaClient } from '@prisma/client';
 import { SlashCommand } from '../../@types/commandDef';
 import commandContext from '../../utils/context';
 import { embedTemplate } from '../../utils/embedTemplate';
 // import log from '../../../global/utils/log';
 
-const db = new PrismaClient({ log: ['error'] });
 const F = f(__filename);
 
 // const karmaQuotes = require('../../../global/assets/data/karma_quotes.json');

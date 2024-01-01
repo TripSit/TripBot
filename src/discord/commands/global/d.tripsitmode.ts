@@ -27,7 +27,7 @@ import {
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
 import { DateTime } from 'luxon';
-import { PrismaClient, ticket_status } from '@prisma/client';
+import { ticket_status } from '@prisma/client';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 // import {embedTemplate} from '../../utils/embedTemplate';
@@ -38,7 +38,6 @@ import { needsHelpMode, tripSitMe, tripsitmeUserClose } from '../../utils/tripsi
 import { checkChannelPermissions } from '../../utils/checkPermissions';
 // import { modmailDMInteraction } from '../archive/modmail';
 
-const db = new PrismaClient({ log: ['error'] });
 const F = f(__filename);
 
 async function tripsitmodeOn(

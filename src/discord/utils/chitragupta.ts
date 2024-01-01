@@ -3,9 +3,6 @@ import {
   MessageReaction,
   User,
 } from 'discord.js';
-import { PrismaClient } from '@prisma/client';
-
-const db = new PrismaClient({ log: ['error'] });
 
 // const F = f(__filename);
 

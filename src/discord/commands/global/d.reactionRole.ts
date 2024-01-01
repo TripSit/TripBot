@@ -21,12 +21,10 @@ import {
   ChannelType,
   PermissionResolvable,
 } from 'discord.js';
-import { PrismaClient, reaction_role_type, reaction_roles } from '@prisma/client';
+import { reaction_role_type, reaction_roles } from '@prisma/client';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { checkChannelPermissions, checkGuildPermissions } from '../../utils/checkPermissions';
-
-const db = new PrismaClient({ log: ['error'] });
 
 const F = f(__filename);
 

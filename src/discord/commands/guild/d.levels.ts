@@ -6,7 +6,7 @@ import {
   AttachmentBuilder,
 } from 'discord.js';
 import Canvas from '@napi-rs/canvas';
-import { PrismaClient, personas } from '@prisma/client';
+import { personas } from '@prisma/client';
 import { SlashCommand } from '../../@types/commandDef';
 import { levels } from '../../../global/commands/g.levels';
 import { profile, ProfileData } from '../../../global/commands/g.profile';
@@ -19,8 +19,6 @@ import { numFormatter, numFormatterVoice } from './d.profile';
 import { resizeText, deFuckifyText, colorDefs } from '../../utils/canvasUtils';
 // import { expForNextLevel, getTotalLevel } from '../../../global/utils/experience';
 // import { imageGet } from '../../utils/imageGet';
-
-const db = new PrismaClient({ log: ['error'] });
 
 const F = f(__filename);
 

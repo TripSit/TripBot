@@ -8,7 +8,6 @@ import {
   Channel,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
-import { PrismaClient } from '@prisma/client';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import {
@@ -16,8 +15,6 @@ import {
 } from '../../../global/commands/g.bridge';
 import commandContext from '../../utils/context';
 import { checkChannelPermissions } from '../../utils/checkPermissions';
-
-const db = new PrismaClient({ log: ['error'] });
 
 const F = f(__filename);
 

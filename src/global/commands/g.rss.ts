@@ -1,6 +1,4 @@
-import { PrismaClient, rss } from '@prisma/client';
-
-const db = new PrismaClient({ log: ['error'] });
+import { rss } from '@prisma/client';
 
 const F = f(__filename); // eslint-disable-line
 

@@ -14,7 +14,7 @@ import {
   TextInputStyle,
 } from 'discord-api-types/v10';
 import { stripIndents } from 'common-tags';
-import { PrismaClient, user_action_type } from '@prisma/client';
+import { user_action_type } from '@prisma/client';
 import { SlashCommand } from '../../@types/commandDef';
 // import {embedTemplate} from '../../utils/embedTemplate';
 import { parseDuration } from '../../../global/utils/parseDuration';
@@ -22,8 +22,6 @@ import { moderate, linkThread } from '../../../global/commands/g.moderate';
 import commandContext from '../../utils/context'; // eslint-disable-line
 import { getDiscordMember, getDiscordUser } from '../../utils/guildMemberLookup';
 import { embedTemplate } from '../../utils/embedTemplate';
-
-const db = new PrismaClient({ log: ['error'] });
 
 const F = f(__filename);
 

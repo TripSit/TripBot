@@ -2,9 +2,6 @@ import {
   Collection,
   Message, MessageMentionTypes, TextChannel, Webhook,
 } from 'discord.js';
-import { PrismaClient } from '@prisma/client';
-
-const db = new PrismaClient({ log: ['error'] });
 
 export default bridgeMessage;
 

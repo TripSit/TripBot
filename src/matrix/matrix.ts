@@ -3,10 +3,6 @@ import {
   SimpleFsStorageProvider,
   AutojoinRoomsMixin,
 } from 'matrix-bot-sdk';
-import { PrismaClient } from '@prisma/client';
-
-const db = new PrismaClient({ log: ['error'] });
-
 
 import * as commands from './commands';
 

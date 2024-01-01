@@ -32,7 +32,6 @@ import {
 } from 'discord-api-types/v10';
 import { stripIndents } from 'common-tags';
 import {
-  PrismaClient,
   ai_channels,
   ai_model,
   ai_moderation,
@@ -51,8 +50,6 @@ import aiChat, {
   aiModerate, createMessage, getAssistant, getMessages, getThread, readRun, runThread,
 } from '../../../global/commands/g.ai';
 import { parseDuration } from '../../../global/utils/parseDuration';
-
-const db = new PrismaClient({ log: ['error'] });
 
 const F = f(__filename);
 

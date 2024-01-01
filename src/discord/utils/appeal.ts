@@ -7,10 +7,8 @@ import {
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
 import {
-  PrismaClient, appeal_status, user_action_type, user_actions,
+  appeal_status, user_action_type, user_actions,
 } from '@prisma/client';
-
-const db = new PrismaClient({ log: ['error'] });
 
 const F = f(__filename);
 

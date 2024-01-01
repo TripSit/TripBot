@@ -4,12 +4,9 @@ import {
   Colors,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
-import { PrismaClient } from '@prisma/client';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import commandContext from '../../utils/context';
-
-const db = new PrismaClient({ log: ['error'] });
 
 // import log from '../../../global/utils/log';
 
