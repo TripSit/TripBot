@@ -1390,10 +1390,7 @@ export async function tripSitMe(
   // log.debug(F, `newTicketData: ${JSON.stringify(newTicketData, null, 2)}`);
 
   // Update the ticket in the DB
-  await db.user_tickets.update({
-    where: {
-      id: newTicketData.id,
-    },
+  await db.user_tickets.create({
     data: {
       user_id: newTicketData.user_id,
       description: newTicketData.description,

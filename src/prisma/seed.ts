@@ -1,7 +1,9 @@
 /* eslint-disable @typescript-eslint/return-await */
 /* eslint-disable no-await-in-loop */
 /* eslint-disable no-restricted-syntax */
-import { PrismaClient, drug_roa, drug_variants } from '@prisma/client';
+import {
+  PrismaClient, drug_roa, drug_variants, users,
+} from '@prisma/client';
 import argon from 'argon2';
 import { Duration as DurationCalc } from 'luxon';
 import combinedDb from '../../assets/data/combinedDB.json';
@@ -115,9 +117,8 @@ const parseDose = (
   return value;
 };
 
-async function seedUsers(): Promise<string> {
-  // Users
-  const [moonbearUser] = await Promise.all([
+async function seedUsers(): Promise<users[]> {
+  return await Promise.all([
     await prisma.users.create({
       data: {
         email: 'moonbear@tripsit.me',
@@ -133,24 +134,23 @@ async function seedUsers(): Promise<string> {
         empathy_points: 300,
       },
     }),
-    // await prisma.users.create({
-    //   data: {
-    //     email: 'hipperooni@tripsit.me',
-    //     username: 'Hipperooni',
-    //     discord_id: '121115330637594625',
-    //     password_hash: await argon.hash('P@ssw0rd'),
-    //   },
-    // }),
-    // await prisma.users.create({
-    //   data: {
-    //     email: 'cosmicowl@gmailc.om',
-    //     username: 'CosmicOwl',
-    //     discord_id: '332687787172167680',
-    //     password_hash: await argon.hash('P@ssw0rd'),
-    //   },
-    // }),
+    await prisma.users.create({
+      data: {
+        email: 'hipperooni@tripsit.me',
+        username: 'Hipperooni',
+        discord_id: '121115330637594625',
+        password_hash: await argon.hash('P@ssw0rd'),
+      },
+    }),
+    await prisma.users.create({
+      data: {
+        email: 'cosmicowl@gmailc.om',
+        username: 'CosmicOwl',
+        discord_id: '332687787172167680',
+        password_hash: await argon.hash('P@ssw0rd'),
+      },
+    }),
   ]);
-  return moonbearUser.id;
 }
 
 async function seedDrugs(userId: string): Promise<DrugRecord[]> {
@@ -259,6 +259,38 @@ async function seedDrugVariantRoas(
   }
 }
 
+async function seedExperience(
+  userList: users[],
+): Promise<void> {
+  // Loop through the user list and create experience records for each
+  for (const user of userList) {
+    await prisma.user_experience.create({
+      data: {
+        user_id: user.id,
+        category: 'GENERAL',
+        type: 'TEXT',
+        level: 10,
+        level_points: 100,
+        total_points: 1000,
+        last_message_channel: '1169747347165687838',
+        last_message_at: new Date(),
+      },
+    });
+    await prisma.user_experience.create({
+      data: {
+        user_id: user.id,
+        category: 'GENERAL',
+        type: 'VOICE',
+        level: 10,
+        level_points: 100,
+        total_points: 1000,
+        last_message_channel: '1169747347165687838',
+        last_message_at: new Date(),
+      },
+    });
+  }
+}
+
 async function seedIdoseEntry(userId:string): Promise<void> {
   const drugData = await prisma.drug_names.findFirstOrThrow({
     where: {
@@ -280,6 +312,7 @@ async function seedIdoseEntry(userId:string): Promise<void> {
 
 async function seed() {
   await Promise.all([
+    await prisma.rpg_inventory.deleteMany({}),
     await prisma.personas.deleteMany({}),
     await prisma.ai_images.deleteMany({}),
     await prisma.user_actions.deleteMany({}),
@@ -300,16 +333,17 @@ async function seed() {
 
   // Start seeding
   // Create users, this will return an ID for a user we can use in other seeds
-  const userId = await seedUsers();
+  const userList = await seedUsers();
+  await seedExperience(userList);
 
   // Create drugs, drug names, drug variants, and drug variant ROAs
-  const drugRecords = await seedDrugs(userId);
+  const drugRecords = await seedDrugs(userList[0].id);
   await seedDrugNames(drugRecords);
-  const variantRecords = await seedDrugVariants(drugRecords, userId);
+  const variantRecords = await seedDrugVariants(drugRecords, userList[0].id);
   await seedDrugVariantRoas(drugRecords, variantRecords);
 
   // Create iDose entry
-  await seedIdoseEntry(userId); // This needs to happen after drug creation
+  await seedIdoseEntry(userList[0].id); // This needs to happen after drug creation
 }
 
 seed()

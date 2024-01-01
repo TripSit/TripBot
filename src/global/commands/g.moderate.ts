@@ -452,7 +452,6 @@ export async function moderate(
   let extraMessage = '';
 
   let actionData = {
-    id: undefined as string | undefined,
     user_id: targetData.id,
     type: {} as user_action_type,
     ban_evasion_related_user: null as string | null,
@@ -846,13 +845,19 @@ export async function moderate(
   if (command !== 'INFO') {
     // This needs to happen before creating the modlog embed
     // await useractionsSet(actionData);
-    await db.user_actions.upsert({
-      where: {
-        id: actionData.id,
-      },
-      create: actionData,
-      update: actionData,
-    });
+    if (actionData.id) {
+      await db.user_actions.upsert({
+        where: {
+          id: actionData.id,
+        },
+        create: actionData,
+        update: actionData,
+      });
+    } else {
+      await db.user_actions.create({
+        data: actionData,
+      });
+    }
   }
 
   const modlogEmbed = await userInfoEmbed(discordUser, targetData, command);

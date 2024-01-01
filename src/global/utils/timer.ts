@@ -164,11 +164,9 @@ async function checkTickets() { // eslint-disable-line @typescript-eslint/no-unu
         // Restore roles on the user
         const userData = await db.users.upsert({
           where: {
-            discord_id: ticket.user_id,
+            id: ticket.user_id,
           },
-          create: {
-            discord_id: ticket.user_id,
-          },
+          create: {},
           update: {},
         });
         if (userData.discord_id) {
@@ -240,12 +238,6 @@ async function checkTickets() { // eslint-disable-line @typescript-eslint/no-unu
         && DateTime.fromJSDate(ticket.deleted_at) <= DateTime.local()
       ) {
         log.debug(F, `Deleting ticket ${ticket.id}...`);
-        // Delete the ticket
-        await db.user_tickets.delete({
-          where: {
-            id: ticket.id,
-          },
-        });
 
         // Delete the thread on discord
         if (ticket.thread_id) {
@@ -258,15 +250,12 @@ async function checkTickets() { // eslint-disable-line @typescript-eslint/no-unu
             log.debug(F, `Thread ${ticket.thread_id} was likely manually deleted`);
           }
         }
-
-        const updatedTicket = ticket;
-        updatedTicket.status = 'DELETED' as ticket_status;
         await db.user_tickets.update({
           where: {
-            id: updatedTicket.id,
+            id: ticket.id,
           },
           data: {
-            status: updatedTicket.status,
+            status: 'DELETED' as ticket_status,
           },
         });
       }
