@@ -17,7 +17,18 @@ export const guildMemberAdd: GuildMemberAddEvent = {
   name: 'guildMemberAdd',
   async execute(member) {
     // Get all guilds in the database
-    const guildsData = await database.guilds.getAll();
+    // const guildsData = await database.guilds.getAll();
+    const guildsData = await db.discord_guilds.findMany({});
+    const userData = await db.users.upsert({
+      where: {
+        discord_id: member.id,
+      },
+      create: {
+        discord_id: member.id,
+      },
+      update: {},
+    });
+
     // Filter out guilds that are not partnered, we only alert partners when someone is banned
     const partnerGuildsData = guildsData.filter(guild => guild.partner);
 

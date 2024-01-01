@@ -5,8 +5,6 @@ import {
 import {
   ApplicationCommandType,
 } from 'discord-api-types/v10';
-import { user_action_type } from '@prisma/client';
-import { parseDuration } from '../../../global/utils/parseDuration';
 import { UserCommand } from '../../@types/commandDef';
 // import log from '../../../global/utils/log';
 import commandContext from '../../utils/context';

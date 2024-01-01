@@ -485,8 +485,6 @@ async function techhelp(
 
       // We need to send the message, otherwise it has the "user used /setup tripsit" at the top
       await (i.channel as TextChannel).send({ embeds: [embed], components: [row] });
-
-      await database.guilds.set(guildData);
       await i.editReply({ content: 'Setup complete!' });
     });
 }

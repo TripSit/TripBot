@@ -21,8 +21,8 @@ import {
 import { stripIndents } from 'common-tags';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
-import { database } from '../../../global/utils/knex';
 import { checkGuildPermissions } from '../../utils/checkPermissions';
+import commandContext from '../../utils/context';
 
 const F = f(__filename);
 
@@ -259,9 +259,18 @@ export async function cooperativeLeaveButton(
 ) {
   await interaction.deferReply({ ephemeral: true });
   const guild = interaction.guild as Guild;
-  const guildData = await database.guilds.get(guild.id);
-  guildData.partner = false;
-  await database.guilds.set(guildData);
+  await db.discord_guilds.upsert({
+    where: {
+      id: guild.id,
+    },
+    create: {
+      id: guild.id,
+      partner: false,
+    },
+    update: {
+      partner: false,
+    },
+  });
   await interaction.editReply({
     embeds: [
       embedTemplate({
@@ -275,9 +284,19 @@ async function add(
   interaction:ChatInputCommandInteraction,
 ):Promise<InteractionEditReplyOptions> {
   const guild = await discordClient.guilds.fetch(interaction.options.getString('guildId', true));
-  const guildData = await database.guilds.get(guild.id);
-  guildData.partner = true;
-  await database.guilds.set(guildData);
+  await db.discord_guilds.upsert({
+    where: {
+      id: guild.id,
+    },
+    create: {
+      id: guild.id,
+      partner: true,
+    },
+    update: {
+      partner: true,
+    },
+  });
+
   return {
     embeds: [
       embedTemplate({
@@ -292,9 +311,18 @@ async function remove(
 ):Promise<InteractionEditReplyOptions> {
   // Sets the guild partner status to false
   const guild = await discordClient.guilds.fetch(interaction.options.getString('guildId', true));
-  const guildData = await database.guilds.get(guild.id);
-  guildData.partner = false;
-  await database.guilds.set(guildData);
+  await db.discord_guilds.upsert({
+    where: {
+      id: guild.id,
+    },
+    create: {
+      id: guild.id,
+      partner: false,
+    },
+    update: {
+      partner: false,
+    },
+  });
   return {
     embeds: [
       embedTemplate({
@@ -314,7 +342,18 @@ export async function sendCooperativeMessage(
   // for each guild so that each guild gets a custom ping if they're in the array.
 
   await Promise.all(pingGuilds.map(async guildId => {
-    const guildData = await database.guilds.get(guildId);
+    const guildData = await db.discord_guilds.upsert({
+      where: {
+        id: guildId,
+      },
+      create: {
+        id: guildId,
+        partner: false,
+      },
+      update: {
+        partner: false,
+      },
+    });
     const guild = await discordClient.guilds.fetch(guildId);
     if (guildData.mod_room_id && guildData.mod_role_id) {
       let channelCoopMod = {} as TextChannel;
@@ -322,15 +361,25 @@ export async function sendCooperativeMessage(
         channelCoopMod = await discordClient.channels.fetch(guildData.mod_room_id) as TextChannel;
       } catch (e) {
         guildData.mod_room_id = null;
-        await database.guilds.set(guildData);
+        await db.discord_guilds.update({
+          where: {
+            id: guildId,
+          },
+          data: guildData,
+        });
       }
 
       let roleMod = {} as Role;
       try {
         roleMod = await guild.roles.fetch(guildData.mod_role_id) as Role;
       } catch (e) {
-        guildData.mod_room_id = null;
-        await database.guilds.set(guildData);
+        guildData.mod_role_id = null;
+        await db.discord_guilds.update({
+          where: {
+            id: guildId,
+          },
+          data: guildData,
+        });
       }
 
       await channelCoopMod.send({
@@ -388,7 +437,15 @@ export const dCooperative: SlashCommand = {
     let response = {} as InteractionEditReplyOptions;
 
     const command = interaction.options.getSubcommand();
-    const guildData = await database.guilds.get(interaction.guild.id);
+    const guildData = await db.discord_guilds.upsert({
+      where: {
+        id: interaction.guild?.id,
+      },
+      create: {
+        id: interaction.guild?.id,
+      },
+      update: {},
+    });
     if ((command === 'leave' || command === 'setup') && !guildData.partner) {
       await interaction.editReply({
         embeds: [

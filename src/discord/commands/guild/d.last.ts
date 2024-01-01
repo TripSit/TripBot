@@ -38,7 +38,7 @@ export const dLast: SlashCommand = {
     const roleModerator = await interaction.guild.roles.fetch(env.ROLE_MODERATOR) as Role;
     const actorIsMod = actor.roles.cache.has(roleModerator.id);
 
-    const response = await last(target);
+    const response = await last(target.user, interaction.guild);
 
     await interaction.editReply({ content: `${response.lastMessage}` });
 

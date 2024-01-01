@@ -12,7 +12,6 @@ import {
   GuildBanAddEvent,
 } from '../@types/eventDef';
 import { checkGuildPermissions } from '../utils/checkPermissions';
-import { database } from '../../global/utils/knex';
 import { tripSitTrollScore, userInfoEmbed } from '../commands/guild/d.moderate';
 import { sendCooperativeMessage } from '../commands/guild/d.cooperative';
 
@@ -24,7 +23,7 @@ export const guildBanAdd: GuildBanAddEvent = {
     log.info(F, `Ban ${ban.user} was added.`);
 
     // Get all guilds in the database
-    const guildsData = await database.guilds.getAll();
+    const guildsData = await db.discord_guilds.findMany({});
     // Filter out guilds that are not partnered, we only alert partners when someone is banned
     const partnerGuildsData = guildsData.filter(guild => guild.partner);
     // Get a list of partnered discord guild objects
@@ -58,7 +57,15 @@ export const guildBanAdd: GuildBanAddEvent = {
         );
       }
 
-      const userData = await database.users.get(ban.user.id, null, null);
+      const userData = await db.users.upsert({
+        where: {
+          discord_id: ban.user.id,
+        },
+        create: {
+          discord_id: ban.user.id,
+        },
+        update: {},
+      });
 
       const embed = await userInfoEmbed(
         ban.user,

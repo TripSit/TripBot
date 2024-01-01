@@ -450,7 +450,9 @@ export async function moderate(
   let extraMessage = '';
 
   let actionData = {
+    id: '',
     user_id: targetData.id,
+    guild_id: actor.guild.id,
     type: {} as user_action_type,
     ban_evasion_related_user: null as string | null,
     description,
@@ -516,7 +518,7 @@ export async function moderate(
       const deleteMessageValue = duration ?? 0;
       if (deleteMessageValue > 0 && targetIsMember) {
       // log.debug(F, `I am deleting ${deleteMessageValue} days of messages!`);
-        const response = await last(discordMember);
+        const response = await last(discordMember.user, actor.guild);
         extraMessage = `${discordMember.displayName}'s last ${response.messageCount} (out of ${response.totalMessages}) messages before being banned :\n${response.messageList}`;
       }
       const targetGuild = await discordClient.guilds.fetch(env.DISCORD_GUILD_ID);

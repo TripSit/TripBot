@@ -5,8 +5,6 @@ import {
 import {
   ApplicationCommandType,
 } from 'discord-api-types/v10';
-import { stripIndents } from 'common-tags';
-import { user_action_type } from '@prisma/client';
 import { MessageCommand } from '../../@types/commandDef';
 import commandContext from '../../utils/context';
 import { warn } from './d.moderate';

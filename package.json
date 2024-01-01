@@ -26,7 +26,7 @@
     "db:formatSchema": "docker exec -it tripbot npx prisma format",
     "db:validateSchema": "docker exec -it tripbot npx prisma validate",
     "db:generateClient": "npx prisma generate && docker exec -it tripbot npx prisma generate",
-    "db:pushDev": "docker exec -it tripbot npx prisma db push && npx prisma generate",
+    "db:pushDev": "docker exec -it tripbot npx prisma db push && npm run tripbot:db:generate",
     "db:migrateDev": "docker exec -it tripbot npx prisma migrate dev -n betterImageLogging",
     "db:seed": "docker exec -it tripbot npx prisma db seed",
     "## PGADMIN ##": "",

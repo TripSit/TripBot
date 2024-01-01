@@ -28,10 +28,10 @@ import {
   TextInputStyle,
 } from 'discord-api-types/v10';
 import { stripIndents } from 'common-tags';
-import { user_action_type } from '@prisma/client';
+import { user_action_type, user_actions, users } from '@prisma/client';
 import { SlashCommand } from '../../@types/commandDef';
 import { parseDuration } from '../../../global/utils/parseDuration';
-import { moderate, linkThread } from '../../../global/commands/g.moderate';
+import { linkThread } from '../../../global/commands/g.moderate';
 import commandContext from '../../utils/context'; // eslint-disable-line
 import { getDiscordMember, getDiscordUser } from '../../utils/guildMemberLookup';
 import { last } from '../../../global/commands/g.last';
@@ -209,7 +209,7 @@ const noUserError = 'Could not find that member/user!';
 
 export async function userInfoEmbed(
   target:GuildMember | User,
-  targetData:Users,
+  targetData:users,
   command?: ModAction,
 ):Promise<EmbedBuilder> {
   const targetActionList = {
@@ -227,7 +227,12 @@ export async function userInfoEmbed(
   };
   // Populate targetActionList from the db
 
-  const targetActionListRaw = await database.actions.get(targetData.id);
+  // const targetActionListRaw = await database.actions.get(targetData.id);
+  const targetActionListRaw = await db.user_actions.findMany({
+    where: {
+      user_id: targetData.id,
+    },
+  });
 
   // log.debug(F, `targetActionListRaw: ${JSON.stringify(targetActionListRaw, null, 2)}`);
 
@@ -463,24 +468,6 @@ export async function tripSitTrollScore(
   };
 }
 
-async function linkThread(
-  discordId: string,
-  threadId: string,
-  override: boolean | null,
-):Promise<string | null> {
-  // Get the targetData from the db
-  const targetData = await database.users.get(discordId, null, null);
-
-  if (targetData.mod_thread_id === null || override) {
-    // log.debug(F, `targetData.mod_thread_id is null, updating it`);
-    targetData.mod_thread_id = threadId;
-    await database.users.set(targetData);
-    return null;
-  }
-  // log.debug(F, `targetData.mod_thread_id is not null, not updating it`);
-  return targetData.mod_thread_id;
-}
-
 async function messageModThread(
   actor: GuildMember,
   target: User,
@@ -491,8 +478,26 @@ async function messageModThread(
 ):Promise<ThreadChannel> {
   let modThread = {} as ThreadChannel;
 
-  const targetData = await database.users.get(target.id, null, null);
-  const guildData = await database.guilds.get(actor.guild.id);
+  const targetData = await db.users.upsert({
+    where: {
+      discord_id: target.id,
+    },
+    create: {
+      discord_id: target.id,
+    },
+    update: {
+    },
+  });
+  const guildData = await db.discord_guilds.upsert({
+    where: {
+      id: actor.guild.id,
+    },
+    create: {
+      id: actor.guild.id,
+    },
+    update: {
+    },
+  });
 
   const guild = await discordClient.guilds.fetch(guildData.id);
   if (targetData.mod_thread_id) {
@@ -525,7 +530,14 @@ async function messageModThread(
     // log.debug(F, 'created mod thread');
     // Save the thread id to the user
     targetData.mod_thread_id = modThread.id;
-    await database.users.set(targetData);
+    await db.users.update({
+      where: {
+        discord_id: target.id,
+      },
+      data: {
+        mod_thread_id: modThread.id,
+      },
+    });
     log.debug(F, 'saved mod thread id to user');
     newModThread = true;
   }
@@ -582,7 +594,17 @@ async function messageUser(
   }
 
   if (addButtons) {
-    const targetData = await database.users.get(target.id, null, null);
+    const targetData = await db.users.upsert({
+      where: {
+        discord_id: target.id,
+      },
+      create: {
+        discord_id: target.id,
+      },
+      update: {
+      },
+    });
+
     const messageFilter = (mi: MessageComponentInteraction) => mi.user.id === target.id;
     const collector = message.createMessageComponentCollector({ filter: messageFilter, time: 0 });
 
@@ -622,7 +644,16 @@ async function messageModlog(
   internalNote: string,
   description?: string,
 ) {
-  const targetData = await database.users.get(target.id, null, null);
+  const targetData = await db.users.upsert({
+    where: {
+      discord_id: target.id,
+    },
+    create: {
+      discord_id: target.id,
+    },
+    update: {
+    },
+  });
   const modlogEmbed = await userInfoEmbed(target, targetData, command);
 
   const anonSummary = `${target.username} was ${embedVariables[command as keyof typeof embedVariables].pastVerb}!`;
@@ -769,13 +800,31 @@ export async function ban(
         );
       }
 
-      const actorData = await database.users.get(actor.id, null, null);
-      const targetData = await database.users.get(target.id, null, null);
+      const actorData = await db.users.upsert({
+        where: {
+          discord_id: actor.id,
+        },
+        create: {
+          discord_id: actor.id,
+        },
+        update: {
+        },
+      });
+      const targetData = await db.users.upsert({
+        where: {
+          discord_id: target.id,
+        },
+        create: {
+          discord_id: target.id,
+        },
+        update: {
+        },
+      });
 
       let actionData = {
         id: undefined as string | undefined,
         user_id: targetData.id,
-        type: 'TIMEOUT' as UserActionType,
+        type: 'TIMEOUT' as user_action_type,
         ban_evasion_related_user: null as string | null,
         description,
         internal_note: internalNote,
@@ -784,12 +833,19 @@ export async function ban(
         repealed_at: null as Date | null,
         created_by: actorData.id,
         created_at: new Date(),
-      } as UserActions;
+      } as user_actions;
       let extraMessage = '';
       if (command === 'FULL_BAN') {
-        actionData.type = 'FULL_BAN' as UserActionType;
+        actionData.type = 'FULL_BAN' as user_action_type;
         targetData.removed_at = new Date();
-        await database.users.set(targetData);
+        await db.users.update({
+          where: {
+            discord_id: target.id,
+          },
+          data: {
+            removed_at: new Date(),
+          },
+        });
         try {
           const deleteMessageValue = duration ?? 0;
           if (deleteMessageValue > 0) {
@@ -812,12 +868,24 @@ export async function ban(
           log.error(F, `Error: ${err}`);
         }
       } else if (command === 'UN-FULL_BAN') {
-        actionData.type = 'FULL_BAN' as UserActionType;
+        actionData.type = 'FULL_BAN' as user_action_type;
 
         targetData.removed_at = null;
-        await database.users.set(targetData);
+        await db.users.update({
+          where: {
+            discord_id: target.id,
+          },
+          data: {
+            removed_at: null,
+          },
+        });
 
-        const record = await database.actions.get(targetData.id, 'FULL_BAN');
+        const record = await db.user_actions.findMany({
+          where: {
+            user_id: targetData.id,
+            type: 'FULL_BAN',
+          },
+        });
 
         if (record.length > 0) {
           [actionData] = record;
@@ -836,9 +904,16 @@ export async function ban(
           log.error(F, `Error: ${err}`);
         }
       } else if (command === 'UNDERBAN') {
-        actionData.type = 'UNDERBAN' as UserActionType;
+        actionData.type = 'UNDERBAN' as user_action_type;
         targetData.removed_at = new Date();
-        await database.users.set(targetData);
+        await db.users.update({
+          where: {
+            discord_id: target.id,
+          },
+          data: {
+            removed_at: new Date(),
+          },
+        });
         try {
           const targetGuild = await discordClient.guilds.fetch(env.DISCORD_GUILD_ID);
           targetGuild.bans.create(
@@ -849,11 +924,24 @@ export async function ban(
           log.error(F, `Error: ${err}`);
         }
       } else if (command === 'UN-UNDERBAN') {
-        actionData.type = 'UNDERBAN' as UserActionType;
+        actionData.type = 'UNDERBAN' as user_action_type;
         targetData.removed_at = null;
-        await database.users.set(targetData);
+        await db.users.update({
+          where: {
+            discord_id: target.id,
+          },
+          data: {
+            removed_at: null,
+          },
+        });
 
-        const record = await database.actions.get(targetData.id, 'UNDERBAN');
+        const record = await db.user_actions.findMany({
+          where: {
+            user_id: targetData.id,
+            type: 'UNDERBAN',
+          },
+        });
+
         if (record.length > 0) {
           [actionData] = record;
         }
@@ -871,32 +959,71 @@ export async function ban(
           log.error(F, `Error: ${err}`);
         }
       } else if (command === 'TICKET_BAN') {
-        actionData.type = 'TICKET_BAN' as UserActionType;
+        actionData.type = 'TICKET_BAN' as user_action_type;
         targetData.ticket_ban = true;
-        await database.users.set(targetData);
+        await db.users.update({
+          where: {
+            discord_id: target.id,
+          },
+          data: {
+            ticket_ban: true,
+          },
+        });
       } else if (command === 'UN-TICKET_BAN') {
-        actionData.type = 'TICKET_BAN' as UserActionType;
+        actionData.type = 'TICKET_BAN' as user_action_type;
         targetData.ticket_ban = false;
 
-        await database.users.set(targetData);
+        await db.users.update({
+          where: {
+            discord_id: target.id,
+          },
+          data: {
+            ticket_ban: false,
+          },
+        });
 
-        const record = await database.actions.get(targetData.id, 'UNDERBAN');
+        const record = await db.user_actions.findMany({
+          where: {
+            user_id: targetData.id,
+            type: 'TICKET_BAN',
+          },
+        });
         if (record.length > 0) {
           [actionData] = record;
         }
         actionData.repealed_at = new Date();
         actionData.repealed_by = actorData.id;
       } else if (command === 'DISCORD_BOT_BAN') {
-        actionData.type = 'DISCORD_BOT_BAN' as UserActionType;
+        actionData.type = 'DISCORD_BOT_BAN' as user_action_type;
         targetData.discord_bot_ban = true;
-        await database.users.set(targetData);
+        await db.users.update({
+          where: {
+            discord_id: target.id,
+          },
+          data: {
+            discord_bot_ban: true,
+          },
+        });
+
         botBannedUsers.push(target.id);
       } else if (command === 'UN-DISCORD_BOT_BAN') {
-        actionData.type = 'DISCORD_BOT_BAN' as UserActionType;
+        actionData.type = 'DISCORD_BOT_BAN' as user_action_type;
         targetData.discord_bot_ban = false;
-        await database.users.set(targetData);
+        await db.users.update({
+          where: {
+            discord_id: target.id,
+          },
+          data: {
+            discord_bot_ban: false,
+          },
+        });
 
-        const record = await database.actions.get(targetData.id, actionData.type);
+        const record = await db.user_actions.findMany({
+          where: {
+            user_id: targetData.id,
+            type: 'DISCORD_BOT_BAN',
+          },
+        });
         if (record.length > 0) {
           [actionData] = record;
         }
@@ -909,15 +1036,34 @@ export async function ban(
           botBannedUsers.splice(index, 1);
         }
       } else if (command === 'BAN_EVASION') {
-        actionData.type = 'BAN_EVASION' as UserActionType;
+        actionData.type = 'BAN_EVASION' as user_action_type;
         targetData.removed_at = new Date();
-        await database.users.set(targetData);
+        await db.users.update({
+          where: {
+            discord_id: target.id,
+          },
+          data: {
+            removed_at: new Date(),
+          },
+        });
       } else if (command === 'UN-BAN_EVASION') {
-        actionData.type = 'BAN_EVASION' as UserActionType;
+        actionData.type = 'BAN_EVASION' as user_action_type;
         targetData.removed_at = null;
-        await database.users.set(targetData);
+        await db.users.update({
+          where: {
+            discord_id: target.id,
+          },
+          data: {
+            removed_at: null,
+          },
+        });
 
-        const record = await database.actions.get(targetData.id, actionData.type);
+        const record = await db.user_actions.findMany({
+          where: {
+            user_id: targetData.id,
+            type: 'BAN_EVASION',
+          },
+        });
         if (record.length > 0) {
           [actionData] = record;
         }
@@ -925,19 +1071,9 @@ export async function ban(
         actionData.repealed_by = actorData.id;
       }
 
-      await database.actions.set({
-        id: undefined as string | undefined,
-        user_id: targetData.id,
-        type: 'KICK' as UserActionType,
-        ban_evasion_related_user: null as string | null,
-        description,
-        internal_note: internalNote,
-        expires_at: null as Date | null,
-        repealed_by: null as string | null,
-        repealed_at: null as Date | null,
-        created_by: actorData.id,
-        created_at: new Date(),
-      } as UserActions);
+      await db.user_actions.create({
+        data: actionData,
+      });
 
       let modThread = {} as ThreadChannel;
       if (!vendorBan) {
@@ -1017,7 +1153,16 @@ export async function info(
   const actor = interaction.member as GuildMember;
   log.debug(F, `${actor} ran ${command} on ${target} in ${actor.guild.name}`);
 
-  const targetData = await database.users.get(target.id, null, null);
+  const targetData = await db.users.upsert({
+    where: {
+      discord_id: target.id,
+    },
+    create: {
+      discord_id: target.id,
+    },
+    update: {
+    },
+  });
   const modlogEmbed = await userInfoEmbed(target, targetData, command);
   const trollScoreData = await tripSitTrollScore((target as GuildMember).user ? (target as GuildMember).user : target as User);
   modlogEmbed.setDescription(`**TripSit TrollScore: ${trollScoreData.trollScore}**\n\`\`\`${trollScoreData.tsReasoning}\`\`\`${modlogEmbed.data.description}`);
@@ -1093,22 +1238,43 @@ export async function kick(
         log.error(F, `Error: ${err}`);
       }
 
-      const actorData = await database.users.get((interaction.member as GuildMember).id, null, null);
-      const targetData = await database.users.get(target.id, null, null);
+      const actorData = await db.users.upsert({
+        where: {
+          discord_id: actor.id,
+        },
+        create: {
+          discord_id: actor.id,
+        },
+        update: {
+        },
+      });
+      const targetData = await db.users.upsert({
+        where: {
+          discord_id: target.id,
+        },
+        create: {
+          discord_id: target.id,
+        },
+        update: {
+        },
+      });
 
-      await database.actions.set({
-        id: undefined as string | undefined,
-        user_id: targetData.id,
-        type: 'KICK' as UserActionType,
-        ban_evasion_related_user: null as string | null,
-        description,
-        internal_note: internalNote,
-        expires_at: null as Date | null,
-        repealed_by: null as string | null,
-        repealed_at: null as Date | null,
-        created_by: actorData.id,
-        created_at: new Date(),
-      } as UserActions);
+      await db.user_actions.create({
+        data: {
+          id: undefined as string | undefined,
+          user_id: targetData.id,
+          guild_id: i.guild.id,
+          type: 'KICK' as user_action_type,
+          ban_evasion_related_user: null as string | null,
+          description,
+          internal_note: internalNote,
+          expires_at: null as Date | null,
+          repealed_by: null as string | null,
+          repealed_at: null as Date | null,
+          created_by: actorData.id,
+          created_at: new Date(),
+        },
+      });
 
       const modThread = await messageModThread(
         actor,
@@ -1148,7 +1314,16 @@ export async function link(
   interaction: ChatInputCommandInteraction,
   target: GuildMember,
 ) {
-  const guildData = await database.guilds.get((interaction.guild as Guild).id);
+  const guildData = await db.discord_guilds.upsert({
+    where: {
+      id: (interaction.guild as Guild).id,
+    },
+    create: {
+      id: (interaction.guild as Guild).id,
+    },
+    update: {
+    },
+  });
   if (!interaction.channel?.isThread()
   || !interaction.channel.parentId
   || interaction.channel.parentId !== guildData.mod_room_id) {
@@ -1164,7 +1339,17 @@ export async function link(
   let result: string | null;
   const targetString = interaction.options.getString('target', true);
   if (!target) {
-    const userData = await database.users.get(targetString, null, null);
+    const userData = await db.users.upsert({
+      where: {
+        discord_id: targetString,
+      },
+      create: {
+        discord_id: targetString,
+      },
+      update: {
+      },
+    });
+
     if (!userData) {
       await interaction.reply({
         content: stripIndents`Failed to link thread, I could not find this user in the guild, \
@@ -1237,22 +1422,34 @@ export async function note(
         `;
       }
 
-      const actorData = await database.users.get((interaction.member as GuildMember).id, null, null);
-      const targetData = await database.users.get(target.id, null, null);
+      // const actorData = await database.users.get((interaction.member as GuildMember).id, null, null);
+      // const targetData = await database.users.get(target.id, null, null);
+      const actorData = await db.users.upsert({
+        where: {
+          discord_id: actor.id,
+        },
+        create: {
+          discord_id: actor.id,
+        },
+        update: {
+        },
+      });
 
-      await database.actions.set({
-        id: undefined as string | undefined,
-        user_id: targetData.id,
-        type: 'NOTE' as UserActionType,
-        ban_evasion_related_user: null as string | null,
-        description: null,
-        internal_note: fullNote,
-        expires_at: null as Date | null,
-        repealed_by: null as string | null,
-        repealed_at: null as Date | null,
-        created_by: actorData.id,
-        created_at: new Date(),
-      } as UserActions);
+      await db.user_actions.create({
+        data: {
+          user_id: target.id,
+          guild_id: actor.guild.id,
+          type: 'NOTE' as user_action_type,
+          ban_evasion_related_user: null as string | null,
+          description: null,
+          internal_note: fullNote,
+          expires_at: null as Date | null,
+          repealed_by: null as string | null,
+          repealed_at: null as Date | null,
+          created_by: actorData.id,
+          created_at: new Date(),
+        },
+      });
 
       const modThread = await messageModThread(
         actor,
@@ -1328,22 +1525,44 @@ export async function report(
         `;
       }
 
-      const actorData = await database.users.get((interaction.member as GuildMember).id, null, null);
-      const targetData = await database.users.get(target.id, null, null);
+      // const actorData = await database.users.get((interaction.member as GuildMember).id, null, null);
+      // const targetData = await database.users.get(target.id, null, null);
+      const actorData = await db.users.upsert({
+        where: {
+          discord_id: actor.id,
+        },
+        create: {
+          discord_id: actor.id,
+        },
+        update: {
+        },
+      });
+      const targetData = await db.users.upsert({
+        where: {
+          discord_id: target.id,
+        },
+        create: {
+          discord_id: target.id,
+        },
+        update: {
+        },
+      });
 
-      await database.actions.set({
-        id: undefined as string | undefined,
-        user_id: targetData.id,
-        type: 'REPORT' as UserActionType,
-        ban_evasion_related_user: null as string | null,
-        description: null,
-        internal_note: fullNote,
-        expires_at: null as Date | null,
-        repealed_by: null as string | null,
-        repealed_at: null as Date | null,
-        created_by: actorData.id,
-        created_at: new Date(),
-      } as UserActions);
+      await db.user_actions.create({
+        data: {
+          user_id: targetData.id,
+          guild_id: actor.guild.id,
+          type: 'REPORT' as user_action_type,
+          ban_evasion_related_user: null as string | null,
+          description: null,
+          internal_note: fullNote,
+          expires_at: null as Date | null,
+          repealed_by: null as string | null,
+          repealed_at: null as Date | null,
+          created_by: actorData.id,
+          created_at: new Date(),
+        },
+      });
 
       await messageModThread(
         actor,
@@ -1506,13 +1725,35 @@ export async function timeout(
         }
       }
 
-      const actorData = await database.users.get(actor.id, null, null);
-      const targetData = await database.users.get(target.id, null, null);
+      // const actorData = await database.users.get(actor.id, null, null);
+      // const targetData = await database.users.get(target.id, null, null);
+
+      const actorData = await db.users.upsert({
+        where: {
+          discord_id: actor.id,
+        },
+        create: {
+          discord_id: actor.id,
+        },
+        update: {
+        },
+      });
+
+      const targetData = await db.users.upsert({
+        where: {
+          discord_id: target.id,
+        },
+        create: {
+          discord_id: target.id,
+        },
+        update: {
+        },
+      });
 
       let actionData = {
         id: undefined as string | undefined,
         user_id: targetData.id,
-        type: 'TIMEOUT' as UserActionType,
+        type: 'TIMEOUT' as user_action_type,
         ban_evasion_related_user: null as string | null,
         description,
         internal_note: fullNote,
@@ -1521,13 +1762,19 @@ export async function timeout(
         repealed_at: null as Date | null,
         created_by: actorData.id,
         created_at: new Date(),
-      } as UserActions;
+      } as user_actions;
 
       if (command === 'TIMEOUT') {
-        actionData.type = 'TIMEOUT' as UserActionType;
+        actionData.type = 'TIMEOUT' as user_action_type;
         actionData.expires_at = new Date(Date.now() + timeoutDuration);
       } else {
-        const record = await database.actions.get(targetData.id, 'TIMEOUT');
+        // const record = await database.actions.get(targetData.id, 'TIMEOUT');
+        const record = await db.user_actions.findMany({
+          where: {
+            user_id: targetData.id,
+            type: 'TIMEOUT',
+          },
+        });
         if (record.length > 0) {
           [actionData] = record;
         }
@@ -1535,7 +1782,9 @@ export async function timeout(
         actionData.repealed_by = actorData.id;
       }
 
-      await database.actions.set(actionData);
+      await db.user_actions.create({
+        data: actionData,
+      });
 
       const modThread = await messageModThread(
         actor,
@@ -1644,22 +1893,43 @@ export async function warn(
         true,
       );
 
-      const actorData = await database.users.get((interaction.member as GuildMember).id, null, null);
-      const targetData = await database.users.get(target.id, null, null);
+      const actorData = await db.users.upsert({
+        where: {
+          discord_id: actor.id,
+        },
+        create: {
+          discord_id: actor.id,
+        },
+        update: {
+        },
+      });
 
-      await database.actions.set({
-        id: undefined as string | undefined,
-        user_id: targetData.id,
-        type: 'WARNING' as UserActionType,
-        ban_evasion_related_user: null as string | null,
-        description,
-        internal_note: fullNote,
-        expires_at: null as Date | null,
-        repealed_by: null as string | null,
-        repealed_at: null as Date | null,
-        created_by: actorData.id,
-        created_at: new Date(),
-      } as UserActions);
+      const targetData = await db.users.upsert({
+        where: {
+          discord_id: target.id,
+        },
+        create: {
+          discord_id: target.id,
+        },
+        update: {
+        },
+      });
+
+      await db.user_actions.create({
+        data: {
+          user_id: targetData.id,
+          guild_id: actor.guild.id,
+          type: 'WARNING' as user_action_type,
+          ban_evasion_related_user: null as string | null,
+          description,
+          internal_note: fullNote,
+          expires_at: null as Date | null,
+          repealed_by: null as string | null,
+          repealed_at: null as Date | null,
+          created_by: actorData.id,
+          created_at: new Date(),
+        },
+      });
 
       const modThread = await messageModThread(
         actor,
@@ -1799,7 +2069,16 @@ export const mod: SlashCommand = {
     const command = interaction.options.getSubcommand().toUpperCase() as ModAction;
 
     // Check if the guild is a partner (or the home guild)
-    const guildData = await database.guilds.get(interaction.guild.id);
+    const guildData = await db.discord_guilds.upsert({
+      where: {
+        id: interaction.guild.id,
+      },
+      create: {
+        id: interaction.guild.id,
+      },
+      update: {
+      },
+    });
     if (interaction.guild.id !== env.DISCORD_GUILD_ID
           && !guildData.partner
           && !guildData.supporter) {
