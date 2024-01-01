@@ -115,7 +115,7 @@ const parseDose = (
   return value;
 };
 
-async function seedUsers():Promise<string> {
+async function seedUsers(): Promise<string> {
   // Users
   const [moonbearUser] = await Promise.all([
     await prisma.users.create({
@@ -124,6 +124,13 @@ async function seedUsers():Promise<string> {
         username: 'MoonBear',
         discord_id: '177537158419054592',
         password_hash: await argon.hash('P@ssw0rd'),
+        timezone: 'America/New_York',
+        birthday: new Date('1995-01-01'),
+        karma_given: 69,
+        karma_received: 420,
+        sparkle_points: 100,
+        move_points: 200,
+        empathy_points: 300,
       },
     }),
     // await prisma.users.create({
@@ -146,7 +153,7 @@ async function seedUsers():Promise<string> {
   return moonbearUser.id;
 }
 
-async function seedDrugs(userId:string):Promise<DrugRecord[]> {
+async function seedDrugs(userId: string): Promise<DrugRecord[]> {
   const drugRecords: DrugRecord[] = await Promise.all(
     drugs.map(async drug => {
       const createdDrug = await prisma.drugs.create({
@@ -171,7 +178,7 @@ async function seedDrugs(userId:string):Promise<DrugRecord[]> {
   return drugRecords;
 }
 
-async function seedDrugNames(drugRecords:DrugRecord[]):Promise<void> {
+async function seedDrugNames(drugRecords: DrugRecord[]): Promise<void> {
   for (const drug of drugRecords) {
     // Insert aliases
     if (drug.aliases && drug.aliases.length > 0) {
@@ -199,7 +206,7 @@ async function seedDrugNames(drugRecords:DrugRecord[]):Promise<void> {
   }
 }
 
-async function seedDrugVariants(drugRecords:DrugRecord[], userId:string):Promise<drug_variants[]> {
+async function seedDrugVariants(drugRecords: DrugRecord[], userId: string): Promise<drug_variants[]> {
   return await Promise.all(
     drugRecords.map(async drug => await prisma.drug_variants.create({
       data: {
@@ -212,9 +219,9 @@ async function seedDrugVariants(drugRecords:DrugRecord[], userId:string):Promise
 }
 
 async function seedDrugVariantRoas(
-  drugRecords:DrugRecord[],
-  variantRecords:drug_variants[],
-):Promise<void> {
+  drugRecords: DrugRecord[],
+  variantRecords: drug_variants[],
+): Promise<void> {
   // Drug variant ROAs
   for (const drug of drugRecords) {
     const drugVariant = variantRecords.find(variant => variant.drug_id === drug.id);
@@ -225,7 +232,7 @@ async function seedDrugVariantRoas(
           data: {
             drug_variant_id: drugVariant.id,
             route: (routeMap[roa.name.toLowerCase() as keyof typeof routeMap]
-            ?? roa.name).toUpperCase() as drug_roa,
+              ?? roa.name).toUpperCase() as drug_roa,
 
             dose_threshold: parseDose('threshold' as Strength, roa.dosage ?? null),
             dose_light: parseDose('light' as Strength, roa.dosage ?? null),
@@ -252,6 +259,25 @@ async function seedDrugVariantRoas(
   }
 }
 
+async function seedIdoseEntry(userId:string): Promise<void> {
+  const drugData = await prisma.drug_names.findFirstOrThrow({
+    where: {
+      name: 'dxm',
+    },
+  });
+
+  await prisma.user_drug_doses.create({
+    data: {
+      user_id: userId,
+      drug_id: drugData.drug_id,
+      route: 'ORAL',
+      dose: 300,
+      units: 'MG',
+      created_at: new Date(),
+    },
+  });
+}
+
 async function seed() {
   await Promise.all([
     await prisma.personas.deleteMany({}),
@@ -273,11 +299,17 @@ async function seed() {
   await prisma.users.deleteMany({}); // Needs to happen last
 
   // Start seeding
+  // Create users, this will return an ID for a user we can use in other seeds
   const userId = await seedUsers();
+
+  // Create drugs, drug names, drug variants, and drug variant ROAs
   const drugRecords = await seedDrugs(userId);
   await seedDrugNames(drugRecords);
   const variantRecords = await seedDrugVariants(drugRecords, userId);
   await seedDrugVariantRoas(drugRecords, variantRecords);
+
+  // Create iDose entry
+  await seedIdoseEntry(userId); // This needs to happen after drug creation
 }
 
 seed()
