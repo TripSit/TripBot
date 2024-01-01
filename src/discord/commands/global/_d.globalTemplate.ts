@@ -13,7 +13,6 @@ import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { globalTemplate } from '../../../global/commands/_g.template';
 import commandContext from '../../utils/context';
-import { getUser } from '../../../global/utils/knex';
 
 const F = f(__filename);
 
@@ -120,7 +119,39 @@ export const dTemplate: SlashCommand = {
         const mentionable = interaction.options.getMentionable('mentionable');
 
         const response = await globalTemplate();
-        const userData = await getUser(i.user.id, null, null);
+        const userData = await db.users.upsert({
+          where: {
+            discord_id: i.user.id,
+          },
+          create: {
+            discord_id: i.user.id,
+          },
+          update: {},
+        });
+
+        if (!interaction.guild) return;
+
+        // const ticketData = await db.user_tickets.findFirst({
+        //   where: {
+        //     user_id: userData.id,
+        //     status: {
+        //       not: {
+        //         in: ['CLOSED', 'RESOLVED', 'DELETED'],
+        //       },
+        //     },
+        //   },
+        // });
+
+        const guildData = await db.discord_guilds.upsert({
+          where: {
+            id: interaction.guild?.id,
+          },
+          create: {
+            id: interaction.guild?.id,
+          },
+          update: {},
+        });
+        log.debug(F, `guildData: ${JSON.stringify(guildData)}`);
 
         await i.editReply({
           embeds: [

@@ -1,11 +1,6 @@
 /* eslint-disable max-len */
 import {
-  // ActionRowBuilder,
-  // ModalBuilder,
-  // TextInputBuilder,
-  // Colors,
   SlashCommandBuilder,
-  // ModalSubmitInteraction,
   ChatInputCommandInteraction,
   Message,
   TextChannel,
@@ -17,16 +12,10 @@ import {
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
 import { SlashCommandBeta } from '../../@types/commandDef';
-// import { embedTemplate } from '../../utils/embedTemplate';
-// import { globalTemplate } from '../../../global/commands/_g.template';
 import commandContext from '../../utils/context';
-import { countingGetG, countingSetG } from '../../../global/commands/g.counting';
 import { embedTemplate } from '../../utils/embedTemplate';
-import { Counting } from '../../../global/@types/database';
-import { getUser, personaGet, personaSet } from '../../../global/utils/knex';
 import { checkChannelPermissions } from '../../utils/checkPermissions';
 import { sleep } from './d.bottest';
-// import { getUser } from '../../../global/utils/knex';
 
 const F = f(__filename);
 
@@ -47,12 +36,16 @@ export async function countingSetup(
   override:boolean,
   purge:boolean,
 ):Promise<InteractionEditReplyOptions> {
-  const data = await countingGetG(channel.id);
-  log.debug(F, `data: ${JSON.stringify(data)}`);
+  const countingData = await db.counting.findFirst({
+    where: {
+      channel_id: channel.id,
+    },
+  });
+  log.debug(F, `data: ${JSON.stringify(countingData)}`);
 
   const embed = embedTemplate();
 
-  if (data && !override) {
+  if (countingData && !override) {
     return {
       embeds: [embed.setTitle('This channel is already set up for counting! Mods can /reset or /end it!')],
     };
@@ -101,31 +94,99 @@ export async function countingSetup(
   const firstNumber = await channel.send({ content: `${startingNumber}` });
   await firstNumber.react('👍');
 
-  await countingSetG({
-    guild_id: channel.guild.id,
-    channel_id: channel.id,
-    type,
+  // await countingSetG({
+  //   guild_id: channel.guild.id,
+  //   channel_id: channel.id,
+  //   type,
 
-    current_number: startingNumber,
-    current_number_message_id: countingMessage.id,
-    current_number_message_date: new Date(),
-    current_number_message_author: countingMessage.author.id,
-    current_stakeholders: purge ? [] : data?.current_stakeholders ?? [],
+  //   current_number: startingNumber,
+  //   current_number_message_id: countingMessage.id,
+  //   current_number_message_date: new Date(),
+  //   current_number_message_author: countingMessage.author.id,
+  //   current_stakeholders: purge ? [] : data?.current_stakeholders ?? [],
 
-    last_number: data?.last_number ?? null,
-    last_number_message_id: data?.last_number_message_id ?? null,
-    last_number_message_date: data?.last_number_broken_date ?? null,
-    last_number_message_author: data?.last_number_message_author ?? null,
-    last_number_broken_by: data?.last_number_broken_by ?? null,
-    last_number_broken_date: data?.last_number_broken_date ?? null,
+  //   last_number: data?.last_number ?? null,
+  //   last_number_message_id: data?.last_number_message_id ?? null,
+  //   last_number_message_date: data?.last_number_broken_date ?? null,
+  //   last_number_message_author: data?.last_number_message_author ?? null,
+  //   last_number_broken_by: data?.last_number_broken_by ?? null,
+  //   last_number_broken_date: data?.last_number_broken_date ?? null,
 
-    record_number: data?.record_number ?? 0,
-    record_number_message_id: data?.record_number_message_id ?? null,
-    record_number_message_date: data?.record_number_message_date ?? null,
-    record_number_message_author: data?.record_number_message_author ?? null,
-    record_number_broken_by: data?.record_number_broken_by ?? null,
-    record_number_broken_date: data?.record_number_broken_date ?? null,
-  } as Counting);
+  //   record_number: data?.record_number ?? 0,
+  //   record_number_message_id: data?.record_number_message_id ?? null,
+  //   record_number_message_date: data?.record_number_message_date ?? null,
+  //   record_number_message_author: data?.record_number_message_author ?? null,
+  //   record_number_broken_by: data?.record_number_broken_by ?? null,
+  //   record_number_broken_date: data?.record_number_broken_date ?? null,
+  // } as counting);
+
+  let currentStakeholders = '';
+
+  if (!purge && countingData?.current_stakeholders) {
+    currentStakeholders = countingData.current_stakeholders;
+  }
+
+  await db.counting.upsert({
+    where: {
+      guild_id_channel_id: {
+        channel_id: channel.id,
+        guild_id: channel.guild.id,
+      },
+    },
+    create: {
+      guild_id: channel.guild.id,
+      channel_id: channel.id,
+      type,
+
+      current_number: startingNumber,
+      current_number_message_id: countingMessage.id,
+      current_number_message_date: new Date(),
+      current_number_message_author: countingMessage.author.id,
+      current_stakeholders: currentStakeholders,
+
+      last_number: countingData?.last_number ?? null,
+      last_number_message_id: countingData?.last_number_message_id ?? null,
+      last_number_message_date: countingData?.last_number_broken_date ?? null,
+      last_number_message_author: countingData?.last_number_message_author ?? null,
+      last_number_broken_by: countingData?.last_number_broken_by ?? null,
+      last_number_broken_date: countingData?.last_number_broken_date ?? null,
+
+      record_number: countingData?.record_number ?? 0,
+      record_number_message_id: countingData?.record_number_message_id ?? null,
+      record_number_message_date: countingData?.record_number_message_date ?? null,
+      record_number_message_author: countingData?.record_number_message_author ?? null,
+      record_number_broken_by: countingData?.record_number_broken_by ?? null,
+      record_number_broken_date: countingData?.record_number_broken_date ?? null,
+    },
+    update: {
+      type,
+
+      current_number: startingNumber,
+      current_number_message_id: countingMessage.id,
+      current_number_message_date: new Date(),
+      current_number_message_author: countingMessage.author.id,
+      current_stakeholders: currentStakeholders,
+
+      last_number: countingData?.last_number
+        ? countingData.last_number
+        : null,
+      last_number_message_id: countingData?.last_number_message_id
+        ? countingData.last_number_message_id
+        : null,
+      last_number_message_date: countingData?.last_number_broken_date
+        ? countingData.last_number_broken_date
+        : null,
+      last_number_message_author: countingData?.last_number_message_author
+        ? countingData.last_number_message_author
+        : null,
+      last_number_broken_by: countingData?.last_number_broken_by
+        ? countingData.last_number_broken_by
+        : null,
+      last_number_broken_date: countingData?.last_number_broken_date
+        ? countingData.last_number_broken_date
+        : null,
+    },
+  });
 
   return { content: 'Counting channel set up!' };
 }
@@ -135,36 +196,40 @@ export async function countingScores(
 ):Promise<InteractionEditReplyOptions> {
   // This function gets the scores for the counting channel
   const channel = interaction.channel as TextChannel;
-  const data = await countingGetG(channel.id);
-  log.debug(F, `Data: ${JSON.stringify(data, null, 2)}`);
-  if (!data) return { content: 'This channel is not set up for counting!' };
+  const countingData = await db.counting.findFirst({
+    where: {
+      channel_id: channel.id,
+    },
+  });
+  log.debug(F, `Data: ${JSON.stringify(countingData, null, 2)}`);
+  if (!countingData) return { content: 'This channel is not set up for counting!' };
 
-  const currentLink = `[${data.current_number}](https://discord.com/channels/${interaction.guildId}/${interaction.channelId}/${data.current_number_message_id})`; // eslint-disable-line max-len
-  const currentMember = await interaction.guild?.members.fetch(data.current_number_message_author as string);
+  const currentLink = `[${countingData.current_number}](https://discord.com/channels/${interaction.guildId}/${interaction.channelId}/${countingData.current_number_message_id})`; // eslint-disable-line max-len
+  const currentMember = await interaction.guild?.members.fetch(countingData.current_number_message_author as string);
   let description = `
   **Current Combo**
-  ${currentLink} - ${currentMember} ${time(data.current_number_message_date, 'R')}`;
+  ${currentLink} - ${currentMember} ${time(countingData.current_number_message_date, 'R')}`;
 
-  if (data.last_number) {
-    const lastLink = `[${data.last_number}](https://discord.com/channels/${interaction.guildId}/${interaction.channelId}/${data.last_number_message_id})`; // eslint-disable-line max-len
-    const lastMember = await interaction.guild?.members.fetch(data.last_number_message_author as string);
-    const lastBreaker = await interaction.guild?.members.fetch(data.last_number_broken_by as string);
+  if (countingData.last_number) {
+    const lastLink = `[${countingData.last_number}](https://discord.com/channels/${interaction.guildId}/${interaction.channelId}/${countingData.last_number_message_id})`; // eslint-disable-line max-len
+    const lastMember = await interaction.guild?.members.fetch(countingData.last_number_message_author as string);
+    const lastBreaker = await interaction.guild?.members.fetch(countingData.last_number_broken_by as string);
     description += `
 
     **Last Combo**
-    ${lastLink} - ${lastMember ?? 'unknown'} ${time(data.last_number_message_date as Date, 'R')}
-    Broken by ${lastBreaker ?? 'unknown'} ${time(data.last_number_broken_date as Date, 'R')}`;
+    ${lastLink} - ${lastMember ?? 'unknown'} ${time(countingData.last_number_message_date as Date, 'R')}
+    Broken by ${lastBreaker ?? 'unknown'} ${time(countingData.last_number_broken_date as Date, 'R')}`;
   }
 
-  if (data.record_number) {
-    const recordLink = `[${data.record_number}](https://discord.com/channels/${interaction.guildId}/${interaction.channelId}/${data.record_number_message_id})`; // eslint-disable-line max-len
-    const recordMember = await interaction.guild?.members.fetch(data.record_number_message_author as string);
-    const recordBreaker = await interaction.guild?.members.fetch(data.record_number_broken_by as string);
+  if (countingData.record_number) {
+    const recordLink = `[${countingData.record_number}](https://discord.com/channels/${interaction.guildId}/${interaction.channelId}/${countingData.record_number_message_id})`; // eslint-disable-line max-len
+    const recordMember = await interaction.guild?.members.fetch(countingData.record_number_message_author as string);
+    const recordBreaker = await interaction.guild?.members.fetch(countingData.record_number_broken_by as string);
     description += `
 
     **Record Combo**
-    ${recordLink} - ${recordMember ?? 'unknown'} ${time(data.record_number_message_date as Date, 'R')}
-    Broken by ${recordBreaker ?? 'unknown'} ${time(data.record_number_broken_date as Date, 'R')}`;
+    ${recordLink} - ${recordMember ?? 'unknown'} ${time(countingData.record_number_message_date as Date, 'R')}
+    Broken by ${recordBreaker ?? 'unknown'} ${time(countingData.record_number_broken_date as Date, 'R')}`;
   }
 
   const embed = embedTemplate()
@@ -178,8 +243,12 @@ export async function countingReset(
 ):Promise<InteractionEditReplyOptions> {
   // This function resets the counting channel
   const channel = interaction.channel as TextChannel;
-  const data = await countingGetG(channel.id);
-  if (!data) return { content: 'This channel is not set up for counting!' };
+  const countingData = await db.counting.findFirst({
+    where: {
+      channel_id: channel.id,
+    },
+  });
+  if (!countingData) return { content: 'This channel is not set up for counting!' };
   const number = interaction.options.getInteger('number') ?? 0;
   await countingSetup(
     channel,
@@ -194,7 +263,11 @@ export async function countingReset(
 export async function countMessage(message: Message): Promise<void> {
   if (!message.guild) return; // If not in a guild then ignore all messages
   if (message.guild.id !== env.DISCORD_GUILD_ID) return; // If not in tripsit ignore all messages
-  const countingData = await countingGetG(message.channel.id);
+  const countingData = await db.counting.findFirst({
+    where: {
+      channel_id: message.channel.id,
+    },
+  });
   if (!countingData) return; // If not a counting channel then ignore all messages
 
   // log.debug(F, `countingData: ${JSON.stringify(countingData, null, 2)} `);
@@ -275,7 +348,17 @@ export async function countMessage(message: Message): Promise<void> {
         .split(',')
         .concat(message.author.id)
         .join(',');
-      await countingSetG(countingData);
+      // await countingSetG(countingData);
+      await db.counting.upsert({
+        where: {
+          guild_id_channel_id: {
+            guild_id: message.guild.id,
+            channel_id: message.channel.id,
+          },
+        },
+        create: countingData,
+        update: countingData,
+      });
 
       warnedUsers.push(message.author.id);
 
@@ -319,11 +402,32 @@ export async function countMessage(message: Message): Promise<void> {
     if (countingData.type === 'TOKEN') {
       // If the channel is token then take tokens from the pot
 
-      const userData = await getUser(message.author.id, null, null);
-      const personaData = await personaGet(userData.id);
+      // const userData = await getUser(message.author.id, null, null);
+      const userData = await db.users.upsert({
+        where: {
+          discord_id: message.author.id,
+        },
+        create: {
+          discord_id: message.author.id,
+        },
+        update: {},
+      });
 
-      personaData.tokens += totalPot;
-      await personaSet(personaData);
+      // const personaData = await personaGet(userData.id);
+      await db.personas.upsert({
+        where: {
+          user_id: userData.id,
+        },
+        create: {
+          user_id: userData.id,
+          tokens: totalPot,
+        },
+        update: {
+          tokens: {
+            increment: totalPot,
+          },
+        },
+      });
     }
 
     let endingMessage = '';
@@ -339,7 +443,16 @@ export async function countMessage(message: Message): Promise<void> {
     countingData.current_number = -1;
 
     // Then update the DB with the user who broke the combo
-    await countingSetG(countingData);
+    await db.counting.upsert({
+      where: {
+        guild_id_channel_id: {
+          guild_id: message.guild.id,
+          channel_id: message.channel.id,
+        },
+      },
+      create: countingData,
+      update: countingData,
+    });
 
     // Send a message to the channel
     await message.channel.send({
@@ -379,7 +492,16 @@ export async function countMessage(message: Message): Promise<void> {
   countingData.current_number_message_id = message.id;
   countingData.current_number_message_date = new Date();
   countingData.current_number_message_author = message.author.id;
-  await countingSetG(countingData);
+  await db.counting.upsert({
+    where: {
+      guild_id_channel_id: {
+        guild_id: message.guild.id,
+        channel_id: message.channel.id,
+      },
+    },
+    create: countingData,
+    update: countingData,
+  });
 
   if (countingData.current_stakeholders) {
     if (!countingData.current_stakeholders.includes(message.author.id)) {
@@ -427,11 +549,32 @@ export async function countMessage(message: Message): Promise<void> {
     // Give each of those personas a fraction of the pot: (totalPot / currentData.current_stakeholders.length)
     const stakeholderIds = countingData.current_stakeholders.split(',');
     await Promise.all(stakeholderIds.map(async discordId => {
-      const userData = await getUser(discordId, null, null);
-      const persona = await personaGet(userData.id);
-      persona.tokens += potPerUser;
-      await personaSet(persona);
-      return persona;
+      // const userData = await getUser(message.author.id, null, null);
+      const userData = await db.users.upsert({
+        where: {
+          discord_id: discordId,
+        },
+        create: {
+          discord_id: discordId,
+        },
+        update: {},
+      });
+
+      // const personaData = await personaGet(userData.id);
+      return db.personas.upsert({
+        where: {
+          user_id: userData.id,
+        },
+        create: {
+          user_id: userData.id,
+          tokens: potPerUser,
+        },
+        update: {
+          tokens: {
+            increment: totalPot,
+          },
+        },
+      });
     }));
 
     const embed = embedTemplate()
@@ -449,7 +592,16 @@ export async function countMessage(message: Message): Promise<void> {
     });
   }
 
-  await countingSetG(countingData);
+  await db.counting.upsert({
+    where: {
+      guild_id_channel_id: {
+        guild_id: message.guild.id,
+        channel_id: message.channel.id,
+      },
+    },
+    create: countingData,
+    update: countingData,
+  });
 
   await message.react('👍');
 

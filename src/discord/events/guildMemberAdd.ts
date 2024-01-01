@@ -9,7 +9,6 @@ import { stripIndents } from 'common-tags';
 import {
   GuildMemberAddEvent,
 } from '../@types/eventDef';
-import { getUser, usersUpdate } from '../../global/utils/knex';
 import { embedTemplate } from '../utils/embedTemplate';
 
 const F = f(__filename);
@@ -37,11 +36,18 @@ export const guildMemberAdd: GuildMemberAddEvent = {
       new Collection(newInvites.map(inviteEntry => [inviteEntry.code, inviteEntry.uses])),
     );
 
-    const userData = await getUser(member.id, null, null);
-    userData.discord_id = member.id;
-    userData.joined_at = new Date();
-
-    await usersUpdate(userData);
+    await db.users.upsert({
+      where: {
+        discord_id: member.id,
+      },
+      create: {
+        discord_id: member.id,
+        joined_at: new Date(),
+      },
+      update: {
+        joined_at: new Date(),
+      },
+    });
 
     // log.debug(F, `Date.now(): ${Date.now()}`);
     // log.debug(F, `member.user.createdAt: ${member.user.createdAt.toString()}`);

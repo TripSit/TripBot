@@ -6,10 +6,8 @@ import {
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
 import { embedTemplate } from './embedTemplate';
-import { incrementPoint } from '../../global/utils/knex';
 import { fact } from '../../global/commands/g.fact';
-// import log from '../../global/utils/log';
-// import {parse} from 'path';
+
 const F = f(__filename); // eslint-disable-line
 
 const frequency = env.NODE_ENV === 'production' ? 50 : 1000;
@@ -295,14 +293,40 @@ export async function announcements(message:Message) {
 
           collector.on('collect', async (reaction, user) => {
             const pointType = pointDict[reaction.emoji.name as keyof typeof pointDict];
-            await incrementPoint(pointType, user.id, 1);
+            await db.users.upsert({
+              where: {
+                discord_id: user.id,
+              },
+              create: {
+                discord_id: user.id,
+                [pointType]: 1,
+              },
+              update: {
+                [pointType]: {
+                  increment: 1,
+                },
+              },
+            });
           });
 
           collector.on('remove', async (reaction, user) => {
             const pointType = pointDict[reaction.emoji.name as keyof typeof pointDict];
             // Increment the users's pointType
 
-            await incrementPoint(pointType, user.id, -1);
+            await db.users.upsert({
+              where: {
+                discord_id: user.id,
+              },
+              create: {
+                discord_id: user.id,
+                [pointType]: -1,
+              },
+              update: {
+                [pointType]: {
+                  increment: -1,
+                },
+              },
+            });
             // log.debug(F, `${user.tag} ${pointType} decremented to ${value[0][pointType as keyof typeof value[0]]}`);
           });
         });

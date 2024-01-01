@@ -8,12 +8,12 @@ import {
 import {
   ChannelType,
 } from 'discord-api-types/v10';
+import { drug_mass_unit, drug_roa } from '@prisma/client';
 import { idose } from '../../../global/commands/g.idose';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { parseDuration } from '../../../global/utils/parseDuration';
 import { paginationEmbed } from '../../utils/pagination';
-import { DrugRoa, DrugMassUnit } from '../../../global/@types/database';
 import commandContext from '../../utils/context';
 
 const F = f(__filename);
@@ -83,8 +83,8 @@ export const dIdose: SlashCommand = {
 
     const substance = interaction.options.getString('substance');
     const volume = interaction.options.getNumber('volume');
-    const units = interaction.options.getString('units') as DrugMassUnit | null;
-    const roa = interaction.options.getString('roa') as DrugRoa | null;
+    const units = interaction.options.getString('units') as drug_mass_unit | null;
+    const roa = interaction.options.getString('roa') as drug_roa | null;
     const offset = interaction.options.getString('offset');
 
     // log.debug(`[${PREFIX}]

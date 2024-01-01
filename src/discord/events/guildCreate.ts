@@ -4,7 +4,6 @@ import {
 import {
   GuildCreateEvent,
 } from '../@types/eventDef';
-import { getGuild, guildUpdate } from '../../global/utils/knex';
 
 const F = f(__filename);
 
@@ -13,16 +12,24 @@ export const guildCreate: GuildCreateEvent = {
   async execute(guild) {
     log.info(F, `Joined guild: ${guild.name} (id: ${guild.id})`);
 
-    const guildData = await getGuild(guild.id);
+    const guildData = await db.discord_guilds.upsert({
+      where: {
+        id: guild.id,
+      },
+      create: {
+        id: guild.id,
+        joined_at: new Date(),
+      },
+      update: {
+        joined_at: new Date(),
+      },
+    });
 
     if (guildData.is_banned) {
       log.info(F, `I'm banned from ${guild.name}, leaving!`);
       guild.leave();
       return;
     }
-
-    guildData.joined_at = new Date();
-    await guildUpdate(guildData);
 
     const auditlog = await discordClient.channels.fetch(env.CHANNEL_AUDITLOG) as TextChannel;
     discordClient.guilds.fetch();

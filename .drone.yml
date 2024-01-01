@@ -52,8 +52,6 @@ steps:
         from_secret: IMDB_TOKEN
       SENTRY_TOKEN:
         from_secret: SENTRY_TOKEN
-      POSTGRES_DB_URL:
-        from_secret: POSTGRES_DB_URL
 
   - name: discord notification
     image: appleboy/drone-discord

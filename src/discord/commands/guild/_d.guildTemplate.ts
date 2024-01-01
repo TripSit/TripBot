@@ -13,7 +13,6 @@ import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { globalTemplate } from '../../../global/commands/_g.template';
 import commandContext from '../../utils/context';
-import { getUser } from '../../../global/utils/knex';
 
 const F = f(__filename);
 
@@ -121,7 +120,15 @@ export const dTemplate: SlashCommand = {
         const mentionable = interaction.options.getMentionable('mentionable');
 
         const response = await globalTemplate();
-        const userData = await getUser(i.user.id, null, null);
+        const userData = await db.users.upsert({
+          where: {
+            discord_id: i.user.id,
+          },
+          create: {
+            discord_id: i.user.id,
+          },
+          update: {},
+        });
 
         const embed = embedTemplate()
           .setTitle('Modal')

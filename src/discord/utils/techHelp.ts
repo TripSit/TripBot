@@ -18,7 +18,6 @@ import {
   ButtonStyle,
 } from 'discord-api-types/v10';
 import { stripIndents } from 'common-tags';
-import { getGuild } from '../../global/utils/knex';
 
 const F = f(__filename);
 
@@ -36,7 +35,15 @@ export async function techHelpClick(interaction:ButtonInteraction) {
 
   const issueType = interaction.customId.split('~')[1];
 
-  const guildData = await getGuild(interaction.guild.id);
+  const guildData = await db.discord_guilds.upsert({
+    where: {
+      id: interaction.guild?.id,
+    },
+    create: {
+      id: interaction.guild?.id,
+    },
+    update: {},
+  });
 
   if (!guildData.role_techhelp) {
     log.error(F, `- techHelpClick] techhelp role not found: ${interaction.guild.id}`);

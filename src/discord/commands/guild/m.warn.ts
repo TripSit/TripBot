@@ -11,11 +11,11 @@ import {
   TextInputStyle,
 } from 'discord-api-types/v10';
 import { stripIndents } from 'common-tags';
+import { user_action_type } from '@prisma/client';
 import { MessageCommand } from '../../@types/commandDef';
 // import log from '../../../global/utils/log';
 import { moderate } from '../../../global/commands/g.moderate';
 import commandContext from '../../utils/context';
-import { UserActionType } from '../../../global/@types/database';
 
 const F = f(__filename);
 
@@ -51,7 +51,7 @@ export const mWarn: MessageCommand = {
         await i.deferReply({ ephemeral: true });
         await i.editReply(await moderate(
           interaction.member as GuildMember,
-          'WARNING' as UserActionType,
+          'WARNING' as user_action_type,
           interaction.targetMessage.member?.id ?? interaction.targetMessage.author.id,
           stripIndents`
         ${i.fields.getTextInputValue('internalNote')}

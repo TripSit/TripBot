@@ -7,7 +7,6 @@ import { stripIndents } from 'common-tags';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import commandContext from '../../utils/context';
-import { h2flow } from '../../../global/commands/g.h2flow';
 
 // import log from '../../../global/utils/log';
 
@@ -23,11 +22,19 @@ export const dH2flow: SlashCommand = {
   async execute(interaction:ChatInputCommandInteraction) {
     log.info(F, await commandContext(interaction));
     await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
-    const data = await h2flow(interaction.user.id);
+    const userData = await db.users.upsert({
+      where: {
+        discord_id: interaction.user.id,
+      },
+      create: {
+        discord_id: interaction.user.id,
+      },
+      update: {},
+    });
 
-    const sparklePoints = data.sparkle_points;
-    const movePoints = data.move_points;
-    const lovePoints = data.empathy_points;
+    const sparklePoints = userData.sparkle_points;
+    const movePoints = userData.move_points;
+    const lovePoints = userData.empathy_points;
     const totalPoints = sparklePoints + movePoints + lovePoints;
     let platinumClub = 'Non-member =(';
     if (totalPoints >= 1000) platinumClub = 'Diamond Club';
@@ -69,18 +76,18 @@ export const dH2flow: SlashCommand = {
       .setFooter({ text: `H2Flow Club Status: ${platinumClub}` })
       .addFields(
         {
-          name: `**${Math.floor(data.sparkle_points / 10)}** 🌊Aqua Badges🔰`,
-          value: `${data.sparkle_points} sparkle points`,
+          name: `**${Math.floor(userData.sparkle_points / 10)}** 🌊Aqua Badges🔰`,
+          value: `${userData.sparkle_points} sparkle points`,
           inline: true,
         },
         {
-          name: `**${Math.floor(data.empathy_points / 10)}** 💖Love Cups🏆`,
-          value: `${data.empathy_points} empathy points`,
+          name: `**${Math.floor(userData.empathy_points / 10)}** 💖Love Cups🏆`,
+          value: `${userData.empathy_points} empathy points`,
           inline: true,
         },
         {
-          name: `**${Math.floor(data.move_points / 10)}** 🏃Move Medals🏅`,
-          value: `${data.move_points} active points`,
+          name: `**${Math.floor(userData.move_points / 10)}** 🏃Move Medals🏅`,
+          value: `${userData.move_points} active points`,
           inline: true,
         },
       );

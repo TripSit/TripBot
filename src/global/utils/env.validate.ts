@@ -42,12 +42,6 @@ export default function validateEnv(
       return false;
     }
 
-    if (!process.env.POSTGRES_DB_URL) {
-      log.error(F, stripIndents`Missing POSTGRES_DB_URL: You wont be able to use the database via Knex.\
-       By default this should be set to 'postgres://tripsit:SuperSecure123@tripbot_database:5432/tripsit'.`);
-      return false;
-    }
-
     // if (!process.env.POSTGRESQL_PASSWORD) {
     //   log.error(F, stripIndents`Missing POSTGRESQL_PASSWORD: You wont be able to use the database.\
     //    By default this should be set to 'SuperSecure123'.`);
@@ -70,10 +64,6 @@ export default function validateEnv(
   }
 
   if (service === 'SERVICES') {
-    if (!process.env.POSTGRES_DB_URL) {
-      log.warn(F, 'Missing POSTGRES_DB_URL: You wont be able to use the database!');
-    }
-
     // if (!process.env.KEYCLOAK_BASE_URL
     //   || !process.env.KEYCLOAK_REALM_NAME
     //   || !process.env.KEYCLOAK_CLIENT_ID
