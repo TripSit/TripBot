@@ -1,4 +1,5 @@
 import {
+  ButtonInteraction,
   ChatInputCommandInteraction,
   GuildMember,
   User,
@@ -8,7 +9,7 @@ import {
 const F = f(__filename); // eslint-disable-line @typescript-eslint/no-unused-vars
 
 export async function getDiscordMember(
-  interaction:ChatInputCommandInteraction | UserContextMenuCommandInteraction,
+  interaction:ChatInputCommandInteraction | UserContextMenuCommandInteraction | ButtonInteraction,
   string:string,
 ):Promise<GuildMember[]> {
   const members = [] as GuildMember[];

@@ -703,17 +703,34 @@ async function messageModlog(
 }
 
 export async function ban(
-  interaction: ChatInputCommandInteraction | UserContextMenuCommandInteraction,
+  interaction: ChatInputCommandInteraction | UserContextMenuCommandInteraction | ButtonInteraction,
   targetString: string,
 ) {
   if (!interaction.guild) return;
   let command = '' as BanAction | UnBanAction;
+  let modalDescription = descriptionPlaceholder;
+  let modalInternal = internalNotePlaceholder;
   if (interaction.isChatInputCommand()) {
     command = interaction.options.getString('toggle') === 'ON'
       ? interaction.options.getString('type', true) as BanAction
       : `UN-${interaction.options.getString('type', true) as ModAction}` as UnBanAction;
   } else if (interaction.isContextMenuCommand()) {
     command = 'FULL_BAN';
+  } else if (interaction.isButton()) {
+    command = 'FULL_BAN';
+    const embed = interaction.message.embeds[0].toJSON();
+    const flagsField = (embed.fields as APIEmbedField[]).find(field => field.name === 'Flags');
+    const messageField = (embed.fields as APIEmbedField[]).find(field => field.name === 'Message') as APIEmbedField;
+    const urlField = (embed.fields as APIEmbedField[]).find(field => field.name === 'Channel') as APIEmbedField;
+    if (flagsField) {
+      modalInternal = `This user breaks TripSit's policies regarding ${flagsField.value} topics.`;
+      modalDescription = stripIndents`
+      Your recent messages have broken TripSit's policies regarding ${flagsField.value} topics.
+      
+      The offending message
+      > ${messageField.value}
+      ${urlField.value}`;
+    }
   }
 
   let target: GuildMember | User;
@@ -756,6 +773,7 @@ export async function ban(
         .setLabel(`Why are you ${embedVariables[command as keyof typeof embedVariables].presentVerb} this user?`)
         .setStyle(TextInputStyle.Paragraph)
         .setPlaceholder(internalNotePlaceholder)
+        .setValue(modalInternal)
         .setRequired(true)
         .setCustomId('internalNote')));
 
@@ -764,6 +782,7 @@ export async function ban(
       .setLabel(descriptionLabel)
       .setStyle(TextInputStyle.Paragraph)
       .setPlaceholder(descriptionPlaceholder)
+      .setValue(modalDescription)
       .setCustomId('description')));
 
   if ('FULL_BAN, BAN_EVASION, UNDERBAN'.includes(command)) {
@@ -784,17 +803,38 @@ export async function ban(
       if (i.customId.split('~')[2] !== interaction.id) return;
       if (!i.guild) return;
       await i.deferReply({ ephemeral: true });
-      const internalNote = i.fields.getTextInputValue('internalNote');
+      // const internalNote = i.fields.getTextInputValue('internalNote');
+      let fullNote = i.fields.getTextInputValue('internalNote');
       const description = i.fields.getTextInputValue('description');
 
-      if (internalNote?.includes('MEP') || description?.includes('MEP')) {
+      if (fullNote?.includes('MEP') || description?.includes('MEP')) {
         await interaction.editReply({
           content: mepWarning,
         });
         return;
       }
 
-      const vendorBan = internalNote?.toLowerCase().includes('vendor')
+      if (interaction.isMessageContextMenuCommand()) {
+        fullNote = stripIndents`
+          ${i.fields.getTextInputValue('internalNote')}`;
+      }
+
+      if (interaction.isButton()) {
+        const embed = interaction.message.embeds[0].toJSON();
+
+        const messageField = (embed.fields as APIEmbedField[]).find(field => field.name === 'Message') as APIEmbedField;
+        const urlField = (embed.fields as APIEmbedField[]).find(field => field.name === 'Channel') as APIEmbedField;
+
+        fullNote = stripIndents`
+        ${i.fields.getTextInputValue('internalNote')}
+    
+        **The offending message**
+        > ${messageField.value}
+        ${urlField.value}
+      `;
+      }
+
+      const vendorBan = fullNote?.toLowerCase().includes('vendor')
         && command === 'FULL_BAN';
 
       // If the command is ban, then the input value exists, so pull that and try to parse it as an int
@@ -860,7 +900,7 @@ export async function ban(
         type: 'TIMEOUT' as user_action_type,
         ban_evasion_related_user: null as string | null,
         description,
-        internal_note: internalNote,
+        internal_note: fullNote,
         expires_at: null as Date | null,
         repealed_by: null as string | null,
         repealed_at: null as Date | null,
@@ -892,10 +932,10 @@ export async function ban(
           }
           const targetGuild = await discordClient.guilds.fetch(env.DISCORD_GUILD_ID);
           // log.debug(F, `Days to delete: ${deleteMessageValue}`);
-          log.info(F, `target: ${target.id} | deleteMessageValue: ${deleteMessageValue} | internalNote: ${internalNote ?? noReason}`); // eslint-disable-line max-len
+          log.info(F, `target: ${target.id} | deleteMessageValue: ${deleteMessageValue} | internalNote: ${fullNote ?? noReason}`); // eslint-disable-line max-len
           targetGuild.bans.create(
             (target as GuildMember).user ? (target as GuildMember).user : target as User,
-            { deleteMessageSeconds: deleteMessageValue / 1000, reason: internalNote ?? noReason },
+            { deleteMessageSeconds: deleteMessageValue / 1000, reason: fullNote ?? noReason },
           );
         } catch (err) {
           log.error(F, `Error: ${err}`);
@@ -931,7 +971,7 @@ export async function ban(
           await targetGuild.bans.fetch();
           await targetGuild.bans.remove(
             (target as GuildMember).user ? (target as GuildMember).user : target as User,
-            internalNote ?? noReason,
+            fullNote ?? noReason,
           );
         } catch (err) {
           log.error(F, `Error: ${err}`);
@@ -951,7 +991,7 @@ export async function ban(
           const targetGuild = await discordClient.guilds.fetch(env.DISCORD_GUILD_ID);
           targetGuild.bans.create(
             (target as GuildMember).user ? (target as GuildMember).user : target as User,
-            { reason: internalNote ?? noReason },
+            { reason: fullNote ?? noReason },
           );
         } catch (err) {
           log.error(F, `Error: ${err}`);
@@ -986,7 +1026,7 @@ export async function ban(
           await targetGuild.bans.fetch();
           await targetGuild.bans.remove(
             (target as GuildMember).user ? (target as GuildMember).user : target as User,
-            internalNote ?? noReason,
+            fullNote ?? noReason,
           );
         } catch (err) {
           log.error(F, `Error: ${err}`);
@@ -1114,7 +1154,7 @@ export async function ban(
           actor,
           (target as GuildMember).user ? (target as GuildMember).user : target as User,
           command,
-          internalNote,
+          fullNote,
           description,
           extraMessage,
         );
@@ -1123,20 +1163,64 @@ export async function ban(
       await messageModlog(
         (target as GuildMember).user ? (target as GuildMember).user : target as User,
         command,
-        internalNote,
+        fullNote,
         description,
       );
 
       const username = (target as GuildMember).user ? (target as GuildMember).user.username : (target as User).username;
 
-      i.editReply({
+      if (interaction.isButton()) {
+        const embed = interaction.message.embeds[0].toJSON();
+        const actionField = embed.fields?.find(field => field.name === 'Actions');
+
+        if (actionField) {
+        // Add the action to the list of actions
+          const newActionFiled = actionField?.value.concat(`
+        
+        ${interaction.user.toString()} muted this user:
+        > ${i.fields.getTextInputValue('internalNote')}
+        
+        Message sent to user:
+        > ${i.fields.getTextInputValue('description')}`);
+          // log.debug(F, `newActionFiled: ${newActionFiled}`);
+
+          // Replace the action field with the new one
+          embed.fields?.splice(embed.fields?.findIndex(field => field.name === 'Actions'), 1, {
+            name: 'Actions',
+            value: newActionFiled,
+            inline: true,
+          });
+        } else {
+          embed.fields?.push(
+            {
+              name: 'Actions',
+              value: stripIndents`${interaction.user.toString()} muted this user:
+            > ${i.fields.getTextInputValue('internalNote')}
+        
+            Message sent to user:
+            > ${i.fields.getTextInputValue('description')}`,
+              inline: true,
+            },
+          );
+        }
+
+        embed.color = Colors.Green;
+        const buttonRows = interaction.message.components.map(row => ActionRowBuilder.from(row.toJSON()));
+
+        await interaction.message.edit({
+          embeds: [embed],
+          components: buttonRows as ActionRowBuilder<ButtonBuilder>[],
+        });
+      }
+
+      await i.editReply({
         embeds: [
           embedTemplate()
             .setAuthor(null)
             .setColor(Colors.Yellow)
             .setDescription(stripIndents`
               ${username} was ${embedVariables[command as keyof typeof embedVariables].pastVerb}
-              **Reason:** ${internalNote ?? noReason}
+              **Reason:** ${fullNote ?? noReason}
               ${(description !== '' && description !== null) ? `\n\n**Note sent to user: ${description}**` : ''}
               ${`You can access their thread here: ${modThread}`}
             `)
