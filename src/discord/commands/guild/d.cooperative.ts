@@ -13,12 +13,13 @@ import {
   TextChannel,
   Role,
   PermissionResolvable,
+  ChannelType,
 } from 'discord.js';
 import {
   ButtonStyle,
   TextInputStyle,
 } from 'discord-api-types/v10';
-import { stripIndents } from 'common-tags';
+import { stripIndent, stripIndents } from 'common-tags';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { checkGuildPermissions } from '../../utils/checkPermissions';
@@ -26,29 +27,28 @@ import commandContext from '../../utils/context';
 
 const F = f(__filename);
 
-async function setup():Promise<InteractionEditReplyOptions> {
+const guildOnlyError = 'This command can only be used in a guild!';
+
+async function info(): Promise<InteractionEditReplyOptions> {
   return {
     embeds: [
       embedTemplate({
-        title: 'Cooperative Setup',
-        description: stripIndents`
+        title: 'TripSit Discord Cooperative Info',
+        description: stripIndent`
         This command will set up your guild when you first join the cooperative.
         It will perform the following tasks:
-        * Create a category called 'Cooperative'
-        - This category will be used to store all cooperative channels.
         * Create a channel called '#coop-mod'
         - This channel will be used for cooperative moderation.
         - Ban messages will be sent here when you ban someone for the rest of the cooperative to see
         - You can reach out to other guilds through this channel to clarify bans.
         * Create a channel called '#modlog'
         - This will be used to track moderation actions *by your own team* and to keep them accountable.
-        - Only ban alerts/messages are sent to #coop-mod for other guilds to see.
-        - Other guilds can see how many warnings/timeouts, but not the reason/who did it.
-        * Create a channel called '#helpdesk'
-        - This is a moderation ticketing system
+        - Only ban alerts and messages are sent to #coop-mod for other guilds to see.
 
 
         **** TBD ****
+        * Create a channel called '#helpdesk'
+        - This is a moderation ticketing system
         * Create a channel called '#coop-gen'
         - This channel will be used for general cooperative chat.
         - Talk about moderation policies or whatever with other moderators.
@@ -61,55 +61,8 @@ async function setup():Promise<InteractionEditReplyOptions> {
         You can move the channels outside the category if you wish, just make sure TripBot keeps the same permissions.
 
         If you have any questions, feel free to reach out to the TripSit team!
-        `,
-      }),
-    ],
-    components: [
-      new ActionRowBuilder<ButtonBuilder>()
-
-        .addComponents(
-          new ButtonBuilder()
-            .setCustomId('cooperativeSetup')
-            .setLabel('Setup')
-            .setStyle(ButtonStyle.Primary),
-        ),
-    ],
-  };
-}
-
-export async function cooperativeSetupButton(
-  interaction:ButtonInteraction,
-) {
-  if (!interaction.guild) return;
-  await interaction.deferReply({ ephemeral: true });
-
-  const perms = await checkGuildPermissions(interaction.guild, [
-    'ViewAuditLog' as PermissionResolvable,
-  ]);
-
-  if (!perms.hasPermission) {
-    const guildOwner = await interaction.guild.fetchOwner();
-    await guildOwner.send({ content: `Please make sure I can ${perms.permission} in ${interaction.guild} so I can run ${F}!` }); // eslint-disable-line
-    log.error(F, `Missing permission ${perms.permission} in ${interaction.guild}!`);
-    return;
-  }
-
-  await interaction.editReply({
-    embeds: [
-      embedTemplate({
-        title: 'Cooperative setup complete!',
-        description: stripIndents`Thanks!`,
-      }),
-    ],
-  });
-}
-
-async function info(): Promise<InteractionEditReplyOptions> {
-  return {
-    embeds: [
-      embedTemplate({
-        title: 'TripSit Discord Cooperative Info',
-        description: 'Here is a list of all the regulations for the TripSit Discord Cooperative:',
+        
+        Here is a list of all the regulations for the TripSit Discord Cooperative:`,
         fields: [
           {
             name: '1. Be kind and respectful to others.',
@@ -138,16 +91,45 @@ async function info(): Promise<InteractionEditReplyOptions> {
   };
 }
 
-async function apply(): Promise<InteractionEditReplyOptions> {
+async function apply(interaction:ChatInputCommandInteraction): Promise<InteractionEditReplyOptions> {
+  if (!interaction.guild) {
+    return {
+      embeds: [
+        embedTemplate({
+          title: guildOnlyError,
+        }),
+      ],
+    };
+  }
+
+  const guildData = await db.discord_guilds.upsert({
+    where: {
+      id: interaction.guild?.id,
+    },
+    create: {
+      id: interaction.guild?.id,
+    },
+    update: {},
+  });
+
+  if (guildData.cooperative) {
+    return {
+      embeds: [
+        embedTemplate({
+          title: 'You are already part of the cooperative!',
+        }),
+      ],
+    };
+  }
   return {
     embeds: [
       embedTemplate({
         title: 'Join the TripSit Discord Cooperative',
         description: stripIndents`
-Thanks for your interest! At this time (April 3rd) this is a brand-new system \
-so there is no application process.... yet!
-However, if you are interested in joining the cooperative, please fill out the form below and we will keep you in mind \
-and perhaps reach out in the future!`,
+            Thanks for your interest! At this time (April 3rd) this is a brand-new system \
+            so there is no application process.... yet!
+            However, if you are interested in joining the cooperative, please fill out the form below and we will keep you in mind \
+            and perhaps reach out in the future!`,
       }),
     ],
     components: [
@@ -230,7 +212,214 @@ export async function cooperativeApplyButton(
   return true;
 }
 
-async function leave(): Promise<InteractionEditReplyOptions> {
+async function setup(interaction:ChatInputCommandInteraction):Promise<InteractionEditReplyOptions> {
+  if (!interaction.guild) {
+    return {
+      embeds: [
+        embedTemplate({
+          title: guildOnlyError,
+        }),
+      ],
+    };
+  }
+
+  const guildData = await db.discord_guilds.upsert({
+    where: {
+      id: interaction.guild?.id,
+    },
+    create: {
+      id: interaction.guild?.id,
+    },
+    update: {},
+  });
+
+  if (!guildData.cooperative) {
+    return {
+      embeds: [
+        embedTemplate({
+          title: 'You are not part of the cooperative!',
+        }),
+      ],
+    };
+  }
+
+  if (!interaction.guild) {
+    return {
+      embeds: [
+        embedTemplate({
+          title: guildOnlyError,
+        }),
+      ],
+    };
+  }
+
+  const perms = await checkGuildPermissions(interaction.guild, [
+    'ViewAuditLog' as PermissionResolvable,
+  ]);
+
+  if (!perms.hasPermission) {
+    log.error(F, `Missing permission ${perms.permission} in ${interaction.guild}!`);
+    return { content: `Please make sure I can ${perms.permission} in ${interaction.guild} so I can run ${F}!` };
+  }
+
+  // Finished checks, lets set this up!
+
+  // Get the IDs of the channels
+  let modRoom = interaction.options.getChannel('coop_mod_channel');
+  if (!modRoom) {
+    // If the channel wasn't provided, create it:
+    modRoom = await interaction.guild.channels.create({
+      name: 'coop-mod',
+      type: ChannelType.GuildText,
+      topic: 'This channel is used for cooperative moderation.',
+      permissionOverwrites: [
+        {
+          id: interaction.guild.roles.everyone.id,
+          deny: ['ViewChannel'],
+        },
+      ],
+    });
+  }
+
+  await db.discord_guilds.update({
+    where: {
+      id: interaction.guild.id,
+    },
+    data: {
+      mod_room_id: modRoom.id,
+    },
+  });
+
+  let modLog = interaction.options.getChannel('modlog_channel');
+  if (!modLog) {
+    // If the channel wasn't provided, create it:
+    modLog = await interaction.guild.channels.create({
+      name: 'modlog',
+      type: ChannelType.GuildText,
+      topic: 'This channel is used for moderation logs.',
+      permissionOverwrites: [
+        {
+          id: interaction.guild.roles.everyone.id,
+          deny: ['ViewChannel'],
+        },
+      ],
+    });
+  }
+
+  await db.discord_guilds.update({
+    where: {
+      id: interaction.guild.id,
+    },
+    data: {
+      mod_log_room_id: modLog.id,
+    },
+  });
+  // const helpdesk = interaction.options.getChannel('helpdesk_channel', true);
+  // const coopGen = interaction.options.getChannel('coop_gen_channel', true);
+  // const coopAnnounce = interaction.options.getChannel('coop_announce_channel', true);
+  // const coopOfftopic = interaction.options.getChannel('coop_offtopic_channel', true);
+
+  let modRole = interaction.options.getRole('mod_role');
+  if (!modRole) {
+    // If the role wasn't provided, create it:
+    modRole = await interaction.guild.roles.create({
+      name: 'Cooperative Moderator',
+      color: '#00ff00',
+      mentionable: true,
+    });
+  }
+
+  await db.discord_guilds.update({
+    where: {
+      id: interaction.guild.id,
+    },
+    data: {
+      mod_role_id: modRole.id,
+    },
+  });
+
+  log.debug(F, `modRoomId: ${modRoom.name}`);
+  log.debug(F, `modLogId: ${modLog.name}`);
+
+  async function getRoleId(
+    role:Role | undefined,
+  ):Promise<string> {
+    // This will create the role if it doesn't exist
+    // Either way it will update the database with the role ID
+    if (!interaction.guild) return '';
+    if (!role) {
+      // If the role wasn't provided, create it:
+      const newRole = await interaction.guild.roles.create({
+        name: 'Cooperative Moderator',
+        color: '#00ff00',
+        mentionable: true,
+      });
+      await db.discord_guilds.update({
+        where: {
+          id: interaction.guild.id,
+        },
+        data: {
+          mod_role_id: newRole.id,
+        },
+      });
+      return newRole.id;
+    }
+    await db.discord_guilds.update({
+      where: {
+        id: interaction.guild.id,
+      },
+      data: {
+        mod_role_id: role.id,
+      },
+    });
+    return role.id;
+  }
+
+  const modRoleId = await getRoleId(modRole as Role | undefined);
+
+  log.debug(F, `modRoleId: ${modRoleId}`);
+
+  return {
+    embeds: [
+      embedTemplate({
+        title: 'Cooperative setup complete!',
+        description: stripIndents`Thanks!`,
+      }),
+    ],
+  };
+}
+
+async function leave(interaction:ChatInputCommandInteraction): Promise<InteractionEditReplyOptions> {
+  if (!interaction.guild) {
+    return {
+      embeds: [
+        embedTemplate({
+          title: guildOnlyError,
+        }),
+      ],
+    };
+  }
+
+  const guildData = await db.discord_guilds.upsert({
+    where: {
+      id: interaction.guild?.id,
+    },
+    create: {
+      id: interaction.guild?.id,
+    },
+    update: {},
+  });
+
+  if (!guildData.cooperative) {
+    return {
+      embeds: [
+        embedTemplate({
+          title: 'You are not part of the cooperative!',
+        }),
+      ],
+    };
+  }
+
   return {
     embeds: [
       embedTemplate({
@@ -265,10 +454,10 @@ export async function cooperativeLeaveButton(
     },
     create: {
       id: guild.id,
-      partner: false,
+      cooperative: false,
     },
     update: {
-      partner: false,
+      cooperative: false,
     },
   });
   await interaction.editReply({
@@ -283,6 +472,16 @@ export async function cooperativeLeaveButton(
 async function add(
   interaction:ChatInputCommandInteraction,
 ):Promise<InteractionEditReplyOptions> {
+  if (interaction.guild?.id !== env.DISCORD_GUILD_ID) {
+    return {
+      embeds: [
+        embedTemplate({
+          title: 'This action is restricted!',
+        }),
+      ],
+    };
+  }
+
   const guild = await discordClient.guilds.fetch(interaction.options.getString('guildId', true));
   await db.discord_guilds.upsert({
     where: {
@@ -290,10 +489,10 @@ async function add(
     },
     create: {
       id: guild.id,
-      partner: true,
+      cooperative: true,
     },
     update: {
-      partner: true,
+      cooperative: true,
     },
   });
 
@@ -309,7 +508,17 @@ async function add(
 async function remove(
   interaction:ChatInputCommandInteraction,
 ):Promise<InteractionEditReplyOptions> {
-  // Sets the guild partner status to false
+  if (interaction.guild?.id !== env.DISCORD_GUILD_ID) {
+    return {
+      embeds: [
+        embedTemplate({
+          title: 'This action is restricted!',
+        }),
+      ],
+    };
+  }
+
+  // Sets the guild cooperative status to false
   const guild = await discordClient.guilds.fetch(interaction.options.getString('guildId', true));
   await db.discord_guilds.upsert({
     where: {
@@ -317,10 +526,10 @@ async function remove(
     },
     create: {
       id: guild.id,
-      partner: false,
+      cooperative: false,
     },
     update: {
-      partner: false,
+      cooperative: false,
     },
   });
   return {
@@ -348,10 +557,10 @@ export async function sendCooperativeMessage(
       },
       create: {
         id: guildId,
-        partner: false,
+        cooperative: false,
       },
       update: {
-        partner: false,
+        cooperative: false,
       },
     });
     const guild = await discordClient.guilds.fetch(guildId);
@@ -402,7 +611,30 @@ export const dCooperative: SlashCommand = {
       .setName('apply'))
     .addSubcommand(subcommand => subcommand
       .setDescription('Setup the TripSit Discord Cooperative on your guild')
-      .setName('setup'))
+      .setName('setup')
+      .addChannelOption(option => option
+        .setName('coop_mod_channel')
+        .setDescription('The channel to use for cooperative moderation'))
+      .addChannelOption(option => option
+        .setName('modlog_channel')
+        .setDescription('The channel to use for moderation logs'))
+      .addRoleOption(option => option
+        .setName('mod_role')
+        .setDescription('The role to use for moderators')),
+      // .addChannelOption(option => option
+      //   .setName('helpdesk_channel')
+      //   .setDescription('The channel to use for moderation tickets')),
+      // .addChannelOption(option => option
+      //   .setName('coop_gen_channel')
+      //   .setDescription('The channel to use for general cooperative chat'))
+      // .addChannelOption(option => option
+      //   .setName('coop_announce_channel')
+      //   .setDescription('The channel to use for cooperative announcements'))
+      // .addChannelOption(option => option
+      //   .setName('coop_offtopic_channel')
+      //   .setDescription('The channel to use for off-topic cooperative chat'))
+    // eslint-disable-next-line function-paren-newline
+    )
     .addSubcommand(subcommand => subcommand
       .setDescription('Leave the TripSit Discord Cooperative')
       .setName('leave'))
@@ -427,7 +659,7 @@ export const dCooperative: SlashCommand = {
       await interaction.editReply({
         embeds: [
           embedTemplate({
-            title: 'This command can only be used in a guild!',
+            title: guildOnlyError,
           }),
         ],
       });
@@ -435,56 +667,29 @@ export const dCooperative: SlashCommand = {
     }
 
     let response = {} as InteractionEditReplyOptions;
-
     const command = interaction.options.getSubcommand();
-    const guildData = await db.discord_guilds.upsert({
-      where: {
-        id: interaction.guild?.id,
-      },
-      create: {
-        id: interaction.guild?.id,
-      },
-      update: {},
-    });
-    if ((command === 'leave' || command === 'setup') && !guildData.partner) {
-      await interaction.editReply({
-        embeds: [
-          embedTemplate({
-            title: 'You are not part of the cooperative!',
-          }),
-        ],
-      });
-      return false;
+    switch (command) {
+      case 'info':
+        response = await info();
+        break;
+      case 'apply':
+        response = await apply(interaction);
+        break;
+      case 'setup':
+        response = await setup(interaction);
+        break;
+      case 'leave':
+        response = await leave(interaction);
+        break;
+      case 'add':
+        response = await add(interaction);
+        break;
+      case 'remove':
+        response = await remove(interaction);
+        break;
+      default:
+        break;
     }
-
-    if (command === 'apply' && !guildData.partner) {
-      await interaction.editReply({
-        embeds: [
-          embedTemplate({
-            title: 'You are already part of the cooperative!',
-          }),
-        ],
-      });
-      return false;
-    }
-
-    if ((command === 'add' || command === 'remove') && interaction.guild.id !== env.DISCORD_GUILD_ID) {
-      await interaction.editReply({
-        embeds: [
-          embedTemplate({
-            title: 'This action is restricted!',
-          }),
-        ],
-      });
-      return false;
-    }
-
-    if (command === 'info') response = await info();
-    else if (command === 'apply') response = await apply();
-    else if (command === 'setup') response = await setup();
-    else if (command === 'leave') response = await leave();
-    else if (command === 'add') response = await add(interaction);
-    else if (command === 'remove') response = await remove(interaction);
 
     await interaction.editReply(response);
     return true;

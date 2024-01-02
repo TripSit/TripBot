@@ -22,6 +22,8 @@ import {
   MessageContextMenuCommandInteraction,
   PermissionResolvable,
   GuildBan,
+  ButtonInteraction,
+  APIEmbedField,
 } from 'discord.js';
 import {
   ButtonStyle,
@@ -31,7 +33,6 @@ import { stripIndents } from 'common-tags';
 import { user_action_type, user_actions, users } from '@prisma/client';
 import { SlashCommand } from '../../@types/commandDef';
 import { parseDuration } from '../../../global/utils/parseDuration';
-import { linkThread } from '../../../global/commands/g.moderate';
 import commandContext from '../../utils/context'; // eslint-disable-line
 import { getDiscordMember, getDiscordUser } from '../../utils/guildMemberLookup';
 import { last } from '../../../global/commands/g.last';
@@ -206,6 +207,38 @@ this includes the ability to ban, warn, report, and more!
 Currently these tools are only available to a limited number of partner guilds, \
 use /cooperative info for more information.`;
 const noUserError = 'Could not find that member/user!';
+
+export async function linkThread(
+  discordId: string,
+  threadId: string,
+  override: boolean | null,
+):Promise<string | null> {
+  // Get the targetData from the db
+  const userData = await db.users.upsert({
+    where: {
+      discord_id: discordId,
+    },
+    create: {
+      discord_id: discordId,
+    },
+    update: {},
+  });
+
+  if (userData.mod_thread_id === null || override) {
+    // log.debug(F, `targetData.mod_thread_id is null, updating it`);
+    await db.users.update({
+      where: {
+        id: userData.id,
+      },
+      data: {
+        mod_thread_id: threadId,
+      },
+    });
+    return null;
+  }
+  // log.debug(F, `targetData.mod_thread_id is not null, not updating it`);
+  return userData.mod_thread_id;
+}
 
 export async function userInfoEmbed(
   target:GuildMember | User,
@@ -1378,12 +1411,23 @@ and they do not exist in the database!`,
 }
 
 export async function note(
-  interaction: ChatInputCommandInteraction | MessageContextMenuCommandInteraction,
+  interaction: ChatInputCommandInteraction | MessageContextMenuCommandInteraction | ButtonInteraction,
   target: GuildMember | User,
 ) {
   const command = 'NOTE';
   const actor = interaction.member as GuildMember;
+
+  let modalValue = '';
   log.debug(F, `${actor} ran ${command} on ${target} in ${actor.guild.name}`);
+
+  if (interaction.isButton()) {
+    const embed = interaction.message.embeds[0].toJSON();
+    const flagsField = (embed.fields as APIEmbedField[]).find(field => field.name === 'Flags');
+    if (flagsField) {
+      modalValue = `This user's message was flagged by the AI for ${flagsField.value}`;
+    }
+  }
+
   const modal = new ModalBuilder()
     .setCustomId(`modModal~${command}~${interaction.id}`)
     .setTitle(`Tripbot ${command}`)
@@ -1392,6 +1436,7 @@ export async function note(
         .setLabel(`Why are you ${embedVariables[command as keyof typeof embedVariables].presentVerb} this user?`)
         .setStyle(TextInputStyle.Paragraph)
         .setPlaceholder(internalNotePlaceholder)
+        .setValue(modalValue)
         .setRequired(true)
         .setCustomId('internalNote')));
 
@@ -1422,8 +1467,21 @@ export async function note(
         `;
       }
 
-      // const actorData = await database.users.get((interaction.member as GuildMember).id, null, null);
-      // const targetData = await database.users.get(target.id, null, null);
+      if (interaction.isButton()) {
+        const embed = interaction.message.embeds[0].toJSON();
+
+        const messageField = (embed.fields as APIEmbedField[]).find(field => field.name === 'Message') as APIEmbedField;
+        const urlField = (embed.fields as APIEmbedField[]).find(field => field.name === 'Channel') as APIEmbedField;
+
+        fullNote = stripIndents`
+        ${i.fields.getTextInputValue('internalNote')}
+    
+        **The offending message**
+        > ${messageField.value}
+        ${urlField.value}
+      `;
+      }
+
       const actorData = await db.users.upsert({
         where: {
           discord_id: actor.id,
@@ -1435,9 +1493,20 @@ export async function note(
         },
       });
 
+      const targetData = await db.users.upsert({
+        where: {
+          discord_id: target.id,
+        },
+        create: {
+          discord_id: target.id,
+        },
+        update: {
+        },
+      });
+
       await db.user_actions.create({
         data: {
-          user_id: target.id,
+          user_id: targetData.id,
           guild_id: actor.guild.id,
           type: 'NOTE' as user_action_type,
           ban_evasion_related_user: null as string | null,
@@ -1464,7 +1533,52 @@ export async function note(
         fullNote,
       );
 
-      i.editReply({
+      if (interaction.isButton()) {
+        const embed = interaction.message.embeds[0].toJSON();
+        const actionField = embed.fields?.find(field => field.name === 'Actions');
+
+        if (actionField) {
+        // Add the action to the list of actions
+          const newActionFiled = actionField?.value.concat(`
+        
+        ${interaction.user.toString()} noted this user:
+        > ${i.fields.getTextInputValue('internalNote')}
+        
+        Message sent to user:
+        > **No message sent to user on notes**
+        `);
+          // log.debug(F, `newActionFiled: ${newActionFiled}`);
+
+          // Replace the action field with the new one
+          embed.fields?.splice(embed.fields?.findIndex(field => field.name === 'Actions'), 1, {
+            name: 'Actions',
+            value: newActionFiled,
+            inline: true,
+          });
+        } else {
+          embed.fields?.push(
+            {
+              name: 'Actions',
+              value: stripIndents`${interaction.user.toString()} noted this user:
+            > ${i.fields.getTextInputValue('internalNote')}
+        
+            Message sent to user:
+            > ${i.fields.getTextInputValue('description')}`,
+              inline: true,
+            },
+          );
+        }
+
+        embed.color = Colors.Green;
+        const buttonRows = interaction.message.components.map(row => ActionRowBuilder.from(row.toJSON()));
+
+        await interaction.message.edit({
+          embeds: [embed],
+          components: buttonRows as ActionRowBuilder<ButtonBuilder>[],
+        });
+      }
+
+      await i.editReply({
         embeds: [
           embedTemplate()
             .setAuthor(null)
@@ -1595,16 +1709,33 @@ export async function report(
 }
 
 export async function timeout(
-  interaction: ChatInputCommandInteraction | MessageContextMenuCommandInteraction,
+  interaction: ChatInputCommandInteraction | MessageContextMenuCommandInteraction | ButtonInteraction,
   target: GuildMember,
 ) {
   let command = '' as 'TIMEOUT' | 'UN-TIMEOUT';
+  let modalDescription = descriptionPlaceholder;
+  let modalInternal = internalNotePlaceholder;
   if (interaction.isChatInputCommand()) {
     command = interaction.options.getString('toggle', true) === 'ON'
       ? 'TIMEOUT'
       : 'UN-TIMEOUT';
   } else if (interaction.isMessageContextMenuCommand()) {
     command = 'TIMEOUT';
+  } else if (interaction.isButton()) {
+    command = 'TIMEOUT';
+    const embed = interaction.message.embeds[0].toJSON();
+    const flagsField = (embed.fields as APIEmbedField[]).find(field => field.name === 'Flags');
+    const messageField = (embed.fields as APIEmbedField[]).find(field => field.name === 'Message') as APIEmbedField;
+    const urlField = (embed.fields as APIEmbedField[]).find(field => field.name === 'Channel') as APIEmbedField;
+    if (flagsField) {
+      modalInternal = `This user breaks TripSit's policies regarding ${flagsField.value} topics.`;
+      modalDescription = stripIndents`
+      Your recent messages have broken TripSit's policies regarding ${flagsField.value} topics.
+      
+      The offending message
+      > ${messageField.value}
+      ${urlField.value}`;
+    }
   }
 
   const actor = interaction.member as GuildMember;
@@ -1617,6 +1748,7 @@ export async function timeout(
         .setLabel(`Why are you ${embedVariables[command].presentVerb} this user?`)
         .setStyle(TextInputStyle.Paragraph)
         .setPlaceholder(internalNotePlaceholder)
+        .setValue(modalInternal)
         .setRequired(true)
         .setCustomId('internalNote')));
 
@@ -1625,6 +1757,7 @@ export async function timeout(
       .setLabel(descriptionLabel)
       .setStyle(TextInputStyle.Paragraph)
       .setPlaceholder(descriptionPlaceholder)
+      .setValue(modalDescription)
       .setCustomId('description')));
 
   modal.addComponents(new ActionRowBuilder<TextInputBuilder>()
@@ -1663,6 +1796,21 @@ export async function timeout(
           > ${interaction.targetMessage.cleanContent}
           ${interaction.targetMessage.url}
         `;
+      }
+
+      if (interaction.isButton()) {
+        const embed = interaction.message.embeds[0].toJSON();
+
+        const messageField = (embed.fields as APIEmbedField[]).find(field => field.name === 'Message') as APIEmbedField;
+        const urlField = (embed.fields as APIEmbedField[]).find(field => field.name === 'Channel') as APIEmbedField;
+
+        fullNote = stripIndents`
+        ${i.fields.getTextInputValue('internalNote')}
+    
+        **The offending message**
+        > ${messageField.value}
+        ${urlField.value}
+      `;
       }
 
       let duration = i.fields.getTextInputValue('duration');
@@ -1801,7 +1949,51 @@ export async function timeout(
         description,
       );
 
-      i.editReply({
+      if (interaction.isButton()) {
+        const embed = interaction.message.embeds[0].toJSON();
+        const actionField = embed.fields?.find(field => field.name === 'Actions');
+
+        if (actionField) {
+        // Add the action to the list of actions
+          const newActionFiled = actionField?.value.concat(`
+        
+        ${interaction.user.toString()} muted this user:
+        > ${i.fields.getTextInputValue('internalNote')}
+        
+        Message sent to user:
+        > ${i.fields.getTextInputValue('description')}`);
+          // log.debug(F, `newActionFiled: ${newActionFiled}`);
+
+          // Replace the action field with the new one
+          embed.fields?.splice(embed.fields?.findIndex(field => field.name === 'Actions'), 1, {
+            name: 'Actions',
+            value: newActionFiled,
+            inline: true,
+          });
+        } else {
+          embed.fields?.push(
+            {
+              name: 'Actions',
+              value: stripIndents`${interaction.user.toString()} muted this user:
+            > ${i.fields.getTextInputValue('internalNote')}
+        
+            Message sent to user:
+            > ${i.fields.getTextInputValue('description')}`,
+              inline: true,
+            },
+          );
+        }
+
+        embed.color = Colors.Green;
+        const buttonRows = interaction.message.components.map(row => ActionRowBuilder.from(row.toJSON()));
+
+        await interaction.message.edit({
+          embeds: [embed],
+          components: buttonRows as ActionRowBuilder<ButtonBuilder>[],
+        });
+      }
+
+      await i.editReply({
         embeds: [
           embedTemplate()
             .setAuthor(null)

@@ -185,13 +185,18 @@ model discord_guilds {
   removed_at           DateTime?        @db.Timestamptz(6)
   joined_at            DateTime         @default(now()) @db.Timestamptz(6)
   created_at           DateTime         @default(now()) @db.Timestamptz(6)
-  partner              Boolean          @default(true)
-  supporter            Boolean          @default(true)
+  partner              Boolean          @default(false)
+  supporter            Boolean          @default(false)
+  cooperative          Boolean          @default(false)
   premium_role_ids     String?
+  mod_room_id          String?
+  mod_log_room_id      String?
+  mod_role_id          String?
   appeals              appeals[]
   counting             counting[]
   reaction_roles       reaction_roles[]
   ai_moderation        ai_moderation?
+  user_actions         user_actions[]
 }
 
 model drug_articles {
@@ -298,6 +303,7 @@ model rpg_inventory {
 model user_actions {
   id                                                 String           @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
   user_id                                            String           @db.Uuid
+  guild_id                                           String
   type                                               user_action_type
   ban_evasion_related_user                           String?          @db.Uuid
   description                                        String?
@@ -311,6 +317,8 @@ model user_actions {
   users_user_actions_created_byTousers               users            @relation("user_actions_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "useractions_createdby_foreign")
   users_user_actions_repealed_byTousers              users?           @relation("user_actions_repealed_byTousers", fields: [repealed_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "useractions_repealedby_foreign")
   users_user_actions_user_idTousers                  users            @relation("user_actions_user_idTousers", fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "useractions_userid_foreign")
+
+  discord_guilds    discord_guilds @relation(fields: [guild_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "appeals_guildid_foreign")
 }
 
 model user_drug_doses {

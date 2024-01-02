@@ -44,12 +44,12 @@ import { MessageContentText } from 'openai/resources/beta/threads/messages/messa
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import commandContext from '../../utils/context';
-import { moderate } from '../../../global/commands/g.moderate';
 import { sleep } from '../guild/d.bottest';
 import aiChat, {
   aiModerate, createMessage, getAssistant, getMessages, getThread, readRun, runThread,
 } from '../../../global/commands/g.ai';
 import { parseDuration } from '../../../global/utils/parseDuration';
+import { note, timeout } from '../guild/d.moderate';
 
 const F = f(__filename);
 
@@ -487,96 +487,17 @@ async function noteUser(
   interaction: ButtonInteraction,
 ): Promise<void> {
   log.debug(F, 'noteUser started');
-  const buttonID = interaction.customId;
-  log.debug(F, `buttonID: ${buttonID}`);
 
   if (!(interaction.member as GuildMember).roles.cache.has(env.ROLE_MODERATOR)) return;
 
   const embed = interaction.message.embeds[0].toJSON();
 
-  const flagsField = (embed.fields as APIEmbedField[]).find(field => field.name === 'Flags') as APIEmbedField;
-
-  await interaction.showModal(new ModalBuilder()
-    .setCustomId(`noteModal~${interaction.id}`)
-    .setTitle('Tripbot Note')
-    .addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
-      .setLabel('What are you noting about this person?')
-      .setStyle(TextInputStyle.Paragraph)
-      .setPlaceholder('Tell the team why you are noting this user.')
-      .setValue(`This user's message was flagged by the AI for ${flagsField.value}`)
-      .setMaxLength(1000)
-      .setRequired(true)
-      .setCustomId('internalNote'))));
-  const filter = (i: ModalSubmitInteraction) => i.customId.includes('noteModal');
-
-  interaction.awaitModalSubmit({ filter, time: 0 })
-    .then(async i => {
-      if (i.customId.split('~')[1] !== interaction.id) return;
-      await i.deferReply({ ephemeral: true });
-
-      const messageField = (embed.fields as APIEmbedField[]).find(field => field.name === 'Message') as APIEmbedField;
-      const memberField = (embed.fields as APIEmbedField[]).find(field => field.name === 'Member') as APIEmbedField;
-      const urlField = (embed.fields as APIEmbedField[]).find(field => field.name === 'Channel') as APIEmbedField;
-
-      await moderate(
-        interaction.member as GuildMember,
-        'NOTE' as user_action_type,
-        memberField.value.slice(2, -1),
-        stripIndents`
-        ${i.fields.getTextInputValue('internalNote')}
-    
-        **The offending message**
-        > ${messageField.value}
-        ${urlField.value}
-      `,
-        null,
-        null,
-      );
-
-      const buttonRows = interaction.message.components.map(row => ActionRowBuilder.from(row.toJSON()));
-
-      const actionField = embed.fields?.find(field => field.name === 'Actions');
-
-      if (actionField) {
-        // Add the action to the list of actions
-        const newActionFiled = actionField?.value.concat(`
-        
-        ${interaction.user.toString()} noted this user:
-        > ${i.fields.getTextInputValue('internalNote')}
-        
-        Message sent to user:
-        > **No message sent to user on notes**
-        `);
-        // log.debug(F, `newActionFiled: ${newActionFiled}`);
-
-        // Replace the action field with the new one
-        embed.fields?.splice(embed.fields?.findIndex(field => field.name === 'Actions'), 1, {
-          name: 'Actions',
-          value: newActionFiled,
-          inline: true,
-        });
-      } else {
-        embed.fields?.push(
-          {
-            name: 'Actions',
-            value: stripIndents`${interaction.user.toString()} noted this user:
-            > ${i.fields.getTextInputValue('internalNote')}
-        
-            Message sent to user:
-            > ${i.fields.getTextInputValue('description')}`,
-            inline: true,
-          },
-        );
-      }
-      embed.color = Colors.Green;
-
-      await i.editReply('User was noted');
-
-      await interaction.message.edit({
-        embeds: [embed],
-        components: buttonRows as ActionRowBuilder<ButtonBuilder>[],
-      });
-    });
+  const memberField = (embed.fields as APIEmbedField[]).find(field => field.name === 'Member') as APIEmbedField;
+  const memberObj = await interaction.guild?.members.fetch(memberField.value.slice(2, -1)) as GuildMember;
+  await note(
+    interaction,
+    memberObj,
+  );
 }
 
 async function muteUser(
@@ -589,117 +510,13 @@ async function muteUser(
 
   const embed = interaction.message.embeds[0].toJSON();
 
-  const flagsField = (embed.fields as APIEmbedField[]).find(field => field.name === 'Flags') as APIEmbedField;
-  const messageField = (embed.fields as APIEmbedField[]).find(field => field.name === 'Message') as APIEmbedField;
   const memberField = (embed.fields as APIEmbedField[]).find(field => field.name === 'Member') as APIEmbedField;
-  const urlField = (embed.fields as APIEmbedField[]).find(field => field.name === 'Channel') as APIEmbedField;
+  const memberObj = await interaction.guild?.members.fetch(memberField.value.slice(2, -1)) as GuildMember;
 
-  await interaction.showModal(new ModalBuilder()
-    .setCustomId(`timeoutModal~${interaction.id}`)
-    .setTitle('Tripbot Timeout')
-    .addComponents(
-      new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
-        .setLabel('Why are you muting this person?')
-        .setStyle(TextInputStyle.Paragraph)
-        .setPlaceholder('Tell the team why you are muting this user.')
-        .setValue(`This user breaks TripSit's policies regarding ${flagsField.value} topics.`)
-        .setMaxLength(1000)
-        .setRequired(true)
-        .setCustomId('internalNote')),
-      new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
-        .setLabel('What should we tell the user?')
-        .setStyle(TextInputStyle.Paragraph)
-        .setPlaceholder('This will be sent to the user!')
-        .setValue(stripIndents`
-        Your recent messages have broken TripSit's policies regarding ${flagsField.value} topics.
-        
-        The offending message
-        > ${messageField.value}
-        ${urlField.value}`)
-        .setMaxLength(1000)
-        .setRequired(false)
-        .setCustomId('description')),
-      new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
-        .setLabel('Timeout for how long? (Max/default 7 days)')
-        .setStyle(TextInputStyle.Short)
-        .setPlaceholder('4 days 3hrs 2 mins 30 seconds')
-        .setRequired(false)
-        .setCustomId('timeoutDuration')),
-    ));
-  const filter = (i: ModalSubmitInteraction) => i.customId.includes('timeoutModal');
-
-  interaction.awaitModalSubmit({ filter, time: 0 })
-    .then(async i => {
-      if (i.customId.split('~')[1] !== interaction.id) return;
-      await i.deferReply({ ephemeral: true });
-
-      const duration = i.fields.getTextInputValue('timeoutDuration')
-        ? await parseDuration(i.fields.getTextInputValue('timeoutDuration'))
-        : 604800000;
-
-      if (duration > 604800000) {
-        await i.editReply('Cannot remove messages older than 7 days.');
-        return;
-      }
-
-      await moderate(
-        interaction.member as GuildMember,
-        'TIMEOUT' as user_action_type,
-        memberField.value.slice(2, -1),
-        stripIndents`
-        ${i.fields.getTextInputValue('internalNote')}
-    
-        **The offending message**
-        > ${messageField.value}
-        ${urlField.value}
-      `,
-        i.fields.getTextInputValue('description'),
-        duration,
-      );
-
-      const buttonRows = interaction.message.components.map(row => ActionRowBuilder.from(row.toJSON()));
-
-      const actionField = embed.fields?.find(field => field.name === 'Actions');
-
-      if (actionField) {
-        // Add the action to the list of actions
-        const newActionFiled = actionField?.value.concat(`
-        
-        ${interaction.user.toString()} muted this user:
-        > ${i.fields.getTextInputValue('internalNote')}
-        
-        Message sent to user:
-        > ${i.fields.getTextInputValue('description')}`);
-        // log.debug(F, `newActionFiled: ${newActionFiled}`);
-
-        // Replace the action field with the new one
-        embed.fields?.splice(embed.fields?.findIndex(field => field.name === 'Actions'), 1, {
-          name: 'Actions',
-          value: newActionFiled,
-          inline: true,
-        });
-      } else {
-        embed.fields?.push(
-          {
-            name: 'Actions',
-            value: stripIndents`${interaction.user.toString()} muted this user:
-            > ${i.fields.getTextInputValue('internalNote')}
-        
-            Message sent to user:
-            > ${i.fields.getTextInputValue('description')}`,
-            inline: true,
-          },
-        );
-      }
-      embed.color = Colors.Green;
-
-      await i.editReply('User was muted');
-
-      await interaction.message.edit({
-        embeds: [embed],
-        components: buttonRows as ActionRowBuilder<ButtonBuilder>[],
-      });
-    });
+  await timeout(
+    interaction,
+    memberObj,
+  );
 }
 
 async function warnUser(
