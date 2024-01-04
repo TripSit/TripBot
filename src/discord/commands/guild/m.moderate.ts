@@ -1,30 +1,30 @@
 import {
   ContextMenuCommandBuilder,
-  GuildMember,
 } from 'discord.js';
 import {
   ApplicationCommandType,
 } from 'discord-api-types/v10';
 import { MessageCommand } from '../../@types/commandDef';
 import commandContext from '../../utils/context';
-import { timeout } from './d.moderate';
+import { modButtons, userInfoEmbed } from './d.moderate';
 
 const F = f(__filename);
 
-export const mTimeout: MessageCommand = {
+export const mModerate: MessageCommand = {
   data: new ContextMenuCommandBuilder()
-    .setName('Timeout')
+    .setName('Moderate')
     .setType(ApplicationCommandType.Message),
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
 
-    await timeout(
-      interaction,
-      (interaction.targetMessage.member as GuildMember),
-    );
+    await interaction.reply({
+      embeds: [await userInfoEmbed(interaction.targetMessage.author.id, 'INFO')],
+      ephemeral: true,
+      components: [modButtons(interaction.targetId)],
+    });
 
     return true;
   },
 };
 
-export default mTimeout;
+export default mModerate;

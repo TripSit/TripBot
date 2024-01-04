@@ -1,29 +1,28 @@
 import {
   ContextMenuCommandBuilder,
-  GuildMember,
 } from 'discord.js';
 import {
   ApplicationCommandType,
 } from 'discord-api-types/v10';
 import { UserCommand } from '../../@types/commandDef';
 import commandContext from '../../utils/context';
-import { kick } from './d.moderate';
+import { modButtons, userInfoEmbed } from './d.moderate';
 
 const F = f(__filename);
 
-export const uKick: UserCommand = {
+export const uModerate: UserCommand = {
   data: new ContextMenuCommandBuilder()
-    .setName('Kick')
+    .setName('Moderate')
     .setType(ApplicationCommandType.User),
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
-    await kick(
-      interaction,
-      interaction.targetMember as GuildMember,
-    );
-
+    await interaction.reply({
+      embeds: [await userInfoEmbed(interaction.targetUser.id, 'INFO')],
+      ephemeral: true,
+      components: [modButtons(interaction.targetId)],
+    });
     return true;
   },
 };
 
-export default uKick;
+export default uModerate;

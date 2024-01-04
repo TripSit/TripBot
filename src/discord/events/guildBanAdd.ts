@@ -57,23 +57,10 @@ export const guildBanAdd: GuildBanAddEvent = {
         );
       }
 
-      const userData = await db.users.upsert({
-        where: {
-          discord_id: ban.user.id,
-        },
-        create: {
-          discord_id: ban.user.id,
-        },
-        update: {},
-      });
-
-      const embed = await userInfoEmbed(
-        ban.user,
-        userData,
-      );
+      const embed = await userInfoEmbed(ban.user.id, 'FULL_BAN');
 
       const trollScoreData = await tripSitTrollScore(
-        ban.user,
+        ban.user.id,
       );
 
       const trollScoreColors = {
