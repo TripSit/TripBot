@@ -69,10 +69,10 @@ async function checkReminders() { // eslint-disable-line @typescript-eslint/no-u
           // Get the user's discord id
           const userData = await db.users.upsert({
             where: {
-              discord_id: reminder.user_id,
+              id: reminder.user_id,
             },
             create: {
-              discord_id: reminder.user_id,
+              id: reminder.user_id,
             },
             update: {},
           });
