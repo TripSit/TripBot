@@ -12,7 +12,7 @@ const F = f(__filename);
 
 export const mModerate: MessageCommand = {
   data: new ContextMenuCommandBuilder()
-    .setName('Moderate')
+    .setName('Message Moderate')
     .setType(ApplicationCommandType.Message),
   async execute(interaction) {
     log.info(F, await commandContext(interaction));

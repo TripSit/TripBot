@@ -31,14 +31,14 @@ import {
 } from 'discord-api-types/v10';
 import { stripIndents } from 'common-tags';
 import { user_action_type, user_actions, users } from '@prisma/client';
-import { SlashCommand } from '../../@types/commandDef';
-import { parseDuration } from '../../../global/utils/parseDuration';
-import commandContext from '../../utils/context'; // eslint-disable-line
-import { getDiscordMember, getDiscordUser } from '../../utils/guildMemberLookup';
-import { last } from '../../../global/commands/g.last';
-import { botBannedUsers } from '../../utils/populateBotBans';
-import { embedTemplate } from '../../utils/embedTemplate';
-import { checkGuildPermissions } from '../../utils/checkPermissions';
+import { SlashCommand } from './src/discord/@types/commandDef';
+import { parseDuration } from './src/global/utils/parseDuration';
+import commandContext from './src/discord/utils/context'; // eslint-disable-line
+import { getDiscordMember, getDiscordUser } from './src/discord/utils/guildMemberLookup';
+import { last } from './src/global/commands/g.last';
+import { botBannedUsers } from './src/discord/utils/populateBotBans';
+import { embedTemplate } from './src/discord/utils/embedTemplate';
+import { checkGuildPermissions } from './src/discord/utils/checkPermissions';
 
 const F = f(__filename);
 

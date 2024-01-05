@@ -39,10 +39,12 @@ import {
 import {
   TextInputStyle,
   ButtonStyle,
+  ApplicationRoleConnectionMetadataType,
 } from 'discord-api-types/v10';
 import { stripIndents } from 'common-tags';
 import { user_action_type, user_actions, users } from '@prisma/client';
 import ms from 'ms';
+import { isContextMenuApplicationCommandInteraction } from 'discord-api-types/utils/v10';
 import { SlashCommand } from '../../@types/commandDef';
 import { parseDuration } from '../../../global/utils/parseDuration';
 import commandContext from '../../utils/context'; // eslint-disable-line
@@ -80,6 +82,12 @@ this includes the ability to ban, warn, report, and more!
 Currently these tools are only available to a limited number of partner guilds, \
 use /cooperative info for more information.`;
 const noUserError = 'Could not find that member/user!';
+const beMoreSpecific = stripIndents`
+Be more specific:
+> **Mention:** <@${env.DISCORD_OWNER_ID}>
+> **ID:** 9876581237
+> **Username:** moonbear
+> **Nickname:** Moony`;
 
 const embedVariables = {
   NOTE: {
@@ -221,6 +229,14 @@ const warnButtons = new ActionRowBuilder<ButtonBuilder>().addComponents(
     .setStyle(ButtonStyle.Danger),
 );
 
+function isSnowflake(id: string): boolean {
+  return /^[0-9]{17,19}$/.test(id);
+}
+
+function isMention(id: string): boolean {
+  return /^<@!?[0-9]{17,19}>$/.test(id);
+}
+
 // Various action type checks
 function isTimeout(command: ModAction): command is 'TIMEOUT' { return command === 'TIMEOUT'; }
 
@@ -286,28 +302,47 @@ function isAcknowledgeable(command: ModAction): command is 'WARNING' | 'TIMEOUT'
   return command === 'WARNING';
 }
 
-export const modButtons = (discordId: string) => new ActionRowBuilder<ButtonBuilder>().addComponents(
-  new ButtonBuilder()
-    .setCustomId(`moderate~note~${discordId}`)
-    .setLabel('Note')
-    .setEmoji('🗒️')
-    .setStyle(ButtonStyle.Success),
-  new ButtonBuilder()
-    .setCustomId(`moderate~warn~${discordId}`)
-    .setLabel('Warn')
-    .setEmoji('⚠️')
-    .setStyle(ButtonStyle.Primary),
-  new ButtonBuilder()
-    .setCustomId(`moderate~timeout~${discordId}`)
-    .setLabel('Mute')
-    .setEmoji('⏳')
-    .setStyle(ButtonStyle.Secondary),
-  new ButtonBuilder()
-    .setCustomId(`moderate~ban~${discordId}`)
-    .setLabel('Ban')
-    .setEmoji('🔨')
-    .setStyle(ButtonStyle.Danger),
-);
+const modButtonNote = (discordId: string) => new ButtonBuilder()
+  .setCustomId(`moderate~note-${discordId}`)
+  .setLabel('Note')
+  .setEmoji('🗒️')
+  .setStyle(ButtonStyle.Success);
+
+const modButtonReport = (discordId: string) => new ButtonBuilder()
+  .setCustomId(`moderate~report-${discordId}`)
+  .setLabel('Report')
+  .setEmoji('📝')
+  .setStyle(ButtonStyle.Primary);
+
+const modButtonWarn = (discordId: string) => new ButtonBuilder()
+  .setCustomId(`moderate~warn-${discordId}`)
+  .setLabel('Warn')
+  .setEmoji('⚠️')
+  .setStyle(ButtonStyle.Primary);
+
+const modButtonTimeout = (discordId: string) => new ButtonBuilder()
+  .setCustomId(`moderate~timeout-${discordId}`)
+  .setLabel('Mute')
+  .setEmoji('⏳')
+  .setStyle(ButtonStyle.Secondary);
+
+const modButtonBan = (discordId: string) => new ButtonBuilder()
+  .setCustomId(`moderate~ban-${discordId}`)
+  .setLabel('Ban')
+  .setEmoji('🔨')
+  .setStyle(ButtonStyle.Danger);
+
+const modButtonUnBan = (discordId: string) => new ButtonBuilder()
+  .setCustomId(`moderate~unban-${discordId}`)
+  .setLabel('Unban')
+  .setEmoji('🔨')
+  .setStyle(ButtonStyle.Success);
+
+const modButtonUnTimeout = (discordId: string) => new ButtonBuilder()
+  .setCustomId(`moderate~untimeout-${discordId}`)
+  .setLabel('Unmute')
+  .setEmoji('⏳')
+  .setStyle(ButtonStyle.Success);
 
 export async function linkThread(
   discordId: string,
@@ -1035,10 +1070,6 @@ export async function moderate(
     && !vendorBan
     && (description !== '' && description !== null)
     && targetUser) {
-    const embed = embedTemplate()
-      .setColor(embedVariables[command as keyof typeof embedVariables].embedColor)
-      .setTitle(embedVariables[command as keyof typeof embedVariables].embedTitle);
-
     let body = stripIndents`
       Hey ${targetUser}, I'm sorry to inform that you've been ${embedVariables[command as keyof typeof embedVariables].pastVerb}${durationStr} by Team TripSit:
 
@@ -1084,9 +1115,13 @@ export async function moderate(
       body = stripIndents`${body}\n\nIf you feel you can follow the rules you can rejoin here: https://discord.gg/tripsit`;
     }
 
-    embed.setDescription(body);
-
-    await targetUser.send({ embeds: [embed] });
+    messageUser(
+      targetUser,
+      buttonInt.guild as Guild,
+      command,
+      body,
+      isTimeout(command) || isWarning(command),
+    );
   }
 
   let actionData = {
@@ -1242,11 +1277,13 @@ export async function moderate(
     });
   }
 
-  const tripsitGuild = await discordClient.guilds.fetch(env.DISCORD_GUILD_ID);
-  const roleModerator = await tripsitGuild.roles.fetch(env.ROLE_MODERATOR) as Role;
-  // const modPing = `Hey ${roleModerator}`;
+  await db.users.update({
+    where: {
+      id: userData.id,
+    },
+    data: userData,
+  });
 
-  const summary = `${actor.displayName} ${embedVariables[command as keyof typeof embedVariables].pastVerb} ${targetName}${durationStr}!`;
   const anonSummary = `${targetName} was ${embedVariables[command as keyof typeof embedVariables].pastVerb}${durationStr}!`;
 
   let modThread = {} as ThreadChannel;
@@ -1272,10 +1309,8 @@ export async function moderate(
 
   // Return a message to the user who started this, confirming the user was acted on
   // log.debug(F, `${target.displayName} has been ${embedVariables[command as keyof typeof embedVariables].verb}!`);
-
   // log.info(F, `response: ${JSON.stringify(desc, null, 2)}`);
   // Take the existing description from response and add to it:'
-
   const desc = stripIndents`
     ${anonSummary}
     **Reason:** ${internalNote ?? noReason}
@@ -1465,9 +1500,10 @@ export async function modModal(
 
 export async function modEmbed(
   interaction: ChatInputCommandInteraction | MessageContextMenuCommandInteraction | UserContextMenuCommandInteraction,
-): Promise<void> {
+):Promise<EmbedBuilder> {
   let targetString = '';
   let targets = [] as GuildMember[];
+  const modEmbedObj = embedTemplate();
 
   if (interaction.isChatInputCommand()) {
     targetString = interaction.options.getString('target', true);
@@ -1480,80 +1516,42 @@ export async function modEmbed(
   }
 
   if (targets.length > 1) {
-    await interaction.reply({
-      embeds: [embedTemplate()
-        .setColor(Colors.Red)
-        .setTitle(`${targetString}" returned ${targets.length} results!`)
-        .setDescription(stripIndents`
-          Be more specific:
-          > **Mention:** @Moonbear
-          > **Tag:** moonbear#1234
-          > **ID:** 9876581237
-          > **Nickname:** MoonBear`)],
-      ephemeral: true,
-    });
-    return;
+    return modEmbedObj
+      .setColor(Colors.Red)
+      .setTitle(`${targetString}" returned ${targets.length} results!`)
+      .setDescription(beMoreSpecific);
   }
 
   if (targets.length === 0) {
     // If we didn't find a member, the likely left the guild already
     // If so, we can only ban or note them
     // We can only do that if the discordID was provided
+    modEmbedObj
+      .setColor(Colors.Red)
+      .setTitle(`${targetString}" returned no results!`)
+      .setDescription(beMoreSpecific);
 
-    const embed = embedTemplate()
+    if (isSnowflake(targetString) || isMention(targetString)) {
+      const userId = isSnowflake(targetString) ? targetString : targetString.replace(/[<@!>]/g, '');
+
+      modEmbedObj.setDescription(stripIndents`
+      User ID '${userId}' is not in the guild, but I can still Note or Ban them!`);
+
+      return modEmbedObj;
+    }
+
+    return embedTemplate()
       .setColor(Colors.Red)
       .setTitle(`${targetString}" returned no results!`)
       .setDescription(stripIndents`
-    Be more specific:
-    > **Mention:** @Moonbear
-    > **Tag:** moonbear#1234
-    > **ID:** 9876581237
-    > **Nickname:** MoonBear`);
-
-    if ((targetString.startsWith('<@') && targetString.endsWith('>'))
-      || targetString.match(/^\d+$/)) { // TODO maybe check that @ mentions are handled correctly
-      const userId = targetString.match(/^\d+$/) ? targetString : targetString.replace(/[<@!>]/g, '');
-
-      const userActions = new ActionRowBuilder<ButtonBuilder>().addComponents(
-        new ButtonBuilder()
-          .setCustomId(`moderate~note~${userId}`)
-          .setLabel('Note')
-          .setEmoji('🗒️')
-          .setStyle(ButtonStyle.Success),
-        new ButtonBuilder()
-          .setCustomId(`moderate~ban~${userId}`)
-          .setLabel('Ban')
-          .setEmoji('🔨')
-          .setStyle(ButtonStyle.Danger),
-      );
-
-      embed.setDescription(stripIndents`
-      User ID '${userId}' is not in the guild, but I can still Note or Ban them!`);
-
-      await interaction.reply({
-        embeds: [embed],
-        components: [userActions],
-        ephemeral: true,
-      });
-      return;
-    }
-
-    await interaction.reply({
-      embeds: [embedTemplate()
-        .setColor(Colors.Red)
-        .setTitle(`${targetString}" returned no results!`)
-        .setDescription(stripIndents`
-          Be more specific:
-          > **Mention:** @Moonbear
-          > **Tag:** moonbear#1234
-          > **ID:** 9876581237
-          > **Nickname:** MoonBear
-          
-          If you want to ban a user who is not on the guild you must provide their ID!
-          `)],
-      ephemeral: true,
-    });
-    return;
+      Be more specific:
+      > **Mention:** @Moonbear
+      > **Tag:** moonbear#1234
+      > **ID:** 9876581237
+      > **Nickname:** MoonBear
+      
+      If you want to ban a user who is not on the guild you must provide their ID!
+      `);
   }
 
   const trollScore = await tripSitTrollScore(targets[0].user.id);
@@ -1563,11 +1561,60 @@ export async function modEmbed(
   modlogEmbed.setDescription(`**TripSit TrollScore: ${trollScore.trollScore}**\n\`\`\`${trollScore.tsReasoning}\`\`\`
   ${modlogEmbed.data.description}`);
 
-  await interaction.reply({
-    embeds: [modlogEmbed],
-    ephemeral: true,
-    components: [modButtons(targets[0].id)],
+  return modlogEmbed;
+}
+
+export async function modButtons(
+  interaction: ChatInputCommandInteraction
+  | MessageContextMenuCommandInteraction
+  | UserContextMenuCommandInteraction,
+):Promise<ActionRowBuilder<ButtonBuilder>> {
+  const actionRow = new ActionRowBuilder<ButtonBuilder>();
+  if (!interaction.guild) return actionRow;
+  if (!interaction.guild) return actionRow;
+
+  let target = {} as GuildMember;
+  if (interaction.isMessageContextMenuCommand() || interaction.isUserContextMenuCommand()) {
+    target = await interaction.guild.members.fetch(interaction.targetId);
+  }
+
+  if (interaction.isChatInputCommand()) {
+    const targetString = interaction.options.getString('target', true);
+    const targets = await getDiscordMember(interaction, targetString);
+    [target] = targets;
+  }
+
+  const actor = interaction.member as GuildMember;
+
+  // Get the guild the message was used in, and get hte moderator role
+  const { guild } = interaction;
+  const guildData = await db.discord_guilds.upsert({
+    where: {
+      id: guild.id,
+    },
+    create: {
+      id: guild.id,
+    },
+    update: {
+    },
   });
+
+  const modId = guildData.mod_role_id as string;
+
+  if (actor.roles.cache.has(modId)) {
+    actionRow.addComponents(
+      modButtonNote(target.id),
+      modButtonWarn(target.id),
+      modButtonTimeout(target.id),
+      modButtonBan(target.id),
+    );
+  } else {
+    actionRow.addComponents(
+      modButtonReport(target.id),
+    );
+  }
+
+  return actionRow;
 }
 
 export const mod: SlashCommand = {
@@ -1578,7 +1625,7 @@ export const mod: SlashCommand = {
       .setDescription('Act on a user.')
       .addStringOption(option => option
         .setName('target')
-        .setDescription('User to warn!')
+        .setDescription('User to act on.')
         .setRequired(true))
       .setName('user'))
     .addSubcommand(subcommand => subcommand
@@ -1709,7 +1756,11 @@ export const mod: SlashCommand = {
       }
     }
 
-    await modEmbed(interaction);
+    await interaction.reply({
+      embeds: [await modEmbed(interaction)],
+      ephemeral: true,
+      components: [await modButtons(interaction)],
+    });
 
     return true;
   },
