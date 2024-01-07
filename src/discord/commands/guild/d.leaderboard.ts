@@ -17,36 +17,9 @@ import { getPersonaInfo } from '../../../global/commands/g.rpg';
 import getAsset from '../../utils/getAsset';
 import { resizeText, deFuckifyText, colorDefs } from '../../utils/canvasUtils';
 // import { paginationEmbed } from '../../utils/pagination';
+import { leaderboardV2 } from '../../../global/commands/g.leaderboard';
 
 const F = f(__filename);
-
-type LeaderboardList = { discord_id: string, total_points: number }[];
-type LeaderboardData = {
-  ALL: {
-    TOTAL: LeaderboardList,
-    TRIPSITTER: LeaderboardList,
-    GENERAL: LeaderboardList,
-    DEVELOPER: LeaderboardList,
-    TEAM: LeaderboardList,
-    IGNORED: LeaderboardList,
-  },
-  TEXT: {
-    TOTAL: LeaderboardList,
-    TRIPSITTER: LeaderboardList,
-    GENERAL: LeaderboardList,
-    DEVELOPER: LeaderboardList,
-    TEAM: LeaderboardList,
-    IGNORED: LeaderboardList,
-  },
-  VOICE: {
-    TOTAL: LeaderboardList,
-    TRIPSITTER: LeaderboardList,
-    GENERAL: LeaderboardList,
-    DEVELOPER: LeaderboardList,
-    TEAM: LeaderboardList,
-    IGNORED: LeaderboardList,
-  },
-};
 
 const categoryChoices = [
   { name: 'Total Lvl', value: 'TOTAL' },
@@ -119,19 +92,17 @@ export const dLeaderboard: SlashCommand = {
     context.fillStyle = '#FFFFFF';
     context.textBaseline = 'middle';
     context.textAlign = 'center';
-    let categoryChoice = interaction.options.getString('category') ?? 'TOTAL';
+    let categoryChoice = (interaction.options.getString('category') ?? 'TOTAL') as
+      'TOTAL' | 'GENERAL' | 'VOICE' | 'TRIPSITTER' | 'DEVELOPER' | 'TEAM' | 'IGNORED';
     let typeChoice = 'ALL' as experience_type;
     // if the category choice is voice, set the type choice to voice (as to treat it as a category, not a type)
     if (categoryChoice === 'VOICE') {
       typeChoice = 'VOICE';
-    }
-    // if the category choice is voice, set the category choice to total (as to treat it as a category, not a type)
-    if (categoryChoice === 'VOICE') {
       categoryChoice = 'TOTAL';
     }
     categoryChoice = categoryChoice as experience_category;
-    const categoryValue = interaction.options.getString('category') ?? 'TOTAL';
-    const categoryName = categoryChoices.find(choice => choice.value === categoryValue)?.name || 'Total';
+    // const categoryValue = interaction.options.getString('category') ?? 'TOTAL';
+    const categoryName = categoryChoices.find(choice => choice.value === categoryChoice)?.name || 'Total';
 
     context.font = resizeText(canvasObj, `${categoryName.toUpperCase()}`, 40, 'futura', 498);
     context.fillText(`${categoryName.toUpperCase()}`, 276, 54);
@@ -146,90 +117,13 @@ export const dLeaderboard: SlashCommand = {
 
     await interaction.guild?.members.fetch();
 
-    const leaderboardData = {
-      ALL: {
-        TOTAL: [],
-        TRIPSITTER: [],
-        GENERAL: [],
-        DEVELOPER: [],
-        TEAM: [],
-        IGNORED: [],
-      },
-      TEXT: {
-        TOTAL: [],
-        TRIPSITTER: [],
-        GENERAL: [],
-        DEVELOPER: [],
-        TEAM: [],
-        IGNORED: [],
-      },
-      VOICE: {
-        TOTAL: [],
-        TRIPSITTER: [],
-        GENERAL: [],
-        DEVELOPER: [],
-        TEAM: [],
-        IGNORED: [],
-      },
-    } as LeaderboardData;
-
-    const categories: experience_category[] = [
-      experience_category.TRIPSITTER,
-      experience_category.GENERAL,
-      experience_category.DEVELOPER,
-      experience_category.TEAM,
-      experience_category.IGNORED,
-    ];
-    const types: experience_type[] = [
-      experience_type.TEXT,
-      experience_type.VOICE,
-    ];
-
-    // eslint-disable-next-line no-restricted-syntax
-    for (const type of ['ALL', ...types]) {
-    // eslint-disable-next-line no-restricted-syntax
-      for (const category of ['TOTAL', ...categories]) {
-        const lookupType = type as experience_type | 'ALL';
-        const lookupCategory = category as experience_category | 'TOTAL';
-
-        const whereClause = {} as {
-          type?: experience_type,
-          category?: experience_category,
-        };
-
-        if (lookupCategory !== 'TOTAL') {
-          whereClause.category = lookupCategory;
-        }
-
-        if (lookupType !== 'ALL') {
-          whereClause.type = lookupType;
-        }
-
-        const users = await db.user_experience.findMany({
-          where: whereClause,
-          orderBy: {
-            total_points: 'desc',
-          },
-          include: {
-            users: {
-              select: {
-                discord_id: true,
-              },
-            },
-          },
-        });
-
-        const userList = users.map(user => ({
-          discord_id: user.users.discord_id,
-          total_points: user.total_points,
-        })) as LeaderboardList;
-
-        leaderboardData[type as experience_type][category as experience_category] = userList;
-      }
-    }
+    const leaderboardData = await leaderboardV2();
 
     // Directly access the selected type in the leaderboardData object
     const typeData = leaderboardData[typeChoice.toUpperCase() as keyof typeof leaderboardData];
+
+    // Do this before the loops
+    await interaction.guild.members.fetch();
 
     // Check if the typeData exists before proceeding
     if (typeData) {
@@ -274,15 +168,19 @@ export const dLeaderboard: SlashCommand = {
       if (categoryData) {
         let count = 0;
         let userCount = 0;
+        // log.debug(F, `Category: ${categoryChoice} | Type: ${typeChoice} | Count: ${count} | UserCount: ${userCount}`);
+        // log.debug(F, `CategoryData: ${JSON.stringify(categoryData.length, null, 2)}`);
         while (count < 10) {
           const user = userCount < categoryData.length ? categoryData[userCount] : null;
           const avatarOffset = count > 2 ? 66 : 91;
           const bar = barCoordinates[count % barCoordinates.length];
           const rankFontSize = count > 2 ? (count === 9 ? 20 : 30) : 40; // eslint-disable-line no-nested-ternary
+          // log.debug(F, `User: ${user?.discord_id} | Count: ${count} | UserCount: ${userCount}`);
           if (user) {
-            const memberCollection = interaction.guild?.members.cache.filter(m => m.id === user.discord_id);
-            if (memberCollection && memberCollection.size > 0) {
-              const member = memberCollection.first(); // Get the first member from the collection
+            // We only need to check the cache here because we already fetched all members above
+            const member = interaction.guild?.members.cache.get(user.discord_id);
+            if (member) {
+              // log.debug(F, `Member: ${member?.displayName} | ${member?.roles.color?.id}`);
               const userLevel = await getTotalLevel(user.total_points);
               const userDarkBarColor = colorDefs[member?.roles.color?.id as keyof typeof colorDefs]?.cardDarkColor || '#232323'; //eslint-disable-line
               const userNameColor = colorDefs[member?.roles.color?.id as keyof typeof colorDefs]?.textColor || '#ffffff'; //eslint-disable-line
@@ -377,30 +275,33 @@ export const dLeaderboard: SlashCommand = {
               context.font = resizeText(canvasObj, userName, fontSize, userFont, maxLength);
               context.textAlign = 'left';
               context.fillText(userName, bar.x + avatarOffset + (bar.height / 2) + 9, bar.y + bar.height / 2);
+
+              count += 1;
             }
             userCount += 1;
-          } else {
-          // Draw a plain bar without any user data
-            context.fillStyle = '#232323';
-            context.beginPath();
-            context.roundRect(bar.x + (avatarOffset - (bar.height / 2)), bar.y, bar.width - (avatarOffset - (bar.height / 2)), bar.height, [bar.height / 2, 19, 19, bar.height / 2]); // eslint-disable-line max-len
-            context.fill();
-            context.fillStyle = '#ffffff';
-            context.textBaseline = 'middle';
-            context.textAlign = 'left';
-            context.font = `${rankFontSize}px futura`;
-            if (count === 0) {
-              context.fillStyle = '#d4af37';
-            } else if (count === 1) {
-              context.fillStyle = '#a8a9ad';
-            } else if (count === 2) {
-              context.fillStyle = '#aa7042';
-            } else {
-              context.fillStyle = '#ffffff';
-            }
-            context.fillText(`#${count + 1}`, bar.x - 9, bar.y + bar.height / 2);
           }
-          count += 1;
+          //  else {
+          // // Draw a plain bar without any user  data
+          //   context.fillStyle = '#232323';
+          //   context.beginPath();
+          //   context.roundRect(bar.x + (avatarOffset - (bar.height / 2)), bar.y, bar.width - (avatarOffset - (bar.height / 2)), bar.height, [bar.height / 2, 19, 19, bar.height / 2]); // eslint-disable-line max-len
+          //   context.fill();
+          //   context.fillStyle = '#ffffff';
+          //   context.textBaseline = 'middle';
+          //   context.textAlign = 'left';
+          //   context.font = `${rankFontSize}px futura`;
+          //   if (count === 0) {
+          //     context.fillStyle = '#d4af37';
+          //   } else if (count === 1) {
+          //     context.fillStyle = '#a8a9ad';
+          //   } else if (count === 2) {
+          //     context.fillStyle = '#aa7042';
+          //   } else {
+          //     context.fillStyle = '#ffffff';
+          //   }
+          //   context.fillText(`#${count + 1}`, bar.x - 9, bar.y + bar.height / 2);
+          // }
+          // count += 1;
         }
       }
     }
