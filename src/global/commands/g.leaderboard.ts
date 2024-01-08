@@ -79,6 +79,7 @@ export async function leaderboardV2(): Promise<LeaderboardData> {
     } else {
       const userExpData = await db.user_experience.groupBy({
         by: ['user_id'],
+        where: whereClause,
         _sum: {
           total_points: true,
         },
