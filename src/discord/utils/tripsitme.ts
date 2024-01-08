@@ -841,7 +841,7 @@ export async function tripsitmeUserClose(
       user_id: userData.id,
       status: {
         not: {
-          in: ['CLOSED', 'RESOLVED', 'DELETED'],
+          in: ['CLOSED', 'DELETED'],
         },
       },
     },

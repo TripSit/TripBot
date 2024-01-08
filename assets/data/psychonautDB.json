@@ -11651,7 +11651,10 @@
         "name": "PCP"
       },
       {
-        "name": "Antibiotics"
+        "name": "ALDH2 inhibitors"
+      },
+      {
+        "name": "Hepatotoxic drugs"
       }
     ],
     "dangerousInteractions": [
