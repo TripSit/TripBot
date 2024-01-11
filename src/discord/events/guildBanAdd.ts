@@ -130,14 +130,14 @@ export const guildBanAdd: GuildBanAddEvent = {
         `);
 
         let modThread = null as ThreadChannel | null;
-        let modThreadMessage = `**${member.displayName} was banned from ${ban.guild.name}**`;
+        let modThreadMessage = `**${member.displayName} was banned from ${ban.guild.name}`;
 
         if (banLog) {
-          if (banLog.executor) modThreadMessage += `** by ${banLog.executor?.username}`;
-          if (banLog.reason) modThreadMessage += `** for ${banLog.reason}`;
+          if (banLog.executor) modThreadMessage += ` by ${banLog.executor?.username}`;
+          if (banLog.reason) modThreadMessage += ` for "${banLog.reason}"`;
         }
 
-        modThreadMessage += ` <@&${guildData.role_moderator}>`;
+        modThreadMessage += ` <@&${guildData.role_moderator}>**`;
         const emoji = '👋';
 
         if (targetData.mod_thread_id || trustScoreData.trustScore < guildData.trust_score_limit) {
