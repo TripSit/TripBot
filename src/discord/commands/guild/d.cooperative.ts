@@ -37,18 +37,18 @@ async function info(): Promise<InteractionEditReplyOptions> {
         description: stripIndent`
         This command will set up your guild when you first join the cooperative.
         It will perform the following tasks:
-        * Create a channel called '#coop-mod'
+        * Create a channel called '#moderators'
         - This channel will be used for cooperative moderation.
         - Ban messages will be sent here when you ban someone for the rest of the cooperative to see
         - You can reach out to other guilds through this channel to clarify bans.
         * Create a channel called '#modlog'
         - This will be used to track moderation actions *by your own team* and to keep them accountable.
         - Only ban alerts and messages are sent to #coop-mod for other guilds to see.
+        * Create a channel called '#helpdesk'
+        - This is a moderation ticketing system
 
 
         **** TBD ****
-        * Create a channel called '#helpdesk'
-        - This is a moderation ticketing system
         * Create a channel called '#coop-gen'
         - This channel will be used for general cooperative chat.
         - Talk about moderation policies or whatever with other moderators.
@@ -265,7 +265,30 @@ async function setup(interaction:ChatInputCommandInteraction):Promise<Interactio
   // Finished checks, lets set this up!
 
   // Get the IDs of the channels
-  let modRoom = interaction.options.getChannel('coop_mod_channel');
+
+  let helpdeskRoom = interaction.options.getChannel('helpdesk_channel');
+  if (!helpdeskRoom) {
+    // If the channel wasn't provided, create it:
+    helpdeskRoom = await interaction.guild.channels.create({
+      name: '🙊│talk-to-mods',
+      type: ChannelType.GuildText,
+      topic: 'This channel is used to make tickets.',
+      permissionOverwrites: [
+        {
+          id: interaction.guild.roles.everyone.id,
+          deny: ['ViewChannel'],
+        },
+      ],
+    });
+  }
+
+  const trustScoreLimit = interaction.options.getInteger('trust_score_limit', true);
+  await db.discord_guilds.update({
+    where: { id: interaction.guild.id },
+    data: { trust_score_limit: trustScoreLimit },
+  });
+
+  let modRoom = interaction.options.getChannel('mod_channel');
   if (!modRoom) {
     // If the channel wasn't provided, create it:
     modRoom = await interaction.guild.channels.create({
@@ -286,7 +309,7 @@ async function setup(interaction:ChatInputCommandInteraction):Promise<Interactio
       id: interaction.guild.id,
     },
     data: {
-      mod_room_id: modRoom.id,
+      channel_moderators: modRoom.id,
     },
   });
 
@@ -311,7 +334,7 @@ async function setup(interaction:ChatInputCommandInteraction):Promise<Interactio
       id: interaction.guild.id,
     },
     data: {
-      mod_log_room_id: modLog.id,
+      channel_mod_log: modLog.id,
     },
   });
   // const helpdesk = interaction.options.getChannel('helpdesk_channel', true);
@@ -334,7 +357,7 @@ async function setup(interaction:ChatInputCommandInteraction):Promise<Interactio
       id: interaction.guild.id,
     },
     data: {
-      mod_role_id: modRole.id,
+      role_moderator: modRole.id,
     },
   });
 
@@ -359,7 +382,7 @@ async function setup(interaction:ChatInputCommandInteraction):Promise<Interactio
           id: interaction.guild.id,
         },
         data: {
-          mod_role_id: newRole.id,
+          role_moderator: newRole.id,
         },
       });
       return newRole.id;
@@ -369,7 +392,7 @@ async function setup(interaction:ChatInputCommandInteraction):Promise<Interactio
         id: interaction.guild.id,
       },
       data: {
-        mod_role_id: role.id,
+        role_moderator: role.id,
       },
     });
     return role.id;
@@ -383,7 +406,8 @@ async function setup(interaction:ChatInputCommandInteraction):Promise<Interactio
     embeds: [
       embedTemplate({
         title: 'Cooperative setup complete!',
-        description: stripIndents`Thanks!`,
+        description: stripIndents`
+        I will make new threads in `,
       }),
     ],
   };
@@ -472,7 +496,7 @@ export async function cooperativeLeaveButton(
 async function add(
   interaction:ChatInputCommandInteraction,
 ):Promise<InteractionEditReplyOptions> {
-  if (interaction.guild?.id !== env.DISCORD_GUILD_ID) {
+  if (interaction.user.id !== env.DISCORD_OWNER_ID) {
     return {
       embeds: [
         embedTemplate({
@@ -482,7 +506,7 @@ async function add(
     };
   }
 
-  const guild = await discordClient.guilds.fetch(interaction.options.getString('guildId', true));
+  const guild = await discordClient.guilds.fetch(interaction.options.getString('guild_id', true));
   await db.discord_guilds.upsert({
     where: {
       id: guild.id,
@@ -508,7 +532,7 @@ async function add(
 async function remove(
   interaction:ChatInputCommandInteraction,
 ):Promise<InteractionEditReplyOptions> {
-  if (interaction.guild?.id !== env.DISCORD_GUILD_ID) {
+  if (interaction.user.id !== env.DISCORD_OWNER_ID) {
     return {
       embeds: [
         embedTemplate({
@@ -519,7 +543,7 @@ async function remove(
   }
 
   // Sets the guild cooperative status to false
-  const guild = await discordClient.guilds.fetch(interaction.options.getString('guildId', true));
+  const guild = await discordClient.guilds.fetch(interaction.options.getString('guild_id', true));
   await db.discord_guilds.upsert({
     where: {
       id: guild.id,
@@ -545,11 +569,6 @@ export async function sendCooperativeMessage(
   embed: EmbedBuilder,
   pingGuilds: string[],
 ) {
-  // const channelComMod = await discordClient.channels.fetch(env.CHANNEL_MODERATORS) as TextChannel;
-  // For each Id in pingGuilds, look up the guild in the database and get the channel id of their community mod room,
-  // and the ID of their moderator role. Then send the message to that channel, pinging those moderators. This is unique
-  // for each guild so that each guild gets a custom ping if they're in the array.
-
   await Promise.all(pingGuilds.map(async guildId => {
     const guildData = await db.discord_guilds.upsert({
       where: {
@@ -564,12 +583,12 @@ export async function sendCooperativeMessage(
       },
     });
     const guild = await discordClient.guilds.fetch(guildId);
-    if (guildData.mod_room_id && guildData.mod_role_id) {
+    if (guildData.channel_moderators && guildData.role_moderator) {
       let channelCoopMod = {} as TextChannel;
       try {
-        channelCoopMod = await discordClient.channels.fetch(guildData.mod_room_id) as TextChannel;
+        channelCoopMod = await discordClient.channels.fetch(guildData.channel_moderators) as TextChannel;
       } catch (e) {
-        guildData.mod_room_id = null;
+        guildData.channel_moderators = null;
         await db.discord_guilds.update({
           where: {
             id: guildId,
@@ -580,9 +599,9 @@ export async function sendCooperativeMessage(
 
       let roleMod = {} as Role;
       try {
-        roleMod = await guild.roles.fetch(guildData.mod_role_id) as Role;
+        roleMod = await guild.roles.fetch(guildData.role_moderator) as Role;
       } catch (e) {
-        guildData.mod_role_id = null;
+        guildData.role_moderator = null;
         await db.discord_guilds.update({
           where: {
             id: guildId,
@@ -611,40 +630,37 @@ export const dCooperative: SlashCommand = {
       .setName('apply'))
     .addSubcommand(subcommand => subcommand
       .setDescription('Setup the TripSit Discord Cooperative on your guild')
-      .setName('setup')
       .addChannelOption(option => option
-        .setName('coop_mod_channel')
-        .setDescription('The channel to use for cooperative moderation'))
+        .setRequired(true)
+        .setDescription('The channel to use for moderation')
+        .setName('mod_channel'))
       .addChannelOption(option => option
-        .setName('modlog_channel')
-        .setDescription('The channel to use for moderation logs'))
+        .setRequired(true)
+        .setDescription('The channel to use for moderation logs')
+        .setName('modlog_channel'))
       .addRoleOption(option => option
-        .setName('mod_role')
-        .setDescription('The role to use for moderators')),
-      // .addChannelOption(option => option
-      //   .setName('helpdesk_channel')
-      //   .setDescription('The channel to use for moderation tickets')),
-      // .addChannelOption(option => option
-      //   .setName('coop_gen_channel')
-      //   .setDescription('The channel to use for general cooperative chat'))
-      // .addChannelOption(option => option
-      //   .setName('coop_announce_channel')
-      //   .setDescription('The channel to use for cooperative announcements'))
-      // .addChannelOption(option => option
-      //   .setName('coop_offtopic_channel')
-      //   .setDescription('The channel to use for off-topic cooperative chat'))
-    // eslint-disable-next-line function-paren-newline
-    )
+        .setRequired(true)
+        .setDescription('The role to use for moderators')
+        .setName('mod_role'))
+      .addChannelOption(option => option
+        .setRequired(true)
+        .setDescription('The channel to use for moderation tickets')
+        .setName('helpdesk_channel'))
+      .addIntegerOption(option => option
+        .setRequired(true)
+        .setDescription('Below this number sends alerts')
+        .setName('trust_score_limit'))
+      .setName('setup'))
     .addSubcommand(subcommand => subcommand
       .setDescription('Leave the TripSit Discord Cooperative')
       .setName('leave'))
     .addSubcommand(subcommand => subcommand
       .setDescription('Add a guild to the TripSit Discord Cooperative')
-      .setName('add')
       .addStringOption(option => option
         .setName('guild_id')
         .setDescription('The ID of the guild to add')
-        .setRequired(true)))
+        .setRequired(true))
+      .setName('add'))
     .addSubcommand(subcommand => subcommand
       .setDescription('Remove a guild from the TripSit Discord Cooperative')
       .setName('remove')

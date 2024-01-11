@@ -28,7 +28,7 @@ export const messageDelete: MessageDeleteEvent = {
     if (message.guild.id !== env.DISCORD_GUILD_ID) return;
     if (message.channel.type !== ChannelType.GuildText) return;
     const startTime = Date.now();
-    log.info(F, `Message in ${message.channel.name} was deleted.`);
+    // log.info(F, `Message in ${message.channel.name} was deleted.`);
     // log.debug(F, `message: ${JSON.stringify(message, null, 2)}`);
 
     // Get the channel this will be posted in
@@ -61,7 +61,7 @@ export const messageDelete: MessageDeleteEvent = {
       type: AuditLogEvent.MessageDelete,
     })).entries.last() as GuildAuditLogsEntry<AuditLogEvent.MessageDelete, 'Delete', 'Message', AuditLogEvent.MessageDelete>; // eslint-disable-line
 
-    log.debug(F, `Deletion Log: ${JSON.stringify(deletionLog, null, 2)}`);
+    // log.debug(F, `Deletion Log: ${JSON.stringify(deletionLog, null, 2)}`);
 
     // Perform a coherence check to make sure that there's *something*
     let executorUser = {} as User;
@@ -97,7 +97,7 @@ export const messageDelete: MessageDeleteEvent = {
       }
     }
 
-    log.debug(F, `Executor: ${JSON.stringify(executorUser, null, 2)}, Content: ${content}`);
+    // log.debug(F, `Executor: ${JSON.stringify(executorUser, null, 2)}, Content: ${content}`);
 
     let executorMember = {} as GuildMember;
     try {
@@ -126,7 +126,7 @@ export const messageDelete: MessageDeleteEvent = {
       ]);
     }
 
-    log.debug(F, `content.length: ${content.length}`);
+    // log.debug(F, `content.length: ${content.length}`);
     if (content.length > 0 && content !== 'No content') {
       embed.addFields([
         { name: authorName, value: content.slice(0, 1023), inline: true },

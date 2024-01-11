@@ -1,50 +1,59 @@
 import {
   Colors,
-  TextChannel,
-  UserResolvable,
   Collection,
+  GuildMember,
+  ThreadChannel,
+  TextChannel,
+  ActionRowBuilder,
+  ButtonBuilder,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
 import {
   GuildMemberAddEvent,
 } from '../@types/eventDef';
-import { tripSitTrollScore, userInfoEmbed } from '../commands/guild/d.moderate';
-import { sendCooperativeMessage } from '../commands/guild/d.cooperative';
+import {
+  modButtonBan, modButtonInfo, modButtonNote, modButtonTimeout, modButtonWarn, tripSitTrustScore, userInfoEmbed,
+} from '../commands/guild/d.moderate';
 
 const F = f(__filename);
+
+async function getInvite(member:GuildMember) {
+  const newInvites = await member.guild.invites.fetch();
+  const cachedInvites = global.guildInvites.get(member.guild.id);
+  const invite = newInvites.find(i => <number > i.uses > cachedInvites.get(i.code));
+  let inviteInfo = 'Joined via the vanity url';
+  if (invite && invite.inviter) {
+    const inviter = await member.guild.members.fetch(invite.inviter);
+    inviteInfo = `Joined via ${inviter.displayName}'s invite (${invite.code}-${invite.uses})`;
+  }
+  // log.debug(F, `inviteInfo: ${inviteInfo}`);
+  global.guildInvites.set(
+    member.guild.id,
+    new Collection(newInvites.map(inviteEntry => [inviteEntry.code, inviteEntry.uses])),
+  );
+  return inviteInfo;
+}
 
 export const guildMemberAdd: GuildMemberAddEvent = {
   name: 'guildMemberAdd',
   async execute(member) {
-    // Get all guilds in the database
-    // const guildsData = await database.guilds.getAll();
-    const guildsData = await db.discord_guilds.findMany({});
-
-    // Filter out guilds that are not partnered, we only alert partners when someone is banned
-    const partnerGuildsData = guildsData.filter(guild => guild.partner);
-
-    // Only run on partnered guilds
-    if (!partnerGuildsData.find(guild => guild.id === member.guild.id)) return;
-
     log.debug(F, `${member} joined guild: ${member.guild.name} (id: ${member.guild.id})`);
+    // Get all guilds in the database
 
-    const newInvites = await member.guild.invites.fetch();
-    const cachedInvites = global.guildInvites.get(member.guild.id);
-    const invite = newInvites.find(i => <number > i.uses > cachedInvites.get(i.code));
-    let inviteInfo = '';
-    if (invite) {
-      const inviter = await discordClient.users.fetch(invite.inviter?.id as UserResolvable);
-      inviteInfo = inviter
-        ? `Joined via ${inviter.tag}'s invite to ${invite.channel?.name} (${invite.code}-${invite.uses})`
-        : 'Joined via the vanity url';
-    }
-    // log.debug(F, `inviteInfo: ${inviteInfo}`);
-    global.guildInvites.set(
-      member.guild.id,
-      new Collection(newInvites.map(inviteEntry => [inviteEntry.code, inviteEntry.uses])),
-    );
+    const guildData = await db.discord_guilds.findFirst({
+      where: {
+        id: member.guild.id,
+        cooperative: true,
+      },
+    });
 
-    await db.users.upsert({
+    // log.debug(F, `guildData: ${JSON.stringify(guildData)}`);
+
+    if (!guildData) return;
+
+    const inviteString = await getInvite(member);
+
+    const targetData = await db.users.upsert({
       where: {
         discord_id: member.id,
       },
@@ -57,38 +66,105 @@ export const guildMemberAdd: GuildMemberAddEvent = {
       },
     });
 
-    const embed = await userInfoEmbed(member.id, 'INFO');
+    const embed = await userInfoEmbed(member, member, targetData, 'NOTE', true);
 
-    const trollScoreData = await tripSitTrollScore(
+    const trustScoreData = await tripSitTrustScore(
       member.user.id,
     );
 
-    const trollScoreColors = {
+    log.debug(F, `trustScoreData: ${JSON.stringify(trustScoreData)}`);
+
+    const trustScoreColors = {
       0: Colors.Purple,
       1: Colors.Blue,
       2: Colors.Green,
       3: Colors.Yellow,
       4: Colors.Orange,
       5: Colors.Red,
+      6: Colors.Red,
     };
 
     embed
-      .setColor(trollScoreColors[trollScoreData.trollScore as keyof typeof trollScoreColors])
-      .setDescription(stripIndents`**${member} has joined the guild!**`);
-    if (inviteInfo) {
-      embed.setFooter({ text: inviteInfo });
+      .setColor(trustScoreColors[trustScoreData.trustScore as keyof typeof trustScoreColors])
+      .setDescription(stripIndents`**Report on ${member}**
+
+        **TripSit TrustScore: ${trustScoreData.trustScore}**
+
+        **TripSit TrustScore Reasoning**
+        \`\`\`${trustScoreData.tsReasoning}\`\`\`
+      `);
+
+    embed.setFooter({ text: inviteString });
+
+    // if (trustScoreData.trustScore > 3) {
+    //   await sendCooperativeMessage(
+    //     embed,
+    //     [`${member.guild.id}`],
+    //   );
+    // }
+
+    let modThread = null as ThreadChannel | null;
+    let modThreadMessage = `**${member.displayName} has joined the guild!**`;
+    let emoji = '👋';
+
+    if (trustScoreData.trustScore > 3) {
+      modThreadMessage = `**${member.displayName} has joined the guild, their account is untrusted!** <@&${guildData.role_moderator}>`;
+      emoji = '👀';
     }
 
-    if (trollScoreData.trollScore > 3) {
-      await sendCooperativeMessage(
-        embed,
-        [`${member.guild.id}`],
-      );
+    if (targetData.mod_thread_id || trustScoreData.trustScore > 3) {
+      log.debug(F, `Mod thread id exists: ${targetData.mod_thread_id}`);
+      // If the mod thread already exists, then they have previous reports, so we should try to update that thread
+      if (targetData.mod_thread_id) {
+        try {
+          modThread = await member.guild.channels.fetch(targetData.mod_thread_id) as ThreadChannel | null;
+          log.debug(F, 'Mod thread exists');
+        } catch (err) {
+          log.debug(F, 'Mod thread does not exist');
+        }
+      }
+
+      const payload = {
+        content: modThreadMessage,
+        embeds: [embed],
+        components: [new ActionRowBuilder<ButtonBuilder>().addComponents(
+          modButtonNote(member.id),
+          modButtonWarn(member.id),
+          modButtonTimeout(member.id),
+          modButtonBan(member.id),
+          modButtonInfo(member.id),
+        )],
+      };
+      // If the thread still exists, send a message and update the name
+      if (modThread) {
+        await modThread.send(payload);
+        await modThread.setName(`${emoji}${modThread.name.substring(1)}`);
+      } else if (guildData.channel_moderators) {
+        // IF the thread doesn't exist, likely deleted, then create a new thread
+        const modChan = await discordClient.channels.fetch(guildData.channel_moderators) as TextChannel;
+
+        modThread = await modChan.threads.create({
+          name: `${emoji}| ${member.displayName}`,
+          autoArchiveDuration: 60,
+        }) as ThreadChannel;
+
+        targetData.mod_thread_id = modThread.id;
+        await db.users.update({
+          where: {
+            discord_id: member.id,
+          },
+          data: {
+            mod_thread_id: modThread.id,
+          },
+        });
+
+        await modThread.send(payload);
+      }
     }
 
-    const auditlog = await discordClient.channels.fetch(env.CHANNEL_AUDITLOG) as TextChannel;
-    if (auditlog) {
-      await auditlog.send({ embeds: [embed] });
+    if (guildData.channel_mod_log) {
+      const auditLog = await discordClient.channels.fetch(guildData.channel_mod_log) as TextChannel;
+      await auditLog.send({ embeds: [embed] });
     }
   },
 };

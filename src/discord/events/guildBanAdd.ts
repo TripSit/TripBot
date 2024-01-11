@@ -12,7 +12,7 @@ import {
   GuildBanAddEvent,
 } from '../@types/eventDef';
 import { checkGuildPermissions } from '../utils/checkPermissions';
-import { tripSitTrollScore, userInfoEmbed } from '../commands/guild/d.moderate';
+import { tripSitTrustScore, userInfoEmbed } from '../commands/guild/d.moderate';
 import { sendCooperativeMessage } from '../commands/guild/d.cooperative';
 
 const F = f(__filename);
@@ -57,13 +57,24 @@ export const guildBanAdd: GuildBanAddEvent = {
         );
       }
 
-      const embed = await userInfoEmbed(ban.user.id, 'FULL_BAN');
+      const targetData = await db.users.upsert({
+        where: {
+          discord_id: ban.user.id,
+        },
+        create: {
+          discord_id: ban.user.id,
+        },
+        update: {
+        },
+      });
 
-      const trollScoreData = await tripSitTrollScore(
+      const embed = await userInfoEmbed(null, ban.user.id, targetData, 'FULL_BAN', false);
+
+      const trustScoreData = await tripSitTrustScore(
         ban.user.id,
       );
 
-      const trollScoreColors = {
+      const trustScoreColors = {
         0: Colors.Purple,
         1: Colors.Blue,
         2: Colors.Green,
@@ -73,7 +84,7 @@ export const guildBanAdd: GuildBanAddEvent = {
       };
 
       embed
-        .setColor(trollScoreColors[trollScoreData.trollScore as keyof typeof trollScoreColors])
+        .setColor(trustScoreColors[trustScoreData.trustScore as keyof typeof trustScoreColors])
         .setDescription(stripIndents`**${ban.user} was banned on ${ban.guild.name} and is in your guild!**`);
 
       await Promise.all(mutualGuilds.map(async guild => {

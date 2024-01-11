@@ -178,10 +178,14 @@ model discord_guilds {
   channel_tripsit      String?
   channel_tripsitmeta  String?
   channel_applications String?
+  channel_moderators   String?
+  channel_mod_log      String?
+  channel_helpdesk     String?
   role_needshelp       String?
   role_tripsitter      String?
   role_helper          String?
   role_techhelp        String?
+  role_moderator       String?
   removed_at           DateTime?        @db.Timestamptz(6)
   joined_at            DateTime         @default(now()) @db.Timestamptz(6)
   created_at           DateTime         @default(now()) @db.Timestamptz(6)
@@ -189,9 +193,7 @@ model discord_guilds {
   supporter            Boolean          @default(false)
   cooperative          Boolean          @default(false)
   premium_role_ids     String?
-  mod_room_id          String?
-  mod_log_room_id      String?
-  mod_role_id          String?
+  trust_score_limit    Int              @default(5)
   appeals              appeals[]
   counting             counting[]
   reaction_roles       reaction_roles[]

@@ -31,14 +31,14 @@ import {
 } from 'discord-api-types/v10';
 import { stripIndents } from 'common-tags';
 import { user_action_type, user_actions, users } from '@prisma/client';
-import { SlashCommand } from './src/discord/@types/commandDef';
-import { parseDuration } from './src/global/utils/parseDuration';
-import commandContext from './src/discord/utils/context'; // eslint-disable-line
-import { getDiscordMember, getDiscordUser } from './src/discord/utils/guildMemberLookup';
-import { last } from './src/global/commands/g.last';
-import { botBannedUsers } from './src/discord/utils/populateBotBans';
-import { embedTemplate } from './src/discord/utils/embedTemplate';
-import { checkGuildPermissions } from './src/discord/utils/checkPermissions';
+import { SlashCommand } from '../../../discord/@types/commandDef';
+import { parseDuration } from '../../utils/parseDuration';
+import commandContext from '../../../discord/utils/context'; // eslint-disable-line
+import { getDiscordMember, getDiscordUser } from '../../../discord/utils/guildMemberLookup';
+import { last } from '../g.last';
+import { botBannedUsers } from '../../../discord/utils/populateBotBans';
+import { embedTemplate } from '../../../discord/utils/embedTemplate';
+import { checkGuildPermissions } from '../../../discord/utils/checkPermissions';
 
 const F = f(__filename);
 
@@ -188,6 +188,14 @@ const warnButtons = new ActionRowBuilder<ButtonBuilder>().addComponents(
     .setStyle(ButtonStyle.Danger),
 );
 
+/* TODO:
+Add unban messages
+
+replace all .env stuff
+
+Motion to <action> users with votes
+*/
+
 const noReason = 'No reason provided';
 const internalNotePlaceholder = 'Tell other moderators why you\'re doing this';
 const descriptionLabel = 'What should we tell the user?';
@@ -319,22 +327,20 @@ export async function userInfoEmbed(
     modlogEmbed.addFields({ name: '# of Underbans', value: `${targetActionList.UNDERBAN.length}`, inline: true });
   }
 
-  if (command === 'INFO') {
-    let infoString = stripIndents`
-      ${targetActionList.FULL_BAN.length > 0 ? `**Bans**\n${targetActionList.FULL_BAN.join('\n')}` : ''}
-      ${targetActionList.UNDERBAN.length > 0 ? `**Underbans**\n${targetActionList.UNDERBAN.join('\n')}` : ''}
-      ${targetActionList.KICK.length > 0 ? `**Kicks**\n${targetActionList.KICK.join('\n')}` : ''}
-      ${targetActionList.TIMEOUT.length > 0 ? `**Timeouts**\n${targetActionList.TIMEOUT.join('\n')}` : ''}
-      ${targetActionList.WARNING.length > 0 ? `**Warns**\n${targetActionList.WARNING.join('\n')}` : ''}
-      ${targetActionList.REPORT.length > 0 ? `**Reports**\n${targetActionList.REPORT.join('\n')}` : ''}
-      ${targetActionList.NOTE.length > 0 ? `**Notes**\n${targetActionList.NOTE.join('\n')}` : ''}
+  let infoString = stripIndents`
+    ${targetActionList.FULL_BAN.length > 0 ? `**Bans**\n${targetActionList.FULL_BAN.join('\n')}` : ''}
+    ${targetActionList.UNDERBAN.length > 0 ? `**Underbans**\n${targetActionList.UNDERBAN.join('\n')}` : ''}
+    ${targetActionList.KICK.length > 0 ? `**Kicks**\n${targetActionList.KICK.join('\n')}` : ''}
+    ${targetActionList.TIMEOUT.length > 0 ? `**Timeouts**\n${targetActionList.TIMEOUT.join('\n')}` : ''}
+    ${targetActionList.WARNING.length > 0 ? `**Warns**\n${targetActionList.WARNING.join('\n')}` : ''}
+    ${targetActionList.REPORT.length > 0 ? `**Reports**\n${targetActionList.REPORT.join('\n')}` : ''}
+    ${targetActionList.NOTE.length > 0 ? `**Notes**\n${targetActionList.NOTE.join('\n')}` : ''}
     `;
-    if (infoString.length === 0) {
-      infoString = 'Squeaky clean!';
-    }
-    // log.debug(F, `infoString: ${infoString}`);
-    modlogEmbed.setDescription(infoString);
+  if (infoString.length === 0) {
+    infoString = 'Squeaky clean!';
   }
+  // log.debug(F, `infoString: ${infoString}`);
+  modlogEmbed.setDescription(infoString);
 
   return modlogEmbed;
 }
@@ -544,10 +550,10 @@ async function messageModThread(
     // If the user we're banning is a vendor, don't make a new one
     // Create a new thread in the mod channel
     log.debug(F, 'creating mod thread');
-    if (guildData.mod_room_id === null) {
+    if (guildData.channel_moderators === null) {
       throw new Error('Moderator room id is null');
     }
-    const modChan = await discordClient.channels.fetch(guildData.mod_room_id) as TextChannel;
+    const modChan = await discordClient.channels.fetch(guildData.channel_moderators) as TextChannel;
     modThread = await modChan.threads.create({
       name: `${target.username}`,
       autoArchiveDuration: 60,
@@ -572,10 +578,10 @@ async function messageModThread(
   const { pastVerb } = embedVariables[command as keyof typeof embedVariables];
   const summary = `${actor.displayName} ${pastVerb} ${target.username}!`;
 
-  if (!guildData.mod_role_id) {
+  if (!guildData.role_moderator) {
     throw new Error('Moderator role id is null');
   }
-  const roleModerator = await guild.roles.fetch(guildData.mod_role_id) as Role;
+  const roleModerator = await guild.roles.fetch(guildData.role_moderator) as Role;
 
   await modThread.send({
     content: stripIndents`
@@ -1435,9 +1441,9 @@ export async function link(
   });
   if (!interaction.channel?.isThread()
   || !interaction.channel.parentId
-  || interaction.channel.parentId !== guildData.mod_room_id) {
+  || interaction.channel.parentId !== guildData.channel_moderators) {
     await interaction.reply({
-      content: `This command can only be run inside a thread under <#${guildData.mod_room_id}>!`,
+      content: `This command can only be run inside a thread under <#${guildData.channel_moderators}>!`,
       ephemeral: true,
     });
     return false;
