@@ -588,11 +588,18 @@ export async function userInfoEmbed(
   // log.debug(F, `targetString: ${targetString}`);
   // const tag = (target as GuildMember).user ? (target as GuildMember).user.tag : (target as User).tag;
   let userAvatar = null;
-  if ((target as GuildMember).user) {
-    userAvatar = (target as GuildMember).user.displayAvatarURL();
-  }
-  if ((target as User).displayAvatarURL()) {
-    userAvatar = (target as User).displayAvatarURL();
+  try {
+    if ((target as GuildMember).user) {
+      userAvatar = (target as GuildMember).user.displayAvatarURL();
+    }
+  } catch (err: unknown) {
+    try {
+      if ((target as User).displayAvatarURL()) {
+        userAvatar = (target as User).displayAvatarURL();
+      }
+    } catch (error: unknown) {
+      // Ignore
+    }
   }
 
   // log.debug(F, `userAvatar: ${userAvatar}`);

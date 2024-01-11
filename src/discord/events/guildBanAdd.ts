@@ -1,8 +1,12 @@
 import {
+  ActionRowBuilder,
+  ButtonBuilder,
   Colors,
+  Guild,
   GuildAuditLogsEntry,
   PermissionResolvable,
   TextChannel,
+  ThreadChannel,
 } from 'discord.js';
 import {
   AuditLogEvent,
@@ -12,8 +16,9 @@ import {
   GuildBanAddEvent,
 } from '../@types/eventDef';
 import { checkGuildPermissions } from '../utils/checkPermissions';
-import { tripSitTrustScore, userInfoEmbed } from '../commands/guild/d.moderate';
-import { sendCooperativeMessage } from '../commands/guild/d.cooperative';
+import {
+  modButtonBan, modButtonInfo, modButtonNote, modButtonTimeout, modButtonWarn, tripSitTrustScore, userInfoEmbed,
+} from '../commands/guild/d.moderate';
 
 const F = f(__filename);
 
@@ -23,11 +28,20 @@ export const guildBanAdd: GuildBanAddEvent = {
     log.info(F, `Ban ${ban.user} was added.`);
 
     // Get all guilds in the database
-    const guildsData = await db.discord_guilds.findMany({});
-    // Filter out guilds that are not partnered, we only alert partners when someone is banned
-    const partnerGuildsData = guildsData.filter(guild => guild.partner);
+    const partnerGuildsData = await db.discord_guilds.findMany({
+      where: {
+        cooperative: true,
+      },
+    });
+    // log.debug(F, `There are ${partnerGuildsData.length} coop guilds.`);
+    // log.debug(F, `${JSON.stringify(partnerGuildsData, null, 2)}`);
     // Get a list of partnered discord guild objects
-    const partnerGuilds = partnerGuildsData.map(guild => discordClient.guilds.cache.get(guild.id));
+    const partnerGuilds = partnerGuildsData
+      .map(guild => discordClient.guilds.cache.get(guild.id))
+      .filter(item => item !== undefined) as Guild[];
+
+    // log.debug(F, `Created an array of ${partnerGuilds.length} guilds.`);
+    // log.debug(F, `${JSON.stringify(partnerGuilds, null, 2)}`);
     // Check how many guilds the member is in
     const inPartnerGuilds = await Promise.all(partnerGuilds.map(async guild => {
       if (!guild) return null;
@@ -39,8 +53,12 @@ export const guildBanAdd: GuildBanAddEvent = {
         return null;
       }
     }));
+    // log.info(F, `inPartnerGuilds ${inPartnerGuilds.length}`);
+    // log.debug(F, `${JSON.stringify(inPartnerGuilds, null, 2)}`);
+
     // Filter out null values
     const mutualGuilds = inPartnerGuilds.filter(item => item !== null);
+    log.info(F, `I share ${mutualGuilds.length} guilds with ${ban.user.tag}`);
 
     // If the user is in a partnered guild, alert the guild
     if (mutualGuilds.length > 0) {
@@ -83,16 +101,94 @@ export const guildBanAdd: GuildBanAddEvent = {
         5: Colors.Red,
       };
 
-      embed
-        .setColor(trustScoreColors[trustScoreData.trustScore as keyof typeof trustScoreColors])
-        .setDescription(stripIndents`**${ban.user} was banned on ${ban.guild.name} and is in your guild!**`);
-
+      log.info(F, 'attemtping to send messages');
       await Promise.all(mutualGuilds.map(async guild => {
         if (!guild) return;
-        await sendCooperativeMessage(
-          embed,
-          [`${guild.id}`],
-        );
+        // await sendCooperativeMessage(
+        //   embed,
+        //   [`${guild.id}`],
+        // );
+        const guildData = await db.discord_guilds.findFirst({
+          where: {
+            id: guild.id,
+            cooperative: true,
+          },
+        });
+
+        if (!guildData) return;
+
+        const member = await guild.members.fetch(ban.user.id);
+
+        embed
+          .setColor(trustScoreColors[trustScoreData.trustScore as keyof typeof trustScoreColors])
+          .setDescription(stripIndents`**Report on ${member}**
+
+          **TripSit TrustScore: ${trustScoreData.trustScore}**
+
+          **TripSit TrustScore Reasoning**
+          \`\`\`${trustScoreData.tsReasoning}\`\`\`
+        `);
+
+        let modThread = null as ThreadChannel | null;
+        let modThreadMessage = `**${member.displayName} was banned from ${ban.guild.name}**`;
+
+        if (banLog) {
+          if (banLog.executor) modThreadMessage += `** by ${banLog.executor?.username}`;
+          if (banLog.reason) modThreadMessage += `** for ${banLog.reason}`;
+        }
+
+        modThreadMessage += ` <@&${guildData.role_moderator}>`;
+        const emoji = '👋';
+
+        if (targetData.mod_thread_id || trustScoreData.trustScore < guildData.trust_score_limit) {
+          log.debug(F, `Mod thread id exists: ${targetData.mod_thread_id}`);
+          // If the mod thread already exists, then they have previous reports, so we should try to update that thread
+          if (targetData.mod_thread_id) {
+            try {
+              modThread = await guild.channels.fetch(targetData.mod_thread_id) as ThreadChannel | null;
+              log.debug(F, 'Mod thread exists');
+            } catch (err) {
+              log.debug(F, 'Mod thread does not exist');
+            }
+          }
+
+          const payload = {
+            content: modThreadMessage,
+            embeds: [embed],
+            components: [new ActionRowBuilder<ButtonBuilder>().addComponents(
+              modButtonNote(ban.user.id),
+              modButtonWarn(ban.user.id),
+              modButtonTimeout(ban.user.id),
+              modButtonBan(ban.user.id),
+              modButtonInfo(ban.user.id),
+            )],
+          };
+          // If the thread still exists, send a message and update the name
+          if (modThread) {
+            await modThread.send(payload);
+            await modThread.setName(`${emoji}${modThread.name.substring(1)}`);
+          } else if (guildData.channel_moderators) {
+            // IF the thread doesn't exist, likely deleted, then create a new thread
+            const modChan = await discordClient.channels.fetch(guildData.channel_moderators) as TextChannel;
+
+            modThread = await modChan.threads.create({
+              name: `${emoji}| ${member.displayName}`,
+              autoArchiveDuration: 60,
+            }) as ThreadChannel;
+
+            targetData.mod_thread_id = modThread.id;
+            await db.users.update({
+              where: {
+                discord_id: member.id,
+              },
+              data: {
+                mod_thread_id: modThread.id,
+              },
+            });
+
+            await modThread.send(payload);
+          }
+        }
       }));
 
       if (ban.guild.id === env.DISCORD_GUILD_ID) {

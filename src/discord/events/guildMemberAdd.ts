@@ -6,6 +6,9 @@ import {
   TextChannel,
   ActionRowBuilder,
   ButtonBuilder,
+  DiscordErrorData,
+  PermissionResolvable,
+  GuildBan,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
 import {
@@ -14,6 +17,7 @@ import {
 import {
   modButtonBan, modButtonInfo, modButtonNote, modButtonTimeout, modButtonWarn, tripSitTrustScore, userInfoEmbed,
 } from '../commands/guild/d.moderate';
+import { checkGuildPermissions } from '../utils/checkPermissions';
 
 const F = f(__filename);
 
@@ -107,12 +111,39 @@ export const guildMemberAdd: GuildMemberAddEvent = {
     let modThreadMessage = `**${member.displayName} has joined the guild!**`;
     let emoji = '👋';
 
-    if (trustScoreData.trustScore > 3) {
+    if (trustScoreData.trustScore < guildData.trust_score_limit) {
       modThreadMessage = `**${member.displayName} has joined the guild, their account is untrusted!** <@&${guildData.role_moderator}>`;
       emoji = '👀';
     }
 
-    if (targetData.mod_thread_id || trustScoreData.trustScore > 3) {
+    const bannedTest = await Promise.all(discordClient.guilds.cache.map(async guild => {
+      // log.debug(F, `Checking guild: ${guild.name}`);
+      const guildPerms = await checkGuildPermissions(guild, [
+        'BanMembers' as PermissionResolvable,
+      ]);
+
+      if (!guildPerms) {
+        return null;
+      }
+
+      try {
+        return await guild.bans.fetch(member.id);
+        // log.debug(F, `User is banned in guild: ${guild.name}`);
+        // return guild.name;
+      } catch (err: unknown) {
+        if ((err as DiscordErrorData).code === 10026) {
+          // log.debug(F, `User is not banned in guild: ${guild.name}`);
+          return null;
+        }
+        // log.debug(F, `Error checking guild: ${guild.name}`);
+        return null;
+      }
+    }));
+
+    // count how many 'banned' appear in the array
+    const bannedGuilds = bannedTest.filter(item => item) as GuildBan[];
+
+    if (targetData.mod_thread_id || trustScoreData.trustScore < guildData.trust_score_limit || bannedGuilds.length > 0) {
       log.debug(F, `Mod thread id exists: ${targetData.mod_thread_id}`);
       // If the mod thread already exists, then they have previous reports, so we should try to update that thread
       if (targetData.mod_thread_id) {
