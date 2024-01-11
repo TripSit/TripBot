@@ -907,7 +907,8 @@ export async function modResponse(
     modlogEmbed.addFields(
       {
         name: 'Message',
-        value: `${interaction.targetMessage.url}${interaction.targetMessage.content}`,
+        value: stripIndents`> ${interaction.targetMessage.content}
+        - ${interaction.targetMessage.url}`,
       },
     );
   }
@@ -1715,8 +1716,9 @@ export async function modModal(
           Your recent messages have broken TripSit's policies regarding ${flagsField.value} topics.
           
           The offending message
-          > ${messageField.value}
-          ${urlField.value}`;
+          > ${urlField.value}
+          - ${messageField.value}
+          `;
       }
     }
   } catch (err) {
@@ -1728,12 +1730,12 @@ export async function modModal(
     modalInternal = stripIndents`This user breaks ${interaction.guild.name}'s policies.
       
       The offending message
-      > ${messageField.value}`;
+      ${messageField.value}`;
     modalDescription = stripIndents`
       Your recent messages have broken ${interaction.guild.name}'s policies.
       
       The offending message
-      > ${messageField.value}`;
+      ${messageField.value}`;
   } catch (err) {
     // log.error(F, `Error: ${err}`);
   }
