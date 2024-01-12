@@ -1970,10 +1970,14 @@ export async function modModal(
 
           const index = buttonRow1.components.findIndex(field => field.custom_id.split('~')[1] === command);
           buttonRow1.components.splice(index, 1, updatedButton);
-
-          await interaction.message.edit({
-            components: [buttonRow1],
-          });
+          try {
+            await interaction.message.edit({
+              components: [buttonRow1],
+            });
+          } catch (error:any) {
+            // This will happen on the initial ephemeral message and idk why
+            // log.error(F, `Error: ${error}`);
+          }
         }
       }
     });
