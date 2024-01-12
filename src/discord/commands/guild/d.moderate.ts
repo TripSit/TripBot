@@ -372,10 +372,13 @@ export async function tripSitTrustScore(
     trustScore: number;
     tsReasoning: string;
   }> {
+  const startTime = Date.now();
   let trustScore = 0;
   let tsReasoning = '';
-  const target = await discordClient.users.fetch(targetId);
+  const targetPromise = discordClient.users.fetch(targetId);
+  const guildsPromise = discordClient.guilds.fetch();
 
+  const target = await targetPromise; // Await here since target is needed for the calculations below
   // Calculate how like it is that this user is a trust.
   // This is based off of factors like, how old is their account, do they have a profile picture, etc.
   const diff = Math.abs(Date.now() - Date.parse(target.createdAt.toString()));
@@ -426,16 +429,26 @@ export async function tripSitTrustScore(
   // }
 
   // Check how many guilds the member is in
-  await discordClient.guilds.fetch();
-  const targetInGuilds = await Promise.all(discordClient.guilds.cache.map(async guild => {
-    try {
-      await guild.members.fetch(target.id);
-      // log.debug(F, `User is in guild: ${guild.name}`);
-      return guild;
-    } catch (err: unknown) {
+  // await discordClient.guilds.fetch();
+  // const targetInGuilds = await Promise.all(discordClient.guilds.cache.map(async guild => {
+  //   try {
+  //     await guild.members.fetch(target.id);
+  //     // log.debug(F, `User is in guild: ${guild.name}`);
+  //     return guild;
+  //   } catch (err: unknown) {
+  //     return null;
+  //   }
+  // }));
+
+  const [, targetInGuilds] = await Promise.all([
+    guildsPromise, // Await the fetched guilds
+    Promise.all(discordClient.guilds.cache.map(async guild => {
+      if (guild.members.cache.get(target.id)) {
+        return guild;
+      }
       return null;
-    }
-  }));
+    })),
+  ]);
   const mutualGuilds = targetInGuilds.filter(item => item);
 
   if (mutualGuilds.length > 0) {
@@ -447,40 +460,64 @@ export async function tripSitTrustScore(
   }
 
   await discordClient.guilds.fetch();
-  const noPermissionGuilds = [] as Guild[];
+  // const noPermissionGuilds = [] as Guild[];
   const notFoundGuilds = [] as Guild[];
   const errorGuilds = [] as Guild[];
-  const bannedTest = await Promise.all(discordClient.guilds.cache.map(async guild => {
-    // log.debug(F, `Checking guild: ${guild.name}`);
-    const guildPerms = await checkGuildPermissions(guild, [
-      'BanMembers' as PermissionResolvable,
-    ]);
+  // const bannedTest = await Promise.all(discordClient.guilds.cache.map(async guild => {
+  //   // log.debug(F, `Checking guild: ${guild.name}`);
+  //   const guildPerms = await checkGuildPermissions(guild, [
+  //     'BanMembers' as PermissionResolvable,
+  //   ]);
 
-    if (!guildPerms) {
-      // log.debug(F, `No permission to check guild: ${guild.name}`);
-      noPermissionGuilds.push(guild);
-      return null;
-    }
+  //   if (!guildPerms) {
+  //     // log.debug(F, `No permission to check guild: ${guild.name}`);
+  //     noPermissionGuilds.push(guild);
+  //     return null;
+  //   }
 
+  //   try {
+  //     return await guild.bans.fetch(target.id);
+  //     // log.debug(F, `User is banned in guild: ${guild.name}`);
+  //     // return guild.name;
+  //   } catch (err: unknown) {
+  //     if ((err as DiscordAPIError).code === 10026) {
+  //       // log.debug(F, `User is not banned in guild: ${guild.name}`);
+  //       notFoundGuilds.push(guild);
+  //       return null;
+  //     }
+  //     // log.debug(F, `Error checking guild: ${guild.name}`);
+  //     errorGuilds.push(guild);
+  //     return null;
+  //   }
+  // }));
+
+  // Separate promises for checking permissions and bans
+  const permissionsPromises = discordClient.guilds.cache.map(guild => checkGuildPermissions(guild, ['BanMembers' as PermissionResolvable]));
+  const bansPromises = discordClient.guilds.cache.map(async guild => {
     try {
-      return await guild.bans.fetch(target.id);
-      // log.debug(F, `User is banned in guild: ${guild.name}`);
-      // return guild.name;
+      return guild.bans.cache.get(target.id);
     } catch (err: unknown) {
       if ((err as DiscordAPIError).code === 10026) {
-        // log.debug(F, `User is not banned in guild: ${guild.name}`);
         notFoundGuilds.push(guild);
         return null;
       }
-      // log.debug(F, `Error checking guild: ${guild.name}`);
       errorGuilds.push(guild);
       return null;
     }
-  }));
+  });
+
+  const [permissionsResults, bannedTest] = await Promise.all([
+    Promise.all(permissionsPromises),
+    Promise.all(bansPromises),
+  ]);
 
   // count how many 'banned' appear in the array
   const bannedGuilds = bannedTest.filter(item => item) as GuildBan[];
   // log.debug(F, `Banned Guilds: ${bannedGuilds.join(', ')}`);
+
+  // log.debug(F, `permissionsResults: ${permissionsResults}`);
+  // log.debug(F, `bannedTest: ${bannedTest}`);
+  const noPermissionGuilds = permissionsResults.filter(item => !item.hasPermission);
 
   // count how many i didn't have permission to check
   // log.debug(F, `No Permission Guilds: ${noPermissionGuilds.map(guild => guild.name).join(', ')}`);
@@ -513,6 +550,7 @@ export async function tripSitTrustScore(
     `;
   }
 
+  log.debug(F, `[trust score] time: ${Date.now() - startTime}ms`);
   return {
     trustScore,
     tsReasoning,
@@ -527,6 +565,7 @@ export async function userInfoEmbed(
   showModInfo: boolean,
 ):Promise<EmbedBuilder> {
   log.debug(F, `[userInfoEmbed] actor: ${actor} | target: ${target} | targetData: ${targetData} | command: ${command}`);
+  const startTime = Date.now();
   const targetActionList = {
     NOTE: [] as string[],
     WARNING: [] as string[],
@@ -653,8 +692,6 @@ export async function userInfoEmbed(
     //   },
     // });
 
-    // log.debug(F, 'Generating trust score');
-    const trustScore = await tripSitTrustScore(targetId);
     // // If the actor is a moderator
     // if (showModInfo && guildData.role_moderator && actor.roles.cache.has(guildData.role_moderator)) {
     let infoString = stripIndents`
@@ -690,11 +727,14 @@ export async function userInfoEmbed(
     if (targetActionList.UNDERBAN.length > 0) {
       modlogEmbed.addFields({ name: '# of Underbans', value: `${targetActionList.UNDERBAN.length}`, inline: true });
     }
-    modlogEmbed.setDescription(`${description}
-      
-      **TripSit TrustScore: ${trustScore.trustScore}**
-      `);
+    modlogEmbed.setDescription(`${description}`);
+    // modlogEmbed.setDescription(`${description}
+
+    //   **TripSit TrustScore: ${trustScore.trustScore}**
+    //   `);
     if (isInfo(command)) {
+      log.debug(F, 'Generating trust score');
+      const trustScore = await tripSitTrustScore(targetId);
       modlogEmbed.setDescription(`${description}
 
       ${infoString}
@@ -705,6 +745,7 @@ export async function userInfoEmbed(
     }
   }
 
+  log.debug(F, `[userInfoEmbed] time: ${Date.now() - startTime}ms`);
   // log.debug(F, `modlogEmbed: ${JSON.stringify(modlogEmbed, null, 2)}`);
   return modlogEmbed;
 }
@@ -717,6 +758,7 @@ export async function modResponse(
   command: ModAction,
   showModButtons: boolean,
 ):Promise<BaseMessageOptions> {
+  const startTime = Date.now();
   const actionRow = new ActionRowBuilder<ButtonBuilder>();
   if (!interaction.guild || !interaction.member) {
     return {
@@ -920,6 +962,7 @@ export async function modResponse(
     );
   }
 
+  log.debug(F, `[modResponse] time: ${Date.now() - startTime}ms`);
   return {
     embeds: [modlogEmbed],
     components: [actionRow],
@@ -972,6 +1015,7 @@ async function messageModThread(
   duration: string,
 ): Promise<ThreadChannel | null> {
   // log.debug(F, `[messageModThread] actor: ${actor} | target: ${target} | command: ${command} | internalNote: ${internalNote} | description: ${description} | extraMessage: ${extraMessage} | duration: ${duration}`);
+  const startTime = Date.now();
   const targetId = (target as User | GuildMember).id ?? target;
   const targetName = (target as GuildMember).displayName ?? (target as User).username ?? target;
 
@@ -1095,6 +1139,8 @@ async function messageModThread(
       await modThread.send({ content: extraMessage });
     }
   }
+
+  log.debug(F, `[messageModThread] time: ${Date.now() - startTime}ms`);
   return modThread;
 }
 
@@ -1106,6 +1152,7 @@ async function messageUser(
   addButtons?: boolean,
 ) {
   // log.debug(F, `Message user: ${target.username}`);
+  const startTime = Date.now();
   const embed = embedTemplate()
     .setColor(embedVariables[command as keyof typeof embedVariables].embedColor)
     .setTitle(embedVariables[command as keyof typeof embedVariables].embedTitle)
@@ -1165,6 +1212,7 @@ async function messageUser(
       }
     });
   }
+  log.debug(F, `[messageUser] time: ${Date.now() - startTime}ms`);
 }
 
 export async function acknowledgeButton(
