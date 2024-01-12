@@ -32306,6 +32306,11 @@
         "note": "No unexpected interactions, though likely to increase blood pressure  but not an issue with sensible doses. Moving around on high doses of  this combination may be ill advised due to risk of physical injury."
       },
       {
+        "status": "Dangerous",
+        "name": "lithium",
+        "note": "High risk of serotonin syndrome"
+      },
+      {
         "status": "Low Risk & Synergy",
         "name": "lsd"
       },
@@ -58417,6 +58422,11 @@
         "status": "Dangerous",
         "name": "lsd",
         "note": "There is a large number of reports indicating a high seizure and psychosis risk from this combination."
+      },
+      {
+        "status": "Dangerous",
+        "name": "mdma",
+        "note": "High risk of serotonin syndrome"
       },
       {
         "status": "Dangerous",

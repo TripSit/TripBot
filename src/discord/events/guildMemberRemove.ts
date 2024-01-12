@@ -1,6 +1,7 @@
 import {
   Colors,
   TextChannel,
+  ThreadChannel,
 } from 'discord.js';
 import {
   GuildMemberRemoveEvent,
@@ -56,10 +57,7 @@ export const guildMemberRemove: GuildMemberRemoveEvent = {
       embed.setDescription(`${member} has left the guild`);
     }
 
-    const auditlog = await discordClient.channels.fetch(env.CHANNEL_AUDITLOG) as TextChannel;
-    await auditlog.send({ embeds: [embed] });
-
-    await db.users.upsert({
+    const targetData = await db.users.upsert({
       where: {
         discord_id: member.id,
       },
@@ -71,6 +69,37 @@ export const guildMemberRemove: GuildMemberRemoveEvent = {
         removed_at: new Date(),
       },
     });
+
+    const guildData = await db.discord_guilds.upsert({
+      where: {
+        id: member.guild.id,
+      },
+      create: {
+        id: member.guild.id,
+      },
+      update: {},
+    });
+
+    let modThread = null as ThreadChannel | null;
+    if (targetData.mod_thread_id) {
+      // log.debug(F, `Mod thread id exists: ${targetData.mod_thread_id}`);
+      try {
+        modThread = await member.guild.channels.fetch(targetData.mod_thread_id) as ThreadChannel | null;
+        // log.debug(F, 'Mod thread exists');
+      } catch (err) {
+        // log.debug(F, 'Mod thread does not exist');
+      }
+
+      if (modThread) {
+        await modThread.send({ embeds: [embed] });
+        await modThread.setName(`🚶${modThread.name.substring(1)}`);
+      }
+    }
+
+    if (guildData.channel_mod_log) {
+      const auditLog = await discordClient.channels.fetch(guildData.channel_mod_log) as TextChannel;
+      await auditLog.send({ embeds: [embed] });
+    }
   },
 };
 

@@ -1,13 +1,19 @@
 import {
+  ButtonInteraction,
   ChatInputCommandInteraction,
   GuildMember,
+  MessageContextMenuCommandInteraction,
   User,
+  UserContextMenuCommandInteraction,
 } from 'discord.js';
 
 const F = f(__filename); // eslint-disable-line @typescript-eslint/no-unused-vars
 
 export async function getDiscordMember(
-  interaction:ChatInputCommandInteraction,
+  interaction:ChatInputCommandInteraction
+  | UserContextMenuCommandInteraction
+  | MessageContextMenuCommandInteraction
+  | ButtonInteraction,
   string:string,
 ):Promise<GuildMember[]> {
   const members = [] as GuildMember[];
@@ -53,32 +59,6 @@ export async function getDiscordMember(
       members.push(member);
     });
   }
-
-  // log.info(F, `members: ${members.length} #1 = ${members[0]?.displayName}`);
-
-  // if (members.length > 1) {
-  //   const embed = embedTemplate()
-  //     .setColor(Colors.Red)
-  //     .setTitle('Found more than one user with with that value!')
-  //     .setDescription(stripIndents`
-  //       "${string}" returned ${members.length} results!
-
-  //       Be more specific:
-  //       > **Mention:** @Moonbear
-  //       > **Tag:** moonbear#1234
-  //       > **ID:** 9876581237
-  //       > **Nickname:** MoonBear`);
-  //   await interaction.reply({
-  //     embeds: [embed],
-  //     ephemeral: true,
-  //   });
-  //   return null;
-  // }
-
-  // if (members.length === 0) {
-  //   return null;
-  // }
-
   return members;
 }
 

@@ -310,24 +310,40 @@ async function seedIdoseEntry(userId:string): Promise<void> {
   });
 }
 
+async function seedDiscordGuilds(): Promise<void> {
+  await prisma.discord_guilds.create({
+    data: {
+      id: '960606557622657026',
+      partner: true,
+      supporter: true,
+      cooperative: true,
+    },
+  });
+}
+
 async function seed() {
   await Promise.all([
-    await prisma.rpg_inventory.deleteMany({}),
-    await prisma.personas.deleteMany({}),
-    await prisma.ai_images.deleteMany({}),
-    await prisma.user_actions.deleteMany({}),
-    await prisma.user_drug_doses.deleteMany({}),
-    await prisma.user_experience.deleteMany({}),
-    await prisma.user_reminders.deleteMany({}),
-    await prisma.user_tickets.deleteMany({}),
-    await prisma.appeals.deleteMany({}),
-    await prisma.user_actions.deleteMany({}),
-    await prisma.ai_usage.deleteMany({}),
-    await prisma.drug_names.deleteMany({}),
-    await prisma.drug_variants.deleteMany({}),
-    await prisma.drug_variant_roas.deleteMany({}),
+    // These need to happen in any order before removing...
+    prisma.reaction_roles.deleteMany({}), // discord_guilds
+    prisma.counting.deleteMany({}), // discord_guilds
+    prisma.ai_moderation.deleteMany({}), // discord_guilds
+    prisma.rpg_inventory.deleteMany({}), // discord_guilds
+    prisma.personas.deleteMany({}), // discord_guilds
+    prisma.ai_images.deleteMany({}), // users
+    prisma.user_actions.deleteMany({}), // users
+    prisma.user_drug_doses.deleteMany({}), // users
+    prisma.user_experience.deleteMany({}), // users
+    prisma.user_reminders.deleteMany({}), // users
+    prisma.user_tickets.deleteMany({}), // users
+    prisma.appeals.deleteMany({}), // users
+    prisma.user_actions.deleteMany({}), // users
+    prisma.ai_usage.deleteMany({}), // users
+    prisma.drug_names.deleteMany({}), // drugs
+    prisma.drug_variants.deleteMany({}), // drugs
+    prisma.drug_variant_roas.deleteMany({}), // drugs
   ]);
 
+  await prisma.discord_guilds.deleteMany({});
   await prisma.drugs.deleteMany({});
   await prisma.users.deleteMany({}); // Needs to happen last
 
@@ -335,6 +351,8 @@ async function seed() {
   // Create users, this will return an ID for a user we can use in other seeds
   const userList = await seedUsers();
   await seedExperience(userList);
+
+  await seedDiscordGuilds();
 
   // Create drugs, drug names, drug variants, and drug variant ROAs
   const drugRecords = await seedDrugs(userList[0].id);

@@ -1,6 +1,6 @@
-/* eslint-disable max-len */
 import {
-  GuildMember,
+  Guild,
+  User,
   time,
 } from 'discord.js';
 import {
@@ -17,7 +17,8 @@ export default last;
  * @param {GuildMember} target
  */
 export async function last(
-  target:GuildMember,
+  target:User,
+  guild: Guild,
 ):Promise<{
     lastMessage: string;
     messageList: string;
@@ -27,7 +28,6 @@ export async function last(
   // log.debug(F, `started!`);
   // This function will find all messages sent by the user in all channels
   // and return an array of messages
-  const { guild } = target;
   let totalMessages = 0;
   const messageInfo = [] as {
     channel: string;
@@ -83,7 +83,7 @@ export async function last(
             // Get the most recent message
             const lastMessage = messageInfo[messageInfo.length - 1];
             const lastMessageText = stripIndents`
-          **${target.displayName}'s** last message was:
+          **${target.username}'s** last message was:
            ${time(lastMessage.timestamp, 'd')} ${lastMessage.channel}: ${lastMessage.content}`;
 
             // Reverse the order: Display most recent messages first

@@ -28,7 +28,7 @@ export const messageDelete: MessageDeleteEvent = {
     if (message.guild.id !== env.DISCORD_GUILD_ID) return;
     if (message.channel.type !== ChannelType.GuildText) return;
     const startTime = Date.now();
-    log.info(F, `Message in ${message.channel.name} was deleted.`);
+    // log.info(F, `Message in ${message.channel.name} was deleted.`);
     // log.debug(F, `message: ${JSON.stringify(message, null, 2)}`);
 
     // Get the channel this will be posted in
@@ -92,7 +92,7 @@ export const messageDelete: MessageDeleteEvent = {
           content = messageRecord.content;
           author = messageRecord.author;
         } else {
-          // log.debug(F, 'Message not found in cache');
+          log.debug(F, 'Message not found in cache');
         }
       }
     }
