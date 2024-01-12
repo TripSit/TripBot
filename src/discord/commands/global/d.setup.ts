@@ -21,7 +21,6 @@ import {
   ButtonStyle, ChannelType, TextInputStyle,
 } from 'discord-api-types/v10';
 import { stripIndents } from 'common-tags';
-import { database, getGuild, guildUpdate } from '../../../global/utils/knex';
 import commandContext from '../../utils/context';
 import { SlashCommand } from '../../@types/commandDef';
 import { checkChannelPermissions, checkGuildPermissions } from '../../utils/checkPermissions';
@@ -202,7 +201,7 @@ async function tripsit(
     // 'EmbedLinks' as PermissionResolvable,
   ]);
   if (!channelPerms.hasPermission) {
-    log.error(F, `Missing TS channel permission ${channelPerms.permission} in ${interaction.channel}!`);
+    log.error(F, `Missing TS channel permission ${channelPerms.permission} in ${interaction.channel.name}!`);
     await interaction.reply({
       content: stripIndents`Missing ${channelPerms.permission} permission in ${interaction.channel}!
     In order to setup the tripsitting feature I need:
@@ -311,23 +310,24 @@ async function tripsit(
       const channelTripsitmeta = interaction.options.getChannel('metatripsit');
       const channelTripsit = interaction.channel as TextChannel;
 
-      const guildData = await getGuild((interaction.guild as Guild).id);
-
       const channelSanctuary = interaction.options.getChannel('sanctuary');
       const channelGeneral = interaction.options.getChannel('general');
 
-      guildData.id = (interaction.guild as Guild).id;
-      guildData.channel_sanctuary = channelSanctuary ? channelSanctuary.id : null;
-      guildData.channel_general = channelGeneral ? channelGeneral.id : null;
-      guildData.channel_tripsitmeta = channelTripsitmeta ? channelTripsitmeta.id : null;
-      guildData.channel_tripsit = channelTripsit.id;
-      guildData.role_needshelp = roleNeedshelp ? roleNeedshelp.id : null;
-      guildData.role_tripsitter = roleTripsitter ? roleTripsitter.id : null;
-      guildData.role_helper = roleHelper ? roleHelper.id : null;
-
       // Save this info to the DB
-
-      await guildUpdate(guildData);
+      await db.discord_guilds.update({
+        where: {
+          id: (interaction.guild as Guild).id,
+        },
+        data: {
+          channel_sanctuary: channelSanctuary ? channelSanctuary.id : null,
+          channel_general: channelGeneral ? channelGeneral.id : null,
+          channel_tripsitmeta: channelTripsitmeta ? channelTripsitmeta.id : null,
+          channel_tripsit: channelTripsit.id,
+          role_needshelp: roleNeedshelp ? roleNeedshelp.id : null,
+          role_tripsitter: roleTripsitter ? roleTripsitter.id : null,
+          role_helper: roleHelper ? roleHelper.id : null,
+        },
+      });
 
       const introMessage = i.fields.getTextInputValue('introMessage');
       const titleMessage = i.fields.getTextInputValue('titleMessage');
@@ -405,11 +405,15 @@ async function techhelp(
       Thanks for reading, stay safe!
     `;
 
-  const guildData = await getGuild(interaction.guild.id);
-  guildData.role_techhelp = interaction.options.getRole('roletechreviewer', true).id;
-
-  // Save this info to the DB
-  await guildUpdate(guildData);
+  // const guildData = await getGuild(interaction.guild.id);
+  const guildData = await db.discord_guilds.update({
+    where: {
+      id: interaction.guild.id,
+    },
+    data: {
+      role_techhelp: interaction.options.getRole('roletechreviewer', true).id,
+    },
+  });
 
   if (guildData.channel_tripsit) {
     const channelTripsit = interaction.guild.channels.fetch(guildData.channel_tripsit);
@@ -609,7 +613,15 @@ async function helper(
 ) {
   await interaction.deferReply({ ephemeral: true });
   if (!interaction.guild) return;
-  const guildData = await database.guilds.get(interaction.guild?.id);
+  const guildData = await db.discord_guilds.upsert({
+    where: {
+      id: interaction.guild?.id,
+    },
+    create: {
+      id: interaction.guild?.id,
+    },
+    update: {},
+  });
 
   if (!guildData.channel_tripsit || !guildData.channel_tripsitmeta) {
     await interaction.editReply({
@@ -673,8 +685,25 @@ export async function helperButton(
   if (!interaction.member) return;
   // Check that the user has completed the course and wasnt just given the role
 
-  const guildData = await database.guilds.get(interaction.guild?.id);
-  const userData = await database.users.get(interaction.user.id, null, null);
+  const guildData = await db.discord_guilds.upsert({
+    where: {
+      id: interaction.guild?.id,
+    },
+    create: {
+      id: interaction.guild?.id,
+    },
+    update: {},
+  });
+
+  const userData = await db.users.upsert({
+    where: {
+      discord_id: interaction.user.id,
+    },
+    create: {
+      discord_id: interaction.user.id,
+    },
+    update: {},
+  });
   const target = interaction.member as GuildMember;
 
   if (!guildData.role_helper) {

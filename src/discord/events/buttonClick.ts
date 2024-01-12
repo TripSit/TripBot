@@ -29,7 +29,7 @@ import {
   werewolfDiary,
   werewolfHow, werewolfJoin, werewolfLeave, werewolfStart,
 } from '../commands/guild/d.werewolf';
-import { aiModButton } from '../commands/global/d.ai';
+import { acknowledgeButton, modModal, refusalButton } from '../commands/guild/d.moderate';
 
 const F = f(__filename);
 
@@ -54,9 +54,21 @@ export async function buttonClick(interaction:ButtonInteraction, discordClient:C
     }
   }
 
-  if (buttonID.startsWith('aiMod')) {
+  if (buttonID.startsWith('moderate')) {
     // log.debug(F, 'aiMod button clicked');
-    await aiModButton(interaction);
+    await modModal(interaction);
+    return;
+  }
+
+  if (buttonID.startsWith('acknowledgeButton')) {
+    // log.debug(F, 'aiMod button clicked');
+    await acknowledgeButton(interaction);
+    return;
+  }
+
+  if (buttonID.startsWith('refusalButton')) {
+    // log.debug(F, 'aiMod button clicked');
+    await refusalButton(interaction);
     return;
   }
 

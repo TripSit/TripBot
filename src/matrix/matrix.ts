@@ -4,10 +4,10 @@ import {
   AutojoinRoomsMixin,
 } from 'matrix-bot-sdk';
 
-import { getUser, userExists, usersUpdate } from '../global/utils/knex';
 import * as commands from './commands';
 
 const F = f(__filename);
+
 export default startMatrix;
 
 // using simple FS storage for now, as postgresql doesn't work in codespaces anyway

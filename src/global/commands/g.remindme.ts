@@ -1,8 +1,4 @@
 import { DateTime } from 'luxon';
-import { UserReminders } from '../@types/database';
-import {
-  getUser, reminderDel, reminderGet, reminderSet,
-} from '../utils/knex';
 
 const F = f(__filename);
 
@@ -42,9 +38,21 @@ export async function remindMe(
     }
     // log.debug(F, `Deleting record ${recordNumber}`);
 
-    const userData = await getUser(userId, null, null);
+    const userData = await db.users.upsert({
+      where: {
+        discord_id: userId,
+      },
+      create: {
+        discord_id: userId,
+      },
+      update: {},
+    });
 
-    const unsortedData = await reminderGet(userData.id);
+    const unsortedData = await db.user_reminders.findMany({
+      where: {
+        user_id: userData.id,
+      },
+    });
 
     if (unsortedData.length === 0) {
       response = 'You have no reminder records, you can use /remind_me to add some!';
@@ -79,7 +87,11 @@ export async function remindMe(
     // ${record.reminder_text}
     // `);
 
-    await reminderDel(recordId);
+    await db.user_reminders.delete({
+      where: {
+        id: recordId,
+      },
+    });
 
     response = `I deleted:
       > **(${recordNumber}) ${timeVal.monthShort} ${timeVal.day} ${timeVal.year} ${timeVal.hour}:${timeVal.minute}**
@@ -88,9 +100,21 @@ export async function remindMe(
     log.info(F, `response: ${JSON.stringify(response, null, 2)}`);
   }
   if (command === 'get') {
-    const userData = await getUser(userId, null, null);
+    const userData = await db.users.upsert({
+      where: {
+        discord_id: userId,
+      },
+      create: {
+        discord_id: userId,
+      },
+      update: {},
+    });
 
-    const unsortedData = await reminderGet(userData.id);
+    const unsortedData = await db.user_reminders.findMany({
+      where: {
+        user_id: userData.id,
+      },
+    });
 
     // log.debug(F, `Data: ${JSON.stringify(unsortedData, null, 2)}`);
 
@@ -138,13 +162,23 @@ export async function remindMe(
       log.info(F, `response: ${JSON.stringify(response, null, 2)}`);
       return response;
     }
-    const userData = await getUser(userId, null, null);
+    const userData = await db.users.upsert({
+      where: {
+        discord_id: userId,
+      },
+      create: {
+        discord_id: userId,
+      },
+      update: {},
+    });
 
-    await reminderSet({
-      userId: userData.id,
-      reminderText,
-      triggerAt,
-    } as unknown as UserReminders);
+    await db.user_reminders.create({
+      data: {
+        user_id: userData.id,
+        reminder_text: reminderText,
+        trigger_at: triggerAt,
+      },
+    });
 
     response = `I will remind you to ${reminderText} at ${triggerAt}!`;
     log.info(F, `response: ${JSON.stringify(response, null, 2)}`);

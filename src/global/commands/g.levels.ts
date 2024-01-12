@@ -3,7 +3,8 @@ import {
   expForNextLevel,
   getTotalLevel,
 } from '../utils/experience';
-import { getLeaderboard } from './g.leaderboard';
+
+import { leaderboardV2 } from './g.leaderboard';
 
 export default levels;
 
@@ -63,7 +64,7 @@ type LevelData = {
 export async function levels(
   discordId: string,
 ):Promise<LevelData> {
-  const leaderboardData = await getLeaderboard();
+  const leaderboardData = await leaderboardV2();
 
   const results = {
     ALL: {
@@ -99,23 +100,26 @@ export async function levels(
     const typeKey = type as keyof typeof leaderboardData;
     const typeData = leaderboardData[typeKey];
     // log.debug(F, `typeKey: ${typeKey}, typeData: ${JSON.stringify(typeData, null, 2)}`);
+    // log.debug(F, `Type: ${typeKey}`);
     for (const category of Object.keys(typeData)) {
       const categoryKey = category as keyof typeof typeData;
       const categoryData = typeData[categoryKey];
-
       // log.debug(F, `categoryKey: ${categoryKey}, categoryData: ${JSON.stringify(categoryData, null, 2)}`);
+      // log.debug(F, `Category: ${categoryKey} has ${categoryData.length} entries`);
+
       if (categoryData.length === 0) {
         continue;
       }
+      // log.debug(F, `categoryKey: ${categoryKey}, categoryData: ${JSON.stringify(categoryData, null, 2)}`);
+
       const userRank = categoryData.findIndex(user => user.discord_id === discordId);
-      // log.debug(F, `userRank: ${userRank}`);
-      if (userRank === -1) {
-        continue;
-      }
-      const userExperience = categoryData[userRank];
-      // log.debug(F, `userExperience: ${JSON.stringify(userExperience, null, 2)}`);
+      if (userRank === -1) continue;
+      // log.debug(F, `Type: ${typeKey} Category: ${categoryKey} userRank: ${userRank}`);
+      const userExperience = categoryData.find(user => user.discord_id === discordId);
+      if (!userExperience) continue;
       const levelData = await getTotalLevel(userExperience.total_points);
       // log.debug(F, `levelData: ${JSON.stringify(levelData, null, 2)}`);
+      // log.debug(F, `${discordId} is rank ${userRank} ${type} ${category} level ${levelData.level} userExperience: ${JSON.stringify(userExperience, null, 2)}`);
       const nextLevel = await expForNextLevel(levelData.level);
       // log.debug(F, `nextLevel: ${nextLevel}`);
       results[typeKey][categoryKey] = {
@@ -123,12 +127,12 @@ export async function levels(
         level_exp: levelData.level_points,
         nextLevel,
         total_exp: userExperience.total_points,
-        rank: userRank + 1,
+        rank: userRank + 1, // 0-based to 1-based
       };
     }
   }
 
-  // log.debug(F, `results: ${JSON.stringify(results, null, 2)}`);
+  log.debug(F, `results: ${JSON.stringify(results, null, 2)}`);
 
   return results;
 }

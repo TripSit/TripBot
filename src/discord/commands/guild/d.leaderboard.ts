@@ -7,62 +7,19 @@ import {
   SlashCommandBuilder,
   AttachmentBuilder,
 } from 'discord.js';
+import { experience_category, experience_type } from '@prisma/client';
 import Canvas from '@napi-rs/canvas';
 import { SlashCommand } from '../../@types/commandDef';
-import {
-  getLeaderboard,
-  // leaderboard,
-} from '../../../global/commands/g.leaderboard';
 import commandContext from '../../utils/context';
 import { embedTemplate } from '../../utils/embedTemplate'; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { getTotalLevel } from '../../../global/utils/experience';
-// import { paginationEmbed } from '../../utils/pagination';
 import { getPersonaInfo } from '../../../global/commands/g.rpg';
-import { inventoryGet } from '../../../global/utils/knex';
 import getAsset from '../../utils/getAsset';
 import { resizeText, deFuckifyText, colorDefs } from '../../utils/canvasUtils';
+// import { paginationEmbed } from '../../utils/pagination';
+import { leaderboardV2 } from '../../../global/commands/g.leaderboard';
 
 const F = f(__filename);
-
-// type RankType = { 'rank': number, 'id': string, 'level': number };
-// type LeaderboardType = {
-//   [key: string]: RankType[],
-// };
-
-type ExpCategory = 'ALL' | 'TOTAL' | 'GENERAL' | 'TRIPSITTER' | 'DEVELOPER' | 'TEAM';
-
-type ExpType = 'ALL' | 'TEXT' | 'VOICE';
-
-// type LeaderboardList = { discord_id: string, total_points: number }[];
-//
-// type LeaderboardDataType = 'TEXT' | 'VOICE';
-//
-// type LeaderboardData = {
-//   ALL: {
-//     TOTAL: LeaderboardList,
-//     TRIPSITTER: LeaderboardList,
-//     GENERAL: LeaderboardList,
-//     DEVELOPER: LeaderboardList,
-//     TEAM: LeaderboardList,
-//     IGNORED: LeaderboardList,
-//   },
-//   TEXT: {
-//     TOTAL: LeaderboardList,
-//     TRIPSITTER: LeaderboardList,
-//     GENERAL: LeaderboardList,
-//     DEVELOPER: LeaderboardList,
-//     TEAM: LeaderboardList,
-//     IGNORED: LeaderboardList,
-//   },
-//   VOICE: {
-//     TOTAL: LeaderboardList,
-//     TRIPSITTER: LeaderboardList,
-//     GENERAL: LeaderboardList,
-//     DEVELOPER: LeaderboardList,
-//     TEAM: LeaderboardList,
-//     IGNORED: LeaderboardList,
-//   },
-// };
 
 const categoryChoices = [
   { name: 'Total Lvl', value: 'TOTAL' },
@@ -72,72 +29,6 @@ const categoryChoices = [
   { name: 'Development Lvl', value: 'DEVELOPER' },
   { name: 'Team Tripsit Lvl', value: 'TEAM' },
 ];
-
-// async function createBook(
-//   interaction: Interaction,
-//   data: LeaderboardData[keyof LeaderboardData],
-//   typeChoice: LeaderboardDataType | undefined,
-//   categoryChoice: ExpCategory,
-// ):Promise<EmbedBuilder[]> {
-//   const book = [] as EmbedBuilder[];
-//   for (const category of Object.keys(data)) {
-//     if (categoryChoice && categoryChoice !== 'ALL' && categoryChoice.toUpperCase() !== category) {
-//       continue;
-//     }
-//     const categoryKey = category as keyof typeof data;
-//     const categoryData = data[categoryKey];
-//     // log.debug(F, `categoryKey: ${categoryKey}, categoryData: ${JSON.stringify(categoryData, null, 2)}`);
-//     if (categoryData.length === 0) {
-//       continue;
-//     }
-//     // eslint-disable-next-line @typescript-eslint/no-loop-func
-//     const descriptionText = await Promise.all(categoryData.map(async user => {
-//       const member = interaction.guild?.members.cache.filter(m => m.id === user.discord_id);
-//       if (member && member.size > 0) {
-//         const levelData = await getTotalLevel(user.total_points);
-//         return `Lvl ${levelData.level} <@${user.discord_id}> (${user.total_points} XP)`;
-//       }
-//       return null;
-//     }));
-//
-//     // prune null values, add rank #, and limit to 10
-//     const filteredList = descriptionText
-//       .filter(value => value !== null)
-//       .map((value, index) => `#${index + 1} ${value}`)
-//       .slice(0, 20);
-//
-//     // Lowercase everything and then capitalize the first letter of type and category
-//     const categoryString = category.charAt(0).toUpperCase() + category.slice(1).toLowerCase();
-//     const typeString = typeChoice ? `${typeChoice.charAt(0).toUpperCase()}${typeChoice.slice(1).toLowerCase()} `
-//       : typeChoice;
-//
-//     const embed = embedTemplate()
-//       .setTitle(`${typeString ?? ''}${categoryString} Leaderboard!`)
-//       .setColor(Colors.Gold)
-//       .setDescription(filteredList.join('\n'));
-//
-//     book.push(embed);
-//   }
-//   return book;
-// }
-
-// async function createLeaderboard(
-//   interaction: Interaction,
-//   leaderboardData: LeaderboardData,
-//   typeChoice: 'TEXT' | 'VOICE' | 'ALL',
-//   categoryChoice: ExpCategory,
-// ):Promise<EmbedBuilder[]> {
-//   const book = [] as EmbedBuilder[];
-//   for (const type of Object.keys(leaderboardData) as LeaderboardDataType[]) {
-//     if (typeChoice.toUpperCase() !== type) {
-//       continue; // eslint-disable-line no-continue
-//     }
-//     const typeData = leaderboardData[type];
-//     // log.debug(F, `typeKey: ${typeKey}, typeData: ${JSON.stringify(typeData, null, 2)}`);
-//     book.push(...await createBook(interaction, typeData, type, categoryChoice));
-//   }
-//   return book;
-// }
 
 export const dLeaderboard: SlashCommand = {
   data: new SlashCommandBuilder()
@@ -201,19 +92,17 @@ export const dLeaderboard: SlashCommand = {
     context.fillStyle = '#FFFFFF';
     context.textBaseline = 'middle';
     context.textAlign = 'center';
-    let categoryChoice = interaction.options.getString('category') ?? 'TOTAL';
-    let typeChoice = 'ALL' as ExpType;
+    let categoryChoice = (interaction.options.getString('category') ?? 'TOTAL') as
+      'TOTAL' | 'GENERAL' | 'VOICE' | 'TRIPSITTER' | 'DEVELOPER' | 'TEAM' | 'IGNORED';
+    let typeChoice = 'ALL' as experience_type;
     // if the category choice is voice, set the type choice to voice (as to treat it as a category, not a type)
     if (categoryChoice === 'VOICE') {
       typeChoice = 'VOICE';
-    }
-    // if the category choice is voice, set the category choice to total (as to treat it as a category, not a type)
-    if (categoryChoice === 'VOICE') {
       categoryChoice = 'TOTAL';
     }
-    categoryChoice = categoryChoice as ExpCategory;
-    const categoryValue = interaction.options.getString('category') ?? 'TOTAL';
-    const categoryName = categoryChoices.find(choice => choice.value === categoryValue)?.name || 'Total';
+    categoryChoice = categoryChoice as experience_category;
+    // const categoryValue = interaction.options.getString('category') ?? 'TOTAL';
+    const categoryName = categoryChoices.find(choice => choice.value === categoryChoice)?.name || 'Total';
 
     context.font = resizeText(canvasObj, `${categoryName.toUpperCase()}`, 40, 'futura', 498);
     context.fillText(`${categoryName.toUpperCase()}`, 276, 54);
@@ -227,10 +116,14 @@ export const dLeaderboard: SlashCommand = {
     // context.drawImage(chatIcon, 88, 54, 75, 75);
 
     await interaction.guild?.members.fetch();
-    const leaderboardData = await getLeaderboard();
+
+    const leaderboardData = await leaderboardV2();
 
     // Directly access the selected type in the leaderboardData object
     const typeData = leaderboardData[typeChoice.toUpperCase() as keyof typeof leaderboardData];
+
+    // Do this before the loops
+    await interaction.guild.members.fetch();
 
     // Check if the typeData exists before proceeding
     if (typeData) {
@@ -275,15 +168,19 @@ export const dLeaderboard: SlashCommand = {
       if (categoryData) {
         let count = 0;
         let userCount = 0;
+        // log.debug(F, `Category: ${categoryChoice} | Type: ${typeChoice} | Count: ${count} | UserCount: ${userCount}`);
+        // log.debug(F, `CategoryData: ${JSON.stringify(categoryData.length, null, 2)}`);
         while (count < 10) {
           const user = userCount < categoryData.length ? categoryData[userCount] : null;
           const avatarOffset = count > 2 ? 66 : 91;
           const bar = barCoordinates[count % barCoordinates.length];
           const rankFontSize = count > 2 ? (count === 9 ? 20 : 30) : 40; // eslint-disable-line no-nested-ternary
+          // log.debug(F, `User: ${user?.discord_id} | Count: ${count} | UserCount: ${userCount}`);
           if (user) {
-            const memberCollection = interaction.guild?.members.cache.filter(m => m.id === user.discord_id);
-            if (memberCollection && memberCollection.size > 0) {
-              const member = memberCollection.first(); // Get the first member from the collection
+            // We only need to check the cache here because we already fetched all members above
+            const member = interaction.guild?.members.cache.get(user.discord_id);
+            if (member) {
+              // log.debug(F, `Member: ${member?.displayName} | ${member?.roles.color?.id}`);
               const userLevel = await getTotalLevel(user.total_points);
               const userDarkBarColor = colorDefs[member?.roles.color?.id as keyof typeof colorDefs]?.cardDarkColor || '#232323'; //eslint-disable-line
               const userNameColor = colorDefs[member?.roles.color?.id as keyof typeof colorDefs]?.textColor || '#ffffff'; //eslint-disable-line
@@ -301,7 +198,11 @@ export const dLeaderboard: SlashCommand = {
               let levelTextWidth = 0;
               if (personaData) {
               // Get the existing inventory data
-                const inventoryData = await inventoryGet(personaData.id);
+                const inventoryData = await db.rpg_inventory.findMany({
+                  where: {
+                    persona_id: personaData.id,
+                  },
+                });
                 // log.debug(F, `Persona home inventory (change): ${JSON.stringify(inventoryData, null, 2)}`);
 
                 const equippedBackground = inventoryData.find(
@@ -374,30 +275,33 @@ export const dLeaderboard: SlashCommand = {
               context.font = resizeText(canvasObj, userName, fontSize, userFont, maxLength);
               context.textAlign = 'left';
               context.fillText(userName, bar.x + avatarOffset + (bar.height / 2) + 9, bar.y + bar.height / 2);
+
+              count += 1;
             }
             userCount += 1;
-          } else {
-          // Draw a plain bar without any user data
-            context.fillStyle = '#232323';
-            context.beginPath();
-            context.roundRect(bar.x + (avatarOffset - (bar.height / 2)), bar.y, bar.width - (avatarOffset - (bar.height / 2)), bar.height, [bar.height / 2, 19, 19, bar.height / 2]); // eslint-disable-line max-len
-            context.fill();
-            context.fillStyle = '#ffffff';
-            context.textBaseline = 'middle';
-            context.textAlign = 'left';
-            context.font = `${rankFontSize}px futura`;
-            if (count === 0) {
-              context.fillStyle = '#d4af37';
-            } else if (count === 1) {
-              context.fillStyle = '#a8a9ad';
-            } else if (count === 2) {
-              context.fillStyle = '#aa7042';
-            } else {
-              context.fillStyle = '#ffffff';
-            }
-            context.fillText(`#${count + 1}`, bar.x - 9, bar.y + bar.height / 2);
           }
-          count += 1;
+          //  else {
+          // // Draw a plain bar without any user  data
+          //   context.fillStyle = '#232323';
+          //   context.beginPath();
+          //   context.roundRect(bar.x + (avatarOffset - (bar.height / 2)), bar.y, bar.width - (avatarOffset - (bar.height / 2)), bar.height, [bar.height / 2, 19, 19, bar.height / 2]); // eslint-disable-line max-len
+          //   context.fill();
+          //   context.fillStyle = '#ffffff';
+          //   context.textBaseline = 'middle';
+          //   context.textAlign = 'left';
+          //   context.font = `${rankFontSize}px futura`;
+          //   if (count === 0) {
+          //     context.fillStyle = '#d4af37';
+          //   } else if (count === 1) {
+          //     context.fillStyle = '#a8a9ad';
+          //   } else if (count === 2) {
+          //     context.fillStyle = '#aa7042';
+          //   } else {
+          //     context.fillStyle = '#ffffff';
+          //   }
+          //   context.fillText(`#${count + 1}`, bar.x - 9, bar.y + bar.height / 2);
+          // }
+          // count += 1;
         }
       }
     }

@@ -1,9 +1,5 @@
 /* eslint-disable max-len */
 import { stripIndents } from 'common-tags';
-import {
-  experienceDel,
-  experienceGet, getUser, idoseDel, idoseGet, reminderDel, reminderGet, usersUpdate,
-} from '../utils/knex';
 
 const F = f(__filename);
 
@@ -19,14 +15,32 @@ export async function privacy(
   userId: string,
 ):Promise<string> {
   let response = '';
-  const userData = await getUser(userId, null, null);
-  // const userActions = await db<UserActions>('user_actions')
+  const userData = await db.users.upsert({
+    where: {
+      discord_id: userId,
+    },
+    create: {
+      discord_id: userId,
+    },
+    update: {},
+  });
   //   .where('user_id', userData.id);
-  const userDrugDoses = await idoseGet(userData.id);
-  const userExperience = await experienceGet(undefined, undefined, undefined, userData.id);
-  const userReminders = await reminderGet(userData.id);
-  // const userTickets = await db<UserTickets>('user_tickets')
-  //   .where('user_id', userData.id);
+  const userDrugDoses = await db.user_drug_doses.findMany({
+    where: {
+      user_id: userData.id,
+    },
+  });
+  const userExperience = await db.user_experience.findMany({
+    where: {
+      user_id: userData.id,
+    },
+  });
+
+  const userReminders = await db.user_reminders.findMany({
+    where: {
+      user_id: userData.id,
+    },
+  });
 
   if (command === 'get') {
     for (const [key, value] of Object.entries(userData)) { // eslint-disable-line
@@ -88,10 +102,27 @@ export async function privacy(
     userData.joined_at = new Date(1970);
     userData.removed_at = null;
 
-    await usersUpdate(userData);
-    await idoseDel(undefined, userData.id);
-    await experienceDel(userData.id);
-    await reminderDel(undefined, userData.id);
+    await db.users.update({
+      where: {
+        id: userData.id,
+      },
+      data: userData,
+    });
+    await db.user_drug_doses.deleteMany({
+      where: {
+        user_id: userData.id,
+      },
+    });
+    await db.user_experience.deleteMany({
+      where: {
+        user_id: userData.id,
+      },
+    });
+    await db.user_reminders.deleteMany({
+      where: {
+        user_id: userData.id,
+      },
+    });
 
     response = 'I deleted your User Data:\n';
       for (const [key, value] of Object.entries(userData)) { // eslint-disable-line

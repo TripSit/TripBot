@@ -2,6 +2,7 @@
 //   ChannelType,
 // } from 'discord-api-types/v10';
 import { TextChannel } from 'discord.js';
+import { experience_category, experience_type } from '@prisma/client';
 import {
   MessageCreateEvent,
 } from '../@types/eventDef';
@@ -11,9 +12,7 @@ import { announcements } from '../utils/announcements';
 import { messageCommand } from '../utils/messageCommand';
 import { youAre } from '../utils/youAre';
 // import { modmailDMInteraction, modmailThreadInteraction } from '../commands/guild/modmail';
-import { getUser } from '../../global/utils/knex';
 import { karma } from '../utils/karma';
-import { ExperienceCategory, ExperienceType } from '../../global/@types/database';
 import { imagesOnly } from '../utils/imagesOnly';
 import { countMessage } from '../commands/guild/d.counting';
 import { bridgeMessage } from '../utils/bridge';
@@ -33,25 +32,25 @@ const ignoredRoles = Object.values({
   tempvoice: [env.ROLE_TEMPVOICE],
 }).flat();
 
-async function getCategory(channel:TextChannel):Promise<ExperienceCategory> {
+async function getCategory(channel:TextChannel):Promise<experience_category> {
   let experienceCategory = '';
   if (channel.parent) {
     // log.debug(F, `parent: ${channel.parent.name} ${channel.parent.id}`);
     if (channel.parent.id === env.CATEGORY_TEAMTRIPSIT) {
-      experienceCategory = 'TEAM' as ExperienceCategory;
+      experienceCategory = 'TEAM' as experience_category;
     } else if (channel.parent.id === env.CATEGORY_DEVELOPMENT) {
-      experienceCategory = 'DEVELOPER' as ExperienceCategory;
+      experienceCategory = 'DEVELOPER' as experience_category;
     } else if (channel.parent.id === env.CATEGORY_HARMREDUCTIONCENTRE) {
-      experienceCategory = 'TRIPSITTER' as ExperienceCategory;
+      experienceCategory = 'TRIPSITTER' as experience_category;
     } else if (channel.parent.id === env.CATEGORY_GATEWAY) {
-      experienceCategory = 'IGNORED' as ExperienceCategory;
+      experienceCategory = 'IGNORED' as experience_category;
     } else {
-      experienceCategory = 'GENERAL' as ExperienceCategory;
+      experienceCategory = 'GENERAL' as experience_category;
     }
   } else {
-    experienceCategory = 'IGNORED' as ExperienceCategory;
+    experienceCategory = 'IGNORED' as experience_category;
   }
-  return experienceCategory as ExperienceCategory;
+  return experienceCategory as experience_category;
 }
 
 export const messageCreate: MessageCreateEvent = {
@@ -65,7 +64,16 @@ export const messageCreate: MessageCreateEvent = {
       return;
     }
 
-    const userData = await getUser(message.author.id, null, null);
+    const userData = await db.users.upsert({
+      where: {
+        discord_id: message.author.id,
+      },
+      create: {
+        discord_id: message.author.id,
+      },
+      update: {},
+    });
+
     if (userData && userData.discord_bot_ban) {
       return;
     }
@@ -103,7 +111,7 @@ export const messageCreate: MessageCreateEvent = {
       // Determine what kind of experience to give
       const experienceCategory = await getCategory(message.channel);
       // Run this now, so that when you're helping in the tech/tripsit rooms you'll always get exp
-      experience(message.member, experienceCategory, 'TEXT' as ExperienceType, message.channel);
+      experience(message.member, experienceCategory, 'TEXT' as experience_type, message.channel);
     }
 
     // Check if the message came in a thread in the helpdesk channel

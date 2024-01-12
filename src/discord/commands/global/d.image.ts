@@ -8,17 +8,12 @@ import {
   time,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
-import {
-  PrismaClient,
-} from '@prisma/client';
 import { DateTime } from 'luxon';
 import { ImagesResponse } from 'openai/resources';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import commandContext from '../../utils/context';
 import { aiModerateReport, createImage } from '../../../global/commands/g.ai';
-
-const db = new PrismaClient({ log: ['error'] });
 
 const F = f(__filename);
 

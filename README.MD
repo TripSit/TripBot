@@ -113,7 +113,6 @@ src/docker   : Dockerfiles for the various containers
 src/global   : Global functions that are used by multiple commands. See "How commands work" below
 src/irc      : IRC specific code, see "How commands work" below.
 src/jest     : Jest testing code.
-src/knex     : Knex migrations, used in database development, see "Database Development" below.
 src/matrix   : Matrix specific code, see "How commands work" below.
 src/pgadmin4 : PGAdmin4 webserver, used in database development, see "Database Development" below.
 src/postgres : Postgres startup script, used in database development, see "Database Development" below.

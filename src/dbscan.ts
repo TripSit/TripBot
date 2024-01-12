@@ -170,7 +170,7 @@ function expandCategories() {
     }
   });
 
-  console.log(`${JSON.stringify(categoryData, null, 2)}`);
+  // console.log(`${JSON.stringify(categoryData, null, 2)}`);
 }
 
 expandCategories();

@@ -1,11 +1,8 @@
 /* eslint-disable sonarjs/no-duplicate-string */
 import {
   ActionRowBuilder,
-  ModalBuilder,
-  TextInputBuilder,
   Colors,
   SlashCommandBuilder,
-  ModalSubmitInteraction,
   ChatInputCommandInteraction,
   GuildMember,
   time,
@@ -18,7 +15,6 @@ import {
   ButtonBuilder,
   ButtonStyle,
   ButtonInteraction,
-  APIEmbedField,
   EmbedBuilder,
   APIButtonComponent,
   APIActionRowComponent,
@@ -28,11 +24,9 @@ import {
 import {
   APIInteractionDataResolvedChannel,
   ChannelType,
-  TextInputStyle,
 } from 'discord-api-types/v10';
 import { stripIndents } from 'common-tags';
 import {
-  PrismaClient,
   ai_channels,
   ai_model,
   ai_moderation,
@@ -44,19 +38,15 @@ import { MessageContentText } from 'openai/resources/beta/threads/messages/messa
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import commandContext from '../../utils/context';
-import { moderate } from '../../../global/commands/g.moderate';
 import { sleep } from '../guild/d.bottest';
 import aiChat, {
   aiModerate, createMessage, getAssistant, getMessages, getThread, readRun, runThread,
 } from '../../../global/commands/g.ai';
-import { UserActionType } from '../../../global/@types/database';
-import { parseDuration } from '../../../global/utils/parseDuration';
-
-const db = new PrismaClient({ log: ['error'] });
+import { modModal } from '../guild/d.moderate';
 
 const F = f(__filename);
 
-const maxHistoryLength = 3;
+// const maxHistoryLength = 3;
 
 const ephemeralExplanation = 'Set to "True" to show the response only to you';
 const personaDoesNotExist = 'This persona does not exist. Please create it first.';
@@ -112,7 +102,7 @@ async function help(
 
       🌐 Powered by OpenAI's API, this module is a Language Learning Model (LLM) – a sophisticated tool for crafting \
       sentences, but not a sentient AI. It's like having a super-smart writing assistant at your fingertips!
-      
+
       🚦 A Word of Caution: While GPT-3.5 can be impressively accurate, it's not infallible. Treat its responses as \
       suggestions rather than hard facts. There's no human behind its words, so always apply your own judgment.
 
@@ -121,22 +111,22 @@ async function help(
       We've tailored our **TripBot** persona to provide harm reduction info with a touch of quirkiness.
       Currently, TripBot is the sole persona available outside of TripSit. But there's more to come!
       Eager to work with the AI? Join us in the TripSit guild and chat in <#${env.CHANNEL_TRIPBOT}>!
-      
+
       🔗 Bring AI to Your Guild:
       Simple Integration: Want this AI wizardry in your server? Just a single command away!
 \`\`\`
-/ai link 
+/ai link
   channel:(optional - defaults to current channel)
   toggle:(optional  - defaults to 'on')
 \`\`\`
       *You can link entire categories if you want!*
-      
+
       Lost track of linked channels? Run \`/ai get\` to check how an AI Persona is linked that channel.
 
       📝 Audit responses:
       You can help us improve the AI by auditing its responses. If you see a response that's excellent or improper, \\
       react to it with the provided thumbs. If enough people agree, we'll take note and try to improve the bot behavior.
-      
+
       🚀 Embark on an AI-Enhanced Journey: Prepare for a new era of AI-driven conversations!
       `)],
   });
@@ -484,454 +474,6 @@ async function adjustThreshold(
   await interaction.update({
     components: buttonRows,
   });
-}
-
-async function noteUser(
-  interaction: ButtonInteraction,
-): Promise<void> {
-  log.debug(F, 'noteUser started');
-  const buttonID = interaction.customId;
-  log.debug(F, `buttonID: ${buttonID}`);
-
-  if (!(interaction.member as GuildMember).roles.cache.has(env.ROLE_MODERATOR)) return;
-
-  const embed = interaction.message.embeds[0].toJSON();
-
-  const flagsField = (embed.fields as APIEmbedField[]).find(field => field.name === 'Flags') as APIEmbedField;
-
-  await interaction.showModal(new ModalBuilder()
-    .setCustomId(`noteModal~${interaction.id}`)
-    .setTitle('Tripbot Note')
-    .addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
-      .setLabel('What are you noting about this person?')
-      .setStyle(TextInputStyle.Paragraph)
-      .setPlaceholder('Tell the team why you are noting this user.')
-      .setValue(`This user's message was flagged by the AI for ${flagsField.value}`)
-      .setMaxLength(1000)
-      .setRequired(true)
-      .setCustomId('internalNote'))));
-  const filter = (i: ModalSubmitInteraction) => i.customId.includes('noteModal');
-
-  interaction.awaitModalSubmit({ filter, time: 0 })
-    .then(async i => {
-      if (i.customId.split('~')[1] !== interaction.id) return;
-      await i.deferReply({ ephemeral: true });
-
-      const messageField = (embed.fields as APIEmbedField[]).find(field => field.name === 'Message') as APIEmbedField;
-      const memberField = (embed.fields as APIEmbedField[]).find(field => field.name === 'Member') as APIEmbedField;
-      const urlField = (embed.fields as APIEmbedField[]).find(field => field.name === 'Channel') as APIEmbedField;
-
-      await moderate(
-        interaction.member as GuildMember,
-        'NOTE' as UserActionType,
-        memberField.value.slice(2, -1),
-        stripIndents`
-        ${i.fields.getTextInputValue('internalNote')}
-    
-        **The offending message**
-        > ${messageField.value}
-        ${urlField.value}
-      `,
-        null,
-        null,
-      );
-
-      const buttonRows = interaction.message.components.map(row => ActionRowBuilder.from(row.toJSON()));
-
-      const actionField = embed.fields?.find(field => field.name === 'Actions');
-
-      if (actionField) {
-        // Add the action to the list of actions
-        const newActionFiled = actionField?.value.concat(`
-        
-        ${interaction.user.toString()} noted this user:
-        > ${i.fields.getTextInputValue('internalNote')}
-        
-        Message sent to user:
-        > **No message sent to user on notes**
-        `);
-        // log.debug(F, `newActionFiled: ${newActionFiled}`);
-
-        // Replace the action field with the new one
-        embed.fields?.splice(embed.fields?.findIndex(field => field.name === 'Actions'), 1, {
-          name: 'Actions',
-          value: newActionFiled,
-          inline: true,
-        });
-      } else {
-        embed.fields?.push(
-          {
-            name: 'Actions',
-            value: stripIndents`${interaction.user.toString()} noted this user:
-            > ${i.fields.getTextInputValue('internalNote')}
-        
-            Message sent to user:
-            > ${i.fields.getTextInputValue('description')}`,
-            inline: true,
-          },
-        );
-      }
-      embed.color = Colors.Green;
-
-      await i.editReply('User was noted');
-
-      await interaction.message.edit({
-        embeds: [embed],
-        components: buttonRows as ActionRowBuilder<ButtonBuilder>[],
-      });
-    });
-}
-
-async function muteUser(
-  interaction: ButtonInteraction,
-): Promise<void> {
-  log.debug(F, 'muteUser started');
-  const buttonID = interaction.customId;
-  log.debug(F, `buttonID: ${buttonID}`);
-  if (!(interaction.member as GuildMember).roles.cache.has(env.ROLE_MODERATOR)) return;
-
-  const embed = interaction.message.embeds[0].toJSON();
-
-  const flagsField = (embed.fields as APIEmbedField[]).find(field => field.name === 'Flags') as APIEmbedField;
-  const messageField = (embed.fields as APIEmbedField[]).find(field => field.name === 'Message') as APIEmbedField;
-  const memberField = (embed.fields as APIEmbedField[]).find(field => field.name === 'Member') as APIEmbedField;
-  const urlField = (embed.fields as APIEmbedField[]).find(field => field.name === 'Channel') as APIEmbedField;
-
-  await interaction.showModal(new ModalBuilder()
-    .setCustomId(`timeoutModal~${interaction.id}`)
-    .setTitle('Tripbot Timeout')
-    .addComponents(
-      new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
-        .setLabel('Why are you muting this person?')
-        .setStyle(TextInputStyle.Paragraph)
-        .setPlaceholder('Tell the team why you are muting this user.')
-        .setValue(`This user breaks TripSit's policies regarding ${flagsField.value} topics.`)
-        .setMaxLength(1000)
-        .setRequired(true)
-        .setCustomId('internalNote')),
-      new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
-        .setLabel('What should we tell the user?')
-        .setStyle(TextInputStyle.Paragraph)
-        .setPlaceholder('This will be sent to the user!')
-        .setValue(stripIndents`
-        Your recent messages have broken TripSit's policies regarding ${flagsField.value} topics.
-        
-        The offending message
-        > ${messageField.value}
-        ${urlField.value}`)
-        .setMaxLength(1000)
-        .setRequired(false)
-        .setCustomId('description')),
-      new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
-        .setLabel('Timeout for how long? (Max/default 7 days)')
-        .setStyle(TextInputStyle.Short)
-        .setPlaceholder('4 days 3hrs 2 mins 30 seconds')
-        .setRequired(false)
-        .setCustomId('timeoutDuration')),
-    ));
-  const filter = (i: ModalSubmitInteraction) => i.customId.includes('timeoutModal');
-
-  interaction.awaitModalSubmit({ filter, time: 0 })
-    .then(async i => {
-      if (i.customId.split('~')[1] !== interaction.id) return;
-      await i.deferReply({ ephemeral: true });
-
-      const duration = i.fields.getTextInputValue('timeoutDuration')
-        ? await parseDuration(i.fields.getTextInputValue('timeoutDuration'))
-        : 604800000;
-
-      if (duration > 604800000) {
-        await i.editReply('Cannot remove messages older than 7 days.');
-        return;
-      }
-
-      await moderate(
-        interaction.member as GuildMember,
-        'TIMEOUT' as UserActionType,
-        memberField.value.slice(2, -1),
-        stripIndents`
-        ${i.fields.getTextInputValue('internalNote')}
-    
-        **The offending message**
-        > ${messageField.value}
-        ${urlField.value}
-      `,
-        i.fields.getTextInputValue('description'),
-        duration,
-      );
-
-      const buttonRows = interaction.message.components.map(row => ActionRowBuilder.from(row.toJSON()));
-
-      const actionField = embed.fields?.find(field => field.name === 'Actions');
-
-      if (actionField) {
-        // Add the action to the list of actions
-        const newActionFiled = actionField?.value.concat(`
-        
-        ${interaction.user.toString()} muted this user:
-        > ${i.fields.getTextInputValue('internalNote')}
-        
-        Message sent to user:
-        > ${i.fields.getTextInputValue('description')}`);
-        // log.debug(F, `newActionFiled: ${newActionFiled}`);
-
-        // Replace the action field with the new one
-        embed.fields?.splice(embed.fields?.findIndex(field => field.name === 'Actions'), 1, {
-          name: 'Actions',
-          value: newActionFiled,
-          inline: true,
-        });
-      } else {
-        embed.fields?.push(
-          {
-            name: 'Actions',
-            value: stripIndents`${interaction.user.toString()} muted this user:
-            > ${i.fields.getTextInputValue('internalNote')}
-        
-            Message sent to user:
-            > ${i.fields.getTextInputValue('description')}`,
-            inline: true,
-          },
-        );
-      }
-      embed.color = Colors.Green;
-
-      await i.editReply('User was muted');
-
-      await interaction.message.edit({
-        embeds: [embed],
-        components: buttonRows as ActionRowBuilder<ButtonBuilder>[],
-      });
-    });
-}
-
-async function warnUser(
-  interaction: ButtonInteraction,
-): Promise<void> {
-  log.debug(F, 'warnUser started');
-  const buttonID = interaction.customId;
-  log.debug(F, `buttonID: ${buttonID}`);
-  if (!(interaction.member as GuildMember).roles.cache.has(env.ROLE_MODERATOR)) return;
-
-  const embed = interaction.message.embeds[0].toJSON();
-
-  const flagsField = (embed.fields as APIEmbedField[]).find(field => field.name === 'Flags') as APIEmbedField;
-  const messageField = (embed.fields as APIEmbedField[]).find(field => field.name === 'Message') as APIEmbedField;
-  const memberField = (embed.fields as APIEmbedField[]).find(field => field.name === 'Member') as APIEmbedField;
-  const urlField = (embed.fields as APIEmbedField[]).find(field => field.name === 'Channel') as APIEmbedField;
-
-  await interaction.showModal(new ModalBuilder()
-    .setCustomId(`warnModal~${interaction.id}`)
-    .setTitle('Tripbot Warn')
-    .addComponents(
-      new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
-        .setLabel('Why are you warning this person?')
-        .setStyle(TextInputStyle.Paragraph)
-        .setPlaceholder('Tell the team why you are warning this user.')
-        .setValue(`This user breaks TripSit's policies regarding ${flagsField.value} topics.`)
-        .setMaxLength(1000)
-        .setRequired(true)
-        .setCustomId('internalNote')),
-      new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
-        .setLabel('What should we tell the user?')
-        .setStyle(TextInputStyle.Paragraph)
-        .setPlaceholder('This will be sent to the user!')
-        .setValue(stripIndents`Your recent messages have broken TripSit's policies regarding ${flagsField.value} topics.
-        
-        The offending message
-        > ${messageField.value}
-        ${urlField.value}`)
-        .setMaxLength(1000)
-        .setRequired(true)
-        .setCustomId('description')),
-    ));
-  const filter = (i: ModalSubmitInteraction) => i.customId.includes('warnModal');
-
-  interaction.awaitModalSubmit({ filter, time: 0 })
-    .then(async i => {
-      if (i.customId.split('~')[1] !== interaction.id) return;
-      await i.deferReply({ ephemeral: true });
-
-      await moderate(
-        interaction.member as GuildMember,
-        'WARNING' as UserActionType,
-        memberField.value.slice(2, -1),
-        stripIndents`
-        ${i.fields.getTextInputValue('internalNote')}
-    
-        **The offending message**
-        > ${messageField.value}
-        ${urlField.value}
-      `,
-        i.fields.getTextInputValue('description'),
-        null,
-      );
-
-      const buttonRows = interaction.message.components.map(row => ActionRowBuilder.from(row.toJSON()));
-
-      const actionField = embed.fields?.find(field => field.name === 'Actions');
-
-      if (actionField) {
-        // Add the action to the list of actions
-        const newActionFiled = actionField?.value.concat(`
-        
-        ${interaction.user.toString()} warned this user:
-        > ${i.fields.getTextInputValue('internalNote')}
-        
-        Message sent to user:
-        > ${i.fields.getTextInputValue('description')}`);
-        // log.debug(F, `newActionFiled: ${newActionFiled}`);
-
-        // Replace the action field with the new one
-        embed.fields?.splice(embed.fields?.findIndex(field => field.name === 'Actions'), 1, {
-          name: 'Actions',
-          value: newActionFiled,
-          inline: true,
-        });
-      } else {
-        embed.fields?.push(
-          {
-            name: 'Actions',
-            value: stripIndents`${interaction.user.toString()} warned this user:
-            > ${i.fields.getTextInputValue('internalNote')}
-        
-            Message sent to user:
-            > ${i.fields.getTextInputValue('description')}`,
-            inline: true,
-          },
-        );
-      }
-      embed.color = Colors.Green;
-
-      await i.editReply('User was warned');
-
-      await interaction.message.edit({
-        embeds: [embed],
-        components: buttonRows as ActionRowBuilder<ButtonBuilder>[],
-      });
-    });
-}
-
-async function banUser(
-  interaction: ButtonInteraction,
-): Promise<void> {
-  log.debug(F, 'banUser started');
-  const buttonID = interaction.customId;
-  log.debug(F, `buttonID: ${buttonID}`);
-  if (!(interaction.member as GuildMember).roles.cache.has(env.ROLE_MODERATOR)) return;
-
-  const embed = interaction.message.embeds[0].toJSON();
-
-  const flagsField = (embed.fields as APIEmbedField[]).find(field => field.name === 'Flags') as APIEmbedField;
-  const messageField = (embed.fields as APIEmbedField[]).find(field => field.name === 'Message') as APIEmbedField;
-  const memberField = (embed.fields as APIEmbedField[]).find(field => field.name === 'Member') as APIEmbedField;
-  const urlField = (embed.fields as APIEmbedField[]).find(field => field.name === 'Channel') as APIEmbedField;
-
-  await interaction.showModal(new ModalBuilder()
-    .setCustomId(`banModal~${interaction.id}`)
-    .setTitle('Tripbot Ban')
-    .addComponents(
-      new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
-        .setLabel('Why are you banning this user?')
-        .setStyle(TextInputStyle.Paragraph)
-        .setPlaceholder('Tell the team why you are banning this user.')
-        .setValue(`This user breaks TripSit's policies regarding ${flagsField.value} topics.`)
-        .setMaxLength(1000)
-        .setRequired(true)
-        .setCustomId('internalNote')),
-      new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
-        .setLabel('What should we tell the user?')
-        .setStyle(TextInputStyle.Paragraph)
-        .setPlaceholder('This will be sent to the user!')
-        .setValue(stripIndents`Your recent messages have broken TripSit's policies regarding ${flagsField.value} topics.
-        
-        The offending message
-        > ${messageField.value}
-        ${urlField.value}`)
-        .setMaxLength(1000)
-        .setRequired(false)
-        .setCustomId('description')),
-      new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
-        .setLabel('How many days of msg to remove?')
-        .setStyle(TextInputStyle.Short)
-        .setPlaceholder('Between 0 and 7 days (Default 0)')
-        .setRequired(false)
-        .setCustomId('duration')),
-    ));
-  const filter = (i: ModalSubmitInteraction) => i.customId.includes('banModal');
-
-  interaction.awaitModalSubmit({ filter, time: 0 })
-    .then(async i => {
-      if (i.customId.split('~')[1] !== interaction.id) return;
-      await i.deferReply({ ephemeral: true });
-
-      const duration = i.fields.getTextInputValue('duration')
-        ? await parseDuration(i.fields.getTextInputValue('duration'))
-        : 0;
-
-      if (duration > 604800000) {
-        await i.editReply('Cannot remove messages older than 7 days.');
-        return;
-      }
-
-      await moderate(
-        interaction.member as GuildMember,
-        'FULL_BAN' as UserActionType,
-        memberField.value.slice(2, -1),
-        stripIndents`
-        ${i.fields.getTextInputValue('internalNote')}
-    
-        **The offending message**
-        > ${messageField.value}
-        ${urlField.value}
-      `,
-        i.fields.getTextInputValue('description'),
-        duration,
-      );
-
-      const buttonRows = interaction.message.components.map(row => ActionRowBuilder.from(row.toJSON()));
-
-      const actionField = embed.fields?.find(field => field.name === 'Actions');
-
-      if (actionField) {
-        // Add the action to the list of actions
-        const newActionFiled = actionField?.value.concat(`
-        
-        ${interaction.user.toString()} banned this user:
-        > ${i.fields.getTextInputValue('internalNote')}
-        
-        Message sent to user:
-        > ${i.fields.getTextInputValue('description')}`);
-        // log.debug(F, `newActionFiled: ${newActionFiled}`);
-
-        // Replace the action field with the new one
-        embed.fields?.splice(embed.fields?.findIndex(field => field.name === 'Actions'), 1, {
-          name: 'Actions',
-          value: newActionFiled,
-          inline: true,
-        });
-      } else {
-        embed.fields?.push(
-          {
-            name: 'Actions',
-            value: stripIndents`${interaction.user.toString()} noted this user:
-            > ${i.fields.getTextInputValue('internalNote')}
-        
-            Message sent to user:
-            > ${i.fields.getTextInputValue('description')}`,
-            inline: true,
-          },
-        );
-      }
-      embed.color = Colors.Green;
-
-      await i.editReply('User was banned');
-
-      await interaction.message.edit({
-        embeds: [embed],
-        components: buttonRows as ActionRowBuilder<ButtonBuilder>[],
-      });
-    });
 }
 
 async function aiAudit(
@@ -1445,10 +987,10 @@ export async function discordAiChat(
 
   // log.debug(F, `messageData: ${JSON.stringify(messageData, null, 2)}`);
 
-  const channelMessages = await messageData.channel.messages.fetch({ limit: 10 });
+  // const channelMessages = await messageData.channel.messages.fetch({ limit: 10 });
   // log.debug(F, `channelMessages: ${JSON.stringify(channelMessages.map(message => message.cleanContent), null, 2)}`);
 
-  const messages = [...channelMessages.values()];
+  // const messages = [...channelMessages.values()];
 
   // if (!messages[0].member?.roles.cache.has(env.ROLE_VERIFIED)) return;
   if (messageData.author.bot) {
@@ -1467,7 +1009,7 @@ export async function discordAiChat(
   log.debug(F, ` ${messageData.author.displayName} asked me ${messageData.cleanContent}`);
 
   // Check if the channel is linked to a persona
-  const aiLinkData = await getLinkedChannel(messages[0].channel);
+  const aiLinkData = await getLinkedChannel(messageData.channel);
   // log.debug(F, `aiLinkData: ${JSON.stringify(aiLinkData, null, 2)}`);
   if (!aiLinkData) return;
   // log.debug(F, `aiLinkData: ${JSON.stringify(aiLinkData, null, 2)}`);
@@ -1481,24 +1023,34 @@ export async function discordAiChat(
   // log.debug(F, `aiPersona: ${aiPersona.name}`);
 
   // Get the last 3 messages that are not empty or from other bots
-  const messageList = messages
-    .filter(message => message.cleanContent.length > 0 && !message.author.bot)
-    .map(message => ({
-      role: 'user',
-      content: message.cleanContent
-        .replace(tripbotUAT, '')
-        .replace('tripbot', '')
-        .trim(),
-    }))
-    .slice(0, maxHistoryLength)
-    .reverse() as OpenAI.Chat.ChatCompletionMessageParam[];
+  // const messageList = messages
+  //   .filter(message => message.cleanContent.length > 0 && !message.author.bot)
+  //   .map(message => ({
+  //     role: 'user',
+  //     content: message.cleanContent
+  //       .replace(tripbotUAT, '')
+  //       .replace('tripbot', '')
+  //       .trim(),
+  //   }))
+  //   .slice(0, maxHistoryLength)
+  //   .reverse() as OpenAI.Chat.ChatCompletionMessageParam[];
 
   // log.debug(F, `messageList: ${JSON.stringify(messageList, null, 2)}`);
 
-  const cleanMessageList = messages
-    .filter(message => message.cleanContent.length > 0 && !message.author.bot)
-    .slice(0, maxHistoryLength)
-    .reverse();
+  // const cleanMessageList = messages
+  //   .filter(message => message.cleanContent.length > 0 && !message.author.bot)
+  //   .slice(0, maxHistoryLength)
+  //   .reverse();
+
+  const cleanMessageList = [messageData];
+
+  const messageList = [{
+    role: 'user',
+    content: messageData.cleanContent
+      .replace(tripbotUAT, '')
+      .replace('tripbot', '')
+      .trim(),
+  }] as OpenAI.Chat.ChatCompletionMessageParam[];
 
   const { response, promptTokens, completionTokens } = await aiChat(aiPersona, messageList, messageData.author.id);
 
@@ -1554,21 +1106,24 @@ export async function discordAiChat(
     completionTokens,
   );
 
-  await messages[0].channel.sendTyping();
+  await messageData.channel.sendTyping();
 
   const wpm = 120;
   const wordCount = response.split(' ').length;
   const sleepTime = (wordCount / wpm) * 60000;
   // log.debug(F, `Typing ${wordCount} at ${wpm} wpm will take ${sleepTime / 1000} seconds`);
   await sleep(sleepTime > 10000 ? 5000 : sleepTime); // Don't wait more than 5 seconds
-  const replyMessage = await messages[0].reply(response.slice(0, 2000));
+  const replyMessage = await messageData.reply({
+    content: response.slice(0, 2000),
+    allowedMentions: { parse: [] },
+  });
 
   // React to that message with thumbs up and thumbs down emojis
   try {
     await replyMessage.react(env.EMOJI_THUMB_UP);
     await replyMessage.react(env.EMOJI_THUMB_DOWN);
   } catch (error) {
-    log.error(F, `Error reacting to message: ${messages[0].url}`);
+    log.error(F, `Error reacting to message: ${messageData.url}`);
     log.error(F, `${error}`);
   }
 }
@@ -1737,16 +1292,16 @@ export async function aiModButton(
       await saveThreshold(interaction);
       break;
     case 'note':
-      await noteUser(interaction);
+      await modModal(interaction);
       break;
     case 'warn':
-      await warnUser(interaction);
+      await modModal(interaction);
       break;
     case 'timeout':
-      await muteUser(interaction);
+      await modModal(interaction);
       break;
     case 'ban':
-      await banUser(interaction);
+      await modModal(interaction);
       break;
     default:
       break;

@@ -1,7 +1,6 @@
 /* eslint-disable max-len */
 
 import timezones from '../../../assets/data/timezones.json';
-import { getUser, usersUpdate } from '../utils/knex';
 
 const F = f(__filename);
 
@@ -37,18 +36,50 @@ export async function timezone(
     }
     // log.debug(F, `actor.id: ${actor.id}`);
 
-    const userData = await getUser(memberId, null, null);
+    const userData = await db.users.upsert({
+      where: {
+        discord_id: memberId,
+      },
+      create: {
+        discord_id: memberId,
+      },
+      update: {},
+    });
 
     userData.timezone = tzCode;
 
-    await usersUpdate(userData);
+    await db.users.update({
+      where: {
+        discord_id: memberId,
+      },
+      data: {
+        timezone: tzCode,
+      },
+    });
+
+    await db.users.update({
+      where: {
+        discord_id: memberId,
+      },
+      data: {
+        timezone: tzCode,
+      },
+    });
 
     // embed.setTitle(`I updated your timezone to ${tzvalue}`);
     return 'updated';
   }
   let gmtValue = '';
 
-  const userData = await getUser(memberId, null, null);
+  const userData = await db.users.upsert({
+    where: {
+      discord_id: memberId,
+    },
+    create: {
+      discord_id: memberId,
+    },
+    update: {},
+  });
 
   // log.debug(F, `userData: ${JSON.stringify(userData, null, 2)}`);
 

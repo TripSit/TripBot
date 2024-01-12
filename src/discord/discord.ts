@@ -39,6 +39,10 @@ export default async function discordConnect(): Promise<void> {
       Partials.Reaction,
       // Partials.GuildScheduledEvent,
     ],
+    allowedMentions: {
+      parse: ['users', 'roles'],
+      repliedUser: true,
+    },
   });
 
   global.discordClient = discordClient;

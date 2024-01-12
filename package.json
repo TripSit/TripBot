@@ -4,7 +4,8 @@
   "description": "A bot for TripSit (and maybe the world)",
   "main": "start.ts",
   "prisma": {
-    "schema": "src/prisma/tripbot/schema.prisma"
+    "schema": "src/prisma/tripbot/schema.prisma",
+    "seed": "ts-node ./src/prisma/seed.ts"
   },
   "engines": {
     "node": "v21.4.0",
@@ -25,8 +26,9 @@
     "db:formatSchema": "docker exec -it tripbot npx prisma format",
     "db:validateSchema": "docker exec -it tripbot npx prisma validate",
     "db:generateClient": "npx prisma generate && docker exec -it tripbot npx prisma generate",
-    "db:pushDev": "docker exec -it tripbot npx prisma db push && npx prisma generate",
-    "db:migrateDev": "docker exec -it tripbot npx prisma migrate dev -n betterImageLogging",
+    "db:pushDev": "docker exec -it tripbot npx prisma db push && npm run tripbot:db:generate",
+    "db:migrateDev": "docker exec -it tripbot npx prisma migrate dev -n betterModeration",
+    "db:seed": "docker exec -it tripbot npx prisma db seed",
     "## PGADMIN ##": "",
     "pgadmin": "docker compose --project-name tripbot up -d --force-recreate --build tripbot_pgadmin",
     "pgadmin:logs": "docker container logs tripbot_pgadmin -f -n 100",
@@ -45,10 +47,9 @@
   ],
   "author": "Eric / Moonbear / Teknos <eric@tripsit.me>",
   "contributors": [
-    "Ajar",
-    "Change",
     "Hipperooni",
-    "SevenCats"
+    "Ajar",
+    "Change"
   ],
   "license": "MIT",
   "bugs": {
@@ -77,8 +78,6 @@
     "he": "^1.2.0",
     "helmet": "^7.1.0",
     "imdb-api": "^4.4.1",
-    "knex": "^3.0.1",
-    "knex-types": "^0.5.0",
     "luxon": "^3.4.4",
     "morgan": "^1.10.0",
     "ms": "^2.1.3",
