@@ -417,13 +417,13 @@ export async function tripSitTrustScore(
     tsReasoning += '+0 | Account does not have a profile picture\n';
   }
 
-  if (target.bannerURL() !== null) {
-    trustScore += 1;
-    tsReasoning += '+1 | Account has a banner\n';
-  } else {
-    trustScore += 0;
-    tsReasoning += '+0 | Account does not have a banner\n';
-  }
+  // if (target.bannerURL() !== null) {
+  //   trustScore += 1;
+  //   tsReasoning += '+1 | Account has a banner\n';
+  // } else {
+  //   trustScore += 0;
+  //   tsReasoning += '+0 | Account does not have a banner\n';
+  // }
 
   // Check how many guilds the member is in
   await discordClient.guilds.fetch();
