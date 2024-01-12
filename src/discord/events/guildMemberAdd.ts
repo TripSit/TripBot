@@ -107,15 +107,6 @@ export const guildMemberAdd: GuildMemberAddEvent = {
     //   );
     // }
 
-    let modThread = null as ThreadChannel | null;
-    let modThreadMessage = `**${member.displayName} has joined the guild!**`;
-    let emoji = '👋';
-
-    if (trustScoreData.trustScore < guildData.trust_score_limit) {
-      modThreadMessage = `**${member.displayName} has joined the guild, their account is untrusted!** <@&${guildData.role_moderator}>`;
-      emoji = '👀';
-    }
-
     const bannedTest = await Promise.all(discordClient.guilds.cache.map(async guild => {
       // log.debug(F, `Checking guild: ${guild.name}`);
       const guildPerms = await checkGuildPermissions(guild, [
@@ -142,6 +133,20 @@ export const guildMemberAdd: GuildMemberAddEvent = {
 
     // count how many 'banned' appear in the array
     const bannedGuilds = bannedTest.filter(item => item) as GuildBan[];
+
+    let modThread = null as ThreadChannel | null;
+    let modThreadMessage = `**${member.displayName} has joined the guild!**`;
+    let emoji = '👋';
+
+    if (trustScoreData.trustScore < guildData.trust_score_limit) {
+      modThreadMessage = `**${member.displayName} has joined the guild, their account is untrusted!** <@&${guildData.role_moderator}>`;
+      emoji = '👀';
+    }
+
+    if (bannedGuilds.length > 0) {
+      modThreadMessage = `**${member.displayName} has joined the guild, they are banned on ${bannedGuilds.length} other guilds!** <@&${guildData.role_moderator}>`;
+      emoji = '👀';
+    }
 
     if (targetData.mod_thread_id || trustScoreData.trustScore < guildData.trust_score_limit || bannedGuilds.length > 0) {
       log.debug(F, `Mod thread id exists: ${targetData.mod_thread_id}`);
