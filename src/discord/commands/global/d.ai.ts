@@ -102,7 +102,7 @@ async function help(
 
       🌐 Powered by OpenAI's API, this module is a Language Learning Model (LLM) – a sophisticated tool for crafting \
       sentences, but not a sentient AI. It's like having a super-smart writing assistant at your fingertips!
-      
+
       🚦 A Word of Caution: While GPT-3.5 can be impressively accurate, it's not infallible. Treat its responses as \
       suggestions rather than hard facts. There's no human behind its words, so always apply your own judgment.
 
@@ -111,22 +111,22 @@ async function help(
       We've tailored our **TripBot** persona to provide harm reduction info with a touch of quirkiness.
       Currently, TripBot is the sole persona available outside of TripSit. But there's more to come!
       Eager to work with the AI? Join us in the TripSit guild and chat in <#${env.CHANNEL_TRIPBOT}>!
-      
+
       🔗 Bring AI to Your Guild:
       Simple Integration: Want this AI wizardry in your server? Just a single command away!
 \`\`\`
-/ai link 
+/ai link
   channel:(optional - defaults to current channel)
   toggle:(optional  - defaults to 'on')
 \`\`\`
       *You can link entire categories if you want!*
-      
+
       Lost track of linked channels? Run \`/ai get\` to check how an AI Persona is linked that channel.
 
       📝 Audit responses:
       You can help us improve the AI by auditing its responses. If you see a response that's excellent or improper, \\
       react to it with the provided thumbs. If enough people agree, we'll take note and try to improve the bot behavior.
-      
+
       🚀 Embark on an AI-Enhanced Journey: Prepare for a new era of AI-driven conversations!
       `)],
   });
@@ -1113,7 +1113,10 @@ export async function discordAiChat(
   const sleepTime = (wordCount / wpm) * 60000;
   // log.debug(F, `Typing ${wordCount} at ${wpm} wpm will take ${sleepTime / 1000} seconds`);
   await sleep(sleepTime > 10000 ? 5000 : sleepTime); // Don't wait more than 5 seconds
-  const replyMessage = await messageData.reply(response.slice(0, 2000));
+  const replyMessage = await messageData.reply({
+    content: response.slice(0, 2000),
+    allowedMentions: { parse: [] },
+  });
 
   // React to that message with thumbs up and thumbs down emojis
   try {
