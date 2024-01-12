@@ -109,7 +109,7 @@ async function help(
 
       🌐 Powered by OpenAI's API, this module is a Language Learning Model (LLM) – a sophisticated tool for crafting \
       sentences, but not a sentient AI. It's like having a super-smart writing assistant at your fingertips!
-      
+
       🚦 A Word of Caution: While GPT-3.5 can be impressively accurate, it's not infallible. Treat its responses as \
       suggestions rather than hard facts. There's no human behind its words, so always apply your own judgment.
 
@@ -118,22 +118,22 @@ async function help(
       We've tailored our **TripBot** persona to provide harm reduction info with a touch of quirkiness.
       Currently, TripBot is the sole persona available outside of TripSit. But there's more to come!
       Eager to work with the AI? Join us in the TripSit guild and chat in <#${env.CHANNEL_TRIPBOT}>!
-      
+
       🔗 Bring AI to Your Guild:
       Simple Integration: Want this AI wizardry in your server? Just a single command away!
 \`\`\`
-/ai link 
+/ai link
   channel:(optional - defaults to current channel)
   toggle:(optional  - defaults to 'on')
 \`\`\`
       *You can link entire categories if you want!*
-      
+
       Lost track of linked channels? Run \`/ai get\` to check how an AI Persona is linked that channel.
 
       📝 Audit responses:
       You can help us improve the AI by auditing its responses. If you see a response that's excellent or improper, \\
       react to it with the provided thumbs. If enough people agree, we'll take note and try to improve the bot behavior.
-      
+
       🚀 Embark on an AI-Enhanced Journey: Prepare for a new era of AI-driven conversations!
       `)],
   });
@@ -524,7 +524,7 @@ async function noteUser(
         memberField.value.slice(2, -1),
         stripIndents`
         ${i.fields.getTextInputValue('internalNote')}
-    
+
         **The offending message**
         > ${messageField.value}
         ${urlField.value}
@@ -540,10 +540,10 @@ async function noteUser(
       if (actionField) {
         // Add the action to the list of actions
         const newActionFiled = actionField?.value.concat(`
-        
+
         ${interaction.user.toString()} noted this user:
         > ${i.fields.getTextInputValue('internalNote')}
-        
+
         Message sent to user:
         > **No message sent to user on notes**
         `);
@@ -561,7 +561,7 @@ async function noteUser(
             name: 'Actions',
             value: stripIndents`${interaction.user.toString()} noted this user:
             > ${i.fields.getTextInputValue('internalNote')}
-        
+
             Message sent to user:
             > ${i.fields.getTextInputValue('description')}`,
             inline: true,
@@ -612,7 +612,7 @@ async function muteUser(
         .setPlaceholder('This will be sent to the user!')
         .setValue(stripIndents`
         Your recent messages have broken TripSit's policies regarding ${flagsField.value} topics.
-        
+
         The offending message
         > ${messageField.value}
         ${urlField.value}`)
@@ -648,7 +648,7 @@ async function muteUser(
         memberField.value.slice(2, -1),
         stripIndents`
         ${i.fields.getTextInputValue('internalNote')}
-    
+
         **The offending message**
         > ${messageField.value}
         ${urlField.value}
@@ -664,10 +664,10 @@ async function muteUser(
       if (actionField) {
         // Add the action to the list of actions
         const newActionFiled = actionField?.value.concat(`
-        
+
         ${interaction.user.toString()} muted this user:
         > ${i.fields.getTextInputValue('internalNote')}
-        
+
         Message sent to user:
         > ${i.fields.getTextInputValue('description')}`);
         // log.debug(F, `newActionFiled: ${newActionFiled}`);
@@ -684,7 +684,7 @@ async function muteUser(
             name: 'Actions',
             value: stripIndents`${interaction.user.toString()} muted this user:
             > ${i.fields.getTextInputValue('internalNote')}
-        
+
             Message sent to user:
             > ${i.fields.getTextInputValue('description')}`,
             inline: true,
@@ -734,7 +734,7 @@ async function warnUser(
         .setStyle(TextInputStyle.Paragraph)
         .setPlaceholder('This will be sent to the user!')
         .setValue(stripIndents`Your recent messages have broken TripSit's policies regarding ${flagsField.value} topics.
-        
+
         The offending message
         > ${messageField.value}
         ${urlField.value}`)
@@ -755,7 +755,7 @@ async function warnUser(
         memberField.value.slice(2, -1),
         stripIndents`
         ${i.fields.getTextInputValue('internalNote')}
-    
+
         **The offending message**
         > ${messageField.value}
         ${urlField.value}
@@ -771,10 +771,10 @@ async function warnUser(
       if (actionField) {
         // Add the action to the list of actions
         const newActionFiled = actionField?.value.concat(`
-        
+
         ${interaction.user.toString()} warned this user:
         > ${i.fields.getTextInputValue('internalNote')}
-        
+
         Message sent to user:
         > ${i.fields.getTextInputValue('description')}`);
         // log.debug(F, `newActionFiled: ${newActionFiled}`);
@@ -791,7 +791,7 @@ async function warnUser(
             name: 'Actions',
             value: stripIndents`${interaction.user.toString()} warned this user:
             > ${i.fields.getTextInputValue('internalNote')}
-        
+
             Message sent to user:
             > ${i.fields.getTextInputValue('description')}`,
             inline: true,
@@ -841,7 +841,7 @@ async function banUser(
         .setStyle(TextInputStyle.Paragraph)
         .setPlaceholder('This will be sent to the user!')
         .setValue(stripIndents`Your recent messages have broken TripSit's policies regarding ${flagsField.value} topics.
-        
+
         The offending message
         > ${messageField.value}
         ${urlField.value}`)
@@ -877,7 +877,7 @@ async function banUser(
         memberField.value.slice(2, -1),
         stripIndents`
         ${i.fields.getTextInputValue('internalNote')}
-    
+
         **The offending message**
         > ${messageField.value}
         ${urlField.value}
@@ -893,10 +893,10 @@ async function banUser(
       if (actionField) {
         // Add the action to the list of actions
         const newActionFiled = actionField?.value.concat(`
-        
+
         ${interaction.user.toString()} banned this user:
         > ${i.fields.getTextInputValue('internalNote')}
-        
+
         Message sent to user:
         > ${i.fields.getTextInputValue('description')}`);
         // log.debug(F, `newActionFiled: ${newActionFiled}`);
@@ -913,7 +913,7 @@ async function banUser(
             name: 'Actions',
             value: stripIndents`${interaction.user.toString()} noted this user:
             > ${i.fields.getTextInputValue('internalNote')}
-        
+
             Message sent to user:
             > ${i.fields.getTextInputValue('description')}`,
             inline: true,
@@ -1568,7 +1568,10 @@ export async function discordAiChat(
   const sleepTime = (wordCount / wpm) * 60000;
   // log.debug(F, `Typing ${wordCount} at ${wpm} wpm will take ${sleepTime / 1000} seconds`);
   await sleep(sleepTime > 10000 ? 5000 : sleepTime); // Don't wait more than 5 seconds
-  const replyMessage = await messageData.reply(response.slice(0, 2000));
+  const replyMessage = await messageData.reply({
+    content: response.slice(0, 2000),
+    allowedMentions: { parse: [] },
+  });
 
   // React to that message with thumbs up and thumbs down emojis
   try {
