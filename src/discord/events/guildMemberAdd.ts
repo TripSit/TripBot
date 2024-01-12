@@ -1,5 +1,5 @@
 import {
-  Colors,
+  // Colors,
   Collection,
   GuildMember,
   ThreadChannel,
@@ -78,18 +78,18 @@ export const guildMemberAdd: GuildMemberAddEvent = {
 
     log.debug(F, `trustScoreData: ${JSON.stringify(trustScoreData)}`);
 
-    const trustScoreColors = {
-      0: Colors.Purple,
-      1: Colors.Blue,
-      2: Colors.Green,
-      3: Colors.Yellow,
-      4: Colors.Orange,
-      5: Colors.Red,
-      6: Colors.Red,
-    };
+    // const trustScoreColors = {
+    //   0: Colors.Purple,
+    //   1: Colors.Blue,
+    //   2: Colors.Green,
+    //   3: Colors.Yellow,
+    //   4: Colors.Orange,
+    //   5: Colors.Red,
+    //   6: Colors.Red,
+    // };
 
     embed
-      .setColor(trustScoreColors[trustScoreData.trustScore as keyof typeof trustScoreColors])
+      // .setColor(trustScoreColors[trustScoreData.trustScore as keyof typeof trustScoreColors])
       .setDescription(stripIndents`**Report on ${member}**
 
         **TripSit TrustScore: ${trustScoreData.trustScore}**
