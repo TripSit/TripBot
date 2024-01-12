@@ -4,6 +4,7 @@ import {
   Colors,
   Guild,
   GuildAuditLogsEntry,
+  GuildMember,
   PermissionResolvable,
   TextChannel,
   ThreadChannel,
@@ -117,7 +118,13 @@ export const guildBanAdd: GuildBanAddEvent = {
 
         if (!guildData) return;
 
-        const member = await guild.members.fetch(ban.user.id);
+        let member = {} as GuildMember;
+        try {
+          member = await guild.members.fetch(ban.user.id);
+        } catch (err:unknown) {
+          log.debug(F, `Failed to fetch member ${ban.user.id} from guild ${guild.name}`);
+          return;
+        }
 
         embed
           .setColor(trustScoreColors[trustScoreData.trustScore as keyof typeof trustScoreColors])
