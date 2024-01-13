@@ -2262,6 +2262,98 @@ export async function rpgHomeInventory(
 }
 
 export async function rpgFlair(interaction: ChatInputCommandInteraction) {
+  // First check if the flair contains a @mention
+  let newFlair = interaction.options.getString('flair') as string;
+  // log.debug(F, `newFlair: ${newFlair}`);
+  const mentionRegex = /<@!?\d{18}>/g;
+  const mentions = newFlair.match(mentionRegex);
+  log.debug(F, `mentions: ${mentions}`);
+  // If the flair contains a mention, check if the user has mod permissions
+  const member = await interaction.guild?.members.fetch(interaction.user.id);
+  if (mentions && member?.roles.cache.has(env.ROLE_MODERATOR)) {
+    // If they are a mod, update the user mentioned's flair
+    const targetId = mentions[0].replace(/[^0-9]/g, '');
+    // log.debug(F, `targetId: ${targetId}`);
+    const targetMember = await interaction.guild?.members.fetch(targetId);
+    // log.debug(F, `targetMember: ${JSON.stringify(targetMember, null, 2)}`);
+    if (!targetMember) {
+      return {
+        embeds: [embedTemplate()
+          .setAuthor(null)
+          // .setFooter({ text: `${interaction.member?.displayName}'s TripSit RPG (BETA)`, iconURL: interaction.member?.displayAvatarURL() })
+          .setTitle(`${emojiGet('itemFlair')} Flair Error`)
+          .setDescription(stripIndents`
+          The user you mentioned does not exist!`)
+          .setColor(Colors.Red)],
+      };
+    }
+    // Check get fresh persona data
+    const userData = await db.users.upsert({
+      where: {
+        discord_id: targetId,
+      },
+      create: {
+        discord_id: targetId,
+      },
+      update: {},
+    });
+    const personaData = await db.personas.upsert({
+      where: {
+        user_id: userData.id,
+      },
+      create: {
+        user_id: userData.id,
+      },
+      update: {},
+    });
+    // Get the existing inventory data
+    const inventoryData = await db.rpg_inventory.findMany({
+      where: {
+        persona_id: personaData.id,
+      },
+    });
+    // Get the flair item
+    const flairItem = inventoryData.find(i => i.effect === 'userflair');
+    // If the user does not own the flair item, send them an error message
+    if (!flairItem) {
+      return {
+        embeds: [embedTemplate()
+          .setAuthor(null)
+          // .setFooter({ text: `${interaction.member?.displayName}'s TripSit RPG (BETA)`, iconURL: interaction.member?.displayAvatarURL() })
+          .setTitle(`${emojiGet('itemFlair')} Flair Error`)
+          .setDescription(stripIndents`
+          The user you mentioned does not own the flair item! They can buy it in the \`/rpg market\`.`)
+          .setColor(Colors.Red)],
+      };
+    }
+    // If the user does own the flair item, get the old flair and continue
+    const oldFlair = flairItem.effect_value;
+    // Update the flair
+    // Remove the mention and the space after it
+    newFlair = newFlair.replace(mentionRegex, '').trim();
+    log.debug(F, `newFlair: ${newFlair}`);
+    flairItem.effect_value = newFlair;
+    await db.rpg_inventory.upsert({
+      where: {
+        id: flairItem.id,
+      },
+      create: flairItem,
+      update: flairItem,
+    });
+    // Send the user a confirmation message
+    return {
+      embeds: [embedTemplate()
+        .setAuthor(null)
+        // .setFooter({ text: `${interaction.member?.displayName}'s TripSit RPG (BETA)`, iconURL: interaction.member?.displayAvatarURL() })
+        .setTitle(`${emojiGet('itemFlair')} Flair Updated`)
+        .setDescription(stripIndents`
+        ${targetMember.displayName}'s flair has been overridden!
+
+        **Old flair:** ${oldFlair}
+        **New flair:** ${newFlair}`)
+        .setColor(Colors.Green)],
+    };
+  }
   // Check that the user owns the flair item
   // Check get fresh persona data
   const userData = await db.users.upsert({
@@ -2303,9 +2395,8 @@ export async function rpgFlair(interaction: ChatInputCommandInteraction) {
         .setColor(Colors.Red)],
     };
   }
-  // If the user does own the flair item, collect the string input from the command
+  // If the user does own the flair item, get the old flair and continue
   const oldFlair = flairItem.effect_value;
-  const newFlair = interaction.options.getString('flair') as string;
 
   // INSERT AI MODERATION HERE. Dummy code as a placeholder
   // Approved = flair is perfect
@@ -2366,6 +2457,7 @@ export async function rpgFlair(interaction: ChatInputCommandInteraction) {
         .setColor(Colors.Green)],
     };
   }
+  
 
   // If the flair needed to be adjusted, ask the user if they want to use the adjusted flair
   if (aiApproved === 'adjusted') {
