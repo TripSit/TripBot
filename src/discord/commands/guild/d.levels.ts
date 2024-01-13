@@ -355,6 +355,7 @@ export const dLevels: SlashCommand = {
     // Check get fresh persona data
     // log.debug(F, `personaData home (Change) ${JSON.stringify(personaData, null, 2)}`);
     let userFont = 'futura';
+    let userFlair = '';
     if (personaData) {
       // Get the existing inventory data
       const inventoryData = await db.rpg_inventory.findMany({
@@ -366,6 +367,7 @@ export const dLevels: SlashCommand = {
 
       const equippedBackground = inventoryData.find(item => item.equipped === true && item.effect === 'background');
       const equippedFont = inventoryData.find(item => item.equipped === true && item.effect === 'font');
+      const equippedFlair = inventoryData.find(item => item.equipped === true && item.effect === 'userflair');
       // log.debug(F, `equippedBackground: ${JSON.stringify(equippedBackground, null, 2)} `);
       if (equippedBackground) {
         const imagePath = await getAsset(equippedBackground.value);
@@ -383,6 +385,9 @@ export const dLevels: SlashCommand = {
       if (equippedFont) {
         await getAsset(equippedFont.value);
         userFont = equippedFont.value;
+      }
+      if (equippedFlair) {
+        userFlair = equippedFlair.effect_value;
       }
     }
     // Top Right Chips
@@ -485,20 +490,22 @@ export const dLevels: SlashCommand = {
     context.fillStyle = textColor;
     context.font = `50px ${userFont}`;
     context.textAlign = 'left';
-    // const flair = null;
-    const usernameHeight = 76;
-    context.textBaseline = 'middle';
-    // if (flair) {
-    //   usernameHeight = 72;
-    //   fontSize = 25;
-    //   context.font = fontSizeFamily;
-    //   context.textBaseline = 'top';
-    //   context.font = applyUsername(canvasObj, `${flair}`);
-    //   context.fillText(`${flair}`, 146, 90);
-    //   context.textBaseline = 'bottom';
-    // }
+    let usernameHeight = 76;
     let fontSize = 50;
     const maxLength = 508;
+
+    if (userFlair) {
+      usernameHeight = 65;
+      fontSize = 25;
+      context.font = fontSizeFamily;
+      context.textBaseline = 'top';
+      context.font = resizeText(canvasObj, userFlair, fontSize, userFont, maxLength);
+      context.fillText(`${userFlair}`, 146, 94);
+      context.textBaseline = 'bottom';
+    }
+
+    fontSize = 50;
+    context.textBaseline = 'middle';
     context.font = resizeText(canvasObj, filteredDisplayName, fontSize, userFont, maxLength);
     context.fillText(`${filteredDisplayName}`, 146, usernameHeight);
 
