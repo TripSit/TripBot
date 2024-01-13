@@ -186,6 +186,7 @@ export const dProfile: SlashCommand = {
 
     // log.debug(F, `personaData home (Change) ${JSON.stringify(personaData, null, 2)}`);
     let userFont = 'futura';
+    let userFlair = '';
     if (personaData) {
       // Get the existing inventory data
       const inventoryData = await db.rpg_inventory.findMany({
@@ -197,6 +198,7 @@ export const dProfile: SlashCommand = {
 
       const equippedBackground = inventoryData.find(item => item.equipped === true && item.effect === 'background');
       const equippedFont = inventoryData.find(item => item.equipped === true && item.effect === 'font');
+      const equippedFlair = inventoryData.find(item => item.equipped === true && item.effect === 'userflair');
       // log.debug(F, `equippedBackground: ${JSON.stringify(equippedBackground, null, 2)} `);
       if (equippedBackground) {
         const imagePath = await getAsset(equippedBackground.value);
@@ -214,6 +216,9 @@ export const dProfile: SlashCommand = {
       if (equippedFont) {
         await getAsset(equippedFont.value);
         userFont = equippedFont.value;
+      }
+      if (equippedFlair) {
+        userFlair = equippedFlair.effect_value;
       }
     }
 
@@ -315,14 +320,28 @@ export const dProfile: SlashCommand = {
     // If so, move Username Text up so the title can fit underneath
 
     // Username Text
+    // Temporary code for user flairs
     const filteredDisplayName = await deFuckifyText(target.displayName);
-    context.font = `50px ${userFont}`;
     context.fillStyle = textColor;
-    context.textBaseline = 'middle';
-    const fontSize = 50;
+    context.font = `50px ${userFont}`;
+    context.textAlign = 'left';
+    let usernameHeight = 76;
+    let fontSize = 50;
     const maxLength = 508;
+
+    if (userFlair) {
+      usernameHeight = 65;
+      fontSize = 25;
+      context.textBaseline = 'top';
+      context.font = resizeText(canvasObj, userFlair, fontSize, userFont, maxLength);
+      context.fillText(`${userFlair}`, 146, 94);
+      context.textBaseline = 'bottom';
+    }
+
+    fontSize = 50;
+    context.textBaseline = 'middle';
     context.font = resizeText(canvasObj, filteredDisplayName, fontSize, userFont, maxLength);
-    context.fillText(`${filteredDisplayName}`, 146, 76);
+    context.fillText(`${filteredDisplayName}`, 146, usernameHeight);
 
     // User Timezone
     context.font = '25px futura';

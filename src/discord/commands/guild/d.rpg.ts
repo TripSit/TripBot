@@ -63,7 +63,7 @@ const items = {
     userflair: {
       label: 'User Flair',
       value: 'userflair',
-      description: 'A text flair that appears under to your name.',
+      description: 'User Flair',
       quantity: 1,
       weight: 0,
       cost: 1000,
@@ -71,7 +71,7 @@ const items = {
       consumable: false,
       effect: 'userflair',
       effect_value: 'Use /rpg flair to set',
-      emoji: 'itemDiscount',
+      emoji: 'itemFlair',
     // },
     // testkit: {
     //   label: 'TestKit',
@@ -2297,39 +2297,15 @@ export async function rpgFlair(interaction: ChatInputCommandInteraction) {
       embeds: [embedTemplate()
         .setAuthor(null)
         // .setFooter({ text: `${interaction.member?.displayName}'s TripSit RPG (BETA)`, iconURL: interaction.member?.displayAvatarURL() })
-        .setTitle(`${emojiGet('buttonFlair')} Flair Error`)
+        .setTitle(`${emojiGet('itemFlair')} Flair Error`)
         .setDescription(stripIndents`
         You don't own the flair item! You can buy it in the \`/rpg market\`.`)
         .setColor(Colors.Red)],
     };
   }
-  // If the user does own the flair item, collect the string input from the command and update the flair item
+  // If the user does own the flair item, collect the string input from the command
   const oldFlair = flairItem.effect_value;
   const newFlair = interaction.options.getString('flair') as string;
-
-  // Make sure the flair is not too long and only contains normal keyboard characters
-  if (newFlair.length > 50) {
-    return {
-      embeds: [embedTemplate()
-        .setAuthor(null)
-        // .setFooter({ text: `${interaction.member?.displayName}'s TripSit RPG (BETA)`, iconURL: interaction.member?.displayAvatarURL() })
-        .setTitle(`${emojiGet('buttonFlair')} Flair Rejected`)
-        .setDescription(stripIndents`
-        Your flair is too long! It must be less than 50 characters.`)
-        .setColor(Colors.Red)],
-    };
-  }
-  if (!/^[a-zA-Z0-9 ]*$/.test(newFlair)) {
-    return {
-      embeds: [embedTemplate()
-        .setAuthor(null)
-        // .setFooter({ text: `${interaction.member?.displayName}'s TripSit RPG (BETA)`, iconURL: interaction.member?.displayAvatarURL() })
-        .setTitle(`${emojiGet('buttonFlair')} Flair Rejected`)
-        .setDescription(stripIndents`
-        Your flair contains unknown, invalid characters! It must only contain letters and numbers.`)
-        .setColor(Colors.Red)],
-    };
-  }
 
   // INSERT AI MODERATION HERE. Dummy code as a placeholder
   // Approved = flair is perfect
@@ -2339,14 +2315,15 @@ export async function rpgFlair(interaction: ChatInputCommandInteraction) {
   let rejectionReason = 'No reason given';
   let adjustmentReason = 'No reason given';
   // Example reasons for adjustment the AI might give:
-  // - Contains a banned word, and was changed to a similar word
-  // - Over 50 characters, and was shortened
-  // - Contains invalid characters, and was changed to only contain valid characters
-  // - Contains no spaces, and was changed to have spaces
+  // - Contained a bad word
+  // - Over 50 characters
+  // - Contained invalid characters
+  // - Bad capitalization
+  // - Bad spelling
+  // - Bad grammar
 
   // Placeholder ai simulator that simply corrects capitalization for each word
   const aiAdjusted = newFlair.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
-  
   if (aiAdjusted !== newFlair) {
     aiApproved = 'adjusted';
     adjustmentReason = 'Capitalization';
@@ -2355,9 +2332,18 @@ export async function rpgFlair(interaction: ChatInputCommandInteraction) {
   } else {
     aiApproved = 'rejected';
   }
-  // If the adjusted flair is identical to the original flair, it is automatically approved and updated
-  if (aiAdjusted === newFlair) {
-    aiApproved = 'approved';
+
+  if (newFlair.length > 50) {
+    aiApproved = 'rejected';
+    rejectionReason = 'Too long';
+  }
+  if (!/^[a-zA-Z0-9 ]*$/.test(newFlair)) {
+    aiApproved = 'rejected';
+    rejectionReason = 'Invalid characters';
+  }
+
+  // If the flair is approved, update the flair and send the user a confirmation message
+  if (aiApproved === 'approved') {
     flairItem.effect_value = newFlair;
     await db.rpg_inventory.upsert({
       where: {
@@ -2371,7 +2357,7 @@ export async function rpgFlair(interaction: ChatInputCommandInteraction) {
       embeds: [embedTemplate()
         .setAuthor(null)
         // .setFooter({ text: `${interaction.member?.displayName}'s TripSit RPG (BETA)`, iconURL: interaction.member?.displayAvatarURL() })
-        .setTitle(`${emojiGet('buttonFlair')} Flair Accepted`)
+        .setTitle(`${emojiGet('itemFlair')} Flair Updated`)
         .setDescription(stripIndents`
         Your flair has been updated!
 
@@ -2381,17 +2367,16 @@ export async function rpgFlair(interaction: ChatInputCommandInteraction) {
     };
   }
 
-  // If the adjusted flair is not identical to the original flair, it is automatically adjusted and the user is asked to confirm
-  if (aiAdjusted !== newFlair) {
-    aiApproved = 'adjusted';
+  // If the flair needed to be adjusted, ask the user if they want to use the adjusted flair
+  if (aiApproved === 'adjusted') {
     // Send the user a confirmation message
-    return {
+    await interaction.editReply({
       embeds: [embedTemplate()
         .setAuthor(null)
         // .setFooter({ text: `${interaction.member?.displayName}'s TripSit RPG (BETA)`, iconURL: interaction.member?.displayAvatarURL() })
-        .setTitle(`${emojiGet('buttonFlair')} Flair Adjusted`)
+        .setTitle(`${emojiGet('itemFlair')} Flair Adjusted`)
         .setDescription(stripIndents`
-        Your flair has been adjusted by TripBot to meet our flair guidelines.
+        Your flair has been adjusted by TripBot to meet our guidelines.
 
         **Original:** ${newFlair}
         **TripBot Adjusted:** ${aiAdjusted}
@@ -2407,7 +2392,85 @@ export async function rpgFlair(interaction: ChatInputCommandInteraction) {
             customButton(`rpgFlairReject,user:${interaction.user.id}`, 'Reject', 'buttonQuit', ButtonStyle.Danger),
           ),
       ],
-    };
+    });
+    // Open a button collector for 30 seconds
+    const filter = (i: MessageComponentInteraction) => i.user.id === interaction.user.id
+        && i.componentType === ComponentType.Button;
+    let collected = {} as ButtonInteraction;
+    if (!interaction.channel) throw new Error('Channel not found');
+    try {
+      collected = await interaction.channel!.awaitMessageComponent({ // eslint-disable-line no-await-in-loop
+        filter,
+        time: 30000,
+      }) as ButtonInteraction;
+    } catch (err) {
+      // Update the embed with disabled buttons
+      return {
+        embeds: [embedTemplate()
+          .setAuthor(null)
+          // .setFooter({ text: `${interaction.member?.displayName}'s TripSit RPG (BETA)`, iconURL: interaction.member?.displayAvatarURL() })
+          .setTitle(`${emojiGet('itemFlair')} Flair Adjusted`)
+          .setDescription(stripIndents`
+          Your flair has been adjusted by TripBot to meet our guidelines.
+
+          **Original:** ${newFlair}
+          **TripBot Adjusted:** ${aiAdjusted}
+
+          **Adjustment Reason:** ${adjustmentReason}
+          
+          Please confirm that you want to use the adjusted flair, or try something else.`)
+          .setColor(Colors.Gold)],
+        components: [
+          new ActionRowBuilder<ButtonBuilder>()
+            .addComponents(
+              customButton(`rpgFlairAccept,user:${interaction.user.id}`, 'Accept', 'buttonAccept', ButtonStyle.Success).setDisabled(true),
+              customButton(`rpgFlairReject,user:${interaction.user.id}`, 'Reject', 'buttonQuit', ButtonStyle.Danger).setDisabled(true),
+            ),
+        ],
+      };
+    }
+    if (collected.customId === `rpgFlairAccept,user:${interaction.user.id}`) {
+      // Update the flair
+      flairItem.effect_value = aiAdjusted;
+      await db.rpg_inventory.upsert({
+        where: {
+          id: flairItem.id,
+        },
+        create: flairItem,
+        update: flairItem,
+      });
+      // Send the user a confirmation message
+      return {
+        embeds: [embedTemplate()
+          .setAuthor(null)
+          // .setFooter({ text: `${interaction.member?.displayName}'s TripSit RPG (BETA)`, iconURL: interaction.member?.displayAvatarURL() })
+          .setTitle(`${emojiGet('itemFlair')} Flair Updated`)
+          .setDescription(stripIndents`
+          Your flair has been updated!
+
+          **Old flair:** ${oldFlair}
+          **New flair:** ${aiAdjusted}`)
+          .setColor(Colors.Green)],
+        components: [],
+      };
+    }
+    if (collected.customId === `rpgFlairReject,user:${interaction.user.id}`) {
+      // Send the user a rejection message
+      return {
+        embeds: [embedTemplate()
+          .setAuthor(null)
+          // .setFooter({ text: `${interaction.member?.displayName}'s TripSit RPG (BETA)`, iconURL: interaction.member?.displayAvatarURL() })
+          .setTitle(`${emojiGet('itemFlair')} Flair Rejected`)
+          .setDescription(stripIndents`
+          You rejected TripBot's adjusted flair.
+          
+          Your flair has not been updated.
+          
+          If you believe TripBot made a mistake, please try again or contact a moderator for manual review.`)
+          .setColor(Colors.Red)],
+        components: [],
+      };
+    }
   }
 
   if (aiApproved === 'rejected') {
@@ -2416,7 +2479,7 @@ export async function rpgFlair(interaction: ChatInputCommandInteraction) {
       embeds: [embedTemplate()
         .setAuthor(null)
         // .setFooter({ text: `${interaction.member?.displayName}'s TripSit RPG (BETA)`, iconURL: interaction.member?.displayAvatarURL() })
-        .setTitle(`${emojiGet('buttonFlair')} Flair Rejected`)
+        .setTitle(`${emojiGet('itemFlair')} Flair Rejected`)
         .setDescription(stripIndents`
         Your flair has been rejected by TripBot.
         
@@ -2432,7 +2495,7 @@ export async function rpgFlair(interaction: ChatInputCommandInteraction) {
     embeds: [embedTemplate()
       .setAuthor(null)
       // .setFooter({ text: `${interaction.member?.displayName}'s TripSit RPG (BETA)`, iconURL: interaction.member?.displayAvatarURL() })
-      .setTitle(`${emojiGet('buttonFlair')} Flair Error`)
+      .setTitle(`${emojiGet('itemFlair')} Flair Error`)
       .setDescription(stripIndents`
       Oops!
       Something went wrong with TripBot's AI.
@@ -2675,7 +2738,7 @@ export async function rpgHome(
     backgroundMenu.addOptions(chosenItem);
     // log.debug(F, `items.backgrounds: ${JSON.stringify(items.backgrounds, null, 2)}`);
     // convert the emoji property into an emoji using emojiGet
-    const allItems = [...Object.values(items.fonts), ...Object.values(items.backgrounds)].map(item => {
+    const allItems = [...Object.values(items.general), ...Object.values(items.fonts), ...Object.values(items.backgrounds)].map(item => {
       const newItem = item;
       newItem.emoji = `<:${emojiGet('itemBackground').identifier}>`;
       return item;

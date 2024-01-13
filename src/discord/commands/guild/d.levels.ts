@@ -497,7 +497,6 @@ export const dLevels: SlashCommand = {
     if (userFlair) {
       usernameHeight = 65;
       fontSize = 25;
-      context.font = fontSizeFamily;
       context.textBaseline = 'top';
       context.font = resizeText(canvasObj, userFlair, fontSize, userFont, maxLength);
       context.fillText(`${userFlair}`, 146, 94);
