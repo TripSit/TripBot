@@ -41,6 +41,14 @@ import commandContext from '../../utils/context';
 import getAsset from '../../utils/getAsset';
 import { customButton } from '../../utils/emoji';
 import { getProfilePreview } from './d.profile';
+import { aiFlairMod } from '../../../global/commands/g.ai';
+import {
+  ai_channels,
+  ai_model,
+  ai_moderation,
+  ai_personas,
+} from '@prisma/client';
+import OpenAI from 'openai';
 
 const Trivia = require('trivia-api');
 
@@ -2414,27 +2422,53 @@ export async function rpgFlair(interaction: ChatInputCommandInteraction) {
   // - Bad grammar
 
   // Placeholder ai simulator that simply corrects capitalization for each word
-  const aiAdjusted = newFlair.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
-  if (aiAdjusted !== newFlair) {
-    aiApproved = 'adjusted';
-    adjustmentReason = 'Capitalization';
-  } else if (aiAdjusted === newFlair) {
+  //  const aiAdjusted = newFlair.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+  //  if (aiAdjusted !== newFlair) {
+  //    aiApproved = 'adjusted';
+  //    adjustmentReason = 'Capitalization';
+  //  } else if (aiAdjusted === newFlair) {
+  //    aiApproved = 'approved';
+  //  } else {
+  //    aiApproved = 'rejected';
+  //  }
+  //
+  //  if (newFlair.length > 50) {
+  //    aiApproved = 'rejected';
+  //    rejectionReason = 'Too long';
+  //  }
+  //  if (!/^[a-zA-Z0-9 ]*$/.test(newFlair)) {
+  //    aiApproved = 'rejected';
+  //    rejectionReason = 'Invalid characters';
+  //  }
+
+  // Query the AI for approval
+  const aiPersona = await db.ai_personas.findUniqueOrThrow({
+    where: {
+      name: 'FlairMod',
+    },
+  });
+
+  const messageList = [{
+    role: 'user',
+    content: newFlair,
+  }] as OpenAI.Chat.ChatCompletionMessageParam[];
+
+  const { response, promptTokens, completionTokens } = await aiFlairMod(aiPersona, messageList);
+  log.debug(F, `aiResponse: ${JSON.stringify(response, null, 2)}`);
+
+  // Regex to see the approval status
+  if (response.match(/Status: Approved/g)) {
     aiApproved = 'approved';
-  } else {
+  } else if (response.match(/Status: Adjusted/g)) {
+    aiApproved = 'adjusted';
+  } else if (response.match(/Status: Rejected/g)) {
     aiApproved = 'rejected';
   }
 
-  if (newFlair.length > 50) {
-    aiApproved = 'rejected';
-    rejectionReason = 'Too long';
-  }
-  if (!/^[a-zA-Z0-9 ]*$/.test(newFlair)) {
-    aiApproved = 'rejected';
-    rejectionReason = 'Invalid characters';
-  }
+  const aiAdjusted = response.match(/Adjusted: (.*)/g)?.[0].replace('Adjusted: ', '');
 
-  // If the flair is approved, update the flair and send the user a confirmation message
-  if (aiApproved === 'approved') {
+  // If the flair is approved or the same as what the user entered, update the flair and send the user a confirmation message
+  if (aiApproved === 'approved' || aiAdjusted === newFlair) {
     flairItem.effect_value = newFlair;
     await db.rpg_inventory.upsert({
       where: {
@@ -2462,12 +2496,35 @@ export async function rpgFlair(interaction: ChatInputCommandInteraction) {
   // If the flair needed to be adjusted, ask the user if they want to use the adjusted flair
   if (aiApproved === 'adjusted') {
     // Send the user a confirmation message
+    // Get the AIs adjusted flair
+
+    // log.debug(F, `aiAdjusted: ${aiAdjusted}`);
+    // If the flair is null, send an error message
+    if (!aiAdjusted) {
+      return {
+        embeds: [embedTemplate()
+          .setAuthor(null)
+        // .setFooter({ text: `${interaction.member?.displayName}'s TripSit RPG (BETA)`, iconURL: interaction.member?.displayAvatarURL() })
+          .setTitle(`${emojiGet('itemFlair')} Flair Error`)
+          .setDescription(stripIndents`
+        Oops!
+        Something went wrong with TripBot's AI.
+        Please try again later or contact a moderator to have your flair manually reviewed.`)
+          .setColor(Colors.Red)],
+      };
+    }
+    // Regex to get the reason for adjustment from the AI response where it says "Reason: "
+    // If it doesn't exist, set it to "No reason given"
+    adjustmentReason = response.match(/Reason: (.*)/g)?.[0].replace('Reason: ', '') || 'No reason given';
+    // log.debug(F, `adjustmentReason: ${adjustmentReason}`);
+
     await interaction.editReply({
       embeds: [embedTemplate()
         .setAuthor(null)
         // .setFooter({ text: `${interaction.member?.displayName}'s TripSit RPG (BETA)`, iconURL: interaction.member?.displayAvatarURL() })
         .setTitle(`${emojiGet('itemFlair')} Flair Adjusted`)
         .setDescription(stripIndents`
+
         Your flair has been adjusted by TripBot to meet our guidelines.
 
         **Original:** ${newFlair}
@@ -2485,7 +2542,7 @@ export async function rpgFlair(interaction: ChatInputCommandInteraction) {
           ),
       ],
     });
-    // Open a button collector for 30 seconds
+    // Open a button collector for 5 minutes
     const filter = (i: MessageComponentInteraction) => i.user.id === interaction.user.id
         && i.componentType === ComponentType.Button;
     let collected = {} as ButtonInteraction;
@@ -2493,7 +2550,7 @@ export async function rpgFlair(interaction: ChatInputCommandInteraction) {
     try {
       collected = await interaction.channel!.awaitMessageComponent({ // eslint-disable-line no-await-in-loop
         filter,
-        time: 30000,
+        time: 300000,
       }) as ButtonInteraction;
     } catch (err) {
       // Update the embed with disabled buttons
@@ -2566,6 +2623,8 @@ export async function rpgFlair(interaction: ChatInputCommandInteraction) {
   }
 
   if (aiApproved === 'rejected') {
+    adjustmentReason = response.match(/Reason: (.*)/g)?.[0].replace('Reason: ', '') || 'No reason given';
+
     // Send the user a rejection message
     return {
       embeds: [embedTemplate()
@@ -2575,7 +2634,7 @@ export async function rpgFlair(interaction: ChatInputCommandInteraction) {
         .setDescription(stripIndents`
         Your flair has been rejected by TripBot.
         
-        **Rejection Reason:** ${rejectionReason}
+        **Rejection Reason:** ${adjustmentReason}
         
         Please try something else.`)
         .setColor(Colors.Red)],
