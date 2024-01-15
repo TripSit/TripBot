@@ -550,6 +550,73 @@ async function autocompleteAiNames(interaction:AutocompleteInteraction) {
   }
 }
 
+async function autocompleteQuotes(interaction:AutocompleteInteraction) {
+  const options = {
+    shouldSort: true,
+    keys: [
+      'quote',
+    ],
+  };
+
+  let whereClause = {};
+
+  // If the user option is filled in, find the user's ID and use that to filter the quotes
+  const user = interaction.options.get('user');
+  if (user) {
+    // log.debug(F, `User option: ${user.value}`);
+    const userValue = user.value as string;
+    const userData = await db.users.upsert({
+      where: { discord_id: userValue },
+      create: { discord_id: userValue },
+      update: {},
+    });
+    whereClause = {
+      user_id: userData.id,
+    };
+  }
+
+  // log.debug(F, `whereClause: ${JSON.stringify(whereClause, null, 2)}`);
+  const quoteList = await db.quotes.findMany({
+    select: {
+      quote: true,
+      user_id: true,
+      url: true,
+      date: true,
+    },
+    where: whereClause,
+  });
+
+  // log.debug(F, `quoteList: ${quoteList.length}`);
+
+  const fuse = new Fuse(quoteList, options);
+  const focusedValue = interaction.options.getFocused();
+  // log.debug(F, `focusedValue: ${focusedValue}`);
+  const results = fuse.search(focusedValue);
+  // log.debug(F, `Autocomplete results: ${results.length}`);
+  // log.debug(F, `Autocomplete results: ${JSON.stringify(results, null, 2)}`);
+  if (results.length > 0) {
+    const top25 = results.slice(0, 20);
+    const listResults = top25.map(choice => ({
+      name: (choice.item as any).quote.slice(0, 100),
+      value: (choice.item as any).quote.slice(0, 100),
+    }));
+      // log.debug(F, `list_results: ${listResults}`);
+    await interaction.respond(listResults);
+  } else if (focusedValue !== '') {
+    await interaction.respond([
+      { name: 'No results found', value: 'No results found' },
+    ]);
+  } else {
+    const initialQuotes = quoteList.slice(0, 25) as {
+      quote: string;
+    }[];
+    const listResults = initialQuotes.map(choice => ({ name: choice.quote.slice(0, 100), value: choice.quote.slice(0, 100) }));
+    // log.debug(F, `list_results: ${listResults}`);
+    // log.debug(F, `Returing ${listResults.length} quotes`);
+    await interaction.respond(listResults);
+  }
+}
+
 export default autocomplete;
 /**
  * Handles autocomplete information
@@ -557,6 +624,7 @@ export default autocomplete;
  * @param {Client} discordClient
  * @return {Promise<void>}
  */
+
 export async function autocomplete(interaction:AutocompleteInteraction):Promise<void> {
   // log.debug(F, `Autocomplete requested for: ${interaction.commandName}`);
   if (interaction.commandName === 'pill-id') {
@@ -579,6 +647,8 @@ export async function autocomplete(interaction:AutocompleteInteraction):Promise<
     if (focusedOption === 'name') {
       autocompleteAiNames(interaction);
     }
+  } else if (interaction.commandName === 'quote') {
+    await autocompleteQuotes(interaction);
   } else { // If you don't need a specific autocomplete, return a list of drug names
     await autocompleteDrugNames(interaction);
   }
