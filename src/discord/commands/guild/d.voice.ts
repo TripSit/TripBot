@@ -180,7 +180,6 @@ async function tentBitrate(
   voiceChannel: VoiceBasedChannel,
   bitrate: string,
 ):Promise<EmbedBuilder> {
-
   if (voiceChannel.bitrate === parseInt(bitrate, 10)) {
     return embedTemplate()
       .setTitle('Error')
@@ -203,9 +202,9 @@ async function tentBitrate(
 
 // Command that makes the bot ping the Join VC role
 let lastTentPingTime = Date.now() - 3600000; // Initialize to one hour ago
-let userTentPingTimes: { [userId: string]: number } = {}; // Initialize an empty object to store user ping times
+const userTentPingTimes: { [userId: string]: number } = {}; // Initialize an empty object to store user ping times
 const globalCooldown = 3600000; // 1 hour
-const userCooldown = 10800000 // 3 hours
+const userCooldown = 10800000; // 3 hours
 
 async function tentPing(
   voiceChannel: VoiceBasedChannel,
