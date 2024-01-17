@@ -1,6 +1,7 @@
 /* eslint-disable no-await-in-loop */
 /* eslint-disable no-restricted-syntax */
 /* eslint-disable max-len */
+import OpenAI from 'openai';
 import {
   Colors,
   SlashCommandBuilder,
@@ -42,13 +43,6 @@ import getAsset from '../../utils/getAsset';
 import { customButton } from '../../utils/emoji';
 import { getProfilePreview } from './d.profile';
 import { aiFlairMod } from '../../../global/commands/g.ai';
-import {
-  ai_channels,
-  ai_model,
-  ai_moderation,
-  ai_personas,
-} from '@prisma/client';
-import OpenAI from 'openai';
 
 const Trivia = require('trivia-api');
 
@@ -69,6 +63,7 @@ const timesUp = 'Time\'s up!';
 const items = {
   general: {
     userflair: {
+      // eslint-disable-next-line sonarjs/no-duplicate-string
       label: 'User Flair',
       value: 'userflair',
       description: 'User Flair',
@@ -2052,7 +2047,7 @@ export async function rpgMarketAccept(
   } = await rpgMarketInventory(interaction);
 
   const itemCost = (itemData.cost - (itemData.cost * personaDiscount));
-  let embedInfoText = ``;
+  let embedInfoText = '';
 
   // Check if the user has enough tokens to buy the item
   if (personaData.tokens < itemCost) {
@@ -2176,7 +2171,7 @@ export async function rpgMarketAccept(
       create: equipItem,
       update: equipItem,
     });
-    embedInfoText = `Your flair has been equipped! Use \`/rpg flair\` to change your flair, or head Home to unequip it.`;
+    embedInfoText = 'Your flair has been equipped! Use `/rpg flair` to change your flair, or head Home to unequip it.';
   }
 
   const { embeds, components } = await rpgMarketChange(interaction);
@@ -2278,88 +2273,31 @@ export async function rpgFlair(interaction: ChatInputCommandInteraction) {
   log.debug(F, `mentions: ${mentions}`);
   // If the flair contains a mention, check if the user has mod permissions
   const member = await interaction.guild?.members.fetch(interaction.user.id);
+
+  // If they are a mod, update the user mentioned's flair
   if (mentions && member?.roles.cache.has(env.ROLE_MODERATOR)) {
-    // If they are a mod, update the user mentioned's flair
     const targetId = mentions[0].replace(/[^0-9]/g, '');
     // log.debug(F, `targetId: ${targetId}`);
     const targetMember = await interaction.guild?.members.fetch(targetId);
+    // Remove the mention from the flair and the space after the mention
+    newFlair = newFlair.replace(mentionRegex, '').replace(' ', '');
     // log.debug(F, `targetMember: ${JSON.stringify(targetMember, null, 2)}`);
-    if (!targetMember) {
-      return {
-        embeds: [embedTemplate()
-          .setAuthor(null)
-          // .setFooter({ text: `${interaction.member?.displayName}'s TripSit RPG (BETA)`, iconURL: interaction.member?.displayAvatarURL() })
-          .setTitle(`${emojiGet('itemFlair')} Flair Error`)
-          .setDescription(stripIndents`
-          The user you mentioned does not exist!`)
-          .setColor(Colors.Red)],
-      };
+    if (targetMember) {
+    // Run rpgFlairAccept for the target member
+      const targetInteraction = interaction as unknown as MessageComponentInteraction;
+      targetInteraction.user = targetMember?.user;
+      // eslint-disable-next-line @typescript-eslint/no-use-before-define
+      return rpgFlairAccept(targetInteraction, newFlair);
     }
-    // Check get fresh persona data
-    const userData = await db.users.upsert({
-      where: {
-        discord_id: targetId,
-      },
-      create: {
-        discord_id: targetId,
-      },
-      update: {},
-    });
-    const personaData = await db.personas.upsert({
-      where: {
-        user_id: userData.id,
-      },
-      create: {
-        user_id: userData.id,
-      },
-      update: {},
-    });
-    // Get the existing inventory data
-    const inventoryData = await db.rpg_inventory.findMany({
-      where: {
-        persona_id: personaData.id,
-      },
-    });
-    // Get the flair item
-    const flairItem = inventoryData.find(i => i.effect === 'userflair');
-    // If the user does not own the flair item, send them an error message
-    if (!flairItem) {
-      return {
-        embeds: [embedTemplate()
-          .setAuthor(null)
-          // .setFooter({ text: `${interaction.member?.displayName}'s TripSit RPG (BETA)`, iconURL: interaction.member?.displayAvatarURL() })
-          .setTitle(`${emojiGet('itemFlair')} Flair Error`)
-          .setDescription(stripIndents`
-          The user you mentioned does not own the flair item! They can buy it in the \`/rpg market\`.`)
-          .setColor(Colors.Red)],
-      };
-    }
-    // If the user does own the flair item, get the old flair and continue
-    const oldFlair = flairItem.effect_value;
-    // Update the flair
-    // Remove the mention and the space after it
-    newFlair = newFlair.replace(mentionRegex, '').trim();
-    log.debug(F, `newFlair: ${newFlair}`);
-    flairItem.effect_value = newFlair;
-    await db.rpg_inventory.upsert({
-      where: {
-        id: flairItem.id,
-      },
-      create: flairItem,
-      update: flairItem,
-    });
-    // Send the user a confirmation message
+  } else if (mentions) {
+    // If they are not a mod, send an error message
     return {
       embeds: [embedTemplate()
         .setAuthor(null)
-        // .setFooter({ text: `${interaction.member?.displayName}'s TripSit RPG (BETA)`, iconURL: interaction.member?.displayAvatarURL() })
-        .setTitle(`${emojiGet('itemFlair')} Flair Updated`)
+        .setTitle(`${emojiGet('itemFlair')} Flair Error`)
         .setDescription(stripIndents`
-        ${targetMember.displayName}'s flair has been overridden!
-
-        **Old flair:** ${oldFlair}
-        **New flair:** ${newFlair}`)
-        .setColor(Colors.Green)],
+        You cannot use a mention in your flair!`)
+        .setColor(Colors.Red)],
     };
   }
   // Check that the user owns the flair item
@@ -2418,40 +2356,9 @@ export async function rpgFlair(interaction: ChatInputCommandInteraction) {
   // If the user does own the flair item, get the old flair and continue
   const oldFlair = flairItem.effect_value;
 
-  // INSERT AI MODERATION HERE. Dummy code as a placeholder
-  // Approved = flair is perfect
-  // Adjusted = flair is okay, but needs some adjustments and confirmation
-  // Rejected = flair is not okay, and needs to be changed entirely
   let aiApproved = 'rejected';
-  let rejectionReason = 'No reason given';
+  // eslint-disable-next-line sonarjs/no-duplicate-string
   let adjustmentReason = 'No reason given';
-  // Example reasons for adjustment the AI might give:
-  // - Contained a bad word
-  // - Over 50 characters
-  // - Contained invalid characters
-  // - Bad capitalization
-  // - Bad spelling
-  // - Bad grammar
-
-  // Placeholder ai simulator that simply corrects capitalization for each word
-  //  const aiAdjusted = newFlair.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
-  //  if (aiAdjusted !== newFlair) {
-  //    aiApproved = 'adjusted';
-  //    adjustmentReason = 'Capitalization';
-  //  } else if (aiAdjusted === newFlair) {
-  //    aiApproved = 'approved';
-  //  } else {
-  //    aiApproved = 'rejected';
-  //  }
-  //
-  //  if (newFlair.length > 50) {
-  //    aiApproved = 'rejected';
-  //    rejectionReason = 'Too long';
-  //  }
-  //  if (!/^[a-zA-Z0-9 ]*$/.test(newFlair)) {
-  //    aiApproved = 'rejected';
-  //    rejectionReason = 'Invalid characters';
-  //  }
 
   // Query the AI for approval
   const aiPersona = await db.ai_personas.findUniqueOrThrow({
@@ -2465,6 +2372,7 @@ export async function rpgFlair(interaction: ChatInputCommandInteraction) {
     content: newFlair,
   }] as OpenAI.Chat.ChatCompletionMessageParam[];
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { response, promptTokens, completionTokens } = await aiFlairMod(aiPersona, messageList);
   log.debug(F, `aiResponse: ${JSON.stringify(response, null, 2)}`);
 
@@ -2482,7 +2390,7 @@ export async function rpgFlair(interaction: ChatInputCommandInteraction) {
 
   // If the flair is approved or the same as what the user entered, update the flair and send the user a confirmation message
   // Also regex to see if the flair is the same as what the user entered but ignoring capitalization
-  if (aiApproved === 'approved' || newFlair.toLowerCase() === aiAdjusted?.toLowerCase()) {
+  if (newFlair.toLowerCase() === aiAdjusted?.toLowerCase()) {
     // Update the flair
     if (aiAdjusted) {
       flairItem.effect_value = aiAdjusted;
@@ -2511,15 +2419,11 @@ export async function rpgFlair(interaction: ChatInputCommandInteraction) {
         .setColor(Colors.Green)],
     };
   }
-  
 
   // If the flair needed to be adjusted, ask the user if they want to use the adjusted flair
-  if (aiApproved === 'adjusted') {
-    // Send the user a confirmation message
-    // Get the AIs adjusted flair
-
-    // log.debug(F, `aiAdjusted: ${aiAdjusted}`);
-    // If the flair is null, send an error message
+  // Also check if the flair was set as approved but the flair is actually different than what the user entered
+  if (aiApproved === 'adjusted' || !(newFlair.toLowerCase() === aiAdjusted?.toLowerCase())) {
+  // If the flair is null, send an error message
     if (!aiAdjusted) {
       return {
         embeds: [embedTemplate()
@@ -2528,7 +2432,9 @@ export async function rpgFlair(interaction: ChatInputCommandInteraction) {
           .setTitle(`${emojiGet('itemFlair')} Flair Error`)
           .setDescription(stripIndents`
         Oops!
+
         Something went wrong with TripBot's AI.
+
         Please try again later or contact a moderator to have your flair manually reviewed.`)
           .setColor(Colors.Red)],
       };
@@ -2538,7 +2444,7 @@ export async function rpgFlair(interaction: ChatInputCommandInteraction) {
     adjustmentReason = response.match(/Reason: (.*)/g)?.[0].replace('Reason: ', '') || 'No reason given';
     // log.debug(F, `adjustmentReason: ${adjustmentReason}`);
 
-    await interaction.editReply({
+    return {
       embeds: [embedTemplate()
         .setAuthor(null)
         // .setFooter({ text: `${interaction.member?.displayName}'s TripSit RPG (BETA)`, iconURL: interaction.member?.displayAvatarURL() })
@@ -2558,88 +2464,10 @@ export async function rpgFlair(interaction: ChatInputCommandInteraction) {
         new ActionRowBuilder<ButtonBuilder>()
           .addComponents(
             customButton(`rpgFlairAccept,user:${interaction.user.id}`, 'Accept', 'buttonAccept', ButtonStyle.Success),
-            customButton(`rpgFlairReject,user:${interaction.user.id}`, 'Reject', 'buttonQuit', ButtonStyle.Danger),
+            customButton(`rpgFlairDecline,user:${interaction.user.id}`, 'Reject', 'buttonQuit', ButtonStyle.Danger),
           ),
       ],
-    });
-    // Open a button collector for 5 minutes
-    const filter = (i: MessageComponentInteraction) => i.user.id === interaction.user.id
-        && i.componentType === ComponentType.Button;
-    let collected = {} as ButtonInteraction;
-    if (!interaction.channel) throw new Error('Channel not found');
-    try {
-      collected = await interaction.channel!.awaitMessageComponent({ // eslint-disable-line no-await-in-loop
-        filter,
-        time: 300000,
-      }) as ButtonInteraction;
-    } catch (err) {
-      // Update the embed with disabled buttons
-      return {
-        embeds: [embedTemplate()
-          .setAuthor(null)
-          // .setFooter({ text: `${interaction.member?.displayName}'s TripSit RPG (BETA)`, iconURL: interaction.member?.displayAvatarURL() })
-          .setTitle(`${emojiGet('itemFlair')} Flair Adjusted`)
-          .setDescription(stripIndents`
-          Your flair has been adjusted by TripBot to meet our guidelines.
-
-          **Original:** ${newFlair}
-          **TripBot Adjusted:** ${aiAdjusted}
-
-          **Adjustment Reason:** ${adjustmentReason}
-          
-          Please confirm that you want to use the adjusted flair, or try something else.`)
-          .setColor(Colors.Gold)],
-        components: [
-          new ActionRowBuilder<ButtonBuilder>()
-            .addComponents(
-              customButton(`rpgFlairAccept,user:${interaction.user.id}`, 'Accept', 'buttonAccept', ButtonStyle.Success).setDisabled(true),
-              customButton(`rpgFlairReject,user:${interaction.user.id}`, 'Reject', 'buttonQuit', ButtonStyle.Danger).setDisabled(true),
-            ),
-        ],
-      };
-    }
-    if (collected.customId === `rpgFlairAccept,user:${interaction.user.id}`) {
-      // Update the flair
-      flairItem.effect_value = aiAdjusted;
-      await db.rpg_inventory.upsert({
-        where: {
-          id: flairItem.id,
-        },
-        create: flairItem,
-        update: flairItem,
-      });
-      // Send the user a confirmation message
-      return {
-        embeds: [embedTemplate()
-          .setAuthor(null)
-          // .setFooter({ text: `${interaction.member?.displayName}'s TripSit RPG (BETA)`, iconURL: interaction.member?.displayAvatarURL() })
-          .setTitle(`${emojiGet('itemFlair')} Flair Updated`)
-          .setDescription(stripIndents`
-          Your flair has been updated!
-
-          **Old flair:** ${oldFlair}
-          **New flair:** ${aiAdjusted}`)
-          .setColor(Colors.Green)],
-        components: [],
-      };
-    }
-    if (collected.customId === `rpgFlairReject,user:${interaction.user.id}`) {
-      // Send the user a rejection message
-      return {
-        embeds: [embedTemplate()
-          .setAuthor(null)
-          // .setFooter({ text: `${interaction.member?.displayName}'s TripSit RPG (BETA)`, iconURL: interaction.member?.displayAvatarURL() })
-          .setTitle(`${emojiGet('itemFlair')} Flair Rejected`)
-          .setDescription(stripIndents`
-          You rejected TripBot's adjusted flair.
-          
-          Your flair has not been updated.
-          
-          If you believe TripBot made a mistake, please try again or contact a moderator for manual review.`)
-          .setColor(Colors.Red)],
-        components: [],
-      };
-    }
+    };
   }
 
   if (aiApproved === 'rejected') {
@@ -2669,9 +2497,170 @@ export async function rpgFlair(interaction: ChatInputCommandInteraction) {
       .setTitle(`${emojiGet('itemFlair')} Flair Error`)
       .setDescription(stripIndents`
       Oops!
+
       Something went wrong with TripBot's AI.
+
       Please try again later or contact a moderator to have your flair manually reviewed.`)
       .setColor(Colors.Red)],
+  };
+}
+
+export async function rpgFlairAccept(
+  interaction:MessageComponentInteraction,
+  overrideFlair:string,
+):Promise<InteractionUpdateOptions> {
+  // Check get fresh persona data
+  const userData = await db.users.upsert({
+    where: {
+      discord_id: interaction.user.id,
+    },
+    create: {
+      discord_id: interaction.user.id,
+    },
+    update: {},
+  });
+  const personaData = await db.personas.upsert({
+    where: {
+      user_id: userData.id,
+    },
+    create: {
+      user_id: userData.id,
+    },
+    update: {},
+  });
+
+  // Get the existing inventory data
+  let inventoryData = await db.rpg_inventory.findMany({
+    where: {
+      persona_id: personaData.id,
+    },
+  });
+  // Get the flair item
+  let flairItem = inventoryData.find(i => i.effect === 'userflair');
+  // If the user does not own the flair item, give it to them (this could only ever be triggered by a mod)
+  if (!flairItem) {
+    const newItem = {
+      persona_id: personaData.id,
+      label: 'User Flair',
+      value: 'userflair',
+      description: 'User Flair',
+      quantity: 1,
+      weight: 0,
+      cost: 1000,
+      equipped: true,
+      consumable: false,
+      effect: 'userflair',
+      effect_value: 'Use /rpg flair to set',
+      emoji: 'itemFlair',
+    } as rpg_inventory;
+    // log.debug(F, `personaInventory: ${JSON.stringify(newItem, null, 2)}`);
+
+    // await inventorySet(newItem);
+    await db.rpg_inventory.create({
+      data: newItem,
+    });
+
+    // Fetch the new flair item
+    inventoryData = await db.rpg_inventory.findMany({
+      where: {
+        persona_id: personaData.id,
+      },
+    });
+    flairItem = inventoryData.find(i => i.effect === 'userflair');
+  }
+
+  // If there still isn't a flair item, send an error embed
+  if (!flairItem) {
+    return {
+      embeds: [embedTemplate()
+        .setAuthor(null)
+      // .setFooter({ text: `${interaction.member?.displayName}'s TripSit RPG (BETA)`, iconURL: interaction.member?.displayAvatarURL() })
+        .setTitle(`${emojiGet('itemFlair')} Flair Error`)
+        .setDescription(stripIndents`
+        Oops!
+        Something went wrong.`)
+        .setColor(Colors.Red)],
+    };
+  }
+  // Get the old flair and the new flair
+  const oldFlair = flairItem.effect_value;
+  let newFlair = '';
+  if (overrideFlair) {
+    newFlair = overrideFlair;
+  } else {
+    newFlair = interaction.message.embeds[0].description?.split('**TripBot Adjusted:** ')[1].split('\n')[0] as string;
+  }
+  // If the flair is null, send an error embed
+  if (!newFlair) {
+    return {
+      embeds: [embedTemplate()
+        .setAuthor(null)
+      // .setFooter({ text: `${interaction.member?.displayName}'s TripSit RPG (BETA)`, iconURL: interaction.member?.displayAvatarURL() })
+        .setTitle(`${emojiGet('itemFlair')} Flair Error`)
+        .setDescription(stripIndents`
+        Oops!
+        Something went wrong.
+        Please try again later or contact a moderator to have your flair manually reviewed.`)
+        .setColor(Colors.Red)],
+    };
+  }
+  // Update the flair
+  flairItem.effect_value = newFlair;
+  await db.rpg_inventory.upsert({
+    where:
+      {
+        id: flairItem.id,
+      },
+    create: flairItem,
+    update: flairItem,
+  });
+  // If overriding, also set the flair's equipped to true
+  if (overrideFlair) {
+    flairItem.equipped = true;
+    await db.rpg_inventory.upsert({
+      where:
+        {
+          id: flairItem.id,
+        },
+      create: flairItem,
+      update: flairItem,
+    });
+  }
+
+  // Send the user a confirmation message
+  return {
+    embeds: [embedTemplate()
+      .setAuthor(null)
+      // .setFooter({ text: `${interaction.member?.displayName}'s TripSit RPG (BETA)`, iconURL: interaction.member?.displayAvatarURL() })
+      .setTitle(`${emojiGet('itemFlair')} Flair Updated`)
+      .setDescription(stripIndents`
+      Your flair has been updated!
+
+      **Old flair:** ${oldFlair}
+      **New flair:** ${newFlair}`)
+      .setColor(Colors.Green)],
+    components: [],
+  };
+}
+
+export async function rpgFlairDecline(
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  interaction:MessageComponentInteraction,
+):Promise<InteractionUpdateOptions> {
+  // Send them the rejection message
+  return {
+    embeds: [embedTemplate()
+      .setAuthor(null)
+    // .setFooter({ text: `${interaction.member?.displayName}'s TripSit RPG (BETA)`, iconURL: interaction.member?.displayAvatarURL() })
+      .setTitle(`${emojiGet('itemFlair')} Flair Rejected`)
+      .setDescription(stripIndents`
+      You rejected TripBot's adjusted flair.
+
+      Your flair has not been updated.
+      
+      If you believe TripBot made an error, please try again or contact a moderator for manual approval.`)
+      .setColor(Colors.Red)],
+    components: [],
   };
 }
 
@@ -4801,7 +4790,7 @@ export const dRpg: SlashCommand = {
       .setName('trivia')
       .setDescription('Go to the trivia parlor'))
     .addSubcommand(subcommand => subcommand
-      .setName(`flair`)
+      .setName('flair')
       .setDescription('Change your flair')
       .addStringOption(option => option
         .setName('flair')
