@@ -77,6 +77,7 @@ Patreon subscribers can use the /imagen command to generate images.
 // }
 
 const tripsitAssistantData = {
+  // eslint-disable-next-line sonarjs/no-duplicate-string
   model: 'gpt-3.5-turbo-1106',
   name: 'tripsitter',
   description: stripIndents``,
