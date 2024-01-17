@@ -1849,6 +1849,15 @@ export async function rpgMarketChange(
     imageFiles.push(attachment);
     embed.setImage(tripSitProfileImageAttachment);
   }
+  // if the option is a userflair, run profile preview as the embed image
+  if (itemData && itemData.effect === 'userflair') {
+    const target = interaction.member as GuildMember;
+    const option = 'userflair';
+    const previewImage = await getProfilePreview(target, option);
+    const attachment = new AttachmentBuilder(previewImage, { name: tripSitProfileImage });
+    imageFiles.push(attachment);
+    embed.setImage(tripSitProfileImageAttachment);
+  }
 
   return {
     embeds: [embed],
@@ -2971,6 +2980,16 @@ export async function rpgHome(
     files.push(attachment);
     embed.setImage(tripSitProfileImageAttachment);
     log.debug(F, `font: ${fontName}`);
+  }
+
+  // If the select item has the 'userflair' effect, add the image to the embed
+  if (interaction.isStringSelectMenu() && backgroundData && backgroundData.effect === 'userflair') {
+    const target = interaction.member as GuildMember;
+    const option = 'userflair';
+    const previewImage = await getProfilePreview(target, option);
+    const attachment = new AttachmentBuilder(previewImage, { name: tripSitProfileImage });
+    files.push(attachment);
+    embed.setImage(tripSitProfileImageAttachment);
   }
 
   // Build out the home navigation buttons
