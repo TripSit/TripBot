@@ -2403,6 +2403,18 @@ export async function rpgFlair(interaction: ChatInputCommandInteraction) {
         .setColor(Colors.Red)],
     };
   }
+  // If the chosen flair is too long, send an error message
+  if (newFlair.length > 50) {
+    return {
+      embeds: [embedTemplate()
+        .setAuthor(null)
+        // .setFooter({ text: `${interaction.member?.displayName}'s TripSit RPG (BETA)`, iconURL: interaction.member?.displayAvatarURL() })
+        .setTitle(`${emojiGet('itemFlair')} Flair Rejected`)
+        .setDescription(stripIndents`
+        Your flair is too long! Please keep it under 50 characters.`)
+        .setColor(Colors.Red)],
+    };
+  }
   // If the user does own the flair item, get the old flair and continue
   const oldFlair = flairItem.effect_value;
 
@@ -2466,10 +2478,18 @@ export async function rpgFlair(interaction: ChatInputCommandInteraction) {
   }
 
   const aiAdjusted = response.match(/Adjusted: (.*)/g)?.[0].replace('Adjusted: ', '');
+  log.debug(F, `aiAdjusted: ${aiAdjusted}`);
 
   // If the flair is approved or the same as what the user entered, update the flair and send the user a confirmation message
-  if (aiApproved === 'approved' || aiAdjusted === newFlair) {
-    flairItem.effect_value = newFlair;
+  // Also regex to see if the flair is the same as what the user entered but ignoring capitalization
+  if (aiApproved === 'approved' || newFlair.toLowerCase() === aiAdjusted?.toLowerCase()) {
+    // Update the flair
+    if (aiAdjusted) {
+      flairItem.effect_value = aiAdjusted;
+      newFlair = aiAdjusted;
+    } else {
+      flairItem.effect_value = newFlair;
+    }
     await db.rpg_inventory.upsert({
       where: {
         id: flairItem.id,

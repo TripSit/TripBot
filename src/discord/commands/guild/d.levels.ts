@@ -485,8 +485,12 @@ export const dLevels: SlashCommand = {
     // If so, move Username Text up so the title can fit underneath
 
     // Username Text
-    // Temporary code for user flairs
-    const filteredDisplayName = await deFuckifyText(target.displayName);
+    let filteredDisplayName = await deFuckifyText(target.displayName);
+    // If the filteredDisplayName is much shorter than what was input, display their username as a fallback
+    if (filteredDisplayName.length < target.displayName.length / 2) {
+      filteredDisplayName = target.user.username.charAt(0).toUpperCase() + target.user.username.slice(1);
+    }
+
     context.fillStyle = textColor;
     context.font = `50px ${userFont}`;
     context.textAlign = 'left';
@@ -495,11 +499,11 @@ export const dLevels: SlashCommand = {
     const maxLength = 508;
 
     if (userFlair) {
-      usernameHeight = 65;
+      usernameHeight = 62;
       fontSize = 25;
       context.textBaseline = 'top';
       context.font = resizeText(canvasObj, userFlair, fontSize, userFont, maxLength);
-      context.fillText(`${userFlair}`, 146, 94);
+      context.fillText(`${userFlair}`, 146, 97);
       context.textBaseline = 'bottom';
     }
 
