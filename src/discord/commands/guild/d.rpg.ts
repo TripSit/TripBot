@@ -2422,7 +2422,7 @@ export async function rpgFlair(interaction: ChatInputCommandInteraction) {
 
   // If the flair needed to be adjusted, ask the user if they want to use the adjusted flair
   // Also check if the flair was set as approved but the flair is actually different than what the user entered
-  if (aiApproved === 'adjusted' || !(newFlair.toLowerCase() === aiAdjusted?.toLowerCase())) {
+  if ((aiApproved === 'adjusted' || newFlair.toLowerCase() !== aiAdjusted?.toLowerCase()) && aiApproved !== 'rejected') {
   // If the flair is null, send an error message
     if (!aiAdjusted) {
       return {
