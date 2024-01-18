@@ -14629,6 +14629,99 @@
     "roa": null
   },
   {
+    "url": "https://psychonautwiki.org/wiki/Chlordiazepoxide",
+    "name": "Chlordiazepoxide",
+    "summary": "",
+    "addictionPotential": null,
+    "toxicity": [
+      "low toxicity",
+      "potentially lethal when mixed with depressants like alcohol or opioids"
+    ],
+    "crossTolerances": null,
+    "commonNames": [
+      "Librium"
+    ],
+    "class": {
+      "chemical": [
+        "Benzodiazepines"
+      ],
+      "psychoactive": [
+        "Depressant"
+      ]
+    },
+    "tolerance": null,
+    "uncertainInteractions": null,
+    "unsafeInteractions": null,
+    "dangerousInteractions": [
+      {
+        "name": "Depressant"
+      },
+      {
+        "name": "Dissociatives"
+      },
+      {
+        "name": "Stimulants"
+      }
+    ],
+    "roa": {
+      "oral": {
+        "name": "oral",
+        "dose": {
+          "units": "mg",
+          "threshold": 5,
+          "heavy": 100,
+          "common": {
+            "min": 10,
+            "max": 25
+          },
+          "light": {
+            "min": 5,
+            "max": 10
+          },
+          "strong": {
+            "min": 50,
+            "max": 100
+          }
+        },
+        "duration": {
+          "afterglow": {
+            "min": 150,
+            "max": 300,
+            "units": "hours"
+          },
+          "comeup": null,
+          "duration": null,
+          "offset": null,
+          "onset": {
+            "min": 30,
+            "max": 60,
+            "units": "minutes"
+          },
+          "peak": {
+            "min": 120,
+            "max": 180,
+            "units": "minutes"
+          },
+          "total": {
+            "min": 24,
+            "max": 60,
+            "units": "hours"
+          }
+        },
+        "bioavailability": null
+      },
+      "sublingual": null,
+      "buccal": null,
+      "insufflated": null,
+      "rectal": null,
+      "transdermal": null,
+      "subcutaneous": null,
+      "intramuscular": null,
+      "intravenous": null,
+      "smoked": null
+    }
+  },
+  {
     "url": "https://psychonautwiki.org/wiki/Choline_bitartrate",
     "name": "Choline bitartrate",
     "summary": "",
@@ -30317,21 +30410,6 @@
   {
     "url": "https://psychonautwiki.org/wiki/Oroxylin_A",
     "name": "Oroxylin A",
-    "summary": "",
-    "addictionPotential": null,
-    "toxicity": null,
-    "crossTolerances": null,
-    "commonNames": null,
-    "class": null,
-    "tolerance": null,
-    "uncertainInteractions": null,
-    "unsafeInteractions": null,
-    "dangerousInteractions": null,
-    "roa": null
-  },
-  {
-    "url": "https://psychonautwiki.org/wiki/Orphenadrine",
-    "name": "Orphenadrine",
     "summary": "",
     "addictionPotential": null,
     "toxicity": null,

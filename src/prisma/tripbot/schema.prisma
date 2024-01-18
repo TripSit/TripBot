@@ -165,6 +165,8 @@ model users {
   user_tickets_user_tickets_user_idTousers                  user_tickets[]    @relation("user_tickets_user_idTousers")
   ai_usage                                                  ai_usage[]
   ai_images                                                 ai_images[]
+  quotes_quotes_user_idTousers                              quotes[]          @relation("UserQuote")
+  quotes_quotes_created_byTousers                           quotes[]          @relation("QuoteCreator")
 }
 
 model discord_guilds {
@@ -305,7 +307,7 @@ model rpg_inventory {
 model user_actions {
   id                                                 String           @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
   user_id                                            String           @db.Uuid
-  guild_id                                           String           @default("179641883222474752") 
+  guild_id                                           String           @default("179641883222474752")
   type                                               user_action_type
   ban_evasion_related_user                           String?          @db.Uuid
   description                                        String?
@@ -320,7 +322,7 @@ model user_actions {
   users_user_actions_repealed_byTousers              users?           @relation("user_actions_repealed_byTousers", fields: [repealed_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "useractions_repealedby_foreign")
   users_user_actions_user_idTousers                  users            @relation("user_actions_user_idTousers", fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "useractions_userid_foreign")
 
-  discord_guilds    discord_guilds @relation(fields: [guild_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "appeals_guildid_foreign")
+  discord_guilds discord_guilds @relation(fields: [guild_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "appeals_guildid_foreign")
 }
 
 model user_drug_doses {
@@ -472,6 +474,21 @@ model ai_images {
   created_at     DateTime @default(now()) @db.Timestamptz(6)
 
   users users @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "aiimages_userid_foreign")
+}
+
+model quotes {
+  id         String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  user_id    String   @db.Uuid
+  quote      String
+  url        String
+  date       DateTime
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  created_by String   @db.Uuid
+
+  user    users @relation("UserQuote", fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  creator users @relation("QuoteCreator", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([url], map: "quotes_url_unique")
 }
 
 enum bridge_status {

@@ -19259,6 +19259,77 @@
     ]
   },
   {
+    "url": "https://psychonautwiki.org/wiki/Chlordiazepoxide",
+    "name": "Chlordiazepoxide",
+    "aliases": [
+      "Librium"
+    ],
+    "aliasesStr": "Librium",
+    "toxicity": [
+      "low toxicity",
+      "potentially lethal when mixed with depressants like alcohol or opioids"
+    ],
+    "roas": [
+      {
+        "name": "Oral",
+        "dosage": [
+          {
+            "name": "Threshold",
+            "value": "5 mg"
+          },
+          {
+            "name": "Light",
+            "value": "5-10 mg"
+          },
+          {
+            "name": "Common",
+            "value": "10-25 mg"
+          },
+          {
+            "name": "Strong",
+            "value": "50-100 mg"
+          },
+          {
+            "name": "Heavy",
+            "value": "100 mg"
+          }
+        ],
+        "duration": [
+          {
+            "name": "Onset",
+            "value": "30-60 minutes"
+          },
+          {
+            "name": "Peak",
+            "value": "120-180 minutes"
+          },
+          {
+            "name": "Afterglow",
+            "value": "150-300 hours"
+          },
+          {
+            "name": "Total",
+            "value": "24-60 hours"
+          }
+        ]
+      }
+    ],
+    "interactions": [
+      {
+        "status": "Dangerous",
+        "name": "Depressant"
+      },
+      {
+        "status": "Dangerous",
+        "name": "Dissociatives"
+      },
+      {
+        "status": "Dangerous",
+        "name": "Stimulants"
+      }
+    ]
+  },
+  {
     "url": "https://psychonautwiki.org/wiki/Choline_bitartrate",
     "name": "Choline bitartrate",
     "aliases": [
@@ -39321,10 +39392,6 @@
   {
     "url": "https://psychonautwiki.org/wiki/Oroxylin_A",
     "name": "Oroxylin A"
-  },
-  {
-    "url": "https://psychonautwiki.org/wiki/Orphenadrine",
-    "name": "Orphenadrine"
   },
   {
     "url": "https://psychonautwiki.org/wiki/Oxazepam",
