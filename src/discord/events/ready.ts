@@ -51,21 +51,21 @@ async function getInvites(discordClient: Client) {
   });
 }
 
-async function refreshCache() {
-  // Loop over all the guilds
-  await discordClient.guilds.fetch();
-  discordClient.guilds.cache.forEach(async (guild:Guild) => {
-    await guild.members.fetch();
-    await guild.roles.fetch();
-    await guild.channels.fetch();
-    try {
-      await guild.bans.fetch();
-    } catch (e) {
-      // log.error(F, `Error fetching bans for guild ${guild.name} (${guild.id}): ${e}`);
-    }
-    await guild.emojis.fetch();
-  });
-}
+// async function refreshCache() {
+//   // Loop over all the guilds
+//   await discordClient.guilds.fetch();
+//   discordClient.guilds.cache.forEach(async (guild:Guild) => {
+//     await guild.members.fetch();
+//     await guild.roles.fetch();
+//     await guild.channels.fetch();
+//     try {
+//       await guild.bans.fetch();
+//     } catch (e) {
+//       // log.error(F, `Error fetching bans for guild ${guild.name} (${guild.id}): ${e}`);
+//     }
+//     await guild.emojis.fetch();
+//   });
+// }
 
 export const ready: ReadyEvent = {
   name: 'ready',
@@ -85,7 +85,7 @@ export const ready: ReadyEvent = {
         getInvites(client),
         emojiCache(client),
         populateBans(),
-        refreshCache(),
+        // refreshCache(),
 
         // Timers
         runTimer(),
