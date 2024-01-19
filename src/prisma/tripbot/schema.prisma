@@ -183,6 +183,7 @@ model discord_guilds {
   channel_moderators   String?
   channel_mod_log      String?
   channel_helpdesk     String?
+  channel_trust        String?
   role_needshelp       String?
   role_tripsitter      String?
   role_helper          String?
@@ -196,6 +197,8 @@ model discord_guilds {
   cooperative          Boolean          @default(false)
   premium_role_ids     String?
   trust_score_limit    Int              @default(5)
+  trust_score_total    Int              @default(0)
+  trust_score_count    Int              @default(0)
   appeals              appeals[]
   counting             counting[]
   reaction_roles       reaction_roles[]

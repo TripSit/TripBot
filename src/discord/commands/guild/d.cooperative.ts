@@ -281,6 +281,30 @@ async function setup(interaction:ChatInputCommandInteraction):Promise<Interactio
       ],
     });
   }
+  await db.discord_guilds.update({
+    where: { id: interaction.guild.id },
+    data: { channel_helpdesk: helpdeskRoom.id },
+  });
+
+  let trustRoom = interaction.options.getChannel('trust_channel');
+  if (!trustRoom) {
+    // If the channel wasn't provided, create it:
+    trustRoom = await interaction.guild.channels.create({
+      name: '🔒│trust-log',
+      type: ChannelType.GuildText,
+      topic: 'This channel is used to oversee the trust logging.',
+      permissionOverwrites: [
+        {
+          id: interaction.guild.roles.everyone.id,
+          deny: ['ViewChannel'],
+        },
+      ],
+    });
+  }
+  await db.discord_guilds.update({
+    where: { id: interaction.guild.id },
+    data: { channel_trust: trustRoom.id },
+  });
 
   const trustScoreLimit = interaction.options.getInteger('trust_score_limit', true);
   await db.discord_guilds.update({
@@ -407,7 +431,7 @@ async function setup(interaction:ChatInputCommandInteraction):Promise<Interactio
       embedTemplate({
         title: 'Cooperative setup complete!',
         description: stripIndents`
-        I will make new threads in `,
+        I will make new threads in ${modRoom.name}`,
       }),
     ],
   };
@@ -646,6 +670,10 @@ export const dCooperative: SlashCommand = {
         .setRequired(true)
         .setDescription('The channel to use for moderation tickets')
         .setName('helpdesk_channel'))
+      .addChannelOption(option => option
+        .setRequired(true)
+        .setDescription('The channel to use for trust logging')
+        .setName('trust_channel'))
       .addIntegerOption(option => option
         .setRequired(true)
         .setDescription('Below this number sends alerts')

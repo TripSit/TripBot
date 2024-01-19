@@ -90,7 +90,7 @@ export const guildMemberAdd: GuildMemberAddEvent = {
 
     embed
       // .setColor(trustScoreColors[trustScoreData.trustScore as keyof typeof trustScoreColors])
-      .setDescription(stripIndents`**Report on ${member}**
+      .setDescription(stripIndents`**${member} has joined**
 
         **TripSit TrustScore: ${trustScoreData.trustScore}**
 
@@ -199,9 +199,23 @@ export const guildMemberAdd: GuildMemberAddEvent = {
       }
     }
 
-    if (guildData.channel_mod_log) {
-      const auditLog = await discordClient.channels.fetch(guildData.channel_mod_log) as TextChannel;
+    guildData.trust_score_count += 1;
+    guildData.trust_score_total += trustScoreData.trustScore;
+    await db.discord_guilds.update({
+      where: { id: guildData.id },
+      data: guildData,
+    });
+
+    if (guildData.channel_trust) {
+      const auditLog = await discordClient.channels.fetch(guildData.channel_trust) as TextChannel;
       await auditLog.send({ embeds: [embed] });
+      const trustAverage = guildData.trust_score_total / guildData.trust_score_count;
+      let trustMessage = `Trust Score Average = ${trustAverage}`;
+      if (trustScoreData.trustScore < trustAverage) {
+        trustMessage += '. **User is below the average trust score, i would ask them to verify if this was built out**';
+      }
+
+      await auditLog.send(trustMessage);
     }
   },
 };
