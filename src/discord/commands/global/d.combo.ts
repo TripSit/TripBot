@@ -86,25 +86,27 @@ export const dCombo: SlashCommand = {
       sourceString = `\n\nSources: ${sourceArray.join(', ')}`;
     }
 
-    const linkString = stripIndents`
-    
-    Check the following resources for more information:
-    
-    **${drugA}**
-    * [TripSit Wiki - ${drugA}](https://wiki.tripsit.me/wiki/${drugA})
-    * [TripSit Factsheets - ${drugA}](https://drugs.tripsit.me/${drugA})
-    * [PsychonautWiki - ${drugA}](https://psychonautwiki.org/wiki/${drugA})
-
-    **${drugB}**
-    * [TripSit Wiki - ${drugB}](https://wiki.tripsit.me/wiki/${drugB})
-    * [TripSit Factsheets - ${drugB}](https://drugs.tripsit.me/${drugB})
-    * [PsychonautWiki - ${drugB}](https://psychonautwiki.org/wiki/${drugB})`;
-
     const embed = embedTemplate()
       .setTitle(`Mixing ${drugA} and ${drugB}: ${resultsData.emoji} ${resultsData.result} ${resultsData.emoji}`)
-      .setDescription(`${resultsData.definition}${noteString}${sourceString}
-      
-      ${linkString}`);
+      .setDescription(`${resultsData.definition}${noteString}${sourceString}`)
+      .setFields([
+        {
+          name: `${drugA}`,
+          value: stripIndents`* [TripSit Wiki](https://wiki.tripsit.me/wiki/${drugA})
+          * [TripSit Factsheets](https://drugs.tripsit.me/${drugA})
+          * [PsychonautWiki](https://psychonautwiki.org/wiki/${drugA})
+          * [Erowid Experiences](https://www.erowid.org/experiences/subs/exp_${drugA}.shtml)`,
+          inline: true,
+        },
+        {
+          name: `${drugB}`,
+          value: stripIndents`* [TripSit Wiki](https://wiki.tripsit.me/wiki/${drugB})
+          * [TripSit Factsheets](https://drugs.tripsit.me/${drugB})
+          * [PsychonautWiki](https://psychonautwiki.org/wiki/${drugB})
+          * [Erowid Experiences](https://www.erowid.org/experiences/subs/exp_${drugB}.shtml)`,
+          inline: true,
+        },
+      ]);
     if (resultsData.thumbnail) embed.setThumbnail(resultsData.thumbnail);
     if (resultsData.color) embed.setColor(Colors[resultsData.color as keyof typeof Colors]);
     await interaction.editReply({ embeds: [embed] });

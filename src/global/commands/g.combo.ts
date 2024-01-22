@@ -147,12 +147,13 @@ export async function combo(
       * https://wiki.tripsit.me/wiki/${drugAInput}
       * https://drugs.tripsit.me/${drugAInput}
       * https://psychonautwiki.org/wiki/${drugAInput}
+      * https://www.erowid.org/experiences/subs/exp_${drugAInput}.shtml
 
       ${drugBInput}
       * https://wiki.tripsit.me/wiki/${drugBInput}
       * https://drugs.tripsit.me/${drugBInput}
       * https://psychonautwiki.org/wiki/${drugBInput}
-      `,
+      * https://www.erowid.org/experiences/subs/exp_${drugBInput}.shtml`,
     };
   }
 
