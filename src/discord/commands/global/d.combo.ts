@@ -44,10 +44,19 @@ export const dCombo: SlashCommand = {
         options?: string[];
       };
       if (errorResults.msg.includes('not found')) {
-        await interaction.editReply(stripIndents`${drugA} and ${drugB} have no known interactions!
+        await interaction.editReply(stripIndents`${drugA} and ${drugB} have no known interactions or we could not find them in the database!
 
         This does not mean combining them is safe: this means we don't have information on it!`);
         return false;
+      }
+
+      // Use regex to check if there are any URLS in the error message, and if so, wrap them in <  and >
+      const regex = /(https?:\/\/[^\s]+)/g;
+      const matches = errorResults.msg.match(regex);
+      if (matches) {
+        matches.forEach(match => {
+          errorResults.msg = errorResults.msg.replace(match, `<${match}>`);
+        });
       }
       await interaction.editReply(errorResults.msg);
       return false;

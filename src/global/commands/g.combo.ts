@@ -2,6 +2,7 @@
 import { Category, Combo, Drug } from 'tripsit_drug_db';
 // import { CbSubstance, Interaction } from '../@types/combined';
 // import drugDataAll from '../../../assets/data/combine dDB.json';
+import { stripIndents } from 'common-tags';
 import comboJsonData from '../../../assets/data/tripsitCombos.json';
 import drugJsonData from '../../../assets/data/tripsitDB.json';
 import comboDefs from '../../../assets/data/combo_definitions.json';
@@ -129,10 +130,29 @@ export async function combo(
   drugAName = cleanDrugName(drugAName);
   drugBName = cleanDrugName(drugBName);
 
+  // log.debug(F, `drugAName: ${drugAName}`);
+  // log.debug(F, `drugBName: ${drugBName}`);
+
+  const drugANameString = drugAInput !== drugAName ? ` (converted to '${drugAName}')` : '';
+  const drugBNameString = drugBInput !== drugBName ? ` (converted to '${drugBName}')` : '';
+
   if (drugAName === drugBName) {
     return {
       err: true,
-      msg: 'Drug A and B are the same drug.',
+      msg: stripIndents`${drugAInput}${drugANameString} and ${drugBInput}${drugBNameString} are the same drug/class.
+      Drugs in the same class tend to potentiate each other, so this may not be a good idea.
+      Please do additional research before combining these drugs.
+      
+      ${drugAInput}
+      * https://wiki.tripsit.me/wiki/${drugAInput}
+      * https://drugs.tripsit.me/${drugAInput}
+      * https://psychonautwiki.org/wiki/${drugAInput}
+
+      ${drugBInput}
+      * https://wiki.tripsit.me/wiki/${drugBInput}
+      * https://drugs.tripsit.me/${drugBInput}
+      * https://psychonautwiki.org/wiki/${drugBInput}
+      `,
     };
   }
 

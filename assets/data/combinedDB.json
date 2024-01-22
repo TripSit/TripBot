@@ -22906,6 +22906,10 @@
         "name": "Cocaine"
       },
       {
+        "status": "Unsafe",
+        "name": "Bupropion"
+      },
+      {
         "status": "Dangerous",
         "name": "ΑMT"
       },
