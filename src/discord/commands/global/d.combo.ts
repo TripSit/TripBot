@@ -86,7 +86,9 @@ export const dCombo: SlashCommand = {
       sourceString = `\n\nSources: ${sourceArray.join(', ')}`;
     }
 
-    const linkString = stripIndents`\n\nCheck the following resources for more information:
+    const linkString = stripIndents`
+    
+    Check the following resources for more information:
     
     **${drugA}**
     * [TripSit Wiki - ${drugA}](https://wiki.tripsit.me/wiki/${drugA})
@@ -100,7 +102,9 @@ export const dCombo: SlashCommand = {
 
     const embed = embedTemplate()
       .setTitle(`Mixing ${drugA} and ${drugB}: ${resultsData.emoji} ${resultsData.result} ${resultsData.emoji}`)
-      .setDescription(`${resultsData.definition}${noteString}${sourceString}${linkString}`);
+      .setDescription(`${resultsData.definition}${noteString}${sourceString}
+      
+      ${linkString}`);
     if (resultsData.thumbnail) embed.setThumbnail(resultsData.thumbnail);
     if (resultsData.color) embed.setColor(Colors[resultsData.color as keyof typeof Colors]);
     await interaction.editReply({ embeds: [embed] });
