@@ -44,7 +44,7 @@ export const dCombo: SlashCommand = {
         options?: string[];
       };
       if (errorResults.msg.includes('not found')) {
-        await interaction.editReply(stripIndents`${drugA} and ${drugB} have no known interactions or we could not find them in the database!
+        await interaction.editReply(stripIndents`I could not find interactions between ${drugA} and ${drugB} in the database!
 
         This does not mean combining them is safe: this means we don't have information on it!`);
         return false;
