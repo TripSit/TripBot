@@ -111,12 +111,37 @@ export const dCombo: SlashCommand = {
       .setDescription(`${resultsData.definition}${noteString}`);
 
     if (resultsData.sources) {
-      const sourceArray = resultsData.sources.map(source => `* [${source.title}](${source.url})\n`);
-      embed.addFields({
-        name: 'Sources',
-        value: sourceArray.join(''),
-        inline: false,
+      // const sourceArray = resultsData.sources.map(source => `* [${source.title}](${source.url})\n`);
+
+      const experiences = [] as string[];
+      const journals = [] as string[];
+
+      resultsData.sources.forEach(source => {
+        if (source.url.includes('erowid.org/experiences')) {
+          experiences.push(`* [${source.title}](${source.url})\n`);
+        } else {
+          journals.push(`* [${source.title}](${source.url})\n`);
+        }
       });
+
+      // log.debug(F, `Experiences: ${experiences}`);
+      // log.debug(F, `Journals: ${journals}`);
+
+      if (journals.length > 0) {
+        embed.addFields({
+          name: '⚗️ Research Articles',
+          value: journals.join(''),
+          inline: false,
+        });
+      }
+
+      if (experiences.length > 0) {
+        embed.addFields({
+          name: `<:erowidLogo:${env.EMOJI_EROWID}> Erowid Experiences`,
+          value: experiences.join(''),
+          inline: false,
+        });
+      }
     }
     embed.addFields(
       {

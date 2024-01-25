@@ -7,6 +7,7 @@ import comboJsonData from '../../../assets/data/tripsitCombos.json';
 import drugJsonData from '../../../assets/data/tripsitDB.json';
 import comboDefs from '../../../assets/data/combo_definitions.json';
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const F = f(__filename);
 
 type DrugData = {
@@ -50,7 +51,11 @@ export async function combo(
     interactionCategoryA: string;
     interactionCategoryB: string;
     note?: string;
-    source?: string;
+    sources?: {
+      author: string;
+      title: string;
+      url: string;
+    }[];
   }> {
   let drugAName = drugAInput.toLowerCase();
   let drugBName = drugBInput.toLowerCase();
@@ -167,7 +172,7 @@ export async function combo(
       options: allDrugNames,
     };
   }
-  log.debug(F, `drugAComboData: ${JSON.stringify(drugAComboData)}`);
+  // log.debug(F, `drugAComboData: ${JSON.stringify(drugAComboData)}`);
 
   const drugBComboData = Object.keys(drugData).includes(drugBName.toLowerCase())
     ? (drugData[drugBName.toLowerCase()]).combos
@@ -180,7 +185,7 @@ export async function combo(
       options: allDrugNames,
     };
   }
-  log.debug(F, `drugBComboData: ${JSON.stringify(drugBComboData)}`);
+  // log.debug(F, `drugBComboData: ${JSON.stringify(drugBComboData)}`);
 
   let comboInfo = {} as Combo;
   // Check if drugB is in drugA's combo list
@@ -196,11 +201,13 @@ export async function combo(
     };
   }
 
-  log.debug(F, `comboInfo: ${JSON.stringify(comboInfo)}`);
+  // log.debug(F, `comboInfo: ${JSON.stringify(comboInfo)}`);
 
   const comboDef = comboDefs.find(def => def.status === comboInfo.status) as ComboDef;
 
-  const response = {
+  // log.info(F, `response: ${JSON.stringify(response, null, 2)}`);
+
+  return {
     result: comboInfo.status,
     interactionCategoryA: drugAName,
     interactionCategoryB: drugBName,
@@ -211,8 +218,4 @@ export async function combo(
     note: comboInfo.note,
     sources: comboInfo.sources,
   };
-
-  log.info(F, `response: ${JSON.stringify(response, null, 2)}`);
-
-  return response;
 }
