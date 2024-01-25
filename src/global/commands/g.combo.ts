@@ -141,19 +141,7 @@ export async function combo(
       err: true,
       msg: stripIndents`${drugAInput}${drugANameString} and ${drugBInput}${drugBNameString} are the same drug/class.
       Drugs in the same class tend to potentiate each other, so this may not be a good idea.
-      Please do additional research before combining these drugs.
-      
-      ${drugAInput}
-      * https://wiki.tripsit.me/wiki/${drugAInput}
-      * https://drugs.tripsit.me/${drugAInput}
-      * https://psychonautwiki.org/wiki/${drugAInput}
-      * https://www.erowid.org/experiences/subs/exp_${drugAInput}.shtml
-
-      ${drugBInput}
-      * https://wiki.tripsit.me/wiki/${drugBInput}
-      * https://drugs.tripsit.me/${drugBInput}
-      * https://psychonautwiki.org/wiki/${drugBInput}
-      * https://www.erowid.org/experiences/subs/exp_${drugBInput}.shtml`,
+      Please do additional research before combining these drugs.`,
     };
   }
 

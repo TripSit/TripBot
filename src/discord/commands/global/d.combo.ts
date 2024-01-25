@@ -50,6 +50,32 @@ export const dCombo: SlashCommand = {
         return false;
       }
 
+      if (errorResults.msg.includes('are the same')) {
+        await interaction.editReply({
+          embeds: [embedTemplate()
+            .setDescription(`${errorResults.msg}`)
+            .setFields([
+              {
+                name: `${drugA}`,
+                value: stripIndents`* [TripSit Wiki](https://wiki.tripsit.me/wiki/${drugA})
+              * [TripSit Factsheets](https://drugs.tripsit.me/${drugA})
+              * [PsychonautWiki](https://psychonautwiki.org/wiki/${drugA})
+              * [Erowid Experiences](https://www.erowid.org/experiences/subs/exp_${drugA}.shtml)`,
+                inline: true,
+              },
+              {
+                name: `${drugB}`,
+                value: stripIndents`* [TripSit Wiki](https://wiki.tripsit.me/wiki/${drugB})
+              * [TripSit Factsheets](https://drugs.tripsit.me/${drugB})
+              * [PsychonautWiki](https://psychonautwiki.org/wiki/${drugB})
+              * [Erowid Experiences](https://www.erowid.org/experiences/subs/exp_${drugB}.shtml)`,
+                inline: true,
+              },
+            ])],
+        });
+        return false;
+      }
+
       // Use regex to check if there are any URLS in the error message, and if so, wrap them in <  and >
       const regex = /(https?:\/\/[^\s]+)/g;
       const matches = errorResults.msg.match(regex);
@@ -71,42 +97,46 @@ export const dCombo: SlashCommand = {
       interactionCategoryA: string;
       interactionCategoryB: string;
       note?: string;
-      sources?: string[];
+      sources?: {
+        author: string;
+        url: string;
+        title: string;
+      }[];
     };
 
-    const noteString = resultsData.note ? `\n\nNote: ${resultsData.note}` : '';
-
-    let sourceString = '' as string;
-    if (resultsData.sources) {
-      const sourceArray = resultsData.sources.map(url => {
-        // Make a markdown URL that uses the domain as the text
-        const urlObj = new URL(url);
-        return `[${urlObj.hostname}](${url})`;
-      });
-      sourceString = `\n\nSources: ${sourceArray.join(', ')}`;
-    }
+    const noteString = resultsData.note ? `\n\n**Note: ${resultsData.note}**` : '';
 
     const embed = embedTemplate()
       .setTitle(`Mixing ${drugA} and ${drugB}: ${resultsData.emoji} ${resultsData.result} ${resultsData.emoji}`)
-      .setDescription(`${resultsData.definition}${noteString}${sourceString}`)
-      .setFields([
-        {
-          name: `${drugA}`,
-          value: stripIndents`* [TripSit Wiki](https://wiki.tripsit.me/wiki/${drugA})
+      .setDescription(`${resultsData.definition}${noteString}`);
+
+    if (resultsData.sources) {
+      const sourceArray = resultsData.sources.map(source => `* [${source.title}](${source.url})\n`);
+      embed.addFields({
+        name: 'Sources',
+        value: sourceArray.join(''),
+        inline: false,
+      });
+    }
+    embed.addFields(
+      {
+        name: `${drugA}`,
+        value: stripIndents`* [TripSit Wiki](https://wiki.tripsit.me/wiki/${drugA})
           * [TripSit Factsheets](https://drugs.tripsit.me/${drugA})
           * [PsychonautWiki](https://psychonautwiki.org/wiki/${drugA})
           * [Erowid Experiences](https://www.erowid.org/experiences/subs/exp_${drugA}.shtml)`,
-          inline: true,
-        },
-        {
-          name: `${drugB}`,
-          value: stripIndents`* [TripSit Wiki](https://wiki.tripsit.me/wiki/${drugB})
+        inline: true,
+      },
+      {
+        name: `${drugB}`,
+        value: stripIndents`* [TripSit Wiki](https://wiki.tripsit.me/wiki/${drugB})
           * [TripSit Factsheets](https://drugs.tripsit.me/${drugB})
           * [PsychonautWiki](https://psychonautwiki.org/wiki/${drugB})
           * [Erowid Experiences](https://www.erowid.org/experiences/subs/exp_${drugB}.shtml)`,
-          inline: true,
-        },
-      ]);
+        inline: true,
+      },
+    );
+
     if (resultsData.thumbnail) embed.setThumbnail(resultsData.thumbnail);
     if (resultsData.color) embed.setColor(Colors[resultsData.color as keyof typeof Colors]);
     await interaction.editReply({ embeds: [embed] });

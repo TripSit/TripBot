@@ -694,9 +694,9 @@ async function combineTs(
           interactionEntry.note = combo.note;
         }
 
-        // if (combo.source) {
-        //   interactionEntry.source = combo.source;
-        // }
+        if (combo.sources) {
+          interactionEntry.sources = combo.sources;
+        }
 
         if (!combinedDrug) return;
         combinedDrug.interactions?.push(interactionEntry);
