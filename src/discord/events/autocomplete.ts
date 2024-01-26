@@ -276,6 +276,8 @@ async function autocompleteRoles(interaction:AutocompleteInteraction) {
   if (!interaction.guild) return;
   if (!interaction.member) return;
 
+  // log.debug(F, `Autocomplete requested for: ${interaction.commandName}`);
+
   const colorRoles = [
     { name: '💖 Tulip', value: env.ROLE_RED },
     { name: '🧡 Marigold', value: env.ROLE_ORANGE },
@@ -304,7 +306,7 @@ async function autocompleteRoles(interaction:AutocompleteInteraction) {
     { name: 'Dissociating', value: env.ROLE_DISSOCIATING },
     { name: 'Stimming', value: env.ROLE_STIMMING },
     { name: 'Sedated', value: env.ROLE_SEDATED },
-    { name: 'Sober', value: env.ROLE_SOBER },
+    { name: 'Sober', value: env.ROLE_CLEARMIND },
   ] as RoleDef[];
 
   // Check if interaction.member type is APIInteractionGuildMember
@@ -314,9 +316,11 @@ async function autocompleteRoles(interaction:AutocompleteInteraction) {
   const roleList = [] as { name:string, value:string }[];
   const command = interaction.options.getSubcommand();
   if (isMod) {
+    // log.debug(F, 'User is a moderator');
     // If the user is a moderator, they can manage the:
     // NeedsHelp, Helper, Mindset, Verified, Occult and Contributor roles.
     // They can manage these roles on anyone, except other moderators and tripsitters.
+
     roleList.push(
       { name: 'NeedsHelp', value: env.ROLE_NEEDSHELP },
       { name: 'Helper', value: env.ROLE_HELPER },
@@ -324,10 +328,12 @@ async function autocompleteRoles(interaction:AutocompleteInteraction) {
       { name: 'Contributor', value: env.ROLE_CONTRIBUTOR },
       { name: 'Occult', value: env.ROLE_OCCULT },
       { name: 'Underban', value: env.ROLE_UNDERBAN },
+      { name: 'Legacy', value: env.ROLE_LEGACY },
       ...mindsetRoles,
       ...premiumColorRoles,
     );
   } else if (isTs) {
+    log.debug(F, 'User is a tripsitter');
     // If the user is a tripsitter, they can manage the
     // NeedsHelp, Helper and Mindset roles.
     // They can manage these roles on anyone, except other tripsitters and moderators.
@@ -338,6 +344,8 @@ async function autocompleteRoles(interaction:AutocompleteInteraction) {
       ...premiumColorRoles,
     );
   } else {
+    log.debug(F, 'User is not a moderator or tripsitter');
+    log.debug(F, `Command is: ${command}`);
     // If the user is not a moderator or tripsitter, they can manage the
     // NeedsHelp, Helper, Contributor, Color and Mindset roles.
     // They can only mange their own roles.
@@ -403,18 +411,16 @@ async function autocompleteRoles(interaction:AutocompleteInteraction) {
     ],
   };
 
-  const roleDict = roleList.map(role => ({ name: role.name, value: role.value }));
-
-  const fuse = new Fuse(roleDict, options);
+  const fuse = new Fuse(roleList, options);
   const focusedValue = interaction.options.getFocused();
   const results = fuse.search(focusedValue);
   if (results.length > 0) {
     // log.debug(F, `Results: ${JSON.stringify(results, null, 2)}`);
     interaction.respond(results.map(choice => (
-      { name: choice.item.name, value: choice.item.name })));
+      { name: choice.item.name, value: choice.item.value })));
   } else {
     // log.debug(F, `roleDict: ${JSON.stringify(roleDict, null, 2)}`);
-    interaction.respond(roleDict);
+    interaction.respond(roleList);
   }
 }
 
