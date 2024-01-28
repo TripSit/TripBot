@@ -7,7 +7,7 @@ import {
   MessageContextMenuCommandInteraction,
   UserContextMenuCommandInteraction,
 } from 'discord.js';
-// import * as Sentry from '@sentry/node';
+import * as Sentry from '@sentry/node';
 import { ErrorEvent } from '../@types/eventDef';
 
 const F = f(__filename);
@@ -51,41 +51,40 @@ export default async function handleError(
   const embed = new EmbedBuilder()
     .setColor(Colors.Red);
 
-  // if (interaction) {
-  //   // log.debug(F, 'Interaction found, sending error to GlitchTip');
-  //   Sentry.captureException(errorData, {
-  //     tags: {
-  //       command: commandName,
-  //       context: await commandContext(interaction),
-  //     },
-  //     user: {
-  //       id: interaction.user.id,
-  //       username: interaction.user.username,
-  //     },
-  //   });
-  // } else {
-  //   // log.debug(F, 'No interaction, sending error to GlitchTip');
-  //   Sentry.captureException(errorData);
-  // }
-
   // If this is production, send a message to the channel and alert the developers
   if (env.NODE_ENV === 'production') {
-    // if (interaction) {
-    //   // log.debug(F, 'Interaction found, sending error to rollbar');
-    //   global.rollbar.error(errorStack, {
-    //     tags: {
-    //       command: commandName,
-    //       context: await commandContext(interaction),
-    //     },
-    //     user: {
-    //       id: interaction.user.id,
-    //       username: interaction.user.username,
-    //     },
-    //   });
-    // } else {
-    //   // log.debug(F, 'No interaction, sending error to rollbar');
-    //   global.rollbar.error(errorStack);
-    // }
+    if (interaction) {
+      log.debug(F, 'Interaction found, sending error to GlitchTip');
+      Sentry.captureException(errorData, {
+        tags: {
+          command: commandName,
+          context: await commandContext(interaction),
+        },
+        user: {
+          id: interaction.user.id,
+          username: interaction.user.username,
+        },
+      });
+    } else {
+      log.debug(F, 'No interaction, sending error to GlitchTip');
+      Sentry.captureException(errorData);
+    }
+    if (interaction) {
+      // log.debug(F, 'Interaction found, sending error to rollbar');
+      global.rollbar.error(errorStack, {
+        tags: {
+          command: commandName,
+          context: await commandContext(interaction),
+        },
+        user: {
+          id: interaction.user.id,
+          username: interaction.user.username,
+        },
+      });
+    } else {
+      // log.debug(F, 'No interaction, sending error to rollbar');
+      global.rollbar.error(errorStack);
+    }
 
     // Get channel we send errors to
     const channel = await discordClient.channels.fetch(env.CHANNEL_BOTERRORS) as TextChannel;
@@ -148,5 +147,9 @@ export const error: ErrorEvent = {
 };
 
 process.on('unhandledRejection', async (errorData: Error) => {
+  await handleError(errorData);
+});
+
+process.on('uncaughtException', async (errorData: Error) => {
   await handleError(errorData);
 });

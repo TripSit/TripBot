@@ -13,17 +13,7 @@ import Rollbar, { Level } from 'rollbar';
 import * as Sentry from '@sentry/node';
 import { env } from './env.config';
 
-const RollbarTransport = require('winston-transport-rollbar-3');
-
-// Setup Rollbar
-const rollbarConfig = {
-  accessToken: env.ROLLBAR_TOKEN,
-  captureUncaught: true,
-  captureUnhandledRejections: true,
-  logLevel: 'error' as Level,
-};
-
-global.rollbar = new Rollbar(rollbarConfig);
+// const RollbarTransport = require('winston-transport-rollbar-3');
 
 const {
   combine,
@@ -124,7 +114,18 @@ const transportOptions = [
 // We only want rollbar logs in production
 // let transportOptions = [];
 if (env.NODE_ENV === 'production') {
-  transportOptions.push(new RollbarTransport({ rollbarConfig }));
+  const rollbarConfig = {
+    accessToken: env.ROLLBAR_TOKEN,
+    // captureUncaught: true,
+    // captureUnhandledRejections: true,
+    logLevel: 'error' as Level,
+  };
+
+  // transportOptions.push(new RollbarTransport({ rollbarConfig }));
+  // Setup Rollbar
+
+  global.rollbar = new Rollbar(rollbarConfig);
+
   // Setup glitchTip
   Sentry.init({
     dsn: env.GLITCHTIP_DSN,
