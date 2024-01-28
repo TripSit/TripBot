@@ -34,6 +34,8 @@ steps:
         from_secret: GITHUB_TOKEN
       RAPID_TOKEN:
         from_secret: RAPID_TOKEN
+      ROLLBAR_TOKEN:
+        from_secret: ROLLBAR_TOKEN
       IMGUR_ID:
         from_secret: IMGUR_ID
       IMGUR_SECRET:
