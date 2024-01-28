@@ -80,7 +80,7 @@ export const dHelp: SlashCommand = {
     tripsitEmbed.addFields({ name: 'Birthday', value: getDesc('birthday') ?? '', inline: true });
     tripsitEmbed.addFields({ name: 'Timezone', value: getDesc('timezone') ?? '', inline: true });
     tripsitEmbed.addFields({ name: 'Profile', value: getDesc('profile') ?? '', inline: true });
-    tripsitEmbed.addFields({ name: 'Moderate', value: getDesc('mod') ?? '', inline: true });
+    // tripsitEmbed.addFields({ name: 'Moderate', value: getDesc('mod') ?? '', inline: true });
     tripsitEmbed.addFields({ name: 'Report', value: getDesc('report') ?? '', inline: true });
 
     const book = [
