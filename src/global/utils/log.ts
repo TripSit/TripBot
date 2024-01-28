@@ -9,11 +9,21 @@ import {
 // import { Logtail } from '@logtail/node'; // eslint-disable-line
 // import { LogtailTransport } from '@logtail/winston'; // eslint-disable-line
 import Rollbar, { Level } from 'rollbar';
-// import * as Sentry from '@sentry/node'; // eslint-disable-line
 // import SentryTransport from 'winston-transport-sentry-node'; // eslint-disable-line
+import * as Sentry from '@sentry/node';
 import { env } from './env.config';
 
 const RollbarTransport = require('winston-transport-rollbar-3');
+
+// Setup Rollbar
+const rollbarConfig = {
+  accessToken: env.ROLLBAR_TOKEN,
+  captureUncaught: true,
+  captureUnhandledRejections: true,
+  logLevel: 'error' as Level,
+};
+
+global.rollbar = new Rollbar(rollbarConfig);
 
 const {
   combine,
@@ -61,15 +71,7 @@ const myFormat = printf(({
   return msg;
 });
 
-const rollbarConfig = {
-  accessToken: env.ROLLBAR_TOKEN,
-  captureUncaught: true,
-  captureUnhandledRejections: true,
-  logLevel: 'error' as Level,
-};
-
-global.rollbar = new Rollbar(rollbarConfig);
-
+// Old sentry stuff
 // const sentryConfig = {
 //   dsn: env.SENTRY_TOKEN,
 //   debug: true, // Enable debug mode to         log internal transactions
@@ -119,10 +121,16 @@ const transportOptions = [
   new transports.Console(),
 ];
 
-// We only want logtail logs in production
+// We only want rollbar logs in production
 // let transportOptions = [];
 if (env.NODE_ENV === 'production') {
   transportOptions.push(new RollbarTransport({ rollbarConfig }));
+  // Setup glitchTip
+  Sentry.init({
+    dsn: env.GLITCHTIP_DSN,
+    // debug: true,
+    environment: env.NODE_ENV,
+  });
 }
 
 const logger = createLogger({

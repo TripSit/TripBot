@@ -13,7 +13,6 @@ import {
 import * as path from 'path';
 import Canvas from '@napi-rs/canvas';
 import { PrismaClient } from '@prisma/client';
-import * as Sentry from '@sentry/node';
 import { env } from './global/utils/env.config';
 import { log } from './global/utils/log';
 import validateEnv from './global/utils/env.validate'; // eslint-disable-line
@@ -46,12 +45,6 @@ async function start() {
   log.info(F, 'Initializing service!');
   if (validateEnv('SERVICES')) {
     api();
-    Sentry.init({
-      dsn: env.GLITCHTIP_DSN,
-      // debug: true,
-      environment: env.NODE_ENV,
-    });
-
     global.db = new PrismaClient({ log: ['error'] });
     await updateDb();
     if (env.DISCORD_CLIENT_TOKEN && validateEnv('DISCORD')) await discordConnect();
