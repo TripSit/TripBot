@@ -36,8 +36,9 @@ export const env = {
 
   TELEGRAM_TOKEN: process.env.TELEGRAM_TOKEN,
 
-  // ROLLBAR_TOKEN: process.env.ROLLBAR_TOKEN,
+  ROLLBAR_TOKEN: process.env.ROLLBAR_TOKEN,
   SENTRY_TOKEN: process.env.SENTRY_TOKEN,
+  GLITCHTIP_DSN: process.env.GLITCHTIP_DSN,
 
   VUE_APP_PASSWORD: process.env.VUE_APP_PASSWORD,
   VUE_APP_USERNAME: process.env.VUE_APP_USERNAME,

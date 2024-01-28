@@ -1,6 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import { Client as DiscordClient } from 'discord.js';
 import { DateTime } from 'luxon';
+import Rollbar from 'rollbar';
 // import { MatrixClient } from 'matrix-bot-sdk';
 // import { Client as IRCClient } from 'matrix-org-irc';
 // import { Telegraf as TelegramClient } from 'telegraf';
@@ -24,6 +25,7 @@ declare global {
     date: DateTime,
   };
   var db: PrismaClient; // eslint-disable-line
+  var rollbar: Rollbar; // eslint-disable-line
 }
 
 export {};

@@ -19,6 +19,7 @@ declare global {
       YOUTUBE_TOKEN: string | undefined;
       IMDB_TOKEN: string | undefined;
       LOGTAIL_TOKEN: string | undefined;
+      GLITCHTIP_DSN: string | undefined;
 
       SONAR_URL: string | undefined;
       SONAR_TOKEN: string | undefined;
