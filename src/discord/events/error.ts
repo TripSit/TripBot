@@ -7,6 +7,7 @@ import {
   MessageContextMenuCommandInteraction,
   UserContextMenuCommandInteraction,
 } from 'discord.js';
+import * as Sentry from '@sentry/node';
 import { ErrorEvent } from '../@types/eventDef';
 
 const F = f(__filename);
@@ -27,8 +28,19 @@ export default async function handleError(
   let errorStack = '';
 
   if (errorData instanceof Error) {
-    errorStack = errorData.stack || JSON.stringify(errorData, null, 2);
+    log.debug(F, 'Error is an instance of Error');
+    // log.debug(F, `Error: ${JSON.stringify(errorData, null, 2)}`); // eslint-disable-line no-console
+    // log.debug(F, `Error stack: ${JSON.stringify(errorData.stack, null, 2)}`); // eslint-disable-line no-console
+    // log.debug(F, `Error message: ${JSON.stringify(errorData.message, null, 2)}`); // eslint-disable-line no-console
+    // log.debug(F, `Error cause: ${JSON.stringify(errorData.cause, null, 2)}`); // eslint-disable-line no-console
+    // log.debug(F, `Error name: ${JSON.stringify(errorData.name, null, 2)}`); // eslint-disable-line no-console
+
+    errorStack = errorData.stack ?? JSON.stringify(errorData, null, 2);
+  } else if (errorData instanceof DiscordAPIError) {
+    log.debug(F, 'Error is an instance of DiscordAPIError');
+    errorStack = JSON.stringify(errorData, null, 2);
   } else {
+    log.debug(F, 'Error is not an instance of Error or DiscordAPIError');
     errorStack = JSON.stringify(errorData, null, 2);
   }
 
@@ -41,20 +53,38 @@ export default async function handleError(
 
   // If this is production, send a message to the channel and alert the developers
   if (env.NODE_ENV === 'production') {
-    // if (interaction) {
-    //   sentry.captureException(errorData, {
-    //     tags: {
-    //       command: commandName,
-    //       context: await commandContext(interaction),
-    //     },
-    //     user: {
-    //       id: interaction.user.id,
-    //       username: interaction.user.username,
-    //     },
-    //   });
-    // } else {
-    //   sentry.captureException(errorData);
-    // }
+    if (interaction) {
+      log.debug(F, 'Interaction found, sending error to GlitchTip');
+      Sentry.captureException(errorData, {
+        tags: {
+          command: commandName,
+          context: await commandContext(interaction),
+        },
+        user: {
+          id: interaction.user.id,
+          username: interaction.user.username,
+        },
+      });
+    } else {
+      log.debug(F, 'No interaction, sending error to GlitchTip');
+      Sentry.captureException(errorData);
+    }
+    if (interaction) {
+      // log.debug(F, 'Interaction found, sending error to rollbar');
+      global.rollbar.error(errorStack, {
+        tags: {
+          command: commandName,
+          context: await commandContext(interaction),
+        },
+        user: {
+          id: interaction.user.id,
+          username: interaction.user.username,
+        },
+      });
+    } else {
+      // log.debug(F, 'No interaction, sending error to rollbar');
+      global.rollbar.error(errorStack);
+    }
 
     // Get channel we send errors to
     const channel = await discordClient.channels.fetch(env.CHANNEL_BOTERRORS) as TextChannel;
@@ -117,5 +147,9 @@ export const error: ErrorEvent = {
 };
 
 process.on('unhandledRejection', async (errorData: Error) => {
+  await handleError(errorData);
+});
+
+process.on('uncaughtException', async (errorData: Error) => {
   await handleError(errorData);
 });

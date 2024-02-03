@@ -186,6 +186,7 @@ export const dProfile: SlashCommand = {
 
     // log.debug(F, `personaData home (Change) ${JSON.stringify(personaData, null, 2)}`);
     let userFont = 'futura';
+    let userFlair = '';
     if (personaData) {
       // Get the existing inventory data
       const inventoryData = await db.rpg_inventory.findMany({
@@ -197,6 +198,7 @@ export const dProfile: SlashCommand = {
 
       const equippedBackground = inventoryData.find(item => item.equipped === true && item.effect === 'background');
       const equippedFont = inventoryData.find(item => item.equipped === true && item.effect === 'font');
+      const equippedFlair = inventoryData.find(item => item.equipped === true && item.effect === 'userflair');
       // log.debug(F, `equippedBackground: ${JSON.stringify(equippedBackground, null, 2)} `);
       if (equippedBackground) {
         const imagePath = await getAsset(equippedBackground.value);
@@ -214,6 +216,9 @@ export const dProfile: SlashCommand = {
       if (equippedFont) {
         await getAsset(equippedFont.value);
         userFont = equippedFont.value;
+      }
+      if (equippedFlair) {
+        userFlair = equippedFlair.effect_value;
       }
     }
 
@@ -311,18 +316,33 @@ export const dProfile: SlashCommand = {
     // const CampIcon = await Canvas.loadImage(await imageGet('campIconA'));
     // context.drawImage(CampIcon, 547, 17);
 
-    // WIP: Check to see if a user has bought a title in the shop
-    // If so, move Username Text up so the title can fit underneath
-
     // Username Text
-    const filteredDisplayName = await deFuckifyText(target.displayName);
-    context.font = `50px ${userFont}`;
+    let filteredDisplayName = await deFuckifyText(target.displayName);
+    // If the filteredDisplayName is much shorter than what was input, display their username as a fallback
+    if (filteredDisplayName.length < target.displayName.length / 2) {
+      filteredDisplayName = target.user.username.charAt(0).toUpperCase() + target.user.username.slice(1);
+    }
+
     context.fillStyle = textColor;
-    context.textBaseline = 'middle';
-    const fontSize = 50;
+    context.font = `50px ${userFont}`;
+    context.textAlign = 'left';
+    let usernameHeight = 76;
+    let fontSize = 50;
     const maxLength = 508;
+
+    if (userFlair) {
+      usernameHeight = 62;
+      fontSize = 25;
+      context.textBaseline = 'top';
+      context.font = resizeText(canvasObj, userFlair, fontSize, userFont, maxLength);
+      context.fillText(`${userFlair}`, 146, 97);
+      context.textBaseline = 'bottom';
+    }
+
+    fontSize = 50;
+    context.textBaseline = 'middle';
     context.font = resizeText(canvasObj, filteredDisplayName, fontSize, userFont, maxLength);
-    context.fillText(`${filteredDisplayName}`, 146, 76);
+    context.fillText(`${filteredDisplayName}`, 146, usernameHeight);
 
     // User Timezone
     context.font = '25px futura';
@@ -585,25 +605,33 @@ export async function getProfilePreview(target: GuildMember, option: string, ima
     userFont = fontName;
   }
   // Username Text
-  const filteredDisplayName = await deFuckifyText(target.displayName);
-  context.font = `50px ${userFont}`;
-  context.fillStyle = textColor;
-  context.textBaseline = 'middle';
-  const fontSize = 50;
-  const maxLength = 508;
-  context.font = resizeText(canvasObj, filteredDisplayName, fontSize, userFont, maxLength);
-  context.fillText(`${filteredDisplayName}`, 146, 76);
-  context.fillStyle = textColor;
-  if (option === 'profileTitle') {
-    context.textBaseline = 'bottom';
-    context.fillText(`${filteredDisplayName}`, 146, 76);
-    context.font = '30px futura';
-    context.textBaseline = 'top';
-    context.fillText('Your Custom Title Here', 146, 86);
-  } else {
-    context.textBaseline = 'middle';
-    context.fillText(`${filteredDisplayName}`, 146, 76);
+  let filteredDisplayName = await deFuckifyText(target.displayName);
+  // If the filteredDisplayName is much shorter than what was input, display their username as a fallback
+  if (filteredDisplayName.length < target.displayName.length / 2) {
+    filteredDisplayName = target.user.username.charAt(0).toUpperCase() + target.user.username.slice(1);
   }
+
+  context.fillStyle = textColor;
+  context.font = `50px ${userFont}`;
+  context.textAlign = 'left';
+  let usernameHeight = 76;
+  let fontSize = 50;
+  const maxLength = 508;
+  const userFlair = 'Your Custom Flair Here';
+
+  if (option === 'userflair') {
+    usernameHeight = 62;
+    fontSize = 25;
+    context.textBaseline = 'top';
+    context.font = resizeText(canvasObj, userFlair, fontSize, userFont, maxLength);
+    context.fillText(`${userFlair}`, 146, 97);
+    context.textBaseline = 'bottom';
+  }
+
+  fontSize = 50;
+  context.textBaseline = 'middle';
+  context.font = resizeText(canvasObj, filteredDisplayName, fontSize, userFont, maxLength);
+  context.fillText(`${filteredDisplayName}`, 146, usernameHeight);
 
   /* User Timezone
     context.font = '25px futura';

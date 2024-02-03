@@ -92,7 +92,7 @@ export const guildMemberRemove: GuildMemberRemoveEvent = {
 
       if (modThread) {
         await modThread.send({ embeds: [embed] });
-        await modThread.setName(`🚶${modThread.name.substring(1)}`);
+        await modThread.setName(`🚶│${member.displayName}`);
       }
     }
 

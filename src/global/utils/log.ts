@@ -8,9 +8,9 @@ import {
 } from 'winston';
 // import { Logtail } from '@logtail/node'; // eslint-disable-line
 // import { LogtailTransport } from '@logtail/winston'; // eslint-disable-line
-// import Rollbar, { Level } from 'rollbar';
-// import * as Sentry from '@sentry/node'; // eslint-disable-line
+import Rollbar, { Level } from 'rollbar';
 // import SentryTransport from 'winston-transport-sentry-node'; // eslint-disable-line
+import * as Sentry from '@sentry/node';
 import { env } from './env.config';
 
 // const RollbarTransport = require('winston-transport-rollbar-3');
@@ -61,15 +61,7 @@ const myFormat = printf(({
   return msg;
 });
 
-// const rollbarConfig = {
-//   accessToken: env.ROLLBAR_TOKEN,
-//   captureUncaught: true,
-//   captureUnhandledRejections: true,
-//   logLevel: 'error' as Level,
-// };
-
-// global.rollbar = new Rollbar(rollbarConfig);
-
+// Old sentry stuff
 // const sentryConfig = {
 //   dsn: env.SENTRY_TOKEN,
 //   debug: true, // Enable debug mode to         log internal transactions
@@ -117,35 +109,30 @@ const myFormat = printf(({
 
 const transportOptions = [
   new transports.Console(),
-  // new RollbarTransport({ rollbarConfig }),
-  // new SentryTransport(sentryTransportConfig),
 ];
 
-// We only want logtail logs in production
+// We only want rollbar logs in production
 // let transportOptions = [];
-// if (env.NODE_ENV === 'production') {
-//   // if (env.LOGTAIL_TOKEN) {
-//   //   transportOptions = [
-//   //     new transports.Console(),
-//   //     new LogtailTransport(new Logtail(env.LOGTAIL_TOKEN)),
-//   //   ];
-//   // } else {
-//   // console.error('No Logtail token found, not logging to Logtail'); // eslint-disable-line no-console
-//   transportOptions = [
-//     new transports.Console(),
-//     new RollbarTransport({
-//       rollbarConfig,
-//     }),
-//   ];
-//   // }
-// } else {
-//   transportOptions = [
-//     new transports.Console(),
-//     new RollbarTransport({
-//       rollbarConfig,
-//     }),
-//   ];
-// }
+if (env.NODE_ENV === 'production') {
+  const rollbarConfig = {
+    accessToken: env.ROLLBAR_TOKEN,
+    // captureUncaught: true,
+    // captureUnhandledRejections: true,
+    logLevel: 'error' as Level,
+  };
+
+  // transportOptions.push(new RollbarTransport({ rollbarConfig }));
+  // Setup Rollbar
+
+  global.rollbar = new Rollbar(rollbarConfig);
+
+  // Setup glitchTip
+  Sentry.init({
+    dsn: env.GLITCHTIP_DSN,
+    // debug: true,
+    environment: env.NODE_ENV,
+  });
+}
 
 const logger = createLogger({
   level: env.DEBUG_LEVEL,
@@ -174,7 +161,12 @@ declare global {
 export const log = {
   info: (F: string, message: string) => logger.info(`[${F}] ${message}`),
   error: (F: string, message: string) => logger.error(`[${F}] ${message}`),
-  warn: (F: string, message: string) => logger.warn(`[${F}] ${message}`),
+  warn: (F: string, message: string) => {
+    if (!message.includes('Missing')) {
+      global.rollbar.warn(message);
+    }
+    return logger.warn(`[${F}] ${message}`);
+  },
   debug: (F: string, message: string) => logger.debug(`[${F}] ${message}`),
   http: (F: string, message: string) => logger.http(`[${F}] ${message}`),
 };

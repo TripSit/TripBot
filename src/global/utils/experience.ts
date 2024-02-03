@@ -177,7 +177,7 @@ async function giveMilestone(
   if (!member.roles.cache.has(role.id)) {
     // log.debug(F, `Giving ${member.displayName} role ${role.name} (${role.id})`);
     await member.roles.add(role);
-    if (levelTier >= 1) {
+    if (levelTier >= 2) {
       const channel = await member.guild?.channels.fetch(env.CHANNEL_VIPLOUNGE) as TextChannel;
       await channel.send(`${emojis} **${member} has reached Total level ${levelTier}0!** ${emojis}`);
     }

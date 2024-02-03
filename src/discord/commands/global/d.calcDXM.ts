@@ -33,15 +33,15 @@ export const dCalcDXM: SlashCommand = {
       .setRequired(true))
     .addStringOption(option => option.setName('taking')
       // eslint-disable-next-line max-len
-      .setDescription('What are you taking? All products listed here contain DXM hBr as the sole active ingredient.')
+      .setDescription('What are you taking? All products (except RoboTablets) contain DXM hBr.')
       .addChoices(
-        { name: 'RoboTablets (30 mg tablets)', value: 'RoboTablets (30 mg tablets)' },
-        { name: 'RoboCough (ml)', value: 'RoboCough (ml)' },
-        { name: 'Robitussin DX (oz)', value: 'Robitussin DX (oz)' },
-        { name: 'Robitussin DX (ml)', value: 'Robitussin DX (ml)' },
-        { name: 'Robitussin Gelcaps (15 mg caps)', value: 'Robitussin Gelcaps (15 mg caps)' },
-        { name: 'Pure (mg)', value: 'Pure (mg)' },
-        { name: '30mg Gelcaps (30 mg caps)', value: '30mg Gelcaps (30 mg caps)' },
+        { name: 'RoboTablets (30 mg freebase tablets)', value: 'RoboTablets (30 mg tablets)' },
+        { name: 'RoboCough (ml HBr)', value: 'RoboCough (ml)' },
+        { name: 'Robitussin DX (oz HBr)', value: 'Robitussin DX (oz)' },
+        { name: 'Robitussin DX (ml HBr)', value: 'Robitussin DX (ml)' },
+        { name: 'Robitussin Gelcaps (15 mg caps HBr)', value: 'Robitussin Gelcaps (15 mg caps)' },
+        { name: 'Pure (mg HBr)', value: 'Pure (mg)' },
+        { name: '30mg Gelcaps (30 mg HBr caps)', value: '30mg Gelcaps (30 mg caps)' },
       )
       .setRequired(true))
     .addBooleanOption(option => option.setName('ephemeral')

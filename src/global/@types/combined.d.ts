@@ -134,6 +134,11 @@ export interface Interaction {
   status: Status;
   note?: string;
   name: string;
+  sources?: {
+    author: string;
+    title: string;
+    url: string;
+  }[];
 }
 
 export enum Status {

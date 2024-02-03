@@ -39,6 +39,7 @@ import {
 } from 'discord-api-types/v10';
 import { stripIndents } from 'common-tags';
 import { user_action_type, user_actions, users } from '@prisma/client';
+import moment from 'moment';
 import { SlashCommand } from '../../@types/commandDef';
 import { parseDuration } from '../../../global/utils/parseDuration';
 import commandContext from '../../utils/context'; // eslint-disable-line
@@ -316,6 +317,23 @@ function isDiscussable(command: ModAction): command is 'DISCORD_BOT_BAN' | 'TICK
 
 function isRepeatable(command: ModAction): command is 'KICK' | 'WARNING' | 'TIMEOUT' {
   return command === 'KICK' || command === 'WARNING' || command === 'TIMEOUT';
+}
+
+export function msToHuman(ms:number):string {
+  const duration = moment.duration(ms);
+
+  const days = duration.days();
+  const hours = duration.hours();
+  const minutes = duration.minutes();
+  const seconds = duration.seconds();
+
+  let humanReadable = '';
+  if (days > 0) humanReadable += `${days} days `;
+  if (hours > 0) humanReadable += `${hours} hours `;
+  if (minutes > 0) humanReadable += `${minutes} minutes `;
+  if (seconds > 0) humanReadable += `${seconds} seconds`;
+
+  return humanReadable.trim();
 }
 
 export const modButtonNote = (discordId: string) => new ButtonBuilder()
@@ -1354,7 +1372,10 @@ export async function moderate(
       return { content: 'Timeout must be between 0 and 7 days!!' };
     }
 
-    durationStr = `. It will expire ${time(new Date(Date.now() + duration), 'R')}`;
+    // convert the miliseconds into a human readable string
+    const humanTime = msToHuman(duration);
+
+    durationStr = `for ${humanTime}. It will expire ${time(new Date(Date.now() + duration), 'R')}`;
     // log.debug(F, `duration: ${duration}`);
   }
   if (isFullBan(command)) {

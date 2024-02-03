@@ -173,13 +173,13 @@ export const guildBanAdd: GuildBanAddEvent = {
           // If the thread still exists, send a message and update the name
           if (modThread) {
             await modThread.send(payload);
-            await modThread.setName(`${emoji}${modThread.name.substring(1)}`);
+            await modThread.setName(`${emoji}│${member.displayName}`);
           } else if (guildData.channel_moderators) {
             // IF the thread doesn't exist, likely deleted, then create a new thread
             const modChan = await discordClient.channels.fetch(guildData.channel_moderators) as TextChannel;
 
             modThread = await modChan.threads.create({
-              name: `${emoji}| ${member.displayName}`,
+              name: `${emoji}│${member.displayName}`,
               autoArchiveDuration: 60,
             }) as ThreadChannel;
 

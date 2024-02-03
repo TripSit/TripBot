@@ -571,7 +571,7 @@ export async function countMessage(message: Message): Promise<void> {
         },
         update: {
           tokens: {
-            increment: totalPot,
+            increment: potPerUser,
           },
         },
       });

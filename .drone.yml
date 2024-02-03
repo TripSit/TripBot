@@ -32,8 +32,12 @@ steps:
         from_secret: DISCORD_CLIENT_REDIRECT_URI
       GITHUB_TOKEN:
         from_secret: GITHUB_TOKEN
+      GLITCHTIP_DSN:
+        from_secret: GLITCHTIP_DSN
       RAPID_TOKEN:
         from_secret: RAPID_TOKEN
+      ROLLBAR_TOKEN:
+        from_secret: ROLLBAR_TOKEN
       IMGUR_ID:
         from_secret: IMGUR_ID
       IMGUR_SECRET:

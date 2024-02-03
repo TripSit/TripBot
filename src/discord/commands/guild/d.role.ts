@@ -94,7 +94,9 @@ export const dRole: SlashCommand = {
     const command = interaction.options.getSubcommand();
     let role = {} as Role;
 
-    const roleId = interaction.options.getString('role', true);
+    // log.debug(F, `Options: ${JSON.stringify(interaction.options, null, 2)}`);
+
+    const roleId = interaction.options.get('role', true).value as string;
     // log.debug(F, `Role ID: ${roleId}`);
 
     // Check if roleId contains any letters
