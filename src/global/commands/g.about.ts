@@ -69,7 +69,7 @@ export default class About {
 
   public static readonly botInfo: string = stripIndents`
     TripBot is the main bot on the TripSit Discord guild and handles a little bit of everything, from harm reduction to fun commands.\
-    It currently has ${discordClient.commands.size} commands and you can get info on each of them by using the drop down menu below.`;
+    It currently has 93 commands and you can get info on each of them by using the drop down menu below.`;
 
   public static readonly inviteInfo: string = stripIndents`
     Want to add TripBot to your server? It's as easy as clicking the button below!

@@ -48,7 +48,9 @@ if (validateEnv('DISCORD')) {
       log.info(F, 'Commands successfully registered!');
     })
     .catch(ex => {
-      log.error(F, `Error in registering commands: ${ex}`);
+      log.error(F, 'Error in registering commands');
+      // eslint-disable-next-line no-console
+      console.log(ex);
       process.exit(1);
     });
 }

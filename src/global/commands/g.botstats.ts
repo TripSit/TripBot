@@ -47,28 +47,21 @@ export async function botStats():Promise<BotStats> {
 
   await discordClient.guilds.fetch();
   response.guildCount = discordClient.guilds.cache.size;
-  response.userCount = 0;
 
-  Promise.all(
-    discordClient.guilds.cache.map(async (guild) => {
-      try {
-        await guild.members.fetch();
-        response.userCount += guild.memberCount;
-      } catch (e) {
-        // log.error(F, `Error fetching members for guild: ${guild.name}`);
-      }
-    })
-  );
+  // Fetching member counts
+  const memberCountPromises = discordClient.guilds.cache.map(async (guild) => {
+    try {
+      await guild.members.fetch();
+      return guild.memberCount;
+    } catch (e) {
+      // log.error(F, `Error fetching members for guild: ${guild.name}`);
+      return 0;
+    }
+  });
 
-  Promise.all(
-    discordClient.guilds.cache.map(async (guild) => {
-      try {
-        await guild.channels.fetch();
-      } catch (e) {
-        // log.error(F, `Error fetching members for guild: ${guild.name}`);
-      }
-    })
-  );
+  // Sum up all the member counts
+  const memberCounts = await Promise.all(memberCountPromises);
+  response.userCount = memberCounts.reduce((acc, count) => acc + count, 0);
 
   response.channelCount = discordClient.channels.cache.size;
   response.commandCount = discordClient.commands.size;
