@@ -1680,133 +1680,6 @@
     }
   },
   {
-    "url": "https://psychonautwiki.org/wiki/2-Methyl-AP-237",
-    "name": "2-Methyl-AP-237",
-    "summary": "",
-    "addictionPotential": null,
-    "toxicity": null,
-    "crossTolerances": null,
-    "commonNames": [
-      "2-Methyl-AP-237",
-      "Apex",
-      "2-MAP"
-    ],
-    "class": null,
-    "tolerance": null,
-    "uncertainInteractions": [
-      {
-        "name": "Substituted amphetamines"
-      },
-      {
-        "name": "MAOI"
-      },
-      {
-        "name": "Nitrous"
-      },
-      {
-        "name": "PCP"
-      }
-    ],
-    "unsafeInteractions": null,
-    "dangerousInteractions": [
-      {
-        "name": "Alcohol"
-      },
-      {
-        "name": "Benzodiazepines"
-      },
-      {
-        "name": "Cocaine"
-      },
-      {
-        "name": "Dextromethorphan"
-      },
-      {
-        "name": "GHB"
-      },
-      {
-        "name": "GBL"
-      },
-      {
-        "name": "Ketamine"
-      },
-      {
-        "name": "Methoxetamine"
-      },
-      {
-        "name": "Tramadol"
-      },
-      {
-        "name": "Grapefruit"
-      }
-    ],
-    "roa": {
-      "oral": {
-        "name": "oral",
-        "dose": {
-          "units": "mg",
-          "threshold": 10,
-          "heavy": 25,
-          "common": {
-            "min": 15,
-            "max": 20
-          },
-          "light": {
-            "min": 10,
-            "max": 15
-          },
-          "strong": {
-            "min": 20,
-            "max": 25
-          }
-        },
-        "duration": {
-          "afterglow": {
-            "min": 4,
-            "max": 6,
-            "units": "hours"
-          },
-          "comeup": {
-            "min": 10,
-            "max": 40,
-            "units": "minutes"
-          },
-          "duration": null,
-          "offset": {
-            "min": 5,
-            "max": 60,
-            "units": "minutes"
-          },
-          "onset": {
-            "min": 5,
-            "max": 15,
-            "units": "minutes"
-          },
-          "peak": {
-            "min": 15,
-            "max": 20,
-            "units": "minutes"
-          },
-          "total": {
-            "min": 4,
-            "max": 6,
-            "units": "hours"
-          }
-        },
-        "bioavailability": null
-      },
-      "sublingual": null,
-      "buccal": null,
-      "insufflated": null,
-      "rectal": null,
-      "transdermal": null,
-      "subcutaneous": null,
-      "intramuscular": null,
-      "intravenous": null,
-      "smoked": null
-    }
-  },
-  {
     "url": "https://psychonautwiki.org/wiki/25B-NBOH",
     "name": "25B-NBOH",
     "summary": "",
@@ -16067,6 +15940,170 @@
     }
   },
   {
+    "url": "https://psychonautwiki.org/wiki/DMT",
+    "name": "DMT",
+    "summary": "",
+    "addictionPotential": "non-addictive with a low abuse potential",
+    "toxicity": [
+      "extremely low toxicity"
+    ],
+    "crossTolerances": [
+      "psychedelics"
+    ],
+    "commonNames": [
+      "DMT",
+      "N,N-DMT",
+      "Dmitry",
+      "The Glory",
+      "The Spirit Molecule"
+    ],
+    "class": {
+      "chemical": [
+        "Substituted tryptamines"
+      ],
+      "psychoactive": [
+        "Psychedelic"
+      ]
+    },
+    "tolerance": {
+      "full": "does not appear to occur",
+      "half": null,
+      "zero": null
+    },
+    "uncertainInteractions": [
+      {
+        "name": "Cannabis"
+      },
+      {
+        "name": "Stimulants"
+      }
+    ],
+    "unsafeInteractions": [
+      {
+        "name": "Tramadol"
+      }
+    ],
+    "dangerousInteractions": [
+      {
+        "name": "Lithium"
+      }
+    ],
+    "roa": {
+      "oral": null,
+      "sublingual": null,
+      "buccal": null,
+      "insufflated": null,
+      "rectal": null,
+      "transdermal": null,
+      "subcutaneous": null,
+      "intramuscular": null,
+      "intravenous": {
+        "name": "intravenous",
+        "dose": {
+          "units": "mg",
+          "threshold": 4,
+          "heavy": 20,
+          "common": {
+            "min": 10,
+            "max": 15
+          },
+          "light": {
+            "min": 4,
+            "max": 10
+          },
+          "strong": {
+            "min": 15,
+            "max": 20
+          }
+        },
+        "duration": {
+          "afterglow": null,
+          "comeup": {
+            "min": 70,
+            "max": 100,
+            "units": "seconds"
+          },
+          "duration": null,
+          "offset": {
+            "min": 10,
+            "max": 20,
+            "units": "minutes"
+          },
+          "onset": {
+            "min": 2,
+            "max": 10,
+            "units": "seconds"
+          },
+          "peak": {
+            "min": 2,
+            "max": 5,
+            "units": "minutes"
+          },
+          "total": {
+            "min": 15,
+            "max": 30,
+            "units": "minutes"
+          }
+        },
+        "bioavailability": null
+      },
+      "smoked": {
+        "name": "smoked",
+        "dose": {
+          "units": "mg",
+          "threshold": 2,
+          "heavy": 60,
+          "common": {
+            "min": 20,
+            "max": 40
+          },
+          "light": {
+            "min": 10,
+            "max": 20
+          },
+          "strong": {
+            "min": 40,
+            "max": 60
+          }
+        },
+        "duration": {
+          "afterglow": {
+            "min": 10,
+            "max": 60,
+            "units": "minutes"
+          },
+          "comeup": {
+            "min": 1,
+            "max": 3,
+            "units": "minutes"
+          },
+          "duration": null,
+          "offset": {
+            "min": 1,
+            "max": 6,
+            "units": "minutes"
+          },
+          "onset": {
+            "min": 20,
+            "max": 40,
+            "units": "seconds"
+          },
+          "peak": {
+            "min": 2,
+            "max": 8,
+            "units": "minutes"
+          },
+          "total": {
+            "min": 5,
+            "max": 20,
+            "units": "minutes"
+          }
+        },
+        "bioavailability": null
+      }
+    }
+  },
+  {
     "url": "https://psychonautwiki.org/wiki/DMXE",
     "name": "DMXE",
     "summary": "",
@@ -17503,9 +17540,6 @@
       },
       {
         "name": "Cocaine"
-      },
-      {
-        "name": "Bupropion"
       }
     ],
     "dangerousInteractions": [
