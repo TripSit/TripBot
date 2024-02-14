@@ -5,6 +5,7 @@ import {
   ButtonInteraction,
   StringSelectMenuInteraction,
   ModalSubmitInteraction,
+  AnySelectMenuInteraction,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
 
@@ -13,7 +14,7 @@ export default async function commandContext(
   | UserContextMenuCommandInteraction
   | MessageContextMenuCommandInteraction
   | ButtonInteraction
-  | StringSelectMenuInteraction
+  | AnySelectMenuInteraction
   | ModalSubmitInteraction,
 ) {
   const source = interaction.guild ? `${interaction.guild.name}` : 'DM';

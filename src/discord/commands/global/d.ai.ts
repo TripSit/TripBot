@@ -1,14 +1,15 @@
+/* eslint-disable max-len */
 /* eslint-disable sonarjs/no-duplicate-string */
 import {
   ActionRowBuilder,
   Colors,
   SlashCommandBuilder,
-  ChatInputCommandInteraction,
+  // ChatInputCommandInteraction,
   GuildMember,
-  time,
+  // time,
   Message,
   TextChannel,
-  ThreadChannel,
+  // ThreadChannel,
   TextBasedChannel,
   CategoryChannel,
   ForumChannel,
@@ -16,10 +17,28 @@ import {
   ButtonStyle,
   ButtonInteraction,
   EmbedBuilder,
-  APIButtonComponent,
-  APIActionRowComponent,
-  APIMessageComponentEmoji,
+  // APIButtonComponent,
+  // APIActionRowComponent,
+  // APIMessageComponentEmoji,
   Events,
+  InteractionEditReplyOptions,
+  ChatInputCommandInteraction,
+  ChannelSelectMenuBuilder,
+  StringSelectMenuBuilder,
+  SelectMenuComponentOptionData,
+  ChannelSelectMenuInteraction,
+  StringSelectMenuInteraction,
+  StringSelectMenuComponent,
+  ChannelSelectMenuComponent,
+  PermissionFlagsBits,
+  time,
+  TextInputBuilder,
+  ModalBuilder,
+  TextInputStyle,
+  ModalSubmitInteraction,
+  MessageReaction,
+  User,
+  MessageReplyOptions,
 } from 'discord.js';
 import {
   APIInteractionDataResolvedChannel,
@@ -32,7 +51,6 @@ import {
   ai_moderation,
   ai_personas,
 } from '@prisma/client';
-import OpenAI from 'openai';
 import { Run } from 'openai/resources/beta/threads/runs/runs';
 import { MessageContentText } from 'openai/resources/beta/threads/messages/messages';
 import { SlashCommand } from '../../@types/commandDef';
@@ -42,46 +60,69 @@ import { sleep } from '../guild/d.bottest';
 import aiChat, {
   aiModerate, createMessage, getAssistant, getMessages, getThread, readRun, runThread,
 } from '../../../global/commands/g.ai';
-import { modModal } from '../guild/d.moderate';
+// import { modModal } from '../guild/d.moderate';
+// import tripsitInfo from '../../../global/commands/g.about';
 
+/* TODO
+* way to delete personas
+* conversations
+* reformat rules
+* If the user starts typing again, cancel the run and wait for them to either stop typing or send a message
+*/
 const F = f(__filename);
 
 // const maxHistoryLength = 3;
 
-const ephemeralExplanation = 'Set to "True" to show the response only to you';
-const personaDoesNotExist = 'This persona does not exist. Please create it first.';
+// const ephemeralExplanation = 'Set to "True" to show the response only to you';
+// const personaDoesNotExist = 'This persona does not exist. Please create it first.';
 const tripbotUAT = '@TripBot UAT (Moonbear)';
 
 // Costs per 1k tokens
 const aiCosts = {
   GPT_3_5_TURBO: {
-    input: 0.0015,
-    output: 0.002,
+    input: 0.0005,
+    output: 0.0015,
   },
-  GPT_3_5_TURBO_1106: {
-    input: 0.001,
-    output: 0.002,
-  },
-  GPT_4: {
-    input: 0.03,
-    output: 0.06,
-  },
-  GPT_4_1106_PREVIEW: {
+  // GPT_3_5_TURBO_1106: {
+  //   input: 0.001,
+  //   output: 0.002,
+  // },
+  GPT_4_TURBO: {
     input: 0.01,
     output: 0.03,
   },
-  GPT_4_1106_VISION_PREVIEW: {
-    input: 0.01,
-    output: 0.03,
-  },
-  DALL_E_2: {
+  // GPT_4: {
+  //   input: 0.03,
+  //   output: 0.06,
+  // },
+  // GPT_4_1106_PREVIEW: {
+  //   input: 0.01,
+  //   output: 0.03,
+  // },
+  // GPT_4_1106_VISION_PREVIEW: {
+  //   input: 0.01,
+  //   output: 0.03,
+  // },
+  // DALL_E_2: {
+  //   input: 0.00,
+  //   output: 0.04,
+  // },
+  // DALL_E_3: {
+  //   input: 0.00,
+  //   output: 0.02,
+  // },
+  GEMINI_PRO: {
     input: 0.00,
-    output: 0.04,
+    output: 0.00,
   },
-  DALL_E_3: {
-    input: 0.00,
-    output: 0.02,
-  },
+  // GEMINI_PRO_VISION: {
+  //   input: 0.00,
+  //   output: 0.00,
+  // },
+  // AQA: {
+  //   input: 0.00,
+  //   output: 0.00,
+  // },
 } as {
   [key in ai_model]: {
     input: number,
@@ -89,48 +130,81 @@ const aiCosts = {
   }
 };
 
-async function help(
-  interaction: ChatInputCommandInteraction,
-): Promise<void> {
-  const visible = interaction.options.getBoolean('ephemeral') !== false;
-  await interaction.deferReply({ ephemeral: visible });
-  await interaction.editReply({
-    embeds: [embedTemplate()
-      .setTitle('AI Help')
-      .setDescription(`
-      🤖 Welcome to TripBot's AI Module! 🤖
+const buttonAiHelp = new ButtonBuilder()
+  .setCustomId('AI~help')
+  .setLabel('Help')
+  .setEmoji('❓')
+  .setStyle(ButtonStyle.Primary);
 
-      🌐 Powered by OpenAI's API, this module is a Language Learning Model (LLM) – a sophisticated tool for crafting \
-      sentences, but not a sentient AI. It's like having a super-smart writing assistant at your fingertips!
+const buttonAiPersonas = new ButtonBuilder()
+  .setCustomId('AI~personas')
+  .setLabel('Personas')
+  .setEmoji('🤖')
+  .setStyle(ButtonStyle.Secondary);
 
-      🚦 A Word of Caution: While GPT-3.5 can be impressively accurate, it's not infallible. Treat its responses as \
-      suggestions rather than hard facts. There's no human behind its words, so always apply your own judgment.
+const buttonAiLink = new ButtonBuilder()
+  .setCustomId('AI~link')
+  .setLabel('Link')
+  .setEmoji('🔗')
+  .setStyle(ButtonStyle.Primary);
 
-      👥 How It Works:
-      An **AI Persona** defines the AI's interaction style, including tone and content length.
-      We've tailored our **TripBot** persona to provide harm reduction info with a touch of quirkiness.
-      Currently, TripBot is the sole persona available outside of TripSit. But there's more to come!
-      Eager to work with the AI? Join us in the TripSit guild and chat in <#${env.CHANNEL_TRIPBOT}>!
+const buttonAiUnlink = new ButtonBuilder()
+  .setCustomId('AI~unlink')
+  .setLabel('Unlink')
+  .setEmoji('❌')
+  .setStyle(ButtonStyle.Danger);
 
-      🔗 Bring AI to Your Guild:
-      Simple Integration: Want this AI wizardry in your server? Just a single command away!
-\`\`\`
-/ai link
-  channel:(optional - defaults to current channel)
-  toggle:(optional  - defaults to 'on')
-\`\`\`
-      *You can link entire categories if you want!*
+const buttonAiSetup = new ButtonBuilder()
+  .setCustomId('AI~setup')
+  .setLabel('Setup')
+  .setEmoji('⚙️')
+  .setStyle(ButtonStyle.Success);
 
-      Lost track of linked channels? Run \`/ai get\` to check how an AI Persona is linked that channel.
+const buttonAiAgree = new ButtonBuilder()
+  .setCustomId('AI~agree')
+  .setLabel('I agree')
+  .setStyle(ButtonStyle.Success);
 
-      📝 Audit responses:
-      You can help us improve the AI by auditing its responses. If you see a response that's excellent or improper, \\
-      react to it with the provided thumbs. If enough people agree, we'll take note and try to improve the bot behavior.
+const buttonAiModify = new ButtonBuilder()
+  .setCustomId('AI~modify')
+  .setLabel('Modify')
+  .setEmoji('🔧')
+  .setStyle(ButtonStyle.Secondary);
 
-      🚀 Embark on an AI-Enhanced Journey: Prepare for a new era of AI-driven conversations!
-      `)],
-  });
-}
+const buttonAiNew = new ButtonBuilder()
+  .setCustomId('AI~new')
+  .setLabel('New')
+  .setEmoji('🆕')
+  .setStyle(ButtonStyle.Secondary);
+
+const buttonAiCreate = new ButtonBuilder()
+  .setCustomId('AI~create')
+  .setLabel('Create')
+  .setEmoji('✨')
+  .setStyle(ButtonStyle.Success);
+
+const menuAiChannels = new ChannelSelectMenuBuilder()
+  .setCustomId('AI~channel')
+  .setPlaceholder('Please select a channel to manage');
+
+const menuAiPersonas = new StringSelectMenuBuilder()
+  .setCustomId('AI~personaInfo')
+  .setPlaceholder('Please select a persona to view.');
+
+const menuAiPersonaSetup = new StringSelectMenuBuilder()
+  .setCustomId('AI~personaSetup')
+  .setPlaceholder('Please select a persona to link.');
+
+const menuAiModels = new StringSelectMenuBuilder()
+  .setCustomId('AI~model')
+  .setPlaceholder('Please select a model.');
+
+const termsOfService = stripIndents`
+➤ I understand this 'AI' is not 'intelligent', I will not use it for any kind of drug/medical advice.
+➤ The bot only responds to @ messages, the bot does not store any history or context.
+➤ I cannot directly modify the bot's behavior, I can only audit the bot\'s responses, or join the TripSit guild to give feedback.
+➤ I will not abuse the bot or use it to break the rules, abuse of this feature may result in a ban from using the bot entirely.
+`;
 
 async function makePersonaEmbed(
   persona: ai_personas,
@@ -147,11 +221,6 @@ async function makePersonaEmbed(
     .setColor(Colors.Blurple)
     .setDescription(persona.prompt)
     .setFields([
-      // {
-      //   name: 'Prompt',
-      //   value: persona.prompt,
-      //   inline: false,
-      // },
       {
         name: 'Model',
         value: persona.ai_model,
@@ -168,149 +237,27 @@ async function makePersonaEmbed(
         inline: true,
       },
       {
-        name: 'Presence Penalty',
-        value: persona.presence_penalty.toString(),
+        name: 'Score',
+        value: `👍x ${persona.upvotes.toString()} / 👎x ${persona.downvotes.toString()}`,
         inline: true,
       },
       {
-        name: 'Frequency Penalty',
-        value: persona.frequency_penalty.toString(),
-        inline: true,
-      },
-      {
-        name: 'Top P',
-        value: persona.top_p ? persona.top_p.toString() : 'N/A',
-        inline: true,
-      },
-      {
-        name: 'Logit Bias',
-        value: `${persona.logit_bias}`,
-        inline: false,
-      },
-      {
-        name: 'Created At',
-        value: time(persona.created_at, 'R'),
-        inline: true,
-      },
-      {
-        name: 'Created By',
-        value: `<@${createdByMember.id}>`,
-        inline: true,
-      },
-      {
-        name: 'Total Tokens',
+        name: 'Tokens',
         value: `$${(totalCost).toFixed(6)}\n(${persona.total_tokens} tokens)`,
+        inline: true,
+      },
+      {
+        name: 'Created',
+        value: `${time(persona.created_at, 'R')} by <@${createdByMember.id}>`,
         inline: true,
       },
     ]);
 }
 
-async function get(
-  interaction: ChatInputCommandInteraction,
-): Promise<void> {
-  const visible = interaction.options.getBoolean('ephemeral') !== false;
-  await interaction.deferReply({ ephemeral: !visible });
-  const modelName = interaction.options.getString('name');
-  const channel = interaction.options.getChannel('channel') ?? interaction.channel;
-
-  let aiPersona: ai_personas | null = null;
-  let description = '' as string;
-  if (modelName) {
-    aiPersona = await db.ai_personas.findUnique({
-      where: {
-        name: modelName,
-      },
-    });
-  } else if (channel) {
-    // Check if the channel is linked to a persona
-    let aiLinkData = await db.ai_channels.findFirst({
-      where: {
-        channel_id: channel.id,
-      },
-    });
-    if (aiLinkData) {
-      log.debug(F, `Found aiLinkData on first go: ${JSON.stringify(aiLinkData, null, 2)}`);
-      aiPersona = await db.ai_personas.findUnique({
-        where: {
-          id: aiLinkData.persona_id,
-        },
-      });
-      if (aiPersona) {
-        // eslint-disable-next-line max-len
-        description = `Channel ${(channel as TextChannel).name} is linked with the **"${aiPersona.name ?? aiPersona}"** persona: ${aiPersona.prompt.slice(0, 4000)}`;
-      }
-    }
-
-    if (!aiLinkData && (channel as ThreadChannel).parent) {
-      log.debug(F, 'Channel is a Thread');
-      // If the channel isn't listed in the database, check the parent
-      aiLinkData = await db.ai_channels.findFirst({
-        where: {
-          channel_id: (channel as ThreadChannel).parent?.id,
-        },
-      });
-      if (aiLinkData) {
-        aiPersona = await db.ai_personas.findUnique({
-          where: {
-            id: aiLinkData.persona_id,
-          },
-        });
-        if (aiPersona) {
-          // eslint-disable-next-line max-len
-          description = `Parent category/channel ${(channel as ThreadChannel).parent} is linked with the **"${aiPersona.name}"** persona:`;
-        }
-      }
-    }
-
-    if (!aiLinkData && (channel as ThreadChannel).parent && (channel as ThreadChannel).parent?.parent) {
-      log.debug(F, 'Channel is a Thread, and no channel was set');
-      // Threads have a parent channel, which has a parent category
-      aiLinkData = await db.ai_channels.findFirst({
-        where: {
-          channel_id: (channel as ThreadChannel).parent?.parent?.id,
-        },
-      });
-      if (aiLinkData) {
-        aiPersona = await db.ai_personas.findUnique({
-          where: {
-            id: aiLinkData.persona_id,
-          },
-        });
-        if (aiPersona) {
-          // eslint-disable-next-line max-len
-          description = `Parent category ${(channel as ThreadChannel).parent?.parent} is linked with the **"${aiPersona.name}"** persona:`;
-        }
-      }
-    }
-  }
-
-  // log.debug(F, `aiPersona: ${JSON.stringify(aiPersona, null, 2)}`);
-
-  if (!aiPersona) {
-    await interaction.editReply({
-      embeds: [embedTemplate()
-        .setTitle('Modal')
-        .setColor(Colors.Red)
-        .setDescription(`
-          There was an error retrieving the AI persona.
-          It likely does not exist?
-        `)],
-
-    });
-    return;
-  }
-
-  const personaEmbed = await makePersonaEmbed(aiPersona);
-  if (description) personaEmbed.setDescription(description);
-  await interaction.editReply({
-    embeds: [personaEmbed],
-  });
-}
-
 async function getLinkedChannel(
   channel: CategoryChannel | ForumChannel | APIInteractionDataResolvedChannel | TextBasedChannel,
 ): Promise<ai_channels | null> {
-  // With the way AI personas work, they can be assigned to a category, channel, or thread
+  // With the way AI personas work, they can be assigned to a category, channel, or thr ead
   // This function will check if the given channel is linked to an AI persona
   // If it is not, it will check the channel's parent; either the Category or Channel (in case of Thread)
   // If the parent isn't linked, it'll check the parent's parent; this is only for Thread channels.
@@ -332,149 +279,149 @@ async function getLinkedChannel(
   return aiLinkData;
 }
 
-async function saveThreshold(
-  interaction: ButtonInteraction,
-): Promise<void> {
-  log.debug(F, 'saveThreshold started');
-  if (!(interaction.member as GuildMember).roles.cache.has(env.DISCORD_OWNER_ID)) return;
-  const buttonID = interaction.customId;
-  log.debug(F, `buttonID: ${buttonID}`);
-  if (!interaction.guild) return;
+// async function saveThreshold(
+//   interaction: ButtonInteraction,
+// ): Promise<void> {
+//   log.debug(F, 'saveThreshold started');
+//   if (!(interaction.member as GuildMember).roles.cache.has(env.DISCORD_OWNER_ID)) return;
+//   const buttonID = interaction.customId;
+//   log.debug(F, `buttonID: ${buttonID}`);
+//   if (!interaction.guild) return;
 
-  const [, , category, amount] = interaction.customId.split('~');
-  const amountFloat = parseFloat(amount);
+//   const [, , category, amount] = interaction.customId.split('~');
+//   const amountFloat = parseFloat(amount);
 
-  const buttonRows = interaction.message.components
-    .map(row => row.toJSON() as APIActionRowComponent<APIButtonComponent>);
-  // log.debug(F, `buttonRows: ${JSON.stringify(buttonRows, null, 2)}`);
+//   const buttonRows = interaction.message.components
+//     .map(row => row.toJSON() as APIActionRowComponent<APIButtonComponent>);
+//   // log.debug(F, `buttonRows: ${JSON.stringify(buttonRows, null, 2)}`);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const categoryRow = buttonRows
-    .find(row => row.components
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .find(button => (button as any).custom_id?.includes(category))) as APIActionRowComponent<APIButtonComponent>;
-  // log.debug(F, `categoryRow: ${JSON.stringify(categoryRow, null, 2)}`);
+//   // eslint-disable-next-line @typescript-eslint/no-explicit-any
+//   const categoryRow = buttonRows
+//     .find(row => row.components
+//       // eslint-disable-next-line @typescript-eslint/no-explicit-any
+//       .find(button => (button as any).custom_id?.includes(category))) as APIActionRowComponent<APIButtonComponent>;
+//   // log.debug(F, `categoryRow: ${JSON.stringify(categoryRow, null, 2)}`);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const saveButton = categoryRow.components
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    .find(button => (button as any).custom_id?.includes('save')) as APIButtonComponent;
+//   // eslint-disable-next-line @typescript-eslint/no-explicit-any
+//   const saveButton = categoryRow.components
+//     // eslint-disable-next-line @typescript-eslint/no-explicit-any
+//     .find(button => (button as any).custom_id?.includes('save')) as APIButtonComponent;
 
-  const labelBreakdown = (saveButton.label as string).split(' ') as string[];
-  labelBreakdown.splice(0, 1, 'Saved');
-  const newLabel = labelBreakdown.join(' ');
+//   const labelBreakdown = (saveButton.label as string).split(' ') as string[];
+//   labelBreakdown.splice(0, 1, 'Saved');
+//   const newLabel = labelBreakdown.join(' ');
 
-  // Replace the save button with the new value
-  categoryRow.components.splice(4, 1, {
-    custom_id: `aiMod~save~${category}~${amountFloat}`,
-    label: newLabel,
-    emoji: '💾' as APIMessageComponentEmoji,
-    style: ButtonStyle.Success,
-    type: 2,
-  } as APIButtonComponent);
+//   // Replace the save button with the new value
+//   categoryRow.components.splice(4, 1, {
+//     custom_id: `aiMod~save~${category}~${amountFloat}`,
+//     label: newLabel,
+//     emoji: '💾' as APIMessageComponentEmoji,
+//     style: ButtonStyle.Success,
+//     type: 2,
+//   } as APIButtonComponent);
 
-  // Replace the category row with the new buttons
-  buttonRows.splice(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    buttonRows.findIndex(row => row.components.find(button => (button as any).custom_id?.includes(category))),
-    1,
-    categoryRow,
-  );
+//   // Replace the category row with the new buttons
+//   buttonRows.splice(
+//     // eslint-disable-next-line @typescript-eslint/no-explicit-any
+//     buttonRows.findIndex(row => row.components.find(button => (button as any).custom_id?.includes(category))),
+//     1,
+//     categoryRow,
+//   );
 
-  const moderationData = await db.ai_moderation.upsert({
-    where: {
-      guild_id: interaction.guild.id,
-    },
-    create: {
-      guild_id: interaction.guild.id,
-    },
-    update: {},
-  });
+//   const moderationData = await db.ai_moderation.upsert({
+//     where: {
+//       guild_id: interaction.guild.id,
+//     },
+//     create: {
+//       guild_id: interaction.guild.id,
+//     },
+//     update: {},
+//   });
 
-  const oldValue = moderationData[category as keyof typeof moderationData];
+//   const oldValue = moderationData[category as keyof typeof moderationData];
 
-  await db.ai_moderation.update({
-    where: {
-      guild_id: interaction.guild.id,
-    },
-    data: {
-      [category]: amountFloat,
-    },
-  });
+//   await db.ai_moderation.update({
+//     where: {
+//       guild_id: interaction.guild.id,
+//     },
+//     data: {
+//       [category]: amountFloat,
+//     },
+//   });
 
-  // Get the channel to send the message to
-  const channelAiModLog = await discordClient.channels.fetch(env.CHANNEL_AIMOD_LOG) as TextChannel;
-  await channelAiModLog.send({
-    content: `${interaction.member} adjusted the ${category} limit from ${oldValue} to ${amountFloat}`,
-  });
+//   // Get the channel to send the message to
+//   const channelAiModLog = await discordClient.channels.fetch(env.CHANNEL_AIMOD_LOG) as TextChannel;
+//   await channelAiModLog.send({
+//     content: `${interaction.member} adjusted the ${category} limit from ${oldValue} to ${amountFloat}`,
+//   });
 
-  await interaction.update({
-    components: buttonRows,
-  });
-}
+//   await interaction.update({
+//     components: buttonRows,
+//   });
+// }
 
-async function adjustThreshold(
-  interaction: ButtonInteraction,
-): Promise<void> {
-  log.debug(F, 'adjustThreshold started');
-  if (!(interaction.member as GuildMember).roles.cache.has(env.DISCORD_OWNER_ID)) return;
-  // const buttonID = interaction.customId;
-  // log.debug(F, `buttonID: ${buttonID}`);
+// async function adjustThreshold(
+//   interaction: ButtonInteraction,
+// ): Promise<void> {
+//   log.debug(F, 'adjustThreshold started');
+//   if (!(interaction.member as GuildMember).roles.cache.has(env.DISCORD_OWNER_ID)) return;
+//   // const buttonID = interaction.customId;
+//   // log.debug(F, `buttonID: ${buttonID}`);
 
-  const [, , category, amount] = interaction.customId.split('~');
-  const amountFloat = parseFloat(amount);
+//   const [, , category, amount] = interaction.customId.split('~');
+//   const amountFloat = parseFloat(amount);
 
-  // Go through the components on the message and find the button that has a customID that includes 'save'
-  const buttonRows = interaction.message.components
-    .map(row => row.toJSON() as APIActionRowComponent<APIButtonComponent>);
-  // log.debug(F, `buttonRows: ${JSON.stringify(buttonRows, null, 2)}`);
+//   // Go through the components on the message and find the button that has a customID that includes 'save'
+//   const buttonRows = interaction.message.components
+//     .map(row => row.toJSON() as APIActionRowComponent<APIButtonComponent>);
+//   // log.debug(F, `buttonRows: ${JSON.stringify(buttonRows, null, 2)}`);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const categoryRow = buttonRows
-    .find(row => row.components
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .find(button => (button as any).custom_id?.includes(category))) as APIActionRowComponent<APIButtonComponent>;
-  // log.debug(F, `categoryRow: ${JSON.stringify(categoryRow, null, 2)}`);
+//   // eslint-disable-next-line @typescript-eslint/no-explicit-any
+//   const categoryRow = buttonRows
+//     .find(row => row.components
+//       // eslint-disable-next-line @typescript-eslint/no-explicit-any
+//       .find(button => (button as any).custom_id?.includes(category))) as APIActionRowComponent<APIButtonComponent>;
+//   // log.debug(F, `categoryRow: ${JSON.stringify(categoryRow, null, 2)}`);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const saveButton = categoryRow.components
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    .find(button => (button as any).custom_id?.includes('save')) as APIButtonComponent;
-  log.debug(F, `saveButton: ${JSON.stringify(saveButton, null, 2)}`);
+//   // eslint-disable-next-line @typescript-eslint/no-explicit-any
+//   const saveButton = categoryRow.components
+//     // eslint-disable-next-line @typescript-eslint/no-explicit-any
+//     .find(button => (button as any).custom_id?.includes('save')) as APIButtonComponent;
+//   log.debug(F, `saveButton: ${JSON.stringify(saveButton, null, 2)}`);
 
-  const saveValue = parseFloat((saveButton.label as string).split(' ')[3] as string);
-  log.debug(F, `saveValue: ${JSON.stringify(saveValue, null, 2)}`);
+//   const saveValue = parseFloat((saveButton.label as string).split(' ')[3] as string);
+//   log.debug(F, `saveValue: ${JSON.stringify(saveValue, null, 2)}`);
 
-  const newValue = saveValue + amountFloat;
-  log.debug(F, `newValue: ${JSON.stringify(newValue.toFixed(2), null, 2)}`);
+//   const newValue = saveValue + amountFloat;
+//   log.debug(F, `newValue: ${JSON.stringify(newValue.toFixed(2), null, 2)}`);
 
-  const labelBreakdown = (saveButton.label as string).split(' ') as string[];
-  labelBreakdown.splice(3, 1, newValue.toFixed(2));
-  const newLabel = labelBreakdown.join(' ');
+//   const labelBreakdown = (saveButton.label as string).split(' ') as string[];
+//   labelBreakdown.splice(3, 1, newValue.toFixed(2));
+//   const newLabel = labelBreakdown.join(' ');
 
-  // Replace the save button with the new value
-  categoryRow.components.splice(4, 1, {
-    custom_id: `aiMod~save~${category}~${newValue}`,
-    label: newLabel,
-    emoji: '💾' as APIMessageComponentEmoji,
-    style: ButtonStyle.Primary,
-    type: 2,
-  } as APIButtonComponent);
+//   // Replace the save button with the new value
+//   categoryRow.components.splice(4, 1, {
+//     custom_id: `aiMod~save~${category}~${newValue}`,
+//     label: newLabel,
+//     emoji: '💾' as APIMessageComponentEmoji,
+//     style: ButtonStyle.Primary,
+//     type: 2,
+//   } as APIButtonComponent);
 
-  // Replace the category row with the new buttons
-  buttonRows.splice(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    buttonRows.findIndex(row => row.components.find(button => (button as any).custom_id?.includes(category))),
-    1,
-    categoryRow,
-  );
+//   // Replace the category row with the new buttons
+//   buttonRows.splice(
+//     // eslint-disable-next-line @typescript-eslint/no-explicit-any
+//     buttonRows.findIndex(row => row.components.find(button => (button as any).custom_id?.includes(category))),
+//     1,
+//     categoryRow,
+//   );
 
-  // const newComponentList = newRows.map(row => ActionRowBuilder.from(row));
+//   // const newComponentList = newRows.map(row => ActionRowBuilder.from(row));
 
-  await interaction.update({
-    components: buttonRows,
-  });
-}
+//   await interaction.update({
+//     components: buttonRows,
+//   });
+// }
 
 async function aiAudit(
   aiPersona: ai_personas,
@@ -636,200 +583,921 @@ async function aiAudit(
   await channelAiLog.send({ embeds: [embed] });
 }
 
-async function link(
-  interaction: ChatInputCommandInteraction,
-): Promise<void> {
-  const visible = interaction.options.getBoolean('ephemeral') !== false;
-  if (!interaction.guild) return;
-  await interaction.deferReply({ ephemeral: !visible });
+async function helpPage(
+  interaction: ChatInputCommandInteraction | ButtonInteraction,
+):Promise<InteractionEditReplyOptions> {
+  const helpButtons = new ActionRowBuilder<ButtonBuilder>();
 
-  const personaName = interaction.options.getString('name') ?? 'tripbot';
-  const toggle = (interaction.options.getString('toggle') ?? 'enable') as 'enable' | 'disable';
-  const textChannel = interaction.options.getChannel('channel') ?? interaction.channel;
+  const userData = await db.users.upsert({
+    where: { discord_id: interaction.user.id },
+    create: { discord_id: interaction.user.id },
+    update: {},
+  });
 
-  if (toggle === 'enable') {
-    if (!textChannel) {
-      await interaction.editReply({
-        embeds: [embedTemplate()
-          .setTitle('Modal')
-          .setColor(Colors.Red)
-          .setDescription('You must provide a text channel to link to.')],
+  if (userData.ai_terms_agree) {
+    helpButtons
+      .addComponents(
+        buttonAiSetup,
+        buttonAiPersonas,
+      );
+  } else {
+    helpButtons
+      .addComponents(
+        buttonAiAgree,
+      );
+  }
 
-      });
-      return;
-    }
+  return {
+    embeds: [embedTemplate()
+      .setTitle('🤖 Welcome to TripBot\'s AI Module! 🤖')
+      .setDescription(`
+      🌐 Experience Cutting-Edge Technology
+      Dive into the world of artificial intelligence with TripBot, powered by OpenAI's Chat GPT 3.5-Turbo API. \
+      This Language Learning Model (LLM) offers you the prowess of a highly advanced writing assistant, crafting sentences with ease. \
+      Remember, it's intelligent but not sentient.
 
-    const personaData = await db.ai_personas.findUnique({
+      🤖 Meet TripBot's Persona
+      We've tailored TripBot's persona to be friendly and helpful, with a touch of quirkiness. \
+      We're still trying to make this persona as helpful as possible, and **you can help us improve the AI by auditing its responses by reacting to messages with the provided thumbs.** \
+      If enough people agree, we'll take note and try to improve the bot behavior.
+
+      🚦 Important Caution
+      While TripBot's AI provides impressive accuracy, it's not perfect. \
+      **Please refrain from relying on it for harm reduction advice, drug dosages, combo info, or medical guidance.** \
+      Consider its suggestions with a critical eye, as it may occasionally fabricate information. \
+      Your judgment is paramount.
+
+      👥 How It Works
+      Simply agree to our terms, and on the next page you can enable the AI in the channels you choose. \
+      Once set up, anyone can @ mention TripBot to get a response from the AI. \
+      Note: "AI doesn't remember context of previous questions and doesn't store any message data" \
+      It does not store any history or context, every message is treated as a new conversation. \
+      However, do not expect that your conversations with the bot are private: every message sent through the bot is logged for moderation purposes.
+
+      **Ready to get started? Please agree to the following:**
+      ${termsOfService}
+      `)
+      .setFooter(null)],
+    components: [helpButtons],
+  };
+}
+
+async function personasPage(
+  interaction: ChatInputCommandInteraction | ButtonInteraction | StringSelectMenuInteraction,
+):Promise<InteractionEditReplyOptions> {
+  log.debug(F, 'personasPage started');
+  const personaButtons = new ActionRowBuilder<ButtonBuilder>()
+    .addComponents(
+      buttonAiHelp,
+      buttonAiSetup,
+    );
+
+  const aiPersonaList = interaction.guild?.id === env.DISCORD_GUILD_ID
+    ? await db.ai_personas.findMany()
+    : await db.ai_personas.findMany({
       where: {
-        name: personaName,
+        OR: [
+          { name: 'tripbot' },
+        ],
       },
     });
 
-    if (!personaData) {
-      await interaction.editReply({
-        embeds: [embedTemplate()
-          .setTitle('Modal')
-          .setColor(Colors.Red)
-          .setDescription(personaDoesNotExist)],
+  const aiPersonaOptions = aiPersonaList.length === 0
+    ? [{
+      label: 'No personas available',
+      description: 'Please tell moonbear about this.',
+      value: 'none',
+      default: true,
+    }] as SelectMenuComponentOptionData[]
+    : aiPersonaList.map(persona => ({
+      label: persona.name,
+      value: persona.name,
+    } as SelectMenuComponentOptionData));
 
-      });
-      return;
+  log.debug(F, `aiPersonaOptions: ${JSON.stringify(aiPersonaOptions, null, 2)}`);
+
+  let selectedPersona = undefined as string | undefined;
+
+  if (interaction.isButton() && interaction.message.components[0].components[0].customId === 'AI~personaInfo') {
+    selectedPersona = (interaction.message.components[0].components[0] as StringSelectMenuComponent).options.find(option => option.default)?.value;
+    log.debug(F, `selectedPersona: ${JSON.stringify(selectedPersona, null, 2)}`);
+    if (selectedPersona) {
+      const personaOption = aiPersonaOptions.find(persona => persona.value === selectedPersona);
+      if (personaOption) {
+        personaOption.default = true;
+      }
     }
+  }
 
-    const aiLinkData = await db.ai_channels.findFirst({
+  if (interaction.isStringSelectMenu()) {
+    [selectedPersona] = interaction.values;
+
+    log.debug(F, `selectedPersona: ${JSON.stringify(selectedPersona, null, 2)}`);
+    // If it exists, make sure the aiPersonaOptions has it marked default
+    if (selectedPersona) {
+      const personaOption = aiPersonaOptions.find(persona => persona.value === selectedPersona);
+      if (personaOption) {
+        personaOption.default = true;
+      }
+    }
+  }
+
+  log.debug(F, `aiPersonaOptions: ${JSON.stringify(aiPersonaOptions, null, 2)}`);
+
+  // If there's only one persona in the list, set it as the default
+  // if (aiPersonaList.length === 1) {
+  //   aiPersonaOptions[0].default = true;
+  //   selectedPersona = aiPersonaOptions[0].value;
+  // }
+
+  // If the user is a developer in the home guild, show the buttonAiModify button
+  const tripsitGuild = await discordClient.guilds.fetch(env.DISCORD_GUILD_ID);
+  const tripsitMember = await tripsitGuild.members.fetch(interaction.user.id);
+
+  if (selectedPersona) {
+    const persona = await db.ai_personas.findFirstOrThrow({
       where: {
-        channel_id: textChannel.id,
+        name: selectedPersona,
       },
     });
 
-    const verb = aiLinkData ? 'updated' : 'created';
+    if (tripsitMember.roles.cache.has(env.ROLE_DEVELOPER)) {
+      personaButtons.addComponents(buttonAiModify, buttonAiNew);
+    }
 
-    await db.ai_channels.upsert({
+    return {
+      embeds: [await makePersonaEmbed(persona)],
+      components: [
+        new ActionRowBuilder<StringSelectMenuBuilder>().addComponents([
+          menuAiPersonas.setOptions(aiPersonaOptions),
+        ]),
+        personaButtons,
+      ],
+    };
+  }
+
+  if (tripsitMember.roles.cache.has(env.ROLE_DEVELOPER)) {
+    personaButtons.addComponents(buttonAiNew);
+  }
+
+  return {
+    embeds: [embedTemplate()
+      .setTitle('Persona Information')
+      .setDescription(stripIndents` 
+      A persona is a set of parameters that the AI uses to generate responses. \
+      This allows us to have different 'personalities' for the AI. \
+      The AI will use the persona that is linked to the channel it is responding in, and return responses based on that persona's personality.
+
+      This menu is used to set the parameters of an AI persona, or create a new persona. The parameters are:
+      **Name**
+      > The name of the persona. This is used to identify the persona in the AI Get command.
+      **Model**
+      > The model to use for the persona. This is a dropdown list of available models.
+      **Prompt**
+      > The prompt to use for the persona. This is the text that the AI will use to generate responses.
+      **Max Tokens**
+      > The maximum number of tokens to use for the AI response.
+      > What are tokens? <https://platform.openai.com/tokenizer>
+      **Temperature**
+      > Adjusts the randomness of the AI's answers.
+      > Lower values make the AI more predictable and focused, while higher values make it more random and varied.`)
+      .setFooter(null)],
+    components: [
+      new ActionRowBuilder<StringSelectMenuBuilder>().addComponents([
+        menuAiPersonas.setOptions(aiPersonaOptions),
+      ]),
+      personaButtons,
+    ],
+  };
+}
+
+async function setupPage(
+  interaction: ChatInputCommandInteraction | ButtonInteraction | ChannelSelectMenuInteraction | StringSelectMenuInteraction,
+):Promise<InteractionEditReplyOptions> {
+  log.info(F, await commandContext(interaction));
+  if (!interaction.guild) return { content: 'This command only works in a server.' };
+  if (!interaction.member) return { content: 'This command only works in a server.' };
+
+  // Check if the member who did this command has the Manage Channels permission
+  if (!(interaction.member as GuildMember).permissions.has(PermissionFlagsBits.ManageChannels)) return { content: 'You do not have permission to modify channels on this guild. Talk to your guild\'s admin if you feel this is a mistake.' };
+
+  const userData = await db.users.upsert({
+    where: { discord_id: interaction.user.id },
+    create: { discord_id: interaction.user.id },
+    update: {},
+  });
+
+  log.debug(F, `userData: ${JSON.stringify(userData, null, 2)}`);
+
+  // If the user hasn't agreed to the terms, show them the help page so they can
+  if (!userData.ai_terms_agree) return helpPage(interaction as ChatInputCommandInteraction | ButtonInteraction);
+
+  // If this is not the home guild, only get the approved personas
+  const aiPersonaList = interaction.guild?.id === env.DISCORD_GUILD_ID
+    ? await db.ai_personas.findMany()
+    : await db.ai_personas.findMany({
       where: {
-        channel_id_persona_id: {
-          channel_id: textChannel.id,
-          persona_id: personaData.id,
+        OR: [
+          { name: 'tripbot' },
+        ],
+      },
+    });
+
+  // log.debug(F, `aiPersonaList: ${JSON.stringify(aiPersonaList, null, 2)}`);
+
+  const aiPersonaOptions = aiPersonaList.length === 0
+    ? [{
+      label: 'No personas available',
+      description: 'Please tell moonbear about this.',
+      value: 'none',
+      default: true,
+    }] as SelectMenuComponentOptionData[]
+    : aiPersonaList.map(persona => ({
+      label: persona.name,
+      value: persona.name,
+    } as SelectMenuComponentOptionData));
+
+  let aiLinkData = null as ai_channels | null;
+  let channelSelectComponent = new ActionRowBuilder<ChannelSelectMenuBuilder>().addComponents([
+    menuAiChannels,
+  ]);
+  let selectedChannel = undefined as string | undefined;
+  let selectedPersona = undefined as string | undefined;
+
+  if (interaction.isChannelSelectMenu()) {
+    log.debug(F, 'interaction is channel select menu');
+    // log.debug(F, `interaction.values ${JSON.stringify(interaction.values[0], null, 2)}`);
+    [selectedChannel] = interaction.values;
+    selectedPersona = (interaction.message.components[1].components[0] as StringSelectMenuComponent).options.find(option => option.default)?.value;
+    log.debug(F, `selectedChannel: ${JSON.stringify(selectedChannel, null, 2)}`);
+    log.debug(F, `selectedPersona: ${JSON.stringify(selectedPersona, null, 2)}`);
+
+    channelSelectComponent = new ActionRowBuilder<ChannelSelectMenuBuilder>().addComponents([
+      menuAiChannels.setCustomId(`AI~channel~${selectedChannel}`),
+    ]);
+
+    // Check if there is an existing link between the provided channel and a persona
+    aiLinkData = await db.ai_channels.findFirst({
+      where: {
+        channel_id: selectedChannel,
+      },
+    });
+
+    if (aiLinkData) {
+      const personaData = await db.ai_personas.findUniqueOrThrow({
+        where: {
+          id: aiLinkData.persona_id,
         },
+      });
+      selectedPersona = personaData.name;
+    }
+
+    // If it exists, make sure the aiPersonaOptions has it marked default
+    if (selectedPersona) {
+      const personaOption = aiPersonaOptions.find(persona => persona.value === selectedPersona);
+      if (personaOption) {
+        personaOption.default = true;
+      }
+    }
+  }
+
+  if (interaction.isStringSelectMenu()) {
+    log.debug(F, 'interaction is string select menu');
+    // log.debug(F, `interaction.values ${JSON.stringify(interaction.values[0], null, 2)}`);
+    [,,selectedChannel] = (interaction.message.components[0].components[0] as ChannelSelectMenuComponent).customId.split('~');
+    [selectedPersona] = interaction.values;
+    log.debug(F, `selectedChannel: ${JSON.stringify(selectedChannel, null, 2)}`);
+    log.debug(F, `selectedPersona: ${JSON.stringify(selectedPersona, null, 2)}`);
+
+    const personaOption = aiPersonaOptions.find(persona => persona.value === selectedPersona);
+    if (personaOption) {
+      personaOption.default = true;
+    }
+
+    aiLinkData = await db.ai_channels.findFirst({
+      where: {
+        channel_id: selectedChannel,
       },
-      create: {
-        channel_id: textChannel.id,
+    });
+  }
+
+  if (interaction.isButton()) {
+    log.debug(F, 'interaction is button');
+
+    if (interaction.message.components.length >= 3) {
+      [,,selectedChannel] = (interaction.message.components[0].components[0] as ChannelSelectMenuComponent).customId.split('~');
+      selectedPersona = (interaction.message.components[1].components[0] as StringSelectMenuComponent).options.find(option => option.default)?.value;
+
+      // If it exists, make sure the aiPersonaOptions has it marked default
+      if (selectedPersona) {
+        const personaOption = aiPersonaOptions.find(persona => persona.value === selectedPersona);
+        if (personaOption) {
+          personaOption.default = true;
+        }
+      }
+
+      if (selectedChannel) {
+        aiLinkData = await db.ai_channels.findFirst({
+          where: {
+            channel_id: selectedChannel,
+          },
+        });
+      }
+
+      channelSelectComponent = new ActionRowBuilder<ChannelSelectMenuBuilder>().addComponents([
+        menuAiChannels.setCustomId(`AI~channel~${selectedChannel}`),
+      ]);
+    }
+  }
+
+  // If there's only one persona in the list, set it as the default
+  if (aiPersonaList.length === 1) {
+    aiPersonaOptions[0].default = true;
+  }
+  // log.debug(F, `aiPersonaOptions: ${JSON.stringify(aiPersonaOptions, null, 2)}`);
+
+  // Logic for which buttons should appear:
+  // If the 'channel' select menu is not set, don't show the buttons
+  // If the 'channel' select menu is set, show the buttons
+  const setupButtons = new ActionRowBuilder<ButtonBuilder>()
+    .addComponents(
+      buttonAiHelp,
+      buttonAiPersonas,
+    );
+  if (aiLinkData) {
+    setupButtons.addComponents(
+      buttonAiUnlink,
+    );
+  } else if (selectedChannel && selectedPersona) {
+    setupButtons.addComponents(
+      buttonAiLink,
+    );
+  }
+
+  // Get the existing links for this guild
+  const existingLinkData = await db.ai_channels.findMany({
+    where: {
+      guild_id: interaction.guild.id,
+    },
+  });
+  const existingLinks = await Promise.all(existingLinkData.map(async linkData => {
+    const persona = await db.ai_personas.findUniqueOrThrow({
+      where: {
+        id: linkData.persona_id,
+      },
+    });
+    const channel = await discordClient.channels.fetch(linkData.channel_id) as TextChannel;
+    return `<#${channel.id}> is linked with the **"${persona.name}"** persona`;
+  }));
+
+  return {
+    embeds: [embedTemplate()
+      .setAuthor(null)
+      .setTitle(`${interaction.guild.name}'s AI Setup`)
+      .setDescription(stripIndents`
+        Here we can link the bot's personas to channels and categories.
+        ${existingLinks.join('\n')}
+      `)
+      .setFooter(null)],
+    components: [
+      channelSelectComponent,
+      new ActionRowBuilder<StringSelectMenuBuilder>().addComponents([
+        menuAiPersonaSetup.setOptions(aiPersonaOptions),
+      ]),
+      setupButtons,
+    ],
+  };
+}
+
+async function createPage(
+  interaction: ChatInputCommandInteraction | ButtonInteraction | StringSelectMenuInteraction,
+):Promise<InteractionEditReplyOptions> {
+  log.debug(F, 'createPage started');
+  const createButtons = new ActionRowBuilder<ButtonBuilder>()
+    .addComponents(
+      buttonAiHelp,
+      buttonAiSetup,
+      buttonAiPersonas,
+    );
+
+  const aiModelList = Object.keys(ai_model).map(model => ({ name: model }));
+
+  const aiModelOptions = aiModelList.map(model => ({
+    label: model.name,
+    value: model.name,
+  } as SelectMenuComponentOptionData));
+
+  log.debug(F, `aiModelOptions: ${JSON.stringify(aiModelOptions, null, 2)}`);
+
+  let selectedModel = undefined as string | undefined;
+  if (interaction.isStringSelectMenu()) {
+    [selectedModel] = interaction.values;
+
+    log.debug(F, `selectedModel: ${JSON.stringify(selectedModel, null, 2)}`);
+    // If it exists, make sure the aiPersonaOptions has it marked default
+    if (selectedModel) {
+      const modelOption = aiModelOptions.find(model => model.value === selectedModel);
+      if (modelOption) {
+        modelOption.default = true;
+      }
+    }
+  }
+
+  log.debug(F, `aiModelOptions: ${JSON.stringify(aiModelOptions, null, 2)}`);
+
+  if (selectedModel) {
+    createButtons.addComponents(buttonAiCreate);
+  }
+
+  return {
+    embeds: [embedTemplate()
+      .setTitle('New Persona')
+      .setDescription(stripIndents` 
+        This page will create help create a new persona for the AI.
+
+        Select the model you want to use below, then click the create button.
+
+        You'll be able to fill in parameters for the new persona on the modal that appears.
+
+        For explanations on the parameters, check the /ai peronsas command.
+      `)
+      .setFooter(null)],
+    components: [
+      new ActionRowBuilder<StringSelectMenuBuilder>().addComponents([
+        menuAiModels.setOptions(aiModelOptions),
+      ]),
+      createButtons,
+    ],
+  };
+}
+
+async function link(
+  interaction: ButtonInteraction,
+):Promise<InteractionEditReplyOptions> {
+  log.info(F, await commandContext(interaction));
+  if (!interaction.guild) return { content: 'This command only works in a server.' };
+
+  const [,,selectedChannel] = (interaction.message.components[0].components[0] as ChannelSelectMenuComponent).customId.split('~');
+  const selectedPersona = (interaction.message.components[1].components[0] as StringSelectMenuComponent).options.find(option => option.default)?.value;
+  log.debug(F, `selectedChannel: ${selectedChannel}`);
+  log.debug(F, `selectedPersona: ${selectedPersona}`);
+
+  const personaData = await db.ai_personas.findUniqueOrThrow({
+    where: {
+      name: selectedPersona,
+    },
+  });
+
+  const aiLinkData = await db.ai_channels.findFirst({
+    where: {
+      channel_id: selectedChannel,
+    },
+  });
+
+  const guildData = await db.discord_guilds.upsert({
+    where: { id: interaction.guild.id },
+    create: { id: interaction.guild.id },
+    update: {},
+  });
+
+  const verb = aiLinkData ? 'updated' : 'created';
+
+  await db.ai_channels.upsert({
+    where: {
+      channel_id_persona_id: {
+        channel_id: selectedChannel,
         persona_id: personaData.id,
       },
-      update: {
-        channel_id: textChannel.id,
-        persona_id: personaData.id,
-      },
-    });
+    },
+    create: {
+      channel_id: selectedChannel,
+      persona_id: personaData.id,
+      guild_id: guildData.id,
+    },
+    update: {
+      channel_id: selectedChannel,
+      persona_id: personaData.id,
+      guild_id: guildData.id,
+    },
+  });
 
-    await interaction.editReply({
-      embeds: [embedTemplate()
-        .setTitle('Modal')
-        .setColor(Colors.Red)
-        .setDescription(`Success: The link between ${personaName} and <#${textChannel.id}> was ${verb}!`)],
-    });
+  const channelAiLog = await discordClient.channels.fetch(env.CHANNEL_AILOG) as TextChannel;
+  await channelAiLog.send({
+    content: `AI link between ${selectedPersona} and <#${selectedChannel}> on the ${interaction.guild.name} server ${verb} (<@${env.DISCORD_OWNER_ID}>)`,
+  });
 
-    await interaction.editReply({
-      embeds: [embedTemplate()
-        .setTitle('Modal')
-        .setColor(Colors.Red)
-        .setDescription(`Success: The link between ${personaName} and <#${textChannel.id}> was ${verb}!`)],
-    });
+  return setupPage(interaction);
+}
 
-    const channelAiLog = await discordClient.channels.fetch(env.CHANNEL_AILOG) as TextChannel;
-    await channelAiLog.send({
-      content: `AI link between ${personaName} and <#${textChannel.id}> on the ${interaction.guild.name} server ${verb} (<@${env.DISCORD_OWNER_ID}>)`,
-    });
+async function unlink(
+  interaction: ButtonInteraction,
+):Promise<InteractionEditReplyOptions> {
+  log.info(F, await commandContext(interaction));
+  if (!interaction.guild) return { content: 'This command only works in a server.' };
+
+  const [,,selectedChannel] = (interaction.message.components[0].components[0] as ChannelSelectMenuComponent).customId.split('~');
+  const selectedPersona = (interaction.message.components[1].components[0] as StringSelectMenuComponent).options.find(option => option.default)?.value;
+  log.debug(F, `selectedChannel: ${JSON.stringify(selectedChannel, null, 2)}`);
+  log.debug(F, `selectedPersona: ${JSON.stringify(selectedPersona, null, 2)}`);
+
+  const aiLinkData = await db.ai_channels.findFirstOrThrow({
+    where: {
+      channel_id: selectedChannel,
+    },
+  });
+
+  const verb = 'deleted';
+
+  await db.ai_channels.delete({
+    where: {
+      id: aiLinkData.id,
+    },
+  });
+
+  const channelAiLog = await discordClient.channels.fetch(env.CHANNEL_AILOG) as TextChannel;
+  await channelAiLog.send({
+    content: `AI link between ${selectedPersona} and <#${selectedChannel}> on the ${interaction.guild.name} server ${verb} (<@${env.DISCORD_OWNER_ID}>)`,
+  });
+
+  return setupPage(interaction);
+}
+
+async function createPersona(
+  interaction: ButtonInteraction,
+):Promise<void> {
+  log.info(F, await commandContext(interaction));
+  if (!interaction.guild) {
+    await interaction.reply({ content: 'This command only works in a server.' });
     return;
   }
 
-  const aiLinkData = textChannel
-    ? await getLinkedChannel(textChannel as TextChannel)
-    : await getLinkedChannel(interaction.channel as TextChannel);
+  const selectedModel = (interaction.message.components[0].components[0] as StringSelectMenuComponent).options.find(option => option.default)?.value;
+  log.debug(F, `selectedModel: ${JSON.stringify(selectedModel, null, 2)}`);
 
-  log.debug(F, `aiLinkData: ${JSON.stringify(aiLinkData, null, 2)}`);
-  if (aiLinkData) {
-    await db.ai_channels.delete({
-      where: {
-        id: aiLinkData.id,
-      },
-    });
-    await interaction.editReply({
-      embeds: [embedTemplate()
-        .setTitle('Modal')
-        .setColor(Colors.Red)
-        .setDescription(`Link between <#${aiLinkData.channel_id}> and ${personaName} was removed!`)],
-    });
-    const channelAiLog = await discordClient.channels.fetch(env.CHANNEL_AILOG) as TextChannel;
-    await channelAiLog.send({
-      content: `AI link between ${personaName} and <#${aiLinkData.channel_id}> on the ${interaction.guild.name} server deleted (<@${env.DISCORD_OWNER_ID}>)`,
-    });
-  } else {
-    await interaction.editReply({
-      embeds: [embedTemplate()
-        .setTitle('Modal')
-        .setColor(Colors.Red)
-        .setDescription('This channel is not linked to an AI persona.')],
+  // const personaButtons = new ActionRowBuilder<ButtonBuilder>()
+  //   .addComponents(
+  //     buttonAiHelp,
+  //     buttonAiPersonas,
+  //     buttonAiNew,
+  //   );
 
+  await interaction.showModal(new ModalBuilder()
+    .setCustomId(`aiPromptModal~${interaction.id}`)
+    .setTitle('Modal')
+    .addComponents(
+      new ActionRowBuilder<TextInputBuilder>()
+        .addComponents(new TextInputBuilder()
+          .setCustomId('name')
+          .setPlaceholder(stripIndents`TripBot V3`)
+          .setValue(stripIndents`TripBot V3`)
+          .setLabel('Unique name for your persona')
+          .setMinLength(3)
+          .setStyle(TextInputStyle.Short)),
+      new ActionRowBuilder<TextInputBuilder>()
+        .addComponents(new TextInputBuilder()
+          .setCustomId('description')
+          .setPlaceholder(stripIndents`A helpful and friendly persona.`)
+          .setValue(stripIndents`A helpful and friendly persona.`)
+          .setLabel('Describe your persona')
+          .setMinLength(10)
+          .setStyle(TextInputStyle.Short)),
+      new ActionRowBuilder<TextInputBuilder>()
+        .addComponents(new TextInputBuilder()
+          .setCustomId('temperature')
+          .setPlaceholder(stripIndents`1.3 is a decent value.`)
+          .setValue('1.3')
+          .setLabel('Set the temperature value, 0.0-2.0')
+          .setMinLength(1)
+          .setMaxLength(3)
+          .setStyle(TextInputStyle.Short)),
+      new ActionRowBuilder<TextInputBuilder>()
+        .addComponents(new TextInputBuilder()
+          .setCustomId('tokens')
+          .setPlaceholder(stripIndents`500 is default`)
+          .setValue('500')
+          .setLabel('Set allowed token usage')
+          .setMinLength(1)
+          .setMaxLength(5)
+          .setStyle(TextInputStyle.Short)),
+      new ActionRowBuilder<TextInputBuilder>()
+        .addComponents(new TextInputBuilder()
+          .setCustomId('prompt')
+          .setPlaceholder(stripIndents`
+            You are a harm reduction assistant and should only give helpful, non-judgemental advice.
+          `)
+          .setValue(stripIndents`
+            You are a harm reduction assistant and should only give helpful, non-judgemental advice.
+          `)
+          .setLabel('Prompt (Personality)')
+          .setStyle(TextInputStyle.Paragraph)),
+    ));
+
+  const filter = (i:ModalSubmitInteraction) => i.customId.includes('aiPromptModal');
+  interaction.awaitModalSubmit({ filter, time: 0 })
+    .then(async i => {
+      if (i.customId.split('~')[1] !== interaction.id) return;
+      if (!i.isModalSubmit()) return;
+      if (!i.isFromMessage()) return;
+      // await i.deferUpdate();
+
+      const personaName = i.fields.getTextInputValue('name');
+      const temperature = parseFloat(i.fields.getTextInputValue('temperature'));
+      // if temperature is outside of 0.0 - 2.0, tell the user and return
+      if (temperature < 0.0 || temperature > 2.0) {
+        await i.editReply({
+          embeds: [embedTemplate()
+            .setTitle('Modal')
+            .setColor(Colors.Red)
+            .setDescription('Temperature must be between 0.0 and 2.0')],
+        });
+        return;
+      }
+
+      const maxTokens = parseInt(i.fields.getTextInputValue('tokens'), 10);
+      // If maxTokens is outside of 1 - 2048, tell the user and return
+      if (maxTokens < 1 || maxTokens > 2048) {
+        await i.editReply({
+          embeds: [embedTemplate()
+            .setTitle('Modal')
+            .setColor(Colors.Red)
+            .setDescription('Max Tokens must be between 1 and 2048')],
+        });
+        return;
+      }
+
+      const description = i.fields.getTextInputValue('description');
+      const prompt = i.fields.getTextInputValue('prompt');
+
+      const alreadyExists = await db.ai_personas.findFirst({
+        where: {
+          name: personaName,
+        },
+      });
+
+      // If the persona name already exists, tell the user and return
+      if (alreadyExists) {
+        await i.editReply({
+          embeds: [embedTemplate()
+            .setTitle('Modal')
+            .setColor(Colors.Red)
+            .setDescription('A persona with that name already exists')],
+        });
+        return;
+      }
+
+      const userData = await db.users.upsert({
+        where: { discord_id: interaction.user.id },
+        create: { discord_id: interaction.user.id },
+        update: { discord_id: interaction.user.id },
+      });
+
+      const aiPersona = await db.ai_personas.create({
+        data: {
+          name: personaName,
+          ai_model: selectedModel as ai_model,
+          description,
+          prompt,
+          temperature,
+          top_p: null,
+          presence_penalty: 0,
+          frequency_penalty: 0,
+          max_tokens: maxTokens,
+          logit_bias: null,
+          total_tokens: 0,
+          created_by: userData.id,
+          created_at: new Date(),
+        },
+      });
+
+      await i.update({
+        embeds: [embedTemplate()
+          .setTitle('Modal')
+          .setColor(Colors.Green)
+          .setDescription(`Success! ${personaName} has been created! You can now link it to a channel.`)],
+      });
+
+      const channelAiLog = await interaction.guild?.channels.fetch(env.CHANNEL_AILOG) as TextChannel;
+      await channelAiLog.send({
+        content: `Hey <@${env.DISCORD_OWNER_ID}>, ${interaction.user.username} created the ${personaName} AI Persona!`,
+        embeds: [embedTemplate()
+          .setTitle('AI Persona')
+          .setColor(Colors.Blurple)
+          .setDescription(stripIndents`${JSON.stringify(aiPersona, null, 2)}`)],
+      });
     });
+}
+
+async function modifyPersona(
+  interaction: ButtonInteraction,
+):Promise<void> {
+  log.info(F, await commandContext(interaction));
+  if (!interaction.guild) {
+    await interaction.reply({ content: 'This command only works in a server.' });
+    return;
   }
 
-  // // For toggle off
-  // if (textChannel) {
-  //   // response = await aiLink(personaName, textChannel.id, toggle);
-  //   const existingPersona = await db.ai_personas.findUnique({
-  //     where: {
-  //       name: personaName,
-  //     },
-  //   });
+  const selectedPersona = (interaction.message.components[0].components[0] as StringSelectMenuComponent).options.find(option => option.default)?.value;
+  log.debug(F, `selectedPersona: ${JSON.stringify(selectedPersona, null, 2)}`);
 
-  //   if (!existingPersona) {
-  //     await interaction.editReply({
-  //       embeds: [embedTemplate()
-  //         .setTitle('Modal')
-  //         .setColor(Colors.Red)
-  //         .setDescription(personaDoesNotExist)],
+  const persona = await db.ai_personas.findUniqueOrThrow({
+    where: {
+      name: selectedPersona,
+    },
+  });
 
-  //     });
-  //     return;
-  //   }
+  await interaction.showModal(new ModalBuilder()
+    .setCustomId(`aiPromptModal~${interaction.id}`)
+    .setTitle('Modal')
+    .addComponents(
+      new ActionRowBuilder<TextInputBuilder>()
+        .addComponents(new TextInputBuilder()
+          .setCustomId('name')
+          .setPlaceholder(stripIndents`TripBot V3`)
+          .setValue(persona.name)
+          .setLabel('Unique name for your persona')
+          .setMinLength(3)
+          .setStyle(TextInputStyle.Short)),
+      new ActionRowBuilder<TextInputBuilder>()
+        .addComponents(new TextInputBuilder()
+          .setCustomId('description')
+          .setPlaceholder(stripIndents`A helpful and friendly persona.`)
+          .setValue(persona.description ?? '')
+          .setLabel('Describe your persona')
+          .setMinLength(10)
+          .setStyle(TextInputStyle.Short)),
+      new ActionRowBuilder<TextInputBuilder>()
+        .addComponents(new TextInputBuilder()
+          .setCustomId('temperature')
+          .setPlaceholder(stripIndents`1.3 is a decent value.`)
+          .setValue(persona.temperature?.toString() ?? '1.3')
+          .setLabel('Set the temperature value, 0.0-2.0')
+          .setMinLength(1)
+          .setMaxLength(3)
+          .setStyle(TextInputStyle.Short)),
+      new ActionRowBuilder<TextInputBuilder>()
+        .addComponents(new TextInputBuilder()
+          .setCustomId('tokens')
+          .setPlaceholder(stripIndents`500 is default`)
+          .setValue(persona.max_tokens.toString())
+          .setLabel('Set allowed token usage')
+          .setMinLength(1)
+          .setMaxLength(5)
+          .setStyle(TextInputStyle.Short)),
+      new ActionRowBuilder<TextInputBuilder>()
+        .addComponents(new TextInputBuilder()
+          .setCustomId('prompt')
+          .setPlaceholder(stripIndents`
+            You are a harm reduction assistant and should only give helpful, non-judgemental advice.
+          `)
+          .setValue(persona.prompt)
+          .setLabel('Prompt (Personality)')
+          .setStyle(TextInputStyle.Paragraph)),
+    ));
 
-  //   let existingLink = await db.ai_channels.findFirst({
-  //     where: {
-  //       channel_id: textChannel.id,
-  //       persona_id: existingPersona.id,
-  //     },
-  //   });
+  const filter = (i:ModalSubmitInteraction) => i.customId.includes('aiPromptModal');
+  interaction.awaitModalSubmit({ filter, time: 0 })
+    .then(async i => {
+      if (i.customId.split('~')[1] !== interaction.id) return;
+      if (!i.isModalSubmit()) return;
+      if (!i.isFromMessage()) return;
+      // await i.deferUpdate();
 
-  //   if (!existingLink) {
-  //     existingLink = await db.ai_channels.findFirst({
-  //       where: {
-  //         channel_id: textChannel.id,
-  //       },
-  //     });
+      const personaName = i.fields.getTextInputValue('name');
+      const temperature = parseFloat(i.fields.getTextInputValue('temperature'));
+      // if temperature is outside of 0.0 - 2.0, tell the user and return
+      if (temperature < 0.0 || temperature > 2.0) {
+        await i.editReply({
+          embeds: [embedTemplate()
+            .setTitle('Modal')
+            .setColor(Colors.Red)
+            .setDescription('Temperature must be between 0.0 and 2.0')],
+        });
+        return;
+      }
 
-  //     if (!existingLink) {
-  //       await interaction.editReply({
-  //         embeds: [embedTemplate()
-  //           .setTitle('Modal')
-  //           .setColor(Colors.Red)
-  //           .setDescription(`Error: No link to <#${textChannel.id}> found!`)],
+      const maxTokens = parseInt(i.fields.getTextInputValue('tokens'), 10);
+      // If maxTokens is outside of 1 - 2048, tell the user and return
+      if (maxTokens < 1 || maxTokens > 2048) {
+        await i.editReply({
+          embeds: [embedTemplate()
+            .setTitle('Modal')
+            .setColor(Colors.Red)
+            .setDescription('Max Tokens must be between 1 and 2048')],
+        });
+        return;
+      }
 
-  //       });
-  //       return;
-  //     }
-  //     const personaData = await db.ai_personas.findUnique({
-  //       where: {
-  //         id: existingLink.persona_id,
-  //       },
-  //     });
-  //     if (!personaData) {
-  //       await interaction.editReply({
-  //         embeds: [embedTemplate()
-  //           .setTitle('Modal')
-  //           .setColor(Colors.Red)
-  //           .setDescription('Error: No persona found for this link!')],
+      const description = i.fields.getTextInputValue('description');
+      const prompt = i.fields.getTextInputValue('prompt');
 
-  //       });
-  //       return;
-  //     }
-  //     await db.ai_channels.delete({
-  //       where: {
-  //         id: existingLink.id,
-  //       },
-  //     });
-  //   }
-  // } else if (interaction.channel) {
+      const userData = await db.users.upsert({
+        where: { discord_id: interaction.user.id },
+        create: { discord_id: interaction.user.id },
+        update: { discord_id: interaction.user.id },
+      });
 
-  // } else {
-  //   await interaction.editReply({
-  //     embeds: [embedTemplate()
-  //       .setTitle('Modal')
-  //       .setColor(Colors.Red)
-  //       .setDescription('Could not find a channel to unlnk')],
+      const aiPersona = await db.ai_personas.update({
+        where: {
+          id: persona.id,
+        },
+        data: {
+          name: personaName,
+          ai_model: persona.ai_model as ai_model,
+          description,
+          prompt,
+          temperature,
+          top_p: null,
+          presence_penalty: 0,
+          frequency_penalty: 0,
+          max_tokens: maxTokens,
+          logit_bias: null,
+          total_tokens: 0,
+          created_by: userData.id,
+          created_at: new Date(),
+        },
+      });
 
-  //   });
-  // }
+      // await i.update({
+      //   embeds: [embedTemplate()
+      //     .setTitle('Modal')
+      //     .setColor(Colors.Green)
+      //     .setDescription(`Success! ${personaName} has been modified!`)],
+      // });
+
+      await i.update(await personasPage(interaction));
+
+      const channelAiLog = await interaction.guild?.channels.fetch(env.CHANNEL_AILOG) as TextChannel;
+      await channelAiLog.send({
+        content: `Hey <@${env.DISCORD_OWNER_ID}>, ${interaction.user.username} modified the ${personaName} AI Persona!`,
+        embeds: [embedTemplate()
+          .setTitle('AI Persona')
+          .setColor(Colors.Blurple)
+          .setDescription(stripIndents`${JSON.stringify(aiPersona, null, 2)}`)],
+      });
+    });
 }
+
+// async function mod(
+//   interaction: ChatInputCommandInteraction,
+// ):Promise<void> {
+//   // .addSubcommand(subcommand => subcommand
+//   //   .setDescription('Change moderation parameters.')
+//   //   .addNumberOption(option => option.setName('harassment')
+//   //     .setDescription('Set harassment limit.'))
+//   //   .addNumberOption(option => option.setName('harassment_threatening')
+//   //     .setDescription('Set harassment_threatening limit.'))
+//   //   .addNumberOption(option => option.setName('hate')
+//   //     .setDescription('Set hate limit.'))
+//   //   .addNumberOption(option => option.setName('hate_threatening')
+//   //     .setDescription('Set hate_threatening limit.'))
+//   //   .addNumberOption(option => option.setName('self_harm')
+//   //     .setDescription('Set self_harm limit.'))
+//   //   .addNumberOption(option => option.setName('self_harm_instructions')
+//   //     .setDescription('Set self_harm_instructions limit.'))
+//   //   .addNumberOption(option => option.setName('self_harm_intent')
+//   //     .setDescription('Set self_harm_intent limit.'))
+//   //   .addNumberOption(option => option.setName('sexual')
+//   //     .setDescription('Set sexual limit.'))
+//   //   .addNumberOption(option => option.setName('sexual_minors')
+//   //     .setDescription('Set sexual_minors limit.'))
+//   //   .addNumberOption(option => option.setName('violence')
+//   //     .setDescription('Set violence limit.'))
+//   //   .addNumberOption(option => option.setName('violence_graphic')
+//   //     .setDescription('Set violence_graphic limit.'))
+//   //   .setName('mod')),
+
+//   if (!interaction.guild) return;
+//   await interaction.deferReply({ ephemeral: true });
+
+//   const moderationData = await db.ai_moderation.upsert({
+//     where: {
+//       guild_id: interaction.guild.id,
+//     },
+//     create: {
+//       guild_id: interaction.guild.id,
+//     },
+//     update: {},
+//   });
+
+//   await db.ai_moderation.update({
+//     where: {
+//       guild_id: interaction.guild.id,
+//     },
+//     data: {
+//       harassment: interaction.options.getNumber('harassment') ?? moderationData.harassment,
+//       harassment_threatening: interaction.options.getNumber('harassment_threatening') ?? moderationData.harassment_threatening,
+//       hate: interaction.options.getNumber('hate') ?? moderationData.hate,
+//       hate_threatening: interaction.options.getNumber('hate_threatening') ?? moderationData.hate_threatening,
+//       self_harm: interaction.options.getNumber('self_harm') ?? moderationData.self_harm,
+//       self_harm_instructions: interaction.options.getNumber('self_harm_instructions') ?? moderationData.self_harm_instructions,
+//       self_harm_intent: interaction.options.getNumber('self_harm_intent') ?? moderationData.self_harm_intent,
+//       sexual: interaction.options.getNumber('sexual') ?? moderationData.sexual,
+//       sexual_minors: interaction.options.getNumber('sexual_minors') ?? moderationData.sexual_minors,
+//       violence: interaction.options.getNumber('violence') ?? moderationData.violence,
+//       violence_graphic: interaction.options.getNumber('violence_graphic') ?? moderationData.violence_graphic,
+//     },
+//   });
+// }
 
 export async function discordAiModerate(
   messageData: Message,
@@ -979,153 +1647,25 @@ export async function discordAiModerate(
   }
 }
 
-export async function discordAiChat(
-  messageData: Message<boolean>,
-): Promise<void> {
-  if (!env.OPENAI_API_ORG || !env.OPENAI_API_KEY) return;
-  await messageData.fetch();
+async function agreeToTerms(
+  messageData:Message,
+):Promise<MessageReplyOptions> {
+  return {
+    embeds: [embedTemplate()
+      .setTitle('🤖 Welcome to TripBot\'s AI Module! 🤖')
+      .setDescription(`
+        Please agree to the following. Use /ai help for more information.
 
-  // log.debug(F, `messageData: ${JSON.stringify(messageData, null, 2)}`);
-
-  // const channelMessages = await messageData.channel.messages.fetch({ limit: 10 });
-  // log.debug(F, `channelMessages: ${JSON.stringify(channelMessages.map(message => message.cleanContent), null, 2)}`);
-
-  // const messages = [...channelMessages.values()];
-
-  // if (!messages[0].member?.roles.cache.has(env.ROLE_VERIFIED)) return;
-  if (messageData.author.bot) {
-    log.debug(F, 'Message was from a bot, returning');
-    return;
-  }
-  if (messageData.cleanContent.length < 1) {
-    log.debug(F, 'Message was empty, returning');
-    return;
-  }
-  if (messageData.channel.type === ChannelType.DM) {
-    log.debug(F, 'Message was from a DM, returning');
-    return;
-  }
-
-  log.debug(F, ` ${messageData.author.displayName} asked me ${messageData.cleanContent}`);
-
-  // Check if the channel is linked to a persona
-  const aiLinkData = await getLinkedChannel(messageData.channel);
-  // log.debug(F, `aiLinkData: ${JSON.stringify(aiLinkData, null, 2)}`);
-  if (!aiLinkData) return;
-  // log.debug(F, `aiLinkData: ${JSON.stringify(aiLinkData, null, 2)}`);
-
-  // Get persona details for this channel, throw an error if the persona was deleted
-  const aiPersona = await db.ai_personas.findUniqueOrThrow({
-    where: {
-      id: aiLinkData.persona_id,
-    },
-  });
-  // log.debug(F, `aiPersona: ${aiPersona.name}`);
-
-  // Get the last 3 messages that are not empty or from other bots
-  // const messageList = messages
-  //   .filter(message => message.cleanContent.length > 0 && !message.author.bot)
-  //   .map(message => ({
-  //     role: 'user',
-  //     content: message.cleanContent
-  //       .replace(tripbotUAT, '')
-  //       .replace('tripbot', '')
-  //       .trim(),
-  //   }))
-  //   .slice(0, maxHistoryLength)
-  //   .reverse() as OpenAI.Chat.ChatCompletionMessageParam[];
-
-  // log.debug(F, `messageList: ${JSON.stringify(messageList, null, 2)}`);
-
-  // const cleanMessageList = messages
-  //   .filter(message => message.cleanContent.length > 0 && !message.author.bot)
-  //   .slice(0, maxHistoryLength)
-  //   .reverse();
-
-  const cleanMessageList = [messageData];
-
-  const messageList = [{
-    role: 'user',
-    content: messageData.cleanContent
-      .replace(tripbotUAT, '')
-      .replace('tripbot', '')
-      .trim(),
-  }] as OpenAI.Chat.ChatCompletionMessageParam[];
-
-  const { response, promptTokens, completionTokens } = await aiChat(aiPersona, messageList, messageData.author.id);
-
-  log.debug(F, `response: ${response}`);
-  // log.debug(F, `promptTokens: ${promptTokens}`);
-  // log.debug(F, `completionTokens: ${completionTokens}`);
-
-  // Increment the tokens used
-  await db.ai_personas.update({
-    where: {
-      id: aiPersona.id,
-    },
-    data: {
-      total_tokens: {
-        increment: completionTokens + promptTokens,
-      },
-    },
-  });
-
-  const costUsd = (aiCosts[aiPersona.ai_model as keyof typeof aiCosts].input * promptTokens)
-    + (aiCosts[aiPersona.ai_model as keyof typeof aiCosts].output * completionTokens);
-
-  const userData = await db.users.upsert({
-    where: { discord_id: messageData.author.id },
-    create: { discord_id: messageData.author.id },
-    update: {},
-  });
-
-  await db.ai_usage.upsert({
-    where: {
-      user_id: userData.id,
-    },
-    create: {
-      user_id: userData.id,
-      tokens: completionTokens + promptTokens,
-      usd: costUsd,
-    },
-    update: {
-      usd: {
-        increment: costUsd,
-      },
-      tokens: {
-        increment: completionTokens + promptTokens,
-      },
-    },
-  });
-
-  await aiAudit(
-    aiPersona,
-    cleanMessageList,
-    response,
-    promptTokens,
-    completionTokens,
-  );
-
-  await messageData.channel.sendTyping();
-
-  const wpm = 120;
-  const wordCount = response.split(' ').length;
-  const sleepTime = (wordCount / wpm) * 60000;
-  // log.debug(F, `Typing ${wordCount} at ${wpm} wpm will take ${sleepTime / 1000} seconds`);
-  await sleep(sleepTime > 10000 ? 5000 : sleepTime); // Don't wait more than 5 seconds
-  const replyMessage = await messageData.reply({
-    content: response.slice(0, 2000),
-    allowedMentions: { parse: [] },
-  });
-
-  // React to that message with thumbs up and thumbs down emojis
-  try {
-    await replyMessage.react(env.EMOJI_THUMB_UP);
-    await replyMessage.react(env.EMOJI_THUMB_DOWN);
-  } catch (error) {
-    log.error(F, `Error reacting to message: ${messageData.url}`);
-    log.error(F, `${error}`);
-  }
+        ${termsOfService}
+      `)
+      .setFooter(null)],
+    components: [
+      new ActionRowBuilder<ButtonBuilder>().addComponents(
+        buttonAiAgree.setCustomId(`AI~messageAgree~${messageData.id}`),
+        buttonAiHelp,
+      ),
+    ],
+  };
 }
 
 export async function discordAiConversate(
@@ -1187,8 +1727,6 @@ export async function discordAiConversate(
     // Wait for the run to complete
     let runStatus = 'queued' as Run['status'];
     while (['queued', 'in_progress'].includes(runStatus)) {
-      // TODO: If the user starts typing again, cancel the run and wait for them to either stop typing or send a message
-
       // Send the typing indicator to show tripbot is thinking
       // eslint-disable-next-line no-await-in-loop
       await messageData.channel.sendTyping();
@@ -1277,33 +1815,386 @@ export async function discordAiConversate(
   });
 }
 
-export async function aiModButton(
-  interaction: ButtonInteraction,
+export async function aiMessage(
+  messageData: Message<boolean>,
+): Promise<void> {
+  if (!env.OPENAI_API_ORG || !env.OPENAI_API_KEY) return;
+  await messageData.fetch();
+
+  let isAfterAgreement = false;
+  const ogMessage = messageData;
+
+  if (messageData.components.length > 0) {
+    // log.debug(F, `messageData.components: ${JSON.stringify(messageData.components, null, 2)}`);
+    isAfterAgreement = true;
+    const [,,messageId] = (messageData.components[0].components[0].customId as string).split('~');
+    log.debug(F, `messageId ${messageId}`);
+    // eslint-disable-next-line no-param-reassign
+    messageData = await messageData.channel?.messages.fetch(messageId);
+  }
+
+  // log.debug(F, `messageData: ${JSON.stringify(messageData, null, 2)}`);
+  // log.debug(F, `isAfterAgreement: ${JSON.stringify(isAfterAgreement, null, 2)}`);
+
+  // const channelMessages = await messageData.channel.messages.fetch({ limit: 10 });
+  // log.debug(F, `channelMessages: ${JSON.stringify(channelMessages.map(message => message.cleanContent), null, 2)}`);
+
+  // const messages = [...channelMessages.values()];
+
+  // if (!messages[0].member?.roles.cache.has(env.ROLE_VERIFIED)) return;
+  if (messageData.author.bot) {
+    log.debug(F, 'Message was from a bot, returning');
+    return;
+  }
+  if (messageData.cleanContent.length < 1) {
+    log.debug(F, 'Message was empty, returning');
+    return;
+  }
+  if (messageData.channel.type === ChannelType.DM) {
+    log.debug(F, 'Message was from a DM, returning');
+    return;
+  }
+
+  log.debug(F, `${messageData.author.displayName} asked me '${messageData.cleanContent}'`);
+
+  // Determine if the user has agreed to the AI terms
+  const userData = await db.users.upsert({
+    where: { discord_id: messageData.author.id },
+    create: { discord_id: messageData.author.id },
+    update: {},
+  });
+
+  if (!userData.ai_terms_agree) {
+    log.debug(F, `${messageData.author.displayName} has not agreed to the AI terms`);
+    await messageData.reply(await agreeToTerms(messageData));
+    return;
+  }
+
+  // Check if the channel is linked to a persona
+  const aiLinkData = await getLinkedChannel(messageData.channel);
+  // log.debug(F, `aiLinkData: ${JSON.stringify(aiLinkData, null, 2)}`);
+  if (!aiLinkData) return;
+  // log.debug(F, `aiLinkData: ${JSON.stringify(aiLinkData, null, 2)}`);
+
+  // Get persona details for this channel, throw an error if the persona was deleted
+  const aiPersona = await db.ai_personas.findUniqueOrThrow({
+    where: {
+      id: aiLinkData.persona_id,
+    },
+  });
+  // log.debug(F, `aiPersona: ${aiPersona.name}`);
+
+  log.debug(F, `${messageData.channel.name} is linked to the '${aiPersona.name}' persona`);
+
+  // Get the last 3 messages that are not empty or from other bots
+  // const messageList = messages
+  //   .filter(message => message.cleanContent.length > 0 && !message.author.bot)
+  //   .map(message => ({
+  //     role: 'user',
+  //     content: message.cleanContent
+  //       .replace(tripbotUAT, '')
+  //       .replace('tripbot', '')
+  //       .trim(),
+  //   }))
+  //   .slice(0, maxHistoryLength)
+  //   .reverse() as OpenAI.Chat.ChatCompletionMessageParam[];
+
+  // log.debug(F, `messageList: ${JSON.stringify(messageList, null, 2)}`);
+
+  // const cleanMessageList = messages
+  //   .filter(message => message.cleanContent.length > 0 && !message.author.bot)
+  //   .slice(0, maxHistoryLength)
+  //   .reverse();
+
+  const cleanMessageList = [messageData];
+
+  const messageList = [{
+    role: 'user',
+    content: messageData.cleanContent
+      .replace(tripbotUAT, '')
+      .replace('tripbot', '')
+      .trim(),
+  }] as {
+    role: 'user';
+    content: string;
+  }[];
+
+  // log.debug(F, `messageData: ${JSON.stringify(messageData, null, 2)}`);
+
+  const attachmentInfo = {
+    url: null,
+    mimeType: null,
+  } as {
+    url: string | null;
+    mimeType: string | null;
+  };
+
+  if (messageData.attachments && messageData.attachments.size >= 1) {
+    attachmentInfo.url = messageData.attachments.first()?.url as string;
+    attachmentInfo.mimeType = messageData.attachments.first()?.contentType as string;
+  }
+
+  if (messageData.reference) {
+    const refMessage = await messageData.fetchReference();
+    attachmentInfo.url = refMessage.attachments.first()?.url as string;
+    attachmentInfo.mimeType = refMessage.attachments.first()?.contentType as string;
+  }
+
+  log.debug(F, `Sending messages to API: ${JSON.stringify(messageList, null, 2)}`);
+  log.debug(F, `attachmentInfo: ${JSON.stringify(attachmentInfo, null, 2)}`);
+
+  const { response, promptTokens, completionTokens } = await aiChat(aiPersona, messageList, messageData.author.id, attachmentInfo);
+
+  log.debug(F, `response from API: ${response}`);
+  // log.debug(F, `promptTokens: ${promptTokens}`);
+  // log.debug(F, `completionTokens: ${completionTokens}`);
+
+  // Increment the tokens used
+  await db.ai_personas.update({
+    where: {
+      id: aiPersona.id,
+    },
+    data: {
+      total_tokens: {
+        increment: completionTokens + promptTokens,
+      },
+    },
+  });
+
+  const costUsd = (aiCosts[aiPersona.ai_model as keyof typeof aiCosts].input * promptTokens)
+    + (aiCosts[aiPersona.ai_model as keyof typeof aiCosts].output * completionTokens);
+
+  await db.ai_usage.upsert({
+    where: {
+      user_id: userData.id,
+    },
+    create: {
+      user_id: userData.id,
+      tokens: completionTokens + promptTokens,
+      usd: costUsd,
+    },
+    update: {
+      usd: {
+        increment: costUsd,
+      },
+      tokens: {
+        increment: completionTokens + promptTokens,
+      },
+    },
+  });
+
+  await aiAudit(
+    aiPersona,
+    cleanMessageList,
+    response,
+    promptTokens,
+    completionTokens,
+  );
+
+  if (isAfterAgreement) {
+    ogMessage.edit({
+      content: response.slice(0, 2000),
+      embeds: [],
+      components: [],
+      allowedMentions: { parse: [] },
+    });
+  } else {
+    await messageData.channel.sendTyping();
+    const wpm = 120;
+    const wordCount = response.split(' ').length;
+    const sleepTime = (wordCount / wpm) * 60000;
+    // log.debug(F, `Typing ${wordCount} at ${wpm} wpm will take ${sleepTime / 1000} seconds`);
+    await sleep(sleepTime > 10000 ? 5000 : sleepTime); // Don't wait more than 5 seconds
+    const replyMessage = await messageData.reply({
+      content: response.slice(0, 2000),
+      allowedMentions: { parse: [] },
+    });
+
+    // React to that message with thumbs up and thumbs down emojis
+    try {
+      await replyMessage.react(env.EMOJI_THUMB_UP);
+      await replyMessage.react(env.EMOJI_THUMB_DOWN);
+    } catch (error) {
+      log.error(F, `Error reacting to message: ${messageData.url}`);
+      log.error(F, `${error}`);
+    }
+  }
+}
+
+export async function aiReaction(
+  messageReaction: MessageReaction,
+  user: User,
 ) {
+  if (!messageReaction.message.guild) return; // Ignore DMs
+  // We want to collect every message tripbot sends that gets three thumbs downs
+  const thumbsUpEmojis = ['👍', '👍🏻', '👍🏼', '👍🏽', '👍🏾', '👍🏿', 'ts_thumbup'];
+  const thumbsDownEmojis = ['👎', '👎🏻', '👎🏼', '👎🏽', '👎🏾', '👎🏿', 'ts_thumbdown'];
+  if (messageReaction.message.reference === null) return;
+  const originalMessage = await messageReaction.message.fetchReference();
+  const aiLinkData = await db.ai_channels.findFirst({
+    where: {
+      channel_id: originalMessage.channel.id,
+    },
+  });
+  if (aiLinkData
+        && messageReaction.message.author?.bot
+        && !user.bot
+        && (thumbsUpEmojis.includes(messageReaction.emoji.name as string)
+          || thumbsDownEmojis.includes(messageReaction.emoji.name as string)
+        )
+  ) {
+  // log.debug(F, `Someone reacted to tripbot's message with an audit emoji (${messageReaction.emoji.name})`);
+
+    const channelAiVoteLog = await discordClient.channels.fetch(env.CHANNEL_AIVOTELOG) as TextChannel;
+    const action = thumbsUpEmojis.includes(messageReaction.emoji.name as string) ? 'approve' : 'reject';
+
+    const auditLimit = env.NODE_ENV === 'production' ? 4 : 2;
+    // log.debug(F, `Audit limit is ${auditLimit}, emoji count is ${messageReaction.count}`);
+    if (messageReaction.count === auditLimit) {
+    // log.debug(F, `Audit limit reached (${auditLimit})`);
+
+      const message = thumbsUpEmojis.includes(messageReaction.emoji.name as string)
+        ? stripIndents`${messageReaction.message.cleanContent}
+            
+        **Thank you for your feedback, I have notified Moonbear that this response was excellent.**`
+        : stripIndents`~~${messageReaction.message.cleanContent}~~
+            
+        **Thank you for your feedback, I have notified Moonbear that this response was improper.**`;
+
+      // This happens before the message is edited, so we need to fetch the original message
+
+      await channelAiVoteLog.send({
+        content: stripIndents`
+            The following AI response was deemed ${action === 'reject' ? 'improper' : 'excellent'} by ${messageReaction.message.guild.name} <@${env.DISCORD_OWNER_ID}>`,
+      });
+
+      await messageReaction.message.edit(message);
+
+      // Remove the emojis so someone can't just toggle it on and off
+      await messageReaction.message.reactions.removeAll();
+    }
+
+    const personaData = await db.ai_personas.findFirstOrThrow({
+      where: {
+        id: aiLinkData.persona_id,
+      },
+    });
+
+    await db.ai_personas.update({
+      where: {
+        id: personaData.id,
+      },
+      data: (thumbsUpEmojis.includes(messageReaction.emoji.name as string)
+        ? {
+          upvotes: {
+            increment: 1,
+          },
+        }
+        : {
+          downvotes: {
+            increment: 1,
+          },
+        }),
+    });
+
+    await channelAiVoteLog.send({
+      embeds: [embedTemplate()
+        .setTitle(`AI ${action}`)
+        .setDescription(stripIndents`
+            ${originalMessage.author.displayName} (${originalMessage.author.id}):
+            \`${originalMessage.cleanContent}\`
+
+            TripBot:
+            \`${messageReaction.message.cleanContent}\`
+          `)],
+    });
+  }
+}
+
+export async function aiMenu(
+  interaction: ChannelSelectMenuInteraction | StringSelectMenuInteraction,
+):Promise<InteractionEditReplyOptions> {
+  const menuId = interaction.customId;
+  log.debug(F, `menuId: ${menuId}`);
+  const [, menuAction] = menuId.split('~');
+
+  // eslint-disable-next-line sonarjs/no-small-switch
+  switch (menuAction) {
+    case 'channel':
+      return setupPage(interaction as ChannelSelectMenuInteraction);
+    case 'persona':
+      return setupPage(interaction as StringSelectMenuInteraction);
+    case 'personaInfo':
+      return personasPage(interaction as StringSelectMenuInteraction);
+    case 'personaSetup':
+      return setupPage(interaction as StringSelectMenuInteraction);
+    case 'model':
+      return createPage(interaction as StringSelectMenuInteraction);
+    default:
+      return setupPage(interaction);
+  }
+}
+
+export async function aiButton(
+  interaction: ButtonInteraction,
+):Promise<void> {
   const buttonID = interaction.customId;
   log.debug(F, `buttonID: ${buttonID}`);
   const [, buttonAction] = buttonID.split('~');
 
+  // eslint-disable-next-line sonarjs/no-small-switch
   switch (buttonAction) {
-    case 'adjust':
-      await adjustThreshold(interaction);
+    case 'agree':
+      await db.users.update({
+        where: {
+          discord_id: interaction.user.id,
+        },
+        data: {
+          ai_terms_agree: true,
+        },
+      });
+      log.debug(F, `User ${interaction.user.id} agreed to the terms`);
+      await interaction.update(await setupPage(interaction));
       break;
-    case 'save':
-      await saveThreshold(interaction);
+    case 'messageAgree': {
+      await db.users.update({
+        where: {
+          discord_id: interaction.user.id,
+        },
+        data: {
+          ai_terms_agree: true,
+        },
+      });
+
+      await aiMessage(interaction.message);
       break;
-    case 'note':
-      await modModal(interaction);
+    }
+    case 'help':
+      await interaction.update(await helpPage(interaction));
       break;
-    case 'warn':
-      await modModal(interaction);
+    case 'link':
+      await interaction.update(await link(interaction));
       break;
-    case 'timeout':
-      await modModal(interaction);
+    case 'unlink':
+      await interaction.update(await unlink(interaction));
       break;
-    case 'ban':
-      await modModal(interaction);
+    case 'setup':
+      await interaction.update(await setupPage(interaction));
+      break;
+    case 'personas':
+      await interaction.update(await personasPage(interaction));
+      break;
+    case 'new':
+      await interaction.update(await createPage(interaction));
+      break;
+    case 'create':
+      await createPersona(interaction);
+      break;
+    case 'modify':
+      await modifyPersona(interaction);
       break;
     default:
+      await helpPage(interaction);
       break;
   }
 }
@@ -1313,54 +2204,33 @@ export const aiCommand: SlashCommand = {
     .setName('ai')
     .setDescription('TripBot\'s AI')
     .addSubcommand(subcommand => subcommand
-      .setDescription('Information on the AI persona.')
-      .setName('help'))
+      .setDescription('Setup the TripBot AI')
+      .setName('setup'))
     .addSubcommand(subcommand => subcommand
-      .setDescription('Get information on the AI')
-      .addStringOption(option => option.setName('name')
-        .setAutocomplete(true)
-        .setDescription('Which AI persona to get information on.'))
-      .addChannelOption(option => option.setName('channel')
-        .setDescription('Which channel to get info on.'))
-      .addBooleanOption(option => option.setName('ephemeral')
-        .setDescription(ephemeralExplanation))
-      .setName('get'))
+      .setDescription('Get information on the various personas available for the AI module')
+      .setName('personas'))
     .addSubcommand(subcommand => subcommand
-      .setDescription('Link an AI model to a channel.')
-      .addStringOption(option => option.setName('name')
-        .setDescription('AI persona to link. (Default: TripBot)')
-        .setAutocomplete(true))
-      .addChannelOption(option => option.setName('channel')
-        .setDescription('Channel, thread or category. (Default: This channel)'))
-      .addStringOption(option => option.setName('toggle')
-        .setDescription('Enable to disable this link? (Default: Enable)')
-        .setChoices(
-          { name: 'Enable', value: 'enable' },
-          { name: 'Disable', value: 'disable' },
-        ))
-      .addBooleanOption(option => option.setName('ephemeral')
-        .setDescription(ephemeralExplanation))
-      .setName('link')),
-
+      .setDescription('Get info on the AI module')
+      .setName('help')),
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
+    await interaction.deferReply({ ephemeral: true });
 
-    const command = interaction.options.getSubcommand().toUpperCase() as 'HELP' | 'GET' | 'LINK';
-    switch (command) {
-      case 'HELP':
-        await help(interaction);
+    const subcommand = interaction.options.getSubcommand();
+    switch (subcommand) {
+      case 'setup':
+        await interaction.editReply(await setupPage(interaction));
         break;
-      case 'GET':
-        await get(interaction);
+      case 'help':
+        await interaction.editReply(await helpPage(interaction));
         break;
-      case 'LINK':
-        await link(interaction);
+      case 'personas':
+        await interaction.editReply(await personasPage(interaction));
         break;
       default:
-        help(interaction);
+        await interaction.editReply(await helpPage(interaction));
         break;
     }
-
     return true;
   },
 };

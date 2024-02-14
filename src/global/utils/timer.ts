@@ -1144,6 +1144,7 @@ async function runTimer() {
   const seconds60 = 1000 * 60;
   const minutes5 = 1000 * 60 * 5;
   const hours24 = 1000 * 60 * 60 * 24;
+  const hours48 = 1000 * 60 * 60 * 48;
 
   const timers = [
     { callback: checkReminders, interval: env.NODE_ENV === 'production' ? seconds10 : seconds5 },
@@ -1156,7 +1157,7 @@ async function runTimer() {
     { callback: checkStats, interval: env.NODE_ENV === 'production' ? minutes5 : seconds5 },
     { callback: checkMoodle, interval: env.NODE_ENV === 'production' ? seconds60 : seconds5 },
     // { callback: checkLpm, interval: env.NODE_ENV === 'production' ? seconds10 : seconds5 },
-    { callback: updateDb, interval: env.NODE_ENV === 'production' ? hours24 : minutes5 },
+    { callback: updateDb, interval: env.NODE_ENV === 'production' ? hours24 : hours48 },
   ];
 
   timers.forEach(timer => {

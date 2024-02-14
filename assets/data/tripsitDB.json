@@ -3303,7 +3303,7 @@
       "Oral": {
         "Common": "4-5mg",
         "Light": "2-4mg",
-        "Strong": "5+mg"
+        "Strong": "5mg+"
       }
     },
     "formatted_duration": {
@@ -3639,7 +3639,7 @@
       ],
       "dose": "Oral Light: 5-8mg Common: 8-15mg Strong: 15-20mg+ || Insufflated Light: 1-3mg Common: 3-8mg Strong: 8-15mg+",
       "duration": "Oral: 3-4 hours. || Insufflated: 1-3 hours.",
-      "onset": "Oral: 15-30 minutes. || Insufflated: 5-10 mintues.",
+      "onset": "Oral: 15-30 minutes. || Insufflated: 5-10 minutes.",
       "summary": "This is the N-Propyl homologue of 3-MeO-PCE. It is slightly less potent than PCP. Yet seems slightly less manic inducing."
     }
   },
@@ -4581,7 +4581,7 @@
       "Vapourized": {
         "Common": "5-10mg",
         "Light": "2-5mg",
-        "Strong": "10-15"
+        "Strong": "10-15mg"
       }
     },
     "formatted_duration": {
@@ -5345,12 +5345,12 @@
       "Insufflated": {
         "Common": "50-100mg",
         "Light": "25-40mg",
-        "Strong": "100-150+mg"
+        "Strong": "100-150mg+"
       },
       "Oral": {
         "Common": "100-150mg",
         "Light": "50-100mg",
-        "Strong": "150-200+mg"
+        "Strong": "150-200mg+"
       }
     },
     "formatted_duration": {
@@ -6173,7 +6173,7 @@
       "Oral": {
         "Common": "10-20mg",
         "Light": "10mg",
-        "Strong": "20+mg"
+        "Strong": "20mg+"
       }
     },
     "formatted_duration": {
@@ -6925,12 +6925,12 @@
       "Insufflated": {
         "Common": "40-60mg",
         "Light": "30-40mg",
-        "Strong": "60-100+mg"
+        "Strong": "60-100mg+"
       },
       "Oral": {
         "Common": "60-100mg",
         "Light": "50-60mg",
-        "Strong": "100-150+mg"
+        "Strong": "100-150mg+"
       }
     },
     "formatted_duration": {
@@ -7387,13 +7387,13 @@
       "Oral": {
         "Common": "12-20mg",
         "Light": "5-12mg",
-        "Strong": "20+mg",
+        "Strong": "20mg+",
         "Threshold": "4-5mg"
       },
       "Vapourized": {
         "Common": "5-15mg",
         "Light": "2-5mg",
-        "Strong": "15+mg"
+        "Strong": "15mg+"
       }
     },
     "formatted_duration": {
@@ -10166,10 +10166,10 @@
     },
     "formatted_dose": {
       "Oral": {
-        "Common": "100-250µg",
-        "Heavy": "400µg+",
-        "Light": "50-100µg",
-        "Strong": "250-400µg"
+        "Common": "100-250ug",
+        "Heavy": "400ug+",
+        "Light": "50-100ug",
+        "Strong": "250-400ug"
       }
     },
     "formatted_duration": {
@@ -10215,13 +10215,13 @@
     "formatted_dose": {
       "Oral": {
         "Common": "0.5-1.5mg",
-        "Heavy": "3+mg",
+        "Heavy": "3mg+",
         "Light": "0.25-0.5mg",
         "Strong": "1.5-3mg"
       },
       "Vapourized": {
         "Common": "0.5-1.5mg",
-        "Heavy": "3+mg",
+        "Heavy": "3mg+",
         "Light": "0.25-0.5mg",
         "Strong": "1.5-3mg"
       }
@@ -10398,7 +10398,7 @@
       "Oral": {
         "Common": "12.5-25ug",
         "Light": "5-12.5ug",
-        "Strong": "25.47.5ug+"
+        "Strong": "25-47.5ug+"
       }
     },
     "formatted_duration": {
@@ -11015,11 +11015,11 @@
         "status": "Low Risk & Decrease"
       },
       "dox": {
-        "note": "Drinking on stimulants is risky because the sedative effects of the alcohol are  reduced, and these are what the body uses to gauge drunkenness. This typically leads to excessive drinking with greatly reduced inhibitions, high risk of liver damage and increased dehydration. They will also  allow you to drink past a point where you might normally pass out, increasing the risk.",
+        "note": "Drinking on stimulants is risky because the sedative effects of the alcohol are reduced, and these are what the body uses to gauge drunkenness. This typically leads to excessive drinking with greatly reduced inhibitions, high risk of liver damage and increased dehydration. They will also  allow you to drink past a point where you might normally pass out, increasing the risk.",
         "status": "Low Risk & Decrease"
       },
       "dxm": {
-        "note": "Both substances potentiate the ataxia and sedation caused by the other and can lead to unexpected loss of consciousness at high doses. Place affected patients in the recovery position to prevent vomit aspiration from excess. Additionally CNS depression can lead to difficulty breathing. Avoid on anything higher than 1st plateau.",
+        "note": "Both substances potentiate the ataxia and sedation caused by the other and can lead to unexpected loss of consciousness at high doses. Place affected patients in the recovery position to prevent vomit aspiration from excess. Additionally, CNS depression can lead to difficulty breathing. Avoid on anything higher than 1st plateau.",
         "status": "Dangerous"
       },
       "ghb/gbl": {
@@ -12420,9 +12420,9 @@
     },
     "formatted_dose": {
       "Oral": {
-        "Common": "500-1000",
-        "Light": "300-500",
-        "Strong": "1000-2000"
+        "Common": "500-1000mg",
+        "Light": "300-500mg",
+        "Strong": "1000-2000mg"
       }
     },
     "formatted_duration": {
@@ -12665,10 +12665,10 @@
     },
     "formatted_dose": {
       "Oral": {
-        "Common": "20-50",
+        "Common": "20-50mg",
         "Heavy": "75-125mg",
         "Light": "10-20mg",
-        "Strong": "50-75"
+        "Strong": "50-75mg"
       }
     },
     "formatted_duration": {
@@ -13858,8 +13858,25 @@
         "status": "Caution"
       },
       "dxm": {
-        "note": "High doses of caffeine may cause anxiety which is less manageable when tripping, and since both are stimulating the combination may cause some physical discomfort.",
-        "status": "Low Risk & No Synergy"
+        "note": "High doses of caffeine can potentially exacerbate anxiety, especially during a dissociative experience, due to its stimulating effects. This combination might also lead to physical discomfort. However, individual responses to caffeine can vary significantly, often influenced by factors like habitual versus occasional usage.",
+        "sources": [
+          {
+            "author": "Chad J Reissig, Lawrence P Carter, Matthew W Johnson, Miriam Z Mintzer, Margaret A Klinedinst, Roland R Griffiths",
+            "title": "High doses of dextromethorphan, an NMDA antagonist, produce effects similar to classic hallucinogens ",
+            "url": "https://pubmed.ncbi.nlm.nih.gov/22526529/"
+          },
+          {
+            "author": "Arthur Eumann Mesas, Luz M Leon-Muñoz, Fernando Rodriguez-Artalejo, Esther Lopez-Garcia",
+            "title": "The effect of coffee on blood pressure and cardiovascular disease in hypertensive individuals: a systematic review and meta-analysis ",
+            "url": "https://pubmed.ncbi.nlm.nih.gov/21880846/"
+          },
+          {
+            "author": "M-L Nurminen, L Niittynen, R Korpela & H Vapaatalo",
+            "title": "Coffee, caffeine and blood pressure: a critical review",
+            "url": "https://www.nature.com/articles/1600899"
+          }
+        ],
+        "status": "Caution"
       },
       "ghb/gbl": {
         "status": "Low Risk & No Synergy"
@@ -17482,7 +17499,7 @@
           {
             "author": "Sandeep M Nayak, Natalie Gukasyan, Frederick S Barrett , Earth Erowid , Fire Erowid , Roland R Griffiths",
             "title": "Classic Psychedelic Coadministration with Lithium, but Not Lamotrigine, is Associated with Seizures: An Analysis of Online Psychedelic Experience Reports",
-            "url": "https://pubmed.ncbi.nlm.nih.gov/34348413/"
+            "url": "https://doi.org/10.1055/a-1524-2794"
           },
           {
             "author": "Erowid",
@@ -17502,7 +17519,7 @@
           {
             "author": "Otto Simonsson, Peper S. Hendricks, Richard Chambers, Walter Osika, Simon B. Goldberg",
             "title": "Prevalence and associations of challenging, difficult or distressing experiences using classic psychedelics",
-            "url": "https://www.sciencedirect.com/science/article/pii/S0165032723000915"
+            "url": "https://doi.org/10.1016/j.jad.2023.01.073"
           }
         ],
         "status": "Dangerous"
@@ -18530,7 +18547,7 @@
         "status": "Unsafe"
       },
       "alcohol": {
-        "note": "Both substances potentiate the ataxia and sedation caused by the other and can lead to unexpected loss of consciousness at high doses. Place affected patients in the recovery position to prevent vomit aspiration from excess. Additionally CNS depression can lead to difficulty breathing. Avoid on anything higher than 1st plateau.",
+        "note": "Both substances potentiate the ataxia and sedation caused by the other and can lead to unexpected loss of consciousness at high doses. Place affected patients in the recovery position to prevent vomit aspiration from excess. Additionally, CNS depression can lead to difficulty breathing. Avoid on anything higher than 1st plateau.",
         "status": "Dangerous"
       },
       "amphetamines": {
@@ -18549,8 +18566,25 @@
         "status": "Caution"
       },
       "caffeine": {
-        "note": "High doses of caffeine may cause anxiety which is less manageable when tripping, and since both are stimulating the combination may cause some physical discomfort.",
-        "status": "Low Risk & No Synergy"
+        "note": "High doses of caffeine can potentially exacerbate anxiety, especially during a dissociative experience, due to its stimulating effects. This combination might also lead to physical discomfort. However, individual responses to caffeine can vary significantly, often influenced by factors like habitual versus occasional usage.",
+        "sources": [
+          {
+            "author": "Chad J Reissig, Lawrence P Carter, Matthew W Johnson, Miriam Z Mintzer, Margaret A Klinedinst, Roland R Griffiths",
+            "title": "High doses of dextromethorphan, an NMDA antagonist, produce effects similar to classic hallucinogens ",
+            "url": "https://pubmed.ncbi.nlm.nih.gov/22526529/"
+          },
+          {
+            "author": "Arthur Eumann Mesas, Luz M Leon-Muñoz, Fernando Rodriguez-Artalejo, Esther Lopez-Garcia",
+            "title": "The effect of coffee on blood pressure and cardiovascular disease in hypertensive individuals: a systematic review and meta-analysis ",
+            "url": "https://pubmed.ncbi.nlm.nih.gov/21880846/"
+          },
+          {
+            "author": "M-L Nurminen, L Niittynen, R Korpela & H Vapaatalo",
+            "title": "Coffee, caffeine and blood pressure: a critical review",
+            "url": "https://www.nature.com/articles/1600899"
+          }
+        ],
+        "status": "Caution"
       },
       "cannabis": {
         "status": "Low Risk & Synergy"
@@ -18571,17 +18605,37 @@
         "status": "Dangerous"
       },
       "ketamine": {
-        "note": "Both substances primarily exert their effects through NMDA antagonism. Currently, there is no evidence regarding mechanisms that might reduce these effects, suggesting a potential for synergistic interaction.",
+        "note": "Both substances primarily exert their effects through NMDA antagonism. Currently, there is no evidence regarding mechanisms that might reduce these effects.",
         "sources": [
           {
-            "author": "Wikipedia",
+            "author": "Jeanna M. Marraffa",
             "title": "Dextromethorphan",
-            "url": "https://en.wikipedia.org/wiki/Dextromethorphan"
+            "url": "https://doi.org/10.1016/B978-0-12-824315-2.00127-5"
           },
           {
-            "author": "Wikipedia",
-            "title": "Ketamine",
-            "url": "https://en.wikipedia.org/wiki/Ketamine"
+            "author": "Georges Mion, Thierry Villevieille",
+            "title": "Ketamine Pharmacology: An Update (Pharmacodynamics and Molecular Aspects, Recent Findings)",
+            "url": "https://doi.org/10.1111/cns.12099"
+          },
+          {
+            "author": "P. Klepstad, P. C. Borchgrevink",
+            "title": "Four years' treatment with ketamine and a trial of dextromethorphan in a patient with severe post-herpetic neuralgia",
+            "url": "https://doi.org/10.1111/j.1399-6576.1997.tb04709.x"
+          },
+          {
+            "author": "Stephen M. Stahl",
+            "title": "Mechanism of action of dextromethorphan/quinidine: comparison with ketamine",
+            "url": "https://doi.org/10.1017/S109285291300062X"
+          },
+          {
+            "author": "A M Hughes,1 J Rhodes,1 G Fisher,2 M Sellers,3 and J W Growcott1",
+            "title": "Assessment of the effect of dextromethorphan and ketamine on the acute nociceptive threshold and wind-up of the second pain response in healthy male volunteers",
+            "url": "https://doi.org/10.1046%2Fj.1365-2125.2002.01602.x"
+          },
+          {
+            "author": "Keiji Tabuchi, MD, Zenya Ito, MD, Shigeki Tsuji, MD, Akira Hara, MD, Tetsuro Wada, MD, Jun Kusakari, MD",
+            "title": "Effect of Ketamine, Dextromethorphan, and MK-801 on Cochlear Dysfunction Induced by Transient Ischemia",
+            "url": "https://doi.org/10.1177/000348940211100107"
           }
         ],
         "status": "Low Risk & Synergy"
@@ -18603,7 +18657,35 @@
         "status": "Low Risk & Synergy"
       },
       "mxe": {
-        "status": "Low Risk & No Synergy"
+        "note": "There is a risk of serotonin syndrome when combining DXM with MXE, due to DXM and MXE both being SRI’s. MXE and DXM having notable affinities for the serotonin transporter.",
+        "sources": [
+          {
+            "author": "Bryan L. Roth, Simon Gibbons, Warunya Arunotayanun, Xi-Ping Huang, Vincent Setola, Ric Treble, Les Iversen",
+            "title": "The Ketamine Analogue Methoxetamine and 3- and 4-Methoxy Analogues of Phencyclidine Are High Affinity and Selective Ligands for the Glutamate NMDA Receptor",
+            "url": "https://doi.org/10.1371/journal.pone.0059334"
+          },
+          {
+            "author": "Matteo Marti, Giuseppe Talani, Cristina Miliano, Sabrine Bilel, Francesca Biggio, Jessica Bratzu, Marco Diana, Maria Antonietta De Luca, Liana Fattore",
+            "title": "New insights into methoxetamine mechanisms of action: Focus on serotonergic 5-HT2 receptors in pharmacological and behavioral effects in the rat ",
+            "url": "https://doi.org/10.1016/j.expneurol.2021.113836"
+          },
+          {
+            "author": "Laura Hondebrink, Emma E.J. Kasteel, Anke M. Tukker, Fiona M.J. Wijnolts, Anouk H.A. Verboven, Remco H.S. Westerink",
+            "title": "Neuropharmacological characterization of the new psychoactive substance methoxetamine",
+            "url": "https://doi.org/10.1016/j.neuropharm.2017.04.035"
+          },
+          {
+            "author": "Linda L. Werling, Ashleigh Keller, Julie G. Frank, Samer J. Nuwayhid",
+            "title": "A comparison of the binding profiles of dextromethorphan, memantine, fluoxetine and amitriptyline: Treatment of involuntary emotional expression disorder",
+            "url": "https://doi.org/10.1016/j.expneurol.2007.06.013"
+          },
+          {
+            "author": "Linda Nguyen, Kelan L. Thomas, Brandon P. Lucke-Wold, John Z. Cavendish, Molly S. Crowe, Rae R. Matsumoto",
+            "title": "Dextromethorphan: An update on its utility for neurological and neuropsychiatric disorders",
+            "url": "https://doi.org/10.1016/j.pharmthera.2016.01.016"
+          }
+        ],
+        "status": "Unsafe"
       },
       "nbomes": {
         "status": "Unsafe"
@@ -20628,7 +20710,7 @@
       ],
       "dose": "Oral Light: 10-20mg Common: 20-30mg Strong: 30-40mg Heavy: 40-50mg",
       "duration": "9-12 hours",
-      "onset": "45-90 mintues.",
+      "onset": "45-90 minutes.",
       "summary": "The psychoactive isomer of methylphenidate, mostly used to treat ADHD. Twice as potent as methylphenidate, and is said to have cleaner psychostimulant effects with fewer side effects."
     }
   },
@@ -21814,7 +21896,7 @@
         "Strong": "4-6mg+"
       },
       "Oral": {
-        "Common": "3-4",
+        "Common": "3-4mg",
         "Light": "1-2mg",
         "Strong": "4-8mg+"
       }
@@ -22566,17 +22648,37 @@
         "status": "Low Risk & Synergy"
       },
       "dxm": {
-        "note": "Both substances primarily exert their effects through NMDA antagonism. Currently, there is no evidence regarding mechanisms that might reduce these effects, suggesting a potential for synergistic interaction.",
+        "note": "Both substances primarily exert their effects through NMDA antagonism. Currently, there is no evidence regarding mechanisms that might reduce these effects.",
         "sources": [
           {
-            "author": "Wikipedia",
+            "author": "Jeanna M. Marraffa",
             "title": "Dextromethorphan",
-            "url": "https://en.wikipedia.org/wiki/Dextromethorphan"
+            "url": "https://doi.org/10.1016/B978-0-12-824315-2.00127-5"
           },
           {
-            "author": "Wikipedia",
-            "title": "Ketamine",
-            "url": "https://en.wikipedia.org/wiki/Ketamine"
+            "author": "Georges Mion, Thierry Villevieille",
+            "title": "Ketamine Pharmacology: An Update (Pharmacodynamics and Molecular Aspects, Recent Findings)",
+            "url": "https://doi.org/10.1111/cns.12099"
+          },
+          {
+            "author": "P. Klepstad, P. C. Borchgrevink",
+            "title": "Four years' treatment with ketamine and a trial of dextromethorphan in a patient with severe post-herpetic neuralgia",
+            "url": "https://doi.org/10.1111/j.1399-6576.1997.tb04709.x"
+          },
+          {
+            "author": "Stephen M. Stahl",
+            "title": "Mechanism of action of dextromethorphan/quinidine: comparison with ketamine",
+            "url": "https://doi.org/10.1017/S109285291300062X"
+          },
+          {
+            "author": "A M Hughes,1 J Rhodes,1 G Fisher,2 M Sellers,3 and J W Growcott1",
+            "title": "Assessment of the effect of dextromethorphan and ketamine on the acute nociceptive threshold and wind-up of the second pain response in healthy male volunteers",
+            "url": "https://doi.org/10.1046%2Fj.1365-2125.2002.01602.x"
+          },
+          {
+            "author": "Keiji Tabuchi, MD, Zenya Ito, MD, Shigeki Tsuji, MD, Akira Hara, MD, Tetsuro Wada, MD, Jun Kusakari, MD",
+            "title": "Effect of Ketamine, Dextromethorphan, and MK-801 on Cochlear Dysfunction Induced by Transient Ischemia",
+            "url": "https://doi.org/10.1177/000348940211100107"
           }
         ],
         "status": "Low Risk & Synergy"
@@ -22593,7 +22695,7 @@
         "status": "Caution"
       },
       "mdma": {
-        "note": "No unexpected interactions, though likely to increase blood pressure  but not an issue with sensible doses. Moving around on high doses of  this combination may be ill advised due to risk of physical injury.",
+        "note": "No unexpected interactions, though likely to increase blood pressure but not an issue with sensible doses. Moving around on high doses of  this combination may be ill advised due to risk of physical injury.",
         "status": "Low Risk & Synergy"
       },
       "mescaline": {
@@ -23092,7 +23194,7 @@
           {
             "author": "Sandeep M Nayak, Natalie Gukasyan, Frederick S Barrett , Earth Erowid , Fire Erowid , Roland R Griffiths",
             "title": "Classic Psychedelic Coadministration with Lithium, but Not Lamotrigine, is Associated with Seizures: An Analysis of Online Psychedelic Experience Reports",
-            "url": "https://pubmed.ncbi.nlm.nih.gov/34348413/"
+            "url": "https://doi.org/10.1055/a-1524-2794"
           },
           {
             "author": "Erowid",
@@ -23112,7 +23214,7 @@
           {
             "author": "Otto Simonsson, Peper S. Hendricks, Richard Chambers, Walter Osika, Simon B. Goldberg",
             "title": "Prevalence and associations of challenging, difficult or distressing experiences using classic psychedelics",
-            "url": "https://www.sciencedirect.com/science/article/pii/S0165032723000915"
+            "url": "https://doi.org/10.1016/j.jad.2023.01.073"
           }
         ],
         "status": "Dangerous"
@@ -23123,7 +23225,7 @@
           {
             "author": "Sandeep M Nayak, Natalie Gukasyan, Frederick S Barrett , Earth Erowid , Fire Erowid , Roland R Griffiths",
             "title": "Classic Psychedelic Coadministration with Lithium, but Not Lamotrigine, is Associated with Seizures: An Analysis of Online Psychedelic Experience Reports",
-            "url": "https://pubmed.ncbi.nlm.nih.gov/34348413/"
+            "url": "https://doi.org/10.1055/a-1524-2794"
           },
           {
             "author": "Erowid",
@@ -23143,7 +23245,7 @@
           {
             "author": "Otto Simonsson, Peper S. Hendricks, Richard Chambers, Walter Osika, Simon B. Goldberg",
             "title": "Prevalence and associations of challenging, difficult or distressing experiences using classic psychedelics",
-            "url": "https://www.sciencedirect.com/science/article/pii/S0165032723000915"
+            "url": "https://doi.org/10.1016/j.jad.2023.01.073"
           }
         ],
         "status": "Dangerous"
@@ -23154,7 +23256,7 @@
           {
             "author": "Sandeep M Nayak, Natalie Gukasyan, Frederick S Barrett , Earth Erowid , Fire Erowid , Roland R Griffiths",
             "title": "Classic Psychedelic Coadministration with Lithium, but Not Lamotrigine, is Associated with Seizures: An Analysis of Online Psychedelic Experience Reports",
-            "url": "https://pubmed.ncbi.nlm.nih.gov/34348413/"
+            "url": "https://doi.org/10.1055/a-1524-2794"
           },
           {
             "author": "Erowid",
@@ -23174,7 +23276,7 @@
           {
             "author": "Otto Simonsson, Peper S. Hendricks, Richard Chambers, Walter Osika, Simon B. Goldberg",
             "title": "Prevalence and associations of challenging, difficult or distressing experiences using classic psychedelics",
-            "url": "https://www.sciencedirect.com/science/article/pii/S0165032723000915"
+            "url": "https://doi.org/10.1016/j.jad.2023.01.073"
           }
         ],
         "status": "Dangerous"
@@ -23185,7 +23287,7 @@
           {
             "author": "Sandeep M Nayak, Natalie Gukasyan, Frederick S Barrett , Earth Erowid , Fire Erowid , Roland R Griffiths",
             "title": "Classic Psychedelic Coadministration with Lithium, but Not Lamotrigine, is Associated with Seizures: An Analysis of Online Psychedelic Experience Reports",
-            "url": "https://pubmed.ncbi.nlm.nih.gov/34348413/"
+            "url": "https://doi.org/10.1055/a-1524-2794"
           },
           {
             "author": "Erowid",
@@ -23205,7 +23307,7 @@
           {
             "author": "Otto Simonsson, Peper S. Hendricks, Richard Chambers, Walter Osika, Simon B. Goldberg",
             "title": "Prevalence and associations of challenging, difficult or distressing experiences using classic psychedelics",
-            "url": "https://www.sciencedirect.com/science/article/pii/S0165032723000915"
+            "url": "https://doi.org/10.1016/j.jad.2023.01.073"
           }
         ],
         "status": "Dangerous"
@@ -23216,7 +23318,7 @@
           {
             "author": "Sandeep M Nayak, Natalie Gukasyan, Frederick S Barrett , Earth Erowid , Fire Erowid , Roland R Griffiths",
             "title": "Classic Psychedelic Coadministration with Lithium, but Not Lamotrigine, is Associated with Seizures: An Analysis of Online Psychedelic Experience Reports",
-            "url": "https://pubmed.ncbi.nlm.nih.gov/34348413/"
+            "url": "https://doi.org/10.1055/a-1524-2794"
           },
           {
             "author": "Erowid",
@@ -23236,7 +23338,7 @@
           {
             "author": "Otto Simonsson, Peper S. Hendricks, Richard Chambers, Walter Osika, Simon B. Goldberg",
             "title": "Prevalence and associations of challenging, difficult or distressing experiences using classic psychedelics",
-            "url": "https://www.sciencedirect.com/science/article/pii/S0165032723000915"
+            "url": "https://doi.org/10.1016/j.jad.2023.01.073"
           }
         ],
         "status": "Dangerous"
@@ -23257,12 +23359,12 @@
           {
             "author": "Olivier Massot Ph.D, Jean-Claude Rousselle Ph.D, Marie-Paule Fillion MSc, Dominique Januel MD, Mathieu Plantefol MSc & Gilles Fillion Ph.D ",
             "title": "5-HT1B Receptors: A Novel Target for Lithium: Possible Involvement in Mood Disorders",
-            "url": "https://www.nature.com/articles/1395366"
+            "url": "https://doi.org/10.1016/S0893-133X(99)00042-1"
           },
           {
             "author": "Philip J. Cowen",
             "title": "New drugs, old problems: Revisiting… Pharmacological management of treatment-resistant depression",
-            "url": "https://www.cambridge.org/core/journals/advances-in-psychiatric-treatment/article/new-drugs-old-problems-revisiting-pharmacological-management-of-treatmentresistant-depression/D44091E25F9537B93CD6F4580F340645"
+            "url": "https://doi.org/10.1192/apt.11.1.19"
           }
         ],
         "status": "Dangerous"
@@ -23273,7 +23375,7 @@
           {
             "author": "Sandeep M Nayak, Natalie Gukasyan, Frederick S Barrett , Earth Erowid , Fire Erowid , Roland R Griffiths",
             "title": "Classic Psychedelic Coadministration with Lithium, but Not Lamotrigine, is Associated with Seizures: An Analysis of Online Psychedelic Experience Reports",
-            "url": "https://pubmed.ncbi.nlm.nih.gov/34348413/"
+            "url": "https://doi.org/10.1055/a-1524-2794"
           },
           {
             "author": "Erowid",
@@ -23293,7 +23395,7 @@
           {
             "author": "Otto Simonsson, Peper S. Hendricks, Richard Chambers, Walter Osika, Simon B. Goldberg",
             "title": "Prevalence and associations of challenging, difficult or distressing experiences using classic psychedelics",
-            "url": "https://www.sciencedirect.com/science/article/pii/S0165032723000915"
+            "url": "https://doi.org/10.1016/j.jad.2023.01.073"
           }
         ],
         "status": "Dangerous"
@@ -23304,7 +23406,7 @@
           {
             "author": "Sandeep M Nayak, Natalie Gukasyan, Frederick S Barrett , Earth Erowid , Fire Erowid , Roland R Griffiths",
             "title": "Classic Psychedelic Coadministration with Lithium, but Not Lamotrigine, is Associated with Seizures: An Analysis of Online Psychedelic Experience Reports",
-            "url": "https://pubmed.ncbi.nlm.nih.gov/34348413/"
+            "url": "https://doi.org/10.1055/a-1524-2794"
           },
           {
             "author": "Erowid",
@@ -23324,7 +23426,7 @@
           {
             "author": "Otto Simonsson, Peper S. Hendricks, Richard Chambers, Walter Osika, Simon B. Goldberg",
             "title": "Prevalence and associations of challenging, difficult or distressing experiences using classic psychedelics",
-            "url": "https://www.sciencedirect.com/science/article/pii/S0165032723000915"
+            "url": "https://doi.org/10.1016/j.jad.2023.01.073"
           }
         ],
         "status": "Dangerous"
@@ -23335,7 +23437,7 @@
           {
             "author": "Sandeep M Nayak, Natalie Gukasyan, Frederick S Barrett , Earth Erowid , Fire Erowid , Roland R Griffiths",
             "title": "Classic Psychedelic Coadministration with Lithium, but Not Lamotrigine, is Associated with Seizures: An Analysis of Online Psychedelic Experience Reports",
-            "url": "https://pubmed.ncbi.nlm.nih.gov/34348413/"
+            "url": "https://doi.org/10.1055/a-1524-2794"
           },
           {
             "author": "Erowid",
@@ -23355,7 +23457,7 @@
           {
             "author": "Otto Simonsson, Peper S. Hendricks, Richard Chambers, Walter Osika, Simon B. Goldberg",
             "title": "Prevalence and associations of challenging, difficult or distressing experiences using classic psychedelics",
-            "url": "https://www.sciencedirect.com/science/article/pii/S0165032723000915"
+            "url": "https://doi.org/10.1016/j.jad.2023.01.073"
           }
         ],
         "status": "Dangerous"
@@ -23743,7 +23845,7 @@
           {
             "author": "Sandeep M Nayak, Natalie Gukasyan, Frederick S Barrett , Earth Erowid , Fire Erowid , Roland R Griffiths",
             "title": "Classic Psychedelic Coadministration with Lithium, but Not Lamotrigine, is Associated with Seizures: An Analysis of Online Psychedelic Experience Reports",
-            "url": "https://pubmed.ncbi.nlm.nih.gov/34348413/"
+            "url": "https://doi.org/10.1055/a-1524-2794"
           },
           {
             "author": "Erowid",
@@ -23763,7 +23865,7 @@
           {
             "author": "Otto Simonsson, Peper S. Hendricks, Richard Chambers, Walter Osika, Simon B. Goldberg",
             "title": "Prevalence and associations of challenging, difficult or distressing experiences using classic psychedelics",
-            "url": "https://www.sciencedirect.com/science/article/pii/S0165032723000915"
+            "url": "https://doi.org/10.1016/j.jad.2023.01.073"
           }
         ],
         "status": "Dangerous"
@@ -23951,7 +24053,7 @@
     "formatted_dose": {
       "Oral": {
         "Common": "0.75-1mg",
-        "Heavy": "1.5+mg.",
+        "Heavy": "1.5mg+",
         "Light": "0.5-0.75mg",
         "Strong": "1-1.5mg"
       }
@@ -24417,17 +24519,17 @@
           {
             "author": "Kelly J. Clemens, Iain S. McGregor, Glenn E. Hunt, Jennifer L. Cornish",
             "title": "MDMA, methamphetamine and their combination: possible lessons for party drug users from recent preclinical research",
-            "url": "https://onlinelibrary.wiley.com/doi/abs/10.1080/09595230601036945"
+            "url": "https://doi.org/10.1080/09595230601036945"
           },
           {
             "author": "Kelly J. Clemens, Iain S. McGregor, Glenn E. Hunt, Jennifer L. Cornish",
             "title": "Repeated weekly exposure to MDMA, methamphetamine or their combination: long-term behavioural and neurochemical effects in rats ",
-            "url": "https://pubmed.ncbi.nlm.nih.gov/16884865/"
+            "url": "https://doi.org/10.1016/j.drugalcdep.2006.06.004"
           },
           {
             "author": "P. Leon Brown, Eugene A. Kiyatkin",
             "title": "Brain hyperthermia induced by MDMA (‘ecstasy’): modulation by environmental conditions",
-            "url": "https://onlinelibrary.wiley.com/doi/10.1111/j.0953-816X.2004.03453.x"
+            "url": "https://doi.org/10.1111/j.0953-816X.2004.03453.x"
           }
         ],
         "status": "Caution"
@@ -24442,7 +24544,7 @@
         "status": "Low Risk & Decrease"
       },
       "caffeine": {
-        "note": "Caffiene is not really necessary with MDMA and increases any neurotoxic effects from MDMA",
+        "note": "Caffeine increases side effects and increases any neurotoxic effects from MDMA",
         "status": "Caution"
       },
       "cannabis": {
@@ -24468,7 +24570,7 @@
         "status": "Caution"
       },
       "ketamine": {
-        "note": "No unexpected interactions, though likely to increase blood pressure  but not an issue with sensible doses. Moving around on high doses of  this combination may be ill advised due to risk of physical injury.",
+        "note": "No unexpected interactions, though likely to increase blood pressure but not an issue with sensible doses. Moving around on high doses of  this combination may be ill advised due to risk of physical injury.",
         "status": "Low Risk & Synergy"
       },
       "lithium": {
@@ -24487,12 +24589,12 @@
           {
             "author": "Olivier Massot Ph.D, Jean-Claude Rousselle Ph.D, Marie-Paule Fillion MSc, Dominique Januel MD, Mathieu Plantefol MSc & Gilles Fillion Ph.D ",
             "title": "5-HT1B Receptors: A Novel Target for Lithium: Possible Involvement in Mood Disorders",
-            "url": "https://www.nature.com/articles/1395366"
+            "url": "https://doi.org/10.1016/S0893-133X(99)00042-1"
           },
           {
             "author": "Philip J. Cowen",
             "title": "New drugs, old problems: Revisiting… Pharmacological management of treatment-resistant depression",
-            "url": "https://www.cambridge.org/core/journals/advances-in-psychiatric-treatment/article/new-drugs-old-problems-revisiting-pharmacological-management-of-treatmentresistant-depression/D44091E25F9537B93CD6F4580F340645"
+            "url": "https://doi.org/10.1192/apt.11.1.19"
           }
         ],
         "status": "Dangerous"
@@ -24501,7 +24603,7 @@
         "status": "Low Risk & Synergy"
       },
       "maois": {
-        "note": "MAO-B inhibitors can increase the potency and duration of  phenethylamines unpredictably. MAO-A inhibitors with MDMA will lead to hypertensive crises.",
+        "note": "MAO-B inhibitors can increase the potency and duration of phenethylamines unpredictably. MAO-A inhibitors with MDMA will lead to hypertensive crises.",
         "status": "Dangerous"
       },
       "mescaline": {
@@ -24760,12 +24862,12 @@
       "Insufflated": {
         "Common": "10-20mg",
         "Light": "5-10mg",
-        "Strong": "20+mg"
+        "Strong": "20mg+"
       },
       "Oral": {
         "Common": "20-35mg",
         "Light": "10-20mg",
-        "Strong": "35+mg"
+        "Strong": "35mg+"
       }
     },
     "formatted_duration": {
@@ -25492,7 +25594,7 @@
           {
             "author": "Sandeep M Nayak, Natalie Gukasyan, Frederick S Barrett , Earth Erowid , Fire Erowid , Roland R Griffiths",
             "title": "Classic Psychedelic Coadministration with Lithium, but Not Lamotrigine, is Associated with Seizures: An Analysis of Online Psychedelic Experience Reports",
-            "url": "https://pubmed.ncbi.nlm.nih.gov/34348413/"
+            "url": "https://doi.org/10.1055/a-1524-2794"
           },
           {
             "author": "Erowid",
@@ -25512,7 +25614,7 @@
           {
             "author": "Otto Simonsson, Peper S. Hendricks, Richard Chambers, Walter Osika, Simon B. Goldberg",
             "title": "Prevalence and associations of challenging, difficult or distressing experiences using classic psychedelics",
-            "url": "https://www.sciencedirect.com/science/article/pii/S0165032723000915"
+            "url": "https://doi.org/10.1016/j.jad.2023.01.073"
           }
         ],
         "status": "Dangerous"
@@ -26625,7 +26727,7 @@
     "formatted_dose": {
       "Oral": {
         "Common": "150-250mg",
-        "Heavy": "300+mg",
+        "Heavy": "300mg+",
         "Light": "100-150mg",
         "Strong": "200-300mg"
       }
@@ -27029,7 +27131,7 @@
         "Strong": "120-200mg+"
       },
       "Oral": {
-        "Common": "150-200",
+        "Common": "150-200mg",
         "Light": "75-150mg",
         "Strong": "200-300mg+"
       }
@@ -27750,7 +27852,7 @@
           {
             "author": "Sandeep M Nayak, Natalie Gukasyan, Frederick S Barrett , Earth Erowid , Fire Erowid , Roland R Griffiths",
             "title": "Classic Psychedelic Coadministration with Lithium, but Not Lamotrigine, is Associated with Seizures: An Analysis of Online Psychedelic Experience Reports",
-            "url": "https://pubmed.ncbi.nlm.nih.gov/34348413/"
+            "url": "https://doi.org/10.1055/a-1524-2794"
           },
           {
             "author": "Erowid",
@@ -27770,7 +27872,7 @@
           {
             "author": "Otto Simonsson, Peper S. Hendricks, Richard Chambers, Walter Osika, Simon B. Goldberg",
             "title": "Prevalence and associations of challenging, difficult or distressing experiences using classic psychedelics",
-            "url": "https://www.sciencedirect.com/science/article/pii/S0165032723000915"
+            "url": "https://doi.org/10.1016/j.jad.2023.01.073"
           }
         ],
         "status": "Dangerous"
@@ -27978,7 +28080,20 @@
         "status": "Caution"
       },
       "dxm": {
-        "status": "Low Risk & No Synergy"
+        "note": "There is a risk of serotonin syndrome when combining DXM with MXE, as DXM can induce serotonin syndrome in conjunction with other serotonin reuptake inhibitors, and MXE has shown a notable affinity for the serotonin transporter.",
+        "sources": [
+          {
+            "author": "Matteo Marti, Giuseppe Talani, Cristina Miliano, Sabrine Bilel, Francesca Biggio, Jessica Bratzu, Marco Diana,Maria Antonietta De Luca, Liana Fattore ",
+            "title": "The Ketamine Analogue Methoxetamine and 3- and 4-Methoxy Analogues of Phencyclidine Are High Affinity and Selective Ligands for the Glutamate NMDA Receptor",
+            "url": "https://doi.org/10.1371/journal.pone.0059334"
+          },
+          {
+            "author": "Bryan L. Roth, Simon Gibbons, Warunya Arunotayanun, Xi-Ping Huang, Vincent Setola, Ric Treble, Les Iversen",
+            "title": "New insights into methoxetamine mechanisms of action: Focus on serotonergic 5-HT2 receptors in pharmacological and behavioral effects in the rat ",
+            "url": "https://www.sciencedirect.com/science/article/abs/pii/S0014488621002442"
+          }
+        ],
+        "status": "Unsafe"
       },
       "ghb/gbl": {
         "note": "Both substances cause ataxia and bring a risk of vomiting and unconsciousness. If the patient falls unconscious while under the influence there is a severe risk of vomit aspiration if they are not placed in the recovery position.",
@@ -28041,7 +28156,7 @@
         "Threshold": "5-10mg"
       },
       "Oral": {
-        "Common": "25-35",
+        "Common": "25-35mg",
         "Light": "15-25mg",
         "Strong": "40-65mg",
         "Threshold": "10-15mg"
@@ -29415,8 +29530,7 @@
     "formatted_dose": {
       "Oral": {
         "Common": "333-500mg.",
-        "Fatal": "2000mg",
-        "Note": "As a tea."
+        "Fatal": "2000mg"
       },
       "Smoked": {
         "Common": "100mg"
@@ -33426,7 +33540,6 @@
       "Oral": {
         "Common": "12.5mg",
         "Light": "7.5mg",
-        "Note": "Tianeptine",
         "Strong": "17mg"
       }
     },
@@ -33922,7 +34035,7 @@
       "Oral": {
         "Common": "50-100mg",
         "Light": "25-50mg",
-        "Strong": "100-150"
+        "Strong": "100-150mg"
       }
     },
     "formatted_duration": {
@@ -34164,7 +34277,7 @@
     "formatted_dose": {
       "Oral": {
         "Common": "7.5-15mg",
-        "Heavy": "25+mg.",
+        "Heavy": "25mg+",
         "Light": "5-7.5mg",
         "Strong": "15-25mg"
       }
@@ -34324,7 +34437,7 @@
     ],
     "formatted_dose": {
       "Oral": {
-        "Light": "50+mg"
+        "Light": "50mg+"
       }
     },
     "name": "valerylfentanyl",

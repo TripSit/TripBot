@@ -58,6 +58,7 @@
   "homepage": "https://github.com/TripSit/TripBot#readme",
   "dependencies": {
     "@discordjs/voice": "^0.16.1",
+    "@google/generative-ai": "^0.2.1",
     "@napi-rs/canvas": "^0.1.44",
     "@octokit/types": "^12.4.0",
     "@octokit/webhooks-types": "^7.3.1",

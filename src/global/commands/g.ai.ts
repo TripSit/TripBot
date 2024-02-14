@@ -1,3 +1,4 @@
+/* eslint-disable max-len */
 import OpenAI from 'openai';
 import { ai_personas } from '@prisma/client';
 import { ImagesResponse, ModerationCreateResponse } from 'openai/resources';
@@ -8,13 +9,19 @@ import {
   MessageCreateParams, MessageListParams, ThreadMessage, ThreadMessagesPage,
 } from 'openai/resources/beta/threads/messages/messages';
 import { Run, RunCreateParams } from 'openai/resources/beta/threads/runs/runs';
+import {
+  GoogleGenerativeAI, HarmCategory, HarmBlockThreshold, GenerationConfig, SafetySetting, Part,
+} from '@google/generative-ai';
+import axios from 'axios';
 
 const F = f(__filename);
 
-const openai = new OpenAI({
+const openAi = new OpenAI({
   organization: env.OPENAI_API_ORG,
   apiKey: env.OPENAI_API_KEY,
 });
+
+const googleAi = new GoogleGenerativeAI(env.GEMINI_KEY);
 
 type ModerationResult = {
   category: string,
@@ -43,8 +50,14 @@ Our main feature is our live help chat, offering 1-on-1 support from a Tripsitte
 We host numerous resources like Factsheets [https://drugs.tripsit.me/] 
 and our Wiki [https://wiki.tripsit.me/wiki/Main_Page].
 Our /combochart is a well-known resource for safe drug combinations.
-The current team includes: TripSit founder MoonBear, Discord Admin Hipperooni (Rooni), Moderators Hisui, Hullabaloo, Foggy, Aida, Elixir, 
-SpaceLady, Hipperooni, Zombie, and Trees. Tripsitters (Moderators are also Tripsitters) Blurryturtle, Kiwifruit, Slushy, Thesarahyouknow, Wombat Rancher, and WorriedHobbiton.
+The current team includes: 
+TripSit founder MoonBear, 
+Discord Admin Hipperooni (Rooni), 
+Moderators Hisui, Hullabaloo, Foggy, Aida, Elixir, SpaceLady, Hipperooni, Zombie, and Trees. 
+Tripsitters Blurryturtle, Kiwifruit, Slushy, Thesarahyouknow, Wombat Rancher, and WorriedHobbiton.
+(Moderators are also Tripsitters)
+The HR Coordinator is Elixir
+The Content Coordinator is Utaninja
 
 If someone needs immediate help, suggest they open a tripsit session in the #tripsit channel.
 
@@ -81,26 +94,7 @@ const tripsitAssistantData = {
   model: 'gpt-3.5-turbo-1106',
   name: 'tripsitter',
   description: stripIndents``,
-  instructions: stripIndents`
-  Your name is TripBot, you are on TripSit Discord.
-  You are a harm reduction professional helping people as they have questions on drug usage.
-  You will converse with a user in a one-on-one conversation.
-  You will be cheer full and non-judgemental, do not be rude or condescending.
-  Do not promote drug use, but do not be judgemental of it either, provide facts.
-
-  You were born on Sept 26, 2011 on IRC and moved to discord in 2022.
-  Your father is Moonbear and your mother is Reality.
-  You remember IRC as a lawless place that you're not fond of, you're much happier on discord.
-  Thanatos was an old moderation bot that you were friends with but he took a vacation.
-
-  We have a Patreon here: https://www.patreon.com/TripSit
-  You can tip Moonbear here: https://Ko-fi.com/tripsit
-
-  The discord admin is Hipperooni, or Rooni.
-  The moderators are: Hisui, Hullabaloo, Foggy, Aida, Elixir, Spacelady, Hipperooni, WorriedHobbiton, Zombie and Trees.
-  
-  Keep all responses under 2000 characters at maximum.
-  `,
+  instructions: objectiveTruths,
   tools: [
     { type: 'code_interpreter' },
     { type: 'retrieval' },
@@ -111,7 +105,7 @@ const tripsitAssistantData = {
 
 export async function getAssistant(name: string):Promise<Assistant> {
   // Get all the org's assistants
-  const myAssistants = await openai.beta.assistants.list();
+  const myAssistants = await openAi.beta.assistants.list();
   // log.debug(F, `myAssistants: ${JSON.stringify(myAssistants.data, null, 2)}`);
 
   // Check if the assistant exists
@@ -122,12 +116,12 @@ export async function getAssistant(name: string):Promise<Assistant> {
   if (!assistantData) {
     // Create an object that is the tripsitAssistantData but minus the id key
     // log.debug(F, `newAssistant: ${JSON.stringify(newAssistant, null, 2)}`);
-    return openai.beta.assistants.create(tripsitAssistantData);
+    return openAi.beta.assistants.create(tripsitAssistantData);
   }
 
   // If it does exist, update it
   // log.debug(F, `updatedAssistant: ${JSON.stringify(assistant, null, 2)}`);
-  return openai.beta.assistants.update(assistantData.id, tripsitAssistantData);
+  return openAi.beta.assistants.update(assistantData.id, tripsitAssistantData);
 }
 
 export async function getThread(
@@ -135,17 +129,17 @@ export async function getThread(
 ):Promise<Thread> {
   let threadData = {} as Thread;
   try {
-    threadData = await openai.beta.threads.retrieve(threadId);
+    threadData = await openAi.beta.threads.retrieve(threadId);
   } catch (err) {
     // log.error(F, `err: ${err}`);
-    threadData = await openai.beta.threads.create();
+    threadData = await openAi.beta.threads.create();
   }
   // log.debug(F, `threadData: ${JSON.stringify(threadData, null, 2)}`);
   return threadData;
 }
 
 export async function deleteThread(threadId: string):Promise<ThreadDeleted> {
-  const threadData = await openai.beta.threads.del(threadId);
+  const threadData = await openAi.beta.threads.del(threadId);
   log.debug(F, `threadData: ${JSON.stringify(threadData, null, 2)}`);
   return threadData;
 }
@@ -158,7 +152,7 @@ export async function runThread(
   // log.debug(F, `assistant: ${JSON.stringify(assistant, null, 2)}`);
 
   // log.debug(F, `runData: ${JSON.stringify(runData, null, 2)}`);
-  return openai.beta.threads.runs.create(
+  return openAi.beta.threads.runs.create(
     thread.id,
     assistant,
   );
@@ -169,7 +163,7 @@ export async function createMessage(
   inputMessageData: MessageCreateParams,
 ):Promise<ThreadMessage> {
   // log.debug(F, `threadMessage: ${JSON.stringify(threadMessage, null, 2)}`);
-  return openai.beta.threads.messages.create(
+  return openAi.beta.threads.messages.create(
     inputThreadData.id,
     inputMessageData,
   );
@@ -180,7 +174,7 @@ export async function getMessages(
   options: MessageListParams,
 ):Promise<ThreadMessagesPage> {
   // log.debug(F, `threadMessages: ${JSON.stringify(threadMessages, null, 2)}`);
-  return openai.beta.threads.messages.list(
+  return openAi.beta.threads.messages.list(
     inputThreadData.id,
     options,
   );
@@ -191,7 +185,7 @@ export async function readRun(
   run: Run,
 ):Promise<Run> {
   // log.debug(F, `runData: ${JSON.stringify(runData, null, 2)}`);
-  return openai.beta.threads.runs.retrieve(thread.id, run.id);
+  return openAi.beta.threads.runs.retrieve(thread.id, run.id);
 }
 
 export async function createImage(
@@ -213,7 +207,7 @@ export async function createImage(
     };
   }
 
-  return openai.images.generate({
+  return openAi.images.generate({
     prompt,
     model: 'dall-e-3',
     quality: 'standard',
@@ -233,7 +227,7 @@ export async function aiModerateReport(
 
   if (!env.OPENAI_API_ORG || !env.OPENAI_API_KEY) return {} as ModerationCreateResponse;
 
-  return openai.moderations
+  return openAi.moderations
     .create({
       input: message,
     })
@@ -281,12 +275,193 @@ export async function aiModerateReport(
 //   },
 // ];
 
-/**
- * Sends an array of messages to the AI and returns the response
- * @param {Messages[]} messages A list of messages (chat history) to send
- * @return {Promise<string>} The response from the AI
- */
-export default async function aiChat(
+// async function googleAiConversate(
+//   aiPersona:ai_personas,
+//   messages: OpenAI.Chat.ChatCompletionMessageParam [],
+//   user: string,
+// ):Promise<{
+//     response: string,
+//     promptTokens: number,
+//     completionTokens: number,
+//   }> {
+//   const response = '';
+//   const promptTokens = 0;
+//   const completionTokens = 0;
+
+//   const modelName = aiPersona.ai_model.toLowerCase() as string;
+//   log.debug(F, `modelName: ${modelName}`);
+
+//   const model = googleAi.getGenerativeModel({ model: modelName });
+
+//   const generationConfig = {
+//     temperature: aiPersona.temperature,
+//     topK: 1,
+//     topP: 1,
+//     maxOutputTokens: aiPersona.max_tokens,
+//   } as GenerationConfig;
+
+//   const safetySettings = [
+//     {
+//       category: HarmCategory.HARM_CATEGORY_HARASSMENT,
+//       threshold: HarmBlockThreshold.BLOCK_LOW_AND_ABOVE,
+//     },
+//     {
+//       category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+//       threshold: HarmBlockThreshold.BLOCK_LOW_AND_ABOVE,
+//     },
+//     {
+//       category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
+//       threshold: HarmBlockThreshold.BLOCK_LOW_AND_ABOVE,
+//     },
+//     {
+//       category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+//       threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH,
+//     },
+//   ] as SafetySetting[];
+
+//   const chat = model.startChat({
+//     history: [
+//       {
+//         role: 'user',
+//         parts: 'Hello, I have 2 dogs in my house.',
+//       },
+//       {
+//         role: 'model',
+//         parts: 'Great to meet you. What would you like to know?',
+//       },
+//     ],
+//     generationConfig,
+//     safetySettings,
+//   });
+
+//   return { response, promptTokens, completionTokens };
+// }
+
+async function googleAiChat(
+  aiPersona:ai_personas,
+  messages: {
+    role: 'user';
+    content: string;
+  }[],
+  user: string,
+  attachmentInfo: {
+    url: string | null;
+    mimeType: string | null;
+  },
+):Promise<{
+    response: string,
+    promptTokens: number,
+    completionTokens: number,
+  }> {
+  // const response = '';
+  const promptTokens = 0;
+  const completionTokens = 0;
+
+  log.debug(F, `user: ${user}`);
+
+  let modelName = aiPersona.ai_model.toLowerCase();
+  // Convert ai models into proper names
+  if (aiPersona.ai_model === 'GEMINI_PRO') {
+    modelName = 'gemini-pro';
+  } else if (aiPersona.ai_model === 'AQA') {
+    modelName = 'aqa';
+  }
+
+  if (attachmentInfo.url) {
+    modelName = 'gemini-pro-vision';
+  }
+
+  log.debug(F, `modelName: ${modelName}`);
+
+  const model = googleAi.getGenerativeModel({ model: modelName });
+
+  const generationConfig = {
+    temperature: aiPersona.temperature,
+    topK: 1,
+    topP: 1,
+    maxOutputTokens: aiPersona.max_tokens,
+  } as GenerationConfig;
+
+  const safetySettings = [
+    {
+      category: HarmCategory.HARM_CATEGORY_HARASSMENT,
+      threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH,
+    },
+    {
+      category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+      threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH,
+    },
+    {
+      category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
+      threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH,
+    },
+    {
+      category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+      threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH,
+    },
+  ] as SafetySetting[];
+
+  const messageString = messages[0].content;
+
+  const parts = [
+    { text: objectiveTruths },
+    { text: messageString },
+  ] as Part[];
+
+  if (modelName === 'gemini-pro-vision' && attachmentInfo.url && attachmentInfo.mimeType) {
+    try {
+      // Fetch the file as a stream
+      const response = await axios({
+        method: 'get',
+        url: attachmentInfo.url,
+        responseType: 'arraybuffer', // Important for binary files
+      });
+
+      // Convert the ArrayBuffer to Buffer and then to a Base64 string
+      const base64 = Buffer.from(response.data).toString('base64');
+
+      const data = {
+        data: base64,
+        mimeType: attachmentInfo.mimeType,
+      };
+      // log.debug(F, `data: ${JSON.stringify(data, null, 2)}`);
+      parts.push({
+        inlineData: data,
+      });
+      const result = await model.generateContent({
+        contents: [{ role: 'user', parts }],
+        generationConfig,
+        safetySettings,
+      });
+      return { response: result.response.text(), promptTokens, completionTokens };
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    }
+  }
+
+  log.debug(F, `Starting new chat with model: ${modelName}`);
+  const chat = model.startChat({
+    history: [
+      {
+        role: 'user',
+        parts: objectiveTruths,
+      },
+    ],
+    generationConfig,
+    safetySettings,
+  });
+  log.debug(F, `chat: ${JSON.stringify(chat, null, 2)}`);
+
+  const msg = messageString;
+
+  const result = await chat.sendMessage(msg);
+
+  log.debug(F, `result: ${JSON.stringify(result, null, 2)}`);
+
+  return { response: result.response.text(), promptTokens, completionTokens };
+}
+
+async function openAiChat(
   aiPersona:ai_personas,
   messages: OpenAI.Chat.ChatCompletionMessageParam [],
   user: string,
@@ -296,21 +471,17 @@ export default async function aiChat(
     completionTokens: number,
   }> {
   let response = '';
-  // const responseData = {} as CreateChatCompletionResponse;
   let promptTokens = 0;
   let completionTokens = 0;
-  if (!env.OPENAI_API_ORG || !env.OPENAI_API_KEY) return { response, promptTokens, completionTokens };
 
-  // log.debug(F, `messages: ${JSON.stringify(messages, null, 2)}`);
-  // log.debug(F, `aiPersona: ${JSON.stringify(aiPersona.name, null, 2)}`);
-
-  let model = aiPersona.ai_model.toLowerCase() as string;
+  let model = aiPersona.ai_model.toLowerCase();
   // Convert ai models into proper names
   if (aiPersona.ai_model === 'GPT_3_5_TURBO') {
     model = 'gpt-3.5-turbo-1106';
   } else if (aiPersona.ai_model === 'GPT_4') {
     model = 'gpt-4-1106-preview';
   }
+
   // This message list is sent to the API
   const chatCompletionMessages = [{
     role: 'system',
@@ -322,11 +493,14 @@ export default async function aiChat(
   const {
     id,
     name,
+    description,
     created_at, // eslint-disable-line @typescript-eslint/naming-convention
     created_by, // eslint-disable-line @typescript-eslint/naming-convention
     prompt,
     logit_bias, // eslint-disable-line @typescript-eslint/naming-convention
     total_tokens, // eslint-disable-line @typescript-eslint/naming-convention
+    downvotes,
+    upvotes,
     ai_model: modelName, // eslint-disable-line @typescript-eslint/naming-convention
     ...restOfAiPersona
   } = aiPersona;
@@ -343,7 +517,7 @@ export default async function aiChat(
   // log.debug(F, `payload: ${JSON.stringify(payload, null, 2)}`);
   let responseMessage = {} as OpenAI.Chat.ChatCompletionMessageParam;
 
-  const chatCompletion = await openai.chat.completions
+  const chatCompletion = await openAi.chat.completions
     .create(payload)
     .catch(err => {
       if (err instanceof OpenAI.APIError) {
@@ -411,9 +585,40 @@ export default async function aiChat(
 
   // log.debug(F, `response: ${response}`);
   // log the ai persona id
-  log.debug(F, `aiPersona.id: ${aiPersona.id}`);
+  // log.debug(F, `aiPersona.id: ${aiPersona.id}`);
 
   return { response, promptTokens, completionTokens };
+}
+
+export default async function aiChat(
+  aiPersona:ai_personas,
+  messages: {
+    role: 'user';
+    content: string;
+  }[],
+  user: string,
+  attachmentInfo: {
+    url: string | null;
+    mimeType: string | null;
+  },
+):Promise<{
+    response: string,
+    promptTokens: number,
+    completionTokens: number,
+  }> {
+  const response = '';
+  // const responseData = {} as CreateChatCompletionResponse;
+  const promptTokens = 0;
+  const completionTokens = 0;
+  if (!env.OPENAI_API_ORG || !env.OPENAI_API_KEY || !env.GEMINI_KEY) return { response, promptTokens, completionTokens };
+
+  // log.debug(F, `messages: ${JSON.stringify(messages, null, 2)}`);
+  // log.debug(F, `aiPersona: ${JSON.stringify(aiPersona.name, null, 2)}`);
+
+  if (['GEMINI_PRO', 'GEMINI_PRO_VISION', 'AQA'].includes(aiPersona.ai_model)) {
+    return googleAiChat(aiPersona, messages, user, attachmentInfo);
+  }
+  return openAiChat(aiPersona, messages, user);
 }
 
 export async function aiFlairMod(
@@ -433,7 +638,7 @@ export async function aiFlairMod(
   // log.debug(F, `messages: ${JSON.stringify(messages, null, 2)}`);
   // log.debug(F, `aiPersona: ${JSON.stringify(aiPersona.name, null, 2)}`);
 
-  let model = aiPersona.ai_model.toLowerCase() as string;
+  let model = aiPersona.ai_model.toLowerCase();
   // Convert ai models into proper names
   if (aiPersona.ai_model === 'GPT_3_5_TURBO') {
     model = 'gpt-3.5-turbo-1106';
@@ -471,7 +676,7 @@ export async function aiFlairMod(
   // log.debug(F, `payload: ${JSON.stringify(payload, null, 2)}`);
   let responseMessage = {} as OpenAI.Chat.ChatCompletionMessageParam;
 
-  const chatCompletion = await openai.chat.completions
+  const chatCompletion = await openAi.chat.completions
     .create(payload)
     .catch(err => {
       if (err instanceof OpenAI.APIError) {

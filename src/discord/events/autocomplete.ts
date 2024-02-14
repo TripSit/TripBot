@@ -521,7 +521,7 @@ async function autocompleteAiNames(interaction:AutocompleteInteraction) {
     keys: [
       'name',
     ],
-  };
+};
 
   const nameList = interaction.guild?.id === env.DISCORD_GUILD_ID
     ? await db.ai_personas.findMany({
