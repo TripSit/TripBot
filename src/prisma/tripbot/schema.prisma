@@ -413,6 +413,7 @@ model ai_personas {
   id                String        @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
   name              String        @unique(map: "aipersonas_name_unique")
   description       String?
+  public            Boolean       @default(false)
   ai_model          ai_model
   prompt            String
   temperature       Float?        @db.Real
@@ -621,7 +622,7 @@ enum ai_model {
   // GPT_4_1106_PREVIEW        @map("GPT-4-1106-PREVIEW")
   // GPT_4_1106_VISION_PREVIEW @map("GPT-4-1106-VISION-PREVIEW")
   // DALL_E_2                  @map("DALL-E-2")
-  // DALL_E_3                  @map("DALL-E-3")
+  DALL_E_3                  @map("DALL-E-3")
   GEMINI_PRO                @map("GEMINI-PRO")
   // GEMINI_PRO_VISION                @map("GEMINI-PRO-VISION")
   // AQA                    @map("AQA")

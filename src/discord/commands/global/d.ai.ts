@@ -64,9 +64,7 @@ import aiChat, {
 // import tripsitInfo from '../../../global/commands/g.about';
 
 /* TODO
-* way to delete personas
 * conversations
-* reformat rules
 * If the user starts typing again, cancel the run and wait for them to either stop typing or send a message
 */
 const F = f(__filename);
@@ -183,6 +181,18 @@ const buttonAiCreate = new ButtonBuilder()
   .setEmoji('✨')
   .setStyle(ButtonStyle.Success);
 
+const buttonAiDelete = new ButtonBuilder()
+  .setCustomId('AI~delete')
+  .setLabel('Delete')
+  .setEmoji('❌')
+  .setStyle(ButtonStyle.Danger);
+
+const buttonAiDeleteConfirm = new ButtonBuilder()
+  .setCustomId('AI~deleteConfirm')
+  .setLabel('Yes I\'m sure')
+  .setEmoji('❌')
+  .setStyle(ButtonStyle.Danger);
+
 const menuAiChannels = new ChannelSelectMenuBuilder()
   .setCustomId('AI~channel')
   .setPlaceholder('Please select a channel to manage');
@@ -198,6 +208,9 @@ const menuAiPersonaSetup = new StringSelectMenuBuilder()
 const menuAiModels = new StringSelectMenuBuilder()
   .setCustomId('AI~model')
   .setPlaceholder('Please select a model.');
+
+const menuAiPublic = new StringSelectMenuBuilder()
+  .setCustomId('AI~public');
 
 const termsOfService = stripIndents`
 ➤ I understand this 'AI' is not 'intelligent', I will not use it for any kind of drug/medical advice.
@@ -642,6 +655,70 @@ async function helpPage(
   };
 }
 
+async function deletePage(
+  interaction: ButtonInteraction,
+):Promise<InteractionEditReplyOptions> {
+  const selectedPersona = (interaction.message.components[0].components[0] as StringSelectMenuComponent).options.find(option => option.default)?.value;
+
+  const personaData = await db.ai_personas.findFirstOrThrow({
+    where: {
+      name: selectedPersona,
+    },
+  });
+
+  return {
+    embeds: [embedTemplate()
+      .setTitle('🤖 Welcome to TripBot\'s AI Module! 🤖')
+      .setDescription(`
+        Are you sure you want to delete the persona ${personaData.name}? This action cannot be undone.
+      `)
+      .setFooter(null)],
+    components: [new ActionRowBuilder<ButtonBuilder>()
+      .addComponents(
+        buttonAiPersonas,
+        buttonAiDeleteConfirm
+          .setCustomId(`AI~deleteConfirm~${selectedPersona}`),
+      )],
+  };
+}
+
+async function deletePersona(
+  interaction: ButtonInteraction,
+):Promise<InteractionEditReplyOptions> {
+  log.debug(F, `Customid: ${interaction.customId}`);
+  const selectedPersona = interaction.customId?.split('~')[2];
+
+  log.debug(F, `selectedPersona: ${selectedPersona}`);
+
+  await db.ai_personas.delete({
+    where: {
+      name: selectedPersona,
+    },
+  });
+
+  // Get the channel to send the message to
+  const channelAiLog = await discordClient.channels.fetch(env.CHANNEL_AILOG) as TextChannel;
+
+  // Send the message
+  await channelAiLog.send({
+    content: `Hey <@${env.DISCORD_OWNER_ID}>, ${interaction.member} deleted the '${selectedPersona}' persona.`,
+  });
+
+  return {
+    embeds: [embedTemplate()
+      .setDescription(`
+        Persona ${selectedPersona} has been deleted.
+      `)
+      .setFooter(null)],
+    components: [new ActionRowBuilder<ButtonBuilder>()
+      .addComponents(
+        buttonAiHelp,
+        buttonAiSetup,
+        buttonAiPersonas,
+      )],
+  };
+}
+
 async function personasPage(
   interaction: ChatInputCommandInteraction | ButtonInteraction | StringSelectMenuInteraction,
 ):Promise<InteractionEditReplyOptions> {
@@ -721,8 +798,35 @@ async function personasPage(
       },
     });
 
+    log.debug(F, 'Adding three buttons to personaButtons');
     if (tripsitMember.roles.cache.has(env.ROLE_DEVELOPER)) {
-      personaButtons.addComponents(buttonAiModify, buttonAiNew);
+      personaButtons.addComponents(buttonAiNew, buttonAiModify, buttonAiDelete);
+    }
+
+    if (persona.public) {
+      menuAiPublic.setOptions(
+        {
+          label: 'Not available outside of TripSit',
+          value: 'private',
+        },
+        {
+          label: 'Available outside of TripSit',
+          value: 'public',
+          default: true,
+        },
+      );
+    } else {
+      menuAiPublic.setOptions(
+        {
+          label: 'Not available outside of TripSit',
+          value: 'private',
+          default: true,
+        },
+        {
+          label: 'Available outside of TripSit',
+          value: 'public',
+        },
+      );
     }
 
     return {
@@ -730,6 +834,9 @@ async function personasPage(
       components: [
         new ActionRowBuilder<StringSelectMenuBuilder>().addComponents([
           menuAiPersonas.setOptions(aiPersonaOptions),
+        ]),
+        new ActionRowBuilder<StringSelectMenuBuilder>().addComponents([
+          menuAiPublic,
         ]),
         personaButtons,
       ],
@@ -769,6 +876,36 @@ async function personasPage(
       personaButtons,
     ],
   };
+}
+
+async function setPublicity(
+  interaction: StringSelectMenuInteraction,
+):Promise<InteractionEditReplyOptions> {
+  log.debug(F, 'setPublicity started');
+  // log.debug(F, `components: ${JSON.stringify(interaction.message.components, null, 2)}`);
+  const selectedPersona = (interaction.message.components[0].components[0] as StringSelectMenuComponent).options.find(option => option.default)?.value;
+  log.debug(F, `selectedPersona: ${JSON.stringify(selectedPersona, null, 2)}`);
+  const isPublic = interaction.values[0] === 'public';
+  log.debug(F, `isPublic: ${isPublic}`);
+
+  await db.ai_personas.update({
+    where: {
+      name: selectedPersona,
+    },
+    data: {
+      public: isPublic,
+    },
+  });
+
+  // Get the channel to send the message to
+  const channelAiLog = await discordClient.channels.fetch(env.CHANNEL_AILOG) as TextChannel;
+
+  // Send the message
+  await channelAiLog.send({
+    content: `Hey <@${env.DISCORD_OWNER_ID}>, ${interaction.member} set'${selectedPersona}' to ${isPublic ? 'public' : 'private'}.`,
+  });
+
+  return personasPage(interaction);
 }
 
 async function setupPage(
@@ -2130,6 +2267,8 @@ export async function aiMenu(
       return setupPage(interaction as StringSelectMenuInteraction);
     case 'model':
       return createPage(interaction as StringSelectMenuInteraction);
+    case 'public':
+      return setPublicity(interaction as StringSelectMenuInteraction);
     default:
       return setupPage(interaction);
   }
@@ -2171,6 +2310,12 @@ export async function aiButton(
     }
     case 'help':
       await interaction.update(await helpPage(interaction));
+      break;
+    case 'delete':
+      await interaction.update(await deletePage(interaction));
+      break;
+    case 'deleteConfirm':
+      await interaction.update(await deletePersona(interaction));
       break;
     case 'link':
       await interaction.update(await link(interaction));

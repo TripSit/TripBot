@@ -363,8 +363,6 @@ async function googleAiChat(
   // Convert ai models into proper names
   if (aiPersona.ai_model === 'GEMINI_PRO') {
     modelName = 'gemini-pro';
-  } else if (aiPersona.ai_model === 'AQA') {
-    modelName = 'aqa';
   }
 
   if (attachmentInfo.url) {
@@ -435,7 +433,7 @@ async function googleAiChat(
       });
       return { response: result.response.text(), promptTokens, completionTokens };
     } catch (error) {
-      console.error('Error fetching data:', error);
+      log.error(F, `Error fetching data: ${error}`);
     }
   }
 
@@ -478,8 +476,6 @@ async function openAiChat(
   // Convert ai models into proper names
   if (aiPersona.ai_model === 'GPT_3_5_TURBO') {
     model = 'gpt-3.5-turbo-1106';
-  } else if (aiPersona.ai_model === 'GPT_4') {
-    model = 'gpt-4-1106-preview';
   }
 
   // This message list is sent to the API
@@ -642,8 +638,6 @@ export async function aiFlairMod(
   // Convert ai models into proper names
   if (aiPersona.ai_model === 'GPT_3_5_TURBO') {
     model = 'gpt-3.5-turbo-1106';
-  } else if (aiPersona.ai_model === 'GPT_4') {
-    model = 'gpt-4-1106-preview';
   }
   // This message list is sent to the API
   const chatCompletionMessages = [{
