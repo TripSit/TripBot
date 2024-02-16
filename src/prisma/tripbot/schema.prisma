@@ -148,6 +148,8 @@ model users {
   moodle_id                                                 String?
   ai_terms_agree                                            Boolean           @default(false)
   ai_personas                                               ai_personas[]
+  ai_history_openai                                         String?
+  ai_history_google                                         String?
   appeals                                                   appeals[]
   drug_articles_drug_articles_last_modified_byTousers       drug_articles[]   @relation("drug_articles_last_modified_byTousers")
   drug_articles_drug_articles_posted_byTousers              drug_articles[]   @relation("drug_articles_posted_byTousers")
@@ -440,7 +442,7 @@ model ai_channels {
 
   discord_guilds discord_guilds @relation(fields: [guild_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "aichannels_guildid_foreign")
 
-  @@unique([channel_id, persona_id], map: "aichannels_channelid_personaid_unique")
+  @@unique([channel_id], map: "aichannels_channelid_unique")
 }
 
 model ai_moderation {

@@ -4,12 +4,9 @@ import {
   ActionRowBuilder,
   Colors,
   SlashCommandBuilder,
-  // ChatInputCommandInteraction,
   GuildMember,
-  // time,
   Message,
   TextChannel,
-  // ThreadChannel,
   TextBasedChannel,
   CategoryChannel,
   ForumChannel,
@@ -17,10 +14,6 @@ import {
   ButtonStyle,
   ButtonInteraction,
   EmbedBuilder,
-  // APIButtonComponent,
-  // APIActionRowComponent,
-  // APIMessageComponentEmoji,
-  Events,
   InteractionEditReplyOptions,
   ChatInputCommandInteraction,
   ChannelSelectMenuBuilder,
@@ -39,6 +32,7 @@ import {
   MessageReaction,
   User,
   MessageReplyOptions,
+  MessageActionRowComponent,
 } from 'discord.js';
 import {
   APIInteractionDataResolvedChannel,
@@ -51,20 +45,13 @@ import {
   ai_moderation,
   ai_personas,
 } from '@prisma/client';
-import { Run } from 'openai/resources/beta/threads/runs/runs';
-import { MessageContentText } from 'openai/resources/beta/threads/messages/messages';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import commandContext from '../../utils/context';
-import { sleep } from '../guild/d.bottest';
-import aiChat, {
-  aiModerate, createMessage, getAssistant, getMessages, getThread, readRun, runThread,
-} from '../../../global/commands/g.ai';
-// import { modModal } from '../guild/d.moderate';
-// import tripsitInfo from '../../../global/commands/g.about';
+import aiChat, { aiModerate } from '../../../global/commands/g.ai';
 
 /* TODO
-* conversations
+* only direct @ message should trigger a response
 * If the user starts typing again, cancel the run and wait for them to either stop typing or send a message
 */
 const F = f(__filename);
@@ -138,25 +125,31 @@ const buttonAiPersonas = new ButtonBuilder()
   .setCustomId('AI~personas')
   .setLabel('Personas')
   .setEmoji('🤖')
-  .setStyle(ButtonStyle.Secondary);
+  .setStyle(ButtonStyle.Primary);
+
+const buttonAiSetup = new ButtonBuilder()
+  .setCustomId('AI~setup')
+  .setLabel('Setup')
+  .setEmoji('⚙️')
+  .setStyle(ButtonStyle.Primary);
+
+const buttonAiPrivacy = new ButtonBuilder()
+  .setCustomId('AI~privacy')
+  .setLabel('Privacy')
+  .setEmoji('🔒')
+  .setStyle(ButtonStyle.Primary);
 
 const buttonAiLink = new ButtonBuilder()
   .setCustomId('AI~link')
   .setLabel('Link')
   .setEmoji('🔗')
-  .setStyle(ButtonStyle.Primary);
+  .setStyle(ButtonStyle.Success);
 
 const buttonAiUnlink = new ButtonBuilder()
   .setCustomId('AI~unlink')
   .setLabel('Unlink')
   .setEmoji('❌')
   .setStyle(ButtonStyle.Danger);
-
-const buttonAiSetup = new ButtonBuilder()
-  .setCustomId('AI~setup')
-  .setLabel('Setup')
-  .setEmoji('⚙️')
-  .setStyle(ButtonStyle.Success);
 
 const buttonAiAgree = new ButtonBuilder()
   .setCustomId('AI~agree')
@@ -190,7 +183,19 @@ const buttonAiDelete = new ButtonBuilder()
 const buttonAiDeleteConfirm = new ButtonBuilder()
   .setCustomId('AI~deleteConfirm')
   .setLabel('Yes I\'m sure')
-  .setEmoji('❌')
+  .setEmoji('🗑️')
+  .setStyle(ButtonStyle.Danger);
+
+const buttonAiDeleteHistory = new ButtonBuilder()
+  .setCustomId('AI~deleteHistory')
+  .setLabel('Delete my history')
+  .setEmoji('🗑️')
+  .setStyle(ButtonStyle.Danger);
+
+const buttonAiDeleteHistoryConfirm = new ButtonBuilder()
+  .setCustomId('AI~deleteHistoryConfirm')
+  .setLabel('Yes I\'m sure')
+  .setEmoji('🗑️')
   .setStyle(ButtonStyle.Danger);
 
 const menuAiChannels = new ChannelSelectMenuBuilder()
@@ -211,6 +216,33 @@ const menuAiModels = new StringSelectMenuBuilder()
 
 const menuAiPublic = new StringSelectMenuBuilder()
   .setCustomId('AI~public');
+
+function getComponentById(
+  interaction: ButtonInteraction | StringSelectMenuInteraction | ChannelSelectMenuInteraction,
+  id: string,
+):MessageActionRowComponent | null {
+  // This function will take an interaction and a customId and return the component with that customId
+  // If no component is found, it will return null
+  // This is useful for finding the button that was clicked, or select menu that was used
+
+  log.debug(F, `getComponentById started with id: ${id}`);
+  log.debug(F, `Components: ${JSON.stringify(interaction.message.components, null, 2)}`);
+
+  if (interaction.message?.components) {
+    // eslint-disable-next-line no-restricted-syntax
+    for (const row of interaction.message.components) {
+      // eslint-disable-next-line no-restricted-syntax
+      for (const component of row.components) {
+        if (component.customId?.includes(id)) {
+          return component;
+        }
+      }
+    }
+  }
+
+  // Return null if no component with the customId is found
+  return null;
+}
 
 const termsOfService = stripIndents`
 ➤ I understand this 'AI' is not 'intelligent', I will not use it for any kind of drug/medical advice.
@@ -596,96 +628,18 @@ async function aiAudit(
   await channelAiLog.send({ embeds: [embed] });
 }
 
-async function helpPage(
-  interaction: ChatInputCommandInteraction | ButtonInteraction,
-):Promise<InteractionEditReplyOptions> {
-  const helpButtons = new ActionRowBuilder<ButtonBuilder>();
-
-  const userData = await db.users.upsert({
-    where: { discord_id: interaction.user.id },
-    create: { discord_id: interaction.user.id },
-    update: {},
-  });
-
-  if (userData.ai_terms_agree) {
-    helpButtons
-      .addComponents(
-        buttonAiSetup,
-        buttonAiPersonas,
-      );
-  } else {
-    helpButtons
-      .addComponents(
-        buttonAiAgree,
-      );
-  }
-
-  return {
-    embeds: [embedTemplate()
-      .setTitle('🤖 Welcome to TripBot\'s AI Module! 🤖')
-      .setDescription(`
-      🌐 Experience Cutting-Edge Technology
-      Dive into the world of artificial intelligence with TripBot, powered by OpenAI's Chat GPT 3.5-Turbo API. \
-      This Language Learning Model (LLM) offers you the prowess of a highly advanced writing assistant, crafting sentences with ease. \
-      Remember, it's intelligent but not sentient.
-
-      🤖 Meet TripBot's Persona
-      We've tailored TripBot's persona to be friendly and helpful, with a touch of quirkiness. \
-      We're still trying to make this persona as helpful as possible, and **you can help us improve the AI by auditing its responses by reacting to messages with the provided thumbs.** \
-      If enough people agree, we'll take note and try to improve the bot behavior.
-
-      🚦 Important Caution
-      While TripBot's AI provides impressive accuracy, it's not perfect. \
-      **Please refrain from relying on it for harm reduction advice, drug dosages, combo info, or medical guidance.** \
-      Consider its suggestions with a critical eye, as it may occasionally fabricate information. \
-      Your judgment is paramount.
-
-      👥 How It Works
-      Simply agree to our terms, and on the next page you can enable the AI in the channels you choose. \
-      Once set up, anyone can @ mention TripBot to get a response from the AI. \
-      Note: "AI doesn't remember context of previous questions and doesn't store any message data" \
-      It does not store any history or context, every message is treated as a new conversation. \
-      However, do not expect that your conversations with the bot are private: every message sent through the bot is logged for moderation purposes.
-
-      **Ready to get started? Please agree to the following:**
-      ${termsOfService}
-      `)
-      .setFooter(null)],
-    components: [helpButtons],
-  };
-}
-
-async function deletePage(
-  interaction: ButtonInteraction,
-):Promise<InteractionEditReplyOptions> {
-  const selectedPersona = (interaction.message.components[0].components[0] as StringSelectMenuComponent).options.find(option => option.default)?.value;
-
-  const personaData = await db.ai_personas.findFirstOrThrow({
-    where: {
-      name: selectedPersona,
-    },
-  });
-
-  return {
-    embeds: [embedTemplate()
-      .setTitle('🤖 Welcome to TripBot\'s AI Module! 🤖')
-      .setDescription(`
-        Are you sure you want to delete the persona ${personaData.name}? This action cannot be undone.
-      `)
-      .setFooter(null)],
-    components: [new ActionRowBuilder<ButtonBuilder>()
-      .addComponents(
-        buttonAiPersonas,
-        buttonAiDeleteConfirm
-          .setCustomId(`AI~deleteConfirm~${selectedPersona}`),
-      )],
-  };
-}
-
-async function deletePersona(
+async function deletedPage(
   interaction: ButtonInteraction,
 ):Promise<InteractionEditReplyOptions> {
   log.debug(F, `Customid: ${interaction.customId}`);
+  const menuButtons = new ActionRowBuilder<ButtonBuilder>()
+    .addComponents(
+      buttonAiHelp.setStyle(ButtonStyle.Primary),
+      buttonAiSetup.setStyle(ButtonStyle.Primary),
+      buttonAiPersonas.setStyle(ButtonStyle.Primary),
+      buttonAiPrivacy.setStyle(ButtonStyle.Primary),
+    );
+
   const selectedPersona = interaction.customId?.split('~')[2];
 
   log.debug(F, `selectedPersona: ${selectedPersona}`);
@@ -710,553 +664,109 @@ async function deletePersona(
         Persona ${selectedPersona} has been deleted.
       `)
       .setFooter(null)],
-    components: [new ActionRowBuilder<ButtonBuilder>()
-      .addComponents(
-        buttonAiHelp,
-        buttonAiSetup,
-        buttonAiPersonas,
-      )],
-  };
-}
-
-async function personasPage(
-  interaction: ChatInputCommandInteraction | ButtonInteraction | StringSelectMenuInteraction,
-):Promise<InteractionEditReplyOptions> {
-  log.debug(F, 'personasPage started');
-  const personaButtons = new ActionRowBuilder<ButtonBuilder>()
-    .addComponents(
-      buttonAiHelp,
-      buttonAiSetup,
-    );
-
-  const aiPersonaList = interaction.guild?.id === env.DISCORD_GUILD_ID
-    ? await db.ai_personas.findMany()
-    : await db.ai_personas.findMany({
-      where: {
-        OR: [
-          { name: 'tripbot' },
-        ],
-      },
-    });
-
-  const aiPersonaOptions = aiPersonaList.length === 0
-    ? [{
-      label: 'No personas available',
-      description: 'Please tell moonbear about this.',
-      value: 'none',
-      default: true,
-    }] as SelectMenuComponentOptionData[]
-    : aiPersonaList.map(persona => ({
-      label: persona.name,
-      value: persona.name,
-    } as SelectMenuComponentOptionData));
-
-  log.debug(F, `aiPersonaOptions: ${JSON.stringify(aiPersonaOptions, null, 2)}`);
-
-  let selectedPersona = undefined as string | undefined;
-
-  if (interaction.isButton() && interaction.message.components[0].components[0].customId === 'AI~personaInfo') {
-    selectedPersona = (interaction.message.components[0].components[0] as StringSelectMenuComponent).options.find(option => option.default)?.value;
-    log.debug(F, `selectedPersona: ${JSON.stringify(selectedPersona, null, 2)}`);
-    if (selectedPersona) {
-      const personaOption = aiPersonaOptions.find(persona => persona.value === selectedPersona);
-      if (personaOption) {
-        personaOption.default = true;
-      }
-    }
-  }
-
-  if (interaction.isStringSelectMenu()) {
-    [selectedPersona] = interaction.values;
-
-    log.debug(F, `selectedPersona: ${JSON.stringify(selectedPersona, null, 2)}`);
-    // If it exists, make sure the aiPersonaOptions has it marked default
-    if (selectedPersona) {
-      const personaOption = aiPersonaOptions.find(persona => persona.value === selectedPersona);
-      if (personaOption) {
-        personaOption.default = true;
-      }
-    }
-  }
-
-  log.debug(F, `aiPersonaOptions: ${JSON.stringify(aiPersonaOptions, null, 2)}`);
-
-  // If there's only one persona in the list, set it as the default
-  // if (aiPersonaList.length === 1) {
-  //   aiPersonaOptions[0].default = true;
-  //   selectedPersona = aiPersonaOptions[0].value;
-  // }
-
-  // If the user is a developer in the home guild, show the buttonAiModify button
-  const tripsitGuild = await discordClient.guilds.fetch(env.DISCORD_GUILD_ID);
-  const tripsitMember = await tripsitGuild.members.fetch(interaction.user.id);
-
-  if (selectedPersona) {
-    const persona = await db.ai_personas.findFirstOrThrow({
-      where: {
-        name: selectedPersona,
-      },
-    });
-
-    log.debug(F, 'Adding three buttons to personaButtons');
-    if (tripsitMember.roles.cache.has(env.ROLE_DEVELOPER)) {
-      personaButtons.addComponents(buttonAiNew, buttonAiModify, buttonAiDelete);
-    }
-
-    if (persona.public) {
-      menuAiPublic.setOptions(
-        {
-          label: 'Not available outside of TripSit',
-          value: 'private',
-        },
-        {
-          label: 'Available outside of TripSit',
-          value: 'public',
-          default: true,
-        },
-      );
-    } else {
-      menuAiPublic.setOptions(
-        {
-          label: 'Not available outside of TripSit',
-          value: 'private',
-          default: true,
-        },
-        {
-          label: 'Available outside of TripSit',
-          value: 'public',
-        },
-      );
-    }
-
-    return {
-      embeds: [await makePersonaEmbed(persona)],
-      components: [
-        new ActionRowBuilder<StringSelectMenuBuilder>().addComponents([
-          menuAiPersonas.setOptions(aiPersonaOptions),
-        ]),
-        new ActionRowBuilder<StringSelectMenuBuilder>().addComponents([
-          menuAiPublic,
-        ]),
-        personaButtons,
-      ],
-    };
-  }
-
-  if (tripsitMember.roles.cache.has(env.ROLE_DEVELOPER)) {
-    personaButtons.addComponents(buttonAiNew);
-  }
-
-  return {
-    embeds: [embedTemplate()
-      .setTitle('Persona Information')
-      .setDescription(stripIndents` 
-      A persona is a set of parameters that the AI uses to generate responses. \
-      This allows us to have different 'personalities' for the AI. \
-      The AI will use the persona that is linked to the channel it is responding in, and return responses based on that persona's personality.
-
-      This menu is used to set the parameters of an AI persona, or create a new persona. The parameters are:
-      **Name**
-      > The name of the persona. This is used to identify the persona in the AI Get command.
-      **Model**
-      > The model to use for the persona. This is a dropdown list of available models.
-      **Prompt**
-      > The prompt to use for the persona. This is the text that the AI will use to generate responses.
-      **Max Tokens**
-      > The maximum number of tokens to use for the AI response.
-      > What are tokens? <https://platform.openai.com/tokenizer>
-      **Temperature**
-      > Adjusts the randomness of the AI's answers.
-      > Lower values make the AI more predictable and focused, while higher values make it more random and varied.`)
-      .setFooter(null)],
     components: [
-      new ActionRowBuilder<StringSelectMenuBuilder>().addComponents([
-        menuAiPersonas.setOptions(aiPersonaOptions),
-      ]),
-      personaButtons,
+      menuButtons,
     ],
   };
 }
 
-async function setPublicity(
-  interaction: StringSelectMenuInteraction,
+async function deletePage(
+  interaction: ButtonInteraction,
 ):Promise<InteractionEditReplyOptions> {
-  log.debug(F, 'setPublicity started');
-  // log.debug(F, `components: ${JSON.stringify(interaction.message.components, null, 2)}`);
-  const selectedPersona = (interaction.message.components[0].components[0] as StringSelectMenuComponent).options.find(option => option.default)?.value;
-  log.debug(F, `selectedPersona: ${JSON.stringify(selectedPersona, null, 2)}`);
-  const isPublic = interaction.values[0] === 'public';
-  log.debug(F, `isPublic: ${isPublic}`);
-
-  await db.ai_personas.update({
+  const personaSelectMenu = getComponentById(interaction, 'AI~personaInfo') as StringSelectMenuComponent;
+  const selectedPersona = personaSelectMenu.options.find(option => option.default)?.value;
+  const personaData = await db.ai_personas.findFirstOrThrow({
     where: {
       name: selectedPersona,
+    },
+  });
+
+  return {
+    embeds: [embedTemplate()
+      .setTitle('🤖 Welcome to TripBot\'s AI Module! 🤖')
+      .setDescription(`
+        Are you sure you want to delete the persona ${personaData.name}? This action cannot be undone.
+      `)
+      .setFooter(null)],
+    components: [
+      new ActionRowBuilder<ButtonBuilder>()
+        .addComponents(
+          buttonAiHelp.setStyle(ButtonStyle.Primary),
+          buttonAiSetup.setStyle(ButtonStyle.Primary),
+          buttonAiPersonas.setStyle(ButtonStyle.Primary),
+          buttonAiPrivacy.setStyle(ButtonStyle.Primary),
+        ),
+      new ActionRowBuilder<ButtonBuilder>()
+        .addComponents(
+          buttonAiDeleteConfirm
+            .setCustomId(`AI~deleteConfirm~${selectedPersona}`),
+        ),
+    ],
+  };
+}
+
+async function deletedHistoryPage(
+  interaction: ButtonInteraction,
+):Promise<InteractionEditReplyOptions> {
+  await db.users.update({
+    where: {
+      discord_id: interaction.user.id,
     },
     data: {
-      public: isPublic,
+      ai_terms_agree: false,
+      ai_history_google: null,
+      ai_history_openai: null,
     },
   });
 
-  // Get the channel to send the message to
   const channelAiLog = await discordClient.channels.fetch(env.CHANNEL_AILOG) as TextChannel;
-
-  // Send the message
   await channelAiLog.send({
-    content: `Hey <@${env.DISCORD_OWNER_ID}>, ${interaction.member} set'${selectedPersona}' to ${isPublic ? 'public' : 'private'}.`,
+    content: `${interaction.member} deleted their history successfully.`,
   });
-
-  return personasPage(interaction);
-}
-
-async function setupPage(
-  interaction: ChatInputCommandInteraction | ButtonInteraction | ChannelSelectMenuInteraction | StringSelectMenuInteraction,
-):Promise<InteractionEditReplyOptions> {
-  log.info(F, await commandContext(interaction));
-  if (!interaction.guild) return { content: 'This command only works in a server.' };
-  if (!interaction.member) return { content: 'This command only works in a server.' };
-
-  // Check if the member who did this command has the Manage Channels permission
-  if (!(interaction.member as GuildMember).permissions.has(PermissionFlagsBits.ManageChannels)) return { content: 'You do not have permission to modify channels on this guild. Talk to your guild\'s admin if you feel this is a mistake.' };
-
-  const userData = await db.users.upsert({
-    where: { discord_id: interaction.user.id },
-    create: { discord_id: interaction.user.id },
-    update: {},
-  });
-
-  log.debug(F, `userData: ${JSON.stringify(userData, null, 2)}`);
-
-  // If the user hasn't agreed to the terms, show them the help page so they can
-  if (!userData.ai_terms_agree) return helpPage(interaction as ChatInputCommandInteraction | ButtonInteraction);
-
-  // If this is not the home guild, only get the approved personas
-  const aiPersonaList = interaction.guild?.id === env.DISCORD_GUILD_ID
-    ? await db.ai_personas.findMany()
-    : await db.ai_personas.findMany({
-      where: {
-        OR: [
-          { name: 'tripbot' },
-        ],
-      },
-    });
-
-  // log.debug(F, `aiPersonaList: ${JSON.stringify(aiPersonaList, null, 2)}`);
-
-  const aiPersonaOptions = aiPersonaList.length === 0
-    ? [{
-      label: 'No personas available',
-      description: 'Please tell moonbear about this.',
-      value: 'none',
-      default: true,
-    }] as SelectMenuComponentOptionData[]
-    : aiPersonaList.map(persona => ({
-      label: persona.name,
-      value: persona.name,
-    } as SelectMenuComponentOptionData));
-
-  let aiLinkData = null as ai_channels | null;
-  let channelSelectComponent = new ActionRowBuilder<ChannelSelectMenuBuilder>().addComponents([
-    menuAiChannels,
-  ]);
-  let selectedChannel = undefined as string | undefined;
-  let selectedPersona = undefined as string | undefined;
-
-  if (interaction.isChannelSelectMenu()) {
-    log.debug(F, 'interaction is channel select menu');
-    // log.debug(F, `interaction.values ${JSON.stringify(interaction.values[0], null, 2)}`);
-    [selectedChannel] = interaction.values;
-    selectedPersona = (interaction.message.components[1].components[0] as StringSelectMenuComponent).options.find(option => option.default)?.value;
-    log.debug(F, `selectedChannel: ${JSON.stringify(selectedChannel, null, 2)}`);
-    log.debug(F, `selectedPersona: ${JSON.stringify(selectedPersona, null, 2)}`);
-
-    channelSelectComponent = new ActionRowBuilder<ChannelSelectMenuBuilder>().addComponents([
-      menuAiChannels.setCustomId(`AI~channel~${selectedChannel}`),
-    ]);
-
-    // Check if there is an existing link between the provided channel and a persona
-    aiLinkData = await db.ai_channels.findFirst({
-      where: {
-        channel_id: selectedChannel,
-      },
-    });
-
-    if (aiLinkData) {
-      const personaData = await db.ai_personas.findUniqueOrThrow({
-        where: {
-          id: aiLinkData.persona_id,
-        },
-      });
-      selectedPersona = personaData.name;
-    }
-
-    // If it exists, make sure the aiPersonaOptions has it marked default
-    if (selectedPersona) {
-      const personaOption = aiPersonaOptions.find(persona => persona.value === selectedPersona);
-      if (personaOption) {
-        personaOption.default = true;
-      }
-    }
-  }
-
-  if (interaction.isStringSelectMenu()) {
-    log.debug(F, 'interaction is string select menu');
-    // log.debug(F, `interaction.values ${JSON.stringify(interaction.values[0], null, 2)}`);
-    [,,selectedChannel] = (interaction.message.components[0].components[0] as ChannelSelectMenuComponent).customId.split('~');
-    [selectedPersona] = interaction.values;
-    log.debug(F, `selectedChannel: ${JSON.stringify(selectedChannel, null, 2)}`);
-    log.debug(F, `selectedPersona: ${JSON.stringify(selectedPersona, null, 2)}`);
-
-    const personaOption = aiPersonaOptions.find(persona => persona.value === selectedPersona);
-    if (personaOption) {
-      personaOption.default = true;
-    }
-
-    aiLinkData = await db.ai_channels.findFirst({
-      where: {
-        channel_id: selectedChannel,
-      },
-    });
-  }
-
-  if (interaction.isButton()) {
-    log.debug(F, 'interaction is button');
-
-    if (interaction.message.components.length >= 3) {
-      [,,selectedChannel] = (interaction.message.components[0].components[0] as ChannelSelectMenuComponent).customId.split('~');
-      selectedPersona = (interaction.message.components[1].components[0] as StringSelectMenuComponent).options.find(option => option.default)?.value;
-
-      // If it exists, make sure the aiPersonaOptions has it marked default
-      if (selectedPersona) {
-        const personaOption = aiPersonaOptions.find(persona => persona.value === selectedPersona);
-        if (personaOption) {
-          personaOption.default = true;
-        }
-      }
-
-      if (selectedChannel) {
-        aiLinkData = await db.ai_channels.findFirst({
-          where: {
-            channel_id: selectedChannel,
-          },
-        });
-      }
-
-      channelSelectComponent = new ActionRowBuilder<ChannelSelectMenuBuilder>().addComponents([
-        menuAiChannels.setCustomId(`AI~channel~${selectedChannel}`),
-      ]);
-    }
-  }
-
-  // If there's only one persona in the list, set it as the default
-  if (aiPersonaList.length === 1) {
-    aiPersonaOptions[0].default = true;
-  }
-  // log.debug(F, `aiPersonaOptions: ${JSON.stringify(aiPersonaOptions, null, 2)}`);
-
-  // Logic for which buttons should appear:
-  // If the 'channel' select menu is not set, don't show the buttons
-  // If the 'channel' select menu is set, show the buttons
-  const setupButtons = new ActionRowBuilder<ButtonBuilder>()
-    .addComponents(
-      buttonAiHelp,
-      buttonAiPersonas,
-    );
-  if (aiLinkData) {
-    setupButtons.addComponents(
-      buttonAiUnlink,
-    );
-  } else if (selectedChannel && selectedPersona) {
-    setupButtons.addComponents(
-      buttonAiLink,
-    );
-  }
-
-  // Get the existing links for this guild
-  const existingLinkData = await db.ai_channels.findMany({
-    where: {
-      guild_id: interaction.guild.id,
-    },
-  });
-  const existingLinks = await Promise.all(existingLinkData.map(async linkData => {
-    const persona = await db.ai_personas.findUniqueOrThrow({
-      where: {
-        id: linkData.persona_id,
-      },
-    });
-    const channel = await discordClient.channels.fetch(linkData.channel_id) as TextChannel;
-    return `<#${channel.id}> is linked with the **"${persona.name}"** persona`;
-  }));
 
   return {
     embeds: [embedTemplate()
-      .setAuthor(null)
-      .setTitle(`${interaction.guild.name}'s AI Setup`)
-      .setDescription(stripIndents`
-        Here we can link the bot's personas to channels and categories.
-        ${existingLinks.join('\n')}
+      .setDescription(`
+        Your history has been deleted successfully!
+
+        To confirm, you @ mention the bot and it will ask you to re-agree to the terms.
       `)
       .setFooter(null)],
     components: [
-      channelSelectComponent,
-      new ActionRowBuilder<StringSelectMenuBuilder>().addComponents([
-        menuAiPersonaSetup.setOptions(aiPersonaOptions),
-      ]),
-      setupButtons,
+      new ActionRowBuilder<ButtonBuilder>()
+        .addComponents(
+          buttonAiHelp.setStyle(ButtonStyle.Primary),
+          buttonAiSetup.setStyle(ButtonStyle.Primary),
+          buttonAiPersonas.setStyle(ButtonStyle.Primary),
+          buttonAiPrivacy.setStyle(ButtonStyle.Primary),
+        ),
     ],
   };
 }
 
-async function createPage(
-  interaction: ChatInputCommandInteraction | ButtonInteraction | StringSelectMenuInteraction,
-):Promise<InteractionEditReplyOptions> {
-  log.debug(F, 'createPage started');
-  const createButtons = new ActionRowBuilder<ButtonBuilder>()
-    .addComponents(
-      buttonAiHelp,
-      buttonAiSetup,
-      buttonAiPersonas,
-    );
-
-  const aiModelList = Object.keys(ai_model).map(model => ({ name: model }));
-
-  const aiModelOptions = aiModelList.map(model => ({
-    label: model.name,
-    value: model.name,
-  } as SelectMenuComponentOptionData));
-
-  log.debug(F, `aiModelOptions: ${JSON.stringify(aiModelOptions, null, 2)}`);
-
-  let selectedModel = undefined as string | undefined;
-  if (interaction.isStringSelectMenu()) {
-    [selectedModel] = interaction.values;
-
-    log.debug(F, `selectedModel: ${JSON.stringify(selectedModel, null, 2)}`);
-    // If it exists, make sure the aiPersonaOptions has it marked default
-    if (selectedModel) {
-      const modelOption = aiModelOptions.find(model => model.value === selectedModel);
-      if (modelOption) {
-        modelOption.default = true;
-      }
-    }
-  }
-
-  log.debug(F, `aiModelOptions: ${JSON.stringify(aiModelOptions, null, 2)}`);
-
-  if (selectedModel) {
-    createButtons.addComponents(buttonAiCreate);
-  }
-
+async function deleteHistoryPage():Promise<InteractionEditReplyOptions> {
   return {
     embeds: [embedTemplate()
-      .setTitle('New Persona')
-      .setDescription(stripIndents` 
-        This page will create help create a new persona for the AI.
-
-        Select the model you want to use below, then click the create button.
-
-        You'll be able to fill in parameters for the new persona on the modal that appears.
-
-        For explanations on the parameters, check the /ai peronsas command.
+      .setTitle('AI History Deletion')
+      .setDescription(`
+        Are you sure you want to delete your AI history? This action cannot be undone.
       `)
       .setFooter(null)],
     components: [
-      new ActionRowBuilder<StringSelectMenuBuilder>().addComponents([
-        menuAiModels.setOptions(aiModelOptions),
-      ]),
-      createButtons,
+      new ActionRowBuilder<ButtonBuilder>()
+        .addComponents(
+          buttonAiHelp.setStyle(ButtonStyle.Primary),
+          buttonAiSetup.setStyle(ButtonStyle.Primary),
+          buttonAiPersonas.setStyle(ButtonStyle.Primary),
+          buttonAiPrivacy.setStyle(ButtonStyle.Primary),
+        ),
+      new ActionRowBuilder<ButtonBuilder>()
+        .addComponents(
+          buttonAiDeleteHistoryConfirm
+            .setCustomId('AI~deleteHistoryConfirm'),
+        ),
     ],
   };
-}
-
-async function link(
-  interaction: ButtonInteraction,
-):Promise<InteractionEditReplyOptions> {
-  log.info(F, await commandContext(interaction));
-  if (!interaction.guild) return { content: 'This command only works in a server.' };
-
-  const [,,selectedChannel] = (interaction.message.components[0].components[0] as ChannelSelectMenuComponent).customId.split('~');
-  const selectedPersona = (interaction.message.components[1].components[0] as StringSelectMenuComponent).options.find(option => option.default)?.value;
-  log.debug(F, `selectedChannel: ${selectedChannel}`);
-  log.debug(F, `selectedPersona: ${selectedPersona}`);
-
-  const personaData = await db.ai_personas.findUniqueOrThrow({
-    where: {
-      name: selectedPersona,
-    },
-  });
-
-  const aiLinkData = await db.ai_channels.findFirst({
-    where: {
-      channel_id: selectedChannel,
-    },
-  });
-
-  const guildData = await db.discord_guilds.upsert({
-    where: { id: interaction.guild.id },
-    create: { id: interaction.guild.id },
-    update: {},
-  });
-
-  const verb = aiLinkData ? 'updated' : 'created';
-
-  await db.ai_channels.upsert({
-    where: {
-      channel_id_persona_id: {
-        channel_id: selectedChannel,
-        persona_id: personaData.id,
-      },
-    },
-    create: {
-      channel_id: selectedChannel,
-      persona_id: personaData.id,
-      guild_id: guildData.id,
-    },
-    update: {
-      channel_id: selectedChannel,
-      persona_id: personaData.id,
-      guild_id: guildData.id,
-    },
-  });
-
-  const channelAiLog = await discordClient.channels.fetch(env.CHANNEL_AILOG) as TextChannel;
-  await channelAiLog.send({
-    content: `AI link between ${selectedPersona} and <#${selectedChannel}> on the ${interaction.guild.name} server ${verb} (<@${env.DISCORD_OWNER_ID}>)`,
-  });
-
-  return setupPage(interaction);
-}
-
-async function unlink(
-  interaction: ButtonInteraction,
-):Promise<InteractionEditReplyOptions> {
-  log.info(F, await commandContext(interaction));
-  if (!interaction.guild) return { content: 'This command only works in a server.' };
-
-  const [,,selectedChannel] = (interaction.message.components[0].components[0] as ChannelSelectMenuComponent).customId.split('~');
-  const selectedPersona = (interaction.message.components[1].components[0] as StringSelectMenuComponent).options.find(option => option.default)?.value;
-  log.debug(F, `selectedChannel: ${JSON.stringify(selectedChannel, null, 2)}`);
-  log.debug(F, `selectedPersona: ${JSON.stringify(selectedPersona, null, 2)}`);
-
-  const aiLinkData = await db.ai_channels.findFirstOrThrow({
-    where: {
-      channel_id: selectedChannel,
-    },
-  });
-
-  const verb = 'deleted';
-
-  await db.ai_channels.delete({
-    where: {
-      id: aiLinkData.id,
-    },
-  });
-
-  const channelAiLog = await discordClient.channels.fetch(env.CHANNEL_AILOG) as TextChannel;
-  await channelAiLog.send({
-    content: `AI link between ${selectedPersona} and <#${selectedChannel}> on the ${interaction.guild.name} server ${verb} (<@${env.DISCORD_OWNER_ID}>)`,
-  });
-
-  return setupPage(interaction);
 }
 
 async function createPersona(
@@ -1268,15 +778,9 @@ async function createPersona(
     return;
   }
 
-  const selectedModel = (interaction.message.components[0].components[0] as StringSelectMenuComponent).options.find(option => option.default)?.value;
+  const modelSelectMenu = getComponentById(interaction, 'AI~model') as StringSelectMenuComponent;
+  const selectedModel = modelSelectMenu.options.find(option => option.default)?.value;
   log.debug(F, `selectedModel: ${JSON.stringify(selectedModel, null, 2)}`);
-
-  // const personaButtons = new ActionRowBuilder<ButtonBuilder>()
-  //   .addComponents(
-  //     buttonAiHelp,
-  //     buttonAiPersonas,
-  //     buttonAiNew,
-  //   );
 
   await interaction.showModal(new ModalBuilder()
     .setCustomId(`aiPromptModal~${interaction.id}`)
@@ -1424,6 +928,591 @@ async function createPersona(
     });
 }
 
+async function helpPage(
+  interaction: ChatInputCommandInteraction | ButtonInteraction,
+):Promise<InteractionEditReplyOptions> {
+  const userData = await db.users.upsert({
+    where: { discord_id: interaction.user.id },
+    create: { discord_id: interaction.user.id },
+    update: {},
+  });
+
+  const components = [
+    new ActionRowBuilder<ButtonBuilder>()
+      .addComponents(
+        buttonAiHelp.setStyle(ButtonStyle.Secondary),
+        buttonAiSetup.setStyle(ButtonStyle.Primary),
+        buttonAiPersonas.setStyle(ButtonStyle.Primary),
+        buttonAiPrivacy.setStyle(ButtonStyle.Primary),
+      ),
+  ];
+
+  if (!userData.ai_terms_agree) {
+    components.push(new ActionRowBuilder<ButtonBuilder>()
+      .addComponents(buttonAiAgree));
+  }
+
+  return {
+    embeds: [embedTemplate()
+      .setTitle('🤖 Welcome to TripBot\'s AI Module! 🤖')
+      .setDescription(`
+      🌐 Experience Cutting-Edge Technology
+      Dive into the world of artificial intelligence with TripBot, powered by OpenAI's Chat GPT 3.5-Turbo API. \
+      This Language Learning Model (LLM) offers you the prowess of a highly advanced writing assistant, crafting sentences with ease. \
+      Remember, it's intelligent but not sentient.
+
+      🤖 Meet TripBot's Persona
+      We've tailored TripBot's persona to be friendly and helpful, with a touch of quirkiness. \
+      We're still trying to make this persona as helpful as possible, and **you can help us improve the AI by auditing its responses by reacting to messages with the provided thumbs.** \
+      If enough people agree, we'll take note and try to improve the bot behavior.
+
+      🚦 Important Caution
+      While TripBot's AI provides impressive accuracy, it's not perfect. \
+      **Please refrain from relying on it for harm reduction advice, drug dosages, combo info, or medical guidance.** \
+      Consider its suggestions with a critical eye, as it may occasionally fabricate information. \
+      Your judgment is paramount.
+
+      👥 How It Works
+      Simply agree to our terms, and on the next page you can enable the AI in the channels you choose. \
+      Once set up, anyone can @ mention TripBot to get a response from the AI. \
+      Note: "AI doesn't remember context of previous questions and doesn't store any message data" \
+      It does not store any history or context, every message is treated as a new conversation. \
+      However, do not expect that your conversations with the bot are private: every message sent through the bot is logged for moderation purposes.
+
+      **Ready to get started? Please agree to the following:**
+      ${termsOfService}
+      `)
+      .setFooter(null)],
+    components,
+  };
+}
+
+async function privacyPage(
+  interaction: ChatInputCommandInteraction | ButtonInteraction,
+):Promise<InteractionEditReplyOptions> {
+  const userData = await db.users.upsert({
+    where: { discord_id: interaction.user.id },
+    create: { discord_id: interaction.user.id },
+    update: {},
+  });
+
+  const components = [
+    new ActionRowBuilder<ButtonBuilder>()
+      .addComponents(
+        buttonAiHelp.setStyle(ButtonStyle.Primary),
+        buttonAiSetup.setStyle(ButtonStyle.Primary),
+        buttonAiPersonas.setStyle(ButtonStyle.Primary),
+        buttonAiPrivacy.setStyle(ButtonStyle.Secondary),
+      ),
+  ];
+
+  if (userData.ai_history_google || userData.ai_history_openai) {
+    components.push(new ActionRowBuilder<ButtonBuilder>()
+      .addComponents(buttonAiDeleteHistory));
+  }
+
+  return {
+    embeds: [embedTemplate()
+      .setTitle('This page explains how your data is used, and how to remove it.')
+      .setDescription(stripIndents`
+        # What data is stored?
+        OpenAI models (GPT) requires that we store a "Thread ID".
+        Google models (Gemini) require we store encrypted message history.
+
+        **We don't send identifying information to either API, only what you say in the message.**
+        # How can I remove my data?
+
+        You can remove your data at any time by clicking the button below.
+
+        This will delete your thread off the OpenAI servers, and remove your thread ID from our DB. \ 
+        It will remove your encrypted chat history from our database.
+
+        **You can further remove your data from TripSit's servers with the \`/privacy\`.**
+      `)
+      .setFooter(null)],
+    components,
+  };
+}
+
+async function personasPage(
+  interaction: ChatInputCommandInteraction | ButtonInteraction | StringSelectMenuInteraction,
+):Promise<InteractionEditReplyOptions> {
+  log.debug(F, 'personasPage started');
+
+  const aiPersonaList = interaction.guild?.id === env.DISCORD_GUILD_ID
+    ? await db.ai_personas.findMany()
+    : await db.ai_personas.findMany({
+      where: {
+        OR: [
+          { name: 'tripbot' },
+        ],
+      },
+    });
+
+  const aiPersonaOptions = aiPersonaList.length === 0
+    ? [{
+      label: 'No personas available',
+      description: 'Please tell moonbear about this.',
+      value: 'none',
+      default: true,
+    }] as SelectMenuComponentOptionData[]
+    : aiPersonaList.map(persona => ({
+      label: persona.name,
+      value: persona.name,
+    } as SelectMenuComponentOptionData));
+
+  // log.debug(F, `aiPersonaOptions: ${JSON.stringify(aiPersonaOptions, null, 2)}`);
+
+  let selectedPersona = undefined as string | undefined;
+
+  if (interaction.isButton()) {
+    const personaSelectMenu = getComponentById(interaction, 'AI~personaInfo') as StringSelectMenuComponent;
+    if (personaSelectMenu) {
+      selectedPersona = personaSelectMenu.options.find(option => option.default)?.value;
+      log.debug(F, `selectedPersona: ${JSON.stringify(selectedPersona, null, 2)}`);
+      if (selectedPersona) {
+        const personaOption = aiPersonaOptions.find(persona => persona.value === selectedPersona);
+        if (personaOption) {
+          personaOption.default = true;
+        }
+      }
+    }
+  }
+
+  if (interaction.isStringSelectMenu()) {
+    // Get the ID of the select menu
+    log.debug(F, `interaction.customId: ${interaction.customId}`);
+
+    if (interaction.customId === 'AI~personaInfo') {
+      [selectedPersona] = interaction.values;
+
+      log.debug(F, `selectedPersona: ${JSON.stringify(selectedPersona, null, 2)}`);
+      // If it exists, make sure the aiPersonaOptions has it marked  default
+      if (selectedPersona) {
+        const personaOption = aiPersonaOptions.find(persona => persona.value === selectedPersona);
+        if (personaOption) {
+          personaOption.default = true;
+        }
+      }
+    } else if (interaction.customId === 'AI~public') {
+      const personaSelectMenu = getComponentById(interaction, 'AI~personaInfo') as StringSelectMenuComponent;
+      if (personaSelectMenu) {
+        selectedPersona = personaSelectMenu.options.find(option => option.default)?.value;
+        log.debug(F, `selectedPersona: ${JSON.stringify(selectedPersona, null, 2)}`);
+        if (selectedPersona) {
+          const personaOption = aiPersonaOptions.find(persona => persona.value === selectedPersona);
+          if (personaOption) {
+            personaOption.default = true;
+          }
+        }
+      }
+    }
+  }
+
+  log.debug(F, `aiPersonaOptions: ${JSON.stringify(aiPersonaOptions, null, 2)}`);
+
+  // If there's only one persona in the list, set it as the default
+  // if (aiPersonaList.length === 1) {
+  //   aiPersonaOptions[0].default = true;
+  //   selectedPersona = aiPersonaOptions[0].value;
+  // }
+
+  // If the user is a developer in the home guild, show the buttonAiModify button
+  const tripsitGuild = await discordClient.guilds.fetch(env.DISCORD_GUILD_ID);
+  const tripsitMember = await tripsitGuild.members.fetch(interaction.user.id);
+
+  const components = [
+    new ActionRowBuilder<ButtonBuilder>()
+      .addComponents(
+        buttonAiHelp.setStyle(ButtonStyle.Primary),
+        buttonAiSetup.setStyle(ButtonStyle.Primary),
+        buttonAiPersonas.setStyle(ButtonStyle.Secondary),
+        buttonAiPrivacy.setStyle(ButtonStyle.Primary),
+      ),
+    new ActionRowBuilder<StringSelectMenuBuilder>().addComponents([
+      menuAiPersonas.setOptions(aiPersonaOptions),
+    ]),
+
+  ];
+
+  log.debug(F, `There are ${components.length} components in the array`);
+
+  if (selectedPersona) {
+    const persona = await db.ai_personas.findFirstOrThrow({
+      where: {
+        name: selectedPersona,
+      },
+    });
+
+    log.debug(F, 'Adding three buttons to personaButtons');
+    if (tripsitMember.roles.cache.has(env.ROLE_DEVELOPER)) {
+      components.push(
+        new ActionRowBuilder<ButtonBuilder>()
+          .addComponents(buttonAiNew, buttonAiModify, buttonAiDelete),
+      );
+    }
+
+    if (persona.public) {
+      menuAiPublic.setOptions(
+        {
+          label: 'Not available outside of TripSit',
+          value: 'private',
+        },
+        {
+          label: 'Available outside of TripSit',
+          value: 'public',
+          default: true,
+        },
+      );
+    } else {
+      menuAiPublic.setOptions(
+        {
+          label: 'Not available outside of TripSit',
+          value: 'private',
+          default: true,
+        },
+        {
+          label: 'Available outside of TripSit',
+          value: 'public',
+        },
+      );
+    }
+
+    components.push(
+      new ActionRowBuilder<StringSelectMenuBuilder>().addComponents([
+        menuAiPublic,
+      ]),
+    );
+
+    return {
+      embeds: [await makePersonaEmbed(persona)],
+      components,
+    };
+  }
+
+  if (tripsitMember.roles.cache.has(env.ROLE_DEVELOPER)) {
+    log.debug(F, 'Adding buttonAiNew to components');
+    components.push(
+      new ActionRowBuilder<ButtonBuilder>()
+        .addComponents(buttonAiNew),
+    );
+  }
+
+  log.debug(F, `Final components: ${JSON.stringify(components, null, 2)}`);
+  log.debug(F, `components 2 0 : ${JSON.stringify(components[2], null, 2)}`);
+  return {
+    embeds: [embedTemplate()
+      .setTitle('Persona Information')
+      .setDescription(stripIndents` 
+      A persona is a set of parameters that the AI uses to generate responses. \
+      This allows us to have different 'personalities' for the AI. \
+      The AI will use the persona that is linked to the channel it is responding in, and return responses based on that persona's personality.
+      You can use the below menu to get information on each persona available. 
+
+      Some options include:
+      **Model**
+      The model to use for the persona. Currently we offer two models, GPT-3.5-Turbo and Gemini Pro.
+      **Prompt**
+      The prompt to use for the persona. This is the text that the AI will use to generate responses.
+      **Max Tokens**
+      The maximum number of tokens to use for the AI response.
+      What are tokens? <https://platform.openai.com/tokenizer>
+      **Temperature**
+      Adjusts the randomness of the AI's answers.
+      Lower values make the AI more predictable and focused, while higher values make it more random and varied.`)
+      .setFooter(null)],
+    components,
+  };
+}
+
+async function setupPage(
+  interaction: ChatInputCommandInteraction | ButtonInteraction | ChannelSelectMenuInteraction | StringSelectMenuInteraction,
+):Promise<InteractionEditReplyOptions> {
+  log.info(F, await commandContext(interaction));
+  if (!interaction.guild) return { content: 'This command only works in a server.' };
+  if (!interaction.member) return { content: 'This command only works in a server.' };
+
+  // Check if the member who did this command has the Manage Channels permission
+  if (!(interaction.member as GuildMember).permissions.has(PermissionFlagsBits.ManageChannels)) return { content: 'You do not have permission to modify channels on this guild. Talk to your guild\'s admin if you feel this is a mistake.' };
+
+  const userData = await db.users.upsert({
+    where: { discord_id: interaction.user.id },
+    create: { discord_id: interaction.user.id },
+    update: {},
+  });
+
+  // log.debug(F, `userData: ${JSON.stringify(userData, null, 2)}`);
+
+  // If the user hasn't agreed to the terms, show them the help page so they can
+  if (!userData.ai_terms_agree) return helpPage(interaction as ChatInputCommandInteraction | ButtonInteraction);
+
+  // If this is not the home guild, only get the approved personas
+  const aiPersonaList = interaction.guild?.id === env.DISCORD_GUILD_ID
+    ? await db.ai_personas.findMany()
+    : await db.ai_personas.findMany({
+      where: {
+        OR: [
+          { name: 'tripbot' },
+        ],
+      },
+    });
+
+  // log.debug(F, `aiPersonaList: ${JSON.stringify(aiPersonaList, null, 2)}`);
+
+  const aiPersonaOptions = aiPersonaList.length === 0
+    ? [{
+      label: 'No personas available',
+      description: 'Please tell moonbear about this.',
+      value: 'none',
+      default: true,
+    }] as SelectMenuComponentOptionData[]
+    : aiPersonaList.map(persona => ({
+      label: persona.name,
+      value: persona.name,
+    } as SelectMenuComponentOptionData));
+
+  let aiLinkData = null as ai_channels | null;
+  let channelSelectComponent = new ActionRowBuilder<ChannelSelectMenuBuilder>().addComponents([
+    menuAiChannels,
+  ]);
+  let selectedChannel = undefined as string | undefined;
+  let selectedPersona = undefined as string | undefined;
+  let linkedPersona = undefined as string | undefined;
+
+  if (interaction.isChannelSelectMenu()) {
+    log.debug(F, 'interaction is channel select menu');
+    // log.debug(F, `interaction.values ${JSON.stringify(interaction.values[0], null, 2)}`);
+    [selectedChannel] = interaction.values;
+    const personaSelectMenu = getComponentById(interaction, 'AI~personaSetup') as StringSelectMenuComponent;
+    selectedPersona = personaSelectMenu.options.find(option => option.default)?.value;
+    log.debug(F, `selectedChannel: ${JSON.stringify(selectedChannel, null, 2)}`);
+    log.debug(F, `selectedPersona1: ${JSON.stringify(selectedPersona, null, 2)}`);
+
+    channelSelectComponent = new ActionRowBuilder<ChannelSelectMenuBuilder>().addComponents([
+      menuAiChannels.setCustomId(`AI~channel~${selectedChannel}`),
+    ]);
+
+    // Check if there is an existing link between the provided channel and a persona
+    aiLinkData = await db.ai_channels.findFirst({
+      where: {
+        channel_id: selectedChannel,
+      },
+    });
+
+    if (aiLinkData) {
+      const personaData = await db.ai_personas.findUniqueOrThrow({
+        where: {
+          id: aiLinkData.persona_id,
+        },
+      });
+      linkedPersona = personaData.name;
+      selectedPersona = personaData.name;
+    }
+
+    // If it exists, make sure the aiPersonaOptions has it marked default
+    if (selectedPersona) {
+      const personaOption = aiPersonaOptions.find(persona => persona.value === selectedPersona);
+      if (personaOption) {
+        personaOption.default = true;
+      }
+    }
+  }
+
+  if (interaction.isStringSelectMenu()) {
+    log.debug(F, 'interaction is string select menu');
+    // log.debug(F, `interaction.values ${JSON.stringify(interaction.values[0], null, 2)}`);
+    const channelSelectMenu = getComponentById(interaction, 'AI~channel') as ChannelSelectMenuComponent;
+    [,,selectedChannel] = channelSelectMenu.customId.split('~');
+    [selectedPersona] = interaction.values;
+    log.debug(F, `selectedChannel: ${JSON.stringify(selectedChannel, null, 2)}`);
+    log.debug(F, `selectedPersona2: ${JSON.stringify(selectedPersona, null, 2)}`);
+
+    const personaOption = aiPersonaOptions.find(persona => persona.value === selectedPersona);
+    if (personaOption) {
+      personaOption.default = true;
+    }
+
+    aiLinkData = await db.ai_channels.findFirst({
+      where: {
+        channel_id: selectedChannel,
+      },
+    });
+
+    if (aiLinkData) {
+      const personaData = await db.ai_personas.findUniqueOrThrow({
+        where: {
+          id: aiLinkData.persona_id,
+        },
+      });
+      linkedPersona = personaData.name;
+    }
+  }
+
+  if (interaction.isButton()) {
+    log.debug(F, 'interaction is button');
+
+    if (interaction.message.components.length >= 3) {
+      const channelSelectMenu = getComponentById(interaction, 'AI~channel') as ChannelSelectMenuComponent;
+      if (channelSelectMenu) {
+        [,,selectedChannel] = channelSelectMenu.customId.split('~');
+      }
+
+      const personaSelectMenu = getComponentById(interaction, 'AI~personaSetup') as StringSelectMenuComponent;
+      if (personaSelectMenu) {
+        selectedPersona = personaSelectMenu.options.find(option => option.default)?.value;
+      }
+
+      // If it exists, make sure the aiPersonaOptions has it marked default
+      if (selectedPersona) {
+        const personaOption = aiPersonaOptions.find(persona => persona.value === selectedPersona);
+        if (personaOption) {
+          personaOption.default = true;
+        }
+      }
+
+      if (selectedChannel) {
+        aiLinkData = await db.ai_channels.findFirst({
+          where: {
+            channel_id: selectedChannel,
+          },
+        });
+      }
+
+      channelSelectComponent = new ActionRowBuilder<ChannelSelectMenuBuilder>().addComponents([
+        menuAiChannels.setCustomId(`AI~channel~${selectedChannel}`),
+      ]);
+    }
+  }
+
+  // If there's only one persona in the list, set it as the default
+  if (aiPersonaList.length === 1) {
+    aiPersonaOptions[0].default = true;
+  }
+  // log.debug(F, `aiPersonaOptions: ${JSON.stringify(aiPersonaOptions, null, 2)}`);
+
+  // Logic for which buttons should appear:
+  // If the 'channel' select menu is not set, don't show the buttons
+  // If the 'channel' select menu is set, show the buttons
+
+  log.debug(F, `aiLinkData: ${JSON.stringify(aiLinkData, null, 2)}`);
+  log.debug(F, `selectedPersona: ${JSON.stringify(selectedPersona, null, 2)}`);
+
+  // Get the existing links for this guild
+  const existingLinkData = await db.ai_channels.findMany({
+    where: {
+      guild_id: interaction.guild.id,
+    },
+  });
+  const existingLinks = await Promise.all(existingLinkData.map(async linkData => {
+    const persona = await db.ai_personas.findUniqueOrThrow({
+      where: {
+        id: linkData.persona_id,
+      },
+    });
+    const channel = await discordClient.channels.fetch(linkData.channel_id) as TextChannel;
+    return `<#${channel.id}> is linked with the **"${persona.name}"** persona`;
+  }));
+
+  const components = [
+    new ActionRowBuilder<ButtonBuilder>()
+      .addComponents(
+        buttonAiHelp.setStyle(ButtonStyle.Primary),
+        buttonAiSetup.setStyle(ButtonStyle.Secondary),
+        buttonAiPersonas.setStyle(ButtonStyle.Primary),
+        buttonAiPrivacy.setStyle(ButtonStyle.Primary),
+      ),
+    channelSelectComponent,
+    new ActionRowBuilder<StringSelectMenuBuilder>().addComponents([
+      menuAiPersonaSetup.setOptions(aiPersonaOptions),
+    ]),
+  ];
+
+  if (aiLinkData && linkedPersona === selectedPersona) {
+    components.push(new ActionRowBuilder<ButtonBuilder>()
+      .addComponents(buttonAiUnlink));
+  } else if (selectedChannel && selectedPersona) {
+    components.push(new ActionRowBuilder<ButtonBuilder>()
+      .addComponents(buttonAiLink));
+  }
+
+  return {
+    embeds: [embedTemplate()
+      .setAuthor(null)
+      .setTitle(`${interaction.guild.name}'s AI Setup`)
+      .setDescription(stripIndents`
+        Here we can link the bot's personas to channels and categories.
+        ${existingLinks.join('\n')}
+      `)
+      .setFooter(null)],
+    components,
+  };
+}
+
+async function createPage(
+  interaction: ChatInputCommandInteraction | ButtonInteraction | StringSelectMenuInteraction,
+):Promise<InteractionEditReplyOptions> {
+  log.debug(F, 'createPage started');
+
+  const aiModelList = Object.keys(ai_model).map(model => ({ name: model }));
+
+  const aiModelOptions = aiModelList.map(model => ({
+    label: model.name,
+    value: model.name,
+  } as SelectMenuComponentOptionData));
+
+  log.debug(F, `aiModelOptions: ${JSON.stringify(aiModelOptions, null, 2)}`);
+
+  let selectedModel = undefined as string | undefined;
+  if (interaction.isStringSelectMenu()) {
+    [selectedModel] = interaction.values;
+
+    log.debug(F, `selectedModel: ${JSON.stringify(selectedModel, null, 2)}`);
+    // If it exists, make sure the aiPersonaOptions has it marked default
+    if (selectedModel) {
+      const modelOption = aiModelOptions.find(model => model.value === selectedModel);
+      if (modelOption) {
+        modelOption.default = true;
+      }
+    }
+  }
+
+  log.debug(F, `aiModelOptions: ${JSON.stringify(aiModelOptions, null, 2)}`);
+
+  const components = [
+    new ActionRowBuilder<ButtonBuilder>()
+      .addComponents(
+        buttonAiHelp.setStyle(ButtonStyle.Primary),
+        buttonAiSetup.setStyle(ButtonStyle.Primary),
+        buttonAiPersonas.setStyle(ButtonStyle.Primary),
+        buttonAiPrivacy.setStyle(ButtonStyle.Primary),
+      ),
+    new ActionRowBuilder<StringSelectMenuBuilder>().addComponents([
+      menuAiModels.setOptions(aiModelOptions),
+    ]),
+  ];
+
+  if (selectedModel) {
+    components.push(new ActionRowBuilder<ButtonBuilder>()
+      .addComponents(buttonAiCreate));
+  }
+
+  return {
+    embeds: [embedTemplate()
+      .setTitle('New Persona')
+      .setDescription(stripIndents` 
+        This page will create help create a new persona for the AI.
+
+        Select the model you want to use below, then click the create button.
+
+        You'll be able to fill in parameters for the new persona on the modal that appears.
+
+        For explanations on the parameters, check the /ai peronsas command.
+      `)
+      .setFooter(null)],
+    components,
+  };
+}
+
 async function modifyPersona(
   interaction: ButtonInteraction,
 ):Promise<void> {
@@ -1433,7 +1522,8 @@ async function modifyPersona(
     return;
   }
 
-  const selectedPersona = (interaction.message.components[0].components[0] as StringSelectMenuComponent).options.find(option => option.default)?.value;
+  const personaSelectMenu = getComponentById(interaction, 'AI~personaInfo') as StringSelectMenuComponent;
+  const selectedPersona = personaSelectMenu.options.find(option => option.default)?.value;
   log.debug(F, `selectedPersona: ${JSON.stringify(selectedPersona, null, 2)}`);
 
   const persona = await db.ai_personas.findUniqueOrThrow({
@@ -1572,6 +1662,150 @@ async function modifyPersona(
           .setDescription(stripIndents`${JSON.stringify(aiPersona, null, 2)}`)],
       });
     });
+}
+
+async function setPublicity(
+  interaction: StringSelectMenuInteraction,
+):Promise<InteractionEditReplyOptions> {
+  log.debug(F, 'setPublicity started');
+  const personaSelectMenu = getComponentById(interaction, 'AI~personaInfo') as StringSelectMenuComponent;
+  const selectedPersona = personaSelectMenu.options.find(option => option.default)?.value;
+  log.debug(F, `selectedPersona: ${JSON.stringify(selectedPersona, null, 2)}`);
+  const isPublic = interaction.values[0] === 'public';
+  log.debug(F, `isPublic: ${isPublic}`);
+
+  await db.ai_personas.update({
+    where: {
+      name: selectedPersona,
+    },
+    data: {
+      public: isPublic,
+    },
+  });
+
+  // Get the channel to send the message to
+  const channelAiLog = await discordClient.channels.fetch(env.CHANNEL_AILOG) as TextChannel;
+
+  // Send the message
+  await channelAiLog.send({
+    content: `Hey <@${env.DISCORD_OWNER_ID}>, ${interaction.member} set'${selectedPersona}' to ${isPublic ? 'public' : 'private'}.`,
+  });
+
+  return personasPage(interaction);
+}
+
+async function agreeToTerms(
+  messageData:Message,
+):Promise<MessageReplyOptions> {
+  return {
+    embeds: [embedTemplate()
+      .setTitle('🤖 Welcome to TripBot\'s AI Module! 🤖')
+      .setDescription(`
+        Please agree to the following. Use \`/ai help\` for more more information.
+
+        ${termsOfService}
+      `)
+      .setFooter(null)],
+    components: [
+      new ActionRowBuilder<ButtonBuilder>().addComponents(
+        buttonAiAgree.setCustomId(`AI~messageAgree~${messageData.id}`),
+      ),
+    ],
+  };
+}
+
+async function link(
+  interaction: ButtonInteraction,
+):Promise<InteractionEditReplyOptions> {
+  log.info(F, await commandContext(interaction));
+  if (!interaction.guild) return { content: 'This command only works in a server.' };
+
+  const channelSelectMenu = getComponentById(interaction, 'AI~channel') as ChannelSelectMenuComponent;
+  const [,,selectedChannel] = channelSelectMenu.customId.split('~');
+
+  const personaSelectMenu = getComponentById(interaction, 'AI~personaSetup') as StringSelectMenuComponent;
+  const selectedPersona = personaSelectMenu.options.find(option => option.default)?.value;
+  log.debug(F, `selectedChannel: ${selectedChannel}`);
+  log.debug(F, `selectedPersona: ${selectedPersona}`);
+
+  const personaData = await db.ai_personas.findUniqueOrThrow({
+    where: {
+      name: selectedPersona,
+    },
+  });
+
+  const aiLinkData = await db.ai_channels.findFirst({
+    where: {
+      channel_id: selectedChannel,
+    },
+  });
+
+  const guildData = await db.discord_guilds.upsert({
+    where: { id: interaction.guild.id },
+    create: { id: interaction.guild.id },
+    update: {},
+  });
+
+  const verb = aiLinkData ? 'updated' : 'created';
+
+  await db.ai_channels.upsert({
+    where: {
+      channel_id: selectedChannel,
+    },
+    create: {
+      channel_id: selectedChannel,
+      persona_id: personaData.id,
+      guild_id: guildData.id,
+    },
+    update: {
+      channel_id: selectedChannel,
+      persona_id: personaData.id,
+      guild_id: guildData.id,
+    },
+  });
+
+  const channelAiLog = await discordClient.channels.fetch(env.CHANNEL_AILOG) as TextChannel;
+  await channelAiLog.send({
+    content: `AI link between ${selectedPersona} and <#${selectedChannel}> on the ${interaction.guild.name} server ${verb} (<@${env.DISCORD_OWNER_ID}>)`,
+  });
+
+  return setupPage(interaction);
+}
+
+async function unlink(
+  interaction: ButtonInteraction,
+):Promise<InteractionEditReplyOptions> {
+  log.info(F, await commandContext(interaction));
+  if (!interaction.guild) return { content: 'This command only works in a server.' };
+
+  const channelSelectMenu = getComponentById(interaction, 'AI~channel') as ChannelSelectMenuComponent;
+  const [,,selectedChannel] = channelSelectMenu.customId.split('~');
+
+  const personaSelectMenu = getComponentById(interaction, 'AI~personaSetup') as StringSelectMenuComponent;
+  const selectedPersona = personaSelectMenu.options.find(option => option.default)?.value;
+  log.debug(F, `selectedChannel: ${JSON.stringify(selectedChannel, null, 2)}`);
+  log.debug(F, `selectedPersona: ${JSON.stringify(selectedPersona, null, 2)}`);
+
+  const aiLinkData = await db.ai_channels.findFirstOrThrow({
+    where: {
+      channel_id: selectedChannel,
+    },
+  });
+
+  const verb = 'deleted';
+
+  await db.ai_channels.delete({
+    where: {
+      id: aiLinkData.id,
+    },
+  });
+
+  const channelAiLog = await discordClient.channels.fetch(env.CHANNEL_AILOG) as TextChannel;
+  await channelAiLog.send({
+    content: `AI link between ${selectedPersona} and <#${selectedChannel}> on the ${interaction.guild.name} server ${verb} (<@${env.DISCORD_OWNER_ID}>)`,
+  });
+
+  return setupPage(interaction);
 }
 
 // async function mod(
@@ -1784,174 +2018,6 @@ export async function discordAiModerate(
   }
 }
 
-async function agreeToTerms(
-  messageData:Message,
-):Promise<MessageReplyOptions> {
-  return {
-    embeds: [embedTemplate()
-      .setTitle('🤖 Welcome to TripBot\'s AI Module! 🤖')
-      .setDescription(`
-        Please agree to the following. Use /ai help for more information.
-
-        ${termsOfService}
-      `)
-      .setFooter(null)],
-    components: [
-      new ActionRowBuilder<ButtonBuilder>().addComponents(
-        buttonAiAgree.setCustomId(`AI~messageAgree~${messageData.id}`),
-        buttonAiHelp,
-      ),
-    ],
-  };
-}
-
-export async function discordAiConversate(
-  messageData: Message<boolean>,
-): Promise<void> {
-  if (!env.OPENAI_API_ORG || !env.OPENAI_API_KEY) return;
-  // log.debug(F, `discordAiConversate - messageData: ${JSON.stringify(messageData.cleanContent, null, 2)}`);
-
-  if (!messageData.member?.roles.cache.has(env.ROLE_VERIFIED)) return;
-  if (messageData.author.bot) return;
-  if (messageData.cleanContent.length < 1) return;
-  if (messageData.channel.type === ChannelType.DM) return;
-  if (messageData.author.id !== env.DISCORD_OWNER_ID) return;
-
-  // Get the assistant for this channel.
-  // Right now the only assistant is the 'tripsitter' assistant
-  const assistant = await getAssistant('tripsitter');
-  // log.debug(F, `assistant: ${JSON.stringify(assistant, null, 2)}`);
-
-  // Get the thread for the user who said something
-  const thread = await getThread('thread_GXG53Z1LS3ZdKBcOHRfRsd70');
-  // log.debug(F, `thread: ${JSON.stringify(thread, null, 2)}`);
-
-  // Add the message to the thread
-  await createMessage(
-    thread,
-    {
-      role: 'user',
-      content: messageData.cleanContent,
-    },
-  );
-
-  // Function to handle the logic after waiting
-  const handleTimeout = async () => {
-    // Your logic here
-    log.debug(F, 'Continuing after wait...');
-
-    // This parses out some values from the assistant object
-    // There's probably a better way to do this
-    const {
-      id,
-      name,
-      created_at, // eslint-disable-line @typescript-eslint/naming-convention
-      description,
-      file_ids, // eslint-disable-line @typescript-eslint/naming-convention
-      object,
-      ...restOfAssistant
-    } = assistant;
-
-    // Run the thread
-    const run = await runThread(
-      thread,
-      {
-        assistant_id: assistant.id,
-        ...restOfAssistant,
-      },
-    );
-
-    // Wait for the run to complete
-    let runStatus = 'queued' as Run['status'];
-    while (['queued', 'in_progress'].includes(runStatus)) {
-      // Send the typing indicator to show tripbot is thinking
-      // eslint-disable-next-line no-await-in-loop
-      await messageData.channel.sendTyping();
-
-      // eslint-disable-next-line no-await-in-loop
-      await sleep(1000);
-      // eslint-disable-next-line no-await-in-loop
-      const runStatusResponse = await readRun(thread, run);
-      // log.debug(F, `runStatusResponse: ${JSON.stringify(runStatusResponse, null, 2)}`);
-      runStatus = runStatusResponse.status;
-    }
-
-    // log.debug(F, `runStatus: ${runStatus}`);
-
-    const devRoom = await discordClient.channels.fetch(env.CHANNEL_BOTERRORS) as TextChannel;
-
-    // Depending on how the run ended, do something
-    switch (runStatus) {
-      case 'completed': {
-        // This should pull the thread and then get the last message in the thread, which should be from the assistant
-        const messagePage = await getMessages(thread, { limit: 10 });
-        // log.debug(F, `messagePage: ${JSON.stringify(messagePage, null, 2)}`);
-        const messages = messagePage.getPaginatedItems();
-        const message = messages[0];
-        const [messageContent] = message.content;
-        if ((messageContent as MessageContentText).text) {
-          log.debug(F, `messageContent: ${JSON.stringify(messageContent, null, 2)}`);
-
-          // Send the result to the dev room
-          await devRoom.send(`AI Conversation succeeded: ${JSON.stringify(messageContent, null, 2)}`);
-
-          // await messages[0].reply(result.response.slice(0, 2000));
-          await messageData.reply((messageContent as MessageContentText).text.value);
-        }
-
-        break;
-      }
-      case 'requires_action':
-        // No way to support additional actions at this time
-        break;
-      case 'expired':
-        // This will happen if the requires_action doesn't get a  response in time, so this isn't supported either
-        break;
-      case 'cancelling':
-        // This would only happen if i manually cancel the request, which isn't supported
-        break;
-      case 'cancelled':
-        // Take a guess =D
-        break;
-      case 'failed': {
-        // This should send an error to the dev
-        await devRoom.send(`AI Conversation failed: ${JSON.stringify(run, null, 2)}`);
-        await messageData.reply('**sad trombone**');
-        break;
-      }
-      default:
-        break;
-    }
-  };
-
-  // Set a timer for 5 seconds
-  const timer = setTimeout(handleTimeout, 5000);
-
-  // Function to reset the timer
-  // const resetTimer = () => {
-  //   clearTimeout(timer);
-  //   timer = setTimeout(handleTimeout, 10000);
-  // };
-
-  // Listen for typing event
-  // This doesn't work for some reason
-  // discordClient.on(Events.TypingStart, interaction => {
-  //   // if (interaction.user.id === messageData.author.id && interaction.channel.id === messageData.channel.id) {
-  //   log.debug(F, `Typing started: ${interaction.user.id}`);
-  //   resetTimer();
-  //   // }
-  // });
-
-  // Handling additional messages
-  discordClient.on(Events.MessageCreate, (newMessage: Message) => {
-    if (newMessage.author.id === messageData.author.id && newMessage.channel.id === messageData.channel.id) {
-      log.debug(F, 'New message clearing timeout');
-      clearTimeout(timer);
-      // Process the new message as required
-    }
-  });
-}
-
 export async function aiMessage(
   messageData: Message<boolean>,
 ): Promise<void> {
@@ -1961,13 +2027,10 @@ export async function aiMessage(
   let isAfterAgreement = false;
   const ogMessage = messageData;
 
-  if (messageData.components.length > 0) {
-    // log.debug(F, `messageData.components: ${JSON.stringify(messageData.components, null, 2)}`);
+  if (messageData.reference) {
     isAfterAgreement = true;
-    const [,,messageId] = (messageData.components[0].components[0].customId as string).split('~');
-    log.debug(F, `messageId ${messageId}`);
     // eslint-disable-next-line no-param-reassign
-    messageData = await messageData.channel?.messages.fetch(messageId);
+    messageData = await messageData.fetchReference();
   }
 
   // log.debug(F, `messageData: ${JSON.stringify(messageData, null, 2)}`);
@@ -2077,10 +2140,26 @@ export async function aiMessage(
     attachmentInfo.mimeType = refMessage.attachments.first()?.contentType as string;
   }
 
-  log.debug(F, `Sending messages to API: ${JSON.stringify(messageList, null, 2)}`);
   log.debug(F, `attachmentInfo: ${JSON.stringify(attachmentInfo, null, 2)}`);
+  log.debug(F, `Sending messages to API: ${JSON.stringify(messageList, null, 2)}`);
 
-  const { response, promptTokens, completionTokens } = await aiChat(aiPersona, messageList, messageData.author.id, attachmentInfo);
+  await messageData.channel.sendTyping();
+
+  const typingInterval = setInterval(() => {
+    messageData.channel.sendTyping();
+  }, 5000); // Start typing indicator every 5 seconds
+  let response = '';
+  let promptTokens = 0;
+  let completionTokens = 0;
+
+  try {
+    const chatResponse = await aiChat(aiPersona, messageList, messageData.author.id, attachmentInfo);
+    response = chatResponse.response;
+    promptTokens = chatResponse.promptTokens;
+    completionTokens = chatResponse.completionTokens;
+  } finally {
+    clearInterval(typingInterval); // Stop sending typing indicator
+  }
 
   log.debug(F, `response from API: ${response}`);
   // log.debug(F, `promptTokens: ${promptTokens}`);
@@ -2136,12 +2215,12 @@ export async function aiMessage(
       allowedMentions: { parse: [] },
     });
   } else {
-    await messageData.channel.sendTyping();
-    const wpm = 120;
-    const wordCount = response.split(' ').length;
-    const sleepTime = (wordCount / wpm) * 60000;
-    // log.debug(F, `Typing ${wordCount} at ${wpm} wpm will take ${sleepTime / 1000} seconds`);
-    await sleep(sleepTime > 10000 ? 5000 : sleepTime); // Don't wait more than 5 seconds
+    // await messageData.channel.sendTyping();
+    // const wpm = 120;
+    // const wordCount = response.split(' ').length;
+    // const sleepTime = (wordCount / wpm) * 60000;
+    // // log.debug(F, `Typing ${wordCount} at ${wpm} wpm will take ${sleepTime / 1000} seconds`);
+    // await sleep(sleepTime > 10000 ? 5000 : sleepTime); // Don't wait more than 5 seconds
     const replyMessage = await messageData.reply({
       content: response.slice(0, 2000),
       allowedMentions: { parse: [] },
@@ -2253,14 +2332,12 @@ export async function aiMenu(
 ):Promise<InteractionEditReplyOptions> {
   const menuId = interaction.customId;
   log.debug(F, `menuId: ${menuId}`);
-  const [, menuAction] = menuId.split('~');
+  const [, menuAction] = menuId.split('~') as [null, 'channel' | 'personaInfo' | 'personaSetup' | 'model' | 'public'];
 
   // eslint-disable-next-line sonarjs/no-small-switch
   switch (menuAction) {
     case 'channel':
       return setupPage(interaction as ChannelSelectMenuInteraction);
-    case 'persona':
-      return setupPage(interaction as StringSelectMenuInteraction);
     case 'personaInfo':
       return personasPage(interaction as StringSelectMenuInteraction);
     case 'personaSetup':
@@ -2279,7 +2356,11 @@ export async function aiButton(
 ):Promise<void> {
   const buttonID = interaction.customId;
   log.debug(F, `buttonID: ${buttonID}`);
-  const [, buttonAction] = buttonID.split('~');
+  const [, buttonAction] = buttonID.split('~') as [
+    null,
+    'help' | 'personas' | 'setup' | 'agree' | 'privacy' |
+    'link' | 'unlink' | 'messageAgree' | 'modify' | 'new' |
+    'create' | 'delete' | 'deleteConfirm' | 'deleteHistory' | 'deleteHistoryConfirm'];
 
   // eslint-disable-next-line sonarjs/no-small-switch
   switch (buttonAction) {
@@ -2311,11 +2392,20 @@ export async function aiButton(
     case 'help':
       await interaction.update(await helpPage(interaction));
       break;
+    case 'privacy':
+      await interaction.update(await privacyPage(interaction));
+      break;
     case 'delete':
       await interaction.update(await deletePage(interaction));
       break;
     case 'deleteConfirm':
-      await interaction.update(await deletePersona(interaction));
+      await interaction.update(await deletedPage(interaction));
+      break;
+    case 'deleteHistory':
+      await interaction.update(await deleteHistoryPage());
+      break;
+    case 'deleteHistoryConfirm':
+      await interaction.update(await deletedHistoryPage(interaction));
       break;
     case 'link':
       await interaction.update(await link(interaction));
@@ -2355,13 +2445,16 @@ export const aiCommand: SlashCommand = {
       .setDescription('Get information on the various personas available for the AI module')
       .setName('personas'))
     .addSubcommand(subcommand => subcommand
+      .setDescription('Get info on your data usage, and delete it if you want')
+      .setName('privacy'))
+    .addSubcommand(subcommand => subcommand
       .setDescription('Get info on the AI module')
       .setName('help')),
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
     await interaction.deferReply({ ephemeral: true });
 
-    const subcommand = interaction.options.getSubcommand();
+    const subcommand = interaction.options.getSubcommand() as | 'setup' | 'personas' | 'privacy' | 'help';
     switch (subcommand) {
       case 'setup':
         await interaction.editReply(await setupPage(interaction));
@@ -2371,6 +2464,9 @@ export const aiCommand: SlashCommand = {
         break;
       case 'personas':
         await interaction.editReply(await personasPage(interaction));
+        break;
+      case 'privacy':
+        await interaction.editReply(await privacyPage(interaction));
         break;
       default:
         await interaction.editReply(await helpPage(interaction));
