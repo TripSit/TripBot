@@ -1750,7 +1750,10 @@ async function link(
 
   await db.ai_channels.upsert({
     where: {
-      channel_id: selectedChannel,
+      channel_id_persona_id: {
+        channel_id: selectedChannel,
+        persona_id: personaData.id,
+      },
     },
     create: {
       channel_id: selectedChannel,
