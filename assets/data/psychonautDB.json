@@ -37327,6 +37327,36 @@
     }
   },
   {
+    "url": "https://psychonautwiki.org/wiki/%CE%92OH-2C-B",
+    "name": "ΒOH-2C-B",
+    "summary": "",
+    "addictionPotential": "not habit-forming",
+    "toxicity": [
+      "toxic dose is unknown"
+    ],
+    "crossTolerances": [
+      "psychedelic"
+    ],
+    "commonNames": null,
+    "class": {
+      "chemical": [
+        "Substituted phenethylamines"
+      ],
+      "psychoactive": [
+        "Psychedelic"
+      ]
+    },
+    "tolerance": {
+      "full": "almost immediately after ingestion",
+      "half": "3 days",
+      "zero": "7 days"
+    },
+    "uncertainInteractions": null,
+    "unsafeInteractions": null,
+    "dangerousInteractions": null,
+    "roa": null
+  },
+  {
     "url": "https://psychonautwiki.org/wiki/%CE%92k-2C-B",
     "name": "Βk-2C-B",
     "summary": "",

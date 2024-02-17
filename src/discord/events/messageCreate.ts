@@ -63,6 +63,8 @@ export const messageCreate: MessageCreateEvent = {
       return;
     }
 
+    return;
+
     const userData = await db.users.upsert({
       where: {
         discord_id: message.author.id,
