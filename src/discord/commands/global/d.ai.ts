@@ -2026,6 +2026,7 @@ export async function aiMessage(
 ): Promise<void> {
   if (!env.OPENAI_API_ORG || !env.OPENAI_API_KEY) return;
   await messageData.fetch();
+  return;
 
   let isAfterAgreement = false;
   const ogMessage = messageData;
