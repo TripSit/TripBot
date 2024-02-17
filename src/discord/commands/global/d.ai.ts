@@ -245,10 +245,9 @@ function getComponentById(
 }
 
 const termsOfService = stripIndents`
-➤ I understand this 'AI' is not 'intelligent', I will not use it for any kind of drug/medical advice.
-➤ The bot only responds to @ messages, the bot does not store any history or context.
-➤ I cannot directly modify the bot's behavior, I can only audit the bot\'s responses, or join the TripSit guild to give feedback.
-➤ I will not abuse the bot or use it to break the rules, abuse of this feature may result in a ban from using the bot entirely.
+➤ This 'AI' is not 'intelligent', do not depend on it for any kind of drug/medical advice.
+➤ It stores your chat history in a database, delete your history with \`/ai privacy\`.
+➤ Abuse of this service may result in a ban from using the bot entirely!
 `;
 
 async function makePersonaEmbed(
@@ -975,9 +974,7 @@ async function helpPage(
       👥 How It Works
       Simply agree to our terms, and on the next page you can enable the AI in the channels you choose. \
       Once set up, anyone can @ mention TripBot to get a response from the AI. \
-      Note: "AI doesn't remember context of previous questions and doesn't store any message data" \
-      It does not store any history or context, every message is treated as a new conversation. \
-      However, do not expect that your conversations with the bot are private: every message sent through the bot is logged for moderation purposes.
+      Do not expect that your conversations with the bot are private: every message sent through the bot is logged for moderation purposes.
 
       **Ready to get started? Please agree to the following:**
       ${termsOfService}
@@ -1206,17 +1203,21 @@ async function personasPage(
       .setDescription(stripIndents` 
       A persona is a set of parameters that the AI uses to generate responses. \
       This allows us to have different 'personalities' for the AI. \
-      The AI will use the persona that is linked to the channel it is responding in, and return responses based on that persona's personality.
+      The AI will use the persona that is linked to the channel it is responding in, and return responses based on that persona's personality. \
       You can use the below menu to get information on each persona available. 
 
-      Some options include:
       **Model**
       The model to use for the persona. Currently we offer two models, GPT-3.5-Turbo and Gemini Pro.
+      GPT is offered through OpenAI and Gemini is offered through Google.
+      Google models have image processing capabilities.
+
       **Prompt**
       The prompt to use for the persona. This is the text that the AI will use to generate responses.
+      
       **Max Tokens**
       The maximum number of tokens to use for the AI response.
       What are tokens? <https://platform.openai.com/tokenizer>
+      
       **Temperature**
       Adjusts the randomness of the AI's answers.
       Lower values make the AI more predictable and focused, while higher values make it more random and varied.`)
@@ -1430,7 +1431,7 @@ async function setupPage(
   if (aiLinkData && linkedPersona === selectedPersona) {
     components.push(new ActionRowBuilder<ButtonBuilder>()
       .addComponents(buttonAiUnlink));
-  } else if (selectedChannel && selectedPersona) {
+  } else if (selectedChannel && selectedPersona && selectedPersona !== 'none') {
     components.push(new ActionRowBuilder<ButtonBuilder>()
       .addComponents(buttonAiLink));
   }
@@ -2026,7 +2027,6 @@ export async function aiMessage(
 ): Promise<void> {
   if (!env.OPENAI_API_ORG || !env.OPENAI_API_KEY) return;
   await messageData.fetch();
-  return;
 
   let isAfterAgreement = false;
   const ogMessage = messageData;
@@ -2059,6 +2059,11 @@ export async function aiMessage(
     return;
   }
 
+  // Check if the channel is linked to a persona
+  const aiLinkData = await getLinkedChannel(messageData.channel);
+  // log.debug(F, `aiLinkData: ${JSON.stringify(aiLinkData, null, 2)}`);
+  if (!aiLinkData) return;
+
   log.debug(F, `${messageData.author.displayName} asked me '${messageData.cleanContent}'`);
 
   // Determine if the user has agreed to the AI terms
@@ -2074,10 +2079,6 @@ export async function aiMessage(
     return;
   }
 
-  // Check if the channel is linked to a persona
-  const aiLinkData = await getLinkedChannel(messageData.channel);
-  // log.debug(F, `aiLinkData: ${JSON.stringify(aiLinkData, null, 2)}`);
-  if (!aiLinkData) return;
   // log.debug(F, `aiLinkData: ${JSON.stringify(aiLinkData, null, 2)}`);
 
   // Get persona details for this channel, throw an error if the persona was deleted
