@@ -16,6 +16,9 @@ ALTER TYPE "ai_model_new" RENAME TO "ai_model";
 DROP TYPE "ai_model_old";
 COMMIT;
 
+-- Drop the unique constraint
+ALTER TABLE ai_channels DROP CONSTRAINT aichannels_channelid_personaid_unique;
+
 -- DropIndex
 DROP INDEX "aichannels_channelid_personaid_unique";
 
