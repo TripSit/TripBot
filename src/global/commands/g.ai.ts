@@ -973,7 +973,7 @@ export async function aiModerate(
 ):Promise<ModerationResult[]> {
   const moderation = await aiModerateReport(message);
 
-  if (!moderation) {
+  if (!moderation || !moderation.results) {
     return [];
   }
 
