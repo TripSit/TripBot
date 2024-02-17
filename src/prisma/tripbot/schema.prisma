@@ -207,7 +207,7 @@ model discord_guilds {
   reaction_roles       reaction_roles[]
   ai_moderation        ai_moderation?
   user_actions         user_actions[]
-  ai_channels          ai_channels[]
+  // ai_channels          ai_channels[]
 }
 
 model drug_articles {
@@ -440,9 +440,11 @@ model ai_channels {
   persona_id  String      @db.Uuid
   ai_personas ai_personas @relation(fields: [persona_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "aichannels_personaid_foreign")
 
-  discord_guilds discord_guilds @relation(fields: [guild_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "aichannels_guildid_foreign")
+  // discord_guilds discord_guilds @relation(fields: [guild_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "aichannels_guildid_foreign")
 
-  @@unique([channel_id], map: "aichannels_channelid_unique")
+  // @@unique([channel_id], map: "aichannels_channelid_unique")
+
+  @@unique([channel_id, persona_id], map: "aichannels_channelid_personaid_unique")
 }
 
 model ai_moderation {
