@@ -92,7 +92,7 @@ export const interactionCreate: InteractionCreateEvent = {
         commandRun(interaction, discordClient);
         return;
       }
-      if (interaction.isStringSelectMenu()) {
+      if (interaction.isAnySelectMenu()) {
         selectMenu(interaction);
         return;
       }

@@ -146,7 +146,10 @@ model users {
   partner                                                   Boolean?          @default(true)
   supporter                                                 Boolean?          @default(true)
   moodle_id                                                 String?
+  ai_terms_agree                                            Boolean           @default(false)
   ai_personas                                               ai_personas[]
+  ai_history_openai                                         String?
+  ai_history_google                                         String?
   appeals                                                   appeals[]
   drug_articles_drug_articles_last_modified_byTousers       drug_articles[]   @relation("drug_articles_last_modified_byTousers")
   drug_articles_drug_articles_posted_byTousers              drug_articles[]   @relation("drug_articles_posted_byTousers")
@@ -204,6 +207,7 @@ model discord_guilds {
   reaction_roles       reaction_roles[]
   ai_moderation        ai_moderation?
   user_actions         user_actions[]
+  ai_channels          ai_channels[]
 }
 
 model drug_articles {
@@ -410,6 +414,8 @@ model appeals {
 model ai_personas {
   id                String        @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
   name              String        @unique(map: "aipersonas_name_unique")
+  description       String?
+  public            Boolean       @default(false)
   ai_model          ai_model
   prompt            String
   temperature       Float?        @db.Real
@@ -421,6 +427,8 @@ model ai_personas {
   total_tokens      Int           @default(0)
   created_at        DateTime      @default(now()) @db.Timestamptz(6)
   created_by        String        @db.Uuid
+  upvotes           Int           @default(0)
+  downvotes         Int           @default(0)
   ai_channels       ai_channels[]
   users             users         @relation(fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "aipersonas_createdby_foreign")
 }
@@ -428,10 +436,13 @@ model ai_personas {
 model ai_channels {
   id          String      @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
   channel_id  String
+  guild_id    String
   persona_id  String      @db.Uuid
   ai_personas ai_personas @relation(fields: [persona_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "aichannels_personaid_foreign")
 
-  @@unique([channel_id, persona_id], map: "aichannels_channelid_personaid_unique")
+  discord_guilds discord_guilds @relation(fields: [guild_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "aichannels_guildid_foreign")
+
+  @@unique([channel_id], map: "aichannels_channelid_unique")
 }
 
 model ai_moderation {
@@ -607,14 +618,18 @@ enum appeal_status {
 
 enum ai_model {
   GPT_3_5_TURBO             @map("GPT-3.5-TURBO")
-  GPT_3_5_TURBO_1106        @map("GPT-3.5-TURBO-1106")
-  GPT_4                     @map("GPT-4")
-  GPT_4_1106_PREVIEW        @map("GPT-4-1106-PREVIEW")
-  GPT_4_1106_VISION_PREVIEW @map("GPT-4-1106-VISION-PREVIEW")
-  DALL_E_2                  @map("DALL-E-2")
+  // GPT_3_5_TURBO_1106        @map("GPT-3.5-TURBO-1106")
+  GPT_4_TURBO              @map("GPT-4-TURBO")
+  // GPT_4                     @map("GPT-4")
+  // GPT_4_1106_PREVIEW        @map("GPT-4-1106-PREVIEW")
+  // GPT_4_1106_VISION_PREVIEW @map("GPT-4-1106-VISION-PREVIEW")
+  // DALL_E_2                  @map("DALL-E-2")
   DALL_E_3                  @map("DALL-E-3")
-  DAVINCI
-  CURIE
-  BABBAGE
-  ADA
+  GEMINI_PRO                @map("GEMINI-PRO")
+  // GEMINI_PRO_VISION                @map("GEMINI-PRO-VISION")
+  // AQA                    @map("AQA")
+  // DAVINCI
+  // CURIE
+  // BABBAGE
+  // ADA
 }
