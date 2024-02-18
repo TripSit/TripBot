@@ -781,6 +781,15 @@ async function createPersona(
   const selectedModel = modelSelectMenu.options.find(option => option.default)?.value;
   log.debug(F, `selectedModel: ${JSON.stringify(selectedModel, null, 2)}`);
 
+  let modelName = '';
+  if (selectedModel === 'GPT_3_5_TURBO') {
+    modelName = 'GPT-3.5';
+  } else if (selectedModel === 'GPT_4_TURBO') {
+    modelName = 'GPT-4';
+  } else if (selectedModel === 'GEMINI_PRO') {
+    modelName = 'Gemini';
+  }
+
   await interaction.showModal(new ModalBuilder()
     .setCustomId(`aiPromptModal~${interaction.id}`)
     .setTitle('Modal')
@@ -789,7 +798,7 @@ async function createPersona(
         .addComponents(new TextInputBuilder()
           .setCustomId('name')
           .setPlaceholder(stripIndents`TripBot V3`)
-          .setValue(stripIndents`TripBot V3`)
+          .setValue(stripIndents`TripBot (${modelName})`)
           .setLabel('Unique name for your persona')
           .setMinLength(3)
           .setStyle(TextInputStyle.Short)),
@@ -1750,11 +1759,14 @@ async function link(
   const verb = aiLinkData ? 'updated' : 'created';
 
   await db.ai_channels.upsert({
+    // where: {
+    //   channel_id_persona_id: {
+    //     channel_id: selectedChannel,
+    //     persona_id: personaData.id,
+    //   },
+    // },
     where: {
-      channel_id_persona_id: {
-        channel_id: selectedChannel,
-        persona_id: personaData.id,
-      },
+      channel_id: selectedChannel,
     },
     create: {
       channel_id: selectedChannel,
@@ -2152,10 +2164,14 @@ export async function aiMessage(
 
   const typingInterval = setInterval(() => {
     messageData.channel.sendTyping();
-  }, 5000); // Start typing indicator every 5 seconds
+  }, 9000); // Start typing indicator every 9 seconds
   let response = '';
   let promptTokens = 0;
   let completionTokens = 0;
+
+  const typingFailsafe = setInterval(() => {
+    clearInterval(typingInterval); // Stop sending typing indicator
+  }, 30000); // Failsafe to stop typing indicator after 30 seconds
 
   try {
     const chatResponse = await aiChat(aiPersona, messageList, messageData.author.id, attachmentInfo);
@@ -2164,6 +2180,7 @@ export async function aiMessage(
     completionTokens = chatResponse.completionTokens;
   } finally {
     clearInterval(typingInterval); // Stop sending typing indicator
+    clearTimeout(typingFailsafe); // Clear the failsafe timeout to prevent it from running if we've successfully stopped typing
   }
 
   log.debug(F, `response from API: ${response}`);

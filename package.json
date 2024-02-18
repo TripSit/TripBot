@@ -27,7 +27,7 @@
     "db:validateSchema": "docker exec -it tripbot npx prisma validate",
     "db:generateClient": "npx prisma generate && docker exec -it tripbot npx prisma generate",
     "db:pushDev": "docker exec -it tripbot npx prisma db push && npm run tripbot:db:generate",
-    "db:migrateDev": "docker exec -it tripbot npx prisma migrate dev -n ai_ui_update",
+    "db:migrateDev": "docker exec -it tripbot npx prisma migrate dev -n ai_ui_fix",
     "db:seed": "docker exec -it tripbot npx prisma db seed",
     "## PGADMIN ##": "",
     "pgadmin": "docker compose --project-name tripbot up -d --force-recreate --build tripbot_pgadmin",
