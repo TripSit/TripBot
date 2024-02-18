@@ -635,7 +635,7 @@ async function openAiConversation(
         log.debug(F, `messageContent: ${JSON.stringify(messageContent, null, 2)}`);
 
         // Send the result to the dev room
-        await devRoom.send(`AI Conversation succeeded: ${JSON.stringify(messageContent, null, 2)}`);
+        // await devRoom.send(`AI Conversation succeeded: ${JSON.stringify(messageContent, null, 2)}`);
 
         // await messages[0].reply(result.response.slice(0, 2000));
         response = (messageContent as MessageContentText).text.value;
