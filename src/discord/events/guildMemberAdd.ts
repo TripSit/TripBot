@@ -10,6 +10,7 @@ const F = f(__filename);
 export const guildMemberAdd: GuildMemberAddEvent = {
   name: 'guildMemberAdd',
   async execute(member) {
+    await member.fetch(true);
     const guildData = await db.discord_guilds.upsert({
       where: {
         id: member.guild.id,
@@ -26,7 +27,7 @@ export const guildMemberAdd: GuildMemberAddEvent = {
     if (!guildData) return;
 
     if (member.guild.id !== env.DISCORD_GUILD_ID) return;
-    await trust(member);
+    // await trust(member);
   },
 };
 
