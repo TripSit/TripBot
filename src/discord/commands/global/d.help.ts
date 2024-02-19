@@ -19,6 +19,8 @@ const F = f(__filename);
 
 const selectAPage = 'Select a Page';
 
+const publicDescription = 'Should we show this to everyone?';
+
 const selectMenuOptions = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents([
   new StringSelectMenuBuilder()
     .setCustomId('helpSelectMenu')
@@ -612,13 +614,106 @@ export const dHelp: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('help')
     .setDescription('Information about TripBot Commands')
-    .addBooleanOption(option => option.setName('ephemeral')
-      .setDescription('Set to "True" to show the response only to you')),
+    .addSubcommand(subcommand => subcommand
+      .setDescription('Info on TripBot commands')
+      .setName('start')
+      .addBooleanOption(option => option.setName('public')
+        .setDescription(publicDescription)))
+    .addSubcommand(subcommand => subcommand
+      .setName('harm_reduction')
+      .setDescription('Harm Reduction Tools')
+      .addBooleanOption(option => option.setName('public')
+        .setDescription(publicDescription)))
+    .addSubcommand(subcommand => subcommand
+      .setName('systems')
+      .setDescription('TripBot Systems')
+      .addBooleanOption(option => option.setName('public')
+        .setDescription(publicDescription)))
+    .addSubcommand(subcommand => subcommand
+      .setName('fun')
+      .setDescription('Fun Modules')
+      .addBooleanOption(option => option.setName('public')
+        .setDescription(publicDescription)))
+    .addSubcommand(subcommand => subcommand
+      .setName('tripsit')
+      .setDescription('TripSit Sessions')
+      .addBooleanOption(option => option.setName('public')
+        .setDescription(publicDescription)))
+    .addSubcommand(subcommand => subcommand
+      .setName('tripsit_exp')
+      .setDescription('TripSit Experience')
+      .addBooleanOption(option => option.setName('public')
+        .setDescription(publicDescription)))
+    .addSubcommand(subcommand => subcommand
+      .setName('tripsit_only')
+      .setDescription('TripSit Specific Modules')
+      .addBooleanOption(option => option.setName('public')
+        .setDescription(publicDescription)))
+    .addSubcommand(subcommand => subcommand
+      .setName('support')
+      .setDescription('Support TripSit')
+      .addBooleanOption(option => option.setName('public')
+        .setDescription(publicDescription)))
+    .addSubcommand(subcommand => subcommand
+      .setName('credits')
+      .setDescription('Credits')
+      .addBooleanOption(option => option.setName('public')
+        .setDescription(publicDescription)))
+    .addSubcommand(subcommand => subcommand
+      .setName('feedback')
+      .setDescription('Feedback / Development')
+      .addBooleanOption(option => option.setName('public')
+        .setDescription(publicDescription)))
+    .addSubcommand(subcommand => subcommand
+      .setName('invite')
+      .setDescription('Invite TripBot')
+      .addBooleanOption(option => option.setName('public')
+        .setDescription(publicDescription))),
 
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
-    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
-    await interaction.editReply(await startPage());
+    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('public') !== true) });
+
+    const command = interaction.options.getSubcommand() as 'start' | 'harm_reduction' | 'systems' | 'fun' | 'tripsit' | 'tripsit_exp' | 'tripsit_only' | 'support' | 'credits' | 'feedback' | 'invite';
+
+    switch (command) {
+      case 'start':
+        await interaction.editReply(await startPage());
+        break;
+      case 'harm_reduction':
+        await interaction.editReply(await hrPage());
+        break;
+      case 'systems':
+        await interaction.editReply(await systemsPage());
+        break;
+      case 'fun':
+        await interaction.editReply(await funPage());
+        break;
+      case 'tripsit':
+        await interaction.editReply(await sessionsPage());
+        break;
+      case 'tripsit_exp':
+        await interaction.editReply(await experiencePage());
+        break;
+      case 'tripsit_only':
+        await interaction.editReply(await tripsitPage());
+        break;
+      case 'support':
+        await interaction.editReply(await donatePage());
+        break;
+      case 'credits':
+        await interaction.editReply(await creditsPage());
+        break;
+      case 'feedback':
+        await interaction.editReply(await feedbackPage());
+        break;
+      case 'invite':
+        await interaction.editReply(await invitePage());
+        break;
+      default:
+        await interaction.editReply(await startPage());
+        break;
+    }
     return true;
   },
 };

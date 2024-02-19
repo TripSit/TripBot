@@ -957,7 +957,9 @@ async function helpPage(
 
   if (!userData.ai_terms_agree) {
     components.push(new ActionRowBuilder<ButtonBuilder>()
-      .addComponents(buttonAiAgree));
+      .addComponents(
+        buttonAiAgree.setCustomId(`AI~agree~${interaction.user.id}`),
+      ));
   }
 
   return {
@@ -2399,6 +2401,8 @@ export async function aiButton(
       await interaction.update(await setupPage(interaction));
       break;
     case 'messageAgree': {
+      if (interaction.customId.split('~')[1] !== interaction.message.id) return;
+
       await db.users.update({
         where: {
           discord_id: interaction.user.id,

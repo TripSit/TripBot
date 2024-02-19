@@ -151,7 +151,7 @@ const thankYouPhrases = [
   "Our deepest gratitude for their contribution. Together, we'll reach new heights.",
 ];
 
-const donationTagline = '*`/donate` to TripSit to access special username colors and the snazzy Gold Lounge!*';
+const donationTagline = '*`/help support` to TripSit to access special username colors and the snazzy Gold Lounge!*';
 
 const boostEmoji = env.NODE_ENV === 'production' ? '<:ts_boost:981799280396353596>' : '<:ts_boost:1168968973082185800>';
 const donorEmoji = env.NODE_ENV === 'production' ? '<:ts_donor:1121625178774966272>' : '<:ts_donor:1168969578836144233>';
