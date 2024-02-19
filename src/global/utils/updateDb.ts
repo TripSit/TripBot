@@ -47,7 +47,7 @@ async function saveData(data: any, fileName: string): Promise<string> {
 
   const filePath = path.join(dataFolder, `${fileName}.json`);
 
-  // log.debug(F, `Saving ${Object.values(data).length} data to ${filePath}!`);
+  // log.debug(F, `Saving ${Object.values(data).length} data  to ${filePath}!`);
 
   await fs.writeFile(filePath, JSON.stringify(data, null, 2));
 
@@ -70,14 +70,14 @@ async function getTSData(): Promise<{
     }
   }
 
-  // log.debug(F, '[getTSData] Getting data from TripSit API!');
+  log.debug(F, '[getTSData] Getting data from TripSit API!');
 
   const data = await axios.get('https://raw.githubusercontent.com/TripSit/drugs/main/drugs.json');
   const drugData = data.data as {
     [key: string]: Drug;
   };
 
-  // log.info(F, `Got ${Object.values(drugData).length} drugs from TripSit API!`);
+  log.info(F, `Got ${Object.values(drugData).length} drugs from TripSit API!`);
 
   await saveData(drugData, 'tripsitDB');
 

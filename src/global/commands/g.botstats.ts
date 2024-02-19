@@ -44,8 +44,20 @@ export async function botStats():Promise<BotStats> {
   response.tsPwDbSize = Object.keys(drugDataCombined).length;
 
   // Get discord stats
+
+  await discordClient.guilds.fetch();
   response.guildCount = discordClient.guilds.cache.size;
-  response.userCount = discordClient.users.cache.size;
+
+  // Fetching member counts
+  response.userCount = discordClient.guilds.cache.reduce((acc, guild) => {
+    try {
+      return acc + guild.memberCount;
+    } catch (e) {
+      // log.error(F, `Error fetching members for guild: ${guild.name}`);
+      return acc;
+    }
+  }, 0);
+
   response.channelCount = discordClient.channels.cache.size;
   response.commandCount = discordClient.commands.size;
   response.uptime = global.bootTime

@@ -28,6 +28,7 @@ import { applicationSetup } from '../../utils/application';
 import { paginationEmbed } from '../../utils/pagination';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { profile } from '../../../global/commands/g.learn';
+import tripsitInfo from '../../../global/commands/g.about';
 
 const F = f(__filename);
 
@@ -43,85 +44,15 @@ async function help(
 ) {
   const tripsitEmbed = embedTemplate()
     .setTitle('How To Setup TripSit Sessions')
-    .setDescription(stripIndents`
-    **What is a TripSit Session?**
-    This is TripSit's help system, basically a support ticket system for people on substances!
-
-    ** What does this to? **
-    This will create a message in the Tripsit room with a button to create a new thread.
-    When a user clicks this button they will be asked two vital questions for tripsitting, and then they submit the form.
-    The Needshelp role will be assigned to the user and the bot will try to remove every other role the user has.
-    This makes it so that people who need help are restricted to the Tripsit room and can't see any other channels.
-    The bot will then create a new thread in the Tripsit room and ping the user, along with the Tripsitters and optionally Helpers.
-    The user can then talk to the Tripsitters and Helpers in the thread.
-    When the user is done with their session, they can click  and the bot will reassign their roles.
-    
-    Full details on how to use this system can be found [on our learning portal](https://learn.tripsit.me/mod/lesson/view.php?id=24)!
-
-    ** How do I set it up? **
-    1. Create a room where you want a message posted and threads created (Tripsit)
-    2. Create a room where people will talk about Tripsit encounters (Meta-tripsit)
-    3. Create a role that will be assigned to users who need help (Needshelp)
-    3a. Set up the permissions for this role so that it can only see the Tripsit room
-    4. Create a role that will respond to new sessions (Tripsitter)
-    5. (Optional) Create a secondary role that will respond to new sessions (Helper)
-    6. Run the /setup tripsit command with each of the above channels and roles
-
-    ** Troubleshooting **
-    If you have any issues with this system, please contact Moonbear on the TripSit guild! 
-    They're happy to give direct support to any problems you may have!
-    `);
+    .setDescription(tripsitInfo.tripsitSessionsDesc);
 
   const applicationsEmbed = embedTemplate()
     .setTitle('How To Setup Applications')
-    .setDescription(stripIndents`
-    **What is an Application system?**
-    This is an application system to allow people to apply for roles in your guild!
-
-    ** What does this to? **
-    This will create a message in the room you run this command with a button.
-    When a user clicks this button they will be asked two questions:
-    1. Why do you want to help out?
-    2. What skills can you bring to the team?
-    The user submits this forum and a new thread is created in a separate channel for the team to discuss the application.
-    The thread is created in a separate room so that people cannot accidentally @ the user and add them to the thread.
-    There is a 24 hour cool down before an application can be accepted or rejected, to give everyone a chance to discuss the application.
-    There are a list of pre-defined responses that can be used to reject the application, if desired, but a custom response is usually better.
-
-    ** How do I set it up? **
-    1. Create a room where you want a message posted (Apply-Here)
-    2. Create a room where people will talk about applications (Applications)
-    3. Create a role that people can apply for (Tripsitter)
-    4. Create a role that will review applications (Moderator)
-    5. Run the /setup applications command with each of the above channels and roles
-
-    ** Troubleshooting **
-    If you have any issues with this system, please contact Moonbear on the TripSit guild! 
-    They're happy to give direct support to any problems you may have!
-    `);
+    .setDescription(tripsitInfo.applicationsDesc);
 
   const techHelpEmbed = embedTemplate()
     .setTitle('How To Setup TechHelp')
-    .setDescription(stripIndents`
-    **What is a TechHelp system?**
-    This is a system to allow people to ask for help with technical issues in your guild!
-    This can be mod requests or whatever, it doesn't need to be technology related!
-
-    ** What does this to? **
-    This is a lot like the Tripsit Sessions system, with some changes:
-    1. The user is not restricted to a single room/thread.
-    2. There is no meta-channel for discussion, we assume you already have a #moderator room for that.
-    3. There is no "im good button" because the bot does not remove roles, but there is a "issue resolved" button.
-
-    ** How do I set it up? **
-    1. Create a room where you want a message posted (TechHelp)
-    2. Create a role that will respond to new sessions (Moderator)
-    3. Run the /setup techhelp command with each of the above channels and roles
-
-    ** Troubleshooting **
-    If you have any issues with this system, please contact Moonbear on the TripSit guild!
-    They're happy to give direct support to any problems you may have!
-    `);
+    .setDescription(tripsitInfo.techhelpDesc);
 
   const rulesEmbed = embedTemplate()
     .setTitle('How To Setup  Rules')
@@ -132,27 +63,7 @@ async function help(
 
   const ticketboothEmbed = embedTemplate()
     .setTitle('How To Setup Ticketbooth')
-    .setDescription(stripIndents`
-    **What is a Ticketbooth system?**
-    This sets up a 'front desk' type channel where users must read and click a button in order to see the rest of the guild.
-    This is useful for guilds that want to restrict access to the rest of the guild until a user has read the rules.
-
-    ** What does this to? **
-    This will create a message in the room you run this command with a button.
-    When a user clicks this button they will be given a role.
-
-    ** How do I set it up? **
-    1. Create a room where you want a message posted (Ticketbooth)
-    2. Create a role that will be assigned to users who click the button (Verified)
-    3. Setup permissions:
-    3a. Make sure that Everyone can see the Ticketbooth room, but not the rest of the guild.
-    3b. Make sure that Verified users can see the rest of the guild, but not the Ticketbooth room.
-    3. Run the /setup ticketbooth command with each of the above channels and roles
-
-    ** Troubleshooting **
-    If you have any issues with this system, please contact Moonbear on the TripSit guild!
-    They're happy to give direct support to any problems you may have!
-    `);
+    .setDescription(tripsitInfo.ticketboothDesc);
 
   const book = [
     tripsitEmbed,
@@ -502,8 +413,6 @@ If you do not agree to this policy, do not use this site.
     flags: ['SuppressEmbeds'],
   });
 
-  const talkToModsChannel = await interaction.guild?.channels.fetch(env.CHANNEL_HELPDESK);
-
   await (interaction.channel as TextChannel).send({
     content: stripIndents`
     > 🔞 **1. Do not connect to TripSit or use our services if you are under eighteen.**
@@ -515,7 +424,7 @@ If you do not agree to this policy, do not use this site.
     > d. Do not display an offensive profile picture, including pornography of any kind.
     > e. Do not use an offensive nickname or one that could cause anxiety in others, e.g., law enforcement or dictators.
     > f. Do not post content that victimizes, harasses, degrades, or intimidates an individual or group based on race, ethnicity, religion, sexual orientation,  gender identification, drug of choice, level of addiction, mental health status, or other reasons.
-    > g. Do not argue rules in public channels, take it to ${talkToModsChannel}.
+    > g. Do not argue rules in public channels.
 
     > 💊 **3. Do not discuss, request, or post identifying information of websites, online vendors, or real-life people who sell or coordinate the purchase, distribution, or production of substances (legal, clear-net, or otherwise) or cryptocurrencies, i.e., no sourcing.**
     > a. Do not discuss the specifics or go in-depth into the mechanics of online vending.

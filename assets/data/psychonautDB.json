@@ -1680,133 +1680,6 @@
     }
   },
   {
-    "url": "https://psychonautwiki.org/wiki/2-Methyl-AP-237",
-    "name": "2-Methyl-AP-237",
-    "summary": "",
-    "addictionPotential": null,
-    "toxicity": null,
-    "crossTolerances": null,
-    "commonNames": [
-      "2-Methyl-AP-237",
-      "Apex",
-      "2-MAP"
-    ],
-    "class": null,
-    "tolerance": null,
-    "uncertainInteractions": [
-      {
-        "name": "Substituted amphetamines"
-      },
-      {
-        "name": "MAOI"
-      },
-      {
-        "name": "Nitrous"
-      },
-      {
-        "name": "PCP"
-      }
-    ],
-    "unsafeInteractions": null,
-    "dangerousInteractions": [
-      {
-        "name": "Alcohol"
-      },
-      {
-        "name": "Benzodiazepines"
-      },
-      {
-        "name": "Cocaine"
-      },
-      {
-        "name": "Dextromethorphan"
-      },
-      {
-        "name": "GHB"
-      },
-      {
-        "name": "GBL"
-      },
-      {
-        "name": "Ketamine"
-      },
-      {
-        "name": "Methoxetamine"
-      },
-      {
-        "name": "Tramadol"
-      },
-      {
-        "name": "Grapefruit"
-      }
-    ],
-    "roa": {
-      "oral": {
-        "name": "oral",
-        "dose": {
-          "units": "mg",
-          "threshold": 10,
-          "heavy": 25,
-          "common": {
-            "min": 15,
-            "max": 20
-          },
-          "light": {
-            "min": 10,
-            "max": 15
-          },
-          "strong": {
-            "min": 20,
-            "max": 25
-          }
-        },
-        "duration": {
-          "afterglow": {
-            "min": 4,
-            "max": 6,
-            "units": "hours"
-          },
-          "comeup": {
-            "min": 10,
-            "max": 40,
-            "units": "minutes"
-          },
-          "duration": null,
-          "offset": {
-            "min": 5,
-            "max": 60,
-            "units": "minutes"
-          },
-          "onset": {
-            "min": 5,
-            "max": 15,
-            "units": "minutes"
-          },
-          "peak": {
-            "min": 15,
-            "max": 20,
-            "units": "minutes"
-          },
-          "total": {
-            "min": 4,
-            "max": 6,
-            "units": "hours"
-          }
-        },
-        "bioavailability": null
-      },
-      "sublingual": null,
-      "buccal": null,
-      "insufflated": null,
-      "rectal": null,
-      "transdermal": null,
-      "subcutaneous": null,
-      "intramuscular": null,
-      "intravenous": null,
-      "smoked": null
-    }
-  },
-  {
     "url": "https://psychonautwiki.org/wiki/25B-NBOH",
     "name": "25B-NBOH",
     "summary": "",
@@ -37452,6 +37325,36 @@
       "intravenous": null,
       "smoked": null
     }
+  },
+  {
+    "url": "https://psychonautwiki.org/wiki/%CE%92OH-2C-B",
+    "name": "ΒOH-2C-B",
+    "summary": "",
+    "addictionPotential": "not habit-forming",
+    "toxicity": [
+      "toxic dose is unknown"
+    ],
+    "crossTolerances": [
+      "psychedelic"
+    ],
+    "commonNames": null,
+    "class": {
+      "chemical": [
+        "Substituted phenethylamines"
+      ],
+      "psychoactive": [
+        "Psychedelic"
+      ]
+    },
+    "tolerance": {
+      "full": "almost immediately after ingestion",
+      "half": "3 days",
+      "zero": "7 days"
+    },
+    "uncertainInteractions": null,
+    "unsafeInteractions": null,
+    "dangerousInteractions": null,
+    "roa": null
   },
   {
     "url": "https://psychonautwiki.org/wiki/%CE%92k-2C-B",

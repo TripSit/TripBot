@@ -30,6 +30,8 @@ import {
   werewolfHow, werewolfJoin, werewolfLeave, werewolfStart,
 } from '../commands/guild/d.werewolf';
 import { acknowledgeButton, modModal, refusalButton } from '../commands/guild/d.moderate';
+import { feedbackReportModal } from '../commands/global/d.feedback';
+import { aiButton } from '../commands/global/d.ai';
 // import { helpButton } from '../commands/global/d.help';
 
 const F = f(__filename);
@@ -41,10 +43,15 @@ export async function buttonClick(interaction:ButtonInteraction, discordClient:C
   // log.debug(F, 'Interaction deferred!');
   const buttonID = interaction.customId;
 
-  // if (buttonID.startsWith('helpButton')) {
-  //   await helpButton(interaction);
-  //   return;
-  // }
+  if (buttonID.startsWith('feedbackReport')) {
+    await feedbackReportModal(interaction);
+    return;
+  }
+
+  if (buttonID.startsWith('AI')) {
+    await aiButton(interaction);
+    return;
+  }
 
   if (buttonID.startsWith('mushroom')) {
     // log.debug(F, 'Werewolf button clicked');

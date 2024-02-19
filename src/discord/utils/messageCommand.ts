@@ -8,7 +8,7 @@ import {
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
 import { sleep } from '../commands/guild/d.bottest';
-import { discordAiChat } from '../commands/global/d.ai';
+import { aiMessage } from '../commands/global/d.ai';
 
 // import log from '../../global/utils/log';
 // import {parse} from 'path';
@@ -303,7 +303,7 @@ give people a chance to answer 😄 If no one answers in 5 minutes you can try a
         }
       }
     } else if (!message.author.bot) {
-      await discordAiChat(message);
+      await aiMessage(message);
     } else {
       try {
         await message.react(emojiGet('ts_heart'));
