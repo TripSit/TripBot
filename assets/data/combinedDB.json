@@ -45663,55 +45663,6 @@
     ]
   },
   {
-    "url": "https://psychonautwiki.org/wiki/TMA",
-    "name": "TMA",
-    "toxicity": [
-      "toxic dose is unknown"
-    ],
-    "addictionPotential": "not habit-forming",
-    "tolerance": {
-      "full": "almost immediately after ingestion",
-      "half": "3 days",
-      "zero": "7 days"
-    },
-    "crossTolerances": [
-      "psychedelic"
-    ],
-    "roas": [
-      {
-        "name": "Oral",
-        "dosage": [
-          {
-            "name": "Threshold",
-            "value": "40 70"
-          },
-          {
-            "name": "Light",
-            "value": "70-140 70"
-          },
-          {
-            "name": "Common",
-            "value": "140-170 70"
-          },
-          {
-            "name": "Strong",
-            "value": "170-200 70"
-          },
-          {
-            "name": "Heavy",
-            "value": "200 70"
-          }
-        ],
-        "duration": [
-          {
-            "name": "Total",
-            "value": "6-12 hours"
-          }
-        ]
-      }
-    ]
-  },
-  {
     "url": "https://psychonautwiki.org/wiki/TMA-2",
     "name": "TMA-2",
     "aliases": [

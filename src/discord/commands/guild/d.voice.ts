@@ -39,6 +39,9 @@ async function tentLock(
       .permissionsFor(voiceChannel.guild.roles.everyone)
       .has(PermissionsBitField.Flags.Connect) === true
   ) {
+    voiceChannel.members.forEach(member => {
+      voiceChannel.permissionOverwrites.edit(member, { Connect: true });
+    });
     voiceChannel.permissionOverwrites.edit(voiceChannel.guild.roles.everyone, { Connect: false });
     verb = 'locked';
   } else {
@@ -62,6 +65,9 @@ async function tentHide(
       .permissionsFor(voiceChannel.guild.roles.everyone)
       .has(PermissionsBitField.Flags.ViewChannel) === true
   ) {
+    voiceChannel.members.forEach(member => {
+      voiceChannel.permissionOverwrites.edit(member, { ViewChannel: true });
+    });
     voiceChannel.permissionOverwrites.edit(voiceChannel.guild.roles.everyone, { ViewChannel: false });
     verb = 'hidden';
   } else {
