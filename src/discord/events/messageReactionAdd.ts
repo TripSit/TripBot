@@ -19,14 +19,14 @@ export const messageReactionAdd: MessageReactionAddEvent = {
     try {
       await messageReaction.fetch();
     } catch (e) {
-      log.error(F, 'Failed to fetch messageReaction');
+      // log.error(F, 'Failed to fetch messageReaction');
       // return;
     }
 
     try {
       await messageReaction.message.fetch(); // Get the message object so that we can do stuff between restarts
     } catch (e) {
-      log.error(F, 'Failed to fetch message data');
+      // log.error(F, 'Failed to fetch message data');
       // return;
     }
 

@@ -2274,6 +2274,13 @@ export async function aiReaction(
       channel_id: originalMessage.channel.id,
     },
   });
+
+  log.debug(F, `aiLinkData: ${JSON.stringify(aiLinkData, null, 2)}`);
+  log.debug(F, `messageReaction: ${JSON.stringify(messageReaction, null, 2)}`);
+  log.debug(F, `messageReaction.message.author: ${JSON.stringify(messageReaction.message.author, null, 2)}`);
+  log.debug(F, `user: ${JSON.stringify(user, null, 2)}`);
+  log.debug(F, `Emoji name: ${messageReaction.emoji.name}`);
+
   if (aiLinkData
         && messageReaction.message.author?.bot
         && !user.bot
