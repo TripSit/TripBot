@@ -165,7 +165,7 @@ async function hrPage():Promise<InteractionEditReplyOptions> {
           },
           {
             name: 'Test Kits',
-            value: 'Display information on how to get drug testing kits, including cooupon codes',
+            value: 'Display information on how to get drug testing kits, including coupon codes',
             inline: true,
           },
           { name: '\u200B', value: '**Picture References**', inline: false },
@@ -195,7 +195,7 @@ async function hrPage():Promise<InteractionEditReplyOptions> {
             inline: true,
           },
           {
-            name: 'Mushrom Info',
+            name: 'Mushroom Info',
             value: 'Display dosage information about common mushrooms.',
             inline: true,
           },
@@ -206,7 +206,7 @@ async function hrPage():Promise<InteractionEditReplyOptions> {
             inline: true,
           },
           {
-            name: 'Calc Benzos',
+            name: 'Calc Benzodiazipine',
             value: 'Convert one benzodiazepine to another, very roughly.',
             inline: true,
           },
@@ -307,17 +307,17 @@ async function funPage():Promise<InteractionEditReplyOptions> {
             inline: true,
           },
           {
-            name: 'Coinflip',
+            name: 'Coin Flip',
             value: 'Flip a coin.',
             inline: true,
           },
           {
-            name: 'Lovebomb',
-            value: 'Send a lovebomb.',
+            name: 'Love Bomb',
+            value: 'Send a love bomb.',
             inline: true,
           },
           {
-            name: 'Remindme',
+            name: 'Remind Me',
             value: 'Set a reminder for a specific time.',
             inline: true,
           },
@@ -497,12 +497,12 @@ async function donatePage():Promise<InteractionEditReplyOptions> {
           .setStyle(ButtonStyle.Link)
           .setURL(tripsit.kofi),
         new ButtonBuilder()
-          .setLabel('Spreadshop')
+          .setLabel('Spread Shop')
           .setEmoji('👕')
           .setStyle(ButtonStyle.Link)
           .setURL(tripsit.spreadshop),
         new ButtonBuilder()
-          .setLabel('Spreadshirt')
+          .setLabel('Spread Shirt')
           .setEmoji('👕')
           .setStyle(ButtonStyle.Link)
           .setURL(tripsit.spreadshirt),

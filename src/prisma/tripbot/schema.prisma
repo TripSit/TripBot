@@ -170,6 +170,21 @@ model users {
   ai_images                                                 ai_images[]
   quotes_quotes_user_idTousers                              quotes[]          @relation("UserQuote")
   quotes_quotes_created_byTousers                           quotes[]          @relation("QuoteCreator")
+  members                                                   members[]
+}
+
+model members {
+  // Each User is associated with at least one Guild, and this union is called a Member record
+  // This table records guild-specific things, and will be expanded on later
+  id       String @id
+  guild_id String
+
+  trusted Boolean @default(false)
+
+  users          users          @relation(fields: [id], references: [discord_id], onDelete: NoAction, onUpdate: NoAction, map: "members_id_foreign")
+  discord_guilds discord_guilds @relation(fields: [guild_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "members_guildid_foreign")
+
+  @@unique([id, guild_id], map: "members_id_guildid_unique")
 }
 
 model discord_guilds {
@@ -208,6 +223,7 @@ model discord_guilds {
   ai_moderation        ai_moderation?
   user_actions         user_actions[]
   ai_channels          ai_channels[]
+  members              members[]
 }
 
 model drug_articles {
@@ -442,9 +458,9 @@ model ai_channels {
 
   discord_guilds discord_guilds @relation(fields: [guild_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "aichannels_guildid_foreign")
 
-  @@unique([channel_id], map: "aichannels_channelid_unique")
-
   // @@unique([channel_id, persona_id], map: "aichannels_channelid_personaid_unique")
+
+  @@unique([channel_id], map: "aichannels_channelid_unique")
 }
 
 model ai_moderation {
@@ -619,15 +635,15 @@ enum appeal_status {
 }
 
 enum ai_model {
-  GPT_3_5_TURBO             @map("GPT-3.5-TURBO")
+  GPT_3_5_TURBO @map("GPT-3.5-TURBO")
   // GPT_3_5_TURBO_1106        @map("GPT-3.5-TURBO-1106")
-  GPT_4_TURBO              @map("GPT-4-TURBO")
+  GPT_4_TURBO   @map("GPT-4-TURBO")
   // GPT_4                     @map("GPT-4")
   // GPT_4_1106_PREVIEW        @map("GPT-4-1106-PREVIEW")
   // GPT_4_1106_VISION_PREVIEW @map("GPT-4-1106-VISION-PREVIEW")
   // DALL_E_2                  @map("DALL-E-2")
-  DALL_E_3                  @map("DALL-E-3")
-  GEMINI_PRO                @map("GEMINI-PRO")
+  DALL_E_3      @map("DALL-E-3")
+  GEMINI_PRO    @map("GEMINI-PRO")
   // GEMINI_PRO_VISION                @map("GEMINI-PRO-VISION")
   // AQA                    @map("AQA")
   // DAVINCI
