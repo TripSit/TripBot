@@ -3,6 +3,7 @@ import { stripIndents } from 'common-tags';
 import {
   GuildMemberUpdateEvent,
 } from '../@types/eventDef';
+import { addedVerified } from '../utils/trust';
 // import { topic } from '../../global/commands/g.topic';
 
 type MindsetNames =
@@ -153,8 +154,12 @@ const thankYouPhrases = [
 
 const donationTagline = '*`/donate` to TripSit to access special username colors and the snazzy Gold Lounge!*';
 
-const boostEmoji = env.NODE_ENV === 'production' ? '<:ts_boost:981799280396353596>' : '<:ts_boost:1168968973082185800>';
-const donorEmoji = env.NODE_ENV === 'production' ? '<:ts_donor:1121625178774966272>' : '<:ts_donor:1168969578836144233>';
+const boostEmoji = env.NODE_ENV === 'production'
+  ? '<:ts_boost:981799280396353596>'
+  : '<:ts_boost:1168968973082185800>';
+const donorEmoji = env.NODE_ENV === 'production'
+  ? '<:ts_donor:1121625178774966272>'
+  : '<:ts_donor:1168969578836144233>';
 
 const F = f(__filename);
 
@@ -191,8 +196,16 @@ async function donorColorRemove(
   // log.debug(F, `donor color role removed: ${roleId}`);
   // log.debug(F, `${Object.keys(donorRoles)}`);
   // Check if the roleId matches a donor role, and if so, check if the user has another donor role
-  if ((roleId === env.ROLE_BOOSTER || roleId === env.ROLE_PREMIUM || roleId === env.ROLE_TEAMTRIPSIT) && !newMember.roles.cache.has(env.ROLE_BOOSTER) && !newMember.roles.cache.has(env.ROLE_PREMIUM) && !newMember.roles.cache.has(env.ROLE_TEAMTRIPSIT)) {
-    // If they don't, find and remove the donor colour role
+  if (
+    (
+      roleId === env.ROLE_BOOSTER
+      || roleId === env.ROLE_PREMIUM
+      || roleId === env.ROLE_TEAMTRIPSIT
+    )
+    && !newMember.roles.cache.has(env.ROLE_BOOSTER)
+    && !newMember.roles.cache.has(env.ROLE_PREMIUM)
+    && !newMember.roles.cache.has(env.ROLE_TEAMTRIPSIT)) {
+    // If they don't, find and remove the donor color role
     const donorColorRole = newMember.roles.cache.find(role => Object.values(donorColorRoles).includes(role.id));
     if (donorColorRole) {
       await newMember.roles.remove(donorColorRole);
@@ -320,94 +333,6 @@ async function removeExTeamFromThreads(
   }
 }
 
-// async function addedVerified(
-//   newMember: GuildMember,
-//   roleId: string,
-// ) {
-//   // Check if this was the verified role
-//   if (roleId === env.ROLE_VERIFIED) {
-//     // log.debug(F, `${newMember.displayName} verified!`);
-//     // let colorValue = 1;
-
-//     // log.debug(F, `member: ${member.roles.cache}`);
-
-//     // log.debug(`Verified button clicked by ${interaction.user.username}#${interaction.user.discriminator}`);
-//     const channelTripbotLogs = await global.discordClient.channels.fetch(env.CHANNEL_BOTLOG) as TextChannel;
-//     await channelTripbotLogs.send({
-//       content: `Verified button clicked by ${newMember.user.username}#${newMember.user.discriminator}`,
-//     });
-
-//     // NOTE: Can be simplified with luxon
-//     // const diff = Math.abs(Date.now() - Date.parse(newMember.user.createdAt.toString()));
-//     // const years = Math.floor(diff / (1000 * 60 * 60 * 24 * 365));
-//     // const months = Math.floor(diff / (1000 * 60 * 60 * 24 * 30));
-//     // const weeks = Math.floor(diff / (1000 * 60 * 60 * 24 * 7));
-//     // const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-//     // const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-//     // const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-//     // const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-
-//     // if (years > 0) {
-//     //   colorValue = Colors.White;
-//     // } else if (years === 0 && months > 0) {
-//     //   colorValue = Colors.Purple;
-//     // } else if (months === 0 && weeks > 0) {
-//     //   colorValue = Colors.Blue;
-//     // } else if (weeks === 0 && days > 0) {
-//     //   colorValue = Colors.Green;
-//     // } else if (days === 0 && hours > 0) {
-//     //   colorValue = Colors.Yellow;
-//     // } else if (hours === 0 && minutes > 0) {
-//     //   colorValue = Colors.Orange;
-//     // } else if (minutes === 0 && seconds > 0) {
-//     //   colorValue = Colors.Red;
-//     // }
-//     // log.debug(F, `coloValue: ${colorValue}`);
-//     // const channelStart = await newMember.client.channels.fetch(env.CHANNEL_START);
-//     // const channelTechhelp = await newMember.client.channels.fetch(env.CHANNEL_HELPDESK);
-//     // const channelBotspam = await newMember.client.channels.fetch(env.CHANNEL_BOTSPAM);
-//     // const channelRules = await newMember.client.channels.fetch(env.CHANNEL_RULES);
-//     // const channelTripsit = await member.client.channels.fetch(CHANNEL_TRIPSIT);
-//     // const embed = embedTemplate()
-//     //   .setAuthor(null)
-//     //   .setColor(colorValue)
-//     //   .setThumbnail(newMember.user.displayAvatarURL())
-//     //   .setFooter(null)
-//     //   .setDescription(stripIndents`
-//     //             **Please welcome ${newMember.toString()} to the guild!**
-//     //             Be safe, have fun, /report any issues!`);
-
-//     const greetingList = [
-//       `Welcome to the guild, ${newMember}!`,
-//       `I'm proud to announce that ${newMember} has joined our guild!`,
-//       `Please welcome ${newMember} to our guild!`,
-//       `Hello, ${newMember}! Welcome to our guild!`,
-//       `Welcome to the family, ${newMember}! We're so glad you're here.`,
-//       `Welcome to the guild, ${newMember}!`,
-//       `We're excited to have ${newMember} as part of our guild!`,
-//       `Say hello to our newest member, ${newMember}!`,
-//       `Let's give a warm welcome to ${newMember}!`,
-//       `It's great to see you here, ${newMember}!`,
-//       `Welcome aboard, ${newMember}!`,
-//       `We're happy to have ${newMember} join us!`,
-//       `Say hi to ${newMember}, our newest member!`,
-//       `Join us in welcoming ${newMember} to our guild!`,
-//       `A big welcome to ${newMember}!`,
-//     ];
-
-//     const greeting = greetingList[Math.floor(Math.random() * greetingList.length)];
-
-//     const channelLounge = await newMember.client.channels.fetch(env.CHANNEL_LOUNGE) as TextChannel;
-//     await channelLounge.send({
-//       content: stripIndents`**${greeting}**
-
-//       Be safe, have fun, and don't forget to visit the <id:guide> for more information!
-
-//       *${await topic()}*`,
-//     });
-//   }
-// }
-
 async function addedBooster(
   newMember: GuildMember,
   roleId: string,
@@ -415,8 +340,8 @@ async function addedBooster(
   // Check if the role added was a donator role
   if (roleId === env.ROLE_BOOSTER) {
     // log.debug(F, `${newMember.displayName} boosted the server!`);
-    const channelviplounge = await discordClient.channels.fetch(env.CHANNEL_VIPLOUNGE) as TextChannel;
-    await channelviplounge.send(stripIndents`
+    const channelViplounge = await discordClient.channels.fetch(env.CHANNEL_VIPLOUNGE) as TextChannel;
+    await channelViplounge.send(stripIndents`
         ** ${boostEmoji} ${newMember.toString()} just boosted the server! ${boostEmoji} **
 
         ${thankYouPhrases[Math.floor(Math.random() * thankYouPhrases.length)]}
@@ -432,9 +357,10 @@ async function addedPatreon(
   if (roleId === env.ROLE_PATRON) {
     // Check if they already have donated before, if so send a special message
     if (newMember.roles.cache.has(env.ROLE_PREMIUM)) {
-      const channelviplounge = await discordClient.channels.fetch(env.CHANNEL_VIPLOUNGE) as TextChannel;
-      await channelviplounge.send(stripIndents`
-        ** ${donorEmoji} ${newMember} just contributed further and became a Supporter by signing up via [Patreon](<https://www.patreon.com/TripSit>)! ${donorEmoji} **
+      const channelViplounge = await discordClient.channels.fetch(env.CHANNEL_VIPLOUNGE) as TextChannel;
+      await channelViplounge.send(stripIndents`
+        ** ${donorEmoji} ${newMember} just contributed further and became a Supporter by \
+        signing up via [Patreon](<https://www.patreon.com/TripSit>)! ${donorEmoji} **
     
           ${thankYouPhrases[Math.floor(Math.random() * thankYouPhrases.length)]}
     
@@ -444,9 +370,10 @@ async function addedPatreon(
       const role = await newMember.guild.roles.fetch(env.ROLE_PREMIUM) as Role;
       await newMember.roles.add(role);
 
-      const channelviplounge = await discordClient.channels.fetch(env.CHANNEL_VIPLOUNGE) as TextChannel;
-      await channelviplounge.send(stripIndents`
-      ** ${donorEmoji} ${newMember} just became a Supporter and Premium Member (first time donator) by signing up via [Patreon](<https://www.patreon.com/TripSit>)! ${donorEmoji} **
+      const channelViplounge = await discordClient.channels.fetch(env.CHANNEL_VIPLOUNGE) as TextChannel;
+      await channelViplounge.send(stripIndents`
+      ** ${donorEmoji} ${newMember} just became a Supporter and Premium Member \
+      (first time donator) by signing up via [Patreon](<https://www.patreon.com/TripSit>)! ${donorEmoji} **
   
         ${thankYouPhrases[Math.floor(Math.random() * thankYouPhrases.length)]}
   
@@ -459,20 +386,22 @@ async function addedPatreon(
     await newMember.roles.remove(roleTrigger);
     // Check if they already have already donated, if so send a special message
     if (newMember.roles.cache.has(env.ROLE_PREMIUM)) {
-      const channelviplounge = await discordClient.channels.fetch(env.CHANNEL_VIPLOUNGE) as TextChannel;
-      await channelviplounge.send(stripIndents`
-        ** ${donorEmoji} ${newMember} just made a further contribution by donating via [KoFi](<https://ko-fi.com/tripsit>)! ${donorEmoji} **
+      const channelViplounge = await discordClient.channels.fetch(env.CHANNEL_VIPLOUNGE) as TextChannel;
+      await channelViplounge.send(stripIndents`
+        ** ${donorEmoji} ${newMember} just made a further contribution by donating via \
+        [KoFi](<https://ko-fi.com/tripsit>)! ${donorEmoji} **
     
           ${thankYouPhrases[Math.floor(Math.random() * thankYouPhrases.length)]}
     
           ${donationTagline}`);
     } else {
-    // If donated on Kofi and for the first time, give them the premium role and send the message
+    // If donated on KoFi and for the first time, give them the premium role and send the message
       const role = await newMember.guild.roles.fetch(env.ROLE_PREMIUM) as Role;
       await newMember.roles.add(role);
-      const channelviplounge = await discordClient.channels.fetch(env.CHANNEL_VIPLOUNGE) as TextChannel;
-      await channelviplounge.send(stripIndents`
-      ** ${donorEmoji} ${newMember} just became a Premium Member (first time donator) by donating via [KoFi](<https://ko-fi.com/tripsit>)! ${donorEmoji} **
+      const channelViplounge = await discordClient.channels.fetch(env.CHANNEL_VIPLOUNGE) as TextChannel;
+      await channelViplounge.send(stripIndents`
+      ** ${donorEmoji} ${newMember} just became a Premium Member (first time donator) by donating via \
+      [KoFi](<https://ko-fi.com/tripsit>)! ${donorEmoji} **
   
         ${thankYouPhrases[Math.floor(Math.random() * thankYouPhrases.length)]}
   
@@ -496,8 +425,7 @@ async function roleAddProcess(
   rolesAdded.forEach(async roleId => {
     await donorColorCheck(newMember, oldMember, roleId);
     await teamMindsetCheck(newMember, roleId);
-    // DISABLED DUE TO WELCOME MESSAGE SPAM
-    // await addedVerified(newMember, roleId);
+    await addedVerified(newMember, roleId);
     await addedBooster(newMember, roleId);
     await addedPatreon(newMember, roleId);
 
