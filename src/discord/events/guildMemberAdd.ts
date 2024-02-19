@@ -27,7 +27,7 @@ export const guildMemberAdd: GuildMemberAddEvent = {
     if (!guildData) return;
 
     if (member.guild.id !== env.DISCORD_GUILD_ID) return;
-    await trust(member);
+    // await trust(member);
   },
 };
 
