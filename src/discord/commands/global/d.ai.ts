@@ -2281,12 +2281,12 @@ export async function aiReaction(
           || thumbsDownEmojis.includes(messageReaction.emoji.name as string)
         )
   ) {
-  // log.debug(F, `Someone reacted to tripbot's message with an audit emoji (${messageReaction.emoji.name})`);
+    log.debug(F, `Someone reacted to tripbot's message with an audit emoji (${messageReaction.emoji.name})`);
 
     const channelAiVoteLog = await discordClient.channels.fetch(env.CHANNEL_AIVOTELOG) as TextChannel;
     const action = thumbsUpEmojis.includes(messageReaction.emoji.name as string) ? 'approve' : 'reject';
 
-    const auditLimit = env.NODE_ENV === 'production' ? 4 : 2;
+    const auditLimit = env.NODE_ENV === 'production' ? 4 : 3;
     // log.debug(F, `Audit limit is ${auditLimit}, emoji count is ${messageReaction.count}`);
     if (messageReaction.count === auditLimit) {
     // log.debug(F, `Audit limit reached (${auditLimit})`);
@@ -2318,6 +2318,10 @@ export async function aiReaction(
       },
     });
 
+    log.debug(F, `personaData: ${JSON.stringify(personaData, null, 2)}`);
+
+    log.debug(F, `Updating db.ai_personas with ${action} vote`);
+
     await db.ai_personas.update({
       where: {
         id: personaData.id,
@@ -2335,6 +2339,7 @@ export async function aiReaction(
         }),
     });
 
+    log.debug(F, 'Sending message to vote room');
     await channelAiVoteLog.send({
       embeds: [embedTemplate()
         .setTitle(`AI ${action}`)

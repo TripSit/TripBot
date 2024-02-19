@@ -1,0 +1,24 @@
+{
+    "eslint.codeActionsOnSave.rules": null,
+    "editor.codeActionsOnSave": {
+        "source.fixAll.eslint": "explicit"
+    },
+    "eslint.validate": [
+        "javascript",
+        "typescript",
+    ],
+    "editor.tabSize": 2,
+    "cSpell.words": [
+        "AILOG",
+        "Blurple",
+        "bottest",
+        "logit",
+        "MDMA",
+        "modlog",
+        "moodle",
+        "Moonbear",
+        "openai",
+        "tripbot",
+        "WOLFDEN"
+    ],
+}

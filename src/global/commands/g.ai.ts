@@ -267,7 +267,7 @@ async function googleAiConversation(
     promptTokens: number,
     completionTokens: number,
   }> {
-  log.debug(F, `googleAiConversation | aiPersona: ${JSON.stringify(aiPersona, null, 2)}`);
+  // log.debug(F, `googleAiConversation | aiPersona: ${JSON.stringify(aiPersona, null, 2)}`);
   // const response = '';
   const promptTokens = 0;
   const completionTokens = 0;
@@ -347,7 +347,12 @@ async function googleAiConversation(
         generationConfig,
         safetySettings,
       });
-      return { response: result.response.text(), promptTokens, completionTokens };
+      try {
+        return { response: result.response.text(), promptTokens, completionTokens };
+      } catch (error) {
+        log.error(F, `Error sending message: ${error}`);
+        return { response: (error as Error).message, promptTokens, completionTokens };
+      }
     } catch (error) {
       log.error(F, `Error fetching data: ${error}`);
     }
@@ -385,14 +390,14 @@ async function googleAiConversation(
       },
     ];
   }
-  log.debug(F, `userHistory: ${JSON.stringify(userHistory, null, 2)}`);
+  // log.debug(F, `userHistory: ${JSON.stringify(userHistory, null, 2)}`);
 
   const chat = model.startChat({
     history: userHistory,
     generationConfig,
     safetySettings,
   });
-  log.debug(F, `chat: ${JSON.stringify(chat, null, 2)}`);
+  // log.debug(F, `chat: ${JSON.stringify(chat, null, 2)}`);
 
   let result = {} as GenerateContentResult;
   try {
@@ -402,7 +407,7 @@ async function googleAiConversation(
     return { response: (error as Error).message, promptTokens, completionTokens };
   }
 
-  log.debug(F, `result: ${JSON.stringify(result, null, 2)}`);
+  // log.debug(F, `result: ${JSON.stringify(result, null, 2)}`);
 
   // Update the history with the message and this response
   userHistory.push({
@@ -413,7 +418,7 @@ async function googleAiConversation(
     role: 'model',
     parts: result.response.text(),
   });
-  log.debug(F, `newUserHistory: ${JSON.stringify(userHistory, null, 2)}`);
+  // log.debug(F, `newUserHistory: ${JSON.stringify(userHistory, null, 2)}`);
 
   // Save the user's history
   await db.users.update({
@@ -589,10 +594,37 @@ async function openAiConversation(
   }
 
   // Add the message to the thread
-  const message = await openAi.beta.threads.messages.create(
-    thread.id,
-    messages[0],
-  );
+
+  try {
+    const message = await openAi.beta.threads.messages.create(
+      thread.id,
+      messages[0],
+    );
+  } catch (error) {
+    log.error(F, `Error sending message: ${error}`);
+    console.log(error);
+
+    // Get all the runs
+    const runs = await openAi.beta.threads.runs.list(thread.id, {
+      limit: 1,
+    });
+
+    // The most recent run is the first one in the sorted array
+    const recentRun = runs.data[0];
+
+    // If the most recent run is in progress, stop it
+    if (recentRun.status === 'in_progress') {
+      log.debug(F, 'Stopping the run');
+      await openAi.beta.threads.runs.cancel(thread.id, recentRun.id);
+    }
+
+    // Add the message to the thread
+    const message = await openAi.beta.threads.messages.create(
+      thread.id,
+      messages[0],
+    );
+  }
+
   // log.debug(F, `message: ${JSON.stringify(message, null, 2)}`);
 
   log.debug(F, `Starting new run with assistant: ${assistant.id} and thread: ${thread.id}`);
