@@ -2269,17 +2269,13 @@ export async function aiReaction(
   const thumbsDownEmojis = ['👎', '👎🏻', '👎🏼', '👎🏽', '👎🏾', '👎🏿', 'ts_thumbdown'];
   if (messageReaction.message.reference === null) return;
   const originalMessage = await messageReaction.message.fetchReference();
-  const aiLinkData = await db.ai_channels.findFirst({
-    where: {
-      channel_id: originalMessage.channel.id,
-    },
-  });
+  const aiLinkData = await getLinkedChannel(originalMessage.channel);
 
-  log.debug(F, `aiLinkData: ${JSON.stringify(aiLinkData, null, 2)}`);
-  log.debug(F, `messageReaction: ${JSON.stringify(messageReaction, null, 2)}`);
-  log.debug(F, `messageReaction.message.author: ${JSON.stringify(messageReaction.message.author, null, 2)}`);
-  log.debug(F, `user: ${JSON.stringify(user, null, 2)}`);
-  log.debug(F, `Emoji name: ${messageReaction.emoji.name}`);
+  // log.debug(F, `aiLinkData: ${JSON.stringify(aiLinkData, null, 2)}`);
+  // log.debug(F, `messageReaction: ${JSON.stringify(messageReaction, null, 2)}`);
+  // log.debug(F, `messageReaction.message.author: ${JSON.stringify(messageReaction.message.author, null, 2)}`);
+  // log.debug(F, `user: ${JSON.stringify(user, null, 2)}`);
+  // log.debug(F, `Emoji name: ${messageReaction.emoji.name}`);
 
   if (aiLinkData
         && messageReaction.message.author?.bot
