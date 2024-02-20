@@ -187,7 +187,7 @@ but they were already marked at trusted in the database, so no message was sent`
 
       if (guildData.channel_trust) {
         const auditLog = await discordClient.channels.fetch(guildData.channel_trust) as TextChannel;
-        await auditLog.send(stripIndents`. **${newMember.displayName} i sent the welcome message to lounge!*`);
+        await auditLog.send(stripIndents`. I sent **${newMember.displayName}'s welcome message to lounge!`);
       }
     } else {
       await db.members.upsert({
@@ -316,19 +316,18 @@ export default async function trust(
 
   if (trustScoreData.trustScore > guildData.trust_score_limit) {
     // What happens when the user has a high trust score
-
-    // Remove the unverified role, add the verified role
-    await member.roles.add(env.ROLE_VERIFIED);
-    await member.roles.remove(env.ROLE_UNVERIFIED);
-
     if (guildData.channel_trust) {
       const auditLog = await discordClient.channels.fetch(guildData.channel_trust) as TextChannel;
-      await auditLog.send(stripIndents`. ${member.displayName} is above the set trust score of \
-${guildData.trust_score_limit}, I removed the Unverified role and added Verified*`);
+      await auditLog.send(stripIndents`${member.displayName} is above the set trust score of \
+${guildData.trust_score_limit}, I removed the Unverified role and added Verified`);
 
       // /events/guildMemberUpdate will recognize that the verified rol has been added
       // and will then activate addedVerified() above
     }
+
+    // Remove the unverified role, add the verified role
+    await member.roles.add(env.ROLE_VERIFIED);
+    await member.roles.remove(env.ROLE_UNVERIFIED);
   }
 
   if (bannedGuilds.length > 0) {
