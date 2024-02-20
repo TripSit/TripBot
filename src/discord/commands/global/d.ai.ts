@@ -2268,7 +2268,15 @@ export async function aiReaction(
   const thumbsUpEmojis = ['👍', '👍🏻', '👍🏼', '👍🏽', '👍🏾', '👍🏿', 'ts_thumbup'];
   const thumbsDownEmojis = ['👎', '👎🏻', '👎🏼', '👎🏽', '👎🏾', '👎🏿', 'ts_thumbdown'];
   if (messageReaction.message.reference === null) return;
-  const originalMessage = await messageReaction.message.fetchReference();
+  let originalMessage = {} as Message;
+  try {
+    originalMessage = await messageReaction.message.fetchReference();
+  } catch (error) {
+    log.error(F, `Error fetching reference: ${error}`);
+    log.error(F, `Reaction: ${JSON.stringify(messageReaction, null, 2)}`);
+    log.error(F, `Message: ${JSON.stringify(messageReaction.message, null, 2)}`);
+    return;
+  }
   const aiLinkData = await getLinkedChannel(originalMessage.channel);
 
   // log.debug(F, `aiLinkData: ${JSON.stringify(aiLinkData, null, 2)}`);
