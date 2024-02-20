@@ -65,7 +65,7 @@ export async function addedVerified(
       // log.debug(F, `member: ${member.roles.cache}`);
 
       // log.debug(`Verified button clicked by ${interaction.user.username}#${interaction.user.discriminator}`);
-      const channelTripbotLogs = await global.discordClient.channels.fetch(env.CHANNEL_BOTLOG) as TextChannel;
+      const channelTripbotLogs = await global.discordClient.channels.fetch(env.CHANNEL_TRUST_LOG) as TextChannel;
       await channelTripbotLogs.send({
         content: `${newMember.user.username}#${newMember.user.discriminator} was verified!`,
       });
