@@ -1184,11 +1184,13 @@ async function personasPage(
       );
     }
 
-    components.push(
-      new ActionRowBuilder<StringSelectMenuBuilder>().addComponents([
-        menuAiPublic,
-      ]),
-    );
+    if (tripsitMember.roles.cache.has(env.ROLE_DEVELOPER)) {
+      components.push(
+        new ActionRowBuilder<StringSelectMenuBuilder>().addComponents([
+          menuAiPublic,
+        ]),
+      );
+    }
 
     return {
       embeds: [await makePersonaEmbed(persona)],
@@ -1437,12 +1439,14 @@ async function setupPage(
     ]),
   ];
 
-  if (aiLinkData && linkedPersona === selectedPersona) {
-    components.push(new ActionRowBuilder<ButtonBuilder>()
-      .addComponents(buttonAiUnlink));
-  } else if (selectedChannel && selectedPersona && selectedPersona !== 'none') {
-    components.push(new ActionRowBuilder<ButtonBuilder>()
-      .addComponents(buttonAiLink));
+  if ((interaction.member as GuildMember).permissions.has(PermissionFlagsBits.ManageChannels)) {
+    if (aiLinkData && linkedPersona === selectedPersona) {
+      components.push(new ActionRowBuilder<ButtonBuilder>()
+        .addComponents(buttonAiUnlink));
+    } else if (selectedChannel && selectedPersona && selectedPersona !== 'none') {
+      components.push(new ActionRowBuilder<ButtonBuilder>()
+        .addComponents(buttonAiLink));
+    }
   }
 
   return {
