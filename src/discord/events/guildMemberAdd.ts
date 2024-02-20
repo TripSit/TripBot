@@ -11,23 +11,30 @@ export const guildMemberAdd: GuildMemberAddEvent = {
   name: 'guildMemberAdd',
   async execute(member) {
     await member.fetch(true);
-    const guildData = await db.discord_guilds.upsert({
-      where: {
-        id: member.guild.id,
-        cooperative: true,
-      },
-      create: {
-        id: member.guild.id,
-      },
-      update: {},
-    });
 
-    // log.debug(F, `guildData: ${JSON.stringify(guildData)}`);
+    try {
+      const guildData = await db.discord_guilds.upsert({
+        where: {
+          id: member.guild.id,
+        },
+        create: {
+          id: member.guild.id,
+        },
+        update: {},
+      });
 
-    if (!guildData) return;
+      // log.debug(F, `guildData: ${JSON.stringify(guildData)}`);
 
-    if (member.guild.id !== env.DISCORD_GUILD_ID) return;
-    // await trust(member);
+      if (!guildData) return;
+
+      if (!guildData.cooperative) return;
+
+      await trust(member);
+    } catch (err) {
+      log.error(F, `Error: ${err}`);
+      log.debug(F, `member: ${JSON.stringify(member)}`);
+      log.debug(F, `member.guild: ${JSON.stringify(member.guild)}`);
+    }
   },
 };
 
