@@ -187,7 +187,7 @@ but they were already marked at trusted in the database, so no message was sent`
 
       if (guildData.channel_trust) {
         const auditLog = await discordClient.channels.fetch(guildData.channel_trust) as TextChannel;
-        await auditLog.send(stripIndents`. I sent **${newMember.displayName}'s welcome message to lounge!`);
+        await auditLog.send(stripIndents`I sent ${newMember.displayName}'s welcome message to lounge!`);
       }
     } else {
       await db.members.upsert({
