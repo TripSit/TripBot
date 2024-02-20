@@ -11,6 +11,7 @@ import {
   GuildBan,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
+import { members } from '@prisma/client';
 import {
   modButtonBan, modButtonInfo, modButtonNote, modButtonTimeout, modButtonWarn, tripSitTrustScore, userInfoEmbed,
 } from '../commands/guild/d.moderate';
@@ -28,7 +29,7 @@ async function getInvite(member:GuildMember) {
     const inviter = await member.guild.members.fetch(invite.inviter);
     inviteInfo = `Joined via ${inviter.displayName}'s invite (${invite.code}-${invite.uses})`;
   }
-  // log.debug(F, `inviteInfo: ${inviteInfo}`);
+  // log.debug(F, `inviteInfo:   ${inviteInfo}`);
   global.guildInvites.set(
     member.guild.id,
     new Collection(newInvites.map(inviteEntry => [inviteEntry.code, inviteEntry.uses])),
@@ -52,19 +53,26 @@ export async function addedVerified(
     update: {},
   });
 
-  const memberData = await db.members.upsert({
-    where: {
-      id_guild_id: {
+  let memberData = {} as members;
+  try {
+    memberData = await db.members.upsert({
+      where: {
+        id_guild_id: {
+          guild_id: newMember.guild.id,
+          id: newMember.id,
+        },
+      },
+      create: {
         guild_id: newMember.guild.id,
         id: newMember.id,
       },
-    },
-    create: {
-      guild_id: newMember.guild.id,
-      id: newMember.id,
-    },
-    update: {},
-  });
+      update: {},
+    });
+  } catch {
+    log.error(F, 'Error getting member data');
+    log.error(F, `newMember: ${JSON.stringify(newMember, null, 2)}`);
+    return;
+  }
 
   if (roleId === env.ROLE_VERIFIED && !memberData.trusted) {
     if (newMember.joinedAt
