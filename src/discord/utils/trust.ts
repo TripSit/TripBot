@@ -74,9 +74,20 @@ export async function addedVerified(
     return;
   }
 
-  if (roleId === env.ROLE_VERIFIED && !memberData.trusted) {
+  if (roleId === env.ROLE_VERIFIED) {
+    if (memberData.trusted) {
+      if (guildData.channel_trust) {
+        const auditLog = await discordClient.channels.fetch(guildData.channel_trust) as TextChannel;
+        await auditLog.send(stripIndents`${newMember.displayName} had the verified role applied, \
+but they were already marked at trusted in the database, so no message was sent`);
+
+        // /events/guildMemberUpdate will recognize that the verified rol has been added
+        // and will then activate addedVerified() above
+      }
+      return;
+    }
     if (newMember.joinedAt
-      && newMember.joinedAt < new Date(Date.now() - 1000 * 60 * 60 * 24)) {
+      && newMember.joinedAt > new Date(Date.now() - 1000 * 60 * 60 * 24)) {
     // log.debug(F, `${newMember.displayName} verified!`);
       // let colorValue = 1;
 
@@ -198,8 +209,8 @@ export async function addedVerified(
 
       if (guildData.channel_trust) {
         const auditLog = await discordClient.channels.fetch(guildData.channel_trust) as TextChannel;
-        await auditLog.send(stripIndents`. **${newMember.displayName} had the verified role applied, but they joined\
-        over a week ago, so no welcome message was sent.*`);
+        await auditLog.send(stripIndents`${newMember.displayName} had the verified role applied, but they joined\
+over a week ago, so no welcome message was sent.`);
 
         // /events/guildMemberUpdate will recognize that the verified rol has been added
         // and will then activate addedVerified() above
@@ -312,8 +323,8 @@ export default async function trust(
 
     if (guildData.channel_trust) {
       const auditLog = await discordClient.channels.fetch(guildData.channel_trust) as TextChannel;
-      await auditLog.send(stripIndents`. **${member.displayName} is above the set trust score of \
-      ${guildData.trust_score_limit}, I removed the Unverified role and added Verified*`);
+      await auditLog.send(stripIndents`. ${member.displayName} is above the set trust score of \
+${guildData.trust_score_limit}, I removed the Unverified role and added Verified*`);
 
       // /events/guildMemberUpdate will recognize that the verified rol has been added
       // and will then activate addedVerified() above
@@ -322,7 +333,7 @@ export default async function trust(
 
   if (bannedGuilds.length > 0) {
     modThreadMessage = stripIndents`**${member.displayName} has joined the guild, \
-    they are banned on ${bannedGuilds.length} other guilds!** <@&${guildData.role_moderator}>`;
+they are banned on ${bannedGuilds.length} other guilds!** <@&${guildData.role_moderator}>`;
     emoji = '👀';
   }
 
@@ -390,8 +401,8 @@ export default async function trust(
     const trustAverage = guildData.trust_score_total / guildData.trust_score_count;
     let trustMessage = `Trust Score Average = ${trustAverage}`;
     if (trustScoreData.trustScore < trustAverage) {
-      trustMessage += stripIndents`. **User is below the set trust score of ${guildData.trust_score_limit}, \
-      I did not remove the <@&${env.ROLE_UNVERIFIED}> role**`;
+      trustMessage += stripIndents`. User is below the set trust score of ${guildData.trust_score_limit}, \
+I did not remove the <@&${env.ROLE_UNVERIFIED}> role`;
     }
 
     await auditLog.send(trustMessage);
