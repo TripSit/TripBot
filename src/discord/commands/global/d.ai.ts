@@ -630,7 +630,7 @@ async function aiAudit(
 async function deletedPage(
   interaction: ButtonInteraction,
 ):Promise<InteractionEditReplyOptions> {
-  log.debug(F, `Customid: ${interaction.customId}`);
+  log.debug(F, `CustomId: ${interaction.customId}`);
   const menuButtons = new ActionRowBuilder<ButtonBuilder>()
     .addComponents(
       buttonAiHelp.setStyle(ButtonStyle.Primary),
