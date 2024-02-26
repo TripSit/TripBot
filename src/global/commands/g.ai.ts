@@ -79,39 +79,11 @@ Any role with 'TS' lettering is an official TripSit team member role.
 Patreon subscribers can use the /imagen command to generate images.
 `;
 
-// # Example dummy function hard coded to return the same weather
-// # In production, this could be your backend API or an external API
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-async function getCurrentWeather(location:string, unit = 'fahrenheit') {
-  return {
-    location,
-    temperature: '72',
-    unit,
-    forecast: ['sunny', 'windy'],
-  };
-}
-
 const availableFunctions = {
-  getCurrentWeather,
   getDrugInfo,
 };
 
 const aiFunctions = [
-  {
-    type: 'function',
-    function: {
-      name: 'getCurrentWeather',
-      description: 'Get the weather in location',
-      parameters: {
-        type: 'object',
-        properties: {
-          location: { type: 'string', description: 'The city and state e.g. San Francisco, CA' },
-          unit: { type: 'string', enum: ['c', 'f'] },
-        },
-        required: ['location'],
-      },
-    },
-  },
   {
     type: 'function',
     function: {
@@ -127,7 +99,7 @@ const aiFunctions = [
       },
     },
   },
-];
+] as Assistant.Function[];
 
 export async function aiModerateReport(
   message: string,
