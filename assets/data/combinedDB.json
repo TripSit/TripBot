@@ -21337,62 +21337,6 @@
     }
   },
   {
-    "url": "https://psychonautwiki.org/wiki/DMXE",
-    "name": "DMXE",
-    "toxicity": [
-      "exact toxic dosage is unknown"
-    ],
-    "roas": [
-      {
-        "name": "Insufflated",
-        "dosage": [
-          {
-            "name": "Threshold",
-            "value": "5 mg"
-          },
-          {
-            "name": "Light",
-            "value": "5-20 mg"
-          },
-          {
-            "name": "Common",
-            "value": "20-35 mg"
-          },
-          {
-            "name": "Strong",
-            "value": "35-60 mg"
-          },
-          {
-            "name": "Heavy",
-            "value": "60 mg"
-          }
-        ],
-        "duration": [
-          {
-            "name": "Comeup",
-            "value": "30-90 minutes"
-          },
-          {
-            "name": "Onset",
-            "value": "5-15 minutes"
-          },
-          {
-            "name": "Peak",
-            "value": "1-3 hours"
-          },
-          {
-            "name": "Offset",
-            "value": "1-2 hours"
-          },
-          {
-            "name": "Total",
-            "value": "2-6 hours"
-          }
-        ]
-      }
-    ]
-  },
-  {
     "url": "https://psychonautwiki.org/wiki/DOB",
     "name": "DOB",
     "aliases": [
@@ -28283,142 +28227,6 @@
         "bioavailability": "90%"
       }
     ]
-  },
-  {
-    "url": "https://psychonautwiki.org/wiki/Glaucine",
-    "name": "Glaucine",
-    "summary": "An alkaloid that is found in several different scpecies in the Papaveraceae family. It has antiinflammatory and antitussive effects. Can also be referred to as Yellow Horned Poppy.",
-    "roas": [
-      {
-        "name": "Oral",
-        "dosage": [
-          {
-            "name": "Threshold",
-            "value": "20 mg"
-          },
-          {
-            "name": "Light",
-            "value": "20-75 mg"
-          },
-          {
-            "name": "Common",
-            "value": "75-150 mg"
-          },
-          {
-            "name": "Strong",
-            "value": "150-180 mg"
-          },
-          {
-            "name": "Heavy",
-            "value": "180 mg"
-          }
-        ],
-        "duration": [
-          {
-            "name": "Comeup",
-            "value": "30-60 minutes"
-          },
-          {
-            "name": "Onset",
-            "value": "20-45 minutes"
-          },
-          {
-            "name": "Peak",
-            "value": "1-3 hours"
-          },
-          {
-            "name": "Offset",
-            "value": "1-2 hours"
-          },
-          {
-            "name": "Afterglow",
-            "value": "3-8 hours"
-          },
-          {
-            "name": "Total",
-            "value": "3-6 hours"
-          },
-          {
-            "name": "Duration",
-            "value": "6-8 hours"
-          },
-          {
-            "name": "After Effects",
-            "value": "1-8 hours"
-          }
-        ],
-        "bioavailability": "%"
-      },
-      {
-        "name": "Oral",
-        "dosage": [
-          {
-            "name": "Threshold",
-            "value": "20 mg"
-          },
-          {
-            "name": "Light",
-            "value": "20-75 mg"
-          },
-          {
-            "name": "Common",
-            "value": "75-150 mg"
-          },
-          {
-            "name": "Strong",
-            "value": "150-180 mg"
-          },
-          {
-            "name": "Heavy",
-            "value": "180 mg"
-          }
-        ],
-        "duration": [
-          {
-            "name": "Comeup",
-            "value": "30-60 minutes"
-          },
-          {
-            "name": "Onset",
-            "value": "20-45 minutes"
-          },
-          {
-            "name": "Peak",
-            "value": "1-3 hours"
-          },
-          {
-            "name": "Offset",
-            "value": "1-2 hours"
-          },
-          {
-            "name": "Afterglow",
-            "value": "3-8 hours"
-          },
-          {
-            "name": "Total",
-            "value": "3-6 hours"
-          },
-          {
-            "name": "Duration",
-            "value": "6-8 hours"
-          },
-          {
-            "name": "After Effects",
-            "value": "1-8 hours"
-          }
-        ],
-        "bioavailability": "%"
-      }
-    ],
-    "classes": {
-      "psychoactive": [
-        "Depressant",
-        "Habit Forming",
-        "Opioid",
-        "Tentative"
-      ],
-      "chemical": []
-    }
   },
   {
     "url": "https://psychonautwiki.org/wiki/HXE",
@@ -57405,6 +57213,53 @@
           {
             "name": "After Effects",
             "value": "1-2 hours"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "glaucine",
+    "url": "https://wiki.tripsit.me/wiki/glaucine",
+    "summary": "An alkaloid that is found in several different scpecies in the Papaveraceae family. It has antiinflammatory and antitussive effects. Can also be referred to as Yellow Horned Poppy.",
+    "classes": {
+      "psychoactive": [
+        "Depressant",
+        "Habit Forming",
+        "Opioid",
+        "Tentative"
+      ],
+      "chemical": []
+    },
+    "roas": [
+      {
+        "name": "Oral",
+        "dosage": [
+          {
+            "name": "Light",
+            "value": "50-100 mg"
+          },
+          {
+            "name": "Common",
+            "value": "100-150 mg"
+          },
+          {
+            "name": "Strong",
+            "value": "150-200 mg"
+          }
+        ],
+        "duration": [
+          {
+            "name": "Onset",
+            "value": "45-90 minutes"
+          },
+          {
+            "name": "Duration",
+            "value": "6-8 hours"
+          },
+          {
+            "name": "After Effects",
+            "value": "1-8 hours"
           }
         ]
       }

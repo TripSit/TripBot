@@ -11524,10 +11524,7 @@
         "name": "PCP"
       },
       {
-        "name": "ALDH2 inhibitors"
-      },
-      {
-        "name": "Hepatotoxic drugs"
+        "name": "Antibiotics"
       }
     ],
     "dangerousInteractions": [
@@ -16101,90 +16098,6 @@
         },
         "bioavailability": null
       }
-    }
-  },
-  {
-    "url": "https://psychonautwiki.org/wiki/DMXE",
-    "name": "DMXE",
-    "summary": "",
-    "addictionPotential": null,
-    "toxicity": [
-      "exact toxic dosage is unknown"
-    ],
-    "crossTolerances": null,
-    "commonNames": null,
-    "class": {
-      "chemical": [
-        "Arylcyclohexylamines"
-      ],
-      "psychoactive": [
-        "Dissociatives"
-      ]
-    },
-    "tolerance": null,
-    "uncertainInteractions": null,
-    "unsafeInteractions": null,
-    "dangerousInteractions": null,
-    "roa": {
-      "oral": null,
-      "sublingual": null,
-      "buccal": null,
-      "insufflated": {
-        "name": "insufflated",
-        "dose": {
-          "units": "mg",
-          "threshold": 5,
-          "heavy": 60,
-          "common": {
-            "min": 20,
-            "max": 35
-          },
-          "light": {
-            "min": 5,
-            "max": 20
-          },
-          "strong": {
-            "min": 35,
-            "max": 60
-          }
-        },
-        "duration": {
-          "afterglow": null,
-          "comeup": {
-            "min": 30,
-            "max": 90,
-            "units": "minutes"
-          },
-          "duration": null,
-          "offset": {
-            "min": 1,
-            "max": 2,
-            "units": "hours"
-          },
-          "onset": {
-            "min": 5,
-            "max": 15,
-            "units": "minutes"
-          },
-          "peak": {
-            "min": 1,
-            "max": 3,
-            "units": "hours"
-          },
-          "total": {
-            "min": 2,
-            "max": 6,
-            "units": "hours"
-          }
-        },
-        "bioavailability": null
-      },
-      "rectal": null,
-      "transdermal": null,
-      "subcutaneous": null,
-      "intramuscular": null,
-      "intravenous": null,
-      "smoked": null
     }
   },
   {
@@ -21375,96 +21288,6 @@
         "bioavailability": {
           "min": null,
           "max": 90
-        }
-      },
-      "sublingual": null,
-      "buccal": null,
-      "insufflated": null,
-      "rectal": null,
-      "transdermal": null,
-      "subcutaneous": null,
-      "intramuscular": null,
-      "intravenous": null,
-      "smoked": null
-    }
-  },
-  {
-    "url": "https://psychonautwiki.org/wiki/Glaucine",
-    "name": "Glaucine",
-    "summary": "",
-    "addictionPotential": null,
-    "toxicity": null,
-    "crossTolerances": null,
-    "commonNames": null,
-    "class": {
-      "chemical": [
-        "Aporphine"
-      ],
-      "psychoactive": [
-        "Psychedelic",
-        "Depressant"
-      ]
-    },
-    "tolerance": null,
-    "uncertainInteractions": null,
-    "unsafeInteractions": null,
-    "dangerousInteractions": null,
-    "roa": {
-      "oral": {
-        "name": "oral",
-        "dose": {
-          "units": "mg",
-          "threshold": 20,
-          "heavy": 180,
-          "common": {
-            "min": 75,
-            "max": 150
-          },
-          "light": {
-            "min": 20,
-            "max": 75
-          },
-          "strong": {
-            "min": 150,
-            "max": 180
-          }
-        },
-        "duration": {
-          "afterglow": {
-            "min": 3,
-            "max": 8,
-            "units": "hours"
-          },
-          "comeup": {
-            "min": 30,
-            "max": 60,
-            "units": "minutes"
-          },
-          "duration": null,
-          "offset": {
-            "min": 1,
-            "max": 2,
-            "units": "hours"
-          },
-          "onset": {
-            "min": 20,
-            "max": 45,
-            "units": "minutes"
-          },
-          "peak": {
-            "min": 1,
-            "max": 3,
-            "units": "hours"
-          },
-          "total": {
-            "min": 3,
-            "max": 6,
-            "units": "hours"
-          }
-        },
-        "bioavailability": {
-          "min": 17,
-          "max": null
         }
       },
       "sublingual": null,
