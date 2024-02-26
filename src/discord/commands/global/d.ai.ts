@@ -225,8 +225,8 @@ function getComponentById(
   // If no component is found, it will return null
   // This is useful for finding the button that was clicked, or select menu that was used
 
-  log.debug(F, `getComponentById started with id: ${id}`);
-  log.debug(F, `Components: ${JSON.stringify(interaction.message.components, null, 2)}`);
+  // log.debug(F, `getComponentById started with id: ${id}`);
+  // log.debug(F, `Components: ${JSON.stringify(interaction.message.components, null, 2)}`);
 
   if (interaction.message?.components) {
     // eslint-disable-next-line no-restricted-syntax
@@ -630,7 +630,7 @@ async function aiAudit(
 async function deletedPage(
   interaction: ButtonInteraction,
 ):Promise<InteractionEditReplyOptions> {
-  log.debug(F, `Customid: ${interaction.customId}`);
+  log.debug(F, `CustomId: ${interaction.customId}`);
   const menuButtons = new ActionRowBuilder<ButtonBuilder>()
     .addComponents(
       buttonAiHelp.setStyle(ButtonStyle.Primary),
@@ -1049,9 +1049,7 @@ async function personasPage(
     ? await db.ai_personas.findMany()
     : await db.ai_personas.findMany({
       where: {
-        OR: [
-          { name: 'tripbot' },
-        ],
+        public: true,
       },
     });
 
@@ -1067,7 +1065,7 @@ async function personasPage(
       value: persona.name,
     } as SelectMenuComponentOptionData));
 
-  // log.debug(F, `aiPersonaOptions: ${JSON.stringify(aiPersonaOptions, null, 2)}`);
+  log.debug(F, `aiPersonaOptions1: ${JSON.stringify(aiPersonaOptions, null, 2)}`);
 
   let selectedPersona = undefined as string | undefined;
 
@@ -1115,7 +1113,7 @@ async function personasPage(
     }
   }
 
-  log.debug(F, `aiPersonaOptions: ${JSON.stringify(aiPersonaOptions, null, 2)}`);
+  log.debug(F, `aiPersonaOptions2: ${JSON.stringify(aiPersonaOptions, null, 2)}`);
 
   // If there's only one persona in the list, set it as the default
   // if (aiPersonaList.length === 1) {
@@ -1141,9 +1139,9 @@ async function personasPage(
 
   ];
 
-  log.debug(F, `There are ${components.length} components in the array`);
+  // log.debug(F, `There are ${components.length} components in the array`);
 
-  if (selectedPersona) {
+  if (selectedPersona !== 'none' && selectedPersona !== undefined) {
     const persona = await db.ai_personas.findFirstOrThrow({
       where: {
         name: selectedPersona,
@@ -1206,8 +1204,8 @@ async function personasPage(
     );
   }
 
-  log.debug(F, `Final components: ${JSON.stringify(components, null, 2)}`);
-  log.debug(F, `components 2 0 : ${JSON.stringify(components[2], null, 2)}`);
+  // log.debug(F, `Final components: ${JSON.stringify(components, null, 2)}`);
+  // log.debug(F, `components 2 0 : ${JSON.stringify(components[2], null, 2)}`);
   return {
     embeds: [embedTemplate()
       .setTitle('Persona Information')
@@ -1262,10 +1260,9 @@ async function setupPage(
   const aiPersonaList = interaction.guild?.id === env.DISCORD_GUILD_ID
     ? await db.ai_personas.findMany()
     : await db.ai_personas.findMany({
-      where: {
-        OR: [
-          { name: 'tripbot' },
-        ],
+      where:
+      {
+        public: true,
       },
     });
 
@@ -2178,13 +2175,13 @@ export async function aiMessage(
   }, 30000); // Failsafe to stop typing indicator after 30 seconds
 
   try {
-    const chatResponse = await aiChat(aiPersona, messageList, messageData.author.id, attachmentInfo);
+    const chatResponse = await aiChat(aiPersona, messageList, messageData, attachmentInfo);
     response = chatResponse.response;
     promptTokens = chatResponse.promptTokens;
     completionTokens = chatResponse.completionTokens;
   } finally {
     clearInterval(typingInterval); // Stop sending typing indicator
-    clearTimeout(typingFailsafe); // Clear the failsafe timeout to prevent it from running if we've successfully stopped typing
+    clearTimeout(typingFailsafe); // Clear the failsafe timeout to prevent  it from running if we've successfully stopped typing
   }
 
   log.debug(F, `response from API: ${response}`);
@@ -2240,6 +2237,8 @@ export async function aiMessage(
       components: [],
       allowedMentions: { parse: [] },
     });
+  } else if (response === 'functionFinished') {
+    log.debug(F, 'Function finished, returning');
   } else {
     // await messageData.channel.sendTyping();
     // const wpm = 120;

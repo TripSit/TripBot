@@ -53,18 +53,28 @@ export async function addedVerified(
     update: {},
   });
 
+  const userData = await db.users.upsert({
+    where: {
+      discord_id: newMember.id,
+    },
+    create: {
+      discord_id: newMember.id,
+    },
+    update: {},
+  });
+
   let memberData = {} as members;
   try {
     memberData = await db.members.upsert({
       where: {
         id_guild_id: {
-          guild_id: newMember.guild.id,
-          id: newMember.id,
+          guild_id: guildData.id,
+          id: userData.discord_id as string,
         },
       },
       create: {
-        guild_id: newMember.guild.id,
-        id: newMember.id,
+        guild_id: guildData.id,
+        id: userData.discord_id as string,
       },
       update: {},
     });
