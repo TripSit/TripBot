@@ -225,8 +225,8 @@ function getComponentById(
   // If no component is found, it will return null
   // This is useful for finding the button that was clicked, or select menu that was used
 
-  log.debug(F, `getComponentById started with id: ${id}`);
-  log.debug(F, `Components: ${JSON.stringify(interaction.message.components, null, 2)}`);
+  // log.debug(F, `getComponentById started with id: ${id}`);
+  // log.debug(F, `Components: ${JSON.stringify(interaction.message.components, null, 2)}`);
 
   if (interaction.message?.components) {
     // eslint-disable-next-line no-restricted-syntax
@@ -1049,9 +1049,7 @@ async function personasPage(
     ? await db.ai_personas.findMany()
     : await db.ai_personas.findMany({
       where: {
-        OR: [
-          { name: 'tripbot' },
-        ],
+        public: true,
       },
     });
 
@@ -1067,7 +1065,7 @@ async function personasPage(
       value: persona.name,
     } as SelectMenuComponentOptionData));
 
-  // log.debug(F, `aiPersonaOptions: ${JSON.stringify(aiPersonaOptions, null, 2)}`);
+  log.debug(F, `aiPersonaOptions1: ${JSON.stringify(aiPersonaOptions, null, 2)}`);
 
   let selectedPersona = undefined as string | undefined;
 
@@ -1115,7 +1113,7 @@ async function personasPage(
     }
   }
 
-  log.debug(F, `aiPersonaOptions: ${JSON.stringify(aiPersonaOptions, null, 2)}`);
+  log.debug(F, `aiPersonaOptions2: ${JSON.stringify(aiPersonaOptions, null, 2)}`);
 
   // If there's only one persona in the list, set it as the default
   // if (aiPersonaList.length === 1) {
@@ -1141,9 +1139,9 @@ async function personasPage(
 
   ];
 
-  log.debug(F, `There are ${components.length} components in the array`);
+  // log.debug(F, `There are ${components.length} components in the array`);
 
-  if (selectedPersona) {
+  if (selectedPersona !== 'none' && selectedPersona !== undefined) {
     const persona = await db.ai_personas.findFirstOrThrow({
       where: {
         name: selectedPersona,
@@ -1206,8 +1204,8 @@ async function personasPage(
     );
   }
 
-  log.debug(F, `Final components: ${JSON.stringify(components, null, 2)}`);
-  log.debug(F, `components 2 0 : ${JSON.stringify(components[2], null, 2)}`);
+  // log.debug(F, `Final components: ${JSON.stringify(components, null, 2)}`);
+  // log.debug(F, `components 2 0 : ${JSON.stringify(components[2], null, 2)}`);
   return {
     embeds: [embedTemplate()
       .setTitle('Persona Information')
@@ -1262,10 +1260,9 @@ async function setupPage(
   const aiPersonaList = interaction.guild?.id === env.DISCORD_GUILD_ID
     ? await db.ai_personas.findMany()
     : await db.ai_personas.findMany({
-      where: {
-        OR: [
-          { name: 'tripbot' },
-        ],
+      where:
+      {
+        public: true,
       },
     });
 

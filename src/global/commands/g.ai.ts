@@ -725,9 +725,10 @@ async function openAiConversation(
   // Get the most recent run
   // This will automatically return the most recent runs, so we can just grab the first one
   let [recentRun] = (await openAi.beta.threads.runs.list(thread.id, { limit: 1 })).data;
+  log.debug(F, `recentRun: ${JSON.stringify(recentRun, null, 2)}`);
 
   // If the most recent run is in progress, queued, or waiting for user action, stop it
-  if (['queued', 'in_progress', 'requires_action'].includes(recentRun.status)) {
+  if (recentRun && ['queued', 'in_progress', 'requires_action'].includes(recentRun.status)) {
     log.debug(F, 'Stopping the run');
     await openAi.beta.threads.runs.cancel(thread.id, recentRun.id);
 
