@@ -2178,13 +2178,13 @@ export async function aiMessage(
   }, 30000); // Failsafe to stop typing indicator after 30 seconds
 
   try {
-    const chatResponse = await aiChat(aiPersona, messageList, messageData.author.id, attachmentInfo);
+    const chatResponse = await aiChat(aiPersona, messageList, messageData, attachmentInfo);
     response = chatResponse.response;
     promptTokens = chatResponse.promptTokens;
     completionTokens = chatResponse.completionTokens;
   } finally {
     clearInterval(typingInterval); // Stop sending typing indicator
-    clearTimeout(typingFailsafe); // Clear the failsafe timeout to prevent it from running if we've successfully stopped typing
+    clearTimeout(typingFailsafe); // Clear the failsafe timeout to prevent  it from running if we've successfully stopped typing
   }
 
   log.debug(F, `response from API: ${response}`);
@@ -2240,6 +2240,8 @@ export async function aiMessage(
       components: [],
       allowedMentions: { parse: [] },
     });
+  } else if (response === 'functionFinished') {
+    log.debug(F, 'Function finished, returning');
   } else {
     // await messageData.channel.sendTyping();
     // const wpm = 120;

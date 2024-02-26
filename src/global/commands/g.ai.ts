@@ -5,20 +5,16 @@ import OpenAI from 'openai';
 import { ai_personas } from '@prisma/client';
 import { ImagesResponse, ModerationCreateResponse } from 'openai/resources';
 import { Assistant } from 'openai/resources/beta/assistants/assistants';
-import { Thread, ThreadDeleted } from 'openai/resources/beta/threads/threads';
+import { ThreadDeleted } from 'openai/resources/beta/threads/threads';
+import { MessageContentText } from 'openai/resources/beta/threads/messages/messages';
 import {
-  MessageListParams, ThreadMessagesPage, MessageContentText,
-} from 'openai/resources/beta/threads/messages/messages';
-import { Run } from 'openai/resources/beta/threads/runs/runs';
-import {
-  GoogleGenerativeAI, HarmCategory, HarmBlockThreshold, GenerationConfig, SafetySetting, Part, InputContent, GenerateContentResult,
+  GoogleGenerativeAI, HarmCategory, HarmBlockThreshold, GenerationConfig, SafetySetting, Part, InputContent,
+  GenerateContentResult,
 } from '@google/generative-ai';
 import axios from 'axios';
-import {
-  TextChannel,
-} from 'discord.js';
-import fs from 'fs';
+import { Message, MessageReplyOptions, TextChannel } from 'discord.js';
 import { sleep } from '../../discord/commands/guild/d.bottest';
+import { getDrugInfo } from '../../discord/commands/global/d.drug';
 
 const F = f(__filename);
 
@@ -95,6 +91,44 @@ async function getCurrentWeather(location:string, unit = 'fahrenheit') {
   };
 }
 
+const availableFunctions = {
+  getCurrentWeather,
+  getDrugInfo,
+};
+
+const aiFunctions = [
+  {
+    type: 'function',
+    function: {
+      name: 'getCurrentWeather',
+      description: 'Get the weather in location',
+      parameters: {
+        type: 'object',
+        properties: {
+          location: { type: 'string', description: 'The city and state e.g. San Francisco, CA' },
+          unit: { type: 'string', enum: ['c', 'f'] },
+        },
+        required: ['location'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'getDrugInfo',
+      description: 'Get information on a drug or substance, such as dosages or summary',
+      parameters: {
+        type: 'object',
+        properties: {
+          drugName: { type: 'string', description: 'The name of the substance to look up' },
+          section: { type: 'string', description: 'The section to return' },
+        },
+        required: ['drugName'],
+      },
+    },
+  },
+];
+
 export async function aiModerateReport(
   message: string,
 ):Promise<ModerationCreateResponse> {
@@ -119,79 +153,6 @@ export async function aiModerateReport(
       return {} as ModerationCreateResponse;
     });
 }
-
-const availableFunctions = {
-  getCurrentWeather,
-  aiModerateReport,
-};
-
-// const aiFunctions = [
-//   {
-//     type: 'function',
-//     function: {
-//       name: 'getCurrentWeather',
-//       description: 'Get the current weather in a given location',
-//       parameters: {
-//         type: 'object',
-//         properties: {
-//           location: {
-//             type: 'string',
-//             description: 'The city and state, e.g. San Francisco, CA',
-//           },
-//           unit: { type: 'string', enum: ['celsius', 'fahrenheit'] },
-//         },
-//         required: ['location'],
-//       },
-//     },
-//   },
-//   // {
-//   //   type: 'function',
-//   //   function: {
-//   //     name: 'aiModerateReport',
-//   //     description: 'Get a report on how the AI rates a message',
-//   //     parameters: {
-//   //       type: 'object',
-//   //       properties: {
-//   //         message: {
-//   //           type: 'string',
-//   //           description: 'The message you want the AI to analyze',
-//   //         },
-//   //       },
-//   //       required: ['message'],
-//   //     },
-//   //   },
-//   // },
-// ];
-
-const aiFunctions = [{
-  type: 'function',
-  function: {
-    name: 'getCurrentWeather',
-    description: 'Get the weather in location',
-    parameters: {
-      type: 'object',
-      properties: {
-        location: { type: 'string', description: 'The city and state e.g. San Francisco, CA' },
-        unit: { type: 'string', enum: ['c', 'f'] },
-      },
-      required: ['location'],
-    },
-  },
-}, {
-  type: 'function',
-  function: {
-    name: 'getNickname',
-    description: 'Get the nickname of a city',
-    parameters: {
-      type: 'object',
-      properties: {
-        location: { type: 'string', description: 'The city and state e.g. San Francisco, CA' },
-      },
-      required: ['location'],
-    },
-  },
-}];
-
 export async function getAssistant(name: string):Promise<Assistant> {
   // Get all the org's assistants
   const myAssistants = await openAi.beta.assistants.list();
@@ -285,7 +246,7 @@ async function googleAiConversation(
     role: 'user';
     content: string;
   }[],
-  user: string,
+  messageData: Message<boolean>,
   attachmentInfo: {
     url: string | null;
     mimeType: string | null;
@@ -390,8 +351,8 @@ async function googleAiConversation(
 
   // Get the user's history
   const userData = await db.users.upsert({
-    where: { discord_id: user },
-    create: { discord_id: user },
+    where: { discord_id: messageData.author.id },
+    create: { discord_id: messageData.author.id },
     update: {},
   });
   let userHistory = [] as InputContent[];
@@ -450,7 +411,7 @@ async function googleAiConversation(
 
   // Save the user's history
   await db.users.update({
-    where: { discord_id: user },
+    where: { discord_id: messageData.author.id },
     data: {
       ai_history_google: JSON.stringify(userHistory),
     },
@@ -573,6 +534,7 @@ async function googleAiConversation(
 async function openAiWaitForRun(
   runData: OpenAI.Beta.Threads.Run,
   threadData: OpenAI.Beta.Threads.Thread,
+  messageData: Message<boolean>,
 ):Promise<{
     response: string,
     promptTokens: number,
@@ -581,7 +543,7 @@ async function openAiWaitForRun(
   let run = runData;
   const thread = threadData;
 
-  let response = '';
+  const response = '';
   const promptTokens = 0;
   const completionTokens = 0;
 
@@ -597,64 +559,93 @@ async function openAiWaitForRun(
   switch (run.status) {
     case 'completed': {
       // This should pull the thread and then get the last message in the thread, which should be from the assistant
-      const messagePage = await openAi.beta.threads.messages.list(
-        thread.id,
-        { limit: 10 },
-      );
-
-      // log.debug(F, `messagePage: ${JSON.stringify(messagePage, null, 2)}`);
-      const messageItems = messagePage.getPaginatedItems();
-      const messageText = messageItems[0];
-      const [messageContent] = messageText.content;
-      if ((messageContent as MessageContentText).text) {
-        log.debug(F, `messageContent: ${JSON.stringify(messageContent, null, 2)}`);
-
-        // Send the result to the dev room
-        // await devRoom.send(`AI Conversation succeeded: ${JSON.stringify(messageContent, null, 2)}`);
-
-        // await messages[0].reply(result.response.slice(0, 2000));
-        response = (messageContent as MessageContentText).text.value;
-        // await messageData.reply(response);
-
-        return { response, promptTokens, completionTokens };
-      }
-
-      break;
+      // We only want the first response, so we limit it to 1
+      const messageContent = (
+        await openAi.beta.threads.messages.list(thread.id, { limit: 1 })
+      ).data[0].content[0];
+      log.debug(F, `messageContent: ${JSON.stringify(messageContent, null, 2)}`);
+      return { response: (messageContent as MessageContentText).text.value.slice(0, 2000), promptTokens, completionTokens };
     }
     case 'requires_action': {
       log.debug(F, 'requires_action');
-      log.debug(F, `run: ${JSON.stringify(run, null, 2)}`);
+      log.debug(F, `run.required_action: ${JSON.stringify(run.required_action, null, 2)}`);
 
-      const functionName = run.required_action?.submit_tool_outputs.tool_calls[0].function?.name;
-      log.debug(F, `functionName: ${functionName}`);
-      const functionToCall = availableFunctions[functionName as keyof typeof availableFunctions];
-      const functionArgs = JSON.parse(run.required_action?.submit_tool_outputs.tool_calls[0].function?.arguments as string);
-      const functionResponse = await functionToCall(
-        functionArgs.location,
-        functionArgs.unit,
-      );
-      log.debug(F, `functionResponse: ${JSON.stringify(functionResponse, null, 2)}`);
+      // // We need to loop through each of the tool_calls and call the function given
+      // const toolOutputs = [] as RunSubmitToolOutputsParams.ToolOutput[];
+      // run.required_action?.submit_tool_outputs.tool_calls.forEach(async toolCall => {
+      //   const functionName = run.required_action?.submit_tool_outputs.tool_calls[0].function?.name;
+      //   log.debug(F, `functionName: ${functionName}`);
+      //   const functionToCall = availableFunctions[functionName as keyof typeof availableFunctions];
+      //   const functionArgs = JSON.parse(run.required_action?.submit_tool_outputs.tool_calls[0].function?.arguments as string);
+      //   // Check if functionArgs is correctly structured and contains the expected properties
+      //   if (functionArgs && typeof functionArgs === 'object' && 'drugName' in functionArgs) {
+      //     // Call the function with the spread syntax if it expects multiple arguments
+      //     // If the function expects an object, you can pass functionArgs directly
+      //     const reply = await functionToCall(functionArgs.drugName, functionArgs.section);
+      //     await messageData.reply(reply as MessageReplyOptions);
+      //     response = 'functionFinished';
+      //   } else {
+      //     // Handle the case where functionArgs does not have the expected structure or types
+      //     log.error(F, `Invalid arguments structure for function ${functionName}: ${JSON.stringify(functionArgs)}`);
+      //   }
+      //   // const functionResponse = await functionToCall(functionArgs);
+      //   // log.debug(F, `functionResponse: ${JSON.stringify(functionResponse, null, 2)}`);
 
-      const callIds = run.required_action?.submit_tool_outputs.tool_calls.map(toolCall => toolCall.id) ?? [];
+      //   // toolOutputs.push({
+      //   //   tool_call_id: toolCall.id,
+      //   //   output: `${JSON.stringify(functionResponse)}`,
+      //   // });
+      // });
 
-      run = await openAi.beta.threads.runs.submitToolOutputs(
-        thread.id,
-        run.id,
-        {
-          tool_outputs: [
-            {
-              tool_call_id: callIds[0],
-              output: `${JSON.stringify(functionResponse)}`,
-            },
-            {
-              tool_call_id: callIds[1],
-              output: `${JSON.stringify(functionResponse)}`,
-            },
-          ],
-        },
-      );
+      // run = await openAi.beta.threads.runs.submitToolOutputs(
+      //   thread.id,
+      //   run.id,
+      //   {
+      //     tool_outputs: toolOutputs,
+      //   },
+      // );
 
-      return openAiWaitForRun(run, thread);
+      // return openAiWaitForRun(run, thread);
+
+      const toolCalls = run.required_action?.submit_tool_outputs.tool_calls;
+
+      if (!toolCalls) {
+        // Handle the case where there are no tool calls
+        break;
+      }
+
+      // Map each tool call to a promise representing the async operation
+      const promises = toolCalls.map(async toolCall => {
+        const functionName = toolCall.function?.name;
+        log.debug(F, `functionName: ${functionName}`);
+        if (!functionName) {
+          // Handle the case where functionName is not provided
+          log.error(F, 'Function name is missing');
+          return;
+        }
+        const functionToCall = availableFunctions[functionName as keyof typeof availableFunctions];
+        if (!functionToCall) {
+          // Handle the case where the function is not found in availableFunctions
+          log.error(F, `Function ${functionName} not found`);
+          return;
+        }
+        const functionArgs = JSON.parse(toolCall.function?.arguments as string);
+        // Check if functionArgs is correctly structured and contains the expected properties
+        if (functionArgs && typeof functionArgs === 'object' && 'drugName' in functionArgs) {
+          // Execute the function call with the provided arguments
+          const reply = await functionToCall(functionArgs.drugName, functionArgs.section);
+          await messageData.reply(reply as MessageReplyOptions);
+          return;
+        }
+        // Log an error if the function arguments do not have the expected structure or types
+        log.error(F, `Invalid arguments structure for function ${functionName}: ${JSON.stringify(functionArgs)}`);
+      });
+
+      // Wait for all promises to resolve
+      const results = await Promise.all(promises);
+      log.debug(F, 'All tool calls have been processed');
+
+      return { response: 'functionFinished', promptTokens, completionTokens };
     }
     case 'expired':
       // This will happen if the requires_action doesn't get a  response in time, so this isn't supported either
@@ -675,6 +666,7 @@ async function openAiWaitForRun(
     default:
       break;
   }
+  log.debug(F, `Returning response: ${response}`);
   return { response, promptTokens, completionTokens };
 }
 
@@ -684,7 +676,7 @@ async function openAiConversation(
     role: 'user';
     content: string;
   }[],
-  user: string,
+  messageData: Message<boolean>,
 ):Promise<{
     response: string,
     promptTokens: number,
@@ -703,8 +695,8 @@ async function openAiConversation(
 
   // Get the user from the DB
   const userData = await db.users.upsert({
-    where: { discord_id: user },
-    create: { discord_id: user },
+    where: { discord_id: messageData.author.id },
+    create: { discord_id: messageData.author.id },
     update: {},
   });
 
@@ -716,9 +708,9 @@ async function openAiConversation(
 
   // Save the thread id to the user if it doesn't exist
   if (!userData.ai_history_openai) {
-    log.debug(F, `Saving new thread id to user: ${user}`);
+    log.debug(F, `Saving new thread id to user: ${messageData.author.id}`);
     await db.users.update({
-      where: { discord_id: user },
+      where: { discord_id: messageData.author.id },
       data: {
         ai_history_openai: thread.id,
       },
@@ -741,7 +733,7 @@ async function openAiConversation(
 
     // Wait for the run to be cancelled
     while (['queued', 'in_progress', 'requires_action'].includes(recentRun.status)) {
-    // eslint-disable-next-line no-await-in-loop
+      // eslint-disable-next-line no-await-in-loop
       await sleep(200);
       // eslint-disable-next-line no-await-in-loop
       recentRun = await openAi.beta.threads.runs.retrieve(thread.id, recentRun.id);
@@ -756,10 +748,11 @@ async function openAiConversation(
     );
   } catch (error) {
     log.error(F, `Error sending message: ${error}`);
+    return { response: (error as Error).message, promptTokens, completionTokens };
   }
 
-  log.debug(F, `Starting new run with assistant: ${assistant.id} and thread: ${thread.id}`);
   // Run the thread
+  log.debug(F, `Starting new run with assistant: ${assistant.id} and thread: ${thread.id}`);
   const run = await openAi.beta.threads.runs.create(
     thread.id,
     {
@@ -768,7 +761,10 @@ async function openAiConversation(
   );
   // log.debug(F, `run: ${JSON.stringify(run, null, 2)}`);
 
-  return openAiWaitForRun(run, thread);
+  // Wait for the run to complete
+  // This is a separate function because if the run requires action, it will call the function again
+
+  return openAiWaitForRun(run, thread, messageData);
 }
 
 async function openAiChat(
@@ -890,7 +886,7 @@ export default async function aiChat(
     role: 'user';
     content: string;
   }[],
-  user: string,
+  messageData: Message<boolean>,
   attachmentInfo: {
     url: string | null;
     mimeType: string | null;
@@ -911,10 +907,10 @@ export default async function aiChat(
 
   if (['GEMINI_PRO', 'GEMINI_PRO_VISION', 'AQA'].includes(aiPersona.ai_model)) {
     // return googleAiChat(aiPersona, messages, user, attachmentInfo);
-    return googleAiConversation(aiPersona, messages, user, attachmentInfo);
+    return googleAiConversation(aiPersona, messages, messageData, attachmentInfo);
   }
   // return openAiChat(aiPersona, messages, user);
-  return openAiConversation(aiPersona, messages, user);
+  return openAiConversation(aiPersona, messages, messageData);
 }
 
 export async function aiFlairMod(
