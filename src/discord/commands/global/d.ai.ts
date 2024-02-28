@@ -847,7 +847,7 @@ async function createPersona(
       if (i.customId.split('~')[1] !== interaction.id) return;
       if (!i.isModalSubmit()) return;
       if (!i.isFromMessage()) return;
-      // await i.deferUpdate();
+      await i.deferUpdate();
 
       const personaName = i.fields.getTextInputValue('name');
       const temperature = parseFloat(i.fields.getTextInputValue('temperature'));
@@ -918,7 +918,7 @@ async function createPersona(
         },
       });
 
-      await i.update({
+      await i.editReply({
         embeds: [embedTemplate()
           .setTitle('Modal')
           .setColor(Colors.Green)

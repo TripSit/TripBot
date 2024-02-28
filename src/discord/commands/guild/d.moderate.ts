@@ -1,3 +1,4 @@
+/* eslint-disable sonarjs/cognitive-complexity */
 /* eslint-disable sonarjs/no-duplicate-string */
 /* eslint-disable max-len */
 import {
@@ -63,6 +64,7 @@ type UndoAction = 'UN-FULL_BAN' | 'UN-TICKET_BAN' | 'UN-DISCORD_BOT_BAN' | 'UN-B
 
 type ModAction = user_action_type | UndoAction | 'INFO' | 'LINK';
 // type BanAction = 'FULL_BAN' | 'TICKET_BAN' | 'DISCORD_BOT_BAN' | 'BAN_EVASION' | 'UNDERBAN';
+type TargetObject = Snowflake | User | GuildMember;
 
 const disableButtonTime = env.NODE_ENV !== 'production' ? 1000 * 60 * 1 : 1000 * 60 * 5; // 1 minute in dev, 5 minute in prod
 
@@ -247,11 +249,11 @@ const warnButtons = new ActionRowBuilder<ButtonBuilder>().addComponents(
 );
 
 function isSnowflake(id: string): boolean {
-  return /^[0-9]{17,19}$/.test(id);
+  return /^\d{17,19}$/.test(id);
 }
 
 function isMention(id: string): boolean {
-  return /^<@!?[0-9]{17,19}>$/.test(id);
+  return /^<@!?\d{17,19}>$/.test(id);
 }
 
 // Various action type checks
@@ -390,7 +392,7 @@ export async function tripSitTrustScore(
     trustScore: number;
     tsReasoning: string;
   }> {
-  const startTime = Date.now();
+  // const startTime = Date.now();
   let trustScore = 0;
   let tsReasoning = '';
   const targetPromise = discordClient.users.fetch(targetId);
@@ -568,7 +570,7 @@ export async function tripSitTrustScore(
     `;
   }
 
-  log.debug(F, `[trust score] time: ${Date.now() - startTime}ms`);
+  // log.debug(F, `[trust score] time: ${Date.now() - startTime}ms`);
   return {
     trustScore,
     tsReasoning,
@@ -582,8 +584,8 @@ export async function userInfoEmbed(
   command: ModAction,
   showModInfo: boolean,
 ):Promise<EmbedBuilder> {
-  log.debug(F, `[userInfoEmbed] actor: ${actor} | target: ${target} | targetData: ${targetData} | command: ${command}`);
-  const startTime = Date.now();
+  log.debug(F, `[userInfoEmbed] actor: ${actor} | target: ${target} | targetData: ${JSON.stringify(targetData, null, 2)} | command: ${command}`);
+  // const startTime = Date.now();
   const targetActionList = {
     NOTE: [] as string[],
     WARNING: [] as string[],
@@ -619,7 +621,7 @@ export async function userInfoEmbed(
 
   log.debug(F, `Target: ${JSON.stringify(target, null, 2)}`);
 
-  const targetDisplayName = (target as GuildMember).displayName ?? null;
+  // const targetDisplayName = (target as GuildMember).displayName ?? null;
   // let targetUserName = null as string | null;
   // if ((target as GuildMember).user) {
   //   targetUserName = (target as GuildMember).user.username;
@@ -628,7 +630,7 @@ export async function userInfoEmbed(
   //   targetUserName = (target as User).username;
   // }
 
-  log.debug(F, `targetDisplayName: ${targetDisplayName}`);
+  // log.debug(F, `targetDisplayName: ${targetDisplayName}`);
 
   const targetId = (target as User | GuildMember).id ?? target;
 
@@ -763,7 +765,7 @@ export async function userInfoEmbed(
     }
   }
 
-  log.debug(F, `[userInfoEmbed] time: ${Date.now() - startTime}ms`);
+  // log.debug(F, `[userInfoEmbed] time: ${Date.now() - startTime}ms`);
   // log.debug(F, `modlogEmbed: ${JSON.stringify(modlogEmbed, null, 2)}`);
   return modlogEmbed;
 }
@@ -821,7 +823,7 @@ export async function modResponse(
       if ((isSnowflake(targetString) || isMention(targetString))) {
         const userId = isSnowflake(targetString) ? targetString : targetString.replace(/[<@!>]/g, '');
 
-        let targetObj = userId as Snowflake | User | GuildMember;
+        let targetObj = userId as TargetObject;
         try {
           targetObj = await actor.guild.members.fetch(userId);
         } catch (err) {
@@ -1032,7 +1034,7 @@ async function messageModThread(
   extraMessage: string,
   duration: string,
 ): Promise<ThreadChannel | null> {
-  // log.debug(F, `[messageModThread] actor: ${actor} | target: ${target} | command: ${command} | internalNote: ${internalNote} | description: ${description} | extraMessage: ${extraMessage} | duration: ${duration}`);
+  log.debug(F, `[messageModThread] actor: ${actor} | target: ${target} | command: ${command} | internalNote: ${internalNote} | description: ${description} | extraMessage: ${extraMessage} | duration: ${duration}`);
   const startTime = Date.now();
   const targetId = (target as User | GuildMember).id ?? target;
   const targetName = (target as GuildMember).displayName ?? (target as User).username ?? target;
@@ -1042,15 +1044,19 @@ async function messageModThread(
     create: { discord_id: targetId },
     update: { },
   });
+  log.debug(F, `targetData: ${JSON.stringify(targetData, null, 2)}`);
   const guildData = await db.discord_guilds.upsert({
     where: { id: actor.guild.id },
     create: { id: actor.guild.id },
     update: { },
   });
+  log.debug(F, `guildData: ${JSON.stringify(guildData, null, 2)}`);
 
-  if (!guildData.channel_moderators) throw new Error('Moderator log room id is null');
+  if (!guildData.channel_moderators) return null;
 
-  if (!guildData.channel_mod_log) throw new Error('Moderator log room id is null');
+  if (!guildData.channel_mod_log) return null;
+
+  log.debug(F, 'Values are set, continuing');
 
   const { pastVerb, emoji } = embedVariables[command as keyof typeof embedVariables];
   let summary = `${actor.displayName} ${pastVerb} ${targetName}`;
@@ -1120,7 +1126,7 @@ async function messageModThread(
       modThread = await modChan.threads.create({
         name: `${emoji}│${targetName}`,
         autoArchiveDuration: 60,
-      }) as ThreadChannel;
+      });
       // log.debug(F, 'created mod thread');
       // Save the thread id to the user
       targetData.mod_thread_id = modThread.id;
@@ -1311,7 +1317,7 @@ export async function moderate(
   }
 
   let targetName = targetId;
-  let targetObj = targetId as Snowflake | User | GuildMember;
+  let targetObj = targetId as TargetObject;
   if (targetMember) {
     targetName = targetMember.displayName;
     targetObj = targetMember;
@@ -1372,7 +1378,7 @@ export async function moderate(
       return { content: 'Timeout must be between 0 and 7 days!!' };
     }
 
-    // convert the miliseconds into a human readable string
+    // convert the milliseconds into a human readable string
     const humanTime = msToHuman(duration);
 
     durationStr = `for ${humanTime}. It will expire ${time(new Date(Date.now() + duration), 'R')}`;
@@ -1454,7 +1460,7 @@ export async function moderate(
       if (isFullBan(command)) {
         const response = await last(
           targetUser ?? targetMember?.user as User,
-          buttonInt.guild as Guild,
+          buttonInt.guild,
         );
         const extraMessage = `${targetName}'s last ${response.messageCount} (out of ${response.totalMessages}) messages before being banned :\n${response.messageList}`; // eslint-disable-line max-len
         body = stripIndents`${body}\n\n${extraMessage}`;
@@ -1484,7 +1490,7 @@ export async function moderate(
     log.debug(F, `Sending message to ${targetName}`);
     await messageUser(
       targetUser ?? targetMember?.user as User,
-      buttonInt.guild as Guild,
+      buttonInt.guild,
       command,
       body,
       isTimeout(command) || isWarning(command),
@@ -1505,7 +1511,7 @@ export async function moderate(
     created_at: new Date(),
   } as user_actions;
 
-  // log.debug(F, `[moderate] performing actions for ${targetName}`);
+  log.debug(F, `[moderate] performing actions for ${targetName}`);
   let extraMessage = '';
   if (isBan(command)) {
     if (isFullBan(command) || isUnderban(command) || isBanEvasion(command)) {
@@ -1607,7 +1613,7 @@ export async function moderate(
 
       try {
         await targetMember.timeout(0, internalNote ?? noReason);
-        // log.debug(F, `I untimeouted ${target.displayName} because\n '${internalNote}'!`);
+        // log.debug(F, `I untimeout ${target.displayName} because\n '${internalNote}'!`);
       } catch (err) {
         log.error(F, `Error: ${err}`);
       }
@@ -1628,7 +1634,8 @@ export async function moderate(
   }
 
   // This needs to happen before creating the modlog embed
-  // await useractionsSet(actionData);
+  // await userActionsSet(actionData);
+  log.debug(F, `Updating user actions: ${JSON.stringify(actionData, null, 2)}`);
   if (actionData.id) {
     await db.user_actions.upsert({
       where: { id: actionData.id },
@@ -1639,6 +1646,7 @@ export async function moderate(
     await db.user_actions.create({ data: actionData });
   }
 
+  log.debug(F, `Updating target data: ${JSON.stringify(targetData, null, 2)}`);
   await db.users.update({
     where: { id: targetData.id },
     data: targetData,
@@ -1646,7 +1654,7 @@ export async function moderate(
 
   const anonSummary = `${targetName} was ${embedVariables[command as keyof typeof embedVariables].pastVerb}${durationStr}!`;
 
-  log.debug(F, '[moderate] Sending messages');
+  log.debug(F, 'Sending message to mod thread');
   const modThread = await messageModThread(
     buttonInt,
     actor,
@@ -1658,18 +1666,18 @@ export async function moderate(
     durationStr,
   );
 
+  // Records the action taken on the action field of the modlog embed
   const embed = buttonInt.message.embeds[0].toJSON();
   const actionField = embed.fields?.find(field => field.name === 'Actions');
-
   if (actionField) {
-  // Add the action to the list of actions
+    // Add the action to the list of actions
     const newActionFiled = actionField?.value.concat(`
-  
-  ${buttonInt.user.toString()} muted this user:
-  > ${modalInt.fields.getTextInputValue('internalNote')}
-  
-  Message sent to user:
-  > ${modalInt.fields.getTextInputValue('description')}`);
+    
+    ${buttonInt.user.toString()} muted this user:
+    > ${modalInt.fields.getTextInputValue('internalNote')}
+    
+    Message sent to user:
+    > ${modalInt.fields.getTextInputValue('description')}`);
     // log.debug(F, `newActionFiled: ${newActionFiled}`);
 
     // Replace the action field with the new one
@@ -1709,6 +1717,8 @@ export async function moderate(
     .setFooter(null);
 
   if (command !== 'REPORT' && modThread) response.setDescription(`${response.data.description}\nYou can access their thread here: ${modThread}`);
+
+  log.debug(F, `Returning embed: ${JSON.stringify(response, null, 2)}`);
   return { embeds: [response] };
 }
 
@@ -1753,7 +1763,7 @@ export async function modModal(
     //   update: {},
     // });
 
-    let targetObj = userId as Snowflake | User | GuildMember;
+    let targetObj = userId as TargetObject;
     try {
       targetObj = await interaction.guild.members.fetch(userId);
     } catch (err) {
@@ -2043,6 +2053,7 @@ export async function modModal(
             await interaction.message.edit({
               components: [buttonRow1],
             });
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           } catch (error:any) {
             // This will happen on the initial ephemeral message and idk why
             // log.error(F, `Error: ${error}`);
@@ -2106,7 +2117,7 @@ export const mod: SlashCommand = {
 
     if (isLink(command)) {
       const targetString = interaction.options.getString('target', true);
-      const targets = await getDiscordMember(interaction, targetString) as GuildMember[];
+      const targets = await getDiscordMember(interaction, targetString);
       const override = interaction.options.getBoolean('override');
       if (targets.length > 1) {
         const embed = embedTemplate()

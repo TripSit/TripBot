@@ -3,6 +3,7 @@ import {
   ChatInputCommandInteraction,
   GuildMember,
 } from 'discord.js';
+import { stripIndents } from 'common-tags';
 import { SlashCommand } from '../../@types/commandDef';
 import commandContext from '../../utils/context';
 import { modResponse } from './d.moderate';
@@ -35,6 +36,17 @@ export const dReport: SlashCommand = {
       update: {
       },
     });
+
+    if (!guildData.role_moderator || !guildData.channel_mod_log || !guildData.channel_moderators) {
+      await interaction.editReply(stripIndents`
+      This server has not been set up for moderation.
+      
+      Please contact an administrator to set up moderation.
+      
+      If you are the admin, please use /cooperative to set up moderation.
+      `);
+      return false;
+    }
 
     // Get the actor
     const actor = interaction.member as GuildMember;
