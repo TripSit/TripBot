@@ -263,14 +263,14 @@ export async function countingReset(
 export async function countMessage(message: Message): Promise<void> {
   if (!message.guild) return; // If not in a guild then ignore all messages
   if (message.guild.id !== env.DISCORD_GUILD_ID) return; // If not in tripsit ignore all messages
+
   const countingData = await db.counting.findFirst({
     where: {
       channel_id: message.channel.id,
     },
   });
   if (!countingData) return; // If not a counting channel then ignore all messages
-
-  // log.debug(F, `countingData: ${JSON.stringify(countingData, null, 2)} `);
+  log.debug(F, `countingData: ${JSON.stringify(countingData, null, 2)} `);
 
   // Process the new message. If it's the next number after current_number, then update the DB
   // If it's not the next number, then still update the db with the user who broke the combo
@@ -287,7 +287,7 @@ export async function countMessage(message: Message): Promise<void> {
   }
 
   if (countingData.current_number === -1) {
-    await message.delete();
+    await message.reply('Please wait for the new game to start');
     return;
   }
 
@@ -296,7 +296,8 @@ export async function countMessage(message: Message): Promise<void> {
   // log.debug(F, `env.DISCORD_OWNER_ID: ${env.DISCORD_OWNER_ID}`);
   if (countingData.current_number_message_author === message.author.id
     && message.author.id.toString() !== env.DISCORD_OWNER_ID.toString()) { // Allow the owner to spam (for testing)
-    await message.delete();
+    log.debug(F, 'Deleting message because the author is the same as the current number message author');
+    await message.reply('Stop playing with yourself 😉');
     return;
   }
 
@@ -311,8 +312,9 @@ export async function countMessage(message: Message): Promise<void> {
     .sort((a, b) => b.createdTimestamp - a.createdTimestamp) // Sorted by most recent
     .first(); // Get the first one
 
-  if (lastMessage && countingData.type === 'TOKEN') {
-    await message.delete();
+  if (lastMessage && countingData.type === 'TOKEN'
+    && message.author.id.toString() !== env.DISCORD_OWNER_ID.toString()) {
+    await message.reply('You can only count once every hour in the Token game!');
     return;
   }
 
