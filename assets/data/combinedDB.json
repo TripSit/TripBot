@@ -17887,6 +17887,57 @@
             "value": "1-6 hours"
           }
         ]
+      },
+      {
+        "name": "Insufflated",
+        "dosage": [
+          {
+            "name": "Threshold",
+            "value": "50 mg"
+          },
+          {
+            "name": "Light",
+            "value": "50-150 mg"
+          },
+          {
+            "name": "Common",
+            "value": "150-300 mg"
+          },
+          {
+            "name": "Strong",
+            "value": "300-900 mg"
+          },
+          {
+            "name": "Heavy",
+            "value": "900 mg"
+          }
+        ],
+        "duration": [
+          {
+            "name": "Comeup",
+            "value": "1-5 minutes"
+          },
+          {
+            "name": "Onset",
+            "value": "30-120 seconds"
+          },
+          {
+            "name": "Peak",
+            "value": "5-20 minutes"
+          },
+          {
+            "name": "Offset",
+            "value": "10-60 minutes"
+          },
+          {
+            "name": "Afterglow",
+            "value": "1-6 hours"
+          },
+          {
+            "name": "Total",
+            "value": "20-180 minutes"
+          }
+        ]
       }
     ],
     "interactions": [

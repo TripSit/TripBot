@@ -13556,7 +13556,60 @@
       },
       "sublingual": null,
       "buccal": null,
-      "insufflated": null,
+      "insufflated": {
+        "name": "insufflated",
+        "dose": {
+          "units": "mg",
+          "threshold": 50,
+          "heavy": 900,
+          "common": {
+            "min": 150,
+            "max": 300
+          },
+          "light": {
+            "min": 50,
+            "max": 150
+          },
+          "strong": {
+            "min": 300,
+            "max": 900
+          }
+        },
+        "duration": {
+          "afterglow": {
+            "min": 1,
+            "max": 6,
+            "units": "hours"
+          },
+          "comeup": {
+            "min": 1,
+            "max": 5,
+            "units": "minutes"
+          },
+          "duration": null,
+          "offset": {
+            "min": 10,
+            "max": 60,
+            "units": "minutes"
+          },
+          "onset": {
+            "min": 30,
+            "max": 120,
+            "units": "seconds"
+          },
+          "peak": {
+            "min": 5,
+            "max": 20,
+            "units": "minutes"
+          },
+          "total": {
+            "min": 20,
+            "max": 180,
+            "units": "minutes"
+          }
+        },
+        "bioavailability": null
+      },
       "rectal": null,
       "transdermal": null,
       "subcutaneous": null,
