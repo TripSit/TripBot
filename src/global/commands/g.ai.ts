@@ -154,11 +154,11 @@ export async function getAssistant(name: string):Promise<Assistant> {
     name: personaData.name,
     description: personaData.description,
     instructions: `${objectiveTruths}\n${personaData.prompt}`,
-    tools: [
-      { type: 'code_interpreter' },
-      { type: 'retrieval' },
-      ...aiFunctions,
-    ],
+    // tools: [
+    //   // { type: 'code_interpreter' },
+    //   // { type: 'retrieval' },
+    //   // ...aiFunctions,
+    // ],
     file_ids: [],
     metadata: {},
   } as Omit<Assistant, 'id' | 'created_at' | 'object'>;
