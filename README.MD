@@ -25,6 +25,11 @@ Want to help out?
 
 Contributing to TripBot is super appreciated, and it's easy to get involved: [Join our Discord guild](https://discord.gg/tripsit) and check out the Development sections to get started.
 
+## NOTE: This is a version in collaboration with Bluelight.org 
+
+
+----------
+
 ### Features
 Fully Typescript
 Postgres Relational Database
