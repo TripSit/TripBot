@@ -28,6 +28,7 @@ import { mushroomPageOne, mushroomPageTwo } from '../commands/global/d.mushroom_
 import { acknowledgeButton, modModal, refusalButton } from '../commands/guild/d.moderate';
 import { feedbackReportModal } from '../commands/global/d.feedback';
 import { aiButton } from '../commands/global/d.ai';
+import { purgeButton } from '../commands/guild/d.purge';
 // import { helpButton } from '../commands/global/d.help';
 
 const F = f(__filename);
@@ -46,6 +47,11 @@ export async function buttonClick(interaction:ButtonInteraction, discordClient:C
 
   if (buttonID.startsWith('AI')) {
     await aiButton(interaction);
+    return;
+  }
+
+  if (buttonID.startsWith('purge')) {
+    await purgeButton(interaction);
     return;
   }
 

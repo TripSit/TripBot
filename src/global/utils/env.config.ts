@@ -37,6 +37,8 @@ export const env = {
   MOODLE_TOKEN: process.env.MOODLE_TOKEN,
   MOODLE_URL: isProd ? 'https://learn.tripsit.me' : 'https://learn.tripsit.io',
 
+  DRONE_TOKEN: process.env.DRONE_TOKEN,
+
   TELEGRAM_TOKEN: process.env.TELEGRAM_TOKEN,
 
   ROLLBAR_TOKEN: process.env.ROLLBAR_TOKEN,
