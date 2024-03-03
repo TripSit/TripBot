@@ -67,3 +67,8 @@ export default async function deployCommands():Promise<{
   }
   return { globalCommands, guildCommands };
 }
+
+const args = process.argv.slice(2); // Remove the first two default arguments
+if (args.includes('deployCommands')) {
+  deployCommands();
+}

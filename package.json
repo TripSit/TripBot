@@ -18,7 +18,7 @@
     "tripbot:test": "docker exec -it tripbot npx jest --silent -c ./src/jest/jest.config.ts ",
     "tripbot:test1": "npx jest -c ./src/jest/jest.config.ts",
     "tripbot:lint": "docker exec -it tripbot npx eslint --fix --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts . --cache",
-    "tripbot:deployCommands": "docker exec -it tripbot ts-node --transpile-only ./src/discord/utils/commandDeploy.ts",
+    "tripbot:deployCommands": "docker exec -it tripbot ts-node --transpile-only ./src/discord/utils/commandDeploy.ts -- deployCommands",
     "tripbot:db:generate": "npx prisma generate && npx prisma generate --schema src/prisma/moodle/schema.prisma && docker exec -it tripbot npx prisma generate && docker exec -it tripbot npx prisma generate --schema src/prisma/moodle/schema.prisma",
     "## DATABASE ##": "",
     "db:start": "docker compose --project-name tripbot up -d --force-recreate --build tripbot_database",
