@@ -20749,7 +20749,7 @@
       "exact toxic dosage is unknown"
     ],
     "tolerance": {
-      "full": "develops with prolonged and repeated use",
+      "full": null,
       "half": "3 - 7 days",
       "zero": "1 - 2 weeks"
     },
@@ -26558,6 +26558,10 @@
   {
     "url": "https://psychonautwiki.org/wiki/Eugeroics",
     "name": "Eugeroics"
+  },
+  {
+    "url": "https://psychonautwiki.org/wiki/Experience:%22DPH_(700mg,_Oral)_-_Arachnophobia_Awakened",
+    "name": "Experience:\"DPH (700mg, Oral) - Arachnophobia Awakened"
   },
   {
     "url": "https://psychonautwiki.org/wiki/F-Phenibut",
