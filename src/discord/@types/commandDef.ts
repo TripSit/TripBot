@@ -8,6 +8,7 @@ import {
   // InteractionReplyOptions,
   // InteractionEditReplyOptions,
   Message,
+  InteractionReplyOptions,
 } from 'discord.js';
 
 export interface SlashCommand {
@@ -15,6 +16,13 @@ export interface SlashCommand {
   | Omit<SlashCommandBuilder, 'addSubcommandGroup' | 'addSubcommand'>
   | SlashCommandSubcommandsOnlyBuilder;
   execute: (interaction: ChatInputCommandInteraction) => Promise<boolean>;
+}
+
+export interface SlashCommandReply {
+  data:
+  | Omit<SlashCommandBuilder, 'addSubcommandGroup' | 'addSubcommand'>
+  | SlashCommandSubcommandsOnlyBuilder;
+  execute: (interaction: ChatInputCommandInteraction) => Promise<InteractionReplyOptions>;
 }
 
 export interface SlashCommandBeta {

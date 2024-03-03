@@ -15817,7 +15817,7 @@
       ]
     },
     "tolerance": {
-      "full": "develops with prolonged and repeated use",
+      "full": null,
       "half": "3 - 7 days",
       "zero": "1 - 2 weeks"
     },
@@ -20047,6 +20047,127 @@
     "unsafeInteractions": null,
     "dangerousInteractions": null,
     "roa": null
+  },
+  {
+    "url": "https://psychonautwiki.org/wiki/Experience:%22DPH_(700mg,_Oral)_-_Arachnophobia_Awakened",
+    "name": "Experience:\"DPH (700mg, Oral) - Arachnophobia Awakened",
+    "summary": "",
+    "addictionPotential": null,
+    "toxicity": null,
+    "crossTolerances": null,
+    "commonNames": null,
+    "class": {
+      "chemical": [
+        "Substituted tryptamines"
+      ],
+      "psychoactive": [
+        "Psychedelic"
+      ]
+    },
+    "tolerance": null,
+    "uncertainInteractions": null,
+    "unsafeInteractions": null,
+    "dangerousInteractions": null,
+    "roa": {
+      "oral": {
+        "name": "oral",
+        "dose": {
+          "units": "mg",
+          "threshold": null,
+          "heavy": null,
+          "common": null,
+          "light": null,
+          "strong": null
+        },
+        "duration": {
+          "afterglow": {
+            "min": null,
+            "max": null,
+            "units": "hours"
+          },
+          "comeup": {
+            "min": null,
+            "max": null,
+            "units": "minutes"
+          },
+          "duration": null,
+          "offset": {
+            "min": null,
+            "max": null,
+            "units": "hours"
+          },
+          "onset": {
+            "min": null,
+            "max": null,
+            "units": "minutes"
+          },
+          "peak": {
+            "min": null,
+            "max": null,
+            "units": "hours"
+          },
+          "total": {
+            "min": null,
+            "max": null,
+            "units": "hours"
+          }
+        },
+        "bioavailability": null
+      },
+      "sublingual": {
+        "name": "sublingual",
+        "dose": {
+          "units": "mg",
+          "threshold": null,
+          "heavy": null,
+          "common": null,
+          "light": null,
+          "strong": null
+        },
+        "duration": {
+          "afterglow": {
+            "min": null,
+            "max": null,
+            "units": "hours"
+          },
+          "comeup": {
+            "min": null,
+            "max": null,
+            "units": "minutes"
+          },
+          "duration": null,
+          "offset": {
+            "min": null,
+            "max": null,
+            "units": "hours"
+          },
+          "onset": {
+            "min": null,
+            "max": null,
+            "units": "minutes"
+          },
+          "peak": {
+            "min": null,
+            "max": null,
+            "units": "hours"
+          },
+          "total": {
+            "min": null,
+            "max": null,
+            "units": "hours"
+          }
+        },
+        "bioavailability": null
+      },
+      "buccal": null,
+      "insufflated": null,
+      "rectal": null,
+      "transdermal": null,
+      "subcutaneous": null,
+      "intramuscular": null,
+      "intravenous": null,
+      "smoked": null
+    }
   },
   {
     "url": "https://psychonautwiki.org/wiki/F-Phenibut",

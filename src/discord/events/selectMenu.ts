@@ -7,6 +7,7 @@ import { applicationStart, applicationReject } from '../utils/application';
 import commandContext from '../utils/context';
 import { helpMenu } from '../commands/global/d.help';
 import { aiMenu } from '../commands/global/d.ai';
+import { purgeMenu } from '../commands/guild/d.purge';
 // import log from '../../global/utils/log';
 // import {parse} from 'path';
 const F = f(__filename);
@@ -44,6 +45,13 @@ export async function selectMenu(
     }
     if (menuID.startsWith('AI')) {
       await interaction.update(await aiMenu(interaction));
+    }
+  }
+
+  // eslint-disable-next-line sonarjs/no-collapsible-if
+  if (interaction.isUserSelectMenu()) {
+    if (menuID.startsWith('purge')) {
+      await purgeMenu(interaction);
     }
   }
 
