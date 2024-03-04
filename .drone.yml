@@ -120,7 +120,7 @@ steps:
         curl -X POST 
         -H 'Authorization: Bearer ${DRONE_TOKEN}' 
         -d '{"target": "production"}' 
-        "http://drone.tripsit.io/api/repos/your_repo/builds/${DRONE_BUILD_NUMBER}/promote"
+        "http://drone.tripsit.io/api/repos/TripSit/TripBot/builds/${DRONE_BUILD_NUMBER}/promote"
     when:
       status: [ success ]
 
