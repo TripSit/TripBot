@@ -46,8 +46,8 @@ RUN npx prisma generate --schema=./src/prisma/moodle/schema.prisma
 # Deploy the commands
 # RUN npx ts-node --transpile-only ./src/discord/utils/commandDeploy.ts
 
-# CMD npx prisma migrate deploy && npx tsc-watch --onSuccess "node ./build/src/start.js"
-CMD npx tsc-watch --onSuccess "node ./build/src/start.js"
+CMD npx prisma migrate deploy && npx tsc-watch --onSuccess "node ./build/src/start.js"
+# CMD npx tsc-watch --onSuccess "node ./build/src/start.js"
 
 # For container development, the following command runs forever, so we can inspect the container
 # CMD tail -f /dev/null
