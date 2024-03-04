@@ -119,7 +119,7 @@ steps:
       - echo "Token is ${DRONE_TOKEN:0:4}" # This prints the first 4 characters
       - >
         curl -X POST 
-        -H 'Authorization: Bearer "${DRONE_TOKEN}"' 
+        -H 'Authorization: Bearer '"${DRONE_TOKEN}" 
         -d '{"target": "production"}' 
         "http://drone.tripsit.io/api/repos/TripSit/TripBot/builds/${DRONE_BUILD_NUMBER}/promote"
     environment:
