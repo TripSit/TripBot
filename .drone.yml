@@ -50,6 +50,8 @@ steps:
         from_secret: MATRIX_BOT_PASSWORD
       MOODLE_TOKEN:
         from_secret: MOODLE_TOKEN
+      PRISMA_DB_URL:
+        from_secret: PRISMA_DB_URL
       GEMINI_KEY:
         from_secret: GEMINI_KEY
       REVOLT_BOT_TOKEN:
