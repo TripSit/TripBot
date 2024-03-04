@@ -114,11 +114,21 @@ steps:
         - failure
 
   - name: trigger promotion
-    image: appropriate/curl
+    image: curlimages/curl
     commands:
-      - echo "Token is ${DRONE_TOKEN:0:4}" # This prints the first 4 characters
-      - echo "${DRONE_TOKEN}" # This prints the first 4 characters
-      - echo "$DRONE_TOKEN" # This prints the first 4 characters
+    # inline
+      - echo "Token is ${DRONE_TOKEN}" # This prints the first 4 characters
+      - echo "Token is $DRONE_TOKEN" # This prints the first 4 characters
+      - echo "Token is DRONE_TOKEN" # This prints the first 4 characters
+    # outside
+      - echo 'Token is '"${DRONE_TOKEN}"'' # This prints the first 4 characters
+      - echo 'Token is '"$DRONE_TOKEN"'' # This prints the first 4 characters
+      - echo 'Token is '"DRONE_TOKEN"'' # This prints the first 4 characters
+
+    # inside with quotes
+      - echo '"${DRONE_TOKEN}"' # This prints the first 4 characters
+      - echo '"$DRONE_TOKEN"' # This prints the first 4 characters
+      - echo '"DRONE_TOKEN"' # This prints the first 4 characters
       - >
         curl -X POST 
         -H 'Authorization: Bearer '"${DRONE_TOKEN}" 
