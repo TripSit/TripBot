@@ -121,6 +121,9 @@ steps:
         -H 'Authorization: Bearer ${DRONE_TOKEN}' 
         -d '{"target": "production"}' 
         "http://drone.tripsit.io/api/repos/TripSit/TripBot/builds/${DRONE_BUILD_NUMBER}/promote"
+    environment:
+      DRONE_TOKEN:
+        from_secret: DRONE_TOKEN
     when:
       status: [ success ]
 
