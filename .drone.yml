@@ -3,116 +3,116 @@ type: docker
 name: Deploy TripBot
 
 steps:
-#   - name: deploy to staging
-#     image: docker
-#     commands:
-#       - echo "Deploying to Staging"
-#       - apk update
-#       - apk upgrade
-#       - apk add --no-cache git
-#       - docker compose -f docker-compose.host.yml --project-name tripbot up tripbot_uat -d --force-recreate --build
-#     environment:
-#       NODE_ENV:
-#         from_secret: NODE_ENV
-#       DOCKER_HOST:
-#         from_secret: DOCKER_HOST
-#       DOCKER_BUILDKIT:
-#         from_secret: DOCKER_BUILDKIT
-#       DISCORD_CLIENT_ID:
-#         from_secret: DISCORD_CLIENT_ID_UAT
-#       DISCORD_CLIENT_TOKEN:
-#         from_secret: DISCORD_CLIENT_TOKEN_UAT
-#       DISCORD_GUILD_ID:
-#         from_secret: DISCORD_GUILD_ID
-#       DISCORD_OWNER_ID:
-#         from_secret: DISCORD_OWNER_ID
-#       DRONE_TOKEN:
-#         from_secret: DRONE_TOKEN
-#       DISCORD_CLIENT_SECRET:
-#         from_secret: DISCORD_CLIENT_SECRET
-#       DISCORD_CLIENT_REDIRECT_URI:
-#         from_secret: DISCORD_CLIENT_REDIRECT_URI
-#       GITHUB_TOKEN:
-#         from_secret: GITHUB_TOKEN
-#       GLITCHTIP_DSN:
-#         from_secret: GLITCHTIP_DSN
-#       RAPID_TOKEN:
-#         from_secret: RAPID_TOKEN
-#       ROLLBAR_TOKEN:
-#         from_secret: ROLLBAR_TOKEN
-#       IMGUR_ID:
-#         from_secret: IMGUR_ID
-#       IMGUR_SECRET:
-#         from_secret: IMGUR_SECRET
-#       YOUTUBE_TOKEN:
-#         from_secret: YOUTUBE_TOKEN
-#       MATRIX_BOT_PASSWORD:
-#         from_secret: MATRIX_BOT_PASSWORD
-#       MOODLE_TOKEN:
-#         from_secret: MOODLE_TOKEN
-#       GEMINI_KEY:
-#         from_secret: GEMINI_KEY
-#       REVOLT_BOT_TOKEN:
-#         from_secret: REVOLT_BOT_TOKEN
-#       WOLFRAM_TOKEN:
-#         from_secret: WOLFRAM_TOKEN
-#       IMDB_TOKEN:
-#         from_secret: IMDB_TOKEN
-#       SENTRY_TOKEN:
-#         from_secret: SENTRY_TOKEN
-# # 
-#   - name: health check
-#     image: appropriate/curl
-#     commands:
-#       - echo "Running Health Checks"
-#       - |
-#         attempt=0
-#         max_attempts=5
-#         delay_between_attempts=10 # seconds
-#         url=https://tripbot-uat.$DNS_DOMAIN/api
-#         while [ $attempt -lt $max_attempts ]; do
-#           attempt=$((attempt + 1))
-#           echo "Attempt $attempt of $max_attempts to reach $url..."
-#           curl -k -f $url && break || echo "Failed to reach $url, retrying in $delay_between_attempts seconds..."
-#           if [ $attempt -eq $max_attempts ]; then
-#             echo "Failed to reach $url after $max_attempts attempts."
-#             exit 1
-#           fi
-#           sleep $delay_between_attempts
-#         done
-#     environment:
-#       DNS_DOMAIN:
-#         from_secret: DNS_DOMAIN
-#     when:
-#       status: [ success ]
+  - name: deploy to staging
+    image: docker
+    commands:
+      - echo "Deploying to Staging"
+      - apk update
+      - apk upgrade
+      - apk add --no-cache git
+      - docker compose -f docker-compose.host.yml --project-name tripbot up tripbot_uat -d --force-recreate --build
+    environment:
+      NODE_ENV:
+        from_secret: NODE_ENV
+      DOCKER_HOST:
+        from_secret: DOCKER_HOST
+      DOCKER_BUILDKIT:
+        from_secret: DOCKER_BUILDKIT
+      DISCORD_CLIENT_ID:
+        from_secret: DISCORD_CLIENT_ID_UAT
+      DISCORD_CLIENT_TOKEN:
+        from_secret: DISCORD_CLIENT_TOKEN_UAT
+      DISCORD_GUILD_ID:
+        from_secret: DISCORD_GUILD_ID
+      DISCORD_OWNER_ID:
+        from_secret: DISCORD_OWNER_ID
+      DRONE_TOKEN:
+        from_secret: DRONE_TOKEN
+      DISCORD_CLIENT_SECRET:
+        from_secret: DISCORD_CLIENT_SECRET
+      DISCORD_CLIENT_REDIRECT_URI:
+        from_secret: DISCORD_CLIENT_REDIRECT_URI
+      GITHUB_TOKEN:
+        from_secret: GITHUB_TOKEN
+      GLITCHTIP_DSN:
+        from_secret: GLITCHTIP_DSN
+      RAPID_TOKEN:
+        from_secret: RAPID_TOKEN
+      ROLLBAR_TOKEN:
+        from_secret: ROLLBAR_TOKEN
+      IMGUR_ID:
+        from_secret: IMGUR_ID
+      IMGUR_SECRET:
+        from_secret: IMGUR_SECRET
+      YOUTUBE_TOKEN:
+        from_secret: YOUTUBE_TOKEN
+      MATRIX_BOT_PASSWORD:
+        from_secret: MATRIX_BOT_PASSWORD
+      MOODLE_TOKEN:
+        from_secret: MOODLE_TOKEN
+      GEMINI_KEY:
+        from_secret: GEMINI_KEY
+      REVOLT_BOT_TOKEN:
+        from_secret: REVOLT_BOT_TOKEN
+      WOLFRAM_TOKEN:
+        from_secret: WOLFRAM_TOKEN
+      IMDB_TOKEN:
+        from_secret: IMDB_TOKEN
+      SENTRY_TOKEN:
+        from_secret: SENTRY_TOKEN
+# 
+  - name: health check
+    image: appropriate/curl
+    commands:
+      - echo "Running Health Checks"
+      - |
+        attempt=0
+        max_attempts=5
+        delay_between_attempts=10 # seconds
+        url=https://tripbot-uat.$DNS_DOMAIN/api
+        while [ $attempt -lt $max_attempts ]; do
+          attempt=$((attempt + 1))
+          echo "Attempt $attempt of $max_attempts to reach $url..."
+          curl -k -f $url && break || echo "Failed to reach $url, retrying in $delay_between_attempts seconds..."
+          if [ $attempt -eq $max_attempts ]; then
+            echo "Failed to reach $url after $max_attempts attempts."
+            exit 1
+          fi
+          sleep $delay_between_attempts
+        done
+    environment:
+      DNS_DOMAIN:
+        from_secret: DNS_DOMAIN
+    when:
+      status: [ success ]
 
-#   - name: discord notification
-#     image: appleboy/drone-discord
-#     settings:
-#       webhook_id: 
-#         from_secret: WEBHOOK_ID
-#       webhook_token:
-#         from_secret: WEBHOOK_TOKEN
-#       avatar_url: https://i.imgur.com/tnw3I34.png
-#       username: 'Drone CI'
-#       message: |
-#         {{#success build.status}}
-#         Build {{build.number}} succeeded.
-#         {{else}}
-#         Build {{build.number}} failed.
-#         {{/success}}
-#         Build time: {{build.started}}
-#         Commit message: {{commit.message}}
-#         Commit author: {{commit.author}}
-#         Commit branch: {{commit.branch}}
-#         {{#success build.status}}
-#         View logs: <{{build.link}}>
-#         {{else}}
-#         View failed job: <{{build.link}}>
-#         {{/success}}
-#     when:
-#       status:
-#         - failure
+  - name: discord notification
+    image: appleboy/drone-discord
+    settings:
+      webhook_id: 
+        from_secret: WEBHOOK_ID
+      webhook_token:
+        from_secret: WEBHOOK_TOKEN
+      avatar_url: https://i.imgur.com/tnw3I34.png
+      username: 'Drone CI'
+      message: |
+        {{#success build.status}}
+        Build {{build.number}} succeeded.
+        {{else}}
+        Build {{build.number}} failed.
+        {{/success}}
+        Build time: {{build.started}}
+        Commit message: {{commit.message}}
+        Commit author: {{commit.author}}
+        Commit branch: {{commit.branch}}
+        {{#success build.status}}
+        View logs: <{{build.link}}>
+        {{else}}
+        View failed job: <{{build.link}}>
+        {{/success}}
+    when:
+      status:
+        - failure
 
   - name: trigger promotion
     image: curlimages/curl
