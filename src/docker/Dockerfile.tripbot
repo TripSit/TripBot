@@ -125,5 +125,5 @@ RUN npx prisma generate --schema=./src/prisma/moodle/schema.prisma
 USER node
 
 # Start the bot using the production build
-# CMD npx prisma migrate deploy && pm2-runtime build/src/start.js
-CMD pm2-runtime build/src/start.js
+CMD npx prisma migrate deploy && pm2-runtime build/src/start.js
+# CMD pm2-runtime build/src/start.js
