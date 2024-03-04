@@ -119,14 +119,14 @@ steps:
     commands:
       - echo "Authorization $DRONE_TOKEN" # WORKS
       - echo "http://drone.$DNS_DOMAIN/api/repos/TripSit/TripBot/builds/${DRONE_BUILD_NUMBER}/promote" # WORKS
-      - > 
-        curl -v -L -f -X POST 
-        -H "Authorization: Bearer $DRONE_TOKEN"
-        -d '{"target": "production"}' 
-        "https://drone.$DNS_DOMAIN/api/repos/TripSit/TripBot/builds/41/promote"
+      # - > 
+      #   curl -v -L -f -X POST 
+      #   -H "Authorization: Bearer $DRONE_TOKEN"
+      #   -d '{"target": "production"}' 
+      #   "https://drone.$DNS_DOMAIN/api/repos/TripSit/TripBot/builds/${DRONE_BUILD_NUMBER}/promote"
 
-      # - >
-      #   curl -v -X -f POST -H "Authorization: Bearer $DRONE_TOKEN" -d '{"target": "production"}' "https://drone.$DNS_DOMAIN/api/repos/TripSit/TripBot/builds/${DRONE_BUILD_NUMBER}/promote"
+      - >
+        curl -v -X -f POST -H "Authorization: Bearer $DRONE_TOKEN" -d '{"target": "production"}' "https://drone.$DNS_DOMAIN/api/repos/TripSit/TripBot/builds/41/promote"
     environment:
       DRONE_TOKEN:
         from_secret: DRONE_TOKEN
