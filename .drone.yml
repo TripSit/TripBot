@@ -66,6 +66,9 @@ steps:
     commands:
       - echo "Running Health Checks"
       - curl -f https://tripbot-uat.${DNS_DOMAIN}/api || exit 1
+    environment:
+      DNS_DOMAIN:
+        from_secret: DNS_DOMAIN
     when:
       status: [ success ]
 
@@ -102,6 +105,9 @@ steps:
         -H 'Authorization: Bearer ${DRONE_TOKEN}' 
         -d '{"target": "production"}' 
         "http://drone.${DNS_DOMAIN}/api/repos/your_repo/builds/${DRONE_BUILD_NUMBER}/promote"
+    environment:
+      DNS_DOMAIN:
+        from_secret: DNS_DOMAIN
     when:
       status: [ success ]
 
