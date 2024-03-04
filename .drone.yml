@@ -65,7 +65,7 @@ steps:
     image: appropriate/curl
     commands:
       - echo "Running Health Checks"
-      - curl -f https://api-uat.${DNS_DOMAIN} || exit 1
+      - curl -f https://tripbot-uat.${DNS_DOMAIN}/api || exit 1
     when:
       status: [ success ]
 
