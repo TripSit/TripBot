@@ -241,5 +241,6 @@ steps:
 trigger:
   branch:
     - main
+    - drone-testing
   event:
     - promote
