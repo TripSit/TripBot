@@ -69,7 +69,7 @@ steps:
         attempt=0
         max_attempts=5
         delay_between_attempts=10 # seconds
-        url=https://tripbot-uat.$DNS_DOMAIN/api
+        url=https://tripbot-uat.tripsit.io/api
         while [ $attempt -lt $max_attempts ]; do
           attempt=$((attempt + 1))
           echo "Attempt $attempt of $max_attempts to reach $url..."
