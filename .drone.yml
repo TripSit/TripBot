@@ -3,14 +3,130 @@ type: docker
 name: Deploy TripBot
 
 steps:
-  - name: Rebuild TripBot
+  - name: deploy to staging
     image: docker
     commands:
+      - echo "Deploying to Staging"
+      - apk update
+      - apk upgrade
+      - apk add --no-cache git
+      - docker compose -f docker-compose.host.yml --project-name tripbot up tripbot_uat -d --force-recreate --build
+    environment:
+      NODE_ENV:
+        from_secret: NODE_ENV
+      DOCKER_HOST:
+        from_secret: DOCKER_HOST
+      DOCKER_BUILDKIT:
+        from_secret: DOCKER_BUILDKIT
+      DISCORD_CLIENT_ID:
+        from_secret: DISCORD_CLIENT_ID_UAT
+      DISCORD_CLIENT_TOKEN:
+        from_secret: DISCORD_CLIENT_TOKEN_UAT
+      DISCORD_GUILD_ID:
+        from_secret: DISCORD_GUILD_ID
+      DISCORD_OWNER_ID:
+        from_secret: DISCORD_OWNER_ID
+      DRONE_TOKEN:
+        from_secret: DRONE_TOKEN
+      DISCORD_CLIENT_SECRET:
+        from_secret: DISCORD_CLIENT_SECRET
+      DISCORD_CLIENT_REDIRECT_URI:
+        from_secret: DISCORD_CLIENT_REDIRECT_URI
+      GITHUB_TOKEN:
+        from_secret: GITHUB_TOKEN
+      GLITCHTIP_DSN:
+        from_secret: GLITCHTIP_DSN
+      RAPID_TOKEN:
+        from_secret: RAPID_TOKEN
+      ROLLBAR_TOKEN:
+        from_secret: ROLLBAR_TOKEN
+      IMGUR_ID:
+        from_secret: IMGUR_ID
+      IMGUR_SECRET:
+        from_secret: IMGUR_SECRET
+      YOUTUBE_TOKEN:
+        from_secret: YOUTUBE_TOKEN
+      MATRIX_BOT_PASSWORD:
+        from_secret: MATRIX_BOT_PASSWORD
+      MOODLE_TOKEN:
+        from_secret: MOODLE_TOKEN
+      GEMINI_KEY:
+        from_secret: GEMINI_KEY
+      REVOLT_BOT_TOKEN:
+        from_secret: REVOLT_BOT_TOKEN
+      WOLFRAM_TOKEN:
+        from_secret: WOLFRAM_TOKEN
+      IMDB_TOKEN:
+        from_secret: IMDB_TOKEN
+      SENTRY_TOKEN:
+        from_secret: SENTRY_TOKEN
+
+  - name: health check
+    image: appropriate/curl
+    commands:
+      - echo "Running Health Checks"
+      - curl -f https://api-uat.${DNS_DOMAIN} || exit 1
+    when:
+      status: [ success ]
+
+  - name: discord notification
+    image: appleboy/drone-discord
+    settings:
+      webhook_id: 
+        from_secret: WEBHOOK_ID
+      webhook_token:
+        from_secret: WEBHOOK_TOKEN
+      avatar_url: https://i.imgur.com/tnw3I34.png
+      username: 'Drone CI'
+      message: |
+        Build {{build.number}} failed.
+        {{/success}}
+        Build time: {{build.started}}
+        Commit message: {{commit.message}}
+        Commit author: {{commit.author}}
+        Commit branch: {{commit.branch}}
+        {{#success build.status}}
+        View logs: <{{build.link}}>
+        {{else}}
+        View failed job: <{{build.link}}>
+        {{/success}}
+    when:
+      status:
+        - failure
+
+  - name: trigger promotion
+    image: appropriate/curl
+    commands:
+      - >
+        curl -X POST 
+        -H 'Authorization: Bearer ${DRONE_TOKEN}' 
+        -d '{"target": "production"}' 
+        "http://drone.${DNS_DOMAIN}/api/repos/your_repo/builds/${DRONE_BUILD_NUMBER}/promote"
+    when:
+      status: [ success ]
+
+trigger:
+  branch:
+  - main
+  - drone-testing
+  event:
+  - custom
+  - push
+
+---
+kind: pipeline
+type: docker
+name: production
+
+steps:
+  - name: promote to production
+    image: docker
+    commands:
+      - echo "Promoting to Production"
       - apk update
       - apk upgrade
       - apk add --no-cache git
       - docker compose -f docker-compose.host.yml --project-name tripbot up tripbot -d --force-recreate --build
-      # - tail -f /dev/null
     environment:
       NODE_ENV:
         from_secret: NODE_ENV
@@ -85,17 +201,13 @@ steps:
         {{else}}
         View failed job: <{{build.link}}>
         {{/success}}
+    when:
+      status:
+        - success
+        - failure
 
 trigger:
   branch:
-  - main
-  - Docker-update
-trigger:
+    - main
   event:
-  # - cron
-  - custom
-  - push
-  # - pull_request
-  # - tag
-  # - promote
-  # - rollback
+    - promote

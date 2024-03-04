@@ -13,7 +13,7 @@
   },
   "scripts": {
     "## TRIPBOT ##": "",
-    "tripbot:start": "docker compose --project-name tripbot up -d --force-recreate --build tripbot ",
+    "tripbot:start": "docker compose --project-name tripbot up -d --force-recreate --build tripbot",
     "tripbot:logs": "docker container logs tripbot -f -n 100",
     "tripbot:test": "docker exec -it tripbot npx jest --silent -c ./src/jest/jest.config.ts ",
     "tripbot:test1": "npx jest -c ./src/jest/jest.config.ts",
