@@ -117,6 +117,8 @@ steps:
   - name: trigger promotion
     image: curlimages/curl
     commands:
+      - echo "Authorization $DRONE_TOKEN" # WORKS
+      - echo "http://drone.$DNS_DOMAIN/api/repos/TripSit/TripBot/builds/${DRONE_BUILD_NUMBER}/promote" # WORKS
       - > 
         curl -v -L -f -X POST 
         -H "Authorization: Bearer $DRONE_TOKEN"
