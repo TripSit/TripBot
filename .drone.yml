@@ -126,7 +126,7 @@ steps:
       #   "https://drone.$DNS_DOMAIN/api/repos/TripSit/TripBot/builds/${DRONE_BUILD_NUMBER}/promote"
 
       - >
-        curl -v -L -f POST -H "Authorization: Bearer $DRONE_TOKEN" -d '{"target": "production"}' "https://drone.$DNS_DOMAIN/api/repos/TripSit/TripBot/builds/41/promote"
+        curl -v -L -f POST -H "Authorization: Bearer $DRONE_TOKEN" -d '{"target": "production"}' "https://drone.$DNS_DOMAIN/api/repos/TripSit/TripBot/builds/${DRONE_BUILD_NUMBER}/promote"
     environment:
       DRONE_TOKEN:
         from_secret: DRONE_TOKEN
