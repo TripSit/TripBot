@@ -3,63 +3,63 @@ type: docker
 name: Deploy TripBot
 
 steps:
-  - name: deploy to staging
-    image: docker
-    commands:
-      - echo "Deploying to Staging"
-      - apk update
-      - apk upgrade
-      - apk add --no-cache git
-      - docker compose -f docker-compose.host.yml --project-name tripbot up tripbot_uat -d --force-recreate --build
-    environment:
-      NODE_ENV:
-        from_secret: NODE_ENV
-      DOCKER_HOST:
-        from_secret: DOCKER_HOST
-      DOCKER_BUILDKIT:
-        from_secret: DOCKER_BUILDKIT
-      DISCORD_CLIENT_ID:
-        from_secret: DISCORD_CLIENT_ID_UAT
-      DISCORD_CLIENT_TOKEN:
-        from_secret: DISCORD_CLIENT_TOKEN_UAT
-      DISCORD_GUILD_ID:
-        from_secret: DISCORD_GUILD_ID
-      DISCORD_OWNER_ID:
-        from_secret: DISCORD_OWNER_ID
-      DRONE_TOKEN:
-        from_secret: DRONE_TOKEN
-      DISCORD_CLIENT_SECRET:
-        from_secret: DISCORD_CLIENT_SECRET
-      DISCORD_CLIENT_REDIRECT_URI:
-        from_secret: DISCORD_CLIENT_REDIRECT_URI
-      GITHUB_TOKEN:
-        from_secret: GITHUB_TOKEN
-      GLITCHTIP_DSN:
-        from_secret: GLITCHTIP_DSN
-      RAPID_TOKEN:
-        from_secret: RAPID_TOKEN
-      ROLLBAR_TOKEN:
-        from_secret: ROLLBAR_TOKEN
-      IMGUR_ID:
-        from_secret: IMGUR_ID
-      IMGUR_SECRET:
-        from_secret: IMGUR_SECRET
-      YOUTUBE_TOKEN:
-        from_secret: YOUTUBE_TOKEN
-      MATRIX_BOT_PASSWORD:
-        from_secret: MATRIX_BOT_PASSWORD
-      MOODLE_TOKEN:
-        from_secret: MOODLE_TOKEN
-      GEMINI_KEY:
-        from_secret: GEMINI_KEY
-      REVOLT_BOT_TOKEN:
-        from_secret: REVOLT_BOT_TOKEN
-      WOLFRAM_TOKEN:
-        from_secret: WOLFRAM_TOKEN
-      IMDB_TOKEN:
-        from_secret: IMDB_TOKEN
-      SENTRY_TOKEN:
-        from_secret: SENTRY_TOKEN
+  # - name: deploy to staging
+  #   image: docker
+  #   commands:
+  #     - echo "Deploying to Staging"
+  #     - apk update
+  #     - apk upgrade
+  #     - apk add --no-cache git
+  #     - docker compose -f docker-compose.host.yml --project-name tripbot up tripbot_uat -d --force-recreate --build
+  #   environment:
+  #     NODE_ENV:
+  #       from_secret: NODE_ENV
+  #     DOCKER_HOST:
+  #       from_secret: DOCKER_HOST
+  #     DOCKER_BUILDKIT:
+  #       from_secret: DOCKER_BUILDKIT
+  #     DISCORD_CLIENT_ID:
+  #       from_secret: DISCORD_CLIENT_ID_UAT
+  #     DISCORD_CLIENT_TOKEN:
+  #       from_secret: DISCORD_CLIENT_TOKEN_UAT
+  #     DISCORD_GUILD_ID:
+  #       from_secret: DISCORD_GUILD_ID
+  #     DISCORD_OWNER_ID:
+  #       from_secret: DISCORD_OWNER_ID
+  #     DRONE_TOKEN:
+  #       from_secret: DRONE_TOKEN
+  #     DISCORD_CLIENT_SECRET:
+  #       from_secret: DISCORD_CLIENT_SECRET
+  #     DISCORD_CLIENT_REDIRECT_URI:
+  #       from_secret: DISCORD_CLIENT_REDIRECT_URI
+  #     GITHUB_TOKEN:
+  #       from_secret: GITHUB_TOKEN
+  #     GLITCHTIP_DSN:
+  #       from_secret: GLITCHTIP_DSN
+  #     RAPID_TOKEN:
+  #       from_secret: RAPID_TOKEN
+  #     ROLLBAR_TOKEN:
+  #       from_secret: ROLLBAR_TOKEN
+  #     IMGUR_ID:
+  #       from_secret: IMGUR_ID
+  #     IMGUR_SECRET:
+  #       from_secret: IMGUR_SECRET
+  #     YOUTUBE_TOKEN:
+  #       from_secret: YOUTUBE_TOKEN
+  #     MATRIX_BOT_PASSWORD:
+  #       from_secret: MATRIX_BOT_PASSWORD
+  #     MOODLE_TOKEN:
+  #       from_secret: MOODLE_TOKEN
+  #     GEMINI_KEY:
+  #       from_secret: GEMINI_KEY
+  #     REVOLT_BOT_TOKEN:
+  #       from_secret: REVOLT_BOT_TOKEN
+  #     WOLFRAM_TOKEN:
+  #       from_secret: WOLFRAM_TOKEN
+  #     IMDB_TOKEN:
+  #       from_secret: IMDB_TOKEN
+  #     SENTRY_TOKEN:
+  #       from_secret: SENTRY_TOKEN
 # 
   - name: health check
     image: appropriate/curl
@@ -69,7 +69,7 @@ steps:
         attempt=0
         max_attempts=5
         delay_between_attempts=10 # seconds
-        url=https://tripbot-uat.tripsit.io/api
+        url=https://tripbot-uat.$DNS_DOMAIN/api
         while [ $attempt -lt $max_attempts ]; do
           attempt=$((attempt + 1))
           echo "Attempt $attempt of $max_attempts to reach $url..."
@@ -117,8 +117,14 @@ steps:
   - name: trigger promotion
     image: curlimages/curl
     commands:
-      - >
-        curl -v -X POST -H "Authorization: Bearer $DRONE_TOKEN" -d '{"target": "production"}' "https://drone.$DNS_DOMAIN/api/repos/TripSit/TripBot/builds/${DRONE_BUILD_NUMBER}/promote"
+      - > 
+        curl -v -L -f -X POST 
+        -H "Authorization: Bearer $DRONE_TOKEN"
+        -d '{"target": "production"}' 
+        "https://drone.$DNS_DOMAIN/api/repos/TripSit/TripBot/builds/41/promote"
+
+      # - >
+      #   curl -v -X -f POST -H "Authorization: Bearer $DRONE_TOKEN" -d '{"target": "production"}' "https://drone.$DNS_DOMAIN/api/repos/TripSit/TripBot/builds/${DRONE_BUILD_NUMBER}/promote"
     environment:
       DRONE_TOKEN:
         from_secret: DRONE_TOKEN
@@ -218,9 +224,9 @@ steps:
       username: 'Drone CI'
       message: |
         {{#success build.status}}
-        Promotion {{build.number}} succeeded.
+        Deployment {{build.number}} succeeded.
         {{else}}
-        Promotion {{build.number}} failed.
+        Deployment {{build.number}} failed.
         {{/success}}
         Build time: {{build.started}}
         Commit message: {{commit.message}}
