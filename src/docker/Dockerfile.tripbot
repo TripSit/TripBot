@@ -46,7 +46,8 @@ RUN npx prisma generate --schema=./src/prisma/moodle/schema.prisma
 # Deploy the commands
 # RUN npx ts-node --transpile-only ./src/discord/utils/commandDeploy.ts
 
-CMD npx prisma migrate deploy && npx tsc-watch --onSuccess "node ./build/src/start.js"
+RUN npx prisma migrate deploy
+CMD npx tsc-watch --onSuccess "node ./build/src/start.js"
 # CMD npx tsc-watch --onSuccess "node ./build/src/start.js"
 
 # For container development, the following command runs forever, so we can inspect the container
@@ -125,5 +126,6 @@ RUN npx prisma generate --schema=./src/prisma/moodle/schema.prisma
 USER node
 
 # Start the bot using the production build
-CMD npx prisma migrate deploy && pm2-runtime build/src/start.js
-# CMD pm2-runtime build/src/start.js
+RUN npx prisma migrate deploy
+
+CMD pm2-runtime build/src/start.js
