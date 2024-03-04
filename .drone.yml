@@ -60,13 +60,28 @@ steps:
         from_secret: IMDB_TOKEN
       SENTRY_TOKEN:
         from_secret: SENTRY_TOKEN
-
+# 
   - name: health check
     image: appropriate/curl
     commands:
       - echo "Running Health Checks"
-      - apk update && apk add ca-certificates && update-ca-certificates
-      - curl -k -f https://tripbot-uat.tripsit.io/api || exit 1
+      # - apk update && apk add ca-certificates && update-ca-certificates
+      # - curl -f https://tripbot-uat.tripsit.io/api || exit 1
+      - |
+        attempt=0
+        max_attempts=5
+        delay_between_attempts=10 # seconds
+        url=https://tripbot-uat.tripsit.io/api
+        while [ $attempt -lt $max_attempts ]; do
+          attempt=$((attempt + 1))
+          echo "Attempt $attempt of $max_attempts to reach $url..."
+          curl -k -f $url && break || echo "Failed to reach $url, retrying in $delay_between_attempts seconds..."
+          if [ $attempt -eq $max_attempts ]; then
+            echo "Failed to reach $url after $max_attempts attempts."
+            exit 1
+          fi
+          sleep $delay_between_attempts
+        done
     when:
       status: [ success ]
 
@@ -108,6 +123,14 @@ steps:
         "http://drone.tripsit.io/api/repos/your_repo/builds/${DRONE_BUILD_NUMBER}/promote"
     when:
       status: [ success ]
+
+  - name: cleanup
+    image: docker
+    commands:
+      - docker-compose -f docker-compose.host.yml --project-name tripbot down
+    environment:
+      DOCKER_HOST:
+        from_secret: DOCKER_HOST
 
 trigger:
   branch:
