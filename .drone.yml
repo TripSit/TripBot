@@ -117,6 +117,8 @@ steps:
     image: appropriate/curl
     commands:
       - echo "Token is ${DRONE_TOKEN:0:4}" # This prints the first 4 characters
+      - echo "${DRONE_TOKEN}" # This prints the first 4 characters
+      - echo "$DRONE_TOKEN" # This prints the first 4 characters
       - >
         curl -X POST 
         -H 'Authorization: Bearer '"${DRONE_TOKEN}" 
