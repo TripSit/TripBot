@@ -65,11 +65,8 @@ steps:
     image: appropriate/curl
     commands:
       - echo "Running Health Checks"
-      - echo $DNS_DOMAIN
-      - curl -f https://tripbot-uat.tripsit.io/api || exit 1
-    environment:
-      DNS_DOMAIN:
-        from_secret: DNS_DOMAIN
+      - apk update && apk add ca-certificates && update-ca-certificates
+      - curl -k -f https://tripbot-uat.tripsit.io/api || exit 1
     when:
       status: [ success ]
 
@@ -109,9 +106,6 @@ steps:
         -H 'Authorization: Bearer ${DRONE_TOKEN}' 
         -d '{"target": "production"}' 
         "http://drone.tripsit.io/api/repos/your_repo/builds/${DRONE_BUILD_NUMBER}/promote"
-    environment:
-      DNS_DOMAIN:
-        from_secret: DNS_DOMAIN
     when:
       status: [ success ]
 
@@ -198,9 +192,9 @@ steps:
       username: 'Drone CI'
       message: |
         {{#success build.status}}
-        Build {{build.number}} succeeded.
+        Promotion {{build.number}} succeeded.
         {{else}}
-        Build {{build.number}} failed.
+        Promotion {{build.number}} failed.
         {{/success}}
         Build time: {{build.started}}
         Commit message: {{commit.message}}
