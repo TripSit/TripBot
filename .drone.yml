@@ -81,8 +81,8 @@ steps:
           sleep $delay_between_attempts
         done
     environment:
-      DRONE_TOKEN:
-        from_secret: DRONE_TOKEN
+      DNS_DOMAIN:
+        from_secret: DNS_DOMAIN
     when:
       status: [ success ]
 
@@ -132,12 +132,14 @@ steps:
 
       - >
         curl -X POST 
-        -H 'Authorization: Bearer '"$DRONE_TOKEN"''
+        -H "Authorization: Bearer ${DRONE_TOKEN}"
         -d '{"target": "production"}' 
-        'http://drone.'"$DNS_DOMAIN"'/api/repos/TripSit/TripBot/builds/${DRONE_BUILD_NUMBER}/promote'
+        "http://drone.${DNS_DOMAIN}/api/repos/TripSit/TripBot/builds/${DRONE_BUILD_NUMBER}/promote"
     environment:
       DRONE_TOKEN:
         from_secret: DRONE_TOKEN
+      DNS_DOMAIN:
+        from_secret: DNS_DOMAIN
     when:
       status: [ success ]
 
