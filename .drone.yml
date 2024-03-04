@@ -117,24 +117,11 @@ steps:
   - name: trigger promotion
     image: curlimages/curl
     commands:
-    # inline
-      - echo "Token is ${DRONE_TOKEN}" # This prints the first 4 characters
-      - echo "Token is $DRONE_TOKEN" # WORKS
       - echo "Authorization $DRONE_TOKEN" # WORKS
-      - echo "http://drone.$DNS_DOMAIN/api/repos/TripSit/TripBot/builds/${DRONE_BUILD_NUMBER}/promote"
-      - echo "Token is DRONE_TOKEN" # This prints the first 4 characters
-    # outside
-      - echo 'Token is '"${DRONE_TOKEN}"'' # This prints the first 4 characters
-      - echo 'Token is '"$DRONE_TOKEN"'' # WORKS
-      - echo 'Authorization $DRONE_TOKEN' # WORKS
-      - echo 'http://drone.'"$DNS_DOMAIN"'/api/repos/TripSit/TripBot/builds/${DRONE_BUILD_NUMBER}/promote'
-      - echo 'Token is '"DRONE_TOKEN"'' # This prints the first 4 characters
+      - echo "http://drone.$DNS_DOMAIN/api/repos/TripSit/TripBot/builds/${DRONE_BUILD_NUMBER}/promote" # WORKS
 
       - >
-        curl -X POST 
-        -H "Authorization: Bearer ${DRONE_TOKEN}"
-        -d '{"target": "production"}' 
-        "http://drone.${DNS_DOMAIN}/api/repos/TripSit/TripBot/builds/${DRONE_BUILD_NUMBER}/promote"
+        curl -v -X POST -H "Authorization: Bearer ${DRONE_TOKEN}" -d '{"target": "production"}' "http://drone.${DNS_DOMAIN}/api/repos/TripSit/TripBot/builds/${DRONE_BUILD_NUMBER}/promote"
     environment:
       DRONE_TOKEN:
         from_secret: DRONE_TOKEN
