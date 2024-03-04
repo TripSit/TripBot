@@ -66,7 +66,7 @@ steps:
     commands:
       - echo "Running Health Checks"
       - echo $DNS_DOMAIN
-      - curl -f https://tripbot-uat.${DNS_DOMAIN}/api || exit 1
+      - curl -f https://tripbot-uat.tripsit.io/api || exit 1
     environment:
       DNS_DOMAIN:
         from_secret: DNS_DOMAIN
@@ -108,7 +108,7 @@ steps:
         curl -X POST 
         -H 'Authorization: Bearer ${DRONE_TOKEN}' 
         -d '{"target": "production"}' 
-        "http://drone.${DNS_DOMAIN}/api/repos/your_repo/builds/${DRONE_BUILD_NUMBER}/promote"
+        "http://drone.tripsit.io/api/repos/your_repo/builds/${DRONE_BUILD_NUMBER}/promote"
     environment:
       DNS_DOMAIN:
         from_secret: DNS_DOMAIN
