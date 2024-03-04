@@ -65,13 +65,11 @@ steps:
     image: appropriate/curl
     commands:
       - echo "Running Health Checks"
-      # - apk update && apk add ca-certificates && update-ca-certificates
-      # - curl -f https://tripbot-uat.tripsit.io/api || exit 1
       - |
         attempt=0
         max_attempts=5
         delay_between_attempts=10 # seconds
-        url=https://tripbot-uat.tripsit.io/api
+        url=https://tripbot-uat.$DNS_DOMAIN/api
         while [ $attempt -lt $max_attempts ]; do
           attempt=$((attempt + 1))
           echo "Attempt $attempt of $max_attempts to reach $url..."
@@ -82,6 +80,9 @@ steps:
           fi
           sleep $delay_between_attempts
         done
+    environment:
+      DRONE_TOKEN:
+        from_secret: DRONE_TOKEN
     when:
       status: [ success ]
 
@@ -119,21 +120,21 @@ steps:
     # inline
       - echo "Token is ${DRONE_TOKEN}" # This prints the first 4 characters
       - echo "Token is $DRONE_TOKEN" # WORKS
+      - echo "Authorization $DRONE_TOKEN" # WORKS
+      - echo "http://drone.$DNS_DOMAIN/api/repos/TripSit/TripBot/builds/${DRONE_BUILD_NUMBER}/promote"
       - echo "Token is DRONE_TOKEN" # This prints the first 4 characters
     # outside
       - echo 'Token is '"${DRONE_TOKEN}"'' # This prints the first 4 characters
-      - echo 'Token is '"$DRONE_TOKEN"'' # WROKS
+      - echo 'Token is '"$DRONE_TOKEN"'' # WORKS
+      - echo 'Authorization $DRONE_TOKEN' # WORKS
+      - echo 'http://drone.'"$DNS_DOMAIN"'/api/repos/TripSit/TripBot/builds/${DRONE_BUILD_NUMBER}/promote'
       - echo 'Token is '"DRONE_TOKEN"'' # This prints the first 4 characters
 
-    # inside with quotes
-      - echo '"${DRONE_TOKEN}"' # This prints the first 4 characters
-      - echo '"$DRONE_TOKEN"' # This prints the first 4 characters
-      - echo '"DRONE_TOKEN"' # This prints the first 4 characters
       - >
         curl -X POST 
-        -H 'Authorization: Bearer $DRONE_TOKEN" 
+        -H 'Authorization: Bearer '"$DRONE_TOKEN"''
         -d '{"target": "production"}' 
-        "http://drone.tripsit.io/api/repos/TripSit/TripBot/builds/${DRONE_BUILD_NUMBER}/promote"
+        'http://drone.'"$DNS_DOMAIN"'/api/repos/TripSit/TripBot/builds/${DRONE_BUILD_NUMBER}/promote'
     environment:
       DRONE_TOKEN:
         from_secret: DRONE_TOKEN
