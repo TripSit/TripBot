@@ -10,7 +10,7 @@ steps:
       - apk update
       - apk upgrade
       - apk add --no-cache git
-      - docker compose -f docker-compose.host.yml --project-name tripbot up tripbot_uat -d --force-recreate --build
+      - docker compose -f docker-compose.host.yml --project-name tripbot up tripbot_deploy -d --force-recreate --build
     environment:
       NODE_ENV:
         from_secret: NODE_ENV
@@ -19,9 +19,9 @@ steps:
       DOCKER_BUILDKIT:
         from_secret: DOCKER_BUILDKIT
       DISCORD_CLIENT_ID:
-        from_secret: DISCORD_CLIENT_ID_UAT
+        from_secret: DISCORD_CLIENT_ID_DEPLOY
       DISCORD_CLIENT_TOKEN:
-        from_secret: DISCORD_CLIENT_TOKEN_UAT
+        from_secret: DISCORD_CLIENT_TOKEN_DEPLOY
       DISCORD_GUILD_ID:
         from_secret: DISCORD_GUILD_ID
       DISCORD_OWNER_ID:
@@ -51,7 +51,7 @@ steps:
       MOODLE_TOKEN:
         from_secret: MOODLE_TOKEN
       PRISMA_DB_URL:
-        from_secret: PRISMA_DB_URL_UAT
+        from_secret: PRISMA_DB_URL_DEPLOY
       GEMINI_KEY:
         from_secret: GEMINI_KEY
       REVOLT_BOT_TOKEN:
