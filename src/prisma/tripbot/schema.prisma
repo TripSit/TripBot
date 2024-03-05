@@ -176,15 +176,16 @@ model users {
 model members {
   // Each User is associated with at least one Guild, and this union is called a Member record
   // This table records guild-specific things, and will be expanded on later
-  id       String @id
-  guild_id String
+  id         String            @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  discord_id String
+  guild_id   String
 
   trusted Boolean @default(false)
 
-  users          users          @relation(fields: [id], references: [discord_id], onDelete: NoAction, onUpdate: NoAction, map: "members_id_foreign")
+  users          users          @relation(fields: [discord_id], references: [discord_id], onDelete: NoAction, onUpdate: NoAction, map: "members_discordid_foreign")
   discord_guilds discord_guilds @relation(fields: [guild_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "members_guildid_foreign")
 
-  @@unique([id, guild_id], map: "members_id_guildid_unique")
+  @@unique([discord_id, guild_id], map: "members_discordid_guildid_unique")
 }
 
 model discord_guilds {

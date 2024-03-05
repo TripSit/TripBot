@@ -53,6 +53,8 @@ export async function addedVerified(
     update: {},
   });
 
+  // log.debug(F, `GuildData: ${JSON.stringify(guildData, null, 2)}`);
+
   const userData = await db.users.upsert({
     where: {
       discord_id: newMember.id,
@@ -63,24 +65,28 @@ export async function addedVerified(
     update: {},
   });
 
+  // log.debug(F, `UserData: ${JSON.stringify(userData, null, 2)}`);
+
   let memberData = {} as members;
   try {
     memberData = await db.members.upsert({
       where: {
-        id_guild_id: {
+        discord_id_guild_id: {
           guild_id: guildData.id,
-          id: userData.discord_id as string,
+          discord_id: userData.discord_id as string,
         },
       },
       create: {
         guild_id: guildData.id,
-        id: userData.discord_id as string,
+        discord_id: userData.discord_id as string,
       },
       update: {},
     });
   } catch {
     log.error(F, 'Error getting member data');
     log.error(F, `newMember: ${JSON.stringify(newMember, null, 2)}`);
+    log.error(F, `userData: ${JSON.stringify(userData, null, 2)}`);
+    log.error(F, `guildData: ${JSON.stringify(guildData, null, 2)}`);
     return;
   }
 
@@ -180,14 +186,14 @@ but they were already marked at trusted in the database, so no message was sent`
 
       await db.members.upsert({
         where: {
-          id_guild_id: {
+          discord_id_guild_id: {
             guild_id: newMember.guild.id,
-            id: newMember.id,
+            discord_id: newMember.id,
           },
         },
         create: {
           guild_id: newMember.guild.id,
-          id: newMember.id,
+          discord_id: newMember.id,
           trusted: true,
         },
         update: {
@@ -202,14 +208,14 @@ but they were already marked at trusted in the database, so no message was sent`
     } else {
       await db.members.upsert({
         where: {
-          id_guild_id: {
+          discord_id_guild_id: {
             guild_id: newMember.guild.id,
-            id: newMember.id,
+            discord_id: newMember.id,
           },
         },
         create: {
           guild_id: newMember.guild.id,
-          id: newMember.id,
+          discord_id: newMember.id,
           trusted: true,
         },
         update: {
