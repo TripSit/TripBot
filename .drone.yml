@@ -62,7 +62,7 @@ steps:
         from_secret: IMDB_TOKEN
       SENTRY_TOKEN:
         from_secret: SENTRY_TOKEN
-# 
+
   - name: health check
     image: appropriate/curl
     commands:
@@ -200,6 +200,8 @@ steps:
         from_secret: MATRIX_BOT_PASSWORD
       MOODLE_TOKEN:
         from_secret: MOODLE_TOKEN
+      PRISMA_DB_URL:
+        from_secret: PRISMA_DB_URL
       GEMINI_KEY:
         from_secret: GEMINI_KEY
       REVOLT_BOT_TOKEN:
