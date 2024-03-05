@@ -51,7 +51,7 @@ steps:
       MOODLE_TOKEN:
         from_secret: MOODLE_TOKEN
       PRISMA_DB_URL:
-        from_secret: PRISMA_DB_URL
+        from_secret: PRISMA_DB_URL_UAT
       GEMINI_KEY:
         from_secret: GEMINI_KEY
       REVOLT_BOT_TOKEN:
