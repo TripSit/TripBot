@@ -225,11 +225,21 @@ async function tripsit(
       const channelGeneral = interaction.options.getChannel('general');
 
       // Save this info to the DB
-      await db.discord_guilds.update({
+      await db.discord_guilds.upsert({
         where: {
           id: (interaction.guild as Guild).id,
         },
-        data: {
+        create: {
+          id: (interaction.guild as Guild).id,
+          channel_sanctuary: channelSanctuary ? channelSanctuary.id : null,
+          channel_general: channelGeneral ? channelGeneral.id : null,
+          channel_tripsitmeta: channelTripsitmeta ? channelTripsitmeta.id : null,
+          channel_tripsit: channelTripsit.id,
+          role_needshelp: roleNeedshelp ? roleNeedshelp.id : null,
+          role_tripsitter: roleTripsitter ? roleTripsitter.id : null,
+          role_helper: roleHelper ? roleHelper.id : null,
+        },
+        update: {
           channel_sanctuary: channelSanctuary ? channelSanctuary.id : null,
           channel_general: channelGeneral ? channelGeneral.id : null,
           channel_tripsitmeta: channelTripsitmeta ? channelTripsitmeta.id : null,
