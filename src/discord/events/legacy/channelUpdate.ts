@@ -41,10 +41,10 @@ export const channelUpdate: ChannelUpdateEvent = {
       'ViewAuditLog' as PermissionResolvable,
     ]);
 
-    if (!perms.hasPermission) {
+    if (perms.length > 0) {
       const guildOwner = await newChannel.guild.fetchOwner();
-      await guildOwner.send({ content: `Please make sure I can ${perms.permission} in ${newChannel.guild} so I can run ${F}!` }); // eslint-disable-line
-      log.error(F, `Missing permission ${perms.permission} in ${newChannel.guild}!`);
+      await guildOwner.send({ content: `Please make sure I can ${perms.join(', ')} in ${newChannel.guild} so I can run ${F}!` }); // eslint-disable-line
+      log.error(F, `Missing permission ${perms.join(', ')} in ${newChannel.guild}!`);
       return;
     }
 
@@ -62,10 +62,10 @@ export const channelUpdate: ChannelUpdateEvent = {
       'ViewChannel' as PermissionResolvable,
       'SendMessages' as PermissionResolvable,
     ]);
-    if (!channelPerms.hasPermission) {
+    if (channelPerms.length > 0) {
       const guildOwner = await newChannel.guild.fetchOwner();
-      await guildOwner.send({ content: `Please make sure I can ${channelPerms.permission} in ${channel} so I can run ${F}!` }); // eslint-disable-line
-      log.error(F, `Missing permission ${channelPerms.permission} in ${channel}!`);
+      await guildOwner.send({ content: `Please make sure I can ${channelPerms.join(', ')} in ${channel} so I can run ${F}!` }); // eslint-disable-line
+      log.error(F, `Missing permission ${channelPerms.join(', ')} in ${channel}!`);
       return;
     }
 

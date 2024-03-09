@@ -4,24 +4,23 @@ import {
   CategoryChannel,
   ChannelType,
   Colors,
-  Guild,
   GuildMember,
   PermissionResolvable,
   TextChannel,
-  ThreadChannel,
 } from 'discord.js';
 import Parser from 'rss-parser';
 import { DateTime } from 'luxon';
 import axios from 'axios'; // eslint-disable-line
 import { stripIndents } from 'common-tags';
 import {
-  experience_category, experience_type, ticket_status, ticket_type,
+  experience_category, experience_type,
 } from '@prisma/client';
 import updateDb from './updateDb';
 import { checkChannelPermissions } from '../../discord/utils/checkPermissions';
 import { embedTemplate } from '../../discord/utils/embedTemplate';
 import { experience } from './experience';
 import { profile } from '../commands/g.learn';
+import { tripsitTimer } from '../../discord/commands/guild/d.tripsit';
 
 const F = f(__filename);
 
@@ -94,258 +93,6 @@ async function checkReminders() { // eslint-disable-line @typescript-eslint/no-u
         }
       } else {
         log.error(F, `Reminder ${reminder.id} has no trigger date!`);
-      }
-    });
-  }
-}
-
-async function checkTickets() { // eslint-disable-line @typescript-eslint/no-unused-vars
-  // log.debug(F, 'Checking tickets...');
-  // Process tickets
-  const ticketData = await db.user_tickets.findMany();
-  // Loop through each ticket
-  if (ticketData.length > 0) {
-    ticketData.forEach(async ticket => {
-      // const archiveDate = DateTime.fromJSDate(ticket.archived_at);
-      // const deleteDate = DateTime.fromJSDate(ticket.deleted_at);
-      // log.debug(F, `Ticket: ${ticket.id} archives on ${archiveDate.toLocaleString(DateTime.DATETIME_FULL)} deletes on ${deleteDate.toLocaleString(DateTime.DATETIME_FULL)}`);
-      // Check if the ticket is ready to be archived
-      if (ticket.archived_at
-        && ticket.status !== 'ARCHIVED'
-        && ticket.status !== 'DELETED'
-        && ticket.status !== 'PAUSED'
-        && DateTime.fromJSDate(ticket.archived_at) <= DateTime.local()) {
-        // log.debug(F, `Archiving ticket ${ticket.id}...`);
-
-        // Archive the ticket set the deleted time to 1 week from now
-
-        const updatedTicket = ticket;
-        updatedTicket.status = 'ARCHIVED' as ticket_status;
-        updatedTicket.deleted_at = env.NODE_ENV === 'production'
-          ? DateTime.local().plus({ days: 7 }).toJSDate()
-          : DateTime.local().plus({ minutes: 1 }).toJSDate();
-        if (!updatedTicket.description) {
-          updatedTicket.description = 'Ticket archived';
-        }
-        if (!updatedTicket.type) {
-          updatedTicket.type = 'TRIPSIT' as ticket_type;
-        }
-        if (!updatedTicket.first_message_id) {
-          updatedTicket.first_message_id = '123';
-        }
-
-        // await ticketUpdate(updatedTicket);
-        await db.user_tickets.update({
-          where: {
-            id: updatedTicket.id,
-          },
-          data: {
-            status: updatedTicket.status,
-            deleted_at: updatedTicket.deleted_at,
-            description: updatedTicket.description,
-            type: updatedTicket.type,
-            first_message_id: updatedTicket.first_message_id,
-          },
-        });
-
-        // Archive the thread on discord
-        if (ticket.thread_id) {
-          try {
-            const thread = await global.discordClient.channels.fetch(ticket.thread_id) as ThreadChannel;
-            await thread.setArchived(true);
-            log.debug(F, `Archived thread ${thread.name}`);
-          } catch (err) {
-            // Thread was likely manually deleted
-          }
-        }
-
-        // Restore roles on the user
-        const userData = await db.users.upsert({
-          where: {
-            id: ticket.user_id,
-          },
-          create: {},
-          update: {},
-        });
-        if (userData.discord_id) {
-          const discordUser = await discordClient.users.fetch(userData.discord_id);
-          if (discordUser) {
-            let threadChannel = {} as ThreadChannel;
-            try {
-              threadChannel = await discordClient.channels.fetch(ticket.thread_id) as ThreadChannel;
-              const guild = await discordClient.guilds.fetch(threadChannel.guild.id);
-              const guildData = await db.discord_guilds.upsert({
-                where: {
-                  id: guild.id,
-                },
-                create: {
-                  id: guild.id,
-                },
-                update: {},
-              });
-              const searchResults = await guild.members.search({ query: discordUser.username });
-              // log.debug(F, `searchResults: ${JSON.stringify(searchResults)}`);
-              if (searchResults.size > 0) {
-                const member = await guild.members.fetch(discordUser);
-                if (member) {
-                  const myMember = guild.members.me as GuildMember;
-                  const myRole = myMember.roles.highest;
-
-                  // Restore the old roles
-                  if (userData.roles) {
-                    // log.debug(F, `Restoring ${userData.discord_id}'s roles: ${userData.roles}`);
-                    const roles = userData.roles.split(',');
-                    // for (const role of roles) {
-                    roles.forEach(async role => {
-                      const roleObj = await guild.roles.fetch(role);
-                      if (roleObj && roleObj.name !== '@everyone'
-                          && roleObj.id !== guildData.role_needshelp
-                          && roleObj.comparePositionTo(myRole) < 0
-                          && member.guild.id !== env.DISCORD_BL_ID
-                          // && member.guild.id !== env.DISCORD_GUILD_ID // Patch for BL not to re-add roles
-                      ) {
-                        // Check if the bot has permission to add the role
-                        log.debug(F, `Adding ${userData.discord_id}'s ${role} role`);
-                        try {
-                          await member.roles.add(roleObj);
-                        } catch (err) {
-                          log.error(F, stripIndents`Failed to add ${member.displayName}'s ${roleObj.name}\
-                           role in ${member.guild.name}: ${err}`);
-                        }
-                      }
-                    });
-
-                    // Remove the needshelp role
-                    const needshelpRole = await guild.roles.fetch(guildData.role_needshelp as string);
-                    if (needshelpRole && needshelpRole.comparePositionTo(myRole) < 0) {
-                      await member.roles.remove(needshelpRole);
-                    }
-                  }
-                }
-              }
-            } catch (err) {
-              // Thread was likely manually deleted
-            }
-          }
-        }
-      }
-
-      // Check if the ticket is ready to be deleted
-      if (ticket.deleted_at
-        && ticket.status === 'ARCHIVED'
-        && DateTime.fromJSDate(ticket.deleted_at) <= DateTime.local()
-      ) {
-        log.debug(F, `Deleting ticket ${ticket.id}...`);
-
-        // Delete the thread on discord
-        if (ticket.thread_id) {
-          try {
-            const thread = await global.discordClient.channels.fetch(ticket.thread_id) as ThreadChannel;
-            await thread.delete();
-            log.debug(F, `Thread ${ticket.thread_id} was deleted`);
-          } catch (err) {
-            // Thread was likely manually deleted
-            log.debug(F, `Thread ${ticket.thread_id} was likely manually deleted`);
-          }
-        }
-        await db.user_tickets.update({
-          where: {
-            id: ticket.id,
-          },
-          data: {
-            status: 'DELETED' as ticket_status,
-          },
-        });
-      }
-    });
-  }
-
-  // As a failsafe, loop through the Tripsit room and delete any threads that are older than 7 days and are archived
-  const guildDataList = await db.discord_guilds.findMany();
-  if (guildDataList.length > 0) {
-    guildDataList.forEach(async guildData => {
-      // log.debug(F, `Checking guild  room for old threads...`);
-      let guild = {} as Guild;
-      try {
-        guild = await discordClient.guilds.fetch(guildData.id);
-      } catch (err) {
-        // Guild was likely deleted
-        return;
-      }
-      if (guild && guildData.channel_tripsit) {
-        // log.debug(F, 'Checking Tripsit room for old threads...');
-        // log.debug(F, `Tripsit room: ${guildData.channel_tripsit}`);
-        let channel = {} as TextChannel;
-        try {
-          channel = await guild.channels.fetch(guildData.channel_tripsit) as TextChannel;
-        } catch (err) {
-          // Channel was likely deleted, remove it from the db
-          const newGuildData = guildData;
-          newGuildData.channel_tripsit = null;
-
-          await db.discord_guilds.update({
-            where: {
-              id: newGuildData.id,
-            },
-            data: {
-              channel_tripsit: newGuildData.channel_tripsit,
-            },
-          });
-          return;
-        }
-        // log.debug(F, `Tripsit room: ${channel.name} (${channel.id})`);
-        const tripsitPerms = await checkChannelPermissions(channel, [
-          'ViewChannel' as PermissionResolvable,
-          'ManageThreads' as PermissionResolvable,
-        ]);
-
-        if (!tripsitPerms.hasPermission) {
-          // // Check if you have reminder the guild owner in the last 24 hours
-          // const lastRemdinerSent = lastReminder[guild.id];
-          // if (!lastRemdinerSent || lastRemdinerSent < DateTime.local().minus({ hours: 24 })) {
-          //   // log.debug(F, `Sending reminder to ${(await guild.fetchOwner()).user.username}...`);
-          //   // const guildOwner = await channel.guild.fetchOwner();
-          //   // await guildOwner.send({
-          //   //   content: `I am trying to prune threads in ${channel} but
-          //   //  I don't have the ${tripsitPerms.permission} permission.`, // eslint-disable-line max-len
-          //   // });
-          //   const botOwner = await discordClient.users.fetch(env.DISCORD_OWNER_ID);
-          //   await botOwner.send({
-          //     content: `I am trying to prune threads in ${channel} of ${channel.guild.name} but I don't have the ${tripsitPerms.permission} permission.`, // eslint-disable-line max-len
-          //   });
-          //   lastReminder[guild.id] = DateTime.local();
-          // }
-          return;
-        }
-
-        // log.debug(F, 'Deleting old threads...');
-        const threadList = await channel.threads.fetch({
-          archived: {
-            type: 'private',
-            fetchAll: true,
-            before: new Date().setDate(new Date().getDate() - 7),
-          },
-        });
-        // const threadList = await channel.threads.fetchArchived({ type: 'private', fetchAll: true });
-        // log.debug(F, `Found ${threadList.threads.size} archived threads in Tripsit room`);
-        threadList.threads.forEach(async thread => {
-          // Check if the thread was created over a week ago
-          try {
-            await thread.fetch();
-
-            // Get the last message sent int he thread
-            const messages = await thread.messages.fetch({ limit: 1 });
-            const lastMessage = messages.first();
-
-            // Determine if this message was sent longer than a week ago
-            if (lastMessage && DateTime.fromJSDate(lastMessage.createdAt) >= DateTime.local().minus({ days: 7 })) {
-              thread.delete();
-              log.debug(F, `Deleted thread ${thread.name} in ${channel.name} because the last message was sent over a week ago`);
-            }
-          } catch (err) {
-            // Thread was likely manually deleted
-          }
-        });
       }
     });
   }
@@ -664,8 +411,8 @@ async function checkStats() {
         'ManageChannels' as PermissionResolvable,
       ]);
 
-      if (!perms.hasPermission) {
-        log.error(F, `I do not have the '${perms.permission}' permission in ${channelTotal.name}!`);
+      if (perms.length > 0) {
+        log.error(F, `I do not have the '${perms.join(', ')}' permission in ${channelTotal.name}!`);
         return;
       }
       channelTotal.setName(name);
@@ -712,8 +459,8 @@ async function checkStats() {
           'Connect' as PermissionResolvable,
           'ManageChannels' as PermissionResolvable,
         ]);
-        if (!perms.hasPermission) {
-          log.error(F, `I do not have the '${perms.permission}' permission in ${channelVerified.name}!`);
+        if (perms.length > 0) {
+          log.error(F, `I do not have the '${perms.join(', ')}' permission in ${channelVerified.name}!`);
           return;
         }
         // log.debug(F, `perms: ${JSON.stringify(perms)}`);
@@ -728,8 +475,8 @@ async function checkStats() {
             const channelPerms = await checkChannelPermissions(channelLounge, [
               'SendMessages' as PermissionResolvable,
             ]);
-            if (!channelPerms.hasPermission) {
-              log.error(F, `I do not have the '${channelPerms.permission}' permission in ${channelLounge.name}!`);
+            if (channelPerms.length > 0) {
+              log.error(F, `I do not have the '${channelPerms.join(', ')}' permission in ${channelLounge.name}!`);
               return;
             }
             await channelLounge.send({ embeds: [embed] });
@@ -739,8 +486,8 @@ async function checkStats() {
             const channelPerms = await checkChannelPermissions(channelTeamtripsit, [
               'SendMessages' as PermissionResolvable,
             ]);
-            if (!channelPerms.hasPermission) {
-              log.error(F, `I do not have the '${channelPerms.permission}' permission in ${channelLounge.name}!`);
+            if (channelPerms.length > 0) {
+              log.error(F, `I do not have the '${channelPerms.join(', ')}' permission in ${channelLounge.name}!`);
               return;
             }
             await channelTeamtripsit.send({ embeds: [embed] });
@@ -767,8 +514,8 @@ async function checkStats() {
   //       'ManageChannels' as PermissionResolvable,
   //     ]);
   //     // log.debug(F, `perms: ${JSON.stringify(perms)}`);
-  //     if (!perms.hasPermission) {
-  //       log.error(F, `I do not have the '${perms.permission}' permission in ${channelOnline.name}!`);
+  //     if (perms.length > 0) {
+  //       log.error(F, `I do not have the '${perms.join(', ')}' permission in ${channelOnline.name}!`);
   //       return;
   //     }
   //     // log.debug(F, `Updating online members to ${name}!`);
@@ -801,8 +548,8 @@ async function checkStats() {
   //         const channelPerms = await checkChannelPermissions(channelLounge, [
   //           'SendMessages' as PermissionResolvable,
   //         ]);
-  //         if (!channelPerms.hasPermission) {
-  //           log.error(F, `I do not have the '${channelPerms.permission}' permission in ${channelLounge.name}!`);
+  //         if (channelPerms.length > 0) {
+  //           log.error(F, `I do not have the '${channelPerms.join(', ')}' permission in ${channelLounge.name}!`);
   //           return;
   //         }
   //         await channelLounge.send({ embeds: [embed] });
@@ -815,8 +562,8 @@ async function checkStats() {
   //         const channelPerms = await checkChannelPermissions(channelTeamtripsit, [
   //           'SendMessages' as PermissionResolvable,
   //         ]);
-  //         if (!channelPerms.hasPermission) {
-  //           log.error(F, `I do not have the '${channelPerms.permission}' permission in ${channelTeamtripsit.name}!`);
+  //         if (channelPerms.length > 0) {
+  //           log.error(F, `I do not have the '${channelPerms.join(', ')}' permission in ${channelTeamtripsit.name}!`);
   //           return;
   //         }
   //         await channelTeamtripsit.send({ embeds: [embed] });
@@ -836,8 +583,8 @@ async function checkStats() {
   //               'Connect' as PermissionResolvable,
   //               'ManageChannels' as PermissionResolvable,
   //             ]);
-  //             if (!channelPerms.hasPermission) {
-  //               log.error(F, `I do not have the '${channelPerms.permission}' permission in ${channelMax.name}!`);
+  //             if (channelPerms.length > 0) {
+  //               log.error(F, `I do not have the '${channelPerms.join(', ')}' permission in ${channelMax.name}!`);
   //               return;
   //             }
   //             channelMax.setName(`Max: ${maxCount}`);
@@ -1148,7 +895,7 @@ async function runTimer() {
 
   const timers = [
     { callback: checkReminders, interval: env.NODE_ENV === 'production' ? seconds10 : seconds5 },
-    { callback: checkTickets, interval: env.NODE_ENV === 'production' ? seconds60 : seconds10 },
+    { callback: tripsitTimer, interval: env.NODE_ENV === 'production' ? seconds60 : seconds10 },
     { callback: checkMindsets, interval: env.NODE_ENV === 'production' ? seconds60 : seconds5 },
     { callback: callUptime, interval: env.NODE_ENV === 'production' ? seconds60 : seconds5 },
     { callback: checkRss, interval: env.NODE_ENV === 'production' ? seconds30 : seconds5 },

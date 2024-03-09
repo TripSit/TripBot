@@ -41,10 +41,10 @@ async function create(
   const internalChannelPerms = await checkChannelPermissions(internalChannel, [
     'ManageWebhooks' as PermissionResolvable,
   ]);
-  if (!internalChannelPerms.hasPermission) {
-    log.error(F, stripIndents`Missing ${internalChannelPerms.permission} permission \
+  if (internalChannelPerms.length > 0) {
+    log.error(F, stripIndents`Missing ${internalChannelPerms.join(', ')} permission \
 in ${internalChannel.guild.name}'s ${internalChannel}!`);
-    return stripIndents`Error: Missing ${internalChannelPerms.permission} permission \
+    return stripIndents`Error: Missing ${internalChannelPerms.join(', ')} permission \
 in ${internalChannel.guild.name}'s ${internalChannel}!
     Manage Webhooks - Create the channel webhook`;
   }
@@ -73,8 +73,8 @@ in ${internalChannel.guild.name}'s ${internalChannel}!
     'SendMessages' as PermissionResolvable,
     'ManageWebhooks' as PermissionResolvable,
   ]);
-  if (!externalChannelPerms.hasPermission) {
-    return stripIndents`Error: Missing ${externalChannelPerms.permission} permission in \
+  if (externalChannelPerms.length > 0) {
+    return stripIndents`Error: Missing ${externalChannelPerms.join(', ')} permission in \
 ${externalChannel.guild.name}'s ${externalChannel}!
     
     Ask the collaborator to make sure the bot has the right permissions:
@@ -136,7 +136,7 @@ async function confirm(
   //   'ManageWebhooks' as PermissionResolvable,
   // ])
   // if (!externalChannelPerms.hasPermission) {
-  //   return stripIndents`Error: Missing ${externalChannelPerms.permission} permission in \
+  //   return stripIndents`Error: Missing ${externalchannelPerms.join(', ')} permission in \
   // ${externalChannel.guild.name}'s ${externalChannel}!
 
   //   Ask the collaborator to make sure the bot has the right permissions:

@@ -85,10 +85,10 @@ async function tripsit(
   const guildPerms = await checkGuildPermissions(interaction.guild, [
     'ManageRoles' as PermissionResolvable,
   ]);
-  if (!guildPerms.hasPermission) {
-    log.error(F, `Missing guild permission ${guildPerms.permission} in ${interaction.guild}!`);
+  if (guildPerms.length > 0) {
+    log.error(F, `Missing guild permission ${guildPerms.join(', ')} in ${interaction.guild}!`);
     await interaction.reply({
-      content: stripIndents`Missing ${guildPerms.permission} permission in ${interaction.guild}!
+      content: stripIndents`Missing ${guildPerms.join(', ')} permission in ${interaction.guild}!
     In order to setup the tripsitting feature I need:
     Manage Roles - In order to take away roles and give them back
     Part of the tripsitting process is to remove all of a user's roles so they can only see the tripsitting channel.
@@ -111,10 +111,10 @@ async function tripsit(
     'ManageThreads' as PermissionResolvable,
     // 'EmbedLinks' as PermissionResolvable,
   ]);
-  if (!channelPerms.hasPermission) {
-    log.error(F, `Missing TS channel permission ${channelPerms.permission} in ${interaction.channel.name}!`);
+  if (channelPerms.length > 0) {
+    log.error(F, `Missing TS channel permission ${channelPerms.join(', ')} in ${interaction.channel.name}!`);
     await interaction.reply({
-      content: stripIndents`Missing ${channelPerms.permission} permission in ${interaction.channel}!
+      content: stripIndents`Missing ${channelPerms.join(', ')} permission in ${interaction.channel}!
     In order to setup the tripsitting feature I need:
     View Channel - to see the channel
     Send Messages - to send messages
@@ -140,10 +140,10 @@ async function tripsit(
     'ManageThreads' as PermissionResolvable,
     // 'EmbedLinks' as PermissionResolvable,
   ]);
-  if (!metaPerms.hasPermission) {
-    log.error(F, `Missing TS channel permission ${channelPerms.permission} in ${metaChannel}!`);
+  if (metaPerms.length > 0) {
+    log.error(F, `Missing TS channel permission ${channelPerms.join(', ')} in ${metaChannel}!`);
     await interaction.reply({
-      content: stripIndents`Missing ${metaPerms.permission} permission in ${metaChannel}!
+      content: stripIndents`Missing ${metaPerms.join(', ')} permission in ${metaChannel}!
     In order to setup the tripsitting feature I need:
     View Channel - to see the channel
     Send Messages - to send messages
@@ -295,10 +295,10 @@ async function techhelp(
     'ManageThreads' as PermissionResolvable,
     // 'EmbedLinks' as PermissionResolvable,
   ]);
-  if (!channelPerms.hasPermission) {
-    log.error(F, `Missing TS channel permission ${channelPerms.permission} in ${interaction.channel}!`);
+  if (channelPerms.length > 0) {
+    log.error(F, `Missing TS channel permission ${channelPerms.join(', ')} in ${interaction.channel}!`);
     await interaction.reply({
-      content: stripIndents`Missing ${channelPerms.permission} permission in ${interaction.channel}!
+      content: stripIndents`Missing ${channelPerms.join(', ')} permission in ${interaction.channel}!
     In order to setup the tripsitting feature I need:
     View Channel - to see the channel
     Send Messages - to send messages

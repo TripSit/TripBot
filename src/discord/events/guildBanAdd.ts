@@ -68,7 +68,7 @@ export const guildBanAdd: GuildBanAddEvent = {
       const guildAuditPerms = await checkGuildPermissions(ban.guild, [
         'ViewAuditLog' as PermissionResolvable,
       ]);
-      if (guildAuditPerms.hasPermission) {
+      if (guildAuditPerms.length === 0) {
         const auditLogs = await ban.guild.fetchAuditLogs({ type: AuditLogEvent.MemberBanAdd });
         // Go through each auditLogs and find the one that banned this user
         banLog = auditLogs.entries.find(

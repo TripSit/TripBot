@@ -63,8 +63,8 @@ export const dPoll: SlashCommand = {
       'AddReactions' as PermissionResolvable,
     ]);
 
-    if (!perms.hasPermission) {
-      await interaction.editReply({ content: `Please make sure I can ${perms.permission} here!` });
+    if (perms.length > 0) {
+      await interaction.editReply({ content: `Please make sure I can ${perms.join(', ')} here!` });
       return false;
     }
 

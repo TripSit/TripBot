@@ -33,6 +33,7 @@ import {
   User,
   MessageReplyOptions,
   MessageActionRowComponent,
+  RoleSelectMenuInteraction,
 } from 'discord.js';
 import {
   APIInteractionDataResolvedChannel,
@@ -217,8 +218,8 @@ const menuAiModels = new StringSelectMenuBuilder()
 const menuAiPublic = new StringSelectMenuBuilder()
   .setCustomId('AI~public');
 
-function getComponentById(
-  interaction: ButtonInteraction | StringSelectMenuInteraction | ChannelSelectMenuInteraction,
+export function getComponentById(
+  interaction: ButtonInteraction | StringSelectMenuInteraction | ChannelSelectMenuInteraction | RoleSelectMenuInteraction,
   id: string,
 ):MessageActionRowComponent | null {
   // This function will take an interaction and a customId and return the component with that customId
@@ -1241,9 +1242,6 @@ async function setupPage(
   log.info(F, await commandContext(interaction));
   if (!interaction.guild) return { content: 'This command only works in a server.' };
   if (!interaction.member) return { content: 'This command only works in a server.' };
-
-  // Check if the member who did this command has the Manage Channels permission
-  if (!(interaction.member as GuildMember).permissions.has(PermissionFlagsBits.ManageChannels)) return { content: 'You do not have permission to modify channels on this guild. Talk to your guild\'s admin if you feel this is a mistake.' };
 
   const userData = await db.users.upsert({
     where: { discord_id: interaction.user.id },

@@ -9,6 +9,7 @@ import { chitragupta } from '../utils/chitragupta';
 import { bestOf } from '../utils/bestOfTripsit';
 import { updatePollEmbed } from '../commands/global/d.poll';
 import { aiReaction } from '../commands/global/d.ai';
+import { tripsitReaction } from '../commands/guild/d.tripsit';
 // import log from '../../global/utils/log';
 // import {parse} from 'path';
 const F = f(__filename); // eslint-disable-line @typescript-eslint/no-unused-vars
@@ -48,6 +49,7 @@ export const messageReactionAdd: MessageReactionAddEvent = {
     chitragupta(messageReaction, user, 1);
     bestOf(messageReaction);
     updatePollEmbed(messageReaction);
+    tripsitReaction(messageReaction, user);
     // await communityMod(reaction, user);
   },
 };

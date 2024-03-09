@@ -8,6 +8,7 @@ import commandContext from '../utils/context';
 import { helpMenu } from '../commands/global/d.help';
 import { aiMenu } from '../commands/global/d.ai';
 import { purgeMenu } from '../commands/guild/d.purge';
+import { tripsitSelect } from '../commands/guild/d.tripsit';
 // import log from '../../global/utils/log';
 // import {parse} from 'path';
 const F = f(__filename);
@@ -57,5 +58,15 @@ export async function selectMenu(
 
   if (interaction.isChannelSelectMenu() && menuID.startsWith('AI')) {
     await interaction.update(await aiMenu(interaction));
+  }
+
+  if (menuID.startsWith('tripsit')
+  && (
+    interaction.isUserSelectMenu()
+    || interaction.isChannelSelectMenu()
+    || interaction.isStringSelectMenu()
+    || interaction.isRoleSelectMenu()
+  )) {
+    await tripsitSelect(interaction);
   }
 }

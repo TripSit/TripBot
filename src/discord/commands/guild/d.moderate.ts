@@ -537,7 +537,7 @@ export async function tripSitTrustScore(
 
   // log.debug(F, `permissionsResults: ${permissionsResults}`);
   // log.debug(F, `bannedTest: ${bannedTest}`);
-  const noPermissionGuilds = permissionsResults.filter(item => !item.hasPermission);
+  const noPermissionGuilds = permissionsResults.filter(item => item.length > 0);
 
   // count how many i didn't have permission to check
   // log.debug(F, `No Permission Guilds: ${noPermissionGuilds.map(guild => guild.name).join(', ')}`);

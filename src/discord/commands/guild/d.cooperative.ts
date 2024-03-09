@@ -257,9 +257,9 @@ async function setup(interaction:ChatInputCommandInteraction):Promise<Interactio
     'ViewAuditLog' as PermissionResolvable,
   ]);
 
-  if (!perms.hasPermission) {
-    log.error(F, `Missing permission ${perms.permission} in ${interaction.guild}!`);
-    return { content: `Please make sure I can ${perms.permission} in ${interaction.guild} so I can run ${F}!` };
+  if (perms.length > 0) {
+    log.error(F, `Missing permission ${perms.join(', ')} in ${interaction.guild}!`);
+    return { content: `Please make sure I can ${perms.join(', ')} in ${interaction.guild} so I can run ${F}!` };
   }
 
   // Finished checks, lets set this up!

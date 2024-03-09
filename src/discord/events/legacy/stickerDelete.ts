@@ -28,10 +28,10 @@ export const stickerDelete: StickerDeleteEvent = {
       'ViewAuditLog' as PermissionResolvable,
     ]);
 
-    if (!perms.hasPermission) {
+    if (perms.length > 0) {
       const guildOwner = await sticker.guild.fetchOwner();
-      await guildOwner.send({ content: `Please make sure I can ${perms.permission} in ${sticker.guild} so I can run ${F}!` }); // eslint-disable-line
-      log.error(F, `Missing permission ${perms.permission} in ${sticker.guild}!`);
+      await guildOwner.send({ content: `Please make sure I can ${perms.join(', ')} in ${sticker.guild} so I can run ${F}!` }); // eslint-disable-line
+      log.error(F, `Missing permission ${perms.join(', ')} in ${sticker.guild}!`);
       return;
     }
 
@@ -48,10 +48,10 @@ export const stickerDelete: StickerDeleteEvent = {
       'ViewChannel' as PermissionResolvable,
       'SendMessages' as PermissionResolvable,
     ]);
-    if (!channelPerms.hasPermission) {
+    if (channelPerms.length > 0) {
       const guildOwner = await channel.guild.fetchOwner();
-      await guildOwner.send({ content: `Please make sure I can ${channelPerms.permission} in ${channel} so I can run ${F}!` }); // eslint-disable-line
-      log.error(F, `Missing permission ${channelPerms.permission} in ${channel}!`);
+      await guildOwner.send({ content: `Please make sure I can ${channelPerms.join(', ')} in ${channel} so I can run ${F}!` }); // eslint-disable-line
+      log.error(F, `Missing permission ${channelPerms.join(', ')} in ${channel}!`);
       return;
     }
 

@@ -144,6 +144,7 @@ declare global {
       CHANNEL_TRIPSITME: string;
       CHANNEL_OPERATORS: string;
       CHANNEL_TRIPSITRADIO: string;
+      CHANNEL_TRIPSIT_LOG: string;
       ROLE_DIRECTOR: string;
       ROLE_SUCCESSOR: string;
       ROLE_LEADDEV: string;

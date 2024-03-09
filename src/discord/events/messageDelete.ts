@@ -37,20 +37,20 @@ export const messageDelete: MessageDeleteEvent = {
       'ViewChannel' as PermissionResolvable,
       'SendMessages' as PermissionResolvable,
     ]);
-    if (!channelPerms.hasPermission) {
+    if (channelPerms.length > 0) {
       const guildOwner = await msglogChannel.guild.fetchOwner();
-      await guildOwner.send({ content: `Please make sure I can ${channelPerms.permission} in ${msglogChannel.name} so I can run ${F}!` }); // eslint-disable-line
-      log.error(F, `Missing permission ${channelPerms.permission} in ${msglogChannel.name}!`);
+      await guildOwner.send({ content: `Please make sure I can ${channelPerms.join(', ')} in ${msglogChannel.name} so I can run ${F}!` }); // eslint-disable-line
+      log.error(F, `Missing permission ${channelPerms.join(', ')} in ${msglogChannel.name}!`);
       return;
     }
 
     const perms = await checkGuildPermissions(message.guild, [
       'ViewAuditLog' as PermissionResolvable,
     ]);
-    if (!perms.hasPermission) {
+    if (perms.length > 0) {
       const guildOwner = await message.guild.fetchOwner();
-      await guildOwner.send({ content: `Please make sure I can ${perms.permission} in ${message.guild} so I can show to message delete logs!` }); // eslint-disable-line
-      log.error(F, `Missing permission ${perms.permission} in ${message.guild}!`);
+      await guildOwner.send({ content: `Please make sure I can ${perms.join(', ')} in ${message.guild} so I can show to message delete logs!` }); // eslint-disable-line
+      log.error(F, `Missing permission ${perms.join(', ')} in ${message.guild}!`);
       return;
     }
 

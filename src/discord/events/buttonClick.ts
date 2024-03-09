@@ -5,14 +5,6 @@ import {
 } from 'discord.js';
 import commandContext from '../utils/context';
 import { applicationApprove } from '../utils/application';
-import {
-  tripsitmeButton,
-  tripsitmeOwned,
-  tripsitmeMeta,
-  tripsitmeBackup,
-  tripsitmeTeamClose,
-  tripsitmeUserClose,
-} from '../utils/tripsitme';
 import { techHelpClick, techHelpClose, techHelpOwn } from '../utils/techHelp';
 // import {
 //   modmailCreate, modmailActions,
@@ -29,6 +21,7 @@ import { acknowledgeButton, modModal, refusalButton } from '../commands/guild/d.
 import { feedbackReportModal } from '../commands/global/d.feedback';
 import { aiButton } from '../commands/global/d.ai';
 import { purgeButton } from '../commands/guild/d.purge';
+import { tripsitButton } from '../commands/guild/d.tripsit';
 // import { helpButton } from '../commands/global/d.help';
 
 const F = f(__filename);
@@ -163,33 +156,8 @@ export async function buttonClick(interaction:ButtonInteraction, discordClient:C
     return;
   }
 
-  if (buttonID.startsWith('tripsitmeClick')) {
-    await tripsitmeButton(interaction);
-    return;
-  }
-
-  if (buttonID.startsWith('tripsitmeOwned')) {
-    await tripsitmeOwned(interaction);
-    return;
-  }
-
-  if (buttonID.startsWith('tripsitmeTeamClose')) {
-    tripsitmeTeamClose(interaction);
-    return;
-  }
-
-  if (buttonID.startsWith('tripsitmeUserClose')) {
-    tripsitmeUserClose(interaction);
-    return;
-  }
-
-  if (buttonID.startsWith('tripsitmeMeta')) {
-    tripsitmeMeta(interaction);
-    return;
-  }
-
-  if (buttonID.startsWith('tripsitmeBackup')) {
-    tripsitmeBackup(interaction);
+  if (buttonID.startsWith('tripsit')) {
+    await tripsitButton(interaction);
     return;
   }
 

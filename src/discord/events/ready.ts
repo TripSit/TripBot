@@ -37,7 +37,7 @@ async function getInvites(discordClient: Client) {
       'ManageGuild' as PermissionResolvable,
     ]);
 
-    if (perms.hasPermission) {
+    if (perms.length === 0) {
       // Fetch all Guild Invites
       const firstInvites = await guild.invites.fetch();
       // Set the key as Guild ID, and create a map which has the invite code, and the number of uses
@@ -46,7 +46,7 @@ async function getInvites(discordClient: Client) {
           .map((invite:Invite) => [invite.code, invite.uses])));
     } else {
       const guildOwner = await guild.fetchOwner();
-      await guildOwner.send({ content: `Please make sure I can ${perms.permission} in ${guild} so I can fetch invites!` }); // eslint-disable-line
+      await guildOwner.send({ content: `Please make sure I can ${perms.join(', ')} in ${guild} so I can fetch invites!` }); // eslint-disable-line
     }
   });
 }
@@ -77,8 +77,8 @@ export const ready: ReadyEvent = {
     await checkGuildPermissions(hostGuild, [
       // 'Administrator' as PermissionResolvable,
     ]).then(async result => {
-      if (!result.hasPermission) {
-        log.error(F, `I do not have the '${result.permission}' permission in ${hostGuild.name}!`);
+      if (result.length > 0) {
+        log.error(F, `I do not have the '${result.join(', ')}' permission in ${hostGuild.name}!`);
         process.exit(1);
       }
       Promise.all([

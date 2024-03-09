@@ -65,7 +65,11 @@ export const channelCreate: GuildAuditLogEntryCreateEvent = {
         embed.setColor(Colors.Default);
     }
 
-    await channelAuditlog.send({ embeds: [embed] });
+    try {
+      await channelAuditlog.send({ embeds: [embed] });
+    } catch (error) {
+      // log.error(F, `Error sending message: ${error}`);
+    }
   },
 };
 

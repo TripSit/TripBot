@@ -26,6 +26,20 @@ declare global {
   };
   var db: PrismaClient; // eslint-disable-line
   var rollbar: Rollbar; // eslint-disable-line
+  // eslint-disable-next-line
+  var sessionsSetupData: {
+    [key: string]: {
+      tripsitChannel: string | null,
+      tripsitterRoles: string[] | null,
+      metaChannel: string | null,
+      logChannel: string | null,
+      givingRoles: string[] | null,
+      removingRoles: string[] | null,
+      title: string,
+      description: string,
+      footer: string,
+    },
+  };
 }
 
 export {};

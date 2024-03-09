@@ -1499,12 +1499,12 @@ export const dReactionRole: SlashCommand = {
     const guildPerms = await checkGuildPermissions(interaction.guild, [
       'ManageRoles' as PermissionResolvable,
     ]);
-    if (!guildPerms.hasPermission) {
-      log.error(F, `Missing guild permission ${guildPerms.permission} in ${interaction.guild}!`);
+    if (guildPerms.length > 0) {
+      log.error(F, `Missing guild permission ${guildPerms.join(', ')} in ${interaction.guild}!`);
       await interaction.reply({
         embeds: [
           embedTemplate()
-            .setDescription(stripIndents`Error: Missing ${guildPerms.permission} permission in ${interaction.guild}!
+            .setDescription(stripIndents`Error: Missing ${guildPerms.join(', ')} permission in ${interaction.guild}!
             In order to setup the reaction roles feature I need:
             Manage Roles - In order to give and take away roles from users
             Note: My role needs to be higher than all other roles you want managed!`)
@@ -1519,12 +1519,12 @@ export const dReactionRole: SlashCommand = {
       'ViewChannel' as PermissionResolvable,
       'SendMessages' as PermissionResolvable,
     ]);
-    if (!channelPerms.hasPermission) {
-      log.error(F, `Missing channel permission ${channelPerms.permission} in ${interaction.channel}!`);
+    if (channelPerms.length > 0) {
+      log.error(F, `Missing channel permission ${channelPerms.join(', ')} in ${interaction.channel}!`);
       await interaction.reply({
         embeds: [
           embedTemplate()
-            .setDescription(stripIndents`Error: Missing ${channelPerms.permission} permission in ${interaction.channel}!
+            .setDescription(stripIndents`Error: Missing ${channelPerms.join(', ')} permission in ${interaction.channel}!
             In order to setup the reaction roles feature I need:
             View Channel - In order to see the channel
             Send Messages - In order to send the reaction role message`)
