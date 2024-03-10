@@ -1866,6 +1866,69 @@
     ]
   },
   {
+    "url": "https://psychonautwiki.org/wiki/2-Methyl-AP-237",
+    "name": "2-Methyl-AP-237",
+    "aliases": [
+      "2-Methyl-AP-237",
+      "Apex",
+      "2-MAP"
+    ],
+    "aliasesStr": "2-Methyl-AP-237, Apex, 2-MAP",
+    "roas": [
+      {
+        "name": "Oral",
+        "dosage": [
+          {
+            "name": "Threshold",
+            "value": "10 mg"
+          },
+          {
+            "name": "Light",
+            "value": "10-15 mg"
+          },
+          {
+            "name": "Common",
+            "value": "15-20 mg"
+          },
+          {
+            "name": "Strong",
+            "value": "20-25 mg"
+          },
+          {
+            "name": "Heavy",
+            "value": "25 mg"
+          }
+        ],
+        "duration": [
+          {
+            "name": "Comeup",
+            "value": "10-40 minutes"
+          },
+          {
+            "name": "Onset",
+            "value": "5-15 minutes"
+          },
+          {
+            "name": "Peak",
+            "value": "15-20 minutes"
+          },
+          {
+            "name": "Offset",
+            "value": "5-60 minutes"
+          },
+          {
+            "name": "Afterglow",
+            "value": "4-6 hours"
+          },
+          {
+            "name": "Total",
+            "value": "4-6 hours"
+          }
+        ]
+      }
+    ]
+  },
+  {
     "url": "https://psychonautwiki.org/wiki/25B-NBOH",
     "name": "25B-NBOH",
     "aliases": [
@@ -26556,12 +26619,174 @@
     }
   },
   {
+    "url": "https://psychonautwiki.org/wiki/Etomidate",
+    "name": "Etomidate",
+    "roas": [
+      {
+        "name": "Oral",
+        "dosage": [
+          {
+            "name": "Threshold",
+            "value": "20 mg"
+          },
+          {
+            "name": "Light",
+            "value": "20-50 mg"
+          },
+          {
+            "name": "Common",
+            "value": "50-100 mg"
+          },
+          {
+            "name": "Strong",
+            "value": "100-135 mg"
+          },
+          {
+            "name": "Heavy",
+            "value": "135 mg"
+          }
+        ],
+        "duration": [
+          {
+            "name": "Comeup",
+            "value": "30-60 minutes"
+          },
+          {
+            "name": "Onset",
+            "value": "20-30 minutes"
+          },
+          {
+            "name": "Peak",
+            "value": "1-2 hours"
+          },
+          {
+            "name": "Offset",
+            "value": "1-1.5 hours"
+          },
+          {
+            "name": "Afterglow",
+            "value": "2-4 hours"
+          },
+          {
+            "name": "Total",
+            "value": "3-5 hours"
+          }
+        ]
+      },
+      {
+        "name": "Insufflated",
+        "dosage": [
+          {
+            "name": "Threshold",
+            "value": "5 mg"
+          },
+          {
+            "name": "Light",
+            "value": "5-15 mg"
+          },
+          {
+            "name": "Common",
+            "value": "15-40 mg"
+          },
+          {
+            "name": "Strong",
+            "value": "40-80 mg"
+          },
+          {
+            "name": "Heavy",
+            "value": "80 mg"
+          }
+        ],
+        "duration": [
+          {
+            "name": "Onset",
+            "value": "10-15 minutes"
+          },
+          {
+            "name": "Peak",
+            "value": "1-1.5 hours"
+          },
+          {
+            "name": "Offset",
+            "value": "1-2 hours"
+          },
+          {
+            "name": "Afterglow",
+            "value": "1-1.5 hours"
+          },
+          {
+            "name": "Total",
+            "value": "2-4 hours"
+          }
+        ]
+      }
+    ]
+  },
+  {
     "url": "https://psychonautwiki.org/wiki/Eugeroics",
     "name": "Eugeroics"
   },
   {
     "url": "https://psychonautwiki.org/wiki/Experience:%22DPH_(700mg,_Oral)_-_Arachnophobia_Awakened",
-    "name": "Experience:\"DPH (700mg, Oral) - Arachnophobia Awakened"
+    "name": "Experience:\"DPH (700mg, Oral) - Arachnophobia Awakened",
+    "aliases": [
+      "DPH",
+      "Benadryl",
+      "Nytol",
+      "Sominex",
+      "Unisom SleepMelts",
+      "ZzzQuil"
+    ],
+    "aliasesStr": "DPH, Benadryl, Nytol, Sominex, Unisom SleepMelts, ZzzQuil",
+    "roas": [
+      {
+        "name": "Oral",
+        "dosage": [
+          {
+            "name": "Threshold",
+            "value": "25 mg"
+          },
+          {
+            "name": "Light",
+            "value": "100-200 mg"
+          },
+          {
+            "name": "Common",
+            "value": "200-400 mg"
+          },
+          {
+            "name": "Strong",
+            "value": "400-700 mg"
+          },
+          {
+            "name": "Heavy",
+            "value": "700 mg"
+          }
+        ],
+        "duration": [
+          {
+            "name": "Comeup",
+            "value": "45-90 minutes"
+          },
+          {
+            "name": "Onset",
+            "value": "30-90 minutes"
+          },
+          {
+            "name": "Peak",
+            "value": "1-4 hours"
+          },
+          {
+            "name": "Offset",
+            "value": "2-6 hours"
+          },
+          {
+            "name": "Total",
+            "value": "3-10 hours"
+          }
+        ]
+      }
+    ]
   },
   {
     "url": "https://psychonautwiki.org/wiki/F-Phenibut",
