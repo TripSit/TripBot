@@ -81,7 +81,6 @@ export async function addedVerified(
   } catch {
     log.error(F, 'Error getting member data');
     log.error(F, `newMember: ${JSON.stringify(newMember, null, 2)}`);
-    return;
   }
 
   if (roleId === env.ROLE_VERIFIED) {

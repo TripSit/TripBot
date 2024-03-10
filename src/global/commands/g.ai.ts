@@ -915,23 +915,17 @@ export async function aiFlairMod(
   }] as OpenAI.Chat.ChatCompletionMessageParam[];
   chatCompletionMessages.push(...messages);
 
-  // eslint-disable-next-line @typescript-eslint/naming-convention
-  const {
-    id,
-    name,
-    created_at, // eslint-disable-line @typescript-eslint/naming-convention
-    created_by, // eslint-disable-line @typescript-eslint/naming-convention
-    prompt,
-    logit_bias, // eslint-disable-line @typescript-eslint/naming-convention
-    total_tokens, // eslint-disable-line @typescript-eslint/naming-convention
-    ai_model: modelName, // eslint-disable-line @typescript-eslint/naming-convention
-    ...restOfAiPersona
-  } = aiPersona;
-
   const payload = {
-    ...restOfAiPersona,
+    temperature: aiPersona.temperature,
+    top_p: aiPersona.top_p,
+    presence_penalty: aiPersona.presence_penalty,
+    frequency_penalty: aiPersona.frequency_penalty,
+    logit_bias: aiPersona.logit_bias,
+    max_tokens: aiPersona.max_tokens,
     model,
     messages: chatCompletionMessages,
+    // functions: aiFunctions,
+    // function_call: 'auto',
   } as OpenAI.Chat.ChatCompletionCreateParamsNonStreaming;
 
   // log.debug(F, `payload: ${JSON.stringify(payload, null, 2)}`);

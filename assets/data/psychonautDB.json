@@ -1680,6 +1680,94 @@
     }
   },
   {
+    "url": "https://psychonautwiki.org/wiki/2-Methyl-AP-237",
+    "name": "2-Methyl-AP-237",
+    "summary": "",
+    "addictionPotential": null,
+    "toxicity": null,
+    "crossTolerances": null,
+    "commonNames": [
+      "2-Methyl-AP-237",
+      "Apex",
+      "2-MAP"
+    ],
+    "class": {
+      "chemical": null,
+      "psychoactive": [
+        "Opioids"
+      ]
+    },
+    "tolerance": null,
+    "uncertainInteractions": null,
+    "unsafeInteractions": null,
+    "dangerousInteractions": null,
+    "roa": {
+      "oral": {
+        "name": "oral",
+        "dose": {
+          "units": "mg",
+          "threshold": 10,
+          "heavy": 25,
+          "common": {
+            "min": 15,
+            "max": 20
+          },
+          "light": {
+            "min": 10,
+            "max": 15
+          },
+          "strong": {
+            "min": 20,
+            "max": 25
+          }
+        },
+        "duration": {
+          "afterglow": {
+            "min": 4,
+            "max": 6,
+            "units": "hours"
+          },
+          "comeup": {
+            "min": 10,
+            "max": 40,
+            "units": "minutes"
+          },
+          "duration": null,
+          "offset": {
+            "min": 5,
+            "max": 60,
+            "units": "minutes"
+          },
+          "onset": {
+            "min": 5,
+            "max": 15,
+            "units": "minutes"
+          },
+          "peak": {
+            "min": 15,
+            "max": 20,
+            "units": "minutes"
+          },
+          "total": {
+            "min": 4,
+            "max": 6,
+            "units": "hours"
+          }
+        },
+        "bioavailability": null
+      },
+      "sublingual": null,
+      "buccal": null,
+      "insufflated": null,
+      "rectal": null,
+      "transdermal": null,
+      "subcutaneous": null,
+      "intramuscular": null,
+      "intravenous": null,
+      "smoked": null
+    }
+  },
+  {
     "url": "https://psychonautwiki.org/wiki/25B-NBOH",
     "name": "25B-NBOH",
     "summary": "",
@@ -5427,7 +5515,7 @@
     ],
     "class": {
       "chemical": [
-        "Khat#1#"
+        "Cathinone"
       ],
       "psychoactive": [
         "Entactogen",
@@ -10265,9 +10353,9 @@
     ],
     "class": {
       "chemical": [
+        "Cathinone",
         "Substituted cathinones",
-        "Substituted pyrrolidines",
-        "Khat#1#"
+        "Substituted pyrrolidines"
       ],
       "psychoactive": [
         "Stimulants"
@@ -10510,9 +10598,9 @@
     ],
     "class": {
       "chemical": [
+        "Cathinone",
         "Substituted cathinones",
-        "Substituted pyrrolidines",
-        "Khat#1#"
+        "Substituted pyrrolidines"
       ],
       "psychoactive": [
         "Stimulants"
@@ -13759,8 +13847,8 @@
     "class": {
       "chemical": [
         "MDxx",
-        "Substituted cathinones",
-        "Khat#1#"
+        "Cathinone",
+        "Substituted cathinones"
       ],
       "psychoactive": [
         "Entactogen",
@@ -18738,7 +18826,7 @@
     ],
     "class": {
       "chemical": [
-        "Khat#1#"
+        "Cathinone"
       ],
       "psychoactive": [
         "Stimulants"
@@ -19219,7 +19307,7 @@
     ],
     "class": {
       "chemical": [
-        "Khat#1#"
+        "Cathinone"
       ],
       "psychoactive": [
         "Entactogen",
@@ -20034,6 +20122,141 @@
     }
   },
   {
+    "url": "https://psychonautwiki.org/wiki/Etomidate",
+    "name": "Etomidate",
+    "summary": "",
+    "addictionPotential": null,
+    "toxicity": null,
+    "crossTolerances": null,
+    "commonNames": null,
+    "class": {
+      "chemical": [
+        "Cathinone"
+      ],
+      "psychoactive": [
+        "Depressant"
+      ]
+    },
+    "tolerance": null,
+    "uncertainInteractions": null,
+    "unsafeInteractions": null,
+    "dangerousInteractions": null,
+    "roa": {
+      "oral": {
+        "name": "oral",
+        "dose": {
+          "units": "mg",
+          "threshold": 20,
+          "heavy": 135,
+          "common": {
+            "min": 50,
+            "max": 100
+          },
+          "light": {
+            "min": 20,
+            "max": 50
+          },
+          "strong": {
+            "min": 100,
+            "max": 135
+          }
+        },
+        "duration": {
+          "afterglow": {
+            "min": 2,
+            "max": 4,
+            "units": "hours"
+          },
+          "comeup": {
+            "min": 30,
+            "max": 60,
+            "units": "minutes"
+          },
+          "duration": null,
+          "offset": {
+            "min": 1,
+            "max": 1.5,
+            "units": "hours"
+          },
+          "onset": {
+            "min": 20,
+            "max": 30,
+            "units": "minutes"
+          },
+          "peak": {
+            "min": 1,
+            "max": 2,
+            "units": "hours"
+          },
+          "total": {
+            "min": 3,
+            "max": 5,
+            "units": "hours"
+          }
+        },
+        "bioavailability": null
+      },
+      "sublingual": null,
+      "buccal": null,
+      "insufflated": {
+        "name": "insufflated",
+        "dose": {
+          "units": "mg",
+          "threshold": 5,
+          "heavy": 80,
+          "common": {
+            "min": 15,
+            "max": 40
+          },
+          "light": {
+            "min": 5,
+            "max": 15
+          },
+          "strong": {
+            "min": 40,
+            "max": 80
+          }
+        },
+        "duration": {
+          "afterglow": {
+            "min": 1,
+            "max": 1.5,
+            "units": "hours"
+          },
+          "comeup": null,
+          "duration": null,
+          "offset": {
+            "min": 1,
+            "max": 2,
+            "units": "hours"
+          },
+          "onset": {
+            "min": 10,
+            "max": 15,
+            "units": "minutes"
+          },
+          "peak": {
+            "min": 1,
+            "max": 1.5,
+            "units": "hours"
+          },
+          "total": {
+            "min": 2,
+            "max": 4,
+            "units": "hours"
+          }
+        },
+        "bioavailability": null
+      },
+      "rectal": null,
+      "transdermal": null,
+      "subcutaneous": null,
+      "intramuscular": null,
+      "intravenous": null,
+      "smoked": null
+    }
+  },
+  {
     "url": "https://psychonautwiki.org/wiki/Eugeroics",
     "name": "Eugeroics",
     "summary": "",
@@ -20055,13 +20278,21 @@
     "addictionPotential": null,
     "toxicity": null,
     "crossTolerances": null,
-    "commonNames": null,
+    "commonNames": [
+      "DPH",
+      "Benadryl",
+      "Nytol",
+      "Sominex",
+      "Unisom SleepMelts",
+      "ZzzQuil"
+    ],
     "class": {
       "chemical": [
-        "Substituted tryptamines"
+        "Ethanolamine#1#"
       ],
       "psychoactive": [
-        "Psychedelic"
+        "Deliriant",
+        "Depressant"
       ]
     },
     "tolerance": null,
@@ -20073,92 +20304,57 @@
         "name": "oral",
         "dose": {
           "units": "mg",
-          "threshold": null,
-          "heavy": null,
-          "common": null,
-          "light": null,
-          "strong": null
+          "threshold": 25,
+          "heavy": 700,
+          "common": {
+            "min": 200,
+            "max": 400
+          },
+          "light": {
+            "min": 100,
+            "max": 200
+          },
+          "strong": {
+            "min": 400,
+            "max": 700
+          }
         },
         "duration": {
           "afterglow": {
             "min": null,
-            "max": null,
+            "max": 24,
             "units": "hours"
           },
           "comeup": {
-            "min": null,
-            "max": null,
+            "min": 45,
+            "max": 90,
             "units": "minutes"
           },
           "duration": null,
           "offset": {
-            "min": null,
-            "max": null,
+            "min": 2,
+            "max": 6,
             "units": "hours"
           },
           "onset": {
-            "min": null,
-            "max": null,
+            "min": 30,
+            "max": 90,
             "units": "minutes"
           },
           "peak": {
-            "min": null,
-            "max": null,
+            "min": 1,
+            "max": 4,
             "units": "hours"
           },
           "total": {
-            "min": null,
-            "max": null,
+            "min": 3,
+            "max": 10,
             "units": "hours"
           }
         },
         "bioavailability": null
       },
-      "sublingual": {
-        "name": "sublingual",
-        "dose": {
-          "units": "mg",
-          "threshold": null,
-          "heavy": null,
-          "common": null,
-          "light": null,
-          "strong": null
-        },
-        "duration": {
-          "afterglow": {
-            "min": null,
-            "max": null,
-            "units": "hours"
-          },
-          "comeup": {
-            "min": null,
-            "max": null,
-            "units": "minutes"
-          },
-          "duration": null,
-          "offset": {
-            "min": null,
-            "max": null,
-            "units": "hours"
-          },
-          "onset": {
-            "min": null,
-            "max": null,
-            "units": "minutes"
-          },
-          "peak": {
-            "min": null,
-            "max": null,
-            "units": "hours"
-          },
-          "total": {
-            "min": null,
-            "max": null,
-            "units": "hours"
-          }
-        },
-        "bioavailability": null
-      },
+      "sublingual": null,
       "buccal": null,
       "insufflated": null,
       "rectal": null,
@@ -22037,7 +22233,7 @@
     ],
     "class": {
       "chemical": [
-        "Khat#1#"
+        "Cathinone"
       ],
       "psychoactive": [
         "Stimulants"
@@ -25754,8 +25950,8 @@
     ],
     "class": {
       "chemical": [
-        "Substituted cathinones",
-        "Khat#1#"
+        "Cathinone",
+        "Substituted cathinones"
       ],
       "psychoactive": [
         "Entactogen",
@@ -27463,7 +27659,7 @@
     ],
     "class": {
       "chemical": [
-        "Khat#1#"
+        "Cathinone"
       ],
       "psychoactive": [
         "Entactogen",
@@ -27871,7 +28067,7 @@
     ],
     "class": {
       "chemical": [
-        "Khat#1#"
+        "Cathinone"
       ],
       "psychoactive": [
         "Stimulants"
@@ -28794,7 +28990,7 @@
     ],
     "class": {
       "chemical": [
-        "Khat#1#"
+        "Cathinone"
       ],
       "psychoactive": [
         "Stimulants"
@@ -29083,7 +29279,7 @@
     ],
     "class": {
       "chemical": [
-        "Khat#1#"
+        "Cathinone"
       ],
       "psychoactive": [
         "Stimulants"
@@ -31791,7 +31987,7 @@
     ],
     "class": {
       "chemical": [
-        "Khat#1#"
+        "Cathinone"
       ],
       "psychoactive": [
         "Stimulants"
