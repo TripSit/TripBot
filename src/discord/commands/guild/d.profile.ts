@@ -329,20 +329,21 @@ export const dProfile: SlashCommand = {
     let usernameHeight = 76;
     let fontSize = 50;
     const maxLength = 508;
+    context.textBaseline = 'middle';
 
     if (userFlair) {
-      usernameHeight = 62;
-      fontSize = 25;
+      usernameHeight = 78;
+      fontSize = 30;
       context.textBaseline = 'top';
-      context.font = resizeText(canvasObj, userFlair, fontSize, userFont, maxLength);
-      context.fillText(`${userFlair}`, 146, 97);
+      context.font = resizeText(canvasObj, userFlair, fontSize, 'futura', maxLength);
+      context.fillText(`${userFlair}`, 146, 100);
       context.textBaseline = 'bottom';
     }
 
     fontSize = 50;
-    context.textBaseline = 'middle';
     context.font = resizeText(canvasObj, filteredDisplayName, fontSize, userFont, maxLength);
     context.fillText(`${filteredDisplayName}`, 146, usernameHeight);
+    context.textBaseline = 'middle';
 
     // User Timezone
     context.font = '25px futura';
@@ -618,20 +619,21 @@ export async function getProfilePreview(target: GuildMember, option: string, ima
   let fontSize = 50;
   const maxLength = 508;
   const userFlair = 'Your Custom Flair Here';
+  context.textBaseline = 'middle';
 
   if (option === 'userflair') {
-    usernameHeight = 62;
-    fontSize = 25;
+    usernameHeight = 78;
+    fontSize = 30;
     context.textBaseline = 'top';
-    context.font = resizeText(canvasObj, userFlair, fontSize, userFont, maxLength);
-    context.fillText(`${userFlair}`, 146, 97);
+    context.font = resizeText(canvasObj, userFlair, fontSize, 'futura', maxLength);
+    context.fillText(`${userFlair}`, 146, 100);
     context.textBaseline = 'bottom';
   }
 
   fontSize = 50;
-  context.textBaseline = 'middle';
   context.font = resizeText(canvasObj, filteredDisplayName, fontSize, userFont, maxLength);
   context.fillText(`${filteredDisplayName}`, 146, usernameHeight);
+  context.textBaseline = 'middle';
 
   /* User Timezone
     context.font = '25px futura';

@@ -102,6 +102,7 @@ const assetDef = {
   Equations: { filePath: `${assetsDirectory}/img/backgrounds/Equations.png`, url: 'https://i.gyazo.com/561e9cd1ca3b02608c7f9e5f1908d6d9.png' },
   Flowers: { filePath: `${assetsDirectory}/img/backgrounds/Flowers.png`, url: 'https://i.gyazo.com/2e1d47f128305b2f12fe2c4bb7db75d2.png' },
   Paws: { filePath: `${assetsDirectory}/img/backgrounds/Paws.png`, url: 'https://i.gyazo.com/83b9f275af87372edc610da449220a4c.png' },
+  Musical: { filePath: `${assetsDirectory}/img/backgrounds/Musical.png`, url: 'https://i.gyazo.com/0026091d93aad26a7be0abba713eb473.png' },
   mushroomInfoA: { filePath: `${assetsDirectory}/img/mushroomInfoA.png`, url: 'https://i.gyazo.com/233df47085a0ac5493d8378111512b3d.png' },
   mushroomInfoB: { filePath: `${assetsDirectory}/img/mushroomInfoB.png`, url: 'https://i.gyazo.com/2aae45e843da99867b82e9b1ad07d22b.png' },
   Acme: { filePath: `${assetsDirectory}/font/Acme.woff2`, url: 'https://fonts.gstatic.com/s/acme/v25/RrQfboBx-C5_XxrBbg.woff2' },
@@ -128,6 +129,9 @@ const assetDef = {
   SedwickAve: { filePath: `${assetsDirectory}/font/SedwickAve.woff2`, url: 'https://fonts.gstatic.com/s/sedgwickavedisplay/v21/xfuu0XPgU3jZPUoUo3ScvmPi-NapQ8OxM1c0fec.woff2' },
   Mogra: { filePath: `${assetsDirectory}/font/Mogra.woff2`, url: 'https://fonts.gstatic.com/s/mogra/v19/f0X40eSs8c95TCo_BPM.woff2' },
   Graduate: { filePath: `${assetsDirectory}/font/Graduate.woff2`, url: 'https://fonts.gstatic.com/s/graduate/v17/C8cg4cs3o2n15t_2YygW43w.woff2' },
+  Kablammo: { filePath: `${assetsDirectory}/font/Kablammo.woff2`, url: 'https://fonts.gstatic.com/s/kablammo/v1/bWtm7fHPcgrhC-J3lcXhcQTY5Ixs6Au9YgCTiBcQ.woff2' },
+  Workbench: { filePath: `${assetsDirectory}/font/Workbench.woff2`, url: 'https://fonts.gstatic.com/s/workbench/v1/FeV8S05Gp6Et7FcfbPFK1rynGd_MxtkvNFmoUDFhgF2VKTGQk6vapeOM2mM.woff2' },
+  ProtestRevolution: { filePath: `${assetsDirectory}/font/ProtestRevolution.woff2`, url: 'https://fonts.gstatic.com/s/protestrevolution/v2/11hcGofZ0kXBbxQXFB7MJsjtqnVw6Z2c9_gy.woff2' },
 } as {
   [key: string]: { filePath: string;
     url: string;
