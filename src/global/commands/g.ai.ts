@@ -12,7 +12,7 @@ import {
   GenerateContentResult,
 } from '@google/generative-ai';
 import axios from 'axios';
-import { Message, MessageReplyOptions, TextChannel } from 'discord.js';
+import { Message, TextChannel } from 'discord.js';
 import { sleep } from '../../discord/commands/guild/d.bottest';
 import { getDrugInfo } from '../../discord/commands/global/d.drug';
 
@@ -601,12 +601,12 @@ async function openAiWaitForRun(
           log.error(F, `Function ${functionName} not found`);
           return;
         }
-        const functionArgs = JSON.parse(toolCall.function?.arguments as string);
+        const functionArgs = JSON.parse(toolCall.function?.arguments);
         // Check if functionArgs is correctly structured and contains the expected properties
         if (functionArgs && typeof functionArgs === 'object' && 'drugName' in functionArgs) {
           // Execute the function call with the provided arguments
           const reply = await functionToCall(functionArgs.drugName, functionArgs.section);
-          await messageData.reply(reply as MessageReplyOptions);
+          await messageData.reply(reply);
           return;
         }
         // Log an error if the function arguments do not have the expected structure or types

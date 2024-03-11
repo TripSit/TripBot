@@ -9,13 +9,11 @@ import {
   TextInputBuilder,
   ModalSubmitInteraction,
   PermissionResolvable,
-  Guild,
   Colors,
   EmbedBuilder,
   ButtonInteraction,
   GuildMember,
-  Role,
-  // CategoryChannel,
+  GuildTextBasedChannel,
 } from 'discord.js';
 import {
   ButtonStyle, ChannelType, TextInputStyle,
@@ -23,7 +21,7 @@ import {
 import { stripIndents } from 'common-tags';
 import commandContext from '../../utils/context';
 import { SlashCommand } from '../../@types/commandDef';
-import { checkChannelPermissions, checkGuildPermissions } from '../../utils/checkPermissions';
+import { checkChannelPermissions } from '../../utils/checkPermissions';
 import { applicationSetup } from '../../utils/application';
 import { paginationEmbed } from '../../utils/pagination';
 import { embedTemplate } from '../../utils/embedTemplate';
@@ -75,29 +73,12 @@ async function help(
   paginationEmbed(interaction, book);
 }
 
-async function tripsit(
+async function techhelp(
   interaction:ChatInputCommandInteraction,
 ) {
   if (!interaction.guild) return;
   if (!interaction.channel) return;
   if (interaction.channel.type !== ChannelType.GuildText) return;
-
-  const guildPerms = await checkGuildPermissions(interaction.guild, [
-    'ManageRoles' as PermissionResolvable,
-  ]);
-  if (guildPerms.length > 0) {
-    log.error(F, `Missing guild permission ${guildPerms.join(', ')} in ${interaction.guild}!`);
-    await interaction.reply({
-      content: stripIndents`Missing ${guildPerms.join(', ')} permission in ${interaction.guild}!
-    In order to setup the tripsitting feature I need:
-    Manage Roles - In order to take away roles and give them back
-    Part of the tripsitting process is to remove all of a user's roles so they can only see the tripsitting channel.
-    I then give them back their roles once they're done with the session.
-    My role needs to be higher than all other roles you want removed, so put moderators and admins above me in the list!`,
-      ephemeral: true,
-    });
-    return;
-  }
 
   // Can't defer cuz there's a modal
   // await interaction.deferReply({ ephemeral: true });
@@ -128,190 +109,6 @@ async function tripsit(
     return;
   }
 
-  const metaChannel = interaction.options.getChannel('metatripsit') as TextChannel;
-
-  const metaPerms = await checkChannelPermissions(metaChannel, [
-    'ViewChannel' as PermissionResolvable,
-    'SendMessages' as PermissionResolvable,
-    'SendMessagesInThreads' as PermissionResolvable,
-    // 'CreatePublicThreads' as PermissionResolvable,
-    'CreatePrivateThreads' as PermissionResolvable,
-    // 'ManageMessages' as PermissionResolvable,
-    'ManageThreads' as PermissionResolvable,
-    // 'EmbedLinks' as PermissionResolvable,
-  ]);
-  if (metaPerms.length > 0) {
-    log.error(F, `Missing TS channel permission ${channelPerms.join(', ')} in ${metaChannel}!`);
-    await interaction.reply({
-      content: stripIndents`Missing ${metaPerms.join(', ')} permission in ${metaChannel}!
-    In order to setup the tripsitting feature I need:
-    View Channel - to see the channel
-    Send Messages - to send messages
-    Create Private Threads - to create private threads, when requested through the bot
-    Send Messages in Threads - to send messages in threads
-    Manage Threads - to delete threads when they're done
-    `,
-      ephemeral: true,
-  }); // eslint-disable-line
-    return;
-  }
-
-  const titleText = '**Need to talk with a TripSitter? Click the button below!**';
-  const footerText = '🛑 Please do not message anyone directly! 🛑';
-  const modalText = stripIndents`
-    **Need mental health support?**
-    Check out [Huddle Humans](https://discord.gg/mentalhealth), a mental health universe!
-
-    **Want professional mental health advisors?**
-    The [Warmline Directory](https://warmline.org/warmdir.html#directory) provides non-crisis mental health support and guidance from trained volunteers (US Only).
-
-    **Looking for voice chat?**
-    The wonderful people at the [Fireside project](https://firesideproject.org) can also help you through a rough trip! (US Only)
-  
-    **Having an emergency?**
-    We're not doctors: If you are in a medical emergency, please contact emergency medical services.
-
-    **Are you suicidal?**
-    If you're having suicidal thoughts please contact your [local hotline](https://en.wikipedia.org/wiki/List_of_suicide_crisis_lines).
-    `;
-
-  await interaction.showModal(new ModalBuilder()
-    .setCustomId(`tripsitmeModal~${interaction.id}`)
-    .setTitle('Setup your TripSit room!')
-    .addComponents(
-      new ActionRowBuilder<TextInputBuilder>()
-        .addComponents(
-          new TextInputBuilder()
-            .setLabel('Title')
-            .setValue(stripIndents`${titleText}`)
-            .setStyle(TextInputStyle.Short)
-            .setRequired(true)
-            .setCustomId('titleMessage'),
-        ),
-      new ActionRowBuilder<TextInputBuilder>()
-        .addComponents(
-          new TextInputBuilder()
-            .setLabel('Intro Message')
-            .setValue(stripIndents`${modalText}`)
-            .setStyle(TextInputStyle.Paragraph)
-            .setRequired(true)
-            .setCustomId('introMessage'),
-        ),
-      new ActionRowBuilder<TextInputBuilder>()
-        .addComponents(
-          new TextInputBuilder()
-            .setLabel('Footer')
-            .setValue(stripIndents`${footerText}`)
-            .setStyle(TextInputStyle.Short)
-            .setRequired(true)
-            .setCustomId('footerMessage'),
-        ),
-    ));
-
-  const filter = (i:ModalSubmitInteraction) => i.customId.startsWith('tripsitmeModal');
-  interaction.awaitModalSubmit({ filter, time: 0 })
-    .then(async i => {
-      if (i.customId.split('~')[1] !== interaction.id) return;
-      if (!i.guild) return;
-      await i.deferReply({ ephemeral: true });
-
-      const roleNeedshelp = interaction.options.getRole('needshelp');
-      const roleTripsitter = interaction.options.getRole('tripsitter');
-      const roleHelper = interaction.options.getRole('helper');
-      const channelTripsitmeta = interaction.options.getChannel('metatripsit');
-      const channelTripsit = interaction.channel as TextChannel;
-
-      const channelSanctuary = interaction.options.getChannel('sanctuary');
-      const channelGeneral = interaction.options.getChannel('general');
-
-      // Save this info to the DB
-      await db.discord_guilds.upsert({
-        where: {
-          id: (interaction.guild as Guild).id,
-        },
-        create: {
-          id: (interaction.guild as Guild).id,
-          channel_sanctuary: channelSanctuary ? channelSanctuary.id : null,
-          channel_general: channelGeneral ? channelGeneral.id : null,
-          channel_tripsitmeta: channelTripsitmeta ? channelTripsitmeta.id : null,
-          channel_tripsit: channelTripsit.id,
-          role_needshelp: roleNeedshelp ? roleNeedshelp.id : null,
-          role_tripsitter: roleTripsitter ? roleTripsitter.id : null,
-          role_helper: roleHelper ? roleHelper.id : null,
-        },
-        update: {
-          channel_sanctuary: channelSanctuary ? channelSanctuary.id : null,
-          channel_general: channelGeneral ? channelGeneral.id : null,
-          channel_tripsitmeta: channelTripsitmeta ? channelTripsitmeta.id : null,
-          channel_tripsit: channelTripsit.id,
-          role_needshelp: roleNeedshelp ? roleNeedshelp.id : null,
-          role_tripsitter: roleTripsitter ? roleTripsitter.id : null,
-          role_helper: roleHelper ? roleHelper.id : null,
-        },
-      });
-
-      const introMessage = i.fields.getTextInputValue('introMessage');
-      const titleMessage = i.fields.getTextInputValue('titleMessage');
-      const footerMessage = i.fields.getTextInputValue('footerMessage');
-
-      // Create a new button embed
-      const row = new ActionRowBuilder<ButtonBuilder>()
-        .addComponents(
-          new ButtonBuilder()
-            .setCustomId('tripsitmeClick')
-            .setLabel('I would like to talk to a tripsitter!')
-            .setStyle(ButtonStyle.Primary),
-        );
-
-      // This should be an embed so that we can display hyperlinks
-      const embed = new EmbedBuilder()
-        .setTitle(titleMessage)
-        .setFooter({ text: footerMessage })
-        .setDescription(introMessage)
-        .setColor(Colors.Blue);
-
-      // We need to send the message, otherwise it has the "user used /setup tripsit" at the top
-      await (i.channel as TextChannel).send({ embeds: [embed], components: [row] });
-      await i.editReply({ content: 'Setup complete!' });
-    });
-}
-
-async function techhelp(
-  interaction:ChatInputCommandInteraction,
-) {
-  if (!interaction.guild) return;
-  if (!interaction.channel) return;
-  if (interaction.channel.type !== ChannelType.GuildText) return;
-
-  // Can't defer cuz there's a modal
-  // await interaction.deferReply({ ephemeral: true });
-  const channelPerms = await checkChannelPermissions(interaction.channel, [
-    'ViewChannel' as PermissionResolvable,
-    'SendMessages' as PermissionResolvable,
-    'SendMessagesInThreads' as PermissionResolvable,
-    // 'CreatePublicThreads' as PermissionResolvable,
-    'CreatePrivateThreads' as PermissionResolvable,
-    'ManageMessages' as PermissionResolvable,
-    'ManageThreads' as PermissionResolvable,
-    // 'EmbedLinks' as PermissionResolvable,
-  ]);
-  if (channelPerms.length > 0) {
-    log.error(F, `Missing TS channel permission ${channelPerms.join(', ')} in ${interaction.channel}!`);
-    await interaction.reply({
-      content: stripIndents`Missing ${channelPerms.join(', ')} permission in ${interaction.channel}!
-    In order to setup the tripsitting feature I need:
-    View Channel - to see the channel
-    Send Messages - to send messages
-    Create Private Threads - to create private threads
-    Send Messages in Threads - to send messages in threads
-    Manage Threads - to delete threads when they're done
-    Manage Messages - to pin the "im good" message to the top of the thread
-    `,
-      ephemeral: true,
-  }); // eslint-disable-line
-    return;
-  }
-
   const titleText = `**Welcome to ${interaction.guild.name}'s technical help channel!**`;
   const footerText = '🛑 Please do not message anyone directly! 🛑';
   let modalText = stripIndents`
@@ -326,19 +123,15 @@ async function techhelp(
       Thanks for reading, stay safe!
     `;
 
-  // const guildData = await getGuild(interaction.guild.id);
-  const guildData = await db.discord_guilds.update({
+  const sessionData = await db.session_data.findFirst({
     where: {
-      id: interaction.guild.id,
-    },
-    data: {
-      role_techhelp: interaction.options.getRole('roletechreviewer', true).id,
+      guild_id: interaction.guild.id,
     },
   });
 
-  if (guildData.channel_tripsit) {
-    const channelTripsit = interaction.guild.channels.fetch(guildData.channel_tripsit);
-    modalText += `\n\n**If you need psychological help try ${channelTripsit.toString()}!**`;
+  if (sessionData?.tripsit_channel) {
+    const channelTripsit = await interaction.guild.channels.fetch(sessionData.tripsit_channel) as GuildTextBasedChannel;
+    modalText += `\n\n**If you need psychological help try ${channelTripsit.name}!**`;
   }
 
   await interaction.showModal(new ModalBuilder()
@@ -501,17 +294,17 @@ async function ticketbooth(
   Welcome to TripSit!
 
   **If you need help**
-  **1** Go to ${channelTripsit.toString()} and click the "I need assistance button"!
+  **1** Go to ${channelTripsit.name} and click the "I need assistance button"!
   **-** This will create a private thread for you, and we're happy to help :grin:
-  **2** If no one responds, you can chat as a group in the ${channelOpentripsit.toString()} rooms
+  **2** If no one responds, you can chat as a group in the ${channelOpentripsit.name} rooms
   **-** Try to pick one that's not busy so we can pay attention to you :heart:
-  **3** If you don't need help but would appreciate a quiet chat, come to ${channelSanctuary.toString()}
+  **3** If you don't need help but would appreciate a quiet chat, come to ${channelSanctuary.name}
 
   **If you want to social chat please agree to the following:**
 
-  **1)** I do not currently need help and understand I can go to ${channelTripsit.toString()} to get help if I need it.
-  **2)** I understand if no one responds in ${channelTripsit.toString()} I can talk in the "open" tripsit rooms.
-  **3)** I have read the ${channelRules.toString()}: I will not buy/sell anything and I will try to keep a positive atmosphere!
+  **1)** I do not currently need help and understand I can go to ${channelTripsit.name} to get help if I need it.
+  **2)** I understand if no one responds in ${channelTripsit.name} I can talk in the "open" tripsit rooms.
+  **3)** I have read the ${channelRules.name}: I will not buy/sell anything and I will try to keep a positive atmosphere!
   `;
 
   // Create a new button embed
@@ -532,31 +325,25 @@ async function helper(
 ) {
   await interaction.deferReply({ ephemeral: true });
   if (!interaction.guild) return;
-  const guildData = await db.discord_guilds.upsert({
-    where: {
-      id: interaction.guild?.id,
-    },
-    create: {
-      id: interaction.guild?.id,
-    },
-    update: {},
+  const sessionData = await db.session_data.findFirst({
+    where: { guild_id: interaction.guild.id },
   });
 
-  if (!guildData.channel_tripsit || !guildData.channel_tripsitmeta) {
+  if (!sessionData?.tripsit_channel || !sessionData?.meta_channel) {
     await interaction.editReply({
       content: stripIndents`This server has not setup the tripsit room. Use \`/setup tripsit\` first`,
     });
     return;
   }
 
-  if (!guildData.role_helper) {
+  if (sessionData.tripsitter_roles.length === 0) {
     await interaction.editReply({
       content: stripIndents`This server has not setup the helper role. Use \`/setup tripsit\` first`,
     });
     return;
   }
 
-  const channelTripsit = await interaction.client.channels.fetch(guildData.channel_tripsit) as TextChannel;
+  const channelTripsit = await interaction.client.channels.fetch(sessionData.tripsit_channel) as TextChannel;
   // const channelMetatripsit = await interaction.client.channels.fetch(guildData.channel_tripsitmeta) as TextChannel;
 
   const messageText = stripIndents`
@@ -576,7 +363,7 @@ as long as you have a general understanding of how drugs work and how hey intera
     // content: messageText,
     embeds: [
       new EmbedBuilder()
-        .setTitle(`Interested in helping out in ${channelTripsit}?`)
+        .setTitle(`Interested in helping out in ${channelTripsit.name}?`)
         .setDescription(messageText)
         .setFooter({ text: 'Once you complete the course, click the button below!' }),
     ],
@@ -602,30 +389,15 @@ export async function helperButton(
 ) {
   if (!interaction.guild) return;
   if (!interaction.member) return;
-  // Check that the user has completed the course and wasnt just given the role
+  // Check that the user has completed the course and wasn't just given the role
 
-  const guildData = await db.discord_guilds.upsert({
-    where: {
-      id: interaction.guild?.id,
-    },
-    create: {
-      id: interaction.guild?.id,
-    },
-    update: {},
+  const sessionData = await db.session_data.findFirst({
+    where: { guild_id: interaction.guild.id },
   });
 
-  const userData = await db.users.upsert({
-    where: {
-      discord_id: interaction.user.id,
-    },
-    create: {
-      discord_id: interaction.user.id,
-    },
-    update: {},
-  });
   const target = interaction.member as GuildMember;
 
-  if (!guildData.role_helper) {
+  if (!sessionData?.tripsitter_roles) {
     await interaction.reply({
       content: stripIndents`This server has not setup the helper role. Use \`/setup tripsit\` first`,
       ephemeral: true,
@@ -633,7 +405,7 @@ export async function helperButton(
     return;
   }
 
-  if (!guildData.channel_tripsitmeta) {
+  if (!sessionData.meta_channel) {
     await interaction.reply({
       content: stripIndents`This server has not setup the tripsit meta room. Use \`/setup tripsit\` first`,
       ephemeral: true,
@@ -661,7 +433,22 @@ export async function helperButton(
     return;
   }
 
+  const guildData = await db.discord_guilds.upsert({
+    where: { id: interaction.guild.id },
+    create: { id: interaction.guild.id },
+    update: {},
+  });
+
   // Do everything else
+
+  if (!guildData.role_helper) {
+    await interaction.reply({
+      content: stripIndents`It looks like the guilds helper role is not set up, talk to the server admin about this! They may need to re-run \`/setup tripsit\``,
+      ephemeral: true,
+    });
+    return;
+  }
+
   const role = await interaction.guild?.roles.fetch(guildData.role_helper);
 
   if (!role) {
@@ -679,6 +466,12 @@ export async function helperButton(
     });
     return;
   }
+
+  const userData = await db.users.upsert({
+    where: { discord_id: interaction.user.id },
+    create: { discord_id: interaction.user.id },
+    update: {},
+  });
 
   // If the role being requested is the Helper or Contributor role, check if they have been banned first
   if (role.id === guildData.role_helper && userData.helper_role_ban) {
@@ -742,12 +535,16 @@ export async function helperButton(
 
       // log.debug(F, `II: ${II}`);
 
+      // const sessionData = await db.session_data.findFirst({
+      //   where: { guild_id: interaction.guild?.id },
+      // });
+
       if (II !== interaction.id) return;
       if (!i.guild) return;
       if (!i.member) return;
-      if (!guildData.channel_tripsitmeta) return;
-      if (!guildData.channel_tripsit) return;
-      if (!guildData.role_tripsitter) return;
+      if (!sessionData?.meta_channel) return;
+      if (!sessionData.tripsit_channel) return;
+      if (sessionData.tripsitter_roles.length === 0) return;
 
       const introMessage = i.fields.getTextInputValue('introduction');
       const strengthMessage = i.fields.getTextInputValue('strengths');
@@ -756,10 +553,10 @@ export async function helperButton(
       // log.debug(F, `introMessage: ${introMessage}`);
 
       await target.roles.add(role);
-      const metaChannel = await i.guild?.channels.fetch(guildData.channel_tripsitmeta) as TextChannel;
-      await i.editReply({ content: `Added role ${role.name}, go check out ${metaChannel}!` });
+      const metaChannel = await i.guild?.channels.fetch(sessionData.meta_channel) as TextChannel;
+      await i.editReply({ content: `Added role ${role.name}, go check out ${metaChannel.name}!` });
 
-      if (metaChannel.id === guildData.channel_tripsitmeta) {
+      if (metaChannel.id === sessionData.meta_channel) {
         const introString = `
         Please welcome ${target.displayName} as a ${role.name}!
 
@@ -814,9 +611,7 @@ export async function helperButton(
 
       if (i.guild.id === env.DISCORD_GUILD_ID) {
         const channelTripsitters = await i.guild?.channels.fetch(env.CHANNEL_TRIPSITTERS) as TextChannel;
-        const roleTripsitter = await i.guild?.roles.fetch(guildData.role_tripsitter) as Role;
-
-        await channelTripsitters.send(stripIndents`Hey ${roleTripsitter}, ${target.displayName} has joined as a ${role.name}`);
+        await channelTripsitters.send(stripIndents`${target.displayName} has joined as a ${role.name}`);
       }
     });
 }
@@ -928,8 +723,6 @@ export const setup: SlashCommand = {
       await techhelp(interaction);
     } else if (command === 'rules') {
       await rules(interaction);
-    } else if (command === 'tripsit') {
-      await tripsit(interaction);
     } else if (command === 'ticketbooth') {
       await ticketbooth(interaction);
     } else if (command === 'help') {

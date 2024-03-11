@@ -172,6 +172,8 @@ model users {
   quotes_quotes_created_byTousers                           quotes[]                  @relation("QuoteCreator")
   members                                                   members[]
   ticket_participation                                      user_ticket_participant[]
+  session_data_created                                      session_data[]            @relation("session_data_created")
+  session_data_updated                                      session_data[]            @relation("session_data_updated")
 }
 
 model members {
@@ -195,17 +197,17 @@ model discord_guilds {
   last_drama_at        DateTime?        @db.Timestamptz(6)
   drama_reason         String?
   max_online_members   Int?
-  channel_sanctuary    String?
-  channel_general      String?
-  channel_tripsit      String?
-  channel_tripsitmeta  String?
+  // channel_sanctuary    String?
+  // channel_general      String?
+  // channel_tripsit      String?
+  // channel_tripsitmeta  String?
   channel_applications String?
   channel_moderators   String?
   channel_mod_log      String?
   channel_helpdesk     String?
   channel_trust        String?
-  role_needshelp       String?
-  role_tripsitter      String?
+  // role_needshelp       String?
+  // role_tripsitter      String?
   role_helper          String?
   role_techhelp        String?
   role_moderator       String?
@@ -227,6 +229,30 @@ model discord_guilds {
   ai_channels          ai_channels[]
   members              members[]
   user_tickets         user_tickets[]
+  session_data         session_data[]
+}
+
+model session_data {
+  id               String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  guild_id         String
+  tripsit_channel  String
+  tripsitter_roles String[]
+  meta_channel     String?
+  log_channel      String?
+  giving_roles     String[]
+  removing_roles   String[]
+  title            String
+  description      String
+  footer           String
+  intro_message    String
+  created_at       DateTime @default(now()) @db.Timestamptz(6)
+  created_by       String   @db.Uuid
+  updated_at       DateTime @default(now()) @db.Timestamptz(6)
+  updated_by       String   @db.Uuid
+
+  discord_guilds discord_guilds @relation(fields: [guild_id], references: [id])
+  createdby      users          @relation("session_data_created", fields: [created_by], references: [id])
+  updatedby      users          @relation("session_data_updated", fields: [updated_by], references: [id])
 }
 
 model drug_articles {

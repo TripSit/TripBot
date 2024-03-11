@@ -20,7 +20,6 @@ import {
   MessageMentionTypes,
   ChatInputCommandInteraction,
   PermissionResolvable,
-  Guild,
   AllowedThreadTypeForTextChannel,
   time,
   Channel,
@@ -33,13 +32,11 @@ import {
   UserSelectMenuInteraction,
   ChannelSelectMenuBuilder,
   PermissionFlagsBits,
-  AnySelectMenuInteraction,
-  Utils,
   RoleSelectMenuBuilder,
   UserSelectMenuBuilder,
   StringSelectMenuBuilder,
-  ChannelSelectMenuComponent,
   GuildTextBasedChannel,
+  EmbedBuilder,
 } from 'discord.js';
 import {
   TextInputStyle,
@@ -55,7 +52,6 @@ import commandContext from '../../utils/context';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { checkChannelPermissions, checkGuildPermissions } from '../../utils/checkPermissions';
 import { SlashCommand } from '../../@types/commandDef';
-import { getComponentById } from '../global/d.ai';
 
 const F = f(__filename);
 
@@ -70,8 +66,11 @@ const F = f(__filename);
 * Display how many sessions the user has had in the past
 * Stats page
 * Add ignored roles to the setup
-* Turn all the function namespaces into consts, when possible
+* Turn all the function namespaces into const, when possible
 * MAke it so that if no one responds after 5 minutes or so, suggest an AI tripsitter
+* Save the ID of the #tripsit message, so that future updates to the wording will just update that message instead of making a new one
+* Make sure Helper system still works
+
 */
 
 const teamRoles = [
@@ -457,16 +456,18 @@ namespace timer {
   }
 
   export async function cleanupTickets() {
-    const guildDataList = await db.discord_guilds.findMany();
-    const promises = guildDataList.map(async guildData => {
+    const sessionDataList = await db.session_data.findMany();
+
+    await Promise.all(sessionDataList.map(async sessionDataInit => {
       try {
-        const guild = await discordClient.guilds.fetch(guildData.id);
-        if (!guild || !guildData.channel_tripsit) return;
+        const guild = await discordClient.guilds.fetch(sessionDataInit.guild_id);
 
-        const channel = await guild.channels.fetch(guildData.channel_tripsit) as TextChannel;
-        const tripsitPerms = await checkChannelPermissions(channel, ['ViewChannel', 'ManageThreads']);
+        if (!guild || !sessionDataInit?.tripsit_channel) return;
 
-        if (tripsitPerms.length > 0) return;
+        const channel = await guild.channels.fetch(sessionDataInit.tripsit_channel) as TextChannel;
+        const missingPerms = await checkChannelPermissions(channel, permissionList.tripsitChannel);
+
+        if (missingPerms.length > 0) return;
 
         const threadList = await channel.threads.fetch({
           archived: {
@@ -475,7 +476,7 @@ namespace timer {
           },
         });
 
-        const deletePromises = threadList.threads.map(async thread => {
+        await Promise.all(threadList.threads.map(async thread => {
           try {
             await thread.fetch();
             const messages = await thread.messages.fetch({ limit: 1 });
@@ -489,25 +490,20 @@ namespace timer {
           } catch (err) {
             // Handle thread fetch or delete error
           }
-        });
-
-        await Promise.all(deletePromises);
+        }));
       } catch (err) {
         // Handle guild fetch error or other errors
         if ((err as DiscordErrorData).message === 'GUILD_DELETED') {
-          await db.discord_guilds.update({
-            where: { id: guildData.id },
-            data: { channel_tripsit: null },
+          await db.session_data.delete({
+            where: { id: sessionDataInit.id },
           });
         }
       }
-    });
-
-    await Promise.all(promises);
+    }));
   }
 }
 
-namespace util {
+export namespace util {
   export async function tripsitmeOwned(
     interaction: ButtonInteraction,
   ) {
@@ -565,7 +561,13 @@ namespace util {
       return;
     }
 
-    const metaChannelId = ticketData.meta_thread_id ?? guildData.channel_tripsitmeta;
+    const sessionData = await db.session_data.findFirst({
+      where: {
+        guild_id: interaction.guild.id,
+      },
+    });
+
+    const metaChannelId = ticketData.meta_thread_id ?? sessionData?.meta_channel;
     if (metaChannelId) {
       // log.debug(F, `metaChannelId: ${metaChannelId}`);
       let metaChannel = {} as TextChannel;
@@ -587,7 +589,7 @@ namespace util {
         await metaChannel.send({
           content: stripIndents`${actor.displayName} has indicated that ${target.toString()} is receiving help!`,
         });
-        if (metaChannelId !== guildData.channel_tripsitmeta) {
+        if (metaChannelId !== sessionData?.meta_channel) {
           metaChannel.setName(`💛│${target.displayName}'s discussion!`);
         }
       }
@@ -809,14 +811,21 @@ namespace util {
     let backupMessage = 'Hey ';
     // Get the roles we'll be referencing
     let roleTripsitter = {} as Role;
-    let roleHelper = {} as Role;
-    if (guildData.role_tripsitter) {
-      roleTripsitter = await interaction.guild.roles.fetch(guildData.role_tripsitter) as Role;
-      backupMessage += `<@&${roleTripsitter.id}> `;
-    }
-    if (guildData.role_helper) {
-      roleHelper = await interaction.guild.roles.fetch(guildData.role_helper) as Role;
-      backupMessage += `and/or <@&${roleHelper.id}> `;
+
+    const sessionData = await db.session_data.findFirst({
+      where: {
+        guild_id: interaction.guild.id,
+      },
+    });
+    if (sessionData?.tripsitter_roles) {
+      await Promise.all(sessionData.tripsitter_roles.map(async roleId => {
+        try {
+          roleTripsitter = await interaction.guild?.roles.fetch(roleId) as Role;
+          backupMessage += `<@&${roleTripsitter.id}> `;
+        } catch (err) {
+          // log.debug(F, `Role ${roleId} was likely deleted`);
+        }
+      }));
     }
 
     backupMessage += stripIndents`team, ${actor} has indicated they could use some backup!
@@ -971,14 +980,20 @@ namespace util {
       components: [row],
     });
 
-    const metaChannelId = ticketData.meta_thread_id ?? guildData.channel_tripsitmeta;
+    const sessionData = await db.session_data.findFirst({
+      where: {
+        guild_id: interaction.guild.id,
+      },
+    });
+
+    const metaChannelId = ticketData.meta_thread_id ?? sessionData?.meta_channel;
     if (metaChannelId) {
       try {
         const metaChannel = await interaction.guild.channels.fetch(metaChannelId) as TextChannel;
         await metaChannel.send({
           content: stripIndents`${actor.displayName} has indicated that ${target ? target.displayName : 'this user'} no longer needs help!`,
         });
-        if (metaChannelId !== guildData.channel_tripsitmeta) {
+        if (metaChannelId !== sessionData?.meta_channel) {
           await metaChannel.setName(`💙${threadHelpUser.name.slice(1)}`);
         }
       } catch (err) {
@@ -1030,7 +1045,7 @@ namespace util {
     await interaction.deferReply({ ephemeral: false });
 
     const targetId = interaction.customId.split('~')[1];
-    const override = interaction.customId.split('~')[0] === 'tripsitmodeOffOverride';
+    const override = interaction.customId.split('~')[0] === 'tripsitModeOffOverride';
 
     const target = await interaction.guild.members.fetch(targetId);
     const actor = interaction.member as GuildMember;
@@ -1104,55 +1119,34 @@ namespace util {
     }
 
     // Remove the needshelp role
-    let roleNeedshelp = {} as Role;
-    if (guildData.role_needshelp) {
-      try {
-        roleNeedshelp = await interaction.guild.roles.fetch(guildData.role_needshelp) as Role;
-        const myMember = await interaction.guild.members.fetch(interaction.client.user.id);
-        const myRole = myMember.roles.highest;
-        if (roleNeedshelp && roleNeedshelp.comparePositionTo(myRole) < 0) {
-          // log.debug(F, `Removing ${roleNeedshelp.name} from ${target.displayName}`);
-          await target.roles.remove(roleNeedshelp);
+    // let roleNeedshelp = {} as Role;
+    const sessionData = await db.session_data.findFirst({
+      where: {
+        guild_id: interaction.guild.id,
+      },
+    });
+    if (sessionData?.giving_roles) {
+      await Promise.all(sessionData.giving_roles.map(async roleId => {
+        try {
+          const roleToRemove = await interaction.guild?.roles.fetch(roleId) as Role;
+          await target.roles.remove(roleToRemove);
+        } catch (err) {
+          // log.debug(F, `There was an error fetching the needshelp role, it was likely deleted:\n ${err}`);
         }
-      } catch (err) {
-        // log.debug(F, `There was an error fetching the needshelp role, it was likely deleted:\n ${err}`);
-        // Update the ticket status to closed
-        await db.discord_guilds.update({
-          where: {
-            id: guildData.id,
-          },
-          data: {
-            role_needshelp: null,
-          },
-        });
-      }
+      }));
     }
 
-    // Remove the needshelp role
     let channelTripsitmeta = {} as TextChannel;
-    if (guildData.channel_tripsitmeta) {
+    if (sessionData?.meta_channel) {
       try {
-        channelTripsitmeta = await interaction.guild.channels.fetch(guildData.channel_tripsitmeta) as TextChannel;
+        channelTripsitmeta = await interaction.guild.channels.fetch(sessionData.meta_channel) as TextChannel;
       } catch (err) {
         // log.debug(F, `There was an error fetching the meta channel, it was likely deleted:\n ${err}`);
-        // Update the ticket status to closed
-        await db.discord_guilds.update({
-          where: {
-            id: guildData.id,
-          },
-          data: {
-            channel_tripsitmeta: null,
-          },
-        });
       }
     }
 
     // Readd old roles
-    if (userData.roles
-      // Patch for BlueLight: Since we didn't remove roles, don't re-add them
-      && target.guild.id !== env.DISCORD_BL_ID
-      // && target.guild.id !== env.DISCORD_GUILD_ID // For testing
-    ) {
+    if (userData.roles) {
       const myMember = await interaction.guild.members.fetch(interaction.client.user.id);
       const myRole = myMember.roles.highest;
       const targetRoles: string[] = userData.roles.split(',') || [];
@@ -1169,7 +1163,7 @@ namespace util {
           if (roleObj
             && !ignoredRoles.includes(roleObj.id)
             && roleObj.name !== '@everyone'
-            && roleObj.id !== roleNeedshelp.id
+            && !sessionData?.giving_roles.includes(roleObj.id)
             && roleObj.comparePositionTo(myRole) < 0) {
             try {
               await target.roles.add(roleObj);
@@ -1210,14 +1204,14 @@ namespace util {
     }
 
     // Let the meta channel know the user has been helped
-    const metaChannelId = ticketData.meta_thread_id ?? guildData.channel_tripsitmeta;
+    const metaChannelId = ticketData.meta_thread_id ?? sessionData?.meta_channel;
     if (metaChannelId) {
       try {
         const metaChannel = await interaction.guild.channels.fetch(metaChannelId) as TextChannel;
         await metaChannel.send({
           content: stripIndents`${actor.displayName} has indicated that they no longer need help!`,
         });
-        if (metaChannelId !== guildData.channel_tripsitmeta) {
+        if (metaChannelId !== sessionData?.meta_channel) {
           metaChannel.setName(`💚│${target.displayName}'s discussion!`);
         }
       } catch (err) {
@@ -1347,21 +1341,17 @@ namespace util {
 
     // Get the tripsit channel from the guild
     let tripsitChannel = {} as TextChannel;
+    const sessionData = await db.session_data.findFirst({
+      where: {
+        guild_id: interaction.guild?.id,
+      },
+    });
     try {
-      if (guildData.channel_tripsit) {
-        tripsitChannel = await interaction.guild?.channels.fetch(guildData.channel_tripsit) as TextChannel;
+      if (sessionData?.tripsit_channel) {
+        tripsitChannel = await interaction.guild?.channels.fetch(sessionData?.tripsit_channel) as TextChannel;
       }
     } catch (err) {
       log.debug(F, `There was an error fetching the tripsit channel, it was likely deleted:\n ${err}`);
-      // Update the ticket status to closed
-      await db.discord_guilds.update({
-        where: {
-          id: guildData.id,
-        },
-        data: {
-          channel_tripsit: null,
-        },
-      });
     }
 
     // log.debug(F, `tripsitChannel: ${JSON.stringify(tripsitChannel, null, 2)}`);
@@ -1369,7 +1359,7 @@ namespace util {
     if (!tripsitChannel.id) {
       log.debug(F, 'No tripsit channel!');
       await interaction.reply({
-        content: 'No tripsit channel found! Make sure to run /setup tripsit, or ask an admin to re-run setup!',
+        content: 'No tripsit channel found! Make sure to run /tripsit setup, or ask an admin to re-run setup!',
         ephemeral: true,
       });
       return;
@@ -1396,22 +1386,22 @@ namespace util {
     let channelTripsitmeta = {} as TextChannel;
     try {
       // log.debug(F, `guildData.channel_tripsitmeta: ${guildData.channel_tripsitmeta}`);
-      if (guildData.channel_tripsitmeta) {
-        channelTripsitmeta = await interaction.guild?.channels.fetch(guildData.channel_tripsitmeta) as TextChannel;
+      if (sessionData?.meta_channel) {
+        channelTripsitmeta = await interaction.guild?.channels.fetch(sessionData.meta_channel) as TextChannel;
       }
     } catch (err) {
       // log.debug(F, `There was an error fetching the tripsit channel, it was likely deleted:\n ${err}`);
       // Update the ticket status to closed
-      guildData.channel_tripsitmeta = null;
-      // await database.guilds.set(guildData);
-      await db.discord_guilds.update({
-        where: {
-          id: guildData.id,
-        },
-        data: {
-          channel_tripsitmeta: null,
-        },
-      });
+      // guildData.channel_tripsitmeta = null;
+      // // await database.guilds.set(guildData);
+      // await db.discord_guilds.update({
+      //   where: {
+      //     id: guildData.id,
+      //   },
+      //   data: {
+      //     channel_tripsitmeta: null,
+      //   },
+      // });
     }
 
     const metaPerms = await checkChannelPermissions(channelTripsitmeta, permissionList.metaChannel);
@@ -1484,16 +1474,16 @@ namespace util {
         await interaction.deferReply({ ephemeral: true });
         await needsHelpMode(interaction, target);
         log.debug(F, 'Added needshelp to user');
-        let roleTripsitter = {} as Role;
-        let roleHelper = {} as Role;
-        if (guildData.role_tripsitter) {
-          roleTripsitter = await interaction.guild?.roles.fetch(guildData.role_tripsitter) as Role;
-        }
-        if (guildData.role_helper) {
-          roleHelper = await interaction.guild?.roles.fetch(guildData.role_helper) as Role;
-        }
-        log.debug(F, `Helper Role : ${roleHelper.name}`);
-        log.debug(F, `Tripsitter Role : ${roleTripsitter.name}`);
+        // let roleTripsitter = {} as Role;
+        // let roleHelper = {} as Role;
+        // if (sessionData?.tripsitter_roles) {
+        //   roleTripsitter = await interaction.guild?.roles.fetch(guildData.role_tripsitter) as Role;
+        // }
+        // if (guildData.role_helper) {
+        //   roleHelper = await interaction.guild?.roles.fetch(guildData.role_helper) as Role;
+        // }
+        // log.debug(F, `Helper Role : ${roleHelper.name}`);
+        // log.debug(F, `Tripsitter Role : ${roleTripsitter.name}`);
 
         // Remind the user that they have a channel open
         // const recipient = '' as string;
@@ -1516,9 +1506,19 @@ namespace util {
         // Send the update message to the thread
         let helpMessage = stripIndents`Hey ${target}, thanks for asking for help, we can continue talking here! What's up?`;
         if (minutes > 5) {
-          const helperStr = `and/or ${roleHelper}`;
+          // const helperStr = `and/or ${roleHelper}`;
           // log.debug(F, `Target has open ticket, and it was created over 5 minutes ago!`);
-          helpMessage += `\n\nSomeone from the ${roleTripsitter} ${guildData.role_helper ? helperStr : ''} team will be with you as soon as they're available!`;
+          helpMessage += '\n\nSomeone from the team will be with you as soon as they\'re available! ';
+          if (sessionData?.tripsitter_roles) {
+            await Promise.all(sessionData.tripsitter_roles.map(async roleId => {
+              try {
+                const roleTripsitter = await interaction.guild?.roles.fetch(roleId) as Role;
+                helpMessage += `<@&${roleTripsitter.id}> `;
+              } catch (err) {
+                // log.debug(F, `Role ${roleId} was likely deleted`);
+              }
+            }));
+          }
         }
         await threadHelpUser.send({
           content: helpMessage,
@@ -1533,8 +1533,17 @@ namespace util {
         if (ticketData.meta_thread_id) {
           let metaMessage = '';
           if (minutes > 5) {
-            const helperString = `and/or ${roleHelper}`;
-            metaMessage = `Hey ${roleTripsitter} ${guildData.role_helper ?? helperString} team, ${target.toString()} has indicated they need assistance!`;
+            metaMessage = `Hey team, ${target.toString()} has indicated they need assistance!`;
+            if (sessionData?.tripsitter_roles) {
+              await Promise.all(sessionData.tripsitter_roles.map(async roleId => {
+                try {
+                  const roleTripsitter = await interaction.guild?.roles.fetch(roleId) as Role;
+                  helpMessage += `<@&${roleTripsitter.id}> `;
+                } catch (err) {
+                  // log.debug(F, `Role ${roleId} was likely deleted`);
+                }
+              }));
+            }
           } else {
             metaMessage = `${target.toString()} has indicated they need assistance!`;
           }
@@ -1652,280 +1661,104 @@ namespace util {
     const guild = await discordClient.guilds.fetch(ticket.guild_id);
     const member = await guild.members.fetch(userData.discord_id as string);
     if (member) {
-      const myMember = guild.members.me as GuildMember;
-      const myRole = myMember.roles.highest;
-
-      const guildData = await db.discord_guilds.upsert({
-        where: { id: guild.id },
-        create: { id: guild.id },
-        update: {},
+      const sessionData = await db.session_data.findFirst({
+        where: { guild_id: guild.id },
       });
 
-      // Remove the needshelp role
-      const needshelpRole = await guild.roles.fetch(guildData.role_needshelp as string);
-      if (needshelpRole && needshelpRole.comparePositionTo(myRole) < 0) {
-        await member.roles.remove(needshelpRole);
+      if (sessionData?.giving_roles) {
+        await Promise.all(sessionData.giving_roles.map(async roleId => {
+          await member.roles.remove(roleId);
+        }));
       }
 
-      // Restore the old roles
-      if (userData.roles) {
-        // log.debug(F, `Restoring ${userData.discord_id}'s roles: ${userData.roles}`);
-        const roles = userData.roles.split(',');
-
-        const promises = roles.map(async role => {
-          const roleObj = await guild.roles.fetch(role);
-          if (roleObj && roleObj.name !== '@everyone'
-            && roleObj.id !== guildData.role_needshelp
-            && roleObj.comparePositionTo(myRole) < 0
-            && member.guild.id !== env.DISCORD_BL_ID
-          ) {
-            // Check if the bot has permission to add the role
-            log.debug(F, `Adding ${userData.discord_id}'s ${role} role`);
-            try {
-              await member.roles.add(roleObj);
-              return `Role ${role} added successfully.`; // Return something meaningful or null
-            } catch (err) {
-              log.error(F, `Failed to add ${member.displayName}'s ${roleObj.name} role in ${member.guild.name}: ${err}`);
-              return `Failed to add role ${role}.`; // Return something meaningful or null
-            }
-          } else {
-            return `Role ${role} skipped.`; // Return something meaningful or null
-          }
-        });
-
-        // Wait for all promises to resolve
-        const results = await Promise.all(promises);
-
-        // Get the log channel
-        const channelTripsitLogs = discordClient.channels.cache.get(env.CHANNEL_TRIPSIT_LOG) as TextChannel;
-
-        await channelTripsitLogs.send({
-          allowedMentions: {},
-          embeds: [
-            embedTemplate()
-              .setAuthor({
-                name: `${member}`,
-                iconURL: member ? member.user.displayAvatarURL() : '',
-              })
-              .setDescription(results.join('\n'))
-              .setColor(Colors.Green),
-          ],
-        });
+      if (sessionData?.removing_roles) {
+        await Promise.all(sessionData.removing_roles.map(async roleId => {
+          await member.roles.add(roleId);
+        }));
       }
-    } else {
-      // User likely left the guild
     }
   }
 
   export async function needsHelpMode(
     interaction: ModalSubmitInteraction | ButtonInteraction | ChatInputCommandInteraction,
     target: GuildMember,
-  ) {
-    const guild = interaction.guild as Guild;
-    const guildData = await db.discord_guilds.upsert({
-      where: {
-        id: guild.id,
-      },
-      create: {
-        id: guild.id,
-      },
+  ):Promise<void> {
+    if (!interaction.guild) return;
+    const userData = await db.users.upsert({
+      where: { discord_id: target.id },
+      create: { discord_id: target.id },
       update: {},
     });
+    // Restore roles
+    const guild = await discordClient.guilds.fetch(interaction.guild.id);
+    const member = await guild.members.fetch(userData.discord_id as string);
+    if (member) {
+      const sessionData = await db.session_data.findFirst({
+        where: { guild_id: guild.id },
+      });
 
-    const perms = await checkGuildPermissions(guild, permissionList.guildPermissions);
-    if (perms.length > 0) {
-      const guildOwner = await guild.fetchOwner();
-      await guildOwner.send({ content: `Please make sure I can ${perms.join(', ')} in ${guild} so I can run ${F}!` }); // eslint-disable-line
-      log.error(F, `Missing permission ${perms.join(', ')} in ${guild}!`);
-      return;
-    }
+      if (sessionData?.giving_roles) {
+        await Promise.all(sessionData.giving_roles.map(async roleId => {
+          await member.roles.add(roleId);
+        }));
+      }
 
-    let roleNeedshelp = {} as Role;
-    if (guildData.role_needshelp) {
-      try {
-        roleNeedshelp = await guild.roles.fetch(guildData.role_needshelp) as Role;
-      } catch (err) {
-        const guildOwner = await guild.fetchOwner();
-        await guildOwner.send({ content: `The 'needshelp' role has been deleted, please remake the #tripsit channel with the new role!` }); // eslint-disable-line
-        return;
+      if (sessionData?.removing_roles) {
+        await Promise.all(sessionData.removing_roles.map(async roleId => {
+          await member.roles.remove(roleId);
+        }));
       }
     }
 
-    // Save the user's roles to the DB
-    target.fetch();
-    const targetRoleIds = target.roles.cache.map(role => role.id);
-    // log.debug(F, `targetRoleIds: ${targetRoleIds}`);
-
-    await db.users.upsert({
-      where: {
-        discord_id: target.id,
-      },
-      create: {
-        discord_id: target.id,
-        roles: targetRoleIds.toString(),
-      },
-      update: {
-        roles: targetRoleIds.toString(),
-      },
-    });
-
-    const myMember = await interaction.guild?.members.fetch(interaction.client.user.id) as GuildMember;
-    const myRole = myMember.roles.highest;
-
-    // Patch for BlueLight: They don't want to remove roles from the target at all
-    if (
-      target.guild.id !== env.DISCORD_BL_ID
-      // && target.guild.id !== env.DISCORD_GUILD_ID // For testing
-    ) {
-      // Remove all roles, except team and vanity, from the target
-      target.roles.cache.forEach(async role => {
-        // log.debug(F, `role: ${role.name} - ${role.id}`);
-
-        if (!ignoredRoles.includes(role.id)
-          && !role.name.includes('@everyone')
-          && role.id !== roleNeedshelp.id
-          && role.comparePositionTo(myRole)) {
-          log.debug(F, `Removing role ${role.name} from ${target.displayName}`);
-          try {
-            await target.roles.remove(role);
-          } catch (err) {
-            log.error(F, `Error removing role from target: ${err}`);
-            const guildOwner = await interaction.guild?.fetchOwner();
-            await guildOwner?.send({
-              content: stripIndents`There was an error removing ${role.name} from ${target.displayName}!
-              Please make sure I have the Manage Roles permission, or put this role above mine so I don't try to remove it.
-              If there's any questions please contact Moonbear#1024 on TripSit!` }); // eslint-disable-line
-            log.error(F, `Missing permission ${perms.join(', ')} in ${interaction.guild}! Sent the guild owner a DM!`);
-          }
-        }
-      });
-    }
-
-    // Add the needsHelp role to the target
-    try {
-      log.debug(F, `Adding role ${roleNeedshelp.name} to ${target.displayName}`);
-      await target.roles.add(roleNeedshelp);
-    } catch (err) {
-      const guildOwner = await interaction.guild?.fetchOwner();
-      await guildOwner?.send({
-        content: stripIndents`There was an error adding the ${roleNeedshelp.name} role to ${target.displayName}!
-            Please make sure I have the Manage Roles permission, or put this role below mine so I can give it to people!
-            If there's any questions please contact Moonbear#1024 on TripSit!` }); // eslint-disable-line
-      log.error(F, `Missing permission ${perms.join(', ')} in ${interaction.guild}! Sent the guild owner a DM!`);
-    }
     log.debug(F, 'Finished needshelp mode');
   }
 
-  export async function tripsitmodeOn(
+  export async function tripsitModeOn(
     interaction: ChatInputCommandInteraction,
     target: GuildMember,
-  ) {
-    if (!interaction.guild) return false;
-    if (!interaction.member) return false;
+  ):Promise<void> {
+    if (!interaction.guild) return;
+    if (!interaction.member) return;
 
-    let guildData = await db.discord_guilds.upsert({
+    await util.sessionDataInit(interaction.guild.id);
+
+    const sessionData = await db.session_data.findFirst({
       where: {
-        id: interaction.guild?.id,
+        guild_id: interaction.guild.id,
       },
-      create: {
-        id: interaction.guild?.id,
-      },
-      update: {},
     });
 
-    // Get the tripsit channel from the guild
-    let tripsitChannel = {} as TextChannel;
-    try {
-      if (guildData.channel_tripsit) {
-        tripsitChannel = await interaction.guild?.channels.fetch(guildData.channel_tripsit) as TextChannel;
-      }
-    } catch (err) {
-      // log.debug(F, `There was an error fetching the tripsit channel, it was likely deleted:\n ${err}`);
-      // Update the ticket status to closed
-      guildData = await db.discord_guilds.update({
-        where: {
-          id: interaction.guild.id,
-        },
-        data: {
-          channel_tripsit: null,
-        },
+    if (!sessionData) {
+      await interaction.reply('Tripsit is not set up on this server!');
+      return;
+    }
+
+    const failedPermissions:string[] = [];
+
+    failedPermissions.push(...(await validate.tripsitChannel(interaction)));
+    failedPermissions.push(...(await validate.tripsitterRoles(interaction)));
+    failedPermissions.push(...(await validate.metaChannel(interaction)));
+    failedPermissions.push(...(await validate.giveRemoveRoles(interaction)));
+    failedPermissions.push(...(await validate.logChannel(interaction)));
+
+    if (failedPermissions.length > 0) {
+      await interaction.reply({
+        content: `Tripsit start failed! Current issues: ${failedPermissions.join(', ')}`,
+        ephemeral: true,
       });
     }
-
-    const channelPerms = await checkChannelPermissions(tripsitChannel, permissionList.tripsitChannel);
-    if (channelPerms.length > 0) {
-      log.error(F, `Missing TS channel permission ${channelPerms.join(', ')} in ${tripsitChannel.name}!`);
-      const guildOwner = await interaction.guild?.fetchOwner();
-      await guildOwner.send({
-        content: stripIndents`Missing permissions in ${tripsitChannel}!
-      In order to setup the tripsitting feature I need:
-      View Channel - to see the channel
-      Send Messages - to send messages
-      Create Private Threads - to create private threads
-      Send Messages in Threads - to send messages in threads
-      Manage Threads - to delete threads when they're done
-      `}); // eslint-disable-line
-      log.error(F, `Missing TS channel permission ${channelPerms.join(', ')} in ${tripsitChannel.name}!`);
-      return false;
-    }
-
-    // Get the tripsit meta channel from the guild
-    let channelTripsitmeta = {} as TextChannel;
-    try {
-      // log.debug(F, `guildData.channel_tripsitmeta: ${guildData.channel_tripsitmeta}`);
-      if (guildData.channel_tripsitmeta) {
-        channelTripsitmeta = await interaction.guild?.channels.fetch(guildData.channel_tripsitmeta) as TextChannel;
-      }
-    } catch (err) {
-      // log.debug(F, `There was an error fetching the tripsit channel, it was likely deleted:\n ${err}`);
-      // Update the ticket status to closed
-      guildData = await db.discord_guilds.update({
-        where: {
-          id: interaction.guild.id,
-        },
-        data: {
-          channel_tripsitmeta: null,
-        },
-      });
-    }
-
-    const metaPerms = await checkChannelPermissions(channelTripsitmeta, permissionList.metaChannel);
-    if (metaPerms.length > 0) {
-      log.error(F, `Missing TS channel permission ${channelPerms.join(', ')} in ${channelTripsitmeta.name}!`);
-      const guildOwner = await interaction.guild?.fetchOwner();
-      await guildOwner.send({
-        content: stripIndents`Missing permissions in ${channelTripsitmeta}!
-    In order to setup the tripsitting feature I need:
-    View Channel - to see the channel
-    Send Messages - to send messages
-    Create Private Threads - to create private threads, when requested through the bot
-    Send Messages in Threads - to send messages in threads
-    Manage Threads - to delete threads when they're done
-    `}); // eslint-disable-line
-      log.error(F, `Missing permission ${channelPerms.join(', ')} in ${tripsitChannel.name}!`);
-      return false;
-    }
-    // const showMentions = actorIsAdmin ? [] : ['users', 'roles'] as MessageMentionTypes[];
 
     log.debug(F, `Target: ${target.displayName} (${target.id})`);
     const userData = await db.users.upsert({
-      where: {
-        discord_id: target.id,
-      },
-      create: {
-        discord_id: target.id,
-      },
+      where: { discord_id: target.id },
+      create: { discord_id: target.id },
       update: {},
     });
     log.debug(F, `Target userData: ${JSON.stringify(userData, null, 2)}`);
+
     let ticketData = await db.user_tickets.findFirst({
-      where: {
-        user_id: userData.id,
-        type: 'TRIPSIT',
-      },
-      orderBy: {
-        thread_id: 'desc',
-      },
+      where: { user_id: userData.id, type: 'TRIPSIT' },
+      orderBy: { thread_id: 'desc' },
     });
     log.debug(F, `Target ticket data: ${JSON.stringify(ticketData, null, 2)}`);
 
@@ -1959,21 +1792,23 @@ namespace util {
         await interaction.deferReply({ ephemeral: true });
         await needsHelpMode(interaction, target);
         log.debug(F, 'Added needshelp to user');
-        let roleTripsitter = {} as Role;
-        let roleHelper = {} as Role;
-        let roleNeedshelp = {} as Role;
-        if (guildData.role_tripsitter) {
-          roleTripsitter = await interaction.guild?.roles.fetch(guildData.role_tripsitter) as Role;
+        let tripsitterRoles = [] as Role[];
+        let removeRoles = [] as Role[];
+        let giveRoles = [] as Role[];
+        if (sessionData.tripsitter_roles) {
+          tripsitterRoles = await Promise.all(sessionData.tripsitter_roles.map(async roleId => await interaction.guild?.roles.fetch(roleId) as Role));
         }
-        if (guildData.role_helper) {
-          roleHelper = await interaction.guild?.roles.fetch(guildData.role_helper) as Role;
+
+        if (sessionData.removing_roles) {
+          removeRoles = await Promise.all(sessionData.removing_roles.map(async roleId => await interaction.guild?.roles.fetch(roleId) as Role));
         }
-        if (guildData.role_needshelp) {
-          roleNeedshelp = await interaction.guild?.roles.fetch(guildData.role_needshelp) as Role;
+
+        if (sessionData.giving_roles) {
+          giveRoles = await Promise.all(sessionData.giving_roles.map(async roleId => await interaction.guild?.roles.fetch(roleId) as Role));
         }
-        log.debug(F, `Helper Role : ${roleHelper.name}`);
-        log.debug(F, `Tripsitter Role : ${roleTripsitter.name}`);
-        log.debug(F, `Needshelp Role : ${roleNeedshelp.name}`);
+        log.debug(F, `Tripsitter Roles : ${tripsitterRoles.length}`);
+        log.debug(F, `Remove Roles : ${removeRoles.length}`);
+        log.debug(F, `Giving Roles : ${giveRoles.length}`);
 
         // Remind the user that they have a channel open
         // const recipient = '' as string;
@@ -1986,9 +1821,8 @@ namespace util {
         const diff = now.getTime() - createdDate.getTime();
         const minutes = Math.floor(diff / 1000 / 60);
         if (minutes > 5) {
-          const helperStr = `and/or ${roleHelper}`;
           // log.debug(F, `Target has open ticket, and it was created over 5 minutes ago!`);
-          helpMessage += `\n\nSomeone from the ${roleTripsitter} ${guildData.role_helper ? helperStr : ''} team will be with you as soon as they're available!`; // eslint-disable-line max-len
+          helpMessage += `\n\nSomeone from the team will be with you as soon as they're available! ${tripsitterRoles.join(' ')}`; // eslint-disable-line max-len
         }
         await threadHelpUser.send({
           content: helpMessage,
@@ -2006,10 +1840,9 @@ namespace util {
         if (ticketData.meta_thread_id) {
           let metaMessage = '';
           if (minutes > 5) {
-            const helperString = `and/or ${roleHelper}`;
-            metaMessage = `Hey ${roleTripsitter} ${guildData.role_helper ?? helperString} team, ${interaction.member} has indicated that ${target.displayName} needs assistance!`; // eslint-disable-line max-len
+            metaMessage = `Hey team, <#${interaction.user.id}> has indicated that ${target.displayName} needs assistance! ${tripsitterRoles.join(' ')} `; // eslint-disable-line max-len
           } else {
-            metaMessage = `${interaction.member} has indicated that ${target.displayName} needs assistance!`;
+            metaMessage = `<#${interaction.user.id}> has indicated that ${target.displayName} needs assistance!`;
           }
           // Get the tripsit meta channel from the guild
           let metaThread = {} as ThreadChannel;
@@ -2058,10 +1891,10 @@ namespace util {
         const embed = embedTemplate()
           .setColor(Colors.DarkBlue)
           .setDescription(stripIndents`Hey ${interaction.member}, ${target.displayName} already has an open ticket!
-            I've re-applied the ${roleNeedshelp} role to them, and updated the thread.
+            I've re-applied the ${giveRoles.join(', ')} role(s) to them, and updated the thread.
             Check your channel list or click '${threadHelpUser.toString()} to see!`);
         await interaction.editReply({ embeds: [embed] });
-        return true;
+        return;
       }
     }
 
@@ -2106,8 +1939,6 @@ namespace util {
           .setDescription(replyMessage);
         await i.editReply({ embeds: [embed] });
       });
-
-    return true;
   }
 
   export async function tripSitMe(
@@ -2116,64 +1947,37 @@ namespace util {
     triage: string,
     intro: string,
   ): Promise<ThreadChannel | null> {
-    // Used in m.tripsitme.ts
-    log.info(F, await commandContext(interaction));
-    // await interaction.deferReply({ ephemeral: true });
+    if (!interaction.guild) return null;
+    if (!interaction.member) return null;
 
-    // Lookup guild information for variables
-    if (!interaction.guild) {
-      // log.debug(F, `no guild!`);
-      await interaction.editReply(await text.guildOnly());
-      return null;
-    }
-    if (!interaction.member) {
-      // log.debug(F, `no member!`);
-      await interaction.editReply(await text.memberOnly());
-      return null;
-    }
+    await util.sessionDataInit(interaction.guild.id);
 
-    // const actor = interaction.member;
-    const guildData = await db.discord_guilds.upsert({
+    const sessionData = await db.session_data.findFirst({
       where: {
-        id: interaction.guild?.id,
+        guild_id: interaction.guild.id,
       },
-      create: {
-        id: interaction.guild?.id,
-      },
-      update: {},
     });
+
+    if (!sessionData) {
+      await interaction.reply('Tripsit is not set up on this server!');
+      return null;
+    }
 
     // let backupMessage = 'Hey ';
     // Get the roles we'll be referencing
-    let roleTripsitter = {} as Role;
-    let roleHelper = {} as Role;
+    let tripsitterRoles = [] as Role[];
     let channelTripsitmeta = {} as TextChannel;
-    if (guildData.role_tripsitter) {
-      roleTripsitter = await interaction.guild.roles.fetch(guildData.role_tripsitter) as Role;
-      // backupMessage += `<@&${roleTripsitter.id}> `;
+    if (sessionData.tripsitter_roles) {
+      tripsitterRoles = await Promise.all(sessionData.tripsitter_roles.map(async roleId => await interaction.guild?.roles.fetch(roleId) as Role));
     }
-    if (guildData.role_helper) {
-      roleHelper = await interaction.guild.roles.fetch(guildData.role_helper) as Role;
-      // backupMessage += `<@&${roleHelper.id}> `;
-    }
-    if (guildData.channel_tripsitmeta) {
+    if (sessionData.meta_channel) {
       try {
-        channelTripsitmeta = await interaction.guild.channels.fetch(guildData.channel_tripsitmeta) as TextChannel;
+        channelTripsitmeta = await interaction.guild.channels.fetch(sessionData.meta_channel) as TextChannel;
       } catch (err) {
         // log.debug(F, `There was an error fetching the meta channel, it was likely deleted:\n ${err}`);
-        // Update the ticket status to closed
-        await db.discord_guilds.update({
-          where: {
-            id: guildData.id,
-          },
-          data: {
-            channel_tripsitmeta: null,
-          },
-        });
       }
     }
-    log.debug(F, `roleTripsitter: ${roleTripsitter.name} (${roleTripsitter.id})`);
-    log.debug(F, `roleHelper: ${roleHelper.name} (${roleHelper.id})`);
+    log.debug(F, `tripsitterRoles: ${tripsitterRoles})`);
     log.debug(F, `channelTripsitmeta: ${channelTripsitmeta.name} (${channelTripsitmeta.id})`);
 
     // log.debug(F, `submitted with |
@@ -2205,25 +2009,16 @@ namespace util {
     // Get the tripsit channel from the guild
     let tripsitChannel = {} as TextChannel;
     try {
-      if (guildData.channel_tripsit) {
-        tripsitChannel = await interaction.guild.channels.fetch(guildData.channel_tripsit) as TextChannel;
+      if (sessionData.tripsit_channel) {
+        tripsitChannel = await interaction.guild.channels.fetch(sessionData.tripsit_channel) as TextChannel;
       }
     } catch (err) {
       // log.debug(F, `There was an error fetching the tripsit channel, it was likely deleted:\n ${err}`);
-      // Update the ticket status to closed
-      await db.discord_guilds.update({
-        where: {
-          id: guildData.id,
-        },
-        data: {
-          channel_tripsit: null,
-        },
-      });
     }
 
     if (!tripsitChannel.id) {
       // log.debug(F, `no tripsit channel!`);
-      await interaction.editReply({ content: 'No tripsit channel found! Make sure to run /setup tripsit' });
+      await interaction.editReply({ content: 'No tripsit channel found! Make sure to run /tripsit setup' });
       return null;
     }
 
@@ -2258,7 +2053,7 @@ namespace util {
   
         Your issue: ${intro ? `\n${intro}` : noInfo}
   
-        Someone from the ${roleTripsitter} ${guildData.role_helper && !targetIsTeamMember ? `and/or ${roleHelper}` : ''} team will be with you as soon as they're available!
+        Someone from the team will be with you as soon as they're available!
   
         If this is a medical emergency please contact your local emergency services: we do not call EMS on behalf of anyone.
         
@@ -2267,6 +2062,8 @@ namespace util {
         **Not in an emergency, but still want to talk to a mental health advisor? Warm lines provide non-crisis mental health support and guidance from trained volunteers. https://warmline.org/warmdir.html#directory**
   
         **The wonderful people at the Fireside project can also help you through a rough trip. You can check them out: https://firesideproject.org/**
+
+        ${tripsitterRoles.join(' ')}
         `;
 
     const row = new ActionRowBuilder<ButtonBuilder>()
@@ -2426,7 +2223,7 @@ namespace util {
   ):Promise<ActionRowBuilder<ButtonBuilder | ChannelSelectMenuBuilder | StringSelectMenuBuilder | RoleSelectMenuBuilder >[]> {
     if (!interaction.guild) return [];
 
-    await util.sessionData(interaction.guild.id);
+    await util.sessionDataInit(interaction.guild.id);
 
     const setupMenuRow = new ActionRowBuilder<ButtonBuilder>();
 
@@ -2447,45 +2244,15 @@ namespace util {
     // Otherwise, they can still view the setup options
     if ((interaction.member as GuildMember).permissions.has(PermissionFlagsBits.ManageChannels)
     && global.sessionsSetupData[interaction.guild.id].tripsitChannel && global.sessionsSetupData[interaction.guild.id].tripsitterRoles) {
-      let permissionsPassed = true as boolean;
+      const failedPermissions:string[] = [];
 
-      if (global.sessionsSetupData[interaction.guild.id].tripsitChannel) {
-        const channelId = global.sessionsSetupData[interaction.guild.id].tripsitChannel as string;
-        const channel = interaction.guild.channels.cache.get(channelId) as GuildTextBasedChannel;
+      failedPermissions.push(...(await validate.tripsitChannel(interaction)));
+      failedPermissions.push(...(await validate.tripsitterRoles(interaction)));
+      failedPermissions.push(...(await validate.metaChannel(interaction)));
+      failedPermissions.push(...(await validate.giveRemoveRoles(interaction)));
+      failedPermissions.push(...(await validate.logChannel(interaction)));
 
-        const perms = await checkChannelPermissions(channel, permissionList.tripsitChannel);
-        if (perms.length > 0) {
-          permissionsPassed = false;
-        }
-      }
-
-      if (global.sessionsSetupData[interaction.guild.id].metaChannel) {
-        const channelId = global.sessionsSetupData[interaction.guild.id].metaChannel as string;
-        const channel = interaction.guild.channels.cache.get(channelId) as GuildTextBasedChannel;
-        const perms = await checkChannelPermissions(channel, permissionList.metaChannel);
-        if (perms.length > 0) {
-          permissionsPassed = false;
-        }
-      }
-
-      if (global.sessionsSetupData[interaction.guild.id].givingRoles
-      || global.sessionsSetupData[interaction.guild.id].removingRoles) {
-        const perms = await checkGuildPermissions(interaction.guild, permissionList.guildPermissions);
-        if (perms.length > 0) {
-          permissionsPassed = false;
-        }
-      }
-
-      if (global.sessionsSetupData[interaction.guild.id].logChannel) {
-        const channelId = global.sessionsSetupData[interaction.guild.id].logChannel as string;
-        const channel = interaction.guild.channels.cache.get(channelId) as GuildTextBasedChannel;
-        const perms = await checkChannelPermissions(channel, permissionList.logChannel);
-        if (perms.length > 0) {
-          permissionsPassed = false;
-        }
-      }
-
-      if (permissionsPassed) {
+      if (failedPermissions.length === 0) {
         setupMenuRow.addComponents(
           button.save().setStyle(ButtonStyle.Danger),
         );
@@ -2676,7 +2443,7 @@ namespace util {
     }
   }
 
-  export async function sessionData(
+  export async function sessionDataInit(
     guildId: string,
   ) {
     if (!global.sessionsSetupData) {
@@ -2698,6 +2465,222 @@ namespace util {
         footer: await text.footer(),
       };
     }
+  }
+}
+
+namespace validate {
+  export async function tripsitChannel(
+    interaction: ChatInputCommandInteraction | ButtonInteraction | ChannelSelectMenuInteraction | RoleSelectMenuInteraction,
+  ): Promise<string[]> {
+    if (!interaction.guild) return [await text.guildOnly()];
+    await util.sessionDataInit(interaction.guild.id);
+
+    const channelId = global.sessionsSetupData[interaction.guild.id].tripsitChannel;
+    if (!channelId) return ['\n\n**⚠️ No TripSit Channel set! ⚠️**'];
+
+    const channel = interaction.guild.channels.cache.get(channelId) as GuildTextBasedChannel;
+    if (!channel) return ['\n\n**⚠️ TripSit Channel not found, try again with another channel! ⚠️**'];
+
+    const missingPerms = await checkChannelPermissions(channel, permissionList.tripsitChannel);
+
+    if (missingPerms.length > 0) {
+      return [`\n\n**⚠️ Missing ${missingPerms.join(', ')} permission in <#${channel.id}> ⚠️**`];
+    }
+
+    // try {
+    //   await interaction.guild.channels.fetch(channelId) as TextChannel;
+    // } catch (err) {
+    //   const sessionData = await db.session_data.findFirst({ where: { guild_id: interaction.guild.id } })
+    //   if (sessionData) {
+    //     await db.session_data.update({
+    //       where: { id: sessionData.id },
+    //       data: { tripsit_channel: undefined },
+    //     });
+    //   }
+    //   return ['Tripsit channel was deleted, please re-run /tripsit setup!'];
+    // }
+
+    return [];
+  }
+
+  export async function metaChannel(
+    interaction: ChatInputCommandInteraction | ButtonInteraction | ChannelSelectMenuInteraction | RoleSelectMenuInteraction,
+  ): Promise<string[]> {
+    if (!interaction.guild) return [await text.guildOnly()];
+    await util.sessionDataInit(interaction.guild.id);
+
+    const channelId = global.sessionsSetupData[interaction.guild.id].metaChannel;
+    if (!channelId) return []; // Meta channel is optional
+
+    const channel = interaction.guild.channels.cache.get(channelId) as GuildTextBasedChannel;
+    if (!channel) return ['\n\n**⚠️ Meta Channel not found, try again with another channel! ⚠️**'];
+
+    const missingPerms = await checkChannelPermissions(channel, permissionList.metaChannel);
+
+    if (missingPerms.length > 0) {
+      return [`\n\n**⚠️ Missing ${missingPerms.join(', ')} permission in <#${channel.id}> ⚠️**`];
+    }
+
+    // try {
+    //   await interaction.guild.channels.fetch(channelId) as TextChannel;
+    // } catch (err) {
+    //   const sessionData = await db.session_data.findFirst({ where: { guild_id: interaction.guild.id } })
+    //   if (sessionData) {
+    //     await db.session_data.update({
+    //       where: { id: sessionData.id },
+    //       data: { meta_channel: undefined },
+    //     });
+    //   }
+    //   return ['Tripsit meta channel was deleted, please re-run /tripsit setup!'];
+    // }
+
+    return [];
+  }
+
+  export async function logChannel(
+    interaction: ChatInputCommandInteraction | ButtonInteraction | ChannelSelectMenuInteraction | RoleSelectMenuInteraction,
+  ): Promise<string[]> {
+    if (!interaction.guild) return [await text.guildOnly()];
+    await util.sessionDataInit(interaction.guild.id);
+
+    const channelId = global.sessionsSetupData[interaction.guild.id].logChannel;
+    if (!channelId) return [];
+
+    const channel = interaction.guild.channels.cache.get(channelId) as GuildTextBasedChannel;
+    if (!channel) return ['\n\n**⚠️ Log Channel not found, try again with another channel! ⚠️**'];
+
+    const missingPerms = await checkChannelPermissions(channel, permissionList.logChannel);
+
+    if (missingPerms.length > 0) {
+      return [`\n\n**⚠️ Missing ${missingPerms.join(', ')} permission in <#${channel.id}> ⚠️**`];
+    }
+
+    // try {
+    //   await interaction.guild.channels.fetch(channelId) as TextChannel;
+    // } catch (err) {
+    //   const sessionData = await db.session_data.findFirst({ where: { guild_id: interaction.guild.id } })
+    //   if (sessionData) {
+    //     await db.session_data.update({
+    //       where: { id: sessionData.id },
+    //       data: { log_channel: undefined },
+    //     });
+    //   }
+    //   return ['Log channel was deleted, please re-run /tripsit setup!'];
+    // }
+
+    return [];
+  }
+
+  export async function tripsitterRoles(
+    interaction: ChatInputCommandInteraction | ButtonInteraction | ChannelSelectMenuInteraction | RoleSelectMenuInteraction,
+  ): Promise<string[]> {
+    if (!interaction.guild) return [await text.guildOnly()];
+    await util.sessionDataInit(interaction.guild.id);
+
+    const roleIds = global.sessionsSetupData[interaction.guild.id].tripsitterRoles;
+    if (!roleIds) return ['\n**⚠️ No Tripsitter Roles set, I wont be able to invite people to private threads! ⚠️**'];
+
+    const roleCheck = await Promise.all(roleIds.map(async roleId => {
+      if (!interaction.guild) return text.guildOnly();
+      // For each of the tripsitter roles, validate:
+
+      // The role exists
+      const role = await interaction.guild?.roles.fetch(roleId);
+      if (!role) return `\n**⚠️ ${role} not found, try again with another role! ⚠️**`;
+
+      // Check that the role is mentionable by the bot
+      if (!role.mentionable) {
+        // If the role isn't mentionable, double check that the bot doesn't have the permission to mention everyone
+        const perms = await checkGuildPermissions(interaction.guild, permissionList.mentionEveryone);
+        if (perms.length > 0) {
+          return `\n**⚠️ The ${role} isn't mentionable, and I don't have the permission to mention them! ⚠️**`;
+        }
+        log.debug(F, `The ${role} isn't mentionable, but I have the permission to mention hidden roles!`);
+      }
+
+      return undefined;
+    }));
+
+    const filteredResults = roleCheck.filter(role => role !== undefined);
+
+    // log.debug(F, `filteredResults: ${filteredResults}`);
+
+    return filteredResults as string[];
+  }
+
+  export async function giveRemoveRoles(
+    interaction: ChatInputCommandInteraction | ButtonInteraction | ChannelSelectMenuInteraction | RoleSelectMenuInteraction,
+  ): Promise<string[]> {
+    if (!interaction.guild) return [await text.guildOnly()];
+    await util.sessionDataInit(interaction.guild.id);
+
+    // If the bot should give or remove roles, check if the bot has the ManageRoles permission
+    // Also check that the provided roles are below the bot's current role
+    const { givingRoles } = global.sessionsSetupData[interaction.guild.id];
+    const { removingRoles } = global.sessionsSetupData[interaction.guild.id];
+    if (givingRoles || removingRoles) {
+      const perms = await checkGuildPermissions(interaction.guild, permissionList.guildPermissions);
+      if (perms.length > 0) {
+        log.error(F, `Missing guild permission ${perms.join(', ')} in ${interaction.guild}!`);
+        return [`\n\n**⚠️ I need the ${perms.join(', ')} permission in order to give or remove roles! ⚠️**`];
+      }
+
+      const myRole = interaction.guild.members.me?.roles.highest;
+
+      // Get a list of all roles that are being added or removed
+      const roleIds = [
+        ...(givingRoles ?? []),
+        ...(removingRoles ?? []),
+      ];
+
+      // log.debug(F, `roleIds: ${roleIds.join(', ')}`);
+
+      const higherRoles = await Promise.all(
+        roleIds.map(async roleId => {
+          const role = await interaction.guild?.roles.fetch(roleId);
+          // log.debug(F, `role: ${JSON.stringify(role, null, 2)}`);
+
+          if (myRole && role && myRole.comparePositionTo(role) < 0) {
+            // log.debug(F, `myRole.comparePositionTo(role): ${myRole?.comparePositionTo(role)}`);
+            return role;
+          }
+          return undefined;
+        }),
+      );
+
+      // Filter out 'undefined' values
+      const filteredResults = higherRoles.filter((role): role is Role => role !== undefined);
+
+      // log.debug(F, `filteredResults: ${filteredResults}`);
+
+      if (filteredResults.length > 0) {
+        // log.error(F, `The bot's role is not higher than the roles being added in ${interaction.guild.name}!`);
+        return [`\n\n**⚠️The bot's role is needs to be higher than the ${filteredResults.join(', ')} role(s)!⚠️**`];
+      }
+
+      if (givingRoles && removingRoles) {
+        // If both options are supplied, make sure that they don't share any roles
+        const sharedRoles = await Promise.all(
+          givingRoles.map(async roleId => {
+            if (removingRoles.includes(roleId)) {
+              return interaction.guild?.roles.fetch(roleId);
+            }
+            return undefined;
+          }),
+        );
+
+        // Filter out 'undefined' values
+        const filteredShared = sharedRoles.filter((role): role is Role => role !== undefined);
+
+        log.debug(F, `filteredShared: ${filteredShared.join(', ')}`);
+
+        if (filteredShared.length > 0) {
+          return [`\n\n**⚠️The role(s) ${filteredShared.join(', ')} are in both the giving and removing roles!⚠️**`];
+        }
+      }
+    }
+
+    return [];
   }
 }
 
@@ -2887,7 +2870,7 @@ namespace page {
       Double check that the Tripsitter Roles can access this channel, and @everyone can't
     */
 
-    await util.sessionData(interaction.guild.id);
+    await util.sessionDataInit(interaction.guild.id);
 
     let description = stripIndents`
       Here we can setup TripSit Sessions in your guild.
@@ -2918,26 +2901,9 @@ namespace page {
 
     // log.debug(F, `setupOptions: ${JSON.stringify(global.sessionsSetupData[interaction.guild.id], null, 2)}`);
 
-    if (global.sessionsSetupData[interaction.guild.id].tripsitChannel) {
-      const channelId = global.sessionsSetupData[interaction.guild.id].tripsitChannel as string;
-      const channel = interaction.guild.channels.cache.get(channelId) as GuildTextBasedChannel;
-
-      const channelPerms = await checkChannelPermissions(channel, permissionList.tripsitChannel);
-      if (channelPerms.length > 0) {
-        log.error(F, `Missing TS channel permission ${channelPerms.join(', ')} in ${channel.name}!`);
-        description += `\n\n**⚠️ Missing ${channelPerms.join(', ')} permission in ${channel} ⚠️**!`;
-      }
-    }
-
-    if (global.sessionsSetupData[interaction.guild.id].metaChannel) {
-      const channelId = global.sessionsSetupData[interaction.guild.id].metaChannel as string;
-      const channel = interaction.guild.channels.cache.get(channelId) as GuildTextBasedChannel;
-      const channelPerms = await checkChannelPermissions(channel, permissionList.metaChannel);
-      if (channelPerms.length > 0) {
-        log.error(F, `Missing TS channel permission ${channelPerms.join(', ')} in ${channel.name}!`);
-        description += `\n\n**⚠️Missing ${channelPerms.join(', ')} permission in ${channel}⚠️**!`;
-      }
-    }
+    description += await validate.tripsitChannel(interaction);
+    description += (await validate.tripsitterRoles(interaction)).join('');
+    description += await validate.metaChannel(interaction);
 
     return {
       embeds: [embedTemplate()
@@ -2992,24 +2958,8 @@ namespace page {
       Send Messages - to send messages
     `;
 
-    if (global.sessionsSetupData[interaction.guild.id].givingRoles
-      || global.sessionsSetupData[interaction.guild.id].removingRoles) {
-      const perms = await checkGuildPermissions(interaction.guild, permissionList.guildPermissions);
-      if (perms.length > 0) {
-        log.error(F, `Missing guild permission ${perms.join(', ')} in ${interaction.guild}!`);
-        description += stripIndents`**⚠️n\nMissing ${perms.join(', ')} permission in ${interaction.guild}!⚠️**`;
-      }
-    }
-
-    if (global.sessionsSetupData[interaction.guild.id].logChannel) {
-      const channelId = global.sessionsSetupData[interaction.guild.id].logChannel as string;
-      const channel = interaction.guild.channels.cache.get(channelId) as GuildTextBasedChannel;
-      const perms = await checkChannelPermissions(channel, permissionList.logChannel);
-      if (perms.length > 0) {
-        log.error(F, `Missing TS channel permission ${perms.join(', ')} in ${channel.name}!`);
-        description += stripIndents`\n\n**⚠️Missing ${perms.join(', ')} permission in ${channel}⚠️**!`;
-      }
-    }
+    description += (await validate.giveRemoveRoles(interaction)).join('');
+    description += await validate.logChannel(interaction);
 
     return {
       embeds: [embedTemplate()
@@ -3032,7 +2982,7 @@ namespace page {
     log.info(F, await commandContext(interaction));
     if (!interaction.guild || !interaction.member) return { content: await text.guildOnly() };
 
-    await util.sessionData(interaction.guild.id);
+    await util.sessionDataInit(interaction.guild.id);
 
     return {
       embeds: [embedTemplate()
@@ -3060,6 +3010,69 @@ namespace page {
   ): Promise<InteractionEditReplyOptions> {
     log.info(F, await commandContext(interaction));
     if (!interaction.guild || !interaction.member || !interaction.channel || interaction.channel.isDMBased()) return { content: await text.guildOnly() };
+
+    await util.sessionDataInit(interaction.guild.id);
+
+    const sessionDataInit = global.sessionsSetupData[interaction.guild.id];
+
+    const channelTripsit = await interaction.guild.channels.fetch(sessionDataInit.tripsitChannel as string) as GuildTextBasedChannel;
+
+    // We need to send the message, otherwise it has the "user used /tripsit setup" at the top
+    const introMessage = await channelTripsit.send({
+      embeds: [
+        new EmbedBuilder()
+          .setTitle(sessionDataInit.title)
+          .setFooter({ text: sessionDataInit.footer })
+          .setDescription(sessionDataInit.description)
+          .setColor(Colors.Blue),
+      ],
+      components: [
+        new ActionRowBuilder<ButtonBuilder>()
+          .addComponents(
+            new ButtonBuilder()
+              .setCustomId('tripsitmeClick')
+              .setLabel('I would like to talk to a tripsitter!')
+              .setStyle(ButtonStyle.Primary),
+          ),
+      ],
+    });
+
+    // Save this info to the DB
+    const guildData = await db.discord_guilds.upsert({
+      where: { id: interaction.guild.id },
+      create: { id: interaction.guild.id },
+      update: {},
+    });
+
+    const userData = await db.users.upsert({
+      where: { discord_id: interaction.user.id },
+      create: { discord_id: interaction.user.id },
+      update: {},
+    });
+
+    const sessionDataUpdate = {
+      guild_id: guildData.id,
+      tripsit_channel: sessionDataInit.tripsitChannel as string,
+      tripsitter_roles: sessionDataInit.tripsitterRoles ?? [],
+      meta_channel: sessionDataInit.metaChannel,
+      log_channel: sessionDataInit.logChannel,
+      giving_roles: sessionDataInit.givingRoles ?? [],
+      removing_roles: sessionDataInit.removingRoles ?? [],
+      title: sessionDataInit.title,
+      description: sessionDataInit.description,
+      footer: sessionDataInit.footer,
+      intro_message: introMessage.id,
+      created_by: userData.id,
+      created_at: new Date(),
+      updated_by: userData.id,
+      updated_at: new Date(),
+    };
+
+    await db.session_data.upsert({
+      where: { id: guildData.id },
+      create: sessionDataUpdate,
+      update: sessionDataUpdate,
+    });
 
     return {
       embeds: [embedTemplate()
@@ -3104,7 +3117,7 @@ namespace modal {
     if (!interaction.channel) return;
     if (interaction.channel.type !== ChannelType.GuildText) return;
 
-    await util.sessionData(interaction.guild.id);
+    await util.sessionDataInit(interaction.guild.id);
 
     await interaction.showModal(new ModalBuilder()
       .setCustomId(`tripsitmeModal~${interaction.id}`)
@@ -3237,6 +3250,15 @@ namespace permissionList {
     'ViewChannel',
     'SendMessages',
   ];
+
+  export const mentionEveryone:PermissionResolvable[] = [
+    'MentionEveryone',
+  ];
+
+  export const manageThreads:PermissionResolvable[] = [
+    'SendMessages',
+    'ManageThreads',
+  ];
 }
 
 export async function tripsitTimer() {
@@ -3272,12 +3294,14 @@ export async function tripsitSelect(
   if (!interaction.guild) return;
   // Used in selectMenu.ts
   const menuId = interaction.customId;
-  log.debug(F, `menuId: ${menuId}`);
+  // log.debug(F, `menuId: ${menuId}`);
   const [, menuAction] = menuId.split('~') as [
     null,
     /* Setup Options */'tripsitChannel' | 'metaChannel' | 'tripsitterRoles' | 'givingRoles' | 'removingRoles' |
     /* Tripsitting selection */ 'user',
   ];
+
+  await util.sessionDataInit(interaction.guild.id);
 
   // Save the most recent interaction data to the global  variable
   // We use a global variable so that it persists between interactions, but it's not stored in the db yet
@@ -3292,7 +3316,6 @@ export async function tripsitSelect(
     }
     if (interaction.isRoleSelectMenu()) {
       if (interaction.customId === 'tripsit~tripsitterRoles') {
-        log.debug(F, `tripsit~tripsitterRoles interaction.values: ${interaction.values}`);
         global.sessionsSetupData[interaction.guild.id].tripsitterRoles = interaction.values;
       }
       if (interaction.customId === 'tripsit~givingRoles') {
@@ -3337,7 +3360,7 @@ export async function tripsitButton(
 ): Promise<void> {
   // Used in buttonClick.ts
   const buttonID = interaction.customId;
-  log.debug(F, `buttonID: ${buttonID}`);
+  // log.debug(F, `buttonID: ${buttonID}`);
   const [, buttonAction] = buttonID.split('~') as [
     null,
     /* button actions */ 'owned' | 'meta' | 'backup' | 'teamClose' | 'userClose' | 'startSession' | 'updateEmbed' |
@@ -3432,7 +3455,6 @@ export const tripsitCommand: SlashCommand = {
           await interaction.editReply(await page.setupPageOne(interaction));
         } catch (error) {
           log.error(F, `Failed to setupPageOne: ${error}`);
-          console.log(error);
           await interaction.editReply({
             content: 'There was an error setting up the TripSit Sessions module!',
           });

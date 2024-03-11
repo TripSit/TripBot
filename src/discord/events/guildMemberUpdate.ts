@@ -4,6 +4,7 @@ import {
   GuildMemberUpdateEvent,
 } from '../@types/eventDef';
 import { addedVerified } from '../utils/trust';
+import { util } from '../commands/guild/d.tripsit';
 // import { topic } from '../../global/commands/g.topic';
 
 type MindsetNames =
@@ -283,23 +284,18 @@ async function removeExTeamFromThreads(
   newMember: GuildMember,
   roleId: string,
 ) {
-  const guildData = await db.discord_guilds.upsert({
+  if (!newMember.guild) return;
+  await util.sessionDataInit(newMember.guild.id);
+
+  const sessionData = await db.session_data.findFirst({
     where: {
-      id: newMember.guild?.id,
+      guild_id: newMember.guild.id,
     },
-    create: {
-      id: newMember.guild?.id,
-    },
-    update: {},
   });
   // If the role removed was a helper/tripsitter role, we need to remove them from threads they are in
-  if (guildData.channel_tripsit
-      && (roleId === guildData.role_helper
-          || roleId === guildData.role_tripsitter
-      )
-  ) {
+  if (sessionData?.tripsit_channel && sessionData.tripsitter_roles.includes(roleId)) {
     log.debug(F, `${newMember.displayName} was a helper/tripsitter!`);
-    const channelTripsit = await discordClient.channels.fetch(guildData.channel_tripsit) as TextChannel;
+    const channelTripsit = await discordClient.channels.fetch(sessionData.tripsit_channel) as TextChannel;
     const userData = await db.users.upsert({
       where: {
         discord_id: newMember.user.id,
@@ -324,7 +320,7 @@ async function removeExTeamFromThreads(
     const fetchedThreads = await channelTripsit.threads.fetch();
     fetchedThreads.threads.forEach(async thread => {
       if (thread
-        && thread.parentId === guildData.channel_tripsit
+        && thread.parentId === sessionData.tripsit_channel
         && thread.id !== ticketData?.thread_id) {
         log.debug(F, `Removing ${newMember.displayName} from ${thread.name}`);
         await thread.members.remove(newMember.id, 'Helper/Tripsitter role removed');

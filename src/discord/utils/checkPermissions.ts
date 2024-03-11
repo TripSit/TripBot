@@ -25,7 +25,7 @@ export async function checkGuildPermissions(
 
   // Check if the bot has the right permissions
   const missingPermissions = await Promise.all(
-    permissionList.map(permission => (myPerms.permissions.has(permission) ? permission : undefined)),
+    permissionList.map(permission => (!myPerms.permissions.has(permission) ? permission : undefined)),
   );
 
   // Filter out 'undefined' values
