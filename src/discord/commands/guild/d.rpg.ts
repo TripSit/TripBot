@@ -2277,7 +2277,7 @@ export async function rpgFlair(interaction: ChatInputCommandInteraction) {
   // First check if the flair contains a @mention
   let newFlair = interaction.options.getString('flair') as string;
   // log.debug(F, `newFlair: ${newFlair}`);
-  const mentionRegex = /<@!?\d{18}>/g;
+  const mentionRegex = /<@!?\d{18,}>/g;
   const mentions = newFlair.match(mentionRegex);
   log.debug(F, `mentions: ${mentions}`);
   // If the flair contains a mention, check if the user has mod permissions

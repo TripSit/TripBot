@@ -95,16 +95,12 @@ export async function pitchTent(
     await newChannel.fetch();
     await newChannel.send(`## Welcome to your tent, <@${New.member?.id}>
 
-- **Webcam Chat (WC) is available for level 10 and up!**
- - The normal rules are still in effect:
+- **Webcam use is available for level 10 and up!**
  - Don't show off drugs, porn, gore, weapons or anything a reasonable person would consider offensive on camera.
- - Consumption of mild psychoactive (nicotine, caffeine, alcohol, weed) substances is allowed.
+ - Consumption of mildly psychoactive (nicotine, caffeine, alcohol, weed) substances is allowed.
 
 - **Looking for others to join?**
- - Pick up the 'Voice Chatty' role in <id:customize>
- - This icon indicates you're looking for joiners in chat
- - You can (infrequently) mention the \`@Join VC\` role to see if anyone wants to join!
- - You can pick up this role in <id:customize>
+ - \`/voice ping\` - Use this to ping those opted-in to VC ping invites
 
 - **Modify your tent**
  - \`/voice bitrate\` - Change the bitrate of your tent
