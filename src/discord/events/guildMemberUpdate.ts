@@ -280,55 +280,6 @@ async function teamMindsetRemove(
   }
 }
 
-async function removeExTeamFromThreads(
-  newMember: GuildMember,
-  roleId: string,
-) {
-  if (!newMember.guild) return;
-  await util.sessionDataInit(newMember.guild.id);
-
-  const sessionData = await db.session_data.findFirst({
-    where: {
-      guild_id: newMember.guild.id,
-    },
-  });
-  // If the role removed was a helper/tripsitter role, we need to remove them from threads they are in
-  if (sessionData?.tripsit_channel && sessionData.tripsitter_roles.includes(roleId)) {
-    log.debug(F, `${newMember.displayName} was a helper/tripsitter!`);
-    const channelTripsit = await discordClient.channels.fetch(sessionData.tripsit_channel) as TextChannel;
-    const userData = await db.users.upsert({
-      where: {
-        discord_id: newMember.user.id,
-      },
-      create: {
-        discord_id: newMember.user.id,
-      },
-      update: {},
-    });
-
-    const ticketData = await db.user_tickets.findFirst({
-      where: {
-        user_id: userData.id,
-        status: {
-          not: {
-            in: ['CLOSED', 'RESOLVED', 'DELETED'],
-          },
-        },
-      },
-    });
-
-    const fetchedThreads = await channelTripsit.threads.fetch();
-    fetchedThreads.threads.forEach(async thread => {
-      if (thread
-        && thread.parentId === sessionData.tripsit_channel
-        && thread.id !== ticketData?.thread_id) {
-        log.debug(F, `Removing ${newMember.displayName} from ${thread.name}`);
-        await thread.members.remove(newMember.id, 'Helper/Tripsitter role removed');
-      }
-    });
-  }
-}
-
 async function addedBooster(
   newMember: GuildMember,
   roleId: string,
@@ -409,7 +360,7 @@ async function addedPatreon(
 async function roleAddProcess(
   newMember: GuildMember,
   oldMember: GuildMember,
-  rolesAdded: string[],
+  rolesAdded: Role[],
 ) {
   // This goes here because we don't really care when other guilds add roles
   if (newMember.guild.id !== env.DISCORD_GUILD_ID) return;
@@ -418,35 +369,33 @@ async function roleAddProcess(
   const auditlog = await discordClient.channels.fetch(env.CHANNEL_AUDITLOG) as TextChannel;
 
   // Go through each role added
-  rolesAdded.forEach(async roleId => {
-    await donorColorCheck(newMember, oldMember, roleId);
-    await teamMindsetCheck(newMember, roleId);
-    await addedVerified(newMember, roleId);
-    await addedBooster(newMember, roleId);
-    await addedPatreon(newMember, roleId);
+  rolesAdded.forEach(async role => {
+    await donorColorCheck(newMember, oldMember, role.id);
+    await teamMindsetCheck(newMember, role.id);
+    await addedVerified(newMember, role.id);
+    await addedBooster(newMember, role.id);
+    await addedPatreon(newMember, role.id);
 
-    const role = await newMember.guild.roles.fetch(roleId) as Role;
     await auditlog.send(`${newMember.displayName} added ${role.name}`);
   });
 }
 
 async function roleRemProcess(
   newMember: GuildMember,
-  rolesRemoved: string[],
+  rolesRemoved: Role[],
 ) {
   // This is commented out because we need to remove people from threads when they remove the tripsitter/helper roles
   // if (newMember.guild.id !== env.DISCORD_GUILD_ID) return;
   // log.debug(F, `roles removed: ${rolesRemoved}`);
   // Go through each role removed
   const auditlog = await discordClient.channels.fetch(env.CHANNEL_AUDITLOG) as TextChannel;
-  rolesRemoved.forEach(async roleId => {
-    await removeExTeamFromThreads(newMember, roleId);
+  rolesRemoved.forEach(async role => {
+    await util.removeExTeamFromThreads(newMember, role);
     // We don't want to run the rest of this on any other guild
     if (newMember.guild.id !== env.DISCORD_GUILD_ID) return;
-    await teamMindsetRemove(newMember, roleId);
-    await donorColorRemove(newMember, roleId);
+    await teamMindsetRemove(newMember, role.id);
+    await donorColorRemove(newMember, role.id);
 
-    const role = await newMember.guild.roles.fetch(roleId) as Role;
     await auditlog.send(`${newMember.displayName} removed ${role.name}`);
   });
 }
@@ -456,8 +405,8 @@ export const guildMemberUpdate: GuildMemberUpdateEvent = {
   async execute(oldMember, newMember) {
     // log.info(F, `${oldMember} was updated`);
     // log.info(F, `${newMember} was created`);
-    const oldRoles = oldMember.roles.cache.map(role => role.id);
-    const newRoles = newMember.roles.cache.map(role => role.id);
+    const oldRoles = oldMember.roles.cache.map(role => role);
+    const newRoles = newMember.roles.cache.map(role => role);
     // log.debug(F, `oldRoles: ${oldRoles}`);
     // log.debug(F, `newRoles: ${newRoles}`);
 

@@ -7,6 +7,21 @@ import Rollbar from 'rollbar';
 // import { Telegraf as TelegramClient } from 'telegraf';
 // import Sentry from '@sentry/node';
 
+export type SessionData = {
+  tripsitChannel: string | null,
+  tripsitterRoles: string[] | null,
+  metaChannel: string | null,
+  logChannel: string | null,
+  givingRoles: string[] | null,
+  removingRoles: string[] | null,
+  introMessage: string | null,
+  title: string,
+  description: string,
+  footer: string,
+  buttonText: string,
+  buttonEmoji: string,
+};
+
 declare global {
   var guildInvites: Collection; // eslint-disable-line
   var reactionRoles: { [key: string]: any };// eslint-disable-line
@@ -28,17 +43,7 @@ declare global {
   var rollbar: Rollbar; // eslint-disable-line
   // eslint-disable-next-line
   var sessionsSetupData: {
-    [key: string]: {
-      tripsitChannel: string | null,
-      tripsitterRoles: string[] | null,
-      metaChannel: string | null,
-      logChannel: string | null,
-      givingRoles: string[] | null,
-      removingRoles: string[] | null,
-      title: string,
-      description: string,
-      footer: string,
-    },
+    [key: string]: sessionData,
   };
 }
 

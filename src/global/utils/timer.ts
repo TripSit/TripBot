@@ -885,6 +885,7 @@ async function runTimer() {
    * This function uses setTimeout so that it can finish running before the next loop
    */
   discordClient.user?.setActivity('with a test kit', { type: ActivityType.Playing });
+  const seconds1 = 1000;
   const seconds5 = 1000 * 5;
   const seconds10 = 1000 * 10;
   const seconds30 = 1000 * 30;
@@ -895,7 +896,7 @@ async function runTimer() {
 
   const timers = [
     { callback: checkReminders, interval: env.NODE_ENV === 'production' ? seconds10 : seconds5 },
-    { callback: tripsitTimer, interval: env.NODE_ENV === 'production' ? seconds60 : seconds10 },
+    { callback: tripsitTimer, interval: env.NODE_ENV === 'production' ? seconds60 : seconds1 },
     { callback: checkMindsets, interval: env.NODE_ENV === 'production' ? seconds60 : seconds5 },
     { callback: callUptime, interval: env.NODE_ENV === 'production' ? seconds60 : seconds5 },
     { callback: checkRss, interval: env.NODE_ENV === 'production' ? seconds30 : seconds5 },

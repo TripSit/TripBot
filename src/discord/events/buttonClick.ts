@@ -3,7 +3,6 @@ import {
   ButtonInteraction,
   Client,
 } from 'discord.js';
-import commandContext from '../utils/context';
 import { applicationApprove } from '../utils/application';
 import { techHelpClick, techHelpClose, techHelpOwn } from '../utils/techHelp';
 // import {
@@ -29,7 +28,7 @@ const F = f(__filename);
 export default buttonClick;
 
 export async function buttonClick(interaction:ButtonInteraction, discordClient:Client) {
-  log.info(F, await commandContext(interaction));
+  // log.info(F, await commandContext(interaction));
   // log.debug(F, 'Interaction deferred!');
   const buttonID = interaction.customId;
 

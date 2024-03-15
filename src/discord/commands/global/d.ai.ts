@@ -34,6 +34,7 @@ import {
   MessageReplyOptions,
   MessageActionRowComponent,
   RoleSelectMenuInteraction,
+  UserSelectMenuInteraction,
 } from 'discord.js';
 import {
   APIInteractionDataResolvedChannel,
@@ -51,10 +52,6 @@ import { embedTemplate } from '../../utils/embedTemplate';
 import commandContext from '../../utils/context';
 import aiChat, { aiModerate } from '../../../global/commands/g.ai';
 
-/* TODO
-* only direct @ message should trigger a response
-* If the user starts typing again, cancel the run and wait for them to either stop typing or send a message
-*/
 const F = f(__filename);
 
 // const maxHistoryLength = 3;
@@ -219,7 +216,7 @@ const menuAiPublic = new StringSelectMenuBuilder()
   .setCustomId('AI~public');
 
 export function getComponentById(
-  interaction: ButtonInteraction | StringSelectMenuInteraction | ChannelSelectMenuInteraction | RoleSelectMenuInteraction,
+  interaction: ButtonInteraction | StringSelectMenuInteraction | ChannelSelectMenuInteraction | RoleSelectMenuInteraction | UserSelectMenuInteraction,
   id: string,
 ):MessageActionRowComponent | null {
   // This function will take an interaction and a customId and return the component with that customId
