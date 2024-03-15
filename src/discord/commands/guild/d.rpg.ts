@@ -221,6 +221,19 @@ const items = {
       effect_value: 'IndieFlower',
       emoji: 'itemFont',
     },
+    Kablammo: {
+      label: 'Kablammo',
+      value: 'Kablammo',
+      description: 'Font',
+      quantity: 1,
+      weight: 0,
+      cost: 700,
+      equipped: false,
+      consumable: false,
+      effect: 'font',
+      effect_value: 'Kablammo',
+      emoji: 'itemFont',
+    },
     KumarOne: {
       label: 'Kumar One',
       value: 'KumarOne',
@@ -284,6 +297,19 @@ const items = {
       consumable: false,
       effect: 'font',
       effect_value: 'PressStart2P',
+      emoji: 'itemFont',
+    },
+    ProtestRevolution: {
+      label: 'Protest Revolution',
+      value: 'ProtestRevolution',
+      description: 'Font',
+      quantity: 1,
+      weight: 0,
+      cost: 700,
+      equipped: false,
+      consumable: false,
+      effect: 'font',
+      effect_value: 'ProtestRevolution',
       emoji: 'itemFont',
     },
     ReggaeOne: {
@@ -375,6 +401,19 @@ const items = {
       consumable: false,
       effect: 'font',
       effect_value: 'SpicyRice',
+      emoji: 'itemFont',
+    },
+    Workbench: {
+      label: 'Workbench',
+      value: 'Workbench',
+      description: 'Font',
+      quantity: 1,
+      weight: 0,
+      cost: 700,
+      equipped: false,
+      consumable: false,
+      effect: 'font',
+      effect_value: 'Workbench',
       emoji: 'itemFont',
     },
     Barcode: {
@@ -689,6 +728,19 @@ const items = {
       consumable: false,
       effect: 'background',
       effect_value: 'Mindsets',
+      emoji: 'itemBackground',
+    },
+    Musical: {
+      label: 'Musical',
+      value: 'Musical',
+      description: 'Background',
+      quantity: 1,
+      weight: 0,
+      cost: 1000,
+      equipped: false,
+      consumable: false,
+      effect: 'background',
+      effect_value: 'Musical',
       emoji: 'itemBackground',
     },
     Noise: {
@@ -2277,7 +2329,7 @@ export async function rpgFlair(interaction: ChatInputCommandInteraction) {
   // First check if the flair contains a @mention
   let newFlair = interaction.options.getString('flair') as string;
   // log.debug(F, `newFlair: ${newFlair}`);
-  const mentionRegex = /<@!?\d{18}>/g;
+  const mentionRegex = /<@!?\d{18,}>/g;
   const mentions = newFlair.match(mentionRegex);
   log.debug(F, `mentions: ${mentions}`);
   // If the flair contains a mention, check if the user has mod permissions
