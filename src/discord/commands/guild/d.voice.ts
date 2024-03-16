@@ -32,55 +32,178 @@ async function tentRename(
 
 async function tentLock(
   voiceChannel: VoiceBasedChannel,
-):Promise<EmbedBuilder> {
+): Promise<EmbedBuilder> {
   let verb = '';
-  if (
-    voiceChannel
-      .permissionsFor(voiceChannel.guild.roles.everyone)
-      .has(PermissionsBitField.Flags.Connect) === true
-  ) {
-    voiceChannel.members.forEach(member => {
-      voiceChannel.permissionOverwrites.edit(member, { Connect: true });
-    });
+  let mode = '';
+  let explanation = '';
+
+  // Fetch the tentChannel data from the database
+  const tentChannel = await db.tentChannel.findFirst({
+    where: {
+      channelId: voiceChannel.id,
+    },
+  });
+
+  if (!tentChannel) {
+    throw new Error(`TentChannel with ID ${voiceChannel.id} not found`);
+  }
+
+  if (tentChannel.mode !== 'locked') {
     voiceChannel.permissionOverwrites.edit(voiceChannel.guild.roles.everyone, { Connect: false });
+    // If the channel is hidden, explain that it will be unhidden but remain locked
+    if (tentChannel.mode === 'hidden') {
+      verb = 'unhidden and ';
+    }
     verb = 'locked';
+    mode = 'locked';
+    explanation = 'The Tent is locked and cannot be joined.';
+
+    // Update the tentChannel mode in the database
+    await db.tentChannel.update({
+      where: {
+        id: tentChannel.id,
+      },
+      data: {
+        mode: 'locked',
+      },
+    });
+
+    // Update the user's preferredTentMode in the database
+    await db.users.update({
+      where: {
+        id: tentChannel.userId,
+      },
+      data: {
+        preferredTentMode: 'locked',
+      },
+    });
   } else {
     voiceChannel.permissionOverwrites.edit(voiceChannel.guild.roles.everyone, { Connect: true });
     verb = 'unlocked';
+    mode = 'open';
+    explanation = 'The Tent is now open and can be joined.';
+
+    // Update the tentChannel mode in the database
+    await db.tentChannel.update({
+      where: {
+        id: tentChannel.id,
+      },
+      data: {
+        mode: 'open',
+      },
+    });
+
+    // Update the user's preferredTentMode in the database
+    await db.users.update({
+      where: {
+        id: tentChannel.userId,
+      },
+      data: {
+        preferredTentMode: 'open',
+      },
+    });
   }
+
+  // Edit the info message with the new mode
+  const infoMessage = await voiceChannel.messages.fetch(tentChannel.infoMessageId);
+  if (infoMessage) {
+    // Update the info message with the new mode using regex
+    const newContent = infoMessage.content.replace(/Mode: .*/, `Mode: ${mode.charAt(0).toUpperCase() + mode.slice(1)}`);
+    infoMessage.edit(newContent);
+  }
+
   // log.debug(F, `Channel is now ${verb}`);
   return embedTemplate()
-    .setTitle('Success')
+    .setTitle(`Mode set to **${mode}**`)
     .setColor(Colors.Green)
-    .setDescription(`${voiceChannel} has been ${verb}`);
+    .setDescription(`${explanation}`);
 }
 
 async function tentHide(
   voiceChannel: VoiceBasedChannel,
-):Promise<EmbedBuilder> {
+): Promise<EmbedBuilder> {
   let verb = '';
+  let mode = '';
+  let explanation = '';
 
-  if (
-    voiceChannel
-      .permissionsFor(voiceChannel.guild.roles.everyone)
-      .has(PermissionsBitField.Flags.ViewChannel) === true
-  ) {
-    voiceChannel.members.forEach(member => {
-      voiceChannel.permissionOverwrites.edit(member, { ViewChannel: true });
-    });
+  // Fetch the tentChannel data from the database
+  const tentChannel = await db.tentChannel.findFirst({
+    where: {
+      channelId: voiceChannel.id,
+    },
+  });
+
+  if (!tentChannel) {
+    throw new Error(`TentChannel with ID ${voiceChannel.id} not found`);
+  }
+
+  if (tentChannel.mode !== 'hidden') {
     voiceChannel.permissionOverwrites.edit(voiceChannel.guild.roles.everyone, { ViewChannel: false });
-    verb = 'hidden';
+    voiceChannel.permissionOverwrites.edit(voiceChannel.guild.roles.everyone, { Connect: false });
+    verb = 'hidden (and locked)';
+    mode = 'hidden';
+    explanation = 'Tent is hidden from the channel list and locked.';
+
+    // Update the tentChannel mode in the database
+    await db.tentChannel.update({
+      where: {
+        id: tentChannel.id,
+      },
+      data: {
+        mode: 'hidden',
+      },
+    });
+
+    // Update the user's preferredTentMode in the database
+    await db.users.update({
+      where: {
+        id: tentChannel.userId,
+      },
+      data: {
+        preferredTentMode: 'hidden',
+      },
+    });
   } else {
     voiceChannel.permissionOverwrites.edit(voiceChannel.guild.roles.everyone, { ViewChannel: true });
-    verb = 'unhidden';
+    voiceChannel.permissionOverwrites.edit(voiceChannel.guild.roles.everyone, { Connect: true });
+    verb = 'unhidden (and unlocked)';
+    mode = 'open';
+    explanation = 'The tent is visible and can be joined.';
+
+    // Update the tentChannel mode in the database
+    await db.tentChannel.update({
+      where: {
+        id: tentChannel.id,
+      },
+      data: {
+        mode: 'open',
+      },
+    });
+
+    // Update the user's preferredTentMode in the database
+    await db.users.update({
+      where: {
+        id: tentChannel.userId,
+      },
+      data: {
+        preferredTentMode: 'open',
+      },
+    });
+  }
+
+  // Edit the info message with the new mode
+  const infoMessage = await voiceChannel.messages.fetch(tentChannel.infoMessageId);
+  if (infoMessage) {
+    // Update the info message with the new mode using regex
+    const newContent = infoMessage.content.replace(/Mode: .*/, `Mode: ${mode.charAt(0).toUpperCase() + mode.slice(1)}`);
+    infoMessage.edit(newContent);
   }
 
   // log.debug(F, `Channel is now ${verb}`);
-
   return embedTemplate()
-    .setTitle('Success')
+    .setTitle(`Mode set to **${mode}**`)
     .setColor(Colors.Green)
-    .setDescription(`${voiceChannel} has been ${verb}`);
+    .setDescription(`${explanation}`);
 }
 
 // async function tentAdd(
