@@ -152,7 +152,7 @@ export const dPoll: SlashCommand = {
 export default dPoll;
 
 export async function updatePollEmbed({ message, emoji: { name: emojiName } }: MessageReaction) {
-  log.debug(F, 'updatePollEmbed triggered');
+  // log.debug(F, 'updatePollEmbed triggered');
   if (emojiName && message.embeds[0] && message.embeds[0]?.footer?.text?.includes('A poll by')) {
     const { description, title, footer } = message.embeds[0];
     if (description) {

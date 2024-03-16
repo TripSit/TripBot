@@ -32,10 +32,11 @@ export const messageReactionAdd: MessageReactionAddEvent = {
     }
 
     if (!messageReaction.message.guild) return; // Ignore DMs
-    // log.info(F, stripIndents`${user} added ${messageReaction.emoji.name} on to \
-    //     ${messageReaction.message.author?.displayName}'s message`);
+
+    // eslint-disable-next-line max-len
     // AI audit stuff comes first cuz this can happen on other guilds
     await aiReaction(messageReaction, user);
+    await tripsitReaction(messageReaction, user);
 
     // Only run the rest on Tripsit, we don't want to snoop on other guilds ( ͡~ ͜ʖ ͡°)
     if (messageReaction.message.guild?.id !== env.DISCORD_GUILD_ID) return;
@@ -45,11 +46,9 @@ export const messageReactionAdd: MessageReactionAddEvent = {
       // log.debug(F, `Ignoring bot interaction`);
       return;
     }
-
-    chitragupta(messageReaction, user, 1);
-    bestOf(messageReaction);
-    updatePollEmbed(messageReaction);
-    tripsitReaction(messageReaction, user);
+    await chitragupta(messageReaction, user, 1);
+    await bestOf(messageReaction);
+    await updatePollEmbed(messageReaction);
     // await communityMod(reaction, user);
   },
 };

@@ -44,13 +44,14 @@ import {
   ChannelType,
   ButtonStyle,
 } from 'discord-api-types/v10';
-import { stripIndents } from 'common-tags';
+import { replaceResultTransformer, stripIndents } from 'common-tags';
 import { DateTime, Duration } from 'luxon';
 import {
   $Enums,
   session_data,
   ticket_status, ticket_type, user_tickets, users,
 } from '@prisma/client';
+import { session } from 'telegraf';
 import commandContext from '../../utils/context';
 import { checkChannelPermissions, checkGuildPermissions } from '../../utils/checkPermissions';
 import { SlashCommand } from '../../@types/commandDef';
@@ -62,8 +63,13 @@ const F = f(__filename);
 /* TODO
 * AI summary of the thread
 * Stats page
-* If no one responds after 5 minutes or so, suggest an AI tripsitter
+* If no one responds after 5 minutes or so, suggest an AI tripsitter?
 * Make sure Helper system still works
+* Stats on the drug usage, anonymous of course
+* Option to delete thread when closing?
+* session menu
+- Open session, how long they've been going on, etc
+* When someone talks, increment the archive and delete times in the db, toherwise it will archive during talkign
 */
 
 /* Testing Scripts
@@ -114,13 +120,13 @@ namespace text {
   export function deleteDuration() {
     return env.NODE_ENV === 'production'
       ? { days: 13.9 } // Needs to be under 14 days
-      : { seconds: 1000 };
+      : { seconds: 10 };
   }
 
   export function archiveDuration() {
     return env.NODE_ENV === 'production'
       ? { days: 7 }
-      : { seconds: 500 };
+      : { seconds: 5 };
   }
 
   export function statusEmoji(
@@ -132,9 +138,9 @@ namespace text {
       case 'OWNED':
         return '🏠';
       case 'SOFT_CLOSED':
-        return '👍';
+        return '😌';
       case 'HARD_CLOSED':
-        return '✅';
+        return '👍';
       case 'ARCHIVED':
         return '📦';
       default:
@@ -235,7 +241,18 @@ namespace timer {
     // Loop through each ticket
     if (ticketData.length > 0) {
       ticketData.forEach(async ticket => {
-        log.debug(F, `[archiveTickets] Archiving ticket ${ticket.id}...`);
+        // Archive the thread on discord
+        let thread = {} as null | Channel;
+        try {
+          thread = await global.discordClient.channels.fetch(ticket.thread_id);
+        } catch (err) {
+          log.debug(F, `[archiveTickets] Thread ${ticket.thread_id} was likely manually deleted`);
+        }
+
+        if (!thread?.isThread()) return;
+        log.debug(F, `[archiveTickets] Archiving session ${thread.name}`);
+
+        await thread.setArchived(true, 'Automatically archived.');
 
         // Update the ticket in the database
         await db.user_tickets.update({
@@ -245,19 +262,7 @@ namespace timer {
             deleted_at: DateTime.utc().plus(text.deleteDuration()).toJSDate(),
           },
         });
-        log.debug(F, '[archiveTickets] Updated the ticket in the db');
-
-        // Archive the thread on discord
-        let thread = {} as null | Channel;
-        try {
-          thread = await global.discordClient.channels.fetch(ticket.thread_id);
-          if (thread?.isThread()) {
-            await thread.setArchived(true, 'Automatically archived.');
-          }
-        } catch (err) {
-          log.debug(F, `[archiveTickets] Thread ${ticket.thread_id} was likely manually deleted`);
-        }
-        log.debug(F, '[archiveTickets] Archived the thread');
+        // log.debug(F, '[archiveTickets] Updated the ticket in the db');
 
         const guild = await discordClient.guilds.fetch(ticket.guild_id);
 
@@ -268,6 +273,7 @@ namespace timer {
           create: {},
           update: {},
         });
+
         try {
           member = await guild.members.fetch(userData.discord_id as string);
         } catch (err) {
@@ -328,18 +334,12 @@ namespace timer {
       },
     });
 
-    // log.debug(F, `[deleteTickets] deleteTicketData: ${JSON.stringify(ticketData, null, 2)}`);
-
     // Loop through each ticket
     if (ticketData.length > 0) {
+      log.debug(F, `[deleteTickets] deleteTicketData: ${JSON.stringify(ticketData.length, null, 2)}`);
+
       ticketData.forEach(async ticket => {
         log.debug(F, `[deleteTickets] Deleting ticket ${ticket.id}...`);
-
-        // Update the ticket in the DB
-        await db.user_tickets.update({
-          where: { id: ticket.id },
-          data: { status: 'DELETED' as ticket_status },
-        });
 
         // Delete the thread on discord
         let thread = {} as null | Channel;
@@ -349,11 +349,18 @@ namespace timer {
           // Thread was likely manually deleted
         }
 
-        if (thread?.isThread()) {
+        if (thread) {
           await thread.delete('Automatically deleted.');
+          log.debug(F, `[deleteTickets] I have deleted thread ${ticket.thread_id}`);
         } else {
           log.debug(F, `[deleteTickets] Thread ${ticket.thread_id} was likely manually deleted`);
         }
+
+        // Update the ticket in the DB
+        await db.user_tickets.update({
+          where: { id: ticket.id },
+          data: { status: 'DELETED' as ticket_status },
+        });
 
         const guild = await discordClient.guilds.fetch(ticket.guild_id);
         let member = {} as null | GuildMember;
@@ -366,33 +373,32 @@ namespace timer {
         try {
           member = await guild.members.fetch(userData.discord_id as string);
         } catch (err) {
-          // Member left the guild
+        // Member left the guild
         }
-
-        const userTotalTickets = await statistic.totalTickets(guild.id, 'TRIPSIT', userData.id);
-        const userAvgTicketTime = await statistic.avgTotalTicketTime(guild.id, 'TRIPSIT', userData.id);
-        const totalAvgTicketTime = await statistic.avgTotalTicketTime(guild.id, 'TRIPSIT');
-
-        const description = thread
-          ? stripIndents`
-            ${member ?? userData.discord_id}'s ticket was deleted after ${DateTime.now().diff(DateTime.fromJSDate(ticket.created_at)).toFormat('hh:mm:ss')}
-  
-
-            They have opened **${userTotalTickets}** tickets in total.
-            Their average ticket lasts ${userAvgTicketTime.toFormat('hh:mm:ss')}
-            The average server ticket lasts ${totalAvgTicketTime.toFormat('hh:mm:ss')}`
-          : stripIndents`
-            ${member ?? userData.discord_id}'s ticket was likely manually deleted, no further actions will be taken.
-          
-            They have opened **${userTotalTickets}** tickets in total.
-            Their average ticket lasts ${userAvgTicketTime.toFormat('hh:mm:ss')}
-            The average server ticket lasts ${totalAvgTicketTime.toFormat('hh:mm:ss')}`;
 
         const sessionData = await util.sessionDataInit(ticket.guild_id);
 
         if (sessionData.logChannel) {
           // Get the log channel
           const channelTripsitLogs = discordClient.channels.cache.get(sessionData.logChannel) as TextChannel;
+
+          const userTotalTickets = await statistic.totalTickets(guild.id, 'TRIPSIT', userData.id);
+          const userAvgTicketTime = await statistic.avgTotalTicketTime(guild.id, 'TRIPSIT', userData.id);
+          const totalAvgTicketTime = await statistic.avgTotalTicketTime(guild.id, 'TRIPSIT');
+          const description = thread
+            ? stripIndents`
+            ${member ?? userData.discord_id}'s ticket was deleted after ${DateTime.now().diff(DateTime.fromJSDate(ticket.created_at)).toFormat('hh:mm:ss')}
+  
+
+            They have opened **${userTotalTickets}** tickets in total.
+            Their average ticket lasts ${userAvgTicketTime.toFormat('hh:mm:ss')}
+            The average server ticket lasts ${totalAvgTicketTime.toFormat('hh:mm:ss')}`
+            : stripIndents`
+            ${member ?? userData.discord_id}'s ticket was likely manually deleted, no further actions will be taken.
+          
+            They have opened **${userTotalTickets}** tickets in total.
+            Their average ticket lasts ${userAvgTicketTime.toFormat('hh:mm:ss')}
+            The average server ticket lasts ${totalAvgTicketTime.toFormat('hh:mm:ss')}`;
 
           await channelTripsitLogs.send({
             allowedMentions: {},
@@ -556,7 +562,7 @@ export namespace util {
     log.info(F, await commandContext(interaction));
     await interaction.deferReply({ ephemeral: true });
 
-    const targetId = interaction.customId.split('~')[1];
+    const targetId = interaction.customId.split('~')[2];
 
     let target = null as GuildMember | null;
     try {
@@ -575,6 +581,8 @@ export namespace util {
       return;
     }
 
+    log.debug(F, `[softClose] targetId: ${targetId}`);
+
     const userData = await db.users.upsert({
       where: {
         discord_id: targetId,
@@ -585,16 +593,21 @@ export namespace util {
       update: {},
     });
 
+    log.debug(F, `[softClose] userData: ${JSON.stringify(userData, null, 2)}`);
+
     const ticketData = await db.user_tickets.findFirst({
       where: {
         user_id: userData.id,
         status: {
           not: {
-            in: ['CLOSED', 'RESOLVED', 'DELETED'],
+            in: ['CLOSED', 'DELETED'],
           },
         },
       },
     });
+
+    log.debug(F, `[softClose] ticketData: ${JSON.stringify(ticketData, null, 2)}`);
+
     const guildData = await db.discord_guilds.upsert({
       where: {
         id: interaction.guild?.id,
@@ -604,7 +617,7 @@ export namespace util {
       },
       update: {},
     });
-    log.debug(F, `[softClose] guildData: ${JSON.stringify(guildData, null, 2)}`);
+    // log.debug(F, `[softClose] guildData: ${JSON.stringify(guildData, null, 2)}`);
 
     if (!ticketData) {
       // log.debug(F, `[softClose] target ${target} does not need help!`);
@@ -613,6 +626,18 @@ export namespace util {
           new EmbedBuilder()
             .setColor(Colors.DarkBlue)
             .setDescription(`Hey ${(interaction.member as GuildMember).displayName}, ${target ? target.displayName : 'this user'} does not have an open session!`),
+        ],
+      });
+      return;
+    }
+
+    if (ticketData.status === 'RESOLVED') {
+      // log.debug(F, `[softClose] target ${target} does not have an open session!`);
+      await interaction.editReply({
+        embeds: [
+          new EmbedBuilder()
+            .setColor(Colors.DarkBlue)
+            .setDescription(`Hey ${(interaction.member as GuildMember).displayName}, this session is already resolved!`),
         ],
       });
       return;
@@ -664,10 +689,10 @@ export namespace util {
 
     await threadHelpUser.send({
       content: stripIndents`Hey ${target}, it looks like you're doing somewhat better!
-      This thread will remain here for ${text.archiveDuration()} if you want to follow up tomorrow.
-      After ${text.deleteDuration()} days, or on request, it will be deleted to preserve your privacy =)
-      If you'd like to go back to social mode, just click the button below!
-    `,
+        As a reminder, this thread will remain here for ${Object.values(text.archiveDuration())[0]} ${Object.keys(text.archiveDuration())[0]} if you want to follow up tomorrow.
+        After ${Object.values(text.deleteDuration())[0]} ${Object.keys(text.deleteDuration())[0]}, or on request, it will be deleted to preserve your privacy =)
+        If everything is good on your end, you can close the session by clicking the button below.
+      `,
       components: [
         new ActionRowBuilder<ButtonBuilder>()
           .addComponents(
@@ -690,7 +715,7 @@ export namespace util {
     log.debug(F, 'Updated ticket status to RESOLVED');
 
     // log.debug(F, `[softClose] ${target.user.tag} (${target.user.id}) is no longer being helped!`);
-    await interaction.editReply({ content: 'Done!' });
+    await interaction.editReply({ content: 'I sent the close button to the thread!' });
   }
 
   export async function hardClose(
@@ -701,17 +726,27 @@ export namespace util {
     if (!interaction.channel) return;
     log.info(F, await commandContext(interaction));
 
-    await interaction.deferReply({ ephemeral: false });
-
-    const targetId = interaction.customId.split('~')[1];
-    const override = interaction.customId.split('~')[0] === 'tripsitModeOffOverride';
+    const targetId = interaction.customId.split('~')[2];
 
     const target = await interaction.guild.members.fetch(targetId);
     const actor = interaction.member as GuildMember;
 
-    if (targetId !== actor.id && !override) {
-      // log.debug(F, `[hardClose] not the target!`);
-      await interaction.editReply({ content: 'Only the user receiving help can click this button!' });
+    const sessionData = await util.sessionDataInit(interaction.guild.id);
+
+    if (targetId !== actor.id) {
+      const override = interaction.customId.split('~')[3];
+      if (!override) {
+        await interaction.reply({
+          content: stripIndents`
+          Only the session creator can close the session! 
+          
+          You can invite the user to close the session with the button below!`,
+          ephemeral: true,
+          components: [
+            new ActionRowBuilder<ButtonBuilder>().addComponents(button.sessionSoftClose(targetId)),
+          ],
+        });
+      }
       return;
     }
 
@@ -747,18 +782,12 @@ export namespace util {
     });
 
     if (!ticketData) {
-      await interaction.editReply({
-        embeds: [
-          new EmbedBuilder()
-            .setColor(Colors.DarkBlue)
-            .setDescription(stripIndents`
-              Hey ${(interaction.member as GuildMember).displayName}, you do not have an open session!
-              If you need help, please click the button again!
-            `),
-        ],
-      });
+      // We don't actually want to update anything but we still need to respond to the interaction
+      await interaction.update({});
       return;
     }
+
+    await interaction.deferReply({ ephemeral: false });
 
     // log.debug(F, `[hardClose] ticketData: ${JSON.stringify(ticketData, null, 2)}`);
     if (Object.entries(ticketData).length === 0) {
@@ -793,7 +822,6 @@ export namespace util {
 
     // Remove the needshelp role
     // let roleNeedshelp = {} as Role;
-    const sessionData = await util.sessionDataInit(interaction.guild.id);
     if (sessionData?.givingRoles) {
       await Promise.all(sessionData.givingRoles.map(async roleId => {
         try {
@@ -805,47 +833,20 @@ export namespace util {
       }));
     }
 
-    let channelTripsitmeta = {} as TextChannel;
-    if (sessionData?.metaChannel) {
-      try {
-        channelTripsitmeta = await interaction.guild.channels.fetch(sessionData.metaChannel) as TextChannel;
-      } catch (err) {
-        // log.debug(F, `[hardClose] There was an error fetching the meta channel, it was likely deleted:\n ${err}`);
-      }
-    }
+    // let channelTripsitmeta = {} as TextChannel;
+    // if (sessionData?.metaChannel) {
+    //   try {
+    //     channelTripsitmeta = await interaction.guild.channels.fetch(sessionData.metaChannel) as TextChannel;
+    //   } catch (err) {
+    //     // log.debug(F, `[hardClose] There was an error fetching the meta channel, it was likely deleted:\n ${err}`);
+    //   }
+    // }
 
     // Re-add old roles
-    if (userData.roles) {
-      const myMember = await interaction.guild.members.fetch(interaction.client.user.id);
-      const myRole = myMember.roles.highest;
-      const removedRoles = sessionData?.removingRoles ?? [];
+    await util.restoreRoles(userData, ticketData);
 
-      // readd each role to the target
-      if (removedRoles.length > 0) {
-        removedRoles.forEach(async roleId => {
-          // log.debug(F, `[hardClose] Re-adding roleId: ${roleId}`);
-          if (!interaction.guild) {
-            log.error(F, 'no guild!');
-            return;
-          }
-          const roleObj = await interaction.guild.roles.fetch(roleId) as Role;
-          const removingRoles = sessionData?.removingRoles ?? [];
-          if (roleObj
-            && roleObj.name !== '@everyone'
-            && !sessionData.givingRoles?.includes(roleObj.id)
-            && roleObj.comparePositionTo(myRole) < 0) {
-            try {
-              await target.roles.add(roleObj);
-            } catch (err) {
-              log.error(F, `Error adding role to target: ${err}`);
-              log.error(F, `${roleObj.name} to ${target.displayName} in ${interaction.guild}!`);
-            }
-          }
-        });
-      }
-    }
-
-    // Change the channel icon
+    // Get the thread
+    // Need to double check that it wasnt manually deleted
     let threadHelpUser = {} as ThreadChannel;
     try {
       threadHelpUser = await interaction.guild.channels.fetch(ticketData.thread_id) as ThreadChannel;
@@ -868,31 +869,43 @@ export namespace util {
     }
 
     if (threadHelpUser.archived) {
+      // We can't send messages to an archived channel
       await threadHelpUser.setArchived(false);
       log.debug(F, `[hardClose] Un-archived ${threadHelpUser.name}`);
     }
 
     // Let the log channel know the user has been helped
-    const channelLogId = sessionData?.logChannel;
-    if (channelLogId) {
-      try {
-        const channelLog = await interaction.guild.channels.fetch(channelLogId);
-        if (channelLog?.isTextBased()) {
-          await channelLog.send({
-            content: stripIndents`${actor.displayName} has indicated that they no longer need help!`,
-          });
-        }
-      } catch (err) {
-        // Log thread likely doesn't exist
-      }
+    if (sessionData.logChannel) {
+      const channelTripsitLogs = interaction.guild.channels.cache.get(sessionData.logChannel) as TextChannel;
+      const userTotalTickets = await statistic.totalTickets(interaction.guild.id, 'TRIPSIT', userData.id);
+      const userAvgTicketTime = await statistic.avgTotalTicketTime(interaction.guild.id, 'TRIPSIT', userData.id);
+      const totalAvgTicketTime = await statistic.avgTotalTicketTime(interaction.guild.id, 'TRIPSIT');
+
+      await channelTripsitLogs.send({
+        allowedMentions: {},
+        embeds: [
+          new EmbedBuilder()
+            .setDescription(stripIndents`
+              <@${target.id}>'s session <#${interaction.channel.id}> was closed after ${DateTime.now().diff(DateTime.fromJSDate(ticketData.created_at)).toFormat('hh:mm:ss')}
+
+              It will be archived in ${Object.values(text.archiveDuration())[0]} ${Object.keys(text.archiveDuration())[0]}.
+              It will be deleted in ${Object.values(text.deleteDuration())[0]} ${Object.keys(text.deleteDuration())[0]}.
+
+              They have opened **${userTotalTickets}** tickets in total.
+              Their average ticket lasts ${userAvgTicketTime.toFormat('hh:mm:ss')}
+              The average server ticket lasts ${totalAvgTicketTime.toFormat('hh:mm:ss')}
+            `)
+            .setColor(Colors.DarkOrange),
+        ],
+      });
     }
 
     // Send the end message to the user
     try {
       await interaction.editReply(stripIndents`Hey ${target}, we're glad you're doing better!
       We've restored your old roles back to normal <3
-      This thread will remain here for ${text.archiveDuration()} if you want to follow up tomorrow.
-      After ${text.deleteDuration()} days, or on request, it will be deleted to preserve your privacy =)`);
+      This thread will remain here for ${Object.values(text.archiveDuration())[0]} ${Object.keys(text.archiveDuration())[0]} if you want to follow up tomorrow.
+      After ${Object.values(text.deleteDuration())[0]} ${Object.keys(text.deleteDuration())[0]}, or on request, it will be deleted to preserve your privacy =)`);
     } catch (err) {
       log.error(F, `Error sending end help message to ${threadHelpUser}`);
       log.error(F, err as string);
@@ -900,32 +913,28 @@ export namespace util {
 
     // Send the survey
     let message: Message;
-    await threadHelpUser.send(stripIndents`
-        ${emojiGet('Invisible')}
-        > **If you have a minute, your feedback is important to us!**
-        > Please rate your experience with ${interaction.guild.name}'s service by reacting below.
-        > Thank you!
-        ${emojiGet('Invisible')}
-        `)
-      .then(async msg => {
-        message = msg;
-        await msg.react(text.rateOne());
-        await msg.react(text.rateTwo());
-        await msg.react(text.rateThree());
-        await msg.react(text.rateFour());
-        await msg.react(text.rateFive());
-      });
+
+    // If there has not already been a survey collected, send the survey message
+    if (!ticketData.survey_response) {
+      await threadHelpUser.send(stripIndents`
+          ${emojiGet('Invisible')}
+          > **If you have a minute, your feedback is important to us!**
+          > Please rate your experience with ${interaction.guild.name}'s service by reacting below.
+          > Thank you!
+          ${emojiGet('Invisible')}
+          `)
+        .then(async msg => {
+          message = msg;
+          await msg.react(text.rateOne());
+          await msg.react(text.rateTwo());
+          await msg.react(text.rateThree());
+          await msg.react(text.rateFour());
+          await msg.react(text.rateFive());
+        });
+    }
 
     // Do this last because it looks weird to have it happen in-between messages
     await threadHelpUser.setName(text.threadName(target, 'HARD_CLOSED'));
-
-    // log.debug(F, `[hardClose] ${target.user.tag} (${target.user.id}) is no longer being helped!`);
-    // await interaction.editReply({ content: 'Done!' });
-
-    // Update the ticket status to closed
-    ticketData.status = 'CLOSED' as ticket_status;
-    ticketData.archived_at = DateTime.utc().plus(text.archiveDuration()).toJSDate();
-    ticketData.deleted_at = DateTime.utc().plus(text.deleteDuration()).toJSDate();
 
     await db.user_tickets.update({
       where: {
@@ -933,8 +942,10 @@ export namespace util {
       },
       data: {
         status: 'CLOSED' as ticket_status,
-        archived_at: ticketData.archived_at,
-        deleted_at: ticketData.deleted_at,
+        closed_at: new Date(),
+        closed_by: userData.id,
+        archived_at: DateTime.utc().plus(text.archiveDuration()).toJSDate(),
+        deleted_at: DateTime.utc().plus(text.deleteDuration()).toJSDate(),
       },
     });
     log.debug(F, 'Updated ticket status to CLOSED');
@@ -982,7 +993,7 @@ export namespace util {
         }
       }
     }
-    log.debug(F, `[startSession] Target: ${target.displayName} (${target.id})`);
+    log.info(F, `[startSession] Target: ${target.displayName} (${target.id})`);
 
     const userData = await db.users.upsert({
       where: { discord_id: target.id },
@@ -996,7 +1007,7 @@ export namespace util {
         user_id: userData.id,
         status: {
           not: {
-            in: ['CLOSED', 'RESOLVED', 'DELETED'],
+            in: ['DELETED'],
           },
         },
       },
@@ -1006,7 +1017,7 @@ export namespace util {
       await util.sessionContinue(interaction, target, ticketData);
       return;
     }
-    log.debug(F, 'No open ticket found');
+    log.info(F, '[startSession] No open ticket found, starting new session');
 
     await util.sessionNew(interaction, target, userData);
   }
@@ -1018,7 +1029,8 @@ export namespace util {
   ) {
     if (!interaction.guild) return;
     if (!interaction.member) return;
-    log.debug(F, `[sessionContinue] Target has tickets: ${JSON.stringify(ticketData, null, 2)}`);
+    log.info(F, `[sessionContinue] ${target.displayName} (${target.id}) has an open ticket, attempting to continue`);
+    // log.debug(F, `[sessionContinue] Target has tickets: ${JSON.stringify(ticketData, null, 2)}`);
 
     const sessionData = await util.sessionDataInit(interaction.guild.id);
 
@@ -1026,7 +1038,7 @@ export namespace util {
     try {
       threadHelpUser = await interaction.guild?.channels.fetch(ticketData.thread_id) as ThreadChannel;
     } catch (err) {
-      log.debug(F, 'There was an error updating the help thread, it was likely deleted');
+      log.debug(F, `There was an error updating ${target.displayName} (${target.id})'s help thread, it was likely deleted`);
       // Update the ticket status to closed
 
       await db.user_tickets.update({
@@ -1037,18 +1049,14 @@ export namespace util {
           deleted_at: ticketData.deleted_at,
         },
       });
-      log.debug(F, 'Updated ticket status to DELETED');
-      log.debug(F, `[sessionContinue] Ticket: ${JSON.stringify(ticketData, null, 2)}`);
-      // If going down this path, skip down to interaction.showModal
+      // log.debug(F, 'Updated ticket status to DELETED');
     }
-
-    log.debug(F, `[sessionContinue] ThreadHelpUser: ${threadHelpUser.name}`);
 
     // If the thread exists
     if (threadHelpUser.id) {
       await interaction.deferReply({ ephemeral: true });
       await needsHelpMode(interaction, target);
-      log.debug(F, 'Added needshelp to user');
+      // log.debug(F, 'Added needshelp to user');
       let tripsitterRoles = [] as Role[];
       let removeRoles = [] as Role[];
       let giveRoles = [] as Role[];
@@ -1063,34 +1071,35 @@ export namespace util {
       if (sessionData.givingRoles) {
         giveRoles = await Promise.all(sessionData.givingRoles.map(async roleId => await interaction.guild?.roles.fetch(roleId) as Role));
       }
-      log.debug(F, `[sessionContinue] Tripsitter Roles : ${tripsitterRoles.length}`);
-      log.debug(F, `[sessionContinue] Remove Roles : ${removeRoles.length}`);
-      log.debug(F, `[sessionContinue] Giving Roles : ${giveRoles.length}`);
-
-      const teamInitialized = (interaction.member as GuildMember).id === target.id;
-
-      log.debug(F, 'Told user they already have an open channel');
+      // log.debug(F, `[sessionContinue] Tripsitter Roles : ${tripsitterRoles.length}`);
+      // log.debug(F, `[sessionContinue] Remove Roles : ${removeRoles.length}`);
+      // log.debug(F, `[sessionContinue] Giving Roles : ${giveRoles.length}`);
 
       // Check if the created_by is in the last 5 minutes
-      const minutes = Math.floor(new Date().getTime() - new Date(ticketData.reopened_at ?? ticketData.created_at).getTime() / 1000 / 60);
+      // log.debug(F, `[sessionContinue] ticketData.created_at: ${ticketData.created_at}`);
+      // log.debug(F, `[sessionContinue] ticketData.reopened_at: ${ticketData.reopened_at}`);
 
       // Send the update message to the thread
+      const teamInitialized = (interaction.member as GuildMember).id !== target.id;
       let helpMessage = teamInitialized
         ? stripIndents`Hey ${target}, the team thinks you could still use some help, lets continue talking here!`
         : stripIndents`Hey ${target}, thanks for asking for help, we can continue talking here! What's up?`;
 
-      if (minutes > 5) {
+      const minutes = DateTime.fromJSDate(new Date())
+        .diff(DateTime.fromJSDate(new Date(ticketData.reopened_at ?? ticketData.created_at)), 'minutes')
+        .as('minutes');
+      // log.debug(F, `[sessionContinue] Minutes since last reopen: ${minutes}`);
+      if (minutes > 5 && sessionData.tripsitterRoles) {
         helpMessage += '\n\nSomeone from the team will be with you as soon as they\'re available!';
-        if (sessionData?.tripsitterRoles) {
-          await Promise.all(sessionData.tripsitterRoles.map(async roleId => {
-            try {
-              const roleTripsitter = await interaction.guild?.roles.fetch(roleId) as Role;
-              helpMessage += `<@&${roleTripsitter.id}> `;
-            } catch (err) {
-              // log.debug(F, `[sessionContinue] Role ${roleId} was likely deleted`);
-            }
-          }));
-        }
+
+        await Promise.all(sessionData.tripsitterRoles.map(async roleId => {
+          try {
+            const roleTripsitter = await interaction.guild?.roles.fetch(roleId) as Role;
+            helpMessage += `<@&${roleTripsitter.id}> `;
+          } catch (err) {
+            // log.debug(F, `[sessionContinue] Role ${roleId} was likely deleted`);
+          }
+        }));
       }
       await threadHelpUser.send({
         content: helpMessage,
@@ -1099,7 +1108,7 @@ export namespace util {
           parse: ['users', 'roles'] as MessageMentionTypes[],
         },
       });
-      log.debug(F, 'Pinged user in help thread');
+      log.info(F, '[sessionContinue] Told user they already have an open channel');
       await threadHelpUser.setName(text.threadName(target, 'OPEN'));
 
       await db.user_tickets.update({
@@ -1121,7 +1130,6 @@ export namespace util {
               .setColor(Colors.DarkBlue)
               .setDescription(stripIndents`
                 Hey ${interaction.member}, ${target.displayName} already has an open ticket!
-                I've re-applied the ${giveRoles.join(', ')} role(s) to them, and updated the thread.
                 Check your channel list or click '${threadHelpUser.toString()} to see!
               `),
           ],
@@ -1132,13 +1140,55 @@ export namespace util {
             new EmbedBuilder()
               .setColor(Colors.DarkBlue)
               .setDescription(stripIndents`
-                Hey ${interaction.member}, you have an open session!
+                Hey ${interaction.member}, already you have an open session!
     
-                Check your channel list or click '${threadHelpUser.toString()} to get help!
+                Check your channel list or click '${threadHelpUser.toString()} to return to your thread.
               `),
           ],
         });
       }
+
+      // Send a message to the logging room
+      if (sessionData.logChannel) {
+        const channelTripsitLogs = interaction.guild.channels.cache.get(sessionData.logChannel) as TextChannel;
+        const userTotalTickets = await statistic.totalTickets(interaction.guild.id, 'TRIPSIT', ticketData.user_id);
+        const userAvgTicketTime = await statistic.avgTotalTicketTime(interaction.guild.id, 'TRIPSIT', ticketData.user_id);
+        const totalAvgTicketTime = await statistic.avgTotalTicketTime(interaction.guild.id, 'TRIPSIT');
+
+        if (!ticketData.closed_at) return;
+
+        await channelTripsitLogs.send({
+          allowedMentions: {},
+          embeds: [
+            new EmbedBuilder()
+              .setDescription(stripIndents`
+              **<@${target.id}>** reopened <#${threadHelpUser.id}> after ${DateTime.now().diff(DateTime.fromJSDate(ticketData.closed_at)).toFormat('hh:mm:ss')}.
+              
+              They have opened **${userTotalTickets}** tickets in total.
+              Their average ticket lasts ${userAvgTicketTime.toFormat('hh:mm:ss')}
+              The average server ticket lasts ${totalAvgTicketTime.toFormat('hh:mm:ss')}`)
+              .setColor(Colors.DarkOrange),
+          ],
+        });
+      }
+    } else {
+      // The thread was likely manually deleted, clear out the ticket and start a new session
+      await db.user_tickets.update({
+        where: {
+          id: ticketData.id,
+        },
+        data: {
+          status: 'DELETED' as ticket_status,
+          archived_at: ticketData.archived_at,
+          deleted_at: ticketData.deleted_at,
+        },
+      });
+      const userData = await db.users.upsert({
+        where: { discord_id: target.id },
+        create: { discord_id: target.id },
+        update: {},
+      });
+      await sessionNew(interaction, target, userData);
     }
   }
 
@@ -1159,11 +1209,13 @@ export namespace util {
           .addComponents(new TextInputBuilder()
             .setCustomId('triageInput')
             .setLabel('What substance? How much taken? How long ago?')
+            .setMaxLength(1000)
             .setStyle(TextInputStyle.Short)),
         new ActionRowBuilder<TextInputBuilder>()
           .addComponents(new TextInputBuilder()
             .setCustomId('introInput')
             .setLabel('What\'s going on? Give us the details!')
+            .setMaxLength(1000)
             .setStyle(TextInputStyle.Paragraph)),
       ));
 
@@ -1173,8 +1225,9 @@ export namespace util {
         if (!interaction.guild) return;
         if (i.customId.split('~')[1] !== interaction.id) return;
         await i.deferReply({ ephemeral: true });
-        const triage = i.fields.getTextInputValue('triageInput');
-        const intro = i.fields.getTextInputValue('introInput');
+
+        const triage = i.fields.getTextInputValue('triageInput').split('\n').map(line => `> ${line}`).join('\n');
+        const intro = i.fields.getTextInputValue('introInput').split('\n').map(line => `> ${line}`).join('\n');
 
         // let backupMessage = 'Hey ';
         // Get the roles we'll be referencing
@@ -1193,8 +1246,6 @@ export namespace util {
         // log.debug(F, `[sessionNew] tripsitterRoles: ${tripsitterRoles})`);
         // log.debug(F, `[sessionNew] channelTripsitmeta: ${channelTripsitmeta.name} (${channelTripsitmeta.id})`);
 
-        await needsHelpMode(interaction, target);
-
         // Get the tripsit channel from the guild
         let tripsitChannel = {} as TextChannel;
         try {
@@ -1206,10 +1257,12 @@ export namespace util {
         }
 
         if (!tripsitChannel.id) {
-        // log.debug(F, `[sessionNew] no tripsit channel!`);
+          // log.debug(F, `[sessionNew] no tripsit channel!`);
           await interaction.editReply({ content: 'No tripsit channel found! Make sure to run /tripsit setup' });
           return;
         }
+
+        await needsHelpMode(interaction, target);
 
         // Create a new thread in the channel
         const threadHelpUser = await tripsitChannel.threads.create({
@@ -1219,7 +1272,7 @@ export namespace util {
           reason: `${target.displayName} requested help`,
           invitable: false,
         });
-        log.debug(F, `[sessionNew] Created thread: ${threadHelpUser.name} (${threadHelpUser.id})`);
+        log.info(F, `[sessionNew] Created thread: ${threadHelpUser.name} (${threadHelpUser.id})`);
 
         // Team check - Cannot be run on team members
         // If this user is a developer then this is a test run and ignore this check,
@@ -1236,21 +1289,25 @@ export namespace util {
         const noInfo = '\n*No info given*';
         const firstMessage = await threadHelpUser.send({
           content: stripIndents`
-            Hey ${target}, thank you for asking for assistance!
-
-            You've taken: ${triage ? `\n${triage}` : noInfo}
-
-            Your issue: ${intro ? `\n${intro}` : noInfo}
-
-            Someone from the team will be with you as soon as they're available!
-
-            If this is a medical emergency please contact your local emergency services: we do not call EMS on behalf of anyone.
+            Hello ${target},
             
-            When you're feeling better you can use the "I'm Good" button to let the team know you're okay.
+            It's good to see you reaching out 🌟. We're here to navigate this together.
 
-            **Not in an emergency, but still want to talk to a mental health advisor? Warm lines provide non-crisis mental health support and guidance from trained volunteers. https://warmline.org/warmdir.html#directory**
+            A member of our team will try to connect with you as soon as possible. We're all volunteers doing our best to be there for each other, so your patience is greatly appreciated 🙏.
 
-            **The wonderful people at the Fireside project can also help you through a rough trip. You can check them out: https://firesideproject.org/**
+            If this situation escalates to a medical emergency 🚑, it's crucial to contact your local emergency services directly - we're not equipped to initiate EMS calls.
+            
+            **Want to talk to a mental health advisor? The [warm line directory](https://warmline.org/warmdir.html#directory) provides info on non-crisis mental health support and guidance from trained volunteers.**
+
+            **Want to talk to someone on the phone? The wonderful people at the [Fireside project](https://firesideproject.org) can also help you through a rough trip.**
+
+            Feeling a shift towards calmness? Hit the "👍 I'm Good" button to signal to our team that you're on more solid ground.      
+
+            Substances involved:
+            ${triage ? `${triage}` : noInfo}
+
+            Your concern:
+            ${intro ? `${intro}` : noInfo}
 
             ${tripsitterRoles.join(' ')}
           `,
@@ -1280,31 +1337,26 @@ export namespace util {
             }); // eslint-disable-line
         }
 
-        // log.debug(F, `[sessionNew] Sent intro message to ${threadHelpUser.name} ${threadHelpUser.id}`);
+        // log.debug(F, `[sessionNew] Sent intro message to ${threadHelpUser.name}  ${threadHelpUser.id}`);
 
         if (sessionData.metaChannel) {
         // Send an embed to the tripsitter room
+
+          const userTotalTickets = await statistic.totalTickets(interaction.guild.id, 'TRIPSIT', userData.id);
+
           await channelTripsitmeta.send({
             embeds: [
               new EmbedBuilder()
                 .setColor(Colors.DarkBlue)
                 .setDescription(stripIndents`
-                  ${target} has requested assistance!
-                  **They've taken:** ${triage ? `${triage}` : noInfo}
-                  **Their issue: ** ${intro ? `${intro}` : noInfo}
-            
-                  **Read the log before interacting**
-                  Use this channel coordinate efforts.
-            
-                  **No one is qualified to handle suicidal users here**
-                  If the user is considering / talking about suicide, direct them to the suicide hotline!
-            
-                  **Do not engage in DM**
-                  Keep things in the open where you have the team's support!
-            
-                  **→ Go to <#${threadHelpUser.id}>**
+                  ${target} has requested assistance in <#${threadHelpUser.id}>!
+                  
+                  **Substances Involved:**
+                  ${triage ? `${triage}` : noInfo}
+                  **Their Concern:**
+                  ${intro ? `${intro}` : noInfo}
                 `)
-                .setFooter({ text: 'If you need help click the Backup button to summon Helpers and Tripsitters' }),
+                .setFooter({ text: `They have opened ${userTotalTickets} tickets in total.` }),
             ],
             components: [
               new ActionRowBuilder<ButtonBuilder>()
@@ -1318,11 +1370,8 @@ export namespace util {
               parse: ['users', 'roles'] as MessageMentionTypes[],
             },
           });
-          log.debug(F, `[sessionNew] Sent message to ${channelTripsitmeta.name} (${channelTripsitmeta.id})`);
+          log.info(F, `[sessionNew] Sent message to ${channelTripsitmeta.name} (${channelTripsitmeta.id})`);
         }
-
-        const archiveTime = DateTime.utc().plus(text.archiveDuration());
-        const deleteTime = DateTime.utc().plus(text.deleteDuration());
 
         // log.debug(F, `[sessionNew] Ticket archives on ${archiveTime.toLocaleString(DateTime.DATETIME_FULL)} deletes on ${deleteTime.toLocaleString(DateTime.DATETIME_FULL)}`);
 
@@ -1337,8 +1386,8 @@ export namespace util {
           thread_id: threadHelpUser.id,
           type: 'TRIPSIT',
           status: 'OPEN',
-          archived_at: archiveTime.toJSDate(),
-          deleted_at: deleteTime.toJSDate(),
+          archived_at: DateTime.utc().plus(text.archiveDuration()).toJSDate(),
+          deleted_at: DateTime.utc().plus(text.deleteDuration()).toJSDate(),
         } as user_tickets;
 
         // log.debug(F, `[sessionNew] newTicketData: ${JSON.stringify(newTicketData, null, 2)}`);
@@ -1365,7 +1414,7 @@ export namespace util {
           const avgFirstResponseTime = await statistic.avgFirstResponseTime(interaction.guild.id, 'TRIPSIT');
           const userAvgTicketTime = await statistic.avgTotalTicketTime(interaction.guild.id, 'TRIPSIT', userData.id);
           const totalAvgTicketTime = await statistic.avgTotalTicketTime(interaction.guild.id, 'TRIPSIT');
-          log.debug(F, `[sessionNew] avgFirstResponseTime: ${avgFirstResponseTime.seconds}`);
+          // log.debug(F, `[sessionNew] avgFirstResponseTime: ${avgFirstResponseTime.seconds}`);
 
           await channelTripsitLog.send({
             embeds: [
@@ -1374,8 +1423,9 @@ export namespace util {
                 .setDescription(stripIndents`
                   **<@${target.id}>** requested help in <#${threadHelpUser.id}>
 
-                  **They've taken:** ${triage ? `\n${triage}` : noInfo}
-                  **Their issue: ** ${introStr}
+                  **Substances Involved:** 
+                  ${triage ? `${triage}` : noInfo}
+                  **Their Concern:** ${introStr ? `${introStr}` : noInfo}
 
                   They have opened **${userTotalTickets}** tickets in total.
                   Their average first response time is ${userFirstResponseTime.toFormat('hh:mm:ss')}
@@ -1406,12 +1456,12 @@ export namespace util {
               new EmbedBuilder()
                 .setColor(Colors.DarkBlue)
                 .setDescription(stripIndents`
-          Hey ${target}, thank you for asking for assistance!
-          
-          Click here to be taken to your private room: ${threadHelpUser.toString()}
-      
-          You can also click in your channel list to see your private room!
-        `),
+                  Hey ${target}, thank you for asking for assistance!
+                  
+                  Click here to be taken to your private room: ${threadHelpUser.toString()}
+              
+                  You can also click in your channel list to see your private room!
+                `),
             ],
           });
         } catch (err) {
@@ -1455,7 +1505,7 @@ export namespace util {
       create: { discord_id: target.id },
       update: {},
     });
-    // Restore roles
+    // Remove roles
     const guild = await discordClient.guilds.fetch(interaction.guild.id);
     const member = await guild.members.fetch(userData.discord_id as string);
     if (member) {
@@ -1472,9 +1522,8 @@ export namespace util {
           await member.roles.remove(roleId);
         }));
       }
+      log.info(F, '[needsHelpMode] Applied and removed roles to start the session');
     }
-
-    log.debug(F, 'Finished needshelp mode');
   }
 
   export async function navMenu(
@@ -1607,6 +1656,7 @@ export namespace util {
 
     if (!message.guild) return;
     if (!message.channel) return;
+    if (!message.member) return;
     if (message.channel.isDMBased()) return;
 
     // Check if the message was sent in a tripsit thread
@@ -1626,29 +1676,47 @@ export namespace util {
         update: {},
       });
 
-      // Add the user to the participants list
-      const participationData = await db.user_ticket_participant.upsert({
+      const existingParticipant = await db.user_ticket_participant.findFirst({
         where: {
-          ticket_id_user_id: {
-            ticket_id: ticketData.id,
-            user_id: userData.id,
-          },
-        },
-        create: {
           ticket_id: ticketData.id,
           user_id: userData.id,
-          messages: 1,
-        },
-        update: {
-          messages: {
-            increment: 1,
-          },
         },
       });
-      log.debug(F, `[messageStats] Added <@!${message.author.id}> to the participants list for thread ${message.channel.name} in the DB`);
+
+      let participationData: {
+        ticket_id: string;
+        user_id: string;
+        messages: number;
+      };
+      if (existingParticipant) {
+        // log.debug(F, `[messageStats] Found existing participant: ${JSON.stringify(existingParticipant, null, 2)}`);
+        participationData = await db.user_ticket_participant.update({
+          where: {
+            ticket_id_user_id: {
+              ticket_id: ticketData.id,
+              user_id: userData.id,
+            },
+          },
+          data: {
+            messages: {
+              increment: 1,
+            },
+          },
+        });
+        log.debug(F, `[messageStats] ${message.member.displayName} (${message.author.id}) has now sent ${participationData.messages} in thread ${message.channel.name}`);
+      } else {
+        participationData = await db.user_ticket_participant.create({
+          data: {
+            ticket_id: ticketData.id,
+            user_id: userData.id,
+            messages: 1,
+          },
+        });
+        log.info(F, `[messageStats] Added ${message.member.displayName} (${message.author.id}) to the participants list for thread ${message.channel.name}`);
+      }
 
       // First responder stuff
-      if ((!ticketData.first_response_user && ticketData.user_id !== userData.id) || env.NODE_ENV === 'development') {
+      if ((!ticketData.first_response_user && ticketData.user_id !== userData.id)) {
         // Check if the first_response_user field is null, and if it's a different user than the person who made the thread
         await db.user_tickets.update({
           where: { id: ticketData.id },
@@ -1657,7 +1725,7 @@ export namespace util {
             first_response_datetime: new Date(),
           },
         });
-        log.debug(F, `[messageStats] Added <@!${message.author.id}> as the first response user for thread ${message.channel.name} in the DB`);
+        log.info(F, `[messageStats] Added ${message.member.displayName} (${message.author.id}) as the first response user for thread ${message.channel.name}`);
 
         const ticketUserData = await db.users.findFirst({
           where: { id: ticketData.user_id },
@@ -1693,7 +1761,7 @@ export namespace util {
                   They have sent ${userParticipationMessages} messages in all threads.
             
                   The first response took ${DateTime.now().diff(DateTime.fromJSDate(ticketData.created_at)).toFormat('hh:mm:ss')}
-                  Average first response time is: ${averageFirstResponseTime.toFormat('hh:mm:ss')}
+                  The server average response time is: ${averageFirstResponseTime.toFormat('hh:mm:ss')}
                 `),
             ],
           });
@@ -1711,8 +1779,14 @@ export namespace util {
         log.debug(F, `[messageStats] Added <@!${message.author.id}> as the first response user for thread ${message.channel.name} in the DB`);
       }
 
-      // Log when someone joins the thread
-      if (sessionData.logChannel) {
+      const ticketUserData = await db.users.findFirstOrThrow({
+        where: { id: ticketData.user_id },
+      });
+
+      // Log when someone besides the ticket owner joins the thread
+      // log.debug(F, `ticketUserData: ${JSON.stringify(ticketUserData, null, 2)}`);
+      // log.debug(F, `userData: ${JSON.stringify(userData, null, 2)}`);
+      if (ticketUserData.id !== userData.id && sessionData.logChannel) {
         const sessionUserData = await db.users.upsert({
           where: { id: ticketData.user_id },
           create: { id: ticketData.user_id },
@@ -1737,9 +1811,6 @@ export namespace util {
           ],
         });
       }
-
-      log.debug(F, stripIndents`${message.author.username} has sent ${participationData.messages} messages in \
-      thread ${message.channel.name}`);
     }
   }
 
@@ -1996,7 +2067,7 @@ namespace statistic {
     type: ticket_type,
     userId?: string,
   ):Promise<Duration> {
-    log.debug(F, `[avgFirstResponseTime] guildId: ${guildId} type: ${type} userId: ${userId}`);
+    // log.debug(F, `[avgFirstResponseTime] guildId: ${guildId} type: ${type} userId: ${userId}`);
     // Determine average first response time
     const tickets = await db.user_tickets.findMany({
       where: userId
@@ -2022,7 +2093,7 @@ namespace statistic {
       },
     });
 
-    log.debug(F, `[avgFirstResponseTime] tickets: ${tickets.length}`);
+    // log.debug(F, `[avgFirstResponseTime] tickets: ${tickets.length}`);
 
     if (tickets.length === 0) {
       return Duration.fromObject({ seconds: 0 });
@@ -2039,11 +2110,11 @@ namespace statistic {
         return null;
       })
       .filter(diff => diff !== null) as number[]; // Filter out tickets where calculation was not possible
-    log.debug(F, `[avgFirstResponseTime] durations: ${JSON.stringify(durations, null, 2)}`);
+    // log.debug(F, `[avgFirstResponseTime] durations: ${JSON.stringify(durations, null, 2)}`);
 
     // Calculate average
     const durationAvg = durations.reduce((acc, curr) => acc + curr, 0) / durations.length;
-    log.debug(F, `[avgFirstResponseTime] durationAvg: ${durationAvg}`);
+    // log.debug(F, `[avgFirstResponseTime] durationAvg: ${durationAvg}`);
 
     return Duration.fromObject({ seconds: durationAvg });
   }
@@ -2141,7 +2212,7 @@ namespace statistic {
         created_at: true,
       },
     });
-    log.debug(F, `[avgTotalTicketTime] tickets: ${tickets.length}`);
+    // log.debug(F, `[avgTotalTicketTime] tickets: ${tickets.length}`);
 
     if (tickets.length === 0) return Duration.fromObject({ seconds: 0 });
 
@@ -2230,6 +2301,50 @@ namespace statistic {
         },
       },
     });
+  }
+
+  export async function avgCsatScore(
+    guildId: string,
+    type: ticket_type,
+    userId?: string,
+  ):Promise<number> {
+    // Determine average first response time
+    const tickets = await db.user_tickets.findMany({
+      where: userId
+        ? {
+          user_id: userId,
+          guild_id: guildId,
+          type,
+          survey_response: { not: null },
+        }
+        : {
+          guild_id: guildId,
+          type,
+          survey_response: { not: null },
+        },
+      orderBy: {
+        created_at: 'asc',
+      },
+      select: {
+        survey_response: true,
+      },
+    });
+    // log.debug(F, `[avgCsatScore] tickets: ${tickets.length}`);
+
+    // Get the average of all survey_response values:
+
+    const scores = tickets
+      .map(ticket => ticket.survey_response)
+      .filter(score => score !== null) as number[]; // Filter out tickets where calculation was not possible
+    // log.debug(F, `[avgCsatScore] scores: ${JSON.stringify(scores, null, 2)}`);
+
+    if (scores.length === 0) return 0;
+
+    // Calculate average
+    // const scoreAvg = scores.reduce((acc, curr) => acc + curr, 0) / scores.length;
+    // log.debug(F, `[avgCsatScore] scoreAvg: ${scoreAvg}`);
+
+    return scores.reduce((acc, curr) => acc + curr, 0) / scores.length;
   }
 }
 
@@ -2548,15 +2663,15 @@ namespace button {
     return new ButtonBuilder()
       .setCustomId(`tripsit~hardClose~${targetId}`)
       .setLabel('I\'m good now!')
-      .setEmoji('✅')
+      .setEmoji('👍')
       .setStyle(ButtonStyle.Success);
   }
 
   export function sessionSoftClose(targetId:string) {
     return new ButtonBuilder()
       .setCustomId(`tripsit~softClose~${targetId}`)
-      .setLabel('They\'re good now!')
-      .setEmoji('👍')
+      .setLabel('Send Close Button')
+      .setEmoji('☑️')
       .setStyle(ButtonStyle.Success);
   }
 
@@ -2564,8 +2679,8 @@ namespace button {
     return new ButtonBuilder()
       .setCustomId(`tripsit~sessionBackup~${targetId}`)
       .setLabel('I need backup')
-      .setEmoji('🔒')
-      .setStyle(ButtonStyle.Danger);
+      .setEmoji('🆘')
+      .setStyle(ButtonStyle.Primary);
   }
 }
 
@@ -3197,14 +3312,11 @@ export async function tripsitReaction(
   messageReaction: MessageReaction,
   user: User,
 ): Promise<void> {
+  if (user.bot) return;
   // Used in messageReactionAdd.ts
-  if (!messageReaction.message.guild) return; // Ignore DMs
-  if (!messageReaction.message.thread) return; // Ignore non-threads
   await messageReaction.fetch();
   await user.fetch();
-
-  log.debug(F, `[tripsitReaction] messageReaction.emoji: ${messageReaction.emoji}`);
-  log.debug(F, `[tripsitReaction] messageReaction.emoji.name: ${messageReaction.emoji.name}`);
+  if (!messageReaction.message.guild) return; // Ignore DMs
 
   const reactionEmojiList = [
     text.rateOne(),
@@ -3215,13 +3327,15 @@ export async function tripsitReaction(
   ];
 
   // If this isn't one of the approved emojis, ignore
-  // if (!reactionEmojiList.includes(messageReaction.emoji.name)) return;
+  if (!reactionEmojiList.includes(messageReaction.emoji.name as string)) return;
 
   // Get the current threadData from the db
   const threadData = await db.user_tickets.findFirst({
-    where: { thread_id: messageReaction.message.thread.id },
+    where: { thread_id: messageReaction.message.channel.id },
   });
   if (!threadData) return;
+
+  if (threadData.survey_response) return;
 
   const userData = await db.users.upsert({
     where: { discord_id: user.id },
@@ -3230,7 +3344,13 @@ export async function tripsitReaction(
   });
 
   // If the user clicking the reaction is not the thread's user, ignore it
-  if (userData.id !== threadData.user_id) return;
+  if (userData.id !== threadData.user_id) {
+    const emojiObj = messageReaction.message.reactions.cache.get(messageReaction.emoji.name as string);
+    if (emojiObj) {
+      await emojiObj.users.remove(user.id);
+    }
+    return;
+  }
 
   await messageReaction.message.edit({
     content: stripIndents`
@@ -3239,26 +3359,31 @@ export async function tripsitReaction(
     ${emojiGet('Invisible')}
     `,
   });
+  await messageReaction.message.reactions.removeAll();
 
-  // const score = reactionEmojiList.indexOf(messageReaction.emoji.name) + 1;
+  const score = reactionEmojiList.indexOf(messageReaction.emoji.name as string) + 1;
 
   // Add the user's reaction to the db
-  // await db.user_tickets.update({
-  //   where: { id: threadData.id },
-  //   data: {
-  //     survey_response: score,
-  //   },
-  // });
+  await db.user_tickets.update({
+    where: { id: threadData.id },
+    data: {
+      survey_response: score,
+    },
+  });
 
   const sessionData = await util.sessionDataInit(messageReaction.message.guild.id);
   if (sessionData.logChannel) {
     const channelLogTripsit = await messageReaction.message.guild.channels.fetch(sessionData.logChannel) as GuildTextBasedChannel;
+
+    const averageCsatScore = await statistic.avgCsatScore(messageReaction.message.guild.id, 'TRIPSIT');
     await channelLogTripsit.send({
       embeds: [
         new EmbedBuilder()
           .setColor(Colors.Blue)
           .setDescription(stripIndents`
             Collected ${messageReaction.emoji.name} from <@${user.id}>
+
+            The server satisfaction score average is ${averageCsatScore} / 5.
           `),
       ],
     });
