@@ -13115,7 +13115,9 @@
     "crossTolerances": null,
     "commonNames": null,
     "class": {
-      "chemical": null,
+      "chemical": [
+        "Benzodiazepines"
+      ],
       "psychoactive": [
         "Depressant"
       ]
