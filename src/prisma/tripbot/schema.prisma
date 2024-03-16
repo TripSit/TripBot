@@ -173,9 +173,9 @@ model users {
   members                                                   members[]
   createdTents                                              tentChannel[]     @relation("CreatedTents")
   hostedTents                                               tentChannel[]     @relation("HostedTents")
-  preferredTentMode                                         String @default("open")
-  banList                                                   String[]
-  preferredBanMode                                          String @default("enabled")
+  preferredTentMode                                         String @default("public")
+  banlist                                                   String[]
+  whitelist                                                 String[]
 }
 
 model tentChannel {
@@ -185,10 +185,10 @@ model tentChannel {
   channelId String
   user      users  @relation(name: "CreatedTents", fields: [userId], references: [id])
   host      users  @relation(name: "HostedTents", fields: [hostId], references: [id])
-  mode     String // Open, Locked, Hidden
+  mode     String // Public, Private
   infoMessageId String
-  banList  String[]
-  banMode  String // Enabled, Disabled
+  banlist  String[]
+  whitelist String[]
   // other fields to store temp data...
 }
 

@@ -16,7 +16,7 @@ import commandContext from '../../utils/context';
 
 const F = f(__filename);
 
-type VoiceActions = 'lock' | 'hide' | 'add' | 'ban' | 'rename' | 'mute' | 'cohost' | 'bitrate' | 'ping' | 'settings';
+type VoiceActions = 'private' | 'ban' | 'whitelist' | 'rename' | 'cohost' | 'ping' | 'settings';
 
 async function tentRename(
   voiceChannel: VoiceBasedChannel,
@@ -32,7 +32,7 @@ async function tentRename(
     .setDescription(`${voiceChannel} has been renamed to ${newName}`);
 }
 
-async function tentLock(
+async function tentPrivate(
   voiceChannel: VoiceBasedChannel,
 ): Promise<EmbedBuilder> {
   let verb = '';
@@ -50,101 +50,11 @@ async function tentLock(
     throw new Error(`TentChannel with ID ${voiceChannel.id} not found`);
   }
 
-  if (tentChannel.mode !== 'locked') {
-    voiceChannel.permissionOverwrites.edit(voiceChannel.guild.roles.everyone, { Connect: false });
-    // If the channel is hidden, explain that it will be unhidden but remain locked
-    if (tentChannel.mode === 'hidden') {
-      verb = 'unhidden and ';
-    }
-    verb = 'locked';
-    mode = 'locked';
-    explanation = 'The Tent is locked and cannot be joined.';
-
-    // Update the tentChannel mode in the database
-    await db.tentChannel.update({
-      where: {
-        id: tentChannel.id,
-      },
-      data: {
-        mode: 'locked',
-      },
-    });
-
-    // Update the user's preferredTentMode in the database
-    await db.users.update({
-      where: {
-        id: tentChannel.userId,
-      },
-      data: {
-        preferredTentMode: 'locked',
-      },
-    });
-  } else {
-    voiceChannel.permissionOverwrites.edit(voiceChannel.guild.roles.everyone, { Connect: true });
-    verb = 'unlocked';
-    mode = 'open';
-    explanation = 'The Tent is now open and can be joined.';
-
-    // Update the tentChannel mode in the database
-    await db.tentChannel.update({
-      where: {
-        id: tentChannel.id,
-      },
-      data: {
-        mode: 'open',
-      },
-    });
-
-    // Update the user's preferredTentMode in the database
-    await db.users.update({
-      where: {
-        id: tentChannel.userId,
-      },
-      data: {
-        preferredTentMode: 'open',
-      },
-    });
-  }
-
-  // Edit the info message with the new mode
-  const infoMessage = await voiceChannel.messages.fetch(tentChannel.infoMessageId);
-  if (infoMessage) {
-    // Update the info message with the new mode using regex
-    const newContent = infoMessage.content.replace(/Mode: .*/, `Mode: ${mode.charAt(0).toUpperCase() + mode.slice(1)}`);
-    infoMessage.edit(newContent);
-  }
-
-  // log.debug(F, `Channel is now ${verb}`);
-  return embedTemplate()
-    .setTitle(`Mode set to **${mode}**`)
-    .setColor(Colors.Green)
-    .setDescription(`${explanation}`);
-}
-
-async function tentHide(
-  voiceChannel: VoiceBasedChannel,
-): Promise<EmbedBuilder> {
-  let verb = '';
-  let mode = '';
-  let explanation = '';
-
-  // Fetch the tentChannel data from the database
-  const tentChannel = await db.tentChannel.findFirst({
-    where: {
-      channelId: voiceChannel.id,
-    },
-  });
-
-  if (!tentChannel) {
-    throw new Error(`TentChannel with ID ${voiceChannel.id} not found`);
-  }
-
-  if (tentChannel.mode !== 'hidden') {
-    voiceChannel.permissionOverwrites.edit(voiceChannel.guild.roles.everyone, { ViewChannel: false });
-    voiceChannel.permissionOverwrites.edit(voiceChannel.guild.roles.everyone, { Connect: false });
+  if (tentChannel.mode !== 'private') {
+    voiceChannel.permissionOverwrites.edit(voiceChannel.guild.roles.everyone, { ViewChannel: false, Connect: false });
     verb = 'hidden (and locked)';
-    mode = 'hidden';
-    explanation = 'Tent is hidden from the channel list and locked.';
+    mode = 'private';
+    explanation = 'Tent is hidden from the channel list and only users on your whitelist can join.';
 
     // Update the tentChannel mode in the database
     await db.tentChannel.update({
@@ -152,7 +62,7 @@ async function tentHide(
         id: tentChannel.id,
       },
       data: {
-        mode: 'hidden',
+        mode: 'private',
       },
     });
 
@@ -162,15 +72,14 @@ async function tentHide(
         id: tentChannel.userId,
       },
       data: {
-        preferredTentMode: 'hidden',
+        preferredTentMode: 'private',
       },
     });
   } else {
-    voiceChannel.permissionOverwrites.edit(voiceChannel.guild.roles.everyone, { ViewChannel: true });
-    voiceChannel.permissionOverwrites.edit(voiceChannel.guild.roles.everyone, { Connect: true });
+    voiceChannel.permissionOverwrites.edit(voiceChannel.guild.roles.everyone, { ViewChannel: true, Connect: true });
     verb = 'unhidden (and unlocked)';
-    mode = 'open';
-    explanation = 'The tent is visible and can be joined.';
+    mode = 'public';
+    explanation = 'The tent is visible and can be joined by anyone not on your banlist.';
 
     // Update the tentChannel mode in the database
     await db.tentChannel.update({
@@ -178,7 +87,7 @@ async function tentHide(
         id: tentChannel.id,
       },
       data: {
-        mode: 'open',
+        mode: 'public',
       },
     });
 
@@ -188,7 +97,7 @@ async function tentHide(
         id: tentChannel.userId,
       },
       data: {
-        preferredTentMode: 'open',
+        preferredTentMode: 'public',
       },
     });
   }
@@ -265,7 +174,7 @@ async function tentBan(
   }
 
   // Check if the target user is already banned or not
-  if (user.banList && user.banList.includes(target.id) === false) {
+  if (user.banlist && user.banlist.includes(target.id) === false) {
     // If not, add the target user to the ban list
     voiceChannel.permissionOverwrites.edit(target, { ViewChannel: false, Connect: false });
     if (target.voice.channel === voiceChannel) {
@@ -274,10 +183,10 @@ async function tentBan(
     verb = 'added to your ban list and disconnected';
 
     // Add the target user to the ban list in the database
-    if (user.banList) {
-      user.banList.push(target.id);
+    if (user.banlist) {
+      user.banlist.push(target.id);
     } else {
-      user.banList = [target.id];
+      user.banlist = [target.id];
     }
 
     await db.users.update({
@@ -285,7 +194,7 @@ async function tentBan(
         id: tentChannel.userId,
       },
       data: {
-        banList: user.banList,
+        banlist: user.banlist,
       },
     });
   } else {
@@ -294,8 +203,8 @@ async function tentBan(
     verb = 'removed from your ban list';
 
     // Remove the target user from the ban list in the database
-    if (user.banList) {
-      user.banList = user.banList.filter(id => id !== target.id);
+    if (user.banlist) {
+      user.banlist = user.banlist.filter(id => id !== target.id);
     }
 
     await db.users.update({
@@ -303,7 +212,7 @@ async function tentBan(
         id: tentChannel.userId,
       },
       data: {
-        banList: user.banList,
+        banlist: user.banlist,
       },
     });
   }
@@ -316,27 +225,80 @@ async function tentBan(
     .setDescription(`${target} has been ${verb}`);
 }
 
-async function tentMute(
+async function tentWhitelist(
   voiceChannel: VoiceBasedChannel,
   target: GuildMember,
-):Promise<EmbedBuilder> {
+): Promise<EmbedBuilder> {
   let verb = '';
 
-  if (voiceChannel.permissionsFor(target).has(PermissionsBitField.Flags.Speak) === true) {
-    voiceChannel.permissionOverwrites.edit(target, { Speak: false });
-    verb = 'muted';
-    // log.debug(F, 'User is now muted');
-  } else {
-    voiceChannel.permissionOverwrites.edit(target, { Speak: true });
-    verb = 'unmuted';
+  // Fetch the tentChannel data from the database
+  const tentChannel = await db.tentChannel.findFirst({
+    where: {
+      channelId: voiceChannel.id,
+    },
+  });
+
+  if (!tentChannel) {
+    throw new Error(`TentChannel with ID ${voiceChannel.id} not found`);
   }
 
-  // log.debug(F, `${target.displayName} is now ${verb}`);
+  // Fetch the user data from the database
+  const user = await db.users.findFirst({
+    where: {
+      id: tentChannel.userId,
+    },
+  });
 
+  if (!user) {
+    throw new Error(`User with ID ${tentChannel.userId} not found`);
+  }
+
+  // Check if the target user is already whitelisted or not
+  if (user.whitelist && user.whitelist.includes(target.id) === false) {
+    // If not, add the target user to the whitelist
+    voiceChannel.permissionOverwrites.edit(target, { ViewChannel: true, Connect: true });
+    verb = 'added to your whitelist';
+
+    // Add the target user to the whitelist in the database
+    if (user.whitelist) {
+      user.whitelist.push(target.id);
+    } else {
+      user.whitelist = [target.id];
+    }
+
+    await db.users.update({
+      where: {
+        id: tentChannel.userId,
+      },
+      data: {
+        whitelist: user.whitelist,
+      },
+    });
+  } else {
+    // If the target user is already whitelisted, remove them from the whitelist
+    voiceChannel.permissionOverwrites.delete(target);
+    verb = 'removed from your whitelist';
+
+    // Remove the target user from the whitelist in the database
+    if (user.whitelist) {
+      user.whitelist = user.whitelist.filter(id => id !== target.id);
+    }
+
+    await db.users.update({
+      where: {
+        id: tentChannel.userId,
+      },
+      data: {
+        whitelist: user.whitelist,
+      },
+    });
+  }
+
+  // Return an embed with the result
   return embedTemplate()
     .setTitle('Success')
     .setColor(Colors.Green)
-    .setDescription(`${target} has been ${verb} in ${voiceChannel}`);
+    .setDescription(`${target} has been ${verb}`);
 }
 
 async function tentCohost(
@@ -360,30 +322,6 @@ async function tentCohost(
     .setTitle('Success')
     .setColor(Colors.Green)
     .setDescription(`${target} has been ${verb} in ${voiceChannel}`);
-}
-
-async function tentBitrate(
-  voiceChannel: VoiceBasedChannel,
-  bitrate: string,
-):Promise<EmbedBuilder> {
-  if (voiceChannel.bitrate === parseInt(bitrate, 10)) {
-    return embedTemplate()
-      .setTitle('Error')
-      .setColor(Colors.Red)
-      .setDescription(`${voiceChannel} is already set to ${(parseInt(bitrate, 10)) / 1000}kbps`);
-  }
-
-  // Change the bitrate
-  voiceChannel.setBitrate(parseInt(bitrate, 10));
-  log.debug(F, `Bitrate ${bitrate}`);
-  log.debug(F, `Bitrate is now ${voiceChannel.bitrate}`);
-
-  // log.debug(F, `${target.displayName} is now ${verb}`);
-
-  return embedTemplate()
-    .setTitle('Success')
-    .setColor(Colors.Green)
-    .setDescription(`${voiceChannel} has been set to ${(parseInt(bitrate, 10)) / 1000}kbps`);
 }
 
 // Command that makes the bot ping the Join VC role
@@ -449,12 +387,6 @@ async function tentPing(
     .setDescription('The Join VC role could not be found.');
 }
 
-const buttonTentViewBan = new ButtonBuilder()
-  .setCustomId('TentViewBan')
-  .setLabel('View Ban List')
-  .setEmoji('🚫')
-  .setStyle(ButtonStyle.Primary);
-
 async function tentSettings(
   member: GuildMember,
 ) {
@@ -473,7 +405,10 @@ async function tentSettings(
   return embedTemplate()
     .setTitle('Tent Settings')
     .setColor(Colors.Blue)
-    .setDescription(`Ban List: ${user.banList}`)
+    .setDescription(`
+      Ban List: ${user.banlist.map(id => `<@${id}>`).join(', ')}
+      White List: ${user.whitelist.map(id => `<@${id}>`).join(', ')}
+    `)
     .setTimestamp();
 }
 
@@ -489,17 +424,21 @@ export const dVoice: SlashCommand = {
         .setDescription('The new name for your Tent')
         .setRequired(true)))
     .addSubcommand(subcommand => subcommand
-      .setName('lock')
-      .setDescription('Lock/Unlock the Tent'))
-    .addSubcommand(subcommand => subcommand
-      .setName('hide')
-      .setDescription('Remove the Tent from the channel list'))
+      .setName('private')
+      .setDescription('Hide and lock the Tent'))
     .addSubcommand(subcommand => subcommand
       .setName('ban')
-      .setDescription('Ban and disconnect a user from your Tent')
+      .setDescription('Add a user to your Tent ban list')
       .addUserOption(option => option
         .setName('target')
         .setDescription('The user to ban/unban')
+        .setRequired(true)))
+    .addSubcommand(subcommand => subcommand
+      .setName('whitelist')
+      .setDescription('Add a user to your Tent whitelist')
+      .addUserOption(option => option
+        .setName('target')
+        .setDescription('The user to add/remove')
         .setRequired(true)))
     .addSubcommand(subcommand => subcommand
       .setName('cohost')
@@ -567,32 +506,20 @@ export const dVoice: SlashCommand = {
       embed = await tentRename(voiceChannel, newName);
     }
 
-    if (command === 'lock') {
-      embed = await tentLock(voiceChannel);
+    if (command === 'private') {
+      embed = await tentPrivate(voiceChannel);
     }
-
-    if (command === 'hide') {
-      embed = await tentHide(voiceChannel);
-    }
-
-    // if (command === 'add') {
-    //   embed = await tentAdd(voiceChannel, target);
-    // }
 
     if (command === 'ban') {
       embed = await tentBan(voiceChannel, target);
     }
 
-    if (command === 'mute') {
-      embed = await tentMute(voiceChannel, target);
+    if (command === 'whitelist') {
+      embed = await tentWhitelist(voiceChannel, target);
     }
 
     if (command === 'cohost') {
       embed = await tentCohost(voiceChannel, target);
-    }
-
-    if (command === 'bitrate') {
-      embed = await tentBitrate(voiceChannel, bitrate);
     }
 
     if (command === 'ping') {
