@@ -13,7 +13,7 @@ import {
 
 const F = f(__filename); // eslint-disable-line
 
-async function createTentChannelData(memberId: string, channelId: string, mode: string, infoMessageId: string) {
+async function createTentChannelData(memberId: string, channelId: string, mode: string, infoMessageId: string, banList: string[] = [], banMode: string) {
   // Fetch the user from the database
   const user = await db.users.findUnique({
     where: {
@@ -33,6 +33,8 @@ async function createTentChannelData(memberId: string, channelId: string, mode: 
       channelId,
       mode,
       infoMessageId,
+      banList,
+      banMode,
     },
   });
 }
@@ -67,6 +69,8 @@ async function getUserPermissions(userId: string) {
 
   return {
     preferredTentMode: user.preferredTentMode,
+    banList: user.banList,
+    banMode: user.preferredBanMode,
   };
 }
 
@@ -87,77 +91,90 @@ export async function pitchTent(
   }
   const userPermissions = await getUserPermissions(New.member.id);
 
+  const permissionOverwrites = [
+    {
+      id: New.member.id,
+      allow: [
+        PermissionsBitField.Flags.ViewChannel,
+        PermissionsBitField.Flags.Connect,
+        PermissionsBitField.Flags.Speak,
+        PermissionsBitField.Flags.UseEmbeddedActivities,
+        PermissionsBitField.Flags.UseVAD,
+        // PermissionsBitField.Flags.MuteMembers,
+        // PermissionsBitField.Flags.DeafenMembers,
+        PermissionsBitField.Flags.MoveMembers,
+        PermissionsBitField.Flags.SendMessages,
+        PermissionsBitField.Flags.EmbedLinks,
+        PermissionsBitField.Flags.AttachFiles,
+        PermissionsBitField.Flags.AddReactions,
+        PermissionsBitField.Flags.UseExternalStickers,
+        PermissionsBitField.Flags.UseExternalEmojis,
+        PermissionsBitField.Flags.UseApplicationCommands,
+      ],
+    },
+    {
+      id: New.member.guild.roles.everyone,
+      allow: [
+        ...(userPermissions.preferredTentMode !== ('hidden') ? [PermissionsBitField.Flags.ViewChannel] : []),
+        ...(userPermissions.preferredTentMode !== ('locked' || 'hidden') ? [PermissionsBitField.Flags.Connect] : []),
+        PermissionsBitField.Flags.Speak,
+        PermissionsBitField.Flags.UseEmbeddedActivities,
+        PermissionsBitField.Flags.UseVAD,
+        PermissionsBitField.Flags.SendMessages,
+        PermissionsBitField.Flags.EmbedLinks,
+        PermissionsBitField.Flags.AttachFiles,
+        PermissionsBitField.Flags.AddReactions,
+        PermissionsBitField.Flags.UseExternalStickers,
+        PermissionsBitField.Flags.UseExternalEmojis,
+        PermissionsBitField.Flags.UseApplicationCommands,
+      ],
+      deny: [
+        ...(userPermissions.preferredTentMode === ('hidden') ? [PermissionsBitField.Flags.ViewChannel] : []),
+        ...(userPermissions.preferredTentMode === ('locked' || 'hidden') ? [PermissionsBitField.Flags.Connect] : []),
+      ],
+    },
+    {
+      id: env.ROLE_MODERATOR,
+      allow: [
+        PermissionsBitField.Flags.ViewChannel,
+      ],
+    },
+    {
+      id: env.ROLE_NEEDSHELP,
+      deny: [
+        PermissionsBitField.Flags.ViewChannel,
+      ],
+    },
+    {
+      id: env.ROLE_VERIFYING,
+      deny: [
+        PermissionsBitField.Flags.ViewChannel,
+      ],
+    },
+    {
+      id: env.ROLE_UNVERIFIED,
+      deny: [
+        PermissionsBitField.Flags.ViewChannel,
+      ],
+    },
+  ];
+
+  userPermissions.banList.forEach(userId => {
+    permissionOverwrites.push({
+      id: userId,
+      deny: [
+        PermissionsBitField.Flags.ViewChannel,
+        PermissionsBitField.Flags.Connect,
+      ],
+    });
+  });
+
   New.member?.guild.channels.create({
     name: `⛺│${New.member.displayName}'s tent`,
     type: ChannelType.GuildVoice,
     parent: env.CATEGORY_VOICE,
     permissionOverwrites: [
-      {
-        id: New.member.id,
-        allow: [
-          PermissionsBitField.Flags.ViewChannel,
-          PermissionsBitField.Flags.Connect,
-          PermissionsBitField.Flags.Speak,
-          PermissionsBitField.Flags.UseEmbeddedActivities,
-          PermissionsBitField.Flags.UseVAD,
-          // PermissionsBitField.Flags.MuteMembers,
-          // PermissionsBitField.Flags.DeafenMembers,
-          PermissionsBitField.Flags.MoveMembers,
-          PermissionsBitField.Flags.SendMessages,
-          PermissionsBitField.Flags.EmbedLinks,
-          PermissionsBitField.Flags.AttachFiles,
-          PermissionsBitField.Flags.AddReactions,
-          PermissionsBitField.Flags.UseExternalStickers,
-          PermissionsBitField.Flags.UseExternalEmojis,
-          PermissionsBitField.Flags.UseApplicationCommands,
-        ],
-      },
-      {
-        id: New.member.guild.roles.everyone,
-        allow: [
-          ...(userPermissions.preferredTentMode !== ('hidden') ? [PermissionsBitField.Flags.ViewChannel] : []),
-          ...(userPermissions.preferredTentMode !== ('locked' || 'hidden') ? [PermissionsBitField.Flags.Connect] : []),
-          PermissionsBitField.Flags.Speak,
-          PermissionsBitField.Flags.UseEmbeddedActivities,
-          PermissionsBitField.Flags.UseVAD,
-          PermissionsBitField.Flags.SendMessages,
-          PermissionsBitField.Flags.EmbedLinks,
-          PermissionsBitField.Flags.AttachFiles,
-          PermissionsBitField.Flags.AddReactions,
-          PermissionsBitField.Flags.UseExternalStickers,
-          PermissionsBitField.Flags.UseExternalEmojis,
-          PermissionsBitField.Flags.UseApplicationCommands,
-        ],
-        deny: [
-          ...(userPermissions.preferredTentMode === ('hidden') ? [PermissionsBitField.Flags.ViewChannel] : []),
-          ...(userPermissions.preferredTentMode === ('locked' || 'hidden') ? [PermissionsBitField.Flags.Connect] : []),
-        ],
-      },
-      {
-        id: env.ROLE_MODERATOR,
-        allow: [
-          PermissionsBitField.Flags.ViewChannel,
-        ],
-      },
-      {
-        id: env.ROLE_NEEDSHELP,
-        deny: [
-          PermissionsBitField.Flags.ViewChannel,
-        ],
-      },
-      {
-        id: env.ROLE_VERIFYING,
-        deny: [
-          PermissionsBitField.Flags.ViewChannel,
-        ],
-      },
-      {
-        id: env.ROLE_UNVERIFIED,
-        deny: [
-          PermissionsBitField.Flags.ViewChannel,
-        ],
-      },
-
+      ...permissionOverwrites,
     ],
   }).then(async newChannel => {
     if (!New.member) {
@@ -171,6 +188,7 @@ export async function pitchTent(
   - Creator: <@${New.member.id}>
   - Host: <@${New.member.id}>
   - Mode: ${userPermissions.preferredTentMode.charAt(0).toUpperCase() + userPermissions.preferredTentMode.slice(1)}
+  - Ban List: ${userPermissions.banList.length > 0 ? userPermissions.banList.map(userId => `<@${userId}>`).join(', ') : 'None'}
 
 ## **Tent Info**
 - **Webcam use is available for level 10 and up!**
@@ -192,7 +210,7 @@ export async function pitchTent(
  - \`/voice cohost\` - Allows another user to use these commands
 ***To undo a command, just use it again.***`);
     // Add the tent to the temp database
-    await createTentChannelData(New.member.id, newChannel.id, userPermissions.preferredTentMode, infoMessage.id);
+    await createTentChannelData(New.member.id, newChannel.id, userPermissions.preferredTentMode, infoMessage.id, userPermissions.banList, userPermissions.banMode);
     // Log the tent data
     const tentData = await db.tentChannel.findFirst({
       where: {

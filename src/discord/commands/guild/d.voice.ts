@@ -7,6 +7,8 @@ import {
   EmbedBuilder,
   VoiceBasedChannel,
   TextChannel,
+  ButtonBuilder,
+  ButtonStyle,
 } from 'discord.js';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
@@ -14,7 +16,7 @@ import commandContext from '../../utils/context';
 
 const F = f(__filename);
 
-type VoiceActions = 'lock' | 'hide' | 'add' | 'ban' | 'rename' | 'mute' | 'cohost' | 'bitrate' | 'ping';
+type VoiceActions = 'lock' | 'hide' | 'add' | 'ban' | 'rename' | 'mute' | 'cohost' | 'bitrate' | 'ping' | 'settings';
 
 async function tentRename(
   voiceChannel: VoiceBasedChannel,
@@ -237,18 +239,73 @@ async function tentHide(
 async function tentBan(
   voiceChannel: VoiceBasedChannel,
   target: GuildMember,
-):Promise<EmbedBuilder> {
+): Promise<EmbedBuilder> {
   let verb = '';
 
-  if (!voiceChannel.permissionsFor(target).has(PermissionsBitField.Flags.ViewChannel) === false) {
+  // Fetch the tentChannel data from the database
+  const tentChannel = await db.tentChannel.findFirst({
+    where: {
+      channelId: voiceChannel.id,
+    },
+  });
+
+  if (!tentChannel) {
+    throw new Error(`TentChannel with ID ${voiceChannel.id} not found`);
+  }
+
+  // Fetch the user data from the database
+  const user = await db.users.findFirst({
+    where: {
+      id: tentChannel.userId,
+    },
+  });
+
+  if (!user) {
+    throw new Error(`User with ID ${tentChannel.userId} not found`);
+  }
+
+  // Check if the target user is already banned or not
+  if (user.banList && user.banList.includes(target.id) === false) {
+    // If not, add the target user to the ban list
     voiceChannel.permissionOverwrites.edit(target, { ViewChannel: false, Connect: false });
     if (target.voice.channel === voiceChannel) {
       target.voice.setChannel(null);
     }
-    verb = 'banned and disconnected';
+    verb = 'added to your ban list and disconnected';
+
+    // Add the target user to the ban list in the database
+    if (user.banList) {
+      user.banList.push(target.id);
+    } else {
+      user.banList = [target.id];
+    }
+
+    await db.users.update({
+      where: {
+        id: tentChannel.userId,
+      },
+      data: {
+        banList: user.banList,
+      },
+    });
   } else {
+    // If the target user is already banned, remove them from the ban list
     voiceChannel.permissionOverwrites.delete(target);
-    verb = 'unbanned';
+    verb = 'removed from your ban list';
+
+    // Remove the target user from the ban list in the database
+    if (user.banList) {
+      user.banList = user.banList.filter(id => id !== target.id);
+    }
+
+    await db.users.update({
+      where: {
+        id: tentChannel.userId,
+      },
+      data: {
+        banList: user.banList,
+      },
+    });
   }
 
   // log.debug(F, `${target.displayName} is now ${verb}`);
@@ -256,7 +313,7 @@ async function tentBan(
   return embedTemplate()
     .setTitle('Success')
     .setColor(Colors.Green)
-    .setDescription(`${target} has been ${verb} from ${voiceChannel}`);
+    .setDescription(`${target} has been ${verb}`);
 }
 
 async function tentMute(
@@ -392,6 +449,34 @@ async function tentPing(
     .setDescription('The Join VC role could not be found.');
 }
 
+const buttonTentViewBan = new ButtonBuilder()
+  .setCustomId('TentViewBan')
+  .setLabel('View Ban List')
+  .setEmoji('🚫')
+  .setStyle(ButtonStyle.Primary);
+
+async function tentSettings(
+  member: GuildMember,
+) {
+  // Fetch the user's data from the database
+  const user = await db.users.findFirst({
+    where: {
+      discord_id: member.id,
+    },
+  });
+
+  if (!user) {
+    throw new Error(`User with ID ${member.id} not found`);
+  }
+
+  // Show embed with ban list
+  return embedTemplate()
+    .setTitle('Tent Settings')
+    .setColor(Colors.Blue)
+    .setDescription(`Ban List: ${user.banList}`)
+    .setTimestamp();
+}
+
 export const dVoice: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('voice')
@@ -409,26 +494,12 @@ export const dVoice: SlashCommand = {
     .addSubcommand(subcommand => subcommand
       .setName('hide')
       .setDescription('Remove the Tent from the channel list'))
-    // .addSubcommand(subcommand => subcommand
-    //   .setName('add')
-    //   .setDescription('Allow a user to join your Tent when locked or hidden')
-    //   .addUserOption(option => option
-    //     .setName('target')
-    //     .setDescription('The user to add/unadd')
-    //     .setRequired(true)))
     .addSubcommand(subcommand => subcommand
       .setName('ban')
       .setDescription('Ban and disconnect a user from your Tent')
       .addUserOption(option => option
         .setName('target')
         .setDescription('The user to ban/unban')
-        .setRequired(true)))
-    .addSubcommand(subcommand => subcommand
-      .setName('mute')
-      .setDescription('Mute/Unmute a user in your Tent')
-      .addUserOption(option => option
-        .setName('target')
-        .setDescription('The user to mute')
         .setRequired(true)))
     .addSubcommand(subcommand => subcommand
       .setName('cohost')
@@ -438,23 +509,11 @@ export const dVoice: SlashCommand = {
         .setDescription('The user to make co-host')
         .setRequired(true)))
     .addSubcommand(subcommand => subcommand
-      .setName('bitrate')
-      .setDescription('Change the bitrate of your Tent')
-      .addStringOption(option => option
-        .setName('bitrate')
-        .setDescription('The bitrate to set')
-        .setRequired(true)
-        .addChoices(
-          { name: 'Potato (8kbps)', value: '8000' },
-          { name: 'Low (32kbps)', value: '16000' },
-          { name: 'Default (64kbps)', value: '64000' },
-          { name: 'Medium (128kbps)', value: '128000' },
-          { name: 'High (256kbps)', value: '256000' },
-          { name: 'Ultra (384kbps)', value: '384000' },
-        )))
-    .addSubcommand(subcommand => subcommand
       .setName('ping')
-      .setDescription('Ping the Join VC role')),
+      .setDescription('Ping the Join VC role'))
+    .addSubcommand(subcommand => subcommand
+      .setName('settings')
+      .setDescription('View and change your Tent settings')),
 
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
@@ -538,6 +597,10 @@ export const dVoice: SlashCommand = {
 
     if (command === 'ping') {
       embed = await tentPing(voiceChannel, member);
+    }
+
+    if (command === 'settings') {
+      embed = await tentSettings(member);
     }
 
     await interaction.editReply({ embeds: [embed] });
