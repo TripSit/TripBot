@@ -171,25 +171,69 @@ model users {
   quotes_quotes_user_idTousers                              quotes[]          @relation("UserQuote")
   quotes_quotes_created_byTousers                           quotes[]          @relation("QuoteCreator")
   members                                                   members[]
-  createdTents                                              tentChannel[]     @relation("CreatedTents")
-  hostedTents                                               tentChannel[]     @relation("HostedTents")
-  preferredTentMode                                         String @default("public")
+  createdTents                                              tent_settings[]   @relation("CreatedTents")
+  updatedTents                                              tent_settings[]   @relation("UpdatedTents")
+  hostedTents                                               tent_hostlist[]
+  bannedFromTents                                           tent_blacklist[]
+  whitelistedInTents                                        tent_whitelist[]
+  preferredTentMode                                         String            @default("public")
   banlist                                                   String[]
   whitelist                                                 String[]
 }
 
-model tentChannel {
-  id        Int    @id @default(autoincrement())
-  userId    String @db.Uuid
-  hostId    String @db.Uuid
-  channelId String
-  user      users  @relation(name: "CreatedTents", fields: [userId], references: [id])
-  host      users  @relation(name: "HostedTents", fields: [hostId], references: [id])
-  mode     String // Public, Private
-  infoMessageId String
-  banlist  String[]
-  whitelist String[]
-  // other fields to store temp data...
+model tent_settings {
+  id              String           @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  name            String
+  channel_id      String?          // Should be optional because the channel will get deleted
+  info_message_id String?          // Should be optional because the channel will get deleted
+  mode            tent_publicity   @default(PUBLIC) // Public, Private
+  // Bitrate - WIP
+  // Server location - WIP
+  hostlist        tent_hostlist[]
+  banlist         tent_blacklist[]
+  whitelist       tent_whitelist[]
+
+  // These are good stats to have, and id like to standardize them
+  created_by      String           @db.Uuid
+  created_at      DateTime         @default(now()) @db.Timestamptz(6)
+  updated_by      String           @db.Uuid
+  updated_at      DateTime         @default(now()) @db.Timestamptz(6)
+
+  // This will be updated when the tent is town down
+  deleted_at      DateTime?        @db.Timestamptz(6)
+
+  creatingUser users @relation(name: "CreatedTents", fields: [created_by], references: [id])
+  updatingUser users @relation(name: "UpdatedTents", fields: [updated_by], references: [id])
+}
+
+model tent_hostlist {
+  // Postgres doesn't do many-to-many relationships well, so we're using a join table
+  tent_id String        @db.Uuid
+  user_id String        @db.Uuid
+  tent    tent_settings @relation(fields: [tent_id], references: [id])
+  user    users         @relation(fields: [user_id], references: [id])
+
+  @@id([tent_id, user_id])
+}
+
+model tent_whitelist {
+  // Postgres doesn't do many-to-many relationships well, so we're using a join table
+  tent_id String        @db.Uuid
+  user_id String        @db.Uuid
+  tent    tent_settings @relation(fields: [tent_id], references: [id])
+  user    users         @relation(fields: [user_id], references: [id])
+
+  @@id([tent_id, user_id])
+}
+
+model tent_blacklist {
+  // Postgres doesn't do many-to-many relationships well, so we're using a join table
+  tent_id String        @db.Uuid
+  user_id String        @db.Uuid
+  channel tent_settings @relation(fields: [tent_id], references: [id])
+  user    users         @relation(fields: [user_id], references: [id])
+
+  @@id([tent_id, user_id])
 }
 
 model members {
@@ -546,6 +590,11 @@ enum bridge_status {
   PENDING
   ACTIVE
   PAUSED
+}
+
+enum tent_publicity {
+  PUBLIC
+  PRIVATE
 }
 
 enum counting_type {

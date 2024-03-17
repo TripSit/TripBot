@@ -3,7 +3,7 @@ import {
   VoiceState,
 } from 'discord.js';
 import { VoiceStateUpdateEvent } from '../@types/eventDef';
-import { pitchTent, teardownTent } from '../utils/tents';
+import { voiceUpdate } from '../commands/guild/d.voice';
 
 const F = f(__filename); // eslint-disable-line
 
@@ -29,13 +29,7 @@ export const voiceStateUpdate: VoiceStateUpdateEvent = {
     }
     channelAuditlog.send(modMessage);
 
-    if (New.channelId === env.CHANNEL_CAMPFIRE) {
-      // If the user joined the campfire channel, pitch a new tent
-      pitchTent(Old, New);
-      return;
-    }
-
-    teardownTent(Old);
+    await voiceUpdate(New, Old);
   },
 };
 
