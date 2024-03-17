@@ -21,7 +21,10 @@ import commandContext from '../../utils/context';
 
 const F = f(__filename);
 
-type VoiceActions = 'private' | 'ban' | 'whitelist' | 'rename' | 'cohost' | 'ping' | 'settings';
+/* TODO
+* Make sure you can't whitelist AND blacklist someone
+
+*/
 
 // Command that makes the bot ping the Join VC role
 let lastTentPingTime = Date.now() - 3600000; // Initialize to one hour ago
@@ -300,6 +303,7 @@ namespace cmd {
   ):Promise<EmbedBuilder> {
     const voiceChannel = (interaction.member as GuildMember).voice.channel as VoiceBasedChannel;
     const newName = interaction.options.getString('name') as string;
+    const ogName = voiceChannel.name;
     const actor = interaction.member as GuildMember;
 
     const userData = await db.users.upsert({
@@ -326,12 +330,12 @@ namespace cmd {
 
     await voiceChannel.setName(await util.tentName(newName));
 
-    log.debug(F, `${voiceChannel.name} has been named to ${newName}`);
+    log.debug(F, `${ogName} has been named to ${newName}`);
 
     return embedTemplate()
       .setTitle('Success')
       .setColor(Colors.Green)
-      .setDescription(`${voiceChannel.name} has been renamed to ${newName}`);
+      .setDescription(`${ogName} has been renamed to ${voiceChannel.name}`);
   }
 
   export async function tentPrivate(
@@ -349,22 +353,9 @@ namespace cmd {
       },
     });
 
-    if (tentData.mode === 'PUBLIC') {
-      voiceChannel.permissionOverwrites.edit(voiceChannel.guild.roles.everyone, { ViewChannel: true, Connect: true });
-      // verb = 'unhidden (and unlocked)';
-      mode = 'PUBLIC';
-      explanation = 'The tent is visible and can be joined by anyone not on your ban list.';
+    log.debug(F, `TentData: ${JSON.stringify(tentData, null, 2)}`);
 
-      // Update the tentChannel mode in the database
-      await db.tent_settings.update({
-        where: {
-          id: tentData.id,
-        },
-        data: {
-          mode: 'PUBLIC',
-        },
-      });
-    } else {
+    if (tentData.mode === 'PUBLIC') {
       voiceChannel.permissionOverwrites.edit(voiceChannel.guild.roles.everyone, { ViewChannel: false, Connect: false });
       // verb = 'hidden (and locked)';
       mode = 'private';
@@ -377,6 +368,21 @@ namespace cmd {
         },
         data: {
           mode: 'PRIVATE',
+        },
+      });
+    } else {
+      voiceChannel.permissionOverwrites.edit(voiceChannel.guild.roles.everyone, { ViewChannel: true, Connect: true });
+      // verb = 'unhidden (and unlocked)';
+      mode = 'public';
+      explanation = 'The tent is visible and can be joined by anyone not on your ban list.';
+
+      // Update the tentChannel mode in the database
+      await db.tent_settings.update({
+        where: {
+          id: tentData.id,
+        },
+        data: {
+          mode: 'PUBLIC',
         },
       });
     }
@@ -560,14 +566,16 @@ namespace cmd {
         channel_id: voiceChannel.id,
       },
     });
+    // log.debug(F, `TentData: ${JSON.stringify(tentData, null, 2)}`);
 
+    // Fetch the target data from the database
     const target = interaction.options.getMember('target') as GuildMember;
-    // Fetch the user data from the database
     const targetData = await db.users.upsert({
       where: { discord_id: target.id },
       create: { discord_id: target.id },
       update: {},
     });
+    // log.debug(F, `TargetData: ${JSON.stringify(targetData, null, 2)}`);
 
     const tentHostData = await db.tent_hostlist.findFirst({
       where: {
@@ -575,13 +583,14 @@ namespace cmd {
         user_id: targetData.id,
       },
     });
+    // log.debug(F, `TentHostData: ${JSON.stringify(tentHostData, null, 2)}`);
 
     let verb = '';
     if (tentHostData) {
       await voiceChannel.permissionOverwrites.edit(target, { MoveMembers: false });
       verb = 'removed as a co-host';
 
-      await db.tent_whitelist.delete({
+      await db.tent_hostlist.delete({
         where: {
           tent_id_user_id: {
             tent_id: tentData.id,
@@ -593,7 +602,7 @@ namespace cmd {
       await voiceChannel.permissionOverwrites.edit(target, { MoveMembers: true });
       verb = 'co-hosted';
 
-      await db.tent_whitelist.create({
+      await db.tent_hostlist.create({
         data: {
           tent_id: tentData.id,
           user_id: targetData.id,
@@ -648,7 +657,7 @@ namespace cmd {
       }
 
       // Send the ping
-      await channel.send(`<@${member.id}> wants you to <@&${role.id}> in ${voiceChannel.name}!`);
+      await channel.send(`<@${member.id}> wants you to <@&${role.id}> in <#${voiceChannel.id}>!`);
 
       // Update the last usage times
       lastTentPingTime = now;
@@ -683,6 +692,7 @@ namespace cmd {
         created_by: userData.id,
       },
     });
+    log.debug(F, `TentData: ${JSON.stringify(tentData, null, 2)}`);
 
     const tentBanList = await db.tent_blacklist.findMany({
       where: {
@@ -696,8 +706,9 @@ namespace cmd {
         },
       },
     });
+    log.debug(F, `TentBanList: ${JSON.stringify(tentBanList, null, 2)}`);
 
-    const tentWhiteList = await db.tent_blacklist.findMany({
+    const tentWhiteList = await db.tent_whitelist.findMany({
       where: {
         tent_id: tentData.id,
       },
@@ -709,6 +720,7 @@ namespace cmd {
         },
       },
     });
+    log.debug(F, `TentWhiteList: ${JSON.stringify(tentWhiteList, null, 2)}`);
 
     // Show embed with ban list
     return embedTemplate()
@@ -747,10 +759,18 @@ namespace validate {
     interaction:ChatInputCommandInteraction,
   ):Promise<boolean> {
     const voiceChannel = (interaction.member as GuildMember).voice.channel as VoiceBasedChannel;
+    const member = interaction.member as GuildMember;
+
+    const userData = await db.users.upsert({
+      where: { discord_id: member.id },
+      create: { discord_id: member.id },
+      update: {},
+    });
+
     const tentChannel = await db.tent_settings.findFirst({
       where: {
         channel_id: voiceChannel.id,
-        created_by: (interaction.member as GuildMember).id,
+        created_by: userData.id,
       },
     });
 
@@ -761,7 +781,7 @@ namespace validate {
           channel_id: voiceChannel.id,
           hostlist: {
             some: {
-              user_id: (interaction.member as GuildMember).id,
+              user_id: userData.id,
             },
           },
         },
@@ -791,7 +811,8 @@ namespace validate {
   export async function actingOnMod(
     interaction:ChatInputCommandInteraction,
   ):Promise<boolean> {
-    const target = interaction.options.getMember('target') as GuildMember;
+    const target = interaction.options.getMember('target') as GuildMember ?? interaction.member;
+
     if (target.roles.cache.has(env.ROLE_MODERATOR)) {
       await interaction.reply({ content: 'You cannot do that to a moderator!', ephemeral: true });
       return true;
@@ -819,42 +840,42 @@ export const dVoice: SlashCommand = {
     .setName('voice')
     .setDescription('Control your Campfire Tent')
     .addSubcommand(subcommand => subcommand
-      .setName('rename')
       .setDescription('Rename your Tent')
       .addStringOption(option => option
         .setName('name')
         .setDescription('The new name for your Tent')
-        .setRequired(true)))
+        .setRequired(true))
+      .setName('rename'))
     .addSubcommand(subcommand => subcommand
-      .setName('private')
-      .setDescription('Hide and lock the Tent'))
+      .setDescription('Hide and lock the Tent')
+      .setName('private'))
     .addSubcommand(subcommand => subcommand
-      .setName('ban')
       .setDescription('Add a user to your Tent ban list')
       .addUserOption(option => option
         .setName('target')
         .setDescription('The user to ban/unban')
-        .setRequired(true)))
+        .setRequired(true))
+      .setName('ban'))
     .addSubcommand(subcommand => subcommand
-      .setName('whitelist')
       .setDescription('Add a user to your Tent whitelist')
       .addUserOption(option => option
         .setName('target')
         .setDescription('The user to add/remove')
-        .setRequired(true)))
+        .setRequired(true))
+      .setName('whitelist'))
     .addSubcommand(subcommand => subcommand
-      .setName('cohost')
       .setDescription('Make another user able to use /voice commands')
       .addUserOption(option => option
         .setName('target')
         .setDescription('The user to make co-host')
-        .setRequired(true)))
+        .setRequired(true))
+      .setName('cohost'))
     .addSubcommand(subcommand => subcommand
-      .setName('ping')
-      .setDescription('Ping the Join VC role'))
+      .setDescription('Ping the Join VC role')
+      .setName('ping'))
     .addSubcommand(subcommand => subcommand
-      .setName('settings')
-      .setDescription('View and change your Tent settings')),
+      .setDescription('View and change your Tent settings')
+      .setName('settings')),
 
   async execute(interaction) {
     if (!(await validate.inGuild(interaction))) return false;
@@ -866,9 +887,9 @@ export const dVoice: SlashCommand = {
     log.info(F, await commandContext(interaction));
     await interaction.deferReply({ ephemeral: true });
 
-    const embed = embedTemplate().setTitle('Error').setColor(Colors.Red);
+    const command = interaction.options.getSubcommand() as
+      'private' | 'ban' | 'whitelist' | 'rename' | 'cohost' | 'ping' | 'settings';
 
-    const command = interaction.options.getSubcommand() as VoiceActions;
     switch (command) {
       case 'rename':
         await interaction.editReply({ embeds: [await cmd.tentRename(interaction)] });
@@ -891,9 +912,11 @@ export const dVoice: SlashCommand = {
       case 'settings':
         await interaction.editReply({ embeds: [await cmd.tentSettings(interaction)] });
         return true;
-      default:
+      default: {
+        const embed = embedTemplate().setTitle('Error').setColor(Colors.Red);
         await interaction.editReply({ embeds: [embed.setDescription('Invalid command')] });
         return false;
+      }
     }
   },
 };
