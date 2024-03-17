@@ -1,3 +1,4 @@
+/* eslint-disable sonarjs/no-small-switch */
 /* eslint-disable @typescript-eslint/no-use-before-define */
 import {
   // Guild,
@@ -13,8 +14,18 @@ import {
   ChannelType,
   CategoryChannel,
   ChatInputCommandInteraction,
+  ButtonInteraction,
+  UserSelectMenuInteraction,
+  ButtonBuilder,
+  ButtonStyle,
+  UserSelectMenuBuilder,
+  InteractionEditReplyOptions,
+  ActionRowBuilder,
+  Role,
+  time,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
+import { DateTime, Duration } from 'luxon';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import commandContext from '../../utils/context';
@@ -27,10 +38,29 @@ const F = f(__filename);
 */
 
 // Command that makes the bot ping the Join VC role
-let lastTentPingTime = Date.now() - 3600000; // Initialize to one hour ago
-const userTentPingTimes: { [userId: string]: number } = {}; // Initialize an empty object to store user ping times
-const globalCoolDown = 3600000; // 1 hour
-const userCoolDown = 10800000; // 3 hours
+let lastTentPingTime = DateTime.now().minus({ hours: 1 }); // Initialize the last ping time to 1 hour ago
+const userTentPingTimes: { [userId: string]: DateTime } = {}; // Initialize an empty object to store user ping times
+namespace text {
+  export function guildOnly() {
+    return 'This must be performed in a guild!';
+  }
+
+  export function memberOnly() {
+    return 'This must be performed by a member of a guild!';
+  }
+
+  export function globalCoolDown() {
+    return env.NODE_ENV === 'production'
+      ? { hours: 1 }
+      : { seconds: 1 };
+  }
+
+  export function userCoolDown() {
+    return env.NODE_ENV === 'production'
+      ? { hours: 3 }
+      : { seconds: 3 };
+  }
+}
 
 namespace util {
   export async function pitchTent(
@@ -157,7 +187,7 @@ namespace util {
     }
 
     // Get the whitelist
-    const tentWhiteList = await db.tent_blacklist.findMany({
+    const tentWhiteList = await db.tent_whitelist.findMany({
       where: {
         tent_id: tentData.id,
       },
@@ -295,6 +325,211 @@ namespace util {
   ):Promise<string> {
     return `⛺│${name}`;
   }
+
+  export async function voiceMenu(
+    interaction: ChatInputCommandInteraction | ButtonInteraction | UserSelectMenuInteraction,
+  ):Promise<ActionRowBuilder<ButtonBuilder | UserSelectMenuBuilder>[]> {
+    const member = interaction.member as GuildMember;
+    const userData = await db.users.upsert({
+      where: { discord_id: member.id },
+      create: { discord_id: member.id },
+      update: {},
+    });
+
+    let tentData = await db.tent_settings.findFirst({
+      where: {
+        created_by: userData.id,
+      },
+    });
+
+    if (!tentData) {
+      tentData = await db.tent_settings.create({
+        data: {
+          name: member.displayName,
+          created_by: userData.id,
+          mode: 'PUBLIC',
+          updated_by: userData.id,
+        },
+      });
+    }
+    // log.debug(F, `TentData: ${JSON.stringify(tentData, null, 2)}`);
+
+    const navButtons = new ActionRowBuilder<ButtonBuilder>()
+      .addComponents(button.rename());
+
+    if (tentData.mode === 'PUBLIC') {
+      navButtons.addComponents(button.lock());
+    } else {
+      navButtons.addComponents(button.unlock());
+    }
+
+    const isAfterUserCoolDown = await validate.pingAfterUserCoolDown(member.id);
+    // log.debug(F, `isAfterUserCoolDown: ${isAfterUserCoolDown}`);
+    const isAfterGlobalCoolDown = await validate.pingAfterGlobalCoolDown();
+    // log.debug(F, `isAfterGlobalCoolDown: ${isAfterGlobalCoolDown}`);
+
+    // Check if the user used the command less than the user cool down
+    if (isAfterUserCoolDown && isAfterGlobalCoolDown) {
+      navButtons.addComponents(button.ping());
+      // log.debug(F, 'Ping button added');
+    } else {
+      navButtons.addComponents(button.ping().setDisabled(true));
+      // log.debug(F, 'Ping button disabled');
+    }
+
+    return [
+      navButtons,
+      new ActionRowBuilder<UserSelectMenuBuilder>()
+        .addComponents(
+          await select.hostlist(userData.id),
+        ),
+      new ActionRowBuilder<UserSelectMenuBuilder>()
+        .addComponents(
+          await select.whitelist(userData.id),
+        ),
+      new ActionRowBuilder<UserSelectMenuBuilder>()
+        .addComponents(
+          await select.blacklist(userData.id),
+        ),
+    ];
+  }
+
+  export async function pingJoinVc(
+    interaction: ChatInputCommandInteraction | ButtonInteraction,
+  ) {
+    const channelLounge = await (interaction.member as GuildMember).guild.channels
+      .fetch(env.CHANNEL_LOUNGE) as TextChannel;
+    const channelVoice = (interaction.member as GuildMember).voice.channel as VoiceBasedChannel;
+    const member = interaction.member as GuildMember;
+    const role = await channelLounge.guild.roles.fetch(env.ROLE_JOINVC) as Role;
+
+    // Send the ping
+    await channelLounge.send(`<@${member.id}> wants you to <@&${role.id}> in <#${channelVoice.id}>!`);
+    log.debug(F, `Pinged the Join VC role in <#${channelVoice.id}>`);
+
+    // Update the last usage times
+    lastTentPingTime = DateTime.now();
+    userTentPingTimes[member.id] = DateTime.now();
+    log.debug(F, `Set global ping time to ${lastTentPingTime}`);
+    log.debug(F, `Set user ping time to   ${userTentPingTimes[member.id]}`);
+    log.debug(F, `Now is                  ${DateTime.now()}`);
+  }
+}
+
+namespace page {
+  export async function start(
+    interaction: ChatInputCommandInteraction | ButtonInteraction
+    | UserSelectMenuInteraction,
+  ): Promise<InteractionEditReplyOptions> {
+    // log.info(F, await commandContext(interaction));
+    if (!interaction.guild || !interaction.member) return { content: text.guildOnly() };
+    const member = interaction.member as GuildMember;
+    // Fetch the user's data from the database
+    const userData = await db.users.upsert({
+      where: { discord_id: member.id },
+      create: { discord_id: member.id },
+      update: {},
+    });
+
+    let description = '';
+
+    const tentData = await db.tent_settings.findFirstOrThrow({
+      where: {
+        created_by: userData.id,
+      },
+    });
+    // log.debug(F, `TentData: ${JSON.stringify(tentData, null, 2)}`);
+
+    const channelStr = tentData.channel_id
+      ? `Tent room: <#${tentData.channel_id}>`
+      : `No tent created, join <#${env.CHANNEL_CAMPFIRE}> to make one!`;
+
+    description += `${channelStr}`;
+
+    description += `\nTent visibility is currently set to **${tentData.mode}**`;
+
+    const tentHostList = await db.tent_hostlist.findMany({
+      where: {
+        tent_id: tentData.id,
+      },
+      select: {
+        user: {
+          select: {
+            discord_id: true,
+          },
+        },
+      },
+    });
+    // log.debug(F, `tentHostList: ${JSON.stringify(tentHostList, null, 2)}`);
+    const hostListStr = tentHostList.map(host => `<@${host.user.discord_id}>`).join(', ');
+    if (tentHostList.length > 0) {
+      description += `\nHost List: ${hostListStr}`;
+    }
+
+    const tentWhiteList = await db.tent_whitelist.findMany({
+      where: {
+        tent_id: tentData.id,
+      },
+      select: {
+        user: {
+          select: {
+            discord_id: true,
+          },
+        },
+      },
+    });
+    // log.debug(F, `TentWhiteList: ${JSON.stringify(tentWhiteList, null, 2)}`);
+
+    // Show embed with ban list
+    const whiteListStr = tentWhiteList.map(whitelist => `<@${whitelist.user.discord_id}>`).join(', ');
+    if (tentWhiteList.length > 0) {
+      description += `\nWhite List: ${whiteListStr}`;
+    }
+
+    const tentBanList = await db.tent_blacklist.findMany({
+      where: {
+        tent_id: tentData.id,
+      },
+      select: {
+        user: {
+          select: {
+            discord_id: true,
+          },
+        },
+      },
+    });
+    // log.debug(F, `TentBanList: ${JSON.stringify(tentBanList, null, 2)}`);
+    const banListStr = tentBanList.map(ban => `<@${ban.user.discord_id}>`).join(', ');
+    if (tentBanList.length > 0) {
+      description += `\nBan List: ${banListStr}`;
+    }
+
+    // Ping to join VC timeout
+    // Check if the last time the user used the command is less than the global last used time
+    const userLastPinged = userTentPingTimes[member.id] ?? DateTime.now().minus(text.userCoolDown());
+    const globalLastPinged = lastTentPingTime;
+    const nextPingTime = DateTime.now().diff(userLastPinged) < Duration.fromObject(text.userCoolDown())
+      ? userLastPinged.plus(text.userCoolDown())
+      : globalLastPinged.plus(text.globalCoolDown());
+    // Check if the next ping time is in the future or past
+    const pingTime = nextPingTime.diffNow() > Duration.fromObject({ seconds: 0 })
+      ? `You can use the Ping Join VC Button ${time(nextPingTime.toJSDate(), 'R')}`
+      : 'You can use the Ping Join VC Button now!';
+
+    description += `\n${pingTime}`;
+
+    // log.debug(F, `Description: ${description}`);
+
+    return {
+      embeds: [
+        new EmbedBuilder()
+          .setTitle('Tent Settings')
+          .setColor(Colors.Blue)
+          .setDescription(description),
+      ],
+      components: await util.voiceMenu(interaction),
+    };
+  }
 }
 
 namespace cmd {
@@ -339,7 +574,7 @@ namespace cmd {
   }
 
   export async function tentPrivate(
-    interaction:ChatInputCommandInteraction,
+    interaction:ChatInputCommandInteraction | ButtonInteraction,
   ): Promise<EmbedBuilder> {
     const voiceChannel = (interaction.member as GuildMember).voice.channel as VoiceBasedChannel;
     // let verb = '';
@@ -353,7 +588,7 @@ namespace cmd {
       },
     });
 
-    log.debug(F, `TentData: ${JSON.stringify(tentData, null, 2)}`);
+    // log.debug(F, `TentData: ${JSON.stringify(tentData, null, 2)}`);
 
     if (tentData.mode === 'PUBLIC') {
       voiceChannel.permissionOverwrites.edit(voiceChannel.guild.roles.everyone, { ViewChannel: false, Connect: false });
@@ -619,31 +854,33 @@ namespace cmd {
   }
 
   export async function tentPing(
-    interaction:ChatInputCommandInteraction,
+    interaction:ChatInputCommandInteraction | ButtonInteraction,
   ): Promise<EmbedBuilder> {
     const member = interaction.member as GuildMember;
     const voiceChannel = (interaction.member as GuildMember).voice.channel as VoiceBasedChannel;
     const role = await voiceChannel.guild.roles.fetch(env.ROLE_JOINVC);
     if (role) {
-      const now = Date.now();
-      const userId = member.id;
-
       // Check if the user used the command less than the user cool down
-      if (userTentPingTimes[userId] && now - userTentPingTimes[userId] < userCoolDown) {
+
+      if (!(await validate.pingAfterUserCoolDown(member.id))) {
         return embedTemplate()
           .setTitle('Cool Down')
           .setColor(Colors.Red)
-          .setDescription(`You already used this command <t:${Math.floor(userTentPingTimes[userId] / 1000)}:R>. 
-        You can use it again <t:${Math.floor((userTentPingTimes[userId] + userCoolDown) / 1000)}:R>.`);
+          .setDescription(stripIndents`
+            You already used this command <t:${userTentPingTimes[member.id].toJSDate()}:R>. 
+            You can use it again <t:${userTentPingTimes[member.id].plus(text.userCoolDown())}:R>.
+          `);
       }
 
       // Check if the command was used less than the global cool down
-      if (now - lastTentPingTime < globalCoolDown) {
+      if (!(await validate.pingAfterGlobalCoolDown())) {
         return embedTemplate()
           .setTitle('Cool Down')
           .setColor(Colors.Red)
-          .setDescription(`This command is on cool down. 
-          It can next be used <t:${Math.floor((lastTentPingTime + globalCoolDown) / 1000)}:R>.`);
+          .setDescription(stripIndents`
+            Someone else used this command <t:${lastTentPingTime.toJSDate()}:R>.
+            You can use it again <t:${lastTentPingTime.plus(text.globalCoolDown())}:R>.
+          `);
       }
 
       // Ping the role
@@ -656,12 +893,7 @@ namespace cmd {
           .setDescription('The lounge channel could not be found.');
       }
 
-      // Send the ping
-      await channel.send(`<@${member.id}> wants you to <@&${role.id}> in <#${voiceChannel.id}>!`);
-
-      // Update the last usage times
-      lastTentPingTime = now;
-      userTentPingTimes[userId] = now;
+      await util.pingJoinVc(interaction);
 
       // Send the confirmation message
       return embedTemplate()
@@ -674,63 +906,6 @@ namespace cmd {
       .setTitle('Error')
       .setColor(Colors.Red)
       .setDescription('The Join VC role could not be found.');
-  }
-
-  export async function tentSettings(
-    interaction:ChatInputCommandInteraction,
-  ) {
-    const member = interaction.member as GuildMember;
-    // Fetch the user's data from the database
-    const userData = await db.users.upsert({
-      where: { discord_id: member.id },
-      create: { discord_id: member.id },
-      update: {},
-    });
-
-    const tentData = await db.tent_settings.findFirstOrThrow({
-      where: {
-        created_by: userData.id,
-      },
-    });
-    log.debug(F, `TentData: ${JSON.stringify(tentData, null, 2)}`);
-
-    const tentBanList = await db.tent_blacklist.findMany({
-      where: {
-        tent_id: tentData.id,
-      },
-      select: {
-        user: {
-          select: {
-            discord_id: true,
-          },
-        },
-      },
-    });
-    log.debug(F, `TentBanList: ${JSON.stringify(tentBanList, null, 2)}`);
-
-    const tentWhiteList = await db.tent_whitelist.findMany({
-      where: {
-        tent_id: tentData.id,
-      },
-      select: {
-        user: {
-          select: {
-            discord_id: true,
-          },
-        },
-      },
-    });
-    log.debug(F, `TentWhiteList: ${JSON.stringify(tentWhiteList, null, 2)}`);
-
-    // Show embed with ban list
-    return embedTemplate()
-      .setTitle('Tent Settings')
-      .setColor(Colors.Blue)
-      .setDescription(stripIndents`
-        Ban List: ${tentBanList.map(ban => `<@${ban.user.discord_id}>`).join(', ')}
-        White List: ${tentWhiteList.map(whitelist => `<@${whitelist.user.discord_id}>`).join(', ')}
-        Mode: ${tentData.mode.charAt(0).toUpperCase() + tentData.mode.slice(1).toLowerCase()}
-      `);
   }
 }
 
@@ -819,6 +994,293 @@ namespace validate {
     }
     return false;
   }
+
+  export async function pingAfterUserCoolDown(userId: string):Promise<boolean> {
+    const userLastPinged = userTentPingTimes[userId] ?? DateTime.now().minus({ hours: 1 });
+    // log.debug(F, `UserLastPinged: ${userLastPinged}`);
+    const coolDownTime = userLastPinged.plus(text.userCoolDown());
+    // log.debug(F, `CoolDownTime  : ${coolDownTime}`);
+    // log.debug(F, `Now           : ${DateTime.now()}`);
+    return (DateTime.now() > coolDownTime);
+  }
+
+  export async function pingAfterGlobalCoolDown():Promise<boolean> {
+    const globalLastPinged = lastTentPingTime;
+    // log.debug(F, `GlobalLastPinged: ${globalLastPinged}`);
+    const coolDownTime = globalLastPinged.plus(text.globalCoolDown());
+    // log.debug(F, `CoolDownTime    : ${coolDownTime}`);
+    // log.debug(F, `Now             : ${DateTime.now()}`);
+    return (DateTime.now() > coolDownTime);
+  }
+}
+
+namespace button {
+  export function lock() {
+    return new ButtonBuilder()
+      .setCustomId('voice~lock')
+      .setLabel('Lock Tent')
+      .setEmoji('🔒')
+      .setStyle(ButtonStyle.Primary);
+  }
+
+  export function unlock() {
+    return new ButtonBuilder()
+      .setCustomId('voice~unlock')
+      .setLabel('Unlock Tent')
+      .setEmoji('🔓')
+      .setStyle(ButtonStyle.Primary);
+  }
+
+  export function rename() {
+    return new ButtonBuilder()
+      .setCustomId('voice~rename')
+      .setLabel('Rename Tent')
+      .setEmoji('🏷️')
+      .setStyle(ButtonStyle.Primary);
+  }
+
+  export function ping() {
+    return new ButtonBuilder()
+      .setCustomId('voice~ping')
+      .setLabel('Ping Join VC')
+      .setEmoji('🔔')
+      .setStyle(ButtonStyle.Primary);
+  }
+}
+
+namespace select {
+  export async function blacklist(
+    userId: string,
+  ) {
+    const ticketData = await db.tent_settings.findFirstOrThrow({
+      where: {
+        created_by: userId,
+      },
+    });
+
+    const listData = await db.tent_blacklist.findMany({
+      where: {
+        tent_id: ticketData.id,
+      },
+      select: {
+        user: {
+          select: {
+            discord_id: true,
+          },
+        },
+      },
+    });
+
+    // Get a list of discord IDs and filter out the null values
+    const discordIds = listData
+      .map(entry => entry.user.discord_id)
+      .filter(entry => entry !== null) as string[];
+
+    return new UserSelectMenuBuilder()
+      .setCustomId('voice~blacklist')
+      .setPlaceholder('Blacklist Users')
+      .setDefaultUsers(discordIds)
+      .setMinValues(1)
+      .setMaxValues(25);
+  }
+
+  export async function whitelist(
+    userId: string,
+  ) {
+    const ticketData = await db.tent_settings.findFirstOrThrow({
+      where: {
+        created_by: userId,
+      },
+    });
+
+    const listData = await db.tent_whitelist.findMany({
+      where: {
+        tent_id: ticketData.id,
+      },
+      select: {
+        user: {
+          select: {
+            discord_id: true,
+          },
+        },
+      },
+    });
+
+    // Get a list of discord IDs and filter out the null values
+    const discordIds = listData
+      .map(entry => entry.user.discord_id)
+      .filter(entry => entry !== null) as string[];
+
+    return new UserSelectMenuBuilder()
+      .setCustomId('voice~whitelist')
+      .setPlaceholder('Whitelist Users')
+      .setDefaultUsers(discordIds)
+      .setMinValues(1)
+      .setMaxValues(25);
+  }
+
+  export async function hostlist(
+    userId: string,
+  ) {
+    const ticketData = await db.tent_settings.findFirstOrThrow({
+      where: {
+        created_by: userId,
+      },
+    });
+
+    const listData = await db.tent_hostlist.findMany({
+      where: {
+        tent_id: ticketData.id,
+      },
+      select: {
+        user: {
+          select: {
+            discord_id: true,
+          },
+        },
+      },
+    });
+
+    // Get a list of discord IDs and filter out the null values
+    const discordIds = listData
+      .map(entry => entry.user.discord_id)
+      .filter(entry => entry !== null) as string[];
+
+    return new UserSelectMenuBuilder()
+      .setCustomId('voice~hostlist')
+      .setPlaceholder('Host List')
+      .setDefaultUsers(discordIds)
+      .setMinValues(1)
+      .setMaxValues(25);
+  }
+}
+
+namespace selectAction {
+  export async function whiteList(
+    interaction: UserSelectMenuInteraction,
+  ) {
+    // Take all the values from the select menu and add them to the database
+    log.debug(F, `Values: ${interaction.values}`);
+  }
+
+  export async function blackList(
+    interaction: UserSelectMenuInteraction,
+  ) {
+    // Take all the values from the select menu and add them to the database
+    log.debug(F, `Values: ${interaction.values}`);
+  }
+
+  export async function hostList(
+    interaction: UserSelectMenuInteraction,
+  ) {
+    if (!interaction.channel) return;
+    if (!interaction.guild) return;
+
+    const tentData = await db.tent_settings.findFirstOrThrow({
+      where: {
+        channel_id: interaction.channel.id,
+      },
+    });
+
+    // Clear out the existing values
+    await db.tent_hostlist.deleteMany({
+      where: {
+        tent_id: tentData.id,
+      },
+    });
+
+    // Take all the values from the select menu and add them to the database
+    log.debug(F, `Values: ${interaction.values}`);
+    await Promise.all(interaction.values.map(async value => {
+      const userData = await db.users.upsert({
+        where: { discord_id: value },
+        create: { discord_id: value },
+        update: {},
+      });
+
+      await db.tent_hostlist.create({
+        data: {
+          tent_id: tentData.id,
+          user_id: userData.id,
+        },
+      });
+    }));
+  }
+}
+
+export async function voiceSelect(
+  interaction: UserSelectMenuInteraction,
+): Promise<void> {
+  if (!interaction.guild) return;
+  // Used in selectMenu.ts
+  const menuId = interaction.customId;
+  // log.debug(F, `[tripsitSelect] menuId: ${menuId}`);
+  const [, menuAction] = menuId.split('~') as [
+    null,
+    'whitelist' | 'blacklist' | 'hostlist',
+  ];
+
+  switch (menuAction) {
+    case 'whitelist': {
+      await selectAction.whiteList(interaction);
+      await interaction.update(await page.start(interaction));
+      break;
+    }
+    case 'blacklist': {
+      await selectAction.blackList(interaction);
+      await interaction.update(await page.start(interaction));
+      break;
+    }
+    case 'hostlist': {
+      await selectAction.hostList(interaction);
+      await interaction.update(await page.start(interaction));
+      break;
+    }
+    default:
+      await interaction.update({
+        content: "I'm sorry, I don't understand that command!",
+      });
+      break;
+  }
+}
+
+export async function voiceButton(
+  interaction: ButtonInteraction,
+): Promise<void> {
+  // Used in buttonClick.ts
+  const buttonID = interaction.customId;
+  // log.debug(F, `[tripsitButton] buttonID: ${buttonID}`);
+  const [, buttonAction] = buttonID.split('~') as [
+    null,
+    /* button actions */ 'lock' | 'unlock' | 'rename' | 'ping',
+  ];
+
+  // eslint-disable-next-line sonarjs/no-small-switch
+  switch (buttonAction) {
+    case 'lock':
+      log.debug(F, 'Locking tent');
+      await cmd.tentPrivate(interaction);
+      await interaction.update(await page.start(interaction));
+      break;
+    case 'unlock':
+      log.debug(F, 'Unlocking tent');
+      await cmd.tentPrivate(interaction);
+      await interaction.update(await page.start(interaction));
+      break;
+    case 'rename':
+      await interaction.update(await page.start(interaction));
+      break;
+    case 'ping':
+      await cmd.tentPing(interaction);
+      await interaction.update(await page.start(interaction));
+      // This will refresh the buttons after the cool down period
+      setTimeout(async () => {
+        await interaction.editReply(await page.start(interaction));
+      }, Duration.fromObject(text.userCoolDown()).as('milliseconds'));
+      break;
+    default:
+      break;
+  }
 }
 
 export async function voiceUpdate(
@@ -882,7 +1344,6 @@ export const dVoice: SlashCommand = {
     if (!(await validate.inVoiceChannel(interaction))) return false;
     if (!(await validate.isTentOwnerOrHost(interaction))) return false;
     if (await validate.actingOnSelf(interaction)) return false;
-    if (await validate.actingOnMod(interaction)) return false;
 
     log.info(F, await commandContext(interaction));
     await interaction.deferReply({ ephemeral: true });
@@ -897,9 +1358,11 @@ export const dVoice: SlashCommand = {
       case 'private':
         await interaction.editReply({ embeds: [await cmd.tentPrivate(interaction)] });
         return true;
-      case 'ban':
+      case 'ban': {
+        if (await validate.actingOnMod(interaction)) return false;
         await interaction.editReply({ embeds: [await cmd.tentBan(interaction)] });
         return true;
+      }
       case 'whitelist':
         await interaction.editReply({ embeds: [await cmd.tentWhitelist(interaction)] });
         return true;
@@ -910,7 +1373,7 @@ export const dVoice: SlashCommand = {
         await interaction.editReply({ embeds: [await cmd.tentPing(interaction)] });
         return true;
       case 'settings':
-        await interaction.editReply({ embeds: [await cmd.tentSettings(interaction)] });
+        await interaction.editReply(await page.start(interaction));
         return true;
       default: {
         const embed = embedTemplate().setTitle('Error').setColor(Colors.Red);
@@ -922,65 +1385,3 @@ export const dVoice: SlashCommand = {
 };
 
 export default dVoice;
-
-// async function transferHost(oldHostId: string, newHostId: string, channelId: string) {
-//   // Fetch the tentChannel from the database
-//   const tentChannel = await db.tent_settings.findFirst({
-//     where: {
-//       channelId,
-//     },
-//   });
-//
-//   if (!tentChannel) {
-//     throw new Error(`TentChannel with ID ${channelId} not found`);
-//   }
-//
-//   // Fetch the new host from the database
-//   const newHost = await db.users.findUnique({
-//     where: {
-//       discord_id: newHostId,
-//     },
-//   });
-//
-//   if (!newHost) {
-//     throw new Error(`User with Discord ID ${newHostId} not found`);
-//   }
-//
-//   // Update the hostId in the tentChannel data
-//   return db.tent_settings.update({
-//     where: {
-//       id: tentChannel.id,
-//     },
-//     data: {
-//       hostId: newHost.id,
-//     },
-//   });
-// }
-
-// async function tentAdd(
-//   voiceChannel: VoiceBasedChannel,
-//   target: GuildMember,
-// ):Promise<EmbedBuilder> {
-//   let verb = '';
-//
-//   if (voiceChannel.permissionsFor(target).has(PermissionsBitField.Flags.ViewChannel) === false){
-//     return embedTemplate()
-//       .setTitle('Error')
-//       .setColor(Colors.Red)
-//       .setDescription(`${target} is banned from ${voiceChannel}, unban them first!`);
-//   }
-//
-//   if (!voiceChannel.permissionsFor(target).has(PermissionsBitField.Flags.ViewChannel) === true){
-//     voiceChannel.permissionOverwrites.create(target, { ViewChannel: true, Connect: true });
-//     verb = 'added';
-//   } else {
-//     voiceChannel.permissionOverwrites.delete(target);
-//     verb = 'un-added';
-//   }
-//   // log.debug(F, `${target.displayName} is now ${verb}`);
-//
-//   return embedTemplate()
-//     .setTitle('Success')
-//     .setColor(Colors.Green)
-//     .setDescription(`${target} has been ${verb} from ${voiceChannel}`);
-// }
