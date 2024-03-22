@@ -84,6 +84,76 @@ namespace util {
     return command ? command.id : null;
   }
 
+  export async function updateTentPermissions(voiceChannel: VoiceBasedChannel): Promise<void> {
+    log.debug(F, `Updating permissions for ${voiceChannel.name}`);
+    // Get the tent data
+    const tentData = await db.tent_settings.findFirst({
+      where: {
+        channel_id: voiceChannel.id,
+      },
+    });
+
+    if (!tentData) {
+      return;
+    }
+
+    // Clear the current permission overwrites
+    await Promise.all(voiceChannel.permissionOverwrites.cache.map(async overwrite => {
+      log.debug(F, `Checking permission overwrite for ${overwrite.id}`);
+      log.debug(F, `Type of overwrite.type: ${typeof overwrite.type}`);
+      log.debug(F, `Value of overwrite.type: ${overwrite.type}`);
+
+      if (overwrite.type === 1) {
+        await overwrite.delete();
+        log.debug(F, `Deleted permission overwrite for ${overwrite.id}`);
+      }
+    }));
+
+    // Get the blacklist
+    const tentBanList = await db.tent_blacklist.findMany({
+      where: {
+        tent_id: tentData.id,
+      },
+      select: {
+        user: {
+          select: {
+            discord_id: true,
+          },
+        },
+      },
+    });
+
+    if (tentBanList.length > 0) {
+      await Promise.all(tentBanList.map(async ban => {
+        if (ban.user.discord_id) {
+          await voiceChannel.permissionOverwrites.edit(ban.user.discord_id, { ViewChannel: false, Connect: false });
+          log.debug(F, `Banned user ${ban.user.discord_id} from ${voiceChannel.name}`);
+        }
+      }));
+    }
+
+    // Get the whitelist
+    const tentWhiteList = await db.tent_whitelist.findMany({
+      where: {
+        tent_id: tentData.id,
+      },
+      select: {
+        user: {
+          select: {
+            discord_id: true,
+          },
+        },
+      },
+    });
+
+    await Promise.all(tentWhiteList.map(async whitelist => {
+      if (whitelist.user.discord_id) {
+        await voiceChannel.permissionOverwrites.edit(whitelist.user.discord_id, { ViewChannel: true, Connect: true });
+        log.debug(F, `Whitelisted user ${whitelist.user.discord_id} for ${voiceChannel.name}`);
+      }
+    }));
+  }
+
   export async function pitchTent(
     oldState:VoiceState,
     newState:VoiceState,
@@ -748,7 +818,13 @@ namespace cmd {
       },
     });
 
-    // Check if the target user is already banned or not
+    const tentWhiteData = await db.tent_whitelist.findFirst({
+      where: {
+        tent_id: tentChannel.id,
+        user_id: targetData.id,
+      },
+    });
+
     let verb = '';
     if (tentBanData) {
       // If the target user is already banned, remove them from the ban list
@@ -777,6 +853,18 @@ namespace cmd {
           user_id: targetData.id,
         },
       });
+
+      // If the user is on the whitelist, remove them
+      if (tentWhiteData) {
+        await db.tent_whitelist.delete({
+          where: {
+            tent_id_user_id: {
+              tent_id: tentChannel.id,
+              user_id: targetData.id,
+            },
+          },
+        });
+      }
     }
 
     // log.debug(F, `${target.displayName} is now ${verb}`);
@@ -814,7 +902,14 @@ namespace cmd {
       update: {},
     });
 
-    const tentWhiteListData = await db.tent_whitelist.findFirst({
+    const tentBanData = await db.tent_blacklist.findFirst({
+      where: {
+        tent_id: tentData.id,
+        user_id: targetData.id,
+      },
+    });
+
+    const tentWhiteData = await db.tent_whitelist.findFirst({
       where: {
         tent_id: tentData.id,
         user_id: targetData.id,
@@ -822,9 +917,10 @@ namespace cmd {
     });
 
     let verb = '';
-    if (tentWhiteListData) {
+    if (tentWhiteData) {
+      // If the target user is already whitelisted, remove them from the whitelist
       await voiceChannel.permissionOverwrites.delete(target);
-      verb = 'removed from your white list';
+      verb = 'removed from your whitelist';
 
       await db.tent_whitelist.delete({
         where: {
@@ -835,8 +931,9 @@ namespace cmd {
         },
       });
     } else {
+      // If not, add the target user to the whitelist
       await voiceChannel.permissionOverwrites.edit(target, { ViewChannel: true, Connect: true });
-      verb = 'added to your white list';
+      verb = 'added to your whitelist';
 
       await db.tent_whitelist.create({
         data: {
@@ -844,6 +941,18 @@ namespace cmd {
           user_id: targetData.id,
         },
       });
+
+      // If the user is on the ban list, remove them
+      if (tentBanData) {
+        await db.tent_blacklist.delete({
+          where: {
+            tent_id_user_id: {
+              tent_id: tentData.id,
+              user_id: targetData.id,
+            },
+          },
+        });
+      }
     }
 
     // Return an embed with the result
@@ -1270,6 +1379,25 @@ namespace selectAction {
         update: {},
       });
 
+      const tentBanData = await db.tent_blacklist.findFirst({
+        where: {
+          tent_id: tentData.id,
+          user_id: userData.id,
+        },
+      });
+
+      if (tentBanData) {
+        // If the user is on the ban list, remove them
+        await db.tent_blacklist.delete({
+          where: {
+            tent_id_user_id: {
+              tent_id: tentData.id,
+              user_id: userData.id,
+            },
+          },
+        });
+      }
+
       await db.tent_whitelist.create({
         data: {
           tent_id: tentData.id,
@@ -1306,6 +1434,25 @@ namespace selectAction {
         create: { discord_id: value },
         update: {},
       });
+
+      const tentWhiteData = await db.tent_whitelist.findFirst({
+        where: {
+          tent_id: tentData.id,
+          user_id: userData.id,
+        },
+      });
+
+      if (tentWhiteData) {
+        // If the user is on the whitelist, remove them
+        await db.tent_whitelist.delete({
+          where: {
+            tent_id_user_id: {
+              tent_id: tentData.id,
+              user_id: userData.id,
+            },
+          },
+        });
+      }
 
       await db.tent_blacklist.create({
         data: {
@@ -1360,6 +1507,7 @@ export async function voiceSelect(
   if (!interaction.guild) return;
   // Used in selectMenu.ts
   const menuId = interaction.customId;
+  const voiceChannel = interaction.channel as VoiceBasedChannel;
   // log.debug(F, `[tripsitSelect] menuId: ${menuId}`);
   const [, menuAction] = menuId.split('~') as [
     null,
@@ -1370,11 +1518,13 @@ export async function voiceSelect(
     case 'whitelist': {
       await selectAction.whiteList(interaction);
       await interaction.update(await page.start(interaction));
+      await util.updateTentPermissions(voiceChannel);
       break;
     }
     case 'blacklist': {
       await selectAction.blackList(interaction);
       await interaction.update(await page.start(interaction));
+      await util.updateTentPermissions(voiceChannel);
       break;
     }
     case 'hostlist': {
