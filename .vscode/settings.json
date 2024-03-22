@@ -96,6 +96,7 @@
         "NOSONAR",
         "openai",
         "OPENTRIPSIT",
+        "outro",
         "peronsas",
         "pgadmin",
         "PGADMIN",
@@ -156,7 +157,8 @@
         "Warmline",
         "warmlines",
         "WEBTRIPSIT",
-        "WOLFDEN"
+        "WOLFDEN",
+        "wordlist"
     ],
     "cSpell.ignoreWords": [
         "KIPP"

@@ -9,6 +9,8 @@ import {
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
 import ms from 'ms';
+import fs from 'fs/promises';
+import path from 'path';
 import { ReadyEvent } from '../@types/eventDef';
 import { checkGuildPermissions } from '../utils/checkPermissions';
 import runTimer from '../../global/utils/timer'; // eslint-disable-line
@@ -91,6 +93,16 @@ export const ready: ReadyEvent = {
         runTimer(),
       ]).then(async () => {
         const bootDuration = (new Date().getTime() - global.bootTime.getTime()) / 1000;
+
+        // update the profile banner
+        try {
+          const imageBuffer = await fs.readFile(path.resolve(__dirname, '../../../assets/img/banner.gif'));
+          await discordClient.rest.patch('/users/@me', {
+            body: { banner: `data:image/gif;base64,${imageBuffer.toString('base64')}` },
+          });
+        } catch (e) {
+          // log.error(F, `Error updating profile banner: ${e}`);
+        }
         log.info(F, `Discord finished booting in ${bootDuration}s!`);
         if (env.NODE_ENV !== 'development') {
           const channelTripbot = await discordClient.channels.fetch(env.CHANNEL_TRIPBOT) as TextChannel;

@@ -163,6 +163,7 @@ model users {
   user_drug_doses                                           user_drug_doses[]
   user_experience                                           user_experience[]
   user_reminders                                            user_reminders[]
+  user_tickets_user_tickets_resolved_byTousers              user_tickets[]            @relation("user_tickets_resolved_byTousers")
   user_tickets_user_tickets_closed_byTousers                user_tickets[]            @relation("user_tickets_closed_byTousers")
   user_tickets_user_tickets_reopened_byTousers              user_tickets[]            @relation("user_tickets_reopened_byTousers")
   user_tickets_user_tickets_user_idTousers                  user_tickets[]            @relation("user_tickets_user_idTousers")
@@ -418,33 +419,36 @@ model user_reminders {
 }
 
 model user_tickets {
-  id                      String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  user_id                 String    @db.Uuid
-  description             String
-  guild_id                String
-  thread_id               String
-  first_message_id        String?
-  first_response_user     String?    @db.Uuid
-  first_response_datetime DateTime?
-  survey_response         Int?
+  id                String        @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  user_id           String        @db.Uuid
+  description       String
+  wordTokens        String[]
+  guild_id          String
+  thread_id         String
+  meta_message_id   String?
+  first_message_id  String?
+  survey_response   Int?
+  type              ticket_type
+  status            ticket_status @default(OPEN)
+  created_at        DateTime      @default(now()) @db.Timestamptz(6)
+  first_response_by String?       @db.Uuid
+  first_response_at DateTime?
+  resolved_by       String?       @db.Uuid
+  resolved_at       DateTime?     @db.Timestamptz(6)
+  closed_by         String?       @db.Uuid
+  closed_at         DateTime?     @db.Timestamptz(6)
+  reopened_by       String?       @db.Uuid
+  reopened_at       DateTime?     @db.Timestamptz(6)
+  archived_at       DateTime      @default(dbgenerated("(CURRENT_TIMESTAMP + '1 day'::interval)")) @db.Timestamptz(6)
+  deleted_at        DateTime      @default(dbgenerated("(CURRENT_TIMESTAMP + '7 days'::interval)")) @db.Timestamptz(6)
 
-  type                                  ticket_type
-  status                                ticket_status @default(OPEN)
-  closed_by                             String?       @db.Uuid
-  closed_at                             DateTime?     @db.Timestamptz(6)
-  reopened_by                           String?       @db.Uuid
-  reopened_at                           DateTime?     @db.Timestamptz(6)
-  archived_at                           DateTime      @default(dbgenerated("(CURRENT_TIMESTAMP + '1 day'::interval)")) @db.Timestamptz(6)
-  deleted_at                            DateTime      @default(dbgenerated("(CURRENT_TIMESTAMP + '7 days'::interval)")) @db.Timestamptz(6)
-  created_at                            DateTime      @default(now()) @db.Timestamptz(6)
-  users_user_tickets_closed_byTousers   users?        @relation("user_tickets_closed_byTousers", fields: [closed_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "usertickets_closedby_foreign")
-  users_user_tickets_reopened_byTousers users?        @relation("user_tickets_reopened_byTousers", fields: [reopened_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "usertickets_reopenedby_foreign")
-  users_user_tickets_user_idTousers     users         @relation("user_tickets_user_idTousers", fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "usertickets_userid_foreign")
-
-  discord_guilds discord_guilds @relation(fields: [guild_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "usertickets_guildid_foreign")
-  first_response_user_record users? @relation(fields: [first_response_user], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "usertickets_firstresponseuser_foreign")
-
-  patricipants user_ticket_participant[]
+  users_user_tickets_first_response_byTousers users?                    @relation(fields: [first_response_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "usertickets_firstresponseby_foreign")
+  users_user_tickets_resolved_byTousers       users?                    @relation("user_tickets_resolved_byTousers", fields: [resolved_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "usertickets_resolvedby_foreign")
+  users_user_tickets_closed_byTousers         users?                    @relation("user_tickets_closed_byTousers", fields: [closed_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "usertickets_closedby_foreign")
+  users_user_tickets_reopened_byTousers       users?                    @relation("user_tickets_reopened_byTousers", fields: [reopened_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "usertickets_reopenedby_foreign")
+  users_user_tickets_user_idTousers           users                     @relation("user_tickets_user_idTousers", fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "usertickets_userid_foreign")
+  discord_guilds                              discord_guilds            @relation(fields: [guild_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "usertickets_guildid_foreign")
+  patricipants                                user_ticket_participant[]
 }
 
 model user_ticket_participant {

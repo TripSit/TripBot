@@ -4,7 +4,7 @@ import {
   GuildMemberUpdateEvent,
 } from '../@types/eventDef';
 import { addedVerified } from '../utils/trust';
-import { util } from '../commands/guild/d.tripsit';
+import { tripsitRoleRemove } from '../commands/guild/d.tripsit';
 // import { topic } from '../../global/commands/g.topic';
 
 type MindsetNames =
@@ -390,7 +390,7 @@ async function roleRemProcess(
   // Go through each role removed
   const auditlog = await discordClient.channels.fetch(env.CHANNEL_AUDITLOG) as TextChannel;
   rolesRemoved.forEach(async role => {
-    await util.removeExTeamFromThreads(newMember, role);
+    await tripsitRoleRemove(newMember, role);
     // We don't want to run the rest of this on any other guild
     if (newMember.guild.id !== env.DISCORD_GUILD_ID) return;
     await teamMindsetRemove(newMember, role.id);
