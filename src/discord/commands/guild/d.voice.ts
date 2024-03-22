@@ -7,6 +7,9 @@ import {
   GuildMember,
   PermissionsBitField,
   EmbedBuilder,
+  ModalBuilder,
+  TextInputBuilder,
+  TextInputStyle,
   VoiceBasedChannel,
   TextChannel,
   Message,
@@ -14,6 +17,7 @@ import {
   ChannelType,
   CategoryChannel,
   ChatInputCommandInteraction,
+  ModalSubmitInteraction,
   ButtonInteraction,
   UserSelectMenuInteraction,
   ButtonBuilder,
@@ -230,32 +234,21 @@ namespace util {
 
     await newState.member.voice.setChannel(newChannel.id);
     await newChannel.fetch();
-    const infoMessage = await newChannel.send(`## Welcome to your tent, <@${newState.member?.id}>
+    const infoMessage = await newChannel.send(stripIndents`## Welcome to your tent, <@${newState.member?.id}>
       
       ## **Current Tent Settings**
-        - Creator: <@${newState.member.id}>
-        - Host: <@${newState.member.id}>
-        - Mode: ${tentData.mode.charAt(0).toUpperCase() + tentData.mode.slice(1).toLowerCase()}
+        - **Creator:** <@${newState.member.id}>
+        - **Host:** <@${newState.member.id}>
+        - **Visibility:** ${tentData.mode.charAt(0).toUpperCase() + tentData.mode.slice(1).toLowerCase()}
       
-      ## **Tent Info**
-      - **Webcam use is available for level 10 and up!**
-      - Don't show off drugs, porn, gore, weapons or anything a reasonable person would consider offensive on camera.
-      - Consumption of mildly psychoactive (nicotine, caffeine, alcohol, weed) substances is allowed.
-      
-      - **Looking for others to join?**
-      - \`/voice ping\` - Use this to ping those opted-in to VC ping invites
-      
-      - **Modify your tent**
-      - \`/voice bitrate\` - Change the bitrate of your tent
-      - \`/voice rename\` - Choose a new name for your tent
-      
-      - **Moderate your tent**
-      - \`/voice lock\`- Locks your tent so no one else can join it
-      - \`/voice hide\` - Hides your tent from the list of voice channels
-      - \`/voice mute\` - Mutes a user for everyone in your tent
-      - \`/voice ban\` - Bans a user from joining and seeing your tent
-      - \`/voice cohost\` - Allows another user to use these commands
-      ***To undo a command, just use it again.***`);
+      ## **Use </voice settings:1078549267028910132> to control your tent and view ban/whitelist or use the commands below**
+       - \`/voice rename\` - Choose a new name for your tent
+       - \`/voice ping\` - Use this to ping those opted-in to VC ping invites
+       - \`/voice private\` - Switch your tent to private/public mode
+       - \`/voice ban\` - Bans a user from joining and seeing your tents
+       - \`/voice whitelist\` - Allows a user to always be able to join your tent
+       - \`/voice cohost\` - Allows a trusted user to use these commands on your behalf
+      ***NOTE: Changes are saved, and persist next time you make a tent***`);
     // Add the tent to the database
     if (tentData) {
       await db.tent_settings.update({
@@ -369,7 +362,7 @@ namespace util {
     // log.debug(F, `isAfterGlobalCoolDown: ${isAfterGlobalCoolDown}`);
 
     // Check if the user used the command less than the user cool down
-    if (isAfterUserCoolDown && isAfterGlobalCoolDown) {
+    if (isAfterUserCoolDown && isAfterGlobalCoolDown && tentData.mode === 'PUBLIC') {
       navButtons.addComponents(button.ping());
       // log.debug(F, 'Ping button added');
     } else {
@@ -441,12 +434,12 @@ namespace page {
     // log.debug(F, `TentData: ${JSON.stringify(tentData, null, 2)}`);
 
     const channelStr = tentData.channel_id
-      ? `Tent room: <#${tentData.channel_id}>`
+      ? `**Name:** ${tentData.name}`
       : `No tent created, join <#${env.CHANNEL_CAMPFIRE}> to make one!`;
 
     description += `${channelStr}`;
 
-    description += `\nTent visibility is currently set to **${tentData.mode}**`;
+    description += `\n**Visibility:** ${tentData.mode.charAt(0).toUpperCase() + tentData.mode.slice(1).toLowerCase()}`;
 
     const tentHostList = await db.tent_hostlist.findMany({
       where: {
@@ -460,10 +453,28 @@ namespace page {
         },
       },
     });
+
+    // Ping to join VC timeout
+    // Check if the last time the user used the command is less than the global last used time
+    const userLastPinged = userTentPingTimes[member.id] ?? DateTime.now().minus(text.userCoolDown());
+    const globalLastPinged = lastTentPingTime;
+    const nextPingTime = DateTime.now().diff(userLastPinged) < Duration.fromObject(text.userCoolDown())
+      ? userLastPinged.plus(text.userCoolDown())
+      : globalLastPinged.plus(text.globalCoolDown());
+    // Check if the next ping time is in the future or past
+    let pingTime = nextPingTime.diffNow() > Duration.fromObject({ seconds: 0 })
+      ? `**Join VC Ping:** Available ${time(nextPingTime.toJSDate(), 'R')}`
+      : '**Join VC Ping:** Available';
+    // Check if the tent is public, if not, disable the ping button
+    if (tentData.mode === 'PRIVATE') {
+      pingTime = '**Join VC Ping:** Unavailable while private';
+    }
+    description += `\n${pingTime}\n`;
+
     // log.debug(F, `tentHostList: ${JSON.stringify(tentHostList, null, 2)}`);
     const hostListStr = tentHostList.map(host => `<@${host.user.discord_id}>`).join(', ');
     if (tentHostList.length > 0) {
-      description += `\nHost List: ${hostListStr}`;
+      description += `\n**Host List:** ${hostListStr}`;
     }
 
     const tentWhiteList = await db.tent_whitelist.findMany({
@@ -483,7 +494,7 @@ namespace page {
     // Show embed with ban list
     const whiteListStr = tentWhiteList.map(whitelist => `<@${whitelist.user.discord_id}>`).join(', ');
     if (tentWhiteList.length > 0) {
-      description += `\nWhite List: ${whiteListStr}`;
+      description += `\n**White List:** ${whiteListStr}`;
     }
 
     const tentBanList = await db.tent_blacklist.findMany({
@@ -501,23 +512,8 @@ namespace page {
     // log.debug(F, `TentBanList: ${JSON.stringify(tentBanList, null, 2)}`);
     const banListStr = tentBanList.map(ban => `<@${ban.user.discord_id}>`).join(', ');
     if (tentBanList.length > 0) {
-      description += `\nBan List: ${banListStr}`;
+      description += `\n**Ban List:** ${banListStr}`;
     }
-
-    // Ping to join VC timeout
-    // Check if the last time the user used the command is less than the global last used time
-    const userLastPinged = userTentPingTimes[member.id] ?? DateTime.now().minus(text.userCoolDown());
-    const globalLastPinged = lastTentPingTime;
-    const nextPingTime = DateTime.now().diff(userLastPinged) < Duration.fromObject(text.userCoolDown())
-      ? userLastPinged.plus(text.userCoolDown())
-      : globalLastPinged.plus(text.globalCoolDown());
-    // Check if the next ping time is in the future or past
-    const pingTime = nextPingTime.diffNow() > Duration.fromObject({ seconds: 0 })
-      ? `You can use the Ping Join VC Button ${time(nextPingTime.toJSDate(), 'R')}`
-      : 'You can use the Ping Join VC Button now!';
-
-    description += `\n${pingTime}`;
-
     // log.debug(F, `Description: ${description}`);
 
     return {
@@ -534,10 +530,42 @@ namespace page {
 
 namespace cmd {
   export async function tentRename(
-    interaction:ChatInputCommandInteraction,
+    interaction:ChatInputCommandInteraction | ButtonInteraction,
   ):Promise<EmbedBuilder> {
+  // Check if the interaction was a button interaction
+    let newName = '';
+    if (interaction instanceof ButtonInteraction) {
+    // If so, open a modal to collect the new name
+      log.debug(F, 'Button interaction detected');
+      const modal = new ModalBuilder()
+        .setCustomId(`tentRenameModal~${interaction.id}`)
+        .setTitle('Rename your tent')
+        .addComponents(new ActionRowBuilder<TextInputBuilder>()
+          .addComponents(new TextInputBuilder()
+            .setLabel('Choose a new name for your tent')
+            .setStyle(TextInputStyle.Short)
+            .setPlaceholder('New name')
+            .setMaxLength(1000)
+            .setRequired(true)
+            .setCustomId('modalTentName')));
+
+      // Send the modal
+      await interaction.showModal(modal);
+
+      // Get the new name from the modal
+      const filter = (i:ModalSubmitInteraction) => i.customId === `tentRenameModal~${interaction.id}`;
+      await interaction.awaitModalSubmit({ filter, time: 60000 })
+        .then(async i => {
+          // Get the new name from the modal
+          await i.deferUpdate();
+          newName = i.fields.getTextInputValue('modalTentName') as string;
+          log.debug(F, `New name: ${newName}`);
+        });
+    } else if (interaction instanceof ChatInputCommandInteraction) {
+      newName = interaction.options.getString('name') as string;
+    }
+
     const voiceChannel = (interaction.member as GuildMember).voice.channel as VoiceBasedChannel;
-    const newName = interaction.options.getString('name') as string;
     const ogName = voiceChannel.name;
     const actor = interaction.member as GuildMember;
 
@@ -633,7 +661,7 @@ namespace cmd {
       if (infoMessage) {
       // Update the info message with the new mode using regex
         const newContent = infoMessage.content
-          .replace(/Mode: .*/, `Mode: ${mode.charAt(0).toUpperCase() + mode.slice(1)}`);
+          .replace(/\*\*Visibility:\*\* .*/, `**Visibility:** ${mode.charAt(0).toUpperCase() + mode.slice(1)}`);
         infoMessage.edit(newContent);
       }
     }
@@ -859,6 +887,11 @@ namespace cmd {
     const member = interaction.member as GuildMember;
     const voiceChannel = (interaction.member as GuildMember).voice.channel as VoiceBasedChannel;
     const role = await voiceChannel.guild.roles.fetch(env.ROLE_JOINVC);
+    const tentData = await db.tent_settings.findFirstOrThrow({
+      where: {
+        channel_id: voiceChannel.id,
+      },
+    });
     if (role) {
       // Check if the user used the command less than the user cool down
 
@@ -880,6 +913,17 @@ namespace cmd {
           .setDescription(stripIndents`
             Someone else used this command <t:${lastTentPingTime.toJSDate()}:R>.
             You can use it again <t:${lastTentPingTime.plus(text.globalCoolDown())}:R>.
+          `);
+      }
+
+      // Check that the tent is public
+      if (tentData.mode === 'PRIVATE') {
+        return embedTemplate()
+          .setTitle('Error')
+          .setColor(Colors.Red)
+          .setDescription(stripIndents`
+            You can't ping the Join VC role from a private tent.
+            Change the tent mode to public to use this command.
           `);
       }
 
@@ -1080,7 +1124,7 @@ namespace select {
       .setCustomId('voice~blacklist')
       .setPlaceholder('Blacklist Users')
       .setDefaultUsers(discordIds)
-      .setMinValues(1)
+      .setMinValues(0)
       .setMaxValues(25);
   }
 
@@ -1115,7 +1159,7 @@ namespace select {
       .setCustomId('voice~whitelist')
       .setPlaceholder('Whitelist Users')
       .setDefaultUsers(discordIds)
-      .setMinValues(1)
+      .setMinValues(0)
       .setMaxValues(25);
   }
 
@@ -1150,7 +1194,7 @@ namespace select {
       .setCustomId('voice~hostlist')
       .setPlaceholder('Host List')
       .setDefaultUsers(discordIds)
-      .setMinValues(1)
+      .setMinValues(0)
       .setMaxValues(25);
   }
 }
@@ -1268,6 +1312,8 @@ export async function voiceButton(
       await interaction.update(await page.start(interaction));
       break;
     case 'rename':
+      log.debug(F, 'Renaming tent');
+      await cmd.tentRename(interaction);
       await interaction.update(await page.start(interaction));
       break;
     case 'ping':
