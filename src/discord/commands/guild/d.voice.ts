@@ -106,7 +106,7 @@ namespace util {
     if (!tentData) {
       tentData = await db.tent_settings.create({
         data: {
-          name: newState.member.displayName,
+          name: userData.defaultTentName || `${newState.member.displayName}'s tent`,
           created_by: userData.id,
           mode: 'PUBLIC',
           updated_by: userData.id,
@@ -241,8 +241,7 @@ namespace util {
     }
 
     const newChannel = await newState.member?.guild.channels.create({
-      // Name the tent from the tentData name, or if it doesn't exist, the member's name
-      name: await util.tentName(tentData.name ?? `${newState.member.displayName}'s tent`),
+      name: await util.tentName(tentData.name),
       type: ChannelType.GuildVoice,
       parent: env.CATEGORY_VOICE,
       permissionOverwrites: [
@@ -486,11 +485,11 @@ namespace page {
       : globalLastPinged.plus(text.globalCoolDown());
     // Check if the next ping time is in the future or past
     let pingTime = nextPingTime.diffNow() > Duration.fromObject({ seconds: 0 })
-      ? `**Join VC Ping:** Available ${time(nextPingTime.toJSDate(), 'R')}`
-      : '**Join VC Ping:** Available';
+      ? `Available ${time(nextPingTime.toJSDate(), 'R')}`
+      : 'Available';
     // Check if the tent is public, if not, disable the ping button
     if (tentData.mode === 'PRIVATE') {
-      pingTime = '**Join VC Ping:** Unavailable while private';
+      pingTime = 'Unavailable while private';
     }
     description += `\n${pingTime}\n`;
 
@@ -544,13 +543,29 @@ namespace page {
       description += '\n**Ban List:** None';
     }
     // log.debug(F, `Description: ${description}`);
+    const isAfterUserCoolDown = await validate.pingAfterUserCoolDown(member.id);
+    // log.debug(F, `isAfterUserCoolDown: ${isAfterUserCoolDown}`);
+    const isAfterGlobalCoolDown = await validate.pingAfterGlobalCoolDown();
+    // log.debug(F, `isAfterGlobalCoolDown: ${isAfterGlobalCoolDown}`);
 
     return {
       embeds: [
         new EmbedBuilder()
-          .setTitle('Tent Settings')
-          .setColor(Colors.Blue)
-          .setDescription(description),
+          .setTitle('⛺ Tent Settings')
+          .setColor(Colors.Orange)
+          // .setDescription(description)
+          .addFields({ name: `🏷️ Tent Name: ${tentData.name}`, value: '*Name that is applied every time you make a tent*' })
+          .addFields({
+            name: `${tentData.mode === 'PRIVATE' ? '🔒' : '🔓'} Visibility: ${tentData.mode.charAt(0).toUpperCase() + tentData.mode.slice(1).toLowerCase()}`,
+            value: `${tentData.mode === 'PRIVATE' ? '*Only those on your whitelist can join*' : '*Anyone can join, unless on your ban list*'}`,
+          })
+          .addFields({
+            name: `${isAfterUserCoolDown && isAfterGlobalCoolDown && tentData.mode === 'PUBLIC' ? '🔔' : '🔕'} Ping Join VC: ${pingTime}`,
+            value: '*Notifies those opted-in to consider joining*',
+          })
+          .addFields({ name: '👔 Host List', value: `${hostListStr}\n*Can change your tent settings on your behalf*` })
+          .addFields({ name: '⚪ White List', value: `${whiteListStr}\n*Can always join, even if the tent is private*` })
+          .addFields({ name: '⚫ Ban List', value: `${banListStr}\n*Cannot join, nor see your tent in their channel list*` }),
       ],
       components: await util.voiceMenu(interaction),
     };
@@ -563,6 +578,12 @@ namespace cmd {
   ):Promise<EmbedBuilder> {
   // Check if the interaction was a button interaction
     let newName = '';
+    const voiceChannel = (interaction.member as GuildMember).voice.channel as VoiceBasedChannel;
+    const tentData = await db.tent_settings.findFirstOrThrow({
+      where: {
+        channel_id: voiceChannel.id,
+      },
+    });
     if (interaction instanceof ButtonInteraction) {
     // If so, open a modal to collect the new name
       log.debug(F, 'Button interaction detected');
@@ -573,9 +594,8 @@ namespace cmd {
           .addComponents(new TextInputBuilder()
             .setLabel('Choose a new name for your tent')
             .setStyle(TextInputStyle.Short)
-            .setPlaceholder('New name')
+            .setPlaceholder(`${await util.tentName(tentData.name)}`)
             .setMaxLength(1000)
-            .setRequired(true)
             .setCustomId('modalTentName')));
 
       // Send the modal
@@ -594,20 +614,13 @@ namespace cmd {
       newName = interaction.options.getString('name') as string;
     }
 
-    const voiceChannel = (interaction.member as GuildMember).voice.channel as VoiceBasedChannel;
     const ogName = voiceChannel.name;
     const actor = interaction.member as GuildMember;
 
     const userData = await db.users.upsert({
       where: { discord_id: actor.id },
-      create: { discord_id: actor.id },
-      update: {},
-    });
-
-    const tentData = await db.tent_settings.findFirstOrThrow({
-      where: {
-        channel_id: voiceChannel.id,
-      },
+      create: { discord_id: actor.id, defaultTentName: newName },
+      update: { defaultTentName: newName },
     });
 
     await db.tent_settings.update({
@@ -1232,15 +1245,75 @@ namespace selectAction {
   export async function whiteList(
     interaction: UserSelectMenuInteraction,
   ) {
+    if (!interaction.channel) return;
+    if (!interaction.guild) return;
+
+    const tentData = await db.tent_settings.findFirstOrThrow({
+      where: {
+        channel_id: interaction.channel.id,
+      },
+    });
+
+    // Clear out the existing values
+    await db.tent_whitelist.deleteMany({
+      where: {
+        tent_id: tentData.id,
+      },
+    });
+
     // Take all the values from the select menu and add them to the database
     log.debug(F, `Values: ${interaction.values}`);
+    await Promise.all(interaction.values.map(async value => {
+      const userData = await db.users.upsert({
+        where: { discord_id: value },
+        create: { discord_id: value },
+        update: {},
+      });
+
+      await db.tent_whitelist.create({
+        data: {
+          tent_id: tentData.id,
+          user_id: userData.id,
+        },
+      });
+    }));
   }
 
   export async function blackList(
     interaction: UserSelectMenuInteraction,
   ) {
+    if (!interaction.channel) return;
+    if (!interaction.guild) return;
+
+    const tentData = await db.tent_settings.findFirstOrThrow({
+      where: {
+        channel_id: interaction.channel.id,
+      },
+    });
+
+    // Clear out the existing values
+    await db.tent_blacklist.deleteMany({
+      where: {
+        tent_id: tentData.id,
+      },
+    });
+
     // Take all the values from the select menu and add them to the database
     log.debug(F, `Values: ${interaction.values}`);
+    await Promise.all(interaction.values.map(async value => {
+      const userData = await db.users.upsert({
+        where: { discord_id: value },
+        create: { discord_id: value },
+        update: {},
+      });
+
+      await db.tent_blacklist.create({
+        data: {
+          tent_id: tentData.id,
+          user_id: userData.id,
+        },
+      });
+    }));
   }
 
   export async function hostList(

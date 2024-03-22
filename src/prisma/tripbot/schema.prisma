@@ -179,6 +179,7 @@ model users {
   preferredTentMode                                         String            @default("public")
   banlist                                                   String[]
   whitelist                                                 String[]
+  defaultTentName                                           String?
 }
 
 model tent_settings {
