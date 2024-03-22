@@ -28,6 +28,8 @@ import {
   Role,
   time,
 } from 'discord.js';
+import { REST } from '@discordjs/rest';
+import { Routes } from 'discord-api-types/v9';
 import { stripIndents } from 'common-tags';
 import { DateTime, Duration } from 'luxon';
 import { SlashCommand } from '../../@types/commandDef';
@@ -67,6 +69,21 @@ namespace text {
 }
 
 namespace util {
+  export async function getCommandID(commandName: string, clientId: string, guildId: string): Promise<string | null> {
+    const rest = new REST({ version: '9' }).setToken(env.DISCORD_CLIENT_TOKEN);
+
+    // Fetch all commands for your client in the guild
+    const commands = await rest.get(
+      Routes.applicationGuildCommands(clientId, guildId),
+    ) as { name: string; id: string }[];
+
+    // Find the command with the specified name
+    const command = commands.find(cmd => cmd.name === commandName);
+
+    // Return the command's ID, or null if the command was not found
+    return command ? command.id : null;
+  }
+
   export async function pitchTent(
     oldState:VoiceState,
     newState:VoiceState,
@@ -224,7 +241,8 @@ namespace util {
     }
 
     const newChannel = await newState.member?.guild.channels.create({
-      name: await util.tentName(`${newState.member.displayName}'s tent`),
+      // Name the tent from the tentData name, or if it doesn't exist, the member's name
+      name: await util.tentName(tentData.name ?? `${newState.member.displayName}'s tent`),
       type: ChannelType.GuildVoice,
       parent: env.CATEGORY_VOICE,
       permissionOverwrites: [
@@ -233,7 +251,12 @@ namespace util {
     });
 
     await newState.member.voice.setChannel(newChannel.id);
+
+    // Get the command ID for /voice settings
+    const commandID = await util.getCommandID('voice', env.DISCORD_CLIENT_ID, env.DISCORD_GUILD_ID);
+    log.debug(F, `Command ID: ${commandID}`);
     await newChannel.fetch();
+
     const infoMessage = await newChannel.send(stripIndents`## Welcome to your tent, <@${newState.member?.id}>
       
       ## **Current Tent Settings**
@@ -241,7 +264,7 @@ namespace util {
         - **Host:** <@${newState.member.id}>
         - **Visibility:** ${tentData.mode.charAt(0).toUpperCase() + tentData.mode.slice(1).toLowerCase()}
       
-      ## **Use </voice settings:1078549267028910132> to control your tent and view ban/whitelist or use the commands below**
+      ## **Use </voice settings:${commandID}> to control your tent and view ban/whitelist or use the commands below**
        - \`/voice rename\` - Choose a new name for your tent
        - \`/voice ping\` - Use this to ping those opted-in to VC ping invites
        - \`/voice private\` - Switch your tent to private/public mode
@@ -475,6 +498,8 @@ namespace page {
     const hostListStr = tentHostList.map(host => `<@${host.user.discord_id}>`).join(', ');
     if (tentHostList.length > 0) {
       description += `\n**Host List:** ${hostListStr}`;
+    } else {
+      description += '\n**Host List:** None';
     }
 
     const tentWhiteList = await db.tent_whitelist.findMany({
@@ -495,6 +520,8 @@ namespace page {
     const whiteListStr = tentWhiteList.map(whitelist => `<@${whitelist.user.discord_id}>`).join(', ');
     if (tentWhiteList.length > 0) {
       description += `\n**White List:** ${whiteListStr}`;
+    } else {
+      description += '\n**White List:** None';
     }
 
     const tentBanList = await db.tent_blacklist.findMany({
@@ -513,6 +540,8 @@ namespace page {
     const banListStr = tentBanList.map(ban => `<@${ban.user.discord_id}>`).join(', ');
     if (tentBanList.length > 0) {
       description += `\n**Ban List:** ${banListStr}`;
+    } else {
+      description += '\n**Ban List:** None';
     }
     // log.debug(F, `Description: ${description}`);
 
