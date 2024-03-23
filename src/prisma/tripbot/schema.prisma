@@ -180,6 +180,7 @@ model users {
   banlist                                                   String[]
   whitelist                                                 String[]
   defaultTentName                                           String?
+  joinTentLevel                                             Int               @default(0)
 }
 
 model tent_settings {
@@ -188,6 +189,7 @@ model tent_settings {
   channel_id      String?          // Should be optional because the channel will get deleted
   info_message_id String?          // Should be optional because the channel will get deleted
   mode            tent_publicity   @default(PUBLIC) // Public, Private
+  join_level   Int              @default(0)
   // Bitrate - WIP
   // Server location - WIP
   hostlist        tent_hostlist[]
