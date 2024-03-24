@@ -9,10 +9,8 @@ const F = f(__filename); // eslint-disable-line @typescript-eslint/no-unused-var
 export const threadDelete: ThreadDeleteEvent = {
   name: 'threadDelete',
   async execute(thread) {
-    // Only run on Tripsit, we don't want to snoop on other guilds ( ͡~ ͜ʖ ͡°)
     if (!thread.guild) return;
-    if (thread.guild.id !== env.DISCORD_GUILD_ID) return;
-    log.info(F, `Thread ${thread.name} was deleted.`);
+    // log.info(F, `Thread ${thread.name} was deleted.`);
 
     // Find if the channel is used as a thread_id in any tickets
     const ticketData = await db.user_tickets.findFirst({

@@ -74,9 +74,7 @@ const spellcheck = new Spellcheck([
 const F = f(__filename);
 
 /* TODO
-* AI summary of the thread
 * Stats page
-* If no one responds after 5 minutes or so, suggest an AI tripsitter?
 * Make sure Helper system still works
 * Stats on the drug usage, anonymous of course
 * Option to delete thread when closing?
@@ -85,9 +83,7 @@ const F = f(__filename);
 * Allow team to hard close, but include warning
 
 * Make sure that the process in the help function works
-* Reopening should only reset the status when the issue has been resolved/closed/archived, not when it's active
-* When a session is reopened, we need a way to determine that someone has sent a message so we can change the status to owned
-* Double check that the cleanup isnt doing that bs after 7 seconds still
+* Double check that the cleanup isn't doing that bs after 7 seconds still
 */
 
 /* Testing Scripts
@@ -618,17 +614,27 @@ namespace session {
         }
 
         try {
+          const actor = interaction.member;
+          const description = actor !== target
+            ? stripIndents`
+            Hey ${actor}, you started a session with ${target}!
+            
+            Click here to be taken to their private room: ${thread.toString()}
+        
+            You can also click in your channel list to see their private room!
+          `
+            : stripIndents`
+            Hey ${target}, thank you for asking for assistance!
+            
+            Click here to be taken to your private room: ${thread.toString()}
+        
+            You can also click in your channel list to see your private room!
+          `;
           await i.editReply({
             embeds: [
               new EmbedBuilder()
                 .setColor(Colors.DarkBlue)
-                .setDescription(stripIndents`
-                  Hey ${target}, thank you for asking for assistance!
-                  
-                  Click here to be taken to your private room: ${thread.toString()}
-              
-                  You can also click in your channel list to see your private room!
-                `),
+                .setDescription(description),
             ],
           });
         } catch (err) {
@@ -665,6 +671,13 @@ namespace session {
       update: {},
     });
 
+    const ticketUserData = await db.users.findFirst({
+      where: { id: ticketData.user_id },
+    });
+
+    const ticketMember = await message.guild.members.fetch(ticketUserData?.discord_id as string);
+
+    // Add first responder if it's not already set
     if ((!ticketData.first_response_by && ticketData.user_id !== userData.id)) {
       // Check if the first_response_by field is null, and if it's a different user than the person who made the thread
       await db.user_tickets.update({
@@ -674,13 +687,6 @@ namespace session {
           first_response_at: new Date(),
         },
       });
-      log.info(F, `[${S}] Added ${message.member.displayName} (${message.author.id}) as the first response user for thread ${message.channel.name}`);
-
-      const ticketUserData = await db.users.findFirst({
-        where: { id: ticketData.user_id },
-      });
-
-      const ticketMember = await message.guild.members.fetch(ticketUserData?.discord_id as string);
 
       // Change the name of the thread
       await message.channel.setName(text.threadName(ticketMember, 'OWNED'));
@@ -705,22 +711,40 @@ namespace session {
       log.info(F, `[${S}] Added ${message.member.displayName} (${message.author.id}) to the participants list for thread ${message.channel.name}`);
 
       await util.sendLogMessage('OWNED', ticketData, message.member);
+      return;
     }
-  }
 
-  export async function join(
-    message: Message,
-  ) {
-    if (!message.guild) return;
-    if (!message.channel) return;
-    if (!message.member) return;
-    if (message.channel.isDMBased()) return;
-    const S = 'join';
-    const ticketData = await db.user_tickets.findFirstOrThrow({
-      where: {
-        thread_id: message.channel.id,
-      },
-    });
+    // log.debug(F, `First responder already set for thread ${message.channel.name}`);
+
+    // If the session has already been transitioned, we need to change the icon back
+    if (['RESOLVED', 'CLOSED', 'ARCHIVED'].includes(ticketData.status)) {
+      // log.debug(F, `Ticket is in ${ticketData.status} status, attempting to reopen`);
+      if (ticketData.user_id === userData.id) {
+        // log.debug(F, 'The user sent the message, setting status to Open');
+        await db.user_tickets.update({
+          where: { id: ticketData.id },
+          data: {
+            status: 'OPEN' as ticket_status,
+            reopened_at: new Date(),
+          },
+        });
+        // Change the name of the thread
+        await message.channel.setName(text.threadName(ticketMember, 'OPEN'));
+        await util.sendLogMessage('REOPENED', ticketData, message.member);
+        return;
+      }
+      // log.debug(F, 'A tripsitter sent the message, setting status to Owned');
+      await db.user_tickets.update({
+        where: { id: ticketData.id },
+        data: {
+          status: 'OWNED' as ticket_status,
+        },
+      });
+      await util.sendLogMessage('OWNED', ticketData, message.member);
+      await message.channel.setName(text.threadName(ticketMember, 'OWNED'));
+    }
+
+    if (ticketData.user_id === userData.id) return;
 
     // Add the user to the participant list if they're not already in it
     // Either way, increment the messages sent
@@ -729,16 +753,8 @@ namespace session {
       user_id: string;
       messages: number;
     };
-    const userData = await db.users.upsert({
-      where: { discord_id: message.author.id },
-      create: { discord_id: message.author.id },
-      update: {},
-    });
 
     // Can't add the ticket owner to the list of participants
-    if (ticketData.user_id === userData.id) return;
-
-    // log.debug(F, `${S}: ${JSON.stringify(userData, null, 2)}`);
     const existingParticipant = await db.user_ticket_participant.findFirst({
       where: {
         ticket_id: ticketData.id,
@@ -774,14 +790,6 @@ namespace session {
       await util.sendLogMessage('JOINED', ticketData, message.member);
     }
   }
-
-  // export async function block() {
-
-  // }
-
-  // export async function pause() {
-
-  // }
 
   export async function reopen(
     interaction: ButtonInteraction,
@@ -871,7 +879,11 @@ namespace session {
         },
       });
       log.info(F, `[${S}] Told user they already have an open channel`);
-      await thread.setName(text.threadName(target, 'OPEN'));
+
+      // If the ticket status was resolved, closed, or archived, change the name back to Open
+      if (['RESOLVED', 'CLOSED', 'ARCHIVED'].includes(ticketData.status)) {
+        await thread.setName(text.threadName(target, 'OPEN'));
+      }
 
       await db.user_tickets.update({
         where: {
@@ -942,7 +954,7 @@ namespace session {
 
     const targetId = interaction.customId.split('~')[2];
 
-    log.debug(F, `[${S}] targetId: ${targetId}`);
+    // log.debug(F, `[${S}] targetId: ${targetId}`);
 
     await interaction.deferReply({ ephemeral: true });
 
@@ -981,7 +993,7 @@ namespace session {
       update: {},
     });
 
-    log.debug(F, `[${S}] userData: ${JSON.stringify(userData, null, 2)}`);
+    // log.debug(F, `[${S}] userData: ${JSON.stringify(userData, null, 2)}`);
 
     const ticketData = await db.user_tickets.findFirst({
       where: {
@@ -994,7 +1006,7 @@ namespace session {
       },
     });
 
-    log.debug(F, `[${S}] ticketData: ${JSON.stringify(ticketData, null, 2)}`);
+    // log.debug(F, `[${S}] ticketData: ${JSON.stringify(ticketData, null, 2)}`);
 
     if (!ticketData) {
       // log.debug(F, `[${S}] target ${target} does not need help!`);
@@ -1131,7 +1143,7 @@ namespace session {
 
     const target = await interaction.guild.members.fetch(targetId);
 
-    log.debug(F, `[${S}] targetId: ${target.id}`);
+    // log.debug(F, `[${S}] targetId: ${target.id}`);
 
     const userData = await db.users.upsert({
       where: { discord_id: target.id },
@@ -1145,7 +1157,7 @@ namespace session {
       update: {},
     });
 
-    log.debug(F, `[${S}] userData: ${JSON.stringify(userData, null, 2)}`);
+    // log.debug(F, `[${S}] userData: ${JSON.stringify(userData, null, 2)}`);
 
     const ticketData = await db.user_tickets.findFirst({
       where: {
@@ -1164,7 +1176,7 @@ namespace session {
       return;
     }
 
-    await interaction.deferReply({ ephemeral: false });
+    // await interaction.deferReply({ ephemeral: false });
 
     // log.debug(F, `[${S}] ticketData: ${JSON.stringify(ticketData, null, 2)}`);
     if (Object.entries(ticketData).length === 0) {
@@ -1202,26 +1214,6 @@ namespace session {
 
     const sessionData = await util.sessionDataInit(interaction.guild.id);
 
-    if (sessionData?.givingRoles) {
-      await Promise.all(sessionData.givingRoles.map(async roleId => {
-        try {
-          const roleToRemove = await interaction.guild?.roles.fetch(roleId) as Role;
-          await target.roles.remove(roleToRemove);
-        } catch (err) {
-          // log.debug(F, `[${S}] There was an error fetching the needshelp role, it was likely deleted:\n ${err}`);
-        }
-      }));
-    }
-
-    // let channelTripsitmeta = {} as TextChannel;
-    // if (sessionData?.metaChannel) {
-    //   try {
-    //     channelTripsitmeta = await interaction.guild.channels.fetch(sessionData.metaChannel) as TextChannel;
-    //   } catch (err) {
-    //     // log.debug(F, `[${S}] There was an error fetching the meta channel, it was likely deleted:\n ${err}`);
-    //   }
-    // }
-
     // Re-add old roles
     await util.restoreRoles(ticketData);
 
@@ -1254,14 +1246,27 @@ namespace session {
       log.debug(F, `[${S}] Un-archived ${thread.name}`);
     }
 
-    // Send the end message to the user
+    let description = stripIndents`
+      Hey ${target}, we're glad you're doing better!
+      This thread will remain here for ${Object.values(text.archiveDuration())[0]} ${Object.keys(text.archiveDuration())[0]} if you want to follow up tomorrow.
+      After ${Object.values(text.deleteDuration())[0]} ${Object.keys(text.deleteDuration())[0]}, or on request, it will be deleted to preserve your privacy =)
+    `;
+
+    if (!ticketData.survey_response) {
+      description += '\n';
+      description += stripIndents`
+        ### If you have a moment, your feedback is important to us!
+        Please rate your experience with ${interaction.guild.name}'s service by reacting below.
+        Thank you!
+      `;
+    }
+
+    // Edit the message the user clicked on
     try {
-      await interaction.editReply(stripIndents`
-        Hey ${target}, we're glad you're doing better!
-        We've restored your old roles back to normal <3
-        This thread will remain here for ${Object.values(text.archiveDuration())[0]} ${Object.keys(text.archiveDuration())[0]} if you want to follow up tomorrow.
-        After ${Object.values(text.deleteDuration())[0]} ${Object.keys(text.deleteDuration())[0]}, or on request, it will be deleted to preserve your privacy =)
-      `);
+      await interaction.update({
+        content: description,
+        components: [],
+      });
     } catch (err) {
       log.error(F, `[${S}] Error sending end help message to ${thread}`);
       log.error(F, err as string);
@@ -1270,27 +1275,19 @@ namespace session {
     // Send the survey
     let message: Message;
 
-    // If there has not already been a survey collected, send the survey message
+    // If there has not already been a survey collected, send the survey emojis
     if (!ticketData.survey_response) {
-      await thread.send(stripIndents`
-          ${emojiGet('Invisible')}
-          > **If you have a minute, your feedback is important to us!**
-          > Please rate your experience with ${interaction.guild.name}'s service by reacting below.
-          > Thank you!
-          ${emojiGet('Invisible')}
-          `)
-        .then(async msg => {
-          message = msg;
-          await msg.react(text.rateOne());
-          await msg.react(text.rateTwo());
-          await msg.react(text.rateThree());
-          await msg.react(text.rateFour());
-          await msg.react(text.rateFive());
-        });
+      await interaction.message.react(text.rateOne());
+      await interaction.message.react(text.rateTwo());
+      await interaction.message.react(text.rateThree());
+      await interaction.message.react(text.rateFour());
+      await interaction.message.react(text.rateFive());
     }
+    log.debug(F, 'Added emojis to the message');
 
     // Do this last because it looks weird to have it happen in-between messages
     await thread.setName(text.threadName(target, 'CLOSED'));
+    log.debug(F, 'Changed the name to closed');
 
     await db.user_tickets.update({
       where: {
@@ -1330,18 +1327,26 @@ namespace session {
     // Loop through each ticket
     if (ticketData.length > 0) {
       ticketData.forEach(async ticket => {
-        // Archive the thread on discord
+        // Get the thread
         let thread = {} as null | Channel;
         try {
           thread = await global.discordClient.channels.fetch(ticket.thread_id);
         } catch (err) {
           log.debug(F, `[${S}] Thread ${ticket.thread_id} was likely manually deleted`);
         }
+        if (!thread || !thread.isThread()) return;
 
-        if (!thread?.isThread()) return;
-        log.info(F, `[${S}] Archiving session ${thread.name}`);
-
-        await thread.setArchived(true, 'Automatically archived.');
+        // Change the name of the thread
+        const guild = await global.discordClient.guilds.fetch(ticket.guild_id);
+        const ticketUserData = await db.users.findFirst({ where: { id: ticket.user_id } });
+        const ticketMember = await guild.members.fetch(ticketUserData?.discord_id as string);
+        try {
+          await thread.setName(text.threadName(ticketMember, 'ARCHIVED'));
+          log.info(F, `[${S}] Set name of thread to ${thread.name} (${ticket.thread_id})`);
+        } catch (err) {
+          log.error(F, `[${S}] Error renaming the thread ${thread.name} (${ticket.thread_id})`);
+          log.error(F, err as string);
+        }
 
         // Update the ticket in the database
         const updatedTicket = await db.user_tickets.update({
@@ -1353,7 +1358,35 @@ namespace session {
         });
         log.info(F, `[${S}] Updated the db`);
 
+        const sessionData = await util.sessionDataInit(ticket.guild_id);
+
+        // Send a message to the channel
+        try {
+          await thread.send(stripIndents`
+            Hey ${ticketMember}, it's been a while since we heard from you, so we're archiving this session.
+            If you need further assistance, you can respond right here and we can pick up where we left off.
+            Otherwise, this session will be deleted ${time(updatedTicket.deleted_at, 'R')} to preserve your privacy.
+            Once the session is deleted you can always start a new one by clicking the button in <#${sessionData.tripsitChannel as string}>.
+          `);
+          log.info(F, `[${S}] Sent message to thread ${thread.name} (${ticket.thread_id})`);
+        } catch (err) {
+          log.error(F, `[${S}] Error sending message to the thread ${thread.name} (${ticket.thread_id})`);
+          log.error(F, err as string);
+        }
+
+        // Archive the thread
+        try {
+          await thread.setArchived(true, 'Automatically archived.');
+          log.info(F, `[${S}] Archived the thread ${thread.name} (${ticket.thread_id})`);
+        } catch (err) {
+          log.error(F, `[${S}] Error archiving the thread ${thread.name} (${ticket.thread_id})`);
+          log.error(F, err as string);
+        }
+
+        // Send the log message
         await util.sendLogMessage('ARCHIVED', updatedTicket);
+
+        // Restore the old roles
         await util.restoreRoles(updatedTicket);
       });
     }
@@ -1402,7 +1435,7 @@ namespace session {
           where: { id: ticket.id },
           data: { status: 'DELETED' as ticket_status },
         });
-        log.debug(F, `[${S}] Updated database`);
+        // log.debug(F, `[${S}] Updated database`);
 
         await util.sendLogMessage('DELETED', updatedTicket);
         await util.restoreRoles(updatedTicket);
@@ -1678,7 +1711,15 @@ namespace util {
       where: {
         thread_id: message.channel.id,
       },
+      include: {
+        users_user_tickets_user_idTousers: {
+          select: {
+            discord_id: true,
+          },
+        },
+      },
     });
+    // log.debug(F, `Got ticket ${ticketData.id}`);
 
     // Update the archive/delete times
     ticketData = await db.user_tickets.update({
@@ -1689,12 +1730,23 @@ namespace util {
         archived_at: DateTime.utc().plus(text.deleteDuration()).toJSDate(),
         deleted_at: DateTime.utc().plus(text.archiveDuration()).toJSDate(),
       },
+      include: {
+        users_user_tickets_user_idTousers: {
+          select: {
+            discord_id: true,
+          },
+        },
+      },
     });
+    // log.debug(F, 'Updated archive/delete times');
 
     await session.own(message);
-    await session.join(message);
-    await util.analyze(message.content, ticketData);
-    await util.sendLogMessage('ANALYZE', ticketData, message.member);
+
+    // If the user is the same who created the ticket, analyze their message
+    const ticketDiscordId = ticketData.users_user_tickets_user_idTousers?.discord_id;
+    if (ticketDiscordId && ticketDiscordId === message.author.id) {
+      await util.analyze(message.content, ticketData);
+    }
   }
 
   export async function sessionDataInit(
@@ -1815,9 +1867,10 @@ namespace util {
     ticket: user_tickets,
     actor?: GuildMember,
   ):Promise<void> {
-    const sessionData = await util.sessionDataInit(ticket.guild_id);
-
+    // log.debug(F, `[${S}] action: ${action} ticket: ${ticket.id} actor: ${actor?.id}`);
     const S = 'sendLogMessage';
+
+    const sessionData = await util.sessionDataInit(ticket.guild_id);
 
     if (!sessionData.logChannel && !sessionData.metaChannel) return;
 
@@ -1887,6 +1940,14 @@ namespace util {
     // Stats are only used in the Log channel
     let stats = '';
     let outro = '';
+    // Component buttons are only on the meta channel
+    let components:ActionRowBuilder<ButtonBuilder>[] = [
+      new ActionRowBuilder<ButtonBuilder>().addComponents(
+        button.sessionSoftClose(target.id),
+        button.sessionBackup(target.id),
+      ),
+    ];
+
     switch (action) {
       case 'OPEN':
         intro = `${actionDef.emoji} **<@${target.id}>** requested help in <#${ticket.thread_id}>`;
@@ -1939,6 +2000,11 @@ namespace util {
           ${actorResolvedCount}
         `;
         outro += `I sent the "I'm good" button to <#${ticket.thread_id}>`;
+        components = [
+          new ActionRowBuilder<ButtonBuilder>().addComponents(
+            button.sessionSoftReopen(target.id),
+          ),
+        ];
         break;
       case 'CLOSED':
         stats = stripIndents`
@@ -1948,6 +2014,11 @@ namespace util {
         outro += stripIndents`
           ${archiveStr}
         `;
+        components = [
+          new ActionRowBuilder<ButtonBuilder>().addComponents(
+            button.sessionSoftReopen(target.id),
+          ),
+        ];
         break;
       case 'ARCHIVED':
         intro = `${actionDef.emoji} <@${target.id}>'s ticket was ${actionDef.verb} after ${DateTime.utc().diff(DateTime.fromJSDate(ticket.created_at)).toFormat('hh:mm:ss')}`;
@@ -1958,6 +2029,11 @@ namespace util {
         outro += stripIndents`
           ${deleteStr}
         `;
+        components = [
+          new ActionRowBuilder<ButtonBuilder>().addComponents(
+            button.sessionSoftReopen(target.id),
+          ),
+        ];
         break;
       case 'REOPENED':
         break;
@@ -2010,53 +2086,78 @@ namespace util {
       }
       if (!channel) return;
 
-      const metaMessageDesc = stripIndents`
-        ${intro}
-        ${body}
+      if (action === 'ANALYZE') {
+        const previousActionDef = text.actionDefinition(ticket.status);
+        switch (ticket.status) {
+          case 'OPEN':
+            intro = `${actionDef.emoji} **<@${target.id}>** requested help in <#${ticket.thread_id}>`;
+            break;
+          case 'OWNED': {
+            const previousActor = await db.users.findFirstOrThrow({
+              where: { id: ticket.first_response_by as string },
+            });
+            intro = `${actionDef.emoji} <@${target.id}>'s <#${(ticket.thread_id)}> was ${previousActionDef.verb} by <@${previousActor.id}> after ${DateTime.fromJSDate(ticket.first_response_at as Date).diff(DateTime.fromJSDate(ticket.created_at)).toFormat('hh:mm:ss')}`;
+            break;
+          }
+          case 'RESOLVED': {
+            const previousActor = await db.users.findFirstOrThrow({
+              where: { id: ticket.resolved_by as string },
+            });
+            intro = `${actionDef.emoji} <@${target.id}>'s <#${(ticket.thread_id)}> was ${previousActionDef.verb} by <@${previousActor.id}> after ${DateTime.fromJSDate(ticket.resolved_at as Date).diff(DateTime.fromJSDate(ticket.created_at)).toFormat('hh:mm:ss')}`;
+            break;
+          }
+          case 'CLOSED': {
+            const previousActor = await db.users.findFirstOrThrow({
+              where: { id: ticket.closed_by as string },
+            });
+            intro = `${actionDef.emoji} <@${target.id}>'s <#${(ticket.thread_id)}> was ${previousActionDef.verb} by <@${previousActor.id}> after ${DateTime.fromJSDate(ticket.closed_at as Date).diff(DateTime.fromJSDate(ticket.created_at)).toFormat('hh:mm:ss')}`;
+            break;
+          }
+          case 'ARCHIVED':
+            intro = `${actionDef.emoji} <@${target.id}>'s <#${(ticket.thread_id)}> was ${previousActionDef.verb} after ${DateTime.utc().diff(DateTime.fromJSDate(ticket.created_at)).toFormat('hh:mm:ss')}`;
+            break;
+          case 'DELETED':
+            intro = `${actionDef.emoji} <@${target.id}>'s ticket was ${actionDef.verb} after ${DateTime.utc().diff(DateTime.fromJSDate(ticket.created_at)).toFormat('hh:mm:ss')}`;
+            break;
+          default:
+            intro = `${actionDef.emoji} <@${target.id}>'s <#${(ticket.thread_id)}> was ${previousActionDef.verb} by <@${actor?.id}> after ${DateTime.utc().diff(DateTime.fromJSDate(ticket.created_at)).toFormat('hh:mm:ss')}`;
+            break;
+        }
+      }
 
-        ${outro}
-      `;
+      const metaMessage = {
+        embeds: [
+          new EmbedBuilder()
+            .setColor(actionDef.color)
+            .setDescription(stripIndents`
+              ${intro}
+              ${body}
+      
+              ${outro}
+            `),
+        ],
+        components,
+      };
 
       if (ticket.meta_message_id) {
         try {
           const message = await channel.messages.fetch(ticket.meta_message_id);
           if (message) {
-            await message.edit({
-              embeds: [
-                new EmbedBuilder()
-                  .setColor(actionDef.color)
-                  .setDescription(metaMessageDesc),
-              ],
-            });
-          } else {
-            throw new Error('Message not found');
+            await message.edit(metaMessage);
+            return;
+            // log.debug(F, `[${S}] Updated message in meta channel`);
+            // log.debug(F, `[${S}] ${metaMessageDesc}`);
           }
+          throw new Error('Message not found');
         } catch (err) {
-          const meteMessage = await channel.send({
-            embeds: [
-              new EmbedBuilder()
-                .setColor(actionDef.color)
-                .setDescription(metaMessageDesc),
-            ],
-          });
-          await db.user_tickets.update({
-            where: { id: ticket.id },
-            data: { meta_message_id: meteMessage.id },
-          });
+          // log.debug(F, `[${S}] Error fetching message: ${err}`);
         }
-      } else {
-        const meteMessage = await channel.send({
-          embeds: [
-            new EmbedBuilder()
-              .setColor(actionDef.color)
-              .setDescription(metaMessageDesc),
-          ],
-        });
-        await db.user_tickets.update({
-          where: { id: ticket.id },
-          data: { meta_message_id: meteMessage.id },
-        });
       }
+      const meteMessage = await channel.send(metaMessage);
+      await db.user_tickets.update({
+        where: { id: ticket.id },
+        data: { meta_message_id: meteMessage.id },
+      });
     }
   }
 
@@ -2075,7 +2176,7 @@ namespace util {
       await interaction.editReply('This must be performed in a channel!');
       return;
     }
-    const userId = interaction.customId.split('~')[1];
+    const userId = interaction.customId.split('~')[2];
     const actor = interaction.member as GuildMember;
     const target = await interaction.guild.members.fetch(userId);
 
@@ -2178,10 +2279,12 @@ namespace util {
     // But if the user came in via /tripsit start, and they're also a tripsitter, they can start a session for someone else
     // So we need to check if the `tripsit~sessionUser` component is present, and if so, if it has a selection
     let target = interaction.member as GuildMember;
+    const actor = interaction.member as GuildMember;
     const userSelectMenu = getComponentById(interaction, 'tripsit~sessionUser') as UserSelectMenuComponent;
     if (userSelectMenu) {
+      // log.debug(F, `[${S}] userSelectMenu found`);
       const targetId = userSelectMenu.customId.split('~')[2];
-      log.debug(F, `[${S}] targetId: ${targetId}`);
+      // log.debug(F, `[${S}] targetId: ${targetId}`);
       if (targetId && targetId !== target.id) {
         try {
           target = await interaction.guild.members.fetch(targetId);
@@ -2315,17 +2418,13 @@ namespace util {
     `;
 
     if (sessionData.givingRoles || sessionData.removingRoles) {
-      if (sessionData.givingRoles) {
+      if (sessionData.givingRoles && sessionData.givingRoles.length > 0) {
         const givingRolesList = sessionData.givingRoles?.map(roleId => `<@&${roleId}>`).join(', ') ?? 'None';
-        description += `
-          I will give users who need help the ${givingRolesList} role(s).
-        `;
+        description += `\nI will give users who need help the ${givingRolesList} role(s).`;
       }
-      if (sessionData.removingRoles) {
+      if (sessionData.removingRoles && sessionData.removingRoles.length > 0) {
         const removingRolesList = sessionData.removingRoles?.map(roleId => `<@&${roleId}>`).join(', ') ?? 'None';
-        description += `
-          I will remove the ${removingRolesList} role(s) from users who need help.
-        `;
+        description += `\nI will remove the ${removingRolesList} role(s) from users who need help.`;
       }
     }
 
@@ -2439,11 +2538,11 @@ namespace util {
     * Discussion summary
     */
     const S = 'analyze';
-
+    const now = DateTime.utc();
     // Lowercase the entire message
     const messageStr:string = message.toLowerCase();
     if (!messageStr || messageStr.length === 9) return;
-    log.debug(F, `[${S}] messageStr: ${messageStr}`);
+    // log.debug(F, `[${S}] messageStr: ${messageStr}`);
 
     // Check spelling
     // Loop through each word and check the spelling
@@ -2468,7 +2567,7 @@ namespace util {
         You are acting as spell checking and language processing API. 
         You will receive a message from someone who is in a help session with a tripsitter.
         The person talking may be under the influence of drugs.
-        Your job is to correct the spelling and grammar of the message.
+        Your job is to correct the spelling and grammar of the message when you feel there is a good chance of an error
         Your response should contain ONLY EVER the corrected message.
         If you are unsure about what was said, return "Undefined" instead of clarifying with the user.
         You will never be able to talk to the user so do not ask them questions.
@@ -2494,7 +2593,6 @@ namespace util {
       role: 'user',
       content: messageStr,
     }]);
-    log.debug(F, `[${S}] translationResponse: ${translation.response}`);
 
     // Remove punctuation
     const punctuation:RegExp = /[!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~]/g;
@@ -2508,13 +2606,14 @@ namespace util {
     // const stopwordsRemoved = stopword.removeStopwords(tokenized);
 
     // Remove stopwords, tokenize, and stem the message
-    // const tokens = PorterStemmer.tokenizeAndStem(messageNoPunctuation, false);
+    const tokens = PorterStemmer.tokenizeAndStem(messageNoPunctuation, false);
+    // log.debug(F, `[${S}] tokens: ${tokens}`);
 
     // Get a list of unique tokens
     // const uniqueTokens = [...new Set([...ticketData.wordTokens, ...tokenized])];
     // log.debug(F, `[${S}] uniqueTokens: ${uniqueTokens}`);
 
-    const allTokens = [...ticketData.wordTokens, ...tokenized];
+    const allTokens = [...ticketData.wordTokens, ...tokens];
     // log.debug(F, `[${S}] allTokens: ${allTokens}`);
 
     // Update the DB
@@ -2526,6 +2625,25 @@ namespace util {
         wordTokens: allTokens,
       },
     });
+
+    const ticketUser = await db.users.findFirstOrThrow({
+      where: {
+        id: ticketData.user_id,
+      },
+    });
+
+    const guild = await discordClient.guilds.fetch(ticketData.guild_id);
+    const member = await guild.members.fetch(ticketUser.discord_id as string);
+
+    await util.sendLogMessage('ANALYZE', ticketData, member);
+
+    // log.debug(F, `[${S}]
+    //   Message:
+    //   ${messageStr}
+    //   Translated:
+    //   ${translation.response === 'Undefined' ? messageStr : translation.response}
+    //   Analyzed in ${DateTime.utc().diff(now).toFormat('hh:mm:ss')}
+    // `);
   }
 }
 
@@ -3157,6 +3275,7 @@ namespace statistic {
     ticketData: user_tickets,
     member: GuildMember,
   ):Promise<string> {
+    const now = DateTime.utc();
     const S = 'sessionSummary';
     const model = {
       name: 'SessionSummarizer2',
@@ -3193,6 +3312,8 @@ namespace statistic {
       content: ticketData.wordTokens.join(' '),
     }]);
     // log.debug(F, `[${S}] summaryResponse: ${summary.response}`);
+
+    // log.debug(F, `[${S}] completed in ${DateTime.utc().diff(now).toFormat('hh:mm:ss')}`);
 
     return stripIndents`
       ### Current Summary
@@ -3541,6 +3662,22 @@ namespace button {
       .setEmoji('🆘')
       .setStyle(ButtonStyle.Primary);
   }
+
+  export function sessionHardReopen(targetId:string) {
+    return new ButtonBuilder()
+      .setCustomId(`tripsit~sessionHardReopen~${targetId}`)
+      .setLabel('I need help again')
+      .setEmoji('🔄')
+      .setStyle(ButtonStyle.Primary);
+  }
+
+  export function sessionSoftReopen(targetId:string) {
+    return new ButtonBuilder()
+      .setCustomId(`tripsit~sessionSoftReopen~${targetId}`)
+      .setLabel('They need help again')
+      .setEmoji('🔄')
+      .setStyle(ButtonStyle.Primary);
+  }
 }
 
 namespace page {
@@ -3580,7 +3717,6 @@ namespace page {
           `;
 
           if (interaction.isUserSelectMenu()) {
-            log.debug(F, `[${S}] Interaction is user select menu`);
             components.push(
               new ActionRowBuilder<UserSelectMenuBuilder>().addComponents(
                 select.sessionUser().setCustomId(`tripsit~sessionUser~${interaction.values[0]}`),
@@ -4055,6 +4191,7 @@ export async function tripsitMessage(
 ): Promise<void> {
   // Used in messageCreate.ts
   // Check if the message was sent in a tripsit thread
+  // const S = 'tripsitMessage';
   const ticketData = await db.user_tickets.findFirst({
     where: {
       thread_id: messageData.channel.id,
@@ -4064,6 +4201,7 @@ export async function tripsitMessage(
   if (!ticketData) return;
 
   await messageData.fetch();
+  // log.debug(F, `[${S}] messageData: ${messageData.author.id}: ${messageData.content}`);
   await util.messageStats(messageData);
 }
 
@@ -4231,7 +4369,7 @@ export async function tripsitButton(
   // log.debug(F, `[${S}] buttonID: ${buttonID}`);
   const [, action] = buttonID.split('~') as [
     null,
-    /* button actions */ 'backup' | 'softClose' | 'hardClose' | 'startSession' | 'updateEmbed' |
+    /* button actions */ 'sessionBackup' | 'softClose' | 'hardClose' | 'startSession' | 'updateEmbed' |
     /* page buttons */ 'startPage' | 'privacy' | 'help' | 'setup' | 'stats' | 'pageOne' | 'pageTwo' | 'pageThree' | 'dev' | 'save',
   ];
 
@@ -4241,7 +4379,7 @@ export async function tripsitButton(
 
   // eslint-disable-next-line sonarjs/no-small-switch
   switch (action) {
-    case 'backup':
+    case 'sessionBackup':
       await util.tripsitmeBackup(interaction);
       break;
     case 'softClose':
