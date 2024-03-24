@@ -11612,7 +11612,10 @@
         "name": "PCP"
       },
       {
-        "name": "Antibiotics"
+        "name": "ALDH2 inhibitors"
+      },
+      {
+        "name": "Hepatotoxic drugs"
       }
     ],
     "dangerousInteractions": [
@@ -12695,7 +12698,8 @@
     ],
     "class": {
       "chemical": [
-        "Butyric acid"
+        "Butyric acid",
+        "Gabapentinoids"
       ],
       "psychoactive": [
         "Depressant"
@@ -13115,9 +13119,7 @@
     "crossTolerances": null,
     "commonNames": null,
     "class": {
-      "chemical": [
-        "Benzodiazepines"
-      ],
+      "chemical": null,
       "psychoactive": [
         "Depressant"
       ]
@@ -14194,6 +14196,21 @@
       "intravenous": null,
       "smoked": null
     }
+  },
+  {
+    "url": "https://psychonautwiki.org/wiki/CanKet",
+    "name": "CanKet",
+    "summary": "",
+    "addictionPotential": null,
+    "toxicity": null,
+    "crossTolerances": null,
+    "commonNames": null,
+    "class": null,
+    "tolerance": null,
+    "uncertainInteractions": null,
+    "unsafeInteractions": null,
+    "dangerousInteractions": null,
+    "roa": null
   },
   {
     "url": "https://psychonautwiki.org/wiki/Cannabidiol",
@@ -29921,6 +29938,21 @@
       "intravenous": null,
       "smoked": null
     }
+  },
+  {
+    "url": "https://psychonautwiki.org/wiki/Nitazene",
+    "name": "Nitazene",
+    "summary": "",
+    "addictionPotential": null,
+    "toxicity": null,
+    "crossTolerances": null,
+    "commonNames": null,
+    "class": null,
+    "tolerance": null,
+    "uncertainInteractions": null,
+    "unsafeInteractions": null,
+    "dangerousInteractions": null,
+    "roa": null
   },
   {
     "url": "https://psychonautwiki.org/wiki/Nitromethaqualone",
