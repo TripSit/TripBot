@@ -29,6 +29,8 @@ import { acknowledgeButton, modModal, refusalButton } from '../commands/guild/d.
 import { feedbackReportModal } from '../commands/global/d.feedback';
 import { aiButton } from '../commands/global/d.ai';
 import { purgeButton } from '../commands/guild/d.purge';
+import { templateButton } from '../commands/guild/d.template';
+import { cooperativeButton } from '../commands/guild/d.cooperative';
 // import { helpButton } from '../commands/global/d.help';
 
 const F = f(__filename);
@@ -37,8 +39,21 @@ export default buttonClick;
 
 export async function buttonClick(interaction:ButtonInteraction, discordClient:Client) {
   log.info(F, await commandContext(interaction));
-  // log.debug(F, 'Interaction deferred!');
   const buttonID = interaction.customId;
+  const commandName = interaction.customId.split('~')[0];
+
+  // Need to convert the rest into a switch statement
+  // eslint-disable-next-line sonarjs/no-small-switch
+  switch (commandName) {
+    case ('template'):
+      await templateButton(interaction);
+      return;
+    case ('cooperative'):
+      await cooperativeButton(interaction);
+      return;
+    default:
+      break;
+  }
 
   if (buttonID.startsWith('feedbackReport')) {
     await feedbackReportModal(interaction);

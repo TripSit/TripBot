@@ -8,6 +8,8 @@ import commandContext from '../utils/context';
 import { helpMenu } from '../commands/global/d.help';
 import { aiMenu } from '../commands/global/d.ai';
 import { purgeMenu } from '../commands/guild/d.purge';
+import { templateSelect } from '../commands/guild/d.template';
+import { cooperativeSelect } from '../commands/guild/d.cooperative';
 // import log from '../../global/utils/log';
 // import {parse} from 'path';
 const F = f(__filename);
@@ -17,10 +19,23 @@ export default selectMenu;
 export async function selectMenu(
   interaction: AnySelectMenuInteraction,
 ): Promise<void> {
-  const { customId } = interaction;
   log.info(F, await commandContext(interaction));
 
   const menuID = interaction.customId;
+  const command = interaction.customId.split('~')[0];
+
+  // Need to convert the rest into a switch statement
+  // eslint-disable-next-line sonarjs/no-small-switch
+  switch (command) {
+    case 'template':
+      await templateSelect(interaction);
+      return;
+    case 'cooperative':
+      await cooperativeSelect(interaction);
+      return;
+    default:
+      break;
+  }
 
   if (interaction.isStringSelectMenu()) {
     if (menuID.startsWith('helpSelectMenu')) {
@@ -37,10 +52,10 @@ export async function selectMenu(
       else if (interaction.customId.startsWith('rpgBackgroundSelect')) await interaction.editReply(await rpgHome(interaction, ''));
     }
 
-    if (customId.startsWith('applicationReject')) {
+    if (interaction.customId.startsWith('applicationReject')) {
       await applicationReject(interaction);
     }
-    if (customId.startsWith('applicationRoleSelectMenu')) {
+    if (interaction.customId.startsWith('applicationRoleSelectMenu')) {
       await applicationStart(interaction);
     }
     if (menuID.startsWith('AI')) {
