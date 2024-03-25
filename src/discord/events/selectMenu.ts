@@ -28,6 +28,9 @@ export async function selectMenu(
       await helpMenu(interaction);
       return;
     }
+    if (menuID.startsWith('voice')) {
+      await voiceSelect(interaction);
+    }
     if (menuID.startsWith('rpg')) {
       if (!menuID.includes(interaction.user.id)) {
         log.debug(F, 'Button clicked by someone other than the user who clicked it');

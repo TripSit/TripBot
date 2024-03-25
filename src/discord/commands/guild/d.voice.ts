@@ -19,6 +19,9 @@ import {
   ChatInputCommandInteraction,
   ModalSubmitInteraction,
   ButtonInteraction,
+  StringSelectMenuBuilder,
+  StringSelectMenuOptionBuilder,
+  StringSelectMenuInteraction,
   UserSelectMenuInteraction,
   ButtonBuilder,
   ButtonStyle,
@@ -30,6 +33,7 @@ import {
 } from 'discord.js';
 import { REST } from '@discordjs/rest';
 import { Routes } from 'discord-api-types/v9';
+import Bottleneck from 'bottleneck';
 import { stripIndents } from 'common-tags';
 import { DateTime, Duration } from 'luxon';
 import { SlashCommand } from '../../@types/commandDef';
@@ -37,6 +41,12 @@ import { embedTemplate } from '../../utils/embedTemplate';
 import commandContext from '../../utils/context';
 
 const F = f(__filename);
+const limiter = new Bottleneck({
+  minTime: 1000, // Minimum time between requests
+  reservoir: 5, // Initial number of available requests
+  reservoirRefreshAmount: 5, // Number of requests added each interval
+  reservoirRefreshInterval: 5000, // Interval between adding new requests
+});
 
 /* TODO
 * Make sure you can't whitelist AND blacklist someone
@@ -84,6 +94,7 @@ namespace util {
     return command ? command.id : null;
   }
 
+  // TODO: Edit this function down so that it calls upon the split functions such as updateJoinLevel and updateTentMode
   export async function updateTentPermissions(voiceChannel: VoiceBasedChannel): Promise<void> {
     log.debug(F, `Updating permissions for ${voiceChannel.name}`);
     // Get the tent data
@@ -150,10 +161,6 @@ namespace util {
 
     // Clear user overwrites that are not in the whitelist or blacklist
     await Promise.all(voiceChannel.permissionOverwrites.cache.map(async overwrite => {
-      log.debug(F, `Checking permission overwrite for ${overwrite.id}`);
-      log.debug(F, `Type of overwrite.type: ${typeof overwrite.type}`);
-      log.debug(F, `Value of overwrite.type: ${overwrite.type}`);
-
       if (overwrite.type === 1) {
         if (!tentWhiteList.find(whitelist => whitelist.user.discord_id === overwrite.id)
           && !tentBanList.find(ban => ban.user.discord_id === overwrite.id)) {
@@ -203,6 +210,97 @@ namespace util {
     }));
   }
 
+  export async function updateJoinLevel(
+    interaction: ChatInputCommandInteraction | StringSelectMenuInteraction,
+  ): Promise<EmbedBuilder> {
+    const voiceChannel = (interaction.member as GuildMember).voice.channel as VoiceBasedChannel;
+    const tentData = await db.tent_settings.findFirstOrThrow({
+      where: {
+        channel_id: voiceChannel.id,
+      },
+    });
+
+    const newLevel = tentData.join_level;
+
+    const vipRoles = {
+      0: env.ROLE_VIP_0,
+      10: env.ROLE_VIP_10,
+      20: env.ROLE_VIP_20,
+      30: env.ROLE_VIP_30,
+      40: env.ROLE_VIP_40,
+      50: env.ROLE_VIP_50,
+      60: env.ROLE_VIP_60,
+      70: env.ROLE_VIP_70,
+      80: env.ROLE_VIP_80,
+      90: env.ROLE_VIP_90,
+      100: env.ROLE_VIP_100,
+    };
+
+    // Check the current channel permissions against the new join level
+    await Promise.all(Object.entries(vipRoles).map(async ([roleNumber, roleId]) => {
+      // Convert roleNumber from string to number
+      const number = parseInt(roleNumber, 10);
+
+      // Determine the desired permissions
+      let desiredPermissions: { ViewChannel: boolean | null, Connect: boolean | null } | undefined;
+      if (newLevel > number) {
+        desiredPermissions = { ViewChannel: false, Connect: false };
+      } else if (newLevel <= number) {
+        desiredPermissions = { ViewChannel: null, Connect: null };
+      }
+
+      // Define the type for permissions
+      type Permissions = {
+        [key: string]: boolean | undefined;
+      };
+
+      // Get the current permissions
+      const overwrite = voiceChannel.permissionOverwrites.cache.get(roleId);
+      const allowedPermissions: Permissions = overwrite ? overwrite.allow.serialize() : {};
+      const deniedPermissions: Permissions = overwrite ? overwrite.deny.serialize() : {};
+
+      const viewChannelPermission = allowedPermissions.ViewChannel === true ? true : (deniedPermissions.ViewChannel === true ? false : null);
+      const connectPermission = allowedPermissions.Connect === true ? true : (deniedPermissions.Connect === true ? false : null);
+
+      // If the current permissions are different from the desired permissions, edit the permissions
+      log.debug(F, `ViewChannel: ${viewChannelPermission}, Connect: ${connectPermission}`);
+      if (desiredPermissions && (viewChannelPermission !== desiredPermissions.ViewChannel || connectPermission !== desiredPermissions.Connect)) {
+        await voiceChannel.permissionOverwrites.edit(roleId, desiredPermissions);
+        log.debug(F, `Set permissions for role ${roleId} in ${voiceChannel.name}`);
+      }
+    }));
+
+    // Return an embed message indicating that the join level has been updated
+    return new EmbedBuilder()
+      .setTitle('Join Level Updated')
+      .setDescription(`The join level has been updated to ${newLevel}.`);
+  }
+
+  export async function updateTentMode(
+    interaction: ChatInputCommandInteraction | ButtonInteraction,
+  ): Promise<EmbedBuilder> {
+    const voiceChannel = (interaction.member as GuildMember).voice.channel as VoiceBasedChannel;
+    const tentData = await db.tent_settings.findFirstOrThrow({
+      where: {
+        channel_id: voiceChannel.id,
+      },
+    });
+
+    const newMode = tentData.mode;
+    log.debug(F, `New mode: ${newMode}`);
+
+    // Update the everyone role based on the new mode
+    if (newMode === 'PRIVATE') {
+      await voiceChannel.permissionOverwrites.edit(voiceChannel.guild.roles.everyone, { ViewChannel: false, Connect: false });
+    } else {
+      await voiceChannel.permissionOverwrites.edit(voiceChannel.guild.roles.everyone, { ViewChannel: true, Connect: true });
+    }
+
+    return new EmbedBuilder()
+      .setTitle('Tent Mode Updated')
+      .setDescription(`The tent mode has been updated to ${newMode}.`);
+  }
+
   export async function pitchTent(
     oldState:VoiceState,
     newState:VoiceState,
@@ -227,7 +325,7 @@ namespace util {
         data: {
           name: userData.defaultTentName || `${newState.member.displayName}'s tent`,
           created_by: userData.id,
-          mode: 'PUBLIC',
+          mode: userData.defaultTentMode || 'PUBLIC',
           updated_by: userData.id,
           join_level: userData.joinTentLevel,
         },
@@ -260,8 +358,8 @@ namespace util {
       {
         id: newState.member.guild.roles.everyone,
         allow: [
-          ...(tentData.mode === ('PUBLIC') && (tentData.join_level === 0) ? [PermissionsBitField.Flags.ViewChannel] : []),
-          ...(tentData.mode === ('PUBLIC') && (tentData.join_level === 0) ? [PermissionsBitField.Flags.Connect] : []),
+          ...(tentData.mode === ('PUBLIC') ? [PermissionsBitField.Flags.ViewChannel] : []),
+          ...(tentData.mode === ('PUBLIC') ? [PermissionsBitField.Flags.Connect] : []),
           PermissionsBitField.Flags.Speak,
           PermissionsBitField.Flags.UseEmbeddedActivities,
           PermissionsBitField.Flags.UseVAD,
@@ -274,8 +372,8 @@ namespace util {
           PermissionsBitField.Flags.UseApplicationCommands,
         ],
         deny: [
-          ...(tentData.mode === ('PRIVATE') || !(tentData.join_level === 0) ? [PermissionsBitField.Flags.ViewChannel] : []),
-          ...(tentData.mode === ('PRIVATE') || !(tentData.join_level === 0) ? [PermissionsBitField.Flags.Connect] : []),
+          ...(tentData.mode === ('PRIVATE') ? [PermissionsBitField.Flags.ViewChannel] : []),
+          ...(tentData.mode === ('PRIVATE') ? [PermissionsBitField.Flags.Connect] : []),
         ],
       },
       {
@@ -304,123 +402,79 @@ namespace util {
       },
       {
         id: env.ROLE_VIP_0 as string,
-        allow: [
-          ...(tentData.join_level <= 0 && !(tentData.mode === 'PRIVATE') ? [PermissionsBitField.Flags.ViewChannel] : []),
-          ...(tentData.join_level <= 0 && !(tentData.mode === 'PRIVATE') ? [PermissionsBitField.Flags.Connect] : []),
-        ],
         deny: [
-          ...(tentData.join_level > 0 || (tentData.mode === 'PRIVATE') ? [PermissionsBitField.Flags.ViewChannel] : []),
-          ...(tentData.join_level > 0 || (tentData.mode === 'PRIVATE') ? [PermissionsBitField.Flags.Connect] : []),
+          ...(tentData.join_level > 0 ? [PermissionsBitField.Flags.ViewChannel] : []),
+          ...(tentData.join_level > 0 ? [PermissionsBitField.Flags.Connect] : []),
         ],
       },
       {
         id: env.ROLE_VIP_10 as string,
-        allow: [
-          ...(tentData.join_level <= 10 && !(tentData.mode === 'PRIVATE') ? [PermissionsBitField.Flags.ViewChannel] : []),
-          ...(tentData.join_level <= 10 && !(tentData.mode === 'PRIVATE') ? [PermissionsBitField.Flags.Connect] : []),
-        ],
         deny: [
-          ...(tentData.join_level > 10 || (tentData.mode === 'PRIVATE') ? [PermissionsBitField.Flags.ViewChannel] : []),
-          ...(tentData.join_level > 10 || (tentData.mode === 'PRIVATE') ? [PermissionsBitField.Flags.Connect] : []),
+          ...(tentData.join_level > 10 ? [PermissionsBitField.Flags.ViewChannel] : []),
+          ...(tentData.join_level > 10 ? [PermissionsBitField.Flags.Connect] : []),
         ],
       },
       {
         id: env.ROLE_VIP_20 as string,
-        allow: [
-          ...(tentData.join_level <= 20 && !(tentData.mode === 'PRIVATE') ? [PermissionsBitField.Flags.ViewChannel] : []),
-          ...(tentData.join_level <= 20 && !(tentData.mode === 'PRIVATE') ? [PermissionsBitField.Flags.Connect] : []),
-        ],
         deny: [
-          ...(tentData.join_level > 20 || (tentData.mode === 'PRIVATE') ? [PermissionsBitField.Flags.ViewChannel] : []),
-          ...(tentData.join_level > 20 || (tentData.mode === 'PRIVATE') ? [PermissionsBitField.Flags.Connect] : []),
+          ...(tentData.join_level > 20 ? [PermissionsBitField.Flags.ViewChannel] : []),
+          ...(tentData.join_level > 20 ? [PermissionsBitField.Flags.Connect] : []),
         ],
       },
       {
         id: env.ROLE_VIP_30 as string,
-        allow: [
-          ...(tentData.join_level <= 30 && !(tentData.mode === 'PRIVATE') ? [PermissionsBitField.Flags.ViewChannel] : []),
-          ...(tentData.join_level <= 30 && !(tentData.mode === 'PRIVATE') ? [PermissionsBitField.Flags.Connect] : []),
-        ],
         deny: [
-          ...(tentData.join_level > 30 || (tentData.mode === 'PRIVATE') ? [PermissionsBitField.Flags.ViewChannel] : []),
-          ...(tentData.join_level > 30 || (tentData.mode === 'PRIVATE') ? [PermissionsBitField.Flags.Connect] : []),
+          ...(tentData.join_level > 30 ? [PermissionsBitField.Flags.ViewChannel] : []),
+          ...(tentData.join_level > 30 ? [PermissionsBitField.Flags.Connect] : []),
         ],
       },
       {
         id: env.ROLE_VIP_40 as string,
-        allow: [
-          ...(tentData.join_level <= 40 && !(tentData.mode === 'PRIVATE') ? [PermissionsBitField.Flags.ViewChannel] : []),
-          ...(tentData.join_level <= 40 && !(tentData.mode === 'PRIVATE') ? [PermissionsBitField.Flags.Connect] : []),
-        ],
         deny: [
-          ...(tentData.join_level > 40 || (tentData.mode === 'PRIVATE') ? [PermissionsBitField.Flags.ViewChannel] : []),
-          ...(tentData.join_level > 40 || (tentData.mode === 'PRIVATE') ? [PermissionsBitField.Flags.Connect] : []),
+          ...(tentData.join_level > 40 ? [PermissionsBitField.Flags.ViewChannel] : []),
+          ...(tentData.join_level > 40 ? [PermissionsBitField.Flags.Connect] : []),
         ],
       },
       {
         id: env.ROLE_VIP_50 as string,
-        allow: [
-          ...(tentData.join_level <= 50 && !(tentData.mode === 'PRIVATE') ? [PermissionsBitField.Flags.ViewChannel] : []),
-          ...(tentData.join_level <= 50 && !(tentData.mode === 'PRIVATE') ? [PermissionsBitField.Flags.Connect] : []),
-        ],
         deny: [
-          ...(tentData.join_level > 50 || (tentData.mode === 'PRIVATE') ? [PermissionsBitField.Flags.ViewChannel] : []),
-          ...(tentData.join_level > 50 || (tentData.mode === 'PRIVATE') ? [PermissionsBitField.Flags.Connect] : []),
+          ...(tentData.join_level > 50 ? [PermissionsBitField.Flags.ViewChannel] : []),
+          ...(tentData.join_level > 50 ? [PermissionsBitField.Flags.Connect] : []),
         ],
       },
       {
         id: env.ROLE_VIP_60 as string,
-        allow: [
-          ...(tentData.join_level <= 60 && !(tentData.mode === 'PRIVATE') ? [PermissionsBitField.Flags.ViewChannel] : []),
-          ...(tentData.join_level <= 60 && !(tentData.mode === 'PRIVATE') ? [PermissionsBitField.Flags.Connect] : []),
-        ],
         deny: [
-          ...(tentData.join_level > 60 || (tentData.mode === 'PRIVATE') ? [PermissionsBitField.Flags.ViewChannel] : []),
-          ...(tentData.join_level > 60 || (tentData.mode === 'PRIVATE') ? [PermissionsBitField.Flags.Connect] : []),
+          ...(tentData.join_level > 60 ? [PermissionsBitField.Flags.ViewChannel] : []),
+          ...(tentData.join_level > 60 ? [PermissionsBitField.Flags.Connect] : []),
         ],
       },
       {
         id: env.ROLE_VIP_70 as string,
-        allow: [
-          ...(tentData.join_level <= 70 && !(tentData.mode === 'PRIVATE') ? [PermissionsBitField.Flags.ViewChannel] : []),
-          ...(tentData.join_level <= 70 && !(tentData.mode === 'PRIVATE') ? [PermissionsBitField.Flags.Connect] : []),
-        ],
         deny: [
-          ...(tentData.join_level > 70 || (tentData.mode === 'PRIVATE') ? [PermissionsBitField.Flags.ViewChannel] : []),
-          ...(tentData.join_level > 70 || (tentData.mode === 'PRIVATE') ? [PermissionsBitField.Flags.Connect] : []),
+          ...(tentData.join_level > 70 ? [PermissionsBitField.Flags.ViewChannel] : []),
+          ...(tentData.join_level > 70 ? [PermissionsBitField.Flags.Connect] : []),
         ],
       },
       {
         id: env.ROLE_VIP_80 as string,
-        allow: [
-          ...(tentData.join_level <= 80 && !(tentData.mode === 'PRIVATE') ? [PermissionsBitField.Flags.ViewChannel] : []),
-          ...(tentData.join_level <= 80 && !(tentData.mode === 'PRIVATE') ? [PermissionsBitField.Flags.Connect] : []),
-        ],
         deny: [
-          ...(tentData.join_level > 80 || (tentData.mode === 'PRIVATE') ? [PermissionsBitField.Flags.ViewChannel] : []),
-          ...(tentData.join_level > 80 || (tentData.mode === 'PRIVATE') ? [PermissionsBitField.Flags.Connect] : []),
+          ...(tentData.join_level > 80 ? [PermissionsBitField.Flags.ViewChannel] : []),
+          ...(tentData.join_level > 80 ? [PermissionsBitField.Flags.Connect] : []),
         ],
       },
       {
         id: env.ROLE_VIP_90 as string,
-        allow: [
-          ...(tentData.join_level <= 90 && !(tentData.mode === 'PRIVATE') ? [PermissionsBitField.Flags.ViewChannel] : []),
-          ...(tentData.join_level <= 90 && !(tentData.mode === 'PRIVATE') ? [PermissionsBitField.Flags.Connect] : []),
-        ],
         deny: [
-          ...(tentData.join_level > 90 || (tentData.mode === 'PRIVATE') ? [PermissionsBitField.Flags.ViewChannel] : []),
-          ...(tentData.join_level > 90 || (tentData.mode === 'PRIVATE') ? [PermissionsBitField.Flags.Connect] : []),
+          ...(tentData.join_level > 90 ? [PermissionsBitField.Flags.ViewChannel] : []),
+          ...(tentData.join_level > 90 ? [PermissionsBitField.Flags.Connect] : []),
         ],
       },
       {
         id: env.ROLE_VIP_100 as string,
-        allow: [
-          ...(tentData.join_level <= 100 && !(tentData.mode === 'PRIVATE') ? [PermissionsBitField.Flags.ViewChannel] : []),
-          ...(tentData.join_level <= 100 && !(tentData.mode === 'PRIVATE') ? [PermissionsBitField.Flags.Connect] : []),
-        ],
         deny: [
-          ...(tentData.join_level > 100 || (tentData.mode === 'PRIVATE') ? [PermissionsBitField.Flags.ViewChannel] : []),
-          ...(tentData.join_level > 100 || (tentData.mode === 'PRIVATE') ? [PermissionsBitField.Flags.Connect] : []),
+          ...(tentData.join_level > 100 ? [PermissionsBitField.Flags.ViewChannel] : []),
+          ...(tentData.join_level > 100 ? [PermissionsBitField.Flags.Connect] : []),
         ],
       },
     ];
@@ -503,7 +557,7 @@ namespace util {
         - **Creator:** <@${newState.member.id}>
         - **Host:** <@${newState.member.id}>
         - **Visibility:** ${tentData.mode.charAt(0).toUpperCase() + tentData.mode.slice(1).toLowerCase()}
-        - **Join Level:** ${tentData.join_level}
+        - **Join Level:** ${tentData.join_level === 0 ? 'Any' : `${tentData.join_level}`}
       
       ## **Use </voice settings:${commandID}> to control your tent and view ban/whitelist or use the commands below**
        - \`/voice rename\` - Choose a new name for your tent
@@ -584,8 +638,8 @@ namespace util {
   }
 
   export async function voiceMenu(
-    interaction: ChatInputCommandInteraction | ButtonInteraction | UserSelectMenuInteraction,
-  ):Promise<ActionRowBuilder<ButtonBuilder | UserSelectMenuBuilder>[]> {
+    interaction: ChatInputCommandInteraction | ButtonInteraction | UserSelectMenuInteraction | StringSelectMenuInteraction,
+  ):Promise<ActionRowBuilder<ButtonBuilder | UserSelectMenuBuilder | StringSelectMenuBuilder>[]> {
     const member = interaction.member as GuildMember;
     const userData = await db.users.upsert({
       where: { discord_id: member.id },
@@ -636,6 +690,10 @@ namespace util {
 
     return [
       navButtons,
+      new ActionRowBuilder<StringSelectMenuBuilder>()
+        .addComponents(
+          await select.joinLevel(userData.id),
+        ),
       new ActionRowBuilder<UserSelectMenuBuilder>()
         .addComponents(
           await select.hostlist(userData.id),
@@ -676,7 +734,7 @@ namespace util {
 namespace page {
   export async function start(
     interaction: ChatInputCommandInteraction | ButtonInteraction
-    | UserSelectMenuInteraction,
+    | UserSelectMenuInteraction | StringSelectMenuInteraction,
   ): Promise<InteractionEditReplyOptions> {
     // log.info(F, await commandContext(interaction));
     if (!interaction.guild || !interaction.member) return { content: text.guildOnly() };
@@ -805,7 +863,10 @@ namespace page {
             name: `${isAfterUserCoolDown && isAfterGlobalCoolDown && tentData.mode === 'PUBLIC' ? '🔔' : '🔕'} Ping Join VC: ${pingTime}`,
             value: '*Notifies those opted-in to consider joining*',
           })
-          .addFields({ name: `⭐ Join Level: ${tentData.join_level}`, value: '*Minimum level required to join your tent*' })
+          .addFields({
+            name: `⭐ Join Level: ${tentData.join_level === 0 ? 'Any' : `${tentData.join_level}`} ${tentData.mode === 'PRIVATE' ? '(Irrelevant while private)' : ''}`,
+            value: '*Minimum level required to join your tent*',
+          })
           .addFields({ name: '👔 Host List', value: `${hostListStr}\n*Can change your tent settings on your behalf*` })
           .addFields({ name: '⚪ White List', value: `${whiteListStr}\n*Can always join, even if the tent is private*` })
           .addFields({ name: '⚫ Ban List', value: `${banListStr}\n*Cannot join, nor see your tent in their channel list*` }),
@@ -904,7 +965,6 @@ namespace cmd {
     // log.debug(F, `TentData: ${JSON.stringify(tentData, null, 2)}`);
 
     if (tentData.mode === 'PUBLIC') {
-      voiceChannel.permissionOverwrites.edit(voiceChannel.guild.roles.everyone, { ViewChannel: false, Connect: false });
       // verb = 'hidden (and locked)';
       mode = 'private';
       explanation = 'Tent is hidden from the channel list and only users on your whitelist can join.';
@@ -918,10 +978,14 @@ namespace cmd {
           mode: 'PRIVATE',
         },
       });
+
+      // Update the user's defaultTentMode
+      await db.users.upsert({
+        where: { discord_id: interaction.user.id },
+        create: { discord_id: interaction.user.id, defaultTentMode: 'PRIVATE' },
+        update: { defaultTentMode: 'PRIVATE' },
+      });
     } else {
-      voiceChannel.permissionOverwrites.edit(voiceChannel.guild.roles.everyone, { ViewChannel: true, Connect: true });
-      // Run the updateTentPermissions function
-      await util.updateTentPermissions(voiceChannel);
       // verb = 'unhidden (and unlocked)';
       mode = 'public';
       explanation = 'The tent is visible and can be joined by anyone not on your ban list.';
@@ -935,7 +999,17 @@ namespace cmd {
           mode: 'PUBLIC',
         },
       });
+
+      // Update the user's defaultTentMode
+      await db.users.upsert({
+        where: { discord_id: interaction.user.id },
+        create: { discord_id: interaction.user.id, defaultTentMode: 'PUBLIC' },
+        update: { defaultTentMode: 'PUBLIC' },
+      });
     }
+
+    // Run the updateTentMode function
+    await util.updateTentMode(interaction);
 
     // Edit the info message with the new mode
     if (tentData.info_message_id) {
@@ -1308,6 +1382,25 @@ namespace cmd {
       update: { joinTentLevel: level },
     });
 
+    // Run the updateJoinLevel function
+    await util.updateJoinLevel(interaction);
+
+    // Edit the info message with the new join level
+    if (tentData.info_message_id) {
+      let infoMessage = null as null | Message;
+      try {
+        infoMessage = await voiceChannel.messages.fetch(tentData.info_message_id);
+      } catch (e) {
+        // Message was likely deleted, should we re-send it in chat?
+      }
+      if (infoMessage) {
+        // Update the info message with the new mode using regex
+        const newContent = infoMessage.content
+          .replace(/\*\*Join Level:\*\* .*/, `**Join Level:** ${tentData.join_level === 0 ? 'Any' : `${tentData.join_level}`}`);
+        infoMessage.edit(newContent);
+      }
+    }
+
     return embedTemplate()
       .setTitle('Success')
       .setColor(Colors.Green)
@@ -1559,6 +1652,66 @@ namespace select {
       .setMinValues(0)
       .setMaxValues(25);
   }
+
+  export async function joinLevel(
+    userId: string,
+  ) {
+    const ticketData = await db.tent_settings.findFirstOrThrow({
+      where: {
+        created_by: userId,
+      },
+    });
+
+    return new StringSelectMenuBuilder()
+      .setCustomId('voice~joinlevel')
+      .setPlaceholder('Join Level')
+      .addOptions([
+        new StringSelectMenuOptionBuilder()
+          .setLabel('Join Level 0 (Any)')
+          .setValue('0')
+          .setDefault(ticketData.join_level === 0),
+        new StringSelectMenuOptionBuilder()
+          .setLabel('Join Level 10')
+          .setValue('10')
+          .setDefault(ticketData.join_level === 10),
+        new StringSelectMenuOptionBuilder()
+          .setLabel('Join Level 20')
+          .setValue('20')
+          .setDefault(ticketData.join_level === 20),
+        new StringSelectMenuOptionBuilder()
+          .setLabel('Join Level 30')
+          .setValue('30')
+          .setDefault(ticketData.join_level === 30),
+        new StringSelectMenuOptionBuilder()
+          .setLabel('Join Level 40')
+          .setValue('40')
+          .setDefault(ticketData.join_level === 40),
+        new StringSelectMenuOptionBuilder()
+          .setLabel('Join Level 50')
+          .setValue('50')
+          .setDefault(ticketData.join_level === 50),
+        new StringSelectMenuOptionBuilder()
+          .setLabel('Join Level 60')
+          .setValue('60')
+          .setDefault(ticketData.join_level === 60),
+        new StringSelectMenuOptionBuilder()
+          .setLabel('Join Level 70')
+          .setValue('70')
+          .setDefault(ticketData.join_level === 70),
+        new StringSelectMenuOptionBuilder()
+          .setLabel('Join Level 80')
+          .setValue('80')
+          .setDefault(ticketData.join_level === 80),
+        new StringSelectMenuOptionBuilder()
+          .setLabel('Join Level 90')
+          .setValue('90')
+          .setDefault(ticketData.join_level === 90),
+        new StringSelectMenuOptionBuilder()
+          .setLabel('Join Level 100')
+          .setValue('100')
+          .setDefault(ticketData.join_level === 100),
+      ]);
+  }
 }
 
 namespace selectAction {
@@ -1710,44 +1863,96 @@ namespace selectAction {
       });
     }));
   }
+
+  export async function joinLevel(
+    interaction: StringSelectMenuInteraction,
+  ) {
+    if (!interaction.channel) return;
+    if (!interaction.guild) return;
+
+    const tentData = await db.tent_settings.findFirstOrThrow({
+      where: {
+        channel_id: interaction.channel.id,
+      },
+    });
+
+    const level = parseInt(interaction.values[0], 10);
+
+    await db.tent_settings.update({
+      where: {
+        id: tentData.id,
+      },
+      data: {
+        join_level: level,
+      },
+    });
+
+    // Edit the info message with the new join level
+    if (tentData.info_message_id) {
+      let infoMessage = null as null | Message;
+      try {
+        infoMessage = await interaction.channel.messages.fetch(tentData.info_message_id);
+      } catch (e) {
+        // Message was likely deleted, should we re-send it in chat?
+      }
+      if (infoMessage) {
+        // Update the info message with the new mode using regex
+        const newContent = infoMessage.content
+          .replace(/\*\*Join Level:\*\* .*/, `**Join Level:** ${level === 0 ? 'Any' : `${level}`}`);
+        infoMessage.edit(newContent);
+      }
+    }
+  }
 }
 
 export async function voiceSelect(
-  interaction: UserSelectMenuInteraction,
+  interaction: UserSelectMenuInteraction | StringSelectMenuInteraction,
 ): Promise<void> {
   if (!interaction.guild) return;
   // Used in selectMenu.ts
   const menuId = interaction.customId;
   const voiceChannel = interaction.channel as VoiceBasedChannel;
-  // log.debug(F, `[tripsitSelect] menuId: ${menuId}`);
   const [, menuAction] = menuId.split('~') as [
     null,
-    'whitelist' | 'blacklist' | 'hostlist',
+    'whitelist' | 'blacklist' | 'hostlist' | 'joinlevel',
   ];
+  log.debug(F, `[voiceSelect] menuAction: ${menuAction}`);
 
   switch (menuAction) {
     case 'whitelist': {
-      await selectAction.whiteList(interaction);
-      await interaction.update(await page.start(interaction));
-      await util.updateTentPermissions(voiceChannel);
+      if (interaction instanceof UserSelectMenuInteraction) {
+        await selectAction.whiteList(interaction);
+        await interaction.update(await page.start(interaction));
+        await util.updateTentPermissions(voiceChannel);
+      }
       break;
     }
     case 'blacklist': {
-      await selectAction.blackList(interaction);
-      await interaction.update(await page.start(interaction));
-      await util.updateTentPermissions(voiceChannel);
+      if (interaction instanceof UserSelectMenuInteraction) {
+        await selectAction.blackList(interaction);
+        await interaction.update(await page.start(interaction));
+        await util.updateTentPermissions(voiceChannel);
+      }
       break;
     }
     case 'hostlist': {
-      await selectAction.hostList(interaction);
-      await interaction.update(await page.start(interaction));
+      if (interaction instanceof UserSelectMenuInteraction) {
+        await selectAction.hostList(interaction);
+        await interaction.update(await page.start(interaction));
+      }
       break;
     }
-    default:
-      await interaction.update({
-        content: "I'm sorry, I don't understand that command!",
-      });
+    case 'joinlevel': {
+      if (interaction instanceof StringSelectMenuInteraction) {
+        await selectAction.joinLevel(interaction);
+        await interaction.update(await page.start(interaction));
+        await util.updateJoinLevel(interaction);
+      }
       break;
+    }
+    default: {
+      break;
+    }
   }
 }
 
@@ -1855,7 +2060,7 @@ export const dVoice: SlashCommand = {
         .setDescription('The minimum level required to join and see your Tent')
         .setRequired(true)
         .addChoices(
-          { name: '0 (None)', value: 0 },
+          { name: '0 (Any)', value: 0 },
           { name: '10', value: 10 },
           { name: '20', value: 20 },
           { name: '30', value: 30 },

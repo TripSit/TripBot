@@ -176,7 +176,7 @@ model users {
   hostedTents                                               tent_hostlist[]
   bannedFromTents                                           tent_blacklist[]
   whitelistedInTents                                        tent_whitelist[]
-  preferredTentMode                                         String            @default("public")
+  defaultTentMode                                           tent_publicity    @default(PUBLIC)
   banlist                                                   String[]
   whitelist                                                 String[]
   defaultTentName                                           String?
