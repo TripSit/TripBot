@@ -1,3 +1,4 @@
+/* eslint-disable sonarjs/no-small-switch */
 /* eslint-disable max-len */
 import {
   AnySelectMenuInteraction,
@@ -22,6 +23,15 @@ export async function selectMenu(
   log.info(F, await commandContext(interaction));
 
   const menuID = interaction.customId;
+  const commandName = interaction.customId.split('~')[0];
+
+  switch (commandName) {
+    case 'tripsit':
+      await tripsitSelect(interaction);
+      return;
+    default:
+      break;
+  }
 
   if (interaction.isStringSelectMenu()) {
     if (menuID.startsWith('helpSelectMenu')) {
@@ -58,15 +68,5 @@ export async function selectMenu(
 
   if (interaction.isChannelSelectMenu() && menuID.startsWith('AI')) {
     await interaction.update(await aiMenu(interaction));
-  }
-
-  if (menuID.startsWith('tripsit')
-  && (
-    interaction.isUserSelectMenu()
-    || interaction.isChannelSelectMenu()
-    || interaction.isStringSelectMenu()
-    || interaction.isRoleSelectMenu()
-  )) {
-    await tripsitSelect(interaction);
   }
 }

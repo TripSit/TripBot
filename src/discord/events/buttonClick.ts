@@ -1,3 +1,4 @@
+/* eslint-disable sonarjs/no-small-switch */
 /* eslint-disable max-len */
 import {
   ButtonInteraction,
@@ -27,10 +28,21 @@ const F = f(__filename);
 
 export default buttonClick;
 
+type CommandType = 'tripsit';
+
 export async function buttonClick(interaction:ButtonInteraction, discordClient:Client) {
   // log.info(F, await commandContext(interaction));
   // log.debug(F, 'Interaction deferred!');
   const buttonID = interaction.customId;
+  const commandName = interaction.customId.split('~')[0] as CommandType;
+
+  switch (commandName) {
+    case 'tripsit':
+      await tripsitButton(interaction);
+      return;
+    default:
+      break;
+  }
 
   if (buttonID.startsWith('feedbackReport')) {
     await feedbackReportModal(interaction);
@@ -152,11 +164,6 @@ export async function buttonClick(interaction:ButtonInteraction, discordClient:C
 
   if (buttonID.startsWith('"ID":"RR"')) {
     await buttonReactionRole(interaction);
-    return;
-  }
-
-  if (buttonID.startsWith('tripsit')) {
-    await tripsitButton(interaction);
     return;
   }
 

@@ -584,7 +584,7 @@ export async function userInfoEmbed(
   command: ModAction,
   showModInfo: boolean,
 ):Promise<EmbedBuilder> {
-  log.debug(F, `[userInfoEmbed] actor: ${actor} | target: ${target} | targetData: ${JSON.stringify(targetData, null, 2)} | command: ${command}`);
+  // log.debug(F, `[userInfoEmbed] actor: ${actor} | target: ${target} | targetData: ${JSON.stringify(targetData, null, 2)} | command: ${command}`);
   // const startTime = Date.now();
   const targetActionList = {
     NOTE: [] as string[],
@@ -619,7 +619,7 @@ export async function userInfoEmbed(
 
   // log.debug(F, `targetActionList: ${JSON.stringify(targetActionList, null, 2)}`);
 
-  log.debug(F, `Target: ${JSON.stringify(target, null, 2)}`);
+  // log.debug(F, `Target: ${JSON.stringify(target, null, 2)}`);
 
   // const targetDisplayName = (target as GuildMember).displayName ?? null;
   // let targetUserName = null as string | null;

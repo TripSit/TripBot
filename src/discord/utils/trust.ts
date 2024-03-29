@@ -238,7 +238,7 @@ over a week ago, so no welcome message was sent.`);
 export default async function trust(
   member:GuildMember,
 ):Promise<void> {
-  log.debug(F, `${member} joined guild: ${member.guild.name} (id: ${member.guild.id})`);
+  // log.debug(F, `${member} joined guild: ${member.guild.name} (id: ${member.guild.id})`);
 
   const inviteString = await getInvite(member);
 
@@ -259,7 +259,7 @@ export default async function trust(
 
   const trustScoreData = await tripSitTrustScore(member.user.id);
 
-  log.debug(F, `trustScoreData: ${JSON.stringify(trustScoreData)}`);
+  // log.debug(F, `trustScoreData: ${JSON.stringify(trustScoreData)}`);
 
   // const trustScoreColors = {
   //   0: Colors.Purple,

@@ -1,6 +1,7 @@
 import {
   GuildMemberAddEvent,
 } from '../@types/eventDef';
+import { tripsitMemberAdd } from '../commands/guild/d.tripsit';
 
 import trust from '../utils/trust';
 
@@ -11,29 +12,19 @@ export const guildMemberAdd: GuildMemberAddEvent = {
   name: 'guildMemberAdd',
   async execute(member) {
     await member.fetch(true);
+    const guildData = await db.discord_guilds.upsert({
+      where: { id: member.guild.id },
+      create: { id: member.guild.id },
+      update: {},
+    });
 
-    try {
-      const guildData = await db.discord_guilds.upsert({
-        where: {
-          id: member.guild.id,
-        },
-        create: {
-          id: member.guild.id,
-        },
-        update: {},
-      });
-
-      // log.debug(F, `guildData: ${JSON.stringify(guildData)}`);
-
-      if (!guildData) return;
-
-      if (!guildData.cooperative) return;
-
+    if (guildData?.cooperative) {
       await trust(member);
-    } catch (err) {
-      log.error(F, `Error: ${err}`);
-      log.debug(F, `member: ${JSON.stringify(member)}`);
-      log.debug(F, `member.guild: ${JSON.stringify(member.guild)}`);
+    }
+
+    const sessionData = await db.session_data.findFirst({ where: { guild_id: member.guild.id } });
+    if (sessionData) {
+      await tripsitMemberAdd(member);
     }
   },
 };
