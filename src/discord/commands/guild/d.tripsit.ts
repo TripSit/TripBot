@@ -1359,7 +1359,7 @@ namespace session {
         const guild = await global.discordClient.guilds.fetch(ticket.guild_id);
         const ticketUserData = await db.users.findFirst({ where: { id: ticket.user_id } });
 
-        await thread.setName(`${text.actionDefinition('ARCHIVED')}${thread.name.slice(thread.name.indexOf('│'), -1)}`);
+        await thread.setName(`${text.actionDefinition('ARCHIVED').emoji}${thread.name.slice(thread.name.indexOf('│'), -1)}`);
 
         // Update the ticket in the database
         const updatedTicket = await db.user_tickets.update({
@@ -1930,12 +1930,12 @@ namespace util {
 
     // const thread = await target.guild.channels.fetch(ticket.thread_id) as ThreadChannel;
 
-    const serverAvgOwnedTime = `${guild.name}'s avg first response: ${(await statistic.avgOwnedTime(guild.id, 'TRIPSIT'))}`;
-    const serverAvgResolvedTime = `${guild.name}'s avg resolution: ${(await statistic.avgResolveTime(guild.id, 'TRIPSIT'))}`;
-    const serverAvgCloseTime = `${guild.name}'s avg closure: ${(await statistic.avgCloseTime(guild.id, 'TRIPSIT'))}`;
-    const serverAvgArchiveTime = `${guild.name}'s avg archive: ${(await statistic.avgArchiveTime(guild.id, 'TRIPSIT'))}`;
-    const serverAvgDeleteTime = `${guild.name}'s avg delete: ${(await statistic.avgDeleteTime(guild.id, 'TRIPSIT'))}`;
-    const serverTicketCount = `${guild.name} total tickets: ${await statistic.totalTickets(guild.id, 'TRIPSIT')}`;
+    const serverAvgOwnedTime = `${guild.name}'s avg first response: ${(await statistic.ticketAvgOwnedTime(guild.id, 'TRIPSIT'))}`;
+    const serverAvgResolvedTime = `${guild.name}'s avg resolution: ${(await statistic.ticketAvgResolveTime(guild.id, 'TRIPSIT'))}`;
+    const serverAvgCloseTime = `${guild.name}'s avg closure: ${(await statistic.ticketAvgCloseTime(guild.id, 'TRIPSIT'))}`;
+    const serverAvgArchiveTime = `${guild.name}'s avg archive: ${(await statistic.ticketAvgArchiveTime(guild.id, 'TRIPSIT'))}`;
+    const serverAvgDeleteTime = `${guild.name}'s avg delete: ${(await statistic.ticketAvgDeleteTime(guild.id, 'TRIPSIT'))}`;
+    const serverTicketCount = `${guild.name} total tickets: ${await statistic.totalTicketsCreated(guild.id, 'TRIPSIT')}`;
 
     let target: GuildMember | null = null;
     try {
@@ -1952,12 +1952,12 @@ namespace util {
     let targetTicketCount = '';
 
     if (target) {
-      targetAvgOwnedTime = `<@${target.id}>'s avg first response: ${(await statistic.avgOwnedTime(guild.id, 'TRIPSIT', targetData.id))}`;
-      targetAvgResolvedTime = `<@${target.id}>'s avg resolution: ${(await statistic.avgResolveTime(guild.id, 'TRIPSIT', targetData.id))}`;
-      targetAvgCloseTime = `<@${target.id}>'s avg closure: ${(await statistic.avgCloseTime(guild.id, 'TRIPSIT', targetData.id))}`;
-      targetAvgArchiveTime = `<@${target.id}>'s avg archive: ${(await statistic.avgArchiveTime(guild.id, 'TRIPSIT', targetData.id))}`;
-      targetAvgDeleteTime = `<@${target.id}>'s avg delete: ${(await statistic.avgDeleteTime(guild.id, 'TRIPSIT', targetData.id))}`;
-      targetTicketCount = `<@${target.id}>'s total tickets opened: ${await statistic.totalTickets(target.guild.id, 'TRIPSIT', targetData.id)}`;
+      targetAvgOwnedTime = `<@${target.id}>'s avg first response: ${(await statistic.ticketAvgOwnedTime(guild.id, 'TRIPSIT', targetData.id))}`;
+      targetAvgResolvedTime = `<@${target.id}>'s avg resolution: ${(await statistic.ticketAvgResolveTime(guild.id, 'TRIPSIT', targetData.id))}`;
+      targetAvgCloseTime = `<@${target.id}>'s avg closure: ${(await statistic.ticketAvgCloseTime(guild.id, 'TRIPSIT', targetData.id))}`;
+      targetAvgArchiveTime = `<@${target.id}>'s avg archive: ${(await statistic.ticketAvgArchiveTime(guild.id, 'TRIPSIT', targetData.id))}`;
+      targetAvgDeleteTime = `<@${target.id}>'s avg delete: ${(await statistic.ticketAvgDeleteTime(guild.id, 'TRIPSIT', targetData.id))}`;
+      targetTicketCount = `<@${target.id}>'s total tickets opened: ${await statistic.totalTicketsCreated(target.guild.id, 'TRIPSIT', targetData.id)}`;
     }
 
     let actorOwnedCount = '';
@@ -1968,11 +1968,11 @@ namespace util {
     let actorMessageCount = '';
 
     if (actor && actorData) {
-      actorAvgOwnedTime = `<@${actor.id}>'s avg first response: ${(await statistic.avgFirstResponse(guild.id, 'TRIPSIT', actorData.id))}`;
-      actorOwnedCount = `<@${actor.id}>'s total first responses: ${await statistic.totalFirstResponse(guild.id, 'TRIPSIT', actorData.id)} time(s).`;
+      actorAvgOwnedTime = `<@${actor.id}>'s avg first response: ${(await statistic.userAvgFirstResponse(guild.id, 'TRIPSIT', actorData.id))}`;
+      actorOwnedCount = `<@${actor.id}>'s total first responses: ${await statistic.userTotalFirstResponse(guild.id, 'TRIPSIT', actorData.id)} time(s).`;
 
-      actorAvgResolvedTime = `<@${actor.id}>'s avg resolution: ${(await statistic.avgResolutionClick(guild.id, 'TRIPSIT', actorData.id))}`;
-      actorResolvedCount = `<@${actor.id}>'s total resolved sessions: ${await statistic.totalResolutionClick(guild.id, 'TRIPSIT', actorData.id)} sessions so far.`;
+      actorAvgResolvedTime = `<@${actor.id}>'s avg resolution: ${(await statistic.userAvgResolutionClick(guild.id, 'TRIPSIT', actorData.id))}`;
+      actorResolvedCount = `<@${actor.id}>'s total resolved sessions: ${await statistic.userTotalResolutionClick(guild.id, 'TRIPSIT', actorData.id)} sessions so far.`;
 
       actorSessionCount = `<@${actor.id}>'s total sessions participated in: ${await statistic.userParticipationSessions(guild.id, 'TRIPSIT', actorData.id)}.`;
       actorMessageCount = `<@${actor.id}>'s total messages in all sessions: ${await statistic.userParticipationMessages(guild.id, 'TRIPSIT', actorData.id)}.`;
@@ -2230,7 +2230,7 @@ namespace util {
           new EmbedBuilder()
             .setColor(actionDef.color)
             .setDescription(stripIndents`
-              ${intro} after ${DateTime.utc().diff(DateTime.fromJSDate(ticket.created_at)).toFormat('hh:mm:ss')}}
+              ${intro} after ${DateTime.utc().diff(DateTime.fromJSDate(ticket.created_at)).toFormat('hh:mm:ss')}
   
               ${stats}
   
@@ -2801,7 +2801,7 @@ namespace util {
 }
 
 namespace statistic {
-  export async function avgOwnedTime(
+  export async function ticketAvgOwnedTime(
     guildId: string,
     ticketType: ticket_type,
     userId?: string,
@@ -2868,7 +2868,7 @@ namespace statistic {
     return Duration.fromObject({ seconds: durationAvg }).toFormat('hh:mm:ss');
   }
 
-  export async function avgResolveTime(
+  export async function ticketAvgResolveTime(
     guildId: string,
     ticketType: ticket_type,
     userId?: string,
@@ -2930,7 +2930,7 @@ namespace statistic {
     return Duration.fromObject({ seconds: durationAvg }).toFormat('hh:mm:ss');
   }
 
-  export async function avgCloseTime(
+  export async function ticketAvgCloseTime(
     guildId: string,
     ticketType: ticket_type,
     userId?: string,
@@ -2992,7 +2992,7 @@ namespace statistic {
     return Duration.fromObject({ seconds: durationAvg }).toFormat('hh:mm:ss');
   }
 
-  export async function avgArchiveTime(
+  export async function ticketAvgArchiveTime(
     guildId: string,
     ticketType: ticket_type,
     userId?: string,
@@ -3054,7 +3054,7 @@ namespace statistic {
     return Duration.fromObject({ seconds: durationAvg }).toFormat('hh:mm:ss');
   }
 
-  export async function avgDeleteTime(
+  export async function ticketAvgDeleteTime(
     guildId: string,
     ticketType: ticket_type,
     userId?: string,
@@ -3113,7 +3113,7 @@ namespace statistic {
     return Duration.fromObject({ seconds: durationAvg }).toFormat('hh:mm:ss');
   }
 
-  export async function avgFirstResponse(
+  export async function userAvgFirstResponse(
     guildId: string,
     ticketType: ticket_type,
     userId: string,
@@ -3174,7 +3174,7 @@ namespace statistic {
     return Duration.fromObject({ seconds: durationAvg }).toFormat('hh:mm:ss');
   }
 
-  export async function totalFirstResponse(
+  export async function userTotalFirstResponse(
     guildId: string,
     ticketType: ticket_type,
     userId: string,
@@ -3188,7 +3188,7 @@ namespace statistic {
     });
   }
 
-  export async function avgResolutionClick(
+  export async function userAvgResolutionClick(
     guildId: string,
     ticketType: ticket_type,
     userId: string,
@@ -3242,7 +3242,7 @@ namespace statistic {
     return Duration.fromObject({ seconds: durationAvg }).toFormat('hh:mm:ss');
   }
 
-  export async function totalResolutionClick(
+  export async function userTotalResolutionClick(
     guildId: string,
     ticketType: ticket_type,
     userId?: string,
@@ -3261,7 +3261,7 @@ namespace statistic {
     return db.user_tickets.count({ where });
   }
 
-  export async function totalTickets(
+  export async function totalTicketsCreated(
     guildId: string,
     ticketType?: ticket_type,
     userId?: string,
@@ -4183,7 +4183,7 @@ namespace page {
 
     let description = `### ${interaction.guild.name}'s TripSit Sessions Statistics\n\n`;
     let selectedUserId;
-    if (interaction.isUserSelectMenu()) {
+    if (interaction.isUserSelectMenu() && interaction.values[0]) {
       const userData = await db.users.upsert({
         where: { discord_id: interaction.values[0] },
         create: { discord_id: interaction.values[0] },
@@ -4199,20 +4199,72 @@ namespace page {
       **Client Satisfaction**
       ${await statistic.avgCsatScore(interaction.guild.id, 'TRIPSIT', selectedUserId)} out of 5 across ${await statistic.avgCsatScore(interaction.guild.id, 'TRIPSIT', selectedUserId)} survey responses.
 
-      **Times**
-      ${(await statistic.avgOwnedTime(interaction.guild.id, 'TRIPSIT', selectedUserId))} average first response time.
-      ${(await statistic.avgArchiveTime(interaction.guild.id, 'TRIPSIT', selectedUserId))} average time to archive.
-      ${(await statistic.avgDeleteTime(interaction.guild.id, 'TRIPSIT', selectedUserId))} average time to delete.
-
-      **Session Counts**
-      ${await statistic.totalTickets(interaction.guild.id, 'TRIPSIT', selectedUserId, 'OPEN')} don't have a first response.
-      ${await statistic.totalTickets(interaction.guild.id, 'TRIPSIT', selectedUserId, 'OWNED')} engaged with a team member.
-      ${await statistic.totalTickets(interaction.guild.id, 'TRIPSIT', selectedUserId, 'RESOLVED')} soft-closed by the team.
-      ${await statistic.totalTickets(interaction.guild.id, 'TRIPSIT', selectedUserId, 'CLOSED')} hard-closed by the user.
-      ${await statistic.totalTickets(interaction.guild.id, 'TRIPSIT', selectedUserId, 'ARCHIVED')} archived.
-      ${await statistic.totalTickets(interaction.guild.id, 'TRIPSIT', selectedUserId, 'DELETED')} deleted.
-      ${await statistic.totalTickets(interaction.guild.id, 'TRIPSIT', selectedUserId)} total.
+      **Session Stats**
+      ${await statistic.totalTicketsCreated(interaction.guild.id, 'TRIPSIT', selectedUserId, 'OPEN')} don't have a first response.
+      ${await statistic.totalTicketsCreated(interaction.guild.id, 'TRIPSIT', selectedUserId, 'OWNED')} engaged with a team member.
+      ${await statistic.totalTicketsCreated(interaction.guild.id, 'TRIPSIT', selectedUserId, 'RESOLVED')} soft-closed by the team.
+      ${await statistic.totalTicketsCreated(interaction.guild.id, 'TRIPSIT', selectedUserId, 'CLOSED')} hard-closed by the user.
+      ${await statistic.totalTicketsCreated(interaction.guild.id, 'TRIPSIT', selectedUserId, 'ARCHIVED')} archived.
+      ${await statistic.totalTicketsCreated(interaction.guild.id, 'TRIPSIT', selectedUserId, 'DELETED')} deleted.
     `;
+
+    if (selectedUserId) {
+      description = stripIndents`
+        **Their session stats**
+        ${await statistic.totalTicketsCreated(interaction.guild.id, 'TRIPSIT', selectedUserId, 'OPEN')} don't have a first response.
+        ${await statistic.totalTicketsCreated(interaction.guild.id, 'TRIPSIT', selectedUserId, 'OWNED')} engaged with a team member.
+        ${await statistic.totalTicketsCreated(interaction.guild.id, 'TRIPSIT', selectedUserId, 'RESOLVED')} soft-closed by the team.
+        ${await statistic.totalTicketsCreated(interaction.guild.id, 'TRIPSIT', selectedUserId, 'CLOSED')} hard-closed by the user.
+        ${await statistic.totalTicketsCreated(interaction.guild.id, 'TRIPSIT', selectedUserId, 'ARCHIVED')} archived.
+        ${await statistic.totalTicketsCreated(interaction.guild.id, 'TRIPSIT', selectedUserId, 'DELETED')} deleted.
+        ${await statistic.totalTicketsCreated(interaction.guild.id, 'TRIPSIT', selectedUserId)} total.
+        ${(await statistic.ticketAvgOwnedTime(interaction.guild.id, 'TRIPSIT', selectedUserId))} average first response time.
+        ${(await statistic.ticketAvgResolveTime(interaction.guild.id, 'TRIPSIT', selectedUserId))} average time to resolution.
+        ${(await statistic.ticketAvgCloseTime(interaction.guild.id, 'TRIPSIT', selectedUserId))} average time to close.
+        ${(await statistic.ticketAvgArchiveTime(interaction.guild.id, 'TRIPSIT', selectedUserId))} average time to archive.
+        ${(await statistic.ticketAvgDeleteTime(interaction.guild.id, 'TRIPSIT', selectedUserId))} average time to delete.
+
+        **Their survey submissions**
+        ${await statistic.avgCsatScore(interaction.guild.id, 'TRIPSIT', selectedUserId)} out of 5 across ${await statistic.avgCsatScore(interaction.guild.id, 'TRIPSIT', selectedUserId)} survey responses.
+      `;
+
+      const userData = await db.users.findFirstOrThrow({ where: { id: selectedUserId } });
+      // Try to find the user in the guild, and check if they have one of the sessionData.tripsitterRoles roles
+      const member = await interaction.guild.members.fetch(userData.discord_id as string);
+      if (member) {
+        const hasTripsitterRole = member.roles.cache.some(role => sessionData.tripsitterRoles?.includes(role.id));
+        if (hasTripsitterRole) {
+          description = stripIndents`
+            Selected user has a tripsitting role:
+
+            **Tickets they've responded to:**
+            ${await statistic.userAvgFirstResponse(interaction.guild.id, 'TRIPSIT', selectedUserId)} average first response time.
+            ${await statistic.userTotalFirstResponse(interaction.guild.id, 'TRIPSIT', selectedUserId)} total first responses.
+            ${await statistic.userAvgResolutionClick(interaction.guild.id, 'TRIPSIT', selectedUserId)} average time to resolution.
+            ${await statistic.userTotalResolutionClick(interaction.guild.id, 'TRIPSIT', selectedUserId)} total resolutions.
+            ${await statistic.userParticipationSessions(interaction.guild.id, 'TRIPSIT', selectedUserId)} total sessions participated in.
+            ${await statistic.userParticipationMessages(interaction.guild.id, 'TRIPSIT', selectedUserId)} total messages sent in all sessions
+
+            **Tickets they've created:**
+            ${await statistic.totalTicketsCreated(interaction.guild.id, 'TRIPSIT', selectedUserId, 'OPEN')} don't have a first response.
+            ${await statistic.totalTicketsCreated(interaction.guild.id, 'TRIPSIT', selectedUserId, 'OWNED')} engaged with a team member.
+            ${await statistic.totalTicketsCreated(interaction.guild.id, 'TRIPSIT', selectedUserId, 'RESOLVED')} soft-closed by the team.
+            ${await statistic.totalTicketsCreated(interaction.guild.id, 'TRIPSIT', selectedUserId, 'CLOSED')} hard-closed by the user.
+            ${await statistic.totalTicketsCreated(interaction.guild.id, 'TRIPSIT', selectedUserId, 'ARCHIVED')} archived.
+            ${await statistic.totalTicketsCreated(interaction.guild.id, 'TRIPSIT', selectedUserId, 'DELETED')} deleted.
+            ${await statistic.totalTicketsCreated(interaction.guild.id, 'TRIPSIT', selectedUserId)} total.
+            ${(await statistic.ticketAvgOwnedTime(interaction.guild.id, 'TRIPSIT', selectedUserId))} average first response time.
+            ${(await statistic.ticketAvgResolveTime(interaction.guild.id, 'TRIPSIT', selectedUserId))} average time to resolution.
+            ${(await statistic.ticketAvgCloseTime(interaction.guild.id, 'TRIPSIT', selectedUserId))} average time to close.
+            ${(await statistic.ticketAvgArchiveTime(interaction.guild.id, 'TRIPSIT', selectedUserId))} average time to archive.
+            ${(await statistic.ticketAvgDeleteTime(interaction.guild.id, 'TRIPSIT', selectedUserId))} average time to delete.
+    
+            **Their survey submissions**
+            ${await statistic.avgCsatScore(interaction.guild.id, 'TRIPSIT', selectedUserId)} out of 5 across ${await statistic.avgCsatScore(interaction.guild.id, 'TRIPSIT', selectedUserId)} survey responses.
+          `;
+        }
+      }
+    }
 
     if (sessionData.tripsitterRoles) {
       const member = interaction.guild.members.cache.get(interaction.user.id);
