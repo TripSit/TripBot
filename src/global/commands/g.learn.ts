@@ -219,12 +219,12 @@ export async function profile(
 
     // Get an array of courses the user has completed
     completedCourses = moodleEnrollments
-      .filter(enrollments => enrollments.enrol.course.completions[0].timecompleted !== null)
-      .map(enrollments => enrollments.enrol.course.fullname);
+      .filter(enrollment => enrollment.enrol.course.completions.length > 0 && enrollment.enrol.course.completions[0].timecompleted !== null)
+      .map(enrollment => enrollment.enrol.course.fullname);
 
     incompleteCourses = moodleEnrollments
-      .filter(enrollments => enrollments.enrol.course.completions[0].timecompleted === null)
-      .map(enrollments => enrollments.enrol.course.fullname);
+      .filter(enrollment => enrollment.enrol.course.completions.length === 0 || enrollment.enrol.course.completions[0].timecompleted === null)
+      .map(enrollment => enrollment.enrol.course.fullname);
   }
 
   moodleProfile = {
