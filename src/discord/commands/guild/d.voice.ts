@@ -33,7 +33,6 @@ import {
 } from 'discord.js';
 import { REST } from '@discordjs/rest';
 import { Routes } from 'discord-api-types/v9';
-import Bottleneck from 'bottleneck';
 import { stripIndents } from 'common-tags';
 import { DateTime, Duration } from 'luxon';
 import { SlashCommand } from '../../@types/commandDef';
@@ -41,12 +40,6 @@ import { embedTemplate } from '../../utils/embedTemplate';
 import commandContext from '../../utils/context';
 
 const F = f(__filename);
-const limiter = new Bottleneck({
-  minTime: 1000, // Minimum time between requests
-  reservoir: 5, // Initial number of available requests
-  reservoirRefreshAmount: 5, // Number of requests added each interval
-  reservoirRefreshInterval: 5000, // Interval between adding new requests
-});
 
 /* TODO
 * Make sure you can't whitelist AND blacklist someone
@@ -94,25 +87,20 @@ namespace util {
     return command ? command.id : null;
   }
 
-  // TODO: Edit this function down so that it calls upon the split functions such as updateJoinLevel and updateTentMode
   export async function updateTentPermissions(voiceChannel: VoiceBasedChannel): Promise<void> {
     log.debug(F, `Updating permissions for ${voiceChannel.name}`);
     // Get the tent data
-    const tentData = await db.tent_settings.findFirst({
+    const tentData = await db.tent_settings.findFirstOrThrow({
       where: {
         channel_id: voiceChannel.id,
+      },
+      include: {
+        creatingUser: true, // Include the 'creatingUser' relation
       },
     });
 
     if (!tentData) {
       return;
-    }
-
-    // Update everyone roles based on the tent mode
-    if (tentData.mode === 'PRIVATE') {
-      await voiceChannel.permissionOverwrites.edit(voiceChannel.guild.roles.everyone, { ViewChannel: false, Connect: false });
-    } else {
-      await voiceChannel.permissionOverwrites.edit(voiceChannel.guild.roles.everyone, { ViewChannel: true, Connect: true });
     }
 
     // Get the blacklist
@@ -129,14 +117,16 @@ namespace util {
       },
     });
 
-    if (tentBanList.length > 0) {
-      await Promise.all(tentBanList.map(async ban => {
-        if (ban.user.discord_id) {
+    // Compare the current permissions with the blacklist as to only edit if necessary
+    await Promise.all(tentBanList.map(async ban => {
+      if (ban.user.discord_id) {
+        const overwrite = voiceChannel.permissionOverwrites.cache.get(ban.user.discord_id);
+        if (!overwrite || (overwrite.allow.serialize().ViewChannel !== false || overwrite.allow.serialize().Connect !== false)) {
           await voiceChannel.permissionOverwrites.edit(ban.user.discord_id, { ViewChannel: false, Connect: false });
-          log.debug(F, `Banned user ${ban.user.discord_id} from ${voiceChannel.name}`);
+          log.debug(F, `Banned user ${ban.user.discord_id} in ${voiceChannel.name}`);
         }
-      }));
-    }
+      }
+    }));
 
     // Get the whitelist
     const tentWhiteList = await db.tent_whitelist.findMany({
@@ -152,59 +142,25 @@ namespace util {
       },
     });
 
+    // Compare the current permissions with the whitelist as to only edit if necessary
     await Promise.all(tentWhiteList.map(async whitelist => {
       if (whitelist.user.discord_id) {
-        await voiceChannel.permissionOverwrites.edit(whitelist.user.discord_id, { ViewChannel: true, Connect: true });
-        log.debug(F, `Whitelisted user ${whitelist.user.discord_id} for ${voiceChannel.name}`);
+        const overwrite = voiceChannel.permissionOverwrites.cache.get(whitelist.user.discord_id);
+        if (!overwrite || (overwrite.allow.serialize().ViewChannel !== true || overwrite.allow.serialize().Connect !== true)) {
+          await voiceChannel.permissionOverwrites.edit(whitelist.user.discord_id, { ViewChannel: true, Connect: true });
+          log.debug(F, `Whitelisted user ${whitelist.user.discord_id} in ${voiceChannel.name}`);
+        }
       }
     }));
 
-    // Clear user overwrites that are not in the whitelist or blacklist
+    // Clear user overwrites that are not in the whitelist or blacklist, ignoring the owner
     await Promise.all(voiceChannel.permissionOverwrites.cache.map(async overwrite => {
-      if (overwrite.type === 1) {
-        if (!tentWhiteList.find(whitelist => whitelist.user.discord_id === overwrite.id)
-          && !tentBanList.find(ban => ban.user.discord_id === overwrite.id)) {
+      if (overwrite.type === 1 && overwrite.id !== tentData.creatingUser.discord_id) {
+        const isWhitelisted = tentWhiteList.some(whitelist => whitelist.user.discord_id === overwrite.id);
+        const isBanned = tentBanList.some(ban => ban.user.discord_id === overwrite.id);
+        if (!isWhitelisted && !isBanned) {
           await voiceChannel.permissionOverwrites.delete(overwrite.id);
-          log.debug(F, `Cleared permission overwrite for ${overwrite.id}`);
-        }
-      }
-    }));
-
-    const tentJoinLevel = tentData.join_level;
-
-    const vipRoles = {
-      0: env.ROLE_VIP_0,
-      10: env.ROLE_VIP_10,
-      20: env.ROLE_VIP_20,
-      30: env.ROLE_VIP_30,
-      40: env.ROLE_VIP_40,
-      50: env.ROLE_VIP_50,
-      60: env.ROLE_VIP_60,
-      70: env.ROLE_VIP_70,
-      80: env.ROLE_VIP_80,
-      90: env.ROLE_VIP_90,
-      100: env.ROLE_VIP_100,
-    };
-
-    await Promise.all(Object.entries(vipRoles).map(async ([roleNumber, roleId]) => {
-      // Convert roleNumber from string to number
-      const number = parseInt(roleNumber, 10);
-      log.debug(F, `Role number: ${number}`);
-
-      // If the tent is set to private, deny all roles
-      if (tentData.mode === 'PRIVATE') {
-        await voiceChannel.permissionOverwrites.edit(roleId, { ViewChannel: false, Connect: false });
-        log.debug(F, `Set permissions for role ${roleId} in ${voiceChannel.name}`);
-      } else {
-      // Check if the tentData.join_level is equal or more than the number in the role name
-        if (tentData.join_level <= number) {
-          await voiceChannel.permissionOverwrites.edit(roleId, { ViewChannel: true, Connect: true });
-          log.debug(F, `Set permissions for role ${roleId} in ${voiceChannel.name}`);
-        }
-        // Check if the tentData.join_level is less than the number in the role name
-        if (tentData.join_level > number) {
-          await voiceChannel.permissionOverwrites.edit(roleId, { ViewChannel: false, Connect: false });
-          log.debug(F, `Set permissions for role ${roleId} in ${voiceChannel.name}`);
+          log.debug(F, `Cleared user ${overwrite.id} in ${voiceChannel.name}`);
         }
       }
     }));
@@ -1029,7 +985,7 @@ namespace cmd {
 
     // log.debug(F, `Channel is now ${verb}`);
     return embedTemplate()
-      .setTitle(`Mode set to **${mode}**`)
+      .setTitle(`Visibility set to **${mode}**`)
       .setColor(Colors.Green)
       .setDescription(`${explanation}`);
   }
@@ -1076,8 +1032,6 @@ namespace cmd {
 
     let verb = '';
     if (tentBanData) {
-      // If the target user is already banned, remove them from the ban list
-      await voiceChannel.permissionOverwrites.delete(target);
       verb = 'removed from your ban list';
 
       await db.tent_blacklist.delete({
@@ -1089,8 +1043,6 @@ namespace cmd {
         },
       });
     } else {
-      // If not, add the target user to the ban list
-      await voiceChannel.permissionOverwrites.edit(target, { ViewChannel: false, Connect: false });
       if (target.voice.channel === voiceChannel) {
         target.voice.setChannel(null);
       }
@@ -1116,7 +1068,8 @@ namespace cmd {
       }
     }
 
-    // log.debug(F, `${target.displayName} is now ${verb}`);
+    // Run the updateTentPermissions function
+    await util.updateTentPermissions(voiceChannel);
 
     return embedTemplate()
       .setTitle('Success')
@@ -1167,8 +1120,6 @@ namespace cmd {
 
     let verb = '';
     if (tentWhiteData) {
-      // If the target user is already whitelisted, remove them from the whitelist
-      await voiceChannel.permissionOverwrites.delete(target);
       verb = 'removed from your whitelist';
 
       await db.tent_whitelist.delete({
@@ -1180,8 +1131,6 @@ namespace cmd {
         },
       });
     } else {
-      // If not, add the target user to the whitelist
-      await voiceChannel.permissionOverwrites.edit(target, { ViewChannel: true, Connect: true });
       verb = 'added to your whitelist';
 
       await db.tent_whitelist.create({
@@ -1203,6 +1152,9 @@ namespace cmd {
         });
       }
     }
+
+    // Run the updateTentPermissions function
+    await util.updateTentPermissions(voiceChannel);
 
     // Return an embed with the result
     return embedTemplate()
