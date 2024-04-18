@@ -205,32 +205,22 @@ namespace util {
         desiredPermissions = { ViewChannel: true, Connect: true };
       }
 
-      // Get the current permissions
-      let viewChannelPermission: boolean | null;
-      if (allowedPermissions.ViewChannel === true) {
-        viewChannelPermission = true;
-      } else if (deniedPermissions.ViewChannel === true) {
-        viewChannelPermission = false;
-      } else {
-        viewChannelPermission = null;
-      }
+      // Define the type for permissions
+      type Permissions = {
+        [key: string]: boolean | undefined;
+      };
 
-      let connectPermission: boolean | null;
-      if (allowedPermissions.Connect === true) {
-        connectPermission = true;
-      } else if (deniedPermissions.Connect === true) {
-        connectPermission = false;
-      } else {
-        connectPermission = null;
-      }
+      // Get the current permissions
+      const overwrite = voiceChannel.permissionOverwrites.cache.get(roleId);
+      const allowedPermissions: Permissions = overwrite ? overwrite.allow.serialize() : {};
+      const deniedPermissions: Permissions = overwrite ? overwrite.deny.serialize() : {};
+
+      const viewChannelPermission = allowedPermissions.ViewChannel === true ? true : (deniedPermissions.ViewChannel === true ? false : null); // eslint-disable-line
+      const connectPermission = allowedPermissions.Connect === true ? true : (deniedPermissions.Connect === true ? false : null); // eslint-disable-line
 
       // If the current permissions are different from the desired permissions, edit the permissions
       log.debug(F, `ViewChannel: ${viewChannelPermission}, Connect: ${connectPermission}`);
-      if (
-        desiredPermissions
-        && (viewChannelPermission !== desiredPermissions.ViewChannel
-          || connectPermission !== desiredPermissions.Connect)
-      ) {
+      if (desiredPermissions && (viewChannelPermission !== desiredPermissions.ViewChannel || connectPermission !== desiredPermissions.Connect)) {
         await voiceChannel.permissionOverwrites.edit(roleId, desiredPermissions);
         log.debug(F, `Set permissions for role ${roleId} in ${voiceChannel.name}`);
       }
