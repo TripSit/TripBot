@@ -167,7 +167,7 @@ namespace util {
   }
 
   export async function updateJoinLevel(
-    interaction: ChatInputCommandInteraction | StringSelectMenuInteraction,
+    interaction: ChatInputCommandInteraction | StringSelectMenuInteraction | ButtonInteraction,
   ): Promise<EmbedBuilder> {
     const voiceChannel = (interaction.member as GuildMember).voice.channel as VoiceBasedChannel;
     const tentData = await db.tent_settings.findFirstOrThrow({
@@ -199,10 +199,10 @@ namespace util {
 
       // Determine the desired permissions
       let desiredPermissions: { ViewChannel: boolean | null, Connect: boolean | null } | undefined;
-      if (newLevel > number) {
+      if (newLevel > number || tentData.mode === 'PRIVATE') {
         desiredPermissions = { ViewChannel: false, Connect: false };
-      } else if (newLevel <= number) {
-        desiredPermissions = { ViewChannel: null, Connect: null };
+      } else if (newLevel <= number && tentData.mode === 'PUBLIC') {
+        desiredPermissions = { ViewChannel: true, Connect: true };
       }
 
       // Define the type for permissions
@@ -251,6 +251,9 @@ namespace util {
     } else {
       await voiceChannel.permissionOverwrites.edit(voiceChannel.guild.roles.everyone, { ViewChannel: true, Connect: true });
     }
+
+    // Run the updateJoinLevel function to update the join level permissions
+    util.updateJoinLevel(interaction);
 
     return new EmbedBuilder()
       .setTitle('Tent Mode Updated')
@@ -362,12 +365,20 @@ namespace util {
           ...(tentData.join_level > 0 ? [PermissionsBitField.Flags.ViewChannel] : []),
           ...(tentData.join_level > 0 ? [PermissionsBitField.Flags.Connect] : []),
         ],
+        allow: [
+          ...(tentData.join_level <= 0 ? [PermissionsBitField.Flags.ViewChannel] : []),
+          ...(tentData.join_level <= 0 ? [PermissionsBitField.Flags.Connect] : []),
+        ],
       },
       {
         id: env.ROLE_VIP_10 as string,
         deny: [
           ...(tentData.join_level > 10 ? [PermissionsBitField.Flags.ViewChannel] : []),
           ...(tentData.join_level > 10 ? [PermissionsBitField.Flags.Connect] : []),
+        ],
+        allow: [
+          ...(tentData.join_level <= 10 ? [PermissionsBitField.Flags.ViewChannel] : []),
+          ...(tentData.join_level <= 10 ? [PermissionsBitField.Flags.Connect] : []),
         ],
       },
       {
@@ -376,12 +387,20 @@ namespace util {
           ...(tentData.join_level > 20 ? [PermissionsBitField.Flags.ViewChannel] : []),
           ...(tentData.join_level > 20 ? [PermissionsBitField.Flags.Connect] : []),
         ],
+        allow: [
+          ...(tentData.join_level <= 20 ? [PermissionsBitField.Flags.ViewChannel] : []),
+          ...(tentData.join_level <= 20 ? [PermissionsBitField.Flags.Connect] : []),
+        ],
       },
       {
         id: env.ROLE_VIP_30 as string,
         deny: [
           ...(tentData.join_level > 30 ? [PermissionsBitField.Flags.ViewChannel] : []),
           ...(tentData.join_level > 30 ? [PermissionsBitField.Flags.Connect] : []),
+        ],
+        allow: [
+          ...(tentData.join_level <= 30 ? [PermissionsBitField.Flags.ViewChannel] : []),
+          ...(tentData.join_level <= 30 ? [PermissionsBitField.Flags.Connect] : []),
         ],
       },
       {
@@ -390,12 +409,20 @@ namespace util {
           ...(tentData.join_level > 40 ? [PermissionsBitField.Flags.ViewChannel] : []),
           ...(tentData.join_level > 40 ? [PermissionsBitField.Flags.Connect] : []),
         ],
+        allow: [
+          ...(tentData.join_level <= 40 ? [PermissionsBitField.Flags.ViewChannel] : []),
+          ...(tentData.join_level <= 40 ? [PermissionsBitField.Flags.Connect] : []),
+        ],
       },
       {
         id: env.ROLE_VIP_50 as string,
         deny: [
           ...(tentData.join_level > 50 ? [PermissionsBitField.Flags.ViewChannel] : []),
           ...(tentData.join_level > 50 ? [PermissionsBitField.Flags.Connect] : []),
+        ],
+        allow: [
+          ...(tentData.join_level <= 50 ? [PermissionsBitField.Flags.ViewChannel] : []),
+          ...(tentData.join_level <= 50 ? [PermissionsBitField.Flags.Connect] : []),
         ],
       },
       {
@@ -404,12 +431,20 @@ namespace util {
           ...(tentData.join_level > 60 ? [PermissionsBitField.Flags.ViewChannel] : []),
           ...(tentData.join_level > 60 ? [PermissionsBitField.Flags.Connect] : []),
         ],
+        allow: [
+          ...(tentData.join_level <= 60 ? [PermissionsBitField.Flags.ViewChannel] : []),
+          ...(tentData.join_level <= 60 ? [PermissionsBitField.Flags.Connect] : []),
+        ],
       },
       {
         id: env.ROLE_VIP_70 as string,
         deny: [
           ...(tentData.join_level > 70 ? [PermissionsBitField.Flags.ViewChannel] : []),
           ...(tentData.join_level > 70 ? [PermissionsBitField.Flags.Connect] : []),
+        ],
+        allow: [
+          ...(tentData.join_level <= 70 ? [PermissionsBitField.Flags.ViewChannel] : []),
+          ...(tentData.join_level <= 70 ? [PermissionsBitField.Flags.Connect] : []),
         ],
       },
       {
@@ -418,6 +453,10 @@ namespace util {
           ...(tentData.join_level > 80 ? [PermissionsBitField.Flags.ViewChannel] : []),
           ...(tentData.join_level > 80 ? [PermissionsBitField.Flags.Connect] : []),
         ],
+        allow: [
+          ...(tentData.join_level <= 80 ? [PermissionsBitField.Flags.ViewChannel] : []),
+          ...(tentData.join_level <= 80 ? [PermissionsBitField.Flags.Connect] : []),
+        ],
       },
       {
         id: env.ROLE_VIP_90 as string,
@@ -425,12 +464,20 @@ namespace util {
           ...(tentData.join_level > 90 ? [PermissionsBitField.Flags.ViewChannel] : []),
           ...(tentData.join_level > 90 ? [PermissionsBitField.Flags.Connect] : []),
         ],
+        allow: [
+          ...(tentData.join_level <= 90 ? [PermissionsBitField.Flags.ViewChannel] : []),
+          ...(tentData.join_level <= 90 ? [PermissionsBitField.Flags.Connect] : []),
+        ],
       },
       {
         id: env.ROLE_VIP_100 as string,
         deny: [
           ...(tentData.join_level > 100 ? [PermissionsBitField.Flags.ViewChannel] : []),
           ...(tentData.join_level > 100 ? [PermissionsBitField.Flags.Connect] : []),
+        ],
+        allow: [
+          ...(tentData.join_level <= 100 ? [PermissionsBitField.Flags.ViewChannel] : []),
+          ...(tentData.join_level <= 100 ? [PermissionsBitField.Flags.Connect] : []),
         ],
       },
     ];
@@ -823,9 +870,9 @@ namespace page {
             name: `⭐ Join Level: ${tentData.join_level === 0 ? 'Any' : `${tentData.join_level}`} ${tentData.mode === 'PRIVATE' ? '(Irrelevant while private)' : ''}`,
             value: '*Minimum level required to join your tent*',
           })
-          .addFields({ name: '👔 Host List', value: `${hostListStr}\n*Can change your tent settings on your behalf*` })
-          .addFields({ name: '⚪ White List', value: `${whiteListStr}\n*Can always join, even if the tent is private*` })
-          .addFields({ name: '⚫ Ban List', value: `${banListStr}\n*Cannot join, nor see your tent in their channel list*` }),
+          .addFields({ name: `👔 Host List: ${tentHostList.length === 0 ? 'None' : `${tentHostList.length} Users`}`, value: `${hostListStr}\n*Can change your tent settings on your behalf*` })
+          .addFields({ name: `⚪ White List: ${tentWhiteList.length === 0 ? 'None' : `${tentWhiteList.length} Users`}`, value: `${whiteListStr}\n*Can always join, even if the tent is private*` })
+          .addFields({ name: `⚫ Ban List: ${tentBanList.length === 0 ? 'None' : `${tentBanList.length} Users`}`, value: `${banListStr}\n*Cannot join, nor see your tent in their channel list*` }),
       ],
       components: await util.voiceMenu(interaction),
     };
