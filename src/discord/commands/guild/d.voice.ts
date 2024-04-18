@@ -205,22 +205,32 @@ namespace util {
         desiredPermissions = { ViewChannel: true, Connect: true };
       }
 
-      // Define the type for permissions
-      type Permissions = {
-        [key: string]: boolean | undefined;
-      };
-
       // Get the current permissions
-      const overwrite = voiceChannel.permissionOverwrites.cache.get(roleId);
-      const allowedPermissions: Permissions = overwrite ? overwrite.allow.serialize() : {};
-      const deniedPermissions: Permissions = overwrite ? overwrite.deny.serialize() : {};
+      let viewChannelPermission: boolean | null;
+      if (allowedPermissions.ViewChannel === true) {
+        viewChannelPermission = true;
+      } else if (deniedPermissions.ViewChannel === true) {
+        viewChannelPermission = false;
+      } else {
+        viewChannelPermission = null;
+      }
 
-      const viewChannelPermission = allowedPermissions.ViewChannel === true ? true : (deniedPermissions.ViewChannel === true ? false : null);
-      const connectPermission = allowedPermissions.Connect === true ? true : (deniedPermissions.Connect === true ? false : null);
+      let connectPermission: boolean | null;
+      if (allowedPermissions.Connect === true) {
+        connectPermission = true;
+      } else if (deniedPermissions.Connect === true) {
+        connectPermission = false;
+      } else {
+        connectPermission = null;
+      }
 
       // If the current permissions are different from the desired permissions, edit the permissions
       log.debug(F, `ViewChannel: ${viewChannelPermission}, Connect: ${connectPermission}`);
-      if (desiredPermissions && (viewChannelPermission !== desiredPermissions.ViewChannel || connectPermission !== desiredPermissions.Connect)) {
+      if (
+        desiredPermissions
+        && (viewChannelPermission !== desiredPermissions.ViewChannel
+          || connectPermission !== desiredPermissions.Connect)
+      ) {
         await voiceChannel.permissionOverwrites.edit(roleId, desiredPermissions);
         log.debug(F, `Set permissions for role ${roleId} in ${voiceChannel.name}`);
       }
@@ -749,22 +759,12 @@ namespace page {
       update: {},
     });
 
-    let description = '';
-
     const tentData = await db.tent_settings.findFirstOrThrow({
       where: {
         created_by: userData.id,
       },
     });
     // log.debug(F, `TentData: ${JSON.stringify(tentData, null, 2)}`);
-
-    const channelStr = tentData.channel_id
-      ? `**Name:** ${tentData.name}`
-      : `No tent created, join <#${env.CHANNEL_CAMPFIRE}> to make one!`;
-
-    description += `${channelStr}`;
-
-    description += `\n**Visibility:** ${tentData.mode.charAt(0).toUpperCase() + tentData.mode.slice(1).toLowerCase()}`;
 
     const tentHostList = await db.tent_hostlist.findMany({
       where: {
@@ -794,15 +794,9 @@ namespace page {
     if (tentData.mode === 'PRIVATE') {
       pingTime = 'Unavailable while private';
     }
-    description += `\n${pingTime}\n`;
 
     // log.debug(F, `tentHostList: ${JSON.stringify(tentHostList, null, 2)}`);
     const hostListStr = tentHostList.map(host => `<@${host.user.discord_id}>`).join(', ');
-    if (tentHostList.length > 0) {
-      description += `\n**Host List:** ${hostListStr}`;
-    } else {
-      description += '\n**Host List:** None';
-    }
 
     const tentWhiteList = await db.tent_whitelist.findMany({
       where: {
@@ -820,11 +814,6 @@ namespace page {
 
     // Show embed with ban list
     const whiteListStr = tentWhiteList.map(whitelist => `<@${whitelist.user.discord_id}>`).join(', ');
-    if (tentWhiteList.length > 0) {
-      description += `\n**White List:** ${whiteListStr}`;
-    } else {
-      description += '\n**White List:** None';
-    }
 
     const tentBanList = await db.tent_blacklist.findMany({
       where: {
@@ -840,11 +829,6 @@ namespace page {
     });
     // log.debug(F, `TentBanList: ${JSON.stringify(tentBanList, null, 2)}`);
     const banListStr = tentBanList.map(ban => `<@${ban.user.discord_id}>`).join(', ');
-    if (tentBanList.length > 0) {
-      description += `\n**Ban List:** ${banListStr}`;
-    } else {
-      description += '\n**Ban List:** None';
-    }
     // log.debug(F, `Description: ${description}`);
     const isAfterUserCoolDown = await validate.pingAfterUserCoolDown(member.id);
     // log.debug(F, `isAfterUserCoolDown: ${isAfterUserCoolDown}`);
@@ -867,12 +851,12 @@ namespace page {
             value: '*Notifies those opted-in to consider joining*',
           })
           .addFields({
-            name: `⭐ Join Level: ${tentData.join_level === 0 ? 'Any' : `${tentData.join_level}`} ${tentData.mode === 'PRIVATE' ? '(Irrelevant while private)' : ''}`,
+            name: `⭐ Join Level: ${tentData.join_level === 0 ? 'Any' : `${tentData.join_level}`} ${tentData.mode === 'PRIVATE' ? '(Irrelevant while private)' : ''}`, // eslint-disable-line
             value: '*Minimum level required to join your tent*',
           })
-          .addFields({ name: `👔 Host List: ${tentHostList.length === 0 ? 'None' : `${tentHostList.length} Users`}`, value: `${hostListStr}\n*Can change your tent settings on your behalf*` })
-          .addFields({ name: `⚪ White List: ${tentWhiteList.length === 0 ? 'None' : `${tentWhiteList.length} Users`}`, value: `${whiteListStr}\n*Can always join, even if the tent is private*` })
-          .addFields({ name: `⚫ Ban List: ${tentBanList.length === 0 ? 'None' : `${tentBanList.length} Users`}`, value: `${banListStr}\n*Cannot join, nor see your tent in their channel list*` }),
+          .addFields({ name: `👔 Host List: ${tentHostList.length === 0 ? 'None' : `${tentHostList.length} Users`}`, value: `${hostListStr}\n*Can change your tent settings on your behalf*` }) // eslint-disable-line
+          .addFields({ name: `⚪ White List: ${tentWhiteList.length === 0 ? 'None' : `${tentWhiteList.length} Users`}`, value: `${whiteListStr}\n*Can always join, even if the tent is private*` }) // eslint-disable-line
+          .addFields({ name: `⚫ Ban List: ${tentBanList.length === 0 ? 'None' : `${tentBanList.length} Users`}`, value: `${banListStr}\n*Cannot join, nor see your tent in their channel list*` }), // eslint-disable-line
       ],
       components: await util.voiceMenu(interaction),
     };
@@ -1395,7 +1379,7 @@ namespace cmd {
       if (infoMessage) {
         // Update the info message with the new mode using regex
         const newContent = infoMessage.content
-          .replace(/\*\*Join Level:\*\* .*/, `**Join Level:** ${level === 0 ? 'Any' : `${level}`}`);
+          .replace(/\*\*Join Level:\*\* .*/, `**Join Level:** ${level === 0 ? 'Any' : `${level}`}`); // eslint-disable-line
         infoMessage.edit(newContent);
       }
     }
@@ -1897,7 +1881,7 @@ namespace selectAction {
       if (infoMessage) {
         // Update the info message with the new mode using regex
         const newContent = infoMessage.content
-          .replace(/\*\*Join Level:\*\* .*/, `**Join Level:** ${level === 0 ? 'Any' : `${level}`}`);
+          .replace(/\*\*Join Level:\*\* .*/, `**Join Level:** ${level === 0 ? 'Any' : `${level}`}`); // eslint-disable-line
         infoMessage.edit(newContent);
       }
     }
