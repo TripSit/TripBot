@@ -1299,8 +1299,8 @@ namespace cmd {
           .setTitle('Cool Down')
           .setColor(Colors.Red)
           .setDescription(stripIndents`
-            You already used this command <t:${userTentPingTimes[member.id].toJSDate()}:R>. 
-            You can use it again <t:${userTentPingTimes[member.id].plus(text.userCoolDown())}:R>.
+            You already used this command <t:${Math.floor(userTentPingTimes[member.id].toSeconds())}:R>. 
+            You can use it again <t:${Math.floor(userTentPingTimes[member.id].plus(text.userCoolDown()).toSeconds())}:R>.
           `);
       }
 
@@ -1310,8 +1310,8 @@ namespace cmd {
           .setTitle('Cool Down')
           .setColor(Colors.Red)
           .setDescription(stripIndents`
-            Someone else used this command <t:${lastTentPingTime.toJSDate()}:R>.
-            You can use it again <t:${lastTentPingTime.plus(text.globalCoolDown())}:R>.
+            Someone else used this command <t:${Math.floor(lastTentPingTime.toSeconds())}:R>.
+            You can use it again <t:${Math.floor(lastTentPingTime.plus(text.globalCoolDown()).toSeconds())}:R>.
           `);
       }
 
