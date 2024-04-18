@@ -562,13 +562,13 @@ namespace util {
         - **Visibility:** ${tentData.mode.charAt(0).toUpperCase() + tentData.mode.slice(1).toLowerCase()}
         - **Join Level:** ${tentData.join_level === 0 ? 'Any' : `${tentData.join_level}`}
       
-      ## **Use </voice settings:${commandID}> to control your tent and view ban/whitelist or use the commands below**
-       - \`/voice rename\` - Choose a new name for your tent
-       - \`/voice ping\` - Use this to ping those opted-in to VC ping invites
-       - \`/voice private\` - Switch your tent to private/public mode
-       - \`/voice ban\` - Bans a user from joining and seeing your tents
-       - \`/voice whitelist\` - Allows a user to always be able to join your tent
-       - \`/voice cohost\` - Allows a trusted user to use these commands on your behalf
+      ## **Use </voice settings:${commandID}> to easily control your tent and view ban/whitelist or use the commands below**
+       - </voice rename:${commandID}> - Set a new name for your tent
+       - </voice ping:${commandID}> - Ping those opted-in to VC ping invites
+       - </voice private:${commandID}> - Switch your tent to private/public mode
+       - </voice ban:${commandID}> - Ban a user from joining and seeing your tents
+       - </voice whitelist:${commandID}> - Allow a user to always be able to join your tent
+       - </voice cohost:${commandID}> - Allow a trusted user to edit your tent settings
       ***NOTE: Changes are saved, and persist next time you make a tent***`);
     // Add the tent to the database
     if (tentData) {
@@ -1012,7 +1012,7 @@ namespace cmd {
     }
 
     // Run the updateTentMode function
-    await util.updateTentMode(interaction);
+    util.updateTentMode(interaction);
 
     // Edit the info message with the new mode
     if (tentData.info_message_id) {
@@ -1116,7 +1116,7 @@ namespace cmd {
     }
 
     // Run the updateTentPermissions function
-    await util.updateTentPermissions(voiceChannel);
+    util.updateTentPermissions(voiceChannel);
 
     return embedTemplate()
       .setTitle('Success')
@@ -1201,7 +1201,7 @@ namespace cmd {
     }
 
     // Run the updateTentPermissions function
-    await util.updateTentPermissions(voiceChannel);
+    util.updateTentPermissions(voiceChannel);
 
     // Return an embed with the result
     return embedTemplate()
@@ -1382,7 +1382,7 @@ namespace cmd {
     });
 
     // Run the updateJoinLevel function
-    await util.updateJoinLevel(interaction);
+    util.updateJoinLevel(interaction);
 
     // Edit the info message with the new join level
     if (tentData.info_message_id) {
@@ -1395,7 +1395,7 @@ namespace cmd {
       if (infoMessage) {
         // Update the info message with the new mode using regex
         const newContent = infoMessage.content
-          .replace(/\*\*Join Level:\*\* .*/, `**Join Level:** ${tentData.join_level === 0 ? 'Any' : `${tentData.join_level}`}`);
+          .replace(/\*\*Join Level:\*\* .*/, `**Join Level:** ${level === 0 ? 'Any' : `${level}`}`);
         infoMessage.edit(newContent);
       }
     }
