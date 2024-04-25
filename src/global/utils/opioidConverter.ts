@@ -93,7 +93,7 @@ export const opioids: OpioidProperties[] = [
   },
 ];
 
-export const mainConversion = (dosage: number, toOpioid: string, fromOpioid: string): number | null => {
+export const mainConversion = (dosage: number, fromOpioid: string, toOpioid: string): number | null => {
   const opi1 = opioids.find(o => o.aliases.includes(fromOpioid.trim().toLowerCase()));
   const opi2 = opioids.find(o => o.aliases.includes(toOpioid.trim().toLowerCase()));
 
@@ -107,5 +107,5 @@ export const mainConversion = (dosage: number, toOpioid: string, fromOpioid: str
 
   const MMEs: number = dosage * opi1.conversionFactor;
 
-  return (MMEs / opi2.conversionFactor) * 0.75; // reducing dose by 25% as per CDC.gov conversion table
+  return ((MMEs / opi2.conversionFactor) * 0.75); // reducing dose by 25% as per CDC.gov conversion table
 };
