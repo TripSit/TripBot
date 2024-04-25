@@ -1,3 +1,5 @@
+// const converter = ()
+
 export interface OpioidProperties {
   name: string;
   conversionFactor: number;
@@ -5,7 +7,7 @@ export interface OpioidProperties {
   aliases: string[];
   notes?: string;
   equivDose30mgMorphine?: number;
-  converter?(dosage: number, toOpioid: string): number | null;
+  converter?(dosage: number, toOpioid: string): number | null
 }
 
 export const opioids: OpioidProperties[] = [
@@ -22,7 +24,8 @@ export const opioids: OpioidProperties[] = [
     conversionFactor: 1,
     duration: '3-6 hours',
     equivDose30mgMorphine: 30,
-    aliases: ['vicodin', 'lortab', 'tussionex', 'hydros'],
+    aliases: ['hydrocodone', 'vicodin', 'lortab', 'tussionex', 'hydros'],
+    notes: 'Be cautious if taking large doses, as tylenol is almost always included in hydrocodone pills/syrup',
   },
   {
     name: 'hydromorphone',
@@ -43,7 +46,7 @@ export const opioids: OpioidProperties[] = [
     conversionFactor: 1.5,
     duration: '4-6 hours',
     equivDose30mgMorphine: 20,
-    aliases: ['morphine'],
+    aliases: ['oxycodone', 'oxy', 'percocet', 'perc'],
   },
   {
     name: 'oxymorphone',
@@ -89,3 +92,20 @@ export const opioids: OpioidProperties[] = [
     },
   },
 ];
+
+export const mainConversion = (dosage: number, toOpioid: string, fromOpioid: string): number | null => {
+  const opi1 = opioids.find(o => o.aliases.includes(fromOpioid.trim().toLowerCase()));
+  const opi2 = opioids.find(o => o.aliases.includes(toOpioid.trim().toLowerCase()));
+
+  if (!opi1 || !opi2) {
+    return null;
+  }
+
+  if (opi1.converter) {
+    return opi1.converter(dosage, opi2.name);
+  }
+
+  const MMEs: number = dosage * opi1.conversionFactor;
+
+  return (MMEs / opi2.conversionFactor) * 0.75; // reducing dose by 25% as per CDC.gov conversion table
+};
