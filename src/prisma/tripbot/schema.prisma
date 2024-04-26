@@ -186,10 +186,10 @@ model users {
 model tent_settings {
   id              String           @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
   name            String
-  channel_id      String?          // Should be optional because the channel will get deleted
-  info_message_id String?          // Should be optional because the channel will get deleted
+  channel_id      String? // Should be optional because the channel will get deleted
+  info_message_id String? // Should be optional because the channel will get deleted
   mode            tent_publicity   @default(PUBLIC) // Public, Private
-  join_level   Int              @default(0)
+  join_level      Int              @default(0)
   // Bitrate - WIP
   // Server location - WIP
   hostlist        tent_hostlist[]
@@ -197,13 +197,13 @@ model tent_settings {
   whitelist       tent_whitelist[]
 
   // These are good stats to have, and id like to standardize them
-  created_by      String           @db.Uuid
-  created_at      DateTime         @default(now()) @db.Timestamptz(6)
-  updated_by      String           @db.Uuid
-  updated_at      DateTime         @default(now()) @db.Timestamptz(6)
+  created_by String   @db.Uuid
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  updated_by String   @db.Uuid
+  updated_at DateTime @default(now()) @db.Timestamptz(6)
 
   // This will be updated when the tent is town down
-  deleted_at      DateTime?        @db.Timestamptz(6)
+  deleted_at DateTime? @db.Timestamptz(6)
 
   creatingUser users @relation(name: "CreatedTents", fields: [created_by], references: [id])
   updatingUser users @relation(name: "UpdatedTents", fields: [updated_by], references: [id])

@@ -96,13 +96,13 @@ export const dLeaderboard: SlashCommand = {
       'TOTAL' | 'GENERAL' | 'VOICE' | 'TRIPSITTER' | 'DEVELOPER' | 'TEAM' | 'IGNORED';
     let typeChoice = 'ALL' as experience_type;
     // if the category choice is voice, set the type choice to voice (as to treat it as a category, not a type)
+    const categoryName = categoryChoices.find(choice => choice.value === categoryChoice)?.name || 'Total';
     if (categoryChoice === 'VOICE') {
       typeChoice = 'VOICE';
       categoryChoice = 'TOTAL';
     }
     categoryChoice = categoryChoice as experience_category;
     // const categoryValue = interaction.options.getString('category') ?? 'TOTAL';
-    const categoryName = categoryChoices.find(choice => choice.value === categoryChoice)?.name || 'Total';
 
     context.font = resizeText(canvasObj, `${categoryName.toUpperCase()}`, 40, 'futura', 498);
     context.fillText(`${categoryName.toUpperCase()}`, 276, 54);
