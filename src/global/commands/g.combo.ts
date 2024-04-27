@@ -1,5 +1,7 @@
 // import { stripIndents } from 'common-tags';
-import { Category, Combo, Drug } from 'tripsit_drug_db';
+import {
+  Category, ComboData, Drug, Combos, Interactions,
+} from 'tripsit_drug_db';
 // import { CbSubstance, Interaction } from '../@types/combined';
 // import drugDataAll from '../../../assets/data/combine dDB.json';
 import { stripIndents } from 'common-tags';
@@ -14,12 +16,6 @@ type DrugData = {
   [key: string]: Drug;
 };
 
-type ComboData = {
-  [key: string]: {
-    [key: string]: Combo;
-  };
-};
-
 type ComboDef = {
   status: string;
   emoji: string;
@@ -29,7 +25,7 @@ type ComboDef = {
 };
 
 const drugData = drugJsonData as DrugData;
-const comboData = comboJsonData as ComboData;
+const comboData = comboJsonData as Combos;
 
 // const devMsg = '...this shouldn\'t have happened, please tell the developer!';
 
@@ -187,12 +183,12 @@ export async function combo(
   }
   // log.debug(F, `drugBComboData: ${JSON.stringify(drugBComboData)}`);
 
-  let comboInfo = {} as Combo;
+  let comboInfo = {} as ComboData;
   // Check if drugB is in drugA's combo list
   if (Object.keys(drugAComboData).includes(drugBName)) {
-    comboInfo = drugAComboData[drugBName];
+    comboInfo = drugAComboData[drugBName as keyof Interactions] as ComboData;
   } else if (Object.keys(drugBComboData).includes(drugAName)) {
-    comboInfo = drugBComboData[drugAName];
+    comboInfo = drugBComboData[drugAName as keyof Interactions] as ComboData;
   } else {
     // If we get here, there is no combo data for these drugs
     return {
