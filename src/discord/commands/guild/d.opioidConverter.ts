@@ -16,13 +16,16 @@ export const dOpioidConverter: SlashCommand = {
     .addSubcommand(subcommand => subcommand
       .setName('convert')
       .setDescription('Converts one opioid dosage to another\'s equivalent.')
-      .addStringOption(option => option.setName('from')
+      .addStringOption(option => option
+        .setName('from')
         .setDescription('The opioid to convert from.')
         .setRequired(true))
-      .addNumberOption(option => option.setName('dosage')
+      .addNumberOption(option => option
+        .setName('dosage')
         .setDescription('The dose **in milligrams (mg)** you want to convert.')
         .setRequired(true))
-      .addStringOption(option => option.setName('to')
+      .addStringOption(option => option
+        .setName('to')
         .setDescription('The opioid to convert to.')
         .setRequired(true))),
   async execute(interaction) {
