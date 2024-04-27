@@ -12,6 +12,8 @@ import {
   Dose as TsDose,
   Drug,
   Duration as TsDuration,
+  Combos,
+  ComboData,
 } from 'tripsit_drug_db';
 import path from 'path';
 import {
@@ -32,7 +34,6 @@ import {
   PwSubstance,
   Range,
 } from '../@types/psychonaut';
-import { Combos } from '../@types/tripsitCombos';
 
 // Limits API calls during development
 const useCache = false;
@@ -684,7 +685,7 @@ async function combineTs(
       combinedDrug.interactions = [];
       Object.keys(tsDrug.combos).forEach(comboName => {
         if (!tsDrug.combos) return;
-        const combo = tsDrug.combos[comboName as keyof typeof tsDrug.combos];
+        const combo = tsDrug.combos[comboName as keyof typeof tsDrug.combos] as ComboData;
         const interactionEntry = {
           status: combo.status as Status,
           name: comboName,
