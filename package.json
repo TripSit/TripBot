@@ -96,6 +96,7 @@
     "trivia-api": "^1.0.0",
     "underscore": "^1.13.6",
     "winston": "^3.11.0",
+    "winston-transport": "^4.7.0",
     "winston-transport-rollbar-3": "^3.2.6",
     "youtube-search-without-api-key": "^2.0.1"
   },
