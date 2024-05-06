@@ -3,6 +3,7 @@
 const F = f(__filename);
 
 const topics = {
+  0: 'What food do you crave most often?',
   1: 'What did you eat for breakfast?',
   2: 'How many cups of coffee, tea, or beverage-of-choice do you have each morning?',
   3: 'Are you an early bird or night owl?',
