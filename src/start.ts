@@ -46,7 +46,8 @@ async function start() {
   if (validateEnv('SERVICES')) {
     api();
     global.db = new PrismaClient({ log: ['error'] });
-    if (env.NODE_ENV === 'production') await updateDb();
+    // if (env.NODE_ENV === 'production') await updateDb();
+    // await updateDb();
     if (env.DISCORD_CLIENT_TOKEN && validateEnv('DISCORD')) await discordConnect();
     // if (env.MATRIX_ACCESS_TOKEN && validateEnv( 'MATRIX') && env.NODE_ENV !== 'production') await startMatrix();
     // if (env.IRC_PASSWORD && validateEnv('IRC') && env.NODE_ENV !== 'production') ircConnect();

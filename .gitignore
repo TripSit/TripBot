@@ -376,3 +376,6 @@ src/example/
 src/assets/ts_data.json
 src/assets/reminders.json
 
+assets/data/combinedDB.json
+assets/data/tripsitCombos.json
+assets/data/tripsitDB.json
