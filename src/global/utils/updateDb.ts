@@ -36,8 +36,7 @@ import {
 } from '../@types/psychonaut';
 
 // Limits API calls during development
-// const useCache = env.NODE_ENV === 'development';
-const useCache = false;
+const useCache = env.NODE_ENV === 'development';
 
 const F = f(__filename);
 

@@ -67,10 +67,8 @@ export async function addedVerified(
   try {
     memberData = await db.members.upsert({
       where: {
-        id_guild_id: {
-          guild_id: guildData.id,
-          id: userData.discord_id as string,
-        },
+        guild_id: guildData.id,
+        id: userData.discord_id as string,
       },
       create: {
         guild_id: guildData.id,
