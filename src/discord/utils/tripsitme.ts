@@ -867,9 +867,9 @@ export async function tripsitmeUserClose(
     return;
   }
 
-  // log.debug(F, `ticketData: ${JSON.stringify(ticketData, null, 2)}`);
+  log.debug(F, `ticketData: ${JSON.stringify(ticketData, null, 2)}`);
   if (Object.entries(ticketData).length === 0) {
-    const rejectMessage = stripIndents`Hey ${(interaction.member as GuildMember).displayName}, you do not have an open session!
+    const rejectMessage = stripIndents`Hey ${(interaction.member as GuildMember).displayName}, you do not have an open session
     If you need help, please click the button again!`;
     const embed = embedTemplate().setColor(Colors.DarkBlue);
     embed.setDescription(rejectMessage);
@@ -972,7 +972,8 @@ export async function tripsitmeUserClose(
   try {
     threadHelpUser = await interaction.guild.channels.fetch(ticketData.thread_id) as ThreadChannel;
   } catch (err) {
-    // log.debug(F, `There was an error updating the help thread, it was likely deleted:\n ${err}`);
+    log.error(F, `There was an error updating the help thread, it was likely deleted:\n ${err}`);
+    log.error(F, `Ticket Data: ${JSON.stringify(ticketData, null, 2)}`);
     // Update the ticket status to closed
     await db.user_tickets.update({
       where: {
