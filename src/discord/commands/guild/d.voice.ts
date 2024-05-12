@@ -261,8 +261,8 @@ namespace util {
   }
 
   export async function pitchTent(
-    oldState:VoiceState,
-    newState:VoiceState,
+    oldState: VoiceState,
+    newState: VoiceState,
   ): Promise<void> {
     // const categoryVoice = await New.guild.channels.fetch(env.CATEGORY_VOICE) as VoiceChannel;
     // const permissions = categoryVoice.permissionOverwrites.cache;
@@ -599,7 +599,7 @@ namespace util {
   }
 
   export async function teardownTent(
-    Old:VoiceState,
+    Old: VoiceState,
   ): Promise<void> {
     const tempVoiceCategory = await Old.guild.channels.fetch(env.CATEGORY_VOICE) as CategoryChannel;
     await Promise.all(tempVoiceCategory.children.cache.map(async channel => {
@@ -635,14 +635,14 @@ namespace util {
   }
 
   export async function tentName(
-    name:string,
-  ):Promise<string> {
+    name: string,
+  ): Promise<string> {
     return `⛺│${name}`;
   }
 
   export async function voiceMenu(
     interaction: ChatInputCommandInteraction | ButtonInteraction | UserSelectMenuInteraction | StringSelectMenuInteraction,
-  ):Promise<ActionRowBuilder<ButtonBuilder | UserSelectMenuBuilder | StringSelectMenuBuilder>[]> {
+  ): Promise<ActionRowBuilder<ButtonBuilder | UserSelectMenuBuilder | StringSelectMenuBuilder>[]> {
     const member = interaction.member as GuildMember;
     const userData = await db.users.upsert({
       where: { discord_id: member.id },
@@ -855,9 +855,9 @@ namespace page {
 
 namespace cmd {
   export async function tentRename(
-    interaction:ChatInputCommandInteraction | ButtonInteraction,
-  ):Promise<EmbedBuilder> {
-  // Check if the interaction was a button interaction
+    interaction: ChatInputCommandInteraction | ButtonInteraction,
+  ): Promise<EmbedBuilder> {
+    // Check if the interaction was a button interaction
     let newName = '';
     const voiceChannel = (interaction.member as GuildMember).voice.channel as VoiceBasedChannel;
     const tentData = await db.tent_settings.findFirstOrThrow({
@@ -866,7 +866,7 @@ namespace cmd {
       },
     });
     if (interaction instanceof ButtonInteraction) {
-    // If so, open a modal to collect the new name
+      // If so, open a modal to collect the new name
       log.debug(F, 'Button interaction detected');
       const modal = new ModalBuilder()
         .setCustomId(`tentRenameModal~${interaction.id}`)
@@ -883,7 +883,7 @@ namespace cmd {
       await interaction.showModal(modal);
 
       // Get the new name from the modal
-      const filter = (i:ModalSubmitInteraction) => i.customId === `tentRenameModal~${interaction.id}`;
+      const filter = (i: ModalSubmitInteraction) => i.customId === `tentRenameModal~${interaction.id}`;
       await interaction.awaitModalSubmit({ filter, time: 60000 })
         .then(async i => {
           // Get the new name from the modal
@@ -925,7 +925,7 @@ namespace cmd {
   }
 
   export async function tentPrivate(
-    interaction:ChatInputCommandInteraction | ButtonInteraction,
+    interaction: ChatInputCommandInteraction | ButtonInteraction,
   ): Promise<EmbedBuilder> {
     const voiceChannel = (interaction.member as GuildMember).voice.channel as VoiceBasedChannel;
     // let verb = '';
@@ -994,10 +994,10 @@ namespace cmd {
       try {
         infoMessage = await voiceChannel.messages.fetch(tentData.info_message_id);
       } catch (e) {
-      // Message was likely deleted, should we re-send it in chat?
+        // Message was likely deleted, should we re-send it in chat?
       }
       if (infoMessage) {
-      // Update the info message with the new mode using regex
+        // Update the info message with the new mode using regex
         const newContent = infoMessage.content
           .replace(/\*\*Visibility:\*\* .*/, `**Visibility:** ${mode.charAt(0).toUpperCase() + mode.slice(1)}`);
         infoMessage.edit(newContent);
@@ -1012,7 +1012,7 @@ namespace cmd {
   }
 
   export async function tentBan(
-    interaction:ChatInputCommandInteraction,
+    interaction: ChatInputCommandInteraction,
   ): Promise<EmbedBuilder> {
     if (await validate.actingOnSelf(interaction)) {
       return embedTemplate()
@@ -1099,7 +1099,7 @@ namespace cmd {
   }
 
   export async function tentWhitelist(
-    interaction:ChatInputCommandInteraction,
+    interaction: ChatInputCommandInteraction,
   ): Promise<EmbedBuilder> {
     if (await validate.actingOnSelf(interaction)) {
       return embedTemplate()
@@ -1185,8 +1185,8 @@ namespace cmd {
   }
 
   export async function tentCohost(
-    interaction:ChatInputCommandInteraction,
-  ):Promise<EmbedBuilder> {
+    interaction: ChatInputCommandInteraction,
+  ): Promise<EmbedBuilder> {
     if (await validate.actingOnSelf(interaction)) {
       return embedTemplate()
         .setTitle('Error')
@@ -1255,7 +1255,7 @@ namespace cmd {
   }
 
   export async function tentPing(
-    interaction:ChatInputCommandInteraction | ButtonInteraction,
+    interaction: ChatInputCommandInteraction | ButtonInteraction,
   ): Promise<EmbedBuilder> {
     const member = interaction.member as GuildMember;
     const voiceChannel = (interaction.member as GuildMember).voice.channel as VoiceBasedChannel;
@@ -1326,7 +1326,7 @@ namespace cmd {
   }
 
   export async function tentJoinLevel(
-    interaction:ChatInputCommandInteraction,
+    interaction: ChatInputCommandInteraction,
   ): Promise<EmbedBuilder> {
     const voiceChannel = (interaction.member as GuildMember).voice.channel as VoiceBasedChannel;
     const tentData = await db.tent_settings.findFirstOrThrow({
@@ -1383,8 +1383,8 @@ namespace cmd {
 
 namespace validate {
   export async function inGuild(
-    interaction:ChatInputCommandInteraction,
-  ):Promise<boolean> {
+    interaction: ChatInputCommandInteraction,
+  ): Promise<boolean> {
     if (!interaction.member || !interaction.guild || !interaction.channel) {
       await interaction.reply({ content: 'You can only do this command in the guild', ephemeral: true });
       return false;
@@ -1393,8 +1393,8 @@ namespace validate {
   }
 
   export async function inVoiceChannel(
-    interaction:ChatInputCommandInteraction,
-  ):Promise<boolean> {
+    interaction: ChatInputCommandInteraction,
+  ): Promise<boolean> {
     if (!(interaction.member as GuildMember).voice.channel) {
       await interaction.reply({ content: 'You must be in a voice channel to use this command', ephemeral: true });
       return false;
@@ -1403,8 +1403,8 @@ namespace validate {
   }
 
   export async function isTentOwnerOrHost(
-    interaction:ChatInputCommandInteraction,
-  ):Promise<boolean> {
+    interaction: ChatInputCommandInteraction,
+  ): Promise<boolean> {
     const voiceChannel = (interaction.member as GuildMember).voice.channel as VoiceBasedChannel;
     const member = interaction.member as GuildMember;
 
@@ -1445,8 +1445,8 @@ namespace validate {
   }
 
   export async function actingOnSelf(
-    interaction:ChatInputCommandInteraction,
-  ):Promise<boolean> {
+    interaction: ChatInputCommandInteraction,
+  ): Promise<boolean> {
     const target = interaction.options.getMember('target') as GuildMember;
     if (target === interaction.member) {
       await interaction.reply({ content: 'Stop playing with yourself!', ephemeral: true });
@@ -1456,8 +1456,8 @@ namespace validate {
   }
 
   export async function actingOnMod(
-    interaction:ChatInputCommandInteraction,
-  ):Promise<boolean> {
+    interaction: ChatInputCommandInteraction,
+  ): Promise<boolean> {
     const target = interaction.options.getMember('target') as GuildMember ?? interaction.member;
 
     if (target.roles.cache.has(env.ROLE_MODERATOR)) {
@@ -1467,7 +1467,7 @@ namespace validate {
     return false;
   }
 
-  export async function pingAfterUserCoolDown(userId: string):Promise<boolean> {
+  export async function pingAfterUserCoolDown(userId: string): Promise<boolean> {
     const userLastPinged = userTentPingTimes[userId] ?? DateTime.now().minus({ hours: 1 });
     // log.debug(F, `UserLastPinged: ${userLastPinged}`);
     const coolDownTime = userLastPinged.plus(text.userCoolDown());
@@ -1476,7 +1476,7 @@ namespace validate {
     return (DateTime.now() > coolDownTime);
   }
 
-  export async function pingAfterGlobalCoolDown():Promise<boolean> {
+  export async function pingAfterGlobalCoolDown(): Promise<boolean> {
     const globalLastPinged = lastTentPingTime;
     // log.debug(F, `GlobalLastPinged: ${globalLastPinged}`);
     const coolDownTime = globalLastPinged.plus(text.globalCoolDown());
