@@ -8,6 +8,7 @@ import commandContext from '../utils/context';
 import { helpMenu } from '../commands/global/d.help';
 import { aiMenu } from '../commands/global/d.ai';
 import { purgeMenu } from '../commands/guild/d.purge';
+import { voiceSelect } from '../commands/guild/d.voice';
 // import log from '../../global/utils/log';
 // import {parse} from 'path';
 const F = f(__filename);
@@ -26,6 +27,9 @@ export async function selectMenu(
     if (menuID.startsWith('helpSelectMenu')) {
       await helpMenu(interaction);
       return;
+    }
+    if (menuID.startsWith('voice')) {
+      await voiceSelect(interaction);
     }
     if (menuID.startsWith('rpg')) {
       if (!menuID.includes(interaction.user.id)) {
@@ -52,6 +56,9 @@ export async function selectMenu(
   if (interaction.isUserSelectMenu()) {
     if (menuID.startsWith('purge')) {
       await purgeMenu(interaction);
+    }
+    if (menuID.startsWith('voice')) {
+      await voiceSelect(interaction);
     }
   }
 
