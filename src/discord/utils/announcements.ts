@@ -10,8 +10,8 @@ import { fact } from '../../global/commands/g.fact';
 
 const F = f(__filename); // eslint-disable-line
 
-const frequency = env.NODE_ENV === 'production' ? 50 : 1000;
-const bigFrequency = env.NODE_ENV === 'production' ? 250 : 2000;
+const frequency = env.NODE_ENV === 'production' ? 100 : 1000;
+const bigFrequency = env.NODE_ENV === 'production' ? 500 : 2000;
 const messageCounter = {} as MessageCounterType;
 let bigFrequencyCounter = 0;
 
@@ -111,16 +111,50 @@ export async function announcements(message:Message) {
   // // const channelDevWelcome = await message.client.channels.fetch(env.CHANNEL_DEVWELCOME) as TextChannel;
 
   const hrAnnouncements = [
-    'Reminder: For the safety of everyone involved, sourcing (buying or selling anything) is against our network rules. If you are contacted by someone asking to find, buy, trade, or give you drugs, you can report it by using /report. This rule also applies to private messages. Be safe and don\'t trust random internet folk.',
-    'Tending to personal hygiene is an important part of self-care. Remember to brush your teeth, bathe, and wash your hands!',
-    'We do our best to keep the environment here as safe as possible but please remember to always be vigilant when using the internet. Do not post anything here that might divulge any of your personal information.',
+    '**Reminder:** For the safety of everyone involved, sourcing (buying or selling anything) is against our network rules. If you are contacted by someone asking to find, buy, trade, or give you drugs, you can report it by using /report. This rule also applies to private messages. Be safe and don\'t trust random internet folk.',
+    '**Reminder:** Tending to personal hygiene is an important part of self-care. Remember to brush your teeth, bathe, and wash your hands!',
+    '**Reminder:** We do our best to keep the environment here as safe as possible but please remember to always be vigilant when using the internet. Do not post anything here that might divulge any of your personal information.',
     // 'Donate to keep TripSit running and fund our future Harm Reduction projects!\nDonate page: https://tripsit.me/donate/\nBTC: 1EDqf32gw73tc1WtgdT2FymfmDN4RyC9RN\nPayPal: teknos@tripsit.me\nPatreon: https://patreon.com/tripsit\nMerchandise: https://tripsit.myspreadshop.com/',
     // 'Try to dose with a friend. Share with your friend any substances you have taken and how much. Communicate if you are not feeling well or if you need a break.',
-    'Sleep is important! A sleep deficit can impair you more than drinking alcohol.',
+    '**Reminder:** Sleep is important! A sleep deficit can impair you more than drinking alcohol.',
     // 'Do not drive after dosing, even if you don\'t feel the effects',
     // 'Re-dosing is not usually a good idea: Sometimes both doses will kick in, sometimes your tolerance will waste both doses',
     // 'LSD and Mushrooms share a tolerance! Check out /calc-psychedelics for more info',
     // 'When snorting, crush your powder as fine as possible and make sure everyone has their own straw. Alternate nostrils between hits.',
+    '**Reminder:** Stay hydrated! Drinking water is essential for your body and mind to function properly.',
+    '**Reminder:** Regular exercise can help reduce stress and improve your mood. Try to incorporate some form of physical activity into your daily routine.',
+    '**Reminder:** Eating a balanced diet is key to maintaining good health. Try to include fruits and vegetables in your meals regularly.',
+    '**Reminder:** Be respectful and considerate in your interactions with others online. Everyone is here for a good time!',
+    '**Reminder:** Protect your personal information online. Avoid sharing sensitive details no matter who you are talking to.',
+    '**Reminder:** Always research any substances you plan to take. Understanding the effects and potential risks can help you make safer choices.',
+    '**Reminder:** Remember to take regular breaks when using screens for a long period of time to avoid eye strain.',
+    '**Reminder:** TripSit strives to be a safe place for everyone. Please be kind and report any inappropriate behavior.',
+  ];
+
+  const tipAnnouncements = [
+    '**Tip:** Report a user by using `/report` if they are breaking the rules or causing issues.',
+    '**Tip:** Report a specific user or message with Right Click > Apps > Report Message.',
+    '**Tip:** Use `/help` to learn more about the bot and its commands.',
+    '**Tip:** Check out the <id:guide> for more tips and server info!',
+    '**Tip:** Go to <id:customize> to change your name color and mindset!',
+    '**Tip:** Use the "ephemeral" option in TripBot commands to use them privately.',
+    `**Tip:** Find a message especially fantastic? React with ${emojiGet('karma_upvote')} to reward karma!`,
+    '**Tip:** Earn TripTokens in `/rpg` to buy customization items for your `/profile`!',
+    '**Tip:** Head to the Activities Corner in the <id:guide> for small games and activities!',
+    '**Tip:** Curious about a specific server function like levelling or karma? Head to Server Tips in the <id:guide>!',
+  ];
+
+  const funAnnouncements = [
+    '[**Did you know?**](https://www.guinnessworldrecords.com/world-records/largest-sandwich) The largest sandwich ever made weighed 2,467kg (5,440 lb) and was close to half a metre thick!.',
+    '[**Did you know?**](https://www.guinnessworldrecords.com/world-records/longest-sausage) The longest sausage ever made was 62.75km (38.99 miles) long.',
+    '[**Did you know?**](https://www.guinnessworldrecords.com/world-records/largest-pizza) The largest pizza ever made was 1,296.72 m² (13,957.77 ft²) and included over 630,000 pepperoni slices!',
+    '[**Did you know?**](https://www.guinnessworldrecords.com/world-records/111847-longest-jump-by-a-cat) The longest jump by a cat is 230 cm (7 ft 6.551 in) achieved by Sputnik the cat.',
+    '[**Did you know?**](https://www.guinnessworldrecords.com/world-records/largest-collection-of-rubber-ducks) The largest collection of rubber ducks is 5,631.',
+    '[**Did you know?**](https://www.guinnessworldrecords.com/world-records/oldest-message-in-a-bottle) The oldest message in a bottle spent 131 years, 223 days at sea.',
+    '[**Did you know?**](https://www.guinnessworldrecords.com/world-records/fastest-time-to-eat-a-bowl-of-pasta) The fastest time to eat a bowl of pasta is 17.03 seconds.',
+    '[**Did you know?**](https://www.guinnessworldrecords.com/world-records/most-ice-cream-scoops-balanced-on-a-cone) The most ice cream scoops balanced on a cone is 125.',
+    '[**Did you know?**](https://www.guinnessworldrecords.com/world-records/largest-collection-of-pokemon-memorabilia) The largest collection of Pokémon memorabilia is 17,127 items.',
+    '[**Did you know?**](https://www.guinnessworldrecords.com/world-records/most-people-making-heart-shaped-hand-gestures) The most people making heart-shaped hand gestures at once is 7,232.',
   ];
 
   // const chanAnnouncements = [
@@ -212,7 +246,7 @@ export async function announcements(message:Message) {
 
   const embed = embedTemplate();
 
-  const genAnnouncements = hrAnnouncements;
+  const genAnnouncements = [hrAnnouncements, tipAnnouncements, funAnnouncements].flat(1);
 
   // const allAnnouncements = [
   //   genAnnouncements,

@@ -171,7 +171,7 @@ but they were already marked at trusted in the database, so no message was sent`
       const channelLounge = await newMember.client.channels.fetch(env.CHANNEL_LOUNGE) as TextChannel;
       await channelLounge.send({
         content: stripIndents`**${greeting}**
-
+      Head to <#${env.CHANNEL_TRIPSIT}> if you need a tripsitter. :)
       Be safe, have fun, and don't forget to visit the <id:guide> for more information!
 
       *${await topic()}*`,
