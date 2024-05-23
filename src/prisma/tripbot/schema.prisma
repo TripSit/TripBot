@@ -171,18 +171,7 @@ model users {
   quotes_quotes_user_idTousers                              quotes[]          @relation("UserQuote")
   quotes_quotes_created_byTousers                           quotes[]          @relation("QuoteCreator")
   members                                                   members[]
-  wordle_stats                                              wordle_stats[]
   wordle_scores                                             wordle_scores[]
-}
-
-model wordle_stats {
-  id             String @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  user_id        String @db.Uuid
-  current_streak Int
-  best_streak    Int
-  games_played   Int
-  win_rate       Float
-  user           users  @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "userstats_userid_foreign")
 }
 
 model wordle_scores {

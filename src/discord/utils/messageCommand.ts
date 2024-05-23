@@ -9,7 +9,7 @@ import {
 import { stripIndents } from 'common-tags';
 import { sleep } from '../commands/guild/d.bottest';
 import { aiMessage } from '../commands/global/d.ai';
-import processWordle from './wordle';
+import { processWordle, processConnections } from './nytUtils';
 
 // import log from '../../global/utils/log';
 // import {parse} from 'path';
@@ -75,7 +75,7 @@ async function isUploadMessage(message:Message):Promise<boolean> {
     || message.content.toLowerCase().includes('fetch');
 }
 
-async function isWordle(message: Message): Promise<{ score: number, puzzleNumber: number } | null> {
+async function isWordle(message: Message): Promise<boolean> {
   const messageContent = message.content;
   const userId = message.author.id; // Extract userId from message
 
@@ -88,9 +88,25 @@ async function isWordle(message: Message): Promise<{ score: number, puzzleNumber
     return processWordle(userId, messageContent); // Pass userId and messageContent
   }
 
-  return null;
+  return false;
 }
 
+async function isConnections(message: Message): Promise<boolean> {
+  const messageContent = message.content;
+  const userId = message.author.id; // Extract userId from message
+
+  // Regular expression to check if the message possibly mentions a Connections score
+  const connectionsScorePattern = /(Connections\s*Puzzle\s*#\d+)/;
+  const match = messageContent.match(connectionsScorePattern);
+
+  // TODO: If a match is found, send the message content for further processing
+
+  if (match) {
+    return processConnections(userId, messageContent); // Pass userId and messageContent
+  }
+
+  return false;
+}
 // async function isAiEnabledGuild(message:Message):Promise<boolean> {
 //   // log.debug(F, `message.guild?.id: ${message.guild?.id}`);
 //   return message.guild?.id === env.DISCORD_GUILD_ID;
@@ -344,21 +360,11 @@ give people a chance to answer 😄 If no one answers in 5 minutes you can try a
   if (wordleResult) {
     log.debug(F, 'Valid Wordle detected');
     await message.react('✅');
-    const user = await db.users.findFirst({
-      where: {
-        discord_id: message.author.id,
-      },
-    });
-    if (!user) {
-      log.error(F, `No user found for discord_id: ${message.author.id}`);
-      return;
-    }
-    const wordleStats = await db.wordle_stats.findFirst({
-      where: {
-        user_id: user.id,
-      },
-    });
-    await message.channel.send(`Wordle detected! Score: ${wordleResult.score}, Puzzle Number: ${wordleResult.puzzleNumber}. Win Rate: ${Math.round((wordleStats?.win_rate ?? 0) * 100)}%, Games Played: ${wordleStats?.games_played}, Current Streak: ${wordleStats?.current_streak}, Best Streak: ${wordleStats?.best_streak}`);
+  }
+  const connectionsResult = await isConnections(message);
+  if (connectionsResult) {
+    log.debug(F, 'Valid Connections detected');
+    await message.react('✅');
   }
   // else if (
   //   message.content.match(/(?:anyone|someone+there|here)\b/)
