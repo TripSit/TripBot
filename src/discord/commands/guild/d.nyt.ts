@@ -7,7 +7,9 @@ import {
 import { stripIndents } from 'common-tags';
 import { SlashCommand } from '../../@types/commandDef';
 import commandContext from '../../utils/context';
-import { getUserWordleStats, getServerWordleStats } from '../../utils/nytUtils';
+import {
+  todaysWordleNumbers, getUserWordleStats, getServerWordleStats, getUserConnectionsStats, getServerConnectionsStats,
+} from '../../utils/nytUtils';
 
 const F = f(__filename);
 
@@ -125,15 +127,24 @@ export const dNYT: SlashCommand = {
       }
 
       if (game === 'connections') {
-        // const connectionsStats = await db.connections_stats.findFirst({
-        //   where: {
-        //     user_id: user.id,
-        //   },
-        // });
-        // if (!connectionsStats) {
-        //   await interaction.editReply({ content: 'No stats found for this user!' });
-        //   return false;
-        // }
+        const results = await getUserConnectionsStats(target.user.id);
+        if (!results) {
+          await interaction.editReply({ content: 'No stats found for this user!' });
+          return false;
+        }
+
+        embed.setColor('Purple');
+        embed.setDescription(stripIndents`
+          **🎮 Games Played:** ${results.stats.gamesPlayed}
+
+          **🏆 Win Rate:** ${(results.stats.winRate * 100)}%
+
+          **🔥Current Streak:** ${results.stats.currentStreak}
+          
+          **❤️‍🔥 Best Streak:** ${results.stats.bestStreak}
+          `);
+        await interaction.editReply({ embeds: [embed] });
+        return true;
       }
     }
 
@@ -147,9 +158,22 @@ export const dNYT: SlashCommand = {
         .setTitle(`Server's ${game.charAt(0).toUpperCase() + game.slice(1)} ${puzzle} stats`);
 
       if (game === 'wordle') {
+        // Check if the user is querying for a wordle from the future
+        const currentPuzzles = await todaysWordleNumbers();
+        const maxPuzzleNumber = Math.max(...currentPuzzles);
+        if (puzzle > maxPuzzleNumber) {
+          (
+            embed.setTitle(`Wordle ${puzzle} is not available yet`)
+              .setDescription(`The most recent Wordle ${maxPuzzleNumber}.`)
+              .setColor('Red')
+          );
+          await interaction.editReply({ embeds: [embed] });
+          return false;
+        }
+
         const results = await getServerWordleStats(puzzle);
         if (!results) {
-          embed.setTitle(`No results for ${game.charAt(0).toUpperCase() + game.slice(1)} ${puzzle}`);
+          embed.setTitle(`No results for Wordle ${puzzle}`);
           embed.setDescription('Be the first to submit by posting them in chat. \n TripBot will react to your message if it\'s a valid submission.');
           embed.setColor('Red');
           await interaction.editReply({ embeds: [embed] });
@@ -177,11 +201,40 @@ export const dNYT: SlashCommand = {
           **📊 Guess Distribution:**
           ${frequencyGraph}
           `);
+        await interaction.editReply({ embeds: [embed] });
+        return true;
       }
+      if (game === 'connections') {
+        const results = await getServerConnectionsStats(puzzle);
+        if (!results) {
+          await interaction.editReply({ content: 'No stats found for this server!' });
+          return false;
+        }
+        const nameToEmoji = {
+          green: '🟩',
+          yellow: '🟨',
+          purple: '🟪',
+          blue: '🟦',
+        };
 
-      await interaction.editReply({ embeds: [embed] });
+        embed.setColor('Purple');
+        embed.setDescription(stripIndents`
+          **🎮 Games Played:** ${results.stats.gamesPlayed}
+
+          **🏆 Win Rate:** ${(results.stats.winRate * 100)}%
+
+          **📊 Category Difficulty:**
+          Easiest: ${nameToEmoji[results.stats.easiestCategory as keyof typeof nameToEmoji] || ''}
+          Easy: ${nameToEmoji[results.stats.easyCategory as keyof typeof nameToEmoji] || ''}
+          Hard: ${nameToEmoji[results.stats.hardCategory as keyof typeof nameToEmoji] || ''}
+          Hardest: ${nameToEmoji[results.stats.hardestCategory as keyof typeof nameToEmoji] || ''}
+        `);
+        await interaction.editReply({ embeds: [embed] });
+        return true;
+      }
     }
-    return true;
+
+    return false;
   },
 };
 

@@ -1,9 +1,9 @@
 const F = f(__filename); // eslint-disable-line
 
-// TODO: Determine if the submitted puzzle is "new" or the user is submitting a puzzle from the past
+// TODO: Make validating Connections puzzles more robust, including checking win and loss conditions
 // TODO: If the puzzle is "new", reward with Trip Tokens
 
-async function todaysWordleNumbers() {
+export async function todaysWordleNumbers() {
   // Get the current date and time in UTC
   const currentDate = new Date();
 
@@ -240,16 +240,15 @@ export async function processWordle(userId: string, messageContent: string): Pro
 
   if (match) {
     // VALIDATE THAT THE WORDLE MAKES SENSE AND IS NOT EDITED
-    // Extract the score from the match
-    const puzzleNumber = parseInt(match[2].replace(',', ''), 10);
     // Prevent users from submitting puzzles from the future
+    const puzzleNumber = parseInt(match[2].replace(',', ''), 10);
     const validPuzzleNumbers = await todaysWordleNumbers();
     if (!validPuzzleNumbers.includes(puzzleNumber)) {
       log.debug(F, `Invalid Wordle score found (Puzzle number is from the future): ${match[1]}`);
       return false;
     }
-    const score = match[3] === 'X' ? 0 : parseInt(match[3], 10);
     // Ensure the score is not more than 6
+    const score = match[3] === 'X' ? 0 : parseInt(match[3], 10);
     if (score > 6) {
       log.debug(F, `Invalid Wordle score found (Score cannot be more than 6): ${match[1]}`);
       return false;
@@ -309,12 +308,267 @@ export async function processWordle(userId: string, messageContent: string): Pro
   return false;
 }
 
-export async function processConnections(userId:String, messageContent: string) {
-  const connectionsScorePattern = /(Connections\s*Puzzle\s*#\d+)/;
+export async function todaysConnectionsNumbers() {
+  // Get the current date and time in UTC
+  const currentDate = new Date();
+
+  // Add 14 hours to the current UTC time to get the date in UTC+14
+  currentDate.setUTCHours(currentDate.getUTCHours() + 14);
+
+  // The start date of Wordle
+  const startDate = new Date('2023-06-11T00:00:00Z');
+
+  // The number of milliseconds in a day
+  const millisecondsPerDay = 1000 * 60 * 60 * 24;
+
+  // The valid puzzle number is the number of days since the start date
+  const validPuzzleNumber = Math.floor((currentDate.getTime() - startDate.getTime()) / millisecondsPerDay);
+
+  log.debug(F, `Valid Wordle puzzle numbers: ${validPuzzleNumber} (UTC+14 Newest Puzzle), ${validPuzzleNumber - 1} (Rest of World), ${validPuzzleNumber - 2} (Yesterday)`);
+  return [validPuzzleNumber, validPuzzleNumber - 1, validPuzzleNumber - 2];
+}
+
+export async function getServerConnectionsStats(puzzleNumber: number) {
+  // Find all the scores for the given puzzle
+  const scores = await db.connections_scores.findMany({
+    where: {
+      puzzle: puzzleNumber,
+    },
+  });
+
+  if (!scores || scores.length === 0) {
+    return null;
+  }
+
+  // Initialize stats
+  const stats = {
+    gamesPlayed: 0,
+    winRate: 0,
+    easiestCategory: '',
+    easyCategory: '',
+    hardCategory: '',
+    hardestCategory: '',
+  };
+
+  stats.gamesPlayed = scores.length;
+  const wins = scores.filter(score => score.score < 4).length;
+  stats.winRate = wins / stats.gamesPlayed;
+
+  const categoryDifficulty: { [key: string]: { count: number, totalDifficulty: number, averageDifficulty?: number } } = {};
+  scores.forEach(score => {
+    // For each color category in the score, update the frequency and total difficulty in the map
+    ['easiest_category', 'easy_category', 'hard_category', 'hardest_category'].forEach((category, index) => {
+      const color = score[category as keyof typeof score];
+      if (color) {
+        if (!categoryDifficulty[color]) {
+          categoryDifficulty[color] = { count: 0, totalDifficulty: 0 };
+        }
+        categoryDifficulty[color].count += 1;
+        categoryDifficulty[color].totalDifficulty += index + 1; // +1 because index is 0-based
+      }
+    });
+  });
+
+  // Calculate the average difficulty for each category
+  Object.keys(categoryDifficulty).forEach(color => {
+    categoryDifficulty[color].averageDifficulty = categoryDifficulty[color].totalDifficulty / categoryDifficulty[color].count;
+  });
+  // Sort the categories by average difficulty in ascending order
+  stats.easiestCategory = Object.keys(categoryDifficulty).sort((a, b) => (categoryDifficulty[a].averageDifficulty || 0) - (categoryDifficulty[b].averageDifficulty || 0))[0];
+  stats.easyCategory = Object.keys(categoryDifficulty).sort((a, b) => (categoryDifficulty[a].averageDifficulty || 0) - (categoryDifficulty[b].averageDifficulty || 0))[1];
+  stats.hardCategory = Object.keys(categoryDifficulty).sort((a, b) => (categoryDifficulty[a].averageDifficulty || 0) - (categoryDifficulty[b].averageDifficulty || 0))[2];
+  stats.hardestCategory = Object.keys(categoryDifficulty).sort((a, b) => (categoryDifficulty[a].averageDifficulty || 0) - (categoryDifficulty[b].averageDifficulty || 0))[3];
+  return { stats, categoryDifficulty };
+}
+
+export async function getUserConnectionsStats(discordId: string) {
+  // Find the user with the given discordId
+  const user = await db.users.findFirst({
+    where: {
+      discord_id: discordId,
+    },
+  });
+
+  // If no user is found, throw an error
+  if (!user) {
+    throw new Error(`No user found with discordId: ${discordId}`);
+  }
+
+  // Find all the scores for the user
+  const scores = await db.connections_scores.findMany({
+    where: {
+      user_id: user.id,
+    },
+  });
+
+  if (!scores || scores.length === 0) {
+    throw new Error(`No scores found for user: ${discordId}`);
+  }
+
+  // Initialize stats
+  const stats = {
+    gamesPlayed: 0,
+    winRate: 0,
+    currentStreak: 0,
+    bestStreak: 0,
+  };
+
+  // Find the total number of games played by counting the number of scores
+  stats.gamesPlayed = scores.length;
+  // Find the number of win rate by counting the number of scores with a score greater than 0 and dividing by the total number of games played
+  const wins = scores.filter(score => score.score < 4).length;
+  stats.winRate = wins / stats.gamesPlayed;
+  // Sort the scores by puzzle number in ascending order
+  scores.sort((a, b) => a.puzzle - b.puzzle);
+  // Initialize current streak and max streak
+  let currentStreak = 0;
+  let maxStreak = 0;
+  // Iterate over the sorted scores
+  for (let i = 0; i < scores.length; i += 1) {
+    // If the score is greater than 0 and the puzzle numbers are consecutive or it's the first puzzle, increment the current streak
+    if (scores[i].score < 4 && (i === 0 || scores[i].puzzle === scores[i - 1].puzzle + 1)) {
+      currentStreak += 1;
+    } else {
+      // If the score is 0 or the puzzle numbers are not consecutive, reset the current streak
+      currentStreak = 0;
+    }
+    // If the current streak is greater than the max streak, update the max streak
+    if (currentStreak > maxStreak) {
+      maxStreak = currentStreak;
+    }
+  }
+  // Set the current streak and best streak in the stats
+  stats.currentStreak = currentStreak;
+  stats.bestStreak = maxStreak;
+
+  // Find the frequency of each score
+  const scoreFrequency = scores.reduce((acc: { [key: number]: number }, score) => {
+    if (!acc[score.score]) {
+      acc[score.score] = 0;
+    }
+    acc[score.score] += 1;
+    return acc;
+  }, {} as { [key: number]: number });
+  log.debug(F, `Wordle score frequency: ${JSON.stringify(scoreFrequency)}`);
+  return { stats, scoreFrequency };
+}
+
+async function updateConnectionsStats(discordId: string, newStats: { score: number, puzzle: number, easiest_category: string, easy_category: string, hard_category: string, hardest_category: string }) {
+  // Find the user with the given discordId
+  const user = await db.users.findFirst({
+    where: {
+      discord_id: discordId,
+    },
+  });
+
+  // If no user is found, throw an error
+  if (!user) {
+    throw new Error(`No user found with discordId: ${discordId}`);
+  }
+
+  // Try to find an existing connections_scores record for the given user and puzzle
+  const existingScore = await db.connections_scores.findFirst({
+    where: {
+      user_id: user.id,
+      puzzle: newStats.puzzle,
+    },
+  });
+
+  if (existingScore) {
+    // If a record is found, update it with the new score
+    await db.connections_scores.update({
+      where: {
+        id: existingScore.id,
+      },
+      data: {
+        score: newStats.score,
+        easiest_category: newStats.easiest_category,
+        easy_category: newStats.easy_category,
+        hard_category: newStats.hard_category,
+        hardest_category: newStats.hardest_category,
+      },
+    });
+    log.debug(F, `Connections score updated for user: ${discordId}`);
+  } else {
+    // If no record is found, create a new one
+    await db.connections_scores.create({
+      data: {
+        user_id: user.id,
+        ...newStats,
+      },
+    });
+    log.debug(F, `Connections score created for user: ${discordId}`);
+  }
+}
+
+export async function processConnections(userId: string, messageContent: string) {
+  const connectionsScorePattern = /(Connections\s*Puzzle\s*#\d+)((?:\n(?:🟩|🟨|🟪|🟦){4})+)/;
   const match = messageContent.match(connectionsScorePattern);
   if (match) {
-    const connections = parseInt(match[1], 10);
-    log.debug(F, `Connections found: ${connections}`);
+    const puzzleNumber = parseInt(match[1].match(/\d+/)?.[0] ?? 'NaN', 10);
+    const validPuzzleNumbers = await todaysConnectionsNumbers();
+    if (!validPuzzleNumbers.includes(puzzleNumber)) {
+      log.debug(F, `Invalid Connections puzzle found (Puzzle number is from the future): ${match[1]}`);
+      return false;
+    }
+
+    // Split the game grid into lines
+    const gameGrid = match[2].split('\n').filter(line => line.length > 0);
+    const winLinesOrder = [];
+    // Filter the game grid to only include valid lines
+    const validSquares = ['🟩', '🟨', '🟪', '🟦'];
+    const validGameGrid = gameGrid.filter(line => validSquares.some(square => line.includes(square)));
+    const emojiToName = {
+      '🟩': 'green',
+      '🟨': 'yellow',
+      '🟪': 'purple',
+      '🟦': 'blue',
+    };
+    // Stop counting lines as soon as you encounter a line that doesn't match the connections pattern
+    for (let i = 0; i < validGameGrid.length; i += 1) {
+      // Ensure each line only contains 4 squares
+      const squares = validGameGrid[i].match(/(🟩|🟨|🟪|🟦)/g);
+      if (!squares || squares.length !== 4) {
+        log.debug(F, `Invalid Connections puzzle found (Invalid squares per line): ${match[1]}`);
+        return false;
+      }
+
+      // Check if a line contains exactly four squares of the same color
+      const winLineMatch = validGameGrid[i].match(/(🟩🟩🟩🟩|🟨🟨🟨🟨|🟪🟪🟪🟪|🟦🟦🟦🟦)/);
+      if (winLineMatch) {
+        // If it does, convert the emoji to a name and add it to the winLinesOrder array
+        const emoji = winLineMatch[0].substring(0, 2);
+        log.debug(F, `Win Line: ${emoji}`);
+        const name = emojiToName[emoji as keyof typeof emojiToName];
+        if (name) {
+          winLinesOrder.push(name.toString());
+        }
+      }
+    }
+    log.debug(F, `Win Lines Order: ${winLinesOrder.join(', ')}`);
+
+    // Calculate the score
+    let score = 0;
+    validGameGrid.forEach(line => {
+      if (!/^(\p{Emoji})\1{3}$/u.test(line)) {
+        score += 1;
+      }
+    });
+    log.debug(F, `Connections score: ${score}`);
+
+    // Ensure the score is not more than 4
+    if (score > 4) {
+      log.debug(F, `Invalid Connections puzzle found (Score is more than 4): ${match[0]}`);
+      return false;
+    }
+    await updateConnectionsStats(userId, {
+      score,
+      puzzle: puzzleNumber,
+      easiest_category: winLinesOrder[0] ?? 'none',
+      easy_category: winLinesOrder[1] ?? 'none',
+      hard_category: winLinesOrder[2] ?? 'none',
+      hardest_category: winLinesOrder[3] ?? 'none',
+    });
     return true;
   }
   return false;
