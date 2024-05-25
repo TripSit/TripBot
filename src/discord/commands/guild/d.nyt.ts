@@ -8,7 +8,7 @@ import { stripIndents } from 'common-tags';
 import { SlashCommand } from '../../@types/commandDef';
 import commandContext from '../../utils/context';
 import {
-  todaysWordleNumbers, getUserWordleStats, getServerWordleStats, getUserConnectionsStats, getServerConnectionsStats,
+  todaysWordleNumbers, getUserWordleStats, getServerWordleStats, todaysConnectionsNumbers, getUserConnectionsStats, getServerConnectionsStats, getUserMiniStats, getServerMiniStats,
 } from '../../utils/nytUtils';
 
 const F = f(__filename);
@@ -52,7 +52,7 @@ export const dNYT: SlashCommand = {
           ))
         .addStringOption(option => option
           .setName('puzzle')
-          .setDescription('Puzzle number or date (YYYY-MM-DD)')
+          .setDescription('Puzzle number or date to get stats for')
           .setRequired(true)
           .setAutocomplete(true))
         .addBooleanOption(option => option
@@ -153,6 +153,31 @@ export const dNYT: SlashCommand = {
         await interaction.editReply({ embeds: [embed] });
         return true;
       }
+
+      // TODO: Implement mini stats
+      if (game === 'mini') {
+        const results = await getUserMiniStats(target.user.id);
+        if (!results) {
+          await interaction.editReply({ content: 'No stats found for this user!' });
+          return false;
+        }
+
+        embed.setColor('Blue');
+        embed.setDescription(stripIndents`
+          **🎮 Games Played:** ${results.stats.gamesPlayed}
+
+          **🔥 Current Streak:** ${results.stats.currentStreak}
+
+          **❤️‍🔥 Best Streak:** ${results.stats.bestStreak}
+
+          **🏆 Best Time:** ${results.stats.bestTime}
+
+          **⏱️ Average Time:** ${results.stats.averageTime}
+        `);
+        embed.setFooter({ text: `Most recent submission: ${results.stats.lastPlayed}` });
+        await interaction.editReply({ embeds: [embed] });
+        return true;
+      }
     }
 
     if (subcommand === 'server') {
@@ -218,10 +243,26 @@ export const dNYT: SlashCommand = {
         }
         const embed = new EmbedBuilder()
           .setTitle(`Server's ${game.charAt(0).toUpperCase() + game.slice(1)} ${puzzle} stats`);
+        // Check if the user is querying for a wordle from the future
+
+        const currentPuzzles = await todaysConnectionsNumbers();
+        const maxPuzzleNumber = Math.max(...currentPuzzles);
+        if (puzzle > maxPuzzleNumber) {
+          (
+            embed.setTitle(`Connections ${puzzle} is not available yet`)
+              .setDescription(`The most recent Connections ${maxPuzzleNumber}.`)
+              .setColor('Red')
+          );
+          await interaction.editReply({ embeds: [embed] });
+          return false;
+        }
 
         const results = await getServerConnectionsStats(puzzle);
         if (!results) {
-          await interaction.editReply({ content: 'No stats found for this server!' });
+          embed.setTitle(`No results for Connections ${puzzle}`);
+          embed.setDescription('Be the first to submit by posting them in chat. \n TripBot will react to your message if it\'s a valid submission.');
+          embed.setColor('Red');
+          await interaction.editReply({ embeds: [embed] });
           return false;
         }
         const nameToEmoji = {
@@ -245,6 +286,30 @@ export const dNYT: SlashCommand = {
         `);
         await interaction.editReply({ embeds: [embed] });
         return true;
+      }
+      if (game === 'mini') {
+        const puzzle = new Date(interaction.options.getString('puzzle') || '');
+        log.info(F, puzzle.toISOString());
+        if (!puzzle) {
+          await interaction.editReply({ content: 'No puzzle provided!' });
+          return false;
+        }
+        const embed = new EmbedBuilder()
+          .setTitle(`Server's ${game.charAt(0).toUpperCase() + game.slice(1)} ${puzzle} stats`);
+
+        const results = await getServerMiniStats(puzzle);
+        if (!results) {
+          await interaction.editReply({ content: 'No stats found for this server!' });
+          return false;
+        }
+        embed.setColor('Blue');
+        embed.setDescription(stripIndents`
+          **🎮 Games Played:** ${results.stats.gamesPlayed}
+
+          **🏆 Best Time** ${results.stats.bestTime}
+
+          **⏱️ Average Time:** ${results.stats.averageTime}
+        `);
       }
     }
 

@@ -1,4 +1,7 @@
-const F = f(__filename); // eslint-disable-line
+// eslint-disable-line
+import { format } from 'date-fns';
+
+const F = f(__filename);
 
 // TODO: Make validating Connections puzzles more robust, including checking win and loss conditions
 // TODO: If the puzzle is "new", reward with Trip Tokens
@@ -653,6 +656,104 @@ export async function todaysMiniDates() {
 
   log.debug(F, `Valid Mini puzzle dates: ${validDates[0]} (UTC+14 Newest Puzzle), ${validDates[1]} (Rest of World), ${validDates[2]} (Yesterday)`);
   return validDates;
+}
+
+export async function getServerMiniStats(puzzleDate: Date) {
+  // Find all the scores for the given puzzle
+  const scores = await db.mini_scores.findMany({
+    where: {
+      puzzle: puzzleDate,
+    },
+  });
+
+  if (!scores || scores.length === 0) {
+    return null;
+  }
+
+  // Initialize stats
+  const stats = {
+    gamesPlayed: 0,
+    bestTime: 0,
+    averageTime: 0,
+  };
+
+  stats.gamesPlayed = scores.length;
+  const bestTime = Math.min(...scores.map(score => score.score));
+  stats.bestTime = bestTime;
+  const averageTime = scores.reduce((acc, score) => acc + score.score, 0) / scores.length;
+  stats.averageTime = averageTime;
+
+  return { stats };
+}
+
+export async function getUserMiniStats(discordId: string) {
+  // Find the user with the given discordId
+  const user = await db.users.findFirst({
+    where: {
+      discord_id: discordId,
+    },
+  });
+
+  // If no user is found, throw an error
+  if (!user) {
+    throw new Error(`No user found with discordId: ${discordId}`);
+  }
+
+  // Find all the scores for the user
+  const scores = await db.mini_scores.findMany({
+    where: {
+      user_id: user.id,
+    },
+  });
+
+  if (!scores || scores.length === 0) {
+    throw new Error(`No scores found for user: ${discordId}`);
+  }
+
+  // Initialize stats
+  const stats = {
+    gamesPlayed: 0,
+    bestTime: 0,
+    averageTime: 0,
+    currentStreak: 0,
+    bestStreak: 0,
+    lastPlayed: '',
+  };
+
+  // Find the total number of games played by counting the number of scores
+  stats.gamesPlayed = scores.length;
+  // Find the best time by finding the minimum score
+  stats.bestTime = Math.min(...scores.map(score => score.score));
+  // Find the average time by summing all the scores and dividing by the total number of games played
+  stats.averageTime = scores.reduce((acc, score) => acc + score.score, 0) / stats.gamesPlayed;
+  // Sort the scores by puzzle date in ascending order
+  scores.sort((a, b) => a.puzzle.getTime() - b.puzzle.getTime());
+  // Initialize current streak and max streak
+  let currentStreak = 0;
+  let maxStreak = 0;
+  // Iterate over the sorted scores
+  for (let i = 0; i < scores.length; i += 1) {
+    // If the score is greater than 0 and the puzzle dates are consecutive or it's the first puzzle, increment the current streak
+    if (scores[i].score > 0 && (i === 0 || scores[i].puzzle.getTime() === scores[i - 1].puzzle.getTime() + 86400000)) {
+      currentStreak += 1;
+    } else {
+      // If the score is 0 or the puzzle dates are not consecutive, reset the current streak
+      currentStreak = 0;
+    }
+    // If the current streak
+    if (currentStreak > maxStreak) {
+      maxStreak = currentStreak;
+    }
+  }
+  // Set the current streak and best streak in the stats
+  stats.currentStreak = currentStreak;
+  stats.bestStreak = maxStreak;
+
+  // Find the last played puzzle date
+  const puzzleDate = scores[scores.length - 1].puzzle;
+  stats.lastPlayed = format(puzzleDate, 'EEEE, MMMM do, yyyy');
+
+  return { stats };
 }
 
 async function updateMiniStats(userId: string, newStats: { score: number, puzzle: Date }) {

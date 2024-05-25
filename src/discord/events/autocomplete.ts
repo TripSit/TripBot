@@ -3,7 +3,7 @@ import {
   GuildMember,
 } from 'discord.js';
 import Fuse from 'fuse.js';
-
+import { format, parse } from 'date-fns';
 import { ai_model } from '@prisma/client';
 import { Drug } from 'tripsit_drug_db';
 import pillColors from '../../../assets/data/pill_colors.json';
@@ -60,13 +60,47 @@ async function autocompleteNYT(interaction: AutocompleteInteraction) {
   const game = interaction.options.getString('game');
   const focusedOption = interaction.options.getFocused(true).name;
 
-  function generateDates(startDate: Date, endDate: Date): string[] {
+  const formats = [
+    'MM/dd/yyyy', // 01/01/2022
+    'dd/MM/yyyy', // 01/01/2022
+    'yyyy-MM-dd', // 2022-01-01
+    'M/d/yyyy', // 1/1/2022
+    'dd-MM-yyyy', // 01-01-2022
+    'yyyy/MM/dd', // 2022/01/01
+    'MMMM d, yyyy', // January 1, 2022
+    'd MMMM yyyy', // 1 January 2022
+    'd MMM, yyyy', // 1 Jan, 2022
+    'MMMM do, yyyy', // January 1st, 2022
+    'MMM d, yyyy', // Jan 1, 2022
+    'MMM dd, yyyy', // Jan 01, 2022
+    'MMMM dd, yyyy', // January 01, 2022
+    'dd MMM yyyy', // 01 Jan 2022
+    'dd MMMM', // 01 January
+    'dd MMM', // 01 Jan
+    'MMMM dd', // January 01
+    'MMM dd', // Jan 01
+    'do MMMM yyyy', // 1st January 2022
+    'do MMM, yyyy', // 1st Jan, 2022
+    'yyyy d M', // 2022 1 1
+    'yyyy dd MM', // 2022 01 01
+    'yyyy MMMM d', // 2022 January 1
+    'yyyy MMM d', // 2022 Jan 1
+    'yyyy do MMMM', // 2022 1st January
+  ];
+
+  function parseDate(input: string): string | null {
+    const date = formats.map(fmt => parse(input, fmt, new Date())).find(date => !Number.isNaN(date.getTime()));
+    return date ? format(date, 'EEEE, MMMM do, yyyy') : null;
+  }
+
+  function generateDates(startDate: Date, endDate: Date): { name: string, value: string }[] {
     const dates = [];
     const currentDate = startDate;
     log.debug(F, `Start date: ${startDate}`);
     log.debug(F, `End date: ${endDate}`);
     while (currentDate <= endDate) {
-      dates.push(currentDate.toISOString().substring(0, 10));
+      const formattedDate = format(currentDate, 'EEEE, MMMM do, yyyy');
+      dates.push({ name: formattedDate, value: currentDate.toISOString().substring(0, 10) });
       currentDate.setDate(currentDate.getDate() + 1);
     }
     return dates;
@@ -77,8 +111,8 @@ async function autocompleteNYT(interaction: AutocompleteInteraction) {
     const currentDate = new Date();
     currentDate.setUTCHours(currentDate.getUTCHours() + 14); // Set currentDate to the current date in UTC+14
     for (let i = recentNumber; i > 0; i--) {
-      const dateString = currentDate.toISOString().substring(0, 10);
-      datesAndNumbers.push({ name: `${i} (${dateString})`, value: i.toString() });
+      const formattedDate = format(currentDate, 'EEEE, MMMM do, yyyy');
+      datesAndNumbers.push({ name: `${i} (${formattedDate})`, value: i.toString() });
       currentDate.setDate(currentDate.getDate() - 1);
     }
     return datesAndNumbers;
@@ -88,44 +122,62 @@ async function autocompleteNYT(interaction: AutocompleteInteraction) {
     const wordleNumbers = (await todaysWordleNumbers()).map(Number); // Convert numbers to strings
     const recentNumber = Math.max(...wordleNumbers);
     const datesAndNumbers = generateDatesAndNumbers(recentNumber);
-    const fuse = new Fuse(datesAndNumbers, { shouldSort: true, keys: ['value'] });
+    const fuse = new Fuse(datesAndNumbers, { shouldSort: true, keys: ['name'] });
     const userInput = interaction.options.getFocused(true).value;
-    const results = fuse.search(userInput);
+    const dateStr = parseDate(userInput);
+    let results;
+    if (dateStr === null) {
+      results = fuse.search(userInput);
+    } else {
+      results = fuse.search(dateStr);
+    }
     const top5 = results.slice(0, 5);
     // If the user's input is empty, respond with the most recent 5 numbers, otherwise respond with the search results
     if (!userInput) {
       interaction.respond(datesAndNumbers.slice(0, 5));
     } else {
-      interaction.respond(top5.map(result => result.item));
+      interaction.respond(top5.map((result: { item: any }) => result.item));
     }
   } else if (focusedOption === 'puzzle' && game === 'connections') {
     const connectionsNumbers = (await todaysConnectionsNumbers()).map(Number); // Convert numbers to strings
     const recentNumber = Math.max(...connectionsNumbers);
     const datesAndNumbers = generateDatesAndNumbers(recentNumber);
-    const fuse = new Fuse(datesAndNumbers, { shouldSort: true, keys: ['value'] });
+    const fuse = new Fuse(datesAndNumbers, { shouldSort: true, keys: ['name'] });
     const userInput = interaction.options.getFocused(true).value;
-    const results = fuse.search(userInput);
+    const dateStr = parseDate(userInput);
+    let results;
+    if (dateStr === null) {
+      results = fuse.search(userInput);
+    } else {
+      results = fuse.search(dateStr);
+    }
     const top5 = results.slice(0, 5);
     // If the user's input is empty, respond with the most recent 5 numbers, otherwise respond with the search results
     if (!userInput) {
       interaction.respond(datesAndNumbers.slice(0, 5));
     } else {
-      interaction.respond(top5.map(result => result.item));
+      interaction.respond(top5.map((result: { item: any }) => result.item));
     }
   } else if (focusedOption === 'puzzle' && game === 'mini') {
     const miniDates = (await todaysMiniDates()).map(String); // Convert dates to strings
     const recentDate = new Date(miniDates[miniDates.length - 3]);
     log.debug(F, `Recent date: ${recentDate}`);
     const startDate = new Date('2016-06-01');
-    const dates = miniDates.length ? generateDates(startDate, recentDate) : ['No dates found'];
+    const dates = miniDates.length ? generateDates(startDate, recentDate) : [{ name: 'No dates found', value: '' }];
     const reversedDates = dates.reverse();
-    const fuse = new Fuse(reversedDates, { shouldSort: true });
+    const fuse = new Fuse(reversedDates.map(date => date.name), { shouldSort: true, keys: ['name'] });
     const userInput = interaction.options.getFocused(true).value;
-    const results = fuse.search(userInput);
+    const dateStr = parseDate(userInput);
+    let results;
+    if (dateStr === null) {
+      results = fuse.search(userInput);
+    } else {
+      results = fuse.search(dateStr);
+    }
     const top5 = results.slice(0, 5);
     // If the user's input is empty, respond with the most recent 5 dates, otherwise respond with the search results
     if (!userInput) {
-      interaction.respond(reversedDates.slice(0, 5).map(result => ({ name: result, value: result })));
+      interaction.respond(reversedDates.slice(0, 5).map(date => ({ name: date.name, value: date.value })));
     } else {
       interaction.respond(top5.map(result => ({ name: result.item, value: result.item })));
     }
