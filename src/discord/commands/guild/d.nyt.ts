@@ -4,6 +4,7 @@ import {
   GuildMember,
   EmbedBuilder,
 } from 'discord.js';
+import { parseISO, format } from 'date-fns';
 import { stripIndents } from 'common-tags';
 import { SlashCommand } from '../../@types/commandDef';
 import commandContext from '../../utils/context';
@@ -288,14 +289,15 @@ export const dNYT: SlashCommand = {
         return true;
       }
       if (game === 'mini') {
-        const puzzle = new Date(interaction.options.getString('puzzle') || '');
-        log.info(F, puzzle.toISOString());
+        const puzzle = (interaction.options.getString('puzzle') || '');
+        log.debug(F, `Puzzle: ${puzzle}`);
         if (!puzzle) {
           await interaction.editReply({ content: 'No puzzle provided!' });
           return false;
         }
         const embed = new EmbedBuilder()
-          .setTitle(`Server's ${game.charAt(0).toUpperCase() + game.slice(1)} ${puzzle} stats`);
+
+          .setTitle(`Server's The Mini ${format(parseISO(puzzle), 'MMMM do yyyy')} stats`);
 
         const results = await getServerMiniStats(puzzle);
         if (!results) {
@@ -310,6 +312,8 @@ export const dNYT: SlashCommand = {
 
           **⏱️ Average Time:** ${results.stats.averageTime}
         `);
+        await interaction.editReply({ embeds: [embed] });
+        return true;
       }
     }
 

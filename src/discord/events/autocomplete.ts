@@ -95,12 +95,17 @@ async function autocompleteNYT(interaction: AutocompleteInteraction) {
 
   function generateDates(startDate: Date, endDate: Date): { name: string, value: string }[] {
     const dates = [];
+    log.debug(F, `Start date: ${startDate}`);
+    log.debug(F, `End date: ${endDate}`);
     const currentDate = startDate;
     log.debug(F, `Start date: ${startDate}`);
     log.debug(F, `End date: ${endDate}`);
+    const timezoneOffset = currentDate.getTimezoneOffset() * 60 * 1000; // Get the timezone offset in milliseconds
     while (currentDate <= endDate) {
       const formattedDate = format(currentDate, 'EEEE, MMMM do, yyyy');
-      dates.push({ name: formattedDate, value: currentDate.toISOString().substring(0, 10) });
+      const dateInUTC = new Date(Date.UTC(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate()));
+      const dateWithOffset = new Date(dateInUTC.getTime() + timezoneOffset);
+      dates.push({ name: formattedDate, value: dateWithOffset.toISOString().substring(0, 10) });
       currentDate.setDate(currentDate.getDate() + 1);
     }
     return dates;
@@ -110,7 +115,7 @@ async function autocompleteNYT(interaction: AutocompleteInteraction) {
     const datesAndNumbers = [];
     const currentDate = new Date();
     currentDate.setUTCHours(currentDate.getUTCHours() + 14); // Set currentDate to the current date in UTC+14
-    for (let i = recentNumber; i > 0; i--) {
+    for (let i = recentNumber; i >= 1; i--) {
       const formattedDate = format(currentDate, 'EEEE, MMMM do, yyyy');
       datesAndNumbers.push({ name: `${i} (${formattedDate})`, value: i.toString() });
       currentDate.setDate(currentDate.getDate() - 1);
@@ -160,7 +165,9 @@ async function autocompleteNYT(interaction: AutocompleteInteraction) {
     }
   } else if (focusedOption === 'puzzle' && game === 'mini') {
     const miniDates = (await todaysMiniDates()).map(String); // Convert dates to strings
-    const recentDate = new Date(miniDates[miniDates.length - 3]);
+    log.debug(F, `Mini dates: ${miniDates}`);
+    const recentDateUTC = new Date(`${miniDates[0]}T00:00:00Z`);
+    const recentDate = new Date(recentDateUTC.getTime() + 14 * 60 * 60 * 1000);
     log.debug(F, `Recent date: ${recentDate}`);
     const startDate = new Date('2016-06-01');
     const dates = miniDates.length ? generateDates(startDate, recentDate) : [{ name: 'No dates found', value: '' }];

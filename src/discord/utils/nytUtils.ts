@@ -658,8 +658,9 @@ export async function todaysMiniDates() {
   return validDates;
 }
 
-export async function getServerMiniStats(puzzleDate: Date) {
+export async function getServerMiniStats(puzzleDate: string) {
   // Find all the scores for the given puzzle
+  log.debug(F, `Getting Mini stats for puzzle: ${puzzleDate}`);
   const scores = await db.mini_scores.findMany({
     where: {
       puzzle: puzzleDate,
@@ -682,6 +683,7 @@ export async function getServerMiniStats(puzzleDate: Date) {
   stats.bestTime = bestTime;
   const averageTime = scores.reduce((acc, score) => acc + score.score, 0) / scores.length;
   stats.averageTime = averageTime;
+  log.debug(F, `Mini stats: ${JSON.stringify(stats)}`);
 
   return { stats };
 }
@@ -727,14 +729,16 @@ export async function getUserMiniStats(discordId: string) {
   // Find the average time by summing all the scores and dividing by the total number of games played
   stats.averageTime = scores.reduce((acc, score) => acc + score.score, 0) / stats.gamesPlayed;
   // Sort the scores by puzzle date in ascending order
-  scores.sort((a, b) => a.puzzle.getTime() - b.puzzle.getTime());
+  scores.sort((a, b) => a.puzzle.localeCompare(b.puzzle));
+
   // Initialize current streak and max streak
   let currentStreak = 0;
   let maxStreak = 0;
+
   // Iterate over the sorted scores
   for (let i = 0; i < scores.length; i += 1) {
     // If the score is greater than 0 and the puzzle dates are consecutive or it's the first puzzle, increment the current streak
-    if (scores[i].score > 0 && (i === 0 || scores[i].puzzle.getTime() === scores[i - 1].puzzle.getTime() + 86400000)) {
+    if (scores[i].score > 0 && (i === 0 || isNextDay(scores[i - 1].puzzle, scores[i].puzzle))) {
       currentStreak += 1;
     } else {
       // If the score is 0 or the puzzle dates are not consecutive, reset the current streak
@@ -744,6 +748,12 @@ export async function getUserMiniStats(discordId: string) {
     if (currentStreak > maxStreak) {
       maxStreak = currentStreak;
     }
+  }
+
+  function isNextDay(date1: string, date2: string) {
+    const dateObj1 = new Date(date1);
+    const dateObj2 = new Date(date2);
+    return dateObj2.getTime() - dateObj1.getTime() === 86400000;
   }
   // Set the current streak and best streak in the stats
   stats.currentStreak = currentStreak;
@@ -756,7 +766,7 @@ export async function getUserMiniStats(discordId: string) {
   return { stats };
 }
 
-async function updateMiniStats(userId: string, newStats: { score: number, puzzle: Date }) {
+async function updateMiniStats(userId: string, newStats: { score: number, puzzle: string }) {
   // Find the user with the given discordId
   const user = await db.users.findFirst({
     where: {
@@ -808,19 +818,19 @@ export async function processTheMini(userId: string, messageContent: string): Pr
     const urlParts = url.split('&');
     const dateString = urlParts[0].split('=')[1];
     const timeString = urlParts[1].split('=')[1];
+    const date = dateString;
+    log.debug(F, `dateString: ${dateString}, timeString: ${timeString}`);
 
-    // Convert date string to Date object
-    const dateParts = dateString.split('-');
-    const date = new Date(parseInt(dateParts[0]), parseInt(dateParts[1]) - 1, parseInt(dateParts[2]));
+    // Get the date from the date string and make it into a (YYYY, MM, DD) tuple
 
     // Convert time string to integer
     const time = parseInt(timeString);
 
-    const validDates = await todaysMiniDates();
-    if (!validDates.includes(date.toISOString().substring(0, 10))) {
-      log.debug(F, `Invalid Mini puzzle found (Date is from the future): ${url}`);
-      return false;
-    }
+    // const validDates = await todaysMiniDates();
+    // if (!validDates.includes(date.toISOString().substring(0, 10))) {
+    //   log.debug(F, `Invalid Mini puzzle found (Date is from the future): ${url}`);
+    //   return false;
+    // }
     log.debug(F, `The Mini puzzle found: ${url}, Date: ${date}, Time: ${time}`);
     await updateMiniStats(userId, { score: time, puzzle: date });
     return true;
