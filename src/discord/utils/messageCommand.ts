@@ -9,7 +9,7 @@ import {
 import { stripIndents } from 'common-tags';
 import { sleep } from '../commands/guild/d.bottest';
 import { aiMessage } from '../commands/global/d.ai';
-import { processWordle, processConnections } from './nytUtils';
+import { processWordle, processConnections, processTheMini } from './nytUtils';
 
 // import log from '../../global/utils/log';
 // import {parse} from 'path';
@@ -103,6 +103,22 @@ async function isConnections(message: Message): Promise<boolean> {
 
   if (match) {
     return processConnections(userId, messageContent); // Pass userId and messageContent
+  }
+
+  return false;
+}
+
+async function isTheMini(message: Message): Promise<boolean> {
+  const messageContent = message.content;
+  const userId = message.author.id; // Extract userId from message
+
+  // Regular expression to check if the message possibly mentions a The Mini score
+  const theMiniScorePattern = /https:\/\/www\.nytimes\.com\/badges\/games\/mini\.html\?d=\d{4}-\d{2}-\d{2}&t=\d+&c=[a-f0-9]+&smid=url-share/;
+  const match = messageContent.match(theMiniScorePattern);
+
+  // If a match is found, send the message content for further processing
+  if (match) {
+    return processTheMini(userId, messageContent); // Pass userId and messageContent
   }
 
   return false;
@@ -364,6 +380,11 @@ give people a chance to answer 😄 If no one answers in 5 minutes you can try a
   const connectionsResult = await isConnections(message);
   if (connectionsResult) {
     log.debug(F, 'Valid Connections detected');
+    await message.react('✅');
+  }
+  const theMiniResult = await isTheMini(message);
+  if (theMiniResult) {
+    log.debug(F, 'Valid The Mini detected');
     await message.react('✅');
   }
   // else if (

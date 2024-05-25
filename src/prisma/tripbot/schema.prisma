@@ -173,6 +173,7 @@ model users {
   members                                                   members[]
   wordle_scores                                             wordle_scores[]
   connections_scores                                        connections_scores[]
+  mini_scores                                               mini_scores[]
 }
 
 model wordle_scores {
@@ -193,6 +194,14 @@ model connections_scores {
   hard_category    String
   hardest_category String
   user             users  @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "connectionsscores_userid_foreign")
+}
+
+model mini_scores {
+  id      String @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  user_id String @db.Uuid
+  puzzle  DateTime
+  score   Int
+  user    users  @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "miniscores_userid_foreign")
 }
 
 model members {

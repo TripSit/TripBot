@@ -27,6 +27,7 @@ export const dNYT: SlashCommand = {
         .addChoices(
           { name: 'Wordle', value: 'wordle' },
           { name: 'Connections', value: 'connections' },
+          { name: 'The Mini', value: 'mini' },
         ))
       .addUserOption(option => option
         .setName('target')
@@ -36,25 +37,29 @@ export const dNYT: SlashCommand = {
         .setName('ephemeral')
         .setDescription('Set to "True" to show the response only to you')
         .setRequired(false)))
-    .addSubcommand(subcommand => subcommand
-      .setName('server')
-      .setDescription('See info for the server')
-      .addStringOption(option => option
-        .setName('game')
-        .setDescription('The game to get stats for')
-        .setRequired(true)
-        .addChoices(
-          { name: 'Wordle', value: 'wordle' },
-          { name: 'Connections', value: 'connections' },
-        ))
-      .addIntegerOption(option => option
-        .setName('puzzle')
-        .setDescription('The puzzle to get stats for')
-        .setRequired(true))
-      .addBooleanOption(option => option
-        .setName('ephemeral')
-        .setDescription('Set to "True" to show the response only to you')
-        .setRequired(false))),
+    .addSubcommand(
+      subcommand => subcommand
+        .setName('server')
+        .setDescription('See info for the server')
+        .addStringOption(option => option
+          .setName('game')
+          .setDescription('The game to get stats for')
+          .setRequired(true)
+          .addChoices(
+            { name: 'Wordle', value: 'wordle' },
+            { name: 'Connections', value: 'connections' },
+            { name: 'The Mini', value: 'mini' },
+          ))
+        .addStringOption(option => option
+          .setName('puzzle')
+          .setDescription('Puzzle number or date (YYYY-MM-DD)')
+          .setRequired(true)
+          .setAutocomplete(true))
+        .addBooleanOption(option => option
+          .setName('ephemeral')
+          .setDescription('Set to "True" to show the response only to you')
+          .setRequired(false)),
+    ),
 
   async execute(
     interaction,
@@ -122,6 +127,7 @@ export const dNYT: SlashCommand = {
           **📊 Guess Distribution:**
           ${frequencyGraph}
           `);
+        embed.setFooter({ text: `Most recent submission: ${results.stats.lastPlayed}` });
         await interaction.editReply({ embeds: [embed] });
         return true;
       }
@@ -143,21 +149,21 @@ export const dNYT: SlashCommand = {
           
           **❤️‍🔥 Best Streak:** ${results.stats.bestStreak}
           `);
+        embed.setFooter({ text: `Most recent submission: ${results.stats.lastPlayed}` });
         await interaction.editReply({ embeds: [embed] });
         return true;
       }
     }
 
     if (subcommand === 'server') {
-      const puzzle = interaction.options.getInteger('puzzle');
-      if (!puzzle) {
-        await interaction.editReply({ content: 'No puzzle provided!' });
-        return false;
-      }
-      const embed = new EmbedBuilder()
-        .setTitle(`Server's ${game.charAt(0).toUpperCase() + game.slice(1)} ${puzzle} stats`);
-
       if (game === 'wordle') {
+        const puzzle = parseInt(interaction.options.getString('puzzle') || '', 10);
+        if (!puzzle) {
+          await interaction.editReply({ content: 'No puzzle provided!' });
+          return false;
+        }
+        const embed = new EmbedBuilder()
+          .setTitle(`Server's ${game.charAt(0).toUpperCase() + game.slice(1)} ${puzzle} stats`);
         // Check if the user is querying for a wordle from the future
         const currentPuzzles = await todaysWordleNumbers();
         const maxPuzzleNumber = Math.max(...currentPuzzles);
@@ -205,6 +211,14 @@ export const dNYT: SlashCommand = {
         return true;
       }
       if (game === 'connections') {
+        const puzzle = parseInt(interaction.options.getString('puzzle') || '', 10);
+        if (!puzzle) {
+          await interaction.editReply({ content: 'No puzzle provided!' });
+          return false;
+        }
+        const embed = new EmbedBuilder()
+          .setTitle(`Server's ${game.charAt(0).toUpperCase() + game.slice(1)} ${puzzle} stats`);
+
         const results = await getServerConnectionsStats(puzzle);
         if (!results) {
           await interaction.editReply({ content: 'No stats found for this server!' });

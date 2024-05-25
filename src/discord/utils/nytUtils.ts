@@ -3,6 +3,38 @@ const F = f(__filename); // eslint-disable-line
 // TODO: Make validating Connections puzzles more robust, including checking win and loss conditions
 // TODO: If the puzzle is "new", reward with Trip Tokens
 
+async function submissionPayout(userId: string, payout: number) {
+  // Get the user's current personaData
+  // Check get fresh persona data
+  const userData = await db.users.upsert({
+    where: {
+      discord_id: userId,
+    },
+    create: {
+      discord_id: userId,
+    },
+    update: {},
+  });
+  const personaData = await db.personas.upsert({
+    where: {
+      user_id: userData.id,
+    },
+    create: {
+      user_id: userData.id,
+    },
+    update: {},
+  });
+
+  personaData.tokens += payout;
+  await db.personas.upsert({
+    where: {
+      user_id: userData.id,
+    },
+    create: personaData,
+    update: personaData,
+  });
+}
+
 export async function todaysWordleNumbers() {
   // Get the current date and time in UTC
   const currentDate = new Date();
@@ -86,6 +118,7 @@ export async function getUserWordleStats(discordId: string) {
     winRate: 0,
     currentStreak: 0,
     bestStreak: 0,
+    lastPlayed: 0,
   };
 
   // Find the total number of games played by counting the number of scores
@@ -117,6 +150,9 @@ export async function getUserWordleStats(discordId: string) {
   stats.currentStreak = currentStreak;
   stats.bestStreak = maxStreak;
 
+  // Find the last played puzzle number
+  stats.lastPlayed = scores[scores.length - 1].puzzle;
+
   // Find the frequency of each score
   const scoreFrequency = scores.reduce((acc: { [key: number]: number }, score) => {
     if (!acc[score.score]) {
@@ -142,6 +178,7 @@ async function updateWordleStats(discordId: string, newStats: { score: number, p
     throw new Error(`No user found with discordId: ${discordId}`);
   }
 
+  const newPuzzles = await todaysWordleNumbers();
   // Try to find an existing wordle_scores record for the given user and puzzle
   const existingScore = await db.wordle_scores.findFirst({
     where: {
@@ -170,6 +207,10 @@ async function updateWordleStats(discordId: string, newStats: { score: number, p
       },
     });
     log.debug(F, `Wordle score created for user: ${discordId}`);
+    // If the puzzle is new, reward with tokens
+    if (newPuzzles.includes(newStats.puzzle)) {
+      await submissionPayout(discordId, 50);
+    }
   }
 
   // UPDATE STORED STATS
@@ -373,11 +414,14 @@ export async function getServerConnectionsStats(puzzleNumber: number) {
   Object.keys(categoryDifficulty).forEach(color => {
     categoryDifficulty[color].averageDifficulty = categoryDifficulty[color].totalDifficulty / categoryDifficulty[color].count;
   });
-  // Sort the categories by average difficulty in ascending order
-  stats.easiestCategory = Object.keys(categoryDifficulty).sort((a, b) => (categoryDifficulty[a].averageDifficulty || 0) - (categoryDifficulty[b].averageDifficulty || 0))[0];
-  stats.easyCategory = Object.keys(categoryDifficulty).sort((a, b) => (categoryDifficulty[a].averageDifficulty || 0) - (categoryDifficulty[b].averageDifficulty || 0))[1];
-  stats.hardCategory = Object.keys(categoryDifficulty).sort((a, b) => (categoryDifficulty[a].averageDifficulty || 0) - (categoryDifficulty[b].averageDifficulty || 0))[2];
-  stats.hardestCategory = Object.keys(categoryDifficulty).sort((a, b) => (categoryDifficulty[a].averageDifficulty || 0) - (categoryDifficulty[b].averageDifficulty || 0))[3];
+  const sortedCategories = Object.keys(categoryDifficulty).sort((a, b) => (categoryDifficulty[a].averageDifficulty || 0) - (categoryDifficulty[b].averageDifficulty || 0));
+
+  const [easiestCategory, easyCategory, hardCategory, hardestCategory] = sortedCategories;
+
+  stats.easiestCategory = easiestCategory;
+  stats.easyCategory = easyCategory;
+  stats.hardCategory = hardCategory;
+  stats.hardestCategory = hardestCategory;
   return { stats, categoryDifficulty };
 }
 
@@ -411,6 +455,7 @@ export async function getUserConnectionsStats(discordId: string) {
     winRate: 0,
     currentStreak: 0,
     bestStreak: 0,
+    lastPlayed: 0,
   };
 
   // Find the total number of games played by counting the number of scores
@@ -441,6 +486,9 @@ export async function getUserConnectionsStats(discordId: string) {
   stats.currentStreak = currentStreak;
   stats.bestStreak = maxStreak;
 
+  // Find the last played puzzle number
+  stats.lastPlayed = scores[scores.length - 1].puzzle;
+
   // Find the frequency of each score
   const scoreFrequency = scores.reduce((acc: { [key: number]: number }, score) => {
     if (!acc[score.score]) {
@@ -465,6 +513,8 @@ async function updateConnectionsStats(discordId: string, newStats: { score: numb
   if (!user) {
     throw new Error(`No user found with discordId: ${discordId}`);
   }
+
+  const newPuzzles = await todaysConnectionsNumbers();
 
   // Try to find an existing connections_scores record for the given user and puzzle
   const existingScore = await db.connections_scores.findFirst({
@@ -497,6 +547,10 @@ async function updateConnectionsStats(discordId: string, newStats: { score: numb
         ...newStats,
       },
     });
+    // If the puzzle is new, reward with tokens
+    if (newPuzzles.includes(newStats.puzzle)) {
+      await submissionPayout(discordId, 50);
+    }
     log.debug(F, `Connections score created for user: ${discordId}`);
   }
 }
@@ -555,6 +609,7 @@ export async function processConnections(userId: string, messageContent: string)
       }
     });
     log.debug(F, `Connections score: ${score}`);
+    await todaysMiniDates();
 
     // Ensure the score is not more than 4
     if (score > 4) {
@@ -569,6 +624,104 @@ export async function processConnections(userId: string, messageContent: string)
       hard_category: winLinesOrder[2] ?? 'none',
       hardest_category: winLinesOrder[3] ?? 'none',
     });
+    return true;
+  }
+  return false;
+}
+
+export async function todaysMiniDates() {
+  // Get the current date and time in UTC
+  const currentDate = new Date();
+
+  // Add 14 hours to the current UTC time to get the date in UTC+14
+  currentDate.setUTCHours(currentDate.getUTCHours() + 14);
+
+  // Get yesterday's date
+  const yesterday = new Date(currentDate);
+  yesterday.setUTCDate(currentDate.getUTCDate() - 1);
+
+  // Get the day before yesterday's date
+  const dayBeforeYesterday = new Date(currentDate);
+  dayBeforeYesterday.setUTCDate(currentDate.getUTCDate() - 2);
+
+  // List of the last 3 valid dates for Mini puzzles
+  const validDates = [
+    currentDate.toISOString().substring(0, 10), // UTC+14 Newest Puzzle
+    yesterday.toISOString().substring(0, 10), // Rest of World
+    dayBeforeYesterday.toISOString().substring(0, 10), // Yesterday
+  ];
+
+  log.debug(F, `Valid Mini puzzle dates: ${validDates[0]} (UTC+14 Newest Puzzle), ${validDates[1]} (Rest of World), ${validDates[2]} (Yesterday)`);
+  return validDates;
+}
+
+async function updateMiniStats(userId: string, newStats: { score: number, puzzle: Date }) {
+  // Find the user with the given discordId
+  const user = await db.users.findFirst({
+    where: {
+      discord_id: userId,
+    },
+  });
+
+  // If no user is found, throw an error
+  if (!user) {
+    throw new Error(`No user found with discordId: ${userId}`);
+  }
+
+  // Try to find an existing mini_scores record for the given user and date
+  const existingScore = await db.mini_scores.findFirst({
+    where: {
+      user_id: user.id,
+      puzzle: newStats.puzzle,
+    },
+  });
+
+  if (existingScore) {
+    // If a record is found, update it with the new score
+    await db.mini_scores.update({
+      where: {
+        id: existingScore.id,
+      },
+      data: {
+        score: newStats.score,
+      },
+    });
+    log.debug(F, `Mini score updated for user: ${userId}`);
+  } else {
+    // If no record is found, create a new one
+    await db.mini_scores.create({
+      data: {
+        user_id: user.id,
+        ...newStats,
+      },
+    });
+    log.debug(F, `Mini score created for user: ${userId}`);
+  }
+}
+
+export async function processTheMini(userId: string, messageContent: string): Promise<boolean> {
+  const theMiniScorePattern = /https:\/\/www\.nytimes\.com\/badges\/games\/mini\.html\?d=\d{4}-\d{2}-\d{2}&t=\d+&c=[a-f0-9]+&smid=url-share/;
+  const match = messageContent.match(theMiniScorePattern);
+  if (match) {
+    const url = match[0];
+    const urlParts = url.split('&');
+    const dateString = urlParts[0].split('=')[1];
+    const timeString = urlParts[1].split('=')[1];
+
+    // Convert date string to Date object
+    const dateParts = dateString.split('-');
+    const date = new Date(parseInt(dateParts[0]), parseInt(dateParts[1]) - 1, parseInt(dateParts[2]));
+
+    // Convert time string to integer
+    const time = parseInt(timeString);
+
+    const validDates = await todaysMiniDates();
+    if (!validDates.includes(date.toISOString().substring(0, 10))) {
+      log.debug(F, `Invalid Mini puzzle found (Date is from the future): ${url}`);
+      return false;
+    }
+    log.debug(F, `The Mini puzzle found: ${url}, Date: ${date}, Time: ${time}`);
+    await updateMiniStats(userId, { score: time, puzzle: date });
     return true;
   }
   return false;

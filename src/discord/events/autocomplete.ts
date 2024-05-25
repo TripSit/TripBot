@@ -13,6 +13,7 @@ import tsData from '../../../assets/data/tripsitDB.json';
 import timezones from '../../../assets/data/timezones.json';
 import unitsOfMeasurement from '../../../assets/data/units_of_measurement.json';
 import { CbSubstance } from '../../global/@types/combined';
+import { todaysWordleNumbers, todaysConnectionsNumbers, todaysMiniDates } from '../utils/nytUtils';
 
 const drugDataTripsit = tsData as {
   [key: string]: Drug;
@@ -53,6 +54,83 @@ const drugNames = drugDataAll.map(drug => ({
   name: drug.name.slice(0, 1).toUpperCase() + drug.name.slice(1),
   aliases: drug.aliases?.map(alias => alias.slice(0, 1).toUpperCase() + alias.slice(1)),
 }));
+
+// TODO: Finish autocompleteNYT or remove it
+async function autocompleteNYT(interaction: AutocompleteInteraction) {
+  const game = interaction.options.getString('game');
+  const focusedOption = interaction.options.getFocused(true).name;
+
+  function generateDates(startDate: Date, endDate: Date): string[] {
+    const dates = [];
+    const currentDate = startDate;
+    log.debug(F, `Start date: ${startDate}`);
+    log.debug(F, `End date: ${endDate}`);
+    while (currentDate <= endDate) {
+      dates.push(currentDate.toISOString().substring(0, 10));
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+    return dates;
+  }
+
+  function generateDatesAndNumbers(recentNumber: number): { name: string, value: string }[] {
+    const datesAndNumbers = [];
+    const currentDate = new Date();
+    currentDate.setUTCHours(currentDate.getUTCHours() + 14); // Set currentDate to the current date in UTC+14
+    for (let i = recentNumber; i > 0; i--) {
+      const dateString = currentDate.toISOString().substring(0, 10);
+      datesAndNumbers.push({ name: `${i} (${dateString})`, value: i.toString() });
+      currentDate.setDate(currentDate.getDate() - 1);
+    }
+    return datesAndNumbers;
+  }
+
+  if (focusedOption === 'puzzle' && game === 'wordle') {
+    const wordleNumbers = (await todaysWordleNumbers()).map(Number); // Convert numbers to strings
+    const recentNumber = Math.max(...wordleNumbers);
+    const datesAndNumbers = generateDatesAndNumbers(recentNumber);
+    const fuse = new Fuse(datesAndNumbers, { shouldSort: true, keys: ['value'] });
+    const userInput = interaction.options.getFocused(true).value;
+    const results = fuse.search(userInput);
+    const top5 = results.slice(0, 5);
+    // If the user's input is empty, respond with the most recent 5 numbers, otherwise respond with the search results
+    if (!userInput) {
+      interaction.respond(datesAndNumbers.slice(0, 5));
+    } else {
+      interaction.respond(top5.map(result => result.item));
+    }
+  } else if (focusedOption === 'puzzle' && game === 'connections') {
+    const connectionsNumbers = (await todaysConnectionsNumbers()).map(Number); // Convert numbers to strings
+    const recentNumber = Math.max(...connectionsNumbers);
+    const datesAndNumbers = generateDatesAndNumbers(recentNumber);
+    const fuse = new Fuse(datesAndNumbers, { shouldSort: true, keys: ['value'] });
+    const userInput = interaction.options.getFocused(true).value;
+    const results = fuse.search(userInput);
+    const top5 = results.slice(0, 5);
+    // If the user's input is empty, respond with the most recent 5 numbers, otherwise respond with the search results
+    if (!userInput) {
+      interaction.respond(datesAndNumbers.slice(0, 5));
+    } else {
+      interaction.respond(top5.map(result => result.item));
+    }
+  } else if (focusedOption === 'puzzle' && game === 'mini') {
+    const miniDates = (await todaysMiniDates()).map(String); // Convert dates to strings
+    const recentDate = new Date(miniDates[miniDates.length - 3]);
+    log.debug(F, `Recent date: ${recentDate}`);
+    const startDate = new Date('2016-06-01');
+    const dates = miniDates.length ? generateDates(startDate, recentDate) : ['No dates found'];
+    const reversedDates = dates.reverse();
+    const fuse = new Fuse(reversedDates, { shouldSort: true });
+    const userInput = interaction.options.getFocused(true).value;
+    const results = fuse.search(userInput);
+    const top5 = results.slice(0, 5);
+    // If the user's input is empty, respond with the most recent 5 dates, otherwise respond with the search results
+    if (!userInput) {
+      interaction.respond(reversedDates.slice(0, 5).map(result => ({ name: result, value: result })));
+    } else {
+      interaction.respond(top5.map(result => ({ name: result.item, value: result.item })));
+    }
+  }
+}
 
 async function autocompletePills(interaction:AutocompleteInteraction) {
   const focusedOption = interaction.options.getFocused(true).name;
@@ -655,6 +733,8 @@ export async function autocomplete(interaction:AutocompleteInteraction):Promise<
     }
   } else if (interaction.commandName === 'quote') {
     await autocompleteQuotes(interaction);
+  } else if (interaction.commandName === 'nyt') {
+    await autocompleteNYT(interaction);
   } else { // If you don't need a specific autocomplete, return a list of drug names
     await autocompleteDrugNames(interaction);
   }
