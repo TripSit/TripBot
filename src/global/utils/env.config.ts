@@ -77,6 +77,7 @@ export const env = {
   NYT_WORDLE_ICON: 'https://i.gyazo.com/d4f3ec029483cf891918b7bb76573000.png',
   NYT_CONNECTIONS_ICON: 'https://i.gyazo.com/d075fe124db5a5fcf5035a1d2ec60799.png',
   NYT_THEMINI_ICON: 'https://i.gyazo.com/1a011c91c8e30e2994c83825fdeb4b62.png',
+  NYT_MAIN_ICON: 'https://i.gyazo.com/f95deb7f51fb9122b783bed729860bbb.png',
 
   CHANNEL_TICKETBOOTH: isProd ? '1014889750206881792' : '1052634079960518778',
   CHANNEL_WELCOME: isProd ? '1021385869262864464' : '1052634082263187456',

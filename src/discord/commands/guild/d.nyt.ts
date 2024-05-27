@@ -61,29 +61,30 @@ export const dNYT: SlashCommand = {
         .setName('ephemeral')
         .setDescription('Set to "True" to show the response only to you')
         .setRequired(false)))
-    .addSubcommand(
-      subcommand => subcommand
-        .setName('server')
-        .setDescription('See info for the server')
-        .addStringOption(option => option
-          .setName('game')
-          .setDescription('The game to get stats for')
-          .setRequired(true)
-          .addChoices(
-            { name: 'Wordle', value: 'wordle' },
-            { name: 'Connections', value: 'connections' },
-            { name: 'The Mini', value: 'mini' },
-          ))
-        .addStringOption(option => option
-          .setName('puzzle')
-          .setDescription('Puzzle to get stats for')
-          .setRequired(true)
-          .setAutocomplete(true))
-        .addBooleanOption(option => option
-          .setName('ephemeral')
-          .setDescription('Set to "True" to show the response only to you')
-          .setRequired(false)),
-    ),
+    .addSubcommand(subcommand => subcommand
+      .setName('server')
+      .setDescription('See info for the server')
+      .addStringOption(option => option
+        .setName('game')
+        .setDescription('The game to get stats for')
+        .setRequired(true)
+        .addChoices(
+          { name: 'Wordle', value: 'wordle' },
+          { name: 'Connections', value: 'connections' },
+          { name: 'The Mini', value: 'mini' },
+        ))
+      .addStringOption(option => option
+        .setName('puzzle')
+        .setDescription('Puzzle to get stats for')
+        .setRequired(true)
+        .setAutocomplete(true))
+      .addBooleanOption(option => option
+        .setName('ephemeral')
+        .setDescription('Set to "True" to show the response only to you')
+        .setRequired(false)))
+    .addSubcommand(subcommand => subcommand
+      .setName('help')
+      .setDescription('Help for NYT Games')),
 
   async execute(
     interaction,
@@ -96,6 +97,29 @@ export const dNYT: SlashCommand = {
     }
 
     const subcommand = interaction.options.getSubcommand();
+
+    if (subcommand === 'help') {
+      const embed = new EmbedBuilder()
+        .setAuthor({ name: 'NYT Games Help', iconURL: env.NYT_MAIN_ICON, url: 'https://www.nytimes.com/crosswords' })
+        .setColor('Yellow')
+        .setDescription(stripIndents`
+          **Usage:**
+          "NYT Games" are games from the New York Times that TripBot tracks stats for.
+          Submit results to the bot by posting them in chat.
+          If the result is valid, the bot will react to the message.
+
+          **Supported games:**
+          - [Wordle](https://www.nytimes.com/games/wordle/index.html)
+          - [Connections](https://www.nytimes.com/puzzles/connections)
+          - [The Mini](https://www.nytimes.com/crosswords/game/mini)
+
+          **TripTokens:**
+          If your submission is one of the 3 most recent puzzles available, you will tokens for submitting a valid result.
+          `);
+      await interaction.editReply({ embeds: [embed] });
+      return true;
+    }
+
     const game = interaction.options.getString('game');
     if (!game) {
       await interaction.editReply({ content: 'No game provided!' });
