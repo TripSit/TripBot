@@ -9,10 +9,33 @@ import { stripIndents } from 'common-tags';
 import { SlashCommand } from '../../@types/commandDef';
 import commandContext from '../../utils/context';
 import {
-  todaysWordleNumbers, getUserWordleStats, getServerWordleStats, todaysConnectionsNumbers, getUserConnectionsStats, getServerConnectionsStats, getUserMiniStats, getServerMiniStats,
+  Wordle, Connections, TheMini,
 } from '../../utils/nytUtils';
 
 const F = f(__filename);
+
+function formatTime(seconds: number) { // eslint-disable-line
+  let remainingSeconds = seconds % (24 * 60 * 60);
+  const days = Math.floor(remainingSeconds / (24 * 60 * 60));
+  remainingSeconds %= 24 * 60 * 60;
+  const hours = Math.floor(remainingSeconds / (60 * 60));
+  remainingSeconds %= 60 * 60;
+  const minutes = Math.floor(remainingSeconds / 60);
+  remainingSeconds %= 60;
+
+  let timeString = '';
+  if (days > 0) timeString += `${days} days, `;
+  if (hours > 0) timeString += `${hours} hr, `;
+  if (minutes > 0) timeString += `${minutes} min, `;
+  if (remainingSeconds > 0) timeString += `${remainingSeconds} sec`;
+
+  // Remove trailing comma and space
+  if (timeString.endsWith(', ')) {
+    timeString = timeString.slice(0, -2);
+  }
+
+  return timeString;
+}
 
 export const dNYT: SlashCommand = {
   data: new SlashCommandBuilder()
@@ -53,7 +76,7 @@ export const dNYT: SlashCommand = {
           ))
         .addStringOption(option => option
           .setName('puzzle')
-          .setDescription('Puzzle number or date to get stats for')
+          .setDescription('Puzzle to get stats for')
           .setRequired(true)
           .setAutocomplete(true))
         .addBooleanOption(option => option
@@ -83,8 +106,6 @@ export const dNYT: SlashCommand = {
       const target = interaction.options.getMember('target')
         ? interaction.options.getMember('target') as GuildMember
         : interaction.member as GuildMember;
-      const embed = new EmbedBuilder()
-        .setTitle(`${target.displayName}'s ${game.charAt(0).toUpperCase() + game.slice(1)} stats`);
 
       const user = await db.users.findFirst({
         where: {
@@ -97,9 +118,15 @@ export const dNYT: SlashCommand = {
       }
 
       if (game === 'wordle') {
-        const results = await getUserWordleStats(target.user.id);
+        const embed = new EmbedBuilder()
+          .setAuthor({ name: `${target.displayName}'s Wordle stats`, iconURL: env.NYT_WORDLE_ICON, url: 'https://www.nytimes.com/games/wordle/index.html' });
+
+        const results = await Wordle.getUserStats(target.user.id);
         if (!results) {
-          await interaction.editReply({ content: 'No stats found for this user!' });
+          embed.setColor('Red');
+          embed.setTitle(`${target.displayName} has no Wordle stats`);
+          embed.setDescription('Encourage them to submit their first result! \n Results are submitted by posting them in chat. \n TripBot will react to the message if it\'s a valid submission.');
+          await interaction.editReply({ embeds: [embed] });
           return false;
         }
 
@@ -121,23 +148,43 @@ export const dNYT: SlashCommand = {
 
           **🏆 Win Rate:** ${(results.stats.winRate * 100)}%
 
-          **🔥 Current Streak:** ${results.stats.currentStreak}
+          **📅 Submission Streak:** ${results.stats.submissionStreak}
 
-          **❤️‍🔥 Best Streak:** ${results.stats.bestStreak}
+          **🔥 Win Streak:** ${results.stats.currentStreak}
+
+          **❤️‍🔥 Best Win Streak:** ${results.stats.bestStreak}
 
           **📊 Guess Distribution:**
           ${frequencyGraph}
+          **⭐ Latest Result:** 
+          Wordle ${results.stats.lastPlayed.toLocaleString()} ${results.stats.lastScore === 0 ? 'X' : results.stats.lastScore}/6
+          ${Array.from(results.stats.lastGrid).reduce((acc, emoji, i) => acc + emoji + (i % 5 === 4 ? '\n' : ''), '')}
           `);
-        embed.setFooter({ text: `Most recent submission: ${results.stats.lastPlayed}` });
         await interaction.editReply({ embeds: [embed] });
         return true;
       }
 
       if (game === 'connections') {
-        const results = await getUserConnectionsStats(target.user.id);
+        const embed = new EmbedBuilder()
+          .setAuthor({ name: `${target.displayName}'s Connections stats`, iconURL: env.NYT_CONNECTIONS_ICON, url: 'https://www.nytimes.com/puzzles/connections' });
+
+        const results = await Connections.getUserStats(target.user.id);
         if (!results) {
           await interaction.editReply({ content: 'No stats found for this user!' });
           return false;
+        }
+
+        const numberEmoji = ['0️⃣', '1️⃣', '2️⃣', '3️⃣'];
+        const maxFrequency = Math.max(...Object.values(results.scoreFrequency));
+        let frequencyGraph = '';
+        for (let score = 0; score < 4; score += 1) {
+          const frequency = results.scoreFrequency[score] || 0;
+          // Calculate the bar length as the frequency of the score divided by the maximum frequency, multiplied by 10
+          const barLength = frequency > 0 ? Math.round((frequency / maxFrequency) * 15) : 1;
+          const bar = '▇'.repeat(barLength);
+          // Use the corresponding emoji instead of the number
+          const scoreEmoji = numberEmoji[score];
+          frequencyGraph += `${scoreEmoji}: ${bar} ${frequency}\n`;
         }
 
         embed.setColor('Purple');
@@ -146,18 +193,30 @@ export const dNYT: SlashCommand = {
 
           **🏆 Win Rate:** ${(results.stats.winRate * 100)}%
 
-          **🔥Current Streak:** ${results.stats.currentStreak}
+          **📅 Submission Streak:** ${results.stats.submissionStreak}
+
+          **🔥 Win Streak:** ${results.stats.currentStreak}
           
-          **❤️‍🔥 Best Streak:** ${results.stats.bestStreak}
+          **❤️‍🔥 Best Win Streak:** ${results.stats.bestStreak}
+
+          **📊 Mistakes Distribution:**
+          ${frequencyGraph}
+          **⭐ Latest Result:**
+          Connections
+          Puzzle #${results.stats.lastPlayed.toLocaleString()}
+          ${Array.from(results.stats.lastGrid).reduce((acc, emoji, i) => acc + emoji + (i % 4 === 3 ? '\n' : ''), '')}
+          
           `);
-        embed.setFooter({ text: `Most recent submission: ${results.stats.lastPlayed}` });
         await interaction.editReply({ embeds: [embed] });
         return true;
       }
 
       // TODO: Implement mini stats
       if (game === 'mini') {
-        const results = await getUserMiniStats(target.user.id);
+        const embed = new EmbedBuilder()
+          .setAuthor({ name: `${target.displayName}'s The Mini stats`, iconURL: env.NYT_THEMINI_ICON, url: 'https://www.nytimes.com/crosswords/game/mini' });
+
+        const results = await TheMini.getUserStats(target.user.id);
         if (!results) {
           await interaction.editReply({ content: 'No stats found for this user!' });
           return false;
@@ -167,15 +226,20 @@ export const dNYT: SlashCommand = {
         embed.setDescription(stripIndents`
           **🎮 Games Played:** ${results.stats.gamesPlayed}
 
-          **🔥 Current Streak:** ${results.stats.currentStreak}
+          **📅 Submission Streak:** ${results.stats.submissionStreak}
 
-          **❤️‍🔥 Best Streak:** ${results.stats.bestStreak}
+          **🔥 Win Streak:** ${results.stats.currentStreak}
 
-          **🏆 Best Time:** ${results.stats.bestTime}
+          **❤️‍🔥 Best Win Streak:** ${results.stats.bestStreak}
 
-          **⏱️ Average Time:** ${results.stats.averageTime}
+          **🏆 Best Time:** ${formatTime(results.stats.bestTime)}
+
+          **⏱️ Average Time:** ${formatTime(results.stats.averageTime)}
+
+          **⭐ Latest Result:**
+          ${results.stats.lastPlayed}
+          ${formatTime(results.stats.lastScore)}
         `);
-        embed.setFooter({ text: `Most recent submission: ${results.stats.lastPlayed}` });
         await interaction.editReply({ embeds: [embed] });
         return true;
       }
@@ -189,23 +253,24 @@ export const dNYT: SlashCommand = {
           return false;
         }
         const embed = new EmbedBuilder()
-          .setTitle(`Server's ${game.charAt(0).toUpperCase() + game.slice(1)} ${puzzle} stats`);
+          .setAuthor({ name: 'Server\'s Wordle stats', iconURL: env.NYT_WORDLE_ICON, url: 'https://www.nytimes.com/games/wordle/index.html' })
+          .setTitle(`Puzzle #${puzzle.toLocaleString()}`);
         // Check if the user is querying for a wordle from the future
-        const currentPuzzles = await todaysWordleNumbers();
+        const currentPuzzles = await Wordle.todaysPuzzles();
         const maxPuzzleNumber = Math.max(...currentPuzzles);
         if (puzzle > maxPuzzleNumber) {
           (
-            embed.setTitle(`Wordle ${puzzle} is not available yet`)
-              .setDescription(`The most recent Wordle ${maxPuzzleNumber}.`)
+            embed.setTitle(`Wordle #${puzzle.toLocaleString()} is not available yet`)
+              .setDescription(`The most recent is #${maxPuzzleNumber.toLocaleString()}.`)
               .setColor('Red')
           );
           await interaction.editReply({ embeds: [embed] });
           return false;
         }
 
-        const results = await getServerWordleStats(puzzle);
+        const results = await Wordle.getServerStats(puzzle);
         if (!results) {
-          embed.setTitle(`No results for Wordle ${puzzle}`);
+          embed.setTitle(`No results for Wordle #${puzzle.toLocaleString()}`);
           embed.setDescription('Be the first to submit by posting them in chat. \n TripBot will react to your message if it\'s a valid submission.');
           embed.setColor('Red');
           await interaction.editReply({ embeds: [embed] });
@@ -226,7 +291,7 @@ export const dNYT: SlashCommand = {
         }
         embed.setColor('Green');
         embed.setDescription(stripIndents`
-          **🎮 Games Submitted:** ${results.stats.gamesPlayed}
+          **🎮 Games Played:** ${results.stats.gamesPlayed}
 
           **🏆 Win Rate:** ${(results.stats.winRate * 100)}%
 
@@ -243,35 +308,43 @@ export const dNYT: SlashCommand = {
           return false;
         }
         const embed = new EmbedBuilder()
-          .setTitle(`Server's ${game.charAt(0).toUpperCase() + game.slice(1)} ${puzzle} stats`);
+          .setAuthor({ name: 'Server\'s Connections stats', iconURL: env.NYT_CONNECTIONS_ICON, url: 'https://www.nytimes.com/puzzles/connections' })
+          .setTitle(`Puzzle #${puzzle.toLocaleString()}`);
         // Check if the user is querying for a wordle from the future
 
-        const currentPuzzles = await todaysConnectionsNumbers();
+        const currentPuzzles = await Connections.todaysPuzzles();
         const maxPuzzleNumber = Math.max(...currentPuzzles);
         if (puzzle > maxPuzzleNumber) {
           (
-            embed.setTitle(`Connections ${puzzle} is not available yet`)
-              .setDescription(`The most recent Connections ${maxPuzzleNumber}.`)
+            embed.setTitle(`Connections #${puzzle.toLocaleString()} is not available yet`)
+              .setDescription(`The most recent is #${maxPuzzleNumber.toLocaleString()}.`)
               .setColor('Red')
           );
           await interaction.editReply({ embeds: [embed] });
           return false;
         }
 
-        const results = await getServerConnectionsStats(puzzle);
+        const results = await Connections.getServerStats(puzzle);
         if (!results) {
-          embed.setTitle(`No results for Connections ${puzzle}`);
+          embed.setTitle(`No results for Connections #${puzzle.toLocaleString()}`);
           embed.setDescription('Be the first to submit by posting them in chat. \n TripBot will react to your message if it\'s a valid submission.');
           embed.setColor('Red');
           await interaction.editReply({ embeds: [embed] });
           return false;
         }
-        const nameToEmoji = {
-          green: '🟩',
-          yellow: '🟨',
-          purple: '🟪',
-          blue: '🟦',
-        };
+
+        const numberEmoji = ['0️⃣', '1️⃣', '2️⃣', '3️⃣'];
+        const maxFrequency = Math.max(...Object.values(results.scoreFrequency));
+        let frequencyGraph = '';
+        for (let score = 0; score < 4; score += 1) {
+          const frequency = results.scoreFrequency[score] || 0;
+          // Calculate the bar length as the frequency of the score divided by the maximum frequency, multiplied by 10
+          const barLength = frequency > 0 ? Math.round((frequency / maxFrequency) * 15) : 1;
+          const bar = '▇'.repeat(barLength);
+          // Use the corresponding emoji instead of the number
+          const scoreEmoji = numberEmoji[score];
+          frequencyGraph += `${scoreEmoji}: ${bar} ${frequency}\n`;
+        }
 
         embed.setColor('Purple');
         embed.setDescription(stripIndents`
@@ -279,11 +352,8 @@ export const dNYT: SlashCommand = {
 
           **🏆 Win Rate:** ${(results.stats.winRate * 100)}%
 
-          **📊 Category Difficulty:**
-          Easiest: ${nameToEmoji[results.stats.easiestCategory as keyof typeof nameToEmoji] || ''}
-          Easy: ${nameToEmoji[results.stats.easyCategory as keyof typeof nameToEmoji] || ''}
-          Hard: ${nameToEmoji[results.stats.hardCategory as keyof typeof nameToEmoji] || ''}
-          Hardest: ${nameToEmoji[results.stats.hardestCategory as keyof typeof nameToEmoji] || ''}
+          **📊 Mistakes Distribution:**
+          ${frequencyGraph}
         `);
         await interaction.editReply({ embeds: [embed] });
         return true;
@@ -297,9 +367,10 @@ export const dNYT: SlashCommand = {
         }
         const embed = new EmbedBuilder()
 
-          .setTitle(`Server's The Mini ${format(parseISO(puzzle), 'MMMM do yyyy')} stats`);
+          .setAuthor({ name: 'Server\'s The Mini stats', iconURL: env.NYT_THEMINI_ICON, url: 'https://www.nytimes.com/crosswords/game/mini' })
+          .setTitle(`${format(parseISO(puzzle), 'MMMM do yyyy')}`);
 
-        const results = await getServerMiniStats(puzzle);
+        const results = await TheMini.getServerStats(puzzle);
         if (!results) {
           await interaction.editReply({ content: 'No stats found for this server!' });
           return false;
@@ -308,9 +379,9 @@ export const dNYT: SlashCommand = {
         embed.setDescription(stripIndents`
           **🎮 Games Played:** ${results.stats.gamesPlayed}
 
-          **🏆 Best Time** ${results.stats.bestTime}
+          **🏆 Best Time:** ${formatTime(results.stats.bestTime)}
 
-          **⏱️ Average Time:** ${results.stats.averageTime}
+          **⏱️ Average Time:** ${formatTime(results.stats.averageTime)}
         `);
         await interaction.editReply({ embeds: [embed] });
         return true;

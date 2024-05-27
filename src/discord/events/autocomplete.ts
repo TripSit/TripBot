@@ -3,7 +3,9 @@ import {
   GuildMember,
 } from 'discord.js';
 import Fuse from 'fuse.js';
-import { format, parse } from 'date-fns';
+import {
+  format, parse, addDays, isBefore, isSameDay,
+} from 'date-fns';
 import { ai_model } from '@prisma/client';
 import { Drug } from 'tripsit_drug_db';
 import pillColors from '../../../assets/data/pill_colors.json';
@@ -13,7 +15,7 @@ import tsData from '../../../assets/data/tripsitDB.json';
 import timezones from '../../../assets/data/timezones.json';
 import unitsOfMeasurement from '../../../assets/data/units_of_measurement.json';
 import { CbSubstance } from '../../global/@types/combined';
-import { todaysWordleNumbers, todaysConnectionsNumbers, todaysMiniDates } from '../utils/nytUtils';
+import { Wordle, Connections, TheMini } from '../utils/nytUtils';
 
 const drugDataTripsit = tsData as {
   [key: string]: Drug;
@@ -90,24 +92,22 @@ async function autocompleteNYT(interaction: AutocompleteInteraction) {
 
   function parseDate(input: string): string | null {
     const date = formats.map(fmt => parse(input, fmt, new Date())).find(date => !Number.isNaN(date.getTime()));
-    return date ? format(date, 'EEEE, MMMM do, yyyy') : null;
+    return date ? format(date, 'EEEE, MMMM do, yyyy') : null; // eslint-disable-line
   }
 
   function generateDates(startDate: Date, endDate: Date): { name: string, value: string }[] {
     const dates = [];
-    log.debug(F, `Start date: ${startDate}`);
-    log.debug(F, `End date: ${endDate}`);
-    const currentDate = startDate;
-    log.debug(F, `Start date: ${startDate}`);
-    log.debug(F, `End date: ${endDate}`);
+    let currentDate = startDate;
     const timezoneOffset = currentDate.getTimezoneOffset() * 60 * 1000; // Get the timezone offset in milliseconds
-    while (currentDate <= endDate) {
+
+    while (isSameDay(currentDate, endDate) || isBefore(currentDate, endDate)) {
       const formattedDate = format(currentDate, 'EEEE, MMMM do, yyyy');
       const dateInUTC = new Date(Date.UTC(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate()));
       const dateWithOffset = new Date(dateInUTC.getTime() + timezoneOffset);
       dates.push({ name: formattedDate, value: dateWithOffset.toISOString().substring(0, 10) });
-      currentDate.setDate(currentDate.getDate() + 1);
+      currentDate = addDays(currentDate, 1);
     }
+
     return dates;
   }
 
@@ -124,7 +124,7 @@ async function autocompleteNYT(interaction: AutocompleteInteraction) {
   }
 
   if (focusedOption === 'puzzle' && game === 'wordle') {
-    const wordleNumbers = (await todaysWordleNumbers()).map(Number); // Convert numbers to strings
+    const wordleNumbers = (await Wordle.todaysPuzzles()).map(Number); // Convert numbers to strings
     const recentNumber = Math.max(...wordleNumbers);
     const datesAndNumbers = generateDatesAndNumbers(recentNumber);
     const fuse = new Fuse(datesAndNumbers, { shouldSort: true, keys: ['name'] });
@@ -141,10 +141,10 @@ async function autocompleteNYT(interaction: AutocompleteInteraction) {
     if (!userInput) {
       interaction.respond(datesAndNumbers.slice(0, 5));
     } else {
-      interaction.respond(top5.map((result: { item: any }) => result.item));
+      interaction.respond(top5.map((result: { item: { name: string, value: string } }) => result.item));
     }
   } else if (focusedOption === 'puzzle' && game === 'connections') {
-    const connectionsNumbers = (await todaysConnectionsNumbers()).map(Number); // Convert numbers to strings
+    const connectionsNumbers = (await Connections.todaysPuzzles()).map(Number); // Convert numbers to strings
     const recentNumber = Math.max(...connectionsNumbers);
     const datesAndNumbers = generateDatesAndNumbers(recentNumber);
     const fuse = new Fuse(datesAndNumbers, { shouldSort: true, keys: ['name'] });
@@ -164,12 +164,12 @@ async function autocompleteNYT(interaction: AutocompleteInteraction) {
       interaction.respond(top5.map((result: { item: any }) => result.item));
     }
   } else if (focusedOption === 'puzzle' && game === 'mini') {
-    const miniDates = (await todaysMiniDates()).map(String); // Convert dates to strings
+    const miniDates = (await TheMini.todaysPuzzles()).map(String); // Convert dates to strings
     log.debug(F, `Mini dates: ${miniDates}`);
     const recentDateUTC = new Date(`${miniDates[0]}T00:00:00Z`);
     const recentDate = new Date(recentDateUTC.getTime() + 14 * 60 * 60 * 1000);
     log.debug(F, `Recent date: ${recentDate}`);
-    const startDate = new Date('2016-06-01');
+    const startDate = new Date('2024-01-01');
     const dates = miniDates.length ? generateDates(startDate, recentDate) : [{ name: 'No dates found', value: '' }];
     const reversedDates = dates.reverse();
     const fuse = new Fuse(reversedDates.map(date => date.name), { shouldSort: true, keys: ['name'] });

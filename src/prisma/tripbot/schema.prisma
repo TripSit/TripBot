@@ -181,6 +181,7 @@ model wordle_scores {
   user_id String @db.Uuid
   puzzle  Int
   score   Int
+  grid    String
   user    users  @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "puzzlescores_userid_foreign")
 }
 
@@ -189,10 +190,7 @@ model connections_scores {
   user_id          String @db.Uuid
   puzzle           Int
   score            Int
-  easiest_category String
-  easy_category  String
-  hard_category    String
-  hardest_category String
+  grid             String
   user             users  @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "connectionsscores_userid_foreign")
 }
 

@@ -9,7 +9,7 @@ import {
 import { stripIndents } from 'common-tags';
 import { sleep } from '../commands/guild/d.bottest';
 import { aiMessage } from '../commands/global/d.ai';
-import { processWordle, processConnections, processTheMini } from './nytUtils';
+import { Wordle, Connections, TheMini } from './nytUtils';
 
 // import log from '../../global/utils/log';
 // import {parse} from 'path';
@@ -85,7 +85,7 @@ async function isWordle(message: Message): Promise<boolean> {
 
   // If a match is found, send the message content for further processing
   if (match) {
-    return processWordle(userId, messageContent); // Pass userId and messageContent
+    return Wordle.process(userId, messageContent); // Pass userId and messageContent
   }
 
   return false;
@@ -102,7 +102,7 @@ async function isConnections(message: Message): Promise<boolean> {
   // TODO: If a match is found, send the message content for further processing
 
   if (match) {
-    return processConnections(userId, messageContent); // Pass userId and messageContent
+    return Connections.process(userId, messageContent); // Pass userId and messageContent
   }
 
   return false;
@@ -118,7 +118,7 @@ async function isTheMini(message: Message): Promise<boolean> {
 
   // If a match is found, send the message content for further processing
   if (match) {
-    return processTheMini(userId, messageContent); // Pass userId and messageContent
+    return TheMini.process(userId, messageContent); // Pass userId and messageContent
   }
 
   return false;
