@@ -52,24 +52,24 @@ const heartEmojis = [
   '❤', '🧡', '💛', '💚', '💙', '💜', '💝', '💖', '💗', '💘', '💕', '💞', '💓', '💟', '❣', '🫂',
 ];
 
-async function isSadMessage(message:Message):Promise<boolean> {
+async function isSadMessage(message: Message): Promise<boolean> {
   return sadStuff.some(word => (message.cleanContent.includes(word)
-  && !(message.cleanContent.substring(message.cleanContent.indexOf(':') + 1).includes(':'))));
+    && !(message.cleanContent.substring(message.cleanContent.indexOf(':') + 1).includes(':'))));
 }
 
-async function isIrcCommand(message:Message):Promise<boolean> {
+async function isIrcCommand(message: Message): Promise<boolean> {
   return message.cleanContent.startsWith('~');
 }
 
-async function isPokingTripbot(message:Message):Promise<boolean> {
+async function isPokingTripbot(message: Message): Promise<boolean> {
   return message.content.startsWith(`_pokes <@${env.DISCORD_CLIENT_ID}>_`);
 }
 
-async function isMentioningTripbot(message:Message):Promise<boolean> {
+async function isMentioningTripbot(message: Message): Promise<boolean> {
   return message.mentions.users.has(env.DISCORD_CLIENT_ID) || message.mentions.roles.has(env.ROLE_TRIPBOT);
 }
 
-async function isUploadMessage(message:Message):Promise<boolean> {
+async function isUploadMessage(message: Message): Promise<boolean> {
   return message.content.toLowerCase().includes('upload')
     || message.content.toLowerCase().includes('steal')
     || message.content.toLowerCase().includes('fetch');
@@ -128,7 +128,7 @@ async function isTheMini(message: Message): Promise<boolean> {
 //   return message.guild?.id === env.DISCORD_GUILD_ID;
 // }
 
-async function isBotOwner(message:Message):Promise<boolean> {
+async function isBotOwner(message: Message): Promise<boolean> {
   return message.author.id === env.DISCORD_OWNER_ID;
 }
 
@@ -310,7 +310,7 @@ give people a chance to answer 😄 If no one answers in 5 minutes you can try a
             const emojiUrl = `https://cdn.discordapp.com/emojis/${emojiId}.${emojiAnimated ? 'gif' : 'png'}`;
             log.debug(F, `emojiUrl: ${emojiUrl}`);
             try {
-              const emojiData = await message.guild.emojis.create({name: emojiName, attachment: emojiUrl}); // eslint-disable-line
+              const emojiData = await message.guild.emojis.create({ name: emojiName, attachment: emojiUrl }); // eslint-disable-line
 
               emojiSuccessList.push(`<${emojiAnimated ? 'a' : ''}:${emojiData.name}:${emojiData.id}>`);
             } catch (e) {
@@ -342,7 +342,7 @@ give people a chance to answer 😄 If no one answers in 5 minutes you can try a
           const stickerList = [];
           for (const sticker of message.stickers.values()) { // eslint-disable-line
             log.debug(F, `sticker: ${JSON.stringify(sticker, null, 2)}`);
-            const stickerData = await message.guild.stickers.create({name: sticker.name, file: sticker.url, tags: 'grinning'}); // eslint-disable-line
+            const stickerData = await message.guild.stickers.create({ name: sticker.name, file: sticker.url, tags: 'grinning' }); // eslint-disable-line
             stickerList.push(sticker.name);
           }
           log.debug(F, `stickerList: ${stickerList}`);

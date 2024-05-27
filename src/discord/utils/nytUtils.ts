@@ -1,5 +1,4 @@
-// eslint-disable-line
-import { format, parse } from 'date-fns';
+import { DateTime } from 'luxon';
 
 const F = f(__filename);
 
@@ -41,7 +40,7 @@ async function submissionPayout(userId: string, payout: number) {
 
 export namespace Wordle {
   export async function todaysPuzzles() {
-  // Get the current date and time in UTC
+    // Get the current date and time in UTC
     const currentDate = new Date();
 
     // Add 14 hours to the current UTC time to get the date in UTC+14
@@ -61,7 +60,7 @@ export namespace Wordle {
   }
 
   export async function getServerStats(puzzleNumber: number) {
-  // Find all the scores for the given puzzle
+    // Find all the scores for the given puzzle
     const scores = await db.wordle_scores.findMany({
       where: {
         puzzle: puzzleNumber,
@@ -94,7 +93,7 @@ export namespace Wordle {
   }
 
   export async function getUserStats(discordId: string) {
-  // Find the user with the given discordId
+    // Find the user with the given discordId
     const user = await db.users.findFirst({
       where: {
         discord_id: discordId,
@@ -189,7 +188,7 @@ export namespace Wordle {
   }
 
   export async function updateStats(discordId: string, newStats: { grid: string, score: number, puzzle: number }) {
-  // Find the user with the given discordId
+    // Find the user with the given discordId
     const user = await db.users.findFirst({
       where: {
         discord_id: discordId,
@@ -211,7 +210,7 @@ export namespace Wordle {
     });
 
     if (existingScore) {
-    // If a record is found, update it with the new score
+      // If a record is found, update it with the new score
       await db.wordle_scores.update({
         where: {
           id: existingScore.id,
@@ -223,7 +222,7 @@ export namespace Wordle {
       });
       log.debug(F, `Wordle score updated for user: ${discordId}`);
     } else {
-    // If no record is found, create a new one
+      // If no record is found, create a new one
       await db.wordle_scores.create({
         data: {
           user_id: user.id,
@@ -245,8 +244,8 @@ export namespace Wordle {
     const match = messageContent.match(wordleScorePattern);
 
     if (match) {
-    // VALIDATE THAT THE WORDLE MAKES SENSE AND IS NOT EDITED
-    // Prevent users from submitting puzzles from the future
+      // VALIDATE THAT THE WORDLE MAKES SENSE AND IS NOT EDITED
+      // Prevent users from submitting puzzles from the future
       const puzzleNumber = parseInt(match[2].replace(',', ''), 10);
       const validPuzzleNumbers = await Wordle.todaysPuzzles();
       if (!validPuzzleNumbers.includes(puzzleNumber)) {
@@ -265,7 +264,7 @@ export namespace Wordle {
       const squareLines = lines.filter(line => /(⬛|⬜|🟨|🟩){5}/.test(line));
       // Stop counting lines as soon as you encounter a line that doesn't match the wordle pattern
       for (let i = 0; i < squareLines.length; i += 1) {
-      // Ensure each line only contains 5 squares
+        // Ensure each line only contains 5 squares
         const squares = squareLines[i].match(/(⬛|⬜|🟨|🟩)/g);
         if (!squares || squares.length !== 5) {
           log.debug(F, `Invalid Wordle score found (Invalid squares per line): ${match[1]}`);
@@ -277,13 +276,13 @@ export namespace Wordle {
       }
       // If the Wordle is completed (Not X/6)
       if (score > 0) {
-      // Check that the score matches the number of lines of squares
+        // Check that the score matches the number of lines of squares
         if (score !== 0 && score !== squareLines.length) {
           log.debug(F, `Invalid Wordle score found (Invalid number of rows for score): ${match[1]}`);
           return false;
         }
         // Check that the last line of squares is all green (win line)
-      if (!squareLines[squareLines.length - 1].includes('🟩🟩🟩🟩🟩')) { // eslint-disable-line
+        if (!squareLines[squareLines.length - 1].includes('🟩🟩🟩🟩🟩')) { // eslint-disable-line
           log.debug(F, `Invalid Wordle score found (Game lost but listed as win): ${match[1]}`);
           return false;
         }
@@ -296,7 +295,7 @@ export namespace Wordle {
       }
       // If the Wordle was failed
       if (score === 0) {
-      // Check that there are 6 lines
+        // Check that there are 6 lines
         if (squareLines.length !== 6) {
           log.debug(F, `Invalid Wordle score found (Rows vs Failure): ${match[1]}`);
           return false;
@@ -319,7 +318,7 @@ export namespace Wordle {
 
 export namespace Connections {
   export async function todaysPuzzles() {
-  // Get the current date and time in UTC
+    // Get the current date and time in UTC
     const currentDate = new Date();
 
     // Add 14 hours to the current UTC time to get the date in UTC+14
@@ -339,7 +338,7 @@ export namespace Connections {
   }
 
   export async function getServerStats(puzzleNumber: number) {
-  // Find all the scores for the given puzzle
+    // Find all the scores for the given puzzle
     const scores = await db.connections_scores.findMany({
       where: {
         puzzle: puzzleNumber,
@@ -372,7 +371,7 @@ export namespace Connections {
   }
 
   export async function getUserStats(discordId: string) {
-  // Find the user with the given discordId
+    // Find the user with the given discordId
     const user = await db.users.findFirst({
       where: {
         discord_id: discordId,
@@ -420,11 +419,11 @@ export namespace Connections {
     let submissionStreak = 0;
     // Iterate over the sorted scores
     for (let i = 0; i < scores.length; i += 1) {
-    // If the score is greater than 0 and the puzzle numbers are consecutive or it's the first puzzle, increment the current streak
+      // If the score is greater than 0 and the puzzle numbers are consecutive or it's the first puzzle, increment the current streak
       if (scores[i].score < 4 && (i === 0 || scores[i].puzzle === scores[i - 1].puzzle + 1)) {
         currentStreak += 1;
       } else {
-      // If the score is 0 or the puzzle numbers are not consecutive, reset the current streak
+        // If the score is 0 or the puzzle numbers are not consecutive, reset the current streak
         currentStreak = 0;
       }
 
@@ -464,7 +463,7 @@ export namespace Connections {
   }
 
   export async function updateStats(discordId: string, newStats: { grid: string, score: number, puzzle: number }) {
-  // Find the user with the given discordId
+    // Find the user with the given discordId
     const user = await db.users.findFirst({
       where: {
         discord_id: discordId,
@@ -487,7 +486,7 @@ export namespace Connections {
     });
 
     if (existingScore) {
-    // If a record is found, update it with the new score
+      // If a record is found, update it with the new score
       await db.connections_scores.update({
         where: {
           id: existingScore.id,
@@ -499,7 +498,7 @@ export namespace Connections {
       });
       log.debug(F, `Connections score updated for user: ${discordId}`);
     } else {
-    // If no record is found, create a new one
+      // If no record is found, create a new one
       await db.connections_scores.create({
         data: {
           user_id: user.id,
@@ -539,7 +538,7 @@ export namespace Connections {
       };
       // Stop counting lines as soon as you encounter a line that doesn't match the connections pattern
       for (let i = 0; i < validGameGrid.length; i += 1) {
-      // Ensure each line only contains 4 squares
+        // Ensure each line only contains 4 squares
         const squares = validGameGrid[i].match(/(🟩|🟨|🟪|🟦)/g);
         if (!squares || squares.length !== 4) {
           log.debug(F, `Invalid Connections puzzle found (Invalid squares per line): ${match[1]}`);
@@ -549,7 +548,7 @@ export namespace Connections {
         // Check if a line contains exactly four squares of the same color
         const winLineMatch = validGameGrid[i].match(/(🟩🟩🟩🟩|🟨🟨🟨🟨|🟪🟪🟪🟪|🟦🟦🟦🟦)/);
         if (winLineMatch) {
-        // If it does, convert the emoji to a name and add it to the winLinesOrder array
+          // If it does, convert the emoji to a name and add it to the winLinesOrder array
           const emoji = winLineMatch[0].substring(0, 2);
           log.debug(F, `Win Line: ${emoji}`);
           const name = emojiToName[emoji as keyof typeof emojiToName];
@@ -590,7 +589,7 @@ export namespace Connections {
 
 export namespace TheMini {
   export async function todaysPuzzles() {
-  // Get the current date and time in UTC
+    // Get the current date and time in UTC
     const currentDate = new Date();
 
     // Add 14 hours to the current UTC time to get the date in UTC+14
@@ -616,7 +615,7 @@ export namespace TheMini {
   }
 
   export async function getServerStats(puzzleDate: string) {
-  // Find all the scores for the given puzzle
+    // Find all the scores for the given puzzle
     log.debug(F, `Getting Mini stats for puzzle: ${puzzleDate}`);
     const scores = await db.mini_scores.findMany({
       where: {
@@ -646,7 +645,7 @@ export namespace TheMini {
   }
 
   export async function getUserStats(discordId: string) {
-  // Find the user with the given discordId
+    // Find the user with the given discordId
     const user = await db.users.findFirst({
       where: {
         discord_id: discordId,
@@ -704,11 +703,11 @@ export namespace TheMini {
 
     // Iterate over the sorted scores
     for (let i = 0; i < scores.length; i += 1) {
-    // If the score is greater than 0 and the puzzle dates are consecutive or it's the first puzzle, increment the current streak
+      // If the score is greater than 0 and the puzzle dates are consecutive or it's the first puzzle, increment the current streak
       if (scores[i].score > 0 && (i === 0 || isNextDay(scores[i - 1].puzzle, scores[i].puzzle))) {
         currentStreak += 1;
       } else {
-      // If the score is 0 or the puzzle dates are not consecutive, reset the current streak
+        // If the score is 0 or the puzzle dates are not consecutive, reset the current streak
         currentStreak = 0;
       }
 
@@ -731,16 +730,17 @@ export namespace TheMini {
     stats.submissionStreak = submissionStreak;
 
     // Find the last played puzzle date
-    const puzzleDate = parse(scores[scores.length - 1].puzzle, 'yyyy-MM-dd', new Date());
+    const lastScore = scores[scores.length - 1];
+    const puzzleDate = DateTime.fromFormat(lastScore.puzzle, 'yyyy-MM-dd');
     log.debug(F, `Last played puzzle date: ${puzzleDate}`);
-    stats.lastPlayed = format(puzzleDate, 'EEEE, MMMM do, yyyy');
-    stats.lastScore = scores[scores.length - 1].score;
+    stats.lastPlayed = puzzleDate.toFormat('EEEE, MMMM dd, yyyy');
+    stats.lastScore = lastScore.score;
 
     return { stats };
   }
 
   export async function updateStats(userId: string, newStats: { score: number, puzzle: string }) {
-  // Find the user with the given discordId
+    // Find the user with the given discordId
     const user = await db.users.findFirst({
       where: {
         discord_id: userId,
@@ -761,7 +761,7 @@ export namespace TheMini {
     });
 
     if (existingScore) {
-    // If a record is found, update it with the new score
+      // If a record is found, update it with the new score
       await db.mini_scores.update({
         where: {
           id: existingScore.id,
@@ -772,7 +772,7 @@ export namespace TheMini {
       });
       log.debug(F, `Mini score updated for user: ${userId}`);
     } else {
-    // If no record is found, create a new one
+      // If no record is found, create a new one
       await db.mini_scores.create({
         data: {
           user_id: user.id,

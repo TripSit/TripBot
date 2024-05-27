@@ -4,7 +4,7 @@ import {
   GuildMember,
   EmbedBuilder,
 } from 'discord.js';
-import { parseISO, format } from 'date-fns';
+import { DateTime } from 'luxon';
 import { stripIndents } from 'common-tags';
 import { SlashCommand } from '../../@types/commandDef';
 import commandContext from '../../utils/context';
@@ -395,19 +395,20 @@ export const dNYT: SlashCommand = {
           await interaction.editReply({ content: 'No puzzle provided!' });
           return false;
         }
-        const embed = new EmbedBuilder()
 
+        const embed = new EmbedBuilder()
           .setAuthor({ name: 'Server\'s The Mini stats', iconURL: env.NYT_THEMINI_ICON, url: 'https://www.nytimes.com/crosswords/game/mini' })
-          .setTitle(`${format(parseISO(puzzle), 'MMMM do yyyy')}`);
+          .setTitle(`${DateTime.fromISO(puzzle).toFormat('MMMM dd, yyyy')}`);
 
         const results = await TheMini.getServerStats(puzzle);
         if (!results) {
-          embed.setTitle(`No results for The Mini ${format(parseISO(puzzle), 'MMMM do yyyy')}`);
+          embed.setTitle(`No results for The Mini ${DateTime.fromISO(puzzle).toFormat('MMMM dd, yyyy')}`);
           embed.setDescription('Be the first to submit by posting them in chat. \n See `/nyt help` for more info.');
           embed.setColor('Red');
           await interaction.editReply({ embeds: [embed] });
           return false;
         }
+
         embed.setColor('Blue');
         embed.setDescription(stripIndents`
           **🎮 Games Played:** ${results.stats.gamesPlayed}
