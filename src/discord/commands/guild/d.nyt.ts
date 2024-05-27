@@ -301,7 +301,7 @@ export const dNYT: SlashCommand = {
         const results = await Wordle.getServerStats(puzzle);
         if (!results) {
           embed.setTitle(`No results for Wordle #${puzzle.toLocaleString()}`);
-          embed.setDescription('Be the first to submit by posting them in chat. \n See `/nyt help` for more info.');
+          embed.setDescription('Be the first to submit by posting them in chat. \n See `/nyt help` for more info.'); //eslint-disable-line
           embed.setColor('Red');
           await interaction.editReply({ embeds: [embed] });
           return false;

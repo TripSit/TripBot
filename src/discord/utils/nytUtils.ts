@@ -309,7 +309,7 @@ export namespace Wordle {
       }
       log.debug(F, `Wordle score found: ${match[1]}`);
       // Get the game "grid" as a simple line of emojis
-      const grid = squareLines.map(line => line.replace(/⬛/g, '⬛').replace(/⬜/g, '⬛').replace(/🟨/g, '🟨').replace(/🟩/g, '🟩')).join('');
+      const grid = squareLines.map(line => line.replace(/⬜/g, '⬛')).join('');
       await Wordle.updateStats(userId, { grid, score, puzzle: puzzleNumber });
       return true;
     }
@@ -575,7 +575,7 @@ export namespace Connections {
         return false;
       }
       // Get the game "grid" as a simple line of emojis
-      const grid = validGameGrid.map(line => line.replace(/🟩/g, '🟩').replace(/🟨/g, '🟨').replace(/🟪/g, '🟪').replace(/🟦/g, '🟦')).join('');
+      const grid = validGameGrid.join('');
       log.debug(F, `Grid: ${grid}`);
       await Connections.updateStats(userId, {
         score,
