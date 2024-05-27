@@ -105,7 +105,7 @@ export const dNYT: SlashCommand = {
         .setDescription(stripIndents`
           **Usage:**
           "NYT Games" are games from the New York Times that TripBot tracks stats for.
-          Submit results to the bot by posting them in chat.
+          Submit results (including old ones) to the bot by posting them in chat.
           If the result is valid, the bot will react to the message.
 
           **Supported games:**
@@ -149,7 +149,7 @@ export const dNYT: SlashCommand = {
         if (!results) {
           embed.setColor('Red');
           embed.setTitle(`${target.displayName} has no Wordle stats`);
-          embed.setDescription('Encourage them to submit their first result! \n Results are submitted by posting them in chat. \n TripBot will react to the message if it\'s a valid submission.');
+          embed.setDescription('Encourage them to submit their first result! \n See `/nyt help` for more info.'); //eslint-disable-line
           await interaction.editReply({ embeds: [embed] });
           return false;
         }
@@ -194,7 +194,10 @@ export const dNYT: SlashCommand = {
 
         const results = await Connections.getUserStats(target.user.id);
         if (!results) {
-          await interaction.editReply({ content: 'No stats found for this user!' });
+          embed.setColor('Red');
+          embed.setTitle(`${target.displayName} has no Connections stats`);
+          embed.setDescription('Encourage them to submit their first result! \n See `/nyt help` for more info.');
+          await interaction.editReply({ embeds: [embed] });
           return false;
         }
 
@@ -242,7 +245,10 @@ export const dNYT: SlashCommand = {
 
         const results = await TheMini.getUserStats(target.user.id);
         if (!results) {
-          await interaction.editReply({ content: 'No stats found for this user!' });
+          embed.setColor('Red');
+          embed.setTitle(`${target.displayName} has no The Mini stats`);
+          embed.setDescription('Encourage them to submit their first result! \n See `/nyt help` for more info.');
+          await interaction.editReply({ embeds: [embed] });
           return false;
         }
 
@@ -273,7 +279,7 @@ export const dNYT: SlashCommand = {
       if (game === 'wordle') {
         const puzzle = parseInt(interaction.options.getString('puzzle') || '', 10);
         if (!puzzle) {
-          await interaction.editReply({ content: 'No puzzle provided!' });
+          await interaction.editReply({ content: 'No puzzle provided!' }); //eslint-disable-line
           return false;
         }
         const embed = new EmbedBuilder()
@@ -295,7 +301,7 @@ export const dNYT: SlashCommand = {
         const results = await Wordle.getServerStats(puzzle);
         if (!results) {
           embed.setTitle(`No results for Wordle #${puzzle.toLocaleString()}`);
-          embed.setDescription('Be the first to submit by posting them in chat. \n TripBot will react to your message if it\'s a valid submission.');
+          embed.setDescription('Be the first to submit by posting them in chat. \n See `/nyt help` for more info.');
           embed.setColor('Red');
           await interaction.editReply({ embeds: [embed] });
           return false;
@@ -351,7 +357,7 @@ export const dNYT: SlashCommand = {
         const results = await Connections.getServerStats(puzzle);
         if (!results) {
           embed.setTitle(`No results for Connections #${puzzle.toLocaleString()}`);
-          embed.setDescription('Be the first to submit by posting them in chat. \n TripBot will react to your message if it\'s a valid submission.');
+          embed.setDescription('Be the first to submit by posting them in chat. \n See `/nyt help` for more info.');
           embed.setColor('Red');
           await interaction.editReply({ embeds: [embed] });
           return false;
@@ -396,7 +402,10 @@ export const dNYT: SlashCommand = {
 
         const results = await TheMini.getServerStats(puzzle);
         if (!results) {
-          await interaction.editReply({ content: 'No stats found for this server!' });
+          embed.setTitle(`No results for The Mini ${format(parseISO(puzzle), 'MMMM do yyyy')}`);
+          embed.setDescription('Be the first to submit by posting them in chat. \n See `/nyt help` for more info.');
+          embed.setColor('Red');
+          await interaction.editReply({ embeds: [embed] });
           return false;
         }
         embed.setColor('Blue');

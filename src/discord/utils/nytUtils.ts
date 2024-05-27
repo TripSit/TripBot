@@ -392,7 +392,7 @@ export namespace Connections {
     });
 
     if (!scores || scores.length === 0) {
-      throw new Error(`No scores found for user: ${discordId}`);
+      return null;
     }
 
     // Initialize stats
@@ -666,7 +666,7 @@ export namespace TheMini {
     });
 
     if (!scores || scores.length === 0) {
-      throw new Error(`No scores found for user: ${discordId}`);
+      return null;
     }
 
     // Initialize stats

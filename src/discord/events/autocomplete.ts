@@ -91,8 +91,8 @@ async function autocompleteNYT(interaction: AutocompleteInteraction) {
   ];
 
   function parseDate(input: string): string | null {
-    const date = formats.map(fmt => parse(input, fmt, new Date())).find(date => !Number.isNaN(date.getTime()));
-    return date ? format(date, 'EEEE, MMMM do, yyyy') : null; // eslint-disable-line
+    const parsedDate = formats.map(fmt => parse(input, fmt, new Date())).find(date => !Number.isNaN(date.getTime()));
+    return parsedDate ? format(parsedDate, 'EEEE, MMMM do, yyyy') : null; // eslint-disable-line
   }
 
   function generateDates(startDate: Date, endDate: Date): { name: string, value: string }[] {
@@ -113,9 +113,10 @@ async function autocompleteNYT(interaction: AutocompleteInteraction) {
 
   function generateDatesAndNumbers(recentNumber: number): { name: string, value: string }[] {
     const datesAndNumbers = [];
-    const currentDate = new Date();
-    currentDate.setUTCHours(currentDate.getUTCHours() + 14); // Set currentDate to the current date in UTC+14
-    for (let i = recentNumber; i >= 1; i--) {
+    let currentDate = new Date();
+    const offset = currentDate.getTimezoneOffset() + 14 * 60;
+    currentDate = new Date(currentDate.getTime() + offset * 60 * 1000);
+    for (let i = recentNumber; i >= 1; i -= 1) {
       const formattedDate = format(currentDate, 'EEEE, MMMM do, yyyy');
       datesAndNumbers.push({ name: `${i} (${formattedDate})`, value: i.toString() });
       currentDate.setDate(currentDate.getDate() - 1);
