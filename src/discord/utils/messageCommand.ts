@@ -372,20 +372,22 @@ give people a chance to answer 😄 If no one answers in 5 minutes you can try a
     await message.react(heartEmojis[Math.floor(Math.random() * heartEmojis.length)]);
   }
 
-  const wordleResult = await isWordle(message);
-  if (wordleResult) {
-    log.debug(F, 'Valid Wordle detected');
-    await message.react(emojiGet('nyt_wordle'));
-  }
-  const connectionsResult = await isConnections(message);
-  if (connectionsResult) {
-    log.debug(F, 'Valid Connections detected');
-    await message.react(emojiGet('nyt_connections'));
-  }
-  const theMiniResult = await isTheMini(message);
-  if (theMiniResult) {
-    log.debug(F, 'Valid The Mini detected');
-    await message.react(emojiGet('nyt_themini'));
+  if (!message.author.bot) {
+    const wordleResult = await isWordle(message);
+    if (wordleResult) {
+      log.debug(F, 'Valid Wordle detected');
+      await message.react(emojiGet('nyt_wordle'));
+    }
+    const connectionsResult = await isConnections(message);
+    if (connectionsResult) {
+      log.debug(F, 'Valid Connections detected');
+      await message.react(emojiGet('nyt_connections'));
+    }
+    const theMiniResult = await isTheMini(message);
+    if (theMiniResult) {
+      log.debug(F, 'Valid The Mini detected');
+      await message.react(emojiGet('nyt_themini'));
+    }
   }
   // else if (
   //   message.content.match(/(?:anyone|someone+there|here)\b/)
