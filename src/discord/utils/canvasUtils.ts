@@ -62,11 +62,11 @@ export function deFuckifyText(text: string): string {
 function hexToHSL(H: string): [number, number, number] {
   let r = 0; let g = 0; let
     b = 0;
-  if (H.length == 4) {
+  if (H.length === 4) {
     r = parseInt(`0x${H[1]}${H[1]}`, 16);
     g = parseInt(`0x${H[2]}${H[2]}`, 16);
     b = parseInt(`0x${H[3]}${H[3]}`, 16);
-  } else if (H.length == 7) {
+  } else if (H.length === 7) {
     r = parseInt(`0x${H[1]}${H[2]}`, 16);
     g = parseInt(`0x${H[3]}${H[4]}`, 16);
     b = parseInt(`0x${H[5]}${H[6]}`, 16);
@@ -79,26 +79,27 @@ function hexToHSL(H: string): [number, number, number] {
   let h = 0; let s = 0; const
     l = (max + min) / 2;
 
-  if (max != min) {
+  if (max !== min) {
     const d = max - min;
     s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
     switch (max) {
       case r: h = (g - b) / d + (g < b ? 6 : 0); break;
       case g: h = (b - r) / d + 2; break;
       case b: h = (r - g) / d + 4; break;
+      default: h = 0; break; // Add a default case to handle any other value of max
     }
     h /= 6;
   }
   return [h * 360, s * 100, l * 100];
 }
 
-function hslToHex(h: number, s: number, l: number): string {
+function hslToHex(h: number, s: number, lightness: number): string {
   s /= 100;
-  l /= 100;
-  const a = s * Math.min(l, 1 - l);
+  const modifiedLightness = lightness / 100;
+  const a = s * Math.min(modifiedLightness, 1 - modifiedLightness);
   const f = (n: number) => {
     const k = (n + h / 30) % 12;
-    const color = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
+    const color = modifiedLightness - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
     return Math.round(255 * color).toString(16).padStart(2, '0');
   };
   return `#${f(0)}${f(8)}${f(4)}`;
