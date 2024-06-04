@@ -1850,18 +1850,27 @@ export async function modModal(
 
   // log.debug(F, `Verb: ${verb}`);
 
+  const modalInputComponent = new TextInputBuilder()
+    .setStyle(TextInputStyle.Paragraph)
+    .setPlaceholder('Tell moderators why you\'re doing this')
+    .setValue(modalInternal)
+    .setMaxLength(1000)
+    .setRequired(true)
+    .setCustomId('internalNote');
+
+  try {
+    modalInputComponent.setLabel(`Why are you ${verb} ${target}?`);
+  } catch (err) {
+    log.error(F, `Error: ${err}`);
+    log.error(F, `Verb: ${verb}, Target: ${target}`);
+  }
+
+  // log.debug(F, `Verb: ${verb}`);
   const modal = new ModalBuilder()
     .setCustomId(`modModal~${command}~${interaction.id}`)
     .setTitle(`${interaction.guild.name} member ${command.toLowerCase()}`)
     .addComponents(new ActionRowBuilder<TextInputBuilder>()
-      .addComponents(new TextInputBuilder()
-        .setLabel(`Why are you ${verb} ${target}?`)
-        .setStyle(TextInputStyle.Paragraph)
-        .setPlaceholder('Tell moderators why you\'re doing this')
-        .setValue(modalInternal)
-        .setMaxLength(1000)
-        .setRequired(true)
-        .setCustomId('internalNote')));
+      .addComponents(modalInputComponent));
 
   // All commands except INFO, NOTE and REPORT can have a public reason sent to the user
   if (!isNote(command) && !isReport(command)) {
