@@ -258,10 +258,6 @@ export const dNYT: SlashCommand = {
 
           **📅 Submission Streak:** ${results.stats.submissionStreak}
 
-          **🔥 Win Streak:** ${results.stats.currentStreak}
-
-          **❤️‍🔥 Best Win Streak:** ${results.stats.bestStreak}
-
           **🏆 Best Time:** ${formatTime(results.stats.bestTime)}
 
           **⏱️ Average Time:** ${formatTime(results.stats.averageTime)}
