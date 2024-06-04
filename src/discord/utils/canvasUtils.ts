@@ -94,9 +94,9 @@ function hexToHSL(H: string): [number, number, number] {
 }
 
 function hslToHex(h: number, s: number, lightness: number): string {
-  s /= 100;
+  const modifiedS = s / 100;
   const modifiedLightness = lightness / 100;
-  const a = s * Math.min(modifiedLightness, 1 - modifiedLightness);
+  const a = modifiedS * Math.min(modifiedLightness, 1 - modifiedLightness);
   const f = (n: number) => {
     const k = (n + h / 30) % 12;
     const color = modifiedLightness - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
