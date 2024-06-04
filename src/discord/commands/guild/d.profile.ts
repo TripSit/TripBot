@@ -13,7 +13,7 @@ import { expForNextLevel, getTotalLevel } from '../../../global/utils/experience
 import { getPersonaInfo } from '../../../global/commands/g.rpg';
 import getAsset from '../../utils/getAsset';
 import {
-  resizeText, deFuckifyText, colorDefs, generateColors,
+  resizeText, deFuckifyText, generateColors,
 } from '../../utils/canvasUtils';
 
 const F = f(__filename);
@@ -165,12 +165,12 @@ export const dProfile: SlashCommand = {
     const canvasObj = Canvas.createCanvas(canvasWidth, canvasHeight);
     const context = canvasObj.getContext('2d');
 
-    // Get the colour of the user's role and convert it to hexadecimal
-    const roleColor = `#${(target.roles.color?.color || 0x232323).toString(16).padStart(6, '0')}`;
+    // Generate the colors for the card based on the user's role color
+    const roleColor = `#${(target.roles.color?.color || 0x99aab5).toString(16).padStart(6, '0')}`;
     log.debug(F, `roleColor: ${roleColor}`);
 
-    const cardLightColor = generateColors(roleColor, 0, -60, -70);
-    const cardDarkColor = generateColors(roleColor, 0, -60, -80);
+    const cardLightColor = generateColors(roleColor, 0, -75, -70);
+    const cardDarkColor = generateColors(roleColor, 0, -75, -80);
     const chipColor = generateColors(roleColor, 0, -50, -50);
     const barColor = generateColors(roleColor, 0, -20, -10);
     const textColor = generateColors(roleColor, 0, 0, 0);
@@ -210,7 +210,7 @@ export const dProfile: SlashCommand = {
         const Background = await Canvas.loadImage(imagePath);
         context.save();
         context.globalCompositeOperation = 'lighter';
-        context.globalAlpha = 0.05;
+        context.globalAlpha = 0.04;
         context.beginPath();
         context.roundRect(0, 0, 675, 292, [19]);
         context.roundRect(684, 0, 237, 292, [19]);
@@ -526,12 +526,14 @@ export async function getProfilePreview(target: GuildMember, option: string, ima
   const canvasObj = Canvas.createCanvas(canvasWidth, canvasHeight);
   const context = canvasObj.getContext('2d');
 
-  // Choose color based on user's role
-  const cardLightColor = colorDefs[target.roles.color?.id as keyof typeof colorDefs]?.cardLightColor || '#232323';
-  const cardDarkColor = colorDefs[target.roles.color?.id as keyof typeof colorDefs]?.cardDarkColor || '#141414';
-  const chipColor = colorDefs[target.roles.color?.id as keyof typeof colorDefs]?.chipColor || '#393939';
-  const barColor = colorDefs[target.roles.color?.id as keyof typeof colorDefs]?.barColor || '#b3b3b3';
-  const textColor = colorDefs[target.roles.color?.id as keyof typeof colorDefs]?.textColor || '#ffffff';
+  // Generate the colors for the card based on the user's role color
+  const roleColor = `#${(target.roles.color?.color || 0x99aab5).toString(16).padStart(6, '0')}`;
+
+  const cardLightColor = generateColors(roleColor, 0, -72, -67);
+  const cardDarkColor = generateColors(roleColor, 0, -72, -82);
+  const chipColor = generateColors(roleColor, 0, -50, -50);
+  const barColor = generateColors(roleColor, 0, -20, -10);
+  const textColor = generateColors(roleColor, 0, 0, 0);
 
   // Draw the card shape
   context.fillStyle = cardLightColor;
@@ -559,7 +561,7 @@ export async function getProfilePreview(target: GuildMember, option: string, ima
     const Background = await Canvas.loadImage(imagePath.toString());
     context.save();
     context.globalCompositeOperation = 'lighter';
-    context.globalAlpha = 0.05;
+    context.globalAlpha = 0.04;
     context.beginPath();
     context.roundRect(0, 0, 675, 292, [19]);
     context.roundRect(684, 0, 237, 292, [19]);
