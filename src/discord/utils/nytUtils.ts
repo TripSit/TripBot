@@ -795,8 +795,8 @@ export namespace TheMini {
         timeString;
       if (url.includes('badges')) {
         const urlParts = url.split('&');
-        dateString = urlParts[0].split('=')[1];
-        timeString = urlParts[1].split('=')[1];
+        [dateString] = urlParts[0].split('=');
+        [, timeString] = urlParts[1].split('=');
       } else {
         const dateMatch = messageContent.match(/(\d{1,2}\/\d{1,2}\/\d{4})/);
         if (dateMatch) {
@@ -805,7 +805,7 @@ export namespace TheMini {
         }
         const timeMatch = messageContent.match(/in (\d+):(\d+)/);
         if (timeMatch) {
-          timeString = (parseInt(timeMatch[1]) * 60 + parseInt(timeMatch[2])).toString();
+          timeString = ((parseInt(timeMatch[1], 10) * 60) + parseInt(timeMatch[2], 10)).toString();
         }
       }
 
