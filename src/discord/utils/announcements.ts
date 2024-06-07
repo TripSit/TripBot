@@ -129,6 +129,7 @@ export async function announcements(message:Message) {
     '**Reminder:** Always research any substances you plan to take. Understanding the effects and potential risks can help you make safer choices.',
     '**Reminder:** Remember to take regular breaks when using screens for a long period of time to avoid eye strain.',
     '**Reminder:** TripSit strives to be a safe place for everyone. Please be kind and report any inappropriate behavior.',
+    '**Reminder:** Spending time outdoors is proven to have a positive impact on your mental health. Try to get some fresh air every day!',
   ];
 
   const tipAnnouncements = [
@@ -136,12 +137,12 @@ export async function announcements(message:Message) {
     '**Tip:** Report a specific user or message with Right Click > Apps > Report Message.',
     '**Tip:** Use `/help` to learn more about the bot and its commands.',
     '**Tip:** Check out the <id:guide> for more tips and server info!',
-    '**Tip:** Go to <id:customize> to change your name color and mindset!',
+    '**Tip:** Go to <id:customize> to change your name color and mindset role icon!',
     '**Tip:** Use the "ephemeral" option in TripBot commands to use them privately.',
-    `**Tip:** Find a message especially fantastic? React with ${emojiGet('karma_upvote')} to reward karma!`,
     '**Tip:** Earn TripTokens in `/rpg` to buy customization items for your `/profile`!',
     '**Tip:** Head to the Activities Corner in the <id:guide> for small games and activities!',
     '**Tip:** Curious about a specific server function like levelling or karma? Head to Server Tips in the <id:guide>!',
+    '**Tip:** Keen to help with tripsitting? Head to the <id:guide> for info on how to become a Helper!',
   ];
 
   const funAnnouncements = [
@@ -154,7 +155,8 @@ export async function announcements(message:Message) {
     '[**Did you know?**](https://www.guinnessworldrecords.com/world-records/fastest-time-to-eat-a-bowl-of-pasta) The fastest time to eat a bowl of pasta is 17.03 seconds.',
     '[**Did you know?**](https://www.guinnessworldrecords.com/world-records/most-ice-cream-scoops-balanced-on-a-cone) The most ice cream scoops balanced on a cone is 125.',
     '[**Did you know?**](https://www.guinnessworldrecords.com/world-records/largest-collection-of-pokemon-memorabilia) The largest collection of Pokémon memorabilia is 17,127 items.',
-    '[**Did you know?**](https://www.guinnessworldrecords.com/world-records/most-people-making-heart-shaped-hand-gestures) The most people making heart-shaped hand gestures at once is 7,232.',
+    '[**Did you know?**](https://www.guinnessworldrecords.com/world-records/69605-longest-conga-line) The record for the longest conga line is 119,986 people.',
+    '[**Did you know?**](https://www.guinnessworldrecords.com/world-records/longest-cake) The longest cake ever made was 5300m (17,388 ft) long, and was eaten in 10 minutes!',
   ];
 
   // const chanAnnouncements = [
