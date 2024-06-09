@@ -2158,8 +2158,8 @@ export async function aiMessage(
     attachmentInfo.mimeType = refMessage.attachments.first()?.contentType as string;
   }
 
-  log.debug(F, `attachmentInfo: ${JSON.stringify(attachmentInfo, null, 2)}`);
-  log.debug(F, `Sending messages to API: ${JSON.stringify(messageList, null, 2)}`);
+  // log.debug(F, `attachmentInfo: ${JSON.stringify(attachmentInfo, null, 2)}`);
+  // log.debug(F, `Sending messages to API: ${JSON.stringify(messageList, null, 2)}`);
 
   await messageData.channel.sendTyping();
 

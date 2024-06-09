@@ -67,10 +67,8 @@ export async function addedVerified(
   try {
     memberData = await db.members.upsert({
       where: {
-        id_guild_id: {
-          guild_id: guildData.id,
-          id: userData.discord_id as string,
-        },
+        guild_id: guildData.id,
+        id: userData.discord_id as string,
       },
       create: {
         guild_id: guildData.id,
@@ -171,7 +169,7 @@ but they were already marked at trusted in the database, so no message was sent`
       const channelLounge = await newMember.client.channels.fetch(env.CHANNEL_LOUNGE) as TextChannel;
       await channelLounge.send({
         content: stripIndents`**${greeting}**
-
+      Head to <#${env.CHANNEL_TRIPSIT}> if you need a tripsitter. :)
       Be safe, have fun, and don't forget to visit the <id:guide> for more information!
 
       *${await topic()}*`,

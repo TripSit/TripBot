@@ -61,22 +61,32 @@ const colorRoles = [
   env.ROLE_SEEDLING,
   env.ROLE_BOOSTER,
   env.ROLE_RED,
+  env.ROLE_REDORANGE,
   env.ROLE_ORANGE,
   env.ROLE_YELLOW,
+  env.ROLE_YELLOWGREEN,
   env.ROLE_GREEN,
+  env.ROLE_GREENBLUE,
   env.ROLE_BLUE,
+  env.ROLE_BLUEPURPLE,
   env.ROLE_PURPLE,
   env.ROLE_PINK,
-  // env.ROLE_BROWN,
-  env.ROLE_BLACK,
+  env.ROLE_PINKRED,
   env.ROLE_WHITE,
+
   env.ROLE_DONOR_RED,
+  env.ROLE_DONOR_REDORANGE,
   env.ROLE_DONOR_ORANGE,
   env.ROLE_DONOR_YELLOW,
+  env.ROLE_DONOR_YELLOWGREEN,
   env.ROLE_DONOR_GREEN,
+  env.ROLE_DONOR_GREENBLUE,
   env.ROLE_DONOR_BLUE,
+  env.ROLE_DONOR_BLUEPURPLE,
   env.ROLE_DONOR_PURPLE,
   env.ROLE_DONOR_PINK,
+  env.ROLE_DONOR_PINKRED,
+  env.ROLE_DONOR_BLACK,
 ];
 
 const mindsetRoles = [
@@ -206,7 +216,7 @@ export async function needsHelpMode(
   }
 
   // Save the user's roles to the DB
-  target.fetch();
+  await target.fetch();
   const targetRoleIds = target.roles.cache.map(role => role.id);
   // log.debug(F, `targetRoleIds: ${targetRoleIds}`);
 
@@ -222,9 +232,10 @@ export async function needsHelpMode(
       roles: targetRoleIds.toString(),
     },
   });
+  log.debug(F, `I saved ${target.displayName}'s (${target.id}) ${targetRoleIds.length} roles to the database!`);
 
   const myMember = await interaction.guild?.members.fetch(interaction.client.user.id) as GuildMember;
-  const myRole = myMember.roles.highest;
+  const highestBotRole = myMember.roles.highest;
 
   // Patch for BlueLight: They don't want to remove roles from the target at all
   if (
@@ -233,32 +244,45 @@ export async function needsHelpMode(
   ) {
   // Remove all roles, except team and vanity, from the target
     target.roles.cache.forEach(async role => {
-    // log.debug(F, `role: ${role.name} - ${role.id}`);
+      if (ignoredRoles.includes(role.id)) {
+        log.debug(F, `${role.name} (${role.id}) is a team role or vanity role, skipping!`);
+        return;
+      }
 
-      if (!ignoredRoles.includes(role.id)
-    && !role.name.includes('@everyone')
-    && role.id !== roleNeedshelp.id
-    && role.comparePositionTo(myRole)) {
-        log.debug(F, `Removing role ${role.name} from ${target.displayName}`);
-        try {
-          await target.roles.remove(role);
-        } catch (err) {
-          log.error(F, `Error removing role from target: ${err}`);
-          const guildOwner = await interaction.guild?.fetchOwner();
-          await guildOwner?.send({
-            content: stripIndents`There was an error removing ${role.name} from ${target.displayName}!
-            Please make sure I have the Manage Roles permission, or put this role above mine so I don't try to remove it.
-            If there's any questions please contact Moonbear#1024 on TripSit!` }); // eslint-disable-line
-          log.error(F, `Missing permission ${perms.permission} in ${interaction.guild}! Sent the guild owner a DM!`);
-        }
+      if (role.name.includes('@everyone')) {
+        log.debug(F, `${role.name} (${role.id}) is the everyone role, skipping!`);
+        return;
+      }
+
+      if (role.id === roleNeedshelp.id) {
+        log.debug(F, `${role.name} (${role.id}) is the needshelp role, skipping!`);
+        return;
+      }
+
+      if (highestBotRole.comparePositionTo(role) < 0) {
+        log.debug(F, `${role.name} (${role.id}) is above my role, skipping!`);
+        return;
+      }
+
+      try {
+        await target.roles.remove(role);
+        log.debug(F, `${role.name} (${role.id}) removed from ${target.displayName} (${target.id})`);
+      } catch (err) {
+        log.error(F, `${role.name} (${role.id}) could not be removed from ${target.displayName} (${target.id}): ${err}`);
+        const guildOwner = await interaction.guild?.fetchOwner();
+        await guildOwner?.send({
+          content: stripIndents`There was an error removing ${role.name} from ${target.displayName}!
+          Please make sure I have the Manage Roles permission, or put this role above mine so I don't try to remove it.
+          If there's any questions please contact Moonbear#1024 on TripSit!` }); // eslint-disable-line
+        log.error(F, `Missing permission ${perms.permission} in ${interaction.guild}! Sent the guild owner a DM!`);
       }
     });
   }
 
   // Add the needsHelp role to the target
   try {
-    log.debug(F, `Adding role ${roleNeedshelp.name} to ${target.displayName}`);
     await target.roles.add(roleNeedshelp);
+    log.debug(F, `${roleNeedshelp.name} (${roleNeedshelp.id}) added to ${target.displayName} (${target.id})`);
   } catch (err) {
     const guildOwner = await interaction.guild?.fetchOwner();
     await guildOwner?.send({
@@ -643,7 +667,7 @@ export async function tripsitmeTeamClose(
 
   const actor = interaction.member as GuildMember;
 
-  if (targetId === actor.id) {
+  if (targetId === actor.id && actor.id !== env.DISCORD_OWNER_ID) {
     // log.debug(F, `not the target!`);
     await interaction.editReply({ content: 'You should not be able to see this button!' });
     return;
@@ -669,6 +693,7 @@ export async function tripsitmeTeamClose(
       },
     },
   });
+
   const guildData = await db.discord_guilds.upsert({
     where: {
       id: interaction.guild?.id,
@@ -678,7 +703,7 @@ export async function tripsitmeTeamClose(
     },
     update: {},
   });
-  log.debug(F, `guildData: ${JSON.stringify(guildData, null, 2)}`);
+  // log.debug(F, `guildData: ${JSON.stringify(guildData, null, 2)}`);
 
   if (!ticketData) {
     const rejectMessage = `Hey ${(interaction.member as GuildMember).displayName}, ${target ? target.displayName : 'this user'} does not have an open session!`;
@@ -819,9 +844,11 @@ export async function tripsitmeUserClose(
 
   const target = await interaction.guild.members.fetch(targetId);
   const actor = interaction.member as GuildMember;
+  await actor.fetch();
+  log.debug(F, `${actor.displayName} (${actor.id}) clicked "I'm good" in ${target.displayName}'s (${target.id}) session `);
 
   if (targetId !== actor.id && !override) {
-    // log.debug(F, `not the target!`);
+    log.debug(F, 'They did not create the thread, so I am not doing anything!');
     await interaction.editReply({ content: 'Only the user receiving help can click this button!' });
     return;
   }
@@ -858,7 +885,8 @@ export async function tripsitmeUserClose(
   });
 
   if (!ticketData) {
-    const rejectMessage = stripIndents`Hey ${(interaction.member as GuildMember).displayName}, you do not have an open session!
+    log.debug(F, `${actor.displayName} does not have any tickets that are not closed or deleted`);
+    const rejectMessage = stripIndents`Hey ${actor.displayName}, you do not have an open session!
     If you need help, please click the button again!`;
     const embed = embedTemplate().setColor(Colors.DarkBlue);
     embed.setDescription(rejectMessage);
@@ -867,26 +895,26 @@ export async function tripsitmeUserClose(
     return;
   }
 
-  log.debug(F, `ticketData: ${JSON.stringify(ticketData, null, 2)}`);
-  if (Object.entries(ticketData).length === 0) {
-    const rejectMessage = stripIndents`Hey ${(interaction.member as GuildMember).displayName}, you do not have an open session
-    If you need help, please click the button again!`;
-    const embed = embedTemplate().setColor(Colors.DarkBlue);
-    embed.setDescription(rejectMessage);
-    // log.debug(F, `target ${target} does not need help!`);
-    await interaction.editReply({ embeds: [embed] });
-    return;
-  }
+  log.debug(F, `Found ticket in ${ticketData.status} status`);
+  // if (Object.entries(ticketData).length === 0) {
+  //   log.debug(F, `${actor.displayName} does not have any tickets that are not closed or deleted`);
+  //   const rejectMessage = stripIndents`Hey ${(interaction.member as GuildMember).displayName}, you do not have an open session
+  //   If you need help, please click the button again!`;
+  //   const embed = embedTemplate().setColor(Colors.DarkBlue);
+  //   embed.setDescription(rejectMessage);
+  //   // log.debug(F, `target ${target} does not need help!`);
+  //   await interaction.editReply({ embeds: [embed] });
+  //   return;
+  // }
 
-  // log.debug(F, `ticketData: ${JSON.stringify(ticketData, null, 2)}`);
-  if (ticketData.status === 'CLOSED') {
-    const rejectMessage = stripIndents`Hey ${(interaction.member as GuildMember).displayName}, you already closed this session!`;
-    const embed = embedTemplate().setColor(Colors.DarkBlue);
-    embed.setDescription(rejectMessage);
-    // log.debug(F, `target ${target} does not have an open session!`);
-    await interaction.editReply({ embeds: [embed] });
-    return;
-  }
+  // if (ticketData.status === 'CLOSED') {
+  //   const rejectMessage = stripIndents`Hey ${(interaction.member as GuildMember).displayName}, you already closed this session!`;
+  //   const embed = embedTemplate().setColor(Colors.DarkBlue);
+  //   embed.setDescription(rejectMessage);
+  //   // log.debug(F, `target ${target} does not have an open session!`);
+  //   await interaction.editReply({ embeds: [embed] });
+  //   return;
+  // }
 
   // Remove the needshelp role
   let roleNeedshelp = {} as Role;
@@ -894,13 +922,17 @@ export async function tripsitmeUserClose(
     try {
       roleNeedshelp = await interaction.guild.roles.fetch(guildData.role_needshelp) as Role;
       const myMember = await interaction.guild.members.fetch(interaction.client.user.id);
-      const myRole = myMember.roles.highest;
-      if (roleNeedshelp && roleNeedshelp.comparePositionTo(myRole) < 0) {
-        // log.debug(F, `Removing ${roleNeedshelp.name} from ${target.displayName}`);
+      const highestBotRole = myMember.roles.highest;
+
+      if (roleNeedshelp.comparePositionTo(highestBotRole) < 0) {
+        log.debug(F, `Removing ${roleNeedshelp.name} from ${target.displayName}`);
         await target.roles.remove(roleNeedshelp);
+        log.debug(F, `${roleNeedshelp.name} (${roleNeedshelp.id}) removed from ${target.displayName} (${target.id})`);
+      } else {
+        log.debug(F, `Skipping ${roleNeedshelp.name} because it is above my role!`);
       }
     } catch (err) {
-      // log.debug(F, `There was an error fetching the needshelp role, it was likely deleted:\n ${err}`);
+      log.debug(F, `There was an error removing needshelp (${guildData.role_needshelp}) role, it was likely deleted:\n ${err}`);
       // Update the ticket status to closed
       await db.discord_guilds.update({
         where: {
@@ -911,9 +943,11 @@ export async function tripsitmeUserClose(
         },
       });
     }
+  } else {
+    log.debug(F, `${interaction.guild.name} does not have a needshelp role!`);
   }
 
-  // Remove the needshelp role
+  // Get the meta room, if it exists
   let channelTripsitmeta = {} as TextChannel;
   if (guildData.channel_tripsitmeta) {
     try {
@@ -932,7 +966,7 @@ export async function tripsitmeUserClose(
     }
   }
 
-  // Readd old roles
+  // Re-add old roles
   if (userData.roles
     // Patch for BlueLight: Since we didn't remove roles, don't re-add them
     && target.guild.id !== env.DISCORD_BL_ID
@@ -942,26 +976,43 @@ export async function tripsitmeUserClose(
     const myRole = myMember.roles.highest;
     const targetRoles:string[] = userData.roles.split(',') || [];
 
+    log.debug(F, `Adding ${targetRoles.length} old roles to ${target.displayName} (${target.id})`);
+
     // readd each role to the target
     if (targetRoles.length > 0) {
       targetRoles.forEach(async roleId => {
-        // log.debug(F, `Re-adding roleId: ${roleId}`);
         if (!interaction.guild) {
           log.error(F, 'no guild!');
           return;
         }
         const roleObj = await interaction.guild.roles.fetch(roleId) as Role;
-        if (roleObj
-            && !ignoredRoles.includes(roleObj.id)
-            && roleObj.name !== '@everyone'
-            && roleObj.id !== roleNeedshelp.id
-            && roleObj.comparePositionTo(myRole) < 0) {
-          try {
-            await target.roles.add(roleObj);
-          } catch (err) {
-            log.error(F, `Error adding role to target: ${err}`);
-            log.error(F, `${roleObj.name} to ${target.displayName} in ${interaction.guild}!`);
-          }
+
+        if (ignoredRoles.includes(roleObj.id)) {
+          log.debug(F, `${roleObj.name} (${roleObj.id}) is a team role or vanity role, skipping!`);
+          return;
+        }
+
+        if (roleObj.name.includes('@everyone')) {
+          log.debug(F, `${roleObj.name} (${roleObj.id}) is Everyone, skipping!`);
+          return;
+        }
+
+        if (roleObj.id === roleNeedshelp.id) {
+          log.debug(F, `${roleObj.name} (${roleObj.id}) is the needshelp role, skipping!`);
+          return;
+        }
+
+        if (myRole.comparePositionTo(roleObj) < 0) {
+          log.debug(F, `${roleObj.name} (${roleObj.id}) is above my role, skipping!`);
+          return;
+        }
+
+        try {
+          await target.roles.add(roleObj);
+          log.debug(F, `${roleObj.name} (${roleObj.id}) added to ${target.displayName} (${target.id})`);
+        } catch (err) {
+          log.error(F, `Error adding role to target: ${err}`);
+          log.error(F, `${roleObj.name} could not be added to ${target.displayName} (${target.id}) in ${interaction.guild}!`);
         }
       });
     }
@@ -1235,7 +1286,7 @@ export async function tripSitMe(
     reason: `${target.displayName} requested help`,
     invitable: false,
   });
-  log.debug(F, `threadHelpUser: ${threadHelpUser.name} (${threadHelpUser.id})`);
+  log.debug(F, `Created thread ${threadHelpUser.name} (${threadHelpUser.id})`);
 
   // Team check - Cannot be run on team members
   // If this user is a developer then this is a test run and ignore this check,
@@ -1247,7 +1298,7 @@ export async function tripSitMe(
     }
   });
 
-  log.debug(F, `targetIsTeamMember: ${targetIsTeamMember}`);
+  // log.debug(F, `targetIsTeamMember: ${targetIsTeamMember}`);
 
   const noInfo = '\n*No info given*';
   const firstMessage = stripIndents`
@@ -1411,12 +1462,12 @@ export async function tripsitmeButton(
   log.info(F, await commandContext(interaction));
   const target = interaction.member as GuildMember;
 
-  // log.debug(F, `target: ${JSON.stringify(target, null, 2)}`);
+  // log.debug(F, `target: ${JSON.stringify(target, n ull, 2)}`);
 
   // const actorIsAdmin = target.permissions.has(PermissionsBitField.Flags.Administrator);
   // const showMentions = actorIsAdmin ? [] : ['users', 'roles'] as MessageMentionTypes[];
 
-  // const guildData = await getGuild(interaction.guild.id) as DiscordGuilds;
+  // const guildData = await getGuild(interactio n.guild.id) as DiscordGuilds;
 
   // Get the roles we'll be referencing
   // let roleTripsitter = {} as Role;
@@ -1457,7 +1508,7 @@ export async function tripsitmeButton(
     });
   }
 
-  log.debug(F, `tripsitChannel: ${JSON.stringify(tripsitChannel, null, 2)}`);
+  log.debug(F, `tripsitChannel: ${tripsitChannel.name} (${tripsitChannel.id})`);
 
   const channelPerms = await checkChannelPermissions(tripsitChannel, [
     'ViewChannel' as PermissionResolvable,
@@ -1544,14 +1595,14 @@ export async function tripsitmeButton(
     },
     update: {},
   });
-  log.debug(F, `Target userData: ${JSON.stringify(userData, null, 2)}`);
+  log.debug(F, `Target userData: ${userData.id}`);
 
   const ticketData = await db.user_tickets.findFirst({
     where: {
       user_id: userData.id,
       status: {
         not: {
-          in: ['CLOSED', 'RESOLVED', 'DELETED'],
+          in: ['DELETED'],
         },
       },
     },
@@ -1566,7 +1617,7 @@ export async function tripsitmeButton(
       threadHelpUser = await interaction.guild?.channels.fetch(ticketData.thread_id) as ThreadChannel;
     } catch (err) {
       log.debug(F, 'There was an error updating the help thread, it was likely deleted');
-      // Update the ticket status to closed
+      // Update the ticket statu s to closed
 
       await db.user_tickets.update({
         where: {

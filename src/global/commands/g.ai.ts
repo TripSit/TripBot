@@ -170,7 +170,7 @@ export async function getAssistant(name: string):Promise<Assistant> {
     log.debug(F, `Creating the ${name} assistant!`);
     return openAi.beta.assistants.create(tripsitAssistantData);
   }
-  log.debug(F, `I found the ${name} assistant!`);
+  // log.debug(F, `I found the ${name} assistant!`);
   // If it does exist, update it
   // log.debug(F, `updatedAssistant: ${JSON.stringify(assistant, null, 2)}`);
   return openAi.beta.assistants.update(assistantData.id, tripsitAssistantData);
@@ -535,7 +535,7 @@ async function openAiWaitForRun(
       const messageContent = (
         await openAi.beta.threads.messages.list(thread.id, { limit: 1 })
       ).data[0].content[0];
-      log.debug(F, `messageContent: ${JSON.stringify(messageContent, null, 2)}`);
+      // log.debug(F, `messageContent: ${JSON.stringify(messageContent, null, 2)}`);
       return { response: (messageContent as MessageContentText).text.value.slice(0, 2000), promptTokens, completionTokens };
     }
     case 'requires_action': {
@@ -697,7 +697,7 @@ async function openAiConversation(
   // Get the most recent run
   // This will automatically return the most recent runs, so we can just grab the first one
   let [recentRun] = (await openAi.beta.threads.runs.list(thread.id, { limit: 1 })).data;
-  log.debug(F, `recentRun: ${JSON.stringify(recentRun, null, 2)}`);
+  // log.debug(F, `recentRun: ${JSON.stringify(recentRun, null, 2)}`);
 
   // If the most recent run is in progress, queued, or waiting for user action, stop it
   if (recentRun && ['queued', 'in_progress', 'requires_action'].includes(recentRun.status)) {
@@ -725,7 +725,7 @@ async function openAiConversation(
   }
 
   // Run the thread
-  log.debug(F, `Starting new run with assistant: ${assistant.id} and thread: ${thread.id}`);
+  log.debug(F, `Starting new run with assistant: ${assistant.name} and thread: ${thread.id}`);
   const run = await openAi.beta.threads.runs.create(
     thread.id,
     {

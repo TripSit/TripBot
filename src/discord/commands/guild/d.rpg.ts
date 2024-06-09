@@ -2142,7 +2142,7 @@ export async function rpgMarketAccept(
     };
   }
 
-  personaData.tokens -= itemData.cost;
+  personaData.tokens -= itemCost;
   await db.personas.upsert({
     where: {
       id: personaData.id,
