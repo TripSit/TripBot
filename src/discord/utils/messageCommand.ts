@@ -113,7 +113,7 @@ async function isTheMini(message: Message): Promise<boolean> {
   const userId = message.author.id; // Extract userId from message
 
   // Regular expression to check if the message possibly mentions a The Mini score
-  const theMiniScorePattern = /https:\/\/www\.nytimes\.com\/badges\/games\/mini\.html\?d=\d{4}-\d{2}-\d{2}&t=\d+&c=[a-f0-9]+&smid=url-share/;
+  const theMiniScorePattern = /(https:\/\/www\.nytimes\.com\/badges\/games\/mini\.html\?d=\d{4}-\d{2}-\d{2}&t=\d+&c=[a-f0-9]+&smid=url-share)|(https:\/\/www\.nytimes\.com\/crosswords\/game\/mini)/;
   const match = messageContent.match(theMiniScorePattern);
 
   // If a match is found, send the message content for further processing

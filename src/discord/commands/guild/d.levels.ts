@@ -334,8 +334,8 @@ export const dLevels: SlashCommand = {
     // Generate the colors for the card based on the user's role color
     const roleColor = `#${(target.roles.color?.color || 0x99aab5).toString(16).padStart(6, '0')}`;
 
-    const cardLightColor = generateColors(roleColor, 0, -72, -67);
-    const cardDarkColor = generateColors(roleColor, 0, -72, -82);
+    const cardLightColor = generateColors(roleColor, 0, -75, -67);
+    const cardDarkColor = generateColors(roleColor, 0, -75, -80);
     const chipColor = generateColors(roleColor, 0, -50, -50);
     const barColor = generateColors(roleColor, 0, -20, -10);
     const textColor = generateColors(roleColor, 0, 0, 0);

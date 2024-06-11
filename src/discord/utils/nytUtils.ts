@@ -79,6 +79,7 @@ export namespace Wordle {
 
     stats.gamesPlayed = scores.length;
     const wins = scores.filter(score => score.score > 0).length;
+    // TODO: Round the win rate to whole percentage
     stats.winRate = wins / stats.gamesPlayed;
     // Find the frequency of each score
     const scoreFrequency = scores.reduce((acc: { [key: number]: number }, score) => {
@@ -248,7 +249,7 @@ export namespace Wordle {
       // Prevent users from submitting puzzles from the future
       const puzzleNumber = parseInt(match[2].replace(',', ''), 10);
       const validPuzzleNumbers = await Wordle.todaysPuzzles();
-      if (!validPuzzleNumbers.includes(puzzleNumber)) {
+      if (puzzleNumber > Math.max(...validPuzzleNumbers)) {
         log.debug(F, `Invalid Wordle score found (Puzzle number is from the future): ${match[1]}`);
         return false;
       }
@@ -519,8 +520,8 @@ export namespace Connections {
     if (match) {
       const puzzleNumber = parseInt(match[1].match(/\d+/)?.[0] ?? 'NaN', 10);
       const validPuzzleNumbers = await Connections.todaysPuzzles();
-      if (!validPuzzleNumbers.includes(puzzleNumber)) {
-        log.debug(F, `Invalid Connections puzzle found (Puzzle number is from the future): ${match[1]}`);
+      if (puzzleNumber > Math.max(...validPuzzleNumbers)) {
+        log.debug(F, `Invalid Wordle score found (Puzzle number is from the future): ${match[1]}`);
         return false;
       }
 
@@ -784,26 +785,40 @@ export namespace TheMini {
   }
 
   export async function process(userId: string, messageContent: string): Promise<boolean> {
-    const theMiniScorePattern = /https:\/\/www\.nytimes\.com\/badges\/games\/mini\.html\?d=\d{4}-\d{2}-\d{2}&t=\d+&c=[a-f0-9]+&smid=url-share/;
+    const theMiniScorePattern = /(https:\/\/www\.nytimes\.com\/badges\/games\/mini\.html\?d=\d{4}-\d{2}-\d{2}&t=\d+&c=[a-f0-9]+&smid=url-share)|(https:\/\/www\.nytimes\.com\/crosswords\/game\/mini)/;
+    log.debug(F, `Processing message for The Mini score: ${messageContent}`);
     const match = messageContent.match(theMiniScorePattern);
     if (match) {
+      log.debug(F, `The Mini puzzle found: ${match[0]}`);
       const url = match[0];
-      const urlParts = url.split('&');
-      const dateString = urlParts[0].split('=')[1];
-      const timeString = urlParts[1].split('=')[1];
-      const date = dateString;
-      log.debug(F, `dateString: ${dateString}, timeString: ${timeString}`);
+      let dateString; let
+        timeString;
+      if (url.includes('badges')) {
+        const urlParts = url.split('&');
+        [dateString] = urlParts[0].split('=');
+        [, timeString] = urlParts[1].split('=');
+      } else {
+        const dateMatch = messageContent.match(/(\d{1,2}\/\d{1,2}\/\d{4})/);
+        if (dateMatch) {
+          const dateParts = dateMatch[1].split('/');
+          dateString = `${dateParts[2]}-${dateParts[0].padStart(2, '0')}-${dateParts[1].padStart(2, '0')}`;
+        }
+        const timeMatch = messageContent.match(/in (\d+):(\d+)/);
+        if (timeMatch) {
+          timeString = ((parseInt(timeMatch[1], 10) * 60) + parseInt(timeMatch[2], 10)).toString();
+        }
+      }
 
-      // Get the date from the date string and make it into a (YYYY, MM, DD) tuple
+      // Check if dateString and timeString are defined before parsing them
+      if (dateString === undefined || timeString === undefined) {
+        return false;
+      }
+
+      const date = dateString;
 
       // Convert time string to integer with radix parameter
       const time = parseInt(timeString, 10);
 
-      // const validDates = await todaysMiniDates();
-      // if (!validDates.includes(date.toISOString().substring(0, 10))) {
-      //   log.debug(F, `Invalid Mini puzzle found (Date is from the future): ${url}`);
-      //   return false;
-      // }
       log.debug(F, `The Mini puzzle found: ${url}, Date: ${date}, Time: ${time}`);
       await TheMini.updateStats(userId, { score: time, puzzle: date });
       return true;

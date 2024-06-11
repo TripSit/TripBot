@@ -170,7 +170,7 @@ export const dNYT: SlashCommand = {
         embed.setDescription(stripIndents`
           **🎮 Games Played:** ${results.stats.gamesPlayed}
 
-          **🏆 Win Rate:** ${(results.stats.winRate * 100)}%
+          **🏆 Win Rate:** ${Math.round(results.stats.winRate * 100)}%
 
           **📅 Submission Streak:** ${results.stats.submissionStreak}
 
@@ -218,7 +218,7 @@ export const dNYT: SlashCommand = {
         embed.setDescription(stripIndents`
           **🎮 Games Played:** ${results.stats.gamesPlayed}
 
-          **🏆 Win Rate:** ${(results.stats.winRate * 100)}%
+          **🏆 Win Rate:** ${Math.round(results.stats.winRate * 100)}%
 
           **📅 Submission Streak:** ${results.stats.submissionStreak}
 
@@ -257,10 +257,6 @@ export const dNYT: SlashCommand = {
           **🎮 Games Played:** ${results.stats.gamesPlayed}
 
           **📅 Submission Streak:** ${results.stats.submissionStreak}
-
-          **🔥 Win Streak:** ${results.stats.currentStreak}
-
-          **❤️‍🔥 Best Win Streak:** ${results.stats.bestStreak}
 
           **🏆 Best Time:** ${formatTime(results.stats.bestTime)}
 
@@ -323,7 +319,7 @@ export const dNYT: SlashCommand = {
         embed.setDescription(stripIndents`
           **🎮 Games Played:** ${results.stats.gamesPlayed}
 
-          **🏆 Win Rate:** ${(results.stats.winRate * 100)}%
+          **🏆 Win Rate:** ${Math.round(results.stats.winRate * 100)}%
 
           **📊 Guess Distribution:**
           ${frequencyGraph}
@@ -380,7 +376,7 @@ export const dNYT: SlashCommand = {
         embed.setDescription(stripIndents`
           **🎮 Games Played:** ${results.stats.gamesPlayed}
 
-          **🏆 Win Rate:** ${(results.stats.winRate * 100)}%
+          **🏆 Win Rate:** ${Math.round(results.stats.winRate * 100)}%
 
           **📊 Mistakes Distribution:**
           ${frequencyGraph}
