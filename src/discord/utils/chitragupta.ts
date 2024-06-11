@@ -4,7 +4,7 @@ import {
   User,
 } from 'discord.js';
 
-// const F = f(__filename);
+const F = f(__filename);
 
 export default chitragupta;
 
@@ -38,8 +38,9 @@ export async function chitragupta(
   // log.debug(F, `actor: ${actor}`);
   if (!reaction.emoji.name) return;
   if (!reaction.emoji.name.includes('upvote')) return;
+  // log.debug(F, `actor: ${actor.username} target: ${target.username} action: ${action}`);
 
-  // Increment karma of the actor
+  // Increment karma given of the actor
   await db.users.upsert({
     where: { discord_id: actor.id },
     create: {
@@ -56,7 +57,7 @@ export async function chitragupta(
 
   // const actorData = await getUser(actor.id, null, null);
 
-  // Increment the karma of the target
+  // Increment the karma received of the target
   await db.users.upsert({
     where: { discord_id: target.id },
     create: {
@@ -65,7 +66,7 @@ export async function chitragupta(
       karma_received: action,
     },
     update: {
-      karma_given: {
+      karma_received: {
         increment: action,
       },
     },
