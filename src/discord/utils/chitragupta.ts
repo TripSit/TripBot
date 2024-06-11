@@ -4,7 +4,7 @@ import {
   User,
 } from 'discord.js';
 
-const F = f(__filename);
+// const F = f(__filename);
 
 export default chitragupta;
 
