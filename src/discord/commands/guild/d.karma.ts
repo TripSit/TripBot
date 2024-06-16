@@ -16,7 +16,7 @@ export const dKarma: SlashCommand = {
     .setName('karma')
     .setDescription('Get someone\'s karma!')
     .addUserOption(option => option
-      .setName('user')
+      .setName('target')
       .setDescription('User to lookup'))
     .addBooleanOption(option => option.setName('ephemeral')
       .setDescription('Set to "True" to show the response only to you')),
