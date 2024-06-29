@@ -4,6 +4,7 @@ import {
   Colors,
   EmbedBuilder,
   SlashCommandBuilder,
+  ColorResolvable
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
 import { SlashCommand } from '../../@types/commandDef';
@@ -22,9 +23,9 @@ type DxmDataType = {
   Fourth: { min: number, max: number };
 };
 
-async function buildCalcEmbed(title: string, description: string, isError: boolean):Promise<EmbedBuilder> {
+async function buildCalcEmbed(title: string, description: string, color: ColorResolvable = Colors.Purple, isError: boolean = false):Promise<EmbedBuilder> {
   return embedTemplate()
-    .setColor(isError ? Colors.Red : Colors.Purple)
+    .setColor(isError ? Colors.Red : color)
     .setTitle(isError ? 'Error!' : title)
     .setDescription(isError ? stripIndents`There was an error during conversion!
       I've let the developer know, please try again with different parameters!` : description);
@@ -38,9 +39,13 @@ async function dCalcBenzo(
   const drugB = interaction.options.getString('and_i_want_the_dose_of', true);
   const data = await calcBenzo(dosage, drugA, drugB);
 
-  let error = false;
+  if(dosage < 0.001) {
+    return buildCalcEmbed('Invalid values supplied', 'The parameter \'i_have\' cannot be less than 0.001.', Colors.Red);
+  }
+
+  let isError = false;
   if (data === -1) {
-    error = true;
+    isError = true;
   }
 
   const embedTitle = `${dosage} mg of ${drugA} about equal to ${data} mg of ${drugB}`;
@@ -48,7 +53,7 @@ async function dCalcBenzo(
       **Please make sure to research the substances thoroughly before using them.**
       It's a good idea to start with a lower dose than the calculator shows, since everybody can react differently to different substances.
       `;
-  return buildCalcEmbed(embedTitle, embedDescription, false);
+  return buildCalcEmbed(embedTitle, embedDescription, Colors.Red, isError);
 }
 
 async function dCalcDXM(
@@ -56,6 +61,11 @@ async function dCalcDXM(
 ):Promise<EmbedBuilder> {
   // Calculate each plat min/max value
   const givenWeight = interaction.options.getNumber('calc_weight', true);
+
+  if(givenWeight < 1) {
+    return buildCalcEmbed('Invalid values supplied', 'The parameter \'calc_weight\' cannot be less than 1.', Colors.Red);
+  }
+
   const weightUnits = interaction.options.getString('units', true);
   const taking = interaction.options.getString('taking', true);
 
@@ -65,7 +75,7 @@ async function dCalcDXM(
 
   const embedTitle = 'DXM Dosages';
   const embedDescription = `For a ${givenWeight}${weightUnits} individual taking ${taking}`;
-  const embed = await buildCalcEmbed(embedTitle, embedDescription, false);
+  const embed = await buildCalcEmbed(embedTitle, embedDescription);
   let header = true;
   Object.keys(dosageData).forEach(key => {
     embed.addFields(
@@ -91,7 +101,7 @@ async function dCalcKetamine(
   }
 
   if (weightUnits === 'lbs' && givenWeight > 398) {
-    embed.setTitle('Please enter a weight less than 398 lbs.');
+    embed.setTitle('Please enter a weight less than 398 lbs.'); // what if a person is > 398 lbs? >.<
     return embed;
   }
 
@@ -116,6 +126,10 @@ async function dCalcMDMA(
   interaction:ChatInputCommandInteraction,
 ):Promise<EmbedBuilder> {
   const givenWeight = interaction.options.getNumber('weight', true);
+
+  if (givenWeight < 1) {
+    return buildCalcEmbed('Invalid values supplied', 'The parameter \'weight\' cannot be less than 1.', Colors.Red);
+  }
   const weightUnits = interaction.options.getString('units', true) as 'kg' | 'lbs';
   const embed = embedTemplate();
   const dosageData = await calcMDMA(givenWeight, weightUnits);
@@ -140,43 +154,75 @@ async function dCalcMDMA(
 async function dCalcNasal(
   interaction:ChatInputCommandInteraction,
 ):Promise<EmbedBuilder> {
-  const command = interaction.options.getSubcommand();
+  const calculationType = interaction.options.getString('calculation_type', true);
+  const amount = interaction.options.getNumber('amount', true);
+  const desiredMgPerPush = interaction.options.getNumber('desired_mg_per_push', true);
+  const mlPerPush = interaction.options.getNumber('ml_per_push', true);
+
+  if (amount < 1 || mlPerPush < 1 || desiredMgPerPush < 0.001) {
+    return buildCalcEmbed('Invalid values supplied', 
+      stripIndents`The parameters \'amount\' and \'mlPerPush\' cannot be less than 1, 
+      and the parameter \'desiredMgPerPush\' cannot be less than 0.001.`,
+    Colors.Red);
+  }
+
   const imageUrl = 'https://user-images.githubusercontent.com/1836049/218758611-c84f1e34-0f5b-43ac-90da-bd89b028f131.png';
   const embed = embedTemplate()
     .setTitle('Nasal spray calculator')
     .setImage(imageUrl);
 
-  if (command === 'solvent') {
+  if (calculationType === 'solvent') {
     // eslint-disable-next-line max-len
-    // log.debug(F, `substance_amount: ${interaction.options.getNumber('substance_amount')}`);
-    // log.debug(F, `desired_mg_per_push: ${interaction.options.getNumber('desired_mg_per_push')}`);
-    // log.debug(F, `ml_per_push: ${interaction.options.getNumber('ml_per_push')}`);
-    const solvent = await calcSolvent(
-      interaction.options.getNumber('substance_amount') as number,
-      interaction.options.getNumber('desired_mg_per_push') as number,
-      interaction.options.getNumber('ml_per_push') as number,
-    );
+    // log.debug(F, `amount: ${amount}`);
+    // log.debug(F, `desired_mg_per_push: ${desiredMgPerPush}`);
+    // log.debug(F, `ml_per_push: ${mlPerPush}`);
+    embed.setDescription(`You'll need ~${ await calcSolvent(amount, desiredMgPerPush, mlPerPush) }ml of solvent (water)`);
 
-    embed.setDescription(`You'll need ~${solvent}ml of solvent (water)`);
-  } else if (command === 'substance') {
-    // log.debug(F, `solvent_amount: ${interaction.options.getNumber('solvent_amount')}`);
-    // log.debug(F, `desired_mg_per_push: ${interaction.options.getNumber('desired_mg_per_push')}`);
-    // log.debug(F, `ml_per_push: ${interaction.options.getNumber('ml_per_push')}`);
-    const dose = await calcSubstance(
-      interaction.options.getNumber('solvent_amount') as number,
-      interaction.options.getNumber('desired_mg_per_push') as number,
-      interaction.options.getNumber('ml_per_push') as number,
-    );
-    embed.setDescription(`You'll need ~${dose}mg of the substance`);
+  } else if (calculationType === 'substance') {
+    // log.debug(F, `amount: ${amount}`);
+    // log.debug(F, `desired_mg_per_push: ${desiredMgPerPush}`);
+    // log.debug(F, `ml_per_push: ${mlPerPush}`);
+    embed.setDescription(`You'll need ~${ await calcSubstance(amount, desiredMgPerPush, mlPerPush) }mg of the substance`);
   }
   return embed;
 }
 
-// async function dCalcPsychedelics(
-//   interaction:ChatInputCommandInteraction,
-// ):Promise<EmbedBuilder> {
+async function dCalcPsychedelics(
+  interaction:ChatInputCommandInteraction,
+):Promise<EmbedBuilder> {
+  const drugType = interaction.options.getString('drug_type', true);
+  const lastDose = interaction.options.getNumber('last_dose_amount', true);
+  const desiredDose = interaction.options.getNumber('desired_dose_amount', true);
+  const days = interaction.options.getNumber('days', true);
 
-// }
+  // This fixes an issue where supplying 0 would cause an "Infinity g/ug" response and a negative number resulted in NaN.
+  if (days < 1 || lastDose < 1 || desiredDose < 1) {
+    return buildCalcEmbed('Invalid values supplied', 'The parameters \'last_dose_amount\', \'desired_dose_amount\', and \'days\' cannot be less than 1.', Colors.Red);
+  }
+
+  // Code here inspired by https://codepen.io/cyberoxide/pen/BaNarGd
+  // Seems like the original source is offline (https://psychedeliccalc.herokuapp.com)
+  const result = await calcPsychedelics(lastDose, days, desiredDose);
+
+  const drug = (drugType === 'lsd') ? 'LSD' : 'Mushrooms';
+  const units = (drugType === 'lsd') ? 'ug' : 'g';
+
+  let title = `${result} ${units} of ${drug} is needed to feel the same effects as`;
+  if (desiredDose) {
+    title = `${title} ${desiredDose} ${units} of ${drug} when ${lastDose} ${units} were taken ${days} days ago.`;
+  } else {
+    title = `${title} ${lastDose} ${units} of ${drug} taken ${days} days ago.`;
+  }
+
+  const embed = buildCalcEmbed(title, 
+    stripIndents`
+    This ESTIMATE only works for tryptamines (LSD and Magic Mushrooms).
+    As all bodies and brains are different, results may vary. 
+    [Credit to cyberoxide's Codepen](https://codepen.io/cyberoxide/pen/BaNarGd) and [AdmiralAcid's post on reddit](https://www.reddit.com/r/LSD/comments/4dzh9s/lsd_tolerance_calculator_improved/) `, 
+    Colors.Red);
+    
+  return embed
+}
 
 export const dCalc: SlashCommand = {
   data: new SlashCommandBuilder()
@@ -185,7 +231,7 @@ export const dCalc: SlashCommand = {
     // Benzo subcommand
     .addSubcommand(subcommand => subcommand
       .setName('benzo')
-      .setDescription('This tool helps figure out how much of a given benzo dose converts into another benzo dose.')
+      .setDescription('Get benzo dosage information')
       .addNumberOption(option => option.setName('i_have')
         .setDescription('mg')
         .setRequired(true))
@@ -265,17 +311,17 @@ export const dCalc: SlashCommand = {
       .setName('nasal')
       .setDescription('Get nasal solvent/substance information')
       .addStringOption(option => option.setName('calculation_type')
-        .setDescription('Calculate how much solvent to use for substance, or how much substance for the solvent?')
+        .setDescription('Are you wanting to calculate the amount of solvent or substance?')
         .setRequired(true)
         .addChoices(
           { name: 'Solvent', value: 'solvent' },
           { name: 'Substance', value: 'substance' },
         ))
-      .addNumberOption(option => option.setName('solvent_amount')
-        .setDescription('amount of solvent in ml')
+      .addNumberOption(option => option.setName('amount')
+        .setDescription('Amount of solvent in ml')
         .setRequired(true))
       .addNumberOption(option => option.setName('desired_mg_per_push')
-        .setDescription('Wanted dose per push in mg')
+        .setDescription('Desired dose per push in mg')
         .setRequired(true))
       .addNumberOption(option => option.setName('ml_per_push')
         .setDescription('Excreted ml per push (look at the packaging)')
@@ -285,7 +331,25 @@ export const dCalc: SlashCommand = {
     // Begin psychedelic subcommands
     .addSubcommand(subcommand => subcommand // Requires subcommands for this subcommand
       .setName('psychedelics')
-      .setDescription('Get psychedelic tolerance information')),
+      .setDescription('Get psychedelic tolerance information')
+      .addStringOption(option => option.setName('drug_type')
+        .setDescription('Are you wanting to calculate tolerance for LSD or Mushrooms?')
+        .setRequired(true)
+        .addChoices(
+          { name: 'LSD', value: 'lsd' },
+          { name: 'Mushrooms', value: 'mushrooms' },
+        ))
+      .addNumberOption(option => option.setName('last_dose_amount')
+        .setDescription('What was your last dose? (e.g 100mcg or 2g)')
+        .setRequired(true))
+      .addNumberOption(option => option.setName('days')
+        .setDescription('How many days has it been since your last dose?')
+        .setRequired(true))
+      .addNumberOption(option => option.setName('desired_dose_amount')
+        .setDescription('What\'s your desired dose?  (e.g 100mcg or 2g)')
+        .setRequired(true))
+      .addBooleanOption(option => option.setName('ephemeral')
+        .setDescription('Set to "True" to show the response only to you'))),
 
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
@@ -311,7 +375,7 @@ export const dCalc: SlashCommand = {
       await interaction.editReply({ embeds: [await dCalcNasal(interaction)] });
     }
     if (subcommand === 'psychedelics') {
-      // await interaction.editReply({ embeds: [await dCalcPsychedelics(interaction)] });
+      await interaction.editReply({ embeds: [await dCalcPsychedelics(interaction)] });
     }
 
     // if (subcommand === 'blackjack') {
