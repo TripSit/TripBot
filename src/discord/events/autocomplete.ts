@@ -777,7 +777,7 @@ export async function autocomplete(interaction: AutocompleteInteraction): Promis
     await autocompletePills(interaction);
   } else if (interaction.commandName === 'role') {
     await autocompleteRoles(interaction);
-  } else if (interaction.commandName === 'calc_benzo') {
+  } else if (interaction.commandName === 'calc' && interaction.options.getSubcommand() === 'benzo') {
     await autocompleteBenzos(interaction);
   } else if (interaction.commandName === 'timezone') {
     await autocompleteTimezone(interaction);
@@ -797,6 +797,8 @@ export async function autocomplete(interaction: AutocompleteInteraction): Promis
     await autocompleteQuotes(interaction);
   } else if (interaction.commandName === 'nyt') {
     await autocompleteNYT(interaction);
+  } else if (interaction.commandName === 'nasal') {
+
   } else { // If you don't need a specific autocomplete, return a list of drug names
     await autocompleteDrugNames(interaction);
   }
