@@ -60,7 +60,7 @@ async function birthdaySet(
     return;
   }
 
-  if (day === null || (day !== null && day < 1)) {
+  if (!day || day < 1) {
     await interaction.editReply({ content: 'You need to specify a valid day!' });
     return;
   }
