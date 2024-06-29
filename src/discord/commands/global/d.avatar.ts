@@ -1,5 +1,6 @@
 import {
   SlashCommandBuilder,
+  DiscordAPIError
 } from 'discord.js';
 
 import { SlashCommand } from '../../@types/commandDef';
@@ -32,15 +33,22 @@ export const dAvatar: SlashCommand = {
     // log.debug(F, `user: ${JSON.stringify(user, null, 2)}`);
     // log.debug(F, `user.id: ${user.id}`);
 
-    const member = await interaction.guild.members.fetch(user.id);
-
-    // log.debug(F, `member: ${JSON.stringify(member, null, 2)}`);
-
-    const embed = embedTemplate()
-      .setTitle(`${member.displayName}'s Profile Picture`)
-      .setImage(`${member.displayAvatarURL()}?size=4096`);
-    await interaction.editReply({ embeds: [embed] });
-    return true;
+    try {
+      const member = await interaction.guild.members.fetch(user.id);
+      // log.debug(F, `member: ${JSON.stringify(member, null, 2)}`);
+      const embed = embedTemplate()
+        .setTitle(`${member.displayName}'s Profile Picture`)
+        .setImage(`${member.displayAvatarURL()}?size=4096`);
+      await interaction.editReply({ embeds: [embed] });
+      return true;
+    } catch (err) {
+      if ((err as DiscordAPIError).code === 10007) {
+        await interaction.editReply({ content: 'This command can only be used on a member of the current guild.' });
+        return false;
+      }
+    }
+    // If this line is reached, then there was a problem.
+    return false;
   },
 };
 
