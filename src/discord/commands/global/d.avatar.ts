@@ -1,6 +1,6 @@
 import {
   SlashCommandBuilder,
-  DiscordAPIError
+  DiscordAPIError,
 } from 'discord.js';
 
 import { SlashCommand } from '../../@types/commandDef';
