@@ -114,7 +114,7 @@ export const dNYT: SlashCommand = {
           - [The Mini](https://www.nytimes.com/crosswords/game/mini)
 
           **TripTokens:**
-          If your submission is one of the 3 most recent puzzles available, you will tokens for submitting a valid result.
+          If your submission is one of the 3 most recent puzzles available, you will get tokens for submitting a valid result.
           `);
       await interaction.editReply({ embeds: [embed] });
       return true;
