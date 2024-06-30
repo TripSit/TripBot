@@ -111,13 +111,13 @@ async function dCalcKetamine(
   const weightUnits = interaction.options.getString('units', true) as 'kg' | 'lbs';
   const embed = embedTemplate();
 
-  if (weightUnits === 'kg' && givenWeight > 179) {
-    embed.setTitle('Please enter a weight less than 179 kg.'); // what if a person is 200kg? =(
+  if (weightUnits === 'kg' && (givenWeight > 179 || givenWeight < 1)) {
+    embed.setTitle('Please enter a weight less than 179 kg and greater than 1kg.'); // what if a person is 200kg? =(
     return embed;
   }
 
-  if (weightUnits === 'lbs' && givenWeight > 398) {
-    embed.setTitle('Please enter a weight less than 398 lbs.'); // what if a person is > 398 lbs? >.<
+  if (weightUnits === 'lbs' && (givenWeight > 398 || givenWeight < 1)) {
+    embed.setTitle('Please enter a weight less than 398 lbs and greater than 1 lb.'); // what if a person is > 398 lbs? >.<
     return embed;
   }
 
