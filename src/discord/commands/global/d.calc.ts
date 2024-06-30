@@ -4,13 +4,13 @@ import {
   Colors,
   EmbedBuilder,
   SlashCommandBuilder,
-  ColorResolvable
+  ColorResolvable,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import {
-  calcBenzo, calcDxm, calcKetamine, calcMDMA, calcSolvent, calcSubstance, calcPsychedelics, DxmDataType
+  calcBenzo, calcDxm, calcKetamine, calcMDMA, calcSolvent, calcSubstance, calcPsychedelics, DxmDataType,
 } from '../../../global/commands/g.calc';
 import commandContext from '../../utils/context';
 
@@ -18,10 +18,10 @@ const F = f(__filename);
 
 /**
  * Utility function to build embeds.
- * @param title 
- * @param description 
- * @param color 
- * @param isError 
+ * @param title
+ * @param description
+ * @param color
+ * @param isError
  * @returns {Promise<EmbedBuilder>}
  */
 async function buildCalcEmbed(title: string, description: string, color: ColorResolvable = Colors.Purple, isError: boolean = false):Promise<EmbedBuilder> {
@@ -34,7 +34,7 @@ async function buildCalcEmbed(title: string, description: string, color: ColorRe
 /**
  * Calls g.calc benzo function with user supplied input and builds an embed out of it.
  * Takes the dose of one specific benzo and uses it to figure out the equivalent dose for another benzo
- * @param interaction 
+ * @param interaction
  * @returns {Promise<EmbedBuilder>}
  */
 async function dCalcBenzo(
@@ -45,7 +45,7 @@ async function dCalcBenzo(
   const drugB = interaction.options.getString('and_i_want_the_dose_of', true);
   const data = await calcBenzo(dosage, drugA, drugB);
 
-  if(dosage < 0.001) {
+  if (dosage < 0.001) {
     return buildCalcEmbed('Invalid values supplied', 'The parameter \'i_have\' cannot be less than 0.001.', Colors.Red);
   }
 
@@ -64,7 +64,7 @@ async function dCalcBenzo(
 
 /**
  * Calls g.calc DXM function with user supplied input and builds an embed out of it. Takes weight for calculations.
- * @param interaction 
+ * @param interaction
  * @returns {Promise<EmbedBuilder>}
  */
 async function dCalcDXM(
@@ -73,7 +73,7 @@ async function dCalcDXM(
   // Calculate each plat min/max value
   const givenWeight = interaction.options.getNumber('calc_weight', true);
 
-  if(givenWeight < 1) {
+  if (givenWeight < 1) {
     return buildCalcEmbed('Invalid values supplied', 'The parameter \'calc_weight\' cannot be less than 1.', Colors.Red);
   }
 
@@ -101,7 +101,7 @@ async function dCalcDXM(
 
 /**
  * Calls g.calc Ketamine function with user supplied input and build an embed out of it for insuffulation and rectal ROAs.
- * @param interaction 
+ * @param interaction
  * @returns {Promise<EmbedBuilder>}
  */
 async function dCalcKetamine(
@@ -139,9 +139,9 @@ async function dCalcKetamine(
 }
 
 /**
- * Calls g.calc MDMA function with user supplied input and build an embed out of it. 
+ * Calls g.calc MDMA function with user supplied input and build an embed out of it.
  * Takes weight for calculations and appends extra HR info at the end.
- * @param interaction 
+ * @param interaction
  * @returns {Promise<EmbedBuilder>}
  */
 async function dCalcMDMA(
@@ -176,7 +176,7 @@ async function dCalcMDMA(
 /**
  * Calls g.calc Nasal function with user supplied input and build an embed out of it.
  * It acts as the frontend for determining how to make a nasal spray solution.
- * @param interaction 
+ * @param interaction
  * @returns {Promise<EmbedBuilder>}
  */
 async function dCalcNasal(
@@ -188,10 +188,12 @@ async function dCalcNasal(
   const mlPerPush = interaction.options.getNumber('ml_per_push', true);
 
   if (amount < 1 || mlPerPush < 1 || desiredMgPerPush < 0.001) {
-    return buildCalcEmbed('Invalid values supplied', 
+    return buildCalcEmbed(
+      'Invalid values supplied',
       stripIndents`The parameters \'amount\' and \'mlPerPush\' cannot be less than 1, 
       and the parameter \'desiredMgPerPush\' cannot be less than 0.001.`,
-    Colors.Red);
+      Colors.Red,
+    );
   }
 
   const imageUrl = 'https://user-images.githubusercontent.com/1836049/218758611-c84f1e34-0f5b-43ac-90da-bd89b028f131.png';
@@ -204,13 +206,12 @@ async function dCalcNasal(
     // log.debug(F, `amount: ${amount}`);
     // log.debug(F, `desired_mg_per_push: ${desiredMgPerPush}`);
     // log.debug(F, `ml_per_push: ${mlPerPush}`);
-    embed.setDescription(`You'll need ~${ await calcSolvent(amount, desiredMgPerPush, mlPerPush) }ml of solvent (water)`);
-
+    embed.setDescription(`You'll need ~${await calcSolvent(amount, desiredMgPerPush, mlPerPush)}ml of solvent (water)`);
   } else if (calculationType === 'substance') {
     // log.debug(F, `amount: ${amount}`);
     // log.debug(F, `desired_mg_per_push: ${desiredMgPerPush}`);
     // log.debug(F, `ml_per_push: ${mlPerPush}`);
-    embed.setDescription(`You'll need ~${ await calcSubstance(amount, desiredMgPerPush, mlPerPush) }mg of the substance`);
+    embed.setDescription(`You'll need ~${await calcSubstance(amount, desiredMgPerPush, mlPerPush)}mg of the substance`);
   }
   return embed;
 }
@@ -218,7 +219,7 @@ async function dCalcNasal(
 /**
  * Calls g.calc Psychedelic (LSD/Mushrooms only) function with user supplied input and build an embed out of it
  * This particular one is the frontend of a tolerance calculator.
- * @param interaction 
+ * @param interaction
  * @returns {Promise<EmbedBuilder>}
  */
 async function dCalcPsychedelics(
@@ -248,14 +249,14 @@ async function dCalcPsychedelics(
     title = `${title} ${lastDose} ${units} of ${drug} taken ${days} days ago.`;
   }
 
-  const embed = buildCalcEmbed(title, 
+  return buildCalcEmbed(
+    title,
     stripIndents`
     This ESTIMATE only works for tryptamines (LSD and Magic Mushrooms).
     As all bodies and brains are different, results may vary. 
-    [Credit to cyberoxide's Codepen](https://codepen.io/cyberoxide/pen/BaNarGd) and [AdmiralAcid's post on reddit](https://www.reddit.com/r/LSD/comments/4dzh9s/lsd_tolerance_calculator_improved/) `, 
-    Colors.Red);
-    
-  return embed
+    [Credit to cyberoxide's Codepen](https://codepen.io/cyberoxide/pen/BaNarGd) and [AdmiralAcid's post on reddit](https://www.reddit.com/r/LSD/comments/4dzh9s/lsd_tolerance_calculator_improved/) `,
+    Colors.Red,
+  );
 }
 
 export const dCalc: SlashCommand = {
@@ -389,13 +390,13 @@ export const dCalc: SlashCommand = {
         .setRequired(true))
       .addBooleanOption(option => option.setName('ephemeral')
         .setDescription('Set to "True" to show the response only to you'))),
-    // END PSYCHEDELIC SUBCOMMAND
+  // END PSYCHEDELIC SUBCOMMAND
 
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
     await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
     const subcommand = interaction.options.getSubcommand();
-    
+
     if (subcommand === 'benzo') {
       await interaction.editReply({ embeds: [await dCalcBenzo(interaction)] });
     } else if (subcommand === 'dxm') {
@@ -409,7 +410,7 @@ export const dCalc: SlashCommand = {
     } else if (subcommand === 'psychedelics') {
       await interaction.editReply({ embeds: [await dCalcPsychedelics(interaction)] });
     } else {
-      await interaction.editReply({ embeds: [await buildCalcEmbed('', '', Colors.Red, true)] }); 
+      await interaction.editReply({ embeds: [await buildCalcEmbed('', '', Colors.Red, true)] });
       return false;
     }
     return true;
