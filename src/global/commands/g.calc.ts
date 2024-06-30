@@ -217,13 +217,13 @@ export async function calcKetamine(weight:number, unit:'lbs' | 'kg'):Promise<Ket
   });
   // log.debug(F, `buttDoseString: ${buttDoseString}`);
 
-  const data = {
+  const kData = {
     insufflated: noseDoseString,
     rectal: buttDoseString,
   };
 
-  log.info(F, `response: ${JSON.stringify(data, null, 2)}`);
-  return data;
+  log.info(F, `response: ${JSON.stringify(kData, null, 2)}`);
+  return kData;
 }
 
 export async function calcMDMA(weight: number, unit: 'lbs' | 'kg'): Promise<{

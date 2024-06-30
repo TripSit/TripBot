@@ -16,6 +16,10 @@ import commandContext from '../../utils/context';
 
 const F = f(__filename);
 
+const invalidParametersErrorMsg = 'Invalid values supplied';
+const ephemeralMsg = 'Set to "True" to show the response only to you';
+const askWeightMsg = 'How much do you weigh?';
+
 /**
  * Utility function to build embeds.
  * @param title
@@ -46,7 +50,7 @@ async function dCalcBenzo(
   const data = await calcBenzo(dosage, drugA, drugB);
 
   if (dosage < 0.001) {
-    return buildCalcEmbed('Invalid values supplied', 'The parameter \'i_have\' cannot be less than 0.001.', Colors.Red);
+    return buildCalcEmbed(invalidParametersErrorMsg, 'The parameter \'i_have\' cannot be less than 0.001.', Colors.Red);
   }
 
   let isError = false;
@@ -74,7 +78,7 @@ async function dCalcDXM(
   const givenWeight = interaction.options.getNumber('calc_weight', true);
 
   if (givenWeight < 1) {
-    return buildCalcEmbed('Invalid values supplied', 'The parameter \'calc_weight\' cannot be less than 1.', Colors.Red);
+    return buildCalcEmbed(invalidParametersErrorMsg, 'The parameter \'calc_weight\' cannot be less than 1.', Colors.Red);
   }
 
   const weightUnits = interaction.options.getString('units', true);
@@ -150,7 +154,7 @@ async function dCalcMDMA(
   const givenWeight = interaction.options.getNumber('weight', true);
 
   if (givenWeight < 1) {
-    return buildCalcEmbed('Invalid values supplied', 'The parameter \'weight\' cannot be less than 1.', Colors.Red);
+    return buildCalcEmbed(invalidParametersErrorMsg, 'The parameter \'weight\' cannot be less than 1.', Colors.Red);
   }
   const weightUnits = interaction.options.getString('units', true) as 'kg' | 'lbs';
   const embed = embedTemplate();
@@ -189,7 +193,7 @@ async function dCalcNasal(
 
   if (amount < 1 || mlPerPush < 1 || desiredMgPerPush < 0.001) {
     return buildCalcEmbed(
-      'Invalid values supplied',
+      invalidParametersErrorMsg,
       stripIndents`The parameters \'amount\' and \'mlPerPush\' cannot be less than 1, 
       and the parameter \'desiredMgPerPush\' cannot be less than 0.001.`,
       Colors.Red,
@@ -232,7 +236,7 @@ async function dCalcPsychedelics(
 
   // This and other instances of these checks in this file fix an issue where supplying 0 could cause an "Infinity g/ug" response and a negative number resulted in NaN.
   if (days < 1 || lastDose < 1 || desiredDose < 1) {
-    return buildCalcEmbed('Invalid values supplied', 'The parameters \'last_dose_amount\', \'desired_dose_amount\', and \'days\' cannot be less than 1.', Colors.Red);
+    return buildCalcEmbed(invalidParametersErrorMsg, 'The parameters \'last_dose_amount\', \'desired_dose_amount\', and \'days\' cannot be less than 1.', Colors.Red);
   }
 
   // Code here inspired by https://codepen.io/cyberoxide/pen/BaNarGd
@@ -279,14 +283,14 @@ export const dCalc: SlashCommand = {
         .setAutocomplete(true)
         .setRequired(true))
       .addBooleanOption(option => option.setName('ephemeral')
-        .setDescription('Set to "True" to show the response only to you')))
+        .setDescription(ephemeralMsg)))
     // END BENZO SUBCOMMAND
     // BEGIN DXM SUBCOMMAND
     .addSubcommand(subcommand => subcommand
       .setName('dxm')
       .setDescription('Get DXM dosage information')
       .addNumberOption(option => option.setName('calc_weight')
-        .setDescription('How much do you weigh?')
+        .setDescription(askWeightMsg)
         .setRequired(true))
       .addStringOption(option => option.setName('units')
         .setDescription('In what units?')
@@ -309,14 +313,14 @@ export const dCalc: SlashCommand = {
         )
         .setRequired(true))
       .addBooleanOption(option => option.setName('ephemeral')
-        .setDescription('Set to "True" to show the response only to you')))
+        .setDescription(ephemeralMsg)))
     // END DXM SUBCOMMAND
     // BEGIN KETAMINE SUBCOMMAND
     .addSubcommand(subcommand => subcommand
       .setName('ketamine')
       .setDescription('Get Ketamine dosage information')
       .addNumberOption(option => option.setName('weight')
-        .setDescription('How much do you weigh?')
+        .setDescription(askWeightMsg)
         .setRequired(true))
       .addStringOption(option => option.setName('units')
         .setDescription('In what unit?')
@@ -326,14 +330,14 @@ export const dCalc: SlashCommand = {
         )
         .setRequired(true))
       .addBooleanOption(option => option.setName('ephemeral')
-        .setDescription('Set to "True" to show the response only to you')))
+        .setDescription(ephemeralMsg)))
     // END KETAMINE SUBCOMMAND
     // BEGIN MDMA SUBCOMMAND
     .addSubcommand(subcommand => subcommand
       .setName('mdma')
       .setDescription('Get MDMA dosage information')
       .addNumberOption(option => option.setName('weight')
-        .setDescription('How much do you weigh?')
+        .setDescription(askWeightMsg)
         .setRequired(true))
       .addStringOption(option => option.setName('units')
         .setDescription('In what unit?')
@@ -343,7 +347,7 @@ export const dCalc: SlashCommand = {
         )
         .setRequired(true))
       .addBooleanOption(option => option.setName('ephemeral')
-        .setDescription('Set to "True" to show the response only to you')))
+        .setDescription(ephemeralMsg)))
     // END MDMA SUBCOMMAND
     // BEGIN NASAL SUBCOMMAND
     .addSubcommand(subcommand => subcommand
@@ -366,7 +370,7 @@ export const dCalc: SlashCommand = {
         .setDescription('Excreted ml per push (look at the packaging)')
         .setRequired(true))
       .addBooleanOption(option => option.setName('ephemeral')
-        .setDescription('Set to "True" to show the response only to you')))
+        .setDescription(ephemeralMsg)))
     // END NASAL SUBCOMMAND
     // BEGIN PSYCHEDELIC SUBCOMMAND
     .addSubcommand(subcommand => subcommand
@@ -389,7 +393,7 @@ export const dCalc: SlashCommand = {
         .setDescription('What\'s your desired dose?  (e.g 100mcg or 2g)')
         .setRequired(true))
       .addBooleanOption(option => option.setName('ephemeral')
-        .setDescription('Set to "True" to show the response only to you'))),
+        .setDescription(ephemeralMsg))),
   // END PSYCHEDELIC SUBCOMMAND
 
   async execute(interaction) {
