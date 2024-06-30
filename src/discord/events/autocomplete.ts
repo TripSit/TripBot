@@ -797,8 +797,6 @@ export async function autocomplete(interaction: AutocompleteInteraction): Promis
     await autocompleteQuotes(interaction);
   } else if (interaction.commandName === 'nyt') {
     await autocompleteNYT(interaction);
-  } else if (interaction.commandName === 'nasal') {
-
   } else { // If you don't need a specific autocomplete, return a list of drug names
     await autocompleteDrugNames(interaction);
   }
