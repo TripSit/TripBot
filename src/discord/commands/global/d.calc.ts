@@ -10,19 +10,20 @@ import { stripIndents } from 'common-tags';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import {
-  calcBenzo, calcDxm, calcKetamine, calcMDMA, calcSolvent, calcSubstance, calcPsychedelics,
+  calcBenzo, calcDxm, calcKetamine, calcMDMA, calcSolvent, calcSubstance, calcPsychedelics, DxmDataType
 } from '../../../global/commands/g.calc';
 import commandContext from '../../utils/context';
 
 const F = f(__filename);
 
-type DxmDataType = {
-  First: { min: number, max: number };
-  Second: { min: number, max: number };
-  Third: { min: number, max: number };
-  Fourth: { min: number, max: number };
-};
-
+/**
+ * Utility function to build embeds.
+ * @param title 
+ * @param description 
+ * @param color 
+ * @param isError 
+ * @returns {Promise<EmbedBuilder>}
+ */
 async function buildCalcEmbed(title: string, description: string, color: ColorResolvable = Colors.Purple, isError: boolean = false):Promise<EmbedBuilder> {
   return embedTemplate()
     .setColor(isError ? Colors.Red : color)
@@ -30,7 +31,12 @@ async function buildCalcEmbed(title: string, description: string, color: ColorRe
     .setDescription(isError ? stripIndents`There was an error during conversion!
       I've let the developer know, please try again with different parameters!` : description);
 }
-
+/**
+ * Calls g.calc benzo function with user supplied input and builds an embed out of it.
+ * Takes the dose of one specific benzo and uses it to figure out the equivalent dose for another benzo
+ * @param interaction 
+ * @returns {Promise<EmbedBuilder>}
+ */
 async function dCalcBenzo(
   interaction:ChatInputCommandInteraction,
 ):Promise<EmbedBuilder> {
@@ -56,6 +62,11 @@ async function dCalcBenzo(
   return buildCalcEmbed(embedTitle, embedDescription, Colors.Red, isError);
 }
 
+/**
+ * Calls g.calc DXM function with user supplied input and builds an embed out of it. Takes weight for calculations.
+ * @param interaction 
+ * @returns {Promise<EmbedBuilder>}
+ */
 async function dCalcDXM(
   interaction:ChatInputCommandInteraction,
 ):Promise<EmbedBuilder> {
@@ -88,6 +99,11 @@ async function dCalcDXM(
   return embed;
 }
 
+/**
+ * Calls g.calc Ketamine function with user supplied input and build an embed out of it for insuffulation and rectal ROAs.
+ * @param interaction 
+ * @returns {Promise<EmbedBuilder>}
+ */
 async function dCalcKetamine(
   interaction:ChatInputCommandInteraction,
 ):Promise<EmbedBuilder> {
@@ -122,6 +138,12 @@ async function dCalcKetamine(
   return embed;
 }
 
+/**
+ * Calls g.calc MDMA function with user supplied input and build an embed out of it. 
+ * Takes weight for calculations and appends extra HR info at the end.
+ * @param interaction 
+ * @returns {Promise<EmbedBuilder>}
+ */
 async function dCalcMDMA(
   interaction:ChatInputCommandInteraction,
 ):Promise<EmbedBuilder> {
@@ -151,6 +173,12 @@ async function dCalcMDMA(
   return embed;
 }
 
+/**
+ * Calls g.calc Nasal function with user supplied input and build an embed out of it.
+ * It acts as the frontend for determining how to make a nasal spray solution.
+ * @param interaction 
+ * @returns {Promise<EmbedBuilder>}
+ */
 async function dCalcNasal(
   interaction:ChatInputCommandInteraction,
 ):Promise<EmbedBuilder> {
@@ -187,6 +215,12 @@ async function dCalcNasal(
   return embed;
 }
 
+/**
+ * Calls g.calc Psychedelic (LSD/Mushrooms only) function with user supplied input and build an embed out of it
+ * This particular one is the frontend of a tolerance calculator.
+ * @param interaction 
+ * @returns {Promise<EmbedBuilder>}
+ */
 async function dCalcPsychedelics(
   interaction:ChatInputCommandInteraction,
 ):Promise<EmbedBuilder> {
@@ -195,7 +229,7 @@ async function dCalcPsychedelics(
   const desiredDose = interaction.options.getNumber('desired_dose_amount', true);
   const days = interaction.options.getNumber('days', true);
 
-  // This fixes an issue where supplying 0 would cause an "Infinity g/ug" response and a negative number resulted in NaN.
+  // This and other instances of these checks in this file fix an issue where supplying 0 could cause an "Infinity g/ug" response and a negative number resulted in NaN.
   if (days < 1 || lastDose < 1 || desiredDose < 1) {
     return buildCalcEmbed('Invalid values supplied', 'The parameters \'last_dose_amount\', \'desired_dose_amount\', and \'days\' cannot be less than 1.', Colors.Red);
   }
@@ -228,7 +262,7 @@ export const dCalc: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('calc')
     .setDescription('Get drug dosage information')
-    // Benzo subcommand
+    // BEGIN BENZO SUBCOMMAND
     .addSubcommand(subcommand => subcommand
       .setName('benzo')
       .setDescription('Get benzo dosage information')
@@ -245,7 +279,8 @@ export const dCalc: SlashCommand = {
         .setRequired(true))
       .addBooleanOption(option => option.setName('ephemeral')
         .setDescription('Set to "True" to show the response only to you')))
-    // Begin DXM subcommand
+    // END BENZO SUBCOMMAND
+    // BEGIN DXM SUBCOMMAND
     .addSubcommand(subcommand => subcommand
       .setName('dxm')
       .setDescription('Get DXM dosage information')
@@ -274,7 +309,8 @@ export const dCalc: SlashCommand = {
         .setRequired(true))
       .addBooleanOption(option => option.setName('ephemeral')
         .setDescription('Set to "True" to show the response only to you')))
-    // Begin Ketamine subcommand
+    // END DXM SUBCOMMAND
+    // BEGIN KETAMINE SUBCOMMAND
     .addSubcommand(subcommand => subcommand
       .setName('ketamine')
       .setDescription('Get Ketamine dosage information')
@@ -290,7 +326,8 @@ export const dCalc: SlashCommand = {
         .setRequired(true))
       .addBooleanOption(option => option.setName('ephemeral')
         .setDescription('Set to "True" to show the response only to you')))
-    // Begin MDMA subcommand
+    // END KETAMINE SUBCOMMAND
+    // BEGIN MDMA SUBCOMMAND
     .addSubcommand(subcommand => subcommand
       .setName('mdma')
       .setDescription('Get MDMA dosage information')
@@ -306,8 +343,9 @@ export const dCalc: SlashCommand = {
         .setRequired(true))
       .addBooleanOption(option => option.setName('ephemeral')
         .setDescription('Set to "True" to show the response only to you')))
-    // Begin nasal subcommands
-    .addSubcommand(subcommand => subcommand // Requires subcommands for this subcommand
+    // END MDMA SUBCOMMAND
+    // BEGIN NASAL SUBCOMMAND
+    .addSubcommand(subcommand => subcommand
       .setName('nasal')
       .setDescription('Get nasal solvent/substance information')
       .addStringOption(option => option.setName('calculation_type')
@@ -328,8 +366,9 @@ export const dCalc: SlashCommand = {
         .setRequired(true))
       .addBooleanOption(option => option.setName('ephemeral')
         .setDescription('Set to "True" to show the response only to you')))
-    // Begin psychedelic subcommands
-    .addSubcommand(subcommand => subcommand // Requires subcommands for this subcommand
+    // END NASAL SUBCOMMAND
+    // BEGIN PSYCHEDELIC SUBCOMMAND
+    .addSubcommand(subcommand => subcommand
       .setName('psychedelics')
       .setDescription('Get psychedelic tolerance information')
       .addStringOption(option => option.setName('drug_type')
@@ -350,40 +389,29 @@ export const dCalc: SlashCommand = {
         .setRequired(true))
       .addBooleanOption(option => option.setName('ephemeral')
         .setDescription('Set to "True" to show the response only to you'))),
+    // END PSYCHEDELIC SUBCOMMAND
 
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
     await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
     const subcommand = interaction.options.getSubcommand();
-    // if (subcommand.getSubcommand) WE NEED TO FIGURE OUT HOW TO GET THE SUB COMMANDS CHILD SUB COMMANDS
-
-    // AHHH
-    // TODO: Check if switch statement is preferable AND verify we need these to be if if if instead if else if else if else
+    
     if (subcommand === 'benzo') {
       await interaction.editReply({ embeds: [await dCalcBenzo(interaction)] });
-    }
-    if (subcommand === 'dxm') {
+    } else if (subcommand === 'dxm') {
       await interaction.editReply({ embeds: [await dCalcDXM(interaction)] });
-    }
-    if (subcommand === 'ketamine') {
+    } else if (subcommand === 'ketamine') {
       await interaction.editReply({ embeds: [await dCalcKetamine(interaction)] });
-    }
-    if (subcommand === 'mdma') {
+    } else if (subcommand === 'mdma') {
       await interaction.editReply({ embeds: [await dCalcMDMA(interaction)] });
-    }
-    if (subcommand === 'nasal') {
+    } else if (subcommand === 'nasal') {
       await interaction.editReply({ embeds: [await dCalcNasal(interaction)] });
-    }
-    if (subcommand === 'psychedelics') {
+    } else if (subcommand === 'psychedelics') {
       await interaction.editReply({ embeds: [await dCalcPsychedelics(interaction)] });
+    } else {
+      await interaction.editReply({ embeds: [await buildCalcEmbed('', '', Colors.Red, true)] }); 
+      return false;
     }
-
-    // if (subcommand === 'blackjack') {
-    //   await interaction.editReply(await rpgArcade(interaction));
-    // }
-    // if (subcommand === 'slots') {
-    //   await interaction.editReply(await rpgArcade(interaction));
-    // }
     return true;
   },
 };

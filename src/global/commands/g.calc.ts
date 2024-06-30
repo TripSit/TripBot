@@ -2,7 +2,7 @@ import drugDataTripsit from '../../../assets/data/tripsitDB.json';
 
 const F = f(__filename);
 
-type DxmDataType = {
+export type DxmDataType = {
   First: { min: number, max: number };
   Second: { min: number, max: number };
   Third: { min: number, max: number };
