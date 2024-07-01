@@ -77,7 +77,9 @@ export async function techHelpClick(interaction:ButtonInteraction) {
       .setStyle(TextInputStyle.Paragraph)
       .setPlaceholder(placeholder)
       .setCustomId(`${issueType}IssueInput`)
-      .setRequired(true))));
+      .setRequired(true)
+      .setMinLength(10)
+      .setMaxLength(2000))));
 
   const filter = (i:ModalSubmitInteraction) => i.customId.includes('techHelpSubmit');
   interaction.awaitModalSubmit({ filter, time: 0 })
