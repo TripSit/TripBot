@@ -73,11 +73,13 @@ export async function techHelpClick(interaction:ButtonInteraction) {
     .setCustomId(`techHelpSubmit~${interaction.id}`)
     .setTitle(`${interaction.guild.name} Feedback`)
     .addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
-      .setLabel('What is your issue? Be super detailed! (2000 character limit)')
+      .setLabel('What is your issue? Be super detailed!')
       .setStyle(TextInputStyle.Paragraph)
       .setPlaceholder(placeholder)
       .setCustomId(`${issueType}IssueInput`)
-      .setRequired(true))));
+      .setRequired(true)
+      .setMinLength(10)
+      .setMaxLength(2000))));
 
   const filter = (i:ModalSubmitInteraction) => i.customId.includes('techHelpSubmit');
   interaction.awaitModalSubmit({ filter, time: 0 })
@@ -93,14 +95,6 @@ export async function techHelpClick(interaction:ButtonInteraction) {
       // Get whatever they sent in the modal
       const modalInput = i.fields.getTextInputValue(`${issueType}IssueInput`);
       // log.debug(F, `modalInput: ${modalInput}!`);
-
-      if (modalInput.length > 2000) {
-        await interaction.reply({
-          content: 'Your feedback must be 2000 characters or less!',
-          ephemeral: true,
-        });
-        return;
-      }
 
       // // Get the actor
       const actor = i.user;
