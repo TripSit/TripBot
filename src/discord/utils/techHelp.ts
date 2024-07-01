@@ -93,12 +93,12 @@ export async function techHelpClick(interaction:ButtonInteraction) {
       // Get whatever they sent in the modal
       const modalInput = i.fields.getTextInputValue(`${issueType}IssueInput`);
       // log.debug(F, `modalInput: ${modalInput}!`);
-      
+
       if (modalInput.length > 2000) {
         await interaction.reply({
           content: 'Your feedback must be 2000 characters or less!',
           ephemeral: true,
-        })
+        });
         return;
       }
 
