@@ -256,7 +256,7 @@ async function dCalcPsychedelics(
   return buildCalcEmbed(
     title,
     stripIndents`
-    This ESTIMATE only works for tryptamines (LSD and Magic Mushrooms).
+    This ESTIMATE only works for lysergamides such as LSD and tryptamines such as Magic Mushrooms.
     As all bodies and brains are different, results may vary. 
     [Credit to cyberoxide's Codepen](https://codepen.io/cyberoxide/pen/BaNarGd) and [AdmiralAcid's post on reddit](https://www.reddit.com/r/LSD/comments/4dzh9s/lsd_tolerance_calculator_improved/) `,
     Colors.Red,
