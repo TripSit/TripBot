@@ -138,7 +138,30 @@ If you wanted to do this in telegram, you would figure out how to take input val
 |         |       |            |       |            |       |             |       |         |
 +---------+       +------------+       +------------+       +-------------+       +---------+
 
-### Database Development ##
+#### Troubleshooting Command Issues ####
+Moderation Tools:
+
+To use moderation commands in your TripBot instance, you must have the Moderator role on the development server. 
+
+If you need this role, please ask Moonbear.
+
+AI Features:
+
+To use AI features in your TripBot instance, you need to do a few things. 
+
+First, you will need the Developer role on the development server. 
+
+Once again, if you need this role, please ask Moonbear.
+
+Second, you must set the OpenAI key/org and the Gemini key in the .env file. If you're using ChatGPT, you will still need the Gemini key set, but it can be a placeholder, e.g "abc". Since the ChatGPT API isn't free, you will need either a ChatGPT Pro subscription or ChatGPT credits to use their API.
+
+Lastly, you'll need to go into a channel and use /ai setup. This is what the Developer role is needed for.
+
+Go into a channel, preferably #bot-spam, and after using /ai setup, accept the ToS in the help tab. Then, add a persona in the persona tab and proceed to the setup tab to finish your setup and select a channel.
+
+That's it, you're done!
+
+### Database Development ###
 
 TripBot's database runs on Postgres, which is a relational database, not a JSON file.
 
@@ -153,6 +176,20 @@ Run the ```db:migrateDev``` to create new migration files based on the changes y
 When these migration files are pushed to production, the database will be updated automatically.
 
 Prisma documentation is excellent, check out guides like: https://www.prisma.io/docs/concepts/components/prisma-migrate/migrate-development-production
+
+
+#### Troubleshooting Initial Database Setup Issues ####
+
+If you run into errors about missing tables/columns, you may need to open src/docker/Dockerfile.tripbot and uncomment "# RUN npx prisma migrate deploy".
+
+If you then encounter an error about not being able to connect to the tripbot_database, try navigating to Containers > tripbot-tripbot in Docker Desktop, then select exec, and enter the above Prisma command there.
+
+After that, if it works, restart the bot. If this doesn't work, then please contact Moonbear for assistance.
+
+To persist these changes so that you don't have to do it every single restart, open docker-compose.yml and uncomment these two lines:
+
+    volumes:
+      - ${DOCKERDIR}/appdata/database/data:/var/lib/postgresql/data
 
 #### Postgres ###
 
