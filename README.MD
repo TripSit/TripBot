@@ -139,13 +139,13 @@ If you wanted to do this in telegram, you would figure out how to take input val
 +---------+       +------------+       +------------+       +-------------+       +---------+
 
 #### Troubleshooting Command Issues ####
-Moderation Tools:
+**Moderation Tools**:
 
 To use moderation commands in your TripBot instance, you must have the Moderator role on the development server. 
 
 If you need this role, please ask Moonbear.
 
-AI Features:
+**AI Features**:
 
 To use AI features in your TripBot instance, you need to do a few things. 
 
@@ -159,7 +159,7 @@ Lastly, you'll need to go into a channel and use /ai setup. This is what the Dev
 
 Go into a channel, preferably #bot-spam, and after using /ai setup, accept the ToS in the help tab. Then, add a persona in the persona tab and proceed to the setup tab to finish your setup and select a channel.
 
-That's it, you're done!
+That's it. You're done! Your TripBot instance should be able to be pinged for an AI response now.
 
 ### Database Development ###
 
@@ -180,16 +180,20 @@ Prisma documentation is excellent, check out guides like: https://www.prisma.io/
 
 #### Troubleshooting Initial Database Setup Issues ####
 
-If you run into errors about missing tables/columns, you may need to open src/docker/Dockerfile.tripbot and uncomment "# RUN npx prisma migrate deploy".
+If you run into errors about missing tables/columns, you may need to open Dockerfile.tripbot and uncomment "# RUN npx prisma migrate deploy".
 
-If you then encounter an error about not being able to connect to the tripbot_database, try navigating to Containers > tripbot-tripbot in Docker Desktop, then select exec, and enter the above Prisma command there.
+If you then encounter an error about not being able to connect to the tripbot_database, try navigating to Containers > tripbot-tripbot in Docker Desktop, then select exec, and enter the above Prisma migration command there.
+
+If you don't use Docker Desktop, then open terminal or Powershell and enter ```docker exec -it tripbot/bin/sh``` to interact with bash and run the above Prisma migration command.
 
 After that, if it works, restart the bot. If this doesn't work, then please contact Moonbear for assistance.
 
-To persist these changes so that you don't have to do it every single restart, open docker-compose.yml and uncomment these two lines:
+To persist these changes so that you don't have to do it upon every restart, open docker-compose.yml and uncomment these two lines:
 
     volumes:
       - ${DOCKERDIR}/appdata/database/data:/var/lib/postgresql/data
+
+Restart the bot and you should be good to go.
 
 #### Postgres ###
 
