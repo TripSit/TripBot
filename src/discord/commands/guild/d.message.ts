@@ -29,10 +29,13 @@ async function messageEdit(
   if (message.author.id !== message.client.user?.id) {
     return `Message with ID '${message.id}' is not from me!`;
   }
+
+  const replacedContent = content.replaceAll('\\n', '\n').replaceAll('\\r', '\r');
+
   // check if message is raw embed code
-  if (content.startsWith('{')) {
+  if (replacedContent.startsWith('{')) {
     try {
-      const embedData = JSON.parse(content);
+      const embedData = JSON.parse(replacedContent);
       const embed = new EmbedBuilder(embedData);
       message.edit({ embeds: [embed] })
         .then(() => 'Successfully edited message with new embed!\'')
@@ -46,9 +49,9 @@ async function messageEdit(
     }
   } else {
   // edit message
-    await message.edit(content);
+    await message.edit(replacedContent);
   }
-  return `I edited message with ID '${message.id}' to say '${content}'`;
+  return `I edited message with ID '${message.id}' to say '${replacedContent}'`;
 }
 
 export const dMessage: SlashCommand = {
