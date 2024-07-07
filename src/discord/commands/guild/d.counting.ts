@@ -376,7 +376,7 @@ export async function countMessage(message: Message): Promise<void> {
     countingData.last_number_broken_date = new Date();
 
     if (message.author.id === countingData.last_number_broken_by) {
-      await message.channel.send('You cannot break a combo twice in a row!')
+      await message.channel.send('You cannot break a combo twice in a row!');
       return;
     }
 
