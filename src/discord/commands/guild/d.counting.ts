@@ -375,6 +375,11 @@ export async function countMessage(message: Message): Promise<void> {
     countingData.last_number_broken_by = message.author.id;
     countingData.last_number_broken_date = new Date();
 
+    if (message.author.id === countingData.last_number_broken_by) {
+      await message.channel.send('You cannot break a combo twice in a row!')
+      return;
+    }
+
     // If the number is not the next number in the sequence...
     let recordMessage = '';
     // Check if a new record was set
