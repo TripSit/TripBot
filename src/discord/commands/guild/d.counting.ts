@@ -332,7 +332,7 @@ export async function countMessage(message: Message): Promise<void> {
     await message.channel.messages.fetch(countingData.current_number_message_id);
 
     // Check if the user has broken the combination recently, and if so, deny them.
-    let comboBreakingHistory: ComboHistoryObj[] = JSON.parse(countingData.combo_breaking_history as string || '[]');
+    const comboBreakingHistory: ComboHistoryObj[] = JSON.parse(countingData.combo_breaking_history as string || '[]');
 
     if (comboBreakingHistory.length > 4) {
       comboBreakingHistory.shift();
@@ -342,9 +342,9 @@ export async function countMessage(message: Message): Promise<void> {
     if (comboBreakingHistory.length > 0) {
       // This filter checks if the combo hasn't been broken more than 4 times in 4 days by the user, if not, remove the user from the list so they can break it.
       // Otherwise, if they have broken recently, flag it to prevent breaking it again.
-      var userCanBreakCombo = true;
-      comboBreakingHistory.forEach(function(comboHistoryObj) {
-        if(message.author.id === comboHistoryObj.user_id) {
+      let userCanBreakCombo = true;
+      comboBreakingHistory.forEach(comboHistoryObj => {
+        if (message.author.id === comboHistoryObj.user_id) {
           userCanBreakCombo = false;
         }
       });
