@@ -34,6 +34,7 @@ model counting {
   last_number_message_author    String?
   last_number_broken_by         String?
   last_number_broken_date       DateTime?      @db.Timestamptz(6)
+  combo_breaking_history        String?
   record_number                 Int            @default(0)
   record_number_message_id      String?
   record_number_message_date    DateTime?      @db.Timestamptz(6)

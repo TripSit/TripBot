@@ -19,6 +19,11 @@ import { sleep } from './d.bottest';
 
 const F = f(__filename);
 
+interface ComboHistoryObj {
+  user_id: string | null;
+  broken_timestamp: number;
+}
+
 function calcTotalPot(
   number:number,
   users:number,
@@ -151,6 +156,8 @@ export async function countingSetup(
       last_number_broken_by: countingData?.last_number_broken_by ?? null,
       last_number_broken_date: countingData?.last_number_broken_date ?? null,
 
+      combo_breaking_history: countingData?.combo_breaking_history ?? JSON.stringify([]),
+
       record_number: countingData?.record_number ?? 0,
       record_number_message_id: countingData?.record_number_message_id ?? null,
       record_number_message_date: countingData?.record_number_message_date ?? null,
@@ -185,6 +192,9 @@ export async function countingSetup(
       last_number_broken_date: countingData?.last_number_broken_date
         ? countingData.last_number_broken_date
         : null,
+      combo_breaking_history: countingData?.combo_breaking_history
+        ? countingData.combo_breaking_history
+        : JSON.stringify([]),
     },
   });
 
@@ -321,6 +331,30 @@ export async function countMessage(message: Message): Promise<void> {
   if (number !== countingData.current_number + 1) {
     await message.channel.messages.fetch(countingData.current_number_message_id);
 
+    // Check if the user has broken the combination recently, and if so, deny them.
+    let comboBreakingHistory: ComboHistoryObj[] = JSON.parse(countingData.combo_breaking_history as string || '[]');
+
+    if (comboBreakingHistory.length > 4) {
+      comboBreakingHistory.shift();
+    }
+
+    // If we have history of someone breaking the combo, do the checks.
+    if (comboBreakingHistory.length > 0) {
+      // This filter checks if the combo hasn't been broken more than 4 times in 4 days by the user, if not, remove the user from the list so they can break it.
+      // Otherwise, if they have broken recently, flag it to prevent breaking it again.
+      var userCanBreakCombo = true;
+      comboBreakingHistory.forEach(function(comboHistoryObj) {
+        if(message.author.id === comboHistoryObj.user_id) {
+          userCanBreakCombo = false;
+        }
+      });
+      if (!userCanBreakCombo) {
+        await message.reply('You cannot break the combo if you are one of the last 4 people to have broken it recently.');
+        // await message.reply(`You cannot break the combo if you are one of the last 4 people to break it: ${JSON.stringify(comboBreakingHistory)}`);
+        return;
+      }
+    }
+
     const stakeholderNumber = countingData.current_stakeholders
       ? countingData.current_stakeholders.split(',').length
       : 1;
@@ -331,7 +365,7 @@ export async function countMessage(message: Message): Promise<void> {
     if (countingData.current_stakeholders
       && !countingData.current_stakeholders.split(',').includes(message.author.id)
       && !warnedUsers.includes(message.author.id)) {
-      let messageReply = `Hey ${message.member?.displayName}, welcome to the counting game!
+      let messageReply = stripIndents`Hey ${message.member?.displayName}, welcome to the counting game!
       
       You may not know, but you're breaking the combo!
 
@@ -368,17 +402,18 @@ export async function countMessage(message: Message): Promise<void> {
       return;
     }
 
+    comboBreakingHistory.push({
+      user_id: message.author.id,
+      broken_timestamp: Date.now(),
+    });
+
     countingData.last_number = countingData.current_number;
     countingData.last_number_message_id = countingData.current_number_message_id;
     countingData.last_number_message_date = countingData.current_number_message_date;
     countingData.last_number_message_author = countingData.current_number_message_author;
     countingData.last_number_broken_by = message.author.id;
     countingData.last_number_broken_date = new Date();
-
-    if (message.author.id === countingData.last_number_broken_by) {
-      await message.channel.send('You cannot break a combo twice in a row!');
-      return;
-    }
+    countingData.combo_breaking_history = JSON.stringify(comboBreakingHistory);
 
     // If the number is not the next number in the sequence...
     let recordMessage = '';
