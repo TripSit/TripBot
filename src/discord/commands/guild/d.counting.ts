@@ -369,7 +369,7 @@ export async function countMessage(message: Message): Promise<void> {
       
       You may not know, but you're breaking the combo!
 
-      The current number is ${countingData.current_number}, if you want to join the game, type the next number in the series!
+      The current number is ${countingData.current_number}, if you want to join the game, type the next number in the series! 
       `;
       if (countingData.type === 'HARDCORE') {
         messageReply += 'If you break the combo again, you\'ll be timed out for 24 hours!';
