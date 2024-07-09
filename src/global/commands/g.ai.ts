@@ -1024,7 +1024,6 @@ export async function aiModerate(
 }
 
 export async function aiTranslate(
-  // aiPersona:ai_personas,
   target_language: string,
   messages: OpenAI.Chat.ChatCompletionMessageParam [],
 ):Promise<{
@@ -1033,38 +1032,17 @@ export async function aiTranslate(
     completionTokens: number,
   }> {
   let response = '';
-  // const responseData = {} as CreateChatCompletionResponse;
   let promptTokens = 0;
   let completionTokens = 0;
   if (!env.OPENAI_API_ORG || !env.OPENAI_API_KEY) return { response, promptTokens, completionTokens };
-  // let model = aiPersona.ai_model.toLowerCase();
-  // Convert ai models into proper names
-  /*
-  if (aiPersona.ai_model === 'GPT_3_5_TURBO') {
-    model = 'gpt-3.5-turbo-1106';
-  }
-  */
+
   const model = 'gpt-3.5-turbo-1106';
-  // This message list is sent to the API
   const chatCompletionMessages = [{
     role: 'system',
     content: `You will translate whatever the user sends to their desired language. Their desired language or language code is: ${target_language}.`,
   }] as OpenAI.Chat.ChatCompletionMessageParam[];
   chatCompletionMessages.push(...messages);
-  /*
-  const payload = {
-    temperature: aiPersona.temperature,
-    top_p: aiPersona.top_p,
-    presence_penalty: aiPersona.presence_penalty,
-    frequency_penalty: aiPersona.frequency_penalty,
-    logit_bias: aiPersona.logit_bias,
-    max_tokens: aiPersona.max_tokens,
-    model,
-    messages: chatCompletionMessages,
-    // functions: aiFunctions,
-    // function_call: 'auto',
-  } as OpenAI.Chat.ChatCompletionCreateParamsNonStreaming;
-  */
+
   const payload = {
     model,
     messages: chatCompletionMessages,
