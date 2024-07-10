@@ -3,7 +3,6 @@ import fs from 'fs';
 import EMSLINES from '../../../assets/data/ems_lines.json';
 import SUICIDELINES from '../../../assets/data/suicide_hotlines.json';
 
-const F = f(__filename);
 export default ems;
 let lastRefresh : Date;
 
@@ -14,14 +13,14 @@ export async function ems(search : string):Promise<any[]> {
     const fetched = await axios.get('https://emergencynumberapi.com/api/data/all').then(response => response.data);
     for (const country of Object.values(fetched)) {
       // @ts-ignore
-        for (const line of SUICIDELINES) {
+      for (const line of SUICIDELINES) {
+        // @ts-ignore
+        if (line.Country.toLowerCase() === country.Country.Name.toLowerCase()) {
           // @ts-ignore
-            if (line.Country.toLowerCase() === country.Country.Name.toLowerCase()) {
-                // @ts-ignore
-                country.Suicide = line.Hotline;
-                break;
-            }
+          country.Suicide = line.Hotline;
+          break;
         }
+      }
     }
     fs.writeFile('assets/data/ems_lines.json', JSON.stringify(fetched), 'utf8', err => { if (err) throw err; });
     lastRefresh = new Date();

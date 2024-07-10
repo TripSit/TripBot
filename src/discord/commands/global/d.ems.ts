@@ -1,18 +1,8 @@
 import {
-  ActionRowBuilder,
-  ModalBuilder,
-  TextInputBuilder,
-  Colors,
   SlashCommandBuilder,
-  ModalSubmitInteraction, InteractionReplyOptions,
 } from 'discord.js';
-import {
-  TextInputStyle,
-} from 'discord-api-types/v10';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
-import { globalTemplate } from '../../../global/commands/_g.template';
-import commandContext from '../../utils/context';
 import { ems } from '../../../global/commands/g.ems';
 
 export const emsCommand : SlashCommand = {
@@ -29,9 +19,9 @@ export const emsCommand : SlashCommand = {
       return true;
     }
     const fields = data.slice(0, 25).map(dataEntry => {
-        let valueStr = dataEntry.LocalOnly
-            ? 'Local numbers only'
-            : `${dataEntry.Suicide ? `Suicide Hotline: \`${dataEntry.Suicide}\`` : ''}`
+      let valueStr = dataEntry.LocalOnly
+        ? 'Local numbers only'
+        : `${dataEntry.Suicide ? `Suicide Hotline: \`${dataEntry.Suicide}\`` : ''}`
             + `${dataEntry.Ambulance.All && dataEntry.Ambulance.All[0] != null && dataEntry.Ambulance.All[0] != '' ? `Ambulance: ${dataEntry.Ambulance.All.map((num: string) => `\`${num}\``).join(', ')}` : ''}`
             + `${dataEntry.Ambulance.GSM || dataEntry.Ambulance.Fixed ? `Ambulance GSM: ${dataEntry.Ambulance.GSM ? dataEntry.Ambulance.GSM.map((num: string) => `\`${num}\``).join(', ') : ''}\nAmbulance Landline: ${dataEntry.Ambulance.Fixed ? dataEntry.Ambulance.Fixed.map((num: string) => `\`${num}\``).join(', ') : ''}` : ''}`
             + `${dataEntry.Police.All && dataEntry.Police.All[0] != null && dataEntry.Police.All[0] != '' ? `\nPolice: ${dataEntry.Police.All.map((num: string) => `\`${num}\``).join(', ')}` : ''}`
