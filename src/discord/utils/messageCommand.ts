@@ -28,6 +28,7 @@ const tripsitChannels = [
   env.CHANNEL_WEBTRIPSIT2,
 ];
 
+/*
 const sadStuff = [
   'sadface',
   ':(',
@@ -56,13 +57,14 @@ const sadStuff = [
   '😐',
   '😑',
 ];
+*/
 
 const heartEmojis = [
   '❤', '🧡', '💛', '💚', '💙', '💜', '💝', '💖', '💗', '💘', '💕', '💞', '💓', '💟', '❣', '🫂',
 ];
 
 async function isSadMessage(message: Message): Promise<boolean> {
-  return sadStuff.some(word => (message.cleanContent.includes(word)
+  return heartEmojis.some(word => (message.cleanContent.includes(word)
     && !(message.cleanContent.substring(message.cleanContent.indexOf(':') + 1).includes(':'))));
 }
 
