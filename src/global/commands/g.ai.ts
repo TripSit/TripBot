@@ -4,9 +4,9 @@
 import OpenAI from 'openai';
 import { ai_personas } from '@prisma/client';
 import { ImagesResponse, ModerationCreateResponse } from 'openai/resources';
-import { Assistant } from 'openai/resources/beta/assistants/assistants';
+import { Assistant } from 'openai/resources/beta/assistants';
 import { ThreadDeleted } from 'openai/resources/beta/threads/threads';
-import { MessageContentText } from 'openai/resources/beta/threads/messages/messages';
+import { TextContentBlock } from 'openai/resources/beta/threads/messages'; // LAZY FIX
 import {
   GoogleGenerativeAI, HarmCategory, HarmBlockThreshold, GenerationConfig, SafetySetting, Part, InputContent,
   GenerateContentResult,
@@ -99,7 +99,7 @@ const aiFunctions = [
       },
     },
   },
-] as Assistant.Function[];
+];
 
 export async function aiModerateReport(
   message: string,
@@ -140,6 +140,7 @@ export async function getAssistant(name: string):Promise<Assistant> {
     },
   });
   // LAZY TEMP FIX
+  // eslint-disable-next-line sonarjs/no-all-duplicated-branches
   const modelName = personaData.ai_model.toLowerCase() === 'gpt-3.5-turbo-1106' ? 'gpt-4o-mini' : 'gpt-4o-mini';
 
   // Upload a file with an "assistants" purpose
@@ -155,9 +156,9 @@ export async function getAssistant(name: string):Promise<Assistant> {
     description: personaData.description,
     instructions: `${objectiveTruths}\n${personaData.prompt}`, // LAZY TEMP FIX. https://platform.openai.com/docs/assistants/migration/what-has-changed - UPDATE to version 4.52.7 in package.json
     tools: [
-    // { type: 'code_interpreter' },
-    // { type: 'retrieval' },
-    // ...aiFunctions,
+      // { type: 'code_interpreter' },
+      // { type: 'retrieval' },
+      // ...aiFunctions,
     ],
     // file_ids: [],
     metadata: {},
@@ -536,7 +537,7 @@ async function openAiWaitForRun(
         await openAi.beta.threads.messages.list(thread.id, { limit: 1 })
       ).data[0].content[0];
       // log.debug(F, `messageContent: ${JSON.stringify(messageContent, null, 2)}`);
-      return { response: (messageContent as MessageContentText).text.value.slice(0, 2000), promptTokens, completionTokens };
+      return { response: (messageContent as TextContentBlock).text.value.slice(0, 2000), promptTokens, completionTokens };
     }
     case 'requires_action': {
       log.debug(F, 'requires_action');
