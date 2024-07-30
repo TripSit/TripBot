@@ -789,7 +789,7 @@ export async function modResponse(
   }
 
   let targetString = '';
-  let target = {} as GuildMember;
+  let target = {} as GuildMember | User;
   const modEmbedObj = embedTemplate();
 
   const { embedColor } = embedVariables[command as keyof typeof embedVariables];
@@ -909,7 +909,11 @@ export async function modResponse(
   } else if (interaction.isMessageContextMenuCommand() && interaction.targetMessage) {
     // log.debug(F, `Message context target message member: ${interaction.targetMessage.member}`);
     target = interaction.targetMessage.member as GuildMember;
+    if (!target) {
+      target = await discordClient.users.fetch(interaction.targetMessage.author.id);
+    }
   }
+
   const targetData = await db.users.upsert({
     where: {
       discord_id: target.id,
@@ -937,7 +941,10 @@ export async function modResponse(
   // Determine if the actor is a mod
   // const actorIsMod = (!!guildData.role_moderator && actor.roles.cache.has(guildData.role_moderator));
 
-  const timeoutTime = target.communicationDisabledUntilTimestamp;
+  let timeoutTime = null;
+  if (target instanceof GuildMember) {
+    timeoutTime = target.communicationDisabledUntilTimestamp;
+  }
 
   if (showModButtons) {
     if (isInfo(command) || isReport(command)) {
