@@ -6,7 +6,7 @@ import { ai_personas } from '@prisma/client';
 import { ImagesResponse, ModerationCreateResponse } from 'openai/resources';
 import { Assistant } from 'openai/resources/beta/assistants';
 import { ThreadDeleted } from 'openai/resources/beta/threads/threads';
-import { TextContentBlock } from 'openai/resources/beta/threads/messages'; // LAZY FIX
+import { TextContentBlock } from 'openai/resources/beta/threads/messages';
 import {
   GoogleGenerativeAI, HarmCategory, HarmBlockThreshold, GenerationConfig, SafetySetting, Part, InputContent,
   GenerateContentResult,
