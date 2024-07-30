@@ -1757,11 +1757,13 @@ export async function tripsitmeButton(
         .addComponents(new TextInputBuilder()
           .setCustomId('triageInput')
           .setLabel('What substance? How much taken? How long ago?')
+          .setMaxLength(120)
           .setStyle(TextInputStyle.Short)),
       new ActionRowBuilder<TextInputBuilder>()
         .addComponents(new TextInputBuilder()
           .setCustomId('introInput')
           .setLabel('What\'s going on? Give us the details!')
+          .setMaxLength(1100)
           .setStyle(TextInputStyle.Paragraph)),
     ));
 
