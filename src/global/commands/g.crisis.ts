@@ -34,10 +34,10 @@ export async function crisis():Promise<HelpResource[]> {
     },
     {
       name: 'BuddyUp',
-      country: "UK",
+      country: 'UK',
       website: 'https://cranstoun.org/help-and-advice/harm-reduction/buddyup/',
       phone: '',
-      text: '[🍎](https://apps.apple.com/gb/app/buddyup-with-cranstoun/id1601622050) [🤖](https://play.google.com/store/apps/details?id=org.cranstoun.buddyup)',
+      text: '[🍎](https://apps.apple.com/gb/app/buddyup-with-cranstoun/id1601622050) [🤖](https://play.google.com/store/apps/details?id=org.cranstoun.buddyup)', // eslint-disable-line max-len
       webchat: '',
     },
     {
