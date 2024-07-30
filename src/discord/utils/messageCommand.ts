@@ -5,6 +5,7 @@ import {
   Role,
   PermissionResolvable,
   EmbedBuilder,
+  TextChannel,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
 import { sleep } from '../commands/guild/d.bottest';
@@ -19,6 +20,15 @@ const helpCounter = new Map<string, number>();
 
 export default messageCommand;
 
+const tripsitChannels = [
+  env.CHANNEL_TRIPSIT,
+  env.CHANNEL_OPENTRIPSIT1,
+  env.CHANNEL_OPENTRIPSIT2,
+  env.CHANNEL_WEBTRIPSIT1,
+  env.CHANNEL_WEBTRIPSIT2,
+];
+
+/*
 const sadStuff = [
   'sadface',
   ':(',
@@ -47,13 +57,14 @@ const sadStuff = [
   '😐',
   '😑',
 ];
+*/
 
 const heartEmojis = [
   '❤', '🧡', '💛', '💚', '💙', '💜', '💝', '💖', '💗', '💘', '💕', '💞', '💓', '💟', '❣', '🫂',
 ];
 
-async function isSadMessage(message: Message): Promise<boolean> {
-  return sadStuff.some(word => (message.cleanContent.includes(word)
+async function messageContainsHearts(message: Message): Promise<boolean> {
+  return heartEmojis.some(word => (message.cleanContent.includes(word)
     && !(message.cleanContent.substring(message.cleanContent.indexOf(':') + 1).includes(':'))));
 }
 
@@ -160,6 +171,15 @@ export async function messageCommand(message: Message): Promise<void> {
     const command = message.content.split(' ')[0].slice(1);
     // log.debug(F, `command: ${command}`);
     if (command === 'tripsit') {
+      // If not in a tripsit channel and not in a specific users custom tripsit channel, tell them where to go and return.
+      if (!tripsitChannels.includes(message.channel.id) && !(message.channel as TextChannel).name.endsWith(`${message.author.displayName}'s channel!`)) {
+        const channelTripsit = await message.guild.channels.fetch(env.CHANNEL_TRIPSIT) as TextChannel;
+        const channelOpenTripsit1 = await message.guild.channels.fetch(env.CHANNEL_OPENTRIPSIT1) as TextChannel;
+        await message.channel.send(
+          stripIndents`Hey ${displayName}, this command is reserved for the tripsitting channels. Head on over to ${channelTripsit} or ${channelOpenTripsit1} and try again if you need help! <3`,
+        );
+        return;
+      }
       const now = Date.now().valueOf();
       if (helpCounter.has(message.author.id)) {
         const lastTime = helpCounter.get(message.author.id);
@@ -365,10 +385,10 @@ give people a chance to answer 😄 If no one answers in 5 minutes you can try a
         }
       }
     }
-  } else if (await isSadMessage(message)) {
+  } else if (await messageContainsHearts(message)) {
     if (message.author.bot) return;
     if (message.guild.id !== env.DISCORD_GUILD_ID) return;
-    // log.debug(F, 'Sad stuff detected');
+    // log.debug(F, 'Sad/lovey stuff detected');
     await message.react(heartEmojis[Math.floor(Math.random() * heartEmojis.length)]);
   }
 

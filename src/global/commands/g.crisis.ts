@@ -33,6 +33,14 @@ export async function crisis():Promise<HelpResource[]> {
       webchat: '',
     },
     {
+      name: 'BuddyUp',
+      country: 'UK',
+      website: 'https://cranstoun.org/help-and-advice/harm-reduction/buddyup/',
+      phone: '',
+      text: '[🍎](https://apps.apple.com/gb/app/buddyup-with-cranstoun/id1601622050) [🤖](https://play.google.com/store/apps/details?id=org.cranstoun.buddyup)', // eslint-disable-line max-len
+      webchat: '',
+    },
+    {
       name: 'Talktofrank',
       country: 'UK',
       website: 'https://www.talktofrank.com',
