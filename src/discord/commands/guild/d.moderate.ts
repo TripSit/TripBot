@@ -903,15 +903,13 @@ export async function modResponse(
     // log.debug(F, `Assigning target from string: ${targets}`);
     [target] = targets;
   }
-  if (interaction.isUserContextMenuCommand() && interaction.targetMember) {
+
+  if (interaction.isUserContextMenuCommand() && (interaction.targetMember || interaction.targetUser)) {
     // log.debug(F, `User context target member: ${interaction.targetMember}`);
-    target = interaction.targetMember as GuildMember;
+    target = interaction.targetMember ? interaction.targetMember as GuildMember : interaction.targetUser as User;
   } else if (interaction.isMessageContextMenuCommand() && interaction.targetMessage) {
     // log.debug(F, `Message context target message member: ${interaction.targetMessage.member}`);
-    target = interaction.targetMessage.member as GuildMember;
-    if (!target) {
-      target = await discordClient.users.fetch(interaction.targetMessage.author.id);
-    }
+    target = interaction.targetMessage.member ? interaction.targetMessage.member as GuildMember : interaction.targetMessage.author as User;
   }
 
   const targetData = await db.users.upsert({
@@ -1946,8 +1944,19 @@ export async function modModal(
   const filter = (i: ModalSubmitInteraction) => i.customId.startsWith('modModal');
   await interaction.awaitModalSubmit({ filter, time: disableButtonTime })
     .then(async i => {
-      if (i.customId.split('~')[2] !== interaction.id) return;
+      if (i.customId.split('~')[2] !== interaction.id) {
+        return;
+      }
       await i.deferReply({ ephemeral: true });
+      if (isReport(command)) {
+        const reportResponseEmbed = embedTemplate()
+          .setColor(Colors.Yellow)
+          .setTitle('Report sent!')
+          .setDescription('The moderators have received your report and will look into it. Thanks!');
+        await i.editReply({
+          embeds: [reportResponseEmbed],
+        });
+      }
       // const internalNote = i.fields.getTextInputValue('internalNote'); // eslint-disable-line
 
       // // Only these commands actually have the description input, so only pull it if it exists
@@ -2039,8 +2048,9 @@ export async function modModal(
           // log.error(F, `Error: ${err}`);
         }
       }
-
-      await i.editReply(await moderate(interaction, i));
+      if (!isReport) {
+        await i.editReply(await moderate(interaction, i));
+      }
     })
     .catch(async err => {
       // log.error(F, `Error: ${JSON.stringify(err as DiscordErrorData, null, 2)}`);
