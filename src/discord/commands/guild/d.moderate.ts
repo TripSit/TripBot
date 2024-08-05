@@ -1864,7 +1864,11 @@ export async function modModal(
     .setCustomId('internalNote');
 
   try {
-    modalInputComponent.setLabel(`Why are you ${verb} ${target}?`);
+    // Ensure the label text is within the limit
+    const label = `Why are you ${verb} ${target}?`;
+    const truncatedLabelText = label.length > 45 ? `${label.substring(0, 41)}...?` : label;
+
+    modalInputComponent.setLabel(truncatedLabelText);
   } catch (err) {
     log.error(F, `Error: ${err}`);
     log.error(F, `Verb: ${verb}, Target: ${target}`);
