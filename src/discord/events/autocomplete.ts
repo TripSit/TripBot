@@ -777,7 +777,7 @@ export async function autocomplete(interaction: AutocompleteInteraction): Promis
     await autocompletePills(interaction);
   } else if (interaction.commandName === 'role') {
     await autocompleteRoles(interaction);
-  } else if (interaction.commandName === 'calc_benzo') {
+  } else if (interaction.commandName === 'calc' && interaction.options.getSubcommand() === 'benzo') {
     await autocompleteBenzos(interaction);
   } else if (interaction.commandName === 'timezone') {
     await autocompleteTimezone(interaction);

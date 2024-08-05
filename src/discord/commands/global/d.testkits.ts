@@ -40,7 +40,7 @@ export default {
     });
     embed.setDescription(stripIndents`
         [How to use a reagent test kit](https://dancesafe.org/testing-kit-instructions/)
-        [How to use fentanyl strips](https://dancesafe.org/you-may-be-using-fentanyl-testing-strips-incorrectly/)
+        [How to use fentanyl strips](https://dancesafe.org/fentanyl/)
         [More testkit resources on the TripSit wiki!](https://wiki.tripsit.me/wiki/Test_Kits)
         `);
     await interaction.editReply({ embeds: [embed] });
