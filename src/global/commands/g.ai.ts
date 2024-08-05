@@ -1022,3 +1022,60 @@ export async function aiModerate(
 
   return moderationAlerts;
 }
+
+export async function aiTranslate(
+  target_language: string,
+  messages: OpenAI.Chat.ChatCompletionMessageParam [],
+):Promise<{
+    response: string,
+    promptTokens: number,
+    completionTokens: number,
+  }> {
+  let response = '';
+  let promptTokens = 0;
+  let completionTokens = 0;
+  if (!env.OPENAI_API_ORG || !env.OPENAI_API_KEY) return { response, promptTokens, completionTokens };
+
+  const model = 'gpt-3.5-turbo-1106';
+  const chatCompletionMessages = [{
+    role: 'system',
+    content: `You will translate whatever the user sends to their desired language. Their desired language or language code is: ${target_language}.`,
+  }] as OpenAI.Chat.ChatCompletionMessageParam[];
+  chatCompletionMessages.push(...messages);
+
+  const payload = {
+    model,
+    messages: chatCompletionMessages,
+  } as OpenAI.Chat.ChatCompletionCreateParamsNonStreaming;
+
+  // log.debug(F, `payload: ${JSON.stringify(payload, null, 2)}`);
+  let responseMessage = {} as OpenAI.Chat.ChatCompletionMessageParam;
+
+  const chatCompletion = await openAi.chat.completions
+    .create(payload)
+    .catch(err => {
+      if (err instanceof OpenAI.APIError) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        log.error(F, `${err.name} - ${err.status} - ${err.type} - ${(err.error as any).message}  `); // 400
+        // log.error  (F, `${JSON.stringify(err.headers, null, 2)}`); // {server: 'nginx', ...}
+        // log.error(F, `${JSON.stringify(err, null, 2)}`); // {server: 'nginx', ...}
+      } else {
+        throw err;
+      }
+    });
+  // log.debug(F, `chatCompletion: ${JSON.stringify(chatCompletion, null, 2)}`);
+
+  if (chatCompletion?.choices[0].message) {
+    responseMessage = chatCompletion.choices[0].message;
+
+    // Sum up the existing tokens
+    promptTokens = chatCompletion.usage?.prompt_tokens ?? 0;
+    completionTokens = chatCompletion.usage?.completion_tokens ?? 0;
+
+    response = responseMessage.content ?? 'Sorry, I\'m not sure how to respond to that.';
+  }
+
+  // log.debug(F, `response: ${response}`);
+
+  return { response, promptTokens, completionTokens };
+}
