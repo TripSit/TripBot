@@ -28,6 +28,7 @@ const tripsitChannels = [
   env.CHANNEL_WEBTRIPSIT2,
 ];
 
+/*
 const sadStuff = [
   'sadface',
   ':(',
@@ -56,13 +57,14 @@ const sadStuff = [
   '😐',
   '😑',
 ];
+*/
 
 const heartEmojis = [
   '❤', '🧡', '💛', '💚', '💙', '💜', '💝', '💖', '💗', '💘', '💕', '💞', '💓', '💟', '❣', '🫂',
 ];
 
-async function isSadMessage(message: Message): Promise<boolean> {
-  return sadStuff.some(word => (message.cleanContent.includes(word)
+async function messageContainsHearts(message: Message): Promise<boolean> {
+  return heartEmojis.some(word => (message.cleanContent.includes(word)
     && !(message.cleanContent.substring(message.cleanContent.indexOf(':') + 1).includes(':'))));
 }
 
@@ -383,10 +385,10 @@ give people a chance to answer 😄 If no one answers in 5 minutes you can try a
         }
       }
     }
-  } else if (await isSadMessage(message)) {
+  } else if (await messageContainsHearts(message)) {
     if (message.author.bot) return;
     if (message.guild.id !== env.DISCORD_GUILD_ID) return;
-    // log.debug(F, 'Sad stuff detected');
+    // log.debug(F, 'Sad/lovey stuff detected');
     await message.react(heartEmojis[Math.floor(Math.random() * heartEmojis.length)]);
   }
 
