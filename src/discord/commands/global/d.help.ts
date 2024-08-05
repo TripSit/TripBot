@@ -93,7 +93,7 @@ const selectMenuOptions = new ActionRowBuilder<StringSelectMenuBuilder>().addCom
     ]),
 ]);
 
-async function startPage():Promise<InteractionEditReplyOptions> {
+export async function startPage():Promise<InteractionEditReplyOptions> {
   return {
     embeds: [
       embedTemplate()
@@ -120,7 +120,7 @@ async function startPage():Promise<InteractionEditReplyOptions> {
   };
 }
 
-async function hrPage():Promise<InteractionEditReplyOptions> {
+export async function hrPage():Promise<InteractionEditReplyOptions> {
   return {
     embeds: [
       embedTemplate()
@@ -244,7 +244,7 @@ async function hrPage():Promise<InteractionEditReplyOptions> {
   };
 }
 
-async function funPage():Promise<InteractionEditReplyOptions> {
+export async function funPage():Promise<InteractionEditReplyOptions> {
   return {
     embeds: [
       embedTemplate()
@@ -339,7 +339,7 @@ async function funPage():Promise<InteractionEditReplyOptions> {
   };
 }
 
-async function sessionsPage():Promise<InteractionEditReplyOptions> {
+export async function sessionsPage():Promise<InteractionEditReplyOptions> {
   return {
     embeds: [embedTemplate()
       .setColor(Colors.Purple)
@@ -351,7 +351,7 @@ async function sessionsPage():Promise<InteractionEditReplyOptions> {
   };
 }
 
-async function experiencePage():Promise<InteractionEditReplyOptions> {
+export async function experiencePage():Promise<InteractionEditReplyOptions> {
   return {
     embeds: [embedTemplate()
       .setColor(Colors.Purple)
@@ -363,7 +363,7 @@ async function experiencePage():Promise<InteractionEditReplyOptions> {
   };
 }
 
-async function systemsPage():Promise<InteractionEditReplyOptions> {
+export async function systemsPage():Promise<InteractionEditReplyOptions> {
   return {
     embeds: [embedTemplate()
       .setColor(Colors.Purple)
@@ -398,7 +398,7 @@ async function systemsPage():Promise<InteractionEditReplyOptions> {
   };
 }
 
-async function tripsitPage():Promise<InteractionEditReplyOptions> {
+export async function tripsitPage():Promise<InteractionEditReplyOptions> {
   return {
     embeds: [
       embedTemplate()
@@ -476,7 +476,7 @@ async function tripsitPage():Promise<InteractionEditReplyOptions> {
   };
 }
 
-async function donatePage():Promise<InteractionEditReplyOptions> {
+export async function donatePage():Promise<InteractionEditReplyOptions> {
   return {
     embeds: [embedTemplate()
       .setColor(Colors.Purple)
@@ -511,7 +511,7 @@ async function donatePage():Promise<InteractionEditReplyOptions> {
   };
 }
 
-async function creditsPage():Promise<InteractionEditReplyOptions> {
+export async function creditsPage():Promise<InteractionEditReplyOptions> {
   return {
     embeds: [embedTemplate()
       .setColor(Colors.Orange)
@@ -522,7 +522,7 @@ async function creditsPage():Promise<InteractionEditReplyOptions> {
   };
 }
 
-async function feedbackPage():Promise<InteractionEditReplyOptions> {
+export async function feedbackPage():Promise<InteractionEditReplyOptions> {
   return {
     embeds: [embedTemplate()
       .setColor(Colors.Green)
@@ -545,7 +545,7 @@ async function feedbackPage():Promise<InteractionEditReplyOptions> {
   };
 }
 
-async function invitePage():Promise<InteractionEditReplyOptions> {
+export async function invitePage():Promise<InteractionEditReplyOptions> {
   return {
     embeds: [embedTemplate()
       .setColor(Colors.Yellow)
