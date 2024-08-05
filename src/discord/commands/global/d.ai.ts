@@ -64,9 +64,9 @@ const tripbotUAT = '@TripBot UAT (Moonbear)';
 
 // Costs per 1k tokens
 const aiCosts = {
-  GPT_3_5_TURBO: {
-    input: 0.0005,
-    output: 0.0015,
+  GPT_3_5_TURBO: { // LAZY TEMP FIX - CHANGE NAME THESE PRICES ARE FOR 4o MINI NOW
+    input: 0.00015,
+    output: 0.00060,
   },
   // GPT_3_5_TURBO_1106: {
   //   input: 0.001,

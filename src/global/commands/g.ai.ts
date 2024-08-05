@@ -4,9 +4,9 @@
 import OpenAI from 'openai';
 import { ai_personas } from '@prisma/client';
 import { ImagesResponse, ModerationCreateResponse } from 'openai/resources';
-import { Assistant } from 'openai/resources/beta/assistants/assistants';
+import { Assistant } from 'openai/resources/beta/assistants';
 import { ThreadDeleted } from 'openai/resources/beta/threads/threads';
-import { MessageContentText } from 'openai/resources/beta/threads/messages/messages';
+import { TextContentBlock } from 'openai/resources/beta/threads/messages';
 import {
   GoogleGenerativeAI, HarmCategory, HarmBlockThreshold, GenerationConfig, SafetySetting, Part, InputContent,
   GenerateContentResult,
@@ -99,7 +99,7 @@ const aiFunctions = [
       },
     },
   },
-] as Assistant.Function[];
+];
 
 export async function aiModerateReport(
   message: string,
@@ -139,8 +139,9 @@ export async function getAssistant(name: string):Promise<Assistant> {
       name,
     },
   });
-
-  const modelName = personaData.ai_model.toLowerCase() === 'gpt_3_5_turbo' ? 'gpt-3.5-turbo-1106' : 'gpt-4-turbo-preview';
+  // LAZY TEMP FIX
+  // eslint-disable-next-line sonarjs/no-all-duplicated-branches
+  const modelName = personaData.ai_model.toLowerCase() === 'gpt-3.5-turbo-1106' ? 'gpt-4o-mini' : 'gpt-4o-mini';
 
   // Upload a file with an "assistants" purpose
   // const combinedDb = await openAi.files.create({
@@ -153,13 +154,13 @@ export async function getAssistant(name: string):Promise<Assistant> {
     model: modelName,
     name: personaData.name,
     description: personaData.description,
-    instructions: `${objectiveTruths}\n${personaData.prompt}`,
+    instructions: `${objectiveTruths}\n${personaData.prompt}`, // LAZY TEMP FIX. https://platform.openai.com/docs/assistants/migration/what-has-changed - UPDATE to version 4.52.7 in package.json
     tools: [
       // { type: 'code_interpreter' },
       // { type: 'retrieval' },
       // ...aiFunctions,
     ],
-    file_ids: [],
+    // file_ids: [],
     metadata: {},
   } as Omit<Assistant, 'id' | 'created_at' | 'object'>;
 
@@ -536,7 +537,7 @@ async function openAiWaitForRun(
         await openAi.beta.threads.messages.list(thread.id, { limit: 1 })
       ).data[0].content[0];
       // log.debug(F, `messageContent: ${JSON.stringify(messageContent, null, 2)}`);
-      return { response: (messageContent as MessageContentText).text.value.slice(0, 2000), promptTokens, completionTokens };
+      return { response: (messageContent as TextContentBlock).text.value.slice(0, 2000), promptTokens, completionTokens };
     }
     case 'requires_action': {
       log.debug(F, 'requires_action');
@@ -757,7 +758,7 @@ async function openAiChat(
   let model = aiPersona.ai_model.toLowerCase();
   // Convert ai models into proper names
   if (aiPersona.ai_model === 'GPT_3_5_TURBO') {
-    model = 'gpt-3.5-turbo-1106';
+    model = 'gpt-4o-mini'; // LAZY TEMP FIX
   }
 
   // This message list is sent to the API
@@ -906,7 +907,7 @@ export async function aiFlairMod(
   let model = aiPersona.ai_model.toLowerCase();
   // Convert ai models into proper names
   if (aiPersona.ai_model === 'GPT_3_5_TURBO') {
-    model = 'gpt-3.5-turbo-1106';
+    model = 'gpt-4o-mini'; // LAZY TEMP FIX
   }
   // This message list is sent to the API
   const chatCompletionMessages = [{
