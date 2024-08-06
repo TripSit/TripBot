@@ -1952,15 +1952,6 @@ export async function modModal(
         return;
       }
       await i.deferReply({ ephemeral: true });
-      if (isReport(command)) {
-        const reportResponseEmbed = embedTemplate()
-          .setColor(Colors.Yellow)
-          .setTitle('Report sent!')
-          .setDescription('The moderators have received your report and will look into it. Thanks!');
-        await i.editReply({
-          embeds: [reportResponseEmbed],
-        });
-      }
       // const internalNote = i.fields.getTextInputValue('internalNote'); // eslint-disable-line
 
       // // Only these commands actually have the description input, so only pull it if it exists
@@ -2052,9 +2043,7 @@ export async function modModal(
           // log.error(F, `Error: ${err}`);
         }
       }
-      if (!isReport) {
-        await i.editReply(await moderate(interaction, i));
-      }
+      await i.editReply(await moderate(interaction, i));
     })
     .catch(async err => {
       // log.error(F, `Error: ${JSON.stringify(err as DiscordErrorData, null, 2)}`);
