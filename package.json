@@ -87,7 +87,7 @@
     "node-os-utils": "^1.3.7",
     "objection": "^3.1.3",
     "octokit": "^3.1.2",
-    "openai": "^4.25.0",
+    "openai": "^4.53.2",
     "rollbar": "^2.26.2",
     "rss-parser": "^3.13.0",
     "source-map-support": "^0.5.21",

@@ -4,9 +4,9 @@
 import OpenAI from 'openai';
 import { ai_personas } from '@prisma/client';
 import { ImagesResponse, ModerationCreateResponse } from 'openai/resources';
-import { Assistant } from 'openai/resources/beta/assistants/assistants';
+import { Assistant } from 'openai/resources/beta/assistants';
 import { ThreadDeleted } from 'openai/resources/beta/threads/threads';
-import { MessageContentText } from 'openai/resources/beta/threads/messages/messages';
+import { TextContentBlock } from 'openai/resources/beta/threads/messages';
 import {
   GoogleGenerativeAI, HarmCategory, HarmBlockThreshold, GenerationConfig, SafetySetting, Part, InputContent,
   GenerateContentResult,
@@ -99,7 +99,7 @@ const aiFunctions = [
       },
     },
   },
-] as Assistant.Function[];
+];
 
 export async function aiModerateReport(
   message: string,
@@ -139,8 +139,9 @@ export async function getAssistant(name: string):Promise<Assistant> {
       name,
     },
   });
-
-  const modelName = personaData.ai_model.toLowerCase() === 'gpt_3_5_turbo' ? 'gpt-3.5-turbo-1106' : 'gpt-4-turbo-preview';
+  // LAZY TEMP FIX
+  // eslint-disable-next-line sonarjs/no-all-duplicated-branches
+  const modelName = personaData.ai_model.toLowerCase() === 'gpt-3.5-turbo-1106' ? 'gpt-4o-mini' : 'gpt-4o-mini';
 
   // Upload a file with an "assistants" purpose
   // const combinedDb = await openAi.files.create({
@@ -153,13 +154,13 @@ export async function getAssistant(name: string):Promise<Assistant> {
     model: modelName,
     name: personaData.name,
     description: personaData.description,
-    instructions: `${objectiveTruths}\n${personaData.prompt}`,
+    instructions: `${objectiveTruths}\n${personaData.prompt}`, // LAZY TEMP FIX. https://platform.openai.com/docs/assistants/migration/what-has-changed - UPDATE to version 4.52.7 in package.json
     tools: [
       // { type: 'code_interpreter' },
       // { type: 'retrieval' },
       // ...aiFunctions,
     ],
-    file_ids: [],
+    // file_ids: [],
     metadata: {},
   } as Omit<Assistant, 'id' | 'created_at' | 'object'>;
 
@@ -536,7 +537,7 @@ async function openAiWaitForRun(
         await openAi.beta.threads.messages.list(thread.id, { limit: 1 })
       ).data[0].content[0];
       // log.debug(F, `messageContent: ${JSON.stringify(messageContent, null, 2)}`);
-      return { response: (messageContent as MessageContentText).text.value.slice(0, 2000), promptTokens, completionTokens };
+      return { response: (messageContent as TextContentBlock).text.value.slice(0, 2000), promptTokens, completionTokens };
     }
     case 'requires_action': {
       log.debug(F, 'requires_action');
@@ -757,7 +758,7 @@ async function openAiChat(
   let model = aiPersona.ai_model.toLowerCase();
   // Convert ai models into proper names
   if (aiPersona.ai_model === 'GPT_3_5_TURBO') {
-    model = 'gpt-3.5-turbo-1106';
+    model = 'gpt-4o-mini'; // LAZY TEMP FIX
   }
 
   // This message list is sent to the API
@@ -906,7 +907,7 @@ export async function aiFlairMod(
   let model = aiPersona.ai_model.toLowerCase();
   // Convert ai models into proper names
   if (aiPersona.ai_model === 'GPT_3_5_TURBO') {
-    model = 'gpt-3.5-turbo-1106';
+    model = 'gpt-4o-mini'; // LAZY TEMP FIX
   }
   // This message list is sent to the API
   const chatCompletionMessages = [{
@@ -1021,4 +1022,61 @@ export async function aiModerate(
   // log.debug(F, `moderationAlerts: ${JSON.stringify(moderationAlerts, null, 2)}`);
 
   return moderationAlerts;
+}
+
+export async function aiTranslate(
+  target_language: string,
+  messages: OpenAI.Chat.ChatCompletionMessageParam [],
+):Promise<{
+    response: string,
+    promptTokens: number,
+    completionTokens: number,
+  }> {
+  let response = '';
+  let promptTokens = 0;
+  let completionTokens = 0;
+  if (!env.OPENAI_API_ORG || !env.OPENAI_API_KEY) return { response, promptTokens, completionTokens };
+
+  const model = 'gpt-3.5-turbo-1106';
+  const chatCompletionMessages = [{
+    role: 'system',
+    content: `You will translate whatever the user sends to their desired language. Their desired language or language code is: ${target_language}.`,
+  }] as OpenAI.Chat.ChatCompletionMessageParam[];
+  chatCompletionMessages.push(...messages);
+
+  const payload = {
+    model,
+    messages: chatCompletionMessages,
+  } as OpenAI.Chat.ChatCompletionCreateParamsNonStreaming;
+
+  // log.debug(F, `payload: ${JSON.stringify(payload, null, 2)}`);
+  let responseMessage = {} as OpenAI.Chat.ChatCompletionMessageParam;
+
+  const chatCompletion = await openAi.chat.completions
+    .create(payload)
+    .catch(err => {
+      if (err instanceof OpenAI.APIError) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        log.error(F, `${err.name} - ${err.status} - ${err.type} - ${(err.error as any).message}  `); // 400
+        // log.error  (F, `${JSON.stringify(err.headers, null, 2)}`); // {server: 'nginx', ...}
+        // log.error(F, `${JSON.stringify(err, null, 2)}`); // {server: 'nginx', ...}
+      } else {
+        throw err;
+      }
+    });
+  // log.debug(F, `chatCompletion: ${JSON.stringify(chatCompletion, null, 2)}`);
+
+  if (chatCompletion?.choices[0].message) {
+    responseMessage = chatCompletion.choices[0].message;
+
+    // Sum up the existing tokens
+    promptTokens = chatCompletion.usage?.prompt_tokens ?? 0;
+    completionTokens = chatCompletion.usage?.completion_tokens ?? 0;
+
+    response = responseMessage.content ?? 'Sorry, I\'m not sure how to respond to that.';
+  }
+
+  // log.debug(F, `response: ${response}`);
+
+  return { response, promptTokens, completionTokens };
 }

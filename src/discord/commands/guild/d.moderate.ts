@@ -789,7 +789,7 @@ export async function modResponse(
   }
 
   let targetString = '';
-  let target = {} as GuildMember;
+  let target = {} as GuildMember | User;
   const modEmbedObj = embedTemplate();
 
   const { embedColor } = embedVariables[command as keyof typeof embedVariables];
@@ -903,13 +903,15 @@ export async function modResponse(
     // log.debug(F, `Assigning target from string: ${targets}`);
     [target] = targets;
   }
-  if (interaction.isUserContextMenuCommand() && interaction.targetMember) {
+
+  if (interaction.isUserContextMenuCommand() && (interaction.targetMember || interaction.targetUser)) {
     // log.debug(F, `User context target member: ${interaction.targetMember}`);
-    target = interaction.targetMember as GuildMember;
+    target = interaction.targetMember ? interaction.targetMember as GuildMember : interaction.targetUser as User;
   } else if (interaction.isMessageContextMenuCommand() && interaction.targetMessage) {
     // log.debug(F, `Message context target message member: ${interaction.targetMessage.member}`);
-    target = interaction.targetMessage.member as GuildMember;
+    target = interaction.targetMessage.member ? interaction.targetMessage.member as GuildMember : interaction.targetMessage.author as User;
   }
+
   const targetData = await db.users.upsert({
     where: {
       discord_id: target.id,
@@ -937,7 +939,10 @@ export async function modResponse(
   // Determine if the actor is a mod
   // const actorIsMod = (!!guildData.role_moderator && actor.roles.cache.has(guildData.role_moderator));
 
-  const timeoutTime = target.communicationDisabledUntilTimestamp;
+  let timeoutTime = null;
+  if (target instanceof GuildMember) {
+    timeoutTime = target.communicationDisabledUntilTimestamp;
+  }
 
   if (showModButtons) {
     if (isInfo(command) || isReport(command)) {
@@ -1859,7 +1864,11 @@ export async function modModal(
     .setCustomId('internalNote');
 
   try {
-    modalInputComponent.setLabel(`Why are you ${verb} ${target}?`);
+    // Ensure the label text is within the limit
+    const label = `Why are you ${verb} ${target}?`;
+    const truncatedLabelText = label.length > 45 ? `${label.substring(0, 41)}...?` : label;
+
+    modalInputComponent.setLabel(truncatedLabelText);
   } catch (err) {
     log.error(F, `Error: ${err}`);
     log.error(F, `Verb: ${verb}, Target: ${target}`);
@@ -1939,8 +1948,19 @@ export async function modModal(
   const filter = (i: ModalSubmitInteraction) => i.customId.startsWith('modModal');
   await interaction.awaitModalSubmit({ filter, time: disableButtonTime })
     .then(async i => {
-      if (i.customId.split('~')[2] !== interaction.id) return;
+      if (i.customId.split('~')[2] !== interaction.id) {
+        return;
+      }
       await i.deferReply({ ephemeral: true });
+      if (isReport(command)) {
+        const reportResponseEmbed = embedTemplate()
+          .setColor(Colors.Yellow)
+          .setTitle('Report sent!')
+          .setDescription('The moderators have received your report and will look into it. Thanks!');
+        await i.editReply({
+          embeds: [reportResponseEmbed],
+        });
+      }
       // const internalNote = i.fields.getTextInputValue('internalNote'); // eslint-disable-line
 
       // // Only these commands actually have the description input, so only pull it if it exists
@@ -2032,8 +2052,9 @@ export async function modModal(
           // log.error(F, `Error: ${err}`);
         }
       }
-
-      await i.editReply(await moderate(interaction, i));
+      if (!isReport) {
+        await i.editReply(await moderate(interaction, i));
+      }
     })
     .catch(async err => {
       // log.error(F, `Error: ${JSON.stringify(err as DiscordErrorData, null, 2)}`);
