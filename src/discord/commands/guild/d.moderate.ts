@@ -1502,6 +1502,10 @@ export async function moderate(
     );
   }
 
+  if (command === 'FULL_BAN') {
+    internalNote += `\n **Actioned by:** ${actor.displayName}`;
+  }
+
   let actionData = {
     user_id: targetData.id,
     guild_id: actor.guild.id,
