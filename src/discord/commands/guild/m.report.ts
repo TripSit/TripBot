@@ -12,7 +12,7 @@ const F = f(__filename);
 
 export const mReport: MessageCommand = {
   data: new ContextMenuCommandBuilder()
-    .setName('Report Message')
+    .setName('TripBot Report Message')
     .setType(ApplicationCommandType.Message),
   async execute(interaction) {
     if (!interaction.guild) return false;
