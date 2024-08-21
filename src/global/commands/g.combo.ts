@@ -92,7 +92,6 @@ export async function combo(
       if (drug.combos && Object.keys(drug.combos).includes(drugName.toLowerCase())) {
         return drugName.toLowerCase();
       }
-      return drugName.toLowerCase();
     }
 
     // If the drug is not in the drug database, check the combo database
@@ -135,8 +134,8 @@ export async function combo(
   drugAName = cleanDrugName(drugAName);
   drugBName = cleanDrugName(drugBName);
 
-  // log.debug(F, `drugAName: ${drugAName}`);
-  // log.debug(F, `drugBName: ${drugBName}`);
+  log.debug(F, `drugAName: ${drugAName}`);
+  log.debug(F, `drugBName: ${drugBName}`);
 
   const drugANameString = drugAInput !== drugAName ? ` (converted to '${drugAName}')` : '';
   const drugBNameString = drugBInput !== drugBName ? ` (converted to '${drugBName}')` : '';
