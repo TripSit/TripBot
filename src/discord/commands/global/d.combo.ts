@@ -26,12 +26,13 @@ export const dCombo: SlashCommand = {
       .setDescription('Set to "True" to show the response only to you')),
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
-    const ephemeral:boolean = (interaction.options.getBoolean('ephemeral') === true);
+    const ephemeral: boolean = (interaction.options.getBoolean('ephemeral') === true);
     await interaction.deferReply({ ephemeral });
     const drugA = interaction.options.getString('first_drug', true);
     const drugB = interaction.options.getString('second_drug', true);
 
     const results = await combo(drugA, drugB);
+    // log.debug(F, `${JSON.stringify(results, null, 2)}`);
 
     if ((results as {
       err: boolean;
