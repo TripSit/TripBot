@@ -1339,7 +1339,7 @@ export async function moderate(
   }
 
   let description = '';
-  if (command !== 'NOTE' && command !== 'REPORT') {
+  if (!isNote(command) && !isReport(command)) {
     description = modalInt.fields.getTextInputValue('description');
   }
   let internalNote = modalInt.fields.getTextInputValue('internalNote');
@@ -1706,7 +1706,7 @@ export async function moderate(
       > ${modalInt.fields.getTextInputValue('internalNote')}
   
       Message sent to user:
-      > ${command !== 'NOTE' && command !== 'REPORT' ? modalInt.fields.getTextInputValue('description') : ''}`,
+      > ${!isNote(command) && !isReport(command) ? modalInt.fields.getTextInputValue('description') : ''}`,
         inline: true,
       },
     );
@@ -1728,7 +1728,7 @@ export async function moderate(
     .setDescription(desc)
     .setFooter(null);
 
-  if (command !== 'REPORT' && modThread) response.setDescription(`${response.data.description}\nYou can access their thread here: ${modThread}`);
+  if (!isReport(command) && modThread) response.setDescription(`${response.data.description}\nYou can access their thread here: ${modThread}`);
 
   log.debug(F, `Returning embed: ${JSON.stringify(response, null, 2)}`);
   return { embeds: [response] };
@@ -2064,7 +2064,7 @@ export async function modModal(
           // log.error(F, `Error: ${err}`);
         }
       }
-      if (command !== 'REPORT' && command !== 'NOTE') {
+      if (!isNote(command) && !isReport(command)) {
         await i.editReply(await moderate(interaction, i));
       }
     })
