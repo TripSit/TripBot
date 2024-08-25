@@ -57,7 +57,7 @@ export async function combo(
   let drugBName = drugBInput.toLowerCase();
 
   // Because users can input whatever they want, we need to clean the input
-  function cleanDrugName(drugName:string):string {
+  function cleanDrugName(drugName: string): string {
     // These matches need to come first because otherwise "2x-b" woould be found in the drug DB but not have any interaction info
     if (/^do.$/i.test(drugName)) {
       return 'dox';
@@ -92,20 +92,6 @@ export async function combo(
       if (drug.combos && Object.keys(drug.combos).includes(drugName.toLowerCase())) {
         return drugName.toLowerCase();
       }
-
-      // Otherwise, check the categories
-      if (drug.categories) {
-        if (drug.categories.includes('benzodiazepine' as Category)) {
-          return 'benzodiazepines';
-        }
-        if (drug.categories.includes('opioid' as Category)) {
-          return 'opioids';
-        }
-        if (drug.categories.includes('ssri' as Category)) {
-          return 'ssris';
-        }
-      }
-      return drugName.toLowerCase();
     }
 
     // If the drug is not in the drug database, check the combo database
@@ -125,14 +111,31 @@ export async function combo(
       }
     }
 
+    if (Object.keys(drugData).includes(drugName.toLowerCase())) {
+      const drug = (drugData as DrugData)[drugName.toLowerCase()] as Drug;
+
+      // Otherwise, check the categories
+      if (drug.categories) {
+        if (drug.categories.includes('benzodiazepine' as Category)) {
+          return 'benzodiazepines';
+        }
+        if (drug.categories.includes('opioid' as Category)) {
+          return 'opioids';
+        }
+        if (drug.categories.includes('ssri' as Category)) {
+          return 'ssris';
+        }
+      }
+    }
+
     return drugName;
   }
 
   drugAName = cleanDrugName(drugAName);
   drugBName = cleanDrugName(drugBName);
 
-  // log.debug(F, `drugAName: ${drugAName}`);
-  // log.debug(F, `drugBName: ${drugBName}`);
+  log.debug(F, `drugAName: ${drugAName}`);
+  log.debug(F, `drugBName: ${drugBName}`);
 
   const drugANameString = drugAInput !== drugAName ? ` (converted to '${drugAName}')` : '';
   const drugBNameString = drugBInput !== drugBName ? ` (converted to '${drugBName}')` : '';
@@ -157,8 +160,8 @@ export async function combo(
 
   // We use this to show the user all the drugs they can use
   const allDrugNames = Object.values(drugData as DrugData)
-    .filter((drug:Drug) => drug.aliases) // Filter drugs without aliases
-    .map((drug:Drug) => drug.aliases) // Get aliases
+    .filter((drug: Drug) => drug.aliases) // Filter drugs without aliases
+    .map((drug: Drug) => drug.aliases) // Get aliases
     .flat() as string[]; // Flatten array, define as string[]
 
   if (!drugAComboData) {
