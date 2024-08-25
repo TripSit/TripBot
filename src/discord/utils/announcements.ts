@@ -143,6 +143,7 @@ export async function announcements(message:Message) {
     '**Tip:** Head to the Activities Corner in the <id:guide> for small games and activities!',
     '**Tip:** Curious about a specific server function like levelling or karma? Head to Server Tips in the <id:guide>!',
     '**Tip:** Keen to help with tripsitting? Head to the <id:guide> for info on how to become a Helper!',
+    '**Tip:** Track your dosages privately with `/idose`.',
   ];
 
   const funAnnouncements = [
