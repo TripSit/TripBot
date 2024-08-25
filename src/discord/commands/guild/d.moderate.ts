@@ -839,43 +839,50 @@ export async function modResponse(
           create: { discord_id: userId },
           update: {},
         });
-
-        actionRow.addComponents(
-          modButtonNote(userId),
-        );
-
         let banVerb = 'ban';
-        let userBan = {} as GuildBan;
-        try {
-          userBan = await interaction.guild.bans.fetch(userId);
-        } catch (err: unknown) {
-          // log.debug(F, `Error fetching ban: ${err}`);
-        }
-        if (userBan.guild) {
+        if (showModButtons) {
           actionRow.addComponents(
-            modButtonUnBan(userId),
+            modButtonNote(userId),
           );
-          banVerb = 'un-ban';
-        } else {
+
+          let userBan = {} as GuildBan;
+          try {
+            userBan = await interaction.guild.bans.fetch(userId);
+          } catch (err: unknown) {
+            // log.debug(F, `Error fetching ban: ${err}`);
+          }
+          if (userBan.guild) {
+            actionRow.addComponents(
+              modButtonUnBan(userId),
+            );
+            banVerb = 'un-ban';
+          } else {
+            actionRow.addComponents(
+              modButtonBan(userId),
+            );
+          }
+
           actionRow.addComponents(
-            modButtonBan(userId),
+            modButtonInfo(userId),
           );
         }
 
-        actionRow.addComponents(
-          modButtonInfo(userId),
-        );
-
-        if (isReport(command)) {
+        if (isReport(command) && showModButtons) {
           modEmbedObj.setDescription(stripIndents`
           User ID '${userId}' is not in the guild, but I can still Note or ${banVerb} them!`);
         } else {
           log.debug(F, '[modResponse] generating user info');
           const modlogEmbed = await userInfoEmbed(actor, targetObj, targetData, command, showModButtons);
           log.debug(F, `modlogEmbed: ${JSON.stringify(modlogEmbed, null, 2)}`);
-          actionRow.setComponents([
-            modButtonInfo(userId),
-          ]);
+          if (showModButtons) {
+            actionRow.setComponents([
+              modButtonInfo(userId),
+            ]);
+          } else {
+            actionRow.setComponents([
+              modButtonReport(userId),
+            ]);
+          }
           if (isBan(command)) {
             actionRow.addComponents(
               modButtonUnBan(userId),
@@ -1699,7 +1706,7 @@ export async function moderate(
       > ${modalInt.fields.getTextInputValue('internalNote')}
   
       Message sent to user:
-      > ${modalInt.fields.getTextInputValue('description')}`,
+      > ${!isNote(command) && !isReport(command) ? modalInt.fields.getTextInputValue('description') : ''}`,
         inline: true,
       },
     );
@@ -1721,7 +1728,7 @@ export async function moderate(
     .setDescription(desc)
     .setFooter(null);
 
-  if (command !== 'REPORT' && modThread) response.setDescription(`${response.data.description}\nYou can access their thread here: ${modThread}`);
+  if (!isReport(command) && modThread) response.setDescription(`${response.data.description}\nYou can access their thread here: ${modThread}`);
 
   log.debug(F, `Returning embed: ${JSON.stringify(response, null, 2)}`);
   return { embeds: [response] };
@@ -1952,6 +1959,20 @@ export async function modModal(
         return;
       }
       await i.deferReply({ ephemeral: true });
+      try {
+        if (command === 'REPORT' || command === 'NOTE') {
+          await moderate(interaction, i);
+          const reportResponseEmbed = embedTemplate()
+            .setColor(command === 'REPORT' ? Colors.Yellow : Colors.Green)
+            .setTitle(command === 'REPORT' ? 'Your report was sent!' : 'Your note was added!')
+            .setDescription(command === 'REPORT' ? 'The moderators have received your report and will look into it. Thanks!' : `Your note was successfully added to ${target}'s thread.`);
+          await i.editReply({
+            embeds: [reportResponseEmbed],
+          });
+        }
+      } catch (err) {
+        log.info(F, `[modModal ModalSubmitInteraction]: ${err}`);
+      }
       // const internalNote = i.fields.getTextInputValue('internalNote'); // eslint-disable-line
 
       // // Only these commands actually have the description input, so only pull it if it exists
@@ -2043,7 +2064,9 @@ export async function modModal(
           // log.error(F, `Error: ${err}`);
         }
       }
-      await i.editReply(await moderate(interaction, i));
+      if (!isNote(command) && !isReport(command)) {
+        await i.editReply(await moderate(interaction, i));
+      }
     })
     .catch(async err => {
       // log.error(F, `Error: ${JSON.stringify(err as DiscordErrorData, null, 2)}`);
