@@ -19,6 +19,13 @@ import { sleep } from './d.bottest';
 
 const F = f(__filename);
 
+interface ComboHistoryObj {
+  user_id: string | null;
+  game_id: string;
+  count: Number;
+  last_broken_at: number;
+}
+
 function calcTotalPot(
   number:number,
   users:number,
@@ -272,6 +279,17 @@ export async function countMessage(message: Message): Promise<void> {
   if (!countingData) return; // If not a counting channel then ignore all messages
   log.debug(F, `countingData: ${JSON.stringify(countingData, null, 2)} `);
 
+  // Get recent combo breakers
+  const recentComboBreakers = await db.counting_breaks.findMany({
+    where: {
+      game_id: countingData.type,
+    },
+    orderBy: {
+      last_broken_at: 'desc'
+    },
+    take: 4,
+  });
+
   // Process the new message. If it's the next number after current_number, then update the DB
   // If it's not the next number, then still update the db with the user who broke the combo
 
@@ -306,10 +324,10 @@ export async function countMessage(message: Message): Promise<void> {
     { before: message.id },
   ) as Collection<string, Message<true>>;
   const lastMessage = channelMessages
-    .filter(m => m.author.id === message.author.id) // Messages sent by the user
-    .filter(m => !Number.isNaN(parseInt(m.cleanContent, 10))) // That are numbers
-    .filter(m => m.createdTimestamp > Date.now() - (1000 * 60 * 60)) // That are within one hour
-    .sort((a, b) => b.createdTimestamp - a.createdTimestamp) // Sorted by most recent
+    .filter((m: { author: { id: any; }; }) => m.author.id === message.author.id) // Messages sent by the user
+    .filter((m: { cleanContent: string; }) => !Number.isNaN(parseInt(m.cleanContent, 10))) // That are numbers
+    .filter((m: { createdTimestamp: number; }) => m.createdTimestamp > Date.now() - (1000 * 60 * 60)) // That are within one hour
+    .sort((a: { createdTimestamp: number; }, b: { createdTimestamp: number; }) => b.createdTimestamp - a.createdTimestamp) // Sorted by most recent
     .first(); // Get the first one
 
   if (lastMessage && countingData.type === 'TOKEN'
@@ -321,6 +339,28 @@ export async function countMessage(message: Message): Promise<void> {
   if (number !== countingData.current_number + 1) {
     await message.channel.messages.fetch(countingData.current_number_message_id);
 
+    //const comboBreakingHistory: ComboHistoryObj[] = countingData.combo_breaking_history;
+
+    // if (comboBreakingHistory.length > 4) {
+    //   comboBreakingHistory.shift();
+    // }
+    
+    if (recentComboBreakers) {
+      // Check if the user has broken the combo recently, and if so, flag them and prevent the break.
+      // REMOVE THIS COMMENT AFTER READING - THIS SHOULD BE FINE.
+      let userCanBreakCombo = true;
+      recentComboBreakers.forEach((comboBreak: { user_id: string; }) => {
+        if (message.author.id === comboBreak.user_id) {
+          userCanBreakCombo = false;
+        }
+      });
+      if (!userCanBreakCombo) {
+        await message.reply('You cannot break the combo if you are one of the last 4 people to have broken it recently.');
+        // await message.reply(`You cannot break the combo if you are one of the last 4 people to break it: ${JSON.stringify(comboBreakingHistory)}`);
+        return;
+      }
+    }
+
     const stakeholderNumber = countingData.current_stakeholders
       ? countingData.current_stakeholders.split(',').length
       : 1;
@@ -331,11 +371,11 @@ export async function countMessage(message: Message): Promise<void> {
     if (countingData.current_stakeholders
       && !countingData.current_stakeholders.split(',').includes(message.author.id)
       && !warnedUsers.includes(message.author.id)) {
-      let messageReply = `Hey ${message.member?.displayName}, welcome to the counting game!
+      let messageReply = stripIndents`Hey ${message.member?.displayName}, welcome to the counting game!
       
       You may not know, but you're breaking the combo!
 
-      The current number is ${countingData.current_number}, if you want to join the game, type the next number in the series!
+      The current number is ${countingData.current_number}, if you want to join the game, type the next number in the series! 
       `;
       if (countingData.type === 'HARDCORE') {
         messageReply += 'If you break the combo again, you\'ll be timed out for 24 hours!';
@@ -374,6 +414,7 @@ export async function countMessage(message: Message): Promise<void> {
     countingData.last_number_message_author = countingData.current_number_message_author;
     countingData.last_number_broken_by = message.author.id;
     countingData.last_number_broken_date = new Date();
+    // countingData.combo_breaking_history = JSON.stringify(comboBreakingHistory);
 
     // If the number is not the next number in the sequence...
     let recordMessage = '';
@@ -455,6 +496,21 @@ export async function countMessage(message: Message): Promise<void> {
       create: countingData,
       update: countingData,
     });
+
+
+    // THIS IS WHERE I LEFT OFF. 
+
+    await db.counting_breaks.upsert({
+      where: {
+        game_id: countingData.type,
+      },
+      create: {
+        user_id: message.author.id,
+        game_id: countingData.type,
+        count: countingData.current_number,
+      },
+    });
+    
 
     // Send a message to the channel
     await message.channel.send({
@@ -550,7 +606,7 @@ export async function countMessage(message: Message): Promise<void> {
     // Look up the persona of every user in the currentData.current_stakeholders string
     // Give each of those personas a fraction of the pot: (totalPot / currentData.current_stakeholders.length)
     const stakeholderIds = countingData.current_stakeholders.split(',');
-    await Promise.all(stakeholderIds.map(async discordId => {
+    await Promise.all(stakeholderIds.map(async (discordId: any) => {
       // const userData = await getUser(message.author.id, null, null);
       const userData = await db.users.upsert({
         where: {
@@ -614,10 +670,10 @@ export const counting: SlashCommandBeta = {
   data: new SlashCommandBuilder()
     .setName('counting')
     .setDescription('All things with counting!')
-    .addSubcommand(subcommand => subcommand
+    .addSubcommand((subcommand: { setName: (arg0: string) => { (): any; new(): any; setDescription: { (arg0: string): { (): any; new(): any; addStringOption: { (arg0: (option: any) => any): any; new(): any; }; }; new(): any; }; }; }) => subcommand
       .setName('setup')
       .setDescription('Set up a Counting channel!')
-      .addStringOption(option => option
+      .addStringOption((option: { setDescription: (arg0: string) => { (): any; new(): any; setName: { (arg0: string): { (): any; new(): any; addChoices: { (arg0: { name: string; value: string; }, arg1: { name: string; value: string; }, arg2: { name: string; value: string; }): any; new(): any; }; }; new(): any; }; }; }) => option
         .setDescription('What kind of counting game?')
         .setName('type')
         .addChoices(
@@ -625,21 +681,21 @@ export const counting: SlashCommandBeta = {
           { name: 'Token', value: 'TOKEN' },
           { name: 'Normal', value: 'NORMAL' },
         )))
-    .addSubcommand(subcommand => subcommand
+    .addSubcommand((subcommand: { setName: (arg0: string) => { (): any; new(): any; setDescription: { (arg0: string): { (): any; new(): any; addBooleanOption: { (arg0: (option: any) => any): any; new(): any; }; }; new(): any; }; }; }) => subcommand
       .setName('scores')
       .setDescription('Get the scores for a Counting channel!')
-      .addBooleanOption(option => option.setName('ephemeral')
+      .addBooleanOption((option: { setName: (arg0: string) => { (): any; new(): any; setDescription: { (arg0: string): any; new(): any; }; }; }) => option.setName('ephemeral')
         .setDescription('Set to "True" to show the response only to you')))
-    .addSubcommand(subcommand => subcommand
+    .addSubcommand((subcommand: { setName: (arg0: string) => { (): any; new(): any; setDescription: { (arg0: string): { (): any; new(): any; addIntegerOption: { (arg0: (option: any) => any): { (): any; new(): any; addBooleanOption: { (arg0: (option: any) => any): { (): any; new(): any; addStringOption: { (arg0: (option: any) => any): any; new(): any; }; }; new(): any; }; }; new(): any; }; }; new(): any; }; }; }) => subcommand
       .setName('reset')
       .setDescription('Reset the counting channel!')
-      .addIntegerOption(option => option
+      .addIntegerOption((option: { setDescription: (arg0: string) => { (): any; new(): any; setName: { (arg0: string): any; new(): any; }; }; }) => option
         .setDescription('The number to set the channel to')
         .setName('number'))
-      .addBooleanOption(option => option
+      .addBooleanOption((option: { setName: (arg0: string) => { (): any; new(): any; setDescription: { (arg0: string): any; new(): any; }; }; }) => option
         .setName('purge')
         .setDescription('Set to "True" to start completely fresh'))
-      .addStringOption(option => option
+      .addStringOption((option: { setDescription: (arg0: string) => { (): any; new(): any; setName: { (arg0: string): { (): any; new(): any; addChoices: { (arg0: { name: string; value: string; }, arg1: { name: string; value: string; }, arg2: { name: string; value: string; }): any; new(): any; }; }; new(): any; }; }; }) => option
         .setDescription('What kind of counting game?')
         .setName('type')
         .addChoices(
@@ -647,7 +703,7 @@ export const counting: SlashCommandBeta = {
           { name: 'Token', value: 'TOKEN' },
           { name: 'Normal', value: 'NORMAL' },
         )))
-    .addSubcommand(subcommand => subcommand
+    .addSubcommand((subcommand: { setName: (arg0: string) => { (): any; new(): any; setDescription: { (arg0: string): any; new(): any; }; }; }) => subcommand
       .setName('end')
       .setDescription('End the counting game!')),
   async execute(interaction) {

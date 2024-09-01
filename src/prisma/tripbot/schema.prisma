@@ -45,6 +45,18 @@ model counting {
   @@unique([guild_id, channel_id], map: "counting_guildid_channelid_unique")
 }
 
+model counting_breaks {
+  id                String @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  user_id           String
+  game_id           counting_type
+  count             Int
+  last_broken_at    DateTime @default(now()) @db.Timestamptz(6)
+
+  user users @relation(fields: [user_id], references: [discord_id], onDelete: NoAction, onUpdate: NoAction, map: "counting_userid_foreign")
+
+  @@unique([user_id, game_id], map: "counting_userid_gameid_unique")
+}
+
 model drugs {
   id                      String                @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
   summary                 String?
@@ -174,6 +186,7 @@ model users {
   wordle_scores                                             wordle_scores[]
   connections_scores                                        connections_scores[]
   mini_scores                                               mini_scores[]
+  counting_breaks                                           counting_breaks[]
 }
 
 model wordle_scores {
