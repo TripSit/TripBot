@@ -652,7 +652,21 @@ export async function helperButton(
   }
 
   // Do everything else
+
   const role = await interaction.guild?.roles.fetch(guildData.role_helper);
+
+  const user = await db.users.findUnique({
+    where: {
+      discord_id: target.user.id,
+    },
+  });
+  
+  const userHasBeenAHelper = user?.last_was_helper !== null;
+
+  if (!user) {
+    log.error(F, `No user found for discord_id: ${target.user.id}`);
+    return false;
+  }
 
   if (!role) {
     await interaction.reply({
@@ -662,17 +676,30 @@ export async function helperButton(
     return;
   }
 
-  if (target.roles.cache.has(role.id)) {
-    await interaction.reply({
-      content: stripIndents`You already have the helper role!`,
-      ephemeral: true,
-    });
-    return;
-  }
-
   // If the role being requested is the Helper or Contributor role, check if they have been banned first
   if (role.id === guildData.role_helper && userData.helper_role_ban) {
     await interaction.editReply({ content: 'Unable to add this role. If you feel this is an error, please talk to the team!' });
+    return;
+  }
+
+  if (target.roles.cache.has(role.id)) {
+    await target.roles.remove(role);
+    await interaction.reply({
+      content: stripIndents`Your helper role has been removed. If you ever want to re-apply it, just click the button again!`,
+      ephemeral: true,
+    });
+    return;
+  } else if (userHasBeenAHelper && !target.roles.cache.has(role.id)) {
+    await target.roles.add(role);
+    if (interaction.guild.id === env.DISCORD_GUILD_ID) {
+      const channelTripsitters = await interaction.guild?.channels.fetch(env.CHANNEL_TRIPSITTERS) as TextChannel;
+      await channelTripsitters.send(stripIndents`${target.displayName} has re-joined as a ${role.name}.`);
+    }
+    const metaChannel = await interaction.guild?.channels.fetch(guildData.channel_tripsitmeta) as TextChannel;
+    await interaction.reply({
+      content: stripIndents`Welcome back, go check out ${metaChannel}!`,
+      ephemeral: true,
+    });
     return;
   }
 
@@ -746,8 +773,22 @@ export async function helperButton(
       // log.debug(F, `introMessage: ${introMessage}`);
 
       await target.roles.add(role);
+
+      // Update the last date when they were given the helper role
+      await db.users.upsert({
+        where: {
+          discord_id: interaction.user.id,
+        },
+        create: {
+          discord_id: interaction.user.id,
+        },
+        update: {
+          last_was_helper: new Date()
+        },
+      });
+
       const metaChannel = await i.guild?.channels.fetch(guildData.channel_tripsitmeta) as TextChannel;
-      await i.editReply({ content: `Added role ${role.name}, go check out ${metaChannel}!` });
+      await i.editReply({ content: `Added role ${role.name}, go check out ${metaChannel}! If you ever want to remove it, just click the button again.` });
 
       if (metaChannel.id === guildData.channel_tripsitmeta) {
         const introString = `
@@ -801,7 +842,6 @@ export async function helperButton(
           **If you have any questions, please reach out!**
         `);
       }
-
       if (i.guild.id === env.DISCORD_GUILD_ID) {
         const channelTripsitters = await i.guild?.channels.fetch(env.CHANNEL_TRIPSITTERS) as TextChannel;
         const roleTripsitter = await i.guild?.roles.fetch(guildData.role_tripsitter) as Role;
