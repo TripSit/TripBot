@@ -660,12 +660,12 @@ export async function helperButton(
       discord_id: target.user.id,
     },
   });
-  
+
   const userHasBeenAHelper = user?.last_was_helper !== null;
 
   if (!user) {
     log.error(F, `No user found for discord_id: ${target.user.id}`);
-    return false;
+    return;
   }
 
   if (!role) {
@@ -689,7 +689,9 @@ export async function helperButton(
       ephemeral: true,
     });
     return;
-  } else if (userHasBeenAHelper && !target.roles.cache.has(role.id)) {
+  }
+
+  if (userHasBeenAHelper && !target.roles.cache.has(role.id)) {
     await target.roles.add(role);
     if (interaction.guild.id === env.DISCORD_GUILD_ID) {
       const channelTripsitters = await interaction.guild?.channels.fetch(env.CHANNEL_TRIPSITTERS) as TextChannel;
@@ -783,7 +785,7 @@ export async function helperButton(
           discord_id: interaction.user.id,
         },
         update: {
-          last_was_helper: new Date()
+          last_was_helper: new Date(),
         },
       });
 
