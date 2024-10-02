@@ -1119,6 +1119,88 @@ async function checkMoodle() { // eslint-disable-line
   // }
 }
 
+async function pruneInactiveHelpers() {
+  const inactiveThreshold = new Date();
+  // 2 months for production, 1 minute for dev
+  env.NODE_ENV === 'production' 
+    ? inactiveThreshold.setMonth(inactiveThreshold.getMonth() - 2) 
+    : inactiveThreshold.setMinutes(inactiveThreshold.getMinutes() - 1);
+  
+  const inactiveHelpers = await db.users.findMany({
+    where: {
+      last_helper_activity: {
+        lt: inactiveThreshold,
+      },
+    },
+  });
+
+  const guild = discordClient.guilds.cache.get(env.DISCORD_GUILD_ID);
+  if (!guild) {
+    log.error(F, `Guild with ID ${env.DISCORD_GUILD_ID} not found.`);
+    return;
+  }
+
+  const guildData = await db.discord_guilds.upsert({
+    where: {
+      id: guild.id,
+    },
+    create: {
+      id: guild.id,
+    },
+    update: {},
+  });
+
+  if (!guildData.role_helper) {
+    log.error(F, `Unable to fetch helper role from db in pruneInactiveHelpers for guild ID ${env.DISCORD_GUILD_ID}`);
+    return;
+  }
+  
+  const role = guild.roles.cache.get(guildData.role_helper);
+  if (!role) {
+    log.error(F, `Unable to fetch helper role from Discord in pruneInactiveHelpers for guild ID ${env.DISCORD_GUILD_ID}`);
+    return;
+  }
+
+  // Loop through the inactive helpers and check their guild membership
+  for (const user of inactiveHelpers) {
+
+    if(!user.discord_id) {
+      log.info(F, `Failed to fetch discord ID for db entry ${user.id}`)
+      continue;
+    }
+
+    const member = await guild.members.fetch(user.discord_id).catch(() => null);
+    if (member) {
+      await member.roles.remove(role);
+
+      try {
+        await member.send(`Your helper role has been removed due to inactivity. You can reapply for it at any time from the #volunteering channel if you find you have the time to help out again.`);
+      } catch (error) {
+        log.error(F, `Failed to send DM to ${member.user.username}: ${error}`);
+      }
+    } else {
+      const target = await guild.client.users.fetch(user.discord_id);
+      log.info(F, `Helper ${target.username}(${user.discord_id}) is no longer a member of the guild :(`);
+      const channelTripsitters = await guild.channels.fetch(env.CHANNEL_TRIPSITTERS) as TextChannel;
+      await channelTripsitters.send(stripIndents`Helper ${target.username}(${user.discord_id}) is no longer a member of the guild :(`);
+    }
+
+    // Reset activity to prevent looping the same user again
+    await db.users.upsert({
+      where: {
+        discord_id: user.discord_id,
+      },
+      create: {
+        discord_id: user.discord_id,
+      },
+      update: {
+        last_helper_activity: null,
+      },
+    });
+  }
+  log.info(F, `${inactiveHelpers.length} inactive helpers have been pruned and notified.`);
+}
+
 async function checkEvery(
   callback: () => Promise<void>,
   interval: number,
@@ -1158,6 +1240,7 @@ async function runTimer() {
     { callback: checkMoodle, interval: env.NODE_ENV === 'production' ? seconds60 : seconds5 },
     // { callback: checkLpm, interval: env.NODE_ENV === 'production' ? seconds10 : seconds5 },
     { callback: updateDb, interval: env.NODE_ENV === 'production' ? hours24 : hours48 },
+    { callback: pruneInactiveHelpers, interval: env.NODE_ENV === 'production' ? hours48 : seconds60 },
   ];
 
   timers.forEach(timer => {
