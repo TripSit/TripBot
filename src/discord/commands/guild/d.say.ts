@@ -44,8 +44,8 @@ export const dSay: SlashCommand = {
 
     // Ensure only moderators can use /say in announcements
     if (
-      channel.type === ChannelType.GuildAnnouncement && 
-      !member.roles.cache.has(env.ROLE_MODERATOR)
+      channel.type === ChannelType.GuildAnnouncement
+      && !member.roles.cache.has(env.ROLE_MODERATOR)
     ) {
       await interaction.editReply({ content: 'Only moderators can use this command in announcement channels!' });
       return false;
@@ -53,12 +53,12 @@ export const dSay: SlashCommand = {
 
     // Ensure that the channel used is a text channel
     if (
-      channel.type !== ChannelType.GuildText &&
-      channel.type !== ChannelType.GuildVoice &&
-      channel.type !== ChannelType.PublicThread &&
-      channel.type !== ChannelType.PrivateThread &&
-      channel.type !== ChannelType.GuildAnnouncement &&
-      channel.type !== ChannelType.GuildForum
+      channel.type !== ChannelType.GuildText
+      && channel.type !== ChannelType.GuildVoice
+      && channel.type !== ChannelType.PublicThread
+      && channel.type !== ChannelType.PrivateThread
+      && channel.type !== ChannelType.GuildAnnouncement
+      && channel.type !== ChannelType.GuildForum
     ) {
       await interaction.editReply({ content: 'This command can only be used in a server!' });
       return false;
