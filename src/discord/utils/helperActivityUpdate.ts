@@ -30,7 +30,7 @@ export async function helperActivityUpdate(message: Message): Promise<void> {
     update: {},
   });
 
-  if(!guildData.role_helper) return;
+  if (!guildData.role_helper) return;
 
   const role = await message.guild?.roles.fetch(guildData.role_helper);
 
@@ -41,11 +41,10 @@ export async function helperActivityUpdate(message: Message): Promise<void> {
       discord_id: message.author.id,
     },
     create: {
-      discord_id: message.author.id
+      discord_id: message.author.id,
     },
     update: {
-      last_helper_activity: new Date()
+      last_helper_activity: new Date(),
     },
   });
-
 }
