@@ -35,6 +35,7 @@ import { ticket_status, user_tickets } from '@prisma/client';
 import commandContext from './context';
 import { embedTemplate } from './embedTemplate';
 import { checkChannelPermissions, checkGuildPermissions } from './checkPermissions';
+import { commandCooldown } from './commandCooldown';
 
 const F = f(__filename);
 
@@ -837,6 +838,13 @@ export async function tripsitmeUserClose(
   if (!interaction.channel) return;
   log.info(F, await commandContext(interaction));
 
+  const cooldown = await commandCooldown(interaction.user, interaction.customId);
+
+  if (!cooldown.success && cooldown.message) {
+    await interaction.reply({ content: cooldown.message, ephemeral: true });
+    return;
+  }
+
   await interaction.deferReply({ ephemeral: false });
 
   const targetId = interaction.customId.split('~')[1];
@@ -1182,6 +1190,12 @@ export async function tripSitMe(
     return null;
   }
 
+  const cooldown = await commandCooldown(interaction.user, interaction.customId);
+
+  if (!cooldown.success && cooldown.message) {
+    await interaction.editReply(cooldown.message);
+  }
+
   // const actor = interaction.member;
   const guildData = await db.discord_guilds.upsert({
     where: {
@@ -1461,6 +1475,13 @@ export async function tripsitmeButton(
 ) {
   log.info(F, await commandContext(interaction));
   const target = interaction.member as GuildMember;
+
+  const cooldown = await commandCooldown(interaction.user, interaction.customId);
+
+  if (!cooldown.success && cooldown.message) {
+    await interaction.reply({ content: cooldown.message, ephemeral: true });
+    return;
+  }
 
   // log.debug(F, `target: ${JSON.stringify(target, n ull, 2)}`);
 
