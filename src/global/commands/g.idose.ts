@@ -150,7 +150,7 @@ async function iDoseSet(
   if (units.toString() === 'µG') {
     units = 'MICRO_G';
   }
-  
+
   await db.user_drug_doses.create({
     data: {
       user_id: userData.id,
