@@ -103,7 +103,7 @@ const topics = {
   97: 'If you could have the power of teleportation right now, where would you go and why?',
   98: 'If you could write a book that was guaranteed to be a best seller, what would you write?',
   99: 'Would you rather live in the ocean or on the moon?',
-  100: 'Would you rather meet your travel back in time to meet your ancestors or to the future to meet your descendants?',
+  100: 'Would you rather travel back in time to meet your ancestors or to the future to meet your descendants?',
   101: 'Would you rather lose all of your money or all of your pictures?',
   102: 'Would you rather have invisibility or flight?',
   103: 'Would you rather live where it only snows or the temperature never falls below 100 degrees?',
