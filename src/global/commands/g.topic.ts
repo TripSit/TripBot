@@ -114,7 +114,6 @@ const topics = {
   108: 'Would you rather be an Olympic gold medalist or an astronaut?',
 };
 
-
 export default topic;
 
 /**
