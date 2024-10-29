@@ -185,13 +185,13 @@ async function overwriteUserData(
   });
 
   if (!experienceData) {
-    console.log('No experience data found for the user.');
+    log.debug(F, `No experience data found for user ${userData.id} in category ${category} type ${type}.`);
     await interaction.editReply('Error: No experience data found for the user.');
     return;
   }
 
   const levelPoints = await findXPfromLevel(level);
-  console.log(`Updating category ${category} for user ${member.id} to level ${level} with ${levelPoints} points.`);
+  log.debug(F, `Overwriting user data for user ${userData.id} in category ${category} type ${type} to level ${level} with ${levelPoints} XP points.`);
 
   try {
     const result = await db.user_experience.updateMany({
@@ -206,9 +206,9 @@ async function overwriteUserData(
         total_points: levelPoints,
       },
     });
-    console.log(`Update result: ${JSON.stringify(result)}`); // Log the result of the update
+    console.log(`Update result: ${JSON.stringify(result)}`);
   } catch (error) {
-    console.error(`Error updating database: ${(error as Error).message}`); // Log any errors
+    console.error(`Error updating database: ${(error as Error).message}`);
   }
 
   await interaction.editReply(`User level and points updated for category ${category} to level ${level} with ${levelPoints} points.`);
