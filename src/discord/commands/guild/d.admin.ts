@@ -7,9 +7,9 @@ import {
 import axios from 'axios';
 import { stripIndents } from 'common-tags';
 import {
-  experience_category, experience_type, user_experience,
+  experience_category, experience_type,
 } from '@prisma/client';
-import { expForNextLevel, findXPfromLevel } from '../../../global/utils/experience';
+import { findXPfromLevel } from '../../../global/utils/experience';
 import { SlashCommand } from '../../@types/commandDef';
 import commandContext from '../../utils/context';
 import deployCommands from '../../utils/commandDeploy';
