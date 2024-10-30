@@ -33,11 +33,22 @@ const announcementEmojis = [
   '🎇',
 ];
 
-export async function expForNextLevel(
-  level:number,
-):Promise<number> {
+export async function expForNextLevel(level: number): Promise<number> {
   // This is a simple formula, making sure it's standardized across the system
   return 5 * (level ** 2) + (50 * level) + 100;
+}
+
+export async function findXPfromLevel(level: number): Promise<number> {
+  let totalXP = 0;
+
+  const xpPromises = [];
+  for (let currentLevel = 1; currentLevel < level; currentLevel += 1) {
+    xpPromises.push(expForNextLevel(currentLevel));
+  }
+  const xpResults = await Promise.all(xpPromises);
+  totalXP = xpResults.reduce((acc, xp) => acc + xp, 0);
+
+  return totalXP;
 }
 
 export async function getTotalLevel(
