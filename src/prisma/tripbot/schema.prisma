@@ -174,7 +174,6 @@ model users {
   wordle_scores                                             wordle_scores[]
   connections_scores                                        connections_scores[]
   mini_scores                                               mini_scores[]
-  last_helper_activity                                      DateTime?
 }
 
 model wordle_scores {
