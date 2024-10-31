@@ -17,6 +17,7 @@ import {
 } from '../commands/guild/d.moderate';
 import { checkGuildPermissions } from './checkPermissions';
 import { topic } from '../../global/commands/g.topic';
+import { giveMilestone } from '../../global/utils/experience';
 
 const F = f(__filename);
 
@@ -410,6 +411,9 @@ they are banned on ${bannedGuilds.length} other guilds!** <@&${guildData.role_mo
       trustMessage += stripIndents`. User is below the set trust score of ${guildData.trust_score_limit}, \
 I did not remove the <@&${env.ROLE_UNVERIFIED}> role`;
     }
+
+    // Run the milestone check to make sure the user gets a level role
+    await giveMilestone(member);
 
     await auditLog.send(trustMessage);
   }
