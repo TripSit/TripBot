@@ -72,7 +72,7 @@ export async function getTotalLevel(
   return { level, level_points: levelPoints };
 }
 
-async function giveMilestone(
+export async function giveMilestone(
   member:GuildMember,
 ) {
   const userData = await db.users.upsert({

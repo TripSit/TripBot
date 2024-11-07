@@ -168,7 +168,7 @@ const boostEmoji = env.NODE_ENV === 'production'
   ? '<:ts_boost:981799280396353596>'
   : '<:ts_boost:1168968973082185800>';
 const donorEmoji = env.NODE_ENV === 'production'
-  ? '<:ts_donor:1121625178774966272>'
+  ? '<:ts_donor:1182567377012015175>'
   : '<:ts_donor:1168969578836144233>';
 
 const F = f(__filename);

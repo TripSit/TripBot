@@ -268,7 +268,7 @@ export const dLevels: SlashCommand = {
       });
     }
     // Check if user has Developer or Contributor role
-    if (levelData.TEXT.DEVELOPER && levelData.TEXT.DEVELOPER.total_exp > 0) {
+    if (levelData.TEXT.DEVELOPER && levelData.TEXT.DEVELOPER.level > 5) {
       const progressDeveloper = levelData.TEXT.DEVELOPER
         ? levelData.TEXT.DEVELOPER.level_exp / levelData.TEXT.DEVELOPER.nextLevel
         : 0;
