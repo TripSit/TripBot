@@ -3,6 +3,7 @@ import {
 } from '../@types/eventDef';
 
 import trust from '../utils/trust';
+import { giveMilestone } from '../../global/utils/experience';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const F = f(__filename);
@@ -29,6 +30,8 @@ export const guildMemberAdd: GuildMemberAddEvent = {
 
       if (!guildData.cooperative) return;
 
+      // Assign level role upon join. Re-assigns if they had a role previously.
+      await giveMilestone(member);
       await trust(member);
     } catch (err) {
       log.error(F, `Error: ${err}`);
