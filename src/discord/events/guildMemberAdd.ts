@@ -31,7 +31,7 @@ export const guildMemberAdd: GuildMemberAddEvent = {
       if (!guildData.cooperative) return;
 
       // Assign level role upon join. Re-assigns if they had a role previously.
-      await giveMilestone(member);
+      await giveMilestone(member, true);
       await trust(member);
     } catch (err) {
       log.error(F, `Error: ${err}`);
