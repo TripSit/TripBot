@@ -1125,7 +1125,7 @@ export async function aiTranslate(
   let completionTokens = 0;
   if (!env.OPENAI_API_ORG || !env.OPENAI_API_KEY) return { response, promptTokens, completionTokens };
 
-  const model = 'gpt-3.5-turbo-1106';
+  const model = 'gpt-4o-mini';
   const chatCompletionMessages = [{
     role: 'system',
     content: `You will translate whatever the user sends to their desired language. Their desired language or language code is: ${target_language}.`,
