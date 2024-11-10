@@ -123,8 +123,7 @@ const aiFunctions = [
 ];
 
 // Main function for aiChat to handle incoming messages and return a Promise with response data
-export function handleMessage(
-  userId: string,
+export function handleAiMessageQueue(
   aiPersona: ai_personas,
   messages: { role: 'user'; content: string }[],
   messageData: Message<boolean>,
@@ -134,11 +133,11 @@ export function handleMessage(
   promptTokens: number;
   completionTokens: number;
 }> {
-  if (!userQueues.has(userId)) {
-      userQueues.set(userId, { queue: [], isProcessing: false });
+  if (!userQueues.has(messageData.author.id)) {
+      userQueues.set(messageData.author.id, { queue: [], isProcessing: false });
   }
 
-  const userQueue = userQueues.get(userId)!;
+  const userQueue = userQueues.get(messageData.author.id)!;
 
   // Push the new message data into the user's queue
   return new Promise((resolve) => {
@@ -152,7 +151,7 @@ export function handleMessage(
 
       // If the user is not currently processing, start processing
       if (!userQueue.isProcessing) {
-          processNextMessage(userId);
+          processNextMessage(messageData.author.id);
       }
   });
 }

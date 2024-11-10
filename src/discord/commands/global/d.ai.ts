@@ -48,7 +48,7 @@ import {
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import commandContext from '../../utils/context';
-import aiChat, { aiModerate, handleMessage } from '../../../global/commands/g.ai';
+import aiChat, { aiModerate, handleAiMessageQueue } from '../../../global/commands/g.ai';
 
 /* TODO
 * only direct @ message should trigger a response
@@ -2175,7 +2175,7 @@ export async function aiMessage(
   }, 30000); // Failsafe to stop typing indicator after 30 seconds
 
   try {
-    const chatResponse = await handleMessage(messageData.author.id, aiPersona, messageList, messageData, attachmentInfo);
+    const chatResponse = await handleAiMessageQueue(aiPersona, messageList, messageData, attachmentInfo);
     response = chatResponse.response;
     promptTokens = chatResponse.promptTokens;
     completionTokens = chatResponse.completionTokens;
