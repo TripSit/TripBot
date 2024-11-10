@@ -176,8 +176,12 @@ but they were already marked at trusted in the database, so no message was sent`
       *${await topic()}*`,
       });
 
-      await message.react('<:ts_welcomeA:1222543903677485156>');
-      await message.react('<:ts_welcomeB:1222543905216663634>');
+      try {
+        await message.react('<:ts_welcomeA:1222543903677485156>');
+        await message.react('<:ts_welcomeB:1222543905216663634>');
+      } catch (err) {
+        log.debug(F, 'Attempted to add welcome emojis to welcome message, but they appear to be missing.');
+      }
 
       await db.members.upsert({
         where: {
