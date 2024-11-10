@@ -27,18 +27,18 @@ const googleAi = new GoogleGenerativeAI(env.GEMINI_KEY);
 
 type UserQueue = {
   queue: {
-      aiPersona: ai_personas;
-      messages: { role: 'user'; content: string }[];
-      messageData: Message<boolean>;
-      attachmentInfo: {
-          url: string | null;
-          mimeType: string | null;
-      };
-      resolve: (value: {
-          response: string;
-          promptTokens: number;
-          completionTokens: number;
-      }) => void;
+    aiPersona: ai_personas;
+    messages: { role: 'user'; content: string }[];
+    messageData: Message<boolean>;
+    attachmentInfo: {
+      url: string | null;
+      mimeType: string | null;
+    };
+    resolve: (value: {
+      response: string;
+      promptTokens: number;
+      completionTokens: number;
+    }) => void;
   }[];
   isProcessing: boolean;
 };
@@ -121,72 +121,6 @@ const aiFunctions = [
     },
   },
 ];
-
-// Main function for aiChat to handle incoming messages and return a Promise with response data
-export function handleAiMessageQueue(
-  aiPersona: ai_personas,
-  messages: { role: 'user'; content: string }[],
-  messageData: Message<boolean>,
-  attachmentInfo: { url: string | null; mimeType: string | null }
-): Promise<{
-  response: string;
-  promptTokens: number;
-  completionTokens: number;
-}> {
-  if (!userQueues.has(messageData.author.id)) {
-      userQueues.set(messageData.author.id, { queue: [], isProcessing: false });
-  }
-
-  const userQueue = userQueues.get(messageData.author.id)!;
-
-  // Push the new message data into the user's queue
-  return new Promise((resolve) => {
-      userQueue.queue.push({
-          aiPersona,
-          messages,
-          messageData,
-          attachmentInfo,
-          resolve
-      });
-
-      // If the user is not currently processing, start processing
-      if (!userQueue.isProcessing) {
-          processNextMessage(messageData.author.id);
-      }
-  });
-}
-
-// Function to process the next message in the user's queue
-async function processNextMessage(userId: string) {
-  const userQueue = userQueues.get(userId);
-  if (!userQueue || userQueue.queue.length === 0) {
-      userQueue!.isProcessing = false;
-      return;
-  }
-
-  userQueue.isProcessing = true; // Mark as processing
-
-  // Get the next message in the queue
-  const { aiPersona, messages, messageData, attachmentInfo, resolve } = userQueue.queue.shift()!;
-
-  try {
-      // Call the aiChat function and destructure the needed response data
-      const { response, promptTokens, completionTokens } = await aiChat(
-          aiPersona,
-          messages,
-          messageData,
-          attachmentInfo
-      );
-
-      resolve({ response, promptTokens, completionTokens });
-  } catch (error) {
-      log.error(F, `Error processing message for user: ${userId} - error: ${error}`);
-      resolve({ response: "Error", promptTokens: 0, completionTokens: 0 });
-  } finally {
-      // Process the next message after this one is done
-      processNextMessage(userId);
-  }
-}
 
 export async function aiModerateReport(
   message: string,
@@ -972,6 +906,90 @@ export default async function aiChat(
   }
   // return openAiChat(aiPersona, messages, user);
   return openAiConversation(aiPersona, messages, messageData);
+}
+
+// Function to process the next message in the user's queue
+async function processNextMessage(userId: string) {
+  const userQueue = userQueues.get(userId);
+
+  // If userQueue is null or undefined, exit the function immediately
+  if (!userQueue) return;
+
+  // If the queue is empty, reset isProcessing to false and exit
+  if (userQueue.queue.length === 0) {
+    userQueue.isProcessing = false;
+    return;
+  }
+
+  userQueue.isProcessing = true; // Mark as processing
+
+  // Ensure the queue has an item before destructuring
+  const nextMessage = userQueue.queue.shift();
+  if (!nextMessage) {
+    // Handle case where there’s no next message in the queue, if needed
+    return;
+  }
+
+  const {
+    aiPersona, messages, messageData, attachmentInfo, resolve,
+  } = nextMessage;
+
+  try {
+    // Call the aiChat function and destructure the needed response data
+    const { response, promptTokens, completionTokens } = await aiChat(
+      aiPersona,
+      messages,
+      messageData,
+      attachmentInfo,
+    );
+
+    resolve({ response, promptTokens, completionTokens });
+  } catch (error) {
+    log.error(F, `Error processing message for user: ${userId} - error: ${error}`);
+    resolve({ response: 'Error', promptTokens: 0, completionTokens: 0 });
+  } finally {
+    // Process the next message after this one is done
+    processNextMessage(userId);
+  }
+}
+
+// Main function for aiChat to handle incoming messages and return a Promise with response data
+export function handleAiMessageQueue(
+  aiPersona: ai_personas,
+  messages: { role: 'user'; content: string }[],
+  messageData: Message<boolean>,
+  attachmentInfo: { url: string | null; mimeType: string | null },
+): Promise<{
+    response: string;
+    promptTokens: number;
+    completionTokens: number;
+  }> {
+  if (!userQueues.has(messageData.author.id)) {
+    userQueues.set(messageData.author.id, { queue: [], isProcessing: false });
+  }
+
+  const userQueue = userQueues.get(messageData.author.id);
+
+  if (!userQueue) {
+    // Return a rejected promise if userQueue is undefined
+    return Promise.reject(new Error(`User queue could not be initialized for user ${messageData.author.id}`));
+  }
+
+  // Push the new message data into the user's queue
+  return new Promise(resolve => {
+    userQueue.queue.push({
+      aiPersona,
+      messages,
+      messageData,
+      attachmentInfo,
+      resolve,
+    });
+
+    // If the user is not currently processing, start processing
+    if (!userQueue.isProcessing) {
+      processNextMessage(messageData.author.id);
+    }
+  });
 }
 
 export async function aiFlairMod(

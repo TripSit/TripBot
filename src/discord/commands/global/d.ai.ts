@@ -48,7 +48,7 @@ import {
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import commandContext from '../../utils/context';
-import aiChat, { aiModerate, handleAiMessageQueue } from '../../../global/commands/g.ai';
+import { aiModerate, handleAiMessageQueue } from '../../../global/commands/g.ai';
 
 /* TODO
 * only direct @ message should trigger a response
