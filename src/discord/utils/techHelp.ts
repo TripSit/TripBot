@@ -125,11 +125,11 @@ export async function techHelpClick(interaction:ButtonInteraction) {
       const techHelpButtons = new ActionRowBuilder<ButtonBuilder>()
         .addComponents(
           new ButtonBuilder()
-            .setCustomId(`techHelpOwn~${issueType}~${actor.id}`)
+            .setCustomId(`techHelpOwn~${issueType}~${actor?.id}`)
             .setLabel('Own this issue!')
             .setStyle(ButtonStyle.Primary),
           new ButtonBuilder()
-            .setCustomId(`techHelpClose~${issueType}~${actor.id}`)
+            .setCustomId(`techHelpClose~${issueType}~${actor?.id}`)
             .setLabel('Close this issue!')
             .setStyle(ButtonStyle.Success),
         );
