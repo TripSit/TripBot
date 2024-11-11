@@ -83,11 +83,11 @@ async function setAvatar(interaction: ChatInputCommandInteraction, avatarUrl: st
       'Content-Type': 'application/json',
     },
   }).then(() => {
-    console.log('Avatar set successfully');
+    log.info(F, 'Avatar set successfully');
     interaction.editReply('Avatar set successfully');
     return true;
   }).catch((error: Error) => {
-    console.error(`Error setting avatar: ${error.message}`);
+    log.error(F, `Error setting avatar: ${error.message}`);
     interaction.editReply('Error setting avatar');
     return false;
   });
@@ -107,11 +107,11 @@ async function setBanner(interaction: ChatInputCommandInteraction, bannerUrl: st
       'Content-Type': 'application/json',
     },
   }).then(() => {
-    console.log('Banner set successfully');
+    log.info(F, 'Banner set successfully');
     interaction.editReply('Banner set successfully');
     return true;
   }).catch((error: Error) => {
-    console.error(`Error setting banner: ${error.message}`);
+    log.error(F, `Error setting banner: ${error.message}`);
     interaction.editReply('Error setting banner');
     return false;
   });
@@ -206,9 +206,9 @@ async function overwriteUserData(
         total_points: levelPoints,
       },
     });
-    console.log(`Update result: ${JSON.stringify(result)}`);
+    log.info(F, `Update result: ${JSON.stringify(result)}`);
   } catch (error) {
-    console.error(`Error updating database: ${(error as Error).message}`);
+    log.error(F, `Error updating database: ${(error as Error).message}`);
   }
 
   await interaction.editReply(`User level and points updated for category ${category} to level ${level} with ${levelPoints} points.`);
