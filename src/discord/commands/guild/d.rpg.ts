@@ -104,17 +104,17 @@ const items = {
     },
     PremiumMember: {
       // eslint-disable-next-line sonarjs/no-duplicate-string
-      label: 'Premium Membership',
+      label: 'Premium Member Role',
       value: 'PremiumMembership',
-      description: 'Bumps you up the member list and gives discounts in the market',
+      description: 'Grants the Premium Member role',
       quantity: 1,
       weight: 0,
-      cost: 69420,
+      cost: 25000,
       equipped: false,
       consumable: true,
       effect: 'role',
       effect_value: 'PremiumMembership',
-      emoji: 'itemFlair',
+      emoji: 'itemPremium',
     },
   },
   fonts: {
