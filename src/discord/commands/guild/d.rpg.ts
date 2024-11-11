@@ -102,6 +102,20 @@ const items = {
     //   effect_value: '0.1',
     //   emoji: 'itemBonus',
     },
+    PremiumMember: {
+      // eslint-disable-next-line sonarjs/no-duplicate-string
+      label: 'Premium Member Role',
+      value: 'PremiumMembership',
+      description: 'Grants the Premium Member role',
+      quantity: 1,
+      weight: 0,
+      cost: 25000,
+      equipped: false,
+      consumable: true,
+      effect: 'role',
+      effect_value: 'PremiumMembership',
+      emoji: 'itemPremium',
+    },
   },
   fonts: {
     AbrilFatFace: {
@@ -1642,7 +1656,8 @@ export async function rpgMarketInventory(
 
   for (const [category, categoryItems] of Object.entries(items)) {
     for (const item of Object.values(categoryItems)) {
-      if (!inventoryData.find(i => i.value === item.value)) {
+      if (!inventoryData.find(i => i.value === item.value)
+          && !(item.value === 'PremiumMembership' && member?.roles.cache.has(env.ROLE_PREMIUM))) {
         marketInventory.push({
           label: `${item.label} - ${(item.cost - (discount * item.cost))} TT$`,
           value: item.value,
@@ -2080,7 +2095,8 @@ export async function rpgMarketAccept(
       persona_id: personaData.id,
     },
   });
-  if (inventoryData.length >= 20) {
+
+  if (inventoryData.length >= 20 && (itemData.value !== 'PremiumMembership')) {
     const { embeds, components } = await rpgMarketChange(interaction);
 
     // This grossness takes the APIEmbed object, turns it into a JSON object, and pulls the description
@@ -2151,27 +2167,29 @@ export async function rpgMarketAccept(
     update: personaData,
   });
 
-  // Add the item to the user's inventory
-  const newItem = {
-    persona_id: personaData.id,
-    label: itemData.label,
-    value: itemData.value,
-    description: itemData.description,
-    quantity: itemData.quantity,
-    weight: itemData.weight,
-    cost: itemData.cost,
-    equipped: itemData.equipped,
-    consumable: itemData.consumable,
-    effect: itemData.effect,
-    effect_value: itemData.effect_value,
-    emoji: itemData.emoji,
-  } as rpg_inventory;
-  // log.debug(F, `personaInventory: ${JSON.stringify(newItem, null, 2)}`);
+  if (itemData.value !== 'PremiumMembership') {
+    // Add the item to the user's inventory
+    const newItem = {
+      persona_id: personaData.id,
+      label: itemData.label,
+      value: itemData.value,
+      description: itemData.description,
+      quantity: itemData.quantity,
+      weight: itemData.weight,
+      cost: itemData.cost,
+      equipped: itemData.equipped,
+      consumable: itemData.consumable,
+      effect: itemData.effect,
+      effect_value: itemData.effect_value,
+      emoji: itemData.emoji,
+    } as rpg_inventory;
+    // log.debug(F, `personaInventory: ${JSON.stringify(newItem, null, 2)}`);
 
-  // await inventorySet(newItem);
-  await db.rpg_inventory.create({
-    data: newItem,
-  });
+    // await inventorySet(newItem);
+    await db.rpg_inventory.create({
+      data: newItem,
+    });
+  }
 
   // if the item is a background or font, automatically equip it and unequip the other items of the same type
   if (itemData.effect === 'background' || itemData.effect === 'font') {
@@ -2233,6 +2251,22 @@ export async function rpgMarketAccept(
       update: equipItem,
     });
     embedInfoText = 'Your flair has been equipped! Use `/rpg flair` to change your flair, or head Home to unequip it.';
+  }
+
+  if (itemData.value === 'PremiumMembership') {
+    try {
+      (interaction.member as GuildMember)?.roles.add(env.ROLE_PREMIUM);
+    } catch (err) {
+      personaData.tokens += itemCost;
+
+      await db.personas.upsert({
+        where: {
+          id: personaData.id,
+        },
+        create: personaData,
+        update: personaData,
+      });
+    }
   }
 
   const { embeds, components } = await rpgMarketChange(interaction);
