@@ -1165,7 +1165,7 @@ export async function tripSitMe(
   interaction:ModalSubmitInteraction,
   memberInput:GuildMember | null,
   triage:string,
-  intro:string,
+  intro: string = '',
 ):Promise<ThreadChannel | null> {
   log.info(F, await commandContext(interaction));
   // await interaction.deferReply({ ephemeral: true });
@@ -1306,24 +1306,18 @@ export async function tripSitMe(
 
       You've taken: ${triage ? `\n${triage}` : noInfo}
 
-      Your issue: ${intro ? `\n${intro}` : noInfo}
-
       Someone from the ${roleTripsitter} ${guildData.role_helper && !targetIsTeamMember ? `and/or ${roleHelper}` : ''} team will be with you as soon as they're available!
 
       If this is a medical emergency please contact your local emergency services: we do not call EMS on behalf of anyone.
       
       When you're feeling better you can use the "I'm Good" button to let the team know you're okay.
-
-      **Not in an emergency, but still want to talk to a mental health advisor? Warm lines provide non-crisis mental health support and guidance from trained volunteers. https://warmline.org/warmdir.html#directory**
-
-      **The wonderful people at the Fireside project can also help you through a rough trip. You can check them out: https://firesideproject.org/**
       `;
 
   const row = new ActionRowBuilder<ButtonBuilder>()
     .addComponents(
       new ButtonBuilder()
         .setCustomId(`tripsitmeUserClose~${target.id}`)
-        .setLabel('I\'m good now!')
+        .setLabel('I no longer need help')
         .setStyle(ButtonStyle.Success),
     );
   await threadHelpUser.send({
@@ -1350,13 +1344,15 @@ export async function tripSitMe(
 
   // log.debug(F, `Sent intro message to ${threadHelpUser.name} ${threadHelpUser.id}`);
 
+  const issue = intro ? `**Their issue: ** \n${intro}` : '';
+
   // Send an embed to the tripsitter room
   const embedTripsitter = embedTemplate()
     .setColor(Colors.DarkBlue)
     .setDescription(stripIndents`
-      ${target} has requested assistance!
-      **They've taken:** ${triage ? `${triage}` : noInfo}
-      **Their issue: ** ${intro ? `${intro}` : noInfo}
+      A tripsitter has put ${target} into tripsitmode!
+      **They've taken:** ${triage ? `\n${triage}` : noInfo}
+      ${issue}
 
       **Read the log before interacting**
       Use this channel coordinate efforts.
@@ -1421,14 +1417,14 @@ export async function tripSitMe(
     update: {},
   });
 
+  const description = triage ? `\n${triage}` : noInfo;
+
   // Set ticket information
-  const introStr = intro ? `\n${intro}` : noInfo;
   const newTicketData = {
     user_id: userData.id,
     description: `
-    They've taken: ${triage ? `\n${triage}` : noInfo}
-
-    Their issue: ${introStr}`,
+    They've taken: ${description}
+    ${issue}`,
     thread_id: threadHelpUser.id,
     type: 'TRIPSIT',
     status: 'OPEN',
@@ -1759,12 +1755,6 @@ export async function tripsitmeButton(
           .setLabel('What substance? How much taken? How long ago?')
           .setMaxLength(120)
           .setStyle(TextInputStyle.Short)),
-      new ActionRowBuilder<TextInputBuilder>()
-        .addComponents(new TextInputBuilder()
-          .setCustomId('introInput')
-          .setLabel('What\'s going on? Give us the details!')
-          .setMaxLength(1100)
-          .setStyle(TextInputStyle.Paragraph)),
     ));
 
   const filter = (i:ModalSubmitInteraction) => i.customId.startsWith('tripsitmeSubmit');
@@ -1773,9 +1763,8 @@ export async function tripsitmeButton(
       if (i.customId.split('~')[1] !== interaction.id) return;
       await i.deferReply({ ephemeral: true });
       const triage = i.fields.getTextInputValue('triageInput');
-      const intro = i.fields.getTextInputValue('introInput');
 
-      const threadHelpUser = await tripSitMe(i, target, triage, intro) as ThreadChannel;
+      const threadHelpUser = await tripSitMe(i, target, triage) as ThreadChannel;
 
       if (!threadHelpUser) {
         const embed = embedTemplate()

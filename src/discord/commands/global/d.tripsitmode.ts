@@ -342,7 +342,7 @@ async function tripsitmodeOn(
   
       Click here to be taken to their private room: ${threadHelpUser}
   
-      You can also click in your channel list to see your private room!`;
+      You can also click in your channel list to see their private room!`;
       const embed = embedTemplate()
         .setColor(Colors.DarkBlue)
         .setDescription(replyMessage);
