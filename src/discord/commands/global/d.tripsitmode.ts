@@ -323,7 +323,7 @@ async function tripsitmodeOn(
       new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
         .setCustomId('introInput')
         .setLabel('What\'s going on with them?')
-        .setPlaceholder('This will be posted in the channel for them to see!')
+        .setPlaceholder('This will only be visible to helpers and TripSitters.')
         .setStyle(TextInputStyle.Paragraph)),
     ));
 

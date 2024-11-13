@@ -845,7 +845,7 @@ export async function tripsitmeUserClose(
   const target = await interaction.guild.members.fetch(targetId);
   const actor = interaction.member as GuildMember;
   await actor.fetch();
-  log.debug(F, `${actor.displayName} (${actor.id}) clicked "I'm good" in ${target.displayName}'s (${target.id}) session `);
+  log.debug(F, `${actor.displayName} (${actor.id}) clicked "I no longer need help" in ${target.displayName}'s (${target.id}) session `);
 
   if (targetId !== actor.id && !override) {
     log.debug(F, 'They did not create the thread, so I am not doing anything!');
@@ -1310,7 +1310,7 @@ export async function tripSitMe(
 
       If this is a medical emergency please contact your local emergency services: we do not call EMS on behalf of anyone.
       
-      When you're feeling better you can use the "I'm Good" button to let the team know you're okay.
+      When you're feeling better you can use the "I no longer need help" button to let the team know you're okay.
       `;
 
   const row = new ActionRowBuilder<ButtonBuilder>()
@@ -1350,10 +1350,10 @@ export async function tripSitMe(
   const embedTripsitter = embedTemplate()
     .setColor(Colors.DarkBlue)
     .setDescription(stripIndents`
-      A tripsitter has put ${target} into tripsitmode!
+      ${issue ? `A tripsitter has put ${target} into tripsitmode!\n` : `${target} has requested assistance!\n`} 
       **They've taken:** ${triage ? `\n${triage}` : noInfo}
-      ${issue}
 
+      ${intro !== '' ? `${issue}\n` : ''}
       **Read the log before interacting**
       Use this channel coordinate efforts.
 
