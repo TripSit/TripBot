@@ -313,6 +313,11 @@ export async function tripsitmeOwned(
 
   const target = await interaction.guild.members.fetch(userId);
 
+  if (target.id === actor.id) {
+    await interaction.editReply({ content: "You can't own your own ticket!" });
+    return;
+  }
+
   const userData = await db.users.upsert({
     where: {
       discord_id: userId,
