@@ -12,6 +12,7 @@ import {
   tripsitmeBackup,
   tripsitmeTeamClose,
   tripsitmeUserClose,
+  tripsitmeUserDelete,
 } from '../utils/tripsitme';
 import { techHelpClick, techHelpClose, techHelpOwn } from '../utils/techHelp';
 // import {
@@ -180,6 +181,11 @@ export async function buttonClick(interaction:ButtonInteraction, discordClient:C
 
   if (buttonID.startsWith('tripsitmeUserClose')) {
     tripsitmeUserClose(interaction);
+    return;
+  }
+
+  if (buttonID.startsWith('tripsitmeUserDelete')) {
+    tripsitmeUserDelete(interaction);
     return;
   }
 

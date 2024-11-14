@@ -117,7 +117,7 @@ const memberOnly = 'This must be performed by a member of a guild!';
 # Initialize
 * As a user, create a new ticket
   Click the I need help button
-  FIll in information
+  Fill in information
   Click submit
   - On BL your roles are not removed
   - On other guilds your roles are removed
@@ -754,8 +754,11 @@ export async function tripsitmeTeamClose(
   }
 
   const closeMessage = stripIndents`Hey ${target}, it looks like you're doing somewhat better!
+
     This thread will remain here for a day if you want to follow up tomorrow.
-    After 7 days, or on request, it will be deleted to preserve your privacy =)
+    After 7 days, it will be deleted to preserve your privacy =)
+    Alternatively, you may press the "Delete my ticket" button to delete it yourself.
+
     If you'd like to go back to social mode, just click the button below!
     `;
 
@@ -763,7 +766,7 @@ export async function tripsitmeTeamClose(
     .addComponents(
       new ButtonBuilder()
         .setCustomId(`tripsitmeUserClose~${targetId}`)
-        .setLabel('I\'m good now!')
+        .setLabel('I no longer need help.')
         .setStyle(ButtonStyle.Success),
     );
 
@@ -1076,10 +1079,13 @@ export async function tripsitmeUserClose(
 
   // Send the end message to the user
   try {
-    await interaction.editReply(stripIndents`Hey ${target}, we're glad you're doing better!
-    We've restored your old roles back to normal <3
-    This thread will remain here for a day if you want to follow up tomorrow.
-    After 7 days, or on request, it will be deleted to preserve your privacy =)`);
+    await interaction.editReply(stripIndents`Hey ${target}, it looks like you're doing somewhat better!
+
+      This thread will remain here for a day if you want to follow up tomorrow.
+      After 7 days, it will be deleted to preserve your privacy =)
+      Alternatively, you may press the "Delete my ticket" button to delete it yourself.
+      
+      If you'd like to go back to social mode, just click the button below!`);
   } catch (err) {
     log.error(F, `Error sending end help message to ${threadHelpUser}`);
     log.error(F, err as string);
@@ -1152,6 +1158,138 @@ export async function tripsitmeUserClose(
     },
   });
   log.debug(F, 'Updated ticket status to CLOSED');
+}
+
+/**
+ * Handles deleting the thread and marking it as deleted
+ * @param {ButtonInteraction} interaction
+ */
+export async function tripsitmeUserDelete(
+  interaction:ButtonInteraction,
+) {
+  if (!interaction.guild) return;
+  if (!interaction.member) return;
+  if (!interaction.channel) return;
+  log.info(F, await commandContext(interaction));
+
+  await interaction.deferReply({ ephemeral: false });
+
+  const targetId = interaction.customId.split('~')[1];
+  const override = interaction.customId.split('~')[0] === 'tripsitmodeOffOverride';
+
+  const target = await interaction.guild.members.fetch(targetId);
+  const actor = interaction.member as GuildMember;
+  await actor.fetch();
+  log.debug(F, `${actor.displayName} (${actor.id}) clicked "Delete my ticket" in ${target.displayName}'s (${target.id}) session `);
+
+  if (targetId !== actor.id && !override) {
+    log.debug(F, 'They did not create the thread, so I am not doing anything!');
+    await interaction.editReply({ content: 'Only the user receiving help can click this button!' });
+    return;
+  }
+
+  const userData = await db.users.upsert({
+    where: {
+      discord_id: target.id,
+    },
+    create: {
+      discord_id: target.id,
+    },
+    update: {},
+  });
+
+  const ticketData = await db.user_tickets.findFirst({
+    where: {
+      user_id: userData.id,
+      status: {
+        not: {
+          in: ['OPEN', 'DELETED'],
+        },
+      },
+    },
+  });
+
+  const guildData = await db.discord_guilds.upsert({
+    where: {
+      id: interaction.guild?.id,
+    },
+    create: {
+      id: interaction.guild?.id,
+    },
+    update: {},
+  });
+
+  if (!ticketData) {
+    log.debug(F, `${actor.displayName} does not have any tickets that are not closed or deleted`);
+    const rejectMessage = stripIndents`
+      Hey ${actor.displayName}, your ticket is still open!
+
+      If you would like to delete your ticket, please click the 'I no longer need help' button first, then click this button again.
+
+      If you still need help, please be patient and someone will be with you soon!
+    `;
+    const embed = embedTemplate().setColor(Colors.DarkBlue);
+    embed.setDescription(rejectMessage);
+    // log.debug(F, `target ${target} does not need help!`);
+    await interaction.editReply({ embeds: [embed] });
+    return;
+  }
+
+  log.debug(F, `Found ticket in ${ticketData.status} status`);
+
+  log.debug(F, `Deleting ticket ${ticketData.id}...`);
+
+  // Delete the thread on discord
+  if (ticketData.thread_id) {
+    try {
+      const thread = await global.discordClient.channels.fetch(ticketData.thread_id) as ThreadChannel;
+      await thread.delete();
+      log.debug(F, `Thread ${ticketData.thread_id} was deleted`);
+    } catch (err) {
+      // Thread was likely manually deleted
+      log.debug(F, `Thread ${ticketData.thread_id} was likely manually deleted`);
+    }
+  }
+
+  // Let the meta channel know the user has been helped
+  const metaChannelId = ticketData.meta_thread_id ?? guildData.channel_tripsitmeta;
+  if (metaChannelId) {
+    try {
+      const metaChannel = await interaction.guild.channels.fetch(metaChannelId) as TextChannel;
+      await metaChannel.send({
+        content: stripIndents`${actor.displayName} has deleted their ticket!`,
+      });
+      if (metaChannelId !== guildData.channel_tripsitmeta) {
+        metaChannel.setName(`💚│${target.displayName}'s discussion!`);
+      }
+    } catch (err) {
+      // Meta thread likely doesn't exist
+      if (metaChannelId === ticketData.meta_thread_id) {
+        ticketData.meta_thread_id = null;
+        // await ticketUpdate(ticketData);
+        await db.user_tickets.update({
+          where: {
+            id: ticketData.id,
+          },
+          data: {
+            meta_thread_id: null,
+          },
+        });
+      }
+    }
+  }
+
+  // Update the ticket status to deleted
+  await db.user_tickets.update({
+    where: {
+      id: ticketData.id,
+    },
+    data: {
+      status: 'DELETED' as ticket_status,
+      deleted_at: DateTime.local().toJSDate(),
+    },
+  });
+  log.debug(F, 'Updated ticket status to DELETED');
 }
 
 /**
@@ -1319,7 +1457,12 @@ export async function tripSitMe(
         .setCustomId(`tripsitmeUserClose~${target.id}`)
         .setLabel('I no longer need help')
         .setStyle(ButtonStyle.Success),
+      new ButtonBuilder()
+        .setCustomId(`tripsitmeUserDelete~${target.id}`)
+        .setLabel('Delete my ticket')
+        .setStyle(ButtonStyle.Success),
     );
+
   await threadHelpUser.send({
     content: firstMessage,
     components: [row],
