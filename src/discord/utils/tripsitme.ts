@@ -877,6 +877,21 @@ export async function tripsitmeUserClose(
     },
   });
 
+  if (ticketData?.tripsit_mode && targetId === actor.id) {
+    log.debug(F, 'They requested to close their ticket, but are in TripSit Mode. Request denied.');
+    // await interaction.editReply({ content: 'Only a TripSitter or Moderator can close your ticket.' });
+    const rejectMessage = stripIndents`
+    Hey ${actor.displayName}, since a team member made this ticket for you, only a team member can close it.
+
+    Let us know if you're okay now and no longer need assistance and we'll get it closed for you!
+  `;
+    const embed = embedTemplate().setColor(Colors.DarkBlue);
+    embed.setDescription(rejectMessage);
+    // log.debug(F, `target ${target} does not need help!`);
+    await interaction.editReply({ embeds: [embed] });
+    return;
+  }
+
   const guildData = await db.discord_guilds.upsert({
     where: {
       id: interaction.guild?.id,

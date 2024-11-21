@@ -286,6 +286,7 @@ async function tripsitmodeOn(
         },
         data: {
           status: 'OPEN' as ticket_status,
+          tripsit_mode: true,
           reopened_at: new Date(),
           archived_at: env.NODE_ENV === 'production'
             ? DateTime.local().plus({ days: 7 }).toJSDate()
@@ -347,6 +348,44 @@ async function tripsitmodeOn(
         .setColor(Colors.DarkBlue)
         .setDescription(replyMessage);
       await i.editReply({ embeds: [embed] });
+
+      if (!ticketData) {
+        ticketData = await db.user_tickets.create({
+          data: {
+            user_id: target.id,
+            type: 'TRIPSIT',
+            status: 'OPEN' as ticket_status,
+            tripsit_mode: true,
+            description: '',
+            first_message_id: '',
+            thread_id: threadHelpUser.id,
+            archived_at: env.NODE_ENV === 'production'
+              ? DateTime.local().plus({ days: 3 }).toJSDate()
+              : DateTime.local().plus({ minutes: 1 }).toJSDate(),
+            deleted_at: env.NODE_ENV === 'production'
+              ? DateTime.local().plus({ days: 6 }).toJSDate()
+              : DateTime.local().plus({ minutes: 2 }).toJSDate(),
+          },
+        });
+      } else {
+        // Create or update thread to toggle tripsit_mode on
+        ticketData = await db.user_tickets.update({
+          where: {
+            id: ticketData.id, // Assuming 'id' is unique; use a dummy value if `ticketData` is null
+          },
+          data: {
+            status: 'OPEN' as ticket_status,
+            tripsit_mode: true,
+            reopened_at: new Date(),
+            archived_at: env.NODE_ENV === 'production'
+              ? DateTime.local().plus({ days: 3 }).toJSDate()
+              : DateTime.local().plus({ minutes: 1 }).toJSDate(),
+            deleted_at: env.NODE_ENV === 'production'
+              ? DateTime.local().plus({ days: 6 }).toJSDate()
+              : DateTime.local().plus({ minutes: 2 }).toJSDate(),
+          },
+        });
+      }
     });
 
   return true;
