@@ -1220,9 +1220,18 @@ async function messageUser(
     const messageFilter = (mi: MessageComponentInteraction) => mi.user.id === target.id;
     const collector = message.createMessageComponentCollector({ filter: messageFilter, time: 0 });
 
+    // Fetch the mod thread channel once
+    let targetChan: TextChannel | null = null;
+    try {
+      targetChan = targetData.mod_thread_id
+        ? await discordClient.channels.fetch(targetData.mod_thread_id as Snowflake) as TextChannel
+        : null;
+    } catch (error) {
+      log.info(F, 'Failed to fetch mod thread. It was likely deleted.');
+    }
+
     collector.on('collect', async (mi: MessageComponentInteraction) => {
       if (mi.customId.startsWith('acknowledgeButton')) {
-        const targetChan = await discordClient.channels.fetch(targetData.mod_thread_id as Snowflake) as TextChannel;
         if (targetChan) {
           await targetChan.send({
             embeds: [embedTemplate()
@@ -1234,16 +1243,16 @@ async function messageUser(
         await mi.update({ components: [] });
         mi.user.send('Thanks for understanding! We appreciate your cooperation and will consider this in the future!');
       } else if (mi.customId.startsWith('refusalButton')) {
-        const targetChan = await discordClient.channels.fetch(targetData.mod_thread_id as Snowflake) as TextChannel;
-        await targetChan.send({
-          embeds: [embedTemplate()
-            .setColor(Colors.Red)
-            .setDescription(`${target.username} has refused their timeout and was kicked.`)],
-        });
+        if (targetChan) {
+          await targetChan.send({
+            embeds: [embedTemplate()
+              .setColor(Colors.Red)
+              .setDescription(`${target.username} has refused their timeout and was kicked.`)],
+          });
+        }
         // remove the components from the message
         await mi.update({ components: [] });
-        mi.user.send(stripIndents`Thanks for admitting this, you\'ve been removed from the guild.
-        You can rejoin if you ever decide to cooperate.`);
+        mi.user.send(stripIndents`Thanks for admitting this, you\'ve been removed from the guild. You can rejoin if you ever decide to cooperate.`);
         await guild.members.kick(target, 'Refused to acknowledge timeout');
       }
     });
@@ -1264,7 +1273,12 @@ export async function acknowledgeButton(
     update: {
     },
   });
-  const targetChan = await discordClient.channels.fetch(targetData.mod_thread_id as Snowflake) as TextChannel;
+  let targetChan: TextChannel | null = null;
+  try {
+    targetChan = targetData.mod_thread_id ? await discordClient.channels.fetch(targetData.mod_thread_id as Snowflake) as TextChannel : null;
+  } catch (error) {
+    log.info(F, 'Failed to fetch mod thread. It was likely deleted.');
+  }
   if (targetChan) {
     await targetChan.send({
       embeds: [embedTemplate()
@@ -1273,8 +1287,11 @@ export async function acknowledgeButton(
     });
   }
   // remove the components from the message
-  await interaction.update({ components: [] });
-  interaction.user.send('Thanks for understanding! We appreciate your cooperation and will consider this in the future!');
+  try {
+    await interaction.update({ components: [] });
+  } catch (err) {
+    log.debug(F, 'Failed to remove warning components for moderation acknowledgement');
+  }
 }
 
 export async function refusalButton(
@@ -1290,19 +1307,23 @@ export async function refusalButton(
     update: {
     },
   });
-  const targetChan = await discordClient.channels.fetch(targetData.mod_thread_id as Snowflake) as TextChannel;
+
+  let targetChan: TextChannel | null = null;
+  try {
+    targetChan = targetData.mod_thread_id ? await discordClient.channels.fetch(targetData.mod_thread_id as Snowflake) as TextChannel : null;
+  } catch (error) {
+    log.info(F, 'Failed to fetch mod thread. It was likely deleted.');
+  }
   if (targetChan) {
     await targetChan.send({
       embeds: [embedTemplate()
-        .setColor(Colors.Green)
+        .setColor(Colors.Red)
         .setDescription(`${interaction.user.username} has refused their warning and was kicked.`)],
     });
+    await targetChan.guild.members.kick(interaction.user, 'Refused to acknowledge warning');
   }
   // remove the components from the message
   await interaction.update({ components: [] });
-  await interaction.user.send('Thanks for admitting this, you\'ve been removed from the guild. You can rejoin if you ever decide to cooperate.');
-
-  await targetChan.guild.members.kick(interaction.user, 'Refused to acknowledge warning');
 }
 
 export async function moderate(
