@@ -80,7 +80,7 @@ export async function techHelpClick(interaction:ButtonInteraction) {
       .setCustomId(`${issueType}IssueInput`)
       .setRequired(true)
       .setMinLength(10)
-      .setMaxLength(2000))));
+      .setMaxLength(1800))));
 
   const filter = (i:ModalSubmitInteraction) => i.customId.includes('techHelpSubmit');
   interaction.awaitModalSubmit({ filter, time: 0 })
