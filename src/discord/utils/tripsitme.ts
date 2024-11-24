@@ -1672,6 +1672,7 @@ export async function tripsitmeButton(
       const now = new Date();
       const diff = now.getTime() - createdDate.getTime();
       const minutes = Math.floor(diff / 1000 / 60);
+      // const seconds = Math.floor(diff / 1000); // Uncomment this for dev server
 
       // Send the update message to the thread
       let helpMessage = stripIndents`Hey ${target}, thanks for asking for help, we can continue talking here! What's up?`;
@@ -1692,9 +1693,15 @@ export async function tripsitmeButton(
 
       if (ticketData.meta_thread_id) {
         let metaMessage = '';
-        if (minutes > 5) {
+        if (minutes > 5) { // Switch to seconds > 10 for dev server
           const helperString = `and/or ${roleHelper}`;
-          metaMessage = `Hey ${roleTripsitter} ${guildData.role_helper ?? helperString} team, ${target.toString()} has indicated they need assistance!`;
+          try {
+            metaMessage = `Hey ${roleTripsitter} ${guildData.role_helper ? helperString : ''} team, ${target.toString()} has indicated they need assistance!`;
+          } catch (err) {
+            // If for example helper role has been deleted but the ID is still stored, do this
+            metaMessage = `Hey ${roleTripsitter} team, ${target.toString()} has indicated they need assistance!`;
+            log.error(F, `Stored Helper ID for guild ${guildData.id} is no longer valid. Role is unfetchable or deleted.`);
+          }
         } else {
           metaMessage = `${target.toString()} has indicated they need assistance!`;
         }
