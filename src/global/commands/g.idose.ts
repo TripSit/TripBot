@@ -1,4 +1,4 @@
-import { drug_mass_unit, drug_roa } from '@prisma/client';
+import { $Enums, drug_mass_unit, drug_roa } from '@prisma/client';
 import {
   time,
 } from 'discord.js';
@@ -153,7 +153,7 @@ async function iDoseSet(
       drug_id: drugId,
       route: roa,
       dose: volume,
-      units,
+      units: units.toString() === 'µG' ? $Enums.drug_mass_unit.MICRO_G : units,
       created_at: date,
     },
   });
