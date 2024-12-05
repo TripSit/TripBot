@@ -117,7 +117,7 @@ const memberOnly = 'This must be performed by a member of a guild!';
 # Initialize
 * As a user, create a new ticket
   Click the I need help button
-  FIll in information
+  Fill in information
   Click submit
   - On BL your roles are not removed
   - On other guilds your roles are removed
@@ -759,8 +759,11 @@ export async function tripsitmeTeamClose(
   }
 
   const closeMessage = stripIndents`Hey ${target}, it looks like you're doing somewhat better!
+
     This thread will remain here for a day if you want to follow up tomorrow.
-    After 7 days, or on request, it will be deleted to preserve your privacy =)
+    After 7 days, it will be deleted to preserve your privacy =)
+    Alternatively, you may press the "Delete my ticket" button to delete it yourself.
+
     If you'd like to go back to social mode, just click the button below!
     `;
 
@@ -768,7 +771,7 @@ export async function tripsitmeTeamClose(
     .addComponents(
       new ButtonBuilder()
         .setCustomId(`tripsitmeUserClose~${targetId}`)
-        .setLabel('I\'m good now!')
+        .setLabel('I no longer need help.')
         .setStyle(ButtonStyle.Success),
     );
 
@@ -850,7 +853,7 @@ export async function tripsitmeUserClose(
   const target = await interaction.guild.members.fetch(targetId);
   const actor = interaction.member as GuildMember;
   await actor.fetch();
-  log.debug(F, `${actor.displayName} (${actor.id}) clicked "I'm good" in ${target.displayName}'s (${target.id}) session `);
+  log.debug(F, `${actor.displayName} (${actor.id}) clicked "I no longer need help" in ${target.displayName}'s (${target.id}) session `);
 
   if (targetId !== actor.id && !override) {
     log.debug(F, 'They did not create the thread, so I am not doing anything!');
@@ -878,6 +881,21 @@ export async function tripsitmeUserClose(
       },
     },
   });
+
+  if (ticketData?.tripsit_mode && targetId === actor.id) {
+    log.debug(F, 'They requested to close their ticket, but are in TripSit Mode. Request denied.');
+    // await interaction.editReply({ content: 'Only a TripSitter or Moderator can close your ticket.' });
+    const rejectMessage = stripIndents`
+    Hey ${actor.displayName}, since a team member made this ticket for you, only a team member can close it.
+
+    Let us know if you're okay now and no longer need assistance and we'll get it closed for you!
+  `;
+    const embed = embedTemplate().setColor(Colors.DarkBlue);
+    embed.setDescription(rejectMessage);
+    // log.debug(F, `target ${target} does not need help!`);
+    await interaction.editReply({ embeds: [embed] });
+    return;
+  }
 
   const guildData = await db.discord_guilds.upsert({
     where: {
@@ -1081,10 +1099,13 @@ export async function tripsitmeUserClose(
 
   // Send the end message to the user
   try {
-    await interaction.editReply(stripIndents`Hey ${target}, we're glad you're doing better!
-    We've restored your old roles back to normal <3
-    This thread will remain here for a day if you want to follow up tomorrow.
-    After 7 days, or on request, it will be deleted to preserve your privacy =)`);
+    await interaction.editReply(stripIndents`Hey ${target}, it looks like you're doing somewhat better!
+
+      This thread will remain here for a day if you want to follow up tomorrow.
+      After 7 days, it will be deleted to preserve your privacy =)
+      Alternatively, you may press the "Delete my ticket" button to delete it yourself.
+      
+      If you'd like to go back to social mode, just click the button below!`);
   } catch (err) {
     log.error(F, `Error sending end help message to ${threadHelpUser}`);
     log.error(F, err as string);
@@ -1160,6 +1181,138 @@ export async function tripsitmeUserClose(
 }
 
 /**
+ * Handles deleting the thread and marking it as deleted
+ * @param {ButtonInteraction} interaction
+ */
+export async function tripsitmeUserDelete(
+  interaction:ButtonInteraction,
+) {
+  if (!interaction.guild) return;
+  if (!interaction.member) return;
+  if (!interaction.channel) return;
+  log.info(F, await commandContext(interaction));
+
+  await interaction.deferReply({ ephemeral: false });
+
+  const targetId = interaction.customId.split('~')[1];
+  const override = interaction.customId.split('~')[0] === 'tripsitmodeOffOverride';
+
+  const target = await interaction.guild.members.fetch(targetId);
+  const actor = interaction.member as GuildMember;
+  await actor.fetch();
+  log.debug(F, `${actor.displayName} (${actor.id}) clicked "Delete my ticket" in ${target.displayName}'s (${target.id}) session `);
+
+  if (targetId !== actor.id && !override) {
+    log.debug(F, 'They did not create the thread, so I am not doing anything!');
+    await interaction.editReply({ content: 'Only the user receiving help can click this button!' });
+    return;
+  }
+
+  const userData = await db.users.upsert({
+    where: {
+      discord_id: target.id,
+    },
+    create: {
+      discord_id: target.id,
+    },
+    update: {},
+  });
+
+  const ticketData = await db.user_tickets.findFirst({
+    where: {
+      user_id: userData.id,
+      status: {
+        not: {
+          in: ['OPEN', 'DELETED'],
+        },
+      },
+    },
+  });
+
+  const guildData = await db.discord_guilds.upsert({
+    where: {
+      id: interaction.guild?.id,
+    },
+    create: {
+      id: interaction.guild?.id,
+    },
+    update: {},
+  });
+
+  if (!ticketData) {
+    log.debug(F, `${actor.displayName} does not have any tickets that are not closed or deleted`);
+    const rejectMessage = stripIndents`
+      Hey ${actor.displayName}, your ticket is still open!
+
+      If you would like to delete your ticket, please click the 'I no longer need help' button first, then click this button again.
+
+      If you still need help, please be patient and someone will be with you soon!
+    `;
+    const embed = embedTemplate().setColor(Colors.DarkBlue);
+    embed.setDescription(rejectMessage);
+    // log.debug(F, `target ${target} does not need help!`);
+    await interaction.editReply({ embeds: [embed] });
+    return;
+  }
+
+  log.debug(F, `Found ticket in ${ticketData.status} status`);
+
+  log.debug(F, `Deleting ticket ${ticketData.id}...`);
+
+  // Delete the thread on discord
+  if (ticketData.thread_id) {
+    try {
+      const thread = await global.discordClient.channels.fetch(ticketData.thread_id) as ThreadChannel;
+      await thread.delete();
+      log.debug(F, `Thread ${ticketData.thread_id} was deleted`);
+    } catch (err) {
+      // Thread was likely manually deleted
+      log.debug(F, `Thread ${ticketData.thread_id} was likely manually deleted`);
+    }
+  }
+
+  // Let the meta channel know the user has been helped
+  const metaChannelId = ticketData.meta_thread_id ?? guildData.channel_tripsitmeta;
+  if (metaChannelId) {
+    try {
+      const metaChannel = await interaction.guild.channels.fetch(metaChannelId) as TextChannel;
+      await metaChannel.send({
+        content: stripIndents`${actor.displayName} has deleted their ticket!`,
+      });
+      if (metaChannelId !== guildData.channel_tripsitmeta) {
+        metaChannel.setName(`💚│${target.displayName}'s discussion!`);
+      }
+    } catch (err) {
+      // Meta thread likely doesn't exist
+      if (metaChannelId === ticketData.meta_thread_id) {
+        ticketData.meta_thread_id = null;
+        // await ticketUpdate(ticketData);
+        await db.user_tickets.update({
+          where: {
+            id: ticketData.id,
+          },
+          data: {
+            meta_thread_id: null,
+          },
+        });
+      }
+    }
+  }
+
+  // Update the ticket status to deleted
+  await db.user_tickets.update({
+    where: {
+      id: ticketData.id,
+    },
+    data: {
+      status: 'DELETED' as ticket_status,
+      deleted_at: DateTime.local().toJSDate(),
+    },
+  });
+  log.debug(F, 'Updated ticket status to DELETED');
+}
+
+/**
  * Creates the tripsit modal
  * @param {ButtonInteraction} interaction The interaction that initialized this
  * @param {GuildMember} memberInput The member being aced upon
@@ -1170,7 +1323,7 @@ export async function tripSitMe(
   interaction:ModalSubmitInteraction,
   memberInput:GuildMember | null,
   triage:string,
-  intro:string,
+  intro: string = '',
 ):Promise<ThreadChannel | null> {
   log.info(F, await commandContext(interaction));
   // await interaction.deferReply({ ephemeral: true });
@@ -1311,26 +1464,25 @@ export async function tripSitMe(
 
       You've taken: ${triage ? `\n${triage}` : noInfo}
 
-      Your issue: ${intro ? `\n${intro}` : noInfo}
-
       Someone from the ${roleTripsitter} ${guildData.role_helper && !targetIsTeamMember ? `and/or ${roleHelper}` : ''} team will be with you as soon as they're available!
 
       If this is a medical emergency please contact your local emergency services: we do not call EMS on behalf of anyone.
       
-      When you're feeling better you can use the "I'm Good" button to let the team know you're okay.
-
-      **Not in an emergency, but still want to talk to a mental health advisor? Warm lines provide non-crisis mental health support and guidance from trained volunteers. https://warmline.org/warmdir.html#directory**
-
-      **The wonderful people at the Fireside project can also help you through a rough trip. You can check them out: https://firesideproject.org/**
+      When you're feeling better you can use the "I no longer need help" button to let the team know you're okay.
       `;
 
   const row = new ActionRowBuilder<ButtonBuilder>()
     .addComponents(
       new ButtonBuilder()
         .setCustomId(`tripsitmeUserClose~${target.id}`)
-        .setLabel('I\'m good now!')
+        .setLabel('I no longer need help')
+        .setStyle(ButtonStyle.Success),
+      new ButtonBuilder()
+        .setCustomId(`tripsitmeUserDelete~${target.id}`)
+        .setLabel('Delete my ticket')
         .setStyle(ButtonStyle.Success),
     );
+
   await threadHelpUser.send({
     content: firstMessage,
     components: [row],
@@ -1355,14 +1507,16 @@ export async function tripSitMe(
 
   // log.debug(F, `Sent intro message to ${threadHelpUser.name} ${threadHelpUser.id}`);
 
+  const issue = intro ? `**Their issue: ** \n${intro}` : '';
+
   // Send an embed to the tripsitter room
   const embedTripsitter = embedTemplate()
     .setColor(Colors.DarkBlue)
     .setDescription(stripIndents`
-      ${target} has requested assistance!
-      **They've taken:** ${triage ? `${triage}` : noInfo}
-      **Their issue: ** ${intro ? `${intro}` : noInfo}
+      ${issue ? `A tripsitter has put ${target} into tripsitmode!\n` : `${target} has requested assistance!\n`} 
+      **They've taken:** ${triage ? `\n${triage}` : noInfo}
 
+      ${intro !== '' ? `${issue}\n` : ''}
       **Read the log before interacting**
       Use this channel coordinate efforts.
 
@@ -1426,14 +1580,14 @@ export async function tripSitMe(
     update: {},
   });
 
+  const description = triage ? `\n${triage}` : noInfo;
+
   // Set ticket information
-  const introStr = intro ? `\n${intro}` : noInfo;
   const newTicketData = {
     user_id: userData.id,
     description: `
-    They've taken: ${triage ? `\n${triage}` : noInfo}
-
-    Their issue: ${introStr}`,
+    They've taken: ${description}
+    ${issue}`,
     thread_id: threadHelpUser.id,
     type: 'TRIPSIT',
     status: 'OPEN',
@@ -1771,12 +1925,6 @@ export async function tripsitmeButton(
           .setLabel('What substance? How much taken? How long ago?')
           .setMaxLength(120)
           .setStyle(TextInputStyle.Short)),
-      new ActionRowBuilder<TextInputBuilder>()
-        .addComponents(new TextInputBuilder()
-          .setCustomId('introInput')
-          .setLabel('What\'s going on? Give us the details!')
-          .setMaxLength(1100)
-          .setStyle(TextInputStyle.Paragraph)),
     ));
 
   const filter = (i:ModalSubmitInteraction) => i.customId.startsWith('tripsitmeSubmit');
@@ -1785,9 +1933,8 @@ export async function tripsitmeButton(
       if (i.customId.split('~')[1] !== interaction.id) return;
       await i.deferReply({ ephemeral: true });
       const triage = i.fields.getTextInputValue('triageInput');
-      const intro = i.fields.getTextInputValue('introInput');
 
-      const threadHelpUser = await tripSitMe(i, target, triage, intro) as ThreadChannel;
+      const threadHelpUser = await tripSitMe(i, target, triage) as ThreadChannel;
 
       if (!threadHelpUser) {
         const embed = embedTemplate()

@@ -293,6 +293,7 @@ async function tripsitmodeOn(
         },
         data: {
           status: 'OPEN' as ticket_status,
+          tripsit_mode: true,
           reopened_at: new Date(),
           archived_at: env.NODE_ENV === 'production'
             ? DateTime.local().plus({ days: 7 }).toJSDate()
@@ -330,7 +331,7 @@ async function tripsitmodeOn(
       new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
         .setCustomId('introInput')
         .setLabel('What\'s going on with them?')
-        .setPlaceholder('This will be posted in the channel for them to see!')
+        .setPlaceholder('This will only be visible to helpers and TripSitters.')
         .setStyle(TextInputStyle.Paragraph)),
     ));
 
@@ -349,11 +350,49 @@ async function tripsitmodeOn(
   
       Click here to be taken to their private room: ${threadHelpUser}
   
-      You can also click in your channel list to see your private room!`;
+      You can also click in your channel list to see their private room!`;
       const embed = embedTemplate()
         .setColor(Colors.DarkBlue)
         .setDescription(replyMessage);
       await i.editReply({ embeds: [embed] });
+
+      if (!ticketData) {
+        ticketData = await db.user_tickets.create({
+          data: {
+            user_id: target.id,
+            type: 'TRIPSIT',
+            status: 'OPEN' as ticket_status,
+            tripsit_mode: true,
+            description: '',
+            first_message_id: '',
+            thread_id: threadHelpUser.id,
+            archived_at: env.NODE_ENV === 'production'
+              ? DateTime.local().plus({ days: 3 }).toJSDate()
+              : DateTime.local().plus({ minutes: 1 }).toJSDate(),
+            deleted_at: env.NODE_ENV === 'production'
+              ? DateTime.local().plus({ days: 6 }).toJSDate()
+              : DateTime.local().plus({ minutes: 2 }).toJSDate(),
+          },
+        });
+      } else {
+        // Create or update thread to toggle tripsit_mode on
+        ticketData = await db.user_tickets.update({
+          where: {
+            id: ticketData.id, // Assuming 'id' is unique; use a dummy value if `ticketData` is null
+          },
+          data: {
+            status: 'OPEN' as ticket_status,
+            tripsit_mode: true,
+            reopened_at: new Date(),
+            archived_at: env.NODE_ENV === 'production'
+              ? DateTime.local().plus({ days: 3 }).toJSDate()
+              : DateTime.local().plus({ minutes: 1 }).toJSDate(),
+            deleted_at: env.NODE_ENV === 'production'
+              ? DateTime.local().plus({ days: 6 }).toJSDate()
+              : DateTime.local().plus({ minutes: 2 }).toJSDate(),
+          },
+        });
+      }
     });
 
   return true;
