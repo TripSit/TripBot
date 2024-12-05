@@ -102,7 +102,7 @@ export const guildBanAdd: GuildBanAddEvent = {
         5: Colors.Red,
       };
 
-      log.info(F, 'attemtping to send messages');
+      log.info(F, 'attempting to send messages');
       await Promise.all(mutualGuilds.map(async guild => {
         if (!guild) return;
         // await sendCooperativeMessage(
