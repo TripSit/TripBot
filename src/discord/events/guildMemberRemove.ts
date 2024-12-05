@@ -25,15 +25,12 @@ export const guildMemberRemove: GuildMemberRemoveEvent = {
 
     if (joinedTimestamp) {
       const diff = Math.abs(Date.now() - joinedTimestamp);
-    
       // Helper to calculate units and update remaining time
       const getUnit = (time: number, unitMs: number) => {
         const value = Math.floor(time / unitMs);
         return [value, time % unitMs];
       };
-    
-      let remaining = diff;
-    
+      const remaining = diff;
       const [years, afterYears] = getUnit(remaining, 1000 * 60 * 60 * 24 * 365);
       const [months, afterMonths] = getUnit(afterYears, 1000 * 60 * 60 * 24 * 30);
       const [weeks, afterWeeks] = getUnit(afterMonths, 1000 * 60 * 60 * 24 * 7);
@@ -41,7 +38,6 @@ export const guildMemberRemove: GuildMemberRemoveEvent = {
       const [hours, afterHours] = getUnit(afterDays, 1000 * 60 * 60);
       const [minutes, afterMinutes] = getUnit(afterHours, 1000 * 60);
       const [seconds] = getUnit(afterMinutes, 1000);
-    
       // Build duration string dynamically
       const duration = [
         years && `${years} year${years > 1 ? 's' : ''}`,
@@ -54,7 +50,6 @@ export const guildMemberRemove: GuildMemberRemoveEvent = {
       ]
         .filter(Boolean)
         .join(', ');
-    
       embed.setDescription(`${member} has left the guild after ${duration}`);
     } else {
       embed.setDescription(`${member} has left the guild`);
