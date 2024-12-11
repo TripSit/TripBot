@@ -9,7 +9,7 @@ import getTripSitStatistics from '../../../global/commands/g.tripsitstats';
 
 const F = f(__filename);
 
-export const dKarma: SlashCommand = {
+export const dTripsitStats: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('tripsit_stats')
     .setDescription('Get stats on a feature of TripSit')
@@ -46,4 +46,4 @@ export const dKarma: SlashCommand = {
   },
 };
 
-export default dKarma;
+export default dTripsitStats;
