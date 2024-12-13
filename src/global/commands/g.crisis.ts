@@ -92,10 +92,18 @@ export async function crisis():Promise<HelpResource[]> {
     {
       name: 'Open Counseling Suicide Hotline List',
       country: 'Worldwide',
-      website: 'https://blog.opencounseling.com',
+      website: 'https://blog.opencounseling.com/suicide-hotlines/',
       phone: '',
       text: '',
-      webchat: 'https://blog.opencounseling.com/suicide-hotlines/',
+      webchat: '',
+    },
+    {
+      name: 'Support Center for Adults in Mental Crisis',
+      country: 'Poland',
+      website: 'https://centrumwsparcia.pl/centrum-wsparcia/',
+      phone: '800 70 2222',
+      text: '',
+      webchat: '',
     },
   ];
   log.info(F, `response: ${JSON.stringify(response, null, 2)}`);
