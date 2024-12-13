@@ -50,9 +50,11 @@ export const guildMemberRemove: GuildMemberRemoveEvent = {
       ]
         .filter(Boolean)
         .join(', ');
-      embed.setDescription(`${member} has left the guild after ${duration}`);
+
+      // eslint-disable-next-line max-len
+      embed.setDescription(`${member} (${member.displayName || member.user?.tag}) has left the guild after ${duration}`);
     } else {
-      embed.setDescription(`${member} has left the guild`);
+      embed.setDescription(`${member} (${member.displayName || member.user?.tag}) has left the guild`);
     }
 
     const targetData = await db.users.upsert({
