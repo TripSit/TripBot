@@ -1119,6 +1119,49 @@ async function checkMoodle() { // eslint-disable-line
   // }
 }
 
+async function undoExpiredBans() {
+  const expiredBans = await db.users.findMany({
+    where: {
+      discord_bot_ban_expires_at: {
+        not: null, // Ensure the ban duration is set (i.e., not null, indicating a ban exists)
+        lte: new Date(), // Fetch users whose ban duration is in the past (expired bans)
+      },
+    },
+  });
+
+  if (expiredBans.length > 0) {
+    // Get the tripsit guild
+    const tripsitGuild = await global.discordClient.guilds.fetch(env.DISCORD_GUILD_ID);
+    expiredBans.forEach(async bannedUser => {
+      // Check if the reminder is ready to be triggered
+      if (bannedUser.discord_id !== null) {
+        const user = await global.discordClient.users.fetch(bannedUser.discord_id);
+        if (user) {
+          // Unban them
+          await tripsitGuild.bans.remove(user, 'Temporary ban has expired');
+          // Reset discord_bot_ban_expires_at flag to null
+          await db.users.update({
+            where: {
+              id: bannedUser.id,
+            },
+            data: {
+              discord_bot_ban_expires_at: null, // Reset the ban duration to null
+            },
+          });
+          try {
+            await user.send(stripIndents`Hey ${user.username}, your temporary ban in TripSit has been lifted! 
+              You're welcome to rejoin anytime. We appreciate your understanding and are looking forward to seeing you back!
+              
+              Make sure to read the #rules if you decide to rejoin.`);
+          } catch (err) {
+            // Do nothing. It's likely their discord permissions disallowed the bot to ever have comms with them.
+          }
+        }
+      }
+    });
+  }
+}
+
 async function checkEvery(
   callback: () => Promise<void>,
   interval: number,
@@ -1158,6 +1201,7 @@ async function runTimer() {
     { callback: checkMoodle, interval: env.NODE_ENV === 'production' ? seconds60 : seconds5 },
     // { callback: checkLpm, interval: env.NODE_ENV === 'production' ? seconds10 : seconds5 },
     { callback: updateDb, interval: env.NODE_ENV === 'production' ? hours24 : hours48 },
+    { callback: undoExpiredBans, interval: env.NODE_ENV === 'production' ? hours24 : seconds10 },
   ];
 
   timers.forEach(timer => {

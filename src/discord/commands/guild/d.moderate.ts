@@ -1387,6 +1387,7 @@ export async function moderate(
   }
 
   // Process duration time for ban and timeouts
+  let banEndTime = null;
   let duration = 0 as null | number;
   let durationStr = '';
   if (isTimeout(command)) {
@@ -1431,6 +1432,12 @@ export async function moderate(
 
     // Get the millisecond value of the input
     duration = await parseDuration(`${dayInput} days`);
+
+    // The above code is about the TIMEOUT duration, not ban. Probably old code.
+    const banDurationInput = parseInt(modalInt.fields.getTextInputValue('ban_duration'), 10);
+    const banDuration = await parseDuration(`${banDurationInput}`);
+    const currentTime = new Date();
+    banEndTime = new Date(currentTime.getTime() + banDuration);
   }
 
   // Display all properties we're going to use
@@ -1532,6 +1539,7 @@ export async function moderate(
 
   if (command === 'FULL_BAN') {
     internalNote += `\n **Actioned by:** ${actor.displayName}`;
+    internalNote += `\n **Ban Ends At:** ${banEndTime}`;
   }
 
   let actionData = {
@@ -1568,6 +1576,10 @@ export async function moderate(
 
       try {
         targetObj = await buttonInt.guild.bans.create(targetId, { deleteMessageSeconds: deleteMessageValue / 1000, reason: internalNote ?? noReason });
+        // Set ban duration if present
+        if (banEndTime !== null) {
+          targetData.discord_bot_ban_expires_at = banEndTime;
+        }
       } catch (err) {
         log.error(F, `Error: ${err}`);
       }
@@ -1943,6 +1955,13 @@ export async function modModal(
         .setPlaceholder('4 days 3hrs 2 mins 30 seconds (Max 7 days, Default 0 days)')
         .setRequired(false)
         .setCustomId('days')));
+    modal.addComponents(new ActionRowBuilder<TextInputBuilder>()
+      .addComponents(new TextInputBuilder()
+        .setLabel('How long should they be banned for?')
+        .setStyle(TextInputStyle.Short)
+        .setPlaceholder('365 days (Empty = Permanent)')
+        .setRequired(false)
+        .setCustomId('ban_duration')));
   }
 
   // When the modal is opened, disable the button on the embed

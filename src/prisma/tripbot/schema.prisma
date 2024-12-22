@@ -134,6 +134,7 @@ model users {
   move_points                                               Int                  @default(0)
   empathy_points                                            Int                  @default(0)
   discord_bot_ban                                           Boolean              @default(false)
+  discord_bot_ban_expires_at                                DateTime?            @db.Timestamptz(6)
   ticket_ban                                                Boolean              @default(false)
   last_seen_at                                              DateTime             @default(now()) @db.Timestamptz(6)
   last_seen_in                                              String?
