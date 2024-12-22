@@ -111,7 +111,7 @@ export async function announcements(message:Message) {
   // // const channelDevWelcome = await message.client.channels.fetch(env.CHANNEL_DEVWELCOME) as TextChannel;
 
   const hrAnnouncements = [
-    '**Reminder:** For the safety of everyone involved, sourcing (buying or selling anything) is against our network rules. If you are contacted by someone asking to find, buy, trade, or give you drugs, you can report it by using /report. This rule also applies to private messages. Be safe and don\'t trust random internet folk.',
+    '**Reminder:** For the safety of everyone involved, sourcing (buying or selling anything) is against our network rules. If someone contacts you to find, buy, trade, or give you drugs, you can report it by using /report or by clicking their name > Apps > TripBot Report User. This rule also applies to private messages. Be safe, and don\'t trust random internet folk.',
     '**Reminder:** Tending to personal hygiene is an important part of self-care. Remember to brush your teeth, bathe, and wash your hands!',
     '**Reminder:** We do our best to keep the environment here as safe as possible but please remember to always be vigilant when using the internet. Do not post anything here that might divulge any of your personal information.',
     // 'Donate to keep TripSit running and fund our future Harm Reduction projects!\nDonate page: https://tripsit.me/donate/\nBTC: 1EDqf32gw73tc1WtgdT2FymfmDN4RyC9RN\nPayPal: teknos@tripsit.me\nPatreon: https://patreon.com/tripsit\nMerchandise: https://tripsit.myspreadshop.com/',
@@ -133,8 +133,8 @@ export async function announcements(message:Message) {
   ];
 
   const tipAnnouncements = [
-    '**Tip:** Report a user by using `/report` if they are breaking the rules or causing issues.',
-    '**Tip:** Report a specific user or message with Right Click > Apps > Report Message.',
+    '**Tip:** You can report a user if they are breaking the rules or causing issues by using /report or by clicking their name > Apps > TripBot Report User.',
+    '**Tip:** To report a user, click their name > Apps > TripBot Report User. To report a message, click the message > Apps > TripBot Report Message.',
     '**Tip:** Use `/help` to learn more about the bot and its commands.',
     '**Tip:** Check out the <id:guide> for more tips and server info!',
     '**Tip:** Go to <id:customize> to change your name color and mindset role icon!',
