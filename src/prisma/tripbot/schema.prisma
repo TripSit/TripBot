@@ -573,7 +573,7 @@ enum drug_category_type {
 enum drug_mass_unit {
   MG
   ML
-  MICRO_G @map("µG")
+  MICRO_G @map("uG")
   G
   OZ
   FLOZ
