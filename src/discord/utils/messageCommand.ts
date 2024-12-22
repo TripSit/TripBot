@@ -389,7 +389,11 @@ give people a chance to answer 😄 If no one answers in 5 minutes you can try a
     if (message.author.bot) return;
     if (message.guild.id !== env.DISCORD_GUILD_ID) return;
     // log.debug(F, 'Sad/lovey stuff detected');
-    await message.react(heartEmojis[Math.floor(Math.random() * heartEmojis.length)]);
+    try {
+      await message.react(heartEmojis[Math.floor(Math.random() * heartEmojis.length)]);
+    } catch (err) {
+      log.info(F, `Failed to add heart reaction in ${message.guild.name}(${message.guild.id}).`);
+    }
   }
 
   if (!message.author.bot) {

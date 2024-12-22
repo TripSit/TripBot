@@ -35,6 +35,7 @@ import { ticket_status, user_tickets } from '@prisma/client';
 import commandContext from './context';
 import { embedTemplate } from './embedTemplate';
 import { checkChannelPermissions, checkGuildPermissions } from './checkPermissions';
+import commandCooldown from './commandCooldown';
 
 const F = f(__filename);
 
@@ -312,6 +313,11 @@ export async function tripsitmeOwned(
   const actor = interaction.member as GuildMember;
 
   const target = await interaction.guild.members.fetch(userId);
+
+  if (target.id === actor.id) {
+    await interaction.editReply({ content: "You can't own your own ticket!" });
+    return;
+  }
 
   const userData = await db.users.upsert({
     where: {
@@ -840,6 +846,13 @@ export async function tripsitmeUserClose(
   if (!interaction.channel) return;
   log.info(F, await commandContext(interaction));
 
+  const cooldown = await commandCooldown(interaction.user, interaction.customId);
+
+  if (!cooldown.success && cooldown.message) {
+    await interaction.reply({ content: cooldown.message, ephemeral: true });
+    return;
+  }
+
   await interaction.deferReply({ ephemeral: false });
 
   const targetId = interaction.customId.split('~')[1];
@@ -1335,6 +1348,12 @@ export async function tripSitMe(
     return null;
   }
 
+  const cooldown = await commandCooldown(interaction.user, interaction.customId);
+
+  if (!cooldown.success && cooldown.message) {
+    await interaction.editReply(cooldown.message);
+  }
+
   // const actor = interaction.member;
   const guildData = await db.discord_guilds.upsert({
     where: {
@@ -1616,6 +1635,13 @@ export async function tripsitmeButton(
   log.info(F, await commandContext(interaction));
   const target = interaction.member as GuildMember;
 
+  const cooldown = await commandCooldown(interaction.user, interaction.customId);
+
+  if (!cooldown.success && cooldown.message) {
+    await interaction.reply({ content: cooldown.message, ephemeral: true });
+    return;
+  }
+
   // log.debug(F, `target: ${JSON.stringify(target, n ull, 2)}`);
 
   // const actorIsAdmin = target.permissions.has(PermissionsBitField.Flags.Administrator);
@@ -1821,6 +1847,7 @@ export async function tripsitmeButton(
       const now = new Date();
       const diff = now.getTime() - createdDate.getTime();
       const minutes = Math.floor(diff / 1000 / 60);
+      // const seconds = Math.floor(diff / 1000); // Uncomment this for dev server
 
       // Send the update message to the thread
       let helpMessage = stripIndents`Hey ${target}, thanks for asking for help, we can continue talking here! What's up?`;
@@ -1841,9 +1868,15 @@ export async function tripsitmeButton(
 
       if (ticketData.meta_thread_id) {
         let metaMessage = '';
-        if (minutes > 5) {
+        if (minutes > 5) { // Switch to seconds > 10 for dev server
           const helperString = `and/or ${roleHelper}`;
-          metaMessage = `Hey ${roleTripsitter} ${guildData.role_helper ?? helperString} team, ${target.toString()} has indicated they need assistance!`;
+          try {
+            metaMessage = `Hey ${roleTripsitter} ${guildData.role_helper ? helperString : ''} team, ${target.toString()} has indicated they need assistance!`;
+          } catch (err) {
+            // If for example helper role has been deleted but the ID is still stored, do this
+            metaMessage = `Hey ${roleTripsitter} team, ${target.toString()} has indicated they need assistance!`;
+            log.error(F, `Stored Helper ID for guild ${guildData.id} is no longer valid. Role is unfetchable or deleted.`);
+          }
         } else {
           metaMessage = `${target.toString()} has indicated they need assistance!`;
         }
