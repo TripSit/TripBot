@@ -828,18 +828,18 @@ export async function helperButton(
           ### For a refresher on tripsitting please see the following resources:
 
           - [TripSit Learning Portal](https://learn.tripsit.me>)
-          - [BlueLight's How To Tripsit](<https://docs.google.com/document/d/1vE3jl9imdT3o62nNGn19k5HZVOkECF3jhjra8GkgvwE>)
-          - [TripSit's How to Tripsit](<https://wiki.tripsit.me/wiki/How_To_Tripsit_Online>)
+          - [BlueLight's How To Tripsit](https://docs.google.com/document/d/1vE3jl9imdT3o62nNGn19k5HZVOkECF3jhjra8GkgvwE)
+          - [TripSit's How to Tripsit](https://wiki.tripsit.me/wiki/How_To_Tripsit_Online)
           - Check the pins in this channel!
-          ### If you're overwhelmed, ask for backup
+          ### If you're overwhelmed, ask for backup:
           - Giving no information is better than giving the wrong information!
-          ### If someone is underage you can ping a Moderator and finish the session if you're comfortable. 
-          - Underage users can use the web-chat anonymously but are not allowed to socialize, moderator will take care of this.
-          ### We are NOT here to give medical advice, diagnose, or treat; or handle suicidal or self-harm situations.
-          - We're here to give harm reduction facts and *mild* mental health support, no one here is qualified to handle suicide of self-harm.
-          - If it seems like someone could use mental health services you can refer them to:
-          **Huddle Humans** - [Mental health support](<https://discord.gg/mentalhealth>)
-          **HealthyGamer** - [Mental health with a gaming twist](<https://discord.com/invite/H3yRwc7>)
+          ### If someone is underage you can ping a Moderator and finish the session if you're comfortable:
+          - Underage users can use the web-chat anonymously but are not allowed to socialize, a Moderator will take care of this.
+          ### We are NOT here to give medical advice, diagnose, or treat; or handle suicidal or self-harm situations:
+          - We're here to give harm reduction facts and *mild* mental health support, no one here is qualified to handle suicide or self-harm.
+          - If it seems like someone could use mental health services you can refer them to one of the servers below.
+          **Huddle Humans** - [Mental health support](https://discord.gg/mentalhealth)
+          **HealthyGamer** - [Mental health with a gaming twist](https://discord.com/invite/H3yRwc7)
     
           **If you have any questions, please reach out!**
         `);

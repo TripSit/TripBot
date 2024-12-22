@@ -6,6 +6,10 @@ import {
 } from 'discord.js';
 import axios from 'axios';
 import { stripIndents } from 'common-tags';
+import {
+  experience_category, experience_type,
+} from '@prisma/client';
+import { findXPfromLevel } from '../../../global/utils/experience';
 import { SlashCommand } from '../../@types/commandDef';
 import commandContext from '../../utils/context';
 import deployCommands from '../../utils/commandDeploy';
@@ -79,11 +83,11 @@ async function setAvatar(interaction: ChatInputCommandInteraction, avatarUrl: st
       'Content-Type': 'application/json',
     },
   }).then(() => {
-    console.log('Avatar set successfully');
+    log.info(F, 'Avatar set successfully');
     interaction.editReply('Avatar set successfully');
     return true;
   }).catch((error: Error) => {
-    console.error(`Error setting avatar: ${error.message}`);
+    log.error(F, `Error setting avatar: ${error.message}`);
     interaction.editReply('Error setting avatar');
     return false;
   });
@@ -103,11 +107,11 @@ async function setBanner(interaction: ChatInputCommandInteraction, bannerUrl: st
       'Content-Type': 'application/json',
     },
   }).then(() => {
-    console.log('Banner set successfully');
+    log.info(F, 'Banner set successfully');
     interaction.editReply('Banner set successfully');
     return true;
   }).catch((error: Error) => {
-    console.error(`Error setting banner: ${error.message}`);
+    log.error(F, `Error setting banner: ${error.message}`);
     interaction.editReply('Error setting banner');
     return false;
   });
@@ -142,6 +146,72 @@ async function setStatus(
   }
   await interaction.client.user?.setActivity(status, { type: statusType });
   await interaction.editReply(`Status set to ${statusType} ${status}`);
+}
+
+async function overwriteUserData(
+  interaction: ChatInputCommandInteraction,
+): Promise<void> {
+  const member = interaction.options.getUser('user');
+  if (!member) {
+    await interaction.editReply('Error: User not found.');
+    return;
+  }
+
+  const category = interaction.options.getString('category') as experience_category;
+  const type = interaction.options.getString('type') as experience_type;
+  const level = interaction.options.getInteger('level');
+
+  if (!category || !type || level === null) {
+    await interaction.editReply('Error: Missing category, type, or level.');
+    return;
+  }
+
+  const userData = await db.users.upsert({
+    where: {
+      discord_id: member.id,
+    },
+    create: {
+      discord_id: member.id,
+    },
+    update: {},
+  });
+
+  const experienceData = await db.user_experience.findFirst({
+    where: {
+      user_id: userData.id,
+      category,
+      type,
+    },
+  });
+
+  if (!experienceData) {
+    log.debug(F, `No experience data found for user ${userData.id} in category ${category} type ${type}.`);
+    await interaction.editReply('Error: No experience data found for the user.');
+    return;
+  }
+
+  const levelPoints = await findXPfromLevel(level);
+  log.debug(F, `Overwriting user data for user ${userData.id} in category ${category} type ${type} to level ${level} with ${levelPoints} XP points.`);
+
+  try {
+    const result = await db.user_experience.updateMany({
+      where: {
+        user_id: userData.id,
+        category,
+        type,
+      },
+      data: {
+        level,
+        level_points: levelPoints,
+        total_points: levelPoints,
+      },
+    });
+    log.info(F, `Update result: ${JSON.stringify(result)}`);
+  } catch (error) {
+    log.error(F, `Error updating database: ${(error as Error).message}`);
+  }
+
+  await interaction.editReply(`User level and points updated for category ${category} to level ${level} with ${levelPoints} points.`);
 }
 
 export const dAdmin: SlashCommand = {
@@ -187,12 +257,37 @@ export const dAdmin: SlashCommand = {
       .addStringOption(option => option
         .setName('url')
         .setDescription('The URL of the banner')
-        .setRequired(true))),
+        .setRequired(true)))
+    .addSubcommand(subcommand => subcommand
+      .setName('overwriteuserdata')
+      .setDescription('Overwrite user data')
+      .addUserOption(option => option.setName('user').setDescription('The user to update').setRequired(true))
+      .addStringOption(option => option.setName('category')
+        .setDescription('The category to update')
+        .setRequired(true)
+        .addChoices(
+          { name: 'General', value: 'GENERAL' },
+          { name: 'Tripsitter', value: 'TRIPSITTER' },
+          { name: 'Developer', value: 'DEVELOPER' },
+          { name: 'Team', value: 'TEAM' },
+          { name: 'Ignored', value: 'IGNORED' },
+          // Add more categories as needed
+        ))
+      .addStringOption(option => option.setName('type')
+        .setDescription('The type to update')
+        .setRequired(true)
+        .addChoices(
+          { name: 'Text', value: 'TEXT' },
+          { name: 'Voice', value: 'VOICE' },
+          // Add more types as needed
+        ))
+      .addIntegerOption(option => option.setName('level').setDescription('The level to set').setRequired(true))),
+
   async execute(interaction) {
     if (!interaction.channel) return false;
     if (!interaction.guild) return false;
     log.info(F, await commandContext(interaction));
-    const command = interaction.options.getSubcommand() as 'restart' | 'rebuild' | 'deploy' | 'setstatus' | 'setavatar' | 'setbanner';
+    const command = interaction.options.getSubcommand() as 'restart' | 'rebuild' | 'deploy' | 'setstatus' | 'setavatar' | 'setbanner' | 'overwriteuserdata';
     // By default we want to make the reply private
     await interaction.deferReply({ ephemeral: true });
     // eslint-disable-next-line sonarjs/no-small-switch
@@ -219,6 +314,10 @@ export const dAdmin: SlashCommand = {
       }
       case 'setstatus': {
         await setStatus(interaction, interaction.options.getString('prefix') as string, interaction.options.getString('status') as string);
+        break;
+      }
+      case 'overwriteuserdata': {
+        await overwriteUserData(interaction);
         break;
       }
       default: {
