@@ -21,10 +21,10 @@ jobs:
       NODE_OPTIONS: --max-old-space-size=7168
     steps:
     - uses: actions/checkout@v3
-    - name: Use Node.js '21.1.0'
+    - name: Use Node.js '22.9.0'
       uses: actions/setup-node@v3
       with:
-        node-version: '21.1.0'
+        node-version: '22.9.0'
         cache: 'npm'
     - name: Update npm
       run: npm install -g npm && npm --version
@@ -37,10 +37,10 @@ jobs:
   #   runs-on: ubuntu-latest
   #   steps:
   #   - uses: actions/checkout@v3
-  #   - name: Use Node.js '20.5.0'
+  #   - name: Use Node.js '22.9.0'
   #     uses: actions/setup-node@v3
   #     with:
-  #       node-version: '20.5.0'
+  #       node-version: '22.9.0'
   #       cache: 'npm'
   #   - name: Update npm
   #     run: npm install -g npm && npm --version

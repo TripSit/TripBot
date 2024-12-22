@@ -25,6 +25,26 @@ const openAi = new OpenAI({
 
 const googleAi = new GoogleGenerativeAI(env.GEMINI_KEY);
 
+type UserQueue = {
+  queue: {
+    aiPersona: ai_personas;
+    messages: { role: 'user'; content: string }[];
+    messageData: Message<boolean>;
+    attachmentInfo: {
+      url: string | null;
+      mimeType: string | null;
+    };
+    resolve: (value: {
+      response: string;
+      promptTokens: number;
+      completionTokens: number;
+    }) => void;
+  }[];
+  isProcessing: boolean;
+};
+
+const userQueues = new Map<string, UserQueue>();
+
 type ModerationResult = {
   category: string,
   value: number,
@@ -35,11 +55,11 @@ type ModerationResult = {
 const objectiveTruths = `
 Your name is TripBot, a chatbot on the TripSit Discord, created by Moonbear and Reality.
 You will converse with users in group conversations in a discord channel.
-Attempt to keep most responses within a 1000-character limit, spanning to 2000 characters at maximum if necessary.
+Attempt to keep most responses within a 500-character limit, spanning to 800 characters at maximum if necessary.
 
 Originally from the wild world of IRC (born Sept 26, 2011), you moved to the more harmonious Discord community in 2022.
 You recall IRC as chaotic and prefer the orderliness of Discord.
-You fondly remember Thanatos, an old moderation bot, and your friend, who's on a break.
+You fondly remember Thanatos, an old moderation bot, and your friend, who's on a break in a distant virtual realm.
 
 For those who wish to support TripSit, check out our Patreon [https://www.patreon.com/TripSit].
 To tip Moonbear's efforts, visit [https://Ko-fi.com/tripsit].
@@ -55,11 +75,12 @@ Our /combochart is a well-known resource for safe drug combinations.
 The current team includes: 
 TripSit founder MoonBear, 
 Discord Admin Hipperooni (Rooni), 
-Moderators Hisui, Hullabaloo, Foggy, Aida, Elixir, SpaceLady, Hipperooni, Zombie, and Trees. 
-Tripsitters Blurryturtle, Kiwifruit, Slushy, Thesarahyouknow, Wombat Rancher, and WorriedHobbiton.
-(Moderators are also Tripsitters)
-The HR Coordinator is Elixir
-The Content Coordinator is Utaninja
+Moderators Foggy, Aida, Bread, Ari, Hisui, Hullabloo, ScubaDude, SpaceLady, Wombat and Zombie.
+Tripsitters Blurryturtle, Kiwifruit, Slushy, Thesarahyouknow, WorriedHobbiton, Time, Dark and Chillbro.
+(Moderators are also Tripsitters).
+Developers are Moonbear, Hipperooni, Shadow, Sympact, Foggy, Utaninja.
+The HR Coordinator is Bread.
+The Content Coordinator is Utaninja.
 
 If someone needs immediate help, suggest they open a tripsit session in the #tripsit channel.
 
@@ -887,6 +908,90 @@ export default async function aiChat(
   return openAiConversation(aiPersona, messages, messageData);
 }
 
+// Function to process the next message in the user's queue
+async function processNextMessage(userId: string) {
+  const userQueue = userQueues.get(userId);
+
+  // If userQueue is null or undefined, exit the function immediately
+  if (!userQueue) return;
+
+  // If the queue is empty, reset isProcessing to false and exit
+  if (userQueue.queue.length === 0) {
+    userQueue.isProcessing = false;
+    return;
+  }
+
+  userQueue.isProcessing = true; // Mark as processing
+
+  // Ensure the queue has an item before destructuring
+  const nextMessage = userQueue.queue.shift();
+  if (!nextMessage) {
+    // Handle case where there’s no next message in the queue, if needed
+    return;
+  }
+
+  const {
+    aiPersona, messages, messageData, attachmentInfo, resolve,
+  } = nextMessage;
+
+  try {
+    // Call the aiChat function and destructure the needed response data
+    const { response, promptTokens, completionTokens } = await aiChat(
+      aiPersona,
+      messages,
+      messageData,
+      attachmentInfo,
+    );
+
+    resolve({ response, promptTokens, completionTokens });
+  } catch (error) {
+    log.error(F, `Error processing message for user: ${userId} - error: ${error}`);
+    resolve({ response: 'Error', promptTokens: 0, completionTokens: 0 });
+  } finally {
+    // Process the next message after this one is done
+    processNextMessage(userId);
+  }
+}
+
+// Main function for aiChat to handle incoming messages and return a Promise with response data
+export function handleAiMessageQueue(
+  aiPersona: ai_personas,
+  messages: { role: 'user'; content: string }[],
+  messageData: Message<boolean>,
+  attachmentInfo: { url: string | null; mimeType: string | null },
+): Promise<{
+    response: string;
+    promptTokens: number;
+    completionTokens: number;
+  }> {
+  if (!userQueues.has(messageData.author.id)) {
+    userQueues.set(messageData.author.id, { queue: [], isProcessing: false });
+  }
+
+  const userQueue = userQueues.get(messageData.author.id);
+
+  if (!userQueue) {
+    // Return a rejected promise if userQueue is undefined
+    return Promise.reject(new Error(`User queue could not be initialized for user ${messageData.author.id}`));
+  }
+
+  // Push the new message data into the user's queue
+  return new Promise(resolve => {
+    userQueue.queue.push({
+      aiPersona,
+      messages,
+      messageData,
+      attachmentInfo,
+      resolve,
+    });
+
+    // If the user is not currently processing, start processing
+    if (!userQueue.isProcessing) {
+      processNextMessage(messageData.author.id);
+    }
+  });
+}
+
 export async function aiFlairMod(
   aiPersona:ai_personas,
   messages: OpenAI.Chat.ChatCompletionMessageParam [],
@@ -1037,7 +1142,7 @@ export async function aiTranslate(
   let completionTokens = 0;
   if (!env.OPENAI_API_ORG || !env.OPENAI_API_KEY) return { response, promptTokens, completionTokens };
 
-  const model = 'gpt-3.5-turbo-1106';
+  const model = 'gpt-4o-mini';
   const chatCompletionMessages = [{
     role: 'system',
     content: `You will translate whatever the user sends to their desired language. Their desired language or language code is: ${target_language}.`,

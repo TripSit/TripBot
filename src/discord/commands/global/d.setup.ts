@@ -652,7 +652,21 @@ export async function helperButton(
   }
 
   // Do everything else
+
   const role = await interaction.guild?.roles.fetch(guildData.role_helper);
+
+  const user = await db.users.findUnique({
+    where: {
+      discord_id: target.user.id,
+    },
+  });
+
+  const userHasBeenAHelper = user?.last_was_helper !== null;
+
+  if (!user) {
+    log.error(F, `No user found for discord_id: ${target.user.id}`);
+    return;
+  }
 
   if (!role) {
     await interaction.reply({
@@ -662,17 +676,32 @@ export async function helperButton(
     return;
   }
 
+  // If the role being requested is the Helper or Contributor role, check if they have been banned first
+  if (role.id === guildData.role_helper && userData.helper_role_ban) {
+    await interaction.editReply({ content: 'Unable to add this role. If you feel this is an error, please talk to the team!' });
+    return;
+  }
+
   if (target.roles.cache.has(role.id)) {
+    await target.roles.remove(role);
     await interaction.reply({
-      content: stripIndents`You already have the helper role!`,
+      content: stripIndents`Your helper role has been removed. If you ever want to re-apply it, just click the button again!`,
       ephemeral: true,
     });
     return;
   }
 
-  // If the role being requested is the Helper or Contributor role, check if they have been banned first
-  if (role.id === guildData.role_helper && userData.helper_role_ban) {
-    await interaction.editReply({ content: 'Unable to add this role. If you feel this is an error, please talk to the team!' });
+  if (userHasBeenAHelper && !target.roles.cache.has(role.id)) {
+    await target.roles.add(role);
+    if (interaction.guild.id === env.DISCORD_GUILD_ID) {
+      const channelTripsitters = await interaction.guild?.channels.fetch(env.CHANNEL_TRIPSITTERS) as TextChannel;
+      await channelTripsitters.send(stripIndents`${target.displayName} has re-joined as a ${role.name}.`);
+    }
+    const metaChannel = await interaction.guild?.channels.fetch(guildData.channel_tripsitmeta) as TextChannel;
+    await interaction.reply({
+      content: stripIndents`Welcome back, go check out ${metaChannel}!`,
+      ephemeral: true,
+    });
     return;
   }
 
@@ -746,8 +775,22 @@ export async function helperButton(
       // log.debug(F, `introMessage: ${introMessage}`);
 
       await target.roles.add(role);
+
+      // Update the last date when they were given the helper role
+      await db.users.upsert({
+        where: {
+          discord_id: interaction.user.id,
+        },
+        create: {
+          discord_id: interaction.user.id,
+        },
+        update: {
+          last_was_helper: new Date(),
+        },
+      });
+
       const metaChannel = await i.guild?.channels.fetch(guildData.channel_tripsitmeta) as TextChannel;
-      await i.editReply({ content: `Added role ${role.name}, go check out ${metaChannel}!` });
+      await i.editReply({ content: `Added role ${role.name}, go check out ${metaChannel}! If you ever want to remove it, just click the button again.` });
 
       if (metaChannel.id === guildData.channel_tripsitmeta) {
         const introString = `
@@ -785,23 +828,22 @@ export async function helperButton(
           ### For a refresher on tripsitting please see the following resources:
 
           - [TripSit Learning Portal](https://learn.tripsit.me>)
-          - [BlueLight's How To Tripsit](<https://docs.google.com/document/d/1vE3jl9imdT3o62nNGn19k5HZVOkECF3jhjra8GkgvwE>)
-          - [TripSit's How to Tripsit](<https://wiki.tripsit.me/wiki/How_To_Tripsit_Online>)
+          - [BlueLight's How To Tripsit](https://docs.google.com/document/d/1vE3jl9imdT3o62nNGn19k5HZVOkECF3jhjra8GkgvwE)
+          - [TripSit's How to Tripsit](https://wiki.tripsit.me/wiki/How_To_Tripsit_Online)
           - Check the pins in this channel!
-          ### If you're overwhelmed, ask for backup
+          ### If you're overwhelmed, ask for backup:
           - Giving no information is better than giving the wrong information!
-          ### If someone is underage you can ping a Moderator and finish the session if you're comfortable. 
-          - Underage users can use the web-chat anonymously but are not allowed to socialize, moderator will take care of this.
-          ### We are NOT here to give medical advice, diagnose, or treat; or handle suicidal or self-harm situations.
-          - We're here to give harm reduction facts and *mild* mental health support, no one here is qualified to handle suicide of self-harm.
-          - If it seems like someone could use mental health services you can refer them to:
-          **Huddle Humans** - [Mental health support](<https://discord.gg/mentalhealth>)
-          **HealthyGamer** - [Mental health with a gaming twist](<https://discord.com/invite/H3yRwc7>)
+          ### If someone is underage you can ping a Moderator and finish the session if you're comfortable:
+          - Underage users can use the web-chat anonymously but are not allowed to socialize, a Moderator will take care of this.
+          ### We are NOT here to give medical advice, diagnose, or treat; or handle suicidal or self-harm situations:
+          - We're here to give harm reduction facts and *mild* mental health support, no one here is qualified to handle suicide or self-harm.
+          - If it seems like someone could use mental health services you can refer them to one of the servers below.
+          **Huddle Humans** - [Mental health support](https://discord.gg/mentalhealth)
+          **HealthyGamer** - [Mental health with a gaming twist](https://discord.com/invite/H3yRwc7)
     
           **If you have any questions, please reach out!**
         `);
       }
-
       if (i.guild.id === env.DISCORD_GUILD_ID) {
         const channelTripsitters = await i.guild?.channels.fetch(env.CHANNEL_TRIPSITTERS) as TextChannel;
         const roleTripsitter = await i.guild?.roles.fetch(guildData.role_tripsitter) as Role;
