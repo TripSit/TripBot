@@ -35,7 +35,7 @@ import { ticket_status, user_tickets } from '@prisma/client';
 import commandContext from './context';
 import { embedTemplate } from './embedTemplate';
 import { checkChannelPermissions, checkGuildPermissions } from './checkPermissions';
-import { commandCooldown } from './commandCooldown';
+import commandCooldown from './commandCooldown';
 
 const F = f(__filename);
 
