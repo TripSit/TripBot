@@ -295,10 +295,10 @@ async function tripsitmodeOn(
           status: 'OPEN' as ticket_status,
           reopened_at: new Date(),
           archived_at: env.NODE_ENV === 'production'
-            ? DateTime.local().plus({ days: 7 }).toJSDate()
+            ? DateTime.local().plus({ days: 3 }).toJSDate()
             : DateTime.local().plus({ minutes: 1 }).toJSDate(),
           deleted_at: env.NODE_ENV === 'production'
-            ? DateTime.local().plus({ days: 14 }).toJSDate()
+            ? DateTime.local().plus({ days: 6 }).toJSDate()
             : DateTime.local().plus({ minutes: 2 }).toJSDate(),
         },
       });
