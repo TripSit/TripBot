@@ -48,7 +48,7 @@ import {
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import commandContext from '../../utils/context';
-import aiChat, { aiModerate } from '../../../global/commands/g.ai';
+import { aiModerate, handleAiMessageQueue } from '../../../global/commands/g.ai';
 
 /* TODO
 * only direct @ message should trigger a response
@@ -1123,7 +1123,12 @@ async function personasPage(
 
   // If the user is a developer in the home guild, show the buttonAiModify button
   const tripsitGuild = await discordClient.guilds.fetch(env.DISCORD_GUILD_ID);
-  const tripsitMember = await tripsitGuild.members.fetch(interaction.user.id);
+  let tripsitMember = null;
+  try {
+    tripsitMember = await tripsitGuild.members.fetch(interaction.user.id);
+  } catch (err) {
+    // do nothing
+  }
 
   const components = [
     new ActionRowBuilder<ButtonBuilder>()
@@ -1149,7 +1154,7 @@ async function personasPage(
     });
 
     log.debug(F, 'Adding three buttons to personaButtons');
-    if (tripsitMember.roles.cache.has(env.ROLE_DEVELOPER)) {
+    if (tripsitMember && tripsitMember.roles.cache.has(env.ROLE_DEVELOPER)) {
       components.push(
         new ActionRowBuilder<ButtonBuilder>()
           .addComponents(buttonAiNew, buttonAiModify, buttonAiDelete),
@@ -1182,7 +1187,7 @@ async function personasPage(
       );
     }
 
-    if (tripsitMember.roles.cache.has(env.ROLE_DEVELOPER)) {
+    if (tripsitMember && tripsitMember.roles.cache.has(env.ROLE_DEVELOPER)) {
       components.push(
         new ActionRowBuilder<StringSelectMenuBuilder>().addComponents([
           menuAiPublic,
@@ -1196,7 +1201,7 @@ async function personasPage(
     };
   }
 
-  if (tripsitMember.roles.cache.has(env.ROLE_DEVELOPER)) {
+  if (tripsitMember && tripsitMember.roles.cache.has(env.ROLE_DEVELOPER)) {
     log.debug(F, 'Adding buttonAiNew to components');
     components.push(
       new ActionRowBuilder<ButtonBuilder>()
@@ -2175,7 +2180,7 @@ export async function aiMessage(
   }, 30000); // Failsafe to stop typing indicator after 30 seconds
 
   try {
-    const chatResponse = await aiChat(aiPersona, messageList, messageData, attachmentInfo);
+    const chatResponse = await handleAiMessageQueue(aiPersona, messageList, messageData, attachmentInfo);
     response = chatResponse.response;
     promptTokens = chatResponse.promptTokens;
     completionTokens = chatResponse.completionTokens;
