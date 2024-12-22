@@ -1075,12 +1075,9 @@ async function checkMoodle() { // eslint-disable-line
             },
               ); // eslint-disable-line
           }
-          if (!member.roles.cache.has(env.ROLE_NEEDS_HELP)) {
-            member.roles.add(role);
-            log.info(F, `Gave ${member.user.username} the ${role.name} role`);
-          } else {
-            log.info(F, `Skipped giving ${member.user.username} the ${role.name} because they have the Needs Help role`);
-          }
+
+          member.roles.add(role);
+          log.info(F, `Gave ${member.user.username} the ${role.name} role`);
 
           // eslint-disable max-len
           member.user.send({
