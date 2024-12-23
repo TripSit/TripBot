@@ -195,11 +195,11 @@ give people a chance to answer 😄 If no one answers in 5 minutes you can try a
       }
       const roleTripsitter = await message.guild.roles.fetch(env.ROLE_TRIPSITTER) as Role;
       const roleHelper = await message.guild.roles.fetch(env.ROLE_HELPER) as Role;
-      await message.channel.send(`Hey ${displayName}, someone from the ${roleTripsitter} and/or ${roleHelper} team will be with you as soon as they're available!
+      await message.channel.send(stripIndents`Hey ${displayName}, someone from the ${roleTripsitter} and/or ${roleHelper} team will be with you as soon as they're available!
 
-        If you’re in the right mindset please start by telling us what you took, at what dose and route, how long ago, along with any concerns you may have.
+      If you’re in the right mindset please start by telling us what you took, at what dose and route, how long ago, along with any concerns you may have.
 
-        **If this is a medical emergency** please contact your local emergency services: we do not call EMS on behalf of anyone.
+      **If this is a medical emergency** please contact your local emergency services: we do not call EMS on behalf of anyone.
 
       `);
 
