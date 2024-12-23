@@ -888,11 +888,13 @@ export async function tripsitmeUserClose(
         },
       },
     },
+    orderBy: {
+      thread_id: 'desc',
+    },
   });
 
   if (ticketData?.tripsit_mode && targetId === actor.id) {
     log.debug(F, 'They requested to close their ticket, but are in TripSit Mode. Request denied.');
-    // await interaction.editReply({ content: 'Only a TripSitter or Moderator can close your ticket.' });
     const rejectMessage = stripIndents`
     Hey ${actor.displayName}, since a team member made this ticket for you, only a team member can close it.
 
@@ -1332,7 +1334,7 @@ export async function tripSitMe(
   memberInput:GuildMember | null,
   triage:string,
   intro: string = '',
-):Promise<ThreadChannel | null> {
+):Promise<[ThreadChannel | null, user_tickets] | null> {
   log.info(F, await commandContext(interaction));
   // await interaction.deferReply({ ephemeral: true });
 
@@ -1527,7 +1529,7 @@ export async function tripSitMe(
   const embedTripsitter = embedTemplate()
     .setColor(Colors.DarkBlue)
     .setDescription(stripIndents`
-      ${issue ? `A tripsitter has put ${target} into tripsitmode!\n` : `${target} has requested assistance!\n`} 
+      ${issue ? `${interaction.member} has put ${target} into tripsitmode!\n` : `${target} has requested assistance!\n`} 
       **They've taken:** ${triage ? `\n${triage}` : noInfo}
 
       ${intro !== '' ? `${issue}\n` : ''}
@@ -1606,6 +1608,7 @@ export async function tripSitMe(
     type: 'TRIPSIT',
     status: 'OPEN',
     first_message_id: '',
+    tripsit_mode: !!issue,
     archived_at: archiveTime.toJSDate(),
     deleted_at: deleteTime.toJSDate(),
   } as user_tickets;
@@ -1613,7 +1616,7 @@ export async function tripSitMe(
   // log.debug(F, `newTicketData: ${JSON.stringify(newTicketData, null, 2)}`);
 
   // Update the ticket in the DB
-  await db.user_tickets.create({
+  const newTicket = await db.user_tickets.create({
     data: {
       user_id: newTicketData.user_id,
       description: newTicketData.description,
@@ -1621,12 +1624,13 @@ export async function tripSitMe(
       type: newTicketData.type,
       status: newTicketData.status,
       first_message_id: newTicketData.first_message_id,
+      tripsit_mode: newTicketData.tripsit_mode,
       archived_at: newTicketData.archived_at,
       deleted_at: newTicketData.deleted_at,
     },
   });
 
-  return threadHelpUser;
+  return [threadHelpUser, newTicket];
 }
 
 export async function tripsitmeButton(
@@ -1955,30 +1959,33 @@ export async function tripsitmeButton(
       await i.deferReply({ ephemeral: true });
       const triage = i.fields.getTextInputValue('triageInput');
 
-      const threadHelpUser = await tripSitMe(i, target, triage) as ThreadChannel;
+      const result = (await tripSitMe(i, target, triage)) as [ThreadChannel | null, user_tickets] | null;
 
-      if (!threadHelpUser) {
+      if (result !== null) {
+        const [threadHelpUser] = result;
+        if (!threadHelpUser) {
+          const embed = embedTemplate()
+            .setColor(Colors.DarkBlue)
+            .setDescription(stripIndents`Hey ${interaction.member}, there was an error creating your help thread! The Guild owner should get a message with specifics!`);
+          await i.editReply({ embeds: [embed] });
+          return;
+        }
+
+        const replyMessage = stripIndents`
+        Hey ${target}, thank you for asking for assistance!
+        
+        Click here to be taken to your private room: ${threadHelpUser.toString()}
+    
+        You can also click in your channel list to see your private room!`;
         const embed = embedTemplate()
           .setColor(Colors.DarkBlue)
-          .setDescription(stripIndents`Hey ${interaction.member}, there was an error creating your help thread! The Guild owner should get a message with specifics!`);
-        await i.editReply({ embeds: [embed] });
-        return;
-      }
-
-      const replyMessage = stripIndents`
-      Hey ${target}, thank you for asking for assistance!
-      
-      Click here to be taken to your private room: ${threadHelpUser.toString()}
-  
-      You can also click in your channel list to see your private room!`;
-      const embed = embedTemplate()
-        .setColor(Colors.DarkBlue)
-        .setDescription(replyMessage);
-      try {
-        await i.editReply({ embeds: [embed] });
-      } catch (err) {
-        log.error(F, `There was an error responding to the user! ${err}`);
-        log.error(F, `Error: ${JSON.stringify(err, null, 2)}`);
+          .setDescription(replyMessage);
+        try {
+          await i.editReply({ embeds: [embed] });
+        } catch (err) {
+          log.error(F, `There was an error responding to the user! ${err}`);
+          log.error(F, `Error: ${JSON.stringify(err, null, 2)}`);
+        }
       }
     });
 }
