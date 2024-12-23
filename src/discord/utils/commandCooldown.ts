@@ -31,10 +31,10 @@ async function commandCooldown(
 
     // If the cooldown is still active, inform the user
     if (now < expirationTime) {
-      const timeLeft = (expirationTime - now) / 1000; // Time left in seconds
       return {
         success: false,
-        message: `Please wait ${timeLeft.toFixed(1)} more seconds before using this command or button again.`,
+        // eslint-disable-next-line max-len
+        message: `Please wait before using this command or button again. You can press it again <t:${Math.floor(expirationTime / 1000)}:R>`,
       };
     }
   }

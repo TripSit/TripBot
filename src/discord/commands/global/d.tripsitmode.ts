@@ -27,7 +27,7 @@ import {
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
 import { DateTime } from 'luxon';
-import { ticket_status } from '@prisma/client';
+import { ticket_status, user_tickets } from '@prisma/client';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 // import {embedTemplate} from '../../utils/embedTemplate';
@@ -251,10 +251,13 @@ async function tripsitmodeOn(
         if (minutes > 5) { // Switch to seconds > 10 for dev server
           const helperString = `and/or ${roleHelper}`;
           try {
+            // eslint-disable-next-line max-len
             metaMessage = `Hey ${roleTripsitter} ${guildData.role_helper ? helperString : ''} team, ${interaction.member} has indicated that ${target.displayName} needs assistance!`;
           } catch (err) {
             // If for example helper role has been deleted but the ID is still stored, do this
+            // eslint-disable-next-line max-len
             metaMessage = `Hey ${roleTripsitter} team, ${interaction.member} has indicated that ${target.displayName} needs assistance!`;
+            // eslint-disable-next-line max-len
             log.error(F, `Stored Helper ID for guild ${guildData.id} is no longer valid. Role is unfetchable or deleted.`);
           }
         } else {
@@ -287,12 +290,14 @@ async function tripsitmodeOn(
         }
       }
 
+      log.info(F, 'TripSit Mode was triggered in Condition 1 (Update)');
       ticketData = await db.user_tickets.update({
         where: {
           id: ticketData.id,
         },
         data: {
           status: 'OPEN' as ticket_status,
+          tripsit_mode: true,
           reopened_at: new Date(),
           archived_at: env.NODE_ENV === 'production'
             ? DateTime.local().plus({ days: 7 }).toJSDate()
@@ -330,7 +335,7 @@ async function tripsitmodeOn(
       new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
         .setCustomId('introInput')
         .setLabel('What\'s going on with them?')
-        .setPlaceholder('This will be posted in the channel for them to see!')
+        .setPlaceholder('This will only be visible to helpers and TripSitters.')
         .setStyle(TextInputStyle.Paragraph)),
     ));
 
@@ -342,18 +347,61 @@ async function tripsitmodeOn(
       const triage = i.fields.getTextInputValue('triageInput');
       const intro = i.fields.getTextInputValue('introInput');
 
-      const threadHelpUser = await tripSitMe(i, target, triage, intro) as ThreadChannel;
+      const result = (await tripSitMe(i, target, triage, intro)) as [ThreadChannel | null, user_tickets] | null;
 
-      const replyMessage = stripIndents`
-      Hey ${i.member}, you activated tripsit mode on ${target.displayName}!
-  
-      Click here to be taken to their private room: ${threadHelpUser}
-  
-      You can also click in your channel list to see your private room!`;
-      const embed = embedTemplate()
-        .setColor(Colors.DarkBlue)
-        .setDescription(replyMessage);
-      await i.editReply({ embeds: [embed] });
+      if (result !== null) {
+        const [threadHelpUser, newTicketData] = result;
+        const replyMessage = stripIndents`
+        Hey ${i.member}, you activated tripsit mode on ${target.displayName}!
+    
+        Click here to be taken to their private room: ${threadHelpUser}
+    
+        You can also click in your channel list to see their private room!`;
+        const embed = embedTemplate()
+          .setColor(Colors.DarkBlue)
+          .setDescription(replyMessage);
+        await i.editReply({ embeds: [embed] });
+
+        if (!ticketData) {
+          log.info(F, 'TripSit Mode was triggered in Condition 2 (Creation)');
+          ticketData = await db.user_tickets.create({
+            data: {
+              user_id: userData.id,
+              type: 'TRIPSIT',
+              status: 'OPEN' as ticket_status,
+              tripsit_mode: true,
+              description: '',
+              first_message_id: '',
+              thread_id: threadHelpUser !== null ? threadHelpUser.id : '',
+              archived_at: env.NODE_ENV === 'production'
+                ? DateTime.local().plus({ days: 3 }).toJSDate()
+                : DateTime.local().plus({ minutes: 1 }).toJSDate(),
+              deleted_at: env.NODE_ENV === 'production'
+                ? DateTime.local().plus({ days: 6 }).toJSDate()
+                : DateTime.local().plus({ minutes: 2 }).toJSDate(),
+            },
+          });
+        } else {
+          // Create or update thread to toggle tripsit_mode on
+          log.info(F, 'TripSit Mode was triggered in Condition 3 (Update)');
+          ticketData = await db.user_tickets.update({
+            where: {
+              id: newTicketData.id, // Assuming 'id' is unique; use a dummy value if `ticketData` is null
+            },
+            data: {
+              status: 'OPEN' as ticket_status,
+              tripsit_mode: true,
+              reopened_at: new Date(),
+              archived_at: env.NODE_ENV === 'production'
+                ? DateTime.local().plus({ days: 3 }).toJSDate()
+                : DateTime.local().plus({ minutes: 1 }).toJSDate(),
+              deleted_at: env.NODE_ENV === 'production'
+                ? DateTime.local().plus({ days: 6 }).toJSDate()
+                : DateTime.local().plus({ minutes: 2 }).toJSDate(),
+            },
+          });
+        }
+      }
     });
 
   return true;
