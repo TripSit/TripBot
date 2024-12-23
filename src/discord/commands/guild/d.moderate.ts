@@ -1388,7 +1388,7 @@ export async function moderate(
 
   // Process duration time for ban and timeouts
   let banEndTime = null;
-  let duration = 0 as null | number;
+  let actionDuration = 0 as null | number;
   let durationStr = '';
   if (isTimeout(command)) {
     // log.debug(F, 'Parsing timeout duration');
@@ -1397,47 +1397,45 @@ export async function moderate(
     // log.debug(F, `durationVal: ${durationVal}`);
     if (durationVal.length === 1) {
       // If the input is a single number, assume it's days
-      duration = parseInt(durationVal, 10);
-      if (Number.isNaN(duration)) {
+      actionDuration = parseInt(durationVal, 10);
+      if (Number.isNaN(actionDuration)) {
         return { content: 'Timeout must be a number!' };
       }
-      if (duration < 0 || duration > 7) {
+      if (actionDuration < 0 || actionDuration > 7) {
         return { content: 'Timeout must be between 0 and 7 days!' };
       }
-      durationVal = `${duration} days`;
+      durationVal = `${actionDuration} days`;
     }
 
-    duration = await parseDuration(durationVal);
-    if (duration && (duration < 0 || duration > 7 * 24 * 60 * 60 * 1000)) {
+    actionDuration = await parseDuration(durationVal);
+    if (actionDuration && (actionDuration < 0 || actionDuration > 7 * 24 * 60 * 60 * 1000)) {
       return { content: 'Timeout must be between 0 and 7 days!!' };
     }
 
     // convert the milliseconds into a human readable string
-    const humanTime = msToHuman(duration);
+    const humanTime = msToHuman(actionDuration);
 
-    durationStr = `for ${humanTime}. It will expire ${time(new Date(Date.now() + duration), 'R')}`;
+    durationStr = ` for ${humanTime}. It will expire ${time(new Date(Date.now() + actionDuration), 'R')}`;
     // log.debug(F, `duration: ${duration}`);
   }
   if (isFullBan(command)) {
-    // If the command is ban, then the input value exists, so pull that and try to parse it as an int
-    let dayInput = parseInt(modalInt.fields.getTextInputValue('days'), 10);
+    const durationVal = modalInt.fields.getTextInputValue('ban_duration');
 
-    // If no input was provided, default to 0 days
-    if (Number.isNaN(dayInput)) dayInput = 0;
+    if (durationVal !== '') {
+      let tempBanDuration = parseInt(durationVal, 10);
+      if (Number.isNaN(tempBanDuration)) {
+        return { content: 'Ban duration must be a number!' };
+      }
 
-    // If the input is a string, or outside the bounds, tell the user and return
-    if (dayInput && (dayInput < 0 || dayInput > 7)) {
-      return { content: 'Ban days must be at least 0 and at most 7!' };
+      tempBanDuration = await parseDuration(durationVal);
+      if (tempBanDuration && tempBanDuration < 0) {
+        return { content: 'Ban duration must be at least 1 second!' };
+      }
+
+      durationStr = `${time(new Date(Date.now() + tempBanDuration), 'R')}`;
+      const currentTime = new Date();
+      banEndTime = tempBanDuration !== 0 ? new Date(currentTime.getTime() + tempBanDuration) : null;
     }
-
-    // Get the millisecond value of the input
-    duration = await parseDuration(`${dayInput} days`);
-
-    // The above code is about the TIMEOUT duration, not ban. Probably old code.
-    const banDurationInput = parseInt(modalInt.fields.getTextInputValue('ban_duration'), 10);
-    const banDuration = await parseDuration(`${banDurationInput}`);
-    const currentTime = new Date();
-    banEndTime = new Date(currentTime.getTime() + banDuration);
   }
 
   // Display all properties we're going to use
@@ -1447,7 +1445,7 @@ export async function moderate(
   targetId: ${targetId}
   internalNote: ${internalNote}
   description: ${description}
-  duration: ${duration}
+  duration: ${actionDuration}
   durationStr: ${durationStr}
   `);
 
@@ -1539,11 +1537,12 @@ export async function moderate(
 
   if (command === 'FULL_BAN') {
     internalNote += `\n **Actioned by:** ${actor.displayName}`;
-    internalNote += `\n **Ban Ends At:** ${banEndTime}`;
+    internalNote += `\n **Ban Ends:** ${durationStr || 'Never'}`;
   }
 
   let actionData = {
     user_id: targetData.id,
+    target_discord_id: targetData.discord_id,
     guild_id: actor.guild.id,
     type: command.includes('UN-') ? command.slice(3) : command,
     ban_evasion_related_user: null as string | null,
@@ -1561,7 +1560,7 @@ export async function moderate(
   if (isBan(command)) {
     if (isFullBan(command) || isUnderban(command) || isBanEvasion(command)) {
       targetData.removed_at = new Date();
-      const deleteMessageValue = duration ?? 0;
+      const deleteMessageValue = actionDuration ?? 0;
       try {
         if (deleteMessageValue > 0 && targetMember) {
         // log.debug(F, `I am deleting ${deleteMessageValue} days of messages!`);
@@ -1578,7 +1577,7 @@ export async function moderate(
         targetObj = await buttonInt.guild.bans.create(targetId, { deleteMessageSeconds: deleteMessageValue / 1000, reason: internalNote ?? noReason });
         // Set ban duration if present
         if (banEndTime !== null) {
-          targetData.discord_bot_ban_expires_at = banEndTime;
+          actionData.expires_at = banEndTime;
         }
       } catch (err) {
         log.error(F, `Error: ${err}`);
@@ -1629,11 +1628,12 @@ export async function moderate(
     }
     actionData.repealed_at = new Date();
     actionData.repealed_by = actorData.id;
+    actionData.expires_at = null;
   } else if (isTimeout(command)) {
     if (targetMember) {
-      actionData.expires_at = new Date(Date.now() + (duration as number));
+      actionData.expires_at = new Date(Date.now() + (actionDuration as number));
       try {
-        await targetMember.timeout(duration, internalNote ?? noReason);
+        await targetMember.timeout(actionDuration, internalNote ?? noReason);
       } catch (err) {
         log.error(F, `Error: ${err}`);
       }
@@ -1661,7 +1661,7 @@ export async function moderate(
       actionData.repealed_by = actorData.id;
 
       try {
-        await targetMember.timeout(0, internalNote ?? noReason);
+        await targetMember.timeout(null, internalNote ?? noReason);
         // log.debug(F, `I untimeout ${target.displayName} because\n '${internalNote}'!`);
       } catch (err) {
         log.error(F, `Error: ${err}`);

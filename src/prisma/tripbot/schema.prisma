@@ -134,7 +134,6 @@ model users {
   move_points                                               Int                  @default(0)
   empathy_points                                            Int                  @default(0)
   discord_bot_ban                                           Boolean              @default(false)
-  discord_bot_ban_expires_at                                DateTime?            @db.Timestamptz(6)
   ticket_ban                                                Boolean              @default(false)
   last_seen_at                                              DateTime             @default(now()) @db.Timestamptz(6)
   last_seen_in                                              String?
@@ -360,6 +359,7 @@ model rpg_inventory {
 model user_actions {
   id                                                 String           @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
   user_id                                            String           @db.Uuid
+  target_discord_id                                  String?
   guild_id                                           String           @default("179641883222474752")
   type                                               user_action_type
   ban_evasion_related_user                           String?          @db.Uuid

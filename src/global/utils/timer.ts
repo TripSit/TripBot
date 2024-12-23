@@ -1120,39 +1120,50 @@ async function checkMoodle() { // eslint-disable-line
 }
 
 async function undoExpiredBans() {
-  const expiredBans = await db.users.findMany({
+  const expiredBans = await db.user_actions.findMany({
     where: {
-      discord_bot_ban_expires_at: {
+      expires_at: {
         not: null, // Ensure the ban duration is set (i.e., not null, indicating a ban exists)
         lte: new Date(), // Fetch users whose ban duration is in the past (expired bans)
       },
+      type: 'FULL_BAN',
     },
   });
 
   if (expiredBans.length > 0) {
     // Get the tripsit guild
     const tripsitGuild = await global.discordClient.guilds.fetch(env.DISCORD_GUILD_ID);
-    expiredBans.forEach(async bannedUser => {
+    expiredBans.forEach(async activeBan => {
       // Check if the reminder is ready to be triggered
-      if (bannedUser.discord_id !== null) {
-        const user = await global.discordClient.users.fetch(bannedUser.discord_id);
+      if (activeBan.target_discord_id !== null) {
+        const user = await global.discordClient.users.fetch(activeBan.target_discord_id);
         if (user) {
           // Unban them
-          await tripsitGuild.bans.remove(user, 'Temporary ban has expired');
-          // Reset discord_bot_ban_expires_at flag to null
-          await db.users.update({
-            where: {
-              id: bannedUser.id,
-            },
-            data: {
-              discord_bot_ban_expires_at: null, // Reset the ban duration to null
-            },
-          });
           try {
-            await user.send(stripIndents`Hey ${user.username}, your temporary ban in TripSit has been lifted! 
-              You're welcome to rejoin anytime. We appreciate your understanding and are looking forward to seeing you back!
+            await tripsitGuild.bans.remove(user, 'Temporary ban expired');
+            log.info(F, `Temporary ban for ${activeBan.target_discord_id} has expired and been lifted!`);
+          } catch (err) {
+            // If this error is ever encountered then something in our flow is probably wrong. This should never happen.
+            log.error(F, `Failed to remove temporary ban on ${activeBan.target_discord_id}. Likely already unbanned.`);
+          } finally {
+          // Reset expires_at flag to null
+            await db.user_actions.update({
+              where: {
+                id: activeBan.id,
+              },
+              data: {
+                expires_at: null, // Reset the ban duration to null
+              },
+            });
+          }
+
+          try {
+            await user.send(stripIndents`Hi ${user.username},  
+              Your temporary ban from TripSit has been lifted! You're welcome to rejoin the community whenever you're ready.  
               
-              Make sure to read the #rules if you decide to rejoin.`);
+              We really appreciate your understanding during this time and look forward to seeing you back.  
+              
+              If you decide to rejoin, please take a moment to review the #rules channel. Hope to see you around soon!`);
           } catch (err) {
             // Do nothing. It's likely their discord permissions disallowed the bot to ever have comms with them.
           }
