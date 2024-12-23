@@ -1159,17 +1159,6 @@ async function undoExpiredBans() {
               },
             });
           }
-
-          try {
-            await user.send(stripIndents`Hi ${user.username},  
-              Your temporary ban from TripSit has been lifted! You're welcome to rejoin the community whenever you're ready.  
-              
-              We really appreciate your understanding during this time and look forward to seeing you back.  
-              
-              If you decide to rejoin, please take a moment to review the #rules channel. Hope to see you around soon!`);
-          } catch (err) {
-            // Do nothing. It's likely their discord permissions disallowed the bot to ever have comms with them.
-          }
         }
       }
     });

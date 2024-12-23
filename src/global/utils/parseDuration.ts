@@ -12,7 +12,7 @@ export default parseDuration;
 export async function parseDuration(duration:string):Promise<number> {
   // Those code inspired by https://gist.github.com/substanc3-dev/306bb4d04b2aad3a5d019052b1a0dec0
   // This is super cool, thanks a lot!
-  const supported = 'smhdwmoy';
+  const supported = 'smMhdwmoy';
   const numbers = '0123456789';
   let stage = 1;
   let idx = 0;
@@ -53,7 +53,7 @@ export async function parseDuration(duration:string):Promise<number> {
           if (c === 'h') {
             timeValue += tempNumber * 60 * 60 * 1000;
           }
-          if (c === 'mo') {
+          if (c === 'M') {
             timeValue += tempNumber * 30 * 24 * 60 * 60 * 1000;
           }
           if (c === 'm') {
@@ -81,3 +81,8 @@ export async function parseDuration(duration:string):Promise<number> {
   }
   return timeValue;
 }
+
+export const validateDurationInput = (input: string): boolean => {
+  const regex = /^(\d+(yr|M|w|d|h|m|s)\s?)+$/;
+  return regex.test(input.trim());
+};

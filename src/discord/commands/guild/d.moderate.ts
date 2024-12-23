@@ -42,7 +42,7 @@ import { stripIndents } from 'common-tags';
 import { user_action_type, user_actions, users } from '@prisma/client';
 import moment from 'moment';
 import { SlashCommand } from '../../@types/commandDef';
-import { parseDuration } from '../../../global/utils/parseDuration';
+import { parseDuration, validateDurationInput } from '../../../global/utils/parseDuration';
 import commandContext from '../../utils/context'; // eslint-disable-line
 import { getDiscordMember } from '../../utils/guildMemberLookup';
 import { embedTemplate } from '../../utils/embedTemplate';
@@ -1394,22 +1394,16 @@ export async function moderate(
     // log.debug(F, 'Parsing timeout duration');
     let durationVal = modalInt.fields.getTextInputValue('duration');
     if (durationVal === '') durationVal = '7 days';
-    // log.debug(F, `durationVal: ${durationVal}`);
-    if (durationVal.length === 1) {
-      // If the input is a single number, assume it's days
-      actionDuration = parseInt(durationVal, 10);
-      if (Number.isNaN(actionDuration)) {
-        return { content: 'Timeout must be a number!' };
-      }
-      if (actionDuration < 0 || actionDuration > 7) {
-        return { content: 'Timeout must be between 0 and 7 days!' };
-      }
-      durationVal = `${actionDuration} days`;
+
+    if (durationVal !== '' && !validateDurationInput(durationVal)) {
+      return {
+        content: 'Timeout duration must include at least one of seconds, minutes, hours, days, or a week. For example: 5d 5h 5m 5s, 1w or 5d.',
+      };
     }
 
     actionDuration = await parseDuration(durationVal);
     if (actionDuration && (actionDuration < 0 || actionDuration > 7 * 24 * 60 * 60 * 1000)) {
-      return { content: 'Timeout must be between 0 and 7 days!!' };
+      return { content: 'Timeout must be between 0 and 7 days!' };
     }
 
     // convert the milliseconds into a human readable string
@@ -1423,8 +1417,15 @@ export async function moderate(
 
     if (durationVal !== '') {
       let tempBanDuration = parseInt(durationVal, 10);
+
       if (Number.isNaN(tempBanDuration)) {
         return { content: 'Ban duration must be a number!' };
+      }
+
+      if (durationVal !== '' && !validateDurationInput(durationVal)) {
+        return {
+          content: 'Ban duration must include at least one of seconds, minutes, hours, days, weeks, months, or years. For example: 1yr 1M 1w 1d 1h 1m 1s',
+        };
       }
 
       tempBanDuration = await parseDuration(durationVal);
