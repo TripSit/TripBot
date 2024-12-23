@@ -1454,7 +1454,6 @@ export async function rpgBounties(
   if (command !== null) {
     const dbKey = `last_${command}`;
     const lastBounties = personaData[dbKey as 'last_quest' | 'last_dungeon' | 'last_raid'] as Date;
-    const resetTime = allResetTimes[command];
     let timeout = false;
 
     if (lastBounties) {
