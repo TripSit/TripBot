@@ -658,7 +658,12 @@ export async function tripsitmeTeamClose(
   if (!interaction.member) return;
   if (!interaction.channel) return;
   log.info(F, await commandContext(interaction));
-  await interaction.deferReply({ ephemeral: true });
+  try {
+    await interaction.deferReply({ ephemeral: true });
+  } catch (err) {
+    // If this errors it is likely because a mod/tripsitter called this function from UserClose button.
+    // This is normal and intended, if a little hacky.
+  }
 
   const targetId = interaction.customId.split('~')[1];
 
@@ -763,7 +768,7 @@ export async function tripsitmeTeamClose(
 
     This thread will remain here for a day if you want to follow up tomorrow.
     After 7 days, it will be deleted to preserve your privacy =)
-    Alternatively, you may press the "Delete my ticket" button to delete it yourself.
+    Alternatively, you may press the "Delete ticket" button at the start of your ticket to delete it yourself.
 
     If you'd like to go back to social mode, just click the button below!
     `;
@@ -846,26 +851,38 @@ export async function tripsitmeUserClose(
   if (!interaction.channel) return;
   log.info(F, await commandContext(interaction));
 
-  const cooldown = await commandCooldown(interaction.user, interaction.customId);
+  const cooldown = await commandCooldown(interaction.user, interaction.customId, 10);
 
   if (!cooldown.success && cooldown.message) {
     await interaction.reply({ content: cooldown.message, ephemeral: true });
     return;
   }
 
-  await interaction.deferReply({ ephemeral: false });
+  const actor = interaction.member as GuildMember;
+  const isModTripsitterOrHelper = actor.roles.cache.some(
+    role => [env.ROLE_MODERATOR, env.ROLE_TRIPSITTER, env.ROLE_HELPER].includes(role.id),
+  );
+
+  await interaction.deferReply({ ephemeral: isModTripsitterOrHelper });
 
   const targetId = interaction.customId.split('~')[1];
   const override = interaction.customId.split('~')[0] === 'tripsitmodeOffOverride';
 
   const target = await interaction.guild.members.fetch(targetId);
-  const actor = interaction.member as GuildMember;
   await actor.fetch();
   log.debug(F, `${actor.displayName} (${actor.id}) clicked "I no longer need help" in ${target.displayName}'s (${target.id}) session `);
 
-  if (targetId !== actor.id && !override) {
-    log.debug(F, 'They did not create the thread, so I am not doing anything!');
-    await interaction.editReply({ content: 'Only the user receiving help can click this button!' });
+  if (
+    targetId !== actor.id
+    && !override
+    && !isModTripsitterOrHelper) {
+    log.debug(F, 'They did not create the thread or have the required role, so I am not doing anything!');
+    await interaction.editReply({ content: 'Only moderators, tripsitters, or the user receiving help can click this button!' });
+    return;
+  }
+
+  if (isModTripsitterOrHelper) {
+    await tripsitmeTeamClose(interaction);
     return;
   }
 
@@ -1112,10 +1129,8 @@ export async function tripsitmeUserClose(
     await interaction.editReply(stripIndents`Hey ${target}, it looks like you're doing somewhat better!
 
       This thread will remain here for a day if you want to follow up tomorrow.
-      After 7 days, it will be deleted to preserve your privacy =)
-      Alternatively, you may press the "Delete my ticket" button to delete it yourself.
-      
-      If you'd like to go back to social mode, just click the button below!`);
+      After 3 days, it will be deleted to preserve your privacy =)
+      Alternatively, you may press the "Delete ticket" button at the start of your ticket to delete it yourself.`);
   } catch (err) {
     log.error(F, `Error sending end help message to ${threadHelpUser}`);
     log.error(F, err as string);
@@ -1202,19 +1217,33 @@ export async function tripsitmeUserDelete(
   if (!interaction.channel) return;
   log.info(F, await commandContext(interaction));
 
-  await interaction.deferReply({ ephemeral: false });
+  const cooldown = await commandCooldown(interaction.user, interaction.customId, 10);
+
+  if (!cooldown.success && cooldown.message) {
+    await interaction.reply({ content: cooldown.message, ephemeral: true });
+    return;
+  }
+
+  const actor = interaction.member as GuildMember;
+  const isModTripsitterOrHelper = actor.roles.cache.some(
+    role => [env.ROLE_MODERATOR, env.ROLE_TRIPSITTER, env.ROLE_HELPER].includes(role.id),
+  );
+
+  await interaction.deferReply({ ephemeral: isModTripsitterOrHelper });
 
   const targetId = interaction.customId.split('~')[1];
   const override = interaction.customId.split('~')[0] === 'tripsitmodeOffOverride';
 
   const target = await interaction.guild.members.fetch(targetId);
-  const actor = interaction.member as GuildMember;
   await actor.fetch();
-  log.debug(F, `${actor.displayName} (${actor.id}) clicked "Delete my ticket" in ${target.displayName}'s (${target.id}) session `);
+  log.debug(F, `${actor.displayName} (${actor.id}) clicked "Delete ticket" in ${target.displayName}'s (${target.id}) session `);
 
-  if (targetId !== actor.id && !override) {
-    log.debug(F, 'They did not create the thread, so I am not doing anything!');
-    await interaction.editReply({ content: 'Only the user receiving help can click this button!' });
+  if (
+    targetId !== actor.id
+    && !override
+    && !isModTripsitterOrHelper) {
+    log.debug(F, 'They did not create the thread or have the required role, so I am not doing anything!');
+    await interaction.editReply({ content: 'Only moderators, tripsitters, or the user receiving help can click this button!' });
     return;
   }
 
@@ -1228,7 +1257,7 @@ export async function tripsitmeUserDelete(
     update: {},
   });
 
-  const ticketData = await db.user_tickets.findFirst({
+  let ticketData = await db.user_tickets.findFirst({
     where: {
       user_id: userData.id,
       status: {
@@ -1249,13 +1278,28 @@ export async function tripsitmeUserDelete(
     update: {},
   });
 
-  if (!ticketData) {
+  if (!ticketData && isModTripsitterOrHelper) {
+    ticketData = await db.user_tickets.findFirst({
+      where: {
+        user_id: userData.id,
+        status: {
+          not: {
+            in: ['DELETED'],
+          },
+        },
+      },
+    });
+    if (!ticketData) {
+      log.error(F, 'Ticket data not found in tripsitmeUserDelete tripsitme.ts');
+      return;
+    }
+  } else if (!ticketData) {
     log.debug(F, `${actor.displayName} does not have any tickets that are not closed or deleted`);
     const rejectMessage = stripIndents`
       Hey ${actor.displayName}, your ticket is still open!
-
+  
       If you would like to delete your ticket, please click the 'I no longer need help' button first, then click this button again.
-
+  
       If you still need help, please be patient and someone will be with you soon!
     `;
     const embed = embedTemplate().setColor(Colors.DarkBlue);
@@ -1495,7 +1539,7 @@ export async function tripSitMe(
         .setStyle(ButtonStyle.Success),
       new ButtonBuilder()
         .setCustomId(`tripsitmeUserDelete~${target.id}`)
-        .setLabel('Delete my ticket')
+        .setLabel('Delete ticket')
         .setStyle(ButtonStyle.Success),
     );
 
