@@ -1393,9 +1393,9 @@ export async function moderate(
   if (isTimeout(command)) {
     // log.debug(F, 'Parsing timeout duration');
     let durationVal = modalInt.fields.getTextInputValue('duration');
-    if (durationVal === '') durationVal = '7 days';
+    if (durationVal === '') durationVal = '7d';
 
-    if (durationVal !== '' && !validateDurationInput(durationVal)) {
+    if (!validateDurationInput(durationVal)) {
       return {
         content: 'Timeout duration must include at least one of seconds, minutes, hours, days, or a week. For example: 5d 5h 5m 5s, 1w or 5d.',
       };
@@ -1422,7 +1422,7 @@ export async function moderate(
         return { content: 'Ban duration must be a number!' };
       }
 
-      if (durationVal !== '' && !validateDurationInput(durationVal)) {
+      if (!validateDurationInput(durationVal)) {
         return {
           content: 'Ban duration must include at least one of seconds, minutes, hours, days, weeks, months, or years. For example: 1yr 1M 1w 1d 1h 1m 1s',
         };
