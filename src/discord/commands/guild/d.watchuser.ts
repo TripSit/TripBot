@@ -45,13 +45,6 @@ export const dWatchUser: SlashCommand = {
       return false;
     }
 
-    if (!(interaction.member as GuildMember).roles.cache.some(
-      (role: Role) => (role.id === env.ROLE_MODERATOR || role.id === env.DEVELOPER),
-    )) {
-      await interaction.reply('You do not have permission to use this command.');
-      return false;
-    }
-
     const targetUser = interaction.options.getUser('target', true);
 
     if (interaction.options.getSubcommand() === 'cancel') {
