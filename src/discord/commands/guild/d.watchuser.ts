@@ -3,7 +3,6 @@ import {
   GuildMember,
   SlashCommandBuilder,
   TextChannel,
-  Role,
 } from 'discord.js';
 import { SlashCommand } from '../../@types/commandDef';
 import commandContext from '../../utils/context'; // eslint-disable-line @typescript-eslint/no-unused-vars
