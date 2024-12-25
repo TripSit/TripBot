@@ -39,19 +39,14 @@ export async function dbAddWatchRequest(
     // Add new watch requests to the existing user's watch_requests array
     const latestRequest = watchRequests[watchRequests.length - 1];
 
-    return db.users.update({
-      where: {
-        discord_id: targetUserId,
-      },
+    // We can also do the same thing by adding these directly to watch_requests on the User table.
+    return db.watch_request.create({
       data: {
-        watch_requests: {
-          create: {
-            notification_method: latestRequest.notification_method,
-            channel_id: latestRequest.channel_id,
-            caller_id: latestRequest.caller_id,
-            watched_user_id: latestRequest.watched_user_id,
-          },
-        },
+        notification_method: latestRequest.notification_method,
+        channel_id: latestRequest.channel_id,
+        caller_id: latestRequest.caller_id,
+        watched_user_id: latestRequest.watched_user_id,
+        usersId: existingUser.id,
       },
     });
   }
