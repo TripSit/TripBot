@@ -18,8 +18,8 @@ export const dWatchUser: SlashCommand = {
     .addSubcommand(subcommand => subcommand
       .setName('add')
       .setDescription('Set a Watch on a user.')
-      .addStringOption(option => option.setName('target')
-        .setDescription('The target user to watch for')
+      .addUserOption(option => option.setName('target')
+        .setDescription('The target user to watch for or their Discord ID')
         .setRequired(true))
       .addStringOption(option => option.setName('notification_method')
         .setDescription('How do you want to be notified?')
@@ -52,10 +52,10 @@ export const dWatchUser: SlashCommand = {
       return false;
     }
 
-    const targetUserId = interaction.options.getString('target', true);
+    const targetUser = interaction.options.getUser('target', true);
 
     if (interaction.options.getSubcommand() === 'cancel') {
-      if (await deleteWatchRequest(targetUserId, interaction.user.id)) {
+      if (await deleteWatchRequest(targetUser.id, interaction.user.id)) {
         await interaction.editReply({ content: 'Done! You won\'t be notified the next time this user is active.' });
         return true;
       }
@@ -77,14 +77,14 @@ export const dWatchUser: SlashCommand = {
     }
 
     const notificationMethod = interaction.options.getString('notification_method', true);
-    const target = await interaction.client.users.fetch(targetUserId);
+    // const target = await interaction.client.users.fetch(targetUser.id);
 
-    if (await executeWatch(target, notificationMethod, interaction.user.id, alertChannel)) {
+    if (await executeWatch(targetUser, notificationMethod, interaction.user.id, alertChannel)) {
       await interaction.editReply({ content: 'Done! You\'ll be notified when this user is next seen active.' });
 
       const channelBotlog = await interaction.guild.channels.fetch(env.CHANNEL_BOTLOG) as TextChannel;
       if (channelBotlog) {
-        await channelBotlog.send(`${(interaction.member as GuildMember).displayName} used /watch on ${target}`);
+        await channelBotlog.send(`${(interaction.member as GuildMember).displayName} used /watch on ${targetUser}`);
       }
     } else {
       // eslint-disable-next-line max-len
