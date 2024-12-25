@@ -17,6 +17,7 @@ import { imagesOnly } from '../utils/imagesOnly';
 import { countMessage } from '../commands/guild/d.counting';
 import { bridgeMessage } from '../utils/bridge';
 import { discordAiModerate } from '../commands/global/d.ai';
+import { nightsWatch } from '../../global/commands/g.watchuser';
 // import { awayMessage } from '../utils/awayMessage';
 // import log from '../../global/utils/log';
 // import {parse} from 'path';
@@ -89,6 +90,7 @@ export const messageCreate: MessageCreateEvent = {
     karma(message);
     imagesOnly(message);
     discordAiModerate(message);
+    nightsWatch(message);
 
     // Disabled for testing
     // thoughtPolice(message);
