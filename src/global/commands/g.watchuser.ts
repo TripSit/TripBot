@@ -117,6 +117,10 @@ export async function nightsWatch(message: Message) {
 
   const watchRequests = user.watch_requests;
 
+  if (watchRequests.length === 0) {
+    return;
+  }
+
   watchRequests.forEach(async watchRequestObj => {
     const target = await message.client.users.fetch(user.discord_id as string) as User;
 
