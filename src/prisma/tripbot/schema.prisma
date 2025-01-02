@@ -175,6 +175,7 @@ model users {
   connections_scores                                        connections_scores[]
   mini_scores                                               mini_scores[]
   last_was_helper                                           DateTime?
+  watch_requests                                            watch_request[]
 }
 
 model wordle_scores {
@@ -187,12 +188,12 @@ model wordle_scores {
 }
 
 model connections_scores {
-  id               String @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  user_id          String @db.Uuid
-  puzzle           Int
-  score            Int
-  grid             String
-  user             users  @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "connectionsscores_userid_foreign")
+  id      String @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  user_id String @db.Uuid
+  puzzle  Int
+  score   Int
+  grid    String
+  user    users  @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "connectionsscores_userid_foreign")
 }
 
 model mini_scores {
@@ -360,6 +361,7 @@ model rpg_inventory {
 model user_actions {
   id                                                 String           @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
   user_id                                            String           @db.Uuid
+  target_discord_id                                  String?
   guild_id                                           String           @default("179641883222474752")
   type                                               user_action_type
   ban_evasion_related_user                           String?          @db.Uuid
@@ -552,6 +554,16 @@ model quotes {
   creator users @relation("QuoteCreator", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@unique([url], map: "quotes_url_unique")
+}
+
+model watch_request {
+  id                  String  @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  notification_method String
+  channel_id          String?
+  caller_id           String
+  watched_user_id     String
+  users               users?  @relation(fields: [usersId], references: [id])
+  usersId             String? @db.Uuid
 }
 
 enum bridge_status {
