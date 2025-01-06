@@ -42,7 +42,7 @@ import { stripIndents } from 'common-tags';
 import { user_action_type, user_actions, users } from '@prisma/client';
 import moment from 'moment';
 import { SlashCommand } from '../../@types/commandDef';
-import { parseDuration, validateDurationInput } from '../../../global/utils/parseDuration';
+import { makeValid, parseDuration, validateDurationInput } from '../../../global/utils/parseDuration';
 import commandContext from '../../utils/context'; // eslint-disable-line
 import { getDiscordMember } from '../../utils/guildMemberLookup';
 import { embedTemplate } from '../../utils/embedTemplate';
@@ -1393,11 +1393,16 @@ export async function moderate(
   if (isTimeout(command)) {
     // log.debug(F, 'Parsing timeout duration');
     let durationVal = modalInt.fields.getTextInputValue('duration');
-    if (durationVal === '') durationVal = '7d';
+
+    if (durationVal === '') {
+      durationVal = '7d';
+    } else {
+      durationVal = await makeValid(durationVal);
+    }
 
     if (!validateDurationInput(durationVal)) {
       return {
-        content: 'Timeout duration must include at least one of seconds, minutes, hours, days, or a week. For example: 5d 5h 5m 5s, 1w or 5d.',
+        content: 'Timeout duration must include at least one of the following units: seconds, minutes, hours, days, or weeks. Examples of valid formats include: 1 days 23 hours 59 minutes 59 seconds, or just 1 day, etc.',
       };
     }
 
@@ -1413,9 +1418,10 @@ export async function moderate(
     // log.debug(F, `duration: ${duration}`);
   }
   if (isFullBan(command)) {
-    const durationVal = modalInt.fields.getTextInputValue('ban_duration');
+    let durationVal = modalInt.fields.getTextInputValue('ban_duration');
 
     if (durationVal !== '') {
+      durationVal = await makeValid(durationVal);
       let tempBanDuration = parseInt(durationVal, 10);
 
       if (Number.isNaN(tempBanDuration)) {
@@ -1424,7 +1430,7 @@ export async function moderate(
 
       if (!validateDurationInput(durationVal)) {
         return {
-          content: 'Ban duration must include at least one of seconds, minutes, hours, days, weeks, months, or years. For example: 1yr 1M 1w 1d 1h 1m 1s',
+          content: 'Ban duration must include at least one of the following units: seconds, minutes, hours, days, weeks, months, or years. Examples of valid formats include: 1 year 1 month 1 week 1 day 23 hours 59 minutes 59 seconds, or just 1 year, 1 month, etc.',
         };
       }
 
@@ -1561,9 +1567,31 @@ export async function moderate(
   if (isBan(command)) {
     if (isFullBan(command) || isUnderban(command) || isBanEvasion(command)) {
       targetData.removed_at = new Date();
-      const deleteMessageValue = actionDuration ?? 0;
+
+      let deleteMessageValue = modalInt.fields.getTextInputValue('days');
+      let deleteDuration = 0;
+
+      if (deleteMessageValue !== '') {
+        deleteMessageValue = await makeValid(deleteMessageValue);
+        deleteDuration = parseInt(deleteMessageValue, 10);
+
+        if (Number.isNaN(deleteDuration)) {
+          return { content: 'Delete duration must be a number!' };
+        }
+
+        if (!validateDurationInput(deleteMessageValue)) {
+          return {
+            content: 'Delete duration must include at least one of the following units: seconds, minutes, hours, days, or weeks, with a maximum duration of 7 days. Examples of valid formats include: 1 day 23 hours 59 minutes 59 seconds, or just 1 day, etc.',
+          };
+        }
+
+        deleteDuration = await parseDuration(deleteMessageValue);
+        if (deleteDuration && deleteDuration < 0) {
+          return { content: 'Delete duration must be at least 1 second!' };
+        }
+      }
       try {
-        if (deleteMessageValue > 0 && targetMember) {
+        if (deleteDuration > 0 && targetMember) {
         // log.debug(F, `I am deleting ${deleteMessageValue} days of messages!`);
           const response = await last(targetMember.user, buttonInt.guild);
           extraMessage = `${targetName}'s last ${response.messageCount} (out of ${response.totalMessages}) messages before being banned :\n${response.messageList}`;
@@ -1575,7 +1603,8 @@ export async function moderate(
       log.info(F, `target: ${targetId} | deleteMessageValue: ${deleteMessageValue} | internalNote: ${internalNote ?? noReason}`);
 
       try {
-        targetObj = await buttonInt.guild.bans.create(targetId, { deleteMessageSeconds: deleteMessageValue / 1000, reason: internalNote ?? noReason });
+        log.info(F, `Message delete duration in milliseconds: ${deleteDuration}`);
+        targetObj = await buttonInt.guild.bans.create(targetId, { deleteMessageSeconds: deleteDuration / 1000, reason: internalNote ?? noReason });
         // Set ban duration if present
         if (banEndTime !== null) {
           actionData.expires_at = banEndTime;
@@ -1944,7 +1973,7 @@ export async function modModal(
       .addComponents(new TextInputBuilder()
         .setLabel('Timeout for how long?')
         .setStyle(TextInputStyle.Short)
-        .setPlaceholder('4 days 3hrs 2 mins 30 seconds (Max 7 days, Default 7 days)')
+        .setPlaceholder('7 days or 1 week, etc. (Max 7 days, Default 7 days)')
         .setRequired(false)
         .setCustomId('duration')));
   }
@@ -1953,14 +1982,14 @@ export async function modModal(
       .addComponents(new TextInputBuilder()
         .setLabel('How many days of msg to remove?')
         .setStyle(TextInputStyle.Short)
-        .setPlaceholder('4 days 3hrs 2 mins 30 seconds (Max 7 days, Default 0 days)')
+        .setPlaceholder('7 days or 1 week, etc. (Max 7 days, Default 0 days)')
         .setRequired(false)
         .setCustomId('days')));
     modal.addComponents(new ActionRowBuilder<TextInputBuilder>()
       .addComponents(new TextInputBuilder()
         .setLabel('How long should they be banned for?')
         .setStyle(TextInputStyle.Short)
-        .setPlaceholder('365 days (Empty = Permanent)')
+        .setPlaceholder('1 year or 365 days, etc. (Empty = Permanent)')
         .setRequired(false)
         .setCustomId('ban_duration')));
   }
