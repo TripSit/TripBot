@@ -99,6 +99,17 @@ const mindsetRoles = [
   env.ROLE_STIMMING,
   env.ROLE_SEDATED,
   env.ROLE_SOBER,
+  env.ROLE_EVENT_1,
+  env.ROLE_EVENT_2,
+  env.ROLE_EVENT_3,
+  env.ROLE_EVENT_4,
+  env.ROLE_EVENT_5,
+  env.ROLE_EVENT_6,
+  env.ROLE_EVENT_7,
+  env.ROLE_EVENT_8,
+  env.ROLE_EVENT_9,
+  env.ROLE_EVENT_10,
+  env.ROLE_EVENT_11,
 ];
 
 const otherRoles = [
