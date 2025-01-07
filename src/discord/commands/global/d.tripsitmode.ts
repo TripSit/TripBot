@@ -227,6 +227,7 @@ async function tripsitmodeOn(
       const now = new Date();
       const diff = now.getTime() - createdDate.getTime();
       const minutes = Math.floor(diff / 1000 / 60);
+      // const seconds = Math.floor(diff / 1000); // Uncomment this for dev server
       if (minutes > 5) {
         const helperStr = `and/or ${roleHelper}`;
         // log.debug(F, `Target has open ticket, and it was created over 5 minutes ago!`);
@@ -247,9 +248,15 @@ async function tripsitmodeOn(
       // If the meta thread exists, update the name and ping the team
       if (ticketData.meta_thread_id) {
         let metaMessage = '';
-        if (minutes > 5) {
+        if (minutes > 5) { // Switch to seconds > 10 for dev server
           const helperString = `and/or ${roleHelper}`;
-          metaMessage = `Hey ${roleTripsitter} ${guildData.role_helper ?? helperString} team, ${interaction.member} has indicated that ${target.displayName} needs assistance!`; // eslint-disable-line max-len
+          try {
+            metaMessage = `Hey ${roleTripsitter} ${guildData.role_helper ? helperString : ''} team, ${interaction.member} has indicated that ${target.displayName} needs assistance!`;
+          } catch (err) {
+            // If for example helper role has been deleted but the ID is still stored, do this
+            metaMessage = `Hey ${roleTripsitter} team, ${interaction.member} has indicated that ${target.displayName} needs assistance!`;
+            log.error(F, `Stored Helper ID for guild ${guildData.id} is no longer valid. Role is unfetchable or deleted.`);
+          }
         } else {
           metaMessage = `${interaction.member} has indicated that ${target.displayName} needs assistance!`;
         }
