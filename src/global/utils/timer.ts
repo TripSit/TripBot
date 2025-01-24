@@ -1122,49 +1122,6 @@ async function checkMoodle() { // eslint-disable-line
   // }
 }
 
-async function undoExpiredBans() {
-  const expiredBans = await db.user_actions.findMany({
-    where: {
-      expires_at: {
-        not: null, // Ensure the ban duration is set (i.e., not null, indicating a ban exists)
-        lte: new Date(), // Fetch users whose ban duration is in the past (expired bans)
-      },
-      type: 'FULL_BAN',
-    },
-  });
-
-  if (expiredBans.length > 0) {
-    // Get the tripsit guild
-    const tripsitGuild = await global.discordClient.guilds.fetch(env.DISCORD_GUILD_ID);
-    expiredBans.forEach(async activeBan => {
-      // Check if the reminder is ready to be triggered
-      if (activeBan.target_discord_id !== null) {
-        const user = await global.discordClient.users.fetch(activeBan.target_discord_id);
-        if (user) {
-          // Unban them
-          try {
-            await tripsitGuild.bans.remove(user, 'Temporary ban expired');
-            log.info(F, `Temporary ban for ${activeBan.target_discord_id} has expired and been lifted!`);
-          } catch (err) {
-            // If this error is ever encountered then something in our flow is probably wrong. This should never happen.
-            log.error(F, `Failed to remove temporary ban on ${activeBan.target_discord_id}. Likely already unbanned.`);
-          } finally {
-          // Reset expires_at flag to null
-            await db.user_actions.update({
-              where: {
-                id: activeBan.id,
-              },
-              data: {
-                expires_at: null, // Reset the ban duration to null
-              },
-            });
-          }
-        }
-      }
-    });
-  }
-}
-
 async function checkEvery(
   callback: () => Promise<void>,
   interval: number,
@@ -1204,7 +1161,6 @@ async function runTimer() {
     { callback: checkMoodle, interval: env.NODE_ENV === 'production' ? seconds60 : seconds5 },
     // { callback: checkLpm, interval: env.NODE_ENV === 'production' ? seconds10 : seconds5 },
     { callback: updateDb, interval: env.NODE_ENV === 'production' ? hours24 : hours48 },
-    { callback: undoExpiredBans, interval: env.NODE_ENV === 'production' ? hours24 : seconds10 },
   ];
 
   timers.forEach(timer => {

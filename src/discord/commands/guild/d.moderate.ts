@@ -42,7 +42,7 @@ import { stripIndents } from 'common-tags';
 import { user_action_type, user_actions, users } from '@prisma/client';
 import moment from 'moment';
 import { SlashCommand } from '../../@types/commandDef';
-import { parseDuration, validateDurationInput } from '../../../global/utils/parseDuration';
+import { parseDuration } from '../../../global/utils/parseDuration';
 import commandContext from '../../utils/context'; // eslint-disable-line
 import { getDiscordMember } from '../../utils/guildMemberLookup';
 import { embedTemplate } from '../../utils/embedTemplate';
@@ -1387,56 +1387,50 @@ export async function moderate(
   }
 
   // Process duration time for ban and timeouts
-  let banEndTime = null;
-  let actionDuration = 0 as null | number;
+  let duration = 0 as null | number;
   let durationStr = '';
   if (isTimeout(command)) {
     // log.debug(F, 'Parsing timeout duration');
     let durationVal = modalInt.fields.getTextInputValue('duration');
-    if (durationVal === '') durationVal = '7d';
-
-    if (!validateDurationInput(durationVal)) {
-      return {
-        content: 'Timeout duration must include at least one of seconds, minutes, hours, days, or a week. For example: 5d 5h 5m 5s, 1w or 5d.',
-      };
+    if (durationVal === '') durationVal = '7 days';
+    // log.debug(F, `durationVal: ${durationVal}`);
+    if (durationVal.length === 1) {
+      // If the input is a single number, assume it's days
+      duration = parseInt(durationVal, 10);
+      if (Number.isNaN(duration)) {
+        return { content: 'Timeout must be a number!' };
+      }
+      if (duration < 0 || duration > 7) {
+        return { content: 'Timeout must be between 0 and 7 days!' };
+      }
+      durationVal = `${duration} days`;
     }
 
-    actionDuration = await parseDuration(durationVal);
-    if (actionDuration && (actionDuration < 0 || actionDuration > 7 * 24 * 60 * 60 * 1000)) {
-      return { content: 'Timeout must be between 0 and 7 days!' };
+    duration = await parseDuration(durationVal);
+    if (duration && (duration < 0 || duration > 7 * 24 * 60 * 60 * 1000)) {
+      return { content: 'Timeout must be between 0 and 7 days!!' };
     }
 
     // convert the milliseconds into a human readable string
-    const humanTime = msToHuman(actionDuration);
+    const humanTime = msToHuman(duration);
 
-    durationStr = ` for ${humanTime}. It will expire ${time(new Date(Date.now() + actionDuration), 'R')}`;
+    durationStr = `for ${humanTime}. It will expire ${time(new Date(Date.now() + duration), 'R')}`;
     // log.debug(F, `duration: ${duration}`);
   }
   if (isFullBan(command)) {
-    const durationVal = modalInt.fields.getTextInputValue('ban_duration');
+    // If the command is ban, then the input value exists, so pull that and try to parse it as an int
+    let dayInput = parseInt(modalInt.fields.getTextInputValue('days'), 10);
 
-    if (durationVal !== '') {
-      let tempBanDuration = parseInt(durationVal, 10);
+    // If no input was provided, default to 0 days
+    if (Number.isNaN(dayInput)) dayInput = 0;
 
-      if (Number.isNaN(tempBanDuration)) {
-        return { content: 'Ban duration must be a number!' };
-      }
-
-      if (!validateDurationInput(durationVal)) {
-        return {
-          content: 'Ban duration must include at least one of seconds, minutes, hours, days, weeks, months, or years. For example: 1yr 1M 1w 1d 1h 1m 1s',
-        };
-      }
-
-      tempBanDuration = await parseDuration(durationVal);
-      if (tempBanDuration && tempBanDuration < 0) {
-        return { content: 'Ban duration must be at least 1 second!' };
-      }
-
-      durationStr = `${time(new Date(Date.now() + tempBanDuration), 'R')}`;
-      const currentTime = new Date();
-      banEndTime = tempBanDuration !== 0 ? new Date(currentTime.getTime() + tempBanDuration) : null;
+    // If the input is a string, or outside the bounds, tell the user and return
+    if (dayInput && (dayInput < 0 || dayInput > 7)) {
+      return { content: 'Ban days must be at least 0 and at most 7!' };
     }
+
+    // Get the millisecond value of the input
+    duration = await parseDuration(`${dayInput} days`);
   }
 
   // Display all properties we're going to use
@@ -1446,7 +1440,7 @@ export async function moderate(
   targetId: ${targetId}
   internalNote: ${internalNote}
   description: ${description}
-  duration: ${actionDuration}
+  duration: ${duration}
   durationStr: ${durationStr}
   `);
 
@@ -1538,12 +1532,10 @@ export async function moderate(
 
   if (command === 'FULL_BAN') {
     internalNote += `\n **Actioned by:** ${actor.displayName}`;
-    internalNote += `\n **Ban Ends:** ${durationStr || 'Never'}`;
   }
 
   let actionData = {
     user_id: targetData.id,
-    target_discord_id: targetData.discord_id,
     guild_id: actor.guild.id,
     type: command.includes('UN-') ? command.slice(3) : command,
     ban_evasion_related_user: null as string | null,
@@ -1561,7 +1553,7 @@ export async function moderate(
   if (isBan(command)) {
     if (isFullBan(command) || isUnderban(command) || isBanEvasion(command)) {
       targetData.removed_at = new Date();
-      const deleteMessageValue = actionDuration ?? 0;
+      const deleteMessageValue = duration ?? 0;
       try {
         if (deleteMessageValue > 0 && targetMember) {
         // log.debug(F, `I am deleting ${deleteMessageValue} days of messages!`);
@@ -1576,10 +1568,6 @@ export async function moderate(
 
       try {
         targetObj = await buttonInt.guild.bans.create(targetId, { deleteMessageSeconds: deleteMessageValue / 1000, reason: internalNote ?? noReason });
-        // Set ban duration if present
-        if (banEndTime !== null) {
-          actionData.expires_at = banEndTime;
-        }
       } catch (err) {
         log.error(F, `Error: ${err}`);
       }
@@ -1629,12 +1617,11 @@ export async function moderate(
     }
     actionData.repealed_at = new Date();
     actionData.repealed_by = actorData.id;
-    actionData.expires_at = null;
   } else if (isTimeout(command)) {
     if (targetMember) {
-      actionData.expires_at = new Date(Date.now() + (actionDuration as number));
+      actionData.expires_at = new Date(Date.now() + (duration as number));
       try {
-        await targetMember.timeout(actionDuration, internalNote ?? noReason);
+        await targetMember.timeout(duration, internalNote ?? noReason);
       } catch (err) {
         log.error(F, `Error: ${err}`);
       }
@@ -1662,7 +1649,7 @@ export async function moderate(
       actionData.repealed_by = actorData.id;
 
       try {
-        await targetMember.timeout(null, internalNote ?? noReason);
+        await targetMember.timeout(0, internalNote ?? noReason);
         // log.debug(F, `I untimeout ${target.displayName} because\n '${internalNote}'!`);
       } catch (err) {
         log.error(F, `Error: ${err}`);
@@ -1956,13 +1943,6 @@ export async function modModal(
         .setPlaceholder('4 days 3hrs 2 mins 30 seconds (Max 7 days, Default 0 days)')
         .setRequired(false)
         .setCustomId('days')));
-    modal.addComponents(new ActionRowBuilder<TextInputBuilder>()
-      .addComponents(new TextInputBuilder()
-        .setLabel('How long should they be banned for?')
-        .setStyle(TextInputStyle.Short)
-        .setPlaceholder('365 days (Empty = Permanent)')
-        .setRequired(false)
-        .setCustomId('ban_duration')));
   }
 
   // When the modal is opened, disable the button on the embed

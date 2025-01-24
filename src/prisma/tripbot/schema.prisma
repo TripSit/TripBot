@@ -361,7 +361,6 @@ model rpg_inventory {
 model user_actions {
   id                                                 String           @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
   user_id                                            String           @db.Uuid
-  target_discord_id                                  String?
   guild_id                                           String           @default("179641883222474752")
   type                                               user_action_type
   ban_evasion_related_user                           String?          @db.Uuid
