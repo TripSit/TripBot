@@ -83,6 +83,48 @@ export async function parseDuration(duration:string):Promise<number> {
 }
 
 export const validateDurationInput = (input: string): boolean => {
-  const regex = /^(\d+(yr|M|w|d|h|m|s)\s?)+$/;
+  const regex = /^(\d+(y|M|w|d|h|m|s)\s?)+$/;
   return regex.test(input.trim());
 };
+
+export async function makeValid(duration: string): Promise<string> {
+  // Define a map for the units and their short forms
+  const unitMap: Record<string, string> = {
+    years: 'y',
+    year: 'y',
+    months: 'M',
+    month: 'M',
+    weeks: 'w',
+    week: 'w',
+    days: 'd',
+    day: 'd',
+    hours: 'h',
+    hour: 'h',
+    minutes: 'm',
+    minute: 'm',
+    seconds: 's',
+    second: 's',
+  };
+
+  // Regular expression to match the input format
+  const regex = /\b(\d+)\s*(years?|months?|weeks?|days?|hours?|minutes?|seconds?)\b/gi;
+
+  // Array to store the parsed results
+  const parts: string[] = [];
+
+  // Replace matched parts with their formatted versions
+  let match;
+  // eslint-disable-next-line no-cond-assign
+  while ((match = regex.exec(duration)) !== null) {
+    const value = match[1]; // The number (e.g., "1")
+    const unit = match[2].toLowerCase(); // The unit (e.g., "year" or "years")
+
+    // Map the unit to its short form and combine with the value
+    if (unit in unitMap) {
+      parts.push(`${value}${unitMap[unit]}`);
+    }
+  }
+
+  // Join the parts with a space to form the final result
+  return parts.join(' ');
+}
