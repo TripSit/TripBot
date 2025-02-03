@@ -85,6 +85,12 @@ const mindsetRoles = [
   env.ROLE_EVENT_3,
   env.ROLE_EVENT_4,
   env.ROLE_EVENT_5,
+  env.ROLE_EVENT_6,
+  env.ROLE_EVENT_7,
+  env.ROLE_EVENT_8,
+  env.ROLE_EVENT_9,
+  env.ROLE_EVENT_10,
+  env.ROLE_EVENT_11,
 ];
 
 const ignoredRoles = `${teamRoles},${colorRoles},${mindsetRoles}`;
