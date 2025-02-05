@@ -82,11 +82,20 @@ export async function parseDuration(duration:string):Promise<number> {
   return timeValue;
 }
 
+/*
+ Input validation for parseDuration. Ensures string is a written time in one or multiple of 3 formats.
+*/
 export const validateDurationInput = (input: string): boolean => {
-  const regex = /^(\d+(y|M|w|d|h|m|s)\s?)+$/;
+  // eslint-disable-next-line max-len
+  const regex = /^(\d+\s?(y|year|M|month|w|week|d|day|days|h|hour|hours|m|min|mins|minute|minutes|s|sec|secs|second|seconds)\s?)+$/i;
   return regex.test(input.trim());
 };
 
+/*
+ This function takes input in the form of years/months, etc, as written and converts them to smMhdwmoy format.
+ It was used to force string compliance for parseDuration but may not be necessary.
+ Feel free to remove it if it's not used in a year or two.
+*/
 export async function makeValid(duration: string): Promise<string> {
   // Define a map for the units and their short forms
   const unitMap: Record<string, string> = {
