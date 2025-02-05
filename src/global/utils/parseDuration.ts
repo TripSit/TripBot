@@ -9,7 +9,7 @@ export default parseDuration;
  * @param {string} duration A string representing a duration
  * @return {number} The duration in milliseconds
  */
-export async function parseDuration(duration:string):Promise<number> {
+export async function parseDuration(duration: string): Promise<number> {
   // Those code inspired by https://gist.github.com/substanc3-dev/306bb4d04b2aad3a5d019052b1a0dec0
   // This is super cool, thanks a lot!
   const supported = 'smMhdwmoy';
@@ -19,62 +19,66 @@ export async function parseDuration(duration:string):Promise<number> {
   let tempNumber = 0;
   let tempString = '';
   let timeValue = 0;
+
   while (idx < duration.length) {
-    const c = duration[idx];
+    const c = duration[idx]; // Normalize to lowercase for easier comparison
     switch (stage) {
-      case 1: // waiting for number
-      {
-        idx += 1;
+      case 1: // Waiting for number
         if (numbers.includes(c)) {
-          tempString = c.toString();
+          tempString = c;
           stage = 2;
         }
+        idx += 1;
         break;
-      }
-      case 2: // parsing the number
-      {
+
+      case 2: // Parsing the number
         if (numbers.includes(c)) {
           tempString += c;
           idx += 1;
         } else {
-          // log.debug(F, `TValue: ${tempString}`);
           tempNumber = Number.parseInt(tempString, 10);
           stage = 3;
         }
         break;
-      }
-      case 3: // parsing the qualifier
-      {
-        idx += 1;
+
+      case 3: // Parsing the qualifier
         if (c === ' ') {
+          idx += 1;
           break;
         } else if (supported.includes(c)) {
-          // log.debug(F, `Qualifier ${c}`);
+          // Handle single-letter qualifiers
           if (c === 'h') {
-            timeValue += tempNumber * 60 * 60 * 1000;
-          }
-          if (c === 'M') {
-            timeValue += tempNumber * 30 * 24 * 60 * 60 * 1000;
-          }
-          if (c === 'm') {
-            timeValue += tempNumber * 60 * 1000;
-          }
-          if (c === 's') {
-            timeValue += tempNumber * 1000;
-          }
-          if (c === 'd') {
-            timeValue += tempNumber * 24 * 60 * 60 * 1000;
-          }
-          if (c === 'w') {
-            timeValue += tempNumber * 7 * 24 * 60 * 60 * 1000;
-          }
-          if (c === 'y') {
-            timeValue += tempNumber * 365 * 24 * 60 * 60 * 1000;
+            timeValue += tempNumber * 60 * 60 * 1000; // Hours
+          } else if (c === 'M' || c === 'm') {
+            // Check if the next characters spell "month" or "months"
+            const nextChars = duration.slice(idx, idx + 5).toLowerCase();
+            if (nextChars.startsWith('month') || c === 'M') {
+              timeValue += tempNumber * 30 * 24 * 60 * 60 * 1000; // Convert months to milliseconds
+              if (c === 'M') {
+                idx += 1; // Skip 'M'
+              } else if (nextChars.startsWith('months')) {
+                idx += 6; // Skip 'months'
+              } else {
+                idx += 5; // Skip 'month'
+              }
+            } else {
+              timeValue += tempNumber * 60 * 1000; // Minutes
+            }
+          } else if (c === 's') {
+            timeValue += tempNumber * 1000; // Seconds
+          } else if (c === 'd') {
+            timeValue += tempNumber * 24 * 60 * 60 * 1000; // Days
+          } else if (c === 'w') {
+            timeValue += tempNumber * 7 * 24 * 60 * 60 * 1000; // Weeks
+          } else if (c === 'y') {
+            timeValue += tempNumber * 365 * 24 * 60 * 60 * 1000; // Years
           }
           stage = 1;
           break;
-        } else return timeValue;
-      }
+        } else {
+          return timeValue; // Unsupported qualifier
+        }
+
       default:
         break;
     }
@@ -87,7 +91,7 @@ export async function parseDuration(duration:string):Promise<number> {
 */
 export const validateDurationInput = (input: string): boolean => {
   // eslint-disable-next-line max-len
-  const regex = /^(\d+\s?(y|year|years|M|month|months|w|week|weeks|d|day|days|h|hour|hours|m|min|mins|minute|minutes|s|sec|secs|second|seconds)\s?)+$/i;
+  const regex = /^(\d+\s?(years?|months?|weeks?|days?|hours?|minutes?|seconds?|y|M|w|d|h|m|min|mins|s|sec|secs)\s?)+$/i;
   return regex.test(input.trim());
 };
 
