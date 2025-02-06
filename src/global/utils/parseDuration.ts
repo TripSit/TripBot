@@ -88,10 +88,17 @@ export async function parseDuration(duration: string): Promise<number> {
 
 /*
  Input validation for parseDuration. Ensures string is a written time in one or multiple of 3 formats.
+
+ Do not use this function outside of mod tools.
+ ⚠️ This regex has been flagged for inefficiency but is acceptable for limited mod tool usage.
+ If repurposing for public-facing features, consider optimizing to avoid potential backtracking issues.
+
 */
 export const validateDurationInput = (input: string): boolean => {
-  // eslint-disable-next-line max-len
-  const regex = /^(?:\d+\s?(?:years?|months?|weeks?|days?|hours?|minutes?|min|mins?|seconds?|secs?|[yMwdhms])\s?)+$/i;
+  /* eslint-disable max-len */
+  // CodeQL: disable-next-line js/redos
+  const regex = /^(\d+\s?(years|year|months|month|weeks|week|days|day|hours|hour|minutes|minute|min|mins|seconds|second|sec|secs|y|M|w|d|h|m|s)\s?)+$/i;
+  /* eslint-enable max-len */
 
   return regex.test(input.trim());
 };
