@@ -91,7 +91,7 @@ export async function parseDuration(duration: string): Promise<number> {
 */
 export const validateDurationInput = (input: string): boolean => {
   // eslint-disable-next-line max-len
-  const regex = /^(\d+\s?(years|year|months|month|weeks|week|days|day|hours|hour|minutes|minute|min|mins|seconds|second|sec|secs|y|M|w|d|h|m|s)\s?)+$/i;
+  const regex = /^(?:\d+\s?(?:years?|months?|weeks?|days?|hours?|minutes?|min|mins?|seconds?|secs?|[yMwdhms])\s?)+$/i;
 
   return regex.test(input.trim());
 };
