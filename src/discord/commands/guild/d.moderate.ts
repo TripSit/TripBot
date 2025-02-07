@@ -1568,10 +1568,15 @@ export async function moderate(
     if (isFullBan(command) || isUnderban(command) || isBanEvasion(command)) {
       targetData.removed_at = new Date();
 
-      const deleteMessageValue = modalInt.fields.getTextInputValue('days');
+      let deleteMessageValue = modalInt.fields.getTextInputValue('days');
       let deleteDuration = 0;
 
       if (deleteMessageValue !== '') {
+        // If input is just a number, append 'd' to treat it as days
+        if (/^\d+$/.test(deleteMessageValue)) {
+          deleteMessageValue += 'd';
+        }
+
         // deleteMessageValue = await makeValid(deleteMessageValue);
         deleteDuration = parseInt(deleteMessageValue, 10);
 
@@ -1590,6 +1595,7 @@ export async function moderate(
           return { content: 'Delete duration must be at least 1 second!' };
         }
       }
+
       try {
         if (deleteDuration > 0 && targetMember) {
         // log.debug(F, `I am deleting ${deleteMessageValue} days of messages!`);
@@ -1980,7 +1986,7 @@ export async function modModal(
   if (isFullBan(command)) {
     modal.addComponents(new ActionRowBuilder<TextInputBuilder>()
       .addComponents(new TextInputBuilder()
-        .setLabel('How many days of msg to remove?')
+        .setLabel('How far back should messages be removed?')
         .setStyle(TextInputStyle.Short)
         .setPlaceholder('7 days or 1 week, etc. (Max 7 days, Default 0 days)')
         .setRequired(false)
