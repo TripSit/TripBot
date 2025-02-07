@@ -42,7 +42,7 @@ import { stripIndents } from 'common-tags';
 import { user_action_type, user_actions, users } from '@prisma/client';
 import moment from 'moment';
 import { SlashCommand } from '../../@types/commandDef';
-import { makeValid, parseDuration, validateDurationInput } from '../../../global/utils/parseDuration';
+import { parseDuration, validateDurationInput } from '../../../global/utils/parseDuration';
 import commandContext from '../../utils/context'; // eslint-disable-line
 import { getDiscordMember } from '../../utils/guildMemberLookup';
 import { embedTemplate } from '../../utils/embedTemplate';
@@ -1396,9 +1396,9 @@ export async function moderate(
 
     if (durationVal === '') {
       durationVal = '7d';
-    } else {
-      durationVal = await makeValid(durationVal);
-    }
+    } // else {
+    // durationVal = await makeValid(durationVal);
+    // }
 
     if (!validateDurationInput(durationVal)) {
       return {
@@ -1418,10 +1418,10 @@ export async function moderate(
     // log.debug(F, `duration: ${duration}`);
   }
   if (isFullBan(command)) {
-    let durationVal = modalInt.fields.getTextInputValue('ban_duration');
+    const durationVal = modalInt.fields.getTextInputValue('ban_duration');
 
     if (durationVal !== '') {
-      durationVal = await makeValid(durationVal);
+      // durationVal = await makeValid(durationVal);
       let tempBanDuration = parseInt(durationVal, 10);
 
       if (Number.isNaN(tempBanDuration)) {
@@ -1568,11 +1568,11 @@ export async function moderate(
     if (isFullBan(command) || isUnderban(command) || isBanEvasion(command)) {
       targetData.removed_at = new Date();
 
-      let deleteMessageValue = modalInt.fields.getTextInputValue('days');
+      const deleteMessageValue = modalInt.fields.getTextInputValue('days');
       let deleteDuration = 0;
 
       if (deleteMessageValue !== '') {
-        deleteMessageValue = await makeValid(deleteMessageValue);
+        // deleteMessageValue = await makeValid(deleteMessageValue);
         deleteDuration = parseInt(deleteMessageValue, 10);
 
         if (Number.isNaN(deleteDuration)) {
