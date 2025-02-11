@@ -74,6 +74,7 @@ export async function getTotalLevel(
 
 export async function giveMilestone(
   member:GuildMember,
+  newMember = false,
 ) {
   const userData = await db.users.upsert({
     where: {
@@ -188,7 +189,7 @@ export async function giveMilestone(
   if (!member.roles.cache.has(role.id)) {
     // log.debug(F, `Giving ${member.displayName} role ${role.name} (${role.id})`);
     await member.roles.add(role);
-    if (levelTier >= 2) {
+    if (levelTier >= 2 && !newMember) {
       const channel = await member.guild?.channels.fetch(env.CHANNEL_VIPLOUNGE) as TextChannel;
       await channel.send(`${emojis} **${member} has reached Total level ${levelTier}0!** ${emojis}`);
     }
@@ -250,11 +251,7 @@ export async function experience(
     await db.user_experience.create({
       data: newUser,
     });
-    if (type === 'TEXT') {
-      // Give the user the VIP 0 role the first time they talk
-      const role = await channel.guild?.roles.fetch(env.ROLE_VIP_0) as Role;
-      await member.roles.add(role);
-    }
+
     return;
   }
 
