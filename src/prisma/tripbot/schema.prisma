@@ -426,6 +426,7 @@ model user_tickets {
   first_message_id                      String
   type                                  ticket_type
   status                                ticket_status @default(OPEN)
+  tripsit_mode                          Boolean?      @default(false)
   closed_by                             String?       @db.Uuid
   closed_at                             DateTime?     @db.Timestamptz(6)
   reopened_by                           String?       @db.Uuid
