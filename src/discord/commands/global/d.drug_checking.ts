@@ -53,7 +53,7 @@ export const drugChecking: SlashCommand = {
         [Saferparty](https://en.saferparty.ch/angebote/drug-checking) (Zurich)
         [Drugs Information and Monitoring System](https://www.drugs-test.nl/en/testlocations/) (Netherlands)
         ## Austrailia
-        [CanTEST](https://pilltestingaustralia.com.au/cantest/) (Canberra)
+        [CanTEST](https://www.cahma.org.au/services/cantest/) (Canberra)
         `)],
     });
 
