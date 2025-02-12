@@ -9,6 +9,7 @@ steps:
       - apk update
       - apk upgrade
       - apk add --no-cache git
+      - cat docker-compose.host.yml
       - docker compose -f docker-compose.host.yml --project-name tripbot up tripbot -d --force-recreate --build
       # - tail -f /dev/null
     environment:

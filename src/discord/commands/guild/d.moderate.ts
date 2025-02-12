@@ -42,7 +42,7 @@ import { stripIndents } from 'common-tags';
 import { user_action_type, user_actions, users } from '@prisma/client';
 import moment from 'moment';
 import { SlashCommand } from '../../@types/commandDef';
-import { parseDuration } from '../../../global/utils/parseDuration';
+import { parseDuration, validateDurationInput } from '../../../global/utils/parseDuration';
 import commandContext from '../../utils/context'; // eslint-disable-line
 import { getDiscordMember } from '../../utils/guildMemberLookup';
 import { embedTemplate } from '../../utils/embedTemplate';
@@ -789,7 +789,7 @@ export async function modResponse(
   }
 
   let targetString = '';
-  let target = {} as GuildMember;
+  let target = {} as GuildMember | User;
   const modEmbedObj = embedTemplate();
 
   const { embedColor } = embedVariables[command as keyof typeof embedVariables];
@@ -839,43 +839,50 @@ export async function modResponse(
           create: { discord_id: userId },
           update: {},
         });
-
-        actionRow.addComponents(
-          modButtonNote(userId),
-        );
-
         let banVerb = 'ban';
-        let userBan = {} as GuildBan;
-        try {
-          userBan = await interaction.guild.bans.fetch(userId);
-        } catch (err: unknown) {
-          // log.debug(F, `Error fetching ban: ${err}`);
-        }
-        if (userBan.guild) {
+        if (showModButtons) {
           actionRow.addComponents(
-            modButtonUnBan(userId),
+            modButtonNote(userId),
           );
-          banVerb = 'un-ban';
-        } else {
+
+          let userBan = {} as GuildBan;
+          try {
+            userBan = await interaction.guild.bans.fetch(userId);
+          } catch (err: unknown) {
+            // log.debug(F, `Error fetching ban: ${err}`);
+          }
+          if (userBan.guild) {
+            actionRow.addComponents(
+              modButtonUnBan(userId),
+            );
+            banVerb = 'un-ban';
+          } else {
+            actionRow.addComponents(
+              modButtonBan(userId),
+            );
+          }
+
           actionRow.addComponents(
-            modButtonBan(userId),
+            modButtonInfo(userId),
           );
         }
 
-        actionRow.addComponents(
-          modButtonInfo(userId),
-        );
-
-        if (isReport(command)) {
+        if (isReport(command) && showModButtons) {
           modEmbedObj.setDescription(stripIndents`
           User ID '${userId}' is not in the guild, but I can still Note or ${banVerb} them!`);
         } else {
           log.debug(F, '[modResponse] generating user info');
           const modlogEmbed = await userInfoEmbed(actor, targetObj, targetData, command, showModButtons);
           log.debug(F, `modlogEmbed: ${JSON.stringify(modlogEmbed, null, 2)}`);
-          actionRow.setComponents([
-            modButtonInfo(userId),
-          ]);
+          if (showModButtons) {
+            actionRow.setComponents([
+              modButtonInfo(userId),
+            ]);
+          } else {
+            actionRow.setComponents([
+              modButtonReport(userId),
+            ]);
+          }
           if (isBan(command)) {
             actionRow.addComponents(
               modButtonUnBan(userId),
@@ -903,13 +910,15 @@ export async function modResponse(
     // log.debug(F, `Assigning target from string: ${targets}`);
     [target] = targets;
   }
-  if (interaction.isUserContextMenuCommand() && interaction.targetMember) {
+
+  if (interaction.isUserContextMenuCommand() && (interaction.targetMember || interaction.targetUser)) {
     // log.debug(F, `User context target member: ${interaction.targetMember}`);
-    target = interaction.targetMember as GuildMember;
+    target = interaction.targetMember ? interaction.targetMember as GuildMember : interaction.targetUser as User;
   } else if (interaction.isMessageContextMenuCommand() && interaction.targetMessage) {
     // log.debug(F, `Message context target message member: ${interaction.targetMessage.member}`);
-    target = interaction.targetMessage.member as GuildMember;
+    target = interaction.targetMessage.member ? interaction.targetMessage.member as GuildMember : interaction.targetMessage.author as User;
   }
+
   const targetData = await db.users.upsert({
     where: {
       discord_id: target.id,
@@ -937,7 +946,10 @@ export async function modResponse(
   // Determine if the actor is a mod
   // const actorIsMod = (!!guildData.role_moderator && actor.roles.cache.has(guildData.role_moderator));
 
-  const timeoutTime = target.communicationDisabledUntilTimestamp;
+  let timeoutTime = null;
+  if (target instanceof GuildMember) {
+    timeoutTime = target.communicationDisabledUntilTimestamp;
+  }
 
   if (showModButtons) {
     if (isInfo(command) || isReport(command)) {
@@ -1208,9 +1220,18 @@ async function messageUser(
     const messageFilter = (mi: MessageComponentInteraction) => mi.user.id === target.id;
     const collector = message.createMessageComponentCollector({ filter: messageFilter, time: 0 });
 
+    // Fetch the mod thread channel once
+    let targetChan: TextChannel | null = null;
+    try {
+      targetChan = targetData.mod_thread_id
+        ? await discordClient.channels.fetch(targetData.mod_thread_id as Snowflake) as TextChannel
+        : null;
+    } catch (error) {
+      log.info(F, 'Failed to fetch mod thread. It was likely deleted.');
+    }
+
     collector.on('collect', async (mi: MessageComponentInteraction) => {
       if (mi.customId.startsWith('acknowledgeButton')) {
-        const targetChan = await discordClient.channels.fetch(targetData.mod_thread_id as Snowflake) as TextChannel;
         if (targetChan) {
           await targetChan.send({
             embeds: [embedTemplate()
@@ -1222,16 +1243,16 @@ async function messageUser(
         await mi.update({ components: [] });
         mi.user.send('Thanks for understanding! We appreciate your cooperation and will consider this in the future!');
       } else if (mi.customId.startsWith('refusalButton')) {
-        const targetChan = await discordClient.channels.fetch(targetData.mod_thread_id as Snowflake) as TextChannel;
-        await targetChan.send({
-          embeds: [embedTemplate()
-            .setColor(Colors.Red)
-            .setDescription(`${target.username} has refused their timeout and was kicked.`)],
-        });
+        if (targetChan) {
+          await targetChan.send({
+            embeds: [embedTemplate()
+              .setColor(Colors.Red)
+              .setDescription(`${target.username} has refused their timeout and was kicked.`)],
+          });
+        }
         // remove the components from the message
         await mi.update({ components: [] });
-        mi.user.send(stripIndents`Thanks for admitting this, you\'ve been removed from the guild.
-        You can rejoin if you ever decide to cooperate.`);
+        mi.user.send(stripIndents`Thanks for admitting this, you\'ve been removed from the guild. You can rejoin if you ever decide to cooperate.`);
         await guild.members.kick(target, 'Refused to acknowledge timeout');
       }
     });
@@ -1252,7 +1273,12 @@ export async function acknowledgeButton(
     update: {
     },
   });
-  const targetChan = await discordClient.channels.fetch(targetData.mod_thread_id as Snowflake) as TextChannel;
+  let targetChan: TextChannel | null = null;
+  try {
+    targetChan = targetData.mod_thread_id ? await discordClient.channels.fetch(targetData.mod_thread_id as Snowflake) as TextChannel : null;
+  } catch (error) {
+    log.info(F, 'Failed to fetch mod thread. It was likely deleted.');
+  }
   if (targetChan) {
     await targetChan.send({
       embeds: [embedTemplate()
@@ -1261,8 +1287,11 @@ export async function acknowledgeButton(
     });
   }
   // remove the components from the message
-  await interaction.update({ components: [] });
-  interaction.user.send('Thanks for understanding! We appreciate your cooperation and will consider this in the future!');
+  try {
+    await interaction.update({ components: [] });
+  } catch (err) {
+    log.debug(F, 'Failed to remove warning components for moderation acknowledgement');
+  }
 }
 
 export async function refusalButton(
@@ -1278,19 +1307,23 @@ export async function refusalButton(
     update: {
     },
   });
-  const targetChan = await discordClient.channels.fetch(targetData.mod_thread_id as Snowflake) as TextChannel;
+
+  let targetChan: TextChannel | null = null;
+  try {
+    targetChan = targetData.mod_thread_id ? await discordClient.channels.fetch(targetData.mod_thread_id as Snowflake) as TextChannel : null;
+  } catch (error) {
+    log.info(F, 'Failed to fetch mod thread. It was likely deleted.');
+  }
   if (targetChan) {
     await targetChan.send({
       embeds: [embedTemplate()
-        .setColor(Colors.Green)
+        .setColor(Colors.Red)
         .setDescription(`${interaction.user.username} has refused their warning and was kicked.`)],
     });
+    await targetChan.guild.members.kick(interaction.user, 'Refused to acknowledge warning');
   }
   // remove the components from the message
   await interaction.update({ components: [] });
-  await interaction.user.send('Thanks for admitting this, you\'ve been removed from the guild. You can rejoin if you ever decide to cooperate.');
-
-  await targetChan.guild.members.kick(interaction.user, 'Refused to acknowledge warning');
 }
 
 export async function moderate(
@@ -1354,50 +1387,62 @@ export async function moderate(
   }
 
   // Process duration time for ban and timeouts
-  let duration = 0 as null | number;
+  let banEndTime = null;
+  let actionDuration = 0 as null | number;
   let durationStr = '';
   if (isTimeout(command)) {
     // log.debug(F, 'Parsing timeout duration');
     let durationVal = modalInt.fields.getTextInputValue('duration');
-    if (durationVal === '') durationVal = '7 days';
-    // log.debug(F, `durationVal: ${durationVal}`);
-    if (durationVal.length === 1) {
-      // If the input is a single number, assume it's days
-      duration = parseInt(durationVal, 10);
-      if (Number.isNaN(duration)) {
-        return { content: 'Timeout must be a number!' };
-      }
-      if (duration < 0 || duration > 7) {
-        return { content: 'Timeout must be between 0 and 7 days!' };
-      }
-      durationVal = `${duration} days`;
+
+    if (durationVal === '') {
+      durationVal = '7d';
+    } // else {
+    // durationVal = await makeValid(durationVal);
+    // }
+
+    if (!validateDurationInput(durationVal)) {
+      return {
+        content: 'Timeout duration must include at least one of the following units: seconds, minutes, hours, days, or weeks. Examples of valid formats include: 1 days 23 hours 59 minutes 59 seconds, or just 1 day, etc.',
+      };
     }
 
-    duration = await parseDuration(durationVal);
-    if (duration && (duration < 0 || duration > 7 * 24 * 60 * 60 * 1000)) {
-      return { content: 'Timeout must be between 0 and 7 days!!' };
+    actionDuration = await parseDuration(durationVal);
+    if (actionDuration && (actionDuration < 0 || actionDuration > 7 * 24 * 60 * 60 * 1000)) {
+      return { content: 'Timeout must be between 0 and 7 days!' };
     }
 
     // convert the milliseconds into a human readable string
-    const humanTime = msToHuman(duration);
+    const humanTime = msToHuman(actionDuration);
 
-    durationStr = `for ${humanTime}. It will expire ${time(new Date(Date.now() + duration), 'R')}`;
+    durationStr = ` for ${humanTime}. It will expire ${time(new Date(Date.now() + actionDuration), 'R')}`;
     // log.debug(F, `duration: ${duration}`);
   }
   if (isFullBan(command)) {
-    // If the command is ban, then the input value exists, so pull that and try to parse it as an int
-    let dayInput = parseInt(modalInt.fields.getTextInputValue('days'), 10);
+    const durationVal = modalInt.fields.getTextInputValue('ban_duration');
 
-    // If no input was provided, default to 0 days
-    if (Number.isNaN(dayInput)) dayInput = 0;
+    if (durationVal !== '') {
+      // durationVal = await makeValid(durationVal);
+      let tempBanDuration = parseInt(durationVal, 10);
 
-    // If the input is a string, or outside the bounds, tell the user and return
-    if (dayInput && (dayInput < 0 || dayInput > 7)) {
-      return { content: 'Ban days must be at least 0 and at most 7!' };
+      if (Number.isNaN(tempBanDuration)) {
+        return { content: 'Ban duration must be a number!' };
+      }
+
+      if (!validateDurationInput(durationVal)) {
+        return {
+          content: 'Ban duration must include at least one of the following units: seconds, minutes, hours, days, weeks, months, or years. Examples of valid formats include: 1 year 1 month 1 week 1 day 23 hours 59 minutes 59 seconds, or just 1 year, 1 month, etc.',
+        };
+      }
+
+      tempBanDuration = await parseDuration(durationVal);
+      if (tempBanDuration && tempBanDuration < 0) {
+        return { content: 'Ban duration must be at least 1 second!' };
+      }
+
+      durationStr = `${time(new Date(Date.now() + tempBanDuration), 'R')}`;
+      const currentTime = new Date();
+      banEndTime = tempBanDuration !== 0 ? new Date(currentTime.getTime() + tempBanDuration) : null;
     }
-
-    // Get the millisecond value of the input
-    duration = await parseDuration(`${dayInput} days`);
   }
 
   // Display all properties we're going to use
@@ -1407,7 +1452,7 @@ export async function moderate(
   targetId: ${targetId}
   internalNote: ${internalNote}
   description: ${description}
-  duration: ${duration}
+  duration: ${actionDuration}
   durationStr: ${durationStr}
   `);
 
@@ -1497,8 +1542,14 @@ export async function moderate(
     );
   }
 
+  if (command === 'FULL_BAN') {
+    internalNote += `\n **Actioned by:** ${actor.displayName}`;
+    internalNote += `\n **Ban Ends:** ${durationStr || 'Never'}`;
+  }
+
   let actionData = {
     user_id: targetData.id,
+    target_discord_id: targetData.discord_id,
     guild_id: actor.guild.id,
     type: command.includes('UN-') ? command.slice(3) : command,
     ban_evasion_related_user: null as string | null,
@@ -1516,9 +1567,37 @@ export async function moderate(
   if (isBan(command)) {
     if (isFullBan(command) || isUnderban(command) || isBanEvasion(command)) {
       targetData.removed_at = new Date();
-      const deleteMessageValue = duration ?? 0;
+
+      let deleteMessageValue = modalInt.fields.getTextInputValue('days');
+      let deleteDuration = 0;
+
+      if (deleteMessageValue !== '') {
+        // If input is just a number, append 'd' to treat it as days
+        if (/^\d+$/.test(deleteMessageValue)) {
+          deleteMessageValue += 'd';
+        }
+
+        // deleteMessageValue = await makeValid(deleteMessageValue);
+        deleteDuration = parseInt(deleteMessageValue, 10);
+
+        if (Number.isNaN(deleteDuration)) {
+          return { content: 'Delete duration must be a number!' };
+        }
+
+        if (!validateDurationInput(deleteMessageValue)) {
+          return {
+            content: 'Delete duration must include at least one of the following units: seconds, minutes, hours, days, or weeks, with a maximum duration of 7 days. Examples of valid formats include: 1 day 23 hours 59 minutes 59 seconds, or just 1 day, etc.',
+          };
+        }
+
+        deleteDuration = await parseDuration(deleteMessageValue);
+        if (deleteDuration && deleteDuration < 0) {
+          return { content: 'Delete duration must be at least 1 second!' };
+        }
+      }
+
       try {
-        if (deleteMessageValue > 0 && targetMember) {
+        if (deleteDuration > 0 && targetMember) {
         // log.debug(F, `I am deleting ${deleteMessageValue} days of messages!`);
           const response = await last(targetMember.user, buttonInt.guild);
           extraMessage = `${targetName}'s last ${response.messageCount} (out of ${response.totalMessages}) messages before being banned :\n${response.messageList}`;
@@ -1530,7 +1609,12 @@ export async function moderate(
       log.info(F, `target: ${targetId} | deleteMessageValue: ${deleteMessageValue} | internalNote: ${internalNote ?? noReason}`);
 
       try {
-        targetObj = await buttonInt.guild.bans.create(targetId, { deleteMessageSeconds: deleteMessageValue / 1000, reason: internalNote ?? noReason });
+        log.info(F, `Message delete duration in milliseconds: ${deleteDuration}`);
+        targetObj = await buttonInt.guild.bans.create(targetId, { deleteMessageSeconds: deleteDuration / 1000, reason: internalNote ?? noReason });
+        // Set ban duration if present
+        if (banEndTime !== null) {
+          actionData.expires_at = banEndTime;
+        }
       } catch (err) {
         log.error(F, `Error: ${err}`);
       }
@@ -1580,11 +1664,12 @@ export async function moderate(
     }
     actionData.repealed_at = new Date();
     actionData.repealed_by = actorData.id;
+    actionData.expires_at = null;
   } else if (isTimeout(command)) {
     if (targetMember) {
-      actionData.expires_at = new Date(Date.now() + (duration as number));
+      actionData.expires_at = new Date(Date.now() + (actionDuration as number));
       try {
-        await targetMember.timeout(duration, internalNote ?? noReason);
+        await targetMember.timeout(actionDuration, internalNote ?? noReason);
       } catch (err) {
         log.error(F, `Error: ${err}`);
       }
@@ -1612,7 +1697,7 @@ export async function moderate(
       actionData.repealed_by = actorData.id;
 
       try {
-        await targetMember.timeout(0, internalNote ?? noReason);
+        await targetMember.timeout(null, internalNote ?? noReason);
         // log.debug(F, `I untimeout ${target.displayName} because\n '${internalNote}'!`);
       } catch (err) {
         log.error(F, `Error: ${err}`);
@@ -1694,7 +1779,7 @@ export async function moderate(
       > ${modalInt.fields.getTextInputValue('internalNote')}
   
       Message sent to user:
-      > ${modalInt.fields.getTextInputValue('description')}`,
+      > ${!isNote(command) && !isReport(command) ? modalInt.fields.getTextInputValue('description') : ''}`,
         inline: true,
       },
     );
@@ -1716,7 +1801,7 @@ export async function moderate(
     .setDescription(desc)
     .setFooter(null);
 
-  if (command !== 'REPORT' && modThread) response.setDescription(`${response.data.description}\nYou can access their thread here: ${modThread}`);
+  if (!isReport(command) && modThread) response.setDescription(`${response.data.description}\nYou can access their thread here: ${modThread}`);
 
   log.debug(F, `Returning embed: ${JSON.stringify(response, null, 2)}`);
   return { embeds: [response] };
@@ -1850,18 +1935,31 @@ export async function modModal(
 
   // log.debug(F, `Verb: ${verb}`);
 
+  const modalInputComponent = new TextInputBuilder()
+    .setStyle(TextInputStyle.Paragraph)
+    .setPlaceholder('Tell moderators why you\'re doing this')
+    .setValue(modalInternal)
+    .setMaxLength(1000)
+    .setRequired(true)
+    .setCustomId('internalNote');
+
+  try {
+    // Ensure the label text is within the limit
+    const label = `Why are you ${verb} ${target}?`;
+    const truncatedLabelText = label.length > 45 ? `${label.substring(0, 41)}...?` : label;
+
+    modalInputComponent.setLabel(truncatedLabelText);
+  } catch (err) {
+    log.error(F, `Error: ${err}`);
+    log.error(F, `Verb: ${verb}, Target: ${target}`);
+  }
+
+  // log.debug(F, `Verb: ${verb}`);
   const modal = new ModalBuilder()
     .setCustomId(`modModal~${command}~${interaction.id}`)
     .setTitle(`${interaction.guild.name} member ${command.toLowerCase()}`)
     .addComponents(new ActionRowBuilder<TextInputBuilder>()
-      .addComponents(new TextInputBuilder()
-        .setLabel(`Why are you ${verb} ${target}?`)
-        .setStyle(TextInputStyle.Paragraph)
-        .setPlaceholder('Tell moderators why you\'re doing this')
-        .setValue(modalInternal)
-        .setMaxLength(1000)
-        .setRequired(true)
-        .setCustomId('internalNote')));
+      .addComponents(modalInputComponent));
 
   // All commands except INFO, NOTE and REPORT can have a public reason sent to the user
   if (!isNote(command) && !isReport(command)) {
@@ -1881,18 +1979,25 @@ export async function modModal(
       .addComponents(new TextInputBuilder()
         .setLabel('Timeout for how long?')
         .setStyle(TextInputStyle.Short)
-        .setPlaceholder('4 days 3hrs 2 mins 30 seconds (Max 7 days, Default 7 days)')
+        .setPlaceholder('7 days or 1 week, etc. (Max 7 days, Default 7 days)')
         .setRequired(false)
         .setCustomId('duration')));
   }
   if (isFullBan(command)) {
     modal.addComponents(new ActionRowBuilder<TextInputBuilder>()
       .addComponents(new TextInputBuilder()
-        .setLabel('How many days of msg to remove?')
+        .setLabel('How far back should messages be removed?')
         .setStyle(TextInputStyle.Short)
-        .setPlaceholder('4 days 3hrs 2 mins 30 seconds (Max 7 days, Default 0 days)')
+        .setPlaceholder('7 days or 1 week, etc. (Max 7 days, Default 0 days)')
         .setRequired(false)
         .setCustomId('days')));
+    modal.addComponents(new ActionRowBuilder<TextInputBuilder>()
+      .addComponents(new TextInputBuilder()
+        .setLabel('How long should they be banned for?')
+        .setStyle(TextInputStyle.Short)
+        .setPlaceholder('1 year or 365 days, etc. (Empty = Permanent)')
+        .setRequired(false)
+        .setCustomId('ban_duration')));
   }
 
   // When the modal is opened, disable the button on the embed
@@ -1930,8 +2035,24 @@ export async function modModal(
   const filter = (i: ModalSubmitInteraction) => i.customId.startsWith('modModal');
   await interaction.awaitModalSubmit({ filter, time: disableButtonTime })
     .then(async i => {
-      if (i.customId.split('~')[2] !== interaction.id) return;
+      if (i.customId.split('~')[2] !== interaction.id) {
+        return;
+      }
       await i.deferReply({ ephemeral: true });
+      try {
+        if (command === 'REPORT' || command === 'NOTE') {
+          await moderate(interaction, i);
+          const reportResponseEmbed = embedTemplate()
+            .setColor(command === 'REPORT' ? Colors.Yellow : Colors.Green)
+            .setTitle(command === 'REPORT' ? 'Your report was sent!' : 'Your note was added!')
+            .setDescription(command === 'REPORT' ? 'The moderators have received your report and will look into it. Thanks!' : `Your note was successfully added to ${target}'s thread.`);
+          await i.editReply({
+            embeds: [reportResponseEmbed],
+          });
+        }
+      } catch (err) {
+        log.info(F, `[modModal ModalSubmitInteraction]: ${err}`);
+      }
       // const internalNote = i.fields.getTextInputValue('internalNote'); // eslint-disable-line
 
       // // Only these commands actually have the description input, so only pull it if it exists
@@ -2023,8 +2144,9 @@ export async function modModal(
           // log.error(F, `Error: ${err}`);
         }
       }
-
-      await i.editReply(await moderate(interaction, i));
+      if (!isNote(command) && !isReport(command)) {
+        await i.editReply(await moderate(interaction, i));
+      }
     })
     .catch(async err => {
       // log.error(F, `Error: ${JSON.stringify(err as DiscordErrorData, null, 2)}`);

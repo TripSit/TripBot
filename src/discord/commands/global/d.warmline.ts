@@ -12,7 +12,7 @@ const F = f(__filename);
 export const dWarmline: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('warmline')
-    .setDescription('(USA only) Need someone to talk to, but don\'t need a "hotline"?')
+    .setDescription('Need someone to talk to, but don\'t need a "hotline"?')
     .addBooleanOption(option => option.setName('ephemeral')
       .setDescription('Set to "True" to show the response only to you')),
 

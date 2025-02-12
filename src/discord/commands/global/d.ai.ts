@@ -48,7 +48,7 @@ import {
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import commandContext from '../../utils/context';
-import aiChat, { aiModerate } from '../../../global/commands/g.ai';
+import { aiModerate, handleAiMessageQueue } from '../../../global/commands/g.ai';
 
 /* TODO
 * only direct @ message should trigger a response
@@ -64,9 +64,9 @@ const tripbotUAT = '@TripBot UAT (Moonbear)';
 
 // Costs per 1k tokens
 const aiCosts = {
-  GPT_3_5_TURBO: {
-    input: 0.0005,
-    output: 0.0015,
+  GPT_3_5_TURBO: { // LAZY TEMP FIX - CHANGE NAME THESE PRICES ARE FOR 4o MINI NOW
+    input: 0.00015,
+    output: 0.00060,
   },
   // GPT_3_5_TURBO_1106: {
   //   input: 0.001,
@@ -1123,7 +1123,12 @@ async function personasPage(
 
   // If the user is a developer in the home guild, show the buttonAiModify button
   const tripsitGuild = await discordClient.guilds.fetch(env.DISCORD_GUILD_ID);
-  const tripsitMember = await tripsitGuild.members.fetch(interaction.user.id);
+  let tripsitMember = null;
+  try {
+    tripsitMember = await tripsitGuild.members.fetch(interaction.user.id);
+  } catch (err) {
+    // do nothing
+  }
 
   const components = [
     new ActionRowBuilder<ButtonBuilder>()
@@ -1149,7 +1154,7 @@ async function personasPage(
     });
 
     log.debug(F, 'Adding three buttons to personaButtons');
-    if (tripsitMember.roles.cache.has(env.ROLE_DEVELOPER)) {
+    if (tripsitMember && tripsitMember.roles.cache.has(env.ROLE_DEVELOPER)) {
       components.push(
         new ActionRowBuilder<ButtonBuilder>()
           .addComponents(buttonAiNew, buttonAiModify, buttonAiDelete),
@@ -1182,7 +1187,7 @@ async function personasPage(
       );
     }
 
-    if (tripsitMember.roles.cache.has(env.ROLE_DEVELOPER)) {
+    if (tripsitMember && tripsitMember.roles.cache.has(env.ROLE_DEVELOPER)) {
       components.push(
         new ActionRowBuilder<StringSelectMenuBuilder>().addComponents([
           menuAiPublic,
@@ -1196,7 +1201,7 @@ async function personasPage(
     };
   }
 
-  if (tripsitMember.roles.cache.has(env.ROLE_DEVELOPER)) {
+  if (tripsitMember && tripsitMember.roles.cache.has(env.ROLE_DEVELOPER)) {
     log.debug(F, 'Adding buttonAiNew to components');
     components.push(
       new ActionRowBuilder<ButtonBuilder>()
@@ -1712,14 +1717,14 @@ async function agreeToTerms(
     embeds: [embedTemplate()
       .setTitle('🤖 Welcome to TripBot\'s AI Module! 🤖')
       .setDescription(`
-        Please agree to the following. Use \`/ai help\` for more more information.
+        Please agree to the following. Use \`/ai help\` for more information.
 
         ${termsOfService}
       `)
       .setFooter(null)],
     components: [
       new ActionRowBuilder<ButtonBuilder>().addComponents(
-        buttonAiAgree.setCustomId(`AI~messageAgree~${messageData.id}`),
+        buttonAiAgree.setCustomId(`AI~messageAgree~${messageData.author.id}`),
       ),
     ],
   };
@@ -2158,8 +2163,8 @@ export async function aiMessage(
     attachmentInfo.mimeType = refMessage.attachments.first()?.contentType as string;
   }
 
-  log.debug(F, `attachmentInfo: ${JSON.stringify(attachmentInfo, null, 2)}`);
-  log.debug(F, `Sending messages to API: ${JSON.stringify(messageList, null, 2)}`);
+  // log.debug(F, `attachmentInfo: ${JSON.stringify(attachmentInfo, null, 2)}`);
+  // log.debug(F, `Sending messages to API: ${JSON.stringify(messageList, null, 2)}`);
 
   await messageData.channel.sendTyping();
 
@@ -2175,7 +2180,7 @@ export async function aiMessage(
   }, 30000); // Failsafe to stop typing indicator after 30 seconds
 
   try {
-    const chatResponse = await aiChat(aiPersona, messageList, messageData, attachmentInfo);
+    const chatResponse = await handleAiMessageQueue(aiPersona, messageList, messageData, attachmentInfo);
     response = chatResponse.response;
     promptTokens = chatResponse.promptTokens;
     completionTokens = chatResponse.completionTokens;
@@ -2397,11 +2402,12 @@ export async function aiButton(
 ):Promise<void> {
   const buttonID = interaction.customId;
   log.debug(F, `buttonID: ${buttonID}`);
-  const [, buttonAction] = buttonID.split('~') as [
+  const [, buttonAction, messageAuthorId] = buttonID.split('~') as [
     null,
     'help' | 'personas' | 'setup' | 'agree' | 'privacy' |
     'link' | 'unlink' | 'messageAgree' | 'modify' | 'new' |
-    'create' | 'delete' | 'deleteConfirm' | 'deleteHistory' | 'deleteHistoryConfirm'];
+    'create' | 'delete' | 'deleteConfirm' | 'deleteHistory' | 'deleteHistoryConfirm',
+    string];
 
   // eslint-disable-next-line sonarjs/no-small-switch
   switch (buttonAction) {
@@ -2427,6 +2433,12 @@ export async function aiButton(
         },
       });
 
+      // const messageData = await interaction.message.fetchReference();
+
+      if (messageAuthorId !== interaction.user.id) {
+        log.debug(F, `${interaction.user.displayName} tried to accept the AI ToS using someone else's instance of the ToS.`);
+        return;
+      }
       await aiMessage(interaction.message);
       break;
     }

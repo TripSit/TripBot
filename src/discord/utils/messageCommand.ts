@@ -5,10 +5,12 @@ import {
   Role,
   PermissionResolvable,
   EmbedBuilder,
+  TextChannel,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
 import { sleep } from '../commands/guild/d.bottest';
 import { aiMessage } from '../commands/global/d.ai';
+import { Wordle, Connections, TheMini } from './nytUtils';
 
 // import log from '../../global/utils/log';
 // import {parse} from 'path';
@@ -18,6 +20,15 @@ const helpCounter = new Map<string, number>();
 
 export default messageCommand;
 
+const tripsitChannels = [
+  env.CHANNEL_TRIPSIT,
+  env.CHANNEL_OPENTRIPSIT1,
+  env.CHANNEL_OPENTRIPSIT2,
+  env.CHANNEL_WEBTRIPSIT1,
+  env.CHANNEL_WEBTRIPSIT2,
+];
+
+/*
 const sadStuff = [
   'sadface',
   ':(',
@@ -46,40 +57,89 @@ const sadStuff = [
   '😐',
   '😑',
 ];
+*/
 
 const heartEmojis = [
   '❤', '🧡', '💛', '💚', '💙', '💜', '💝', '💖', '💗', '💘', '💕', '💞', '💓', '💟', '❣', '🫂',
 ];
 
-async function isSadMessage(message:Message):Promise<boolean> {
-  return sadStuff.some(word => (message.cleanContent.includes(word)
-  && !(message.cleanContent.substring(message.cleanContent.indexOf(':') + 1).includes(':'))));
+async function messageContainsHearts(message: Message): Promise<boolean> {
+  return heartEmojis.some(word => (message.cleanContent.includes(word)
+    && !(message.cleanContent.substring(message.cleanContent.indexOf(':') + 1).includes(':'))));
 }
 
-async function isIrcCommand(message:Message):Promise<boolean> {
+async function isIrcCommand(message: Message): Promise<boolean> {
   return message.cleanContent.startsWith('~');
 }
 
-async function isPokingTripbot(message:Message):Promise<boolean> {
+async function isPokingTripbot(message: Message): Promise<boolean> {
   return message.content.startsWith(`_pokes <@${env.DISCORD_CLIENT_ID}>_`);
 }
 
-async function isMentioningTripbot(message:Message):Promise<boolean> {
+async function isMentioningTripbot(message: Message): Promise<boolean> {
   return message.mentions.users.has(env.DISCORD_CLIENT_ID) || message.mentions.roles.has(env.ROLE_TRIPBOT);
 }
 
-async function isUploadMessage(message:Message):Promise<boolean> {
+async function isUploadMessage(message: Message): Promise<boolean> {
   return message.content.toLowerCase().includes('upload')
     || message.content.toLowerCase().includes('steal')
     || message.content.toLowerCase().includes('fetch');
 }
 
+async function isWordle(message: Message): Promise<boolean> {
+  const messageContent = message.content;
+  const userId = message.author.id; // Extract userId from message
+
+  // Regular expression to check if the message possibly mentions a Wordle score
+  const wordleScorePattern = /(Wordle\s[\d,]+\s(\d|X)\/6)/;
+  const match = messageContent.match(wordleScorePattern);
+
+  // If a match is found, send the message content for further processing
+  if (match) {
+    return Wordle.process(userId, messageContent); // Pass userId and messageContent
+  }
+
+  return false;
+}
+
+async function isConnections(message: Message): Promise<boolean> {
+  const messageContent = message.content;
+  const userId = message.author.id; // Extract userId from message
+
+  // Regular expression to check if the message possibly mentions a Connections score
+  const connectionsScorePattern = /(Connections\s*Puzzle\s*#\d+)/;
+  const match = messageContent.match(connectionsScorePattern);
+
+  // TODO: If a match is found, send the message content for further processing
+
+  if (match) {
+    return Connections.process(userId, messageContent); // Pass userId and messageContent
+  }
+
+  return false;
+}
+
+async function isTheMini(message: Message): Promise<boolean> {
+  const messageContent = message.content;
+  const userId = message.author.id; // Extract userId from message
+
+  // Regular expression to check if the message possibly mentions a The Mini score
+  const theMiniScorePattern = /(https:\/\/www\.nytimes\.com\/badges\/games\/mini\.html\?d=\d{4}-\d{2}-\d{2}&t=\d+&c=[a-f0-9]+&smid=url-share)|(https:\/\/www\.nytimes\.com\/crosswords\/game\/mini)/;
+  const match = messageContent.match(theMiniScorePattern);
+
+  // If a match is found, send the message content for further processing
+  if (match) {
+    return TheMini.process(userId, messageContent); // Pass userId and messageContent
+  }
+
+  return false;
+}
 // async function isAiEnabledGuild(message:Message):Promise<boolean> {
 //   // log.debug(F, `message.guild?.id: ${message.guild?.id}`);
 //   return message.guild?.id === env.DISCORD_GUILD_ID;
 // }
 
-async function isBotOwner(message:Message):Promise<boolean> {
+async function isBotOwner(message: Message): Promise<boolean> {
   return message.author.id === env.DISCORD_OWNER_ID;
 }
 
@@ -111,6 +171,15 @@ export async function messageCommand(message: Message): Promise<void> {
     const command = message.content.split(' ')[0].slice(1);
     // log.debug(F, `command: ${command}`);
     if (command === 'tripsit') {
+      // If not in a tripsit channel and not in a specific users custom tripsit channel, tell them where to go and return.
+      if (!tripsitChannels.includes(message.channel.id) && !(message.channel as TextChannel).name.endsWith(`${message.author.displayName}'s channel!`)) {
+        const channelTripsit = await message.guild.channels.fetch(env.CHANNEL_TRIPSIT) as TextChannel;
+        const channelOpenTripsit1 = await message.guild.channels.fetch(env.CHANNEL_OPENTRIPSIT1) as TextChannel;
+        await message.channel.send(
+          stripIndents`Hey ${displayName}, this command is reserved for the tripsitting channels. Head on over to ${channelTripsit} or ${channelOpenTripsit1} and try again if you need help! <3`,
+        );
+        return;
+      }
       const now = Date.now().valueOf();
       if (helpCounter.has(message.author.id)) {
         const lastTime = helpCounter.get(message.author.id);
@@ -261,7 +330,7 @@ give people a chance to answer 😄 If no one answers in 5 minutes you can try a
             const emojiUrl = `https://cdn.discordapp.com/emojis/${emojiId}.${emojiAnimated ? 'gif' : 'png'}`;
             log.debug(F, `emojiUrl: ${emojiUrl}`);
             try {
-              const emojiData = await message.guild.emojis.create({name: emojiName, attachment: emojiUrl}); // eslint-disable-line
+              const emojiData = await message.guild.emojis.create({ name: emojiName, attachment: emojiUrl }); // eslint-disable-line
 
               emojiSuccessList.push(`<${emojiAnimated ? 'a' : ''}:${emojiData.name}:${emojiData.id}>`);
             } catch (e) {
@@ -293,7 +362,7 @@ give people a chance to answer 😄 If no one answers in 5 minutes you can try a
           const stickerList = [];
           for (const sticker of message.stickers.values()) { // eslint-disable-line
             log.debug(F, `sticker: ${JSON.stringify(sticker, null, 2)}`);
-            const stickerData = await message.guild.stickers.create({name: sticker.name, file: sticker.url, tags: 'grinning'}); // eslint-disable-line
+            const stickerData = await message.guild.stickers.create({ name: sticker.name, file: sticker.url, tags: 'grinning' }); // eslint-disable-line
             stickerList.push(sticker.name);
           }
           log.debug(F, `stickerList: ${stickerList}`);
@@ -316,11 +385,33 @@ give people a chance to answer 😄 If no one answers in 5 minutes you can try a
         }
       }
     }
-  } else if (await isSadMessage(message)) {
+  } else if (await messageContainsHearts(message)) {
     if (message.author.bot) return;
     if (message.guild.id !== env.DISCORD_GUILD_ID) return;
-    // log.debug(F, 'Sad stuff detected');
-    await message.react(heartEmojis[Math.floor(Math.random() * heartEmojis.length)]);
+    // log.debug(F, 'Sad/lovey stuff detected');
+    try {
+      await message.react(heartEmojis[Math.floor(Math.random() * heartEmojis.length)]);
+    } catch (err) {
+      log.info(F, `Failed to add heart reaction in ${message.guild.name}(${message.guild.id}).`);
+    }
+  }
+
+  if (!message.author.bot) {
+    const wordleResult = await isWordle(message);
+    if (wordleResult) {
+      log.debug(F, 'Valid Wordle detected');
+      await message.react(emojiGet('nyt_wordle'));
+    }
+    const connectionsResult = await isConnections(message);
+    if (connectionsResult) {
+      log.debug(F, 'Valid Connections detected');
+      await message.react(emojiGet('nyt_connections'));
+    }
+    const theMiniResult = await isTheMini(message);
+    if (theMiniResult) {
+      log.debug(F, 'Valid The Mini detected');
+      await message.react(emojiGet('nyt_themini'));
+    }
   }
   // else if (
   //   message.content.match(/(?:anyone|someone+there|here)\b/)

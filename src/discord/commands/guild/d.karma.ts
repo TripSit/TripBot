@@ -16,15 +16,16 @@ export const dKarma: SlashCommand = {
     .setName('karma')
     .setDescription('Get someone\'s karma!')
     .addUserOption(option => option
-      .setName('user')
-      .setDescription('User to lookup')
-      .setRequired(true))
+      .setName('target')
+      .setDescription('User to lookup'))
     .addBooleanOption(option => option.setName('ephemeral')
       .setDescription('Set to "True" to show the response only to you')),
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
     await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
-    const member = interaction.options.getMember('user') as GuildMember;
+    const member = interaction.options.getMember('target')
+      ? interaction.options.getMember('target') as GuildMember
+      : interaction.member as GuildMember;
 
     const userData = await db.users.upsert({
       where: {

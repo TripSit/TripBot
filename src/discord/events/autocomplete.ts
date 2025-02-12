@@ -3,7 +3,7 @@ import {
   GuildMember,
 } from 'discord.js';
 import Fuse from 'fuse.js';
-
+import { DateTime } from 'luxon';
 import { ai_model } from '@prisma/client';
 import { Drug } from 'tripsit_drug_db';
 import pillColors from '../../../assets/data/pill_colors.json';
@@ -13,6 +13,7 @@ import tsData from '../../../assets/data/tripsitDB.json';
 import timezones from '../../../assets/data/timezones.json';
 import unitsOfMeasurement from '../../../assets/data/units_of_measurement.json';
 import { CbSubstance } from '../../global/@types/combined';
+import { Wordle, Connections, TheMini } from '../utils/nytUtils';
 
 const drugDataTripsit = tsData as {
   [key: string]: Drug;
@@ -20,28 +21,30 @@ const drugDataTripsit = tsData as {
 
 const drugDataAll = cbData as CbSubstance[];
 
+const dateFormat = 'EEEE, MMMM dd, yyyy';
+
 const F = f(__filename); // eslint-disable-line
 
 type RoleDef = { name: string; value: string };
 
-const timezoneNames:string[] = [];
+const timezoneNames: string[] = [];
 for (const timezone of timezones) { // eslint-disable-line
   timezoneNames.push(timezone.label);
 }
 
-const measurementNames:string[] = [];
+const measurementNames: string[] = [];
 for (const unit of unitsOfMeasurement) { // eslint-disable-line
   measurementNames.push(unit.abbr);
 }
 
-const pillColorNames:string[] = [];
+const pillColorNames: string[] = [];
 for (const color of pillColors) { // eslint-disable-line
   pillColorNames.push(Object.keys(color)[0]);
 }
 const defaultPillColors = pillColorNames.slice(0, 25);
 // log.debug(F, `pill_color_names: ${pill_color_names}`);
 
-const pillShapeNames:string[] = [];
+const pillShapeNames: string[] = [];
 for (const shape of pillShapes) { // eslint-disable-line
   pillShapeNames.push(Object.keys(shape)[0]);
 }
@@ -54,7 +57,144 @@ const drugNames = drugDataAll.map(drug => ({
   aliases: drug.aliases?.map(alias => alias.slice(0, 1).toUpperCase() + alias.slice(1)),
 }));
 
-async function autocompletePills(interaction:AutocompleteInteraction) {
+// TODO: Finish autocompleteNYT or remove it
+async function autocompleteNYT(interaction: AutocompleteInteraction) {
+  const game = interaction.options.getString('game');
+  const focusedOption = interaction.options.getFocused(true).name;
+
+  const formats = [
+    'MM/dd/yyyy', // 01/01/2022
+    'dd/MM/yyyy', // 01/01/2022
+    'yyyy-MM-dd', // 2022-01-01
+    'M/d/yyyy', // 1/1/2022
+    'dd-MM-yyyy', // 01-01-2022
+    'yyyy/MM/dd', // 2022/01/01
+    'MMMM d, yyyy', // January 1, 2022
+    'd MMMM yyyy', // 1 January 2022
+    'd MMM, yyyy', // 1 Jan, 2022
+    'MMMM do, yyyy', // January 1st, 2022
+    'MMM d, yyyy', // Jan 1, 2022
+    'MMM dd, yyyy', // Jan 01, 2022
+    'MMMM dd, yyyy', // January 01, 2022
+    'dd MMM yyyy', // 01 Jan 2022
+    'dd MMMM', // 01 January
+    'dd MMM', // 01 Jan
+    'MMMM dd', // January 01
+    'MMM dd', // Jan 01
+    'do MMMM yyyy', // 1st January 2022
+    'do MMM, yyyy', // 1st Jan, 2022
+    'yyyy d M', // 2022 1 1
+    'yyyy dd MM', // 2022 01 01
+    'yyyy MMMM d', // 2022 January 1
+    'yyyy MMM d', // 2022 Jan 1
+    'yyyy do MMMM', // 2022 1st January
+  ];
+
+  function parseDate(input: string): string | null {
+    const parsedDate = formats
+      .map(fmt => DateTime.fromFormat(input, fmt))
+      .find(date => date.isValid);
+
+    return parsedDate ? parsedDate.toFormat(dateFormat) : null;
+  }
+
+  function generateDates(startDate: Date, endDate: Date): { name: string, value: string }[] {
+    const dates = [];
+    let currentDate = DateTime.fromJSDate(startDate);
+    const endLuxonDate = DateTime.fromJSDate(endDate);
+
+    while (currentDate <= endLuxonDate) {
+      const formattedDate = currentDate.toFormat(dateFormat);
+      const dateInUTC = currentDate.toUTC().toFormat('yyyy-MM-dd');
+      dates.push({ name: formattedDate, value: dateInUTC });
+      currentDate = currentDate.plus({ days: 1 });
+    }
+
+    return dates;
+  }
+
+  function generateDatesAndNumbers(recentNumber: number): { name: string, value: string }[] {
+    const datesAndNumbers = [];
+    let currentDate = DateTime.local().plus({ minutes: 14 * 60 });
+
+    for (let i = recentNumber; i >= 1; i -= 1) {
+      const formattedDate = currentDate.toFormat(dateFormat);
+      datesAndNumbers.push({ name: `${i} (${formattedDate})`, value: i.toString() });
+      currentDate = currentDate.minus({ days: 1 });
+    }
+
+    return datesAndNumbers;
+  }
+
+  if (focusedOption === 'puzzle' && game === 'wordle') {
+    const wordleNumbers = (await Wordle.todaysPuzzles()).map(Number); // Convert numbers to strings
+    const recentNumber = Math.max(...wordleNumbers);
+    const datesAndNumbers = generateDatesAndNumbers(recentNumber);
+    const fuse = new Fuse(datesAndNumbers, { shouldSort: true, keys: ['name'] });
+    const userInput = interaction.options.getFocused(true).value;
+    const dateStr = parseDate(userInput);
+    let results;
+    if (dateStr === null) {
+      results = fuse.search(userInput);
+    } else {
+      results = fuse.search(dateStr);
+    }
+    const top5 = results.slice(0, 5);
+    // If the user's input is empty, respond with the most recent 5 numbers, otherwise respond with the search results
+    if (!userInput) {
+      interaction.respond(datesAndNumbers.slice(0, 5));
+    } else {
+      interaction.respond(top5.map((result: { item: { name: string, value: string } }) => result.item));
+    }
+  } else if (focusedOption === 'puzzle' && game === 'connections') {
+    const connectionsNumbers = (await Connections.todaysPuzzles()).map(Number); // Convert numbers to strings
+    const recentNumber = Math.max(...connectionsNumbers);
+    const datesAndNumbers = generateDatesAndNumbers(recentNumber);
+    const fuse = new Fuse(datesAndNumbers, { shouldSort: true, keys: ['name'] });
+    const userInput = interaction.options.getFocused(true).value;
+    const dateStr = parseDate(userInput);
+    let results;
+    if (dateStr === null) {
+      results = fuse.search(userInput);
+    } else {
+      results = fuse.search(dateStr);
+    }
+    const top5 = results.slice(0, 5);
+    // If the user's input is empty, respond with the most recent 5 numbers, otherwise respond with the search results
+    if (!userInput) {
+      interaction.respond(datesAndNumbers.slice(0, 5));
+    } else {
+      interaction.respond(top5.map((result: { item: any }) => result.item));
+    }
+  } else if (focusedOption === 'puzzle' && game === 'mini') {
+    const miniDates = (await TheMini.todaysPuzzles()).map(String); // Convert dates to strings
+    log.debug(F, `Mini dates: ${miniDates}`);
+    const recentDateUTC = new Date(`${miniDates[0]}T00:00:00Z`);
+    const recentDate = new Date(recentDateUTC.getTime() + 14 * 60 * 60 * 1000);
+    log.debug(F, `Recent date: ${recentDate}`);
+    const startDate = new Date('2024-01-01');
+    const dates = miniDates.length ? generateDates(startDate, recentDate) : [{ name: 'No dates found', value: '' }];
+    const reversedDates = dates.reverse();
+    const fuse = new Fuse(reversedDates.map(date => date.name), { shouldSort: true, keys: ['name'] });
+    const userInput = interaction.options.getFocused(true).value;
+    const dateStr = parseDate(userInput);
+    let results;
+    if (dateStr === null) {
+      results = fuse.search(userInput);
+    } else {
+      results = fuse.search(dateStr);
+    }
+    const top5 = results.slice(0, 5);
+    // If the user's input is empty, respond with the most recent 5 dates, otherwise respond with the search results
+    if (!userInput) {
+      interaction.respond(reversedDates.slice(0, 5).map(date => ({ name: date.name, value: date.value })));
+    } else {
+      interaction.respond(top5.map(result => ({ name: result.item, value: result.item })));
+    }
+  }
+}
+
+async function autocompletePills(interaction: AutocompleteInteraction) {
   const focusedOption = interaction.options.getFocused(true).name;
   const options = {
     shouldSort: true,
@@ -89,7 +229,7 @@ async function autocompletePills(interaction:AutocompleteInteraction) {
   }
 }
 
-async function autocompleteBenzos(interaction:AutocompleteInteraction) {
+async function autocompleteBenzos(interaction: AutocompleteInteraction) {
   // log.debug(F, `Autocomplete requested for: ${interaction.commandName}`);
   const options = {
     shouldSort: true,
@@ -145,7 +285,7 @@ async function autocompleteBenzos(interaction:AutocompleteInteraction) {
   }
 }
 
-async function autocompleteTimezone(interaction:AutocompleteInteraction) {
+async function autocompleteTimezone(interaction: AutocompleteInteraction) {
   const options = {
     shouldSort: true,
     keys: [
@@ -164,7 +304,7 @@ async function autocompleteTimezone(interaction:AutocompleteInteraction) {
       name: choice.item.label,
       value: choice.item.label,
     }));
-      // log.debug(F, `list_results: ${listResults}`);
+    // log.debug(F, `list_results: ${listResults}`);
     interaction.respond(listResults);
   } else {
     const defaultTimezones = timezoneNames.slice(0, 25);
@@ -174,7 +314,7 @@ async function autocompleteTimezone(interaction:AutocompleteInteraction) {
   }
 }
 
-async function autocompleteConvert(interaction:AutocompleteInteraction) {
+async function autocompleteConvert(interaction: AutocompleteInteraction) {
   const firstUnit = interaction.options.data[1].value;
   const focusedOption = interaction.options.data[1].focused;
 
@@ -183,14 +323,14 @@ async function autocompleteConvert(interaction:AutocompleteInteraction) {
   if (firstUnit !== '' && !focusedOption) {
     // log.debug(F, `firstUnit: ${firstUnit}`);
     // eslint-disable-next-line
-      for (const i in unitsOfMeasurement) {
+    for (const i in unitsOfMeasurement) {
       if (unitsOfMeasurement[i].abbr.toLowerCase() === (firstUnit as string).toLowerCase()) {
         measure = unitsOfMeasurement[i].measure;
         // log.debug(F, `First unit measure: ${measure}`);
       }
     }
     // eslint-disable-next-line
-      for (const i in unitsOfMeasurement) {
+    for (const i in unitsOfMeasurement) {
       if (unitsOfMeasurement[i].measure.toLowerCase() === measure.toLowerCase()) {
         displayUnits.push(unitsOfMeasurement[i]);
         // log.debug(F, `Added: ${unitsOfMeasurement[i].plural}`);
@@ -220,7 +360,7 @@ async function autocompleteConvert(interaction:AutocompleteInteraction) {
       name: choice.item.abbr,
       value: choice.item.abbr,
     }));
-      // log.debug(F, `list_results: ${listResults}`);
+    // log.debug(F, `list_results: ${listResults}`);
     interaction.respond(listResults);
   } else if (measure !== '') {
     const top25 = displayUnits.slice(0, 25);
@@ -238,7 +378,7 @@ async function autocompleteConvert(interaction:AutocompleteInteraction) {
   }
 }
 
-async function autocompleteDrugNames(interaction:AutocompleteInteraction) {
+async function autocompleteDrugNames(interaction: AutocompleteInteraction) {
   const options = {
     shouldSort: true,
     threshold: 0.2,
@@ -270,7 +410,7 @@ async function autocompleteDrugNames(interaction:AutocompleteInteraction) {
   }
 }
 
-async function autocompleteRoles(interaction:AutocompleteInteraction) {
+async function autocompleteRoles(interaction: AutocompleteInteraction) {
   // This will find all the roles that the user has the ability to assign
   // This list can change depending on if the user is self-assigning or assigning to someone else
   if (!interaction.guild) return;
@@ -313,7 +453,7 @@ async function autocompleteRoles(interaction:AutocompleteInteraction) {
   const isMod = (interaction.member as GuildMember).roles.cache.has(env.ROLE_MODERATOR);
   const isTs = (interaction.member as GuildMember).roles.cache.has(env.ROLE_TRIPSITTER);
 
-  const roleList = [] as { name:string, value:string }[];
+  const roleList = [] as { name: string, value: string }[];
   const command = interaction.options.getSubcommand();
   if (isMod) {
     // log.debug(F, 'User is a moderator');
@@ -424,7 +564,7 @@ async function autocompleteRoles(interaction:AutocompleteInteraction) {
   }
 }
 
-async function autocompleteColors(interaction:AutocompleteInteraction) {
+async function autocompleteColors(interaction: AutocompleteInteraction) {
   const options = {
     shouldSort: true,
     keys: [
@@ -475,7 +615,7 @@ async function autocompleteColors(interaction:AutocompleteInteraction) {
       name: choice.item.color,
       value: choice.item.hex,
     }));
-      // log.debug(F, `list_results: ${listResults}`);
+    // log.debug(F, `list_results: ${listResults}`);
     interaction.respond(listResults);
   } else {
     const defaultDiscordColors = colorList.slice(0, 25);
@@ -485,7 +625,7 @@ async function autocompleteColors(interaction:AutocompleteInteraction) {
   }
 }
 
-async function autocompleteAiModels(interaction:AutocompleteInteraction) {
+async function autocompleteAiModels(interaction: AutocompleteInteraction) {
   const options = {
     shouldSort: true,
     keys: [
@@ -505,7 +645,7 @@ async function autocompleteAiModels(interaction:AutocompleteInteraction) {
       name: choice.item.name,
       value: choice.item.name,
     }));
-      // log.debug(F, `list_results: ${listResults}`);
+    // log.debug(F, `list_results: ${listResults}`);
     interaction.respond(listResults);
   } else {
     const defaultDiscordColors = modelList.slice(0, 25);
@@ -515,7 +655,7 @@ async function autocompleteAiModels(interaction:AutocompleteInteraction) {
   }
 }
 
-async function autocompleteAiNames(interaction:AutocompleteInteraction) {
+async function autocompleteAiNames(interaction: AutocompleteInteraction) {
   const options = {
     shouldSort: true,
     keys: [
@@ -544,7 +684,7 @@ async function autocompleteAiNames(interaction:AutocompleteInteraction) {
       name: (choice.item as any).name,
       value: (choice.item as any).name,
     }));
-      // log.debug(F, `list_results: ${listResults}`);
+    // log.debug(F, `list_results: ${listResults}`);
     interaction.respond(listResults);
   } else {
     const defaultDiscordColors = nameList.slice(0, 25) as {
@@ -556,7 +696,7 @@ async function autocompleteAiNames(interaction:AutocompleteInteraction) {
   }
 }
 
-async function autocompleteQuotes(interaction:AutocompleteInteraction) {
+async function autocompleteQuotes(interaction: AutocompleteInteraction) {
   const options = {
     shouldSort: true,
     keys: [
@@ -606,7 +746,7 @@ async function autocompleteQuotes(interaction:AutocompleteInteraction) {
       name: (choice.item as any).quote.slice(0, 100),
       value: (choice.item as any).quote.slice(0, 100),
     }));
-      // log.debug(F, `list_results: ${listResults}`);
+    // log.debug(F, `list_results: ${listResults}`);
     await interaction.respond(listResults);
   } else if (focusedValue !== '') {
     await interaction.respond([
@@ -631,13 +771,13 @@ export default autocomplete;
  * @return {Promise<void>}
  */
 
-export async function autocomplete(interaction:AutocompleteInteraction):Promise<void> {
+export async function autocomplete(interaction: AutocompleteInteraction): Promise<void> {
   // log.debug(F, `Autocomplete requested for: ${interaction.commandName}`);
   if (interaction.commandName === 'pill-id') {
     await autocompletePills(interaction);
   } else if (interaction.commandName === 'role') {
     await autocompleteRoles(interaction);
-  } else if (interaction.commandName === 'calc_benzo') {
+  } else if (interaction.commandName === 'calc' && interaction.options.getSubcommand() === 'benzo') {
     await autocompleteBenzos(interaction);
   } else if (interaction.commandName === 'timezone') {
     await autocompleteTimezone(interaction);
@@ -655,6 +795,8 @@ export async function autocomplete(interaction:AutocompleteInteraction):Promise<
     }
   } else if (interaction.commandName === 'quote') {
     await autocompleteQuotes(interaction);
+  } else if (interaction.commandName === 'nyt') {
+    await autocompleteNYT(interaction);
   } else { // If you don't need a specific autocomplete, return a list of drug names
     await autocompleteDrugNames(interaction);
   }

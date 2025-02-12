@@ -15,7 +15,7 @@ import { embedTemplate } from '../../utils/embedTemplate'; // eslint-disable-lin
 import { getTotalLevel } from '../../../global/utils/experience';
 import { getPersonaInfo } from '../../../global/commands/g.rpg';
 import getAsset from '../../utils/getAsset';
-import { resizeText, deFuckifyText, colorDefs } from '../../utils/canvasUtils';
+import { resizeText, deFuckifyText, generateColors } from '../../utils/canvasUtils';
 // import { paginationEmbed } from '../../utils/pagination';
 import { leaderboardV2 } from '../../../global/commands/g.leaderboard';
 
@@ -182,8 +182,9 @@ export const dLeaderboard: SlashCommand = {
             if (member) {
               // log.debug(F, `Member: ${member?.displayName} | ${member?.roles.color?.id}`);
               const userLevel = await getTotalLevel(user.total_points);
-              const userDarkBarColor = colorDefs[member?.roles.color?.id as keyof typeof colorDefs]?.cardDarkColor || '#232323'; //eslint-disable-line
-              const userNameColor = colorDefs[member?.roles.color?.id as keyof typeof colorDefs]?.textColor || '#ffffff'; //eslint-disable-line
+              const roleColor = `#${(member.roles.color?.color || 0x99aab5).toString(16).padStart(6, '0')}`;
+              const userDarkBarColor = generateColors(roleColor, 0, -72, -82);
+              const userNameColor = generateColors(roleColor, 0, 0, 0);
               const userName = await deFuckifyText(member?.displayName || '');
               const userFontSize = count > 2 ? 25 : 35;
               const personaData = await getPersonaInfo(user.discord_id);
