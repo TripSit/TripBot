@@ -3,13 +3,18 @@ import app from './app';
 
 const F = f(__filename);
 
-const port = env.API_PORT || 1337;
+const port = 3024;
 
 export default async function api(): Promise<Server> {
+  log.info(F, `Attempting to start server on port ${port}...`); // Debug log
+
   return new Promise((resolve, reject) => {
-    const server = app.listen(port, () => {
-      log.info(F, `Listening at http://api.${process.env.DNS_DOMAIN ?? 'localhost'}:${port}`);
+    const server = app.listen(port, '0.0.0.0', () => {
+      log.info(F, `✅ Server is running at http://localhost:${port}`);
       resolve(server);
-    }).on('error', reject);
+    }).on('error', err => {
+      log.info(F, `❌ Server failed to start: ${err.message}`);
+      reject(err);
+    });
   });
 }

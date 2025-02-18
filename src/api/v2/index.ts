@@ -17,6 +17,7 @@ router.get('/', (req, res) => {
     privateEndpoints: [
       '/users',
       '/appeals',
+      '/discord',
     ],
   });
 });

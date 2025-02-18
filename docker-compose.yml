@@ -38,6 +38,8 @@ services:
       - .env
     environment:
       <<: *default-tz-puid-pgid
+    ports:
+      - "3024:3024"
     networks:
       - tripbot-net
       - tripbot_database-net
