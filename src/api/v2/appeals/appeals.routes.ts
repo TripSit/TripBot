@@ -12,18 +12,11 @@ const router = express.Router();
 // set up rate limiter: maximum of five requests per minute
 const limiter = RateLimit({
   windowMs: 1 * 60 * 1000, // 1 minute
-  max: 5,
+  max: 20,
 });
 
 // apply rate limiter to all requests
 router.use(limiter);
-
-router.get('/', async (req, res) => {
-  if (await checkAuth(req, res)) {
-    const result = await appeals.getAllAppeals();
-    res.json(result);
-  }
-});
 
 router.get('/:userId/latest', async (req, res, next) => {
   if (await checkAuth(req, res)) {
@@ -48,13 +41,14 @@ router.post('/:userId/create', async (req, res, next) => {
   if (await checkAuth(req, res)) {
     try {
       if (req.params.userId === 'error') throw new Error('error');
+      const appealData = req.body.newAppealData;
       const result = await appeals.createAppeal({
-        guild_id: '179641883222474752',
+        guild_id: '960606557622657026',
         user_id: req.params.userId,
-        reason: req.body.reason,
-        solution: req.body.solution,
-        future: req.body.future,
-        extra: req.body.extra,
+        reason: appealData.reason,
+        solution: appealData.solution,
+        future: appealData.future,
+        extra: appealData.extra,
         appeal_message_id: '54321',
       });
 
@@ -86,6 +80,13 @@ router.get('/:userId', async (req, res, next) => {
     }
   } else {
     return next();
+  }
+});
+
+router.get('/', async (req, res) => {
+  if (await checkAuth(req, res)) {
+    const result = await appeals.getAllAppeals();
+    res.json(result);
   }
 });
 

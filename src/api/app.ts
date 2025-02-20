@@ -27,7 +27,7 @@ const app = express();
 // set up rate limiter: maximum of five requests per minute
 const limiter = RateLimit({
   windowMs: 1 * 60 * 1000, // 1 minute
-  max: 60,
+  max: 120,
   handler: (req, res /* next */) => {
     res.status(429).send('Too many requests, please try again later.');
   },
@@ -48,7 +48,7 @@ app.use(bodyParser.text()); // configure the app to be able to read text
 
 // CORS middleware
 app.use((req, res, next) => {
-  const allowedOrigins = [`https://${env.DNS_DOMAIN}`, `https://${env.BOT_DOMAIN}`, 'http://localhost/'];
+  const allowedOrigins = [`https://${env.DNS_DOMAIN}`, `https://${env.BOT_DOMAIN}`, 'http://localhost/', 'http://localhost:3024', 'https://a23a-75-191-112-228.ngrok-free.app'];
   const { origin } = req.headers;
   if (origin) {
     if (allowedOrigins.includes(origin)) {
