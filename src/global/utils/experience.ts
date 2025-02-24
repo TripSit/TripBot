@@ -250,11 +250,6 @@ export async function experience(
     await db.user_experience.create({
       data: newUser,
     });
-    if (type === 'TEXT') {
-      // Give the user the VIP 0 role the first time they talk
-      const role = await channel.guild?.roles.fetch(env.ROLE_VIP_0) as Role;
-      await member.roles.add(role);
-    }
     return;
   }
 
