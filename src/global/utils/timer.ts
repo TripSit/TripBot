@@ -1148,8 +1148,13 @@ async function undoExpiredBans() {
 
             // If target guild is TripSit guild
             if (targetGuild.id === env.DISCORD_GUILD_ID) {
-              const targetUser = await discordClient.users.fetch(activeBan.target_discord_id);
               const modlog = await targetGuild.channels.fetch(env.CHANNEL_MODLOG) as TextChannel;
+              const targetUser = await discordClient.users.fetch(activeBan.target_discord_id);
+              const targetUserData = await db.users.findUnique({
+                where: {
+                  discord_id: activeBan.target_discord_id,
+                },
+              });
 
               // Ensure created_at and expires_at are valid before using them
               if (activeBan.created_at && activeBan.expires_at) {
@@ -1163,6 +1168,17 @@ async function undoExpiredBans() {
 
                 // Build the duration string
                 const durationString = `${days} days`;
+                if (targetUserData && targetUserData.mod_thread_id) {
+                  const modThread = await targetGuild.channels.fetch(targetUserData.mod_thread_id) as ThreadChannel | null;
+                  if (modThread) {
+                    const modThreadEmbed = embedTemplate()
+                      .setColor(Colors.Green)
+                      .setDescription(`${targetUser.username} (${activeBan.target_discord_id}) has been automatically unbanned after ${durationString}`);
+                    await modThread.send({
+                      embeds: [modThreadEmbed],
+                    });
+                  }
+                }
 
                 // Send the modlog message with the formatted duration
                 const modlogEmbed = embedTemplate()
