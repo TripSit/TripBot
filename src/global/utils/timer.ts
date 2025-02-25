@@ -1125,89 +1125,67 @@ async function checkMoodle() { // eslint-disable-line
 async function undoExpiredBans() {
   const expiredBans = await db.user_actions.findMany({
     where: {
-      expires_at: {
-        not: null, // Ensure the ban duration is set (i.e., not null, indicating a ban exists)
-        lte: new Date(), // Fetch users whose ban duration is in the past (expired bans)
-      },
+      expires_at: { not: null, lte: new Date() },
       type: 'FULL_BAN',
     },
   });
 
-  if (expiredBans.length > 0) {
-    // Get the tripsit guild
-    expiredBans.forEach(async activeBan => {
-      // Check if the reminder is ready to be triggered
-      if (activeBan.target_discord_id !== null) {
-        const user = await global.discordClient.users.fetch(activeBan.target_discord_id);
-        if (user) {
-          const targetGuild = await global.discordClient.guilds.fetch(activeBan.guild_id);
-          // Unban them
-          try {
-            await targetGuild.bans.remove(user, 'Temporary ban expired');
-            log.info(F, `Temporary ban for ${activeBan.target_discord_id} in ${targetGuild.name} has expired and been lifted!`);
+  if (expiredBans.length === 0) return;
 
-            // If target guild is TripSit guild
-            if (targetGuild.id === env.DISCORD_GUILD_ID) {
-              const modlog = await targetGuild.channels.fetch(env.CHANNEL_MODLOG) as TextChannel;
-              const targetUser = await discordClient.users.fetch(activeBan.target_discord_id);
-              const targetUserData = await db.users.findUnique({
-                where: {
-                  discord_id: activeBan.target_discord_id,
-                },
-              });
+  await Promise.all(expiredBans.map(async activeBan => { // Use map + Promise.all for async handling
+    if (!activeBan.target_discord_id) return;
 
-              // Ensure created_at and expires_at are valid before using them
-              if (activeBan.created_at && activeBan.expires_at) {
-                const createdAt = new Date(activeBan.created_at);
-                const expiresAt = new Date(activeBan.expires_at);
+    let targetGuild: Guild | null = null;
 
-                const durationMs = expiresAt.getTime() - createdAt.getTime(); // Duration in milliseconds
+    try {
+      const user = await global.discordClient.users.fetch(activeBan.target_discord_id);
+      if (!user) return;
 
-                // Convert the duration from milliseconds to days
-                const days = Math.floor(durationMs / (1000 * 60 * 60 * 24));
+      targetGuild = await global.discordClient.guilds.fetch(activeBan.guild_id);
 
-                // Build the duration string
-                const durationString = `${days} days`;
-                if (targetUserData && targetUserData.mod_thread_id) {
-                  const modThread = await targetGuild.channels.fetch(targetUserData.mod_thread_id) as ThreadChannel | null;
-                  if (modThread) {
-                    const modThreadEmbed = embedTemplate()
-                      .setColor(Colors.Green)
-                      .setDescription(`${targetUser.username} (${activeBan.target_discord_id}) has been automatically unbanned after ${durationString}`);
-                    await modThread.send({
-                      embeds: [modThreadEmbed],
-                    });
-                  }
-                }
+      // Ensure guild exists
+      if (!targetGuild) return;
 
-                // Send the modlog message with the formatted duration
-                const modlogEmbed = embedTemplate()
-                  .setColor(Colors.Green)
-                  .setDescription(`${targetUser.username} (${activeBan.target_discord_id}) has been unbanned after ${durationString}`);
+      const targetGuildData = await db.discord_guilds.findUnique({ where: { id: activeBan.guild_id } });
 
-                await modlog.send({ embeds: [modlogEmbed] });
-              } else {
-                log.error(F, 'Temporary ban is somehow missing created_at or expired_at');
-              }
-            }
-          } catch (err) {
-            // This should never happen.
-            log.error(F, `Failed to remove temporary ban on ${activeBan.target_discord_id} in ${targetGuild.name}. Likely already unbanned.`);
-          } finally {
-          // Reset expires_at flag to null
-            await db.user_actions.update({
-              where: {
-                id: activeBan.id,
-              },
-              data: {
-                expires_at: null, // Reset the ban duration to null
-              },
-            });
-          }
-        }
-      }
-    });
-  }
+      // Unban user
+      await targetGuild.bans.remove(user, 'Temporary ban expired');
+      log.info(F, `Temporary ban for ${user.username} (${activeBan.target_discord_id}) in ${targetGuild.name} has expired and been lifted!`);
+
+      // Ensure mod log channel exists
+      if (!targetGuildData || !targetGuildData.channel_mod_log) return;
+      const modlog = await targetGuild.channels.fetch(targetGuildData.channel_mod_log) as TextChannel | null;
+
+      // Fetch mod thread & user data
+      const targetUserData = await db.users.findUnique({ where: { discord_id: activeBan.target_discord_id } });
+      const modThread = targetUserData?.mod_thread_id
+        ? await targetGuild.channels.fetch(targetUserData.mod_thread_id) as ThreadChannel | null
+        : null;
+
+      // Ensure valid dates
+      if (!activeBan.created_at || !activeBan.expires_at) return;
+
+      const durationMs = new Date(activeBan.expires_at).getTime() - new Date(activeBan.created_at).getTime();
+      const days = Math.floor(durationMs / (1000 * 60 * 60 * 24));
+      const durationString = `${days} days`;
+
+      // Send messages
+      const embed = embedTemplate()
+        .setColor(Colors.Green)
+        .setDescription(`${user.username} (${activeBan.target_discord_id}) has been unbanned after ${durationString}`);
+
+      if (modThread) await modThread.send({ embeds: [embed] });
+      if (modlog) await modlog.send({ embeds: [embed] });
+    } catch (err) {
+      log.error(F, `Failed to remove temporary ban on ${activeBan.target_discord_id} in ${targetGuild?.name}. Likely already unbanned.`);
+    } finally {
+      // Reset expires_at to null
+      await db.user_actions.update({
+        where: { id: activeBan.id },
+        data: { expires_at: null },
+      });
+    }
+  }));
 }
 
 async function checkEvery(
