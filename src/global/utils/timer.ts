@@ -1135,19 +1135,48 @@ async function undoExpiredBans() {
 
   if (expiredBans.length > 0) {
     // Get the tripsit guild
-    const tripsitGuild = await global.discordClient.guilds.fetch(env.DISCORD_GUILD_ID);
     expiredBans.forEach(async activeBan => {
       // Check if the reminder is ready to be triggered
       if (activeBan.target_discord_id !== null) {
         const user = await global.discordClient.users.fetch(activeBan.target_discord_id);
         if (user) {
+          const targetGuild = await global.discordClient.guilds.fetch(activeBan.guild_id);
           // Unban them
           try {
-            await tripsitGuild.bans.remove(user, 'Temporary ban expired');
-            log.info(F, `Temporary ban for ${activeBan.target_discord_id} has expired and been lifted!`);
+            await targetGuild.bans.remove(user, 'Temporary ban expired');
+            log.info(F, `Temporary ban for ${activeBan.target_discord_id} in ${targetGuild.name} has expired and been lifted!`);
+
+            // If target guild is TripSit guild
+            if (targetGuild.id === env.DISCORD_GUILD_ID) {
+              const targetUser = await discordClient.users.fetch(activeBan.target_discord_id);
+              const modlog = await targetGuild.channels.fetch(env.CHANNEL_MODLOG) as TextChannel;
+            
+              // Ensure created_at and expires_at are valid before using them
+              if (activeBan.created_at && activeBan.expires_at) {
+                const createdAt = new Date(activeBan.created_at);
+                const expiresAt = new Date(activeBan.expires_at);
+            
+                const durationMs = expiresAt.getTime() - createdAt.getTime(); // Duration in milliseconds
+            
+                // Convert the duration from milliseconds to days
+                const days = Math.floor(durationMs / (1000 * 60 * 60 * 24));
+            
+                // Build the duration string
+                let durationString = `${days} days`;
+            
+                // Send the modlog message with the formatted duration
+                const modlogEmbed = embedTemplate()
+                  .setColor(Colors.Green)
+                  .setDescription(`${targetUser.username} (${activeBan.target_discord_id}) has been unbanned after ${durationString}`);
+                
+                await modlog.send({ embeds: [modlogEmbed] });
+              } else {
+                console.error("Invalid ban timestamps:", activeBan.created_at, activeBan.expires_at);
+              }
+            }
           } catch (err) {
-            // If this error is ever encountered then something in our flow is probably wrong. This should never happen.
-            log.error(F, `Failed to remove temporary ban on ${activeBan.target_discord_id}. Likely already unbanned.`);
+            // This should never happen.
+            log.error(F, `Failed to remove temporary ban on ${activeBan.target_discord_id} in ${targetGuild.name}. Likely already unbanned.`);
           } finally {
           // Reset expires_at flag to null
             await db.user_actions.update({
