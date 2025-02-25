@@ -1125,44 +1125,66 @@ async function checkMoodle() { // eslint-disable-line
 async function undoExpiredBans() {
   const expiredBans = await db.user_actions.findMany({
     where: {
-      expires_at: {
-        not: null, // Ensure the ban duration is set (i.e., not null, indicating a ban exists)
-        lte: new Date(), // Fetch users whose ban duration is in the past (expired bans)
-      },
+      expires_at: { not: null, lte: new Date() },
       type: 'FULL_BAN',
     },
   });
 
-  if (expiredBans.length > 0) {
-    // Get the tripsit guild
-    const tripsitGuild = await global.discordClient.guilds.fetch(env.DISCORD_GUILD_ID);
-    expiredBans.forEach(async activeBan => {
-      // Check if the reminder is ready to be triggered
-      if (activeBan.target_discord_id !== null) {
-        const user = await global.discordClient.users.fetch(activeBan.target_discord_id);
-        if (user) {
-          // Unban them
-          try {
-            await tripsitGuild.bans.remove(user, 'Temporary ban expired');
-            log.info(F, `Temporary ban for ${activeBan.target_discord_id} has expired and been lifted!`);
-          } catch (err) {
-            // If this error is ever encountered then something in our flow is probably wrong. This should never happen.
-            log.error(F, `Failed to remove temporary ban on ${activeBan.target_discord_id}. Likely already unbanned.`);
-          } finally {
-          // Reset expires_at flag to null
-            await db.user_actions.update({
-              where: {
-                id: activeBan.id,
-              },
-              data: {
-                expires_at: null, // Reset the ban duration to null
-              },
-            });
-          }
-        }
-      }
-    });
-  }
+  if (expiredBans.length === 0) return;
+
+  await Promise.all(expiredBans.map(async activeBan => { // Use map + Promise.all for async handling
+    if (!activeBan.target_discord_id) return;
+
+    let targetGuild: Guild | null = null;
+
+    try {
+      const user = await global.discordClient.users.fetch(activeBan.target_discord_id);
+      if (!user) return;
+
+      targetGuild = await global.discordClient.guilds.fetch(activeBan.guild_id);
+
+      // Ensure guild exists
+      if (!targetGuild) return;
+
+      const targetGuildData = await db.discord_guilds.findUnique({ where: { id: activeBan.guild_id } });
+
+      // Unban user
+      await targetGuild.bans.remove(user, 'Temporary ban expired');
+      log.info(F, `Temporary ban for ${user.username} (${activeBan.target_discord_id}) in ${targetGuild.name} has expired and been lifted!`);
+
+      // Ensure mod log channel exists
+      if (!targetGuildData || !targetGuildData.channel_mod_log) return;
+      const modlog = await targetGuild.channels.fetch(targetGuildData.channel_mod_log) as TextChannel | null;
+
+      // Fetch mod thread & user data
+      const targetUserData = await db.users.findUnique({ where: { discord_id: activeBan.target_discord_id } });
+      const modThread = targetUserData?.mod_thread_id
+        ? await targetGuild.channels.fetch(targetUserData.mod_thread_id) as ThreadChannel | null
+        : null;
+
+      // Ensure valid dates
+      if (!activeBan.created_at || !activeBan.expires_at) return;
+
+      const durationMs = new Date(activeBan.expires_at).getTime() - new Date(activeBan.created_at).getTime();
+      const days = Math.floor(durationMs / (1000 * 60 * 60 * 24));
+
+      // Send messages
+      const embed = embedTemplate()
+        .setColor(Colors.Green)
+        .setDescription(`${user.username} (${activeBan.target_discord_id}) has been unbanned after ${days} days`);
+
+      if (modThread) await modThread.send({ embeds: [embed] });
+      if (modlog) await modlog.send({ embeds: [embed] });
+    } catch (err) {
+      log.error(F, `Failed to remove temporary ban on ${activeBan.target_discord_id} in ${targetGuild?.name}. Likely already unbanned.`);
+    } finally {
+      // Reset expires_at to null
+      await db.user_actions.update({
+        where: { id: activeBan.id },
+        data: { expires_at: null },
+      });
+    }
+  }));
 }
 
 async function checkEvery(
@@ -1204,7 +1226,7 @@ async function runTimer() {
     { callback: checkMoodle, interval: env.NODE_ENV === 'production' ? seconds60 : seconds5 },
     // { callback: checkLpm, interval: env.NODE_ENV === 'production' ? seconds10 : seconds5 },
     { callback: updateDb, interval: env.NODE_ENV === 'production' ? hours24 : hours48 },
-    { callback: undoExpiredBans, interval: env.NODE_ENV === 'production' ? hours24 : seconds10 },
+    { callback: undoExpiredBans, interval: env.NODE_ENV === 'production' ? hours24 / 2 : seconds10 },
   ];
 
   timers.forEach(timer => {
