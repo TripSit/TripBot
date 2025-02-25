@@ -356,6 +356,12 @@ export const modButtonReport = (discordId: string) => new ButtonBuilder()
   .setEmoji('📝')
   .setStyle(ButtonStyle.Primary);
 
+  export const modButtonAcknowledgeReport = (discordId: string) => new ButtonBuilder()
+  .setCustomId(`moderate~ACKN_REPORT~${discordId}`)
+  .setLabel('Acknowledge')
+  .setEmoji('✅')
+  .setStyle(ButtonStyle.Primary);
+
 export const modButtonWarn = (discordId: string) => new ButtonBuilder()
   .setCustomId(`moderate~WARNING~${discordId}`)
   .setLabel('Warn')
@@ -931,20 +937,19 @@ export async function modResponse(
   });
 
   // Get the guild
-  // const { guild } = interaction;
-  // const guildData = await db.discord_guilds.upsert({
-  //   where: {
-  //     id: guild.id,
-  //   },
-  //   create: {
-  //     id: guild.id,
-  //   },
-  //   update: {
-  //   },
-  // });
+  const { guild } = interaction;
+  const guildData = await db.discord_guilds.upsert({
+    where: {
+      id: guild.id,
+    },
+    create: {
+      id: guild.id,
+    },
+    update: {},
+  });
 
   // Determine if the actor is a mod
-  // const actorIsMod = (!!guildData.role_moderator && actor.roles.cache.has(guildData.role_moderator));
+  const actorIsMod = (!!guildData.role_moderator && actor.roles.cache.has(guildData.role_moderator));
 
   let timeoutTime = null;
   if (target instanceof GuildMember) {
@@ -958,7 +963,7 @@ export async function modResponse(
         modButtonWarn(target.id),
         modButtonTimeout(target.id),
         modButtonBan(target.id),
-        modButtonInfo(target.id),
+        actorIsMod ? modButtonInfo(target.id) : modButtonAcknowledgeReport(target.id),
       );
     } else if (isTimeout(command) || (timeoutTime && timeoutTime > Date.now())) {
       actionRow.addComponents(
