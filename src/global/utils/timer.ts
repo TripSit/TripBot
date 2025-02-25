@@ -1150,28 +1150,28 @@ async function undoExpiredBans() {
             if (targetGuild.id === env.DISCORD_GUILD_ID) {
               const targetUser = await discordClient.users.fetch(activeBan.target_discord_id);
               const modlog = await targetGuild.channels.fetch(env.CHANNEL_MODLOG) as TextChannel;
-            
+
               // Ensure created_at and expires_at are valid before using them
               if (activeBan.created_at && activeBan.expires_at) {
                 const createdAt = new Date(activeBan.created_at);
                 const expiresAt = new Date(activeBan.expires_at);
-            
+
                 const durationMs = expiresAt.getTime() - createdAt.getTime(); // Duration in milliseconds
-            
+
                 // Convert the duration from milliseconds to days
                 const days = Math.floor(durationMs / (1000 * 60 * 60 * 24));
-            
+
                 // Build the duration string
-                let durationString = `${days} days`;
-            
+                const durationString = `${days} days`;
+
                 // Send the modlog message with the formatted duration
                 const modlogEmbed = embedTemplate()
                   .setColor(Colors.Green)
                   .setDescription(`${targetUser.username} (${activeBan.target_discord_id}) has been unbanned after ${durationString}`);
-                
+
                 await modlog.send({ embeds: [modlogEmbed] });
               } else {
-                console.error("Invalid ban timestamps:", activeBan.created_at, activeBan.expires_at);
+                log.error(F, 'Temporary ban is somehow missing created_at or expired_at');
               }
             }
           } catch (err) {
