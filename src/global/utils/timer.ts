@@ -1167,12 +1167,11 @@ async function undoExpiredBans() {
 
       const durationMs = new Date(activeBan.expires_at).getTime() - new Date(activeBan.created_at).getTime();
       const days = Math.floor(durationMs / (1000 * 60 * 60 * 24));
-      const durationString = `${days} days`;
 
       // Send messages
       const embed = embedTemplate()
         .setColor(Colors.Green)
-        .setDescription(`${user.username} (${activeBan.target_discord_id}) has been unbanned after ${durationString}`);
+        .setDescription(`${user.username} (${activeBan.target_discord_id}) has been unbanned after ${days} days`);
 
       if (modThread) await modThread.send({ embeds: [embed] });
       if (modlog) await modlog.send({ embeds: [embed] });
