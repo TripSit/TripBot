@@ -1991,19 +1991,18 @@ export async function modModal(
     }
   }
 
-  if (isInfo(command) || isReportAcknowledgement(command)) {
+  if (isReportAcknowledgement(command)) {
     await interaction.deferReply({ ephemeral: true });
+    await acknowledgeReportButton(interaction);
+    await interaction.editReply({
+      embeds: [embedTemplate()
+        .setColor(Colors.Green)
+        .setDescription(`You have acknowledged the report on ${target}.`)],
+    });
+    return;
+  }
 
-    if (isReportAcknowledgement(command)) {
-      await acknowledgeReportButton(interaction);
-      await interaction.editReply({
-        embeds: [embedTemplate()
-          .setColor(Colors.Green)
-          .setDescription(`You have acknowledged the report on ${target}.`)],
-      });
-      return;
-    }
-
+  if (isInfo(command)) {
     const targetData = await db.users.upsert({
       where: {
         discord_id: userId,
