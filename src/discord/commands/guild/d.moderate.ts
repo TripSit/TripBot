@@ -1088,7 +1088,7 @@ async function messageModThread(
   log.debug(F, 'Values are set, continuing');
 
   const { pastVerb, emoji } = embedVariables[command as keyof typeof embedVariables];
-  let summary = `${actor} ${pastVerb} ${target ? target : targetName}`;
+  let summary = `${actor} ${pastVerb} ${target}`;
   let anonSummary = `${targetName} was ${pastVerb}`;
 
   if (isTimeout(command)) {
@@ -1437,20 +1437,18 @@ export async function acknowledgeReportButton(
 
   // Send a DM to the user who triggered the report
   try {
-    if (reporterUser) {
-      await reporterUser.send(stripIndents`
-        Thank you for your report. Users that break our server rules disrupt the server for everyone, and your reports help us identify them.
+    await reporterUser.send(stripIndents`
+      Thank you for your report. Users that break our server rules disrupt the server for everyone, and your reports help us identify them.
 
-        While we can't provide specific details about the specific actions taken, your recent report has been acknowledged and action taken. Your reports make TripSit a friendlier place for everyone.
+      While we can't provide specific details about the specific actions taken, your recent report has been acknowledged and action taken. Your reports make TripSit a friendlier place for everyone.
 
-        If you come across more bad behavior, we hope you'll continue to assist the Tripsit community by reporting it to us.
+      If you come across more bad behavior, we hope you'll continue to assist the Tripsit community by reporting it to us.
 
-        This was for your report on ${reporteeName}, submitted on <t:${Math.floor(buttonInt.message.createdTimestamp / 1000)}:F>.
+      This was for your report on ${reporteeName}, submitted on <t:${Math.floor(buttonInt.message.createdTimestamp / 1000)}:F>.
 
-        Regards,
-        Team TripSit
-      `);
-    }
+      Regards,
+      Team TripSit
+    `);
 
     const successEmbed = embedTemplate()
       .setColor(Colors.Green)
