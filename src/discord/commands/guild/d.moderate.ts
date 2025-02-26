@@ -1399,7 +1399,7 @@ export async function acknowledgeReportButton(
   if (!reporteeMember && !reporteeUser) {
     await targetChan.send({
       embeds: [embedTemplate()
-        .setColor(Colors.Green)
+        .setColor(Colors.DarkOrange)
         .setDescription('The user this mod thread is for has deleted their Discord account.')],
     });
     return;
@@ -1420,7 +1420,7 @@ export async function acknowledgeReportButton(
   if (!reporterUser) {
     await targetChan.send({
       embeds: [embedTemplate()
-        .setColor(Colors.Green)
+        .setColor(Colors.DarkOrange)
         .setDescription('The original reporter of this user has left the server.')],
     });
     log.info(F, 'Could not determine the reporter user.');
@@ -1451,17 +1451,42 @@ export async function acknowledgeReportButton(
         Team TripSit
       `);
     }
+
+    const successEmbed = embedTemplate()
+      .setColor(Colors.Green)
+      .setDescription(`${modActorMember} has acknowledged the report on ${reporteeMember || reporteeUser?.username}.`);
+
     await targetChan.send({
-      embeds: [embedTemplate()
-        .setColor(Colors.Green)
-        .setDescription(`${modActorMember} has acknowledged the report on ${reporteeMember || reporteeUser?.username}.`)],
+      embeds: [successEmbed],
     });
+
+    const guildData = await db.discord_guilds.upsert({
+      where: {
+        id: buttonInt.guild.id,
+      },
+      create: {
+        id: buttonInt.guild.id,
+      },
+      update: {
+      },
+    });
+
+    if (guildData.channel_mod_log) {
+      const modLog = await buttonInt.guild.channels.fetch(guildData.channel_mod_log) as TextChannel;
+      successEmbed.setDescription(`${modActorMember.displayName} has acknowledged the report on ${reporteeMember || reporteeUser?.username}.`);
+      await modLog.send({
+        embeds: [successEmbed],
+      });
+      return;
+    }
+
+    log.info(F, 'Failed to send report acknowledgement to mod log. No mod log channel set.');
   } catch (error) {
     log.error(F, `Failed to send DM to ${buttonInt.user.username}: ${error}`);
     await targetChan.send({
       embeds: [embedTemplate()
-        .setColor(Colors.Green)
-        .setDescription(`${buttonInt.user.username} tried to acknowledged ${reporteeData.username}'s report, but they are no longer in the server.`)],
+        .setColor(Colors.Red)
+        .setDescription(`${buttonInt.user.username} tried to acknowledged ${reporteeData.username}'s report, but there was an error.`)],
     });
   }
 }
