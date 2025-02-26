@@ -176,6 +176,7 @@ model users {
   mini_scores                                               mini_scores[]
   last_was_helper                                           DateTime?
   watch_requests                                            watch_request[]
+  best_of_messages                                          best_of[]            @relation("UserBestOf")
 }
 
 model wordle_scores {
@@ -563,6 +564,17 @@ model watch_request {
   watched_user_id     String
   users               users?  @relation(fields: [usersId], references: [id])
   usersId             String? @db.Uuid
+}
+
+model best_of {
+  id            String       @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  user_id       String
+  message_id    String    @unique
+  channel_id    String
+  sent_at       DateTime
+  last_updated  DateTime  @updatedAt
+
+  user          users     @relation("UserBestOf", fields: [user_id], references: [discord_id], onDelete: NoAction, onUpdate: NoAction)
 }
 
 enum bridge_status {

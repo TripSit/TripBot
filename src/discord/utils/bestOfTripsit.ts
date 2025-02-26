@@ -26,7 +26,7 @@ export default bestOf;
  * @param {User} user The user that added the reaction
  * @return {Promise<void>}
  */
-export async function bestOf(reaction:MessageReaction) {
+export async function bestOf(reaction:MessageReaction): Promise<void> {
   if (reaction.count === votePinThreshold && reaction.emoji.name?.includes('upvote')) {
     if (reaction.message.partial) await reaction.message.fetch();
 
@@ -36,6 +36,25 @@ export async function bestOf(reaction:MessageReaction) {
       // log.debug(F, `Message sent in an ignored channel`);
       return;
     }
+
+    if (!reaction.message.author) return;
+
+    const existingEntry = await db.best_of.findUnique({
+      where: { message_id: reaction.message.id },
+    });
+
+    if (existingEntry) return;
+
+    // Create the entry since it doesn't exist yet
+    await db.best_of.create({
+      data: {
+        user_id: reaction.message.author.id,
+        message_id: reaction.message.id,
+        channel_id: channelObj.id,
+        sent_at: new Date(),
+        last_updated: new Date(),
+      },
+    });
 
     const channelBestof = await channelObj.guild.channels.fetch(env.CHANNEL_BESTOF) as TextChannel;
 
