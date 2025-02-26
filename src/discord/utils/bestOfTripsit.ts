@@ -43,7 +43,7 @@ export async function bestOf(reaction:MessageReaction): Promise<void> {
       where: { message_id: reaction.message.id },
       update: {}, // No updates if it already exists
       create: {
-        user_id: reaction.message.author!.id,
+        user_id: reaction.message.author.id,
         message_id: reaction.message.id,
         channel_id: channelObj.id,
         sent_at: new Date(),
