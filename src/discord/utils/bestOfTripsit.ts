@@ -39,10 +39,15 @@ export async function bestOf(reaction:MessageReaction): Promise<void> {
 
     if (!reaction.message.author) return;
 
-    const bestOfEntry = await db.best_of.upsert({
+    const existingEntry = await db.best_of.findUnique({
       where: { message_id: reaction.message.id },
-      update: {}, // No updates if it already exists
-      create: {
+    });
+
+    if (existingEntry) return;
+
+    // Create the entry since it doesn't exist yet
+    await db.best_of.create({
+      data: {
         user_id: reaction.message.author.id,
         message_id: reaction.message.id,
         channel_id: channelObj.id,
@@ -50,8 +55,6 @@ export async function bestOf(reaction:MessageReaction): Promise<void> {
         last_updated: new Date(),
       },
     });
-
-    if (bestOfEntry) return;
 
     const channelBestof = await channelObj.guild.channels.fetch(env.CHANNEL_BESTOF) as TextChannel;
 
