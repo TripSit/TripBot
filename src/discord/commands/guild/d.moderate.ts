@@ -1349,15 +1349,6 @@ export async function acknowledgeReportButton(
   if (!buttonInt.guild) return;
   const [, , targetId]: [string, ModAction, Snowflake] = buttonInt.customId.split('~') as [string, ModAction, Snowflake];
 
-  // Fetch the mod actor and return if failed
-  let modActorMember = null as null | GuildMember;
-  try {
-    modActorMember = await buttonInt.guild.members.fetch(buttonInt.user.id);
-  } catch (err) {
-    log.info(F, 'Failed to fetch mod actor. They are likely no longer in the server.');
-    return;
-  }
-
   // Fetch db data for the person who was reported
   const reporteeData = await db.users.upsert({
     where: {
@@ -1370,6 +1361,7 @@ export async function acknowledgeReportButton(
     },
   });
 
+  let modActorMember = null as null | GuildMember;
   let targetChan: TextChannel | null = null;
   let reporteeMember: GuildMember | null = null;
   let reporteeUser: User | null = null;
@@ -1383,6 +1375,13 @@ export async function acknowledgeReportButton(
 
     if (!targetChan) {
       log.info(F, 'Failed to fetch mod thread. It was likely deleted.');
+      return;
+    }
+
+    try {
+      modActorMember = await buttonInt.guild.members.fetch(buttonInt.user.id);
+    } catch (err) {
+      log.info(F, 'Failed to fetch mod actor. They are likely no longer in the server.');
       return;
     }
 
