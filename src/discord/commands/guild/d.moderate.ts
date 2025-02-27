@@ -62,7 +62,7 @@ link accounts to transfer warnings and experience
 const F = f(__filename);
 type UndoAction = 'UN-FULL_BAN' | 'UN-TICKET_BAN' | 'UN-DISCORD_BOT_BAN' | 'UN-BAN_EVASION' | 'UN-UNDERBAN' | 'UN-TIMEOUT' | 'UN-HELPER_BAN' | 'UN-CONTRIBUTOR_BAN';
 
-type ModAction = user_action_type | UndoAction | 'INFO' | 'LINK';
+type ModAction = user_action_type | UndoAction | 'INFO' | 'LINK' | 'ACKN_REPORT';
 // type BanAction = 'FULL_BAN' | 'TICKET_BAN' | 'DISCORD_BOT_BAN' | 'BAN_EVASION' | 'UNDERBAN';
 type TargetObject = Snowflake | User | GuildMember;
 
@@ -313,6 +313,8 @@ function isLink(command: ModAction): command is 'LINK' { return command === 'LIN
 
 function isInfo(command: ModAction): command is 'INFO' { return command === 'INFO'; }
 
+function isReportAcknowledgement(command: ModAction): command is 'ACKN_REPORT' { return command === 'ACKN_REPORT'; }
+
 function isDiscussable(command: ModAction): command is 'DISCORD_BOT_BAN' | 'TICKET_BAN' | 'WARNING' | 'KICK' {
   return command === 'DISCORD_BOT_BAN' || command === 'TICKET_BAN' || command === 'WARNING' || command === 'KICK';
 }
@@ -354,6 +356,12 @@ export const modButtonReport = (discordId: string) => new ButtonBuilder()
   .setCustomId(`moderate~REPORT~${discordId}`)
   .setLabel('Report')
   .setEmoji('📝')
+  .setStyle(ButtonStyle.Primary);
+
+export const modButtonAcknowledgeReport = (discordId: string) => new ButtonBuilder()
+  .setCustomId(`moderate~ACKN_REPORT~${discordId}`)
+  .setLabel('Acknowledge')
+  .setEmoji('✅')
   .setStyle(ButtonStyle.Primary);
 
 export const modButtonWarn = (discordId: string) => new ButtonBuilder()
@@ -931,20 +939,19 @@ export async function modResponse(
   });
 
   // Get the guild
-  // const { guild } = interaction;
-  // const guildData = await db.discord_guilds.upsert({
-  //   where: {
-  //     id: guild.id,
-  //   },
-  //   create: {
-  //     id: guild.id,
-  //   },
-  //   update: {
-  //   },
-  // });
+  const { guild } = interaction;
+  const guildData = await db.discord_guilds.upsert({
+    where: {
+      id: guild.id,
+    },
+    create: {
+      id: guild.id,
+    },
+    update: {},
+  });
 
   // Determine if the actor is a mod
-  // const actorIsMod = (!!guildData.role_moderator && actor.roles.cache.has(guildData.role_moderator));
+  const actorIsMod = (!!guildData.role_moderator && actor.roles.cache.has(guildData.role_moderator));
 
   let timeoutTime = null;
   if (target instanceof GuildMember) {
@@ -995,6 +1002,16 @@ export async function modResponse(
   }
 
   log.debug(F, `[modResponse] time: ${Date.now() - startTime}ms`);
+
+  if (showModButtons && !actorIsMod && isReport(command)) {
+    const actionRowTwo = new ActionRowBuilder<ButtonBuilder>();
+    actionRowTwo.addComponents(modButtonAcknowledgeReport(target.id));
+    return {
+      embeds: [modlogEmbed],
+      components: [actionRow, actionRowTwo],
+    };
+  }
+
   return {
     embeds: [modlogEmbed],
     components: [actionRow],
@@ -1071,7 +1088,7 @@ async function messageModThread(
   log.debug(F, 'Values are set, continuing');
 
   const { pastVerb, emoji } = embedVariables[command as keyof typeof embedVariables];
-  let summary = `${actor.displayName} ${pastVerb} ${targetName}`;
+  let summary = `${actor} ${pastVerb} ${target}`;
   let anonSummary = `${targetName} was ${pastVerb}`;
 
   if (isTimeout(command)) {
@@ -1324,6 +1341,143 @@ export async function refusalButton(
   }
   // remove the components from the message
   await interaction.update({ components: [] });
+}
+
+export async function acknowledgeReportButton(
+  buttonInt: ButtonInteraction,
+) {
+  if (!buttonInt.guild) return;
+  const [, , targetId]: [string, ModAction, Snowflake] = buttonInt.customId.split('~') as [string, ModAction, Snowflake];
+
+  // Fetch db data for the person who was reported
+  const reporteeData = await db.users.upsert({
+    where: {
+      discord_id: targetId,
+    },
+    create: {
+      discord_id: targetId,
+    },
+    update: {
+    },
+  });
+
+  let modActorMember = null as null | GuildMember;
+  let targetChan: TextChannel | null = null;
+  let reporteeMember: GuildMember | null = null;
+  let reporteeUser: User | null = null;
+  let reporterUser: User | null = null;
+
+  try {
+    // Fetch the mod thread
+    if (reporteeData.mod_thread_id) {
+      targetChan = await discordClient.channels.fetch(reporteeData.mod_thread_id as Snowflake) as TextChannel;
+    }
+
+    if (!targetChan) {
+      log.info(F, 'Failed to fetch mod thread. It was likely deleted.');
+      return;
+    }
+
+    try {
+      modActorMember = await buttonInt.guild.members.fetch(buttonInt.user.id);
+    } catch (err) {
+      log.info(F, 'Failed to fetch mod actor. They are likely no longer in the server.');
+      return;
+    }
+
+    // Fetch the reportee member or user
+    try {
+      reporteeMember = await buttonInt.guild.members.fetch(targetId);
+    } catch {
+      log.info(F, 'Failed to fetch reportee member. They are likely no longer in the server. Fetching user.');
+      reporteeUser = await discordClient.users.fetch(targetId);
+      log.info(F, 'Reportee user successfully fetched!');
+    }
+
+    if (!reporteeMember && !reporteeUser) {
+      await targetChan.send({
+        embeds: [embedTemplate()
+          .setColor(Colors.DarkOrange)
+          .setDescription('The user this mod thread is for has deleted their Discord account.')],
+      });
+      return;
+    }
+
+    // Fetch the reporter from message mentions
+    const reporterId = buttonInt.message.mentions.users.first()?.id;
+    if (reporterId) {
+      reporterUser = await discordClient.users.fetch(reporterId);
+    }
+
+    if (!reporterUser) {
+      await targetChan.send({
+        embeds: [embedTemplate()
+          .setColor(Colors.DarkOrange)
+          .setDescription('The original reporter of this user has left the server.')],
+      });
+      log.info(F, 'Could not determine the reporter user.');
+      return;
+    }
+  } catch (error) {
+    log.info(F, `An unexpected error occurred: ${error}`);
+    return;
+  }
+
+  // Determine reportee name
+  const reporteeName = reporteeMember?.displayName ?? reporteeUser?.username ?? 'Unknown User';
+
+  // Send a DM to the user who triggered the report
+  try {
+    await reporterUser.send(stripIndents`
+      Thank you for your report. Users that break our server rules disrupt the server for everyone, and your reports help us identify them.
+
+      While we can't provide specific details about the specific actions taken, your recent report has been acknowledged and action taken. Your reports make TripSit a friendlier place for everyone.
+
+      If you come across more bad behavior, we hope you'll continue to assist the Tripsit community by reporting it to us.
+
+      This was for your report on ${reporteeName}, submitted on <t:${Math.floor(buttonInt.message.createdTimestamp / 1000)}:F>.
+
+      Regards,
+      Team TripSit
+    `);
+
+    const successEmbed = embedTemplate()
+      .setColor(Colors.Green)
+      .setDescription(`${modActorMember} has acknowledged the report on ${reporteeMember || reporteeUser?.username}.`);
+
+    await targetChan.send({
+      embeds: [successEmbed],
+    });
+
+    const guildData = await db.discord_guilds.upsert({
+      where: {
+        id: buttonInt.guild.id,
+      },
+      create: {
+        id: buttonInt.guild.id,
+      },
+      update: {
+      },
+    });
+
+    if (guildData.channel_mod_log) {
+      const modLog = await buttonInt.guild.channels.fetch(guildData.channel_mod_log) as TextChannel;
+      successEmbed.setDescription(`${modActorMember.displayName} has acknowledged the report on ${reporteeMember || reporteeUser?.username}.`);
+      await modLog.send({
+        embeds: [successEmbed],
+      });
+      return;
+    }
+
+    log.info(F, 'Failed to send report acknowledgement to mod log. No mod log channel set.');
+  } catch (error) {
+    log.error(F, `Failed to send DM to ${buttonInt.user.username}: ${error}`);
+    await targetChan.send({
+      embeds: [embedTemplate()
+        .setColor(Colors.Red)
+        .setDescription(`${buttonInt.user.username} tried to acknowledged ${reporteeData.username}'s report, but there was an error.`)],
+    });
+  }
 }
 
 export async function moderate(
@@ -1826,7 +1980,18 @@ export async function modModal(
     }
   }
 
-  if (command === 'INFO') {
+  if (isReportAcknowledgement(command)) {
+    await interaction.deferReply({ ephemeral: true });
+    await acknowledgeReportButton(interaction);
+    await interaction.editReply({
+      embeds: [embedTemplate()
+        .setColor(Colors.Green)
+        .setDescription(`You have acknowledged the report on ${target}.`)],
+    });
+    return;
+  }
+
+  if (isInfo(command)) {
     await interaction.deferReply({ ephemeral: true });
     const targetData = await db.users.upsert({
       where: {
