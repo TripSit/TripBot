@@ -1370,70 +1370,62 @@ export async function acknowledgeReportButton(
     },
   });
 
-  // Fetch the mod thread
   let targetChan: TextChannel | null = null;
-  try {
-    targetChan = reporteeData.mod_thread_id ? await discordClient.channels.fetch(reporteeData.mod_thread_id as Snowflake) as TextChannel : null;
-  } catch (error) {
-    log.info(F, 'Failed to fetch mod thread. It was likely deleted.');
-  }
+  let reporteeMember: GuildMember | null = null;
+  let reporteeUser: User | null = null;
+  let reporterUser: User | null = null;
 
-  if (!targetChan) return;
-
-  // Fetch the reportee member or user
-  let reporteeMember = null as null | GuildMember;
-  let reporteeUser = null as null | User;
   try {
-    reporteeMember = await buttonInt.guild.members.fetch(targetId);
-  } catch (err) {
-    log.info(F, 'Failed to fetch reportee member. They are likely no longer in the server. Fetching user.');
-    try {
-      reporteeUser = await discordClient.users.fetch(targetId);
-      log.info(F, 'Reportee user successfully fetched!');
-    } catch (error) {
-      log.info(F, 'Failed to fetch reportee user. They likely no longer exist.');
+    // Fetch the mod thread
+    if (reporteeData.mod_thread_id) {
+      targetChan = await discordClient.channels.fetch(reporteeData.mod_thread_id as Snowflake) as TextChannel;
+    }
+
+    if (!targetChan) {
+      log.info(F, 'Failed to fetch mod thread. It was likely deleted.');
       return;
     }
-  }
 
-  if (!reporteeMember && !reporteeUser) {
-    await targetChan.send({
-      embeds: [embedTemplate()
-        .setColor(Colors.DarkOrange)
-        .setDescription('The user this mod thread is for has deleted their Discord account.')],
-    });
-    return;
-  }
-
-  // Fetch the reporter from message mentions
-  let reporterUser: User | null = null;
-  const reporterId = buttonInt.message.mentions.users.first()?.id;
-
-  if (reporterId) {
+    // Fetch the reportee member or user
     try {
-      reporterUser = await discordClient.users.fetch(reporterId);
-    } catch (error) {
-      log.info(F, 'Failed to fetch reporter user.');
+      reporteeMember = await buttonInt.guild.members.fetch(targetId);
+    } catch {
+      log.info(F, 'Failed to fetch reportee member. They are likely no longer in the server. Fetching user.');
+      reporteeUser = await discordClient.users.fetch(targetId);
+      log.info(F, 'Reportee user successfully fetched!');
     }
-  }
 
-  if (!reporterUser) {
-    await targetChan.send({
-      embeds: [embedTemplate()
-        .setColor(Colors.DarkOrange)
-        .setDescription('The original reporter of this user has left the server.')],
-    });
-    log.info(F, 'Could not determine the reporter user.');
+    if (!reporteeMember && !reporteeUser) {
+      await targetChan.send({
+        embeds: [embedTemplate()
+          .setColor(Colors.DarkOrange)
+          .setDescription('The user this mod thread is for has deleted their Discord account.')],
+      });
+      return;
+    }
+
+    // Fetch the reporter from message mentions
+    const reporterId = buttonInt.message.mentions.users.first()?.id;
+    if (reporterId) {
+      reporterUser = await discordClient.users.fetch(reporterId);
+    }
+
+    if (!reporterUser) {
+      await targetChan.send({
+        embeds: [embedTemplate()
+          .setColor(Colors.DarkOrange)
+          .setDescription('The original reporter of this user has left the server.')],
+      });
+      log.info(F, 'Could not determine the reporter user.');
+      return;
+    }
+  } catch (error) {
+    log.info(F, `An unexpected error occurred: ${error}`);
     return;
   }
 
-  let reporteeName = 'Unknown User'; // Default fallback
-
-  if (reporteeMember) {
-    reporteeName = reporteeMember.displayName;
-  } else if (reporteeUser) {
-    reporteeName = reporteeUser.username;
-  }
+  // Determine reportee name
+  const reporteeName = reporteeMember?.displayName ?? reporteeUser?.username ?? 'Unknown User';
 
   // Send a DM to the user who triggered the report
   try {
