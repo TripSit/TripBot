@@ -1992,6 +1992,7 @@ export async function modModal(
   }
 
   if (isInfo(command)) {
+    await interaction.deferReply({ ephemeral: true });
     const targetData = await db.users.upsert({
       where: {
         discord_id: userId,
