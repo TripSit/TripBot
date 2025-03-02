@@ -7,7 +7,7 @@ import {
   MessageContextMenuCommandInteraction,
   UserContextMenuCommandInteraction,
 } from 'discord.js';
-import * as Sentry from '@sentry/node';
+// import * as Sentry from '@sentry/node';
 import { ErrorEvent } from '../@types/eventDef';
 
 const F = f(__filename);
@@ -53,8 +53,10 @@ export default async function handleError(
 
   // If this is production, send a message to the channel and alert the developers
   if (env.NODE_ENV === 'production') {
+    /* Uncomment this if you want to use Sentry
+
     if (interaction) {
-      log.debug(F, 'Interaction found, sending error to GlitchTip');
+      log.debug(F, 'Interaction found, sending error to Sentry');
       Sentry.captureException(errorData, {
         tags: {
           command: commandName,
@@ -66,11 +68,11 @@ export default async function handleError(
         },
       });
     } else {
-      log.debug(F, 'No interaction, sending error to GlitchTip');
+      log.debug(F, 'No interaction, sending error to Sentry');
       Sentry.captureException(errorData);
-    }
+    } */
     if (interaction) {
-      // log.debug(F, 'Interaction found, sending error to rollbar');
+      log.debug(F, 'Interaction found, sending error to rollbar');
       global.rollbar.error(errorStack, {
         tags: {
           command: commandName,
@@ -82,7 +84,7 @@ export default async function handleError(
         },
       });
     } else {
-      // log.debug(F, 'No interaction, sending error to rollbar');
+      log.debug(F, 'No interaction, sending error to rollbar');
       global.rollbar.error(errorStack);
     }
 

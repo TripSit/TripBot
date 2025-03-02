@@ -49,6 +49,16 @@ const mindsetRoles = [
   { name: 'Sober', value: env.ROLE_SOBER },
 ] as RoleDef[];
 
+// Roles that only an Admin can add, therefor no one.
+const blacklistedRoles = [
+  env.ROLE_MODERATOR,
+  env.ROLE_TRIPSITTER,
+  env.ROLE_DEVELOPER,
+  env.ROLE_TRIPBOTDEV,
+  env.ROLE_TEAMTRIPSIT,
+  env.ROLE_TRIPBOT,
+  env.ROLE_BOT,
+];
 // log.debug(F, `Mindset roles: ${JSON.stringify(mindsetRoles, null, 2)}`);
 // const mindsetNames = mindsetRoles.map(role => role.name);
 const mindsetIds = mindsetRoles.map(role => role.value);
@@ -64,6 +74,8 @@ const safeRoleList = [
 //   ...mindsetRoles,
 //   ...premiumColorRoles,
 // ];
+
+const noPermissionText = 'You do not have permission to use that role!';
 
 export const dRole: SlashCommand = {
   data: new SlashCommandBuilder()
@@ -125,10 +137,17 @@ export const dRole: SlashCommand = {
 
     // log.debug(F, `isMod: ${isMod}, isTs: ${isTs}, isDonor: ${isDonor}, isPatron: ${isPatron}`);
 
+    // Prevent using blacklisted roles
+    if (blacklistedRoles.includes(role.id)) {
+      // log.debug(F, `role.id is ${role.id} and is blacklisted`);
+      await interaction.editReply({ content: noPermissionText });
+      return false;
+    }
+
     // If you're not a mod or tripsitter, you can't add anything that's not in the "safe" list
     if (!safeRoleList.includes(role.id) && !isMod && !isTs) {
       // log.debug(F, `role.id is ${role.id} and is not in the safe list. (isMod: ${isMod}, isTs: ${isTs})`);
-      await interaction.editReply({ content: 'You do not have permission to use that role!' });
+      await interaction.editReply({ content: noPermissionText });
       return false;
     }
 
@@ -136,7 +155,7 @@ export const dRole: SlashCommand = {
     if (premiumColorIds.includes(role.id) && !isMod && !isTs && !isDonor && !isPatron) {
       // log.debug(F, `role.id is ${role.id} is a premium role and the user is not premium
       // (isMod: ${isMod}, isTs: ${isTs} isDonor: ${isDonor}, isPatron: ${isPatron})`);
-      await interaction.editReply({ content: 'You do not have permission to use that role!' });
+      await interaction.editReply({ content: noPermissionText });
       return false;
     }
 
