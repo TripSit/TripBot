@@ -14,7 +14,7 @@ import commandContext from '../../utils/context';
 
 const F = f(__filename);
 
-type VoiceActions = 'lock' | 'hide' | 'add' | 'ban' | 'rename' | 'mute' | 'cohost' | 'bitrate' | 'ping';
+type VoiceActions = 'lock' | 'hide' | 'add' | 'ban' | 'rename' | 'cohost' | 'ping';
 
 async function tentRename(
   voiceChannel: VoiceBasedChannel,
@@ -136,29 +136,6 @@ async function tentBan(
     .setDescription(`${target} has been ${verb} from ${voiceChannel}`);
 }
 
-async function tentMute(
-  voiceChannel: VoiceBasedChannel,
-  target: GuildMember,
-):Promise<EmbedBuilder> {
-  let verb = '';
-
-  if (voiceChannel.permissionsFor(target).has(PermissionsBitField.Flags.Speak) === true) {
-    voiceChannel.permissionOverwrites.edit(target, { Speak: false });
-    verb = 'muted';
-    // log.debug(F, 'User is now muted');
-  } else {
-    voiceChannel.permissionOverwrites.edit(target, { Speak: true });
-    verb = 'unmuted';
-  }
-
-  // log.debug(F, `${target.displayName} is now ${verb}`);
-
-  return embedTemplate()
-    .setTitle('Success')
-    .setColor(Colors.Green)
-    .setDescription(`${target} has been ${verb} in ${voiceChannel}`);
-}
-
 async function tentCohost(
   voiceChannel: VoiceBasedChannel,
   target: GuildMember,
@@ -180,30 +157,6 @@ async function tentCohost(
     .setTitle('Success')
     .setColor(Colors.Green)
     .setDescription(`${target} has been ${verb} in ${voiceChannel}`);
-}
-
-async function tentBitrate(
-  voiceChannel: VoiceBasedChannel,
-  bitrate: string,
-):Promise<EmbedBuilder> {
-  if (voiceChannel.bitrate === parseInt(bitrate, 10)) {
-    return embedTemplate()
-      .setTitle('Error')
-      .setColor(Colors.Red)
-      .setDescription(`${voiceChannel} is already set to ${(parseInt(bitrate, 10)) / 1000}kbps`);
-  }
-
-  // Change the bitrate
-  voiceChannel.setBitrate(parseInt(bitrate, 10));
-  log.debug(F, `Bitrate ${bitrate}`);
-  log.debug(F, `Bitrate is now ${voiceChannel.bitrate}`);
-
-  // log.debug(F, `${target.displayName} is now ${verb}`);
-
-  return embedTemplate()
-    .setTitle('Success')
-    .setColor(Colors.Green)
-    .setDescription(`${voiceChannel} has been set to ${(parseInt(bitrate, 10)) / 1000}kbps`);
 }
 
 // Command that makes the bot ping the Join VC role
@@ -301,34 +254,12 @@ export const dVoice: SlashCommand = {
         .setDescription('The user to ban/unban')
         .setRequired(true)))
     .addSubcommand(subcommand => subcommand
-      .setName('mute')
-      .setDescription('Mute/Unmute a user in your Tent')
-      .addUserOption(option => option
-        .setName('target')
-        .setDescription('The user to mute')
-        .setRequired(true)))
-    .addSubcommand(subcommand => subcommand
       .setName('cohost')
       .setDescription('Make another user able to use /voice commands')
       .addUserOption(option => option
         .setName('target')
         .setDescription('The user to make co-host')
         .setRequired(true)))
-    .addSubcommand(subcommand => subcommand
-      .setName('bitrate')
-      .setDescription('Change the bitrate of your Tent')
-      .addStringOption(option => option
-        .setName('bitrate')
-        .setDescription('The bitrate to set')
-        .setRequired(true)
-        .addChoices(
-          { name: 'Potato (8kbps)', value: '8000' },
-          { name: 'Low (32kbps)', value: '16000' },
-          { name: 'Default (64kbps)', value: '64000' },
-          { name: 'Medium (128kbps)', value: '128000' },
-          { name: 'High (256kbps)', value: '256000' },
-          { name: 'Ultra (384kbps)', value: '384000' },
-        )))
     .addSubcommand(subcommand => subcommand
       .setName('ping')
       .setDescription('Ping the Join VC role')),
@@ -343,7 +274,6 @@ export const dVoice: SlashCommand = {
     const newName = interaction.options.getString('name') as string;
     // const stationid = interaction.options.getString('station') as string;
     // const guild = interaction.guild as Guild;
-    const bitrate = interaction.options.getString('bitrate') as string;
     const voiceChannel = member.voice.channel;
     let embed = embedTemplate()
       .setTitle('Error')
@@ -401,16 +331,8 @@ export const dVoice: SlashCommand = {
       embed = await tentBan(voiceChannel, target);
     }
 
-    if (command === 'mute') {
-      embed = await tentMute(voiceChannel, target);
-    }
-
     if (command === 'cohost') {
       embed = await tentCohost(voiceChannel, target);
-    }
-
-    if (command === 'bitrate') {
-      embed = await tentBitrate(voiceChannel, bitrate);
     }
 
     if (command === 'ping') {
