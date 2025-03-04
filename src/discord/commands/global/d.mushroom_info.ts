@@ -5,6 +5,8 @@ import {
   ButtonInteraction,
   ButtonStyle,
   Colors,
+  InteractionReplyOptions,
+  MessageFlags,
   SlashCommandBuilder,
 } from 'discord.js';
 import { SlashCommand } from '../../@types/commandDef';
@@ -86,6 +88,15 @@ export default {
     log.info(F, await commandContext(interaction));
     await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
     await interaction.editReply(await mushroomPageOneEmbed());
+    try {
+      await interaction.editReply(await mushroomPageOneEmbed());
+    } catch (error) {
+      log.error(F, `${error}`);
+      await interaction.deleteReply();
+      const mushroomEmbed = await mushroomPageOneEmbed() as InteractionReplyOptions;
+      mushroomEmbed.flags = MessageFlags.Ephemeral;
+      await interaction.followUp(mushroomEmbed);
+    }
     return true;
   },
 } as SlashCommand;

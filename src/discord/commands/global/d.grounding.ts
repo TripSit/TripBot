@@ -20,6 +20,13 @@ export const dGrounding: SlashCommand = {
     log.info(F, await commandContext(interaction));
     await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
     await interaction.editReply({ content: await grounding() });
+    try {
+      await interaction.editReply({ content: await grounding() });
+    } catch (error) {
+      log.error(F, `${error}`);
+      await interaction.deleteReply();
+      await interaction.followUp({ content: await grounding(), ephemeral: true });
+    }
     return true;
   },
 };

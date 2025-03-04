@@ -3,6 +3,8 @@ import {
   Colors,
   EmbedBuilder,
   InteractionEditReplyOptions,
+  InteractionReplyOptions,
+  MessageFlags,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
 import { SlashCommand } from '../../@types/commandDef';
@@ -473,7 +475,15 @@ export const dDrug: SlashCommand = {
     await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') !== false) });
     const section = interaction.options.getString('section') as 'all' | 'dosage' | 'summary' | undefined;
     const drugName = interaction.options.getString('substance', true);
-    await interaction.editReply(await getDrugInfo(drugName, section));
+    try {
+      await interaction.editReply(await getDrugInfo(drugName, section));
+    } catch (error) {
+      log.error(F, `${error}`);
+      await interaction.deleteReply();
+      const drugInfo = await getDrugInfo(drugName, section) as InteractionReplyOptions;
+      drugInfo.flags = MessageFlags.Ephemeral;
+      await interaction.followUp(drugInfo);
+    }
     return true;
   },
 };

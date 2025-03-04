@@ -44,7 +44,13 @@ export const dConvert: SlashCommand = {
     const embed = embedTemplate()
       .setTitle(response);
 
-    await interaction.editReply({ embeds: [embed] });
+    try {
+      await interaction.editReply({ embeds: [embed] });
+    } catch (error) {
+      log.error(F, `${error}`);
+      await interaction.deleteReply();
+      await interaction.followUp({ embeds: [embed], ephemeral: true });
+    }
     return true;
   },
 };

@@ -167,7 +167,13 @@ export const dCombo: SlashCommand = {
 
     if (resultsData.thumbnail) embed.setThumbnail(resultsData.thumbnail);
     if (resultsData.color) embed.setColor(Colors[resultsData.color as keyof typeof Colors]);
-    await interaction.editReply({ embeds: [embed] });
+    try {
+      await interaction.editReply({ embeds: [embed] });
+    } catch (error) {
+      log.error(F, `${error}`);
+      await interaction.deleteReply();
+      await interaction.followUp({ embeds: [embed], ephemeral: true });
+    }
     return true;
   },
 };

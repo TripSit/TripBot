@@ -28,7 +28,13 @@ export const dBreathe: SlashCommand = {
     await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
     const choice = interaction.options.getString('exercise');
     const data = await breathe(choice);
-    await interaction.editReply({ content: data });
+    try {
+      await interaction.editReply({ content: data });
+    } catch (error) {
+      log.error(F, `${error}`);
+      await interaction.deleteReply();
+      await interaction.followUp({ content: data, ephemeral: true });
+    }
     return true;
   },
 };

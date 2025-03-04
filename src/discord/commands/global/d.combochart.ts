@@ -19,6 +19,13 @@ export const dCombochart: SlashCommand = {
     log.info(F, await commandContext(interaction));
     await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
     await interaction.editReply({ content: await combochart() });
+    try {
+      await interaction.editReply({ content: await combochart() });
+    } catch (error) {
+      log.error(F, `${error}`);
+      await interaction.deleteReply();
+      await interaction.followUp({ content: await combochart(), ephemeral: true });
+    }
     return true;
   },
 };

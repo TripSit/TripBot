@@ -19,6 +19,13 @@ export const dReagents: SlashCommand = {
     log.info(F, await commandContext(interaction));
     await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
     await interaction.editReply({ content: await reagents() });
+    try {
+      await interaction.editReply({ content: await reagents() });
+    } catch (error) {
+      log.error(F, `${error}`);
+      await interaction.deleteReply();
+      await interaction.followUp({ content: await reagents(), ephemeral: true });
+    }
     return true;
   },
 };
