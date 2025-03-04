@@ -817,11 +817,11 @@ export async function tripsitmeTeamClose(
   // Update the ticket status to resolved
   ticketData.status = 'RESOLVED' as ticket_status;
   ticketData.archived_at = env.NODE_ENV === 'production'
-    ? DateTime.local().plus({ days: 7 }).toJSDate()
+    ? DateTime.local().plus({ days: 3 }).toJSDate()
     : DateTime.local().plus({ minutes: 1 }).toJSDate();
 
   ticketData.deleted_at = env.NODE_ENV === 'production'
-    ? DateTime.local().plus({ days: 14 }).toJSDate()
+    ? DateTime.local().plus({ days: 6 }).toJSDate()
     : DateTime.local().plus({ minutes: 2 }).toJSDate();
 
   // await database.tickets.set(ticketData);
@@ -1158,11 +1158,11 @@ export async function tripsitmeUserClose(
   // Update the ticket status to closed
   ticketData.status = 'CLOSED' as ticket_status;
   ticketData.archived_at = env.NODE_ENV === 'production'
-    ? DateTime.local().plus({ days: 7 }).toJSDate()
+    ? DateTime.local().plus({ days: 3 }).toJSDate()
     : DateTime.local().plus({ minutes: 1 }).toJSDate();
 
   ticketData.deleted_at = env.NODE_ENV === 'production'
-    ? DateTime.local().plus({ days: 14 }).toJSDate()
+    ? DateTime.local().plus({ days: 6 }).toJSDate()
     : DateTime.local().plus({ minutes: 2 }).toJSDate();
 
   await db.user_tickets.update({
@@ -1432,11 +1432,11 @@ export async function tripSitMe(
   // log.debug(F, `Sent message to ${channelTripsitmeta.name} (${channelTripsitmeta.id})`);
 
   const archiveTime = env.NODE_ENV === 'production'
-    ? DateTime.local().plus({ days: 7 })
+    ? DateTime.local().plus({ days: 3 })
     : DateTime.local().plus({ minutes: 1 });
 
   const deleteTime = env.NODE_ENV === 'production'
-    ? DateTime.local().plus({ days: 14 })
+    ? DateTime.local().plus({ days: 6 })
     : DateTime.local().plus({ minutes: 2 });
 
   log.debug(F, `Ticket archives on ${archiveTime.toLocaleString(DateTime.DATETIME_FULL)} deletes on ${deleteTime.toLocaleString(DateTime.DATETIME_FULL)}`);
@@ -1769,11 +1769,11 @@ export async function tripsitmeButton(
       ticketData.status = 'OPEN' as ticket_status;
       ticketData.reopened_at = new Date();
       ticketData.archived_at = env.NODE_ENV === 'production'
-        ? DateTime.local().plus({ days: 7 }).toJSDate()
+        ? DateTime.local().plus({ days: 3 }).toJSDate()
         : DateTime.local().plus({ minutes: 1 }).toJSDate();
 
       ticketData.deleted_at = env.NODE_ENV === 'production'
-        ? DateTime.local().plus({ days: 14 }).toJSDate()
+        ? DateTime.local().plus({ days: 6 }).toJSDate()
         : DateTime.local().plus({ minutes: 2 }).toJSDate();
       // await database.tickets.set(ticketData);
 
