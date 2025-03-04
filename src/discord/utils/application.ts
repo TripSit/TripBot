@@ -22,6 +22,7 @@ import {
   StringSelectMenuBuilder,
   ChatInputCommandInteraction,
   MessageMentionTypes,
+  DMChannel,
 } from 'discord.js';
 import {
   TextInputStyle,
@@ -649,10 +650,12 @@ export async function applicationApprove(
   target.roles.add(role);
 
   // Send this message outside the ephemeral response
-  interaction.channel.send(stripIndents`
-  ${(interaction.member as GuildMember).displayName} accepted this application!
-  Please send a message to ${target} welcoming them to their new role!
-  `);
+  if (interaction.channel instanceof TextChannel || interaction.channel instanceof DMChannel) {
+    interaction.channel.send(stripIndents`
+    ${(interaction.member as GuildMember).displayName} accepted this application!
+    Please send a message to ${target} welcoming them to their new role!
+    `);
+  }
 
   // Change the channel name
   (interaction.channel as ThreadChannel).setName(`💚│${target.displayName}'s ${role.name} application1!`);

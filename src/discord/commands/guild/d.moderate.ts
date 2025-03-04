@@ -33,6 +33,7 @@ import {
   APIActionRowComponent,
   APIButtonComponentWithCustomId,
   DiscordErrorData,
+  InteractionEditReplyOptions,
 } from 'discord.js';
 import {
   TextInputStyle,
@@ -2310,7 +2311,7 @@ export async function modModal(
         }
       }
       if (!isNote(command) && !isReport(command)) {
-        await i.editReply(await moderate(interaction, i));
+        await i.editReply(await moderate(interaction, i) as InteractionEditReplyOptions);
       }
     })
     .catch(async err => {

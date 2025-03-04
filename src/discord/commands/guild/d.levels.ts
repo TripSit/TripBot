@@ -83,7 +83,7 @@ export const dLevels: SlashCommand = {
       .setName('target')
       .setDescription('User to lookup'))
     .addBooleanOption(option => option.setName('ephemeral')
-      .setDescription('Set to "True" to show the response only to you')),
+      .setDescription('Set to "True" to show the response only to you')) as SlashCommandBuilder,
   async execute(
     interaction:ChatInputCommandInteraction,
   ) {
@@ -700,8 +700,14 @@ export const dLevels: SlashCommand = {
 
     // Process The Entire Card and Send it to Discord
     const date = new Date();
-    const formattedDate = date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' }).replace(/ /g, '-');
-    const attachment = new AttachmentBuilder(await canvasObj.encode('png'), { name: `TS_Levels_${filteredDisplayName}_${formattedDate}.png` });
+    const formattedDate = date.toLocaleDateString('en-GB', {
+      day: '2-digit',
+      month: 'short',
+      year: '2-digit',
+    }).replace(/ /g, '-');
+    const attachment = new AttachmentBuilder(await canvasObj.encode('png'), {
+      name: `TS_Levels_${filteredDisplayName}_${formattedDate}.png`,
+    });
     await interaction.editReply({ files: [attachment] });
 
     log.info(F, `Total Time: ${Date.now() - startTime}ms`);

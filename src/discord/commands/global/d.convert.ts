@@ -11,6 +11,8 @@ const F = f(__filename);
 export const dConvert: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('convert')
+    .setContexts([0, 1, 2])
+    .setIntegrationTypes([0, 1])
     .setDescription('Convert one unit into another')
     .addNumberOption(option => option.setName('value')
       .setDescription('#')
@@ -24,7 +26,7 @@ export const dConvert: SlashCommand = {
       .setRequired(true)
       .setAutocomplete(true))
     .addBooleanOption(option => option.setName('ephemeral')
-      .setDescription('Set to "True" to show the response only to you')),
+      .setDescription('Set to "True" to show the response only to you')) as SlashCommandBuilder,
 
   async execute(interaction) {
     log.info(F, await commandContext(interaction));

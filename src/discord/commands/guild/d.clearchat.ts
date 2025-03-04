@@ -20,7 +20,7 @@ export const dClearchat: SlashCommand = {
       .setName('delete-threads'))
     .addBooleanOption(option => option
       .setDescription('Delete threads? (default: true)')
-      .setName('delete-archived-threads')),
+      .setName('delete-archived-threads')) as SlashCommandBuilder,
   async execute(interaction:ChatInputCommandInteraction) {
     log.info(F, await commandContext(interaction));
     await interaction.deferReply({ ephemeral: false });

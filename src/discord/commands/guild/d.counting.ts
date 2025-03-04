@@ -15,7 +15,7 @@ import { SlashCommandBeta } from '../../@types/commandDef';
 import commandContext from '../../utils/context';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { checkChannelPermissions } from '../../utils/checkPermissions';
-import { sleep } from './d.bottest';
+import { sleep } from '../../utils/sleep';
 
 const F = f(__filename);
 
@@ -285,6 +285,8 @@ export async function countMessage(message: Message): Promise<void> {
     // await message.delete();
     return;
   }
+
+  if (!(message.channel instanceof TextChannel)) return;
 
   if (countingData.current_number === -1) {
     await message.reply('Please wait for the new game to start');

@@ -24,7 +24,7 @@ export const selfTimeout: SlashCommand = {
         { name: 'Yes, I won\'t ask a mod to undo.', value: 'yes' },
         { name: 'No, I\'m just testing.', value: 'no' },
       )
-      .setRequired(true)),
+      .setRequired(true)) as SlashCommandBuilder,
   async execute(interaction:ChatInputCommandInteraction) {
     log.info(F, await commandContext(interaction));
     await interaction.deferReply({ ephemeral: true });

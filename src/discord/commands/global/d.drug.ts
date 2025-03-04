@@ -2,7 +2,7 @@ import {
   SlashCommandBuilder,
   Colors,
   EmbedBuilder,
-  MessageReplyOptions,
+  InteractionEditReplyOptions,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
 import { SlashCommand } from '../../@types/commandDef';
@@ -278,7 +278,7 @@ async function addDosages(
 export async function getDrugInfo(
   drugName: string,
   section?: 'all' | 'dosage' | 'summary',
-):Promise<MessageReplyOptions> {
+):Promise<InteractionEditReplyOptions> {
   let embed = embedTemplate();
   log.debug(F, `drugName: ${drugName} | section: ${section}`);
 
@@ -453,6 +453,8 @@ export const dDrug: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('drug')
     .setDescription('Check substance information')
+    .setContexts([0, 1, 2])
+    .setIntegrationTypes([0, 1])
     .addStringOption(option => option.setName('substance')
       .setDescription('Pick a substance!')
       .setRequired(true)
@@ -465,7 +467,7 @@ export const dDrug: SlashCommand = {
         { name: 'Summary', value: 'summary' },
       ))
     .addBooleanOption(option => option.setName('ephemeral')
-      .setDescription('Set to "True" to show the response only to you')),
+      .setDescription('Set to "True" to show the response only to you')) as SlashCommandBuilder,
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
     await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') !== false) });

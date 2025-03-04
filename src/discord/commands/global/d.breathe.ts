@@ -11,6 +11,8 @@ export const dBreathe: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('breathe')
     .setDescription('Remember to breathe')
+    .setContexts([0, 1, 2])
+    .setIntegrationTypes([0, 1])
     .addStringOption(option => option.setName('exercise')
       .setDescription('Which exercise?')
       .addChoices(
@@ -20,7 +22,7 @@ export const dBreathe: SlashCommand = {
         { name: '4', value: '4' },
       ))
     .addBooleanOption(option => option.setName('ephemeral')
-      .setDescription('Set to "True" to show the response only to you')),
+      .setDescription('Set to "True" to show the response only to you')) as SlashCommandBuilder,
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
     await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });

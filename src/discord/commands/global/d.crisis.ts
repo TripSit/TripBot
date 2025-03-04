@@ -12,9 +12,11 @@ const F = f(__filename);
 export const dCrisis: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('crisis')
+    .setContexts([0, 1, 2])
+    .setIntegrationTypes([0, 1])
     .setDescription('Information that may be helpful in a serious situation.')
     .addBooleanOption(option => option.setName('ephemeral')
-      .setDescription('Set to "True" to show the response only to you')),
+      .setDescription('Set to "True" to show the response only to you')) as SlashCommandBuilder,
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
     const emsInfo = await crisis();

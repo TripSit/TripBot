@@ -13,7 +13,7 @@ export const dFact: SlashCommand = {
     .setName('fact')
     .setDescription('Random fact')
     .addBooleanOption(option => option.setName('ephemeral')
-      .setDescription('Set to "True" to show the response only to you')),
+      .setDescription('Set to "True" to show the response only to you')) as SlashCommandBuilder,
 
   async execute(interaction) {
     log.info(F, await commandContext(interaction));

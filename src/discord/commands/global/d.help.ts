@@ -613,7 +613,7 @@ export const dHelp: SlashCommand = {
     .setName('help')
     .setDescription('Information about TripBot Commands')
     .addBooleanOption(option => option.setName('ephemeral')
-      .setDescription('Set to "True" to show the response only to you')),
+      .setDescription('Set to "True" to show the response only to you')) as SlashCommandBuilder,
 
   async execute(interaction) {
     log.info(F, await commandContext(interaction));

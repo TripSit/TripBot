@@ -37,6 +37,7 @@ import {
 import {
   APIInteractionDataResolvedChannel,
   ChannelType,
+  MessageFlags,
 } from 'discord-api-types/v10';
 import { stripIndents } from 'common-tags';
 import {
@@ -2077,6 +2078,13 @@ export async function aiMessage(
     return;
   }
 
+  if (messageData.channel.type !== ChannelType.GuildText) {
+    log.debug(F, 'Message was not in a text channel, returning');
+    return;
+  }
+
+  const channel = messageData.channel as TextChannel;
+
   // Check if the channel is linked to a persona
   const aiLinkData = await getLinkedChannel(messageData.channel);
   // log.debug(F, `aiLinkData: ${JSON.stringify(aiLinkData, null, 2)}`);
@@ -2166,10 +2174,10 @@ export async function aiMessage(
   // log.debug(F, `attachmentInfo: ${JSON.stringify(attachmentInfo, null, 2)}`);
   // log.debug(F, `Sending messages to API: ${JSON.stringify(messageList, null, 2)}`);
 
-  await messageData.channel.sendTyping();
+  await channel.send({ content: '', flags: MessageFlags.SuppressNotifications });
 
   const typingInterval = setInterval(() => {
-    messageData.channel.sendTyping();
+    channel.send({ content: '', flags: MessageFlags.SuppressNotifications });
   }, 9000); // Start typing indicator every 9 seconds
   let response = '';
   let promptTokens = 0;

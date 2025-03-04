@@ -17,7 +17,7 @@ export const dReport: SlashCommand = {
     .addStringOption(option => option
       .setDescription('User to report!')
       .setRequired(true)
-      .setName('target')),
+      .setName('target')) as SlashCommandBuilder,
 
   async execute(interaction: ChatInputCommandInteraction) {
     if (!interaction.guild) return false;

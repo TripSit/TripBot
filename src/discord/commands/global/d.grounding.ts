@@ -12,8 +12,10 @@ export const dGrounding: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('grounding')
     .setDescription('Send an image with the 5-senses grounding exercise')
+    .setContexts([0, 1, 2])
+    .setIntegrationTypes([0, 1])
     .addBooleanOption(option => option.setName('ephemeral')
-      .setDescription('Set to "True" to show the response only to you')),
+      .setDescription('Set to "True" to show the response only to you')) as SlashCommandBuilder,
   async execute(interaction:ChatInputCommandInteraction) {
     log.info(F, await commandContext(interaction));
     await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });

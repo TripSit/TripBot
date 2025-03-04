@@ -6,6 +6,8 @@ import {
   TextInputBuilder,
   SlashCommandBuilder,
   ModalSubmitInteraction,
+  InteractionEditReplyOptions,
+  InteractionReplyOptions,
 } from 'discord.js';
 import {
   TextInputStyle,
@@ -107,7 +109,7 @@ export const dBotmod: SlashCommand = {
 
     if (command === 'BOTINFO') {
       await interaction.deferReply({ ephemeral: true });
-      await interaction.editReply(await botmod(
+      const replyOptions: InteractionReplyOptions = await botmod(
         interaction,
         group,
         actor,
@@ -115,7 +117,8 @@ export const dBotmod: SlashCommand = {
         targetId,
         null,
         null,
-      ));
+      );
+      await interaction.editReply(replyOptions as InteractionEditReplyOptions);
       return true;
     }
 
@@ -169,7 +172,7 @@ export const dBotmod: SlashCommand = {
         } catch (e) {
           // ignore
         }
-        await i.editReply(await botmod(interaction, group, actor, command, targetId, privReason, pubReason));
+        await i.editReply(await botmod(interaction, group, actor, command, targetId, privReason, pubReason) as InteractionEditReplyOptions);
       });
     return false;
   },

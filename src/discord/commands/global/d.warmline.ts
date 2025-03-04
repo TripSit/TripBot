@@ -13,8 +13,10 @@ export const dWarmline: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('warmline')
     .setDescription('Need someone to talk to, but don\'t need a "hotline"?')
+    .setContexts([0, 1, 2])
+    .setIntegrationTypes([0, 1])
     .addBooleanOption(option => option.setName('ephemeral')
-      .setDescription('Set to "True" to show the response only to you')),
+      .setDescription('Set to "True" to show the response only to you')) as SlashCommandBuilder,
 
   async execute(interaction) {
     log.info(F, await commandContext(interaction));

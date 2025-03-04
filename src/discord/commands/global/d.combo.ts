@@ -14,6 +14,8 @@ export const dCombo: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('combo')
     .setDescription('Check combo information')
+    .setContexts([0, 1, 2])
+    .setIntegrationTypes([0, 1])
     .addStringOption(option => option.setName('first_drug')
       .setDescription('Pick the first drug')
       .setRequired(true)
@@ -23,7 +25,7 @@ export const dCombo: SlashCommand = {
       .setRequired(true)
       .setAutocomplete(true))
     .addBooleanOption(option => option.setName('ephemeral')
-      .setDescription('Set to "True" to show the response only to you')),
+      .setDescription('Set to "True" to show the response only to you')) as SlashCommandBuilder,
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
     const ephemeral: boolean = (interaction.options.getBoolean('ephemeral') === true);

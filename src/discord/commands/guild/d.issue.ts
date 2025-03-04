@@ -51,7 +51,7 @@ export const dIssue: SlashCommand = {
         { name: 'Low', value: 'E2: Low' },
         { name: 'Trivial', value: 'E3: Trivial' },
       )
-      .setName('effort')),
+      .setName('effort')) as SlashCommandBuilder,
   async execute(interaction:ChatInputCommandInteraction) {
     log.info(F, await commandContext(interaction));
     await interaction.showModal(

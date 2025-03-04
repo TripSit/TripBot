@@ -14,7 +14,7 @@ export const dBotstats: SlashCommand = {
     .setName('botstats')
     .setDescription('Get stats about the bot!')
     .addBooleanOption(option => option.setName('ephemeral')
-      .setDescription('Set to "True" to show the response only to you')),
+      .setDescription('Set to "True" to show the response only to you')) as SlashCommandBuilder,
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
     const startTime = new Date().getTime();

@@ -13,7 +13,7 @@ export const dGuides: SlashCommand = {
     .setName('guides')
     .setDescription('Get a link to all the guides from our wiki')
     .addBooleanOption(option => option.setName('ephemeral')
-      .setDescription('Set to "True" to show the response only to you')),
+      .setDescription('Set to "True" to show the response only to you')) as SlashCommandBuilder,
 
   async execute(interaction) {
     log.info(F, await commandContext(interaction));

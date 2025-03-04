@@ -756,7 +756,10 @@ async function autocompleteQuotes(interaction: AutocompleteInteraction) {
     const initialQuotes = quoteList.slice(0, 25) as {
       quote: string;
     }[];
-    const listResults = initialQuotes.map(choice => ({ name: choice.quote.slice(0, 100), value: choice.quote.slice(0, 100) }));
+    const listResults = initialQuotes.map(choice => ({
+      name: choice.quote.slice(0, 100),
+      value: choice.quote.slice(0, 100),
+    }));
     // log.debug(F, `list_results: ${listResults}`);
     // log.debug(F, `Returing ${listResults.length} quotes`);
     await interaction.respond(listResults);

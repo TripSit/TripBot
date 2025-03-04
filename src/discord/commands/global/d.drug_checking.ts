@@ -13,9 +13,11 @@ const F = f(__filename);
 export const drugChecking: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('drug_checking')
+    .setContexts([0, 1, 2])
+    .setIntegrationTypes([0, 1])
     .setDescription('Provides information on drug checking services.')
     .addBooleanOption(option => option.setName('ephemeral')
-      .setDescription('Set to "True" to show the response only to you')),
+      .setDescription('Set to "True" to show the response only to you')) as SlashCommandBuilder,
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
     await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });

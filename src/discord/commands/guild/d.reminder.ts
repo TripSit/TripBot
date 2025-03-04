@@ -63,7 +63,7 @@ export const dReminder: SlashCommand = {
       await interaction.editReply({ content: 'This command can only be used in a server!' });
       return false;
     }
-    if (!interaction.channel) {
+    if (!interaction.channel || !(interaction.channel instanceof TextChannel)) {
       await interaction.editReply({ content: 'This command can only be used in a channel!' });
       return false;
     }

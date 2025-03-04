@@ -651,8 +651,10 @@ export async function tripsitmeBackup(
         },
       });
     }
-  } else {
+  } else if (interaction.channel instanceof TextChannel) {
     await interaction.channel.send(backupMessage);
+  } else {
+    log.error(F, 'Cannot send a message in this channel type!');
   }
 
   await interaction.editReply({ content: 'Backup message sent!' });

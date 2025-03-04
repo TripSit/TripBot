@@ -11,8 +11,10 @@ export const dCombochart: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('combochart')
     .setDescription('Display TripSit\'s Combo Chart')
+    .setContexts([0, 1, 2])
+    .setIntegrationTypes([0, 1])
     .addBooleanOption(option => option.setName('ephemeral')
-      .setDescription('Set to "True" to show the response only to you')),
+      .setDescription('Set to "True" to show the response only to you')) as SlashCommandBuilder,
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
     await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });

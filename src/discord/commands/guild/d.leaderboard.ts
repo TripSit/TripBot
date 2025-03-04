@@ -53,7 +53,7 @@ export const dLeaderboard: SlashCommand = {
     //     { name: 'Weekly', value: 'WEEK' },
     //   ))
     .addBooleanOption(option => option.setName('ephemeral')
-      .setDescription('Set to "True" to show the response only to you')),
+      .setDescription('Set to "True" to show the response only to you')) as SlashCommandBuilder,
   async execute(interaction) { // eslint-disable-line
     log.info(F, await commandContext(interaction));
     await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
@@ -168,7 +168,8 @@ export const dLeaderboard: SlashCommand = {
       if (categoryData) {
         let count = 0;
         let userCount = 0;
-        // log.debug(F, `Category: ${categoryChoice} | Type: ${typeChoice} | Count: ${count} | UserCount: ${userCount}`);
+        // log.debug(F, `Category: ${categoryChoice} | Type: ${typeChoice}
+        // | Count: ${count} | UserCount: ${userCount}`);
         // log.debug(F, `CategoryData: ${JSON.stringify(categoryData.length, null, 2)}`);
         while (count < 10) {
           const user = userCount < categoryData.length ? categoryData[userCount] : null;
@@ -285,7 +286,9 @@ export const dLeaderboard: SlashCommand = {
           // // Draw a plain bar without any user  data
           //   context.fillStyle = '#232323';
           //   context.beginPath();
-          //   context.roundRect(bar.x + (avatarOffset - (bar.height / 2)), bar.y, bar.width - (avatarOffset - (bar.height / 2)), bar.height, [bar.height / 2, 19, 19, bar.height / 2]); // eslint-disable-line max-len
+          //   context.roundRect(bar.x + (avatarOffset - (bar.height / 2)),
+          //  bar.y, bar.width - (avatarOffset - (bar.height / 2)),
+          //  bar.height, [bar.height / 2, 19, 19, bar.height / 2]); // eslint-disable-line max-len
           //   context.fill();
           //   context.fillStyle = '#ffffff';
           //   context.textBaseline = 'middle';

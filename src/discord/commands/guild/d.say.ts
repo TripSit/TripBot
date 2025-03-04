@@ -18,7 +18,7 @@ export const dSay: SlashCommand = {
       .setRequired(true))
     .addChannelOption(option => option
       .setDescription('Where should I say it? (Default: \'here\')')
-      .setName('channel')),
+      .setName('channel')) as SlashCommandBuilder,
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
     await interaction.deferReply({ ephemeral: true });
