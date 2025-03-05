@@ -1,4 +1,5 @@
 import {
+  MessageFlags,
   SlashCommandBuilder,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
@@ -20,7 +21,8 @@ export const dCrisis: SlashCommand = {
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
     const emsInfo = await crisis();
-    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
+    const ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined;
+    await interaction.deferReply({ flags: ephemeral });
     const embed = embedTemplate();
 
     embed.setTitle('Crisis Information');
@@ -47,7 +49,10 @@ export const dCrisis: SlashCommand = {
     } catch (error) {
       log.error(F, `${error}`);
       await interaction.deleteReply();
-      await interaction.followUp({ embeds: [embed], ephemeral: true });
+      await interaction.followUp({
+        embeds: [embed],
+        flags: MessageFlags.Ephemeral,
+      });
     }
     return true;
   },

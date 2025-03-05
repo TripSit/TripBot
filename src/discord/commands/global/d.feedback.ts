@@ -10,6 +10,7 @@ import {
   ButtonInteraction,
 } from 'discord.js';
 import {
+  MessageFlags,
   TextInputStyle,
 } from 'discord-api-types/v10';
 import { stripIndents } from 'common-tags';
@@ -44,7 +45,7 @@ export async function feedbackReportModal(
     .then(async i => {
       // log.debug(F, 'Modal submit interaction received');
       if (i.customId.split('~')[1] !== interaction.id) return;
-      await i.deferReply({ ephemeral: true });
+      await i.deferReply({ flags: MessageFlags.Ephemeral });
       const guildName = ` in ${i.guild?.name}`;
       const guildMessage = `${i.guild ? guildName : 'DM'}`;
 

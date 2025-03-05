@@ -29,6 +29,7 @@ import {
   // ChannelType,
   ButtonStyle,
   PermissionFlagsBits,
+  MessageFlags,
 } from 'discord-api-types/v10';
 import { stripIndents } from 'common-tags';
 import { embedTemplate } from './embedTemplate';
@@ -58,22 +59,22 @@ export async function applicationPermissions(
   applicationThreadChannel: TextChannel,
 ):Promise<boolean> {
   if (!interaction.guild) {
-    await interaction.reply({ content: 'This command can only be used in a guild!', ephemeral: true });
+    await interaction.reply({ content: 'This command can only be used in a guild!', flags: MessageFlags.Ephemeral });
     return false;
   }
   if (!interaction.member) {
     // log.debug(F, `no member!`);
-    await interaction.reply({ content: 'This must be performed by a member of a guild!', ephemeral: true });
+    await interaction.reply({ content: 'This must be performed by a member of a guild!', flags: MessageFlags.Ephemeral });
     return false;
   }
   if (!interaction.channel) {
     // log.debug(F, `no member!`);
-    await interaction.reply({ content: 'This must be performed inside of a channel!', ephemeral: true });
+    await interaction.reply({ content: 'This must be performed inside of a channel!', flags: MessageFlags.Ephemeral });
     return false;
   }
   if (interaction.channel.type !== ChannelType.GuildText) {
     // log.debug(F, `no member!`);
-    await interaction.reply({ content: 'This must be performed inside of a text channel!', ephemeral: true });
+    await interaction.reply({ content: 'This must be performed inside of a text channel!', flags: MessageFlags.Ephemeral });
     return false;
   }
 
@@ -82,7 +83,7 @@ export async function applicationPermissions(
   // const applicationThreadChannel = interaction.options.getChannel('applications_channel', true);
 
   // Can't defer cuz there's a modal
-  // await interaction.deferReply({ ephemeral: true });
+  // await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
   // Check guild permissions
   const guildPerms = await checkGuildPermissions(interaction.guild, [
@@ -94,7 +95,7 @@ export async function applicationPermissions(
       content: stripIndents`Missing ${guildPerms.permission} permission in ${interaction.guild}!
     In order to setup the applications feature I need:
     Manage Roles - To give the role when the application is approved!`,
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return false;
   }
@@ -105,7 +106,7 @@ export async function applicationPermissions(
       await interaction.reply({
         content: stripIndents`The application thread channel cannot be the same as the current channel:
         This prevents accidentally adding the user with a @ mention!`,
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
       return false;
     }
@@ -113,7 +114,7 @@ export async function applicationPermissions(
     if (applicationPostChannel.type !== ChannelType.GuildText) {
       await interaction.reply({
         content: stripIndents`The application thread channel must be a text channel!`,
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
       return false;
     }
@@ -131,7 +132,7 @@ export async function applicationPermissions(
     View Channel - to see the channel
     Send Messages - to send the application post
     `,
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
   }); // eslint-disable-line
       return false;
     }
@@ -158,7 +159,7 @@ export async function applicationPermissions(
       Create Private Threads - to create the application thread
       Manage Threads - to manage the application thread, archiving when the application is approved
       `,
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     }); // eslint-disable-line
     return false;
   }
@@ -172,7 +173,7 @@ export async function applicationSetup(
   if (!interaction.channel) return;
   if (interaction.channel.type !== ChannelType.GuildText) return;
   // Can't defer cuz there's a modal
-  // await interaction.deferReply({ ephemeral: true });
+  // await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
   const applicationThreadChannel = interaction.options.getChannel('applications_channel', true);
 
@@ -208,7 +209,7 @@ export async function applicationSetup(
   interaction.awaitModalSubmit({ filter, time: 0 })
     .then(async i => {
       if (i.customId.split('~')[1] !== interaction.id) return;
-      await i.deferReply({ ephemeral: true });
+      await i.deferReply({ flags: MessageFlags.Ephemeral });
 
       await db.discord_guilds.upsert({
         where: {
@@ -283,7 +284,7 @@ export async function applicationStart(
   if (interaction.values[0] === 'none') {
     await interaction.reply({
       content: 'No application selected.',
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
@@ -306,7 +307,7 @@ export async function applicationStart(
   if (!channelApplicationsId) {
     await interaction.reply({
       content: 'The applications channel has not been set up yet!',
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
@@ -353,7 +354,7 @@ export async function applicationStart(
   interaction.awaitModalSubmit({ filter, time: 0 })
     .then(async i => {
       if (i.customId.split('~')[1] !== interaction.id) return;
-      await i.deferReply({ ephemeral: true });
+      await i.deferReply({ flags: MessageFlags.Ephemeral });
 
       if (!i.member) return;
 
@@ -540,7 +541,7 @@ export async function applicationReject(
     interaction.channel as TextChannel,
   )) return;
 
-  await interaction.deferReply({ ephemeral: false });
+  await interaction.deferReply({ });
 
   const threadCreated = interaction.channel.createdAt;
   // Check if the thread was created in the last 24 hours
@@ -611,7 +612,7 @@ export async function applicationApprove(
     interaction.channel as TextChannel,
   )) return;
 
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
   if (!actor.permissions.has(PermissionFlagsBits.ManageRoles)) {
     await interaction.editReply({

@@ -3,6 +3,7 @@ import {
 } from 'discord.js';
 import {
   ApplicationCommandType,
+  MessageFlags,
 } from 'discord-api-types/v10';
 import { MessageCommand } from '../../@types/commandDef';
 import commandContext from '../../utils/context';
@@ -18,7 +19,7 @@ export const mReport: MessageCommand = {
   async execute(interaction) {
     if (!interaction.guild) return false;
     log.info(F, await commandContext(interaction));
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
     // Get the guild
     const { guild } = interaction;

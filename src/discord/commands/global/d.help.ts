@@ -5,6 +5,7 @@ import {
   ButtonStyle,
   Colors,
   InteractionEditReplyOptions,
+  MessageFlags,
   SlashCommandBuilder,
   StringSelectMenuBuilder,
   StringSelectMenuInteraction,
@@ -618,7 +619,8 @@ export const dHelp: SlashCommand = {
 
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
-    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
+    const ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined;
+    await interaction.deferReply({ flags: ephemeral });
     await interaction.editReply(await startPage());
     return true;
   },

@@ -1,4 +1,5 @@
 import {
+  MessageFlags,
   SlashCommandBuilder,
 } from 'discord.js';
 import { SlashCommand } from '../../@types/commandDef';
@@ -18,7 +19,8 @@ export const dFact: SlashCommand = {
 
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
-    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
+    const ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined;
+    await interaction.deferReply({ flags: ephemeral });
     const data = await fact();
 
     // log.debug(F, `data: ${JSON.stringify(data, null, 2)}`);

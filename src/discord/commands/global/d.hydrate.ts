@@ -18,7 +18,7 @@ export const dHydrate: SlashCommand = {
 
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
-    await interaction.deferReply({ ephemeral: false });
+    await interaction.deferReply({});
     const output = stripIndents`
     💧🌊💧🌊💧🌊💧🌊💧🌊💧🌊💧🌊💧🌊
     ⚠️ ＨＹＤＲＡＴＩＯＮ ＲＥＭＩＮＤＥＲ ⚠️

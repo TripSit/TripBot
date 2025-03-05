@@ -2,6 +2,7 @@ import {
   SlashCommandBuilder,
   EmbedBuilder,
   Message,
+  MessageFlags,
 } from 'discord.js';
 import { SlashCommand } from '../../@types/commandDef';
 
@@ -75,7 +76,7 @@ export const dMessage: SlashCommand = {
         .setDescription('What is the message ID?')
         .setRequired(true))),
   async execute(interaction) {
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
     if (!interaction.guild) {
       await interaction.editReply({ content: 'This command can only be used in a server!' });

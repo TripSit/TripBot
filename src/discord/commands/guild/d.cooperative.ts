@@ -17,6 +17,7 @@ import {
 } from 'discord.js';
 import {
   ButtonStyle,
+  MessageFlags,
   TextInputStyle,
 } from 'discord-api-types/v10';
 import { stripIndent, stripIndents } from 'common-tags';
@@ -198,7 +199,7 @@ export async function cooperativeApplyButton(
   interaction.awaitModalSubmit({ filter, time: 0 })
     .then(async i => {
       if (i.customId.split('~')[1] !== interaction.id) return;
-      await i.deferReply({ ephemeral: true });
+      await i.deferReply({ flags: MessageFlags.Ephemeral });
 
       await i.editReply({
         embeds: [
@@ -494,7 +495,7 @@ async function leave(interaction:ChatInputCommandInteraction): Promise<Interacti
 export async function cooperativeLeaveButton(
   interaction:ButtonInteraction,
 ) {
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
   const guild = interaction.guild as Guild;
   await db.discord_guilds.upsert({
     where: {
@@ -699,7 +700,7 @@ export const dCooperative: SlashCommand = {
         .setRequired(true))),
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
     if (!interaction.guild) {
       await interaction.editReply({
         embeds: [

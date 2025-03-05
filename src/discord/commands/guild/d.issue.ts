@@ -8,6 +8,7 @@ import {
   GuildMember,
 } from 'discord.js';
 import {
+  MessageFlags,
   TextInputStyle,
 } from 'discord-api-types/v10';
 import { stripIndents } from 'common-tags';
@@ -83,7 +84,7 @@ export const dIssue: SlashCommand = {
     interaction.awaitModalSubmit({ filter, time: 0 })
       .then(async i => {
         if (i.customId.split('~')[1] !== interaction.id) return;
-        await i.deferReply({ ephemeral: true });
+        await i.deferReply({ flags: MessageFlags.Ephemeral });
         const issueBody = `${i.fields.getTextInputValue('issueBody')}
         
         This issue was submitted by ${(i.member as GuildMember).displayName} in ${i.guild}`;

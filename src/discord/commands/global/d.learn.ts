@@ -3,6 +3,7 @@ import {
   Colors,
   EmbedBuilder,
   GuildMember,
+  MessageFlags,
   SlashCommandBuilder,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
@@ -216,7 +217,8 @@ export const dLearn: SlashCommand = {
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
     // Below is if you just want a response (non-modal) command
-    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') !== false) });
+    const ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined;
+    await interaction.deferReply({ flags: ephemeral });
 
     let embed = embedTemplate();
 

@@ -20,6 +20,7 @@ import {
   Colors,
   ChannelType,
   PermissionResolvable,
+  MessageFlags,
 } from 'discord.js';
 import { reaction_role_type, reaction_roles } from '@prisma/client';
 import { SlashCommand } from '../../@types/commandDef';
@@ -56,7 +57,7 @@ export async function setupCustomReactionRole(
           .setDescription('Error: If an intro message is required, then you must specify where you want the intro message to be posted!')
           .setColor(Colors.Red),
       ],
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
@@ -69,7 +70,7 @@ export async function setupCustomReactionRole(
           .setDescription('Error: The intro message channel must be a text channel!')
           .setColor(Colors.Red),
       ],
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
@@ -87,7 +88,7 @@ export async function setupCustomReactionRole(
           .setDescription('Error: That is not a valid emoji! Please try again.')
           .setColor(Colors.Red),
       ],
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
@@ -99,7 +100,7 @@ export async function setupCustomReactionRole(
           .setDescription('Error: You can only specify one emoji!')
           .setColor(Colors.Red),
       ],
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
@@ -114,7 +115,7 @@ export async function setupCustomReactionRole(
           .setDescription('Error: You must specify either an emoji or a label for the reaction role!')
           .setColor(Colors.Red),
       ],
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
@@ -131,7 +132,7 @@ export async function setupCustomReactionRole(
           Please move my role above ${role} and try again.`)
           .setColor(Colors.Red),
       ],
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
@@ -168,7 +169,7 @@ export async function setupCustomReactionRole(
     .then(async i => {
       const { II } = JSON.parse(`{${i.customId}}`);
       if (II !== interaction.id) return;
-      await i.deferReply({ ephemeral: true });
+      await i.deferReply({ flags: MessageFlags.Ephemeral });
       const button = new ButtonBuilder()
         .setCustomId(`"ID":"RR","RID":"${role.id}","IM":${introMessageRequired},"IC":${messagePostChannel}`)
         .setStyle(ButtonStyle.Primary);
@@ -227,7 +228,7 @@ export async function buttonReactionRole(
 
   // If the intro message isn't required, then there is no modal, so defer
   if (!introMessageRequired) {
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
   }
   // log.debug(F, `introMessageRequired: ${introMessageRequired} `);
 
@@ -263,7 +264,7 @@ export async function buttonReactionRole(
           // log.debug(F, `${JSON.stringify(i.customId)}`);
           const { II } = JSON.parse(`{${i.customId}}`);
           if (II !== interaction.id) return;
-          await i.deferReply({ ephemeral: true });
+          await i.deferReply({ flags: MessageFlags.Ephemeral });
 
           await target.roles.remove(role);
           const channelAudit = await i.guild?.channels.fetch(env.CHANNEL_AUDITLOG) as TextChannel;
@@ -344,7 +345,7 @@ export async function buttonReactionRole(
         const {
           II,
         } = JSON.parse(`{${i.customId}}`);
-        await i.deferReply({ ephemeral: true });
+        await i.deferReply({ flags: MessageFlags.Ephemeral });
 
         // log.debug(F, `II: ${II}`);
 
@@ -829,7 +830,7 @@ async function getGuildRole(
 export async function createColorMessage(
   interaction: ChatInputCommandInteraction,
 ) {
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
   if (!interaction.guild) return;
   if (!interaction.member) return;
   if (!interaction.channel) return;
@@ -932,7 +933,7 @@ export async function createColorMessage(
 export async function createPremiumColorMessage(
   interaction: ChatInputCommandInteraction,
 ) {
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
   if (!interaction.guild) return;
   if (!interaction.member) return;
   if (!interaction.channel) return;
@@ -1061,7 +1062,7 @@ export async function createPremiumColorMessage(
 export async function createMindsetMessage(
   interaction: ChatInputCommandInteraction,
 ) {
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
   if (!interaction.guild) return;
   if (!interaction.member) return;
   if (!interaction.channel) return;
@@ -1179,7 +1180,7 @@ export async function createMindsetMessage(
 export async function createPronounMessage(
   interaction: ChatInputCommandInteraction,
 ) {
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
   if (!interaction.guild) return;
   if (!interaction.member) return;
   if (!interaction.channel) return;
@@ -1264,7 +1265,7 @@ export async function createPronounMessage(
 export async function createNotificationMessage(
   interaction: ChatInputCommandInteraction,
 ) {
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
   if (!interaction.guild) return;
   if (!interaction.member) return;
   if (!interaction.channel) return;
@@ -1439,7 +1440,7 @@ export const dReactionRole: SlashCommand = {
             .setDescription('This command can only be used in a partner or supporter guilds! Use /reaction_role help for more info.')
             .setColor(Colors.Red),
         ],
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
       return false;
     }
@@ -1455,7 +1456,7 @@ export const dReactionRole: SlashCommand = {
             .setDescription('Error: You do not have the ManageRoles permission needed to create a reactionrole message!')
             .setColor(Colors.Red),
         ],
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
       return false;
     }
@@ -1467,7 +1468,7 @@ export const dReactionRole: SlashCommand = {
             .setDescription('Error: This command can only be used in a guild!')
             .setColor(Colors.Red),
         ],
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
       return false;
     }
@@ -1479,7 +1480,7 @@ export const dReactionRole: SlashCommand = {
             .setDescription('Error: This command can only be used in a channel!')
             .setColor(Colors.Red),
         ],
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
       return false;
     }
@@ -1491,7 +1492,7 @@ export const dReactionRole: SlashCommand = {
             .setDescription('Error: This command can only be used in a text channel!')
             .setColor(Colors.Red),
         ],
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
       return false;
     }
@@ -1511,7 +1512,7 @@ export const dReactionRole: SlashCommand = {
             Note: My role needs to be higher than all other roles you want managed!`)
             .setColor(Colors.Red),
         ],
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
       return false;
     }
@@ -1531,7 +1532,7 @@ export const dReactionRole: SlashCommand = {
             Send Messages - In order to send the reaction role message`)
             .setColor(Colors.Red),
         ],
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
       return false;
     }
@@ -1593,7 +1594,7 @@ export const dReactionRole: SlashCommand = {
             )
             .setColor(Colors.Blue),
         ],
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
     } else if (subcommand === 'color') await createColorMessage(interaction);
     else if (subcommand === 'premium_color') await createPremiumColorMessage(interaction);

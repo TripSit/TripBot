@@ -2,6 +2,7 @@ import {
   SlashCommandBuilder,
   ChatInputCommandInteraction,
   Colors,
+  MessageFlags,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
 import { SlashCommand } from '../../@types/commandDef';
@@ -22,7 +23,8 @@ export const dH2flow: SlashCommand = {
 
   async execute(interaction:ChatInputCommandInteraction) {
     log.info(F, await commandContext(interaction));
-    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
+    const ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined;
+    await interaction.deferReply({ flags: ephemeral });
     const userData = await db.users.upsert({
       where: {
         discord_id: interaction.user.id,

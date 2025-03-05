@@ -1,5 +1,6 @@
 /* eslint-disable sonarjs/no-duplicate-string */
 import {
+  MessageFlags,
   SlashCommandBuilder,
 } from 'discord.js';
 import { SlashCommand } from '../../@types/commandDef';
@@ -34,7 +35,8 @@ export const dTripsitStats: SlashCommand = {
   //     .setDescription('Set to "True" to show the response only to you'))),
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
-    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
+    const ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined;
+    await interaction.deferReply({ flags: ephemeral });
 
     const subcommand = interaction.options.getSubcommand();
 

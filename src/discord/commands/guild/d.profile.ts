@@ -3,6 +3,7 @@ import {
   SlashCommandBuilder,
   GuildMember,
   AttachmentBuilder,
+  MessageFlags,
 } from 'discord.js';
 import Canvas from '@napi-rs/canvas';
 import { personas } from '@prisma/client';
@@ -53,7 +54,8 @@ export const dProfile: SlashCommand = {
     interaction,
   ) {
     log.info(F, await commandContext(interaction));
-    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
+    const ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined;
+    await interaction.deferReply({ flags: ephemeral });
     const startTime = Date.now();
     if (!interaction.guild) {
       await interaction.editReply({ content: 'You can only use this command in a guild!' });

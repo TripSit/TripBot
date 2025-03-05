@@ -6,6 +6,7 @@ import {
   // GuildMember,
   SlashCommandBuilder,
   AttachmentBuilder,
+  MessageFlags,
 } from 'discord.js';
 import { experience_category, experience_type } from '@prisma/client';
 import Canvas from '@napi-rs/canvas';
@@ -57,7 +58,8 @@ export const dLeaderboard: SlashCommand = {
       .setDescription('Set to "True" to show the response only to you')) as SlashCommandBuilder,
   async execute(interaction) { // eslint-disable-line
     log.info(F, await commandContext(interaction));
-    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
+    const ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined;
+    await interaction.deferReply({ flags: ephemeral });
     const startTime = Date.now();
     if (!interaction.guild) {
       await interaction.editReply('You can only use this command in a guild!');

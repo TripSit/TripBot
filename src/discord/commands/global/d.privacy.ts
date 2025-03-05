@@ -1,4 +1,5 @@
 import {
+  MessageFlags,
   SlashCommandBuilder,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
@@ -24,7 +25,7 @@ export const dPrivacy: SlashCommand = {
         .setDescription('Enter your confirmation code to delete your data!'))),
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
     const command = interaction.options.getSubcommand() as 'get' | 'delete';
     const embed = embedTemplate();
 

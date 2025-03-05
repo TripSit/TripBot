@@ -10,6 +10,7 @@ import {
   InteractionReplyOptions,
 } from 'discord.js';
 import {
+  MessageFlags,
   TextInputStyle,
 } from 'discord-api-types/v10';
 import { botmod } from '../../../global/commands/g.botmod';
@@ -109,7 +110,7 @@ export const dBotmod: SlashCommand = {
     const targetId = interaction.options.getString('target', true);
 
     if (command === 'BOTINFO') {
-      await interaction.deferReply({ ephemeral: true });
+      await interaction.deferReply({ flags: MessageFlags.Ephemeral });
       const replyOptions: InteractionReplyOptions = await botmod(
         interaction,
         group,
@@ -159,7 +160,7 @@ export const dBotmod: SlashCommand = {
     interaction.awaitModalSubmit({ filter, time: 0 })
       .then(async i => {
         if (i.customId.split('~')[1] !== interaction.id) return;
-        await i.deferReply({ ephemeral: true });
+        await i.deferReply({ flags: MessageFlags.Ephemeral });
         const toggle = interaction.options.getString('toggle') ?? 'on' as 'on' | 'off';
 
         if (toggle === 'off' && command === 'BOTBAN') {

@@ -3,6 +3,7 @@
 import {
   SlashCommandBuilder,
   Colors,
+  MessageFlags,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
 import { SlashCommand } from '../../@types/commandDef';
@@ -21,7 +22,8 @@ export const dInvite: SlashCommand = {
       .setDescription('Set to "True" to show the response only to you')) as SlashCommandBuilder,
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
-    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
+    const ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined;
+    await interaction.deferReply({ flags: ephemeral });
     const inviteInfo = await invite();
     const isProd = process.env.NODE_ENV === 'production';
     const devNotice = process.env.NODE_ENV === 'production'

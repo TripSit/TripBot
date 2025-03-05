@@ -3,6 +3,7 @@ import {
   SlashCommandBuilder,
   TextChannel,
   ActivityType,
+  MessageFlags,
 } from 'discord.js';
 import axios from 'axios';
 import { stripIndents } from 'common-tags';
@@ -290,7 +291,7 @@ export const dAdmin: SlashCommand = {
     log.info(F, await commandContext(interaction));
     const command = interaction.options.getSubcommand() as 'restart' | 'rebuild' | 'deploy' | 'setstatus' | 'setavatar' | 'setbanner' | 'overwriteuserdata';
     // By default we want to make the reply private
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
     // eslint-disable-next-line sonarjs/no-small-switch
     switch (command) {
       case 'restart': {

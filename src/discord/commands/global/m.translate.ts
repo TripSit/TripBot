@@ -4,6 +4,7 @@ import {
 } from 'discord.js';
 import {
   ApplicationCommandType,
+  MessageFlags,
 } from 'discord-api-types/v10';
 import OpenAI from 'openai';
 import { MessageCommand } from '../../@types/commandDef';
@@ -20,7 +21,7 @@ export const mTranslate: MessageCommand = {
   async execute(interaction) {
     if (!interaction.guild) return false;
     log.info(F, await commandContext(interaction));
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
     const targetMessage = interaction.targetMessage.content;
 

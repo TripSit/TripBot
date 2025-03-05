@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import {
+  MessageFlags,
   SlashCommandBuilder,
 } from 'discord.js';
 
@@ -24,7 +25,8 @@ export const dWikipedia: SlashCommand = {
 
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
-    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
+    const ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined;
+    await interaction.deferReply({ flags: ephemeral });
 
     const query = (interaction.options.getString('query') as string);
 

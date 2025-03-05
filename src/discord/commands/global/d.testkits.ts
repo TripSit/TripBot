@@ -1,4 +1,5 @@
 import {
+  MessageFlags,
   SlashCommandBuilder,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
@@ -21,7 +22,8 @@ export default {
 
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
-    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
+    const ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined;
+    await interaction.deferReply({ flags: ephemeral });
     const emsInfo = await testkits();
     const embed = embedTemplate();
 

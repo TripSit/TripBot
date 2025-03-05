@@ -472,7 +472,8 @@ export const dDrug: SlashCommand = {
       .setDescription('Set to "True" to show the response only to you')) as SlashCommandBuilder,
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
-    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') !== false) });
+    const ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined;
+    await interaction.deferReply({ flags: ephemeral });
     const section = interaction.options.getString('section') as 'all' | 'dosage' | 'summary' | undefined;
     const drugName = interaction.options.getString('substance', true);
     try {

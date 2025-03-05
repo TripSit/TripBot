@@ -1,4 +1,5 @@
 import {
+  MessageFlags,
   SlashCommandBuilder,
 } from 'discord.js';
 import { SlashCommand } from '../../@types/commandDef';
@@ -25,7 +26,8 @@ export const dBreathe: SlashCommand = {
       .setDescription('Set to "True" to show the response only to you')) as SlashCommandBuilder,
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
-    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
+    const ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined;
+    await interaction.deferReply({ flags: ephemeral });
     const choice = interaction.options.getString('exercise');
     const data = await breathe(choice);
     try {
@@ -33,7 +35,7 @@ export const dBreathe: SlashCommand = {
     } catch (error) {
       log.error(F, `${error}`);
       await interaction.deleteReply();
-      await interaction.followUp({ content: data, ephemeral: true });
+      await interaction.followUp({ content: data, flags: MessageFlags.Ephemeral });
     }
     return true;
   },

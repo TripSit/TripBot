@@ -2514,7 +2514,7 @@ export const aiCommand: SlashCommand = {
       .setName('help')),
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
     const subcommand = interaction.options.getSubcommand() as | 'setup' | 'personas' | 'privacy' | 'help';
     switch (subcommand) {

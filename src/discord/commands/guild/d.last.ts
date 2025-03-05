@@ -1,5 +1,6 @@
 import {
   GuildMember,
+  MessageFlags,
   Role,
   SlashCommandBuilder,
 } from 'discord.js';
@@ -24,7 +25,8 @@ export const dLast: SlashCommand = {
       .setDescription('Set to "True" to show the response only to you')) as SlashCommandBuilder,
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
-    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
+    const ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined;
+    await interaction.deferReply({ flags: ephemeral });
     // Only run on Tripsit or DM, we don't want to snoop on other guilds ( ͡~ ͜ʖ ͡°)
     if (interaction.guild) {
       if (interaction.guild.id !== env.DISCORD_GUILD_ID.toString()) {

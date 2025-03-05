@@ -1,6 +1,7 @@
 import {
   SlashCommandBuilder,
   ChatInputCommandInteraction,
+  MessageFlags,
 } from 'discord.js';
 import { SlashCommand } from '../../@types/commandDef';
 import { grounding } from '../../../global/commands/g.grounding';
@@ -18,14 +19,15 @@ export const dGrounding: SlashCommand = {
       .setDescription('Set to "True" to show the response only to you')) as SlashCommandBuilder,
   async execute(interaction:ChatInputCommandInteraction) {
     log.info(F, await commandContext(interaction));
-    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
+    const ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined;
+    await interaction.deferReply({ flags: ephemeral });
     await interaction.editReply({ content: await grounding() });
     try {
       await interaction.editReply({ content: await grounding() });
     } catch (error) {
       log.error(F, `${error}`);
       await interaction.deleteReply();
-      await interaction.followUp({ content: await grounding(), ephemeral: true });
+      await interaction.followUp({ content: await grounding(), flags: MessageFlags.Ephemeral });
     }
     return true;
   },

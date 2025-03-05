@@ -1,6 +1,7 @@
 import {
   ChannelType,
   GuildMember,
+  MessageFlags,
   SlashCommandBuilder,
   TextChannel,
 } from 'discord.js';
@@ -22,7 +23,7 @@ export const dSay: SlashCommand = {
       .setName('channel')) as SlashCommandBuilder,
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
     if (!interaction.guild) {
       await interaction.editReply({ content: 'This command can only be used in a server!' });
       return false;

@@ -3,6 +3,7 @@ import {
   time,
   EmbedBuilder,
   EmbedField,
+  MessageFlags,
 } from 'discord.js';
 import { remindMe } from '../../../global/commands/g.remindme';
 import commandContext from '../../utils/context';
@@ -38,7 +39,7 @@ export const dRemindme: SlashCommand = {
       .setName('delete')),
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
     const command = interaction.options.getSubcommand() as 'get' | 'set' | 'delete';
     const offset = interaction.options.getString('offset');
     const reminder = interaction.options.getString('reminder');

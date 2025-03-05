@@ -3,6 +3,7 @@ import {
   SlashCommandBuilder,
   GuildMember,
   EmbedBuilder,
+  MessageFlags,
 } from 'discord.js';
 import { DateTime } from 'luxon';
 import { stripIndents } from 'common-tags';
@@ -91,7 +92,8 @@ export const dNYT: SlashCommand = {
     interaction,
   ) {
     log.info(F, await commandContext(interaction));
-    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
+    const ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined;
+    await interaction.deferReply({ flags: ephemeral });
     if (!interaction.guild) {
       await interaction.editReply({ content: 'You can only use this command in a guild!' });
       return false;

@@ -4,6 +4,7 @@ import {
   // UserContextMenuCommandInteraction,
   GuildMember,
   AttachmentBuilder,
+  MessageFlags,
 } from 'discord.js';
 import Canvas from '@napi-rs/canvas';
 import { personas } from '@prisma/client';
@@ -102,8 +103,9 @@ export const dLevels: SlashCommand = {
 
     // log.debug(F, `target id: ${target.id}`);
     // log.debug(F, `levelData: ${JSON.stringify(target, null, 2)}`);
+    const ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined;
     const values = await Promise.allSettled([
-      await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) }),
+      await interaction.deferReply({ flags: ephemeral }),
       // Get the target's profile data from the database
       await profile(target.id),
       // Check get fresh persona data

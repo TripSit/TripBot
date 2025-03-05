@@ -24,7 +24,7 @@ export const dClearchat: SlashCommand = {
       .setName('delete-archived-threads')) as SlashCommandBuilder,
   async execute(interaction:ChatInputCommandInteraction) {
     log.info(F, await commandContext(interaction));
-    await interaction.deferReply({ ephemeral: false });
+    await interaction.deferReply({ });
     if (!interaction.channel) {
       await interaction.editReply({ content: 'This command can only be used in a server!' });
       return false;

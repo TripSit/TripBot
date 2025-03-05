@@ -1,6 +1,7 @@
 import {
   SlashCommandBuilder,
   Colors,
+  MessageFlags,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
 import { SlashCommand } from '../../@types/commandDef';
@@ -28,8 +29,8 @@ export const dCombo: SlashCommand = {
       .setDescription('Set to "True" to show the response only to you')) as SlashCommandBuilder,
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
-    const ephemeral: boolean = (interaction.options.getBoolean('ephemeral') === true);
-    await interaction.deferReply({ ephemeral });
+    const ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined;
+    await interaction.deferReply({ flags: ephemeral });
     const drugA = interaction.options.getString('first_drug', true);
     const drugB = interaction.options.getString('second_drug', true);
 
@@ -172,7 +173,7 @@ export const dCombo: SlashCommand = {
     } catch (error) {
       log.error(F, `${error}`);
       await interaction.deleteReply();
-      await interaction.followUp({ embeds: [embed], ephemeral: true });
+      await interaction.followUp({ embeds: [embed], flags: MessageFlags.Ephemeral });
     }
     return true;
   },

@@ -9,6 +9,7 @@ import {
   Colors,
   PermissionResolvable,
   Collection,
+  MessageFlags,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
 import { SlashCommandBeta } from '../../@types/commandDef';
@@ -655,7 +656,8 @@ export const counting: SlashCommandBeta = {
       .setDescription('End the counting game!')),
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
-    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') !== false) });
+    const ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined;
+    await interaction.deferReply({ flags: ephemeral });
     const command = interaction.options.getSubcommand();
     let response = { content: 'This command has not been setup yet!' } as InteractionEditReplyOptions;
     if (command === 'setup') {
