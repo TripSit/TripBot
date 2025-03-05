@@ -22,6 +22,8 @@ export const dIdose: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('idose')
     .setDescription('Your personal dosage information!')
+    .setContexts([0, 1, 2])
+    .setIntegrationTypes([0, 1])
     .addSubcommand(subcommand => subcommand
       .setName('set')
       .setDescription('Record when you dosed something')

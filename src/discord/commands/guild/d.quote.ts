@@ -463,6 +463,7 @@ export const dQuote: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('quote')
     .setDescription('Manage quotes')
+    .setIntegrationTypes([0])
     .addSubcommand(subcommand => subcommand
       .setDescription('Search quotes!')
       .addStringOption(option => option.setName('quote')

@@ -12,7 +12,8 @@ const F = f(__filename);
 export const dTemplate: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('audit')
-    .setDescription('Will convert helpers into the new role'),
+    .setDescription('Will convert helpers into the new role')
+    .setIntegrationTypes([0]),
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
 

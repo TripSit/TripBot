@@ -2499,6 +2499,7 @@ export const aiCommand: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('ai')
     .setDescription('TripBot\'s AI')
+    .setIntegrationTypes([0])
     .addSubcommand(subcommand => subcommand
       .setDescription('Setup the TripBot AI')
       .setName('setup'))

@@ -13,6 +13,7 @@ export const dPrivacy: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('privacy')
     .setDescription('See and manage how TripSit uses your data!')
+    .setIntegrationTypes([0])
     .addSubcommand(subcommand => subcommand
       .setName('get')
       .setDescription('Get what data is stored on your user!'))

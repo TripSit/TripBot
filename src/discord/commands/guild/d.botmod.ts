@@ -25,6 +25,7 @@ export const dBotmod: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('botmod')
     .setDescription('Bot Mod Actions!')
+    .setIntegrationTypes([0])
     .addSubcommandGroup(subcommandgroup => subcommandgroup
       .setName('guild')
       .setDescription('Bot mod guilds')

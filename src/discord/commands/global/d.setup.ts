@@ -857,6 +857,7 @@ export const setup: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('setup')
     .setDescription('Set up various channels and prompts!')
+    .setIntegrationTypes([0])
     .addSubcommand(subcommand => subcommand
       .setDescription('Tripsit info!')
       .addRoleOption(option => option

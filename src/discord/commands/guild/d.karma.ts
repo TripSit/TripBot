@@ -15,6 +15,7 @@ export const dKarma: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('karma')
     .setDescription('Get someone\'s karma!')
+    .setIntegrationTypes([0])
     .addUserOption(option => option
       .setName('target')
       .setDescription('User to lookup'))

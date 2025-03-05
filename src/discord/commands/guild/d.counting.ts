@@ -616,6 +616,7 @@ export const counting: SlashCommandBeta = {
   data: new SlashCommandBuilder()
     .setName('counting')
     .setDescription('All things with counting!')
+    .setIntegrationTypes([0])
     .addSubcommand(subcommand => subcommand
       .setName('setup')
       .setDescription('Set up a Counting channel!')

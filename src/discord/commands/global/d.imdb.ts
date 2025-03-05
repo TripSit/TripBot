@@ -14,6 +14,7 @@ export const dImdb: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('imdb')
     .setDescription('Search imdb')
+    .setIntegrationTypes([0])
     .addStringOption(option => option
       .setName('title')
       .setDescription('Movie / Series title')

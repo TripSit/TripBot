@@ -14,6 +14,7 @@ export const dWikipedia: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('wikipedia')
     .setDescription('Define a word from wikipedia')
+    .setIntegrationTypes([0])
     .addStringOption(option => option
       .setName('query')
       .setDescription('Word to define')

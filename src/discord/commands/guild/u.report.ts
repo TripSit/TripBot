@@ -13,7 +13,8 @@ const F = f(__filename);
 export const uReport: UserCommand = {
   data: new ContextMenuCommandBuilder()
     .setName('TripBot Report User')
-    .setType(ApplicationCommandType.User),
+    .setType(ApplicationCommandType.User)
+    .setIntegrationTypes([0]),
   async execute(interaction) {
     if (!interaction.guild) return false;
     log.info(F, await commandContext(interaction));

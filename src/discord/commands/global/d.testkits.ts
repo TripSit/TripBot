@@ -14,6 +14,8 @@ export default {
   data: new SlashCommandBuilder()
     .setName('drug_testkits')
     .setDescription('Information on how to get a test kit')
+    .setContexts([0, 1, 2])
+    .setIntegrationTypes([0, 1])
     .addBooleanOption(option => option.setName('ephemeral')
       .setDescription('Set to "True" to show the response only to you')) as SlashCommandBuilder,
 

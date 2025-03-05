@@ -2355,6 +2355,7 @@ export const mod: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('moderate')
     .setDescription('Moderation actions!')
+    .setIntegrationTypes([0])
     .addSubcommand(subcommand => subcommand
       .setDescription('Link one user to another.')
       .addStringOption(option => option

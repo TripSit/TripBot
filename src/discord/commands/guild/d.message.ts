@@ -58,7 +58,7 @@ export const dMessage: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('message')
     .setDescription('Do stuff with a bot message')
-
+    .setIntegrationTypes([0])
     .addSubcommand(subcommand => subcommand
       .setName('edit')
       .setDescription('Edit a message')

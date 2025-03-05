@@ -11,7 +11,8 @@ const F = f(__filename);
 export const dTopic: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('topic')
-    .setDescription('Sends a random topic!'),
+    .setDescription('Sends a random topic!')
+    .setIntegrationTypes([0]),
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
     await interaction.deferReply({ ephemeral: false });

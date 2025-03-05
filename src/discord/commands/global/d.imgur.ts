@@ -11,6 +11,7 @@ export const dImgur: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('imgur')
     .setDescription('Search Imgur')
+    .setIntegrationTypes([0])
     .addStringOption(option => option
       .setName('search')
       .setDescription('What are you looking for?')

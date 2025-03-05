@@ -14,6 +14,7 @@ export const dSheesh: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('sheesh')
     .setDescription('Let\'s sheesh!')
+    .setIntegrationTypes([0])
     .addSubcommand(subcommand => subcommand
       .setName('lightjoint')
       .setDescription('Let\'s sheesh!')

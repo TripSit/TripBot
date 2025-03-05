@@ -12,6 +12,7 @@ export const dClearchat: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('clear-chat')
     .setDescription('This will delete the last 100 messages!')
+    .setIntegrationTypes([0])
     .addIntegerOption(option => option
       .setDescription('Number of messages to delete (default/max: 99)')
       .setName('count'))

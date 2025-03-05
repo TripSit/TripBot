@@ -310,6 +310,7 @@ export const image: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('image')
     .setDescription('TripBot\'s Image Generator')
+    .setIntegrationTypes([0])
     .addSubcommand(subcommand => subcommand
       .setDescription('Information on the imagen function.')
       .setName('help'))

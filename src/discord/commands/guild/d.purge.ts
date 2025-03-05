@@ -214,6 +214,7 @@ export const dPurge: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('purge')
     .setDescription('Purge messages from the server.')
+    .setIntegrationTypes([0])
     .addSubcommand(subcommand => subcommand
       .setName('messages')
       .setDescription('Purge messages from the server')

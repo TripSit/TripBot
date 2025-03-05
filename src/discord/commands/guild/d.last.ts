@@ -15,6 +15,7 @@ export const dLast: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('last')
     .setDescription('Get the users last location/messages')
+    .setIntegrationTypes([0])
     .addUserOption(option => option
       .setName('user')
       .setDescription('User to look up')

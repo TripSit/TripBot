@@ -36,6 +36,7 @@ export const dTriptoys: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('triptoys')
     .setDescription('Fun toys to play with!')
+    .setIntegrationTypes([0])
     .addStringOption(option => option.setName('toy')
       .setDescription('Which toy?')
       .addChoices(

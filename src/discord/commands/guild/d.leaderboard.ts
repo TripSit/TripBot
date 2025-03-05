@@ -34,6 +34,7 @@ export const dLeaderboard: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('leaderboard')
     .setDescription('Show the experience leaderboard')
+    .setIntegrationTypes([0])
     .addStringOption(option => option.setName('category')
       .setDescription('What category of experience?')
       .addChoices(

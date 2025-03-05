@@ -4861,6 +4861,7 @@ export const dRpg: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('rpg')
     .setDescription('A TripSit RPG (BETA)!')
+    .setIntegrationTypes([0])
     .addSubcommand(subcommand => subcommand
       .setName('town')
       .setDescription('Go to TripTown!'))

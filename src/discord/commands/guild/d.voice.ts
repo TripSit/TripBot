@@ -273,6 +273,7 @@ export const dVoice: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('voice')
     .setDescription('Control your Campfire Tent')
+    .setIntegrationTypes([0])
     .addSubcommand(subcommand => subcommand
       .setName('rename')
       .setDescription('Rename your Tent')

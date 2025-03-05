@@ -79,6 +79,7 @@ export const dLevels: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('levels')
     .setDescription('Get someone\'s current experience levels!')
+    .setIntegrationTypes([0])
     .addUserOption(option => option
       .setName('target')
       .setDescription('User to lookup'))

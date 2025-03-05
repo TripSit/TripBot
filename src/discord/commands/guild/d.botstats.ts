@@ -13,6 +13,7 @@ export const dBotstats: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('botstats')
     .setDescription('Get stats about the bot!')
+    .setIntegrationTypes([0])
     .addBooleanOption(option => option.setName('ephemeral')
       .setDescription('Set to "True" to show the response only to you')) as SlashCommandBuilder,
   async execute(interaction) {

@@ -14,7 +14,8 @@ const heartEmojis = [
 export const dlovebomb: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('lovebomb')
-    .setDescription('Spread some love'),
+    .setDescription('Spread some love')
+    .setIntegrationTypes([0]),
 
   async execute(interaction) {
     log.info(F, await commandContext(interaction));

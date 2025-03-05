@@ -267,6 +267,8 @@ export const dCalc: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('calc')
     .setDescription('Get drug dosage information')
+    .setContexts([0, 1, 2])
+    .setIntegrationTypes([0, 1])
     // BEGIN BENZO SUBCOMMAND
     .addSubcommand(subcommand => subcommand
       .setName('benzo')

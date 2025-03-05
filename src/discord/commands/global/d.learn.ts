@@ -187,6 +187,7 @@ export const dLearn: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('learn')
     .setDescription('Commands related to TripSit\'s learning portal')
+    .setIntegrationTypes([0])
     .addSubcommand(subcommand => subcommand
       .setName('help')
       .setDescription('Information about this command')

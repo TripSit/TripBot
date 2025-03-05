@@ -387,6 +387,7 @@ export const dBridge: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('bridge')
     .setDescription('Manage the bridge between two discord channels')
+    .setIntegrationTypes([0])
     .addSubcommand(subcommand => subcommand
       .setName('create')
       .setDescription('Create a bridge between two discord channels')

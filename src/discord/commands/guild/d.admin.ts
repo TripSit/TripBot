@@ -218,6 +218,7 @@ export const dAdmin: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('admin')
     .setDescription('Admin Commands')
+    .setIntegrationTypes([0])
     // .addSubcommand(subcommand => subcommand
     //   .setName('restart')
     //   .setDescription('Restart the bot'))

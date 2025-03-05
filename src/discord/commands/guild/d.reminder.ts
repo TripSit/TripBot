@@ -55,7 +55,8 @@ const reminderDict = {
 export const dReminder: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('reminder')
-    .setDescription('Sends a reminder on what the channel is for!'),
+    .setDescription('Sends a reminder on what the channel is for!')
+    .setIntegrationTypes([0]),
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
     await interaction.deferReply({ ephemeral: true });

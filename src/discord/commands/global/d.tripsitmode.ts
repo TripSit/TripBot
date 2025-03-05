@@ -377,6 +377,7 @@ export const tripsitmode: SlashCommand = {
     .setDescription(
       'This command will apply the NeedsHelp role onto a user, and remove other roles!',
     )
+    .setIntegrationTypes([0])
     .addSubcommand(subcommand => subcommand
       .setName('on')
       .setDescription('Turn on tripsit mode for a user')

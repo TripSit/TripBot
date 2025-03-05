@@ -15,7 +15,8 @@ const F = f(__filename);
 export const mTranslate: MessageCommand = {
   data: new ContextMenuCommandBuilder()
     .setName('Translate')
-    .setType(ApplicationCommandType.Message),
+    .setType(ApplicationCommandType.Message)
+    .setIntegrationTypes([0]),
   async execute(interaction) {
     if (!interaction.guild) return false;
     log.info(F, await commandContext(interaction));

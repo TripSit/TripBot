@@ -41,6 +41,7 @@ export const dNYT: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('nyt')
     .setDescription('See info for tracked NYT games')
+    .setIntegrationTypes([0])
     .addSubcommand(subcommand => subcommand
       .setName('user')
       .setDescription('See info for a user')

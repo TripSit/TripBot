@@ -11,6 +11,7 @@ export const dCoinflip: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('coinflip')
     .setDescription('Flip a coin')
+    .setIntegrationTypes([0])
     .addBooleanOption(option => option.setName('ephemeral')
       .setDescription('Set to "True" to show the response only to you')) as SlashCommandBuilder,
   async execute(interaction) {

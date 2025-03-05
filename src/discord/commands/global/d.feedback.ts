@@ -85,7 +85,8 @@ export async function feedbackReportModal(
 export const dFeedback: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('feedback')
-    .setDescription('Share feedback or report a bug to the TripBot dev team!'),
+    .setDescription('Share feedback or report a bug to the TripBot dev team!')
+    .setIntegrationTypes([0]),
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
     await feedbackReportModal(interaction);

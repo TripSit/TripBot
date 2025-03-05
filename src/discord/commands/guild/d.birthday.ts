@@ -127,6 +127,7 @@ export const dBirthday: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('birthday')
     .setDescription('Birthday info!')
+    .setIntegrationTypes([0])
     .addSubcommand(subcommand => subcommand
       .setName('get')
       .setDescription('Get someone\'s birthday!')

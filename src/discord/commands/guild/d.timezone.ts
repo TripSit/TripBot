@@ -14,6 +14,7 @@ export const dTimezone: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('timezone')
     .setDescription('Get or set timezones!')
+    .setIntegrationTypes([0])
     .addSubcommand(subcommand => subcommand
       .setName('get')
       .setDescription('Get someone\'s timezone!')

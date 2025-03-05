@@ -612,6 +612,7 @@ export const dHelp: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('help')
     .setDescription('Information about TripBot Commands')
+    .setIntegrationTypes([0])
     .addBooleanOption(option => option.setName('ephemeral')
       .setDescription('Set to "True" to show the response only to you')) as SlashCommandBuilder,
 

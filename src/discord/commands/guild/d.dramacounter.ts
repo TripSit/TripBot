@@ -16,6 +16,7 @@ export const dDramacounter: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('dramacounter')
     .setDescription('How long since the last drama incident?!')
+    .setIntegrationTypes([0])
     .addSubcommand(subcommand => subcommand
       .setName('get')
       .setDescription('Get the time since last drama.')

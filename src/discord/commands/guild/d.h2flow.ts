@@ -16,6 +16,7 @@ export const dH2flow: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('h2flow')
     .setDescription('Welcome to the H2Flow Club!')
+    .setIntegrationTypes([0])
     .addBooleanOption(option => option.setName('ephemeral')
       .setDescription('Set to "True" to show the response only to you')) as SlashCommandBuilder,
 

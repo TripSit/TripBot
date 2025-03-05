@@ -11,6 +11,7 @@ export const dDonate: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('donate')
     .setDescription('Get information on supporting TripSit')
+    .setIntegrationTypes([0])
     .addBooleanOption(option => option.setName('ephemeral')
       .setDescription('Set to "True" to show the response only to you')) as SlashCommandBuilder,
   async execute(interaction) {

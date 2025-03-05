@@ -23,6 +23,7 @@ export const dJoke: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('joke')
     .setDescription('Random jokes')
+    .setIntegrationTypes([0])
     .addBooleanOption(option => option.setName('ephemeral')
       .setDescription('Set to "True" to show the response only to you')) as SlashCommandBuilder,
 

@@ -646,6 +646,7 @@ export const dCooperative: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('cooperative')
     .setDescription('TripSit Discord Cooperative Commands')
+    .setIntegrationTypes([0])
     .addSubcommand(subcommand => subcommand
       .setDescription('Help for the TripSit Discord Cooperative Commands')
       .setName('info'))

@@ -25,6 +25,7 @@ export const dRss: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('rss')
     .setDescription('Add or remove a subscription to an RSS feed!')
+    .setIntegrationTypes([0])
     .addSubcommand(subcommand => subcommand
       .setName('add')
       .setDescription('Add an RSS subscription to this channel')

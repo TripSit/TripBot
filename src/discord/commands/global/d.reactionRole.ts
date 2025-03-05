@@ -1354,6 +1354,7 @@ export const dReactionRole: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('reaction_role')
     .setDescription('Create a reaction role messages')
+    .setIntegrationTypes([0])
     .addSubcommand(subcommand => subcommand
       .setName('help')
       .setDescription('Displays info on this command'))

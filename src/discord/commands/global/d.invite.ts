@@ -16,6 +16,7 @@ export const dInvite: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('invite')
     .setDescription('Shows an invite link for this bot!')
+    .setIntegrationTypes([0])
     .addBooleanOption(option => option.setName('ephemeral')
       .setDescription('Set to "True" to show the response only to you')) as SlashCommandBuilder,
   async execute(interaction) {

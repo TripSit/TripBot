@@ -13,6 +13,7 @@ export const dAvatar: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('avatar')
     .setDescription('Shows a member\'s profile picture in large format.')
+    .setIntegrationTypes([0])
     .addUserOption(option => option.setName('user')
       .setDescription('user')
       .setRequired(true))

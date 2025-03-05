@@ -17,6 +17,7 @@ export const dRemindme: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('remind_me')
     .setDescription('Handle reminders!')
+    .setIntegrationTypes([0])
     .addSubcommand(subcommand => subcommand
       .setDescription('Set a reminder')
       .addStringOption(option => option.setName('reminder')

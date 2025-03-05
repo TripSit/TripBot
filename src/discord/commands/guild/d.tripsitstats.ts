@@ -13,6 +13,7 @@ export const dTripsitStats: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('tripsit_stats')
     .setDescription('Get stats on a feature of TripSit')
+    .setIntegrationTypes([0])
     .addSubcommand(subcommand => subcommand
       .setName('session')
       .setDescription('Get stats for TripSit sessions')

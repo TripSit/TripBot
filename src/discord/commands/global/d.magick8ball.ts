@@ -11,6 +11,7 @@ export const dMagick8ball: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('magick8ball')
     .setDescription('Ask the magick 8-ball a question!')
+    .setIntegrationTypes([0])
     .addBooleanOption(option => option.setName('ephemeral')
       .setDescription('Set to "True" to show the response only to you')) as SlashCommandBuilder,
   async execute(interaction) {

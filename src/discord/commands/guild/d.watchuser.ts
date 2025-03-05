@@ -14,6 +14,7 @@ export const dWatchUser: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('watch')
     .setDescription('Get notified when a user says something')
+    .setIntegrationTypes([0])
     .addSubcommand(subcommand => subcommand
       .setName('add')
       .setDescription('Set a Watch on a user.')

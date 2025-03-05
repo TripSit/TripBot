@@ -11,7 +11,8 @@ const F = f(__filename);
 export const dKipp: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('kipp')
-    .setDescription('Keep it positive please!'),
+    .setDescription('Keep it positive please!')
+    .setIntegrationTypes([0]),
 
   async execute(interaction) {
     log.info(F, await commandContext(interaction));

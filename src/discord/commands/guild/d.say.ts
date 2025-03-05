@@ -13,6 +13,7 @@ export const dSay: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('say')
     .setDescription('Say something like a real person!')
+    .setIntegrationTypes([0])
     .addStringOption(option => option.setName('say')
       .setDescription('What do you want to say?')
       .setRequired(true))

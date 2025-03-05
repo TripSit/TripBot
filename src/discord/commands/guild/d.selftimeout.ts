@@ -13,6 +13,7 @@ export const selfTimeout: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('selftimeout')
     .setDescription('Timeout yourself!')
+    .setIntegrationTypes([0])
     .addStringOption(option => option
       .setName('duration')
       .setDescription('How long? Max is 2 weeks!')

@@ -12,6 +12,7 @@ export const dSlowMode: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('slowmode')
     .setDescription('Toggles slowmode on a channel')
+    .setIntegrationTypes([0])
     .addSubcommand(subcommand => subcommand
       .setName('on')
       .setDescription('Turn on slowmode')

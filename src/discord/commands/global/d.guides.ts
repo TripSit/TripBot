@@ -12,6 +12,7 @@ export const dGuides: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('guides')
     .setDescription('Get a link to all the guides from our wiki')
+    .setIntegrationTypes([0])
     .addBooleanOption(option => option.setName('ephemeral')
       .setDescription('Set to "True" to show the response only to you')) as SlashCommandBuilder,
 

@@ -23,6 +23,7 @@ export const dIssue: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('issue')
     .setDescription('Create issue on github')
+    .setIntegrationTypes([0])
     .addStringOption(option => option
       .setDescription('What type of issue is this?')
       .addChoices(

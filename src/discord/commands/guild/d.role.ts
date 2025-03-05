@@ -81,6 +81,7 @@ export const dRole: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('role')
     .setDescription('Add or remove roles.')
+    .setIntegrationTypes([0])
     .addSubcommand(subcommand => subcommand
       .setName('add')
       .setDescription('Add a role.')

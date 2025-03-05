@@ -14,6 +14,7 @@ export const dReport: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('report')
     .setDescription('Report a user')
+    .setIntegrationTypes([0])
     .addStringOption(option => option
       .setDescription('User to report!')
       .setRequired(true)

@@ -13,6 +13,7 @@ export const dUrbanDefine: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('urban_define')
     .setDescription('Define a word on Urban Dictionary')
+    .setIntegrationTypes([0])
     .addStringOption(option => option
       .setName('define')
       .setDescription('What do you want to define?')

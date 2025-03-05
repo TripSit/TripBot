@@ -43,6 +43,7 @@ export const dProfile: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('profile')
     .setDescription('Get someone\'s profile!')
+    .setIntegrationTypes([0])
     .addUserOption(option => option
       .setName('target')
       .setDescription('User to lookup'))
