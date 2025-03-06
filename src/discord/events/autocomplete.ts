@@ -315,8 +315,12 @@ async function autocompleteTimezone(interaction: AutocompleteInteraction) {
 }
 
 async function autocompleteConvert(interaction: AutocompleteInteraction) {
-  const firstUnit = interaction.options.data[1].value;
-  const focusedOption = interaction.options.data[1].focused;
+  let firstUnit: string = '';
+  let focusedOption = false;
+  if (interaction.options.data[1] !== undefined) {
+    firstUnit = interaction.options.data[1].value as string;
+    focusedOption = interaction.options.data[1].focused as boolean;
+  }
 
   let displayUnits = [];
   let measure = '';
