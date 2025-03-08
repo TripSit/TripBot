@@ -2,7 +2,6 @@ import {
   SlashCommandBuilder,
   ChatInputCommandInteraction,
   GuildMember,
-  MessageFlags,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
 import { SlashCommand } from '../../@types/commandDef';
@@ -15,16 +14,15 @@ export const dReport: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('report')
     .setDescription('Report a user')
-    .setIntegrationTypes([0])
     .addStringOption(option => option
       .setDescription('User to report!')
       .setRequired(true)
-      .setName('target')) as SlashCommandBuilder,
+      .setName('target')),
 
   async execute(interaction: ChatInputCommandInteraction) {
     if (!interaction.guild) return false;
     log.info(F, await commandContext(interaction));
-    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+    await interaction.deferReply({ ephemeral: true });
 
     // Get the guild
     const { guild } = interaction;

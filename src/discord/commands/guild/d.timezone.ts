@@ -2,7 +2,6 @@
 import {
   SlashCommandBuilder,
   GuildMember,
-  MessageFlags,
 } from 'discord.js';
 import { SlashCommand } from '../../@types/commandDef';
 import { timezone } from '../../../global/commands/g.timezone';
@@ -15,7 +14,6 @@ export const dTimezone: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('timezone')
     .setDescription('Get or set timezones!')
-    .setIntegrationTypes([0])
     .addSubcommand(subcommand => subcommand
       .setName('get')
       .setDescription('Get someone\'s timezone!')
@@ -36,11 +34,10 @@ export const dTimezone: SlashCommand = {
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
     let command = interaction.options.getSubcommand() as 'get' | 'set' | undefined;
-    const ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined;
     if (command === 'set') {
-      await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+      await interaction.deferReply({ ephemeral: true });
     } else {
-      await interaction.deferReply({ flags: ephemeral });
+      await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
     }
     const tzValue = interaction.options.getString('timezone');
     let member = interaction.options.getMember('user') as GuildMember | null;

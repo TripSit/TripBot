@@ -1,5 +1,4 @@
 import {
-  MessageFlags,
   SlashCommandBuilder,
 } from 'discord.js';
 import { SlashCommand } from '../../@types/commandDef';
@@ -12,7 +11,6 @@ export const dImgur: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('imgur')
     .setDescription('Search Imgur')
-    .setIntegrationTypes([0])
     .addStringOption(option => option
       .setName('search')
       .setDescription('What are you looking for?')
@@ -36,11 +34,10 @@ export const dImgur: SlashCommand = {
         { name: 'Year', value: 'year' },
       ))
     .addBooleanOption(option => option.setName('ephemeral')
-      .setDescription('Set to "True" to show the response only to you')) as SlashCommandBuilder,
+      .setDescription('Set to "True" to show the response only to you')),
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
-    const ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined;
-    await interaction.deferReply({ flags: ephemeral });
+    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
     // Sometimes the API takes a few seconds to respond.
     const search = interaction.options.getString('search');
     const sort = interaction.options.getString('sort') || 'top';

@@ -1,7 +1,6 @@
 import {
   SlashCommandBuilder,
   Colors,
-  MessageFlags,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
 import { SlashCommand } from '../../@types/commandDef';
@@ -15,8 +14,6 @@ export const dCombo: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('combo')
     .setDescription('Check combo information')
-    .setContexts([0, 1, 2])
-    .setIntegrationTypes([0, 1])
     .addStringOption(option => option.setName('first_drug')
       .setDescription('Pick the first drug')
       .setRequired(true)
@@ -26,11 +23,11 @@ export const dCombo: SlashCommand = {
       .setRequired(true)
       .setAutocomplete(true))
     .addBooleanOption(option => option.setName('ephemeral')
-      .setDescription('Set to "True" to show the response only to you')) as SlashCommandBuilder,
+      .setDescription('Set to "True" to show the response only to you')),
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
-    const ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined;
-    await interaction.deferReply({ flags: ephemeral });
+    const ephemeral: boolean = (interaction.options.getBoolean('ephemeral') === true);
+    await interaction.deferReply({ ephemeral });
     const drugA = interaction.options.getString('first_drug', true);
     const drugB = interaction.options.getString('second_drug', true);
 
@@ -168,13 +165,7 @@ export const dCombo: SlashCommand = {
 
     if (resultsData.thumbnail) embed.setThumbnail(resultsData.thumbnail);
     if (resultsData.color) embed.setColor(Colors[resultsData.color as keyof typeof Colors]);
-    try {
-      await interaction.editReply({ embeds: [embed] });
-    } catch (error) {
-      log.error(F, `${error}`);
-      await interaction.deleteReply();
-      await interaction.followUp({ embeds: [embed], flags: MessageFlags.Ephemeral });
-    }
+    await interaction.editReply({ embeds: [embed] });
     return true;
   },
 };

@@ -3,7 +3,6 @@ import {
   SlashCommandBuilder,
   GuildMember,
   EmbedBuilder,
-  MessageFlags,
 } from 'discord.js';
 import { DateTime } from 'luxon';
 import { stripIndents } from 'common-tags';
@@ -42,7 +41,6 @@ export const dNYT: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('nyt')
     .setDescription('See info for tracked NYT games')
-    .setIntegrationTypes([0])
     .addSubcommand(subcommand => subcommand
       .setName('user')
       .setDescription('See info for a user')
@@ -92,8 +90,7 @@ export const dNYT: SlashCommand = {
     interaction,
   ) {
     log.info(F, await commandContext(interaction));
-    const ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined;
-    await interaction.deferReply({ flags: ephemeral });
+    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
     if (!interaction.guild) {
       await interaction.editReply({ content: 'You can only use this command in a guild!' });
       return false;
