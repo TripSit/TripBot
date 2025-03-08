@@ -49,7 +49,8 @@
   "contributors": [
     "Hipperooni",
     "Ajar",
-    "Change"
+    "Change",
+    "theimperious1"
   ],
   "license": "MIT",
   "bugs": {
@@ -71,7 +72,7 @@
     "convert-units": "^2.3.4",
     "cross-fetch": "^4.0.0",
     "discord-api-types": "^0.37.67",
-    "discord.js": "^14.14.1",
+    "discord.js": "^14.18.0",
     "dotenv": "^16.4.1",
     "express": "^4.18.2",
     "express-rate-limit": "^7.1.5",

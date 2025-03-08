@@ -31,6 +31,7 @@ import {
   APISelectMenuOption,
   ButtonStyle,
   ComponentType,
+  MessageFlags,
   TextInputStyle,
 } from 'discord-api-types/v10';
 import { stripIndents } from 'common-tags';
@@ -2806,7 +2807,7 @@ export async function rpgHomeNameChange(
     .then(async i => {
       if (i.customId.split('~')[1] !== interaction.id) return;
       const choice = i.fields.getTextInputValue('rpgNewName');
-      await i.deferReply({ ephemeral: true });
+      await i.deferReply({ flags: MessageFlags.Ephemeral });
 
       // log.debug(F, `name: ${choice}`);
 
@@ -4861,6 +4862,7 @@ export const dRpg: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('rpg')
     .setDescription('A TripSit RPG (BETA)!')
+    .setIntegrationTypes([0])
     .addSubcommand(subcommand => subcommand
       .setName('town')
       .setDescription('Go to TripTown!'))
@@ -4919,7 +4921,8 @@ export const dRpg: SlashCommand = {
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
     const channelRpg = await interaction.guild?.channels.fetch(env.CHANNEL_TRIPTOWN as string) as TextChannel;
-    await interaction.deferReply({ ephemeral: (channelRpg.id !== interaction.channelId) });
+    const ephemeral = channelRpg.id !== interaction.channelId ? MessageFlags.Ephemeral : undefined;
+    await interaction.deferReply({ flags: ephemeral });
     const subcommand = interaction.options.getSubcommand();
 
     // const quietCommands = [

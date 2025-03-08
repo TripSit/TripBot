@@ -13,7 +13,7 @@ import {
 } from '@google/generative-ai';
 import axios from 'axios';
 import { Message, MessageReplyOptions, TextChannel } from 'discord.js';
-import { sleep } from '../../discord/commands/guild/d.bottest';
+import { sleep } from '../../discord/utils/sleep';
 import { getDrugInfo } from '../../discord/commands/global/d.drug';
 
 const F = f(__filename);

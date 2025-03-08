@@ -6,6 +6,7 @@ import {
   ChatInputCommandInteraction,
   MessageContextMenuCommandInteraction,
   UserContextMenuCommandInteraction,
+  MessageFlags,
 } from 'discord.js';
 // import * as Sentry from '@sentry/node';
 import { ErrorEvent } from '../@types/eventDef';
@@ -133,7 +134,7 @@ export default async function handleError(
       if (interaction.deferred) {
         await interaction.editReply({ embeds: [embed] });
       } else {
-        await interaction.reply({ embeds: [embed], ephemeral: true });
+        await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
       }
     } else {
       await interaction.editReply({ embeds: [embed] });
