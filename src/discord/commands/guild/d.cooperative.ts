@@ -17,7 +17,6 @@ import {
 } from 'discord.js';
 import {
   ButtonStyle,
-  MessageFlags,
   TextInputStyle,
 } from 'discord-api-types/v10';
 import { stripIndent, stripIndents } from 'common-tags';
@@ -199,7 +198,7 @@ export async function cooperativeApplyButton(
   interaction.awaitModalSubmit({ filter, time: 0 })
     .then(async i => {
       if (i.customId.split('~')[1] !== interaction.id) return;
-      await i.deferReply({ flags: MessageFlags.Ephemeral });
+      await i.deferReply({ ephemeral: true });
 
       await i.editReply({
         embeds: [
@@ -495,7 +494,7 @@ async function leave(interaction:ChatInputCommandInteraction): Promise<Interacti
 export async function cooperativeLeaveButton(
   interaction:ButtonInteraction,
 ) {
-  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+  await interaction.deferReply({ ephemeral: true });
   const guild = interaction.guild as Guild;
   await db.discord_guilds.upsert({
     where: {
@@ -647,7 +646,6 @@ export const dCooperative: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('cooperative')
     .setDescription('TripSit Discord Cooperative Commands')
-    .setIntegrationTypes([0])
     .addSubcommand(subcommand => subcommand
       .setDescription('Help for the TripSit Discord Cooperative Commands')
       .setName('info'))
@@ -700,7 +698,7 @@ export const dCooperative: SlashCommand = {
         .setRequired(true))),
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
-    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+    await interaction.deferReply({ ephemeral: true });
     if (!interaction.guild) {
       await interaction.editReply({
         embeds: [

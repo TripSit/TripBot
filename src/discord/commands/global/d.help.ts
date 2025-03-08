@@ -5,7 +5,6 @@ import {
   ButtonStyle,
   Colors,
   InteractionEditReplyOptions,
-  MessageFlags,
   SlashCommandBuilder,
   StringSelectMenuBuilder,
   StringSelectMenuInteraction,
@@ -613,14 +612,12 @@ export const dHelp: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('help')
     .setDescription('Information about TripBot Commands')
-    .setIntegrationTypes([0])
     .addBooleanOption(option => option.setName('ephemeral')
-      .setDescription('Set to "True" to show the response only to you')) as SlashCommandBuilder,
+      .setDescription('Set to "True" to show the response only to you')),
 
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
-    const ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined;
-    await interaction.deferReply({ flags: ephemeral });
+    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
     await interaction.editReply(await startPage());
     return true;
   },

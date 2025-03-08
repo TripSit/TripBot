@@ -22,14 +22,12 @@ import {
   StringSelectMenuBuilder,
   ChatInputCommandInteraction,
   MessageMentionTypes,
-  DMChannel,
 } from 'discord.js';
 import {
   TextInputStyle,
   // ChannelType,
   ButtonStyle,
   PermissionFlagsBits,
-  MessageFlags,
 } from 'discord-api-types/v10';
 import { stripIndents } from 'common-tags';
 import { embedTemplate } from './embedTemplate';
@@ -59,22 +57,22 @@ export async function applicationPermissions(
   applicationThreadChannel: TextChannel,
 ):Promise<boolean> {
   if (!interaction.guild) {
-    await interaction.reply({ content: 'This command can only be used in a guild!', flags: MessageFlags.Ephemeral });
+    await interaction.reply({ content: 'This command can only be used in a guild!', ephemeral: true });
     return false;
   }
   if (!interaction.member) {
     // log.debug(F, `no member!`);
-    await interaction.reply({ content: 'This must be performed by a member of a guild!', flags: MessageFlags.Ephemeral });
+    await interaction.reply({ content: 'This must be performed by a member of a guild!', ephemeral: true });
     return false;
   }
   if (!interaction.channel) {
     // log.debug(F, `no member!`);
-    await interaction.reply({ content: 'This must be performed inside of a channel!', flags: MessageFlags.Ephemeral });
+    await interaction.reply({ content: 'This must be performed inside of a channel!', ephemeral: true });
     return false;
   }
   if (interaction.channel.type !== ChannelType.GuildText) {
     // log.debug(F, `no member!`);
-    await interaction.reply({ content: 'This must be performed inside of a text channel!', flags: MessageFlags.Ephemeral });
+    await interaction.reply({ content: 'This must be performed inside of a text channel!', ephemeral: true });
     return false;
   }
 
@@ -83,7 +81,7 @@ export async function applicationPermissions(
   // const applicationThreadChannel = interaction.options.getChannel('applications_channel', true);
 
   // Can't defer cuz there's a modal
-  // await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+  // await interaction.deferReply({ ephemeral: true });
 
   // Check guild permissions
   const guildPerms = await checkGuildPermissions(interaction.guild, [
@@ -95,7 +93,7 @@ export async function applicationPermissions(
       content: stripIndents`Missing ${guildPerms.permission} permission in ${interaction.guild}!
     In order to setup the applications feature I need:
     Manage Roles - To give the role when the application is approved!`,
-      flags: MessageFlags.Ephemeral,
+      ephemeral: true,
     });
     return false;
   }
@@ -106,7 +104,7 @@ export async function applicationPermissions(
       await interaction.reply({
         content: stripIndents`The application thread channel cannot be the same as the current channel:
         This prevents accidentally adding the user with a @ mention!`,
-        flags: MessageFlags.Ephemeral,
+        ephemeral: true,
       });
       return false;
     }
@@ -114,7 +112,7 @@ export async function applicationPermissions(
     if (applicationPostChannel.type !== ChannelType.GuildText) {
       await interaction.reply({
         content: stripIndents`The application thread channel must be a text channel!`,
-        flags: MessageFlags.Ephemeral,
+        ephemeral: true,
       });
       return false;
     }
@@ -132,7 +130,7 @@ export async function applicationPermissions(
     View Channel - to see the channel
     Send Messages - to send the application post
     `,
-        flags: MessageFlags.Ephemeral,
+        ephemeral: true,
   }); // eslint-disable-line
       return false;
     }
@@ -159,7 +157,7 @@ export async function applicationPermissions(
       Create Private Threads - to create the application thread
       Manage Threads - to manage the application thread, archiving when the application is approved
       `,
-      flags: MessageFlags.Ephemeral,
+      ephemeral: true,
     }); // eslint-disable-line
     return false;
   }
@@ -173,7 +171,7 @@ export async function applicationSetup(
   if (!interaction.channel) return;
   if (interaction.channel.type !== ChannelType.GuildText) return;
   // Can't defer cuz there's a modal
-  // await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+  // await interaction.deferReply({ ephemeral: true });
 
   const applicationThreadChannel = interaction.options.getChannel('applications_channel', true);
 
@@ -209,7 +207,7 @@ export async function applicationSetup(
   interaction.awaitModalSubmit({ filter, time: 0 })
     .then(async i => {
       if (i.customId.split('~')[1] !== interaction.id) return;
-      await i.deferReply({ flags: MessageFlags.Ephemeral });
+      await i.deferReply({ ephemeral: true });
 
       await db.discord_guilds.upsert({
         where: {
@@ -284,7 +282,7 @@ export async function applicationStart(
   if (interaction.values[0] === 'none') {
     await interaction.reply({
       content: 'No application selected.',
-      flags: MessageFlags.Ephemeral,
+      ephemeral: true,
     });
     return;
   }
@@ -307,7 +305,7 @@ export async function applicationStart(
   if (!channelApplicationsId) {
     await interaction.reply({
       content: 'The applications channel has not been set up yet!',
-      flags: MessageFlags.Ephemeral,
+      ephemeral: true,
     });
     return;
   }
@@ -354,7 +352,7 @@ export async function applicationStart(
   interaction.awaitModalSubmit({ filter, time: 0 })
     .then(async i => {
       if (i.customId.split('~')[1] !== interaction.id) return;
-      await i.deferReply({ flags: MessageFlags.Ephemeral });
+      await i.deferReply({ ephemeral: true });
 
       if (!i.member) return;
 
@@ -541,7 +539,7 @@ export async function applicationReject(
     interaction.channel as TextChannel,
   )) return;
 
-  await interaction.deferReply({ });
+  await interaction.deferReply({ ephemeral: false });
 
   const threadCreated = interaction.channel.createdAt;
   // Check if the thread was created in the last 24 hours
@@ -612,7 +610,7 @@ export async function applicationApprove(
     interaction.channel as TextChannel,
   )) return;
 
-  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+  await interaction.deferReply({ ephemeral: true });
 
   if (!actor.permissions.has(PermissionFlagsBits.ManageRoles)) {
     await interaction.editReply({
@@ -651,12 +649,10 @@ export async function applicationApprove(
   target.roles.add(role);
 
   // Send this message outside the ephemeral response
-  if (interaction.channel instanceof TextChannel || interaction.channel instanceof DMChannel) {
-    interaction.channel.send(stripIndents`
-    ${(interaction.member as GuildMember).displayName} accepted this application!
-    Please send a message to ${target} welcoming them to their new role!
-    `);
-  }
+  interaction.channel.send(stripIndents`
+  ${(interaction.member as GuildMember).displayName} accepted this application!
+  Please send a message to ${target} welcoming them to their new role!
+  `);
 
   // Change the channel name
   (interaction.channel as ThreadChannel).setName(`💚│${target.displayName}'s ${role.name} application1!`);

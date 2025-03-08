@@ -3,7 +3,6 @@ import {
   SlashCommandBuilder,
   TextChannel,
   ActivityType,
-  MessageFlags,
 } from 'discord.js';
 import axios from 'axios';
 import { stripIndents } from 'common-tags';
@@ -219,7 +218,6 @@ export const dAdmin: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('admin')
     .setDescription('Admin Commands')
-    .setIntegrationTypes([0])
     // .addSubcommand(subcommand => subcommand
     //   .setName('restart')
     //   .setDescription('Restart the bot'))
@@ -291,7 +289,7 @@ export const dAdmin: SlashCommand = {
     log.info(F, await commandContext(interaction));
     const command = interaction.options.getSubcommand() as 'restart' | 'rebuild' | 'deploy' | 'setstatus' | 'setavatar' | 'setbanner' | 'overwriteuserdata';
     // By default we want to make the reply private
-    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+    await interaction.deferReply({ ephemeral: true });
     // eslint-disable-next-line sonarjs/no-small-switch
     switch (command) {
       case 'restart': {

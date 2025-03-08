@@ -11,12 +11,11 @@ const F = f(__filename);
 export const dKipp: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('kipp')
-    .setDescription('Keep it positive please!')
-    .setIntegrationTypes([0]),
+    .setDescription('Keep it positive please!'),
 
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
-    await interaction.deferReply({});
+    await interaction.deferReply({ ephemeral: false });
     const happyEmojis = [
       '😀', '😃', '😄', '😊', '😁', '🥰', '😇', '😍', '😂', '🤣',
       '🙂', '😆', '😋', '😛', '🙃', '😜', '🤪', '😝', '🤗', '🤭',

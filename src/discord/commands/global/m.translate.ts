@@ -4,7 +4,6 @@ import {
 } from 'discord.js';
 import {
   ApplicationCommandType,
-  MessageFlags,
 } from 'discord-api-types/v10';
 import OpenAI from 'openai';
 import { MessageCommand } from '../../@types/commandDef';
@@ -16,12 +15,11 @@ const F = f(__filename);
 export const mTranslate: MessageCommand = {
   data: new ContextMenuCommandBuilder()
     .setName('Translate')
-    .setType(ApplicationCommandType.Message)
-    .setIntegrationTypes([0]),
+    .setType(ApplicationCommandType.Message),
   async execute(interaction) {
     if (!interaction.guild) return false;
     log.info(F, await commandContext(interaction));
-    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+    await interaction.deferReply({ ephemeral: true });
 
     const targetMessage = interaction.targetMessage.content;
 
