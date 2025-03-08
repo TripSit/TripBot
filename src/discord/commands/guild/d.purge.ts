@@ -9,6 +9,7 @@ import {
   InteractionEditReplyOptions,
   InteractionReplyOptions,
   InteractionUpdateOptions,
+  MessageFlags,
   PermissionFlagsBits,
   SlashCommandBuilder,
   Snowflake,
@@ -214,6 +215,7 @@ export const dPurge: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('purge')
     .setDescription('Purge messages from the server.')
+    .setIntegrationTypes([0])
     .addSubcommand(subcommand => subcommand
       .setName('messages')
       .setDescription('Purge messages from the server')
@@ -225,7 +227,8 @@ export const dPurge: SlashCommand = {
     log.info(F, await commandContext(interaction));
     const command = interaction.options.getSubcommand() as 'messages';
     // By default we want to make the reply private
-    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('private') !== false) });
+    const ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined;
+    await interaction.deferReply({ flags: ephemeral });
     // eslint-disable-next-line sonarjs/no-small-switch
     switch (command) {
       case 'messages': {

@@ -1,6 +1,7 @@
 import {
   ChannelType,
   GuildMember,
+  MessageFlags,
   SlashCommandBuilder,
   TextChannel,
 } from 'discord.js';
@@ -14,6 +15,7 @@ export const dWatchUser: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('watch')
     .setDescription('Get notified when a user says something')
+    .setIntegrationTypes([0])
     .addSubcommand(subcommand => subcommand
       .setName('add')
       .setDescription('Set a Watch on a user.')
@@ -37,7 +39,7 @@ export const dWatchUser: SlashCommand = {
         .setRequired(true))),
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
     if (!interaction.guild) {
       await interaction.editReply({ content: 'This command can only be used in a server!' });

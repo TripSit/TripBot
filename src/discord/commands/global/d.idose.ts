@@ -7,6 +7,7 @@ import {
 } from 'discord.js';
 import {
   ChannelType,
+  MessageFlags,
 } from 'discord-api-types/v10';
 import { drug_mass_unit, drug_roa } from '@prisma/client';
 import { idose } from '../../../global/commands/g.idose';
@@ -22,6 +23,8 @@ export const dIdose: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('idose')
     .setDescription('Your personal dosage information!')
+    .setContexts([0, 1, 2])
+    .setIntegrationTypes([0, 1])
     .addSubcommand(subcommand => subcommand
       .setName('set')
       .setDescription('Record when you dosed something')
@@ -72,8 +75,8 @@ export const dIdose: SlashCommand = {
         .setRequired(true))),
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
-
-    await interaction.deferReply({ ephemeral: (interaction.channel?.type !== ChannelType.DM) });
+    const ephemeral = interaction.channel?.type !== ChannelType.DM ? MessageFlags.Ephemeral : undefined;
+    await interaction.deferReply({ flags: ephemeral });
     const command = interaction.options.getSubcommand() as 'get' | 'set' | 'delete';
     const embed = embedTemplate();
     const book = [] as EmbedBuilder[];
