@@ -24,16 +24,6 @@ import {
   TextChannel,
   PermissionResolvable,
   MessageMentionTypes,
-  InteractionDeferReplyOptions,
-  APIModalInteractionResponseCallbackData,
-  JSONEncodable,
-  ModalComponentData,
-  AwaitModalSubmitOptions,
-  CacheType,
-  InteractionEditReplyOptions,
-  InteractionReplyOptions,
-  MessagePayload,
-  MessageFlags,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
 import { DateTime } from 'luxon';
@@ -85,9 +75,6 @@ async function tripsitmodeOn(
       },
     });
   }
-
-  // Fix tripsitmode causing errors if no channel has been set
-  if (!tripsitChannel || !(tripsitChannel instanceof TextChannel)) return false;
 
   const channelPerms = await checkChannelPermissions(tripsitChannel, [
     'ViewChannel' as PermissionResolvable,
@@ -211,7 +198,7 @@ async function tripsitmodeOn(
     log.debug(F, `ThreadHelpUser: ${threadHelpUser.name}`);
 
     if (threadHelpUser.id) {
-      await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+      await interaction.deferReply({ ephemeral: true });
       await needsHelpMode(interaction, target);
       log.debug(F, 'Added needshelp to user');
       let roleTripsitter = {} as Role;
@@ -351,7 +338,7 @@ async function tripsitmodeOn(
   await interaction.awaitModalSubmit({ filter, time: 0 })
     .then(async i => {
       if (i.customId.split('~')[1] !== interaction.id) return;
-      await i.deferReply({ flags: MessageFlags.Ephemeral });
+      await i.deferReply({ ephemeral: true });
       const triage = i.fields.getTextInputValue('triageInput');
       const intro = i.fields.getTextInputValue('introInput');
 
@@ -378,7 +365,6 @@ export const tripsitmode: SlashCommand = {
     .setDescription(
       'This command will apply the NeedsHelp role onto a user, and remove other roles!',
     )
-    .setIntegrationTypes([0])
     .addSubcommand(subcommand => subcommand
       .setName('on')
       .setDescription('Turn on tripsit mode for a user')
@@ -412,18 +398,18 @@ export const tripsitmode: SlashCommand = {
         member: interaction.member,
         user: interaction.user,
         channel: interaction.channel,
-        deferReply: (content: InteractionDeferReplyOptions & { withResponse: true; }) => interaction.deferReply(content),
-        reply: (content: string | MessagePayload | InteractionReplyOptions) => {
+        deferReply: content => interaction.deferReply(content),
+        reply: content => {
           if (interaction.deferred || interaction.replied) {
             return interaction.followUp(content);
           }
           return interaction.reply(content);
         },
-        editReply: (content: string | MessagePayload | InteractionEditReplyOptions) => interaction.editReply(content),
-        followUp: (content: string | MessagePayload | InteractionReplyOptions) => interaction.followUp(content),
-        showModal: (modal: APIModalInteractionResponseCallbackData | ModalComponentData | JSONEncodable<APIModalInteractionResponseCallbackData>) => interaction.showModal(modal),
-        awaitModalSubmit: (params: AwaitModalSubmitOptions<ModalSubmitInteraction<CacheType>>) => interaction.awaitModalSubmit(params),
-      } as unknown as ButtonInteraction;
+        editReply: content => interaction.editReply(content),
+        followUp: content => interaction.followUp(content),
+        showModal: modal => interaction.showModal(modal),
+        awaitModalSubmit: params => interaction.awaitModalSubmit(params),
+      } as ButtonInteraction;
       tripsitmeUserClose(testInteraction);
     }
     return true;

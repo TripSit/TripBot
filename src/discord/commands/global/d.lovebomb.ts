@@ -14,12 +14,11 @@ const heartEmojis = [
 export const dlovebomb: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('lovebomb')
-    .setDescription('Spread some love')
-    .setIntegrationTypes([0]),
+    .setDescription('Spread some love'),
 
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
-    await interaction.deferReply({});
+    await interaction.deferReply({ ephemeral: false });
     const message = `${[...heartEmojis].sort(() => 0.5 - Math.random()).slice(0, 30).join(' ')}`;
     await interaction.editReply(message);
 
