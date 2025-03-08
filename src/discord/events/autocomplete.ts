@@ -315,12 +315,8 @@ async function autocompleteTimezone(interaction: AutocompleteInteraction) {
 }
 
 async function autocompleteConvert(interaction: AutocompleteInteraction) {
-  let firstUnit: string = '';
-  let focusedOption = false;
-  if (interaction.options.data[1] !== undefined) {
-    firstUnit = interaction.options.data[1].value as string;
-    focusedOption = interaction.options.data[1].focused as boolean;
-  }
+  const firstUnit = interaction.options.data[1].value;
+  const focusedOption = interaction.options.data[1].focused;
 
   let displayUnits = [];
   let measure = '';
@@ -760,10 +756,7 @@ async function autocompleteQuotes(interaction: AutocompleteInteraction) {
     const initialQuotes = quoteList.slice(0, 25) as {
       quote: string;
     }[];
-    const listResults = initialQuotes.map(choice => ({
-      name: choice.quote.slice(0, 100),
-      value: choice.quote.slice(0, 100),
-    }));
+    const listResults = initialQuotes.map(choice => ({ name: choice.quote.slice(0, 100), value: choice.quote.slice(0, 100) }));
     // log.debug(F, `list_results: ${listResults}`);
     // log.debug(F, `Returing ${listResults.length} quotes`);
     await interaction.respond(listResults);

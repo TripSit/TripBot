@@ -3,7 +3,6 @@ import {
 } from 'discord.js';
 import {
   ApplicationCommandType,
-  MessageFlags,
 } from 'discord-api-types/v10';
 import { UserCommand } from '../../@types/commandDef';
 import commandContext from '../../utils/context';
@@ -14,12 +13,11 @@ const F = f(__filename);
 export const uReport: UserCommand = {
   data: new ContextMenuCommandBuilder()
     .setName('TripBot Report User')
-    .setType(ApplicationCommandType.User)
-    .setIntegrationTypes([0]),
+    .setType(ApplicationCommandType.User),
   async execute(interaction) {
     if (!interaction.guild) return false;
     log.info(F, await commandContext(interaction));
-    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+    await interaction.deferReply({ ephemeral: true });
 
     // Get the guild
     const { guild } = interaction;
