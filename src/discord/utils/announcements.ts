@@ -1,5 +1,6 @@
 /* eslint-disable max-len */
 import {
+  DMChannel,
   Message,
   MessageReaction,
   TextChannel,
@@ -385,7 +386,9 @@ export async function announcements(message:Message) {
       }
       await message.channel.sendTyping(); // This method automatically stops typing after 10 seconds, or when a message is sent.
       setTimeout(async () => {
-        await (message.channel.send({ embeds: [embed] }));
+        if (message.channel instanceof TextChannel || message.channel instanceof DMChannel) {
+          await (message.channel.send({ embeds: [embed] }));
+        } else log.error(F, 'Cannot send typing in this channel type.');
       }, 3000);
     }
   }
