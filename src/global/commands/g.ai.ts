@@ -865,7 +865,7 @@ async function openAiChat(
       }
     }
 
-    response = responseMessage.content ?? 'Sorry, I\'m not sure how to respond to that.';
+    response = responseMessage.content?.toString() ?? 'Sorry, I\'m not sure how to respond to that.';
   }
 
   // log.debug(F, `response: ${response}`);
@@ -1058,7 +1058,7 @@ export async function aiFlairMod(
     promptTokens = chatCompletion.usage?.prompt_tokens ?? 0;
     completionTokens = chatCompletion.usage?.completion_tokens ?? 0;
 
-    response = responseMessage.content ?? 'Sorry, I\'m not sure how to respond to that.';
+    response = responseMessage.content?.toString() ?? 'Sorry, I\'m not sure how to respond to that.';
   }
 
   // log.debug(F, `response: ${response}`);
@@ -1178,7 +1178,7 @@ export async function aiTranslate(
     promptTokens = chatCompletion.usage?.prompt_tokens ?? 0;
     completionTokens = chatCompletion.usage?.completion_tokens ?? 0;
 
-    response = responseMessage.content ?? 'Sorry, I\'m not sure how to respond to that.';
+    response = responseMessage.content?.toString() ?? 'Sorry, I\'m not sure how to respond to that.';
   }
 
   // log.debug(F, `response: ${response}`);
