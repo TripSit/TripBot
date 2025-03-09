@@ -3,7 +3,6 @@ import { stripIndents } from 'common-tags';
 import {
   ButtonInteraction,
   Colors,
-  MessageFlags,
   TextChannel,
 } from 'discord.js';
 import { embedTemplate } from './embedTemplate';
@@ -22,7 +21,7 @@ export default verifyButton;
  * @return {Promise<void>}
 * */
 export async function verifyButton(interaction:ButtonInteraction): Promise<void> {
-  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+  await interaction.deferReply({ ephemeral: true });
 
   if (!interaction.guild) {
     await interaction.editReply({ content: 'This command can only be used in a server!' });

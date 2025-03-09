@@ -55,8 +55,7 @@ export namespace Wordle {
     // The valid puzzle number is the number of days since the start date
     const validPuzzleNumber = Math.floor((currentDate.getTime() - startDate.getTime()) / millisecondsPerDay);
 
-    log.debug(F, `Valid Wordle puzzle numbers: ${validPuzzleNumber} 
-      (UTC+14 Newest Puzzle), ${validPuzzleNumber - 1} (Rest of World), ${validPuzzleNumber - 2} (Yesterday)`);
+    log.debug(F, `Valid Wordle puzzle numbers: ${validPuzzleNumber} (UTC+14 Newest Puzzle), ${validPuzzleNumber - 1} (Rest of World), ${validPuzzleNumber - 2} (Yesterday)`);
     return [validPuzzleNumber, validPuzzleNumber - 1, validPuzzleNumber - 2];
   }
 
@@ -132,8 +131,7 @@ export namespace Wordle {
 
     // Find the total number of games played by counting the number of scores
     stats.gamesPlayed = scores.length;
-    // Find the number of win rate by counting the number of scores with a score
-    //  greater than 0 and dividing by the total number of games played
+    // Find the number of win rate by counting the number of scores with a score greater than 0 and dividing by the total number of games played
     const wins = scores.filter(score => score.score > 0).length;
     stats.winRate = wins / stats.gamesPlayed;
     // Find the current streak by counting the number of consecutive wins (based off the puzzle number)
@@ -146,8 +144,7 @@ export namespace Wordle {
 
     // Iterate over the sorted scores
     for (let i = 0; i < scores.length; i += 1) {
-      // If the score is greater than 0 and the puzzle numbers are
-      // consecutive or it's the first puzzle, increment the current streak
+      // If the score is greater than 0 and the puzzle numbers are consecutive or it's the first puzzle, increment the current streak
       if (scores[i].score > 0 && (i === 0 || scores[i].puzzle === scores[i - 1].puzzle + 1)) {
         currentStreak += 1;
       } else {
@@ -337,8 +334,7 @@ export namespace Connections {
     // The valid puzzle number is the number of days since the start date
     const validPuzzleNumber = Math.floor((currentDate.getTime() - startDate.getTime()) / millisecondsPerDay);
 
-    log.debug(F, `Valid Wordle puzzle numbers: ${validPuzzleNumber} 
-      (UTC+14 Newest Puzzle), ${validPuzzleNumber - 1} (Rest of World), ${validPuzzleNumber - 2} (Yesterday)`);
+    log.debug(F, `Valid Wordle puzzle numbers: ${validPuzzleNumber} (UTC+14 Newest Puzzle), ${validPuzzleNumber - 1} (Rest of World), ${validPuzzleNumber - 2} (Yesterday)`);
     return [validPuzzleNumber, validPuzzleNumber - 1, validPuzzleNumber - 2];
   }
 
@@ -413,8 +409,7 @@ export namespace Connections {
 
     // Find the total number of games played by counting the number of scores
     stats.gamesPlayed = scores.length;
-    // Find the number of win rate by counting the number of scores
-    // with a score greater than 0 and dividing by the total number of games played
+    // Find the number of win rate by counting the number of scores with a score greater than 0 and dividing by the total number of games played
     const wins = scores.filter(score => score.score < 4).length;
     stats.winRate = wins / stats.gamesPlayed;
     // Sort the scores by puzzle number in ascending order
@@ -425,8 +420,7 @@ export namespace Connections {
     let submissionStreak = 0;
     // Iterate over the sorted scores
     for (let i = 0; i < scores.length; i += 1) {
-      // If the score is greater than 0 and the puzzle numbers
-      // are consecutive or it's the first puzzle, increment the current streak
+      // If the score is greater than 0 and the puzzle numbers are consecutive or it's the first puzzle, increment the current streak
       if (scores[i].score < 4 && (i === 0 || scores[i].puzzle === scores[i - 1].puzzle + 1)) {
         currentStreak += 1;
       } else {
@@ -617,8 +611,7 @@ export namespace TheMini {
       dayBeforeYesterday.toISOString().substring(0, 10), // Yesterday
     ];
 
-    log.debug(F, `Valid Mini puzzle dates: ${validDates[0]} (UTC+14 Newest Puzzle),
-       ${validDates[1]} (Rest of World), ${validDates[2]} (Yesterday)`);
+    log.debug(F, `Valid Mini puzzle dates: ${validDates[0]} (UTC+14 Newest Puzzle), ${validDates[1]} (Rest of World), ${validDates[2]} (Yesterday)`);
     return validDates;
   }
 
@@ -711,8 +704,7 @@ export namespace TheMini {
 
     // Iterate over the sorted scores
     for (let i = 0; i < scores.length; i += 1) {
-      // If the score is greater than 0 and the puzzle dates are
-      // consecutive or it's the first puzzle, increment the current streak
+      // If the score is greater than 0 and the puzzle dates are consecutive or it's the first puzzle, increment the current streak
       if (scores[i].score > 0 && (i === 0 || isNextDay(scores[i - 1].puzzle, scores[i].puzzle))) {
         currentStreak += 1;
       } else {
@@ -793,7 +785,7 @@ export namespace TheMini {
   }
 
   export async function process(userId: string, messageContent: string): Promise<boolean> {
-    const theMiniScorePattern = /(https:\/\/www\.nytimes\.com\/badges\/games\/mini\.html\?d=\d{4}-\d{2}-\d{2}&t=\d+&c=[a-f0-9]+&smid=url-share)|(https:\/\/www\.nytimes\.com\/crosswords\/game\/mini)/; // eslint-disable-line max-len
+    const theMiniScorePattern = /(https:\/\/www\.nytimes\.com\/badges\/games\/mini\.html\?d=\d{4}-\d{2}-\d{2}&t=\d+&c=[a-f0-9]+&smid=url-share)|(https:\/\/www\.nytimes\.com\/crosswords\/game\/mini)/;
     log.debug(F, `Processing message for The Mini score: ${messageContent}`);
     const match = messageContent.match(theMiniScorePattern);
     if (match) {

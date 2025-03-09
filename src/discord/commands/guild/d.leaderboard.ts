@@ -6,7 +6,6 @@ import {
   // GuildMember,
   SlashCommandBuilder,
   AttachmentBuilder,
-  MessageFlags,
 } from 'discord.js';
 import { experience_category, experience_type } from '@prisma/client';
 import Canvas from '@napi-rs/canvas';
@@ -35,7 +34,6 @@ export const dLeaderboard: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('leaderboard')
     .setDescription('Show the experience leaderboard')
-    .setIntegrationTypes([0])
     .addStringOption(option => option.setName('category')
       .setDescription('What category of experience?')
       .addChoices(
@@ -55,11 +53,10 @@ export const dLeaderboard: SlashCommand = {
     //     { name: 'Weekly', value: 'WEEK' },
     //   ))
     .addBooleanOption(option => option.setName('ephemeral')
-      .setDescription('Set to "True" to show the response only to you')) as SlashCommandBuilder,
+      .setDescription('Set to "True" to show the response only to you')),
   async execute(interaction) { // eslint-disable-line
     log.info(F, await commandContext(interaction));
-    const ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined;
-    await interaction.deferReply({ flags: ephemeral });
+    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
     const startTime = Date.now();
     if (!interaction.guild) {
       await interaction.editReply('You can only use this command in a guild!');
@@ -171,8 +168,7 @@ export const dLeaderboard: SlashCommand = {
       if (categoryData) {
         let count = 0;
         let userCount = 0;
-        // log.debug(F, `Category: ${categoryChoice} | Type: ${typeChoice}
-        // | Count: ${count} | UserCount: ${userCount}`);
+        // log.debug(F, `Category: ${categoryChoice} | Type: ${typeChoice} | Count: ${count} | UserCount: ${userCount}`);
         // log.debug(F, `CategoryData: ${JSON.stringify(categoryData.length, null, 2)}`);
         while (count < 10) {
           const user = userCount < categoryData.length ? categoryData[userCount] : null;
@@ -289,9 +285,7 @@ export const dLeaderboard: SlashCommand = {
           // // Draw a plain bar without any user  data
           //   context.fillStyle = '#232323';
           //   context.beginPath();
-          //   context.roundRect(bar.x + (avatarOffset - (bar.height / 2)),
-          //  bar.y, bar.width - (avatarOffset - (bar.height / 2)),
-          //  bar.height, [bar.height / 2, 19, 19, bar.height / 2]); // eslint-disable-line max-len
+          //   context.roundRect(bar.x + (avatarOffset - (bar.height / 2)), bar.y, bar.width - (avatarOffset - (bar.height / 2)), bar.height, [bar.height / 2, 19, 19, bar.height / 2]); // eslint-disable-line max-len
           //   context.fill();
           //   context.fillStyle = '#ffffff';
           //   context.textBaseline = 'middle';

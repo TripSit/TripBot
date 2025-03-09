@@ -2,7 +2,6 @@ import {
   SlashCommandBuilder,
   ChatInputCommandInteraction,
   Colors,
-  MessageFlags,
 } from 'discord.js';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
@@ -15,18 +14,16 @@ export const dImdb: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('imdb')
     .setDescription('Search imdb')
-    .setIntegrationTypes([0])
     .addStringOption(option => option
       .setName('title')
       .setDescription('Movie / Series title')
       .setRequired(true))
     .addBooleanOption(option => option.setName('ephemeral')
-      .setDescription('Set to "True" to show the response only to you')) as SlashCommandBuilder,
+      .setDescription('Set to "True" to show the response only to you')),
 
   async execute(interaction:ChatInputCommandInteraction) {
     log.info(F, await commandContext(interaction));
-    const ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined;
-    await interaction.deferReply({ flags: ephemeral });
+    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
 
     const title = interaction.options.getString('title', true);
     if (!title) {

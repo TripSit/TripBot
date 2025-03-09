@@ -2,7 +2,6 @@ import {
   SlashCommandBuilder,
   GuildMember,
   ChatInputCommandInteraction,
-  MessageFlags,
 } from 'discord.js';
 import { DateTime } from 'luxon';
 import { SlashCommand } from '../../@types/commandDef';
@@ -18,8 +17,7 @@ async function birthdayGet(
   member:GuildMember,
 ) {
   log.info(F, await commandContext(interaction));
-  // const ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined
-  // await interaction.deferReply({ flags: ephemeral });
+  // await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
   const embed = embedTemplate();
 
   const response = await birthday('get', member.id, null, null);
@@ -129,7 +127,6 @@ export const dBirthday: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('birthday')
     .setDescription('Birthday info!')
-    .setIntegrationTypes([0])
     .addSubcommand(subcommand => subcommand
       .setName('get')
       .setDescription('Get someone\'s birthday!')
@@ -168,10 +165,9 @@ export const dBirthday: SlashCommand = {
     log.info(F, await commandContext(interaction));
     let command = interaction.options.getSubcommand() as 'get' | 'set' | undefined;
     if (command === 'set') {
-      await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+      await interaction.deferReply({ ephemeral: true });
     } else {
-      const ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined;
-      await interaction.deferReply({ flags: ephemeral });
+      await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
     }
     let member = interaction.options.getMember('user');
     const monthInput = interaction.options.getString('month');
