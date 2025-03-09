@@ -1,5 +1,6 @@
 import {
   GuildMember,
+  MessageFlags,
   Role,
   SlashCommandBuilder,
   TextChannel,
@@ -81,6 +82,7 @@ export const dRole: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('role')
     .setDescription('Add or remove roles.')
+    .setIntegrationTypes([0])
     .addSubcommand(subcommand => subcommand
       .setName('add')
       .setDescription('Add a role.')
@@ -101,7 +103,7 @@ export const dRole: SlashCommand = {
         .setDescription('(Mod only, defaults to you) The user to remove the role.'))),
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
     if (!interaction.guild) return false;
     const command = interaction.options.getSubcommand();
     let role = {} as Role;

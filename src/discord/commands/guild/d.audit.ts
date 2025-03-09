@@ -1,6 +1,7 @@
 import {
   Role,
   SlashCommandBuilder,
+  TextChannel,
 } from 'discord.js';
 import { SlashCommand } from '../../@types/commandDef';
 import commandContext from '../../utils/context';
@@ -11,16 +12,20 @@ const F = f(__filename);
 export const dTemplate: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('audit')
-    .setDescription('Will convert helpers into the new role'),
+    .setDescription('Will convert helpers into the new role')
+    .setIntegrationTypes([0]),
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
 
     await interaction.reply({ content: 'okay' });
 
+    if (!(interaction.channel instanceof TextChannel)) return false;
+
     // Get a list of people on the guild with the Helper role
     const helpers = await interaction.guild?.roles.fetch(env.ROLE_HELPER) as Role;
 
     // Send a message to the channel with a list of the helper username and IDs
+
     await interaction.channel?.send({
       embeds: [
         embedTemplate()

@@ -3,6 +3,7 @@ import {
   Colors,
   GuildMember,
   MessageContextMenuCommandInteraction,
+  MessageFlags,
   SlashCommandBuilder,
   TextChannel,
 } from 'discord.js';
@@ -119,7 +120,7 @@ async function get(interaction:ChatInputCommandInteraction) {
     log.debug(F, 'Quote not found');
     await interaction.reply({
       content: 'Quote not found!',
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
@@ -150,7 +151,6 @@ async function get(interaction:ChatInputCommandInteraction) {
       color: target.displayColor,
       timestamp: `${quoteData.date.toISOString()}`,
     }],
-    ephemeral: false,
   });
 }
 
@@ -166,7 +166,7 @@ async function random(interaction:ChatInputCommandInteraction) {
   if (!quotes) {
     await interaction.reply({
       content: 'No quotes found!',
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
@@ -194,7 +194,6 @@ async function random(interaction:ChatInputCommandInteraction) {
         timestamp: `${quote.date.toISOString()}`,
       },
     ],
-    ephemeral: false,
   });
 }
 
@@ -217,7 +216,7 @@ async function del(interaction:ChatInputCommandInteraction) {
     log.debug(F, 'Quote not found');
     await interaction.reply({
       content: 'Quote not found!',
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
@@ -247,7 +246,7 @@ async function del(interaction:ChatInputCommandInteraction) {
     log.debug(F, 'User does not own quote');
     await interaction.reply({
       content: 'You do not own this quote! You can only delete your own quotes.',
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
@@ -296,13 +295,13 @@ async function del(interaction:ChatInputCommandInteraction) {
       },
       color: Colors.Red,
     }],
-    ephemeral: true,
+    flags: MessageFlags.Ephemeral,
   });
 }
 
 export async function quoteAdd(interaction:MessageContextMenuCommandInteraction) {
   log.info(F, await commandContext(interaction));
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
   if (!interaction.guild) return false;
   if (interaction.guild.id !== env.DISCORD_GUILD_ID) return false;
   await interaction.targetMessage.fetch(); // Fetch the message, just in case
@@ -463,6 +462,7 @@ export const dQuote: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('quote')
     .setDescription('Manage quotes')
+    .setIntegrationTypes([0])
     .addSubcommand(subcommand => subcommand
       .setDescription('Search quotes!')
       .addStringOption(option => option.setName('quote')
@@ -497,7 +497,7 @@ export const dQuote: SlashCommand = {
       default:
         await interaction.reply({
           content: 'Unknown subcommand!',
-          ephemeral: true,
+          flags: MessageFlags.Ephemeral,
         });
         break;
     }

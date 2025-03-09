@@ -9,13 +9,14 @@ import {
   Colors,
   PermissionResolvable,
   Collection,
+  MessageFlags,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
 import { SlashCommandBeta } from '../../@types/commandDef';
 import commandContext from '../../utils/context';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { checkChannelPermissions } from '../../utils/checkPermissions';
-import { sleep } from './d.bottest';
+import { sleep } from '../../utils/sleep';
 
 const F = f(__filename);
 
@@ -285,6 +286,8 @@ export async function countMessage(message: Message): Promise<void> {
     // await message.delete();
     return;
   }
+
+  if (!(message.channel instanceof TextChannel)) return;
 
   if (countingData.current_number === -1) {
     await message.reply('Please wait for the new game to start');
@@ -614,6 +617,7 @@ export const counting: SlashCommandBeta = {
   data: new SlashCommandBuilder()
     .setName('counting')
     .setDescription('All things with counting!')
+    .setIntegrationTypes([0])
     .addSubcommand(subcommand => subcommand
       .setName('setup')
       .setDescription('Set up a Counting channel!')
@@ -652,7 +656,8 @@ export const counting: SlashCommandBeta = {
       .setDescription('End the counting game!')),
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
-    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') !== false) });
+    const ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined;
+    await interaction.deferReply({ flags: ephemeral });
     const command = interaction.options.getSubcommand();
     let response = { content: 'This command has not been setup yet!' } as InteractionEditReplyOptions;
     if (command === 'setup') {
