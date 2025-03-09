@@ -6,7 +6,6 @@ import {
   PermissionResolvable,
   GuildMember,
   Channel,
-  MessageFlags,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
 import { SlashCommand } from '../../@types/commandDef';
@@ -388,7 +387,6 @@ export const dBridge: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('bridge')
     .setDescription('Manage the bridge between two discord channels')
-    .setIntegrationTypes([0])
     .addSubcommand(subcommand => subcommand
       .setName('create')
       .setDescription('Create a bridge between two discord channels')
@@ -417,7 +415,7 @@ export const dBridge: SlashCommand = {
         .setDescription('Confirmation Code'))),
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
-    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+    await interaction.deferReply({ ephemeral: false });
     const embed = embedTemplate()
       .setTitle('Bridge')
       .setColor(Colors.DarkPurple);

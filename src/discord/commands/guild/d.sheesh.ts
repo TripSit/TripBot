@@ -4,7 +4,6 @@
 import {
   SlashCommandBuilder,
   GuildMember,
-  MessageFlags,
 } from 'discord.js';
 import { SlashCommand } from '../../@types/commandDef';
 import commandContext from '../../utils/context';
@@ -15,7 +14,6 @@ export const dSheesh: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('sheesh')
     .setDescription('Let\'s sheesh!')
-    .setIntegrationTypes([0])
     .addSubcommand(subcommand => subcommand
       .setName('lightjoint')
       .setDescription('Let\'s sheesh!')
@@ -32,7 +30,7 @@ export const dSheesh: SlashCommand = {
         .setRequired(true))),
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
-    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+    await interaction.deferReply({ ephemeral: false });
 
     const command = interaction.options.getSubcommand() as 'lightjoint' | 'passjoint';
     const user = interaction.member as GuildMember;

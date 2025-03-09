@@ -1,6 +1,5 @@
 import {
   GuildMember,
-  MessageFlags,
   Role,
   SlashCommandBuilder,
 } from 'discord.js';
@@ -16,17 +15,15 @@ export const dLast: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('last')
     .setDescription('Get the users last location/messages')
-    .setIntegrationTypes([0])
     .addUserOption(option => option
       .setName('user')
       .setDescription('User to look up')
       .setRequired(true))
     .addBooleanOption(option => option.setName('ephemeral')
-      .setDescription('Set to "True" to show the response only to you')) as SlashCommandBuilder,
+      .setDescription('Set to "True" to show the response only to you')),
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
-    const ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined;
-    await interaction.deferReply({ flags: ephemeral });
+    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
     // Only run on Tripsit or DM, we don't want to snoop on other guilds ( ͡~ ͜ʖ ͡°)
     if (interaction.guild) {
       if (interaction.guild.id !== env.DISCORD_GUILD_ID.toString()) {
