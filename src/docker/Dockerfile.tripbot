@@ -34,8 +34,7 @@ COPY --chown=node:node package*.json ./
 
 # Install app dependencies using the `npm ci` command instead of `npm install`
 # Use NPM CI even though this may be your first time, cuz package-lock already thinks you installed stuff
-# RUN npm ci
-RUN npm install
+RUN npm ci
 
 # Bundle app source
 COPY --chown=node:node . .
@@ -83,8 +82,7 @@ COPY --chown=node:node . .
 RUN tsc
 
 # Running `npm ci` removes the existing node_modules directory and passing in --only=production ensures that only the production dependencies are installed. This ensures that the node_modules directory is as optimized as possible
-# RUN npm ci --omit:dev && npm cache clean --force
-RUN npm install --only=production && npm cache clean --force
+RUN npm ci --omit:dev && npm cache clean --force
 
 ###################
 # PRODUCTION
