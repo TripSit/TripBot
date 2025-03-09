@@ -5,7 +5,6 @@ import {
   EmbedBuilder,
   SlashCommandBuilder,
   ColorResolvable,
-  MessageFlags,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
 import { SlashCommand } from '../../@types/commandDef';
@@ -268,8 +267,6 @@ export const dCalc: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('calc')
     .setDescription('Get drug dosage information')
-    .setContexts([0, 1, 2])
-    .setIntegrationTypes([0, 1])
     // BEGIN BENZO SUBCOMMAND
     .addSubcommand(subcommand => subcommand
       .setName('benzo')
@@ -401,8 +398,7 @@ export const dCalc: SlashCommand = {
 
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
-    const ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined;
-    await interaction.deferReply({ flags: ephemeral });
+    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
     const subcommand = interaction.options.getSubcommand();
 
     if (subcommand === 'benzo') {

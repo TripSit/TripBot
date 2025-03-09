@@ -37,7 +37,6 @@ import {
 import {
   APIInteractionDataResolvedChannel,
   ChannelType,
-  MessageFlags,
 } from 'discord-api-types/v10';
 import { stripIndents } from 'common-tags';
 import {
@@ -2078,13 +2077,6 @@ export async function aiMessage(
     return;
   }
 
-  if (messageData.channel.type !== ChannelType.GuildText) {
-    log.debug(F, 'Message was not in a text channel, returning');
-    return;
-  }
-
-  const channel = messageData.channel as TextChannel;
-
   // Check if the channel is linked to a persona
   const aiLinkData = await getLinkedChannel(messageData.channel);
   // log.debug(F, `aiLinkData: ${JSON.stringify(aiLinkData, null, 2)}`);
@@ -2174,10 +2166,10 @@ export async function aiMessage(
   // log.debug(F, `attachmentInfo: ${JSON.stringify(attachmentInfo, null, 2)}`);
   // log.debug(F, `Sending messages to API: ${JSON.stringify(messageList, null, 2)}`);
 
-  await channel.send({ content: '', flags: MessageFlags.SuppressNotifications });
+  await messageData.channel.sendTyping();
 
   const typingInterval = setInterval(() => {
-    channel.send({ content: '', flags: MessageFlags.SuppressNotifications });
+    messageData.channel.sendTyping();
   }, 9000); // Start typing indicator every 9 seconds
   let response = '';
   let promptTokens = 0;
@@ -2259,10 +2251,6 @@ export async function aiMessage(
     // const sleepTime = (wordCount / wpm) * 60000;
     // // log.debug(F, `Typing ${wordCount} at ${wpm} wpm will take ${sleepTime / 1000} seconds`);
     // await sleep(sleepTime > 10000 ? 5000 : sleepTime); // Don't wait more than 5 seconds
-    if (response.length === 0) {
-      response = stripIndents`This is unexpected, but somehow I don't appear to have anything to say! 
-      By the way, this is an error message and something went wrong. Please try again.`;
-    }
     const replyMessage = await messageData.reply({
       content: response.slice(0, 2000),
       allowedMentions: { parse: [] },
@@ -2503,7 +2491,6 @@ export const aiCommand: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('ai')
     .setDescription('TripBot\'s AI')
-    .setIntegrationTypes([0])
     .addSubcommand(subcommand => subcommand
       .setDescription('Setup the TripBot AI')
       .setName('setup'))
@@ -2518,7 +2505,7 @@ export const aiCommand: SlashCommand = {
       .setName('help')),
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
-    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+    await interaction.deferReply({ ephemeral: true });
 
     const subcommand = interaction.options.getSubcommand() as | 'setup' | 'personas' | 'privacy' | 'help';
     switch (subcommand) {

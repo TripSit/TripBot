@@ -8,7 +8,6 @@ import {
   GuildMember,
 } from 'discord.js';
 import {
-  MessageFlags,
   TextInputStyle,
 } from 'discord-api-types/v10';
 import { stripIndents } from 'common-tags';
@@ -24,7 +23,6 @@ export const dIssue: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('issue')
     .setDescription('Create issue on github')
-    .setIntegrationTypes([0])
     .addStringOption(option => option
       .setDescription('What type of issue is this?')
       .addChoices(
@@ -53,7 +51,7 @@ export const dIssue: SlashCommand = {
         { name: 'Low', value: 'E2: Low' },
         { name: 'Trivial', value: 'E3: Trivial' },
       )
-      .setName('effort')) as SlashCommandBuilder,
+      .setName('effort')),
   async execute(interaction:ChatInputCommandInteraction) {
     log.info(F, await commandContext(interaction));
     await interaction.showModal(
@@ -84,7 +82,7 @@ export const dIssue: SlashCommand = {
     interaction.awaitModalSubmit({ filter, time: 0 })
       .then(async i => {
         if (i.customId.split('~')[1] !== interaction.id) return;
-        await i.deferReply({ flags: MessageFlags.Ephemeral });
+        await i.deferReply({ ephemeral: true });
         const issueBody = `${i.fields.getTextInputValue('issueBody')}
         
         This issue was submitted by ${(i.member as GuildMember).displayName} in ${i.guild}`;
