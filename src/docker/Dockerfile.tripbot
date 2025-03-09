@@ -1,7 +1,7 @@
 ###################
 # BUILD FOR LOCAL DEVELOPMENT
 ###################
-# In this step we copy over everything we need and install all dependancies
+# In this step we copy over everything we need and install all dependencies
 # We stop at the end of this step in development, so it also includes the deploy command
 # We install jest, eslint and ts-node so we can run tests and lint.
 
@@ -34,7 +34,8 @@ COPY --chown=node:node package*.json ./
 
 # Install app dependencies using the `npm ci` command instead of `npm install`
 # Use NPM CI even though this may be your first time, cuz package-lock already thinks you installed stuff
-RUN npm ci
+# RUN npm ci
+RUN npm install
 
 # Bundle app source
 COPY --chown=node:node . .
@@ -82,7 +83,8 @@ COPY --chown=node:node . .
 RUN tsc
 
 # Running `npm ci` removes the existing node_modules directory and passing in --only=production ensures that only the production dependencies are installed. This ensures that the node_modules directory is as optimized as possible
-RUN npm ci --omit:dev && npm cache clean --force
+# RUN npm ci --omit:dev && npm cache clean --force
+RUN npm install --only=production && npm cache clean --force
 
 ###################
 # PRODUCTION
@@ -114,8 +116,7 @@ COPY --chown=node:node ./assets ./build/assets
 COPY --chown=node:node package*.json ./
 
 # Generate prisma client
-RUN npx prisma generate
-RUN npx prisma generate --schema=./src/prisma/moodle/schema.prisma
+RUN npx prisma generate && npx prisma generate --schema=./src/prisma/moodle/schema.prisma
 
 USER node
 
