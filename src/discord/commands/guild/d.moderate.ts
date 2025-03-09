@@ -33,10 +33,12 @@ import {
   APIActionRowComponent,
   APIButtonComponentWithCustomId,
   DiscordErrorData,
+  InteractionEditReplyOptions,
 } from 'discord.js';
 import {
   TextInputStyle,
   ButtonStyle,
+  MessageFlags,
 } from 'discord-api-types/v10';
 import { stripIndents } from 'common-tags';
 import { user_action_type, user_actions, users } from '@prisma/client';
@@ -1981,7 +1983,7 @@ export async function modModal(
   }
 
   if (isReportAcknowledgement(command)) {
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
     await acknowledgeReportButton(interaction);
     await interaction.editReply({
       embeds: [embedTemplate()
@@ -1992,7 +1994,7 @@ export async function modModal(
   }
 
   if (isInfo(command)) {
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
     const targetData = await db.users.upsert({
       where: {
         discord_id: userId,
@@ -2203,7 +2205,7 @@ export async function modModal(
       if (i.customId.split('~')[2] !== interaction.id) {
         return;
       }
-      await i.deferReply({ ephemeral: true });
+      await i.deferReply({ flags: MessageFlags.Ephemeral });
       try {
         if (command === 'REPORT' || command === 'NOTE') {
           await moderate(interaction, i);
@@ -2310,7 +2312,7 @@ export async function modModal(
         }
       }
       if (!isNote(command) && !isReport(command)) {
-        await i.editReply(await moderate(interaction, i));
+        await i.editReply(await moderate(interaction, i) as InteractionEditReplyOptions);
       }
     })
     .catch(async err => {
@@ -2354,6 +2356,7 @@ export const mod: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('moderate')
     .setDescription('Moderation actions!')
+    .setIntegrationTypes([0])
     .addSubcommand(subcommand => subcommand
       .setDescription('Link one user to another.')
       .addStringOption(option => option
@@ -2373,7 +2376,7 @@ export const mod: SlashCommand = {
         embeds: [embedTemplate()
           .setColor(Colors.Red)
           .setTitle('This command can only be used in a server!')],
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
       return false;
     }
@@ -2397,7 +2400,7 @@ export const mod: SlashCommand = {
             .setDescription(cooperativeExplanation)
             .setColor(Colors.Red),
         ],
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
       return false;
     }
@@ -2420,7 +2423,7 @@ export const mod: SlashCommand = {
           > **Nickname:** MoonBear`);
         await interaction.reply({
           embeds: [embed],
-          ephemeral: true,
+          flags: MessageFlags.Ephemeral,
         });
         return false;
       }
@@ -2436,7 +2439,7 @@ export const mod: SlashCommand = {
       > **Nickname:** MoonBear`);
         await interaction.reply({
           embeds: [embed],
-          ephemeral: true,
+          flags: MessageFlags.Ephemeral,
         });
         return false;
       }
@@ -2460,7 +2463,7 @@ export const mod: SlashCommand = {
           await interaction.reply({
             content: stripIndents`Failed to link thread, I could not find this user in the guild, \
     and they do not exist in the database!`,
-            ephemeral: true,
+            flags: MessageFlags.Ephemeral,
           });
           return false;
         }
@@ -2476,7 +2479,7 @@ export const mod: SlashCommand = {
         await interaction.reply({
           content: stripIndents`Failed to link thread, this user has an existing thread: ${existingThread}
           Use the override parameter if you're sure!`,
-          ephemeral: true,
+          flags: MessageFlags.Ephemeral,
         });
       }
     }

@@ -119,7 +119,8 @@ export async function levels(
       if (!userExperience) continue;
       const levelData = await getTotalLevel(userExperience.total_points);
       // log.debug(F, `levelData: ${JSON.stringify(levelData, null, 2)}`);
-      // log.debug(F, `${discordId} is rank ${userRank} ${type} ${category} level ${levelData.level} userExperience: ${JSON.stringify(userExperience, null, 2)}`);
+      // log.debug(F, `${discordId} is rank ${userRank} ${type} ${category} \
+      // level ${levelData.level} userExperience: ${JSON.stringify(userExperience, null, 2)}`);
       const nextLevel = await expForNextLevel(levelData.level);
       // log.debug(F, `nextLevel: ${nextLevel}`);
       results[typeKey][categoryKey] = {
