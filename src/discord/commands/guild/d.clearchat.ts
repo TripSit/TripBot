@@ -12,7 +12,6 @@ export const dClearchat: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('clear-chat')
     .setDescription('This will delete the last 100 messages!')
-    .setIntegrationTypes([0])
     .addIntegerOption(option => option
       .setDescription('Number of messages to delete (default/max: 99)')
       .setName('count'))
@@ -21,10 +20,10 @@ export const dClearchat: SlashCommand = {
       .setName('delete-threads'))
     .addBooleanOption(option => option
       .setDescription('Delete threads? (default: true)')
-      .setName('delete-archived-threads')) as SlashCommandBuilder,
+      .setName('delete-archived-threads')),
   async execute(interaction:ChatInputCommandInteraction) {
     log.info(F, await commandContext(interaction));
-    await interaction.deferReply({ });
+    await interaction.deferReply({ ephemeral: false });
     if (!interaction.channel) {
       await interaction.editReply({ content: 'This command can only be used in a server!' });
       return false;

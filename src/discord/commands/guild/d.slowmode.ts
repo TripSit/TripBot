@@ -2,7 +2,6 @@ import {
   SlashCommandBuilder,
   TextChannel,
   GuildMember,
-  MessageFlags,
 } from 'discord.js';
 import { SlashCommand } from '../../@types/commandDef';
 import commandContext from '../../utils/context';
@@ -13,7 +12,6 @@ export const dSlowMode: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('slowmode')
     .setDescription('Toggles slowmode on a channel')
-    .setIntegrationTypes([0])
     .addSubcommand(subcommand => subcommand
       .setName('on')
       .setDescription('Turn on slowmode')
@@ -35,7 +33,7 @@ export const dSlowMode: SlashCommand = {
       .setDescription('Turn off slowmode')),
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
-    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+    await interaction.deferReply({ ephemeral: true });
 
     const toggle = interaction.options.getSubcommand();
     const { channel } = interaction;

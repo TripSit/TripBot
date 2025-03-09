@@ -1,7 +1,6 @@
 import {
   ChannelType,
   GuildMember,
-  MessageFlags,
   SlashCommandBuilder,
   TextChannel,
 } from 'discord.js';
@@ -14,16 +13,15 @@ export const dSay: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('say')
     .setDescription('Say something like a real person!')
-    .setIntegrationTypes([0])
     .addStringOption(option => option.setName('say')
       .setDescription('What do you want to say?')
       .setRequired(true))
     .addChannelOption(option => option
       .setDescription('Where should I say it? (Default: \'here\')')
-      .setName('channel')) as SlashCommandBuilder,
+      .setName('channel')),
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
-    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+    await interaction.deferReply({ ephemeral: true });
     if (!interaction.guild) {
       await interaction.editReply({ content: 'This command can only be used in a server!' });
       return false;

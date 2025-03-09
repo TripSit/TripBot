@@ -9,7 +9,6 @@ import {
   ModalSubmitInteraction,
 } from 'discord.js';
 import {
-  MessageFlags,
   TextInputStyle,
 } from 'discord-api-types/v10';
 import Parser from 'rss-parser';
@@ -26,7 +25,6 @@ export const dRss: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('rss')
     .setDescription('Add or remove a subscription to an RSS feed!')
-    .setIntegrationTypes([0])
     .addSubcommand(subcommand => subcommand
       .setName('add')
       .setDescription('Add an RSS subscription to this channel')
@@ -47,7 +45,7 @@ export const dRss: SlashCommand = {
       .setDescription('List all RSS feeds')),
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
-    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+    await interaction.deferReply({ ephemeral: true });
 
     if (!interaction.guild) {
       await interaction.editReply({ content: 'This command can only be used in a guild!' });

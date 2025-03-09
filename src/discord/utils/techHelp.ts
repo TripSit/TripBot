@@ -17,7 +17,6 @@ import {
   ChannelType,
   TextInputStyle,
   ButtonStyle,
-  MessageFlags,
 } from 'discord-api-types/v10';
 import { stripIndents } from 'common-tags';
 
@@ -30,7 +29,7 @@ export async function techHelpClick(interaction:ButtonInteraction) {
   if (!interaction.guild) {
     await interaction.reply({
       content: guildOnly,
-      flags: MessageFlags.Ephemeral,
+      ephemeral: true,
     });
     return;
   }
@@ -87,7 +86,7 @@ export async function techHelpClick(interaction:ButtonInteraction) {
   interaction.awaitModalSubmit({ filter, time: 0 })
     .then(async i => {
       if (i.customId.split('~')[1] !== interaction.id) return;
-      await i.deferReply({ flags: MessageFlags.Ephemeral });
+      await i.deferReply({ ephemeral: true });
 
       if (!i.guild) {
         await interaction.editReply({ content: guildOnly });
@@ -164,7 +163,7 @@ export async function techHelpOwn(interaction:ButtonInteraction) {
           .setDescription('You can\'t claim your own issue!')
           .setColor(Colors.Yellow),
       ],
-      flags: MessageFlags.Ephemeral,
+      ephemeral: true,
     });
     return;
   }

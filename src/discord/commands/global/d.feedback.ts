@@ -10,7 +10,6 @@ import {
   ButtonInteraction,
 } from 'discord.js';
 import {
-  MessageFlags,
   TextInputStyle,
 } from 'discord-api-types/v10';
 import { stripIndents } from 'common-tags';
@@ -45,7 +44,7 @@ export async function feedbackReportModal(
     .then(async i => {
       // log.debug(F, 'Modal submit interaction received');
       if (i.customId.split('~')[1] !== interaction.id) return;
-      await i.deferReply({ flags: MessageFlags.Ephemeral });
+      await i.deferReply({ ephemeral: true });
       const guildName = ` in ${i.guild?.name}`;
       const guildMessage = `${i.guild ? guildName : 'DM'}`;
 
@@ -86,8 +85,7 @@ export async function feedbackReportModal(
 export const dFeedback: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('feedback')
-    .setDescription('Share feedback or report a bug to the TripBot dev team!')
-    .setIntegrationTypes([0]),
+    .setDescription('Share feedback or report a bug to the TripBot dev team!'),
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
     await feedbackReportModal(interaction);
