@@ -2174,10 +2174,10 @@ export async function aiMessage(
   // log.debug(F, `attachmentInfo: ${JSON.stringify(attachmentInfo, null, 2)}`);
   // log.debug(F, `Sending messages to API: ${JSON.stringify(messageList, null, 2)}`);
 
-  await channel.send({ content: '', flags: MessageFlags.SuppressNotifications });
+  await channel.sendTyping();
 
   const typingInterval = setInterval(() => {
-    channel.send({ content: '', flags: MessageFlags.SuppressNotifications });
+    channel.sendTyping();
   }, 9000); // Start typing indicator every 9 seconds
   let response = '';
   let promptTokens = 0;
