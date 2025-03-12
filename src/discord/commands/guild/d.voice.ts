@@ -19,7 +19,7 @@ const F = f(__filename);
 Add command to set a level requirement for a tent
 */
 
-type VoiceActions = 'lock' | 'limit' | 'host' | 'add' | 'ban' | 'name' | 'ping';
+type VoiceActions = 'lock' | 'level' | 'limit' | 'host' | 'add' | 'ban' | 'name' | 'ping';
 
 // Helper function to check if a user has an explicit permission overwrite
 function hasExplicitPermission(channel: VoiceBasedChannel, member: GuildMember, permission: bigint): boolean | null {
@@ -66,6 +66,67 @@ async function tentLimit(
     description = `Your tent now has a user limit of ${limit}.`;
   }
   // log.debug(F, `Channel limit set to ${limit}`);
+  return embedTemplate()
+    .setTitle(title)
+    .setColor(Colors.Green)
+    .setDescription(description);
+}
+
+async function tentLevel(
+  voiceChannel: VoiceBasedChannel,
+  levelNumber: string,
+): Promise<EmbedBuilder> {
+  const level = parseInt(levelNumber, 10);
+  let title = '';
+  let description = '';
+
+  const levelRoles: { [key: number]: string } = {
+    0: env.ROLE_VIP_0,
+    10: env.ROLE_VIP_10,
+    20: env.ROLE_VIP_20,
+    30: env.ROLE_VIP_30,
+    40: env.ROLE_VIP_40,
+    50: env.ROLE_VIP_50,
+    60: env.ROLE_VIP_60,
+    70: env.ROLE_VIP_70,
+    80: env.ROLE_VIP_80,
+    90: env.ROLE_VIP_90,
+    100: env.ROLE_VIP_100,
+  };
+
+  if (level === 0) {
+    // Iterate over all the level roles and remove their overwrites
+    Object.values(levelRoles).forEach(roleId => {
+      const role = voiceChannel.guild.roles.cache.get(roleId);
+      if (role) {
+        voiceChannel.permissionOverwrites.delete(role);
+      }
+    });
+    title = 'Level requirement removed';
+    description = 'Your tent now has no level requirement.';
+  } else {
+    // Add permissions for all roles below the level
+    Object.keys(levelRoles).forEach(key => {
+      const roleLevel = parseInt(key, 10);
+      if (roleLevel < level) {
+        const roleId = levelRoles[roleLevel];
+        const role = voiceChannel.guild.roles.cache.get(roleId);
+        if (role) {
+          voiceChannel.permissionOverwrites.edit(role, { Connect: false, ViewChannel: false });
+        }
+      }
+      if (roleLevel >= level) {
+        const roleId = levelRoles[roleLevel];
+        const role = voiceChannel.guild.roles.cache.get(roleId);
+        if (role) {
+          voiceChannel.permissionOverwrites.delete(role);
+        }
+      }
+    });
+    title = 'Level requirement set';
+    description = `Only users level ${level} or higher can join your tent.`;
+  }
+
   return embedTemplate()
     .setTitle(title)
     .setColor(Colors.Green)
@@ -175,11 +236,11 @@ async function tentAdd(
   if (hasExplicitPermission(voiceChannel, target, PermissionsBitField.Flags.Connect) === null) {
     voiceChannel.permissionOverwrites.create(target, { Connect: true });
     title = 'User added';
-    description = `${target} can now join, even if the tent is locked.`;
+    description = `${target} can now join, regardless of other settings.`;
   } else {
     voiceChannel.permissionOverwrites.delete(target);
     title = 'User un-added';
-    description = `${target} can still join if the tent is unlocked.`;
+    description = `${target} can still join regardless of other settings.`;
   }
   // log.debug(F, `${target.displayName} is now ${verb}`);
   return embedTemplate()
@@ -309,7 +370,7 @@ export const dVoice: SlashCommand = {
       .setDescription('Set a limit on the number of users in your Tent')
       .addIntegerOption(option => option
         .setName('limit')
-        .setDescription('The new limit for your Tent. (0 = No limit)')
+        .setDescription('The new limit for your Tent (0 = No limit)')
         .setRequired(true)
         .setMinValue(0)
         .setMaxValue(99)))
@@ -323,6 +384,26 @@ export const dVoice: SlashCommand = {
     .addSubcommand(subcommand => subcommand
       .setName('lock')
       .setDescription('Lock/Unlock your Tent'))
+    .addSubcommand(subcommand => subcommand
+      .setName('level')
+      .setDescription('Set a level requirement for your Tent')
+      .addStringOption(option => option
+        .setName('level')
+        .setDescription('The new level requirement for your Tent')
+        .setChoices([
+          { name: 'None', value: '0' },
+          { name: '10', value: '10' },
+          { name: '20', value: '20' },
+          { name: '30', value: '30' },
+          { name: '40', value: '40' },
+          { name: '50', value: '50' },
+          { name: '60', value: '60' },
+          { name: '70', value: '70' },
+          { name: '80', value: '80' },
+          { name: '90', value: '90' },
+          { name: '100', value: '100' },
+        ])
+        .setRequired(true)))
     .addSubcommand(subcommand => subcommand
       .setName('add')
       .setDescription('Allow a user to join your Tent when locked or hidden')
@@ -350,6 +431,7 @@ export const dVoice: SlashCommand = {
     const target = interaction.options.getMember('target') as GuildMember;
     const newName = interaction.options.getString('name') as string;
     const limit = interaction.options.getInteger('limit') as number;
+    const level = interaction.options.getString('level') as string;
     // const stationid = interaction.options.getString('station') as string;
     // const guild = interaction.guild as Guild;
     const voiceChannel = member.voice.channel;
@@ -383,10 +465,10 @@ export const dVoice: SlashCommand = {
     }
 
     // Check if the target is a bot
-    if (target.user.bot) {
-      await interaction.editReply({ embeds: [embed.setDescription('You cannot interact with bots.')] });
-      return false;
-    }
+    // if (target.user.bot === true) {
+    //   await interaction.editReply({ embeds: [embed.setDescription('You cannot interact with bots.')] });
+    //   return false;
+    // }
 
     // log.debug(F, `Command: ${command}`);
     if (command === 'name') {
@@ -405,9 +487,9 @@ export const dVoice: SlashCommand = {
       embed = await tentHost(voiceChannel, target, member);
     }
 
-    /* if (command === 'hide') {
-      embed = await tentHide(voiceChannel);
-    } */
+    if (command === 'level') {
+      embed = await tentLevel(voiceChannel, level);
+    }
 
     if (command === 'add') {
       embed = await tentAdd(voiceChannel, target);

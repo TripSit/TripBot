@@ -89,25 +89,28 @@ export async function pitchTent(
   }).then(async newChannel => {
     New.member?.voice.setChannel(newChannel.id);
     await newChannel.fetch();
-    await newChannel.send(`## Welcome to your tent, <@${New.member?.id}>
-
-- **Looking for others to join?**
+    await newChannel.send(`## Welcome to your tent, <@${New.member?.id}>`);
+    const embed = new EmbedBuilder()
+      .setTitle('Tent pitched')
+      .setColor(Colors.Green)
+      .setDescription(`- **Looking for others to join?**
   - \`/tent ping\` - Use this to ping those opted-in to VC ping invites
 
 - **Modify your tent**
-  - \`/tent rename\` - Choose a new name for your tent
-  - \`/tent limit\` - Set a user limit for your tent
-  - \`/tent lock\`- Prevents anyone else from joining your tent
+  - \`/tent name\` - Set a new name for your tent
+  - \`/tent limit\` - Set a user limit
+  - \`/tent level\` - Set a level requirement
+  - \`/tent lock\`- Prevents anyone else from joining
 
 - **Moderate your tent**
-  - \`/tent add\` - Allows a user to join and see your tent, regardless of other settings
-  - \`/tent ban\` - Prevents a user from joining and seeing your tent
+  - \`/tent add\` - Allow a user to join and see your tent, regardless of other settings
+  - \`/tent ban\` - Prevents a user from joining or seeing your tent
   - \`/tent host\` - Transfer tent ownership to another user
 
-*Note: Host will automatically transfer to the first person to join your tent if you are disconnected for more than 60 seconds.*
+*Note: Host will automatically transfer to the first person to join your tent if you are disconnected for more than 2 minutes.*
 
 ***To undo a command, just use it again.***`);
-    // await newChannel.send({ embeds: [embed] });
+    await newChannel.send({ embeds: [embed] });
   });
 }
 
@@ -185,8 +188,8 @@ export async function logTent(
     return overwrite ? overwrite.allow.has(permission) : false;
   }
 
-  // If the user left a tent
-  if (Old.channel && Old.channel.name.includes('⛺') && Old.member && Old.channel) {
+  // If the user left a tent and wasn't the last one
+  if (Old.channel && Old.channel.name.includes('⛺') && Old.member && Old.channel && Old.channel.members.size >= 1) {
     log.debug(F, `Old.channel: ${Old.channel}`);
     // Check if the user that left was the host by checking explicit permissions
     if (hasExplicitPermission(Old.channel, Old.member as GuildMember, PermissionsBitField.Flags.MoveMembers)) {
