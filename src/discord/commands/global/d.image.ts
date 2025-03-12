@@ -6,6 +6,7 @@ import {
   TextChannel,
   GuildMember,
   time,
+  MessageFlags,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
 import { DateTime } from 'luxon';
@@ -31,8 +32,8 @@ const imageLimits = {
 async function help(
   interaction: ChatInputCommandInteraction,
 ):Promise<void> {
-  const visible = interaction.options.getBoolean('ephemeral') !== false;
-  await interaction.deferReply({ ephemeral: !visible });
+  const ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined;
+  await interaction.deferReply({ flags: ephemeral });
   await interaction.editReply({
     embeds: [embedTemplate()
       .setTitle('Image Generation Help')
@@ -70,8 +71,8 @@ async function help(
 async function generate(
   interaction: ChatInputCommandInteraction,
 ):Promise<void> {
-  const visible = interaction.options.getBoolean('ephemeral') !== false;
-  await interaction.deferReply({ ephemeral: !visible });
+  const ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined;
+  await interaction.deferReply({ flags: ephemeral });
 
   const description = interaction.options.getString('description', true);
 
@@ -237,8 +238,8 @@ async function generate(
 async function library(
   interaction: ChatInputCommandInteraction,
 ):Promise<void> {
-  const visible = interaction.options.getBoolean('ephemeral') !== false;
-  await interaction.deferReply({ ephemeral: !visible });
+  const ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined;
+  await interaction.deferReply({ flags: ephemeral });
   if (!interaction.member) return;
 
   const guildMember = interaction.member as GuildMember;
@@ -310,6 +311,7 @@ export const image: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('image')
     .setDescription('TripBot\'s Image Generator')
+    .setIntegrationTypes([0])
     .addSubcommand(subcommand => subcommand
       .setDescription('Information on the imagen function.')
       .setName('help'))

@@ -6,9 +6,10 @@ import {
   PermissionResolvable,
   EmbedBuilder,
   TextChannel,
+  DMChannel,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
-import { sleep } from '../commands/guild/d.bottest';
+import { sleep } from './sleep';
 import { aiMessage } from '../commands/global/d.ai';
 import { Wordle, Connections, TheMini } from './nytUtils';
 
@@ -161,6 +162,10 @@ export async function messageCommand(message: Message): Promise<void> {
   // Ignore messages that start with ~~, these are usually strikethrough messages
   if (message.content.startsWith('~~')) { return; }
 
+  if (!(message.channel instanceof TextChannel)) {
+    return;
+  }
+
   if (await isIrcCommand(message)) {
     // If you try to use the old tripbot command prefix while inside of the tripsit guild
     if (message.guild.id !== env.DISCORD_GUILD_ID) return;
@@ -251,8 +256,10 @@ give people a chance to answer 😄 If no one answers in 5 minutes you can try a
 
         const recipientMember = await message.guild?.members.fetch(recipient.id);
 
-        if (!recipientMember) {
-          await message.channel.send('The user you mentioned is not a member of this guild!');
+        if (!recipientMember && (message.channel instanceof TextChannel || message.channel instanceof DMChannel)) {
+          if (message.channel instanceof DMChannel) {
+            await message.channel.send('The user you mentioned is not a member of this guild!');
+          }
           return;
         }
 
@@ -274,11 +281,12 @@ give people a chance to answer 😄 If no one answers in 5 minutes you can try a
             },
           },
         });
-        log.debug(F, `Gave ${amount} tokens to ${recipientMember.displayName}!`);
-
-        await message.channel.send(stripIndents`Gave ${amount} tokens to ${recipientMember.displayName}!
-        
-        They now have ${personaData.tokens} tokens!`);
+        log.debug(F, `Gave ${amount} tokens to ${recipientMember ? recipientMember.displayName : recipient.username}!`);
+        if (message.channel instanceof TextChannel || message.channel instanceof DMChannel) {
+          await message.channel.send(stripIndents`Gave ${amount} tokens to ${recipientMember ? recipientMember.displayName : recipient.username}!
+          
+          They now have ${personaData.tokens} tokens!`);
+        }
       });
 
       return;

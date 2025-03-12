@@ -4,6 +4,7 @@
 // } from 'discord.js';
 import {
   InteractionType,
+  MessageFlags,
 } from 'discord-api-types/v10';
 import {
   InteractionCreateEvent,
@@ -31,7 +32,7 @@ export const interactionCreate: InteractionCreateEvent = {
     if (botBannedUsers.includes(interaction.user.id)) {
       // log.info(F, `Got user ban status in ${new Date().getTime() - startTime}ms`);
       if (interaction.isRepliable()) {
-        await interaction.reply({ content: '*beeps sadly*', ephemeral: true });
+        await interaction.reply({ content: '*beeps sadly*', flags: MessageFlags.Ephemeral });
       }
       return;
     }

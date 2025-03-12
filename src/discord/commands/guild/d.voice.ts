@@ -7,6 +7,7 @@ import {
   EmbedBuilder,
   VoiceBasedChannel,
   TextChannel,
+  MessageFlags,
 } from 'discord.js';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
@@ -296,6 +297,7 @@ export const dVoice: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('tent')
     .setDescription('Control your Campfire Tent')
+    .setIntegrationTypes([0])
     .addSubcommand(subcommand => subcommand
       .setName('name')
       .setDescription('Rename your Tent')
@@ -342,7 +344,7 @@ export const dVoice: SlashCommand = {
 
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
     const command = interaction.options.getSubcommand() as VoiceActions;
     const member = interaction.member as GuildMember;
