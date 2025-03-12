@@ -12,7 +12,6 @@ import {
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import commandContext from '../../utils/context';
-import { transferTent } from '../../utils/tents';
 
 const F = f(__filename);
 
@@ -384,10 +383,10 @@ export const dVoice: SlashCommand = {
     }
 
     // Check if the target is a bot
-    // if (target.user.bot) {
-    //   await interaction.editReply({ embeds: [embed.setDescription('You cannot interact with bots.')] });
-    //   return false;
-    // }
+    if (target.user.bot) {
+      await interaction.editReply({ embeds: [embed.setDescription('You cannot interact with bots.')] });
+      return false;
+    }
 
     // log.debug(F, `Command: ${command}`);
     if (command === 'name') {
