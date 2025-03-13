@@ -3,7 +3,7 @@ import {
   VoiceState,
 } from 'discord.js';
 import { VoiceStateUpdateEvent } from '../@types/eventDef';
-import { pitchTent, teardownTent } from '../utils/tents';
+import { pitchTent, teardownTent, logTent } from '../utils/tents';
 
 const F = f(__filename); // eslint-disable-line
 
@@ -14,7 +14,6 @@ export const voiceStateUpdate: VoiceStateUpdateEvent = {
     if (New.member?.user?.bot) return; // Don't run on bots
     if (Old.member?.user?.bot) return; // Don't run on bots
     log.info(F, `${New.member?.displayName} changed voice state`);
-
     const channelAuditlog = await New.guild.channels.fetch(env.CHANNEL_AUDITLOG) as TextChannel;
 
     let modMessage = '';
@@ -34,6 +33,8 @@ export const voiceStateUpdate: VoiceStateUpdateEvent = {
       pitchTent(Old, New);
       return;
     }
+
+    logTent(Old, New);
 
     teardownTent(Old);
   },
