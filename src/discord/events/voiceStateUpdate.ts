@@ -11,8 +11,8 @@ export const voiceStateUpdate: VoiceStateUpdateEvent = {
   name: 'voiceStateUpdate',
   async execute(Old: VoiceState, New: VoiceState) {
     if (New.guild.id !== env.DISCORD_GUILD_ID) return; // Don't run on non-tripsit guilds
-    // if (New.member?.user?.bot) return; // Don't run on bots
-    // if (Old.member?.user?.bot) return; // Don't run on bots
+    if (New.member?.user?.bot) return; // Don't run on bots
+    if (Old.member?.user?.bot) return; // Don't run on bots
     log.info(F, `${New.member?.displayName} changed voice state`);
     const channelAuditlog = await New.guild.channels.fetch(env.CHANNEL_AUDITLOG) as TextChannel;
 

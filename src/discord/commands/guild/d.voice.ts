@@ -1,3 +1,4 @@
+/* eslint-disable sonarjs/no-duplicate-string */
 import {
   // Guild,
   Colors,
@@ -65,6 +66,14 @@ async function tentLimit(
     title = 'User limit set';
     description = `Your tent now has a user limit of ${limit}.`;
   }
+  // Send the tent update message
+  const embed = new EmbedBuilder()
+    .setTitle('Tent updated')
+    .setColor(Colors.Blue)
+    .setDescription(limit === 0
+      ? 'There is now no user limit.'
+      : `The tent now has a max user limit of ${limit}.`);
+  await voiceChannel.send({ embeds: [embed] });
   // log.debug(F, `Channel limit set to ${limit}`);
   return embedTemplate()
     .setTitle(title)
@@ -127,6 +136,17 @@ async function tentLevel(
     description = `Only users level ${level} or higher can join your tent.`;
   }
 
+  // Send the tent update message
+  const embed = new EmbedBuilder()
+    .setTitle('Tent updated')
+    .setColor(Colors.Blue)
+    .setDescription(
+      level === 0
+        ? 'There is now no level requirement to join this tent.'
+        : `Only users level ${level} or higher can join this tent.`,
+    );
+  await voiceChannel.send({ embeds: [embed] });
+
   return embedTemplate()
     .setTitle(title)
     .setColor(Colors.Green)
@@ -147,16 +167,24 @@ async function tentLock(
       voiceChannel.permissionOverwrites.edit(member, { Connect: true });
     });
     voiceChannel.permissionOverwrites.edit(voiceChannel.guild.roles.everyone, { Connect: false });
-    title = 'Tent has been locked.';
+    title = 'Locked';
     description = `Currently joined users have been automatically \`/add\`ed and will be able to rejoin if they disconnect.
 
     Note: Mods can still join locked tents, though only if deemed necessary.`;
   } else {
     voiceChannel.permissionOverwrites.edit(voiceChannel.guild.roles.everyone, { Connect: true });
-    title = 'Tent has been unlocked.';
+    title = 'Unlocked';
     description = 'Your tent is now open to everyone not `/tent ban`ned.';
   }
   // log.debug(F, `Channel is now ${verb}`);
+  // Send the tent update message
+  const embed = new EmbedBuilder()
+    .setTitle('Tent updated')
+    .setColor(Colors.Blue)
+    .setDescription(`
+    The tent has been ${title.toLowerCase()}.`);
+  await voiceChannel.send({ embeds: [embed] });
+
   return embedTemplate()
     .setTitle(title)
     .setColor(Colors.Green)
@@ -194,12 +222,12 @@ async function tentHost(
   description = `The new host is ${newHost}.`;
   // log.debug(F, `${oldHost.displayName} is now ${verb}`);
   const embed = new EmbedBuilder()
-    .setTitle('Host transferred')
+    .setTitle('Tent updated')
     .setColor(Colors.Blue)
     .setDescription(`
-    The new host is ${newHost}.
-    
-    Note: Old hosts can still rejoin. (They will not be host)`);
+    ${newHost} is now host.
+    The host can use \`/tent\` commands.
+    `);
   await voiceChannel.send({
     content: `<@${newHost.id}>`,
     embeds: [embed],
@@ -463,12 +491,6 @@ export const dVoice: SlashCommand = {
       await interaction.editReply({ embeds: [embed.setDescription('Stop playing with yourself!')] });
       return false;
     }
-
-    // Check if the target is a bot
-    // if (target.user.bot === true) {
-    //   await interaction.editReply({ embeds: [embed.setDescription('You cannot interact with bots.')] });
-    //   return false;
-    // }
 
     // log.debug(F, `Command: ${command}`);
     if (command === 'name') {

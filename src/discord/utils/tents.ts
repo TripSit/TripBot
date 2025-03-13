@@ -168,11 +168,37 @@ export async function transferTent(
       Connect: true,
       MoveMembers: true,
     });
+    // Rename the channel
+    channel.setName(`⛺│${newHost.displayName}'s tent`);
   }
 }
 
 // Store timeouts for each channel to handle host rejoining
 const hostTimeouts: { [channelId: string]: NodeJS.Timeout } = {};
+
+const joinMessages = [
+  'Hope you brought snacks!',
+  'The marshmallows are crisp!',
+  'The fire is warm!',
+  'There is a comfy spot for you!',
+  'Hope you brought a sleeping bag!',
+  'Time to make some s\'mores!',
+  'The stars are out tonight!',
+  'Do you have any ghost stories?',
+  'Do you have any campfire songs?',
+  'Coffee or tea?',
+];
+
+const leaveMessages = [
+  'I hope they had a good time!',
+  'I think they forgot their glasses!',
+  'I hope they can see in the dark!',
+  'I hope they find their way back!',
+  'Hopefully they brought a flashlight!',
+  'They didn\'t even finish their tea!',
+  'Did anyone see where they went?',
+  'Gone but not forgotten!',
+];
 
 export async function logTent(
   Old: VoiceState,
@@ -208,7 +234,8 @@ export async function logTent(
     } else {
       embed = new EmbedBuilder()
         .setColor(Colors.Red)
-        .setDescription(`${Old.member} left`);
+        .setDescription(`${Old.member} left the tent.
+          *${leaveMessages[Math.floor(Math.random() * leaveMessages.length)]}*`);
       await Old.channel.send({ embeds: [embed] });
     }
   }
@@ -233,7 +260,8 @@ export async function logTent(
     } else {
       embed = new EmbedBuilder()
         .setColor(Colors.Green)
-        .setDescription(`${New.member} joined`);
+        .setDescription(`${New.member} joined the tent.
+          *${joinMessages[Math.floor(Math.random() * joinMessages.length)]}*`);
       await New.channel.send({ embeds: [embed] });
     }
   }
