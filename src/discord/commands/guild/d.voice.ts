@@ -232,6 +232,8 @@ async function tentHost(
     content: `<@${newHost.id}>`,
     embeds: [embed],
   });
+  // Rename the channel
+  voiceChannel.setName(`⛺│${newHost.displayName}'s tent`);
   return embedTemplate()
     .setTitle(title)
     .setColor(Colors.Green)

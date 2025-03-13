@@ -107,7 +107,7 @@ export async function pitchTent(
   - \`/tent ban\` - Prevents a user from joining or seeing your tent
   - \`/tent host\` - Transfer tent ownership to another user
 
-*Note: Host will automatically transfer to the first person to join your tent if you are disconnected for more than 2 minutes.*
+*Note: Host will automatically transfer to the first person to join your tent if you are disconnected for more than 5 minutes.*
 
 ***To undo a command, just use it again.***`);
     await newChannel.send({ embeds: [embed] });
@@ -222,15 +222,15 @@ export async function logTent(
       embed = new EmbedBuilder()
         .setColor(Colors.Red)
         .setDescription(`The host, ${Old.member} left!
-        Host will transfer <t:${Math.floor(Date.now() / 1000) + 120}:R> if they don't return`);
+        Host will transfer <t:${Math.floor(Date.now() / 1000) + 300}:R> if they don't return`);
       await Old.channel.send({ embeds: [embed] });
 
-      // Set a timeout to transfer host after 2 minutes
+      // Set a timeout to transfer host after 5 minutes
       hostTimeouts[Old.channel.id] = setTimeout(async () => {
         if (Old.channel) {
           await transferTent(Old.channel, Old.member as GuildMember);
         }
-      }, 120000); // 2 minutes in milliseconds
+      }, 300000); // 5 minutes in milliseconds
     } else {
       embed = new EmbedBuilder()
         .setColor(Colors.Red)
