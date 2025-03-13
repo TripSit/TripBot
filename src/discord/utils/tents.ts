@@ -241,7 +241,7 @@ export async function logTent(
   }
 
   // If the user joined a tent
-  if (New.channel && New.channel.name.includes('⛺') && New.member && New.channel) {
+  if (New.channel && New.channel.name.includes('⛺') && New.member) {
     log.debug(F, `New.channel: ${New.channel}`);
     log.debug(F, `List of members: ${New.channel.members.map(member => member.displayName)}`);
 

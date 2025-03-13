@@ -249,8 +249,6 @@ async function tentAdd(
   // Check if the user is banned
   if (hasExplicitPermission(voiceChannel, target, PermissionsBitField.Flags.ViewChannel) === false) {
     voiceChannel.permissionOverwrites.create(target, { Connect: true });
-    title = 'User unbanned and added';
-    description = `${target} has been unbanned and added to the tent.`;
     return embedTemplate()
       .setTitle('User unbanned and added')
       .setColor(Colors.Green)
