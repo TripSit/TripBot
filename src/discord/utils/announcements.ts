@@ -179,7 +179,6 @@ export async function announcements(message:Message) {
     '[**Did you know?**](https://www.guinnessworldrecords.com/world-records/372384-fastest-marathon-dressed-as-an-elf-male) The fastest marathon dressed as an elf is 2 hours, 56 minutes!',
     '[**Did you know?**](https://www.guinnessworldrecords.com/world-records/longest-legs-female) The longest female legs measure 134.3 cm (52.87 in)!',
     '[**Did you know?**](https://www.guinnessworldrecords.com/world-records/longest-noodle) The longest noodle ever made was 3,084m (10,119 ft) long!',
-    '[**Did you know?**](https://www.guinnessworldrecords.com/world-records/longest-fingernails-ever-on-a-pair-of-hands)',
   ];
 
   // const chanAnnouncements = [
