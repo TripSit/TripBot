@@ -34,7 +34,10 @@ export const voiceStateUpdate: VoiceStateUpdateEvent = {
       return;
     }
 
-    logTent(Old, New);
+    // Check if the user actually left or joined a channel before logging
+    if (New.channel !== Old.channel) {
+      logTent(Old, New);
+    }
 
     teardownTent(Old);
   },
