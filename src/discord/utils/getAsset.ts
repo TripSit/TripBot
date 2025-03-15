@@ -18,19 +18,16 @@ const assetsDirectory = path.join(__dirname, '../../../assets');
 
 const assetDef = {
   nasal_spray_dosage: { filePath: `${assetsDirectory}/img/nasal_spray_dosage.png`, url: 'https://user-images.githubusercontent.com/1836049/218758611-c84f1e34-0f5b-43ac-90da-bd89b028f131.png' },
-  icon_online: { filePath: `${assetsDirectory}/img/icons/online.png`, url: 'https://i.gyazo.com/cd7b9e018d4818e4b6588cab5d5b019d.png' },
-  icon_offline: { filePath: `${assetsDirectory}/img/icons/offline.png`, url: 'https://i.gyazo.com/b2b1bf7d91acdb4ccc72dfde3d7075fc.png' },
-  icon_dnd: { filePath: `${assetsDirectory}/img/icons/dnd.png`, url: 'https://i.gyazo.com/a98f0e9dd72f6fb59af388d719d01e64.png' },
-  icon_idle: { filePath: `${assetsDirectory}/img/icons/idle.png`, url: 'https://i.gyazo.com/df8f4a4ca2553d4d657ee82e4bf64a3a.png' },
   teamtripsitIcon: { filePath: `${assetsDirectory}/img/icons/teamtripsit.png`, url: 'https://i.gyazo.com/332b0abef2d223d1a3e6673bcc51681f.png' },
-  premiumIcon: { filePath: `${assetsDirectory}/img/icons/premiumicon.png`, url: 'https://i.gyazo.com/6a76ceef0d0daa3fcb1f893d554f9b5d.png' },
+  premiumIcon: { filePath: `${assetsDirectory}/img/icons/premiumicon.png`, url: 'https://i.gyazo.com/790f0c327e228b862cf7ce963a72073c.png' },
   boosterIcon: { filePath: `${assetsDirectory}/img/icons/boostericon.png`, url: 'https://i.gyazo.com/8e31c1a660ca0b6c8fe5dc0996f705f8.png' },
   legacyIcon: { filePath: `${assetsDirectory}/img/icons/legacyicon.png`, url: 'https://i.gyazo.com/0f3fc0132204e80ed5e697e0863cfad3.png' },
-  badgeVip0: { filePath: `${assetsDirectory}/img/badges/vip0.png`, url: 'https://i.gyazo.com/13daebdda4ca75ab59923396f255f7db.png' },
-  voiceBar: { filePath: `${assetsDirectory}/img/voiceBar.png`, url: 'https://i.gyazo.com/f536d9aa1c652fb7d324e918fdab9f60.png' },
-  tripsitterBar: { filePath: `${assetsDirectory}/img/tripsitterBar.png`, url: 'https://i.gyazo.com/66321aeeb7d0a14d7bb5a7a1cfc3bd11.png' },
-  developerBar: { filePath: `${assetsDirectory}/img/developerBar.png`, url: 'https://i.gyazo.com/4eb82654834990b9f3d0471dbd4d2af3.png' },
+  cardLevelIcons: { filePath: `${assetsDirectory}/img/cards/levelIcons.png`, url: 'https://i.gyazo.com/36b3e2d8c01b239bd1ebc59522761051.png' },
+  voiceBar: { filePath: `${assetsDirectory}/img/voiceBar.png`, url: 'https://i.gyazo.com/662a0cf49b068375d6b98a49cffec81b.png' },
+  tripsitterBar: { filePath: `${assetsDirectory}/img/tripsitterBar.png`, url: 'https://i.gyazo.com/2df7f0589366a4d3933ed1830c8059cb.png' },
+  developerBar: { filePath: `${assetsDirectory}/img/developerBar.png`, url: 'https://i.gyazo.com/3113b0e232b18dbb1ffeac3f82369675.png' },
   teamtripsitBar: { filePath: `${assetsDirectory}/img/teamtripsitBar.png`, url: 'https://i.gyazo.com/5dd5543cd8c19eb3f28c6b752b525d22.png' },
+  badgeVip0: { filePath: `${assetsDirectory}/img/badges/vip0.png`, url: 'https://i.gyazo.com/13daebdda4ca75ab59923396f255f7db.png' },
   badgeVip1: { filePath: `${assetsDirectory}/img/badges/vip1.png`, url: 'https://i.gyazo.com/5d37a2d3193c4c7e8a033b6b2ed7cb7f.png' },
   badgeVip2: { filePath: `${assetsDirectory}/img/badges/vip2.png`, url: 'https://i.gyazo.com/161506f23b1907ac1280db26ead5a0a4.png' },
   badgeVip3: { filePath: `${assetsDirectory}/img/badges/vip3.png`, url: 'https://i.gyazo.com/4bd15a019f7fd5c881e196c38a8b8bf5.png' },
@@ -42,24 +39,7 @@ const assetDef = {
   badgeVip9: { filePath: `${assetsDirectory}/img/badges/vip9.png`, url: 'https://i.gyazo.com/eed9e28789262927cefe0a68b3126ed2.png' },
   badgeVip10: { filePath: `${assetsDirectory}/img/badges/vip10.png`, url: 'https://i.gyazo.com/4428c08aaf82b7363fb7a327ce27a4c3.png' },
   cardBirthday: { filePath: `${assetsDirectory}/img/cards/birthday.png`, url: 'https://i.gyazo.com/b7504ea55bd7935f97b286407a1bc259.png' },
-  campIconA: { filePath: `${assetsDirectory}/img/campIconA.png`, url: 'https://i.gyazo.com/62a9db6c42ca3c03cc892b28f5d8b367.png' },
-  cardIcons: { filePath: `${assetsDirectory}/img/cards/icons.png`, url: 'https://i.gyazo.com/1f33cc53c5102c3cbdb751368cb5059c.png' },
-  cardLevelIcons: { filePath: `${assetsDirectory}/img/cards/levelIcons.png`, url: 'https://i.gyazo.com/739f8b68658b9aeeedfb6d5aaf07dc68.png' },
-  karmaScale: { filePath: `${assetsDirectory}/img/cards/karmaScale.png`, url: 'https://i.gyazo.com/8cf140f384aeb61bb2929cccf3d7a8c2.png' },
-  karmaContainer: { filePath: `${assetsDirectory}/img/cards/karmaContainer.png`, url: 'https://i.gyazo.com/4b10b62f315e41d90ee99d6f70c14787.png' },
-  karmaFill: { filePath: `${assetsDirectory}/img/cards/karmaFill.png`, url: 'https://i.gyazo.com/4a5aa5d098e09370e4a257c451c7aaf9.png' },
-  // cardBackground: { filePath: `${assetsDirectory}/img/cards/background.png`, url: 'https://i.gyazo.com/b7504ea55bd7935f97b286407a1bc259.png' },
-  // cardBirthdayOverlay: { filePath: `${assetsDirectory}/img/cards/birthdayOverlay.png`, url: 'https://i.gyazo.com/b7504ea55bd7935f97b286407a1bc259.png' },
-  // cardDefault: { filePath: `${assetsDirectory}/img/cards/default.png`, url: 'https://i.gyazo.com/b7504ea55bd7935f97b286407a1bc259.png' },
-  // cardBlack: { filePath: `${assetsDirectory}/img/cards/black.png`, url: 'https://i.gyazo.com/b7504ea55bd7935f97b286407a1bc259.png' },
-  // cardWhite: { filePath: `${assetsDirectory}/img/cards/white.png`, url: 'https://i.gyazo.com/b7504ea55bd7935f97b286407a1bc259.png' },
-  // cardRed: { filePath: `${assetsDirectory}/img/cards/red.png`, url: 'https://i.gyazo.com/b7504ea55bd7935f97b286407a1bc259.png' },
-  // cardGreen: { filePath: `${assetsDirectory}/img/cards/green.png`, url: 'https://i.gyazo.com/b7504ea55bd7935f97b286407a1bc259.png' },
-  // cardBlue: { filePath: `${assetsDirectory}/img/cards/blue.png`, url: 'https://i.gyazo.com/b7504ea55bd7935f97b286407a1bc259.png' },
-  // cardYellow: { filePath: `${assetsDirectory}/img/cards/yellow.png`, url: 'https://i.gyazo.com/b7504ea55bd7935f97b286407a1bc259.png' },
-  // cardPurple: { filePath: `${assetsDirectory}/img/cards/purple.png`, url: 'https://i.gyazo.com/b7504ea55bd7935f97b286407a1bc259.png' },
-  // cardOrange: { filePath: `${assetsDirectory}/img/cards/orange.png`, url: 'https://i.gyazo.com/b7504ea55bd7935f97b286407a1bc259.png' },
-  // cardPink: { filePath: `${assetsDirectory}/img/cards/pink.png`, url: 'https://i.gyazo.com/b7504ea55bd7935f97b286407a1bc259.png' },
+  cardIcons: { filePath: `${assetsDirectory}/img/cards/icons.png`, url: 'https://i.gyazo.com/8c75c5ff78f226ba8003b2ec882d3a71.png' },
   rules: { filePath: `${assetsDirectory}/img/RULES.png`, url: 'https://i.imgur.com/lDoNca1.png' },
   Geolines: { filePath: `${assetsDirectory}/img/backgrounds/Geolines.png`, url: 'https://i.gyazo.com/ac6676009174aed8d3448ca7f3fa9527.png' },
   Waves: { filePath: `${assetsDirectory}/img/backgrounds/Waves.png`, url: 'https://i.gyazo.com/0ee1fcdf6bba0c56c1fc0183242ef1d2.png' },
@@ -183,6 +163,7 @@ export default async function getAsset(
     throw new Error(`Asset not found: ${assetName}`);
   }
   const { filePath, url } = assetDef[assetName];
+  await downloadAsset(url, filePath);
   // log.debug(F, `Checking ${path}`);
   if (!fs.existsSync(filePath)) {
     // log.debug(F, `Downloading ${url} to ${path}`);

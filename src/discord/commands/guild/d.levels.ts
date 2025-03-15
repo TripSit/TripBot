@@ -270,8 +270,8 @@ export const dLevels: SlashCommand = {
         rank: levelData.TEXT.TRIPSITTER ? levelData.TEXT.TRIPSITTER.rank : 0,
       });
     }
-    // Check if user has Developer or Contributor role
-    if (levelData.TEXT.DEVELOPER && levelData.TEXT.DEVELOPER.level > 5) {
+    // Check if user has Dev role or has some xp
+    if (levelData.TEXT.DEVELOPER && levelData.TEXT.DEVELOPER.level > 5 || (target.roles.cache.has(env.ROLE_DEVELOPER))) {
       const progressDeveloper = levelData.TEXT.DEVELOPER
         ? levelData.TEXT.DEVELOPER.level_exp / levelData.TEXT.DEVELOPER.nextLevel
         : 0;
