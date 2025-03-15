@@ -163,7 +163,6 @@ export default async function getAsset(
     throw new Error(`Asset not found: ${assetName}`);
   }
   const { filePath, url } = assetDef[assetName];
-  await downloadAsset(url, filePath);
   // log.debug(F, `Checking ${path}`);
   if (!fs.existsSync(filePath)) {
     // log.debug(F, `Downloading ${url} to ${path}`);
