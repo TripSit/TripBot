@@ -4,7 +4,6 @@
 import {
   SlashCommandBuilder,
   GuildMember,
-  MessageFlags,
 } from 'discord.js';
 import { SlashCommand } from '../../@types/commandDef';
 import commandContext from '../../utils/context';
