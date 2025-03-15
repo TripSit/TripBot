@@ -271,7 +271,7 @@ export const dLevels: SlashCommand = {
       });
     }
     // Check if user has Dev role or has some xp
-    if (levelData.TEXT.DEVELOPER && levelData.TEXT.DEVELOPER.level > 5 || (target.roles.cache.has(env.ROLE_DEVELOPER))) {
+    if ((levelData.TEXT.DEVELOPER && levelData.TEXT.DEVELOPER.level > 5) || (target.roles.cache.has(env.ROLE_DEVELOPER))) {
       const progressDeveloper = levelData.TEXT.DEVELOPER
         ? levelData.TEXT.DEVELOPER.level_exp / levelData.TEXT.DEVELOPER.nextLevel
         : 0;
