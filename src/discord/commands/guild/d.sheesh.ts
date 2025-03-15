@@ -38,21 +38,21 @@ export const dSheesh: SlashCommand = {
     const member = interaction.options.getMember('user') as GuildMember;
     if (command === 'lightjoint') {
       if (user == member) {
-        await interaction.editReply({ content: `<:ts_wellness:1121432396647112725> ${user.displayName} decided to light up joint alone today... <:ts_wellness:1121432396647112725>` });
+        await interaction.editReply({ content: `<:ts_meditate:1350089899113578529> ${user.displayName} decided to light up joint alone today... <:ts_meditate:1350089899113578529>` });
       } else if (member?.id === '977945272359452713') {
-        await interaction.editReply({ content: `<:ts_high:979362238349578250> ${user.displayName} is blazing with ${member.displayName}! <:ts_bots:979362238253113404> 110100100 blaze it! <:ts_high:979362238349578250>` }); // eslint-disable-line max-len
+        await interaction.editReply({ content: `<:ts_cannabinoids:1350076845021986816> ${user.displayName} is blazing with ${member.displayName}! <:ts_bot:1350076410714128384> 110100100 blaze it! <:ts_cannabinoids:1350076845021986816>` }); // eslint-disable-line max-len
       } else if (member != null) {
-        await interaction.editReply({ content: `<:ts_high:979362238349578250> ${user.displayName} started sheeshin with ${member.displayName} <:ts_high:979362238349578250>` });
+        await interaction.editReply({ content: `<:ts_cannabinoids:1350076845021986816> ${user.displayName} started sheeshin with ${member.displayName} <:ts_cannabinoids:1350076845021986816>` });
       } else {
-        await interaction.editReply({ content: `<:ts_high:979362238349578250> ${user.displayName} lighted up a joint! <:ts_high:979362238349578250>` });
+        await interaction.editReply({ content: `<:ts_cannabinoids:1350076845021986816> ${user.displayName} lighted up a joint! <:ts_cannabinoids:1350076845021986816>` });
       }
     } else if (command === 'passjoint') {
       if (user === member) {
-        await interaction.editReply({ content: `<:ts_memes:1121436581232902155> ${user.displayName} decided to keep joint for themselves! Shame on you! <:ts_memes:1121436581232902155>` });
+        await interaction.editReply({ content: `<:ts_smile:1350089891798712403> ${user.displayName} decided to keep joint for themselves! Shame on you! <:ts_smile:1350089891798712403>` });
       } else if (member.id === '977945272359452713') {
-        await interaction.editReply({ content: `<:ts_high:979362238349578250> ${user.displayName} passed joint to TripBot! <:ts_bots:979362238253113404> Hopefully, TripBot gives it back <:ts_memes:1121436581232902155>` }); // eslint-disable-line max-len
+        await interaction.editReply({ content: `<:ts_cannabinoids:1350076845021986816> ${user.displayName} passed joint to TripBot! <:ts_bot:1350076410714128384> Hopefully, TripBot gives it back <:ts_smile:1350089891798712403>` }); // eslint-disable-line max-len
       } else {
-        await interaction.editReply({ content: `<:ts_high:979362238349578250> ${user.displayName} passed joint to ${member?.displayName} <:ts_high:979362238349578250>` }); // eslint-disable-line max-len
+        await interaction.editReply({ content: `<:ts_cannabinoids:1350076845021986816> ${user.displayName} passed joint to ${member?.displayName} <:ts_cannabinoids:1350076845021986816>` }); // eslint-disable-line max-len
       }
     }
 
