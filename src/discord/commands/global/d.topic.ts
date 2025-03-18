@@ -1,5 +1,4 @@
 import {
-  MessageFlags,
   SlashCommandBuilder,
 } from 'discord.js';
 import { SlashCommand } from '../../@types/commandDef';
@@ -16,7 +15,7 @@ export const dTopic: SlashCommand = {
     .setIntegrationTypes([0]),
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
-    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+    await interaction.deferReply({});
     // interaction.editReply({ embeds: [embedTemplate().setDescription(await topic())] });
     await interaction.editReply(`Random New Topic: **${await topic()}**`);
     return true;

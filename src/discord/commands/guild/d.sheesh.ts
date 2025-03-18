@@ -31,7 +31,7 @@ export const dSheesh: SlashCommand = {
         .setRequired(true))),
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
-    await interaction.deferReply({ });
+    await interaction.deferReply({});
 
     const command = interaction.options.getSubcommand() as 'lightjoint' | 'passjoint';
     const user = interaction.member as GuildMember;
