@@ -34,6 +34,7 @@ import {
   APIButtonComponentWithCustomId,
   DiscordErrorData,
   InteractionEditReplyOptions,
+  AnySelectMenuInteraction,
 } from 'discord.js';
 import {
   TextInputStyle,
@@ -1504,14 +1505,99 @@ export async function acknowledgeReportButton(
   }
 }
 
+async function wasActionedRecently(actionType: string): Promise<boolean> {
+  const oneMinuteAgo = new Date(Date.now() - 300 * 1000);
+  const recentAction = await db.user_actions.findFirst({
+    where: {
+      type: actionType as user_action_type,
+      created_at: {
+        gte: oneMinuteAgo,
+      },
+    },
+  });
+  return recentAction !== null;
+}
+
+async function onActionedRecently(
+  buttonInt: ButtonInteraction,
+  modalInt: ModalSubmitInteraction,
+) {
+  const actionRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
+    new ButtonBuilder()
+      .setCustomId('proceedButton')
+      .setLabel('Proceed')
+      .setStyle(ButtonStyle.Primary),
+    new ButtonBuilder()
+      .setCustomId('nahButton')
+      .setLabel("Nah I'm good")
+      .setStyle(ButtonStyle.Secondary),
+  );
+
+  const replyMessage = await buttonInt.followUp({
+    content: stripIndents`This action has already been taken by another moderator in the last 5 minutes. Would you like to proceed anyways?
+    
+    NOTE: These buttons will only remain functional for 1 minute.`,
+    components: [actionRow],
+    ephemeral: true,
+  });
+
+  // Filter only for ButtonInteraction
+  const filter = (i: ButtonInteraction | AnySelectMenuInteraction) => i.isButton() && i.user.id === buttonInt.user.id;
+  const collector = replyMessage.createMessageComponentCollector({ filter, time: 60000 });
+
+  return new Promise(resolve => {
+    collector.on('collect', async (i: ButtonInteraction) => {
+      try {
+        // Don't call deferUpdate() if you plan to use update()
+        if (i.customId === 'proceedButton') {
+          await i.update({ content: 'Proceeding with the action...', components: [] });
+          // eslint-disable-next-line @typescript-eslint/no-use-before-define
+          await moderate(buttonInt, modalInt, true);
+          resolve('proceeded');
+        } else if (i.customId === 'nahButton') {
+          await i.update({ content: 'Action cancelled.', components: [] });
+          resolve('cancelled');
+        }
+      } catch (error) {
+        log.error(F, `Error updating message: ${error}`);
+      }
+    });
+    /*
+    collector.on('end', async collected => {
+      if (collected.size === 0) {
+        try {
+          // For timeouts, try to edit the original reply
+          // await buttonInt.editReply({ content: 'No response received. Action cancelled.', components: [] });
+        } catch (error) {
+          log.error(F, `Error updating actioned recently message: ${error}`);
+        }
+        resolve('timeout');
+      }
+    });
+    */
+  });
+}
+
 export async function moderate(
   buttonInt: ButtonInteraction,
   modalInt: ModalSubmitInteraction,
+  ignoreRecentActions: boolean = false,
 ): Promise<InteractionReplyOptions> {
   if (!buttonInt.guild) return { content: 'This command can only be used in a guild!' };
   const actor = buttonInt.member as GuildMember;
 
   const [, command, targetId]: [string, ModAction, Snowflake] = buttonInt.customId.split('~') as [string, ModAction, Snowflake];
+  if (!isUnFullBan(command)
+    && !isUnTimeout(command)
+    && !isNote(command)
+    && !isReport(command)
+    && !ignoreRecentActions && await wasActionedRecently(command)) {
+    await onActionedRecently(buttonInt, modalInt);
+    return {
+      content: 'This action was cancelled due to another taken recently. Proceed or cancel below.',
+      components: [],
+    }; // Ensure the function returns something
+  }
 
   const modEmbedObj = buttonInt.message.embeds[0].toJSON();
 
