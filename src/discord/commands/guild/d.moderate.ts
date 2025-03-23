@@ -1562,7 +1562,7 @@ async function onActionedRecently(
         log.error(F, `Error updating message: ${error}`);
       }
     });
-    /* 
+    /*
     collector.on('end', async collected => {
       if (collected.size === 0) {
         try {
