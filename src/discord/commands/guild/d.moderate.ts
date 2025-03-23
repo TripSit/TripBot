@@ -1392,17 +1392,12 @@ export async function acknowledgeReportButton(
       reporteeMember = await buttonInt.guild.members.fetch(targetId);
     } catch {
       log.info(F, 'Failed to fetch reportee member. They are likely no longer in the server. Fetching user.');
-      reporteeUser = await discordClient.users.fetch(targetId);
+      try {
+        reporteeUser = await discordClient.users.fetch(targetId);
+      } catch (err) {
+        log.error(F, `Failed to fetch reportee user. Account likely deleted or no access: ${err}`);
+      }
       log.info(F, 'Reportee user successfully fetched!');
-    }
-
-    if (!reporteeMember && !reporteeUser) {
-      await targetChan.send({
-        embeds: [embedTemplate()
-          .setColor(Colors.DarkOrange)
-          .setDescription('The user this mod thread is for has deleted their Discord account.')],
-      });
-      return;
     }
 
     // Fetch the reporter from message mentions
@@ -1425,8 +1420,31 @@ export async function acknowledgeReportButton(
     return;
   }
 
+  if (!reporteeMember && !reporteeUser) {
+    await targetChan.send({
+      embeds: [embedTemplate()
+        .setColor(Colors.DarkOrange)
+        .setDescription('The user this mod thread is for has deleted their Discord account.')],
+    });
+    return;
+  }
+
   // Determine reportee name
-  const reporteeName = reporteeMember?.displayName ?? reporteeUser?.username ?? 'Unknown User';
+  // Determine reportee name
+  let reporteeName = reporteeMember?.displayName ?? reporteeUser?.username ?? 'Unknown User';
+
+  // If reporteeUser and reporteeMember are not found, try fetching the mod thread name
+  if (!reporteeMember && !reporteeUser && reporteeData.mod_thread_id) {
+    try {
+      const modThread = await buttonInt.guild.channels.fetch(reporteeData.mod_thread_id) as TextChannel;
+      if (modThread) {
+        reporteeName = modThread.name; // Use the thread name as the reportee's name
+      }
+    } catch (err) {
+      log.info(F, `Failed to fetch mod thread channel name: ${err}`);
+      log.error(F, `Failed to fetch reporteeMember, user, and modthread name. ${err}`);
+    }
+  }
 
   // Send a DM to the user who triggered the report
   try {
@@ -1445,7 +1463,9 @@ export async function acknowledgeReportButton(
 
     const successEmbed = embedTemplate()
       .setColor(Colors.Green)
-      .setDescription(`${modActorMember} has acknowledged the report on ${reporteeMember || reporteeUser?.username}.`);
+      .setDescription(
+        `${modActorMember.displayName} has acknowledged the report on ${reporteeMember ?? reporteeUser?.username ?? reporteeName}.`,
+      );
 
     await targetChan.send({
       embeds: [successEmbed],
@@ -1464,7 +1484,9 @@ export async function acknowledgeReportButton(
 
     if (guildData.channel_mod_log) {
       const modLog = await buttonInt.guild.channels.fetch(guildData.channel_mod_log) as TextChannel;
-      successEmbed.setDescription(`${modActorMember.displayName} has acknowledged the report on ${reporteeMember || reporteeUser?.username}.`);
+      successEmbed.setDescription(
+        `${modActorMember.displayName} has acknowledged the report on ${reporteeMember ?? reporteeUser?.username ?? reporteeName}.`,
+      );
       await modLog.send({
         embeds: [successEmbed],
       });
@@ -2169,32 +2191,30 @@ export async function modModal(
 
   // When the modal is opened, disable the button on the embed
 
-  const buttonRow = interaction.message.components[0].toJSON() as APIActionRowComponent<APIButtonComponentWithCustomId>;
-  const buttonData = buttonRow.components.find(field => field.custom_id.split('~')[1] === command);
-  if (buttonData) {
-  // log.debug(F, `buttonData: ${JSON.stringify(buttonData, null, 2)}`);
+  const buttonRows = interaction.message.components.map(row => row.toJSON()) as APIActionRowComponent<APIButtonComponentWithCustomId>[];
 
-    const updatedButton = {
-      custom_id: buttonData.custom_id,
-      label: buttonData.label,
-      emoji: buttonData.emoji,
-      style: buttonData.style,
-      type: buttonData.type,
-      disabled: true,
-    };
+  const updatedRows = buttonRows.map(row => {
+    const buttonIndex = row.components.findIndex(field => field.custom_id.split('~')[1] === command);
+    if (buttonIndex !== -1) {
+      const buttonData = row.components[buttonIndex];
 
-    const index = buttonRow.components.findIndex(field => field.custom_id.split('~')[1] === command);
-    buttonRow.components.splice(index, 1, updatedButton);
+      const updatedButton = {
+        ...buttonData,
+        disabled: true,
+      };
 
-    // log.debug(F, `Interaction message: ${JSON.stringify(interaction.message, null, 2)}`);
-    try {
-      await interaction.message.edit({
-        components: [buttonRow],
-      });
-    } catch (err) {
-      // This will happen on the initial ephemeral message and idk why
-      // log.error(F, `Error: ${err}`);
+      row.components.splice(buttonIndex, 1, updatedButton);
     }
+    return row;
+  });
+
+  try {
+    await interaction.message.edit({
+      components: updatedRows,
+    });
+  } catch (err) {
+    // This will happen on the initial ephemeral message and idk why
+    // log.error(F, `Error: ${err}`);
   }
 
   await interaction.showModal(modal);

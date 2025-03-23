@@ -217,12 +217,16 @@ export const dLearn: SlashCommand = {
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
     // Below is if you just want a response (non-modal) command
-    const ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined;
+    let ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined;
+    let embed = embedTemplate();
+    const subcommand = interaction.options.getSubcommand();
+
+    if (subcommand === 'link' || subcommand === 'unlink') {
+      ephemeral = MessageFlags.Ephemeral;
+    }
     await interaction.deferReply({ flags: ephemeral });
 
-    let embed = embedTemplate();
-
-    switch (interaction.options.getSubcommand()) {
+    switch (subcommand) {
       case 'help':
         embed = await moodleHelp();
         break;
