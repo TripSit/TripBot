@@ -1589,6 +1589,7 @@ export async function moderate(
   if (!isUnFullBan(command)
     && !isUnTimeout(command)
     && !isNote(command)
+    && !isReport(command)
     && !ignoreRecentActions && await wasActionedRecently(command)) {
     await onActionedRecently(buttonInt, modalInt);
     return {
