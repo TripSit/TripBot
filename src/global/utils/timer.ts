@@ -122,7 +122,7 @@ async function checkTickets() { // eslint-disable-line @typescript-eslint/no-unu
         const updatedTicket = ticket;
         updatedTicket.status = 'ARCHIVED' as ticket_status;
         updatedTicket.deleted_at = env.NODE_ENV === 'production'
-          ? DateTime.local().plus({ days: 3 }).toJSDate()
+          ? DateTime.local().plus({ days: 2 }).toJSDate()
           : DateTime.local().plus({ minutes: 1 }).toJSDate();
         if (!updatedTicket.description) {
           updatedTicket.description = 'Ticket archived';
@@ -338,9 +338,9 @@ async function checkTickets() { // eslint-disable-line @typescript-eslint/no-unu
             const lastMessage = messages.first();
 
             // Determine if this message was sent longer than a week ago
-            if (lastMessage && DateTime.fromJSDate(lastMessage.createdAt) >= DateTime.local().minus({ days: 3 })) {
+            if (lastMessage && DateTime.fromJSDate(lastMessage.createdAt) >= DateTime.local().minus({ days: 5 })) {
               thread.delete();
-              log.debug(F, `Deleted thread ${thread.name} in ${channel.name} because the last message was sent over 3 days ago`);
+              log.debug(F, `Deleted thread ${thread.name} in ${channel.name} because the last message was sent over 5 days ago`);
             }
           } catch (err) {
             // Thread was likely manually deleted
