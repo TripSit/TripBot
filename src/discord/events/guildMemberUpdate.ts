@@ -359,9 +359,10 @@ async function removeExTeamFromThreads(
     fetchedThreads.threads.forEach(async thread => {
       if (thread
         && thread.parentId === guildData.channel_tripsit
-        && thread.id !== ticketData?.thread_id) {
+        && thread.id !== ticketData?.thread_id
+        && !thread.archived) {
         log.debug(F, `Removing ${newMember.displayName} from ${thread.name}`);
-        await thread.members.remove(newMember.id, 'Helper/Tripsitter role removed');
+        await thread.members.remove(newMember.id);
       }
     });
   }
