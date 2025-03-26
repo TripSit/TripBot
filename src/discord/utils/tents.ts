@@ -51,6 +51,7 @@ export async function pitchTent(
       {
         id: New.member.id,
         allow: [
+          PermissionsBitField.Flags.ViewChannel,
           PermissionsBitField.Flags.Connect,
           PermissionsBitField.Flags.MoveMembers,
         ],
@@ -100,7 +101,7 @@ export async function pitchTent(
   - \`/tent name\` - Set a new name for your tent
   - \`/tent limit\` - Set a user limit
   - \`/tent level\` - Set a level requirement
-  - \`/tent lock\`- Prevents anyone else from joining
+  - \`/tent lock\`- Locks channel for all
 
 - **Moderate your tent**
   - \`/tent add\` - Allow a user to join and see your tent, regardless of other settings
