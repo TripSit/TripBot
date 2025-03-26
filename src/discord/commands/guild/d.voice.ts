@@ -16,10 +16,6 @@ import commandContext from '../../utils/context';
 
 const F = f(__filename);
 
-/* Rooni's TODO:
-Add command to set a level requirement for a tent
-*/
-
 type VoiceActions = 'lock' | 'level' | 'limit' | 'host' | 'add' | 'ban' | 'name' | 'ping';
 
 // Helper function to check if a user has an explicit permission overwrite
@@ -43,12 +39,17 @@ async function tentName(
 ):Promise<EmbedBuilder> {
   voiceChannel.setName(`⛺│${newName}`);
 
-  // log.debug(F, `${voiceChannel} hab been named to ${newName}`);
+  // Send the tent update message
+  const embed = new EmbedBuilder()
+    .setTitle('Tent updated')
+    .setColor(Colors.Blue)
+    .setDescription(`Tent renamed to "${newName}".`);
+  await voiceChannel.send({ embeds: [embed] });
 
   return embedTemplate()
     .setTitle('Tent renamed')
     .setColor(Colors.Green)
-    .setDescription(`${voiceChannel} has been renamed to ${newName}`);
+    .setDescription(`${voiceChannel} has been renamed to "${newName}"`);
 }
 
 async function tentLimit(
@@ -248,7 +249,7 @@ async function tentAdd(
   let description = '';
   // Check if the user is banned
   if (hasExplicitPermission(voiceChannel, target, PermissionsBitField.Flags.ViewChannel) === false) {
-    voiceChannel.permissionOverwrites.create(target, { Connect: true });
+    voiceChannel.permissionOverwrites.create(target, { Connect: true, ViewChannel: true });
     return embedTemplate()
       .setTitle('User unbanned and added')
       .setColor(Colors.Green)
@@ -262,13 +263,13 @@ async function tentAdd(
       .setDescription('Moderators are already able to join all tents.');
   }
   if (hasExplicitPermission(voiceChannel, target, PermissionsBitField.Flags.Connect) === null) {
-    voiceChannel.permissionOverwrites.create(target, { Connect: true });
+    voiceChannel.permissionOverwrites.create(target, { Connect: true, ViewChannel: true });
     title = 'User added';
     description = `${target} can now join, regardless of other settings.`;
   } else {
     voiceChannel.permissionOverwrites.delete(target);
     title = 'User un-added';
-    description = `${target} can still join regardless of other settings.`;
+    description = `${target}'s permissions are reset to default.`;
   }
   // log.debug(F, `${target.displayName} is now ${verb}`);
   return embedTemplate()
@@ -296,15 +297,15 @@ async function tentBan(
   if (hasExplicitPermission(voiceChannel, target, PermissionsBitField.Flags.ViewChannel) === false) {
     voiceChannel.permissionOverwrites.delete(target);
     title = 'User unbanned';
-    description = `${target} can now join the tent if it's unlocked.`;
+    description = `${target}'s permissions reset to default.`;
     // Edge case: Check if the user is the host and transfer
   } else if (hasExplicitPermission(voiceChannel, target, PermissionsBitField.Flags.MoveMembers) === true) {
-    voiceChannel.permissionOverwrites.edit(target, { ViewChannel: false, Connect: null });
+    voiceChannel.permissionOverwrites.edit(target, { Connect: false, ViewChannel: false });
     target.voice.setChannel(null);
     title = 'User banned';
     description = `${target} has been banned from the tent. They can no longer view or join this channel.`;
   } else {
-    voiceChannel.permissionOverwrites.create(target, { ViewChannel: false });
+    voiceChannel.permissionOverwrites.create(target, { Connect: false, ViewChannel: false });
     target.voice.setChannel(null);
     title = 'User banned';
     description = `${target} has been banned from the tent. They can no longer view or join this channel.`;
@@ -385,7 +386,6 @@ export const dVoice: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('tent')
     .setDescription('Control your Campfire Tent')
-    .setIntegrationTypes([0])
     .addSubcommand(subcommand => subcommand
       .setName('name')
       .setDescription('Rename your Tent')
@@ -460,39 +460,80 @@ export const dVoice: SlashCommand = {
     const newName = interaction.options.getString('name') as string;
     const limit = interaction.options.getInteger('limit') as number;
     const level = interaction.options.getString('level') as string;
-    // const stationid = interaction.options.getString('station') as string;
-    // const guild = interaction.guild as Guild;
-    const voiceChannel = member.voice.channel;
+
     let embed = embedTemplate()
       .setTitle('Error')
       .setColor(Colors.Red)
       .setDescription('You can only use this command in a voice channel Tent that you own!');
 
-    // Check if user is in a voice channel
-    if (voiceChannel === null) {
+    // Determine the voice channel
+    let voiceChannel = member.voice.channel;
+    if (!voiceChannel && member.roles.cache.has(env.ROLE_MODERATOR)) {
+      // If the user is a moderator and not in a voice channel, use the channel where the command was executed
+      if (interaction.channel?.isVoiceBased()) {
+        voiceChannel = interaction.channel as VoiceBasedChannel;
+      } else {
+        embed = embedTemplate()
+          .setTitle('Error')
+          .setColor(Colors.Red)
+          .setDescription(
+            'You must be in a voice channel or use this command in a voice channel\'s text chat as a moderator.',
+          );
+        await interaction.editReply({ embeds: [embed] });
+        return false;
+      }
+    }
+
+    // If no voice channel is determined, return an error
+    if (!voiceChannel) {
+      embed = embedTemplate()
+        .setTitle('Error')
+        .setColor(Colors.Red)
+        .setDescription('You must be in a voice channel to use this command.');
       await interaction.editReply({ embeds: [embed] });
       return false;
     }
 
     // Check if user is in a Tent
-    if (voiceChannel.name.includes('⛺') === false) {
+    if (!voiceChannel.name.includes('⛺')) {
+      embed = embedTemplate()
+        .setTitle('Error')
+        .setColor(Colors.Red)
+        .setDescription('You can only use this command in a Tent.');
       await interaction.editReply({ embeds: [embed] });
       return false;
     }
 
     // Check if a user is the current host or mod/admin, only users with MoveMembers permission can do this
     if (!voiceChannel.permissionsFor(member).has(PermissionsBitField.Flags.MoveMembers)) {
+      embed = embedTemplate()
+        .setTitle('Error')
+        .setColor(Colors.Red)
+        .setDescription('You must be the host or a moderator to use this command.');
       await interaction.editReply({ embeds: [embed] });
       return false;
     }
 
     // Check the user is trying to act on themselves
     if (target === member) {
-      await interaction.editReply({ embeds: [embed.setDescription('Stop playing with yourself!')] });
+      embed = embedTemplate()
+        .setTitle('Error')
+        .setColor(Colors.Red)
+        .setDescription('Stop playing with yourself!');
+      await interaction.editReply({ embeds: [embed] });
       return false;
     }
 
-    // log.debug(F, `Command: ${command}`);
+    // Check if the target is a bot
+    if (target && target.user.bot) {
+      embed = embedTemplate()
+        .setTitle('Error')
+        .setColor(Colors.Red)
+        .setDescription('You cannot interact with bots.');
+      await interaction.editReply({ embeds: [embed] });
+      return false;
+    }
+
     if (command === 'name') {
       embed = await tentName(voiceChannel, newName);
     }
