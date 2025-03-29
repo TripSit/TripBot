@@ -1,8 +1,6 @@
 import {
   Colors,
   SlashCommandBuilder,
-  time,
-  EmbedBuilder,
   TextChannel,
   MessageFlags,
 } from 'discord.js';
@@ -15,8 +13,6 @@ const F = f(__filename);
 
 const interval = 30 * 1000; // Check every 30 seconds
 const busynessThreshold = 100; // Set the busyness score limit
-const cooldownChecks = 2; // Number of checks below 75% threshold to disable slowmode
-const cooldownCounter = 0;
 
 const embedTitle = 'Shows the busyness score of #lounge';
 const header = 'Busyness score is being calculated...'; // Provide a default value
@@ -27,9 +23,9 @@ export const dBusyness: SlashCommand = {
     .setDescription('Shows the busyness of #lounge')
     .addBooleanOption(option => option
       .setName('ephemeral')
-      .setDescription('Set to "True" to show the response only to you')) as SlashCommandBuilder, // Explicitly cast to SlashCommandBuilder
+      .setDescription('Set to "True" to show the response only to you')) as SlashCommandBuilder,
   async execute(interaction) {
-    log.info(F, await commandContext(interaction));
+    log.debug(F, await commandContext(interaction));
 
     // Check if the user has admin permissions
     if (!interaction.memberPermissions?.has('Administrator')) {
@@ -51,6 +47,15 @@ export const dBusyness: SlashCommand = {
         .setColor(Colors.Blurple)
         .setFooter(null)],
     });
+
+    // Variables to track the maximum recorded busyness score
+    let maxBusynessScore = 0;
+    let maxBusynessDetails = {
+      messageCount: 0,
+      userCount: 0,
+      distributionFactor: 0,
+      activityDensity: 0,
+    };
 
     async function calculateBusyness(
       channel: TextChannel,
@@ -114,6 +119,18 @@ export const dBusyness: SlashCommand = {
         return;
       }
 
+      // Check if there are any new messages in the cache
+      const oneMinuteAgo = Date.now() - 60 * 1000;
+      const recentMessages = channel.messages.cache.filter(
+        message => message.createdTimestamp > oneMinuteAgo && !message.author.bot,
+      );
+
+      if (recentMessages.size === 0) {
+        log.debug(F, 'No new messages in the last minute. Skipping busyness check.');
+        setTimeout(checkBusyness, interval); // Schedule the next check
+        return;
+      }
+
       // Check if the embed message still exists
       try {
         await msg.fetch();
@@ -126,6 +143,17 @@ export const dBusyness: SlashCommand = {
         busynessScore, messageCount, userCount, distributionFactor, activityDensity,
       } = await calculateBusyness(channel);
 
+      // Update the maximum recorded busyness score if the current score is higher
+      if (busynessScore > maxBusynessScore) {
+        maxBusynessScore = busynessScore;
+        maxBusynessDetails = {
+          messageCount,
+          userCount,
+          distributionFactor,
+          activityDensity,
+        };
+      }
+
       // Add the current score to the history
       scoreHistory.push(busynessScore);
       if (scoreHistory.length > 2) {
@@ -133,24 +161,24 @@ export const dBusyness: SlashCommand = {
       }
 
       // Log the current score and history
-      log.info(F, `Current Busyness Score: ${busynessScore.toFixed(2)}`);
-      log.info(F, `Score History: ${scoreHistory.map(score => score.toFixed(2)).join(', ')}`);
+      log.debug(F, `Current Busyness Score: ${busynessScore.toFixed(2)}`);
+      log.debug(F, `Score History: ${scoreHistory.map(score => score.toFixed(2)).join(', ')}`);
 
       // Hysteresis logic
       if (busynessScore > busynessThreshold) {
         aboveThresholdChecks = Math.min(aboveThresholdChecks + 1, 2);
         belowThresholdChecks = 0;
-        log.info(F, `Above threshold for ${aboveThresholdChecks} consecutive checks.`);
+        log.debug(F, `Above threshold for ${aboveThresholdChecks} consecutive checks.`);
         if (aboveThresholdChecks >= 2 && !slowmodeEnabled) {
-          log.info(F, 'Slowmode would be enabled.');
+          log.debug(F, 'Slowmode would be enabled.');
           slowmodeEnabled = true;
         }
       } else if (busynessScore <= busynessThreshold * 0.75) {
         belowThresholdChecks = Math.min(belowThresholdChecks + 1, 2);
         aboveThresholdChecks = 0;
-        log.info(F, `Below 75% threshold for ${belowThresholdChecks} consecutive checks.`);
+        log.debug(F, `Below 75% threshold for ${belowThresholdChecks} consecutive checks.`);
         if (belowThresholdChecks >= 2 && slowmodeEnabled) {
-          log.info(F, 'Slowmode would be disabled.');
+          log.debug(F, 'Slowmode would be disabled.');
           slowmodeEnabled = false;
         }
       } else {
@@ -172,6 +200,12 @@ export const dBusyness: SlashCommand = {
           + `- **U (Unique Users):** ${userCount}\n`
           + `- **D (Distribution Factor):** ${(distributionFactor * 100).toFixed(2)}%\n`
           + `- **A (Activity Density):** ${activityDensity.toFixed(2)}\n\n`
+          + `**Max Recorded Busyness Score:** ${maxBusynessScore.toFixed(2)}\n`
+          + '**Max Components:**\n'
+          + `- **M (Messages):** ${maxBusynessDetails.messageCount}\n`
+          + `- **U (Unique Users):** ${maxBusynessDetails.userCount}\n`
+          + `- **D (Distribution Factor):** ${(maxBusynessDetails.distributionFactor * 100).toFixed(2)}%\n`
+          + `- **A (Activity Density):** ${maxBusynessDetails.activityDensity.toFixed(2)}\n\n`
           + `**Enable Threshold:** ${busynessThreshold}\n`
           + `**Disable Threshold:** ${busynessThreshold * 0.75}\n\n`
           + `**Last Check:** <t:${Math.floor(now / 1000)}:R>\n`
