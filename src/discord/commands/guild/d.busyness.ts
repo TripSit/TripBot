@@ -12,7 +12,7 @@ import commandContext from '../../utils/context';
 const F = f(__filename);
 
 const interval = 30 * 1000; // Check every 30 seconds
-const busynessThreshold = 100; // Set the busyness score limit
+const busynessThreshold = 150; // Set the busyness score limit
 
 const embedTitle = 'Shows the busyness score of #lounge';
 const header = 'Busyness score is being calculated...'; // Provide a default value
