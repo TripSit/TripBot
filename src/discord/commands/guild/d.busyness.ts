@@ -33,92 +33,6 @@ let maxBusynessDetails = {
   activityDensity: 0,
 };
 
-export const dBusyness: SlashCommand = {
-  data: new SlashCommandBuilder()
-    .setName('busyness')
-    .setDescription('Manage the busyness score of #lounge')
-    .addSubcommand(subcommand => subcommand
-      .setName('post')
-      .setDescription('Post the busyness embed')
-      .addBooleanOption(option => option
-        .setName('ephemeral')
-        .setDescription('Set to "True" to show the response only to you')))
-    .addSubcommand(subcommand => subcommand
-      .setName('set')
-      .setDescription('Update the busyness configuration')
-      .addStringOption(option => option
-        .setName('key')
-        .setDescription('The configuration key to update')
-        .setRequired(true)
-        .addChoices(
-          { name: 'Message Weight', value: 'messageWeight' },
-          { name: 'User Weight', value: 'userWeight' },
-          { name: 'Distribution Weight', value: 'distributionWeight' },
-          { name: 'Activity Density Weight', value: 'activityDensityWeight' },
-          { name: 'Busyness Threshold', value: 'busynessThreshold' },
-        ))
-      .addNumberOption(option => option
-        .setName('value')
-        .setDescription('The new value for the configuration key')
-        .setRequired(true))) as SlashCommandBuilder,
-  async execute(interaction) {
-    log.debug(F, await commandContext(interaction));
-
-    // Check if the user has admin permissions
-    if (!interaction.memberPermissions?.has('Administrator')) {
-      await interaction.reply({
-        content: 'You do not have permission to use this command.',
-        ephemeral: true,
-      });
-      return false;
-    }
-
-    const subcommand = interaction.options.getSubcommand();
-
-    if (subcommand === 'post') {
-      // Handle the "post" subcommand
-      await interaction.deferReply({
-        flags: interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined,
-      });
-
-      msg = await interaction.editReply({
-        embeds: [embedTemplate()
-          .setTitle(embedTitle)
-          .setDescription(header)
-          .setColor(Colors.Blurple)
-          .setFooter(null)],
-      });
-
-      // Start the busyness check loop
-      checkBusyness();
-    } else if (subcommand === 'set') {
-      // Handle the "set" subcommand
-      const key = interaction.options.getString('key', true);
-      const value = interaction.options.getNumber('value', true);
-
-      if (!(key in busynessConfig)) {
-        await interaction.reply({
-          content: `Invalid configuration key: \`${key}\`.`,
-          ephemeral: true,
-        });
-        return false;
-      }
-
-      // Update the configuration
-      busynessConfig[key as keyof typeof busynessConfig] = value;
-
-      await interaction.reply({
-        content: `Updated \`${key}\` to \`${value}\`.`,
-        ephemeral: true,
-      });
-
-      log.debug(F, `Updated busynessConfig: ${key} = ${value}`);
-    }
-
-    return true;
-  },
-};
-
 async function calculateBusyness(
   channel: TextChannel,
 ): Promise<{
@@ -208,23 +122,39 @@ async function checkBusyness() {
   const embed = embedTemplate()
     .setTitle(embedTitle)
     .setDescription(
-      `**Current Busyness Score:** ${busynessScore.toFixed(2)}\n`
-      + `**Formula:** \`Busyness = (M * ${busynessConfig.messageWeight}) + (U * ${busynessConfig.userWeight}) + (D * ${busynessConfig.distributionWeight}) - (A * ${busynessConfig.activityDensityWeight})\`\n\n`
-      + '**Components:**\n'
-      + `- **M (Messages):** ${messageCount}\n`
-      + `- **U (Unique Users):** ${userCount}\n`
-      + `- **D (Distribution Factor):** ${(distributionFactor * 100).toFixed(2)}%\n`
-      + `- **A (Activity Density):** ${activityDensity.toFixed(2)}\n\n`
-      + `**Max Recorded Busyness Score:** ${maxBusynessScore.toFixed(2)}\n`
-      + '**Max Components:**\n'
-      + `- **M (Messages):** ${maxBusynessDetails.messageCount}\n`
-      + `- **U (Unique Users):** ${maxBusynessDetails.userCount}\n`
-      + `- **D (Distribution Factor):** ${(maxBusynessDetails.distributionFactor * 100).toFixed(2)}%\n`
-      + `- **A (Activity Density):** ${maxBusynessDetails.activityDensity.toFixed(2)}\n\n`
+      `**Formula:** \`Busyness = (M * ${busynessConfig.messageWeight}) + (U * ${busynessConfig.userWeight}) + (D * ${busynessConfig.distributionWeight}) - (A * ${busynessConfig.activityDensityWeight})\`\n\n`
       + `**Enable Threshold:** ${busynessConfig.busynessThreshold}\n`
       + `**Disable Threshold:** ${busynessConfig.busynessThreshold * 0.75}\n\n`
       + `**Last Check:** <t:${Math.floor(now / 1000)}:R>\n`
       + `**Next Check:** <t:${Math.floor(nextCheck / 1000)}:R>\n\n`,
+    )
+    .addFields(
+      {
+        name: `Current Busyness Score: ${busynessScore.toFixed(2)}`,
+        value:
+          '```\n'
+          + 'Component            Value       Raw Contribution\n'
+          + '------------------------------------------------\n'
+          + `Messages (M):        ${String(messageCount).padStart(10)} ${String((messageCount * busynessConfig.messageWeight).toFixed(2)).padStart(10)}\n`
+          + `Unique Users (U):    ${String(userCount).padStart(10)} ${String((userCount * busynessConfig.userWeight).toFixed(2)).padStart(10)}\n`
+          + `Distribution (D):    ${String((distributionFactor * 100).toFixed(2)).padStart(10)} ${String((distributionFactor * busynessConfig.distributionWeight).toFixed(2)).padStart(10)}\n`
+          + `Activity (A):        ${String(activityDensity.toFixed(2)).padStart(10)} ${String((-activityDensity * busynessConfig.activityDensityWeight).toFixed(2)).padStart(10)}\n`
+          + '```',
+        inline: false,
+      },
+      {
+        name: `Maximum Busyness Score: ${maxBusynessScore.toFixed(2)}`,
+        value:
+          '```\n'
+          + 'Component            Value       Raw Contribution\n'
+          + '------------------------------------------------\n'
+          + `Messages (M):        ${String(maxBusynessDetails.messageCount).padStart(10)} ${String((maxBusynessDetails.messageCount * busynessConfig.messageWeight).toFixed(2)).padStart(10)}\n`
+          + `Unique Users (U):    ${String(maxBusynessDetails.userCount).padStart(10)} ${String((maxBusynessDetails.userCount * busynessConfig.userWeight).toFixed(2)).padStart(10)}\n`
+          + `Distribution (D):    ${String((maxBusynessDetails.distributionFactor * 100).toFixed(2)).padStart(10)} ${String((maxBusynessDetails.distributionFactor * busynessConfig.distributionWeight).toFixed(2)).padStart(10)}\n`
+          + `Activity (A):        ${String(maxBusynessDetails.activityDensity.toFixed(2)).padStart(10)} ${String((-maxBusynessDetails.activityDensity * busynessConfig.activityDensityWeight).toFixed(2)).padStart(10)}\n`
+          + '```',
+        inline: false,
+      },
     )
     .setColor(Colors.Blurple);
 
@@ -237,5 +167,83 @@ async function checkBusyness() {
 
   setTimeout(checkBusyness, interval);
 }
+
+export const dBusyness: SlashCommand = {
+  data: new SlashCommandBuilder()
+    .setName('busyness')
+    .setDescription('Manage the busyness score of #lounge')
+    .addSubcommand(subcommand => subcommand
+      .setName('post')
+      .setDescription('Post the busyness embed')
+      .addBooleanOption(option => option
+        .setName('ephemeral')
+        .setDescription('Set to "True" to show the response only to you')))
+    .addSubcommand(subcommand => subcommand
+      .setName('set')
+      .setDescription('Update the busyness configuration')
+      .addStringOption(option => option
+        .setName('key')
+        .setDescription('The configuration key to update')
+        .setRequired(true)
+        .addChoices(
+          { name: 'Message Weight', value: 'messageWeight' },
+          { name: 'User Weight', value: 'userWeight' },
+          { name: 'Distribution Weight', value: 'distributionWeight' },
+          { name: 'Activity Density Weight', value: 'activityDensityWeight' },
+          { name: 'Busyness Threshold', value: 'busynessThreshold' },
+        ))
+      .addNumberOption(option => option
+        .setName('value')
+        .setDescription('The new value for the configuration key')
+        .setRequired(true))) as SlashCommandBuilder,
+  async execute(interaction) {
+    log.debug(F, await commandContext(interaction));
+
+    // Check if the user has admin permissions
+    if (!interaction.memberPermissions?.has('Administrator')) {
+      await interaction.reply({
+        content: 'You do not have permission to use this command.',
+        ephemeral: true,
+      });
+      return false;
+    }
+
+    const subcommand = interaction.options.getSubcommand();
+
+    if (subcommand === 'post') {
+      // Handle the "post" subcommand
+      await interaction.deferReply({
+        flags: interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined,
+      });
+
+      msg = await interaction.editReply({
+        embeds: [embedTemplate()
+          .setTitle(embedTitle)
+          .setDescription(header)
+          .setColor(Colors.Blurple)
+          .setFooter(null)],
+      });
+
+      // Start the busyness check loop
+      checkBusyness();
+    } else if (subcommand === 'set') {
+      // Handle the "set" subcommand
+      const key = interaction.options.getString('key', true);
+      const value = interaction.options.getNumber('value', true);
+
+      // Update the configuration
+      busynessConfig[key as keyof typeof busynessConfig] = value;
+
+      await interaction.reply({
+        content: `Updated \`${key}\` to \`${value}\`.`,
+        ephemeral: true,
+      });
+
+      log.debug(F, `Updated busynessConfig: ${key} = ${value}`);
+    }
+
+    return true;
+  },
+};
 
 export default dBusyness;
