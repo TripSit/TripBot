@@ -84,7 +84,7 @@ async function calculateBusyness(
 }
 
 async function checkBusyness() {
-  const channel = msg.channel as TextChannel;
+  const channel = (await msg.client.channels.fetch(env.CHANNEL_LOUNGE)) as TextChannel;
   if (!channel) {
     log.error(F, 'Lounge channel not found.');
     return;
