@@ -3,6 +3,7 @@ import {
   SlashCommandBuilder,
   TextChannel,
   MessageFlags,
+  Message,
 } from 'discord.js';
 
 import { SlashCommand } from '../../@types/commandDef';
@@ -13,24 +14,24 @@ const F = f(__filename);
 
 // Editable configuration variables
 const busynessConfig = {
-  messageWeight: 0.5,
-  userWeight: 2,
-  distributionWeight: 50,
-  activityDensityWeight: 1.5,
-  busynessThreshold: 150,
+  messageWeight: 3,
+  userWeight: 3.5,
+  spamminessWeight: 15,
+  densityWeight: 3,
+  busynessThreshold: 100,
 };
 
 const interval = 30 * 1000; // Check every 30 seconds
 const embedTitle = 'Shows the busyness score of #lounge';
 const header = 'Busyness score is being calculated...'; // Provide a default value
 
-let msg: any; // To store the embed message reference
+let msg: Message<boolean>;
 let maxBusynessScore = 0;
 let maxBusynessDetails = {
   messageCount: 0,
   userCount: 0,
-  distributionFactor: 0,
-  activityDensity: 0,
+  spamminess: 0,
+  density: 0,
 };
 
 async function calculateBusyness(
@@ -39,8 +40,8 @@ async function calculateBusyness(
     busynessScore: number;
     messageCount: number;
     userCount: number;
-    distributionFactor: number;
-    activityDensity: number;
+    spamminess: number;
+    density: number;
   }> {
   const now = Date.now();
   const oneMinuteAgo = now - 60 * 1000;
@@ -51,47 +52,82 @@ async function calculateBusyness(
   );
 
   const uniqueUsers = new Set(recentMessages.map(message => message.author.id));
-  const userMessageCounts: { [userId: string]: number } = {};
-
-  // Count messages per user
+  const userMessageCounts = new Map<string, number>();
   recentMessages.forEach(message => {
-    userMessageCounts[message.author.id] = (userMessageCounts[message.author.id] || 0) + 1;
+    userMessageCounts.set(
+      message.author.id,
+      (userMessageCounts.get(message.author.id) || 0) + 1,
+    );
   });
 
   const messageCount = recentMessages.size;
   const userCount = uniqueUsers.size;
 
-  // Calculate the distribution factor (D)
-  const maxMessages = Math.max(...Object.values(userMessageCounts));
-  const distributionFactor = messageCount > 0 ? 1 - maxMessages / messageCount : 0;
+  // Calculate the Spamminess (S)
+  const messageCounts = Object.values(userMessageCounts);
+  const n = messageCounts.length;
+  const totalMessages = messageCounts.reduce((sum, count) => sum + count, 0);
 
-  // Calculate the activity density (A)
-  const activityDensity = userCount > 0 ? messageCount / userCount : 0;
+  let spamminess = 0;
+  if (n > 0 && totalMessages > 0) {
+    let cumulativeSum = 0;
+    let magicNumerator = 0;
+
+    messageCounts.forEach((count, index) => {
+      cumulativeSum += count;
+      magicNumerator += (index + 1) * count; // Adjust index logic if needed
+    });
+
+    spamminess = 1 - (2 * magicNumerator) / (n * cumulativeSum);
+    spamminess = Math.min(Math.max(spamminess, 0), 1);
+  }
+
+  // Calculate the Density (D)
+  const density = userCount > 0 ? messageCount / userCount : 0;
 
   // Calculate the final busyness score
   const busynessScore = messageCount * busynessConfig.messageWeight
     + userCount * busynessConfig.userWeight
-    + distributionFactor * busynessConfig.distributionWeight
-    - activityDensity * busynessConfig.activityDensityWeight;
+    + spamminess * busynessConfig.spamminessWeight
+    - density * busynessConfig.densityWeight;
 
   return {
     busynessScore,
     messageCount,
     userCount,
-    distributionFactor,
-    activityDensity,
+    spamminess,
+    density,
   };
 }
 
+let loungeChannel: TextChannel | null = null; // Cache the channel object
+
 async function checkBusyness() {
-  const channel = (await msg.client.channels.fetch(env.CHANNEL_LOUNGE)) as TextChannel;
-  if (!channel) {
-    log.error(F, 'Lounge channel not found.');
-    return;
+  const startTime = Date.now(); // Start timing
+  const now = startTime; // Use a single `now` variable for consistency
+
+  // Fetch the channel only once and reuse it
+  if (!loungeChannel) {
+    try {
+      loungeChannel = (await msg.client.channels.fetch(env.CHANNEL_LOUNGE)) as TextChannel;
+      log.debug(F, 'Fetched lounge channel.');
+    } catch (error) {
+      log.error(F, 'Failed to fetch lounge channel');
+      return;
+    }
   }
 
-  const oneMinuteAgo = Date.now() - 60 * 1000;
-  const recentMessages = channel.messages.cache.filter(
+  const fetchStart = now;
+  // Preload the message cache if it's empty
+  if (loungeChannel.messages.cache.size === 0) {
+    await loungeChannel.messages.fetch({ limit: 100 });
+    log.debug(F, `Preloaded message cache in ${Date.now() - fetchStart}ms.`);
+  }
+
+  const oneMinuteAgo = now - 60 * 1000;
+
+  // Filter recent messages
+  const recentMessages = loungeChannel.messages.cache.filter(
     message => message.createdTimestamp > oneMinuteAgo && !message.author.bot,
   );
 
@@ -102,8 +138,8 @@ async function checkBusyness() {
   }
 
   const {
-    busynessScore, messageCount, userCount, distributionFactor, activityDensity,
-  } = await calculateBusyness(channel);
+    busynessScore, messageCount, userCount, spamminess, density,
+  } = await calculateBusyness(loungeChannel);
 
   // Update the maximum recorded busyness score if the current score is higher
   if (busynessScore > maxBusynessScore) {
@@ -111,18 +147,18 @@ async function checkBusyness() {
     maxBusynessDetails = {
       messageCount,
       userCount,
-      distributionFactor,
-      activityDensity,
+      spamminess,
+      density,
     };
+    log.debug(F, 'Updated maximum busyness score.');
   }
 
-  const now = Date.now(); // Current timestamp
   const nextCheck = now + interval; // Timestamp for the next check
 
   const embed = embedTemplate()
     .setTitle(embedTitle)
     .setDescription(
-      `**Formula:** \`Busyness = (M * ${busynessConfig.messageWeight}) + (U * ${busynessConfig.userWeight}) + (D * ${busynessConfig.distributionWeight}) - (A * ${busynessConfig.activityDensityWeight})\`\n\n`
+      `**Formula:** \`Busyness = (M * ${busynessConfig.messageWeight}) + (U * ${busynessConfig.userWeight}) + (S * ${busynessConfig.spamminessWeight}) - (D * ${busynessConfig.densityWeight})\`\n\n`
       + `**Enable Threshold:** ${busynessConfig.busynessThreshold}\n`
       + `**Disable Threshold:** ${busynessConfig.busynessThreshold * 0.75}\n\n`
       + `**Last Check:** <t:${Math.floor(now / 1000)}:R>\n`
@@ -137,8 +173,8 @@ async function checkBusyness() {
           + '------------------------------------------------\n'
           + `Messages (M):        ${String(messageCount).padStart(10)} ${String((messageCount * busynessConfig.messageWeight).toFixed(2)).padStart(10)}\n`
           + `Unique Users (U):    ${String(userCount).padStart(10)} ${String((userCount * busynessConfig.userWeight).toFixed(2)).padStart(10)}\n`
-          + `Distribution (D):    ${String((distributionFactor * 100).toFixed(2)).padStart(10)} ${String((distributionFactor * busynessConfig.distributionWeight).toFixed(2)).padStart(10)}\n`
-          + `Activity (A):        ${String(activityDensity.toFixed(2)).padStart(10)} ${String((-activityDensity * busynessConfig.activityDensityWeight).toFixed(2)).padStart(10)}\n`
+          + `Spamminess (S):      ${String(spamminess.toFixed(2)).padStart(10)} ${String((spamminess * busynessConfig.spamminessWeight).toFixed(2)).padStart(10)}\n`
+          + `Density (D):         ${String(density.toFixed(2)).padStart(10)} ${String((-density * busynessConfig.densityWeight).toFixed(2)).padStart(10)}\n`
           + '```',
         inline: false,
       },
@@ -150,8 +186,8 @@ async function checkBusyness() {
           + '------------------------------------------------\n'
           + `Messages (M):        ${String(maxBusynessDetails.messageCount).padStart(10)} ${String((maxBusynessDetails.messageCount * busynessConfig.messageWeight).toFixed(2)).padStart(10)}\n`
           + `Unique Users (U):    ${String(maxBusynessDetails.userCount).padStart(10)} ${String((maxBusynessDetails.userCount * busynessConfig.userWeight).toFixed(2)).padStart(10)}\n`
-          + `Distribution (D):    ${String((maxBusynessDetails.distributionFactor * 100).toFixed(2)).padStart(10)} ${String((maxBusynessDetails.distributionFactor * busynessConfig.distributionWeight).toFixed(2)).padStart(10)}\n`
-          + `Activity (A):        ${String(maxBusynessDetails.activityDensity.toFixed(2)).padStart(10)} ${String((-maxBusynessDetails.activityDensity * busynessConfig.activityDensityWeight).toFixed(2)).padStart(10)}\n`
+          + `Spamminess (S):      ${String(maxBusynessDetails.spamminess.toFixed(2)).padStart(10)} ${String((maxBusynessDetails.spamminess * busynessConfig.spamminessWeight).toFixed(2)).padStart(10)}\n`
+          + `Density (D):         ${String(maxBusynessDetails.density.toFixed(2)).padStart(10)} ${String((-maxBusynessDetails.density * busynessConfig.densityWeight).toFixed(2)).padStart(10)}\n`
           + '```',
         inline: false,
       },
@@ -188,8 +224,8 @@ export const dBusyness: SlashCommand = {
         .addChoices(
           { name: 'Message Weight', value: 'messageWeight' },
           { name: 'User Weight', value: 'userWeight' },
-          { name: 'Distribution Weight', value: 'distributionWeight' },
-          { name: 'Activity Density Weight', value: 'activityDensityWeight' },
+          { name: 'Spamminess Weight', value: 'spamminessWeight' },
+          { name: 'Density Weight', value: 'densityWeight' },
           { name: 'Busyness Threshold', value: 'busynessThreshold' },
         ))
       .addNumberOption(option => option
