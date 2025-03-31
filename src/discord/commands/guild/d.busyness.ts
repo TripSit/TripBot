@@ -3,6 +3,7 @@ import {
   SlashCommandBuilder,
   TextChannel,
   MessageFlags,
+  Message,
 } from 'discord.js';
 
 import { SlashCommand } from '../../@types/commandDef';
@@ -24,7 +25,7 @@ const interval = 30 * 1000; // Check every 30 seconds
 const embedTitle = 'Shows the busyness score of #lounge';
 const header = 'Busyness score is being calculated...'; // Provide a default value
 
-let msg: any; // To store the embed message reference
+let msg: Message<boolean>;
 let maxBusynessScore = 0;
 let maxBusynessDetails = {
   messageCount: 0,
@@ -51,19 +52,19 @@ async function calculateBusyness(
   );
 
   const uniqueUsers = new Set(recentMessages.map(message => message.author.id));
-  const userMessageCounts: { [userId: string]: number } = {};
-
-  // Count messages per user
+  const userMessageCounts = new Map<string, number>();
   recentMessages.forEach(message => {
-    userMessageCounts[message.author.id] = (userMessageCounts[message.author.id] || 0) + 1;
+    userMessageCounts.set(
+      message.author.id,
+      (userMessageCounts.get(message.author.id) || 0) + 1,
+    );
   });
 
   const messageCount = recentMessages.size;
   const userCount = uniqueUsers.size;
 
   // Calculate the Spamminess (S)
-  // Measures the imbalance between users
-  const messageCounts = Object.values(userMessageCounts).sort((a, b) => a - b); // Sort message counts in ascending order
+  const messageCounts = Object.values(userMessageCounts);
   const n = messageCounts.length;
   const totalMessages = messageCounts.reduce((sum, count) => sum + count, 0);
 
@@ -72,17 +73,16 @@ async function calculateBusyness(
     let cumulativeSum = 0;
     let magicNumerator = 0;
 
-    for (let i = 0; i < n; i += 1) {
-      cumulativeSum += messageCounts[i];
-      magicNumerator += (i + 1) * messageCounts[i];
-    }
+    messageCounts.forEach((count, index) => {
+      cumulativeSum += count;
+      magicNumerator += (index + 1) * count; // Adjust index logic if needed
+    });
 
     spamminess = 1 - (2 * magicNumerator) / (n * cumulativeSum);
     spamminess = Math.min(Math.max(spamminess, 0), 1);
   }
 
   // Calculate the Density (D)
-  // Measures the average activity per user
   const density = userCount > 0 ? messageCount / userCount : 0;
 
   // Calculate the final busyness score
@@ -100,15 +100,34 @@ async function calculateBusyness(
   };
 }
 
+let loungeChannel: TextChannel | null = null; // Cache the channel object
+
 async function checkBusyness() {
-  const channel = (await msg.client.channels.fetch(env.CHANNEL_LOUNGE)) as TextChannel;
-  if (!channel) {
-    log.error(F, 'Lounge channel not found.');
-    return;
+  const startTime = Date.now(); // Start timing
+  const now = startTime; // Use a single `now` variable for consistency
+
+  // Fetch the channel only once and reuse it
+  if (!loungeChannel) {
+    try {
+      loungeChannel = (await msg.client.channels.fetch(env.CHANNEL_LOUNGE)) as TextChannel;
+      log.debug(F, 'Fetched lounge channel.');
+    } catch (error) {
+      log.error(F, 'Failed to fetch lounge channel');
+      return;
+    }
   }
 
-  const oneMinuteAgo = Date.now() - 60 * 1000;
-  const recentMessages = channel.messages.cache.filter(
+  const fetchStart = now;
+  // Preload the message cache if it's empty
+  if (loungeChannel.messages.cache.size === 0) {
+    await loungeChannel.messages.fetch({ limit: 100 });
+    log.debug(F, `Preloaded message cache in ${Date.now() - fetchStart}ms.`);
+  }
+
+  const oneMinuteAgo = now - 60 * 1000;
+
+  // Filter recent messages
+  const recentMessages = loungeChannel.messages.cache.filter(
     message => message.createdTimestamp > oneMinuteAgo && !message.author.bot,
   );
 
@@ -120,7 +139,7 @@ async function checkBusyness() {
 
   const {
     busynessScore, messageCount, userCount, spamminess, density,
-  } = await calculateBusyness(channel);
+  } = await calculateBusyness(loungeChannel);
 
   // Update the maximum recorded busyness score if the current score is higher
   if (busynessScore > maxBusynessScore) {
@@ -129,11 +148,11 @@ async function checkBusyness() {
       messageCount,
       userCount,
       spamminess,
-      density, // Updated to use the new name
+      density,
     };
+    log.debug(F, 'Updated maximum busyness score.');
   }
 
-  const now = Date.now(); // Current timestamp
   const nextCheck = now + interval; // Timestamp for the next check
 
   const embed = embedTemplate()
