@@ -16,31 +16,34 @@ import { linkThread } from '../../utils/modUtils';
 const F = f(__filename);
 
 const SERVER_ONLY_TEXT = 'This command can only be used in a server!';
+const EPHEMERAL_TEXT = 'Set to "True" to show the response only to you';
 
 export async function slowMode(interaction: ChatInputCommandInteraction): Promise<boolean> {
-  const { channel } = interaction;
+  const { channel, guild } = interaction;
   const rateLimit = interaction.options.getString('limit', true);
-  const verb = rateLimit !== '0' ? 'enabled' : 'disabled';
+  const rateLimitNum = parseInt(rateLimit, 10);
+  const verb = rateLimitNum ? 'enabled' : 'disabled';
 
   if (!(channel instanceof TextChannel)) {
     await interaction.editReply({ content: SERVER_ONLY_TEXT });
     return false;
   }
 
-  if (rateLimit !== '0') {
-    await channel.setRateLimitPerUser(parseInt(rateLimit, 10));
-  } else {
-    await channel.setRateLimitPerUser(0);
+  try {
+    await channel.setRateLimitPerUser(rateLimitNum);
+    await interaction.editReply({ content: `Slowmode ${verb} on ${channel}` });
+
+    const channelModerators = await guild?.channels.fetch(env.CHANNEL_MODERATORS) as TextChannel;
+    const slowModeText = `${(interaction.member as GuildMember).displayName} ${verb} slowmode on ${channel}`;
+    await channelModerators?.send({
+      content: rateLimitNum ? `${slowModeText} (${rateLimit}s)` : slowModeText,
+    });
+
+    return true;
+  } catch (error) {
+    await interaction.editReply({ content: 'Failed to set slowmode.' });
+    return false;
   }
-
-  await interaction.editReply({ content: `Slowmode ${verb} on ${channel}` });
-
-  const channelModerators = await interaction.guild?.channels.fetch(env.CHANNEL_MODERATORS) as TextChannel;
-  const slowModeText = `${(interaction.member as GuildMember).displayName} ${verb} slowmode on ${channel}`;
-  channelModerators.send({
-    content: rateLimit !== '0' ? `${slowModeText} (${rateLimit}s)` : `${slowModeText}`,
-  });
-  return true;
 }
 
 async function unWatchUser(interaction: ChatInputCommandInteraction): Promise<boolean> {
@@ -243,11 +246,14 @@ export const dLast: SlashCommand = {
           { name: '2m', value: '120' },
           { name: '5m', value: '300' },
           { name: '10m', value: '600' },
-        )
-        .setRequired(true)))
+        ).setRequired(true))
+      .addBooleanOption(option => option.setName('ephemeral')
+        .setDescription(EPHEMERAL_TEXT)))
     .addSubcommand(subcommand => subcommand
       .setName('lockdown')
-      .setDescription('Toggle channel lockdown'))
+      .setDescription('Toggle channel lockdown')
+      .addBooleanOption(option => option.setName('ephemeral')
+        .setDescription(EPHEMERAL_TEXT)))
     .addSubcommand(subcommand => subcommand
       .setName('watchuser')
       .setDescription('Set a Watch on a user.')
@@ -262,13 +268,17 @@ export const dLast: SlashCommand = {
         )
         .setRequired(true))
       .addChannelOption(option => option.setName('alert_channel')
-        .setDescription('Where should I notify you? (Default: \'here\')')))
+        .setDescription('Where should I notify you? (Default: \'here\')'))
+      .addBooleanOption(option => option.setName('ephemeral')
+        .setDescription(EPHEMERAL_TEXT)))
     .addSubcommand(subcommand => subcommand
       .setName('unwatchuser')
       .setDescription('Stop watching a user')
       .addUserOption(option => option.setName('target')
         .setDescription('The target user to watch for or their Discord ID')
-        .setRequired(true)))
+        .setRequired(true))
+      .addBooleanOption(option => option.setName('ephemeral')
+        .setDescription(EPHEMERAL_TEXT)))
     .addSubcommand(subcommand => subcommand
       .setName('link')
       .setDescription('Link one user to another.')
@@ -277,7 +287,9 @@ export const dLast: SlashCommand = {
         .setRequired(true))
       .addBooleanOption(option => option
         .setName('override')
-        .setDescription('Override existing threads in the DB.'))),
+        .setDescription('Override existing threads in the DB.'))
+      .addBooleanOption(option => option.setName('ephemeral')
+        .setDescription(EPHEMERAL_TEXT))),
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
     const ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined;
