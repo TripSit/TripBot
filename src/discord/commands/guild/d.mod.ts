@@ -83,7 +83,6 @@ async function watchUser(interaction: ChatInputCommandInteraction): Promise<bool
   }
 
   const notificationMethod = interaction.options.getString('notification_method', true);
-  // const target = await interaction.client.users.fetch(targetUser.id);
 
   if (await executeWatch(targetUser, notificationMethod, interaction.user.id, alertChannel)) {
     await interaction.editReply({ content: 'Done! You\'ll be notified when this user is next seen active.' });
@@ -176,6 +175,7 @@ async function lockdown(interaction: ChatInputCommandInteraction): Promise<boole
       CreatePrivateThreads: null,
     });
 
+    // Remove exempt roles from overrides
     await Promise.all(exemptRoles.map(async roleId => {
       const role = interaction.guild ? await interaction.guild.roles.fetch(roleId) : null;
       if (role) {
@@ -205,6 +205,7 @@ async function lockdown(interaction: ChatInputCommandInteraction): Promise<boole
     CreatePrivateThreads: false,
   });
 
+  // Exempt team roles from lockdown
   await Promise.all(exemptRoles.map(async roleId => {
     const role = interaction.guild ? await interaction.guild.roles.fetch(roleId) : null;
     if (role) {
@@ -283,23 +284,14 @@ export const dLast: SlashCommand = {
     log.info(F, await commandContext(interaction));
     const ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined;
     await interaction.deferReply({ flags: ephemeral });
-    // Only run on Tripsit or DM, we don't want to snoop on other guilds ( ͡~ ͜ʖ ͡°)
-    if (interaction.guild) {
-      if (interaction.guild.id !== env.DISCORD_GUILD_ID.toString()) {
-        return false;
-      }
-    } else {
+
+    if (!interaction.guild || interaction.guild.id !== env.DISCORD_GUILD_ID.toString()) {
       return false;
     }
 
-    // const target = interaction.options.getMember('user') as GuildMember;
     const actor = interaction.member as GuildMember;
     const roleModerator = await interaction.guild.roles.fetch(env.ROLE_MODERATOR) as Role;
     const actorIsMod = actor.roles.cache.has(roleModerator.id);
-
-    // const response = await last(target.user, interaction.guild);
-
-    // await interaction.editReply({ content: `${response.lastMessage}` });
 
     if (actorIsMod) {
       switch (interaction.options.getSubcommand()) {
