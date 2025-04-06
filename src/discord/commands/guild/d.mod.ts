@@ -240,7 +240,7 @@ export const dLast: SlashCommand = {
           { name: 'Disabled', value: '0' },
           { name: '5s', value: '5' },
           { name: '10s', value: '10' },
-          { name: '15s', value: '10' },
+          { name: '15s', value: '15' },
           { name: '30s', value: '30' },
           { name: '1m', value: '60' },
           { name: '2m', value: '120' },
