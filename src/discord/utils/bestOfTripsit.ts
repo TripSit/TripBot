@@ -30,10 +30,17 @@ export async function bestOf(reaction:MessageReaction): Promise<void> {
   if (reaction.count === votePinThreshold && reaction.emoji.name?.includes('upvote')) {
     if (reaction.message.partial) await reaction.message.fetch();
 
-    const channelObj = (reaction.message.channel as TextChannel);
+    let channelObj = reaction.message.channel;
 
-    if (channelObj.parentId && ignoredCategories.includes(channelObj.parentId)) {
-      // log.debug(F, `Message sent in an ignored channel`);
+    if (channelObj.isThread()) {
+      channelObj = channelObj.parent as TextChannel;
+    } else channelObj = channelObj as TextChannel;
+
+    if (!channelObj) return;
+
+    if ((channelObj.parentId && ignoredCategories.includes(channelObj.parentId))
+      || channelObj.id === env.CHANNEL_HELPERLOUNGE) {
+      // log.debug(F, `Message sent in an ignored channel or thread`);
       return;
     }
 
