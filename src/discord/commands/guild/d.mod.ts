@@ -226,7 +226,7 @@ export async function lockdown(interaction: ChatInputCommandInteraction): Promis
   return true;
 }
 
-export const dLast: SlashCommand = {
+export const dMod: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('mod')
     .setDescription('Moderation commands')
@@ -329,4 +329,4 @@ export const dLast: SlashCommand = {
   },
 };
 
-export default dLast;
+export default dMod;
