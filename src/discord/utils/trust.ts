@@ -14,7 +14,7 @@ import { stripIndents } from 'common-tags';
 import { members } from '@prisma/client';
 import {
   modButtonBan, modButtonInfo, modButtonNote, modButtonTimeout, modButtonWarn, tripSitTrustScore, userInfoEmbed,
-} from '../commands/guild/d.moderate';
+} from './modUtils';
 import { checkGuildPermissions } from './checkPermissions';
 import { topic } from '../../global/commands/g.topic';
 import { giveMilestone } from '../../global/utils/experience';
