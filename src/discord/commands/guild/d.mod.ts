@@ -13,13 +13,11 @@ import commandContext from '../../utils/context';
 import { deleteWatchRequest, executeWatch } from '../../../global/commands/g.watchuser';
 import { linkThread } from '../../utils/modUtils';
 
-// import log from '../../../global/utils/logger';
-
 const F = f(__filename);
 
 const SERVER_ONLY_TEXT = 'This command can only be used in a server!';
 
-async function slowMode(interaction: ChatInputCommandInteraction): Promise<boolean> {
+export async function slowMode(interaction: ChatInputCommandInteraction): Promise<boolean> {
   const { channel } = interaction;
   const rateLimit = interaction.options.getString('limit', true);
   const verb = rateLimit !== '0' ? 'enabled' : 'disabled';
@@ -38,7 +36,7 @@ async function slowMode(interaction: ChatInputCommandInteraction): Promise<boole
   await interaction.editReply({ content: `Slowmode ${verb} on ${channel}` });
 
   const channelModerators = await interaction.guild?.channels.fetch(env.CHANNEL_MODERATORS) as TextChannel;
-  const slowModeText = `${(interaction.member as GuildMember).displayName} ${verb} slowmode on ${channel}`
+  const slowModeText = `${(interaction.member as GuildMember).displayName} ${verb} slowmode on ${channel}`;
   channelModerators.send({
     content: rateLimit !== '0' ? `${slowModeText} (${rateLimit}s)` : `${slowModeText}`,
   });
@@ -140,7 +138,7 @@ and they do not exist in the database!`,
   return false;
 }
 
-async function lockdown(interaction: ChatInputCommandInteraction): Promise<boolean> {
+export async function lockdown(interaction: ChatInputCommandInteraction): Promise<boolean> {
   const { channel } = interaction;
   if (!(channel instanceof TextChannel)) {
     await interaction.editReply({ content: 'This command can only be used in a text channel' });
