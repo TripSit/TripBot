@@ -7,7 +7,7 @@ import {
 import { stripIndents } from 'common-tags';
 import { SlashCommand } from '../../@types/commandDef';
 import commandContext from '../../utils/context';
-import { modResponse } from './d.moderate';
+import { modResponse } from '../../utils/modUtils';
 
 const F = f(__filename);
 

@@ -2,7 +2,6 @@
 /* eslint-disable sonarjs/no-duplicate-string */
 /* eslint-disable max-len */
 import {
-  SlashCommandBuilder,
   ChatInputCommandInteraction,
   GuildMember,
   ModalBuilder,
@@ -44,15 +43,13 @@ import {
 import { stripIndents } from 'common-tags';
 import { user_action_type, user_actions, users } from '@prisma/client';
 import moment from 'moment';
-import { SlashCommand } from '../../@types/commandDef';
-import { parseDuration, validateDurationInput } from '../../../global/utils/parseDuration';
-import commandContext from '../../utils/context'; // eslint-disable-line
-import { getDiscordMember } from '../../utils/guildMemberLookup';
-import { embedTemplate } from '../../utils/embedTemplate';
+import { parseDuration, validateDurationInput } from '../../global/utils/parseDuration';
+import { getDiscordMember } from './guildMemberLookup';
+import { embedTemplate } from './embedTemplate';
 
 // import { last } from '../../../global/commands/g.last';
-import { checkGuildPermissions } from '../../utils/checkPermissions';
-import { last } from '../../../global/commands/g.last';
+import { checkGuildPermissions } from './checkPermissions';
+import { last } from '../../global/commands/g.last';
 
 /* TODO:
 add dates to bans
@@ -77,11 +74,12 @@ const noReason = 'No reason provided';
 // const descriptionPlaceholder = 'Tell the user why you\'re doing this';
 const mepWarning = 'You cannot use the word "MEP" here.';
 const noMessageSent = '*No message sent to user*';
+/*
 const cooperativeExplanation = stripIndents`This is a suite of moderation tools for guilds to use, \
 this includes the ability to ban, warn, report, and more!
 
 Currently these tools are only available to a limited number of partner guilds, \
-use /cooperative info for more information.`;
+use /cooperative info for more information.`; */
 // const noUserError = 'Could not find that member/user!';
 const beMoreSpecific = stripIndents`
 Be more specific:
@@ -312,7 +310,7 @@ function isReport(command: ModAction): command is 'REPORT' { return command === 
 
 function isNote(command: ModAction): command is 'NOTE' { return command === 'NOTE'; }
 
-function isLink(command: ModAction): command is 'LINK' { return command === 'LINK'; }
+// function isLink(command: ModAction): command is 'LINK' { return command === 'LINK'; }
 
 function isInfo(command: ModAction): command is 'INFO' { return command === 'INFO'; }
 
@@ -2457,143 +2455,3 @@ export async function modModal(
       }
     });
 }
-
-export const mod: SlashCommand = {
-  data: new SlashCommandBuilder()
-    .setName('moderate')
-    .setDescription('Moderation actions!')
-    .setIntegrationTypes([0])
-    .addSubcommand(subcommand => subcommand
-      .setDescription('Link one user to another.')
-      .addStringOption(option => option
-        .setName('target')
-        .setDescription('User to link!')
-        .setRequired(true))
-      .addBooleanOption(option => option
-        .setName('override')
-        .setDescription('Override existing threads in the DB.'))
-      .setName('link')),
-  async execute(interaction: ChatInputCommandInteraction) {
-    log.info(F, await commandContext(interaction));
-    const command = interaction.options.getSubcommand() as ModAction;
-
-    if (!interaction.guild) {
-      await interaction.reply({
-        embeds: [embedTemplate()
-          .setColor(Colors.Red)
-          .setTitle('This command can only be used in a server!')],
-        flags: MessageFlags.Ephemeral,
-      });
-      return false;
-    }
-
-    // Check if the guild is a partner (or the home guild)
-    const guildData = await db.discord_guilds.upsert({
-      where: {
-        id: interaction.guild.id,
-      },
-      create: {
-        id: interaction.guild.id,
-      },
-      update: {
-      },
-    });
-
-    if (!guildData.cooperative) {
-      await interaction.reply({
-        embeds: [
-          embedTemplate()
-            .setDescription(cooperativeExplanation)
-            .setColor(Colors.Red),
-        ],
-        flags: MessageFlags.Ephemeral,
-      });
-      return false;
-    }
-
-    if (isLink(command)) {
-      const targetString = interaction.options.getString('target', true);
-      const targets = await getDiscordMember(interaction, targetString);
-      const override = interaction.options.getBoolean('override');
-      if (targets.length > 1) {
-        const embed = embedTemplate()
-          .setColor(Colors.Red)
-          .setTitle('Found more than one user with with that value!')
-          .setDescription(stripIndents`
-          "${targetString}" returned ${targets.length} results!
-  
-          Be more specific:
-          > **Mention:** @Moonbear
-          > **Tag:** moonbear#1234
-          > **ID:** 9876581237
-          > **Nickname:** MoonBear`);
-        await interaction.reply({
-          embeds: [embed],
-          flags: MessageFlags.Ephemeral,
-        });
-        return false;
-      }
-      if (targets.length === 0) {
-        const embed = embedTemplate()
-          .setColor(Colors.Red)
-          .setTitle(`${targetString}" returned no results!`)
-          .setDescription(stripIndents`
-      Be more specific:
-      > **Mention:** @Moonbear
-      > **Tag:** moonbear#1234
-      > **ID:** 9876581237
-      > **Nickname:** MoonBear`);
-        await interaction.reply({
-          embeds: [embed],
-          flags: MessageFlags.Ephemeral,
-        });
-        return false;
-      }
-
-      const target = targets[0];
-
-      let result: string | null;
-      if (!target) {
-        const userData = await db.users.upsert({
-          where: {
-            discord_id: targetString,
-          },
-          create: {
-            discord_id: targetString,
-          },
-          update: {
-          },
-        });
-
-        if (!userData) {
-          await interaction.reply({
-            content: stripIndents`Failed to link thread, I could not find this user in the guild, \
-    and they do not exist in the database!`,
-            flags: MessageFlags.Ephemeral,
-          });
-          return false;
-        }
-        result = await linkThread(targetString, interaction.channelId, override);
-      } else {
-        result = await linkThread(target.id, interaction.channelId, override);
-      }
-
-      if (result === null) {
-        await interaction.editReply({ content: 'Successfully linked thread!' });
-      } else {
-        const existingThread = await interaction.client.channels.fetch(result);
-        await interaction.reply({
-          content: stripIndents`Failed to link thread, this user has an existing thread: ${existingThread}
-          Use the override parameter if you're sure!`,
-          flags: MessageFlags.Ephemeral,
-        });
-      }
-    }
-
-    await interaction.reply(await modResponse(interaction, command, true));
-
-    return true;
-  },
-};
-
-export default mod;
