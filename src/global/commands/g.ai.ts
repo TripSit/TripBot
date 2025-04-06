@@ -1129,59 +1129,97 @@ export async function aiModerate(
   return moderationAlerts;
 }
 
-export async function aiTranslate(
-  target_language: string,
-  messages: OpenAI.Chat.ChatCompletionMessageParam [],
-):Promise<{
-    response: string,
-    promptTokens: number,
-    completionTokens: number,
-  }> {
+export async function callAI(
+  options: {
+    model?: string,
+    systemPrompt: string,
+    messages?: OpenAI.Chat.ChatCompletionMessageParam[],
+  }
+): Promise<{
+  response: string,
+  promptTokens: number,
+  completionTokens: number,
+}> {
   let response = '';
   let promptTokens = 0;
   let completionTokens = 0;
+  
   if (!env.OPENAI_API_ORG || !env.OPENAI_API_KEY) return { response, promptTokens, completionTokens };
-
-  const model = 'gpt-4o-mini';
+  
+  const model = options.model || 'gpt-4o-mini';
   const chatCompletionMessages = [{
     role: 'system',
-    content: `You will translate whatever the user sends to their desired language. Their desired language or language code is: ${target_language}.`,
+    content: options.systemPrompt,
   }] as OpenAI.Chat.ChatCompletionMessageParam[];
-  chatCompletionMessages.push(...messages);
-
+  
+  if (options.messages && options.messages.length > 0) {
+    chatCompletionMessages.push(...options.messages);
+  }
+  
   const payload = {
     model,
     messages: chatCompletionMessages,
   } as OpenAI.Chat.ChatCompletionCreateParamsNonStreaming;
-
-  // log.debug(F, `payload: ${JSON.stringify(payload, null, 2)}`);
+  
   let responseMessage = {} as OpenAI.Chat.ChatCompletionMessageParam;
-
+  
   const chatCompletion = await openAi.chat.completions
     .create(payload)
     .catch(err => {
       if (err instanceof OpenAI.APIError) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        log.error(F, `${err.name} - ${err.status} - ${err.type} - ${(err.error as any).message}  `); // 400
-        // log.error  (F, `${JSON.stringify(err.headers, null, 2)}`); // {server: 'nginx', ...}
-        // log.error(F, `${JSON.stringify(err, null, 2)}`); // {server: 'nginx', ...}
+        log.error(F, `${err.name} - ${err.status} - ${err.type} - ${(err.error as any).message} `);
       } else {
         throw err;
       }
     });
-  // log.debug(F, `chatCompletion: ${JSON.stringify(chatCompletion, null, 2)}`);
-
+  
   if (chatCompletion?.choices[0].message) {
     responseMessage = chatCompletion.choices[0].message;
-
-    // Sum up the existing tokens
     promptTokens = chatCompletion.usage?.prompt_tokens ?? 0;
     completionTokens = chatCompletion.usage?.completion_tokens ?? 0;
-
     response = responseMessage.content?.toString() ?? 'Sorry, I\'m not sure how to respond to that.';
   }
-
-  // log.debug(F, `response: ${response}`);
-
+  
   return { response, promptTokens, completionTokens };
+}
+
+/**
+ * Takes a target language and a message and ships it off to AI to get a translation.
+ * @param {string} target_language e.g "en", "es", "fr", etc.
+ * @param {OpenAI.Chat.ChatCompletionMessageParam[]} messages
+ * @returns {Promise<{ response: string, promptTokens: number, completionTokens: number }>} The response from the AI
+ */
+export async function aiTranslate(
+  target_language: string,
+  messages: OpenAI.Chat.ChatCompletionMessageParam[],
+): Promise<{
+  response: string,
+  promptTokens: number,
+  completionTokens: number,
+}> {
+  return callAI({
+    systemPrompt: `You will translate whatever the user sends to their desired language. Their desired language or language code is: ${target_language}.`,
+    messages: messages,
+  });
+}
+
+/**
+ * Takes developer context and an Error object and ships it off to AI to get a solution.
+ * Logs it out into the logging channel.
+ * @param context 
+ * @param error 
+ */
+export async function aiCatchError(
+  context: string,
+  error: Error,
+): Promise<{
+  response: string,
+  promptTokens: number,
+  completionTokens: number,
+}> {
+  return callAI({
+    systemPrompt: `Keep this as short as possible while still conveying the solution. Ensure the actual error stays in the response. Here is an error and the relevant context around where it happened: ${context} - error: ${JSON.stringify(error)}.`,
+    messages: [], // No additional messages needed for error handling
+  });
 }

@@ -49,7 +49,7 @@ import {
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import commandContext from '../../utils/context';
-import { aiModerate, handleAiMessageQueue } from '../../../global/commands/g.ai';
+import { aiCatchError, aiModerate, handleAiMessageQueue } from '../../../global/commands/g.ai';
 
 /* TODO
 * only direct @ message should trigger a response
@@ -2383,6 +2383,27 @@ export async function aiReaction(
           `)],
     });
   }
+}
+
+export async function dAiCatchError(
+  context: string,
+  error: Error,
+  interaction: StringSelectMenuInteraction | ChatInputCommandInteraction | undefined = undefined,
+): Promise<{
+  response: string,
+  promptTokens: number,
+  completionTokens: number,
+}> {
+  const caught = await aiCatchError(context, error);
+  if (interaction) {
+    const embed = embedTemplate()
+      .setColor(Colors.Red)
+      .setDescription(caught.response);
+      await interaction.editReply({
+        embeds: [embed],
+      });
+  }
+  return caught;
 }
 
 export async function aiMenu(
