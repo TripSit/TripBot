@@ -180,6 +180,89 @@ and they do not exist in the database!`,
   return false;
 }
 
+async function lockdown(interaction: ChatInputCommandInteraction): Promise<boolean> {
+  const { channel } = interaction;
+  if (!(channel instanceof TextChannel)) {
+    await interaction.editReply({ content: 'This command can only be used in a text channel' });
+    return false;
+  }
+
+  if (!interaction.guild) {
+    await interaction.editReply({ content: 'This command can only be used in a server!' });
+    return false;
+  }
+
+  const currentPermissions = channel.permissionOverwrites.cache.get(interaction.guild.roles.everyone.id);
+
+  const isLocked = currentPermissions?.deny.has('SendMessages');
+
+  const exemptRoles = [
+    env.ROLE_MODERATOR,
+    env.ROLE_TRIPSITTER,
+    env.ROLE_DEVELOPER,
+  ];
+
+  if (isLocked) {
+    // Unlock the channel
+    await channel.permissionOverwrites.edit(interaction.guild.roles.everyone, {
+      SendMessages: null,
+      AddReactions: null,
+      Speak: null,
+      SendTTSMessages: null,
+      SendMessagesInThreads: null,
+      CreatePublicThreads: null,
+      CreatePrivateThreads: null,
+    });
+
+    for (const roleId of exemptRoles) {
+      const role = await interaction.guild.roles.fetch(roleId);
+      if (role) {
+        await channel.permissionOverwrites.edit(role, {
+          SendMessages: null,
+          AddReactions: null,
+          Speak: null,
+          SendTTSMessages: null,
+          SendMessagesInThreads: null,
+          CreatePublicThreads: null,
+          CreatePrivateThreads: null,
+        });
+      }
+    }
+
+    await interaction.editReply({ content: `Channel ${channel} has been unlocked.` });
+    return true;
+  } else {
+    // Lock the channel
+    await channel.permissionOverwrites.edit(interaction.guild.roles.everyone, {
+      SendMessages: false,
+      AddReactions: false,
+      Speak: false,
+      SendTTSMessages: false,
+      SendMessagesInThreads: false,
+      CreatePublicThreads: false,
+      CreatePrivateThreads: false,
+    });
+
+    for (const roleId of exemptRoles) {
+      const role = await interaction.guild.roles.fetch(roleId);
+      if (role) {
+        await channel.permissionOverwrites.edit(role, {
+          SendMessages: true,
+          AddReactions: true,
+          Speak: true,
+          SendTTSMessages: true,
+          SendMessagesInThreads: true,
+          CreatePublicThreads: true,
+          CreatePrivateThreads: true,
+        });
+      }
+    }
+
+    await interaction.editReply({ content: `Channel ${channel} has been locked down.` });
+    return true;
+  }
+}
+
 export const dLast: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('mod')
@@ -263,7 +346,7 @@ export const dLast: SlashCommand = {
           await slowMode(interaction);
           break;
         case 'lockdown':
-          // await lockdown(interaction);
+          await lockdown(interaction);
           break;
         case 'watchuser':
           await watchUser(interaction);
