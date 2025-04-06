@@ -20,13 +20,15 @@ import { linkThread } from '../../utils/modUtils';
 
 const F = f(__filename);
 
+const SERVER_ONLY_TEXT = 'This command can only be used in a server!';
+
 async function slowMode(interaction: ChatInputCommandInteraction): Promise<boolean> {
   const { channel } = interaction;
   const rateLimit = interaction.options.getString('limit', true);
   const verb = rateLimit !== '0' ? 'enabled' : 'disabled';
 
   if (!(channel instanceof TextChannel)) {
-    await interaction.editReply({ content: 'This command can only be used in a text channel' });
+    await interaction.editReply({ content: SERVER_ONLY_TEXT });
     return false;
   }
 
@@ -47,7 +49,7 @@ async function slowMode(interaction: ChatInputCommandInteraction): Promise<boole
 
 async function unWatchUser(interaction: ChatInputCommandInteraction): Promise<boolean> {
   if (!interaction.guild) {
-    await interaction.editReply({ content: 'This command can only be used in a server!' });
+    await interaction.editReply({ content: SERVER_ONLY_TEXT });
     return false;
   }
 
@@ -64,7 +66,7 @@ async function unWatchUser(interaction: ChatInputCommandInteraction): Promise<bo
 
 async function watchUser(interaction: ChatInputCommandInteraction): Promise<boolean> {
   if (!interaction.guild) {
-    await interaction.editReply({ content: 'This command can only be used in a server!' });
+    await interaction.editReply({ content: SERVER_ONLY_TEXT });
     return false;
   }
 
@@ -200,6 +202,7 @@ async function lockdown(interaction: ChatInputCommandInteraction): Promise<boole
     env.ROLE_MODERATOR,
     env.ROLE_TRIPSITTER,
     env.ROLE_DEVELOPER,
+    env.ROLE_TEAMTRIPSIT,
   ];
 
   if (isLocked) {
@@ -214,8 +217,8 @@ async function lockdown(interaction: ChatInputCommandInteraction): Promise<boole
       CreatePrivateThreads: null,
     });
 
-    for (const roleId of exemptRoles) {
-      const role = await interaction.guild.roles.fetch(roleId);
+    await Promise.all(exemptRoles.map(async roleId => {
+      const role = interaction.guild ? await interaction.guild.roles.fetch(roleId) : null;
       if (role) {
         await channel.permissionOverwrites.edit(role, {
           SendMessages: null,
@@ -227,40 +230,39 @@ async function lockdown(interaction: ChatInputCommandInteraction): Promise<boole
           CreatePrivateThreads: null,
         });
       }
-    }
+    }));
 
     await interaction.editReply({ content: `Channel ${channel} has been unlocked.` });
     return true;
-  } else {
-    // Lock the channel
-    await channel.permissionOverwrites.edit(interaction.guild.roles.everyone, {
-      SendMessages: false,
-      AddReactions: false,
-      Speak: false,
-      SendTTSMessages: false,
-      SendMessagesInThreads: false,
-      CreatePublicThreads: false,
-      CreatePrivateThreads: false,
-    });
-
-    for (const roleId of exemptRoles) {
-      const role = await interaction.guild.roles.fetch(roleId);
-      if (role) {
-        await channel.permissionOverwrites.edit(role, {
-          SendMessages: true,
-          AddReactions: true,
-          Speak: true,
-          SendTTSMessages: true,
-          SendMessagesInThreads: true,
-          CreatePublicThreads: true,
-          CreatePrivateThreads: true,
-        });
-      }
-    }
-
-    await interaction.editReply({ content: `Channel ${channel} has been locked down.` });
-    return true;
   }
+  // Lock the channel
+  await channel.permissionOverwrites.edit(interaction.guild.roles.everyone, {
+    SendMessages: false,
+    AddReactions: false,
+    Speak: false,
+    SendTTSMessages: false,
+    SendMessagesInThreads: false,
+    CreatePublicThreads: false,
+    CreatePrivateThreads: false,
+  });
+
+  await Promise.all(exemptRoles.map(async roleId => {
+    const role = interaction.guild ? await interaction.guild.roles.fetch(roleId) : null;
+    if (role) {
+      await channel.permissionOverwrites.edit(role, {
+        SendMessages: true,
+        AddReactions: true,
+        Speak: true,
+        SendTTSMessages: true,
+        SendMessagesInThreads: true,
+        CreatePublicThreads: true,
+        CreatePrivateThreads: true,
+      });
+    }
+  }));
+
+  await interaction.editReply({ content: `Channel ${channel} has been locked down.` });
+  return true;
 }
 
 export const dLast: SlashCommand = {
