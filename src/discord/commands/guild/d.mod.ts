@@ -1,7 +1,6 @@
 import {
   ChannelType,
   ChatInputCommandInteraction,
-  Colors,
   GuildMember,
   MessageFlags,
   Role,
@@ -12,8 +11,6 @@ import { stripIndents } from 'common-tags';
 import { SlashCommand } from '../../@types/commandDef';
 import commandContext from '../../utils/context';
 import { deleteWatchRequest, executeWatch } from '../../../global/commands/g.watchuser';
-import { getDiscordMember } from '../../utils/guildMemberLookup';
-import { embedTemplate } from '../../utils/embedTemplate';
 import { linkThread } from '../../utils/modUtils';
 
 // import log from '../../../global/utils/logger';
@@ -41,8 +38,9 @@ async function slowMode(interaction: ChatInputCommandInteraction): Promise<boole
   await interaction.editReply({ content: `Slowmode ${verb} on ${channel}` });
 
   const channelModerators = await interaction.guild?.channels.fetch(env.CHANNEL_MODERATORS) as TextChannel;
+  const slowModeText = `${(interaction.member as GuildMember).displayName} ${verb} slowmode on ${channel}`
   channelModerators.send({
-    content: `${(interaction.member as GuildMember).displayName} ${verb} slowmode on ${channel}`,
+    content: rateLimit !== '0' ? `${slowModeText} (${rateLimit}s)` : `${slowModeText}`,
   });
   return true;
 }
@@ -103,70 +101,32 @@ async function watchUser(interaction: ChatInputCommandInteraction): Promise<bool
 }
 
 async function link(interaction: ChatInputCommandInteraction): Promise<boolean> {
-  const targetString = interaction.options.getString('target', true);
-  const targets = await getDiscordMember(interaction, targetString);
+  const targetUser = interaction.options.getUser('target', true);
   const override = interaction.options.getBoolean('override');
-  if (targets.length > 1) {
-    const embed = embedTemplate()
-      .setColor(Colors.Red)
-      .setTitle('Found more than one user with with that value!')
-      .setDescription(stripIndents`
-      "${targetString}" returned ${targets.length} results!
-
-      Be more specific:
-      > **Mention:** @Moonbear
-      > **Tag:** moonbear#1234
-      > **ID:** 9876581237
-      > **Nickname:** MoonBear`);
-    await interaction.reply({
-      embeds: [embed],
-      flags: MessageFlags.Ephemeral,
-    });
-    return false;
-  }
-  if (targets.length === 0) {
-    const embed = embedTemplate()
-      .setColor(Colors.Red)
-      .setTitle(`${targetString}" returned no results!`)
-      .setDescription(stripIndents`
-  Be more specific:
-  > **Mention:** @Moonbear
-  > **Tag:** moonbear#1234
-  > **ID:** 9876581237
-  > **Nickname:** MoonBear`);
-    await interaction.reply({
-      embeds: [embed],
-      flags: MessageFlags.Ephemeral,
-    });
-    return false;
-  }
-
-  const target = targets[0];
 
   let result: string | null;
-  if (!target) {
+  if (!targetUser) {
     const userData = await db.users.upsert({
       where: {
-        discord_id: targetString,
+        discord_id: targetUser,
       },
       create: {
-        discord_id: targetString,
+        discord_id: targetUser,
       },
       update: {
       },
     });
 
     if (!userData) {
-      await interaction.reply({
+      await interaction.editReply({
         content: stripIndents`Failed to link thread, I could not find this user in the guild, \
 and they do not exist in the database!`,
-        flags: MessageFlags.Ephemeral,
       });
       return false;
     }
-    result = await linkThread(targetString, interaction.channelId, override);
+    result = await linkThread(targetUser, interaction.channelId, override);
   } else {
-    result = await linkThread(target.id, interaction.channelId, override);
+    result = await linkThread(targetUser.id, interaction.channelId, override);
   }
 
   if (result === null) {
@@ -174,10 +134,9 @@ and they do not exist in the database!`,
     return true;
   }
   const existingThread = await interaction.client.channels.fetch(result);
-  await interaction.reply({
+  await interaction.editReply({
     content: stripIndents`Failed to link thread, this user has an existing thread: ${existingThread}
       Use the override parameter if you're sure!`,
-    flags: MessageFlags.Ephemeral,
   });
   return false;
 }
