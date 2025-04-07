@@ -74,7 +74,7 @@ async function watchUser(interaction: ChatInputCommandInteraction): Promise<bool
   let alertChannel = interaction.options.getChannel('alert_channel') as TextChannel | null;
 
   if (!alertChannel) {
-    alertChannel = interaction.channel as TextChannel;
+    alertChannel = interaction.guild.channels.cache.get(env.CHANNEL_MODERATORS) as TextChannel;
   }
 
   // Ensure that the channel used is a text channel
@@ -325,7 +325,10 @@ export const dMod: SlashCommand = {
       }
       return true;
     }
-    return false; // Ensure a boolean is always returned
+    await interaction.editReply({
+      content: 'You do not have permission to use this command.',
+    });
+    return false;
   },
 };
 
