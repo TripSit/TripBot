@@ -34,6 +34,12 @@ import {
   DiscordErrorData,
   InteractionEditReplyOptions,
   AnySelectMenuInteraction,
+  StringSelectMenuBuilder,
+  StringSelectMenuInteraction,
+  UserSelectMenuInteraction,
+  ChannelSelectMenuInteraction,
+  MentionableSelectMenuInteraction,
+  RoleSelectMenuInteraction,
 } from 'discord.js';
 import {
   TextInputStyle,
@@ -62,7 +68,7 @@ link accounts to transfer warnings and experience
 const F = f(__filename);
 type UndoAction = 'UN-FULL_BAN' | 'UN-TICKET_BAN' | 'UN-DISCORD_BOT_BAN' | 'UN-BAN_EVASION' | 'UN-UNDERBAN' | 'UN-TIMEOUT' | 'UN-HELPER_BAN' | 'UN-CONTRIBUTOR_BAN';
 
-type ModAction = user_action_type | UndoAction | 'INFO' | 'LINK' | 'ACKN_REPORT';
+type ModAction = user_action_type | UndoAction | 'INFO' | 'LINK' | 'ACKN_REPORT' | 'MY_REPORTS';
 // type BanAction = 'FULL_BAN' | 'TICKET_BAN' | 'DISCORD_BOT_BAN' | 'BAN_EVASION' | 'UNDERBAN';
 type TargetObject = Snowflake | User | GuildMember;
 
@@ -316,6 +322,8 @@ function isInfo(command: ModAction): command is 'INFO' { return command === 'INF
 
 function isReportAcknowledgement(command: ModAction): command is 'ACKN_REPORT' { return command === 'ACKN_REPORT'; }
 
+function isMyActiveReports(command: ModAction): command is 'MY_REPORTS' { return command === 'MY_REPORTS'; }
+
 function isDiscussable(command: ModAction): command is 'DISCORD_BOT_BAN' | 'TICKET_BAN' | 'WARNING' | 'KICK' {
   return command === 'DISCORD_BOT_BAN' || command === 'TICKET_BAN' || command === 'WARNING' || command === 'KICK';
 }
@@ -356,6 +364,12 @@ export const modButtonInfo = (discordId: string) => new ButtonBuilder()
 export const modButtonReport = (discordId: string) => new ButtonBuilder()
   .setCustomId(`moderate~REPORT~${discordId}`)
   .setLabel('Report')
+  .setEmoji('📝')
+  .setStyle(ButtonStyle.Primary);
+
+export const modButtonMyReports = (discordId: string) => new ButtonBuilder()
+  .setCustomId(`moderate~MY_REPORTS~${discordId}`)
+  .setLabel('My Recent Reports')
   .setEmoji('📝')
   .setStyle(ButtonStyle.Primary);
 
@@ -890,6 +904,7 @@ export async function modResponse(
           } else {
             actionRow.setComponents([
               modButtonReport(userId),
+              modButtonMyReports(userId),
             ]);
           }
           if (isBan(command)) {
@@ -986,6 +1001,7 @@ export async function modResponse(
   } else {
     actionRow.addComponents(
       modButtonReport(target.id),
+      modButtonMyReports(actor.id),
     );
   }
 
@@ -1503,6 +1519,138 @@ export async function acknowledgeReportButton(
   }
 }
 
+async function myRecentReportsButton(interaction: ButtonInteraction) {
+  const threeHoursAgo = new Date(Date.now() - (3 * 60 * 60 * 1000));
+
+  const actorUser = await db.users.upsert({
+    where: {
+      discord_id: interaction.user.id
+    },
+    create: {
+      discord_id: interaction.user.id
+    },
+    update: {}
+  });
+
+  const userReports = await db.user_actions.findMany({
+    where: {
+      created_by: actorUser.id,
+      type: 'REPORT',
+      created_at: {
+        gte: threeHoursAgo
+      }
+    },
+    orderBy: {
+      created_at: 'desc'
+    }
+  });
+
+  const users = await Promise.all(
+    userReports.map(async report => 
+      db.users.findUnique({
+        where: { id: report.user_id }
+      })
+    )
+  );
+
+  // Fetch unique Discord users using discord_ids from database users
+  const uniqueIds = [...new Set(users.filter(user => user?.discord_id).map(user => user!.discord_id))];
+  const discordUsers = await Promise.all(
+    uniqueIds.map(async discord_id => {
+      try {
+        if (!discord_id) return null;
+        return await discordClient.users.fetch(discord_id);
+      } catch (err) {
+        log.error(F, `Failed to fetch Discord user for ID ${discord_id}: ${err}`);
+        return null;
+      }
+    })
+  );
+  log.info(F, `Fetched ${discordUsers.length} Discord users`);
+
+  log.info(F, `Found ${users.length}`);
+
+  if (userReports.length === 0) {
+    await interaction.editReply({
+      embeds: [embedTemplate()
+        .setColor(Colors.Yellow)
+        .setDescription('No recent reports found in the last 3 hours.')]
+    });
+    return;
+  }
+
+  const selectMenu = new StringSelectMenuBuilder()
+    .setCustomId(`report_select~${interaction.user.id}`)
+    .setPlaceholder('Select a report to view')
+    .setOptions(
+      userReports.map(report => {
+        // Find the user record from users array that matches the report's user_id
+        const reportedUserRecord = users.find(user => user?.id === report.user_id);
+        // Use that user's discord_id to find the Discord user object
+        const reportedDiscordUser = discordUsers.find(user => user?.id === reportedUserRecord?.discord_id);
+
+        return {
+          label: report.summary || 'No summary provided',
+          description: `Reported ${reportedDiscordUser?.tag ?? 'Unknown User'}`,
+          emoji: '📝',
+          value: report.id.toString()
+        };
+      })
+    );
+
+  const row = new ActionRowBuilder<StringSelectMenuBuilder>()
+    .addComponents(selectMenu);
+
+  await interaction.editReply({
+    embeds: [embedTemplate()
+      .setColor(Colors.Blue)
+      .setTitle('Recent Reports')
+      .setDescription(`Found ${userReports.length} recent reports from the last 3 hours.`)],
+    components: [row]
+  });
+
+  // Handle select menu interaction
+  const filter = (i: ButtonInteraction | StringSelectMenuInteraction | UserSelectMenuInteraction | RoleSelectMenuInteraction | MentionableSelectMenuInteraction | ChannelSelectMenuInteraction): boolean => 
+    i.customId.startsWith('report_select') && i.user.id === interaction.user.id;
+  
+  const collector = interaction.channel?.createMessageComponentCollector({
+    filter,
+    time: 300000 // 5 minutes
+  });
+
+  collector?.on('collect', async (i: StringSelectMenuInteraction) => {
+    const reportId = i.values[0];
+    const selectedReport = userReports.find(r => r.id === reportId);
+    log.info(F, `Selected report: ${JSON.stringify(selectedReport, null, 2)}`);
+
+    if (!selectedReport) {
+      await i.reply({
+        content: 'Could not find that report.',
+        flags: MessageFlags.Ephemeral
+      });
+      return;
+    }
+
+    await i.update({
+      embeds: [embedTemplate()
+        .setColor(Colors.Blue)
+        .setTitle('Report Details')
+        .addFields([
+          { name: 'Summary', value: selectedReport.summary || 'No summary provided' },
+          { name: 'Description', value: selectedReport.internal_note || 'No description' }, // Make sure internal_note is replaced with the correct field
+          { name: 'Reported', value: time(selectedReport.created_at, 'R') }
+        ])],
+      components: [row]
+    });
+  });
+
+  collector?.on('end', async () => {
+    await interaction.editReply({
+      components: []
+    }).catch(() => null);
+  });
+}
+
 async function wasActionedRecently(actionType: string): Promise<boolean> {
   const oneMinuteAgo = new Date(Date.now() - 300 * 1000);
   const recentAction = await db.user_actions.findFirst({
@@ -1622,10 +1770,17 @@ export async function moderate(
   }
 
   let description = '';
+  let reportSummary = ''
   if (!isNote(command) && !isReport(command)) {
     description = modalInt.fields.getTextInputValue('description');
   }
+
   let internalNote = modalInt.fields.getTextInputValue('internalNote');
+
+  if (isReport(command)) {
+    reportSummary = modalInt.fields.getTextInputValue('reportSummary');
+    description = modalInt.fields.getTextInputValue('internalNote');
+  }
 
   // Check if this is a vendor ban
   const vendorBan = internalNote?.toLowerCase().includes('vendor') && isFullBan(command);
@@ -1714,6 +1869,7 @@ export async function moderate(
   targetId: ${targetId}
   internalNote: ${internalNote}
   description: ${description}
+  reportSummary: ${reportSummary}
   duration: ${actionDuration}
   durationStr: ${durationStr}
   `);
@@ -1815,7 +1971,9 @@ export async function moderate(
     guild_id: actor.guild.id,
     type: command.includes('UN-') ? command.slice(3) : command,
     ban_evasion_related_user: null as string | null,
-    description,
+    mod_thread_message_id: '',
+    summary: reportSummary,
+    description: description,
     internal_note: internalNote,
     expires_at: null as Date | null,
     repealed_by: null as string | null,
@@ -1980,19 +2138,6 @@ export async function moderate(
     }
   }
 
-  // This needs to happen before creating the modlog embed
-  // await userActionsSet(actionData);
-  log.debug(F, `Updating user actions: ${JSON.stringify(actionData, null, 2)}`);
-  if (actionData.id) {
-    await db.user_actions.upsert({
-      where: { id: actionData.id },
-      create: actionData,
-      update: actionData,
-    });
-  } else {
-    await db.user_actions.create({ data: actionData });
-  }
-
   log.debug(F, `Updating target data: ${JSON.stringify(targetData, null, 2)}`);
   await db.users.update({
     where: { id: targetData.id },
@@ -2012,6 +2157,23 @@ export async function moderate(
     extraMessage,
     durationStr,
   );
+
+  if (modThread?.lastMessage) {
+    actionData.mod_thread_message_id = modThread.lastMessage.id;
+  }
+  
+  // This needs to happen before creating the modlog embed
+  // await userActionsSet(actionData);
+  log.debug(F, `Updating user actions: ${JSON.stringify(actionData, null, 2)}`);
+  if (actionData.id) {
+    await db.user_actions.upsert({
+      where: { id: actionData.id },
+      create: actionData,
+      update: actionData,
+    });
+  } else {
+    await db.user_actions.create({ data: actionData });
+  }
 
   // Records the action taken on the action field of the modlog embed
   const embed = buttonInt.message.embeds[0].toJSON();
@@ -2096,6 +2258,12 @@ export async function modModal(
         .setColor(Colors.Green)
         .setDescription(`You have acknowledged the report on ${target}.`)],
     });
+    return;
+  }
+
+  if (isMyActiveReports(command)) {
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+    await myRecentReportsButton(interaction);
     return;
   }
 
@@ -2216,23 +2384,39 @@ export async function modModal(
     .setRequired(true)
     .setCustomId('internalNote');
 
+  const subjectComponent = new TextInputBuilder()
+    .setStyle(TextInputStyle.Paragraph)
+    .setPlaceholder('Summarize your report')
+    .setMaxLength(120)
+    .setRequired(true)
+    .setCustomId('reportSummary');
+
   try {
     // Ensure the label text is within the limit
     const label = `Why are you ${verb} ${target}?`;
     const truncatedLabelText = label.length > 45 ? `${label.substring(0, 41)}...?` : label;
 
     modalInputComponent.setLabel(truncatedLabelText);
+    subjectComponent.setLabel('Summary');
   } catch (err) {
     log.error(F, `Error: ${err}`);
     log.error(F, `Verb: ${verb}, Target: ${target}`);
   }
 
   // log.debug(F, `Verb: ${verb}`);
+  
   const modal = new ModalBuilder()
     .setCustomId(`modModal~${command}~${interaction.id}`)
-    .setTitle(`${interaction.guild.name} member ${command.toLowerCase()}`)
-    .addComponents(new ActionRowBuilder<TextInputBuilder>()
-      .addComponents(modalInputComponent));
+    .setTitle(`${interaction.guild.name} member ${command.toLowerCase()}`);
+
+  if (isReport(command)) {
+    modal.addComponents(
+      new ActionRowBuilder<TextInputBuilder>().addComponents(subjectComponent),
+      new ActionRowBuilder<TextInputBuilder>().addComponents(modalInputComponent));
+  } else {
+    modal.addComponents(
+      new ActionRowBuilder<TextInputBuilder>().addComponents(modalInputComponent));
+  }
 
   // All commands except INFO, NOTE and REPORT can have a public reason sent to the user
   if (!isNote(command) && !isReport(command)) {

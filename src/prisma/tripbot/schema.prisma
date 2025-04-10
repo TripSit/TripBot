@@ -366,6 +366,8 @@ model user_actions {
   guild_id                                           String           @default("179641883222474752")
   type                                               user_action_type
   ban_evasion_related_user                           String?          @db.Uuid
+  mod_thread_message_id                              String?
+  summary                                            String?
   description                                        String?
   internal_note                                      String
   expires_at                                         DateTime?        @db.Timestamptz(6)
