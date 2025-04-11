@@ -85,7 +85,8 @@ export const messageCreate: MessageCreateEvent = {
     // Don't run on bots
     if (message.author.bot) return;
     countMessage(message);
-    youAre(message);
+    // Uncomment this to re-enable the feature where TripBot responds with "You're {insert what they said here}".
+    // youAre(message);
     karma(message);
     imagesOnly(message);
     // discordAiModerate(message);
