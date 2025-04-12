@@ -70,6 +70,9 @@ export const env = {
   HTTP_PORT: '8080',
   API_PORT: '1337',
 
+  MODERATE_HATESPEECH_NORMAL_CONFIDENCE: 0.92,
+  MODERATE_HATESPEECH_FLAG_CONFIDENCE: 0.95,
+
   TS_ICON_URL: 'https://i.gyazo.com/b48b08a853fefaafb6393837eec1a501.png',
   FLAME_ICON_URL: 'https://i.gyazo.com/19276c297cca0761dc9689ac7c320b8e.png',
   DISCLAIMER: 'Dose responsibly!',

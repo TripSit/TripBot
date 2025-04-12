@@ -1,10 +1,11 @@
 import {
   Message, TextChannel,
 } from 'discord.js';
+import { isToxic } from './moderateHatespeech';
 
 export default youAre;
 
-// const F = f(__filename);
+const F = f(__filename);
 
 export function valMatch(
   input:string,
@@ -34,11 +35,19 @@ export async function youAre(message: Message): Promise<void> {
   if (message.channel.parentId === env.CATEGORY_HARMREDUCTIONCENTRE) return;
 
   const key = valMatch(content, /(\bis\b|\bare\b)\s+([\w\s\d]*?)(\s+)?(,|\.|\band\b|$)/, 5);
+  if (!key || !key[2]) return;
 
-  // const chance = env.Node_ENV === 'production' ?  : 1;
+  const chance = env.Node_ENV === 'production' ? 1 : 100;
 
-  // log.debug(F, `Chance: ${chance}`);
-  if (key && key[2] !== '' && ((Math.floor(Math.random() * (101)) / 1) === 1)) {
-    message.channel.send(`${message.member?.displayName}: You're ${key[2]}.`);
+  // 1% chance to trigger on prod otherwise 100% chance to trigger on dev
+  if (Math.floor(Math.random() * 101) >= chance) return;
+  const phrase = key[2];
+  // log.info(F, `Phrase: ${phrase}`);
+  const isFlagged = await isToxic(`You're ${phrase}`);
+  if (isFlagged) {
+    log.info(F, `Message flagged by moderatehatespeech API: "You're ${phrase}"`);
+    return;
   }
+
+  message.channel.send(`${message.member?.displayName}: You're ${key[2]}.`);
 }

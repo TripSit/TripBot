@@ -17,6 +17,7 @@ import { imagesOnly } from '../utils/imagesOnly';
 import { countMessage } from '../commands/guild/d.counting';
 import { bridgeMessage } from '../utils/bridge';
 import { nightsWatch } from '../../global/commands/g.watchuser';
+import { isToxic } from '../utils/moderateHatespeech';
 // import { awayMessage } from '../utils/awayMessage';
 // import log from '../../global/utils/log';
 // import {parse} from 'path';
@@ -90,6 +91,15 @@ export const messageCreate: MessageCreateEvent = {
     imagesOnly(message);
     // discordAiModerate(message);
     nightsWatch(message);
+
+    if (await isToxic(message.content)) {
+      log.info(F, `Message flagged by ModerateHatespeech API: "${message.content}"`);
+      const channelAiModLog = await discordClient.channels.fetch(env.CHANNEL_BOTSPAM) as TextChannel;
+      await channelAiModLog.send({
+        content: `${message.author.displayName} was flagged by AI ${message.url}`,
+      });
+      return;
+    }
 
     // Disabled for testing
     // thoughtPolice(message);
