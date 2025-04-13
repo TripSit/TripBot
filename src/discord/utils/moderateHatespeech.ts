@@ -13,7 +13,7 @@ const MODERATION_API_URL = 'https://api.moderatehatespeech.com/api/v1/moderate/'
  * @returns boolean - True if the text is considered toxic or uncertain; false otherwise.
  */
 export async function isToxic(text: string): Promise<boolean> {
-  const apiKey = process.env.MODERATE_HATESPEECH_TOKEN;
+  const apiKey = env.MODERATE_HATESPEECH_TOKEN;
   const minNormalConfidence = env.MODERATE_HATESPEECH_NORMAL_CONFIDENCE;
 
   if (!apiKey || !minNormalConfidence) {
