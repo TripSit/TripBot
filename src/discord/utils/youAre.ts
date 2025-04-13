@@ -37,7 +37,7 @@ export async function youAre(message: Message): Promise<void> {
   const key = valMatch(content, /(\bis\b|\bare\b)\s+([\w\s\d]*?)(\s+)?(,|\.|\band\b|$)/, 5);
   if (!key || !key[2]) return;
 
-  const chance = env.Node_ENV === 'production' ? 1 : 100;
+  const chance = env.NODE_ENV === 'production' ? 1 : 100;
 
   // 1% chance to trigger on prod otherwise 100% chance to trigger on dev
   if (Math.floor(Math.random() * 101) >= chance) return;
