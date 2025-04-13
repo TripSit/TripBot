@@ -17,6 +17,7 @@ import { imagesOnly } from '../utils/imagesOnly';
 import { countMessage } from '../commands/guild/d.counting';
 import { bridgeMessage } from '../utils/bridge';
 import { nightsWatch } from '../../global/commands/g.watchuser';
+import { monitorToxicity } from '../utils/moderateHatespeech';
 // import { awayMessage } from '../utils/awayMessage';
 // import log from '../../global/utils/log';
 // import {parse} from 'path';
@@ -90,6 +91,7 @@ export const messageCreate: MessageCreateEvent = {
     imagesOnly(message);
     // discordAiModerate(message);
     nightsWatch(message);
+    monitorToxicity(message);
 
     // Disabled for testing
     // thoughtPolice(message);
