@@ -43,9 +43,9 @@ export async function youAre(message: Message): Promise<void> {
   if (Math.floor(Math.random() * 101) >= chance) return;
   const phrase = key[2];
   // log.info(F, `Phrase: ${phrase}`);
-  const isFlagged = await isToxic(`You're ${phrase}`);
-  if (isFlagged) {
-    log.info(F, `Message flagged by moderatehatespeech API: "You're ${phrase}"`);
+  const response = await isToxic(`You're ${phrase}`);
+  if (response.isFlaggedOrLowConfidence) {
+    log.info(F, `Message flagged by ModerateHatespeech API: "You're ${phrase}\n ${response.class} (${response.confidence})"`);
     return;
   }
 
