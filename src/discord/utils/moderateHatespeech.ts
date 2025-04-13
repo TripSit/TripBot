@@ -17,7 +17,7 @@ export async function isToxic(text: string): Promise<boolean> {
   const minNormalConfidence = env.MODERATE_HATESPEECH_NORMAL_CONFIDENCE;
 
   if (!apiKey || !minNormalConfidence) {
-    log.error(F, 'ModerationHatespeech API key or confidence level not set');
+    log.error(F, 'ModerateHatespeech API key or confidence level not set');
     return false;
   }
 
