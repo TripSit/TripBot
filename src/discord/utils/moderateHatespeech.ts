@@ -35,7 +35,7 @@ export async function isToxic(text: string): Promise<ModerateHatespeechResponse>
       { headers: { 'Content-Type': 'application/json' } },
     );
 
-    log.info(F, `ModerateHatespeech API response: ${JSON.stringify(data)}`);
+    // log.info(F, `ModerateHatespeech API response: ${JSON.stringify(data)}`);
 
     const isNormalWithLowConfidence = data.class === 'normal' && data.confidence < minNormalConfidence;
     const isFlagged = data.class === 'flag' && data.confidence >= minFlagConfidence;
