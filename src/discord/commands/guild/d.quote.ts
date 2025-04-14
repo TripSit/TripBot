@@ -135,20 +135,28 @@ async function get(interaction:ChatInputCommandInteraction) {
 
   if (!authorData.discord_id) return; // Just to type safe
 
-  const target = await interaction.guild.members.fetch(authorData.discord_id);
+  let target = null;
+  try {
+    target = await interaction.guild.members.fetch(authorData.discord_id);
+  } catch (err) {
+    log.error(F, `Failed to fetch author: ${authorData.discord_id}`);
+    target = null;
+  }
 
   await interaction.reply({
     embeds: [{
-      thumbnail: {
-        url: target.user.displayAvatarURL(),
-      },
-      description: stripIndents`${target} ${flavorText[Math.floor(Math.random() * flavorText.length)]}
+      ...(target && {
+        thumbnail: {
+          url: target.user.displayAvatarURL(),
+        },
+      }),
+      description: stripIndents`${target || 'Unknown User'} ${flavorText[Math.floor(Math.random() * flavorText.length)]}
     
       > **${quoteData.quote}**
       
       - ${quoteData.url}
       `,
-      color: target.displayColor,
+      ...(target && { color: target.displayColor }),
       timestamp: `${quoteData.date.toISOString()}`,
     }],
   });
@@ -182,14 +190,22 @@ async function random(interaction:ChatInputCommandInteraction) {
     },
   });
 
-  const author = await interaction.guild.members.fetch(authorData.discord_id as string);
+  let author = null;
+  try {
+    author = await interaction.guild.members.fetch(authorData.discord_id as string);
+  } catch (err) {
+    log.error(F, `Failed to fetch author: ${authorData.discord_id}`);
+    author = null;
+  }
 
   await interaction.editReply({
     embeds: [
       {
         author: {
-          name: `${author.displayName} ${flavorText[Math.floor(Math.random() * flavorText.length)]}`,
-          icon_url: author.user.displayAvatarURL(),
+          name: `${author ? author.displayName : 'Unknown User'} ${
+            flavorText[Math.floor(Math.random() * flavorText.length)]
+          }`,
+          icon_url: author ? author.user.displayAvatarURL() : undefined,
           url: quote.url,
         },
         description: `**${quote.quote}**`,
