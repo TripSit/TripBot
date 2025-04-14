@@ -156,6 +156,7 @@ async function get(interaction:ChatInputCommandInteraction) {
 
 async function random(interaction:ChatInputCommandInteraction) {
   if (!interaction.guild) return;
+  await interaction.deferReply({ });
 
   // Get total count first
   const count = await db.quotes.count();
@@ -183,7 +184,7 @@ async function random(interaction:ChatInputCommandInteraction) {
 
   const author = await interaction.guild.members.fetch(authorData.discord_id as string);
 
-  await interaction.reply({
+  await interaction.editReply({
     embeds: [
       {
         author: {
