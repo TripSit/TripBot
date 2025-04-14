@@ -66,9 +66,16 @@ export async function monitorToxicity(message: Message): Promise<void> {
 
   if (result.isFlaggedOrLowConfidence) {
     log.info(F, `Message flagged by ModerateHatespeech: "${message.content}"`);
-    const logChannelId = env.NODE_ENV === 'production' ? env.CHANNEL_AIMOD_LOG : env.CHANNEL_BOTSPAM;
-    const aiModLogChannel = await discordClient.channels.fetch(logChannelId) as TextChannel;
 
+    // Choose the appropriate log channel based on result.class
+    let logChannelId: string;
+    if (result.class === 'flag') {
+      logChannelId = env.NODE_ENV === 'production' ? env.CHANNEL_AIMOD_LOG : env.CHANNEL_BOTSPAM;
+    } else {
+      logChannelId = env.CHANNEL_BOTERRORS;
+    }
+
+    const aiModLogChannel = await discordClient.channels.fetch(logChannelId) as TextChannel;
     await aiModLogChannel.send({
       embeds: [{
         title: 'Flagged by ModerateHatespeech',
