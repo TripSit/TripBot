@@ -156,14 +156,11 @@ async function get(interaction:ChatInputCommandInteraction) {
 
 async function random(interaction:ChatInputCommandInteraction) {
   if (!interaction.guild) return;
-  const quotes = await db.quotes.findMany({
-    orderBy: {
-      id: 'desc',
-    },
-    take: 1,
-  });
 
-  if (!quotes) {
+  // Get total count first
+  const count = await db.quotes.count();
+
+  if (count === 0) {
     await interaction.reply({
       content: 'No quotes found!',
       flags: MessageFlags.Ephemeral,
@@ -171,8 +168,12 @@ async function random(interaction:ChatInputCommandInteraction) {
     return;
   }
 
-  // Get a random quote from the list
-  const quote = quotes[Math.floor(Math.random() * quotes.length)];
+  // Get one random quote using skip
+  const quote = await db.quotes.findFirst({
+    skip: Math.floor(Math.random() * count),
+  });
+
+  if (!quote) return; // TypeScript safety
 
   const authorData = await db.users.findFirstOrThrow({
     where: {
