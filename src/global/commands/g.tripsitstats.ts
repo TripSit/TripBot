@@ -124,7 +124,7 @@ async function getCommandStats(command?: string | null, days?: number): Promise<
   const topStats = command ? stats : stats.slice(0, 25);
 
   const formatted = topStats
-    .map(s => `• \`${s.command}\`: ${s._count.command} use(s)`)
+    .map(s => `- \`${s.command}\`: ${s._count.command} use(s)`)
     .join('\n');
 
   const titleParts = ['📊 **Command Stats'];
