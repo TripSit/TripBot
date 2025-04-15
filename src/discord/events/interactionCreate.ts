@@ -72,6 +72,35 @@ export const interactionCreate: InteractionCreateEvent = {
       // log.debug(F, `Interaction isChatInputCommand!`);
       // log.info(F, `Decided to run slash command in ${new Date().getTime() - startTime}ms`);
       commandRun(interaction, discordClient);
+      const subcommand = interaction.options.getSubcommand(false);
+      const commandName = subcommand ? `${interaction.commandName} ${subcommand}` : interaction.commandName;
+
+      // Get all options passed to the command
+      const options = interaction.options.data;
+
+      const commandUsage = await db.command_usage.create({
+        data: {
+          command: commandName,
+          created_at: new Date(),
+          channel_id: interaction.channel?.id ?? '0',
+          user_id: interaction.user.id,
+        },
+      });
+
+      // Now create the parameters linked to the command_usage entry
+      const parameterEntries = options
+        .filter(opt => opt.name !== subcommand) // optional: skip subcommand if already part of the command name
+        .map(opt => ({
+          name: opt.name,
+          value: String(opt.value ?? ''), // Prisma expects string
+          usage_id: commandUsage.id, // Use the command_usage ID to link to command_parameters
+        }));
+
+      // Create the parameters in the database
+      await db.command_usage_parameter.createMany({
+        data: parameterEntries,
+      });
+
       return;
     }
 

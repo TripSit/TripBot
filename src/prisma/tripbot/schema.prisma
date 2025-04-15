@@ -177,6 +177,7 @@ model users {
   last_was_helper                                           DateTime?
   watch_requests                                            watch_request[]
   best_of_messages                                          best_of[]            @relation("UserBestOf")
+  command_stats                                             command_usage[]        @relation("CommandUsage")
 }
 
 model wordle_scores {
@@ -575,6 +576,27 @@ model best_of {
   last_updated  DateTime  @updatedAt
 
   user          users     @relation("UserBestOf", fields: [user_id], references: [discord_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model command_usage {
+  id                    String       @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  command               String
+  user_id               String
+  channel_id            String
+  created_at            DateTime
+  last_updated          DateTime    @updatedAt
+
+  user                  users       @relation("CommandUsage", fields: [user_id], references: [discord_id], onDelete: NoAction, onUpdate: NoAction)
+  parameters            command_usage_parameter[]
+}
+
+model command_usage_parameter {
+  id                String        @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  usage_id          String        @db.Uuid
+  name              String
+  value             String
+
+  usage             command_usage @relation(fields: [usage_id], references: [id], onDelete: Cascade)
 }
 
 enum bridge_status {

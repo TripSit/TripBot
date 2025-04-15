@@ -63,14 +63,78 @@ async function getSessionStats(): Promise<string> {
   `;
 }
 
-async function getCommandStats(): Promise<string> {
-  /* Skeleton
-  This command should pull how many times a command has been used in total or within X time frame.
+async function getCommandStats(command?: string | null, days?: number): Promise<string> {
+  log.info(F, 'Getting command stats');
 
-  Requires: new column or table somewhere
-   */
-  log.info(F, 'getCommandStats');
-  return 'Not implemented';
+  let whereClause: any = {};
+
+  const filters = [];
+
+  if (days) {
+    const since = new Date();
+    since.setDate(since.getDate() - days);
+    filters.push({
+      created_at: {
+        gte: since,
+      },
+    });
+  }
+
+  if (command) {
+    filters.push({
+      command: {
+        contains: command,
+        mode: 'insensitive',
+      },
+    });
+  }
+
+  if (filters.length > 0) {
+    whereClause = {
+      AND: filters,
+    };
+  }
+
+  const stats = await db.command_usage.groupBy({
+    by: ['command'],
+    where: whereClause,
+    _count: {
+      command: true,
+    },
+    orderBy: {
+      _count: {
+        command: 'desc',
+      },
+    },
+  });
+
+  if (!stats.length) {
+    let message = 'No command usage found';
+    if (command) {
+      message += ` for \`${command}\``;
+    }
+    if (days) {
+      message += ` in the last ${days} days`;
+    }
+    message += '.';
+    return message;
+  }
+
+  /* eslint-disable no-underscore-dangle */
+  const topStats = command ? stats : stats.slice(0, 25);
+
+  const formatted = topStats
+    .map(s => `• \`${s.command}\`: ${s._count.command} use(s)`)
+    .join('\n');
+
+  const titleParts = ['📊 **Command Stats'];
+
+  if (command) titleParts.push(`for \`${command}\``);
+  if (days) titleParts.push(`(Last ${days} Days)`);
+
+  const title = `${titleParts.join(' ')}**`;
+
+  return `${title}\n${formatted}`;
 }
 
 async function getHelperStats(): Promise<string> {
@@ -88,14 +152,14 @@ async function getHelperStats(): Promise<string> {
  * @param feature - The feature for which statistics are requested.
  * @returns The data related to the specified feature.
  */
-async function getTripSitStatistics(feature: string): Promise<string> {
+async function getTripSitStatistics(feature: string, command?: string | null, days?: number): Promise<string> {
   try {
     switch (feature) {
       case 'session':
         return await getSessionStats();
 
-      case 'commands':
-        return await getCommandStats();
+      case 'command':
+        return await getCommandStats(command, days);
 
       case 'helpers':
         return await getHelperStats();

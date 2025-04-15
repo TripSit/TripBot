@@ -170,9 +170,8 @@ async function random(interaction:ChatInputCommandInteraction) {
   const count = await db.quotes.count();
 
   if (count === 0) {
-    await interaction.reply({
+    await interaction.editReply({
       content: 'No quotes found!',
-      flags: MessageFlags.Ephemeral,
     });
     return;
   }
