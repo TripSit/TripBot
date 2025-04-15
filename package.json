@@ -72,7 +72,6 @@
     "common-tags": "^1.8.2",
     "convert-units": "^2.3.4",
     "cross-fetch": "^4.0.0",
-    "date-fns": "^4.1.0",
     "discord-api-types": "^0.37.67",
     "discord.js": "^14.18.0",
     "dotenv": "^16.4.1",
