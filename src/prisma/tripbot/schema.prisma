@@ -177,7 +177,6 @@ model users {
   last_was_helper                                           DateTime?
   watch_requests                                            watch_request[]
   best_of_messages                                          best_of[]            @relation("UserBestOf")
-  command_stats                                             command_usage[]        @relation("CommandUsage")
 }
 
 model wordle_scores {
@@ -584,12 +583,10 @@ model command_usage {
   id                    String       @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
   command               String
   guild_id              String?
-  user_id               String
   channel_id            String
   created_at            DateTime
   last_updated          DateTime    @updatedAt
 
-  user                  users       @relation("CommandUsage", fields: [user_id], references: [discord_id], onDelete: NoAction, onUpdate: NoAction)
   guild                 discord_guilds?     @relation("GuildCommandUsages", fields: [guild_id], references: [id], onDelete: SetNull)
   parameters            command_usage_parameter[]
 }

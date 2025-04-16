@@ -91,7 +91,6 @@ export const interactionCreate: InteractionCreateEvent = {
           command: commandName,
           created_at: new Date(),
           channel_id: interaction.channel?.id ?? '0',
-          user_id: interaction.user.id,
           guild_id: interaction.guild?.id ?? null,
         },
       });
