@@ -2,6 +2,7 @@
 CREATE TABLE "command_usage" (
     "id" UUID NOT NULL DEFAULT uuid_generate_v4(),
     "command" TEXT NOT NULL,
+    "guild_id" TEXT,
     "user_id" TEXT NOT NULL,
     "channel_id" TEXT NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL,
@@ -22,6 +23,9 @@ CREATE TABLE "command_usage_parameter" (
 
 -- AddForeignKey
 ALTER TABLE "command_usage" ADD CONSTRAINT "command_usage_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("discord_id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+
+-- AddForeignKey
+ALTER TABLE "command_usage" ADD CONSTRAINT "command_usage_guild_id_fkey" FOREIGN KEY ("guild_id") REFERENCES "discord_guilds"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "command_usage_parameter" ADD CONSTRAINT "command_usage_parameter_usage_id_fkey" FOREIGN KEY ("usage_id") REFERENCES "command_usage"("id") ON DELETE CASCADE ON UPDATE CASCADE;

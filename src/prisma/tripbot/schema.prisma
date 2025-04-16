@@ -257,6 +257,8 @@ model discord_guilds {
   user_actions         user_actions[]
   ai_channels          ai_channels[]
   members              members[]
+
+  command_usages       command_usage[]  @relation("GuildCommandUsages")
 }
 
 model drug_articles {
@@ -581,12 +583,14 @@ model best_of {
 model command_usage {
   id                    String       @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
   command               String
+  guild_id              String?
   user_id               String
   channel_id            String
   created_at            DateTime
   last_updated          DateTime    @updatedAt
 
   user                  users       @relation("CommandUsage", fields: [user_id], references: [discord_id], onDelete: NoAction, onUpdate: NoAction)
+  guild                 discord_guilds?     @relation("GuildCommandUsages", fields: [guild_id], references: [id], onDelete: SetNull)
   parameters            command_usage_parameter[]
 }
 

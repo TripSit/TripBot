@@ -78,12 +78,21 @@ export const interactionCreate: InteractionCreateEvent = {
       // Get all options passed to the command
       const options = interaction.options.data;
 
+      await db.users.upsert({
+        where: { discord_id: interaction.user.id },
+        update: {},
+        create: {
+          discord_id: interaction.user.id,
+        },
+      });
+
       const commandUsage = await db.command_usage.create({
         data: {
           command: commandName,
           created_at: new Date(),
           channel_id: interaction.channel?.id ?? '0',
           user_id: interaction.user.id,
+          guild_id: interaction.guild?.id ?? null,
         },
       });
 
