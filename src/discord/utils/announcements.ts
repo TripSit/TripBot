@@ -1,5 +1,6 @@
 /* eslint-disable max-len */
 import {
+  DMChannel,
   Message,
   MessageReaction,
   TextChannel,
@@ -114,13 +115,7 @@ export async function announcements(message:Message) {
     '**Reminder:** For the safety of everyone involved, sourcing (buying or selling anything) is against our network rules. If someone contacts you to find, buy, trade, or give you drugs, you can report it by using /report or by clicking their name > Apps > TripBot Report User. This rule also applies to private messages. Be safe, and don\'t trust random internet folk.',
     '**Reminder:** Tending to personal hygiene is an important part of self-care. Remember to brush your teeth, bathe, and wash your hands!',
     '**Reminder:** We do our best to keep the environment here as safe as possible but please remember to always be vigilant when using the internet. Do not post anything here that might divulge any of your personal information.',
-    // 'Donate to keep TripSit running and fund our future Harm Reduction projects!\nDonate page: https://tripsit.me/donate/\nBTC: 1EDqf32gw73tc1WtgdT2FymfmDN4RyC9RN\nPayPal: teknos@tripsit.me\nPatreon: https://patreon.com/tripsit\nMerchandise: https://tripsit.myspreadshop.com/',
-    // 'Try to dose with a friend. Share with your friend any substances you have taken and how much. Communicate if you are not feeling well or if you need a break.',
     '**Reminder:** Sleep is important! A sleep deficit can impair you more than drinking alcohol.',
-    // 'Do not drive after dosing, even if you don\'t feel the effects',
-    // 'Re-dosing is not usually a good idea: Sometimes both doses will kick in, sometimes your tolerance will waste both doses',
-    // 'LSD and Mushrooms share a tolerance! Check out /calc-psychedelics for more info',
-    // 'When snorting, crush your powder as fine as possible and make sure everyone has their own straw. Alternate nostrils between hits.',
     '**Reminder:** Stay hydrated! Drinking water is essential for your body and mind to function properly.',
     '**Reminder:** Regular exercise can help reduce stress and improve your mood. Try to incorporate some form of physical activity into your daily routine.',
     '**Reminder:** Eating a balanced diet is key to maintaining good health. Try to include fruits and vegetables in your meals regularly.',
@@ -130,11 +125,20 @@ export async function announcements(message:Message) {
     '**Reminder:** Remember to take regular breaks when using screens for a long period of time to avoid eye strain.',
     '**Reminder:** TripSit strives to be a safe place for everyone. Please be kind and report any inappropriate behavior.',
     '**Reminder:** Spending time outdoors is proven to have a positive impact on your mental health. Try to get some fresh air every day!',
+    '**Reminder:** If you are feeling overwhelmed or anxious, take a moment to breathe deeply and focus on the present.',
+    '**Reminder:** Make sure you have taken care of your responsibilities before using substances.',
+    '**Reminder:** Try to maintain a regular sleep schedule. Consistent sleep patterns can improve your overall health.',
+    '**Reminder:** 20-20-20! Every 20 minutes, take 20 seconds to look at something 20 feet away. This can help reduce eye strain from screens.',
+    '**Reminder:** It is important to take your medication as prescribed. If you have any concerns, please speak to your healthcare provider instead of deviating from your prescription.',
+    '**Reminder:** Sometimes it can be healthy to take a break from online drug focused communities. It is okay to step back to help focus on other things.',
+    '**Reminder:** Please be mindful of the jokes you make here. What may be funny to you could be hurtful to someone else with lived experience.',
+    '**Reminder:** If one channel is too busy, try striking conversation in another! There are many different channels to choose from.',
+    '**Reminder:** What is your habit really costing you? Never be discouraged to seek help if you need it.',
   ];
 
   const tipAnnouncements = [
-    '**Tip:** You can report a user if they are breaking the rules or causing issues by using /report or by clicking their name > Apps > TripBot Report User.',
-    '**Tip:** To report a user, click their name > Apps > TripBot Report User. To report a message, click the message > Apps > TripBot Report Message.',
+    '**Tip:** You can report a user if they are breaking the rules or causing issues by using /report or by right-clicking their name > Apps > TripBot Report User.',
+    '**Tip:** To report a user, click their name > Apps > TripBot Report User. To report a message, right-click the message > Apps > TripBot Report Message.',
     '**Tip:** Use `/help` to learn more about the bot and its commands.',
     '**Tip:** Check out the <id:guide> for more tips and server info!',
     '**Tip:** Go to <id:customize> to change your name color and mindset role icon!',
@@ -144,6 +148,17 @@ export async function announcements(message:Message) {
     '**Tip:** Curious about a specific server function like levelling or karma? Head to Server Tips in the <id:guide>!',
     '**Tip:** Keen to help with tripsitting? Head to the <id:guide> for info on how to become a Helper!',
     '**Tip:** Track your dosages privately with `/idose`.',
+    '**Tip:** Feeling a little airy? Use `/breathe` to guide your breathing.',
+    '**Tip:** Feeling a bit spacey? Try `/grounding` to bring you back down to earth.',
+    '**Tip:** Conversation a bit dull? Use `/topic` to get a random topic to chat about!',
+    '**Tip:** Need a little pick-me-up? Use `/lovebomb` to send some love to the channel!',
+    '**Tip:** Want to know how much karma you\'ve given or received? Use `/karma`!',
+    '**Tip:** Need to force yourself to take a break? Use `/selftimeout`.',
+    '**Tip:** Want to see a reagent chart? Use `/reagents`!',
+    '**Tip:** Get quick access to the combo chart with `/combochart`!',
+    '**Tip:** Convert one benzo dosage to another with `/calc benzo`.',
+    '**Tip:** Need some quick activities? Head over to Rooni\'s Fun Activities Corner in the <id:guide>!',
+    '**Tip:** Want to know what is happening behind the scenes? Check out the <id:guide> for info on our development projects!',
   ];
 
   const funAnnouncements = [
@@ -158,6 +173,12 @@ export async function announcements(message:Message) {
     '[**Did you know?**](https://www.guinnessworldrecords.com/world-records/largest-collection-of-pokemon-memorabilia) The largest collection of Pokémon memorabilia is 17,127 items.',
     '[**Did you know?**](https://www.guinnessworldrecords.com/world-records/69605-longest-conga-line) The record for the longest conga line is 119,986 people.',
     '[**Did you know?**](https://www.guinnessworldrecords.com/world-records/longest-cake) The longest cake ever made was 5300m (17,388 ft) long, and was eaten in 10 minutes!',
+    '[**Did you know?**](https://www.guinnessworldrecords.com/world-records/heaviest-train-pulled-with-beard) The heaviest train pulled with a beard weighed 2,753kg (6,069 lb)!',
+    '[**Did you know?**](https://www.guinnessworldrecords.com/world-records/70851-largest-cow-ever) The tallest cow recorded was "Blossom" who stood at 190cm (74.8 in) tall!',
+    '[**Did you know?**](https://www.guinnessworldrecords.com/world-records/most-feet-and-armpits-sniffed) The record for the most feet sniffed by an individual is approx 5600!',
+    '[**Did you know?**](https://www.guinnessworldrecords.com/world-records/372384-fastest-marathon-dressed-as-an-elf-male) The fastest marathon dressed as an elf is 2 hours, 56 minutes!',
+    '[**Did you know?**](https://www.guinnessworldrecords.com/world-records/longest-legs-female) The longest female legs measure 134.3 cm (52.87 in)!',
+    '[**Did you know?**](https://www.guinnessworldrecords.com/world-records/longest-noodle) The longest noodle ever made was 3,084m (10,119 ft) long!',
   ];
 
   // const chanAnnouncements = [
@@ -385,7 +406,9 @@ export async function announcements(message:Message) {
       }
       await message.channel.sendTyping(); // This method automatically stops typing after 10 seconds, or when a message is sent.
       setTimeout(async () => {
-        await (message.channel.send({ embeds: [embed] }));
+        if (message.channel instanceof TextChannel || message.channel instanceof DMChannel) {
+          await (message.channel.send({ embeds: [embed] }));
+        } else log.error(F, 'Cannot send typing in this channel type.');
       }, 3000);
     }
   }

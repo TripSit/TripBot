@@ -28,6 +28,7 @@ import {
   TextInputStyle,
   ChannelType,
   ButtonStyle,
+  MessageFlags,
 } from 'discord-api-types/v10';
 import { stripIndents } from 'common-tags';
 import { DateTime } from 'luxon';
@@ -35,6 +36,7 @@ import { ticket_status, user_tickets } from '@prisma/client';
 import commandContext from './context';
 import { embedTemplate } from './embedTemplate';
 import { checkChannelPermissions, checkGuildPermissions } from './checkPermissions';
+import commandCooldown from './commandCooldown';
 
 const F = f(__filename);
 
@@ -98,6 +100,17 @@ const mindsetRoles = [
   env.ROLE_STIMMING,
   env.ROLE_SEDATED,
   env.ROLE_SOBER,
+  env.ROLE_EVENT_1,
+  env.ROLE_EVENT_2,
+  env.ROLE_EVENT_3,
+  env.ROLE_EVENT_4,
+  env.ROLE_EVENT_5,
+  env.ROLE_EVENT_6,
+  env.ROLE_EVENT_7,
+  env.ROLE_EVENT_8,
+  env.ROLE_EVENT_9,
+  env.ROLE_EVENT_10,
+  env.ROLE_EVENT_11,
 ];
 
 const otherRoles = [
@@ -301,7 +314,7 @@ export async function needsHelpMode(
 export async function tripsitmeOwned(
   interaction:ButtonInteraction,
 ) {
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
   if (!interaction.guild) {
     // log.debug(F, `no guild!`);
     await interaction.editReply(guildOnly);
@@ -417,7 +430,7 @@ export async function tripsitmeOwned(
 export async function tripsitmeMeta(
   interaction:ButtonInteraction,
 ) {
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
   if (!interaction.guild) {
     // log.debug(F, `no guild!`);
     await interaction.editReply(guildOnly);
@@ -551,7 +564,7 @@ export async function tripsitmeMeta(
 export async function tripsitmeBackup(
   interaction:ButtonInteraction,
 ) {
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
   // log.debug(F, `tripsitmeBackup`);
   if (!interaction.guild) {
     // log.debug(F, `no guild!`);
@@ -639,8 +652,10 @@ export async function tripsitmeBackup(
         },
       });
     }
-  } else {
+  } else if (interaction.channel instanceof TextChannel) {
     await interaction.channel.send(backupMessage);
+  } else {
+    log.error(F, 'Cannot send a message in this channel type!');
   }
 
   await interaction.editReply({ content: 'Backup message sent!' });
@@ -657,7 +672,7 @@ export async function tripsitmeTeamClose(
   if (!interaction.member) return;
   if (!interaction.channel) return;
   log.info(F, await commandContext(interaction));
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
   const targetId = interaction.customId.split('~')[1];
 
@@ -805,11 +820,11 @@ export async function tripsitmeTeamClose(
   // Update the ticket status to resolved
   ticketData.status = 'RESOLVED' as ticket_status;
   ticketData.archived_at = env.NODE_ENV === 'production'
-    ? DateTime.local().plus({ days: 7 }).toJSDate()
+    ? DateTime.local().plus({ days: 3 }).toJSDate()
     : DateTime.local().plus({ minutes: 1 }).toJSDate();
 
   ticketData.deleted_at = env.NODE_ENV === 'production'
-    ? DateTime.local().plus({ days: 14 }).toJSDate()
+    ? DateTime.local().plus({ days: 5 }).toJSDate()
     : DateTime.local().plus({ minutes: 2 }).toJSDate();
 
   // await database.tickets.set(ticketData);
@@ -842,7 +857,14 @@ export async function tripsitmeUserClose(
   if (!interaction.channel) return;
   log.info(F, await commandContext(interaction));
 
-  await interaction.deferReply({ ephemeral: false });
+  const cooldown = await commandCooldown(interaction.user, interaction.customId);
+
+  if (!cooldown.success && cooldown.message) {
+    await interaction.reply({ content: cooldown.message, flags: MessageFlags.Ephemeral });
+    return;
+  }
+
+  await interaction.deferReply({ });
 
   const targetId = interaction.customId.split('~')[1];
   const override = interaction.customId.split('~')[0] === 'tripsitmodeOffOverride';
@@ -1139,11 +1161,11 @@ export async function tripsitmeUserClose(
   // Update the ticket status to closed
   ticketData.status = 'CLOSED' as ticket_status;
   ticketData.archived_at = env.NODE_ENV === 'production'
-    ? DateTime.local().plus({ days: 7 }).toJSDate()
+    ? DateTime.local().plus({ days: 3 }).toJSDate()
     : DateTime.local().plus({ minutes: 1 }).toJSDate();
 
   ticketData.deleted_at = env.NODE_ENV === 'production'
-    ? DateTime.local().plus({ days: 14 }).toJSDate()
+    ? DateTime.local().plus({ days: 5 }).toJSDate()
     : DateTime.local().plus({ minutes: 2 }).toJSDate();
 
   await db.user_tickets.update({
@@ -1185,6 +1207,12 @@ export async function tripSitMe(
     // log.debug(F, `no member!`);
     await interaction.editReply(memberOnly);
     return null;
+  }
+
+  const cooldown = await commandCooldown(interaction.user, interaction.customId);
+
+  if (!cooldown.success && cooldown.message) {
+    await interaction.editReply(cooldown.message);
   }
 
   // const actor = interaction.member;
@@ -1407,11 +1435,11 @@ export async function tripSitMe(
   // log.debug(F, `Sent message to ${channelTripsitmeta.name} (${channelTripsitmeta.id})`);
 
   const archiveTime = env.NODE_ENV === 'production'
-    ? DateTime.local().plus({ days: 7 })
+    ? DateTime.local().plus({ days: 3 })
     : DateTime.local().plus({ minutes: 1 });
 
   const deleteTime = env.NODE_ENV === 'production'
-    ? DateTime.local().plus({ days: 14 })
+    ? DateTime.local().plus({ days: 5 })
     : DateTime.local().plus({ minutes: 2 });
 
   log.debug(F, `Ticket archives on ${archiveTime.toLocaleString(DateTime.DATETIME_FULL)} deletes on ${deleteTime.toLocaleString(DateTime.DATETIME_FULL)}`);
@@ -1466,6 +1494,13 @@ export async function tripsitmeButton(
 ) {
   log.info(F, await commandContext(interaction));
   const target = interaction.member as GuildMember;
+
+  const cooldown = await commandCooldown(interaction.user, interaction.customId);
+
+  if (!cooldown.success && cooldown.message) {
+    await interaction.reply({ content: cooldown.message, flags: MessageFlags.Ephemeral });
+    return;
+  }
 
   // log.debug(F, `target: ${JSON.stringify(target, n ull, 2)}`);
 
@@ -1641,7 +1676,7 @@ export async function tripsitmeButton(
     log.debug(F, `ThreadHelpUser: ${threadHelpUser.name}`);
 
     if (threadHelpUser.id) {
-      await interaction.deferReply({ ephemeral: true });
+      await interaction.deferReply({ flags: MessageFlags.Ephemeral });
       await needsHelpMode(interaction, target);
       log.debug(F, 'Added needshelp to user');
       let roleTripsitter = {} as Role;
@@ -1737,11 +1772,11 @@ export async function tripsitmeButton(
       ticketData.status = 'OPEN' as ticket_status;
       ticketData.reopened_at = new Date();
       ticketData.archived_at = env.NODE_ENV === 'production'
-        ? DateTime.local().plus({ days: 7 }).toJSDate()
+        ? DateTime.local().plus({ days: 3 }).toJSDate()
         : DateTime.local().plus({ minutes: 1 }).toJSDate();
 
       ticketData.deleted_at = env.NODE_ENV === 'production'
-        ? DateTime.local().plus({ days: 14 }).toJSDate()
+        ? DateTime.local().plus({ days: 5 }).toJSDate()
         : DateTime.local().plus({ minutes: 2 }).toJSDate();
       // await database.tickets.set(ticketData);
 
@@ -1783,7 +1818,7 @@ export async function tripsitmeButton(
   await interaction.awaitModalSubmit({ filter, time: 0 })
     .then(async i => {
       if (i.customId.split('~')[1] !== interaction.id) return;
-      await i.deferReply({ ephemeral: true });
+      await i.deferReply({ flags: MessageFlags.Ephemeral });
       const triage = i.fields.getTextInputValue('triageInput');
       const intro = i.fields.getTextInputValue('introInput');
 

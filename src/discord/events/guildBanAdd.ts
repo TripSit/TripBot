@@ -19,7 +19,7 @@ import {
 import { checkGuildPermissions } from '../utils/checkPermissions';
 import {
   modButtonBan, modButtonInfo, modButtonNote, modButtonTimeout, modButtonWarn, tripSitTrustScore, userInfoEmbed,
-} from '../commands/guild/d.moderate';
+} from '../utils/modUtils';
 
 const F = f(__filename);
 

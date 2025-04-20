@@ -1,4 +1,5 @@
 import {
+  MessageFlags,
   SlashCommandBuilder,
 } from 'discord.js';
 import { SlashCommand } from '../../@types/commandDef';
@@ -11,6 +12,8 @@ export const dBreathe: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('breathe')
     .setDescription('Remember to breathe')
+    .setContexts([0, 1, 2])
+    .setIntegrationTypes([0, 1])
     .addStringOption(option => option.setName('exercise')
       .setDescription('Which exercise?')
       .addChoices(
@@ -20,13 +23,20 @@ export const dBreathe: SlashCommand = {
         { name: '4', value: '4' },
       ))
     .addBooleanOption(option => option.setName('ephemeral')
-      .setDescription('Set to "True" to show the response only to you')),
+      .setDescription('Set to "True" to show the response only to you')) as SlashCommandBuilder,
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
-    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
+    const ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined;
+    await interaction.deferReply({ flags: ephemeral });
     const choice = interaction.options.getString('exercise');
     const data = await breathe(choice);
-    await interaction.editReply({ content: data });
+    try {
+      await interaction.editReply({ content: data });
+    } catch (error) {
+      log.error(F, `${error}`);
+      await interaction.deleteReply();
+      await interaction.followUp({ content: data, flags: MessageFlags.Ephemeral });
+    }
     return true;
   },
 };

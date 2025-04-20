@@ -1,6 +1,7 @@
 /* eslint-disable max-len */
 import {
   Colors,
+  MessageFlags,
   SlashCommandBuilder,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
@@ -13,17 +14,19 @@ const F = f(__filename);
 export const drugChecking: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('drug_checking')
+    .setContexts([0, 1, 2])
+    .setIntegrationTypes([0, 1])
     .setDescription('Provides information on drug checking services.')
     .addBooleanOption(option => option.setName('ephemeral')
-      .setDescription('Set to "True" to show the response only to you')),
+      .setDescription('Set to "True" to show the response only to you')) as SlashCommandBuilder,
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
-    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
-    await interaction.editReply({
-      embeds: [embedTemplate()
-        .setTitle('Drug Checking Information')
-        .setColor(Colors.Blurple)
-        .setDescription(stripIndents`
+    const ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined;
+    await interaction.deferReply({ flags: ephemeral });
+    const embed = embedTemplate()
+      .setTitle('Drug Checking Information')
+      .setColor(Colors.Blurple)
+      .setDescription(stripIndents`
         Drug-checking services allow for laboratory testing of substances to allow people who use drugs to confirm what substances are present in the drugs they are purchasing and taking. In addition, they often publish results and post alerts when there are concerning samples found so are a good resource to check in with even if you do not or cannot send in your own sample. 
         
         For a full list of resources [check out our wiki page](https://wiki.tripsit.me/wiki/Sources_for_Laboratory_Analysis).
@@ -53,9 +56,16 @@ export const drugChecking: SlashCommand = {
         [Saferparty](https://en.saferparty.ch/angebote/drug-checking) (Zurich)
         [Drugs Information and Monitoring System](https://www.drugs-test.nl/en/testlocations/) (Netherlands)
         ## Austrailia
-        [CanTEST](https://pilltestingaustralia.com.au/cantest/) (Canberra)
-        `)],
-    });
+        [CanTEST](https://www.cahma.org.au/services/cantest/) (Canberra)
+        `);
+
+    try {
+      await interaction.editReply({ embeds: [embed] });
+    } catch (error) {
+      log.error(F, `${error}`);
+      await interaction.deleteReply();
+      await interaction.followUp({ embeds: [embed], flags: MessageFlags.Ephemeral });
+    }
 
     return true;
   },

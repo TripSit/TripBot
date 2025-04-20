@@ -25,7 +25,7 @@ import {
 import { helperButton } from '../commands/global/d.setup';
 import { appealAccept, appealReject } from '../utils/appeal';
 import { mushroomPageOne, mushroomPageTwo } from '../commands/global/d.mushroom_info';
-import { acknowledgeButton, modModal, refusalButton } from '../commands/guild/d.moderate';
+import { acknowledgeButton, modModal, refusalButton } from '../utils/modUtils';
 import { feedbackReportModal } from '../commands/global/d.feedback';
 import { aiButton } from '../commands/global/d.ai';
 import { purgeButton } from '../commands/guild/d.purge';

@@ -3,21 +3,23 @@ import {
 } from 'discord.js';
 import {
   ApplicationCommandType,
+  MessageFlags,
 } from 'discord-api-types/v10';
 import { MessageCommand } from '../../@types/commandDef';
 import commandContext from '../../utils/context';
-import { modResponse } from './d.moderate';
+import { modResponse } from '../../utils/modUtils';
 
 const F = f(__filename);
 
 export const mReport: MessageCommand = {
   data: new ContextMenuCommandBuilder()
     .setName('TripBot Report Message')
-    .setType(ApplicationCommandType.Message),
+    .setType(ApplicationCommandType.Message)
+    .setIntegrationTypes([0]),
   async execute(interaction) {
     if (!interaction.guild) return false;
     log.info(F, await commandContext(interaction));
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
     // Get the guild
     const { guild } = interaction;

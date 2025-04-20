@@ -13,7 +13,7 @@ import {
 } from '@google/generative-ai';
 import axios from 'axios';
 import { Message, MessageReplyOptions, TextChannel } from 'discord.js';
-import { sleep } from '../../discord/commands/guild/d.bottest';
+import { sleep } from '../../discord/utils/sleep';
 import { getDrugInfo } from '../../discord/commands/global/d.drug';
 
 const F = f(__filename);
@@ -162,7 +162,7 @@ export async function getAssistant(name: string):Promise<Assistant> {
   });
   // LAZY TEMP FIX
   // eslint-disable-next-line sonarjs/no-all-duplicated-branches
-  const modelName = personaData.ai_model.toLowerCase() === 'gpt-3.5-turbo-1106' ? 'gpt-4o-mini' : 'gpt-4o-mini';
+  const modelName = personaData.ai_model.toLowerCase() === 'gpt-3.5-turbo-1106' ? 'gpt-4.1-mini' : 'gpt-4.1-mini';
 
   // Upload a file with an "assistants" purpose
   // const combinedDb = await openAi.files.create({
@@ -779,7 +779,7 @@ async function openAiChat(
   let model = aiPersona.ai_model.toLowerCase();
   // Convert ai models into proper names
   if (aiPersona.ai_model === 'GPT_3_5_TURBO') {
-    model = 'gpt-4o-mini'; // LAZY TEMP FIX
+    model = 'gpt-4.1-mini'; // LAZY TEMP FIX
   }
 
   // This message list is sent to the API
@@ -865,7 +865,7 @@ async function openAiChat(
       }
     }
 
-    response = responseMessage.content ?? 'Sorry, I\'m not sure how to respond to that.';
+    response = responseMessage.content?.toString() ?? 'Sorry, I\'m not sure how to respond to that.';
   }
 
   // log.debug(F, `response: ${response}`);
@@ -1012,7 +1012,7 @@ export async function aiFlairMod(
   let model = aiPersona.ai_model.toLowerCase();
   // Convert ai models into proper names
   if (aiPersona.ai_model === 'GPT_3_5_TURBO') {
-    model = 'gpt-4o-mini'; // LAZY TEMP FIX
+    model = 'gpt-4.1-mini'; // LAZY TEMP FIX
   }
   // This message list is sent to the API
   const chatCompletionMessages = [{
@@ -1058,7 +1058,7 @@ export async function aiFlairMod(
     promptTokens = chatCompletion.usage?.prompt_tokens ?? 0;
     completionTokens = chatCompletion.usage?.completion_tokens ?? 0;
 
-    response = responseMessage.content ?? 'Sorry, I\'m not sure how to respond to that.';
+    response = responseMessage.content?.toString() ?? 'Sorry, I\'m not sure how to respond to that.';
   }
 
   // log.debug(F, `response: ${response}`);
@@ -1142,7 +1142,7 @@ export async function aiTranslate(
   let completionTokens = 0;
   if (!env.OPENAI_API_ORG || !env.OPENAI_API_KEY) return { response, promptTokens, completionTokens };
 
-  const model = 'gpt-4o-mini';
+  const model = 'gpt-4.1-mini';
   const chatCompletionMessages = [{
     role: 'system',
     content: `You will translate whatever the user sends to their desired language. Their desired language or language code is: ${target_language}.`,
@@ -1178,7 +1178,7 @@ export async function aiTranslate(
     promptTokens = chatCompletion.usage?.prompt_tokens ?? 0;
     completionTokens = chatCompletion.usage?.completion_tokens ?? 0;
 
-    response = responseMessage.content ?? 'Sorry, I\'m not sure how to respond to that.';
+    response = responseMessage.content?.toString() ?? 'Sorry, I\'m not sure how to respond to that.';
   }
 
   // log.debug(F, `response: ${response}`);

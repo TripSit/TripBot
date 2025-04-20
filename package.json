@@ -8,8 +8,8 @@
     "seed": "ts-node ./src/prisma/seed.ts"
   },
   "engines": {
-    "node": "v21.4.0",
-    "npm": "10.2.4"
+    "node": ">=v22.14.0",
+    "npm": ">=v10.9.2"
   },
   "scripts": {
     "## TRIPBOT ##": "",
@@ -17,8 +17,9 @@
     "tripbot:logs": "docker container logs tripbot -f -n 100",
     "tripbot:test": "docker exec -it tripbot npx jest --silent -c ./src/jest/jest.config.ts ",
     "tripbot:test1": "npx jest -c ./src/jest/jest.config.ts",
+    "lint": "npx eslint --fix --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts . --cache",
     "tripbot:lint": "docker exec -it tripbot npx eslint --fix --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts . --cache",
-    "tripbot:deployCommands": "docker exec -it tripbot ts-node --transpile-only ./src/discord/utils/commandDeploy.ts -- deployCommands",
+    "tripbot:deployCommands": "docker exec -it tripbot npx ts-node --transpile-only ./src/discord/utils/commandDeploy.ts -- deployCommands",
     "tripbot:db:generate": "npx prisma generate && npx prisma generate --schema src/prisma/moodle/schema.prisma && docker exec -it tripbot npx prisma generate && docker exec -it tripbot npx prisma generate --schema src/prisma/moodle/schema.prisma",
     "## DATABASE ##": "",
     "db:start": "docker compose --project-name tripbot up -d --force-recreate --build tripbot_database",
@@ -49,7 +50,8 @@
   "contributors": [
     "Hipperooni",
     "Ajar",
-    "Change"
+    "Change",
+    "theimperious1"
   ],
   "license": "MIT",
   "bugs": {
@@ -63,7 +65,7 @@
     "@octokit/types": "^12.4.0",
     "@octokit/webhooks-types": "^7.3.1",
     "@prisma/client": "^5.8.1",
-    "@sentry/node": "^7.98.0",
+    "@sentry/node": "^7.120.3",
     "argon2": "^0.31.2",
     "axios": "^1.6.6",
     "body-parser": "^1.20.2",
@@ -71,7 +73,7 @@
     "convert-units": "^2.3.4",
     "cross-fetch": "^4.0.0",
     "discord-api-types": "^0.37.67",
-    "discord.js": "^14.14.1",
+    "discord.js": "^14.18.0",
     "dotenv": "^16.4.1",
     "express": "^4.18.2",
     "express-rate-limit": "^7.1.5",

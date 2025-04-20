@@ -31,6 +31,7 @@ import {
   APISelectMenuOption,
   ButtonStyle,
   ComponentType,
+  MessageFlags,
   TextInputStyle,
 } from 'discord-api-types/v10';
 import { stripIndents } from 'common-tags';
@@ -1359,9 +1360,8 @@ function getLastMonday(d:Date) {
 export async function rpgBounties(
   interaction: MessageComponentInteraction | ChatInputCommandInteraction,
   command: 'quest' | 'dungeon' | 'raid' | null,
-):Promise<InteractionEditReplyOptions | InteractionUpdateOptions> {
+): Promise<InteractionEditReplyOptions | InteractionUpdateOptions> {
   // Check if the user has a persona
-
   const userData = await db.users.upsert({
     where: {
       discord_id: interaction.user.id,
@@ -1445,54 +1445,40 @@ export async function rpgBounties(
     },
   };
 
+  const allResetTimes: { [key: string]: Date } = {
+    quest: new Date(new Date().setHours(new Date().getHours() + 1, 0, 0, 0)),
+    dungeon: new Date(new Date(new Date().setDate(new Date().getDate() + 1)).setHours(0, 0, 0, 0)),
+    raid: new Date(new Date(getLastMonday(new Date()).getTime() + 7 * 24 * 60 * 60 * 1000).setHours(0, 0, 0, 0)),
+  };
+
+  // If the command is not null, we need to check the respective reset time
   if (command !== null) {
     const dbKey = `last_${command}`;
     const lastBounties = personaData[dbKey as 'last_quest' | 'last_dungeon' | 'last_raid'] as Date;
-    // log.debug(F, `lastBounties: ${lastBounties}`);
-
-    let resetTime = {} as Date;
     let timeout = false;
-    if (command === 'quest') {
-      const currentHour = new Date().getHours();
-      // log.debug(F, `currentHour: ${currentHour}`);
 
-      resetTime = new Date(new Date().setHours(currentHour + 1, 0, 0, 0));
+    if (lastBounties) {
+      // Check if the user has already completed the bounty type today, hourly, or weekly
+      const currentDate = new Date();
 
-      if (lastBounties) {
-        const lastBountiesHour = lastBounties.getHours();
-        // log.debug(F, `lastBountiesHour: ${lastBountiesHour}`);
-        if (lastBountiesHour === currentHour) {
-          timeout = true;
-        }
-      }
-    } else if (command === 'dungeon') {
-      const currentDay = new Date().getDate();
-      // log.debug(F, `currentDay: ${currentDay}`);
-      resetTime = new Date(new Date(new Date().setDate(currentDay + 1)).setHours(0, 0, 0, 0));
+      const timeComparison = {
+        quest: () => lastBounties.getHours() === currentDate.getHours(),
+        dungeon: () => lastBounties.getDate() === currentDate.getDate(),
+        raid: () => lastBounties.getTime() > getLastMonday(currentDate).getTime(),
+      };
 
-      if (lastBounties) {
-        const lastBountiesDay = lastBounties.getDate();
-        // log.debug(F, `lastBountiesDay: ${lastBountiesDay}`);
-
-        // log.debug(F, `personaData1: ${JSON.stringify(personaData, null, 2)}`);
-        // if (lastBounties && (lastBounties.getTime() + interval > new Date().getTime())) {
-        if (lastBountiesDay === currentDay) {
-          timeout = true;
-        }
-      }
-    } else if (command === 'raid') {
-      const lastMonday = getLastMonday(new Date());
-      // log.debug(F, `lastMonday: ${lastMonday}`);
-      resetTime = new Date(new Date(lastMonday.getTime() + 7 * 24 * 60 * 60 * 1000).setHours(0, 0, 0, 0));
-
-      // Check if the last bounties was done after the last monday
-      if (lastBounties && lastBounties.getTime() > lastMonday.getTime()) {
+      if (timeComparison[command] && timeComparison[command]()) {
         timeout = true;
       }
     }
 
-    // log.debug(F, `resetTime: ${resetTime}`);
-    // log.debug(F, `timeout: ${timeout}`);
+    // Including all reset times in the response
+    const resetTimesMessage = stripIndents`
+      **Reset Times:**
+      - Quest: ${time(allResetTimes.quest, 'R')}
+      - Dungeon: ${time(allResetTimes.dungeon, 'R')}
+      - Raid: ${time(allResetTimes.raid, 'R')}
+    `;
 
     if (timeout) {
       return {
@@ -1501,42 +1487,38 @@ export async function rpgBounties(
           .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).displayAvatarURL() })
           .setTitle(contracts[command].fail.title)
           .setDescription(stripIndents`${contracts[command].fail.description}
-            You can try again ${time(resetTime, 'R')}
+            ${resetTimesMessage}
             ${emojiGet('buttonBetSmall')} **Wallet:** ${personaData.tokens}`)
           .setColor(contracts[command].fail.color)],
         components: [rowBounties],
       };
     }
 
+    // Process tokens and other logic here...
     let tokens = 10;
     if (command === 'dungeon') { tokens = 50; } else if (command === 'raid') { tokens = 100; }
 
     let tokenMultiplier = inventoryData
       .filter(item => item.effect === 'tokenMultiplier')
       .reduce((acc, item) => acc + parseFloat(item.effect_value), 1);
-    // log.debug(F, `tokenMultiplier (before donor): ${tokenMultiplier}`);
 
-    // CHeck if the user who started this interaction has the patreon or booster roles
+    // Check for roles and adjust multiplier
     const member = await interaction.guild?.members.fetch(interaction.user.id);
     if (member?.roles.cache.has(env.ROLE_BOOSTER) || member?.roles.cache.has(env.ROLE_PATRON)) {
       tokenMultiplier += 0.1;
     }
 
-    // Round token multiplier to 1 decimal place
     tokenMultiplier = Math.round(tokenMultiplier * 10) / 10;
-    // log.debug(F, `tokenMultiplier: ${tokenMultiplier}`);
-
     tokens *= tokenMultiplier;
 
     if (env.NODE_ENV === 'development') { tokens *= 10; }
 
     tokens = Math.round(tokens);
 
-    // Award the user tokens
+    // Award tokens to the user
     personaData.tokens += tokens;
     personaData[dbKey as 'last_quest' | 'last_dungeon' | 'last_raid'] = new Date();
 
-    // log.debug(F, `personaData2: ${JSON.stringify(personaData, null, 2)}`);
     await db.personas.upsert({
       where: {
         id: personaData.id,
@@ -1551,7 +1533,7 @@ export async function rpgBounties(
         .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).displayAvatarURL() })
         .setTitle(contracts[command].success.title)
         .setDescription(stripIndents`${contracts[command].success.description.replace('{tokens}', tokens.toString())}
-          You can try again ${time(resetTime, 'R')}.
+          ${resetTimesMessage}
           ${emojiGet('buttonBetSmall')} **Wallet:** ${personaData.tokens}`)
         .setColor(contracts[command].success.color)],
       components: [rowBounties],
@@ -2825,7 +2807,7 @@ export async function rpgHomeNameChange(
     .then(async i => {
       if (i.customId.split('~')[1] !== interaction.id) return;
       const choice = i.fields.getTextInputValue('rpgNewName');
-      await i.deferReply({ ephemeral: true });
+      await i.deferReply({ flags: MessageFlags.Ephemeral });
 
       // log.debug(F, `name: ${choice}`);
 
@@ -4880,6 +4862,7 @@ export const dRpg: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('rpg')
     .setDescription('A TripSit RPG (BETA)!')
+    .setIntegrationTypes([0])
     .addSubcommand(subcommand => subcommand
       .setName('town')
       .setDescription('Go to TripTown!'))
@@ -4938,7 +4921,8 @@ export const dRpg: SlashCommand = {
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
     const channelRpg = await interaction.guild?.channels.fetch(env.CHANNEL_TRIPTOWN as string) as TextChannel;
-    await interaction.deferReply({ ephemeral: (channelRpg.id !== interaction.channelId) });
+    const ephemeral = channelRpg.id !== interaction.channelId ? MessageFlags.Ephemeral : undefined;
+    await interaction.deferReply({ flags: ephemeral });
     const subcommand = interaction.options.getSubcommand();
 
     // const quietCommands = [

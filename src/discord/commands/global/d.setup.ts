@@ -18,7 +18,7 @@ import {
   // CategoryChannel,
 } from 'discord.js';
 import {
-  ButtonStyle, ChannelType, TextInputStyle,
+  ButtonStyle, ChannelType, MessageFlags, TextInputStyle,
 } from 'discord-api-types/v10';
 import { stripIndents } from 'common-tags';
 import commandContext from '../../utils/context';
@@ -94,13 +94,13 @@ async function tripsit(
     Part of the tripsitting process is to remove all of a user's roles so they can only see the tripsitting channel.
     I then give them back their roles once they're done with the session.
     My role needs to be higher than all other roles you want removed, so put moderators and admins above me in the list!`,
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
 
   // Can't defer cuz there's a modal
-  // await interaction.deferReply({ ephemeral: true });
+  // await interaction.deferReply({ flags: MessageFlags.Ephemeral });
   const channelPerms = await checkChannelPermissions(interaction.channel, [
     'ViewChannel' as PermissionResolvable,
     'SendMessages' as PermissionResolvable,
@@ -123,7 +123,7 @@ async function tripsit(
     Manage Threads - to delete threads when they're done
     Manage Messages - to pin the "im good" message to the top of the thread
     `,
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
   }); // eslint-disable-line
     return;
   }
@@ -151,7 +151,7 @@ async function tripsit(
     Send Messages in Threads - to send messages in threads
     Manage Threads - to delete threads when they're done
     `,
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
   }); // eslint-disable-line
     return;
   }
@@ -213,7 +213,7 @@ async function tripsit(
     .then(async i => {
       if (i.customId.split('~')[1] !== interaction.id) return;
       if (!i.guild) return;
-      await i.deferReply({ ephemeral: true });
+      await i.deferReply({ flags: MessageFlags.Ephemeral });
 
       const roleNeedshelp = interaction.options.getRole('needshelp');
       const roleTripsitter = interaction.options.getRole('tripsitter');
@@ -274,7 +274,7 @@ async function techhelp(
   if (interaction.channel.type !== ChannelType.GuildText) return;
 
   // Can't defer cuz there's a modal
-  // await interaction.deferReply({ ephemeral: true });
+  // await interaction.deferReply({ flags: MessageFlags.Ephemeral });
   const channelPerms = await checkChannelPermissions(interaction.channel, [
     'ViewChannel' as PermissionResolvable,
     'SendMessages' as PermissionResolvable,
@@ -297,7 +297,7 @@ async function techhelp(
     Manage Threads - to delete threads when they're done
     Manage Messages - to pin the "im good" message to the top of the thread
     `,
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
   }); // eslint-disable-line
     return;
   }
@@ -369,7 +369,7 @@ async function techhelp(
     .then(async i => {
       if (i.customId.split('~')[1] !== interaction.id) return;
       if (!i.guild) return;
-      await i.deferReply({ ephemeral: true });
+      await i.deferReply({ flags: MessageFlags.Ephemeral });
 
       const introMessage = i.fields.getTextInputValue('introMessage');
       const titleMessage = i.fields.getTextInputValue('titleMessage');
@@ -403,7 +403,7 @@ async function techhelp(
 async function rules(
   interaction:ChatInputCommandInteraction,
 ) {
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
   await (interaction.channel as TextChannel).send({
     content: stripIndents`
 **By using and remaining connected to this discord you signify your agreement of TripSit's full terms and conditions: https://github.com/TripSit/rules/blob/main/termsofservice.md **
@@ -479,7 +479,7 @@ If you do not agree to this policy, do not use this site.
 async function ticketbooth(
   interaction:ChatInputCommandInteraction,
 ) {
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
   const channelTripsit = await interaction.client.channels.fetch(env.CHANNEL_TRIPSIT) as TextChannel;
   const channelSanctuary = await interaction.client.channels.fetch(env.CHANNEL_SANCTUARY) as TextChannel;
   const channelOpentripsit = await interaction.client.channels.fetch(env.CHANNEL_OPENTRIPSIT1) as TextChannel;
@@ -520,7 +520,7 @@ async function ticketbooth(
 async function helper(
   interaction:ChatInputCommandInteraction,
 ) {
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
   if (!interaction.guild) return;
   const guildData = await db.discord_guilds.upsert({
     where: {
@@ -618,7 +618,7 @@ export async function helperButton(
   if (!guildData.role_helper) {
     await interaction.reply({
       content: stripIndents`This server has not setup the helper role. Use \`/setup tripsit\` first`,
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
@@ -626,7 +626,7 @@ export async function helperButton(
   if (!guildData.channel_tripsitmeta) {
     await interaction.reply({
       content: stripIndents`This server has not setup the tripsit meta room. Use \`/setup tripsit\` first`,
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
@@ -638,7 +638,7 @@ export async function helperButton(
       content: stripIndents`You need to link your Trip Sit Learn account to your Discord account first!
       
       Visit [Trip Sit Learn](<${env.MOODLE_URL}>) to create an account and then use \`/learn link\``,
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
@@ -646,26 +646,32 @@ export async function helperButton(
   if (moodleProfile.completedCourses.toString().indexOf('Intro to Tripsitting') === -1) {
     await interaction.reply({
       content: stripIndents`You need to complete the Intro to Tripsitting course first! Visit [Trip Sit Learn](<${env.MOODLE_URL}>)!`,
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
 
   // Do everything else
+
   const role = await interaction.guild?.roles.fetch(guildData.role_helper);
+
+  const user = await db.users.findUnique({
+    where: {
+      discord_id: target.user.id,
+    },
+  });
+
+  const userHasBeenAHelper = user?.last_was_helper !== null;
+
+  if (!user) {
+    log.error(F, `No user found for discord_id: ${target.user.id}`);
+    return;
+  }
 
   if (!role) {
     await interaction.reply({
       content: stripIndents`It looks like the guilds helper role was deleted, talk to the server admin about this! They may need to re-run \`/setup tripsit\``,
-      ephemeral: true,
-    });
-    return;
-  }
-
-  if (target.roles.cache.has(role.id)) {
-    await interaction.reply({
-      content: stripIndents`You already have the helper role!`,
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
@@ -673,6 +679,29 @@ export async function helperButton(
   // If the role being requested is the Helper or Contributor role, check if they have been banned first
   if (role.id === guildData.role_helper && userData.helper_role_ban) {
     await interaction.editReply({ content: 'Unable to add this role. If you feel this is an error, please talk to the team!' });
+    return;
+  }
+
+  if (target.roles.cache.has(role.id)) {
+    await target.roles.remove(role);
+    await interaction.reply({
+      content: stripIndents`Your helper role has been removed. If you ever want to re-apply it, just click the button again!`,
+      flags: MessageFlags.Ephemeral,
+    });
+    return;
+  }
+
+  if (userHasBeenAHelper && !target.roles.cache.has(role.id)) {
+    await target.roles.add(role);
+    if (interaction.guild.id === env.DISCORD_GUILD_ID) {
+      const channelTripsitters = await interaction.guild?.channels.fetch(env.CHANNEL_TRIPSITTERS) as TextChannel;
+      await channelTripsitters.send(stripIndents`${target.displayName} has re-joined as a ${role.name}.`);
+    }
+    const metaChannel = await interaction.guild?.channels.fetch(guildData.channel_tripsitmeta) as TextChannel;
+    await interaction.reply({
+      content: stripIndents`Welcome back, go check out ${metaChannel}!`,
+      flags: MessageFlags.Ephemeral,
+    });
     return;
   }
 
@@ -724,7 +753,7 @@ export async function helperButton(
   interaction.awaitModalSubmit({ filter, time: 0 })
     .then(async i => {
       // log.debug(F, `${JSON.stringify(i.customId)}`);
-      await i.deferReply({ ephemeral: true });
+      await i.deferReply({ flags: MessageFlags.Ephemeral });
       const {
         II,
       } = JSON.parse(`{${i.customId}}`);
@@ -746,8 +775,22 @@ export async function helperButton(
       // log.debug(F, `introMessage: ${introMessage}`);
 
       await target.roles.add(role);
+
+      // Update the last date when they were given the helper role
+      await db.users.upsert({
+        where: {
+          discord_id: interaction.user.id,
+        },
+        create: {
+          discord_id: interaction.user.id,
+        },
+        update: {
+          last_was_helper: new Date(),
+        },
+      });
+
       const metaChannel = await i.guild?.channels.fetch(guildData.channel_tripsitmeta) as TextChannel;
-      await i.editReply({ content: `Added role ${role.name}, go check out ${metaChannel}!` });
+      await i.editReply({ content: `Added role ${role.name}, go check out ${metaChannel}! If you ever want to remove it, just click the button again.` });
 
       if (metaChannel.id === guildData.channel_tripsitmeta) {
         const introString = `
@@ -801,7 +844,6 @@ export async function helperButton(
           **If you have any questions, please reach out!**
         `);
       }
-
       if (i.guild.id === env.DISCORD_GUILD_ID) {
         const channelTripsitters = await i.guild?.channels.fetch(env.CHANNEL_TRIPSITTERS) as TextChannel;
         const roleTripsitter = await i.guild?.roles.fetch(guildData.role_tripsitter) as Role;
@@ -815,6 +857,7 @@ export const setup: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('setup')
     .setDescription('Set up various channels and prompts!')
+    .setIntegrationTypes([0])
     .addSubcommand(subcommand => subcommand
       .setDescription('Tripsit info!')
       .addRoleOption(option => option
@@ -897,7 +940,7 @@ export const setup: SlashCommand = {
   async execute(interaction:ChatInputCommandInteraction) {
     log.info(F, await commandContext(interaction));
     // We cannot defer because some of the setup commands have modals
-    // await interaction.deferReply({ ephemeral: true });
+    // await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
     if (!interaction.channel) {
       log.error(F, noChannel);

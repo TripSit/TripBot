@@ -4,6 +4,7 @@ import {
   // UserContextMenuCommandInteraction,
   GuildMember,
   AttachmentBuilder,
+  MessageFlags,
 } from 'discord.js';
 import Canvas from '@napi-rs/canvas';
 import { personas } from '@prisma/client';
@@ -79,11 +80,12 @@ export const dLevels: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('levels')
     .setDescription('Get someone\'s current experience levels!')
+    .setIntegrationTypes([0])
     .addUserOption(option => option
       .setName('target')
       .setDescription('User to lookup'))
     .addBooleanOption(option => option.setName('ephemeral')
-      .setDescription('Set to "True" to show the response only to you')),
+      .setDescription('Set to "True" to show the response only to you')) as SlashCommandBuilder,
   async execute(
     interaction:ChatInputCommandInteraction,
   ) {
@@ -101,8 +103,9 @@ export const dLevels: SlashCommand = {
 
     // log.debug(F, `target id: ${target.id}`);
     // log.debug(F, `levelData: ${JSON.stringify(target, null, 2)}`);
+    const ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined;
     const values = await Promise.allSettled([
-      await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) }),
+      await interaction.deferReply({ flags: ephemeral }),
       // Get the target's profile data from the database
       await profile(target.id),
       // Check get fresh persona data
@@ -267,8 +270,8 @@ export const dLevels: SlashCommand = {
         rank: levelData.TEXT.TRIPSITTER ? levelData.TEXT.TRIPSITTER.rank : 0,
       });
     }
-    // Check if user has Developer or Contributor role
-    if (levelData.TEXT.DEVELOPER && levelData.TEXT.DEVELOPER.level > 5) {
+    // Check if user has Dev role or has some xp
+    if ((levelData.TEXT.DEVELOPER && levelData.TEXT.DEVELOPER.level > 5) || (target.roles.cache.has(env.ROLE_DEVELOPER))) {
       const progressDeveloper = levelData.TEXT.DEVELOPER
         ? levelData.TEXT.DEVELOPER.level_exp / levelData.TEXT.DEVELOPER.nextLevel
         : 0;
@@ -700,8 +703,14 @@ export const dLevels: SlashCommand = {
 
     // Process The Entire Card and Send it to Discord
     const date = new Date();
-    const formattedDate = date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' }).replace(/ /g, '-');
-    const attachment = new AttachmentBuilder(await canvasObj.encode('png'), { name: `TS_Levels_${filteredDisplayName}_${formattedDate}.png` });
+    const formattedDate = date.toLocaleDateString('en-GB', {
+      day: '2-digit',
+      month: 'short',
+      year: '2-digit',
+    }).replace(/ /g, '-');
+    const attachment = new AttachmentBuilder(await canvasObj.encode('png'), {
+      name: `TS_Levels_${filteredDisplayName}_${formattedDate}.png`,
+    });
     await interaction.editReply({ files: [attachment] });
 
     log.info(F, `Total Time: ${Date.now() - startTime}ms`);

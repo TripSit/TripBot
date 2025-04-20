@@ -21,7 +21,13 @@ type MindsetNames =
 | 'ROLE_EVENT_2'
 | 'ROLE_EVENT_3'
 | 'ROLE_EVENT_4'
-| 'ROLE_EVENT_5';
+| 'ROLE_EVENT_5'
+| 'ROLE_EVENT_6'
+| 'ROLE_EVENT_7'
+| 'ROLE_EVENT_8'
+| 'ROLE_EVENT_9'
+| 'ROLE_EVENT_10'
+| 'ROLE_EVENT_11';
 
 const mindsetRoles = {
   ROLE_DRUNK: env.ROLE_DRUNK,
@@ -44,6 +50,7 @@ const mindsetRoles = {
   ROLE_EVENT_8: env.ROLE_EVENT_8,
   ROLE_EVENT_9: env.ROLE_EVENT_9,
   ROLE_EVENT_10: env.ROLE_EVENT_10,
+  ROLE_EVENT_11: env.ROLE_EVENT_11,
 } as {
   [key in MindsetNames]: string;
 };
@@ -63,7 +70,13 @@ type TeamMindsetNames =
 | 'ROLE_TTS_EVENT_2'
 | 'ROLE_TTS_EVENT_3'
 | 'ROLE_TTS_EVENT_4'
-| 'ROLE_TTS_EVENT_5';
+| 'ROLE_TTS_EVENT_5'
+| 'ROLE_TTS_EVENT_6'
+| 'ROLE_TTS_EVENT_7'
+| 'ROLE_TTS_EVENT_8'
+| 'ROLE_TTS_EVENT_9'
+| 'ROLE_TTS_EVENT_10'
+| 'ROLE_TTS_EVENT_11';
 
 const TTSMindsetRoles = {
   ROLE_TTS_DRUNK: env.ROLE_TTS_DRUNK,
@@ -86,6 +99,7 @@ const TTSMindsetRoles = {
   ROLE_TTS_EVENT_8: env.ROLE_TTS_EVENT_8,
   ROLE_TTS_EVENT_9: env.ROLE_TTS_EVENT_9,
   ROLE_TTS_EVENT_10: env.ROLE_TTS_EVENT_10,
+  ROLE_TTS_EVENT_11: env.ROLE_TTS_EVENT_11,
 } as {
   [key in TeamMindsetNames]: string;
 };
@@ -178,7 +192,7 @@ const boostEmoji = env.NODE_ENV === 'production'
   ? '<:ts_boost:981799280396353596>'
   : '<:ts_boost:1168968973082185800>';
 const donorEmoji = env.NODE_ENV === 'production'
-  ? '<:ts_donor:1182567377012015175>'
+  ? '<:ts_premium:1350311457371197503>'
   : '<:ts_donor:1168969578836144233>';
 
 const F = f(__filename);
@@ -345,9 +359,10 @@ async function removeExTeamFromThreads(
     fetchedThreads.threads.forEach(async thread => {
       if (thread
         && thread.parentId === guildData.channel_tripsit
-        && thread.id !== ticketData?.thread_id) {
+        && thread.id !== ticketData?.thread_id
+        && !thread.archived) {
         log.debug(F, `Removing ${newMember.displayName} from ${thread.name}`);
-        await thread.members.remove(newMember.id, 'Helper/Tripsitter role removed');
+        await thread.members.remove(newMember.id);
       }
     });
   }

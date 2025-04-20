@@ -3,6 +3,7 @@ import {
   Colors,
   GuildMember,
   MessageContextMenuCommandInteraction,
+  MessageFlags,
   SlashCommandBuilder,
   TextChannel,
 } from 'discord.js';
@@ -119,7 +120,7 @@ async function get(interaction:ChatInputCommandInteraction) {
     log.debug(F, 'Quote not found');
     await interaction.reply({
       content: 'Quote not found!',
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
@@ -134,45 +135,53 @@ async function get(interaction:ChatInputCommandInteraction) {
 
   if (!authorData.discord_id) return; // Just to type safe
 
-  const target = await interaction.guild.members.fetch(authorData.discord_id);
+  let target = null;
+  try {
+    target = await interaction.guild.members.fetch(authorData.discord_id);
+  } catch (err) {
+    log.error(F, `Failed to fetch author: ${authorData.discord_id}`);
+    target = null;
+  }
 
   await interaction.reply({
     embeds: [{
-      thumbnail: {
-        url: target.user.displayAvatarURL(),
-      },
-      description: stripIndents`${target} ${flavorText[Math.floor(Math.random() * flavorText.length)]}
+      ...(target && {
+        thumbnail: {
+          url: target.user.displayAvatarURL(),
+        },
+      }),
+      description: stripIndents`${target || 'Unknown User'} ${flavorText[Math.floor(Math.random() * flavorText.length)]}
     
       > **${quoteData.quote}**
       
       - ${quoteData.url}
       `,
-      color: target.displayColor,
+      ...(target && { color: target.displayColor }),
       timestamp: `${quoteData.date.toISOString()}`,
     }],
-    ephemeral: false,
   });
 }
 
 async function random(interaction:ChatInputCommandInteraction) {
   if (!interaction.guild) return;
-  const quotes = await db.quotes.findMany({
-    orderBy: {
-      id: 'desc',
-    },
-    take: 1,
-  });
+  await interaction.deferReply({ });
 
-  if (!quotes) {
-    await interaction.reply({
+  // Get total count first
+  const count = await db.quotes.count();
+
+  if (count === 0) {
+    await interaction.editReply({
       content: 'No quotes found!',
-      ephemeral: true,
     });
     return;
   }
 
-  // Get a random quote from the list
-  const quote = quotes[Math.floor(Math.random() * quotes.length)];
+  // Get one random quote using skip
+  const quote = await db.quotes.findFirst({
+    skip: Math.floor(Math.random() * count),
+  });
+
+  if (!quote) return; // TypeScript safety
 
   const authorData = await db.users.findFirstOrThrow({
     where: {
@@ -180,21 +189,28 @@ async function random(interaction:ChatInputCommandInteraction) {
     },
   });
 
-  const author = await interaction.guild.members.fetch(authorData.discord_id as string);
+  let author = null;
+  try {
+    author = await interaction.guild.members.fetch(authorData.discord_id as string);
+  } catch (err) {
+    log.error(F, `Failed to fetch author: ${authorData.discord_id}`);
+    author = null;
+  }
 
-  await interaction.reply({
+  await interaction.editReply({
     embeds: [
       {
         author: {
-          name: `${author.displayName} ${flavorText[Math.floor(Math.random() * flavorText.length)]}`,
-          icon_url: author.user.displayAvatarURL(),
+          name: `${author ? author.displayName : 'Unknown User'} ${
+            flavorText[Math.floor(Math.random() * flavorText.length)]
+          }`,
+          icon_url: author ? author.user.displayAvatarURL() : undefined,
           url: quote.url,
         },
         description: `**${quote.quote}**`,
         timestamp: `${quote.date.toISOString()}`,
       },
     ],
-    ephemeral: false,
   });
 }
 
@@ -217,7 +233,7 @@ async function del(interaction:ChatInputCommandInteraction) {
     log.debug(F, 'Quote not found');
     await interaction.reply({
       content: 'Quote not found!',
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
@@ -247,7 +263,7 @@ async function del(interaction:ChatInputCommandInteraction) {
     log.debug(F, 'User does not own quote');
     await interaction.reply({
       content: 'You do not own this quote! You can only delete your own quotes.',
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
@@ -296,13 +312,13 @@ async function del(interaction:ChatInputCommandInteraction) {
       },
       color: Colors.Red,
     }],
-    ephemeral: true,
+    flags: MessageFlags.Ephemeral,
   });
 }
 
 export async function quoteAdd(interaction:MessageContextMenuCommandInteraction) {
   log.info(F, await commandContext(interaction));
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
   if (!interaction.guild) return false;
   if (interaction.guild.id !== env.DISCORD_GUILD_ID) return false;
   await interaction.targetMessage.fetch(); // Fetch the message, just in case
@@ -463,6 +479,7 @@ export const dQuote: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('quote')
     .setDescription('Manage quotes')
+    .setIntegrationTypes([0])
     .addSubcommand(subcommand => subcommand
       .setDescription('Search quotes!')
       .addStringOption(option => option.setName('quote')
@@ -497,7 +514,7 @@ export const dQuote: SlashCommand = {
       default:
         await interaction.reply({
           content: 'Unknown subcommand!',
-          ephemeral: true,
+          flags: MessageFlags.Ephemeral,
         });
         break;
     }

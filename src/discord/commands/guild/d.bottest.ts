@@ -135,6 +135,10 @@ async function runCommand(interaction:ChatInputCommandInteraction, commandName:s
 
   if (!interaction.channel) return null;
 
+  if (!(interaction.channel instanceof TextChannel)) {
+    return false;
+  }
+
   await sleep(2000);
 
   await interaction.channel.send(`> **${commandName}** - Initializing test!`);
@@ -1302,7 +1306,7 @@ export const dBottest: SlashCommand = {
         { name: 'All', value: 'All' },
         { name: 'Guild', value: 'Guild' },
         { name: 'Global', value: 'Global' },
-      )),
+      )) as SlashCommandBuilder,
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
     await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
@@ -1339,6 +1343,11 @@ export const dBottest: SlashCommand = {
                 { name: 'Success', value: `${guildResults.passed.length}`, inline: true },
                 { name: 'Failed', value: `${guildResults.failed.length}`, inline: true },
               );
+
+            if (!(interaction.channel instanceof TextChannel)) {
+              return false;
+            }
+
             await interaction.channel.send({ embeds: [embed] });
             return true;
           });

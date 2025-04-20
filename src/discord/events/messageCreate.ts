@@ -18,6 +18,8 @@ import { countMessage } from '../commands/guild/d.counting';
 import { bridgeMessage } from '../utils/bridge';
 import { discordAiModerate } from '../commands/global/d.ai';
 import { helperActivityUpdate } from '../utils/helperActivityUpdate';
+import { nightsWatch } from '../../global/commands/g.watchuser';
+import { monitorToxicity } from '../utils/moderateHatespeech';
 // import { awayMessage } from '../utils/awayMessage';
 // import log from '../../global/utils/log';
 // import {parse} from 'path';
@@ -89,8 +91,10 @@ export const messageCreate: MessageCreateEvent = {
     youAre(message);
     karma(message);
     imagesOnly(message);
-    discordAiModerate(message);
     helperActivityUpdate(message);
+    // discordAiModerate(message);
+    nightsWatch(message);
+    monitorToxicity(message);
 
     // Disabled for testing
     // thoughtPolice(message);
