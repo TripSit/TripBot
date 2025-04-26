@@ -282,7 +282,7 @@ export async function announcements(message:Message) {
     env.CATEGORY_CAMPGROUND,
   ];
 
-  if (message.channel.id === env.CHANNEL_SANCTUARY 
+  if (message.channel.id === env.CHANNEL_SANCTUARY
     || message.channel.id === env.CHANNEL_CLEARLOUNGE) {
     return;
   }
