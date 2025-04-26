@@ -282,6 +282,11 @@ export async function announcements(message:Message) {
     env.CATEGORY_CAMPGROUND,
   ];
 
+  if (message.channel.id === env.CHANNEL_SANCTUARY 
+    || message.channel.id === env.CHANNEL_CLEARLOUNGE) {
+    return;
+  }
+
   // log.debug(F, `instance of TextChannel: ${message.channel instanceof TextChannel}`);
   if (message.channel instanceof TextChannel
     && message.channel.parentId
