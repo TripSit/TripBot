@@ -9,7 +9,7 @@ type IDoseResponse = {
   value: string,
 }[];
 
-const F = f(__filename);
+// const F = f(__filename);
 
 async function iDoseGet(
   userId: string,
@@ -294,7 +294,6 @@ export async function idose(
       break;
   }
 
-  log.info(F, `response: ${JSON.stringify(response, null, 2)}`);
   return response;
 }
 
