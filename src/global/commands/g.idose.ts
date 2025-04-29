@@ -9,7 +9,7 @@ type IDoseResponse = {
   value: string,
 }[];
 
-const F = f(__filename);
+// const F = f(__filename);
 
 async function iDoseGet(
   userId: string,

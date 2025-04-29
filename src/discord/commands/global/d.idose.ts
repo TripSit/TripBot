@@ -15,9 +15,8 @@ import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { parseDuration } from '../../../global/utils/parseDuration';
 import { paginationEmbed } from '../../utils/pagination';
-import commandContext from '../../utils/context';
 
-const F = f(__filename);
+// const F = f(__filename);
 
 export const dIdose: SlashCommand = {
   data: new SlashCommandBuilder()
