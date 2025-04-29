@@ -74,7 +74,6 @@ export const dIdose: SlashCommand = {
         .setDescription('Which record? (0, 1, 2, etc)')
         .setRequired(true))),
   async execute(interaction) {
-    log.info(F, await commandContext(interaction));
     const ephemeral = interaction.channel?.type !== ChannelType.DM ? MessageFlags.Ephemeral : undefined;
     await interaction.deferReply({ flags: ephemeral });
     const command = interaction.options.getSubcommand() as 'get' | 'set' | 'delete';

@@ -294,7 +294,6 @@ export async function idose(
       break;
   }
 
-  log.info(F, `response: ${JSON.stringify(response, null, 2)}`);
   return response;
 }
 
