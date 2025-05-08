@@ -133,12 +133,12 @@ async function dCalcKetamine(
       name: 'Insufflated',
       value: stripIndents`${data.insufflated}`,
       inline: true,
-    },
+    }, /* Uncomment this when we've implemented a better boofing calculation method
     {
       name: 'Rectal',
       value: stripIndents`${data.rectal}`,
       inline: true,
-    },
+    }, */
   );
   return embed;
 }
