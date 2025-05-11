@@ -1123,14 +1123,12 @@ export async function tripsitmeUserClose(
       `)
     .then(async msg => {
       message = msg;
-      await msg.react('🙁');
-      await msg.react('😕');
-      await msg.react('😐');
-      await msg.react('🙂');
-      await msg.react('😁');
+      const validEmojis = ['🙁', '😕', '😐', '🙂', '😁'];
+
+      await Promise.all(validEmojis.map(emoji => msg.react(emoji)));
 
       // Setup the reaction collector
-      const filter = (reaction:MessageReaction, user:User) => user.id === target.id;
+      const filter = (reaction:MessageReaction, user:User) => user.id === target.id && validEmojis.includes(reaction.emoji.name ?? '');
       const collector = message.createReactionCollector({ filter, time: 0 });
       collector.on('collect', async reaction => {
         await threadHelpUser.send(stripIndents`
