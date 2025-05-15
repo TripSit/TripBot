@@ -2187,8 +2187,13 @@ export async function aiMessage(
     clearInterval(typingInterval); // Stop sending typing indicator
   }, 30000); // Failsafe to stop typing indicator after 30 seconds
 
+  let differenceInMs = 0;
   try {
+    const startTime = Date.now();
     const chatResponse = await handleAiMessageQueue(aiPersona, messageList, messageData, attachmentInfo);
+    const endTime = Date.now();
+    differenceInMs = endTime - startTime;
+    log.debug(F, `AI response took ${differenceInMs}ms`);
     response = chatResponse.response;
     promptTokens = chatResponse.promptTokens;
     completionTokens = chatResponse.completionTokens;
@@ -2259,10 +2264,13 @@ export async function aiMessage(
     // const sleepTime = (wordCount / wpm) * 60000;
     // // log.debug(F, `Typing ${wordCount} at ${wpm} wpm will take ${sleepTime / 1000} seconds`);
     // await sleep(sleepTime > 10000 ? 5000 : sleepTime); // Don't wait more than 5 seconds
+
     if (response.length === 0) {
-      response = stripIndents`This is unexpected, but somehow I don't appear to have anything to say! 
-      By the way, this is an error message and something went wrong. Please try again.`;
+      response = stripIndents`This is unexpected but somehow I don't appear to have anything to say! 
+      By the way, this is an error message and something went wrong. Please try again.
+      Time from query to error: ${(differenceInMs / 1000).toFixed(2)} seconds`;
     }
+
     const replyMessage = await messageData.reply({
       content: response.slice(0, 2000),
       allowedMentions: { parse: [] },
