@@ -8,6 +8,7 @@ import {
   ModalSubmitInteraction,
   ChatInputCommandInteraction,
   ButtonInteraction,
+  EmbedBuilder,
 } from 'discord.js';
 import {
   MessageFlags,
@@ -64,12 +65,24 @@ export async function feedbackReportModal(
         log.error(F, 'Developer role not found!');
         return;
       }
-      const devChan = await i.client.channels.fetch(env.CHANNEL_TRIPBOT) as TextChannel;
+      const devChan = await i.client.channels.fetch(env.CHANNEL_DEVELOPERS) as TextChannel;
       if (!devChan) {
         log.error(F, 'Developer channel not found!');
         return;
       }
-      await devChan.send(`Hey ${developerRole.toString()}, a user submitted a feedback report:\n${feedbackReport}`);
+      const feedbackEmbed = new EmbedBuilder()
+        .setTitle('📝 New Feedback Report')
+        .setDescription(feedbackReport)
+        .setColor(0x00b0f4) // Choose your desired color
+        .addFields({ name: 'Mention', value: developerRole.toString(), inline: false })
+        .setTimestamp();
+
+      await devChan.send({
+        embeds: [feedbackEmbed],
+        allowedMentions: {
+          parse: [], // Prevents pinging the role
+        },
+      });
 
       const embed = embedTemplate()
         .setColor(Colors.Purple)

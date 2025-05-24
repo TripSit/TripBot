@@ -258,9 +258,11 @@ async function del(interaction:ChatInputCommandInteraction) {
 
   const actor = interaction.member as GuildMember;
 
-  if (target.id !== interaction.user.id
-    || (guildData.role_moderator && !actor.roles.cache.has(guildData.role_moderator))) {
-    log.debug(F, 'User does not own quote');
+  const isOwner = target.id === interaction.user.id;
+  const isModerator = guildData.role_moderator && actor.roles.cache.has(guildData.role_moderator);
+
+  if (!isOwner && !isModerator) {
+    log.debug(F, 'User does not own quote and is not a moderator');
     await interaction.reply({
       content: 'You do not own this quote! You can only delete your own quotes.',
       flags: MessageFlags.Ephemeral,
