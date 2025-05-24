@@ -65,7 +65,7 @@ export async function feedbackReportModal(
         log.error(F, 'Developer role not found!');
         return;
       }
-      const devChan = await i.client.channels.fetch(env.CHANNEL_TRIPBOT) as TextChannel;
+      const devChan = await i.client.channels.fetch(env.CHANNEL_DEVELOPERS) as TextChannel;
       if (!devChan) {
         log.error(F, 'Developer channel not found!');
         return;
