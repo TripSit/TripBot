@@ -7,6 +7,7 @@ import {
   GuildMember,
   time,
   MessageFlags,
+  EmbedBuilder,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
 import { DateTime } from 'luxon';
@@ -135,8 +136,21 @@ async function generate(
   }
 
   const channelAiImageLog = await discordClient.channels.fetch(env.CHANNEL_AIIMAGELOG) as TextChannel;
-  await channelAiImageLog
-    .send(`${guildMember.displayName} requested '${description}' in ${interaction.guild?.name}`);
+  const embed = new EmbedBuilder()
+    .setTitle('🖼️ AI Image Request')
+    .setDescription(
+      // eslint-disable-next-line max-len
+      `**User:** ${guildMember.displayName}\n**Prompt:** '${description}'\n**Server:** ${interaction.guild?.name ?? 'Unknown'}`,
+    )
+    .setColor(Colors.Green)
+    .setTimestamp();
+
+  await channelAiImageLog.send({
+    embeds: [embed],
+    allowedMentions: {
+      parse: [], // Prevents all pings
+    },
+  });
 
   let imageData = {} as ImagesResponse;
 

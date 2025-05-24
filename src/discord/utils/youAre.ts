@@ -45,9 +45,15 @@ export async function youAre(message: Message): Promise<void> {
   // log.info(F, `Phrase: ${phrase}`);
   const response = await isToxic(`You're ${phrase}`);
   if (response.isFlaggedOrLowConfidence) {
+    // eslint-disable-next-line max-len
     log.info(F, `Message flagged by ModerateHatespeech API: "You're ${phrase}\n ${response.class} (${response.confidence})"`);
     return;
   }
 
-  message.channel.send(`${message.member?.displayName}: You're ${key[2]}.`);
+  await message.channel.send({
+    content: `${message.member?.displayName}: You're ${key[2]}.`,
+    allowedMentions: {
+      parse: [], // disables all mentions (users, roles, everyone)
+    },
+  });
 }

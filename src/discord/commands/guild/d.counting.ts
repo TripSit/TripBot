@@ -367,7 +367,10 @@ export async function countMessage(message: Message): Promise<void> {
 
       warnedUsers.push(message.author.id);
 
-      await message.channel.send(messageReply);
+      await message.channel.send({
+        content: messageReply,
+        allowedMentions: { parse: [] },
+      });
       return;
     }
 
@@ -525,7 +528,10 @@ export async function countMessage(message: Message): Promise<void> {
         welcomeMessage += '\nThis is a HARDCORE game: if you break the combo you will be timed out for 24 hours!';
       }
 
-      await message.channel.send(welcomeMessage);
+      await message.channel.send({
+        content: welcomeMessage,
+        allowedMentions: { parse: [] },
+      });
     } else {
       log.debug(F, `Member ${message.member?.displayName} was already a stakeholder`);
     }
