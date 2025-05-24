@@ -180,9 +180,12 @@ export async function messageCommand(message: Message): Promise<void> {
       if (!tripsitChannels.includes(message.channel.id) && !(message.channel as TextChannel).name.endsWith(`${message.author.displayName}'s channel!`)) {
         const channelTripsit = await message.guild.channels.fetch(env.CHANNEL_TRIPSIT) as TextChannel;
         const channelOpenTripsit1 = await message.guild.channels.fetch(env.CHANNEL_OPENTRIPSIT1) as TextChannel;
-        await message.channel.send(
-          stripIndents`Hey ${displayName}, this command is reserved for the tripsitting channels. Head on over to ${channelTripsit} or ${channelOpenTripsit1} and try again if you need help! <3`,
-        );
+        await message.channel.send({
+          content: stripIndents`Hey ${displayName}, this command is reserved for the tripsitting channels. Head on over to ${channelTripsit} or ${channelOpenTripsit1} and try again if you need help! <3`,
+          allowedMentions: {
+            parse: [],
+          },
+        });
         return;
       }
       const now = Date.now().valueOf();
@@ -193,20 +196,30 @@ export async function messageCommand(message: Message): Promise<void> {
           return;
         }
         if (now - lastTime < 1000 * 60 * 5) {
-          await message.channel.send(stripIndents`Hey ${displayName}, you just used that command, \
-give people a chance to answer 😄 If no one answers in 5 minutes you can try again.`);
+          await message.channel.send({
+            content: stripIndents`Hey ${displayName}, you just used that command, \
+          give people a chance to answer 😄 If no one answers in 5 minutes you can try again.`,
+            allowedMentions: { parse: [] },
+          });
+
           return;
         }
       }
       const roleTripsitter = await message.guild.roles.fetch(env.ROLE_TRIPSITTER) as Role;
       const roleHelper = await message.guild.roles.fetch(env.ROLE_HELPER) as Role;
-      await message.channel.send(`Hey ${displayName}, someone from the ${roleTripsitter} and/or ${roleHelper} team will be with you as soon as they're available!
+      await message.channel.send({
+        content: `Hey ${displayName}, someone from the ${roleTripsitter} and/or ${roleHelper} team will be with you as soon as they're available!
 
-        If you’re in the right mindset please start by telling us what you took, at what dose and route, how long ago, along with any concerns you may have.
+      If you’re in the right mindset please start by telling us what you took, at what dose and route, how long ago, along with any concerns you may have.
 
-        **If this is a medical emergency** please contact your local emergency services: we do not call EMS on behalf of anyone.
-
-      `);
+      **If this is a medical emergency** please contact your local emergency services: we do not call EMS on behalf of anyone.
+      `,
+        allowedMentions: {
+          roles: [roleTripsitter.id, roleHelper.id],
+          users: [], // prevents user pings
+          parse: [], // prevents @everyone/@here
+        },
+      });
 
       const embed = new EmbedBuilder()
         .setTitle('Other Resources')
@@ -227,7 +240,12 @@ give people a chance to answer 😄 If no one answers in 5 minutes you can try a
       // Update helpCounter with the current date that the user sent this command
       helpCounter.set(message.author.id, Date.now().valueOf());
     } else {
-      await message.channel.send(`Hey ${displayName}, use /help to get a list of commands on discord!`);
+      await message.channel.send({
+        content: `Hey ${displayName}, use /help to get a list of commands on Discord!`,
+        allowedMentions: {
+          parse: [], // disables all user, role, and @everyone pings
+        },
+      });
     }
   } else if (await isPokingTripbot(message)) {
     // If you poke tripbot
@@ -310,7 +328,12 @@ give people a chance to answer 😄 If no one answers in 5 minutes you can try a
       if (message.content.toLowerCase().includes('emoji')) {
         // Check if the user has the ManageEmojis permission
         if (!message.member?.permissions.has('ManageEmojisAndStickers' as PermissionResolvable)) {
-          await message.channel.send(stripIndents`Hey ${displayName}, you don't have the permission to upload emojis to this guild!`); // eslint-disable-line
+          await message.channel.send({
+            content: stripIndents`Hey ${displayName}, you don't have the permission to upload emojis to this guild!`,
+            allowedMentions: {
+              parse: [], // disables user, role, and @everyone pings
+            },
+          });
           return;
         }
 
@@ -357,7 +380,12 @@ give people a chance to answer 😄 If no one answers in 5 minutes you can try a
       if (message.content.toLowerCase().includes('sticker')) {
         // Check if the user has the ManageEmojis permission
         if (!message.member?.permissions.has('ManageEmojisAndStickers' as PermissionResolvable)) {
-          await message.channel.send(stripIndents`Hey ${displayName}, you don't have the permission to upload stickers to this guild!`); // eslint-disable-line
+          await message.channel.send({
+            content: stripIndents`Hey ${displayName}, you don't have the permission to upload stickers to this guild!`,
+            allowedMentions: {
+              parse: [], // disables user, role, and @everyone pings
+            },
+          });
           return;
         }
         await message.channel.send(stripIndents`Hey ${displayName}, uploading emojis...`); // eslint-disable-line
