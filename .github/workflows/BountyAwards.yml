@@ -88,7 +88,7 @@ jobs:
                   console.log(`Awarding ${bountyAmount} XP to ${githubUsername} for issue #${issueNumber}`);
                   
                   // Call TripBot API
-                  const response = await fetch('${{ secrets.TRIPBOT_API_URL }}/award-xp', {
+                  const response = await fetch('${{ secrets.TRIPBOT_API_URL }}/bounty/award-xp', {
                     method: 'POST',
                     headers: {
                       'Content-Type': 'application/json',

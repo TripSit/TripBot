@@ -1,7 +1,9 @@
 import express from 'express';
 import RateLimit from 'express-rate-limit';
+import { TextChannel } from 'discord.js';
 import checkAuth from '../../utils/checkAuth';
-import { getDiscordUserByGitHub } from '../../../global/utils/keycloak'; // or similar
+import { getDiscordUserByGitHub } from '../../../global/utils/keycloak';
+import { awardGitHubXP } from '../../../global/utils/experience';
 
 const F = f(__filename);
 const router = express.Router();
@@ -37,25 +39,36 @@ router.post('/award-xp', async (req, res, next) => {
       log.debug(F, `Awarding ${bountyAmount} XP to GitHub user: ${githubUsername}`);
 
       // Step 1: Look up Discord user via Keycloak using GitHub username
-      const discordUser = await getDiscordUserByGitHub(githubUsername);
-      if (!discordUser) {
+      const discordUserData = await getDiscordUserByGitHub(githubUsername);
+      if (!discordUserData) {
         return res.status(404).json({
           error: `No Discord user found linked to GitHub username: ${githubUsername}`,
         });
       }
 
-      log.debug(F, `Found Discord user ${discordUser.id} for GitHub user ${githubUsername}`);
+      // Step 2: Fetch the Discord guild and member
+      const guild = await discordClient.guilds.fetch(env.DISCORD_GUILD_ID);
+      const guildMember = await guild.members.fetch(discordUserData.id as string);
+      if (!guildMember) {
+        return res.status(404).json({
+          error: `Guild Member with ID ${discordUserData.id} could not be found in TripSit Guild.`,
+        });
+      }
 
-      // Step 2: Award XP to the Discord user
-      const xpResult = await awardXP(discordUser.id, bountyAmount, 'GitHub Bounty');
+      log.debug(F, `Found Discord user ${guildMember.id} for GitHub user ${githubUsername}`);
+
+      const announceChannel = await guild.channels.fetch(env.CHANNEL_DEVELOPMENT) as TextChannel;
+
+      // Step 3: Award XP to the Discord user
+      await awardGitHubXP(guildMember, bountyAmount, announceChannel);
 
       // eslint-disable-next-line max-len
-      log.info(F, `Successfully awarded ${bountyAmount} XP to ${discordUser.username} (${discordUser.id}) for GitHub contributions`);
+      log.info(F, `Successfully awarded ${bountyAmount} XP to ${guildMember.displayName} (${guildMember.id}) for GitHub contributions`);
 
       return res.json({
         success: true,
-        message: `Awarded ${bountyAmount} XP to ${discordUser.username}`,
-        discordUserId: discordUser.id,
+        message: `Awarded ${bountyAmount} XP to ${guildMember.displayName}`,
+        discordUserId: guildMember.id,
         bountyAmount,
       });
     }
