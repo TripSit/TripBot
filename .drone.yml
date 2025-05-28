@@ -63,6 +63,18 @@ steps:
         from_secret: SENTRY_TOKEN
       MODERATE_HATESPEECH_TOKEN:
         from_secret: MODERATE_HATESPEECH_TOKEN
+      TRIPBOT_API_URL:
+        from_secret: TRIPBOT_API_URL
+      TRIPBOT_API_TOKEN:
+        from_secret: TRIPBOT_API_TOKEN
+      KEYCLOAK_BASE_URL:
+        from_secret: KEYCLOAK_BASE_URL
+      KEYCLOAK_REALM:
+        from_secret: KEYCLOAK_REALM
+      KEYCLOAK_CLIENT_ID:
+        from_secret: KEYCLOAK_CLIENT_ID
+      KEYCLOAK_CLIENT_SECRET:
+        from_secret: KEYCLOAK_CLIENT_SECRET
 
   - name: discord notification
     image: appleboy/drone-discord
