@@ -209,7 +209,7 @@ async function sendMilestoneAnnouncement(
   const announceChannel = await guild.channels.fetch(channelId) as TextChannel;
   const emojis = [...announcementEmojis].sort(() => 0.5 - Math.random()).slice(0, 3);
   await announceChannel.send(
-    `${emojis} **${member} has reached ${categoryName} ${typeName} level ${level} through GitHub contributions!** ${emojis}`,
+    `${emojis} **${member} has reached ${categoryName} ${typeName} level ${level}!** ${emojis}`,
   );
 }
 
