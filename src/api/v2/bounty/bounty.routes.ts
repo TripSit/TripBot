@@ -67,6 +67,7 @@ router.post('/award-xp', async (req, res, next) => {
       log.info(F, `Successfully awarded ${bountyAmount} XP to ${guildMember.displayName} (${guildMember.id}) for GitHub contributions`);
 
       // Step 4: Log the bounty in the database
+      /* Disabled for initial test
       await db.claimed_bounties.create({
         data: {
           type: 'GitHub',
@@ -74,7 +75,7 @@ router.post('/award-xp', async (req, res, next) => {
           user_id: guildMember.id,
         },
       });
-
+      */
       return res.json({
         success: true,
         message: `Awarded ${bountyAmount} XP to ${guildMember.displayName}`,
