@@ -65,6 +65,15 @@ router.post('/award-xp', async (req, res, next) => {
       // eslint-disable-next-line max-len
       log.info(F, `Successfully awarded ${bountyAmount} XP to ${guildMember.displayName} (${guildMember.id}) for GitHub contributions`);
 
+      // Step 4: Log the bounty in the database
+      await db.claimed_bounties.create({
+        data: {
+          type: 'GitHub',
+          amount: bountyAmount,
+          user_id: guildMember.id,
+        },
+      });
+
       return res.json({
         success: true,
         message: `Awarded ${bountyAmount} XP to ${guildMember.displayName}`,
