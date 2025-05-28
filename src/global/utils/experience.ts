@@ -320,7 +320,6 @@ export async function experience(
       } else if (category === 'IGNORED' as experience_category) {
         id = env.CHANNEL_BOTSPAM;
       }
-      // log.debug(F, `id: ${id}`);
       sendMilestoneAnnouncement(member, id, experienceData.level, categoryName, typeName);
     }
   }
