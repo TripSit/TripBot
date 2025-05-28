@@ -56,7 +56,7 @@ router.post('/award-xp', async (req, res, next) => {
       }
 
       log.debug(F, `Found Discord user ${guildMember.id} for GitHub user ${githubUsername}`);
-
+      // test for test issue/pr
       // const announceChannel = await guild.channels.fetch(env.CHANNEL_DEVELOPMENT) as TextChannel;
 
       // Step 3: Award XP to the Discord user
