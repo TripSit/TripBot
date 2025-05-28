@@ -91,6 +91,10 @@ services:
     networks:
       - tripbot_pgadmin-net
       - tripbot_database-net
+    # Uncomment this if you want to access pgAdmin locally
+    # Remember, you need to use npm run pgadmin.
+    # ports:
+    #   - "5050:80"
     environment:
       <<: *default-tz-puid-pgid
       PGADMIN_DEFAULT_EMAIL: admin@tripsit.me

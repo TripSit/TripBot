@@ -177,6 +177,20 @@ When these migration files are pushed to production, the database will be update
 
 Prisma documentation is excellent, check out guides like: https://www.prisma.io/docs/concepts/components/prisma-migrate/migrate-development-production
 
+---
+#### Handling unexpected migration issues ####
+If your database changes aren't reflecting locally after editing the Prisma schema: 
+
+Generate and apply migrations:  
+  ```npx prisma migrate dev --name your_migration_name```  
+  ```npx prisma generate```  
+  ```npx prisma migrate deploy```  
+
+If VSCode isn't recognizing the new tables when writing code for them, press ```Ctrl/CMD Shift P: Restart TypeScript Server```.
+
+if you are on Windows, you may need to run the above commands within the docker containers command execution context, after which you may need to run ```npx prisma generate``` within your VSCode IDE or otherwise 
+
+---
 
 #### Troubleshooting Initial Database Setup Issues ####
 
@@ -207,13 +221,17 @@ By itself, it does nothing, you need another utility, like Prisma, to interact w
 
 #### PG Admin ###
 
+NOTE: You will need to uncomment the port from the docker-compose file. More details there.
+
 ```npm run pgadmin```
 
 This is a webserver that allows you to view the database.
 
 It's not necessary, but it's nice to have.
 
-You can access it via http://localhost:80 (maybe idk)
+You can access it via http://localhost:5050 (maybe idk)
+
+---
 
 #### API ###
 

@@ -1,0 +1,128 @@
+name: Award XP for Merged Bounty PRs
+
+on:
+  pull_request:
+    branches:
+      - main
+    types:
+      - closed
+
+jobs:
+  award-bounty:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Check if PR is a revert
+      id: check-revert
+      run: |
+        PR_TITLE="${{ github.event.pull_request.title }}"
+        if echo "$PR_TITLE" | grep -i "revert" > /dev/null; then
+          echo "is_revert=true" >> $GITHUB_OUTPUT
+          echo "Detected revert PR: $PR_TITLE"
+        else
+          echo "is_revert=false" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Get linked issues
+      if: steps.check-revert.outputs.is_revert != 'true'
+      id: get-issues
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const prNumber = context.payload.pull_request.number;
+          
+          try {
+            // Get timeline events for the PR
+            const { data: events } = await github.rest.issues.listEventsForTimeline({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber
+            });
+            
+            // Find connected/cross-referenced issues
+            const linkedIssues = new Set();
+            
+            for (const event of events) {
+              // Connected events show when issues are linked
+              if (event.event === 'connected' && event.source?.issue) {
+                linkedIssues.add(event.source.issue.number);
+              }
+              
+              // Cross-referenced events show mentions/links
+              // We aren't using this for now, but it's here for future reference
+              // as it may be useful for other types of references
+              /* 
+              if (event.event === 'cross-referenced' && event.source?.issue) {
+                linkedIssues.add(event.source.issue.number);
+              }
+              */
+            }
+            
+            const issueNumbers = Array.from(linkedIssues);
+            console.log('Found linked issues via timeline events:', issueNumbers);
+            
+            return issueNumbers;
+            
+          } catch (error) {
+            console.error('Error getting timeline events:', error);
+            console.log('Timeline API failed - no fallback, returning empty array');
+            return [];
+          }
+
+    - name: Process bounty issues
+      if: steps.check-revert.outputs.is_revert != 'true'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const issueNumbers = ${{ steps.get-issues.outputs.result }};
+          const githubUsername = context.payload.pull_request.user.login;
+          
+          for (const issueNumber of issueNumbers) {
+            try {
+              // Get issue details
+              const { data: issue } = await github.rest.issues.get({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issueNumber
+              });
+              
+              // Check for bounty tags
+              const bountyTag = issue.labels.find(label => 
+                label.name.toLowerCase().startsWith('bounty:')
+              );
+              
+              if (bountyTag) {
+                // Extract bounty amount from tag (e.g., "bounty: 100" -> 100)
+                const bountyMatch = bountyTag.name.match(/bounty:\s*(\d+)/i);
+                if (bountyMatch) {
+                  const bountyAmount = parseInt(bountyMatch[1]);
+                  
+                  console.log(`Awarding ${bountyAmount} XP to ${githubUsername} for issue #${issueNumber}`);
+                  
+                  // Call TripBot API
+                  const response = await fetch('${{ secrets.TRIPBOT_API_URL }}/bounty/award-xp', {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                      'Authorization': 'Bearer ${{ secrets.TRIPBOT_API_TOKEN }}'
+                    },
+                    body: JSON.stringify({
+                      'github_username': githubUsername,
+                      'bounty': bountyAmount
+                    })
+                  });
+                  
+                  if (response.ok) {
+                    console.log(`Successfully awarded XP for issue #${issueNumber}`);
+                  } else {
+                    console.error(`Failed to award XP: ${response.status} ${response.statusText}`);
+                  }
+                }
+              } else {
+                console.log(`Issue #${issueNumber} has no bounty tag`);
+              }
+            } catch (error) {
+              console.error(`Error processing issue #${issueNumber}:`, error);
+            }
+          }
