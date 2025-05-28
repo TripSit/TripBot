@@ -1,9 +1,9 @@
 import express from 'express';
 import RateLimit from 'express-rate-limit';
-import { TextChannel } from 'discord.js';
+// import { TextChannel } from 'discord.js';
 import checkAuth from '../../utils/checkAuth';
 import { getDiscordUserByGitHub } from '../../../global/utils/keycloak';
-import { awardGitHubXP } from '../../../global/utils/experience';
+// import { awardGitHubXP } from '../../../global/utils/experience';
 
 const F = f(__filename);
 const router = express.Router();
@@ -57,10 +57,11 @@ router.post('/award-xp', async (req, res, next) => {
 
       log.debug(F, `Found Discord user ${guildMember.id} for GitHub user ${githubUsername}`);
 
-      const announceChannel = await guild.channels.fetch(env.CHANNEL_DEVELOPMENT) as TextChannel;
+      // const announceChannel = await guild.channels.fetch(env.CHANNEL_DEVELOPMENT) as TextChannel;
 
       // Step 3: Award XP to the Discord user
-      await awardGitHubXP(guildMember, bountyAmount, announceChannel);
+      // Disabled for initial test
+      // await awardGitHubXP(guildMember, bountyAmount, announceChannel);
 
       // eslint-disable-next-line max-len
       log.info(F, `Successfully awarded ${bountyAmount} XP to ${guildMember.displayName} (${guildMember.id}) for GitHub contributions`);
