@@ -40,23 +40,29 @@ jobs:
               issue_number: prNumber
             });
             
+            console.log(`Found ${events.length} timeline events for PR #${prNumber}`);
+            
+            // Debug: Log all event types
+            const eventTypes = events.map(e => e.event);
+            console.log('Event types found:', [...new Set(eventTypes)]);
+            
             // Find connected/cross-referenced issues
             const linkedIssues = new Set();
             
             for (const event of events) {
+              console.log(`Processing event: ${event.event}`);
+              
               // Connected events show when issues are linked
               if (event.event === 'connected' && event.source?.issue) {
+                console.log(`Found connected issue: #${event.source.issue.number}`);
                 linkedIssues.add(event.source.issue.number);
               }
               
-              // Cross-referenced events show mentions/links
-              // We aren't using this for now, but it's here for future reference
-              // as it may be useful for other types of references
-              /* 
+              // Also check cross-referenced events (mentions in PR body/comments)
               if (event.event === 'cross-referenced' && event.source?.issue) {
+                console.log(`Found cross-referenced issue: #${event.source.issue.number}`);
                 linkedIssues.add(event.source.issue.number);
               }
-              */
             }
             
             const issueNumbers = Array.from(linkedIssues);
