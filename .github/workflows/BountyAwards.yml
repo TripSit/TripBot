@@ -31,44 +31,65 @@ jobs:
       with:
         script: |
           const prNumber = context.payload.pull_request.number;
+          const prBody = context.payload.pull_request.body || '';
+          const prTitle = context.payload.pull_request.title || '';
           
+          console.log(`Analyzing PR #${prNumber} for linked issues`);
+          console.log('PR Title:', prTitle);
+          console.log('PR Body:', prBody);
+          
+          const linkedIssues = new Set();
+          
+          // Method 1: Parse PR body and title for issue references
+          const issuePattern = /(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?)\s*:?\s*#(\d+)/gi;
+          const mentionPattern = /#(\d+)/g;
+          
+          // Look for closing keywords + issue numbers
+          const closingMatches = [...(prTitle + ' ' + prBody).matchAll(issuePattern)];
+          for (const match of closingMatches) {
+            const issueNumber = parseInt(match[1]);
+            console.log(`Found closing reference to issue #${issueNumber}`);
+            linkedIssues.add(issueNumber);
+          }
+          
+          // If no closing references found, look for any issue mentions
+          if (linkedIssues.size === 0) {
+            const mentions = [...(prTitle + ' ' + prBody).matchAll(mentionPattern)];
+            for (const match of mentions) {
+              const issueNumber = parseInt(match[1]);
+              console.log(`Found mention of issue #${issueNumber}`);
+              linkedIssues.add(issueNumber);
+            }
+          }
+          
+          // Method 2: Also try timeline API (backup)
           try {
-            // Get timeline events for the PR
             const { data: events } = await github.rest.issues.listEventsForTimeline({
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: prNumber
             });
             
-            // Find connected/cross-referenced issues
-            const linkedIssues = new Set();
+            console.log(`Found ${events.length} timeline events`);
             
             for (const event of events) {
-              // Connected events show when issues are linked
               if (event.event === 'connected' && event.source?.issue) {
+                console.log(`Timeline: Found connected issue #${event.source.issue.number}`);
                 linkedIssues.add(event.source.issue.number);
               }
-              
-              // Cross-referenced events show mentions/links
-              // We aren't using this for now, but it's here for future reference
-              // as it may be useful for other types of references
-              /* 
               if (event.event === 'cross-referenced' && event.source?.issue) {
+                console.log(`Timeline: Found cross-referenced issue #${event.source.issue.number}`);
                 linkedIssues.add(event.source.issue.number);
               }
-              */
             }
-            
-            const issueNumbers = Array.from(linkedIssues);
-            console.log('Found linked issues via timeline events:', issueNumbers);
-            
-            return issueNumbers;
-            
           } catch (error) {
-            console.error('Error getting timeline events:', error);
-            console.log('Timeline API failed - no fallback, returning empty array');
-            return [];
+            console.log('Timeline API failed, using text parsing only');
           }
+          
+          const issueNumbers = Array.from(linkedIssues);
+          console.log('Final linked issues found:', issueNumbers);
+          
+          return issueNumbers;
 
     - name: Process bounty issues
       if: steps.check-revert.outputs.is_revert != 'true'
@@ -78,6 +99,8 @@ jobs:
           const issueNumbers = ${{ steps.get-issues.outputs.result }};
           const githubUsername = context.payload.pull_request.user.login;
           
+          console.log(`Processing ${issueNumbers.length} potential bounty issues`);
+          
           for (const issueNumber of issueNumbers) {
             try {
               // Get issue details
@@ -86,6 +109,8 @@ jobs:
                 repo: context.repo.repo,
                 issue_number: issueNumber
               });
+              
+              console.log(`Issue #${issueNumber} exists and is titled: "${issue.title}"`);
               
               // Check for bounty tags
               const bountyTag = issue.labels.find(label => 
@@ -118,11 +143,17 @@ jobs:
                   } else {
                     console.error(`Failed to award XP: ${response.status} ${response.statusText}`);
                   }
+                } else {
+                  console.log(`Issue #${issueNumber} has bounty tag "${bountyTag.name}" but couldn't parse amount`);
                 }
               } else {
-                console.log(`Issue #${issueNumber} has no bounty tag`);
+                console.log(`Issue #${issueNumber} has no bounty tag - skipping`);
               }
             } catch (error) {
-              console.error(`Error processing issue #${issueNumber}:`, error);
+              if (error.status === 404) {
+                console.log(`Issue #${issueNumber} does not exist - skipping`);
+              } else {
+                console.error(`Error processing issue #${issueNumber}:`, error.message);
+              }
             }
           }
