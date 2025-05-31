@@ -59,7 +59,7 @@ export const messageDelete: MessageDeleteEvent = {
     const deletionLog = (await message.guild.fetchAuditLogs({
       limit: 1,
       type: AuditLogEvent.MessageDelete,
-    })).entries.last() as GuildAuditLogsEntry<AuditLogEvent.MessageDelete, 'Delete', 'Message', AuditLogEvent.MessageDelete>; // eslint-disable-line
+    })).entries.last() as GuildAuditLogsEntry<AuditLogEvent.MessageDelete, 'Delete', 'Message'>; // eslint-disable-line
 
     // log.debug(F, `Deletion Log: ${JSON.stringify(deletionLog, null, 2)}`);
 
@@ -69,21 +69,24 @@ export const messageDelete: MessageDeleteEvent = {
     let { author } = message;
     // log.debug(F, `Author: ${JSON.stringify(author, null, 2)}`);
     // log.debug(F, `Target: ${JSON.stringify(deletionLog?.target, null, 2)}`);
-    if (deletionLog
+    if (
+      deletionLog
       && author
+      && deletionLog.target
       && deletionLog.target.id === author.id
-      && deletionLog.createdTimestamp > (startTime - 1)) {
+      && deletionLog.createdTimestamp > (startTime - 1)
+    ) {
       // log.debug(F, `Found relevant audit log: ${JSON.stringify(deletionLog, null, 2)}`);
-      if (deletionLog.executor) {
-        executorUser = deletionLog.executor;
+      if (deletionLog.executor && 'id' in deletionLog.executor) {
+        executorUser = deletionLog.executor as User;
         if (message.content) {
           content = message.content;
         }
       }
     } else {
       log.debug(F, 'No relevant audit logs were found. This usually means the user deleted the message themselves');
-      if (message.author) {
-        executorUser = message.author;
+      if (message.author && 'id' in message.author) {
+        executorUser = message.author as User;
         content = message.content;
       } else {
         const messageRecord = message.channel.messages.cache.find(m => m.id === message.id);

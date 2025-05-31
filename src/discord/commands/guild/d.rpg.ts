@@ -1752,18 +1752,20 @@ export async function rpgMarketChange(
     // const itemComponent = interaction.message.components[0].components[0];
     let selectedItem: APISelectMenuOption | undefined;
     for (const component of interaction.message.components) {
-      for (const subComponent of component.components) {
-        if (subComponent.type === ComponentType.SelectMenu) {
-          selectedItem = (subComponent as StringSelectMenuComponent).options.find(
-            (o:APISelectMenuOption) => o.default === true,
-          );
-          if (selectedItem) {
-            break;
+      if ('components' in component) {
+        for (const subComponent of component.components) {
+          if (subComponent.type === ComponentType.SelectMenu) {
+            selectedItem = (subComponent as StringSelectMenuComponent).options.find(
+              (o:APISelectMenuOption) => o.default === true,
+            );
+            if (selectedItem) {
+              break;
+            }
           }
         }
-      }
-      if (selectedItem) {
-        break;
+        if (selectedItem) {
+          break;
+        }
       }
     }
     choice = selectedItem?.value ?? '';
@@ -1932,18 +1934,20 @@ export async function rpgMarketPreview(
   // If the user confirms the information, save the persona information
   let selectedItem: APISelectMenuOption | undefined;
   for (const component of interaction.message.components) {
-    for (const subComponent of component.components) {
-      if (subComponent.type === ComponentType.SelectMenu) {
-        selectedItem = (subComponent as StringSelectMenuComponent).options.find(
-          (o:APISelectMenuOption) => o.default === true,
-        );
-        if (selectedItem) {
-          break;
+    if ('components' in component) {
+      for (const subComponent of component.components) {
+        if (subComponent.type === ComponentType.SelectMenu) {
+          selectedItem = (subComponent as StringSelectMenuComponent).options.find(
+            (o:APISelectMenuOption) => o.default === true,
+          );
+          if (selectedItem) {
+            break;
+          }
         }
       }
-    }
-    if (selectedItem) {
-      break;
+      if (selectedItem) {
+        break;
+      }
     }
   }
   // log.debug(F, `selectedItem (accept): ${JSON.stringify(selectedItem, null, 2)}`);
@@ -2039,18 +2043,20 @@ export async function rpgMarketAccept(
   // If the user confirms the information, save the persona information
   let selectedItem: APISelectMenuOption | undefined;
   for (const component of interaction.message.components) {
-    for (const subComponent of component.components) {
-      if (subComponent.type === ComponentType.SelectMenu) {
-        selectedItem = (subComponent as StringSelectMenuComponent).options.find(
-          (o:APISelectMenuOption) => o.default === true,
-        );
-        if (selectedItem) {
-          break;
+    if ('components' in component) {
+      for (const subComponent of component.components) {
+        if (subComponent.type === ComponentType.SelectMenu) {
+          selectedItem = (subComponent as StringSelectMenuComponent).options.find(
+            (o:APISelectMenuOption) => o.default === true,
+          );
+          if (selectedItem) {
+            break;
+          }
         }
       }
-    }
-    if (selectedItem) {
-      break;
+      if (selectedItem) {
+        break;
+      }
     }
   }
   log.debug(F, `selectedItem (accept): ${JSON.stringify(selectedItem, null, 2)}`);
@@ -2945,13 +2951,16 @@ export async function rpgHome(
 
   // Get the item the user selected
   if (interaction.isButton()) {
-    const backgroundComponent = interaction.message.components[0].components[0];
-    if ((backgroundComponent as StringSelectMenuComponent).options) {
-      const selectedItem = (backgroundComponent as StringSelectMenuComponent).options.find(
-        (o:APISelectMenuOption) => o.default === true,
-      );
-      if (selectedItem) {
-        defaultOption = selectedItem.value;
+    const firstComponent = interaction.message.components[0];
+    if ('components' in firstComponent && Array.isArray(firstComponent.components)) {
+      const backgroundComponent = firstComponent.components[0];
+      if ((backgroundComponent as StringSelectMenuComponent).options) {
+        const selectedItem = (backgroundComponent as StringSelectMenuComponent).options.find(
+          (o:APISelectMenuOption) => o.default === true,
+        );
+        if (selectedItem) {
+          defaultOption = selectedItem.value;
+        }
       }
     }
   } else if (interaction.isStringSelectMenu() && interaction.values) {
@@ -3240,8 +3249,12 @@ export async function rpgHomeAccept(
     update: {},
   });
   // If the user confirms the information, save the persona information
-  const backgroundComponent = interaction.message.components[0].components[0];
-  const selectedItem = (backgroundComponent as StringSelectMenuComponent).options.find(
+  let backgroundComponent: StringSelectMenuComponent | undefined;
+  if ('components' in interaction.message.components[0]) {
+    const [{ components }] = interaction.message.components as { components: StringSelectMenuComponent[] }[];
+    [backgroundComponent] = components;
+  }
+  const selectedItem = backgroundComponent && (backgroundComponent as StringSelectMenuComponent).options.find(
     (o:APISelectMenuOption) => o.default === true,
   );
 
@@ -3352,7 +3365,12 @@ export async function rpgHomeDecline(
     },
     update: {},
   });
-  const itemComponent = interaction.message.components[0].components[0];
+  let itemComponent;
+  if ('components' in interaction.message.components[0]) {
+    [itemComponent] = interaction.message.components[0].components;
+  } else {
+    [itemComponent] = interaction.message.components;
+  }
   const selectedItem = (itemComponent as StringSelectMenuComponent).options.find(
     (o:APISelectMenuOption) => o.default === true,
   );
@@ -3408,7 +3426,12 @@ export async function rpgHomeSell(
       persona_id: personaData.id,
     },
   });
-  const itemComponent = interaction.message.components[0].components[0];
+  let itemComponent;
+  if ('components' in interaction.message.components[0]) {
+    [itemComponent] = interaction.message.components[0].components;
+  } else {
+    [itemComponent] = interaction.message.components;
+  }
   const selectedItem = (itemComponent as StringSelectMenuComponent).options.find(
     (o:APISelectMenuOption) => o.default === true,
   );
@@ -4039,13 +4062,23 @@ export async function rpgTrivia( // eslint-disable-line
   if (interaction.isButton() && interaction.customId.split(',')[0] === 'rpgStart') {
     // const channelRpg = await interaction.guild?.channels.fetch(env.CHANNEL_TRIPTOWN as string) as TextChannel;
     // await interaction.deferReply({ ephemeral: (channelRpg.id !== interaction.channelId) });
-    const difficultyComponent = interaction.message.components[1].components[0];
+    let difficultyComponent: any;
+    if ('components' in interaction.message.components[1]) {
+      [difficultyComponent] = interaction.message.components[1].components;
+    } else {
+      [difficultyComponent] = [interaction.message.components[1]];
+    }
     const selectedDifficulty = (difficultyComponent as StringSelectMenuComponent).options.find(
       (o:APISelectMenuOption) => o.default === true,
     );
     const chosenDifficulty = selectedDifficulty?.value ?? 'easy';
 
-    const amountComponent = interaction.message.components[2].components[0];
+    let amountComponent: any;
+    if ('components' in interaction.message.components[2]) {
+      [amountComponent] = interaction.message.components[2].components;
+    } else {
+      [amountComponent] = [interaction.message.components[2]];
+    }
     const selectedAmount = (amountComponent as StringSelectMenuComponent).options.find(
       (o:APISelectMenuOption) => o.default === true,
     );

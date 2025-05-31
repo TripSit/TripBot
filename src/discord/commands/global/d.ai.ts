@@ -232,10 +232,12 @@ function getComponentById(
   if (interaction.message?.components) {
     // eslint-disable-next-line no-restricted-syntax
     for (const row of interaction.message.components) {
-      // eslint-disable-next-line no-restricted-syntax
-      for (const component of row.components) {
-        if (component.customId?.includes(id)) {
-          return component;
+      if ('components' in row && Array.isArray((row as any).components)) {
+        // eslint-disable-next-line no-restricted-syntax
+        for (const component of (row as { components: MessageActionRowComponent[] }).components) {
+          if (component.customId?.includes(id)) {
+            return component;
+          }
         }
       }
     }
