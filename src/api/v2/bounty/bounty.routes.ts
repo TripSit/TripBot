@@ -30,9 +30,9 @@ router.post('/award-xp', async (req, res, next) => {
         });
       }
 
-      if (typeof bountyAmount !== 'number' || bountyAmount <= 0) {
+      if (typeof bountyAmount !== 'number' || bountyAmount <= 0 || bountyAmount >= 100000) {
         return res.status(400).json({
-          error: 'Bounty amount must be a positive number',
+          error: 'Bounty amount must be a positive number less than 100000 and greater than 0.',
         });
       }
 
@@ -56,15 +56,24 @@ router.post('/award-xp', async (req, res, next) => {
       }
 
       log.debug(F, `Found Discord user ${guildMember.id} for GitHub user ${githubUsername}`);
+
+      // Step 3: Make sure we aren't awarding to a team member
+      if (guildMember.roles.cache.has(env.ROLE_TEAMTRIPSIT)) {
+        log.error(F, `Cannot award XP to team members: ${guildMember.displayName} (${guildMember.id})`);
+        return res.status(403).json({
+          error: 'Cannot award XP to team members.',
+        });
+      }
+
       const announceChannel = await guild.channels.fetch(env.CHANNEL_DEVELOPMENT) as TextChannel;
 
-      // Step 3: Award XP to the Discord user
+      // Step 4: Award XP to the Discord user
       await awardGitHubXP(guildMember, bountyAmount, announceChannel);
 
       // eslint-disable-next-line max-len
       log.info(F, `Successfully awarded ${bountyAmount} XP to ${guildMember.displayName} (${guildMember.id}) for GitHub contributions`);
 
-      // Step 4: Log the bounty in the database
+      // Step 5: Log the bounty in the database
       await db.claimed_bounties.create({
         data: {
           type: 'GitHub',
