@@ -35,7 +35,7 @@ jobs:
     - name: Update npm
       run: npm install -g npm && npm --version
     - name: Install eslint
-      run: npm install eslint @typescript-eslint/eslint-plugin @typescript-eslint/parser eslint-config-airbnb-base eslint-config-airbnb-typescript eslint-config-google eslint-import-resolver-typescript@^3.6.0 eslint-plugin-import eslint-plugin-jest eslint-plugin-sonarjs --save-dev && npx eslint --version
+      run: npm install eslint @typescript-eslint/eslint-plugin @typescript-eslint/parser eslint-config-airbnb-base eslint-config-airbnb-typescript eslint-config-google eslint-import-resolver-typescript eslint-plugin-import eslint-plugin-jest eslint-plugin-sonarjs --save-dev --legacy-peer-deps && npx eslint --version
     - name: Linting
       run: npx eslint --ext .ts,.js .
   # test:
