@@ -29,7 +29,7 @@ jobs:
     - name: Update npm
       run: npm install -g npm && npm --version
     - name: Install eslint
-      run: npm install eslint eslint-config-airbnb-base eslint-config-airbnb-typescript eslint-config-google eslint-import-resolver-typescript eslint-plugin-import --save-dev && npx eslint --version
+      run: npm install eslint eslint-config-airbnb-base eslint-config-airbnb-typescript eslint-config-google eslint-import-resolver-typescript@^3.6.0 eslint-plugin-import --save-dev && npx eslint --version
     - name: Linting
       run: npx eslint --ext .ts,.js .
   # test:
