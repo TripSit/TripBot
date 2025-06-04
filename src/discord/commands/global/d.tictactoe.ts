@@ -8,17 +8,11 @@ import {
   ButtonInteraction,
   ChatInputCommandInteraction,
   Colors,
+  MessageFlags,
 } from 'discord.js';
 import { SlashCommand } from '../../@types/commandDef';
-
-interface TicTacToeGame {
-  board: string[];
-  currentPlayer: string;
-  player1: string;
-  player2: string;
-  isGameOver: boolean;
-  winner: string | null;
-}
+import { createInitialGame, executeMove } from '../../../global/commands/g.tictactoe';
+import { TicTacToeGame } from '../../@types/ticTacToeDef';
 
 function createGameEmbed(
   game: TicTacToeGame,
@@ -80,26 +74,6 @@ function createGameButtons(game: TicTacToeGame): ActionRowBuilder<ButtonBuilder>
   return rows;
 }
 
-function checkWinner(board: string[]): string | null {
-  const winPatterns = [
-    [0, 1, 2], [3, 4, 5], [6, 7, 8], // Rows
-    [0, 3, 6], [1, 4, 7], [2, 5, 8], // Columns
-    [0, 4, 8], [2, 4, 6], // Diagonals
-  ];
-
-  const winningPattern = winPatterns.find(pattern => {
-    const [a, b, c] = pattern;
-    return board[a] !== '⬜' && board[a] === board[b] && board[b] === board[c];
-  });
-
-  if (winningPattern) {
-    const [a] = winningPattern;
-    return board[a] === '❌' ? 'X' : 'O';
-  }
-
-  return null;
-}
-
 export const dTicTacToe: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('tictactoe')
@@ -117,7 +91,7 @@ export const dTicTacToe: SlashCommand = {
     if (!opponent) {
       await interaction.reply({
         content: 'Please specify a valid opponent!',
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
       return false;
     }
@@ -125,7 +99,7 @@ export const dTicTacToe: SlashCommand = {
     if (opponent.id === interaction.user.id) {
       await interaction.reply({
         content: 'You cannot play against yourself!',
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
       return false;
     }
@@ -133,20 +107,12 @@ export const dTicTacToe: SlashCommand = {
     if (opponent.bot) {
       await interaction.reply({
         content: 'You cannot play against a bot!',
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
       return false;
     }
 
-    const game: TicTacToeGame = {
-      board: Array(9).fill('⬜'),
-      currentPlayer: 'X',
-      player1: interaction.user.id,
-      player2: opponent.id,
-      isGameOver: false,
-      winner: null,
-    };
-
+    const game = createInitialGame(interaction.user.id, opponent.id);
     const embed = createGameEmbed(game, interaction.user.username, opponent.username);
     const buttons = createGameButtons(game);
 
@@ -160,7 +126,7 @@ export const dTicTacToe: SlashCommand = {
     const collector = interaction.channel?.createMessageComponentCollector({
       componentType: ComponentType.Button,
       filter,
-      time: 300000, // 5 minutes
+      time: 300000,
     });
 
     if (!collector) {
@@ -173,50 +139,21 @@ export const dTicTacToe: SlashCommand = {
     }
 
     collector.on('collect', async (i: ButtonInteraction) => {
-      if (game.isGameOver) {
-        await i.reply({
-          content: 'This game has already ended!',
-          ephemeral: true,
-        });
-        return false;
-      }
-
-      const currentPlayerId = game.currentPlayer === 'X' ? game.player1 : game.player2;
-
-      if (i.user.id !== currentPlayerId) {
-        await i.reply({
-          content: 'It\'s not your turn!',
-          ephemeral: true,
-        });
-        return false;
-      }
-
       const position = parseInt(i.customId.split('_')[1], 10);
+      const moveResult = executeMove(game, position, i.user.id);
 
-      if (game.board[position] !== '⬜') {
+      if (!moveResult.success) {
         await i.reply({
-          content: 'That position is already taken!',
-          ephemeral: true,
+          content: moveResult.errorMessage,
+          flags: MessageFlags.Ephemeral,
         });
         return false;
       }
 
-      // Make the move
-      game.board[position] = game.currentPlayer === 'X' ? '❌' : '⭕';
+      // Update the game reference
+      Object.assign(game, moveResult.gameUpdated);
 
-      // Check for win or tie
-      const winner = checkWinner(game.board);
-      if (winner) {
-        game.isGameOver = true;
-        game.winner = winner;
-      } else if (game.board.every(cell => cell !== '⬜')) {
-        game.isGameOver = true;
-        game.winner = 'tie';
-      } else {
-      // Switch players
-        game.currentPlayer = game.currentPlayer === 'X' ? 'O' : 'X';
-      }
-
+      // Update Discord UI
       const newEmbed = createGameEmbed(game, interaction.user.username, opponent.username);
       const newButtons = createGameButtons(game);
 
