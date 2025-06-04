@@ -13,6 +13,7 @@ import {
   User,
   Colors,
   MessageFlags,
+  InteractionCollector,
 } from 'discord.js';
 
 const F = f(__filename);
@@ -533,15 +534,20 @@ async function handle1v1Game(interaction: ChatInputCommandInteraction, opponent:
 
   const filter = (i: ButtonInteraction): boolean => i.user.id === interaction.user.id || i.user.id === opponent.id;
 
-  const collector = interaction.channel?.createMessageComponentCollector({
-    componentType: ComponentType.Button,
-    filter,
-    time: 120000,
-  });
+  let collector: InteractionCollector<ButtonInteraction> | undefined;
+  try {
+    collector = interaction.channel?.createMessageComponentCollector({
+      componentType: ComponentType.Button,
+      filter,
+      time: 120000,
+    });
 
-  if (!collector) {
+    if (!collector) {
+      throw new Error('Collector creation failed');
+    }
+  } catch (error) {
     await interaction.editReply({
-      content: 'Error: Could not create game collector.',
+      content: '❌ This command requires the bot to be added to the server to work properly.',
       embeds: [],
       components: [],
     });
@@ -577,7 +583,7 @@ async function handle1v1Game(interaction: ChatInputCommandInteraction, opponent:
 
     if (game.choices.size === 2) {
       const gameEnded = await handle1v1GameEnd(interaction, opponent, game);
-      if (gameEnded) {
+      if (gameEnded && collector) {
         collector.stop();
       }
     }
@@ -603,14 +609,6 @@ async function handle1v1Game(interaction: ChatInputCommandInteraction, opponent:
 }
 
 async function handleMultiplayerQueue(interaction: ChatInputCommandInteraction): Promise<void> {
-  if (!interaction.guild) {
-    await interaction.reply({
-      content: 'This command can only be used in a server.',
-      flags: MessageFlags.Ephemeral,
-    });
-    return;
-  }
-
   const playersJoined: string[] = [];
   let timeLeft = 45;
 
@@ -727,6 +725,14 @@ export const dRockPaperScissors: SlashCommand = {
     if (opponent) {
       await handle1v1Game(interaction, opponent);
     } else {
+      // Multiplayer queue - requires server AND bot membership
+      if (!interaction.guild) {
+        await interaction.reply({
+          content: '4-10 player RPS can only be played in a server. If you want to play 1v1, please specify an opponent.',
+          flags: MessageFlags.Ephemeral,
+        });
+        return;
+      }
       await handleMultiplayerQueue(interaction);
     }
   },
