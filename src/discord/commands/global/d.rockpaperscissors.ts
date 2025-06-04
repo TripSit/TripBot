@@ -547,7 +547,7 @@ async function handle1v1Game(interaction: ChatInputCommandInteraction, opponent:
     }
   } catch (error) {
     await interaction.editReply({
-      content: '❌ This command requires the bot to be added to the server to work properly.',
+      content: 'This command requires the bot to be added to the server to work properly.',
       embeds: [],
       components: [],
     });
