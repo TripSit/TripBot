@@ -16,6 +16,8 @@ import {
   InteractionCollector,
 } from 'discord.js';
 
+import { embedTemplate } from '../../utils/embedTemplate';
+
 const F = f(__filename);
 
 interface SlashCommand {
@@ -33,6 +35,21 @@ interface RPSGame {
   scores?: { player1: number; player2: number }; // Add this line
 }
 
+type GameResult = 'player1' | 'player2' | 'tie';
+
+type RoundResult = {
+  choice: string;
+  count: number;
+  players: string[];
+};
+
+type MultiplayerResult = {
+  winner: string | null;
+  eliminated: string[];
+  remaining: string[];
+  results: RoundResult[];
+};
+
 const rpsChoices = {
   rock: { emoji: '🪨', name: 'Rock', beats: 'scissors' },
   paper: { emoji: '📄', name: 'Paper', beats: 'rock' },
@@ -40,7 +57,7 @@ const rpsChoices = {
 };
 
 function createQueueEmbed(playersJoined: string[], timeLeft: number): EmbedBuilder {
-  return new EmbedBuilder()
+  return embedTemplate()
     .setTitle('🎮 Rock Paper Scissors - Join the Battle!')
     .setColor(Colors.Green)
     .setDescription(
@@ -67,7 +84,7 @@ function createQueueButtons(disabled = false): ActionRowBuilder<ButtonBuilder>[]
 }
 
 function create1v1GameEmbed(player1: User, player2: User): EmbedBuilder {
-  return new EmbedBuilder()
+  return embedTemplate()
     .setTitle('⚔️ Rock Paper Scissors - 1v1 Battle!')
     .setColor(Colors.Green)
     .setDescription(
@@ -78,7 +95,7 @@ function create1v1GameEmbed(player1: User, player2: User): EmbedBuilder {
 }
 
 function createMultiplayerGameEmbed(players: string[], round: number, eliminated: string[] = []): EmbedBuilder {
-  return new EmbedBuilder()
+  return embedTemplate()
     .setTitle(`🏆 Rock Paper Scissors - Round ${round}`)
     .setColor(Colors.Green)
     .setDescription(
@@ -86,7 +103,7 @@ function createMultiplayerGameEmbed(players: string[], round: number, eliminated
       + `${players.map(id => `<@${id}>`).join(', ')}\n\n${
         eliminated.length > 0 ? `**Eliminated:** ${eliminated.map(id => `<@${id}>`).join(', ')}\n\n` : ''
       }⏰ **60 seconds** to make your choice!\n`
-      + '🎯 Choose wisely - majority wins!',
+      + '🎯 Rock beats Scissors, Paper beats Rock, Scissors beats Paper!',
     );
 }
 
@@ -133,18 +150,21 @@ function createPlayerStatusList(game: RPSGame, interaction: ChatInputCommandInte
   }).join('\n');
 }
 
-function determineWinner(choice1: string, choice2: string): 'player1' | 'player2' | 'tie' {
-  if (choice1 === choice2) return 'tie';
-  if (rpsChoices[choice1 as keyof typeof rpsChoices]?.beats === choice2) return 'player1';
+function determineWinner(choice1: string, choice2: string): GameResult {
+  if (choice1 === choice2) {
+    return 'tie';
+  }
+
+  const player1Choice = rpsChoices[choice1 as keyof typeof rpsChoices];
+
+  if (player1Choice.beats === choice2) {
+    return 'player1';
+  }
+
   return 'player2';
 }
 
-function determineMultiplayerWinner(choices: Map<string, string>): {
-  winner: string | null,
-  eliminated: string[],
-  remaining: string[],
-  results: { choice: string, count: number, players: string[] }[]
-} {
+function determineMultiplayerWinner(choices: Map<string, string>): MultiplayerResult {
   // Count choices
   const choiceCounts = { rock: 0, paper: 0, scissors: 0 };
   const choicePlayers = { rock: [] as string[], paper: [] as string[], scissors: [] as string[] };
@@ -178,7 +198,7 @@ function determineMultiplayerWinner(choices: Map<string, string>): {
     const choice2 = choices.get(player2Id)!;
 
     if (choice1 === choice2) {
-      // Tie - no elimination
+    // Tie - no elimination
       return {
         winner: null,
         eliminated: [],
@@ -189,18 +209,13 @@ function determineMultiplayerWinner(choices: Map<string, string>): {
 
     // Determine winner using standard RPS
     const rpsResult = determineWinner(choice1, choice2);
-    if (rpsResult === 'player1') {
-      return {
-        winner: player1Id,
-        eliminated: [player2Id],
-        remaining: [player1Id],
-        results,
-      };
-    }
+    const winnerId = rpsResult === 'player1' ? player1Id : player2Id;
+    const loserId = rpsResult === 'player1' ? player2Id : player1Id;
+
     return {
-      winner: player2Id,
-      eliminated: [player1Id],
-      remaining: [player2Id],
+      winner: winnerId,
+      eliminated: [loserId],
+      remaining: [winnerId],
       results,
     };
   }
@@ -249,13 +264,13 @@ function determineMultiplayerWinner(choices: Map<string, string>): {
 }
 
 function createResultsEmbed(
-  results: { choice: string, count: number, players: string[] }[],
+  results: RoundResult[],
   eliminated: string[],
   remaining: string[],
   winner: string | null,
   round: number,
 ): EmbedBuilder {
-  const embed = new EmbedBuilder()
+  const embed = embedTemplate()
     .setTitle(`🎲 Round ${round} Results`)
     .setColor(winner ? Colors.Green : Colors.Yellow);
 
@@ -302,6 +317,12 @@ async function startMultiplayerRound(interaction: ChatInputCommandInteraction, g
   if (!roundCollector) return;
 
   roundCollector.on('collect', async (i: ButtonInteraction) => {
+    // Extra safety check to prevent eliminated players from participating in case of race conditions
+    if (!game.players.includes(i.user.id)) {
+      await i.deferUpdate();
+      return;
+    }
+
     if (game.choices.has(i.user.id)) {
       await i.deferUpdate();
       return;
@@ -342,7 +363,7 @@ async function startMultiplayerRound(interaction: ChatInputCommandInteraction, g
 
     if (gameObj.players.length <= 1) {
       const winner = gameObj.players[0] || null;
-      const finalEmbed = new EmbedBuilder()
+      const finalEmbed = embedTemplate()
         .setTitle('🏆 Game Over!')
         .setDescription(
           winner ? `**WINNER:** <@${winner}>\n🎉 Congratulations!` : 'No winner - all players eliminated!',
@@ -441,7 +462,7 @@ async function handle1v1GameEnd(
   const player2Info = `**${opponent.username}:** ${player2ChoiceData.emoji} ${player2ChoiceData.name}`;
 
   // Show round results immediately
-  const resultEmbed = new EmbedBuilder()
+  const resultEmbed = embedTemplate()
     .setTitle('⚔️ Round Results!')
     .setColor(result === 'tie' ? Colors.Yellow : Colors.Green)
     .setDescription(`${player1Info}\n${player2Info}\n\n${resultMessage}`);
@@ -458,7 +479,7 @@ async function handle1v1GameEnd(
     // Wait 2 seconds, then show final results
     setTimeout(async () => {
       const finalWinner = gameObj.scores!.player1 >= 2 ? interaction.user.username : opponent.username;
-      const finalEmbed = new EmbedBuilder()
+      const finalEmbed = embedTemplate()
         .setTitle('🏆 Match Complete!')
         .setColor(Colors.Green)
         .setDescription(
@@ -478,7 +499,7 @@ async function handle1v1GameEnd(
     gameObj.isActive = true;
 
     setTimeout(async () => {
-      const nextRoundEmbed = new EmbedBuilder()
+      const nextRoundEmbed = embedTemplate()
         .setTitle(`⚔️ Round ${gameObj.round}`)
         .setColor(Colors.Green)
         .setDescription(
@@ -566,7 +587,7 @@ async function handle1v1Game(interaction: ChatInputCommandInteraction, opponent:
     // Only update embed for new choices (not changes)
     if (isNewChoice && game.choices.size < 2) {
       const statusList = createPlayerStatusList(game, interaction, opponent);
-      const updatedEmbed = new EmbedBuilder()
+      const updatedEmbed = embedTemplate()
         .setTitle(`⚔️ Round ${game.round}`)
         .setColor(Colors.Orange)
         .setDescription(
@@ -592,7 +613,7 @@ async function handle1v1Game(interaction: ChatInputCommandInteraction, opponent:
   collector.on('end', async () => {
     if (game.isActive) {
       try {
-        const timeoutEmbed = new EmbedBuilder()
+        const timeoutEmbed = embedTemplate()
           .setTitle('⏰ Game Timeout')
           .setDescription('The game has has timed out after 2 minutes.')
           .setColor(Colors.Red);
@@ -683,7 +704,7 @@ async function handleMultiplayerQueue(interaction: ChatInputCommandInteraction):
 
     if (playersJoined.length < 4) {
       const playerText = playersJoined.length !== 1 ? 's' : '';
-      const failEmbed = new EmbedBuilder()
+      const failEmbed = embedTemplate()
         .setTitle('❌ Not Enough Players')
         .setDescription(`Only ${playersJoined.length} player${playerText} joined. Minimum 4 players needed.`)
         .setColor(Colors.Red);
