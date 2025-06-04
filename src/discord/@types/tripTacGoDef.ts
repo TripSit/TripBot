@@ -7,3 +7,9 @@ export interface TripTacGoGame {
   winner: string | null;
   capturedPieces: { X: number; O: number };
 }
+
+export type TripTacGoMoveResult = {
+  success: boolean;
+  errorMessage?: string;
+  gameUpdated: TripTacGoGame;
+};

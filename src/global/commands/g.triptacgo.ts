@@ -1,4 +1,4 @@
-import { TripTacGoGame } from '../../discord/@types/tripTacGoDef';
+import { TripTacGoGame, TripTacGoMoveResult } from '../../discord/@types/tripTacGoDef';
 
 export function checkCaptures(board: string[], position: number, playerSymbol: string): number[] {
   const captures: number[] = [];
@@ -50,11 +50,7 @@ export function executeMove(
   game: TripTacGoGame,
   position: number,
   playerId: string,
-): {
-    success: boolean;
-    errorMessage?: string;
-    gameUpdated: TripTacGoGame;
-  } {
+): TripTacGoMoveResult {
   // Validate move
   if (game.isGameOver) {
     return {
