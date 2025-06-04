@@ -115,6 +115,23 @@ function createChoiceButtons(disabled = false): ActionRowBuilder<ButtonBuilder>[
   return [row];
 }
 
+function createPlayerStatusList(game: RPSGame, interaction: ChatInputCommandInteraction, opponent?: User): string {
+  if (game.gameType === '1v1' && opponent) {
+    const player1Status = game.choices.has(interaction.user.id) ? '✅' : '⏳';
+    const player2Status = game.choices.has(opponent.id) ? '✅' : '⏳';
+
+    // eslint-disable-next-line sonarjs/no-duplicate-string
+    return `${player1Status} ${interaction.user.username}: ${player1Status === '✅' ? 'Ready' : 'Choosing...'}\n`
+           + `${player2Status} ${opponent.username}: ${player2Status === '✅' ? 'Ready' : 'Choosing...'}`;
+  }
+  // Multiplayer
+  return game.players.map(playerId => {
+    const status = game.choices.has(playerId) ? '✅' : '⏳';
+    const statusText = status === '✅' ? 'Ready' : 'Choosing...';
+    return `${status} <@${playerId}>: ${statusText}`;
+  }).join('\n');
+}
+
 function determineWinner(choice1: string, choice2: string): 'player1' | 'player2' | 'tie' {
   if (choice1 === choice2) return 'tie';
   if (rpsChoices[choice1 as keyof typeof rpsChoices]?.beats === choice2) return 'player1';
@@ -284,20 +301,32 @@ async function startMultiplayerRound(interaction: ChatInputCommandInteraction, g
   if (!roundCollector) return;
 
   roundCollector.on('collect', async (i: ButtonInteraction) => {
-    if (gameObj.choices.has(i.user.id)) {
-      await i.reply({
-        content: 'You have already made your choice!',
-        flags: MessageFlags.Ephemeral,
-      });
+    if (game.choices.has(i.user.id)) {
+      await i.deferUpdate();
       return;
     }
 
     const choice = i.customId.replace('rps_', '');
-    gameObj.choices.set(i.user.id, choice);
-
+    game.choices.set(i.user.id, choice);
     await i.deferUpdate();
 
-    if (gameObj.choices.size === gameObj.players.length) {
+    // Update embed with current status
+    if (game.choices.size < game.players.length) {
+      const statusList = createPlayerStatusList(game, interaction);
+      const updatedEmbed = createMultiplayerGameEmbed(game.players, game.round, game.eliminatedPlayers)
+        .setDescription(
+          `**Active Players:** ${game.players.length}\n\n`
+        + `${statusList}\n\n`
+        + '⏰ **60 seconds** to make your choice!\n🎯 Choose wisely - majority wins!',
+        );
+
+      await interaction.editReply({
+        embeds: [updatedEmbed],
+        components: createChoiceButtons(),
+      });
+    }
+
+    if (game.choices.size === game.players.length) {
       roundCollector.stop();
     }
   });
@@ -523,9 +552,28 @@ async function handle1v1Game(interaction: ChatInputCommandInteraction, opponent:
     if (!game.isActive) return;
 
     const choice = i.customId.replace('rps_', '');
-    game.choices.set(i.user.id, choice);
+    const isNewChoice = !game.choices.has(i.user.id);
 
+    game.choices.set(i.user.id, choice);
     await i.deferUpdate();
+
+    // Only update embed for new choices (not changes)
+    if (isNewChoice && game.choices.size < 2) {
+      const statusList = createPlayerStatusList(game, interaction, opponent);
+      const updatedEmbed = new EmbedBuilder()
+        .setTitle(`⚔️ Round ${game.round}`)
+        .setColor(Colors.Orange)
+        .setDescription(
+          `**${interaction.user.username}** vs **${opponent.username}**\n\n`
+        + `${statusList}\n\n`
+        + 'Both players, make your choice!\n⏰ You have 2 minutes for the entire match!',
+        );
+
+      await interaction.editReply({
+        embeds: [updatedEmbed],
+        components: createChoiceButtons(),
+      });
+    }
 
     if (game.choices.size === 2) {
       const gameEnded = await handle1v1GameEnd(interaction, opponent, game);
