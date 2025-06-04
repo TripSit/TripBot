@@ -8,27 +8,21 @@ import {
   ButtonInteraction,
   ChatInputCommandInteraction,
   Colors,
+  MessageFlags,
 } from 'discord.js';
 import { SlashCommand } from '../../@types/commandDef';
-
-interface TripTacGoGame {
-  board: string[];
-  currentPlayer: string;
-  player1: string;
-  player2: string;
-  isGameOver: boolean;
-  winner: string | null;
-  capturedPieces: { X: number; O: number };
-}
+import { TripTacGoGame } from '../../@types/tripTacGoDef';
+import { createInitialGame, executeMove } from '../../../global/commands/g.triptacgo';
+import { embedTemplate } from '../../utils/embedTemplate';
 
 function createGameEmbed(
   game: TripTacGoGame,
   player1Name: string,
   player2Name: string,
 ): EmbedBuilder {
-  const embed = new EmbedBuilder()
+  const embed = embedTemplate()
     .setTitle('🎮 Trip-Tac-Go (4x4)')
-    .setColor(0x0099ff);
+    .setColor(Colors.Green);
 
   let description = `${player1Name} (❌) vs ${player2Name} (⭕)\n`;
   description += `**Captures:** ❌${game.capturedPieces.X} | ⭕${game.capturedPieces.O}\n\n`;
@@ -83,52 +77,6 @@ function createGameButtons(game: TripTacGoGame): ActionRowBuilder<ButtonBuilder>
   return rows;
 }
 
-function checkCaptures(board: string[], position: number, playerSymbol: string): number[] {
-  const captures: number[] = [];
-  const opponentSymbol = playerSymbol === '❌' ? '⭕' : '❌';
-
-  // Check all 8 directions from the newly placed piece
-  const directions = [
-    [-1, 0], [1, 0], // left, right
-    [0, -1], [0, 1], // up, down
-    [-1, -1], [1, 1], // diagonal up-left, down-right
-    [-1, 1], [1, -1], // diagonal up-right, down-left
-  ];
-
-  const row = Math.floor(position / 4);
-  const col = position % 4;
-
-  directions.forEach(direction => {
-    // Check exactly 2 positions away in this direction
-    const pos1Row = row + direction[0];
-    const pos1Col = col + direction[1];
-    const pos2Row = row + (direction[0] * 2);
-    const pos2Col = col + (direction[1] * 2);
-
-    // Make sure both positions are within bounds
-    if (pos1Row >= 0 && pos1Row < 4 && pos1Col >= 0 && pos1Col < 4
-        && pos2Row >= 0 && pos2Row < 4 && pos2Col >= 0 && pos2Col < 4) {
-      const pos1 = pos1Row * 4 + pos1Col;
-      const pos2 = pos2Row * 4 + pos2Col;
-
-      // Check if pattern is: Our piece - Opponent piece - Our piece
-      if (board[pos1] === opponentSymbol && board[pos2] === playerSymbol) {
-        captures.push(pos1);
-      }
-    }
-  });
-
-  return captures;
-}
-
-function checkWinner(board: string[], captures: { X: number; O: number }): string | null {
-  // Check capture win conditions (X needs 3, O needs 2)
-  if (captures.X >= 3) return 'X';
-  if (captures.O >= 2) return 'O';
-
-  return null;
-}
-
 export const dTripTacGo: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('triptacgo')
@@ -146,7 +94,7 @@ export const dTripTacGo: SlashCommand = {
     if (!opponent) {
       await interaction.reply({
         content: 'Please specify a valid opponent!',
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
       return false;
     }
@@ -154,7 +102,7 @@ export const dTripTacGo: SlashCommand = {
     if (opponent.id === interaction.user.id) {
       await interaction.reply({
         content: 'You cannot play against yourself!',
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
       return false;
     }
@@ -162,20 +110,12 @@ export const dTripTacGo: SlashCommand = {
     if (opponent.bot) {
       await interaction.reply({
         content: 'You cannot play against a bot!',
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
       return false;
     }
 
-    const game: TripTacGoGame = {
-      board: Array(16).fill('⬜'), // 4x4 = 16 squares
-      currentPlayer: 'X',
-      player1: interaction.user.id,
-      player2: opponent.id,
-      isGameOver: false,
-      winner: null,
-      capturedPieces: { X: 0, O: 0 },
-    };
+    const game = createInitialGame(interaction.user.id, opponent.id);
 
     const embed = createGameEmbed(game, interaction.user.username, opponent.username);
     const buttons = createGameButtons(game);
@@ -195,7 +135,7 @@ export const dTripTacGo: SlashCommand = {
 
     if (!collector) {
       await interaction.editReply({
-        content: 'Error: Could not create game collector.',
+        content: 'This command requires the bot to be added to the server to work properly.',
         embeds: [],
         components: [],
       });
@@ -203,59 +143,21 @@ export const dTripTacGo: SlashCommand = {
     }
 
     collector.on('collect', async (i: ButtonInteraction) => {
-      if (game.isGameOver) {
-        await i.reply({
-          content: 'This game has already ended!',
-          ephemeral: true,
-        });
-        return false;
-      }
-
-      const currentPlayerId = game.currentPlayer === 'X' ? game.player1 : game.player2;
-
-      if (i.user.id !== currentPlayerId) {
-        await i.reply({
-          content: 'It\'s not your turn!',
-          ephemeral: true,
-        });
-        return false;
-      }
-
       const position = parseInt(i.customId.split('_')[1], 10);
+      const moveResult = executeMove(game, position, i.user.id);
 
-      if (game.board[position] !== '⬜') {
+      if (!moveResult.success) {
         await i.reply({
-          content: 'That position is already taken!',
-          ephemeral: true,
+          content: moveResult.errorMessage,
+          flags: MessageFlags.Ephemeral,
         });
         return false;
       }
 
-      // Make the move
-      const symbol = game.currentPlayer === 'X' ? '❌' : '⭕';
-      game.board[position] = symbol;
+      // Update the game reference
+      Object.assign(game, moveResult.gameUpdated);
 
-      // Check for captures
-      const captures = checkCaptures(game.board, position, symbol);
-      captures.forEach(capturePos => {
-        game.board[capturePos] = '⬜';
-        game.capturedPieces[game.currentPlayer as 'X' | 'O'] += 1;
-      });
-
-      // Check for win conditions
-      const winner = checkWinner(game.board, game.capturedPieces);
-      if (winner) {
-        game.isGameOver = true;
-        game.winner = winner;
-      } else if (game.board.every(cell => cell !== '⬜')) {
-        // Board is full but no winner
-        game.isGameOver = true;
-        game.winner = 'tie';
-      } else {
-        // Switch players
-        game.currentPlayer = game.currentPlayer === 'X' ? 'O' : 'X';
-      }
-
+      // Update Discord UI
       const newEmbed = createGameEmbed(game, interaction.user.username, opponent.username);
       const newButtons = createGameButtons(game);
 
@@ -275,7 +177,7 @@ export const dTripTacGo: SlashCommand = {
         const timeoutEmbed = new EmbedBuilder()
           .setTitle('Trip-Tac-Go - Game Timeout')
           .setDescription('The game has ended due to inactivity.')
-          .setColor(0xff0000);
+          .setColor(Colors.Red);
 
         await interaction.editReply({
           embeds: [timeoutEmbed],
