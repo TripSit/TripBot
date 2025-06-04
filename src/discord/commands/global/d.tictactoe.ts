@@ -18,6 +18,7 @@ interface TicTacToeGame {
   player2: string;
   isGameOver: boolean;
   winner: string | null;
+  capturedPieces: { X: number; O: number };
 }
 
 function createGameEmbed(
@@ -26,20 +27,23 @@ function createGameEmbed(
   player2Name: string,
 ): EmbedBuilder {
   const embed = new EmbedBuilder()
-    .setTitle('🎮 Tic-Tac-Toe')
+    .setTitle('🎮 Tactical Tic-Tac-Toe (4x4)')
     .setColor(0x0099ff);
 
-  let description = `${player1Name} (❌) vs ${player2Name} (⭕)\n\n`;
+  let description = `${player1Name} (❌) vs ${player2Name} (⭕)\n`;
+  description += `**Captures:** ❌${game.capturedPieces.X} | ⭕${game.capturedPieces.O}\n\n`;
+  description += '🎯 **Win by capturing pieces:** ❌ needs 3 | ⭕ needs 2\n';
+  description += '💡 **Capture:** Surround opponent on opposite sides\n\n';
 
   if (game.isGameOver) {
     if (game.winner === 'tie') {
-      description += '\n🤝✨ **IT\'S A TIE!** ✨🤝\n';
+      description += '\n🤝✨ **IT\'S A TIE!** ✨🤝\n🎭 What an epic battle! Both players fought valiantly! 🎭';
       embed.setColor(Colors.Yellow);
     } else if (game.winner !== 'tie') {
       const winnerName = game.winner === 'X' ? player1Name : player2Name;
       const winnerSymbol = game.winner === 'X' ? '❌' : '⭕';
       // eslint-disable-next-line max-len
-      description += `\n🏆🎉 **${winnerName.toUpperCase()} WINS!** 🎉🏆\n🌟 ${winnerSymbol} CHAMPION ${winnerSymbol} 🌟`;
+      description += `\n🏆🎉 **${winnerName.toUpperCase()} WINS!** 🎉🏆\n👑 Absolutely magnificent victory! 👑\n🌟 ${winnerSymbol} CHAMPION ${winnerSymbol} 🌟`;
       embed.setColor(Colors.Green);
     }
   } else {
@@ -55,10 +59,10 @@ function createGameEmbed(
 function createGameButtons(game: TicTacToeGame): ActionRowBuilder<ButtonBuilder>[] {
   const rows: ActionRowBuilder<ButtonBuilder>[] = [];
 
-  [0, 3, 6].forEach(i => {
+  [0, 4, 8, 12].forEach(i => { // 4x4 grid: rows start at 0, 4, 8, 12
     const row = new ActionRowBuilder<ButtonBuilder>();
 
-    [0, 1, 2].forEach(j => {
+    [0, 1, 2, 3].forEach(j => {
       const position = i + j;
       const button = new ButtonBuilder()
         .setCustomId(`ttt_${position}`)
@@ -66,7 +70,6 @@ function createGameButtons(game: TicTacToeGame): ActionRowBuilder<ButtonBuilder>
         .setStyle(ButtonStyle.Secondary)
         .setDisabled(game.isGameOver || game.board[position] !== '⬜');
 
-      // If the button is empty and game is active, make it primary for better visibility
       if (game.board[position] === '⬜' && !game.isGameOver) {
         button.setStyle(ButtonStyle.Primary);
       }
@@ -80,22 +83,48 @@ function createGameButtons(game: TicTacToeGame): ActionRowBuilder<ButtonBuilder>
   return rows;
 }
 
-function checkWinner(board: string[]): string | null {
-  const winPatterns = [
-    [0, 1, 2], [3, 4, 5], [6, 7, 8], // Rows
-    [0, 3, 6], [1, 4, 7], [2, 5, 8], // Columns
-    [0, 4, 8], [2, 4, 6], // Diagonals
+function checkCaptures(board: string[], position: number, playerSymbol: string): number[] {
+  const captures: number[] = [];
+  const opponentSymbol = playerSymbol === '❌' ? '⭕' : '❌';
+
+  // Check all 8 directions from the newly placed piece
+  const directions = [
+    [-1, 0], [1, 0], // left, right
+    [0, -1], [0, 1], // up, down
+    [-1, -1], [1, 1], // diagonal up-left, down-right
+    [-1, 1], [1, -1], // diagonal up-right, down-left
   ];
 
-  const winningPattern = winPatterns.find(pattern => {
-    const [a, b, c] = pattern;
-    return board[a] !== '⬜' && board[a] === board[b] && board[b] === board[c];
+  const row = Math.floor(position / 4);
+  const col = position % 4;
+
+  directions.forEach(direction => {
+    // Check exactly 2 positions away in this direction
+    const pos1Row = row + direction[0];
+    const pos1Col = col + direction[1];
+    const pos2Row = row + (direction[0] * 2);
+    const pos2Col = col + (direction[1] * 2);
+
+    // Make sure both positions are within bounds
+    if (pos1Row >= 0 && pos1Row < 4 && pos1Col >= 0 && pos1Col < 4
+        && pos2Row >= 0 && pos2Row < 4 && pos2Col >= 0 && pos2Col < 4) {
+      const pos1 = pos1Row * 4 + pos1Col;
+      const pos2 = pos2Row * 4 + pos2Col;
+
+      // Check if pattern is: Our piece - Opponent piece - Our piece
+      if (board[pos1] === opponentSymbol && board[pos2] === playerSymbol) {
+        captures.push(pos1);
+      }
+    }
   });
 
-  if (winningPattern) {
-    const [a] = winningPattern;
-    return board[a] === '❌' ? 'X' : 'O';
-  }
+  return captures;
+}
+
+function checkWinner(board: string[], captures: { X: number; O: number }): string | null {
+  // Check capture win conditions (X needs 3, O needs 2)
+  if (captures.X >= 3) return 'X';
+  if (captures.O >= 2) return 'O';
 
   return null;
 }
@@ -139,12 +168,13 @@ export const dTicTacToe: SlashCommand = {
     }
 
     const game: TicTacToeGame = {
-      board: Array(9).fill('⬜'),
+      board: Array(16).fill('⬜'), // 4x4 = 16 squares
       currentPlayer: 'X',
       player1: interaction.user.id,
       player2: opponent.id,
       isGameOver: false,
       winner: null,
+      capturedPieces: { X: 0, O: 0 },
     };
 
     const embed = createGameEmbed(game, interaction.user.username, opponent.username);
@@ -202,18 +232,27 @@ export const dTicTacToe: SlashCommand = {
       }
 
       // Make the move
-      game.board[position] = game.currentPlayer === 'X' ? '❌' : '⭕';
+      const symbol = game.currentPlayer === 'X' ? '❌' : '⭕';
+      game.board[position] = symbol;
 
-      // Check for win or tie
-      const winner = checkWinner(game.board);
+      // Check for captures
+      const captures = checkCaptures(game.board, position, symbol);
+      captures.forEach(capturePos => {
+        game.board[capturePos] = '⬜';
+        game.capturedPieces[game.currentPlayer as 'X' | 'O'] += 1;
+      });
+
+      // Check for win conditions
+      const winner = checkWinner(game.board, game.capturedPieces);
       if (winner) {
         game.isGameOver = true;
         game.winner = winner;
       } else if (game.board.every(cell => cell !== '⬜')) {
+        // Board is full but no winner
         game.isGameOver = true;
         game.winner = 'tie';
       } else {
-      // Switch players
+        // Switch players
         game.currentPlayer = game.currentPlayer === 'X' ? 'O' : 'X';
       }
 
