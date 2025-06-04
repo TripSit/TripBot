@@ -11,7 +11,7 @@ import {
 } from 'discord.js';
 import { SlashCommand } from '../../@types/commandDef';
 
-interface TicTacToeGame {
+interface TripTacGoGame {
   board: string[];
   currentPlayer: string;
   player1: string;
@@ -22,12 +22,12 @@ interface TicTacToeGame {
 }
 
 function createGameEmbed(
-  game: TicTacToeGame,
+  game: TripTacGoGame,
   player1Name: string,
   player2Name: string,
 ): EmbedBuilder {
   const embed = new EmbedBuilder()
-    .setTitle('🎮 Tactical Tic-Tac-Toe (4x4)')
+    .setTitle('🎮 Trip-Tac-Go (4x4)')
     .setColor(0x0099ff);
 
   let description = `${player1Name} (❌) vs ${player2Name} (⭕)\n`;
@@ -37,13 +37,13 @@ function createGameEmbed(
 
   if (game.isGameOver) {
     if (game.winner === 'tie') {
-      description += '\n🤝✨ **IT\'S A TIE!** ✨🤝\n🎭 What an epic battle! Both players fought valiantly! 🎭';
+      description += '\n🤝✨ **IT\'S A TIE!** ✨🤝';
       embed.setColor(Colors.Yellow);
     } else if (game.winner !== 'tie') {
       const winnerName = game.winner === 'X' ? player1Name : player2Name;
       const winnerSymbol = game.winner === 'X' ? '❌' : '⭕';
       // eslint-disable-next-line max-len
-      description += `\n🏆🎉 **${winnerName.toUpperCase()} WINS!** 🎉🏆\n👑 Absolutely magnificent victory! 👑\n🌟 ${winnerSymbol} CHAMPION ${winnerSymbol} 🌟`;
+      description += `\n🏆🎉${winnerSymbol} **${winnerName.toUpperCase()} WINS!** ${winnerSymbol}🎉🏆\n`;
       embed.setColor(Colors.Green);
     }
   } else {
@@ -56,7 +56,7 @@ function createGameEmbed(
   return embed;
 }
 
-function createGameButtons(game: TicTacToeGame): ActionRowBuilder<ButtonBuilder>[] {
+function createGameButtons(game: TripTacGoGame): ActionRowBuilder<ButtonBuilder>[] {
   const rows: ActionRowBuilder<ButtonBuilder>[] = [];
 
   [0, 4, 8, 12].forEach(i => { // 4x4 grid: rows start at 0, 4, 8, 12
@@ -65,7 +65,7 @@ function createGameButtons(game: TicTacToeGame): ActionRowBuilder<ButtonBuilder>
     [0, 1, 2, 3].forEach(j => {
       const position = i + j;
       const button = new ButtonBuilder()
-        .setCustomId(`ttt_${position}`)
+        .setCustomId(`ttg_${position}`)
         .setLabel(game.board[position] !== '⬜' ? game.board[position] : '​')
         .setStyle(ButtonStyle.Secondary)
         .setDisabled(game.isGameOver || game.board[position] !== '⬜');
@@ -129,10 +129,10 @@ function checkWinner(board: string[], captures: { X: number; O: number }): strin
   return null;
 }
 
-export const dTicTacToe: SlashCommand = {
+export const dTripTacGo: SlashCommand = {
   data: new SlashCommandBuilder()
-    .setName('tictactoe')
-    .setDescription('Start a tic-tac-toe game')
+    .setName('triptacgo')
+    .setDescription('Start a trip-tac-go game')
     .setContexts([0, 1, 2])
     .setIntegrationTypes([0, 1])
     .addUserOption(option => option
@@ -167,7 +167,7 @@ export const dTicTacToe: SlashCommand = {
       return false;
     }
 
-    const game: TicTacToeGame = {
+    const game: TripTacGoGame = {
       board: Array(16).fill('⬜'), // 4x4 = 16 squares
       currentPlayer: 'X',
       player1: interaction.user.id,
@@ -273,7 +273,7 @@ export const dTicTacToe: SlashCommand = {
     collector.on('end', async () => {
       if (!game.isGameOver) {
         const timeoutEmbed = new EmbedBuilder()
-          .setTitle('Tic-Tac-Toe - Game Timeout')
+          .setTitle('Trip-Tac-Go - Game Timeout')
           .setDescription('The game has ended due to inactivity.')
           .setColor(0xff0000);
 
@@ -287,4 +287,4 @@ export const dTicTacToe: SlashCommand = {
   },
 };
 
-export default dTicTacToe;
+export default dTripTacGo;
