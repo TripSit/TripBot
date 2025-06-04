@@ -17,38 +17,12 @@ import {
 } from 'discord.js';
 
 import { embedTemplate } from '../../utils/embedTemplate';
+import { SlashCommand } from '../../@types/commandDef';
+import {
+  GameResult, MultiplayerResult, RoundResult, RPSGame,
+} from '../../@types/rpsDef';
 
 const F = f(__filename);
-
-interface SlashCommand {
-  data: SlashCommandBuilder;
-  execute(interaction: ChatInputCommandInteraction): Promise<void>;
-}
-
-interface RPSGame {
-  players: string[];
-  choices: Map<string, string>;
-  isActive: boolean;
-  gameType: '1v1' | 'multiplayer';
-  round: number;
-  eliminatedPlayers: string[];
-  scores?: { player1: number; player2: number }; // Add this line
-}
-
-type GameResult = 'player1' | 'player2' | 'tie';
-
-type RoundResult = {
-  choice: string;
-  count: number;
-  players: string[];
-};
-
-type MultiplayerResult = {
-  winner: string | null;
-  eliminated: string[];
-  remaining: string[];
-  results: RoundResult[];
-};
 
 const rpsChoices = {
   rock: { emoji: '🪨', name: 'Rock', beats: 'scissors' },
@@ -745,17 +719,18 @@ export const dRockPaperScissors: SlashCommand = {
 
     if (opponent) {
       await handle1v1Game(interaction, opponent);
-    } else {
-      // Multiplayer queue - requires server AND bot membership
-      if (!interaction.guild) {
-        await interaction.reply({
-          content: '4-10 player RPS can only be played in a server. If you want to play 1v1, please specify an opponent.',
-          flags: MessageFlags.Ephemeral,
-        });
-        return;
-      }
-      await handleMultiplayerQueue(interaction);
+      return true;
     }
+    // Multiplayer queue - requires server AND bot membership
+    if (!interaction.guild) {
+      await interaction.reply({
+        content: '4-10 player RPS can only be played in a server. If you want to play 1v1, please specify an opponent.',
+        flags: MessageFlags.Ephemeral,
+      });
+      return false;
+    }
+    await handleMultiplayerQueue(interaction);
+    return true;
   },
 };
 
