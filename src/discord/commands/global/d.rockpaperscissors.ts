@@ -15,6 +15,8 @@ import {
   MessageFlags,
 } from 'discord.js';
 
+const F = f(__filename);
+
 interface SlashCommand {
   data: SlashCommandBuilder;
   execute(interaction: ChatInputCommandInteraction): Promise<void>;
@@ -70,7 +72,7 @@ function create1v1GameEmbed(player1: User, player2: User): EmbedBuilder {
     .setDescription(
       `**${player1.username}** vs **${player2.username}**\n\n`
       + 'Both players, make your choice!\n'
-      + '⏰ You have 30 seconds to decide!',
+      + '⏰ You have 2 minutes for the entire match!',
     );
 }
 
@@ -285,7 +287,7 @@ async function startMultiplayerRound(interaction: ChatInputCommandInteraction, g
     if (gameObj.choices.has(i.user.id)) {
       await i.reply({
         content: 'You have already made your choice!',
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
       return;
     }
@@ -293,14 +295,7 @@ async function startMultiplayerRound(interaction: ChatInputCommandInteraction, g
     const choice = i.customId.replace('rps_', '');
     gameObj.choices.set(i.user.id, choice);
 
-    const choiceData = rpsChoices[choice as keyof typeof rpsChoices];
-    const choiceEmoji = choiceData.emoji;
-    const choiceName = choiceData.name;
-
-    await i.reply({
-      content: `You chose ${choiceEmoji} ${choiceName}!`,
-      ephemeral: true,
-    });
+    await i.deferUpdate();
 
     if (gameObj.choices.size === gameObj.players.length) {
       roundCollector.stop();
@@ -373,6 +368,11 @@ async function handle1v1GameEnd(
   const gameObj = game;
   gameObj.isActive = false;
 
+  // Ensure scores are initialized (TypeScript safety)
+  if (!gameObj.scores) {
+    gameObj.scores = { player1: 0, player2: 0 };
+  }
+
   const player1Choice = gameObj.choices.get(interaction.user.id);
   const player2Choice = gameObj.choices.get(opponent.id);
 
@@ -386,11 +386,6 @@ async function handle1v1GameEnd(
   }
 
   const result = determineWinner(player1Choice, player2Choice);
-
-  // Add score tracking
-  if (!gameObj.scores) {
-    gameObj.scores = { player1: 0, player2: 0 };
-  }
 
   // Update scores based on round result
   if (result === 'player1') {
@@ -437,7 +432,7 @@ async function handle1v1GameEnd(
         .setTitle('🏆 Match Complete!')
         .setColor(Colors.Green)
         .setDescription(
-          `**Final Score:** ${interaction.user.username} ${gameObj.scores!.player1} - ${gameObj.scores!.player2} ${opponent.username}\n\n`
+          `**Final Score:**\n${interaction.user.username}: ${gameObj.scores!.player1} | ${opponent.username}: ${gameObj.scores!.player2}\n\n`
           + `🎉 **GAME OVER! ${finalWinner} wins the match!** 🎉`,
         );
 
@@ -458,8 +453,8 @@ async function handle1v1GameEnd(
         .setColor(Colors.Green)
         .setDescription(
           `**${interaction.user.username}** vs **${opponent.username}**\n\n`
-          + `**Current Score:** ${interaction.user.username} ${gameObj.scores!.player1} - ${gameObj.scores!.player2} ${opponent.username}\n\n`
-          + 'Both players, make your choice!\n⏰ You have 30 seconds to decide!',
+          + `**Current Score:**\n${interaction.user.username}: ${gameObj.scores!.player1} | ${opponent.username}: ${gameObj.scores!.player2}\n\n`
+          + 'Both players, make your choice!\n⏰ You have 2 minutes for the entire match!',
         );
 
       await interaction.editReply({
@@ -476,7 +471,7 @@ async function handle1v1Game(interaction: ChatInputCommandInteraction, opponent:
   if (opponent.id === interaction.user.id) {
     await interaction.reply({
       content: 'You cannot play against yourself!',
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
@@ -484,7 +479,7 @@ async function handle1v1Game(interaction: ChatInputCommandInteraction, opponent:
   if (opponent.bot) {
     await interaction.reply({
       content: 'You cannot play against a bot!',
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
@@ -496,7 +491,7 @@ async function handle1v1Game(interaction: ChatInputCommandInteraction, opponent:
     gameType: '1v1',
     round: 1,
     eliminatedPlayers: [],
-    scores: { player1: 0, player2: 0 }, // Add this line
+    scores: { player1: 0, player2: 0 }, // Always initialize fresh scores
   };
 
   const embed = create1v1GameEmbed(interaction.user, opponent);
@@ -530,16 +525,30 @@ async function handle1v1Game(interaction: ChatInputCommandInteraction, opponent:
     const choice = i.customId.replace('rps_', '');
     game.choices.set(i.user.id, choice);
 
-    const choiceData = rpsChoices[choice as keyof typeof rpsChoices];
-    await i.reply({
-      content: `You chose ${choiceData.emoji} ${choiceData.name}!`,
-      ephemeral: true,
-    });
+    await i.deferUpdate();
 
     if (game.choices.size === 2) {
       const gameEnded = await handle1v1GameEnd(interaction, opponent, game);
       if (gameEnded) {
         collector.stop();
+      }
+    }
+  });
+
+  collector.on('end', async () => {
+    if (game.isActive) {
+      try {
+        const timeoutEmbed = new EmbedBuilder()
+          .setTitle('⏰ Game Timeout')
+          .setDescription('The game has has timed out after 2 minutes.')
+          .setColor(Colors.Red);
+
+        await interaction.editReply({
+          embeds: [timeoutEmbed],
+          components: [],
+        });
+      } catch (error) {
+        log.error(F, `Could not send timeout message: ${error}`);
       }
     }
   });
@@ -597,7 +606,7 @@ async function handleMultiplayerQueue(interaction: ChatInputCommandInteraction):
     if (playersJoined.includes(i.user.id)) {
       await i.reply({
         content: 'You are already in the queue!',
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
       return;
     }
@@ -605,7 +614,7 @@ async function handleMultiplayerQueue(interaction: ChatInputCommandInteraction):
     if (playersJoined.length >= 10) {
       await i.reply({
         content: 'The queue is full!',
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
       return;
     }
@@ -613,7 +622,7 @@ async function handleMultiplayerQueue(interaction: ChatInputCommandInteraction):
     playersJoined.push(i.user.id);
     await i.reply({
       content: 'You joined the battle queue! ⚔️',
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
 
     const updatedEmbed = createQueueEmbed(playersJoined, timeLeft);
@@ -631,7 +640,7 @@ async function handleMultiplayerQueue(interaction: ChatInputCommandInteraction):
       const failEmbed = new EmbedBuilder()
         .setTitle('❌ Not Enough Players')
         .setDescription(`Only ${playersJoined.length} player${playerText} joined. Minimum 4 players needed.`)
-        .setColor(0xff0000);
+        .setColor(Colors.Red);
 
       await interaction.editReply({
         embeds: [failEmbed],
