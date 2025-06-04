@@ -27,7 +27,7 @@ function createGameEmbed(
 ): EmbedBuilder {
   const embed = new EmbedBuilder()
     .setTitle('🎮 Tic-Tac-Toe')
-    .setColor(0x0099ff);
+    .setColor(Colors.Green);
 
   let description = `${player1Name} (❌) vs ${player2Name} (⭕)\n\n`;
 
@@ -39,7 +39,7 @@ function createGameEmbed(
       const winnerName = game.winner === 'X' ? player1Name : player2Name;
       const winnerSymbol = game.winner === 'X' ? '❌' : '⭕';
       // eslint-disable-next-line max-len
-      description += `\n🏆🎉 **${winnerName.toUpperCase()} WINS!** 🎉🏆\n🌟 ${winnerSymbol} CHAMPION ${winnerSymbol} 🌟`;
+      description += `\n🏆🎉${winnerSymbol} **${winnerName.toUpperCase()} WINS!** ${winnerSymbol}🎉🏆`;
       embed.setColor(Colors.Green);
     }
   } else {
@@ -236,7 +236,7 @@ export const dTicTacToe: SlashCommand = {
         const timeoutEmbed = new EmbedBuilder()
           .setTitle('Tic-Tac-Toe - Game Timeout')
           .setDescription('The game has ended due to inactivity.')
-          .setColor(0xff0000);
+          .setColor(Colors.Red);
 
         await interaction.editReply({
           embeds: [timeoutEmbed],
