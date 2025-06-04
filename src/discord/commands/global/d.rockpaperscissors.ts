@@ -454,7 +454,7 @@ async function handle1v1GameEnd(
 
     setTimeout(async () => {
       const nextRoundEmbed = new EmbedBuilder()
-        .setTitle(`⚔️ Round ${gameObj.round}/3`)
+        .setTitle(`⚔️ Round ${gameObj.round}`)
         .setColor(Colors.Green)
         .setDescription(
           `**${interaction.user.username}** vs **${opponent.username}**\n\n`
