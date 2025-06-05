@@ -127,6 +127,21 @@ const TTSMindsetRoles = {
 //   [key in ColorNames]: string;
 // };
 
+type LevelColorNames =
+  | 'ROLE_LEVEL_RED'
+  | 'ROLE_LEVEL_REDORANGE'
+  | 'ROLE_LEVEL_ORANGE'
+  | 'ROLE_LEVEL_YELLOW'
+  | 'ROLE_LEVEL_YELLOWGREEN'
+  | 'ROLE_LEVEL_GREEN'
+  | 'ROLE_LEVEL_GREENBLUE'
+  | 'ROLE_LEVEL_BLUE'
+  | 'ROLE_LEVEL_BLUEPURPLE'
+  | 'ROLE_LEVEL_PURPLE'
+  | 'ROLE_LEVEL_PINK'
+  | 'ROLE_LEVEL_PINKRED'
+  | 'ROLE_LEVEL_BLACK';
+
 const levelColorRoles = {
   ROLE_LEVEL_RED: env.ROLE_LEVEL_RED,
   ROLE_LEVEL_REDORANGE: env.ROLE_LEVEL_REDORANGE,
@@ -142,8 +157,34 @@ const levelColorRoles = {
   ROLE_LEVEL_PINKRED: env.ROLE_LEVEL_PINKRED,
   ROLE_LEVEL_BLACK: env.ROLE_LEVEL_BLACK,
 } as {
-  [key in levelColorNames]: string;
+  [key in LevelColorNames]: string;
 };
+
+type DonorColorNames =
+  | 'ROLE_GRADIENT_1'
+  | 'ROLE_GRADIENT_2'
+  | 'ROLE_GRADIENT_3'
+  | 'ROLE_GRADIENT_4'
+  | 'ROLE_GRADIENT_5'
+  | 'ROLE_GRADIENT_6'
+  | 'ROLE_GRADIENT_7'
+  | 'ROLE_GRADIENT_8'
+  | 'ROLE_GRADIENT_9'
+  | 'ROLE_GRADIENT_10'
+  | 'ROLE_GRADIENT_11'
+  | 'ROLE_GRADIENT_12'
+  | 'ROLE_GRADIENT_13'
+  | 'ROLE_GRADIENT_14'
+  | 'ROLE_GRADIENT_15'
+  | 'ROLE_GRADIENT_16'
+  | 'ROLE_GRADIENT_17'
+  | 'ROLE_GRADIENT_18'
+  | 'ROLE_GRADIENT_19'
+  | 'ROLE_GRADIENT_20'
+  | 'ROLE_GRADIENT_21'
+  | 'ROLE_GRADIENT_22'
+  | 'ROLE_GRADIENT_23'
+  | 'ROLE_GRADIENT_24';
 
 const donorColorRoles = {
   ROLE_GRADIENT_1: env.ROLE_GRADIENT_1,
@@ -171,7 +212,7 @@ const donorColorRoles = {
   ROLE_GRADIENT_23: env.ROLE_GRADIENT_23,
   ROLE_GRADIENT_24: env.ROLE_GRADIENT_24,
 } as {
-  [key in GradientColorNames]: string;
+  [key in DonorColorNames]: string;
 };
 
 // type DonorNames =
@@ -211,32 +252,6 @@ const donorEmoji = env.NODE_ENV === 'production'
 
 const F = f(__filename);
 
-async function donorColorCheck(
-  newMember: GuildMember,
-  oldMember: GuildMember,
-  roleId: string,
-) {
-  // Check if the id matches a colorRole
-  if (Object.values(donorColorRoles).includes(roleId)) {
-    // log.debug(F, `donor color role added: ${roleId}`);
-    // If it does, check if the user also has a donor role
-    if (oldMember.roles.cache.has(env.ROLE_BOOSTER)
-    || oldMember.roles.cache.has(env.ROLE_PREMIUM)
-    || oldMember.roles.cache.has(env.ROLE_TEAMTRIPSIT)) {
-      log.debug(F, 'Donor added a color role!');
-    } else {
-      // If they don't, remove the color role
-      log.debug(F, 'User added a color role without being a donor!');
-      const role = await newMember.guild.roles.fetch(roleId);
-      if (role) {
-        log.debug(F, `Removing ${role.name} from ${newMember.displayName}`);
-        await newMember.roles.remove(role);
-        log.debug(F, `Removed ${role.name} from ${newMember.displayName}`);
-      }
-    }
-  }
-}
-
 async function levelColorCheck(
   newMember: GuildMember,
   oldMember: GuildMember,
@@ -260,6 +275,32 @@ async function levelColorCheck(
     } else {
       // If they don't, remove the level color role
       log.debug(F, 'User added a level color role without being VIP 30+!');
+      const role = await newMember.guild.roles.fetch(roleId);
+      if (role) {
+        log.debug(F, `Removing ${role.name} from ${newMember.displayName}`);
+        await newMember.roles.remove(role);
+        log.debug(F, `Removed ${role.name} from ${newMember.displayName}`);
+      }
+    }
+  }
+}
+
+async function donorColorCheck(
+  newMember: GuildMember,
+  oldMember: GuildMember,
+  roleId: string,
+) {
+  // Check if the id matches a colorRole
+  if (Object.values(donorColorRoles).includes(roleId)) {
+    // log.debug(F, `donor color role added: ${roleId}`);
+    // If it does, check if the user also has a donor role
+    if (oldMember.roles.cache.has(env.ROLE_BOOSTER)
+    || oldMember.roles.cache.has(env.ROLE_PREMIUM)
+    || oldMember.roles.cache.has(env.ROLE_TEAMTRIPSIT)) {
+      log.debug(F, 'Donor added a color role!');
+    } else {
+      // If they don't, remove the color role
+      log.debug(F, 'User added a color role without being a donor!');
       const role = await newMember.guild.roles.fetch(roleId);
       if (role) {
         log.debug(F, `Removing ${role.name} from ${newMember.displayName}`);
