@@ -93,7 +93,9 @@ export const messageCreate: MessageCreateEvent = {
     helperActivityUpdate(message);
     // discordAiModerate(message);
     nightsWatch(message);
-    monitorToxicity(message);
+    if ('parentId' in message.channel && message.channel.parentId !== env.CATEGORY_TEAMTRIPSIT) {
+      monitorToxicity(message);
+    }
 
     // Disabled for testing
     // thoughtPolice(message);
