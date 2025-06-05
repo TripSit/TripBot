@@ -1,4 +1,5 @@
 export interface TripTacGoGame {
+  gameId: string;
   board: string[];
   currentPlayer: string;
   player1: string;

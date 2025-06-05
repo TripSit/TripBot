@@ -59,7 +59,7 @@ function createGameButtons(game: TripTacGoGame): ActionRowBuilder<ButtonBuilder>
     [0, 1, 2, 3].forEach(j => {
       const position = i + j;
       const button = new ButtonBuilder()
-        .setCustomId(`ttg_${position}`)
+        .setCustomId(`ttg_${game.gameId}_${position}`)
         .setLabel(game.board[position] !== '⬜' ? game.board[position] : '​')
         .setStyle(ButtonStyle.Secondary)
         .setDisabled(game.isGameOver || game.board[position] !== '⬜');
@@ -115,7 +115,7 @@ export const dTripTacGo: SlashCommand = {
       return false;
     }
 
-    const game = createInitialGame(interaction.user.id, opponent.id);
+    let game = createInitialGame(interaction.user.id, opponent.id);
 
     const embed = createGameEmbed(game, interaction.user.username, opponent.username);
     const buttons = createGameButtons(game);
@@ -143,19 +143,15 @@ export const dTripTacGo: SlashCommand = {
     }
 
     collector.on('collect', async (i: ButtonInteraction) => {
-      const position = parseInt(i.customId.split('_')[1], 10);
+      const [, gameIdFromButton, positionStr] = i.customId.split('_');
+      const position = parseInt(positionStr, 10);
       const moveResult = executeMove(game, position, i.user.id);
-
-      if (!moveResult.success) {
-        await i.reply({
-          content: moveResult.errorMessage,
-          flags: MessageFlags.Ephemeral,
-        });
+      if (gameIdFromButton !== game.gameId) {
         return false;
       }
 
       // Update the game reference
-      Object.assign(game, moveResult.gameUpdated);
+      game = JSON.parse(JSON.stringify(moveResult.gameUpdated));
 
       // Update Discord UI
       const newEmbed = createGameEmbed(game, interaction.user.username, opponent.username);
@@ -174,6 +170,7 @@ export const dTripTacGo: SlashCommand = {
 
     collector.on('end', async () => {
       if (!game.isGameOver) {
+        collector.removeAllListeners();
         const timeoutEmbed = new EmbedBuilder()
           .setTitle('Trip-Tac-Go - Game Timeout')
           .setDescription('The game has ended due to inactivity.')
