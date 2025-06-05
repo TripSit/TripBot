@@ -20,7 +20,7 @@ import { embedTemplate } from '../../utils/embedTemplate';
 import { SlashCommand } from '../../@types/commandDef';
 import {
   GameResult, MultiplayerResult, RoundResult, RPSGame,
-} from '../../@types/rpsDef';
+} from '../../@types/rockPaperScissorsDef';
 
 const F = f(__filename);
 
