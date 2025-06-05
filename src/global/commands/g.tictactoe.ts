@@ -1,5 +1,7 @@
 import { MoveResult, TicTacToeGame } from '../../discord/@types/ticTacToeDef';
 
+const F = f(__filename);
+
 export function checkWinner(board: string[]): string | null {
   const winPatterns = [
     [0, 1, 2], [3, 4, 5], [6, 7, 8], // Rows
@@ -25,6 +27,9 @@ export function executeMove(
   position: number,
   playerId: string,
 ): MoveResult {
+  log.info(F, `[${game.gameId}] BEFORE move - Board: ${game.board}`);
+  log.info(F, `[${game.gameId}] BEFORE move - Current player: ${game.currentPlayer}`);
+
   // Validate move
   if (game.isGameOver) {
     return {
