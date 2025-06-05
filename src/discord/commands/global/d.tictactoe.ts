@@ -14,6 +14,8 @@ import { SlashCommand } from '../../@types/commandDef';
 import { createInitialGame, executeMove } from '../../../global/commands/g.tictactoe';
 import { TicTacToeGame } from '../../@types/ticTacToeDef';
 
+// const F = f(__filename);
+
 function createGameEmbed(
   game: TicTacToeGame,
   player1Name: string,
@@ -55,7 +57,7 @@ function createGameButtons(game: TicTacToeGame): ActionRowBuilder<ButtonBuilder>
     [0, 1, 2].forEach(j => {
       const position = i + j;
       const button = new ButtonBuilder()
-        .setCustomId(`ttt_${position}`)
+        .setCustomId(`ttt_${game.gameId}_${position}`)
         .setLabel(game.board[position] !== '⬜' ? game.board[position] : '​')
         .setStyle(ButtonStyle.Secondary)
         .setDisabled(game.isGameOver || game.board[position] !== '⬜');
@@ -112,7 +114,7 @@ export const dTicTacToe: SlashCommand = {
       return false;
     }
 
-    const game = createInitialGame(interaction.user.id, opponent.id);
+    let game = createInitialGame(interaction.user.id, opponent.id);
     const embed = createGameEmbed(game, interaction.user.username, opponent.username);
     const buttons = createGameButtons(game);
 
@@ -139,8 +141,14 @@ export const dTicTacToe: SlashCommand = {
     }
 
     collector.on('collect', async (i: ButtonInteraction) => {
-      const position = parseInt(i.customId.split('_')[1], 10);
+      const [, gameIdFromButton, positionStr] = i.customId.split('_');
+      const position = parseInt(positionStr, 10);
       const moveResult = executeMove(game, position, i.user.id);
+
+      // Verify this button belongs to this game
+      if (gameIdFromButton !== game.gameId) {
+        return false;
+      }
 
       if (!moveResult.success) {
         await i.reply({
@@ -151,7 +159,7 @@ export const dTicTacToe: SlashCommand = {
       }
 
       // Update the game reference
-      Object.assign(game, moveResult.gameUpdated);
+      game = JSON.parse(JSON.stringify(moveResult.gameUpdated));
 
       // Update Discord UI
       const newEmbed = createGameEmbed(game, interaction.user.username, opponent.username);
@@ -170,6 +178,7 @@ export const dTicTacToe: SlashCommand = {
 
     collector.on('end', async () => {
       if (!game.isGameOver) {
+        collector.removeAllListeners();
         const timeoutEmbed = new EmbedBuilder()
           .setTitle('Tic-Tac-Toe - Game Timeout')
           .setDescription('The game has ended due to inactivity.')

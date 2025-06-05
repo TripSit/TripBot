@@ -1,4 +1,5 @@
 export interface RPSGame {
+  gameId: string;
   players: string[];
   choices: Map<string, string>;
   isActive: boolean;
