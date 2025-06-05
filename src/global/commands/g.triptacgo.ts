@@ -1,5 +1,7 @@
 import { TripTacGoGame, TripTacGoMoveResult } from '../../discord/@types/tripTacGoDef';
 
+const F = f(__filename);
+
 export function checkCaptures(board: string[], position: number, playerSymbol: string): number[] {
   const captures: number[] = [];
   const opponentSymbol = playerSymbol === '❌' ? '⭕' : '❌';
@@ -51,6 +53,9 @@ export function executeMove(
   position: number,
   playerId: string,
 ): TripTacGoMoveResult {
+  log.info(F, `[${game.gameId}] BEFORE move - Board: ${game.board}`);
+  log.info(F, `[${game.gameId}] BEFORE move - Current player: ${game.currentPlayer}`);
+
   // Validate move
   if (game.isGameOver) {
     return {

@@ -15,6 +15,8 @@ import { TripTacGoGame } from '../../@types/tripTacGoDef';
 import { createInitialGame, executeMove } from '../../../global/commands/g.triptacgo';
 import { embedTemplate } from '../../utils/embedTemplate';
 
+const F = f(__filename);
+
 function createGameEmbed(
   game: TripTacGoGame,
   player1Name: string,
@@ -146,12 +148,20 @@ export const dTripTacGo: SlashCommand = {
       const [, gameIdFromButton, positionStr] = i.customId.split('_');
       const position = parseInt(positionStr, 10);
       const moveResult = executeMove(game, position, i.user.id);
+      log.info(F, `[${game.gameId}] Move result: ${moveResult}`);
+
+      log.info(F, `[${game.gameId}] Button clicked by ${i.user.username} (${i.user.id})`);
+      log.info(F, `[${game.gameId}] CustomId: ${i.customId}`);
+      // eslint-disable-next-line max-len
+      log.info(F, `[${game.gameId}] Current turn: ${game.currentPlayer}, Player1: ${game.player1}, Player2: ${game.player2}`);
       if (gameIdFromButton !== game.gameId) {
         return false;
       }
 
       // Update the game reference
       game = JSON.parse(JSON.stringify(moveResult.gameUpdated));
+      log.info(F, `[${game.gameId}] AFTER move - Board: ${game.board}`);
+      log.info(F, `[${game.gameId}] AFTER move - Current player: ${game.currentPlayer}`);
 
       // Update Discord UI
       const newEmbed = createGameEmbed(game, interaction.user.username, opponent.username);

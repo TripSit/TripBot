@@ -14,7 +14,7 @@ import { SlashCommand } from '../../@types/commandDef';
 import { createInitialGame, executeMove } from '../../../global/commands/g.tictactoe';
 import { TicTacToeGame } from '../../@types/ticTacToeDef';
 
-// const F = f(__filename);
+const F = f(__filename);
 
 function createGameEmbed(
   game: TicTacToeGame,
@@ -144,6 +144,12 @@ export const dTicTacToe: SlashCommand = {
       const [, gameIdFromButton, positionStr] = i.customId.split('_');
       const position = parseInt(positionStr, 10);
       const moveResult = executeMove(game, position, i.user.id);
+      log.info(F, `[${game.gameId}] Move result: ${moveResult}`);
+
+      log.info(F, `[${game.gameId}] Button clicked by ${i.user.username} (${i.user.id})`);
+      log.info(F, `[${game.gameId}] CustomId: ${i.customId}`);
+      // eslint-disable-next-line max-len
+      log.info(F, `[${game.gameId}] Current turn: ${game.currentPlayer}, Player1: ${game.player1}, Player2: ${game.player2}`);
 
       // Verify this button belongs to this game
       if (gameIdFromButton !== game.gameId) {
