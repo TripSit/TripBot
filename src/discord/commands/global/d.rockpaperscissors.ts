@@ -38,7 +38,7 @@ function createQueueEmbed(playersJoined: string[], timeLeft: number): EmbedBuild
       `**Players Joined:** ${playersJoined.length}/10\n`
       + `${playersJoined.length > 0 ? playersJoined.map(id => `<@${id}>`).join(', ') : 'No players yet...'}\n\n`
       + `⏰ **Time left to join:** ${timeLeft} seconds\n`
-      + '🎯 **Minimum players needed:** 4\n\n'
+      + '🎯 **Need at least 2 players to start**\n\n'
       + 'Click the button below to join!',
     );
 }
@@ -698,12 +698,12 @@ async function handleMultiplayerQueue(interaction: ChatInputCommandInteraction):
   queueCollector.on('end', async () => {
     clearInterval(timerInterval);
 
-    if (playersJoined.length < 4) {
+    if (playersJoined.length < 2) {
       queueCollector.removeAllListeners();
       const playerText = playersJoined.length !== 1 ? 's' : '';
       const failEmbed = embedTemplate()
         .setTitle('❌ Not Enough Players')
-        .setDescription(`Only ${playersJoined.length} player${playerText} joined. Minimum 4 players needed.`)
+        .setDescription(`Only ${playersJoined.length} player${playerText} joined. Minimum 2 players needed.`)
         .setColor(Colors.Red);
 
       await interaction.editReply({
@@ -748,7 +748,7 @@ export const dRockPaperScissors: SlashCommand = {
     // Multiplayer queue - requires server AND bot membership
     if (!interaction.guild) {
       await interaction.reply({
-        content: '4-10 player RPS can only be played in a server. If you want to play 1v1, please specify an opponent.',
+        content: '2-10 player RPS can only be played in a server. If you want to play 1v1, please specify an opponent.',
         flags: MessageFlags.Ephemeral,
       });
       return false;
