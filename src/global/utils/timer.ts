@@ -323,7 +323,7 @@ async function checkTickets() { // eslint-disable-line @typescript-eslint/no-unu
           archived: {
             type: 'private',
             fetchAll: true,
-            before: new Date().setDate(new Date().getDate() - 7),
+            before: new Date().setDate(new Date().getDate() - 5),
           },
         });
         // const threadList = await channel.threads.fetchArchived({ type: 'private', fetchAll: true });
@@ -333,14 +333,15 @@ async function checkTickets() { // eslint-disable-line @typescript-eslint/no-unu
           try {
             await thread.fetch();
 
-            // Get the last message sent int he thread
-            const messages = await thread.messages.fetch({ limit: 1 });
-            const lastMessage = messages.first();
+            // Get messages and filter out system messages
+            const messages = await thread.messages.fetch({ limit: 10 }); // Fetch more to account for system messages
+            const userMessages = messages.filter(msg => !msg.system);
+            const lastUserMessage = userMessages.first();
 
             // Determine if this message was sent longer than a week ago
-            if (lastMessage && DateTime.fromJSDate(lastMessage.createdAt) >= DateTime.local().minus({ days: 5 })) {
+            if (lastUserMessage && DateTime.fromJSDate(lastUserMessage.createdAt) >= DateTime.local().minus({ days: 5 })) {
               thread.delete();
-              log.debug(F, `Deleted thread ${thread.name} in ${channel.name} because the last message was sent over 5 days ago`);
+              log.debug(F, `Deleted thread ${thread.name} in ${channel.name} because the last user message was sent over 5 days ago`);
             }
           } catch (err) {
             // Thread was likely manually deleted
