@@ -134,6 +134,15 @@ export async function announcements(message:Message) {
     '**Reminder:** Please be mindful of the jokes you make here. What may be funny to you could be hurtful to someone else with lived experience.',
     '**Reminder:** If one channel is too busy, try striking conversation in another! There are many different channels to choose from.',
     '**Reminder:** What is your habit really costing you? Never be discouraged to seek help if you need it.',
+    '**Reminder:** Know your source and only consider a substance tested if you have witnessed it with your own eyes!',
+    '**Reminder:** Start low, go slow. You can choose to take more later, you cannot choose to take less!',
+    '**Reminder:** Driving under the influence is never justified. Consider other people and their wellbeing before making decisions!',
+    '**Reminder:** Carry naloxone if using opioids, and know how to use it in an emergency.',
+    '**Reminder:** Share your plans with a trusted friend so someone knows to check in on you.',
+    '**Reminder:** It\'s okay to say no. Never feel pressured to use more than you want. Peer pressuring is for losers!',
+    '**Reminder:** If in doubt, throw it out. Don\'t take risks with unknown or suspicious substances.',
+    '**Reminder:** Take breaks and rest when needed. Listen to your body and don\'t push your limits.',
+    '**Reminder:** Health checks are important to catch issues early! Make sure to try to see a dentist at least once a year, an optometrist every two years and an audiologist every five years.',
   ];
 
   const tipAnnouncements = [
@@ -147,6 +156,7 @@ export async function announcements(message:Message) {
     '**Tip:** Head to the Activities Corner in the <id:guide> for small games and activities!',
     '**Tip:** Curious about a specific server function like levelling or karma? Head to Server Tips in the <id:guide>!',
     '**Tip:** Keen to help with tripsitting? Head to the <id:guide> for info on how to become a Helper!',
+    '**Tip:** We are looking for Tripsitters! Check out the <id:guide> to learn how to become a Helper!',
     '**Tip:** Track your dosages privately with `/idose`.',
     '**Tip:** Feeling a little airy? Use `/breathe` to guide your breathing.',
     '**Tip:** Feeling a bit spacey? Try `/grounding` to bring you back down to earth.',
@@ -175,10 +185,11 @@ export async function announcements(message:Message) {
     '[**Did you know?**](https://www.guinnessworldrecords.com/world-records/longest-cake) The longest cake ever made was 5300m (17,388 ft) long, and was eaten in 10 minutes!',
     '[**Did you know?**](https://www.guinnessworldrecords.com/world-records/heaviest-train-pulled-with-beard) The heaviest train pulled with a beard weighed 2,753kg (6,069 lb)!',
     '[**Did you know?**](https://www.guinnessworldrecords.com/world-records/70851-largest-cow-ever) The tallest cow recorded was "Blossom" who stood at 190cm (74.8 in) tall!',
-    '[**Did you know?**](https://www.guinnessworldrecords.com/world-records/most-feet-and-armpits-sniffed) The record for the most feet sniffed by an individual is approx 5600!',
     '[**Did you know?**](https://www.guinnessworldrecords.com/world-records/372384-fastest-marathon-dressed-as-an-elf-male) The fastest marathon dressed as an elf is 2 hours, 56 minutes!',
-    '[**Did you know?**](https://www.guinnessworldrecords.com/world-records/longest-legs-female) The longest female legs measure 134.3 cm (52.87 in)!',
     '[**Did you know?**](https://www.guinnessworldrecords.com/world-records/longest-noodle) The longest noodle ever made was 3,084m (10,119 ft) long!',
+    '[**Did you know?**](https://www.guinnessworldrecords.com/world-records/103131-most-spoons-balanced-on-the-body) The most spoons balanced on a human body is 96!',
+    '[**Did you know?**](https://www.guinnessworldrecords.com/world-records/most-t-shirts-worn-at-once) The most t-shirts worn at once is 260!',
+    '[**Did you know?**](https://www.guinnessworldrecords.com/world-records/80129-loudest-burp-male) The loudest burp is 112.4 decibels!',
   ];
 
   // const chanAnnouncements = [
