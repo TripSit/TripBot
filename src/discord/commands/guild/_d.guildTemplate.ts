@@ -1,4 +1,4 @@
-import {
+/* import {
   ActionRowBuilder,
   ModalBuilder,
   TextInputBuilder,
@@ -140,7 +140,7 @@ export const dTemplate: SlashCommand = {
           .setDescription(`
           Your user id: ${userData.id}
           response: ${response}
-          string: ${string} 
+          string: ${string}
           number: ${number}
           integer: ${integer}
           boolean: ${boolean}
@@ -159,4 +159,4 @@ export const dTemplate: SlashCommand = {
   },
 };
 
-export default dTemplate;
+export default dTemplate; */
