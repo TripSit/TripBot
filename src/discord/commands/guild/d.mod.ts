@@ -149,7 +149,7 @@ export async function lockdown(interaction: ChatInputCommandInteraction): Promis
   }
 
   if (!interaction.guild) {
-    await interaction.editReply({ content: 'This command can only be used in a server!' });
+    await interaction.editReply({ content: SERVER_ONLY_TEXT });
     return false;
   }
 
@@ -226,6 +226,69 @@ export async function lockdown(interaction: ChatInputCommandInteraction): Promis
   return true;
 }
 
+async function say(interaction: ChatInputCommandInteraction): Promise<boolean> {
+  if (!interaction.guild) {
+    await interaction.editReply({ content: SERVER_ONLY_TEXT });
+    return false;
+  }
+
+  if (!interaction.member) return false;
+
+  const member: GuildMember = interaction.member as GuildMember;
+
+  const sayText = interaction.options.getString('say', true);
+
+  let channel = interaction.options.getChannel('channel')
+    ? interaction.options.getChannel('channel')
+    : interaction.channel;
+
+  if (!channel) {
+    await interaction.editReply({ content: 'Channel not found!' });
+    return false;
+  }
+
+  // Ensure only moderators can use /say in announcements
+  if (
+    channel.type === ChannelType.GuildAnnouncement
+      && !member.roles.cache.has(env.ROLE_MODERATOR)
+  ) {
+    await interaction.editReply({ content: 'Only moderators can use this command in announcement channels!' });
+    return false;
+  }
+
+  // Ensure that the channel used is a text channel
+  if (
+    channel.type !== ChannelType.GuildText
+      && channel.type !== ChannelType.GuildVoice
+      && channel.type !== ChannelType.PublicThread
+      && channel.type !== ChannelType.PrivateThread
+      && channel.type !== ChannelType.GuildAnnouncement
+      && channel.type !== ChannelType.GuildForum
+  ) {
+    await interaction.editReply({ content: SERVER_ONLY_TEXT });
+    return false;
+  }
+
+  // Set the type so it's not an API channel
+  channel = channel as TextChannel;
+
+  await channel.sendTyping(); // This method automatically stops typing after 10 seconds, or when a message is sent.
+  setTimeout(async () => (channel as TextChannel).send({
+    content: sayText,
+    allowedMentions: { parse: ['users'] },
+  }), 3000);
+
+  await interaction.editReply({ content: `I said '${sayText}' in ${channel.name}` }); // eslint-disable-line max-len
+
+  const channelBotlog = await interaction.guild.channels.fetch(env.CHANNEL_BOTLOG) as TextChannel;
+  if (channelBotlog) {
+    await channelBotlog.send(`${member.displayName} made me say '${sayText}' \
+        in ${channel.name}`);
+  }
+
+  return true;
+}
+
 export const dMod: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('mod')
@@ -289,21 +352,33 @@ export const dMod: SlashCommand = {
         .setName('override')
         .setDescription('Override existing threads in the DB.'))
       .addBooleanOption(option => option.setName('ephemeral')
-        .setDescription(EPHEMERAL_TEXT))),
+        .setDescription(EPHEMERAL_TEXT)))
+    .addSubcommand(subcommand => subcommand
+      .setName('say')
+      .setDescription('Say something like a real person!')
+      .addStringOption(option => option.setName('say')
+        .setDescription('What do you want to say?')
+        .setRequired(true))
+      .addChannelOption(option => option
+        .setDescription('Where should I say it? (Default: \'here\')')
+        .setName('channel'))),
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
     const ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined;
-    await interaction.deferReply({ flags: ephemeral });
 
     if (!interaction.guild || interaction.guild.id !== env.DISCORD_GUILD_ID.toString()) {
+      log.info(F, 'This command can only be used in the main guild.');
       return false;
     }
 
     const actor = interaction.member as GuildMember;
     const roleModerator = await interaction.guild.roles.fetch(env.ROLE_MODERATOR) as Role;
+    const roleTeamMember = await interaction.guild.roles.fetch(env.ROLE_TEAMTRIPSIT) as Role;
     const actorIsMod = actor.roles.cache.has(roleModerator.id);
+    const actorIsTeamMember = actor.roles.cache.has(roleTeamMember.id);
 
-    if (actorIsMod) {
+    if (actorIsMod && interaction.options.getSubcommand() !== 'say') {
+      await interaction.deferReply({ flags: ephemeral });
       switch (interaction.options.getSubcommand()) {
         case 'slowmode':
           await slowMode(interaction);
@@ -323,11 +398,18 @@ export const dMod: SlashCommand = {
         default:
           break;
       }
-      return true;
     }
-    await interaction.editReply({
-      content: 'You do not have permission to use this command.',
-    });
+
+    if (interaction.options.getSubcommand() === 'say') {
+      await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+      if (actorIsTeamMember) {
+        log.info(F, `${actor.displayName} used /mod say`);
+        await say(interaction);
+      } else {
+        log.info(F, `${actor.displayName} attempted to use /mod say`);
+        await interaction.editReply({ content: 'Only Team TripSit can use this command.' });
+      }
+    }
     return false;
   },
 };
