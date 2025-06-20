@@ -82,9 +82,12 @@ async function isMentioningTripbot(message: Message): Promise<boolean> {
 }
 
 async function isUploadMessage(message: Message): Promise<boolean> {
-  return message.content.toLowerCase().includes('upload')
-    || message.content.toLowerCase().includes('steal')
-    || message.content.toLowerCase().includes('fetch');
+  const content = message.content.toLowerCase().trim();
+
+  // Check for specific command patterns starting with !
+  const uploadCommands = ['!upload', '!steal', '!fetch'];
+
+  return uploadCommands.some(command => content.startsWith(`${command} `));
 }
 
 async function isWordle(message: Message): Promise<boolean> {
@@ -324,19 +327,8 @@ export async function messageCommand(message: Message): Promise<void> {
       return;
     }
 
-    if (await isUploadMessage(message)) {
+    if (await isUploadMessage(message) && message.member?.permissions.has('ManageEmojisAndStickers' as PermissionResolvable)) {
       if (message.content.toLowerCase().includes('emoji')) {
-        // Check if the user has the ManageEmojis permission
-        if (!message.member?.permissions.has('ManageEmojisAndStickers' as PermissionResolvable)) {
-          await message.channel.send({
-            content: stripIndents`Hey ${displayName}, you don't have the permission to upload emojis to this guild!`,
-            allowedMentions: {
-              parse: [], // disables user, role, and @everyone pings
-            },
-          });
-          return;
-        }
-
         // Upload all the emojis in the message to the guild
         let emojis = message.content.match(/<a?:\w+:\d+>/g);
 
@@ -378,16 +370,6 @@ export async function messageCommand(message: Message): Promise<void> {
         }
       }
       if (message.content.toLowerCase().includes('sticker')) {
-        // Check if the user has the ManageEmojis permission
-        if (!message.member?.permissions.has('ManageEmojisAndStickers' as PermissionResolvable)) {
-          await message.channel.send({
-            content: stripIndents`Hey ${displayName}, you don't have the permission to upload stickers to this guild!`,
-            allowedMentions: {
-              parse: [], // disables user, role, and @everyone pings
-            },
-          });
-          return;
-        }
         await message.channel.send(stripIndents`Hey ${displayName}, uploading emojis...`); // eslint-disable-line
 
         log.debug(F, `message.stickers: ${JSON.stringify(message.stickers, null, 2)}`);
