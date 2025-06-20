@@ -127,35 +127,90 @@ const TTSMindsetRoles = {
 //   [key in ColorNames]: string;
 // };
 
+type LevelColorNames =
+  | 'ROLE_LEVEL_RED'
+  | 'ROLE_LEVEL_REDORANGE'
+  | 'ROLE_LEVEL_ORANGE'
+  | 'ROLE_LEVEL_YELLOW'
+  | 'ROLE_LEVEL_YELLOWGREEN'
+  | 'ROLE_LEVEL_GREEN'
+  | 'ROLE_LEVEL_GREENBLUE'
+  | 'ROLE_LEVEL_BLUE'
+  | 'ROLE_LEVEL_BLUEPURPLE'
+  | 'ROLE_LEVEL_PURPLE'
+  | 'ROLE_LEVEL_PINK'
+  | 'ROLE_LEVEL_PINKRED'
+  | 'ROLE_LEVEL_BLACK';
+
+const levelColorRoles = {
+  ROLE_LEVEL_RED: env.ROLE_LEVEL_RED,
+  ROLE_LEVEL_REDORANGE: env.ROLE_LEVEL_REDORANGE,
+  ROLE_LEVEL_ORANGE: env.ROLE_LEVEL_ORANGE,
+  ROLE_LEVEL_YELLOW: env.ROLE_LEVEL_YELLOW,
+  ROLE_LEVEL_YELLOWGREEN: env.ROLE_LEVEL_YELLOWGREEN,
+  ROLE_LEVEL_GREEN: env.ROLE_LEVEL_GREEN,
+  ROLE_LEVEL_GREENBLUE: env.ROLE_LEVEL_GREENBLUE,
+  ROLE_LEVEL_BLUE: env.ROLE_LEVEL_BLUE,
+  ROLE_LEVEL_BLUEPURPLE: env.ROLE_LEVEL_BLUEPURPLE,
+  ROLE_LEVEL_PURPLE: env.ROLE_LEVEL_PURPLE,
+  ROLE_LEVEL_PINK: env.ROLE_LEVEL_PINK,
+  ROLE_LEVEL_PINKRED: env.ROLE_LEVEL_PINKRED,
+  ROLE_LEVEL_BLACK: env.ROLE_LEVEL_BLACK,
+} as {
+  [key in LevelColorNames]: string;
+};
+
 type DonorColorNames =
-| 'ROLE_DONOR_RED'
-| 'ROLE_DONOR_REDORANGE'
-| 'ROLE_DONOR_ORANGE'
-| 'ROLE_DONOR_YELLOW'
-| 'ROLE_DONOR_YELLOWGREEN'
-| 'ROLE_DONOR_GREEN'
-| 'ROLE_DONOR_GREENBLUE'
-| 'ROLE_DONOR_BLUE'
-| 'ROLE_DONOR_BLUEPURPLE'
-| 'ROLE_DONOR_PURPLE'
-| 'ROLE_DONOR_PINK'
-| 'ROLE_DONOR_PINKRED'
-| 'ROLE_DONOR_BLACK';
+  | 'ROLE_GRADIENT_1'
+  | 'ROLE_GRADIENT_2'
+  | 'ROLE_GRADIENT_3'
+  | 'ROLE_GRADIENT_4'
+  | 'ROLE_GRADIENT_5'
+  | 'ROLE_GRADIENT_6'
+  | 'ROLE_GRADIENT_7'
+  | 'ROLE_GRADIENT_8'
+  | 'ROLE_GRADIENT_9'
+  | 'ROLE_GRADIENT_10'
+  | 'ROLE_GRADIENT_11'
+  | 'ROLE_GRADIENT_12'
+  | 'ROLE_GRADIENT_13'
+  | 'ROLE_GRADIENT_14'
+  | 'ROLE_GRADIENT_15'
+  | 'ROLE_GRADIENT_16'
+  | 'ROLE_GRADIENT_17'
+  | 'ROLE_GRADIENT_18'
+  | 'ROLE_GRADIENT_19'
+  | 'ROLE_GRADIENT_20'
+  | 'ROLE_GRADIENT_21'
+  | 'ROLE_GRADIENT_22'
+  | 'ROLE_GRADIENT_23'
+  | 'ROLE_GRADIENT_24';
 
 const donorColorRoles = {
-  ROLE_DONOR_RED: env.ROLE_DONOR_RED,
-  ROLE_DONOR_REDORANGE: env.ROLE_DONOR_REDORANGE,
-  ROLE_DONOR_ORANGE: env.ROLE_DONOR_ORANGE,
-  ROLE_DONOR_YELLOW: env.ROLE_DONOR_YELLOW,
-  ROLE_DONOR_YELLOWGREEN: env.ROLE_DONOR_YELLOWGREEN,
-  ROLE_DONOR_GREEN: env.ROLE_DONOR_GREEN,
-  ROLE_DONOR_GREENBLUE: env.ROLE_DONOR_GREENBLUE,
-  ROLE_DONOR_BLUE: env.ROLE_DONOR_BLUE,
-  ROLE_DONOR_BLUEPURPLE: env.ROLE_DONOR_BLUEPURPLE,
-  ROLE_DONOR_PURPLE: env.ROLE_DONOR_PURPLE,
-  ROLE_DONOR_PINK: env.ROLE_DONOR_PINK,
-  ROLE_DONOR_PINKRED: env.ROLE_DONOR_PINKRED,
-  ROLE_DONOR_BLACK: env.ROLE_DONOR_BLACK,
+  ROLE_GRADIENT_1: env.ROLE_GRADIENT_1,
+  ROLE_GRADIENT_2: env.ROLE_GRADIENT_2,
+  ROLE_GRADIENT_3: env.ROLE_GRADIENT_3,
+  ROLE_GRADIENT_4: env.ROLE_GRADIENT_4,
+  ROLE_GRADIENT_5: env.ROLE_GRADIENT_5,
+  ROLE_GRADIENT_6: env.ROLE_GRADIENT_6,
+  ROLE_GRADIENT_7: env.ROLE_GRADIENT_7,
+  ROLE_GRADIENT_8: env.ROLE_GRADIENT_8,
+  ROLE_GRADIENT_9: env.ROLE_GRADIENT_9,
+  ROLE_GRADIENT_10: env.ROLE_GRADIENT_10,
+  ROLE_GRADIENT_11: env.ROLE_GRADIENT_11,
+  ROLE_GRADIENT_12: env.ROLE_GRADIENT_12,
+  ROLE_GRADIENT_13: env.ROLE_GRADIENT_13,
+  ROLE_GRADIENT_14: env.ROLE_GRADIENT_14,
+  ROLE_GRADIENT_15: env.ROLE_GRADIENT_15,
+  ROLE_GRADIENT_16: env.ROLE_GRADIENT_16,
+  ROLE_GRADIENT_17: env.ROLE_GRADIENT_17,
+  ROLE_GRADIENT_18: env.ROLE_GRADIENT_18,
+  ROLE_GRADIENT_19: env.ROLE_GRADIENT_19,
+  ROLE_GRADIENT_20: env.ROLE_GRADIENT_20,
+  ROLE_GRADIENT_21: env.ROLE_GRADIENT_21,
+  ROLE_GRADIENT_22: env.ROLE_GRADIENT_22,
+  ROLE_GRADIENT_23: env.ROLE_GRADIENT_23,
+  ROLE_GRADIENT_24: env.ROLE_GRADIENT_24,
 } as {
   [key in DonorColorNames]: string;
 };
@@ -196,6 +251,39 @@ const donorEmoji = env.NODE_ENV === 'production'
   : '<:ts_donor:1168969578836144233>';
 
 const F = f(__filename);
+
+async function levelColorCheck(
+  newMember: GuildMember,
+  oldMember: GuildMember,
+  roleId: string,
+) {
+  // Check if the id matches a level color role
+  if (Object.values(levelColorRoles).includes(roleId)) {
+    // If it does, check if the user also has a VIP 30+ role
+    if (
+      oldMember.roles.cache.has(env.ROLE_VIP_30)
+      || oldMember.roles.cache.has(env.ROLE_VIP_40)
+      || oldMember.roles.cache.has(env.ROLE_VIP_50)
+      || oldMember.roles.cache.has(env.ROLE_VIP_60)
+      || oldMember.roles.cache.has(env.ROLE_VIP_70)
+      || oldMember.roles.cache.has(env.ROLE_VIP_80)
+      || oldMember.roles.cache.has(env.ROLE_VIP_90)
+      || oldMember.roles.cache.has(env.ROLE_VIP_100)
+      || oldMember.roles.cache.has(env.ROLE_TEAMTRIPSIT)
+    ) {
+      log.debug(F, 'VIP 30+ user added a level color role!');
+    } else {
+      // If they don't, remove the level color role
+      log.debug(F, 'User added a level color role without being VIP 30+!');
+      const role = await newMember.guild.roles.fetch(roleId);
+      if (role) {
+        log.debug(F, `Removing ${role.name} from ${newMember.displayName}`);
+        await newMember.roles.remove(role);
+        log.debug(F, `Removed ${role.name} from ${newMember.displayName}`);
+      }
+    }
+  }
+}
 
 async function donorColorCheck(
   newMember: GuildMember,
@@ -458,6 +546,7 @@ async function roleAddProcess(
 
   // Go through each role added
   rolesAdded.forEach(async roleId => {
+    await levelColorCheck(newMember, oldMember, roleId);
     await donorColorCheck(newMember, oldMember, roleId);
     await teamMindsetCheck(newMember, roleId);
     await addedVerified(newMember, roleId);

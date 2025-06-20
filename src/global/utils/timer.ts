@@ -122,7 +122,7 @@ async function checkTickets() { // eslint-disable-line @typescript-eslint/no-unu
         const updatedTicket = ticket;
         updatedTicket.status = 'ARCHIVED' as ticket_status;
         updatedTicket.deleted_at = env.NODE_ENV === 'production'
-          ? DateTime.local().plus({ days: 2 }).toJSDate()
+          ? DateTime.local().plus({ days: 3 }).toJSDate()
           : DateTime.local().plus({ minutes: 1 }).toJSDate();
         if (!updatedTicket.description) {
           updatedTicket.description = 'Ticket archived';
@@ -323,7 +323,7 @@ async function checkTickets() { // eslint-disable-line @typescript-eslint/no-unu
           archived: {
             type: 'private',
             fetchAll: true,
-            before: new Date().setDate(new Date().getDate() - 7),
+            before: new Date().setDate(new Date().getDate() - 5),
           },
         });
         // const threadList = await channel.threads.fetchArchived({ type: 'private', fetchAll: true });
@@ -333,14 +333,15 @@ async function checkTickets() { // eslint-disable-line @typescript-eslint/no-unu
           try {
             await thread.fetch();
 
-            // Get the last message sent int he thread
-            const messages = await thread.messages.fetch({ limit: 1 });
-            const lastMessage = messages.first();
+            // Get messages and filter out system messages
+            const messages = await thread.messages.fetch({ limit: 10 }); // Fetch more to account for system messages
+            const userMessages = messages.filter(msg => !msg.system);
+            const lastUserMessage = userMessages.first();
 
             // Determine if this message was sent longer than a week ago
-            if (lastMessage && DateTime.fromJSDate(lastMessage.createdAt) >= DateTime.local().minus({ days: 5 })) {
+            if (lastUserMessage && DateTime.fromJSDate(lastUserMessage.createdAt) >= DateTime.local().minus({ days: 5 })) {
               thread.delete();
-              log.debug(F, `Deleted thread ${thread.name} in ${channel.name} because the last message was sent over 5 days ago`);
+              log.debug(F, `Deleted thread ${thread.name} in ${channel.name} because the last user message was sent over 5 days ago`);
             }
           } catch (err) {
             // Thread was likely manually deleted
@@ -651,210 +652,20 @@ async function checkStats() {
   const { memberCount } = tripsitGuild;
 
   // Total member count
-  // log.debug(F, `memberCount: ${memberCount}`);
-  const channelTotal = await tripsitGuild.channels.fetch(env.CHANNEL_STATS_TOTAL);
-  // log.debug(F, `channelTotal: ${channelTotal?.name}`);
-  if (channelTotal) {
-    const name = `Total: ${memberCount}`;
-    if (channelTotal.name !== name) {
-      // log.debug(F, `Updating total members to ${memberCount}!`);
-      const perms = await checkChannelPermissions(channelTotal, [
-        'ViewChannel' as PermissionResolvable,
-        'Connect' as PermissionResolvable,
-        'ManageChannels' as PermissionResolvable,
-      ]);
-
-      if (!perms.hasPermission) {
-        log.error(F, `I do not have the '${perms.permission}' permission in ${channelTotal.name}!`);
-        return;
-      }
-      channelTotal.setName(name);
-      // log.debug(F, `Updated total members to ${memberCount}!`);
-      // Check if the total members is divisible by 100
-      if (memberCount % 100 === 0) {
-        const embed = embedTemplate()
-          .setTitle(newRecordString)
-          .setDescription(`We have reached ${memberCount} total members!`);
-        const channelLounge = await tripsitGuild.channels.fetch(env.CHANNEL_LOUNGE) as TextChannel;
-        if (channelLounge) {
-          await channelLounge.send({ embeds: [embed] });
-        }
-        const channelTeamtripsit = await tripsitGuild.channels.fetch(env.CHANNEL_TEAMTRIPSIT) as TextChannel;
-        if (channelTeamtripsit) {
-          await channelTeamtripsit.send({ embeds: [embed] });
-        }
-      }
+  // Check if the total members is divisible by 100
+  if (memberCount % 100 === 0) {
+    const embed = embedTemplate()
+      .setTitle(newRecordString)
+      .setDescription(`We have reached ${memberCount} total members!`);
+    const channelLounge = await tripsitGuild.channels.fetch(env.CHANNEL_LOUNGE) as TextChannel;
+    if (channelLounge) {
+      await channelLounge.send({ embeds: [embed] });
     }
-  } else {
-    log.error(F, 'Could not find channel total!');
-  }
-
-  // Determine how many people have the Verified role
-  await tripsitGuild.members.fetch();
-  const roleVerified = await tripsitGuild.roles.fetch(env.ROLE_VERIFIED);
-  // log.debug(F, `roleVerified: ${roleVerified?.name} (${roleVerified?.id})`);
-
-  if (roleVerified) {
-    const { members } = roleVerified;
-    // log.debug(F, `Role verified members: ${members.size}`);
-    const channelVerified = await tripsitGuild.channels.fetch(env.CHANNEL_STATS_VERIFIED);
-    if (channelVerified) {
-      // log.debug(F, `${members.size} / ${memberCount} = ${(members.size / memberCount) * 10000}`);
-      const percentVerified = Math.round(((members.size / memberCount) * 10000)) / 100;
-      // log.debug(F, `percentVerified: ${percentVerified}%`);
-      const name = `Verified: ${members.size} (${percentVerified}%)`;
-      // log.debug(F, `channelVerified: ${channelVerified.name}`);
-      // log.debug(F, `name: ${name}`);
-      if (channelVerified.name !== name) {
-        // log.debug(F, `Updating verified members to ${members.size}!`);
-        const perms = await checkChannelPermissions(channelVerified, [
-          'ViewChannel' as PermissionResolvable,
-          'Connect' as PermissionResolvable,
-          'ManageChannels' as PermissionResolvable,
-        ]);
-        if (!perms.hasPermission) {
-          log.error(F, `I do not have the '${perms.permission}' permission in ${channelVerified.name}!`);
-          return;
-        }
-        // log.debug(F, `perms: ${JSON.stringify(perms)}`);
-        await channelVerified.setName(name);
-        // log.debug(F, `Updated verified members to ${members.size}!`);
-        if (members.size % 100 === 0) {
-          const embed = embedTemplate()
-            .setTitle(newRecordString)
-            .setDescription(`We have reached ${members.size} verified members!`);
-          const channelLounge = await tripsitGuild.channels.fetch(env.CHANNEL_LOUNGE) as TextChannel;
-          if (channelLounge) {
-            const channelPerms = await checkChannelPermissions(channelLounge, [
-              'SendMessages' as PermissionResolvable,
-            ]);
-            if (!channelPerms.hasPermission) {
-              log.error(F, `I do not have the '${channelPerms.permission}' permission in ${channelLounge.name}!`);
-              return;
-            }
-            await channelLounge.send({ embeds: [embed] });
-          }
-          const channelTeamtripsit = await tripsitGuild.channels.fetch(env.CHANNEL_TEAMTRIPSIT) as TextChannel;
-          if (channelTeamtripsit) {
-            const channelPerms = await checkChannelPermissions(channelTeamtripsit, [
-              'SendMessages' as PermissionResolvable,
-            ]);
-            if (!channelPerms.hasPermission) {
-              log.error(F, `I do not have the '${channelPerms.permission}' permission in ${channelLounge.name}!`);
-              return;
-            }
-            await channelTeamtripsit.send({ embeds: [embed] });
-          }
-        }
-      }
+    const channelTeamtripsit = await tripsitGuild.channels.fetch(env.CHANNEL_TEAMTRIPSIT) as TextChannel;
+    if (channelTeamtripsit) {
+      await channelTeamtripsit.send({ embeds: [embed] });
     }
-  } else {
-    log.error(F, 'Could not find role verified!');
   }
-
-  // Determine the number of users currently online
-  // const onlineCount = tripsitGuild.members.cache.filter(
-  //   member => member.presence?.status !== undefined && member.presence?.status !== 'offline',
-  // ).size;
-  // const channelOnline = await tripsitGuild.channels.fetch(env.CHANNEL_STATS_ONLINE);
-  // if (channelOnline) {
-  //   // log.debug(F, `onlineCount: ${onlineCount}`);
-  //   const name = `Online: ${onlineCount}`;
-  //   if (channelOnline.name !== name) {
-  //     const perms = await checkChannelPermissions(channelOnline, [
-  //       'ViewChannel' as PermissionResolvable,
-  //       'Connect' as PermissionResolvable,
-  //       'ManageChannels' as PermissionResolvable,
-  //     ]);
-  //     // log.debug(F, `perms: ${JSON.stringify(perms)}`);
-  //     if (!perms.hasPermission) {
-  //       log.error(F, `I do not have the '${perms.permission}' permission in ${channelOnline.name}!`);
-  //       return;
-  //     }
-  //     // log.debug(F, `Updating online members to ${name}!`);
-  //     channelOnline.setName(name);
-  //   }
-  // }
-
-  // // Update the database's max_online_members if it's higher than the current value
-  // // log.debug(F, `Getting guild data`);
-  // const guildData = await getGuild(env.DISCORD_GUILD_ID);
-  // if (guildData) {
-  //   // log.debug(F, `Updating guild data (max_online_members: ${guildData.max_online_members})`);
-  //   const newGuild = guildData;
-  //   if (guildData.max_online_members) {
-  //     // log.debug(F, `guildData.max_online_members: ${guildData.max_online_members}`);
-  //     let maxCount = guildData.max_online_members;
-  //     if (onlineCount > maxCount) {
-  //       // log.debug(F, `onlineCount (${onlineCount}) > maxCount (${maxCount})`);
-  //       maxCount = onlineCount;
-  //       newGuild.max_online_members = maxCount;
-  //       await guildUpdate(newGuild);
-  //       // log.debug(F, 'Test0');
-  //       const embed = embedTemplate()
-  //         .setTitle(newRecordString)
-  //         .setDescription(`We have reached ${maxCount} online members!`);
-
-  //       const channelLounge = await tripsitGuild.channels.fetch(env.CHANNEL_LOUNGE) as TextChannel;
-  //       if (channelLounge) {
-  //         // log.debug(F, `channelLounge: ${channelLounge.name}`);
-  //         const channelPerms = await checkChannelPermissions(channelLounge, [
-  //           'SendMessages' as PermissionResolvable,
-  //         ]);
-  //         if (!channelPerms.hasPermission) {
-  //           log.error(F, `I do not have the '${channelPerms.permission}' permission in ${channelLounge.name}!`);
-  //           return;
-  //         }
-  //         await channelLounge.send({ embeds: [embed] });
-  //         // log.debug(F, `Sent new record message to ${channelLounge.name}!`);
-  //       }
-  //       // log.debug(F, 'TestA');
-  //       const channelTeamtripsit = await tripsitGuild.channels.fetch(env.CHANNEL_TEAMTRIPSIT) as TextChannel;
-  //       if (channelTeamtripsit) {
-  //         // log.debug(F, `channelTeamtripsit: ${channelTeamtripsit.name}`);
-  //         const channelPerms = await checkChannelPermissions(channelTeamtripsit, [
-  //           'SendMessages' as PermissionResolvable,
-  //         ]);
-  //         if (!channelPerms.hasPermission) {
-  //           log.error(F, `I do not have the '${channelPerms.permission}' permission in ${channelTeamtripsit.name}!`);
-  //           return;
-  //         }
-  //         await channelTeamtripsit.send({ embeds: [embed] });
-  //         // log.debug(F, `Sent new record message to ${channelTeamtripsit.name}!`);
-  //       }
-  //       // log.debug(F, 'TestB');
-
-  //       const channelMax = await tripsitGuild.channels.fetch(env.CHANNEL_STATS_MAX);
-  //       if (channelMax) {
-  //         // log.debug(F, `channelMax: ${channelMax.name}`);
-  //         const currentCount = parseInt(channelMax.name.split(': ')[1], 10);
-  //         if (maxCount > currentCount) {
-  //           const name = `Max: ${maxCount}`;
-  //           if (channelMax.name !== name) {
-  //             const channelPerms = await checkChannelPermissions(channelMax, [
-  //               'ViewChannel' as PermissionResolvable,
-  //               'Connect' as PermissionResolvable,
-  //               'ManageChannels' as PermissionResolvable,
-  //             ]);
-  //             if (!channelPerms.hasPermission) {
-  //               log.error(F, `I do not have the '${channelPerms.permission}' permission in ${channelMax.name}!`);
-  //               return;
-  //             }
-  //             channelMax.setName(`Max: ${maxCount}`);
-  //           }
-  //           // log.debug(F, `Updated max online members to ${maxCount}!`);
-  //         } else {
-  //           // log.debug(F, `Max members is already ${maxCount}!`);
-  //         }
-  //       }
-  //       // log.debug(F, 'TestC');
-  //     }
-  //   } else {
-  //     // log.debug(F, `Updating guild data (max_online_members: ${onlineCount})`);
-  //     newGuild.max_online_members = onlineCount;
-  //     await guildUpdate(newGuild);
-  //   }
-  // }
 }
 
 // async function checkLpm() { // eslint-disable-line
