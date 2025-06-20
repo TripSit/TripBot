@@ -1131,7 +1131,7 @@ async function monthlySessionStats() {
 
     // Get the channel and send the embed
     const channel = discordClient.channels.cache.get(env.CHANNEL_HELPERLOUNGE) as TextChannel;
-    if (channel.guildId === env.DISCORD_GUILD_ID && channel && channel.isTextBased()) {
+    if (channel && channel.guildId === env.DISCORD_GUILD_ID && channel.isTextBased()) {
       await channel.send({ embeds: [embed] });
       log.info(F, 'Sent TripSit Session Stats in Helper Lounge!');
     }
