@@ -204,9 +204,9 @@ export async function techHelpClose(interaction:ButtonInteraction) {
 
   if (interaction.member === target) {
     // Replace the first character of the channel name with a green heart
-    (interaction.channel as ThreadChannel).setName(`💚|${(interaction.channel as ThreadChannel).name.slice(1)}`);
+    (interaction.channel as ThreadChannel).setName(`💚${(interaction.channel as ThreadChannel).name.slice(1)}`);
   } else {
-    (interaction.channel as ThreadChannel).setName(`💙|${(interaction.channel as ThreadChannel).name.slice(1)}`);
+    (interaction.channel as ThreadChannel).setName(`💙${(interaction.channel as ThreadChannel).name.slice(1)}`);
   }
 
   await interaction.reply({
