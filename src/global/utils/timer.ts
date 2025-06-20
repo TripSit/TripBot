@@ -22,6 +22,7 @@ import { checkChannelPermissions } from '../../discord/utils/checkPermissions';
 import { embedTemplate } from '../../discord/utils/embedTemplate';
 import { experience } from './experience';
 import { profile } from '../commands/g.learn';
+import getTripSitStatistics from '../commands/g.tripsitstats';
 
 const F = f(__filename);
 
@@ -1115,6 +1116,28 @@ async function undoExpiredBans() {
   }));
 }
 
+async function monthlySessionStats() {
+  const now = new Date();
+  // Get the last day of current month (handles 28, 29, 30, or 31 days automatically)
+  const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+  const currentDay = now.getDate();
+
+  // Check if we're on the last day of the month
+  if (currentDay !== lastDayOfMonth) {
+    const stats = await getTripSitStatistics('session');
+    const embed = embedTemplate()
+      .setTitle('TripSit Session Stats')
+      .setDescription(stats);
+
+    // Get the channel and send the embed
+    const channel = discordClient.channels.cache.get(env.CHANNEL_HELPERLOUNGE) as TextChannel;
+    if (channel.guildId === env.DISCORD_GUILD_ID && channel && channel.isTextBased()) {
+      await channel.send({ embeds: [embed] });
+      log.info(F, 'Sent TripSit Session Stats in Helper Lounge!');
+    }
+  }
+}
+
 async function checkEvery(
   callback: () => Promise<void>,
   interval: number,
@@ -1156,6 +1179,7 @@ async function runTimer() {
     { callback: updateDb, interval: env.NODE_ENV === 'production' ? hours24 : hours48 },
     { callback: pruneInactiveHelpers, interval: env.NODE_ENV === 'production' ? hours48 : seconds60 },
     { callback: undoExpiredBans, interval: env.NODE_ENV === 'production' ? hours24 / 2 : seconds10 },
+    { callback: monthlySessionStats, interval: env.NODE_ENV === 'production' ? hours24 / 2 : hours24 / 3 }, // 8 hours on dev
   ];
 
   timers.forEach(timer => {
