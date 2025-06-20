@@ -38,16 +38,16 @@ function createQueueEmbed(playersJoined: string[], timeLeft: number): EmbedBuild
       `**Players Joined:** ${playersJoined.length}/10\n`
       + `${playersJoined.length > 0 ? playersJoined.map(id => `<@${id}>`).join(', ') : 'No players yet...'}\n\n`
       + `⏰ **Time left to join:** ${timeLeft} seconds\n`
-      + '🎯 **Minimum players needed:** 4\n\n'
+      + '🎯 **Need at least 2 players to start**\n\n'
       + 'Click the button below to join!',
     );
 }
 
-function createQueueButtons(disabled = false): ActionRowBuilder<ButtonBuilder>[] {
+function createQueueButtons(gameId: string, disabled = false): ActionRowBuilder<ButtonBuilder>[] {
   const row = new ActionRowBuilder<ButtonBuilder>()
     .addComponents(
       new ButtonBuilder()
-        .setCustomId('rps_join_queue')
+        .setCustomId(`rps_${gameId}_join_queue`)
         .setLabel('Join Game')
         .setEmoji('⚔️')
         .setStyle(ButtonStyle.Primary)
@@ -81,23 +81,23 @@ function createMultiplayerGameEmbed(players: string[], round: number, eliminated
     );
 }
 
-function createChoiceButtons(disabled = false): ActionRowBuilder<ButtonBuilder>[] {
+function createChoiceButtons(game: RPSGame, disabled = false): ActionRowBuilder<ButtonBuilder>[] {
   const row = new ActionRowBuilder<ButtonBuilder>()
     .addComponents(
       new ButtonBuilder()
-        .setCustomId('rps_rock')
+        .setCustomId(`rps_${game.gameId}_rock`)
         .setLabel('Rock')
         .setEmoji('🪨')
         .setStyle(ButtonStyle.Secondary)
         .setDisabled(disabled),
       new ButtonBuilder()
-        .setCustomId('rps_paper')
+        .setCustomId(`rps_${game.gameId}_paper`)
         .setLabel('Paper')
         .setEmoji('📄')
         .setStyle(ButtonStyle.Secondary)
         .setDisabled(disabled),
       new ButtonBuilder()
-        .setCustomId('rps_scissors')
+        .setCustomId(`rps_${game.gameId}_scissors`)
         .setLabel('Scissors')
         .setEmoji('✂️')
         .setStyle(ButtonStyle.Secondary)
@@ -128,7 +128,7 @@ function determineWinner(choice1: string, choice2: string): GameResult {
   if (choice1 === choice2) {
     return 'tie';
   }
-
+  log.info(F, `Player 1 choice: ${choice1}`);
   const player1Choice = rpsChoices[choice1 as keyof typeof rpsChoices];
 
   if (player1Choice.beats === choice2) {
@@ -270,10 +270,10 @@ function createResultsEmbed(
 
 async function startMultiplayerRound(interaction: ChatInputCommandInteraction, game: RPSGame): Promise<void> {
   const gameObj = game;
-  gameObj.choices.clear();
+  gameObj.choices = new Map();
 
   const roundEmbed = createMultiplayerGameEmbed(gameObj.players, gameObj.round, gameObj.eliminatedPlayers);
-  const choiceButtons = createChoiceButtons();
+  const choiceButtons = createChoiceButtons(gameObj);
 
   await interaction.editReply({
     embeds: [roundEmbed],
@@ -291,6 +291,12 @@ async function startMultiplayerRound(interaction: ChatInputCommandInteraction, g
   if (!roundCollector) return;
 
   roundCollector.on('collect', async (i: ButtonInteraction) => {
+    const choice = i.customId.split('_').pop(); // Gets the last part after splitting
+    const gameIdFromButton = i.customId.split('_')[1]; // Gets the gameId part
+
+    if (gameIdFromButton !== game.gameId) {
+      return;
+    }
     // Extra safety check to prevent eliminated players from participating in case of race conditions
     if (!game.players.includes(i.user.id)) {
       await i.deferUpdate();
@@ -302,8 +308,7 @@ async function startMultiplayerRound(interaction: ChatInputCommandInteraction, g
       return;
     }
 
-    const choice = i.customId.replace('rps_', '');
-    game.choices.set(i.user.id, choice);
+    game.choices.set(i.user.id, choice as string);
     await i.deferUpdate();
 
     // Update embed with current status
@@ -318,7 +323,7 @@ async function startMultiplayerRound(interaction: ChatInputCommandInteraction, g
 
       await interaction.editReply({
         embeds: [updatedEmbed],
-        components: createChoiceButtons(),
+        components: createChoiceButtons(gameObj),
       });
     }
 
@@ -336,6 +341,7 @@ async function startMultiplayerRound(interaction: ChatInputCommandInteraction, g
     });
 
     if (gameObj.players.length <= 1) {
+      roundCollector.removeAllListeners();
       const winner = gameObj.players[0] || null;
       const finalEmbed = embedTemplate()
         .setTitle('🏆 Game Over!')
@@ -484,7 +490,7 @@ async function handle1v1GameEnd(
 
       await interaction.editReply({
         embeds: [nextRoundEmbed],
-        components: createChoiceButtons(),
+        components: createChoiceButtons(gameObj),
       });
     }, 3000);
   }
@@ -509,8 +515,12 @@ async function handle1v1Game(interaction: ChatInputCommandInteraction, opponent:
     return;
   }
 
+  const player1Id = interaction.user.id;
+  const player2Id = opponent.id;
+
   const game: RPSGame = {
-    players: [interaction.user.id, opponent.id],
+    gameId: `${player1Id}-${player2Id}-${Date.now()}`,
+    players: [player1Id, player2Id],
     choices: new Map(),
     isActive: true,
     gameType: '1v1',
@@ -520,7 +530,7 @@ async function handle1v1Game(interaction: ChatInputCommandInteraction, opponent:
   };
 
   const embed = create1v1GameEmbed(interaction.user, opponent);
-  const buttons = createChoiceButtons();
+  const buttons = createChoiceButtons(game);
 
   await interaction.reply({
     embeds: [embed],
@@ -552,10 +562,16 @@ async function handle1v1Game(interaction: ChatInputCommandInteraction, opponent:
   collector.on('collect', async (i: ButtonInteraction) => {
     if (!game.isActive) return;
 
-    const choice = i.customId.replace('rps_', '');
+    const choice = i.customId.split('_').pop(); // Gets the last part after splitting (e.g., 'rock')
+    const gameIdFromButton = i.customId.split('_')[1]; // Gets the gameId part
+
+    if (gameIdFromButton !== game.gameId) {
+      return; // Wrong game instance, ignore this button click
+    }
+
     const isNewChoice = !game.choices.has(i.user.id);
 
-    game.choices.set(i.user.id, choice);
+    game.choices.set(i.user.id, choice as string);
     await i.deferUpdate();
 
     // Only update embed for new choices (not changes)
@@ -572,7 +588,7 @@ async function handle1v1Game(interaction: ChatInputCommandInteraction, opponent:
 
       await interaction.editReply({
         embeds: [updatedEmbed],
-        components: createChoiceButtons(),
+        components: createChoiceButtons(game),
       });
     }
 
@@ -587,6 +603,10 @@ async function handle1v1Game(interaction: ChatInputCommandInteraction, opponent:
   collector.on('end', async () => {
     if (game.isActive) {
       try {
+        if (collector) {
+          collector.removeAllListeners();
+        }
+
         const timeoutEmbed = embedTemplate()
           .setTitle('⏰ Game Timeout')
           .setDescription('The game has has timed out after 2 minutes.')
@@ -607,15 +627,17 @@ async function handleMultiplayerQueue(interaction: ChatInputCommandInteraction):
   const playersJoined: string[] = [];
   let timeLeft = 45;
 
+  const gameId = `${interaction.user.id}-${Date.now()}`;
+
   const queueEmbed = createQueueEmbed(playersJoined, timeLeft);
-  const queueButtons = createQueueButtons();
+  const queueButtons = createQueueButtons(gameId);
 
   await interaction.reply({
     embeds: [queueEmbed],
     components: queueButtons,
   });
 
-  const filter = (i: ButtonInteraction): boolean => i.customId === 'rps_join_queue';
+  const filter = (i: ButtonInteraction): boolean => i.customId === `rps_${gameId}_join_queue`;
 
   const queueCollector = interaction.channel?.createMessageComponentCollector({
     componentType: ComponentType.Button,
@@ -676,11 +698,12 @@ async function handleMultiplayerQueue(interaction: ChatInputCommandInteraction):
   queueCollector.on('end', async () => {
     clearInterval(timerInterval);
 
-    if (playersJoined.length < 4) {
+    if (playersJoined.length < 2) {
+      queueCollector.removeAllListeners();
       const playerText = playersJoined.length !== 1 ? 's' : '';
       const failEmbed = embedTemplate()
         .setTitle('❌ Not Enough Players')
-        .setDescription(`Only ${playersJoined.length} player${playerText} joined. Minimum 4 players needed.`)
+        .setDescription(`Only ${playersJoined.length} player${playerText} joined. Minimum 2 players needed.`)
         .setColor(Colors.Red);
 
       await interaction.editReply({
@@ -691,6 +714,7 @@ async function handleMultiplayerQueue(interaction: ChatInputCommandInteraction):
     }
 
     const multiGame: RPSGame = {
+      gameId,
       players: [...playersJoined],
       choices: new Map(),
       isActive: true,
@@ -724,7 +748,7 @@ export const dRockPaperScissors: SlashCommand = {
     // Multiplayer queue - requires server AND bot membership
     if (!interaction.guild) {
       await interaction.reply({
-        content: '4-10 player RPS can only be played in a server. If you want to play 1v1, please specify an opponent.',
+        content: '2-10 player RPS can only be played in a server. If you want to play 1v1, please specify an opponent.',
         flags: MessageFlags.Ephemeral,
       });
       return false;

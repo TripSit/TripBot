@@ -1,5 +1,7 @@
 import { TripTacGoGame, TripTacGoMoveResult } from '../../discord/@types/tripTacGoDef';
 
+const F = f(__filename);
+
 export function checkCaptures(board: string[], position: number, playerSymbol: string): number[] {
   const captures: number[] = [];
   const opponentSymbol = playerSymbol === '❌' ? '⭕' : '❌';
@@ -51,6 +53,9 @@ export function executeMove(
   position: number,
   playerId: string,
 ): TripTacGoMoveResult {
+  log.info(F, `[${game.gameId}] BEFORE move - Board: ${game.board}`);
+  log.info(F, `[${game.gameId}] BEFORE move - Current player: ${game.currentPlayer}`);
+
   // Validate move
   if (game.isGameOver) {
     return {
@@ -79,7 +84,11 @@ export function executeMove(
   }
 
   // Execute the move
-  const updatedGame = { ...game };
+  const updatedGame = {
+    ...game,
+    board: [...game.board], // Deep copy board
+    capturedPieces: { ...game.capturedPieces }, // Deep copy capturedPieces
+  };
   const symbol = updatedGame.currentPlayer === 'X' ? '❌' : '⭕';
   updatedGame.board[position] = symbol;
 
@@ -111,6 +120,7 @@ export function executeMove(
 
 export function createInitialGame(player1Id: string, player2Id: string): TripTacGoGame {
   return {
+    gameId: `${player1Id}-${player2Id}-${Date.now()}`,
     board: Array(16).fill('⬜'),
     currentPlayer: 'X',
     player1: player1Id,

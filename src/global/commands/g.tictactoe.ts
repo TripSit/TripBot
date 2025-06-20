@@ -1,5 +1,7 @@
 import { MoveResult, TicTacToeGame } from '../../discord/@types/ticTacToeDef';
 
+const F = f(__filename);
+
 export function checkWinner(board: string[]): string | null {
   const winPatterns = [
     [0, 1, 2], [3, 4, 5], [6, 7, 8], // Rows
@@ -25,6 +27,9 @@ export function executeMove(
   position: number,
   playerId: string,
 ): MoveResult {
+  log.info(F, `[${game.gameId}] BEFORE move - Board: ${game.board}`);
+  log.info(F, `[${game.gameId}] BEFORE move - Current player: ${game.currentPlayer}`);
+
   // Validate move
   if (game.isGameOver) {
     return {
@@ -53,7 +58,10 @@ export function executeMove(
   }
 
   // Execute the move
-  const updatedGame = { ...game };
+  const updatedGame = {
+    ...game,
+    board: [...game.board], // Deep copy the board array
+  };
   updatedGame.board[position] = updatedGame.currentPlayer === 'X' ? '❌' : '⭕';
 
   // Check for win or tie
@@ -77,6 +85,7 @@ export function executeMove(
 
 export function createInitialGame(player1Id: string, player2Id: string): TicTacToeGame {
   return {
+    gameId: `${player1Id}-${player2Id}-${Date.now()}`,
     board: Array(9).fill('⬜'),
     currentPlayer: 'X',
     player1: player1Id,
