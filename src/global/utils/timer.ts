@@ -1123,7 +1123,7 @@ async function monthlySessionStats() {
   const currentDay = now.getDate();
 
   // Check if we're on the last day of the month
-  if (currentDay !== lastDayOfMonth) {
+  if (currentDay === lastDayOfMonth) {
     const stats = await getTripSitStatistics('session');
     const embed = embedTemplate()
       .setTitle('TripSit Session Stats')
