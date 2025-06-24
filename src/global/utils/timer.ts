@@ -22,6 +22,7 @@ import { checkChannelPermissions } from '../../discord/utils/checkPermissions';
 import { embedTemplate } from '../../discord/utils/embedTemplate';
 import { experience } from './experience';
 import { profile } from '../commands/g.learn';
+import getTripSitStatistics from '../commands/g.tripsitstats';
 
 const F = f(__filename);
 
@@ -849,81 +850,106 @@ async function checkMoodle() { // eslint-disable-line
   const channelContent = await guild.channels.fetch(env.CHANNEL_CONTENT);
 
   // log.debug(F, 'Starting to check each user');
-  userDataList.forEach(async user => {
+
+  // FIXED: Use reduce to process users sequentially instead of concurrent forEach
+  await userDataList.reduce(async (previousPromise, user) => {
+    await previousPromise; // Wait for the previous user to complete
+
     let member = {} as GuildMember;
     try {
       member = await guild.members.fetch(user.discord_id as string);
     } catch (error) {
       // log.debug(F, `Error fetching member: ${error}`);
-      return;
+      return; // Skip this user and continue with the next one
     }
 
-    const moodleProfile = await profile(user.discord_id as string);
+    let moodleProfile: { completedCourses?: string[] | undefined };
+    try {
+      // Add timeout protection for the profile lookup
+      moodleProfile = await Promise.race([
+        profile(user.discord_id as string),
+        new Promise((_, reject) => { setTimeout(() => reject(new Error('Profile lookup timeout')), 8000); }),
+      ]) as { completedCourses?: string[] | undefined };
+    } catch (error) {
+      log.error(F, `Error getting moodle profile for user ${user.discord_id}: ${error}`);
+      return; // Skip this user and continue with the next one
+    }
 
     // log.debug(F, `Checking ${member.user.username}...`);
     if (moodleProfile.completedCourses && moodleProfile.completedCourses.length > 0) {
-      moodleProfile.completedCourses.forEach(async course => {
-        // log.debug(F, `${member.user.username} completed ${course}...`);
-        const roleId = courseRoleMap[course as keyof typeof courseRoleMap];
-        const role = await guild.roles.fetch(roleId);
+      // FIXED: Also use reduce for sequential course processing
+      await moodleProfile.completedCourses.reduce(async (coursePrevious: Promise<void>, course: string) => {
+        await coursePrevious; // Wait for the previous course to complete
 
-        if (role) {
-          // log.debug(F, `Found role: ${JSON.stringify(role, null, 2)}`);
-          // check if the member already has the role
-          if (member.roles.cache.has(role.id)) {
-            // log.debug(F, `${member.user.username} already has the ${role.name} role`);
-            return;
+        try {
+          // log.debug(F, `${member.user.username} completed ${course}...`);
+          const roleId = courseRoleMap[course as keyof typeof courseRoleMap];
+          const role = await guild.roles.fetch(roleId);
+
+          if (role) {
+            // log.debug(F, `Found role: ${JSON.stringify(role, null, 2)}`);
+            // check if the member already has the role
+            if (member.roles.cache.has(role.id)) {
+              // log.debug(F, `${member.user.username} already has the ${role.name} role`);
+              return; // Skip to next course
+            }
+
+            if (channelContent) {
+              // log.debug(F, `Sending message to ${channelContent.name}`);
+              await (channelContent as TextChannel).send({
+                embeds: [
+                  embedTemplate()
+                    .setColor(Colors.Green)
+                    .setDescription(`Congratulate ${member} on completing "${course}"!`),
+                ],
+              }); // eslint-disable-line
+            }
+
+            if (!member.roles.cache.has(env.ROLE_NEEDS_HELP)) {
+              await member.roles.add(role);
+              log.info(F, `Gave ${member.user.username} the ${role.name} role`);
+            } else {
+              log.info(F, `Skipped giving ${member.user.username} the ${role.name} because they have the Needs Help role`);
+            }
+
+            // eslint-disable max-len
+            try {
+              await member.user.send({
+                embeds: [
+                  embedTemplate()
+                    .setColor(Colors.Green)
+                    .setTitle(`Congratulations on completing "${course}"!`)
+                    .setDescription(stripIndents`
+                    Give yourself deserved pack on the back, you deserve it!
+                                 
+                    But your journey doesn't end here...
+
+                    You can now become a TripSit Helper!
+                    Head over to ${channelHowToVolunteer} and post your introduction.
+
+                    Show off your achievement with \`/learn profile\` in any discord guild with TripBot.
+                    Maybe you'll inspire someone else to learn too!
+
+                    No tripbot? No problem!
+                    Anyone can [verify the code on your certificate](https://learn.tripsit.me/mod/customcert/verify_certificate.php) to see you completed the course.
+
+                    Finally, if you have any feedback on the course, please let us know in the ${channelContent} channel, or on the forum in the course!
+
+                    Thanks so much for taking the time to learn with us, we hope you enjoyed it!
+                    `),
+                ],
+              });
+              // log.debug(F, `Sent ${member.user.username} a message!`);
+            } catch (error) {
+              log.warn(F, `Could not send DM to ${member.user.username}: ${error}`);
+            }
           }
-
-          if (channelContent) {
-            // log.debug(F, `Sending message to ${channelContent.name}`);
-            (channelContent as TextChannel).send({
-              embeds: [
-                embedTemplate()
-                  .setColor(Colors.Green)
-                  .setDescription(`Congratulate ${member} on completing "${course}"!`),
-              ],
-            },
-              ); // eslint-disable-line
-          }
-          if (!member.roles.cache.has(env.ROLE_NEEDS_HELP)) {
-            member.roles.add(role);
-            log.info(F, `Gave ${member.user.username} the ${role.name} role`);
-          } else {
-            log.info(F, `Skipped giving ${member.user.username} the ${role.name} because they have the Needs Help role`);
-          }
-
-          // eslint-disable max-len
-          member.user.send({
-            embeds: [
-              embedTemplate()
-                .setColor(Colors.Green)
-                .setTitle(`Congratulations on completing "${course}"!`)
-                .setDescription(stripIndents`
-                Give yourself deserved pack on the back, you deserve it!
-                             
-                But your journey doesn't end here...
-
-                You can now become a TripSit Helper!
-                Head over to ${channelHowToVolunteer} and post your introduction.
-
-                Show off your achievement with \`/learn profile\` in any discord guild with TripBot.
-                Maybe you'll inspire someone else to learn too!
-
-                No tripbot? No problem!
-                Anyone can [verify the code on your certificate](https://learn.tripsit.me/mod/customcert/verify_certificate.php) to see you completed the course.
-
-                Finally, if you have any feedback on the course, please let us know in the ${channelContent} channel, or on the forum in the course!
-
-                Thanks so much for taking the time to learn with us, we hope you enjoyed it!
-                `),
-            ],
-          });
-          // log.debug(F, `Sent ${member.user.username} a message!`);
+        } catch (error) {
+          log.error(F, `Error processing course ${course} for user ${member.user.username}: ${error}`);
         }
-      });
+      }, Promise.resolve());
     }
-  });
+  }, Promise.resolve());
 
   // log.debug(F, 'Finished checking moodle!');
   // log.debug(F, `connection: ${JSON.stringify(global.moodleConnection, null, 2)}`);
@@ -1090,6 +1116,28 @@ async function undoExpiredBans() {
   }));
 }
 
+async function monthlySessionStats() {
+  const now = new Date();
+  // Get the last day of current month (handles 28, 29, 30, or 31 days automatically)
+  const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+  const currentDay = now.getDate();
+
+  // Check if we're on the last day of the month
+  if (currentDay === lastDayOfMonth) {
+    const stats = await getTripSitStatistics('session');
+    const embed = embedTemplate()
+      .setTitle('TripSit Session Stats')
+      .setDescription(stats);
+
+    // Get the channel and send the embed
+    const channel = discordClient.channels.cache.get(env.CHANNEL_HELPERLOUNGE) as TextChannel;
+    if (channel && channel.guildId === env.DISCORD_GUILD_ID && channel.isTextBased()) {
+      await channel.send({ embeds: [embed] });
+      log.info(F, 'Sent TripSit Session Stats in Helper Lounge!');
+    }
+  }
+}
+
 async function checkEvery(
   callback: () => Promise<void>,
   interval: number,
@@ -1131,6 +1179,7 @@ async function runTimer() {
     { callback: updateDb, interval: env.NODE_ENV === 'production' ? hours24 : hours48 },
     // { callback: pruneInactiveHelpers, interval: env.NODE_ENV === 'production' ? hours48 : seconds60 },
     { callback: undoExpiredBans, interval: env.NODE_ENV === 'production' ? hours24 / 2 : seconds10 },
+    { callback: monthlySessionStats, interval: env.NODE_ENV === 'production' ? hours24 / 2 : hours24 / 3 }, // 8 hours on dev
   ];
 
   timers.forEach(timer => {

@@ -32,7 +32,7 @@ function hasExplicitPermission(channel: VoiceBasedChannel, member: GuildMember, 
   }
   return null; // No explicit permission overwrite for this permission
 }
-
+/*
 async function tentName(
   voiceChannel: VoiceBasedChannel,
   newName: string,
@@ -51,6 +51,7 @@ async function tentName(
     .setColor(Colors.Green)
     .setDescription(`${voiceChannel} has been renamed to "${newName}"`);
 }
+*/
 
 async function tentLimit(
   voiceChannel: VoiceBasedChannel,
@@ -364,7 +365,9 @@ async function tentPing(
       return embedTemplate()
         .setTitle('BAD ERROR')
         .setColor(Colors.Red)
-        .setDescription('The lounge channel could not be found. This should not have happened, please contact a developer.');
+        .setDescription(
+          'The lounge channel could not be found. This should not have happened, please contact a developer.',
+        );
     }
 
     // Send the ping
@@ -386,13 +389,13 @@ export const dVoice: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('tent')
     .setDescription('Control your Campfire Tent')
-    .addSubcommand(subcommand => subcommand
-      .setName('name')
-      .setDescription('Rename your Tent')
-      .addStringOption(option => option
-        .setName('name')
-        .setDescription('The new name for your Tent')
-        .setRequired(true)))
+    // .addSubcommand(subcommand => subcommand
+    //   .setName('name')
+    //   .setDescription('Rename your Tent')
+    //   .addStringOption(option => option
+    //     .setName('name')
+    //     .setDescription('The new name for your Tent')
+    //     .setRequired(true)))
     .addSubcommand(subcommand => subcommand
       .setName('limit')
       .setDescription('Set a limit on the number of users in your Tent')
@@ -457,7 +460,7 @@ export const dVoice: SlashCommand = {
     const command = interaction.options.getSubcommand() as VoiceActions;
     const member = interaction.member as GuildMember;
     const target = interaction.options.getMember('target') as GuildMember;
-    const newName = interaction.options.getString('name') as string;
+    // const newName = interaction.options.getString('name') as string;
     const limit = interaction.options.getInteger('limit') as number;
     const level = interaction.options.getString('level') as string;
 
@@ -534,9 +537,9 @@ export const dVoice: SlashCommand = {
       return false;
     }
 
-    if (command === 'name') {
-      embed = await tentName(voiceChannel, newName);
-    }
+    // if (command === 'name') {
+    //   embed = await tentName(voiceChannel, newName);
+    // }
 
     if (command === 'lock') {
       embed = await tentLock(voiceChannel);
