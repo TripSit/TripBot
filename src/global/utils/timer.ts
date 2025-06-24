@@ -959,7 +959,7 @@ async function checkMoodle() { // eslint-disable-line
   // }
 }
 
-async function pruneInactiveHelpers() {
+/* async function pruneInactiveHelpers() {
   const inactiveThreshold = new Date();
   // 2 months for production, 1 minute for dev
   if (env.NODE_ENV === 'production') {
@@ -1017,10 +1017,10 @@ async function pruneInactiveHelpers() {
       try {
         const channelHowToVolunteer = await guild.channels.fetch(env.CHANNEL_HOW_TO_VOLUNTEER);
         await member.send(stripIndents`
-          Your helper role has been automatically removed on TripSit due to inactivity, 
-          but no worries—you can easily reapply for it at any time through ${channelHowToVolunteer} 
+          Your helper role has been automatically removed on TripSit due to inactivity,
+          but no worries—you can easily reapply for it at any time through ${channelHowToVolunteer}
           if you’d like to start helping out again.
-        
+
           Thank you for all your past contributions, and we’d love to have you back whenever you're ready!
         `);
       } catch (error) {
@@ -1049,7 +1049,7 @@ async function pruneInactiveHelpers() {
 
   await Promise.all(promises); // Wait for all promises to resolve
   log.info(F, `${inactiveHelpers.length} inactive helpers have been pruned and notified.`);
-}
+} */
 
 async function undoExpiredBans() {
   const expiredBans = await db.user_actions.findMany({
@@ -1177,7 +1177,7 @@ async function runTimer() {
     { callback: checkMoodle, interval: env.NODE_ENV === 'production' ? seconds60 : seconds5 },
     // { callback: checkLpm, interval: env.NODE_ENV === 'production' ? seconds10 : seconds5 },
     { callback: updateDb, interval: env.NODE_ENV === 'production' ? hours24 : hours48 },
-    { callback: pruneInactiveHelpers, interval: env.NODE_ENV === 'production' ? hours48 : seconds60 },
+    // { callback: pruneInactiveHelpers, interval: env.NODE_ENV === 'production' ? hours48 : seconds60 },
     { callback: undoExpiredBans, interval: env.NODE_ENV === 'production' ? hours24 / 2 : seconds10 },
     { callback: monthlySessionStats, interval: env.NODE_ENV === 'production' ? hours24 / 2 : hours24 / 3 }, // 8 hours on dev
   ];
