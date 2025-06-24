@@ -3,7 +3,6 @@ import {
   GuildMember,
 } from 'discord.js';
 import Fuse from 'fuse.js';
-import { DateTime } from 'luxon';
 import { ai_model } from '@prisma/client';
 import { Drug } from 'tripsit_drug_db';
 import pillColors from '../../../assets/data/pill_colors.json';
@@ -19,8 +18,6 @@ const drugDataTripsit = tsData as {
 };
 
 const drugDataAll = cbData as CbSubstance[];
-
-const dateFormat = 'EEEE, MMMM dd, yyyy';
 
 const F = f(__filename); // eslint-disable-line
 
