@@ -11,7 +11,6 @@ import {
 import { stripIndents } from 'common-tags';
 import { sleep } from './sleep';
 import { aiMessage } from '../commands/global/d.ai';
-import { Wordle, Connections, TheMini } from './nytUtils';
 
 // import log from '../../global/utils/log';
 // import {parse} from 'path';
@@ -82,63 +81,13 @@ async function isMentioningTripbot(message: Message): Promise<boolean> {
 }
 
 async function isUploadMessage(message: Message): Promise<boolean> {
-  return message.content.toLowerCase().includes('upload')
-    || message.content.toLowerCase().includes('steal')
-    || message.content.toLowerCase().includes('fetch');
+  const content = message.content.toLowerCase().trim();
+
+  // Check for specific command patterns starting with !
+  const uploadCommands = ['!upload', '!steal', '!fetch'];
+
+  return uploadCommands.some(command => content.startsWith(`${command} `));
 }
-
-async function isWordle(message: Message): Promise<boolean> {
-  const messageContent = message.content;
-  const userId = message.author.id; // Extract userId from message
-
-  // Regular expression to check if the message possibly mentions a Wordle score
-  const wordleScorePattern = /(Wordle\s[\d,]+\s(\d|X)\/6)/;
-  const match = messageContent.match(wordleScorePattern);
-
-  // If a match is found, send the message content for further processing
-  if (match) {
-    return Wordle.process(userId, messageContent); // Pass userId and messageContent
-  }
-
-  return false;
-}
-
-async function isConnections(message: Message): Promise<boolean> {
-  const messageContent = message.content;
-  const userId = message.author.id; // Extract userId from message
-
-  // Regular expression to check if the message possibly mentions a Connections score
-  const connectionsScorePattern = /(Connections\s*Puzzle\s*#\d+)/;
-  const match = messageContent.match(connectionsScorePattern);
-
-  // TODO: If a match is found, send the message content for further processing
-
-  if (match) {
-    return Connections.process(userId, messageContent); // Pass userId and messageContent
-  }
-
-  return false;
-}
-
-async function isTheMini(message: Message): Promise<boolean> {
-  const messageContent = message.content;
-  const userId = message.author.id; // Extract userId from message
-
-  // Regular expression to check if the message possibly mentions a The Mini score
-  const theMiniScorePattern = /(https:\/\/www\.nytimes\.com\/badges\/games\/mini\.html\?d=\d{4}-\d{2}-\d{2}&t=\d+&c=[a-f0-9]+&smid=url-share)|(https:\/\/www\.nytimes\.com\/crosswords\/game\/mini)/;
-  const match = messageContent.match(theMiniScorePattern);
-
-  // If a match is found, send the message content for further processing
-  if (match) {
-    return TheMini.process(userId, messageContent); // Pass userId and messageContent
-  }
-
-  return false;
-}
-// async function isAiEnabledGuild(message:Message):Promise<boolean> {
-//   // log.debug(F, `message.guild?.id: ${message.guild?.id}`);
-//   return message.guild?.id === env.DISCORD_GUILD_ID;
-// }
 
 async function isBotOwner(message: Message): Promise<boolean> {
   return message.author.id === env.DISCORD_OWNER_ID;
@@ -324,19 +273,8 @@ export async function messageCommand(message: Message): Promise<void> {
       return;
     }
 
-    if (await isUploadMessage(message)) {
+    if (await isUploadMessage(message) && message.member?.permissions.has('ManageEmojisAndStickers' as PermissionResolvable)) {
       if (message.content.toLowerCase().includes('emoji')) {
-        // Check if the user has the ManageEmojis permission
-        if (!message.member?.permissions.has('ManageEmojisAndStickers' as PermissionResolvable)) {
-          await message.channel.send({
-            content: stripIndents`Hey ${displayName}, you don't have the permission to upload emojis to this guild!`,
-            allowedMentions: {
-              parse: [], // disables user, role, and @everyone pings
-            },
-          });
-          return;
-        }
-
         // Upload all the emojis in the message to the guild
         let emojis = message.content.match(/<a?:\w+:\d+>/g);
 
@@ -378,16 +316,6 @@ export async function messageCommand(message: Message): Promise<void> {
         }
       }
       if (message.content.toLowerCase().includes('sticker')) {
-        // Check if the user has the ManageEmojis permission
-        if (!message.member?.permissions.has('ManageEmojisAndStickers' as PermissionResolvable)) {
-          await message.channel.send({
-            content: stripIndents`Hey ${displayName}, you don't have the permission to upload stickers to this guild!`,
-            allowedMentions: {
-              parse: [], // disables user, role, and @everyone pings
-            },
-          });
-          return;
-        }
         await message.channel.send(stripIndents`Hey ${displayName}, uploading emojis...`); // eslint-disable-line
 
         log.debug(F, `message.stickers: ${JSON.stringify(message.stickers, null, 2)}`);
@@ -432,23 +360,6 @@ export async function messageCommand(message: Message): Promise<void> {
     }
   }
 
-  if (!message.author.bot) {
-    const wordleResult = await isWordle(message);
-    if (wordleResult) {
-      log.debug(F, 'Valid Wordle detected');
-      await message.react(emojiGet('nyt_wordle'));
-    }
-    const connectionsResult = await isConnections(message);
-    if (connectionsResult) {
-      log.debug(F, 'Valid Connections detected');
-      await message.react(emojiGet('nyt_connections'));
-    }
-    const theMiniResult = await isTheMini(message);
-    if (theMiniResult) {
-      log.debug(F, 'Valid The Mini detected');
-      await message.react(emojiGet('nyt_themini'));
-    }
-  }
   // else if (
   //   message.content.match(/(?:anyone|someone+there|here)\b/)
   //   && (message.channel as ThreadChannel).parent?.parentId !== env.CATEGORY_HARMREDUCTIONCENTRE
