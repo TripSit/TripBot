@@ -9,13 +9,14 @@ import {
   Colors,
   PermissionResolvable,
   Collection,
+  MessageFlags,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
 import { SlashCommandBeta } from '../../@types/commandDef';
 import commandContext from '../../utils/context';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { checkChannelPermissions } from '../../utils/checkPermissions';
-import { sleep } from './d.bottest';
+import { sleep } from '../../utils/sleep';
 
 const F = f(__filename);
 
@@ -263,14 +264,14 @@ export async function countingReset(
 export async function countMessage(message: Message): Promise<void> {
   if (!message.guild) return; // If not in a guild then ignore all messages
   if (message.guild.id !== env.DISCORD_GUILD_ID) return; // If not in tripsit ignore all messages
+
   const countingData = await db.counting.findFirst({
     where: {
       channel_id: message.channel.id,
     },
   });
   if (!countingData) return; // If not a counting channel then ignore all messages
-
-  // log.debug(F, `countingData: ${JSON.stringify(countingData, null, 2)} `);
+  log.debug(F, `countingData: ${JSON.stringify(countingData, null, 2)} `);
 
   // Process the new message. If it's the next number after current_number, then update the DB
   // If it's not the next number, then still update the db with the user who broke the combo
@@ -286,8 +287,10 @@ export async function countMessage(message: Message): Promise<void> {
     return;
   }
 
+  if (!(message.channel instanceof TextChannel)) return;
+
   if (countingData.current_number === -1) {
-    await message.delete();
+    await message.reply('Please wait for the new game to start');
     return;
   }
 
@@ -296,7 +299,8 @@ export async function countMessage(message: Message): Promise<void> {
   // log.debug(F, `env.DISCORD_OWNER_ID: ${env.DISCORD_OWNER_ID}`);
   if (countingData.current_number_message_author === message.author.id
     && message.author.id.toString() !== env.DISCORD_OWNER_ID.toString()) { // Allow the owner to spam (for testing)
-    await message.delete();
+    log.debug(F, 'Deleting message because the author is the same as the current number message author');
+    await message.reply('Stop playing with yourself 😉');
     return;
   }
 
@@ -311,8 +315,9 @@ export async function countMessage(message: Message): Promise<void> {
     .sort((a, b) => b.createdTimestamp - a.createdTimestamp) // Sorted by most recent
     .first(); // Get the first one
 
-  if (lastMessage && countingData.type === 'TOKEN') {
-    await message.delete();
+  if (lastMessage && countingData.type === 'TOKEN'
+    && message.author.id.toString() !== env.DISCORD_OWNER_ID.toString()) {
+    await message.reply('You can only count once every hour in the Token game!');
     return;
   }
 
@@ -362,7 +367,10 @@ export async function countMessage(message: Message): Promise<void> {
 
       warnedUsers.push(message.author.id);
 
-      await message.channel.send(messageReply);
+      await message.channel.send({
+        content: messageReply,
+        allowedMentions: { parse: [] },
+      });
       return;
     }
 
@@ -520,7 +528,10 @@ export async function countMessage(message: Message): Promise<void> {
         welcomeMessage += '\nThis is a HARDCORE game: if you break the combo you will be timed out for 24 hours!';
       }
 
-      await message.channel.send(welcomeMessage);
+      await message.channel.send({
+        content: welcomeMessage,
+        allowedMentions: { parse: [] },
+      });
     } else {
       log.debug(F, `Member ${message.member?.displayName} was already a stakeholder`);
     }
@@ -612,6 +623,7 @@ export const counting: SlashCommandBeta = {
   data: new SlashCommandBuilder()
     .setName('counting')
     .setDescription('All things with counting!')
+    .setIntegrationTypes([0])
     .addSubcommand(subcommand => subcommand
       .setName('setup')
       .setDescription('Set up a Counting channel!')
@@ -650,7 +662,8 @@ export const counting: SlashCommandBeta = {
       .setDescription('End the counting game!')),
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
-    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') !== false) });
+    const ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined;
+    await interaction.deferReply({ flags: ephemeral });
     const command = interaction.options.getSubcommand();
     let response = { content: 'This command has not been setup yet!' } as InteractionEditReplyOptions;
     if (command === 'setup') {

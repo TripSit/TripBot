@@ -3,7 +3,6 @@ import {
   GuildMember,
 } from 'discord.js';
 import Fuse from 'fuse.js';
-
 import { ai_model } from '@prisma/client';
 import { Drug } from 'tripsit_drug_db';
 import pillColors from '../../../assets/data/pill_colors.json';
@@ -24,24 +23,24 @@ const F = f(__filename); // eslint-disable-line
 
 type RoleDef = { name: string; value: string };
 
-const timezoneNames:string[] = [];
+const timezoneNames: string[] = [];
 for (const timezone of timezones) { // eslint-disable-line
   timezoneNames.push(timezone.label);
 }
 
-const measurementNames:string[] = [];
+const measurementNames: string[] = [];
 for (const unit of unitsOfMeasurement) { // eslint-disable-line
   measurementNames.push(unit.abbr);
 }
 
-const pillColorNames:string[] = [];
+const pillColorNames: string[] = [];
 for (const color of pillColors) { // eslint-disable-line
   pillColorNames.push(Object.keys(color)[0]);
 }
 const defaultPillColors = pillColorNames.slice(0, 25);
 // log.debug(F, `pill_color_names: ${pill_color_names}`);
 
-const pillShapeNames:string[] = [];
+const pillShapeNames: string[] = [];
 for (const shape of pillShapes) { // eslint-disable-line
   pillShapeNames.push(Object.keys(shape)[0]);
 }
@@ -54,7 +53,7 @@ const drugNames = drugDataAll.map(drug => ({
   aliases: drug.aliases?.map(alias => alias.slice(0, 1).toUpperCase() + alias.slice(1)),
 }));
 
-async function autocompletePills(interaction:AutocompleteInteraction) {
+async function autocompletePills(interaction: AutocompleteInteraction) {
   const focusedOption = interaction.options.getFocused(true).name;
   const options = {
     shouldSort: true,
@@ -89,7 +88,7 @@ async function autocompletePills(interaction:AutocompleteInteraction) {
   }
 }
 
-async function autocompleteBenzos(interaction:AutocompleteInteraction) {
+async function autocompleteBenzos(interaction: AutocompleteInteraction) {
   // log.debug(F, `Autocomplete requested for: ${interaction.commandName}`);
   const options = {
     shouldSort: true,
@@ -145,7 +144,7 @@ async function autocompleteBenzos(interaction:AutocompleteInteraction) {
   }
 }
 
-async function autocompleteTimezone(interaction:AutocompleteInteraction) {
+async function autocompleteTimezone(interaction: AutocompleteInteraction) {
   const options = {
     shouldSort: true,
     keys: [
@@ -164,7 +163,7 @@ async function autocompleteTimezone(interaction:AutocompleteInteraction) {
       name: choice.item.label,
       value: choice.item.label,
     }));
-      // log.debug(F, `list_results: ${listResults}`);
+    // log.debug(F, `list_results: ${listResults}`);
     interaction.respond(listResults);
   } else {
     const defaultTimezones = timezoneNames.slice(0, 25);
@@ -174,23 +173,27 @@ async function autocompleteTimezone(interaction:AutocompleteInteraction) {
   }
 }
 
-async function autocompleteConvert(interaction:AutocompleteInteraction) {
-  const firstUnit = interaction.options.data[1].value;
-  const focusedOption = interaction.options.data[1].focused;
+async function autocompleteConvert(interaction: AutocompleteInteraction) {
+  let firstUnit: string = '';
+  let focusedOption = false;
+  if (interaction.options.data[1] !== undefined) {
+    firstUnit = interaction.options.data[1].value as string;
+    focusedOption = interaction.options.data[1].focused as boolean;
+  }
 
   let displayUnits = [];
   let measure = '';
   if (firstUnit !== '' && !focusedOption) {
     // log.debug(F, `firstUnit: ${firstUnit}`);
     // eslint-disable-next-line
-      for (const i in unitsOfMeasurement) {
+    for (const i in unitsOfMeasurement) {
       if (unitsOfMeasurement[i].abbr.toLowerCase() === (firstUnit as string).toLowerCase()) {
         measure = unitsOfMeasurement[i].measure;
         // log.debug(F, `First unit measure: ${measure}`);
       }
     }
     // eslint-disable-next-line
-      for (const i in unitsOfMeasurement) {
+    for (const i in unitsOfMeasurement) {
       if (unitsOfMeasurement[i].measure.toLowerCase() === measure.toLowerCase()) {
         displayUnits.push(unitsOfMeasurement[i]);
         // log.debug(F, `Added: ${unitsOfMeasurement[i].plural}`);
@@ -220,7 +223,7 @@ async function autocompleteConvert(interaction:AutocompleteInteraction) {
       name: choice.item.abbr,
       value: choice.item.abbr,
     }));
-      // log.debug(F, `list_results: ${listResults}`);
+    // log.debug(F, `list_results: ${listResults}`);
     interaction.respond(listResults);
   } else if (measure !== '') {
     const top25 = displayUnits.slice(0, 25);
@@ -238,7 +241,7 @@ async function autocompleteConvert(interaction:AutocompleteInteraction) {
   }
 }
 
-async function autocompleteDrugNames(interaction:AutocompleteInteraction) {
+async function autocompleteDrugNames(interaction: AutocompleteInteraction) {
   const options = {
     shouldSort: true,
     threshold: 0.2,
@@ -270,7 +273,7 @@ async function autocompleteDrugNames(interaction:AutocompleteInteraction) {
   }
 }
 
-async function autocompleteRoles(interaction:AutocompleteInteraction) {
+async function autocompleteRoles(interaction: AutocompleteInteraction) {
   // This will find all the roles that the user has the ability to assign
   // This list can change depending on if the user is self-assigning or assigning to someone else
   if (!interaction.guild) return;
@@ -313,7 +316,7 @@ async function autocompleteRoles(interaction:AutocompleteInteraction) {
   const isMod = (interaction.member as GuildMember).roles.cache.has(env.ROLE_MODERATOR);
   const isTs = (interaction.member as GuildMember).roles.cache.has(env.ROLE_TRIPSITTER);
 
-  const roleList = [] as { name:string, value:string }[];
+  const roleList = [] as { name: string, value: string }[];
   const command = interaction.options.getSubcommand();
   if (isMod) {
     // log.debug(F, 'User is a moderator');
@@ -424,7 +427,7 @@ async function autocompleteRoles(interaction:AutocompleteInteraction) {
   }
 }
 
-async function autocompleteColors(interaction:AutocompleteInteraction) {
+async function autocompleteColors(interaction: AutocompleteInteraction) {
   const options = {
     shouldSort: true,
     keys: [
@@ -475,7 +478,7 @@ async function autocompleteColors(interaction:AutocompleteInteraction) {
       name: choice.item.color,
       value: choice.item.hex,
     }));
-      // log.debug(F, `list_results: ${listResults}`);
+    // log.debug(F, `list_results: ${listResults}`);
     interaction.respond(listResults);
   } else {
     const defaultDiscordColors = colorList.slice(0, 25);
@@ -485,7 +488,7 @@ async function autocompleteColors(interaction:AutocompleteInteraction) {
   }
 }
 
-async function autocompleteAiModels(interaction:AutocompleteInteraction) {
+async function autocompleteAiModels(interaction: AutocompleteInteraction) {
   const options = {
     shouldSort: true,
     keys: [
@@ -505,7 +508,7 @@ async function autocompleteAiModels(interaction:AutocompleteInteraction) {
       name: choice.item.name,
       value: choice.item.name,
     }));
-      // log.debug(F, `list_results: ${listResults}`);
+    // log.debug(F, `list_results: ${listResults}`);
     interaction.respond(listResults);
   } else {
     const defaultDiscordColors = modelList.slice(0, 25);
@@ -515,7 +518,7 @@ async function autocompleteAiModels(interaction:AutocompleteInteraction) {
   }
 }
 
-async function autocompleteAiNames(interaction:AutocompleteInteraction) {
+async function autocompleteAiNames(interaction: AutocompleteInteraction) {
   const options = {
     shouldSort: true,
     keys: [
@@ -544,7 +547,7 @@ async function autocompleteAiNames(interaction:AutocompleteInteraction) {
       name: (choice.item as any).name,
       value: (choice.item as any).name,
     }));
-      // log.debug(F, `list_results: ${listResults}`);
+    // log.debug(F, `list_results: ${listResults}`);
     interaction.respond(listResults);
   } else {
     const defaultDiscordColors = nameList.slice(0, 25) as {
@@ -556,7 +559,7 @@ async function autocompleteAiNames(interaction:AutocompleteInteraction) {
   }
 }
 
-async function autocompleteQuotes(interaction:AutocompleteInteraction) {
+async function autocompleteQuotes(interaction: AutocompleteInteraction) {
   const options = {
     shouldSort: true,
     keys: [
@@ -606,7 +609,7 @@ async function autocompleteQuotes(interaction:AutocompleteInteraction) {
       name: (choice.item as any).quote.slice(0, 100),
       value: (choice.item as any).quote.slice(0, 100),
     }));
-      // log.debug(F, `list_results: ${listResults}`);
+    // log.debug(F, `list_results: ${listResults}`);
     await interaction.respond(listResults);
   } else if (focusedValue !== '') {
     await interaction.respond([
@@ -616,7 +619,10 @@ async function autocompleteQuotes(interaction:AutocompleteInteraction) {
     const initialQuotes = quoteList.slice(0, 25) as {
       quote: string;
     }[];
-    const listResults = initialQuotes.map(choice => ({ name: choice.quote.slice(0, 100), value: choice.quote.slice(0, 100) }));
+    const listResults = initialQuotes.map(choice => ({
+      name: choice.quote.slice(0, 100),
+      value: choice.quote.slice(0, 100),
+    }));
     // log.debug(F, `list_results: ${listResults}`);
     // log.debug(F, `Returing ${listResults.length} quotes`);
     await interaction.respond(listResults);
@@ -631,13 +637,13 @@ export default autocomplete;
  * @return {Promise<void>}
  */
 
-export async function autocomplete(interaction:AutocompleteInteraction):Promise<void> {
+export async function autocomplete(interaction: AutocompleteInteraction): Promise<void> {
   // log.debug(F, `Autocomplete requested for: ${interaction.commandName}`);
   if (interaction.commandName === 'pill-id') {
     await autocompletePills(interaction);
   } else if (interaction.commandName === 'role') {
     await autocompleteRoles(interaction);
-  } else if (interaction.commandName === 'calc_benzo') {
+  } else if (interaction.commandName === 'calc' && interaction.options.getSubcommand() === 'benzo') {
     await autocompleteBenzos(interaction);
   } else if (interaction.commandName === 'timezone') {
     await autocompleteTimezone(interaction);

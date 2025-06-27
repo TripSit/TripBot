@@ -37,6 +37,7 @@ import {
 import {
   APIInteractionDataResolvedChannel,
   ChannelType,
+  MessageFlags,
 } from 'discord-api-types/v10';
 import { stripIndents } from 'common-tags';
 import {
@@ -48,7 +49,7 @@ import {
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import commandContext from '../../utils/context';
-import aiChat, { aiModerate } from '../../../global/commands/g.ai';
+import { aiModerate, handleAiMessageQueue } from '../../../global/commands/g.ai';
 
 /* TODO
 * only direct @ message should trigger a response
@@ -64,9 +65,9 @@ const tripbotUAT = '@TripBot UAT (Moonbear)';
 
 // Costs per 1k tokens
 const aiCosts = {
-  GPT_3_5_TURBO: {
-    input: 0.0005,
-    output: 0.0015,
+  GPT_3_5_TURBO: { // LAZY TEMP FIX - CHANGE NAME THESE PRICES ARE FOR 4o MINI NOW
+    input: 0.00015,
+    output: 0.00060,
   },
   // GPT_3_5_TURBO_1106: {
   //   input: 0.001,
@@ -225,8 +226,8 @@ function getComponentById(
   // If no component is found, it will return null
   // This is useful for finding the button that was clicked, or select menu that was used
 
-  log.debug(F, `getComponentById started with id: ${id}`);
-  log.debug(F, `Components: ${JSON.stringify(interaction.message.components, null, 2)}`);
+  // log.debug(F, `getComponentById started with id: ${id}`);
+  // log.debug(F, `Components: ${JSON.stringify(interaction.message.components, null, 2)}`);
 
   if (interaction.message?.components) {
     // eslint-disable-next-line no-restricted-syntax
@@ -630,7 +631,7 @@ async function aiAudit(
 async function deletedPage(
   interaction: ButtonInteraction,
 ):Promise<InteractionEditReplyOptions> {
-  log.debug(F, `Customid: ${interaction.customId}`);
+  log.debug(F, `CustomId: ${interaction.customId}`);
   const menuButtons = new ActionRowBuilder<ButtonBuilder>()
     .addComponents(
       buttonAiHelp.setStyle(ButtonStyle.Primary),
@@ -847,7 +848,7 @@ async function createPersona(
       if (i.customId.split('~')[1] !== interaction.id) return;
       if (!i.isModalSubmit()) return;
       if (!i.isFromMessage()) return;
-      // await i.deferUpdate();
+      await i.deferUpdate();
 
       const personaName = i.fields.getTextInputValue('name');
       const temperature = parseFloat(i.fields.getTextInputValue('temperature'));
@@ -918,7 +919,7 @@ async function createPersona(
         },
       });
 
-      await i.update({
+      await i.editReply({
         embeds: [embedTemplate()
           .setTitle('Modal')
           .setColor(Colors.Green)
@@ -1051,9 +1052,7 @@ async function personasPage(
     ? await db.ai_personas.findMany()
     : await db.ai_personas.findMany({
       where: {
-        OR: [
-          { name: 'tripbot' },
-        ],
+        public: true,
       },
     });
 
@@ -1069,7 +1068,7 @@ async function personasPage(
       value: persona.name,
     } as SelectMenuComponentOptionData));
 
-  // log.debug(F, `aiPersonaOptions: ${JSON.stringify(aiPersonaOptions, null, 2)}`);
+  log.debug(F, `aiPersonaOptions1: ${JSON.stringify(aiPersonaOptions, null, 2)}`);
 
   let selectedPersona = undefined as string | undefined;
 
@@ -1117,7 +1116,7 @@ async function personasPage(
     }
   }
 
-  log.debug(F, `aiPersonaOptions: ${JSON.stringify(aiPersonaOptions, null, 2)}`);
+  log.debug(F, `aiPersonaOptions2: ${JSON.stringify(aiPersonaOptions, null, 2)}`);
 
   // If there's only one persona in the list, set it as the default
   // if (aiPersonaList.length === 1) {
@@ -1127,7 +1126,12 @@ async function personasPage(
 
   // If the user is a developer in the home guild, show the buttonAiModify button
   const tripsitGuild = await discordClient.guilds.fetch(env.DISCORD_GUILD_ID);
-  const tripsitMember = await tripsitGuild.members.fetch(interaction.user.id);
+  let tripsitMember = null;
+  try {
+    tripsitMember = await tripsitGuild.members.fetch(interaction.user.id);
+  } catch (err) {
+    // do nothing
+  }
 
   const components = [
     new ActionRowBuilder<ButtonBuilder>()
@@ -1143,9 +1147,9 @@ async function personasPage(
 
   ];
 
-  log.debug(F, `There are ${components.length} components in the array`);
+  // log.debug(F, `There are ${components.length} components in the array`);
 
-  if (selectedPersona) {
+  if (selectedPersona !== 'none' && selectedPersona !== undefined) {
     const persona = await db.ai_personas.findFirstOrThrow({
       where: {
         name: selectedPersona,
@@ -1153,7 +1157,7 @@ async function personasPage(
     });
 
     log.debug(F, 'Adding three buttons to personaButtons');
-    if (tripsitMember.roles.cache.has(env.ROLE_DEVELOPER)) {
+    if (tripsitMember && tripsitMember.roles.cache.has(env.ROLE_DEVELOPER)) {
       components.push(
         new ActionRowBuilder<ButtonBuilder>()
           .addComponents(buttonAiNew, buttonAiModify, buttonAiDelete),
@@ -1186,11 +1190,13 @@ async function personasPage(
       );
     }
 
-    components.push(
-      new ActionRowBuilder<StringSelectMenuBuilder>().addComponents([
-        menuAiPublic,
-      ]),
-    );
+    if (tripsitMember && tripsitMember.roles.cache.has(env.ROLE_DEVELOPER)) {
+      components.push(
+        new ActionRowBuilder<StringSelectMenuBuilder>().addComponents([
+          menuAiPublic,
+        ]),
+      );
+    }
 
     return {
       embeds: [await makePersonaEmbed(persona)],
@@ -1198,7 +1204,7 @@ async function personasPage(
     };
   }
 
-  if (tripsitMember.roles.cache.has(env.ROLE_DEVELOPER)) {
+  if (tripsitMember && tripsitMember.roles.cache.has(env.ROLE_DEVELOPER)) {
     log.debug(F, 'Adding buttonAiNew to components');
     components.push(
       new ActionRowBuilder<ButtonBuilder>()
@@ -1206,8 +1212,8 @@ async function personasPage(
     );
   }
 
-  log.debug(F, `Final components: ${JSON.stringify(components, null, 2)}`);
-  log.debug(F, `components 2 0 : ${JSON.stringify(components[2], null, 2)}`);
+  // log.debug(F, `Final components: ${JSON.stringify(components, null, 2)}`);
+  // log.debug(F, `components 2 0 : ${JSON.stringify(components[2], null, 2)}`);
   return {
     embeds: [embedTemplate()
       .setTitle('Persona Information')
@@ -1262,10 +1268,9 @@ async function setupPage(
   const aiPersonaList = interaction.guild?.id === env.DISCORD_GUILD_ID
     ? await db.ai_personas.findMany()
     : await db.ai_personas.findMany({
-      where: {
-        OR: [
-          { name: 'tripbot' },
-        ],
+      where:
+      {
+        public: true,
       },
     });
 
@@ -1439,12 +1444,14 @@ async function setupPage(
     ]),
   ];
 
-  if (aiLinkData && linkedPersona === selectedPersona) {
-    components.push(new ActionRowBuilder<ButtonBuilder>()
-      .addComponents(buttonAiUnlink));
-  } else if (selectedChannel && selectedPersona && selectedPersona !== 'none') {
-    components.push(new ActionRowBuilder<ButtonBuilder>()
-      .addComponents(buttonAiLink));
+  if ((interaction.member as GuildMember).permissions.has(PermissionFlagsBits.ManageChannels)) {
+    if (aiLinkData && linkedPersona === selectedPersona) {
+      components.push(new ActionRowBuilder<ButtonBuilder>()
+        .addComponents(buttonAiUnlink));
+    } else if (selectedChannel && selectedPersona && selectedPersona !== 'none') {
+      components.push(new ActionRowBuilder<ButtonBuilder>()
+        .addComponents(buttonAiLink));
+    }
   }
 
   return {
@@ -1713,14 +1720,14 @@ async function agreeToTerms(
     embeds: [embedTemplate()
       .setTitle('🤖 Welcome to TripBot\'s AI Module! 🤖')
       .setDescription(`
-        Please agree to the following. Use \`/ai help\` for more more information.
+        Please agree to the following. Use \`/ai help\` for more information.
 
         ${termsOfService}
       `)
       .setFooter(null)],
     components: [
       new ActionRowBuilder<ButtonBuilder>().addComponents(
-        buttonAiAgree.setCustomId(`AI~messageAgree~${messageData.id}`),
+        buttonAiAgree.setCustomId(`AI~messageAgree~${messageData.author.id}`),
       ),
     ],
   };
@@ -2073,6 +2080,13 @@ export async function aiMessage(
     return;
   }
 
+  if (messageData.channel.type !== ChannelType.GuildText) {
+    log.debug(F, 'Message was not in a text channel, returning');
+    return;
+  }
+
+  const channel = messageData.channel as TextChannel;
+
   // Check if the channel is linked to a persona
   const aiLinkData = await getLinkedChannel(messageData.channel);
   // log.debug(F, `aiLinkData: ${JSON.stringify(aiLinkData, null, 2)}`);
@@ -2159,13 +2173,13 @@ export async function aiMessage(
     attachmentInfo.mimeType = refMessage.attachments.first()?.contentType as string;
   }
 
-  log.debug(F, `attachmentInfo: ${JSON.stringify(attachmentInfo, null, 2)}`);
-  log.debug(F, `Sending messages to API: ${JSON.stringify(messageList, null, 2)}`);
+  // log.debug(F, `attachmentInfo: ${JSON.stringify(attachmentInfo, null, 2)}`);
+  // log.debug(F, `Sending messages to API: ${JSON.stringify(messageList, null, 2)}`);
 
-  await messageData.channel.sendTyping();
+  await channel.sendTyping();
 
   const typingInterval = setInterval(() => {
-    messageData.channel.sendTyping();
+    channel.sendTyping();
   }, 9000); // Start typing indicator every 9 seconds
   let response = '';
   let promptTokens = 0;
@@ -2175,14 +2189,19 @@ export async function aiMessage(
     clearInterval(typingInterval); // Stop sending typing indicator
   }, 30000); // Failsafe to stop typing indicator after 30 seconds
 
+  let differenceInMs = 0;
   try {
-    const chatResponse = await aiChat(aiPersona, messageList, messageData.author.id, attachmentInfo);
+    const startTime = Date.now();
+    const chatResponse = await handleAiMessageQueue(aiPersona, messageList, messageData, attachmentInfo);
+    const endTime = Date.now();
+    differenceInMs = endTime - startTime;
+    log.debug(F, `AI response took ${differenceInMs}ms`);
     response = chatResponse.response;
     promptTokens = chatResponse.promptTokens;
     completionTokens = chatResponse.completionTokens;
   } finally {
     clearInterval(typingInterval); // Stop sending typing indicator
-    clearTimeout(typingFailsafe); // Clear the failsafe timeout to prevent it from running if we've successfully stopped typing
+    clearTimeout(typingFailsafe); // Clear the failsafe timeout to prevent  it from running if we've successfully stopped typing
   }
 
   log.debug(F, `response from API: ${response}`);
@@ -2238,6 +2257,8 @@ export async function aiMessage(
       components: [],
       allowedMentions: { parse: [] },
     });
+  } else if (response === 'functionFinished') {
+    log.debug(F, 'Function finished, returning');
   } else {
     // await messageData.channel.sendTyping();
     // const wpm = 120;
@@ -2245,6 +2266,13 @@ export async function aiMessage(
     // const sleepTime = (wordCount / wpm) * 60000;
     // // log.debug(F, `Typing ${wordCount} at ${wpm} wpm will take ${sleepTime / 1000} seconds`);
     // await sleep(sleepTime > 10000 ? 5000 : sleepTime); // Don't wait more than 5 seconds
+
+    if (response.length === 0) {
+      response = stripIndents`This is unexpected but somehow I don't appear to have anything to say! 
+      By the way, this is an error message and something went wrong. Please try again.
+      Time from query to error: ${(differenceInMs / 1000).toFixed(2)} seconds`;
+    }
+
     const replyMessage = await messageData.reply({
       content: response.slice(0, 2000),
       allowedMentions: { parse: [] },
@@ -2270,12 +2298,23 @@ export async function aiReaction(
   const thumbsUpEmojis = ['👍', '👍🏻', '👍🏼', '👍🏽', '👍🏾', '👍🏿', 'ts_thumbup'];
   const thumbsDownEmojis = ['👎', '👎🏻', '👎🏼', '👎🏽', '👎🏾', '👎🏿', 'ts_thumbdown'];
   if (messageReaction.message.reference === null) return;
-  const originalMessage = await messageReaction.message.fetchReference();
-  const aiLinkData = await db.ai_channels.findFirst({
-    where: {
-      channel_id: originalMessage.channel.id,
-    },
-  });
+  let originalMessage = {} as Message;
+  try {
+    originalMessage = await messageReaction.message.fetchReference();
+  } catch (error) {
+    log.error(F, `Error fetching reference: ${error}`);
+    log.error(F, `Reaction: ${JSON.stringify(messageReaction, null, 2)}`);
+    log.error(F, `Message: ${JSON.stringify(messageReaction.message, null, 2)}`);
+    return;
+  }
+  const aiLinkData = await getLinkedChannel(originalMessage.channel);
+
+  // log.debug(F, `aiLinkData: ${JSON.stringify(aiLinkData, null, 2)}`);
+  // log.debug(F, `messageReaction: ${JSON.stringify(messageReaction, null, 2)}`);
+  // log.debug(F, `messageReaction.message.author: ${JSON.stringify(messageReaction.message.author, null, 2)}`);
+  // log.debug(F, `user: ${JSON.stringify(user, null, 2)}`);
+  // log.debug(F, `Emoji name: ${messageReaction.emoji.name}`);
+
   if (aiLinkData
         && messageReaction.message.author?.bot
         && !user.bot
@@ -2283,12 +2322,12 @@ export async function aiReaction(
           || thumbsDownEmojis.includes(messageReaction.emoji.name as string)
         )
   ) {
-  // log.debug(F, `Someone reacted to tripbot's message with an audit emoji (${messageReaction.emoji.name})`);
+    log.debug(F, `Someone reacted to tripbot's message with an audit emoji (${messageReaction.emoji.name})`);
 
     const channelAiVoteLog = await discordClient.channels.fetch(env.CHANNEL_AIVOTELOG) as TextChannel;
     const action = thumbsUpEmojis.includes(messageReaction.emoji.name as string) ? 'approve' : 'reject';
 
-    const auditLimit = env.NODE_ENV === 'production' ? 4 : 2;
+    const auditLimit = env.NODE_ENV === 'production' ? 4 : 3;
     // log.debug(F, `Audit limit is ${auditLimit}, emoji count is ${messageReaction.count}`);
     if (messageReaction.count === auditLimit) {
     // log.debug(F, `Audit limit reached (${auditLimit})`);
@@ -2320,6 +2359,10 @@ export async function aiReaction(
       },
     });
 
+    log.debug(F, `personaData: ${JSON.stringify(personaData, null, 2)}`);
+
+    log.debug(F, `Updating db.ai_personas with ${action} vote`);
+
     await db.ai_personas.update({
       where: {
         id: personaData.id,
@@ -2337,6 +2380,7 @@ export async function aiReaction(
         }),
     });
 
+    log.debug(F, 'Sending message to vote room');
     await channelAiVoteLog.send({
       embeds: [embedTemplate()
         .setTitle(`AI ${action}`)
@@ -2380,11 +2424,12 @@ export async function aiButton(
 ):Promise<void> {
   const buttonID = interaction.customId;
   log.debug(F, `buttonID: ${buttonID}`);
-  const [, buttonAction] = buttonID.split('~') as [
+  const [, buttonAction, messageAuthorId] = buttonID.split('~') as [
     null,
     'help' | 'personas' | 'setup' | 'agree' | 'privacy' |
     'link' | 'unlink' | 'messageAgree' | 'modify' | 'new' |
-    'create' | 'delete' | 'deleteConfirm' | 'deleteHistory' | 'deleteHistoryConfirm'];
+    'create' | 'delete' | 'deleteConfirm' | 'deleteHistory' | 'deleteHistoryConfirm',
+    string];
 
   // eslint-disable-next-line sonarjs/no-small-switch
   switch (buttonAction) {
@@ -2412,6 +2457,12 @@ export async function aiButton(
         },
       });
 
+      // const messageData = await interaction.message.fetchReference();
+
+      if (messageAuthorId !== interaction.user.id) {
+        log.debug(F, `${interaction.user.displayName} tried to accept the AI ToS using someone else's instance of the ToS.`);
+        return;
+      }
       await aiMessage(interaction.message);
       break;
     }
@@ -2464,6 +2515,7 @@ export const aiCommand: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('ai')
     .setDescription('TripBot\'s AI')
+    .setIntegrationTypes([0])
     .addSubcommand(subcommand => subcommand
       .setDescription('Setup the TripBot AI')
       .setName('setup'))
@@ -2478,7 +2530,7 @@ export const aiCommand: SlashCommand = {
       .setName('help')),
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
     const subcommand = interaction.options.getSubcommand() as | 'setup' | 'personas' | 'privacy' | 'help';
     switch (subcommand) {

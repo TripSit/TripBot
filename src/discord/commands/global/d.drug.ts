@@ -2,6 +2,9 @@ import {
   SlashCommandBuilder,
   Colors,
   EmbedBuilder,
+  InteractionEditReplyOptions,
+  InteractionReplyOptions,
+  MessageFlags,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
 import { SlashCommand } from '../../@types/commandDef';
@@ -274,109 +277,130 @@ async function addDosages(
 //   return embed;
 // }
 
-export const dDrug: SlashCommand = {
-  data: new SlashCommandBuilder()
-    .setName('drug')
-    .setDescription('Check substance information')
-    .addStringOption(option => option.setName('substance')
-      .setDescription('Pick a substance!')
-      .setRequired(true)
-      .setAutocomplete(true))
-    .addStringOption(option => option.setName('section')
-      .setDescription('What section of the info to respond with? (Defaults to all)')
-      .addChoices(
-        { name: 'All', value: 'all' },
-        { name: 'Dosage', value: 'dosage' },
-        { name: 'Summary', value: 'summary' },
-      ))
-    .addBooleanOption(option => option.setName('ephemeral')
-      .setDescription('Set to "True" to show the response only to you')),
-  async execute(interaction) {
-    log.info(F, await commandContext(interaction));
-    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') !== false) });
-    let embed = embedTemplate();
-    // Check if the interaction is coming from DM
+export async function getDrugInfo(
+  drugName: string,
+  section?: 'all' | 'dosage' | 'summary',
+):Promise<InteractionEditReplyOptions> {
+  let embed = embedTemplate();
+  log.debug(F, `drugName: ${drugName} | section: ${section}`);
 
-    // log.debug(F, `ephemeral: ${ephemeral} | interaction.channelId: ${interaction.channelId}`);
-    // if (interaction.channelId !== null && !ephemeral) {
-    //   embed.setFooter({ text: 'You can use this command in DM for privacy if you want!' });
-    // }
-    // log.debug(F, `ephemeral: ${ephemeral}`);
-    const drugName = interaction.options.getString('substance', true);
-    // if (!drugName) {
-    //   embed.setTitle('No drug name was provided');
-    //   await interaction.editReply({ embeds: [embed] });
-    //   return false;
-    // }
-    const drugData = await drug(drugName);
+  // if (!drugName) {
+  //   embed.setTitle('No drug name was provided');
+  //   await interaction.editReply({ embeds: [embed] });
+  //   return false;
+  // }
+  const drugData = await drug(drugName);
 
-    if (!drugData) {
-      embed.setTitle(`${drugName} was not found`);
-      embed.setDescription(stripIndents`...this shouldn\'t have happened, please tell the developer!`);
-      // If this happens then something went wrong with the auto-complete
-      await interaction.editReply({ embeds: [embed] });
-      return false;
-    }
-    // log.debug(F, `drugData: ${JSON.stringify(drugData, null, 2)}`);
+  if (!drugData) {
+    embed.setTitle(`${drugName} was not found`);
+    embed.setDescription(stripIndents`...this shouldn\'t have happened, please tell the developer!`);
+    // If this happens then something went wrong with the auto-complete
+    return { embeds: [embed] };
+  }
+  // log.debug(F, `drugData: ${JSON.stringify(drugData, null, 2)}`);
 
-    // if (drugData === null) {
-    //   embed.setTitle(`${drugName} was not found`);
-    //   embed.setDescription(stripIndents`...this shouldn\'t have happened, please tell the developer!`);
-    //   // If this happens then something went wrong with the auto-complete
-    //   await interaction.editReply({ embeds: [embed] });
-    //   return false;
-    // }
+  // if (drugData === null) {
+  //   embed.setTitle(`${drugName} was not found`);
+  //   embed.setDescription(stripIndents`...this shouldn\'t have happened, please tell the developer!`);
+  //   // If this happens then something went wrong with the auto-complete
+  //   await interaction.editReply({ embeds: [embed] });
+  //   return false;
+  // }
 
-    const section = interaction.options.getString('section');
+  // log.debug(F, `section: ${section} | drugName: ${drugName} | drugData: ${JSON.stringify(drugData, null, 2)}`);
 
-    // log.debug(F, `section: ${section} | drugName: ${drugName} | drugData: ${JSON.stringify(drugData, null, 2)}`);
+  embed.setColor(Colors.Purple);
+  embed.setTitle(`🌐 ${drugData.name} Information`);
+  // embed.setURL(`https://wiki.tripsit.me/wiki/${drugName.replaceAll(' ', '_')}`);
+  embed.setURL(drugData.url);
 
-    embed.setColor(Colors.Purple);
-    embed.setTitle(`🌐 ${drugData.name} Information`);
-    // embed.setURL(`https://wiki.tripsit.me/wiki/${drugName.replaceAll(' ', '_')}`);
-    embed.setURL(drugData.url);
+  if (section === 'dosage') {
+    embed = await addDosages(embed, drugData);
+    return { embeds: [embed] };
+  }
 
-    if (section === 'dosage') {
-      embed = await addDosages(embed, drugData);
-      await interaction.editReply({ embeds: [embed] });
-      return true;
-    }
+  embed = await addSummary(embed, drugData);
 
-    embed = await addSummary(embed, drugData);
+  if (section === 'summary') {
+    return { embeds: [embed] };
+  }
 
-    log.debug(F, `Embed: ${JSON.stringify(embed, null, 2)}`);
+  embed = await addAliases(embed, drugData);
+  embed = await addInteractions(embed, drugData);
 
-    if (section === 'summary') {
-      await interaction.editReply({ embeds: [embed] });
-      return true;
-    }
+  let embedRowColumns = 0;
 
-    embed = await addAliases(embed, drugData);
-    embed = await addInteractions(embed, drugData);
+  // CLASS
+  if (drugData.classes) {
+    embed = await addClasses(embed, drugData);
+    embedRowColumns += 1;
+  }
 
-    let embedRowColumns = 0;
+  // CROSS TOLERANCE
+  if (drugData.crossTolerances && drugData.crossTolerances.length >= 1) {
+    embed = await addCrossTolerance(embed, drugData);
+    embedRowColumns += 1;
+  }
 
-    // CLASS
-    if (drugData.classes) {
-      embed = await addClasses(embed, drugData);
-      embedRowColumns += 1;
-    }
+  // ADDICTION POTENTIAL
+  if (drugData.addictionPotential) {
+    embed = await addAddictions(embed, drugData);
+    embedRowColumns += 1;
+  }
 
-    // CROSS TOLERANCE
-    if (drugData.crossTolerances && drugData.crossTolerances.length >= 1) {
-      embed = await addCrossTolerance(embed, drugData);
-      embedRowColumns += 1;
-    }
+  // Make sure that each column has three rows to utilize space
+  let toleranceAdded = false;
+  let toxicityAdded = false;
 
-    // ADDICTION POTENTIAL
-    if (drugData.addictionPotential) {
-      embed = await addAddictions(embed, drugData);
-      embedRowColumns += 1;
+  [
+    embed,
+    toleranceAdded,
+    toxicityAdded,
+  ] = await fillInColumns(
+    embed,
+    drugData,
+    embedRowColumns,
+    toleranceAdded,
+    toxicityAdded,
+  );
+
+  // Dosage
+  if (drugData.roas) {
+    // Get a list of drug ROA names
+    const roaNames = drugData.roas.map(roa => roa.name);
+
+    // For HR reasons we prefer non-invasive methods
+    if (roaNames.includes('Insufflated')) {
+      roaNames.splice(roaNames.indexOf('Insufflated'), 1);
+      roaNames.unshift('Insufflated');
     }
 
-    // Make sure that each column has three rows to utilize space
-    let toleranceAdded = false;
-    let toxicityAdded = false;
+    if (roaNames.includes('Vapourised')) {
+      roaNames.splice(roaNames.indexOf('Vapourised'), 1);
+      roaNames.unshift('Vapourised');
+    }
+    if (roaNames.includes('Smoked')) {
+      roaNames.splice(roaNames.indexOf('Smoked'), 1);
+      roaNames.unshift('Smoked');
+    }
+
+    // For each roaName, get the dosage and duration
+    // log.debug(F, `roaNames: ${roaNames}`);
+
+    embedRowColumns = 0;
+    roaNames.forEach(roaName => {
+      if (embedRowColumns < 3) {
+        const roaInfo = (drugData.roas as RoaType[]).find((r:RoaType) => r.name === roaName) as RoaType;
+        if (roaInfo.dosage) {
+          let dosageString = '';
+          roaInfo.dosage.forEach(d => {
+            dosageString += `${d.name}: ${d.value}\n`;
+          });
+          embed.addFields({ name: `💊 Dosage (${roaName})`, value: stripIndents`${dosageString}`, inline: true });
+          embedRowColumns += 1;
+        }
+      }
+    });
 
     [
       embed,
@@ -390,90 +414,77 @@ export const dDrug: SlashCommand = {
       toxicityAdded,
     );
 
-    // Dosage
-    if (drugData.roas) {
-      // Get a list of drug ROA names
-      const roaNames = drugData.roas.map(roa => roa.name);
+    // DURATION
+    [embed, embedRowColumns] = await addDurations(embed, drugData, roaNames);
 
-      // For HR reasons we prefer non-invasive methods
-      if (roaNames.includes('Insufflated')) {
-        roaNames.splice(roaNames.indexOf('Insufflated'), 1);
-        roaNames.unshift('Insufflated');
-      }
+    [
+      embed,
+      toleranceAdded,
+      toxicityAdded,
+    ] = await fillInColumns(
+      embed,
+      drugData,
+      embedRowColumns,
+      toleranceAdded,
+      toxicityAdded,
+    );
+  }
 
-      if (roaNames.includes('Vapourised')) {
-        roaNames.splice(roaNames.indexOf('Vapourised'), 1);
-        roaNames.unshift('Vapourised');
-      }
-      if (roaNames.includes('Smoked')) {
-        roaNames.splice(roaNames.indexOf('Smoked'), 1);
-        roaNames.unshift('Smoked');
-      }
+  // Reagents
+  await addReagents(embed, drugData);
 
-      // For each roaName, get the dosage and duration
-      // log.debug(F, `roaNames: ${roaNames}`);
+  // Tolerance
+  if (!toleranceAdded) {
+    await addTolerances(embed, drugData);
+  }
 
-      embedRowColumns = 0;
-      roaNames.forEach(roaName => {
-        if (embedRowColumns < 3) {
-          const roaInfo = (drugData.roas as RoaType[]).find((r:RoaType) => r.name === roaName) as RoaType;
-          if (roaInfo.dosage) {
-            let dosageString = '';
-            roaInfo.dosage.forEach(d => {
-              dosageString += `${d.name}: ${d.value}\n`;
-            });
-            embed.addFields({ name: `💊 Dosage (${roaName})`, value: stripIndents`${dosageString}`, inline: true });
-            embedRowColumns += 1;
-          }
-        }
-      });
+  // Toxicity
+  if (!toxicityAdded) {
+    await addToxicities(embed, drugData);
+  }
 
-      [
-        embed,
-        toleranceAdded,
-        toxicityAdded,
-      ] = await fillInColumns(
-        embed,
-        drugData,
-        embedRowColumns,
-        toleranceAdded,
-        toxicityAdded,
-      );
+  // Experiences
+  await addExperiences(embed, drugData);
 
-      // DURATION
-      [embed, embedRowColumns] = await addDurations(embed, drugData, roaNames);
+  // log.debug(F, `Embed: ${JSON.stringify(embed, null, 2)}`);
 
-      [
-        embed,
-        toleranceAdded,
-        toxicityAdded,
-      ] = await fillInColumns(
-        embed,
-        drugData,
-        embedRowColumns,
-        toleranceAdded,
-        toxicityAdded,
-      );
+  return { embeds: [embed] };
+}
+
+export const dDrug: SlashCommand = {
+  data: new SlashCommandBuilder()
+    .setName('drug')
+    .setDescription('Check substance information')
+    .setContexts([0, 1, 2])
+    .setIntegrationTypes([0, 1])
+    .addStringOption(option => option.setName('substance')
+      .setDescription('Pick a substance!')
+      .setRequired(true)
+      .setAutocomplete(true))
+    .addStringOption(option => option.setName('section')
+      .setDescription('What section of the info to respond with? (Defaults to all)')
+      .addChoices(
+        { name: 'All', value: 'all' },
+        { name: 'Dosage', value: 'dosage' },
+        { name: 'Summary', value: 'summary' },
+      ))
+    .addBooleanOption(option => option.setName('ephemeral')
+      .setDescription('Set to "True" to show the response only to you')) as SlashCommandBuilder,
+  async execute(interaction) {
+    log.info(F, await commandContext(interaction));
+    const ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined;
+    await interaction.deferReply({ flags: ephemeral });
+    const section = interaction.options.getString('section') as 'all' | 'dosage' | 'summary' | undefined;
+    const drugName = interaction.options.getString('substance', true);
+    try {
+      await interaction.editReply(await getDrugInfo(drugName, section));
+    } catch (error) {
+      log.error(F, `${error}`);
+      await interaction.deleteReply();
+      const drugInfo = await getDrugInfo(drugName, section) as InteractionReplyOptions;
+      drugInfo.flags = MessageFlags.Ephemeral;
+      await interaction.followUp(drugInfo);
     }
-
-    // Reagents
-    await addReagents(embed, drugData);
-
-    // Tolerance
-    if (!toleranceAdded) {
-      await addTolerances(embed, drugData);
-    }
-
-    // Toxicity
-    if (!toxicityAdded) {
-      await addToxicities(embed, drugData);
-    }
-
-    // Experiences
-    await addExperiences(embed, drugData);
-
-    await interaction.editReply({ embeds: [embed] });
-
     return true;
   },
 };

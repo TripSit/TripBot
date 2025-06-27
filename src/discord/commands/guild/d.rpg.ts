@@ -11,7 +11,6 @@ import {
   MessageComponentInteraction,
   time,
   ChatInputCommandInteraction,
-  EmbedBuilder,
   ModalBuilder,
   TextInputBuilder,
   ModalSubmitInteraction,
@@ -22,19 +21,16 @@ import {
   AttachmentBuilder,
   GuildMember,
   TextChannel,
-  ColorResolvable,
-  Emoji,
-  ButtonInteraction,
 } from 'discord.js';
 import {
   APIEmbed,
   APISelectMenuOption,
   ButtonStyle,
   ComponentType,
+  MessageFlags,
   TextInputStyle,
 } from 'discord-api-types/v10';
 import { stripIndents } from 'common-tags';
-import he from 'he';
 import { rpg_inventory } from '@prisma/client';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
@@ -43,8 +39,6 @@ import getAsset from '../../utils/getAsset';
 import { customButton } from '../../utils/emoji';
 import { getProfilePreview } from './d.profile';
 import { aiFlairMod } from '../../../global/commands/g.ai';
-
-const Trivia = require('trivia-api');
 
 const tripSitProfileImage = 'tripsit-profile-image.png';
 const tripSitProfileImageAttachment = 'attachment://tripsit-profile-image.png';
@@ -57,8 +51,6 @@ const F = f(__filename);
 //   dungeon: env.NODE_ENV === 'production' ? 1000 * 60 * 60 * 24 : 1000 * 1,
 //   raid: env.NODE_ENV === 'production' ? 1000 * 60 * 60 * 24 * 7 : 1000 * 1,
 // };
-
-const timesUp = 'Time\'s up!';
 
 const items = {
   general: {
@@ -101,6 +93,20 @@ const items = {
     //   effect: 'tokenMultiplier',
     //   effect_value: '0.1',
     //   emoji: 'itemBonus',
+    },
+    PremiumMember: {
+      // eslint-disable-next-line sonarjs/no-duplicate-string
+      label: 'Premium Member Role',
+      value: 'PremiumMembership',
+      description: 'Grants the Premium Member role',
+      quantity: 1,
+      weight: 0,
+      cost: 25000,
+      equipped: false,
+      consumable: true,
+      effect: 'role',
+      effect_value: 'PremiumMembership',
+      emoji: 'itemPremium',
     },
   },
   fonts: {
@@ -221,6 +227,19 @@ const items = {
       effect_value: 'IndieFlower',
       emoji: 'itemFont',
     },
+    Kablammo: {
+      label: 'Kablammo',
+      value: 'Kablammo',
+      description: 'Font',
+      quantity: 1,
+      weight: 0,
+      cost: 700,
+      equipped: false,
+      consumable: false,
+      effect: 'font',
+      effect_value: 'Kablammo',
+      emoji: 'itemFont',
+    },
     KumarOne: {
       label: 'Kumar One',
       value: 'KumarOne',
@@ -284,6 +303,19 @@ const items = {
       consumable: false,
       effect: 'font',
       effect_value: 'PressStart2P',
+      emoji: 'itemFont',
+    },
+    ProtestRevolution: {
+      label: 'Protest Revolution',
+      value: 'ProtestRevolution',
+      description: 'Font',
+      quantity: 1,
+      weight: 0,
+      cost: 700,
+      equipped: false,
+      consumable: false,
+      effect: 'font',
+      effect_value: 'ProtestRevolution',
       emoji: 'itemFont',
     },
     ReggaeOne: {
@@ -375,6 +407,19 @@ const items = {
       consumable: false,
       effect: 'font',
       effect_value: 'SpicyRice',
+      emoji: 'itemFont',
+    },
+    Workbench: {
+      label: 'Workbench',
+      value: 'Workbench',
+      description: 'Font',
+      quantity: 1,
+      weight: 0,
+      cost: 700,
+      equipped: false,
+      consumable: false,
+      effect: 'font',
+      effect_value: 'Workbench',
       emoji: 'itemFont',
     },
     Barcode: {
@@ -689,6 +734,19 @@ const items = {
       consumable: false,
       effect: 'background',
       effect_value: 'Mindsets',
+      emoji: 'itemBackground',
+    },
+    Musical: {
+      label: 'Musical',
+      value: 'Musical',
+      description: 'Background',
+      quantity: 1,
+      weight: 0,
+      cost: 1000,
+      equipped: false,
+      consumable: false,
+      effect: 'background',
+      effect_value: 'Musical',
       emoji: 'itemBackground',
     },
     Noise: {
@@ -1161,123 +1219,6 @@ const wagers = {} as {
   },
 };
 
-const optionDict = {
-  easy: {
-    name: 'Normal',
-    bonus: 1,
-  },
-  medium: {
-    name: 'Hard',
-    bonus: 1.5,
-  },
-  hard: {
-    name: 'Expert',
-    bonus: 2,
-  },
-};
-
-const bonusDict = {
-  5: {
-    perfectBonus: 1.5,
-    perfectBonusMessage: ' *(+50% perfect bonus)*',
-  },
-  10: {
-    perfectBonus: 2,
-    perfectBonusMessage: ' *(+100% perfect bonus)*',
-  },
-  20: {
-    perfectBonus: 3,
-    perfectBonusMessage: ' *(+200% perfect bonus)*',
-  },
-};
-
-type TriviaQuestion = {
-  category: string;
-  type: string;
-  difficulty: string;
-  question: string;
-  correct_answer: string;
-  all_answers: string[];
-};
-
-const bonusMessageDict = {
-  easy: '',
-  medium: ' *(+50% difficulty bonus)*',
-  hard: ' *(+100% difficulty bonus)*',
-};
-
-const gameQuitMessageList = [ // Random messages to display when the user quits the game
-  'If you\'re tired of starting over, stop giving up!',
-  'Believe in yourself more!',
-  'Come back later?',
-  'Did you leave the oven on?',
-  'Sometimes it\'s ok to cut your losses...',
-  'Perhaps another time?',
-  'Perhaps you should try a different game?',
-  'Did I do something wrong?',
-  'Was it something I said?',
-];
-
-const timeOutMessageList = [ // Random messages to display when the user runs out of time
-  'Be faster next time!',
-  'Be a bit quicker next time!',
-  'You were far too slow!',
-  'If you were any slower, you would have been going backwards!',
-  'You were almost as slow as a snail!',
-  'You were slower than a turtle!',
-  'A sloth could have answered that faster!',
-];
-
-const awfulScoreMessageList = [ // Random messages to display when the user got no questions right
-  'Yikes...',
-  'Ouch...',
-  'That was awful...',
-  'That was terrible...',
-  'That was horrible...',
-  'Were you even trying?',
-  'I\'ll pretend I didn\'t see that...',
-  'Let\'s just forget that ever happened...',
-  '...',
-  'I\'m speechless...',
-  'Sheeeeeesh...',
-  'Beep Bop Bloop... Error... Error... Error...',
-  'Tip: A score of 0 is not a good score...',
-];
-
-const badScoreMessageList = [ // Random messages to display when the user got less than half the questions right
-  'Is that all you got?',
-  'You can do better than that!',
-  'Is that the best you can do?',
-  'Better than nothing, I guess...',
-  'You wouldn\'t want to vs my grandma...',
-  'Come on, you can do better than that!',
-  'Try harder next time!',
-  'Tip: You get more points for answering correctly!',
-];
-
-const goodScoreMessageList = [ // Random messages to display when the user got more than half the questions right
-  'Not bad!',
-  'Not too shabby!',
-  'Getting close!',
-  'Almost there!',
-  'You\'re getting there!',
-  'Now we\'re talking!',
-  'Let\'s see if you can keep it up!',
-  'Let\'s go for gold next time!',
-  'You\'re a natural!',
-];
-
-const perfectScoreMessageList = [ // Random messages to display when the user got all the questions right
-  'Now that\'s what I call a fine score!',
-  'You\'re a genius!',
-  'You\'re a trivia master!',
-  'You\'re a trivia god!',
-  'Have you ever considered being a professional trivia player?',
-  'That last player could learn a thing or two from you!',
-  'Very impressive!',
-  'You\'re on a roll!',
-];
-
 function rand(array:string[]):string {
   return array[Math.floor(Math.random() * array.length)];
 }
@@ -1293,9 +1234,8 @@ function getLastMonday(d:Date) {
 export async function rpgBounties(
   interaction: MessageComponentInteraction | ChatInputCommandInteraction,
   command: 'quest' | 'dungeon' | 'raid' | null,
-):Promise<InteractionEditReplyOptions | InteractionUpdateOptions> {
+): Promise<InteractionEditReplyOptions | InteractionUpdateOptions> {
   // Check if the user has a persona
-
   const userData = await db.users.upsert({
     where: {
       discord_id: interaction.user.id,
@@ -1379,54 +1319,40 @@ export async function rpgBounties(
     },
   };
 
+  const allResetTimes: { [key: string]: Date } = {
+    quest: new Date(new Date().setHours(new Date().getHours() + 1, 0, 0, 0)),
+    dungeon: new Date(new Date(new Date().setDate(new Date().getDate() + 1)).setHours(0, 0, 0, 0)),
+    raid: new Date(new Date(getLastMonday(new Date()).getTime() + 7 * 24 * 60 * 60 * 1000).setHours(0, 0, 0, 0)),
+  };
+
+  // If the command is not null, we need to check the respective reset time
   if (command !== null) {
     const dbKey = `last_${command}`;
     const lastBounties = personaData[dbKey as 'last_quest' | 'last_dungeon' | 'last_raid'] as Date;
-    // log.debug(F, `lastBounties: ${lastBounties}`);
-
-    let resetTime = {} as Date;
     let timeout = false;
-    if (command === 'quest') {
-      const currentHour = new Date().getHours();
-      // log.debug(F, `currentHour: ${currentHour}`);
 
-      resetTime = new Date(new Date().setHours(currentHour + 1, 0, 0, 0));
+    if (lastBounties) {
+      // Check if the user has already completed the bounty type today, hourly, or weekly
+      const currentDate = new Date();
 
-      if (lastBounties) {
-        const lastBountiesHour = lastBounties.getHours();
-        // log.debug(F, `lastBountiesHour: ${lastBountiesHour}`);
-        if (lastBountiesHour === currentHour) {
-          timeout = true;
-        }
-      }
-    } else if (command === 'dungeon') {
-      const currentDay = new Date().getDate();
-      // log.debug(F, `currentDay: ${currentDay}`);
-      resetTime = new Date(new Date(new Date().setDate(currentDay + 1)).setHours(0, 0, 0, 0));
+      const timeComparison = {
+        quest: () => lastBounties.getHours() === currentDate.getHours(),
+        dungeon: () => lastBounties.getDate() === currentDate.getDate(),
+        raid: () => lastBounties.getTime() > getLastMonday(currentDate).getTime(),
+      };
 
-      if (lastBounties) {
-        const lastBountiesDay = lastBounties.getDate();
-        // log.debug(F, `lastBountiesDay: ${lastBountiesDay}`);
-
-        // log.debug(F, `personaData1: ${JSON.stringify(personaData, null, 2)}`);
-        // if (lastBounties && (lastBounties.getTime() + interval > new Date().getTime())) {
-        if (lastBountiesDay === currentDay) {
-          timeout = true;
-        }
-      }
-    } else if (command === 'raid') {
-      const lastMonday = getLastMonday(new Date());
-      // log.debug(F, `lastMonday: ${lastMonday}`);
-      resetTime = new Date(new Date(lastMonday.getTime() + 7 * 24 * 60 * 60 * 1000).setHours(0, 0, 0, 0));
-
-      // Check if the last bounties was done after the last monday
-      if (lastBounties && lastBounties.getTime() > lastMonday.getTime()) {
+      if (timeComparison[command] && timeComparison[command]()) {
         timeout = true;
       }
     }
 
-    // log.debug(F, `resetTime: ${resetTime}`);
-    // log.debug(F, `timeout: ${timeout}`);
+    // Including all reset times in the response
+    const resetTimesMessage = stripIndents`
+      **Reset Times:**
+      - Quest: ${time(allResetTimes.quest, 'R')}
+      - Dungeon: ${time(allResetTimes.dungeon, 'R')}
+      - Raid: ${time(allResetTimes.raid, 'R')}
+    `;
 
     if (timeout) {
       return {
@@ -1435,42 +1361,38 @@ export async function rpgBounties(
           .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).displayAvatarURL() })
           .setTitle(contracts[command].fail.title)
           .setDescription(stripIndents`${contracts[command].fail.description}
-            You can try again ${time(resetTime, 'R')}
+            ${resetTimesMessage}
             ${emojiGet('buttonBetSmall')} **Wallet:** ${personaData.tokens}`)
           .setColor(contracts[command].fail.color)],
         components: [rowBounties],
       };
     }
 
+    // Process tokens and other logic here...
     let tokens = 10;
     if (command === 'dungeon') { tokens = 50; } else if (command === 'raid') { tokens = 100; }
 
     let tokenMultiplier = inventoryData
       .filter(item => item.effect === 'tokenMultiplier')
       .reduce((acc, item) => acc + parseFloat(item.effect_value), 1);
-    // log.debug(F, `tokenMultiplier (before donor): ${tokenMultiplier}`);
 
-    // CHeck if the user who started this interaction has the patreon or booster roles
+    // Check for roles and adjust multiplier
     const member = await interaction.guild?.members.fetch(interaction.user.id);
     if (member?.roles.cache.has(env.ROLE_BOOSTER) || member?.roles.cache.has(env.ROLE_PATRON)) {
       tokenMultiplier += 0.1;
     }
 
-    // Round token multiplier to 1 decimal place
     tokenMultiplier = Math.round(tokenMultiplier * 10) / 10;
-    // log.debug(F, `tokenMultiplier: ${tokenMultiplier}`);
-
     tokens *= tokenMultiplier;
 
     if (env.NODE_ENV === 'development') { tokens *= 10; }
 
     tokens = Math.round(tokens);
 
-    // Award the user tokens
+    // Award tokens to the user
     personaData.tokens += tokens;
     personaData[dbKey as 'last_quest' | 'last_dungeon' | 'last_raid'] = new Date();
 
-    // log.debug(F, `personaData2: ${JSON.stringify(personaData, null, 2)}`);
     await db.personas.upsert({
       where: {
         id: personaData.id,
@@ -1485,7 +1407,7 @@ export async function rpgBounties(
         .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).displayAvatarURL() })
         .setTitle(contracts[command].success.title)
         .setDescription(stripIndents`${contracts[command].success.description.replace('{tokens}', tokens.toString())}
-          You can try again ${time(resetTime, 'R')}.
+          ${resetTimesMessage}
           ${emojiGet('buttonBetSmall')} **Wallet:** ${personaData.tokens}`)
         .setColor(contracts[command].success.color)],
       components: [rowBounties],
@@ -1590,7 +1512,8 @@ export async function rpgMarketInventory(
 
   for (const [category, categoryItems] of Object.entries(items)) {
     for (const item of Object.values(categoryItems)) {
-      if (!inventoryData.find(i => i.value === item.value)) {
+      if (!inventoryData.find(i => i.value === item.value)
+          && !(item.value === 'PremiumMembership' && member?.roles.cache.has(env.ROLE_PREMIUM))) {
         marketInventory.push({
           label: `${item.label} - ${(item.cost - (discount * item.cost))} TT$`,
           value: item.value,
@@ -2028,7 +1951,8 @@ export async function rpgMarketAccept(
       persona_id: personaData.id,
     },
   });
-  if (inventoryData.length >= 20) {
+
+  if (inventoryData.length >= 20 && (itemData.value !== 'PremiumMembership')) {
     const { embeds, components } = await rpgMarketChange(interaction);
 
     // This grossness takes the APIEmbed object, turns it into a JSON object, and pulls the description
@@ -2090,7 +2014,7 @@ export async function rpgMarketAccept(
     };
   }
 
-  personaData.tokens -= itemData.cost;
+  personaData.tokens -= itemCost;
   await db.personas.upsert({
     where: {
       id: personaData.id,
@@ -2099,27 +2023,29 @@ export async function rpgMarketAccept(
     update: personaData,
   });
 
-  // Add the item to the user's inventory
-  const newItem = {
-    persona_id: personaData.id,
-    label: itemData.label,
-    value: itemData.value,
-    description: itemData.description,
-    quantity: itemData.quantity,
-    weight: itemData.weight,
-    cost: itemData.cost,
-    equipped: itemData.equipped,
-    consumable: itemData.consumable,
-    effect: itemData.effect,
-    effect_value: itemData.effect_value,
-    emoji: itemData.emoji,
-  } as rpg_inventory;
-  // log.debug(F, `personaInventory: ${JSON.stringify(newItem, null, 2)}`);
+  if (itemData.value !== 'PremiumMembership') {
+    // Add the item to the user's inventory
+    const newItem = {
+      persona_id: personaData.id,
+      label: itemData.label,
+      value: itemData.value,
+      description: itemData.description,
+      quantity: itemData.quantity,
+      weight: itemData.weight,
+      cost: itemData.cost,
+      equipped: itemData.equipped,
+      consumable: itemData.consumable,
+      effect: itemData.effect,
+      effect_value: itemData.effect_value,
+      emoji: itemData.emoji,
+    } as rpg_inventory;
+    // log.debug(F, `personaInventory: ${JSON.stringify(newItem, null, 2)}`);
 
-  // await inventorySet(newItem);
-  await db.rpg_inventory.create({
-    data: newItem,
-  });
+    // await inventorySet(newItem);
+    await db.rpg_inventory.create({
+      data: newItem,
+    });
+  }
 
   // if the item is a background or font, automatically equip it and unequip the other items of the same type
   if (itemData.effect === 'background' || itemData.effect === 'font') {
@@ -2181,6 +2107,22 @@ export async function rpgMarketAccept(
       update: equipItem,
     });
     embedInfoText = 'Your flair has been equipped! Use `/rpg flair` to change your flair, or head Home to unequip it.';
+  }
+
+  if (itemData.value === 'PremiumMembership') {
+    try {
+      (interaction.member as GuildMember)?.roles.add(env.ROLE_PREMIUM);
+    } catch (err) {
+      personaData.tokens += itemCost;
+
+      await db.personas.upsert({
+        where: {
+          id: personaData.id,
+        },
+        create: personaData,
+        update: personaData,
+      });
+    }
   }
 
   const { embeds, components } = await rpgMarketChange(interaction);
@@ -2277,7 +2219,7 @@ export async function rpgFlair(interaction: ChatInputCommandInteraction) {
   // First check if the flair contains a @mention
   let newFlair = interaction.options.getString('flair') as string;
   // log.debug(F, `newFlair: ${newFlair}`);
-  const mentionRegex = /<@!?\d{18}>/g;
+  const mentionRegex = /<@!?\d{18,}>/g;
   const mentions = newFlair.match(mentionRegex);
   log.debug(F, `mentions: ${mentions}`);
   // If the flair contains a mention, check if the user has mod permissions
@@ -2370,10 +2312,32 @@ export async function rpgFlair(interaction: ChatInputCommandInteraction) {
   let adjustmentReason = 'No reason given';
 
   // Query the AI for approval
-  const aiPersona = await db.ai_personas.findUniqueOrThrow({
+  const aiPersona = await db.ai_personas.upsert({
     where: {
       name: 'FlairMod',
     },
+    create: {
+      name: 'FlairMod',
+      public: false,
+      ai_model: 'GPT_3_5_TURBO',
+      prompt: `You are acting as a moderation API. You will receive an input that a user wants to set as their user flair text.
+
+      Drug references and jokes and adult humour are allowed as long as they are not extremely vulgur or offensive. You can swap any very rude words with more PG rated family friendly ones. If there are no alternative words, reject the flair.
+      
+      After that, adjust it to correct spelling, grammar and such. Made up words are allowed unless they are obvious misspellings, but no random keyboard gibberish (EG. ALRJRBSIEIR)
+      
+      IMPORTANT! You must correct capitalisation so that the flair fits headline capitalisation rules (every word should be capitalised except short words like "i love going to the supermarket" becomes "I Love Going to the Supermarket")
+      
+      You must reply with this strict format:
+      Status: Approved, Adjusted, Rejected
+      Reason: Spelling, grammar, etc
+      Adjusted: The new edited flair, or the original flair if nothing was changed or adjusted`,
+      presence_penalty: 0,
+      frequency_penalty: 0,
+      max_tokens: 500,
+      created_by: userData.id,
+    },
+    update: {},
   });
 
   const messageList = [{
@@ -2717,7 +2681,7 @@ export async function rpgHomeNameChange(
     .then(async i => {
       if (i.customId.split('~')[1] !== interaction.id) return;
       const choice = i.fields.getTextInputValue('rpgNewName');
-      await i.deferReply({ ephemeral: true });
+      await i.deferReply({ flags: MessageFlags.Ephemeral });
 
       // log.debug(F, `name: ${choice}`);
 
@@ -3370,7 +3334,6 @@ export async function rpgArcade(
       .addComponents(
         customButton(`rpgCoinFlip,user:${interaction.user.id}`, 'CoinFlip', 'buttonCoinflip', ButtonStyle.Secondary),
         customButton(`rpgRoulette,user:${interaction.user.id}`, 'Roulette', 'buttonRoulette', ButtonStyle.Secondary),
-        customButton(`rpgTrivia,user:${interaction.user.id}`, 'Trivia', 'buttonTrivia', ButtonStyle.Secondary),
         // customButton(`rpgBlackjack,user:${interaction.user.id}`, 'Blackjack', '🃏', ButtonStyle.Primary),
         // customButton(`rpgSlots,user:${interaction.user.id}`, 'Slots', '🎰', ButtonStyle.Primary),
         customButton(`rpgTown,user:${interaction.user.id}`, 'Town', 'buttonTown', ButtonStyle.Primary),
@@ -3816,718 +3779,6 @@ export async function getNewTimer(seconds: number) {
   return new Date(currentDate.getTime() + seconds * 1000);
 }
 
-type GameState = {
-  [key:string]: {
-    difficultyMenu: StringSelectMenuBuilder,
-    questionsMenu: StringSelectMenuBuilder,
-  }
-};
-
-const gameStates = {} as GameState;
-
-export async function rpgTriviaGetQuestions(
-  amount: number,
-  difficulty:string,
-):Promise<TriviaQuestion[]> {
-  // log.debug(F, `Getting question with difficulty: ${difficulty}...`);
-  const trivia = new Trivia({ encoding: 'url3986' });
-
-  const { results } = await trivia.getQuestions({ amount, type: 'multiple', difficulty });
-
-  // log.debug(F, `results: ${JSON.stringify(results, null, 2)}`);
-
-  function anticheat(str: string) {
-    const replacementMap: { [key: string]: string } = {
-      a: 'α',
-      e: 'є',
-      u: 'υ',
-    };
-
-    return str.replace(/[aet]/gi, (replacement: string) => replacementMap[replacement] || replacement);
-  }
-
-  return results.map((questionData:{
-    category: string;
-    type: string;
-    difficulty: string;
-    question: string;
-    correct_answer: string;
-    incorrect_answers: string[];
-  }) => {
-    // const answers = [...questionData.incorrect_answers, questionData.correct_answer];
-    // Unescape HTML entities
-    const Question = anticheat(he.unescape(questionData.question));
-    const CorrectAnswer = anticheat(he.unescape(questionData.correct_answer));
-    const IncorrectAnswers = anticheat(he.unescape(questionData.incorrect_answers.join('| ')));
-    const Answers = [...IncorrectAnswers.split('| '), CorrectAnswer];
-    // log.debug(F, `Broken Question: ${questionData.question}, Fixed Question: ${fixedQuestion}`);
-    // log.debug(F, `Broken Answer: ${answers}, Fixed Answer: ${fixedAnswers}`);
-    // Shuffle the answers (So the correct answer isn't always the last one)
-    Answers.sort(() => Math.random() - 0.5);
-
-    return {
-      category: questionData.category,
-      type: questionData.type,
-      difficulty: questionData.difficulty,
-      question: Question,
-      correct_answer: CorrectAnswer,
-      all_answers: Answers,
-    } as TriviaQuestion;
-  });
-}
-
-export async function rpgTrivia( // eslint-disable-line
-  interaction: MessageComponentInteraction | ChatInputCommandInteraction,
-):Promise<InteractionEditReplyOptions | InteractionUpdateOptions> {
-  // log.debug(F, `GameStates: ${JSON.stringify(gameStates, null, 2)}`);
-
-  const difficulties = [
-    {
-      label: 'Normal Difficulty',
-      value: 'easy',
-      emoji: 'menuNormal',
-      default: true,
-    },
-    {
-      label: 'Hard Difficulty (50% difficulty bonus)',
-      value: 'medium',
-      emoji: 'menuHard',
-    },
-    {
-      label: 'Expert Difficulty (100% difficulty bonus)',
-      value: 'hard',
-      emoji: 'menuExpert',
-    },
-  ];
-
-  const numberOfQuestions = [
-    {
-      label: '5 Questions (50% perfect bonus)',
-      value: '5',
-      emoji: 'menuShort',
-      default: true,
-    },
-    {
-      label: '10 Questions (100% perfect bonus)',
-      value: '10',
-      emoji: 'menuMedium',
-    },
-    {
-      label: '20 Questions (200% perfect bonus)',
-      value: '20',
-      emoji: 'menuLong',
-    },
-  ];
-
-  const questionsMenu = gameStates[interaction.user.id]
-    ? gameStates[interaction.user.id].questionsMenu
-    : new StringSelectMenuBuilder()
-      .setCustomId(`rpgQuestionLimit,user:${interaction.user.id}`)
-      .setPlaceholder('How many questions?')
-      .setOptions(numberOfQuestions.map(q => ({
-        label: q.label,
-        value: q.value,
-        emoji: `<:${(emojiGet(q.emoji) as Emoji).identifier}>`,
-        default: q.default,
-      })));
-
-  const difficultyMenu = gameStates[interaction.user.id]
-    ? gameStates[interaction.user.id].difficultyMenu
-    : new StringSelectMenuBuilder()
-      .setCustomId(`rpgDifficulty,user:${interaction.user.id}`)
-      .setPlaceholder('Easy')
-      .setOptions(difficulties.map(d => ({
-        label: d.label,
-        value: d.value,
-        emoji: `<:${(emojiGet(d.emoji) as Emoji).identifier}>`,
-        default: d.default,
-      })));
-
-  // log.debug(F, `Questions Menu: ${JSON.stringify(questionsMenu, null, 2)}`);
-  // log.debug(F, `Difficulty Menu: ${JSON.stringify(difficultyMenu, null, 2)}`);
-
-  if (interaction.isButton() && interaction.customId.split(',')[0] === 'rpgStart') {
-    // const channelRpg = await interaction.guild?.channels.fetch(env.CHANNEL_TRIPTOWN as string) as TextChannel;
-    // await interaction.deferReply({ ephemeral: (channelRpg.id !== interaction.channelId) });
-    const difficultyComponent = interaction.message.components[1].components[0];
-    const selectedDifficulty = (difficultyComponent as StringSelectMenuComponent).options.find(
-      (o:APISelectMenuOption) => o.default === true,
-    );
-    const chosenDifficulty = selectedDifficulty?.value ?? 'easy';
-
-    const amountComponent = interaction.message.components[2].components[0];
-    const selectedAmount = (amountComponent as StringSelectMenuComponent).options.find(
-      (o:APISelectMenuOption) => o.default === true,
-    );
-    const amountOfQuestions = parseInt(selectedAmount?.value ?? '5', 10);
-
-    const difficultyName = optionDict[chosenDifficulty as keyof typeof optionDict].name;
-    const { bonus } = optionDict[chosenDifficulty as keyof typeof optionDict];
-    const { perfectBonus } = bonusDict[amountOfQuestions as keyof typeof bonusDict];
-    let questionTimer = {} as Date;
-    // let perfectScore = bonusDict[amountOfQuestions as keyof typeof bonusDict].perfectBonusMessage;
-    let bonusMessage = bonusMessageDict[chosenDifficulty as keyof typeof bonusMessageDict];
-    let questionsCorrect = 0;
-    let streak = 0;
-    let maxStreak = 0;
-    let score = 0;
-    let scoreMessage = '';
-    let timedOut = false as boolean;
-    let gameQuit = false as boolean;
-    let answerColor = Colors.Purple as ColorResolvable;
-    let embedStatus = `Starting trivia with ${amountOfQuestions} questions!`;
-    let questionAnswer = 'You have 30 seconds to answer each question.';
-    const choices = [
-      `<:${emojiGet('buttonBoxA').identifier}>`,
-      `<:${emojiGet('buttonBoxB').identifier}>`,
-      `<:${emojiGet('buttonBoxC').identifier}>`,
-      `<:${emojiGet('buttonBoxD').identifier}>`,
-    ] as string[];
-    // log.debug(F, `Choices: ${choices}`);
-    const choiceEmoji = (choice: string) => { // emoji for the buttons without the emoji name
-      switch (choice) {
-        case `<:${emojiGet('buttonBoxA').identifier}>`:
-          return emojiGet('buttonBoxA').id;
-        case `<:${emojiGet('buttonBoxB').identifier}>`:
-          return emojiGet('buttonBoxB').id;
-        case `<:${emojiGet('buttonBoxC').identifier}>`:
-          return emojiGet('buttonBoxC').id;
-        case `<:${emojiGet('buttonBoxD').identifier}>`:
-          return emojiGet('buttonBoxD').id;
-        default:
-          return '❓';
-      }
-    };
-
-    // Get the user's persona data
-    const userData = await db.users.upsert({
-      where: {
-        discord_id: interaction.user.id,
-      },
-      create: {
-        discord_id: interaction.user.id,
-      },
-      update: {},
-    });
-    const personaData = await db.personas.upsert({
-      where: {
-        user_id: userData.id,
-      },
-      create: {
-        user_id: userData.id,
-      },
-      update: {},
-    }); const questionList = await rpgTriviaGetQuestions(amountOfQuestions, chosenDifficulty);
-
-    for (let qNumber = 0; (qNumber < amountOfQuestions); qNumber += 1) {
-      // Get the first question from the array
-      const [questionData] = questionList;
-      const answerMap = new Map(questionData.all_answers.map((answer, index) => [choices[index], `**${choices[index]}** ${answer}`])); // eslint-disable-line max-len
-      questionTimer = await getNewTimer(35); // eslint-disable-line no-await-in-loop
-      let embed = new EmbedBuilder()
-        .setColor(answerColor)
-        .setTitle(`${emojiGet('buttonTrivia')} Trivia *(${difficultyName})*`)
-        .setDescription(`
-        **Question ${qNumber + 1} of ${amountOfQuestions}**
-        ${questionData.question}
-        
-        **Choices**
-        ${[...answerMap.values()].join('\n')}
-
-        Streak: ${streak}
-        **Time's up <t:${Math.floor(questionTimer.getTime() / 1000)}:R>**`)
-        .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).displayAvatarURL() }); // eslint-disable-line max-len
-
-      if (qNumber === 0) {
-        // await (interaction as MessageComponentInteraction).update({}); // eslint-disable-line no-await-in-loop
-        questionTimer = await getNewTimer(6); // eslint-disable-line no-await-in-loop
-        const startingEmbed = new EmbedBuilder()
-          .setColor(answerColor)
-          .setTitle(`${emojiGet('buttonTrivia')} Trivia *(${difficultyName})*`)
-          .setDescription(`
-          **Loading Trivia with ${amountOfQuestions} questions...**
-          
-          **Starting <t:${Math.floor(questionTimer.getTime() / 1000)}:R>**
-          Get ready!`)
-          .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).displayAvatarURL() }); // eslint-disable-line max-len
-        await interaction.editReply({ embeds: [startingEmbed], components: [] }); // eslint-disable-line no-await-in-loop, max-len
-        // If it's the first question, send a new message
-        await sleep(5 * 1000); // eslint-disable-line no-await-in-loop
-        await interaction.editReply({ // eslint-disable-line no-await-in-loop
-          embeds: [embed],
-          components: [
-            new ActionRowBuilder<ButtonBuilder>().addComponents(
-              choices.map(choice => new ButtonBuilder()
-                .setDisabled(false)
-                .setCustomId(`${choice},user:${interaction.user.id}`)
-                .setEmoji(choiceEmoji(choice))
-                .setStyle(ButtonStyle.Secondary))
-                .concat([
-                  customButton(`rpgQuit,user:${interaction.user.id}`, 'Quit', 'buttonQuit', ButtonStyle.Danger).setDisabled(false),
-                ]),
-            ),
-          ],
-        });
-      } else {
-        // await (interaction as MessageComponentInteraction).editReply({}); // eslint-disable-line no-await-in-loop
-        // If not the first question, edit the previous message
-        await sleep(5 * 1000); // eslint-disable-line no-await-in-loop
-        await interaction.editReply({ // eslint-disable-line no-await-in-loop
-          embeds: [embed],
-          components: [
-            new ActionRowBuilder<ButtonBuilder>().addComponents(
-              choices.map(choice => new ButtonBuilder()
-                .setDisabled(false)
-                .setCustomId(`${choice},user:${interaction.user.id}`)
-                .setEmoji(choiceEmoji(choice))
-                .setStyle(ButtonStyle.Secondary))
-                .concat([
-                  customButton(`rpgQuit,user:${interaction.user.id}`, 'Quit', 'buttonQuit', ButtonStyle.Danger).setDisabled(false),
-                ]),
-            ),
-          ],
-        });
-      }
-
-      // Filter for the buttons
-      const filter = (i: MessageComponentInteraction) => i.user.id === interaction.user.id
-          && i.componentType === ComponentType.Button;
-      if (!interaction.channel) throw new Error('Channel not found');
-      let collected = {} as ButtonInteraction;
-      try {
-        collected = await interaction.channel.awaitMessageComponent({ // eslint-disable-line no-await-in-loop
-          filter,
-          time: 30000,
-        }) as ButtonInteraction;
-      } catch (err) {
-        // If the user doesn't answer in time
-        // log.debug(F, 'User did not answer in time');
-        embedStatus = timesUp;
-        answerColor = Colors.Red as ColorResolvable;
-        questionAnswer = `The correct answer was **${questionData.correct_answer}.**`;
-        timedOut = true;
-      }
-
-      if (timedOut === true) break;
-      await collected.update({}); // eslint-disable-line no-await-in-loop
-
-      await collected.editReply({ // eslint-disable-line no-await-in-loop
-        components: [
-          new ActionRowBuilder<ButtonBuilder>()
-            .addComponents(
-              choices.map(choice => new ButtonBuilder()
-                .setCustomId(`${choice},user:${interaction.user.id}`)
-                .setDisabled(true)
-                .setEmoji(choice)
-                .setStyle(ButtonStyle.Secondary))
-                .concat([
-                  customButton('rpgQuit', 'Quit', 'buttonQuit', ButtonStyle.Danger).setDisabled(true),
-                ]),
-            )],
-      });
-
-      if (collected.customId.split(',')[0] === 'rpgQuit') {
-        gameQuit = true;
-        // log.debug(F, 'User quit the game');
-        break;
-      }
-
-      let answer = answerMap.get(collected.customId.split(',')[0]); // Get the answer from the map
-      answer = answer?.substring(38);
-      log.debug(F, `User chose: ${answer}`);
-      log.debug(F, `Correct answer was: ${questionData.correct_answer}`);
-
-      if (answer === questionData.correct_answer) { // If the user answers correctly
-        questionTimer = await getNewTimer(6); // eslint-disable-line no-await-in-loop
-        streak += 1;
-        if (streak > maxStreak) {
-          maxStreak = streak;
-        }
-        score += (1 * streak);
-        questionsCorrect += 1;
-        embed = new EmbedBuilder()
-          .setColor(Colors.Green as ColorResolvable)
-          .setTitle(`${emojiGet('buttonTrivia')} Trivia *(${difficultyName})*`)
-          .setDescription(`
-            **Correct!**
-            The answer was **${questionData.correct_answer}.**
-            
-            **Current Score**
-            Correct: ${questionsCorrect} of ${(qNumber + 1)}
-            Streak: ${streak}
-            
-            Next question <t:${Math.floor(questionTimer.getTime() / 1000)}:R>`)
-          .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).displayAvatarURL() }); // eslint-disable-line max-len
-        embedStatus = 'Correct!';
-        questionAnswer = `The answer was **${questionData.correct_answer}.**`;
-        if (interaction.isRepliable()) {
-          await interaction.editReply({ // eslint-disable-line no-await-in-loop
-            embeds: [embed],
-            components: [
-              new ActionRowBuilder<ButtonBuilder>()
-                .addComponents(
-                  choices.map(choice => new ButtonBuilder()
-                    .setDisabled(true)
-                    .setCustomId(`${choice},user:${interaction.user.id}`)
-                    .setEmoji(choiceEmoji(choice))
-                    .setStyle(ButtonStyle.Secondary))
-                    .concat([
-                      customButton(`rpgQuit,user:${interaction.user.id}`, 'Quit', 'buttonQuit', ButtonStyle.Danger).setDisabled(true),
-                    ]),
-                ),
-            ],
-          });
-        } else {
-          embedStatus = timesUp;
-          answerColor = Colors.Red as ColorResolvable;
-          questionAnswer = `The correct answer was **${questionData.correct_answer}.**`;
-          timedOut = true;
-          break; // If the user timed out, break the loop
-        }
-      } else { // If the user answers incorrectly
-        questionTimer = await getNewTimer(6); // eslint-disable-line no-await-in-loop
-        streak = 0;
-        embed = new EmbedBuilder()
-          .setColor(Colors.Grey as ColorResolvable)
-          .setTitle(`${emojiGet('buttonTrivia')} Trivia *(${difficultyName})*`)
-          .setDescription(`
-          **Incorrect!**
-          The correct answer was **${questionData.correct_answer}.**
-          
-          **Current Score**
-          Correct: ${questionsCorrect} of ${(qNumber + 1)}
-          Streak: ${streak}
-          
-          Next question <t:${Math.floor(questionTimer.getTime() / 1000)}:R>`)
-          .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: env.TS_ICON_URL }); // eslint-disable-line max-len
-        embedStatus = 'Incorrect!';
-        questionAnswer = `The correct answer was **${questionData.correct_answer}.**`;
-        if (interaction.isRepliable()) {
-          await interaction.editReply({ // eslint-disable-line no-await-in-loop
-            embeds: [embed],
-            components: [
-              new ActionRowBuilder<ButtonBuilder>().addComponents(
-                choices.map(choice => new ButtonBuilder()
-                  .setDisabled(true)
-                  .setCustomId(`${choice},user:${interaction.user.id}`)
-                  .setEmoji(choiceEmoji(choice))
-                  .setStyle(ButtonStyle.Secondary))
-                  .concat([
-                    customButton(`rpgQuit,user:${interaction.user.id}`, 'Quit', 'buttonQuit', ButtonStyle.Danger).setDisabled(true),
-                  ]),
-              ),
-            ],
-          });
-        } else {
-          embedStatus = timesUp;
-          answerColor = Colors.Red as ColorResolvable;
-          questionAnswer = `The correct answer was **${questionData.correct_answer}.**`;
-          timedOut = true;
-          break; // If the user timed out, break the loop
-        }
-      }
-      questionList.splice(0, 1); // Remove the first question from the array
-    }
-    let payout = 0;
-    // perfectScore = '';
-    if (questionsCorrect !== 0) { // The user got at least one question correct
-      if (questionsCorrect === amountOfQuestions) { // Bonus for getting all questions correct
-        payout = Math.ceil(2 * (score * (bonus + perfectBonus)));
-      } else {
-        payout = Math.ceil(2 * (score * bonus));
-        // perfectScore = '';
-      }
-      // log.debug(F, `Payout: ${payout} tokens`);
-      // log.debug(F, `Rounded Payout: ${payout} tokens`);
-      personaData.tokens += payout;
-      // log.debug(F, `User scored: ${score}`);
-      // log.debug(F, `User earned: ${payout} tokens`);
-      await db.personas.upsert({
-        where: {
-          user_id: userData.id,
-        },
-        create: personaData,
-        update: personaData,
-      });
-    } else {
-      bonusMessage = '';
-    }
-
-    if (!timedOut) {
-      if (questionsCorrect === 0) {
-        scoreMessage = awfulScoreMessageList[Math.floor(Math.random() * awfulScoreMessageList.length)];
-      }
-      if (questionsCorrect <= (amountOfQuestions / 2)) {
-        scoreMessage = badScoreMessageList[Math.floor(Math.random() * badScoreMessageList.length)];
-      }
-      if (questionsCorrect > (amountOfQuestions / 2)) {
-        scoreMessage = goodScoreMessageList[Math.floor(Math.random() * goodScoreMessageList.length)];
-      }
-      if (questionsCorrect === amountOfQuestions) {
-        scoreMessage = perfectScoreMessageList[Math.floor(Math.random() * perfectScoreMessageList.length)];
-      }
-      // log.debug(F, `Score Message: ${scoreMessage}`);
-      const embed = new EmbedBuilder()
-        .setColor(answerColor)
-        .setTitle(`${emojiGet('buttonTrivia')} Trivia *(${difficultyName})*`)
-        .setDescription(
-          `**${embedStatus}**
-          ${questionAnswer}
-
-          **Final Scores** 
-          Correct: **${questionsCorrect}** out of **${amountOfQuestions}**
-          Max Streak: **${maxStreak}** correct in a row
-          *${scoreMessage}*
-
-          Earned: **${payout} tokens**${bonusMessage}
-          ${emojiGet('buttonBetSmall')} **Wallet:** ${personaData.tokens}
-          `,
-        )
-        .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).displayAvatarURL() }); // eslint-disable-line max-len
-      return {
-        embeds: [embed],
-        components: [
-          new ActionRowBuilder<ButtonBuilder>()
-            .addComponents(
-              customButton(`rpgStart,user:${interaction.user.id}`, 'Start', 'buttonStart', ButtonStyle.Success),
-              customButton(`rpgArcade,user:${interaction.user.id}`, 'Arcade', 'buttonArcade', ButtonStyle.Primary),
-            ),
-          new ActionRowBuilder<StringSelectMenuBuilder>()
-            .addComponents(
-              difficultyMenu,
-            ),
-          new ActionRowBuilder<StringSelectMenuBuilder>()
-            .addComponents(
-              questionsMenu,
-            ),
-        ],
-      };
-    }
-    if (gameQuit) {
-      const gameQuitMessage = gameQuitMessageList[Math.floor(Math.random() * gameQuitMessageList.length)];
-      const embed = new EmbedBuilder()
-        .setColor(Colors.Purple)
-        .setTitle(`${emojiGet('buttonTrivia')} Trivia *(${difficultyName})*`)
-        .setDescription(
-          `**Game quit.**
-          ${questionAnswer}
-
-          **Final Scores** 
-          Correct: **${questionsCorrect}** out of **${amountOfQuestions}**
-          Max Streak: **${maxStreak}** questions correct in a row
-          *${gameQuitMessage}*
-
-          Earned: **${payout} tokens**${bonusMessage}
-          ${emojiGet('buttonBetSmall')} **Wallet:** ${personaData.tokens}
-          `,
-        )
-        .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).displayAvatarURL() }); // eslint-disable-line max-len
-      return {
-        embeds: [embed],
-        components: [
-          new ActionRowBuilder<ButtonBuilder>()
-            .addComponents(
-              customButton(`rpgStart,user:${interaction.user.id}`, 'Start', 'buttonStart', ButtonStyle.Success),
-              customButton(`rpgArcade,user:${interaction.user.id}`, 'Arcade', 'buttonArcade', ButtonStyle.Primary),
-            ),
-          new ActionRowBuilder<StringSelectMenuBuilder>()
-            .addComponents(
-              difficultyMenu,
-            ),
-          new ActionRowBuilder<StringSelectMenuBuilder>()
-            .addComponents(
-              questionsMenu,
-            ),
-        ],
-      };
-    }
-    const timeOutMessage = timeOutMessageList[Math.floor(Math.random() * timeOutMessageList.length)];
-    const embed = new EmbedBuilder()
-      .setColor(Colors.Purple)
-      .setTitle(`${emojiGet('buttonTrivia')} Trivia *(${difficultyName})*`)
-      .setDescription(
-        `**${embedStatus}**
-        ${questionAnswer}
-
-        **Final Scores** 
-        Correct: **${questionsCorrect}** out of **${amountOfQuestions}**
-        Max Streak: **${maxStreak}** correct in a row
-        *${timeOutMessage}*
-
-        Earned: **${payout} tokens**${bonusMessage}
-        ${emojiGet('buttonBetSmall')} **Wallet:** ${personaData.tokens}
-        `,
-      )
-      .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).displayAvatarURL() }); // eslint-disable-line max-len
-
-    // log.debug(F, 'Trivia Game Ended');
-    // log.debug(F, `Embed: ${JSON.stringify(embed, null, 2)}`);
-    const components = [
-      new ActionRowBuilder<ButtonBuilder>()
-        .addComponents(
-          customButton(`rpgStart,user:${interaction.user.id}`, 'Start', 'buttonStart', ButtonStyle.Success),
-          customButton(`rpgArcade,user:${interaction.user.id}`, 'Arcade', 'buttonArcade', ButtonStyle.Primary),
-        ),
-      new ActionRowBuilder<StringSelectMenuBuilder>()
-        .addComponents(
-          difficultyMenu,
-        ),
-      new ActionRowBuilder<StringSelectMenuBuilder>()
-        .addComponents(
-          questionsMenu,
-        ),
-    ];
-    // log.debug(F, `Components: ${JSON.stringify(components, null, 2)}`);
-    return {
-      embeds: [embed],
-      components,
-    };
-  }
-
-  // Get the item the user selected
-  let selectedOption = '' as string;
-  if (interaction.isStringSelectMenu() && interaction.values) {
-    [selectedOption] = interaction.values;
-  }
-  // log.debug(F, `selectedOption: ${selectedOption}`);
-
-  // Check if the selected option exists in the difficulties list
-  const difficultyOption = Object.values(difficulties.map(d => ({
-    label: d.label,
-    value: d.value,
-    emoji: emojiGet(d.emoji),
-    default: d.default,
-  }))).find(item => item.value === selectedOption);
-  if (difficultyOption) {
-    // log.debug(F, 'difficultyOption is not empty');
-    // Get a list of marketInventory where the value does not equal the choice
-    // If there is no choice, it will return all items the user has
-    const filteredDifficulties = Object.values(difficulties.map(d => ({
-      label: d.label,
-      value: d.value,
-      emoji: `<:${(emojiGet(d.emoji) as Emoji).identifier}>`,
-      default: d.default,
-    })))
-      .filter(item => item.value !== selectedOption)
-      .map(item => ({ ...item, default: false }));
-    difficultyMenu.setOptions(filteredDifficulties);
-    const chosenDifficulty = difficulties.map(d => ({
-      label: d.label,
-      value: d.value,
-      emoji: `<:${(emojiGet(d.emoji) as Emoji).identifier}>`,
-      default: d.default,
-    })).find(item => item.value === selectedOption);
-    if (chosenDifficulty) {
-      chosenDifficulty.default = true;
-      difficultyMenu.addOptions(chosenDifficulty);
-    }
-    // log.debug(F, `difficultyMenu: ${JSON.stringify(difficultyMenu, null, 2)}`);
-    if (gameStates[interaction.user.id]) {
-      gameStates[interaction.user.id].difficultyMenu = difficultyMenu;
-    } else {
-      gameStates[interaction.user.id] = {
-        difficultyMenu,
-        questionsMenu: new StringSelectMenuBuilder()
-          .setCustomId(`rpgQuestionLimit,user:${interaction.user.id}`)
-          .setPlaceholder('How many questions?')
-          .setOptions(numberOfQuestions.map(q => ({
-            label: q.label,
-            value: q.value,
-            emoji: `<:${(emojiGet(q.emoji) as Emoji).identifier}>`,
-            default: q.default,
-          }))),
-      };
-    }
-  }
-
-  // Check if the selected option exists in the number of questions list
-  const amountOption = Object.values(numberOfQuestions.map(q => ({
-    label: q.label,
-    value: q.value,
-    emoji: emojiGet(q.emoji),
-    default: q.default,
-  }))).find(item => item.value === selectedOption);
-  if (amountOption) {
-    // log.debug(F, 'amountOption is not empty');
-    const filteredOptions = Object.values(numberOfQuestions.map(q => ({
-      label: q.label,
-      value: q.value,
-      emoji: `<:${(emojiGet(q.emoji) as Emoji).identifier}>`,
-      default: q.default,
-    })))
-      .filter(item => item.value !== selectedOption)
-      .map(item => ({ ...item, default: false }));
-    questionsMenu.setOptions(filteredOptions);
-    const chosenQuestion = numberOfQuestions.map(q => ({
-      label: q.label,
-      value: q.value,
-      emoji: `<:${(emojiGet(q.emoji) as Emoji).identifier}>`,
-      default: q.default,
-    })).find(item => item.value === selectedOption);
-    if (chosenQuestion) {
-      chosenQuestion.default = true;
-      questionsMenu.addOptions(chosenQuestion);
-    }
-    if (gameStates[interaction.user.id]) {
-      gameStates[interaction.user.id].questionsMenu = questionsMenu;
-    } else {
-      gameStates[interaction.user.id] = {
-        difficultyMenu: new StringSelectMenuBuilder()
-          .setCustomId(`rpgDifficulty,user:${interaction.user.id}`)
-          .setPlaceholder('Easy')
-          .setOptions(difficulties.map(d => ({
-            label: d.label,
-            value: d.value,
-            emoji: `<:${(emojiGet(d.emoji) as Emoji).identifier}>`,
-            default: d.default,
-          }))),
-        questionsMenu,
-      };
-    }
-  }
-
-  const components = [
-    new ActionRowBuilder<ButtonBuilder>()
-      .addComponents(
-        customButton(`rpgStart,user:${interaction.user.id}`, 'Start', 'buttonStart', ButtonStyle.Success),
-        customButton(`rpgArcade,user:${interaction.user.id}`, 'Arcade', 'buttonArcade', ButtonStyle.Primary),
-      ),
-    new ActionRowBuilder<StringSelectMenuBuilder>()
-      .addComponents(
-        difficultyMenu,
-      ),
-    new ActionRowBuilder<StringSelectMenuBuilder>()
-      .addComponents(
-        questionsMenu,
-      ),
-  ];
-
-  // log.debug(F, `Components: ${JSON.stringify(components, null, 2)}`);
-
-  return {
-    embeds: [embedTemplate()
-      .setAuthor(null)
-      .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).displayAvatarURL() })
-      .setTitle(`${emojiGet('buttonTrivia')} Trivia`)
-      .setDescription(stripIndents`
-        You ${rand(text.enter)} the trivia parlor where you can test your knowledge of random facts!
-
-        **How to play**
-        - All questions are multiple choice
-        - Select a difficulty and number of questions
-        - Answer the questions within 30 seconds
-
-        - Earn 1 token (plus difficulty bonus) for each correct answer
-        - Earn a streak multiplier for each correct answer in a row
-        - Earn more bonus tokens if you get all questions correct
-
-       *(Multiplayer coming soon!)*
-      `)
-      .setColor(Colors.Green)],
-    components,
-  };
-}
-
 export async function rpgArcadeWager(
   interaction: MessageComponentInteraction,
 ):Promise<InteractionUpdateOptions> {
@@ -4772,6 +4023,7 @@ export const dRpg: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('rpg')
     .setDescription('A TripSit RPG (BETA)!')
+    .setIntegrationTypes([0])
     .addSubcommand(subcommand => subcommand
       .setName('town')
       .setDescription('Go to TripTown!'))
@@ -4806,9 +4058,6 @@ export const dRpg: SlashCommand = {
       .setName('roulette')
       .setDescription('Go to the roulette game'))
     .addSubcommand(subcommand => subcommand
-      .setName('trivia')
-      .setDescription('Go to the trivia parlor'))
-    .addSubcommand(subcommand => subcommand
       .setName('flair')
       .setDescription('Change your flair')
       .addStringOption(option => option
@@ -4830,7 +4079,8 @@ export const dRpg: SlashCommand = {
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
     const channelRpg = await interaction.guild?.channels.fetch(env.CHANNEL_TRIPTOWN as string) as TextChannel;
-    await interaction.deferReply({ ephemeral: (channelRpg.id !== interaction.channelId) });
+    const ephemeral = channelRpg.id !== interaction.channelId ? MessageFlags.Ephemeral : undefined;
+    await interaction.deferReply({ flags: ephemeral });
     const subcommand = interaction.options.getSubcommand();
 
     // const quietCommands = [
@@ -4888,9 +4138,6 @@ export const dRpg: SlashCommand = {
     }
     if (subcommand === 'roulette') {
       await interaction.editReply(await rpgArcadeGame(interaction, 'Roulette'));
-    }
-    if (subcommand === 'trivia') {
-      await interaction.editReply(await rpgTrivia(interaction));
     }
     if (subcommand === 'flair') {
       await interaction.editReply(await rpgFlair(interaction));

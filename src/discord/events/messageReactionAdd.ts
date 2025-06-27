@@ -7,7 +7,6 @@ import {
 } from '../@types/eventDef';
 import { chitragupta } from '../utils/chitragupta';
 import { bestOf } from '../utils/bestOfTripsit';
-import { updatePollEmbed } from '../commands/global/d.poll';
 import { aiReaction } from '../commands/global/d.ai';
 // import log from '../../global/utils/log';
 // import {parse} from 'path';
@@ -19,14 +18,14 @@ export const messageReactionAdd: MessageReactionAddEvent = {
     try {
       await messageReaction.fetch();
     } catch (e) {
-      log.error(F, 'Failed to fetch messageReaction');
+      // log.error(F, 'Failed to fetch messageReaction');
       // return;
     }
 
     try {
       await messageReaction.message.fetch(); // Get the message object so that we can do stuff between restarts
     } catch (e) {
-      log.error(F, 'Failed to fetch message data');
+      // log.error(F, 'Failed to fetch message data');
       // return;
     }
 
@@ -47,7 +46,6 @@ export const messageReactionAdd: MessageReactionAddEvent = {
 
     chitragupta(messageReaction, user, 1);
     bestOf(messageReaction);
-    updatePollEmbed(messageReaction);
     // await communityMod(reaction, user);
   },
 };

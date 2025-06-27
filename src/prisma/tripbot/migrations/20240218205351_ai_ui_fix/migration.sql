@@ -6,10 +6,10 @@
 */
 
 -- DropConstraint
-ALTER TABLE ai_channels DROP CONSTRAINT aichannels_channelid_personaid_unique;
+-- ALTER TABLE ai_channels DROP CONSTRAINT aichannels_channelid_personaid_unique;
 
 -- DropIndex
--- DROP INDEX "aichannels_channelid_personaid_unique";
+DROP INDEX "aichannels_channelid_personaid_unique";
 
 -- CreateIndex
 CREATE UNIQUE INDEX "aichannels_channelid_unique" ON "ai_channels"("channel_id");

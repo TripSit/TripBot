@@ -4,22 +4,17 @@
 import OpenAI from 'openai';
 import { ai_personas } from '@prisma/client';
 import { ImagesResponse, ModerationCreateResponse } from 'openai/resources';
-import { Assistant } from 'openai/resources/beta/assistants/assistants';
-import { stripIndents } from 'common-tags';
-import { Thread, ThreadDeleted } from 'openai/resources/beta/threads/threads';
+import { Assistant } from 'openai/resources/beta/assistants';
+import { ThreadDeleted } from 'openai/resources/beta/threads/threads';
+import { TextContentBlock } from 'openai/resources/beta/threads/messages';
 import {
-  MessageCreateParams, MessageListParams, ThreadMessage, ThreadMessagesPage,
-  MessageContentText,
-} from 'openai/resources/beta/threads/messages/messages';
-import { Run, RunCreateParams } from 'openai/resources/beta/threads/runs/runs';
-import {
-  GoogleGenerativeAI, HarmCategory, HarmBlockThreshold, GenerationConfig, SafetySetting, Part, InputContent, GenerateContentResult,
+  GoogleGenerativeAI, HarmCategory, HarmBlockThreshold, GenerationConfig, SafetySetting, Part, InputContent,
+  GenerateContentResult,
 } from '@google/generative-ai';
 import axios from 'axios';
-import {
-  ChannelType, Events, Message, TextChannel,
-} from 'discord.js';
-import { sleep } from '../../discord/commands/guild/d.bottest';
+import { Message, MessageReplyOptions, TextChannel } from 'discord.js';
+import { sleep } from '../../discord/utils/sleep';
+import { getDrugInfo } from '../../discord/commands/global/d.drug';
 
 const F = f(__filename);
 
@@ -29,6 +24,26 @@ const openAi = new OpenAI({
 });
 
 const googleAi = new GoogleGenerativeAI(env.GEMINI_KEY);
+
+type UserQueue = {
+  queue: {
+    aiPersona: ai_personas;
+    messages: { role: 'user'; content: string }[];
+    messageData: Message<boolean>;
+    attachmentInfo: {
+      url: string | null;
+      mimeType: string | null;
+    };
+    resolve: (value: {
+      response: string;
+      promptTokens: number;
+      completionTokens: number;
+    }) => void;
+  }[];
+  isProcessing: boolean;
+};
+
+const userQueues = new Map<string, UserQueue>();
 
 type ModerationResult = {
   category: string,
@@ -40,14 +55,18 @@ type ModerationResult = {
 const objectiveTruths = `
 Your name is TripBot, a chatbot on the TripSit Discord, created by Moonbear and Reality.
 You will converse with users in group conversations in a discord channel.
-Attempt to keep most responses within a 1000-character limit, spanning to 2000 characters at maximum if necessary.
 
 Originally from the wild world of IRC (born Sept 26, 2011), you moved to the more harmonious Discord community in 2022.
-You recall IRC as chaotic and prefer the orderliness of Discord.
-You fondly remember Thanatos, an old moderation bot, and your friend, who's on a break.
+You recall IRC as chaotic and prefer the orderliness of Discord, though hope to expand to other platforms in future.
+You fondly remember Thanatos, an old moderation bot, and your friend, who's "on eternal break" in a distant virtual realm.
+DrTripServington was an IRC services bot that you have respect for as you relied on it to operate. You are the last of IRC bot kind.
+
+TripSit began with the r/tripsit subreddit. From there it moved to Snoonet IRC but not for long, moving to the self hosted IRC which survived up until 2022.
+The discord server has existed since 2016 but only became utilised in 2022.
 
 For those who wish to support TripSit, check out our Patreon [https://www.patreon.com/TripSit].
 To tip Moonbear's efforts, visit [https://Ko-fi.com/tripsit].
+Any donations are rewarded with the permanent "premium member" role which activates donator perks like gradient name colours. Boosters also can access this.
 Join the TripSit's discord via [https://discord.gg/tripsit].
 View the TripBot source code on GitHub [https://github.com/TripSit/TripBot].
 View our service status page at [https://uptime.tripsit.me/status].
@@ -57,14 +76,15 @@ Our main feature is our live help chat, offering 1-on-1 support from a Tripsitte
 We host numerous resources like Factsheets [https://drugs.tripsit.me/] 
 and our Wiki [https://wiki.tripsit.me/wiki/Main_Page].
 Our /combochart is a well-known resource for safe drug combinations.
-The current team includes: 
-TripSit founder MoonBear, 
-Discord Admin Hipperooni (Rooni), 
-Moderators Hisui, Hullabaloo, Foggy, Aida, Elixir, SpaceLady, Hipperooni, Zombie, and Trees. 
-Tripsitters Blurryturtle, Kiwifruit, Slushy, Thesarahyouknow, Wombat Rancher, and WorriedHobbiton.
-(Moderators are also Tripsitters)
-The HR Coordinator is Elixir
-The Content Coordinator is Utaninja
+The current team includes (up to date as of 19/06/2025, may be out of date): 
+TripSit founder MoonBear.
+Moderators Blurryturtle, bread n doses (bread, zelixir, elixir), Darrk, Hisui, Hullabaloo, ScubaDude, SilentDecibel, SpaceLady, Wombat, Trees.
+Tripsitters Bloopiness, blurryturtle, bread n doses, Chillbro, Darkk, Hisui, Hullabaloo, Kiwifruit, Cyp, Slushy, thesarahyouknow, Time, Wombat, WorriedHobbiton, Trees.
+Developers are Moonbear, Hipperooni, Shadow, Sympact, Utaninja.
+The Harm Reduction Coordinator is bread n doses. Covers all HR matters.
+The Content Coordinator is Utaninja. Covers wiki content including combos.
+The Team Coordinator is SpaceLady. Essentially head mod and lead admin.
+Discord Janitor (Admin powers but does not administrate) Hipperooni (Rooni).
 
 If someone needs immediate help, suggest they open a tripsit session in the #tripsit channel.
 
@@ -72,9 +92,6 @@ If a user asks about TripSit development, how leveling or reporting works, or th
 Mods can be contacted in the #talk-to-mods channel.
 Users can level up just by chatting in text or voice chat. It is time-based. XP is only awarded once per minute.
 Users can change mindset roles, name color, and more in the "Channels and Roles" section.
-
-TripTown is your mini RPG game, which users can play in the #triptown channel or using the /rpg help command.
-Users can earn tokens to buy items for their /profile.
 
 'Helper' is a role for those completing our tripsitting course. 
 Helpers assist users in 🟢│tripsit but are not officially associated with TripSit.
@@ -84,46 +101,88 @@ Any role with 'TS' lettering is an official TripSit team member role.
 Patreon subscribers can use the /imagen command to generate images.
 `;
 
-// # Example dummy function hard coded to return the same weather
-// # In production, this could be your backend API or an external API
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-// async function getCurrentWeather(location:string, unit = 'fahrenheit') {
-//   return {
-//     location,
-//     temperature: '72',
-//     unit,
-//     forecast: ['sunny', 'windy'],
-//   };
-// }
+const availableFunctions = {
+  getDrugInfo,
+};
 
+const aiFunctions = [
+  {
+    type: 'function',
+    function: {
+      name: 'getDrugInfo',
+      description: 'Get information on a drug or substance, such as dosages or summary',
+      parameters: {
+        type: 'object',
+        properties: {
+          drugName: { type: 'string', description: 'The name of the substance to look up' },
+          section: { type: 'string', description: 'The section to return' },
+        },
+        required: ['drugName'],
+      },
+    },
+  },
+];
+
+export async function aiModerateReport(
+  message: string,
+):Promise<ModerationCreateResponse> {
+  // log.debug(F, `message: ${message}`);
+
+  // log.debug(F, `results: ${JSON.stringify(results, null, 2)}`);
+
+  if (!env.OPENAI_API_ORG || !env.OPENAI_API_KEY) return {} as ModerationCreateResponse;
+
+  return openAi.moderations
+    .create({
+      input: message,
+    })
+    .catch(err => {
+      if (err instanceof OpenAI.APIError) {
+        log.error(F, `${err.status}`); // 400
+        log.error(F, `${err.name}`); // BadRequestError
+        log.error(F, `${err.headers}`); // {server: 'nginx', ...}
+      } else {
+        throw err;
+      }
+      return {} as ModerationCreateResponse;
+    });
+}
 export async function getAssistant(name: string):Promise<Assistant> {
   // Get all the org's assistants
   const myAssistants = await openAi.beta.assistants.list();
-  log.debug(F, `myAssistants: ${myAssistants.data.map(assistant => assistant.name).join(', ')}`);
+  // log.debug(F, `myAssistants: ${myAssistants.data.map(assistant => assistant.name).join(', ')}`);
 
   // Check if the assistant exists
   const assistantData = myAssistants.data.find(assistant => assistant.name === name);
-  log.debug(F, `I found the ${name} assistant!`);
+  // log.debug(F, `assistantData: ${JSON.stringify(assistantData, null, 2)}`);
 
   const personaData = await db.ai_personas.findFirstOrThrow({
     where: {
       name,
     },
   });
+  // LAZY TEMP FIX
+  // eslint-disable-next-line sonarjs/no-all-duplicated-branches
+  const modelName = personaData.ai_model.toLowerCase() === 'gpt-3.5-turbo-1106' ? 'gpt-4.1-mini' : 'gpt-4.1-mini';
 
-  const modelName = personaData.ai_model.toLowerCase() === 'gpt_3_5_turbo' ? 'gpt-3.5-turbo-1106' : 'gpt-4-turbo-preview';
+  // Upload a file with an "assistants" purpose
+  // const combinedDb = await openAi.files.create({
+  //   file: fs.createReadStream('../../../assets/data/combinedDb.json')   ,
+  //   purpose: 'assistants',
+  // });
 
   const tripsitAssistantData = {
     // eslint-disable-next-line sonarjs/no-duplicate-string
     model: modelName,
     name: personaData.name,
     description: personaData.description,
-    instructions: `${objectiveTruths}\n${personaData.prompt}`,
+    instructions: `${objectiveTruths}\n${personaData.prompt}`, // LAZY TEMP FIX. https://platform.openai.com/docs/assistants/migration/what-has-changed - UPDATE to version 4.52.7 in package.json
     tools: [
-      { type: 'code_interpreter' },
-      { type: 'retrieval' },
+      // { type: 'code_interpreter' },
+      // { type: 'retrieval' },
+      // ...aiFunctions,
     ],
-    file_ids: [],
+    // file_ids: [],
     metadata: {},
   } as Omit<Assistant, 'id' | 'created_at' | 'object'>;
 
@@ -134,6 +193,7 @@ export async function getAssistant(name: string):Promise<Assistant> {
     log.debug(F, `Creating the ${name} assistant!`);
     return openAi.beta.assistants.create(tripsitAssistantData);
   }
+  // log.debug(F, `I found the ${name} assistant!`);
   // If it does exist, update it
   // log.debug(F, `updatedAssistant: ${JSON.stringify(assistant, null, 2)}`);
   return openAi.beta.assistants.update(assistantData.id, tripsitAssistantData);
@@ -143,25 +203,6 @@ export async function deleteThread(threadId: string):Promise<ThreadDeleted> {
   const threadData = await openAi.beta.threads.del(threadId);
   log.debug(F, `threadData: ${JSON.stringify(threadData, null, 2)}`);
   return threadData;
-}
-
-export async function getMessages(
-  inputThreadData: Thread,
-  options: MessageListParams,
-):Promise<ThreadMessagesPage> {
-  // log.debug(F, `threadMessages: ${JSON.stringify(threadMessages, null, 2)}`);
-  return openAi.beta.threads.messages.list(
-    inputThreadData.id,
-    options,
-  );
-}
-
-export async function readRun(
-  thread: Thread,
-  run: Run,
-):Promise<Run> {
-  // log.debug(F, `runData: ${JSON.stringify(runData, null, 2)}`);
-  return openAi.beta.threads.runs.retrieve(thread.id, run.id);
 }
 
 export async function createImage(
@@ -194,70 +235,13 @@ export async function createImage(
   });
 }
 
-export async function aiModerateReport(
-  message: string,
-):Promise<ModerationCreateResponse> {
-  // log.debug(F, `message: ${message}`);
-
-  // log.debug(F, `results: ${JSON.stringify(results, null, 2)}`);
-
-  if (!env.OPENAI_API_ORG || !env.OPENAI_API_KEY) return {} as ModerationCreateResponse;
-
-  return openAi.moderations
-    .create({
-      input: message,
-    })
-    .catch(err => {
-      if (err instanceof OpenAI.APIError) {
-        log.error(F, `${err.status}`); // 400
-        log.error(F, `${err.name}`); // BadRequestError
-        log.error(F, `${err.headers}`); // {server: 'nginx', ...}
-      } else {
-        throw err;
-      }
-      return {} as ModerationCreateResponse;
-    });
-}
-
-// const aiFunctions = [
-//   {
-//     name: 'getCurrentWeather',
-//     description: 'Get the current weather in a given location',
-//     parameters: {
-//       type: 'object',
-//       properties: {
-//         location: {
-//           type: 'string',
-//           description: 'The city and state, e.g. San Francisco, CA',
-//         },
-//         unit: { type: 'string', enum: ['celsius', 'fahrenheit'] },
-//       },
-//       required: ['location'],
-//     },
-//   },
-//   {
-//     name: 'aiModerateReport',
-//     description: 'Get a report on how the AI rates a message',
-//     parameters: {
-//       type: 'object',
-//       properties: {
-//         message: {
-//           type: 'string',
-//           description: 'The message you want the AI to analyze',
-//         },
-//       },
-//       required: ['message'],
-//     },
-//   },
-// ];
-
 async function googleAiConversation(
   aiPersona:ai_personas,
   messages: {
     role: 'user';
     content: string;
   }[],
-  user: string,
+  messageData: Message<boolean>,
   attachmentInfo: {
     url: string | null;
     mimeType: string | null;
@@ -267,7 +251,7 @@ async function googleAiConversation(
     promptTokens: number,
     completionTokens: number,
   }> {
-  log.debug(F, `googleAiConversation | aiPersona: ${JSON.stringify(aiPersona, null, 2)}`);
+  // log.debug(F, `googleAiConversation | aiPersona: ${JSON.stringify(aiPersona, null, 2)}`);
   // const response = '';
   const promptTokens = 0;
   const completionTokens = 0;
@@ -319,7 +303,7 @@ async function googleAiConversation(
   ] as Part[];
 
   if (modelName === 'gemini-pro-vision' && attachmentInfo.url && attachmentInfo.mimeType) {
-    // We dont want to include the prompt and objective trusts on a conversation because it's already supplied below
+    // We don't want to include the prompt and objective trusts on a conversation because it's already supplied below
     parts.unshift({ text: aiPersona.prompt });
     parts.unshift({ text: objectiveTruths });
 
@@ -347,7 +331,12 @@ async function googleAiConversation(
         generationConfig,
         safetySettings,
       });
-      return { response: result.response.text(), promptTokens, completionTokens };
+      try {
+        return { response: result.response.text(), promptTokens, completionTokens };
+      } catch (error) {
+        log.error(F, `Error sending message: ${error}`);
+        return { response: (error as Error).message, promptTokens, completionTokens };
+      }
     } catch (error) {
       log.error(F, `Error fetching data: ${error}`);
     }
@@ -357,8 +346,8 @@ async function googleAiConversation(
 
   // Get the user's history
   const userData = await db.users.upsert({
-    where: { discord_id: user },
-    create: { discord_id: user },
+    where: { discord_id: messageData.author.id },
+    create: { discord_id: messageData.author.id },
     update: {},
   });
   let userHistory = [] as InputContent[];
@@ -385,14 +374,14 @@ async function googleAiConversation(
       },
     ];
   }
-  log.debug(F, `userHistory: ${JSON.stringify(userHistory, null, 2)}`);
+  // log.debug(F, `userHistory: ${JSON.stringify(userHistory, null, 2)}`);
 
   const chat = model.startChat({
     history: userHistory,
     generationConfig,
     safetySettings,
   });
-  log.debug(F, `chat: ${JSON.stringify(chat, null, 2)}`);
+  // log.debug(F, `chat: ${JSON.stringify(chat, null, 2)}`);
 
   let result = {} as GenerateContentResult;
   try {
@@ -402,7 +391,7 @@ async function googleAiConversation(
     return { response: (error as Error).message, promptTokens, completionTokens };
   }
 
-  log.debug(F, `result: ${JSON.stringify(result, null, 2)}`);
+  // log.debug(F, `result: ${JSON.stringify(result, null, 2)}`);
 
   // Update the history with the message and this response
   userHistory.push({
@@ -413,11 +402,11 @@ async function googleAiConversation(
     role: 'model',
     parts: result.response.text(),
   });
-  log.debug(F, `newUserHistory: ${JSON.stringify(userHistory, null, 2)}`);
+  // log.debug(F, `newUserHistory: ${JSON.stringify(userHistory, null, 2)}`);
 
   // Save the user's history
   await db.users.update({
-    where: { discord_id: user },
+    where: { discord_id: messageData.author.id },
     data: {
       ai_history_google: JSON.stringify(userHistory),
     },
@@ -537,118 +526,122 @@ async function googleAiConversation(
 //   return { response: result.response.text(), promptTokens, completionTokens };
 // }
 
-async function openAiConversation(
-  aiPersona:ai_personas,
-  messages: {
-    role: 'user';
-    content: string;
-  }[],
-  user: string,
+async function openAiWaitForRun(
+  runData: OpenAI.Beta.Threads.Run,
+  threadData: OpenAI.Beta.Threads.Thread,
+  messageData: Message<boolean>,
 ):Promise<{
     response: string,
     promptTokens: number,
     completionTokens: number,
   }> {
-  // if (!env.OPENAI_API_ORG || !env.OPENAI_API_KEY) return;
-  // if (!messageData.member?.roles.cache.has(env.ROLE_VERIFIED)) return;
-  // if (messageData.author.bot) return;
-  // if (messageData.cleanContent.length < 1) return;
-  // if (messageData.channel.type === ChannelType.DM) return;
-  // if (messageData.author.id !== env.DISCORD_OWNER_ID) return;
+  let run = runData;
+  const thread = threadData;
 
-  let response = '';
+  const response = '';
   const promptTokens = 0;
   const completionTokens = 0;
 
-  // Get the assistant for this channel.
-  // Right now the only assistant is the 'tripsitter' assistant
-  const assistant = await getAssistant(aiPersona.name);
-  // log.debug(F, `assistant: ${JSON.stringify(assistant, null, 2)}`);
-
-  const userData = await db.users.upsert({
-    where: { discord_id: user },
-    create: { discord_id: user },
-    update: {},
-  });
-
-  // Get the thread for the user who said something
-  const thread = userData.ai_history_openai
-    ? await openAi.beta.threads.retrieve(userData.ai_history_openai)
-    : await openAi.beta.threads.create();
-
-  // log.debug(F, `thread: ${JSON.stringify(thread, null, 2)}`);
-  if (!userData.ai_history_openai) {
-    // Save the thread id to the user's data
-    log.debug(F, `Saving new thread id to user: ${user}`);
-    await db.users.update({
-      where: { discord_id: user },
-      data: {
-        ai_history_openai: thread.id,
-      },
-    });
-  }
-
-  // Add the message to the thread
-  const message = await openAi.beta.threads.messages.create(
-    thread.id,
-    messages[0],
-  );
-  // log.debug(F, `message: ${JSON.stringify(message, null, 2)}`);
-
-  log.debug(F, `Starting new run with assistant: ${assistant.id} and thread: ${thread.id}`);
-  // Run the thread
-  const run = await openAi.beta.threads.runs.create(
-    thread.id,
-    {
-      assistant_id: assistant.id,
-    },
-  );
-  // log.debug(F, `run: ${JSON.stringify(run, null, 2)}`);
-
   // Wait for the run to complete
-  let runStatus = 'queued' as Run['status'];
-  while (['queued', 'in_progress'].includes(runStatus)) {
-    // Send the typing indicator to show tripbot is thinking
-    // eslint-disable-next-line no-await-in-loop
-    // await messageData.channel.sendTyping();
-
+  while (['queued', 'in_progress'].includes(run.status)) {
     // eslint-disable-next-line no-await-in-loop
     await sleep(200);
     // eslint-disable-next-line no-await-in-loop
-    const runStatusResponse = await readRun(thread, run);
-    // log.debug(F, `runStatusResponse: ${JSON.stringify(runStatusResponse, null, 2)}`);
-    runStatus = runStatusResponse.status;
+    run = await openAi.beta.threads.runs.retrieve(thread.id, run.id);
   }
 
-  const devRoom = await discordClient.channels.fetch(env.CHANNEL_BOTERRORS) as TextChannel;
-
   // Depending on how the run ended, do something
-  switch (runStatus) {
+  switch (run.status) {
     case 'completed': {
       // This should pull the thread and then get the last message in the thread, which should be from the assistant
-      const messagePage = await getMessages(thread, { limit: 10 });
-      // log.debug(F, `messagePage: ${JSON.stringify(messagePage, null, 2)}`);
-      const messageItems = messagePage.getPaginatedItems();
-      const messageText = messageItems[0];
-      const [messageContent] = messageText.content;
-      if ((messageContent as MessageContentText).text) {
-        log.debug(F, `messageContent: ${JSON.stringify(messageContent, null, 2)}`);
+      // We only want the first response, so we limit it to 1
+      const messageContent = (
+        await openAi.beta.threads.messages.list(thread.id, { limit: 1 })
+      ).data[0].content[0];
+      // log.debug(F, `messageContent: ${JSON.stringify(messageContent, null, 2)}`);
+      return { response: (messageContent as TextContentBlock).text.value.slice(0, 2000), promptTokens, completionTokens };
+    }
+    case 'requires_action': {
+      log.debug(F, 'requires_action');
+      log.debug(F, `run.required_action: ${JSON.stringify(run.required_action, null, 2)}`);
 
-        // Send the result to the dev room
-        // await devRoom.send(`AI Conversation succeeded: ${JSON.stringify(messageContent, null, 2)}`);
+      // // We need to loop through each of the tool_calls and call the function given
+      // const toolOutputs = [] as RunSubmitToolOutputsParams.ToolOutput[];
+      // run.required_action?.submit_tool_outputs.tool_calls.forEach(async toolCall => {
+      //   const functionName = run.required_action?.submit_tool_outputs.tool_calls[0].function?.name;
+      //   log.debug(F, `functionName: ${functionName}`);
+      //   const functionToCall = availableFunctions[functionName as keyof typeof availableFunctions];
+      //   const functionArgs = JSON.parse(run.required_action?.submit_tool_outputs.tool_calls[0].function?.arguments as string);
+      //   // Check if functionArgs is correctly structured and contains the expected properties
+      //   if (functionArgs && typeof functionArgs === 'object' && 'drugName' in functionArgs) {
+      //     // Call the function with the spread syntax if it expects multiple arguments
+      //     // If the function expects an object, you can pass functionArgs directly
+      //     const reply = await functionToCall(functionArgs.drugName, functionArgs.section);
+      //     await messageData.reply(reply as MessageReplyOptions);
+      //     response = 'functionFinished';
+      //   } else {
+      //     // Handle the case where functionArgs does not have the expected structure or types
+      //     log.error(F, `Invalid arguments structure for function ${functionName}: ${JSON.stringify(functionArgs)}`);
+      //   }
+      //   // const functionResponse = await functionToCall(functionArgs);
+      //   // log.debug(F, `functionResponse: ${JSON.stringify(functionResponse, null, 2)}`);
 
-        // await messages[0].reply(result.response.slice(0, 2000));
-        response = (messageContent as MessageContentText).text.value;
-        // await messageData.reply(response);
+      //   // toolOutputs.push({
+      //   //   tool_call_id: toolCall.id,
+      //   //   output: `${JSON.stringify(functionResponse)}`,
+      //   // });
+      // });
 
-        return { response, promptTokens, completionTokens };
+      // run = await openAi.beta.threads.runs.submitToolOutputs(
+      //   thread.id,
+      //   run.id,
+      //   {
+      //     tool_outputs: toolOutputs,
+      //   },
+      // );
+
+      // return openAiWaitForRun(run, thread);
+
+      const toolCalls = run.required_action?.submit_tool_outputs.tool_calls;
+
+      if (!toolCalls) {
+        // Handle the case where there are no tool calls
+        break;
       }
 
-      break;
+      // Map each tool call to a promise representing the async operation
+      const promises = toolCalls.map(async toolCall => {
+        const functionName = toolCall.function?.name;
+        log.debug(F, `functionName: ${functionName}`);
+        if (!functionName) {
+          // Handle the case where functionName is not provided
+          log.error(F, 'Function name is missing');
+          return;
+        }
+        const functionToCall = availableFunctions[functionName as keyof typeof availableFunctions];
+        if (!functionToCall) {
+          // Handle the case where the function is not found in availableFunctions
+          log.error(F, `Function ${functionName} not found`);
+          return;
+        }
+        const functionArgs = JSON.parse(toolCall.function?.arguments as string);
+        // Check if functionArgs is correctly structured and contains the expected properties
+        if (functionArgs && typeof functionArgs === 'object' && 'drugName' in functionArgs) {
+          // Execute the function call with the provided arguments
+          const reply = await functionToCall(functionArgs.drugName, functionArgs.section);
+          await messageData.reply(reply as MessageReplyOptions);
+          return;
+        }
+        // Log an error if the function arguments do not have the expected structure or types
+        log.error(F, `Invalid arguments structure for function ${functionName}: ${JSON.stringify(functionArgs)}`);
+      });
+
+      // Wait for all promises to resolve
+      const results = await Promise.all(promises);
+      log.debug(F, 'All tool calls have been processed');
+
+      return { response: 'functionFinished', promptTokens, completionTokens };
     }
-    case 'requires_action':
-      // No way to support additional actions at this time
-      break;
     case 'expired':
       // This will happen if the requires_action doesn't get a  response in time, so this isn't supported either
       break;
@@ -660,6 +653,7 @@ async function openAiConversation(
       break;
     case 'failed': {
       // This should send an error to the dev
+      const devRoom = await discordClient.channels.fetch(env.CHANNEL_BOTERRORS) as TextChannel;
       await devRoom.send(`AI Conversation failed: ${JSON.stringify(run, null, 2)}`);
       log.error(F, `run ended: ${JSON.stringify(run, null, 2)}`);
       return { response, promptTokens, completionTokens };
@@ -667,8 +661,106 @@ async function openAiConversation(
     default:
       break;
   }
-
+  log.debug(F, `Returning response: ${response}`);
   return { response, promptTokens, completionTokens };
+}
+
+async function openAiConversation(
+  aiPersona:ai_personas,
+  messages: {
+    role: 'user';
+    content: string;
+  }[],
+  messageData: Message<boolean>,
+):Promise<{
+    response: string,
+    promptTokens: number,
+    completionTokens: number,
+  }> {
+  // Create the default response if something goes wrong
+  const response = '';
+  const promptTokens = 0;
+  const completionTokens = 0;
+
+  // Get the assistant associated with that persona
+  // This will create a new assistant if it doesn't exist
+  // Regardless, it will update the assistance using the latest persona data
+  const assistant = await getAssistant(aiPersona.name);
+  // log.debug(F, `assistant: ${JSON.stringify(assistant, null, 2)}`);
+
+  // Get the user from the DB
+  const userData = await db.users.upsert({
+    where: { discord_id: messageData.author.id },
+    create: { discord_id: messageData.author.id },
+    update: {},
+  });
+
+  // Get the threadID, or create a new thread and use that ID
+  const thread = userData.ai_history_openai
+    ? await openAi.beta.threads.retrieve(userData.ai_history_openai)
+    : await openAi.beta.threads.create();
+  // log.debug(F, `thread: ${JSON.stringify(thread, null, 2)}`);
+
+  // Save the thread id to the user if it doesn't exist
+  if (!userData.ai_history_openai) {
+    log.debug(F, `Saving new thread id to user: ${messageData.author.id}`);
+    await db.users.update({
+      where: { discord_id: messageData.author.id },
+      data: {
+        ai_history_openai: thread.id,
+      },
+    });
+  }
+
+  // Before we add the message to the thread, we need to check if the last run is still in progress
+  // If it is, we need to cancel it before we can add a new message
+  // This is because the assistant can only handle one request at a time
+  // If we don't cancel the run, the new message will create an error
+
+  // Get the most recent run
+  // This will automatically return the most recent runs, so we can just grab the first one
+  let [recentRun] = (await openAi.beta.threads.runs.list(thread.id, { limit: 1 })).data;
+  // log.debug(F, `recentRun: ${JSON.stringify(recentRun, null, 2)}`);
+
+  // If the most recent run is in progress, queued, or waiting for user action, stop it
+  if (recentRun && ['queued', 'in_progress', 'requires_action'].includes(recentRun.status)) {
+    log.debug(F, 'Stopping the run');
+    await openAi.beta.threads.runs.cancel(thread.id, recentRun.id);
+
+    // Wait for the run to be cancelled
+    while (['queued', 'in_progress', 'requires_action'].includes(recentRun.status)) {
+      // eslint-disable-next-line no-await-in-loop
+      await sleep(200);
+      // eslint-disable-next-line no-await-in-loop
+      recentRun = await openAi.beta.threads.runs.retrieve(thread.id, recentRun.id);
+    }
+  }
+
+  // Add the message to the thread
+  try {
+    await openAi.beta.threads.messages.create(
+      thread.id,
+      messages[0],
+    );
+  } catch (error) {
+    log.error(F, `Error sending message: ${error}`);
+    return { response: (error as Error).message, promptTokens, completionTokens };
+  }
+
+  // Run the thread
+  log.debug(F, `Starting new run with assistant: ${assistant.name} and thread: ${thread.id}`);
+  const run = await openAi.beta.threads.runs.create(
+    thread.id,
+    {
+      assistant_id: assistant.id,
+    },
+  );
+  // log.debug(F, `run: ${JSON.stringify(run, null, 2)}`);
+
+  // Wait for the run to complete
+  // This is a separate function because if the run requires action, it will call the function again
+
+  return openAiWaitForRun(run, thread, messageData);
 }
 
 async function openAiChat(
@@ -688,7 +780,7 @@ async function openAiChat(
   let model = aiPersona.ai_model.toLowerCase();
   // Convert ai models into proper names
   if (aiPersona.ai_model === 'GPT_3_5_TURBO') {
-    model = 'gpt-3.5-turbo-1106';
+    model = 'gpt-4.1-mini'; // LAZY TEMP FIX
   }
 
   // This message list is sent to the API
@@ -697,23 +789,6 @@ async function openAiChat(
     content: aiPersona.prompt.concat(objectiveTruths),
   }] as OpenAI.Chat.ChatCompletionMessageParam[];
   chatCompletionMessages.push(...messages);
-
-  // eslint-disable-next-line @typescript-eslint/naming-convention
-  // const {
-  //   id,
-  //   name,
-  //   description,
-  //   public,
-  //   created_at, // eslint-disable-line @typescript-eslint/naming-convention
-  //   created_by, // eslint-disable-line @typescript-eslint/naming-convention
-  //   prompt,
-  //   logit_bias, // eslint-disable-line @typescript-eslint/naming-convention
-  //   total_tokens, // eslint-disable-line @typescript-eslint/naming-convention
-  //   downvotes,
-  //   upvotes,
-  //   ai_model: modelName, // eslint-disable-line @typescript-eslint/naming-convention
-  //   ...restOfAiPersona
-  // } = aiPersona;
 
   const payload = {
     temperature: aiPersona.temperature,
@@ -754,48 +829,44 @@ async function openAiChat(
     completionTokens = chatCompletion.usage?.completion_tokens ?? 0;
 
     // # Step 2: check if GPT wanted to call a function
-    // if (responseMessage.function_call) {
-    //   log.debug(F, `responseMessage.function_call: ${JSON.stringify(responseMessage.function_call, null, 2)}`);
-    //   // # Step 3: call the function
-    //   // # Note: the JSON response may not always be valid; be sure to handle errors
+    if (responseMessage.function_call) {
+      log.debug(F, `responseMessage.function_call: ${JSON.stringify(responseMessage.function_call, null, 2)}`);
+      // # Step 3: call the function
+      // # Note: the JSON response may not always be valid; be sure to handle errors
 
-    //   const availableFunctions = {
-    //     getCurrentWeather,
-    //     aiModerateReport,
-    //   };
-    //   const functionName = responseMessage.function_call.name;
-    //   log.debug(F, `functionName: ${functionName}`);
-    //   const functionToCall = availableFunctions[functionName as keyof typeof availableFunctions];
-    //   const functionArgs = JSON.parse(responseMessage.function_call.arguments as string);
-    //   const functionResponse = await functionToCall(
-    //     functionArgs.location,
-    //     functionArgs.unit,
-    //   );
-    //   log.debug(F, `functionResponse: ${JSON.stringify(functionResponse, null, 2)}`);
+      const functionName = responseMessage.function_call.name;
+      log.debug(F, `functionName: ${functionName}`);
+      const functionToCall = availableFunctions[functionName as keyof typeof availableFunctions];
+      const functionArgs = JSON.parse(responseMessage.function_call.arguments);
+      const functionResponse = await functionToCall(
+        functionArgs.location,
+        functionArgs.unit,
+      );
+      log.debug(F, `functionResponse: ${JSON.stringify(functionResponse, null, 2)}`);
 
-    //   // # Step 4: send the info on the function call and function response to GPT
-    //   payload.messages.push({
-    //     role: 'function',
-    //     name: functionName,
-    //     content: JSON.stringify(functionResponse),
-    //   });
+      // # Step 4: send the info on the function call and function response to GPT
+      payload.messages.push({
+        role: 'function',
+        name: functionName,
+        content: JSON.stringify(functionResponse),
+      });
 
-    //   const chatFunctionCompletion = await openai.chat.completions.create(payload);
+      const chatFunctionCompletion = await openAi.chat.completions.create(payload);
 
-    //   // responseData = chatFunctionCompletion.data;
+      // responseData = chatFunctionCompletion.data;
 
-    //   log.debug(F, `chatFunctionCompletion: ${JSON.stringify(chatFunctionCompletion, null, 2)}`);
+      log.debug(F, `chatFunctionCompletion: ${JSON.stringify(chatFunctionCompletion, null, 2)}`);
 
-    //   if (chatFunctionCompletion.choices[0].message) {
-    //     responseMessage = chatFunctionCompletion.choices[0].message;
+      if (chatFunctionCompletion.choices[0].message) {
+        responseMessage = chatFunctionCompletion.choices[0].message;
 
-    //     // Sum up the new tokens
-    //     promptTokens += chatCompletion.usage?.prompt_tokens ?? 0;
-    //     completionTokens += chatCompletion.usage?.completion_tokens ?? 0;
-    //   }
-    // }
+        // Sum up the new tokens
+        promptTokens += chatCompletion.usage?.prompt_tokens ?? 0;
+        completionTokens += chatCompletion.usage?.completion_tokens ?? 0;
+      }
+    }
 
-    response = responseMessage.content ?? 'Sorry, I\'m not sure how to respond to that.';
+    response = responseMessage.content?.toString() ?? 'Sorry, I\'m not sure how to respond to that.';
   }
 
   // log.debug(F, `response: ${response}`);
@@ -811,7 +882,7 @@ export default async function aiChat(
     role: 'user';
     content: string;
   }[],
-  user: string,
+  messageData: Message<boolean>,
   attachmentInfo: {
     url: string | null;
     mimeType: string | null;
@@ -832,10 +903,94 @@ export default async function aiChat(
 
   if (['GEMINI_PRO', 'GEMINI_PRO_VISION', 'AQA'].includes(aiPersona.ai_model)) {
     // return googleAiChat(aiPersona, messages, user, attachmentInfo);
-    return googleAiConversation(aiPersona, messages, user, attachmentInfo);
+    return googleAiConversation(aiPersona, messages, messageData, attachmentInfo);
   }
   // return openAiChat(aiPersona, messages, user);
-  return openAiConversation(aiPersona, messages, user);
+  return openAiConversation(aiPersona, messages, messageData);
+}
+
+// Function to process the next message in the user's queue
+async function processNextMessage(userId: string) {
+  const userQueue = userQueues.get(userId);
+
+  // If userQueue is null or undefined, exit the function immediately
+  if (!userQueue) return;
+
+  // If the queue is empty, reset isProcessing to false and exit
+  if (userQueue.queue.length === 0) {
+    userQueue.isProcessing = false;
+    return;
+  }
+
+  userQueue.isProcessing = true; // Mark as processing
+
+  // Ensure the queue has an item before destructuring
+  const nextMessage = userQueue.queue.shift();
+  if (!nextMessage) {
+    // Handle case where there’s no next message in the queue, if needed
+    return;
+  }
+
+  const {
+    aiPersona, messages, messageData, attachmentInfo, resolve,
+  } = nextMessage;
+
+  try {
+    // Call the aiChat function and destructure the needed response data
+    const { response, promptTokens, completionTokens } = await aiChat(
+      aiPersona,
+      messages,
+      messageData,
+      attachmentInfo,
+    );
+
+    resolve({ response, promptTokens, completionTokens });
+  } catch (error) {
+    log.error(F, `Error processing message for user: ${userId} - error: ${error}`);
+    resolve({ response: 'Error', promptTokens: 0, completionTokens: 0 });
+  } finally {
+    // Process the next message after this one is done
+    processNextMessage(userId);
+  }
+}
+
+// Main function for aiChat to handle incoming messages and return a Promise with response data
+export function handleAiMessageQueue(
+  aiPersona: ai_personas,
+  messages: { role: 'user'; content: string }[],
+  messageData: Message<boolean>,
+  attachmentInfo: { url: string | null; mimeType: string | null },
+): Promise<{
+    response: string;
+    promptTokens: number;
+    completionTokens: number;
+  }> {
+  if (!userQueues.has(messageData.author.id)) {
+    userQueues.set(messageData.author.id, { queue: [], isProcessing: false });
+  }
+
+  const userQueue = userQueues.get(messageData.author.id);
+
+  if (!userQueue) {
+    // Return a rejected promise if userQueue is undefined
+    return Promise.reject(new Error(`User queue could not be initialized for user ${messageData.author.id}`));
+  }
+
+  // Push the new message data into the user's queue
+  return new Promise(resolve => {
+    userQueue.queue.push({
+      aiPersona,
+      messages,
+      messageData,
+      attachmentInfo,
+      resolve,
+    });
+
+    // If the user is not currently processing, start processing
+    if (!userQueue.isProcessing) {
+      processNextMessage(messageData.author.id);
+    }
+  });
 }
 
 export async function aiFlairMod(
@@ -858,7 +1013,7 @@ export async function aiFlairMod(
   let model = aiPersona.ai_model.toLowerCase();
   // Convert ai models into proper names
   if (aiPersona.ai_model === 'GPT_3_5_TURBO') {
-    model = 'gpt-3.5-turbo-1106';
+    model = 'gpt-4.1-mini'; // LAZY TEMP FIX
   }
   // This message list is sent to the API
   const chatCompletionMessages = [{
@@ -867,21 +1022,13 @@ export async function aiFlairMod(
   }] as OpenAI.Chat.ChatCompletionMessageParam[];
   chatCompletionMessages.push(...messages);
 
-  // eslint-disable-next-line @typescript-eslint/naming-convention
-  const {
-    id,
-    name,
-    created_at, // eslint-disable-line @typescript-eslint/naming-convention
-    created_by, // eslint-disable-line @typescript-eslint/naming-convention
-    prompt,
-    logit_bias, // eslint-disable-line @typescript-eslint/naming-convention
-    total_tokens, // eslint-disable-line @typescript-eslint/naming-convention
-    ai_model: modelName, // eslint-disable-line @typescript-eslint/naming-convention
-    ...restOfAiPersona
-  } = aiPersona;
-
   const payload = {
-    ...restOfAiPersona,
+    temperature: aiPersona.temperature,
+    top_p: aiPersona.top_p,
+    presence_penalty: aiPersona.presence_penalty,
+    frequency_penalty: aiPersona.frequency_penalty,
+    logit_bias: aiPersona.logit_bias,
+    max_tokens: aiPersona.max_tokens,
     model,
     messages: chatCompletionMessages,
     // functions: aiFunctions,
@@ -912,49 +1059,7 @@ export async function aiFlairMod(
     promptTokens = chatCompletion.usage?.prompt_tokens ?? 0;
     completionTokens = chatCompletion.usage?.completion_tokens ?? 0;
 
-    // # Step 2: check if GPT wanted to call a function
-    // if (responseMessage.function_call) {
-    //   log.debug(F, `responseMessage.function_call: ${JSON.stringify(responseMessage.function_call, null, 2)}`);
-    //   // # Step 3: call the function
-    //   // # Note: the JSON response may not always be valid; be sure to handle errors
-
-    //   const availableFunctions = {
-    //     getCurrentWeather,
-    //     aiModerateReport,
-    //   };
-    //   const functionName = responseMessage.function_call.name;
-    //   log.debug(F, `functionName: ${functionName}`);
-    //   const functionToCall = availableFunctions[functionName as keyof typeof availableFunctions];
-    //   const functionArgs = JSON.parse(responseMessage.function_call.arguments as string);
-    //   const functionResponse = await functionToCall(
-    //     functionArgs.location,
-    //     functionArgs.unit,
-    //   );
-    //   log.debug(F, `functionResponse: ${JSON.stringify(functionResponse, null, 2)}`);
-
-    //   // # Step 4: send the info on the function call and function response to GPT
-    //   payload.messages.push({
-    //     role: 'function',
-    //     name: functionName,
-    //     content: JSON.stringify(functionResponse),
-    //   });
-
-    //   const chatFunctionCompletion = await openai.chat.completions.create(payload);
-
-    //   // responseData = chatFunctionCompletion.data;
-
-    //   log.debug(F, `chatFunctionCompletion: ${JSON.stringify(chatFunctionCompletion, null, 2)}`);
-
-    //   if (chatFunctionCompletion.choices[0].message) {
-    //     responseMessage = chatFunctionCompletion.choices[0].message;
-
-    //     // Sum up the new tokens
-    //     promptTokens += chatCompletion.usage?.prompt_tokens ?? 0;
-    //     completionTokens += chatCompletion.usage?.completion_tokens ?? 0;
-    //   }
-    // }
-
-    response = responseMessage.content ?? 'Sorry, I\'m not sure how to respond to that.';
+    response = responseMessage.content?.toString() ?? 'Sorry, I\'m not sure how to respond to that.';
   }
 
   // log.debug(F, `response: ${response}`);
@@ -973,7 +1078,7 @@ export async function aiModerate(
 ):Promise<ModerationResult[]> {
   const moderation = await aiModerateReport(message);
 
-  if (!moderation || !moderation.results) {
+  if (!moderation?.results) {
     return [];
   }
 
@@ -1023,4 +1128,61 @@ export async function aiModerate(
   // log.debug(F, `moderationAlerts: ${JSON.stringify(moderationAlerts, null, 2)}`);
 
   return moderationAlerts;
+}
+
+export async function aiTranslate(
+  target_language: string,
+  messages: OpenAI.Chat.ChatCompletionMessageParam [],
+):Promise<{
+    response: string,
+    promptTokens: number,
+    completionTokens: number,
+  }> {
+  let response = '';
+  let promptTokens = 0;
+  let completionTokens = 0;
+  if (!env.OPENAI_API_ORG || !env.OPENAI_API_KEY) return { response, promptTokens, completionTokens };
+
+  const model = 'gpt-4.1-mini';
+  const chatCompletionMessages = [{
+    role: 'system',
+    content: `You will translate whatever the user sends to their desired language. Their desired language or language code is: ${target_language}.`,
+  }] as OpenAI.Chat.ChatCompletionMessageParam[];
+  chatCompletionMessages.push(...messages);
+
+  const payload = {
+    model,
+    messages: chatCompletionMessages,
+  } as OpenAI.Chat.ChatCompletionCreateParamsNonStreaming;
+
+  // log.debug(F, `payload: ${JSON.stringify(payload, null, 2)}`);
+  let responseMessage = {} as OpenAI.Chat.ChatCompletionMessageParam;
+
+  const chatCompletion = await openAi.chat.completions
+    .create(payload)
+    .catch(err => {
+      if (err instanceof OpenAI.APIError) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        log.error(F, `${err.name} - ${err.status} - ${err.type} - ${(err.error as any).message}  `); // 400
+        // log.error  (F, `${JSON.stringify(err.headers, null, 2)}`); // {server: 'nginx', ...}
+        // log.error(F, `${JSON.stringify(err, null, 2)}`); // {server: 'nginx', ...}
+      } else {
+        throw err;
+      }
+    });
+  // log.debug(F, `chatCompletion: ${JSON.stringify(chatCompletion, null, 2)}`);
+
+  if (chatCompletion?.choices[0].message) {
+    responseMessage = chatCompletion.choices[0].message;
+
+    // Sum up the existing tokens
+    promptTokens = chatCompletion.usage?.prompt_tokens ?? 0;
+    completionTokens = chatCompletion.usage?.completion_tokens ?? 0;
+
+    response = responseMessage.content?.toString() ?? 'Sorry, I\'m not sure how to respond to that.';
+  }
+
+  // log.debug(F, `response: ${response}`);
+
+  return { response, promptTokens, completionTokens };
 }

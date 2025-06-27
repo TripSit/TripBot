@@ -3,6 +3,7 @@ import {
   Colors,
   EmbedBuilder,
   GuildMember,
+  MessageFlags,
   SlashCommandBuilder,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
@@ -187,6 +188,7 @@ export const dLearn: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('learn')
     .setDescription('Commands related to TripSit\'s learning portal')
+    .setIntegrationTypes([0])
     .addSubcommand(subcommand => subcommand
       .setName('help')
       .setDescription('Information about this command')
@@ -215,11 +217,16 @@ export const dLearn: SlashCommand = {
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
     // Below is if you just want a response (non-modal) command
-    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') !== false) });
-
+    let ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined;
     let embed = embedTemplate();
+    const subcommand = interaction.options.getSubcommand();
 
-    switch (interaction.options.getSubcommand()) {
+    if (subcommand === 'link' || subcommand === 'unlink') {
+      ephemeral = MessageFlags.Ephemeral;
+    }
+    await interaction.deferReply({ flags: ephemeral });
+
+    switch (subcommand) {
       case 'help':
         embed = await moodleHelp();
         break;

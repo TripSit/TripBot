@@ -34,7 +34,7 @@ describe(slashCommand.data.name, () => {
         title: 'Test Kit Resources and information!',
         description: stripIndents`
       [How to use a reagent test kit](https://dancesafe.org/testing-kit-instructions/)
-      [How to use fentanyl strips](https://dancesafe.org/you-may-be-using-fentanyl-testing-strips-incorrectly/)
+      [How to use fentanyl strips](https://dancesafe.org/fentanyl/)
       [More testkit resources on the TripSit wiki!](https://wiki.tripsit.me/wiki/Test_Kits)
       `,
         fields: [
@@ -43,13 +43,6 @@ describe(slashCommand.data.name, () => {
             value: stripIndents`
           [Website](https://dancesafe.org/product-category/testing-strips/)            
           [Info on the new test strips](https://dancesafe.org/fentanyl/)`,
-            inline: true,
-          },
-          {
-            name: 'Dosetest (Worldwide)',
-            value: stripIndents`
-          [Website](https://dosetest.com/)            
-          20% off test kits with code TripSit!`,
             inline: true,
           },
           {
