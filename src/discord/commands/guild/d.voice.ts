@@ -32,7 +32,8 @@ function hasExplicitPermission(channel: VoiceBasedChannel, member: GuildMember, 
   }
   return null; // No explicit permission overwrite for this permission
 }
-/*
+
+/* DISABLED DUE TO CONCERNS OVER SERVER BEING DE-LISTED FOR "BAD" CHANNEL NAMES
 async function tentName(
   voiceChannel: VoiceBasedChannel,
   newName: string,
@@ -340,7 +341,7 @@ async function tentPing(
       return embedTemplate()
         .setTitle('Cooldown')
         .setColor(Colors.Red)
-        .setDescription(`You already used this command <t:${Math.floor(userTentPingTimes[userId] / 1000)}:R>. 
+        .setDescription(`You already used this command <t:${Math.floor(userTentPingTimes[userId] / 1000)}:R>.
         You can use it again <t:${Math.floor((userTentPingTimes[userId] + userCooldown) / 1000)}:R>.`);
     }
 
@@ -349,7 +350,7 @@ async function tentPing(
       return embedTemplate()
         .setTitle('Cooldown')
         .setColor(Colors.Red)
-        .setDescription(`This command is on cooldown. 
+        .setDescription(`This command is on cooldown.
         It can next be used <t:${Math.floor((lastTentPingTime + globalCooldown) / 1000)}:R>.`);
     }
 
