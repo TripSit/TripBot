@@ -26,17 +26,10 @@ export default async function checkAuth(
   }
   // log.debug(F, 'Authorization header is in the correct format!')
 
-  // Check the authorization header is a basic token
-  const authHeaderType = authHeaderParts[0];
-  if (authHeaderType !== 'Basic') {
-    log.error(F, 'Authorization header is not a basic token');
-    res.status(401).send('Authorization header is not a basic token');
-    return false;
-  }
-  // log.debug(F, 'Authorization header is a basic token!')
-
-  // Check the authorization header has a token
+  // Check the authorization type and token
+  const authType = authHeaderParts[0];
   const authToken = authHeaderParts[1];
+
   if (!authToken) {
     log.error(F, 'Authorization header does not have a token');
     res.status(401).send('Authorization header does not have a token');
@@ -44,15 +37,35 @@ export default async function checkAuth(
   }
   // log.debug(F, 'Authorization header has a token!')
 
-  // Check the authorization token is valid
-  const myToken = Buffer.from(`${env.API_USERNAME}:${env.API_PASSWORD}`).toString('base64');
+  // Handle different authentication types
+  if (authType === 'Basic') {
+    // Existing Basic auth logic
+    const myToken = Buffer.from(`${env.API_USERNAME}:${env.API_PASSWORD}`).toString('base64');
 
-  if (authToken !== myToken) {
-    log.error(F, 'Authorization token is not valid');
-    res.status(401).send('Authorization token is not valid');
+    if (authToken !== myToken) {
+      log.error(F, 'Authorization token is not valid');
+      res.status(401).send('Authorization token is not valid');
+      return false;
+    }
+  } else if (authType === 'Bearer') {
+    // New Bearer token logic
+    if (!env.TRIPBOT_API_TOKEN) {
+      log.error(F, 'TRIPBOT_API_TOKEN not configured');
+      res.status(500).send('Server authentication misconfigured');
+      return false;
+    }
+
+    if (authToken !== env.TRIPBOT_API_TOKEN) {
+      log.error(F, 'Bearer token is not valid');
+      res.status(401).send('Bearer token is not valid');
+      return false;
+    }
+  } else {
+    log.error(F, `Unsupported authorization type: ${authType}`);
+    res.status(401).send('Unsupported authorization type');
     return false;
   }
 
-  log.debug(F, 'Authorization token is valid!');
+  log.debug(F, `Authorization token is valid! (${authType})`);
   return true;
 }

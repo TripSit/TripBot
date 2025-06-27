@@ -1,4 +1,5 @@
 import {
+  MessageFlags,
   SlashCommandBuilder,
 } from 'discord.js';
 import ms from 'ms';
@@ -13,15 +14,17 @@ export const dBotstats: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('botstats')
     .setDescription('Get stats about the bot!')
+    .setIntegrationTypes([0])
     .addBooleanOption(option => option.setName('ephemeral')
-      .setDescription('Set to "True" to show the response only to you')),
+      .setDescription('Set to "True" to show the response only to you')) as SlashCommandBuilder,
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
     const startTime = new Date().getTime();
     log.info(F, `Command started at ${startTime}`);
     // log.info(F, await commandContext(interaction));
     log.info(F, 'Attempting to defer reply...');
-    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
+    const ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined;
+    await interaction.deferReply({ flags: ephemeral });
     log.info(F, `Reply deferred in ${new Date().getTime() - startTime}ms`);
 
     // Check if the user is an admin

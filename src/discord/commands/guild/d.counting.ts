@@ -9,13 +9,14 @@ import {
   Colors,
   PermissionResolvable,
   Collection,
+  MessageFlags,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
 import { SlashCommandBeta } from '../../@types/commandDef';
 import commandContext from '../../utils/context';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { checkChannelPermissions } from '../../utils/checkPermissions';
-import { sleep } from './d.bottest';
+import { sleep } from '../../utils/sleep';
 
 const F = f(__filename);
 
@@ -286,6 +287,8 @@ export async function countMessage(message: Message): Promise<void> {
     return;
   }
 
+  if (!(message.channel instanceof TextChannel)) return;
+
   if (countingData.current_number === -1) {
     await message.reply('Please wait for the new game to start');
     return;
@@ -364,7 +367,10 @@ export async function countMessage(message: Message): Promise<void> {
 
       warnedUsers.push(message.author.id);
 
-      await message.channel.send(messageReply);
+      await message.channel.send({
+        content: messageReply,
+        allowedMentions: { parse: [] },
+      });
       return;
     }
 
@@ -522,7 +528,10 @@ export async function countMessage(message: Message): Promise<void> {
         welcomeMessage += '\nThis is a HARDCORE game: if you break the combo you will be timed out for 24 hours!';
       }
 
-      await message.channel.send(welcomeMessage);
+      await message.channel.send({
+        content: welcomeMessage,
+        allowedMentions: { parse: [] },
+      });
     } else {
       log.debug(F, `Member ${message.member?.displayName} was already a stakeholder`);
     }
@@ -614,6 +623,7 @@ export const counting: SlashCommandBeta = {
   data: new SlashCommandBuilder()
     .setName('counting')
     .setDescription('All things with counting!')
+    .setIntegrationTypes([0])
     .addSubcommand(subcommand => subcommand
       .setName('setup')
       .setDescription('Set up a Counting channel!')
@@ -652,7 +662,8 @@ export const counting: SlashCommandBeta = {
       .setDescription('End the counting game!')),
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
-    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') !== false) });
+    const ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined;
+    await interaction.deferReply({ flags: ephemeral });
     const command = interaction.options.getSubcommand();
     let response = { content: 'This command has not been setup yet!' } as InteractionEditReplyOptions;
     if (command === 'setup') {

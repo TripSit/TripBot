@@ -1,6 +1,7 @@
 import {
   time,
   SlashCommandBuilder,
+  MessageFlags,
 } from 'discord.js';
 import { DateTime } from 'luxon';
 import { stripIndents } from 'common-tags';
@@ -16,6 +17,7 @@ export const dDramacounter: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('dramacounter')
     .setDescription('How long since the last drama incident?!')
+    .setIntegrationTypes([0])
     .addSubcommand(subcommand => subcommand
       .setName('get')
       .setDescription('Get the time since last drama.')
@@ -34,7 +36,8 @@ export const dDramacounter: SlashCommand = {
         .setRequired(true))),
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
-    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
+    const ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined;
+    await interaction.deferReply({ flags: ephemeral });
     const command = interaction.options.getSubcommand() as 'get' | 'set';
 
     if (!interaction.guild) {

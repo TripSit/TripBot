@@ -37,20 +37,25 @@ export async function urbanDefine(term:string) {
     thumbs_down: number
   };
 
+  // Check if any definitions exist
+  if (!data.list || data.list.length === 0) {
+    return `No definition found for "${term}". Try checking your spelling or using a different term.`;
+  }
+
   // Sort data by the thumbs_up value
   (data.list as UrbanDefinition[]).sort((a, b) => b.thumbs_up - a.thumbs_up);
+
   const definition = `${data.list[0].definition.length > 1024
     ? `${data.list[0].definition.slice(0, 1020)}...`
     : data.list[0].definition}`.replace(/\[|\]/g, '');
-
   const example = `${data.list[0].example}`.replace(/\[|\]/g, '');
-
   const upvotes = `${data.list[0].thumbs_up}`;
   const downvotes = `${data.list[0].thumbs_down}`;
 
   const response = stripIndents`**Definition for "${term}" ** (+${upvotes}/-${downvotes})
     ${definition}
     Example: ${example}`;
+
   log.info(F, `response: ${JSON.stringify(response, null, 2)}`);
   return response;
 }

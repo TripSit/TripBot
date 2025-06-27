@@ -4,6 +4,7 @@
 // } from 'discord.js';
 import {
   InteractionType,
+  MessageFlags,
 } from 'discord-api-types/v10';
 import {
   InteractionCreateEvent,
@@ -31,7 +32,7 @@ export const interactionCreate: InteractionCreateEvent = {
     if (botBannedUsers.includes(interaction.user.id)) {
       // log.info(F, `Got user ban status in ${new Date().getTime() - startTime}ms`);
       if (interaction.isRepliable()) {
-        await interaction.reply({ content: '*beeps sadly*', ephemeral: true });
+        await interaction.reply({ content: '*beeps sadly*', flags: MessageFlags.Ephemeral });
       }
       return;
     }
@@ -71,6 +72,43 @@ export const interactionCreate: InteractionCreateEvent = {
       // log.debug(F, `Interaction isChatInputCommand!`);
       // log.info(F, `Decided to run slash command in ${new Date().getTime() - startTime}ms`);
       commandRun(interaction, discordClient);
+      const subcommand = interaction.options.getSubcommand(false);
+      const commandName = subcommand ? `${interaction.commandName} ${subcommand}` : interaction.commandName;
+
+      // Get all options passed to the command
+      const options = interaction.options.data;
+
+      await db.users.upsert({
+        where: { discord_id: interaction.user.id },
+        update: {},
+        create: {
+          discord_id: interaction.user.id,
+        },
+      });
+
+      const commandUsage = await db.command_usage.create({
+        data: {
+          command: commandName,
+          created_at: new Date(),
+          channel_id: interaction.channel?.id ?? '0',
+          guild_id: interaction.guild?.id ?? null,
+        },
+      });
+
+      // Now create the parameters linked to the command_usage entry
+      const parameterEntries = options
+        .filter(opt => opt.name !== subcommand) // optional: skip subcommand if already part of the command name
+        .map(opt => ({
+          name: opt.name,
+          value: String(opt.value ?? ''), // Prisma expects string
+          usage_id: commandUsage.id, // Use the command_usage ID to link to command_parameters
+        }));
+
+      // Create the parameters in the database
+      await db.command_usage_parameter.createMany({
+        data: parameterEntries,
+      });
+
       return;
     }
 

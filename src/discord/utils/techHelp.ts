@@ -6,6 +6,7 @@ import {
   TextChannel,
   ButtonBuilder,
   GuildMember,
+  User,
   ThreadChannel,
   ModalSubmitInteraction,
   Colors,
@@ -16,6 +17,7 @@ import {
   ChannelType,
   TextInputStyle,
   ButtonStyle,
+  MessageFlags,
 } from 'discord-api-types/v10';
 import { stripIndents } from 'common-tags';
 
@@ -28,7 +30,7 @@ export async function techHelpClick(interaction:ButtonInteraction) {
   if (!interaction.guild) {
     await interaction.reply({
       content: guildOnly,
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
@@ -79,13 +81,13 @@ export async function techHelpClick(interaction:ButtonInteraction) {
       .setCustomId(`${issueType}IssueInput`)
       .setRequired(true)
       .setMinLength(10)
-      .setMaxLength(2000))));
+      .setMaxLength(1800))));
 
   const filter = (i:ModalSubmitInteraction) => i.customId.includes('techHelpSubmit');
   interaction.awaitModalSubmit({ filter, time: 0 })
     .then(async i => {
       if (i.customId.split('~')[1] !== interaction.id) return;
-      await i.deferReply({ ephemeral: true });
+      await i.deferReply({ flags: MessageFlags.Ephemeral });
 
       if (!i.guild) {
         await interaction.editReply({ content: guildOnly });
@@ -96,15 +98,20 @@ export async function techHelpClick(interaction:ButtonInteraction) {
       const modalInput = i.fields.getTextInputValue(`${issueType}IssueInput`);
       // log.debug(F, `modalInput: ${modalInput}!`);
 
-      // // Get the actor
-      const actor = i.user;
+      // Get the actor
+      const actor = (i.member ?? i.user) as GuildMember | User;
+
+      // Get the actors name.
+      const targetName = (actor as GuildMember | null)?.displayName
+        ?? (actor as User | null)?.username
+        ?? '[Deleted Discord Account]';
 
       // Create a new thread in channel
       const ticketThread = await (i.channel as TextChannel).threads.create({
-        name: `🧡│${actor.username}'s ${issueType} issue!`,
+        name: `🧡│${targetName}'s ${issueType} issue!`,
         autoArchiveDuration: 1440,
         type: ChannelType.PrivateThread as AllowedThreadTypeForTextChannel,
-        reason: `${actor.username} submitted a(n) ${issueType} issue`,
+        reason: `${targetName} submitted a(n) ${issueType} issue`,
         invitable: false,
       });
       // log.debug(F, `Created meta-thread ${ticketThread.id}`);
@@ -119,11 +126,11 @@ export async function techHelpClick(interaction:ButtonInteraction) {
       const techHelpButtons = new ActionRowBuilder<ButtonBuilder>()
         .addComponents(
           new ButtonBuilder()
-            .setCustomId(`techHelpOwn~${issueType}~${actor.id}`)
+            .setCustomId(`techHelpOwn~${issueType}~${actor?.id}`)
             .setLabel('Own this issue!')
             .setStyle(ButtonStyle.Primary),
           new ButtonBuilder()
-            .setCustomId(`techHelpClose~${issueType}~${actor.id}`)
+            .setCustomId(`techHelpClose~${issueType}~${actor?.id}`)
             .setLabel('Close this issue!')
             .setStyle(ButtonStyle.Success),
         );
@@ -157,7 +164,7 @@ export async function techHelpOwn(interaction:ButtonInteraction) {
           .setDescription('You can\'t claim your own issue!')
           .setColor(Colors.Yellow),
       ],
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
@@ -197,9 +204,9 @@ export async function techHelpClose(interaction:ButtonInteraction) {
 
   if (interaction.member === target) {
     // Replace the first character of the channel name with a green heart
-    (interaction.channel as ThreadChannel).setName(`💚|${(interaction.channel as ThreadChannel).name.slice(1)}`);
+    (interaction.channel as ThreadChannel).setName(`💚${(interaction.channel as ThreadChannel).name.slice(1)}`);
   } else {
-    (interaction.channel as ThreadChannel).setName(`💙|${(interaction.channel as ThreadChannel).name.slice(1)}`);
+    (interaction.channel as ThreadChannel).setName(`💙${(interaction.channel as ThreadChannel).name.slice(1)}`);
   }
 
   await interaction.reply({

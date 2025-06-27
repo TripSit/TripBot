@@ -46,13 +46,6 @@ describe(slashCommand.data.name, () => {
             inline: true,
           },
           {
-            name: 'Dosetest (Worldwide)',
-            value: stripIndents`
-          [Website](https://dosetest.com/)            
-          20% off test kits with code TripSit!`,
-            inline: true,
-          },
-          {
             name: 'ReagentTests UK (UK & EU)',
             value: stripIndents`
           [Website](https://www.reagent-tests.uk/shop/)            

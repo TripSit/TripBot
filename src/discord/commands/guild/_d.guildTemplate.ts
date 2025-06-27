@@ -7,6 +7,7 @@ import {
   ModalSubmitInteraction,
 } from 'discord.js';
 import {
+  MessageFlags,
   TextInputStyle,
 } from 'discord-api-types/v10';
 import { SlashCommand } from '../../@types/commandDef';
@@ -20,6 +21,7 @@ export const dTemplate: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('template')
     .setDescription('Example!')
+    .setIntegrationTypes([0])
     .addSubcommand(subcommand => subcommand
       .setName('subcommand')
       .setDescription('subcommand')
@@ -52,7 +54,8 @@ export const dTemplate: SlashCommand = {
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
     // Below is if you just want a response (non-modal) command
-    // await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
+    // const ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined
+    // await interaction.deferReply({ flags: ephemeral });
     // const input = i.fields.getTextInputValue('modalInput');
     // const string = interaction.options.getString('string');
     // const number = interaction.options.getNumber('number');
@@ -108,7 +111,8 @@ export const dTemplate: SlashCommand = {
     interaction.awaitModalSubmit({ filter, time: 0 })
       .then(async i => {
         if (i.customId.split('~')[2] !== interaction.id) return;
-        await i.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
+        const ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined;
+        await i.deferReply({ flags: ephemeral });
         const input = i.fields.getTextInputValue('modalInput');
         const string = interaction.options.getString('string');
         const number = interaction.options.getNumber('number');

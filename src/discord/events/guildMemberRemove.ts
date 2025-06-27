@@ -24,37 +24,37 @@ export const guildMemberRemove: GuildMemberRemoveEvent = {
       .setColor(Colors.Red);
 
     if (joinedTimestamp) {
-      // log.debug(F, `Date.now(): ${Date.now()}`);
-      // display the difference between the two dates
-      // NOTE: Can simplify with luxon
       const diff = Math.abs(Date.now() - joinedTimestamp);
-      // log.debug(F, `diff: ${diff}`);
-      const years = Math.floor(diff / (1000 * 60 * 60 * 24 * 365)) > 0
-        ? `${Math.floor(diff / (1000 * 60 * 60 * 24 * 365))} years, `
-        : '';
-      const months = Math.floor(diff / (1000 * 60 * 60 * 24 * 30)) > 0
-        ? `${Math.floor(diff / (1000 * 60 * 60 * 24 * 30))} months, `
-        : '';
-      const weeks = Math.floor(diff / (1000 * 60 * 60 * 24 * 7)) > 0
-        ? `${Math.floor(diff / (1000 * 60 * 60 * 24 * 7))} weeks, `
-        : '';
-      const days = Math.floor(diff / (1000 * 60 * 60 * 24)) > 0
-        ? `${Math.floor(diff / (1000 * 60 * 60 * 24))} days, `
-        : '';
-      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)) > 0
-        ? `${Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))} hours, `
-        : '';
-      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
-        ? `${Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))} minutes, `
-        : '';
-      const seconds = Math.floor((diff % (1000 * 60)) / 1000)
-        ? `${Math.floor((diff % (1000 * 60)) / 1000)} seconds`
-        : '';
-      const duration = `${years}${months}${weeks}${days}${hours}${minutes}${seconds}`;
+      // Helper to calculate units and update remaining time
+      const getUnit = (time: number, unitMs: number) => {
+        const value = Math.floor(time / unitMs);
+        return [value, time % unitMs];
+      };
+      const remaining = diff;
+      const [years, afterYears] = getUnit(remaining, 1000 * 60 * 60 * 24 * 365);
+      const [months, afterMonths] = getUnit(afterYears, 1000 * 60 * 60 * 24 * 30);
+      const [weeks, afterWeeks] = getUnit(afterMonths, 1000 * 60 * 60 * 24 * 7);
+      const [days, afterDays] = getUnit(afterWeeks, 1000 * 60 * 60 * 24);
+      const [hours, afterHours] = getUnit(afterDays, 1000 * 60 * 60);
+      const [minutes, afterMinutes] = getUnit(afterHours, 1000 * 60);
+      const [seconds] = getUnit(afterMinutes, 1000);
+      // Build duration string dynamically
+      const duration = [
+        years && `${years} year${years > 1 ? 's' : ''}`,
+        months && `${months} month${months > 1 ? 's' : ''}`,
+        weeks && `${weeks} week${weeks > 1 ? 's' : ''}`,
+        days && `${days} day${days > 1 ? 's' : ''}`,
+        hours && `${hours} hour${hours > 1 ? 's' : ''}`,
+        minutes && `${minutes} minute${minutes > 1 ? 's' : ''}`,
+        seconds && `${seconds} second${seconds > 1 ? 's' : ''}`,
+      ]
+        .filter(Boolean)
+        .join(', ');
 
-      embed.setDescription(`${member} has left the guild after ${duration}`);
+      // eslint-disable-next-line max-len
+      embed.setDescription(`${member} (${member.displayName || member.user?.tag}) has left the guild after ${duration}`);
     } else {
-      embed.setDescription(`${member} has left the guild`);
+      embed.setDescription(`${member} (${member.displayName || member.user?.tag}) has left the guild`);
     }
 
     const targetData = await db.users.upsert({

@@ -12,11 +12,13 @@ const F = f(__filename);
 export const dHydrate: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('hydrate')
-    .setDescription('Remember to hydrate!'),
+    .setDescription('Remember to hydrate!')
+    .setContexts([0, 1, 2])
+    .setIntegrationTypes([0, 1]),
 
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
-    await interaction.deferReply({ ephemeral: false });
+    await interaction.deferReply({});
     const output = stripIndents`
     💧🌊💧🌊💧🌊💧🌊💧🌊💧🌊💧🌊💧🌊
     ⚠️ ＨＹＤＲＡＴＩＯＮ ＲＥＭＩＮＤＥＲ ⚠️

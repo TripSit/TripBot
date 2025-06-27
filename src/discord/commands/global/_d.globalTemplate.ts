@@ -20,6 +20,7 @@ export const dTemplate: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('template')
     .setDescription('Example!')
+    .setIntegrationTypes([0])
     .addSubcommand(subcommand => subcommand
       .setName('subcommand')
       .setDescription('subcommand')

@@ -8,8 +8,10 @@ import {
   ModalSubmitInteraction,
   ChatInputCommandInteraction,
   ButtonInteraction,
+  EmbedBuilder,
 } from 'discord.js';
 import {
+  MessageFlags,
   TextInputStyle,
 } from 'discord-api-types/v10';
 import { stripIndents } from 'common-tags';
@@ -44,7 +46,7 @@ export async function feedbackReportModal(
     .then(async i => {
       // log.debug(F, 'Modal submit interaction received');
       if (i.customId.split('~')[1] !== interaction.id) return;
-      await i.deferReply({ ephemeral: true });
+      await i.deferReply({ flags: MessageFlags.Ephemeral });
       const guildName = ` in ${i.guild?.name}`;
       const guildMessage = `${i.guild ? guildName : 'DM'}`;
 
@@ -63,12 +65,24 @@ export async function feedbackReportModal(
         log.error(F, 'Developer role not found!');
         return;
       }
-      const devChan = await i.client.channels.fetch(env.CHANNEL_TRIPBOT) as TextChannel;
+      const devChan = await i.client.channels.fetch(env.CHANNEL_DEVELOPERS) as TextChannel;
       if (!devChan) {
         log.error(F, 'Developer channel not found!');
         return;
       }
-      await devChan.send(`Hey ${developerRole.toString()}, a user submitted a feedback report:\n${feedbackReport}`);
+      const feedbackEmbed = new EmbedBuilder()
+        .setTitle('📝 New Feedback Report')
+        .setDescription(feedbackReport)
+        .setColor(0x00b0f4) // Choose your desired color
+        .addFields({ name: 'Mention', value: developerRole.toString(), inline: false })
+        .setTimestamp();
+
+      await devChan.send({
+        embeds: [feedbackEmbed],
+        allowedMentions: {
+          parse: [], // Prevents pinging the role
+        },
+      });
 
       const embed = embedTemplate()
         .setColor(Colors.Purple)
@@ -85,7 +99,8 @@ export async function feedbackReportModal(
 export const dFeedback: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('feedback')
-    .setDescription('Share feedback or report a bug to the TripBot dev team!'),
+    .setDescription('Share feedback or report a bug to the TripBot dev team!')
+    .setIntegrationTypes([0]),
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
     await feedbackReportModal(interaction);

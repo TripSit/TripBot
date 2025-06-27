@@ -13,6 +13,7 @@ import Rollbar, { Level } from 'rollbar';
 // import SentryTransport from 'winston-transport-sentry-node'; // eslint-disable-line
 import * as Sentry from '@sentry/node';
 import { ConsoleTransportInstance } from 'winston/lib/winston/transports';
+import { TextChannel } from 'discord.js';
 import { env } from './env.config';
 
 const {
@@ -55,9 +56,10 @@ class DiscordTransport extends Transport {
       const channel = await discordClient.channels.fetch(env.CHANNEL_BOTERRORS);
       if (!channel) return;
       if (!channel.isTextBased()) return;
+      if (!(channel instanceof TextChannel)) return;
       await channel.send(`${prefixDict[info.level]} ${info.message}`);
     } catch (error) {
-      console.error('Failed to send message to Discord:', error);
+      console.error('Failed to send message to Discord:', error); // eslint-disable-line no-console
     }
 
     if (callback) {

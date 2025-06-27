@@ -10,10 +10,18 @@ export async function warmline():Promise<HelpResource[]> {
   const resources = [
     {
       name: 'Warmline Directory',
-      country: 'Worldwide',
+      country: 'US',
       website: 'https://warmline.org/warmdir.html#directory',
       phone: '',
       text: '',
+      webchat: '',
+    },
+    {
+      name: 'Progress Place',
+      country: 'Canada',
+      website: 'https://www.warmline.ca/',
+      phone: '416-960-WARM (9276)',
+      text: '647-557-5882',
       webchat: '',
     },
   ];

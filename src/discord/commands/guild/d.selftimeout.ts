@@ -3,6 +3,7 @@ import {
   ChatInputCommandInteraction,
   GuildMember,
   TextChannel,
+  MessageFlags,
 } from 'discord.js';
 import { SlashCommand } from '../../@types/commandDef';
 import { parseDuration } from '../../../global/utils/parseDuration';
@@ -13,6 +14,7 @@ export const selfTimeout: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('selftimeout')
     .setDescription('Timeout yourself!')
+    .setIntegrationTypes([0])
     .addStringOption(option => option
       .setName('duration')
       .setDescription('How long? Max is 2 weeks!')
@@ -24,10 +26,10 @@ export const selfTimeout: SlashCommand = {
         { name: 'Yes, I won\'t ask a mod to undo.', value: 'yes' },
         { name: 'No, I\'m just testing.', value: 'no' },
       )
-      .setRequired(true)),
+      .setRequired(true)) as SlashCommandBuilder,
   async execute(interaction:ChatInputCommandInteraction) {
     log.info(F, await commandContext(interaction));
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
     if (!interaction.guild) return false;
 
     const confirmation = interaction.options.getString('confirmation');

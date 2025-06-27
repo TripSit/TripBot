@@ -3,7 +3,7 @@ import {
   VoiceState,
 } from 'discord.js';
 import { VoiceStateUpdateEvent } from '../@types/eventDef';
-import { pitchTent, teardownTent } from '../utils/tents';
+import { pitchTent, teardownTent, logTent } from '../utils/tents';
 
 const F = f(__filename); // eslint-disable-line
 
@@ -14,7 +14,6 @@ export const voiceStateUpdate: VoiceStateUpdateEvent = {
     if (New.member?.user?.bot) return; // Don't run on bots
     if (Old.member?.user?.bot) return; // Don't run on bots
     log.info(F, `${New.member?.displayName} changed voice state`);
-
     const channelAuditlog = await New.guild.channels.fetch(env.CHANNEL_AUDITLOG) as TextChannel;
 
     let modMessage = '';
@@ -33,6 +32,11 @@ export const voiceStateUpdate: VoiceStateUpdateEvent = {
       // If the user joined the campfire channel, pitch a new tent
       pitchTent(Old, New);
       return;
+    }
+
+    // Check if the user actually left or joined a channel before logging
+    if (New.channel !== Old.channel) {
+      logTent(Old, New);
     }
 
     teardownTent(Old);
