@@ -33,6 +33,14 @@ export async function crisis():Promise<HelpResource[]> {
       webchat: '',
     },
     {
+      name: 'BuddyUp',
+      country: 'UK',
+      website: 'https://cranstoun.org/help-and-advice/harm-reduction/buddyup/',
+      phone: '',
+      text: '[🍎](https://apps.apple.com/gb/app/buddyup-with-cranstoun/id1601622050) [🤖](https://play.google.com/store/apps/details?id=org.cranstoun.buddyup)', // eslint-disable-line max-len
+      webchat: '',
+    },
+    {
       name: 'Talktofrank',
       country: 'UK',
       website: 'https://www.talktofrank.com',
@@ -84,10 +92,18 @@ export async function crisis():Promise<HelpResource[]> {
     {
       name: 'Open Counseling Suicide Hotline List',
       country: 'Worldwide',
-      website: 'https://blog.opencounseling.com',
+      website: 'https://blog.opencounseling.com/suicide-hotlines/',
       phone: '',
       text: '',
-      webchat: 'https://blog.opencounseling.com/suicide-hotlines/',
+      webchat: '',
+    },
+    {
+      name: 'Support Center for Adults in Mental Crisis',
+      country: 'Poland',
+      website: 'https://centrumwsparcia.pl/centrum-wsparcia/',
+      phone: '800 70 2222',
+      text: '',
+      webchat: '',
     },
   ];
   log.info(F, `response: ${JSON.stringify(response, null, 2)}`);

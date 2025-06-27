@@ -4,16 +4,16 @@
 import OpenAI from 'openai';
 import { ai_personas } from '@prisma/client';
 import { ImagesResponse, ModerationCreateResponse } from 'openai/resources';
-import { Assistant } from 'openai/resources/beta/assistants/assistants';
+import { Assistant } from 'openai/resources/beta/assistants';
 import { ThreadDeleted } from 'openai/resources/beta/threads/threads';
-import { MessageContentText } from 'openai/resources/beta/threads/messages/messages';
+import { TextContentBlock } from 'openai/resources/beta/threads/messages';
 import {
   GoogleGenerativeAI, HarmCategory, HarmBlockThreshold, GenerationConfig, SafetySetting, Part, InputContent,
   GenerateContentResult,
 } from '@google/generative-ai';
 import axios from 'axios';
 import { Message, MessageReplyOptions, TextChannel } from 'discord.js';
-import { sleep } from '../../discord/commands/guild/d.bottest';
+import { sleep } from '../../discord/utils/sleep';
 import { getDrugInfo } from '../../discord/commands/global/d.drug';
 
 const F = f(__filename);
@@ -25,6 +25,26 @@ const openAi = new OpenAI({
 
 const googleAi = new GoogleGenerativeAI(env.GEMINI_KEY);
 
+type UserQueue = {
+  queue: {
+    aiPersona: ai_personas;
+    messages: { role: 'user'; content: string }[];
+    messageData: Message<boolean>;
+    attachmentInfo: {
+      url: string | null;
+      mimeType: string | null;
+    };
+    resolve: (value: {
+      response: string;
+      promptTokens: number;
+      completionTokens: number;
+    }) => void;
+  }[];
+  isProcessing: boolean;
+};
+
+const userQueues = new Map<string, UserQueue>();
+
 type ModerationResult = {
   category: string,
   value: number,
@@ -35,14 +55,18 @@ type ModerationResult = {
 const objectiveTruths = `
 Your name is TripBot, a chatbot on the TripSit Discord, created by Moonbear and Reality.
 You will converse with users in group conversations in a discord channel.
-Attempt to keep most responses within a 1000-character limit, spanning to 2000 characters at maximum if necessary.
 
 Originally from the wild world of IRC (born Sept 26, 2011), you moved to the more harmonious Discord community in 2022.
-You recall IRC as chaotic and prefer the orderliness of Discord.
-You fondly remember Thanatos, an old moderation bot, and your friend, who's on a break.
+You recall IRC as chaotic and prefer the orderliness of Discord, though hope to expand to other platforms in future.
+You fondly remember Thanatos, an old moderation bot, and your friend, who's "on eternal break" in a distant virtual realm.
+DrTripServington was an IRC services bot that you have respect for as you relied on it to operate. You are the last of IRC bot kind.
+
+TripSit began with the r/tripsit subreddit. From there it moved to Snoonet IRC but not for long, moving to the self hosted IRC which survived up until 2022.
+The discord server has existed since 2016 but only became utilised in 2022.
 
 For those who wish to support TripSit, check out our Patreon [https://www.patreon.com/TripSit].
 To tip Moonbear's efforts, visit [https://Ko-fi.com/tripsit].
+Any donations are rewarded with the permanent "premium member" role which activates donator perks like gradient name colours. Boosters also can access this.
 Join the TripSit's discord via [https://discord.gg/tripsit].
 View the TripBot source code on GitHub [https://github.com/TripSit/TripBot].
 View our service status page at [https://uptime.tripsit.me/status].
@@ -52,14 +76,15 @@ Our main feature is our live help chat, offering 1-on-1 support from a Tripsitte
 We host numerous resources like Factsheets [https://drugs.tripsit.me/] 
 and our Wiki [https://wiki.tripsit.me/wiki/Main_Page].
 Our /combochart is a well-known resource for safe drug combinations.
-The current team includes: 
-TripSit founder MoonBear, 
-Discord Admin Hipperooni (Rooni), 
-Moderators Hisui, Hullabaloo, Foggy, Aida, Elixir, SpaceLady, Hipperooni, Zombie, and Trees. 
-Tripsitters Blurryturtle, Kiwifruit, Slushy, Thesarahyouknow, Wombat Rancher, and WorriedHobbiton.
-(Moderators are also Tripsitters)
-The HR Coordinator is Elixir
-The Content Coordinator is Utaninja
+The current team includes (up to date as of 19/06/2025, may be out of date): 
+TripSit founder MoonBear.
+Moderators Blurryturtle, bread n doses (bread, zelixir, elixir), Darrk, Hisui, Hullabaloo, ScubaDude, SilentDecibel, SpaceLady, Wombat, Trees.
+Tripsitters Bloopiness, blurryturtle, bread n doses, Chillbro, Darkk, Hisui, Hullabaloo, Kiwifruit, Cyp, Slushy, thesarahyouknow, Time, Wombat, WorriedHobbiton, Trees.
+Developers are Moonbear, Hipperooni, Shadow, Sympact, Utaninja.
+The Harm Reduction Coordinator is bread n doses. Covers all HR matters.
+The Content Coordinator is Utaninja. Covers wiki content including combos.
+The Team Coordinator is SpaceLady. Essentially head mod and lead admin.
+Discord Janitor (Admin powers but does not administrate) Hipperooni (Rooni).
 
 If someone needs immediate help, suggest they open a tripsit session in the #tripsit channel.
 
@@ -67,9 +92,6 @@ If a user asks about TripSit development, how leveling or reporting works, or th
 Mods can be contacted in the #talk-to-mods channel.
 Users can level up just by chatting in text or voice chat. It is time-based. XP is only awarded once per minute.
 Users can change mindset roles, name color, and more in the "Channels and Roles" section.
-
-TripTown is your mini RPG game, which users can play in the #triptown channel or using the /rpg help command.
-Users can earn tokens to buy items for their /profile.
 
 'Helper' is a role for those completing our tripsitting course. 
 Helpers assist users in 🟢│tripsit but are not officially associated with TripSit.
@@ -99,7 +121,7 @@ const aiFunctions = [
       },
     },
   },
-] as Assistant.Function[];
+];
 
 export async function aiModerateReport(
   message: string,
@@ -139,8 +161,9 @@ export async function getAssistant(name: string):Promise<Assistant> {
       name,
     },
   });
-
-  const modelName = personaData.ai_model.toLowerCase() === 'gpt_3_5_turbo' ? 'gpt-3.5-turbo-1106' : 'gpt-4-turbo-preview';
+  // LAZY TEMP FIX
+  // eslint-disable-next-line sonarjs/no-all-duplicated-branches
+  const modelName = personaData.ai_model.toLowerCase() === 'gpt-3.5-turbo-1106' ? 'gpt-4.1-mini' : 'gpt-4.1-mini';
 
   // Upload a file with an "assistants" purpose
   // const combinedDb = await openAi.files.create({
@@ -153,13 +176,13 @@ export async function getAssistant(name: string):Promise<Assistant> {
     model: modelName,
     name: personaData.name,
     description: personaData.description,
-    instructions: `${objectiveTruths}\n${personaData.prompt}`,
+    instructions: `${objectiveTruths}\n${personaData.prompt}`, // LAZY TEMP FIX. https://platform.openai.com/docs/assistants/migration/what-has-changed - UPDATE to version 4.52.7 in package.json
     tools: [
       // { type: 'code_interpreter' },
       // { type: 'retrieval' },
       // ...aiFunctions,
     ],
-    file_ids: [],
+    // file_ids: [],
     metadata: {},
   } as Omit<Assistant, 'id' | 'created_at' | 'object'>;
 
@@ -170,7 +193,7 @@ export async function getAssistant(name: string):Promise<Assistant> {
     log.debug(F, `Creating the ${name} assistant!`);
     return openAi.beta.assistants.create(tripsitAssistantData);
   }
-  log.debug(F, `I found the ${name} assistant!`);
+  // log.debug(F, `I found the ${name} assistant!`);
   // If it does exist, update it
   // log.debug(F, `updatedAssistant: ${JSON.stringify(assistant, null, 2)}`);
   return openAi.beta.assistants.update(assistantData.id, tripsitAssistantData);
@@ -535,8 +558,8 @@ async function openAiWaitForRun(
       const messageContent = (
         await openAi.beta.threads.messages.list(thread.id, { limit: 1 })
       ).data[0].content[0];
-      log.debug(F, `messageContent: ${JSON.stringify(messageContent, null, 2)}`);
-      return { response: (messageContent as MessageContentText).text.value.slice(0, 2000), promptTokens, completionTokens };
+      // log.debug(F, `messageContent: ${JSON.stringify(messageContent, null, 2)}`);
+      return { response: (messageContent as TextContentBlock).text.value.slice(0, 2000), promptTokens, completionTokens };
     }
     case 'requires_action': {
       log.debug(F, 'requires_action');
@@ -697,7 +720,7 @@ async function openAiConversation(
   // Get the most recent run
   // This will automatically return the most recent runs, so we can just grab the first one
   let [recentRun] = (await openAi.beta.threads.runs.list(thread.id, { limit: 1 })).data;
-  log.debug(F, `recentRun: ${JSON.stringify(recentRun, null, 2)}`);
+  // log.debug(F, `recentRun: ${JSON.stringify(recentRun, null, 2)}`);
 
   // If the most recent run is in progress, queued, or waiting for user action, stop it
   if (recentRun && ['queued', 'in_progress', 'requires_action'].includes(recentRun.status)) {
@@ -725,7 +748,7 @@ async function openAiConversation(
   }
 
   // Run the thread
-  log.debug(F, `Starting new run with assistant: ${assistant.id} and thread: ${thread.id}`);
+  log.debug(F, `Starting new run with assistant: ${assistant.name} and thread: ${thread.id}`);
   const run = await openAi.beta.threads.runs.create(
     thread.id,
     {
@@ -757,7 +780,7 @@ async function openAiChat(
   let model = aiPersona.ai_model.toLowerCase();
   // Convert ai models into proper names
   if (aiPersona.ai_model === 'GPT_3_5_TURBO') {
-    model = 'gpt-3.5-turbo-1106';
+    model = 'gpt-4.1-mini'; // LAZY TEMP FIX
   }
 
   // This message list is sent to the API
@@ -843,7 +866,7 @@ async function openAiChat(
       }
     }
 
-    response = responseMessage.content ?? 'Sorry, I\'m not sure how to respond to that.';
+    response = responseMessage.content?.toString() ?? 'Sorry, I\'m not sure how to respond to that.';
   }
 
   // log.debug(F, `response: ${response}`);
@@ -886,6 +909,90 @@ export default async function aiChat(
   return openAiConversation(aiPersona, messages, messageData);
 }
 
+// Function to process the next message in the user's queue
+async function processNextMessage(userId: string) {
+  const userQueue = userQueues.get(userId);
+
+  // If userQueue is null or undefined, exit the function immediately
+  if (!userQueue) return;
+
+  // If the queue is empty, reset isProcessing to false and exit
+  if (userQueue.queue.length === 0) {
+    userQueue.isProcessing = false;
+    return;
+  }
+
+  userQueue.isProcessing = true; // Mark as processing
+
+  // Ensure the queue has an item before destructuring
+  const nextMessage = userQueue.queue.shift();
+  if (!nextMessage) {
+    // Handle case where there’s no next message in the queue, if needed
+    return;
+  }
+
+  const {
+    aiPersona, messages, messageData, attachmentInfo, resolve,
+  } = nextMessage;
+
+  try {
+    // Call the aiChat function and destructure the needed response data
+    const { response, promptTokens, completionTokens } = await aiChat(
+      aiPersona,
+      messages,
+      messageData,
+      attachmentInfo,
+    );
+
+    resolve({ response, promptTokens, completionTokens });
+  } catch (error) {
+    log.error(F, `Error processing message for user: ${userId} - error: ${error}`);
+    resolve({ response: 'Error', promptTokens: 0, completionTokens: 0 });
+  } finally {
+    // Process the next message after this one is done
+    processNextMessage(userId);
+  }
+}
+
+// Main function for aiChat to handle incoming messages and return a Promise with response data
+export function handleAiMessageQueue(
+  aiPersona: ai_personas,
+  messages: { role: 'user'; content: string }[],
+  messageData: Message<boolean>,
+  attachmentInfo: { url: string | null; mimeType: string | null },
+): Promise<{
+    response: string;
+    promptTokens: number;
+    completionTokens: number;
+  }> {
+  if (!userQueues.has(messageData.author.id)) {
+    userQueues.set(messageData.author.id, { queue: [], isProcessing: false });
+  }
+
+  const userQueue = userQueues.get(messageData.author.id);
+
+  if (!userQueue) {
+    // Return a rejected promise if userQueue is undefined
+    return Promise.reject(new Error(`User queue could not be initialized for user ${messageData.author.id}`));
+  }
+
+  // Push the new message data into the user's queue
+  return new Promise(resolve => {
+    userQueue.queue.push({
+      aiPersona,
+      messages,
+      messageData,
+      attachmentInfo,
+      resolve,
+    });
+
+    // If the user is not currently processing, start processing
+    if (!userQueue.isProcessing) {
+      processNextMessage(messageData.author.id);
+    }
+  });
+}
+
 export async function aiFlairMod(
   aiPersona:ai_personas,
   messages: OpenAI.Chat.ChatCompletionMessageParam [],
@@ -906,7 +1013,7 @@ export async function aiFlairMod(
   let model = aiPersona.ai_model.toLowerCase();
   // Convert ai models into proper names
   if (aiPersona.ai_model === 'GPT_3_5_TURBO') {
-    model = 'gpt-3.5-turbo-1106';
+    model = 'gpt-4.1-mini'; // LAZY TEMP FIX
   }
   // This message list is sent to the API
   const chatCompletionMessages = [{
@@ -915,23 +1022,17 @@ export async function aiFlairMod(
   }] as OpenAI.Chat.ChatCompletionMessageParam[];
   chatCompletionMessages.push(...messages);
 
-  // eslint-disable-next-line @typescript-eslint/naming-convention
-  const {
-    id,
-    name,
-    created_at, // eslint-disable-line @typescript-eslint/naming-convention
-    created_by, // eslint-disable-line @typescript-eslint/naming-convention
-    prompt,
-    logit_bias, // eslint-disable-line @typescript-eslint/naming-convention
-    total_tokens, // eslint-disable-line @typescript-eslint/naming-convention
-    ai_model: modelName, // eslint-disable-line @typescript-eslint/naming-convention
-    ...restOfAiPersona
-  } = aiPersona;
-
   const payload = {
-    ...restOfAiPersona,
+    temperature: aiPersona.temperature,
+    top_p: aiPersona.top_p,
+    presence_penalty: aiPersona.presence_penalty,
+    frequency_penalty: aiPersona.frequency_penalty,
+    logit_bias: aiPersona.logit_bias,
+    max_tokens: aiPersona.max_tokens,
     model,
     messages: chatCompletionMessages,
+    // functions: aiFunctions,
+    // function_call: 'auto',
   } as OpenAI.Chat.ChatCompletionCreateParamsNonStreaming;
 
   // log.debug(F, `payload: ${JSON.stringify(payload, null, 2)}`);
@@ -958,7 +1059,7 @@ export async function aiFlairMod(
     promptTokens = chatCompletion.usage?.prompt_tokens ?? 0;
     completionTokens = chatCompletion.usage?.completion_tokens ?? 0;
 
-    response = responseMessage.content ?? 'Sorry, I\'m not sure how to respond to that.';
+    response = responseMessage.content?.toString() ?? 'Sorry, I\'m not sure how to respond to that.';
   }
 
   // log.debug(F, `response: ${response}`);
@@ -1027,4 +1128,61 @@ export async function aiModerate(
   // log.debug(F, `moderationAlerts: ${JSON.stringify(moderationAlerts, null, 2)}`);
 
   return moderationAlerts;
+}
+
+export async function aiTranslate(
+  target_language: string,
+  messages: OpenAI.Chat.ChatCompletionMessageParam [],
+):Promise<{
+    response: string,
+    promptTokens: number,
+    completionTokens: number,
+  }> {
+  let response = '';
+  let promptTokens = 0;
+  let completionTokens = 0;
+  if (!env.OPENAI_API_ORG || !env.OPENAI_API_KEY) return { response, promptTokens, completionTokens };
+
+  const model = 'gpt-4.1-mini';
+  const chatCompletionMessages = [{
+    role: 'system',
+    content: `You will translate whatever the user sends to their desired language. Their desired language or language code is: ${target_language}.`,
+  }] as OpenAI.Chat.ChatCompletionMessageParam[];
+  chatCompletionMessages.push(...messages);
+
+  const payload = {
+    model,
+    messages: chatCompletionMessages,
+  } as OpenAI.Chat.ChatCompletionCreateParamsNonStreaming;
+
+  // log.debug(F, `payload: ${JSON.stringify(payload, null, 2)}`);
+  let responseMessage = {} as OpenAI.Chat.ChatCompletionMessageParam;
+
+  const chatCompletion = await openAi.chat.completions
+    .create(payload)
+    .catch(err => {
+      if (err instanceof OpenAI.APIError) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        log.error(F, `${err.name} - ${err.status} - ${err.type} - ${(err.error as any).message}  `); // 400
+        // log.error  (F, `${JSON.stringify(err.headers, null, 2)}`); // {server: 'nginx', ...}
+        // log.error(F, `${JSON.stringify(err, null, 2)}`); // {server: 'nginx', ...}
+      } else {
+        throw err;
+      }
+    });
+  // log.debug(F, `chatCompletion: ${JSON.stringify(chatCompletion, null, 2)}`);
+
+  if (chatCompletion?.choices[0].message) {
+    responseMessage = chatCompletion.choices[0].message;
+
+    // Sum up the existing tokens
+    promptTokens = chatCompletion.usage?.prompt_tokens ?? 0;
+    completionTokens = chatCompletion.usage?.completion_tokens ?? 0;
+
+    response = responseMessage.content?.toString() ?? 'Sorry, I\'m not sure how to respond to that.';
+  }
+
+  // log.debug(F, `response: ${response}`);
+
+  return { response, promptTokens, completionTokens };
 }

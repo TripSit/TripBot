@@ -1,5 +1,7 @@
 // import { stripIndents } from 'common-tags';
-import { Category, Combo, Drug } from 'tripsit_drug_db';
+import {
+  Category, ComboData, Drug, Combos, Interactions,
+} from 'tripsit_drug_db';
 // import { CbSubstance, Interaction } from '../@types/combined';
 // import drugDataAll from '../../../assets/data/combine dDB.json';
 import { stripIndents } from 'common-tags';
@@ -14,12 +16,6 @@ type DrugData = {
   [key: string]: Drug;
 };
 
-type ComboData = {
-  [key: string]: {
-    [key: string]: Combo;
-  };
-};
-
 type ComboDef = {
   status: string;
   emoji: string;
@@ -29,7 +25,7 @@ type ComboDef = {
 };
 
 const drugData = drugJsonData as DrugData;
-const comboData = comboJsonData as ComboData;
+const comboData = comboJsonData as Combos;
 
 // const devMsg = '...this shouldn\'t have happened, please tell the developer!';
 
@@ -61,7 +57,7 @@ export async function combo(
   let drugBName = drugBInput.toLowerCase();
 
   // Because users can input whatever they want, we need to clean the input
-  function cleanDrugName(drugName:string):string {
+  function cleanDrugName(drugName: string): string {
     // These matches need to come first because otherwise "2x-b" woould be found in the drug DB but not have any interaction info
     if (/^do.$/i.test(drugName)) {
       return 'dox';
@@ -96,20 +92,6 @@ export async function combo(
       if (drug.combos && Object.keys(drug.combos).includes(drugName.toLowerCase())) {
         return drugName.toLowerCase();
       }
-
-      // Otherwise, check the categories
-      if (drug.categories) {
-        if (drug.categories.includes('benzodiazepine' as Category)) {
-          return 'benzodiazepines';
-        }
-        if (drug.categories.includes('opioid' as Category)) {
-          return 'opioids';
-        }
-        if (drug.categories.includes('ssri' as Category)) {
-          return 'ssris';
-        }
-      }
-      return drugName.toLowerCase();
     }
 
     // If the drug is not in the drug database, check the combo database
@@ -129,14 +111,31 @@ export async function combo(
       }
     }
 
+    if (Object.keys(drugData).includes(drugName.toLowerCase())) {
+      const drug = (drugData as DrugData)[drugName.toLowerCase()] as Drug;
+
+      // Otherwise, check the categories
+      if (drug.categories) {
+        if (drug.categories.includes('benzodiazepine' as Category)) {
+          return 'benzodiazepines';
+        }
+        if (drug.categories.includes('opioid' as Category)) {
+          return 'opioids';
+        }
+        if (drug.categories.includes('ssri' as Category)) {
+          return 'ssris';
+        }
+      }
+    }
+
     return drugName;
   }
 
   drugAName = cleanDrugName(drugAName);
   drugBName = cleanDrugName(drugBName);
 
-  // log.debug(F, `drugAName: ${drugAName}`);
-  // log.debug(F, `drugBName: ${drugBName}`);
+  log.debug(F, `drugAName: ${drugAName}`);
+  log.debug(F, `drugBName: ${drugBName}`);
 
   const drugANameString = drugAInput !== drugAName ? ` (converted to '${drugAName}')` : '';
   const drugBNameString = drugBInput !== drugBName ? ` (converted to '${drugBName}')` : '';
@@ -161,8 +160,8 @@ export async function combo(
 
   // We use this to show the user all the drugs they can use
   const allDrugNames = Object.values(drugData as DrugData)
-    .filter((drug:Drug) => drug.aliases) // Filter drugs without aliases
-    .map((drug:Drug) => drug.aliases) // Get aliases
+    .filter((drug: Drug) => drug.aliases) // Filter drugs without aliases
+    .map((drug: Drug) => drug.aliases) // Get aliases
     .flat() as string[]; // Flatten array, define as string[]
 
   if (!drugAComboData) {
@@ -187,12 +186,12 @@ export async function combo(
   }
   // log.debug(F, `drugBComboData: ${JSON.stringify(drugBComboData)}`);
 
-  let comboInfo = {} as Combo;
+  let comboInfo = {} as ComboData;
   // Check if drugB is in drugA's combo list
   if (Object.keys(drugAComboData).includes(drugBName)) {
-    comboInfo = drugAComboData[drugBName];
+    comboInfo = drugAComboData[drugBName as keyof Interactions] as ComboData;
   } else if (Object.keys(drugBComboData).includes(drugAName)) {
-    comboInfo = drugBComboData[drugAName];
+    comboInfo = drugBComboData[drugAName as keyof Interactions] as ComboData;
   } else {
     // If we get here, there is no combo data for these drugs
     return {

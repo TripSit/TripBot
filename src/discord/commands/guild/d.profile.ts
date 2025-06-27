@@ -3,6 +3,7 @@ import {
   SlashCommandBuilder,
   GuildMember,
   AttachmentBuilder,
+  MessageFlags,
 } from 'discord.js';
 import Canvas from '@napi-rs/canvas';
 import { personas } from '@prisma/client';
@@ -12,7 +13,9 @@ import commandContext from '../../utils/context';
 import { expForNextLevel, getTotalLevel } from '../../../global/utils/experience';
 import { getPersonaInfo } from '../../../global/commands/g.rpg';
 import getAsset from '../../utils/getAsset';
-import { resizeText, deFuckifyText, colorDefs } from '../../utils/canvasUtils';
+import {
+  resizeText, deFuckifyText, generateColors,
+} from '../../utils/canvasUtils';
 
 const F = f(__filename);
 
@@ -41,16 +44,18 @@ export const dProfile: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('profile')
     .setDescription('Get someone\'s profile!')
+    .setIntegrationTypes([0])
     .addUserOption(option => option
       .setName('target')
       .setDescription('User to lookup'))
     .addBooleanOption(option => option.setName('ephemeral')
-      .setDescription('Set to "True" to show the response only to you')),
+      .setDescription('Set to "True" to show the response only to you')) as SlashCommandBuilder,
   async execute(
     interaction,
   ) {
     log.info(F, await commandContext(interaction));
-    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
+    const ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined;
+    await interaction.deferReply({ flags: ephemeral });
     const startTime = Date.now();
     if (!interaction.guild) {
       await interaction.editReply({ content: 'You can only use this command in a guild!' });
@@ -163,12 +168,15 @@ export const dProfile: SlashCommand = {
     const canvasObj = Canvas.createCanvas(canvasWidth, canvasHeight);
     const context = canvasObj.getContext('2d');
 
-    // Choose color based on user's role
-    const cardLightColor = colorDefs[target.roles.color?.id as keyof typeof colorDefs]?.cardLightColor || '#232323';
-    const cardDarkColor = colorDefs[target.roles.color?.id as keyof typeof colorDefs]?.cardDarkColor || '#141414';
-    const chipColor = colorDefs[target.roles.color?.id as keyof typeof colorDefs]?.chipColor || '#393939';
-    const barColor = colorDefs[target.roles.color?.id as keyof typeof colorDefs]?.barColor || '#b3b3b3';
-    const textColor = colorDefs[target.roles.color?.id as keyof typeof colorDefs]?.textColor || '#ffffff';
+    // Generate the colors for the card based on the user's role color
+    const roleColor = `#${(target.roles.color?.color || 0x99aab5).toString(16).padStart(6, '0')}`;
+    log.debug(F, `roleColor: ${roleColor}`);
+
+    const cardLightColor = generateColors(roleColor, 0, -75, -67);
+    const cardDarkColor = generateColors(roleColor, 0, -75, -80);
+    const chipColor = generateColors(roleColor, 0, -50, -50);
+    const barColor = generateColors(roleColor, 0, -20, -10);
+    const textColor = generateColors(roleColor, 0, 0, 0);
 
     // Draw the card shape
     context.fillStyle = cardLightColor;
@@ -205,7 +213,7 @@ export const dProfile: SlashCommand = {
         const Background = await Canvas.loadImage(imagePath);
         context.save();
         context.globalCompositeOperation = 'lighter';
-        context.globalAlpha = 0.05;
+        context.globalAlpha = 0.04;
         context.beginPath();
         context.roundRect(0, 0, 675, 292, [19]);
         context.roundRect(684, 0, 237, 292, [19]);
@@ -329,20 +337,21 @@ export const dProfile: SlashCommand = {
     let usernameHeight = 76;
     let fontSize = 50;
     const maxLength = 508;
+    context.textBaseline = 'middle';
 
     if (userFlair) {
-      usernameHeight = 62;
-      fontSize = 25;
+      usernameHeight = 78;
+      fontSize = 30;
       context.textBaseline = 'top';
-      context.font = resizeText(canvasObj, userFlair, fontSize, userFont, maxLength);
-      context.fillText(`${userFlair}`, 146, 97);
+      context.font = resizeText(canvasObj, userFlair, fontSize, 'futura', maxLength);
+      context.fillText(`${userFlair}`, 146, 100);
       context.textBaseline = 'bottom';
     }
 
     fontSize = 50;
-    context.textBaseline = 'middle';
     context.font = resizeText(canvasObj, filteredDisplayName, fontSize, userFont, maxLength);
     context.fillText(`${filteredDisplayName}`, 146, usernameHeight);
+    context.textBaseline = 'middle';
 
     // User Timezone
     context.font = '25px futura';
@@ -520,12 +529,14 @@ export async function getProfilePreview(target: GuildMember, option: string, ima
   const canvasObj = Canvas.createCanvas(canvasWidth, canvasHeight);
   const context = canvasObj.getContext('2d');
 
-  // Choose color based on user's role
-  const cardLightColor = colorDefs[target.roles.color?.id as keyof typeof colorDefs]?.cardLightColor || '#232323';
-  const cardDarkColor = colorDefs[target.roles.color?.id as keyof typeof colorDefs]?.cardDarkColor || '#141414';
-  const chipColor = colorDefs[target.roles.color?.id as keyof typeof colorDefs]?.chipColor || '#393939';
-  const barColor = colorDefs[target.roles.color?.id as keyof typeof colorDefs]?.barColor || '#b3b3b3';
-  const textColor = colorDefs[target.roles.color?.id as keyof typeof colorDefs]?.textColor || '#ffffff';
+  // Generate the colors for the card based on the user's role color
+  const roleColor = `#${(target.roles.color?.color || 0x99aab5).toString(16).padStart(6, '0')}`;
+
+  const cardLightColor = generateColors(roleColor, 0, -75, -67);
+  const cardDarkColor = generateColors(roleColor, 0, -75, -80);
+  const chipColor = generateColors(roleColor, 0, -50, -50);
+  const barColor = generateColors(roleColor, 0, -20, -10);
+  const textColor = generateColors(roleColor, 0, 0, 0);
 
   // Draw the card shape
   context.fillStyle = cardLightColor;
@@ -553,7 +564,7 @@ export async function getProfilePreview(target: GuildMember, option: string, ima
     const Background = await Canvas.loadImage(imagePath.toString());
     context.save();
     context.globalCompositeOperation = 'lighter';
-    context.globalAlpha = 0.05;
+    context.globalAlpha = 0.04;
     context.beginPath();
     context.roundRect(0, 0, 675, 292, [19]);
     context.roundRect(684, 0, 237, 292, [19]);
@@ -618,20 +629,21 @@ export async function getProfilePreview(target: GuildMember, option: string, ima
   let fontSize = 50;
   const maxLength = 508;
   const userFlair = 'Your Custom Flair Here';
+  context.textBaseline = 'middle';
 
   if (option === 'userflair') {
-    usernameHeight = 62;
-    fontSize = 25;
+    usernameHeight = 78;
+    fontSize = 30;
     context.textBaseline = 'top';
-    context.font = resizeText(canvasObj, userFlair, fontSize, userFont, maxLength);
-    context.fillText(`${userFlair}`, 146, 97);
+    context.font = resizeText(canvasObj, userFlair, fontSize, 'futura', maxLength);
+    context.fillText(`${userFlair}`, 146, 100);
     context.textBaseline = 'bottom';
   }
 
   fontSize = 50;
-  context.textBaseline = 'middle';
   context.font = resizeText(canvasObj, filteredDisplayName, fontSize, userFont, maxLength);
   context.fillText(`${filteredDisplayName}`, 146, usernameHeight);
+  context.textBaseline = 'middle';
 
   /* User Timezone
     context.font = '25px futura';

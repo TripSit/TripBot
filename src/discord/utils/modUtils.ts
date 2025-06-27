@@ -2,7 +2,6 @@
 /* eslint-disable sonarjs/no-duplicate-string */
 /* eslint-disable max-len */
 import {
-  SlashCommandBuilder,
   ChatInputCommandInteraction,
   GuildMember,
   ModalBuilder,
@@ -33,23 +32,24 @@ import {
   APIActionRowComponent,
   APIButtonComponentWithCustomId,
   DiscordErrorData,
+  InteractionEditReplyOptions,
+  AnySelectMenuInteraction,
 } from 'discord.js';
 import {
   TextInputStyle,
   ButtonStyle,
+  MessageFlags,
 } from 'discord-api-types/v10';
 import { stripIndents } from 'common-tags';
 import { user_action_type, user_actions, users } from '@prisma/client';
 import moment from 'moment';
-import { SlashCommand } from '../../@types/commandDef';
-import { parseDuration } from '../../../global/utils/parseDuration';
-import commandContext from '../../utils/context'; // eslint-disable-line
-import { getDiscordMember } from '../../utils/guildMemberLookup';
-import { embedTemplate } from '../../utils/embedTemplate';
+import { parseDuration, validateDurationInput } from '../../global/utils/parseDuration';
+import { getDiscordMember } from './guildMemberLookup';
+import { embedTemplate } from './embedTemplate';
 
 // import { last } from '../../../global/commands/g.last';
-import { checkGuildPermissions } from '../../utils/checkPermissions';
-import { last } from '../../../global/commands/g.last';
+import { checkGuildPermissions } from './checkPermissions';
+import { last } from '../../global/commands/g.last';
 
 /* TODO:
 add dates to bans
@@ -62,7 +62,7 @@ link accounts to transfer warnings and experience
 const F = f(__filename);
 type UndoAction = 'UN-FULL_BAN' | 'UN-TICKET_BAN' | 'UN-DISCORD_BOT_BAN' | 'UN-BAN_EVASION' | 'UN-UNDERBAN' | 'UN-TIMEOUT' | 'UN-HELPER_BAN' | 'UN-CONTRIBUTOR_BAN';
 
-type ModAction = user_action_type | UndoAction | 'INFO' | 'LINK';
+type ModAction = user_action_type | UndoAction | 'INFO' | 'LINK' | 'ACKN_REPORT';
 // type BanAction = 'FULL_BAN' | 'TICKET_BAN' | 'DISCORD_BOT_BAN' | 'BAN_EVASION' | 'UNDERBAN';
 type TargetObject = Snowflake | User | GuildMember;
 
@@ -74,11 +74,12 @@ const noReason = 'No reason provided';
 // const descriptionPlaceholder = 'Tell the user why you\'re doing this';
 const mepWarning = 'You cannot use the word "MEP" here.';
 const noMessageSent = '*No message sent to user*';
+/*
 const cooperativeExplanation = stripIndents`This is a suite of moderation tools for guilds to use, \
 this includes the ability to ban, warn, report, and more!
 
 Currently these tools are only available to a limited number of partner guilds, \
-use /cooperative info for more information.`;
+use /cooperative info for more information.`; */
 // const noUserError = 'Could not find that member/user!';
 const beMoreSpecific = stripIndents`
 Be more specific:
@@ -309,9 +310,11 @@ function isReport(command: ModAction): command is 'REPORT' { return command === 
 
 function isNote(command: ModAction): command is 'NOTE' { return command === 'NOTE'; }
 
-function isLink(command: ModAction): command is 'LINK' { return command === 'LINK'; }
+// function isLink(command: ModAction): command is 'LINK' { return command === 'LINK'; }
 
 function isInfo(command: ModAction): command is 'INFO' { return command === 'INFO'; }
+
+function isReportAcknowledgement(command: ModAction): command is 'ACKN_REPORT' { return command === 'ACKN_REPORT'; }
 
 function isDiscussable(command: ModAction): command is 'DISCORD_BOT_BAN' | 'TICKET_BAN' | 'WARNING' | 'KICK' {
   return command === 'DISCORD_BOT_BAN' || command === 'TICKET_BAN' || command === 'WARNING' || command === 'KICK';
@@ -354,6 +357,12 @@ export const modButtonReport = (discordId: string) => new ButtonBuilder()
   .setCustomId(`moderate~REPORT~${discordId}`)
   .setLabel('Report')
   .setEmoji('📝')
+  .setStyle(ButtonStyle.Primary);
+
+export const modButtonAcknowledgeReport = (discordId: string) => new ButtonBuilder()
+  .setCustomId(`moderate~ACKN_REPORT~${discordId}`)
+  .setLabel('Acknowledge')
+  .setEmoji('✅')
   .setStyle(ButtonStyle.Primary);
 
 export const modButtonWarn = (discordId: string) => new ButtonBuilder()
@@ -789,7 +798,7 @@ export async function modResponse(
   }
 
   let targetString = '';
-  let target = {} as GuildMember;
+  let target = {} as GuildMember | User;
   const modEmbedObj = embedTemplate();
 
   const { embedColor } = embedVariables[command as keyof typeof embedVariables];
@@ -839,43 +848,50 @@ export async function modResponse(
           create: { discord_id: userId },
           update: {},
         });
-
-        actionRow.addComponents(
-          modButtonNote(userId),
-        );
-
         let banVerb = 'ban';
-        let userBan = {} as GuildBan;
-        try {
-          userBan = await interaction.guild.bans.fetch(userId);
-        } catch (err: unknown) {
-          // log.debug(F, `Error fetching ban: ${err}`);
-        }
-        if (userBan.guild) {
+        if (showModButtons) {
           actionRow.addComponents(
-            modButtonUnBan(userId),
+            modButtonNote(userId),
           );
-          banVerb = 'un-ban';
-        } else {
+
+          let userBan = {} as GuildBan;
+          try {
+            userBan = await interaction.guild.bans.fetch(userId);
+          } catch (err: unknown) {
+            // log.debug(F, `Error fetching ban: ${err}`);
+          }
+          if (userBan.guild) {
+            actionRow.addComponents(
+              modButtonUnBan(userId),
+            );
+            banVerb = 'un-ban';
+          } else {
+            actionRow.addComponents(
+              modButtonBan(userId),
+            );
+          }
+
           actionRow.addComponents(
-            modButtonBan(userId),
+            modButtonInfo(userId),
           );
         }
 
-        actionRow.addComponents(
-          modButtonInfo(userId),
-        );
-
-        if (isReport(command)) {
+        if (isReport(command) && showModButtons) {
           modEmbedObj.setDescription(stripIndents`
           User ID '${userId}' is not in the guild, but I can still Note or ${banVerb} them!`);
         } else {
           log.debug(F, '[modResponse] generating user info');
           const modlogEmbed = await userInfoEmbed(actor, targetObj, targetData, command, showModButtons);
           log.debug(F, `modlogEmbed: ${JSON.stringify(modlogEmbed, null, 2)}`);
-          actionRow.setComponents([
-            modButtonInfo(userId),
-          ]);
+          if (showModButtons) {
+            actionRow.setComponents([
+              modButtonInfo(userId),
+            ]);
+          } else {
+            actionRow.setComponents([
+              modButtonReport(userId),
+            ]);
+          }
           if (isBan(command)) {
             actionRow.addComponents(
               modButtonUnBan(userId),
@@ -903,13 +919,15 @@ export async function modResponse(
     // log.debug(F, `Assigning target from string: ${targets}`);
     [target] = targets;
   }
-  if (interaction.isUserContextMenuCommand() && interaction.targetMember) {
+
+  if (interaction.isUserContextMenuCommand() && (interaction.targetMember || interaction.targetUser)) {
     // log.debug(F, `User context target member: ${interaction.targetMember}`);
-    target = interaction.targetMember as GuildMember;
+    target = interaction.targetMember ? interaction.targetMember as GuildMember : interaction.targetUser as User;
   } else if (interaction.isMessageContextMenuCommand() && interaction.targetMessage) {
     // log.debug(F, `Message context target message member: ${interaction.targetMessage.member}`);
-    target = interaction.targetMessage.member as GuildMember;
+    target = interaction.targetMessage.member ? interaction.targetMessage.member as GuildMember : interaction.targetMessage.author as User;
   }
+
   const targetData = await db.users.upsert({
     where: {
       discord_id: target.id,
@@ -922,22 +940,24 @@ export async function modResponse(
   });
 
   // Get the guild
-  // const { guild } = interaction;
-  // const guildData = await db.discord_guilds.upsert({
-  //   where: {
-  //     id: guild.id,
-  //   },
-  //   create: {
-  //     id: guild.id,
-  //   },
-  //   update: {
-  //   },
-  // });
+  const { guild } = interaction;
+  const guildData = await db.discord_guilds.upsert({
+    where: {
+      id: guild.id,
+    },
+    create: {
+      id: guild.id,
+    },
+    update: {},
+  });
 
   // Determine if the actor is a mod
-  // const actorIsMod = (!!guildData.role_moderator && actor.roles.cache.has(guildData.role_moderator));
+  const actorIsMod = (!!guildData.role_moderator && actor.roles.cache.has(guildData.role_moderator));
 
-  const timeoutTime = target.communicationDisabledUntilTimestamp;
+  let timeoutTime = null;
+  if (target instanceof GuildMember) {
+    timeoutTime = target.communicationDisabledUntilTimestamp;
+  }
 
   if (showModButtons) {
     if (isInfo(command) || isReport(command)) {
@@ -983,6 +1003,16 @@ export async function modResponse(
   }
 
   log.debug(F, `[modResponse] time: ${Date.now() - startTime}ms`);
+
+  if (showModButtons && !actorIsMod && isReport(command)) {
+    const actionRowTwo = new ActionRowBuilder<ButtonBuilder>();
+    actionRowTwo.addComponents(modButtonAcknowledgeReport(target.id));
+    return {
+      embeds: [modlogEmbed],
+      components: [actionRow, actionRowTwo],
+    };
+  }
+
   return {
     embeds: [modlogEmbed],
     components: [actionRow],
@@ -1059,7 +1089,7 @@ async function messageModThread(
   log.debug(F, 'Values are set, continuing');
 
   const { pastVerb, emoji } = embedVariables[command as keyof typeof embedVariables];
-  let summary = `${actor.displayName} ${pastVerb} ${targetName}`;
+  let summary = `${actor} ${pastVerb} ${target}`;
   let anonSummary = `${targetName} was ${pastVerb}`;
 
   if (isTimeout(command)) {
@@ -1208,9 +1238,18 @@ async function messageUser(
     const messageFilter = (mi: MessageComponentInteraction) => mi.user.id === target.id;
     const collector = message.createMessageComponentCollector({ filter: messageFilter, time: 0 });
 
+    // Fetch the mod thread channel once
+    let targetChan: TextChannel | null = null;
+    try {
+      targetChan = targetData.mod_thread_id
+        ? await discordClient.channels.fetch(targetData.mod_thread_id as Snowflake) as TextChannel
+        : null;
+    } catch (error) {
+      log.info(F, 'Failed to fetch mod thread. It was likely deleted.');
+    }
+
     collector.on('collect', async (mi: MessageComponentInteraction) => {
       if (mi.customId.startsWith('acknowledgeButton')) {
-        const targetChan = await discordClient.channels.fetch(targetData.mod_thread_id as Snowflake) as TextChannel;
         if (targetChan) {
           await targetChan.send({
             embeds: [embedTemplate()
@@ -1222,16 +1261,16 @@ async function messageUser(
         await mi.update({ components: [] });
         mi.user.send('Thanks for understanding! We appreciate your cooperation and will consider this in the future!');
       } else if (mi.customId.startsWith('refusalButton')) {
-        const targetChan = await discordClient.channels.fetch(targetData.mod_thread_id as Snowflake) as TextChannel;
-        await targetChan.send({
-          embeds: [embedTemplate()
-            .setColor(Colors.Red)
-            .setDescription(`${target.username} has refused their timeout and was kicked.`)],
-        });
+        if (targetChan) {
+          await targetChan.send({
+            embeds: [embedTemplate()
+              .setColor(Colors.Red)
+              .setDescription(`${target.username} has refused their timeout and was kicked.`)],
+          });
+        }
         // remove the components from the message
         await mi.update({ components: [] });
-        mi.user.send(stripIndents`Thanks for admitting this, you\'ve been removed from the guild.
-        You can rejoin if you ever decide to cooperate.`);
+        mi.user.send(stripIndents`Thanks for admitting this, you\'ve been removed from the guild. You can rejoin if you ever decide to cooperate.`);
         await guild.members.kick(target, 'Refused to acknowledge timeout');
       }
     });
@@ -1252,7 +1291,12 @@ export async function acknowledgeButton(
     update: {
     },
   });
-  const targetChan = await discordClient.channels.fetch(targetData.mod_thread_id as Snowflake) as TextChannel;
+  let targetChan: TextChannel | null = null;
+  try {
+    targetChan = targetData.mod_thread_id ? await discordClient.channels.fetch(targetData.mod_thread_id as Snowflake) as TextChannel : null;
+  } catch (error) {
+    log.info(F, 'Failed to fetch mod thread. It was likely deleted.');
+  }
   if (targetChan) {
     await targetChan.send({
       embeds: [embedTemplate()
@@ -1261,8 +1305,11 @@ export async function acknowledgeButton(
     });
   }
   // remove the components from the message
-  await interaction.update({ components: [] });
-  interaction.user.send('Thanks for understanding! We appreciate your cooperation and will consider this in the future!');
+  try {
+    await interaction.update({ components: [] });
+  } catch (err) {
+    log.debug(F, 'Failed to remove warning components for moderation acknowledgement');
+  }
 }
 
 export async function refusalButton(
@@ -1278,29 +1325,277 @@ export async function refusalButton(
     update: {
     },
   });
-  const targetChan = await discordClient.channels.fetch(targetData.mod_thread_id as Snowflake) as TextChannel;
+
+  let targetChan: TextChannel | null = null;
+  try {
+    targetChan = targetData.mod_thread_id ? await discordClient.channels.fetch(targetData.mod_thread_id as Snowflake) as TextChannel : null;
+  } catch (error) {
+    log.info(F, 'Failed to fetch mod thread. It was likely deleted.');
+  }
   if (targetChan) {
     await targetChan.send({
       embeds: [embedTemplate()
-        .setColor(Colors.Green)
+        .setColor(Colors.Red)
         .setDescription(`${interaction.user.username} has refused their warning and was kicked.`)],
     });
+    await targetChan.guild.members.kick(interaction.user, 'Refused to acknowledge warning');
   }
   // remove the components from the message
   await interaction.update({ components: [] });
-  await interaction.user.send('Thanks for admitting this, you\'ve been removed from the guild. You can rejoin if you ever decide to cooperate.');
+}
 
-  await targetChan.guild.members.kick(interaction.user, 'Refused to acknowledge warning');
+export async function acknowledgeReportButton(
+  buttonInt: ButtonInteraction,
+) {
+  if (!buttonInt.guild) return;
+  const [, , targetId]: [string, ModAction, Snowflake] = buttonInt.customId.split('~') as [string, ModAction, Snowflake];
+
+  // Fetch db data for the person who was reported
+  const reporteeData = await db.users.upsert({
+    where: {
+      discord_id: targetId,
+    },
+    create: {
+      discord_id: targetId,
+    },
+    update: {
+    },
+  });
+
+  let modActorMember = null as null | GuildMember;
+  let targetChan: TextChannel | null = null;
+  let reporteeMember: GuildMember | null = null;
+  let reporteeUser: User | null = null;
+  let reporterUser: User | null = null;
+
+  try {
+    // Fetch the mod thread
+    if (reporteeData.mod_thread_id) {
+      targetChan = await discordClient.channels.fetch(reporteeData.mod_thread_id as Snowflake) as TextChannel;
+    }
+
+    if (!targetChan) {
+      log.info(F, 'Failed to fetch mod thread. It was likely deleted.');
+      return;
+    }
+
+    try {
+      modActorMember = await buttonInt.guild.members.fetch(buttonInt.user.id);
+    } catch (err) {
+      log.info(F, 'Failed to fetch mod actor. They are likely no longer in the server.');
+      return;
+    }
+
+    // Fetch the reportee member or user
+    try {
+      reporteeMember = await buttonInt.guild.members.fetch(targetId);
+    } catch {
+      log.info(F, 'Failed to fetch reportee member. They are likely no longer in the server. Fetching user.');
+      try {
+        reporteeUser = await discordClient.users.fetch(targetId);
+      } catch (err) {
+        log.error(F, `Failed to fetch reportee user. Account likely deleted or no access: ${err}`);
+      }
+      log.info(F, 'Reportee user successfully fetched!');
+    }
+
+    // Fetch the reporter from message mentions
+    const reporterId = buttonInt.message.mentions.users.first()?.id;
+    if (reporterId) {
+      reporterUser = await discordClient.users.fetch(reporterId);
+    }
+
+    if (!reporterUser) {
+      await targetChan.send({
+        embeds: [embedTemplate()
+          .setColor(Colors.DarkOrange)
+          .setDescription('The original reporter of this user has left the server.')],
+      });
+      log.info(F, 'Could not determine the reporter user.');
+      return;
+    }
+  } catch (error) {
+    log.info(F, `An unexpected error occurred: ${error}`);
+    return;
+  }
+
+  if (!reporteeMember && !reporteeUser) {
+    await targetChan.send({
+      embeds: [embedTemplate()
+        .setColor(Colors.DarkOrange)
+        .setDescription('The user this mod thread is for has deleted their Discord account.')],
+    });
+    return;
+  }
+
+  // Determine reportee name
+  // Determine reportee name
+  let reporteeName = reporteeMember?.displayName ?? reporteeUser?.username ?? 'Unknown User';
+
+  // If reporteeUser and reporteeMember are not found, try fetching the mod thread name
+  if (!reporteeMember && !reporteeUser && reporteeData.mod_thread_id) {
+    try {
+      const modThread = await buttonInt.guild.channels.fetch(reporteeData.mod_thread_id) as TextChannel;
+      if (modThread) {
+        reporteeName = modThread.name; // Use the thread name as the reportee's name
+      }
+    } catch (err) {
+      log.info(F, `Failed to fetch mod thread channel name: ${err}`);
+      log.error(F, `Failed to fetch reporteeMember, user, and modthread name. ${err}`);
+    }
+  }
+
+  // Send a DM to the user who triggered the report
+  try {
+    await reporterUser.send(stripIndents`
+      Thank you for your report. Users that break our server rules disrupt the server for everyone, and your reports help us identify them.
+
+      While we can't provide specific details about the specific actions taken, your recent report has been acknowledged and action taken. Your reports make TripSit a friendlier place for everyone.
+
+      If you come across more bad behavior, we hope you'll continue to assist the Tripsit community by reporting it to us.
+
+      This was for your report on ${reporteeName}, submitted on <t:${Math.floor(buttonInt.message.createdTimestamp / 1000)}:F>.
+
+      Regards,
+      Team TripSit
+    `);
+
+    const successEmbed = embedTemplate()
+      .setColor(Colors.Green)
+      .setDescription(
+        `${modActorMember.displayName} has acknowledged the report on ${reporteeMember ?? reporteeUser?.username ?? reporteeName}.`,
+      );
+
+    await targetChan.send({
+      embeds: [successEmbed],
+    });
+
+    const guildData = await db.discord_guilds.upsert({
+      where: {
+        id: buttonInt.guild.id,
+      },
+      create: {
+        id: buttonInt.guild.id,
+      },
+      update: {
+      },
+    });
+
+    if (guildData.channel_mod_log) {
+      const modLog = await buttonInt.guild.channels.fetch(guildData.channel_mod_log) as TextChannel;
+      successEmbed.setDescription(
+        `${modActorMember.displayName} has acknowledged the report on ${reporteeMember ?? reporteeUser?.username ?? reporteeName}.`,
+      );
+      await modLog.send({
+        embeds: [successEmbed],
+      });
+      return;
+    }
+
+    log.info(F, 'Failed to send report acknowledgement to mod log. No mod log channel set.');
+  } catch (error) {
+    log.error(F, `Failed to send DM to ${buttonInt.user.username}: ${error}`);
+    await targetChan.send({
+      embeds: [embedTemplate()
+        .setColor(Colors.Red)
+        .setDescription(`${buttonInt.user.username} tried to acknowledged ${reporteeData.username}'s report, but there was an error.`)],
+    });
+  }
+}
+
+async function wasActionedRecently(actionType: string): Promise<boolean> {
+  const oneMinuteAgo = new Date(Date.now() - 300 * 1000);
+  const recentAction = await db.user_actions.findFirst({
+    where: {
+      type: actionType as user_action_type,
+      created_at: {
+        gte: oneMinuteAgo,
+      },
+    },
+  });
+  return recentAction !== null;
+}
+
+async function onActionedRecently(
+  buttonInt: ButtonInteraction,
+  modalInt: ModalSubmitInteraction,
+) {
+  const actionRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
+    new ButtonBuilder()
+      .setCustomId('proceedButton')
+      .setLabel('Proceed')
+      .setStyle(ButtonStyle.Primary),
+    new ButtonBuilder()
+      .setCustomId('nahButton')
+      .setLabel("Nah I'm good")
+      .setStyle(ButtonStyle.Secondary),
+  );
+
+  const replyMessage = await buttonInt.followUp({
+    content: stripIndents`This action has already been taken by another moderator in the last 5 minutes. Would you like to proceed anyways?
+    
+    NOTE: These buttons will only remain functional for 1 minute.`,
+    components: [actionRow],
+    ephemeral: true,
+  });
+
+  // Filter only for ButtonInteraction
+  const filter = (i: ButtonInteraction | AnySelectMenuInteraction) => i.isButton() && i.user.id === buttonInt.user.id;
+  const collector = replyMessage.createMessageComponentCollector({ filter, time: 60000 });
+
+  return new Promise(resolve => {
+    collector.on('collect', async (i: ButtonInteraction) => {
+      try {
+        // Don't call deferUpdate() if you plan to use update()
+        if (i.customId === 'proceedButton') {
+          await i.update({ content: 'Proceeding with the action...', components: [] });
+          // eslint-disable-next-line @typescript-eslint/no-use-before-define
+          await moderate(buttonInt, modalInt, true);
+          resolve('proceeded');
+        } else if (i.customId === 'nahButton') {
+          await i.update({ content: 'Action cancelled.', components: [] });
+          resolve('cancelled');
+        }
+      } catch (error) {
+        log.error(F, `Error updating message: ${error}`);
+      }
+    });
+    /*
+    collector.on('end', async collected => {
+      if (collected.size === 0) {
+        try {
+          // For timeouts, try to edit the original reply
+          // await buttonInt.editReply({ content: 'No response received. Action cancelled.', components: [] });
+        } catch (error) {
+          log.error(F, `Error updating actioned recently message: ${error}`);
+        }
+        resolve('timeout');
+      }
+    });
+    */
+  });
 }
 
 export async function moderate(
   buttonInt: ButtonInteraction,
   modalInt: ModalSubmitInteraction,
+  ignoreRecentActions: boolean = false,
 ): Promise<InteractionReplyOptions> {
   if (!buttonInt.guild) return { content: 'This command can only be used in a guild!' };
   const actor = buttonInt.member as GuildMember;
 
   const [, command, targetId]: [string, ModAction, Snowflake] = buttonInt.customId.split('~') as [string, ModAction, Snowflake];
+  if (!isUnFullBan(command)
+    && !isUnTimeout(command)
+    && !isNote(command)
+    && !isReport(command)
+    && !ignoreRecentActions && await wasActionedRecently(command)) {
+    await onActionedRecently(buttonInt, modalInt);
+    return {
+      content: 'This action was cancelled due to another taken recently. Proceed or cancel below.',
+      components: [],
+    }; // Ensure the function returns something
+  }
 
   const modEmbedObj = buttonInt.message.embeds[0].toJSON();
 
@@ -1354,50 +1649,62 @@ export async function moderate(
   }
 
   // Process duration time for ban and timeouts
-  let duration = 0 as null | number;
+  let banEndTime = null;
+  let actionDuration = 0 as null | number;
   let durationStr = '';
   if (isTimeout(command)) {
     // log.debug(F, 'Parsing timeout duration');
     let durationVal = modalInt.fields.getTextInputValue('duration');
-    if (durationVal === '') durationVal = '7 days';
-    // log.debug(F, `durationVal: ${durationVal}`);
-    if (durationVal.length === 1) {
-      // If the input is a single number, assume it's days
-      duration = parseInt(durationVal, 10);
-      if (Number.isNaN(duration)) {
-        return { content: 'Timeout must be a number!' };
-      }
-      if (duration < 0 || duration > 7) {
-        return { content: 'Timeout must be between 0 and 7 days!' };
-      }
-      durationVal = `${duration} days`;
+
+    if (durationVal === '') {
+      durationVal = '7d';
+    } // else {
+    // durationVal = await makeValid(durationVal);
+    // }
+
+    if (!validateDurationInput(durationVal)) {
+      return {
+        content: 'Timeout duration must include at least one of the following units: seconds, minutes, hours, days, or weeks. Examples of valid formats include: 1 days 23 hours 59 minutes 59 seconds, or just 1 day, etc.',
+      };
     }
 
-    duration = await parseDuration(durationVal);
-    if (duration && (duration < 0 || duration > 7 * 24 * 60 * 60 * 1000)) {
-      return { content: 'Timeout must be between 0 and 7 days!!' };
+    actionDuration = await parseDuration(durationVal);
+    if (actionDuration && (actionDuration < 0 || actionDuration > 7 * 24 * 60 * 60 * 1000)) {
+      return { content: 'Timeout must be between 0 and 7 days!' };
     }
 
     // convert the milliseconds into a human readable string
-    const humanTime = msToHuman(duration);
+    const humanTime = msToHuman(actionDuration);
 
-    durationStr = `for ${humanTime}. It will expire ${time(new Date(Date.now() + duration), 'R')}`;
+    durationStr = ` for ${humanTime}. It will expire ${time(new Date(Date.now() + actionDuration), 'R')}`;
     // log.debug(F, `duration: ${duration}`);
   }
   if (isFullBan(command)) {
-    // If the command is ban, then the input value exists, so pull that and try to parse it as an int
-    let dayInput = parseInt(modalInt.fields.getTextInputValue('days'), 10);
+    const durationVal = modalInt.fields.getTextInputValue('ban_duration');
 
-    // If no input was provided, default to 0 days
-    if (Number.isNaN(dayInput)) dayInput = 0;
+    if (durationVal !== '') {
+      // durationVal = await makeValid(durationVal);
+      let tempBanDuration = parseInt(durationVal, 10);
 
-    // If the input is a string, or outside the bounds, tell the user and return
-    if (dayInput && (dayInput < 0 || dayInput > 7)) {
-      return { content: 'Ban days must be at least 0 and at most 7!' };
+      if (Number.isNaN(tempBanDuration)) {
+        return { content: 'Ban duration must be a number!' };
+      }
+
+      if (!validateDurationInput(durationVal)) {
+        return {
+          content: 'Ban duration must include at least one of the following units: seconds, minutes, hours, days, weeks, months, or years. Examples of valid formats include: 1 year 1 month 1 week 1 day 23 hours 59 minutes 59 seconds, or just 1 year, 1 month, etc.',
+        };
+      }
+
+      tempBanDuration = await parseDuration(durationVal);
+      if (tempBanDuration && tempBanDuration < 0) {
+        return { content: 'Ban duration must be at least 1 second!' };
+      }
+
+      durationStr = `${time(new Date(Date.now() + tempBanDuration), 'R')}`;
+      const currentTime = new Date();
+      banEndTime = tempBanDuration !== 0 ? new Date(currentTime.getTime() + tempBanDuration) : null;
     }
-
-    // Get the millisecond value of the input
-    duration = await parseDuration(`${dayInput} days`);
   }
 
   // Display all properties we're going to use
@@ -1407,7 +1714,7 @@ export async function moderate(
   targetId: ${targetId}
   internalNote: ${internalNote}
   description: ${description}
-  duration: ${duration}
+  duration: ${actionDuration}
   durationStr: ${durationStr}
   `);
 
@@ -1497,8 +1804,14 @@ export async function moderate(
     );
   }
 
+  if (command === 'FULL_BAN') {
+    internalNote += `\n **Actioned by:** ${actor.displayName}`;
+    internalNote += `\n **Ban Ends:** ${durationStr || 'Never'}`;
+  }
+
   let actionData = {
     user_id: targetData.id,
+    target_discord_id: targetData.discord_id,
     guild_id: actor.guild.id,
     type: command.includes('UN-') ? command.slice(3) : command,
     ban_evasion_related_user: null as string | null,
@@ -1516,9 +1829,37 @@ export async function moderate(
   if (isBan(command)) {
     if (isFullBan(command) || isUnderban(command) || isBanEvasion(command)) {
       targetData.removed_at = new Date();
-      const deleteMessageValue = duration ?? 0;
+
+      let deleteMessageValue = modalInt.fields.getTextInputValue('days');
+      let deleteDuration = 0;
+
+      if (deleteMessageValue !== '') {
+        // If input is just a number, append 'd' to treat it as days
+        if (/^\d+$/.test(deleteMessageValue)) {
+          deleteMessageValue += 'd';
+        }
+
+        // deleteMessageValue = await makeValid(deleteMessageValue);
+        deleteDuration = parseInt(deleteMessageValue, 10);
+
+        if (Number.isNaN(deleteDuration)) {
+          return { content: 'Delete duration must be a number!' };
+        }
+
+        if (!validateDurationInput(deleteMessageValue)) {
+          return {
+            content: 'Delete duration must include at least one of the following units: seconds, minutes, hours, days, or weeks, with a maximum duration of 7 days. Examples of valid formats include: 1 day 23 hours 59 minutes 59 seconds, or just 1 day, etc.',
+          };
+        }
+
+        deleteDuration = await parseDuration(deleteMessageValue);
+        if (deleteDuration && deleteDuration < 0) {
+          return { content: 'Delete duration must be at least 1 second!' };
+        }
+      }
+
       try {
-        if (deleteMessageValue > 0 && targetMember) {
+        if (deleteDuration > 0 && targetMember) {
         // log.debug(F, `I am deleting ${deleteMessageValue} days of messages!`);
           const response = await last(targetMember.user, buttonInt.guild);
           extraMessage = `${targetName}'s last ${response.messageCount} (out of ${response.totalMessages}) messages before being banned :\n${response.messageList}`;
@@ -1530,7 +1871,12 @@ export async function moderate(
       log.info(F, `target: ${targetId} | deleteMessageValue: ${deleteMessageValue} | internalNote: ${internalNote ?? noReason}`);
 
       try {
-        targetObj = await buttonInt.guild.bans.create(targetId, { deleteMessageSeconds: deleteMessageValue / 1000, reason: internalNote ?? noReason });
+        log.info(F, `Message delete duration in milliseconds: ${deleteDuration}`);
+        targetObj = await buttonInt.guild.bans.create(targetId, { deleteMessageSeconds: deleteDuration / 1000, reason: internalNote ?? noReason });
+        // Set ban duration if present
+        if (banEndTime !== null) {
+          actionData.expires_at = banEndTime;
+        }
       } catch (err) {
         log.error(F, `Error: ${err}`);
       }
@@ -1580,11 +1926,12 @@ export async function moderate(
     }
     actionData.repealed_at = new Date();
     actionData.repealed_by = actorData.id;
+    actionData.expires_at = null;
   } else if (isTimeout(command)) {
     if (targetMember) {
-      actionData.expires_at = new Date(Date.now() + (duration as number));
+      actionData.expires_at = new Date(Date.now() + (actionDuration as number));
       try {
-        await targetMember.timeout(duration, internalNote ?? noReason);
+        await targetMember.timeout(actionDuration, internalNote ?? noReason);
       } catch (err) {
         log.error(F, `Error: ${err}`);
       }
@@ -1612,7 +1959,7 @@ export async function moderate(
       actionData.repealed_by = actorData.id;
 
       try {
-        await targetMember.timeout(0, internalNote ?? noReason);
+        await targetMember.timeout(null, internalNote ?? noReason);
         // log.debug(F, `I untimeout ${target.displayName} because\n '${internalNote}'!`);
       } catch (err) {
         log.error(F, `Error: ${err}`);
@@ -1694,7 +2041,7 @@ export async function moderate(
       > ${modalInt.fields.getTextInputValue('internalNote')}
   
       Message sent to user:
-      > ${modalInt.fields.getTextInputValue('description')}`,
+      > ${!isNote(command) && !isReport(command) ? modalInt.fields.getTextInputValue('description') : ''}`,
         inline: true,
       },
     );
@@ -1716,7 +2063,7 @@ export async function moderate(
     .setDescription(desc)
     .setFooter(null);
 
-  if (command !== 'REPORT' && modThread) response.setDescription(`${response.data.description}\nYou can access their thread here: ${modThread}`);
+  if (!isReport(command) && modThread) response.setDescription(`${response.data.description}\nYou can access their thread here: ${modThread}`);
 
   log.debug(F, `Returning embed: ${JSON.stringify(response, null, 2)}`);
   return { embeds: [response] };
@@ -1741,8 +2088,19 @@ export async function modModal(
     }
   }
 
-  if (command === 'INFO') {
-    await interaction.deferReply({ ephemeral: true });
+  if (isReportAcknowledgement(command)) {
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+    await acknowledgeReportButton(interaction);
+    await interaction.editReply({
+      embeds: [embedTemplate()
+        .setColor(Colors.Green)
+        .setDescription(`You have acknowledged the report on ${target}.`)],
+    });
+    return;
+  }
+
+  if (isInfo(command)) {
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
     const targetData = await db.users.upsert({
       where: {
         discord_id: userId,
@@ -1850,18 +2208,31 @@ export async function modModal(
 
   // log.debug(F, `Verb: ${verb}`);
 
+  const modalInputComponent = new TextInputBuilder()
+    .setStyle(TextInputStyle.Paragraph)
+    .setPlaceholder('Tell moderators why you\'re doing this')
+    .setValue(modalInternal)
+    .setMaxLength(1000)
+    .setRequired(true)
+    .setCustomId('internalNote');
+
+  try {
+    // Ensure the label text is within the limit
+    const label = `Why are you ${verb} ${target}?`;
+    const truncatedLabelText = label.length > 45 ? `${label.substring(0, 41)}...?` : label;
+
+    modalInputComponent.setLabel(truncatedLabelText);
+  } catch (err) {
+    log.error(F, `Error: ${err}`);
+    log.error(F, `Verb: ${verb}, Target: ${target}`);
+  }
+
+  // log.debug(F, `Verb: ${verb}`);
   const modal = new ModalBuilder()
     .setCustomId(`modModal~${command}~${interaction.id}`)
     .setTitle(`${interaction.guild.name} member ${command.toLowerCase()}`)
     .addComponents(new ActionRowBuilder<TextInputBuilder>()
-      .addComponents(new TextInputBuilder()
-        .setLabel(`Why are you ${verb} ${target}?`)
-        .setStyle(TextInputStyle.Paragraph)
-        .setPlaceholder('Tell moderators why you\'re doing this')
-        .setValue(modalInternal)
-        .setMaxLength(1000)
-        .setRequired(true)
-        .setCustomId('internalNote')));
+      .addComponents(modalInputComponent));
 
   // All commands except INFO, NOTE and REPORT can have a public reason sent to the user
   if (!isNote(command) && !isReport(command)) {
@@ -1881,48 +2252,53 @@ export async function modModal(
       .addComponents(new TextInputBuilder()
         .setLabel('Timeout for how long?')
         .setStyle(TextInputStyle.Short)
-        .setPlaceholder('4 days 3hrs 2 mins 30 seconds (Max 7 days, Default 7 days)')
+        .setPlaceholder('7 days or 1 week, etc. (Max 7 days, Default 7 days)')
         .setRequired(false)
         .setCustomId('duration')));
   }
   if (isFullBan(command)) {
     modal.addComponents(new ActionRowBuilder<TextInputBuilder>()
       .addComponents(new TextInputBuilder()
-        .setLabel('How many days of msg to remove?')
+        .setLabel('How far back should messages be removed?')
         .setStyle(TextInputStyle.Short)
-        .setPlaceholder('4 days 3hrs 2 mins 30 seconds (Max 7 days, Default 0 days)')
+        .setPlaceholder('7 days or 1 week, etc. (Max 7 days, Default 0 days)')
         .setRequired(false)
         .setCustomId('days')));
+    modal.addComponents(new ActionRowBuilder<TextInputBuilder>()
+      .addComponents(new TextInputBuilder()
+        .setLabel('How long should they be banned for?')
+        .setStyle(TextInputStyle.Short)
+        .setPlaceholder('1 year or 365 days, etc. (Empty = Permanent)')
+        .setRequired(false)
+        .setCustomId('ban_duration')));
   }
 
   // When the modal is opened, disable the button on the embed
 
-  const buttonRow = interaction.message.components[0].toJSON() as APIActionRowComponent<APIButtonComponentWithCustomId>;
-  const buttonData = buttonRow.components.find(field => field.custom_id.split('~')[1] === command);
-  if (buttonData) {
-  // log.debug(F, `buttonData: ${JSON.stringify(buttonData, null, 2)}`);
+  const buttonRows = interaction.message.components.map(row => row.toJSON()) as APIActionRowComponent<APIButtonComponentWithCustomId>[];
 
-    const updatedButton = {
-      custom_id: buttonData.custom_id,
-      label: buttonData.label,
-      emoji: buttonData.emoji,
-      style: buttonData.style,
-      type: buttonData.type,
-      disabled: true,
-    };
+  const updatedRows = buttonRows.map(row => {
+    const buttonIndex = row.components.findIndex(field => field.custom_id.split('~')[1] === command);
+    if (buttonIndex !== -1) {
+      const buttonData = row.components[buttonIndex];
 
-    const index = buttonRow.components.findIndex(field => field.custom_id.split('~')[1] === command);
-    buttonRow.components.splice(index, 1, updatedButton);
+      const updatedButton = {
+        ...buttonData,
+        disabled: true,
+      };
 
-    // log.debug(F, `Interaction message: ${JSON.stringify(interaction.message, null, 2)}`);
-    try {
-      await interaction.message.edit({
-        components: [buttonRow],
-      });
-    } catch (err) {
-      // This will happen on the initial ephemeral message and idk why
-      // log.error(F, `Error: ${err}`);
+      row.components.splice(buttonIndex, 1, updatedButton);
     }
+    return row;
+  });
+
+  try {
+    await interaction.message.edit({
+      components: updatedRows,
+    });
+  } catch (err) {
+    // This will happen on the initial ephemeral message and idk why
+    // log.error(F, `Error: ${err}`);
   }
 
   await interaction.showModal(modal);
@@ -1930,8 +2306,24 @@ export async function modModal(
   const filter = (i: ModalSubmitInteraction) => i.customId.startsWith('modModal');
   await interaction.awaitModalSubmit({ filter, time: disableButtonTime })
     .then(async i => {
-      if (i.customId.split('~')[2] !== interaction.id) return;
-      await i.deferReply({ ephemeral: true });
+      if (i.customId.split('~')[2] !== interaction.id) {
+        return;
+      }
+      await i.deferReply({ flags: MessageFlags.Ephemeral });
+      try {
+        if (command === 'REPORT' || command === 'NOTE') {
+          await moderate(interaction, i);
+          const reportResponseEmbed = embedTemplate()
+            .setColor(command === 'REPORT' ? Colors.Yellow : Colors.Green)
+            .setTitle(command === 'REPORT' ? 'Your report was sent!' : 'Your note was added!')
+            .setDescription(command === 'REPORT' ? 'The moderators have received your report and will look into it. Thanks!' : `Your note was successfully added to ${target}'s thread.`);
+          await i.editReply({
+            embeds: [reportResponseEmbed],
+          });
+        }
+      } catch (err) {
+        log.info(F, `[modModal ModalSubmitInteraction]: ${err}`);
+      }
       // const internalNote = i.fields.getTextInputValue('internalNote'); // eslint-disable-line
 
       // // Only these commands actually have the description input, so only pull it if it exists
@@ -2023,8 +2415,9 @@ export async function modModal(
           // log.error(F, `Error: ${err}`);
         }
       }
-
-      await i.editReply(await moderate(interaction, i));
+      if (!isNote(command) && !isReport(command)) {
+        await i.editReply(await moderate(interaction, i) as InteractionEditReplyOptions);
+      }
     })
     .catch(async err => {
       // log.error(F, `Error: ${JSON.stringify(err as DiscordErrorData, null, 2)}`);
@@ -2062,142 +2455,3 @@ export async function modModal(
       }
     });
 }
-
-export const mod: SlashCommand = {
-  data: new SlashCommandBuilder()
-    .setName('moderate')
-    .setDescription('Moderation actions!')
-    .addSubcommand(subcommand => subcommand
-      .setDescription('Link one user to another.')
-      .addStringOption(option => option
-        .setName('target')
-        .setDescription('User to link!')
-        .setRequired(true))
-      .addBooleanOption(option => option
-        .setName('override')
-        .setDescription('Override existing threads in the DB.'))
-      .setName('link')),
-  async execute(interaction: ChatInputCommandInteraction) {
-    log.info(F, await commandContext(interaction));
-    const command = interaction.options.getSubcommand() as ModAction;
-
-    if (!interaction.guild) {
-      await interaction.reply({
-        embeds: [embedTemplate()
-          .setColor(Colors.Red)
-          .setTitle('This command can only be used in a server!')],
-        ephemeral: true,
-      });
-      return false;
-    }
-
-    // Check if the guild is a partner (or the home guild)
-    const guildData = await db.discord_guilds.upsert({
-      where: {
-        id: interaction.guild.id,
-      },
-      create: {
-        id: interaction.guild.id,
-      },
-      update: {
-      },
-    });
-
-    if (!guildData.cooperative) {
-      await interaction.reply({
-        embeds: [
-          embedTemplate()
-            .setDescription(cooperativeExplanation)
-            .setColor(Colors.Red),
-        ],
-        ephemeral: true,
-      });
-      return false;
-    }
-
-    if (isLink(command)) {
-      const targetString = interaction.options.getString('target', true);
-      const targets = await getDiscordMember(interaction, targetString);
-      const override = interaction.options.getBoolean('override');
-      if (targets.length > 1) {
-        const embed = embedTemplate()
-          .setColor(Colors.Red)
-          .setTitle('Found more than one user with with that value!')
-          .setDescription(stripIndents`
-          "${targetString}" returned ${targets.length} results!
-  
-          Be more specific:
-          > **Mention:** @Moonbear
-          > **Tag:** moonbear#1234
-          > **ID:** 9876581237
-          > **Nickname:** MoonBear`);
-        await interaction.reply({
-          embeds: [embed],
-          ephemeral: true,
-        });
-        return false;
-      }
-      if (targets.length === 0) {
-        const embed = embedTemplate()
-          .setColor(Colors.Red)
-          .setTitle(`${targetString}" returned no results!`)
-          .setDescription(stripIndents`
-      Be more specific:
-      > **Mention:** @Moonbear
-      > **Tag:** moonbear#1234
-      > **ID:** 9876581237
-      > **Nickname:** MoonBear`);
-        await interaction.reply({
-          embeds: [embed],
-          ephemeral: true,
-        });
-        return false;
-      }
-
-      const target = targets[0];
-
-      let result: string | null;
-      if (!target) {
-        const userData = await db.users.upsert({
-          where: {
-            discord_id: targetString,
-          },
-          create: {
-            discord_id: targetString,
-          },
-          update: {
-          },
-        });
-
-        if (!userData) {
-          await interaction.reply({
-            content: stripIndents`Failed to link thread, I could not find this user in the guild, \
-    and they do not exist in the database!`,
-            ephemeral: true,
-          });
-          return false;
-        }
-        result = await linkThread(targetString, interaction.channelId, override);
-      } else {
-        result = await linkThread(target.id, interaction.channelId, override);
-      }
-
-      if (result === null) {
-        await interaction.editReply({ content: 'Successfully linked thread!' });
-      } else {
-        const existingThread = await interaction.client.channels.fetch(result);
-        await interaction.reply({
-          content: stripIndents`Failed to link thread, this user has an existing thread: ${existingThread}
-          Use the override parameter if you're sure!`,
-          ephemeral: true,
-        });
-      }
-    }
-
-    await interaction.reply(await modResponse(interaction, command, true));
-
-    return true;
-  },
-};
-
-export default mod;

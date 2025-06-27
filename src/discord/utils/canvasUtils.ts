@@ -59,125 +59,61 @@ export function deFuckifyText(text: string): string {
   }).join('');
 }
 
-export const colorDefs = {
-  [env.ROLE_PURPLE]: {
-    cardDarkColor: '#19151e',
-    cardLightColor: '#2d2636',
-    chipColor: '#47335f',
-    barColor: '#9661d9',
-    textColor: '#b072ff',
-  },
-  [env.ROLE_BLUE]: {
-    cardDarkColor: '#161d1f',
-    cardLightColor: '#283438',
-    chipColor: '#3a5760',
-    barColor: '#4baccc',
-    textColor: '#5acff5',
-  },
-  [env.ROLE_GREEN]: {
-    cardDarkColor: '#151a16',
-    cardLightColor: '#252e28',
-    chipColor: '#31543d',
-    barColor: '#59b879',
-    textColor: '#6de194',
-  },
-  [env.ROLE_PINK]: {
-    cardDarkColor: '#1e151b',
-    cardLightColor: '#352530',
-    chipColor: '#5f324f',
-    barColor: '#d95dae',
-    textColor: '#ff6dcd',
-  },
-  [env.ROLE_RED]: {
-    cardDarkColor: '#1f1616',
-    cardLightColor: '#382727',
-    chipColor: '#613838',
-    barColor: '#d95152',
-    textColor: '#ff5f60',
-  },
-  [env.ROLE_ORANGE]: {
-    cardDarkColor: '#1d1814',
-    cardLightColor: '#342b24',
-    chipColor: '#5f422e',
-    barColor: '#d98b51',
-    textColor: '#ffa45f',
-  },
-  [env.ROLE_YELLOW]: {
-    cardDarkColor: '#1d1b14',
-    cardLightColor: '#333024',
-    chipColor: '#5e532d',
-    barColor: '#d6b94e',
-    textColor: '#ffdd5d',
-  },
-  [env.ROLE_WHITE]: {
-    cardDarkColor: '#242424',
-    cardLightColor: '#404040',
-    chipColor: '#666666',
-    barColor: '#b3b3b3',
-    textColor: '#dadada',
-  },
-  [env.ROLE_DONOR_BLACK]: {
-    cardDarkColor: '#0e0e0e',
-    cardLightColor: '#181818',
-    chipColor: '#262626',
-    barColor: '#595959',
-    textColor: '#626262',
-  },
-  [env.ROLE_DONOR_PURPLE]: {
-    cardDarkColor: '#1a1222',
-    cardLightColor: '#272235',
-    chipColor: '#432767',
-    barColor: '#7f38d9',
-    textColor: '#9542ff',
-  },
-  [env.ROLE_DONOR_BLUE]: {
-    cardDarkColor: '#0c171d',
-    cardLightColor: '#1b2830',
-    chipColor: '#2f4f5f',
-    barColor: '#1da2cc',
-    textColor: '#22bef0',
-  },
-  [env.ROLE_DONOR_GREEN]: {
-    cardDarkColor: '#0f1f12',
-    cardLightColor: '#203827',
-    chipColor: '#275c39',
-    barColor: '#36b360',
-    textColor: '#45e47b',
-  },
-  [env.ROLE_DONOR_PINK]: {
-    cardDarkColor: '#25141c',
-    cardLightColor: '#412438',
-    chipColor: '#682b52',
-    barColor: '#d93fa4',
-    textColor: '#ff4ac1',
-  },
-  [env.ROLE_DONOR_RED]: {
-    cardDarkColor: '#210e0e',
-    cardLightColor: '#3e211f',
-    chipColor: '#662526',
-    barColor: '#d93335',
-    textColor: '#ff3c3e',
-  },
-  [env.ROLE_DONOR_ORANGE]: {
-    cardDarkColor: '#211710',
-    cardLightColor: '#3f2c20',
-    chipColor: '#664225',
-    barColor: '#d96c36',
-    textColor: '#ff913b',
-  },
-  [env.ROLE_DONOR_YELLOW]: {
-    cardDarkColor: '#211e0f',
-    cardLightColor: '#3d361f',
-    chipColor: '#655721',
-    barColor: '#d9bc4f',
-    textColor: '#ffd431',
-  },
-} as {
-  [key: string]: {
-    cardDarkColor: string;
-    cardLightColor: string;
-    chipColor: string;
-    barColor: string;
-    textColor: string;
+function hexToHSL(H: string): [number, number, number] {
+  let r = 0; let g = 0; let
+    b = 0;
+  if (H.length === 4) {
+    r = parseInt(`0x${H[1]}${H[1]}`, 16);
+    g = parseInt(`0x${H[2]}${H[2]}`, 16);
+    b = parseInt(`0x${H[3]}${H[3]}`, 16);
+  } else if (H.length === 7) {
+    r = parseInt(`0x${H[1]}${H[2]}`, 16);
+    g = parseInt(`0x${H[3]}${H[4]}`, 16);
+    b = parseInt(`0x${H[5]}${H[6]}`, 16);
+  }
+  r /= 255;
+  g /= 255;
+  b /= 255;
+  const max = Math.max(r, g, b); const
+    min = Math.min(r, g, b);
+  let h = 0; let s = 0; const
+    l = (max + min) / 2;
+
+  if (max !== min) {
+    const d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    switch (max) {
+      case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+      case g: h = (b - r) / d + 2; break;
+      case b: h = (r - g) / d + 4; break;
+      default: h = 0; break; // Add a default case to handle any other value of max
+    }
+    h /= 6;
+  }
+  return [h * 360, s * 100, l * 100];
+}
+
+function hslToHex(h: number, s: number, lightness: number): string {
+  const modifiedS = s / 100;
+  const modifiedLightness = lightness / 100;
+  const a = modifiedS * Math.min(modifiedLightness, 1 - modifiedLightness);
+  const f = (n: number) => {
+    const k = (n + h / 30) % 12;
+    const color = modifiedLightness - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
+    return Math.round(255 * color).toString(16).padStart(2, '0');
   };
-};
+  return `#${f(0)}${f(8)}${f(4)}`;
+}
+
+export function generateColors(baseHex: string, hueModifier: number, saturationModifier: number, lightnessModifier: number): string {
+  // Convert the base Hex color to HSL
+  let [h, s, l] = hexToHSL(baseHex);
+
+  // Apply the modifier amounts
+  h = (h + hueModifier) % 360;
+  s = Math.max(0, s * (1 + saturationModifier / 100));
+  l = Math.max(0, l * (1 + lightnessModifier / 100));
+
+  // Convert the modified HSL color back to Hex and return it
+  return hslToHex(h, s, l);
+}
