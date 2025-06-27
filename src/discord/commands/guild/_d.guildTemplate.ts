@@ -1,4 +1,5 @@
-/* import {
+/* eslint-disable import/prefer-default-export */
+import {
   ActionRowBuilder,
   ModalBuilder,
   TextInputBuilder,
@@ -159,4 +160,4 @@ export const dTemplate: SlashCommand = {
   },
 };
 
-export default dTemplate; */
+// export default dTemplate;
