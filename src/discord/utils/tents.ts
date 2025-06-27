@@ -98,7 +98,6 @@ export async function pitchTent(
   - \`/tent ping\` - Use this to ping those opted-in to VC ping invites
 
 - **Modify your tent**
-  - \`/tent name\` - Set a new name for your tent
   - \`/tent limit\` - Set a user limit
   - \`/tent level\` - Set a level requirement
   - \`/tent lock\`- Locks channel for all
