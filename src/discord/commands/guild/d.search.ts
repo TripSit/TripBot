@@ -125,7 +125,6 @@ async function steam(query: string): Promise<{
   }
   const item = data.items[0];
 
-  // Only fetch USD, EUR, GBP
   const currencies = [
     { cc: 'us', symbol: '$' },
     { cc: 'de', symbol: '€' },
@@ -142,7 +141,6 @@ async function steam(query: string): Promise<{
     details[symbol] = currencyData;
   });
 
-  // Use USD details for general info
   const usDetails = details.$ || {};
   type Genre = { id: number; description: string };
   let tags: string;
@@ -155,11 +153,9 @@ async function steam(query: string): Promise<{
   }
   const header = usDetails.header_image || item.header_image || null;
 
-  // Use Steam's Unix timestamp for release date if available
   let releaseDate = 'Unknown';
   if (usDetails.release_date?.date) {
     if (usDetails.release_date?.coming_soon === false && usDetails.release_date?.steam_release_date) {
-      // Use Discord timestamp formatting for release date
       releaseDate = `<t:${usDetails.release_date.steam_release_date}:D>`;
     } else {
       releaseDate = usDetails.release_date.date;
@@ -172,7 +168,6 @@ async function steam(query: string): Promise<{
   const developer = usDetails.developers ? usDetails.developers.join(', ') : 'Unknown';
   const publisher = usDetails.publishers ? usDetails.publishers.join(', ') : 'Unknown';
 
-  // Build a single-line price field and set sale percent in field name if on sale (USD region)
   let priceFieldName = 'Price';
   let salePercent = 0;
   const usdPriceObj = details.$?.price_overview;
@@ -230,35 +225,22 @@ async function weather(city: string): Promise<{
   fields: { name: string, value: string, inline?: boolean }[]
 }> {
   try {
-    // 1. Get coordinates from Nominatim
     const geoRes = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(city)}`);
     const geoData = await geoRes.json();
     if (!geoData[0]) {
       return {
         title: `Weather: ${city}`,
         url: `https://wttr.in/${encodeURIComponent(city)}`,
-        description: 'Could not find this location.',
+        description: 'Could not find this location. Try being more specific',
         fields: [],
       };
     }
-    const { lat, lon, display_name } = geoData[0];
+    const { lat, lon, display_name: displayName } = geoData[0];
 
-    // 2. Get local time from worldtimeapi.org (optional)
-    let localTime = '';
-    try {
-      const tzRes = await fetch(`https://api.timezonedb.com/v2.1/get-time-zone?key=YOUR_FREE_KEY&format=json&by=position&lat=${lat}&lng=${lon}`);
-      const tzData = await tzRes.json();
-      if (tzData.formatted) localTime = tzData.formatted;
-    } catch {
-      // fallback: skip local time
-    }
-
-    // 3. Get weather JSON from wttr.in
     const wttrUrl = `https://wttr.in/${lat},${lon}?format=j1`;
     const weatherRes = await fetch(wttrUrl);
     const weatherData = await weatherRes.json();
 
-    // 4. Extract current conditions
     const current = weatherData.current_condition?.[0];
     const weatherDesc = current?.weatherDesc?.[0]?.value || 'N/A';
     const tempC = current?.temp_C ?? 'N/A';
@@ -270,12 +252,8 @@ async function weather(city: string): Promise<{
     const humidity = current?.humidity ?? 'N/A';
     const precipMM = current?.precipMM ?? 'N/A';
 
-    // 5. Google Maps link
     const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${lat},${lon}`;
-
-    // 6. Build description and fields
-    let description = `[View on Google Maps](${mapsUrl})`;
-    if (localTime) description = `Local time: ${localTime}\n${description}`;
+    const description = `[View on Google Maps](${mapsUrl})`;
 
     const fields = [
       { name: 'Condition', value: weatherDesc, inline: true },
@@ -287,7 +265,7 @@ async function weather(city: string): Promise<{
     ];
 
     return {
-      title: `Weather: ${display_name}`,
+      title: `Weather: ${displayName}`,
       url: wttrUrl,
       description,
       fields,
@@ -296,7 +274,7 @@ async function weather(city: string): Promise<{
     return {
       title: `Weather: ${city}`,
       url: `https://wttr.in/${encodeURIComponent(city)}`,
-      description: 'Weather service is currently unavailable. Please try again later.',
+      description: 'Weather is currently unavailable. Please try again later.',
       fields: [],
     };
   }
@@ -328,7 +306,7 @@ export const dSearch: SlashCommand = {
         .setDescription('Set to "True" to show the response only to you')))
     .addSubcommand(sub => sub
       .setName('steam')
-      .setDescription('Search a game on Steam')
+      .setDescription('Find a game on Steam')
       .addStringOption(option => option
         .setName('game')
         .setDescription('Game to search for')
@@ -338,7 +316,7 @@ export const dSearch: SlashCommand = {
         .setDescription('Set to "True" to show the response only to you')))
     .addSubcommand(sub => sub
       .setName('wikipedia')
-      .setDescription('Query Wikipedia')
+      .setDescription('Query a topic on Wikipedia')
       .addStringOption(option => option
         .setName('query')
         .setDescription('Word to query')
@@ -371,7 +349,10 @@ export const dSearch: SlashCommand = {
         const urbanResult = await urbanDefine(word);
         result = {
           ...urbanResult,
-          description: `No standard dictionary definition found for "${word}".\n Showing Urban Dictionary result instead:\n\n${urbanResult.description}`,
+          description: `No standard dictionary definition found for "${word}".
+            Showing Urban Dictionary result instead:
+
+            ${urbanResult.description}`,
         };
       }
 
@@ -398,7 +379,10 @@ export const dSearch: SlashCommand = {
         const dictResult = await normalDefine(word);
         result = {
           ...dictResult,
-          description: `No Urban Dictionary result found for "${word}".\n Showing standard dictionary result instead:\n\n${dictResult.description}`,
+          description: `No Urban Dictionary result found for "${word}".
+          Showing standard dictionary result instead:
+
+          ${dictResult.description}`,
         };
       }
 
@@ -443,7 +427,6 @@ export const dSearch: SlashCommand = {
       return true;
     }
 
-    // In your weather subcommand handler, update to use fields:
     if (subcommand === 'weather') {
       const ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined;
       await interaction.deferReply({ flags: ephemeral });
