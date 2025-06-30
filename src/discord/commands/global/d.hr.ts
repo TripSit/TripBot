@@ -316,7 +316,6 @@ export const dHR = {
     }
 
     if (subcommand === 'mushroom_info') {
-      // Inline the mushroomPageOneEmbed logic
       const source = 'https://www.oaklandhyphae510.com/post/preliminary-tryptamine-potency-analysis-from-dried-homogenized-fruit-bodies-of-psilocybe-mushrooms';
       const disclaimer = 'The following data is based on preliminary research and development methods, does not represent final data and requires further peer review before being taken more seriously than \'interesting\'. However, this does represent meaningful, comparable data to the cultivators, to the consumers, and to the public.';
       const article = 'https://tripsitter.com/magic-mushrooms/average-potency/';
