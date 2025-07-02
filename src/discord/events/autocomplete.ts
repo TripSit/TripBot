@@ -291,15 +291,43 @@ async function autocompleteRoles(interaction: AutocompleteInteraction) {
     { name: '💗 Azalea', value: env.ROLE_PINK },
   ] as RoleDef[];
 
-  const premiumColorRoles = [
-    { name: '💖 Ruby', value: env.ROLE_DONOR_RED },
-    { name: '🧡 Sunstone', value: env.ROLE_DONOR_ORANGE },
-    { name: '💛 Citrine', value: env.ROLE_DONOR_YELLOW },
-    { name: '💚 Jade', value: env.ROLE_DONOR_GREEN },
-    { name: '💙 Sapphire', value: env.ROLE_DONOR_BLUE },
-    { name: '💜 Amethyst', value: env.ROLE_DONOR_PURPLE },
-    { name: '💗 Pezzottaite', value: env.ROLE_DONOR_PINK },
-  ] as RoleDef[];
+  const levelRoles = [
+    { name: '💖 Ruby', value: env.ROLE_LEVEL_RED },
+    { name: '🔶 Level Red-Orange', value: env.ROLE_LEVEL_REDORANGE },
+    { name: '🧡 Sunstone', value: env.ROLE_LEVEL_ORANGE },
+    { name: '💛 Citrine', value: env.ROLE_LEVEL_YELLOW },
+    { name: '💚 Jade', value: env.ROLE_LEVEL_GREEN },
+    { name: '💙 Sapphire', value: env.ROLE_LEVEL_BLUE },
+    { name: '💜 Amethyst', value: env.ROLE_LEVEL_PURPLE },
+    { name: '💗 Pezzottaite', value: env.ROLE_LEVEL_PINK },
+  ].filter(role => role.value && role.value.trim() !== '') as RoleDef[];
+
+  const gradientRoles = [
+    { name: '🌈 Crimson Gradient', value: env.ROLE_GRADIENT_1 },
+    { name: '🌈 Lava Gradient', value: env.ROLE_GRADIENT_2 },
+    { name: '🌈 Flare Gradient', value: env.ROLE_GRADIENT_3 },
+    { name: '🌈 Heatwave Gradient', value: env.ROLE_GRADIENT_4 },
+    { name: '🌈 Orchard Gradient', value: env.ROLE_GRADIENT_5 },
+    { name: '🌈 Aurora Gradient', value: env.ROLE_GRADIENT_6 },
+    { name: '🌈 Meadow Gradient', value: env.ROLE_GRADIENT_7 },
+    { name: '🌈 Jungle Gradient', value: env.ROLE_GRADIENT_8 },
+    { name: '🌈 Coral Gradient', value: env.ROLE_GRADIENT_9 },
+    { name: '🌈 Ocean Gradient', value: env.ROLE_GRADIENT_10 },
+    { name: '🌈 Lagoon Gradient', value: env.ROLE_GRADIENT_11 },
+    { name: '🌈 Mirage Gradient', value: env.ROLE_GRADIENT_12 },
+    { name: '🌈 Daydream Gradient', value: env.ROLE_GRADIENT_13 },
+    { name: '🌈 Cosmic Gradient', value: env.ROLE_GRADIENT_14 },
+    { name: '🌈 Blush Gradient', value: env.ROLE_GRADIENT_15 },
+    { name: '🌈 Berry Gradient', value: env.ROLE_GRADIENT_16 },
+    { name: '🌈 Solstice Gradient', value: env.ROLE_GRADIENT_17 },
+    { name: '🌈 Electric Gradient', value: env.ROLE_GRADIENT_18 },
+    { name: '🌈 Enigma Gradient', value: env.ROLE_GRADIENT_19 },
+    { name: '🌈 Nebula Gradient', value: env.ROLE_GRADIENT_20 },
+    { name: '🌈 Rocket Gradient', value: env.ROLE_GRADIENT_21 },
+    { name: '🌈 Eclipse Gradient', value: env.ROLE_GRADIENT_22 },
+    { name: '🌈 Phoenix Gradient', value: env.ROLE_GRADIENT_23 },
+    { name: '🌈 Sunset Gradient', value: env.ROLE_GRADIENT_24 },
+  ].filter(role => role.value && role.value.trim() !== '') as RoleDef[];
 
   const mindsetRoles = [
     { name: 'Drunk', value: env.ROLE_DRUNK },
@@ -315,16 +343,17 @@ async function autocompleteRoles(interaction: AutocompleteInteraction) {
   // Check if interaction.member type is APIInteractionGuildMember
   const isMod = (interaction.member as GuildMember).roles.cache.has(env.ROLE_MODERATOR);
   const isTs = (interaction.member as GuildMember).roles.cache.has(env.ROLE_TRIPSITTER);
-
-  const roleList = [] as { name: string, value: string }[];
   const command = interaction.options.getSubcommand();
+
+  // Build the complete list of available roles based on permissions
+  let availableRoles = [] as { name: string, value: string }[];
+
   if (isMod) {
     // log.debug(F, 'User is a moderator');
     // If the user is a moderator, they can manage the:
     // NeedsHelp, Helper, Mindset, Verified, Occult and Contributor roles.
     // They can manage these roles on anyone, except other moderators and tripsitters.
-
-    roleList.push(
+    availableRoles.push(
       { name: 'NeedsHelp', value: env.ROLE_NEEDSHELP },
       { name: 'Helper', value: env.ROLE_HELPER },
       { name: 'Verified', value: env.ROLE_VERIFIED },
@@ -333,43 +362,41 @@ async function autocompleteRoles(interaction: AutocompleteInteraction) {
       { name: 'Underban', value: env.ROLE_UNDERBAN },
       { name: 'Legacy', value: env.ROLE_LEGACY },
       ...mindsetRoles,
-      ...premiumColorRoles,
+      ...colorRoles,
+      ...levelRoles,
+      ...gradientRoles,
     );
   } else if (isTs) {
-    log.debug(F, 'User is a tripsitter');
     // If the user is a tripsitter, they can manage the
     // NeedsHelp, Helper and Mindset roles.
     // They can manage these roles on anyone, except other tripsitters and moderators.
-    roleList.push(
+    availableRoles.push(
       { name: 'NeedsHelp', value: env.ROLE_NEEDSHELP },
       { name: 'Helper', value: env.ROLE_HELPER },
       ...mindsetRoles,
-      ...premiumColorRoles,
+      ...colorRoles,
+      ...levelRoles,
+      ...gradientRoles,
     );
   } else {
-    log.debug(F, 'User is not a moderator or tripsitter');
-    log.debug(F, `Command is: ${command}`);
-    // If the user is not a moderator or tripsitter, they can manage the
-    // NeedsHelp, Helper, Contributor, Color and Mindset roles.
-    // They can only mange their own roles.
+    // Regular users
+    // They can only manage their own roles.
     if (command === 'add') {
-      // Everyone can add mindset roles
-      roleList.push(
-        ...mindsetRoles,
-      );
+      // Everyone can add mindset and basic color roles
+      availableRoles.push(...mindsetRoles, ...colorRoles);
+
+      // If the user is a donor or patreon they have access to extra color roles
       const isDonor = (interaction.member as GuildMember).roles.cache.has(env.ROLE_DONOR);
       const isPatron = (interaction.member as GuildMember).roles.cache.has(env.ROLE_PATRON);
 
-      // If the user is a donor or patreon they have access to extra color roles
       if (isDonor || isPatron) {
-        roleList.push(...premiumColorRoles);
-      } else {
-        roleList.push(...colorRoles);
+        availableRoles.push(...levelRoles, ...gradientRoles);
       }
     }
 
     // Keep this here cuz while the team can remove any role, regular members can only remove roles they already have
     if (command === 'remove') {
+      // For remove, only show roles the user actually has
       const potentialRoles = [
         { name: 'NeedsHelp', value: env.ROLE_NEEDSHELP },
         { name: 'Helper', value: env.ROLE_HELPER },
@@ -377,54 +404,63 @@ async function autocompleteRoles(interaction: AutocompleteInteraction) {
         { name: 'Occult', value: env.ROLE_OCCULT },
         ...colorRoles,
         ...mindsetRoles,
-        ...premiumColorRoles,
+        ...levelRoles,
+        ...gradientRoles,
       ];
 
       const potentialRoleIds = potentialRoles.map(role => role.value);
-
       const member = await (interaction.member as GuildMember).fetch();
       const memberRoles = member.roles.cache.map(role => ({ name: role.name, value: role.id }));
 
-      // Get a list of all roles that match between memberRoles and potentialRoles
-      const roles = memberRoles.map(role => {
-        if (potentialRoleIds.includes(role.value)) {
-          return { name: role.name, value: role.value };
-        }
-        return { name: '', value: '' };
-      });
-
-      const nonNullRoles = roles.filter(role => role.name !== '');
-
-      // log.debug(F, `nonNullRoles: ${JSON.stringify(nonNullRoles, null, 2)}`);
-
-      roleList.push(...nonNullRoles);
+      availableRoles = memberRoles.filter(memberRole => potentialRoleIds.includes(memberRole.value)
+        && memberRole.name
+        && memberRole.value);
     }
   }
 
-  const options = {
-    // shouldSort: true,
-    threshold: 0.2,
+  // Filter out roles with empty values
+  availableRoles = availableRoles.filter(role => role.value && role.value.trim() !== '');
+
+  // Get the search query from user input
+  const focusedValue = interaction.options.getFocused();
+
+  // If user hasn't typed anything yet, show some popular default options
+  if (!focusedValue || focusedValue.trim() === '') {
+    const defaultRoles = [
+      ...mindsetRoles.slice(0, 8), // Show all mindset roles
+      ...colorRoles.slice(0, 7), // Show all basic colors
+      ...(levelRoles.length > 0 ? levelRoles.slice(0, 5) : []), // Show first 5 level roles if available
+      ...(gradientRoles.length > 0 ? gradientRoles.slice(0, 5) : []), // Show first 5 gradients if available
+    ].filter(role => role.value && role.value.trim() !== '')
+      .slice(0, 25); // Ensure we don't exceed 25
+
+    interaction.respond(defaultRoles);
+    return;
+  }
+
+  // Use Fuse.js for fuzzy searching
+  const fuseOptions = {
+    shouldSort: true,
+    threshold: 0.3, // Less strict matching for better search results
     location: 0,
     distance: 100,
     maxPatternLength: 32,
     minMatchCharLength: 1,
     keys: [
-      'name',
-      'value',
+      { name: 'name', weight: 0.8 }, // Prioritize name matches
+      { name: 'value', weight: 0.2 }, // Lower priority for value matches
     ],
   };
 
-  const fuse = new Fuse(roleList, options);
-  const focusedValue = interaction.options.getFocused();
+  const fuse = new Fuse(availableRoles, fuseOptions);
   const results = fuse.search(focusedValue);
-  if (results.length > 0) {
-    // log.debug(F, `Results: ${JSON.stringify(results, null, 2)}`);
-    interaction.respond(results.map(choice => (
-      { name: choice.item.name, value: choice.item.value })));
-  } else {
-    // log.debug(F, `roleDict: ${JSON.stringify(roleDict, null, 2)}`);
-    interaction.respond(roleList);
-  }
+
+  // Return top 25 search results
+  const searchResults = results
+    .map(result => ({ name: result.item.name, value: result.item.value }))
+    .slice(0, 25);
+
+  interaction.respond(searchResults);
 }
 
 async function autocompleteColors(interaction: AutocompleteInteraction) {
