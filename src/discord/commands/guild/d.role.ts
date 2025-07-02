@@ -59,6 +59,12 @@ const blacklistedRoles = [
   env.ROLE_TEAMTRIPSIT,
   env.ROLE_TRIPBOT,
   env.ROLE_BOT,
+  env.ROLE_TEAMCOORDINATOR,
+  env.ROLE_DISCORDADMIN,
+  env.ROLE_SUCCESSOR,
+  env.ROLE_MATRIXADMIN,
+  env.ROLE_DIRECTOR,
+  env.ROLE_HRCOORDINATOR,
 ];
 // log.debug(F, `Mindset roles: ${JSON.stringify(mindsetRoles, null, 2)}`);
 // const mindsetNames = mindsetRoles.map(role => role.name);
