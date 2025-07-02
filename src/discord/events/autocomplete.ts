@@ -1,6 +1,5 @@
 import {
   AutocompleteInteraction,
-  GuildMember,
 } from 'discord.js';
 import Fuse from 'fuse.js';
 import { ai_model } from '@prisma/client';
@@ -20,8 +19,6 @@ const drugDataTripsit = tsData as {
 const drugDataAll = cbData as CbSubstance[];
 
 const F = f(__filename); // eslint-disable-line
-
-type RoleDef = { name: string; value: string };
 
 const timezoneNames: string[] = [];
 for (const timezone of timezones) { // eslint-disable-line
@@ -273,257 +270,6 @@ async function autocompleteDrugNames(interaction: AutocompleteInteraction) {
   }
 }
 
-async function autocompleteRoles(interaction: AutocompleteInteraction) {
-  // This will find all the roles that the user has the ability to assign
-  // This list can change depending on if the user is self-assigning or assigning to someone else
-  if (!interaction.guild) return;
-  if (!interaction.member) return;
-
-  // log.debug(F, `Autocomplete requested for: ${interaction.commandName}`);
-
-  const colorRoles = [
-    { name: '💖 Tulip', value: env.ROLE_RED },
-    { name: '🧡 Marigold', value: env.ROLE_ORANGE },
-    { name: '💛 Daffodil', value: env.ROLE_YELLOW },
-    { name: '💚 Waterlily', value: env.ROLE_GREEN },
-    { name: '💙 Bluebell', value: env.ROLE_BLUE },
-    { name: '💜 Hyacinth', value: env.ROLE_PURPLE },
-    { name: '💗 Azalea', value: env.ROLE_PINK },
-  ] as RoleDef[];
-
-  const levelRoles = [
-    { name: '💖 Ruby', value: env.ROLE_LEVEL_RED },
-    { name: '🔶 Level Red-Orange', value: env.ROLE_LEVEL_REDORANGE },
-    { name: '🧡 Sunstone', value: env.ROLE_LEVEL_ORANGE },
-    { name: '💛 Citrine', value: env.ROLE_LEVEL_YELLOW },
-    { name: '💚 Jade', value: env.ROLE_LEVEL_GREEN },
-    { name: '💙 Sapphire', value: env.ROLE_LEVEL_BLUE },
-    { name: '💜 Amethyst', value: env.ROLE_LEVEL_PURPLE },
-    { name: '💗 Pezzottaite', value: env.ROLE_LEVEL_PINK },
-  ].filter(role => role.value && role.value.trim() !== '') as RoleDef[];
-
-  const gradientRoles = [
-    { name: '🌈 Crimson Gradient', value: env.ROLE_GRADIENT_1 },
-    { name: '🌈 Lava Gradient', value: env.ROLE_GRADIENT_2 },
-    { name: '🌈 Flare Gradient', value: env.ROLE_GRADIENT_3 },
-    { name: '🌈 Heatwave Gradient', value: env.ROLE_GRADIENT_4 },
-    { name: '🌈 Orchard Gradient', value: env.ROLE_GRADIENT_5 },
-    { name: '🌈 Aurora Gradient', value: env.ROLE_GRADIENT_6 },
-    { name: '🌈 Meadow Gradient', value: env.ROLE_GRADIENT_7 },
-    { name: '🌈 Jungle Gradient', value: env.ROLE_GRADIENT_8 },
-    { name: '🌈 Coral Gradient', value: env.ROLE_GRADIENT_9 },
-    { name: '🌈 Ocean Gradient', value: env.ROLE_GRADIENT_10 },
-    { name: '🌈 Lagoon Gradient', value: env.ROLE_GRADIENT_11 },
-    { name: '🌈 Mirage Gradient', value: env.ROLE_GRADIENT_12 },
-    { name: '🌈 Daydream Gradient', value: env.ROLE_GRADIENT_13 },
-    { name: '🌈 Cosmic Gradient', value: env.ROLE_GRADIENT_14 },
-    { name: '🌈 Blush Gradient', value: env.ROLE_GRADIENT_15 },
-    { name: '🌈 Berry Gradient', value: env.ROLE_GRADIENT_16 },
-    { name: '🌈 Solstice Gradient', value: env.ROLE_GRADIENT_17 },
-    { name: '🌈 Electric Gradient', value: env.ROLE_GRADIENT_18 },
-    { name: '🌈 Enigma Gradient', value: env.ROLE_GRADIENT_19 },
-    { name: '🌈 Nebula Gradient', value: env.ROLE_GRADIENT_20 },
-    { name: '🌈 Rocket Gradient', value: env.ROLE_GRADIENT_21 },
-    { name: '🌈 Eclipse Gradient', value: env.ROLE_GRADIENT_22 },
-    { name: '🌈 Phoenix Gradient', value: env.ROLE_GRADIENT_23 },
-    { name: '🌈 Sunset Gradient', value: env.ROLE_GRADIENT_24 },
-  ].filter(role => role.value && role.value.trim() !== '') as RoleDef[];
-
-  const mindsetRoles = [
-    { name: 'Drunk', value: env.ROLE_DRUNK },
-    { name: 'High', value: env.ROLE_HIGH },
-    { name: 'Rolling', value: env.ROLE_ROLLING },
-    { name: 'Tripping', value: env.ROLE_TRIPPING },
-    { name: 'Dissociating', value: env.ROLE_DISSOCIATING },
-    { name: 'Stimming', value: env.ROLE_STIMMING },
-    { name: 'Sedated', value: env.ROLE_SEDATED },
-    { name: 'Sober', value: env.ROLE_CLEARMIND },
-  ] as RoleDef[];
-
-  // Check if interaction.member type is APIInteractionGuildMember
-  const isMod = (interaction.member as GuildMember).roles.cache.has(env.ROLE_MODERATOR);
-  const isTs = (interaction.member as GuildMember).roles.cache.has(env.ROLE_TRIPSITTER);
-  const command = interaction.options.getSubcommand();
-
-  // Build the complete list of available roles based on permissions
-  let availableRoles = [] as { name: string, value: string }[];
-
-  if (isMod) {
-    // log.debug(F, 'User is a moderator');
-    // If the user is a moderator, they can manage the:
-    // NeedsHelp, Helper, Mindset, Verified, Occult and Contributor roles.
-    // They can manage these roles on anyone, except other moderators and tripsitters.
-    availableRoles.push(
-      { name: 'NeedsHelp', value: env.ROLE_NEEDSHELP },
-      { name: 'Helper', value: env.ROLE_HELPER },
-      { name: 'Verified', value: env.ROLE_VERIFIED },
-      { name: 'Contributor', value: env.ROLE_CONTRIBUTOR },
-      { name: 'Occult', value: env.ROLE_OCCULT },
-      { name: 'Underban', value: env.ROLE_UNDERBAN },
-      { name: 'Legacy', value: env.ROLE_LEGACY },
-      ...mindsetRoles,
-      ...colorRoles,
-      ...levelRoles,
-      ...gradientRoles,
-    );
-  } else if (isTs) {
-    // If the user is a tripsitter, they can manage the
-    // NeedsHelp, Helper and Mindset roles.
-    // They can manage these roles on anyone, except other tripsitters and moderators.
-    availableRoles.push(
-      { name: 'NeedsHelp', value: env.ROLE_NEEDSHELP },
-      { name: 'Helper', value: env.ROLE_HELPER },
-      ...mindsetRoles,
-      ...colorRoles,
-      ...levelRoles,
-      ...gradientRoles,
-    );
-  } else {
-    // Regular users
-    // They can only manage their own roles.
-    if (command === 'add') {
-      // Everyone can add mindset and basic color roles
-      availableRoles.push(...mindsetRoles, ...colorRoles);
-
-      // If the user is a donor or patreon they have access to extra color roles
-      const isDonor = (interaction.member as GuildMember).roles.cache.has(env.ROLE_DONOR);
-      const isPatron = (interaction.member as GuildMember).roles.cache.has(env.ROLE_PATRON);
-
-      if (isDonor || isPatron) {
-        availableRoles.push(...levelRoles, ...gradientRoles);
-      }
-    }
-
-    // Keep this here cuz while the team can remove any role, regular members can only remove roles they already have
-    if (command === 'remove') {
-      // For remove, only show roles the user actually has
-      const potentialRoles = [
-        { name: 'NeedsHelp', value: env.ROLE_NEEDSHELP },
-        { name: 'Helper', value: env.ROLE_HELPER },
-        { name: 'Contributor', value: env.ROLE_CONTRIBUTOR },
-        { name: 'Occult', value: env.ROLE_OCCULT },
-        ...colorRoles,
-        ...mindsetRoles,
-        ...levelRoles,
-        ...gradientRoles,
-      ];
-
-      const potentialRoleIds = potentialRoles.map(role => role.value);
-      const member = await (interaction.member as GuildMember).fetch();
-      const memberRoles = member.roles.cache.map(role => ({ name: role.name, value: role.id }));
-
-      availableRoles = memberRoles.filter(memberRole => potentialRoleIds.includes(memberRole.value)
-        && memberRole.name
-        && memberRole.value);
-    }
-  }
-
-  // Filter out roles with empty values
-  availableRoles = availableRoles.filter(role => role.value && role.value.trim() !== '');
-
-  // Get the search query from user input
-  const focusedValue = interaction.options.getFocused();
-
-  // If user hasn't typed anything yet, show some popular default options
-  if (!focusedValue || focusedValue.trim() === '') {
-    const defaultRoles = [
-      ...mindsetRoles.slice(0, 8), // Show all mindset roles
-      ...colorRoles.slice(0, 7), // Show all basic colors
-      ...(levelRoles.length > 0 ? levelRoles.slice(0, 5) : []), // Show first 5 level roles if available
-      ...(gradientRoles.length > 0 ? gradientRoles.slice(0, 5) : []), // Show first 5 gradients if available
-    ].filter(role => role.value && role.value.trim() !== '')
-      .slice(0, 25); // Ensure we don't exceed 25
-
-    interaction.respond(defaultRoles);
-    return;
-  }
-
-  // Use Fuse.js for fuzzy searching
-  const fuseOptions = {
-    shouldSort: true,
-    threshold: 0.3, // Less strict matching for better search results
-    location: 0,
-    distance: 100,
-    maxPatternLength: 32,
-    minMatchCharLength: 1,
-    keys: [
-      { name: 'name', weight: 0.8 }, // Prioritize name matches
-      { name: 'value', weight: 0.2 }, // Lower priority for value matches
-    ],
-  };
-
-  const fuse = new Fuse(availableRoles, fuseOptions);
-  const results = fuse.search(focusedValue);
-
-  // Return top 25 search results
-  const searchResults = results
-    .map(result => ({ name: result.item.name, value: result.item.value }))
-    .slice(0, 25);
-
-  interaction.respond(searchResults);
-}
-
-async function autocompleteColors(interaction: AutocompleteInteraction) {
-  const options = {
-    shouldSort: true,
-    keys: [
-      'color',
-    ],
-  };
-  const colorList = [
-    { color: 'Default', hex: '000000', id: 'DEFAULT' },
-    { color: 'Blurple', hex: '5865f2', id: 'BLURPLE' },
-    { color: 'Greyple', hex: '99aab5', id: 'GREYPLE' },
-    { color: 'White', hex: 'ffffff', id: 'WHITE' },
-    { color: 'Aqua', hex: '1abc9c', id: 'AQUA' },
-    { color: 'Green', hex: '57f287', id: 'GREEN' },
-    { color: 'Blue', hex: '3498db', id: 'BLUE' },
-    { color: 'Yellow', hex: 'fee75c', id: 'YELLOW' },
-    { color: 'Purple', hex: '9b59b6', id: 'PURPLE' },
-    { color: 'LuminousVividPink', hex: 'e91e63', id: 'LUMINOUS_VIVID_PINK' },
-    { color: 'Fuchsia', hex: 'eb459e', id: 'FUCHSIA' },
-    { color: 'Gold', hex: 'f1c40f', id: 'GOLD' },
-    { color: 'Orange', hex: 'e67e22', id: 'ORANGE' },
-    { color: 'Red', hex: 'ed4245', id: 'RED' },
-    { color: 'Navy', hex: '34495e', id: 'NAVY' },
-    { color: 'Grey', hex: '95a5a6', id: 'GREY' },
-    { color: 'DarkerGrey', hex: '7f8c8d', id: 'DARKER_GREY' },
-    { color: 'LightGrey', hex: 'bcc0c0', id: 'LIGHT_GREY' },
-    { color: 'DarkButNotBlack', hex: '2c2f33', id: 'DARK_BUT_NOT_BLACK' },
-    { color: 'NotQuiteBlack', hex: '23272a', id: 'NOT_QUITE_BLACK' },
-    { color: 'DarkNavy', hex: '2c3e50', id: 'DARK_NAVY' },
-    { color: 'DarkAqua', hex: '11806a', id: 'DARK_AQUA' },
-    { color: 'DarkGreen', hex: '1f8b4c', id: 'DARK_GREEN' },
-    { color: 'DarkBlue', hex: '206694', id: 'DARK_BLUE' },
-    { color: 'DarkPurple', hex: '71368a', id: 'DARK_PURPLE' },
-    { color: 'DarkVividPink', hex: 'ad1457', id: 'DARK_VIVID_PINK' },
-    { color: 'DarkGold', hex: 'c27c0e', id: 'DARK_GOLD' },
-    { color: 'DarkOrange', hex: 'a84300', id: 'DARK_ORANGE' },
-    { color: 'DarkRed', hex: '992d22', id: 'DARK_RED' },
-    { color: 'DarkGrey', hex: '979c9f', id: 'DARK_GREY' },
-  ];
-
-  const fuse = new Fuse(colorList, options);
-  const focusedValue = interaction.options.getFocused();
-  // log.debug(F, `focusedValue: ${focusedValue}`);
-  const results = fuse.search(focusedValue);
-  // log.debug(F, `Autocomplete results: ${results}`);
-  if (results.length > 0) {
-    const top25 = results.slice(0, 20);
-    const listResults = top25.map(choice => ({
-      name: choice.item.color,
-      value: choice.item.hex,
-    }));
-    // log.debug(F, `list_results: ${listResults}`);
-    interaction.respond(listResults);
-  } else {
-    const defaultDiscordColors = colorList.slice(0, 25);
-    const listResults = defaultDiscordColors.map(choice => ({ name: choice.color, value: choice.hex }));
-    // log.debug(F, `list_results: ${listResults}`);
-    interaction.respond(listResults);
-  }
-}
-
 async function autocompleteAiModels(interaction: AutocompleteInteraction) {
   const options = {
     shouldSort: true,
@@ -677,16 +423,12 @@ export async function autocomplete(interaction: AutocompleteInteraction): Promis
   // log.debug(F, `Autocomplete requested for: ${interaction.commandName}`);
   if (interaction.commandName === 'pill-id') {
     await autocompletePills(interaction);
-  } else if (interaction.commandName === 'role') {
-    await autocompleteRoles(interaction);
   } else if (interaction.commandName === 'calc' && interaction.options.getSubcommand() === 'benzo') {
     await autocompleteBenzos(interaction);
   } else if (interaction.commandName === 'timezone') {
     await autocompleteTimezone(interaction);
   } else if (interaction.commandName === 'convert') {
     autocompleteConvert(interaction);
-  } else if (interaction.commandName === 'reaction_role') {
-    autocompleteColors(interaction);
   } else if (interaction.commandName === 'ai' || interaction.commandName === 'ai_manage') {
     const focusedOption = interaction.options.getFocused(true).name;
     if (focusedOption === 'model') {
