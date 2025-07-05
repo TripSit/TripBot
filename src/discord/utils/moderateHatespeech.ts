@@ -91,6 +91,7 @@ export async function monitorToxicity(message: Message): Promise<void> {
         ].filter(Boolean).join('\n'),
         color: Colors.Yellow,
       }],
+      allowedMentions: { parse: [] },
     });
   }
 }

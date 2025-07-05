@@ -1075,10 +1075,11 @@ async function messageModThread(
   extraMessage: string,
   duration: string,
 ): Promise<ThreadChannel | null> {
-  log.debug(F, `[messageModThread] actor: ${actor} | target: ${target} | command: ${command} | internalNote: ${internalNote} | description: ${description} | extraMessage: ${extraMessage} | duration: ${duration}`);
+  const actorName = actor.displayName || actor.user.username;
   const startTime = Date.now();
   const targetId = (target as User | GuildMember).id ?? target;
   const targetName = (target as GuildMember).displayName ?? (target as User).username ?? target;
+  log.debug(F, `[messageModThread] actor: ${actorName} | target: ${targetName} | command: ${command} | internalNote: ${internalNote} | description: ${description} | extraMessage: ${extraMessage} | duration: ${duration}`);
 
   const targetData = await db.users.upsert({
     where: { discord_id: targetId },
@@ -1720,7 +1721,7 @@ export async function moderate(
 
   // Display all properties we're going to use
   log.info(F, `[moderate]
-  actor: ${actor}
+  actor: ${actor.displayName || actor.user.username}
   command: ${command}
   targetId: ${targetId}
   internalNote: ${internalNote}
