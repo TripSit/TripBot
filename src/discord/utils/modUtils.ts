@@ -588,12 +588,23 @@ export async function tripSitTrustScore(
 
 export async function userInfoEmbed(
   actor: GuildMember | null,
-  target:GuildMember | User | string,
-  targetData:users,
+  target: GuildMember | User | string,
+  targetData: users,
   command: ModAction,
   showModInfo: boolean,
-):Promise<EmbedBuilder> {
-  log.debug(F, `[userInfoEmbed] actor: ${actor} | target: ${target} | targetData: ${JSON.stringify(targetData, null, 2)} | command: ${command}`);
+): Promise<EmbedBuilder> {
+  const actorName = actor ? (actor.displayName || actor.user.username) : 'null';
+  let targetName: string;
+
+  if (typeof target === 'string') {
+    targetName = target;
+  } else if (target instanceof GuildMember) {
+    targetName = target.displayName || target.user.username;
+  } else {
+    targetName = target.username;
+  }
+
+  log.debug(F, `[userInfoEmbed] actor: ${actorName} | target: ${targetName} | targetData: ${JSON.stringify(targetData, null, 2)} | command: ${command}`);
   // const startTime = Date.now();
   const targetActionList = {
     NOTE: [] as string[],
