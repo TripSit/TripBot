@@ -65,7 +65,7 @@ export async function monitorToxicity(message: Message): Promise<void> {
   const result = await isToxic(message.content);
 
   if (result.isFlaggedOrLowConfidence) {
-    log.info(F, `Message flagged by ModerateHatespeech: "${message.content}"`);
+    log.info(F, `Message flagged by ModerateHatespeech: \`${message.content}\``);
 
     // Choose the appropriate log channel based on result.class
     let logChannelId: string;
