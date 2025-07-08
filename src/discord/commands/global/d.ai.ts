@@ -50,6 +50,7 @@ import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import commandContext from '../../utils/context';
 import { aiModerate, handleAiMessageQueue } from '../../../global/commands/g.ai';
+import { checkPremiumStatus, formatTimeUntilReset, RateLimiter } from '../../utils/commandRateLimiter';
 
 /* TODO
 * only direct @ message should trigger a response
@@ -58,13 +59,12 @@ import { aiModerate, handleAiMessageQueue } from '../../../global/commands/g.ai'
 const F = f(__filename);
 
 // Rate limiter
-const userRateLimits = new Map<string, { count: number; resetTime: number }>();
-const userLastRateLimitMessage = new Map<string, number>(); // Track when we last showed rate limit message
-
-const DAILY_QUERY_LIMIT = 20;
-const PATREON_DAILY_QUERY_LIMIT = 350; // Effectively unlimited in any realistic scenario but prevents botting
-const RATE_LIMIT_WINDOW = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
-const RATE_LIMIT_MESSAGE_INTERVAL = 10; // Show rate limit message every 10 queries
+const aiRateLimiter = new RateLimiter({
+  defaultLimit: 10,
+  premiumLimit: 350, // Basically unlimited
+  windowMs: 24 * 60 * 60 * 1000, // 24 hours
+  messageInterval: 10, // Show rate limit message every 10 queries (except if premium user)
+});
 
 // const maxHistoryLength = 3;
 
@@ -226,52 +226,6 @@ const menuAiModels = new StringSelectMenuBuilder()
 
 const menuAiPublic = new StringSelectMenuBuilder()
   .setCustomId('AI~public');
-
-interface RateLimitResult {
-  allowed: boolean;
-  remaining: number;
-  resetTime: number;
-}
-
-function shouldShowRateLimitMessage(userId: string, isPatreonSubscriber: boolean, currentCount: number): boolean {
-  // Never show rate limit message for Patreon subscribers
-  if (isPatreonSubscriber) {
-    return false;
-  }
-
-  // Show every 10 queries for non-subscribers
-  const lastMessageCount = userLastRateLimitMessage.get(userId) || 0;
-  const shouldShow = currentCount - lastMessageCount >= RATE_LIMIT_MESSAGE_INTERVAL;
-
-  if (shouldShow) {
-    userLastRateLimitMessage.set(userId, currentCount);
-  }
-
-  return shouldShow;
-}
-
-function checkRateLimit(userId: string, isPatreonSubscriber: boolean): RateLimitResult {
-  const queryLimit = isPatreonSubscriber ? PATREON_DAILY_QUERY_LIMIT : DAILY_QUERY_LIMIT;
-  const now = Date.now();
-  const userLimit = userRateLimits.get(userId);
-
-  if (!userLimit || now >= userLimit.resetTime) {
-    // First query of the day or reset time has passed
-    const resetTime = now + RATE_LIMIT_WINDOW;
-    userRateLimits.set(userId, { count: 1, resetTime });
-    return { allowed: true, remaining: queryLimit - 1, resetTime };
-  }
-
-  if (userLimit.count >= queryLimit) {
-    // Rate limit exceeded
-    return { allowed: false, remaining: 0, resetTime: userLimit.resetTime };
-  }
-
-  // Increment count and allow
-  userLimit.count += 1;
-  userRateLimits.set(userId, userLimit);
-  return { allowed: true, remaining: queryLimit - userLimit.count, resetTime: userLimit.resetTime };
-}
 
 function getComponentById(
   interaction: ButtonInteraction | StringSelectMenuInteraction | ChannelSelectMenuInteraction,
@@ -2161,18 +2115,18 @@ export async function aiMessage(
   }
 
   // Check if user is a Patreon subscriber
-  const isPatreonSubscriber = messageData.member?.roles.cache.has(env.ROLE_PATRON);
+  const isPatreonSubscriber = checkPremiumStatus(messageData.member, env.PATREON_SUBSCRIBER_ROLE_ID);
 
   // Rate limiting check
-  const rateLimitResult = checkRateLimit(messageData.author.id, isPatreonSubscriber || false);
+  const rateLimitResult = aiRateLimiter.checkRateLimit(messageData.author.id, isPatreonSubscriber);
   if (!rateLimitResult.allowed) {
-    const timeUntilReset = Math.ceil((rateLimitResult.resetTime - Date.now()) / (1000 * 60 * 60)); // hours
-    const userLimit = isPatreonSubscriber ? PATREON_DAILY_QUERY_LIMIT : DAILY_QUERY_LIMIT;
+    const timeUntilReset = formatTimeUntilReset(rateLimitResult.resetTime);
+    const userLimit = isPatreonSubscriber ? 2000 : 20;
 
     log.debug(F, `${messageData.author.displayName} has exceeded daily rate limit`);
     await messageData.reply(
       `You've reached your daily limit of ${userLimit} AI queries. `
-      + `Your limit will reset in approximately ${timeUntilReset} hour${timeUntilReset !== 1 ? 's' : ''}. `
+      + `Your limit will reset in approximately ${timeUntilReset}. `
       + 'In the meantime, you can use ChatGPT directly at https://chat.openai.com',
     );
     return;
@@ -2181,8 +2135,7 @@ export async function aiMessage(
   log.debug(F, `Rate limit check passed for ${messageData.author.displayName}. Remaining queries: ${rateLimitResult.remaining}`);
 
   // Check if we should show rate limit message
-  const currentCount = (userRateLimits.get(messageData.author.id)?.count || 0);
-  const showRateLimitMessage = shouldShowRateLimitMessage(messageData.author.id, isPatreonSubscriber || false, currentCount);
+  const showRateLimitMessage = aiRateLimiter.shouldShowRateLimitMessage(messageData.author.id, isPatreonSubscriber);
 
   // log.debug(F, `aiLinkData: ${JSON.stringify(aiLinkData, null, 2)}`);
 
@@ -2344,14 +2297,10 @@ export async function aiMessage(
     // // log.debug(F, `Typing ${wordCount} at ${wpm} wpm will take ${sleepTime / 1000} seconds`);
     // await sleep(sleepTime > 10000 ? 5000 : sleepTime); // Don't wait more than 5 seconds
 
+    // Handle error case - decrement rate limit count
     if (response.length === 0) {
-      // Decrement the rate limit count since this was an error
-      const userLimit = userRateLimits.get(messageData.author.id);
-      if (userLimit) {
-        userLimit.count -= 1;
-        userRateLimits.set(messageData.author.id, userLimit);
-        log.debug(F, `Decremented rate limit count for ${messageData.author.displayName} due to empty response error`);
-      }
+      aiRateLimiter.decrementCount(messageData.author.id);
+      log.debug(F, `Decremented rate limit count for ${messageData.author.displayName} due to empty response error`);
 
       response = stripIndents`This is unexpected but somehow I don't appear to have anything to say!
       By the way, this is an error message and something went wrong. Please try again.
