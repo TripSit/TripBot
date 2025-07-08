@@ -24,11 +24,11 @@ import {
 } from '../commands/guild/d.rpg';
 import { helperButton } from '../commands/global/d.setup';
 import { appealAccept, appealReject } from '../utils/appeal';
-import { mushroomPageOne, mushroomPageTwo } from '../commands/global/d.mushroom_info';
 import { acknowledgeButton, modModal, refusalButton } from '../utils/modUtils';
 import { feedbackReportModal } from '../commands/global/d.feedback';
 import { aiButton } from '../commands/global/d.ai';
 import { purgeButton } from '../commands/guild/d.purge';
+import { mushroomPageEmbed } from '../utils/hrUtils';
 // import { helpButton } from '../commands/global/d.help';
 
 const F = f(__filename);
@@ -59,12 +59,12 @@ export async function buttonClick(interaction:ButtonInteraction, discordClient:C
     // log.debug(F, 'Werewolf button clicked');
 
     if (buttonID.toLowerCase().includes('pageone')) {
-      await mushroomPageOne(interaction);
+      interaction.update(await mushroomPageEmbed(1));
       return;
     }
 
     if (buttonID.toLowerCase().includes('pagetwo')) {
-      await mushroomPageTwo(interaction);
+      interaction.update(await mushroomPageEmbed(2));
       return;
     }
   }
