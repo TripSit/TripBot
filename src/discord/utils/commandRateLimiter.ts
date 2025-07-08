@@ -98,9 +98,12 @@ export class RateLimiter {
   }
 }
 
-// Utility function to check if user has premium role
-export function checkPremiumStatus(member: any, roleId: string): boolean {
-  return member?.roles.cache.has(roleId) || false;
+// Utility function to check if user has premium role or is a team member
+export function checkPremiumStatus(member: any, roleId: string, teamImmunity: boolean = false): boolean {
+  const hasPremiumRole = member?.roles.cache.has(roleId) || false;
+  const isTeamMember = teamImmunity ? (member?.roles.cache.has(env.ROLE_TEAMTRIPSIT) || false) : false;
+
+  return hasPremiumRole || isTeamMember;
 }
 
 // Utility function to format time until reset

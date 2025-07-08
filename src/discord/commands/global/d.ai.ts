@@ -2115,7 +2115,7 @@ export async function aiMessage(
   }
 
   // Check if user is a Patreon subscriber
-  const isPatreonSubscriber = checkPremiumStatus(messageData.member, env.PATREON_SUBSCRIBER_ROLE_ID);
+  const isPatreonSubscriber = checkPremiumStatus(messageData.member, env.PATREON_SUBSCRIBER_ROLE_ID, true);
 
   // Rate limiting check
   const rateLimitResult = aiRateLimiter.checkRateLimit(messageData.author.id, isPatreonSubscriber);
