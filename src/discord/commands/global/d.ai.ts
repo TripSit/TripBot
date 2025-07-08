@@ -2121,7 +2121,7 @@ export async function aiMessage(
   const rateLimitResult = aiRateLimiter.checkRateLimit(messageData.author.id, isPatreonSubscriber);
   if (!rateLimitResult.allowed) {
     const timeUntilReset = formatTimeUntilReset(rateLimitResult.resetTime);
-    const userLimit = isPatreonSubscriber ? 2000 : 20;
+    const userLimit = isPatreonSubscriber ? 350 : 20;
 
     log.debug(F, `${messageData.author.displayName} has exceeded daily rate limit`);
     await messageData.reply(
