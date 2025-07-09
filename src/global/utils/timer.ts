@@ -1179,7 +1179,7 @@ async function runTimer() {
     { callback: updateDb, interval: env.NODE_ENV === 'production' ? hours24 : hours48 },
     // { callback: pruneInactiveHelpers, interval: env.NODE_ENV === 'production' ? hours48 : seconds60 },
     { callback: undoExpiredBans, interval: env.NODE_ENV === 'production' ? hours24 / 2 : seconds10 },
-    { callback: monthlySessionStats, interval: env.NODE_ENV === 'production' ? hours24 / 2 : hours24 / 3 }, // 8 hours on dev
+    { callback: monthlySessionStats, interval: env.NODE_ENV === 'production' ? hours24 : hours24 / 3 }, // 8 hours on dev
   ];
 
   timers.forEach(timer => {
