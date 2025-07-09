@@ -60,7 +60,7 @@ const F = f(__filename);
 
 // Rate limiter
 const aiRateLimiter = new RateLimiter({
-  defaultLimit: 10,
+  defaultLimit: 20, // 20 queries per 24 hours
   premiumLimit: 350, // Basically unlimited
   windowMs: 24 * 60 * 60 * 1000, // 24 hours
   messageInterval: 10, // Show rate limit message every 10 queries (except if premium user)
