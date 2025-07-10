@@ -1,4 +1,5 @@
 import {
+  Colors,
   PermissionResolvable,
   TextChannel,
 } from 'discord.js';
@@ -9,6 +10,7 @@ import {
   GuildBanRemoveEvent,
 } from '../@types/eventDef';
 import { checkChannelPermissions, checkGuildPermissions } from '../utils/checkPermissions';
+import embedTemplate from '../utils/embedTemplate';
 
 const F = f(__filename);
 
@@ -53,17 +55,35 @@ export const guildBanRemove: GuildBanRemoveEvent = {
       return;
     }
 
-    // Perform a coherence check to make sure that there's *something*
-    if (!creationLog) {
-      await channel.send(`${ban.user} was unbaned, but no relevant audit logs were found.`);
-      return;
+    // Create audit log embed
+    const embed = embedTemplate()
+      .setAuthor(null)
+      .setFooter(null)
+      .setTitle('✅ User Unbanned')
+      .setColor(Colors.Green)
+      .setTimestamp();
+
+    let description = `**${ban.user.tag}** was unbanned`;
+
+    if (creationLog?.executor) {
+      if (creationLog.reason?.toLowerCase().includes('ban expired')) {
+        description = `**${ban.user.tag}** was unbanned`;
+        embed.setFooter({ text: 'Automated action' });
+      } else {
+        description = `**${creationLog.executor.tag}** unbanned **${ban.user.tag}**`;
+        embed.setFooter({
+          text: `Action by ${creationLog.executor.tag}`,
+          iconURL: creationLog.executor.displayAvatarURL({ size: 32 }),
+        });
+      }
     }
 
-    const response = creationLog.executor
-      ? `Channel ${ban.user} was unbanned by ${creationLog.executor.tag}.`
-      : `Channel ${ban.user} was unbanned, but the audit log was inconclusive.`;
+    if (creationLog?.reason) {
+      description += `\n\n**Reason:** ${creationLog.reason}`;
+    }
 
-    await channel.send(response);
+    embed.setDescription(description);
+    await channel.send({ embeds: [embed] });
   },
 };
 

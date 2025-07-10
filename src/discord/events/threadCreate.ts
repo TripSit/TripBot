@@ -63,6 +63,7 @@ export const threadCreate: ThreadCreateEvent = {
       ? `Channel ${thread.name} was created by ${auditLog.executor.tag}.`
       : `Channel ${thread.name} was created, but the audit log was inconclusive.`;
 
+    log.info(F, JSON.stringify(response, null, 2));
     await channel.send(response);
   },
 };

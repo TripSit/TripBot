@@ -20,6 +20,7 @@ import { checkGuildPermissions } from '../utils/checkPermissions';
 import {
   modButtonBan, modButtonInfo, modButtonNote, modButtonTimeout, modButtonWarn, tripSitTrustScore, userInfoEmbed,
 } from '../utils/modUtils';
+import embedTemplate from '../utils/embedTemplate';
 
 const F = f(__filename);
 
@@ -197,15 +198,33 @@ export const guildBanAdd: GuildBanAddEvent = {
           }
         }
       }));
-
+      // Send audit log message for our guild
       if (ban.guild.id === env.DISCORD_GUILD_ID) {
         const channelAuditlog = await discordClient.channels.fetch(env.CHANNEL_AUDITLOG) as TextChannel;
 
-        const response = banLog
-          ? `Channel ${ban.user} was banned from ${ban.guild.name} by ${banLog.executor?.tag} for ${banLog.reason}.`
-          : `Channel ${ban.user} was banned, but the audit log was inconclusive.`;
+        const auditEmbed = embedTemplate()
+          .setAuthor(null)
+          .setFooter(null)
+          .setTitle('❌ User Banned')
+          .setColor(Colors.Red)
+          .setTimestamp();
 
-        await channelAuditlog.send(response);
+        let description = `**${ban.user.tag}** was banned`;
+
+        if (banLog?.executor) {
+          description = `**${banLog.executor.tag}** banned **${ban.user.tag}**`;
+          auditEmbed.setFooter({
+            text: `Action by ${banLog.executor.tag}`,
+            iconURL: banLog.executor.displayAvatarURL({ size: 32 }),
+          });
+        }
+
+        if (banLog?.reason) {
+          description += `\n\n**Reason:** ${banLog.reason}`;
+        }
+
+        auditEmbed.setDescription(description);
+        await channelAuditlog.send({ embeds: [auditEmbed] });
       }
     }
   },
