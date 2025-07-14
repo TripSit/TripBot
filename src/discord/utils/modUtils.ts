@@ -359,8 +359,8 @@ export const modButtonReport = (discordId: string) => new ButtonBuilder()
   .setEmoji('📝')
   .setStyle(ButtonStyle.Primary);
 
-export const modButtonAcknowledgeReport = (discordId: string) => new ButtonBuilder()
-  .setCustomId(`moderate~ACKN_REPORT~${discordId}`)
+export const modButtonAcknowledgeReport = (reporteeId: string, reporterId: string) => new ButtonBuilder()
+  .setCustomId(`moderate~ACKN_REPORT~${reporteeId}~${reporterId}`)
   .setLabel('Acknowledge')
   .setEmoji('✅')
   .setStyle(ButtonStyle.Primary);
@@ -1004,10 +1004,14 @@ export async function modResponse(
   const modlogEmbed = await userInfoEmbed(actor, target, targetData, 'REPORT', showModButtons);
 
   if (interaction.isMessageContextMenuCommand() && interaction.targetMessage) {
+    const messageContent = interaction.targetMessage.content;
+    const truncatedContent = messageContent.length > 900
+      ? `${messageContent.slice(0, 900)}...`
+      : messageContent;
     modlogEmbed.addFields(
       {
         name: 'Message',
-        value: stripIndents`> ${interaction.targetMessage.content}
+        value: stripIndents`> ${truncatedContent}
         - ${interaction.targetMessage.url}`,
       },
     );
@@ -1017,7 +1021,7 @@ export async function modResponse(
 
   if (showModButtons && !actorIsMod && isReport(command)) {
     const actionRowTwo = new ActionRowBuilder<ButtonBuilder>();
-    actionRowTwo.addComponents(modButtonAcknowledgeReport(target.id));
+    actionRowTwo.addComponents(modButtonAcknowledgeReport(target.id, actor.id));
     return {
       embeds: [modlogEmbed],
       components: [actionRow, actionRowTwo],
@@ -1360,7 +1364,7 @@ export async function acknowledgeReportButton(
   buttonInt: ButtonInteraction,
 ) {
   if (!buttonInt.guild) return;
-  const [, , targetId]: [string, ModAction, Snowflake] = buttonInt.customId.split('~') as [string, ModAction, Snowflake];
+  const [, , targetId, reporterId]: [string, ModAction, Snowflake, Snowflake] = buttonInt.customId.split('~') as [string, ModAction, Snowflake, Snowflake];
 
   // Fetch db data for the person who was reported
   const reporteeData = await db.users.upsert({
@@ -1412,10 +1416,11 @@ export async function acknowledgeReportButton(
     }
 
     // Fetch the reporter from message mentions
-    const reporterId = buttonInt.message.mentions.users.first()?.id;
-    if (reporterId) {
-      reporterUser = await discordClient.users.fetch(reporterId);
-    }
+    // const reporterId = buttonInt.message.mentions.users.first()?.id;
+    // if (reporterId) {
+    //   reporterUser = await discordClient.users.fetch(reporterId);
+    // }
+    reporterUser = await discordClient.users.fetch(reporterId).catch(() => null);
 
     if (!reporterUser) {
       await targetChan.send({
@@ -1501,6 +1506,11 @@ export async function acknowledgeReportButton(
       await modLog.send({
         embeds: [successEmbed],
       });
+      // eslint-disable-next-line sonarjs/no-nested-template-literals
+      log.info(F, `All mentioned users:${buttonInt.message.mentions.users.map(u => `${u.username} (${u.id})`)}`);
+      log.info(F, `First mentioned user (reporterId):${reporterUser.id}`);
+      // eslint-disable-next-line no-nested-ternary
+      log.info(F, `TargetId from button:${reporteeMember ? reporteeMember.id : (reporterUser ? reporteeUser?.id : 'unknown')} `);
       return;
     }
 
@@ -2168,6 +2178,9 @@ export async function modModal(
         const messageField = (embed.fields as APIEmbedField[]).find(field => field.name === 'Message') as APIEmbedField;
         const urlField = (embed.fields as APIEmbedField[]).find(field => field.name === 'Channel') as APIEmbedField;
         modalInternal = `This user breaks TripSit's policies regarding ${flagsField.value} topics.`;
+        // If we ever run into a 1000 char error, apply the fix to the code after this try catch block.
+        // I did not apply it here because AI automod is disabled and replaced by ModerateHatespeech.
+        // 7/14/2025 - theimperious1
         modalDescription = stripIndents`
           Your recent messages have broken TripSit's policies regarding ${flagsField.value} topics.
           
@@ -2183,15 +2196,22 @@ export async function modModal(
 
   try {
     const messageField = (embed.fields as APIEmbedField[]).find(field => field.name === 'Message') as APIEmbedField;
+    const messageContent = messageField.value;
+    const urlMatch = messageContent.match(/- (https:\/\/discord\.com\/channels\/\d+\/\d+\/\d+)$/);
+    const extractedUrl = urlMatch ? urlMatch[1] : null;
+    const messageWithoutUrl = extractedUrl
+      ? messageContent.replace(/\n- https:\/\/discord\.com\/channels\/\d+\/\d+\/\d+$/, '')
+      : messageContent;
+
     modalInternal = stripIndents`This user breaks ${interaction.guild.name}'s policies.
       
       The offending message
-      ${messageField.value}`;
+      ${messageField.value.substring(0, 846)} \n> ${extractedUrl}`;
     modalDescription = stripIndents`
       Your recent messages have broken ${interaction.guild.name}'s policies.
       
       The offending message
-      ${messageField.value}`;
+      ${messageWithoutUrl.substring(0, 830)} \n> ${extractedUrl}`;
   } catch (err) {
     // log.error(F, `Error: ${err}`);
   }
