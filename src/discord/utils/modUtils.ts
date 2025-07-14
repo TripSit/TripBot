@@ -1506,11 +1506,6 @@ export async function acknowledgeReportButton(
       await modLog.send({
         embeds: [successEmbed],
       });
-      // eslint-disable-next-line sonarjs/no-nested-template-literals
-      log.info(F, `All mentioned users:${buttonInt.message.mentions.users.map(u => `${u.username} (${u.id})`)}`);
-      log.info(F, `First mentioned user (reporterId):${reporterUser.id}`);
-      // eslint-disable-next-line no-nested-ternary
-      log.info(F, `TargetId from button:${reporteeMember ? reporteeMember.id : (reporterUser ? reporteeUser?.id : 'unknown')} `);
       return;
     }
 
