@@ -426,6 +426,122 @@ async function dBook(interaction: ChatInputCommandInteraction): Promise<boolean>
   return true;
 }
 
+async function dSong(interaction: ChatInputCommandInteraction): Promise<boolean> {
+  const query = interaction.options.getString('song', true);
+  let result;
+  let odesliInputUrl = '';
+  let odesliUrl = `https://odesli.co/search/${encodeURIComponent(query)}`;
+  let platformsField = '';
+  let title = query;
+  let artist = 'Unknown';
+  const album = 'Unknown';
+  const releaseDate = 'Unknown';
+  let artwork = '';
+
+  const isUrl = /^https?:\/\/\S+$/.test(query);
+
+  try {
+    if (isUrl) {
+      odesliInputUrl = query;
+    } else {
+      // TODO: Get YouTube API key and use that instead of iTunes for better results
+      const url = `https://itunes.apple.com/search?term=${encodeURIComponent(query)}&entity=song&limit=1`;
+      const response = await fetch(url);
+      if (!response.ok) throw new Error('iTunes API unavailable');
+      const data = await response.json();
+      if (!data.results || data.results.length === 0) throw new Error('No song found');
+      const song = data.results[0];
+      odesliInputUrl = song.trackViewUrl || `https://music.apple.com/us/search?term=${encodeURIComponent(song.trackName || query)}`;
+    }
+
+    try {
+      const odesliRes = await fetch(`https://api.song.link/v1-alpha.1/links?url=${encodeURIComponent(odesliInputUrl)}`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      const odesliData = await odesliRes.json();
+      if (odesliData.entitiesByUniqueId && odesliData.linksByPlatform) {
+        odesliUrl = odesliData.pageUrl || odesliUrl;
+        const entityKey = Object.keys(odesliData.entitiesByUniqueId)[0];
+        const entity = odesliData.entitiesByUniqueId[entityKey];
+        title = entity.title || title;
+        artist = entity.artistName || artist;
+        artwork = entity.thumbnailUrl || artwork;
+
+        const platformsToShow = [
+          'spotify',
+          'soundcloud',
+          'youtubeMusic',
+          'appleMusic',
+          'amazonMusic',
+        ];
+        platformsField = platformsToShow
+          .filter(platform => odesliData.linksByPlatform[platform])
+          .map(platform => {
+            const platformName = {
+              spotify: 'Spotify',
+              appleMusic: 'Apple',
+              youtubeMusic: 'YouTube',
+              soundcloud: 'SoundCloud',
+              amazonMusic: 'Amazon',
+            }[platform] || platform;
+            const { url } = odesliData.linksByPlatform[platform];
+            return `[${platformName}](${url})`;
+          })
+          .join(' | ');
+      } else {
+        platformsField = `[Apple Music](${odesliInputUrl})`;
+      }
+    } catch {
+      platformsField = `[Apple Music](${odesliInputUrl})`;
+    }
+
+    result = {
+      title: `Song: ${title}`,
+      url: odesliUrl,
+      description: ' ',
+      thumb: artwork,
+      fields: [
+        { name: 'Artist', value: artist, inline: true },
+        {
+          name: 'Platforms',
+          value: platformsField,
+          inline: false,
+        },
+      ],
+    };
+  } catch (err) {
+    result = {
+      title: `Song: ${query}`,
+      url: odesliUrl,
+      description: 'Song search is currently unavailable or no results found.',
+      fields: [],
+    };
+  }
+
+  const ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined;
+  await interaction.deferReply({ flags: ephemeral });
+
+  const embed = embedTemplate()
+    .setTitle(result.title)
+    .setURL(result.url)
+    .setDescription(result.description);
+
+  if (result.thumb) embed.setThumbnail(result.thumb);
+  if (result.fields) {
+    result.fields.forEach(field => {
+      embed.addFields({
+        name: field.name,
+        value: field.value,
+        inline: field.inline ?? false,
+      });
+    });
+  }
+
+  await interaction.editReply({ embeds: [embed] });
+  return true;
+}
+
 async function dWikipedia(interaction: ChatInputCommandInteraction): Promise<boolean> {
   const query = interaction.options.getString('query', true);
   let result;
@@ -588,6 +704,16 @@ export const dSearch: SlashCommand = {
         .setName('ephemeral')
         .setDescription('Set to "True" to show the response only to you')))
     .addSubcommand(sub => sub
+      .setName('song')
+      .setDescription('Search for a song and where to listen')
+      .addStringOption(option => option
+        .setName('song')
+        .setDescription('Song title or artist')
+        .setRequired(true))
+      .addBooleanOption(option => option
+        .setName('ephemeral')
+        .setDescription('Set to "True" to show the response only to you')))
+    .addSubcommand(sub => sub
       .setName('wikipedia')
       .setDescription('Query a topic on Wikipedia')
       .addStringOption(option => option
@@ -620,6 +746,8 @@ export const dSearch: SlashCommand = {
         return dGame(interaction);
       case 'book':
         return dBook(interaction);
+      case 'song':
+        return dSong(interaction);
       case 'wikipedia':
         return dWikipedia(interaction);
       case 'weather':
