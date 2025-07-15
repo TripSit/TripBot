@@ -1,6 +1,10 @@
 /* eslint-disable max-len */
 /* eslint-disable sonarjs/no-duplicate-string */
 import {
+  ActionRowBuilder,
+  AttachmentBuilder,
+  ButtonBuilder,
+  ButtonStyle,
   SlashCommandBuilder,
   MessageFlags,
   ChatInputCommandInteraction,
@@ -18,47 +22,67 @@ import testkits from '../../../global/commands/g.testkits';
 import { warmline } from '../../../global/commands/g.warmline';
 import { recovery } from '../../../global/commands/g.recovery';
 import { reagents } from '../../../global/commands/g.reagents';
-import { mushroomPageEmbed } from '../../utils/hrUtils';
+import getAsset from '../../utils/getAsset';
 
-// Helper function to handle the edit/delete/followup pattern
-async function safeReply(
-  interaction: ChatInputCommandInteraction,
-  replyOptions: any,
-): Promise<boolean> {
+async function dCombochart(interaction: ChatInputCommandInteraction): Promise<boolean> {
+  const content = await combochart();
   try {
-    const { flags, ...editReplyOptions } = replyOptions;
-    await interaction.editReply(editReplyOptions);
+    await interaction.editReply({ content });
     return true;
   } catch (error) {
     await interaction.deleteReply();
-    await interaction.followUp({
-      ...replyOptions,
-      flags: MessageFlags.Ephemeral,
-    });
+    await interaction.followUp({ content, flags: MessageFlags.Ephemeral });
     return false;
   }
 }
 
-// Create a mapping of subcommands to their corresponding functions
-const genericContentHandlers = {
-  combochart: () => combochart(),
-  breathe: (interaction: ChatInputCommandInteraction) => {
-    const exercise = interaction.options.getString('exercise');
-    return breathe(exercise);
-  },
-  grounding: () => grounding(),
-  recovery: () => recovery(),
-  reagents: () => reagents(),
-} as const;
+async function dBreathe(interaction: ChatInputCommandInteraction): Promise<boolean> {
+  const exercise = interaction.options.getString('exercise');
+  const content = await breathe(exercise);
+  try {
+    await interaction.editReply({ content });
+    return true;
+  } catch (error) {
+    await interaction.deleteReply();
+    await interaction.followUp({ content, flags: MessageFlags.Ephemeral });
+    return false;
+  }
+}
 
-// Generic handler function for repetitive content responses
-async function handleContentResponse(
-  interaction: ChatInputCommandInteraction,
-  subcommand: keyof typeof genericContentHandlers,
-): Promise<boolean> {
-  const handler = genericContentHandlers[subcommand];
-  const content = await handler(interaction);
-  return safeReply(interaction, { content });
+async function dGrounding(interaction: ChatInputCommandInteraction): Promise<boolean> {
+  const content = await grounding();
+  try {
+    await interaction.editReply({ content });
+    return true;
+  } catch (error) {
+    await interaction.deleteReply();
+    await interaction.followUp({ content, flags: MessageFlags.Ephemeral });
+    return false;
+  }
+}
+
+async function dRecovery(interaction: ChatInputCommandInteraction): Promise<boolean> {
+  const content = await recovery();
+  try {
+    await interaction.editReply({ content });
+    return true;
+  } catch (error) {
+    await interaction.deleteReply();
+    await interaction.followUp({ content, flags: MessageFlags.Ephemeral });
+    return false;
+  }
+}
+
+async function dReagents(interaction: ChatInputCommandInteraction): Promise<boolean> {
+  const content = await reagents();
+  try {
+    await interaction.editReply({ content });
+    return true;
+  } catch (error) {
+    await interaction.deleteReply();
+    await interaction.followUp({ content, flags: MessageFlags.Ephemeral });
+    return false;
+  }
 }
 
 async function dCrisis(interaction: ChatInputCommandInteraction): Promise<boolean> {
@@ -76,15 +100,14 @@ async function dCrisis(interaction: ChatInputCommandInteraction): Promise<boolea
       inline: true,
     });
   });
-  return safeReply(interaction, { embeds: [embed] });
-}
-
-async function dMushroomInfo(interaction: ChatInputCommandInteraction): Promise<boolean> {
-  const mushroomPage = await mushroomPageEmbed(1);
-  const reply: InteractionReplyOptions = {
-    embeds: [mushroomPage.embeds[0]], files: mushroomPage.files, components: mushroomPage.components,
-  };
-  return safeReply(interaction, reply);
+  try {
+    await interaction.editReply({ embeds: [embed] });
+    return true;
+  } catch (error) {
+    await interaction.deleteReply();
+    await interaction.followUp({ embeds: [embed], flags: MessageFlags.Ephemeral });
+    return false;
+  }
 }
 
 async function dGuides(interaction: ChatInputCommandInteraction): Promise<boolean> {
@@ -95,7 +118,14 @@ async function dGuides(interaction: ChatInputCommandInteraction): Promise<boolea
   const embed = embedTemplate()
     .setTitle('Wiki Guides')
     .setDescription(`These are the guides currently available on our [Wiki](https://wiki.tripsit.me)\n\n${message}\nYou're welcome to contribute. :heart:`);
-  return safeReply(interaction, { embeds: [embed] });
+  try {
+    await interaction.editReply({ embeds: [embed] });
+    return true;
+  } catch (error) {
+    await interaction.deleteReply();
+    await interaction.followUp({ embeds: [embed], flags: MessageFlags.Ephemeral });
+    return false;
+  }
 }
 
 async function dWarmline(interaction: ChatInputCommandInteraction): Promise<boolean> {
@@ -114,7 +144,14 @@ async function dWarmline(interaction: ChatInputCommandInteraction): Promise<bool
       inline: true,
     });
   });
-  return safeReply(interaction, { embeds: [embed] });
+  try {
+    await interaction.editReply({ embeds: [embed] });
+    return true;
+  } catch (error) {
+    await interaction.deleteReply();
+    await interaction.followUp({ embeds: [embed], flags: MessageFlags.Ephemeral });
+    return false;
+  }
 }
 
 async function dDrugChecking(interaction: ChatInputCommandInteraction): Promise<boolean> {
@@ -153,7 +190,14 @@ async function dDrugChecking(interaction: ChatInputCommandInteraction): Promise<
           ## Austrailia
           [CanTEST](https://www.cahma.org.au/services/cantest/) (Canberra)
         `);
-  return safeReply(interaction, { embeds: [embed] });
+  try {
+    await interaction.editReply({ embeds: [embed] });
+    return true;
+  } catch (error) {
+    await interaction.deleteReply();
+    await interaction.followUp({ embeds: [embed], flags: MessageFlags.Ephemeral });
+    return false;
+  }
 }
 
 async function dTestKits(interaction: ChatInputCommandInteraction): Promise<boolean> {
@@ -192,7 +236,51 @@ async function dTestKits(interaction: ChatInputCommandInteraction): Promise<bool
         [How to use fentanyl strips](https://dancesafe.org/fentanyl/)
         [More testkit resources on the TripSit wiki!](https://wiki.tripsit.me/wiki/Test_Kits)
       `);
-  return safeReply(interaction, { embeds: [embed] });
+  try {
+    await interaction.editReply({ embeds: [embed] });
+    return true;
+  } catch (error) {
+    await interaction.deleteReply();
+    await interaction.followUp({ embeds: [embed], flags: MessageFlags.Ephemeral });
+    return false;
+  }
+}
+
+async function dMushroomInfo(interaction: ChatInputCommandInteraction): Promise<boolean> {
+  const source = 'https://www.oaklandhyphae510.com/post/preliminary-tryptamine-potency-analysis-from-dried-homogenized-fruit-bodies-of-psilocybe-mushrooms';
+  const disclaimer = 'The following data is based on preliminary research and development methods, does not represent final data and requires further peer review before being taken more seriously than \'interesting\'. However, this does represent meaningful, comparable data to the cultivators, to the consumers, and to the public.';
+  const article = 'https://tripsitter.com/magic-mushrooms/average-potency/';
+
+  const embed = embedTemplate()
+    .setTitle('Mushroom Potency Info')
+    .setColor(Colors.Green)
+    .setDescription(`${disclaimer}\n\nFor more information check out [the source](${source}) and [this article](${article}).`)
+    .setImage('attachment://mushroomInfoA.png');
+
+  const files = [new AttachmentBuilder(await getAsset('mushroomInfoA'))];
+  const components = [new ActionRowBuilder<ButtonBuilder>().addComponents(
+    new ButtonBuilder()
+      .setCustomId('mushroomPageTwo')
+      .setLabel('Show Visual')
+      .setStyle(ButtonStyle.Primary),
+  )];
+
+  const reply: InteractionReplyOptions = {
+    embeds: [embed],
+    files,
+    components,
+  };
+
+  try {
+    const { flags, ...editReplyOptions } = reply;
+    await interaction.editReply(editReplyOptions);
+    return true;
+  } catch (error) {
+    await interaction.deleteReply();
+    reply.flags = MessageFlags.Ephemeral;
+    await interaction.followUp(reply);
+    return false;
+  }
 }
 
 export const dHR = {
@@ -270,11 +358,15 @@ export const dHR = {
 
     switch (subcommand) {
       case 'combochart':
+        return dCombochart(interaction);
       case 'breathe':
+        return dBreathe(interaction);
       case 'grounding':
+        return dGrounding(interaction);
       case 'recovery':
+        return dRecovery(interaction);
       case 'reagents':
-        return handleContentResponse(interaction, subcommand);
+        return dReagents(interaction);
       case 'crisis':
         return dCrisis(interaction);
       case 'guides':
