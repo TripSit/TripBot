@@ -700,8 +700,8 @@ export const dSearch: SlashCommand = {
         .setRequired(true))
       .addBooleanOption(option => option
         .setName('ephemeral')
-        .setDescription('Set to "True" to show the response only to you')))
-    .addSubcommand(sub => sub
+        .setDescription('Set to "True" to show the response only to you'))) as SlashCommandBuilder,
+  /* .addSubcommand(sub => sub
       .setName('weather')
       .setDescription('Get weather for a city')
       .addStringOption(option => option
@@ -710,7 +710,7 @@ export const dSearch: SlashCommand = {
         .setRequired(true))
       .addBooleanOption(option => option
         .setName('ephemeral')
-        .setDescription('Set to "True" to show the response only to you'))) as SlashCommandBuilder,
+        .setDescription('Set to "True" to show the response only to you'))) as SlashCommandBuilder, */
 
   async execute(interaction: ChatInputCommandInteraction) {
     const subcommand = interaction.options.getSubcommand();
