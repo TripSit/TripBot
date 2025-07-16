@@ -3,7 +3,6 @@ import {
   SlashCommandBuilder,
   MessageFlags,
   ChatInputCommandInteraction,
-  EmbedField,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
 import { SlashCommand } from '../../@types/commandDef';
@@ -98,8 +97,6 @@ async function dDefine(interaction: ChatInputCommandInteraction): Promise<boolea
     }
   }
 
-  const ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined;
-  await interaction.deferReply({ flags: ephemeral });
   const embed = embedTemplate()
     .setTitle(result.title)
     .setURL(result.url)
@@ -197,8 +194,6 @@ async function dUrbanDefine(interaction: ChatInputCommandInteraction): Promise<b
     }
   }
 
-  const ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined;
-  await interaction.deferReply({ flags: ephemeral });
   const embed = embedTemplate()
     .setTitle(result.title)
     .setURL(result.url)
@@ -289,7 +284,7 @@ async function dGame(interaction: ChatInputCommandInteraction): Promise<boolean>
 
       const platforms = (usDetails.platforms && typeof usDetails.platforms === 'object')
         ? Object.entries(usDetails.platforms)
-          .filter(([_, supported]) => supported)
+          .filter(([supported]) => supported)
           .map(([platform]) => platform.charAt(0).toUpperCase() + platform.slice(1))
           .join(', ')
         : 'Unknown';
@@ -311,9 +306,6 @@ async function dGame(interaction: ChatInputCommandInteraction): Promise<boolean>
       };
     }
   }
-
-  const ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined;
-  await interaction.deferReply({ flags: ephemeral });
 
   const embed = embedTemplate()
     .setTitle(result.title)
@@ -403,9 +395,6 @@ async function dBook(interaction: ChatInputCommandInteraction): Promise<boolean>
     };
   }
 
-  const ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined;
-  await interaction.deferReply({ flags: ephemeral });
-
   const embed = embedTemplate()
     .setTitle(result.title)
     .setURL(result.url)
@@ -434,8 +423,6 @@ async function dSong(interaction: ChatInputCommandInteraction): Promise<boolean>
   let platformsField = '';
   let title = query;
   let artist = 'Unknown';
-  const album = 'Unknown';
-  const releaseDate = 'Unknown';
   let artwork = '';
 
   const isUrl = /^https?:\/\/\S+$/.test(query);
@@ -519,9 +506,6 @@ async function dSong(interaction: ChatInputCommandInteraction): Promise<boolean>
     };
   }
 
-  const ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined;
-  await interaction.deferReply({ flags: ephemeral });
-
   const embed = embedTemplate()
     .setTitle(result.title)
     .setURL(result.url)
@@ -551,7 +535,7 @@ async function dWikipedia(interaction: ChatInputCommandInteraction): Promise<boo
     result = {
       title: `Wikipedia: ${query}`,
       url: `https://en.wikipedia.org/wiki/${encodeURIComponent(query)}`,
-      description: 'Wikipedia is currently unavailable. Please try again later.',
+      description: 'No wikipedia results found or your query was too vague, try being more specific.',
       thumb: '',
     };
   } else {
@@ -563,9 +547,6 @@ async function dWikipedia(interaction: ChatInputCommandInteraction): Promise<boo
       thumb: data.thumbnail?.source || '',
     };
   }
-
-  const ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined;
-  await interaction.deferReply({ flags: ephemeral });
 
   const embed = embedTemplate()
     .setTitle(result.title)
@@ -588,7 +569,7 @@ async function dWeather(interaction: ChatInputCommandInteraction): Promise<boole
       result = {
         title: `Weather: ${city}`,
         url: `https://wttr.in/${encodeURIComponent(city)}`,
-        description: 'Could not find this location. Try being more specific',
+        description: 'Could not find this location. Try being more specific or try a close major city.',
         fields: [],
       };
     } else {
@@ -636,9 +617,6 @@ async function dWeather(interaction: ChatInputCommandInteraction): Promise<boole
       fields: [],
     };
   }
-
-  const ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined;
-  await interaction.deferReply({ flags: ephemeral });
 
   const embed = embedTemplate()
     .setTitle(result.title)
@@ -736,6 +714,8 @@ export const dSearch: SlashCommand = {
 
   async execute(interaction: ChatInputCommandInteraction) {
     const subcommand = interaction.options.getSubcommand();
+    const ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined;
+    await interaction.deferReply({ flags: ephemeral });
 
     switch (subcommand) {
       case 'define':

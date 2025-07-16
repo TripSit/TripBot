@@ -291,12 +291,12 @@ export const dHR = {
       .setName('crisis')
       .setDescription('Information that may be helpful in a serious situation.')
       .addBooleanOption(option => option.setName('ephemeral')
-        .setDescription('Show only to you')))
+        .setDescription('Set to "True" to show the response only to you')))
     .addSubcommand(sub => sub
       .setName('combochart')
       .setDescription('Display TripSit\'s Combo Chart')
       .addBooleanOption(option => option.setName('ephemeral')
-        .setDescription('Show only to you')))
+        .setDescription('Set to "True" to show the response only to you')))
     .addSubcommand(sub => sub
       .setName('breathe')
       .setDescription('Remember to breathe')
@@ -309,47 +309,47 @@ export const dHR = {
           { name: '4', value: '4' },
         ))
       .addBooleanOption(option => option.setName('ephemeral')
-        .setDescription('Show only to you')))
+        .setDescription('Set to "True" to show the response only to you')))
     .addSubcommand(sub => sub
       .setName('guides')
       .setDescription('Show wiki guides')
       .addBooleanOption(option => option.setName('ephemeral')
-        .setDescription('Show only to you')))
+        .setDescription('Set to "True" to show the response only to you')))
     .addSubcommand(sub => sub
       .setName('grounding')
       .setDescription('Show grounding exercise')
       .addBooleanOption(option => option.setName('ephemeral')
-        .setDescription('Show only to you')))
+        .setDescription('Set to "True" to show the response only to you')))
     .addSubcommand(sub => sub
       .setName('drug_checking')
       .setDescription('Show drug checking resources')
       .addBooleanOption(option => option.setName('ephemeral')
-        .setDescription('Show only to you')))
+        .setDescription('Set to "True" to show the response only to you')))
     .addSubcommand(sub => sub
       .setName('warmline')
       .setDescription('Need someone to talk to, but don\'t need a "hotline"?')
       .addBooleanOption(option => option.setName('ephemeral')
-        .setDescription('Show only to you')))
+        .setDescription('Set to "True" to show the response only to you')))
     .addSubcommand(sub => sub
       .setName('testkits')
       .setDescription('Information on how to get a test kit')
       .addBooleanOption(option => option.setName('ephemeral')
-        .setDescription('Show only to you')))
+        .setDescription('Set to "True" to show the response only to you')))
     .addSubcommand(sub => sub
       .setName('recovery')
       .setDescription('Information that may be helpful in a recovery situation.')
       .addBooleanOption(option => option.setName('ephemeral')
-        .setDescription('Show only to you')))
+        .setDescription('Set to "True" to show the response only to you')))
     .addSubcommand(sub => sub
       .setName('reagents')
       .setDescription('Display reagent color chart!')
       .addBooleanOption(option => option.setName('ephemeral')
-        .setDescription('Show only to you')))
+        .setDescription('Set to "True" to show the response only to you')))
     .addSubcommand(sub => sub
       .setName('mushroom_info')
       .setDescription('Displays different potencies of mushroom strains.')
       .addBooleanOption(option => option.setName('ephemeral')
-        .setDescription('Show only to you'))) as SlashCommandBuilder,
+        .setDescription('Set to "True" to show the response only to you'))) as SlashCommandBuilder,
 
   async execute(interaction: ChatInputCommandInteraction) {
     const subcommand = interaction.options.getSubcommand();
