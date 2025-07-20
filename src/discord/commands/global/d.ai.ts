@@ -33,6 +33,7 @@ import {
   User,
   MessageReplyOptions,
   MessageActionRowComponent,
+  ComponentType,
 } from 'discord.js';
 import {
   APIInteractionDataResolvedChannel,
