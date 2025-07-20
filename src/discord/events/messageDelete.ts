@@ -5,6 +5,8 @@ import {
   User,
   GuildAuditLogsEntry,
   GuildMember,
+  PartialUser,
+  PartialGuildMember,
 } from 'discord.js';
 import {
 // ChannelType,
@@ -59,18 +61,19 @@ export const messageDelete: MessageDeleteEvent = {
     const deletionLog = (await message.guild.fetchAuditLogs({
       limit: 1,
       type: AuditLogEvent.MessageDelete,
-    })).entries.last() as GuildAuditLogsEntry<AuditLogEvent.MessageDelete, 'Delete', 'Message', AuditLogEvent.MessageDelete>; // eslint-disable-line
+    })).entries.last() as GuildAuditLogsEntry<AuditLogEvent.MessageDelete, 'Delete', 'Message'>; // eslint-disable-line
 
     // log.debug(F, `Deletion Log: ${JSON.stringify(deletionLog, null, 2)}`);
 
     // Perform a coherence check to make sure that there's *something*
-    let executorUser = {} as User;
+    let executorUser: User | PartialUser | undefined;
     let content = 'No content'; // eslint-disable-line
     let { author } = message;
     // log.debug(F, `Author: ${JSON.stringify(author, null, 2)}`);
     // log.debug(F, `Target: ${JSON.stringify(deletionLog?.target, null, 2)}`);
     if (deletionLog
       && author
+      && deletionLog.target
       && deletionLog.target.id === author.id
       && deletionLog.createdTimestamp > (startTime - 1)) {
       // log.debug(F, `Found relevant audit log: ${JSON.stringify(deletionLog, null, 2)}`);
@@ -97,9 +100,14 @@ export const messageDelete: MessageDeleteEvent = {
       }
     }
 
-    // log.debug(F, `Executor: ${JSON.stringify(executorUser, null, 2)}, Content: ${content}`);
+    if (!executorUser) {
+      log.error(F, 'No executor user found');
+      return;
+    }
 
-    let executorMember = {} as GuildMember;
+    log.debug(F, `Executor: ${JSON.stringify(executorUser, null, 2)}, Content: ${content}`);
+
+    let executorMember: GuildMember | PartialGuildMember;
     try {
       executorMember = await message.guild.members.fetch(executorUser.id);
     } catch (err) {

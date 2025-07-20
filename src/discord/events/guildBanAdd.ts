@@ -63,7 +63,7 @@ export const guildBanAdd: GuildBanAddEvent = {
 
     // If the user is in a partnered guild, alert the guild
     if (mutualGuilds.length > 0) {
-      let banLog = {} as GuildAuditLogsEntry<AuditLogEvent.MemberBanAdd, 'Delete', 'User', AuditLogEvent.MemberBanAdd> | undefined; // eslint-disable-line max-len
+      let banLog = {} as GuildAuditLogsEntry<AuditLogEvent.MemberBanAdd, 'Delete', 'User'> | undefined;
 
       const guildAuditPerms = await checkGuildPermissions(ban.guild, [
         'ViewAuditLog' as PermissionResolvable,

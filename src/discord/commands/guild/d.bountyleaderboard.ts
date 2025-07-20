@@ -7,6 +7,7 @@ import {
   ComponentType,
   StringSelectMenuInteraction,
   Colors,
+  ChatInputCommandInteraction,
 } from 'discord.js';
 
 import { SlashCommand } from '../../@types/commandDef';
@@ -135,7 +136,7 @@ export const dLeaderboard: SlashCommand = {
         { name: '⭐ Most XP Earned', value: 'xp' },
       )) as SlashCommandBuilder,
 
-  async execute(interaction: CommandInteraction): Promise<boolean> {
+  async execute(interaction: ChatInputCommandInteraction): Promise<boolean> {
     try {
       await interaction.deferReply();
 
