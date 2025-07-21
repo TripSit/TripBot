@@ -201,7 +201,7 @@ export async function getAssistant(name: string):Promise<Assistant> {
 }
 
 export async function deleteThread(threadId: string):Promise<ThreadDeleted> {
-  const threadData = await openAi.beta.threads.del(threadId);
+  const threadData = await openAi.beta.threads.delete(threadId);
   log.debug(F, `threadData: ${JSON.stringify(threadData, null, 2)}`);
   return threadData;
 }
@@ -548,7 +548,7 @@ async function openAiWaitForRun(
     // eslint-disable-next-line no-await-in-loop
     await sleep(200);
     // eslint-disable-next-line no-await-in-loop
-    run = await openAi.beta.threads.runs.retrieve(thread.id, run.id);
+    run = await openAi.beta.threads.runs.retrieve(thread.id, { thread_id: run.id });
   }
 
   // Depending on how the run ended, do something
@@ -726,14 +726,14 @@ async function openAiConversation(
   // If the most recent run is in progress, queued, or waiting for user action, stop it
   if (recentRun && ['queued', 'in_progress', 'requires_action'].includes(recentRun.status)) {
     log.debug(F, 'Stopping the run');
-    await openAi.beta.threads.runs.cancel(thread.id, recentRun.id);
+    await openAi.beta.threads.runs.cancel(thread.id, { thread_id: recentRun.id });
 
     // Wait for the run to be cancelled
     while (['queued', 'in_progress', 'requires_action'].includes(recentRun.status)) {
       // eslint-disable-next-line no-await-in-loop
       await sleep(200);
       // eslint-disable-next-line no-await-in-loop
-      recentRun = await openAi.beta.threads.runs.retrieve(thread.id, recentRun.id);
+      recentRun = await openAi.beta.threads.runs.retrieve(thread.id, { thread_id: recentRun.id });
     }
   }
 

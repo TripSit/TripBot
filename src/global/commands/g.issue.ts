@@ -30,7 +30,7 @@ export async function issue(
         title,
         body,
       })
-        .then(async response => {
+        .then(async (response: OctokitResponse<Issue>) => {
           const issueNumber = response.data.number;
           octokit.rest.issues.addLabels({
             owner: 'TripSit',
