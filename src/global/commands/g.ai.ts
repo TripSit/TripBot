@@ -8,8 +8,9 @@ import { Assistant } from 'openai/resources/beta/assistants';
 import { ThreadDeleted } from 'openai/resources/beta/threads/threads';
 import { TextContentBlock } from 'openai/resources/beta/threads/messages';
 import {
-  GoogleGenerativeAI, HarmCategory, HarmBlockThreshold, GenerationConfig, SafetySetting, Part, InputContent,
+  GoogleGenerativeAI, HarmCategory, HarmBlockThreshold, GenerationConfig, SafetySetting, Part,
   GenerateContentResult,
+  Content,
 } from '@google/generative-ai';
 import axios from 'axios';
 import { Message, MessageReplyOptions, TextChannel } from 'discord.js';
@@ -350,9 +351,9 @@ async function googleAiConversation(
     create: { discord_id: messageData.author.id },
     update: {},
   });
-  let userHistory = [] as InputContent[];
+  let userHistory = [] as Content[];
   if (userData.ai_history_google) {
-    userHistory = JSON.parse(userData.ai_history_google) as InputContent[];
+    userHistory = JSON.parse(userData.ai_history_google) as Content[];
   } else {
     // If the user's history is blank, start with the objective truths and the AI's prompt
     userHistory = [
@@ -362,7 +363,7 @@ async function googleAiConversation(
       },
       {
         role: 'model',
-        parts: 'Okay, understood, I will remember those facts',
+        parts: [{ text: 'Okay, understood, I will remember those facts' }],
       },
       {
         role: 'user',
@@ -370,7 +371,7 @@ async function googleAiConversation(
       },
       {
         role: 'model',
-        parts: 'Great, I will remember that prompt too. Let\'s get started!',
+        parts: [{ text: "Great, I will remember that prompt too. Let's get started!" }],
       },
     ];
   }
@@ -400,7 +401,7 @@ async function googleAiConversation(
   });
   userHistory.push({
     role: 'model',
-    parts: result.response.text(),
+    parts: [{ text: result.response.text() }],
   });
   // log.debug(F, `newUserHistory: ${JSON.stringify(userHistory, null, 2)}`);
 
