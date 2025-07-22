@@ -11,8 +11,6 @@ import comboDefs from '../../../assets/data/combo_definitions.json';
 import comboJsonData from '../../../assets/data/tripsitCombos.json';
 import drugJsonData from '../../../assets/data/tripsitDB.json';
 
-const F = f(__filename);
-
 const drugData = drugJsonData as DrugData;
 const comboData = comboJsonData as Combos;
 const comboDefinitions = comboDefs as ComboDefinition[];
@@ -125,9 +123,6 @@ export function combo(
 
   drugAName = cleanDrugName(drugAName);
   drugBName = cleanDrugName(drugBName);
-
-  log.debug(F, `drugAName: ${drugAName}`);
-  log.debug(F, `drugBName: ${drugBName}`);
 
   const drugANameString = drugAInput === drugAName ? '' : ` (converted to '${drugAName}')`;
   const drugBNameString = drugBInput === drugBName ? '' : ` (converted to '${drugBName}')`;

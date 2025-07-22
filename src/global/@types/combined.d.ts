@@ -133,7 +133,7 @@ export enum Strength {
   Threshold = 'Threshold',
 }
 
-export interface CallbackSubstance {
+export interface CbSubstance {
   addictionPotential?: string;
   aliases?: string[];
   aliasesStr?: string;

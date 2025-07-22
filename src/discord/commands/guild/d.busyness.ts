@@ -43,13 +43,16 @@ async function calculateBusyness(channel: TextChannel): Promise<{
 
   // Use the built-in message cache
   const recentMessages = channel.messages.cache.filter(
-    (message) => message.createdTimestamp > oneMinuteAgo && !message.author.bot,
+    (messageData) => messageData.createdTimestamp > oneMinuteAgo && !messageData.author.bot,
   );
 
-  const uniqueUsers = new Set(recentMessages.map((message) => message.author.id));
+  const uniqueUsers = new Set(recentMessages.map((messageData) => messageData.author.id));
   const userMessageCounts = new Map<string, number>();
-  for (const message of recentMessages) {
-    userMessageCounts.set(message.author.id, (userMessageCounts.get(message.author.id) || 0) + 1);
+  for (const [, messageData] of recentMessages) {
+    userMessageCounts.set(
+      messageData.author.id,
+      (userMessageCounts.get(messageData.author.id) ?? 0) + 1,
+    );
   }
 
   const messageCount = recentMessages.size;

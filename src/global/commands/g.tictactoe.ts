@@ -2,7 +2,7 @@ import type { MoveResult, TicTacToeGame } from '../../discord/@types/ticTacToeDe
 
 const F = f(__filename);
 
-export function checkWinner(board: string[]): null | string {
+export function checkWinner(board: string[]): undefined | string {
   const winPatterns = [
     [0, 1, 2],
     [3, 4, 5],
@@ -24,12 +24,12 @@ export function checkWinner(board: string[]): null | string {
     return board[a] === '❌' ? 'X' : 'O';
   }
 
-  return null;
+  return undefined;
 }
 
 export function createInitialGame(player1Id: string, player2Id: string): TicTacToeGame {
   return {
-    board: Array.from({ length: 9 }).fill('⬜'),
+    board: Array.from({ length: 9 }).fill('⬜') as string[],
     currentPlayer: 'X',
     gameId: `${player1Id}-${player2Id}-${Date.now()}`,
     isGameOver: false,

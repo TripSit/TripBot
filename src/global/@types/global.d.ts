@@ -24,11 +24,13 @@ declare global {
     date: DateTime;
     status: boolean;
   };
+  var db: PrismaClient;
   var database: PrismaClient;
   var rollbar: Rollbar;
   namespace NodeJS {
-    interface ProcessEnvironment {
+    interface ProcessEnv {
       CATEGORY_ARCADE: string;
+
       CATEGORY_ARCHIVED: string;
       CATEGORY_BACKSTAGE: string;
       CATEGORY_CAMPGROUND: string;
@@ -37,11 +39,11 @@ declare global {
       CATEGORY_GATEWAY: string;
       CATEGORY_HARMREDUCTIONCENTRE: string;
       CATEGORY_RADIO: string;
-
       CATEGORY_STATS: string;
-      CATEGORY_TEAMTRIPSIT: string;
 
+      CATEGORY_TEAMTRIPSIT: string;
       CATEGORY_VOICE: string;
+
       CHANNEL_AIIMAGELOG: string;
       CHANNEL_AILOG: string;
       CHANNEL_AIMOD_LOG: string;
@@ -53,19 +55,19 @@ declare global {
       CHANNEL_BESTOF: string;
       CHANNEL_BOTERRORS: string;
       CHANNEL_BOTLOG: string;
-
       CHANNEL_BOTSPAM: string;
+
       CHANNEL_CAMPFIRE: string;
       CHANNEL_CLEARMIND: string;
-
       CHANNEL_CLOSEDTRIPSIT: string;
-      CHANNEL_COLLABVC: string;
 
+      CHANNEL_COLLABVC: string;
       CHANNEL_COMPSCI: string;
+
       CHANNEL_CONTENT: string;
       CHANNEL_CREATIVE: string;
-
       CHANNEL_DBAPI: string;
+
       CHANNEL_DELERIANTS: string;
       CHANNEL_DEPRESSANTS: string;
       CHANNEL_DESIGN: string;
@@ -185,6 +187,7 @@ declare global {
       MODERATE_HATESPEECH_TOKEN: string | undefined;
       MOODLE_TOKEN: string;
       MOODLE_URL: string;
+      NODE_ENV: string;
       NODE_ENV?: string;
       OPENAI_API_KEY: string | undefined;
       OPENAI_API_ORG: string | undefined;
@@ -328,4 +331,5 @@ declare global {
     }
   }
   var environment: NodeJS.ProcessEnv;
+  var env: NodeJS.ProcessEnv;
 }

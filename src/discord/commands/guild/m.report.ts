@@ -37,6 +37,11 @@ export const mReport: MessageCommand = {
     // Get the actor
     const actor = interaction.member as GuildMember;
 
+    if (guildData.role_moderator === null) {
+      log.error(F, 'No moderator role found');
+      return false;
+    }
+
     // Determine if the actor is a mod
     const actorIsModule =
       Boolean(guildData.role_moderator) && actor.roles.cache.has(guildData.role_moderator);

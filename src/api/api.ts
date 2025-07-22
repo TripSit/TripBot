@@ -1,5 +1,7 @@
 import type { Server } from 'node:http';
 
+import { log } from '../global/utils/log';
+
 import app from './app';
 
 const F = f(__filename);

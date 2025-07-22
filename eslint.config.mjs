@@ -1,6 +1,6 @@
 import eslint from '@eslint/js';
 import prettierConfigFlat from 'eslint-config-prettier/flat';
-import perfectionist from 'eslint-plugin-perfectionist';
+// import perfectionist from 'eslint-plugin-perfectionist';
 import prettier from 'eslint-plugin-prettier';
 import sonarjs from 'eslint-plugin-sonarjs';
 import unicorn from 'eslint-plugin-unicorn';
@@ -31,7 +31,7 @@ export default tseslint.config(
   },
   // Prettier plugin config block
   unicorn.configs.recommended,
-  perfectionist.configs['recommended-natural'],
+  // perfectionist.configs['recommended-natural'],
   {
     plugins: {
       prettier,
@@ -41,6 +41,7 @@ export default tseslint.config(
       'prettier/prettier': 'error',
       'sonarjs/cognitive-complexity': ['warn', 50],
       'unicorn/filename-case': 'off',
+      'unicorn/prevent-abbreviations': 'off',
     },
   },
   // Disable conflicting rules via config-prettier

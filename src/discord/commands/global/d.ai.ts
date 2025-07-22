@@ -1104,6 +1104,10 @@ async function aiAudit(
   // const embed = await makePersonaEmbed(cleanPersona);
 
   const promptMessage = messages.at(-1);
+  if (!promptMessage) {
+    log.error(F, 'No prompt message found');
+    return;
+  }
   const contextMessages = messages.slice(0, -1);
 
   const embed = embedTemplate()

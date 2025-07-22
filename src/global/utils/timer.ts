@@ -348,7 +348,7 @@ async function checkTickets() {
   const ticketData = await db.user_tickets.findMany();
   // Loop through each ticket
   if (ticketData.length > 0) {
-    ticketData.forEach(async (ticket) => {
+    for (const ticket of ticketData) {
       // const archiveDate = DateTime.fromJSDate(ticket.archived_at);
       // const deleteDate = DateTime.fromJSDate(ticket.deleted_at);
       // log.debug(F, `Ticket: ${ticket.id} archives on ${archiveDate.toLocaleString(DateTime.DATETIME_FULL)} deletes on ${deleteDate.toLocaleString(DateTime.DATETIME_FULL)}`);
@@ -445,8 +445,7 @@ async function checkTickets() {
                   if (userData.roles) {
                     // log.debug(F, `Restoring ${userData.discord_id}'s roles: ${userData.roles}`);
                     const roles = userData.roles.split(',');
-                    // for (const role of roles) {
-                    roles.forEach(async (role) => {
+                    for (const role of roles) {
                       const roleObject = await guild.roles.fetch(role);
                       if (
                         roleObject &&
@@ -468,7 +467,12 @@ async function checkTickets() {
                           );
                         }
                       }
-                    });
+                    }
+
+                    if (guildData.role_needshelp === null) {
+                      log.error(F, `No needshelp role found for ${guild.name}`);
+                      return;
+                    }
 
                     // Remove the needshelp role
                     const needshelpRole = await guild.roles.fetch(guildData.role_needshelp);
@@ -515,13 +519,13 @@ async function checkTickets() {
           },
         });
       }
-    });
+    }
   }
 
   // As a failsafe, loop through the Tripsit room and delete any threads that are older than 7 days and are archived
   const guildDataList = await db.discord_guilds.findMany();
   if (guildDataList.length > 0) {
-    guildDataList.forEach(async (guildData) => {
+    for (const guildData of guildDataList) {
       // log.debug(F, `Checking guild  room for old threads...`);
       let guild = {} as Guild;
       try {
@@ -612,7 +616,7 @@ async function checkTickets() {
           }
         });
       }
-    });
+    }
   }
 }
 
@@ -806,6 +810,10 @@ async function checkMoodle() { // eslint-disable-line
 
     let member = {} as GuildMember;
     try {
+      if (user.discord_id === null) {
+        log.error(F, `No discord ID found for user ${user.id}`);
+        return;
+      }
       member = await guild.members.fetch(user.discord_id);
     } catch {
       // log.debug(F, `Error fetching member: ${error}`);

@@ -281,16 +281,20 @@ async function tentLock(voiceChannel: VoiceBasedChannel): Promise<EmbedBuilder> 
       .permissionsFor(voiceChannel.guild.roles.everyone)
       .has(PermissionsBitField.Flags.Connect)
   ) {
-    for (const member of voiceChannel.members) {
-      voiceChannel.permissionOverwrites.edit(member, { Connect: true });
+    for (const [, member] of voiceChannel.members) {
+      await voiceChannel.permissionOverwrites.edit(member, { Connect: true });
     }
-    voiceChannel.permissionOverwrites.edit(voiceChannel.guild.roles.everyone, { Connect: false });
+    await voiceChannel.permissionOverwrites.edit(voiceChannel.guild.roles.everyone, {
+      Connect: false,
+    });
     title = 'Locked';
     description = `Currently joined users have been automatically \`/add\`ed and will be able to rejoin if they disconnect.
 
     Note: Mods can still join locked tents, though only if deemed necessary.`;
   } else {
-    voiceChannel.permissionOverwrites.edit(voiceChannel.guild.roles.everyone, { Connect: true });
+    await voiceChannel.permissionOverwrites.edit(voiceChannel.guild.roles.everyone, {
+      Connect: true,
+    });
     title = 'Unlocked';
     description = 'Your tent is now open to everyone not `/tent ban`ned.';
   }

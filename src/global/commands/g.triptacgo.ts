@@ -66,7 +66,7 @@ export function checkWinner(board: string[], captures: { O: number; X: number })
 
 export function createInitialGame(player1Id: string, player2Id: string): TripTacGoGame {
   return {
-    board: Array.from({ length: 16 }).fill('⬜'),
+    board: Array.from({ length: 16 }).fill('⬜') as string[],
     capturedPieces: { O: 0, X: 0 },
     currentPlayer: 'X',
     gameId: `${player1Id}-${player2Id}-${Date.now()}`,

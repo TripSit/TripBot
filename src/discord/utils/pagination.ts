@@ -54,10 +54,14 @@ export async function paginationEmbed(
   });
 
   // There is a bug in the typescript definition of the buttonList[x].data.customId
-  const filter = (index: Interaction) =>
-    // @ts-expect-error Actually works
-    index.customId === buttonList[1].data.custom_id ||
-    index.customId === buttonList[0].data.custom_id;
+  const filter = (index: Interaction): boolean => {
+    return (
+      // @ts-expect-error Actually works
+      index.customId === buttonList[1].data.custom_id ||
+      // @ts-expect-error Actually works
+      index.customId === buttonList[0].data.custom_id
+    );
+  };
 
   const collector = currentPage.createMessageComponentCollector({
     filter,

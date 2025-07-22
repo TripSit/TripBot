@@ -46,7 +46,7 @@ export async function getDiscordMember(
     // log.debug(F, `memberCollection: ${memberCollection.size} #1 = ${memberCollection.first()?.displayName}`);
 
     // Add all members in that collection to the members list
-    for (const member of memberCollection) {
+    for (const [, member] of memberCollection) {
       members.push(member);
     }
   } else if (string.startsWith('@')) {
@@ -56,20 +56,20 @@ export async function getDiscordMember(
       query: string.slice(1),
     });
     // Add all members in that collection to the members list
-    for (const member of memberCollection) {
+    for (const [, member] of memberCollection) {
       members.push(member);
     }
   } else {
     // log.debug(F, `${string} is a username!`);
     const memberCollection = await interaction.guild.members.fetch({ limit: 10, query: string });
-    for (const member of memberCollection) {
+    for (const [, member] of memberCollection) {
       members.push(member);
     }
   }
   return members;
 }
 
-export async function getDiscordUser(string: string): Promise<null | User> {
+export async function getDiscordUser(string: string): Promise<undefined | User> {
   let user = {} as User;
 
   // Check if the string begins with <@ or ends with >
@@ -79,7 +79,7 @@ export async function getDiscordUser(string: string): Promise<null | User> {
       user = await discordClient.users.fetch(string.replaceAll(/[<@!>]/g, ''));
     } catch {
       // log.debug(F, `Error fetching user with ID ${string}, they may have left the guild!`);
-      return null;
+      return undefined;
     }
   } else if (/^\d+$/.test(string)) {
     // log.debug(F, `${string} is an ID!`);
@@ -87,7 +87,7 @@ export async function getDiscordUser(string: string): Promise<null | User> {
       user = await discordClient.users.fetch(string);
     } catch {
       // log.debug(F, `Error fetching user with ID ${string}, they may have left the guild!`);
-      return null;
+      return undefined;
     }
   }
 

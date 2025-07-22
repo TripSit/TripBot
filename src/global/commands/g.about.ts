@@ -1,6 +1,15 @@
 import { stripIndents } from 'common-tags';
 
 export default class About {
+  public static readonly github: string = 'https://github.com/tripsit/tripbot';
+
+  public static readonly tripsitSessionsDoc: string =
+    'https://docs.google.com/document/d/1Jy0VWTY2pj1EUS0uuoJQfK9LX0UjC-pyBYhAjBT67Ic/edit#heading=h.5n7ta7l8o6dk';
+
+  public static readonly url: string = 'https://tripsit.me/';
+
+  public static readonly webchat: string = 'http://chat.tripsit.me';
+
   public static readonly applicationsDesc = stripIndents`
     **What is an Application system?**
     This is an application system to allow people to apply for roles in your guild!
@@ -25,7 +34,6 @@ export default class About {
     ** Troubleshooting **
     If you have any issues with this system, please contact Moonbear on the TripSit guild! 
     They're happy to give direct support to any problems you may have!`;
-
   public static readonly botEmail: string = 'discord@tripsit.me';
 
   public static readonly botInfo: string = stripIndents`
@@ -48,6 +56,8 @@ export default class About {
       The bot itself is a spiritual successor to the original TripBot, which was written for IRC and is now defunct.
       `;
 
+  public static readonly discord: string = 'https://discord.gg/TripSit';
+
   public static readonly description: string = stripIndents`
     TripSit is an organization which helps to provide factual information about drugs and how to reduce the harms involved in using them.\
     If you have issues/questions, the best way to get in contact with TeamTripsit is via the official [TripSit discord](${this.discord}),\
@@ -57,7 +67,8 @@ export default class About {
     The information here should be used as guidelines only, and it is important to do your own research from multiple sources before ingesting a substance.\
     TripBot and TripSit are not medical professionals. If you are experiencing a medical emergency, please call 911 or your local emergency number.`;
 
-  public static readonly discord: string = 'https://discord.gg/TripSit';
+  public static readonly levelingCalculator =
+    'https://hipperooni.github.io/TripSit-Level-Calculator/';
 
   public static readonly experienceDesc = stripIndents`
     You gain 15-25 experience when you send a message in chat, once per minute, or in other words: \
@@ -110,8 +121,6 @@ export default class About {
       
       Moonbear is also available on the [TripSit discord](${this.discord}), and is happy to chat about anything bot related, or anything else you want to talk about.`;
 
-  public static readonly github: string = 'https://github.com/tripsit/tripbot';
-
   public static readonly inviteInfo: string = stripIndents`
     Want to add TripBot to your server? It's as easy as clicking the button below!
 
@@ -124,9 +133,6 @@ export default class About {
   public static readonly kofi: string = 'https://ko-fi.com/tripsit';
 
   public static readonly learnUrl: string = 'https://learn.tripsit.me';
-
-  public static readonly levelingCalculator =
-    'https://hipperooni.github.io/TripSit-Level-Calculator/';
 
   public static readonly name: string = 'TripSit';
 
@@ -243,11 +249,4 @@ export default class About {
     ** Troubleshooting **
     If you have any issues with this system, please contact Moonbear on the TripSit guild! 
     They're happy to give direct support to any problems you may have!`;
-
-  public static readonly tripsitSessionsDoc: string =
-    'https://docs.google.com/document/d/1Jy0VWTY2pj1EUS0uuoJQfK9LX0UjC-pyBYhAjBT67Ic/edit#heading=h.5n7ta7l8o6dk';
-
-  public static readonly url: string = 'https://tripsit.me/';
-
-  public static readonly webchat: string = 'http://chat.tripsit.me';
 }

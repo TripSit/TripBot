@@ -79,10 +79,7 @@ export default {
       } {
     const drug: Drug | undefined = drugData[drugName.toLowerCase()];
 
-    if (drug) {
-      return drug;
-    }
-
+    return drug;
     return {
       err: true,
       msg: 'Drug with that name not found, please try again.',

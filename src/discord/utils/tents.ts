@@ -124,13 +124,13 @@ export async function teardownTent(Old: VoiceState): Promise<void> {
   const temporaryVoiceCategory = (await Old.guild.channels.fetch(
     env.CATEGORY_VOICE,
   )) as CategoryChannel;
-  for (const channel of temporaryVoiceCategory.children.cache) {
+  for (const [, channel] of temporaryVoiceCategory.children.cache) {
     // Get the number of humans in the channel
     const humans = channel.members.filter((member) => !member.user.bot).size;
 
     // If the channel is a voice channel, and it's a tent, and there are no humans in it delete it
     if (channel.type === ChannelType.GuildVoice && channel.name.includes('⛺') && humans < 1) {
-      channel.delete('Removing temporary voice chan!');
+      await channel.delete('Removing temporary voice chan!');
     }
   }
 }

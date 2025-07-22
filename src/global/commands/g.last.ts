@@ -52,7 +52,7 @@ export async function last(
                 );
                 totalMessages += memberMessages.size;
                 // Get the info for each message and append it to messageInfo
-                for (const message of memberMessages) {
+                for (const [, message] of memberMessages) {
                   // log.debug(F, `message: ${JSON.stringify(message, null, 2)}`);
                   messageInfo.push({
                     channel: `<#${message.channelId}>`,
@@ -83,6 +83,16 @@ export async function last(
 
         // Get the most recent message
         const lastMessage = messageInfo.at(-1);
+        if (!lastMessage) {
+          resolve({
+            lastMessage: 'No messages found',
+            messageCount: 0,
+            messageList: 'No messages found',
+            totalMessages: 0,
+          });
+          return;
+        }
+
         const lastMessageText = stripIndents`
           **${target.username}'s** last message was:
            ${time(lastMessage.timestamp, 'd')} ${lastMessage.channel}: ${lastMessage.content}`;

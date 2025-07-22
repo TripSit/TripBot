@@ -1949,6 +1949,15 @@ export async function modResponse(
     },
   });
 
+  if (guildData.role_moderator === null) {
+    log.error(F, 'No moderator role found');
+    return {
+      embeds: [
+        embedTemplate().setColor(Colors.Red).setTitle('This command can only be used in a guild!'),
+      ],
+    };
+  }
+
   // Determine if the actor is a mod
   const actorIsModule =
     Boolean(guildData.role_moderator) && actor.roles.cache.has(guildData.role_moderator);

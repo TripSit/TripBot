@@ -31,6 +31,9 @@ export async function dbAddWatchRequest(targetUserId: string, watchRequests: Wat
   if (existingUser) {
     // Add new watch requests to the existing user's watch_requests array
     const latestRequest = watchRequests.at(-1);
+    if (!latestRequest) {
+      throw new Error(`No latest request found for user ${targetUserId}.`);
+    }
 
     // We can also do the same thing by adding these directly to watch_requests on the User table.
     return db.watch_request.create({
@@ -148,7 +151,7 @@ export async function nightsWatch(message: Message) {
     where: { discord_id: message.author.id },
   });
 
-  if (!user || !message.guild) {
+  if (!user || !message.guild || user.discord_id === null) {
     return;
   }
 
@@ -158,7 +161,7 @@ export async function nightsWatch(message: Message) {
     return;
   }
 
-  watchRequests.forEach(async (watchRequestObject) => {
+  for (const watchRequestObject of watchRequests) {
     const target = await message.client.users.fetch(user.discord_id);
 
     if (watchRequestObject.notification_method === 'dm') {
@@ -191,5 +194,5 @@ export async function nightsWatch(message: Message) {
         await deleteWatchRequest(user.discord_id, caller.id);
       }
     }
-  });
+  }
 }
