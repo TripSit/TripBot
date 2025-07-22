@@ -4,7 +4,7 @@ const F = f(__filename);
 
 export default fact;
 
-export async function fact():Promise<string> {
+export async function fact(): Promise<string> {
   // log.debug(F, `jo ke()`);
   log.debug(F, `env.RAPID_TOKEN: ${env.RAPID_TOKEN}`);
   const { data } = await axios.get('https://facts-by-api-ninjas.p.rapidapi.com/v1/facts', {

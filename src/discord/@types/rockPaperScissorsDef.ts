@@ -1,31 +1,31 @@
-export interface RPSGame {
-  gameId: string;
-  players: string[];
-  choices: Map<string, string>;
-  isActive: boolean;
-  gameType: '1v1' | 'multiplayer';
-  round: number;
-  eliminatedPlayers: string[];
-  scores?: { player1: number; player2: number }; // Add this line
-}
-
 export type GameResult = 'player1' | 'player2' | 'tie';
 
-export type RoundResult = {
-  choice: string;
-  count: number;
-  players: string[];
-};
-
-export type MultiplayerResult = {
-  winner: string | null;
+export interface MultiplayerResult {
   eliminated: string[];
   remaining: string[];
   results: RoundResult[];
-};
+  winner: null | string;
+}
+
+export interface RoundResult {
+  choice: string;
+  count: number;
+  players: string[];
+}
+
+export interface RPSGame {
+  choices: Map<string, string>;
+  eliminatedPlayers: string[];
+  gameId: string;
+  gameType: '1v1' | 'multiplayer';
+  isActive: boolean;
+  players: string[];
+  round: number;
+  scores?: { player1: number; player2: number }; // Add this line
+}
 
 export const rpsChoices = {
-  rock: { emoji: '🪨', name: 'Rock', beats: 'scissors' },
-  paper: { emoji: '📄', name: 'Paper', beats: 'rock' },
-  scissors: { emoji: '✂️', name: 'Scissors', beats: 'paper' },
+  paper: { beats: 'rock', emoji: '📄', name: 'Paper' },
+  rock: { beats: 'scissors', emoji: '🪨', name: 'Rock' },
+  scissors: { beats: 'paper', emoji: '✂️', name: 'Scissors' },
 };

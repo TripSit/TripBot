@@ -1,8 +1,6 @@
-import {
-  DMChannel,
-  Message,
-  TextChannel,
-} from 'discord.js';
+import type { Message } from 'discord.js';
+
+import { DMChannel, TextChannel } from 'discord.js';
 import _ from 'underscore';
 
 export default karma;
@@ -13,16 +11,21 @@ const lastKarma = {};
  * karma
  * @param {Message} message The message that was sent
  * @return {Promise<void>}
-* */
+ * */
 export async function karma(message: Message): Promise<void> {
-  if (!message.guild || message.guild.id !== env.DISCORD_GUILD_ID || message.author.bot) return; // If not in tripsit or a bot message, ignore
+  if (!message.guild || message.guild.id !== env.DISCORD_GUILD_ID || message.author.bot) {
+    return;
+  } // If not in tripsit or a bot message, ignore
 
-  const match = message.content.match(/^(.+)(\+\+|--)$/);
+  const match = /^(.+)(\+\+|--)$/.exec(message.content);
   if (match && match[1].length < 25) {
-    match[1] = match[1].replace(/(\+-)/g, '').replace(/:/g, '').trim();
+    match[1] = match[1].replaceAll(/(\+-)/g, '').replaceAll(':', '').trim();
 
     const timeout = 5000;
-    if (_.has(lastKarma, message.author.id) && lastKarma[message.author.id as keyof typeof lastKarma] + timeout > Date.now()) {
+    if (
+      _.has(lastKarma, message.author.id) &&
+      lastKarma[message.author.id as keyof typeof lastKarma] + timeout > Date.now()
+    ) {
       if (message.channel instanceof TextChannel || message.channel instanceof DMChannel) {
         message.channel.send('Try again in a few seconds : - )');
       }

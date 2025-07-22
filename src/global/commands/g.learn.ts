@@ -1,42 +1,30 @@
-/* eslint-disable max-len */
-import { stripIndents } from 'common-tags';
-import { PrismaClient as PrismaClientTripbot } from '@prisma/client';
-// eslint-disable-next-line import/no-extraneous-dependencies
 import { PrismaClient as PrismaClientMoodle } from '@prisma-moodle/client';
+import { PrismaClient as PrismaClientTripbot } from '@prisma/client';
+import { stripIndents } from 'common-tags';
 import { DateTime } from 'luxon';
 
-const moodleDb = new PrismaClientMoodle();
-const tripbotDb = new PrismaClientTripbot();
+const moodleDatabase = new PrismaClientMoodle();
+const tripbotDatabase = new PrismaClientTripbot();
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const F = f(__filename);
 
-type MoodleProfile = {
-  fullName: string,
-  institution: string | null,
-  department: string | null,
-  completedCourses: string[],
-  incompleteCourses: string[],
-};
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function bigIntSanitize(key: any, value: any) {
-  if (typeof value === 'bigint') {
-    return value.toString(); // or alternatively `Number(value)` if the value is within the safe integer range for JavaScript
-  }
-  return value; // return the unchanged property value.
+interface MoodleInfo {
+  description: string;
+  footer: string;
+  title: string;
+  url: string;
 }
 
-type MoodleInfo = {
-  title: string,
-  description: string,
-  url: string,
-  footer: string,
-};
+interface MoodleProfile {
+  completedCourses: string[];
+  department: null | string;
+  fullName: string;
+  incompleteCourses: string[];
+  institution: null | string;
+}
 
-export async function help():Promise<MoodleInfo> {
+export async function help(): Promise<MoodleInfo> {
   return {
-    title: 'TripSitLearn Info',
     description: stripIndents`[TripSit Learn: Your Gateway to Harm Reduction Knowledge](${env.MOODLE_URL})
 
     Join us on a transformative journey of learning and growth! At TripSit, we're committed to fostering a responsible understanding of drug use. With this in mind, we're excited to present our pioneering course—"How to Be a TripSitter", which is entirely free and open for everyone.
@@ -53,19 +41,17 @@ export async function help():Promise<MoodleInfo> {
     
     We heartily welcome other communities to join hands with TripSit and contribute their unique learning courses to our thriving platform. If this sounds exciting to you, we would love to hear from you. Please, don't hesitate to reach out!
     `,
-    url: env.MOODLE_URL,
     footer: 'Thanks for your interest!',
+    title: 'TripSitLearn Info',
+    url: env.MOODLE_URL,
   };
 }
 
-export async function link(
-  email:string,
-  discordId:string,
-):Promise<string> {
+export async function link(email: string, discordId: string): Promise<string> {
   // log.debug(F, `Link started with moodleUsername: ${moodleUsername}, \
   // discordId: ${discordId}, matrixId: ${matrixId}`);
 
-  const userData = await tripbotDb.users.findUnique({
+  const userData = await tripbotDatabase.users.findUnique({
     where: {
       discord_id: discordId,
     },
@@ -77,7 +63,7 @@ export async function link(
     return 'No user found with that Discord or Matrix ID.';
   }
 
-  const moodleUserData = await moodleDb.mdl_user.findFirst({
+  const moodleUserData = await moodleDatabase.mdl_user.findFirst({
     where: {
       email,
     },
@@ -89,12 +75,12 @@ export async function link(
 
   log.debug(F, `moodleUserData: ${JSON.stringify(moodleUserData.username)}`);
 
-  const result = await tripbotDb.users.update({
-    where: {
-      id: userData.id,
-    },
+  const result = await tripbotDatabase.users.update({
     data: {
       moodle_id: moodleUserData.username,
+    },
+    where: {
+      id: userData.id,
     },
   });
 
@@ -104,82 +90,44 @@ export async function link(
   Use the /learn profile command to see the profile!`;
 }
 
-export async function unlink(
-  discordId?:string,
-  matrixId?:string,
-):Promise<string> {
-  // log.debug(F, `Unlink started with discordId: ${discordId}, matrixId: ${matrixId}`);
-
-  const userData = discordId
-    ? await tripbotDb.users.findUnique({
-      where: {
-        discord_id: discordId,
-      },
-    })
-    : await tripbotDb.users.findFirst({
-      where: {
-        matrix_id: matrixId as string,
-      },
-    });
-
-  if (!userData) {
-    return 'No user found with that Discord or Matrix ID.';
-  }
-
-  tripbotDb.users.update({
-    where: {
-      id: userData.id,
-    },
-    data: {
-      moodle_id: null,
-    },
-  });
-
-  return stripIndents`You have unlinked your Discord account with TripSitLearn!
-  Use the /learn link command if you ever want to link your account again!`;
-}
-
-export async function profile(
-  discordId?:string,
-  matrixId?:string,
-):Promise<MoodleProfile> {
+export async function profile(discordId?: string, matrixId?: string): Promise<MoodleProfile> {
   // log.debug(F, `Profile started with discordId: ${discordId}, matrixId: ${matrixId}`);
 
   let moodleProfile = {} as MoodleProfile;
 
   const userData = discordId
-    ? await tripbotDb.users.findUnique({
-      where: {
-        discord_id: discordId,
-      },
-    })
-    : await tripbotDb.users.findFirst({
-      where: {
-        matrix_id: matrixId as string,
-      },
-    });
+    ? await tripbotDatabase.users.findUnique({
+        where: {
+          discord_id: discordId,
+        },
+      })
+    : await tripbotDatabase.users.findFirst({
+        where: {
+          matrix_id: matrixId!,
+        },
+      });
 
   // log.debug(F, `userData: ${JSON.stringify(userData, null, 2)}`);
 
-  if (!userData || !userData.moodle_id) {
+  if (!userData?.moodle_id) {
     return moodleProfile;
   }
 
   try {
-    await moodleDb.mdl_user.findMany();
-  } catch (err) {
-    global.moodleConnection = {
-      status: false,
+    await moodleDatabase.mdl_user.findMany();
+  } catch {
+    globalThis.moodleConnection = {
       date: DateTime.now(),
+      status: false,
     };
     return moodleProfile;
   }
 
-  const moodleUserData = await moodleDb.mdl_user.findUnique({
+  const moodleUserData = await moodleDatabase.mdl_user.findUnique({
     where: {
       mnethostid_username: {
-        username: userData.moodle_id,
         mnethostid: 1,
+        username: userData.moodle_id,
       },
     },
   });
@@ -190,10 +138,7 @@ export async function profile(
 
   // log.debug(F, `moodleUserData: ${JSON.stringify(moodleUserData, bigIntSanitize, 2)}`);
 
-  const moodleEnrollments = await moodleDb.mdl_user_enrolments.findMany({
-    where: {
-      userid: moodleUserData.id,
-    },
+  const moodleEnrollments = await moodleDatabase.mdl_user_enrolments.findMany({
     include: {
       enrol: {
         include: {
@@ -209,32 +154,83 @@ export async function profile(
         },
       },
     },
+    where: {
+      userid: moodleUserData.id,
+    },
   });
 
-  let completedCourses:string[] = [];
-  let incompleteCourses:string[] = [];
+  let completedCourses: string[] = [];
+  let incompleteCourses: string[] = [];
   if (moodleEnrollments.length > 0) {
     // log.debug(F, `moodleEnrollments: ${JSON.stringify(moodleEnrollments, null, 2)}`);
     // log.debug(F, `moodleCourseCompletionData: ${JSON.stringify(moodleCourseCompletionData, null, 2)}`);
 
     // Get an array of courses the user has completed
     completedCourses = moodleEnrollments
-      .filter(enrollment => enrollment.enrol.course.completions.length > 0 && enrollment.enrol.course.completions[0].timecompleted !== null)
-      .map(enrollment => enrollment.enrol.course.fullname);
+      .filter(
+        (enrollment) =>
+          enrollment.enrol.course.completions.length > 0 &&
+          enrollment.enrol.course.completions[0].timecompleted !== null,
+      )
+      .map((enrollment) => enrollment.enrol.course.fullname);
 
     incompleteCourses = moodleEnrollments
-      .filter(enrollment => enrollment.enrol.course.completions.length === 0 || enrollment.enrol.course.completions[0].timecompleted === null)
-      .map(enrollment => enrollment.enrol.course.fullname);
+      .filter(
+        (enrollment) =>
+          enrollment.enrol.course.completions.length === 0 ||
+          enrollment.enrol.course.completions[0].timecompleted === null,
+      )
+      .map((enrollment) => enrollment.enrol.course.fullname);
   }
 
   moodleProfile = {
-    fullName: `${moodleUserData.firstname} ${moodleUserData.lastname}`,
-    institution: moodleUserData.institution,
-    department: moodleUserData.department,
     completedCourses,
+    department: moodleUserData.department,
+    fullName: `${moodleUserData.firstname} ${moodleUserData.lastname}`,
     incompleteCourses,
+    institution: moodleUserData.institution,
   };
 
   // log.debug(F, `moodleProfile: ${JSON.stringify(moodleProfile, null, 2)}`);
   return moodleProfile;
+}
+
+export async function unlink(discordId?: string, matrixId?: string): Promise<string> {
+  // log.debug(F, `Unlink started with discordId: ${discordId}, matrixId: ${matrixId}`);
+
+  const userData = discordId
+    ? await tripbotDatabase.users.findUnique({
+        where: {
+          discord_id: discordId,
+        },
+      })
+    : await tripbotDatabase.users.findFirst({
+        where: {
+          matrix_id: matrixId!,
+        },
+      });
+
+  if (!userData) {
+    return 'No user found with that Discord or Matrix ID.';
+  }
+
+  tripbotDatabase.users.update({
+    data: {
+      moodle_id: null,
+    },
+    where: {
+      id: userData.id,
+    },
+  });
+
+  return stripIndents`You have unlinked your Discord account with TripSitLearn!
+  Use the /learn link command if you ever want to link your account again!`;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function bigIntSanitize(key: any, value: any) {
+  if (typeof value === 'bigint') {
+    return value.toString(); // or alternatively `Number(value)` if the value is within the safe integer range for JavaScript
+  }
+  return value; // return the unchanged property value.
 }

@@ -1,10 +1,6 @@
-import {
-  Client,
-  Partials,
-} from 'discord.js';
-import {
-  GatewayIntentBits,
-} from 'discord-api-types/v10';
+import { GatewayIntentBits } from 'discord-api-types/v10';
+import { Client, Partials } from 'discord.js';
+
 import { registerCommands } from './commands';
 import { registerEvents } from './events';
 
@@ -12,6 +8,10 @@ const F = f(__filename);
 
 export default async function discordConnect(): Promise<void> {
   const discordClient = new Client({
+    allowedMentions: {
+      parse: ['users', 'roles'],
+      repliedUser: true,
+    },
     intents: [
       GatewayIntentBits.MessageContent,
       GatewayIntentBits.Guilds,
@@ -39,15 +39,11 @@ export default async function discordConnect(): Promise<void> {
       Partials.Reaction,
       // Partials.GuildScheduledEvent,
     ],
-    allowedMentions: {
-      parse: ['users', 'roles'],
-      repliedUser: true,
-    },
   });
 
-  global.discordClient = discordClient;
+  globalThis.discordClient = discordClient;
 
   Promise.all([registerCommands(discordClient), registerEvents(discordClient)])
-    .then(() => discordClient.login(env.DISCORD_CLIENT_TOKEN))
+    .then(async () => discordClient.login(env.DISCORD_CLIENT_TOKEN))
     .then(() => log.info(F, `${discordClient.user?.username} logged in!`));
 }

@@ -1,8 +1,9 @@
-import {
+import type {
   // Role,
   Message,
   TextChannel,
 } from 'discord.js';
+
 import { stripIndents } from 'common-tags';
 
 import { bigBrother } from '../../global/utils/thoughtPolice';
@@ -18,9 +19,9 @@ export default thoughtPolice;
  * @param {Message} message Message to scan
  * @return {Promise<void>}
  */
-export async function thoughtPolice(message:Message): Promise<void> {
+export async function thoughtPolice(message: Message): Promise<void> {
   // log.debug(F, `${message.member!.displayName} said "${message.cleanContent}"`);
-  const channelModlog = await message.client.channels.fetch(env.CHANNEL_MODLOG) as TextChannel;
+  const channelModlog = (await message.client.channels.fetch(env.CHANNEL_MODLOG)) as TextChannel;
 
   const result = await bigBrother(message.cleanContent.toLowerCase());
 

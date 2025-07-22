@@ -15,49 +15,49 @@ export default birthday;
 export async function birthday(
   command: 'get' | 'set',
   memberId: string,
-  month?: number | null,
-  day?: number | null,
-):Promise<DateTime | null> {
+  month?: null | number,
+  day?: null | number,
+): Promise<DateTime | null> {
   let response = {} as DateTime | null;
   if (command === 'set') {
     // log.debug(F, `${command} ${memberId} ${month} ${day}`);
-    const birthDate = DateTime.local(2000, month as number, day as number);
+    const birthDate = DateTime.local(2000, month!, day!);
 
     // log.debug(F, `Setting birthDate for ${memberId} to ${birthDate}`);
 
     await db.users.upsert({
-      where: {
-        discord_id: memberId,
-      },
       create: {
-        discord_id: memberId,
         birthday: birthDate.toJSDate(),
+        discord_id: memberId,
       },
       update: {
         birthday: birthDate.toJSDate(),
+      },
+      where: {
+        discord_id: memberId,
       },
     });
 
     response = birthDate;
   } else if (command === 'get') {
     const userData = await db.users.upsert({
-      where: {
-        discord_id: memberId,
-      },
       create: {
         discord_id: memberId,
       },
       update: {},
+      where: {
+        discord_id: memberId,
+      },
     });
-    if (userData.birthday !== null) {
+    if (userData.birthday === null) {
+      // log.debug(F, `birthday is NULL`);
+      response = null;
+    } else {
       const birthDateRaw = userData.birthday;
       // log.debug(F, `birthDate: ${birthDate}`);
       const birthDate = DateTime.fromJSDate(birthDateRaw);
       // log.debug(F, `birthday: ${birthday}`);
       response = birthDate;
-    } else {
-      // log.debug(F, `birthday is NULL`);
-      response = null;
     }
   }
   log.info(F, `response: ${JSON.stringify(response, null, 2)}`);

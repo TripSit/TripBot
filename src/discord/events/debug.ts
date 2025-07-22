@@ -1,10 +1,7 @@
 // import * as path from 'path';
-import {
-  TextChannel,
-} from 'discord.js';
-import {
-  DebugEvent,
-} from '../@types/eventDef';
+import type { TextChannel } from 'discord.js';
+
+import type { DebugEvent } from '../@types/eventDef';
 // import log from '../../global/utils/log';
 
 // const F= f(__filename);
@@ -12,13 +9,15 @@ import {
 const enable = false;
 
 export const debug: DebugEvent = {
-  name: 'debug',
   async execute(info) {
-    if (!enable) return;
+    if (!enable) {
+      return;
+    }
     // log.debug(F, `info: ${info}`);
-    const botlog = await discordClient.channels.fetch(env.CHANNEL_BOTLOG) as TextChannel;
+    const botlog = (await discordClient.channels.fetch(env.CHANNEL_BOTLOG)) as TextChannel;
     await botlog.send(info);
   },
+  name: 'debug',
 };
 
 export default debug;

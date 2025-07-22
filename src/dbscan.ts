@@ -1,13 +1,13 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { Category, Drug, Combos } from 'tripsit_drug_db';
-import fs from 'fs';
-import path from 'path';
-import drugs from '../assets/data/tripsitDB.json';
-import combos from '../assets/data/tripsitCombos.json';
+import type { Category, Combos, Drug } from 'tripsit_drug_db';
 
-const drugData = drugs as {
-  [key: string]: Drug
-};
+import fs from 'node:fs';
+import path from 'node:path';
+
+import combos from '../assets/data/tripsitCombos.json';
+import drugs from '../assets/data/tripsitDB.json';
+
+const drugData = drugs as Record<string, Drug>;
 
 const comboData = combos as Combos;
 
@@ -130,17 +130,20 @@ function expandCategories() {
     opioids: [] as string[],
     ssris: [] as string[],
   };
-  Object.entries(drugData).forEach(([drugName, drugObj]) => {
-    if (drugName.includes('amphetamine' as Category) || drugObj.aliases?.join().includes('amphetamine')) {
+  for (const [drugName, drugObject] of Object.entries(drugData)) {
+    if (
+      drugName.includes('amphetamine' as Category) ||
+      drugObject.aliases?.join(',').includes('amphetamine')
+    ) {
       categoryData.amphetamines.push(drugName);
     }
-    if (drugObj.categories?.includes('benzodiazepine' as Category)) {
+    if (drugObject.categories?.includes('benzodiazepine' as Category)) {
       categoryData.benzodiazepines.push(drugName);
     }
-    if (drugObj.categories?.includes('opioid' as Category)) {
+    if (drugObject.categories?.includes('opioid' as Category)) {
       categoryData.opioids.push(drugName);
     }
-    if (drugObj.categories?.includes('ssri' as Category)) {
+    if (drugObject.categories?.includes('ssri' as Category)) {
       categoryData.ssris.push(drugName);
     }
     if (/^do.$/i.test(drugName)) {
@@ -167,7 +170,7 @@ function expandCategories() {
     if (drugName === 'maoi') {
       categoryData.maois.push(drugName);
     }
-  });
+  }
 
   // console.log(`${JSON.stringify(categoryData, null, 2)}`);
 }

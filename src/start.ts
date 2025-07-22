@@ -1,37 +1,35 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import { getVoiceConnection } from '@discordjs/voice';
-// import { stripIndents } from 'common-tags';
-import sourceMap from 'source-map-support'; // eslint-disable-line
-import {
-  ChatInputCommandInteraction,
-  UserContextMenuCommandInteraction,
-  MessageContextMenuCommandInteraction,
+import type {
   ButtonInteraction,
-  StringSelectMenuInteraction,
+  ChatInputCommandInteraction,
+  MessageContextMenuCommandInteraction,
   ModalSubmitInteraction,
+  StringSelectMenuInteraction,
+  UserContextMenuCommandInteraction,
 } from 'discord.js';
-import * as path from 'path';
+
+import { getVoiceConnection } from '@discordjs/voice';
 import Canvas from '@napi-rs/canvas';
 import { PrismaClient } from '@prisma/client';
-import { env } from './global/utils/env.config';
-import { log } from './global/utils/log';
-import validateEnv from './global/utils/env.validate'; // eslint-disable-line
-import commandContext from './discord/utils/context'; // eslint-disable-line
+import * as path from 'node:path';
+// import { stripIndents } from 'common-tags';
+import sourceMap from 'source-map-support';
+
+import api from './api/api';
 import discordConnect from './discord/discord';
-import api from './api/api'; // eslint-disable-line
-import updateDb from './global/utils/updateDb';
+import commandContext from './discord/utils/context';
+import { env as environment } from './global/utils/env.config';
+import validateEnvironment from './global/utils/env.validate';
+import { log } from './global/utils/log';
+import updateDatabase from './global/utils/updateDb';
 // import startMatrix from './matrix/matrix';
 // import ircConnect from './irc/irc';
 // import telegramConnect from './telegram/telegram';
 
 sourceMap.install();
 
-global.bootTime = new Date();
+globalThis.bootTime = new Date();
 
-Canvas.GlobalFonts.registerFromPath(
-  path.resolve(__dirname, '../assets/font/Futura.otf'),
-  'futura',
-);
+Canvas.GlobalFonts.registerFromPath(path.resolve(__dirname, '../assets/font/Futura.otf'), 'futura');
 
 const F = f(__filename);
 
@@ -43,11 +41,13 @@ const F = f(__filename);
 
 async function start() {
   log.info(F, 'Initializing service!');
-  if (validateEnv('SERVICES')) {
+  if (validateEnvironment('SERVICES')) {
     api();
-    global.db = new PrismaClient({ log: ['error'] });
-    await updateDb();
-    if (env.DISCORD_CLIENT_TOKEN && validateEnv('DISCORD')) await discordConnect();
+    globalThis.db = new PrismaClient({ log: ['error'] });
+    await updateDatabase();
+    if (environment.DISCORD_CLIENT_TOKEN && validateEnvironment('DISCORD')) {
+      await discordConnect();
+    }
     // if (env.MATRIX_ACCESS_TOKEN && validateEnv( 'MATRIX') && env.NODE_ENV !== 'production') await startMatrix();
     // if (env.IRC_PASSWORD && validateEnv('IRC') && env.NODE_ENV !== 'production') ircConnect();
     // if (env.TELEGRAM_TOKEN && validateEnv('TELEGRAM')) await telegramConnect();
@@ -66,7 +66,7 @@ const destroy = () => {
   // } catch (err) {
   //   log.error(F, `${err}`);
   // }
-  const existingConnection = getVoiceConnection(env.DISCORD_GUILD_ID);
+  const existingConnection = getVoiceConnection(environment.DISCORD_GUILD_ID);
   if (existingConnection) {
     existingConnection.destroy();
   }
@@ -76,18 +76,18 @@ process.on('SIGINT', destroy);
 process.on('SIGTERM', destroy);
 
 declare global {
-  // eslint-disable-next-line no-var, vars-on-top
   // var env:any; // NOSONAR
-  // eslint-disable-next-line no-var, vars-on-top
-  var commandContext:(
-    interaction: ChatInputCommandInteraction
-    | UserContextMenuCommandInteraction
-    | MessageContextMenuCommandInteraction
-    | ButtonInteraction
-    | StringSelectMenuInteraction
-    | ModalSubmitInteraction,
+
+  var commandContext: (
+    interaction:
+      | ButtonInteraction
+      | ChatInputCommandInteraction
+      | MessageContextMenuCommandInteraction
+      | ModalSubmitInteraction
+      | StringSelectMenuInteraction
+      | UserContextMenuCommandInteraction,
   ) => Promise<string>;
 }
 
-global.env = env;
-global.commandContext = commandContext;
+globalThis.env = environment;
+globalThis.commandContext = commandContext;

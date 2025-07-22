@@ -1,9 +1,9 @@
 export default {
-  getAllDrugs() {
+  async getAllDrugs() {
     return db.drug_names.findMany();
   },
 
-  async getDrug(name:string) {
+  async getDrug(name: string) {
     return db.drug_names.findFirst({
       where: {
         name: name.toUpperCase(),

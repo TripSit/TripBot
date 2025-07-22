@@ -1,15 +1,20 @@
-import { MoveResult, TicTacToeGame } from '../../discord/@types/ticTacToeDef';
+import type { MoveResult, TicTacToeGame } from '../../discord/@types/ticTacToeDef';
 
 const F = f(__filename);
 
-export function checkWinner(board: string[]): string | null {
+export function checkWinner(board: string[]): null | string {
   const winPatterns = [
-    [0, 1, 2], [3, 4, 5], [6, 7, 8], // Rows
-    [0, 3, 6], [1, 4, 7], [2, 5, 8], // Columns
-    [0, 4, 8], [2, 4, 6], // Diagonals
+    [0, 1, 2],
+    [3, 4, 5],
+    [6, 7, 8], // Rows
+    [0, 3, 6],
+    [1, 4, 7],
+    [2, 5, 8], // Columns
+    [0, 4, 8],
+    [2, 4, 6], // Diagonals
   ];
 
-  const winningPattern = winPatterns.find(pattern => {
+  const winningPattern = winPatterns.find((pattern) => {
     const [a, b, c] = pattern;
     return board[a] !== '⬜' && board[a] === board[b] && board[b] === board[c];
   });
@@ -22,20 +27,28 @@ export function checkWinner(board: string[]): string | null {
   return null;
 }
 
-export function executeMove(
-  game: TicTacToeGame,
-  position: number,
-  playerId: string,
-): MoveResult {
+export function createInitialGame(player1Id: string, player2Id: string): TicTacToeGame {
+  return {
+    board: Array.from({ length: 9 }).fill('⬜'),
+    currentPlayer: 'X',
+    gameId: `${player1Id}-${player2Id}-${Date.now()}`,
+    isGameOver: false,
+    player1: player1Id,
+    player2: player2Id,
+    winner: null,
+  };
+}
+
+export function executeMove(game: TicTacToeGame, position: number, playerId: string): MoveResult {
   log.info(F, `[${game.gameId}] BEFORE move - Board: ${game.board}`);
   log.info(F, `[${game.gameId}] BEFORE move - Current player: ${game.currentPlayer}`);
 
   // Validate move
   if (game.isGameOver) {
     return {
-      success: false,
       errorMessage: 'This game has already ended!',
       gameUpdated: game,
+      success: false,
     };
   }
 
@@ -43,17 +56,17 @@ export function executeMove(
 
   if (playerId !== currentPlayerId) {
     return {
-      success: false,
-      errorMessage: 'It\'s not your turn!',
+      errorMessage: "It's not your turn!",
       gameUpdated: game,
+      success: false,
     };
   }
 
   if (game.board[position] !== '⬜') {
     return {
-      success: false,
       errorMessage: 'That position is already taken!',
       gameUpdated: game,
+      success: false,
     };
   }
 
@@ -78,19 +91,7 @@ export function executeMove(
   }
 
   return {
-    success: true,
     gameUpdated: updatedGame,
-  };
-}
-
-export function createInitialGame(player1Id: string, player2Id: string): TicTacToeGame {
-  return {
-    gameId: `${player1Id}-${player2Id}-${Date.now()}`,
-    board: Array(9).fill('⬜'),
-    currentPlayer: 'X',
-    player1: player1Id,
-    player2: player2Id,
-    isGameOver: false,
-    winner: null,
+    success: true,
   };
 }

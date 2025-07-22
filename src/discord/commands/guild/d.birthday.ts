@@ -1,11 +1,10 @@
-import {
-  SlashCommandBuilder,
-  GuildMember,
-  ChatInputCommandInteraction,
-  MessageFlags,
-} from 'discord.js';
+import type { ChatInputCommandInteraction, GuildMember } from 'discord.js';
+
+import { MessageFlags, SlashCommandBuilder } from 'discord.js';
 import { DateTime } from 'luxon';
-import { SlashCommand } from '../../@types/commandDef';
+
+import type { SlashCommand } from '../../@types/commandDef';
+
 import { birthday } from '../../../global/commands/g.birthday';
 import commandContext from '../../utils/context';
 import { embedTemplate } from '../../utils/embedTemplate';
@@ -13,10 +12,7 @@ import { embedTemplate } from '../../utils/embedTemplate';
 
 const F = f(__filename);
 
-async function birthdayGet(
-  interaction:ChatInputCommandInteraction,
-  member:GuildMember,
-) {
+async function birthdayGet(interaction: ChatInputCommandInteraction, member: GuildMember) {
   log.info(F, await commandContext(interaction));
   // const ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined
   // await interaction.deferReply({ flags: ephemeral });
@@ -35,8 +31,8 @@ async function birthdayGet(
   const birthdayDate = response;
   const birthdayThisYear = birthdayDate.set({ year: now.year });
   const birthdayNextYear = birthdayDate.set({ year: now.year + 1 });
-  const daysUntilBirthday = birthdayThisYear.diff(now, 'days').toObject().days as number;
-  const daysUntilBirthdayNextYear = birthdayNextYear.diff(now, 'days').toObject().days as number;
+  const daysUntilBirthday = birthdayThisYear.diff(now, 'days').toObject().days!;
+  const daysUntilBirthdayNextYear = birthdayNextYear.diff(now, 'days').toObject().days!;
   let daysUntil = daysUntilBirthday;
   if (daysUntilBirthday < 0) {
     daysUntil = daysUntilBirthdayNextYear;
@@ -50,10 +46,10 @@ async function birthdayGet(
 }
 
 async function birthdaySet(
-  interaction:ChatInputCommandInteraction,
-  member:GuildMember,
-  monthInput:string | null,
-  day:number | null,
+  interaction: ChatInputCommandInteraction,
+  member: GuildMember,
+  monthInput: null | string,
+  day: null | number,
 ) {
   let month = 0 as number;
 
@@ -103,25 +99,25 @@ async function birthdaySet(
   // };
 
   const monthDict = {
-    january: 1,
-    february: 2,
-    march: 3,
     april: 4,
-    may: 5,
-    june: 6,
-    july: 7,
     august: 8,
-    september: 9,
-    october: 10,
-    november: 11,
     december: 12,
+    february: 2,
+    january: 1,
+    july: 7,
+    june: 6,
+    march: 3,
+    may: 5,
+    november: 11,
+    october: 10,
+    september: 9,
   };
 
   month = monthDict[monthInput.toLowerCase() as keyof typeof monthDict];
 
   const response = await birthday('set', member.id, month, day);
   const embed = embedTemplate();
-  embed.setTitle(`Set your birthday to ${(response as DateTime).toFormat('LLLL d')}`);
+  embed.setTitle(`Set your birthday to ${response!.toFormat('LLLL d')}`);
   await interaction.editReply({ embeds: [embed] });
 }
 
@@ -130,47 +126,59 @@ export const dBirthday: SlashCommand = {
     .setName('birthday')
     .setDescription('Birthday info!')
     .setIntegrationTypes([0])
-    .addSubcommand(subcommand => subcommand
-      .setName('get')
-      .setDescription('Get someone\'s birthday!')
-      .addUserOption(option => option
-        // .setRequired(true) If nothing is provided it defaults to the user who ran the command
-        .setName('user')
-        .setDescription('User to lookup'))
-      .addBooleanOption(option => option.setName('ephemeral')
-        .setDescription('Set to "True" to show the response only to you')))
-    .addSubcommand(subcommand => subcommand
-      .setName('set')
-      .setDescription('Set your birthday!')
-      .addStringOption(option => option
-        .setRequired(true)
-        .setDescription('Month value')
-        .addChoices(
-          { name: 'January', value: 'January' },
-          { name: 'February', value: 'February' },
-          { name: 'March', value: 'March' },
-          { name: 'April', value: 'April' },
-          { name: 'May', value: 'May' },
-          { name: 'June', value: 'June' },
-          { name: 'July', value: 'July' },
-          { name: 'August', value: 'August' },
-          { name: 'September', value: 'September' },
-          { name: 'October', value: 'October' },
-          { name: 'November', value: 'November' },
-          { name: 'December', value: 'December' },
+    .addSubcommand((subcommand) =>
+      subcommand
+        .setName('get')
+        .setDescription("Get someone's birthday!")
+        .addUserOption((option) =>
+          option
+            // .setRequired(true) If nothing is provided it defaults to the user who ran the command
+            .setName('user')
+            .setDescription('User to lookup'),
         )
-        .setName('month'))
-      .addIntegerOption(option => option
-        .setRequired(true)
-        .setDescription('Day value')
-        .setName('day'))),
+        .addBooleanOption((option) =>
+          option
+            .setName('ephemeral')
+            .setDescription('Set to "True" to show the response only to you'),
+        ),
+    )
+    .addSubcommand((subcommand) =>
+      subcommand
+        .setName('set')
+        .setDescription('Set your birthday!')
+        .addStringOption((option) =>
+          option
+            .setRequired(true)
+            .setDescription('Month value')
+            .addChoices(
+              { name: 'January', value: 'January' },
+              { name: 'February', value: 'February' },
+              { name: 'March', value: 'March' },
+              { name: 'April', value: 'April' },
+              { name: 'May', value: 'May' },
+              { name: 'June', value: 'June' },
+              { name: 'July', value: 'July' },
+              { name: 'August', value: 'August' },
+              { name: 'September', value: 'September' },
+              { name: 'October', value: 'October' },
+              { name: 'November', value: 'November' },
+              { name: 'December', value: 'December' },
+            )
+            .setName('month'),
+        )
+        .addIntegerOption((option) =>
+          option.setRequired(true).setDescription('Day value').setName('day'),
+        ),
+    ),
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
     let command = interaction.options.getSubcommand() as 'get' | 'set' | undefined;
     if (command === 'set') {
       await interaction.deferReply({ flags: MessageFlags.Ephemeral });
     } else {
-      const ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined;
+      const ephemeral = interaction.options.getBoolean('ephemeral')
+        ? MessageFlags.Ephemeral
+        : undefined;
       await interaction.deferReply({ flags: ephemeral });
     }
     let member = interaction.options.getMember('user');
@@ -182,20 +190,12 @@ export const dBirthday: SlashCommand = {
     }
 
     if (command === 'set') {
-      if (member === null) {
-        member = interaction.member as GuildMember;
-      } else {
-        member = member as GuildMember;
-      }
+      member = member === null ? (interaction.member as GuildMember) : (member as GuildMember);
       await birthdaySet(interaction, member, monthInput, day);
     }
 
     if (command === 'get') {
-      if (member === null) {
-        member = interaction.member as GuildMember;
-      } else {
-        member = member as GuildMember;
-      }
+      member = member === null ? (interaction.member as GuildMember) : (member as GuildMember);
       await birthdayGet(interaction, member);
     }
     return true;

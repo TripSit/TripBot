@@ -104,7 +104,7 @@ const mindsetRoles = [
   env.ROLE_SOBER,
   env.ROLE_TALKATIVE,
   env.ROLE_VOICECHATTY,
-  env.ROLE_BUSY,
+  env.ROLE_WORKING,
   env.ROLE_EVENT_1,
   env.ROLE_EVENT_2,
   env.ROLE_EVENT_3,

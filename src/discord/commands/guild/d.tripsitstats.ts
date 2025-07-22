@@ -1,12 +1,10 @@
-/* eslint-disable sonarjs/no-duplicate-string */
-import {
-  MessageFlags,
-  SlashCommandBuilder,
-} from 'discord.js';
-import { SlashCommand } from '../../@types/commandDef';
+import { MessageFlags, SlashCommandBuilder } from 'discord.js';
+
+import type { SlashCommand } from '../../@types/commandDef';
+
+import getTripSitStatistics from '../../../global/commands/g.tripsitstats';
 import commandContext from '../../utils/context';
 import { embedTemplate } from '../../utils/embedTemplate';
-import getTripSitStatistics from '../../../global/commands/g.tripsitstats';
 
 const F = f(__filename);
 
@@ -15,27 +13,37 @@ export const dTripsitStats: SlashCommand = {
     .setName('tripsit_stats')
     .setDescription('Get stats on a feature of TripSit')
     .setIntegrationTypes([0])
-    .addSubcommand(subcommand => subcommand
-      .setName('session')
-      .setDescription('Get stats for TripSit sessions')
-      .addBooleanOption(option => option
-        .setName('ephemeral')
-        .setDescription('Set to "True" to show the response only to you')))
-    .addSubcommand(subcommand => subcommand
-      .setName('command')
-      .setDescription('Get stats for commands')
-      .addStringOption(option => option
-        .setName('target_command')
-        .setDescription('The command to get stats for'))
-      .addIntegerOption(option => option
-        .setName('days')
-        .setDescription('Number of days to look back'))
-      .addBooleanOption(option => option
-        .setName('ephemeral')
-        .setDescription('Set to "True" to show the response only to you'))),
+    .addSubcommand((subcommand) =>
+      subcommand
+        .setName('session')
+        .setDescription('Get stats for TripSit sessions')
+        .addBooleanOption((option) =>
+          option
+            .setName('ephemeral')
+            .setDescription('Set to "True" to show the response only to you'),
+        ),
+    )
+    .addSubcommand((subcommand) =>
+      subcommand
+        .setName('command')
+        .setDescription('Get stats for commands')
+        .addStringOption((option) =>
+          option.setName('target_command').setDescription('The command to get stats for'),
+        )
+        .addIntegerOption((option) =>
+          option.setName('days').setDescription('Number of days to look back'),
+        )
+        .addBooleanOption((option) =>
+          option
+            .setName('ephemeral')
+            .setDescription('Set to "True" to show the response only to you'),
+        ),
+    ),
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
-    const ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined;
+    const ephemeral = interaction.options.getBoolean('ephemeral')
+      ? MessageFlags.Ephemeral
+      : undefined;
     await interaction.deferReply({ flags: ephemeral });
 
     let stats = null;

@@ -1,60 +1,56 @@
-/* eslint-disable max-len */
-import {
-  SlashCommandBuilder,
-  GuildMember,
-  AttachmentBuilder,
-  MessageFlags,
-} from 'discord.js';
+import type { personas } from '@prisma/client';
+import type { GuildMember } from 'discord.js';
+
 import Canvas from '@napi-rs/canvas';
-import { personas } from '@prisma/client';
-import { SlashCommand } from '../../@types/commandDef';
-import { profile, ProfileData } from '../../../global/commands/g.profile';
-import commandContext from '../../utils/context';
-import { expForNextLevel, getTotalLevel } from '../../../global/utils/experience';
+import { AttachmentBuilder, MessageFlags, SlashCommandBuilder } from 'discord.js';
+
+import type { ProfileData } from '../../../global/commands/g.profile';
+import type { SlashCommand } from '../../@types/commandDef';
+
+import { profile } from '../../../global/commands/g.profile';
 import { getPersonaInfo } from '../../../global/commands/g.rpg';
+import { expForNextLevel, getTotalLevel } from '../../../global/utils/experience';
+import { deFuckifyText, generateColors, resizeText } from '../../utils/canvasUtils';
+import commandContext from '../../utils/context';
 import getAsset from '../../utils/getAsset';
-import {
-  resizeText, deFuckifyText, generateColors,
-} from '../../utils/canvasUtils';
 
 const F = f(__filename);
 
-export function numFormatter(num:number):string {
-  if (num > 999 && num < 1000000) {
-    return `${(num / 1000).toFixed(2)}K`;
+export function numFormatter(number_: number): string {
+  if (number_ > 999 && number_ < 1_000_000) {
+    return `${(number_ / 1000).toFixed(2)}K`;
   }
-  if (num > 1000000) {
-    return `${(num / 1000000).toFixed(2)}M`;
+  if (number_ > 1_000_000) {
+    return `${(number_ / 1_000_000).toFixed(2)}M`;
   }
-  return num.toFixed(0);
+  return number_.toFixed(0);
 }
 
 // Number Formatter Voice
-export function numFormatterVoice(num:number):string {
-  if (num > 999 && num < 1000000) {
-    return `${(num / 1000).toFixed(1)}K`;
+export function numFormatterVoice(number_: number): string {
+  if (number_ > 999 && number_ < 1_000_000) {
+    return `${(number_ / 1000).toFixed(1)}K`;
   }
-  if (num > 1000000) {
-    return `${(num / 1000000).toFixed(1)}M`;
+  if (number_ > 1_000_000) {
+    return `${(number_ / 1_000_000).toFixed(1)}M`;
   }
-  return num.toFixed(1);
+  return number_.toFixed(1);
 }
 
 export const dProfile: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('profile')
-    .setDescription('Get someone\'s profile!')
+    .setDescription("Get someone's profile!")
     .setIntegrationTypes([0])
-    .addUserOption(option => option
-      .setName('target')
-      .setDescription('User to lookup'))
-    .addBooleanOption(option => option.setName('ephemeral')
-      .setDescription('Set to "True" to show the response only to you')) as SlashCommandBuilder,
-  async execute(
-    interaction,
-  ) {
+    .addUserOption((option) => option.setName('target').setDescription('User to lookup'))
+    .addBooleanOption((option) =>
+      option.setName('ephemeral').setDescription('Set to "True" to show the response only to you'),
+    ) as SlashCommandBuilder,
+  async execute(interaction) {
     log.info(F, await commandContext(interaction));
-    const ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined;
+    const ephemeral = interaction.options.getBoolean('ephemeral')
+      ? MessageFlags.Ephemeral
+      : undefined;
     await interaction.deferReply({ flags: ephemeral });
     const startTime = Date.now();
     if (!interaction.guild) {
@@ -64,13 +60,12 @@ export const dProfile: SlashCommand = {
 
     // Target is the option given, if none is given, it will be the user who used the command
     const target = interaction.options.getMember('target')
-      ? interaction.options.getMember('target') as GuildMember
-      : interaction.member as GuildMember;
+      ? (interaction.options.getMember('target') as GuildMember)
+      : (interaction.member as GuildMember);
 
     // log.debug(F, `target.presence?.status: ${target.presence?.status}`);
 
     const values = await Promise.allSettled([
-
       // Get the target's profile data from the database
       await profile(target.id),
       // Check get fresh persona data
@@ -89,33 +84,35 @@ export const dProfile: SlashCommand = {
       await Canvas.loadImage(await getAsset('legacyIcon')),
     ]);
 
-    const profileData = values[0].status === 'fulfilled' ? values[0].value : {} as ProfileData;
-    const personaData = values[1].status === 'fulfilled' ? values[1].value : {} as personas;
-    const Icons = values[2].status === 'fulfilled' ? values[2].value : {} as Canvas.Image;
+    const profileData = values[0].status === 'fulfilled' ? values[0].value : ({} as ProfileData);
+    const personaData = values[1].status === 'fulfilled' ? values[1].value : ({} as personas);
+    const Icons = values[2].status === 'fulfilled' ? values[2].value : ({} as Canvas.Image);
     // const StatusIcon = values[3].status === 'fulfilled' ? values[3].value : {} as Canvas.Image;
-    const avatar = values[3].status === 'fulfilled' ? values[3].value : {} as Canvas.Image;
-    const birthdayOverlay = values[4].status === 'fulfilled' ? values[4].value : {} as Canvas.Image;
-    const teamtripsitIcon = values[5].status === 'fulfilled' ? values[5].value : {} as Canvas.Image;
-    const premiumIcon = values[6].status === 'fulfilled' ? values[6].value : {} as Canvas.Image;
-    const boosterIcon = values[7].status === 'fulfilled' ? values[7].value : {} as Canvas.Image;
-    const legacyIcon = values[8].status === 'fulfilled' ? values[8].value : {} as Canvas.Image;
+    const avatar = values[3].status === 'fulfilled' ? values[3].value : ({} as Canvas.Image);
+    const birthdayOverlay =
+      values[4].status === 'fulfilled' ? values[4].value : ({} as Canvas.Image);
+    const teamtripsitIcon =
+      values[5].status === 'fulfilled' ? values[5].value : ({} as Canvas.Image);
+    const premiumIcon = values[6].status === 'fulfilled' ? values[6].value : ({} as Canvas.Image);
+    const boosterIcon = values[7].status === 'fulfilled' ? values[7].value : ({} as Canvas.Image);
+    const legacyIcon = values[8].status === 'fulfilled' ? values[8].value : ({} as Canvas.Image);
 
     const avatarIconRoles = {
-      [env.ROLE_TEAMTRIPSIT]: {
-        image: teamtripsitIcon,
-        hierarchy: 1,
-      },
-      [env.ROLE_PREMIUM]: {
-        image: premiumIcon,
-        hierarchy: 2,
-      },
       [env.ROLE_BOOSTER]: {
-        image: boosterIcon,
         hierarchy: 3,
+        image: boosterIcon,
       },
       [env.ROLE_LEGACY]: {
-        image: legacyIcon,
         hierarchy: 4,
+        image: legacyIcon,
+      },
+      [env.ROLE_PREMIUM]: {
+        hierarchy: 2,
+        image: premiumIcon,
+      },
+      [env.ROLE_TEAMTRIPSIT]: {
+        hierarchy: 1,
+        image: teamtripsitIcon,
       },
     };
 
@@ -165,11 +162,11 @@ export const dProfile: SlashCommand = {
     // Create Canvas and Context
     const canvasWidth = 921;
     const canvasHeight = 292;
-    const canvasObj = Canvas.createCanvas(canvasWidth, canvasHeight);
-    const context = canvasObj.getContext('2d');
+    const canvasObject = Canvas.createCanvas(canvasWidth, canvasHeight);
+    const context = canvasObject.getContext('2d');
 
     // Generate the colors for the card based on the user's role color
-    const roleColor = `#${(target.roles.color?.color || 0x99aab5).toString(16).padStart(6, '0')}`;
+    const roleColor = `#${(target.roles.color?.color || 0x99_aa_b5).toString(16).padStart(6, '0')}`;
     log.debug(F, `roleColor: ${roleColor}`);
 
     const cardLightColor = generateColors(roleColor, 0, -75, -67);
@@ -204,9 +201,13 @@ export const dProfile: SlashCommand = {
       });
       // log.debug(F, `Persona home inventory (change): ${JSON.stringify(inventoryData, null, 2)}`);
 
-      const equippedBackground = inventoryData.find(item => item.equipped === true && item.effect === 'background');
-      const equippedFont = inventoryData.find(item => item.equipped === true && item.effect === 'font');
-      const equippedFlair = inventoryData.find(item => item.equipped === true && item.effect === 'userflair');
+      const equippedBackground = inventoryData.find(
+        (item) => item.equipped && item.effect === 'background',
+      );
+      const equippedFont = inventoryData.find((item) => item.equipped && item.effect === 'font');
+      const equippedFlair = inventoryData.find(
+        (item) => item.equipped && item.effect === 'userflair',
+      );
       // log.debug(F, `equippedBackground: ${JSON.stringify(equippedBackground, null, 2)} `);
       if (equippedBackground) {
         const imagePath = await getAsset(equippedBackground.value);
@@ -328,7 +329,8 @@ export const dProfile: SlashCommand = {
     let filteredDisplayName = await deFuckifyText(target.displayName);
     // If the filteredDisplayName is much shorter than what was input, display their username as a fallback
     if (filteredDisplayName.length < target.displayName.length / 2) {
-      filteredDisplayName = target.user.username.charAt(0).toUpperCase() + target.user.username.slice(1);
+      filteredDisplayName =
+        target.user.username.charAt(0).toUpperCase() + target.user.username.slice(1);
     }
 
     context.fillStyle = textColor;
@@ -343,14 +345,14 @@ export const dProfile: SlashCommand = {
       usernameHeight = 78;
       fontSize = 30;
       context.textBaseline = 'top';
-      context.font = resizeText(canvasObj, userFlair, fontSize, 'futura', maxLength);
-      context.fillText(`${userFlair}`, 146, 100);
+      context.font = resizeText(canvasObject, userFlair, fontSize, 'futura', maxLength);
+      context.fillText(userFlair, 146, 100);
       context.textBaseline = 'bottom';
     }
 
     fontSize = 50;
-    context.font = resizeText(canvasObj, filteredDisplayName, fontSize, userFont, maxLength);
-    context.fillText(`${filteredDisplayName}`, 146, usernameHeight);
+    context.font = resizeText(canvasObject, filteredDisplayName, fontSize, userFont, maxLength);
+    context.fillText(filteredDisplayName, 146, usernameHeight);
     context.textBaseline = 'middle';
 
     // User Timezone
@@ -359,10 +361,10 @@ export const dProfile: SlashCommand = {
     context.fillStyle = '#ffffff';
     if (profileData.timezone) {
       const timestring = new Date().toLocaleTimeString('en-US', {
-        timeZone: profileData.timezone,
-        hour12: true,
         hour: 'numeric',
+        hour12: true,
         minute: 'numeric',
+        timeZone: profileData.timezone,
       });
       context.fillText(timestring, 210, 190);
     } else {
@@ -375,14 +377,25 @@ export const dProfile: SlashCommand = {
     if (profileData.birthday) {
       targetBirthday = profileData.birthday;
       const today = new Date();
-      if (today.getMonth() === targetBirthday.getMonth() && today.getDate() === targetBirthday.getDate()) {
+      if (
+        today.getMonth() === targetBirthday.getMonth() &&
+        today.getDate() === targetBirthday.getDate()
+      ) {
         // log.debug(F, 'Birthday Match!');
         itIsYourBirthday = true;
       }
       if (targetBirthday.getDate() < 10) {
-        context.fillText(`0${targetBirthday.getDate()} ${targetBirthday.toLocaleString('en-GB', { month: 'short' }).toUpperCase()}`, 210, 250);
+        context.fillText(
+          `0${targetBirthday.getDate()} ${targetBirthday.toLocaleString('en-GB', { month: 'short' }).toUpperCase()}`,
+          210,
+          250,
+        );
       } else {
-        context.fillText(`${targetBirthday.getDate()} ${targetBirthday.toLocaleString('en-GB', { month: 'short' }).toUpperCase()}`, 210, 250);
+        context.fillText(
+          `${targetBirthday.getDate()} ${targetBirthday.toLocaleString('en-GB', { month: 'short' }).toUpperCase()}`,
+          210,
+          250,
+        );
       }
     } else {
       context.fillText('NOT SET!', 210, 250);
@@ -391,24 +404,24 @@ export const dProfile: SlashCommand = {
     // Messages Sent Text
     if (profileData.totalTextExp) {
       const MessagesSent = profileData.totalTextExp / 20;
-      context.fillText(`${numFormatter(MessagesSent)}`, 429, 190);
+      context.fillText(numFormatter(MessagesSent), 429, 190);
     } else {
       context.fillText('0', 429, 190);
     }
 
     // Voice Hours Text
     if (profileData.totalTextExp) {
-      const hoursInChat = (profileData.totalVoiceExp / 10 / 60);
+      const hoursInChat = profileData.totalVoiceExp / 10 / 60;
       context.fillText(`${numFormatterVoice(hoursInChat)} HR`, 429, 250);
     } else {
       context.fillText('0 HR', 429, 250);
     }
 
     // Karma Text
-    context.fillText(`${numFormatter(profileData.karma_received)}`, 648, 190);
+    context.fillText(numFormatter(profileData.karma_received), 648, 190);
 
     // Tokens Text
-    context.fillText(`${numFormatter(profileData.tokens)}`, 648, 250);
+    context.fillText(numFormatter(profileData.tokens), 648, 250);
 
     // Level Text
     const totalTextData = await getTotalLevel(profileData.totalTextExp + profileData.totalVoiceExp);
@@ -453,7 +466,7 @@ export const dProfile: SlashCommand = {
     // Level Bar Math
     let percentageOfLevel = 0;
     const expToLevel = await expForNextLevel(totalTextData.level);
-    percentageOfLevel = (totalTextData.level_points / expToLevel);
+    percentageOfLevel = totalTextData.level_points / expToLevel;
     // log.debug(F, `percentageOfLevel: ${percentageOfLevel}`);
 
     // Start at the 0 degrees position, in human terms, the 12 o'clock position
@@ -490,8 +503,12 @@ export const dProfile: SlashCommand = {
 
     // Process The Entire Card and Send it to Discord
     const date = new Date();
-    const formattedDate = date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' }).replace(/ /g, '-');
-    const attachment = new AttachmentBuilder(await canvasObj.encode('png'), { name: `TS_Profile_${filteredDisplayName}_${formattedDate}.png` });
+    const formattedDate = date
+      .toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' })
+      .replaceAll(' ', '-');
+    const attachment = new AttachmentBuilder(await canvasObject.encode('png'), {
+      name: `TS_Profile_${filteredDisplayName}_${formattedDate}.png`,
+    });
     await interaction.editReply({ files: [attachment] });
 
     log.info(F, `Total Time: ${Date.now() - startTime}ms`);
@@ -499,9 +516,13 @@ export const dProfile: SlashCommand = {
   },
 };
 
-export async function getProfilePreview(target: GuildMember, option: string, imagePath?: string, fontName?: string): Promise<Buffer> {
+export async function getProfilePreview(
+  target: GuildMember,
+  option: string,
+  imagePath?: string,
+  fontName?: string,
+): Promise<Buffer> {
   const values = await Promise.allSettled([
-
     // Get the target's profile data from the database
     // await profile(target.id),
     // Check get fresh persona data
@@ -518,19 +539,19 @@ export async function getProfilePreview(target: GuildMember, option: string, ima
   ]);
   // const profileData = values[0].status === 'fulfilled' ? values[0].value : {} as ProfileData;
   // const [personaData] = values[1].status === 'fulfilled' ? values[1].value : [];
-  const Icons = values[0].status === 'fulfilled' ? values[0].value : {} as Canvas.Image;
+  const Icons = values[0].status === 'fulfilled' ? values[0].value : ({} as Canvas.Image);
   // const StatusIcon = values[3].status === 'fulfilled' ? values[3].value : {} as Canvas.Image;
-  const avatar = values[1].status === 'fulfilled' ? values[1].value : {} as Canvas.Image;
+  const avatar = values[1].status === 'fulfilled' ? values[1].value : ({} as Canvas.Image);
   // const birthdayOverlay = values[4].status === 'fulfilled' ? values[4].value : {} as Canvas.Image;
 
   // Create Canvas and Context
   const canvasWidth = 921;
   const canvasHeight = 292;
-  const canvasObj = Canvas.createCanvas(canvasWidth, canvasHeight);
-  const context = canvasObj.getContext('2d');
+  const canvasObject = Canvas.createCanvas(canvasWidth, canvasHeight);
+  const context = canvasObject.getContext('2d');
 
   // Generate the colors for the card based on the user's role color
-  const roleColor = `#${(target.roles.color?.color || 0x99aab5).toString(16).padStart(6, '0')}`;
+  const roleColor = `#${(target.roles.color?.color || 0x99_aa_b5).toString(16).padStart(6, '0')}`;
 
   const cardLightColor = generateColors(roleColor, 0, -75, -67);
   const cardDarkColor = generateColors(roleColor, 0, -75, -80);
@@ -619,7 +640,8 @@ export async function getProfilePreview(target: GuildMember, option: string, ima
   let filteredDisplayName = await deFuckifyText(target.displayName);
   // If the filteredDisplayName is much shorter than what was input, display their username as a fallback
   if (filteredDisplayName.length < target.displayName.length / 2) {
-    filteredDisplayName = target.user.username.charAt(0).toUpperCase() + target.user.username.slice(1);
+    filteredDisplayName =
+      target.user.username.charAt(0).toUpperCase() + target.user.username.slice(1);
   }
 
   context.fillStyle = textColor;
@@ -635,14 +657,14 @@ export async function getProfilePreview(target: GuildMember, option: string, ima
     usernameHeight = 78;
     fontSize = 30;
     context.textBaseline = 'top';
-    context.font = resizeText(canvasObj, userFlair, fontSize, 'futura', maxLength);
-    context.fillText(`${userFlair}`, 146, 100);
+    context.font = resizeText(canvasObject, userFlair, fontSize, 'futura', maxLength);
+    context.fillText(userFlair, 146, 100);
     context.textBaseline = 'bottom';
   }
 
   fontSize = 50;
-  context.font = resizeText(canvasObj, filteredDisplayName, fontSize, userFont, maxLength);
-  context.fillText(`${filteredDisplayName}`, 146, usernameHeight);
+  context.font = resizeText(canvasObject, filteredDisplayName, fontSize, userFont, maxLength);
+  context.fillText(filteredDisplayName, 146, usernameHeight);
   context.textBaseline = 'middle';
 
   /* User Timezone
@@ -779,7 +801,7 @@ export async function getProfilePreview(target: GuildMember, option: string, ima
       context.drawImage(birthdayOverlay, 0, 0, 934, 282);
     } */
 
-  return (canvasObj.encode('png'));
+  return canvasObject.encode('png');
 }
 
 export default dProfile;

@@ -1,24 +1,29 @@
-import {
-  ActionRowBuilder,
-  ButtonBuilder,
+import type {
   ButtonInteraction,
-  ButtonStyle,
-  ChannelType,
   ChatInputCommandInteraction,
   GuildMember,
   InteractionEditReplyOptions,
   InteractionReplyOptions,
   InteractionUpdateOptions,
+  Snowflake,
+  TextChannel,
+  UserSelectMenuInteraction,
+} from 'discord.js';
+
+import { stripIndents } from 'common-tags';
+import {
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
+  ChannelType,
   MessageFlags,
   PermissionFlagsBits,
   SlashCommandBuilder,
-  Snowflake,
-  TextChannel,
   UserSelectMenuBuilder,
-  UserSelectMenuInteraction,
 } from 'discord.js';
-import { stripIndents } from 'common-tags';
-import { SlashCommand } from '../../@types/commandDef';
+
+import type { SlashCommand } from '../../@types/commandDef';
+
 // import { stats } from '../../../global/commands/g.stats';
 import commandContext from '../../utils/context';
 import { embedTemplate } from '../../utils/embedTemplate';
@@ -27,44 +32,41 @@ import { embedTemplate } from '../../utils/embedTemplate';
 const F = f(__filename);
 
 // A dictionary using channelIDs as the key, and an array of messageIDs as the value
-type MessageDict = {
-  [key: string]: string[];
-};
+type MessageDict = Record<string, string[]>;
 
-async function getMessages(
-  interaction: ChatInputCommandInteraction | UserSelectMenuInteraction | ButtonInteraction,
-  selectedUser: Snowflake,
-):Promise<MessageDict> {
-  // Get all the messages this user has sent in the guild in the past two weeks
-  log.debug(F, `InteractionId:  ${interaction.id}`);
+export async function purgeButton(interaction: ButtonInteraction) {
+  log.info(F, await commandContext(interaction));
+  const button = interaction.customId.split('~')[1];
 
-  const messageData = {} as MessageDict;
-
-  // Get all the channels in the guild
-  const channels = await interaction.guild?.channels.fetch();
-  if (!channels) return messageData;
-
-  // Get all the messages in each channel
-  await Promise.all(
-    channels.map(async channel => {
-      if (!channel) return;
-      if (channel.type === ChannelType.GuildText) {
-        const messages = await channel.messages.fetch();
-        const memberMessages = messages.filter(message => message.author.id === selectedUser);
-        if (memberMessages.size > 0) {
-          messageData[channel.id] = memberMessages.map(message => message.id);
-        }
-      }
-    }),
-  );
-
-  // log.debug(F, `messageData: ${JSON.stringify(messageData, null, 2)}`);
-  return messageData;
+  switch (button) {
+    case 'confirm': {
+      await interaction.editReply(await purgeConfirmedPage(interaction));
+      break;
+    }
+    default: {
+      log.error(F, `This shouldn't have happened: ${interaction.customId}`);
+      break;
+    }
+  }
 }
 
-async function deleteMessages(
-  interaction: ButtonInteraction,
-):Promise<void> {
+export async function purgeMenu(interaction: UserSelectMenuInteraction) {
+  log.info(F, await commandContext(interaction));
+  const menu = interaction.customId.split('~')[1];
+
+  switch (menu) {
+    case 'user': {
+      await interaction.update(await purgeMessagesPage(interaction));
+      break;
+    }
+    default: {
+      log.error(F, `This shouldn't have happened: ${interaction.customId}`);
+      break;
+    }
+  }
+}
+
+async function deleteMessages(interaction: ButtonInteraction): Promise<void> {
   // Get messages
   const messageData = await getMessages(interaction, interaction.customId.split('~')[2]);
 
@@ -74,18 +76,81 @@ async function deleteMessages(
       log.debug(F, `Deleting messages in channel ${channel}`);
       // Wait for all message deletions in this channel to complete
       await Promise.all(
-        Object.values(messages).map(async message => {
+        Object.values(messages).map(async (message) => {
           log.debug(F, `Deleting message ${message} in channel ${channel}`);
-          await (interaction.guild?.channels.cache.get(channel) as TextChannel).messages.delete(message);
+          await (interaction.guild?.channels.cache.get(channel) as TextChannel).messages.delete(
+            message,
+          );
         }),
       );
     }),
   );
 }
 
+async function getMessages(
+  interaction: ButtonInteraction | ChatInputCommandInteraction | UserSelectMenuInteraction,
+  selectedUser: Snowflake,
+): Promise<MessageDict> {
+  // Get all the messages this user has sent in the guild in the past two weeks
+  log.debug(F, `InteractionId:  ${interaction.id}`);
+
+  const messageData = {} as MessageDict;
+
+  // Get all the channels in the guild
+  const channels = await interaction.guild?.channels.fetch();
+  if (!channels) {
+    return messageData;
+  }
+
+  // Get all the messages in each channel
+  await Promise.all(
+    channels.map(async (channel) => {
+      if (!channel) {
+        return;
+      }
+      if (channel.type === ChannelType.GuildText) {
+        const messages = await channel.messages.fetch();
+        const memberMessages = messages.filter((message) => message.author.id === selectedUser);
+        if (memberMessages.size > 0) {
+          messageData[channel.id] = memberMessages.map((message) => message.id);
+        }
+      }
+    }),
+  );
+
+  // log.debug(F, `messageData: ${JSON.stringify(messageData, null, 2)}`);
+  return messageData;
+}
+
+async function purgeConfirmedPage(
+  interaction: ButtonInteraction,
+): Promise<InteractionUpdateOptions> {
+  log.debug(F, `purge confirm ${interaction.id}`);
+
+  await interaction.update({
+    components: [],
+    embeds: [
+      embedTemplate()
+        .setTitle('Purge Deletion')
+        .setDescription('Please hold while I delete in your messages. This may take a while.'),
+    ],
+  });
+
+  await deleteMessages(interaction);
+
+  return {
+    components: [],
+    embeds: [
+      embedTemplate()
+        .setTitle('Purge Done')
+        .setDescription(stripIndents`I've deleted your messages!`),
+    ],
+  };
+}
+
 async function purgeMessagesPage(
   interaction: ChatInputCommandInteraction | UserSelectMenuInteraction,
-):Promise<InteractionEditReplyOptions> {
+): Promise<InteractionEditReplyOptions> {
   log.debug(F, `purge messages ${interaction.id}`);
 
   let selectedUser = interaction.user.id;
@@ -116,7 +181,7 @@ async function purgeMessagesPage(
     If you're sure, click the below button and we'll gather all your messages for deletion.`;
 
   // Check if the user who did the interaction has the permission to manage messages
-  const components:ActionRowBuilder<UserSelectMenuBuilder | ButtonBuilder>[] = [
+  const components: ActionRowBuilder<ButtonBuilder | UserSelectMenuBuilder>[] = [
     new ActionRowBuilder<ButtonBuilder>().addComponents([
       new ButtonBuilder()
         .setLabel('Start the purge!')
@@ -142,73 +207,11 @@ async function purgeMessagesPage(
   }
 
   return {
-    embeds: [
-      embedTemplate()
-        .setTitle('So you wanna purge some messages?')
-        .setDescription(explanation),
-    ],
     components,
-  };
-}
-
-async function purgeConfirmedPage(
-  interaction: ButtonInteraction,
-):Promise<InteractionUpdateOptions> {
-  log.debug(F, `purge confirm ${interaction.id}`);
-
-  await interaction.update({
     embeds: [
-      embedTemplate()
-        .setTitle('Purge Deletion')
-        .setDescription('Please hold while I delete in your messages. This may take a while.'),
+      embedTemplate().setTitle('So you wanna purge some messages?').setDescription(explanation),
     ],
-    components: [],
-  });
-
-  await deleteMessages(interaction);
-
-  return {
-    embeds: [
-      embedTemplate()
-        .setTitle('Purge Done')
-        .setDescription(stripIndents`I've deleted your messages!`),
-    ],
-    components: [],
   };
-}
-
-export async function purgeButton(
-  interaction: ButtonInteraction,
-) {
-  log.info(F, await commandContext(interaction));
-  const button = interaction.customId.split('~')[1];
-  // eslint-disable-next-line sonarjs/no-small-switch
-  switch (button) {
-    case 'confirm': {
-      await interaction.editReply(await purgeConfirmedPage(interaction));
-      break;
-    }
-    default:
-      log.error(F, `This shouldn't have happened: ${interaction.customId}`);
-      break;
-  }
-}
-
-export async function purgeMenu(
-  interaction: UserSelectMenuInteraction,
-) {
-  log.info(F, await commandContext(interaction));
-  const menu = interaction.customId.split('~')[1];
-  // eslint-disable-next-line sonarjs/no-small-switch
-  switch (menu) {
-    case 'user': {
-      await interaction.update(await purgeMessagesPage(interaction));
-      break;
-    }
-    default:
-      log.error(F, `This shouldn't have happened: ${interaction.customId}`);
-      break;
-  }
 }
 
 export const dPurge: SlashCommand = {
@@ -216,27 +219,36 @@ export const dPurge: SlashCommand = {
     .setName('purge')
     .setDescription('Purge messages from the server.')
     .setIntegrationTypes([0])
-    .addSubcommand(subcommand => subcommand
-      .setName('messages')
-      .setDescription('Purge messages from the server')
-      .addBooleanOption(option => option.setName('private')
-        .setDescription('Set to "True" to show the response only to you'))),
+    .addSubcommand((subcommand) =>
+      subcommand
+        .setName('messages')
+        .setDescription('Purge messages from the server')
+        .addBooleanOption((option) =>
+          option
+            .setName('private')
+            .setDescription('Set to "True" to show the response only to you'),
+        ),
+    ),
   async execute(interaction) {
-    if (!interaction.channel) return false;
-    if (!interaction.guild) return false;
+    if (!interaction.channel) {
+      return false;
+    }
+    if (!interaction.guild) {
+      return false;
+    }
     log.info(F, await commandContext(interaction));
     const command = interaction.options.getSubcommand() as 'messages';
     // By default we want to make the reply private
-    const ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined;
+    const ephemeral = interaction.options.getBoolean('ephemeral')
+      ? MessageFlags.Ephemeral
+      : undefined;
     await interaction.deferReply({ flags: ephemeral });
-    // eslint-disable-next-line sonarjs/no-small-switch
+
     switch (command) {
       case 'messages': {
-        if (interaction.deferred) {
-          await interaction.editReply(await purgeMessagesPage(interaction));
-        } else {
-          await interaction.reply(await purgeMessagesPage(interaction) as InteractionReplyOptions);
-        }
+        await (interaction.deferred
+          ? interaction.editReply(await purgeMessagesPage(interaction))
+          : interaction.reply((await purgeMessagesPage(interaction)) as InteractionReplyOptions));
         return true;
       }
       default: {

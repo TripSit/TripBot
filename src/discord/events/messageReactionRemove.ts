@@ -2,18 +2,18 @@
 //   MessageReaction,
 //   User,
 // } from 'discord.js';
-import {
-  MessageReactionRemoveEvent,
-} from '../@types/eventDef';
+import type { MessageReactionRemoveEvent } from '../@types/eventDef';
+
 import { chitragupta } from '../utils/chitragupta';
 
 const F = f(__filename);
 
 export const messageReactionRemove: MessageReactionRemoveEvent = {
-  name: 'messageReactionRemove',
   async execute(reaction, user) {
     // Only run on Tripsit, we don't want to snoop on other guilds ( ͡~ ͜ʖ ͡°)
-    if (reaction.message.guild?.id !== env.DISCORD_GUILD_ID) return;
+    if (reaction.message.guild?.id !== env.DISCORD_GUILD_ID) {
+      return;
+    }
     log.info(F, `${user.displayName}(${user.id}) removed a reaction`);
 
     // log.debug(F, `reaction: ${JSON.stringify(reaction.emoji.name, null, 2)}`);
@@ -33,8 +33,8 @@ export const messageReactionRemove: MessageReactionRemoveEvent = {
       // log.debug(F, `reaction is partial!`);
       // If the message this reaction belongs to was removed,
       // the fetching might result in an API error which should be handled
-      await reaction.fetch().catch(ex => {
-        log.error(F, `reaction3: ${JSON.stringify(ex, null, 4)}`);
+      await reaction.fetch().catch((error) => {
+        log.error(F, `reaction3: ${JSON.stringify(error, null, 4)}`);
       });
     }
 
@@ -46,6 +46,7 @@ export const messageReactionRemove: MessageReactionRemoveEvent = {
     // }
     chitragupta(reaction, user, -1);
   },
+  name: 'messageReactionRemove',
 };
 
 export default messageReactionRemove;

@@ -1,13 +1,12 @@
-import {
-  SlashCommandBuilder,
-  ChatInputCommandInteraction,
-  Colors,
-  MessageFlags,
-} from 'discord.js';
+import type { ChatInputCommandInteraction } from 'discord.js';
+
 import { stripIndents } from 'common-tags';
-import { SlashCommand } from '../../@types/commandDef';
-import { embedTemplate } from '../../utils/embedTemplate';
+import { Colors, MessageFlags, SlashCommandBuilder } from 'discord.js';
+
+import type { SlashCommand } from '../../@types/commandDef';
+
 import commandContext from '../../utils/context';
+import { embedTemplate } from '../../utils/embedTemplate';
 
 // import log from '../../../global/utils/log';
 
@@ -18,21 +17,24 @@ export const dH2flow: SlashCommand = {
     .setName('h2flow')
     .setDescription('Welcome to the H2Flow Club!')
     .setIntegrationTypes([0])
-    .addBooleanOption(option => option.setName('ephemeral')
-      .setDescription('Set to "True" to show the response only to you')) as SlashCommandBuilder,
+    .addBooleanOption((option) =>
+      option.setName('ephemeral').setDescription('Set to "True" to show the response only to you'),
+    ) as SlashCommandBuilder,
 
-  async execute(interaction:ChatInputCommandInteraction) {
+  async execute(interaction: ChatInputCommandInteraction) {
     log.info(F, await commandContext(interaction));
-    const ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined;
+    const ephemeral = interaction.options.getBoolean('ephemeral')
+      ? MessageFlags.Ephemeral
+      : undefined;
     await interaction.deferReply({ flags: ephemeral });
     const userData = await db.users.upsert({
-      where: {
-        discord_id: interaction.user.id,
-      },
       create: {
         discord_id: interaction.user.id,
       },
       update: {},
+      where: {
+        discord_id: interaction.user.id,
+      },
     });
 
     const sparklePoints = userData.sparkle_points;
@@ -40,21 +42,37 @@ export const dH2flow: SlashCommand = {
     const lovePoints = userData.empathy_points;
     const totalPoints = sparklePoints + movePoints + lovePoints;
     let platinumClub = 'Non-member =(';
-    if (totalPoints >= 1000) platinumClub = 'Diamond Club';
-    else if (totalPoints >= 900) platinumClub = 'Ruby Club';
-    else if (totalPoints >= 800) platinumClub = 'Sapphire Club';
-    else if (totalPoints >= 700) platinumClub = 'Emerald Club';
-    else if (totalPoints >= 600) platinumClub = 'Platinum Club';
-    else if (totalPoints >= 500) platinumClub = 'Gold Club';
-    else if (totalPoints >= 400) platinumClub = 'Silver Club';
-    else if (totalPoints >= 300) platinumClub = 'Bronze Club';
-    else if (totalPoints >= 200) platinumClub = 'Copper Club';
-    else if (totalPoints >= 100) platinumClub = 'Tin Club';
-    else if (totalPoints >= 50) platinumClub = 'Aluminum Club';
-    else if (totalPoints >= 25) platinumClub = 'Steel Club';
-    else if (totalPoints >= 10) platinumClub = 'Iron Club';
-    else if (totalPoints >= 5) platinumClub = 'Bronze Club';
-    else if (totalPoints >= 1) platinumClub = 'Copper Club';
+    if (totalPoints >= 1000) {
+      platinumClub = 'Diamond Club';
+    } else if (totalPoints >= 900) {
+      platinumClub = 'Ruby Club';
+    } else if (totalPoints >= 800) {
+      platinumClub = 'Sapphire Club';
+    } else if (totalPoints >= 700) {
+      platinumClub = 'Emerald Club';
+    } else if (totalPoints >= 600) {
+      platinumClub = 'Platinum Club';
+    } else if (totalPoints >= 500) {
+      platinumClub = 'Gold Club';
+    } else if (totalPoints >= 400) {
+      platinumClub = 'Silver Club';
+    } else if (totalPoints >= 300) {
+      platinumClub = 'Bronze Club';
+    } else if (totalPoints >= 200) {
+      platinumClub = 'Copper Club';
+    } else if (totalPoints >= 100) {
+      platinumClub = 'Tin Club';
+    } else if (totalPoints >= 50) {
+      platinumClub = 'Aluminum Club';
+    } else if (totalPoints >= 25) {
+      platinumClub = 'Steel Club';
+    } else if (totalPoints >= 10) {
+      platinumClub = 'Iron Club';
+    } else if (totalPoints >= 5) {
+      platinumClub = 'Bronze Club';
+    } else if (totalPoints >= 1) {
+      platinumClub = 'Copper Club';
+    }
 
     const embed = embedTemplate()
       .setAuthor({
@@ -63,7 +81,8 @@ export const dH2flow: SlashCommand = {
       })
       .setThumbnail('https://i.imgur.com/2niEJJO.png')
       .setColor(Colors.Blue)
-      .setDescription(stripIndents`
+      .setDescription(
+        stripIndents`
       These are not useless internet points✨
       This is an emoji-based social🌐media experience!
       Think about H2Flow as app📱for your health 🩺
@@ -75,23 +94,24 @@ export const dH2flow: SlashCommand = {
       **🌊AquaBadge🔰** or **💖LoveCup🏆** or **🏃Move Medal🏅**!
       Get enough 🌊🔰, 💖🏆 or 🏃🏅 and you'll level up!
       Level up enough and we'll welcome you to the fabled
-      ☆ﾟ.*･｡ﾟ☆ﾟ.*･｡ﾟ🥇*H2Flow Club*🥇☆ﾟ.*･｡ﾟ☆ﾟ.*･｡ﾟ`)
+      ☆ﾟ.*･｡ﾟ☆ﾟ.*･｡ﾟ🥇*H2Flow Club*🥇☆ﾟ.*･｡ﾟ☆ﾟ.*･｡ﾟ`,
+      )
       .setFooter({ text: `H2Flow Club Status: ${platinumClub}` })
       .addFields(
         {
+          inline: true,
           name: `**${Math.floor(userData.sparkle_points / 10)}** 🌊Aqua Badges🔰`,
           value: `${userData.sparkle_points} sparkle points`,
-          inline: true,
         },
         {
+          inline: true,
           name: `**${Math.floor(userData.empathy_points / 10)}** 💖Love Cups🏆`,
           value: `${userData.empathy_points} empathy points`,
-          inline: true,
         },
         {
+          inline: true,
           name: `**${Math.floor(userData.move_points / 10)}** 🏃Move Medals🏅`,
           value: `${userData.move_points} active points`,
-          inline: true,
         },
       );
 

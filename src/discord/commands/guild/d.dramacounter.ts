@@ -1,15 +1,13 @@
-import {
-  time,
-  SlashCommandBuilder,
-  MessageFlags,
-} from 'discord.js';
-import { DateTime } from 'luxon';
 import { stripIndents } from 'common-tags';
+import { MessageFlags, SlashCommandBuilder, time } from 'discord.js';
+import { DateTime } from 'luxon';
+
+import type { SlashCommand } from '../../@types/commandDef';
+
 import { dramacounter } from '../../../global/commands/g.dramacounter';
+import { parseDuration } from '../../../global/utils/parseDuration';
 import commandContext from '../../utils/context';
 import { embedTemplate } from '../../utils/embedTemplate';
-import { SlashCommand } from '../../@types/commandDef';
-import { parseDuration } from '../../../global/utils/parseDuration';
 
 const F = f(__filename);
 
@@ -18,25 +16,38 @@ export const dDramacounter: SlashCommand = {
     .setName('dramacounter')
     .setDescription('How long since the last drama incident?!')
     .setIntegrationTypes([0])
-    .addSubcommand(subcommand => subcommand
-      .setName('get')
-      .setDescription('Get the time since last drama.')
-      .addBooleanOption(option => option.setName('ephemeral')
-        .setDescription('Set to "True" to show the response only to you')))
-    .addSubcommand(subcommand => subcommand
-      .setName('set')
-      .setDescription('Set the dramacounter >.<')
-      .addStringOption(option => option
-        .setName('dramatime')
-        .setDescription('When did the drama happen? "3 hours (ago)"')
-        .setRequired(true))
-      .addStringOption(option => option
-        .setName('dramaissue')
-        .setDescription('What was the drama? Be descriptive, or cryptic.')
-        .setRequired(true))),
+    .addSubcommand((subcommand) =>
+      subcommand
+        .setName('get')
+        .setDescription('Get the time since last drama.')
+        .addBooleanOption((option) =>
+          option
+            .setName('ephemeral')
+            .setDescription('Set to "True" to show the response only to you'),
+        ),
+    )
+    .addSubcommand((subcommand) =>
+      subcommand
+        .setName('set')
+        .setDescription('Set the dramacounter >.<')
+        .addStringOption((option) =>
+          option
+            .setName('dramatime')
+            .setDescription('When did the drama happen? "3 hours (ago)"')
+            .setRequired(true),
+        )
+        .addStringOption((option) =>
+          option
+            .setName('dramaissue')
+            .setDescription('What was the drama? Be descriptive, or cryptic.')
+            .setRequired(true),
+        ),
+    ),
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
-    const ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined;
+    const ephemeral = interaction.options.getBoolean('ephemeral')
+      ? MessageFlags.Ephemeral
+      : undefined;
     await interaction.deferReply({ flags: ephemeral });
     const command = interaction.options.getSubcommand() as 'get' | 'set';
 
@@ -49,13 +60,15 @@ export const dDramacounter: SlashCommand = {
     let lastDramaAt = {} as Date;
     let dramaReason = '';
     if (command === 'set') {
-      const dramaVal = interaction.options.getString('dramatime');
+      const dramaValue = interaction.options.getString('dramatime');
       // log.debug(F, `dramaVal: ${JSON.stringify(dramaVal, null, 2)}`);
-      if (!dramaVal) {
-        await interaction.editReply({ content: 'You need to specify a time for the drama to have happened.' });
+      if (!dramaValue) {
+        await interaction.editReply({
+          content: 'You need to specify a time for the drama to have happened.',
+        });
         return false;
       }
-      const dramatimeValue = await parseDuration(dramaVal);
+      const dramatimeValue = await parseDuration(dramaValue);
       // log.debug(F, `dramatimeValue: ${JSON.stringify(dramatimeValue, null, 2)}`);
       const dramaIssue = interaction.options.getString('dramaissue');
       // log.debug(F, `dramaIssue: ${JSON.stringify(dramaIssue, null, 2)}`);
@@ -70,8 +83,7 @@ export const dDramacounter: SlashCommand = {
 
     const response = await dramacounter(command, interaction.guild.id, lastDramaAt, dramaReason);
 
-    const embed = embedTemplate()
-      .setTitle('Drama Counter');
+    const embed = embedTemplate().setTitle('Drama Counter');
 
     if (command === 'get') {
       if (!response.lastDramaAt) {

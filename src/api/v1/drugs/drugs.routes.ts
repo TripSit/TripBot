@@ -1,4 +1,3 @@
-/* eslint-disable sonarjs/no-duplicate-string */
 import express from 'express';
 import RateLimit from 'express-rate-limit';
 
@@ -10,191 +9,211 @@ const router = express.Router();
 
 // set up rate limiter: maximum of five requests per minute
 const limiter = RateLimit({
-  windowMs: 1 * 60 * 1000, // 1 minute
   max: 5,
+  windowMs: 1 * 60 * 1000, // 1 minute
 });
 
 // apply rate limiter to all requests
 router.use(limiter);
 
 // getInteraction - readme
-router.get('/getInteraction', (req, res) => {
+router.get('/getInteraction', (request, res) => {
   res.json({
+    example: '/getInteraction/DXM/MDMA',
     input: {
       drugA: 'string',
       drugB: 'string',
     },
-    example: '/getInteraction/DXM/MDMA',
     output: {
-      success: {
-        result: 'string',
-        interactionCategoryA: 'string',
-        interactionCategoryB: 'string',
-        definition: 'string?',
-        thumbnail: 'string?',
-        color: 'string?',
-        note: 'string?',
-        source: 'string?',
-      },
       error: {
         err: 'boolean',
         msg: 'string',
         options: 'string[]',
+      },
+      success: {
+        color: 'string?',
+        definition: 'string?',
+        interactionCategoryA: 'string',
+        interactionCategoryB: 'string',
+        note: 'string?',
+        result: 'string',
+        source: 'string?',
+        thumbnail: 'string?',
       },
     },
   });
 });
 
 // getInteraction - function
-router.get('/getInteraction/:drugAName/:drugBName', async (req, res, next) => {
-  const { drugAName, drugBName } = req.params;
+router.get('/getInteraction/:drugAName/:drugBName', async (request, res, next) => {
+  const { drugAName, drugBName } = request.params;
   // console.log('drugAName', drugAName);
   // console.log('drugBName', drugBName);
   try {
-    if (drugAName === 'error') throw new Error('error');
-    if (drugBName === 'error') throw new Error('error');
+    if (drugAName === 'error') {
+      throw new Error('error');
+    }
+    if (drugBName === 'error') {
+      throw new Error('error');
+    }
     const result = await queries.getInteraction(drugAName, drugBName);
     // log.debug(F, `result: ${JSON.stringify(result)}`);
     if (result) {
       return res.json({
-        err: null,
         data: [result],
+        err: null,
       });
     }
-    return next();
+    next();
+    return;
   } catch (error) {
-    return next(error);
+    next(error);
+    return;
   }
 });
 
 // getDrug - readme
-router.get('/getDrug', (req, res) => {
+router.get('/getDrug', (request, res) => {
   res.json({
+    example: '/getDrug/DXM',
     input: {
       drugName: 'string',
     },
-    example: '/getDrug/DXM',
     output: {
-      success: 'Drug Object, see github./com/tripsit/drugs for type info',
       error: {
         err: 'boolean',
         msg: 'string',
         options: 'string[]',
       },
+      success: 'Drug Object, see github./com/tripsit/drugs for type info',
     },
   });
 });
 
 // getDrug - function
-router.get('/getDrug/:name', async (req, res, next) => {
-  const { name } = req.params;
+router.get('/getDrug/:name', async (request, res, next) => {
+  const { name } = request.params;
   // log.debug(F, `name: ${name}`);
   try {
-    if (name === 'error') throw new Error('error');
-    const result = await queries.getDrug(name);
+    if (name === 'error') {
+      throw new Error('error');
+    }
+    const result = queries.getDrug(name);
     // log.debug(F, `result: ${JSON.stringify(result)}`);
     if (result) {
       return res.json({
-        err: null,
         data: [result],
+        err: null,
       });
     }
-    return next();
+    next();
+    return;
   } catch (error) {
-    return next(error);
+    next(error);
+    return;
   }
 });
 
 // getAllDrugNames
-router.get('/getAllDrugNames', async (req, res, next) => {
+router.get('/getAllDrugNames', async (request, res, next) => {
   try {
     const result = await queries.getAllDrugNames();
     if (result) {
       return res.json({
-        err: null,
         data: [result],
+        err: null,
       });
     }
-    return next();
+    next();
+    return;
   } catch (error) {
-    return next(error);
+    next(error);
+    return;
   }
 });
 
 // getAllDrugNamesByCategory
-router.get('/getAllDrugNamesByCategory', (req, res) => {
+router.get('/getAllDrugNamesByCategory', (request, res) => {
   res.json({
     endpoint: 'getAllDrugNamesByCategory',
-    properties: [
-      '/category',
-    ],
     example: '/getAllDrugNamesByCategory/stimulants',
+    properties: ['/category'],
   });
 });
 
-router.get('/getAllDrugNamesByCategory/:category', async (req, res, next) => {
-  const { category } = req.params;
+router.get('/getAllDrugNamesByCategory/:category', async (request, res, next) => {
+  const { category } = request.params;
   // console.log('category', category);
   try {
-    if (category === 'error') throw new Error('error');
+    if (category === 'error') {
+      throw new Error('error');
+    }
     const result = await queries.getAllDrugNamesByCategory(category);
     if (result) {
       return res.json({
-        err: null,
         data: [result],
+        err: null,
       });
     }
-    return next();
+    next();
+    return;
   } catch (error) {
-    return next(error);
+    next(error);
+    return;
   }
 });
 
 // getAllDrugs
-router.get('/getAllDrugs', async (req, res, next) => {
+router.get('/getAllDrugs', async (request, res, next) => {
   try {
     const result = await queries.getAllDrugs();
     if (result) {
       return res.json({
-        err: null,
         data: [result],
+        err: null,
       });
     }
-    return next();
+    next();
+    return;
   } catch (error) {
-    return next(error);
+    next(error);
+    return;
   }
 });
 
 // getAllCategories
-router.get('/getAllCategories', async (req, res, next) => {
+router.get('/getAllCategories', async (request, res, next) => {
   try {
     const result = await queries.getAllCategories();
     if (result) {
       return res.json({
-        err: null,
         data: [result],
+        err: null,
       });
     }
-    return next();
+    next();
+    return;
   } catch (error) {
-    return next(error);
+    next(error);
+    return;
   }
 });
 
 // getAllDrugAliases
-router.get('/getAllDrugAliases', async (req, res, next) => {
+router.get('/getAllDrugAliases', async (request, res, next) => {
   try {
     const result = await queries.getAllDrugAliases();
     if (result) {
       return res.json({
-        err: null,
         data: [result],
+        err: null,
       });
     }
-    return next();
+    next();
+    return;
   } catch (error) {
-    return next(error);
+    next(error);
+    return;
   }
 });
 

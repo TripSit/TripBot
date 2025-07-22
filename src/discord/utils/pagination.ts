@@ -1,15 +1,13 @@
-import {
+import type {
+  ButtonInteraction,
   CommandInteraction,
   EmbedBuilder,
-  ButtonBuilder,
-  ActionRowBuilder,
+  Interaction,
   Message,
-  ButtonInteraction,
 } from 'discord.js';
-import {
-  ButtonStyle,
-  MessageFlags,
-} from 'discord-api-types/v10';
+
+import { ButtonStyle, MessageFlags } from 'discord-api-types/v10';
+import { ActionRowBuilder, ButtonBuilder } from 'discord.js';
 // import log from '../../global/utils/log';
 // import {parse} from 'path';
 // const F = f(__filename);
@@ -26,10 +24,7 @@ const nextButton = new ButtonBuilder()
   .setLabel('Next')
   .setStyle(ButtonStyle.Success);
 
-const buttonList = [
-  previousButton,
-  nextButton,
-];
+const buttonList = [previousButton, nextButton];
 
 /**
  * Creates a pagination embed
@@ -39,12 +34,12 @@ const buttonList = [
  * @return {Promise<void>}
  */
 export async function paginationEmbed(
-  interaction:CommandInteraction,
-  pages:EmbedBuilder[],
-  timeout = 120000,
-  ephemeral:boolean = false,
+  interaction: CommandInteraction,
+  pages: EmbedBuilder[],
+  timeout = 120_000,
+  ephemeral = false,
 ): Promise<Message> {
-  if (interaction.deferred === false) {
+  if (!interaction.deferred) {
     await interaction.deferReply({ flags: ephemeral ? MessageFlags.Ephemeral : undefined });
   }
   // log.debug(`${PREFIX} - Paginating ${pages.length} pages.`);
@@ -53,42 +48,42 @@ export async function paginationEmbed(
 
   const row = new ActionRowBuilder<ButtonBuilder>().addComponents(buttonList);
 
-  const curPage = await interaction.editReply({
-    embeds: [
-      pages[page].setFooter({ text: `Page ${page + 1} / ${pages.length}` }),
-    ],
+  const currentPage = await interaction.editReply({
     components: [row],
+    embeds: [pages[page].setFooter({ text: `Page ${page + 1} / ${pages.length}` })],
   });
 
   // There is a bug in the typescript definition of the buttonList[x].data.customId
-  // @ts-ignore https://discord.com/channels/222078108977594368/824411059443204127/1013418391584899202
-  const filter = (i:Interaction) => i.customId === buttonList[1].data.custom_id // @ts-ignore
-    || i.customId === buttonList[0].data.custom_id;
+  const filter = (index: Interaction) =>
+    // @ts-expect-error Actually works
+    index.customId === buttonList[1].data.custom_id ||
+    index.customId === buttonList[0].data.custom_id;
 
-  const collector = curPage.createMessageComponentCollector({
+  const collector = currentPage.createMessageComponentCollector({
     filter,
     time: timeout,
   });
 
-  collector.on('collect', async (i:ButtonInteraction) => {
-    switch (i.customId) {
+  collector.on('collect', async (index: ButtonInteraction) => {
+    switch (index.customId) {
       // @ts-ignore
-      case buttonList[0].data.custom_id:
+      case buttonList[0].data.custom_id: {
         page = page > 0 ? page - 1 : pages.length - 1;
         break;
+      }
       // @ts-ignore
-      case buttonList[1].data.custom_id:
+      case buttonList[1].data.custom_id: {
         page = page + 1 < pages.length ? page + 1 : 0;
         break;
-      default:
+      }
+      default: {
         break;
+      }
     }
-    await i.deferUpdate();
-    await i.editReply({
-      embeds: [
-        pages[page].setFooter({ text: `Page ${page + 1} / ${pages.length}` }),
-      ],
+    await index.deferUpdate();
+    await index.editReply({
       components: [row],
+      embeds: [pages[page].setFooter({ text: `Page ${page + 1} / ${pages.length}` })],
     });
     collector.resetTimer();
   });
@@ -99,14 +94,12 @@ export async function paginationEmbed(
         buttonList[0].setDisabled(true),
         buttonList[1].setDisabled(true),
       );
-      curPage.edit({
-        embeds: [
-          pages[page].setFooter({ text: `Page ${page + 1} / ${pages.length}` }),
-        ],
+      currentPage.edit({
         components: [disabledRow],
+        embeds: [pages[page].setFooter({ text: `Page ${page + 1} / ${pages.length}` })],
       });
     }
   });
 
-  return curPage;
+  return currentPage;
 }

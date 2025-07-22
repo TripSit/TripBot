@@ -1,9 +1,9 @@
-import {
-  SlashCommandBuilder,
-  ChatInputCommandInteraction,
-  MessageFlags,
-} from 'discord.js';
-import { SlashCommand } from '../../@types/commandDef';
+import type { ChatInputCommandInteraction } from 'discord.js';
+
+import { MessageFlags, SlashCommandBuilder } from 'discord.js';
+
+import type { SlashCommand } from '../../@types/commandDef';
+
 import { grounding } from '../../../global/commands/g.grounding';
 import commandContext from '../../utils/context';
 // import log from '../../../global/utils/log';
@@ -15,11 +15,14 @@ export const dGrounding: SlashCommand = {
     .setDescription('Send an image with the 5-senses grounding exercise')
     .setContexts([0, 1, 2])
     .setIntegrationTypes([0, 1])
-    .addBooleanOption(option => option.setName('ephemeral')
-      .setDescription('Set to "True" to show the response only to you')) as SlashCommandBuilder,
-  async execute(interaction:ChatInputCommandInteraction) {
+    .addBooleanOption((option) =>
+      option.setName('ephemeral').setDescription('Set to "True" to show the response only to you'),
+    ) as SlashCommandBuilder,
+  async execute(interaction: ChatInputCommandInteraction) {
     log.info(F, await commandContext(interaction));
-    const ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined;
+    const ephemeral = interaction.options.getBoolean('ephemeral')
+      ? MessageFlags.Ephemeral
+      : undefined;
     await interaction.deferReply({ flags: ephemeral });
     await interaction.editReply({ content: await grounding() });
     try {

@@ -1,8 +1,4 @@
-import {
-  Role,
-  SlashCommandBuilder,
-  TextChannel,
-} from 'discord.js';
+import { SlashCommandBuilder, TextChannel } from 'discord.js';
 import { SlashCommand } from '../../@types/commandDef';
 import commandContext from '../../utils/context';
 import { embedTemplate } from '../../utils/embedTemplate';
@@ -19,61 +15,85 @@ export const dTemplate: SlashCommand = {
 
     await interaction.reply({ content: 'okay' });
 
-    if (!(interaction.channel instanceof TextChannel)) return false;
+    if (!(interaction.channel instanceof TextChannel)) {
+      return false;
+    }
 
     // Get a list of people on the guild with the Helper role
-    const helpers = await interaction.guild?.roles.fetch(env.ROLE_HELPER) as Role;
+    const helpers = await interaction.guild?.roles.fetch(env.ROLE_HELPER);
+    if (!helpers) {
+      await interaction.channel.send({
+        embeds: [embedTemplate().setTitle('No helpers found')],
+      });
+      return false;
+    }
 
     // Send a message to the channel with a list of the helper username and IDs
 
-    await interaction.channel?.send({
+    await interaction.channel.send({
       embeds: [
         embedTemplate()
           .setTitle('Helpers')
-          .setDescription(helpers?.members.map(member => `${member.user.username} (${member.id})`).join('\n')),
+          .setDescription(
+            helpers.members.map((member) => `${member.user.username} (${member.id})`).join('\n'),
+          ),
       ],
     });
 
     // Get a list of people on the guild with the Tripsitting 101 role
-    const tripsitters = await interaction.guild?.roles.fetch(env.ROLE_TRIPSITTING_101) as Role;
+    const tripsitters = await interaction.guild?.roles.fetch(env.ROLE_TRIPSITTING_101);
+    if (!tripsitters) {
+      await interaction.channel.send({
+        embeds: [embedTemplate().setTitle('No tripsitters found')],
+      });
+      return false;
+    }
 
     // Send a message to the channel with a list of the tripsitter101 username and IDs
-    await interaction.channel?.send({
+    await interaction.channel.send({
       embeds: [
         embedTemplate()
           .setTitle('Completed Course')
-          .setDescription(tripsitters?.members.map(member => `${member.user.username} (${member.id})`).join('\n')),
+          .setDescription(
+            tripsitters.members
+              .map((member) => `${member.user.username} (${member.id})`)
+              .join('\n'),
+          ),
       ],
     });
 
     // Get a list of people with both roles
-    const both = helpers?.members.filter(member => tripsitters?.members.has(member.id));
+    const both = helpers.members.filter((member) => tripsitters.members.has(member.id));
 
     // Send a message to the channel with a list of the people with both roles
-    await interaction.channel?.send({
+    await interaction.channel.send({
       embeds: [
         embedTemplate()
           .setTitle('Helpers with Completed Course')
-          .setDescription(both?.map(member => `${member.user.username} (${member.id})`).join('\n')),
+          .setDescription(
+            both.map((member) => `${member.user.username} (${member.id})`).join('\n'),
+          ),
       ],
     });
 
     // Give those people the Verified Helper role
     // This needs to be an async forEach because we're awaiting the addRole
-    // eslint-disable-next-line no-restricted-syntax
+
     for (const member of both.values()) {
       log.debug(F, `Adding Verified Helper role to ${member.user.username} (${member.id})`);
-      // eslint-disable-next-line no-await-in-loop
+
       await member.roles.add(env.ROLE_VERIFIED_HELPER);
       log.debug(F, `Added Verified Helper role to ${member.user.username} (${member.id})`);
     }
 
     // Send a message to the channel when this is completed
-    await interaction.channel?.send({
+    await interaction.channel.send({
       embeds: [
         embedTemplate()
           .setTitle('Completed')
-          .setDescription('All helpers with the Tripsitting 101 role have been given the Verified Helper role.'),
+          .setDescription(
+            'All helpers with the Tripsitting 101 role have been given the Verified Helper role.',
+          ),
       ],
     });
 

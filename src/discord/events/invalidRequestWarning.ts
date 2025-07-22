@@ -1,18 +1,17 @@
-import {
-  TextChannel,
-} from 'discord.js';
-import { InvalidRequestWarningEvent } from '../@types/eventDef';
+import type { TextChannel } from 'discord.js';
+
+import type { InvalidRequestWarningEvent } from '../@types/eventDef';
 
 const F = f(__filename);
 
 export const invalidRequestWarning: InvalidRequestWarningEvent = {
-  name: 'invalidRequestWarning',
   async execute(invalidRequestWarningData) {
-    const botlog = await discordClient.channels.fetch(env.CHANNEL_BOTERRORS) as TextChannel;
-    const response = `Invalid request warning count: ${invalidRequestWarningData.count} Time left: ${invalidRequestWarningData.remainingTime})`; // eslint-disable-line max-len
+    const botlog = (await discordClient.channels.fetch(env.CHANNEL_BOTERRORS)) as TextChannel;
+    const response = `Invalid request warning count: ${invalidRequestWarningData.count} Time left: ${invalidRequestWarningData.remainingTime})`;
     await botlog.send(response);
-    log.error(F, `${response}`);
+    log.error(F, response);
   },
+  name: 'invalidRequestWarning',
 };
 
 export default invalidRequestWarning;

@@ -1,13 +1,12 @@
-import {
-  SlashCommandBuilder,
-  ChatInputCommandInteraction,
-  GuildMember,
-  MessageFlags,
-} from 'discord.js';
+import type { ChatInputCommandInteraction, GuildMember } from 'discord.js';
+
 import { stripIndents } from 'common-tags';
-import { SlashCommand } from '../../@types/commandDef';
+import { MessageFlags, SlashCommandBuilder } from 'discord.js';
+
+import type { SlashCommand } from '../../@types/commandDef';
+
 import commandContext from '../../utils/context';
-import { modResponse } from '../../utils/modUtils';
+import { modResponse as moduleResponse } from '../../utils/modUtils';
 
 const F = f(__filename);
 
@@ -16,26 +15,26 @@ export const dReport: SlashCommand = {
     .setName('report')
     .setDescription('Report a user')
     .setIntegrationTypes([0])
-    .addStringOption(option => option
-      .setDescription('User to report!')
-      .setRequired(true)
-      .setName('target')) as SlashCommandBuilder,
+    .addStringOption((option) =>
+      option.setDescription('User to report!').setRequired(true).setName('target'),
+    ) as SlashCommandBuilder,
 
   async execute(interaction: ChatInputCommandInteraction) {
-    if (!interaction.guild) return false;
+    if (!interaction.guild) {
+      return false;
+    }
     log.info(F, await commandContext(interaction));
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
     // Get the guild
     const { guild } = interaction;
     const guildData = await db.discord_guilds.upsert({
-      where: {
-        id: guild.id,
-      },
       create: {
         id: guild.id,
       },
-      update: {
+      update: {},
+      where: {
+        id: guild.id,
       },
     });
 
@@ -53,8 +52,9 @@ export const dReport: SlashCommand = {
     // Get the actor
     const actor = interaction.member as GuildMember;
     // Determine if the actor is a mod
-    const actorIsMod = (!!guildData.role_moderator && actor.roles.cache.has(guildData.role_moderator));
-    await interaction.editReply(await modResponse(interaction, 'REPORT', actorIsMod));
+    const actorIsModule =
+      Boolean(guildData.role_moderator) && actor.roles.cache.has(guildData.role_moderator);
+    await interaction.editReply(await moduleResponse(interaction, 'REPORT', actorIsModule));
     return true;
   },
 };

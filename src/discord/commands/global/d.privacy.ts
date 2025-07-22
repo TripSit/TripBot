@@ -1,12 +1,11 @@
-import {
-  MessageFlags,
-  SlashCommandBuilder,
-} from 'discord.js';
 import { stripIndents } from 'common-tags';
-import { SlashCommand } from '../../@types/commandDef';
+import { MessageFlags, SlashCommandBuilder } from 'discord.js';
+
+import type { SlashCommand } from '../../@types/commandDef';
+
 import { privacy } from '../../../global/commands/g.privacy';
-import { embedTemplate } from '../../utils/embedTemplate';
 import commandContext from '../../utils/context';
+import { embedTemplate } from '../../utils/embedTemplate';
 
 const F = f(__filename);
 
@@ -15,34 +14,37 @@ export const dPrivacy: SlashCommand = {
     .setName('privacy')
     .setDescription('See and manage how TripSit uses your data!')
     .setIntegrationTypes([0])
-    .addSubcommand(subcommand => subcommand
-      .setName('get')
-      .setDescription('Get what data is stored on your user!'))
-    .addSubcommand(subcommand => subcommand
-      .setName('delete')
-      .setDescription('Instructions on deleting your data!')
-      .addStringOption(option => option.setName('confirmation')
-        .setDescription('Enter your confirmation code to delete your data!'))),
+    .addSubcommand((subcommand) =>
+      subcommand.setName('get').setDescription('Get what data is stored on your user!'),
+    )
+    .addSubcommand((subcommand) =>
+      subcommand
+        .setName('delete')
+        .setDescription('Instructions on deleting your data!')
+        .addStringOption((option) =>
+          option
+            .setName('confirmation')
+            .setDescription('Enter your confirmation code to delete your data!'),
+        ),
+    ),
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
-    const command = interaction.options.getSubcommand() as 'get' | 'delete';
+    const command = interaction.options.getSubcommand() as 'delete' | 'get';
     const embed = embedTemplate();
 
     const userData = await privacy('get', interaction.user.id);
 
     if (command === 'get') {
-      embed.setTitle('Your Data')
-        .setDescription(`Here is what data we store on you: ${userData}`);
+      embed.setTitle('Your Data').setDescription(`Here is what data we store on you: ${userData}`);
     } else if (command === 'delete') {
       const confirmation = interaction.options.getString('confirmation');
       if (confirmation === 'YesPlease!') {
         const userDeleteData = await privacy('delete', interaction.user.id);
-        embed.setTitle('Deleting Your Data')
-          .setDescription(`Your data was deleted:
+        embed.setTitle('Deleting Your Data').setDescription(`Your data was deleted:
           ${userDeleteData}`);
       } else {
-        embed.setTitle('Are you sure?') /* eslint-disable max-len */
+        embed.setTitle('Are you sure?')
           .setDescription(stripIndents`This will delete all data we have on you, except:
           1) Moderation actions taken against your Discord ID will remain on file for 6 months from the last time your user ID was seen.
           2) If your user has been banned, your Discord ID and status of your ban will remain on file indefinitely.

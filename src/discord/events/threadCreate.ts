@@ -1,13 +1,9 @@
-import {
-  PermissionResolvable,
-  TextChannel,
-} from 'discord.js';
-import {
-  AuditLogEvent,
-} from 'discord-api-types/v10';
-import {
-  ThreadCreateEvent,
-} from '../@types/eventDef';
+import type { PermissionResolvable, TextChannel } from 'discord.js';
+
+import { AuditLogEvent } from 'discord-api-types/v10';
+
+import type { ThreadCreateEvent } from '../@types/eventDef';
+
 import { checkChannelPermissions, checkGuildPermissions } from '../utils/checkPermissions';
 
 const F = f(__filename);
@@ -15,11 +11,14 @@ const F = f(__filename);
 // https://discordjs.guide/popular-topics/audit-logs.html#who-deleted-a-message
 
 export const threadCreate: ThreadCreateEvent = {
-  name: 'threadCreate',
   async execute(thread) {
     // Only run on Tripsit, we don't want to snoop on other guilds ( ͡~ ͜ʖ ͡°)
-    if (!thread.guild) return;
-    if (thread.guild.id !== env.DISCORD_GUILD_ID) return;
+    if (!thread.guild) {
+      return;
+    }
+    if (thread.guild.id !== env.DISCORD_GUILD_ID) {
+      return;
+    }
     log.info(F, `Thread ${thread.name} was created.`);
 
     const perms = await checkGuildPermissions(thread.guild, [
@@ -41,7 +40,7 @@ export const threadCreate: ThreadCreateEvent = {
     // Since there's only 1 audit log entry in this collection, grab the first one
     const auditLog = fetchedLogs.entries.first();
 
-    const channel = await discordClient.channels.fetch(env.CHANNEL_AUDITLOG) as TextChannel;
+    const channel = (await discordClient.channels.fetch(env.CHANNEL_AUDITLOG)) as TextChannel;
     const channelPerms = await checkChannelPermissions(channel, [
       'ViewChannel' as PermissionResolvable,
       'SendMessages' as PermissionResolvable,
@@ -65,6 +64,7 @@ export const threadCreate: ThreadCreateEvent = {
 
     await channel.send(response);
   },
+  name: 'threadCreate',
 };
 
 export default threadCreate;

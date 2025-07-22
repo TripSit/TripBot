@@ -1,9 +1,10 @@
-import {
-  Client,
+import type {
   ChatInputCommandInteraction,
+  Client,
   MessageContextMenuCommandInteraction,
   UserContextMenuCommandInteraction,
 } from 'discord.js';
+
 // import {SlashCommand} from './commandDef';
 import handleError from '../events/error';
 
@@ -18,7 +19,10 @@ export default commandRun;
  * @return {Discord.MessageEmbed}
  */
 export async function commandRun(
-  interaction: ChatInputCommandInteraction | MessageContextMenuCommandInteraction | UserContextMenuCommandInteraction,
+  interaction:
+    | ChatInputCommandInteraction
+    | MessageContextMenuCommandInteraction
+    | UserContextMenuCommandInteraction,
   discordClient: Client,
 ) {
   // const startTime = new Date().getTime();
@@ -27,7 +31,9 @@ export async function commandRun(
 
   const command = discordClient.commands.get(commandName);
 
-  if (!command) return;
+  if (!command) {
+    return;
+  }
 
   try {
     // log.info(F, `Executed the command in ${new Date().getTime() - startTime}ms`);

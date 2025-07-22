@@ -1,13 +1,12 @@
-/* eslint-disable max-len */
-import {
-  SlashCommandBuilder,
-  GuildMember,
-  MessageFlags,
-} from 'discord.js';
-import { SlashCommand } from '../../@types/commandDef';
+import type { GuildMember } from 'discord.js';
+
+import { MessageFlags, SlashCommandBuilder } from 'discord.js';
+
+import type { SlashCommand } from '../../@types/commandDef';
+
 import { timezone } from '../../../global/commands/g.timezone';
-import { embedTemplate } from '../../utils/embedTemplate';
 import commandContext from '../../utils/context';
+import { embedTemplate } from '../../utils/embedTemplate';
 
 const F = f(__filename);
 
@@ -16,32 +15,43 @@ export const dTimezone: SlashCommand = {
     .setName('timezone')
     .setDescription('Get or set timezones!')
     .setIntegrationTypes([0])
-    .addSubcommand(subcommand => subcommand
-      .setName('get')
-      .setDescription('Get someone\'s timezone!')
-      .addUserOption(option => option
-        // .setRequired(true) If nothing is provided it defaults to the user who ran the command
-        .setName('user')
-        .setDescription('User to lookup'))
-      .addBooleanOption(option => option.setName('ephemeral')
-        .setDescription('Set to "True" to show the response only to you')))
-    .addSubcommand(subcommand => subcommand
-      .setName('set')
-      .setDescription('Set your timezone!')
-      .addStringOption(option => option
-        .setName('timezone')
-        .setDescription('Timezone value')
-        .setRequired(true)
-        .setAutocomplete(true))),
+    .addSubcommand((subcommand) =>
+      subcommand
+        .setName('get')
+        .setDescription("Get someone's timezone!")
+        .addUserOption((option) =>
+          option
+            // .setRequired(true) If nothing is provided it defaults to the user who ran the command
+            .setName('user')
+            .setDescription('User to lookup'),
+        )
+        .addBooleanOption((option) =>
+          option
+            .setName('ephemeral')
+            .setDescription('Set to "True" to show the response only to you'),
+        ),
+    )
+    .addSubcommand((subcommand) =>
+      subcommand
+        .setName('set')
+        .setDescription('Set your timezone!')
+        .addStringOption((option) =>
+          option
+            .setName('timezone')
+            .setDescription('Timezone value')
+            .setRequired(true)
+            .setAutocomplete(true),
+        ),
+    ),
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
     let command = interaction.options.getSubcommand() as 'get' | 'set' | undefined;
-    const ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined;
-    if (command === 'set') {
-      await interaction.deferReply({ flags: MessageFlags.Ephemeral });
-    } else {
-      await interaction.deferReply({ flags: ephemeral });
-    }
+    const ephemeral = interaction.options.getBoolean('ephemeral')
+      ? MessageFlags.Ephemeral
+      : undefined;
+    await (command === 'set'
+      ? interaction.deferReply({ flags: MessageFlags.Ephemeral })
+      : interaction.deferReply({ flags: ephemeral }));
     const tzValue = interaction.options.getString('timezone');
     let member = interaction.options.getMember('user') as GuildMember | null;
 
@@ -59,22 +69,37 @@ export const dTimezone: SlashCommand = {
 
     if (command === 'get') {
       const embed = embedTemplate();
-      if (response === '') {
-        embed.setTitle(`${member.displayName} is a timeless treasure <3\n(Has not set a time zone)`);
-        await interaction.editReply({ embeds: [embed] });
-      } else if (response === 'invalid') {
-        embed.setTitle('Invalid timezone!\nPlease only use the options from the autocomplete list.');
-        await interaction.editReply({ embeds: [embed] });
-      } else if (response === 'updated') {
-        embed.setTitle(`I updated your timezone to ${tzValue}`);
-        await interaction.editReply({ embeds: [embed] });
-      } else {
-        embed.setTitle(`${response} wherever ${member.displayName} is located`);
-        await interaction.editReply({ embeds: [embed] });
-        // await interaction.editReply({ content: `${response} wherever ${member.displayName} is located.` });
+      switch (response) {
+        case '': {
+          embed.setTitle(
+            `${member.displayName} is a timeless treasure <3\n(Has not set a time zone)`,
+          );
+          await interaction.editReply({ embeds: [embed] });
+
+          break;
+        }
+        case 'invalid': {
+          embed.setTitle(
+            'Invalid timezone!\nPlease only use the options from the autocomplete list.',
+          );
+          await interaction.editReply({ embeds: [embed] });
+
+          break;
+        }
+        case 'updated': {
+          embed.setTitle(`I updated your timezone to ${tzValue}`);
+          await interaction.editReply({ embeds: [embed] });
+
+          break;
+        }
+        default: {
+          embed.setTitle(`${response} wherever ${member.displayName} is located`);
+          await interaction.editReply({ embeds: [embed] });
+          // await interaction.editReply({ content: `${response} wherever ${member.displayName} is located.` });
+        }
       }
     } else {
-      await interaction.editReply({ content: response as string });
+      await interaction.editReply({ content: response });
     }
     return true;
   },

@@ -1,11 +1,8 @@
-/* eslint-disable no-unused-vars */
+import type { ButtonInteraction, TextChannel } from 'discord.js';
+
 import { stripIndents } from 'common-tags';
-import {
-  ButtonInteraction,
-  Colors,
-  MessageFlags,
-  TextChannel,
-} from 'discord.js';
+import { Colors, MessageFlags } from 'discord.js';
+
 import { embedTemplate } from './embedTemplate';
 
 // import {
@@ -20,8 +17,8 @@ export default verifyButton;
  * Template
  * @param {Client} discordClient The Client that manages this interaction
  * @return {Promise<void>}
-* */
-export async function verifyButton(interaction:ButtonInteraction): Promise<void> {
+ * */
+export async function verifyButton(interaction: ButtonInteraction): Promise<void> {
   await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
   if (!interaction.guild) {
@@ -38,7 +35,9 @@ export async function verifyButton(interaction:ButtonInteraction): Promise<void>
     // log.debug(F, `member: ${member.roles.cache}`);
 
     // log.debug(`Verified button clicked by ${interaction.user.username}#${interaction.user.discriminator}`);
-    const channelTripbotlogs = await global.discordClient.channels.fetch(env.CHANNEL_BOTLOG) as TextChannel;
+    const channelTripbotlogs = (await globalThis.discordClient.channels.fetch(
+      env.CHANNEL_BOTLOG,
+    )) as TextChannel;
     await channelTripbotlogs.send({
       content: `Verified button clicked by ${interaction.user.username}#${interaction.user.discriminator}`,
     });
@@ -88,14 +87,13 @@ export async function verifyButton(interaction:ButtonInteraction): Promise<void>
         .setAuthor(null)
         .setColor(colorValue)
         .setThumbnail(member.user.displayAvatarURL())
-        .setFooter(null)
-        .setDescription(stripIndents`
+        .setFooter(null).setDescription(stripIndents`
               **Please welcome ${member.toString()} to the guild!**
               Check out ${channelStart} set your color and icon
               Make sure you've read the ${channelRules}
               Be safe, have fun, /report any issues!`);
 
-      const channelLounge = await member.client.channels.fetch(env.CHANNEL_LOUNGE) as TextChannel;
+      const channelLounge = (await member.client.channels.fetch(env.CHANNEL_LOUNGE)) as TextChannel;
       await interaction.editReply({
         content: stripIndents`
         Awesome! This channel will disappear when you click away, before you go:
@@ -113,7 +111,9 @@ export async function verifyButton(interaction:ButtonInteraction): Promise<void>
       await channelLounge.send({ embeds: [embed] });
     } else {
       log.error(F, `verifiedRole ${env.ROLE_VERIFIED} not found`);
-      await interaction.editReply({ content: 'Something went wrong, please make sure the right role exists!' });
+      await interaction.editReply({
+        content: 'Something went wrong, please make sure the right role exists!',
+      });
     }
   }
 }

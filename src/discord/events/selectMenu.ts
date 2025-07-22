@@ -1,22 +1,18 @@
-/* eslint-disable max-len */
-import {
-  AnySelectMenuInteraction,
-} from 'discord.js';
-import { rpgHome, rpgMarketChange } from '../commands/guild/d.rpg';
-import { applicationStart, applicationReject } from '../utils/application';
-import commandContext from '../utils/context';
-import { helpMenu } from '../commands/global/d.help';
+import type { AnySelectMenuInteraction } from 'discord.js';
+
 import { aiMenu } from '../commands/global/d.ai';
+import { helpMenu } from '../commands/global/d.help';
 import { purgeMenu } from '../commands/guild/d.purge';
+import { rpgHome, rpgMarketChange } from '../commands/guild/d.rpg';
+import { applicationReject, applicationStart } from '../utils/application';
+import commandContext from '../utils/context';
 // import log from '../../global/utils/log';
 // import {parse} from 'path';
 const F = f(__filename);
 
 export default selectMenu;
 
-export async function selectMenu(
-  interaction: AnySelectMenuInteraction,
-): Promise<void> {
+export async function selectMenu(interaction: AnySelectMenuInteraction): Promise<void> {
   const { customId } = interaction;
   log.info(F, await commandContext(interaction));
 
@@ -33,8 +29,11 @@ export async function selectMenu(
         return;
       }
       await interaction.deferUpdate();
-      if (interaction.customId.startsWith('rpgGeneralSelect')) await interaction.editReply(await rpgMarketChange(interaction));
-      else if (interaction.customId.startsWith('rpgBackgroundSelect')) await interaction.editReply(await rpgHome(interaction, ''));
+      if (interaction.customId.startsWith('rpgGeneralSelect')) {
+        await interaction.editReply(await rpgMarketChange(interaction));
+      } else if (interaction.customId.startsWith('rpgBackgroundSelect')) {
+        await interaction.editReply(await rpgHome(interaction, ''));
+      }
     }
 
     if (customId.startsWith('applicationReject')) {
@@ -48,11 +47,8 @@ export async function selectMenu(
     }
   }
 
-  // eslint-disable-next-line sonarjs/no-collapsible-if
-  if (interaction.isUserSelectMenu()) {
-    if (menuID.startsWith('purge')) {
-      await purgeMenu(interaction);
-    }
+  if (interaction.isUserSelectMenu() && menuID.startsWith('purge')) {
+    await purgeMenu(interaction);
   }
 
   if (interaction.isChannelSelectMenu() && menuID.startsWith('AI')) {

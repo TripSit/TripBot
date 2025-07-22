@@ -1,11 +1,11 @@
 const F = f(__filename);
 
 export default {
-  getAllAppeals() {
+  async getAllAppeals() {
     return db.appeals.findMany();
   },
 
-  async getAppeals(UserId:string) {
+  async getAppeals(UserId: string) {
     log.debug(F, `UserId: ${UserId}`);
     return db.appeals.findMany({
       where: {
@@ -14,13 +14,13 @@ export default {
     });
   },
 
-  async getLatestAppeal(UserId:string) {
+  async getLatestAppeal(UserId: string) {
     return db.appeals.findFirst({
-      where: {
-        user_id: UserId,
-      },
       orderBy: {
         created_at: 'desc',
+      },
+      where: {
+        user_id: UserId,
       },
     });
   },

@@ -15,72 +15,100 @@ export async function parseDuration(duration: string): Promise<number> {
   const supported = 'smMhdwmoy';
   const numbers = '0123456789';
   let stage = 1;
-  let idx = 0;
-  let tempNumber = 0;
-  let tempString = '';
+  let index = 0;
+  let temporaryNumber = 0;
+  let temporaryString = '';
   let timeValue = 0;
 
-  while (idx < duration.length) {
-    const c = duration[idx]; // Normalize to lowercase for easier comparison
+  while (index < duration.length) {
+    const c = duration[index]; // Normalize to lowercase for easier comparison
     switch (stage) {
-      case 1: // Waiting for number
+      case 1: {
+        // Waiting for number
         if (numbers.includes(c)) {
-          tempString = c;
+          temporaryString = c;
           stage = 2;
         }
-        idx += 1;
+        index += 1;
         break;
+      }
 
-      case 2: // Parsing the number
+      case 2: {
+        // Parsing the number
         if (numbers.includes(c)) {
-          tempString += c;
-          idx += 1;
+          temporaryString += c;
+          index += 1;
         } else {
-          tempNumber = Number.parseInt(tempString, 10);
+          temporaryNumber = Number.parseInt(temporaryString, 10);
           stage = 3;
         }
         break;
+      }
 
-      case 3: // Parsing the qualifier
+      case 3: {
+        // Parsing the qualifier
         if (c === ' ') {
-          idx += 1;
+          index += 1;
           break;
         } else if (supported.includes(c)) {
           // Handle single-letter qualifiers
-          if (c === 'h') {
-            timeValue += tempNumber * 60 * 60 * 1000; // Hours
-          } else if (c === 'M' || c === 'm') {
-            // Check if the next characters spell "month" or "months"
-            const nextChars = duration.slice(idx, idx + 5).toLowerCase();
-            if (nextChars.startsWith('month') || c === 'M') {
-              timeValue += tempNumber * 30 * 24 * 60 * 60 * 1000; // Convert months to milliseconds
-              if (c === 'M') {
-                idx += 1; // Skip 'M'
-              } else if (nextChars.startsWith('months')) {
-                idx += 6; // Skip 'months'
-              } else {
-                idx += 5; // Skip 'month'
-              }
-            } else {
-              timeValue += tempNumber * 60 * 1000; // Minutes
+          switch (c) {
+            case 'd': {
+              timeValue += temporaryNumber * 24 * 60 * 60 * 1000; // Days
+
+              break;
             }
-          } else if (c === 's') {
-            timeValue += tempNumber * 1000; // Seconds
-          } else if (c === 'd') {
-            timeValue += tempNumber * 24 * 60 * 60 * 1000; // Days
-          } else if (c === 'w') {
-            timeValue += tempNumber * 7 * 24 * 60 * 60 * 1000; // Weeks
-          } else if (c === 'y') {
-            timeValue += tempNumber * 365 * 24 * 60 * 60 * 1000; // Years
+            case 'h': {
+              timeValue += temporaryNumber * 60 * 60 * 1000; // Hours
+
+              break;
+            }
+            case 'M':
+            case 'm': {
+              // Check if the next characters spell "month" or "months"
+              const nextChars = duration.slice(index, index + 5).toLowerCase();
+              if (nextChars.startsWith('month') || c === 'M') {
+                timeValue += temporaryNumber * 30 * 24 * 60 * 60 * 1000; // Convert months to milliseconds
+                if (c === 'M') {
+                  index += 1; // Skip 'M'
+                } else if (nextChars.startsWith('months')) {
+                  index += 6; // Skip 'months'
+                } else {
+                  index += 5; // Skip 'month'
+                }
+              } else {
+                timeValue += temporaryNumber * 60 * 1000; // Minutes
+              }
+
+              break;
+            }
+            case 's': {
+              timeValue += temporaryNumber * 1000; // Seconds
+
+              break;
+            }
+            case 'w': {
+              timeValue += temporaryNumber * 7 * 24 * 60 * 60 * 1000; // Weeks
+
+              break;
+            }
+            case 'y': {
+              timeValue += temporaryNumber * 365 * 24 * 60 * 60 * 1000; // Years
+
+              break;
+            }
+            // No default
           }
           stage = 1;
           break;
         } else {
           return timeValue; // Unsupported qualifier
         }
+      }
 
-      default:
+      default: {
         break;
+      }
     }
   }
   return timeValue;
@@ -91,8 +119,8 @@ export async function parseDuration(duration: string): Promise<number> {
  Huge thank you to /u/gumnos on Reddit for the regex!
 */
 export const validateDurationInput = (input: string): boolean => {
-  // eslint-disable-next-line max-len
-  const regex = /^(?: *(?:\d+ *(?:y(?:ears?)?|M|mon(ths?)?|w(?:eeks?)?|d(?:ays?)?|h(?:ours?)?|m(?:in(?:ute)?s?)?|s(?:ec(?:ond)?s?)?)))+$/;
+  const regex =
+    /^(?: *(?:\d+ *(?:y(?:ears?)?|M|mon(ths?)?|w(?:eeks?)?|d(?:ays?)?|h(?:ours?)?|m(?:in(?:ute)?s?)?|s(?:ec(?:ond)?s?)?)))+$/;
 
   return regex.test(input.trim());
 };
@@ -105,20 +133,20 @@ export const validateDurationInput = (input: string): boolean => {
 export async function makeValid(duration: string): Promise<string> {
   // Define a map for the units and their short forms
   const unitMap: Record<string, string> = {
-    years: 'y',
-    year: 'y',
-    months: 'M',
-    month: 'M',
-    weeks: 'w',
-    week: 'w',
-    days: 'd',
     day: 'd',
-    hours: 'h',
+    days: 'd',
     hour: 'h',
-    minutes: 'm',
+    hours: 'h',
     minute: 'm',
-    seconds: 's',
+    minutes: 'm',
+    month: 'M',
+    months: 'M',
     second: 's',
+    seconds: 's',
+    week: 'w',
+    weeks: 'w',
+    year: 'y',
+    years: 'y',
   };
 
   // Regular expression to match the input format
@@ -129,7 +157,7 @@ export async function makeValid(duration: string): Promise<string> {
 
   // Replace matched parts with their formatted versions
   let match;
-  // eslint-disable-next-line no-cond-assign
+
   while ((match = regex.exec(duration)) !== null) {
     const value = match[1]; // The number (e.g., "1")
     const unit = match[2].toLowerCase(); // The unit (e.g., "year" or "years")

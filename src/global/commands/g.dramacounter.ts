@@ -2,6 +2,11 @@ const F = f(__filename);
 
 export default dramacounter;
 
+interface Drama {
+  dramaReason: null | string;
+  lastDramaAt: Date | null;
+}
+
 /**
  * Birthday information of a user
  * @param {'get' | 'set'} command
@@ -15,19 +20,19 @@ export async function dramacounter(
   guildId: string,
   lastDramaAt: Date,
   dramaReason: string,
-):Promise<Drama> {
+): Promise<Drama> {
   let response = {} as {
     dramaReason: string;
     lastDramaAt: Date;
   };
   const guildData = await db.discord_guilds.upsert({
-    where: {
-      id: guildId,
-    },
     create: {
       id: guildId,
     },
     update: {},
+    where: {
+      id: guildId,
+    },
   });
 
   if (command === 'get') {
@@ -46,12 +51,12 @@ export async function dramacounter(
     guildData.drama_reason = dramaReason;
     // await guildUpdate(guildData);
     await db.discord_guilds.update({
+      data: {
+        drama_reason: dramaReason,
+        last_drama_at: lastDramaAt,
+      },
       where: {
         id: guildId,
-      },
-      data: {
-        last_drama_at: lastDramaAt,
-        drama_reason: dramaReason,
       },
     });
     response = { dramaReason, lastDramaAt };
@@ -60,8 +65,3 @@ export async function dramacounter(
   log.info(F, `response: ${JSON.stringify(response, null, 2)}`);
   return response;
 }
-
-type Drama = {
-  dramaReason: string | null;
-  lastDramaAt: Date | null;
-};

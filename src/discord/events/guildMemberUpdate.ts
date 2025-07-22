@@ -1,45 +1,38 @@
-import { GuildMember, Role, TextChannel } from 'discord.js';
+import type { GuildMember, TextChannel } from 'discord.js';
+
 import { stripIndents } from 'common-tags';
-import {
-  GuildMemberUpdateEvent,
-} from '../@types/eventDef';
+
+import type { GuildMemberUpdateEvent } from '../@types/eventDef';
+
 import { addedVerified } from '../utils/trust';
 // import { topic } from '../../global/commands/g.topic';
 
 type MindsetNames =
-| 'ROLE_DRUNK'
-| 'ROLE_HIGH'
-| 'ROLE_ROLLING'
-| 'ROLE_TRIPPING'
-| 'ROLE_DISSOCIATING'
-| 'ROLE_STIMMING'
-| 'ROLE_SEDATED'
-| 'ROLE_TALKATIVE'
-| 'ROLE_VOICECHATTY'
-| 'ROLE_BUSY'
-| 'ROLE_EVENT_1'
-| 'ROLE_EVENT_2'
-| 'ROLE_EVENT_3'
-| 'ROLE_EVENT_4'
-| 'ROLE_EVENT_5'
-| 'ROLE_EVENT_6'
-| 'ROLE_EVENT_7'
-| 'ROLE_EVENT_8'
-| 'ROLE_EVENT_9'
-| 'ROLE_EVENT_10'
-| 'ROLE_EVENT_11';
+  | 'ROLE_DISSOCIATING'
+  | 'ROLE_DRUNK'
+  | 'ROLE_EVENT_1'
+  | 'ROLE_EVENT_2'
+  | 'ROLE_EVENT_3'
+  | 'ROLE_EVENT_4'
+  | 'ROLE_EVENT_5'
+  | 'ROLE_EVENT_6'
+  | 'ROLE_EVENT_7'
+  | 'ROLE_EVENT_8'
+  | 'ROLE_EVENT_9'
+  | 'ROLE_EVENT_10'
+  | 'ROLE_EVENT_11'
+  | 'ROLE_HIGH'
+  | 'ROLE_ROLLING'
+  | 'ROLE_SEDATED'
+  | 'ROLE_STIMMING'
+  | 'ROLE_TALKATIVE'
+  | 'ROLE_TRIPPING'
+  | 'ROLE_VOICECHATTY'
+  | 'ROLE_WORKING';
 
 const mindsetRoles = {
-  ROLE_DRUNK: env.ROLE_DRUNK,
-  ROLE_HIGH: env.ROLE_HIGH,
-  ROLE_ROLLING: env.ROLE_ROLLING,
-  ROLE_TRIPPING: env.ROLE_TRIPPING,
   ROLE_DISSOCIATING: env.ROLE_DISSOCIATING,
-  ROLE_STIMMING: env.ROLE_STIMMING,
-  ROLE_SEDATED: env.ROLE_SEDATED,
-  ROLE_TALKATIVE: env.ROLE_TALKATIVE,
-  ROLE_VOICECHATTY: env.ROLE_VOICECHATTY,
-  ROLE_BUSY: env.ROLE_BUSY,
+  ROLE_DRUNK: env.ROLE_DRUNK,
   ROLE_EVENT_1: env.ROLE_EVENT_1,
   ROLE_EVENT_2: env.ROLE_EVENT_2,
   ROLE_EVENT_3: env.ROLE_EVENT_3,
@@ -51,44 +44,43 @@ const mindsetRoles = {
   ROLE_EVENT_9: env.ROLE_EVENT_9,
   ROLE_EVENT_10: env.ROLE_EVENT_10,
   ROLE_EVENT_11: env.ROLE_EVENT_11,
-} as {
-  [key in MindsetNames]: string;
-};
+  ROLE_HIGH: env.ROLE_HIGH,
+  ROLE_ROLLING: env.ROLE_ROLLING,
+  ROLE_SEDATED: env.ROLE_SEDATED,
+  ROLE_STIMMING: env.ROLE_STIMMING,
+  ROLE_TALKATIVE: env.ROLE_TALKATIVE,
+  ROLE_TRIPPING: env.ROLE_TRIPPING,
+  ROLE_VOICECHATTY: env.ROLE_VOICECHATTY,
+  ROLE_WORKING: env.ROLE_WORKING,
+} as Record<MindsetNames, string>;
 
 type TeamMindsetNames =
-| 'ROLE_TTS_DRUNK'
-| 'ROLE_TTS_HIGH'
-| 'ROLE_TTS_ROLLING'
-| 'ROLE_TTS_TRIPPING'
-| 'ROLE_TTS_DISSOCIATING'
-| 'ROLE_TTS_STIMMING'
-| 'ROLE_TTS_SEDATED'
-| 'ROLE_TTS_TALKATIVE'
-| 'ROLE_TTS_VOICECHATTY'
-| 'ROLE_TTS_BUSY'
-| 'ROLE_TTS_EVENT_1'
-| 'ROLE_TTS_EVENT_2'
-| 'ROLE_TTS_EVENT_3'
-| 'ROLE_TTS_EVENT_4'
-| 'ROLE_TTS_EVENT_5'
-| 'ROLE_TTS_EVENT_6'
-| 'ROLE_TTS_EVENT_7'
-| 'ROLE_TTS_EVENT_8'
-| 'ROLE_TTS_EVENT_9'
-| 'ROLE_TTS_EVENT_10'
-| 'ROLE_TTS_EVENT_11';
+  | 'ROLE_TTS_BUSY'
+  | 'ROLE_TTS_DISSOCIATING'
+  | 'ROLE_TTS_DRUNK'
+  | 'ROLE_TTS_EVENT_1'
+  | 'ROLE_TTS_EVENT_2'
+  | 'ROLE_TTS_EVENT_3'
+  | 'ROLE_TTS_EVENT_4'
+  | 'ROLE_TTS_EVENT_5'
+  | 'ROLE_TTS_EVENT_6'
+  | 'ROLE_TTS_EVENT_7'
+  | 'ROLE_TTS_EVENT_8'
+  | 'ROLE_TTS_EVENT_9'
+  | 'ROLE_TTS_EVENT_10'
+  | 'ROLE_TTS_EVENT_11'
+  | 'ROLE_TTS_HIGH'
+  | 'ROLE_TTS_ROLLING'
+  | 'ROLE_TTS_SEDATED'
+  | 'ROLE_TTS_STIMMING'
+  | 'ROLE_TTS_TALKATIVE'
+  | 'ROLE_TTS_TRIPPING'
+  | 'ROLE_TTS_VOICECHATTY';
 
 const TTSMindsetRoles = {
-  ROLE_TTS_DRUNK: env.ROLE_TTS_DRUNK,
-  ROLE_TTS_HIGH: env.ROLE_TTS_HIGH,
-  ROLE_TTS_ROLLING: env.ROLE_TTS_ROLLING,
-  ROLE_TTS_TRIPPING: env.ROLE_TTS_TRIPPING,
-  ROLE_TTS_DISSOCIATING: env.ROLE_TTS_DISSOCIATING,
-  ROLE_TTS_STIMMING: env.ROLE_TTS_STIMMING,
-  ROLE_TTS_SEDATED: env.ROLE_TTS_SEDATED,
-  ROLE_TTS_TALKATIVE: env.ROLE_TTS_TALKATIVE,
-  ROLE_TTS_VOICECHATTY: env.ROLE_TTS_VOICECHATTY,
   ROLE_TTS_BUSY: env.ROLE_TTS_BUSY,
+  ROLE_TTS_DISSOCIATING: env.ROLE_TTS_DISSOCIATING,
+  ROLE_TTS_DRUNK: env.ROLE_TTS_DRUNK,
   ROLE_TTS_EVENT_1: env.ROLE_TTS_EVENT_1,
   ROLE_TTS_EVENT_2: env.ROLE_TTS_EVENT_2,
   ROLE_TTS_EVENT_3: env.ROLE_TTS_EVENT_3,
@@ -100,9 +92,14 @@ const TTSMindsetRoles = {
   ROLE_TTS_EVENT_9: env.ROLE_TTS_EVENT_9,
   ROLE_TTS_EVENT_10: env.ROLE_TTS_EVENT_10,
   ROLE_TTS_EVENT_11: env.ROLE_TTS_EVENT_11,
-} as {
-  [key in TeamMindsetNames]: string;
-};
+  ROLE_TTS_HIGH: env.ROLE_TTS_HIGH,
+  ROLE_TTS_ROLLING: env.ROLE_TTS_ROLLING,
+  ROLE_TTS_SEDATED: env.ROLE_TTS_SEDATED,
+  ROLE_TTS_STIMMING: env.ROLE_TTS_STIMMING,
+  ROLE_TTS_TALKATIVE: env.ROLE_TTS_TALKATIVE,
+  ROLE_TTS_TRIPPING: env.ROLE_TTS_TRIPPING,
+  ROLE_TTS_VOICECHATTY: env.ROLE_TTS_VOICECHATTY,
+} as Record<TeamMindsetNames, string>;
 
 // type ColorNames =
 // | 'ROLE_RED'
@@ -128,37 +125,35 @@ const TTSMindsetRoles = {
 // };
 
 type LevelColorNames =
-  | 'ROLE_LEVEL_RED'
-  | 'ROLE_LEVEL_REDORANGE'
-  | 'ROLE_LEVEL_ORANGE'
-  | 'ROLE_LEVEL_YELLOW'
-  | 'ROLE_LEVEL_YELLOWGREEN'
-  | 'ROLE_LEVEL_GREEN'
-  | 'ROLE_LEVEL_GREENBLUE'
+  | 'ROLE_LEVEL_BLACK'
   | 'ROLE_LEVEL_BLUE'
   | 'ROLE_LEVEL_BLUEPURPLE'
-  | 'ROLE_LEVEL_PURPLE'
+  | 'ROLE_LEVEL_GREEN'
+  | 'ROLE_LEVEL_GREENBLUE'
+  | 'ROLE_LEVEL_ORANGE'
   | 'ROLE_LEVEL_PINK'
   | 'ROLE_LEVEL_PINKRED'
-  | 'ROLE_LEVEL_BLACK';
+  | 'ROLE_LEVEL_PURPLE'
+  | 'ROLE_LEVEL_RED'
+  | 'ROLE_LEVEL_REDORANGE'
+  | 'ROLE_LEVEL_YELLOW'
+  | 'ROLE_LEVEL_YELLOWGREEN';
 
 const levelColorRoles = {
-  ROLE_LEVEL_RED: env.ROLE_LEVEL_RED,
-  ROLE_LEVEL_REDORANGE: env.ROLE_LEVEL_REDORANGE,
-  ROLE_LEVEL_ORANGE: env.ROLE_LEVEL_ORANGE,
-  ROLE_LEVEL_YELLOW: env.ROLE_LEVEL_YELLOW,
-  ROLE_LEVEL_YELLOWGREEN: env.ROLE_LEVEL_YELLOWGREEN,
-  ROLE_LEVEL_GREEN: env.ROLE_LEVEL_GREEN,
-  ROLE_LEVEL_GREENBLUE: env.ROLE_LEVEL_GREENBLUE,
+  ROLE_LEVEL_BLACK: env.ROLE_LEVEL_BLACK,
   ROLE_LEVEL_BLUE: env.ROLE_LEVEL_BLUE,
   ROLE_LEVEL_BLUEPURPLE: env.ROLE_LEVEL_BLUEPURPLE,
-  ROLE_LEVEL_PURPLE: env.ROLE_LEVEL_PURPLE,
+  ROLE_LEVEL_GREEN: env.ROLE_LEVEL_GREEN,
+  ROLE_LEVEL_GREENBLUE: env.ROLE_LEVEL_GREENBLUE,
+  ROLE_LEVEL_ORANGE: env.ROLE_LEVEL_ORANGE,
   ROLE_LEVEL_PINK: env.ROLE_LEVEL_PINK,
   ROLE_LEVEL_PINKRED: env.ROLE_LEVEL_PINKRED,
-  ROLE_LEVEL_BLACK: env.ROLE_LEVEL_BLACK,
-} as {
-  [key in LevelColorNames]: string;
-};
+  ROLE_LEVEL_PURPLE: env.ROLE_LEVEL_PURPLE,
+  ROLE_LEVEL_RED: env.ROLE_LEVEL_RED,
+  ROLE_LEVEL_REDORANGE: env.ROLE_LEVEL_REDORANGE,
+  ROLE_LEVEL_YELLOW: env.ROLE_LEVEL_YELLOW,
+  ROLE_LEVEL_YELLOWGREEN: env.ROLE_LEVEL_YELLOWGREEN,
+} as Record<LevelColorNames, string>;
 
 type DonorColorNames =
   | 'ROLE_GRADIENT_1'
@@ -211,9 +206,7 @@ const donorColorRoles = {
   ROLE_GRADIENT_22: env.ROLE_GRADIENT_22,
   ROLE_GRADIENT_23: env.ROLE_GRADIENT_23,
   ROLE_GRADIENT_24: env.ROLE_GRADIENT_24,
-} as {
-  [key in DonorColorNames]: string;
-};
+} as Record<DonorColorNames, string>;
 
 // type DonorNames =
 // | 'ROLE_BOOSTER'
@@ -241,35 +234,173 @@ const thankYouPhrases = [
   "Our deepest gratitude for their contribution. Together, we'll reach new heights.",
 ];
 
-const donationTagline = '*`/donate` to TripSit to access special username colors and the snazzy Gold Lounge!*';
+const donationTagline =
+  '*`/donate` to TripSit to access special username colors and the snazzy Gold Lounge!*';
 
-const boostEmoji = env.NODE_ENV === 'production'
-  ? '<:ts_boost:981799280396353596>'
-  : '<:ts_boost:1168968973082185800>';
-const donorEmoji = env.NODE_ENV === 'production'
-  ? '<:ts_premium:1350311457371197503>'
-  : '<:ts_donor:1168969578836144233>';
+const boostEmoji =
+  env.NODE_ENV === 'production'
+    ? '<:ts_boost:981799280396353596>'
+    : '<:ts_boost:1168968973082185800>';
+const donorEmoji =
+  env.NODE_ENV === 'production'
+    ? '<:ts_premium:1350311457371197503>'
+    : '<:ts_donor:1168969578836144233>';
 
 const F = f(__filename);
 
-async function levelColorCheck(
-  newMember: GuildMember,
-  oldMember: GuildMember,
-  roleId: string,
-) {
+async function addedBooster(newMember: GuildMember, roleId: string) {
+  // Check if the role added was a donator role
+  if (roleId === env.ROLE_BOOSTER) {
+    // log.debug(F, `${newMember.displayName} boosted the server!`);
+    const channelViplounge = (await discordClient.channels.fetch(
+      env.CHANNEL_VIPLOUNGE,
+    )) as TextChannel;
+    await channelViplounge.send(stripIndents`
+        ** ${boostEmoji} ${newMember.toString()} just boosted the server! ${boostEmoji} **
+
+        ${thankYouPhrases[Math.floor(Math.random() * thankYouPhrases.length)]}
+
+        ${donationTagline}`);
+  }
+}
+
+async function addedPatreon(newMember: GuildMember, roleId: string) {
+  if (roleId === env.ROLE_PATRON) {
+    // Check if they already have donated before, if so send a special message
+    if (newMember.roles.cache.has(env.ROLE_PREMIUM)) {
+      const channelViplounge = (await discordClient.channels.fetch(
+        env.CHANNEL_VIPLOUNGE,
+      )) as TextChannel;
+      await channelViplounge.send(stripIndents`
+        ** ${donorEmoji} ${newMember} just contributed further and became a Supporter by \
+        signing up via [Patreon](<https://www.patreon.com/TripSit>)! ${donorEmoji} **
+    
+          ${thankYouPhrases[Math.floor(Math.random() * thankYouPhrases.length)]}
+    
+          ${donationTagline}`);
+    } else {
+      // If added as a first time Patron and donator, give them the premium role and send the message
+      const role = await newMember.guild.roles.fetch(env.ROLE_PREMIUM);
+      if (role) {
+        await newMember.roles.add(role);
+      } else {
+        log.error(F, `Role ${env.ROLE_PREMIUM} not found!`);
+      }
+
+      const channelViplounge = (await discordClient.channels.fetch(
+        env.CHANNEL_VIPLOUNGE,
+      )) as TextChannel;
+      await channelViplounge.send(stripIndents`
+      ** ${donorEmoji} ${newMember} just became a Supporter and Premium Member \
+      (first time donator) by signing up via [Patreon](<https://www.patreon.com/TripSit>)! ${donorEmoji} **
+  
+        ${thankYouPhrases[Math.floor(Math.random() * thankYouPhrases.length)]}
+  
+        ${donationTagline}`);
+    }
+  }
+  if (roleId === env.ROLE_DONATIONTRIGGER) {
+    // If donated on KoFi, remove the trigger role
+    const roleTrigger = await newMember.guild.roles.fetch(env.ROLE_DONATIONTRIGGER);
+    if (roleTrigger) {
+      await newMember.roles.remove(roleTrigger);
+    } else {
+      log.error(F, `Role ${env.ROLE_DONATIONTRIGGER} not found!`);
+    }
+    // Check if they already have already donated, if so send a special message
+    if (newMember.roles.cache.has(env.ROLE_PREMIUM)) {
+      const channelViplounge = (await discordClient.channels.fetch(
+        env.CHANNEL_VIPLOUNGE,
+      )) as TextChannel;
+      await channelViplounge.send(stripIndents`
+        ** ${donorEmoji} ${newMember} just made a further contribution by donating via \
+        [KoFi](<https://ko-fi.com/tripsit>)! ${donorEmoji} **
+    
+          ${thankYouPhrases[Math.floor(Math.random() * thankYouPhrases.length)]}
+    
+          ${donationTagline}`);
+    } else {
+      // If donated on KoFi and for the first time, give them the premium role and send the message
+      const role = await newMember.guild.roles.fetch(env.ROLE_PREMIUM);
+      if (role) {
+        await newMember.roles.add(role);
+      } else {
+        log.error(F, `Role ${env.ROLE_PREMIUM} not found!`);
+      }
+      const channelViplounge = (await discordClient.channels.fetch(
+        env.CHANNEL_VIPLOUNGE,
+      )) as TextChannel;
+      await channelViplounge.send(stripIndents`
+      ** ${donorEmoji} ${newMember} just became a Premium Member (first time donator) by donating via \
+      [KoFi](<https://ko-fi.com/tripsit>)! ${donorEmoji} **
+  
+        ${thankYouPhrases[Math.floor(Math.random() * thankYouPhrases.length)]}
+  
+        ${donationTagline}`);
+    }
+  }
+}
+
+async function donorColorCheck(newMember: GuildMember, oldMember: GuildMember, roleId: string) {
+  // Check if the id matches a colorRole
+  if (Object.values(donorColorRoles).includes(roleId)) {
+    // log.debug(F, `donor color role added: ${roleId}`);
+    // If it does, check if the user also has a donor role
+    if (
+      oldMember.roles.cache.has(env.ROLE_BOOSTER) ||
+      oldMember.roles.cache.has(env.ROLE_PREMIUM) ||
+      oldMember.roles.cache.has(env.ROLE_TEAMTRIPSIT)
+    ) {
+      log.debug(F, 'Donor added a color role!');
+    } else {
+      // If they don't, remove the color role
+      log.debug(F, 'User added a color role without being a donor!');
+      const role = await newMember.guild.roles.fetch(roleId);
+      if (role) {
+        log.debug(F, `Removing ${role.name} from ${newMember.displayName}`);
+        await newMember.roles.remove(role);
+        log.debug(F, `Removed ${role.name} from ${newMember.displayName}`);
+      }
+    }
+  }
+}
+
+async function donorColorRemove(newMember: GuildMember, roleId: string) {
+  // log.debug(F, `donor color role removed: ${roleId}`);
+  // log.debug(F, `${Object.keys(donorRoles)}`);
+  // Check if the roleId matches a donor role, and if so, check if the user has another donor role
+  if (
+    (roleId === env.ROLE_BOOSTER ||
+      roleId === env.ROLE_PREMIUM ||
+      roleId === env.ROLE_TEAMTRIPSIT) &&
+    !newMember.roles.cache.has(env.ROLE_BOOSTER) &&
+    !newMember.roles.cache.has(env.ROLE_PREMIUM) &&
+    !newMember.roles.cache.has(env.ROLE_TEAMTRIPSIT)
+  ) {
+    // If they don't, find and remove the donor color role
+    const donorColorRole = newMember.roles.cache.find((role) =>
+      Object.values(donorColorRoles).includes(role.id),
+    );
+    if (donorColorRole) {
+      await newMember.roles.remove(donorColorRole);
+    }
+  }
+}
+
+async function levelColorCheck(newMember: GuildMember, oldMember: GuildMember, roleId: string) {
   // Check if the id matches a level color role
   if (Object.values(levelColorRoles).includes(roleId)) {
     // If it does, check if the user also has a VIP 30+ role
     if (
-      oldMember.roles.cache.has(env.ROLE_VIP_30)
-      || oldMember.roles.cache.has(env.ROLE_VIP_40)
-      || oldMember.roles.cache.has(env.ROLE_VIP_50)
-      || oldMember.roles.cache.has(env.ROLE_VIP_60)
-      || oldMember.roles.cache.has(env.ROLE_VIP_70)
-      || oldMember.roles.cache.has(env.ROLE_VIP_80)
-      || oldMember.roles.cache.has(env.ROLE_VIP_90)
-      || oldMember.roles.cache.has(env.ROLE_VIP_100)
-      || oldMember.roles.cache.has(env.ROLE_TEAMTRIPSIT)
+      oldMember.roles.cache.has(env.ROLE_VIP_30) ||
+      oldMember.roles.cache.has(env.ROLE_VIP_40) ||
+      oldMember.roles.cache.has(env.ROLE_VIP_50) ||
+      oldMember.roles.cache.has(env.ROLE_VIP_60) ||
+      oldMember.roles.cache.has(env.ROLE_VIP_70) ||
+      oldMember.roles.cache.has(env.ROLE_VIP_80) ||
+      oldMember.roles.cache.has(env.ROLE_VIP_90) ||
+      oldMember.roles.cache.has(env.ROLE_VIP_100) ||
+      oldMember.roles.cache.has(env.ROLE_TEAMTRIPSIT)
     ) {
       log.debug(F, 'VIP 30+ user added a level color role!');
     } else {
@@ -285,251 +416,59 @@ async function levelColorCheck(
   }
 }
 
-async function donorColorCheck(
-  newMember: GuildMember,
-  oldMember: GuildMember,
-  roleId: string,
-) {
-  // Check if the id matches a colorRole
-  if (Object.values(donorColorRoles).includes(roleId)) {
-    // log.debug(F, `donor color role added: ${roleId}`);
-    // If it does, check if the user also has a donor role
-    if (oldMember.roles.cache.has(env.ROLE_BOOSTER)
-    || oldMember.roles.cache.has(env.ROLE_PREMIUM)
-    || oldMember.roles.cache.has(env.ROLE_TEAMTRIPSIT)) {
-      log.debug(F, 'Donor added a color role!');
-    } else {
-      // If they don't, remove the color role
-      log.debug(F, 'User added a color role without being a donor!');
-      const role = await newMember.guild.roles.fetch(roleId);
-      if (role) {
-        log.debug(F, `Removing ${role.name} from ${newMember.displayName}`);
-        await newMember.roles.remove(role);
-        log.debug(F, `Removed ${role.name} from ${newMember.displayName}`);
-      }
-    }
-  }
-}
-
-async function donorColorRemove(
-  newMember: GuildMember,
-  roleId: string,
-) {
-  // log.debug(F, `donor color role removed: ${roleId}`);
-  // log.debug(F, `${Object.keys(donorRoles)}`);
-  // Check if the roleId matches a donor role, and if so, check if the user has another donor role
-  if (
-    (
-      roleId === env.ROLE_BOOSTER
-      || roleId === env.ROLE_PREMIUM
-      || roleId === env.ROLE_TEAMTRIPSIT
-    )
-    && !newMember.roles.cache.has(env.ROLE_BOOSTER)
-    && !newMember.roles.cache.has(env.ROLE_PREMIUM)
-    && !newMember.roles.cache.has(env.ROLE_TEAMTRIPSIT)) {
-    // If they don't, find and remove the donor color role
-    const donorColorRole = newMember.roles.cache.find(role => Object.values(donorColorRoles).includes(role.id));
-    if (donorColorRole) {
-      await newMember.roles.remove(donorColorRole);
-    }
-  }
-}
-
-async function teamMindsetCheck(
-  newMember: GuildMember,
-  roleId: string,
-) {
-  // Check if the id matches a mindsetRole
-  if (Object.values(mindsetRoles).includes(roleId)
-      && newMember.roles.cache.has(env.ROLE_TEAMTRIPSIT)) {
-    // log.debug(F, `mindset role added: ${roleId}`);
-    // If it does, check if the user also has team tripsit role
-    // If so, replace the mindset role with the TTS equivalent
-    log.debug(F, 'User added a mindset role while being a TTS!');
-
-    const mindsetData = Object.entries(mindsetRoles).find(([, value]) => value === roleId);
-
-    log.debug(F, `mindsetData: ${mindsetData}`);
-
-    if (mindsetData) {
-      const [key] = mindsetData;
-      // The target ID matches the current mindsetRole object
-      log.debug(F, `User Mindset role: ${key}`);
-      // Change "ROLE_" to "ROLE_TTS" in the .env name
-      const ttsMindsetName = key.replace('ROLE_', 'ROLE_TTS_') as TeamMindsetNames;
-      log.debug(F, `TTS mindset name: ${ttsMindsetName}`);
-      // Find the role in the TTSMindsetRoles object
-      const ttsMindsetRoleId = TTSMindsetRoles[ttsMindsetName];
-      log.debug(F, `TTS mindset role: ${ttsMindsetRoleId}`);
-      // Get the role from the guild
-      const role = await newMember.guild.roles.fetch(ttsMindsetRoleId) as Role;
-      // Add the role to the user
-      await newMember.roles.add(role);
-    }
-  }
-}
-
-async function teamMindsetRemove(
-  newMember: GuildMember,
-  roleId: string,
-) {
-  // Check if it's a mindsetRole
-  if (Object.values(mindsetRoles).includes(roleId)
-    && newMember.roles.cache.has(env.ROLE_TEAMTRIPSIT)) {
-    // Remove all TTS mindsets
-    // Check if the member has any of the TTSmindsetRoles
-
-    const mindsetData = Object.entries(mindsetRoles).find(([, value]) => value === roleId);
-
-    log.debug(F, `mindsetData: ${mindsetData}`);
-
-    if (mindsetData) {
-      const [key] = mindsetData;
-      // The target ID matches the current mindsetRole object
-      log.debug(F, `User Mindset role: ${key}`);
-      // Change "ROLE_" to "ROLE_TTS" in the .env name
-      const ttsMindsetName = key.replace('ROLE_', 'ROLE_TTS_') as TeamMindsetNames;
-      log.debug(F, `TTS mindset name: ${ttsMindsetName}`);
-      // Find the role in the TTSMindsetRoles object
-      const ttsMindsetRoleId = TTSMindsetRoles[ttsMindsetName];
-      log.debug(F, `TTS mindset role: ${ttsMindsetRoleId}`);
-      // Get the role from the guild
-      const role = await newMember.guild.roles.fetch(ttsMindsetRoleId) as Role;
-      // Add the role to the user
-      await newMember.roles.remove(role);
-    }
-  }
-}
-
-async function removeExTeamFromThreads(
-  newMember: GuildMember,
-  roleId: string,
-) {
+async function removeExTeamFromThreads(newMember: GuildMember, roleId: string) {
   const guildData = await db.discord_guilds.upsert({
-    where: {
-      id: newMember.guild?.id,
-    },
     create: {
-      id: newMember.guild?.id,
+      id: newMember.guild.id,
     },
     update: {},
+    where: {
+      id: newMember.guild.id,
+    },
   });
   // If the role removed was a helper/tripsitter role, we need to remove them from threads they are in
-  if (guildData.channel_tripsit
-      && (roleId === guildData.role_helper
-          || roleId === guildData.role_tripsitter
-      )
+  if (
+    guildData.channel_tripsit &&
+    (roleId === guildData.role_helper || roleId === guildData.role_tripsitter)
   ) {
     log.debug(F, `${newMember.displayName} was a helper/tripsitter!`);
-    const channelTripsit = await discordClient.channels.fetch(guildData.channel_tripsit) as TextChannel;
+    const channelTripsit = (await discordClient.channels.fetch(
+      guildData.channel_tripsit,
+    )) as TextChannel;
     const userData = await db.users.upsert({
-      where: {
-        discord_id: newMember.user.id,
-      },
       create: {
         discord_id: newMember.user.id,
       },
       update: {},
+      where: {
+        discord_id: newMember.user.id,
+      },
     });
 
     const ticketData = await db.user_tickets.findFirst({
       where: {
-        user_id: userData.id,
         status: {
           not: {
             in: ['CLOSED', 'RESOLVED', 'DELETED'],
           },
         },
+        user_id: userData.id,
       },
     });
 
     const fetchedThreads = await channelTripsit.threads.fetch();
-    fetchedThreads.threads.forEach(async thread => {
-      if (thread
-        && thread.parentId === guildData.channel_tripsit
-        && thread.id !== ticketData?.thread_id
-        && !thread.archived) {
-        log.debug(F, `Removing ${newMember.displayName} from ${thread.name}`);
-        await thread.members.remove(newMember.id);
-      }
-    });
-  }
-}
-
-async function addedBooster(
-  newMember: GuildMember,
-  roleId: string,
-) {
-  // Check if the role added was a donator role
-  if (roleId === env.ROLE_BOOSTER) {
-    // log.debug(F, `${newMember.displayName} boosted the server!`);
-    const channelViplounge = await discordClient.channels.fetch(env.CHANNEL_VIPLOUNGE) as TextChannel;
-    await channelViplounge.send(stripIndents`
-        ** ${boostEmoji} ${newMember.toString()} just boosted the server! ${boostEmoji} **
-
-        ${thankYouPhrases[Math.floor(Math.random() * thankYouPhrases.length)]}
-
-        ${donationTagline}`);
-  }
-}
-
-async function addedPatreon(
-  newMember: GuildMember,
-  roleId: string,
-) {
-  if (roleId === env.ROLE_PATRON) {
-    // Check if they already have donated before, if so send a special message
-    if (newMember.roles.cache.has(env.ROLE_PREMIUM)) {
-      const channelViplounge = await discordClient.channels.fetch(env.CHANNEL_VIPLOUNGE) as TextChannel;
-      await channelViplounge.send(stripIndents`
-        ** ${donorEmoji} ${newMember} just contributed further and became a Supporter by \
-        signing up via [Patreon](<https://www.patreon.com/TripSit>)! ${donorEmoji} **
-    
-          ${thankYouPhrases[Math.floor(Math.random() * thankYouPhrases.length)]}
-    
-          ${donationTagline}`);
-    } else {
-    // If added as a first time Patron and donator, give them the premium role and send the message
-      const role = await newMember.guild.roles.fetch(env.ROLE_PREMIUM) as Role;
-      await newMember.roles.add(role);
-
-      const channelViplounge = await discordClient.channels.fetch(env.CHANNEL_VIPLOUNGE) as TextChannel;
-      await channelViplounge.send(stripIndents`
-      ** ${donorEmoji} ${newMember} just became a Supporter and Premium Member \
-      (first time donator) by signing up via [Patreon](<https://www.patreon.com/TripSit>)! ${donorEmoji} **
-  
-        ${thankYouPhrases[Math.floor(Math.random() * thankYouPhrases.length)]}
-  
-        ${donationTagline}`);
-    }
-  }
-  if (roleId === env.ROLE_DONATIONTRIGGER) {
-    // If donated on KoFi, remove the trigger role
-    const roleTrigger = await newMember.guild.roles.fetch(env.ROLE_DONATIONTRIGGER) as Role;
-    await newMember.roles.remove(roleTrigger);
-    // Check if they already have already donated, if so send a special message
-    if (newMember.roles.cache.has(env.ROLE_PREMIUM)) {
-      const channelViplounge = await discordClient.channels.fetch(env.CHANNEL_VIPLOUNGE) as TextChannel;
-      await channelViplounge.send(stripIndents`
-        ** ${donorEmoji} ${newMember} just made a further contribution by donating via \
-        [KoFi](<https://ko-fi.com/tripsit>)! ${donorEmoji} **
-    
-          ${thankYouPhrases[Math.floor(Math.random() * thankYouPhrases.length)]}
-    
-          ${donationTagline}`);
-    } else {
-    // If donated on KoFi and for the first time, give them the premium role and send the message
-      const role = await newMember.guild.roles.fetch(env.ROLE_PREMIUM) as Role;
-      await newMember.roles.add(role);
-      const channelViplounge = await discordClient.channels.fetch(env.CHANNEL_VIPLOUNGE) as TextChannel;
-      await channelViplounge.send(stripIndents`
-      ** ${donorEmoji} ${newMember} just became a Premium Member (first time donator) by donating via \
-      [KoFi](<https://ko-fi.com/tripsit>)! ${donorEmoji} **
-  
-        ${thankYouPhrases[Math.floor(Math.random() * thankYouPhrases.length)]}
-  
-        ${donationTagline}`);
-    }
+    await Promise.all(
+      fetchedThreads.threads.map(async (thread) => {
+        if (
+          thread.parentId === guildData.channel_tripsit &&
+          thread.id !== ticketData?.thread_id &&
+          !thread.archived
+        ) {
+          log.debug(F, `Removing ${newMember.displayName} from ${thread.name}`);
+          await thread.members.remove(newMember.id);
+        }
+      }),
+    );
   }
 }
 
@@ -539,53 +478,138 @@ async function roleAddProcess(
   rolesAdded: string[],
 ) {
   // This goes here because we don't really care when other guilds add roles
-  if (newMember.guild.id !== env.DISCORD_GUILD_ID) return;
+  if (newMember.guild.id !== env.DISCORD_GUILD_ID) {
+    return;
+  }
   // log.debug(F, `roles added: ${rolesAdded}`);
 
-  const auditlog = await discordClient.channels.fetch(env.CHANNEL_AUDITLOG) as TextChannel;
+  const auditlog = (await discordClient.channels.fetch(env.CHANNEL_AUDITLOG)) as TextChannel;
 
   // Go through each role added
-  rolesAdded.forEach(async roleId => {
-    await levelColorCheck(newMember, oldMember, roleId);
-    await donorColorCheck(newMember, oldMember, roleId);
-    await teamMindsetCheck(newMember, roleId);
-    await addedVerified(newMember, roleId);
-    await addedBooster(newMember, roleId);
-    await addedPatreon(newMember, roleId);
 
-    const role = await newMember.guild.roles.fetch(roleId) as Role;
-    await auditlog.send(`${newMember.displayName} added ${role.name}`);
-  });
+  await Promise.all(
+    rolesAdded.map(async (roleId) => {
+      await levelColorCheck(newMember, oldMember, roleId);
+      await donorColorCheck(newMember, oldMember, roleId);
+      await teamMindsetCheck(newMember, roleId);
+      await addedVerified(newMember, roleId);
+      await addedBooster(newMember, roleId);
+      await addedPatreon(newMember, roleId);
+
+      const role = await newMember.guild.roles.fetch(roleId);
+      if (role) {
+        await auditlog.send(`${newMember.displayName} added ${role.name}`);
+      } else {
+        log.error(F, `Role ${roleId} not found!`);
+      }
+    }),
+  );
 }
 
-async function roleRemProcess(
-  newMember: GuildMember,
-  rolesRemoved: string[],
-) {
+async function roleRemProcess(newMember: GuildMember, rolesRemoved: string[]) {
   // This is commented out because we need to remove people from threads when they remove the tripsitter/helper roles
   // if (newMember.guild.id !== env.DISCORD_GUILD_ID) return;
   // log.debug(F, `roles removed: ${rolesRemoved}`);
   // Go through each role removed
-  const auditlog = await discordClient.channels.fetch(env.CHANNEL_AUDITLOG) as TextChannel;
-  rolesRemoved.forEach(async roleId => {
-    await removeExTeamFromThreads(newMember, roleId);
-    // We don't want to run the rest of this on any other guild
-    if (newMember.guild.id !== env.DISCORD_GUILD_ID) return;
-    await teamMindsetRemove(newMember, roleId);
-    await donorColorRemove(newMember, roleId);
+  const auditlog = (await discordClient.channels.fetch(env.CHANNEL_AUDITLOG)) as TextChannel;
+  await Promise.all(
+    rolesRemoved.map(async (roleId) => {
+      await removeExTeamFromThreads(newMember, roleId);
+      // We don't want to run the rest of this on any other guild
+      if (newMember.guild.id !== env.DISCORD_GUILD_ID) {
+        return;
+      }
+      await teamMindsetRemove(newMember, roleId);
+      await donorColorRemove(newMember, roleId);
 
-    const role = await newMember.guild.roles.fetch(roleId) as Role;
-    await auditlog.send(`${newMember.displayName} removed ${role.name}`);
-  });
+      const role = await newMember.guild.roles.fetch(roleId);
+      if (role) {
+        await auditlog.send(`${newMember.displayName} removed ${role.name}`);
+      } else {
+        log.error(F, `Role ${roleId} not found!`);
+      }
+    }),
+  );
+}
+
+async function teamMindsetCheck(newMember: GuildMember, roleId: string) {
+  // Check if the id matches a mindsetRole
+  if (
+    Object.values(mindsetRoles).includes(roleId) &&
+    newMember.roles.cache.has(env.ROLE_TEAMTRIPSIT)
+  ) {
+    // log.debug(F, `mindset role added: ${roleId}`);
+    // If it does, check if the user also has team tripsit role
+    // If so, replace the mindset role with the TTS equivalent
+    log.debug(F, 'User added a mindset role while being a TTS!');
+
+    const mindsetData = Object.entries(mindsetRoles).find(([, value]) => value === roleId);
+
+    log.debug(F, `mindsetData: ${JSON.stringify(mindsetData)}`);
+
+    if (mindsetData) {
+      const [key] = mindsetData;
+      // The target ID matches the current mindsetRole object
+      log.debug(F, `User Mindset role: ${key}`);
+      // Change "ROLE_" to "ROLE_TTS" in the .env name
+      const ttsMindsetName = key.replace('ROLE_', 'ROLE_TTS_') as TeamMindsetNames;
+      log.debug(F, `TTS mindset name: ${ttsMindsetName}`);
+      // Find the role in the TTSMindsetRoles object
+      const ttsMindsetRoleId = TTSMindsetRoles[ttsMindsetName];
+      log.debug(F, `TTS mindset role: ${ttsMindsetRoleId}`);
+      // Get the role from the guild
+      const role = await newMember.guild.roles.fetch(ttsMindsetRoleId);
+      if (role) {
+        // Add the role to the user
+        await newMember.roles.add(role);
+      } else {
+        log.error(F, `Role ${ttsMindsetName} not found!`);
+      }
+    }
+  }
+}
+
+async function teamMindsetRemove(newMember: GuildMember, roleId: string) {
+  // Check if it's a mindsetRole
+  if (
+    Object.values(mindsetRoles).includes(roleId) &&
+    newMember.roles.cache.has(env.ROLE_TEAMTRIPSIT)
+  ) {
+    // Remove all TTS mindsets
+    // Check if the member has any of the TTSmindsetRoles
+
+    const mindsetData = Object.entries(mindsetRoles).find(([, value]) => value === roleId);
+
+    log.debug(F, `mindsetData: ${JSON.stringify(mindsetData)}`);
+
+    if (mindsetData) {
+      const [key] = mindsetData;
+      // The target ID matches the current mindsetRole object
+      log.debug(F, `User Mindset role: ${key}`);
+      // Change "ROLE_" to "ROLE_TTS" in the .env name
+      const ttsMindsetName = key.replace('ROLE_', 'ROLE_TTS_') as TeamMindsetNames;
+      log.debug(F, `TTS mindset name: ${ttsMindsetName}`);
+      // Find the role in the TTSMindsetRoles object
+      const ttsMindsetRoleId = TTSMindsetRoles[ttsMindsetName];
+      log.debug(F, `TTS mindset role: ${ttsMindsetRoleId}`);
+      // Get the role from the guild
+      const role = await newMember.guild.roles.fetch(ttsMindsetRoleId);
+      if (role) {
+        // Add the role to the user
+        await newMember.roles.remove(role);
+      } else {
+        log.error(F, `Role ${ttsMindsetName} not found!`);
+      }
+    }
+  }
 }
 
 export const guildMemberUpdate: GuildMemberUpdateEvent = {
-  name: 'guildMemberUpdate',
   async execute(oldMember, newMember) {
     // log.info(F, `${oldMember} was updated`);
     // log.info(F, `${newMember} was created`);
-    const oldRoles = oldMember.roles.cache.map(role => role.id);
-    const newRoles = newMember.roles.cache.map(role => role.id);
+    const oldRoles = oldMember.roles.cache.map((role) => role.id);
+    const newRoles = newMember.roles.cache.map((role) => role.id);
     // log.debug(F, `oldRoles: ${oldRoles}`);
     // log.debug(F, `newRoles: ${newRoles}`);
 
@@ -594,18 +618,19 @@ export const guildMemberUpdate: GuildMemberUpdateEvent = {
       // log.debug(F, `roles changed on ${newMember.displayName}!`);
 
       // Find the difference between the two arrays
-      const rolesAdded = newRoles.filter(x => !oldRoles.includes(x));
+      const rolesAdded = newRoles.filter((x) => !oldRoles.includes(x));
       if (rolesAdded.length > 0) {
         // log.debug(F, `${rolesAdded.length} roles added`);
         await roleAddProcess(newMember, oldMember, rolesAdded);
       }
-      const rolesRemoved = oldRoles.filter(x => !newRoles.includes(x));
+      const rolesRemoved = oldRoles.filter((x) => !newRoles.includes(x));
       if (rolesRemoved.length > 0) {
         // log.debug(F, `${rolesRemoved.length} roles removed`);
         await roleRemProcess(newMember, rolesRemoved);
       }
     }
   },
+  name: 'guildMemberUpdate',
 };
 
 export default guildMemberUpdate;

@@ -1,7 +1,6 @@
-import {
-  Collection,
-  Message, MessageMentionTypes, TextChannel, Webhook,
-} from 'discord.js';
+import type { Message, MessageMentionTypes, TextChannel, Webhook } from 'discord.js';
+
+import { Collection } from 'discord.js';
 
 export default bridgeMessage;
 
@@ -11,41 +10,16 @@ const tripsitBridgeName = 'Tripsit Bridge';
 
 const webhookCache = new Collection<string, Webhook>();
 
-export async function sendMessageToChannel(
-  channelId:string,
-  message: Message,
-):Promise<void> {
-  let webhookData = webhookCache.find(webhook => webhook.channelId === channelId);
-
-  // If the webhook isn't found in the cache...
-  if (!webhookData) {
-    const channel = await discordClient.channels.fetch(channelId) as TextChannel;
-    log.debug(F, 'Fetching webhooks');
-    webhookData = (await channel.fetchWebhooks())
-      .find(webhook => webhook.name === tripsitBridgeName);
-    if (!webhookData) {
-      log.debug(F, 'Creating new webhook');
-      webhookData = await channel.createWebhook({
-        name: tripsitBridgeName,
-        reason: tripsitBridgeName,
-      });
-    }
-    webhookCache.set(webhookData.id, webhookData);
-  }
-
-  await webhookData.send({ // eslint-disable-line no-await-in-loop
-    username: `${message.member?.displayName} (${message.guild?.name})`,
-    avatarURL: message.author.avatarURL() ?? undefined,
-    content: message.content,
-    files: message.attachments.size > 0 ? message.attachments.map(attachment => attachment.url) : undefined,
-    allowedMentions: { parse: ['users', 'roles'] as MessageMentionTypes[] },
-  });
-}
-
 export async function bridgeMessage(message: Message): Promise<void> {
-  if (!message.guild) return; // If not in a guild then ignore all messages
-  if (message.webhookId) return; // Don't run on webhook messages
-  if (message.author.bot) return; // Don't run on bot messages
+  if (!message.guild) {
+    return;
+  } // If not in a guild then ignore all messages
+  if (message.webhookId) {
+    return;
+  } // Don't run on webhook messages
+  if (message.author.bot) {
+    return;
+  } // Don't run on bot messages
   // This is the bridge utility
   // It will check the database to see if the message was sent in a channel that is configured to be bridged
   // If it is, it will send the message to the bridged channels using a webhook integration
@@ -68,52 +42,96 @@ export async function bridgeMessage(message: Message): Promise<void> {
 
   // Internal message
   if (message.guildId === env.DISCORD_GUILD_ID) {
-    const internalBridgeDb = await db.bridges.findMany({
+    const internalBridgeDatabase = await db.bridges.findMany({
       where: {
         internal_channel: message.channel.id,
       },
     });
 
-    if (internalBridgeDb.length === 0) return; // If there is no bridge config for this channel then ignore the message
+    if (internalBridgeDatabase.length === 0) {
+      return;
+    } // If there is no bridge config for this channel then ignore the message
     log.debug(F, `Message is from tripsit in ${(message.channel as TextChannel).name}`);
 
-    await Promise.all(internalBridgeDb.map(async bridge => {
-      if (bridge.status === 'ACTIVE'
-        && bridge.internal_channel === message.channel.id
-      ) {
-        await sendMessageToChannel(bridge.external_channel, message);
-      }
-    }));
+    await Promise.all(
+      internalBridgeDatabase.map(async (bridge) => {
+        if (bridge.status === 'ACTIVE' && bridge.internal_channel === message.channel.id) {
+          await sendMessageToChannel(bridge.external_channel, message);
+        }
+      }),
+    );
   }
 
   // External message
   if (message.guildId !== env.DISCORD_GUILD_ID) {
-    const externalBridgeDb = await db.bridges.findMany({
+    const externalBridgeDatabase = await db.bridges.findMany({
       where: {
         external_channel: message.channel.id,
       },
     });
-    if (externalBridgeDb.length === 0) return; // If there is no bridge config for this channel then ignore the message
-    const bridgeConfig = externalBridgeDb.find(bridge => bridge.status === 'ACTIVE');
-    if (!bridgeConfig) return; // If there is no bridge config for this channel then ignore the message
-    log.debug(F, `Message is from ${message.guild.name}'s ${(message.channel as TextChannel).name}`);
+    if (externalBridgeDatabase.length === 0) {
+      return;
+    } // If there is no bridge config for this channel then ignore the message
+    const bridgeConfig = externalBridgeDatabase.find((bridge) => bridge.status === 'ACTIVE');
+    if (!bridgeConfig) {
+      return;
+    } // If there is no bridge config for this channel then ignore the message
+    log.debug(
+      F,
+      `Message is from ${message.guild.name}'s ${(message.channel as TextChannel).name}`,
+    );
 
     await sendMessageToChannel(bridgeConfig.internal_channel, message);
 
     // const internalBridgeDb = await database.bridges.get(bridgeConfig.internal_channel);
 
-    const internalBridgeDb = await db.bridges.findMany({
+    const internalBridgeDatabase = await db.bridges.findMany({
       where: {
         internal_channel: bridgeConfig.internal_channel,
       },
     });
 
-    await Promise.all(internalBridgeDb.map(async bridge => {
-      if (bridge.status === 'ACTIVE'
-        && bridge.external_channel.toString() !== message.channel.id.toString()
-      ) {
-        await sendMessageToChannel(bridge.external_channel, message);
-      }
-    }));
+    await Promise.all(
+      internalBridgeDatabase.map(async (bridge) => {
+        if (
+          bridge.status === 'ACTIVE' &&
+          bridge.external_channel.toString() !== message.channel.id.toString()
+        ) {
+          await sendMessageToChannel(bridge.external_channel, message);
+        }
+      }),
+    );
   }
+}
+
+export async function sendMessageToChannel(channelId: string, message: Message): Promise<void> {
+  let webhookData = webhookCache.find((webhook) => webhook.channelId === channelId);
+
+  // If the webhook isn't found in the cache...
+  if (!webhookData) {
+    const channel = (await discordClient.channels.fetch(channelId)) as TextChannel;
+    log.debug(F, 'Fetching webhooks');
+    webhookData = (await channel.fetchWebhooks()).find(
+      (webhook) => webhook.name === tripsitBridgeName,
+    );
+    if (!webhookData) {
+      log.debug(F, 'Creating new webhook');
+      webhookData = await channel.createWebhook({
+        name: tripsitBridgeName,
+        reason: tripsitBridgeName,
+      });
+    }
+    webhookCache.set(webhookData.id, webhookData);
+  }
+
+  await webhookData.send({
+    allowedMentions: { parse: ['users', 'roles'] as MessageMentionTypes[] },
+    avatarURL: message.author.avatarURL() ?? undefined,
+    content: message.content,
+    files:
+      message.attachments.size > 0
+        ? message.attachments.map((attachment) => attachment.url)
+        : undefined,
+    username: `${message.member?.displayName} (${message.guild?.name})`,
+  });
 }

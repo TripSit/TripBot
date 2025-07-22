@@ -1,29 +1,28 @@
-import {
-  Colors,
-  EmbedBuilder,
-  TextChannel,
-  DiscordAPIError,
+import type {
   ChatInputCommandInteraction,
   MessageContextMenuCommandInteraction,
+  TextChannel,
   UserContextMenuCommandInteraction,
-  MessageFlags,
 } from 'discord.js';
+
+import { Colors, DiscordAPIError, EmbedBuilder, MessageFlags } from 'discord.js';
+
 // import * as Sentry from '@sentry/node';
-import { ErrorEvent } from '../@types/eventDef';
+import type { ErrorEvent } from '../@types/eventDef';
 
 const F = f(__filename);
 
-const error10062 = 'Error 10062: (Unknown Interaction Error)[https://github.com/discord/discord-api-docs/issues/5558] for details'; // eslint-disable-line max-len
-const dataSensitiveCommands = [
-  'idose',
-  'moderate',
-  'report',
-];
+const error10062 =
+  'Error 10062: (Unknown Interaction Error)[https://github.com/discord/discord-api-docs/issues/5558] for details';
+const dataSensitiveCommands = new Set(['idose', 'moderate', 'report']);
 
 export default async function handleError(
-  errorData: Error | DiscordAPIError | unknown,
+  errorData: DiscordAPIError | Error | unknown,
   commandName?: string,
-  interaction?: ChatInputCommandInteraction | MessageContextMenuCommandInteraction | UserContextMenuCommandInteraction,
+  interaction?:
+    | ChatInputCommandInteraction
+    | MessageContextMenuCommandInteraction
+    | UserContextMenuCommandInteraction,
 ) {
   Error.stackTraceLimit = 50;
   let errorStack = '';
@@ -46,11 +45,10 @@ export default async function handleError(
   }
 
   // Log the error locally
-  log.error(F, `${errorStack}`);
+  log.error(F, errorStack);
 
   // Construct the embed
-  const embed = new EmbedBuilder()
-    .setColor(Colors.Red);
+  const embed = new EmbedBuilder().setColor(Colors.Red);
 
   // If this is production, send a message to the channel and alert the developers
   if (env.NODE_ENV === 'production') {
@@ -74,7 +72,7 @@ export default async function handleError(
     } */
     if (interaction) {
       log.debug(F, 'Interaction found, sending error to rollbar');
-      global.rollbar.error(errorStack, {
+      globalThis.rollbar.error(errorStack, {
         tags: {
           command: commandName,
           context: await commandContext(interaction),
@@ -86,18 +84,16 @@ export default async function handleError(
       });
     } else {
       log.debug(F, 'No interaction, sending error to rollbar');
-      global.rollbar.error(errorStack);
+      globalThis.rollbar.error(errorStack);
     }
 
     // Get channel we send errors to
-    const channel = await discordClient.channels.fetch(env.CHANNEL_BOTERRORS) as TextChannel;
+    const channel = (await discordClient.channels.fetch(env.CHANNEL_BOTERRORS)) as TextChannel;
 
     // If the error is a 10062, we know it's a Discord API error, to kind of ignore it =/
-    if ((errorData as DiscordAPIError).code === 10062) { // eslint-disable-line @typescript-eslint/no-explicit-any
+    if ((errorData as DiscordAPIError).code === 10_062) {
       await channel.send({
-        embeds: [
-          embed.setDescription(error10062), // eslint-disable-line max-len
-        ],
+        embeds: [embed.setDescription(error10062)],
       });
       return;
     }
@@ -107,46 +103,45 @@ export default async function handleError(
     const role = await guild.roles.fetch(env.ROLE_TRIPBOTDEV);
     let message = `\`\`\`${errorStack}\`\`\``;
     if (interaction && commandName) {
-      const context = dataSensitiveCommands.includes(commandName) ? '' : await commandContext(interaction);
+      const context = dataSensitiveCommands.has(commandName)
+        ? ''
+        : await commandContext(interaction);
       message = `**Error running /${commandName} ${context}${message}`;
     }
 
     // Alert the developers
     await channel.send({
       content: `${role}`,
-      embeds: [
-        embed.setDescription(message),
-      ],
+      embeds: [embed.setDescription(message)],
     });
   }
 
   if (interaction) {
-    const errorMessage = env.NODE_ENV === 'production'
-      ? `There was an error while executing this command!
+    const errorMessage =
+      env.NODE_ENV === 'production'
+        ? `There was an error while executing this command!
 
     The developers have been alerted, you can try again with new parameters maybe?`
-      : errorStack;
+        : errorStack;
 
     embed.setDescription(errorMessage);
 
     // Respond to the user. We don't know how this command was invoked, so we need to check and respond accordingly
-    if (!interaction.replied) {
-      if (interaction.deferred) {
-        await interaction.editReply({ embeds: [embed] });
-      } else {
-        await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
-      }
-    } else {
+    if (interaction.replied) {
       await interaction.editReply({ embeds: [embed] });
+    } else {
+      await (interaction.deferred
+        ? interaction.editReply({ embeds: [embed] })
+        : interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral }));
     }
   }
 }
 
 export const error: ErrorEvent = {
-  name: 'error',
-  async execute(errorObj) {
-    await handleError(errorObj);
+  async execute(errorObject) {
+    await handleError(errorObject);
   },
+  name: 'error',
 };
 
 process.on('unhandledRejection', async (errorData: Error) => {

@@ -1,52 +1,69 @@
+import type { experience_category, experience_type } from '@prisma/client';
+
 // import {
 //   ChannelType,
 // } from 'discord-api-types/v10';
 import { TextChannel } from 'discord.js';
-import { experience_category, experience_type } from '@prisma/client';
-import {
-  MessageCreateEvent,
-} from '../@types/eventDef';
+
+import type { MessageCreateEvent } from '../@types/eventDef';
+
+import { nightsWatch } from '../../global/commands/g.watchuser';
 // import {thoughtPolice} from '../utils/d.thoughtPolice';
 import { experience } from '../../global/utils/experience';
-import { announcements } from '../utils/announcements';
-import { messageCommand } from '../utils/messageCommand';
-import { youAre } from '../utils/youAre';
-// import { modmailDMInteraction, modmailThreadInteraction } from '../commands/guild/modmail';
-import { karma } from '../utils/karma';
-import { imagesOnly } from '../utils/imagesOnly';
 import { countMessage } from '../commands/guild/d.counting';
+import { announcements } from '../utils/announcements';
 import { bridgeMessage } from '../utils/bridge';
 import { helperActivityUpdate } from '../utils/helperActivityUpdate';
-import { nightsWatch } from '../../global/commands/g.watchuser';
+import { imagesOnly } from '../utils/imagesOnly';
+// import { modmailDMInteraction, modmailThreadInteraction } from '../commands/guild/modmail';
+import { karma } from '../utils/karma';
+import { messageCommand } from '../utils/messageCommand';
 import { monitorToxicity } from '../utils/moderateHatespeech';
+import { youAre } from '../utils/youAre';
 // import { awayMessage } from '../utils/awayMessage';
 // import log from '../../global/utils/log';
 // import {parse} from 'path';
 
 const F = f(__filename); // eslint-disable-line
 
-const ignoredRoles = Object.values({
+const ignoredRoles: string[] = Object.values({
+  muted: [env.ROLE_MUTED],
   needshelp: [env.ROLE_NEEDSHELP],
   newbie: [env.ROLE_NEWBIE],
-  underban: [env.ROLE_UNDERBAN],
-  muted: [env.ROLE_MUTED],
   tempvoice: [env.ROLE_TEMPVOICE],
-}).flat();
+  underban: [env.ROLE_UNDERBAN],
+})
+  .flat()
+  .filter((role): role is string => typeof role === 'string');
 
-async function getCategory(channel:TextChannel):Promise<experience_category> {
+async function getCategory(channel: TextChannel): Promise<experience_category> {
   let experienceCategory = '';
   if (channel.parent) {
     // log.debug(F, `parent: ${channel.parent.name} ${channel.parent.id}`);
-    if (channel.parent.id === env.CATEGORY_TEAMTRIPSIT) {
-      experienceCategory = 'TEAM' as experience_category;
-    } else if (channel.parent.id === env.CATEGORY_DEVELOPMENT) {
-      experienceCategory = 'DEVELOPER' as experience_category;
-    } else if (channel.parent.id === env.CATEGORY_HARMREDUCTIONCENTRE) {
-      experienceCategory = 'TRIPSITTER' as experience_category;
-    } else if (channel.parent.id === env.CATEGORY_GATEWAY) {
-      experienceCategory = 'IGNORED' as experience_category;
-    } else {
-      experienceCategory = 'GENERAL' as experience_category;
+    switch (channel.parent.id) {
+      case env.CATEGORY_DEVELOPMENT: {
+        experienceCategory = 'DEVELOPER' as experience_category;
+
+        break;
+      }
+      case env.CATEGORY_GATEWAY: {
+        experienceCategory = 'IGNORED' as experience_category;
+
+        break;
+      }
+      case env.CATEGORY_HARMREDUCTIONCENTRE: {
+        experienceCategory = 'TRIPSITTER' as experience_category;
+
+        break;
+      }
+      case env.CATEGORY_TEAMTRIPSIT: {
+        experienceCategory = 'TEAM' as experience_category;
+
+        break;
+      }
+      default: {
+        experienceCategory = 'GENERAL' as experience_category;
+      }
     }
   } else {
     experienceCategory = 'IGNORED' as experience_category;
@@ -55,7 +72,6 @@ async function getCategory(channel:TextChannel):Promise<experience_category> {
 }
 
 export const messageCreate: MessageCreateEvent = {
-  name: 'messageCreate',
   async execute(message) {
     messageCommand(message);
     bridgeMessage(message);
@@ -66,13 +82,13 @@ export const messageCreate: MessageCreateEvent = {
     }
 
     const userData = await db.users.upsert({
-      where: {
-        discord_id: message.author.id,
-      },
       create: {
         discord_id: message.author.id,
       },
       update: {},
+      where: {
+        discord_id: message.author.id,
+      },
     });
 
     if (userData && userData.discord_bot_ban) {
@@ -85,7 +101,9 @@ export const messageCreate: MessageCreateEvent = {
     // This handles ~ commands
 
     // Don't run on bots
-    if (message.author.bot) return;
+    if (message.author.bot) {
+      return;
+    }
     countMessage(message);
     youAre(message);
     karma(message);
@@ -107,11 +125,11 @@ export const messageCreate: MessageCreateEvent = {
 
     // Determine if the bot should give exp
     if (
-      message.member // Is not a member of a guild
-    && message.channel // Was not sent in a channel
-    && (message.channel instanceof TextChannel) // Was not sent in a text channel
-    && message.guild // Was not sent in a guild
-    && !ignoredRoles.some(role => message.member?.roles.cache.has(role)) // Has a role that should be ignored
+      message.member && // Is not a member of a guild
+      message.channel && // Was not sent in a channel
+      message.channel instanceof TextChannel && // Was not sent in a text channel
+      message.guild && // Was not sent in a guild
+      !ignoredRoles.some((role) => message.member?.roles.cache.has(role)) // Has a role that should be ignored
     ) {
       // Determine what kind of experience to give
       const experienceCategory = await getCategory(message.channel);
@@ -127,6 +145,7 @@ export const messageCreate: MessageCreateEvent = {
 
     announcements(message);
   },
+  name: 'messageCreate',
 };
 
 export default messageCreate;

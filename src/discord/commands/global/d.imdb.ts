@@ -1,13 +1,12 @@
-import {
-  SlashCommandBuilder,
-  ChatInputCommandInteraction,
-  Colors,
-  MessageFlags,
-} from 'discord.js';
-import { SlashCommand } from '../../@types/commandDef';
-import { embedTemplate } from '../../utils/embedTemplate';
+import type { ChatInputCommandInteraction } from 'discord.js';
+
+import { Colors, MessageFlags, SlashCommandBuilder } from 'discord.js';
+
+import type { SlashCommand } from '../../@types/commandDef';
+
 import { imdb } from '../../../global/commands/g.imdb';
 import commandContext from '../../utils/context';
+import { embedTemplate } from '../../utils/embedTemplate';
 
 const F = f(__filename);
 
@@ -16,16 +15,18 @@ export const dImdb: SlashCommand = {
     .setName('imdb')
     .setDescription('Search imdb')
     .setIntegrationTypes([0])
-    .addStringOption(option => option
-      .setName('title')
-      .setDescription('Movie / Series title')
-      .setRequired(true))
-    .addBooleanOption(option => option.setName('ephemeral')
-      .setDescription('Set to "True" to show the response only to you')) as SlashCommandBuilder,
+    .addStringOption((option) =>
+      option.setName('title').setDescription('Movie / Series title').setRequired(true),
+    )
+    .addBooleanOption((option) =>
+      option.setName('ephemeral').setDescription('Set to "True" to show the response only to you'),
+    ) as SlashCommandBuilder,
 
-  async execute(interaction:ChatInputCommandInteraction) {
+  async execute(interaction: ChatInputCommandInteraction) {
     log.info(F, await commandContext(interaction));
-    const ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined;
+    const ephemeral = interaction.options.getBoolean('ephemeral')
+      ? MessageFlags.Ephemeral
+      : undefined;
     await interaction.deferReply({ flags: ephemeral });
 
     const title = interaction.options.getString('title', true);
@@ -47,8 +48,10 @@ export const dImdb: SlashCommand = {
         embeds: [
           embedTemplate()
             .setTitle('Error')
-            .setDescription(`Could not find **${title}**!
-            This API is kind of dumb, you need to be *exact*!`)
+            .setDescription(
+              `Could not find **${title}**!
+            This API is kind of dumb, you need to be *exact*!`,
+            )
             .setColor(Colors.Red),
         ],
       });
@@ -60,17 +63,17 @@ export const dImdb: SlashCommand = {
       .setDescription(`||${result.plot}||`)
       .setURL(result.imdburl)
       .addFields(
-        { name: 'Director(s)', value: `${result.director}`, inline: true },
-        { name: 'Actor(s)', value: `${result.actors}`, inline: true },
-        { name: 'Writer(s)', value: `${result.writer}`, inline: true },
+        { inline: true, name: 'Director(s)', value: result.director },
+        { inline: true, name: 'Actor(s)', value: result.actors },
+        { inline: true, name: 'Writer(s)', value: result.writer },
       );
     if (result.poster !== 'N/A') {
       embed.setThumbnail(result.poster);
     }
 
-    result.ratings.forEach(rating => {
-      embed.addFields({ name: rating.source, value: rating.value, inline: true });
-    });
+    for (const rating of result.ratings) {
+      embed.addFields({ inline: true, name: rating.source, value: rating.value });
+    }
 
     await interaction.editReply({ embeds: [embed] });
     return true;

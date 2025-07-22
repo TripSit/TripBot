@@ -1,23 +1,27 @@
-import {
-  SlashCommandBuilder,
+import type { personas } from '@prisma/client';
+import type {
   ChatInputCommandInteraction,
   // UserContextMenuCommandInteraction,
   GuildMember,
-  AttachmentBuilder,
-  MessageFlags,
 } from 'discord.js';
-import Canvas from '@napi-rs/canvas';
-import { personas } from '@prisma/client';
-import { SlashCommand } from '../../@types/commandDef';
-import { levels } from '../../../global/commands/g.levels';
-import { profile, ProfileData } from '../../../global/commands/g.profile';
-import { getPersonaInfo } from '../../../global/commands/g.rpg';
-import getAsset from '../../utils/getAsset';
-import commandContext from '../../utils/context';
-import { numFormatter, numFormatterVoice } from './d.profile';
 
+import Canvas from '@napi-rs/canvas';
+import { AttachmentBuilder, MessageFlags, SlashCommandBuilder } from 'discord.js';
+
+import type { ProfileData } from '../../../global/commands/g.profile';
+import type { SlashCommand } from '../../@types/commandDef';
+
+import { levels } from '../../../global/commands/g.levels';
+import { profile } from '../../../global/commands/g.profile';
+import { getPersonaInfo } from '../../../global/commands/g.rpg';
 // import { getTotalLevel } from '../../../global/utils/experience';
-import { resizeText, deFuckifyText, generateColors } from '../../utils/canvasUtils';
+import { deFuckifyText, generateColors, resizeText } from '../../utils/canvasUtils';
+import commandContext from '../../utils/context';
+import getAsset from '../../utils/getAsset';
+import {
+  numFormatter as numberFormatter,
+  numFormatterVoice as numberFormatterVoice,
+} from './d.profile';
 // import { expForNextLevel, getTotalLevel } from '../../../global/utils/experience';
 // import { imageGet } from '../../utils/imageGet';
 
@@ -25,70 +29,67 @@ const F = f(__filename);
 
 const fontSizeFamily = '25px futura';
 
-type LevelData = {
+interface LevelData {
   ALL: {
-    TOTAL: {
-      level: number,
-      level_exp: number,
-      nextLevel: number,
-      total_exp: number,
-      rank: number,
-    },
     [key: string]: {
-      level: number,
-      level_exp: number,
-      nextLevel: number,
-      total_exp: number,
-      rank: number,
-    },
-  },
+      level: number;
+      level_exp: number;
+      nextLevel: number;
+      rank: number;
+      total_exp: number;
+    };
+    TOTAL: {
+      level: number;
+      level_exp: number;
+      nextLevel: number;
+      rank: number;
+      total_exp: number;
+    };
+  };
   TEXT: {
-    TOTAL: {
-      level: number,
-      level_exp: number,
-      nextLevel: number,
-      total_exp: number,
-      rank: number,
-    },
     [key: string]: {
-      level: number,
-      level_exp: number,
-      nextLevel: number,
-      total_exp: number,
-      rank: number,
-    },
-  },
+      level: number;
+      level_exp: number;
+      nextLevel: number;
+      rank: number;
+      total_exp: number;
+    };
+    TOTAL: {
+      level: number;
+      level_exp: number;
+      nextLevel: number;
+      rank: number;
+      total_exp: number;
+    };
+  };
   VOICE: {
-    TOTAL: {
-      level: number,
-      level_exp: number,
-      nextLevel: number,
-      total_exp: number,
-      rank: number,
-    },
     [key: string]: {
-      level: number,
-      level_exp: number,
-      nextLevel: number,
-      total_exp: number,
-      rank: number,
-    },
-  },
-};
+      level: number;
+      level_exp: number;
+      nextLevel: number;
+      rank: number;
+      total_exp: number;
+    };
+    TOTAL: {
+      level: number;
+      level_exp: number;
+      nextLevel: number;
+      rank: number;
+      total_exp: number;
+    };
+  };
+}
 
 export const dLevels: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('levels')
-    .setDescription('Get someone\'s current experience levels!')
+    .setDescription("Get someone's current experience levels!")
     .setIntegrationTypes([0])
-    .addUserOption(option => option
-      .setName('target')
-      .setDescription('User to lookup'))
-    .addBooleanOption(option => option.setName('ephemeral')
-      .setDescription('Set to "True" to show the response only to you')) as SlashCommandBuilder,
-  async execute(
-    interaction:ChatInputCommandInteraction,
-  ) {
+    .addUserOption((option) => option.setName('target').setDescription('User to lookup'))
+    .addBooleanOption((option) =>
+      option.setName('ephemeral').setDescription('Set to "True" to show the response only to you'),
+    ) as SlashCommandBuilder,
+  async execute(interaction: ChatInputCommandInteraction) {
     log.info(F, await commandContext(interaction));
     const startTime = Date.now();
     if (!interaction.guild) {
@@ -98,12 +99,14 @@ export const dLevels: SlashCommand = {
 
     // Target is the option given, if none is given, it will be the user who used the command
     const target = interaction.options.getMember('target')
-      ? interaction.options.getMember('target') as GuildMember
-      : interaction.member as GuildMember;
+      ? (interaction.options.getMember('target') as GuildMember)
+      : (interaction.member as GuildMember);
 
     // log.debug(F, `target id: ${target.id}`);
     // log.debug(F, `levelData: ${JSON.stringify(target, null, 2)}`);
-    const ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined;
+    const ephemeral = interaction.options.getBoolean('ephemeral')
+      ? MessageFlags.Ephemeral
+      : undefined;
     const values = await Promise.allSettled([
       await interaction.deferReply({ flags: ephemeral }),
       // Get the target's profile data from the database
@@ -125,37 +128,41 @@ export const dLevels: SlashCommand = {
       await Canvas.loadImage(await getAsset('teamtripsitBar')),
     ]);
 
-    const profileData = values[1].status === 'fulfilled' ? values[1].value : {} as ProfileData;
-    const personaData = values[2].status === 'fulfilled' ? values[2].value : {} as personas;
-    const levelData = values[3].status === 'fulfilled' ? values[3].value : {} as LevelData;
-    const Icons = values[4].status === 'fulfilled' ? values[4].value : {} as Canvas.Image;
+    const profileData = values[1].status === 'fulfilled' ? values[1].value : ({} as ProfileData);
+    const personaData = values[2].status === 'fulfilled' ? values[2].value : ({} as personas);
+    const levelData = values[3].status === 'fulfilled' ? values[3].value : ({} as LevelData);
+    const Icons = values[4].status === 'fulfilled' ? values[4].value : ({} as Canvas.Image);
     // const StatusIcon = values[5].status === 'fulfilled' ? values[5].value : {} as Canvas.Image;
-    const avatar = values[5].status === 'fulfilled' ? values[5].value : {} as Canvas.Image;
-    const teamtripsitIcon = values[6].status === 'fulfilled' ? values[6].value : {} as Canvas.Image;
-    const premiumIcon = values[7].status === 'fulfilled' ? values[7].value : {} as Canvas.Image;
-    const boosterIcon = values[8].status === 'fulfilled' ? values[8].value : {} as Canvas.Image;
-    const legacyIcon = values[9].status === 'fulfilled' ? values[9].value : {} as Canvas.Image;
-    const voiceBar = values[10].status === 'fulfilled' ? values[10].value : {} as Canvas.Image;
-    const tripsitterBar = values[11].status === 'fulfilled' ? values[11].value : {} as Canvas.Image;
-    const developerBar = values[12].status === 'fulfilled' ? values[12].value : {} as Canvas.Image;
-    const teamtripsitBar = values[13].status === 'fulfilled' ? values[13].value : {} as Canvas.Image;
+    const avatar = values[5].status === 'fulfilled' ? values[5].value : ({} as Canvas.Image);
+    const teamtripsitIcon =
+      values[6].status === 'fulfilled' ? values[6].value : ({} as Canvas.Image);
+    const premiumIcon = values[7].status === 'fulfilled' ? values[7].value : ({} as Canvas.Image);
+    const boosterIcon = values[8].status === 'fulfilled' ? values[8].value : ({} as Canvas.Image);
+    const legacyIcon = values[9].status === 'fulfilled' ? values[9].value : ({} as Canvas.Image);
+    const voiceBar = values[10].status === 'fulfilled' ? values[10].value : ({} as Canvas.Image);
+    const tripsitterBar =
+      values[11].status === 'fulfilled' ? values[11].value : ({} as Canvas.Image);
+    const developerBar =
+      values[12].status === 'fulfilled' ? values[12].value : ({} as Canvas.Image);
+    const teamtripsitBar =
+      values[13].status === 'fulfilled' ? values[13].value : ({} as Canvas.Image);
 
     const avatarIconRoles = {
-      [env.ROLE_TEAMTRIPSIT]: {
-        image: teamtripsitIcon,
-        hierarchy: 1,
-      },
-      [env.ROLE_PREMIUM]: {
-        image: premiumIcon,
-        hierarchy: 2,
-      },
       [env.ROLE_BOOSTER]: {
-        image: boosterIcon,
         hierarchy: 3,
+        image: boosterIcon,
       },
       [env.ROLE_LEGACY]: {
-        image: legacyIcon,
         hierarchy: 4,
+        image: legacyIcon,
+      },
+      [env.ROLE_PREMIUM]: {
+        hierarchy: 2,
+        image: premiumIcon,
+      },
+      [env.ROLE_TEAMTRIPSIT]: {
+        hierarchy: 1,
+        image: teamtripsitIcon,
       },
     };
 
@@ -210,39 +217,39 @@ export const dLevels: SlashCommand = {
       : 0;
 
     let xpBarSlot1 = {} as {
-      image: Canvas.Image;
       dataName: string;
-      progress: number;
+      image: Canvas.Image;
       level: number;
+      progress: number;
       rank: number;
     };
     let xpBarSlot2 = {} as {
-      image: Canvas.Image;
       dataName: string;
-      progress: number;
+      image: Canvas.Image;
       level: number;
+      progress: number;
       rank: number;
     };
     let xpBarSlot3 = {} as {
-      image: Canvas.Image;
       dataName: string;
-      progress: number;
+      image: Canvas.Image;
       level: number;
+      progress: number;
       rank: number;
     };
     let xpBarSlot4 = {} as {
-      image: Canvas.Image;
       dataName: string;
-      progress: number;
+      image: Canvas.Image;
       level: number;
+      progress: number;
       rank: number;
     };
 
     const xpBarList = [] as {
-      image: Canvas.Image;
       dataName: string;
-      progress: number;
+      image: Canvas.Image;
       level: number;
+      progress: number;
       rank: number;
     }[];
 
@@ -250,10 +257,10 @@ export const dLevels: SlashCommand = {
     if (levelData.VOICE.TOTAL.level) {
       const progressVoice = levelData.VOICE.TOTAL.level_exp / levelData.VOICE.TOTAL.nextLevel;
       xpBarList.push({
-        image: voiceBar,
         dataName: 'Voice',
-        progress: progressVoice,
+        image: voiceBar,
         level: levelData.VOICE.TOTAL.level,
+        progress: progressVoice,
         rank: levelData.VOICE.TOTAL.rank,
       });
     }
@@ -263,23 +270,26 @@ export const dLevels: SlashCommand = {
         ? levelData.TEXT.TRIPSITTER.level_exp / levelData.TEXT.TRIPSITTER.nextLevel
         : 0;
       xpBarList.push({
-        image: tripsitterBar,
         dataName: 'Tripsitter',
-        progress: progressTripsitter,
+        image: tripsitterBar,
         level: levelData.TEXT.TRIPSITTER ? levelData.TEXT.TRIPSITTER.level : 0,
+        progress: progressTripsitter,
         rank: levelData.TEXT.TRIPSITTER ? levelData.TEXT.TRIPSITTER.rank : 0,
       });
     }
     // Check if user has Dev role or has some xp
-    if ((levelData.TEXT.DEVELOPER && levelData.TEXT.DEVELOPER.level > 5) || (target.roles.cache.has(env.ROLE_DEVELOPER))) {
+    if (
+      (levelData.TEXT.DEVELOPER && levelData.TEXT.DEVELOPER.level > 5) ||
+      target.roles.cache.has(env.ROLE_DEVELOPER)
+    ) {
       const progressDeveloper = levelData.TEXT.DEVELOPER
         ? levelData.TEXT.DEVELOPER.level_exp / levelData.TEXT.DEVELOPER.nextLevel
         : 0;
       xpBarList.push({
-        image: developerBar,
         dataName: 'Developer',
-        progress: progressDeveloper,
+        image: developerBar,
         level: levelData.TEXT.DEVELOPER ? levelData.TEXT.DEVELOPER.level : 0,
+        progress: progressDeveloper,
         rank: levelData.TEXT.DEVELOPER ? levelData.TEXT.DEVELOPER.rank : 0,
       });
     }
@@ -289,10 +299,10 @@ export const dLevels: SlashCommand = {
         ? levelData.TEXT.TEAM.level_exp / levelData.TEXT.TEAM.nextLevel
         : 0;
       xpBarList.push({
-        image: teamtripsitBar,
         dataName: 'Team',
-        progress: progressTeam,
+        image: teamtripsitBar,
         level: levelData.TEXT.TEAM ? levelData.TEXT.TEAM.level : 0,
+        progress: progressTeam,
         rank: levelData.TEXT.TEAM ? levelData.TEXT.TEAM.rank : 0,
       });
     }
@@ -310,19 +320,19 @@ export const dLevels: SlashCommand = {
     }
     if (xpBarList.length > 1) {
       // Assign the second one to slot 2
-      [,xpBarSlot2] = xpBarList;
+      [, xpBarSlot2] = xpBarList;
       layoutHeight = 446;
       layout = 3;
     }
     if (xpBarList.length > 2) {
       // Assign the third one to slot 3
-      [,,xpBarSlot3] = xpBarList;
+      [, , xpBarSlot3] = xpBarList;
       layoutHeight = 506;
       layout = 4;
     }
     if (xpBarList.length > 3) {
       // Assign the fourth one to slot 4
-      [,,,xpBarSlot4] = xpBarList;
+      [, , , xpBarSlot4] = xpBarList;
       layoutHeight = 566;
       layout = 5;
     }
@@ -330,12 +340,12 @@ export const dLevels: SlashCommand = {
     // Create Canvas and Context
     const canvasWidth = 921;
     const canvasHeight = layoutHeight;
-    const canvasObj = Canvas.createCanvas(canvasWidth, canvasHeight);
-    const context = canvasObj.getContext('2d');
+    const canvasObject = Canvas.createCanvas(canvasWidth, canvasHeight);
+    const context = canvasObject.getContext('2d');
     // log.debug(F, `canvasHeight: ${canvasHeight}`);
 
     // Generate the colors for the card based on the user's role color
-    const roleColor = `#${(target.roles.color?.color || 0x99aab5).toString(16).padStart(6, '0')}`;
+    const roleColor = `#${(target.roles.color?.color || 0x99_aa_b5).toString(16).padStart(6, '0')}`;
 
     const cardLightColor = generateColors(roleColor, 0, -75, -67);
     const cardDarkColor = generateColors(roleColor, 0, -75, -80);
@@ -348,12 +358,12 @@ export const dLevels: SlashCommand = {
     context.fillStyle = cardLightColor;
     context.beginPath();
     context.roundRect(20, 0, 901, 145, [19]);
-    context.roundRect(20, 154, 901, (layoutHeight - 154), [19]);
+    context.roundRect(20, 154, 901, layoutHeight - 154, [19]);
     context.fill();
     context.fillStyle = cardDarkColor;
     context.beginPath();
     context.roundRect(0, 0, 684, 145, [19]);
-    context.roundRect(0, 154, 684, (layoutHeight - 154), [19]);
+    context.roundRect(0, 154, 684, layoutHeight - 154, [19]);
     context.fill();
 
     // Purchased Background
@@ -370,9 +380,13 @@ export const dLevels: SlashCommand = {
       });
       // log.debug(F, `Persona home inventory (change): ${JSON.stringify(inventoryData, null, 2)}`);
 
-      const equippedBackground = inventoryData.find(item => item.equipped === true && item.effect === 'background');
-      const equippedFont = inventoryData.find(item => item.equipped === true && item.effect === 'font');
-      const equippedFlair = inventoryData.find(item => item.equipped === true && item.effect === 'userflair');
+      const equippedBackground = inventoryData.find(
+        (item) => item.equipped && item.effect === 'background',
+      );
+      const equippedFont = inventoryData.find((item) => item.equipped && item.effect === 'font');
+      const equippedFlair = inventoryData.find(
+        (item) => item.equipped && item.effect === 'userflair',
+      );
       // log.debug(F, `equippedBackground: ${JSON.stringify(equippedBackground, null, 2)} `);
       if (equippedBackground) {
         const imagePath = await getAsset(equippedBackground.value);
@@ -382,7 +396,7 @@ export const dLevels: SlashCommand = {
         context.globalAlpha = 0.04;
         context.beginPath();
         context.roundRect(0, 0, 921, 145, [19]);
-        context.roundRect(0, 154, 921, (layoutHeight - 154), [19]);
+        context.roundRect(0, 154, 921, layoutHeight - 154, [19]);
         context.clip();
         context.drawImage(Background, 0, 0);
         context.restore();
@@ -401,8 +415,8 @@ export const dLevels: SlashCommand = {
     context.roundRect(702, 18, 201, 51, [19]);
     context.roundRect(702, 78, 201, 51, [19]);
     // Label Chips
-    context.roundRect(18, 172, 51, (layoutHeight - 190), [19]);
-    context.roundRect(852, 172, 51, (layoutHeight - 190), [19]);
+    context.roundRect(18, 172, 51, layoutHeight - 190, [19]);
+    context.roundRect(852, 172, 51, layoutHeight - 190, [19]);
     // Level Bar and Rank Chips
     context.roundRect(87, 172, 579, 76, [19]);
     context.roundRect(702, 172, 132, 76, [19]);
@@ -493,7 +507,8 @@ export const dLevels: SlashCommand = {
     let filteredDisplayName = await deFuckifyText(target.displayName);
     // If the filteredDisplayName is much shorter than what was input, display their username as a fallback
     if (filteredDisplayName.length < target.displayName.length / 2) {
-      filteredDisplayName = target.user.username.charAt(0).toUpperCase() + target.user.username.slice(1);
+      filteredDisplayName =
+        target.user.username.charAt(0).toUpperCase() + target.user.username.slice(1);
     }
 
     context.fillStyle = textColor;
@@ -508,14 +523,14 @@ export const dLevels: SlashCommand = {
       usernameHeight = 78;
       fontSize = 30;
       context.textBaseline = 'top';
-      context.font = resizeText(canvasObj, userFlair, fontSize, 'futura', maxLength);
-      context.fillText(`${userFlair}`, 146, 100);
+      context.font = resizeText(canvasObject, userFlair, fontSize, 'futura', maxLength);
+      context.fillText(userFlair, 146, 100);
       context.textBaseline = 'bottom';
     }
 
     fontSize = 50;
-    context.font = resizeText(canvasObj, filteredDisplayName, fontSize, userFont, maxLength);
-    context.fillText(`${filteredDisplayName}`, 146, usernameHeight);
+    context.font = resizeText(canvasObject, filteredDisplayName, fontSize, userFont, maxLength);
+    context.fillText(filteredDisplayName, 146, usernameHeight);
     context.textBaseline = 'middle';
 
     // Progress Bars Draw
@@ -530,19 +545,19 @@ export const dLevels: SlashCommand = {
     context.roundRect(87, 497, 579, 51, [19]);
     context.clip();
     context.beginPath();
-    context.roundRect(87, 172, (progressTotal) * 579, 76, [19]);
-    context.roundRect(87, 257, (progressGeneral) * 579, 51, [19]);
+    context.roundRect(87, 172, progressTotal * 579, 76, [19]);
+    context.roundRect(87, 257, progressGeneral * 579, 51, [19]);
     if (xpBarSlot1.image) {
-      context.roundRect(87, 317, (xpBarSlot1.progress) * 579, 51, [19]);
+      context.roundRect(87, 317, xpBarSlot1.progress * 579, 51, [19]);
     }
     if (xpBarSlot2.image) {
-      context.roundRect(87, 377, (xpBarSlot2.progress) * 579, 51, [19]);
+      context.roundRect(87, 377, xpBarSlot2.progress * 579, 51, [19]);
     }
     if (xpBarSlot3.image) {
-      context.roundRect(87, 437, (xpBarSlot3.progress) * 579, 51, [19]);
+      context.roundRect(87, 437, xpBarSlot3.progress * 579, 51, [19]);
     }
     if (xpBarSlot4.image) {
-      context.roundRect(87, 497, (xpBarSlot4.progress) * 579, 51, [19]);
+      context.roundRect(87, 497, xpBarSlot4.progress * 579, 51, [19]);
     }
     context.fill();
     context.restore();
@@ -570,7 +585,7 @@ export const dLevels: SlashCommand = {
 
     // Rank Text Resize to fit
     let startingFontSize = 40;
-    const applyRank = (canvas:Canvas.Canvas, text:string) => {
+    const applyRank = (canvas: Canvas.Canvas, text: string) => {
       const rankContext = canvas.getContext('2d');
       fontSize = startingFontSize;
       do {
@@ -578,53 +593,67 @@ export const dLevels: SlashCommand = {
         rankContext.font = `${fontSize}px futura`;
       } while (rankContext.measureText(text).width > 114);
       // Set the color of the rank text based on the rank
-      if (text === '#1') {
-        rankContext.fillStyle = '#d4af37';
-      } else if (text === '#2') {
-        rankContext.fillStyle = '#a8a9ad';
-      } else if (text === '#3') {
-        rankContext.fillStyle = '#aa7042';
-      } else {
-        rankContext.fillStyle = '#ffffff';
+      switch (text) {
+        case '#1': {
+          rankContext.fillStyle = '#d4af37';
+
+          break;
+        }
+        case '#2': {
+          rankContext.fillStyle = '#a8a9ad';
+
+          break;
+        }
+        case '#3': {
+          rankContext.fillStyle = '#aa7042';
+
+          break;
+        }
+        default: {
+          rankContext.fillStyle = '#ffffff';
+        }
       }
       return rankContext.font;
     };
 
     // Rank Text
     context.textAlign = 'left';
-    context.font = applyRank(canvasObj, `#${levelData.ALL.TOTAL.rank}`);
+    context.font = applyRank(canvasObject, `#${levelData.ALL.TOTAL.rank}`);
     context.fillText(`#${levelData.ALL.TOTAL.rank}`, 711, 213);
 
     startingFontSize = 25;
-    context.font = applyRank(canvasObj, `#${levelData.TEXT.GENERAL ? levelData.TEXT.GENERAL.rank : 0}`);
+    context.font = applyRank(
+      canvasObject,
+      `#${levelData.TEXT.GENERAL ? levelData.TEXT.GENERAL.rank : 0}`,
+    );
     context.fillText(`#${levelData.TEXT.GENERAL ? levelData.TEXT.GENERAL.rank : 0}`, 711, 284);
 
     if (xpBarSlot1.image && xpBarSlot1.rank) {
-      context.font = applyRank(canvasObj, `#${xpBarSlot1.rank}`);
+      context.font = applyRank(canvasObject, `#${xpBarSlot1.rank}`);
       context.fillText(`#${xpBarSlot1.rank}`, 711, 344);
     } else if (xpBarSlot1.image && !xpBarSlot1.rank) {
-      context.font = applyRank(canvasObj, '#0');
+      context.font = applyRank(canvasObject, '#0');
       context.fillText('#0', 711, 344);
     }
     if (xpBarSlot2.image && xpBarSlot2.rank) {
-      context.font = applyRank(canvasObj, `#${xpBarSlot2.rank}`);
+      context.font = applyRank(canvasObject, `#${xpBarSlot2.rank}`);
       context.fillText(`#${xpBarSlot2.rank}`, 711, 404);
     } else if (xpBarSlot2.image && !xpBarSlot2.rank) {
-      context.font = applyRank(canvasObj, '#0');
+      context.font = applyRank(canvasObject, '#0');
       context.fillText('#0', 711, 404);
     }
     if (xpBarSlot3.image && xpBarSlot3.rank) {
-      context.font = applyRank(canvasObj, `#${xpBarSlot3.rank}`);
+      context.font = applyRank(canvasObject, `#${xpBarSlot3.rank}`);
       context.fillText(`#${xpBarSlot3.rank}`, 711, 464);
     } else if (xpBarSlot3.image && !xpBarSlot3.rank) {
-      context.font = applyRank(canvasObj, '#0');
+      context.font = applyRank(canvasObject, '#0');
       context.fillText('#0', 711, 464);
     }
     if (xpBarSlot4.image && xpBarSlot4.rank) {
-      context.font = applyRank(canvasObj, `#${xpBarSlot4.rank}`);
+      context.font = applyRank(canvasObject, `#${xpBarSlot4.rank}`);
       context.fillText(`#${xpBarSlot4.rank}`, 711, 524);
     } else if (xpBarSlot4.image && !xpBarSlot4.rank) {
-      context.font = applyRank(canvasObj, '#0');
+      context.font = applyRank(canvasObject, '#0');
       context.fillText('#0', 711, 524);
     }
 
@@ -635,25 +664,25 @@ export const dLevels: SlashCommand = {
     context.save();
     context.translate(921, 0);
     context.rotate((90 * Math.PI) / 180);
-    context.fillText('RANK', ((layoutHeight / 2) + 77), 45);
+    context.fillText('RANK', layoutHeight / 2 + 77, 45);
     context.translate(layoutHeight, 921);
     context.rotate((180 * Math.PI) / 180);
-    context.fillText('LEVEL', ((layoutHeight / 2) - 77), 45);
+    context.fillText('LEVEL', layoutHeight / 2 - 77, 45);
     context.restore();
 
     // Messages Sent Text
     context.textAlign = 'right';
     if (profileData.totalTextExp) {
       const MessagesSent = profileData.totalTextExp / 20;
-      context.fillText(`${numFormatter(MessagesSent)}`, 894, 45);
+      context.fillText(numberFormatter(MessagesSent), 894, 45);
     } else {
       context.fillText('0', 894, 45);
     }
 
     // Voice Hours Text
     if (profileData.totalTextExp) {
-      const hoursInChat = (profileData.totalVoiceExp / 10 / 60);
-      context.fillText(`${numFormatterVoice(hoursInChat)} HR`, 894, 105);
+      const hoursInChat = profileData.totalVoiceExp / 10 / 60;
+      context.fillText(`${numberFormatterVoice(hoursInChat)} HR`, 894, 105);
     } else {
       context.fillText('0 HR', 894, 105);
     }
@@ -703,12 +732,14 @@ export const dLevels: SlashCommand = {
 
     // Process The Entire Card and Send it to Discord
     const date = new Date();
-    const formattedDate = date.toLocaleDateString('en-GB', {
-      day: '2-digit',
-      month: 'short',
-      year: '2-digit',
-    }).replace(/ /g, '-');
-    const attachment = new AttachmentBuilder(await canvasObj.encode('png'), {
+    const formattedDate = date
+      .toLocaleDateString('en-GB', {
+        day: '2-digit',
+        month: 'short',
+        year: '2-digit',
+      })
+      .replaceAll(' ', '-');
+    const attachment = new AttachmentBuilder(await canvasObject.encode('png'), {
       name: `TS_Levels_${filteredDisplayName}_${formattedDate}.png`,
     });
     await interaction.editReply({ files: [attachment] });

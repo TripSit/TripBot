@@ -1,4 +1,3 @@
-/* eslint-disable max-len */
 import { stripIndents } from 'common-tags';
 
 const F = f(__filename);
@@ -10,19 +9,16 @@ export default privacy;
  * @param {'get' | 'delete'} command
  * @return {any}
  */
-export async function privacy(
-  command: 'get' | 'delete',
-  userId: string,
-):Promise<string> {
+export async function privacy(command: 'delete' | 'get', userId: string): Promise<string> {
   let response = '';
   const userData = await db.users.upsert({
-    where: {
-      discord_id: userId,
-    },
     create: {
       discord_id: userId,
     },
     update: {},
+    where: {
+      discord_id: userId,
+    },
   });
   //   .where('user_id', userData.id);
   const userDrugDoses = await db.user_drug_doses.findMany({
@@ -46,12 +42,12 @@ export async function privacy(
     for (const [key, value] of Object.entries(userData)) { // eslint-disable-line
       if (value !== null && value !== undefined && value !== '') {
         if (
-          key === 'id'
-        || key === 'discord_id'
-        || key === 'discord_bot_ban'
-        || key === 'ticket_ban'
+          key === 'id' ||
+          key === 'discord_id' ||
+          key === 'discord_bot_ban' ||
+          key === 'ticket_ban'
         ) {
-          continue; // eslint-disable-line
+          continue;
         }
         response += `**${key}**: ${value}\n`;
         if (key === 'roles') {
@@ -103,10 +99,10 @@ export async function privacy(
     userData.removed_at = null;
 
     await db.users.update({
+      data: userData,
       where: {
         id: userData.id,
       },
-      data: userData,
     });
     await db.user_drug_doses.deleteMany({
       where: {
@@ -128,12 +124,12 @@ export async function privacy(
       for (const [key, value] of Object.entries(userData)) { // eslint-disable-line
       if (value !== null && value !== undefined && value !== '') {
         if (
-          key === 'id'
-        || key === 'discord_id'
-        || key === 'discord_bot_ban'
-        || key === 'ticket_ban'
+          key === 'id' ||
+          key === 'discord_id' ||
+          key === 'discord_bot_ban' ||
+          key === 'ticket_ban'
         ) {
-          continue; // eslint-disable-line
+          continue;
         }
         response += `**${key}**: ${value}\n`;
       }

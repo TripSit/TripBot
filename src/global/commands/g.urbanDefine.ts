@@ -10,32 +10,32 @@ export default urbanDefine;
  * @param {string} term
  * @return {string} definition
  */
-export async function urbanDefine(term:string) {
+export async function urbanDefine(term: string) {
   const { data } = await axios.get(
     'https://mashape-community-urban-dictionary.p.rapidapi.com/define',
     {
-      params: { term },
       headers: {
+        useQueryString: true,
         'X-RapidAPI-Host': 'mashape-community-urban-dictionary.p.rapidapi.com',
         'X-RapidAPI-Key': env.RAPID_TOKEN,
-        useQueryString: true,
       },
+      params: { term },
     },
   );
 
-  type UrbanDefinition = {
-    definition: string,
-    permalink: string,
-    thumbs_up: number,
-    sound_urls: string[],
-    author: string,
-    word: string,
-    defid: number,
-    current_vote: string,
-    written_on: string,
-    example: string,
-    thumbs_down: number
-  };
+  interface UrbanDefinition {
+    author: string;
+    current_vote: string;
+    defid: number;
+    definition: string;
+    example: string;
+    permalink: string;
+    sound_urls: string[];
+    thumbs_down: number;
+    thumbs_up: number;
+    word: string;
+    written_on: string;
+  }
 
   // Check if any definitions exist
   if (!data.list || data.list.length === 0) {
@@ -45,10 +45,12 @@ export async function urbanDefine(term:string) {
   // Sort data by the thumbs_up value
   (data.list as UrbanDefinition[]).sort((a, b) => b.thumbs_up - a.thumbs_up);
 
-  const definition = `${data.list[0].definition.length > 1024
-    ? `${data.list[0].definition.slice(0, 1020)}...`
-    : data.list[0].definition}`.replace(/\[|\]/g, '');
-  const example = `${data.list[0].example}`.replace(/\[|\]/g, '');
+  const definition = `${
+    data.list[0].definition.length > 1024
+      ? `${data.list[0].definition.slice(0, 1020)}...`
+      : data.list[0].definition
+  }`.replaceAll(/\[|\]/g, '');
+  const example = `${data.list[0].example}`.replaceAll(/\[|\]/g, '');
   const upvotes = `${data.list[0].thumbs_up}`;
   const downvotes = `${data.list[0].thumbs_down}`;
 

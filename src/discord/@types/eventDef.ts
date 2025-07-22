@@ -1,243 +1,246 @@
-import {
+import type {
   Client,
+  Collection,
+  DMChannel,
   Guild,
+  GuildAuditLogsEntry,
+  GuildBan,
+  GuildChannel,
+  GuildEmoji,
   GuildMember,
   Interaction,
+  InvalidRequestWarningData,
   Invite,
   Message,
   MessageReaction,
-  User,
-  VoiceState,
-  DMChannel,
-  GuildChannel,
-  GuildEmoji,
-  Role,
-  Sticker,
-  ThreadChannel,
-  TextBasedChannel,
-  RateLimitData,
-  TextChannel,
   NewsChannel,
-  VoiceChannel,
-  GuildBan,
-  InvalidRequestWarningData,
+  RateLimitData,
+  Role,
   Snowflake,
-  Collection,
-  GuildAuditLogsEntry,
+  Sticker,
+  TextBasedChannel,
+  TextChannel,
+  ThreadChannel,
+  User,
+  VoiceChannel,
+  VoiceState,
 } from 'discord.js';
 
-export interface GuildAuditLogEntryCreateEvent {
-  name: string;
-  execute: (auditLogEntry: GuildAuditLogsEntry, guild: Guild) => Promise<void>;
-}
-
 export interface ChannelCreateEvent {
-  name: string;
   execute: (channel: GuildChannel) => Promise<void>;
+  name: string;
 }
 
 export interface ChannelDeleteEvent {
-  name: string;
   execute: (channel: DMChannel | GuildChannel) => Promise<void>;
-}
-
-export interface ChannelUpdateEvent {
   name: string;
-  execute: (oldChannel: DMChannel | GuildChannel, newChannel: DMChannel | GuildChannel) => Promise<void>;
 }
 
 export interface ChannelPinsUpdateEvent {
-  name: string;
   execute: (channel: TextBasedChannel, time: Date) => Promise<void>;
+  name: string;
 }
 
-export interface ReadyEvent {
+export interface ChannelUpdateEvent {
+  execute: (
+    oldChannel: DMChannel | GuildChannel,
+    newChannel: DMChannel | GuildChannel,
+  ) => Promise<void>;
   name: string;
-  once: boolean;
-  execute: (discordClient: Client) => Promise<void>;
 }
 
 export interface DebugEvent {
-  name: string;
   execute: (info: string) => Promise<void>;
+  name: string;
 }
 
 export interface EmojiCreateEvent {
-  name: string;
   execute: (emoji: GuildEmoji) => Promise<void>;
+  name: string;
 }
 
 export interface EmojiDeleteEvent {
-  name: string;
   execute: (emoji: GuildEmoji) => Promise<void>;
+  name: string;
 }
 
 export interface EmojiUpdateEvent {
-  name: string;
   execute: (oldEmoji: GuildEmoji, newEmoji: GuildEmoji) => Promise<void>;
+  name: string;
 }
 
 export interface ErrorEvent {
-  name: string;
   execute: (error: Error) => Promise<void>;
+  name: string;
+}
+
+export interface GuildAuditLogEntryCreateEvent {
+  execute: (auditLogEntry: GuildAuditLogsEntry, guild: Guild) => Promise<void>;
+  name: string;
 }
 
 export interface GuildBanAddEvent {
-  name: string;
   execute: (ban: GuildBan) => Promise<void>;
+  name: string;
 }
 
 export interface GuildBanRemoveEvent {
-  name: string;
   execute: (ban: GuildBan) => Promise<void>;
+  name: string;
 }
 
 export interface GuildCreateEvent {
-  name: string;
   execute: (guild: Guild) => Promise<void>;
+  name: string;
 }
 
 export interface GuildDeleteEvent {
-  name: string;
   execute: (guild: Guild) => Promise<void>;
-}
-
-export interface GuildUpdateEvent {
   name: string;
-  execute: (oldGuild: Guild, newGuild: Guild) => Promise<void>;
-}
-
-export interface GuildMemberAddEvent {
-  name: string;
-  execute: (member: GuildMember) => Promise<void>;
-}
-
-export interface GuildMemberRemoveEvent {
-  name: string;
-  execute: (member: GuildMember) => Promise<void>;
-}
-
-export interface GuildMemberUpdateEvent {
-  name: string;
-  execute: (oldMember: GuildMember, newMember: GuildMember) => Promise<void>;
 }
 
 export interface GuildIntegrationsUpdateEvent {
-  name: string;
   execute: (guild: Guild) => Promise<void>;
+  name: string;
+}
+
+export interface GuildMemberAddEvent {
+  execute: (member: GuildMember) => Promise<void>;
+  name: string;
+}
+
+export interface GuildMemberRemoveEvent {
+  execute: (member: GuildMember) => Promise<void>;
+  name: string;
+}
+
+export interface GuildMemberUpdateEvent {
+  execute: (oldMember: GuildMember, newMember: GuildMember) => Promise<void>;
+  name: string;
+}
+
+export interface GuildUpdateEvent {
+  execute: (oldGuild: Guild, newGuild: Guild) => Promise<void>;
+  name: string;
 }
 
 export interface InteractionCreateEvent {
-  name: string;
   execute: (interaction: Interaction) => Promise<void>;
-}
-
-export interface InviteCreateEvent {
   name: string;
-  execute: (invite: Invite) => Promise<void>;
-}
-
-export interface InviteDeleteEvent {
-  name: string;
-  execute: (invite: Invite) => Promise<void>;
 }
 
 export interface InvalidRequestWarningEvent {
-  name: string;
   execute: (invalidRequestWarningData: InvalidRequestWarningData) => Promise<void>;
+  name: string;
+}
+
+export interface InviteCreateEvent {
+  execute: (invite: Invite) => Promise<void>;
+  name: string;
+}
+
+export interface InviteDeleteEvent {
+  execute: (invite: Invite) => Promise<void>;
+  name: string;
 }
 
 export interface MessageCreateEvent {
-  name: string;
   execute: (message: Message) => Promise<void>;
-}
-
-export interface MessageDeleteEvent {
   name: string;
-  execute: (message: Message) => Promise<void>;
-}
-
-export interface MessageUpdateEvent {
-  name: string;
-  execute: (oldMessage: Message, newMessage: Message) => Promise<void>;
 }
 
 export interface MessageDeleteBulkEvent {
+  execute: (messages: Collection<Snowflake, Message>) => Promise<void>;
   name: string;
-  execute: (messages: Collection <Snowflake, Message>) => Promise<void>;
+}
+
+export interface MessageDeleteEvent {
+  execute: (message: Message) => Promise<void>;
+  name: string;
 }
 
 export interface MessageReactionAddEvent {
-  name: string;
   execute: (messageReaction: MessageReaction, user: User) => Promise<void>;
+  name: string;
 }
 
 export interface MessageReactionRemoveEvent {
-  name: string;
   execute: (messageReaction: MessageReaction, user: User) => Promise<void>;
+  name: string;
+}
+
+export interface MessageUpdateEvent {
+  execute: (oldMessage: Message, newMessage: Message) => Promise<void>;
+  name: string;
 }
 
 export interface RateLimitEvent {
-  name: string;
   execute: (rateLimitData: RateLimitData) => Promise<void>;
+  name: string;
+}
+
+export interface ReadyEvent {
+  execute: (discordClient: Client) => Promise<void>;
+  name: string;
+  once: boolean;
 }
 
 export interface RoleCreateEvent {
-  name: string;
   execute: (role: Role) => Promise<void>;
+  name: string;
 }
 
 export interface RoleDeleteEvent {
-  name: string;
   execute: (role: Role) => Promise<void>;
+  name: string;
 }
 
 export interface RoleUpdateEvent {
-  name: string;
   execute: (oldRole: Role, newRole: Role) => Promise<void>;
+  name: string;
 }
 
 export interface StickerCreateEvent {
-  name: string;
   execute: (role: Sticker) => Promise<void>;
+  name: string;
 }
 
 export interface StickerDeleteEvent {
-  name: string;
   execute: (role: Sticker) => Promise<void>;
+  name: string;
 }
 
 export interface StickerUpdateEvent {
-  name: string;
   execute: (oldSticker: Sticker, newSticker: Sticker) => Promise<void>;
+  name: string;
 }
 
 export interface ThreadCreateEvent {
-  name: string;
   execute: (thread: ThreadChannel, newlyCreated: boolean) => Promise<void>;
+  name: string;
 }
 
 export interface ThreadDeleteEvent {
-  name: string;
   execute: (thread: ThreadChannel) => Promise<void>;
+  name: string;
 }
 
 export interface ThreadUpdateEvent {
-  name: string;
   execute: (oldThread: ThreadChannel, newThread: ThreadChannel) => Promise<void>;
+  name: string;
 }
 
 export interface VoiceStateUpdateEvent {
-  name: string;
   execute: (oldState: VoiceState, newState: VoiceState) => Promise<void>;
+  name: string;
 }
 
 export interface WarnEvent {
-  name: string;
   execute: (info: string) => Promise<void>;
+  name: string;
 }
 
 export interface WebhookUpdateEvent {
+  execute: (channel: NewsChannel | TextChannel | VoiceChannel) => Promise<void>;
   name: string;
-  execute: (channel: TextChannel | NewsChannel | VoiceChannel) => Promise<void>;
 }

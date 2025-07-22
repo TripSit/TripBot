@@ -1,12 +1,10 @@
-import {
-  TextChannel,
-} from 'discord.js';
-import { RateLimitEvent } from '../@types/eventDef';
+import type { TextChannel } from 'discord.js';
+
+import type { RateLimitEvent } from '../@types/eventDef';
 
 const F = f(__filename);
 
 export const rateLimit: RateLimitEvent = {
-  name: 'rateLimit',
   async execute(rateLimitData) {
     const response = `Rate limit warning!
     Global: ${rateLimitData.global}
@@ -19,10 +17,11 @@ export const rateLimit: RateLimitEvent = {
     URL: ${rateLimitData.url}
     `;
 
-    const botlog = await discordClient.channels.fetch(env.CHANNEL_BOTERRORS) as TextChannel;
+    const botlog = (await discordClient.channels.fetch(env.CHANNEL_BOTERRORS)) as TextChannel;
     await botlog.send(response);
-    log.error(F, `${response}`);
+    log.error(F, response);
   },
+  name: 'rateLimit',
 };
 
 export default rateLimit;

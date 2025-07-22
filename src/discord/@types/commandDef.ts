@@ -1,40 +1,40 @@
-import {
+import type {
   ChatInputCommandInteraction,
   ContextMenuCommandBuilder,
-  SlashCommandBuilder,
-  SlashCommandSubcommandsOnlyBuilder,
-  MessageContextMenuCommandInteraction,
-  UserContextMenuCommandInteraction,
+  InteractionReplyOptions,
   // InteractionReplyOptions,
   // InteractionEditReplyOptions,
   Message,
-  InteractionReplyOptions,
+  MessageContextMenuCommandInteraction,
+  SlashCommandBuilder,
+  SlashCommandSubcommandsOnlyBuilder,
+  UserContextMenuCommandInteraction,
 } from 'discord.js';
-
-export interface SlashCommand {
-  data:
-  | Omit<SlashCommandBuilder, 'addSubcommandGroup' | 'addSubcommand'>
-  | SlashCommandSubcommandsOnlyBuilder;
-  execute: (interaction: ChatInputCommandInteraction) => Promise<boolean>;
-}
-
-export interface SlashCommandReply {
-  data:
-  | Omit<SlashCommandBuilder, 'addSubcommandGroup' | 'addSubcommand'>
-  | SlashCommandSubcommandsOnlyBuilder;
-  execute: (interaction: ChatInputCommandInteraction) => Promise<InteractionReplyOptions>;
-}
-
-export interface SlashCommandBeta {
-  data:
-  | Omit<SlashCommandBuilder, 'addSubcommandGroup' | 'addSubcommand'>
-  | SlashCommandSubcommandsOnlyBuilder;
-  execute: (interaction: ChatInputCommandInteraction) => Promise<Message>;
-}
 
 export interface MessageCommand {
   data: ContextMenuCommandBuilder;
   execute: (interaction: MessageContextMenuCommandInteraction) => Promise<boolean>;
+}
+
+export interface SlashCommand {
+  data:
+    | Omit<SlashCommandBuilder, 'addSubcommand' | 'addSubcommandGroup'>
+    | SlashCommandSubcommandsOnlyBuilder;
+  execute: (interaction: ChatInputCommandInteraction) => Promise<boolean>;
+}
+
+export interface SlashCommandBeta {
+  data:
+    | Omit<SlashCommandBuilder, 'addSubcommand' | 'addSubcommandGroup'>
+    | SlashCommandSubcommandsOnlyBuilder;
+  execute: (interaction: ChatInputCommandInteraction) => Promise<Message>;
+}
+
+export interface SlashCommandReply {
+  data:
+    | Omit<SlashCommandBuilder, 'addSubcommand' | 'addSubcommandGroup'>
+    | SlashCommandSubcommandsOnlyBuilder;
+  execute: (interaction: ChatInputCommandInteraction) => Promise<InteractionReplyOptions>;
 }
 
 export interface UserCommand {

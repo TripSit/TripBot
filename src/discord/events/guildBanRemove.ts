@@ -1,13 +1,9 @@
-import {
-  PermissionResolvable,
-  TextChannel,
-} from 'discord.js';
-import {
-  AuditLogEvent,
-} from 'discord-api-types/v10';
-import {
-  GuildBanRemoveEvent,
-} from '../@types/eventDef';
+import type { PermissionResolvable, TextChannel } from 'discord.js';
+
+import { AuditLogEvent } from 'discord-api-types/v10';
+
+import type { GuildBanRemoveEvent } from '../@types/eventDef';
+
 import { checkChannelPermissions, checkGuildPermissions } from '../utils/checkPermissions';
 
 const F = f(__filename);
@@ -15,15 +11,14 @@ const F = f(__filename);
 // https://discordjs.guide/popular-topics/audit-logs.html#who-deleted-a-message
 
 export const guildBanRemove: GuildBanRemoveEvent = {
-  name: 'guildBanRemove',
   async execute(ban) {
     // Only run on Tripsit, we don't want to snoop on other guilds ( ͡~ ͜ʖ ͡°)
-    if (ban.guild.id !== env.DISCORD_GUILD_ID) return;
+    if (ban.guild.id !== env.DISCORD_GUILD_ID) {
+      return;
+    }
     log.info(F, `Channel ${ban.user} was remove.`);
 
-    const perms = await checkGuildPermissions(ban.guild, [
-      'ViewAuditLog' as PermissionResolvable,
-    ]);
+    const perms = await checkGuildPermissions(ban.guild, ['ViewAuditLog' as PermissionResolvable]);
 
     if (!perms.hasPermission) {
       const guildOwner = await ban.guild.fetchOwner();
@@ -40,7 +35,7 @@ export const guildBanRemove: GuildBanRemoveEvent = {
     // Since there's only 1 audit log entry in this collection, grab the first one
     const creationLog = fetchedLogs.entries.first();
 
-    const channel = await discordClient.channels.fetch(env.CHANNEL_AUDITLOG) as TextChannel;
+    const channel = (await discordClient.channels.fetch(env.CHANNEL_AUDITLOG)) as TextChannel;
 
     const channelPerms = await checkChannelPermissions(channel, [
       'ViewChannel' as PermissionResolvable,
@@ -65,6 +60,7 @@ export const guildBanRemove: GuildBanRemoveEvent = {
 
     await channel.send(response);
   },
+  name: 'guildBanRemove',
 };
 
 export default guildBanRemove;

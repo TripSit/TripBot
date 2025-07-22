@@ -1,14 +1,10 @@
-/* eslint-disable max-len */
-
-import express from 'express';
 import bodyParser from 'body-parser';
+import express from 'express';
+import RateLimit from 'express-rate-limit';
+import helmet from 'helmet';
 import morgan from 'morgan';
 
-import helmet from 'helmet';
-import RateLimit from 'express-rate-limit';
-
-import { notFound, errorHandler } from './middlewares/middlewares';
-
+import { errorHandler, notFound } from './middlewares/middlewares';
 import api1 from './v1';
 import api2 from './v2';
 
@@ -26,11 +22,11 @@ const app = express();
 
 // set up rate limiter: maximum of five requests per minute
 const limiter = RateLimit({
-  windowMs: 1 * 60 * 1000, // 1 minute
-  max: 60,
-  handler: (req, res /* next */) => {
+  handler: (request, res /* next */) => {
     res.status(429).send('Too many requests, please try again later.');
   },
+  max: 60,
+  windowMs: 1 * 60 * 1000, // 1 minute
 });
 
 // Apply rate limiter to all requests
@@ -47,9 +43,9 @@ app.use(express.urlencoded({ extended: false })); // configure the app to parse 
 app.use(bodyParser.text()); // configure the app to be able to read text
 
 // CORS middleware
-app.use((req, res, next) => {
+app.use((request, res, next) => {
   const allowedOrigins = [`https://${env.DNS_DOMAIN}`, `https://${env.BOT_DOMAIN}`];
-  const { origin } = req.headers;
+  const { origin } = request.headers;
   if (origin) {
     if (allowedOrigins.includes(origin)) {
       res.setHeader('Access-Control-Allow-Origin', origin);
@@ -64,18 +60,24 @@ app.use((req, res, next) => {
 
 // Routes
 app.get('/api/ip', (request, response) => response.send(request.ip));
-app.get('/api', (req, res) => {
+app.get('/api', (request, res) => {
   res.json({
-    welcome: 'Welcome to TripSit\'s API endpoint.',
-    description: 'You likely want one of the below endpoints.',
-    developers: 'Want type definitions? npm install tripsit/drugs and import { Drug, Interaction, Category } from \'tripsit_drug_db\';',
     data: 'Want to change the data here? Check out the drug database repo at https://github.com/tripsit/drugs',
-    discord: 'Want to discuss this API or other TripSit projects? Join the discord https://discord.gg/tripsit and check out the development rooms.',
-    github: 'Want to help improve the API? Check out the code on the github: https://github.com/TripSit/TripBot/tree/main/src/api',
+    description: 'You likely want one of the below endpoints.',
+    developers:
+      "Want type definitions? npm install tripsit/drugs and import { Drug, Interaction, Category } from 'tripsit_drug_db';",
+    discord:
+      'Want to discuss this API or other TripSit projects? Join the discord https://discord.gg/tripsit and check out the development rooms.',
     endpoints: {
       '/tripsit': {
-        description: 'TripSit\'s original API, preserved for legacy purposes.',
+        description: "TripSit's original API, preserved for legacy purposes.",
         endpoints: {
+          '/getAllCategories': {
+            output: 'string[]',
+          },
+          '/getAllDrugAliases': {
+            output: 'string[]',
+          },
           '/getAllDrugNames': {
             output: 'string[]',
           },
@@ -85,47 +87,41 @@ app.get('/api', (req, res) => {
           '/getAllDrugs': {
             output: '{ [drugName: string]: Drug }, See github.com/tripsit/drugs for type info',
           },
-          '/getAllCategories': {
-            output: 'string[]',
-          },
-          '/getAllDrugAliases': {
-            output: 'string[]',
-          },
           '/getDrug': {
+            example: '/getDrug/DXM',
             input: {
               drugName: 'string',
             },
-            example: '/getDrug/DXM',
             output: {
-              success: 'Drug Object, see github./com/tripsit/drugs for type info',
               error: {
                 err: 'boolean',
                 msg: 'string',
                 options: 'string[]',
               },
+              success: 'Drug Object, see github./com/tripsit/drugs for type info',
             },
           },
           '/getInteraction': {
+            example: '/getInteraction/DXM/MDMA',
             input: {
               drugA: 'string',
               drugB: 'string',
             },
-            example: '/getInteraction/DXM/MDMA',
             output: {
-              success: {
-                result: 'string',
-                interactionCategoryA: 'string',
-                interactionCategoryB: 'string',
-                definition: 'string?',
-                thumbnail: 'string?',
-                color: 'string?',
-                note: 'string?',
-                source: 'string?',
-              },
               error: {
                 err: 'boolean',
                 msg: 'string',
                 options: 'string[]',
+              },
+              success: {
+                color: 'string?',
+                definition: 'string?',
+                interactionCategoryA: 'string',
+                interactionCategoryB: 'string',
+                note: 'string?',
+                result: 'string',
+                source: 'string?',
+                thumbnail: 'string?',
               },
             },
           },
@@ -147,6 +143,9 @@ app.get('/api', (req, res) => {
       //   ],
       // },
     },
+    github:
+      'Want to help improve the API? Check out the code on the github: https://github.com/TripSit/TripBot/tree/main/src/api',
+    welcome: "Welcome to TripSit's API endpoint.",
   });
 });
 app.use('/api/tripsit', api1);

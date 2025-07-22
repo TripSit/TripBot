@@ -1,25 +1,93 @@
-/* eslint-disable no-unused-vars */
-
-export interface CbSubstance {
-  url: string;
-  experiencesUrl?: string;
-  name: string;
-  aliases?: string[];
-  aliasesStr?: string;
-  summary?: string;
-  reagents?: string;
-  classes?: Classes;
-  toxicity?: string[] ;
-  addictionPotential?: string;
-  tolerance?: Tolerance;
-  crossTolerances?: string[];
-  roas?: Roa[];
-  interactions?: Interaction[];
+export enum Chemical {
+  '4-oxazolidinone' = '4-oxazolidinone',
+  Adamantanes = 'Adamantanes',
+  Alcohol = 'Alcohol',
+  Alkanediol = 'Alkanediol',
+  Amine = 'Amine',
+  'Amino acid' = 'Amino acid',
+  'Amino acid analogue' = 'Amino acid analogue',
+  Aminoindane = 'Aminoindane',
+  'Ammonium salt' = 'Ammonium salt',
+  Amphetamine = 'Amphetamine',
+  Anilidopiperidine = 'Anilidopiperidine',
+  Arylcyclohexylamines = 'Arylcyclohexylamines',
+  Barbiturates = 'Barbiturates',
+  Benzamide = 'Benzamide',
+  Benzazepine = 'Benzazepine',
+  Benzhydryl = 'Benzhydryl',
+  Benzisoxazole = 'Benzisoxazole',
+  Benzodiazepines = 'Benzodiazepines',
+  'Butyric acid' = 'Butyric acid',
+  Butyrophenone = 'Butyrophenone',
+  Cannabinoid = 'Cannabinoid',
+  Carbamate = 'Carbamate',
+  'Choline derivative' = 'Choline derivative',
+  Common = 'Common',
+  Cycloalkylamines = 'Cycloalkylamines',
+  Cyclopyrrolone = 'Cyclopyrrolone',
+  Cysteine = 'Cysteine',
+  Diarylethylamines = 'Diarylethylamines',
+  Dibenzothiazepine = 'Dibenzothiazepine',
+  Diol = 'Diol',
+  Diphenylpropylamine = 'Diphenylpropylamine',
+  'Ethanolamine#1#' = 'Ethanolamine#1#',
+  Gabapentinoids = 'Gabapentinoids',
+  Imidazoline = 'Imidazoline',
+  Imidazopyridine = 'Imidazopyridine',
+  Indazole = 'Indazole',
+  Indazolecarboxamide = 'Indazolecarboxamide',
+  'Indole alkaloids' = 'Indole alkaloids',
+  'Indole cannabinoid' = 'Indole cannabinoid',
+  Indolecarboxamide = 'Indolecarboxamide',
+  Indolecarboxylate = 'Indolecarboxylate',
+  Khat = 'Khat#1#',
+  Lactone = 'Lactone',
+  Lysergamides = 'Lysergamides',
+  MDxx = 'MDxx',
+  Naphthoylindazole = 'Naphthoylindazole',
+  Naphthoylindole = 'Naphthoylindole',
+  'Nitrogenous organic acid' = 'Nitrogenous organic acid',
+  Peptide = 'Peptide',
+  Phenothiazine = 'Phenothiazine',
+  Phenylmorpholine = 'Phenylmorpholine',
+  Phenylpropenes = 'Phenylpropenes',
+  Phenylpropylamine = 'Phenylpropylamine',
+  Piperazinoazepine = 'Piperazinoazepine',
+  Poppers = 'Poppers',
+  'Purine alkaloid' = 'Purine alkaloid',
+  Pyridine = 'Pyridine',
+  Quinazolinone = 'Quinazolinone',
+  Racetams = 'Racetams',
+  Salvinorin = 'Salvinorin',
+  'Substituted aminorexes' = 'Substituted aminorexes',
+  'Substituted amphetamines' = 'Substituted amphetamines',
+  'Substituted benzofurans' = 'Substituted benzofurans',
+  'Substituted cathinones' = 'Substituted cathinones',
+  'Substituted morphinans' = 'Substituted morphinans',
+  'Substituted phenethylamines' = 'Substituted phenethylamines',
+  'Substituted phenidates' = 'Substituted phenidates',
+  'Substituted piperazines' = 'Substituted piperazines',
+  'Substituted piperidines' = 'Substituted piperidines',
+  'Substituted pyrrolidines' = 'Substituted pyrrolidines',
+  'Substituted tropanes' = 'Substituted tropanes',
+  'Substituted tryptamines' = 'Substituted tryptamines',
+  Terpenoid = 'Terpenoid',
+  Tetrahydroisoxazole = 'Tetrahydroisoxazole',
+  Tetrahydroisoxazolopyridine = 'Tetrahydroisoxazolopyridine',
+  Thienodiazepines = 'Thienodiazepines',
+  Thiophene = 'Thiophene',
+  'Tricyclic antidepressant' = 'Tricyclic antidepressant',
+  Xanthines = 'Xanthines',
 }
 
-export interface Classes {
-  chemical?: [Chemical];
-  psychoactive?: [Psychoactive];
+export enum Period {
+  AfterEffects = 'After effects',
+  ComeUp = 'Come up',
+  Duration = 'Duration',
+  Offset = 'Offset',
+  Onset = 'Onset',
+  Peak = 'Peak',
+  Total = 'Total',
 }
 
 export enum Psychoactive {
@@ -48,99 +116,6 @@ export enum Psychoactive {
   Tentative = 'Tentative',
 }
 
-export enum Chemical {
-  '4-oxazolidinone' = '4-oxazolidinone',
-  'Amino acid' = 'Amino acid',
-  'Amino acid analogue' = 'Amino acid analogue',
-  'Ammonium salt' = 'Ammonium salt',
-  Amine = 'Amine',
-  Aminoindane = 'Aminoindane',
-  Amphetamine = 'Amphetamine',
-  Adamantanes = 'Adamantanes',
-  Alcohol = 'Alcohol',
-  Alkanediol = 'Alkanediol',
-  Anilidopiperidine = 'Anilidopiperidine',
-  Arylcyclohexylamines = 'Arylcyclohexylamines',
-  Barbiturates = 'Barbiturates',
-  Benzamide = 'Benzamide',
-  Benzazepine = 'Benzazepine',
-  Benzhydryl = 'Benzhydryl',
-  Benzisoxazole = 'Benzisoxazole',
-  Benzodiazepines = 'Benzodiazepines',
-  Butyrophenone = 'Butyrophenone',
-  'Butyric acid' = 'Butyric acid',
-  Cannabinoid = 'Cannabinoid',
-  Carbamate = 'Carbamate',
-  Common = 'Common',
-  'Choline derivative' = 'Choline derivative',
-  Cysteine = 'Cysteine',
-  Cycloalkylamines = 'Cycloalkylamines',
-  Cyclopyrrolone = 'Cyclopyrrolone',
-  Diarylethylamines = 'Diarylethylamines',
-  Diol = 'Diol',
-  Diphenylpropylamine = 'Diphenylpropylamine',
-  Dibenzothiazepine = 'Dibenzothiazepine',
-  'Ethanolamine#1#' = 'Ethanolamine#1#',
-  Gabapentinoids = 'Gabapentinoids',
-  Imidazoline = 'Imidazoline',
-  Imidazopyridine = 'Imidazopyridine',
-  Indazole = 'Indazole',
-  Indazolecarboxamide = 'Indazolecarboxamide',
-  Indolecarboxamide = 'Indolecarboxamide',
-  Indolecarboxylate = 'Indolecarboxylate',
-  'Indole alkaloids' = 'Indole alkaloids',
-  'Indole cannabinoid' = 'Indole cannabinoid',
-  Khat = 'Khat#1#',
-  Lactone = 'Lactone',
-  Lysergamides = 'Lysergamides',
-  MDxx = 'MDxx',
-  Naphthoylindole = 'Naphthoylindole',
-  Naphthoylindazole = 'Naphthoylindazole',
-  'Nitrogenous organic acid' = 'Nitrogenous organic acid',
-  Peptide = 'Peptide',
-  Phenothiazine = 'Phenothiazine',
-  Phenylmorpholine = 'Phenylmorpholine',
-  Phenylpropenes = 'Phenylpropenes',
-  Phenylpropylamine = 'Phenylpropylamine',
-  Piperazinoazepine = 'Piperazinoazepine',
-  Poppers = 'Poppers',
-  Pyridine = 'Pyridine',
-  Quinazolinone = 'Quinazolinone',
-  Racetams = 'Racetams',
-  Salvinorin = 'Salvinorin',
-  'Substituted aminorexes' = 'Substituted aminorexes',
-  'Substituted amphetamines' = 'Substituted amphetamines',
-  'Substituted benzofurans' = 'Substituted benzofurans',
-  'Substituted cathinones' = 'Substituted cathinones',
-  'Substituted morphinans' = 'Substituted morphinans',
-  'Substituted phenethylamines' = 'Substituted phenethylamines',
-  'Substituted phenidates' = 'Substituted phenidates',
-  'Substituted piperazines' = 'Substituted piperazines',
-  'Substituted piperidines' = 'Substituted piperidines',
-  'Substituted pyrrolidines' = 'Substituted pyrrolidines',
-  'Substituted tropanes' = 'Substituted tropanes',
-  'Substituted tryptamines' = 'Substituted tryptamines',
-  Terpenoid = 'Terpenoid',
-  Tetrahydroisoxazole = 'Tetrahydroisoxazole',
-  Tetrahydroisoxazolopyridine = 'Tetrahydroisoxazolopyridine',
-  Thienodiazepines = 'Thienodiazepines',
-  Thiophene = 'Thiophene',
-  'Tricyclic antidepressant' = 'Tricyclic antidepressant',
-  'Purine alkaloid' = 'Purine alkaloid',
-  Xanthines = 'Xanthines',
-}
-
-export interface Interaction {
-  status: Status;
-  note?: string;
-  name: string;
-  sources?: {
-    author: string;
-    title: string;
-    url: string;
-  }[];
-}
-
 export enum Status {
   Caution = 'Caution',
   Dangerous = 'Dangerous',
@@ -148,25 +123,6 @@ export enum Status {
   LowRiskNoSynergy = 'Low Risk & No Synergy',
   LowRiskSynergy = 'Low Risk & Synergy',
   Unsafe = 'Unsafe',
-}
-
-export interface Roa {
-  name: string;
-  dosage?: Dosage[];
-  duration?: Duration[];
-  bioavailability?: string;
-}
-
-export interface Dosage {
-  name: Strength;
-  value: string;
-  note?: string;
-}
-
-export interface Duration {
-  name: Period;
-  value: null | string;
-  note?: string;
 }
 
 export enum Strength {
@@ -177,14 +133,56 @@ export enum Strength {
   Threshold = 'Threshold',
 }
 
-export enum Period {
-  AfterEffects = 'After effects',
-  ComeUp = 'Come up',
-  Duration = 'Duration',
-  Offset = 'Offset',
-  Onset = 'Onset',
-  Peak = 'Peak',
-  Total = 'Total',
+export interface CallbackSubstance {
+  addictionPotential?: string;
+  aliases?: string[];
+  aliasesStr?: string;
+  classes?: Classes;
+  crossTolerances?: string[];
+  experiencesUrl?: string;
+  interactions?: Interaction[];
+  name: string;
+  reagents?: string;
+  roas?: Roa[];
+  summary?: string;
+  tolerance?: Tolerance;
+  toxicity?: string[];
+  url: string;
+}
+
+export interface Classes {
+  chemical?: [Chemical];
+  psychoactive?: [Psychoactive];
+}
+
+export interface Dosage {
+  name: Strength;
+  note?: string;
+  value: string;
+}
+
+export interface Duration {
+  name: Period;
+  note?: string;
+  value: null | string;
+}
+
+export interface Interaction {
+  name: string;
+  note?: string;
+  sources?: {
+    author: string;
+    title: string;
+    url: string;
+  }[];
+  status: Status;
+}
+
+export interface Roa {
+  bioavailability?: string;
+  dosage?: Dosage[];
+  duration?: Duration[];
+  name: string;
 }
 
 export interface Tolerance {

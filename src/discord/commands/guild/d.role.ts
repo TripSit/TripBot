@@ -1,43 +1,55 @@
-import {
-  GuildMember,
-  MessageFlags,
-  Role,
-  SlashCommandBuilder,
-  TextChannel,
-} from 'discord.js';
-import { SlashCommand } from '../../@types/commandDef';
+import type { GuildMember, Role, TextChannel } from 'discord.js';
+
+import { MessageFlags, SlashCommandBuilder } from 'discord.js';
+
+import type { SlashCommand } from '../../@types/commandDef';
 
 const F = f(__filename);
 
-type RoleDef = { name: string; value: string };
+interface RoleDef {
+  name: string;
+  value: string;
+}
 
 const colorRoles = [
   { name: '💖 Tulip', value: env.ROLE_RED },
+  { name: '💖 Red Orange', value: env.ROLE_REDORANGE },
   { name: '🧡 Marigold', value: env.ROLE_ORANGE },
+  { name: '💛 Yellow Green', value: env.ROLE_YELLOWGREEN },
   { name: '💛 Daffodil', value: env.ROLE_YELLOW },
   { name: '💚 Waterlily', value: env.ROLE_GREEN },
-  { name: '💙 Bluebell', value: env.ROLE_BLUE },
-  { name: '💜 Hyacinth', value: env.ROLE_PURPLE },
+  { name: '� Green Blue', value: env.ROLE_GREENBLUE },
+  { name: '�💙 Bluebell', value: env.ROLE_BLUE },
+  { name: '� Blue Purple', value: env.ROLE_BLUEPURPLE },
+  { name: '�💜 Hyacinth', value: env.ROLE_PURPLE },
+  { name: '💜 Pink Red', value: env.ROLE_PINKRED },
   { name: '💗 Azalea', value: env.ROLE_PINK },
+  { name: '💗 White', value: env.ROLE_WHITE },
 ] as RoleDef[];
 
 // log.debug(F, `Color roles: ${JSON.stringify(colorRoles, null, 2)}`);
 // const colorNames = colorRoles.map(role => role.name);
-const colorIds = colorRoles.map(role => role.value);
+const colorIds = colorRoles.map((role) => role.value);
 
 const premiumColorRoles = [
-  { name: '💖 Red', value: env.ROLE_DONOR_RED },
-  { name: '🧡 Orange', value: env.ROLE_DONOR_ORANGE },
-  { name: '💛 Yellow', value: env.ROLE_DONOR_YELLOW },
-  { name: '💚 Green', value: env.ROLE_DONOR_GREEN },
-  { name: '💙 Blue', value: env.ROLE_DONOR_BLUE },
-  { name: '💜 Purple', value: env.ROLE_DONOR_PURPLE },
-  { name: '💗 Pink', value: env.ROLE_DONOR_PINK },
+  { name: '💖 Red', value: env.ROLE_LEVEL_RED },
+  { name: '🧡 Red Orange', value: env.ROLE_LEVEL_REDORANGE },
+  { name: '🧡 Orange', value: env.ROLE_LEVEL_ORANGE },
+  { name: '💛 Yellow', value: env.ROLE_LEVEL_YELLOW },
+  { name: '💛 Yellow Green', value: env.ROLE_LEVEL_YELLOWGREEN },
+  { name: '💚 Green', value: env.ROLE_LEVEL_GREEN },
+  { name: '💚 Green Blue', value: env.ROLE_LEVEL_GREENBLUE },
+  { name: '💙 Blue', value: env.ROLE_LEVEL_BLUE },
+  { name: '💜 Blue Purple', value: env.ROLE_LEVEL_BLUEPURPLE },
+  { name: '💜 Purple', value: env.ROLE_LEVEL_PURPLE },
+  { name: '💗 Pink', value: env.ROLE_LEVEL_PINK },
+  { name: '💗 Pink Red', value: env.ROLE_LEVEL_PINKRED },
+  { name: '💗 Black', value: env.ROLE_LEVEL_BLACK },
 ] as RoleDef[];
 
 // log.debug(F, `Premium Color roles: ${JSON.stringify(premiumColorRoles, null, 2)}`);
 // const premiumColorNames = premiumColorRoles.map(role => role.name);
-const premiumColorIds = premiumColorRoles.map(role => role.value);
+const premiumColorIds = premiumColorRoles.map((role) => role.value);
 
 const mindsetRoles = [
   { name: 'Drunk', value: env.ROLE_DRUNK },
@@ -47,28 +59,24 @@ const mindsetRoles = [
   { name: 'Dissociating', value: env.ROLE_DISSOCIATING },
   { name: 'Stimming', value: env.ROLE_STIMMING },
   { name: 'Sedated', value: env.ROLE_SEDATED },
-  { name: 'Sober', value: env.ROLE_SOBER },
+  { name: 'Working', value: env.ROLE_WORKING },
 ] as RoleDef[];
 
 // Roles that only an Admin can add, therefor no one.
-const blacklistedRoles = [
-  env.ROLE_MODERATOR,
-  env.ROLE_TRIPSITTER,
+const blacklistedRoles = new Set([
+  env.ROLE_BOT,
   env.ROLE_DEVELOPER,
-  env.ROLE_TRIPBOTDEV,
+  env.ROLE_MODERATOR,
   env.ROLE_TEAMTRIPSIT,
   env.ROLE_TRIPBOT,
-  env.ROLE_BOT,
-];
+  env.ROLE_TRIPBOTDEV,
+  env.ROLE_TRIPSITTER,
+]);
 // log.debug(F, `Mindset roles: ${JSON.stringify(mindsetRoles, null, 2)}`);
 // const mindsetNames = mindsetRoles.map(role => role.name);
-const mindsetIds = mindsetRoles.map(role => role.value);
+const mindsetIds = mindsetRoles.map((role) => role.value);
 
-const safeRoleList = [
-  ...colorIds,
-  ...mindsetIds,
-  ...premiumColorIds,
-];
+const safeRoleList = new Set([...colorIds, ...mindsetIds, ...premiumColorIds]);
 
 // const allRoles = [
 //   ...colorRoles,
@@ -83,30 +91,48 @@ export const dRole: SlashCommand = {
     .setName('role')
     .setDescription('Add or remove roles.')
     .setIntegrationTypes([0])
-    .addSubcommand(subcommand => subcommand
-      .setName('add')
-      .setDescription('Add a role.')
-      .addStringOption(option => option.setName('role')
-        .setDescription('The role to add.')
-        .setAutocomplete(true)
-        .setRequired(true))
-      .addUserOption(option => option.setName('user')
-        .setDescription('(Mod only, defaults to you) The user to give the role.')))
-    .addSubcommand(subcommand => subcommand
-      .setName('remove')
-      .setDescription('Remove a role.')
-      .addStringOption(option => option.setName('role')
-        .setDescription('The role to remove.')
-        .setAutocomplete(true)
-        .setRequired(true))
-      .addUserOption(option => option.setName('user')
-        .setDescription('(Mod only, defaults to you) The user to remove the role.'))),
+    .addSubcommand((subcommand) =>
+      subcommand
+        .setName('add')
+        .setDescription('Add a role.')
+        .addStringOption((option) =>
+          option
+            .setName('role')
+            .setDescription('The role to add.')
+            .setAutocomplete(true)
+            .setRequired(true),
+        )
+        .addUserOption((option) =>
+          option
+            .setName('user')
+            .setDescription('(Mod only, defaults to you) The user to give the role.'),
+        ),
+    )
+    .addSubcommand((subcommand) =>
+      subcommand
+        .setName('remove')
+        .setDescription('Remove a role.')
+        .addStringOption((option) =>
+          option
+            .setName('role')
+            .setDescription('The role to remove.')
+            .setAutocomplete(true)
+            .setRequired(true),
+        )
+        .addUserOption((option) =>
+          option
+            .setName('user')
+            .setDescription('(Mod only, defaults to you) The user to remove the role.'),
+        ),
+    ),
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
-    if (!interaction.guild) return false;
+    if (!interaction.guild) {
+      return false;
+    }
     const command = interaction.options.getSubcommand();
-    let role = {} as Role;
+    let role: Role | undefined;
 
     // log.debug(F, `Options: ${JSON.stringify(interaction.options, null, 2)}`);
 
@@ -120,10 +146,12 @@ export const dRole: SlashCommand = {
       const roleName = roleId.includes(' ') ? roleId.split(' ')[1].trim() : roleId;
       // log.debug(F, `Role name: ${roleName}`);
       // log.debug(F, `Role cache: ${interaction.guild.roles.cache}`);
-      role = interaction.guild.roles.cache.find(r => r.name.toLowerCase() === roleName.toLowerCase()) as Role; // eslint-disable-line max-len
+      role = interaction.guild.roles.cache.find(
+        (r) => r.name.toLowerCase() === roleName.toLowerCase(),
+      );
     } else {
       // log.debug(F, 'Role ID is a number');
-      role = await interaction.guild.roles.fetch(roleId) as Role;
+      role = (await interaction.guild.roles.fetch(roleId)) ?? undefined;
     }
 
     if (!role) {
@@ -132,29 +160,29 @@ export const dRole: SlashCommand = {
     }
 
     // Check if interaction.member type is APIInteractionGuildMember
-    const isMod = (interaction.member as GuildMember).roles.cache.has(env.ROLE_MODERATOR);
+    const isModule = (interaction.member as GuildMember).roles.cache.has(env.ROLE_MODERATOR);
     const isTs = (interaction.member as GuildMember).roles.cache.has(env.ROLE_TRIPSITTER);
-    const isDonor = (interaction.member as GuildMember).roles.cache.has(env.ROLE_DONOR);
+    const isDonor = (interaction.member as GuildMember).roles.cache.has(env.ROLE_DONATIONTRIGGER);
     const isPatron = (interaction.member as GuildMember).roles.cache.has(env.ROLE_PATRON);
 
     // log.debug(F, `isMod: ${isMod}, isTs: ${isTs}, isDonor: ${isDonor}, isPatron: ${isPatron}`);
 
     // Prevent using blacklisted roles
-    if (blacklistedRoles.includes(role.id)) {
+    if (blacklistedRoles.has(role.id)) {
       // log.debug(F, `role.id is ${role.id} and is blacklisted`);
       await interaction.editReply({ content: noPermissionText });
       return false;
     }
 
     // If you're not a mod or tripsitter, you can't add anything that's not in the "safe" list
-    if (!safeRoleList.includes(role.id) && !isMod && !isTs) {
+    if (!safeRoleList.has(role.id) && !isModule && !isTs) {
       // log.debug(F, `role.id is ${role.id} and is not in the safe list. (isMod: ${isMod}, isTs: ${isTs})`);
       await interaction.editReply({ content: noPermissionText });
       return false;
     }
 
     // You cant add a premium color if you're not a team member or a donor
-    if (premiumColorIds.includes(role.id) && !isMod && !isTs && !isDonor && !isPatron) {
+    if (premiumColorIds.includes(role.id) && !isModule && !isTs && !isDonor && !isPatron) {
       // log.debug(F, `role.id is ${role.id} is a premium role and the user is not premium
       // (isMod: ${isMod}, isTs: ${isTs} isDonor: ${isDonor}, isPatron: ${isPatron})`);
       await interaction.editReply({ content: noPermissionText });
@@ -165,7 +193,7 @@ export const dRole: SlashCommand = {
     const selectedUser = interaction.options.getUser('user') ?? interaction.user;
 
     // If you're not a mod or tripsitter, you can't add anything to anyone but yourself
-    const user = isMod || isTs ? selectedUser : interaction.user;
+    const user = isModule || isTs ? selectedUser : interaction.user;
 
     // Get the member object for the user
     const member = await interaction.guild.members.fetch(user.id);
@@ -182,21 +210,21 @@ export const dRole: SlashCommand = {
       // Remove the other color roles if you're adding a color role
       if (colorIds.includes(role.id)) {
         // log.debug(F, 'Removing other color roles');
-        const otherColorRoles = colorIds.filter(r => r !== role.id);
+        const otherColorRoles = colorIds.filter((r) => r !== role.id);
         await member.roles.remove([...otherColorRoles, ...premiumColorIds]);
       }
 
       // Remove the other premium mindset roles if you're adding a mindset role
       if (premiumColorIds.includes(role.id)) {
         // log.debug(F, 'Removing other premium color roles');
-        const otherPremiumColorRoles = premiumColorIds.filter(r => r !== role.id);
+        const otherPremiumColorRoles = premiumColorIds.filter((r) => r !== role.id);
         await member.roles.remove([...otherPremiumColorRoles, ...colorIds]);
       }
 
       // Remove the other mindset roles if you're adding a mindset role
       if (mindsetIds.includes(role.id)) {
         // log.debug(F, 'Removing other mindset roles');
-        const otherMindsetRoles = mindsetIds.filter(r => r !== role.id);
+        const otherMindsetRoles = mindsetIds.filter((r) => r !== role.id);
         await member.roles.remove([...otherMindsetRoles]);
       }
 
@@ -208,9 +236,13 @@ export const dRole: SlashCommand = {
       await interaction.editReply({ content: `Removed ${role.name} from ${target}!` });
     }
 
-    const targetString = target !== '' ? ` ${preposition} ${target}` : '';
-    const channelBotlog = await interaction.guild.channels.fetch(env.CHANNEL_BOTLOG) as TextChannel;
-    await channelBotlog.send(`${(interaction.member as GuildMember).displayName} ${verb} ${role.name}${targetString}`);
+    const targetString = target === '' ? '' : ` ${preposition} ${target}`;
+    const channelBotlog = (await interaction.guild.channels.fetch(
+      env.CHANNEL_BOTLOG,
+    )) as TextChannel;
+    await channelBotlog.send(
+      `${(interaction.member as GuildMember).displayName} ${verb} ${role.name}${targetString}`,
+    );
 
     return true;
   },

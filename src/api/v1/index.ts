@@ -4,10 +4,15 @@ import drugs from './drugs/drugs.routes';
 
 const router = express.Router();
 
-router.get('/', (req, res) => {
+router.get('/', (request, res) => {
   res.json({
-    welcome: 'Welcome to TripSit\'s original API, preserved for legacy purposes.',
     publicEndpoints: {
+      '/getAllCategories': {
+        output: 'string[]',
+      },
+      '/getAllDrugAliases': {
+        output: 'string[]',
+      },
       '/getAllDrugNames': {
         output: 'string[]',
       },
@@ -17,52 +22,47 @@ router.get('/', (req, res) => {
       '/getAllDrugs': {
         output: '{ [drugName: string]: Drug }, See github.com/tripsit/drugs for type info',
       },
-      '/getAllCategories': {
-        output: 'string[]',
-      },
-      '/getAllDrugAliases': {
-        output: 'string[]',
-      },
 
       '/getDrug': {
+        example: '/getDrug/DXM',
         input: {
           drugName: 'string',
         },
-        example: '/getDrug/DXM',
         output: {
-          success: 'Drug Object, see github./com/tripsit/drugs for type info',
           error: {
             err: 'boolean',
             msg: 'string',
             options: 'string[]',
           },
+          success: 'Drug Object, see github./com/tripsit/drugs for type info',
         },
       },
       '/getInteraction': {
+        example: '/getInteraction/DXM/MDMA',
         input: {
           drugA: 'string',
           drugB: 'string',
         },
-        example: '/getInteraction/DXM/MDMA',
         output: {
-          success: {
-            result: 'string',
-            interactionCategoryA: 'string',
-            interactionCategoryB: 'string',
-            definition: 'string?',
-            thumbnail: 'string?',
-            color: 'string?',
-            note: 'string?',
-            source: 'string?',
-          },
           error: {
             err: 'boolean',
             msg: 'string',
             options: 'string[]',
           },
+          success: {
+            color: 'string?',
+            definition: 'string?',
+            interactionCategoryA: 'string',
+            interactionCategoryB: 'string',
+            note: 'string?',
+            result: 'string',
+            source: 'string?',
+            thumbnail: 'string?',
+          },
         },
       },
     },
+    welcome: "Welcome to TripSit's original API, preserved for legacy purposes.",
   });
 });
 

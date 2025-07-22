@@ -1,13 +1,9 @@
-import {
-  PermissionResolvable,
-  TextChannel,
-} from 'discord.js';
-import {
-  AuditLogEvent,
-} from 'discord-api-types/v10';
-import {
-  EmojiUpdateEvent,
-} from '../@types/eventDef';
+import type { PermissionResolvable, TextChannel } from 'discord.js';
+
+import { AuditLogEvent } from 'discord-api-types/v10';
+
+import type { EmojiUpdateEvent } from '../@types/eventDef';
+
 import { checkChannelPermissions, checkGuildPermissions } from '../utils/checkPermissions';
 
 const F = f(__filename);
@@ -15,10 +11,11 @@ const F = f(__filename);
 // https://discordjs.guide/popular-topics/audit-logs.html#who-deleted-a-message
 
 export const emojiUpdate: EmojiUpdateEvent = {
-  name: 'emojiUpdate',
   async execute(oldEmoji, newEmoji) {
     // Only run on Tripsit, we don't want to snoop on other guilds ( ͡~ ͜ʖ ͡°)
-    if (newEmoji.guild.id !== env.DISCORD_GUILD_ID) return;
+    if (newEmoji.guild.id !== env.DISCORD_GUILD_ID) {
+      return;
+    }
     log.info(F, `Emoji ${newEmoji.name} was updated.`);
 
     const perms = await checkGuildPermissions(newEmoji.guild, [
@@ -40,7 +37,7 @@ export const emojiUpdate: EmojiUpdateEvent = {
     // Since there's only 1 audit log entry in this collection, grab the first one
     const auditLog = fetchedLogs.entries.first();
 
-    const channel = await discordClient.channels.fetch(env.CHANNEL_AUDITLOG) as TextChannel;
+    const channel = (await discordClient.channels.fetch(env.CHANNEL_AUDITLOG)) as TextChannel;
     const channelPerms = await checkChannelPermissions(channel, [
       'ViewChannel' as PermissionResolvable,
       'SendMessages' as PermissionResolvable,
@@ -54,24 +51,29 @@ export const emojiUpdate: EmojiUpdateEvent = {
 
     // Perform a coherence check to make sure that there's *something*
     if (!auditLog) {
-      await channel.send(`Emoji ${newEmoji.name} was updated, but no relevant audit logs were found.`);
+      await channel.send(
+        `Emoji ${newEmoji.name} was updated, but no relevant audit logs were found.`,
+      );
       return;
     }
 
     let response = '' as string;
 
-    const changes = auditLog.changes.map(change => `**[${change.key}]** '**${change.old}**' > '**${change.new}**'`);
+    const changes = auditLog.changes.map(
+      (change) => `**[${change.key}]** '**${change.old}**' > '**${change.new}**'`,
+    );
 
     if (auditLog.executor) {
       response = `Emoji **${newEmoji.toString()}** was updated by ${auditLog.executor.tag}:`;
-      response += `\n${changes.join('\n')}`; // eslint-disable-line max-len
+      response += `\n${changes.join('\n')}`;
     } else {
       response = `Emoji ${newEmoji.toString()} was updated, but the audit log was inconclusive.`;
-      response += `\n${changes.join('\n')}`; // eslint-disable-line max-len
+      response += `\n${changes.join('\n')}`;
     }
 
     await channel.send(response);
   },
+  name: 'emojiUpdate',
 };
 
 export default emojiUpdate;

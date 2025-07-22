@@ -1,53 +1,43 @@
-/* eslint-disable max-len */
-import {
-  SlashCommandBuilder,
-  TextChannel,
-  GuildMember,
-  Colors,
-  TextBasedChannel,
-  MessageFlags,
-} from 'discord.js';
-import { SlashCommand } from '../../@types/commandDef';
-import { embedTemplate } from '../../utils/embedTemplate';
+import type { GuildMember, TextBasedChannel } from 'discord.js';
+
+import { Colors, MessageFlags, SlashCommandBuilder, TextChannel } from 'discord.js';
+
+import type { SlashCommand } from '../../@types/commandDef';
+
 import commandContext from '../../utils/context';
+import { embedTemplate } from '../../utils/embedTemplate';
 // import log from '../../../global/utils/log'; // eslint-disable-line no-unused-vars
 
 const F = f(__filename);
 
 const reminderDict = {
-  [`${env.CHANNEL_ANNOUNCEMENTS}`]: [
-    'EmbedTitle',
-    'EmbedDescription',
-  ],
-  [`${env.CHANNEL_BOTSPAM}`]: [
-    'EmbedTitle',
-    'EmbedDescription',
-  ],
-  [`${env.CHANNEL_MODHAVEN}`]: [
+  [env.CHANNEL_ANNOUNCEMENTS]: ['EmbedTitle', 'EmbedDescription'],
+  [env.CHANNEL_BOTSPAM]: ['EmbedTitle', 'EmbedDescription'],
+  [env.CHANNEL_MODHAVEN]: [
     'Keep team talk to #teamtripsit!',
     'While we love to see people discussing the org, we want to make sure everyone is on the same page. Please keep all team talk to #teamtripsit!',
-  ],
-  [`${env.CHANNEL_TEAMTRIPSIT}`]: [
-    'Keep social talk to #modhaven!',
-    'While we all love to have a good time, we want to keep this channel easy to scan for people to keep up with news and updates. Please keep social talk to #modhaven!',
   ],
   // [`${env.CHANNEL_GENERAL}`]: [
   //   'Keep #general welcoming and move drug talk to #lounge',
   //   '#general is the first channel new members see. To ensure we make a good impression, we ask that you move all NSFW conversation, including most drug-related talk, to #lounge or the appropriate Backstage channel to ensure a comfortable landing space for new members, thank you!',
   // ],
-  [`${env.CHANNEL_SANCTUARY}`]: [
+  [env.CHANNEL_SANCTUARY]: [
     'Keep #sanctuary slow and positive!',
     '#sanctuary is a positivity-enforced channel for people currently on substances. Please keep the conversation slow and positive, and remember that we are here to help!',
+  ],
+  [env.CHANNEL_TEAMTRIPSIT]: [
+    'Keep social talk to #modhaven!',
+    'While we all love to have a good time, we want to keep this channel easy to scan for people to keep up with news and updates. Please keep social talk to #modhaven!',
   ],
   // [`${env.CHANNEL_WEBTRIPSIT}`]: [
   //   'Keep #web-tripsit clear for people who need help!',
   //   'Reminder: this channel is for people who need immediate assistance or who have questions about harm reduction and safer drug use. To access our social chat channels, consider joining our discord at https://discord.gg/tripsit. Thank you!,',
   // ],
-  [`${env.CHANNEL_WEBTRIPSIT1}`]: [
+  [env.CHANNEL_WEBTRIPSIT1]: [
     'Keep #web-tripsit clear for people who need help!',
     'Reminder: this channel is for people who need immediate assistance or who have questions about harm reduction and safer drug use. To access our social chat channels, consider joining our discord at https://discord.gg/tripsit. Thank you!,',
   ],
-  [`${env.CHANNEL_WEBTRIPSIT2}`]: [
+  [env.CHANNEL_WEBTRIPSIT2]: [
     'Keep #web-tripsit clear for people who need help!',
     'Reminder: this channel is for people who need immediate assistance or who have questions about harm reduction and safer drug use. To access our social chat channels, consider joining our discord at https://discord.gg/tripsit. Thank you!,',
   ],
@@ -77,7 +67,9 @@ export const dReminder: SlashCommand = {
     const reminderData = reminderDict[chanId];
     // log.debug(F, `reminderData: ${JSON.stringify(reminderData, null, 2)}`);
     if (!reminderData) {
-      await interaction.editReply({ content: 'This command can only be used in a channel with a reminder!' });
+      await interaction.editReply({
+        content: 'This command can only be used in a channel with a reminder!',
+      });
       return false;
     }
     const reminderTitle = reminderData[0];
@@ -92,9 +84,11 @@ export const dReminder: SlashCommand = {
 
     await interaction.channel.send({ embeds: [reminder] });
 
-    const botlog = await interaction.guild.channels.fetch(env.CHANNEL_BOTLOG) as TextChannel;
+    const botlog = (await interaction.guild.channels.fetch(env.CHANNEL_BOTLOG)) as TextChannel;
     if (botlog) {
-      await botlog.send(`${(interaction.member as GuildMember).displayName} sent a reminder to ${(interaction.channel as TextChannel).name}`);
+      await botlog.send(
+        `${(interaction.member as GuildMember).displayName} sent a reminder to ${interaction.channel.name}`,
+      );
     }
     await interaction.editReply({ content: 'Reminder sent!' });
     return true;

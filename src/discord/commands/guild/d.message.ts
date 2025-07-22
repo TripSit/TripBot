@@ -1,16 +1,43 @@
-import {
-  SlashCommandBuilder,
-  EmbedBuilder,
-  Message,
-  MessageFlags,
-} from 'discord.js';
-import { SlashCommand } from '../../@types/commandDef';
+import type { Message } from 'discord.js';
+
+import { EmbedBuilder, MessageFlags, SlashCommandBuilder } from 'discord.js';
+
+import type { SlashCommand } from '../../@types/commandDef';
 
 const F = f(__filename);
 
-async function messageGrab(
-  message: Message,
-):Promise<string> {
+async function messageEdit(message: Message, content: string): Promise<string> {
+  // check if message is from bot
+  if (message.author.id !== message.client.user?.id) {
+    return `Message with ID '${message.id}' is not from me!`;
+  }
+
+  const replacedContent = content.replaceAll(String.raw`\n`, '\n').replaceAll(String.raw`\r`, '\r');
+
+  // check if message is raw embed code
+  if (replacedContent.startsWith('{')) {
+    try {
+      const embedData = JSON.parse(replacedContent);
+      const embed = new EmbedBuilder(embedData);
+      message
+        .edit({ embeds: [embed] })
+        .then(() => "Successfully edited message with new embed!'")
+        .catch((error) => {
+          log.error(F, error);
+          return "Error: Failed to edit message with embed.'";
+        });
+    } catch (error) {
+      log.error(F, `${error}`);
+      return 'Error: There is an error in your embed code!';
+    }
+  } else {
+    // edit message
+    await message.edit(replacedContent);
+  }
+  return `I edited message with ID '${message.id}' to say '${replacedContent}'`;
+}
+
+async function messageGrab(message: Message): Promise<string> {
   // check if message contains embed
   if (message.embeds.length > 0) {
     const embed = message.embeds[0];
@@ -22,59 +49,30 @@ async function messageGrab(
   return `Message with ID '${message.id}' does not contain an embed!`;
 }
 
-async function messageEdit(
-  message: Message,
-  content: string,
-):Promise<string> {
-  // check if message is from bot
-  if (message.author.id !== message.client.user?.id) {
-    return `Message with ID '${message.id}' is not from me!`;
-  }
-
-  const replacedContent = content.replaceAll('\\n', '\n').replaceAll('\\r', '\r');
-
-  // check if message is raw embed code
-  if (replacedContent.startsWith('{')) {
-    try {
-      const embedData = JSON.parse(replacedContent);
-      const embed = new EmbedBuilder(embedData);
-      message.edit({ embeds: [embed] })
-        .then(() => 'Successfully edited message with new embed!\'')
-        .catch(error => {
-          log.error(F, error);
-          return 'Error: Failed to edit message with embed.\'';
-        });
-    } catch (error) {
-      log.error(F, `${error}`);
-      return 'Error: There is an error in your embed code!';
-    }
-  } else {
-  // edit message
-    await message.edit(replacedContent);
-  }
-  return `I edited message with ID '${message.id}' to say '${replacedContent}'`;
-}
-
 export const dMessage: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('message')
     .setDescription('Do stuff with a bot message')
     .setIntegrationTypes([0])
-    .addSubcommand(subcommand => subcommand
-      .setName('edit')
-      .setDescription('Edit a message')
-      .addStringOption(option => option.setName('id')
-        .setDescription('What is the message ID?')
-        .setRequired(true))
-      .addStringOption(option => option.setName('message')
-        .setDescription('What do you want to say?')
-        .setRequired(true)))
-    .addSubcommand(subcommand => subcommand
-      .setName('grab')
-      .setDescription('Grab the raw embed code of a message')
-      .addStringOption(option => option.setName('id')
-        .setDescription('What is the message ID?')
-        .setRequired(true))),
+    .addSubcommand((subcommand) =>
+      subcommand
+        .setName('edit')
+        .setDescription('Edit a message')
+        .addStringOption((option) =>
+          option.setName('id').setDescription('What is the message ID?').setRequired(true),
+        )
+        .addStringOption((option) =>
+          option.setName('message').setDescription('What do you want to say?').setRequired(true),
+        ),
+    )
+    .addSubcommand((subcommand) =>
+      subcommand
+        .setName('grab')
+        .setDescription('Grab the raw embed code of a message')
+        .addStringOption((option) =>
+          option.setName('id').setDescription('What is the message ID?').setRequired(true),
+        ),
+    ),
   async execute(interaction) {
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
@@ -104,14 +102,14 @@ export const dMessage: SlashCommand = {
 
     if (response.toLowerCase().startsWith('error')) {
       await interaction.editReply({
-        embeds: [],
         content: response,
+        embeds: [],
       });
       return false;
     }
     await interaction.editReply({
-      embeds: [],
       content: response,
+      embeds: [],
     });
     return true;
   },

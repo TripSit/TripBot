@@ -1,17 +1,16 @@
-import {
-  TextChannel,
-} from 'discord.js';
-import { WarnEvent } from '../@types/eventDef';
+import type { TextChannel } from 'discord.js';
+
+import type { WarnEvent } from '../@types/eventDef';
 
 const F = f(__filename);
 
 export const warn: WarnEvent = {
-  name: 'warn',
   async execute(info) {
-    const botlog = await discordClient.channels.fetch(env.CHANNEL_BOTLOG) as TextChannel;
+    const botlog = (await discordClient.channels.fetch(env.CHANNEL_BOTLOG)) as TextChannel;
     await botlog.send(info);
-    log.error(F, `${info}`);
+    log.error(F, info);
   },
+  name: 'warn',
 };
 
 export default warn;

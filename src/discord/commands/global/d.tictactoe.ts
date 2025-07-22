@@ -1,40 +1,68 @@
+import type { ButtonInteraction, ChatInputCommandInteraction } from 'discord.js';
+
 import {
-  SlashCommandBuilder,
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
+  Colors,
   ComponentType,
   EmbedBuilder,
-  ButtonInteraction,
-  ChatInputCommandInteraction,
-  Colors,
   MessageFlags,
+  SlashCommandBuilder,
 } from 'discord.js';
-import { SlashCommand } from '../../@types/commandDef';
+
+import type { SlashCommand } from '../../@types/commandDef';
+import type { TicTacToeGame } from '../../@types/ticTacToeDef';
+
 import { createInitialGame, executeMove } from '../../../global/commands/g.tictactoe';
-import { TicTacToeGame } from '../../@types/ticTacToeDef';
 
 const F = f(__filename);
+
+function createGameButtons(game: TicTacToeGame): ActionRowBuilder<ButtonBuilder>[] {
+  const rows: ActionRowBuilder<ButtonBuilder>[] = [];
+
+  for (const index of [0, 3, 6]) {
+    const row = new ActionRowBuilder<ButtonBuilder>();
+
+    for (const index_ of [0, 1, 2]) {
+      const position = index + index_;
+      const button = new ButtonBuilder()
+        .setCustomId(`ttt_${game.gameId}_${position}`)
+        .setLabel(game.board[position] === '⬜' ? '​' : game.board[position])
+        .setStyle(ButtonStyle.Secondary)
+        .setDisabled(game.isGameOver || game.board[position] !== '⬜');
+
+      // If the button is empty and game is active, make it primary for better visibility
+      if (game.board[position] === '⬜' && !game.isGameOver) {
+        button.setStyle(ButtonStyle.Primary);
+      }
+
+      row.addComponents(button);
+    }
+
+    rows.push(row);
+  }
+
+  return rows;
+}
 
 function createGameEmbed(
   game: TicTacToeGame,
   player1Name: string,
   player2Name: string,
 ): EmbedBuilder {
-  const embed = new EmbedBuilder()
-    .setTitle('🎮 Tic-Tac-Toe')
-    .setColor(Colors.Green);
+  const embed = new EmbedBuilder().setTitle('🎮 Tic-Tac-Toe').setColor(Colors.Green);
 
   let description = `${player1Name} (❌) vs ${player2Name} (⭕)\n\n`;
 
   if (game.isGameOver) {
     if (game.winner === 'tie') {
-      description += '\n🤝✨ **IT\'S A TIE!** ✨🤝\n';
+      description += "\n🤝✨ **IT'S A TIE!** ✨🤝\n";
       embed.setColor(Colors.Yellow);
     } else if (game.winner !== 'tie') {
       const winnerName = game.winner === 'X' ? player1Name : player2Name;
       const winnerSymbol = game.winner === 'X' ? '❌' : '⭕';
-      // eslint-disable-next-line max-len
+
       description += `\n🏆🎉${winnerSymbol} **${winnerName.toUpperCase()} WINS!** ${winnerSymbol}🎉🏆`;
       embed.setColor(Colors.Green);
     }
@@ -48,44 +76,18 @@ function createGameEmbed(
   return embed;
 }
 
-function createGameButtons(game: TicTacToeGame): ActionRowBuilder<ButtonBuilder>[] {
-  const rows: ActionRowBuilder<ButtonBuilder>[] = [];
-
-  [0, 3, 6].forEach(i => {
-    const row = new ActionRowBuilder<ButtonBuilder>();
-
-    [0, 1, 2].forEach(j => {
-      const position = i + j;
-      const button = new ButtonBuilder()
-        .setCustomId(`ttt_${game.gameId}_${position}`)
-        .setLabel(game.board[position] !== '⬜' ? game.board[position] : '​')
-        .setStyle(ButtonStyle.Secondary)
-        .setDisabled(game.isGameOver || game.board[position] !== '⬜');
-
-      // If the button is empty and game is active, make it primary for better visibility
-      if (game.board[position] === '⬜' && !game.isGameOver) {
-        button.setStyle(ButtonStyle.Primary);
-      }
-
-      row.addComponents(button);
-    });
-
-    rows.push(row);
-  });
-
-  return rows;
-}
-
 export const dTicTacToe: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('tictactoe')
     .setDescription('Start a tic-tac-toe game')
     .setContexts([0, 1, 2])
     .setIntegrationTypes([0, 1])
-    .addUserOption(option => option
-      .setName('opponent')
-      .setDescription('The user you want to play against')
-      .setRequired(true)) as SlashCommandBuilder,
+    .addUserOption((option) =>
+      option
+        .setName('opponent')
+        .setDescription('The user you want to play against')
+        .setRequired(true),
+    ) as SlashCommandBuilder,
 
   async execute(interaction: ChatInputCommandInteraction) {
     const opponent = interaction.options.getUser('opponent', true);
@@ -119,37 +121,41 @@ export const dTicTacToe: SlashCommand = {
     const buttons = createGameButtons(game);
 
     await interaction.reply({
-      embeds: [embed],
       components: buttons,
+      embeds: [embed],
     });
 
-    const filter = (i: ButtonInteraction): boolean => i.user.id === interaction.user.id || i.user.id === opponent.id;
+    const filter = (index: ButtonInteraction): boolean =>
+      index.user.id === interaction.user.id || index.user.id === opponent.id;
 
     const collector = interaction.channel?.createMessageComponentCollector({
       componentType: ComponentType.Button,
       filter,
-      time: 300000,
+      time: 300_000,
     });
 
     if (!collector) {
       await interaction.editReply({
+        components: [],
         content: 'Error: Could not create game collector.',
         embeds: [],
-        components: [],
       });
       return false;
     }
 
-    collector.on('collect', async (i: ButtonInteraction) => {
-      const [, gameIdFromButton, positionStr] = i.customId.split('_');
-      const position = parseInt(positionStr, 10);
-      const moveResult = executeMove(game, position, i.user.id);
+    collector.on('collect', async (index: ButtonInteraction) => {
+      const [, gameIdFromButton, positionString] = index.customId.split('_');
+      const position = Number.parseInt(positionString, 10);
+      const moveResult = executeMove(game, position, index.user.id);
       log.info(F, `[${game.gameId}] Move result: ${moveResult}`);
 
-      log.info(F, `[${game.gameId}] Button clicked by ${i.user.username} (${i.user.id})`);
-      log.info(F, `[${game.gameId}] CustomId: ${i.customId}`);
-      // eslint-disable-next-line max-len
-      log.info(F, `[${game.gameId}] Current turn: ${game.currentPlayer}, Player1: ${game.player1}, Player2: ${game.player2}`);
+      log.info(F, `[${game.gameId}] Button clicked by ${index.user.username} (${index.user.id})`);
+      log.info(F, `[${game.gameId}] CustomId: ${index.customId}`);
+
+      log.info(
+        F,
+        `[${game.gameId}] Current turn: ${game.currentPlayer}, Player1: ${game.player1}, Player2: ${game.player2}`,
+      );
 
       // Verify this button belongs to this game
       if (gameIdFromButton !== game.gameId) {
@@ -157,7 +163,7 @@ export const dTicTacToe: SlashCommand = {
       }
 
       if (!moveResult.success) {
-        await i.reply({
+        await index.reply({
           content: moveResult.errorMessage,
           flags: MessageFlags.Ephemeral,
         });
@@ -171,9 +177,9 @@ export const dTicTacToe: SlashCommand = {
       const newEmbed = createGameEmbed(game, interaction.user.username, opponent.username);
       const newButtons = createGameButtons(game);
 
-      await i.update({
-        embeds: [newEmbed],
+      await index.update({
         components: newButtons,
+        embeds: [newEmbed],
       });
 
       if (game.isGameOver) {
@@ -191,8 +197,8 @@ export const dTicTacToe: SlashCommand = {
           .setColor(Colors.Red);
 
         await interaction.editReply({
-          embeds: [timeoutEmbed],
           components: [],
+          embeds: [timeoutEmbed],
         });
       }
     });

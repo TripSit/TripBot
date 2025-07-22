@@ -1,4 +1,4 @@
-import { User, GuildMember } from 'discord.js';
+import type { GuildMember, User } from 'discord.js';
 
 // Map to store cooldowns for users and their commands
 const cooldowns = new Map<string, Map<string, number>>();
@@ -11,10 +11,10 @@ const cooldowns = new Map<string, Map<string, number>>();
  * @return {Promise<{ success: boolean; message?: string }>}
  */
 async function commandCooldown(
-  user: User | GuildMember,
+  user: GuildMember | User,
   commandName: string,
-  cooldownAmount: number = 30000,
-): Promise<{ success: boolean; message?: string }> {
+  cooldownAmount = 30_000,
+): Promise<{ message?: string; success: boolean }> {
   const now = Date.now();
 
   // Ensure there's a map for the user in the cooldowns map
@@ -22,7 +22,7 @@ async function commandCooldown(
     cooldowns.set(user.id, new Map());
   }
 
-  const userCooldowns = cooldowns.get(user.id) as Map<string, number>;
+  const userCooldowns = cooldowns.get(user.id)!;
 
   // Check if the user has a cooldown for the specific command
   const commandExpiration = userCooldowns.get(commandName);
@@ -33,8 +33,8 @@ async function commandCooldown(
     if (now < expirationTime) {
       const timeLeft = (expirationTime - now) / 1000; // Time left in seconds
       return {
-        success: false,
         message: `Please wait ${timeLeft.toFixed(1)} more seconds before using this command or button again.`,
+        success: false,
       };
     }
   }

@@ -1,5 +1,6 @@
+import type UserRepresentation from '@keycloak/keycloak-admin-client/lib/defs/userRepresentation';
+
 import KcAdminClient from '@keycloak/keycloak-admin-client';
-import UserRepresentation from '@keycloak/keycloak-admin-client/lib/defs/userRepresentation';
 
 const F = f(__filename);
 
@@ -8,122 +9,6 @@ const kcAdminClient = new KcAdminClient({
   baseUrl: process.env.KEYCLOAK_BASE_URL || 'http://localhost:8080',
   realmName: process.env.KEYCLOAK_REALM || 'master',
 });
-
-// Authenticate with Keycloak
-async function authenticateKeycloak() {
-  try {
-    await kcAdminClient.auth({
-      grantType: 'client_credentials',
-      clientId: process.env.KEYCLOAK_CLIENT_ID as string,
-      clientSecret: process.env.KEYCLOAK_CLIENT_SECRET,
-    });
-    log.debug(F, 'Successfully authenticated with Keycloak');
-  } catch (error) {
-    log.error(F, `Failed to authenticate with Keycloak: ${error}`);
-    throw error;
-  }
-}
-
-async function fetchAllUsers(): Promise<UserRepresentation[]> {
-  const max = 100;
-  const maxUsers = 10000; // Safety limit
-
-  // Create an array of page numbers to fetch
-  const pageCount = Math.ceil(maxUsers / max);
-  const pageNumbers = Array.from({ length: pageCount }, (_, i) => i);
-
-  // Fetch pages in parallel batches
-  const PARALLEL_PAGES = 5; // Fetch 5 pages at a time
-
-  // Create all page batches
-  const pageBatches = [];
-  for (let i = 0; i < pageNumbers.length; i += PARALLEL_PAGES) {
-    pageBatches.push(pageNumbers.slice(i, i + PARALLEL_PAGES));
-  }
-
-  // Fetch all pages in parallel
-  const allPageResults = await Promise.all(
-    pageBatches.map(pageNumberBatch => Promise.all(
-      pageNumberBatch.map(pageNum => kcAdminClient.users.find({
-        first: pageNum * max,
-        max,
-        realm: process.env.KEYCLOAK_REALM || 'master',
-      })),
-    )),
-  );
-
-  // Process results and collect users
-  return allPageResults.reduce<UserRepresentation[]>((acc, batchResults, index) => {
-    const batchUsers = batchResults.flat();
-
-    // Only include results up to and including the first incomplete batch
-    if (index === 0 || !allPageResults.slice(0, index).some(batch => batch.flat().length < batch.length * max)) {
-      acc.push(...batchUsers);
-    }
-
-    return acc;
-  }, []);
-}
-
-/**
- * Check a user's federated identities for GitHub and Discord accounts
- * @param {any} user - The Keycloak user object
- * @param {string} githubUsername - The GitHub username to match
- * @returns {Promise<Object|null>} Discord user info if found, null otherwise
- */
-async function checkUserIdentities(user: UserRepresentation, githubUsername: string): Promise<{
-  id: string;
-  username: string;
-  keycloakUserId: string | undefined;
-  githubUsername: string;
-  email: string | null;
-} | null> {
-  try {
-    // Get federated identities for this user
-    const federatedIdentities = await kcAdminClient.users.listFederatedIdentities({
-      id: user.id as string,
-      realm: process.env.KEYCLOAK_REALM || 'master',
-    });
-
-    // Look for GitHub identity
-    const githubIdentity = federatedIdentities.find(
-      identity => identity.identityProvider === 'github'
-      && identity.userName
-      && identity.userName.toLowerCase() === githubUsername.toLowerCase(),
-    );
-
-    if (!githubIdentity) {
-      return null;
-    }
-
-    log.debug(F, `Found user ${user.id} with GitHub username ${githubUsername}`);
-
-    // Look for Discord identity for the same user
-    const discordIdentity = federatedIdentities.find(
-      identity => identity.identityProvider === 'discord',
-    );
-
-    if (discordIdentity) {
-      log.debug(F, `Found Discord identity for user: ${discordIdentity.userName}`);
-
-      return {
-        id: discordIdentity.userId as string, // Discord user ID
-        username: discordIdentity.userName as string, // Discord username
-        keycloakUserId: user.id, // Keycloak user ID
-        githubUsername: githubIdentity.userName as string, // GitHub username
-        email: user.email || null, // Email from Keycloak user
-      };
-    }
-
-    log.warn(F, `User ${user.id} has GitHub account but no Discord account linked`);
-    return null;
-  } catch (error) {
-    // Some users might not have federated identities, that's okay
-    const errorMsg = error instanceof Error ? error.message : String(error);
-    log.debug(F, `No federated identities for user ${user.id}: ${errorMsg}`);
-    return null;
-  }
-}
 
 /**
  * Find Discord user info by GitHub username
@@ -146,17 +31,19 @@ export async function getDiscordUserByGitHub(githubUsername: string) {
     const batches = [];
 
     // Create batches
-    for (let i = 0; i < allUsers.length; i += BATCH_SIZE) {
-      batches.push(allUsers.slice(i, i + BATCH_SIZE));
+    for (let index = 0; index < allUsers.length; index += BATCH_SIZE) {
+      batches.push(allUsers.slice(index, index + BATCH_SIZE));
     }
 
     // Process all batches in parallel
     const batchResults = await Promise.all(
-      batches.map(batch => Promise.all(batch.map(user => checkUserIdentities(user, githubUsername)))),
+      batches.map(async (batch) =>
+        Promise.all(batch.map(async (user) => checkUserIdentities(user, githubUsername))),
+      ),
     );
 
     // Flatten results and find first match
-    const matchedResult = batchResults.flat().find(result => result !== null);
+    const matchedResult = batchResults.flat().find((result) => result !== null);
     if (matchedResult) {
       return matchedResult;
     }
@@ -167,6 +54,133 @@ export async function getDiscordUserByGitHub(githubUsername: string) {
     log.error(F, `Error looking up Discord user by GitHub username ${githubUsername}: ${error}`);
     throw error;
   }
+}
+
+// Authenticate with Keycloak
+async function authenticateKeycloak() {
+  try {
+    await kcAdminClient.auth({
+      clientId: process.env.KEYCLOAK_CLIENT_ID!,
+      clientSecret: process.env.KEYCLOAK_CLIENT_SECRET,
+      grantType: 'client_credentials',
+    });
+    log.debug(F, 'Successfully authenticated with Keycloak');
+  } catch (error) {
+    log.error(F, `Failed to authenticate with Keycloak: ${error}`);
+    throw error;
+  }
+}
+
+/**
+ * Check a user's federated identities for GitHub and Discord accounts
+ * @param {any} user - The Keycloak user object
+ * @param {string} githubUsername - The GitHub username to match
+ * @returns {Promise<Object|null>} Discord user info if found, null otherwise
+ */
+async function checkUserIdentities(
+  user: UserRepresentation,
+  githubUsername: string,
+): Promise<null | {
+  email: null | string;
+  githubUsername: string;
+  id: string;
+  keycloakUserId: string | undefined;
+  username: string;
+}> {
+  try {
+    // Get federated identities for this user
+    const federatedIdentities = await kcAdminClient.users.listFederatedIdentities({
+      id: user.id!,
+      realm: process.env.KEYCLOAK_REALM || 'master',
+    });
+
+    // Look for GitHub identity
+    const githubIdentity = federatedIdentities.find(
+      (identity) =>
+        identity.identityProvider === 'github' &&
+        identity.userName &&
+        identity.userName.toLowerCase() === githubUsername.toLowerCase(),
+    );
+
+    if (!githubIdentity) {
+      return null;
+    }
+
+    log.debug(F, `Found user ${user.id} with GitHub username ${githubUsername}`);
+
+    // Look for Discord identity for the same user
+    const discordIdentity = federatedIdentities.find(
+      (identity) => identity.identityProvider === 'discord',
+    );
+
+    if (discordIdentity) {
+      log.debug(F, `Found Discord identity for user: ${discordIdentity.userName}`);
+
+      return {
+        email: user.email || null, // Email from Keycloak user
+        githubUsername: githubIdentity.userName!, // GitHub username
+        id: discordIdentity.userId!, // Discord user ID
+        keycloakUserId: user.id, // Keycloak user ID
+        username: discordIdentity.userName!, // Discord username
+      };
+    }
+
+    log.warn(F, `User ${user.id} has GitHub account but no Discord account linked`);
+    return null;
+  } catch (error) {
+    // Some users might not have federated identities, that's okay
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    log.debug(F, `No federated identities for user ${user.id}: ${errorMessage}`);
+    return null;
+  }
+}
+
+async function fetchAllUsers(): Promise<UserRepresentation[]> {
+  const max = 100;
+  const maxUsers = 10_000; // Safety limit
+
+  // Create an array of page numbers to fetch
+  const pageCount = Math.ceil(maxUsers / max);
+  const pageNumbers = Array.from({ length: pageCount }, (_, index) => index);
+
+  // Fetch pages in parallel batches
+  const PARALLEL_PAGES = 5; // Fetch 5 pages at a time
+
+  // Create all page batches
+  const pageBatches = [];
+  for (let index = 0; index < pageNumbers.length; index += PARALLEL_PAGES) {
+    pageBatches.push(pageNumbers.slice(index, index + PARALLEL_PAGES));
+  }
+
+  // Fetch all pages in parallel
+  const allPageResults = await Promise.all(
+    pageBatches.map(async (pageNumberBatch) =>
+      Promise.all(
+        pageNumberBatch.map(async (pageNumber) =>
+          kcAdminClient.users.find({
+            first: pageNumber * max,
+            max,
+            realm: process.env.KEYCLOAK_REALM || 'master',
+          }),
+        ),
+      ),
+    ),
+  );
+
+  // Process results and collect users
+  return allPageResults.reduce<UserRepresentation[]>((accumulator, batchResults, index) => {
+    const batchUsers = batchResults.flat();
+
+    // Only include results up to and including the first incomplete batch
+    if (
+      index === 0 ||
+      !allPageResults.slice(0, index).some((batch) => batch.flat().length < batch.length * max)
+    ) {
+      accumulator.push(...batchUsers);
+    }
+
+    return accumulator;
+  }, []);
 }
 
 export default getDiscordUserByGitHub;

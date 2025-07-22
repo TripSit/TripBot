@@ -1,32 +1,45 @@
-import {
-  SlashCommandBuilder,
+import type {
+  ChatInputCommandInteraction,
   CommandInteraction,
   EmbedBuilder,
-  ActionRowBuilder,
-  StringSelectMenuBuilder,
-  ComponentType,
   StringSelectMenuInteraction,
-  Colors,
-  ChatInputCommandInteraction,
 } from 'discord.js';
 
-import { SlashCommand } from '../../@types/commandDef';
-import { embedTemplate } from '../../utils/embedTemplate';
+import {
+  ActionRowBuilder,
+  Colors,
+  ComponentType,
+  SlashCommandBuilder,
+  StringSelectMenuBuilder,
+} from 'discord.js';
+
+import type { SlashCommand } from '../../@types/commandDef';
+
 import { getBountyStats } from '../../../global/commands/g.bountyleaderboard';
+import { embedTemplate } from '../../utils/embedTemplate';
 
 const F = f(__filename);
 
-function getMedal(position: number): string {
-  switch (position) {
-    case 1:
-      return '🥇';
-    case 2:
-      return '🥈';
-    case 3:
-      return '🥉';
-    default:
-      return `**${position}.**`;
-  }
+function createSelectMenu(currentType: string): StringSelectMenuBuilder {
+  return new StringSelectMenuBuilder()
+    .setCustomId('leaderboard_type')
+    .setPlaceholder('Choose leaderboard type')
+    .addOptions(
+      {
+        default: currentType === 'bounties',
+        description: 'Sort by number of bounties claimed',
+        emoji: '🏆',
+        label: 'Most Bounties Claimed',
+        value: 'bounties',
+      },
+      {
+        default: currentType === 'xp',
+        description: 'Sort by total XP earned from bounties',
+        emoji: '⭐',
+        label: 'Most XP Earned',
+        value: 'xp',
+      },
+    );
 }
 
 async function generateLeaderboardEmbed(
@@ -36,9 +49,10 @@ async function generateLeaderboardEmbed(
   const stats = await getBountyStats();
 
   // Sort based on type
-  const sortedStats = type === 'xp'
-    ? stats.sort((a, b) => b.totalXP - a.totalXP)
-    : stats.sort((a, b) => b.totalBounties - a.totalBounties);
+  const sortedStats =
+    type === 'xp'
+      ? stats.sort((a, b) => b.totalXP - a.totalXP)
+      : stats.sort((a, b) => b.totalBounties - a.totalBounties);
 
   const topUsers = sortedStats.slice(0, 10); // Top 10 users
 
@@ -55,9 +69,9 @@ async function generateLeaderboardEmbed(
 
   if (topUsers.length === 0) {
     embed.addFields({
+      inline: false,
       name: '📭 No Data Available',
       value: 'No bounties have been claimed yet!',
-      inline: false,
     });
     return embed;
   }
@@ -72,16 +86,18 @@ async function generateLeaderboardEmbed(
       const primaryLabel = type === 'xp' ? 'XP' : 'bounties';
       const secondaryLabel = type === 'xp' ? 'bounties' : 'XP';
 
-      return `${medal} **${user.username}**\n`
-             + `├ ${primaryStat.toLocaleString()} ${primaryLabel}\n`
-             + `└ ${secondaryStat.toLocaleString()} ${secondaryLabel}`;
+      return (
+        `${medal} **${user.username}**\n` +
+        `├ ${primaryStat.toLocaleString()} ${primaryLabel}\n` +
+        `└ ${secondaryStat.toLocaleString()} ${secondaryLabel}`
+      );
     })
     .join('\n\n');
 
   embed.addFields({
+    inline: false,
     name: '\u200B', // Invisible character for spacing
     value: leaderboardText,
-    inline: false,
   });
 
   // Add statistics summary
@@ -90,36 +106,32 @@ async function generateLeaderboardEmbed(
   const totalUsers = stats.length;
 
   embed.addFields({
-    name: '📊 Server Statistics',
-    value: `**${totalUsers}** active bounty hunters\n`
-           + `**${totalBounties.toLocaleString()}** total bounties claimed\n`
-           + `**${totalXP.toLocaleString()}** total XP earned`,
     inline: false,
+    name: '📊 Server Statistics',
+    value:
+      `**${totalUsers}** active bounty hunters\n` +
+      `**${totalBounties.toLocaleString()}** total bounties claimed\n` +
+      `**${totalXP.toLocaleString()}** total XP earned`,
   });
 
   return embed;
 }
 
-function createSelectMenu(currentType: string): StringSelectMenuBuilder {
-  return new StringSelectMenuBuilder()
-    .setCustomId('leaderboard_type')
-    .setPlaceholder('Choose leaderboard type')
-    .addOptions(
-      {
-        label: 'Most Bounties Claimed',
-        description: 'Sort by number of bounties claimed',
-        value: 'bounties',
-        emoji: '🏆',
-        default: currentType === 'bounties',
-      },
-      {
-        label: 'Most XP Earned',
-        description: 'Sort by total XP earned from bounties',
-        value: 'xp',
-        emoji: '⭐',
-        default: currentType === 'xp',
-      },
-    );
+function getMedal(position: number): string {
+  switch (position) {
+    case 1: {
+      return '🥇';
+    }
+    case 2: {
+      return '🥈';
+    }
+    case 3: {
+      return '🥉';
+    }
+    default: {
+      return `**${position}.**`;
+    }
+  }
 }
 
 export const dLeaderboard: SlashCommand = {
@@ -127,28 +139,30 @@ export const dLeaderboard: SlashCommand = {
     .setName('bounty_leaderboard')
     .setDescription('Display bounty leaderboards for TripBot')
     .setIntegrationTypes([0])
-    .addStringOption(option => option
-      .setName('type')
-      .setDescription('Type of leaderboard to display')
-      .setRequired(false)
-      .addChoices(
-        { name: '🏆 Most Bounties Claimed', value: 'bounties' },
-        { name: '⭐ Most XP Earned', value: 'xp' },
-      )) as SlashCommandBuilder,
+    .addStringOption((option) =>
+      option
+        .setName('type')
+        .setDescription('Type of leaderboard to display')
+        .setRequired(false)
+        .addChoices(
+          { name: '🏆 Most Bounties Claimed', value: 'bounties' },
+          { name: '⭐ Most XP Earned', value: 'xp' },
+        ),
+    ) as SlashCommandBuilder,
 
   async execute(interaction: ChatInputCommandInteraction): Promise<boolean> {
     try {
       await interaction.deferReply();
 
-      const leaderboardType = interaction.options.get('type')?.value as string || 'bounties';
+      const leaderboardType = (interaction.options.get('type')?.value as string) || 'bounties';
 
       const embed = await generateLeaderboardEmbed(leaderboardType, interaction);
       const selectMenu = createSelectMenu(leaderboardType);
       const row = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(selectMenu);
 
       const response = await interaction.editReply({
-        embeds: [embed],
         components: [row],
+        embeds: [embed],
       });
 
       // Handle select menu interactions
@@ -172,15 +186,15 @@ export const dLeaderboard: SlashCommand = {
         const newRow = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(newSelectMenu);
 
         await selectInteraction.update({
-          embeds: [newEmbed],
           components: [newRow],
+          embeds: [newEmbed],
         });
       });
 
       collector.on('end', async () => {
         try {
           await interaction.editReply({ components: [] });
-        } catch (error) {
+        } catch {
           // Ignore errors when removing components (message might be deleted)
         }
       });
@@ -190,11 +204,9 @@ export const dLeaderboard: SlashCommand = {
       log.error(F, `Error in leaderboard command:, ${error}`);
       const errorMessage = 'An error occurred while generating the leaderboard.';
 
-      if (interaction.deferred) {
-        await interaction.editReply({ content: errorMessage });
-      } else {
-        await interaction.reply({ content: errorMessage, ephemeral: true });
-      }
+      await (interaction.deferred
+        ? interaction.editReply({ content: errorMessage })
+        : interaction.reply({ content: errorMessage, ephemeral: true }));
       return false;
     }
   },

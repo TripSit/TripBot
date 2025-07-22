@@ -1,21 +1,18 @@
-import {
-  GuildUpdateEvent,
-} from '../@types/eventDef';
+import type { GuildUpdateEvent } from '../@types/eventDef';
 
 const F = f(__filename);
 
 export const guildUpdate: GuildUpdateEvent = {
-  name: 'guildUpdate',
   async execute(guild) {
     const guildData = await db.discord_guilds.upsert({
-      where: {
-        id: guild.id,
-      },
       create: {
         id: guild.id,
         joined_at: new Date(),
       },
       update: {},
+      where: {
+        id: guild.id,
+      },
     });
 
     if (guildData.is_banned) {
@@ -24,9 +21,12 @@ export const guildUpdate: GuildUpdateEvent = {
     }
 
     // Only run this on TripSit
-    if (guild.id !== env.DISCORD_GUILD_ID) return;
+    if (guild.id !== env.DISCORD_GUILD_ID) {
+      return;
+    }
     log.info(F, `${guild} was updated`);
   },
+  name: 'guildUpdate',
 };
 
 export default guildUpdate;

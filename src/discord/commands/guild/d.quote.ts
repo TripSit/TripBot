@@ -1,16 +1,16 @@
-import {
+import type { Prisma } from '@prisma/client';
+import type {
   ChatInputCommandInteraction,
-  Colors,
   GuildMember,
   MessageContextMenuCommandInteraction,
-  MessageFlags,
-  SlashCommandBuilder,
   TextChannel,
 } from 'discord.js';
-import { stripIndents } from 'common-tags';
-import { Prisma } from '@prisma/client';
 
-import { SlashCommand } from '../../@types/commandDef';
+import { stripIndents } from 'common-tags';
+import { Colors, MessageFlags, SlashCommandBuilder } from 'discord.js';
+
+import type { SlashCommand } from '../../@types/commandDef';
+
 import commandContext from '../../utils/context';
 
 const F = f(__filename);
@@ -104,8 +104,290 @@ const failResponses = [
   "Quote redundancy alert! This one's already living a cozy life in our database.",
 ];
 
+export async function quoteAdd(interaction: MessageContextMenuCommandInteraction) {
+  log.info(F, await commandContext(interaction));
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+  if (!interaction.guild) {
+    return false;
+  }
+  if (interaction.guild.id !== env.DISCORD_GUILD_ID) {
+    return false;
+  }
+  await interaction.targetMessage.fetch(); // Fetch the message, just in case
+
+  // Get the actor
+  const actor = interaction.member as GuildMember;
+
+  // Get the target
+  const target = interaction.targetMessage.member;
+
+  // IDK how this happens but making it type-safe
+  if (!target) {
+    log.debug(F, 'No target member found');
+    await interaction.editReply({
+      content: 'You can only save messages that have an author, or from the last 2 weeks!',
+    });
+    return true;
+  }
+
+  // Don't allow saving bot messages
+  if (target.user.bot) {
+    log.debug(F, 'Target is a bot');
+    await interaction.editReply({
+      content: 'You can only save messages from humans!',
+    });
+    return true;
+  }
+
+  // Don't allow saving your own messages
+  if (target.id === actor.id && actor.id !== env.DISCORD_OWNER_ID) {
+    log.debug(F, 'Target is the actor');
+    await interaction.editReply({
+      content: "You can't save your own messages!",
+    });
+    return true;
+  }
+
+  // Don't allow people under level 10 to save quotes
+  const vipRoles = [
+    env.ROLE_VIP_10,
+    env.ROLE_VIP_20,
+    env.ROLE_VIP_30,
+    env.ROLE_VIP_40,
+    env.ROLE_VIP_50,
+    env.ROLE_VIP_60,
+    env.ROLE_VIP_70,
+    env.ROLE_VIP_80,
+    env.ROLE_VIP_90,
+    env.ROLE_VIP_100,
+  ]
+    .map((role) => actor.roles.cache.has(role)) // Check if the actor has any of these roles
+    .filter(Boolean); // Filter out any non-truthy values
+
+  // log.debug(F, `VIP Roles: ${vipRoles}`);
+
+  if (vipRoles.length === 0) {
+    log.debug(F, 'Actor has no VIP roles');
+    await interaction.editReply({
+      content: 'You need to be at least level 10 to save quotes!',
+    });
+    return true;
+  }
+
+  // Check if the URL already exists in the database
+  const quoteExists = await db.quotes.findFirst({
+    where: {
+      url: interaction.targetMessage.url,
+    },
+  });
+  if (quoteExists) {
+    log.debug(F, 'Quote already exists');
+    await interaction.editReply({
+      content: failResponses[Math.floor(Math.random() * failResponses.length)],
+    });
+    return true;
+  }
+
+  log.debug(F, `All checks passed, saving quote from ${target.displayName} (${target.id})`);
+
+  const actorData = await db.users.upsert({
+    create: { discord_id: actor.id },
+    update: {},
+    where: { discord_id: actor.id },
+  });
+
+  const targetData = await db.users.upsert({
+    create: { discord_id: target.id },
+    update: {},
+    where: { discord_id: target.id },
+  });
+
+  const quoteData = await db.quotes.create({
+    data: {
+      created_by: actorData.id,
+      date: interaction.targetMessage.createdAt,
+      quote: interaction.targetMessage.content,
+      url: interaction.targetMessage.url,
+      user_id: targetData.id,
+    },
+  });
+
+  await interaction.targetMessage.reply({
+    embeds: [
+      {
+        // footer: {
+        //   text: 'Saved to the /quote database!',
+        // },
+        color: Colors.Green,
+        description: stripIndents`${successResponses[
+          Math.floor(Math.random() * successResponses.length)
+        ].replace('{target.displayName}', target.displayName)}
+      `,
+      },
+    ],
+  });
+
+  const quoteLog = (await discordClient.channels.fetch(env.CHANNEL_QUOTE_LOG)) as TextChannel;
+  quoteLog.send({
+    embeds: [
+      {
+        color: Colors.Green,
+        description: stripIndents`${target}
+      
+        > **${quoteData.quote}**
+        
+        - ${quoteData.url}
+        `,
+        footer: {
+          icon_url: interaction.user.displayAvatarURL(),
+          text: `Saved by ${actor.displayName} (${actor.id})`,
+        },
+        thumbnail: {
+          url: target.user.displayAvatarURL(),
+        },
+      },
+    ],
+  });
+
+  await interaction.editReply({
+    embeds: [
+      {
+        color: Colors.Green,
+        description: stripIndents`${target}
+    
+      > **${quoteData.quote}**
+      
+      - ${quoteData.url}
+      `,
+        footer: {
+          text: 'Saved to the /quote database!',
+        },
+        thumbnail: {
+          url: target.user.displayAvatarURL(),
+        },
+      },
+    ],
+  });
+
+  return true;
+}
+
+async function del(interaction: ChatInputCommandInteraction) {
+  if (!interaction.guild) {
+    return;
+  }
+  if (!interaction.member) {
+    return;
+  }
+  const quote = interaction.options.getString('quote', true);
+
+  log.debug(F, `Searching for quote: ${quote}`);
+
+  const quoteData = await db.quotes.findFirst({
+    where: {
+      quote: {
+        contains: quote,
+      },
+    },
+  });
+
+  if (!quoteData) {
+    log.debug(F, 'Quote not found');
+    await interaction.reply({
+      content: 'Quote not found!',
+      flags: MessageFlags.Ephemeral,
+    });
+    return;
+  }
+
+  log.debug(F, 'Quote found!');
+
+  const targetData = await db.users.findFirstOrThrow({
+    where: {
+      id: quoteData.user_id,
+    },
+  });
+
+  if (!targetData.discord_id) {
+    return;
+  } // Just to type safe
+
+  const target = await interaction.guild.members.fetch(targetData.discord_id);
+
+  const guildData = await db.discord_guilds.findFirstOrThrow({
+    where: {
+      id: interaction.guild.id,
+    },
+  });
+
+  const actor = interaction.member as GuildMember;
+
+  const isOwner = target.id === interaction.user.id;
+  const isModerator = guildData.role_moderator && actor.roles.cache.has(guildData.role_moderator);
+
+  if (!isOwner && !isModerator) {
+    log.debug(F, 'User does not own quote and is not a moderator');
+    await interaction.reply({
+      content: 'You do not own this quote! You can only delete your own quotes.',
+      flags: MessageFlags.Ephemeral,
+    });
+    return;
+  }
+
+  await db.quotes.delete({
+    where: {
+      id: quoteData.id,
+    },
+  });
+
+  const quoteLog = (await discordClient.channels.fetch(env.CHANNEL_QUOTE_LOG)) as TextChannel;
+  quoteLog.send({
+    embeds: [
+      {
+        color: Colors.Red,
+        description: stripIndents`${target}
+      
+        > **${quoteData.quote}**
+        
+        - ${quoteData.url}
+        `,
+        footer: {
+          icon_url: interaction.user.displayAvatarURL(),
+          text: `Deleted by ${actor.displayName} (${actor.id})`,
+        },
+        thumbnail: {
+          url: target.user.displayAvatarURL(),
+        },
+      },
+    ],
+  });
+
+  await interaction.reply({
+    embeds: [
+      {
+        color: Colors.Red,
+        description: stripIndents`${target}
+    
+      > **${quoteData.quote}**
+      
+      - ${quoteData.url}
+      `,
+        footer: {
+          text: 'Deleted from the /quote database!',
+        },
+        thumbnail: {
+          url: target.user.displayAvatarURL(),
+        },
+      },
+    ],
+    flags: MessageFlags.Ephemeral,
+  });
+}
+
 async function get(interaction: ChatInputCommandInteraction) {
-  if (!interaction.guild) return;
+  if (!interaction.guild) {
+    return;
+  }
   const quote = interaction.options.getString('quote', false);
   const user = interaction.options.getUser('user', false);
 
@@ -186,41 +468,47 @@ async function get(interaction: ChatInputCommandInteraction) {
     },
   });
 
-  if (!authorData.discord_id) return; // Type safety
+  if (!authorData.discord_id) {
+    return;
+  } // Type safety
 
   // Try to fetch the Discord member
   let target = null;
   try {
     target = await interaction.guild.members.fetch(authorData.discord_id);
-  } catch (err) {
+  } catch {
     log.error(F, `Failed to fetch author: ${authorData.discord_id}`);
     target = null;
   }
 
   // Reply with the quote embed
   await interaction.reply({
-    embeds: [{
-      ...(target && {
-        thumbnail: {
-          url: target.user.displayAvatarURL(),
-        },
-      }),
-      // eslint-disable-next-line max-len
-      description: stripIndents`${target?.displayName || target?.user.username || 'Unknown User'} ${flavorText[Math.floor(Math.random() * flavorText.length)]}
+    embeds: [
+      {
+        ...(target && {
+          thumbnail: {
+            url: target.user.displayAvatarURL(),
+          },
+        }),
+
+        description: stripIndents`${target?.displayName || target?.user.username || 'Unknown User'} ${flavorText[Math.floor(Math.random() * flavorText.length)]}
     
       > **${quoteData.quote}**
       
       - ${quoteData.url || 'No source URL'}
       `,
-      ...(target && { color: target.displayColor }),
-      timestamp: quoteData.date.toISOString(),
-    }],
+        ...(target && { color: target.displayColor }),
+        timestamp: quoteData.date.toISOString(),
+      },
+    ],
   });
 }
 
-async function random(interaction:ChatInputCommandInteraction) {
-  if (!interaction.guild) return;
-  await interaction.deferReply({ });
+async function random(interaction: ChatInputCommandInteraction) {
+  if (!interaction.guild) {
+    return;
+  }
+  await interaction.deferReply({});
 
   // Get total count first
   const count = await db.quotes.count();
@@ -237,7 +525,9 @@ async function random(interaction:ChatInputCommandInteraction) {
     skip: Math.floor(Math.random() * count),
   });
 
-  if (!quote) return; // TypeScript safety
+  if (!quote) {
+    return;
+  } // TypeScript safety
 
   const authorData = await db.users.findFirstOrThrow({
     where: {
@@ -247,8 +537,8 @@ async function random(interaction:ChatInputCommandInteraction) {
 
   let author = null;
   try {
-    author = await interaction.guild.members.fetch(authorData.discord_id as string);
-  } catch (err) {
+    author = await interaction.guild.members.fetch(authorData.discord_id!);
+  } catch {
     log.error(F, `Failed to fetch author: ${authorData.discord_id}`);
     author = null;
   }
@@ -257,280 +547,17 @@ async function random(interaction:ChatInputCommandInteraction) {
     embeds: [
       {
         author: {
+          icon_url: author ? author.user.displayAvatarURL() : undefined,
           name: `${author ? author.displayName : 'Unknown User'} ${
             flavorText[Math.floor(Math.random() * flavorText.length)]
           }`,
-          icon_url: author ? author.user.displayAvatarURL() : undefined,
           url: quote.url,
         },
         description: `**${quote.quote}**`,
-        timestamp: `${quote.date.toISOString()}`,
+        timestamp: quote.date.toISOString(),
       },
     ],
   });
-}
-
-async function del(interaction:ChatInputCommandInteraction) {
-  if (!interaction.guild) return;
-  if (!interaction.member) return;
-  const quote = interaction.options.getString('quote', true);
-
-  log.debug(F, `Searching for quote: ${quote}`);
-
-  const quoteData = await db.quotes.findFirst({
-    where: {
-      quote: {
-        contains: quote,
-      },
-    },
-  });
-
-  if (!quoteData) {
-    log.debug(F, 'Quote not found');
-    await interaction.reply({
-      content: 'Quote not found!',
-      flags: MessageFlags.Ephemeral,
-    });
-    return;
-  }
-
-  log.debug(F, 'Quote found!');
-
-  const targetData = await db.users.findFirstOrThrow({
-    where: {
-      id: quoteData.user_id,
-    },
-  });
-
-  if (!targetData.discord_id) return; // Just to type safe
-
-  const target = await interaction.guild.members.fetch(targetData.discord_id);
-
-  const guildData = await db.discord_guilds.findFirstOrThrow({
-    where: {
-      id: interaction.guild.id,
-    },
-  });
-
-  const actor = interaction.member as GuildMember;
-
-  const isOwner = target.id === interaction.user.id;
-  const isModerator = guildData.role_moderator && actor.roles.cache.has(guildData.role_moderator);
-
-  if (!isOwner && !isModerator) {
-    log.debug(F, 'User does not own quote and is not a moderator');
-    await interaction.reply({
-      content: 'You do not own this quote! You can only delete your own quotes.',
-      flags: MessageFlags.Ephemeral,
-    });
-    return;
-  }
-
-  await db.quotes.delete({
-    where: {
-      id: quoteData.id,
-    },
-  });
-
-  const quoteLog = await discordClient.channels.fetch(env.CHANNEL_QUOTE_LOG) as TextChannel;
-  quoteLog.send({
-    embeds: [
-      {
-        thumbnail: {
-          url: target.user.displayAvatarURL(),
-        },
-        description: stripIndents`${target}
-      
-        > **${quoteData.quote}**
-        
-        - ${quoteData.url}
-        `,
-        footer: {
-          text: `Deleted by ${actor.displayName} (${actor.id})`,
-          icon_url: interaction.user.displayAvatarURL(),
-        },
-        color: Colors.Red,
-      },
-    ],
-  });
-
-  await interaction.reply({
-    embeds: [{
-      thumbnail: {
-        url: target.user.displayAvatarURL(),
-      },
-      description: stripIndents`${target}
-    
-      > **${quoteData.quote}**
-      
-      - ${quoteData.url}
-      `,
-      footer: {
-        text: 'Deleted from the /quote database!',
-      },
-      color: Colors.Red,
-    }],
-    flags: MessageFlags.Ephemeral,
-  });
-}
-
-export async function quoteAdd(interaction:MessageContextMenuCommandInteraction) {
-  log.info(F, await commandContext(interaction));
-  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
-  if (!interaction.guild) return false;
-  if (interaction.guild.id !== env.DISCORD_GUILD_ID) return false;
-  await interaction.targetMessage.fetch(); // Fetch the message, just in case
-
-  // Get the actor
-  const actor = interaction.member as GuildMember;
-
-  // Get the target
-  const target = interaction.targetMessage.member;
-
-  // IDK how this happens but making it type-safe
-  if (!target) {
-    log.debug(F, 'No target member found');
-    await interaction.editReply({
-      content: 'You can only save messages that have an author, or from the last 2 weeks!',
-    });
-    return true;
-  }
-
-  // Don't allow saving bot messages
-  if (target.user.bot) {
-    log.debug(F, 'Target is a bot');
-    await interaction.editReply({
-      content: 'You can only save messages from humans!',
-    });
-    return true;
-  }
-
-  // Don't allow saving your own messages
-  if (target.id === actor.id && !actor.id === env.DISCORD_OWNER_ID) {
-    log.debug(F, 'Target is the actor');
-    await interaction.editReply({
-      content: 'You can\'t save your own messages!',
-    });
-    return true;
-  }
-
-  // Don't allow people under level 10 to save quotes
-  const vipRoles = [
-    env.ROLE_VIP_10,
-    env.ROLE_VIP_20,
-    env.ROLE_VIP_30,
-    env.ROLE_VIP_40,
-    env.ROLE_VIP_50,
-    env.ROLE_VIP_60,
-    env.ROLE_VIP_70,
-    env.ROLE_VIP_80,
-    env.ROLE_VIP_90,
-    env.ROLE_VIP_100,
-  ]
-    .map(role => actor.roles.cache.has(role)) // Check if the actor has any of these roles
-    .filter(role => role); // Filter out any non-truthy values
-
-  // log.debug(F, `VIP Roles: ${vipRoles}`);
-
-  if (vipRoles.length === 0) {
-    log.debug(F, 'Actor has no VIP roles');
-    await interaction.editReply({
-      content: 'You need to be at least level 10 to save quotes!',
-    });
-    return true;
-  }
-
-  // Check if the URL already exists in the database
-  const quoteExists = await db.quotes.findFirst({
-    where: {
-      url: interaction.targetMessage.url,
-    },
-  });
-  if (quoteExists) {
-    log.debug(F, 'Quote already exists');
-    await interaction.editReply({
-      content: failResponses[Math.floor(Math.random() * failResponses.length)],
-    });
-    return true;
-  }
-
-  log.debug(F, `All checks passed, saving quote from ${target.displayName} (${target.id})`);
-
-  const actorData = await db.users.upsert({
-    where: { discord_id: actor.id },
-    create: { discord_id: actor.id },
-    update: {},
-  });
-
-  const targetData = await db.users.upsert({
-    where: { discord_id: target.id },
-    create: { discord_id: target.id },
-    update: {},
-  });
-
-  const quoteData = await db.quotes.create({
-    data: {
-      user_id: targetData.id,
-      quote: interaction.targetMessage.content,
-      url: interaction.targetMessage.url,
-      date: interaction.targetMessage.createdAt,
-      created_by: actorData.id,
-    },
-  });
-
-  await interaction.targetMessage.reply({
-    embeds: [{
-      description: stripIndents`${successResponses[Math.floor(Math.random() * successResponses.length)]
-        .replace('{target.displayName}', target.displayName)}
-      `,
-      // footer: {
-      //   text: 'Saved to the /quote database!',
-      // },
-      color: Colors.Green,
-    }],
-  });
-
-  const quoteLog = await discordClient.channels.fetch(env.CHANNEL_QUOTE_LOG) as TextChannel;
-  quoteLog.send({
-    embeds: [
-      {
-        thumbnail: {
-          url: target.user.displayAvatarURL(),
-        },
-        description: stripIndents`${target}
-      
-        > **${quoteData.quote}**
-        
-        - ${quoteData.url}
-        `,
-        footer: {
-          text: `Saved by ${actor.displayName} (${actor.id})`,
-          icon_url: interaction.user.displayAvatarURL(),
-        },
-        color: Colors.Green,
-      },
-    ],
-  });
-
-  await interaction.editReply({
-    embeds: [{
-      thumbnail: {
-        url: target.user.displayAvatarURL(),
-      },
-      description: stripIndents`${target}
-    
-      > **${quoteData.quote}**
-      
-      - ${quoteData.url}
-      `,
-      footer: {
-        text: 'Saved to the /quote database!',
-      },
-      color: Colors.Green,
-    }],
-  });
-
-  return true;
 }
 
 export const dQuote: SlashCommand = {
@@ -538,42 +565,55 @@ export const dQuote: SlashCommand = {
     .setName('quote')
     .setDescription('Manage quotes')
     .setIntegrationTypes([0])
-    .addSubcommand(subcommand => subcommand
-      .setDescription('Search quotes!')
-      .addStringOption(option => option.setName('quote')
-        .setDescription('Which quote? Type to search!')
-        .setAutocomplete(true))
-      .addUserOption(option => option.setName('user')
-        .setDescription('Which user?'))
-      .setName('get'))
-    .addSubcommand(subcommand => subcommand
-      .setDescription('Get a random quote!')
-      .setName('random'))
-    .addSubcommand(subcommand => subcommand
-      .setDescription('Delete your own quote records!')
-      .addStringOption(option => option.setName('quote')
-        .setDescription('Which quote? Type to search!')
-        .setAutocomplete(true)
-        .setRequired(true))
-      .setName('delete')),
+    .addSubcommand((subcommand) =>
+      subcommand
+        .setDescription('Search quotes!')
+        .addStringOption((option) =>
+          option
+            .setName('quote')
+            .setDescription('Which quote? Type to search!')
+            .setAutocomplete(true),
+        )
+        .addUserOption((option) => option.setName('user').setDescription('Which user?'))
+        .setName('get'),
+    )
+    .addSubcommand((subcommand) =>
+      subcommand.setDescription('Get a random quote!').setName('random'),
+    )
+    .addSubcommand((subcommand) =>
+      subcommand
+        .setDescription('Delete your own quote records!')
+        .addStringOption((option) =>
+          option
+            .setName('quote')
+            .setDescription('Which quote? Type to search!')
+            .setAutocomplete(true)
+            .setRequired(true),
+        )
+        .setName('delete'),
+    ),
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
     switch (interaction.options.getSubcommand()) {
-      case 'get':
-        await get(interaction);
-        break;
-      case 'random':
-        await random(interaction);
-        break;
-      case 'delete':
+      case 'delete': {
         await del(interaction);
         break;
-      default:
+      }
+      case 'get': {
+        await get(interaction);
+        break;
+      }
+      case 'random': {
+        await random(interaction);
+        break;
+      }
+      default: {
         await interaction.reply({
           content: 'Unknown subcommand!',
           flags: MessageFlags.Ephemeral,
         });
         break;
+      }
     }
     return true;
   },

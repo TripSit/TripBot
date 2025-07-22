@@ -1,4 +1,3 @@
-/* eslint-disable max-len */
 import supertest from 'supertest';
 
 import app from '../../app';
@@ -24,19 +23,22 @@ describe('GET /api/v1/getInteraction/:drugAName/:drugBName', () => {
       .expect(expectValue, /json/)
       .expect(200);
 
-    expect(response.body)
-      .toEqual({
-        err: null,
-        data: [{
-          result: 'Dangerous',
+    expect(response.body).toEqual({
+      data: [
+        {
+          color: 'Red',
+          definition:
+            'These combinations are considered extremely harmful and should always be avoided. Reactions to these drugs taken in combination are highly unpredictable and have a potential to cause death.',
+          emoji: '☠️',
           interactionCategoryA: 'dxm',
           interactionCategoryB: 'mdma',
-          definition: 'These combinations are considered extremely harmful and should always be avoided. Reactions to these drugs taken in combination are highly unpredictable and have a potential to cause death.',
-          thumbnail: 'https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/samsung/320/skull-and-crossbones_2620-fe0f.png',
-          color: 'Red',
-          emoji: '☠️',
-        }],
-      });
+          result: 'Dangerous',
+          thumbnail:
+            'https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/samsung/320/skull-and-crossbones_2620-fe0f.png',
+        },
+      ],
+      err: null,
+    });
   });
 });
 

@@ -1,46 +1,46 @@
-type HelpResource = {
-  name: string;
+interface HelpResource {
   country: string;
-  website: string;
   description: string;
-};
+  name: string;
+  website: string;
+}
 
 /**
  * Information about contacting the team!
  * @return {any} an object with information about the bot
  */
 
-export default async function testkits():Promise<HelpResource[]> {
+export default async function testkits(): Promise<HelpResource[]> {
   return [
     {
-      name: 'DanceSafe',
       country: 'Worldwide',
-      website: 'https://dancesafe.org/product-category/testing-strips/',
       description: '[Info on the new test strips](https://dancesafe.org/fentanyl/)',
+      name: 'DanceSafe',
+      website: 'https://dancesafe.org/product-category/testing-strips/',
     },
     {
-      name: 'Protest',
       country: 'Europe',
-      website: 'https://protestkit.eu/shop/?coupon_code=tripsit',
       description: '10% off with code TripSit (Affiliate code)',
+      name: 'Protest',
+      website: 'https://protestkit.eu/shop/?coupon_code=tripsit',
     },
     {
-      name: 'ReagentTests UK',
       country: 'UK & EU',
-      website: 'https://www.reagent-tests.uk/shop/',
       description: '10% off with code tripsitwiki',
+      name: 'ReagentTests UK',
+      website: 'https://www.reagent-tests.uk/shop/',
     },
     {
-      name: 'EZ Test',
       country: 'Australia',
-      website: 'http://ez-test.com.au/',
       description: '',
+      name: 'EZ Test',
+      website: 'http://ez-test.com.au/',
     },
     {
-      name: 'Test Drogue',
       country: 'France',
-      website: 'https://www.testdrogue.fr/',
       description: '',
+      name: 'Test Drogue',
+      website: 'https://www.testdrogue.fr/',
     },
   ];
 }

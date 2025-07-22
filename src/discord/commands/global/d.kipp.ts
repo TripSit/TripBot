@@ -1,10 +1,10 @@
-import {
-  SlashCommandBuilder,
-} from 'discord.js';
-import { SlashCommand } from '../../@types/commandDef';
-import { embedTemplate } from '../../utils/embedTemplate';
+import { SlashCommandBuilder } from 'discord.js';
+
+import type { SlashCommand } from '../../@types/commandDef';
+
 // import log from '../../../global/utils/log';
 import commandContext from '../../utils/context';
+import { embedTemplate } from '../../utils/embedTemplate';
 
 const F = f(__filename);
 
@@ -18,9 +18,34 @@ export const dKipp: SlashCommand = {
     log.info(F, await commandContext(interaction));
     await interaction.deferReply({});
     const happyEmojis = [
-      '😀', '😃', '😄', '😊', '😁', '🥰', '😇', '😍', '😂', '🤣',
-      '🙂', '😆', '😋', '😛', '🙃', '😜', '🤪', '😝', '🤗', '🤭',
-      '😎', '😺', '😸', '😹', '😻', '👍', '✌'];
+      '😀',
+      '😃',
+      '😄',
+      '😊',
+      '😁',
+      '🥰',
+      '😇',
+      '😍',
+      '😂',
+      '🤣',
+      '🙂',
+      '😆',
+      '😋',
+      '😛',
+      '🙃',
+      '😜',
+      '🤪',
+      '😝',
+      '🤗',
+      '🤭',
+      '😎',
+      '😺',
+      '😸',
+      '😹',
+      '😻',
+      '👍',
+      '✌',
+    ];
 
     // Get 10 random happy emojis from the list above
     const rowA = [...happyEmojis].sort(() => 0.5 - Math.random()).slice(0, 8); // Sort the array
@@ -33,10 +58,7 @@ export const dKipp: SlashCommand = {
     const output = rowA.join(' ') + rowB + rowC.join(' ');
     // log.debug(F, `Output: ${output}`);
 
-    const embed = embedTemplate()
-      .setDescription(output)
-      .setAuthor(null)
-      .setFooter(null);
+    const embed = embedTemplate().setDescription(output).setAuthor(null).setFooter(null);
     await interaction.editReply({ embeds: [embed] });
     return true;
   },

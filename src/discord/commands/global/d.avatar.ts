@@ -1,10 +1,9 @@
-import {
-  SlashCommandBuilder,
-  DiscordAPIError,
-  MessageFlags,
-} from 'discord.js';
+import type { DiscordAPIError } from 'discord.js';
 
-import { SlashCommand } from '../../@types/commandDef';
+import { MessageFlags, SlashCommandBuilder } from 'discord.js';
+
+import type { SlashCommand } from '../../@types/commandDef';
+
 import commandContext from '../../utils/context';
 import { embedTemplate } from '../../utils/embedTemplate';
 
@@ -13,16 +12,17 @@ const F = f(__filename);
 export const dAvatar: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('avatar')
-    .setDescription('Shows a member\'s profile picture in large format.')
+    .setDescription("Shows a member's profile picture in large format.")
     .setIntegrationTypes([0])
-    .addUserOption(option => option.setName('user')
-      .setDescription('user')
-      .setRequired(true))
-    .addBooleanOption(option => option.setName('ephemeral')
-      .setDescription('Set to "True" to show the response only to you')) as SlashCommandBuilder,
+    .addUserOption((option) => option.setName('user').setDescription('user').setRequired(true))
+    .addBooleanOption((option) =>
+      option.setName('ephemeral').setDescription('Set to "True" to show the response only to you'),
+    ) as SlashCommandBuilder,
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
-    const ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined;
+    const ephemeral = interaction.options.getBoolean('ephemeral')
+      ? MessageFlags.Ephemeral
+      : undefined;
     await interaction.deferReply({ flags: ephemeral });
     // log.debug(F, `${JSON.stringify(interaction.options, null, 2)}`);
     // If this doesn't happen in a guild then ignore it
@@ -44,9 +44,11 @@ export const dAvatar: SlashCommand = {
         .setImage(`${member.displayAvatarURL()}?size=4096`);
       await interaction.editReply({ embeds: [embed] });
       return true;
-    } catch (err) {
-      if ((err as DiscordAPIError).code === 10007) {
-        await interaction.editReply({ content: 'This command can only be used on a member of the current guild.' });
+    } catch (error) {
+      if ((error as DiscordAPIError).code === 10_007) {
+        await interaction.editReply({
+          content: 'This command can only be used on a member of the current guild.',
+        });
         return false;
       }
     }

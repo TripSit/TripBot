@@ -5,7 +5,7 @@ const F = f(__filename); // eslint-disable-line
 // Create a dictionary that will be used for future checks that contains the status of every user
 export const botBannedUsers: string[] = [];
 
-export async function populateBans():Promise<void> {
+export async function populateBans(): Promise<void> {
   const bannedUsers = await db.users.findMany({
     select: {
       discord_id: true,
@@ -15,10 +15,10 @@ export async function populateBans():Promise<void> {
     },
   });
 
-  bannedUsers.forEach(user => {
+  for (const user of bannedUsers) {
     if (user.discord_id) {
       // log.debug(F, `user: ${user.discord_id} is banned`);
       botBannedUsers.push(user.discord_id);
     }
-  });
+  }
 }

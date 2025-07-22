@@ -1,31 +1,331 @@
-import { PrismaClient } from '@prisma/client';
-import { Client as DiscordClient } from 'discord.js';
-import { DateTime } from 'luxon';
-import Rollbar from 'rollbar';
+import type { PrismaClient } from '@prisma/client';
+import type { Client as DiscordClient } from 'discord.js';
+import type { DateTime } from 'luxon';
+import type Rollbar from 'rollbar';
 // import { MatrixClient } from 'matrix-bot-sdk';
 // import { Client as IRCClient } from 'matrix-org-irc';
 // import { Telegraf as TelegramClient } from 'telegraf';
 // import Sentry from '@sentry/node';
 
 declare global {
-  var guildInvites: Collection; // eslint-disable-line
+  var guildInvites: Collection;
   var reactionRoles: { [key: string]: any };// eslint-disable-line
-  var bootTime: Date; // eslint-disable-line
-  var discordClient: DiscordClient; // eslint-disable-line
+  var bootTime: Date;
+  var discordClient: DiscordClient;
   // var ircClient: IRCClient; // eslint-disable-line
   // var matrixClient: MatrixClient; // eslint-disable-line
   // var telegramClient: TelegramClient; // eslint-disable-line
-  var announcements: string[]; // eslint-disable-line
-  var lpmDict: LpmDict; // eslint-disable-line
-  var lpmTime: number[]; // eslint-disable-line
+  var announcements: string[];
+  var lpmDict: LpmDict;
+  var lpmTime: number[];
   // var sentry: Sentry; // eslint-disable-line
   var emojiGet: (name:string) => Emoji; // eslint-disable-line
   var moodleConnection: { // eslint-disable-line
-    status: Boolean,
-    date: DateTime,
+    date: DateTime;
+    status: boolean;
   };
-  var db: PrismaClient; // eslint-disable-line
-  var rollbar: Rollbar; // eslint-disable-line
-}
+  var database: PrismaClient;
+  var rollbar: Rollbar;
+  namespace NodeJS {
+    interface ProcessEnvironment {
+      CATEGORY_ARCADE: string;
+      CATEGORY_ARCHIVED: string;
+      CATEGORY_BACKSTAGE: string;
+      CATEGORY_CAMPGROUND: string;
+      CATEGORY_COLLABORATION: string;
+      CATEGORY_DEVELOPMENT: string;
+      CATEGORY_GATEWAY: string;
+      CATEGORY_HARMREDUCTIONCENTRE: string;
+      CATEGORY_RADIO: string;
 
-export {};
+      CATEGORY_STATS: string;
+      CATEGORY_TEAMTRIPSIT: string;
+
+      CATEGORY_VOICE: string;
+      CHANNEL_AIIMAGELOG: string;
+      CHANNEL_AILOG: string;
+      CHANNEL_AIMOD_LOG: string;
+      CHANNEL_AIMOD_LOG: string;
+      CHANNEL_AIVOTELOG: string;
+      CHANNEL_ANNOUNCEMENTS: string;
+      CHANNEL_APPLICATIONS: string;
+      CHANNEL_AUDITLOG: string;
+      CHANNEL_BESTOF: string;
+      CHANNEL_BOTERRORS: string;
+      CHANNEL_BOTLOG: string;
+
+      CHANNEL_BOTSPAM: string;
+      CHANNEL_CAMPFIRE: string;
+      CHANNEL_CLEARMIND: string;
+
+      CHANNEL_CLOSEDTRIPSIT: string;
+      CHANNEL_COLLABVC: string;
+
+      CHANNEL_COMPSCI: string;
+      CHANNEL_CONTENT: string;
+      CHANNEL_CREATIVE: string;
+
+      CHANNEL_DBAPI: string;
+      CHANNEL_DELERIANTS: string;
+      CHANNEL_DEPRESSANTS: string;
+      CHANNEL_DESIGN: string;
+      CHANNEL_DEVANNCOUNCE: string;
+      CHANNEL_DEVELOPERS: string;
+      CHANNEL_DEVELOPMENT: string;
+      CHANNEL_DEVELOPMENTVOICE: string;
+      CHANNEL_DEVOFFTOPIC: string;
+      CHANNEL_DISCORD: string;
+      CHANNEL_DISSOCIATIVES: string;
+      CHANNEL_DISSONAUT: string;
+      CHANNEL_DRUGQUESTIONS: string;
+      CHANNEL_FAQ: string;
+      CHANNEL_FOOD: string;
+      CHANNEL_FUTON: string;
+      CHANNEL_GAMES: string;
+      CHANNEL_GAMING: string;
+      CHANNEL_GOLDLOUNGE: string;
+      CHANNEL_GROUPCOLLAB: string;
+      CHANNEL_HELPDESK: string;
+      CHANNEL_HELPERLOUNGE: string;
+      CHANNEL_HOW_TO_VOLUNTEER: string;
+      CHANNEL_HRRESOURCES: string;
+      CHANNEL_INTANNOUNCE: string;
+      CHANNEL_INTRODUCTIONS: string;
+      CHANNEL_IRC: string;
+      CHANNEL_JAZZRADIO: string;
+      CHANNEL_KUDOS: string;
+      CHANNEL_LOFIRADIO: string;
+      CHANNEL_LOUNGE: string;
+      CHANNEL_MATRIX: string;
+      CHANNEL_MEMES: string;
+      CHANNEL_MIDJOURNEY: string;
+      CHANNEL_MINECRAFT: string;
+      CHANNEL_MINECRAFTADMIN: string;
+      CHANNEL_MODERATORS: string;
+      CHANNEL_MODHAVEN: string;
+      CHANNEL_MODLOG: string;
+      CHANNEL_MOVIES: string;
+      CHANNEL_MSGLOG: string;
+      CHANNEL_MUSIC: string;
+      CHANNEL_OCCULT: string;
+      CHANNEL_OPENTRIPSIT1: string;
+      CHANNEL_OPENTRIPSIT2: string;
+      CHANNEL_OPERATORS: string;
+      CHANNEL_OPIATES: string;
+      // CHANNEL_GENERAL: string;
+      CHANNEL_PETS: string;
+      CHANNEL_PHOTOGRAPHY: string;
+      CHANNEL_PSYCHEDELICS: string;
+      CHANNEL_PSYCHONAUT: string;
+      CHANNEL_QUOTE_LOG: string;
+      CHANNEL_RECOVERY: string;
+      CHANNEL_REPLICATIONS: string;
+      CHANNEL_RTRIPSIT: string;
+      CHANNEL_RULES: string;
+      // CHANNEL_REALTALK: string;
+      CHANNEL_SANCTUARY: string;
+      CHANNEL_SANDBOX: string;
+      CHANNEL_SANDBOX_DEV: string;
+      CHANNEL_SCIENCE: string;
+      CHANNEL_SLEEPYRADIO: string;
+      CHANNEL_START: string;
+      CHANNEL_STATS_MAX: string;
+      CHANNEL_STATS_ONLINE: string;
+      CHANNEL_STATS_TOTAL: string;
+      CHANNEL_STATS_VERIFIED: string;
+      CHANNEL_STIMULANTS: string;
+      CHANNEL_SUGGESTIONS: string;
+      CHANNEL_SYNTHWAVERADIO: string;
+      CHANNEL_TALKTOTS: string;
+      CHANNEL_TEAMMEETING: string;
+      CHANNEL_TEAMTRIPSIT: string;
+      CHANNEL_TECHHELP: string;
+      CHANNEL_TICKETBOOTH: string;
+      CHANNEL_TREES: string;
+      CHANNEL_TRIPBOT: string;
+      CHANNEL_TRIPMOBILE: string;
+      CHANNEL_TRIPSIT: string;
+      CHANNEL_TRIPSITME: string;
+      CHANNEL_TRIPSITMETA: string;
+      CHANNEL_TRIPSITRADIO: string;
+      CHANNEL_TRIPSITREDDIT: string;
+      CHANNEL_TRIPSITTERS: string;
+      CHANNEL_TRIVIA: string;
+      CHANNEL_TRUST_LOG: string;
+      CHANNEL_VIPLOUNGE: string;
+      CHANNEL_VIPWELCOME: string;
+      CHANNEL_WEBSITE: string;
+      CHANNEL_WEBTRIPSIT1: string;
+      CHANNEL_WEBTRIPSIT2: string;
+      CHANNEL_WELCOME: string;
+      DISCLAIMER: string;
+      DISCORD_CLIENT_ID: string;
+      DISCORD_CLIENT_REDIRECT_URI: string | undefined;
+      DISCORD_CLIENT_SECRET: string | undefined;
+      DISCORD_CLIENT_TOKEN: string;
+      DISCORD_EMOJI_GUILD_MAIN: string;
+      DISCORD_EMOJI_GUILD_RPG: string;
+      DISCORD_GUILD_ID: string;
+      DISCORD_OWNER_ID: string;
+      EMOJI_EROWID: string;
+      EMOJI_THUMB_DOWN: string;
+      EMOJI_THUMB_UP: string;
+      EMOJI_VOTE_DOWN: string;
+      EMOJI_VOTE_UP: string;
+      FLAME_ICON_URL: string;
+      GEMINI_KEY: string | undefined;
+      GITHUB_TOKEN: string | undefined;
+      GLITCHTIP_DSN: string | undefined;
+      IMDB_TOKEN: string | undefined;
+      IMGUR_ID: string | undefined;
+      IMGUR_SECRET: string | undefined;
+      LOGTAIL_TOKEN: string | undefined;
+      MODERATE_HATESPEECH_FLAG_CONFIDENCE: string;
+      MODERATE_HATESPEECH_NORMAL_CONFIDENCE: string;
+      MODERATE_HATESPEECH_TOKEN: string | undefined;
+      MOODLE_TOKEN: string;
+      MOODLE_URL: string;
+      NODE_ENV?: string;
+      OPENAI_API_KEY: string | undefined;
+      OPENAI_API_ORG: string | undefined;
+      RAPID_TOKEN: string | undefined;
+      ROLE_ALUMNI: string;
+      ROLE_BLUE: string;
+      ROLE_BLUEPURPLE: string;
+      ROLE_BOOSTER: string;
+      ROLE_BOTS: string;
+      ROLE_CLEARMIND: string;
+      ROLE_COLLABORATOR: string;
+      ROLE_CONTRIBUTOR: string;
+      ROLE_DEVELOPER: string;
+      ROLE_DIRECTOR: string;
+      ROLE_DISCORDADMIN: string;
+      ROLE_DISSOCIATING: string;
+      ROLE_DJ: string;
+      ROLE_DMMEFORHELP: string;
+      ROLE_DONATIONTRIGGER: string;
+      ROLE_DRUNK: string;
+      ROLE_FRANK: string;
+      ROLE_GRADIENT_1: string;
+      ROLE_GRADIENT_2: string;
+      ROLE_GRADIENT_3: string;
+      ROLE_GRADIENT_4: string;
+      ROLE_GRADIENT_5: string;
+      ROLE_GRADIENT_6: string;
+      ROLE_GRADIENT_7: string;
+      ROLE_GRADIENT_8: string;
+      ROLE_GRADIENT_9: string;
+      ROLE_GRADIENT_10: string;
+      ROLE_GRADIENT_11: string;
+      ROLE_GRADIENT_12: string;
+      ROLE_GRADIENT_13: string;
+      ROLE_GRADIENT_14: string;
+      ROLE_GRADIENT_15: string;
+      ROLE_GRADIENT_16: string;
+      ROLE_GRADIENT_17: string;
+      ROLE_GRADIENT_18: string;
+      ROLE_GRADIENT_19: string;
+      ROLE_GRADIENT_20: string;
+      ROLE_GRADIENT_21: string;
+      ROLE_GRADIENT_22: string;
+      ROLE_GRADIENT_23: string;
+      ROLE_GRADIENT_24: string;
+      ROLE_GREEN: string;
+      ROLE_GREENBLUE: string;
+      ROLE_HELPER: string;
+      ROLE_HIGH: string;
+      ROLE_HR_LISTENER: string;
+      ROLE_HR_MODERATOR: string;
+      ROLE_HR_PRESENTER: string;
+      ROLE_IRCADMIN: string;
+      ROLE_JOINVC: string;
+      ROLE_LEADDEV: string;
+      ROLE_LEGACY: string;
+      ROLE_LEVEL_BLACK: string;
+      ROLE_LEVEL_BLUE: string;
+      ROLE_LEVEL_BLUEPURPLE: string;
+      ROLE_LEVEL_GREEN: string;
+      ROLE_LEVEL_GREENBLUE: string;
+      ROLE_LEVEL_ORANGE: string;
+      ROLE_LEVEL_PINK: string;
+      ROLE_LEVEL_PINKRED: string;
+      ROLE_LEVEL_PURPLE: string;
+      ROLE_LEVEL_RED: string;
+      ROLE_LEVEL_REDORANGE: string;
+      ROLE_LEVEL_YELLOW: string;
+      ROLE_LEVEL_YELLOWGREEN: string;
+      ROLE_MATRIXADMIN: string;
+      ROLE_MODERATOR: string;
+      ROLE_MUTED: string;
+      ROLE_NEEDSHELP: string;
+      ROLE_OCCULT: string;
+      ROLE_ORANGE: string;
+      ROLE_PATRON: string;
+      ROLE_PATRON_TIER_1: string;
+      ROLE_PATRON_TIER_2: string;
+      ROLE_PATRON_TIER_3: string;
+      ROLE_PATRON_TIER_4: string;
+      ROLE_PATRON_TIER_5: string;
+      ROLE_PINK: string;
+      ROLE_PINKRED: string;
+      ROLE_PREMIUM: string;
+      ROLE_PRONOUN_ANY: string;
+      ROLE_PRONOUN_ASK: string;
+      ROLE_PRONOUN_HE: string;
+      ROLE_PRONOUN_SHE: string;
+      ROLE_PRONOUN_THEY: string;
+      ROLE_PURPLE: string;
+      ROLE_RECOVERY: string;
+      ROLE_RED: string;
+      ROLE_REDORANGE: string;
+      ROLE_RESEARCHER: string;
+      ROLE_ROLLING: string;
+      ROLE_SEDATED: string;
+      ROLE_SOCIALMEDIA: string;
+      ROLE_STIMMING: string;
+      ROLE_SUCCESSOR: string;
+      ROLE_TALKATIVE: string;
+      ROLE_TEAMTRIPSIT: string;
+      ROLE_TEMPVOICE: string;
+      ROLE_TRIPBOT: string;
+      ROLE_TRIPBOTDEV: string;
+      ROLE_TRIPPING: string;
+      ROLE_TRIPSITTER: string;
+
+      ROLE_TRIPSITTING_101: string;
+      ROLE_TS100: string;
+      ROLE_UNDERBAN: string;
+      ROLE_UNVERIFIED: string;
+      ROLE_VERIFIED: string;
+      ROLE_VERIFYING: string;
+      ROLE_VIP: string;
+      ROLE_VIP_0: string;
+      ROLE_VIP_10: string;
+      ROLE_VIP_20: string;
+      ROLE_VIP_30: string;
+      ROLE_VIP_40: string;
+      ROLE_VIP_50: string;
+      ROLE_VIP_60: string;
+      ROLE_VIP_70: string;
+      ROLE_VIP_80: string;
+      ROLE_VIP_90: string;
+      ROLE_VIP_100: string;
+      ROLE_VOTEBANNED: string;
+      ROLE_VOTEKICKED: string;
+      ROLE_VOTETIMEOUT: string;
+      ROLE_VUTEUNDERBAN: string;
+      ROLE_WHITE: string;
+      ROLE_WORKING: string;
+
+      ROLE_YELLOW: string;
+      ROLE_YELLOWGREEN: string;
+
+      SONAR_TOKEN: string | undefined;
+      SONAR_URL: string | undefined;
+      TS_ICON_URL: string;
+      WOLFRAM_TOKEN: string | undefined;
+      YOUTUBE_TOKEN: string | undefined;
+    }
+  }
+  var environment: NodeJS.ProcessEnv;
+}

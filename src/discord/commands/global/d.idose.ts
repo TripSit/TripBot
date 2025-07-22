@@ -1,19 +1,14 @@
-import {
-  SlashCommandBuilder,
-  time,
-  Colors,
-  EmbedBuilder,
-  EmbedField,
-} from 'discord.js';
-import {
-  ChannelType,
-  MessageFlags,
-} from 'discord-api-types/v10';
-import { drug_mass_unit, drug_roa } from '@prisma/client';
+import type { drug_mass_unit, drug_roa } from '@prisma/client';
+import type { EmbedBuilder, EmbedField } from 'discord.js';
+
+import { ChannelType, MessageFlags } from 'discord-api-types/v10';
+import { Colors, SlashCommandBuilder, time } from 'discord.js';
+
+import type { SlashCommand } from '../../@types/commandDef';
+
 import { idose } from '../../../global/commands/g.idose';
-import { SlashCommand } from '../../@types/commandDef';
-import { embedTemplate } from '../../utils/embedTemplate';
 import { parseDuration } from '../../../global/utils/parseDuration';
+import { embedTemplate } from '../../utils/embedTemplate';
 import { paginationEmbed } from '../../utils/pagination';
 
 // const F = f(__filename);
@@ -24,58 +19,73 @@ export const dIdose: SlashCommand = {
     .setDescription('Your personal dosage information!')
     .setContexts([0, 1, 2])
     .setIntegrationTypes([0, 1])
-    .addSubcommand(subcommand => subcommand
-      .setName('set')
-      .setDescription('Record when you dosed something')
-      .addNumberOption(option => option.setName('volume')
-        .setDescription('How much?')
-        .setRequired(true))
-      .addStringOption(option => option.setName('units')
-        .setDescription('What units?')
-        .setRequired(true)
-        .addChoices(
-          { name: 'mg (milligrams)', value: 'MG' },
-          { name: 'mL (milliliters)', value: 'ML' },
-          { name: 'µg (micrograms/ug/mcg)', value: 'µG' },
-          { name: 'g (grams)', value: 'G' },
-          { name: 'oz (ounces)', value: 'OZ' },
-          { name: 'fl oz (fluid ounces)', value: 'FLOZ' },
-        ))
-      .addStringOption(option => option.setName('substance')
-        .setDescription('What Substance?')
-        .setRequired(true)
-        .setAutocomplete(true))
-      .addStringOption(option => option.setName('roa')
-        .setDescription('How did you take it?')
-        .setRequired(true)
-        .addChoices(
-          { name: 'Oral', value: 'ORAL' },
-          { name: 'Insufflated (Snorted)', value: 'INSUFFLATED' },
-          { name: 'Inhaled', value: 'INHALED' },
-          { name: 'Sublingual (Tongue)', value: 'SUBLINGUAL' },
-          { name: 'Buccal (Gums)', value: 'BUCCAL' },
-          { name: 'Rectal (Butt)', value: 'RECTAL' },
-          { name: 'Intramuscular (IM)', value: 'INTRAMUSCULAR' },
-          { name: 'Intravenous (IV)', value: 'INTRAVENOUS' },
-          { name: 'Subcutanious (IM)', value: 'SUBCUTANIOUS' },
-          { name: 'Topical (On Skin)', value: 'TOPICAL' },
-          { name: 'Transdermal (Past Skin)', value: 'TRANSDERMAL' },
-        ))
-      .addStringOption(option => option.setName('offset')
-        .setDescription('How long ago? EG: 4 hours 32 mins ago')))
-    .addSubcommand(subcommand => subcommand
-      .setName('get')
-      .setDescription('Get your dosage records!'))
-    .addSubcommand(subcommand => subcommand
-      .setName('delete')
-      .setDescription('Delete a dosage record!')
-      .addNumberOption(option => option.setName('record')
-        .setDescription('Which record? (0, 1, 2, etc)')
-        .setRequired(true))),
+    .addSubcommand((subcommand) =>
+      subcommand
+        .setName('set')
+        .setDescription('Record when you dosed something')
+        .addNumberOption((option) =>
+          option.setName('volume').setDescription('How much?').setRequired(true),
+        )
+        .addStringOption((option) =>
+          option
+            .setName('units')
+            .setDescription('What units?')
+            .setRequired(true)
+            .addChoices(
+              { name: 'mg (milligrams)', value: 'MG' },
+              { name: 'mL (milliliters)', value: 'ML' },
+              { name: 'µg (micrograms/ug/mcg)', value: 'µG' },
+              { name: 'g (grams)', value: 'G' },
+              { name: 'oz (ounces)', value: 'OZ' },
+              { name: 'fl oz (fluid ounces)', value: 'FLOZ' },
+            ),
+        )
+        .addStringOption((option) =>
+          option
+            .setName('substance')
+            .setDescription('What Substance?')
+            .setRequired(true)
+            .setAutocomplete(true),
+        )
+        .addStringOption((option) =>
+          option
+            .setName('roa')
+            .setDescription('How did you take it?')
+            .setRequired(true)
+            .addChoices(
+              { name: 'Oral', value: 'ORAL' },
+              { name: 'Insufflated (Snorted)', value: 'INSUFFLATED' },
+              { name: 'Inhaled', value: 'INHALED' },
+              { name: 'Sublingual (Tongue)', value: 'SUBLINGUAL' },
+              { name: 'Buccal (Gums)', value: 'BUCCAL' },
+              { name: 'Rectal (Butt)', value: 'RECTAL' },
+              { name: 'Intramuscular (IM)', value: 'INTRAMUSCULAR' },
+              { name: 'Intravenous (IV)', value: 'INTRAVENOUS' },
+              { name: 'Subcutanious (IM)', value: 'SUBCUTANIOUS' },
+              { name: 'Topical (On Skin)', value: 'TOPICAL' },
+              { name: 'Transdermal (Past Skin)', value: 'TRANSDERMAL' },
+            ),
+        )
+        .addStringOption((option) =>
+          option.setName('offset').setDescription('How long ago? EG: 4 hours 32 mins ago'),
+        ),
+    )
+    .addSubcommand((subcommand) =>
+      subcommand.setName('get').setDescription('Get your dosage records!'),
+    )
+    .addSubcommand((subcommand) =>
+      subcommand
+        .setName('delete')
+        .setDescription('Delete a dosage record!')
+        .addNumberOption((option) =>
+          option.setName('record').setDescription('Which record? (0, 1, 2, etc)').setRequired(true),
+        ),
+    ),
   async execute(interaction) {
-    const ephemeral = interaction.channel?.type !== ChannelType.DM ? MessageFlags.Ephemeral : undefined;
+    const ephemeral =
+      interaction.channel?.type === ChannelType.DM ? undefined : MessageFlags.Ephemeral;
     await interaction.deferReply({ flags: ephemeral });
-    const command = interaction.options.getSubcommand() as 'get' | 'set' | 'delete';
+    const command = interaction.options.getSubcommand() as 'delete' | 'get' | 'set';
     const embed = embedTemplate();
     const book = [] as EmbedBuilder[];
 
@@ -138,8 +148,8 @@ export const dIdose: SlashCommand = {
           // Add fields to the pageEmbed until there are 24 fields
           let pageFields = [] as EmbedField[];
           let pageFieldsCount = 0;
-          for (const record of response) { // eslint-disable-line no-restricted-syntax
-            pageFields.push({ name: record.name, value: record.value, inline: true });
+          for (const record of response) {
+            pageFields.push({ inline: true, name: record.name, value: record.value });
             // log.debug(F, `Adding field ${field.name}`);
             pageFieldsCount += 1;
             // log.debug(F, `pageFieldsCount: ${pageFieldsCount}`);
@@ -164,8 +174,8 @@ export const dIdose: SlashCommand = {
         if (response.length <= 24) {
           // Add fields to the embed
           const fields = [] as EmbedField[];
-          for (const record of response) { // eslint-disable-line no-restricted-syntax
-            fields.push({ name: record.name, value: record.value, inline: true });
+          for (const record of response) {
+            fields.push({ inline: true, name: record.name, value: record.value });
           }
           embed.setFields(fields);
         }
@@ -191,10 +201,10 @@ export const dIdose: SlashCommand = {
       const relative = time(date, 'R');
       // log.debug(F, `relative: ${relative}`);
 
-      const routeStr = roa.charAt(0).toUpperCase() + roa.slice(1).toLowerCase();
+      const routeString = roa.charAt(0).toUpperCase() + roa.slice(1).toLowerCase();
 
       const embedField = {
-        name: `You dosed ${volume} ${units} of ${substance} ${routeStr}`,
+        name: `You dosed ${volume} ${units} of ${substance} ${routeString}`,
         value: `${relative} on ${timeString}`,
       };
       embed.setColor(Colors.DarkBlue);

@@ -1,10 +1,8 @@
-import {
-  ContextMenuCommandBuilder,
-} from 'discord.js';
-import {
-  ApplicationCommandType,
-} from 'discord-api-types/v10';
-import { MessageCommand } from '../../@types/commandDef';
+import { ApplicationCommandType } from 'discord-api-types/v10';
+import { ContextMenuCommandBuilder } from 'discord.js';
+
+import type { MessageCommand } from '../../@types/commandDef';
+
 import { quoteAdd } from './d.quote';
 
 export const mQuote: MessageCommand = {

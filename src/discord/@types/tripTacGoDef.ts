@@ -1,16 +1,16 @@
 export interface TripTacGoGame {
-  gameId: string;
   board: string[];
+  capturedPieces: { O: number; X: number };
   currentPlayer: string;
+  gameId: string;
+  isGameOver: boolean;
   player1: string;
   player2: string;
-  isGameOver: boolean;
-  winner: string | null;
-  capturedPieces: { X: number; O: number };
+  winner: null | string;
 }
 
-export type TripTacGoMoveResult = {
-  success: boolean;
+export interface TripTacGoMoveResult {
   errorMessage?: string;
   gameUpdated: TripTacGoGame;
-};
+  success: boolean;
+}

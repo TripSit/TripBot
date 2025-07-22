@@ -1,33 +1,74 @@
-import {
-  TextChannel,
-  GuildMember,
+import type {
   Guild,
-  PermissionResolvable,
-  PublicThreadChannel,
-  PrivateThreadChannel,
-  NewsChannel,
   GuildBasedChannel,
+  NewsChannel,
+  PermissionResolvable,
+  PrivateThreadChannel,
+  PublicThreadChannel,
+  TextChannel,
 } from 'discord.js';
 
+import { GuildMember, TextBasedChannel } from 'discord.js';
+
 const F = 'check'; // eslint-disable-line
+
+/**
+ * Checks to see if the bot has the right permissions
+ * @param {ChatInputCommandInteraction} interaction The guild to check
+ * @param {TextChannel} channel
+ * @return {Promise<boolean>}
+ */
+export async function checkChannelPermissions(
+  channel:
+    | GuildBasedChannel
+    | NewsChannel
+    | PrivateThreadChannel
+    | PublicThreadChannel
+    | TextChannel,
+  permissionList: PermissionResolvable[],
+): Promise<{
+  hasPermission: boolean;
+  permission?: PermissionResolvable;
+}> {
+  const me = channel.guild.members.me;
+  if (!me) {
+    return {
+      hasPermission: false,
+    };
+  }
+  const channelPerms = channel.permissionsFor(me);
+
+  // Loop through the permissions and check if the bot has them
+  for (const permission of permissionList) {
+    if (!channelPerms.has(permission)) {
+      return {
+        hasPermission: false,
+        permission,
+      };
+    }
+  }
+  return {
+    hasPermission: true,
+  };
+}
 
 /**
  * Template
  * @param {Client} client The Client that manages this interaction
  * @return {Promise<void>}
-* */
+ * */
 export async function checkGuildPermissions(
   guild: Guild,
-  permissionList:PermissionResolvable[],
+  permissionList: PermissionResolvable[],
 ): Promise<{
-    hasPermission: boolean,
-    permission?: PermissionResolvable,
-  }> {
-  const guildObj = await discordClient.guilds.fetch(guild.id);
-  const member = await guildObj.members.fetch(discordClient.user?.id as string);
+  hasPermission: boolean;
+  permission?: PermissionResolvable;
+}> {
+  const guildObject = await discordClient.guilds.fetch(guild.id);
+  const member = await guildObject.members.fetch(discordClient.user?.id!);
 
   // Loop through the permissions and check if the bot has them
-  for (const permission of permissionList) { // eslint-disable-line no-restricted-syntax
+  for (const permission of permissionList) {
     if (!member.permissions.has(permission)) {
       return {
         hasPermission: false,
@@ -183,36 +224,6 @@ export async function checkGuildPermissions(
   // return {
   //   hasPermission: true,
   // };
-}
-
-/**
- * Checks to see if the bot has the right permissions
- * @param {ChatInputCommandInteraction} interaction The guild to check
- * @param {TextChannel} channel
- * @return {Promise<boolean>}
- */
-export async function checkChannelPermissions(
-  channel: TextChannel | PublicThreadChannel | PrivateThreadChannel | NewsChannel | GuildBasedChannel,
-  permissionList:PermissionResolvable[],
-):Promise<{
-    hasPermission: boolean,
-    permission?: PermissionResolvable,
-  }> {
-  const me = channel.guild?.members.me as GuildMember;
-  const channelPerms = channel.permissionsFor(me);
-
-  // Loop through the permissions and check if the bot has them
-  for (const permission of permissionList) { // eslint-disable-line no-restricted-syntax
-    if (!channelPerms.has(permission)) {
-      return {
-        hasPermission: false,
-        permission,
-      };
-    }
-  }
-  return {
-    hasPermission: true,
-  };
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars

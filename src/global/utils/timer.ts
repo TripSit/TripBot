@@ -1,28 +1,30 @@
-/* eslint-disable max-len */
-import {
-  ActivityType,
+import type {
+  experience_category,
+  experience_type,
+  ticket_status,
+  ticket_type,
+} from '@prisma/client';
+import type {
   CategoryChannel,
-  ChannelType,
-  Colors,
   Guild,
   GuildMember,
   PermissionResolvable,
   TextChannel,
   ThreadChannel,
 } from 'discord.js';
-import Parser from 'rss-parser';
-import { DateTime } from 'luxon';
-import axios from 'axios'; // eslint-disable-line
+
+import axios from 'axios';
 import { stripIndents } from 'common-tags';
-import {
-  experience_category, experience_type, ticket_status, ticket_type,
-} from '@prisma/client';
-import updateDb from './updateDb';
+import { ActivityType, ChannelType, Colors } from 'discord.js';
+import { DateTime } from 'luxon';
+import Parser from 'rss-parser';
+
 import { checkChannelPermissions } from '../../discord/utils/checkPermissions';
 import { embedTemplate } from '../../discord/utils/embedTemplate';
-import { experience } from './experience';
 import { profile } from '../commands/g.learn';
 import getTripSitStatistics from '../commands/g.tripsitstats';
+import { experience } from './experience';
+import updateDatabase from './updateDb';
 
 const F = f(__filename);
 
@@ -32,328 +34,50 @@ const F = f(__filename);
 
 const newRecordString = '🎈🎉🎊 New Record 🎊🎉🎈';
 
-type RedditItem = {
-  title: string,
-  link: string,
-  pubDate: string,
-  author: string,
-  content: string,
-  contentSnippet: string,
-  id: string,
-  isoDate: string,
-};
-
-type RedditFeed = {
-  title: string;
-  link: string;
+interface RedditFeed {
   feedUrl: string;
-  lastBuildDate: string;
   items: RedditItem[];
-};
+  lastBuildDate: string;
+  link: string;
+  title: string;
+}
+
+interface RedditItem {
+  author: string;
+  content: string;
+  contentSnippet: string;
+  id: string;
+  isoDate: string;
+  link: string;
+  pubDate: string;
+  title: string;
+}
 
 // const intervalP = env.NODE_ENV === 'production' ? 1000 * 30 : 1000 * 1;
 
 export default runTimer;
 
-async function checkReminders() { // eslint-disable-line @typescript-eslint/no-unused-vars
-  // log.debug(F, 'Checking reminders...');
-  // Process reminders
-  // const reminderData = await reminderGet();
-  const reminderData = await db.user_reminders.findMany();
-  if (reminderData.length > 0) {
-    // Loop through each reminder
-    // for (const reminder of reminderData) {
-    reminderData.forEach(async reminder => {
-      // Check if the reminder is ready to be triggered
-      if (reminder.trigger_at) {
-        if (DateTime.fromJSDate(reminder.trigger_at) <= DateTime.local()) {
-          // Get the user's discord id
-          const userData = await db.users.upsert({
-            where: {
-              id: reminder.user_id,
-            },
-            create: {
-              id: reminder.user_id,
-            },
-            update: {},
-          });
-
-          // Send the user a message
-          if (userData?.discord_id) {
-            const user = await global.discordClient.users.fetch(userData.discord_id);
-            if (user) {
-              await user.send(`Hey ${user.username}, you asked me to remind you: ${reminder.reminder_text}`);
-            }
-          }
-
-          // Delete the reminder from the database
-          await db.user_reminders.delete({
-            where: {
-              id: reminder.id,
-            },
-          });
-        }
-      } else {
-        log.error(F, `Reminder ${reminder.id} has no trigger date!`);
-      }
-    });
+async function callUptime() {
+  if (env.NODE_ENV !== 'production') {
+    return;
   }
+  axios
+    .get(
+      `https://uptime.tripsit.me/api/push/B11H5MbsKx?status=up&msg=OK&ping=${discordClient.ws.ping}`,
+    )
+    .catch((error) => {
+      log.debug(F, `Error when calling uptime monitor! ${error}`);
+    });
 }
 
-async function checkTickets() { // eslint-disable-line @typescript-eslint/no-unused-vars
-  // log.debug(F, 'Checking tickets...');
-  // Process tickets
-  const ticketData = await db.user_tickets.findMany();
-  // Loop through each ticket
-  if (ticketData.length > 0) {
-    ticketData.forEach(async ticket => {
-      // const archiveDate = DateTime.fromJSDate(ticket.archived_at);
-      // const deleteDate = DateTime.fromJSDate(ticket.deleted_at);
-      // log.debug(F, `Ticket: ${ticket.id} archives on ${archiveDate.toLocaleString(DateTime.DATETIME_FULL)} deletes on ${deleteDate.toLocaleString(DateTime.DATETIME_FULL)}`);
-      // Check if the ticket is ready to be archived
-      if (ticket.archived_at
-        && ticket.status !== 'ARCHIVED'
-        && ticket.status !== 'DELETED'
-        && ticket.status !== 'PAUSED'
-        && DateTime.fromJSDate(ticket.archived_at) <= DateTime.local()) {
-        // log.debug(F, `Archiving ticket ${ticket.id}...`);
-
-        // Archive the ticket set the deleted time to 1 week from now
-
-        const updatedTicket = ticket;
-        updatedTicket.status = 'ARCHIVED' as ticket_status;
-        updatedTicket.deleted_at = env.NODE_ENV === 'production'
-          ? DateTime.local().plus({ days: 3 }).toJSDate()
-          : DateTime.local().plus({ minutes: 1 }).toJSDate();
-        if (!updatedTicket.description) {
-          updatedTicket.description = 'Ticket archived';
-        }
-        if (!updatedTicket.type) {
-          updatedTicket.type = 'TRIPSIT' as ticket_type;
-        }
-        if (!updatedTicket.first_message_id) {
-          updatedTicket.first_message_id = '123';
-        }
-
-        // await ticketUpdate(updatedTicket);
-        await db.user_tickets.update({
-          where: {
-            id: updatedTicket.id,
-          },
-          data: {
-            status: updatedTicket.status,
-            deleted_at: updatedTicket.deleted_at,
-            description: updatedTicket.description,
-            type: updatedTicket.type,
-            first_message_id: updatedTicket.first_message_id,
-          },
-        });
-
-        // Archive the thread on discord
-        if (ticket.thread_id) {
-          try {
-            const thread = await global.discordClient.channels.fetch(ticket.thread_id) as ThreadChannel;
-            await thread.setArchived(true);
-            log.debug(F, `Archived thread ${thread.name}`);
-          } catch (err) {
-            // Thread was likely manually deleted
-          }
-        }
-
-        // Restore roles on the user
-        const userData = await db.users.upsert({
-          where: {
-            id: ticket.user_id,
-          },
-          create: {},
-          update: {},
-        });
-        if (userData.discord_id) {
-          const discordUser = await discordClient.users.fetch(userData.discord_id);
-          if (discordUser) {
-            let threadChannel = {} as ThreadChannel;
-            try {
-              threadChannel = await discordClient.channels.fetch(ticket.thread_id) as ThreadChannel;
-              const guild = await discordClient.guilds.fetch(threadChannel.guild.id);
-              const guildData = await db.discord_guilds.upsert({
-                where: {
-                  id: guild.id,
-                },
-                create: {
-                  id: guild.id,
-                },
-                update: {},
-              });
-              const searchResults = await guild.members.search({ query: discordUser.username });
-              // log.debug(F, `searchResults: ${JSON.stringify(searchResults)}`);
-              if (searchResults.size > 0) {
-                const member = await guild.members.fetch(discordUser);
-                if (member) {
-                  const myMember = guild.members.me as GuildMember;
-                  const myRole = myMember.roles.highest;
-
-                  // Restore the old roles
-                  if (userData.roles) {
-                    // log.debug(F, `Restoring ${userData.discord_id}'s roles: ${userData.roles}`);
-                    const roles = userData.roles.split(',');
-                    // for (const role of roles) {
-                    roles.forEach(async role => {
-                      const roleObj = await guild.roles.fetch(role);
-                      if (roleObj && roleObj.name !== '@everyone'
-                          && roleObj.id !== guildData.role_needshelp
-                          && roleObj.comparePositionTo(myRole) < 0
-                          && member.guild.id !== env.DISCORD_BL_ID
-                          // && member.guild.id !== env.DISCORD_GUILD_ID // Patch for BL not to re-add roles
-                      ) {
-                        // Check if the bot has permission to add the role
-                        log.debug(F, `Adding ${userData.discord_id}'s ${role} role`);
-                        try {
-                          await member.roles.add(roleObj);
-                        } catch (err) {
-                          log.error(F, stripIndents`Failed to add ${member.displayName}'s ${roleObj.name}\
-                           role in ${member.guild.name}: ${err}`);
-                        }
-                      }
-                    });
-
-                    // Remove the needshelp role
-                    const needshelpRole = await guild.roles.fetch(guildData.role_needshelp as string);
-                    if (needshelpRole && needshelpRole.comparePositionTo(myRole) < 0) {
-                      await member.roles.remove(needshelpRole);
-                    }
-                  }
-                }
-              }
-            } catch (err) {
-              // Thread was likely manually deleted
-            }
-          }
-        }
-      }
-
-      // Check if the ticket is ready to be deleted
-      if (ticket.deleted_at
-        && ticket.status === 'ARCHIVED'
-        && DateTime.fromJSDate(ticket.deleted_at) <= DateTime.local()
-      ) {
-        log.debug(F, `Deleting ticket ${ticket.id}...`);
-
-        // Delete the thread on discord
-        if (ticket.thread_id) {
-          try {
-            const thread = await global.discordClient.channels.fetch(ticket.thread_id) as ThreadChannel;
-            await thread.delete();
-            log.debug(F, `Thread ${ticket.thread_id} was deleted`);
-          } catch (err) {
-            // Thread was likely manually deleted
-            log.debug(F, `Thread ${ticket.thread_id} was likely manually deleted`);
-          }
-        }
-        await db.user_tickets.update({
-          where: {
-            id: ticket.id,
-          },
-          data: {
-            status: 'DELETED' as ticket_status,
-          },
-        });
-      }
-    });
-  }
-
-  // As a failsafe, loop through the Tripsit room and delete any threads that are older than 7 days and are archived
-  const guildDataList = await db.discord_guilds.findMany();
-  if (guildDataList.length > 0) {
-    guildDataList.forEach(async guildData => {
-      // log.debug(F, `Checking guild  room for old threads...`);
-      let guild = {} as Guild;
-      try {
-        guild = await discordClient.guilds.fetch(guildData.id);
-      } catch (err) {
-        // Guild was likely deleted
-        return;
-      }
-      if (guild && guildData.channel_tripsit) {
-        // log.debug(F, 'Checking Tripsit room for old threads...');
-        // log.debug(F, `Tripsit room: ${guildData.channel_tripsit}`);
-        let channel = {} as TextChannel;
-        try {
-          channel = await guild.channels.fetch(guildData.channel_tripsit) as TextChannel;
-        } catch (err) {
-          // Channel was likely deleted, remove it from the db
-          const newGuildData = guildData;
-          newGuildData.channel_tripsit = null;
-
-          await db.discord_guilds.update({
-            where: {
-              id: newGuildData.id,
-            },
-            data: {
-              channel_tripsit: newGuildData.channel_tripsit,
-            },
-          });
-          return;
-        }
-        // log.debug(F, `Tripsit room: ${channel.name} (${channel.id})`);
-        const tripsitPerms = await checkChannelPermissions(channel, [
-          'ViewChannel' as PermissionResolvable,
-          'ManageThreads' as PermissionResolvable,
-        ]);
-
-        if (!tripsitPerms.hasPermission) {
-          // // Check if you have reminder the guild owner in the last 24 hours
-          // const lastRemdinerSent = lastReminder[guild.id];
-          // if (!lastRemdinerSent || lastRemdinerSent < DateTime.local().minus({ hours: 24 })) {
-          //   // log.debug(F, `Sending reminder to ${(await guild.fetchOwner()).user.username}...`);
-          //   // const guildOwner = await channel.guild.fetchOwner();
-          //   // await guildOwner.send({
-          //   //   content: `I am trying to prune threads in ${channel} but
-          //   //  I don't have the ${tripsitPerms.permission} permission.`, // eslint-disable-line max-len
-          //   // });
-          //   const botOwner = await discordClient.users.fetch(env.DISCORD_OWNER_ID);
-          //   await botOwner.send({
-          //     content: `I am trying to prune threads in ${channel} of ${channel.guild.name} but I don't have the ${tripsitPerms.permission} permission.`, // eslint-disable-line max-len
-          //   });
-          //   lastReminder[guild.id] = DateTime.local();
-          // }
-          return;
-        }
-
-        // log.debug(F, 'Deleting old threads...');
-        const threadList = await channel.threads.fetch({
-          archived: {
-            type: 'private',
-            fetchAll: true,
-            before: new Date().setDate(new Date().getDate() - 5),
-          },
-        });
-        // const threadList = await channel.threads.fetchArchived({ type: 'private', fetchAll: true });
-        // log.debug(F, `Found ${threadList.threads.size} archived threads in Tripsit room`);
-        threadList.threads.forEach(async thread => {
-          // Check if the thread was created over a week ago
-          try {
-            await thread.fetch();
-
-            // Get messages and filter out system messages
-            const messages = await thread.messages.fetch({ limit: 10 }); // Fetch more to account for system messages
-            const userMessages = messages.filter(msg => !msg.system);
-            const lastUserMessage = userMessages.first();
-
-            // Determine if this message was sent longer than a week ago
-            if (lastUserMessage && DateTime.fromJSDate(lastUserMessage.createdAt) >= DateTime.local().minus({ days: 5 })) {
-              thread.delete();
-              log.debug(F, `Deleted thread ${thread.name} in ${channel.name} because the last user message was sent over 5 days ago`);
-            }
-          } catch (err) {
-            // Thread was likely manually deleted
-          }
-        });
-      }
-    });
-  }
+async function checkEvery(callback: () => Promise<void>, interval: number) {
+  setTimeout(async () => {
+    await callback();
+    checkEvery(callback, interval);
+  }, interval);
 }
 
-async function checkMindsets() { // eslint-disable-line @typescript-eslint/no-unused-vars
+async function checkMindsets() {
   // log.debug(F, 'Checking mindsets...');
   // Process mindset roles
   const mindsetRoleData = await db.users.findMany({
@@ -366,23 +90,24 @@ async function checkMindsets() { // eslint-disable-line @typescript-eslint/no-un
   if (mindsetRoleData.length > 0) {
     // Loop through each user
     // for (const user of mindsetRoleData) {
-    mindsetRoleData.forEach(async mindsetUser => {
+    mindsetRoleData.forEach(async (mindsetUser) => {
       // log.debug(F, `mindsetUser: ${JSON.stringify(mindsetUser, null, 2)}`);
       // log.debug(F, `Expires: ${DateTime.fromJSDate(mindsetUser.mindset_role_expires_at!) <= DateTime.local()}`);
 
       // Check if the user has a mindset role
-      if (mindsetUser.mindset_role
-              && mindsetUser.mindset_role_expires_at
-              && DateTime.fromJSDate(mindsetUser.mindset_role_expires_at) <= DateTime.local()
-              && mindsetUser.discord_id
+      if (
+        mindsetUser.mindset_role &&
+        mindsetUser.mindset_role_expires_at &&
+        DateTime.fromJSDate(mindsetUser.mindset_role_expires_at) <= DateTime.local() &&
+        mindsetUser.discord_id
       ) {
         // const expires = DateTime.fromJSDate(user.mindset_role_expires_at);
         // log.debug(F, `${DateTime.fromJSDate(mindsetUser.mindset_role_expires_at)}`); // eslint-disable-line max-len
         // Check if the user's mindset role has expired
         // Get the user's discord id
         // Get the user's discord object
-        const user = await global.discordClient.users.fetch(mindsetUser.discord_id);
-        const guild = await global.discordClient.guilds.fetch(env.DISCORD_GUILD_ID);
+        const user = await globalThis.discordClient.users.fetch(mindsetUser.discord_id);
+        const guild = await globalThis.discordClient.guilds.fetch(env.DISCORD_GUILD_ID);
         if (user && guild) {
           const searchResults = await guild.members.search({ query: user.username });
           // log.debug(F, `searchResults: ${JSON.stringify(searchResults)}`);
@@ -415,12 +140,12 @@ async function checkMindsets() { // eslint-disable-line @typescript-eslint/no-un
               // await usersUpdate(updatedUser);
               if (updatedUser.discord_id) {
                 await db.users.update({
-                  where: {
-                    discord_id: updatedUser.discord_id,
-                  },
                   data: {
                     mindset_role: updatedUser.mindset_role,
                     mindset_role_expires_at: updatedUser.mindset_role_expires_at,
+                  },
+                  where: {
+                    discord_id: updatedUser.discord_id,
                   },
                 });
               }
@@ -432,11 +157,58 @@ async function checkMindsets() { // eslint-disable-line @typescript-eslint/no-un
   }
 }
 
-async function checkRss() { // eslint-disable-line @typescript-eslint/no-unused-vars
+async function checkReminders() {
+  // log.debug(F, 'Checking reminders...');
+  // Process reminders
+  // const reminderData = await reminderGet();
+  const reminderData = await db.user_reminders.findMany();
+  if (reminderData.length > 0) {
+    // Loop through each reminder
+    // for (const reminder of reminderData) {
+    reminderData.forEach(async (reminder) => {
+      // Check if the reminder is ready to be triggered
+      if (reminder.trigger_at) {
+        if (DateTime.fromJSDate(reminder.trigger_at) <= DateTime.local()) {
+          // Get the user's discord id
+          const userData = await db.users.upsert({
+            create: {
+              id: reminder.user_id,
+            },
+            update: {},
+            where: {
+              id: reminder.user_id,
+            },
+          });
+
+          // Send the user a message
+          if (userData?.discord_id) {
+            const user = await globalThis.discordClient.users.fetch(userData.discord_id);
+            if (user) {
+              await user.send(
+                `Hey ${user.username}, you asked me to remind you: ${reminder.reminder_text}`,
+              );
+            }
+          }
+
+          // Delete the reminder from the database
+          await db.user_reminders.delete({
+            where: {
+              id: reminder.id,
+            },
+          });
+        }
+      } else {
+        log.error(F, `Reminder ${reminder.id} has no trigger date!`);
+      }
+    });
+  }
+}
+
+async function checkRss() {
   // log.debug(F, 'Checking rss...');
-  const parser: Parser<RedditFeed, RedditItem> = new Parser();
+  const parser = new Parser<RedditFeed, RedditItem>();
   (async () => {
-    const guild = await global.discordClient.guilds.fetch(env.DISCORD_GUILD_ID);
+    const guild = await globalThis.discordClient.guilds.fetch(env.DISCORD_GUILD_ID);
 
     // log.debug(F, `guild: ${JSON.stringify(guild, null, 2)}\n`);
     const rssData = await db.rss.findMany({
@@ -446,21 +218,23 @@ async function checkRss() { // eslint-disable-line @typescript-eslint/no-unused-
     });
     // log.debug(F, `rssData: ${JSON.stringify(rssData, null, 2)}\n`);
 
-    rssData.forEach(async feed => {
-      let mostRecentPost = {} as RedditItem & Parser.Item;
+    rssData.forEach(async (feed) => {
+      let mostRecentPost = {} as Parser.Item & RedditItem;
       try {
         [mostRecentPost] = (await parser.parseURL(feed.url)).items;
-      } catch (error) {
+      } catch {
         // log.debug(F, `Error parsing ${feed.url}: ${error}`);
         return;
       }
       // log.debug(F, `mostRecentPost: ${JSON.stringify(mostRecentPost, null, 2)}`);
 
-      if (feed.last_post_id === mostRecentPost.id) return;
+      if (feed.last_post_id === mostRecentPost.id) {
+        return;
+      }
 
       // log.debug(F, `New post: ${JSON.stringify(mostRecentPost, null, 2)}`);
 
-      const channelBotlog = await guild.channels.fetch(feed.destination) as TextChannel;
+      const channelBotlog = (await guild.channels.fetch(feed.destination)) as TextChannel;
 
       // Gets everything before "submitted by"
       const bigBody = mostRecentPost.contentSnippet.slice(
@@ -472,10 +246,12 @@ async function checkRss() { // eslint-disable-line @typescript-eslint/no-unused-
       const body = bigBody.slice(0, 2000);
 
       // Capitalizes the B in by and gets the username
-      const submittedBy = `B${mostRecentPost.contentSnippet.slice(
-        mostRecentPost.contentSnippet.indexOf('submitted by') + 11,
-        mostRecentPost.contentSnippet.indexOf('[link]'),
-      ).replaceAll('    ', ' ')}`;
+      const submittedBy = `B${mostRecentPost.contentSnippet
+        .slice(
+          mostRecentPost.contentSnippet.indexOf('submitted by') + 11,
+          mostRecentPost.contentSnippet.indexOf('[link]'),
+        )
+        .replaceAll('    ', ' ')}`;
 
       // log.debug(F, `submittedBy: ${submittedBy}`);
 
@@ -486,12 +262,12 @@ async function checkRss() { // eslint-disable-line @typescript-eslint/no-unused-
 
       const embed = embedTemplate();
       try {
-        embed.setAuthor({ name: `New /r/${subreddit} post`, iconURL: env.TS_ICON_URL });
-        embed.setTitle(`${mostRecentPost.title.slice(0, 256)}`);
+        embed.setAuthor({ iconURL: env.TS_ICON_URL, name: `New /r/${subreddit} post` });
+        embed.setTitle(mostRecentPost.title.slice(0, 256));
         embed.setURL(mostRecentPost.link);
-        embed.setFooter({ text: submittedBy, iconURL: env.FLAME_ICON_URL });
+        embed.setFooter({ iconURL: env.FLAME_ICON_URL, text: submittedBy });
         embed.setTimestamp(new Date(mostRecentPost.pubDate));
-      } catch (error) {
+      } catch {
         // log.debug(F, `Error creating embed: ${error}`);
         // log.debug(F, `mostRecentPost: ${JSON.stringify(mostRecentPost, null, 2)}`);
         return;
@@ -509,122 +285,44 @@ async function checkRss() { // eslint-disable-line @typescript-eslint/no-unused-
       newFeed.last_post_id = mostRecentPost.id;
 
       await db.rss.update({
-        where: {
-          id: newFeed.id,
-        },
         data: {
           last_post_id: newFeed.last_post_id,
         },
+        where: {
+          id: newFeed.id,
+        },
       });
     });
   })();
 }
 
-async function callUptime() { // eslint-disable-line @typescript-eslint/no-unused-vars
-  if (env.NODE_ENV !== 'production') return;
-  axios.get(`https://uptime.tripsit.me/api/push/B11H5MbsKx?status=up&msg=OK&ping=${discordClient.ws.ping}`).catch(e => {
-    log.debug(F, `Error when calling uptime monitor! ${e}`);
-  });
-}
+async function checkStats() {
+  // log.debug(F, 'Checking stats...');
+  // Determine how many people are in the tripsit guild
+  const tripsitGuild = await globalThis.discordClient.guilds.fetch(env.DISCORD_GUILD_ID);
+  if (!tripsitGuild) {
+    return;
+  }
 
-async function checkVoice() {
-  // This function will run every minute and check every voice channel on the guild
-  // If someone satisfies the following conditions, they will be awarded voice exp
-  // 1. They are not a bot
-  // 2. They are in a voice channel
-  // 4. They have not been awarded voice exp in the last 5 minutes
-  // 5. Are not AFK
-  // 6. Are not deafened
-  // 7. Are not muted
-  // 9. Are not in a stage channel
-  // 10. Do not have the NeedsHelp role
-  // 10. With another human in the channel that also meets these conditions
+  const { memberCount } = tripsitGuild;
 
-  // The type of voice exp is determined by the category the voice channel is in
-  // GENERAL = Campground and Backstage
-  // TRIPSITTER = HR
-  // TEAM = Team
-  // DEVELOPER = Development
-
-  // The amount of of voice gained is ((A random value between 15 and 25) / 2)
-
-  // log.info('voiceExp', 'Checking voice channels...');
-  (async () => {
-    // Define each category type and the category channel id
-    const categoryDefs = [
-      { category: 'GENERAL' as experience_category, id: env.CATEGORY_CAMPGROUND },
-      { category: 'GENERAL' as experience_category, id: env.CATEGORY_VOICE },
-      { category: 'GENERAL' as experience_category, id: env.CATEGORY_BACKSTAGE },
-      { category: 'TEAM' as experience_category, id: env.CATEGORY_TEAMTRIPSIT },
-      { category: 'TRIPSITTER' as experience_category, id: env.CATEGORY_HARMREDUCTIONCENTRE },
-      { category: 'DEVELOPER' as experience_category, id: env.CATEGORY_DEVELOPMENT },
-    ];
-
-    // For each of the above types, check each voice channel in the category
-    categoryDefs.forEach(async categoryDef => {
-      const category = await discordClient.channels.fetch(categoryDef.id) as CategoryChannel;
-      category.children.cache.forEach(async channel => {
-        if (channel.type === ChannelType.GuildVoice
-        && channel.id !== env.CHANNEL_CAMPFIRE
-        /* && channel.members.size > 1 */) { // For testing
-          // Check to see if the people in the channel meet the right requirements
-          if (channel.members.size < 1) {
-            return;
-          }
-          // log.info('voiceExp', `${channel.name} has ${channel.members.size} people in it`);
-          const humansInChat = channel.members.filter(member => {
-            if (member.user.bot) {
-              // log.info('voiceExp', `${member.displayName} is a bot`);
-              return false;
-            }
-            if (member.voice.selfDeaf) {
-              // log.info('voiceExp', `${member.displayName} is self deafened`);
-              return false;
-            }
-            if (member.voice.serverDeaf) {
-              // log.info('voiceExp', `${member.displayName} is server deafened`);
-              return false;
-            }
-            if (member.voice.selfMute) {
-              // log.info('voiceExp', `${member.displayName} is self muted`);
-              return false;
-            }
-            if (member.voice.serverMute) {
-              // log.info('voiceExp', `${member.displayName} is server muted`);
-              return false;
-            }
-            // if (member.voice.streaming) {
-            //   // log.info('voiceExp', `${member.displayName} is streaming`);
-            //   return false;
-            // }
-            if (member.voice.suppress) {
-              // log.info('voiceExp', `${member.displayName} is suppressed`);
-              return false;
-            }
-            if (member.voice.channel?.type === ChannelType.GuildStageVoice) {
-              // log.info('voiceExp', `${member.displayName} is in a stage channel`);
-              return false;
-            }
-            if (member.roles.cache.has(env.ROLE_NEEDS_HELP)) {
-              // log.info('voiceExp', `${member.displayName} has the NeedsHelp role`);
-              return false;
-            }
-            return !(channel.members.size < 2 && env.NODE_ENV === 'production');
-          });
-          // log.info('voiceExp', `${channel.name} has ${humansInChat.size} people actively chatting in it`);
-          if ((env.NODE_ENV === 'production' && humansInChat && humansInChat.size > 1)
-          || (env.NODE_ENV !== 'production' && humansInChat && humansInChat.size > 0)) {
-            // log.info('voiceExp', `Attempting to give experience to ${humansInChat.size} people in ${channel.name}: ${humansInChat.map(member => member.displayName).join(', ')}`);
-            // For each human in chat, check if they have been awarded voice exp in the last 5 minutes
-            // If they have not, award them voice exp
-            humansInChat.forEach(async member => {
-              await experience(member, categoryDef.category, 'VOICE' as experience_type, channel);
-            });
-          }
-        }
-      });
-    });
-  })();
+  // Total member count
+  // Check if the total members is divisible by 100
+  if (memberCount % 100 === 0) {
+    const embed = embedTemplate()
+      .setTitle(newRecordString)
+      .setDescription(`We have reached ${memberCount} total members!`);
+    const channelLounge = (await tripsitGuild.channels.fetch(env.CHANNEL_LOUNGE)) as TextChannel;
+    if (channelLounge) {
+      await channelLounge.send({ embeds: [embed] });
+    }
+    const channelTeamtripsit = (await tripsitGuild.channels.fetch(
+      env.CHANNEL_TEAMTRIPSIT,
+    )) as TextChannel;
+    if (channelTeamtripsit) {
+      await channelTeamtripsit.send({ embeds: [embed] });
+    }
+  }
 }
 
 // async function changeStatus() {
@@ -644,28 +342,277 @@ async function checkVoice() {
 //   // }, delay);
 // }
 
-async function checkStats() {
-  // log.debug(F, 'Checking stats...');
-  // Determine how many people are in the tripsit guild
-  const tripsitGuild = await global.discordClient.guilds.fetch(env.DISCORD_GUILD_ID);
-  if (!tripsitGuild) return;
+async function checkTickets() {
+  // log.debug(F, 'Checking tickets...');
+  // Process tickets
+  const ticketData = await db.user_tickets.findMany();
+  // Loop through each ticket
+  if (ticketData.length > 0) {
+    ticketData.forEach(async (ticket) => {
+      // const archiveDate = DateTime.fromJSDate(ticket.archived_at);
+      // const deleteDate = DateTime.fromJSDate(ticket.deleted_at);
+      // log.debug(F, `Ticket: ${ticket.id} archives on ${archiveDate.toLocaleString(DateTime.DATETIME_FULL)} deletes on ${deleteDate.toLocaleString(DateTime.DATETIME_FULL)}`);
+      // Check if the ticket is ready to be archived
+      if (
+        ticket.archived_at &&
+        ticket.status !== 'ARCHIVED' &&
+        ticket.status !== 'DELETED' &&
+        ticket.status !== 'PAUSED' &&
+        DateTime.fromJSDate(ticket.archived_at) <= DateTime.local()
+      ) {
+        // log.debug(F, `Archiving ticket ${ticket.id}...`);
 
-  const { memberCount } = tripsitGuild;
+        // Archive the ticket set the deleted time to 1 week from now
 
-  // Total member count
-  // Check if the total members is divisible by 100
-  if (memberCount % 100 === 0) {
-    const embed = embedTemplate()
-      .setTitle(newRecordString)
-      .setDescription(`We have reached ${memberCount} total members!`);
-    const channelLounge = await tripsitGuild.channels.fetch(env.CHANNEL_LOUNGE) as TextChannel;
-    if (channelLounge) {
-      await channelLounge.send({ embeds: [embed] });
-    }
-    const channelTeamtripsit = await tripsitGuild.channels.fetch(env.CHANNEL_TEAMTRIPSIT) as TextChannel;
-    if (channelTeamtripsit) {
-      await channelTeamtripsit.send({ embeds: [embed] });
-    }
+        const updatedTicket = ticket;
+        updatedTicket.status = 'ARCHIVED' as ticket_status;
+        updatedTicket.deleted_at =
+          env.NODE_ENV === 'production'
+            ? DateTime.local().plus({ days: 3 }).toJSDate()
+            : DateTime.local().plus({ minutes: 1 }).toJSDate();
+        if (!updatedTicket.description) {
+          updatedTicket.description = 'Ticket archived';
+        }
+        if (!updatedTicket.type) {
+          updatedTicket.type = 'TRIPSIT' as ticket_type;
+        }
+        if (!updatedTicket.first_message_id) {
+          updatedTicket.first_message_id = '123';
+        }
+
+        // await ticketUpdate(updatedTicket);
+        await db.user_tickets.update({
+          data: {
+            deleted_at: updatedTicket.deleted_at,
+            description: updatedTicket.description,
+            first_message_id: updatedTicket.first_message_id,
+            status: updatedTicket.status,
+            type: updatedTicket.type,
+          },
+          where: {
+            id: updatedTicket.id,
+          },
+        });
+
+        // Archive the thread on discord
+        if (ticket.thread_id) {
+          try {
+            const thread = (await globalThis.discordClient.channels.fetch(
+              ticket.thread_id,
+            )) as ThreadChannel;
+            await thread.setArchived(true);
+            log.debug(F, `Archived thread ${thread.name}`);
+          } catch {
+            // Thread was likely manually deleted
+          }
+        }
+
+        // Restore roles on the user
+        const userData = await db.users.upsert({
+          create: {},
+          update: {},
+          where: {
+            id: ticket.user_id,
+          },
+        });
+        if (userData.discord_id) {
+          const discordUser = await discordClient.users.fetch(userData.discord_id);
+          if (discordUser) {
+            let threadChannel = {} as ThreadChannel;
+            try {
+              threadChannel = (await discordClient.channels.fetch(
+                ticket.thread_id,
+              )) as ThreadChannel;
+              const guild = await discordClient.guilds.fetch(threadChannel.guild.id);
+              const guildData = await db.discord_guilds.upsert({
+                create: {
+                  id: guild.id,
+                },
+                update: {},
+                where: {
+                  id: guild.id,
+                },
+              });
+              const searchResults = await guild.members.search({ query: discordUser.username });
+              // log.debug(F, `searchResults: ${JSON.stringify(searchResults)}`);
+              if (searchResults.size > 0) {
+                const member = await guild.members.fetch(discordUser);
+                if (member) {
+                  const myMember = guild.members.me!;
+                  const myRole = myMember.roles.highest;
+
+                  // Restore the old roles
+                  if (userData.roles) {
+                    // log.debug(F, `Restoring ${userData.discord_id}'s roles: ${userData.roles}`);
+                    const roles = userData.roles.split(',');
+                    // for (const role of roles) {
+                    roles.forEach(async (role) => {
+                      const roleObject = await guild.roles.fetch(role);
+                      if (
+                        roleObject &&
+                        roleObject.name !== '@everyone' &&
+                        roleObject.id !== guildData.role_needshelp &&
+                        roleObject.comparePositionTo(myRole) < 0 &&
+                        member.guild.id !== env.DISCORD_BL_ID
+                        // && member.guild.id !== env.DISCORD_GUILD_ID // Patch for BL not to re-add roles
+                      ) {
+                        // Check if the bot has permission to add the role
+                        log.debug(F, `Adding ${userData.discord_id}'s ${role} role`);
+                        try {
+                          await member.roles.add(roleObject);
+                        } catch (error) {
+                          log.error(
+                            F,
+                            stripIndents`Failed to add ${member.displayName}'s ${roleObject.name}\
+                           role in ${member.guild.name}: ${error}`,
+                          );
+                        }
+                      }
+                    });
+
+                    // Remove the needshelp role
+                    const needshelpRole = await guild.roles.fetch(guildData.role_needshelp);
+                    if (needshelpRole && needshelpRole.comparePositionTo(myRole) < 0) {
+                      await member.roles.remove(needshelpRole);
+                    }
+                  }
+                }
+              }
+            } catch {
+              // Thread was likely manually deleted
+            }
+          }
+        }
+      }
+
+      // Check if the ticket is ready to be deleted
+      if (
+        ticket.deleted_at &&
+        ticket.status === 'ARCHIVED' &&
+        DateTime.fromJSDate(ticket.deleted_at) <= DateTime.local()
+      ) {
+        log.debug(F, `Deleting ticket ${ticket.id}...`);
+
+        // Delete the thread on discord
+        if (ticket.thread_id) {
+          try {
+            const thread = (await globalThis.discordClient.channels.fetch(
+              ticket.thread_id,
+            )) as ThreadChannel;
+            await thread.delete();
+            log.debug(F, `Thread ${ticket.thread_id} was deleted`);
+          } catch {
+            // Thread was likely manually deleted
+            log.debug(F, `Thread ${ticket.thread_id} was likely manually deleted`);
+          }
+        }
+        await db.user_tickets.update({
+          data: {
+            status: 'DELETED' as ticket_status,
+          },
+          where: {
+            id: ticket.id,
+          },
+        });
+      }
+    });
+  }
+
+  // As a failsafe, loop through the Tripsit room and delete any threads that are older than 7 days and are archived
+  const guildDataList = await db.discord_guilds.findMany();
+  if (guildDataList.length > 0) {
+    guildDataList.forEach(async (guildData) => {
+      // log.debug(F, `Checking guild  room for old threads...`);
+      let guild = {} as Guild;
+      try {
+        guild = await discordClient.guilds.fetch(guildData.id);
+      } catch {
+        // Guild was likely deleted
+        return;
+      }
+      if (guild && guildData.channel_tripsit) {
+        // log.debug(F, 'Checking Tripsit room for old threads...');
+        // log.debug(F, `Tripsit room: ${guildData.channel_tripsit}`);
+        let channel = {} as TextChannel;
+        try {
+          channel = (await guild.channels.fetch(guildData.channel_tripsit)) as TextChannel;
+        } catch {
+          // Channel was likely deleted, remove it from the db
+          const newGuildData = guildData;
+          newGuildData.channel_tripsit = null;
+
+          await db.discord_guilds.update({
+            data: {
+              channel_tripsit: newGuildData.channel_tripsit,
+            },
+            where: {
+              id: newGuildData.id,
+            },
+          });
+          return;
+        }
+        // log.debug(F, `Tripsit room: ${channel.name} (${channel.id})`);
+        const tripsitPerms = await checkChannelPermissions(channel, [
+          'ViewChannel' as PermissionResolvable,
+          'ManageThreads' as PermissionResolvable,
+        ]);
+
+        if (!tripsitPerms.hasPermission) {
+          // // Check if you have reminder the guild owner in the last 24 hours
+          // const lastRemdinerSent = lastReminder[guild.id];
+          // if (!lastRemdinerSent || lastRemdinerSent < DateTime.local().minus({ hours: 24 })) {
+          //   // log.debug(F, `Sending reminder to ${(await guild.fetchOwner()).user.username}...`);
+          //   // const guildOwner = await channel.guild.fetchOwner();
+          //   // await guildOwner.send({
+          //   //   content: `I am trying to prune threads in ${channel} but
+          //   //  I don't have the ${tripsitPerms.permission} permission.`, // eslint-disable-line max-len
+          //   // });
+          //   const botOwner = await discordClient.users.fetch(env.DISCORD_OWNER_ID);
+          //   await botOwner.send({
+          //     content: `I am trying to prune threads in ${channel} of ${channel.guild.name} but I don't have the ${tripsitPerms.permission} permission.`, // eslint-disable-line max-len
+          //   });
+          //   lastReminder[guild.id] = DateTime.local();
+          // }
+          return;
+        }
+
+        // log.debug(F, 'Deleting old threads...');
+        const threadList = await channel.threads.fetch({
+          archived: {
+            before: new Date().setDate(new Date().getDate() - 5),
+            fetchAll: true,
+            type: 'private',
+          },
+        });
+        // const threadList = await channel.threads.fetchArchived({ type: 'private', fetchAll: true });
+        // log.debug(F, `Found ${threadList.threads.size} archived threads in Tripsit room`);
+        threadList.threads.forEach(async (thread) => {
+          // Check if the thread was created over a week ago
+          try {
+            await thread.fetch();
+
+            // Get messages and filter out system messages
+            const messages = await thread.messages.fetch({ limit: 10 }); // Fetch more to account for system messages
+            const userMessages = messages.filter((message) => !message.system);
+            const lastUserMessage = userMessages.first();
+
+            // Determine if this message was sent longer than a week ago
+            if (
+              lastUserMessage &&
+              DateTime.fromJSDate(lastUserMessage.createdAt) >= DateTime.local().minus({ days: 5 })
+            ) {
+              thread.delete();
+              log.debug(
+                F,
+                `Deleted thread ${thread.name} in ${channel.name} because the last user message was sent over 5 days ago`,
+              );
+            }
+          } catch {
+            // Thread was likely manually deleted
+          }
+        });
+      }
+    });
   }
 }
 
@@ -817,17 +764,19 @@ async function checkMoodle() { // eslint-disable-line
   // log.debug(F, 'Starting checkMoodle');
 
   // Set the connection status on first run
-  if (global.moodleConnection === undefined) {
+  if (globalThis.moodleConnection === undefined) {
     // log.debug(F, 'moodleConnection is undefined setting it to true and now');
-    global.moodleConnection = {
-      status: true,
+    globalThis.moodleConnection = {
       date: DateTime.now(),
+      status: true,
     };
   }
 
   // If the connection is bad and it has been less than 5 minutes, return;
-  if (!global.moodleConnection.status
-    && DateTime.now().diff(global.moodleConnection.date, 'minutes').minutes <= 5) {
+  if (
+    !globalThis.moodleConnection.status &&
+    DateTime.now().diff(globalThis.moodleConnection.date, 'minutes').minutes <= 5
+  ) {
     // log.debug(F, 'Connection is bad and it has been less than 5 minutes, returning...');
     return;
   }
@@ -857,8 +806,8 @@ async function checkMoodle() { // eslint-disable-line
 
     let member = {} as GuildMember;
     try {
-      member = await guild.members.fetch(user.discord_id as string);
-    } catch (error) {
+      member = await guild.members.fetch(user.discord_id);
+    } catch {
       // log.debug(F, `Error fetching member: ${error}`);
       return; // Skip this user and continue with the next one
     }
@@ -866,10 +815,14 @@ async function checkMoodle() { // eslint-disable-line
     let moodleProfile: { completedCourses?: string[] | undefined };
     try {
       // Add timeout protection for the profile lookup
-      moodleProfile = await Promise.race([
-        profile(user.discord_id as string),
-        new Promise((_, reject) => { setTimeout(() => reject(new Error('Profile lookup timeout')), 8000); }),
-      ]) as { completedCourses?: string[] | undefined };
+      moodleProfile = (await Promise.race([
+        profile(user.discord_id),
+        new Promise((_, reject) => {
+          setTimeout(() => {
+            reject(new Error('Profile lookup timeout'));
+          }, 8000);
+        }),
+      ])) as { completedCourses?: string[] | undefined };
     } catch (error) {
       log.error(F, `Error getting moodle profile for user ${user.discord_id}: ${error}`);
       return; // Skip this user and continue with the next one
@@ -878,48 +831,52 @@ async function checkMoodle() { // eslint-disable-line
     // log.debug(F, `Checking ${member.user.username}...`);
     if (moodleProfile.completedCourses && moodleProfile.completedCourses.length > 0) {
       // FIXED: Also use reduce for sequential course processing
-      await moodleProfile.completedCourses.reduce(async (coursePrevious: Promise<void>, course: string) => {
-        await coursePrevious; // Wait for the previous course to complete
+      await moodleProfile.completedCourses.reduce(
+        async (coursePrevious: Promise<void>, course: string) => {
+          await coursePrevious; // Wait for the previous course to complete
 
-        try {
-          // log.debug(F, `${member.user.username} completed ${course}...`);
-          const roleId = courseRoleMap[course as keyof typeof courseRoleMap];
-          const role = await guild.roles.fetch(roleId);
+          try {
+            // log.debug(F, `${member.user.username} completed ${course}...`);
+            const roleId = courseRoleMap[course as keyof typeof courseRoleMap];
+            const role = await guild.roles.fetch(roleId);
 
-          if (role) {
-            // log.debug(F, `Found role: ${JSON.stringify(role, null, 2)}`);
-            // check if the member already has the role
-            if (member.roles.cache.has(role.id)) {
-              // log.debug(F, `${member.user.username} already has the ${role.name} role`);
-              return; // Skip to next course
-            }
+            if (role) {
+              // log.debug(F, `Found role: ${JSON.stringify(role, null, 2)}`);
+              // check if the member already has the role
+              if (member.roles.cache.has(role.id)) {
+                // log.debug(F, `${member.user.username} already has the ${role.name} role`);
+                return; // Skip to next course
+              }
 
-            if (channelContent) {
-              // log.debug(F, `Sending message to ${channelContent.name}`);
-              await (channelContent as TextChannel).send({
-                embeds: [
-                  embedTemplate()
-                    .setColor(Colors.Green)
-                    .setDescription(`Congratulate ${member} on completing "${course}"!`),
-                ],
+              if (channelContent) {
+                // log.debug(F, `Sending message to ${channelContent.name}`);
+                await (channelContent as TextChannel).send({
+                  embeds: [
+                    embedTemplate()
+                      .setColor(Colors.Green)
+                      .setDescription(`Congratulate ${member} on completing "${course}"!`),
+                  ],
               }); // eslint-disable-line
-            }
+              }
 
-            if (!member.roles.cache.has(env.ROLE_NEEDS_HELP)) {
-              await member.roles.add(role);
-              log.info(F, `Gave ${member.user.username} the ${role.name} role`);
-            } else {
-              log.info(F, `Skipped giving ${member.user.username} the ${role.name} because they have the Needs Help role`);
-            }
+              if (member.roles.cache.has(env.ROLE_NEEDSHELP)) {
+                log.info(
+                  F,
+                  `Skipped giving ${member.user.username} the ${role.name} because they have the Needs Help role`,
+                );
+              } else {
+                await member.roles.add(role);
+                log.info(F, `Gave ${member.user.username} the ${role.name} role`);
+              }
 
-            // eslint-disable max-len
-            try {
-              await member.user.send({
-                embeds: [
-                  embedTemplate()
-                    .setColor(Colors.Green)
-                    .setTitle(`Congratulations on completing "${course}"!`)
-                    .setDescription(stripIndents`
+              // eslint-disable max-len
+              try {
+                await member.user.send({
+                  embeds: [
+                    embedTemplate()
+                      .setColor(Colors.Green)
+                      .setTitle(`Congratulations on completing "${course}"!`)
+                      .setDescription(stripIndents`
                     Give yourself deserved pack on the back, you deserve it!
                                  
                     But your journey doesn't end here...
@@ -937,17 +894,22 @@ async function checkMoodle() { // eslint-disable-line
 
                     Thanks so much for taking the time to learn with us, we hope you enjoyed it!
                     `),
-                ],
-              });
-              // log.debug(F, `Sent ${member.user.username} a message!`);
-            } catch (error) {
-              log.warn(F, `Could not send DM to ${member.user.username}: ${error}`);
+                  ],
+                });
+                // log.debug(F, `Sent ${member.user.username} a message!`);
+              } catch (error) {
+                log.warn(F, `Could not send DM to ${member.user.username}: ${error}`);
+              }
             }
+          } catch (error) {
+            log.error(
+              F,
+              `Error processing course ${course} for user ${member.user.username}: ${error}`,
+            );
           }
-        } catch (error) {
-          log.error(F, `Error processing course ${course} for user ${member.user.username}: ${error}`);
-        }
-      }, Promise.resolve());
+        },
+        Promise.resolve(),
+      );
     }
   }, Promise.resolve());
 
@@ -1051,69 +1013,109 @@ async function checkMoodle() { // eslint-disable-line
   log.info(F, `${inactiveHelpers.length} inactive helpers have been pruned and notified.`);
 } */
 
-async function undoExpiredBans() {
-  const expiredBans = await db.user_actions.findMany({
-    where: {
-      expires_at: { not: null, lte: new Date() },
-      type: 'FULL_BAN',
-    },
-  });
+async function checkVoice() {
+  // This function will run every minute and check every voice channel on the guild
+  // If someone satisfies the following conditions, they will be awarded voice exp
+  // 1. They are not a bot
+  // 2. They are in a voice channel
+  // 4. They have not been awarded voice exp in the last 5 minutes
+  // 5. Are not AFK
+  // 6. Are not deafened
+  // 7. Are not muted
+  // 9. Are not in a stage channel
+  // 10. Do not have the NeedsHelp role
+  // 10. With another human in the channel that also meets these conditions
 
-  if (expiredBans.length === 0) return;
+  // The type of voice exp is determined by the category the voice channel is in
+  // GENERAL = Campground and Backstage
+  // TRIPSITTER = HR
+  // TEAM = Team
+  // DEVELOPER = Development
 
-  await Promise.all(expiredBans.map(async activeBan => { // Use map + Promise.all for async handling
-    if (!activeBan.target_discord_id) return;
+  // The amount of of voice gained is ((A random value between 15 and 25) / 2)
 
-    let targetGuild: Guild | null = null;
+  // log.info('voiceExp', 'Checking voice channels...');
+  (async () => {
+    // Define each category type and the category channel id
+    const categoryDefs = [
+      { category: 'GENERAL' as experience_category, id: env.CATEGORY_CAMPGROUND },
+      { category: 'GENERAL' as experience_category, id: env.CATEGORY_VOICE },
+      { category: 'GENERAL' as experience_category, id: env.CATEGORY_BACKSTAGE },
+      { category: 'TEAM' as experience_category, id: env.CATEGORY_TEAMTRIPSIT },
+      { category: 'TRIPSITTER' as experience_category, id: env.CATEGORY_HARMREDUCTIONCENTRE },
+      { category: 'DEVELOPER' as experience_category, id: env.CATEGORY_DEVELOPMENT },
+    ];
 
-    try {
-      const user = await global.discordClient.users.fetch(activeBan.target_discord_id);
-      if (!user) return;
-
-      targetGuild = await global.discordClient.guilds.fetch(activeBan.guild_id);
-
-      // Ensure guild exists
-      if (!targetGuild) return;
-
-      const targetGuildData = await db.discord_guilds.findUnique({ where: { id: activeBan.guild_id } });
-
-      // Unban user
-      await targetGuild.bans.remove(user, 'Temporary ban expired');
-      log.info(F, `Temporary ban for ${user.username} (${activeBan.target_discord_id}) in ${targetGuild.name} has expired and been lifted!`);
-
-      // Ensure mod log channel exists
-      if (!targetGuildData || !targetGuildData.channel_mod_log) return;
-      const modlog = await targetGuild.channels.fetch(targetGuildData.channel_mod_log) as TextChannel | null;
-
-      // Fetch mod thread & user data
-      const targetUserData = await db.users.findUnique({ where: { discord_id: activeBan.target_discord_id } });
-      const modThread = targetUserData?.mod_thread_id
-        ? await targetGuild.channels.fetch(targetUserData.mod_thread_id) as ThreadChannel | null
-        : null;
-
-      // Ensure valid dates
-      if (!activeBan.created_at || !activeBan.expires_at) return;
-
-      const durationMs = new Date(activeBan.expires_at).getTime() - new Date(activeBan.created_at).getTime();
-      const days = Math.floor(durationMs / (1000 * 60 * 60 * 24));
-
-      // Send messages
-      const embed = embedTemplate()
-        .setColor(Colors.Green)
-        .setDescription(`${user.username} (${activeBan.target_discord_id}) has been unbanned after ${days} days`);
-
-      if (modThread) await modThread.send({ embeds: [embed] });
-      if (modlog) await modlog.send({ embeds: [embed] });
-    } catch (err) {
-      log.error(F, `Failed to remove temporary ban on ${activeBan.target_discord_id} in ${targetGuild?.name}. Likely already unbanned.`);
-    } finally {
-      // Reset expires_at to null
-      await db.user_actions.update({
-        where: { id: activeBan.id },
-        data: { expires_at: null },
+    // For each of the above types, check each voice channel in the category
+    categoryDefs.forEach(async (categoryDef) => {
+      const category = (await discordClient.channels.fetch(categoryDef.id)) as CategoryChannel;
+      category.children.cache.forEach(async (channel) => {
+        if (
+          channel.type === ChannelType.GuildVoice &&
+          channel.id !== env.CHANNEL_CAMPFIRE
+          /* && channel.members.size > 1 */
+        ) {
+          // For testing
+          // Check to see if the people in the channel meet the right requirements
+          if (channel.members.size === 0) {
+            return;
+          }
+          // log.info('voiceExp', `${channel.name} has ${channel.members.size} people in it`);
+          const humansInChat = channel.members.filter((member) => {
+            if (member.user.bot) {
+              // log.info('voiceExp', `${member.displayName} is a bot`);
+              return false;
+            }
+            if (member.voice.selfDeaf) {
+              // log.info('voiceExp', `${member.displayName} is self deafened`);
+              return false;
+            }
+            if (member.voice.serverDeaf) {
+              // log.info('voiceExp', `${member.displayName} is server deafened`);
+              return false;
+            }
+            if (member.voice.selfMute) {
+              // log.info('voiceExp', `${member.displayName} is self muted`);
+              return false;
+            }
+            if (member.voice.serverMute) {
+              // log.info('voiceExp', `${member.displayName} is server muted`);
+              return false;
+            }
+            // if (member.voice.streaming) {
+            //   // log.info('voiceExp', `${member.displayName} is streaming`);
+            //   return false;
+            // }
+            if (member.voice.suppress) {
+              // log.info('voiceExp', `${member.displayName} is suppressed`);
+              return false;
+            }
+            if (member.voice.channel?.type === ChannelType.GuildStageVoice) {
+              // log.info('voiceExp', `${member.displayName} is in a stage channel`);
+              return false;
+            }
+            if (member.roles.cache.has(env.ROLE_NEEDSHELP)) {
+              // log.info('voiceExp', `${member.displayName} has the NeedsHelp role`);
+              return false;
+            }
+            return !(channel.members.size < 2 && env.NODE_ENV === 'production');
+          });
+          // log.info('voiceExp', `${channel.name} has ${humansInChat.size} people actively chatting in it`);
+          if (
+            (env.NODE_ENV === 'production' && humansInChat && humansInChat.size > 1) ||
+            (env.NODE_ENV !== 'production' && humansInChat && humansInChat.size > 0)
+          ) {
+            // log.info('voiceExp', `Attempting to give experience to ${humansInChat.size} people in ${channel.name}: ${humansInChat.map(member => member.displayName).join(', ')}`);
+            // For each human in chat, check if they have been awarded voice exp in the last 5 minutes
+            // If they have not, award them voice exp
+            humansInChat.forEach(async (member) => {
+              await experience(member, categoryDef.category, 'VOICE' as experience_type, channel);
+            });
+          }
+        }
       });
-    }
-  }));
+    });
+  })();
 }
 
 async function monthlySessionStats() {
@@ -1125,9 +1127,7 @@ async function monthlySessionStats() {
   // Check if we're on the last day of the month
   if (currentDay === lastDayOfMonth) {
     const stats = await getTripSitStatistics('session');
-    const embed = embedTemplate()
-      .setTitle('TripSit Session Stats')
-      .setDescription(stats);
+    const embed = embedTemplate().setTitle('TripSit Session Stats').setDescription(stats);
 
     // Get the channel and send the embed
     const channel = discordClient.channels.cache.get(env.CHANNEL_HELPERLOUNGE) as TextChannel;
@@ -1136,19 +1136,6 @@ async function monthlySessionStats() {
       log.info(F, 'Sent TripSit Session Stats in Helper Lounge!');
     }
   }
-}
-
-async function checkEvery(
-  callback: () => Promise<void>,
-  interval: number,
-) {
-  setTimeout(
-    async () => {
-      await callback();
-      checkEvery(callback, interval);
-    },
-    interval,
-  );
 }
 
 async function runTimer() {
@@ -1176,13 +1163,120 @@ async function runTimer() {
     { callback: checkStats, interval: env.NODE_ENV === 'production' ? minutes5 : seconds5 },
     { callback: checkMoodle, interval: env.NODE_ENV === 'production' ? seconds60 : seconds5 },
     // { callback: checkLpm, interval: env.NODE_ENV === 'production' ? seconds10 : seconds5 },
-    { callback: updateDb, interval: env.NODE_ENV === 'production' ? hours24 : hours48 },
+    { callback: updateDatabase, interval: env.NODE_ENV === 'production' ? hours24 : hours48 },
     // { callback: pruneInactiveHelpers, interval: env.NODE_ENV === 'production' ? hours48 : seconds60 },
-    { callback: undoExpiredBans, interval: env.NODE_ENV === 'production' ? hours24 / 2 : seconds10 },
-    { callback: monthlySessionStats, interval: env.NODE_ENV === 'production' ? hours24 / 2 : hours24 / 3 }, // 8 hours on dev
+    {
+      callback: undoExpiredBans,
+      interval: env.NODE_ENV === 'production' ? hours24 / 2 : seconds10,
+    },
+    {
+      callback: monthlySessionStats,
+      interval: env.NODE_ENV === 'production' ? hours24 / 2 : hours24 / 3,
+    }, // 8 hours on dev
   ];
 
-  timers.forEach(timer => {
+  for (const timer of timers) {
     checkEvery(timer.callback, timer.interval);
+  }
+}
+
+async function undoExpiredBans() {
+  const expiredBans = await db.user_actions.findMany({
+    where: {
+      expires_at: { lte: new Date(), not: null },
+      type: 'FULL_BAN',
+    },
   });
+
+  if (expiredBans.length === 0) {
+    return;
+  }
+
+  await Promise.all(
+    expiredBans.map(async (activeBan) => {
+      // Use map + Promise.all for async handling
+      if (!activeBan.target_discord_id) {
+        return;
+      }
+
+      let targetGuild: Guild | null = null;
+
+      try {
+        const user = await globalThis.discordClient.users.fetch(activeBan.target_discord_id);
+        if (!user) {
+          return;
+        }
+
+        targetGuild = await globalThis.discordClient.guilds.fetch(activeBan.guild_id);
+
+        // Ensure guild exists
+        if (!targetGuild) {
+          return;
+        }
+
+        const targetGuildData = await db.discord_guilds.findUnique({
+          where: { id: activeBan.guild_id },
+        });
+
+        // Unban user
+        await targetGuild.bans.remove(user, 'Temporary ban expired');
+        log.info(
+          F,
+          `Temporary ban for ${user.username} (${activeBan.target_discord_id}) in ${targetGuild.name} has expired and been lifted!`,
+        );
+
+        // Ensure mod log channel exists
+        if (!targetGuildData?.channel_mod_log) {
+          return;
+        }
+        const modlog = (await targetGuild.channels.fetch(
+          targetGuildData.channel_mod_log,
+        )) as null | TextChannel;
+
+        // Fetch mod thread & user data
+        const targetUserData = await db.users.findUnique({
+          where: { discord_id: activeBan.target_discord_id },
+        });
+        const moduleThread = targetUserData?.mod_thread_id
+          ? ((await targetGuild.channels.fetch(
+              targetUserData.mod_thread_id,
+            )) as null | ThreadChannel)
+          : null;
+
+        // Ensure valid dates
+        if (!activeBan.created_at || !activeBan.expires_at) {
+          return;
+        }
+
+        const durationMs =
+          new Date(activeBan.expires_at).getTime() - new Date(activeBan.created_at).getTime();
+        const days = Math.floor(durationMs / (1000 * 60 * 60 * 24));
+
+        // Send messages
+        const embed = embedTemplate()
+          .setColor(Colors.Green)
+          .setDescription(
+            `${user.username} (${activeBan.target_discord_id}) has been unbanned after ${days} days`,
+          );
+
+        if (moduleThread) {
+          await moduleThread.send({ embeds: [embed] });
+        }
+        if (modlog) {
+          await modlog.send({ embeds: [embed] });
+        }
+      } catch {
+        log.error(
+          F,
+          `Failed to remove temporary ban on ${activeBan.target_discord_id} in ${targetGuild?.name}. Likely already unbanned.`,
+        );
+      } finally {
+        // Reset expires_at to null
+        await db.user_actions.update({
+          data: { expires_at: null },
+          where: { id: activeBan.id },
+        });
+      }
+    }),
+  );
 }

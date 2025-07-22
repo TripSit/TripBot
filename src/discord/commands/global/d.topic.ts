@@ -1,7 +1,7 @@
-import {
-  SlashCommandBuilder,
-} from 'discord.js';
-import { SlashCommand } from '../../@types/commandDef';
+import { SlashCommandBuilder } from 'discord.js';
+
+import type { SlashCommand } from '../../@types/commandDef';
+
 // import { embedTemplate } from '../../utils/embedTemplate';
 import { topic } from '../../../global/commands/g.topic';
 import commandContext from '../../utils/context';

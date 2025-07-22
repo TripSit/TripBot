@@ -1,10 +1,9 @@
-import {
-  GuildMember,
-  MessageFlags,
-  Role,
-  SlashCommandBuilder,
-} from 'discord.js';
-import { SlashCommand } from '../../@types/commandDef';
+import type { GuildMember } from 'discord.js';
+
+import { MessageFlags, Role, SlashCommandBuilder } from 'discord.js';
+
+import type { SlashCommand } from '../../@types/commandDef';
+
 import { last } from '../../../global/commands/g.last';
 import commandContext from '../../utils/context';
 
@@ -17,15 +16,17 @@ export const dLast: SlashCommand = {
     .setName('last')
     .setDescription('Get the users last location/messages')
     .setIntegrationTypes([0])
-    .addUserOption(option => option
-      .setName('user')
-      .setDescription('User to look up')
-      .setRequired(true))
-    .addBooleanOption(option => option.setName('ephemeral')
-      .setDescription('Set to "True" to show the response only to you')) as SlashCommandBuilder,
+    .addUserOption((option) =>
+      option.setName('user').setDescription('User to look up').setRequired(true),
+    )
+    .addBooleanOption((option) =>
+      option.setName('ephemeral').setDescription('Set to "True" to show the response only to you'),
+    ) as SlashCommandBuilder,
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
-    const ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined;
+    const ephemeral = interaction.options.getBoolean('ephemeral')
+      ? MessageFlags.Ephemeral
+      : undefined;
     await interaction.deferReply({ flags: ephemeral });
     // Only run on Tripsit or DM, we don't want to snoop on other guilds ( ͡~ ͜ʖ ͡°)
     if (interaction.guild) {
@@ -38,15 +39,17 @@ export const dLast: SlashCommand = {
 
     const target = interaction.options.getMember('user') as GuildMember;
     const actor = interaction.member as GuildMember;
-    const roleModerator = await interaction.guild.roles.fetch(env.ROLE_MODERATOR) as Role;
-    const actorIsMod = actor.roles.cache.has(roleModerator.id);
+    const roleModerator = (await interaction.guild.roles.fetch(env.ROLE_MODERATOR))!;
+    const actorIsModule = actor.roles.cache.has(roleModerator.id);
 
     const response = await last(target.user, interaction.guild);
 
-    await interaction.editReply({ content: `${response.lastMessage}` });
+    await interaction.editReply({ content: response.lastMessage });
 
-    if (actorIsMod) {
-      await interaction.followUp({ content: `Last ${response.messageCount} messages:\n${response.messageList}` });
+    if (actorIsModule) {
+      await interaction.followUp({
+        content: `Last ${response.messageCount} messages:\n${response.messageList}`,
+      });
     }
     return true;
   },

@@ -1,12 +1,11 @@
-import {
-  MessageFlags,
-  SlashCommandBuilder,
-} from 'discord.js';
 import { stripIndents } from 'common-tags';
-import { SlashCommand } from '../../@types/commandDef';
-import { embedTemplate } from '../../utils/embedTemplate';
+import { MessageFlags, SlashCommandBuilder } from 'discord.js';
+
+import type { SlashCommand } from '../../@types/commandDef';
+
 import { warmline } from '../../../global/commands/g.warmline';
 import commandContext from '../../utils/context';
+import { embedTemplate } from '../../utils/embedTemplate';
 // import log from '../../../global/utils/log';
 const F = f(__filename);
 
@@ -16,36 +15,36 @@ export const dWarmline: SlashCommand = {
     .setDescription('Need someone to talk to, but don\'t need a "hotline"?')
     .setContexts([0, 1, 2])
     .setIntegrationTypes([0, 1])
-    .addBooleanOption(option => option.setName('ephemeral')
-      .setDescription('Set to "True" to show the response only to you')) as SlashCommandBuilder,
+    .addBooleanOption((option) =>
+      option.setName('ephemeral').setDescription('Set to "True" to show the response only to you'),
+    ) as SlashCommandBuilder,
 
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
-    const ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined;
+    const ephemeral = interaction.options.getBoolean('ephemeral')
+      ? MessageFlags.Ephemeral
+      : undefined;
     await interaction.deferReply({ flags: ephemeral });
     const emsInfo = await warmline();
-    const embed = embedTemplate()
-      .setTitle('Need someone to talk to, but don\'t need a "hotline"?');
+    const embed = embedTemplate().setTitle('Need someone to talk to, but don\'t need a "hotline"?');
 
     embed.setTitle('Warmline Information');
     // for (const entry of emsInfo) {
-    emsInfo.forEach(entry => {
+    for (const entry of emsInfo) {
       const country = `(${entry.country})`;
       const website = `\n[Website](${entry.website})`;
       const webchat = `\n[Webchat](${entry.website})`;
       const phone = `\nCall: ${entry.phone}`;
       const text = `\nText: ${entry.text}`;
-      embed.addFields(
-        {
-          name: `${entry.name} ${entry.country ? country : ''}`,
-          value: stripIndents`${entry.website ? website : ''}\
+      embed.addFields({
+        inline: true,
+        name: `${entry.name} ${entry.country ? country : ''}`,
+        value: stripIndents`${entry.website ? website : ''}\
             ${entry.webchat ? webchat : ''}\
             ${entry.phone ? phone : ''}\
             ${entry.text ? text : ''}`,
-          inline: true,
-        },
-      );
-    });
+      });
+    }
     await interaction.editReply({ embeds: [embed] });
     try {
       await interaction.editReply({ embeds: [embed] });

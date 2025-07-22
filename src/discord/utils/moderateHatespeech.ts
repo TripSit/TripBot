@@ -1,11 +1,13 @@
+import type { Message, TextChannel } from 'discord.js';
+
 import axios from 'axios';
-import { Colors, Message, TextChannel } from 'discord.js';
+import { Colors } from 'discord.js';
 
 const F = f(__filename);
 const MODERATION_API_URL = 'https://api.moderatehatespeech.com/api/v1/moderate/';
 
 interface ModerateHatespeechResponse {
-  class: 'normal' | 'flag' | null;
+  class: 'flag' | 'normal' | null;
   confidence: number;
   isFlaggedOrLowConfidence: boolean;
 }
@@ -31,13 +33,14 @@ export async function isToxic(text: string): Promise<ModerateHatespeechResponse>
   try {
     const { data } = await axios.post(
       MODERATION_API_URL,
-      { token: apiKey, text },
+      { text, token: apiKey },
       { headers: { 'Content-Type': 'application/json' } },
     );
 
     // log.info(F, `ModerateHatespeech API response: ${JSON.stringify(data)}`);
 
-    const isNormalWithLowConfidence = data.class === 'normal' && data.confidence < minNormalConfidence;
+    const isNormalWithLowConfidence =
+      data.class === 'normal' && data.confidence < minNormalConfidence;
     const isFlagged = data.class === 'flag' && data.confidence >= minFlagConfidence;
 
     return {
@@ -54,7 +57,7 @@ export async function isToxic(text: string): Promise<ModerateHatespeechResponse>
 export async function monitorToxicity(message: Message): Promise<void> {
   // Get reference message if this is a reply
   let repliedMessage = null;
-  if (message.reference && message.reference.messageId) {
+  if (message.reference?.messageId) {
     try {
       repliedMessage = await message.channel.messages.fetch(message.reference.messageId);
     } catch (error) {
@@ -75,22 +78,26 @@ export async function monitorToxicity(message: Message): Promise<void> {
       logChannelId = env.CHANNEL_BOTERRORS;
     }
 
-    const aiModLogChannel = await discordClient.channels.fetch(logChannelId) as TextChannel;
-    await aiModLogChannel.send({
-      embeds: [{
-        title: 'Flagged by ModerateHatespeech',
-        description: [
-          `**Author:** ${message.author}`,
-          `**Message:** ${message.content}`,
-          `**Link:** ${message.url}`,
-          `**Class:** ${result.class}`,
-          `**Confidence:** ${result.confidence}`,
-          repliedMessage ? `\n**Replying to**: ${repliedMessage.content}` : '',
-          repliedMessage ? `**Referenced User**: ${repliedMessage.author}` : '',
-          repliedMessage ? `**Referenced Message**: ${repliedMessage.url}` : '',
-        ].filter(Boolean).join('\n'),
-        color: Colors.Yellow,
-      }],
+    const aiModuleLogChannel = (await discordClient.channels.fetch(logChannelId)) as TextChannel;
+    await aiModuleLogChannel.send({
+      embeds: [
+        {
+          color: Colors.Yellow,
+          description: [
+            `**Author:** ${message.author}`,
+            `**Message:** ${message.content}`,
+            `**Link:** ${message.url}`,
+            `**Class:** ${result.class}`,
+            `**Confidence:** ${result.confidence}`,
+            repliedMessage ? `\n**Replying to**: ${repliedMessage.content}` : '',
+            repliedMessage ? `**Referenced User**: ${repliedMessage.author}` : '',
+            repliedMessage ? `**Referenced Message**: ${repliedMessage.url}` : '',
+          ]
+            .filter(Boolean)
+            .join('\n'),
+          title: 'Flagged by ModerateHatespeech',
+        },
+      ],
     });
   }
 }

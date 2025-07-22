@@ -4,6 +4,12 @@ const F = f(__filename);
 
 export default remindMe;
 
+interface Reminder {
+  date: Date;
+  index: number;
+  value: string;
+}
+
 /**
  *
  * @param {'get' | 'set' | 'delete'} command
@@ -14,12 +20,12 @@ export default remindMe;
  * @return {any}
  */
 export async function remindMe(
-  command: 'get' | 'set' | 'delete',
+  command: 'delete' | 'get' | 'set',
   userId: string,
-  recordNumber: number | null,
-  reminderText: string | null,
+  recordNumber: null | number,
+  reminderText: null | string,
   triggerAt: Date | null,
-):Promise<string | Reminder[]> {
+): Promise<Reminder[] | string> {
   // log.debug(`[${PREFIX}]
   //   command: ${command}
   //   userId: ${userId}
@@ -28,7 +34,7 @@ export async function remindMe(
   //   triggerAt: ${triggerAt}
   // `);
 
-  let response = '' as string | Reminder[];
+  let response = '' as Reminder[] | string;
 
   if (command === 'delete') {
     if (recordNumber === null) {
@@ -39,13 +45,13 @@ export async function remindMe(
     // log.debug(F, `Deleting record ${recordNumber}`);
 
     const userData = await db.users.upsert({
-      where: {
-        discord_id: userId,
-      },
       create: {
         discord_id: userId,
       },
       update: {},
+      where: {
+        discord_id: userId,
+      },
     });
 
     const unsortedData = await db.user_reminders.findMany({
@@ -80,7 +86,7 @@ export async function remindMe(
     const recordId = record.id;
     const reminderDate = data[recordNumber].created_at.toISOString();
     // log.debug(F, `reminderDate: ${reminderDate}`);
-    const timeVal = DateTime.fromISO(reminderDate);
+    const timeValue = DateTime.fromISO(reminderDate);
 
     // log.debug(F, `I deleted:
     // (${recordNumber}) ${timeVal.monthShort} ${timeVal.day} ${timeVal.year} ${timeVal.hour}:${timeVal.minute}
@@ -94,20 +100,20 @@ export async function remindMe(
     });
 
     response = `I deleted:
-      > **(${recordNumber}) ${timeVal.monthShort} ${timeVal.day} ${timeVal.year} ${timeVal.hour}:${timeVal.minute}**
+      > **(${recordNumber}) ${timeValue.monthShort} ${timeValue.day} ${timeValue.year} ${timeValue.hour}:${timeValue.minute}**
       > ${record.reminder_text}
       `;
     log.info(F, `response: ${JSON.stringify(response, null, 2)}`);
   }
   if (command === 'get') {
     const userData = await db.users.upsert({
-      where: {
-        discord_id: userId,
-      },
       create: {
         discord_id: userId,
       },
       update: {},
+      where: {
+        discord_id: userId,
+      },
     });
 
     const unsortedData = await db.user_reminders.findMany({
@@ -141,14 +147,13 @@ export async function remindMe(
 
     const reminders = [] as Reminder[];
 
-    for (let i = 0; i < data.length; i += 1) {
-      const reminder = data[i];
-      const reminderDate = data[i].trigger_at;
+    for (const [index, reminder] of data.entries()) {
+      const reminderDate = reminder.trigger_at;
 
       // Lowercase everything but the first letter
       const field = {
-        index: i,
         date: reminderDate,
+        index: index,
         value: `${reminder.reminder_text}`,
       };
       reminders.push(field);
@@ -163,20 +168,20 @@ export async function remindMe(
       return response;
     }
     const userData = await db.users.upsert({
-      where: {
-        discord_id: userId,
-      },
       create: {
         discord_id: userId,
       },
       update: {},
+      where: {
+        discord_id: userId,
+      },
     });
 
     await db.user_reminders.create({
       data: {
-        user_id: userData.id,
         reminder_text: reminderText,
         trigger_at: triggerAt,
+        user_id: userData.id,
       },
     });
 
@@ -185,9 +190,3 @@ export async function remindMe(
   }
   return response;
 }
-
-type Reminder = {
-  index: number,
-  date: Date,
-  value: string,
-};

@@ -1,34 +1,27 @@
-import { parse } from 'path';
-import {
-  createLogger,
-  format,
-  transports,
-  addColors,
-  Logger,
-} from 'winston';
-import Transport from 'winston-transport';
 // import { Logtail } from '@logtail/node'; // eslint-disable-line
 // import { LogtailTransport } from '@logtail/winston'; // eslint-disable-line
-import Rollbar, { Level } from 'rollbar';
+import type { Level } from 'rollbar';
+import type { Logger } from 'winston';
+import type { ConsoleTransportInstance } from 'winston/lib/winston/transports';
+
 // import SentryTransport from 'winston-transport-sentry-node'; // eslint-disable-line
 import * as Sentry from '@sentry/node';
-import { ConsoleTransportInstance } from 'winston/lib/winston/transports';
 import { TextChannel } from 'discord.js';
-import { env } from './env.config';
+import { parse } from 'node:path';
+import Rollbar from 'rollbar';
+import { addColors, createLogger, format, transports } from 'winston';
+import Transport from 'winston-transport';
 
-const {
-  combine,
-  splat,
-  timestamp,
-  printf,
-} = format;
+import { env as environment } from './env.config';
+
+const { combine, printf, splat, timestamp } = format;
 
 addColors({
-  error: 'red',
-  warn: 'yellow',
-  info: 'green',
-  http: 'magenta',
   debug: 'blue',
+  error: 'red',
+  http: 'magenta',
+  info: 'green',
+  warn: 'yellow',
 });
 
 class DiscordTransport extends Transport {
@@ -37,26 +30,32 @@ class DiscordTransport extends Transport {
       this.emit('logged', info);
     });
 
-    if (!global.discordClient || !discordClient.isReady()) {
-      if (callback) callback();
+    if (!globalThis.discordClient || !discordClient.isReady()) {
+      if (callback) {
+        callback();
+      }
       return;
     }
 
     const prefixDict = {
-      error: '❌',
-      warn: '⚠️',
-      info: 'ℹ️',
       debug: '🐛',
+      error: '❌',
       http: '🌐',
-    } as {
-      [key: string]: string;
-    };
+      info: 'ℹ️',
+      warn: '⚠️',
+    } as Record<string, string>;
 
     try {
-      const channel = await discordClient.channels.fetch(env.CHANNEL_BOTERRORS);
-      if (!channel) return;
-      if (!channel.isTextBased()) return;
-      if (!(channel instanceof TextChannel)) return;
+      const channel = await discordClient.channels.fetch(environment.CHANNEL_BOTERRORS);
+      if (!channel) {
+        return;
+      }
+      if (!channel.isTextBased()) {
+        return;
+      }
+      if (!(channel instanceof TextChannel)) {
+        return;
+      }
       await channel.send(`${prefixDict[info.level]} ${info.message}`);
     } catch (error) {
       console.error('Failed to send message to Discord:', error); // eslint-disable-line no-console
@@ -74,127 +73,117 @@ const transportOptions = [
       format.colorize({ all: true }),
       splat(),
       timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
-      printf(({
+      printf(
+        ({
         level, message, timestamp, stack, ...metadata // eslint-disable-line
-      }) => {
-        let msg = '';
-        if (env.NODE_ENV === 'production') {
-          msg += '(Prd) ';
-        } else {
-          msg += `(Dev) ${timestamp} `;
-        }
+        }) => {
+          let message_ = '';
+          message_ += environment.NODE_ENV === 'production' ? '(Prd) ' : `(Dev) ${timestamp} `;
 
-        // This makes it so that the logs look nice and even
-        // Idk why the length is 15, maybe cuz of colors
-        if (level.length < 15) {
-          msg += `${level}  `;
-        } else {
-          msg += `${level} `;
-        }
+          // This makes it so that the logs look nice and even
+          // Idk why the length is 15, maybe cuz of colors
+          message_ += level.length < 15 ? `${level}  ` : `${level} `;
 
-        msg += `${message} `;
+          message_ += `${message} `;
 
-        if (JSON.stringify(metadata) !== '{}') {
-          console.debug(`metadata: ${JSON.stringify(metadata, null, 2)}`); // eslint-disable-line no-console
-          msg += JSON.stringify(metadata);
-        }
-        if (stack) {
-          console.debug(`stack: ${stack}`); // eslint-disable-line no-console
-          msg += `\n${stack}`;
-        }
-        return msg;
-      }),
+          if (JSON.stringify(metadata) !== '{}') {
+            console.debug(`metadata: ${JSON.stringify(metadata, null, 2)}`); // eslint-disable-line no-console
+            message_ += JSON.stringify(metadata);
+          }
+          if (stack) {
+            console.debug(`stack: ${stack}`); // eslint-disable-line no-console
+            message_ += `\n${stack}`;
+          }
+          return message_;
+        },
+      ),
     ),
   }),
 ];
 
 // We only want rollbar logs in production
-if (env.NODE_ENV === 'production') {
-  transportOptions.push(new DiscordTransport({
-    format: combine(
-      printf(({
+if (environment.NODE_ENV === 'production') {
+  transportOptions.push(
+    new DiscordTransport({
+      format: combine(
+        printf(
+          ({
         level, message, timestamp, stack, ...metadata // eslint-disable-line
-      }) => {
-        let msg = '';
-        if (env.NODE_ENV === 'production') {
-          msg += '(Prd) ';
-        } else {
-          msg += `(Dev) ${timestamp} `;
-        }
+          }) => {
+            let message_ = '';
+            message_ += environment.NODE_ENV === 'production' ? '(Prd) ' : `(Dev) ${timestamp} `;
 
-        // This makes it so that the logs look nice and even
-        // Idk why the length is 15, maybe cuz of colors
-        if (level.length < 15) {
-          msg += `${level}  `;
-        } else {
-          msg += `${level} `;
-        }
+            // This makes it so that the logs look nice and even
+            // Idk why the length is 15, maybe cuz of colors
+            message_ += level.length < 15 ? `${level}  ` : `${level} `;
 
-        msg += `${message} `;
+            message_ += `${message} `;
 
-        if (JSON.stringify(metadata) !== '{}') {
-          console.debug(`metadata: ${JSON.stringify(metadata, null, 2)}`); // eslint-disable-line no-console
-          msg += JSON.stringify(metadata);
-        }
-        if (stack) {
-          console.debug(`stack: ${stack}`); // eslint-disable-line no-console
-          msg += `\n${stack}`;
-        }
-        return msg;
-      }),
-    ),
-  }) as ConsoleTransportInstance);
+            if (JSON.stringify(metadata) !== '{}') {
+              console.debug(`metadata: ${JSON.stringify(metadata, null, 2)}`); // eslint-disable-line no-console
+              message_ += JSON.stringify(metadata);
+            }
+            if (stack) {
+              console.debug(`stack: ${stack}`); // eslint-disable-line no-console
+              message_ += `\n${stack}`;
+            }
+            return message_;
+          },
+        ),
+      ),
+    }) as ConsoleTransportInstance,
+  );
   const rollbarConfig = {
-    accessToken: env.ROLLBAR_TOKEN,
+    accessToken: environment.ROLLBAR_TOKEN,
     // captureUncaught: true,
     // captureUnhandledRejections: true,
     logLevel: 'error' as Level,
   };
-  global.rollbar = new Rollbar(rollbarConfig);
+  globalThis.rollbar = new Rollbar(rollbarConfig);
 
   // Setup Sentry
   Sentry.init({
-    dsn: env.GLITCHTIP_DSN,
+    dsn: environment.GLITCHTIP_DSN,
     // debug: true,
-    environment: env.NODE_ENV,
+    environment: environment.NODE_ENV,
   });
 }
 
 const logger = createLogger({
-  level: env.DEBUG_LEVEL,
+  level: environment.DEBUG_LEVEL,
   transports: transportOptions,
 });
 
 declare global {
-  // eslint-disable-next-line no-var, vars-on-top
-  var log: { // NOSONAR
-    info: (prefix:string, message:string) => Logger,
-    error: (prefix:string, message:string) => Logger,
-    warn: (prefix:string, message:string) => Logger,
-    debug: (prefix:string, message:string) => Logger,
-    http: (prefix:string, message:string) => Logger,
+  var log: {
+    debug: (prefix: string, message: string) => Logger;
+    error: (prefix: string, message: string) => Logger;
+    http: (prefix: string, message: string) => Logger;
+    // NOSONAR
+    info: (prefix: string, message: string) => Logger;
+    warn: (prefix: string, message: string) => Logger;
   };
-  // eslint-disable-next-line no-var, vars-on-top
-  var f:(filename:string) => string; // NOSONAR
+
+  var f: (filename: string) => string; // NOSONAR
 }
 
 export const log = {
-  info: (F: string, message: string) => logger.info(`[${F}] ${message}`),
+  debug: (F: string, message: string) => logger.debug(`[${F}] ${message}`),
   error: (F: string, message: string) => logger.error(`[${F}] ${message}`),
+  http: (F: string, message: string) => logger.http(`[${F}] ${message}`),
+  info: (F: string, message: string) => logger.info(`[${F}] ${message}`),
   warn: (F: string, message: string) => {
     if (!message.includes('Missing')) {
-      global.rollbar.warn(message);
+      globalThis.rollbar.warn(message);
     }
     return logger.warn(`[${F}] ${message}`);
   },
-  debug: (F: string, message: string) => logger.debug(`[${F}] ${message}`),
-  http: (F: string, message: string) => logger.http(`[${F}] ${message}`),
 };
 
-global.log = log;
+globalThis.log = log;
 
-global.f = function f(filename: string) {
-  return `${parse(filename).name}`;
+globalThis.f = function f(filename: string) {
+  return parse(filename).name;
 };
 
 export default log;

@@ -1,13 +1,9 @@
-import {
-  PermissionResolvable,
-  TextChannel,
-} from 'discord.js';
-import {
-  AuditLogEvent,
-} from 'discord-api-types/v10';
-import {
-  ThreadUpdateEvent,
-} from '../@types/eventDef';
+import type { PermissionResolvable, TextChannel } from 'discord.js';
+
+import { AuditLogEvent } from 'discord-api-types/v10';
+
+import type { ThreadUpdateEvent } from '../@types/eventDef';
+
 import { checkChannelPermissions, checkGuildPermissions } from '../utils/checkPermissions';
 
 const F = f(__filename);
@@ -15,11 +11,14 @@ const F = f(__filename);
 // https://discordjs.guide/popular-topics/audit-logs.html#who-deleted-a-message
 
 export const threadUpdate: ThreadUpdateEvent = {
-  name: 'threadUpdate',
   async execute(oldThread, newThread) {
     // Only run on Tripsit, we don't want to snoop on other guilds ( ͡~ ͜ʖ ͡°)
-    if (!newThread.guild) return;
-    if (newThread.guild.id !== env.DISCORD_GUILD_ID) return;
+    if (!newThread.guild) {
+      return;
+    }
+    if (newThread.guild.id !== env.DISCORD_GUILD_ID) {
+      return;
+    }
     log.info(F, `Thread ${newThread.name} was updated.`);
 
     const perms = await checkGuildPermissions(newThread.guild, [
@@ -41,7 +40,7 @@ export const threadUpdate: ThreadUpdateEvent = {
     // Since there's only 1 audit log entry in this collection, grab the first one
     const auditLog = fetchedLogs.entries.first();
 
-    const channel = await discordClient.channels.fetch(env.CHANNEL_AUDITLOG) as TextChannel;
+    const channel = (await discordClient.channels.fetch(env.CHANNEL_AUDITLOG)) as TextChannel;
     const channelPerms = await checkChannelPermissions(channel, [
       'ViewChannel' as PermissionResolvable,
       'SendMessages' as PermissionResolvable,
@@ -55,23 +54,28 @@ export const threadUpdate: ThreadUpdateEvent = {
 
     // Perform a coherence check to make sure that there's *something*
     if (!auditLog) {
-      await channel.send(`Thread ${newThread.name} was updated, but no relevant audit logs were found.`);
+      await channel.send(
+        `Thread ${newThread.name} was updated, but no relevant audit logs were found.`,
+      );
       return;
     }
 
     let response = '' as string;
-    const changes = auditLog.changes.map(change => `**[${change.key}]** '**${change.old}**' > '**${change.new}**'`);
+    const changes = auditLog.changes.map(
+      (change) => `**[${change.key}]** '**${change.old}**' > '**${change.new}**'`,
+    );
 
     if (auditLog.executor) {
       response = `Thread **${newThread.toString()}** was updated by ${auditLog.executor.tag}:`;
-      response += `\n${changes.join('\n')}`; // eslint-disable-line max-len
+      response += `\n${changes.join('\n')}`;
     } else {
       response = `Thread ${newThread.toString()} was updated, but the audit log was inconclusive.`;
-      response += `\n${changes.join('\n')}`; // eslint-disable-line max-len
+      response += `\n${changes.join('\n')}`;
     }
 
     await channel.send(response);
   },
+  name: 'threadUpdate',
 };
 
 export default threadUpdate;

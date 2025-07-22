@@ -1,15 +1,15 @@
-export interface TicTacToeGame {
-  gameId: string;
-  board: string[];
-  currentPlayer: string;
-  player1: string;
-  player2: string;
-  isGameOver: boolean;
-  winner: string | null;
-}
-
-export type MoveResult = {
-  success: boolean;
+export interface MoveResult {
   errorMessage?: string;
   gameUpdated: TicTacToeGame;
-};
+  success: boolean;
+}
+
+export interface TicTacToeGame {
+  board: string[];
+  currentPlayer: string;
+  gameId: string;
+  isGameOver: boolean;
+  player1: string;
+  player2: string;
+  winner: null | string;
+}

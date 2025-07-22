@@ -24,16 +24,10 @@ describe('GET /api/v2/drugs', () => {
   });
 
   it('should respond with a 404 for a not found drug', async () => {
-    await supertest(app)
-      .get('/api/v2/drugs/4200')
-      .expect(expectValue, /json/)
-      .expect(404);
+    await supertest(app).get('/api/v2/drugs/4200').expect(expectValue, /json/).expect(404);
   });
 
   it('should respond with a 404 for a not found drug', async () => {
-    await supertest(app)
-      .get('/api/v2/drugs/error')
-      .expect(expectValue, /json/)
-      .expect(500);
+    await supertest(app).get('/api/v2/drugs/error').expect(expectValue, /json/).expect(500);
   });
 });

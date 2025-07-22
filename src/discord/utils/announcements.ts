@@ -1,15 +1,12 @@
-/* eslint-disable max-len */
-import {
-  DMChannel,
-  Message,
-  MessageReaction,
-  TextChannel,
-} from 'discord.js';
-import { stripIndents } from 'common-tags';
-import { embedTemplate } from './embedTemplate';
-import { fact } from '../../global/commands/g.fact';
+import type { Message, MessageReaction } from 'discord.js';
 
-const F = f(__filename); // eslint-disable-line
+import { stripIndents } from 'common-tags';
+import { DMChannel, TextChannel } from 'discord.js';
+
+import { fact } from '../../global/commands/g.fact';
+import { embedTemplate } from './embedTemplate';
+
+const F = f(__filename);
 
 const frequency = env.NODE_ENV === 'production' ? 100 : 1000;
 const bigFrequency = env.NODE_ENV === 'production' ? 500 : 2000;
@@ -32,46 +29,150 @@ const waterAndTeaEmojis = [
   // '🚣', '🚣🏻', '🚣🏼', '🚣🏽', '🚣🏾', '🚣🏿',
   // '🤽', '🤽🏻', '🤽🏼', '🤽🏽', '🤽🏾', '🤽🏿',
   // '🛀', '🛀🏻', '🛀🏼', '🛀🏽', '🛀🏾', '🛀🏿',
-  '💧', '🌊', '💦', '🧊',
-  '💧', '🌊', '💦', '🧊',
+  '💧',
+  '🌊',
+  '💦',
+  '🧊',
+  '💧',
+  '🌊',
+  '💦',
+  '🧊',
   // '🧖‍♂️', '🧖🏻‍♂️', '🧖🏼‍♂️', '🧖🏽‍♂️', '🧖🏾‍♂️', '🧖🏿‍♂️',
   // '🧖‍♀️', '🧖🏻‍♀️', '🧖🏼‍♀️', '🧖🏽‍♀️', '🧖🏾‍♀️', '🧖🏿‍♀️',
-  '🥛', '☕', '🍵', '🥤', '🧃', '🧉',
-  '🥛', '☕', '🍵', '🥤', '🧃', '🧉',
+  '🥛',
+  '☕',
+  '🍵',
+  '🥤',
+  '🧃',
+  '🧉',
+  '🥛',
+  '☕',
+  '🍵',
+  '🥤',
+  '🧃',
+  '🧉',
   // '🚤', '🛳', '⛴', '🚢', '🍼',
 ];
 
 const movingEmojis = [
-  '🏃', '🏃‍♂️', '🏃‍♀️', '🏃🏽', '🏃🏾', '🏃🏿',
-  '🚴', '🚴🏻', '🚴🏼', '🚴🏽', '🚴🏾', '🚴🏿',
-  '🚵', '🚵🏻', '🚵🏼', '🚵🏽', '🚵🏾', '🚵🏿',
-  '⛹', '⛹🏻', '⛹🏼', '⛹🏽', '⛹🏾', '⛹🏿',
-  '🤸', '🤸🏻', '🤸🏼', '🤸🏽', '🤸🏾', '🤸🏿',
-  '🤾', '🤾🏻', '🤾🏼', '🤾🏽', '🤾🏾', '🤾🏿',
-  '🤹', '🤹🏻', '🤹🏼', '🤹🏽', '🤹🏾', '🤹🏿',
-  '🧘', '🧘🏻', '🧘🏼', '🧘🏽', '🧘🏾', '🧘🏿',
-  '🏌', '🏌️‍♂️', '🏌️‍♀️', '🏌🏽', '🏌🏾', '🏌🏿',
-  '🤾', '🤾🏻', '🤾🏼', '🤾🏽', '🤾🏾', '🤾🏿',
-  '🚶‍♂️', '🚶‍♀️', '🚶🏽', '🚶🏾', '🚶🏿', '🤼',
-  '🏇', '🏂', '🤺', '🏋', '🏋‍♂️', '🏋‍♀️',
-  '🧎', '🧎‍♂️', '🧎‍♀️', '💃', '🕺', '🕴',
+  '🏃',
+  '🏃‍♂️',
+  '🏃‍♀️',
+  '🏃🏽',
+  '🏃🏾',
+  '🏃🏿',
+  '🚴',
+  '🚴🏻',
+  '🚴🏼',
+  '🚴🏽',
+  '🚴🏾',
+  '🚴🏿',
+  '🚵',
+  '🚵🏻',
+  '🚵🏼',
+  '🚵🏽',
+  '🚵🏾',
+  '🚵🏿',
+  '⛹',
+  '⛹🏻',
+  '⛹🏼',
+  '⛹🏽',
+  '⛹🏾',
+  '⛹🏿',
+  '🤸',
+  '🤸🏻',
+  '🤸🏼',
+  '🤸🏽',
+  '🤸🏾',
+  '🤸🏿',
+  '🤾',
+  '🤾🏻',
+  '🤾🏼',
+  '🤾🏽',
+  '🤾🏾',
+  '🤾🏿',
+  '🤹',
+  '🤹🏻',
+  '🤹🏼',
+  '🤹🏽',
+  '🤹🏾',
+  '🤹🏿',
+  '🧘',
+  '🧘🏻',
+  '🧘🏼',
+  '🧘🏽',
+  '🧘🏾',
+  '🧘🏿',
+  '🏌',
+  '🏌️‍♂️',
+  '🏌️‍♀️',
+  '🏌🏽',
+  '🏌🏾',
+  '🏌🏿',
+  '🤾',
+  '🤾🏻',
+  '🤾🏼',
+  '🤾🏽',
+  '🤾🏾',
+  '🤾🏿',
+  '🚶‍♂️',
+  '🚶‍♀️',
+  '🚶🏽',
+  '🚶🏾',
+  '🚶🏿',
+  '🤼',
+  '🏇',
+  '🏂',
+  '🤺',
+  '🏋',
+  '🏋‍♂️',
+  '🏋‍♀️',
+  '🧎',
+  '🧎‍♂️',
+  '🧎‍♀️',
+  '💃',
+  '🕺',
+  '🕴',
 ];
 
 const happyEmojis = [
-  '😀', '😃', '😄', '😊', '😁', '🥰', '😇', '😍', '😂', '🤣',
-  '🙂', '😆', '😋', '😛', '🙃', '😜', '🤪', '😝', '🤗', '🤭',
-  '😎', '😺', '😸', '😹', '😻', '🐵', '👍', '✌',
+  '😀',
+  '😃',
+  '😄',
+  '😊',
+  '😁',
+  '🥰',
+  '😇',
+  '😍',
+  '😂',
+  '🤣',
+  '🙂',
+  '😆',
+  '😋',
+  '😛',
+  '🙃',
+  '😜',
+  '🤪',
+  '😝',
+  '🤗',
+  '🤭',
+  '😎',
+  '😺',
+  '😸',
+  '😹',
+  '😻',
+  '🐵',
+  '👍',
+  '✌',
 ];
 
-type MessageCounterType = {
-  [key: string]: number;
-};
+type MessageCounterType = Record<string, number>;
 
 /**
  *
  * @param {Message} message
  */
-export async function announcements(message:Message) {
+export async function announcements(message: Message) {
   // // const channelStart = await message.client.channels.fetch(env.CHANNEL_START) as TextChannel;
   // const channelAnnouncements = await message.client.channels.fetch(env.CHANNEL_ANNOUNCEMENTS) as TextChannel;
   // const channelRules = await message.client.channels.fetch(env.CHANNEL_RULES) as TextChannel;
@@ -112,7 +213,7 @@ export async function announcements(message:Message) {
   // // const channelDevWelcome = await message.client.channels.fetch(env.CHANNEL_DEVWELCOME) as TextChannel;
 
   const hrAnnouncements = [
-    '**Reminder:** For the safety of everyone involved, sourcing (buying or selling anything) is against our network rules. If someone contacts you to find, buy, trade, or give you drugs, you can report it by using /report or by clicking their name > Apps > TripBot Report User. This rule also applies to private messages. Be safe, and don\'t trust random internet folk.',
+    "**Reminder:** For the safety of everyone involved, sourcing (buying or selling anything) is against our network rules. If someone contacts you to find, buy, trade, or give you drugs, you can report it by using /report or by clicking their name > Apps > TripBot Report User. This rule also applies to private messages. Be safe, and don't trust random internet folk.",
     '**Reminder:** Tending to personal hygiene is an important part of self-care. Remember to brush your teeth, bathe, and wash your hands!',
     '**Reminder:** We do our best to keep the environment here as safe as possible but please remember to always be vigilant when using the internet. Do not post anything here that might divulge any of your personal information.',
     '**Reminder:** Sleep is important! A sleep deficit can impair you more than drinking alcohol.',
@@ -139,9 +240,9 @@ export async function announcements(message:Message) {
     '**Reminder:** Driving under the influence is never justified. Consider other people and their wellbeing before making decisions!',
     '**Reminder:** Carry naloxone if using opioids, and know how to use it in an emergency.',
     '**Reminder:** Share your plans with a trusted friend so someone knows to check in on you.',
-    '**Reminder:** It\'s okay to say no. Never feel pressured to use more than you want. Peer pressuring is for losers!',
-    '**Reminder:** If in doubt, throw it out. Don\'t take risks with unknown or suspicious substances.',
-    '**Reminder:** Take breaks and rest when needed. Listen to your body and don\'t push your limits.',
+    "**Reminder:** It's okay to say no. Never feel pressured to use more than you want. Peer pressuring is for losers!",
+    "**Reminder:** If in doubt, throw it out. Don't take risks with unknown or suspicious substances.",
+    "**Reminder:** Take breaks and rest when needed. Listen to your body and don't push your limits.",
     '**Reminder:** Health checks are important to catch issues early! Make sure to try to see a dentist at least once a year, an optometrist every two years and an audiologist every five years.',
   ];
 
@@ -162,12 +263,12 @@ export async function announcements(message:Message) {
     '**Tip:** Feeling a bit spacey? Try `/grounding` to bring you back down to earth.',
     '**Tip:** Conversation a bit dull? Use `/topic` to get a random topic to chat about!',
     '**Tip:** Need a little pick-me-up? Use `/lovebomb` to send some love to the channel!',
-    '**Tip:** Want to know how much karma you\'ve given or received? Use `/karma`!',
+    "**Tip:** Want to know how much karma you've given or received? Use `/karma`!",
     '**Tip:** Need to force yourself to take a break? Use `/selftimeout`.',
     '**Tip:** Want to see a reagent chart? Use `/reagents`!',
     '**Tip:** Get quick access to the combo chart with `/combochart`!',
     '**Tip:** Convert one benzo dosage to another with `/calc benzo`.',
-    '**Tip:** Need some quick activities? Head over to Rooni\'s Fun Activities Corner in the <id:guide>!',
+    "**Tip:** Need some quick activities? Head over to Rooni's Fun Activities Corner in the <id:guide>!",
     '**Tip:** Want to know what is happening behind the scenes? Check out the <id:guide> for info on our development projects!',
   ];
 
@@ -281,27 +382,28 @@ export async function announcements(message:Message) {
 
   const embed = embedTemplate();
 
-  const genAnnouncements = [hrAnnouncements, tipAnnouncements, funAnnouncements].flat(1);
+  const genAnnouncements = [hrAnnouncements, tipAnnouncements, funAnnouncements].flat();
 
   // const allAnnouncements = [
   //   genAnnouncements,
   //   vipAnnouncements,
   // ];
 
-  const generalChatCategories = [
-    env.CATEGORY_BACKSTAGE,
-    env.CATEGORY_CAMPGROUND,
-  ];
+  const generalChatCategories = [env.CATEGORY_BACKSTAGE, env.CATEGORY_CAMPGROUND];
 
-  if (message.channel.id === env.CHANNEL_SANCTUARY
-    || message.channel.id === env.CHANNEL_CLEARLOUNGE) {
+  if (
+    message.channel.id === env.CHANNEL_SANCTUARY ||
+    message.channel.id === env.CHANNEL_CLEARLOUNGE
+  ) {
     return;
   }
 
   // log.debug(F, `instance of TextChannel: ${message.channel instanceof TextChannel}`);
-  if (message.channel instanceof TextChannel
-    && message.channel.parentId
-    && generalChatCategories.includes(message.channel.parentId)) {
+  if (
+    message.channel instanceof TextChannel &&
+    message.channel.parentId &&
+    generalChatCategories.includes(message.channel.parentId)
+  ) {
     // log.debug(F, `message.channel.parentId: ${message.channel.parentId}`);
     // log.debug(F, `generalChatCategories: ${generalChatCategories}`);
     // log.debug(F, `generalChatCategories.includes(message.channel.parentId): ${generalChatCategories.includes(message.channel.parentId)}`);
@@ -317,31 +419,49 @@ export async function announcements(message:Message) {
     if (messageCounter[message.channel.id] % bigFrequency === 0) {
       const bigAnnouncementDict = {
         0: {
+          emoji: '❤',
+          footer: 'Send a ❤ to someone and react to get /h2flow points!',
           message: stripIndents`
-                ${[...happyEmojis].sort(() => 0.5 - Math.random()).slice(0, 14).join(' ')}
+                ${[...happyEmojis]
+                  .sort(() => 0.5 - Math.random())
+                  .slice(0, 14)
+                  .join(' ')}
                 **Please remember to KIPP - Keep It Positive Please!**
                 We're all here to help each other and have fun!
-                ${[...happyEmojis].sort(() => 0.5 - Math.random()).slice(0, 14).join(' ')}`,
-          footer: 'Send a ❤ to someone and react to get /h2flow points!',
-          emoji: '❤',
+                ${[...happyEmojis]
+                  .sort(() => 0.5 - Math.random())
+                  .slice(0, 14)
+                  .join(' ')}`,
         },
         1: {
+          emoji: '🕴',
+          footer: 'Get up, move around and react to get /h2flow points!',
           message: stripIndents`
-              ${[...movingEmojis].sort(() => 0.5 - Math.random()).slice(0, 12).join(' ')}
+              ${[...movingEmojis]
+                .sort(() => 0.5 - Math.random())
+                .slice(0, 12)
+                .join(' ')}
               **It's good to get up and move every hour!**
               Take a break, stretch, and get some fresh air!
-              ${[...movingEmojis].sort(() => 0.5 - Math.random()).slice(0, 12).join(' ')}`,
-          footer: 'Get up, move around and react to get /h2flow points!',
-          emoji: '🕴',
+              ${[...movingEmojis]
+                .sort(() => 0.5 - Math.random())
+                .slice(0, 12)
+                .join(' ')}`,
         },
         2: {
+          emoji: '💧',
+          footer: 'Take a sip of something and react to get /h2flow points!',
           message: stripIndents`
-              ${[...waterAndTeaEmojis].sort(() => 0.5 - Math.random()).slice(0, 12).join(' ')}
+              ${[...waterAndTeaEmojis]
+                .sort(() => 0.5 - Math.random())
+                .slice(0, 12)
+                .join(' ')}
               ＨＹＤＲＡＴＩＯＮ ＲＥＭＩＮＤＥＲ
               Doesn't some water sound great right now?
-              ${[...waterAndTeaEmojis].sort(() => 0.5 - Math.random()).slice(0, 12).join(' ')}`,
-          footer: 'Take a sip of something and react to get /h2flow points!',
-          emoji: '💧',
+              ${[...waterAndTeaEmojis]
+                .sort(() => 0.5 - Math.random())
+                .slice(0, 12)
+                .join(' ')}`,
         },
       };
 
@@ -351,65 +471,72 @@ export async function announcements(message:Message) {
       }
 
       embed.setAuthor(null);
-      embed.setFooter({ text: bigAnnouncementDict[bigFrequencyCounter as keyof typeof bigAnnouncementDict].footer });
-      embed.setDescription(bigAnnouncementDict[bigFrequencyCounter as keyof typeof bigAnnouncementDict].message);
-      await message.channel.send({ embeds: [embed] })
-        .then(async msg => {
-          await msg.react(bigAnnouncementDict[bigFrequencyCounter as keyof typeof bigAnnouncementDict].emoji);
-          const filter = (reaction:MessageReaction) => reaction.emoji.name === bigAnnouncementDict[bigFrequencyCounter as keyof typeof bigAnnouncementDict].emoji;
-          const collector = msg.createReactionCollector({ filter, time: 0, dispose: true });
+      embed.setFooter({
+        text: bigAnnouncementDict[bigFrequencyCounter as keyof typeof bigAnnouncementDict].footer,
+      });
+      embed.setDescription(
+        bigAnnouncementDict[bigFrequencyCounter as keyof typeof bigAnnouncementDict].message,
+      );
+      await message.channel.send({ embeds: [embed] }).then(async (message_) => {
+        await message_.react(
+          bigAnnouncementDict[bigFrequencyCounter as keyof typeof bigAnnouncementDict].emoji,
+        );
+        const filter = (reaction: MessageReaction) =>
+          reaction.emoji.name ===
+          bigAnnouncementDict[bigFrequencyCounter as keyof typeof bigAnnouncementDict].emoji;
+        const collector = message_.createReactionCollector({ dispose: true, filter, time: 0 });
 
-          const pointDict = {
-            '❤': 'empathy_points',
-            '🕴': 'move_points',
-            '💧': 'sparkle_points',
-          };
+        const pointDict = {
+          '❤': 'empathy_points',
+          '💧': 'sparkle_points',
+          '🕴': 'move_points',
+        };
 
-          collector.on('collect', async (reaction, user) => {
-            const pointType = pointDict[reaction.emoji.name as keyof typeof pointDict];
-            await db.users.upsert({
-              where: {
-                discord_id: user.id,
+        collector.on('collect', async (reaction, user) => {
+          const pointType = pointDict[reaction.emoji.name as keyof typeof pointDict];
+          await db.users.upsert({
+            create: {
+              discord_id: user.id,
+              [pointType]: 1,
+            },
+            update: {
+              [pointType]: {
+                increment: 1,
               },
-              create: {
-                discord_id: user.id,
-                [pointType]: 1,
-              },
-              update: {
-                [pointType]: {
-                  increment: 1,
-                },
-              },
-            });
-          });
-
-          collector.on('remove', async (reaction, user) => {
-            const pointType = pointDict[reaction.emoji.name as keyof typeof pointDict];
-            // Increment the users's pointType
-
-            await db.users.upsert({
-              where: {
-                discord_id: user.id,
-              },
-              create: {
-                discord_id: user.id,
-                [pointType]: -1,
-              },
-              update: {
-                [pointType]: {
-                  increment: -1,
-                },
-              },
-            });
-            // log.debug(F, `${user.tag} ${pointType} decremented to ${value[0][pointType as keyof typeof value[0]]}`);
+            },
+            where: {
+              discord_id: user.id,
+            },
           });
         });
+
+        collector.on('remove', async (reaction, user) => {
+          const pointType = pointDict[reaction.emoji.name as keyof typeof pointDict];
+          // Increment the users's pointType
+
+          await db.users.upsert({
+            create: {
+              discord_id: user.id,
+              [pointType]: -1,
+            },
+            update: {
+              [pointType]: {
+                increment: -1,
+              },
+            },
+            where: {
+              discord_id: user.id,
+            },
+          });
+          // log.debug(F, `${user.tag} ${pointType} decremented to ${value[0][pointType as keyof typeof value[0]]}`);
+        });
+      });
     } else if (messageCounter[message.channel.id] % frequency === 0) {
       // If the number of messages sent in the channel / by (frequency) has no remainder..
 
       // log.debug(F, `genAnnouncements.length: ${genAnnouncements.length}`);
 
-      const randomGenNumber = Math.floor(Math.random() * (genAnnouncements.length));
+      const randomGenNumber = Math.floor(Math.random() * genAnnouncements.length);
 
       // log.debug(F, `randomGenNumber: ${randomGenNumber}`);
 
@@ -423,8 +550,10 @@ export async function announcements(message:Message) {
       await message.channel.sendTyping(); // This method automatically stops typing after 10 seconds, or when a message is sent.
       setTimeout(async () => {
         if (message.channel instanceof TextChannel || message.channel instanceof DMChannel) {
-          await (message.channel.send({ embeds: [embed] }));
-        } else log.error(F, 'Cannot send typing in this channel type.');
+          await message.channel.send({ embeds: [embed] });
+        } else {
+          log.error(F, 'Cannot send typing in this channel type.');
+        }
       }, 3000);
     }
   }

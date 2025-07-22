@@ -4,20 +4,20 @@ const F = f(__filename);
 
 export default wikipedia;
 
-export type WikiData = {
-  title: string,
-  thumbnail: string,
-  url: string,
-  description: string,
-};
+export interface WikiData {
+  description: string;
+  thumbnail: string;
+  title: string;
+  url: string;
+}
 
 /**
  * Retrieve a definition from wikipedia
  * @return {string}
  */
-export async function wikipedia(query: string):Promise<WikiData> {
+export async function wikipedia(query: string): Promise<WikiData> {
   try {
-    const searchUrl = `https://en.wikipedia.org/w/api.php?action=opensearch&search=${query}&limit=1&namespace=0&format=json`; // eslint-disable-line
+    const searchUrl = `https://en.wikipedia.org/w/api.php?action=opensearch&search=${query}&limit=1&namespace=0&format=json`;
     const searchResult = await axios.get(searchUrl);
     // log.debug(F, `seachResult: ${JSON.stringify(searchResult.data, null, 2)}`);
 
@@ -27,19 +27,19 @@ export async function wikipedia(query: string):Promise<WikiData> {
 
     if (result.data.extract === undefined) {
       return {
-        title: '',
-        thumbnail: '',
-        url: '',
         description: '',
+        thumbnail: '',
+        title: '',
+        url: '',
       };
     }
 
     if (result.data.type === 'disambiguation') {
       return {
-        title: 'CHS returned multiple results, please be more specific!',
-        thumbnail: '',
-        url: '',
         description: '',
+        thumbnail: '',
+        title: 'CHS returned multiple results, please be more specific!',
+        url: '',
       };
     }
 
@@ -49,27 +49,27 @@ export async function wikipedia(query: string):Promise<WikiData> {
 
     // Take all the html tags and convert to markdown
     const newExtract = extract
-      .replace(/<p>/g, '')
-      .replace(/<\/p>/g, '')
-      .replace(/<b>/g, '**')
-      .replace(/<\/b>/g, '**')
-      .replace(/<i>/g, '*')
-      .replace(/<\/i>/g, '*')
-      .replace(/<a href="(.*)">(.*)<\/a>/g, '[$2]($1)');
+      .replaceAll('<p>', '')
+      .replaceAll('</p>', '')
+      .replaceAll('<b>', '**')
+      .replaceAll('</b>', '**')
+      .replaceAll('<i>', '*')
+      .replaceAll('</i>', '*')
+      .replaceAll(/<a href="(.*)">(.*)<\/a>/g, '[$2]($1)');
 
     return {
-      title: result.data.title,
-      thumbnail: result.data.thumbnail.source,
-      url: result.data.content_urls.desktop.page,
       description: newExtract,
+      thumbnail: result.data.thumbnail.source,
+      title: result.data.title,
+      url: result.data.content_urls.desktop.page,
     };
-  } catch (e) {
-    log.error(F, `${(e as Error).message} query: ${query}`);
+  } catch (error) {
+    log.error(F, `${(error as Error).message} query: ${query}`);
     return {
-      title: '',
-      thumbnail: '',
-      url: '',
       description: '',
+      thumbnail: '',
+      title: '',
+      url: '',
     };
   }
 }

@@ -1,69 +1,62 @@
-/* eslint-disable no-await-in-loop, no-restricted-syntax, no-continue */
-import {
-  expForNextLevel,
-  getTotalLevel,
-} from '../utils/experience';
-
+import { expForNextLevel, getTotalLevel } from '../utils/experience';
 import { leaderboardV2 } from './g.leaderboard';
 
 export default levels;
 
-const F = f(__filename); // eslint-disable-line
+const F = f(__filename);
 
-type LevelData = {
+interface LevelData {
   ALL: {
-    TOTAL: {
-      level: number,
-      level_exp: number,
-      nextLevel: number,
-      total_exp: number,
-      rank: number,
-    },
     [key: string]: {
-      level: number,
-      level_exp: number,
-      nextLevel: number,
-      total_exp: number,
-      rank: number,
-    },
-  },
+      level: number;
+      level_exp: number;
+      nextLevel: number;
+      rank: number;
+      total_exp: number;
+    };
+    TOTAL: {
+      level: number;
+      level_exp: number;
+      nextLevel: number;
+      rank: number;
+      total_exp: number;
+    };
+  };
   TEXT: {
-    TOTAL: {
-      level: number,
-      level_exp: number,
-      nextLevel: number,
-      total_exp: number,
-      rank: number,
-    },
     [key: string]: {
-      level: number,
-      level_exp: number,
-      nextLevel: number,
-      total_exp: number,
-      rank: number,
-    },
-  },
+      level: number;
+      level_exp: number;
+      nextLevel: number;
+      rank: number;
+      total_exp: number;
+    };
+    TOTAL: {
+      level: number;
+      level_exp: number;
+      nextLevel: number;
+      rank: number;
+      total_exp: number;
+    };
+  };
   VOICE: {
-    TOTAL: {
-      level: number,
-      level_exp: number,
-      nextLevel: number,
-      total_exp: number,
-      rank: number,
-    },
     [key: string]: {
-      level: number,
-      level_exp: number,
-      nextLevel: number,
-      total_exp: number,
-      rank: number,
-    },
-  },
-};
+      level: number;
+      level_exp: number;
+      nextLevel: number;
+      rank: number;
+      total_exp: number;
+    };
+    TOTAL: {
+      level: number;
+      level_exp: number;
+      nextLevel: number;
+      rank: number;
+      total_exp: number;
+    };
+  };
+}
 
-export async function levels(
-  discordId: string,
-):Promise<LevelData> {
+export async function levels(discordId: string): Promise<LevelData> {
   const leaderboardData = await leaderboardV2();
 
   const results = {
@@ -72,8 +65,8 @@ export async function levels(
         level: 0,
         level_exp: 0,
         nextLevel: 0,
-        total_exp: 0,
         rank: 0,
+        total_exp: 0,
       },
     },
     TEXT: {
@@ -81,8 +74,8 @@ export async function levels(
         level: 0,
         level_exp: 0,
         nextLevel: 0,
-        total_exp: 0,
         rank: 0,
+        total_exp: 0,
       },
     },
     VOICE: {
@@ -90,13 +83,13 @@ export async function levels(
         level: 0,
         level_exp: 0,
         nextLevel: 0,
-        total_exp: 0,
         rank: 0,
+        total_exp: 0,
       },
     },
   } as LevelData;
 
-  for (const type of Object.keys(leaderboardData)) { // eslint-disable-line no-restricted-syntax
+  for (const type of Object.keys(leaderboardData)) {
     const typeKey = type as keyof typeof leaderboardData;
     const typeData = leaderboardData[typeKey];
     // log.debug(F, `typeKey: ${typeKey}, typeData: ${JSON.stringify(typeData, null, 2)}`);
@@ -112,11 +105,15 @@ export async function levels(
       }
       // log.debug(F, `categoryKey: ${categoryKey}, categoryData: ${JSON.stringify(categoryData, null, 2)}`);
 
-      const userRank = categoryData.findIndex(user => user.discord_id === discordId);
-      if (userRank === -1) continue;
+      const userRank = categoryData.findIndex((user) => user.discord_id === discordId);
+      if (userRank === -1) {
+        continue;
+      }
       // log.debug(F, `Type: ${typeKey} Category: ${categoryKey} userRank: ${userRank}`);
-      const userExperience = categoryData.find(user => user.discord_id === discordId);
-      if (!userExperience) continue;
+      const userExperience = categoryData.find((user) => user.discord_id === discordId);
+      if (!userExperience) {
+        continue;
+      }
       const levelData = await getTotalLevel(userExperience.total_points);
       // log.debug(F, `levelData: ${JSON.stringify(levelData, null, 2)}`);
       // log.debug(F, `${discordId} is rank ${userRank} ${type} ${category} \
@@ -127,8 +124,8 @@ export async function levels(
         level: levelData.level,
         level_exp: levelData.level_points,
         nextLevel,
-        total_exp: userExperience.total_points,
         rank: userRank + 1, // 0-based to 1-based
+        total_exp: userExperience.total_points,
       };
     }
   }

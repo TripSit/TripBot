@@ -1,30 +1,58 @@
+import type { ButtonInteraction, ChatInputCommandInteraction } from 'discord.js';
+
 import {
-  SlashCommandBuilder,
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
+  Colors,
   ComponentType,
   EmbedBuilder,
-  ButtonInteraction,
-  ChatInputCommandInteraction,
-  Colors,
   MessageFlags,
+  SlashCommandBuilder,
 } from 'discord.js';
-import { SlashCommand } from '../../@types/commandDef';
-import { TripTacGoGame } from '../../@types/tripTacGoDef';
+
+import type { SlashCommand } from '../../@types/commandDef';
+import type { TripTacGoGame } from '../../@types/tripTacGoDef';
+
 import { createInitialGame, executeMove } from '../../../global/commands/g.triptacgo';
 import { embedTemplate } from '../../utils/embedTemplate';
 
 const F = f(__filename);
+
+function createGameButtons(game: TripTacGoGame): ActionRowBuilder<ButtonBuilder>[] {
+  const rows: ActionRowBuilder<ButtonBuilder>[] = [];
+
+  for (const index of [0, 4, 8, 12]) {
+    // 4x4 grid: rows start at 0, 4, 8, 12
+    const row = new ActionRowBuilder<ButtonBuilder>();
+
+    for (const index_ of [0, 1, 2, 3]) {
+      const position = index + index_;
+      const button = new ButtonBuilder()
+        .setCustomId(`ttg_${game.gameId}_${position}`)
+        .setLabel(game.board[position] === '⬜' ? '​' : game.board[position])
+        .setStyle(ButtonStyle.Secondary)
+        .setDisabled(game.isGameOver || game.board[position] !== '⬜');
+
+      if (game.board[position] === '⬜' && !game.isGameOver) {
+        button.setStyle(ButtonStyle.Primary);
+      }
+
+      row.addComponents(button);
+    }
+
+    rows.push(row);
+  }
+
+  return rows;
+}
 
 function createGameEmbed(
   game: TripTacGoGame,
   player1Name: string,
   player2Name: string,
 ): EmbedBuilder {
-  const embed = embedTemplate()
-    .setTitle('🎮 Trip-Tac-Go (4x4)')
-    .setColor(Colors.Green);
+  const embed = embedTemplate().setTitle('🎮 Trip-Tac-Go (4x4)').setColor(Colors.Green);
 
   let description = `${player1Name} (❌) vs ${player2Name} (⭕)\n`;
   description += `**Captures:** ❌${game.capturedPieces.X} | ⭕${game.capturedPieces.O}\n\n`;
@@ -33,12 +61,12 @@ function createGameEmbed(
 
   if (game.isGameOver) {
     if (game.winner === 'tie') {
-      description += '\n🤝✨ **IT\'S A TIE!** ✨🤝';
+      description += "\n🤝✨ **IT'S A TIE!** ✨🤝";
       embed.setColor(Colors.Yellow);
     } else if (game.winner !== 'tie') {
       const winnerName = game.winner === 'X' ? player1Name : player2Name;
       const winnerSymbol = game.winner === 'X' ? '❌' : '⭕';
-      // eslint-disable-next-line max-len
+
       description += `\n🏆🎉${winnerSymbol} **${winnerName.toUpperCase()} WINS!** ${winnerSymbol}🎉🏆\n`;
       embed.setColor(Colors.Green);
     }
@@ -52,43 +80,18 @@ function createGameEmbed(
   return embed;
 }
 
-function createGameButtons(game: TripTacGoGame): ActionRowBuilder<ButtonBuilder>[] {
-  const rows: ActionRowBuilder<ButtonBuilder>[] = [];
-
-  [0, 4, 8, 12].forEach(i => { // 4x4 grid: rows start at 0, 4, 8, 12
-    const row = new ActionRowBuilder<ButtonBuilder>();
-
-    [0, 1, 2, 3].forEach(j => {
-      const position = i + j;
-      const button = new ButtonBuilder()
-        .setCustomId(`ttg_${game.gameId}_${position}`)
-        .setLabel(game.board[position] !== '⬜' ? game.board[position] : '​')
-        .setStyle(ButtonStyle.Secondary)
-        .setDisabled(game.isGameOver || game.board[position] !== '⬜');
-
-      if (game.board[position] === '⬜' && !game.isGameOver) {
-        button.setStyle(ButtonStyle.Primary);
-      }
-
-      row.addComponents(button);
-    });
-
-    rows.push(row);
-  });
-
-  return rows;
-}
-
 export const dTripTacGo: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('triptacgo')
     .setDescription('Start a trip-tac-go game')
     .setContexts([0, 1, 2])
     .setIntegrationTypes([0, 1])
-    .addUserOption(option => option
-      .setName('opponent')
-      .setDescription('The user you want to play against')
-      .setRequired(true)) as SlashCommandBuilder,
+    .addUserOption((option) =>
+      option
+        .setName('opponent')
+        .setDescription('The user you want to play against')
+        .setRequired(true),
+    ) as SlashCommandBuilder,
 
   async execute(interaction: ChatInputCommandInteraction) {
     const opponent = interaction.options.getUser('opponent', true);
@@ -123,37 +126,41 @@ export const dTripTacGo: SlashCommand = {
     const buttons = createGameButtons(game);
 
     await interaction.reply({
-      embeds: [embed],
       components: buttons,
+      embeds: [embed],
     });
 
-    const filter = (i: ButtonInteraction): boolean => i.user.id === interaction.user.id || i.user.id === opponent.id;
+    const filter = (index: ButtonInteraction): boolean =>
+      index.user.id === interaction.user.id || index.user.id === opponent.id;
 
     const collector = interaction.channel?.createMessageComponentCollector({
       componentType: ComponentType.Button,
       filter,
-      time: 300000, // 5 minutes
+      time: 300_000, // 5 minutes
     });
 
     if (!collector) {
       await interaction.editReply({
+        components: [],
         content: 'This command requires the bot to be added to the server to work properly.',
         embeds: [],
-        components: [],
       });
       return false;
     }
 
-    collector.on('collect', async (i: ButtonInteraction) => {
-      const [, gameIdFromButton, positionStr] = i.customId.split('_');
-      const position = parseInt(positionStr, 10);
-      const moveResult = executeMove(game, position, i.user.id);
+    collector.on('collect', async (index: ButtonInteraction) => {
+      const [, gameIdFromButton, positionString] = index.customId.split('_');
+      const position = Number.parseInt(positionString, 10);
+      const moveResult = executeMove(game, position, index.user.id);
       log.info(F, `[${game.gameId}] Move result: ${moveResult}`);
 
-      log.info(F, `[${game.gameId}] Button clicked by ${i.user.username} (${i.user.id})`);
-      log.info(F, `[${game.gameId}] CustomId: ${i.customId}`);
-      // eslint-disable-next-line max-len
-      log.info(F, `[${game.gameId}] Current turn: ${game.currentPlayer}, Player1: ${game.player1}, Player2: ${game.player2}`);
+      log.info(F, `[${game.gameId}] Button clicked by ${index.user.username} (${index.user.id})`);
+      log.info(F, `[${game.gameId}] CustomId: ${index.customId}`);
+
+      log.info(
+        F,
+        `[${game.gameId}] Current turn: ${game.currentPlayer}, Player1: ${game.player1}, Player2: ${game.player2}`,
+      );
       if (gameIdFromButton !== game.gameId) {
         return false;
       }
@@ -167,9 +174,9 @@ export const dTripTacGo: SlashCommand = {
       const newEmbed = createGameEmbed(game, interaction.user.username, opponent.username);
       const newButtons = createGameButtons(game);
 
-      await i.update({
-        embeds: [newEmbed],
+      await index.update({
         components: newButtons,
+        embeds: [newEmbed],
       });
 
       if (game.isGameOver) {
@@ -187,8 +194,8 @@ export const dTripTacGo: SlashCommand = {
           .setColor(Colors.Red);
 
         await interaction.editReply({
-          embeds: [timeoutEmbed],
           components: [],
+          embeds: [timeoutEmbed],
         });
       }
     });

@@ -1,58 +1,50 @@
 // import { stripIndents } from 'common-tags';
-import {
-  Category, ComboData, Drug, Combos, Interactions,
-} from 'tripsit_drug_db';
+import type { Category, ComboData, Combos, Drug, Interactions } from 'tripsit_drug_db';
+
 // import { CbSubstance, Interaction } from '../@types/combined';
 // import drugDataAll from '../../../assets/data/combine dDB.json';
 import { stripIndents } from 'common-tags';
+
+import type { ComboDefinition, DrugData } from '../@types/tripsit';
+
+import comboDefs from '../../../assets/data/combo_definitions.json';
 import comboJsonData from '../../../assets/data/tripsitCombos.json';
 import drugJsonData from '../../../assets/data/tripsitDB.json';
-import comboDefs from '../../../assets/data/combo_definitions.json';
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const F = f(__filename);
-
-type DrugData = {
-  [key: string]: Drug;
-};
-
-type ComboDef = {
-  status: string;
-  emoji: string;
-  color: string;
-  definition: string;
-  thumbnail: string;
-};
 
 const drugData = drugJsonData as DrugData;
 const comboData = comboJsonData as Combos;
+const comboDefinitions = comboDefs as ComboDefinition[];
 
 // const devMsg = '...this shouldn\'t have happened, please tell the developer!';
 
 export default combo;
 
-export async function combo(
+export function combo(
   drugAInput: string,
   drugBInput: string,
-): Promise<{
-    err: boolean;
-    msg: string;
-    options?: string[];
-  } | {
-    result: string;
-    definition: string;
-    thumbnail: string;
-    color: string;
-    emoji: string;
-    interactionCategoryA: string;
-    interactionCategoryB: string;
-    note?: string;
-    sources?: {
-      author: string;
-      title: string;
-      url: string;
-    }[];
-  }> {
+):
+  | {
+      color: string;
+      definition: string;
+      emoji: string;
+      interactionCategoryA: string;
+      interactionCategoryB: string;
+      note?: string;
+      result: string;
+      sources?: {
+        author: string;
+        title: string;
+        url: string;
+      }[];
+      thumbnail: string;
+    }
+  | {
+      err: boolean;
+      msg: string;
+      options?: string[];
+    } {
   let drugAName = drugAInput.toLowerCase();
   let drugBName = drugBInput.toLowerCase();
 
@@ -86,7 +78,7 @@ export async function combo(
 
     // First, check if the given name exists in the drug database, if so, we should try to use that info
     if (Object.keys(drugData).includes(drugName.toLowerCase())) {
-      const drug = (drugData as DrugData)[drugName.toLowerCase()] as Drug;
+      const drug = drugData[drugName.toLowerCase()];
 
       // If the drug has combo data, try to use that first
       if (drug.combos && Object.keys(drug.combos).includes(drugName.toLowerCase())) {
@@ -105,14 +97,14 @@ export async function combo(
     }
 
     if (Object.keys(drugData).includes(drugName.toLowerCase())) {
-      const drug = (drugData as DrugData)[drugName.toLowerCase()] as Drug;
-      if (drug.aliases?.join().includes('amphetamine')) {
+      const drug = drugData[drugName.toLowerCase()];
+      if (drug.aliases?.join(',').includes('amphetamine') === true) {
         return 'amphetamines';
       }
     }
 
     if (Object.keys(drugData).includes(drugName.toLowerCase())) {
-      const drug = (drugData as DrugData)[drugName.toLowerCase()] as Drug;
+      const drug = drugData[drugName.toLowerCase()];
 
       // Otherwise, check the categories
       if (drug.categories) {
@@ -137,8 +129,8 @@ export async function combo(
   log.debug(F, `drugAName: ${drugAName}`);
   log.debug(F, `drugBName: ${drugBName}`);
 
-  const drugANameString = drugAInput !== drugAName ? ` (converted to '${drugAName}')` : '';
-  const drugBNameString = drugBInput !== drugBName ? ` (converted to '${drugBName}')` : '';
+  const drugANameString = drugAInput === drugAName ? '' : ` (converted to '${drugAName}')`;
+  const drugBNameString = drugBInput === drugBName ? '' : ` (converted to '${drugBName}')`;
 
   if (drugAName === drugBName) {
     return {
@@ -155,14 +147,13 @@ export async function combo(
   // Either way, it's the same format, so they're interchangeable
   // log.debug(F, `drugAName: ${drugAName}`);
   const drugAComboData = Object.keys(drugData).includes(drugAName.toLowerCase())
-    ? (drugData[drugAName.toLowerCase()]).combos
+    ? drugData[drugAName.toLowerCase()].combos
     : comboData[drugAName.toLowerCase() as keyof typeof comboData];
 
   // We use this to show the user all the drugs they can use
-  const allDrugNames = Object.values(drugData as DrugData)
+  const allDrugNames = Object.values(drugData)
     .filter((drug: Drug) => drug.aliases) // Filter drugs without aliases
-    .map((drug: Drug) => drug.aliases) // Get aliases
-    .flat() as string[]; // Flatten array, define as string[]
+    .flatMap((drug: Drug) => drug.aliases) as string[]; // Flatten array, define as string[]
 
   if (!drugAComboData) {
     return {
@@ -174,7 +165,7 @@ export async function combo(
   // log.debug(F, `drugAComboData: ${JSON.stringify(drugAComboData)}`);
 
   const drugBComboData = Object.keys(drugData).includes(drugBName.toLowerCase())
-    ? (drugData[drugBName.toLowerCase()]).combos
+    ? drugData[drugBName.toLowerCase()].combos
     : comboData[drugBName.toLowerCase() as keyof typeof comboData];
 
   if (!drugBComboData) {
@@ -186,12 +177,12 @@ export async function combo(
   }
   // log.debug(F, `drugBComboData: ${JSON.stringify(drugBComboData)}`);
 
-  let comboInfo = {} as ComboData;
+  let comboInfo: ComboData | undefined = undefined;
   // Check if drugB is in drugA's combo list
   if (Object.keys(drugAComboData).includes(drugBName)) {
-    comboInfo = drugAComboData[drugBName as keyof Interactions] as ComboData;
+    comboInfo = drugAComboData[drugBName as keyof Interactions];
   } else if (Object.keys(drugBComboData).includes(drugAName)) {
-    comboInfo = drugBComboData[drugAName as keyof Interactions] as ComboData;
+    comboInfo = drugBComboData[drugAName as keyof Interactions];
   } else {
     // If we get here, there is no combo data for these drugs
     return {
@@ -200,21 +191,37 @@ export async function combo(
     };
   }
 
+  if (!comboInfo) {
+    return {
+      err: true,
+      msg: `No combo data found for ${drugAInput} and ${drugBInput}.`,
+    };
+  }
+
   // log.debug(F, `comboInfo: ${JSON.stringify(comboInfo)}`);
 
-  const comboDef = comboDefs.find(def => def.status === comboInfo.status) as ComboDef;
+  const comboDefinition = comboDefinitions.find(
+    (definition) => definition.status === comboInfo.status,
+  );
+
+  if (!comboDefinition) {
+    return {
+      err: true,
+      msg: `No combo definition found for ${comboInfo.status}.`,
+    };
+  }
 
   // log.info(F, `response: ${JSON.stringify(response, null, 2)}`);
 
   return {
-    result: comboInfo.status,
+    color: comboDefinition.color,
+    definition: comboDefinition.definition,
+    emoji: comboDefinition.emoji,
     interactionCategoryA: drugAName,
     interactionCategoryB: drugBName,
-    definition: comboDef.definition,
-    thumbnail: comboDef.thumbnail,
-    color: comboDef.color,
-    emoji: comboDef.emoji,
     note: comboInfo.note,
+    result: comboInfo.status,
     sources: comboInfo.sources,
+    thumbnail: comboDefinition.thumbnail,
   };
 }

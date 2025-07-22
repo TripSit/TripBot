@@ -1,15 +1,13 @@
-import {
-  SlashCommandBuilder,
-  time,
-  EmbedBuilder,
-  EmbedField,
-  MessageFlags,
-} from 'discord.js';
+import type { EmbedBuilder, EmbedField } from 'discord.js';
+
+import { MessageFlags, SlashCommandBuilder, time } from 'discord.js';
+
+import type { SlashCommand } from '../../@types/commandDef';
+
 import { remindMe } from '../../../global/commands/g.remindme';
-import commandContext from '../../utils/context';
-import { SlashCommand } from '../../@types/commandDef';
-import { embedTemplate } from '../../utils/embedTemplate';
 import { parseDuration } from '../../../global/utils/parseDuration';
+import commandContext from '../../utils/context';
+import { embedTemplate } from '../../utils/embedTemplate';
 import { paginationEmbed } from '../../utils/pagination';
 // import log from '../../../global/utils/log';
 const F = f(__filename);
@@ -19,28 +17,35 @@ export const dRemindme: SlashCommand = {
     .setName('remind_me')
     .setDescription('Handle reminders!')
     .setIntegrationTypes([0])
-    .addSubcommand(subcommand => subcommand
-      .setDescription('Set a reminder')
-      .addStringOption(option => option.setName('reminder')
-        .setDescription('What do you want to be reminded?')
-        .setRequired(true))
-      .addStringOption(option => option.setName('offset')
-        .setDescription('When? EG: 4 hours 32 mins')
-        .setRequired(true))
-      .setName('set'))
-    .addSubcommand(subcommand => subcommand
-      .setDescription('Get your upcoming reminders!')
-      .setName('get'))
-    .addSubcommand(subcommand => subcommand
-      .setDescription('Delete a reminder!')
-      .addNumberOption(option => option.setName('record')
-        .setDescription('Which record? (0, 1, 2, etc)')
-        .setRequired(true))
-      .setName('delete')),
+    .addSubcommand((subcommand) =>
+      subcommand
+        .setDescription('Set a reminder')
+        .addStringOption((option) =>
+          option
+            .setName('reminder')
+            .setDescription('What do you want to be reminded?')
+            .setRequired(true),
+        )
+        .addStringOption((option) =>
+          option.setName('offset').setDescription('When? EG: 4 hours 32 mins').setRequired(true),
+        )
+        .setName('set'),
+    )
+    .addSubcommand((subcommand) =>
+      subcommand.setDescription('Get your upcoming reminders!').setName('get'),
+    )
+    .addSubcommand((subcommand) =>
+      subcommand
+        .setDescription('Delete a reminder!')
+        .addNumberOption((option) =>
+          option.setName('record').setDescription('Which record? (0, 1, 2, etc)').setRequired(true),
+        )
+        .setName('delete'),
+    ),
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
-    const command = interaction.options.getSubcommand() as 'get' | 'set' | 'delete';
+    const command = interaction.options.getSubcommand() as 'delete' | 'get' | 'set';
     const offset = interaction.options.getString('offset');
     const reminder = interaction.options.getString('reminder');
     const record = interaction.options.getNumber('record');
@@ -67,7 +72,10 @@ export const dRemindme: SlashCommand = {
       await interaction.editReply({ content: response as string });
     }
     if (command === 'get') {
-      if (response !== null) {
+      if (response === null) {
+        embed.setTitle('No reminders!');
+        embed.setDescription('You have no reminders! Use /remind_me to add some!');
+      } else {
         embed.setTitle('Your reminders');
         if (typeof response === 'string') {
           embed.setDescription('You have no reminders! You can use /remind_me to add some!');
@@ -83,9 +91,9 @@ export const dRemindme: SlashCommand = {
           let pageFieldsCount = 0;
           for (const record of response) { // eslint-disable-line
             pageFields.push({
+              inline: true,
               name: `(${record.index}) ${time(record.date, 'R')}`,
               value: record.value,
-              inline: true,
             });
             // log.debug(F, `Adding field ${field.name}`);
             pageFieldsCount += 1;
@@ -111,22 +119,19 @@ export const dRemindme: SlashCommand = {
         if (response.length <= 24) {
           // Add fields to the embed
           const fields = [] as {
+            inline: boolean;
             name: string;
             value: string;
-            inline: boolean;
           }[];
           for (const record of response) { // eslint-disable-line
             fields.push({
+              inline: true,
               name: `(${record.index}) ${time(record.date, 'R')}`,
               value: record.value,
-              inline: true,
             });
           }
           embed.setFields(fields);
         }
-      } else {
-        embed.setTitle('No reminders!');
-        embed.setDescription('You have no reminders! Use /remind_me to add some!');
       }
       // log.debug(F, `book.length: ${book.length}`);
       if (book.length > 1) {

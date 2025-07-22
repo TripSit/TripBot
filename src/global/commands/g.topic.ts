@@ -1,5 +1,3 @@
-/* eslint-disable max-len */
-
 const F = f(__filename);
 
 const topics = {
@@ -8,14 +6,14 @@ const topics = {
   2: 'How many cups of coffee, tea, or beverage-of-choice do you have each morning?',
   3: 'Are you an early bird or night owl?',
   4: 'Do you prefer showering in the morning or at night?',
-  5: 'What\'s your favorite flower or plant?',
-  6: 'What\'s your caffeinated beverage of choice? Coffee? Cola? Tea?',
-  7: 'What\'s your favorite scent?',
-  8: 'What\'s the last great TV show or movie you watched?',
-  9: 'Best book you\'ve ever read?',
+  5: "What's your favorite flower or plant?",
+  6: "What's your caffeinated beverage of choice? Coffee? Cola? Tea?",
+  7: "What's your favorite scent?",
+  8: "What's the last great TV show or movie you watched?",
+  9: "Best book you've ever read?",
   10: 'If you could learn one new professional skill, what would it be?',
   11: 'If you could learn one new personal skill, what would it be?',
-  12: 'What\'s your favorite way to get in some exercise?',
+  12: "What's your favorite way to get in some exercise?",
   13: 'If you could write a book, what genre would you write it in? Mystery? Thriller? Romance? Historical fiction? Non-fiction?',
   14: 'What is one article of clothing that someone could wear that would make you walk out on a date with them?',
   15: 'The zombie apocalypse is coming, who are 3 people you want on your team?',
@@ -29,24 +27,24 @@ const topics = {
   23: 'If you had to eat one meal everyday for the rest of your life what would it be?',
   24: 'If aliens landed on earth tomorrow and offered to take you home with them, would you go?',
   25: '60s, 70s, 80s, 90s: Which decade do you love the most and why?',
-  26: 'What\'s your favorite sandwich and why?',
-  27: 'What is your favorite item you\'ve bought this year?',
+  26: "What's your favorite sandwich and why?",
+  27: "What is your favorite item you've bought this year?",
   28: 'What would be the most surprising scientific discovery imaginable?',
   29: 'What is your absolute dream job?',
   30: 'What would your talent be if you were Miss or Mister World?',
   31: 'What would the title of your autobiography be?',
-  32: 'Say you\'re independently wealthy and don\'t have to work, what would you do with your time?',
+  32: "Say you're independently wealthy and don't have to work, what would you do with your time?",
   33: 'If you had to delete all but 3 apps from your smartphone, which ones would you keep?',
   34: 'What is your favorite magical or mythological animal?',
   35: 'What does your favorite shirt look like?',
   36: 'Who is your favorite Disney hero or heroine? Would you trade places with them?',
   37: 'What would your dream house be like?',
   38: 'If you could add anyone to Mount Rushmore who would it be, and why?',
-  39: 'You\'re going sail around the world, what\'s the name of your boat?',
+  39: "You're going sail around the world, what's the name of your boat?",
   40: 'What fictional family would you be a member of?',
-  41: 'What sport would you compete in if you were in the Olympics (even if it\'s not in the Olympics)?',
+  41: "What sport would you compete in if you were in the Olympics (even if it's not in the Olympics)?",
   42: 'What would your superpower be and why?',
-  43: 'What\'s your favorite tradition or holiday?',
+  43: "What's your favorite tradition or holiday?",
   44: 'What fictional world or place would you like to visit?',
   45: 'What is your favorite breakfast food?',
   46: 'What is your favorite time of the day and why?',
@@ -60,7 +58,7 @@ const topics = {
   54: 'What is your favorite dessert?',
   55: 'What was your favorite game to play as a child?',
   56: 'Are you a traveler or a homebody?',
-  57: 'What\'s one career you wish you could have?',
+  57: "What's one career you wish you could have?",
   58: 'Have you ever completed anything on your “bucket list”?',
   59: 'Do you have a favorite plant?',
   60: 'What did you have for breakfast this morning?',
@@ -69,7 +67,7 @@ const topics = {
   63: 'Are you a cat person or a dog person?',
   64: 'What languages do you know how to speak?',
   65: 'Popcorn or M&Ms?',
-  66: 'What\'s the weirdest food you\'ve ever eaten?',
+  66: "What's the weirdest food you've ever eaten?",
   67: 'What is your cellphone wallpaper?',
   68: 'You can have an unlimited supply of one thing for the rest of your life, what is it? Sushi? Scotch Tape?',
   69: 'Would you go with aliens if they beamed down to Earth?',
@@ -110,7 +108,7 @@ const topics = {
   104: 'Would you rather live without heat and AC or live without social media?',
   105: 'Would you rather be the funniest or smartest person in the room?',
   106: 'Would you rather be able to run at 100 miles per hour or fly at 10 miles per hour?',
-  107: 'Would you rather be a superhero or the world\'s best chef?',
+  107: "Would you rather be a superhero or the world's best chef?",
   108: 'Would you rather be an Olympic gold medalist or an astronaut?',
 };
 
@@ -120,8 +118,9 @@ export default topic;
  *
  * @return {string}
  */
-export async function topic():Promise<string> {
-  const response = topics[Math.floor(Math.random() * Object.keys(topics).length) as keyof typeof topics];
+export async function topic(): Promise<string> {
+  const response =
+    topics[Math.floor(Math.random() * Object.keys(topics).length) as keyof typeof topics];
   log.info(F, `response: ${JSON.stringify(response, null, 2)}`);
   return response;
 }
