@@ -35,7 +35,9 @@
     "pgadmin:logs": "docker container logs tripbot_pgadmin -f -n 100",
     "## CODESPACE ##": "",
     "codespace:start": "npx tsc-watch --onSuccess 'npx nodemon --config ./nodemon.json'",
-    "codespace:deploy": "npx ts-node --transpile-only ./src/discord/utils/commandDeploy.ts"
+    "codespace:deploy": "npx ts-node --transpile-only ./src/discord/utils/commandDeploy.ts",
+    "prepare": "husky",
+    "lint-staged": "npx lint-staged"
   },
   "repository": {
     "type": "git",
@@ -58,6 +60,15 @@
     "url": "https://github.com/TripSit/TripBot/issues"
   },
   "homepage": "https://github.com/TripSit/TripBot#readme",
+  "lint-staged": {
+    "*.{js,ts,tsx,jsx}": [
+      "eslint --cache --fix",
+      "prettier --write"
+    ],
+    "*.{css,scss,json,md,svg}": [
+      "prettier --write"
+    ]
+  },
   "dependencies": {
     "@discordjs/voice": "^0.18.0",
     "@google/generative-ai": "^0.24.1",
@@ -130,6 +141,7 @@
     "globals": "^16.3.0",
     "husky": "^9.1.7",
     "jest": "^30.0.4",
+    "lint-staged": "^16.1.2",
     "prettier": "^3.6.2",
     "prisma": "^6.12.0",
     "supertest": "^7.1.3",

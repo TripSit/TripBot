@@ -1,4 +1,5 @@
-#!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
-
-npm run lint
+#!/usr/bin/env bash
+if ! npm run lint-staged; then
+  echo >&2 "🛑 Oops! Lint/staged errors found. Run 'npm run lint-staged' for details."
+  exit 1
+fi

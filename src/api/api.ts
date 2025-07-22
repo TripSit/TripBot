@@ -6,15 +6,17 @@ import app from './app';
 
 const F = f(__filename);
 
-const port = env.API_PORT || 1337;
+const port = env.API_PORT ?? 1337;
 
 export default async function api(): Promise<Server> {
-  return new Promise((resolve, reject) => {
-    const server = app
-      .listen(port, () => {
-        log.info(F, `Listening at http://api.${process.env.DNS_DOMAIN ?? 'localhost'}:${port}`);
-        resolve(server);
-      })
-      .on('error', reject);
+  const server = app.listen(port);
+  await new Promise<void>((resolve, reject) => {
+    server.once('listening', resolve);
+    server.once('error', reject);
   });
+  log.info(
+    F,
+    `Listening at http://api.${process.env.DNS_DOMAIN ?? 'localhost'}:${port.toString()}`,
+  );
+  return server;
 }
