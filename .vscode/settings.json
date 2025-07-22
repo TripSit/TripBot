@@ -31,7 +31,7 @@
       ".prettierrc": true,
       ".prettierignore": true,
       ".git": true,
-      // "eslint.config.mjs": true,
+      "eslint.config.mjs": true,
       "coverage": true,
       "package-lock.json": true,
       "tsconfig.json": true,
