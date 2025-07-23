@@ -31,7 +31,7 @@
       ".prettierignore": true,
       ".git": true,
       "coverage": true,
-      "docker-compose.yml": true,
+      "docker-compose.yml": false,
       "eslint.config.mjs": true,
       "node_modules": true,
       "package-lock.json": true,
