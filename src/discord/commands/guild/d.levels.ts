@@ -4,6 +4,7 @@ import {
   // UserContextMenuCommandInteraction,
   GuildMember,
   AttachmentBuilder,
+  MessageFlags,
 } from 'discord.js';
 import Canvas from '@napi-rs/canvas';
 import { personas } from '@prisma/client';
@@ -16,7 +17,7 @@ import commandContext from '../../utils/context';
 import { numFormatter, numFormatterVoice } from './d.profile';
 
 // import { getTotalLevel } from '../../../global/utils/experience';
-import { resizeText, deFuckifyText, colorDefs } from '../../utils/canvasUtils';
+import { resizeText, deFuckifyText, generateColors } from '../../utils/canvasUtils';
 // import { expForNextLevel, getTotalLevel } from '../../../global/utils/experience';
 // import { imageGet } from '../../utils/imageGet';
 
@@ -79,11 +80,12 @@ export const dLevels: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('levels')
     .setDescription('Get someone\'s current experience levels!')
+    .setIntegrationTypes([0])
     .addUserOption(option => option
       .setName('target')
       .setDescription('User to lookup'))
     .addBooleanOption(option => option.setName('ephemeral')
-      .setDescription('Set to "True" to show the response only to you')),
+      .setDescription('Set to "True" to show the response only to you')) as SlashCommandBuilder,
   async execute(
     interaction:ChatInputCommandInteraction,
   ) {
@@ -101,8 +103,9 @@ export const dLevels: SlashCommand = {
 
     // log.debug(F, `target id: ${target.id}`);
     // log.debug(F, `levelData: ${JSON.stringify(target, null, 2)}`);
+    const ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined;
     const values = await Promise.allSettled([
-      await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) }),
+      await interaction.deferReply({ flags: ephemeral }),
       // Get the target's profile data from the database
       await profile(target.id),
       // Check get fresh persona data
@@ -267,8 +270,8 @@ export const dLevels: SlashCommand = {
         rank: levelData.TEXT.TRIPSITTER ? levelData.TEXT.TRIPSITTER.rank : 0,
       });
     }
-    // Check if user has Developer or Contributor role
-    if (levelData.TEXT.DEVELOPER && levelData.TEXT.DEVELOPER.total_exp > 0) {
+    // Check if user has Dev role or has some xp
+    if ((levelData.TEXT.DEVELOPER && levelData.TEXT.DEVELOPER.level > 5) || (target.roles.cache.has(env.ROLE_DEVELOPER))) {
       const progressDeveloper = levelData.TEXT.DEVELOPER
         ? levelData.TEXT.DEVELOPER.level_exp / levelData.TEXT.DEVELOPER.nextLevel
         : 0;
@@ -331,12 +334,14 @@ export const dLevels: SlashCommand = {
     const context = canvasObj.getContext('2d');
     // log.debug(F, `canvasHeight: ${canvasHeight}`);
 
-    // Choose color based on user's role
-    const cardLightColor = colorDefs[target.roles.color?.id as keyof typeof colorDefs]?.cardLightColor || '#232323';
-    const cardDarkColor = colorDefs[target.roles.color?.id as keyof typeof colorDefs]?.cardDarkColor || '#141414';
-    const chipColor = colorDefs[target.roles.color?.id as keyof typeof colorDefs]?.chipColor || '#393939';
-    const barColor = colorDefs[target.roles.color?.id as keyof typeof colorDefs]?.barColor || '#b3b3b3';
-    const textColor = colorDefs[target.roles.color?.id as keyof typeof colorDefs]?.textColor || '#ffffff';
+    // Generate the colors for the card based on the user's role color
+    const roleColor = `#${(target.roles.color?.color || 0x99aab5).toString(16).padStart(6, '0')}`;
+
+    const cardLightColor = generateColors(roleColor, 0, -75, -67);
+    const cardDarkColor = generateColors(roleColor, 0, -75, -80);
+    const chipColor = generateColors(roleColor, 0, -50, -50);
+    const barColor = generateColors(roleColor, 0, -20, -10);
+    const textColor = generateColors(roleColor, 0, 0, 0);
 
     // Draw the card shape and chips
     // Card
@@ -374,7 +379,7 @@ export const dLevels: SlashCommand = {
         const Background = await Canvas.loadImage(imagePath);
         context.save();
         context.globalCompositeOperation = 'lighter';
-        context.globalAlpha = 0.05;
+        context.globalAlpha = 0.04;
         context.beginPath();
         context.roundRect(0, 0, 921, 145, [19]);
         context.roundRect(0, 154, 921, (layoutHeight - 154), [19]);
@@ -698,8 +703,14 @@ export const dLevels: SlashCommand = {
 
     // Process The Entire Card and Send it to Discord
     const date = new Date();
-    const formattedDate = date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' }).replace(/ /g, '-');
-    const attachment = new AttachmentBuilder(await canvasObj.encode('png'), { name: `TS_Levels_${filteredDisplayName}_${formattedDate}.png` });
+    const formattedDate = date.toLocaleDateString('en-GB', {
+      day: '2-digit',
+      month: 'short',
+      year: '2-digit',
+    }).replace(/ /g, '-');
+    const attachment = new AttachmentBuilder(await canvasObj.encode('png'), {
+      name: `TS_Levels_${filteredDisplayName}_${formattedDate}.png`,
+    });
     await interaction.editReply({ files: [attachment] });
 
     log.info(F, `Total Time: ${Date.now() - startTime}ms`);

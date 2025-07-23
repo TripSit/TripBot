@@ -20,18 +20,20 @@ export async function registerCommands(discordClient: Client): Promise<void> {
      */
   async function registerType(commandType: 'global' | 'guild') {
     discordClient.commands = new Collection(); // eslint-disable-line no-param-reassign
-
     const commandDir = path.join(__dirname, '../commands');
-    const files = await fs.readdir(path.join(commandDir, commandType));
-    files
-      .filter(file => (file.endsWith('.ts') || file.endsWith('.js')) && !file.startsWith('index'))
-      .map(file => require(`${commandDir}/${commandType}/${file}`)) // eslint-disable-line global-require, import/no-dynamic-require, max-len
+    const dirEntries = await fs.readdir(path.join(commandDir, commandType), { withFileTypes: true });
+
+    dirEntries
+      .filter(entry => entry.isFile()
+        && (entry.name.endsWith('.ts') || entry.name.endsWith('.js'))
+        && !entry.name.startsWith('index'))
+      .map(entry => require(`${commandDir}/${commandType}/${entry.name}`)) // eslint-disable-line global-require, import/no-dynamic-require
       .forEach(command => {
-        // log.debug(F, `command: ${JSON.stringify(command, null, 2)}`);
-        const goodKey = Object.keys(command).find(key => command[key].data !== undefined) as string;
-        // const fileName = Object.keys(command)[0];
-        const functionName = command[goodKey].data.name;
-        discordClient.commands.set(functionName, command[goodKey]);
+        const goodKey = Object.keys(command).find(key => command[key]?.data !== undefined) as string;
+        if (goodKey) {
+          const functionName = command[goodKey].data.name;
+          discordClient.commands.set(functionName, command[goodKey]);
+        }
       });
   }
   await Promise.all([registerType('global'), registerType('guild')]);

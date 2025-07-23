@@ -116,61 +116,95 @@ model rss {
 }
 
 model users {
-  id                                                        String            @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  email                                                     String?           @unique(map: "users_email_unique") @db.VarChar(320)
-  username                                                  String?           @unique(map: "users_username_unique") @db.VarChar(320)
+  id                                                        String               @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  email                                                     String?              @unique(map: "users_email_unique") @db.VarChar(320)
+  username                                                  String?              @unique(map: "users_username_unique") @db.VarChar(320)
   password_hash                                             String?
-  discord_id                                                String?           @unique(map: "users_discordid_unique")
+  discord_id                                                String?              @unique(map: "users_discordid_unique")
   irc_id                                                    String?
   matrix_id                                                 String?
   timezone                                                  String?
-  birthday                                                  DateTime?         @db.Timestamptz(6)
+  birthday                                                  DateTime?            @db.Timestamptz(6)
   roles                                                     String?
   mindset_role                                              String?
-  mindset_role_expires_at                                   DateTime?         @db.Timestamptz(6)
-  karma_given                                               Int               @default(0)
-  karma_received                                            Int               @default(0)
-  sparkle_points                                            Int               @default(0)
-  move_points                                               Int               @default(0)
-  empathy_points                                            Int               @default(0)
-  discord_bot_ban                                           Boolean           @default(false)
-  ticket_ban                                                Boolean           @default(false)
-  last_seen_at                                              DateTime          @default(now()) @db.Timestamptz(6)
+  mindset_role_expires_at                                   DateTime?            @db.Timestamptz(6)
+  karma_given                                               Int                  @default(0)
+  karma_received                                            Int                  @default(0)
+  sparkle_points                                            Int                  @default(0)
+  move_points                                               Int                  @default(0)
+  empathy_points                                            Int                  @default(0)
+  discord_bot_ban                                           Boolean              @default(false)
+  ticket_ban                                                Boolean              @default(false)
+  last_seen_at                                              DateTime             @default(now()) @db.Timestamptz(6)
   last_seen_in                                              String?
-  joined_at                                                 DateTime          @default(now()) @db.Timestamptz(6)
-  removed_at                                                DateTime?         @db.Timestamptz(6)
+  joined_at                                                 DateTime             @default(now()) @db.Timestamptz(6)
+  removed_at                                                DateTime?            @db.Timestamptz(6)
   mod_thread_id                                             String?
-  helper_role_ban                                           Boolean           @default(false)
-  contributor_role_ban                                      Boolean           @default(false)
+  helper_role_ban                                           Boolean              @default(false)
+  contributor_role_ban                                      Boolean              @default(false)
   lastfm_username                                           String?
-  partner                                                   Boolean?          @default(true)
-  supporter                                                 Boolean?          @default(true)
+  partner                                                   Boolean?             @default(true)
+  supporter                                                 Boolean?             @default(true)
   moodle_id                                                 String?
-  ai_terms_agree                                            Boolean           @default(false)
+  ai_terms_agree                                            Boolean              @default(false)
   ai_personas                                               ai_personas[]
   ai_history_openai                                         String?
   ai_history_google                                         String?
   appeals                                                   appeals[]
-  drug_articles_drug_articles_last_modified_byTousers       drug_articles[]   @relation("drug_articles_last_modified_byTousers")
-  drug_articles_drug_articles_posted_byTousers              drug_articles[]   @relation("drug_articles_posted_byTousers")
+  drug_articles_drug_articles_last_modified_byTousers       drug_articles[]      @relation("drug_articles_last_modified_byTousers")
+  drug_articles_drug_articles_posted_byTousers              drug_articles[]      @relation("drug_articles_posted_byTousers")
   drug_variants                                             drug_variants[]
   drugs                                                     drugs[]
   personas                                                  personas?
-  user_actions_user_actions_ban_evasion_related_userTousers user_actions[]    @relation("user_actions_ban_evasion_related_userTousers")
-  user_actions_user_actions_created_byTousers               user_actions[]    @relation("user_actions_created_byTousers")
-  user_actions_user_actions_repealed_byTousers              user_actions[]    @relation("user_actions_repealed_byTousers")
-  user_actions_user_actions_user_idTousers                  user_actions[]    @relation("user_actions_user_idTousers")
+  user_actions_user_actions_ban_evasion_related_userTousers user_actions[]       @relation("user_actions_ban_evasion_related_userTousers")
+  user_actions_user_actions_created_byTousers               user_actions[]       @relation("user_actions_created_byTousers")
+  user_actions_user_actions_repealed_byTousers              user_actions[]       @relation("user_actions_repealed_byTousers")
+  user_actions_user_actions_user_idTousers                  user_actions[]       @relation("user_actions_user_idTousers")
   user_drug_doses                                           user_drug_doses[]
   user_experience                                           user_experience[]
   user_reminders                                            user_reminders[]
-  user_tickets_user_tickets_closed_byTousers                user_tickets[]    @relation("user_tickets_closed_byTousers")
-  user_tickets_user_tickets_reopened_byTousers              user_tickets[]    @relation("user_tickets_reopened_byTousers")
-  user_tickets_user_tickets_user_idTousers                  user_tickets[]    @relation("user_tickets_user_idTousers")
+  user_tickets_user_tickets_closed_byTousers                user_tickets[]       @relation("user_tickets_closed_byTousers")
+  user_tickets_user_tickets_reopened_byTousers              user_tickets[]       @relation("user_tickets_reopened_byTousers")
+  user_tickets_user_tickets_user_idTousers                  user_tickets[]       @relation("user_tickets_user_idTousers")
   ai_usage                                                  ai_usage[]
   ai_images                                                 ai_images[]
-  quotes_quotes_user_idTousers                              quotes[]          @relation("UserQuote")
-  quotes_quotes_created_byTousers                           quotes[]          @relation("QuoteCreator")
+  quotes_quotes_user_idTousers                              quotes[]             @relation("UserQuote")
+  quotes_quotes_created_byTousers                           quotes[]             @relation("QuoteCreator")
   members                                                   members[]
+  wordle_scores                                             wordle_scores[]
+  connections_scores                                        connections_scores[]
+  mini_scores                                               mini_scores[]
+  last_helper_activity                                      DateTime?
+  last_was_helper                                           DateTime?
+  watch_requests                                            watch_request[]
+  best_of_messages                                          best_of[]            @relation("UserBestOf")
+  claimed_bounties                                          claimed_bounties[]   @relation("ClaimedBounties")
+}
+
+model wordle_scores {
+  id      String @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  user_id String @db.Uuid
+  puzzle  Int
+  score   Int
+  grid    String
+  user    users  @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "puzzlescores_userid_foreign")
+}
+
+model connections_scores {
+  id      String @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  user_id String @db.Uuid
+  puzzle  Int
+  score   Int
+  grid    String
+  user    users  @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "connectionsscores_userid_foreign")
+}
+
+model mini_scores {
+  id      String @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  user_id String @db.Uuid
+  puzzle  String
+  score   Int
+  user    users  @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "miniscores_userid_foreign")
 }
 
 model members {
@@ -224,6 +258,8 @@ model discord_guilds {
   user_actions         user_actions[]
   ai_channels          ai_channels[]
   members              members[]
+
+  command_usages       command_usage[]  @relation("GuildCommandUsages")
 }
 
 model drug_articles {
@@ -330,6 +366,7 @@ model rpg_inventory {
 model user_actions {
   id                                                 String           @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
   user_id                                            String           @db.Uuid
+  target_discord_id                                  String?
   guild_id                                           String           @default("179641883222474752")
   type                                               user_action_type
   ban_evasion_related_user                           String?          @db.Uuid
@@ -523,6 +560,56 @@ model quotes {
   @@unique([url], map: "quotes_url_unique")
 }
 
+model watch_request {
+  id                  String  @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  notification_method String
+  channel_id          String?
+  caller_id           String
+  watched_user_id     String
+  users               users?  @relation(fields: [usersId], references: [id])
+  usersId             String? @db.Uuid
+}
+
+model best_of {
+  id            String       @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  user_id       String
+  message_id    String    @unique
+  channel_id    String
+  sent_at       DateTime
+  last_updated  DateTime  @updatedAt
+
+  user          users     @relation("UserBestOf", fields: [user_id], references: [discord_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model command_usage {
+  id                    String       @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  command               String
+  guild_id              String?
+  channel_id            String
+  created_at            DateTime
+  last_updated          DateTime    @updatedAt
+
+  guild                 discord_guilds?     @relation("GuildCommandUsages", fields: [guild_id], references: [id], onDelete: SetNull)
+  parameters            command_usage_parameter[]
+}
+
+model command_usage_parameter {
+  id                String        @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  usage_id          String        @db.Uuid
+  name              String
+  value             String
+
+  usage             command_usage @relation(fields: [usage_id], references: [id], onDelete: Cascade)
+}
+
+model claimed_bounties {
+  id                String        @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  type              String
+  amount            Int           @default(0)
+  user_id           String
+  user              users         @relation("ClaimedBounties", fields: [user_id], references: [discord_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
 enum bridge_status {
   PENDING
   ACTIVE
@@ -544,7 +631,7 @@ enum drug_category_type {
 enum drug_mass_unit {
   MG
   ML
-  MICRO_G @map("µG")
+  MICRO_G @map("uG")
   G
   OZ
   FLOZ

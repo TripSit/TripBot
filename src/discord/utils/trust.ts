@@ -14,9 +14,10 @@ import { stripIndents } from 'common-tags';
 import { members } from '@prisma/client';
 import {
   modButtonBan, modButtonInfo, modButtonNote, modButtonTimeout, modButtonWarn, tripSitTrustScore, userInfoEmbed,
-} from '../commands/guild/d.moderate';
+} from './modUtils';
 import { checkGuildPermissions } from './checkPermissions';
 import { topic } from '../../global/commands/g.topic';
+import { giveMilestone } from '../../global/utils/experience';
 
 const F = f(__filename);
 
@@ -67,10 +68,8 @@ export async function addedVerified(
   try {
     memberData = await db.members.upsert({
       where: {
-        id_guild_id: {
-          guild_id: guildData.id,
-          id: userData.discord_id as string,
-        },
+        guild_id: guildData.id,
+        id: userData.discord_id as string,
       },
       create: {
         guild_id: guildData.id,
@@ -169,13 +168,20 @@ but they were already marked at trusted in the database, so no message was sent`
       const greeting = greetingList[Math.floor(Math.random() * greetingList.length)];
 
       const channelLounge = await newMember.client.channels.fetch(env.CHANNEL_LOUNGE) as TextChannel;
-      await channelLounge.send({
+      const message = await channelLounge.send({
         content: stripIndents`**${greeting}**
-
+      Head to <#${env.CHANNEL_TRIPSIT}> if you need a tripsitter. :)
       Be safe, have fun, and don't forget to visit the <id:guide> for more information!
 
       *${await topic()}*`,
       });
+
+      try {
+        await message.react('<:ts_welcomeA:1222543903677485156>');
+        await message.react('<:ts_welcomeB:1222543905216663634>');
+      } catch (err) {
+        log.debug(F, 'Attempted to add welcome emojis to welcome message, but they appear to be missing.');
+      }
 
       await db.members.upsert({
         where: {
@@ -412,6 +418,9 @@ they are banned on ${bannedGuilds.length} other guilds!** <@&${guildData.role_mo
       trustMessage += stripIndents`. User is below the set trust score of ${guildData.trust_score_limit}, \
 I did not remove the <@&${env.ROLE_UNVERIFIED}> role`;
     }
+
+    // Run the milestone check to make sure the user gets a level role
+    await giveMilestone(member);
 
     await auditLog.send(trustMessage);
   }

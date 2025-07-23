@@ -1,11 +1,14 @@
 ###################
 # BUILD FOR LOCAL DEVELOPMENT
 ###################
-# In this step we copy over everything we need and install all dependancies
+# In this step we copy over everything we need and install all dependencies
 # We stop at the end of this step in development, so it also includes the deploy command
 # We install jest, eslint and ts-node so we can run tests and lint.
 
-FROM node:21.4.0-alpine AS development
+FROM node:lts-alpine AS development
+
+# Install openssl
+RUN apk add --no-cache openssl
 
 ENV NODE_ENV=development
 RUN date
@@ -17,7 +20,7 @@ WORKDIR /usr/src/app
 RUN npm install @napi-rs/canvas-linux-x64-musl
 
 # RUN if [ $NODE_ENV != "production" ] ; then npm install -g --save-dev jest ts-node eslint pm2; fi
-RUN npm install -g --save-dev jest ts-node eslint pm2
+# RUN npm install -g --save-dev jest ts-node eslint pm2
 
 # We need to copy the assets over so that the bot can use it
 COPY --chown=node:node ./assets ./build/assets
@@ -36,8 +39,6 @@ RUN npm ci
 # Bundle app source
 COPY --chown=node:node . .
 
-# RUN npx prisma migrate deploy
-
 # Generate prisma client
 # This needs to happen before the next command for some reason
 RUN npx prisma generate
@@ -46,11 +47,7 @@ RUN npx prisma generate --schema=./src/prisma/moodle/schema.prisma
 # Deploy the commands
 # RUN npx ts-node --transpile-only ./src/discord/utils/commandDeploy.ts
 
-# CMD npx prisma migrate deploy && npx tsc-watch --onSuccess "node ./build/src/start.js"
-CMD npx tsc-watch --onSuccess "node ./build/src/start.js"
-
-# For container development, the following command runs forever, so we can inspect the container
-# CMD tail -f /dev/null
+CMD npx prisma migrate deploy && npx tsc-watch --onSuccess "node ./build/src/start.js"
 
 ###################
 # BUILD FOR PRODUCTION
@@ -61,7 +58,7 @@ CMD npx tsc-watch --onSuccess "node ./build/src/start.js"
 # We run the build command which creates the production bundle
 # We run npm ci --only=production to ensure that only the production dependencies are installed
 
-FROM node:21.4.0-alpine AS build
+FROM node:lts-alpine AS build
 
 ENV NODE_ENV=production
 RUN date
@@ -87,11 +84,6 @@ RUN tsc
 # Running `npm ci` removes the existing node_modules directory and passing in --only=production ensures that only the production dependencies are installed. This ensures that the node_modules directory is as optimized as possible
 RUN npm ci --omit:dev && npm cache clean --force
 
-# USER node
-
-# For container development, the following command runs forever, so we can inspect the container
-# CMD tail -f /dev/null
-
 ###################
 # PRODUCTION
 ###################
@@ -100,7 +92,10 @@ RUN npm ci --omit:dev && npm cache clean --force
 # Then we ONLY copy over the /build folder with the js files
 # We already deployed before, so the only thing left to do is run the bot with PM2
 
-FROM node:21.4.0-alpine AS production
+FROM node:lts-alpine AS production
+
+# Install openssl
+RUN apk add --no-cache openssl
 
 ENV NODE_ENV=production
 RUN date
@@ -119,11 +114,9 @@ COPY --chown=node:node ./assets ./build/assets
 COPY --chown=node:node package*.json ./
 
 # Generate prisma client
-RUN npx prisma generate
-RUN npx prisma generate --schema=./src/prisma/moodle/schema.prisma
+RUN npx prisma generate && npx prisma generate --schema=./src/prisma/moodle/schema.prisma
 
 USER node
 
 # Start the bot using the production build
-# CMD npx prisma migrate deploy && pm2-runtime build/src/start.js
-CMD pm2-runtime build/src/start.js
+CMD npx prisma migrate deploy && pm2-runtime build/src/start.js
