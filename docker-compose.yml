@@ -1,6 +1,4 @@
-version: '3.9'
-
-name: tripsit-dev-apps
+name: tripbot
 
 ########################### EXTENSION FIELDS
 # Common environment values
@@ -33,7 +31,7 @@ services:
     container_name: tripbot
     depends_on:
       - tripbot_database
-    working_dir: /usr/src/app
+    working_dir: /workspaces/tripbot
     env_file:
       - .env
     environment:
@@ -44,10 +42,7 @@ services:
       - tripbot_website-net
       - moodle_data-net
     volumes:
-      # - ./src/global/assets:/usr/src/app/assets/data # For viewing downloaded assets in development
-      - ./assets:/usr/src/app/build/assets # For viewing downloaded assets in development
-      - ./src:/usr/src/app/src # Needed for hot-reloading of source code
-      - ./.env:/usr/src/app/.env # Needed for hot-reloading the .env
+      - ./src:/workspaces/tripbot/src # Needed for hot-reloading of source code
     labels:
       - com.centurylinklabs.watchtower.enable=false
       - traefik.enable=true
@@ -60,6 +55,8 @@ services:
       - traefik.http.routers.tripbot.entrypoints=websecure
       - traefik.http.routers.tripbot.tls=true
       - traefik.http.routers.tripbot.middlewares=tripbot@file,redirectApi@file
+    command: ["sh", "./src/docker/entrypoint.sh"]
+
 
   tripbot_database:
     <<: *common-keys-apps
@@ -67,9 +64,11 @@ services:
     container_name: tripbot_database
     # Uncomment this if you want the DB to persist between rebuilds
     # volumes:
-    #   - ${DOCKERDIR}/appdata/database/data:/var/lib/postgresql/data
+    #   - ./src/docker/database/data:/var/lib/postgresql/data
     networks:
       - tripbot_database-net
+    # ports:
+    #   - "5432:5432"
     environment:
       <<: *default-tz-puid-pgid
       POSTGRES_DB: tripsit
@@ -105,7 +104,7 @@ services:
       - traefik.docker.network=tripbot_pgadmin-net
       - traefik.http.services.tripbot_pgadmin-svc.loadbalancer.server.port=80
 
-      - traefik.http.routers.tripbot_pgadmin.rule=Host(`database.${DNS_DOMAIN}`, `db.${DNS_DOMAIN}`, `pgadmin.${DNS_DOMAIN}`)
+      - traefik.http.routers.tripbot_pgadmin.rule=Host(`database.${DNS_DOMAIN}`)
       - traefik.http.routers.tripbot_pgadmin.entrypoints=websecure
       - traefik.http.routers.tripbot_pgadmin.tls.certresolver=letsencrypt
       - traefik.http.routers.tripbot_pgadmin.service=tripbot_pgadmin-svc
