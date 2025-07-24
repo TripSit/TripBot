@@ -88,6 +88,7 @@
     "graphql-request": "^7.2.0",
     "he": "^1.2.0",
     "helmet": "^8.1.0",
+    "husky": "^9.1.7",
     "imdb-api": "^4.4.1",
     "luxon": "^3.7.1",
     "moment": "^2.30.1",
