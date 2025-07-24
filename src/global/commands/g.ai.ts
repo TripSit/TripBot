@@ -8,7 +8,7 @@ import { Assistant } from 'openai/resources/beta/assistants';
 import { ThreadDeleted } from 'openai/resources/beta/threads/threads';
 import { TextContentBlock } from 'openai/resources/beta/threads/messages';
 import {
-  GoogleGenerativeAI, HarmCategory, HarmBlockThreshold, GenerationConfig, SafetySetting, Part, InputContent,
+  GoogleGenerativeAI, HarmCategory, HarmBlockThreshold, GenerationConfig, SafetySetting, Part, Content,
   GenerateContentResult,
 } from '@google/generative-ai';
 import axios from 'axios';
@@ -200,7 +200,7 @@ export async function getAssistant(name: string):Promise<Assistant> {
 }
 
 export async function deleteThread(threadId: string):Promise<ThreadDeleted> {
-  const threadData = await openAi.beta.threads.del(threadId);
+  const threadData = await openAi.beta.threads.delete(threadId);
   log.debug(F, `threadData: ${JSON.stringify(threadData, null, 2)}`);
   return threadData;
 }
@@ -350,9 +350,9 @@ async function googleAiConversation(
     create: { discord_id: messageData.author.id },
     update: {},
   });
-  let userHistory = [] as InputContent[];
+  let userHistory = [] as Content[];
   if (userData.ai_history_google) {
-    userHistory = JSON.parse(userData.ai_history_google) as InputContent[];
+    userHistory = JSON.parse(userData.ai_history_google) as Content[];
   } else {
     // If the user's history is blank, start with the objective truths and the AI's prompt
     userHistory = [
@@ -362,7 +362,7 @@ async function googleAiConversation(
       },
       {
         role: 'model',
-        parts: 'Okay, understood, I will remember those facts',
+        parts: [{ text: 'Okay, understood, I will remember those facts' }],
       },
       {
         role: 'user',
@@ -370,7 +370,7 @@ async function googleAiConversation(
       },
       {
         role: 'model',
-        parts: 'Great, I will remember that prompt too. Let\'s get started!',
+        parts: [{ text: 'Great, I will remember that prompt too. Let\'s get started!' }],
       },
     ];
   }
@@ -400,7 +400,7 @@ async function googleAiConversation(
   });
   userHistory.push({
     role: 'model',
-    parts: result.response.text(),
+    parts: [{ text: result.response.text() }],
   });
   // log.debug(F, `newUserHistory: ${JSON.stringify(userHistory, null, 2)}`);
 
@@ -547,7 +547,7 @@ async function openAiWaitForRun(
     // eslint-disable-next-line no-await-in-loop
     await sleep(200);
     // eslint-disable-next-line no-await-in-loop
-    run = await openAi.beta.threads.runs.retrieve(thread.id, run.id);
+    run = await openAi.beta.threads.runs.retrieve(thread.id, { thread_id: run.id });
   }
 
   // Depending on how the run ended, do something
@@ -725,14 +725,14 @@ async function openAiConversation(
   // If the most recent run is in progress, queued, or waiting for user action, stop it
   if (recentRun && ['queued', 'in_progress', 'requires_action'].includes(recentRun.status)) {
     log.debug(F, 'Stopping the run');
-    await openAi.beta.threads.runs.cancel(thread.id, recentRun.id);
+    await openAi.beta.threads.runs.cancel(thread.id, { thread_id: recentRun.id });
 
     // Wait for the run to be cancelled
     while (['queued', 'in_progress', 'requires_action'].includes(recentRun.status)) {
       // eslint-disable-next-line no-await-in-loop
       await sleep(200);
       // eslint-disable-next-line no-await-in-loop
-      recentRun = await openAi.beta.threads.runs.retrieve(thread.id, recentRun.id);
+      recentRun = await openAi.beta.threads.runs.retrieve(thread.id, { thread_id: recentRun.id });
     }
   }
 

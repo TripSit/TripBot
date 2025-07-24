@@ -1,14 +1,43 @@
 {
-    "editor.defaultFormatter": "dbaeumer.vscode-eslint",
-    "eslint.codeActionsOnSave.rules": null,
-    "editor.codeActionsOnSave": {
-        "source.fixAll.eslint": "always"
-    },
+    "eslint.format.enable": true,
     "eslint.validate": [
-        "javascript",
-        "typescript",
+      "typescript",
+      "typescriptreact",
+      "javascript"
     ],
-    "editor.tabSize": 2,
+    "[javascript]": {
+      "editor.defaultFormatter": "dbaeumer.vscode-eslint"
+    },
+    "[typescript]": {
+      "editor.defaultFormatter": "dbaeumer.vscode-eslint"
+    },
+    "editor.codeActionsOnSave": {
+      "source.fixAll.eslint": "always"
+    },
+    "files.exclude": {
+      ".husky": true,
+      ".devcontainer": true,
+      ".github": true,
+      ".dockerignore": true,
+      ".drone.yml": true,
+      ".gitignore": true,
+      ".eslintignore": true,
+      ".eslintrc": true,
+      ".eslintcache": true,
+      ".gitattributes": true,
+      ".npmrc": true,
+      ".nvmrc": true,
+      ".prettierrc": true,
+      ".prettierignore": true,
+      ".git": true,
+      "coverage": true,
+      "docker-compose.yml": false,
+      "eslint.config.mjs": true,
+      "node_modules": true,
+      "package-lock.json": true,
+      "sonar-project.properties": true,
+      "tsconfig.json": true,
+    },
     "cSpell.words": [
         "AIIMAGELOG",
         "AILOG",

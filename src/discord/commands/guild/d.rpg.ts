@@ -21,6 +21,8 @@ import {
   AttachmentBuilder,
   GuildMember,
   TextChannel,
+  ActionRow,
+  MessageActionRowComponent,
 } from 'discord.js';
 import {
   APIEmbed,
@@ -1626,13 +1628,15 @@ export async function rpgMarketChange(
     // const itemComponent = interaction.message.components[0].components[0];
     let selectedItem: APISelectMenuOption | undefined;
     for (const component of interaction.message.components) {
-      for (const subComponent of component.components) {
-        if (subComponent.type === ComponentType.SelectMenu) {
-          selectedItem = (subComponent as StringSelectMenuComponent).options.find(
-            (o:APISelectMenuOption) => o.default === true,
-          );
-          if (selectedItem) {
-            break;
+      if (component.type === ComponentType.ActionRow && 'components' in component) {
+        for (const subComponent of component.components) {
+          if (subComponent.type === ComponentType.SelectMenu) {
+            selectedItem = (subComponent as StringSelectMenuComponent).options.find(
+              (o:APISelectMenuOption) => o.default === true,
+            );
+            if (selectedItem) {
+              break;
+            }
           }
         }
       }
@@ -1806,13 +1810,15 @@ export async function rpgMarketPreview(
   // If the user confirms the information, save the persona information
   let selectedItem: APISelectMenuOption | undefined;
   for (const component of interaction.message.components) {
-    for (const subComponent of component.components) {
-      if (subComponent.type === ComponentType.SelectMenu) {
-        selectedItem = (subComponent as StringSelectMenuComponent).options.find(
-          (o:APISelectMenuOption) => o.default === true,
-        );
-        if (selectedItem) {
-          break;
+    if (component.type === ComponentType.ActionRow && 'components' in component) {
+      for (const subComponent of component.components) {
+        if (subComponent.type === ComponentType.SelectMenu) {
+          selectedItem = (subComponent as StringSelectMenuComponent).options.find(
+            (o:APISelectMenuOption) => o.default === true,
+          );
+          if (selectedItem) {
+            break;
+          }
         }
       }
     }
@@ -1913,13 +1919,15 @@ export async function rpgMarketAccept(
   // If the user confirms the information, save the persona information
   let selectedItem: APISelectMenuOption | undefined;
   for (const component of interaction.message.components) {
-    for (const subComponent of component.components) {
-      if (subComponent.type === ComponentType.SelectMenu) {
-        selectedItem = (subComponent as StringSelectMenuComponent).options.find(
-          (o:APISelectMenuOption) => o.default === true,
-        );
-        if (selectedItem) {
-          break;
+    if (component.type === ComponentType.ActionRow && 'components' in component) {
+      for (const subComponent of component.components) {
+        if (subComponent.type === ComponentType.SelectMenu) {
+          selectedItem = (subComponent as StringSelectMenuComponent).options.find(
+            (o:APISelectMenuOption) => o.default === true,
+          );
+          if (selectedItem) {
+            break;
+          }
         }
       }
     }
@@ -2819,7 +2827,8 @@ export async function rpgHome(
 
   // Get the item the user selected
   if (interaction.isButton()) {
-    const backgroundComponent = interaction.message.components[0].components[0];
+    const row = interaction.message.components[0] as ActionRow<MessageActionRowComponent>;
+    const backgroundComponent = row.components[0];
     if ((backgroundComponent as StringSelectMenuComponent).options) {
       const selectedItem = (backgroundComponent as StringSelectMenuComponent).options.find(
         (o:APISelectMenuOption) => o.default === true,
@@ -3114,7 +3123,8 @@ export async function rpgHomeAccept(
     update: {},
   });
   // If the user confirms the information, save the persona information
-  const backgroundComponent = interaction.message.components[0].components[0];
+  const row = interaction.message.components[0] as ActionRow<MessageActionRowComponent>;
+  const backgroundComponent = row.components[0];
   const selectedItem = (backgroundComponent as StringSelectMenuComponent).options.find(
     (o:APISelectMenuOption) => o.default === true,
   );
@@ -3226,7 +3236,8 @@ export async function rpgHomeDecline(
     },
     update: {},
   });
-  const itemComponent = interaction.message.components[0].components[0];
+  const row = interaction.message.components[0] as ActionRow<MessageActionRowComponent>;
+  const itemComponent = row.components[0];
   const selectedItem = (itemComponent as StringSelectMenuComponent).options.find(
     (o:APISelectMenuOption) => o.default === true,
   );
@@ -3282,7 +3293,8 @@ export async function rpgHomeSell(
       persona_id: personaData.id,
     },
   });
-  const itemComponent = interaction.message.components[0].components[0];
+  const row = interaction.message.components[0] as ActionRow<MessageActionRowComponent>;
+  const itemComponent = row.components[0];
   const selectedItem = (itemComponent as StringSelectMenuComponent).options.find(
     (o:APISelectMenuOption) => o.default === true,
   );
