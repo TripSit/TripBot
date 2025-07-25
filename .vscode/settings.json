@@ -189,4 +189,9 @@
     "cSpell.ignoreWords": [
         "KIPP"
     ],
+    "deepscan.enable": true,
+    "sonarlint.connectedMode.project": {
+      "connectionId": "https-sonar-tripsit-me",
+      "projectKey": "TripSit_TripBot_AYmOpsWli19oCrgFtvQT"
+    },
 }
