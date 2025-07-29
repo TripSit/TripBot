@@ -9,7 +9,7 @@ FROM node:lts AS development
 ENV NODE_ENV=development
 
 # Update the package list and install the necessary dependencies
-RUN apt-get update && apt-get upgrade -y
+RUN apt-get update && apt-get upgrade -y && apt-get install -y openjdk-17-jdk tmux
 
 # Create app directory
 WORKDIR /workspaces/tripbot

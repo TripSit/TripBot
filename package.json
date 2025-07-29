@@ -13,8 +13,11 @@
   },
   "scripts": {
     "## TRIPBOT ##": "",
-    "tripbot:start": "docker compose --project-name tripbot up -d --force-recreate --build tripbot ",
-    "tripbot:logs": "docker container logs tripbot -f -n 100",
+    "tripbot:dev": "npm run tripbot:start && npm run tripbot:logs",
+    "tripbot:start": "tmux new-session -d -s tripbot \"npx tsc-watch --onSuccess 'node ./build/src/start.js'\"",
+    "tripbot:logs": "tmux attach -t tripbot",
+    "tripbot:stop": "tmux kill-session -t tripbot || true",
+    "tripbot:restart": "npm run tripbot:stop && npm run tripbot:start && npm run tripbot:logs",
     "tripbot:test": "npx jest -c ./src/jest/jest.config.ts",
     "tripbot:lint": "npx eslint --fix --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts . --cache",
     "tripbot:deployCommands": "ts-node --transpile-only ./src/discord/utils/commandDeploy.ts -- deployCommands",

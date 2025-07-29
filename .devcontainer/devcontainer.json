@@ -4,7 +4,7 @@
 	"service": "tripbot",
 	"workspaceFolder": "/workspaces/tripbot",
 	"shutdownAction": "stopCompose",
-  	"postStartCommand": "npx tsc-watch --onSuccess 'node ./build/src/start.js'",
+  	"postStartCommand": "npm run tripbot:dev",
 	"customizations": {
 	  "vscode": {
 		"extensions": [
