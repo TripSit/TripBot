@@ -176,13 +176,13 @@ networks:
     # external: true
   tripbot_website-net:
     name: tripbot_website-net
-    # external: true
+    external: true
   tripbot_api-net:
     name: tripbot_api-net
     # external: true
   tripbot_pgadmin-net:
     name: tripbot_pgadmin-net
-    # external: true
+    external: true
   moodle_data-net:
     name: moodle_data-net
     # external: true
