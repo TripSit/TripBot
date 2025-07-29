@@ -1,0 +1,9 @@
+{
+    "recommendations": [
+        "streetsidesoftware.code-spell-checker",
+        "dbaeumer.vscode-eslint",
+        "mikestead.dotenv",
+        "oderwat.indent-rainbow",
+        "ms-vscode-remote.remote-containers",
+    ],
+}
