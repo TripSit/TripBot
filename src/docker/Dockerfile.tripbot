@@ -14,6 +14,8 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y openjdk-17-jdk tm
 # Create app directory
 WORKDIR /workspaces/tripbot
 
+COPY .devcontainer/.tmux.conf /root/.tmux.conf
+
 # Copy application dependency manifests to the container image.
 # A wildcard is used to ensure copying both package.json AND package-lock.json (when available).
 # Copying this first prevents re-running npm install on every code change.
