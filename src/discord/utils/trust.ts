@@ -21,10 +21,12 @@ import {
   modButtonNote,
   modButtonTimeout,
   modButtonWarn,
+  tripSitTrustScore,
   userInfoEmbed,
 } from './modUtils';
 // import { checkGuildPermissions } from './checkPermissions';
 import { topic } from '../../global/commands/g.topic';
+import { giveMilestone } from '../../global/utils/experience';
 
 const F = f(__filename);
 
@@ -247,7 +249,7 @@ export default async function trust(
 ):Promise<void> {
   log.debug(F, `${member} joined guild: ${member.guild.name} (id: ${member.guild.id})`);
 
-  // const inviteString = await getInvite(member);
+  const inviteString = await getInvite(member);
 
   const targetData = await db.users.upsert({
     where: {
@@ -264,11 +266,11 @@ export default async function trust(
 
   const embed = await userInfoEmbed(member, member, targetData, 'NOTE', true);
 
-  /*
   const trustScoreData = await tripSitTrustScore(member.user.id);
 
   log.debug(F, `trustScoreData: ${JSON.stringify(trustScoreData)}`);
 
+  /*
   const trustScoreColors = {
     0: Colors.Purple,
     1: Colors.Blue,
@@ -278,9 +280,10 @@ export default async function trust(
     5: Colors.Red,
     6: Colors.Red,
   };
+  */
 
   embed
-    .setColor(trustScoreColors[trustScoreData.trustScore as keyof typeof trustScoreColors])
+    // .setColor(trustScoreColors[trustScoreData.trustScore as keyof typeof trustScoreColors])
     .setDescription(stripIndents`**${member} has joined**
 
       **TripSit TrustScore: ${trustScoreData.trustScore}**
@@ -288,7 +291,7 @@ export default async function trust(
     `);
 
   embed.setFooter({ text: inviteString });
-
+  /*
   if (trustScoreData.trustScore > 3) {
     await sendCooperativeMessage(
       embed,
@@ -338,8 +341,6 @@ export default async function trust(
     },
     update: {},
   });
-
-  /*
   if (trustScoreData.trustScore > guildData.trust_score_limit) {
     // What happens when the user has a high trust score
     if (guildData.channel_trust) {
@@ -355,7 +356,7 @@ ${guildData.trust_score_limit}, I removed the Unverified role and added Verified
     await member.roles.add(env.ROLE_VERIFIED);
     await member.roles.remove(env.ROLE_UNVERIFIED);
   }
-
+  /*
   if (bannedGuilds.length > 0) {
     modThreadMessage = stripIndents`**${member.displayName} has joined the guild, \
   they are banned on ${bannedGuilds.length} other guilds!** <@&${guildData.role_moderator}>`;
@@ -415,16 +416,13 @@ ${guildData.trust_score_limit}, I removed the Unverified role and added Verified
     }
   }
 
-  /*
   guildData.trust_score_count += 1;
   guildData.trust_score_total += trustScoreData.trustScore;
   await db.discord_guilds.update({
     where: { id: guildData.id },
     data: guildData,
   });
-  */
 
-  /*
   if (guildData.channel_trust) {
     const auditLog = await discordClient.channels.fetch(guildData.channel_trust) as TextChannel;
     await auditLog.send({ embeds: [embed] });
@@ -440,5 +438,4 @@ I did not remove the <@&${env.ROLE_UNVERIFIED}> role`;
 
     await auditLog.send(trustMessage);
   }
-  */
 }
