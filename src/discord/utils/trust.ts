@@ -368,13 +368,11 @@ ${guildData.trust_score_limit}, I removed the Unverified role and added Verified
   if (targetData.mod_thread_id) {
     log.debug(F, `Mod thread id exists: ${targetData.mod_thread_id}`);
     // If the mod thread already exists, then they have previous reports, so we should try to update that thread
-    if (targetData.mod_thread_id) {
-      try {
-        modThread = await member.guild.channels.fetch(targetData.mod_thread_id) as ThreadChannel | null;
-        log.debug(F, 'Mod thread exists');
-      } catch (err) {
-        log.debug(F, 'Mod thread does not exist');
-      }
+    try {
+      modThread = await member.guild.channels.fetch(targetData.mod_thread_id) as ThreadChannel | null;
+      log.debug(F, 'Mod thread exists');
+    } catch (err) {
+      log.debug(F, 'Mod thread does not exist');
     }
 
     const payload = {
