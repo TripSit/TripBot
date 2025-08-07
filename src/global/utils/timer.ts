@@ -1138,6 +1138,77 @@ async function monthlySessionStats() {
   }
 }
 
+async function checkBirthdays() {
+  try {
+    // Get today's date in MM-DD format for comparison
+    const today = new Date();
+    const todayMonth = String(today.getMonth() + 1).padStart(2, '0');
+    const todayDay = String(today.getDate()).padStart(2, '0');
+    const todayMMDD = `${todayMonth}-${todayDay}`;
+
+    // Find users whose birthday is today
+    // Assuming birthday is stored as a Date field, we extract month and day
+    const birthdayUsers = await db.users.findMany({
+      where: {
+        birthday: {
+          not: null,
+        },
+      },
+    });
+
+    // Filter users whose birthday is today
+    const todaysBirthdayUsers = birthdayUsers.filter((user: typeof birthdayUsers[0]) => {
+      if (!user.birthday) return false;
+
+      const birthdayDate = new Date(user.birthday);
+      const birthdayMonth = String(birthdayDate.getMonth() + 1).padStart(2, '0');
+      const birthdayDay = String(birthdayDate.getDate()).padStart(2, '0');
+      const birthdayMMDD = `${birthdayMonth}-${birthdayDay}`;
+
+      return birthdayMMDD === todayMMDD;
+    });
+
+    // Send birthday messages to the lounge channel
+    const birthdayPromises = todaysBirthdayUsers.map(async (user: typeof birthdayUsers[0]) => {
+      try {
+        if (!user.birthday) {
+          return;
+        }
+        // Calculate age
+        const age = today.getFullYear() - new Date(user.birthday).getFullYear();
+
+        // Create birthday message with age suffix
+        let ageSuffix = '';
+        if (age > 0) {
+          let suffix = 'th';
+          if (age === 1) suffix = 'st';
+          else if (age === 2) suffix = 'nd';
+          else if (age === 3) suffix = 'rd';
+
+          ageSuffix = `${age + suffix} `;
+        }
+
+        const birthdayMessage = `Happy Birthday, <@${user.discord_id}>! Hope you have an amazing ${ageSuffix}birthday! 🎉`;
+
+        // Send message to lounge channel
+        const loungeChannel = await discordClient.channels.fetch(env.CHANNEL_VIPLOUNGE) as TextChannel;
+        await loungeChannel.send(birthdayMessage);
+
+        log.info(F, `Birthday message sent for user: ${user.id}`);
+      } catch (messageError) {
+        log.error(F, `Failed to send birthday message for user ${user.id}: ${messageError}`);
+      }
+    });
+
+    await Promise.all(birthdayPromises);
+
+    log.info(F, `Birthday check completed. Found ${todaysBirthdayUsers.length} birthday(s) today.`);
+  } catch (error) {
+    log.error(F, `Error in checkBirthdays function: ${error}`);
+    throw error;
+  }
+}
+
 async function checkEvery(
   callback: () => Promise<void>,
   interval: number,
@@ -1180,6 +1251,7 @@ async function runTimer() {
     // { callback: pruneInactiveHelpers, interval: env.NODE_ENV === 'production' ? hours48 : seconds60 },
     { callback: undoExpiredBans, interval: env.NODE_ENV === 'production' ? hours24 / 2 : seconds10 },
     { callback: monthlySessionStats, interval: env.NODE_ENV === 'production' ? hours24 : hours24 / 3 }, // 8 hours on dev
+    { callback: checkBirthdays, interval: env.NODE_ENV === 'production' ? hours24 : hours24 / 3 }, // 8 hours on dev
   ];
 
   timers.forEach(timer => {
