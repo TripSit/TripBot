@@ -1175,9 +1175,10 @@ async function checkBirthdays() {
           return;
         }
         // Calculate age
-        const age = today.getFullYear() - new Date(user.birthday).getFullYear();
+        // const age = today.getFullYear() - new Date(user.birthday).getFullYear();
 
         // Create birthday message with age suffix
+        /*
         let ageSuffix = '';
         if (age > 0) {
           let suffix = 'th';
@@ -1193,7 +1194,7 @@ async function checkBirthdays() {
         // Send message to lounge channel
         const loungeChannel = await discordClient.channels.fetch(env.CHANNEL_VIPLOUNGE) as TextChannel;
         await loungeChannel.send(birthdayMessage);
-
+        */
         log.info(F, `Birthday message sent for user: ${user.id}`);
       } catch (messageError) {
         log.error(F, `Failed to send birthday message for user ${user.id}: ${messageError}`);
