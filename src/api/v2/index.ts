@@ -4,6 +4,7 @@ import drugs from './drugs/drugs.routes';
 import users from './users/users.routes';
 import appeals from './appeals/appeals.routes';
 import discord from './discord/discord.routes';
+import keycloak from './keycloak/keycloak.routes';
 
 const router = express.Router();
 
@@ -18,6 +19,7 @@ router.get('/', (req, res) => {
       '/users',
       '/appeals',
       '/discord',
+      '/keycloak',
     ],
   });
 });
@@ -26,5 +28,6 @@ router.use('/drugs', drugs);
 router.use('/users', users);
 router.use('/appeals', appeals);
 router.use('/discord', discord);
+router.use('/keycloak', keycloak);
 
 export default router;
