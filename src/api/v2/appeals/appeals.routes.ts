@@ -1,6 +1,6 @@
 import express from 'express';
 import RateLimit from 'express-rate-limit';
-import checkAuth from '../../utils/checkAuth';
+// import checkAuth from '../../utils/checkAuth';
 import { messageModThread, AppealData } from '../../../discord/commands/guild/d.moderate';
 
 import appeals from './appeals.queries';
@@ -40,7 +40,7 @@ router.post('/:userId/create', async (req, res, next) => {
     const appealData = req.body.newAppealData as AppealData;
     const result = await appeals.createAppeal({
       guild_id: appealData.guild,
-      user_id: req.params.userId,
+      discord_id: req.params.userId,
       reason: appealData.reason,
       solution: appealData.solution,
       future: appealData.future,
