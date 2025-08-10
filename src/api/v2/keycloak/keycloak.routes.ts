@@ -34,7 +34,7 @@ router.post('/token', async (req, res) => {
 router.post('/userinfo', async (req, res) => {
   try {
     const { accessToken } = req.body;
-
+    log.info(F, `Received access token: ${accessToken}`);
     if (!accessToken || typeof accessToken !== 'string') {
       return res.status(400).json({ error: 'Missing access token' });
     }
