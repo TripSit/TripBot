@@ -31,4 +31,20 @@ router.post('/token', async (req, res) => {
   }
 });
 
+router.post('/userinfo', async (req, res) => {
+  try {
+    const { accessToken } = req.body;
+
+    if (!accessToken || typeof accessToken !== 'string') {
+      return res.status(400).json({ error: 'Missing access token' });
+    }
+
+    const userInfo = await keycloak.getUserInfo(accessToken);
+    return res.status(200).json(userInfo);
+  } catch (error) {
+    log.error(F, `Error in /userinfo route: ${error}`);
+    return res.status(500).json({ error: 'Server error' });
+  }
+});
+
 export default router;
