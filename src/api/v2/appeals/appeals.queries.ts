@@ -17,14 +17,29 @@ export default {
     });
   },
 
-  async getLatestAppeal(UserId: string) {
-    if (!UserId || UserId === 'undefined') {
-      throw new Error('Invalid user ID provided');
+  async getLatestAppeal(discordId: string) {
+    if (!discordId || discordId === 'undefined') {
+      throw new Error('Invalid discord ID provided');
     }
 
+    // First find the user by discord_id to get their UUID
+    const user = await db.users.findFirst({
+      where: {
+        discord_id: discordId,
+      },
+      select: {
+        id: true, // Get the UUID
+      },
+    });
+
+    if (!user) {
+      return null; // User doesn't exist in database
+    }
+
+    // Now query appeals using the user's UUID
     return db.appeals.findFirst({
       where: {
-        user_id: UserId,
+        user_id: user.id, // Use the UUID
       },
       orderBy: {
         created_at: 'desc',
@@ -34,7 +49,7 @@ export default {
 
   async createAppeal(data: {
     guild_id: string;
-    user_id: string;
+    discord_id: string; // Changed from user_id to discord_id
     reason: string;
     solution: string;
     future: string;
@@ -42,10 +57,25 @@ export default {
     appeal_message_id: string;
   }): Promise<boolean> {
     try {
+      // First find the user by discord_id to get their UUID
+      const user = await db.users.findFirst({
+        where: {
+          discord_id: data.discord_id,
+        },
+        select: {
+          id: true, // Get the UUID
+        },
+      });
+
+      if (!user) {
+        log.error(F, `User not found in database for discord_id: ${data.discord_id}`);
+        return false;
+      }
+
       // Get the latest appeal to determine the next appeal number
       const latestAppeal = await db.appeals.findFirst({
         where: {
-          user_id: data.user_id,
+          user_id: user.id, // Use the UUID
           guild_id: data.guild_id,
         },
         orderBy: {
@@ -62,7 +92,7 @@ export default {
       await db.appeals.create({
         data: {
           guild_id: data.guild_id,
-          user_id: data.user_id,
+          user_id: user.id, // Use the UUID
           appeal_number: newAppealNumber,
           reason: data.reason,
           solution: data.solution,
@@ -73,7 +103,7 @@ export default {
         },
       });
 
-      log.info(F, `Appeal #${newAppealNumber} created successfully for user ${data.user_id}`);
+      log.info(F, `Appeal #${newAppealNumber} created successfully for discord_id ${data.discord_id} (user_id: ${user.id})`);
       return true;
     } catch (error) {
       log.error(F, `Error creating appeal: ${error}`);
