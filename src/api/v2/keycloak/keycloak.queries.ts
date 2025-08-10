@@ -4,7 +4,7 @@ export default {
   async exchangeCodeForToken(code: string) {
     const KEYCLOAK_URL = `${process.env.KEYCLOAK_URL}/realms/TripSit/protocol/openid-connect/token`;
     const CLIENT_ID = process.env.KEYCLOAK_CLIENT_ID;
-    const REDIRECT_URI = `${process.env.DNS_DOMAIN}/appeal`;
+    const REDIRECT_URI = `https://${process.env.DNS_DOMAIN}/appeal`;
 
     if (!CLIENT_ID) {
       throw new Error('Missing client ID');
