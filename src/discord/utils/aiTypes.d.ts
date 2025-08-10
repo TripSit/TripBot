@@ -54,6 +54,7 @@ export type PersonaSpec = {
   id: PersonaId;
   name: string;
   description: string;
+  emoji: string;
   config: PersonalityConfig;
 };
 

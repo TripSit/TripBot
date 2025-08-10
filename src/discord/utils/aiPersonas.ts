@@ -27,6 +27,7 @@ export default class AiPersona {
     id: 'tripbot',
     name: 'TripBot',
     description: 'Helpful, friendly, and informative',
+    emoji: '🤖',
     config: {
       communicationStyle: {
         formality: 'neutral',
@@ -53,6 +54,7 @@ export default class AiPersona {
     id: 'chill_buddy',
     name: 'Chill Buddy',
     description: 'Laid back and casual, like talking to a friend',
+    emoji: '😎',
     config: {
       communicationStyle: {
         formality: 'casual',
@@ -79,6 +81,7 @@ export default class AiPersona {
     id: 'wise_sage',
     name: 'Wise Sage',
     description: 'Thoughtful and philosophical responses',
+    emoji: '🧙‍♂️',
     config: {
       communicationStyle: {
         formality: 'formal',
@@ -105,6 +108,7 @@ export default class AiPersona {
     id: 'hype_beast',
     name: 'Hype Beast',
     description: 'Energetic and enthusiastic about everything',
+    emoji: '🔥',
     config: {
       communicationStyle: {
         formality: 'very_casual',
@@ -131,6 +135,7 @@ export default class AiPersona {
     id: 'sassy_bot',
     name: 'Sassy Bot',
     description: 'Witty with a bit of attitude',
+    emoji: '💅',
     config: {
       communicationStyle: {
         formality: 'casual',

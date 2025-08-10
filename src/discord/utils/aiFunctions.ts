@@ -516,4 +516,13 @@ export default class AiFunction {
 
     return elements.join(' ');
   }
+
+  static getModelInfo(modelId: string): { display: string; emoji: string; label: string } {
+    const modelData = AiText.modelInfo.find(model => model.value === modelId);
+    return {
+      display: modelData ? `${modelData.emoji} ${modelData.label}` : '❓ Unknown Model',
+      emoji: modelData?.emoji || '❓',
+      label: modelData?.label || 'Unknown Model',
+    };
+  }
 }

@@ -8,6 +8,7 @@ import {
   StringSelectMenuBuilder,
   ContainerBuilder,
   time,
+  ButtonStyle,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
 
@@ -145,71 +146,118 @@ export default class AiPage {
   static async userSettings(
     interaction: AiInteraction,
   ): Promise<InteractionEditReplyOptions> {
+    // Fetch user data
     const userData = await db.users.upsert({
       where: { discord_id: interaction.user.id },
       create: { discord_id: interaction.user.id },
       update: {},
-      include: {
-        ai_info: true,
-      },
+      include: { ai_info: true },
     });
 
-    const primaryModelId = userData.ai_info?.primary_model || 'google/gemini-2.5-flash';
+    // Extract and format model information
+    const aiInfo = userData.ai_info;
+    const primaryModel = AiFunction.getModelInfo(aiInfo?.primary_model || 'google/gemini-2.5-flash');
+    const secondaryModel = AiFunction.getModelInfo(aiInfo?.secondary_model || 'google/gemini-2.0-flash-exp:free');
+    const persona = AiFunction.getPersonaById((aiInfo?.persona_name as PersonaId) || 'tripbot');
+    const responseSize = aiInfo?.response_size || 500;
+    const contextSize = aiInfo?.context_size || 10000;
 
-    const primaryModelData = AiText.modelInfo.find(model => model.value === primaryModelId);
+    // Create styled container
+    const settingsContainer = new ContainerBuilder()
+      .setAccentColor(0x7289DA) // Discord blurple
+      .addTextDisplayComponents(td => td.setContent('🤖 AI Settings'));
 
-    const primaryModelLabel = primaryModelData ? `${primaryModelData.emoji} ${primaryModelData.label}` : 'Unknown Model';
+    // Persona Section
+    settingsContainer.addTextDisplayComponents(
+      new TextDisplayBuilder()
+        .setContent('## 🎭 Personality\nChoose how Tripbot responds when you @ mention it'),
+    );
 
-    const secondaryModelId = userData.ai_info?.secondary_model || 'google/gemini-2.0-flash-exp:free';
+    settingsContainer.addActionRowComponents(
+      new ActionRowBuilder<StringSelectMenuBuilder>()
+        .addComponents(
+          AiMenu.aiPersonasSelect()
+            .setPlaceholder(`${persona?.emoji} ${persona?.name || 'TripBot'}`),
+        ),
+    );
 
-    const secondaryModelData = AiText.modelInfo.find(model => model.value === secondaryModelId);
+    // Primary Model Section
+    settingsContainer.addTextDisplayComponents(
+      new TextDisplayBuilder()
+        .setContent('## ⚡ Primary Model\nYour main AI model - uses credits for premium responses'),
+    );
 
-    const secondaryModelLabel = secondaryModelData ? `${secondaryModelData.emoji} ${secondaryModelData.label}` : 'Unknown Model';
+    settingsContainer.addActionRowComponents(
+      new ActionRowBuilder<StringSelectMenuBuilder>()
+        .addComponents(
+          AiMenu.primaryModels()
+            .setPlaceholder(primaryModel.display),
+        ),
+    );
 
-    const persona = AiFunction.getPersonaById(userData.ai_info?.persona_name as PersonaId || 'tripbot');
+    // Secondary Model Section
+    settingsContainer.addTextDisplayComponents(
+      new TextDisplayBuilder()
+        .setContent('## 🆓 Fallback Model\nFree backup model when you run out of credits'),
+    );
+
+    settingsContainer.addActionRowComponents(
+      new ActionRowBuilder<StringSelectMenuBuilder>()
+        .addComponents(
+          AiMenu.secondaryModels()
+            .setPlaceholder(secondaryModel.display),
+        ),
+    );
+
+    // Response & Context Size Section
+    settingsContainer.addTextDisplayComponents(
+      new TextDisplayBuilder()
+        .setContent('## ⚙️ Response Settings\nAdjust token limits for your AI interactions'),
+    );
+
+    const tokenRow = new ActionRowBuilder<ButtonBuilder>()
+      .addComponents(
+        AiButton.responseSize
+          .setLabel(`📝 Response: ${responseSize} tokens`)
+          .setStyle(ButtonStyle.Secondary),
+        AiButton.contextSize
+          .setLabel(`💭 Context: ${contextSize.toLocaleString()} tokens`)
+          .setStyle(ButtonStyle.Secondary),
+      );
+
+    settingsContainer.addActionRowComponents(tokenRow);
+
+    settingsContainer.addTextDisplayComponents(
+      new TextDisplayBuilder()
+        .setContent('## 📊 Usage Stats\nYour current AI usage information'),
+    );
+
+    const statsRow = new ActionRowBuilder<ButtonBuilder>()
+      .addComponents(
+        new ButtonBuilder()
+          .setCustomId('credits_info')
+          .setLabel('Credits')
+          .setStyle(ButtonStyle.Secondary)
+          .setDisabled(true),
+      );
+
+    settingsContainer.addActionRowComponents(statsRow);
+
+    // Help Section
+    settingsContainer.addTextDisplayComponents(
+      new TextDisplayBuilder()
+        .setContent(stripIndents`
+          ## 💡 Tips
+          • **Higher response tokens** = More detailed answers, uses credits faster
+          • **Higher context tokens** = Better conversation memory, costs more
+          • **Premium models** = Better quality but use credits
+          • **Free models** = Always available as backup
+        `),
+    );
 
     return {
       components: [
-        new TextDisplayBuilder().setContent(stripIndents`
-          When you @ Tripbot it will respond with this persona:
-        `),
-        new ActionRowBuilder<StringSelectMenuBuilder>()
-          .addComponents(
-            AiMenu.aiPersonasSelect()
-              .setPlaceholder(persona?.name || 'TripBot'),
-          ),
-        new TextDisplayBuilder().setContent(stripIndents`
-        When you send messages to the API you will be using this model:
-      `),
-        new ActionRowBuilder<StringSelectMenuBuilder>()
-          .addComponents(
-            AiMenu.primaryModels()
-              .setPlaceholder(primaryModelLabel),
-          ),
-        new TextDisplayBuilder().setContent(stripIndents`
-        When you run out of credits, you will start using this **free** model:
-      `),
-        new ActionRowBuilder<StringSelectMenuBuilder>()
-          .addComponents(
-            AiMenu.secondaryModels()
-              .setPlaceholder(secondaryModelLabel),
-          ),
-        new TextDisplayBuilder().setContent(stripIndents`
-        Your responses are capped at this many tokens. 
-        Increase this for more detailed responses, but use credits faster.
-      `),
-        new ActionRowBuilder<ButtonBuilder>()
-          .addComponents(
-            AiButton.responseSize.setLabel(`${userData.ai_info?.response_size || 500} tokens`),
-          ),
-        new TextDisplayBuilder().setContent(stripIndents`
-        Your context size is this many tokens: 
-        Increase this to include more of your previous messages in the context.
-      `),
-        new ActionRowBuilder<ButtonBuilder>()
-          .addComponents(
-            AiButton.contextSize.setLabel(`${userData.ai_info?.context_size || 10000} tokens`),
-          ),
+        settingsContainer,
         await AiFunction.pageMenu(interaction),
       ],
       flags: MessageFlags.IsComponentsV2,
