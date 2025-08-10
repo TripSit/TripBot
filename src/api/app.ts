@@ -44,7 +44,7 @@ app.use(morgan('tiny'));
 app.use(helmet());
 app.use(express.json()); // configure the app to parse requests with JSON payloads
 app.use(express.urlencoded({ extended: false })); // configure the app to parse requests with urlencoded payloads
-app.use(bodyParser.text()); // configure the app to be able to read text
+// app.use(bodyParser.text()); // configure the app to be able to read text
 
 // CORS middleware
 app.use((req, res, next) => {
