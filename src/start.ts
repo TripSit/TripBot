@@ -9,6 +9,7 @@ import {
   ButtonInteraction,
   StringSelectMenuInteraction,
   ModalSubmitInteraction,
+  ChannelSelectMenuInteraction,
 } from 'discord.js';
 import * as path from 'path';
 import Canvas from '@napi-rs/canvas';
@@ -85,6 +86,7 @@ declare global {
     | MessageContextMenuCommandInteraction
     | ButtonInteraction
     | StringSelectMenuInteraction
+    | ChannelSelectMenuInteraction
     | ModalSubmitInteraction,
   ) => Promise<string>;
 }

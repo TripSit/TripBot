@@ -2319,42 +2319,13 @@ export async function rpgFlair(interaction: ChatInputCommandInteraction) {
   // eslint-disable-next-line sonarjs/no-duplicate-string
   let adjustmentReason = 'No reason given';
 
-  // Query the AI for approval
-  const aiPersona = await db.ai_personas.upsert({
-    where: {
-      name: 'FlairMod',
-    },
-    create: {
-      name: 'FlairMod',
-      public: false,
-      ai_model: 'GPT_3_5_TURBO',
-      prompt: `You are acting as a moderation API. You will receive an input that a user wants to set as their user flair text.
-
-      Drug references and jokes and adult humour are allowed as long as they are not extremely vulgur or offensive. You can swap any very rude words with more PG rated family friendly ones. If there are no alternative words, reject the flair.
-      
-      After that, adjust it to correct spelling, grammar and such. Made up words are allowed unless they are obvious misspellings, but no random keyboard gibberish (EG. ALRJRBSIEIR)
-      
-      IMPORTANT! You must correct capitalisation so that the flair fits headline capitalisation rules (every word should be capitalised except short words like "i love going to the supermarket" becomes "I Love Going to the Supermarket")
-      
-      You must reply with this strict format:
-      Status: Approved, Adjusted, Rejected
-      Reason: Spelling, grammar, etc
-      Adjusted: The new edited flair, or the original flair if nothing was changed or adjusted`,
-      presence_penalty: 0,
-      frequency_penalty: 0,
-      max_tokens: 500,
-      created_by: userData.id,
-    },
-    update: {},
-  });
-
   const messageList = [{
     role: 'user',
     content: newFlair,
   }] as OpenAI.Chat.ChatCompletionMessageParam[];
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { response, promptTokens, completionTokens } = await aiFlairMod(aiPersona, messageList);
+  const { response, promptTokens, completionTokens } = await aiFlairMod(messageList);
   log.debug(F, `aiResponse: ${JSON.stringify(response, null, 2)}`);
 
   // Regex to see the approval status

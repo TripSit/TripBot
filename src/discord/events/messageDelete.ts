@@ -7,8 +7,6 @@ import {
   GuildMember,
   PartialUser,
   PartialGuildMember,
-  PartialUser,
-  PartialGuildMember,
 } from 'discord.js';
 import {
 // ChannelType,
