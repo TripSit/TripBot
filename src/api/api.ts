@@ -3,7 +3,7 @@ import app from './app';
 
 const F = f(__filename);
 
-const port = 3024;
+const port = env.API_PORT || 1337;
 
 export default async function api(): Promise<Server> {
   log.info(F, `Attempting to start server on port ${port}...`); // Debug log
