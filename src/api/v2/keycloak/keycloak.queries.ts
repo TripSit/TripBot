@@ -1,11 +1,12 @@
 const F = f(__filename);
 
-const KEYCLOAK_URL = `${process.env.KEYCLOAK_URL}/realms/TripSit/protocol/openid-connect/token`;
 const CLIENT_ID = process.env.KEYCLOAK_CLIENT_ID;
 const REDIRECT_URI = `https://${process.env.DNS_DOMAIN}/appeal`;
 
 export default {
   async exchangeCodeForToken(code: string) {
+    const KEYCLOAK_URL = `${process.env.KEYCLOAK_URL}/realms/TripSit/protocol/openid-connect/token`;
+
     if (!CLIENT_ID) {
       throw new Error('Missing client ID');
     }
@@ -39,11 +40,16 @@ export default {
     }
   },
   async getUserInfo(accessToken: string) {
+    const KEYCLOAK_URL = `${process.env.KEYCLOAK_URL}/realms/TripSit/protocol/openid-connect/userinfo`;
+
     try {
       const res = await fetch(KEYCLOAK_URL, {
+        method: 'POST',
         headers: {
           Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/x-www-form-urlencoded',
         },
+        body: '', // Empty body is fine when using Authorization header
       });
 
       if (!res.ok) {
