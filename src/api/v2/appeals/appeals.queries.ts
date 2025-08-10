@@ -7,6 +7,9 @@ export default {
 
   async getAppeals(UserId:string) {
     log.debug(F, `UserId: ${UserId}`);
+    if (!UserId || UserId === 'undefined') {
+      throw new Error('Invalid user ID provided');
+    }
     return db.appeals.findMany({
       where: {
         user_id: UserId,
@@ -14,7 +17,11 @@ export default {
     });
   },
 
-  async getLatestAppeal(UserId:string) {
+  async getLatestAppeal(UserId: string) {
+    if (!UserId || UserId === 'undefined') {
+      throw new Error('Invalid user ID provided');
+    }
+
     return db.appeals.findFirst({
       where: {
         user_id: UserId,
