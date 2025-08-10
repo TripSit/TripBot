@@ -31,15 +31,16 @@ router.post('/token', async (req, res) => {
   }
 });
 
-router.get('/userinfo', async (req, res) => {
+router.post('/userinfo', async (req, res) => {
   try {
-    const { accessToken } = req.query;
-
-    if (!accessToken || typeof accessToken !== 'string') {
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    const { access_token } = req.body;
+    log.info(F, `Received access token: ${access_token}`);
+    if (!access_token || typeof access_token !== 'string') {
       return res.status(400).json({ error: 'Missing access token' });
     }
 
-    const userInfo = await keycloak.getUserInfo(accessToken);
+    const userInfo = await keycloak.getUserInfo(access_token);
     return res.status(200).json(userInfo);
   } catch (error) {
     log.error(F, `Error in /userinfo route: ${error}`);
