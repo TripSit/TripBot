@@ -48,4 +48,71 @@ router.post('/userinfo', async (req, res) => {
   }
 });
 
+router.post('/discord-id', async (req, res) => {
+  try {
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    const { access_token } = req.body;
+
+    if (!access_token || typeof access_token !== 'string') {
+      return res.status(400).json({ error: 'Missing access token' });
+    }
+
+    // First get user info to get the user ID
+    const userInfo = await keycloak.getUserInfo(access_token);
+    const userId = userInfo.sub; // Keycloak user ID
+
+    // Now fetch the user's identity provider links
+    const adminToken = await keycloak.getAdminToken();
+
+    const identityProvidersRes = await fetch(
+      `${process.env.KEYCLOAK_URL}/admin/realms/TripSit/users/${userId}/federated-identity`,
+      {
+        headers: {
+          Authorization: `Bearer ${adminToken}`,
+          'Content-Type': 'application/json',
+        },
+      },
+    );
+
+    if (!identityProvidersRes.ok) {
+      throw new Error('Failed to fetch identity providers');
+    }
+
+    const identityProviders = await identityProvidersRes.json();
+
+    // Find the Discord identity provider
+    const discordProvider = identityProviders.find(
+      (provider: any) => provider.identityProvider === 'discord',
+    );
+
+    if (discordProvider) {
+      return res.json({
+        discord_id: discordProvider.userId,
+        userInfo,
+      });
+    }
+    return res.status(404).json({ error: 'No Discord identity provider found' });
+  } catch (error) {
+    log.error(F, `Error in /discord-id route: ${error}`);
+    return res.status(500).json({ error: 'Server error' });
+  }
+});
+
+router.post('/discord-id', async (req, res) => {
+  try {
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    const { access_token } = req.body;
+
+    if (!access_token || typeof access_token !== 'string') {
+      return res.status(400).json({ error: 'Missing access token' });
+    }
+
+    const discordId = await keycloak.getDiscordId(access_token);
+    return res.json({ discord_id: discordId });
+  } catch (error) {
+    log.error(F, `Error in /discord-id route: ${error}`);
+    return res.status(500).json({ error: 'Server error' });
+  }
+});
+
 export default router;
