@@ -67,7 +67,7 @@ export default {
     }
   },
   async getAdminToken() {
-    if (!process.env.KEYCLOAK_CLIENT_ID || !process.env.KEYCLOAK_CLIENT_SECRET) {
+    if (!process.env.KEYCLOAK_ADMIN_CLIENT_ID || !process.env.KEYCLOAK_ADMIN_CLIENT_SECRET) {
       throw new Error('Missing admin client credentials');
     }
 
@@ -78,8 +78,8 @@ export default {
       },
       body: new URLSearchParams({
         grant_type: 'client_credentials',
-        client_id: process.env.KEYCLOAK_CLIENT_ID,
-        client_secret: process.env.KEYCLOAK_CLIENT_SECRET,
+        client_id: process.env.KEYCLOAK_ADMIN_CLIENT_ID,
+        client_secret: process.env.KEYCLOAK_ADMIN_CLIENT_SECRET,
       }),
     });
 
