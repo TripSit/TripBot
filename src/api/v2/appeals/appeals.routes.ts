@@ -39,7 +39,7 @@ router.post('/:userId/create', async (req, res) => {
     if (req.params.userId === 'error') throw new Error('error');
     const appealData = req.body.newAppealData as AppealData;
     const result = await appeals.createAppeal({
-      guild_id: appealData.guild,
+      guild_id: process.env.DISCORD_GUILD_ID,
       discord_id: req.params.userId,
       reason: appealData.reason,
       solution: appealData.solution,
