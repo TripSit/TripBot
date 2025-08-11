@@ -34,7 +34,7 @@ router.get('/:userId/latest', async (req, res, next) => {
   }
 });
 
-router.post('/:userId/create', async (req, res, next) => {
+router.post('/:userId/create', async (req, res) => {
   try {
     if (req.params.userId === 'error') throw new Error('error');
     const appealData = req.body.newAppealData as AppealData;
@@ -78,9 +78,10 @@ router.post('/:userId/create', async (req, res, next) => {
       );
       return res.json(result);
     }
-    return next();
-  } catch (error) {
-    return next(error);
+    return res.status(500).json({ error: 'Failed to create appeal' });
+  } catch (error: unknown) {
+    log.error(F, `Error in create route: ${error}`);
+    return res.status(500).json({ error: error instanceof Error ? error.message : 'Internal server error' });
   }
 });
 
@@ -93,7 +94,7 @@ router.get('/:userId', async (req, res, next) => {
     if (result) {
       return res.json(result);
     }
-    return next();
+    return res.status(404).json({ error: 'No appeals found' });
   } catch (error) {
     return next(error);
   }
