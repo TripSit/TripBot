@@ -68,8 +68,8 @@ services:
     image: postgres:15.4
     container_name: tripbot_database
     # Uncomment this if you want the DB to persist between rebuilds
-    # volumes:
-    #   - ${DOCKERDIR}/appdata/database/data:/var/lib/postgresql/data
+    volumes:
+      - ${DOCKERDIR}/appdata/database/data:/var/lib/postgresql/data
     networks:
       - tripbot_database-net
     environment:
