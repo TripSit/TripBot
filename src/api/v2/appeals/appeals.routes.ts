@@ -21,35 +21,34 @@ const limiter = RateLimit({
 // apply rate limiter to all requests
 router.use(limiter);
 
-router.get('/:userId/latest', async (req: AuthenticatedRequest, res, next) => {
-  const { userId } = req.params;
-  log.debug(F, `userId: ${userId}`);
+router.get('/latest', async (req: AuthenticatedRequest, res, next) => {
   try {
     if (!req.user?.discord_id) {
       return res.status(400).json({ error: 'Discord ID not found in token' });
     }
-    if (userId === 'error') throw new Error('error');
-    const result = await appeals.getLatestAppeal(userId);
+
+    log.debug(F, `Getting latest appeal for discord_id: ${req.user.discord_id}`);
+    const result = await appeals.getLatestAppeal(req.user.discord_id);
+
     if (result) {
       return res.json(result);
     }
-    return next();
+    return res.status(404).json({ error: 'No appeals found' });
   } catch (error) {
     return next(error);
   }
 });
 
-router.post('/:userId/create', async (req: AuthenticatedRequest, res) => {
+router.post('/create', async (req: AuthenticatedRequest, res) => {
   try {
     if (!req.user?.discord_id) {
       return res.status(400).json({ error: 'Discord ID not found in token' });
     }
 
-    if (req.params.userId === 'error') throw new Error('error');
     const appealData = req.body.newAppealData as AppealData;
     const result = await appeals.createAppeal({
       guild_id: process.env.DISCORD_GUILD_ID,
-      discord_id: req.params.userId,
+      discord_id: req.user.discord_id,
       reason: appealData.reason,
       solution: appealData.solution,
       future: appealData.future,
@@ -58,6 +57,7 @@ router.post('/:userId/create', async (req: AuthenticatedRequest, res) => {
     });
 
     if (result) {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const botMember = await discordClient.guilds.cache.first()?.members.fetch(discordClient.user!.id);
       if (!botMember) throw new Error('Failed to fetch bot user.');
 
@@ -94,23 +94,8 @@ router.post('/:userId/create', async (req: AuthenticatedRequest, res) => {
   }
 });
 
-router.get('/:userId', async (req: AuthenticatedRequest, res) => {
-  const { userId } = req.params;
-  log.debug(F, `userId: ${userId}`);
-  try {
-    if (userId === 'error') throw new Error('error');
-    const result = await appeals.getAppeals(userId);
-    if (result) {
-      return res.json(result);
-    }
-    return res.status(404).json({ error: 'No appeals found' });
-  } catch (error: unknown) {
-    return res.status(500).json({ error: error instanceof Error ? error.message : 'Internal server error' });
-  }
-});
-
 // Get all user's appeals
-router.get('/', async (req: AuthenticatedRequest, res) => {
+router.get('/', async (req: AuthenticatedRequest, res, next) => {
   try {
     if (!req.user?.discord_id) {
       return res.status(400).json({ error: 'Discord ID not found in token' });
@@ -118,8 +103,8 @@ router.get('/', async (req: AuthenticatedRequest, res) => {
 
     const result = await appeals.getAppeals(req.user.discord_id);
     return res.json(result);
-  } catch (error: unknown) {
-    return res.status(500).json({ error: error instanceof Error ? error.message : 'Internal server error' });
+  } catch (error) {
+    return next(error);
   }
 });
 

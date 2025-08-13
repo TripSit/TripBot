@@ -24,41 +24,35 @@ router.get('/', async (req, res) => {
   res.json({ message: 'Oh, hello there!' });
 });
 
-router.get('/:discordId', async (req: AuthenticatedRequest, res, next) => {
-  const { discordId } = req.params;
-  log.debug(F, `discordId: ${discordId}`);
+router.get('/banned', async (req: AuthenticatedRequest, res) => {
   try {
     if (!req.user?.discord_id) {
       return res.status(400).json({ error: 'Discord ID not found in token' });
     }
 
-    if (discordId === 'error') throw new Error('error');
-    const result = await users.getUser(discordId);
-    if (result) {
-      log.debug(F, `Returning result: ${JSON.stringify(result)}`);
-      return res.json(result);
-    }
-    return next();
-  } catch (error) {
-    return next(error);
-  }
-});
-
-router.get('/:discordId/banned', async (req: AuthenticatedRequest, res) => {
-  const { discordId } = req.params;
-  log.debug(F, `Checking ban status for discordId: ${discordId}`);
-  try {
-    if (!req.user?.discord_id) {
-      return res.status(400).json({ error: 'Discord ID not found in token' });
-    }
-
-    if (discordId === 'error') throw new Error('error');
-
-    const banStatus = await users.checkBanStatus(discordId);
+    log.debug(F, `Checking ban status for discord_id: ${req.user.discord_id}`);
+    const banStatus = await users.checkBanStatus(req.user.discord_id);
     return res.json(banStatus);
   } catch (error) {
     log.error(F, `Error checking ban status: ${error}`);
     return res.status(500).json({ error: 'Failed to check ban status' });
+  }
+});
+
+// Get authenticated user's profile
+router.get('/profile', async (req: AuthenticatedRequest, res) => {
+  try {
+    if (!req.user?.discord_id) {
+      return res.status(400).json({ error: 'Discord ID not found in token' });
+    }
+
+    const result = await users.getUser(req.user.discord_id);
+    if (result) {
+      return res.json(result);
+    }
+    return res.status(404).json({ error: 'User not found' });
+  } catch (error) {
+    return res.status(500).json({ error: 'Failed to get user profile' });
   }
 });
 

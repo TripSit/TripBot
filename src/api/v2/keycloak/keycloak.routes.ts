@@ -50,6 +50,7 @@ router.post('/userinfo', async (req, res) => {
   }
 });
 
+/*
 router.post('/discord-id', async (req, res) => {
   try {
     // eslint-disable-next-line @typescript-eslint/naming-convention
@@ -99,6 +100,7 @@ router.post('/discord-id', async (req, res) => {
     return res.status(500).json({ error: 'Server error' });
   }
 });
+*/
 
 /*
 router.post('/discord-id', async (req, res) => {
