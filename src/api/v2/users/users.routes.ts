@@ -1,6 +1,6 @@
 import express from 'express';
 import RateLimit from 'express-rate-limit';
-import checkAuth from '../../utils/checkAuth';
+// import checkAuth from '../../utils/checkAuth';
 
 import users from './users.queries';
 

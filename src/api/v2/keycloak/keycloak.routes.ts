@@ -115,4 +115,21 @@ router.post('/discord-id', async (req, res) => {
   }
 });
 
+router.post('/refresh', async (req, res) => {
+  try {
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    const { refresh_token } = req.body;
+
+    if (!refresh_token || typeof refresh_token !== 'string') {
+      return res.status(400).json({ error: 'Missing refresh token' });
+    }
+
+    const newTokens = await keycloak.refreshToken(refresh_token);
+    return res.status(200).json(newTokens);
+  } catch (error) {
+    log.error(F, `Error in /refresh route: ${error}`);
+    return res.status(500).json({ error: 'Server error' });
+  }
+});
+
 export default router;
