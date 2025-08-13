@@ -1,4 +1,6 @@
 /* eslint-disable sonarjs/no-duplicate-string */
+import { getAdminToken } from '../../utils/keycloakAuth';
+
 const F = f(__filename);
 
 const CLIENT_ID = process.env.KEYCLOAK_CLIENT_ID;
