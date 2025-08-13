@@ -68,16 +68,12 @@ type TargetObject = Snowflake | User | GuildMember;
 
 export interface AppealData {
   guild: string;
-  userId: string;
-  username: string;
-  discriminator: string;
-  avatar: string;
+  discordId: string;
   reason: string;
   solution: string;
   future: string;
   extra: string;
 }
-
 
 const disableButtonTime = env.NODE_ENV !== 'production' ? 1000 * 60 * 1 : 1000 * 60 * 5; // 1 minute in dev, 5 minute in prod
 
@@ -333,7 +329,7 @@ function isLink(command: ModAction): command is 'LINK' { return command === 'LIN
 
 function isInfo(command: ModAction): command is 'INFO' { return command === 'INFO'; }
 
-function isBanAppeal(command: ModAction): command is 'BAN_APPEAL' { return command === 'BAN_APPEAL' }
+function isBanAppeal(command: ModAction): command is 'BAN_APPEAL' { return command === 'BAN_APPEAL'; }
 
 function isDiscussable(command: ModAction): command is 'DISCORD_BOT_BAN' | 'TICKET_BAN' | 'WARNING' | 'KICK' {
   return command === 'DISCORD_BOT_BAN' || command === 'TICKET_BAN' || command === 'WARNING' || command === 'KICK';
@@ -877,7 +873,7 @@ export async function modResponse(
             } else if (interaction.guild) {
               userBan = await interaction.guild.bans.fetch(userId);
             } else {
-              throw new Error("Interaction is missing a valid guild.");
+              throw new Error('Interaction is missing a valid guild.');
             }
           } catch (err: unknown) {
             // log.debug(F, `Error fetching ban: ${err}`);
@@ -955,7 +951,7 @@ export async function modResponse(
   }
 
   if (!actor && appealData) {
-    actor = await discordClient.users.fetch(appealData.userId)
+    actor = await discordClient.users.fetch(appealData.userId);
   }
 
   const targetData = await db.users.upsert({
@@ -1091,7 +1087,7 @@ export async function messageModThread(
   description: string,
   extraMessage: string,
   duration: string,
-  appealData?: AppealData | null
+  appealData?: AppealData | null,
 ): Promise<ThreadChannel | null> {
   log.debug(F, `[messageModThread] actor: ${actor} | target: ${target} | command: ${command} | internalNote: ${internalNote} | description: ${description} | extraMessage: ${extraMessage} | duration: ${duration}`);
   const startTime = Date.now();
@@ -1206,7 +1202,7 @@ export async function messageModThread(
     }
     const roleModerator = await guild.roles.fetch(guildData.role_moderator) as Role;
 
-    var modThreadMessage = '';
+    let modThreadMessage = '';
     if (!appealData) {
       modThreadMessage = stripIndents`
       ${summary}
@@ -1218,7 +1214,7 @@ export async function messageModThread(
       modThreadMessage = stripIndents`
       ${summary}
       ${description}
-      ${command === 'NOTE' && !newModThread ? '' : roleModerator}`.trim()
+      ${command === 'NOTE' && !newModThread ? '' : roleModerator}`.trim();
     }
     await modThread.send({
       content: modThreadMessage,

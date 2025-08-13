@@ -47,14 +47,18 @@ router.post('/create', async (req: AuthenticatedRequest, res) => {
     }
 
     const appealData = req.body.newAppealData as AppealData;
+
+    const {
+      reason, solution, future, extra,
+    } = req.body;
     const result = await appeals.createAppeal({
       guild_id: process.env.DISCORD_GUILD_ID,
       discord_id: req.user.discord_id,
-      reason: appealData.reason,
-      solution: appealData.solution,
-      future: appealData.future,
-      extra: appealData.extra,
-      appeal_message_id: '54321',
+      reason,
+      solution,
+      future,
+      extra,
+      appeal_message_id: 'web-appeal',
     });
 
     if (result) {
@@ -63,17 +67,17 @@ router.post('/create', async (req: AuthenticatedRequest, res) => {
       if (!botMember) throw new Error('Failed to fetch bot user.');
 
       // Fetch the target user
-      const targetUser = await discordClient.users.fetch(appealData.userId);
+      const targetUser = await discordClient.users.fetch(req.user.discord_id);
       if (!targetUser) throw new Error('Failed to fetch target user.');
 
       const description = `
-      **Do you know why you were banned?**: ${appealData.reason}
+      **Do you know why you were banned?**: ${reason}
 
-        **Have you taken any steps to rectify the situation or make amends for the behavior that lead to the ban?**: ${appealData.solution}
+        **Have you taken any steps to rectify the situation or make amends for the behavior that lead to the ban?**: ${solution}
 
-        **What steps will you take to ensure that you do not repeat the behavior that lead to the ban?**: ${appealData.future}
+        **What steps will you take to ensure that you do not repeat the behavior that lead to the ban?**: ${future}
 
-        **Is there anything else you would like to add?**: ${appealData.extra}
+        **Is there anything else you would like to add?**: ${extra || 'N/A'}
         `;
       await messageModThread(
         null,
