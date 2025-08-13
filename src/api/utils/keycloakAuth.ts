@@ -41,7 +41,6 @@ export default async function keycloakAuth(
   next: NextFunction,
 ): Promise<void> {
   try {
-    // Check for Bearer token
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       res.status(401).json({ error: 'Missing or invalid authorization header' });
@@ -49,6 +48,7 @@ export default async function keycloakAuth(
     }
 
     const token = authHeader.split(' ')[1];
+    log.info(F, `🔍 Auth middleware - processing token for: ${req.path}`);
 
     // Validate token with Keycloak
     const userInfoRes = await fetch(`${process.env.KEYCLOAK_URL}/realms/TripSit/protocol/openid-connect/userinfo`, {
@@ -58,44 +58,56 @@ export default async function keycloakAuth(
     });
 
     if (!userInfoRes.ok) {
+      log.error(F, `❌ Auth middleware - Keycloak userinfo failed: ${userInfoRes.status}`);
       res.status(401).json({ error: 'Invalid or expired token' });
       return;
     }
 
     const userInfo = await userInfoRes.json();
+    log.info(F, `✅ Auth middleware - Got user info: ${JSON.stringify(userInfo, null, 2)}`);
 
     // Get Discord ID from identity providers
     try {
-      const adminToken = await getAdminToken(); // We'll need to import this
+      log.info(F, '🔍 Auth middleware - Getting admin token...');
+      const adminToken = await getAdminToken();
+      log.info(F, '✅ Auth middleware - Got admin token');
 
-      const identityRes = await fetch(
-        `${process.env.KEYCLOAK_URL}/admin/realms/TripSit/users/${userInfo.sub}/federated-identity`,
-        {
-          headers: {
-            Authorization: `Bearer ${adminToken}`,
-          },
+      const identityUrl = `${process.env.KEYCLOAK_URL}/admin/realms/TripSit/users/${userInfo.sub}/federated-identity`;
+      log.info(F, `🔍 Auth middleware - Fetching identity providers from: ${identityUrl}`);
+
+      const identityRes = await fetch(identityUrl, {
+        headers: {
+          Authorization: `Bearer ${adminToken}`,
         },
-      );
+      });
 
       if (identityRes.ok) {
         const identityProviders = await identityRes.json();
+        log.info(F, `✅ Auth middleware - Identity providers: ${JSON.stringify(identityProviders, null, 2)}`);
+
         const discordProvider = identityProviders.find(
           (provider: any) => provider.identityProvider === 'discord',
         );
 
         if (discordProvider) {
           userInfo.discord_id = discordProvider.userId;
+          log.info(F, `✅ Auth middleware - Found Discord ID: ${discordProvider.userId}`);
+        } else {
+          log.warn(F, '❌ Auth middleware - No Discord provider found');
         }
+      } else {
+        const errorText = await identityRes.text();
+        log.error(F, `❌ Auth middleware - Identity providers fetch failed: ${identityRes.status} ${errorText}`);
       }
     } catch (error) {
-      log.warn(F, `Failed to get Discord ID for user ${userInfo.sub}: ${error}`);
+      log.error(F, `❌ Auth middleware - Error getting Discord ID: ${error}`);
     }
 
-    // Attach user info to request
+    log.info(F, `🏁 Auth middleware - Final user object: ${JSON.stringify(userInfo, null, 2)}`);
     req.user = userInfo;
     next();
   } catch (error) {
-    log.error(F, `Auth middleware error: ${error}`);
+    log.error(F, `💥 Auth middleware - Unexpected error: ${error}`);
     res.status(500).json({ error: 'Authentication error' });
   }
 }
