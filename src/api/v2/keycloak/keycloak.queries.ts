@@ -1,3 +1,4 @@
+/* eslint-disable sonarjs/no-duplicate-string */
 const F = f(__filename);
 
 const CLIENT_ID = process.env.KEYCLOAK_CLIENT_ID;
@@ -66,33 +67,6 @@ export default {
       throw error;
     }
   },
-  async getAdminToken() {
-    if (!process.env.KEYCLOAK_ADMIN_CLIENT_ID || !process.env.KEYCLOAK_ADMIN_CLIENT_SECRET) {
-      throw new Error('Missing admin client credentials');
-    }
-
-    const tokenRes = await fetch(`${process.env.KEYCLOAK_URL}/realms/TripSit/protocol/openid-connect/token`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: new URLSearchParams({
-        grant_type: 'client_credentials',
-        client_id: process.env.KEYCLOAK_ADMIN_CLIENT_ID,
-        client_secret: process.env.KEYCLOAK_ADMIN_CLIENT_SECRET,
-      }),
-    });
-
-    if (!tokenRes.ok) {
-      const errText = await tokenRes.text();
-      log.error(F, `Failed to get admin token: ${errText}`);
-      throw new Error('Failed to get admin token');
-    }
-
-    const tokenData = await tokenRes.json();
-    log.debug(F, 'Successfully got admin token');
-    return tokenData.access_token;
-  },
 
   async getDiscordId(userAccessToken: string) {
     try {
@@ -101,7 +75,7 @@ export default {
       const userId = userInfo.sub; // Keycloak user ID
 
       // Get admin token
-      const adminToken = await this.getAdminToken();
+      const adminToken = await getAdminToken();
 
       // Fetch the user's identity provider links
       const identityProvidersRes = await fetch(

@@ -1,6 +1,7 @@
 import express from 'express';
 import RateLimit from 'express-rate-limit';
 // import checkAuth from '../../utils/checkAuth';
+import keycloakAuth, { AuthenticatedRequest } from '../../utils/keycloakAuth';
 
 import users from './users.queries';
 
@@ -18,15 +19,19 @@ const limiter = RateLimit({
 router.use(limiter);
 
 router.get('/', async (req, res) => {
-  log.debug(F, 'Getting all users');
-  const result = await users.getAllUsers();
-  res.json(result);
+  // log.debug(F, 'Getting all users');
+  // const result = await users.getAllUsers();
+  res.json({ message: 'Oh, hello there!' });
 });
 
-router.get('/:discordId', async (req, res, next) => {
+router.get('/:discordId', async (req: AuthenticatedRequest, res, next) => {
   const { discordId } = req.params;
   log.debug(F, `discordId: ${discordId}`);
   try {
+    if (!req.user?.discord_id) {
+      return res.status(400).json({ error: 'Discord ID not found in token' });
+    }
+
     if (discordId === 'error') throw new Error('error');
     const result = await users.getUser(discordId);
     if (result) {
@@ -39,10 +44,14 @@ router.get('/:discordId', async (req, res, next) => {
   }
 });
 
-router.get('/:discordId/banned', async (req, res) => {
+router.get('/:discordId/banned', async (req: AuthenticatedRequest, res) => {
   const { discordId } = req.params;
   log.debug(F, `Checking ban status for discordId: ${discordId}`);
   try {
+    if (!req.user?.discord_id) {
+      return res.status(400).json({ error: 'Discord ID not found in token' });
+    }
+
     if (discordId === 'error') throw new Error('error');
 
     const banStatus = await users.checkBanStatus(discordId);

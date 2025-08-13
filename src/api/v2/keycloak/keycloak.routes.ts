@@ -1,6 +1,8 @@
+/* eslint-disable sonarjs/no-duplicate-string */
 import express from 'express';
 import RateLimit from 'express-rate-limit';
 import keycloak from './keycloak.queries';
+import { getAdminToken } from '../../utils/keycloakAuth';
 
 const F = f(__filename);
 
@@ -62,7 +64,7 @@ router.post('/discord-id', async (req, res) => {
     const userId = userInfo.sub; // Keycloak user ID
 
     // Now fetch the user's identity provider links
-    const adminToken = await keycloak.getAdminToken();
+    const adminToken = await getAdminToken();
 
     const identityProvidersRes = await fetch(
       `${process.env.KEYCLOAK_URL}/admin/realms/TripSit/users/${userId}/federated-identity`,
@@ -98,6 +100,7 @@ router.post('/discord-id', async (req, res) => {
   }
 });
 
+/*
 router.post('/discord-id', async (req, res) => {
   try {
     // eslint-disable-next-line @typescript-eslint/naming-convention
@@ -114,6 +117,7 @@ router.post('/discord-id', async (req, res) => {
     return res.status(500).json({ error: 'Server error' });
   }
 });
+*/
 
 router.post('/refresh', async (req, res) => {
   try {

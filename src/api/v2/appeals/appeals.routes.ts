@@ -1,6 +1,8 @@
+/* eslint-disable sonarjs/no-duplicate-string */
 import express from 'express';
 import RateLimit from 'express-rate-limit';
 // import checkAuth from '../../utils/checkAuth';
+import keycloakAuth, { AuthenticatedRequest } from '../../utils/keycloakAuth';
 import { messageModThread, AppealData } from '../../../discord/commands/guild/d.moderate';
 
 import appeals from './appeals.queries';
@@ -19,10 +21,13 @@ const limiter = RateLimit({
 // apply rate limiter to all requests
 router.use(limiter);
 
-router.get('/:userId/latest', async (req, res, next) => {
+router.get('/:userId/latest', async (req: AuthenticatedRequest, res, next) => {
   const { userId } = req.params;
   log.debug(F, `userId: ${userId}`);
   try {
+    if (!req.user?.discord_id) {
+      return res.status(400).json({ error: 'Discord ID not found in token' });
+    }
     if (userId === 'error') throw new Error('error');
     const result = await appeals.getLatestAppeal(userId);
     if (result) {
@@ -34,8 +39,12 @@ router.get('/:userId/latest', async (req, res, next) => {
   }
 });
 
-router.post('/:userId/create', async (req, res) => {
+router.post('/:userId/create', async (req: AuthenticatedRequest, res) => {
   try {
+    if (!req.user?.discord_id) {
+      return res.status(400).json({ error: 'Discord ID not found in token' });
+    }
+
     if (req.params.userId === 'error') throw new Error('error');
     const appealData = req.body.newAppealData as AppealData;
     const result = await appeals.createAppeal({
@@ -85,7 +94,7 @@ router.post('/:userId/create', async (req, res) => {
   }
 });
 
-router.get('/:userId', async (req, res, next) => {
+router.get('/:userId', async (req: AuthenticatedRequest, res) => {
   const { userId } = req.params;
   log.debug(F, `userId: ${userId}`);
   try {
@@ -95,14 +104,23 @@ router.get('/:userId', async (req, res, next) => {
       return res.json(result);
     }
     return res.status(404).json({ error: 'No appeals found' });
-  } catch (error) {
-    return next(error);
+  } catch (error: unknown) {
+    return res.status(500).json({ error: error instanceof Error ? error.message : 'Internal server error' });
   }
 });
 
-router.get('/', async (req, res) => {
-  const result = await appeals.getAllAppeals();
-  res.json(result);
+// Get all user's appeals
+router.get('/', async (req: AuthenticatedRequest, res) => {
+  try {
+    if (!req.user?.discord_id) {
+      return res.status(400).json({ error: 'Discord ID not found in token' });
+    }
+
+    const result = await appeals.getAppeals(req.user.discord_id);
+    return res.json(result);
+  } catch (error: unknown) {
+    return res.status(500).json({ error: error instanceof Error ? error.message : 'Internal server error' });
+  }
 });
 
 export default router;
