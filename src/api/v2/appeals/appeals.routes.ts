@@ -2,7 +2,7 @@
 import express from 'express';
 import RateLimit from 'express-rate-limit';
 // import checkAuth from '../../utils/checkAuth';
-import keycloakAuth, { AuthenticatedRequest } from '../../utils/keycloakAuth';
+import keycloakAuth, { AuthenticatedRequest } from '../../middlewares/keycloakAuth';
 import { messageModThread, AppealData } from '../../../discord/commands/guild/d.moderate';
 
 import appeals from './appeals.queries';
@@ -20,6 +20,7 @@ const limiter = RateLimit({
 
 // apply rate limiter to all requests
 router.use(limiter);
+router.use(keycloakAuth);
 
 router.get('/latest', async (req: AuthenticatedRequest, res, next) => {
   try {

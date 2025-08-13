@@ -1,7 +1,7 @@
 import express from 'express';
 import RateLimit from 'express-rate-limit';
 // import checkAuth from '../../utils/checkAuth';
-import keycloakAuth, { AuthenticatedRequest } from '../../utils/keycloakAuth';
+import keycloakAuth, { AuthenticatedRequest } from '../../middlewares/keycloakAuth';
 
 import users from './users.queries';
 
@@ -17,6 +17,7 @@ const limiter = RateLimit({
 
 // apply rate limiter to all requests
 router.use(limiter);
+router.use(keycloakAuth);
 
 router.get('/', async (req, res) => {
   // log.debug(F, 'Getting all users');

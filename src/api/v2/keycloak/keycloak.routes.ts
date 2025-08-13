@@ -2,7 +2,7 @@
 import express from 'express';
 import RateLimit from 'express-rate-limit';
 import keycloak from './keycloak.queries';
-import { getAdminToken } from '../../utils/keycloakAuth';
+import { getAdminToken } from '../../middlewares/keycloakAuth';
 
 const F = f(__filename);
 
