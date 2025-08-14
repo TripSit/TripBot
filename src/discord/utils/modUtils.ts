@@ -1603,6 +1603,9 @@ export async function acknowledgeReportButton(
 }
 
 async function wasActionedRecently(actionType: string): Promise<boolean> {
+  if (actionType === 'APPROVE_APPEAL' || actionType === 'DENY_APPEAL') {
+    return false;
+  }
   const oneMinuteAgo = new Date(Date.now() - 300 * 1000);
   const recentAction = await db.user_actions.findFirst({
     where: {
