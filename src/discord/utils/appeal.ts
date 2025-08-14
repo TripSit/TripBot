@@ -66,9 +66,9 @@ export async function appealAccept(
     return { content: 'Modal interaction required.' };
   }
 
-  const [, userId] = interaction.customId.split('~');
+  const [, , userId] = interaction.customId.split('~');
   const userMessage = modalInteraction.fields.getTextInputValue('appealDescription');
-
+  log.info(F, `custom ID: ${interaction.customId}`);
   const result = await updateAppeal(interaction, userId, userMessage, 'ACCEPTED' as appeal_status);
 
   if (!result.success) {
@@ -97,7 +97,7 @@ export async function appealReject(
     return { content: 'Modal interaction required.' };
   }
 
-  const [, userId] = interaction.customId.split('~');
+  const [, , userId] = interaction.customId.split('~');
   const userMessage = modalInteraction.fields.getTextInputValue('appealDescription');
 
   const result = await updateAppeal(interaction, userId, userMessage, 'DENIED' as appeal_status);
