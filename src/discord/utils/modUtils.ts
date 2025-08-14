@@ -62,7 +62,7 @@ link accounts to transfer warnings and experience
 const F = f(__filename);
 type UndoAction = 'UN-FULL_BAN' | 'UN-TICKET_BAN' | 'UN-DISCORD_BOT_BAN' | 'UN-BAN_EVASION' | 'UN-UNDERBAN' | 'UN-TIMEOUT' | 'UN-HELPER_BAN' | 'UN-CONTRIBUTOR_BAN';
 
-type ModAction = user_action_type | UndoAction | 'INFO' | 'LINK' | 'ACKN_REPORT' | 'BAN_APPEAL';
+type ModAction = user_action_type | UndoAction | 'INFO' | 'LINK' | 'ACKN_REPORT' | 'BAN_APPEAL' | 'APPEAL_ACCEPT' | 'APPEAL_REJECT';
 // type BanAction = 'FULL_BAN' | 'TICKET_BAN' | 'DISCORD_BOT_BAN' | 'BAN_EVASION' | 'UNDERBAN';
 type TargetObject = Snowflake | User | GuildMember;
 

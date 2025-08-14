@@ -1,5 +1,6 @@
 /* eslint-disable sonarjs/no-duplicate-string */
 import { ButtonInteraction, InteractionEditReplyOptions, ModalSubmitInteraction } from 'discord.js';
+import { appeal_status } from '@prisma/client';
 
 const F = f(__filename);
 
@@ -7,7 +8,7 @@ async function updateAppeal(
   interaction: ButtonInteraction,
   discordId: string,
   userMessage: string,
-  appealStatus: string,
+  appealStatus: appeal_status,
 ): Promise<{ success: boolean; message: string }> {
   if (!interaction.guild) {
     return { success: false, message: 'This command can only be used in a guild.' };
@@ -43,7 +44,7 @@ async function updateAppeal(
       id: latestAppeal.id,
     },
     data: {
-      status: appealStatus,
+      status: appealStatus as appeal_status,
       decided_at: new Date(),
       response_message: userMessage,
     },
