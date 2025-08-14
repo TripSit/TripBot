@@ -962,9 +962,11 @@ export async function modResponse(
   if (interaction && (interaction.isUserContextMenuCommand() && (interaction.targetMember || interaction.targetUser))) {
     // log.debug(F, `User context target member: ${interaction.targetMember}`);
     target = interaction.targetMember ? interaction.targetMember as GuildMember : interaction.targetUser as User;
+    actor = interaction.member as GuildMember;
   } else if (interaction && interaction.isMessageContextMenuCommand() && interaction.targetMessage) {
     // log.debug(F, `Message context target message member: ${interaction.targetMessage.member}`);
     target = interaction.targetMessage.member ? interaction.targetMessage.member as GuildMember : interaction.targetMessage.author as User;
+    actor = interaction.member as GuildMember;
   }
 
   if (!interaction && appealData) {
