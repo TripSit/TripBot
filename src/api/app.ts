@@ -24,10 +24,10 @@ const app = express();
 //   next();
 // });
 
-// set up rate limiter: maximum of five requests per minute
+// set up rate limiter: maximum of 120 requests per minute
 const limiter = RateLimit({
   windowMs: 1 * 60 * 1000, // 1 minute
-  max: 60,
+  max: 120,
   handler: (req, res /* next */) => {
     res.status(429).send('Too many requests, please try again later.');
   },

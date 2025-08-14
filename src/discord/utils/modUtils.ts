@@ -62,9 +62,18 @@ link accounts to transfer warnings and experience
 const F = f(__filename);
 type UndoAction = 'UN-FULL_BAN' | 'UN-TICKET_BAN' | 'UN-DISCORD_BOT_BAN' | 'UN-BAN_EVASION' | 'UN-UNDERBAN' | 'UN-TIMEOUT' | 'UN-HELPER_BAN' | 'UN-CONTRIBUTOR_BAN';
 
-type ModAction = user_action_type | UndoAction | 'INFO' | 'LINK' | 'ACKN_REPORT';
+type ModAction = user_action_type | UndoAction | 'INFO' | 'LINK' | 'ACKN_REPORT' | 'BAN_APPEAL';
 // type BanAction = 'FULL_BAN' | 'TICKET_BAN' | 'DISCORD_BOT_BAN' | 'BAN_EVASION' | 'UNDERBAN';
 type TargetObject = Snowflake | User | GuildMember;
+
+export interface AppealData {
+  guildId: string;
+  discordId: string;
+  reason: string;
+  solution: string;
+  future: string;
+  extra: string;
+}
 
 const disableButtonTime = env.NODE_ENV !== 'production' ? 1000 * 60 * 1 : 1000 * 60 * 5; // 1 minute in dev, 5 minute in prod
 
@@ -236,6 +245,13 @@ const embedVariables = {
     presentVerb: 'getting info on',
     emoji: 'ℹ️',
   },
+  BAN_APPEAL: {
+    embedColor: Colors.Green,
+    embedTitle: 'Ban Appeal!',
+    pastVerb: 'has requested a ban appeal',
+    presentVerb: 'is requesting a ban appeal',
+    emoji: '🔨',
+  },
 };
 
 const warnButtons = new ActionRowBuilder<ButtonBuilder>().addComponents(
@@ -313,6 +329,8 @@ function isNote(command: ModAction): command is 'NOTE' { return command === 'NOT
 // function isLink(command: ModAction): command is 'LINK' { return command === 'LINK'; }
 
 function isInfo(command: ModAction): command is 'INFO' { return command === 'INFO'; }
+
+function isBanAppeal(command: ModAction): command is 'BAN_APPEAL' { return command === 'BAN_APPEAL'; }
 
 function isReportAcknowledgement(command: ModAction): command is 'ACKN_REPORT' { return command === 'ACKN_REPORT'; }
 
@@ -794,13 +812,15 @@ export async function modResponse(
   interaction: ChatInputCommandInteraction
   | MessageContextMenuCommandInteraction
   | UserContextMenuCommandInteraction
-  | ButtonInteraction,
+  | ButtonInteraction
+  | null,
   command: ModAction,
   showModButtons: boolean,
+  appealData? : AppealData | null,
 ):Promise<BaseMessageOptions> {
   const startTime = Date.now();
   const actionRow = new ActionRowBuilder<ButtonBuilder>();
-  if (!interaction.guild || !interaction.member) {
+  if (interaction && (!interaction.guild || !interaction.member)) {
     return {
       embeds: [embedTemplate()
         .setColor(Colors.Red)
@@ -815,10 +835,11 @@ export async function modResponse(
   const { embedColor } = embedVariables[command as keyof typeof embedVariables];
 
   // Get the actor
-  const actor = interaction.member as GuildMember;
+  let actor = null;
 
   // Determine the target
-  if (interaction.isChatInputCommand() || interaction.isButton()) {
+  if (interaction && (interaction.isChatInputCommand() || interaction.isButton())) {
+    actor = interaction.member as GuildMember;
     if (interaction.isButton()) {
       [,, targetString] = interaction.customId.split('~');
     } else {
@@ -867,7 +888,14 @@ export async function modResponse(
 
           let userBan = {} as GuildBan;
           try {
-            userBan = await interaction.guild.bans.fetch(userId);
+            if (appealData) {
+              const guild = await discordClient.guilds.fetch(process.env.DISCORD_GUILD_ID);
+              userBan = await guild.bans.fetch(appealData.discordId);
+            } else if (interaction.guild) {
+              userBan = await interaction.guild.bans.fetch(userId);
+            } else {
+              throw new Error('Interaction is missing a valid guild.');
+            }
           } catch (err: unknown) {
             // log.debug(F, `Error fetching ban: ${err}`);
           }
@@ -931,12 +959,24 @@ export async function modResponse(
     [target] = targets;
   }
 
-  if (interaction.isUserContextMenuCommand() && (interaction.targetMember || interaction.targetUser)) {
+  if (interaction && (interaction.isUserContextMenuCommand() && (interaction.targetMember || interaction.targetUser))) {
     // log.debug(F, `User context target member: ${interaction.targetMember}`);
     target = interaction.targetMember ? interaction.targetMember as GuildMember : interaction.targetUser as User;
-  } else if (interaction.isMessageContextMenuCommand() && interaction.targetMessage) {
+  } else if (interaction && interaction.isMessageContextMenuCommand() && interaction.targetMessage) {
     // log.debug(F, `Message context target message member: ${interaction.targetMessage.member}`);
     target = interaction.targetMessage.member ? interaction.targetMessage.member as GuildMember : interaction.targetMessage.author as User;
+  }
+
+  if (!interaction && appealData) {
+    target = await discordClient.users.fetch(appealData.discordId);
+  }
+
+  if (!actor && appealData) {
+    actor = await discordClient.users.fetch(appealData.discordId);
+  }
+
+  if (!actor) {
+    throw new Error('Action must be either a ban appeal or a genuine moderation action with a valid actor!');
   }
 
   const targetData = await db.users.upsert({
@@ -951,7 +991,8 @@ export async function modResponse(
   });
 
   // Get the guild
-  const { guild } = interaction;
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  const guild = interaction?.guild!;
   const guildData = await db.discord_guilds.upsert({
     where: {
       id: guild.id,
@@ -989,6 +1030,12 @@ export async function modResponse(
         modButtonUnBan(target.id),
         modButtonInfo(target.id),
       );
+    } else if (isBanAppeal(command)) {
+      actionRow.addComponents(
+        modButtonNote(target.id),
+        modButtonUnBan(target.id), // ADD Approve/Reject ban appeal buttons, maybe replace unban
+        modButtonInfo(target.id),
+      );
     } else {
       actionRow.addComponents(
         modButtonInfo(target.id),
@@ -1003,7 +1050,7 @@ export async function modResponse(
   log.debug(F, '[modResponse1] generating user info');
   const modlogEmbed = await userInfoEmbed(actor, target, targetData, 'REPORT', showModButtons);
 
-  if (interaction.isMessageContextMenuCommand() && interaction.targetMessage) {
+  if (interaction && interaction.isMessageContextMenuCommand() && interaction.targetMessage) {
     const messageContent = interaction.targetMessage.content;
     const truncatedContent = messageContent.length > 900
       ? `${messageContent.slice(0, 900)}...`
@@ -1066,11 +1113,12 @@ export async function linkThread(
   return userData.mod_thread_id;
 }
 
-async function messageModThread(
+export async function messageModThread(
   interaction: ChatInputCommandInteraction
   | MessageContextMenuCommandInteraction
   | UserContextMenuCommandInteraction
-  | ButtonInteraction,
+  | ButtonInteraction
+  | null,
   actor: GuildMember,
   target: string | GuildMember | User,
   command: ModAction,
@@ -1078,6 +1126,7 @@ async function messageModThread(
   description: string,
   extraMessage: string,
   duration: string,
+  appealData?: AppealData | null,
 ): Promise<ThreadChannel | null> {
   const actorName = actor.displayName || actor.user.username;
   const startTime = Date.now();
@@ -1105,7 +1154,7 @@ async function messageModThread(
   log.debug(F, 'Values are set, continuing');
 
   const { pastVerb, emoji } = embedVariables[command as keyof typeof embedVariables];
-  let summary = `${actor} ${pastVerb} ${target}`;
+  let summary = `${appealData ? targetName : actor.displayName} ${pastVerb} ${appealData ? '' : targetName}`;
   let anonSummary = `${targetName} was ${pastVerb}`;
 
   if (isTimeout(command)) {
@@ -1193,14 +1242,24 @@ async function messageModThread(
     }
     const roleModerator = await guild.roles.fetch(guildData.role_moderator) as Role;
 
-    await modThread.send({
-      content: stripIndents`
+    let modThreadMessage = '';
+    if (!appealData) {
+      modThreadMessage = stripIndents`
       ${summary}
       **Reason:** ${internalNote ?? noReason}
       **Note sent to user:** ${(description !== '' && description !== null) ? description : noMessageSent}
       ${command === 'NOTE' && !newModThread ? '' : roleModerator}
-      `,
-      ...await modResponse(interaction, command, true),
+      `;
+    } else {
+      modThreadMessage = stripIndents`
+      ${summary}
+      ${description}
+      ${command === 'NOTE' && !newModThread ? '' : roleModerator}`.trim();
+    }
+
+    await modThread.send({
+      content: modThreadMessage,
+      ...await modResponse(interaction, command, true, appealData),
     });
 
     await modThread.setName(`${emoji}│${targetName}`);

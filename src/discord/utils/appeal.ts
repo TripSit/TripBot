@@ -150,7 +150,7 @@ export async function appealAccept(
     where: {
       user_id: userData.id,
       guild_id: interaction.guild.id,
-      status: appeal_status.OPEN,
+      status: appeal_status.RECEIVED,
     },
   });
   log.debug(F, `appealRecord: ${JSON.stringify(appealRecord, null, 2)}`);
@@ -201,7 +201,7 @@ export async function appealReject(
     where: {
       user_id: userData.id,
       guild_id: interaction.guild.id,
-      status: appeal_status.OPEN,
+      status: appeal_status.RECEIVED,
     },
   });
   log.debug(F, `openAppealRecord: ${JSON.stringify(openAppealRecord, null, 2)}`);

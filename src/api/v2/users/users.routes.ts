@@ -1,6 +1,7 @@
 import express from 'express';
 import RateLimit from 'express-rate-limit';
-import checkAuth from '../../utils/checkAuth';
+// import checkAuth from '../../utils/checkAuth';
+import keycloakAuth, { AuthenticatedRequest } from '../../middlewares/keycloakAuth';
 
 import users from './users.queries';
 
@@ -8,40 +9,51 @@ const F = f(__filename);
 
 const router = express.Router();
 
-// set up rate limiter: maximum of five requests per minute
+// set up rate limiter: maximum of 20 requests per minute
 const limiter = RateLimit({
   windowMs: 1 * 60 * 1000, // 1 minute
-  max: 5,
+  max: process.env.NODE_ENV === 'production' ? 20 : 1000,
 });
 
 // apply rate limiter to all requests
 router.use(limiter);
+router.use(keycloakAuth);
 
 router.get('/', async (req, res) => {
-  if (await checkAuth(req, res)) {
-    log.debug(F, 'Getting all users');
-    const result = await users.getAllUsers();
-    res.json(result);
+  // log.debug(F, 'Getting all users');
+  // const result = await users.getAllUsers();
+  res.json({ message: 'Oh, hello there!' });
+});
+
+router.get('/banned', async (req: AuthenticatedRequest, res) => {
+  try {
+    if (!req.user?.discord_id) {
+      return res.status(400).json({ error: 'Discord ID not found in token' });
+    }
+
+    log.debug(F, `Checking ban status for discord_id: ${req.user.discord_id}`);
+    const banStatus = await users.checkBanStatus(req.user.discord_id);
+    return res.json(banStatus);
+  } catch (error) {
+    log.error(F, `Error checking ban status: ${error}`);
+    return res.status(500).json({ error: 'Failed to check ban status' });
   }
 });
 
-router.get('/:discordId', async (req, res, next) => {
-  if (await checkAuth(req, res)) {
-    const { discordId } = req.params;
-    log.debug(F, `discordId: ${discordId}`);
-    try {
-      if (discordId === 'error') throw new Error('error');
-      const result = await users.getUser(discordId);
-      if (result) {
-        log.debug(F, `Returning result: ${JSON.stringify(result)}`);
-        return res.json(result);
-      }
-      return next();
-    } catch (error) {
-      return next(error);
+// Get authenticated user's profile
+router.get('/profile', async (req: AuthenticatedRequest, res) => {
+  try {
+    if (!req.user?.discord_id) {
+      return res.status(400).json({ error: 'Discord ID not found in token' });
     }
-  } else {
-    return next();
+
+    const result = await users.getUser(req.user.discord_id);
+    if (result) {
+      return res.json(result);
+    }
+    return res.status(404).json({ error: 'User not found' });
+  } catch (error) {
+    return res.status(500).json({ error: 'Failed to get user profile' });
   }
 });
 
