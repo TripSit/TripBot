@@ -2317,8 +2317,8 @@ export async function modModal(
   else if (command === 'UN-DISCORD_BOT_BAN') verb = 'removing bot ban on';
   else if (command === 'UN-BAN_EVASION') verb = 'removing ban evasion on';
   else if (command === 'UN-UNDERBAN') verb = 'removing underban on';
-  else if (command === 'APPEAL_ACCEPT') verb = 'accepting appeal for';
-  else if (command === 'APPEAL_REJECT') verb = 'rejecting appeal for';
+  else if (command === 'APPEAL_ACCEPT') verb = 'approving the appeal for';
+  else if (command === 'APPEAL_REJECT') verb = 'rejecting the appeal for';
 
   // log.debug(F, `Verb: ${verb}`);
 
@@ -2558,7 +2558,7 @@ export async function modModal(
           // log.error(F, `Error: ${err}`);
         }
       }
-      if (!isNote(command) && !isReport(command)) {
+      if (!isNote(command) && !isReport(command) && command !== 'APPEAL_ACCEPT' && command !== 'APPEAL_REJECT') {
         await i.editReply(await moderate(interaction, i) as InteractionEditReplyOptions);
       }
     })

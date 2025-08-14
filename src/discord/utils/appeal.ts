@@ -57,6 +57,7 @@ export async function appealAccept(
   interaction: ButtonInteraction,
   modalInteraction?: ModalSubmitInteraction,
 ): Promise<InteractionEditReplyOptions> {
+  log.info(F, 'appealAccept called with modModal');
   if (!interaction.guild) {
     return { content: 'This command can only be used in a guild.' };
   }
@@ -79,7 +80,7 @@ export async function appealAccept(
   } catch (err) {
     log.error(F, `Error unbanning user: ${err}`);
   }
-
+  log.info(F, 'appealAccept completed');
   return { content: `User <@${userId}> has been unbanned and their appeal approved.` };
 }
 
@@ -87,6 +88,7 @@ export async function appealReject(
   interaction: ButtonInteraction,
   modalInteraction?: ModalSubmitInteraction,
 ): Promise<InteractionEditReplyOptions> {
+  log.info(F, 'appealReject called with modModal');
   if (!interaction.guild) {
     return { content: 'This command can only be used in a guild.' };
   }
@@ -103,6 +105,6 @@ export async function appealReject(
   if (!result.success) {
     return { content: result.message };
   }
-
+  log.info(F, 'appealReject completed');
   return { content: `User <@${userId}> appeal has been rejected.` };
 }
