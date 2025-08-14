@@ -50,6 +50,7 @@ import { embedTemplate } from './embedTemplate';
 // import { last } from '../../../global/commands/g.last';
 import { checkGuildPermissions } from './checkPermissions';
 import { last } from '../../global/commands/g.last';
+import { appealAccept, appealReject } from './appeal';
 
 /* TODO:
 add dates to bans
@@ -414,13 +415,13 @@ export const modButtonUnTimeout = (discordId: string) => new ButtonBuilder()
   .setStyle(ButtonStyle.Success);
 
 export const modButtonApproveAppeal = (discordId: string) => new ButtonBuilder()
-  .setCustomId(`moderate~APPROVE_APPEAL~${discordId}`)
+  .setCustomId(`moderate~APPEAL_ACCEPT~${discordId}`)
   .setLabel('Approve')
   .setEmoji('✅')
   .setStyle(ButtonStyle.Success);
 
 export const modButtonRejectAppeal = (discordId: string) => new ButtonBuilder()
-  .setCustomId(`moderate~DENY_APPEAL~${discordId}`)
+  .setCustomId(`moderate~APPEAL_REJECT~${discordId}`)
   .setLabel('Deny')
   .setEmoji('❌')
   .setStyle(ButtonStyle.Danger);
@@ -1848,8 +1849,8 @@ export async function moderate(
       **Do not message a moderator to talk about this or argue about the rules in public channels!**
     `;
 
-    const appealString = '\nYou can send an email to appeals@tripsit.me to appeal this ban! Evasion bans are permanent, and underban bans are permanent until you turn 18.'; // eslint-disable-line max-len
-    const evasionString = '\nEvasion bans are permanent, you can appeal the ban on your main account by sending an email, but evading will extend the ban'; // eslint-disable-line max-len
+    const appealString = '\nYou can appeal this ban at https://tripsit.me/appeal. Evasion bans are permanent, and underban bans are permanent until you turn 18.'; // eslint-disable-line max-len
+    const evasionString = '\nEvasion bans are permanent, you can appeal the ban on your main account by creating an appeal at https://tripsit.me/appeal, but evading will extend the ban'; // eslint-disable-line max-len
 
     // if (guildData.channel_helpdesk) {
     //   // const channel = await discordClient.channels.fetch(guildData.channel_helpdesk);
@@ -2447,6 +2448,18 @@ export async function modModal(
           await i.editReply({
             embeds: [reportResponseEmbed],
           });
+        }
+        // Add this new block:
+        if (command === 'APPEAL_ACCEPT') {
+          const result = await appealAccept(interaction, i);
+          await i.editReply(result);
+          return;
+        }
+
+        if (command === 'APPEAL_REJECT') {
+          const result = await appealReject(interaction, i);
+          await i.editReply(result);
+          return;
         }
       } catch (err) {
         log.info(F, `[modModal ModalSubmitInteraction]: ${err}`);

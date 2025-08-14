@@ -23,7 +23,6 @@ import {
   rpgArcade, rpgArcadeGame, rpgArcadeWager, rpgBounties, rpgHelp, rpgHome, rpgHomeAccept, rpgHomeDecline, rpgHomeSell, rpgHomeNameChange, rpgMarket, rpgMarketAccept, rpgMarketPreview, rpgTown, rpgFlairAccept, rpgFlairDecline,
 } from '../commands/guild/d.rpg';
 import { helperButton } from '../commands/global/d.setup';
-import { appealAccept, appealReject } from '../utils/appeal';
 import { acknowledgeButton, modModal, refusalButton } from '../utils/modUtils';
 import { feedbackReportModal } from '../commands/global/d.feedback';
 import { aiButton } from '../commands/global/d.ai';
@@ -67,16 +66,6 @@ export async function buttonClick(interaction:ButtonInteraction, discordClient:C
       interaction.update(await mushroomPageEmbed(2));
       return;
     }
-  }
-
-  if (buttonID.startsWith('moderate~APPROVE_APPEAL')) {
-    await appealAccept(interaction);
-    return;
-  }
-
-  if (buttonID.startsWith('moderate~DENY_APPEAL')) {
-    await appealReject(interaction);
-    return;
   }
 
   if (buttonID.startsWith('moderate')) {
