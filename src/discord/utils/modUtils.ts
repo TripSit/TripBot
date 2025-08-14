@@ -413,6 +413,18 @@ export const modButtonUnTimeout = (discordId: string) => new ButtonBuilder()
   .setEmoji('⏳')
   .setStyle(ButtonStyle.Success);
 
+export const modButtonApproveAppeal = (discordId: string) => new ButtonBuilder()
+  .setCustomId(`moderate~APPROVE_APPEAL~${discordId}`)
+  .setLabel('Approve')
+  .setEmoji('✅')
+  .setStyle(ButtonStyle.Success);
+
+export const modButtonRejectAppeal = (discordId: string) => new ButtonBuilder()
+  .setCustomId(`moderate~DENY_APPEAL~${discordId}`)
+  .setLabel('Deny')
+  .setEmoji('❌')
+  .setStyle(ButtonStyle.Danger);
+
 export async function tripSitTrustScore(
   targetId: string,
 ): Promise<{
@@ -935,6 +947,11 @@ export async function modResponse(
             actionRow.addComponents(
               modButtonUnBan(userId),
             );
+          } else if (isBanAppeal(command)) {
+            actionRow.addComponents(
+              modButtonApproveAppeal(userId),
+              modButtonRejectAppeal(userId),
+            );
           }
           return {
             embeds: [modlogEmbed],
@@ -1036,9 +1053,9 @@ export async function modResponse(
       );
     } else if (isBanAppeal(command)) {
       actionRow.addComponents(
-        modButtonNote(target.id),
-        modButtonUnBan(target.id), // ADD Approve/Reject ban appeal buttons, maybe replace unban
         modButtonInfo(target.id),
+        modButtonApproveAppeal(target.id),
+        modButtonRejectAppeal(target.id),
       );
     } else {
       actionRow.addComponents(
@@ -2296,6 +2313,8 @@ export async function modModal(
   else if (command === 'UN-DISCORD_BOT_BAN') verb = 'removing bot ban on';
   else if (command === 'UN-BAN_EVASION') verb = 'removing ban evasion on';
   else if (command === 'UN-UNDERBAN') verb = 'removing underban on';
+  else if (command === 'APPEAL_ACCEPT') verb = 'accepting appeal for';
+  else if (command === 'APPEAL_REJECT') verb = 'rejecting appeal for';
 
   // log.debug(F, `Verb: ${verb}`);
 
@@ -2362,6 +2381,23 @@ export async function modModal(
         .setPlaceholder('1 year or 365 days, etc. (Empty = Permanent)')
         .setRequired(false)
         .setCustomId('ban_duration')));
+  }
+
+  // For appeal actions, always require a message to the user
+  if (command === 'APPEAL_ACCEPT' || command === 'APPEAL_REJECT') {
+    const defaultMessage = command === 'APPEAL_ACCEPT'
+      ? 'Your appeal has been accepted. Welcome back to TripSit!'
+      : 'Your appeal has been reviewed and unfortunately denied at this time.';
+
+    modal.addComponents(new ActionRowBuilder<TextInputBuilder>()
+      .addComponents(new TextInputBuilder()
+        .setLabel('Message to send to the user')
+        .setStyle(TextInputStyle.Paragraph)
+        .setPlaceholder('What should we tell the user about their appeal?')
+        .setValue(defaultMessage)
+        .setMaxLength(1000)
+        .setRequired(true)
+        .setCustomId('description')));
   }
 
   // When the modal is opened, disable the button on the embed

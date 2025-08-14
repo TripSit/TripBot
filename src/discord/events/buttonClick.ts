@@ -69,6 +69,16 @@ export async function buttonClick(interaction:ButtonInteraction, discordClient:C
     }
   }
 
+  if (buttonID.startsWith('moderate~APPROVE_APPEAL')) {
+    await appealAccept(interaction);
+    return;
+  }
+
+  if (buttonID.startsWith('moderate~DENY_APPEAL')) {
+    await appealReject(interaction);
+    return;
+  }
+
   if (buttonID.startsWith('moderate')) {
     // log.debug(F, 'aiMod button clicked');
     await modModal(interaction);
@@ -136,16 +146,6 @@ export async function buttonClick(interaction:ButtonInteraction, discordClient:C
     else if (interaction.customId.split(',')[0] === 'rpgQuest') await interaction.editReply(await rpgBounties(interaction, interaction.customId.split(',')[0].replace('rpg', '').toLowerCase() as 'quest' | 'dungeon' | 'raid'));
     else if (interaction.customId.split(',')[0] === 'rpgDungeon') await interaction.editReply(await rpgBounties(interaction, interaction.customId.split(',')[0].replace('rpg', '').toLowerCase() as 'quest' | 'dungeon' | 'raid'));
     else if (interaction.customId.split(',')[0] === 'rpgRaid') await interaction.editReply(await rpgBounties(interaction, interaction.customId.split(',')[0].replace('rpg', '').toLowerCase() as 'quest' | 'dungeon' | 'raid'));
-    return;
-  }
-
-  if (buttonID.startsWith('appealAccept')) {
-    await appealAccept(interaction);
-    return;
-  }
-
-  if (buttonID.startsWith('appealReject')) {
-    await appealReject(interaction);
     return;
   }
 
