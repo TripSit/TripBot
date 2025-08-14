@@ -442,21 +442,17 @@ model appeals {
   id                String         @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
   guild_id          String
   user_id           String         @db.Uuid
-  appeal_number     Int
   reason            String
   solution          String
   future            String
   extra             String?
   status            appeal_status
-  appeal_message_id String
   response_message  String?
   created_at        DateTime       @default(now()) @db.Timestamptz(6)
   reminded_at       DateTime?      @db.Timestamptz(6)
   decided_at        DateTime?      @db.Timestamptz(6)
   discord_guilds    discord_guilds @relation(fields: [guild_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "appeals_guildid_foreign")
   users             users          @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "appeals_userid_foreign")
-
-  @@unique([user_id, guild_id, appeal_number], map: "appeals_user_id_guild_id_appeal_number_unique")
 }
 
 model ai_personas {
@@ -670,7 +666,6 @@ enum user_action_type {
 }
 
 enum appeal_status {
-  OPEN
   RECEIVED
   ACCEPTED
   DENIED
