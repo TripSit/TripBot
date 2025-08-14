@@ -67,11 +67,8 @@ type ModAction = user_action_type | UndoAction | 'INFO' | 'LINK' | 'BAN_APPEAL';
 type TargetObject = Snowflake | User | GuildMember;
 
 export interface AppealData {
-  guild: string;
-  userId: string;
-  username: string;
-  discriminator: string;
-  avatar: string;
+  guildId: string;
+  discordId: string;
   reason: string;
   solution: string;
   future: string;
@@ -870,9 +867,9 @@ export async function modResponse(
 
           let userBan = {} as GuildBan;
           try {
-            if (appealData && !interaction) {
-              const guild = await discordClient.guilds.fetch(appealData.guild);
-              userBan = await guild.bans.fetch(appealData.userId);
+            if (appealData) {
+              const guild = await discordClient.guilds.fetch(process.env.DISCORD_GUILD_ID);
+              userBan = await guild.bans.fetch(appealData.discordId);
             } else if (interaction.guild) {
               userBan = await interaction.guild.bans.fetch(userId);
             } else {
@@ -950,11 +947,11 @@ export async function modResponse(
   }
 
   if (!interaction && appealData) {
-    target = await discordClient.users.fetch(appealData.userId);
+    target = await discordClient.users.fetch(appealData.discordId);
   }
 
   if (!actor && appealData) {
-    actor = await discordClient.users.fetch(appealData.userId);
+    actor = await discordClient.users.fetch(appealData.discordId);
   }
 
   const targetData = await db.users.upsert({
