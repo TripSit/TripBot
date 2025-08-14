@@ -60,7 +60,6 @@ router.post('/create', async (req: AuthenticatedRequest, res) => {
       solution: appealData.solution,
       future: appealData.future,
       extra: appealData.extra,
-      appeal_message_id: '54321',
     });
 
     if (result) {
@@ -108,7 +107,18 @@ router.get('/', async (req: AuthenticatedRequest, res, next) => {
       return res.status(400).json({ error: 'Discord ID not found in token' });
     }
 
-    const result = await appeals.getAppeals(req.user.discord_id);
+    // First get the user by discord_id
+    const user = await db.users.findFirst({
+      where: {
+        discord_id: req.user.discord_id,
+      },
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const result = await appeals.getAppeals(user.id);
     return res.json(result);
   } catch (error) {
     return next(error);

@@ -49,12 +49,11 @@ export default {
 
   async createAppeal(data: {
     guild_id: string;
-    discord_id: string; // Changed from user_id to discord_id
+    discord_id: string;
     reason: string;
     solution: string;
     future: string;
     extra?: string;
-    appeal_message_id: string;
   }): Promise<boolean> {
     try {
       // First find the user by discord_id to get their UUID
