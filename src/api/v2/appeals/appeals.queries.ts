@@ -5,14 +5,14 @@ export default {
     return db.appeals.findMany();
   },
 
-  async getAppeals(UserId:string) {
-    log.debug(F, `UserId: ${UserId}`);
-    if (!UserId || UserId === 'undefined') {
+  async getAppeals(userId:string) {
+    log.debug(F, `UserId: ${userId}`);
+    if (!userId || userId === 'undefined') {
       throw new Error('Invalid user ID provided');
     }
     return db.appeals.findMany({
       where: {
-        user_id: UserId,
+        user_id: userId,
       },
     });
   },
@@ -72,38 +72,39 @@ export default {
         return false;
       }
 
-      // Get the latest appeal to determine the next appeal number
+      // Get the latest appeal within 48 hours. If one exists, we cannot create a new appeal.
       const latestAppeal = await db.appeals.findFirst({
         where: {
-          user_id: user.id, // Use the UUID
+          user_id: user.id,
           guild_id: data.guild_id,
+          created_at: {
+            gte: new Date(Date.now() - 48 * 60 * 60 * 1000), // 48 hours ago
+          },
         },
         orderBy: {
           created_at: 'desc',
         },
-        select: {
-          appeal_number: true,
-        },
       });
 
-      const newAppealNumber = latestAppeal ? latestAppeal.appeal_number + 1 : 1;
+      if (latestAppeal) {
+        log.info(F, `User ${data.discord_id} tried to create appeal before 48 hour cooldown`);
+        return false;
+      }
 
       // Create the new appeal
       await db.appeals.create({
         data: {
           guild_id: data.guild_id,
           user_id: user.id, // Use the UUID
-          appeal_number: newAppealNumber,
           reason: data.reason,
           solution: data.solution,
           future: data.future,
           extra: data.extra,
-          status: 'RECEIVED', // Opened, Received, Accepted, Denied
-          appeal_message_id: data.appeal_message_id,
+          status: 'RECEIVED', // Received, Accepted, Denied
         },
       });
 
-      log.info(F, `Appeal #${newAppealNumber} created successfully for discord_id ${data.discord_id} (user_id: ${user.id})`);
+      log.info(F, `Appeal created successfully for discord_id ${data.discord_id} (user_id: ${user.id})`);
       return true;
     } catch (error) {
       log.error(F, `Error creating appeal: ${error}`);
