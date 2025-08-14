@@ -68,7 +68,10 @@ type TargetObject = Snowflake | User | GuildMember;
 
 export interface AppealData {
   guild: string;
-  discordId: string;
+  userId: string;
+  username: string;
+  discriminator: string;
+  avatar: string;
   reason: string;
   solution: string;
   future: string;
@@ -867,9 +870,9 @@ export async function modResponse(
 
           let userBan = {} as GuildBan;
           try {
-            if (appealData) {
+            if (appealData && !interaction) {
               const guild = await discordClient.guilds.fetch(appealData.guild);
-              userBan = await guild.bans.fetch(appealData.discordId);
+              userBan = await guild.bans.fetch(appealData.userId);
             } else if (interaction.guild) {
               userBan = await interaction.guild.bans.fetch(userId);
             } else {
@@ -947,11 +950,11 @@ export async function modResponse(
   }
 
   if (!interaction && appealData) {
-    target = await discordClient.users.fetch(appealData.discordId);
+    target = await discordClient.users.fetch(appealData.userId);
   }
 
   if (!actor && appealData) {
-    actor = await discordClient.users.fetch(appealData.discordId);
+    actor = await discordClient.users.fetch(appealData.userId);
   }
 
   const targetData = await db.users.upsert({
