@@ -46,7 +46,7 @@ router.post('/create', async (req: AuthenticatedRequest, res) => {
       return res.status(400).json({ error: 'Discord ID not found in token' });
     }
 
-    const appealData = req.body.newAppealData as AppealData;
+    const appealData = req.body as AppealData;
     log.info(F, `body: ${JSON.stringify(req.body)}`);
     const result = await appeals.createAppeal({
       guild_id: process.env.DISCORD_GUILD_ID,
