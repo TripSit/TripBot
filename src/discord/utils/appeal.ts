@@ -66,7 +66,7 @@ export async function appealAccept(
   }
 
   const [, userId] = interaction.customId.split('~');
-  const userMessage = modalInteraction.fields.getTextInputValue('description');
+  const userMessage = modalInteraction.fields.getTextInputValue('appealDescription');
 
   const result = await updateAppeal(interaction, userId, userMessage, 'ACCEPTED' as appeal_status);
 
@@ -96,7 +96,7 @@ export async function appealReject(
   }
 
   const [, userId] = interaction.customId.split('~');
-  const userMessage = modalInteraction.fields.getTextInputValue('description');
+  const userMessage = modalInteraction.fields.getTextInputValue('appealDescription');
 
   const result = await updateAppeal(interaction, userId, userMessage, 'DENIED' as appeal_status);
 

@@ -2401,7 +2401,7 @@ export async function modModal(
         .setValue(defaultMessage)
         .setMaxLength(1000)
         .setRequired(true)
-        .setCustomId('description')));
+        .setCustomId('appealDescription')));
   }
 
   // When the modal is opened, disable the button on the embed
