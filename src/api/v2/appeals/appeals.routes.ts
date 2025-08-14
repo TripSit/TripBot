@@ -47,7 +47,7 @@ router.post('/create', async (req: AuthenticatedRequest, res) => {
     }
 
     const appealData = req.body.newAppealData as AppealData;
-    log.info(F, `body: ${req.body}`);
+    log.info(F, `body: ${JSON.stringify(req.body)}`);
     const result = await appeals.createAppeal({
       guild_id: process.env.DISCORD_GUILD_ID,
       discord_id: req.user.discord_id,
