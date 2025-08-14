@@ -100,6 +100,24 @@ router.post('/create', async (req: AuthenticatedRequest, res) => {
   }
 });
 
+router.post('/remind', async (req: AuthenticatedRequest, res) => {
+  try {
+    if (!req.user?.discord_id) {
+      return res.status(400).json({ error: 'Discord ID not found in token' });
+    }
+
+    const result = await appeals.remindAppeal(req.user.discord_id);
+
+    if (result.success) {
+      return res.json({ success: true, message: result.message });
+    }
+    return res.status(400).json({ error: result.message });
+  } catch (error) {
+    log.error(F, `Error in remind route: ${error}`);
+    return res.status(500).json({ error: 'Failed to send reminder' });
+  }
+});
+
 // Get all user's appeals
 router.get('/', async (req: AuthenticatedRequest, res, next) => {
   try {
