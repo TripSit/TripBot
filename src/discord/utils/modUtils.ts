@@ -1004,7 +1004,9 @@ export async function modResponse(
   });
 
   // Determine if the actor is a mod
-  const actorIsMod = (!!guildData.role_moderator && actor.roles.cache.has(guildData.role_moderator));
+  const actorIsMod = actor instanceof GuildMember
+    ? (!!guildData.role_moderator && actor.roles.cache.has(guildData.role_moderator))
+    : false; // Users don't have guild roles
 
   let timeoutTime = null;
   if (target instanceof GuildMember) {
@@ -1048,7 +1050,8 @@ export async function modResponse(
   }
 
   log.debug(F, '[modResponse1] generating user info');
-  const modlogEmbed = await userInfoEmbed(actor, target, targetData, 'REPORT', showModButtons);
+  const actorForEmbed = actor instanceof GuildMember ? actor : null;
+  const modlogEmbed = await userInfoEmbed(actorForEmbed, target, targetData, 'REPORT', showModButtons);
 
   if (interaction && interaction.isMessageContextMenuCommand() && interaction.targetMessage) {
     const messageContent = interaction.targetMessage.content;
