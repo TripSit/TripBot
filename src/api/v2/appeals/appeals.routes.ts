@@ -64,7 +64,9 @@ router.post('/create', async (req: AuthenticatedRequest, res) => {
 
     if (result) {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      const botMember = await discordClient.guilds.cache.first()?.members.fetch(discordClient.user!.id);
+      const guild = await discordClient.guilds.fetch(process.env.DISCORD_GUILD_ID);
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      const botMember = await guild.members.fetch(discordClient.user!.id);
       if (!botMember) throw new Error('Failed to fetch bot user.');
 
       // Fetch the target user
