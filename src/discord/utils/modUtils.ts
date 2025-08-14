@@ -993,8 +993,8 @@ export async function modResponse(
   });
 
   // Get the guild
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  const guild = interaction?.guild!;
+  // For ban appeals there will be no interaction, hence fetching our guild after the || operator.
+  const guild = interaction?.guild || await discordClient.guilds.fetch(process.env.DISCORD_GUILD_ID);
   const guildData = await db.discord_guilds.upsert({
     where: {
       id: guild.id,
