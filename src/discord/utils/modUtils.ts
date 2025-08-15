@@ -333,6 +333,10 @@ function isInfo(command: ModAction): command is 'INFO' { return command === 'INF
 
 function isBanAppeal(command: ModAction): command is 'BAN_APPEAL' { return command === 'BAN_APPEAL'; }
 
+function isAcceptBanAppeal(command: ModAction): command is 'APPEAL_ACCEPT' { return command === 'APPEAL_ACCEPT'; }
+
+function isRejectBanAppeal(command: ModAction): command is 'APPEAL_REJECT' { return command === 'APPEAL_REJECT'; }
+
 function isReportAcknowledgement(command: ModAction): command is 'ACKN_REPORT' { return command === 'ACKN_REPORT'; }
 
 function isDiscussable(command: ModAction): command is 'DISCORD_BOT_BAN' | 'TICKET_BAN' | 'WARNING' | 'KICK' {
@@ -2348,8 +2352,8 @@ export async function modModal(
     .addComponents(new ActionRowBuilder<TextInputBuilder>()
       .addComponents(modalInputComponent));
 
-  // All commands except INFO, NOTE and REPORT can have a public reason sent to the user
-  if (!isNote(command) && !isReport(command)) {
+  // All commands except INFO, NOTE, REPORT, and APPEALS can have a public reason sent to the user
+  if (!isNote(command) && !isReport(command) && !isInfo(command) && !isAcceptBanAppeal(command) && !isRejectBanAppeal(command)) {
     modal.addComponents(new ActionRowBuilder<TextInputBuilder>()
       .addComponents(new TextInputBuilder()
         .setLabel('What should we tell the user?')
@@ -2415,7 +2419,7 @@ export async function modModal(
 
       const updatedButton = {
         ...buttonData,
-        disabled: true,
+        disabled: false, // Previously true, turned to false because it's annoying.
       };
 
       row.components.splice(buttonIndex, 1, updatedButton);
@@ -2452,7 +2456,7 @@ export async function modModal(
             embeds: [reportResponseEmbed],
           });
         }
-        // Add this new block:
+
         if (command === 'APPEAL_ACCEPT') {
           const result = await appealAccept(interaction, i);
           await i.editReply(result);
