@@ -71,13 +71,17 @@ export default {
         return false;
       }
 
-      // Get the latest appeal within 48 hours. If one exists, we cannot create a new appeal.
+      // Get the latest appeal within 30 seconds (dev) or 30 days (prod)
+      const cooldownPeriod = process.env.NODE_ENV === 'development'
+        ? 30 * 1000 // 30 seconds
+        : 30 * 24 * 60 * 60 * 1000; // 30 days
+
       const latestAppeal = await db.appeals.findFirst({
         where: {
           user_id: user.id,
           guild_id: data.guild_id,
           created_at: {
-            gte: new Date(Date.now() - 48 * 60 * 60 * 1000), // 48 hours ago
+            gte: new Date(Date.now() - cooldownPeriod),
           },
         },
         orderBy: {
@@ -86,7 +90,7 @@ export default {
       });
 
       if (latestAppeal) {
-        log.info(F, `User ${data.discord_id} tried to create appeal before 48 hour cooldown`);
+        log.info(F, `User ${data.discord_id} tried to create appeal before 30 day cooldown`);
         return false;
       }
 
