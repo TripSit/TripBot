@@ -10,9 +10,8 @@ const F = f(__filename);
 export const guildMemberAdd: GuildMemberAddEvent = {
   name: 'guildMemberAdd',
   async execute(member) {
-    await member.fetch(true);
-
     try {
+      await member.fetch(true);
       const guildData = await db.discord_guilds.upsert({
         where: {
           id: member.guild.id,
