@@ -146,14 +146,15 @@ export async function appealReminder(
     }
 
     // Create the reminder message
-    const reminderMessage = `<@&${env.ROLE_MODERATOR}> 
-<@${userData.discord_id}> reminded us to review their ban appeal:
+    const reminderMessage = `<@${userData.discord_id}> reminded us to review their ban appeal:
 
 **Appeal ID:** ${appeal.id}
 **Submitted:** ${new Date(appeal.created_at).toLocaleString()}
 **Status:** ${appeal.status}
 
-This appeal has been pending review. Please check when you have a moment.`;
+This appeal has been pending review. Please check when you have a moment.
+
+<@&${env.ROLE_MODERATOR}>`;
 
     // Send the message to the mod thread
     await modThread.send({
@@ -164,9 +165,9 @@ This appeal has been pending review. Please check when you have a moment.`;
     });
 
     log.info(F, `Appeal reminder sent for appeal ID: ${appeal.id} in thread: ${userData.mod_thread_id}`);
-    return { success: true, message: 'The mod team has been reminded about this appeal.' };
+    return { success: true, message: 'Your reminder has been sent!' };
   } catch (error) {
     log.error(F, `Error sending appeal reminder: ${error}`);
-    return { success: false, message: 'Failed to send reminder to moderators' };
+    return { success: false, message: 'Something went wrong. Your reminder was not sent.' };
   }
 }
