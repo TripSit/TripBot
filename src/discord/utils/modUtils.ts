@@ -249,7 +249,7 @@ const embedVariables = {
   BAN_APPEAL: {
     embedColor: Colors.Green,
     embedTitle: 'Ban Appeal!',
-    pastVerb: 'has requested a ban appeal',
+    pastVerb: 'requested a ban appeal',
     presentVerb: 'is requesting a ban appeal',
     emoji: '🔨',
   },
@@ -1166,12 +1166,15 @@ export async function messageModThread(
     create: { discord_id: targetId },
     update: { },
   });
+
   log.debug(F, `targetData: ${JSON.stringify(targetData, null, 2)}`);
+
   const guildData = await db.discord_guilds.upsert({
     where: { id: actor.guild.id },
     create: { id: actor.guild.id },
     update: { },
   });
+
   log.debug(F, `guildData: ${JSON.stringify(guildData, null, 2)}`);
 
   if (!guildData.channel_moderators) return null;
@@ -1187,6 +1190,8 @@ export async function messageModThread(
   if (isTimeout(command)) {
     summary = summary.concat(duration);
     anonSummary = anonSummary.concat(duration);
+  } else if (isBanAppeal(command)) {
+    anonSummary = anonSummary.replace('was', 'has');
   }
 
   // log.debug(F, `summary: ${summary}`);
@@ -1206,14 +1211,24 @@ export async function messageModThread(
 
   log.debug(F, 'Sending message to mod log');
   const modLogChan = await discordClient.channels.fetch(guildData.channel_mod_log) as TextChannel;
-  await modLogChan.send({
-    content: stripIndents`
-    ${anonSummary}
-    **Reason:** ${internalNote ?? noReason}
-    **Note sent to user:** ${(description !== '' && description !== null) ? description : noMessageSent}
-    `,
-    embeds: [modlogEmbed],
-  });
+  if (!appealData) {
+    await modLogChan.send({
+      content: stripIndents`
+      ${anonSummary}
+      **Reason:** ${internalNote ?? noReason}
+      **Note sent to user:** ${(description !== '' && description !== null) ? description : noMessageSent}
+      `,
+      embeds: [modlogEmbed],
+    });
+  } else {
+    await modLogChan.send({
+      content: stripIndents`
+      ${anonSummary}
+      ${description}
+      `,
+      embeds: [modlogEmbed],
+    });
+  }
 
   if (extraMessage) {
     await modLogChan.send({ content: extraMessage });
