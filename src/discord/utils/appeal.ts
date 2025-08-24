@@ -1,6 +1,6 @@
 /* eslint-disable sonarjs/no-duplicate-string */
 import { ButtonInteraction, InteractionEditReplyOptions, ModalSubmitInteraction } from 'discord.js';
-import { appeal_status } from '@prisma/client';
+import { appeal_status, appeals } from '@prisma/client';
 
 const F = f(__filename);
 
@@ -117,4 +117,55 @@ export async function appealReject(
   }
 
   return { content: `<@${userId}>'s appeal has been rejected.` };
+}
+
+export async function appealReminder(
+  appeal: appeals,
+) {
+  const userData = await db.users.findFirst({
+    where: { id: appeal.user_id },
+  });
+
+  if (!userData) {
+    log.error(F, `User not found for appeal ID: ${appeal.id}`);
+    return { success: false, content: `User not found for appeal ID: ${appeal.id}` };
+  }
+
+  if (!userData.mod_thread_id) {
+    log.error(F, `No mod thread ID found for user ID: ${appeal.user_id}`);
+    return { success: false, content: 'No mod thread found for this user' };
+  }
+
+  try {
+    // Get the mod thread channel
+    const modThread = await discordClient.channels.fetch(userData.mod_thread_id);
+
+    if (!modThread || !modThread.isThread()) {
+      log.error(F, `Mod thread not found or invalid: ${userData.mod_thread_id}`);
+      return { success: false, content: 'Mod thread not found or invalid' };
+    }
+
+    // Create the reminder message
+    const reminderMessage = `<@&${process.env.ROLE_MODERATOR}> Appeal reminder for <@${appeal.discord_id}>:
+
+**Appeal ID:** ${appeal.id}
+**Submitted:** ${new Date(appeal.created_at).toLocaleString()}
+**Status:** ${appeal.status}
+
+This appeal has been pending review. Please check when you have a moment.`;
+
+    // Send the message to the mod thread
+    await modThread.send({
+      content: reminderMessage,
+      allowedMentions: {
+        roles: [process.env.ROLE_MODERATOR as string],
+      },
+    });
+
+    log.info(F, `Appeal reminder sent for appeal ID: ${appeal.id} in thread: ${userData.mod_thread_id}`);
+    return { success: true, content: 'The mod team has been reminded about this appeal.' };
+  } catch (error) {
+    log.error(F, `Error sending appeal reminder: ${error}`);
+    return { success: false, content: 'Failed to send reminder to moderators' };
+  }
 }

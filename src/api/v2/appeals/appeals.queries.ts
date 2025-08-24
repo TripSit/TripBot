@@ -1,3 +1,5 @@
+import { appealReminder } from '../../../discord/utils/appeal';
+
 const F = f(__filename);
 
 export default {
@@ -142,18 +144,33 @@ export default {
         return { success: false, message: 'No pending appeal found' };
       }
 
-      // Check if already reminded within 24 hours
+      // Check if already reminded within the timeout period
       if (appeal.reminded_at) {
         const now = new Date();
         const reminderTime = new Date(appeal.reminded_at);
-        const hoursSinceReminder = (now.getTime() - reminderTime.getTime()) / (1000 * 60 * 60);
 
-        if (hoursSinceReminder < 24) {
-          const hoursLeft = Math.ceil(24 - hoursSinceReminder);
-          return {
-            success: false,
-            message: `You can send another reminder in ${hoursLeft} hours`,
-          };
+        if (process.env.NODE_ENV === 'development') {
+          // 30 seconds for development
+          const secondsSinceReminder = (now.getTime() - reminderTime.getTime()) / 1000;
+
+          if (secondsSinceReminder < 30) {
+            const secondsLeft = Math.ceil(30 - secondsSinceReminder);
+            return {
+              success: false,
+              message: `You can send another reminder in ${secondsLeft} seconds`,
+            };
+          }
+        } else {
+          // 24 hours for production
+          const hoursSinceReminder = (now.getTime() - reminderTime.getTime()) / (1000 * 60 * 60);
+
+          if (hoursSinceReminder < 24) {
+            const hoursLeft = Math.ceil(24 - hoursSinceReminder);
+            return {
+              success: false,
+              message: `You can send another reminder in ${hoursLeft} hours`,
+            };
+          }
         }
       }
 
@@ -165,13 +182,7 @@ export default {
 
       log.info(F, `Appeal reminder sent for discord_id ${discordId}, appeal_id ${appeal.id}`);
 
-      // TODO: Add your ping logic here
-      // await pingModerators(appeal);
-
-      return {
-        success: true,
-        message: 'Reminder sent to moderators',
-      };
+      return await appealReminder(appeal);
     } catch (error) {
       log.error(F, `Error reminding appeal: ${error}`);
       return { success: false, message: 'Internal error' };
