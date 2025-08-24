@@ -128,12 +128,12 @@ export async function appealReminder(
 
   if (!userData) {
     log.error(F, `User not found for appeal ID: ${appeal.id}`);
-    return { success: false, content: `User not found for appeal ID: ${appeal.id}` };
+    return { success: false, message: `User not found for appeal ID: ${appeal.id}` };
   }
 
   if (!userData.mod_thread_id) {
     log.error(F, `No mod thread ID found for user ID: ${appeal.user_id}`);
-    return { success: false, content: 'No mod thread found for this user' };
+    return { success: false, message: 'No mod thread found for this user' };
   }
 
   try {
@@ -142,7 +142,7 @@ export async function appealReminder(
 
     if (!modThread || !modThread.isThread()) {
       log.error(F, `Mod thread not found or invalid: ${userData.mod_thread_id}`);
-      return { success: false, content: 'Mod thread not found or invalid' };
+      return { success: false, message: 'Mod thread not found or invalid' };
     }
 
     // Create the reminder message
@@ -163,9 +163,9 @@ This appeal has been pending review. Please check when you have a moment.`;
     });
 
     log.info(F, `Appeal reminder sent for appeal ID: ${appeal.id} in thread: ${userData.mod_thread_id}`);
-    return { success: true, content: 'The mod team has been reminded about this appeal.' };
+    return { success: true, message: 'The mod team has been reminded about this appeal.' };
   } catch (error) {
     log.error(F, `Error sending appeal reminder: ${error}`);
-    return { success: false, content: 'Failed to send reminder to moderators' };
+    return { success: false, message: 'Failed to send reminder to moderators' };
   }
 }
