@@ -2476,7 +2476,29 @@ export async function modModal(
           const thread = await discordClient.channels.fetch(interaction.message.channelId) as ThreadChannel;
           const roleModerator = await interaction.guild?.roles.fetch(env.ROLE_MODERATOR) as Role;
           const accept = command === 'APPEAL_ACCEPT';
+          const [, , targetUserId] = interaction.customId.split('~');
           const result = accept ? await appealAccept(interaction, i) : await appealReject(interaction, i);
+
+          const actionData = {
+            user_id: interaction.user.id,
+            target_discord_id: targetUserId,
+            guild_id: interaction.guild?.id,
+            type: command.includes('UN-') ? command.slice(3) : command,
+            ban_evasion_related_user: null as string | null,
+            description: i.fields.getTextInputValue('appealDescription'),
+            internal_note: i.fields.getTextInputValue('internalNote'),
+            expires_at: null as Date | null,
+            repealed_by: null as string | null,
+            repealed_at: null as Date | null,
+            created_by: interaction.user.id,
+            created_at: new Date(),
+          } as user_actions;
+
+          await db.user_actions.upsert({
+            where: { id: actionData.id },
+            create: actionData,
+            update: actionData,
+          });
 
           // Send message to thread with embed
           await thread.send({
