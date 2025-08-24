@@ -2503,10 +2503,16 @@ export async function modModal(
             embeds: [embedTemplate()
               .setColor(accept ? Colors.Green : Colors.Red)
               .setDescription(`${interaction.user} has ${accept ? 'accepted' : 'rejected'} an appeal from <@${userId}>`)
-              .addFields({
-                name: 'Reason',
-                value: i.fields.getTextInputValue('appealDescription'),
-              }),
+              .addFields(
+                {
+                  name: 'Internal Note',
+                  value: i.fields.getTextInputValue('internalNote'),
+                },
+                {
+                  name: 'Reason',
+                  value: i.fields.getTextInputValue('appealDescription'),
+                },
+              ),
             ],
           });
 
