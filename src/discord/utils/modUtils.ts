@@ -2477,7 +2477,33 @@ export async function modModal(
           const roleModerator = await interaction.guild?.roles.fetch(env.ROLE_MODERATOR) as Role;
           const accept = command === 'APPEAL_ACCEPT';
           const result = accept ? await appealAccept(interaction, i) : await appealReject(interaction, i);
-          await thread.send(`${roleModerator} ${interaction.user} has ${accept ? 'accepted' : 'rejected'} this appeal.`);
+
+          // Send message to thread with embed
+          await thread.send({
+            content: `${roleModerator}`,
+            embeds: [embedTemplate()
+              .setColor(accept ? Colors.Green : Colors.Red)
+              .setDescription(`${interaction.user} has ${accept ? 'accepted' : 'rejected'} this appeal.`)
+              .addFields({
+                name: 'Reason',
+                value: i.fields.getTextInputValue('appealDescription'),
+              }),
+            ],
+          });
+
+          // Send message to mod-log channel
+          const modLogChannel = await discordClient.channels.fetch(process.env.CHANNEL_MODLOG) as TextChannel;
+          await modLogChannel.send({
+            embeds: [embedTemplate()
+              .setColor(accept ? Colors.Green : Colors.Red)
+              .setDescription(`${interaction.user} has ${accept ? 'accepted' : 'rejected'} an appeal from <@${userId}>`)
+              .addFields({
+                name: 'Reason',
+                value: i.fields.getTextInputValue('appealDescription'),
+              }),
+            ],
+          });
+
           await i.editReply(result);
           return;
         }
