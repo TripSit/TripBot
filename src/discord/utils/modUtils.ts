@@ -2457,14 +2457,12 @@ export async function modModal(
           });
         }
 
-        if (command === 'APPEAL_ACCEPT') {
-          const result = await appealAccept(interaction, i);
-          await i.editReply(result);
-          return;
-        }
-
-        if (command === 'APPEAL_REJECT') {
-          const result = await appealReject(interaction, i);
+        if (command === 'APPEAL_ACCEPT' || command === 'APPEAL_REJECT') {
+          const thread = await discordClient.channels.fetch(interaction.message.channelId) as ThreadChannel;
+          const moderator = await interaction.guild?.roles.fetch(process.env.ROLE_MODERATOR);
+          const accept = command === 'APPEAL_ACCEPT';
+          const result = accept ? await appealAccept(interaction, i) : await appealReject(interaction, i);
+          await thread.send(`${moderator} ${interaction.user} has ${accept ? 'accepted' : 'rejected'} this appeal.`);
           await i.editReply(result);
           return;
         }

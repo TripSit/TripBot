@@ -114,6 +114,7 @@ export default {
       return false;
     }
   },
+
   async remindAppeal(discordId: string) {
     try {
     // Find user by discord_id
