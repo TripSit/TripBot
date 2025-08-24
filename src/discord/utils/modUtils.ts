@@ -2494,11 +2494,15 @@ export async function modModal(
             created_at: new Date(),
           } as user_actions;
 
-          await db.user_actions.upsert({
-            where: { id: actionData.id },
-            create: actionData,
-            update: actionData,
-          });
+          if (actionData.id) {
+            await db.user_actions.upsert({
+              where: { id: actionData.id },
+              create: actionData,
+              update: actionData,
+            });
+          } else {
+            await db.user_actions.create({ data: actionData });
+          }
 
           // Send message to thread with embed
           await thread.send({
