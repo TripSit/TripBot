@@ -3,37 +3,13 @@ import { getDiscordIdFromFederatedIdentity } from '../../global/utils/keycloak';
 
 const F = f(__filename);
 
-interface AuthenticatedRequest extends Request {
-  user?: {
-    sub: string; // Keycloak user ID
-    discord_id?: string;
-  };
+interface KeycloakUserInfo {
+  sub: string;
+  discord_id?: string;
 }
 
-// Helper function to get admin token (legacy - keeping for backwards compatibility if needed elsewhere)
-export async function getAdminToken() {
-  if (!process.env.KEYCLOAK_ADMIN_CLIENT_ID || !process.env.KEYCLOAK_ADMIN_CLIENT_SECRET) {
-    throw new Error('Missing required environment variables for Keycloak admin authentication');
-  }
-
-  const tokenRes = await fetch(`${process.env.KEYCLOAK_URL}/realms/TripSit/protocol/openid-connect/token`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-    },
-    body: new URLSearchParams({
-      grant_type: 'client_credentials',
-      client_id: process.env.KEYCLOAK_ADMIN_CLIENT_ID,
-      client_secret: process.env.KEYCLOAK_ADMIN_CLIENT_SECRET,
-    }),
-  });
-
-  if (!tokenRes.ok) {
-    throw new Error('Failed to get admin token');
-  }
-
-  const tokenData = await tokenRes.json();
-  return tokenData.access_token;
+interface AuthenticatedRequest extends Request {
+  user?: KeycloakUserInfo;
 }
 
 export default async function keycloakAuth(
@@ -63,8 +39,8 @@ export default async function keycloakAuth(
       res.status(401).json({ error: 'Invalid or expired token' });
       return;
     }
+    const userInfo = await userInfoRes.json() as KeycloakUserInfo;
 
-    const userInfo = await userInfoRes.json();
     log.info(F, `✅ Auth middleware - Got user info: ${JSON.stringify(userInfo, null, 2)}`);
 
     // Get Discord ID using admin client

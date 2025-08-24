@@ -67,20 +67,19 @@ export async function appealAccept(
   interaction: ButtonInteraction,
   modalInteraction?: ModalSubmitInteraction,
 ): Promise<InteractionEditReplyOptions> {
-  log.info(F, 'appealAccept called with modModal');
   if (!interaction.guild) {
     return { content: 'This command can only be used in a guild.' };
   }
-  // If no modal, show modal first
+  // If no modal, something went wrong
   if (!modalInteraction) {
     return { content: 'Modal interaction required.' };
   }
 
   const [, , userId] = interaction.customId.split('~');
   const rawUserMessage = modalInteraction.fields.getTextInputValue('appealDescription');
+  // Sanitize moderator input to prevent XSS (Yes, I know. This will never be necessary, but good practice)
   const userMessage = sanitizeAppealMessage(rawUserMessage);
 
-  log.info(F, `custom ID: ${interaction.customId}`);
   const result = await updateAppeal(interaction, userId, userMessage, 'ACCEPTED' as appeal_status);
 
   if (!result.success) {
@@ -88,23 +87,21 @@ export async function appealAccept(
   }
 
   try {
-    await interaction.guild.bans.remove(userId, 'Appeal accepted');
+    await interaction.guild.bans.remove(userId, 'Ban appeal accepted by moderator');
   } catch (err) {
     log.error(F, `Error unbanning user: ${err}`);
   }
-  log.info(F, 'appealAccept completed');
-  return { content: `User <@${userId}> has been unbanned and their appeal approved.` };
+  return { content: `<@${userId}> has been unbanned and their appeal approved.` };
 }
 
 export async function appealReject(
   interaction: ButtonInteraction,
   modalInteraction?: ModalSubmitInteraction,
 ): Promise<InteractionEditReplyOptions> {
-  log.info(F, 'appealReject called with modModal');
   if (!interaction.guild) {
     return { content: 'This command can only be used in a guild.' };
   }
-  // If no modal, show modal first
+  // If no modal, something went wrong
   if (!modalInteraction) {
     return { content: 'Modal interaction required.' };
   }
@@ -118,6 +115,6 @@ export async function appealReject(
   if (!result.success) {
     return { content: result.message };
   }
-  log.info(F, 'appealReject completed');
-  return { content: `User <@${userId}> appeal has been rejected.` };
+
+  return { content: `<@${userId}>'s appeal has been rejected.` };
 }
