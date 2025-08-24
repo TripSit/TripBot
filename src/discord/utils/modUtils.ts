@@ -2492,7 +2492,7 @@ export async function modModal(
           });
 
           // Send message to mod-log channel
-          const modLogChannel = await discordClient.channels.fetch(process.env.CHANNEL_MODLOG) as TextChannel;
+          const modLogChannel = await discordClient.channels.fetch(env.CHANNEL_MODLOG) as TextChannel;
           await modLogChannel.send({
             embeds: [embedTemplate()
               .setColor(accept ? Colors.Green : Colors.Red)
