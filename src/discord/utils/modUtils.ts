@@ -2479,18 +2479,24 @@ export async function modModal(
           const [, , targetUserId] = interaction.customId.split('~');
           const result = accept ? await appealAccept(interaction, i) : await appealReject(interaction, i);
 
+          const targetData = await db.users.upsert({
+            where: { discord_id: interaction.user.id },
+            create: { discord_id: interaction.user.id },
+            update: {},
+          });
+
           const actionData = {
-            user_id: interaction.user.id,
+            user_id: targetData.id,
             target_discord_id: targetUserId,
             guild_id: interaction.guild?.id,
-            type: command.includes('UN-') ? command.slice(3) : command,
+            type: command,
             ban_evasion_related_user: null as string | null,
             description: i.fields.getTextInputValue('appealDescription'),
             internal_note: i.fields.getTextInputValue('internalNote'),
             expires_at: null as Date | null,
             repealed_by: null as string | null,
             repealed_at: null as Date | null,
-            created_by: interaction.user.id,
+            created_by: targetData.id,
             created_at: new Date(),
           } as user_actions;
 
