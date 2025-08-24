@@ -708,6 +708,8 @@ enum user_action_type {
   KICK
   HELPER_BAN
   CONTRIBUTOR_BAN
+  APPEAL_ACCEPT
+  APPEAL_REJECT
 }
 
 enum appeal_status {
