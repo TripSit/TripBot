@@ -146,7 +146,7 @@ export async function appealReminder(
     }
 
     // Create the reminder message
-    const reminderMessage = `<@&${process.env.ROLE_MODERATOR}> Appeal reminder for <@${userData.discord_id}>:
+    const reminderMessage = `<@&${env.ROLE_MODERATOR}> Appeal reminder for <@${userData.discord_id}>:
 
 **Appeal ID:** ${appeal.id}
 **Submitted:** ${new Date(appeal.created_at).toLocaleString()}
@@ -158,7 +158,7 @@ This appeal has been pending review. Please check when you have a moment.`;
     await modThread.send({
       content: reminderMessage,
       allowedMentions: {
-        roles: [process.env.ROLE_MODERATOR as string],
+        roles: [env.ROLE_MODERATOR as string],
       },
     });
 
