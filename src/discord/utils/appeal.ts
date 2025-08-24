@@ -4,6 +4,16 @@ import { appeal_status } from '@prisma/client';
 
 const F = f(__filename);
 
+function sanitizeAppealMessage(message: string): string {
+  return message
+    .replace(/[<>]/g, '') // Remove HTML tags
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;')
+    .trim()
+    .slice(0, 1000); // Limit length to 1000 characters
+}
+
 async function updateAppeal(
   interaction: ButtonInteraction,
   discordId: string,
@@ -67,7 +77,9 @@ export async function appealAccept(
   }
 
   const [, , userId] = interaction.customId.split('~');
-  const userMessage = modalInteraction.fields.getTextInputValue('appealDescription');
+  const rawUserMessage = modalInteraction.fields.getTextInputValue('appealDescription');
+  const userMessage = sanitizeAppealMessage(rawUserMessage);
+
   log.info(F, `custom ID: ${interaction.customId}`);
   const result = await updateAppeal(interaction, userId, userMessage, 'ACCEPTED' as appeal_status);
 
@@ -98,7 +110,8 @@ export async function appealReject(
   }
 
   const [, , userId] = interaction.customId.split('~');
-  const userMessage = modalInteraction.fields.getTextInputValue('appealDescription');
+  const rawUserMessage = modalInteraction.fields.getTextInputValue('appealDescription');
+  const userMessage = sanitizeAppealMessage(rawUserMessage);
 
   const result = await updateAppeal(interaction, userId, userMessage, 'DENIED' as appeal_status);
 

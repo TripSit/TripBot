@@ -6,6 +6,7 @@ import keycloakAuth, { AuthenticatedRequest } from '../../middlewares/keycloakAu
 import { messageModThread, AppealData } from '../../../discord/utils/modUtils';
 
 import appeals from './appeals.queries';
+import { checkBanStatus } from '../users/users.queries';
 // import users from '../users/users.queries';
 
 const F = f(__filename);
@@ -44,6 +45,12 @@ router.post('/create', async (req: AuthenticatedRequest, res) => {
   try {
     if (!req.user?.discord_id) {
       return res.status(400).json({ error: 'Discord ID not found in token' });
+    }
+
+    const banStatus = await checkBanStatus(req.user.discord_id);
+
+    if (!banStatus.banned) {
+      return res.status(403).json({ error: 'You are not currently banned from TripSit' });
     }
 
     const appealData = {
