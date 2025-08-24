@@ -53,7 +53,7 @@ export default async function keycloakAuth(
         userInfo.discord_id = discordId;
         log.info(F, `✅ Auth middleware - Found Discord ID: ${discordId}`);
       } else {
-        log.warn(F, '❌ Auth middleware - No Discord provider found');
+        log.info(F, '❌ Auth middleware - No Discord provider found');
       }
     } catch (error) {
       log.error(F, `❌ Auth middleware - Error getting Discord ID: ${error}`);

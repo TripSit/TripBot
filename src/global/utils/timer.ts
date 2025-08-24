@@ -941,7 +941,7 @@ async function checkMoodle() { // eslint-disable-line
               });
               // log.debug(F, `Sent ${member.user.username} a message!`);
             } catch (error) {
-              log.warn(F, `Could not send DM to ${member.user.username}: ${error}`);
+              log.info(F, `Could not send DM to ${member.user.username}: ${error}`);
             }
           }
         } catch (error) {

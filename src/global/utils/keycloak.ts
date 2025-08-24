@@ -72,7 +72,7 @@ export async function getDiscordIdFromFederatedIdentity(userId: string): Promise
   } catch (error) {
     // If we get a 401, the admin token expired - reset authentication and try once more
     if (error instanceof Error && error.message.includes('401')) {
-      log.warn(F, `Admin token expired, re-authenticating and retrying for user ${userId}`);
+      log.error(F, `Admin token expired, re-authenticating and retrying for user ${userId}`);
 
       // Reset authentication state
       isAuthenticated = false;
@@ -198,7 +198,7 @@ async function checkUserIdentities(user: UserRepresentation, githubUsername: str
       };
     }
 
-    log.warn(F, `User ${user.id} has GitHub account but no Discord account linked`);
+    log.info(F, `User ${user.id} has GitHub account but no Discord account linked`);
     return null;
   } catch (error) {
     // Some users might not have federated identities, that's okay
