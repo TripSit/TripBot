@@ -12,6 +12,15 @@ const kcAdminClient = new KcAdminClient({
 let isAuthenticated = false;
 let authPromise: Promise<void> | null = null;
 
+// Discord ID cache - stores userId -> {discordId, timestamp}
+const discordIdCache = new Map<string, { discordId: string | null; timestamp: number }>();
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes in milliseconds
+
+// Helper function to check if cache entry is still valid
+function isCacheValid(timestamp: number): boolean {
+  return Date.now() - timestamp < CACHE_TTL;
+}
+
 // Authenticate with Keycloak admin client
 async function authenticateAdmin(): Promise<void> {
   if (isAuthenticated) {
@@ -50,6 +59,13 @@ export async function getAdminClient(): Promise<KcAdminClient> {
 
 // Helper function to get Discord ID from user's federated identities
 export async function getDiscordIdFromFederatedIdentity(userId: string): Promise<string | null> {
+  // Check cache first
+  const cached = discordIdCache.get(userId);
+  if (cached && isCacheValid(cached.timestamp)) {
+    log.debug(F, `Using cached Discord ID for user ${userId}: ${cached.discordId}`);
+    return cached.discordId;
+  }
+
   try {
     const adminClient = await getAdminClient();
 
@@ -62,13 +78,21 @@ export async function getDiscordIdFromFederatedIdentity(userId: string): Promise
       (provider: any) => provider.identityProvider === 'discord',
     );
 
-    if (discordProvider) {
-      log.debug(F, `Found Discord provider for user ${userId}: ${discordProvider.userId}`);
-      return discordProvider.userId as string;
+    const discordId = discordProvider ? discordProvider.userId as string : null;
+
+    // Cache the result
+    discordIdCache.set(userId, {
+      discordId,
+      timestamp: Date.now(),
+    });
+
+    if (discordId) {
+      log.debug(F, `Found Discord provider for user ${userId}: ${discordId}`);
+    } else {
+      log.debug(F, `No Discord provider found for user ${userId}`);
     }
 
-    log.debug(F, `No Discord provider found for user ${userId}`);
-    return null;
+    return discordId;
   } catch (error) {
     // If we get a 401, the admin token expired - reset authentication and try once more
     if (error instanceof Error && error.message.includes('401')) {
@@ -90,13 +114,21 @@ export async function getDiscordIdFromFederatedIdentity(userId: string): Promise
           (provider: any) => provider.identityProvider === 'discord',
         );
 
-        if (discordProvider) {
-          log.debug(F, `Found Discord provider for user ${userId} after re-auth: ${discordProvider.userId}`);
-          return discordProvider.userId as string;
+        const discordId = discordProvider ? discordProvider.userId as string : null;
+
+        // Cache the result
+        discordIdCache.set(userId, {
+          discordId,
+          timestamp: Date.now(),
+        });
+
+        if (discordId) {
+          log.debug(F, `Found Discord provider for user ${userId} after re-auth: ${discordId}`);
+        } else {
+          log.debug(F, `No Discord provider found for user ${userId} after re-auth`);
         }
 
-        log.debug(F, `No Discord provider found for user ${userId} after re-auth`);
-        return null;
+        return discordId;
       } catch (retryError) {
         log.error(F, `Error getting Discord ID for user ${userId} after re-auth: ${retryError}`);
         throw retryError;
@@ -198,7 +230,7 @@ async function checkUserIdentities(user: UserRepresentation, githubUsername: str
       };
     }
 
-    log.info(F, `User ${user.id} has GitHub account but no Discord account linked`);
+    log.warn(F, `User ${user.id} has GitHub account but no Discord account linked`);
     return null;
   } catch (error) {
     // Some users might not have federated identities, that's okay
