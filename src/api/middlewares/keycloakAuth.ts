@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import { getDiscordIdFromFederatedIdentity } from '../../global/utils/keycloak';
 
 const F = f(__filename);
 
@@ -9,7 +10,7 @@ interface AuthenticatedRequest extends Request {
   };
 }
 
-// Helper function to get admin token
+// Helper function to get admin token (legacy - keeping for backwards compatibility if needed elsewhere)
 export async function getAdminToken() {
   if (!process.env.KEYCLOAK_ADMIN_CLIENT_ID || !process.env.KEYCLOAK_ADMIN_CLIENT_SECRET) {
     throw new Error('Missing required environment variables for Keycloak admin authentication');
@@ -66,38 +67,17 @@ export default async function keycloakAuth(
     const userInfo = await userInfoRes.json();
     log.info(F, `✅ Auth middleware - Got user info: ${JSON.stringify(userInfo, null, 2)}`);
 
-    // Get Discord ID from identity providers
+    // Get Discord ID using admin client
     try {
-      log.info(F, '🔍 Auth middleware - Getting admin token...');
-      const adminToken = await getAdminToken();
-      log.info(F, '✅ Auth middleware - Got admin token');
+      log.info(F, '🔍 Auth middleware - Getting Discord ID from federated identities...');
 
-      const identityUrl = `${process.env.KEYCLOAK_URL}/admin/realms/TripSit/users/${userInfo.sub}/federated-identity`;
-      log.info(F, `🔍 Auth middleware - Fetching identity providers from: ${identityUrl}`);
+      const discordId = await getDiscordIdFromFederatedIdentity(userInfo.sub);
 
-      const identityRes = await fetch(identityUrl, {
-        headers: {
-          Authorization: `Bearer ${adminToken}`,
-        },
-      });
-
-      if (identityRes.ok) {
-        const identityProviders = await identityRes.json();
-        log.info(F, `✅ Auth middleware - Identity providers: ${JSON.stringify(identityProviders, null, 2)}`);
-
-        const discordProvider = identityProviders.find(
-          (provider: any) => provider.identityProvider === 'discord',
-        );
-
-        if (discordProvider) {
-          userInfo.discord_id = discordProvider.userId;
-          log.info(F, `✅ Auth middleware - Found Discord ID: ${discordProvider.userId}`);
-        } else {
-          log.warn(F, '❌ Auth middleware - No Discord provider found');
-        }
+      if (discordId) {
+        userInfo.discord_id = discordId;
+        log.info(F, `✅ Auth middleware - Found Discord ID: ${discordId}`);
       } else {
-        const errorText = await identityRes.text();
-        log.error(F, `❌ Auth middleware - Identity providers fetch failed: ${identityRes.status} ${errorText}`);
+        log.warn(F, '❌ Auth middleware - No Discord provider found');
       }
     } catch (error) {
       log.error(F, `❌ Auth middleware - Error getting Discord ID: ${error}`);
