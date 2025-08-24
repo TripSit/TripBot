@@ -146,7 +146,7 @@ export async function appealReminder(
     }
 
     // Create the reminder message
-    const reminderMessage = `<@&${process.env.ROLE_MODERATOR}> Appeal reminder for <@${appeal.discord_id}>:
+    const reminderMessage = `<@&${process.env.ROLE_MODERATOR}> Appeal reminder for <@${userData.discord_id}>:
 
 **Appeal ID:** ${appeal.id}
 **Submitted:** ${new Date(appeal.created_at).toLocaleString()}
