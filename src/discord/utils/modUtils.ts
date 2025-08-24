@@ -2496,7 +2496,7 @@ export async function modModal(
             expires_at: null as Date | null,
             repealed_by: null as string | null,
             repealed_at: null as Date | null,
-            created_by: interaction.user.id,
+            created_by: targetData.id,
             created_at: new Date(),
           } as user_actions;
 
