@@ -70,6 +70,39 @@ export async function getDiscordIdFromFederatedIdentity(userId: string): Promise
     log.debug(F, `No Discord provider found for user ${userId}`);
     return null;
   } catch (error) {
+    // If we get a 401, the admin token expired - reset authentication and try once more
+    if (error instanceof Error && error.message.includes('401')) {
+      log.warn(F, `Admin token expired, re-authenticating and retrying for user ${userId}`);
+
+      // Reset authentication state
+      isAuthenticated = false;
+      authPromise = null;
+
+      try {
+        // Try once more with fresh authentication
+        const adminClient = await getAdminClient();
+        const federatedIdentities = await adminClient.users.listFederatedIdentities({
+          id: userId,
+          realm: process.env.KEYCLOAK_REALM || 'TripSit',
+        });
+
+        const discordProvider = federatedIdentities.find(
+          (provider: any) => provider.identityProvider === 'discord',
+        );
+
+        if (discordProvider) {
+          log.debug(F, `Found Discord provider for user ${userId} after re-auth: ${discordProvider.userId}`);
+          return discordProvider.userId as string;
+        }
+
+        log.debug(F, `No Discord provider found for user ${userId} after re-auth`);
+        return null;
+      } catch (retryError) {
+        log.error(F, `Error getting Discord ID for user ${userId} after re-auth: ${retryError}`);
+        throw retryError;
+      }
+    }
+
     log.error(F, `Error getting Discord ID for user ${userId}: ${error}`);
     throw error;
   }
