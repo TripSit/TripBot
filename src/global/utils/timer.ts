@@ -1175,9 +1175,9 @@ async function checkBirthdays() {
           return;
         }
 
-        // Send message to lounge channel
-        // const loungeChannel = await discordClient.channels.fetch(env.CHANNEL_VIPLOUNGE) as TextChannel;
-        // await loungeChannel.send(`Happy Birthday, <@${user.discord_id}>! We hope you have an amazing birthday! 🎉`);
+        // Send message to VIP lounge channel
+        const vipLounge = await discordClient.channels.fetch(env.CHANNEL_VIPLOUNGE) as TextChannel;
+        await vipLounge.send(`Happy Birthday, <@${user.discord_id}>! We hope you have an amazing birthday! 🎉`);
         log.info(F, `Birthday message sent for user: ${user.id}`);
       } catch (messageError) {
         log.error(F, `Failed to send birthday message for user ${user.id}: ${messageError}`);
