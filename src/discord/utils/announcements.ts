@@ -169,7 +169,6 @@ export async function announcements(message:Message) {
     '**Tip:** Convert one benzo dosage to another with `/calc benzo`.',
     '**Tip:** Need some quick activities? Head over to Rooni\'s Fun Activities Corner in the <id:guide>!',
     '**Tip:** Want to know what is happening behind the scenes? Check out the <id:guide> for info on our development projects!',
-    '**Tip:** Check out our wiki and the web version of our drug factsheets and combo info at tripsit.me!',
   ];
 
   const funAnnouncements = [
