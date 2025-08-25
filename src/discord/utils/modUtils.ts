@@ -1109,7 +1109,7 @@ async function messageModThread(
   let anonSummary = `${targetName} was ${pastVerb}`;
 
   if (isTimeout(command)) {
-    summary = summary.concat(duration);
+    summary = summary.concat(`\n**Timeout Ends:** ${duration}`);
     anonSummary = anonSummary.concat(duration);
   }
 
@@ -1239,58 +1239,21 @@ async function messageUser(
     return;
   }
 
-  if (addButtons) {
-    const targetData = await db.users.upsert({
-      where: {
-        discord_id: target.id,
-      },
-      create: {
-        discord_id: target.id,
-      },
-      update: {
-      },
-    });
+  const messageFilter = (mi: MessageComponentInteraction) => mi.user.id === target.id;
+  const collector = message.createMessageComponentCollector({ filter: messageFilter, time: 0 });
 
-    const messageFilter = (mi: MessageComponentInteraction) => mi.user.id === target.id;
-    const collector = message.createMessageComponentCollector({ filter: messageFilter, time: 0 });
-
-    // Fetch the mod thread channel once
-    let targetChan: TextChannel | null = null;
-    try {
-      targetChan = targetData.mod_thread_id
-        ? await discordClient.channels.fetch(targetData.mod_thread_id as Snowflake) as TextChannel
-        : null;
-    } catch (error) {
-      log.info(F, 'Failed to fetch mod thread. It was likely deleted.');
+  collector.on('collect', async (mi: MessageComponentInteraction) => {
+    if (mi.customId.startsWith('acknowledgeButton')) {
+      // remove the components from the message
+      await mi.update({ components: [] });
+      mi.user.send('Thanks for understanding! We appreciate your cooperation and will consider this in the future!');
+    } else if (mi.customId.startsWith('refusalButton')) {
+      // remove the components from the message
+      await mi.update({ components: [] });
+      mi.user.send(stripIndents`Thanks for admitting this, you\'ve been removed from the guild. You can rejoin if you ever decide to cooperate.`);
+      await guild.members.kick(target, 'Refused to acknowledge timeout');
     }
-
-    collector.on('collect', async (mi: MessageComponentInteraction) => {
-      if (mi.customId.startsWith('acknowledgeButton')) {
-        if (targetChan) {
-          await targetChan.send({
-            embeds: [embedTemplate()
-              .setColor(Colors.Green)
-              .setDescription(`${target.username} has acknowledged their warning.`)],
-          });
-        }
-        // remove the components from the message
-        await mi.update({ components: [] });
-        mi.user.send('Thanks for understanding! We appreciate your cooperation and will consider this in the future!');
-      } else if (mi.customId.startsWith('refusalButton')) {
-        if (targetChan) {
-          await targetChan.send({
-            embeds: [embedTemplate()
-              .setColor(Colors.Red)
-              .setDescription(`${target.username} has refused their timeout and was kicked.`)],
-          });
-        }
-        // remove the components from the message
-        await mi.update({ components: [] });
-        mi.user.send(stripIndents`Thanks for admitting this, you\'ve been removed from the guild. You can rejoin if you ever decide to cooperate.`);
-        await guild.members.kick(target, 'Refused to acknowledge timeout');
-      }
-    });
-  }
+  });
   log.debug(F, `[messageUser] time: ${Date.now() - startTime}ms`);
 }
 
@@ -2029,8 +1992,6 @@ export async function moderate(
     data: targetData,
   });
 
-  const anonSummary = `${targetName} was ${embedVariables[command as keyof typeof embedVariables].pastVerb}${durationStr}!`;
-
   log.debug(F, 'Sending message to mod thread');
   const modThread = await messageModThread(
     buttonInt,
@@ -2042,6 +2003,8 @@ export async function moderate(
     extraMessage,
     durationStr,
   );
+
+  const anonSummary = `${targetName} was ${embedVariables[command as keyof typeof embedVariables].pastVerb}${durationStr}!`;
 
   // Records the action taken on the action field of the modlog embed
   const embed = buttonInt.message.embeds[0].toJSON();
