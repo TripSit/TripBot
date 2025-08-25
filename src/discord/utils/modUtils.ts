@@ -428,7 +428,7 @@ export const modButtonRejectAppeal = (discordId: string) => new ButtonBuilder()
   .setCustomId(`moderate~APPEAL_REJECT~${discordId}`)
   .setLabel('Deny')
   .setEmoji('❌')
-  .setStyle(ButtonStyle.Danger);
+  .setStyle(ButtonStyle.Secondary);
 
 export async function tripSitTrustScore(
   targetId: string,
