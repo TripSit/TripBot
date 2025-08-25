@@ -1691,11 +1691,12 @@ export async function moderate(
     }
 
     // convert the milliseconds into a human readable string
-    const humanTime = msToHuman(actionDuration);
+    // const humanTime = msToHuman(actionDuration);
 
-    durationStr = ` for ${humanTime}. It will expire ${time(new Date(Date.now() + actionDuration), 'R')}`;
+    durationStr = `${time(new Date(Date.now() + actionDuration), 'R')}`;
     // log.debug(F, `duration: ${duration}`);
   }
+
   if (isFullBan(command)) {
     const durationVal = modalInt.fields.getTextInputValue('ban_duration');
 
@@ -1755,13 +1756,25 @@ export async function moderate(
   // log.debug(F, `TargetData: ${JSON.stringify(targetData, null, 2)}`);
   // If this is a Warn, ban, timeout or kick, send a message to the user
   // Do this first cuz you can't do this if they're not in the guild
+
+  // Set up the expiration string for the message
+  let expiration = '';
+  if (durationStr && isBan(command)) {
+    expiration = `Your ban will be automatically lifted ${durationStr}`;
+  } else if (durationStr && isTimeout(command)) {
+    expiration = `It will expire in ${durationStr}`;
+  } else {
+    expiration = '';
+  }
+
   if (sendsMessageToUser(command)
     && !vendorBan
     && (description !== '' && description !== null)
     && (targetMember || targetUser)) {
     log.debug(F, `[moderate] Sending message to ${targetName}`);
-    let body = stripIndents`I regret to inform you that you've been ${embedVariables[command as keyof typeof embedVariables].pastVerb}${durationStr} by Team TripSit. 
+    let body = stripIndents`I regret to inform you that you've been ${embedVariables[command as keyof typeof embedVariables].pastVerb} by Team TripSit. 
 
+        ${expiration}
       > ${description}
 
       **Do not message a moderator to talk about this or argue about the rules in public channels!**
