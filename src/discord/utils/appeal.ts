@@ -148,7 +148,6 @@ export async function appealReminder(
     // Create the reminder message
     const reminderMessage = `<@${userData.discord_id}> reminded us to review their ban appeal:
 
-**Appeal ID:** ${appeal.id}
 **Submitted:** ${new Date(appeal.created_at).toLocaleString()}
 **Status:** ${appeal.status}
 
