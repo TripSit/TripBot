@@ -59,6 +59,15 @@ router.post('/create', async (req: AuthenticatedRequest, res) => {
       ...req.body,
     } as AppealData;
 
+    // Ensure individual fields do not exceed 900 characters
+    if (
+      appealData.reason?.length > 900
+      || appealData.solution?.length > 900
+      || appealData.future?.length > 900
+      || appealData.extra?.length > 900) {
+      return res.status(400).json({ error: 'Individual fields cannot exceed 900 characters' });
+    }
+
     log.info(F, `body: ${JSON.stringify(req.body)}`);
     const result = await appeals.createAppeal({
       guild_id: appealData.guildId,
