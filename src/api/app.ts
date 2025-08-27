@@ -42,7 +42,7 @@ app.set('trust proxy', 2);
 // Standard middleware
 app.use(morgan('tiny'));
 app.use(helmet());
-app.use(express.json()); // configure the app to parse requests with JSON payloads
+app.use(express.json({ limit: '500kb' })); // configure the app to parse requests with JSON payloads & increase input size limit
 app.use(express.urlencoded({ extended: false })); // configure the app to parse requests with urlencoded payloads
 app.use(bodyParser.text()); // configure the app to be able to read text
 
