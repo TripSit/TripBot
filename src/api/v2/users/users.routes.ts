@@ -38,22 +38,4 @@ router.get('/banned', async (req: AuthenticatedRequest, res) => {
   }
 });
 
-// Get authenticated user's profile
-router.get('/profile', async (req: AuthenticatedRequest, res) => {
-  try {
-    if (!req.user?.discord_id) {
-      return res.status(400).json({ error: 'Discord ID not found in token' });
-    }
-
-    const result = await users.getUser(req.user.discord_id);
-    if (result) {
-      return res.json(result);
-    }
-
-    return res.status(404).json({ error: 'User not found' });
-  } catch (error) {
-    return res.status(500).json({ error: 'Failed to get user profile' });
-  }
-});
-
 export default router;
