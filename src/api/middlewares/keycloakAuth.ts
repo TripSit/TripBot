@@ -59,7 +59,6 @@ export default async function keycloakAuth(
       log.error(F, `Auth middleware - Error getting Discord ID: ${error}`);
     }
 
-    log.info(F, `Auth middleware - Final user object: ${JSON.stringify(userInfo, null, 2)}`);
     req.user = userInfo;
     next();
   } catch (error) {
