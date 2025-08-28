@@ -230,7 +230,7 @@ async function checkUserIdentities(user: UserRepresentation, githubUsername: str
       };
     }
 
-    log.warn(F, `User ${user.id} has GitHub account but no Discord account linked`);
+    log.info(F, `User ${user.id} has GitHub account but no Discord account linked`);
     return null;
   } catch (error) {
     // Some users might not have federated identities, that's okay

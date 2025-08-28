@@ -25,7 +25,7 @@ export default async function keycloakAuth(
     }
 
     const token = authHeader.split(' ')[1];
-    log.info(F, `🔍 Auth middleware - processing token for: ${req.path}`);
+    log.info(F, `Auth middleware - processing token for: ${req.path}`);
 
     // Validate token with Keycloak
     const userInfoRes = await fetch(`${process.env.KEYCLOAK_URL}/realms/TripSit/protocol/openid-connect/userinfo`, {
@@ -35,35 +35,35 @@ export default async function keycloakAuth(
     });
 
     if (!userInfoRes.ok) {
-      log.error(F, `❌ Auth middleware - Keycloak userinfo failed: ${userInfoRes.status}`);
+      log.error(F, `Auth middleware - Keycloak userinfo failed: ${userInfoRes.status}`);
       res.status(401).json({ error: 'Invalid or expired token' });
       return;
     }
     const userInfo = await userInfoRes.json() as KeycloakUserInfo;
 
-    log.info(F, `✅ Auth middleware - Got user info: ${JSON.stringify(userInfo, null, 2)}`);
+    log.info(F, `Auth middleware - Got user info: ${JSON.stringify(userInfo, null, 2)}`);
 
     // Get Discord ID using admin client
     try {
-      log.info(F, '🔍 Auth middleware - Getting Discord ID from federated identities...');
+      log.info(F, 'Auth middleware - Getting Discord ID from federated identities...');
 
       const discordId = await getDiscordIdFromFederatedIdentity(userInfo.sub);
 
       if (discordId) {
         userInfo.discord_id = discordId;
-        log.info(F, `✅ Auth middleware - Found Discord ID: ${discordId}`);
+        log.info(F, `Auth middleware - Found Discord ID: ${discordId}`);
       } else {
-        log.info(F, '❌ Auth middleware - No Discord provider found');
+        log.info(F, 'Auth middleware - No Discord provider found');
       }
     } catch (error) {
-      log.error(F, `❌ Auth middleware - Error getting Discord ID: ${error}`);
+      log.error(F, `Auth middleware - Error getting Discord ID: ${error}`);
     }
 
-    log.info(F, `🏁 Auth middleware - Final user object: ${JSON.stringify(userInfo, null, 2)}`);
+    log.info(F, `Auth middleware - Final user object: ${JSON.stringify(userInfo, null, 2)}`);
     req.user = userInfo;
     next();
   } catch (error) {
-    log.error(F, `💥 Auth middleware - Unexpected error: ${error}`);
+    log.error(F, `Auth middleware - Unexpected error: ${error}`);
     res.status(500).json({ error: 'Authentication error' });
   }
 }

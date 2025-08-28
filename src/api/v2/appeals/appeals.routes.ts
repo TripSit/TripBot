@@ -1,13 +1,12 @@
+/* eslint-disable max-len */
 /* eslint-disable sonarjs/no-duplicate-string */
 import express from 'express';
 import RateLimit from 'express-rate-limit';
-// import checkAuth from '../../utils/checkAuth';
 import keycloakAuth, { AuthenticatedRequest } from '../../middlewares/keycloakAuth';
 import { messageModThread, AppealData } from '../../../discord/utils/modUtils';
 
 import appeals from './appeals.queries';
 import users from '../users/users.queries';
-// import users from '../users/users.queries';
 
 const F = f(__filename);
 
@@ -60,6 +59,8 @@ router.post('/create', async (req: AuthenticatedRequest, res) => {
     } as AppealData;
 
     // Ensure individual fields do not exceed 900 characters
+    // The total should always be below 3600 to prevent 4000 char embed limit being hit
+    // The extra 400 is to provide space for changing embed text, etc.
     if (
       appealData.reason?.length > 900
       || appealData.solution?.length > 900
@@ -68,7 +69,6 @@ router.post('/create', async (req: AuthenticatedRequest, res) => {
       return res.status(400).json({ error: 'Individual fields cannot exceed 900 characters' });
     }
 
-    log.info(F, `body: ${JSON.stringify(req.body)}`);
     const result = await appeals.createAppeal({
       guild_id: appealData.guildId,
       discord_id: appealData.discordId,
@@ -98,6 +98,7 @@ router.post('/create', async (req: AuthenticatedRequest, res) => {
 
         **Is there anything else you would like to add?**: ${appealData.extra}
         `;
+
       await messageModThread(
         null,
         botMember,

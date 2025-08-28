@@ -1,10 +1,6 @@
 const F = f(__filename);
 
 export default {
-  getAllUsers() {
-    return db.users.findMany();
-  },
-
   async getUser(DiscordId:string) {
     return db.users.findFirst({
       where: {
@@ -21,7 +17,7 @@ export default {
         const ban = await guild.bans.fetch(discordId);
         return { banned: true, reason: ban.reason };
       } catch (error) {
-      // User is not banned (Discord throws error if user isn't banned)
+        // User is not banned (Discord throws error if user isn't banned)
         return { banned: false };
       }
     } catch (error) {

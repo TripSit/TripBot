@@ -10,8 +10,7 @@ function sanitizeAppealMessage(message: string): string {
     .replace(/&/g, '&amp;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#x27;')
-    .trim()
-    .slice(0, 1000); // Limit length to 1000 characters
+    .trim();
 }
 
 async function updateAppeal(
@@ -108,6 +107,7 @@ export async function appealReject(
 
   const [, , userId] = interaction.customId.split('~');
   const rawUserMessage = modalInteraction.fields.getTextInputValue('appealDescription');
+  // Sanitize moderator input to prevent XSS (Yes, I know. This will never be necessary, but good practice)
   const userMessage = sanitizeAppealMessage(rawUserMessage);
 
   const result = await updateAppeal(interaction, userId, userMessage, 'DENIED' as appeal_status);

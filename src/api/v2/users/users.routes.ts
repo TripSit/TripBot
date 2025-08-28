@@ -1,6 +1,5 @@
 import express from 'express';
 import RateLimit from 'express-rate-limit';
-// import checkAuth from '../../utils/checkAuth';
 import keycloakAuth, { AuthenticatedRequest } from '../../middlewares/keycloakAuth';
 
 import users from './users.queries';
@@ -20,11 +19,10 @@ router.use(limiter);
 router.use(keycloakAuth);
 
 router.get('/', async (req, res) => {
-  // log.debug(F, 'Getting all users');
-  // const result = await users.getAllUsers();
   res.json({ message: 'Oh, hello there!' });
 });
 
+// Check if user is banned
 router.get('/banned', async (req: AuthenticatedRequest, res) => {
   try {
     if (!req.user?.discord_id) {
@@ -51,6 +49,7 @@ router.get('/profile', async (req: AuthenticatedRequest, res) => {
     if (result) {
       return res.json(result);
     }
+
     return res.status(404).json({ error: 'User not found' });
   } catch (error) {
     return res.status(500).json({ error: 'Failed to get user profile' });

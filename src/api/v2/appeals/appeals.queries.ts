@@ -3,12 +3,7 @@ import { appealReminder } from '../../../discord/utils/appeal';
 const F = f(__filename);
 
 export default {
-  getAllAppeals() {
-    return db.appeals.findMany();
-  },
-
   async getAppeals(userId:string) {
-    log.debug(F, `UserId: ${userId}`);
     if (!userId || userId === 'undefined') {
       throw new Error('Invalid user ID provided');
     }
@@ -92,7 +87,7 @@ export default {
       });
 
       if (latestAppeal) {
-        log.info(F, `User ${data.discord_id} tried to create appeal before 30 day cooldown}`);
+        log.info(F, `User ${data.discord_id} tried to create appeal before 30 day cooldown`);
         return false;
       }
 
