@@ -41,8 +41,6 @@ export default async function keycloakAuth(
     }
     const userInfo = await userInfoRes.json() as KeycloakUserInfo;
 
-    log.info(F, `Auth middleware - Got user info: ${JSON.stringify(userInfo, null, 2)}`);
-
     // Get Discord ID using admin client
     try {
       log.info(F, 'Auth middleware - Getting Discord ID from federated identities...');
