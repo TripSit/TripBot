@@ -68,10 +68,10 @@ export default {
         return false;
       }
 
-      // Get the latest appeal within 30 seconds (dev) or 30 days (prod)
+      // Get the latest appeal within 30 seconds (dev) or 3 months (prod)
       const cooldownPeriod = process.env.NODE_ENV === 'development'
         ? 30 * 1000 // 30 seconds
-        : 30 * 24 * 60 * 60 * 1000; // 30 days
+        : 90 * 24 * 60 * 60 * 1000; // 3 months
 
       const latestAppeal = await db.appeals.findFirst({
         where: {
@@ -156,11 +156,11 @@ export default {
             };
           }
         } else {
-          // 24 hours for production
+          // 48 hours for production
           const hoursSinceReminder = (now.getTime() - reminderTime.getTime()) / (1000 * 60 * 60);
 
-          if (hoursSinceReminder < 24) {
-            const hoursLeft = Math.ceil(24 - hoursSinceReminder);
+          if (hoursSinceReminder < 48) {
+            const hoursLeft = Math.ceil(48 - hoursSinceReminder);
             return {
               success: false,
               message: `You can send another reminder in ${hoursLeft} hours`,
