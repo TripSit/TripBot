@@ -38,4 +38,20 @@ router.get('/banned', async (req: AuthenticatedRequest, res) => {
   }
 });
 
+// Get user Discord avatar
+router.get('/avatar', async (req: AuthenticatedRequest, res) => {
+  try {
+    if (!req.user?.discord_id) {
+      return res.status(400).json({ error: 'Discord ID not found in token' });
+    }
+
+    log.debug(F, `Getting avatar for discord_id: ${req.user.discord_id}`);
+    const avatarData = await users.getDiscordAvatar(req.user.discord_id);
+    return res.json(avatarData);
+  } catch (error) {
+    log.error(F, `Error getting Discord avatar: ${error}`);
+    return res.status(500).json({ error: 'Failed to get Discord avatar' });
+  }
+});
+
 export default router;
