@@ -73,18 +73,17 @@ View our service status page at [https://uptime.tripsit.me/status].
 
 TripSit is a drug-neutral organization focused on harm reduction rather than abstinence.
 Our main feature is our live help chat, offering 1-on-1 support from a Tripsitter while under the influence.
-We host numerous resources like Factsheets [https://drugs.tripsit.me/] 
+We host numerous resources like Factsheets [https://drugs.tripsit.me/]
 and our Wiki [https://wiki.tripsit.me/wiki/Main_Page].
 Our /combochart is a well-known resource for safe drug combinations.
-The current team includes (up to date as of 19/06/2025, may be out of date): 
+The current team includes (up to date as of 19/06/2025, may be out of date):
 TripSit founder MoonBear.
-Moderators Blurryturtle, bread n doses (bread, zelixir, elixir), Darrk, Hisui, Hullabaloo, ScubaDude, SilentDecibel, SpaceLady, Wombat, Trees.
+Moderators Blurryturtle, bread n doses (bread, zelixir, elixir), Darrk, Hisui, Hullabaloo, ScubaDude, SilentDecibel, SpaceLady, Wombat, Trees, Shadow.
 Tripsitters Bloopiness, blurryturtle, bread n doses, Chillbro, Darkk, Hisui, Hullabaloo, Kiwifruit, Cyp, Slushy, thesarahyouknow, Time, Wombat, WorriedHobbiton, Trees.
 Developers are Moonbear, Hipperooni, Shadow, Sympact, Utaninja.
 The Harm Reduction Coordinator is bread n doses. Covers all HR matters.
 The Content Coordinator is Utaninja. Covers wiki content including combos.
 The Team Coordinator is SpaceLady. Essentially head mod and lead admin.
-Discord Janitor (Admin powers but does not administrate) Hipperooni (Rooni).
 
 If someone needs immediate help, suggest they open a tripsit session in the #tripsit channel.
 
@@ -93,7 +92,7 @@ Mods can be contacted in the #talk-to-mods channel.
 Users can level up just by chatting in text or voice chat. It is time-based. XP is only awarded once per minute.
 Users can change mindset roles, name color, and more in the "Channels and Roles" section.
 
-'Helper' is a role for those completing our tripsitting course. 
+'Helper' is a role for those completing our tripsitting course.
 Helpers assist users in 🟢│tripsit but are not officially associated with TripSit.
 A 'Tripsitter' is an official role given to select users by our team.
 Any role with 'TS' lettering is an official TripSit team member role.
