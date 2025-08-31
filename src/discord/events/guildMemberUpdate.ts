@@ -215,6 +215,15 @@ const donorColorRoles = {
   [key in DonorColorNames]: string;
 };
 
+const subscriberRoles = [
+  env.ROLE_PATREONSUB_TIER_1,
+  env.ROLE_PATREONSUB_TIER_2,
+  env.ROLE_PATREONSUB_TIER_3,
+  env.ROLE_DISCORDSUB_TIER_1,
+  env.ROLE_DISCORDSUB_TIER_2,
+  env.ROLE_DISCORDSUB_TIER_3,
+];
+
 // type DonorNames =
 // | 'ROLE_BOOSTER'
 // | 'ROLE_PATRON'
@@ -311,7 +320,7 @@ async function donorColorCheck(
   }
 }
 
-async function donorColorRemove(
+async function donorRemove(
   newMember: GuildMember,
   roleId: string,
 ) {
@@ -332,6 +341,11 @@ async function donorColorRemove(
     if (donorColorRole) {
       await newMember.roles.remove(donorColorRole);
     }
+  }
+  // Remove supporter role if a sub role is removed
+  if (subscriberRoles.includes(roleId)) {
+    const supporterRole = await newMember.guild.roles.fetch(env.ROLE_SUPPORTER);
+    if (supporterRole) await newMember.roles.remove(supporterRole);
   }
 }
 
@@ -473,63 +487,60 @@ async function addedBooster(
   }
 }
 
-async function addedPatreon(
+async function addedSubscriber(
   newMember: GuildMember,
   roleId: string,
 ) {
-  if (roleId === env.ROLE_PATRON) {
-    // Check if they already have donated before, if so send a special message
-    if (newMember.roles.cache.has(env.ROLE_PREMIUM)) {
-      const channelViplounge = await discordClient.channels.fetch(env.CHANNEL_VIPLOUNGE) as TextChannel;
-      await channelViplounge.send(stripIndents`
-        ** ${donorEmoji} ${newMember} just contributed further and became a Supporter by \
-        signing up via [Patreon](<https://www.patreon.com/TripSit>)! ${donorEmoji} **
-    
-          ${thankYouPhrases[Math.floor(Math.random() * thankYouPhrases.length)]}
-    
-          ${donationTagline}`);
-    } else {
-    // If added as a first time Patron and donator, give them the premium role and send the message
-      const role = await newMember.guild.roles.fetch(env.ROLE_PREMIUM) as Role;
-      await newMember.roles.add(role);
+  if (subscriberRoles.includes(roleId)) {
+    // If they are a subscriber, give them the premium role and supporter role
+    const rolePremium = await newMember.guild.roles.fetch(env.ROLE_PREMIUM) as Role;
+    await newMember.roles.add(rolePremium);
+    const roleSupporter = await newMember.guild.roles.fetch(env.ROLE_SUPPORTER) as Role;
+    await newMember.roles.add(roleSupporter);
+  }
+  // Send a message to the VIP lounge based on which platform they subscribed on
+  const channelViplounge = await discordClient.channels.fetch(env.CHANNEL_VIPLOUNGE) as TextChannel;
 
-      const channelViplounge = await discordClient.channels.fetch(env.CHANNEL_VIPLOUNGE) as TextChannel;
-      await channelViplounge.send(stripIndents`
-      ** ${donorEmoji} ${newMember} just became a Supporter and Premium Member \
-      (first time donator) by signing up via [Patreon](<https://www.patreon.com/TripSit>)! ${donorEmoji} **
-  
-        ${thankYouPhrases[Math.floor(Math.random() * thankYouPhrases.length)]}
-  
-        ${donationTagline}`);
-    }
+  // Helper to get tier number
+  const getTier = (role: string): string => {
+    if (role === env.ROLE_PATREONSUB_TIER_1) return 'tier 1';
+    if (role === env.ROLE_PATREONSUB_TIER_2) return 'tier 2';
+    if (role === env.ROLE_PATREONSUB_TIER_3) return 'tier 3';
+    if (role === env.ROLE_DISCORDSUB_TIER_1) return 'tier 1';
+    if (role === env.ROLE_DISCORDSUB_TIER_2) return 'tier 2';
+    if (role === env.ROLE_DISCORDSUB_TIER_3) return 'tier 3';
+    return '';
+  };
+
+  const tier = getTier(roleId);
+
+  if (roleId === env.ROLE_PATREONSUB_TIER_1
+      || roleId === env.ROLE_PATREONSUB_TIER_2
+      || roleId === env.ROLE_PATREONSUB_TIER_3) {
+    await channelViplounge.send(stripIndents`
+      **${donorEmoji} ${newMember.toString()} just subscribed on [Patreon](<https://www.patreon.com/tripsit>) at ${tier}! ${donorEmoji}**
+      ${thankYouPhrases[Math.floor(Math.random() * thankYouPhrases.length)]}
+      ${donationTagline}`);
+  } else if (roleId === env.ROLE_DISCORDSUB_TIER_1
+      || roleId === env.ROLE_DISCORDSUB_TIER_2
+      || roleId === env.ROLE_DISCORDSUB_TIER_3) {
+    await channelViplounge.send(stripIndents`
+      **${donorEmoji} ${newMember.toString()} just subscribed on [Discord](<https://discord.com/>) at ${tier}! ${donorEmoji}**
+      ${thankYouPhrases[Math.floor(Math.random() * thankYouPhrases.length)]}
+      ${donationTagline}`);
   }
   if (roleId === env.ROLE_DONATIONTRIGGER) {
     // If donated on KoFi, remove the trigger role
     const roleTrigger = await newMember.guild.roles.fetch(env.ROLE_DONATIONTRIGGER) as Role;
     await newMember.roles.remove(roleTrigger);
-    // Check if they already have already donated, if so send a special message
-    if (newMember.roles.cache.has(env.ROLE_PREMIUM)) {
-      const channelViplounge = await discordClient.channels.fetch(env.CHANNEL_VIPLOUNGE) as TextChannel;
-      await channelViplounge.send(stripIndents`
-        ** ${donorEmoji} ${newMember} just made a further contribution by donating via \
-        [KoFi](<https://ko-fi.com/tripsit>)! ${donorEmoji} **
-    
-          ${thankYouPhrases[Math.floor(Math.random() * thankYouPhrases.length)]}
-    
-          ${donationTagline}`);
-    } else {
-    // If donated on KoFi and for the first time, give them the premium role and send the message
-      const role = await newMember.guild.roles.fetch(env.ROLE_PREMIUM) as Role;
-      await newMember.roles.add(role);
-      const channelViplounge = await discordClient.channels.fetch(env.CHANNEL_VIPLOUNGE) as TextChannel;
-      await channelViplounge.send(stripIndents`
-      ** ${donorEmoji} ${newMember} just became a Premium Member (first time donator) by donating via \
-      [KoFi](<https://ko-fi.com/tripsit>)! ${donorEmoji} **
-  
-        ${thankYouPhrases[Math.floor(Math.random() * thankYouPhrases.length)]}
-  
-        ${donationTagline}`);
-    }
+    // Give them the premium membership role
+    const rolePremium = await newMember.guild.roles.fetch(env.ROLE_PREMIUM) as Role;
+    await newMember.roles.add(rolePremium);
+    // Send a message to the VIP lounge
+    await channelViplounge.send(stripIndents`
+      **${donorEmoji} ${newMember.toString()} just donated on [Ko-fi](<https://ko-fi.com/tripsit>)! ${donorEmoji}**
+      ${thankYouPhrases[Math.floor(Math.random() * thankYouPhrases.length)]}
+      ${donationTagline}`);
   }
 }
 
@@ -551,7 +562,7 @@ async function roleAddProcess(
     await teamMindsetCheck(newMember, roleId);
     await addedVerified(newMember, roleId);
     await addedBooster(newMember, roleId);
-    await addedPatreon(newMember, roleId);
+    await addedSubscriber(newMember, roleId);
 
     const role = await newMember.guild.roles.fetch(roleId) as Role;
     await auditlog.send(`${newMember.displayName} added ${role.name}`);
@@ -572,7 +583,7 @@ async function roleRemProcess(
     // We don't want to run the rest of this on any other guild
     if (newMember.guild.id !== env.DISCORD_GUILD_ID) return;
     await teamMindsetRemove(newMember, roleId);
-    await donorColorRemove(newMember, roleId);
+    await donorRemove(newMember, roleId);
 
     const role = await newMember.guild.roles.fetch(roleId) as Role;
     await auditlog.send(`${newMember.displayName} removed ${role.name}`);

@@ -24,6 +24,8 @@ export default class About {
 
   public static readonly patreon: string = 'https://www.patreon.com/TripSit';
 
+  public static readonly discordSub: string = 'https://discord.com/servers/tripsit-179641883222474752';
+
   public static readonly kofi: string = 'https://ko-fi.com/tripsit';
 
   public static readonly spreadshop: string = 'https://tripsit.myspreadshop.com/';
@@ -59,7 +61,7 @@ export default class About {
     6. Run the /setup tripsit command with each of the above channels and roles
 
     ** Troubleshooting **
-    If you have any issues with this system, please contact Moonbear on the TripSit guild! 
+    If you have any issues with this system, please contact Moonbear on the TripSit guild!
     They're happy to give direct support to any problems you may have!`;
 
   public static readonly description: string = stripIndents`
@@ -95,9 +97,11 @@ export default class About {
     For as little as $1 a month, you can become a patron and keep supporting the good cause.
     After a long enough subscription, you'll be sent some sweet TripSit merch!
     Active patreon subscribers also get a special role in the discord, exclusive to them.
-  3) [Ko-Fi Donation](${this.kofi})
+  3) [Discord Subscription](${this.discord})
+    If you prefer to keep everything on Discord, you can subscribe to us directly through Discord via the TripSit server and get the same perks as Patreon subscribers.
+  4) [Ko-Fi Donation](${this.kofi})
     If Subscriptions aren't your style, you can give a one-time boost to our cause through Ko-Fi.
-  4) No spare change? Boosting our server will also give you donor perks while your boost is active!
+  5) No spare change? Boosting our server will also give you donor perks while your boost is active!
 
     What's in it for you? Well, we've got some fantastic benefits for our supporters:
 
@@ -106,7 +110,7 @@ export default class About {
     - **Special Donor Colors**: Deck out your Discord persona with unique colors.
     - **Supporter Role (Patreon)**: Be shown at the top of the member list with a unique icon.
     - More surprises are in the works! Your suggestions are welcome.
-    
+
     Your donations directly fuel our server costs, ensuring TripSit keeps doing what we do best.
 
     With enough support, we can even expand and provide new services – who's up for a Minecraft server? 😎
@@ -122,13 +126,13 @@ export default class About {
       Your feedback is important to us, we're not in this for the money, we're in this to help people, and we want the bot to be as good as it can be.
 
       If you have a feature request, please make sure to include as much detail as possible, including how you think it should work, and what it should do.
-      
+
       If you have a bug report, please include as much detail as possible, including what you were doing when the bug happened, and what you expected to happen.
-      
+
       If you just want to say thanks, we appreciate it! We love to hear that we're doing a good job, and it helps keep us motivated to keep working on the bot.
-      
+
       If you're a developer, and you want to help out, the bot is open source, and we're always looking for new contributors. We're happy to help you get started!
-      
+
       Moonbear is also available on the [TripSit discord](${this.discord}), and is happy to chat about anything bot related, or anything else you want to talk about.`;
 
   public static readonly credits:string = stripIndents`
@@ -169,7 +173,7 @@ export default class About {
     5. Run the /setup applications command with each of the above channels and roles
 
     ** Troubleshooting **
-    If you have any issues with this system, please contact Moonbear on the TripSit guild! 
+    If you have any issues with this system, please contact Moonbear on the TripSit guild!
     They're happy to give direct support to any problems you may have!`;
 
   public static readonly techhelpDesc = stripIndents`
@@ -234,13 +238,13 @@ export default class About {
 
     You can use the \`/levels\` command to see your experience breakdown, which is categorized by where you chat:
     * Total - The sum of all experience gained. In most contexts this is your "level".
-    * General - Experience gained from sending messages in most channels. If it's not one of the below categories, it's general. 
+    * General - Experience gained from sending messages in most channels. If it's not one of the below categories, it's general.
     * TripSitter - Harm Reduction category rooms, helping out when people need it.
     * Developer - Development category rooms, talking about development or ideas.
     * Team - Team category rooms, talking about team stuff.
-    
+
     Each of those categories can track text and also voice experience.
-    
+
     Levels are not used for anything vital, but as you level up you may gain access to new commands or features.
     * Every 10 levels, you gain a new level role with it's own icon
     * Level 10 grants camera and stream permissions in VC

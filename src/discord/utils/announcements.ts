@@ -143,6 +143,10 @@ export async function announcements(message:Message) {
     '**Reminder:** If in doubt, throw it out. Don\'t take risks with unknown or suspicious substances.',
     '**Reminder:** Take breaks and rest when needed. Listen to your body and don\'t push your limits.',
     '**Reminder:** Health checks are important to catch issues early! Make sure to try to see a dentist at least once a year, an optometrist every two years and an audiologist every five years.',
+    '**Reminder:** You can access our resources via [drugs.tripsit.me](<https://drugs.tripsit.me>).',
+    '**Reminder:** Our main website is [tripsit.me](<https://tripsit.me>).',
+    '**Reminder:** An interactive version of the combo chart is available at [combo.tripsit.me](<https://combo.tripsit.me>).',
+    '**Reminder:** We have extra resources available on our wiki at [wiki.tripsit.me](<https://wiki.tripsit.me>).',
   ];
 
   const tipAnnouncements = [
@@ -167,7 +171,7 @@ export async function announcements(message:Message) {
     '**Tip:** Want to see a reagent chart? Use `/reagents`!',
     '**Tip:** Get quick access to the combo chart with `/combochart`!',
     '**Tip:** Convert one benzo dosage to another with `/calc benzo`.',
-    '**Tip:** Need some quick activities? Head over to Rooni\'s Fun Activities Corner in the <id:guide>!',
+    '**Tip:** Need some quick activities? Head over to the Activities Corner in the <id:guide>!',
     '**Tip:** Want to know what is happening behind the scenes? Check out the <id:guide> for info on our development projects!',
   ];
 
