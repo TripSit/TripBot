@@ -1300,7 +1300,7 @@ export async function messageModThread(
 
     const messageOptions = await modResponse(interaction, command, true, appealData);
 
-    if (appealData && description.length > 1500) { // If it's too long for regular message
+    if (appealData) {
       const appealEmbed = embedTemplate()
         .setTitle('Ban Appeal Details')
         .setDescription(description)
