@@ -1292,27 +1292,26 @@ export async function messageModThread(
       **Note sent to user:** ${(description !== '' && description !== null) ? description : noMessageSent}
       ${command === 'NOTE' && !newModThread ? '' : roleModerator}
       `;
+      await modThread.send({
+        content: modThreadMessage,
+        ...await modResponse(interaction, command, true, appealData),
+      });
     } else {
-      modThreadMessage = stripIndents`
+      // Send summary as content
+      await modThread.send({
+        content: stripIndents`
       ${summary}
-      ${command === 'NOTE' && !newModThread ? '' : roleModerator}`.trim();
+      ${command === 'NOTE' && !newModThread ? '' : roleModerator}`.trim(),
+      });
+      // Send description as a separate embed message
+      if (description && description.trim() !== '') {
+        await modThread.send({
+          embeds: [embedTemplate().setDescription(description)],
+        });
+      }
+      // Optionally send modResponse embed/buttons if needed
+      await modThread.send(await modResponse(interaction, command, true, appealData));
     }
-
-    const messageOptions = await modResponse(interaction, command, true, appealData);
-
-    if (appealData) {
-      const appealEmbed = embedTemplate()
-        .setTitle('Ban Appeal Details')
-        .setDescription(description)
-        .setColor(Colors.Blue);
-
-      messageOptions.embeds = messageOptions.embeds ? [...messageOptions.embeds, appealEmbed] : [appealEmbed];
-    }
-
-    await modThread.send({
-      content: modThreadMessage,
-      ...messageOptions,
-    });
 
     await modThread.setName(`${emoji}│${targetName}`);
 
