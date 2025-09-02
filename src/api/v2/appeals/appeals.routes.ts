@@ -58,15 +58,14 @@ router.post('/create', async (req: AuthenticatedRequest, res) => {
       ...req.body,
     } as AppealData;
 
-    // Ensure individual fields do not exceed 900 characters
-    // The total should always be below 3600 to prevent 4000 char embed limit being hit
-    // The extra 400 is to provide space for changing embed text, etc.
-    if (
-      appealData.reason?.length > 900
-      || appealData.solution?.length > 900
-      || appealData.future?.length > 900
-      || appealData.extra?.length > 900) {
-      return res.status(400).json({ error: 'Individual fields cannot exceed 900 characters' });
+    const totalLength = (appealData.reason?.length || 0)
+                      + (appealData.solution?.length || 0)
+                      + (appealData.future?.length || 0)
+                      + (appealData.extra?.length || 0);
+
+    // Account for the question text overhead (roughly 400 chars)
+    if (totalLength > 3600) {
+      return res.status(400).json({ error: 'Total appeal content cannot exceed 3600 characters' });
     }
 
     const result = await appeals.createAppeal({

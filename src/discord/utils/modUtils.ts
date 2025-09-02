@@ -1295,13 +1295,23 @@ export async function messageModThread(
     } else {
       modThreadMessage = stripIndents`
       ${summary}
-      ${description}
       ${command === 'NOTE' && !newModThread ? '' : roleModerator}`.trim();
+    }
+
+    const messageOptions = await modResponse(interaction, command, true, appealData);
+
+    if (appealData && description.length > 1500) { // If it's too long for regular message
+      const appealEmbed = embedTemplate()
+        .setTitle('Ban Appeal Details')
+        .setDescription(description)
+        .setColor(Colors.Blue);
+
+      messageOptions.embeds = messageOptions.embeds ? [...messageOptions.embeds, appealEmbed] : [appealEmbed];
     }
 
     await modThread.send({
       content: modThreadMessage,
-      ...await modResponse(interaction, command, true, appealData),
+      ...messageOptions,
     });
 
     await modThread.setName(`${emoji}│${targetName}`);
