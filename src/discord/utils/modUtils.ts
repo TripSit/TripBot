@@ -1221,13 +1221,18 @@ export async function messageModThread(
       embeds: [modlogEmbed],
     });
   } else {
+    // Send summary as content (without description to avoid 2000 char limit)
     await modLogChan.send({
-      content: stripIndents`
-      ${anonSummary}
-      ${description}
-      `,
+      content: anonSummary,
       embeds: [modlogEmbed],
     });
+
+    // Send description as a separate embed message
+    if (description && description.trim() !== '') {
+      await modLogChan.send({
+        embeds: [embedTemplate().setDescription(description)],
+      });
+    }
   }
 
   if (extraMessage) {
@@ -1309,7 +1314,7 @@ export async function messageModThread(
           embeds: [embedTemplate().setDescription(description)],
         });
       }
-      // Optionally send modResponse embed/buttons if needed
+
       await modThread.send(await modResponse(interaction, command, true, appealData));
     }
 
