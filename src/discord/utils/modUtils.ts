@@ -1307,15 +1307,11 @@ export async function messageModThread(
         content: stripIndents`
       ${summary}
       ${command === 'NOTE' && !newModThread ? '' : roleModerator}`.trim(),
+        embeds: [
+          embedTemplate().setDescription(description.trim()),
+        ],
+        ...await modResponse(interaction, command, true, appealData),
       });
-      // Send description as a separate embed message
-      if (description && description.trim() !== '') {
-        await modThread.send({
-          embeds: [embedTemplate().setDescription(description)],
-        });
-      }
-
-      await modThread.send(await modResponse(interaction, command, true, appealData));
     }
 
     await modThread.setName(`${emoji}│${targetName}`);
