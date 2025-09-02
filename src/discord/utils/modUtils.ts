@@ -1302,15 +1302,18 @@ export async function messageModThread(
         ...await modResponse(interaction, command, true, appealData),
       });
     } else {
-      // Send summary as content
+      const modResponseData = await modResponse(interaction, command, true, appealData);
+      const appealEmbed = embedTemplate().setDescription(description.trim());
+
       await modThread.send({
         content: stripIndents`
-      ${summary}
-      ${command === 'NOTE' && !newModThread ? '' : roleModerator}`.trim(),
+        ${summary}
+        ${command === 'NOTE' && !newModThread ? '' : roleModerator}`.trim(),
         embeds: [
-          embedTemplate().setDescription(description.trim()),
+          appealEmbed,
+          ...(modResponseData.embeds || []),
         ],
-        ...await modResponse(interaction, command, true, appealData),
+        components: modResponseData.components,
       });
     }
 
