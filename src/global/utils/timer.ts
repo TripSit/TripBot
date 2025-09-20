@@ -78,12 +78,16 @@ async function checkReminders() { // eslint-disable-line @typescript-eslint/no-u
             update: {},
           });
 
-          // Send the user a message
-          if (userData?.discord_id) {
-            const user = await global.discordClient.users.fetch(userData.discord_id);
-            if (user) {
-              await user.send(`Hey ${user.username}, you asked me to remind you: ${reminder.reminder_text}`);
+          try {
+            // Send the user a message
+            if (userData?.discord_id) {
+              const user = await global.discordClient.users.fetch(userData.discord_id);
+              if (user) {
+                await user.send(`Hey ${user.username}, you asked me to remind you: ${reminder.reminder_text}`);
+              }
             }
+          } catch (err) { // do nothing, user likely  disabled DMs or not in a shared guild
+            log.error(F, `Error sending reminder DM to user ${userData?.discord_id}: ${err}`);
           }
 
           // Delete the reminder from the database

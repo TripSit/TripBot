@@ -1,11 +1,11 @@
 import {
   Message, TextChannel,
 } from 'discord.js';
-import { isToxic } from './moderateHatespeech';
+// import { isToxic } from './moderateHatespeech';
 
 export default youAre;
 
-const F = f(__filename);
+// const F = f(__filename);
 
 export function valMatch(
   input:string,
@@ -41,14 +41,14 @@ export async function youAre(message: Message): Promise<void> {
 
   // 1% chance to trigger on prod otherwise 100% chance to trigger on dev
   if (Math.floor(Math.random() * 101) >= chance) return;
-  const phrase = key[2];
+  // const phrase = key[2];
   // log.info(F, `Phrase: ${phrase}`);
-  const response = await isToxic(`You're ${phrase}`);
-  if (response.isFlaggedOrLowConfidence) {
-    // eslint-disable-next-line max-len
-    log.info(F, `Message flagged by ModerateHatespeech API: "You're ${phrase}\n ${response.class} (${response.confidence})"`);
-    return;
-  }
+  // const response = await isToxic(`You're ${phrase}`);
+  // if (response.isFlaggedOrLowConfidence) {
+  //   // eslint-disable-next-line max-len
+  //   log.info(F, `Message flagged by ModerateHatespeech API: "You're ${phrase}\n ${response.class} (${response.confidence})"`);
+  //   return;
+  // }
 
   await message.channel.send({
     content: `${message.member?.displayName}: You're ${key[2]}.`,
