@@ -1,68 +1,29 @@
-// For format details, see https://aka.ms/devcontainer.json. For config options, see the
-// README at: https://github.com/devcontainers/templates/tree/main/src/typescript-node
-
 {
 	"name": "TripBot Dev",
-	"image": "mcr.microsoft.com/devcontainers/typescript-node:1-20-bullseye",
-	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
-
-	// Configure tool-specific properties.
+	"dockerComposeFile": ["../docker-compose.yml"],
+	"service": "tripbot",
+	"workspaceFolder": "/workspaces/tripbot",
+	"shutdownAction": "stopCompose",
+  	"postStartCommand": "npm run tripbot:dev",
 	"customizations": {
-		"codespaces": {
-			"openFiles": [
-				"FIRSTRUN.MD"
-			]
-		},
-		// Configure properties specific to VS Code.
-		"vscode": {
-			"settings": {
-				"files.autoSave": "off",
-				// "editor.inlineSuggest.enabled": true,
-				// "eslint.codeActionsOnSave.rules": null,
-				"editor.codeActionsOnSave": {
-						"source.fixAll.eslint": true
-				},
-				"eslint.validate": [
-						"javascript",
-						"typescript"
-				],
-				// "editor.tabSize": 2,
-				// "git.enableSmartCommit": true,
-				// "git.autofetch": true,
-				// "git.confirmSync": false,
-				// "typescript.updateImportsOnFileMove.enabled": "always",
-				// "javascript.updateImportsOnFileMove.enabled": "always",
-				// "github.copilot.enable": {
-				// 	"*": true,
-				// 	"yaml": true,
-				// 	"plaintext": true,
-				// 	"markdown": true
-				// },
-				// "editor.rulers": [
-				// 	120
-				// ],
-			},
-			//"devPort": {},
-			// Specify which VS Code extensions to install (List of IDs)
-			"extensions": [
-				// "dbaeumer.vscode-eslint",
-				// "GitHub.copilot",
-				// "mikestead.dotenv"
-			]
-		}
+	  "vscode": {
+		"extensions": [
+		  "streetsidesoftware.code-spell-checker",
+		  "dbaeumer.vscode-eslint",
+		  "mikestead.dotenv",
+		  "oderwat.indent-rainbow",
+		  "ms-vscode-remote.remote-containers",
+		  "ms-azuretools.vscode-docker",
+		  "Prisma.prisma",
+		  "SonarSource.sonarlint-vscode"
+		]
+	  },
+	  "codespaces": {
+		"openFiles": ["FIRSTRUN.MD"]
+	  }
 	},
 	"features": {
-		"ghcr.io/devcontainers/features/github-cli:1": {},
-	},
-
-	// Features to add to the dev container. More info: https://containers.dev/features.
-	// "features": {},
-
-	// Use 'forwardPorts' to make a list of ports inside the container available locally.
-	// "forwardPorts": [],
-
-	// Use 'postCreateCommand' to run commands after the container is created.
-	"postCreateCommand": ["npm install"]
-	// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
-	// "remoteUser": "root"
-}
+	  "ghcr.io/devcontainers/features/github-cli:1": {}
+	}
+  }
+  
