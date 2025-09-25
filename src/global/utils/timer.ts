@@ -86,7 +86,7 @@ async function checkReminders() { // eslint-disable-line @typescript-eslint/no-u
                 await user.send(`Hey ${user.username}, you asked me to remind you: ${reminder.reminder_text}`);
               }
             }
-          } catch (err) { // do nothing, user likely  disabled DMs or not in a shared guild
+          } catch (err) { // do nothing, user likely disabled DMs or not in a shared guild
             log.error(F, `Error sending reminder DM to user ${userData?.discord_id}: ${err}`);
           }
 
