@@ -98,9 +98,10 @@ export async function pitchTent(
   - \`/tent ping\` - Use this to ping those opted-in to VC ping invites
 
 - **Modify your tent**
+	- \`/tent name\` - Rename your tent
   - \`/tent limit\` - Set a user limit
   - \`/tent level\` - Set a level requirement
-  - \`/tent lock\`- Locks channel for all
+  - \`/tent lock\`- Lock your tent
 
 - **Moderate your tent**
   - \`/tent add\` - Allow a user to join and see your tent, regardless of other settings
@@ -147,7 +148,7 @@ export async function transferTent(
       .setColor(Colors.Blue)
       .setDescription(`
         The new host is ${newHost}.
-        
+
         Note: Old hosts can still rejoin. (They will not be host)`);
     await channel.send({
       content: `<@${newHost.id}>`,
