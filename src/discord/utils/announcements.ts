@@ -1,9 +1,15 @@
 /* eslint-disable max-len */
 import {
-  DMChannel,
+  Colors,
   Message,
-  MessageReaction,
   TextChannel,
+  DMChannel,
+  MessageFlags,
+  ContainerBuilder,
+  TextDisplayBuilder,
+  SeparatorBuilder,
+  SeparatorSpacingSize,
+  MessageReaction,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
 import { embedTemplate } from './embedTemplate';
@@ -11,8 +17,8 @@ import { fact } from '../../global/commands/g.fact';
 
 const F = f(__filename); // eslint-disable-line
 
-const frequency = env.NODE_ENV === 'production' ? 100 : 1000;
-const bigFrequency = env.NODE_ENV === 'production' ? 500 : 2000;
+const frequency = 1;
+const bigFrequency = 1;
 const messageCounter = {} as MessageCounterType;
 let bigFrequencyCounter = 0;
 
@@ -298,133 +304,138 @@ export async function announcements(message:Message) {
     return;
   }
 
-  // log.debug(F, `instance of TextChannel: ${message.channel instanceof TextChannel}`);
-  if (message.channel instanceof TextChannel
+  if (
+    message.channel instanceof TextChannel
     && message.channel.parentId
-    && generalChatCategories.includes(message.channel.parentId)) {
-    // log.debug(F, `message.channel.parentId: ${message.channel.parentId}`);
-    // log.debug(F, `generalChatCategories: ${generalChatCategories}`);
-    // log.debug(F, `generalChatCategories.includes(message.channel.parentId): ${generalChatCategories.includes(message.channel.parentId)}`);
+    && generalChatCategories.includes(message.channel.parentId)
+  ) {
     messageCounter[message.channel.id] = messageCounter[message.channel.id]
       ? messageCounter[message.channel.id] + 1
       : 1;
 
-    // log.debug(F, `messageCounter[message.channel.id]: ${messageCounter[message.channel.id]}`);
-    // log.debug(F, `bigFrequency: ${bigFrequency}`);
-    // log.debug(F, `${messageCounter[message.channel.id] % bigFrequency === 0}`);
-    // log.debug(F, `frequency: ${frequency}`);
-    // log.debug(F, `${messageCounter[message.channel.id] % frequency === 0}`);
     if (messageCounter[message.channel.id] % bigFrequency === 0) {
+      // --- BIG ANNOUNCEMENT ---
       const bigAnnouncementDict = {
         0: {
-          message: stripIndents`
-                ${[...happyEmojis].sort(() => 0.5 - Math.random()).slice(0, 14).join(' ')}
-                **Please remember to KIPP - Keep It Positive Please!**
-                We're all here to help each other and have fun!
-                ${[...happyEmojis].sort(() => 0.5 - Math.random()).slice(0, 14).join(' ')}`,
+          emojiBanner: [...happyEmojis].sort(() => 0.5 - Math.random()).slice(0, 14).join(' '),
+          heading: 'Keep It Positive Please!',
+          message: "We're all here to help each other and have fun!",
           footer: 'Send a ❤ to someone and react to get /h2flow points!',
           emoji: '❤',
+          accent_color: Colors.Green,
         },
         1: {
-          message: stripIndents`
-              ${[...movingEmojis].sort(() => 0.5 - Math.random()).slice(0, 12).join(' ')}
-              **It's good to get up and move every hour!**
-              Take a break, stretch, and get some fresh air!
-              ${[...movingEmojis].sort(() => 0.5 - Math.random()).slice(0, 12).join(' ')}`,
+          emojiBanner: [...movingEmojis].sort(() => 0.5 - Math.random()).slice(0, 12).join(' '),
+          heading: "It's good to get up and move every hour!",
+          message: 'Take a break, stretch, and get some fresh air!',
           footer: 'Get up, move around and react to get /h2flow points!',
           emoji: '🕴',
+          accent_color: Colors.Orange,
         },
         2: {
-          message: stripIndents`
-              ${[...waterAndTeaEmojis].sort(() => 0.5 - Math.random()).slice(0, 12).join(' ')}
-              ＨＹＤＲＡＴＩＯＮ ＲＥＭＩＮＤＥＲ
-              Doesn't some water sound great right now?
-              ${[...waterAndTeaEmojis].sort(() => 0.5 - Math.random()).slice(0, 12).join(' ')}`,
+          emojiBanner: [...waterAndTeaEmojis].sort(() => 0.5 - Math.random()).slice(0, 12).join(' '),
+          heading: 'ＨＹＤＲＡＴＩＯＮ ＲＥＭＩＮＤＥＲ',
+          message: "Doesn't some water sound great right now?",
           footer: 'Take a sip of something and react to get /h2flow points!',
           emoji: '💧',
+          accent_color: Colors.Blue,
         },
       };
 
       bigFrequencyCounter += 1;
-      if (bigFrequencyCounter > 2) {
-        bigFrequencyCounter = 0;
-      }
+      if (bigFrequencyCounter > 2) bigFrequencyCounter = 0;
+      const big = bigAnnouncementDict[bigFrequencyCounter as keyof typeof bigAnnouncementDict];
 
-      embed.setAuthor(null);
-      embed.setFooter({ text: bigAnnouncementDict[bigFrequencyCounter as keyof typeof bigAnnouncementDict].footer });
-      embed.setDescription(bigAnnouncementDict[bigFrequencyCounter as keyof typeof bigAnnouncementDict].message);
-      await message.channel.send({ embeds: [embed] })
-        .then(async msg => {
-          await msg.react(bigAnnouncementDict[bigFrequencyCounter as keyof typeof bigAnnouncementDict].emoji);
-          const filter = (reaction:MessageReaction) => reaction.emoji.name === bigAnnouncementDict[bigFrequencyCounter as keyof typeof bigAnnouncementDict].emoji;
-          const collector = msg.createReactionCollector({ filter, time: 0, dispose: true });
+      await message.channel.send({
+        components: [
+          new ContainerBuilder({
+            accent_color: big.accent_color,
+            components: [
+              new TextDisplayBuilder().setContent(big.emojiBanner).toJSON(),
+              new SeparatorBuilder().setSpacing(SeparatorSpacingSize.Small).setDivider(true).toJSON(),
+              new TextDisplayBuilder().setContent(`## ${big.heading}`).toJSON(),
+              new TextDisplayBuilder().setContent(big.message).toJSON(),
+              new SeparatorBuilder().setSpacing(SeparatorSpacingSize.Small).setDivider(true).toJSON(),
+              new TextDisplayBuilder().setContent(`*${big.footer}*`).toJSON(),
+            ],
+          }),
+        ],
+        flags: MessageFlags.IsComponentsV2,
+      }).then(async msg => {
+        await msg.react(bigAnnouncementDict[bigFrequencyCounter as keyof typeof bigAnnouncementDict].emoji);
+        const filter = (reaction:MessageReaction) => reaction.emoji.name === bigAnnouncementDict[bigFrequencyCounter as keyof typeof bigAnnouncementDict].emoji;
+        const collector = msg.createReactionCollector({ filter, time: 0, dispose: true });
 
-          const pointDict = {
-            '❤': 'empathy_points',
-            '🕴': 'move_points',
-            '💧': 'sparkle_points',
-          };
+        const pointDict = {
+          '❤': 'empathy_points',
+          '🕴': 'move_points',
+          '💧': 'sparkle_points',
+        };
 
-          collector.on('collect', async (reaction, user) => {
-            const pointType = pointDict[reaction.emoji.name as keyof typeof pointDict];
-            await db.users.upsert({
-              where: {
-                discord_id: user.id,
+        collector.on('collect', async (reaction, user) => {
+          const pointType = pointDict[reaction.emoji.name as keyof typeof pointDict];
+          await db.users.upsert({
+            where: {
+              discord_id: user.id,
+            },
+            create: {
+              discord_id: user.id,
+              [pointType]: 1,
+            },
+            update: {
+              [pointType]: {
+                increment: 1,
               },
-              create: {
-                discord_id: user.id,
-                [pointType]: 1,
-              },
-              update: {
-                [pointType]: {
-                  increment: 1,
-                },
-              },
-            });
-          });
-
-          collector.on('remove', async (reaction, user) => {
-            const pointType = pointDict[reaction.emoji.name as keyof typeof pointDict];
-            // Increment the users's pointType
-
-            await db.users.upsert({
-              where: {
-                discord_id: user.id,
-              },
-              create: {
-                discord_id: user.id,
-                [pointType]: -1,
-              },
-              update: {
-                [pointType]: {
-                  increment: -1,
-                },
-              },
-            });
-            // log.debug(F, `${user.tag} ${pointType} decremented to ${value[0][pointType as keyof typeof value[0]]}`);
+            },
           });
         });
+
+        collector.on('remove', async (reaction, user) => {
+          const pointType = pointDict[reaction.emoji.name as keyof typeof pointDict];
+          // Increment the users's pointType
+
+          await db.users.upsert({
+            where: {
+              discord_id: user.id,
+            },
+            create: {
+              discord_id: user.id,
+              [pointType]: -1,
+            },
+            update: {
+              [pointType]: {
+                increment: -1,
+              },
+            },
+          });
+          // log.debug(F, `${user.tag} ${pointType} decremented to ${value[0][pointType as keyof typeof value[0]]}`);
+        });
+      });
     } else if (messageCounter[message.channel.id] % frequency === 0) {
-      // If the number of messages sent in the channel / by (frequency) has no remainder..
-
-      // log.debug(F, `genAnnouncements.length: ${genAnnouncements.length}`);
-
+      // --- GENERAL ANNOUNCEMENT ---
       const randomGenNumber = Math.floor(Math.random() * (genAnnouncements.length));
+      let announcement = genAnnouncements[randomGenNumber];
 
-      // log.debug(F, `randomGenNumber: ${randomGenNumber}`);
-
+      // If it's a fact, fetch it
       if (randomGenNumber === genAnnouncements.length) {
-        embed.setDescription(await fact());
-      } else {
-        const randomGenAnnouncement = genAnnouncements[randomGenNumber];
-        // log.debug(F, `randomGenAnnouncement: ${randomGenAnnouncement}`);
-        embed.setDescription(randomGenAnnouncement);
+        announcement = await fact();
       }
-      await message.channel.sendTyping(); // This method automatically stops typing after 10 seconds, or when a message is sent.
+
+      await message.channel.sendTyping();
       setTimeout(async () => {
         if (message.channel instanceof TextChannel || message.channel instanceof DMChannel) {
-          await (message.channel.send({ embeds: [embed] }));
-        } else log.error(F, 'Cannot send typing in this channel type.');
+          await message.channel.send({
+            components: [
+              new ContainerBuilder({
+                accent_color: Colors.Purple,
+                components: [
+                  new TextDisplayBuilder().setContent(announcement).toJSON(),
+                ],
+              }),
+            ],
+            flags: MessageFlags.IsComponentsV2,
+          });
+        }
       }, 3000);
     }
   }
