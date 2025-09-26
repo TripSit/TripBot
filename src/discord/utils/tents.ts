@@ -12,6 +12,7 @@ import {
   MessageFlags,
   TextDisplayBuilder,
   SeparatorBuilder,
+  ContainerBuilder,
   SeparatorSpacingSize,
 } from 'discord.js';
 
@@ -96,40 +97,44 @@ export async function pitchTent(
     await newChannel.fetch();
     await newChannel.send({
       components: [
-        new TextDisplayBuilder().setContent(`## Welcome to your tent, <@${New.member?.id}>`),
+        new ContainerBuilder({
+          components: [
+            new TextDisplayBuilder().setContent(`## Welcome to your tent, <@${New.member?.id}>`).toJSON(),
 
-        new SeparatorBuilder().setSpacing(SeparatorSpacingSize.Small).setDivider(true),
+            new SeparatorBuilder().setSpacing(SeparatorSpacingSize.Large).setDivider(true).toJSON(),
 
-        new TextDisplayBuilder().setContent([
-          '### Looking for others to join?',
-          '</tent ping:1349382215104069697> — Ping everyone opted-in to VC invites.',
-        ].join('\n')),
+            new TextDisplayBuilder().setContent([
+              '### Looking for others to join?',
+              '</tent ping:1349382215104069697> — Ping everyone opted-in to VC invites',
+            ].join('\n')).toJSON(),
 
-        new SeparatorBuilder().setSpacing(SeparatorSpacingSize.Small).setDivider(true),
+            new SeparatorBuilder().setSpacing(SeparatorSpacingSize.Small).setDivider(true).toJSON(),
 
-        new TextDisplayBuilder().setContent([
-          '### Modify your tent',
-          '</tent name:1349382215104069697> — Rename your tent',
-          '</tent limit:1349382215104069697> — Set a user limit',
-          '</tent level:1349382215104069697> — Set a level requirement',
-          '</tent lock:1349382215104069697> — Lock your tent',
-        ].join('\n')),
+            new TextDisplayBuilder().setContent([
+              '### Modify your tent',
+              '</tent name:1349382215104069697> — Rename your tent',
+              '</tent limit:1349382215104069697> — Set a user limit',
+              '</tent level:1349382215104069697> — Set a level requirement',
+              '</tent lock:1349382215104069697> — Lock your tent',
+            ].join('\n')).toJSON(),
 
-        new SeparatorBuilder().setSpacing(SeparatorSpacingSize.Small).setDivider(true),
+            new SeparatorBuilder().setSpacing(SeparatorSpacingSize.Small).setDivider(true).toJSON(),
 
-        new TextDisplayBuilder().setContent([
-          '### Moderate your tent',
-          '</tent add:1349382215104069697> — Allow a user to join/see your tent',
-          '</tent ban:1349382215104069697> — Ban a user from your tent',
-          '</tent host:1349382215104069697> — Transfer tent ownership',
-        ].join('\n')),
+            new TextDisplayBuilder().setContent([
+              '### Moderate your tent',
+              '</tent add:1349382215104069697> — Allow a user to join/see your tent',
+              '</tent ban:1349382215104069697> — Ban a user from your tent',
+              '</tent host:1349382215104069697> — Transfer tent ownership',
+            ].join('\n')).toJSON(),
 
-        new SeparatorBuilder().setSpacing(SeparatorSpacingSize.Small).setDivider(true),
+            new SeparatorBuilder().setSpacing(SeparatorSpacingSize.Small).setDivider(true).toJSON(),
 
-        new TextDisplayBuilder().setContent(
-          '*Host will automatically transfer to the first person to join your tent if you are disconnected for more than 5 minutes.*\n'
-      + '***To undo a command, just use it again.***',
-        ),
+            new TextDisplayBuilder().setContent(
+              '*Host will automatically transfer to the first person to join your tent if you are disconnected for more than 5 minutes.*\n'
+							+ '***To undo a command, just use it again.***',
+            ).toJSON(),
+          ],
+        }),
       ],
       flags: MessageFlags.IsComponentsV2,
     });
