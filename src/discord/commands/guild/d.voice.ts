@@ -33,7 +33,6 @@ function hasExplicitPermission(channel: VoiceBasedChannel, member: GuildMember, 
   return null; // No explicit permission overwrite for this permission
 }
 
-/* DISABLED DUE TO CONCERNS OVER SERVER BEING DE-LISTED FOR "BAD" CHANNEL NAMES
 async function tentName(
   voiceChannel: VoiceBasedChannel,
   newName: string,
@@ -52,7 +51,6 @@ async function tentName(
     .setColor(Colors.Green)
     .setDescription(`${voiceChannel} has been renamed to "${newName}"`);
 }
-*/
 
 async function tentLimit(
   voiceChannel: VoiceBasedChannel,
@@ -390,19 +388,19 @@ export const dVoice: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('tent')
     .setDescription('Control your Campfire Tent')
-    // .addSubcommand(subcommand => subcommand
-    //   .setName('name')
-    //   .setDescription('Rename your Tent')
-    //   .addStringOption(option => option
-    //     .setName('name')
-    //     .setDescription('The new name for your Tent')
-    //     .setRequired(true)))
+    .addSubcommand(subcommand => subcommand
+      .setName('name')
+      .setDescription('Rename your Tent')
+      .addStringOption(option => option
+        .setName('name')
+        .setDescription('The new name for your Tent')
+        .setRequired(true)))
     .addSubcommand(subcommand => subcommand
       .setName('limit')
       .setDescription('Set a limit on the number of users in your Tent')
       .addIntegerOption(option => option
         .setName('limit')
-        .setDescription('The new limit for your Tent (0 = No limit)')
+        .setDescription('The new user limit for your Tent (0 = No limit)')
         .setRequired(true)
         .setMinValue(0)
         .setMaxValue(99)))
@@ -418,7 +416,7 @@ export const dVoice: SlashCommand = {
       .setDescription('Lock/Unlock your Tent'))
     .addSubcommand(subcommand => subcommand
       .setName('level')
-      .setDescription('Set a level requirement for your Tent')
+      .setDescription('Set a level requirement to see and join your Tent')
       .addStringOption(option => option
         .setName('level')
         .setDescription('The new level requirement for your Tent')
@@ -461,7 +459,7 @@ export const dVoice: SlashCommand = {
     const command = interaction.options.getSubcommand() as VoiceActions;
     const member = interaction.member as GuildMember;
     const target = interaction.options.getMember('target') as GuildMember;
-    // const newName = interaction.options.getString('name') as string;
+    const newName = interaction.options.getString('name') as string;
     const limit = interaction.options.getInteger('limit') as number;
     const level = interaction.options.getString('level') as string;
 
@@ -538,9 +536,9 @@ export const dVoice: SlashCommand = {
       return false;
     }
 
-    // if (command === 'name') {
-    //   embed = await tentName(voiceChannel, newName);
-    // }
+    if (command === 'name') {
+      embed = await tentName(voiceChannel, newName);
+    }
 
     if (command === 'lock') {
       embed = await tentLock(voiceChannel);
