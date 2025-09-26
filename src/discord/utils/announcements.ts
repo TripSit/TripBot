@@ -11,14 +11,13 @@ import {
   SeparatorSpacingSize,
   MessageReaction,
 } from 'discord.js';
-import { stripIndents } from 'common-tags';
 import { embedTemplate } from './embedTemplate';
 import { fact } from '../../global/commands/g.fact';
 
 const F = f(__filename); // eslint-disable-line
 
-const frequency = 1;
-const bigFrequency = 1;
+const frequency = env.NODE_ENV === 'production' ? 100 : 1000;
+const bigFrequency = env.NODE_ENV === 'production' ? 500 : 2000;
 const messageCounter = {} as MessageCounterType;
 let bigFrequencyCounter = 0;
 
@@ -152,28 +151,26 @@ export async function announcements(message:Message) {
   ];
 
   const tipAnnouncements = [
-    '**Tip:** You can report a user if they are breaking the rules or causing issues by using /report or by right-clicking their name > Apps > TripBot Report User.',
-    '**Tip:** To report a user, click their name > Apps > TripBot Report User. To report a message, right-click the message > Apps > TripBot Report Message.',
-    '**Tip:** Use `/help` to learn more about the bot and its commands.',
+    '**Tip:** You can report a user if they are breaking the rules or causing issues by using </report:966403343746490504> or by right-clicking their name or message > Apps > TripBot Report User.',
+    '**Tip:** Use </help:966477926763757629> to learn more about the bot and its commands.',
     '**Tip:** Check out the <id:guide> for more tips and server info!',
     '**Tip:** Go to <id:customize> to change your name color and mindset role icon!',
     '**Tip:** Use the "ephemeral" option in TripBot commands to use them privately.',
-    '**Tip:** Earn TripTokens in `/rpg` to buy customization items for your `/profile`!',
+    '**Tip:** Earn TripTokens with </rpg bounties:1070002315001606154> to buy customization items for your </profile:983483831925497890>!',
     '**Tip:** Head to the Activities Corner in the <id:guide> for small games and activities!',
     '**Tip:** Curious about a specific server function like levelling or karma? Head to Server Tips in the <id:guide>!',
     '**Tip:** Keen to help with tripsitting? Head to the <id:guide> for info on how to become a Helper!',
     '**Tip:** We are looking for Tripsitters! Check out the <id:guide> to learn how to become a Helper!',
-    '**Tip:** Track your dosages privately with `/idose`.',
-    '**Tip:** Feeling a little airy? Use `/breathe` to guide your breathing.',
-    '**Tip:** Feeling a bit spacey? Try `/grounding` to bring you back down to earth.',
-    '**Tip:** Conversation a bit dull? Use `/topic` to get a random topic to chat about!',
-    '**Tip:** Need a little pick-me-up? Use `/lovebomb` to send some love to the channel!',
-    '**Tip:** Want to know how much karma you\'ve given or received? Use `/karma`!',
-    '**Tip:** Need to force yourself to take a break? Use `/selftimeout`.',
-    '**Tip:** Want to see a reagent chart? Use `/reagents`!',
-    '**Tip:** Get quick access to the combo chart with `/combochart`!',
-    '**Tip:** Convert one benzo dosage to another with `/calc benzo`.',
-    '**Tip:** Need some quick activities? Head over to Rooni\'s Fun Activities Corner in the <id:guide>!',
+    '**Tip:** Track your dosages privately with </idose:1009840858478166041>.',
+    '**Tip:** Feeling a little airy? Use </hr breathe:1394995163301937202> to guide your breathing.',
+    '**Tip:** Feeling a bit spacey? Try </hr grounding:1394995163301937202> to bring you back down to earth.',
+    '**Tip:** Conversation a bit dull? Use </topic:1009840858478166040> to get a random topic to chat about!',
+    '**Tip:** Need a little pick-me-up? Use </lovebomb:1009840858478166044> to send some love to the channel!',
+    '**Tip:** Want to know how much karma you\'ve given or received? Use </karma:1020034430103982122>!',
+    '**Tip:** Need to force yourself to take a break? Use </selftimeout:1067561585696055407>.',
+    '**Tip:** Want to see a reagent chart? Use </hr reagents:1394995163301937202>!',
+    '**Tip:** Get quick access to the combo chart with </hr combochart:1394995163301937202>!',
+    '**Tip:** Convert one benzo dosage to another with </calc benzo:1270029505066700913>.',
     '**Tip:** Want to know what is happening behind the scenes? Check out the <id:guide> for info on our development projects!',
   ];
 
@@ -285,8 +282,6 @@ export async function announcements(message:Message) {
   //   `Want to help out tripsit 'behind the scenes'? Review the #vip-welcome ${channelDevWelcome} room and pick up the Contributor role to access the Development category where we discuss projects and ideas! You don't need to be a coder to be Headers, all input is welcome`,
   // ];
 
-  const embed = embedTemplate();
-
   const genAnnouncements = [hrAnnouncements, tipAnnouncements, funAnnouncements].flat(1);
 
   // const allAnnouncements = [
@@ -320,7 +315,7 @@ export async function announcements(message:Message) {
           emojiBanner: [...happyEmojis].sort(() => 0.5 - Math.random()).slice(0, 14).join(' '),
           heading: 'Keep It Positive Please!',
           message: "We're all here to help each other and have fun!",
-          footer: 'Send a ❤ to someone and react to get /h2flow points!',
+          footer: 'Send a ❤ to someone and react to get </h2flow:984560964051537972> points!',
           emoji: '❤',
           accent_color: Colors.Green,
         },
@@ -328,7 +323,7 @@ export async function announcements(message:Message) {
           emojiBanner: [...movingEmojis].sort(() => 0.5 - Math.random()).slice(0, 12).join(' '),
           heading: "It's good to get up and move every hour!",
           message: 'Take a break, stretch, and get some fresh air!',
-          footer: 'Get up, move around and react to get /h2flow points!',
+          footer: 'Get up, move around and react to get </h2flow:984560964051537972> points!',
           emoji: '🕴',
           accent_color: Colors.Orange,
         },
@@ -336,7 +331,7 @@ export async function announcements(message:Message) {
           emojiBanner: [...waterAndTeaEmojis].sort(() => 0.5 - Math.random()).slice(0, 12).join(' '),
           heading: 'ＨＹＤＲＡＴＩＯＮ ＲＥＭＩＮＤＥＲ',
           message: "Doesn't some water sound great right now?",
-          footer: 'Take a sip of something and react to get /h2flow points!',
+          footer: 'Take a sip of something and react to get </h2flow:984560964051537972> points!',
           emoji: '💧',
           accent_color: Colors.Blue,
         },
