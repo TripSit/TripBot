@@ -9,6 +9,10 @@ import {
   GuildMember,
   GuildPremiumTier,
   EmbedBuilder,
+  MessageFlags,
+  TextDisplayBuilder,
+  SeparatorBuilder,
+  SeparatorSpacingSize,
 } from 'discord.js';
 
 const F = f(__filename); // eslint-disable-line
@@ -90,28 +94,45 @@ export async function pitchTent(
   }).then(async newChannel => {
     New.member?.voice.setChannel(newChannel.id);
     await newChannel.fetch();
-    await newChannel.send(`## Welcome to your tent, <@${New.member?.id}>`);
-    const embed = new EmbedBuilder()
-      .setTitle('Tent pitched')
-      .setColor(Colors.Green)
-      .setDescription(`- **Looking for others to join?**
-  - \`/tent ping\` - Use this to ping those opted-in to VC ping invites
+    await newChannel.send({
+      components: [
+        new TextDisplayBuilder().setContent(`## Welcome to your tent, <@${New.member?.id}>`),
 
-- **Modify your tent**
-	- \`/tent name\` - Rename your tent
-  - \`/tent limit\` - Set a user limit
-  - \`/tent level\` - Set a level requirement
-  - \`/tent lock\`- Lock your tent
+        new SeparatorBuilder().setSpacing(SeparatorSpacingSize.Small).setDivider(true),
 
-- **Moderate your tent**
-  - \`/tent add\` - Allow a user to join and see your tent, regardless of other settings
-  - \`/tent ban\` - Prevents a user from joining or seeing your tent
-  - \`/tent host\` - Transfer tent ownership to another user
+        new TextDisplayBuilder().setContent([
+          '### Looking for others to join?',
+          '</tent ping:1349382215104069697> — Ping everyone opted-in to VC invites.',
+        ].join('\n')),
 
-*Note: Host will automatically transfer to the first person to join your tent if you are disconnected for more than 5 minutes.*
+        new SeparatorBuilder().setSpacing(SeparatorSpacingSize.Small).setDivider(true),
 
-***To undo a command, just use it again.***`);
-    await newChannel.send({ embeds: [embed] });
+        new TextDisplayBuilder().setContent([
+          '### Modify your tent',
+          '</tent name:1349382215104069697> — Rename your tent',
+          '</tent limit:1349382215104069697> — Set a user limit',
+          '</tent level:1349382215104069697> — Set a level requirement',
+          '</tent lock:1349382215104069697> — Lock your tent',
+        ].join('\n')),
+
+        new SeparatorBuilder().setSpacing(SeparatorSpacingSize.Small).setDivider(true),
+
+        new TextDisplayBuilder().setContent([
+          '### Moderate your tent',
+          '</tent add:1349382215104069697> — Allow a user to join/see your tent',
+          '</tent ban:1349382215104069697> — Ban a user from your tent',
+          '</tent host:1349382215104069697> — Transfer tent ownership',
+        ].join('\n')),
+
+        new SeparatorBuilder().setSpacing(SeparatorSpacingSize.Small).setDivider(true),
+
+        new TextDisplayBuilder().setContent(
+          '*Host will automatically transfer to the first person to join your tent if you are disconnected for more than 5 minutes.*\n'
+      + '***To undo a command, just use it again.***',
+        ),
+      ],
+      flags: MessageFlags.IsComponentsV2,
+    });
   });
 }
 
