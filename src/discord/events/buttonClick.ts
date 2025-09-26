@@ -29,6 +29,7 @@ import { feedbackReportModal } from '../commands/global/d.feedback';
 import { aiButton } from '../commands/global/d.ai';
 import { purgeButton } from '../commands/guild/d.purge';
 import { mushroomPageEmbed } from '../utils/hrUtils';
+import { H2flowButton } from '../commands/guild/d.h2flow';
 // import { helpButton } from '../commands/global/d.help';
 
 const F = f(__filename);
@@ -225,6 +226,11 @@ export async function buttonClick(interaction:ButtonInteraction, discordClient:C
   // }
   if (buttonID === 'memberButton') {
     verifyButton(interaction);
+    return;
+  }
+
+  if (buttonID === 'h2flow_about') {
+    H2flowButton(interaction);
     return;
   }
 

@@ -11,7 +11,6 @@ import {
   SeparatorSpacingSize,
   MessageReaction,
 } from 'discord.js';
-import { embedTemplate } from './embedTemplate';
 import { fact } from '../../global/commands/g.fact';
 
 const F = f(__filename); // eslint-disable-line

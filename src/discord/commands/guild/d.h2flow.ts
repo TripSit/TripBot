@@ -7,6 +7,12 @@ import {
   TextDisplayBuilder,
   SeparatorBuilder,
   SeparatorSpacingSize,
+  ButtonBuilder,
+  ButtonStyle,
+  ActionRowBuilder,
+  ButtonInteraction,
+  SectionBuilder,
+  ComponentType,
 } from 'discord.js';
 import { SlashCommand } from '../../@types/commandDef';
 import commandContext from '../../utils/context';
@@ -59,18 +65,31 @@ export const dH2flow: SlashCommand = {
           accent_color: Colors.Blue,
           components: [
             new TextDisplayBuilder().setContent(`### ${interaction.user.displayName}'s H2Flow Progress`).toJSON(),
-            new SeparatorBuilder().setSpacing(SeparatorSpacingSize.Large).setDivider(true).toJSON(),
+            new SeparatorBuilder().setSpacing(SeparatorSpacingSize.Small).setDivider(false).toJSON(),
             new TextDisplayBuilder().setContent([
               `**${Math.floor(sparklePoints / 10)}** 🌊 Aqua Badges 🔰 — ${sparklePoints} sparkle points`,
               `**${Math.floor(lovePoints / 10)}** 💖 Love Cups 🏆 — ${lovePoints} empathy points`,
               `**${Math.floor(movePoints / 10)}** 🏃 Move Medals 🏅 — ${movePoints} active points`,
             ].join('\n')).toJSON(),
             new SeparatorBuilder().setSpacing(SeparatorSpacingSize.Small).setDivider(true).toJSON(),
-            new TextDisplayBuilder().setContent([
-              `**Total Points:** ${totalPoints}`,
-              `**Club Status:** ${platinumClub}`,
-              '*Keep moving, hydrating, and spreading love!*',
-            ].join('\n')).toJSON(),
+            new SectionBuilder({
+              components: [
+                {
+                  type: ComponentType.TextDisplay,
+                  content: [
+                    `**Total Points:** ${totalPoints}`,
+                    `**Club Status:** ${platinumClub}`,
+                    '*Keep moving, hydrating, and spreading love!*',
+                  ].join('\n'),
+                },
+              ],
+              accessory: {
+                type: ComponentType.Button,
+                custom_id: 'h2flow_about',
+                label: 'About H2Flow',
+                style: ButtonStyle.Secondary,
+              },
+            }).toJSON(),
           ],
         }),
       ],
@@ -83,3 +102,38 @@ export const dH2flow: SlashCommand = {
 };
 
 export default dH2flow;
+
+export async function H2flowButton(interaction: ButtonInteraction) {
+  if (interaction.isButton() && interaction.customId === 'h2flow_about') {
+    await interaction.reply({
+      components: [
+        new ContainerBuilder({
+          accent_color: Colors.Purple,
+          components: [
+            new TextDisplayBuilder().setContent('## What is the H2Flow club?').toJSON(),
+            new SeparatorBuilder().setSpacing(SeparatorSpacingSize.Small).setDivider(true).toJSON(),
+            new TextDisplayBuilder().setContent([
+              'These are not useless internet points ✨',
+              'This is an emoji-based social 🌐 media experience!',
+              'Think about H2Flow as an app 📱 for your health 🩺',
+              'Every so often you\'ll see a reminder to be healthy 🧘‍♂️',
+              'Move around 🕴, drink some water 💧, or spread love 💖',
+              'Perform the action, react to the message, get your points ✨!',
+              'You can only get one point ✨ per message, so pay attention!',
+              '',
+              'If you get enough ✨ then you\'re on your way to your first:',
+              '- **🌊AquaBadge🔰**',
+              '- **💖LoveCup🏆**',
+              '- **🏃Move Medal🏅**',
+              '',
+              'Level up enough and we\'ll welcome you to the fabled:',
+              '🥇 *H2Flow Club* 🥇',
+            ].join('\n')).toJSON(),
+          ],
+        }),
+      ],
+      ephemeral: true,
+      flags: MessageFlags.IsComponentsV2,
+    });
+  }
+}
