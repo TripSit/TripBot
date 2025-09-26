@@ -129,10 +129,10 @@ export async function pitchTent(
 
             new SeparatorBuilder().setSpacing(SeparatorSpacingSize.Small).setDivider(true).toJSON(),
 
-            new TextDisplayBuilder().setContent(
-              '*Host will automatically transfer to the first person to join your tent if you are disconnected for more than 5 minutes.*\n'
-							+ '***To undo a command, just use it again.***',
-            ).toJSON(),
+            new TextDisplayBuilder().setContent([
+              '*Host will automatically transfer to the first person to join your tent if you are disconnected for more than 5 minutes.*',
+              '***To undo a command, just use it again.***',
+            ].join('\n')).toJSON(),
           ],
         }),
       ],
