@@ -105,26 +105,26 @@ export async function pitchTent(
 
             new TextDisplayBuilder().setContent([
               '### Looking for others to join?',
-              '</tent ping:1349382215104069697> — Ping everyone opted-in to VC invites',
+              '</tent ping:1349687950006423583> — Ping everyone opted-in to VC invites',
             ].join('\n')).toJSON(),
 
             new SeparatorBuilder().setSpacing(SeparatorSpacingSize.Small).setDivider(true).toJSON(),
 
             new TextDisplayBuilder().setContent([
               '### Modify your tent',
-              '</tent name:1349382215104069697> — Rename your tent',
-              '</tent limit:1349382215104069697> — Set a user limit',
-              '</tent level:1349382215104069697> — Set a level requirement',
-              '</tent lock:1349382215104069697> — Lock your tent',
+              '</tent name:1349687950006423583> — Rename your tent',
+              '</tent limit:1349687950006423583> — Set a user limit',
+              '</tent level:1349687950006423583> — Set a level requirement',
+              '</tent lock:1349687950006423583> — Lock your tent',
             ].join('\n')).toJSON(),
 
             new SeparatorBuilder().setSpacing(SeparatorSpacingSize.Small).setDivider(true).toJSON(),
 
             new TextDisplayBuilder().setContent([
               '### Moderate your tent',
-              '</tent add:1349382215104069697> — Allow a user to join/see your tent',
-              '</tent ban:1349382215104069697> — Ban a user from your tent',
-              '</tent host:1349382215104069697> — Transfer tent ownership',
+              '</tent add:1349687950006423583> — Allow a user to join/see your tent',
+              '</tent ban:1349687950006423583> — Ban a user from your tent',
+              '</tent host:1349687950006423583> — Transfer tent ownership',
             ].join('\n')).toJSON(),
 
             new SeparatorBuilder().setSpacing(SeparatorSpacingSize.Small).setDivider(true).toJSON(),
