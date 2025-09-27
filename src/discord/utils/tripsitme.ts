@@ -139,7 +139,6 @@ const mindsetRoles = [
 ];
 
 const otherRoles = [
-  env.ROLE_VERIFIED,
   env.ROLE_PREMIUM,
   env.ROLE_BOOSTER,
   env.ROLE_PATRON,
@@ -659,7 +658,7 @@ export async function tripsitmeBackup(
   }
 
   backupMessage += stripIndents`team, ${actor} has indicated they could use some backup!
-    
+
   Be sure to read the log so you have the context!`;
 
   if (ticketData.meta_thread_id) {
@@ -1367,7 +1366,7 @@ export async function tripSitMe(
       Someone from the ${roleTripsitter} ${guildData.role_helper && !targetIsTeamMember ? `and/or ${roleHelper}` : ''} team will be with you as soon as they're available!
 
       If this is a medical emergency please contact your local emergency services: we do not call EMS on behalf of anyone.
-      
+
       When you're feeling better you can use the "I'm Good" button to let the team know you're okay.
 
       **Not in an emergency, but still want to talk to a mental health advisor? Warm lines provide non-crisis mental health support and guidance from trained volunteers. https://warmline.org/warmdir.html#directory**
@@ -1719,7 +1718,7 @@ export async function tripsitmeButton(
       const embed = embedTemplate()
         .setColor(Colors.DarkBlue)
         .setDescription(stripIndents`Hey ${interaction.member}, you have an open session!
-  
+
         Check your channel list or click '${threadHelpUser.toString()} to get help!`);
       await interaction.editReply({ embeds: [embed] });
       log.debug(F, 'Told user they already have an open channel');
@@ -1857,9 +1856,9 @@ export async function tripsitmeButton(
 
       const replyMessage = stripIndents`
       Hey ${target}, thank you for asking for assistance!
-      
+
       Click here to be taken to your private room: ${threadHelpUser.toString()}
-  
+
       You can also click in your channel list to see your private room!`;
       const embed = embedTemplate()
         .setColor(Colors.DarkBlue)

@@ -1041,7 +1041,7 @@ async function privacyPage(
 
         You can remove your data at any time by clicking the button below.
 
-        This will delete your thread off the OpenAI servers, and remove your thread ID from our DB. \ 
+        This will delete your thread off the OpenAI servers, and remove your thread ID from our DB. \
         It will remove your encrypted chat history from our database.
 
         **You can further remove your data from TripSit's servers with the \`/privacy\`.**
@@ -1225,11 +1225,11 @@ async function personasPage(
   return {
     embeds: [embedTemplate()
       .setTitle('Persona Information')
-      .setDescription(stripIndents` 
+      .setDescription(stripIndents`
       A persona is a set of parameters that the AI uses to generate responses. \
       This allows us to have different 'personalities' for the AI. \
       The AI will use the persona that is linked to the channel it is responding in, and return responses based on that persona's personality. \
-      You can use the below menu to get information on each persona available. 
+      You can use the below menu to get information on each persona available.
 
       **Model**
       The model to use for the persona. Currently we offer two models, GPT-3.5-Turbo and Gemini Pro.
@@ -1238,11 +1238,11 @@ async function personasPage(
 
       **Prompt**
       The prompt to use for the persona. This is the text that the AI will use to generate responses.
-      
+
       **Max Tokens**
       The maximum number of tokens to use for the AI response.
       What are tokens? <https://platform.openai.com/tokenizer>
-      
+
       **Temperature**
       Adjusts the randomness of the AI's answers.
       Lower values make the AI more predictable and focused, while higher values make it more random and varied.`)
@@ -1526,7 +1526,7 @@ async function createPage(
   return {
     embeds: [embedTemplate()
       .setTitle('New Persona')
-      .setDescription(stripIndents` 
+      .setDescription(stripIndents`
         This page will create help create a new persona for the AI.
 
         Select the model you want to use below, then click the create button.
@@ -2074,7 +2074,6 @@ export async function aiMessage(
 
   // const messages = [...channelMessages.values()];
 
-  // if (!messages[0].member?.roles.cache.has(env.ROLE_VERIFIED)) return;
   if (messageData.author.bot) {
     log.debug(F, 'Message was from a bot, returning');
     return;
@@ -2382,10 +2381,10 @@ export async function aiReaction(
 
       const message = thumbsUpEmojis.includes(messageReaction.emoji.name as string)
         ? stripIndents`${messageReaction.message.cleanContent}
-            
+
         **Thank you for your feedback, I have notified Moonbear that this response was excellent.**`
         : stripIndents`~~${messageReaction.message.cleanContent}~~
-            
+
         **Thank you for your feedback, I have notified Moonbear that this response was improper.**`;
 
       // This happens before the message is edited, so we need to fetch the original message
