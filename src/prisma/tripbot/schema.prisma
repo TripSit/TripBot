@@ -144,7 +144,7 @@ model users {
   contributor_role_ban                                      Boolean              @default(false)
   lastfm_username                                           String?
   partner                                                   Boolean?             @default(true)
-  supporter                                                 Boolean?             @default(true)
+  supporter                                                 Boolean?             @default(false)
   moodle_id                                                 String?
   ai_terms_agree                                            Boolean              @default(false)
   ai_personas                                               ai_personas[]
