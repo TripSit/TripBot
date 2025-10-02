@@ -1109,7 +1109,7 @@ async function messageModThread(
   let anonSummary = `${targetName} was ${pastVerb}`;
 
   if (isTimeout(command)) {
-    summary = summary.concat(`\n**Timeout Ends:** ${duration}`);
+    summary = summary.concat(duration);
     anonSummary = anonSummary.concat(duration);
   }
 
@@ -1632,6 +1632,7 @@ export async function moderate(
   let banEndTime = null;
   let actionDuration = 0 as null | number;
   let durationStr = '';
+  let modDurationStr = ''; // For moderator-facing messages
   if (isTimeout(command)) {
     // log.debug(F, 'Parsing timeout duration');
     let durationVal = modalInt.fields.getTextInputValue('duration');
@@ -1654,9 +1655,11 @@ export async function moderate(
     }
 
     // convert the milliseconds into a human readable string
-    // const humanTime = msToHuman(actionDuration);
+    const humanTime = msToHuman(actionDuration);
+    const timeoutEnd = time(new Date(Date.now() + actionDuration), 'R');
 
-    durationStr = `${time(new Date(Date.now() + actionDuration), 'R')}`;
+    durationStr = timeoutEnd; // For user-facing messages
+    modDurationStr = `\n**Timeout Duration:** ${humanTime}\n**Timeout Ends:** ${timeoutEnd}`; // For moderator-facing messages
     // log.debug(F, `duration: ${duration}`);
   }
 
@@ -2001,10 +2004,10 @@ export async function moderate(
     internalNote,
     description,
     extraMessage,
-    durationStr,
+    modDurationStr || durationStr,
   );
 
-  const anonSummary = `${targetName} was ${embedVariables[command as keyof typeof embedVariables].pastVerb}${durationStr}!`;
+  const anonSummary = `${targetName} was ${embedVariables[command as keyof typeof embedVariables].pastVerb}${modDurationStr || durationStr}!`;
 
   // Records the action taken on the action field of the modlog embed
   const embed = buttonInt.message.embeds[0].toJSON();
