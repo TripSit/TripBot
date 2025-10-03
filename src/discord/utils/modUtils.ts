@@ -272,8 +272,8 @@ function isUnBan(command: ModAction): command is 'UN-FULL_BAN' | 'UN-BAN_EVASION
   return command === 'UN-FULL_BAN' || command === 'UN-BAN_EVASION' || command === 'UN-UNDERBAN';
 }
 
-function sendsMessageToUser(command: ModAction): command is 'WARNING' | 'FULL_BAN' | 'TICKET_BAN' | 'DISCORD_BOT_BAN' | 'BAN_EVASION' | 'UNDERBAN' | 'TIMEOUT' | 'KICK' {
-  return command === 'WARNING' || command === 'FULL_BAN' || command === 'TICKET_BAN' || command === 'DISCORD_BOT_BAN' || command === 'BAN_EVASION' || command === 'UNDERBAN' || command === 'TIMEOUT' || command === 'KICK';
+function sendsMessageToUser(command: ModAction): command is 'WARNING' | 'FULL_BAN' | 'TICKET_BAN' | 'DISCORD_BOT_BAN' | 'BAN_EVASION' | 'UNDERBAN' | 'TIMEOUT' | 'UN-TIMEOUT' | 'KICK' {
+  return command === 'WARNING' || command === 'FULL_BAN' || command === 'TICKET_BAN' || command === 'DISCORD_BOT_BAN' || command === 'BAN_EVASION' || command === 'UNDERBAN' || command === 'TIMEOUT' || command === 'UN-TIMEOUT' || command === 'KICK';
 }
 
 function isFullBan(command: ModAction): command is 'FULL_BAN' { return command === 'FULL_BAN'; }
@@ -1738,7 +1738,11 @@ export async function moderate(
     && (description !== '' && description !== null)
     && (targetMember || targetUser)) {
     log.debug(F, `[moderate] Sending message to ${targetName}`);
-    let body = stripIndents`I regret to inform you that you've been ${embedVariables[command as keyof typeof embedVariables].pastVerb} by Team TripSit. 
+    const openingMessage = isUnTimeout(command)
+      ? `Good news! You've been ${embedVariables[command as keyof typeof embedVariables].pastVerb} by Team TripSit.`
+      : `I regret to inform you that you've been ${embedVariables[command as keyof typeof embedVariables].pastVerb} by Team TripSit.`;
+
+    let body = stripIndents`${openingMessage}
 
         ${expiration}
       > ${description}
