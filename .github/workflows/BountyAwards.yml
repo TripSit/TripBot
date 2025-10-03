@@ -15,11 +15,11 @@ jobs:
     steps:
     - name: Check if PR is a revert
       id: check-revert
+      env:
+        PR_TITLE: ${{ github.event.pull_request.title }}
       run: |
-        PR_TITLE="${{ github.event.pull_request.title }}"
         if echo "$PR_TITLE" | grep -i "revert" > /dev/null; then
           echo "is_revert=true" >> $GITHUB_OUTPUT
-          echo "Detected revert PR: $PR_TITLE"
         else
           echo "is_revert=false" >> $GITHUB_OUTPUT
         fi
