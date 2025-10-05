@@ -313,18 +313,23 @@ async function startMultiplayerRound(interaction: ChatInputCommandInteraction, g
 
     // Update embed with current status
     if (game.choices.size < game.players.length) {
-      const statusList = createPlayerStatusList(game, interaction);
-      const updatedEmbed = createMultiplayerGameEmbed(game.players, game.round, game.eliminatedPlayers)
-        .setDescription(
-          `**Active Players:** ${game.players.length}\n\n`
-        + `${statusList}\n\n`
-        + '⏰ **60 seconds** to make your choice!\n🎯 Choose wisely - majority wins!',
-        );
+      try {
+        const statusList = createPlayerStatusList(game, interaction);
+        const updatedEmbed = createMultiplayerGameEmbed(game.players, game.round, game.eliminatedPlayers)
+          .setDescription(
+            `**Active Players:** ${game.players.length}\n\n`
+          + `${statusList}\n\n`
+          + '⏰ **60 seconds** to make your choice!\n🎯 Choose wisely - majority wins!',
+          );
 
-      await interaction.editReply({
-        embeds: [updatedEmbed],
-        components: createChoiceButtons(gameObj),
-      });
+        await interaction.editReply({
+          embeds: [updatedEmbed],
+          components: createChoiceButtons(gameObj),
+        });
+      } catch (error) {
+        // Message was likely deleted, stop the collector
+        roundCollector.stop();
+      }
     }
 
     if (game.choices.size === game.players.length) {
@@ -373,10 +378,15 @@ async function startMultiplayerRound(interaction: ChatInputCommandInteraction, g
       gameObj.round,
     );
 
-    await interaction.editReply({
-      embeds: [resultsEmbed],
-      components: [],
-    });
+    try {
+      await interaction.editReply({
+        embeds: [resultsEmbed],
+        components: [],
+      });
+    } catch (error) {
+      // Message was likely deleted, game is over
+      return;
+    }
 
     if (result.winner) {
       // Game over
@@ -384,8 +394,12 @@ async function startMultiplayerRound(interaction: ChatInputCommandInteraction, g
     } else if (gameObj.players.length > 1) {
       // Continue to next round
       gameObj.round += 1;
-      setTimeout(() => {
-        startMultiplayerRound(interaction, gameObj);
+      setTimeout(async () => {
+        try {
+          await startMultiplayerRound(interaction, gameObj);
+        } catch (error) {
+          // Message was likely deleted, game is over
+        }
       }, 3000);
     }
   });
@@ -458,40 +472,50 @@ async function handle1v1GameEnd(
   if (gameOver) {
     // Wait 2 seconds, then show final results
     setTimeout(async () => {
-      const finalWinner = gameObj.scores!.player1 >= 2 ? interaction.user.username : opponent.username;
-      const finalEmbed = embedTemplate()
-        .setTitle('🏆 Match Complete!')
-        .setColor(Colors.Green)
-        .setDescription(
-          `**Final Score:**\n${interaction.user.username}: ${gameObj.scores!.player1} | ${opponent.username}: ${gameObj.scores!.player2}\n\n`
-          + `🎉 **GAME OVER! ${finalWinner} wins the match!** 🎉`,
-        );
+      try {
+        const finalWinner = gameObj.scores!.player1 >= 2 ? interaction.user.username : opponent.username;
+        const finalEmbed = embedTemplate()
+          .setTitle('🏆 Match Complete!')
+          .setColor(Colors.Green)
+          .setDescription(
+            `**Final Score:**\n${interaction.user.username}: ${gameObj.scores!.player1} | ${opponent.username}: ${gameObj.scores!.player2}\n\n`
+            + `🎉 **GAME OVER! ${finalWinner} wins the match!** 🎉`,
+          );
 
-      await interaction.editReply({
-        embeds: [finalEmbed],
-        components: [],
-      });
+        await interaction.editReply({
+          embeds: [finalEmbed],
+          components: [],
+        });
+      } catch (error) {
+        // Message was likely deleted, game is over
+      }
     }, 2000);
   } else {
     // Wait 3 seconds, then start next round
     gameObj.round += 1;
     gameObj.choices.clear();
     gameObj.isActive = true;
+    gameObj.roundProcessed = false; // Reset for next round
 
     setTimeout(async () => {
-      const nextRoundEmbed = embedTemplate()
-        .setTitle(`⚔️ Round ${gameObj.round}`)
-        .setColor(Colors.Green)
-        .setDescription(
-          `**${interaction.user.username}** vs **${opponent.username}**\n\n`
-          + `**Current Score:**\n${interaction.user.username}: ${gameObj.scores!.player1} | ${opponent.username}: ${gameObj.scores!.player2}\n\n`
-          + 'Both players, make your choice!\n⏰ You have 2 minutes for the entire match!',
-        );
+      try {
+        const nextRoundEmbed = embedTemplate()
+          .setTitle(`⚔️ Round ${gameObj.round}`)
+          .setColor(Colors.Green)
+          .setDescription(
+            `**${interaction.user.username}** vs **${opponent.username}**\n\n`
+            + `**Current Score:**\n${interaction.user.username}: ${gameObj.scores!.player1} | ${opponent.username}: ${gameObj.scores!.player2}\n\n`
+            + 'Both players, make your choice!\n⏰ You have 2 minutes for the entire match!',
+          );
 
-      await interaction.editReply({
-        embeds: [nextRoundEmbed],
-        components: createChoiceButtons(gameObj),
-      });
+        await interaction.editReply({
+          embeds: [nextRoundEmbed],
+          components: createChoiceButtons(gameObj),
+        });
+      } catch (error) {
+        // Message was likely deleted, game is over
+        gameObj.isActive = false;
+      }
     }, 3000);
   }
 
@@ -527,6 +551,7 @@ async function handle1v1Game(interaction: ChatInputCommandInteraction, opponent:
     round: 1,
     eliminatedPlayers: [],
     scores: { player1: 0, player2: 0 }, // Always initialize fresh scores
+    roundProcessed: false, // Prevents duplicate scoring
   };
 
   const embed = create1v1GameEmbed(interaction.user, opponent);
@@ -576,23 +601,32 @@ async function handle1v1Game(interaction: ChatInputCommandInteraction, opponent:
 
     // Only update embed for new choices (not changes)
     if (isNewChoice && game.choices.size < 2) {
-      const statusList = createPlayerStatusList(game, interaction, opponent);
-      const updatedEmbed = embedTemplate()
-        .setTitle(`⚔️ Round ${game.round}`)
-        .setColor(Colors.Orange)
-        .setDescription(
-          `**${interaction.user.username}** vs **${opponent.username}**\n\n`
-        + `${statusList}\n\n`
-        + 'Both players, make your choice!\n⏰ You have 2 minutes for the entire match!',
-        );
+      try {
+        const statusList = createPlayerStatusList(game, interaction, opponent);
+        const updatedEmbed = embedTemplate()
+          .setTitle(`⚔️ Round ${game.round}`)
+          .setColor(Colors.Orange)
+          .setDescription(
+            `**${interaction.user.username}** vs **${opponent.username}**\n\n`
+          + `${statusList}\n\n`
+          + 'Both players, make your choice!\n⏰ You have 2 minutes for the entire match!',
+          );
 
-      await interaction.editReply({
-        embeds: [updatedEmbed],
-        components: createChoiceButtons(game),
-      });
+        await interaction.editReply({
+          embeds: [updatedEmbed],
+          components: createChoiceButtons(game),
+        });
+      } catch (error) {
+        // Message was likely deleted, stop the collector
+        game.isActive = false;
+        if (collector) {
+          collector.stop();
+        }
+      }
     }
 
-    if (game.choices.size === 2) {
+    if (game.choices.size === 2 && !game.roundProcessed) {
+      game.roundProcessed = true;
       const gameEnded = await handle1v1GameEnd(interaction, opponent, game);
       if (gameEnded && collector) {
         collector.stop();
@@ -657,11 +691,19 @@ async function handleMultiplayerQueue(interaction: ChatInputCommandInteraction):
   const timerInterval = setInterval(async () => {
     timeLeft -= 5;
     if (timeLeft > 0) {
-      const updatedEmbed = createQueueEmbed(playersJoined, timeLeft);
-      await interaction.editReply({
-        embeds: [updatedEmbed],
-        components: queueButtons,
-      });
+      try {
+        const updatedEmbed = createQueueEmbed(playersJoined, timeLeft);
+        await interaction.editReply({
+          embeds: [updatedEmbed],
+          components: queueButtons,
+        });
+      } catch (error) {
+        // Message was likely deleted, stop the timer and collector
+        clearInterval(timerInterval);
+        if (queueCollector) {
+          queueCollector.stop();
+        }
+      }
     }
   }, 5000);
 
@@ -706,10 +748,14 @@ async function handleMultiplayerQueue(interaction: ChatInputCommandInteraction):
         .setDescription(`Only ${playersJoined.length} player${playerText} joined. Minimum 2 players needed.`)
         .setColor(Colors.Red);
 
-      await interaction.editReply({
-        embeds: [failEmbed],
-        components: [],
-      });
+      try {
+        await interaction.editReply({
+          embeds: [failEmbed],
+          components: [],
+        });
+      } catch (error) {
+        // Message was likely deleted, game is over
+      }
       return;
     }
 
