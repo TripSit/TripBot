@@ -154,7 +154,7 @@ export async function teardownTent(
   Old:VoiceState,
 ): Promise<void> {
   const tempVoiceCategory = await Old.guild.channels.fetch(env.CATEGORY_VOICE) as CategoryChannel;
-  tempVoiceCategory.children.cache.forEach(async channel => {
+  const deletePromises = tempVoiceCategory.children.cache.map(async channel => {
     // Get the number of humans in the channel
     const humans = channel.members.filter(member => !member.user.bot).size;
 
@@ -167,12 +167,16 @@ export async function teardownTent(
       }
 
       try {
+        await Old.guild.channels.fetch(channel.id);
+        // If fetch succeeds, delete the channel
         await channel.delete('Removing temporary voice chan!');
       } catch (err) {
-        // Channel was likely already deleted
+        // Channel was likely already deleted or doesn't exist
       }
     }
   });
+
+  await Promise.all(deletePromises);
 }
 
 export async function transferTent(
