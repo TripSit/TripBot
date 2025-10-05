@@ -748,10 +748,14 @@ async function handleMultiplayerQueue(interaction: ChatInputCommandInteraction):
         .setDescription(`Only ${playersJoined.length} player${playerText} joined. Minimum 2 players needed.`)
         .setColor(Colors.Red);
 
-      await interaction.editReply({
-        embeds: [failEmbed],
-        components: [],
-      });
+      try {
+        await interaction.editReply({
+          embeds: [failEmbed],
+          components: [],
+        });
+      } catch (error) {
+        // Message was likely deleted, game is over
+      }
       return;
     }
 
