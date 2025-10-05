@@ -508,7 +508,7 @@ export const dLevels: SlashCommand = {
     // Username Text
     // Use displayName if user is in guild, otherwise use username
     const displayNameToUse = target?.displayName ?? targetUser.username;
-    let filteredDisplayName = await deFuckifyText(displayNameToUse);
+    let filteredDisplayName = deFuckifyText(displayNameToUse);
     // If the filteredDisplayName is much shorter than what was input, display their username as a fallback
     if (filteredDisplayName.length < displayNameToUse.length / 2) {
       filteredDisplayName = targetUser.username.charAt(0).toUpperCase() + targetUser.username.slice(1);
