@@ -97,9 +97,19 @@ export const dLevels: SlashCommand = {
     }
 
     // Target is the option given, if none is given, it will be the user who used the command
-    const target = interaction.options.getMember('target')
-      ? interaction.options.getMember('target') as GuildMember
-      : interaction.member as GuildMember;
+    // First try to get as User (works even if not in guild)
+    const targetUser = interaction.options.getUser('target') ?? interaction.user;
+
+    // Then try to get as GuildMember (may be null if not in guild)
+    let target: GuildMember | null = null;
+    try {
+      target = await interaction.guild.members.fetch(targetUser.id);
+    } catch (error) {
+      // User is not in the guild, target will remain null
+      log.debug(F, `User ${targetUser.id} is not in the guild`);
+    }
+
+    // If target is still null (user not in guild), we'll use fallback values below
 
     // log.debug(F, `target id: ${target.id}`);
     // log.debug(F, `levelData: ${JSON.stringify(target, null, 2)}`);
@@ -107,14 +117,14 @@ export const dLevels: SlashCommand = {
     const values = await Promise.allSettled([
       await interaction.deferReply({ flags: ephemeral }),
       // Get the target's profile data from the database
-      await profile(target.id),
+      await profile(targetUser.id),
       // Check get fresh persona data
-      await getPersonaInfo(target.id),
+      await getPersonaInfo(targetUser.id),
       // Get the levels of the user
-      await levels(target.id),
+      await levels(targetUser.id),
       // Load Images
       await Canvas.loadImage(await getAsset('cardLevelIcons')),
-      await Canvas.loadImage(target.displayAvatarURL({ extension: 'jpg' })),
+      await Canvas.loadImage(targetUser.displayAvatarURL({ extension: 'jpg' })),
       await Canvas.loadImage(await getAsset('teamtripsitIcon')),
       await Canvas.loadImage(await getAsset('premiumIcon')),
       await Canvas.loadImage(await getAsset('boosterIcon')),
@@ -176,9 +186,12 @@ export const dLevels: SlashCommand = {
     };
 
     // Check if user has any roles that have an avatar icon. Put all of them in an array and sort them by hierarchy
-    const avatarIconRolesArray = Object.entries(avatarIconRoles)
-      .filter(([key]) => target.roles.cache.has(key))
-      .sort((a, b) => a[1].hierarchy - b[1].hierarchy);
+    // If target is null (not in guild), this will be an empty array
+    const avatarIconRolesArray = target
+      ? Object.entries(avatarIconRoles)
+        .filter(([key]) => target.roles.cache.has(key))
+        .sort((a, b) => a[1].hierarchy - b[1].hierarchy)
+      : [];
 
     // From the list, assign each one to a slot in numerical order
     if (avatarIconRolesArray.length > 0) {
@@ -257,8 +270,8 @@ export const dLevels: SlashCommand = {
         rank: levelData.VOICE.TOTAL.rank,
       });
     }
-    // Check if user has Helper or Tripsitter role
-    if (target.roles.cache.has(env.ROLE_HELPER) || target.roles.cache.has(env.ROLE_TRIPSITTER)) {
+    // Check if user has Helper or Tripsitter role (only if they're in the guild)
+    if (target && (target.roles.cache.has(env.ROLE_HELPER) || target.roles.cache.has(env.ROLE_TRIPSITTER))) {
       const progressTripsitter = levelData.TEXT.TRIPSITTER
         ? levelData.TEXT.TRIPSITTER.level_exp / levelData.TEXT.TRIPSITTER.nextLevel
         : 0;
@@ -270,8 +283,8 @@ export const dLevels: SlashCommand = {
         rank: levelData.TEXT.TRIPSITTER ? levelData.TEXT.TRIPSITTER.rank : 0,
       });
     }
-    // Check if user has Dev role or has some xp
-    if ((levelData.TEXT.DEVELOPER && levelData.TEXT.DEVELOPER.level > 5) || (target.roles.cache.has(env.ROLE_DEVELOPER))) {
+    // Check if user has Dev role or has some xp (shows even if not in guild if they have level > 5)
+    if ((levelData.TEXT.DEVELOPER && levelData.TEXT.DEVELOPER.level > 5) || (target && target.roles.cache.has(env.ROLE_DEVELOPER))) {
       const progressDeveloper = levelData.TEXT.DEVELOPER
         ? levelData.TEXT.DEVELOPER.level_exp / levelData.TEXT.DEVELOPER.nextLevel
         : 0;
@@ -283,8 +296,8 @@ export const dLevels: SlashCommand = {
         rank: levelData.TEXT.DEVELOPER ? levelData.TEXT.DEVELOPER.rank : 0,
       });
     }
-    // Check if user has Teamtripsit role
-    if (target.roles.cache.has(env.ROLE_TEAMTRIPSIT)) {
+    // Check if user has Teamtripsit role (only if they're in the guild)
+    if (target && target.roles.cache.has(env.ROLE_TEAMTRIPSIT)) {
       const progressTeam = levelData.TEXT.TEAM
         ? levelData.TEXT.TEAM.level_exp / levelData.TEXT.TEAM.nextLevel
         : 0;
@@ -335,7 +348,10 @@ export const dLevels: SlashCommand = {
     // log.debug(F, `canvasHeight: ${canvasHeight}`);
 
     // Generate the colors for the card based on the user's role color
-    const roleColor = `#${(target.roles.color?.color || 0x99aab5).toString(16).padStart(6, '0')}`;
+    // If user is not in guild, use default gray color
+    const roleColor = target
+      ? `#${(target.roles.color?.color || 0x99aab5).toString(16).padStart(6, '0')}`
+      : '#99aab5';
 
     const cardLightColor = generateColors(roleColor, 0, -75, -67);
     const cardDarkColor = generateColors(roleColor, 0, -75, -80);
@@ -490,10 +506,12 @@ export const dLevels: SlashCommand = {
     // If so, move Username Text up so the title can fit underneath
 
     // Username Text
-    let filteredDisplayName = await deFuckifyText(target.displayName);
+    // Use displayName if user is in guild, otherwise use username
+    const displayNameToUse = target?.displayName ?? targetUser.username;
+    let filteredDisplayName = await deFuckifyText(displayNameToUse);
     // If the filteredDisplayName is much shorter than what was input, display their username as a fallback
-    if (filteredDisplayName.length < target.displayName.length / 2) {
-      filteredDisplayName = target.user.username.charAt(0).toUpperCase() + target.user.username.slice(1);
+    if (filteredDisplayName.length < displayNameToUse.length / 2) {
+      filteredDisplayName = targetUser.username.charAt(0).toUpperCase() + targetUser.username.slice(1);
     }
 
     context.fillStyle = textColor;
