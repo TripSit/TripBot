@@ -8,6 +8,7 @@ import commandContext from '../utils/context';
 import { helpMenu } from '../commands/global/d.help';
 import { aiMenu } from '../commands/global/d.ai';
 import { purgeMenu } from '../commands/guild/d.purge';
+import { handleBanReasonSelect } from '../utils/modUtils';
 // import log from '../../global/utils/log';
 // import {parse} from 'path';
 const F = f(__filename);
@@ -23,6 +24,10 @@ export async function selectMenu(
   const menuID = interaction.customId;
 
   if (interaction.isStringSelectMenu()) {
+    if (menuID.startsWith('banReasonSelect')) {
+      await handleBanReasonSelect(interaction);
+      return;
+    }
     if (menuID.startsWith('helpSelectMenu')) {
       await helpMenu(interaction);
       return;

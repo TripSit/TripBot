@@ -24,7 +24,12 @@ import {
 } from '../commands/guild/d.rpg';
 import { helperButton } from '../commands/global/d.setup';
 import { appealAccept, appealReject } from '../utils/appeal';
-import { acknowledgeButton, modModal, refusalButton } from '../utils/modUtils';
+import {
+  acknowledgeButton,
+  modModal,
+  refusalButton,
+  showBanReasonSelect,
+} from '../utils/modUtils';
 import { feedbackReportModal } from '../commands/global/d.feedback';
 import { aiButton } from '../commands/global/d.ai';
 import { purgeButton } from '../commands/guild/d.purge';
@@ -70,8 +75,13 @@ export async function buttonClick(interaction:ButtonInteraction, discordClient:C
   }
 
   if (buttonID.startsWith('moderate')) {
-    // log.debug(F, 'aiMod button clicked');
-    await modModal(interaction);
+    // Check if it's a ban button - if so, show predefined reason select menu
+    if (buttonID.includes('~FULL_BAN~') || buttonID.includes('~BAN_EVASION~') || buttonID.includes('~UNDERBAN~')) {
+      await showBanReasonSelect(interaction);
+    } else {
+      // For other mod actions, show modal directly
+      await modModal(interaction);
+    }
     return;
   }
 

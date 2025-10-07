@@ -34,6 +34,8 @@ import {
   DiscordErrorData,
   InteractionEditReplyOptions,
   AnySelectMenuInteraction,
+  StringSelectMenuBuilder,
+  StringSelectMenuOptionBuilder,
 } from 'discord.js';
 import {
   TextInputStyle,
@@ -248,6 +250,52 @@ const warnButtons = new ActionRowBuilder<ButtonBuilder>().addComponents(
     .setLabel('Nah, I do what I want!')
     .setStyle(ButtonStyle.Danger),
 );
+
+// Predefined ban reasons configuration
+export const predefinedBanReasons = {
+  rule1_harassment: {
+    label: 'Rule 1: Harassment/Hate Speech',
+    internalNote: 'User violated Rule 1: Harassment or Hate Speech',
+    userMessage: 'You have been banned for violating Rule 1: Harassment or Hate Speech is not tolerated.',
+    duration: null,
+    banType: undefined as string | undefined,
+  },
+  rule2_spam: {
+    label: 'Rule 2: Spam/Advertising',
+    internalNote: 'User violated Rule 2: Spam or Advertising',
+    userMessage: 'You have been banned for violating Rule 2: Spam and advertising are not allowed.',
+    duration: null,
+    banType: undefined as string | undefined,
+  },
+  rule3_nsfw: {
+    label: 'Rule 3: NSFW Content',
+    internalNote: 'User violated Rule 3: Posted NSFW content',
+    userMessage: 'You have been banned for violating Rule 3: NSFW content is not allowed.',
+    duration: null,
+    banType: undefined as string | undefined,
+  },
+  rule4_underage: {
+    label: 'Rule 4: Underage',
+    internalNote: 'User is underage',
+    userMessage: 'You have been banned for being underage. You may appeal when you turn 18.',
+    duration: null,
+    banType: 'UNDERBAN' as const,
+  },
+  rule5_vendor: {
+    label: 'Rule 5: Drug Sourcing/Vendor Activity',
+    internalNote: 'vendor activity - attempting to source or sell drugs',
+    userMessage: 'You have been permanently banned for attempting to source or sell drugs.',
+    duration: null,
+    banType: undefined as string | undefined,
+  },
+  custom: {
+    label: 'Custom Reason (Manual Entry)',
+    internalNote: '',
+    userMessage: '',
+    duration: null,
+    banType: undefined as string | undefined,
+  },
+};
 
 function isSnowflake(id: string): boolean {
   return /^\d{17,19}$/.test(id);
@@ -2464,4 +2512,193 @@ export async function modModal(
         }
       }
     });
+}
+
+/**
+ * Shows a select menu for choosing a predefined ban reason
+ * @param interaction - The button interaction that triggered the ban
+ */
+export async function showBanReasonSelect(
+  interaction: ButtonInteraction,
+): Promise<void> {
+  const [, command, userId] = interaction.customId.split('~');
+
+  // Only show select menu for ban actions
+  if (!['FULL_BAN', 'BAN_EVASION', 'UNDERBAN'].includes(command)) {
+    await modModal(interaction);
+    return;
+  }
+
+  const selectMenu = new StringSelectMenuBuilder()
+    .setCustomId(`banReasonSelect~${command}~${userId}~${interaction.id}`)
+    .setPlaceholder('Choose a predefined ban reason or custom...')
+    .addOptions(
+      Object.entries(predefinedBanReasons).map(([key, value]) => {
+        const truncatedNote = value.internalNote.length > 80 ? '...' : '';
+        const description = key === 'custom' ? 'Enter your own reason' : `${value.internalNote.substring(0, 80)}${truncatedNote}`;
+        return new StringSelectMenuOptionBuilder()
+          .setLabel(value.label)
+          .setValue(key)
+          .setDescription(description);
+      }),
+    );
+
+  const row = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(selectMenu);
+
+  await interaction.reply({
+    content: 'Please select a ban reason:',
+    components: [row],
+    flags: MessageFlags.Ephemeral,
+  });
+}
+
+/**
+ * Handles the ban reason select menu interaction and shows the modal
+ * @param interaction - The select menu interaction
+ */
+export async function handleBanReasonSelect(
+  interaction: AnySelectMenuInteraction,
+): Promise<void> {
+  if (!interaction.isStringSelectMenu()) return;
+
+  const [, command, userId, buttonInteractionId] = interaction.customId.split('~');
+  const selectedReason = interaction.values[0] as keyof typeof predefinedBanReasons;
+  const reasonData = predefinedBanReasons[selectedReason];
+
+  // Get the target user info for display
+  let target: string = userId;
+  try {
+    target = (await interaction.guild?.members.fetch(userId))?.displayName || userId;
+  } catch (err) {
+    try {
+      target = (await discordClient.users.fetch(userId))?.username || userId;
+    } catch (error) {
+      // Ignore
+    }
+  }
+
+  // Determine the actual command to use (for underage, switch to UNDERBAN)
+  const actualCommand = reasonData.banType || command;
+
+  // Build the modal with pre-filled values
+  let modalInternal = reasonData.internalNote;
+  let modalDescription = reasonData.userMessage;
+
+  // Try to get additional context from the original button message if it exists
+  try {
+    if (interaction.message.embeds.length > 0) {
+      const embed = interaction.message.embeds[0].toJSON();
+      const messageField = (embed.fields as APIEmbedField[])?.find(field => field.name === 'Message');
+      const urlField = (embed.fields as APIEmbedField[])?.find(field => field.name === 'Channel');
+
+      if (messageField && urlField && selectedReason !== 'custom') {
+        const messageContent = messageField.value;
+        const urlMatch = messageContent.match(/- (https:\/\/discord\.com\/channels\/\d+\/\d+\/\d+)$/);
+        const extractedUrl = urlMatch ? urlMatch[1] : null;
+        const messageWithoutUrl = extractedUrl
+          ? messageContent.replace(/\n- https:\/\/discord\.com\/channels\/\d+\/\d+\/\d+$/, '')
+          : messageContent;
+
+        // Calculate remaining space for message content
+        const baseInternalLength = reasonData.internalNote.length + 50; // +50 for formatting
+        const baseDescLength = reasonData.userMessage.length + 50;
+
+        const internalUrlSuffix = extractedUrl ? `\n> ${extractedUrl}` : '';
+        const descUrlSuffix = extractedUrl ? `\n> ${extractedUrl}` : '';
+
+        modalInternal = stripIndents`${reasonData.internalNote}
+
+          The offending message
+          ${messageField.value.substring(0, Math.max(0, 950 - baseInternalLength))}${internalUrlSuffix}`;
+
+        modalDescription = stripIndents`${reasonData.userMessage}
+
+          The offending message
+          ${messageWithoutUrl.substring(0, Math.max(0, 950 - baseDescLength))}${descUrlSuffix}`;
+      }
+    }
+  } catch (err) {
+    // Ignore - just use the base predefined messages
+  }
+
+  // Build verb for label
+  let verb = '';
+  if (actualCommand === 'NOTE') verb = 'noting';
+  else if (actualCommand === 'REPORT') verb = 'reporting';
+  else if (actualCommand === 'WARNING') verb = 'warning';
+  else if (actualCommand === 'KICK') verb = 'kicking';
+  else if (actualCommand === 'TIMEOUT') verb = 'timing out';
+  else if (actualCommand === 'FULL_BAN') verb = 'banning';
+  else if (actualCommand === 'TICKET_BAN') verb = 'ticket banning';
+  else if (actualCommand === 'DISCORD_BOT_BAN') verb = 'discord bot banning';
+  else if (actualCommand === 'BAN_EVASION') verb = 'evasion banning';
+  else if (actualCommand === 'UNDERBAN') verb = 'underbanning';
+
+  const modalInputComponent = new TextInputBuilder()
+    .setStyle(TextInputStyle.Paragraph)
+    .setPlaceholder('Tell moderators why you\'re doing this')
+    .setValue(modalInternal)
+    .setMaxLength(1000)
+    .setRequired(true)
+    .setCustomId('internalNote');
+
+  try {
+    const label = `Why are you ${verb} ${target}?`;
+    const truncatedLabelText = label.length > 45 ? `${label.substring(0, 41)}...?` : label;
+    modalInputComponent.setLabel(truncatedLabelText);
+  } catch (err) {
+    log.error(F, `Error setting label: ${err}`);
+    log.error(F, `Verb: ${verb}, Target: ${target}`);
+  }
+
+  const modal = new ModalBuilder()
+    .setCustomId(`modModal~${actualCommand}~${buttonInteractionId}`)
+    .setTitle(`${interaction.guild?.name || 'Server'} member ${actualCommand.toLowerCase()}`)
+    .addComponents(new ActionRowBuilder<TextInputBuilder>()
+      .addComponents(modalInputComponent));
+
+  // Add description field unless it's a note or report
+  if (!isNote(actualCommand as ModAction) && !isReport(actualCommand as ModAction)) {
+    modal.addComponents(new ActionRowBuilder<TextInputBuilder>()
+      .addComponents(new TextInputBuilder()
+        .setLabel('What should we tell the user?')
+        .setStyle(TextInputStyle.Paragraph)
+        .setPlaceholder('Tell the user why you\'re doing this')
+        .setValue(modalDescription)
+        .setMaxLength(1000)
+        .setRequired(actualCommand === 'WARNING')
+        .setCustomId('description')));
+  }
+
+  // Add duration field for timeout
+  if (isTimeout(actualCommand as ModAction)) {
+    modal.addComponents(new ActionRowBuilder<TextInputBuilder>()
+      .addComponents(new TextInputBuilder()
+        .setLabel('Timeout for how long?')
+        .setStyle(TextInputStyle.Short)
+        .setPlaceholder('7 days or 1 week, etc. (Max 7 days, Default 7 days)')
+        .setRequired(false)
+        .setCustomId('duration')));
+  }
+
+  // Add days to delete and ban duration for all ban types (FULL_BAN, UNDERBAN, BAN_EVASION)
+  if (isFullBan(actualCommand as ModAction) || isUnderban(actualCommand as ModAction) || isBanEvasion(actualCommand as ModAction)) {
+    modal.addComponents(new ActionRowBuilder<TextInputBuilder>()
+      .addComponents(new TextInputBuilder()
+        .setLabel('How far back should messages be removed?')
+        .setStyle(TextInputStyle.Short)
+        .setPlaceholder('7 days or 1 week, etc. (Max 7 days, Default 0 days)')
+        .setRequired(false)
+        .setCustomId('days')));
+    modal.addComponents(new ActionRowBuilder<TextInputBuilder>()
+      .addComponents(new TextInputBuilder()
+        .setLabel('How long should they be banned for?')
+        .setStyle(TextInputStyle.Short)
+        .setPlaceholder('1 year or 365 days, etc. (Empty = Permanent)')
+        .setRequired(false)
+        .setCustomId('ban_duration')));
+  }
+
+  // Show the modal as a response to the select menu interaction
+  await interaction.showModal(modal);
 }
