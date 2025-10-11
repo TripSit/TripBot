@@ -36,10 +36,10 @@ export const voiceStateUpdate: VoiceStateUpdateEvent = {
 
     // Check if the user actually left or joined a channel before logging
     if (New.channel !== Old.channel) {
-      logTent(Old, New);
+      await logTent(Old, New);
     }
 
-    teardownTent(Old);
+    await teardownTent(Old);
   },
 };
 
