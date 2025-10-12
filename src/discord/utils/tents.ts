@@ -141,6 +141,9 @@ export async function pitchTent(
   });
 }
 
+// Store timeouts for each channel to handle host rejoining
+const hostTimeouts: { [channelId: string]: NodeJS.Timeout } = {};
+
 /**
  * Template
  * @param {VoiceState} Old The previous voice state
@@ -151,15 +154,29 @@ export async function teardownTent(
   Old:VoiceState,
 ): Promise<void> {
   const tempVoiceCategory = await Old.guild.channels.fetch(env.CATEGORY_VOICE) as CategoryChannel;
-  tempVoiceCategory.children.cache.forEach(channel => {
+  const deletePromises = tempVoiceCategory.children.cache.map(async channel => {
     // Get the number of humans in the channel
     const humans = channel.members.filter(member => !member.user.bot).size;
 
     // If the channel is a voice channel, and it's a tent, and there are no humans in it delete it
     if (channel.type === ChannelType.GuildVoice && channel.name.includes('⛺') && humans < 1) {
-      channel.delete('Removing temporary voice chan!');
+      // Clear any pending host transfer timeout for this channel
+      if (hostTimeouts[channel.id]) {
+        clearTimeout(hostTimeouts[channel.id]);
+        delete hostTimeouts[channel.id];
+      }
+
+      try {
+        await Old.guild.channels.fetch(channel.id);
+        // If fetch succeeds, delete the channel
+        await channel.delete('Removing temporary voice chan!');
+      } catch (err) {
+        // Channel was likely already deleted or doesn't exist
+      }
     }
   });
+
+  await Promise.all(deletePromises);
 }
 
 export async function transferTent(
@@ -199,9 +216,6 @@ export async function transferTent(
     channel.setName(`⛺│${newHost.displayName}'s tent`);
   }
 }
-
-// Store timeouts for each channel to handle host rejoining
-const hostTimeouts: { [channelId: string]: NodeJS.Timeout } = {};
 
 const joinMessages = [
   'Hope you brought snacks!',
