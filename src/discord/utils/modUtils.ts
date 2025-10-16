@@ -1016,7 +1016,13 @@ export async function modResponse(
 
   // Get the guild
   // For ban appeals there will be no interaction, hence fetching our guild after the || operator.
+  if (!process.env.DISCORD_GUILD_ID) {
+    throw new Error('DISCORD_GUILD_ID environment variable is not set');
+  }
   const guild = interaction?.guild || await discordClient.guilds.fetch(process.env.DISCORD_GUILD_ID);
+  if (!guild) {
+    throw new Error('Failed to fetch guild');
+  }
   const guildData = await db.discord_guilds.upsert({
     where: {
       id: guild.id,
