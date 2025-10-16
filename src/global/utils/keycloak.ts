@@ -36,8 +36,8 @@ async function authenticateAdmin(): Promise<void> {
     try {
       await kcAdminClient.auth({
         grantType: 'client_credentials',
-        clientId: process.env.KEYCLOAK_BAN_APPEALS_ADMIN_CLIENT_ID as string,
-        clientSecret: process.env.KEYCLOAK_BAN_APPEALS_ADMIN_CLIENT_SECRET as string,
+        clientId: process.env.KEYCLOAK_ADMIN_CLIENT_ID as string,
+        clientSecret: process.env.KEYCLOAK_ADMIN_CLIENT_SECRET as string,
       });
       isAuthenticated = true;
       log.debug(F, 'Successfully authenticated admin client with Keycloak');
