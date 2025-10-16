@@ -2,7 +2,7 @@
 
 const F = f(__filename);
 
-const CLIENT_ID = process.env.KEYCLOAK_CLIENT_ID;
+const CLIENT_ID = process.env.KEYCLOAK_BAN_APPEALS_CLIENT_ID;
 const REDIRECT_URI = `https://${process.env.DNS_DOMAIN}/appeal`;
 
 export default {
@@ -43,7 +43,7 @@ export default {
   },
 
   async refreshToken(refreshToken: string) {
-    if (!process.env.KEYCLOAK_CLIENT_ID) {
+    if (!process.env.KEYCLOAK_BAN_APPEALS_CLIENT_ID) {
       throw new Error('Missing client ID');
     }
 
@@ -55,7 +55,7 @@ export default {
       body: new URLSearchParams({
         grant_type: 'refresh_token',
         refresh_token: refreshToken,
-        client_id: process.env.KEYCLOAK_CLIENT_ID,
+        client_id: process.env.KEYCLOAK_BAN_APPEALS_CLIENT_ID,
         // Don't include client_secret for public clients
       }),
     });
