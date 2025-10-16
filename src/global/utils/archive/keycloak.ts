@@ -19,8 +19,8 @@ let authenticated = false;
 export async function authenticate(): Promise<void> {
   await kcAdminClient.auth({
     grantType: 'client_credentials',
-    clientId: env.KEYCLOAK_CLIENT_ID,
-    clientSecret: env.KEYCLOAK_CLIENT_SECRET,
+    clientId: env.KEYCLOAK_BAN_APPEALS_CLIENT_ID,
+    clientSecret: env.KEYCLOAK_BAN_APPEALS_CLIENT_SECRET,
   });
   authenticated = true;
 }
