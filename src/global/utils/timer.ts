@@ -78,12 +78,16 @@ async function checkReminders() { // eslint-disable-line @typescript-eslint/no-u
             update: {},
           });
 
-          // Send the user a message
-          if (userData?.discord_id) {
-            const user = await global.discordClient.users.fetch(userData.discord_id);
-            if (user) {
-              await user.send(`Hey ${user.username}, you asked me to remind you: ${reminder.reminder_text}`);
+          try {
+            // Send the user a message
+            if (userData?.discord_id) {
+              const user = await global.discordClient.users.fetch(userData.discord_id);
+              if (user) {
+                await user.send(`Hey ${user.username}, you asked me to remind you: ${reminder.reminder_text}`);
+              }
             }
+          } catch (err) { // do nothing, user likely disabled DMs or not in a shared guild
+            log.error(F, `Error sending reminder DM to user ${userData?.discord_id}: ${err}`);
           }
 
           // Delete the reminder from the database
@@ -1175,10 +1179,10 @@ async function checkBirthdays() {
           return;
         }
 
-        // Send message to lounge channel
-        // const loungeChannel = await discordClient.channels.fetch(env.CHANNEL_VIPLOUNGE) as TextChannel;
-        // await loungeChannel.send(`Happy Birthday, <@${user.discord_id}>! We hope you have an amazing birthday! 🎉`);
-        log.info(F, `Birthday message sent for user: ${user.id}`);
+        // Send message to VIP lounge channel
+        const vipLounge = await discordClient.channels.fetch(env.CHANNEL_VIPLOUNGE) as TextChannel;
+        await vipLounge.send(`Happy Birthday, <@${user.discord_id}>! 🎉`);
+        log.info(F, `Birthday message sent for user: ${user.discord_id}`);
       } catch (messageError) {
         log.error(F, `Failed to send birthday message for user ${user.id}: ${messageError}`);
       }

@@ -289,8 +289,8 @@ function isUnBan(command: ModAction): command is 'UN-FULL_BAN' | 'UN-BAN_EVASION
   return command === 'UN-FULL_BAN' || command === 'UN-BAN_EVASION' || command === 'UN-UNDERBAN';
 }
 
-function sendsMessageToUser(command: ModAction): command is 'WARNING' | 'FULL_BAN' | 'TICKET_BAN' | 'DISCORD_BOT_BAN' | 'BAN_EVASION' | 'UNDERBAN' | 'TIMEOUT' | 'KICK' {
-  return command === 'WARNING' || command === 'FULL_BAN' || command === 'TICKET_BAN' || command === 'DISCORD_BOT_BAN' || command === 'BAN_EVASION' || command === 'UNDERBAN' || command === 'TIMEOUT' || command === 'KICK';
+function sendsMessageToUser(command: ModAction): command is 'WARNING' | 'FULL_BAN' | 'TICKET_BAN' | 'DISCORD_BOT_BAN' | 'BAN_EVASION' | 'UNDERBAN' | 'TIMEOUT' | 'UN-TIMEOUT' | 'KICK' {
+  return command === 'WARNING' || command === 'FULL_BAN' || command === 'TICKET_BAN' || command === 'DISCORD_BOT_BAN' || command === 'BAN_EVASION' || command === 'UNDERBAN' || command === 'TIMEOUT' || command === 'UN-TIMEOUT' || command === 'KICK';
 }
 
 function isFullBan(command: ModAction): command is 'FULL_BAN' { return command === 'FULL_BAN'; }
@@ -1353,58 +1353,21 @@ async function messageUser(
     return;
   }
 
-  if (addButtons) {
-    const targetData = await db.users.upsert({
-      where: {
-        discord_id: target.id,
-      },
-      create: {
-        discord_id: target.id,
-      },
-      update: {
-      },
-    });
+  const messageFilter = (mi: MessageComponentInteraction) => mi.user.id === target.id;
+  const collector = message.createMessageComponentCollector({ filter: messageFilter, time: 0 });
 
-    const messageFilter = (mi: MessageComponentInteraction) => mi.user.id === target.id;
-    const collector = message.createMessageComponentCollector({ filter: messageFilter, time: 0 });
-
-    // Fetch the mod thread channel once
-    let targetChan: TextChannel | null = null;
-    try {
-      targetChan = targetData.mod_thread_id
-        ? await discordClient.channels.fetch(targetData.mod_thread_id as Snowflake) as TextChannel
-        : null;
-    } catch (error) {
-      log.info(F, 'Failed to fetch mod thread. It was likely deleted.');
+  collector.on('collect', async (mi: MessageComponentInteraction) => {
+    if (mi.customId.startsWith('acknowledgeButton')) {
+      // remove the components from the message
+      await mi.update({ components: [] });
+      mi.user.send('Thanks for understanding! We appreciate your cooperation and will consider this in the future!');
+    } else if (mi.customId.startsWith('refusalButton')) {
+      // remove the components from the message
+      await mi.update({ components: [] });
+      mi.user.send(stripIndents`Thanks for admitting this, you\'ve been removed from the guild. You can rejoin if you ever decide to cooperate.`);
+      await guild.members.kick(target, 'Refused to acknowledge timeout');
     }
-
-    collector.on('collect', async (mi: MessageComponentInteraction) => {
-      if (mi.customId.startsWith('acknowledgeButton')) {
-        if (targetChan) {
-          await targetChan.send({
-            embeds: [embedTemplate()
-              .setColor(Colors.Green)
-              .setDescription(`${target.username} has acknowledged their warning.`)],
-          });
-        }
-        // remove the components from the message
-        await mi.update({ components: [] });
-        mi.user.send('Thanks for understanding! We appreciate your cooperation and will consider this in the future!');
-      } else if (mi.customId.startsWith('refusalButton')) {
-        if (targetChan) {
-          await targetChan.send({
-            embeds: [embedTemplate()
-              .setColor(Colors.Red)
-              .setDescription(`${target.username} has refused their timeout and was kicked.`)],
-          });
-        }
-        // remove the components from the message
-        await mi.update({ components: [] });
-        mi.user.send(stripIndents`Thanks for admitting this, you\'ve been removed from the guild. You can rejoin if you ever decide to cooperate.`);
-        await guild.members.kick(target, 'Refused to acknowledge timeout');
-      }
-    });
-  }
+  });
   log.debug(F, `[messageUser] time: ${Date.now() - startTime}ms`);
 }
 
@@ -1786,6 +1749,7 @@ export async function moderate(
   let banEndTime = null;
   let actionDuration = 0 as null | number;
   let durationStr = '';
+  let modDurationStr = ''; // For moderator-facing messages
   if (isTimeout(command)) {
     // log.debug(F, 'Parsing timeout duration');
     let durationVal = modalInt.fields.getTextInputValue('duration');
@@ -1809,10 +1773,13 @@ export async function moderate(
 
     // convert the milliseconds into a human readable string
     const humanTime = msToHuman(actionDuration);
+    const timeoutEnd = time(new Date(Date.now() + actionDuration), 'R');
 
-    durationStr = ` for ${humanTime}. It will expire ${time(new Date(Date.now() + actionDuration), 'R')}`;
+    durationStr = timeoutEnd; // For user-facing messages
+    modDurationStr = `\n**Timeout Duration:** ${humanTime}\n**Timeout Ends:** ${timeoutEnd}`; // For moderator-facing messages
     // log.debug(F, `duration: ${duration}`);
   }
+
   if (isFullBan(command)) {
     const durationVal = modalInt.fields.getTextInputValue('ban_duration');
 
@@ -1872,13 +1839,29 @@ export async function moderate(
   // log.debug(F, `TargetData: ${JSON.stringify(targetData, null, 2)}`);
   // If this is a Warn, ban, timeout or kick, send a message to the user
   // Do this first cuz you can't do this if they're not in the guild
+
+  // Set up the expiration string for the message
+  let expiration = '';
+  if (durationStr && isBan(command)) {
+    expiration = `Your ban will be automatically lifted ${durationStr}`;
+  } else if (durationStr && isTimeout(command)) {
+    expiration = `It will expire in ${durationStr}`;
+  } else {
+    expiration = '';
+  }
+
   if (sendsMessageToUser(command)
     && !vendorBan
     && (description !== '' && description !== null)
     && (targetMember || targetUser)) {
     log.debug(F, `[moderate] Sending message to ${targetName}`);
-    let body = stripIndents`I regret to inform you that you've been ${embedVariables[command as keyof typeof embedVariables].pastVerb}${durationStr} by Team TripSit. 
+    const openingMessage = isUnTimeout(command)
+      ? `Good news! You've been ${embedVariables[command as keyof typeof embedVariables].pastVerb} by Team TripSit.`
+      : `I regret to inform you that you've been ${embedVariables[command as keyof typeof embedVariables].pastVerb} by Team TripSit.`;
 
+    let body = stripIndents`${openingMessage}
+
+        ${expiration}
       > ${description}
 
       **Do not message a moderator to talk about this or argue about the rules in public channels!**
@@ -2133,8 +2116,6 @@ export async function moderate(
     data: targetData,
   });
 
-  const anonSummary = `${targetName} was ${embedVariables[command as keyof typeof embedVariables].pastVerb}${durationStr}!`;
-
   log.debug(F, 'Sending message to mod thread');
   const modThread = await messageModThread(
     buttonInt,
@@ -2144,8 +2125,10 @@ export async function moderate(
     internalNote,
     description,
     extraMessage,
-    durationStr,
+    modDurationStr || durationStr,
   );
+
+  const anonSummary = `${targetName} was ${embedVariables[command as keyof typeof embedVariables].pastVerb}${modDurationStr || durationStr}!`;
 
   // Records the action taken on the action field of the modlog embed
   const embed = buttonInt.message.embeds[0].toJSON();
