@@ -43,14 +43,15 @@ const F = f(__filename);
 
 async function start() {
   log.info(F, 'Initializing service!');
-  // if (validateEnv('SERVICES')) {
-  api();
-  global.db = new PrismaClient({ log: ['error'] });
-  await updateDb();
-  if (env.DISCORD_CLIENT_TOKEN && validateEnv('DISCORD')) await discordConnect();
-  // if (env.MATRIX_ACCESS_TOKEN && validateEnv( 'MATRIX') && env.NODE_ENV !== 'production') await startMatrix();
-  // if (env.IRC_PASSWORD && validateEnv('IRC') && env.NODE_ENV !== 'production') ircConnect();
-  // if (env.TELEGRAM_TOKEN && validateEnv('TELEGRAM')) await telegramConnect();
+  if (validateEnv('SERVICES')) {
+    api();
+    global.db = new PrismaClient({ log: ['error'] });
+    await updateDb();
+    if (env.DISCORD_CLIENT_TOKEN && validateEnv('DISCORD')) await discordConnect();
+    // if (env.MATRIX_ACCESS_TOKEN && validateEnv( 'MATRIX') && env.NODE_ENV !== 'production') await startMatrix();
+    // if (env.IRC_PASSWORD && validateEnv('IRC') && env.NODE_ENV !== 'production') ircConnect();
+    // if (env.TELEGRAM_TOKEN && validateEnv('TELEGRAM')) await telegramConnect();
+  }
 }
 
 start();
