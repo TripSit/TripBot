@@ -24,10 +24,10 @@ const app = express();
 //   next();
 // });
 
-// set up rate limiter: maximum of 120 requests per minute
+// set up rate limiter: maximum of five requests per minute
 const limiter = RateLimit({
   windowMs: 1 * 60 * 1000, // 1 minute
-  max: 120,
+  max: 60,
   handler: (req, res /* next */) => {
     res.status(429).send('Too many requests, please try again later.');
   },
@@ -42,7 +42,7 @@ app.set('trust proxy', 2);
 // Standard middleware
 app.use(morgan('tiny'));
 app.use(helmet());
-app.use(express.json({ limit: '500kb' })); // configure the app to parse requests with JSON payloads & increase input size limit
+app.use(express.json()); // configure the app to parse requests with JSON payloads
 app.use(express.urlencoded({ extended: false })); // configure the app to parse requests with urlencoded payloads
 app.use(bodyParser.text()); // configure the app to be able to read text
 
