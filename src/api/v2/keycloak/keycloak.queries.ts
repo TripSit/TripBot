@@ -3,7 +3,8 @@
 const F = f(__filename);
 
 const CLIENT_ID = process.env.KEYCLOAK_BAN_APPEALS_CLIENT_ID;
-const REDIRECT_URI = `https://${process.env.DNS_DOMAIN}/appeal`;
+const DNS_DOMAIN = process.env.DNS_DOMAIN || 'tripsit.me';
+const REDIRECT_URI = `https://${DNS_DOMAIN}/appeal`;
 
 export default {
   async exchangeCodeForToken(code: string) {
