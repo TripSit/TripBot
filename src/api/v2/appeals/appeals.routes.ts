@@ -34,7 +34,8 @@ router.get('/latest', async (req: AuthenticatedRequest, res) => {
     if (result) {
       return res.json(result);
     }
-    return res.status(404).json({ error: 'No appeals found' });
+    // Temporarily return 200 instead of 404 to test
+    return res.status(200).json({ appeal: null, message: 'No appeals found' });
   } catch (error) {
     log.error(F, `Error getting latest appeal: ${error}`);
     return res.status(500).json({ error: 'Failed to get latest appeal' });
