@@ -48,8 +48,7 @@ app.use(bodyParser.text()); // configure the app to be able to read text
 
 // CORS middleware
 app.use((req, res, next) => {
-  const allowedOrigins = [`https://${env.DNS_DOMAIN}`, `https://${env.BOT_DOMAIN}`];
-  log.info(F, allowedOrigins.toString());
+  const allowedOrigins = [`https://${process.env.DNS_DOMAIN}`, `https://${process.env.BOT_DOMAIN}`, 'https://tripsit.me', 'https://tripbot.info'];
   const { origin } = req.headers;
   if (origin) {
     if (allowedOrigins.includes(origin)) {
