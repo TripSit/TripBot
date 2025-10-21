@@ -20,6 +20,7 @@ export default async function keycloakAuth(
   try {
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      log.error(F, `Auth middleware - No auth header for ${req.method} ${req.path} - authHeader: ${authHeader}`);
       res.status(401).json({ error: 'Missing or invalid authorization header' });
       return;
     }

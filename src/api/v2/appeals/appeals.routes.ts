@@ -22,7 +22,7 @@ const limiter = RateLimit({
 router.use(limiter);
 router.use(keycloakAuth);
 
-router.get('/latest', async (req: AuthenticatedRequest, res, next) => {
+router.get('/latest', async (req: AuthenticatedRequest, res) => {
   try {
     if (!req.user?.discord_id) {
       return res.status(400).json({ error: 'Discord ID not found in token' });
@@ -36,7 +36,8 @@ router.get('/latest', async (req: AuthenticatedRequest, res, next) => {
     }
     return res.status(404).json({ error: 'No appeals found' });
   } catch (error) {
-    return next(error);
+    log.error(F, `Error getting latest appeal: ${error}`);
+    return res.status(500).json({ error: 'Failed to get latest appeal' });
   }
 });
 
@@ -136,7 +137,7 @@ router.post('/remind', async (req: AuthenticatedRequest, res) => {
 });
 
 // Get all user's appeals
-router.get('/', async (req: AuthenticatedRequest, res, next) => {
+router.get('/', async (req: AuthenticatedRequest, res) => {
   try {
     if (!req.user?.discord_id) {
       return res.status(400).json({ error: 'Discord ID not found in token' });
@@ -156,7 +157,8 @@ router.get('/', async (req: AuthenticatedRequest, res, next) => {
     const result = await appeals.getAppeals(user.id);
     return res.json(result);
   } catch (error) {
-    return next(error);
+    log.error(F, `Error getting appeals: ${error}`);
+    return res.status(500).json({ error: 'Failed to get appeals' });
   }
 });
 
