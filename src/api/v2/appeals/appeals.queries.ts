@@ -53,20 +53,16 @@ export default {
     extra?: string;
   }): Promise<{ success: boolean; error?: string }> {
     try {
-      // First find the user by discord_id to get their UUID
-      const user = await db.users.findFirst({
+      // Get or create user by discord_id to get their UUID
+      const user = await db.users.upsert({
         where: {
           discord_id: data.discord_id,
         },
-        select: {
-          id: true, // Get the UUID
+        create: {
+          discord_id: data.discord_id,
         },
+        update: {},
       });
-
-      if (!user) {
-        log.error(F, `User not found in database for discord_id: ${data.discord_id}`);
-        return { success: false, error: 'USER_NOT_FOUND' };
-      }
 
       // Get the latest appeal within 30 seconds (dev) or 3 months (prod)
       const cooldownPeriod = process.env.NODE_ENV === 'development'

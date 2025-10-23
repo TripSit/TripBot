@@ -23,13 +23,12 @@ async function updateAppeal(
     return { success: false, message: 'This command can only be used in a guild.' };
   }
 
-  const userData = await db.users.findFirst({
+  // Get or create user by discord_id
+  const userData = await db.users.upsert({
     where: { discord_id: discordId },
+    create: { discord_id: discordId },
+    update: {},
   });
-
-  if (!userData) {
-    return { success: false, message: 'User not found in database.' };
-  }
 
   // Find the latest appeal (any status)
   const latestAppeal = await db.appeals.findFirst({
