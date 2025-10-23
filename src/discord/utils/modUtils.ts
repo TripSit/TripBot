@@ -2481,74 +2481,80 @@ export async function modModal(
           const [, , targetUserId] = interaction.customId.split('~');
           const result = accept ? await appealAccept(interaction, i) : await appealReject(interaction, i);
 
-          const targetData = await db.users.upsert({
-            where: { discord_id: interaction.user.id },
-            create: { discord_id: interaction.user.id },
-            update: {},
-          });
+          // Check if the appeal action succeeded
+          const succeeded = result.content?.includes('unbanned') || result.content?.includes('rejected');
 
-          const actionData = {
-            user_id: targetData.id,
-            target_discord_id: targetUserId,
-            guild_id: interaction.guild?.id,
-            type: command,
-            ban_evasion_related_user: null as string | null,
-            description: i.fields.getTextInputValue('appealDescription'),
-            internal_note: i.fields.getTextInputValue('internalNote'),
-            expires_at: null as Date | null,
-            repealed_by: null as string | null,
-            repealed_at: null as Date | null,
-            created_by: targetData.id,
-            created_at: new Date(),
-          } as user_actions;
-
-          if (actionData.id) {
-            await db.user_actions.upsert({
-              where: { id: actionData.id },
-              create: actionData,
-              update: actionData,
+          // Only log action and send embeds if the appeal action actually succeeded
+          if (succeeded) {
+            const targetData = await db.users.upsert({
+              where: { discord_id: interaction.user.id },
+              create: { discord_id: interaction.user.id },
+              update: {},
             });
-          } else {
-            await db.user_actions.create({ data: actionData });
+
+            const actionData = {
+              user_id: targetData.id,
+              target_discord_id: targetUserId,
+              guild_id: interaction.guild?.id,
+              type: command,
+              ban_evasion_related_user: null as string | null,
+              description: i.fields.getTextInputValue('appealDescription'),
+              internal_note: i.fields.getTextInputValue('internalNote'),
+              expires_at: null as Date | null,
+              repealed_by: null as string | null,
+              repealed_at: null as Date | null,
+              created_by: targetData.id,
+              created_at: new Date(),
+            } as user_actions;
+
+            if (actionData.id) {
+              await db.user_actions.upsert({
+                where: { id: actionData.id },
+                create: actionData,
+                update: actionData,
+              });
+            } else {
+              await db.user_actions.create({ data: actionData });
+            }
+
+            // Send message to thread with embed
+            await thread.send({
+              content: `${roleModerator}`,
+              embeds: [embedTemplate()
+                .setColor(accept ? Colors.Green : Colors.Red)
+                .setDescription(`${interaction.user} has ${accept ? 'accepted' : 'rejected'} this appeal.`)
+                .addFields(
+                  {
+                    name: 'Internal Note',
+                    value: i.fields.getTextInputValue('internalNote'),
+                  },
+                  {
+                    name: 'Reason',
+                    value: i.fields.getTextInputValue('appealDescription'),
+                  },
+                ),
+              ],
+            });
+
+            // Send message to mod-log channel
+            const modLogChannel = await discordClient.channels.fetch(env.CHANNEL_MODLOG) as TextChannel;
+            await modLogChannel.send({
+              embeds: [embedTemplate()
+                .setColor(accept ? Colors.Green : Colors.Red)
+                .setDescription(`${interaction.user} has ${accept ? 'accepted' : 'rejected'} an appeal from <@${userId}>`)
+                .addFields(
+                  {
+                    name: 'Internal Note',
+                    value: i.fields.getTextInputValue('internalNote'),
+                  },
+                  {
+                    name: 'Reason',
+                    value: i.fields.getTextInputValue('appealDescription'),
+                  },
+                ),
+              ],
+            });
           }
-
-          // Send message to thread with embed
-          await thread.send({
-            content: `${roleModerator}`,
-            embeds: [embedTemplate()
-              .setColor(accept ? Colors.Green : Colors.Red)
-              .setDescription(`${interaction.user} has ${accept ? 'accepted' : 'rejected'} this appeal.`)
-              .addFields(
-                {
-                  name: 'Internal Note',
-                  value: i.fields.getTextInputValue('internalNote'),
-                },
-                {
-                  name: 'Reason',
-                  value: i.fields.getTextInputValue('appealDescription'),
-                },
-              ),
-            ],
-          });
-
-          // Send message to mod-log channel
-          const modLogChannel = await discordClient.channels.fetch(env.CHANNEL_MODLOG) as TextChannel;
-          await modLogChannel.send({
-            embeds: [embedTemplate()
-              .setColor(accept ? Colors.Green : Colors.Red)
-              .setDescription(`${interaction.user} has ${accept ? 'accepted' : 'rejected'} an appeal from <@${userId}>`)
-              .addFields(
-                {
-                  name: 'Internal Note',
-                  value: i.fields.getTextInputValue('internalNote'),
-                },
-                {
-                  name: 'Reason',
-                  value: i.fields.getTextInputValue('appealDescription'),
-                },
-              ),
-            ],
-          });
 
           await i.editReply(result);
           return;
