@@ -87,7 +87,7 @@ export default {
       });
 
       if (latestAppeal) {
-        log.info(F, `User ${data.discord_id} tried to create appeal before 30 day cooldown`);
+        log.info(F, `User ${data.discord_id} tried to create appeal before 90 day cooldown`);
         return { success: false, error: 'COOLDOWN' };
       }
 
