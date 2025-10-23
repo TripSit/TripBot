@@ -34,7 +34,11 @@ router.get('/banned', async (req: AuthenticatedRequest, res) => {
     return res.json(banStatus);
   } catch (error) {
     log.error(F, `Error checking ban status: ${error}`);
-    return res.status(500).json({ error: 'Failed to check ban status' });
+    return res.status(200).json({
+      success: false,
+      banned: false,
+      error: 'Failed to check ban status',
+    });
   }
 });
 
@@ -50,7 +54,11 @@ router.get('/avatar', async (req: AuthenticatedRequest, res) => {
     return res.json(avatarData);
   } catch (error) {
     log.error(F, `Error getting Discord avatar: ${error}`);
-    return res.status(500).json({ error: 'Failed to get Discord avatar' });
+    return res.status(200).json({
+      success: false,
+      avatarUrl: '/assets/img/guest.png',
+      error: 'Failed to get Discord avatar',
+    });
   }
 });
 
