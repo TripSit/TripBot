@@ -189,7 +189,7 @@ export const dLeaderboard: SlashCommand = {
               const roleColor = `#${(member.roles.color?.color || 0x99aab5).toString(16).padStart(6, '0')}`;
               const userDarkBarColor = generateColors(roleColor, 0, -72, -82);
               const userNameColor = generateColors(roleColor, 0, 0, 0);
-              const userName = await deFuckifyText(member?.displayName || '');
+              const userName = deFuckifyText(member?.displayName || '');
               const userFontSize = count > 2 ? 25 : 35;
               const personaData = await getPersonaInfo(user.discord_id);
 
