@@ -30,7 +30,7 @@ const F = f(__filename);
 //   [key: string]: DateTime;
 // };
 
-const newRecordString = '🎈🎉🎊 New Record 🎊🎉🎈';
+// const newRecordString = '🎈🎉🎊 New Record 🎊🎉🎈';
 
 type RedditItem = {
   title: string,
@@ -648,30 +648,30 @@ async function checkVoice() {
 //   // }, delay);
 // }
 
-async function checkStats() {
-  // log.debug(F, 'Checking stats...');
-  // Determine how many people are in the tripsit guild
-  const tripsitGuild = await global.discordClient.guilds.fetch(env.DISCORD_GUILD_ID);
-  if (!tripsitGuild) return;
-
-  const { memberCount } = tripsitGuild;
-
-  // Total member count
-  // Check if the total members is divisible by 100
-  if (memberCount % 100 === 0) {
-    const embed = embedTemplate()
-      .setTitle(newRecordString)
-      .setDescription(`We have reached ${memberCount} total members!`);
-    const channelLounge = await tripsitGuild.channels.fetch(env.CHANNEL_LOUNGE) as TextChannel;
-    if (channelLounge) {
-      await channelLounge.send({ embeds: [embed] });
-    }
-    const channelTeamtripsit = await tripsitGuild.channels.fetch(env.CHANNEL_TEAMTRIPSIT) as TextChannel;
-    if (channelTeamtripsit) {
-      await channelTeamtripsit.send({ embeds: [embed] });
-    }
-  }
-}
+// async function checkStats() {
+//   // log.debug(F, 'Checking stats...');
+//   // Determine how many people are in the tripsit guild
+//   const tripsitGuild = await global.discordClient.guilds.fetch(env.DISCORD_GUILD_ID);
+//   if (!tripsitGuild) return;
+//
+//   const { memberCount } = tripsitGuild;
+//
+//   // Total member count
+//   // Check if the total members is divisible by 100
+//   if (memberCount % 100 === 0) {
+//     const embed = embedTemplate()
+//       .setTitle(newRecordString)
+//       .setDescription(`We have reached ${memberCount} total members!`);
+//     const channelLounge = await tripsitGuild.channels.fetch(env.CHANNEL_LOUNGE) as TextChannel;
+//     if (channelLounge) {
+//       await channelLounge.send({ embeds: [embed] });
+//     }
+//     const channelTeamtripsit = await tripsitGuild.channels.fetch(env.CHANNEL_TEAMTRIPSIT) as TextChannel;
+//     if (channelTeamtripsit) {
+//       await channelTeamtripsit.send({ embeds: [embed] });
+//     }
+//   }
+// }
 
 // async function checkLpm() { // eslint-disable-line
 //   const channels = [
