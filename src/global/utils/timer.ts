@@ -925,7 +925,7 @@ async function checkMoodle() { // eslint-disable-line
                     .setTitle(`Congratulations on completing "${course}"!`)
                     .setDescription(stripIndents`
                     Give yourself deserved pack on the back, you deserve it!
-                                 
+
                     But your journey doesn't end here...
 
                     You can now become a TripSit Helper!
@@ -1220,7 +1220,7 @@ async function runTimer() {
   const seconds10 = 1000 * 10;
   const seconds30 = 1000 * 30;
   const seconds60 = 1000 * 60;
-  const minutes5 = 1000 * 60 * 5;
+  // const minutes5 = 1000 * 60 * 5;
   const hours24 = 1000 * 60 * 60 * 24;
   const hours48 = 1000 * 60 * 60 * 48;
 
@@ -1232,7 +1232,7 @@ async function runTimer() {
     { callback: checkRss, interval: env.NODE_ENV === 'production' ? seconds30 : seconds5 },
     { callback: checkVoice, interval: env.NODE_ENV === 'production' ? seconds60 : seconds5 },
     // { callback: changeStatus, interval: env.NODE_ENV === 'production' ? hours24 : seconds5 },
-    { callback: checkStats, interval: env.NODE_ENV === 'production' ? minutes5 : seconds5 },
+    // { callback: checkStats, interval: env.NODE_ENV === 'production' ? minutes5 : seconds5 },
     { callback: checkMoodle, interval: env.NODE_ENV === 'production' ? seconds60 : seconds5 },
     // { callback: checkLpm, interval: env.NODE_ENV === 'production' ? seconds10 : seconds5 },
     { callback: updateDb, interval: env.NODE_ENV === 'production' ? hours24 : hours48 },
