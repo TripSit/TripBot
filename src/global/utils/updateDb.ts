@@ -100,21 +100,30 @@ async function getTSCombos(): Promise<Combos> {
   if (useCache) {
     try {
       const rawData = await fs.readFile(path.join(dataFolder, 'tripsitCombos.json'));
-      // log.debug(F, `Got ${Object.keys(newData).length} drugs from TripSit Combo Cache!`);
       return JSON.parse(rawData.toString());
     } catch (err) {
       log.error(F, `Error reading TripSit Combo Cache: ${err}`);
+      return {} as Combos;
     }
   }
 
-  const tsComboResponse = await axios.get('https://raw.githubusercontent.com/TripSit/drugs/main/combos.json');
-  const tsComboData = tsComboResponse.data as Combos;
+  try {
+    const tsComboResponse = await axios.get('https://raw.githubusercontent.com/TripSit/drugs/main/combos.json');
+    const tsComboData = tsComboResponse.data as Combos;
 
-  log.info(F, `Got ${Object.keys(tsComboData).length} combos from TripSit API!`);
+    log.info(F, `Got ${Object.keys(tsComboData).length} combos from TripSit API!`);
 
-  await saveData(tsComboData, 'tripsitCombos');
+    try {
+      await saveData(tsComboData, 'tripsitCombos');
+    } catch (err) {
+      log.error(F, `Error saving TripSit Combos to cache: ${err}`);
+    }
 
-  return tsComboData;
+    return tsComboData;
+  } catch (err) {
+    log.error(F, `Error fetching TripSit Combos from API: ${err}`);
+    return {} as Combos;
+  }
 }
 
 async function getPWData(): Promise<PwSubstance[]> {
