@@ -37,6 +37,7 @@ import {
 import {
   APIInteractionDataResolvedChannel,
   ChannelType,
+  ComponentType,
   MessageFlags,
 } from 'discord-api-types/v10';
 import { stripIndents } from 'common-tags';
@@ -238,12 +239,12 @@ function getComponentById(
   // log.debug(F, `getComponentById started with id: ${id}`);
   // log.debug(F, `Components: ${JSON.stringify(interaction.message.components, null, 2)}`);
 
-  if (interaction.message?.components) {
-    // eslint-disable-next-line no-restricted-syntax
-    for (const row of interaction.message.components) {
+  // eslint-disable-next-line no-restricted-syntax
+  for (const row of interaction.message.components) {
+    if (row.type === ComponentType.ActionRow && 'components' in row) {
       // eslint-disable-next-line no-restricted-syntax
       for (const component of row.components) {
-        if (component.customId?.includes(id)) {
+        if ('customId' in component && component.customId?.includes(id)) {
           return component;
         }
       }

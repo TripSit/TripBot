@@ -6,7 +6,8 @@ export interface RPSGame {
   gameType: '1v1' | 'multiplayer';
   round: number;
   eliminatedPlayers: string[];
-  scores?: { player1: number; player2: number }; // Add this line
+  scores?: { player1: number; player2: number };
+  roundProcessed?: boolean; // Prevents duplicate scoring in 1v1 when players change choices
 }
 
 export type GameResult = 'player1' | 'player2' | 'tie';

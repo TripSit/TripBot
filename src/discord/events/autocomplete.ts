@@ -388,8 +388,8 @@ async function autocompleteQuotes(interaction: AutocompleteInteraction) {
   if (results.length > 0) {
     const top25 = results.slice(0, 20);
     const listResults = top25.map(choice => ({
-      name: (choice.item as any).quote.slice(0, 100),
-      value: (choice.item as any).quote.slice(0, 100),
+      name: (choice.item as any).quote.slice(0, 99),
+      value: (choice.item as any).quote.slice(0, 99),
     }));
     // log.debug(F, `list_results: ${listResults}`);
     await interaction.respond(listResults);
@@ -402,8 +402,8 @@ async function autocompleteQuotes(interaction: AutocompleteInteraction) {
       quote: string;
     }[];
     const listResults = initialQuotes.map(choice => ({
-      name: choice.quote.slice(0, 100),
-      value: choice.quote.slice(0, 100),
+      name: choice.quote.slice(0, 99),
+      value: choice.quote.slice(0, 99),
     }));
     // log.debug(F, `list_results: ${listResults}`);
     // log.debug(F, `Returing ${listResults.length} quotes`);

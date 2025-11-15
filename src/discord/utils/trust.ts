@@ -2,25 +2,35 @@ import {
   GuildMember,
   // Colors,
   Collection,
-  ThreadChannel,
+  // ThreadChannel,
   TextChannel,
+  ThreadChannel,
   ActionRowBuilder,
   ButtonBuilder,
-  DiscordErrorData,
-  PermissionResolvable,
-  GuildBan,
+  // ActionRowBuilder,
+  // ButtonBuilder,
+  // DiscordErrorData,
+  // PermissionResolvable,
+  // GuildBan,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
 import { members } from '@prisma/client';
 import {
-  modButtonBan, modButtonInfo, modButtonNote, modButtonTimeout, modButtonWarn, tripSitTrustScore, userInfoEmbed,
+  modButtonBan,
+  modButtonInfo,
+  modButtonNote,
+  modButtonTimeout,
+  modButtonWarn,
+  tripSitTrustScore,
+  userInfoEmbed,
 } from './modUtils';
-import { checkGuildPermissions } from './checkPermissions';
+// import { checkGuildPermissions } from './checkPermissions';
 import { topic } from '../../global/commands/g.topic';
 import { giveMilestone } from '../../global/utils/experience';
 
 const F = f(__filename);
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 async function getInvite(member:GuildMember) {
   const newInvites = await member.guild.invites.fetch();
   const cachedInvites = global.guildInvites.get(member.guild.id);
@@ -260,15 +270,17 @@ export default async function trust(
 
   log.debug(F, `trustScoreData: ${JSON.stringify(trustScoreData)}`);
 
-  // const trustScoreColors = {
-  //   0: Colors.Purple,
-  //   1: Colors.Blue,
-  //   2: Colors.Green,
-  //   3: Colors.Yellow,
-  //   4: Colors.Orange,
-  //   5: Colors.Red,
-  //   6: Colors.Red,
-  // };
+  /*
+  const trustScoreColors = {
+    0: Colors.Purple,
+    1: Colors.Blue,
+    2: Colors.Green,
+    3: Colors.Yellow,
+    4: Colors.Orange,
+    5: Colors.Red,
+    6: Colors.Red,
+  };
+  */
 
   embed
     // .setColor(trustScoreColors[trustScoreData.trustScore as keyof typeof trustScoreColors])
@@ -279,13 +291,13 @@ export default async function trust(
     `);
 
   embed.setFooter({ text: inviteString });
-
-  // if (trustScoreData.trustScore > 3) {
-  //   await sendCooperativeMessage(
-  //     embed,
-  //     [`${member.guild.id}`],
-  //   );
-  // }
+  /*
+  if (trustScoreData.trustScore > 3) {
+    await sendCooperativeMessage(
+      embed,
+      [`${member.guild.id}`],
+    );
+  }
 
   const bannedTest = await Promise.all(discordClient.guilds.cache.map(async guild => {
     // log.debug(F, `Checking guild: ${guild.name}`);
@@ -299,24 +311,25 @@ export default async function trust(
 
     try {
       return await guild.bans.fetch(member.id);
-      // log.debug(F, `User is banned in guild: ${guild.name}`);
-      // return guild.name;
+      log.debug(F, `User is banned in guild: ${guild.name}`);
+      return guild.name;
     } catch (err: unknown) {
       if ((err as DiscordErrorData).code === 10026) {
-        // log.debug(F, `User is not banned in guild: ${guild.name}`);
+        log.debug(F, `User is not banned in guild: ${guild.name}`);
         return null;
       }
-      // log.debug(F, `Error checking guild: ${guild.name}`);
+      log.debug(F, `Error checking guild: ${guild.name}`);
       return null;
     }
   }));
 
   // count how many 'banned' appear in the array
-  const bannedGuilds = bannedTest.filter(item => item) as GuildBan[];
+  // const bannedGuilds = bannedTest.filter(item => item) as GuildBan[];
+  */
 
   let modThread = null as ThreadChannel | null;
-  let modThreadMessage = `**${member.displayName} has joined the guild!**`;
-  let emoji = '👋';
+  const modThreadMessage = `**${member.displayName} has joined the guild!**`;
+  const emoji = '👋';
 
   const guildData = await db.discord_guilds.upsert({
     where: {
@@ -328,7 +341,6 @@ export default async function trust(
     },
     update: {},
   });
-
   if (trustScoreData.trustScore > guildData.trust_score_limit) {
     // What happens when the user has a high trust score
     if (guildData.channel_trust) {
@@ -344,23 +356,23 @@ ${guildData.trust_score_limit}, I removed the Unverified role and added Verified
     await member.roles.add(env.ROLE_VERIFIED);
     await member.roles.remove(env.ROLE_UNVERIFIED);
   }
-
+  /*
   if (bannedGuilds.length > 0) {
     modThreadMessage = stripIndents`**${member.displayName} has joined the guild, \
-they are banned on ${bannedGuilds.length} other guilds!** <@&${guildData.role_moderator}>`;
+  they are banned on ${bannedGuilds.length} other guilds!** <@&${guildData.role_moderator}>`;
     emoji = '👀';
   }
+  */
 
-  if (targetData.mod_thread_id || bannedGuilds.length > 0) {
+  // if (targetData.mod_thread_id || bannedGuilds.length > 0) {
+  if (targetData.mod_thread_id) {
     log.debug(F, `Mod thread id exists: ${targetData.mod_thread_id}`);
     // If the mod thread already exists, then they have previous reports, so we should try to update that thread
-    if (targetData.mod_thread_id) {
-      try {
-        modThread = await member.guild.channels.fetch(targetData.mod_thread_id) as ThreadChannel | null;
-        log.debug(F, 'Mod thread exists');
-      } catch (err) {
-        log.debug(F, 'Mod thread does not exist');
-      }
+    try {
+      modThread = await member.guild.channels.fetch(targetData.mod_thread_id) as ThreadChannel | null;
+      log.debug(F, 'Mod thread exists');
+    } catch (err) {
+      log.debug(F, 'Mod thread does not exist');
     }
 
     const payload = {
