@@ -174,6 +174,11 @@ async function generate(
 
   log.debug(F, `openAi responded response: ${JSON.stringify(imageData, null, 2)}`);
   const { data } = imageData;
+
+  if (!data) {
+    await interaction.editReply('No images were generated. Please try again.');
+    return;
+  }
   const [image] = data;
   await db.ai_images.create({
     data: {

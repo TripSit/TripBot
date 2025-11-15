@@ -468,10 +468,12 @@ export async function quoteAdd(interaction:MessageContextMenuCommandInteraction)
     update: {},
   });
 
+  // If empty string or just whitespace, replace it.
+  const fixedQuote = interaction.targetMessage.content.trim() || 'No text (Image)';
   const quoteData = await db.quotes.create({
     data: {
       user_id: targetData.id,
-      quote: interaction.targetMessage.content,
+      quote: fixedQuote,
       url: interaction.targetMessage.url,
       date: interaction.targetMessage.createdAt,
       created_by: actorData.id,

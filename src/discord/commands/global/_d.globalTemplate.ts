@@ -1,3 +1,4 @@
+/* eslint-disable import/prefer-default-export */
 import {
   ActionRowBuilder,
   ModalBuilder,
@@ -179,4 +180,4 @@ export const dTemplate: SlashCommand = {
   },
 };
 
-export default dTemplate;
+// export default dTemplate;

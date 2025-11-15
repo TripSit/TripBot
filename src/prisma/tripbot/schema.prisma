@@ -144,7 +144,7 @@ model users {
   contributor_role_ban                                      Boolean              @default(false)
   lastfm_username                                           String?
   partner                                                   Boolean?             @default(true)
-  supporter                                                 Boolean?             @default(true)
+  supporter                                                 Boolean?             @default(false)
   moodle_id                                                 String?
   ai_terms_agree                                            Boolean              @default(false)
   ai_personas                                               ai_personas[]
@@ -447,13 +447,13 @@ model appeals {
   id                String         @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
   guild_id          String
   user_id           String         @db.Uuid
-  appeal_number     Int
+  appeal_number     Int?
   reason            String
   solution          String
   future            String
   extra             String?
   status            appeal_status
-  appeal_message_id String
+  appeal_message_id String?
   response_message  String?
   created_at        DateTime       @default(now()) @db.Timestamptz(6)
   reminded_at       DateTime?      @db.Timestamptz(6)
@@ -712,10 +712,11 @@ enum user_action_type {
   KICK
   HELPER_BAN
   CONTRIBUTOR_BAN
+  APPEAL_ACCEPT
+  APPEAL_REJECT
 }
 
 enum appeal_status {
-  OPEN
   RECEIVED
   ACCEPTED
   DENIED

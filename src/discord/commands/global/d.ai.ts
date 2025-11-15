@@ -37,6 +37,7 @@ import {
 import {
   APIInteractionDataResolvedChannel,
   ChannelType,
+  ComponentType,
   MessageFlags,
 } from 'discord-api-types/v10';
 import { stripIndents } from 'common-tags';
@@ -50,12 +51,21 @@ import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import commandContext from '../../utils/context';
 import { aiModerate, handleAiMessageQueue } from '../../../global/commands/g.ai';
+import { checkPremiumStatus, formatTimeUntilReset, RateLimiter } from '../../utils/commandRateLimiter';
 
 /* TODO
 * only direct @ message should trigger a response
 * If the user starts typing again, cancel the run and wait for them to either stop typing or send a message
 */
 const F = f(__filename);
+
+// Rate limiter
+const aiRateLimiter = new RateLimiter({
+  defaultLimit: 20, // 20 queries per 24 hours
+  premiumLimit: 350, // Basically unlimited
+  windowMs: 24 * 60 * 60 * 1000, // 24 hours
+  messageInterval: 10, // Show rate limit message every 10 queries (except if premium user)
+});
 
 // const maxHistoryLength = 3;
 
@@ -229,12 +239,12 @@ function getComponentById(
   // log.debug(F, `getComponentById started with id: ${id}`);
   // log.debug(F, `Components: ${JSON.stringify(interaction.message.components, null, 2)}`);
 
-  if (interaction.message?.components) {
-    // eslint-disable-next-line no-restricted-syntax
-    for (const row of interaction.message.components) {
+  // eslint-disable-next-line no-restricted-syntax
+  for (const row of interaction.message.components) {
+    if (row.type === ComponentType.ActionRow && 'components' in row) {
       // eslint-disable-next-line no-restricted-syntax
       for (const component of row.components) {
-        if (component.customId?.includes(id)) {
+        if ('customId' in component && component.customId?.includes(id)) {
           return component;
         }
       }
@@ -2105,6 +2115,29 @@ export async function aiMessage(
     return;
   }
 
+  // Check if user is a Patreon subscriber
+  const isPatreonSubscriber = checkPremiumStatus(messageData.member, env.PATREON_SUBSCRIBER_ROLE_ID, true);
+
+  // Rate limiting check
+  const rateLimitResult = aiRateLimiter.checkRateLimit(messageData.author.id, isPatreonSubscriber);
+  if (!rateLimitResult.allowed) {
+    const timeUntilReset = formatTimeUntilReset(rateLimitResult.resetTime);
+    const userLimit = isPatreonSubscriber ? 350 : 20;
+
+    log.debug(F, `${messageData.author.displayName} has exceeded daily rate limit`);
+    await messageData.reply(
+      `You've reached your daily limit of ${userLimit} AI queries. `
+      + `Your limit will reset in approximately ${timeUntilReset}. `
+      + 'In the meantime, you can use ChatGPT directly at https://chat.openai.com',
+    );
+    return;
+  }
+
+  log.debug(F, `Rate limit check passed for ${messageData.author.displayName}. Remaining queries: ${rateLimitResult.remaining}`);
+
+  // Check if we should show rate limit message
+  const showRateLimitMessage = aiRateLimiter.shouldShowRateLimitMessage(messageData.author.id, isPatreonSubscriber);
+
   // log.debug(F, `aiLinkData: ${JSON.stringify(aiLinkData, null, 2)}`);
 
   // Get persona details for this channel, throw an error if the persona was deleted
@@ -2265,16 +2298,33 @@ export async function aiMessage(
     // // log.debug(F, `Typing ${wordCount} at ${wpm} wpm will take ${sleepTime / 1000} seconds`);
     // await sleep(sleepTime > 10000 ? 5000 : sleepTime); // Don't wait more than 5 seconds
 
+    // Handle error case - decrement rate limit count
     if (response.length === 0) {
-      response = stripIndents`This is unexpected but somehow I don't appear to have anything to say! 
+      aiRateLimiter.decrementCount(messageData.author.id);
+      log.debug(F, `Decremented rate limit count for ${messageData.author.displayName} due to empty response error`);
+
+      response = stripIndents`This is unexpected but somehow I don't appear to have anything to say!
       By the way, this is an error message and something went wrong. Please try again.
       Time from query to error: ${(differenceInMs / 1000).toFixed(2)} seconds`;
     }
 
-    const replyMessage = await messageData.reply({
-      content: response.slice(0, 2000),
-      allowedMentions: { parse: [] },
-    });
+    // Handle response and rate limit message
+    let replyMessage: Message;
+    if (showRateLimitMessage) {
+      const rateLimitResponse = `You have ${rateLimitResult.remaining} AI queries remaining today.`;
+      const separator = ' \n\n';
+      const maxResponseLength = 2000 - (rateLimitResponse.length + separator.length);
+
+      replyMessage = await messageData.reply({
+        content: `${response.slice(0, maxResponseLength)}${separator}${rateLimitResponse}`,
+        allowedMentions: { parse: [] },
+      });
+    } else {
+      replyMessage = await messageData.reply({
+        content: response.slice(0, 2000),
+        allowedMentions: { parse: [] },
+      });
+    }
 
     // React to that message with thumbs up and thumbs down emojis
     try {
