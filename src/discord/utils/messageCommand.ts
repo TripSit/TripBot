@@ -83,10 +83,10 @@ async function isMentioningTripbot(message: Message): Promise<boolean> {
 async function isUploadMessage(message: Message): Promise<boolean> {
   const content = message.content.toLowerCase().trim();
 
-  // Check for specific command patterns starting with !
+  // Check for specific command patterns with !
   const uploadCommands = ['!upload', '!steal', '!fetch'];
 
-  return uploadCommands.some(command => content.startsWith(`${command} `));
+  return uploadCommands.some(command => content.includes(command));
 }
 
 async function isBotOwner(message: Message): Promise<boolean> {
@@ -273,7 +273,15 @@ export async function messageCommand(message: Message): Promise<void> {
       return;
     }
 
-    if (await isUploadMessage(message) && message.member?.permissions.has('ManageEmojisAndStickers' as PermissionResolvable)) {
+    if (await isUploadMessage(message)) {
+      if (!message.member?.permissions.has('ManageEmojisAndStickers' as PermissionResolvable)) {
+        await message.channel.send({
+          content: `Hey ${displayName}, you don't have permission to manage emojis and stickers!`,
+          allowedMentions: { parse: [] },
+        });
+        return;
+      }
+
       if (message.content.toLowerCase().includes('emoji')) {
         // Upload all the emojis in the message to the guild
         let emojis = message.content.match(/<a?:\w+:\d+>/g);

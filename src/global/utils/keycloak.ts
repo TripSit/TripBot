@@ -5,26 +5,144 @@ const F = f(__filename);
 
 // Initialize Keycloak Admin Client
 const kcAdminClient = new KcAdminClient({
-  baseUrl: process.env.KEYCLOAK_BASE_URL || 'http://localhost:8080',
-  realmName: process.env.KEYCLOAK_REALM || 'master',
+  baseUrl: process.env.KEYCLOAK_URL || 'http://localhost:8080',
+  realmName: process.env.KEYCLOAK_REALM || 'TripSit',
 });
 
-// Authenticate with Keycloak
-async function authenticateKeycloak() {
+let isAuthenticated = false;
+let authPromise: Promise<void> | null = null;
+
+// Discord ID cache - stores userId -> {discordId, timestamp}
+const discordIdCache = new Map<string, { discordId: string | null; timestamp: number }>();
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes in milliseconds
+
+// Helper function to check if cache entry is still valid
+function isCacheValid(timestamp: number): boolean {
+  return Date.now() - timestamp < CACHE_TTL;
+}
+
+// Authenticate with Keycloak admin client
+async function authenticateAdmin(): Promise<void> {
+  if (isAuthenticated) {
+    return;
+  }
+
+  if (authPromise) {
+    await authPromise;
+    return;
+  }
+
+  authPromise = (async (): Promise<void> => {
+    try {
+      await kcAdminClient.auth({
+        grantType: 'client_credentials',
+        clientId: process.env.KEYCLOAK_BAN_APPEALS_ADMIN_CLIENT_ID as string,
+        clientSecret: process.env.KEYCLOAK_BAN_APPEALS_ADMIN_CLIENT_SECRET as string,
+      });
+      isAuthenticated = true;
+      log.debug(F, 'Successfully authenticated admin client with Keycloak');
+    } catch (error) {
+      log.error(F, `Failed to authenticate admin client with Keycloak: ${error}`);
+      authPromise = null;
+      throw error;
+    }
+  })();
+
+  await authPromise;
+}
+
+// Get authenticated admin client
+export async function getAdminClient(): Promise<KcAdminClient> {
+  await authenticateAdmin();
+  return kcAdminClient;
+}
+
+// Helper function to get Discord ID from user's federated identities
+export async function getDiscordIdFromFederatedIdentity(userId: string): Promise<string | null> {
+  // Check cache first
+  const cached = discordIdCache.get(userId);
+  if (cached && isCacheValid(cached.timestamp)) {
+    log.debug(F, `Using cached Discord ID for user ${userId}: ${cached.discordId}`);
+    return cached.discordId;
+  }
+
   try {
-    await kcAdminClient.auth({
-      grantType: 'client_credentials',
-      clientId: process.env.KEYCLOAK_CLIENT_ID as string,
-      clientSecret: process.env.KEYCLOAK_CLIENT_SECRET,
+    const adminClient = await getAdminClient();
+
+    const federatedIdentities = await adminClient.users.listFederatedIdentities({
+      id: userId,
+      realm: process.env.KEYCLOAK_REALM || 'TripSit',
     });
-    log.debug(F, 'Successfully authenticated with Keycloak');
+
+    const discordProvider = federatedIdentities.find(
+      (provider: any) => provider.identityProvider === 'discord',
+    );
+
+    const discordId = discordProvider ? discordProvider.userId as string : null;
+
+    // Cache the result
+    discordIdCache.set(userId, {
+      discordId,
+      timestamp: Date.now(),
+    });
+
+    if (discordId) {
+      log.debug(F, `Found Discord provider for user ${userId}: ${discordId}`);
+    } else {
+      log.debug(F, `No Discord provider found for user ${userId}`);
+    }
+
+    return discordId;
   } catch (error) {
-    log.error(F, `Failed to authenticate with Keycloak: ${error}`);
+    // If we get a 401, the admin token expired - reset authentication and try once more
+    if (error instanceof Error && error.message.includes('401')) {
+      log.error(F, `Admin token expired, re-authenticating and retrying for user ${userId}`);
+
+      // Reset authentication state
+      isAuthenticated = false;
+      authPromise = null;
+
+      try {
+        // Try once more with fresh authentication
+        const adminClient = await getAdminClient();
+        const federatedIdentities = await adminClient.users.listFederatedIdentities({
+          id: userId,
+          realm: process.env.KEYCLOAK_REALM || 'TripSit',
+        });
+
+        const discordProvider = federatedIdentities.find(
+          (provider: any) => provider.identityProvider === 'discord',
+        );
+
+        const discordId = discordProvider ? discordProvider.userId as string : null;
+
+        // Cache the result
+        discordIdCache.set(userId, {
+          discordId,
+          timestamp: Date.now(),
+        });
+
+        if (discordId) {
+          log.debug(F, `Found Discord provider for user ${userId} after re-auth: ${discordId}`);
+        } else {
+          log.debug(F, `No Discord provider found for user ${userId} after re-auth`);
+        }
+
+        return discordId;
+      } catch (retryError) {
+        log.error(F, `Error getting Discord ID for user ${userId} after re-auth: ${retryError}`);
+        throw retryError;
+      }
+    }
+
+    log.error(F, `Error getting Discord ID for user ${userId}: ${error}`);
     throw error;
   }
 }
 
+// Helper function to fetch all users in batches
 async function fetchAllUsers(): Promise<UserRepresentation[]> {
+  const adminClient = await getAdminClient();
   const max = 100;
   const maxUsers = 10000; // Safety limit
 
@@ -44,10 +162,10 @@ async function fetchAllUsers(): Promise<UserRepresentation[]> {
   // Fetch all pages in parallel
   const allPageResults = await Promise.all(
     pageBatches.map(pageNumberBatch => Promise.all(
-      pageNumberBatch.map(pageNum => kcAdminClient.users.find({
+      pageNumberBatch.map(pageNum => adminClient.users.find({
         first: pageNum * max,
         max,
-        realm: process.env.KEYCLOAK_REALM || 'master',
+        realm: process.env.KEYCLOAK_REALM || 'TripSit',
       })),
     )),
   );
@@ -65,12 +183,7 @@ async function fetchAllUsers(): Promise<UserRepresentation[]> {
   }, []);
 }
 
-/**
- * Check a user's federated identities for GitHub and Discord accounts
- * @param {any} user - The Keycloak user object
- * @param {string} githubUsername - The GitHub username to match
- * @returns {Promise<Object|null>} Discord user info if found, null otherwise
- */
+// Helper function to check user identities for GitHub and Discord accounts
 async function checkUserIdentities(user: UserRepresentation, githubUsername: string): Promise<{
   id: string;
   username: string;
@@ -79,10 +192,12 @@ async function checkUserIdentities(user: UserRepresentation, githubUsername: str
   email: string | null;
 } | null> {
   try {
+    const adminClient = await getAdminClient();
+
     // Get federated identities for this user
-    const federatedIdentities = await kcAdminClient.users.listFederatedIdentities({
+    const federatedIdentities = await adminClient.users.listFederatedIdentities({
       id: user.id as string,
-      realm: process.env.KEYCLOAK_REALM || 'master',
+      realm: process.env.KEYCLOAK_REALM || 'TripSit',
     });
 
     // Look for GitHub identity
@@ -115,7 +230,7 @@ async function checkUserIdentities(user: UserRepresentation, githubUsername: str
       };
     }
 
-    log.warn(F, `User ${user.id} has GitHub account but no Discord account linked`);
+    log.info(F, `User ${user.id} has GitHub account but no Discord account linked`);
     return null;
   } catch (error) {
     // Some users might not have federated identities, that's okay
@@ -135,7 +250,7 @@ export async function getDiscordUserByGitHub(githubUsername: string) {
     log.debug(F, `Looking up Discord user for GitHub username: ${githubUsername}`);
 
     // Ensure we're authenticated
-    await authenticateKeycloak();
+    await authenticateAdmin();
 
     // Fetch all users in batches
     const allUsers = await fetchAllUsers();

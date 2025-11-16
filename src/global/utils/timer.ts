@@ -30,7 +30,7 @@ const F = f(__filename);
 //   [key: string]: DateTime;
 // };
 
-const newRecordString = '🎈🎉🎊 New Record 🎊🎉🎈';
+// const newRecordString = '🎈🎉🎊 New Record 🎊🎉🎈';
 
 type RedditItem = {
   title: string,
@@ -78,12 +78,16 @@ async function checkReminders() { // eslint-disable-line @typescript-eslint/no-u
             update: {},
           });
 
-          // Send the user a message
-          if (userData?.discord_id) {
-            const user = await global.discordClient.users.fetch(userData.discord_id);
-            if (user) {
-              await user.send(`Hey ${user.username}, you asked me to remind you: ${reminder.reminder_text}`);
+          try {
+            // Send the user a message
+            if (userData?.discord_id) {
+              const user = await global.discordClient.users.fetch(userData.discord_id);
+              if (user) {
+                await user.send(`Hey ${user.username}, you asked me to remind you: ${reminder.reminder_text}`);
+              }
             }
+          } catch (err) { // do nothing, user likely disabled DMs or not in a shared guild
+            log.error(F, `Error sending reminder DM to user ${userData?.discord_id}: ${err}`);
           }
 
           // Delete the reminder from the database
@@ -644,30 +648,30 @@ async function checkVoice() {
 //   // }, delay);
 // }
 
-async function checkStats() {
-  // log.debug(F, 'Checking stats...');
-  // Determine how many people are in the tripsit guild
-  const tripsitGuild = await global.discordClient.guilds.fetch(env.DISCORD_GUILD_ID);
-  if (!tripsitGuild) return;
-
-  const { memberCount } = tripsitGuild;
-
-  // Total member count
-  // Check if the total members is divisible by 100
-  if (memberCount % 100 === 0) {
-    const embed = embedTemplate()
-      .setTitle(newRecordString)
-      .setDescription(`We have reached ${memberCount} total members!`);
-    const channelLounge = await tripsitGuild.channels.fetch(env.CHANNEL_LOUNGE) as TextChannel;
-    if (channelLounge) {
-      await channelLounge.send({ embeds: [embed] });
-    }
-    const channelTeamtripsit = await tripsitGuild.channels.fetch(env.CHANNEL_TEAMTRIPSIT) as TextChannel;
-    if (channelTeamtripsit) {
-      await channelTeamtripsit.send({ embeds: [embed] });
-    }
-  }
-}
+// async function checkStats() {
+//   // log.debug(F, 'Checking stats...');
+//   // Determine how many people are in the tripsit guild
+//   const tripsitGuild = await global.discordClient.guilds.fetch(env.DISCORD_GUILD_ID);
+//   if (!tripsitGuild) return;
+//
+//   const { memberCount } = tripsitGuild;
+//
+//   // Total member count
+//   // Check if the total members is divisible by 100
+//   if (memberCount % 100 === 0) {
+//     const embed = embedTemplate()
+//       .setTitle(newRecordString)
+//       .setDescription(`We have reached ${memberCount} total members!`);
+//     const channelLounge = await tripsitGuild.channels.fetch(env.CHANNEL_LOUNGE) as TextChannel;
+//     if (channelLounge) {
+//       await channelLounge.send({ embeds: [embed] });
+//     }
+//     const channelTeamtripsit = await tripsitGuild.channels.fetch(env.CHANNEL_TEAMTRIPSIT) as TextChannel;
+//     if (channelTeamtripsit) {
+//       await channelTeamtripsit.send({ embeds: [embed] });
+//     }
+//   }
+// }
 
 // async function checkLpm() { // eslint-disable-line
 //   const channels = [
@@ -921,7 +925,7 @@ async function checkMoodle() { // eslint-disable-line
                     .setTitle(`Congratulations on completing "${course}"!`)
                     .setDescription(stripIndents`
                     Give yourself deserved pack on the back, you deserve it!
-                                 
+
                     But your journey doesn't end here...
 
                     You can now become a TripSit Helper!
@@ -941,7 +945,7 @@ async function checkMoodle() { // eslint-disable-line
               });
               // log.debug(F, `Sent ${member.user.username} a message!`);
             } catch (error) {
-              log.warn(F, `Could not send DM to ${member.user.username}: ${error}`);
+              log.info(F, `Could not send DM to ${member.user.username}: ${error}`);
             }
           }
         } catch (error) {
@@ -1138,6 +1142,61 @@ async function monthlySessionStats() {
   }
 }
 
+async function checkBirthdays() {
+  try {
+    // Get today's date in MM-DD format for comparison
+    const today = new Date();
+    const todayMonth = String(today.getMonth() + 1).padStart(2, '0');
+    const todayDay = String(today.getDate()).padStart(2, '0');
+    const todayMMDD = `${todayMonth}-${todayDay}`;
+
+    // Find users whose birthday is today
+    // Assuming birthday is stored as a Date field, we extract month and day
+    const birthdayUsers = await db.users.findMany({
+      where: {
+        birthday: {
+          not: null,
+        },
+      },
+    });
+
+    // Filter users whose birthday is today
+    const todaysBirthdayUsers = birthdayUsers.filter((user: typeof birthdayUsers[0]) => {
+      if (!user.birthday) return false;
+
+      const birthdayDate = new Date(user.birthday);
+      const birthdayMonth = String(birthdayDate.getMonth() + 1).padStart(2, '0');
+      const birthdayDay = String(birthdayDate.getDate()).padStart(2, '0');
+      const birthdayMMDD = `${birthdayMonth}-${birthdayDay}`;
+
+      return birthdayMMDD === todayMMDD;
+    });
+
+    // Send birthday messages to the lounge channel
+    const birthdayPromises = todaysBirthdayUsers.map(async (user: typeof birthdayUsers[0]) => {
+      try {
+        if (!user.birthday) {
+          return;
+        }
+
+        // Send message to VIP lounge channel
+        const vipLounge = await discordClient.channels.fetch(env.CHANNEL_VIPLOUNGE) as TextChannel;
+        await vipLounge.send(`Happy Birthday, <@${user.discord_id}>! 🎉`);
+        log.info(F, `Birthday message sent for user: ${user.discord_id}`);
+      } catch (messageError) {
+        log.error(F, `Failed to send birthday message for user ${user.id}: ${messageError}`);
+      }
+    });
+
+    await Promise.all(birthdayPromises);
+
+    log.info(F, `Birthday check completed. Found ${todaysBirthdayUsers.length} birthday(s) today.`);
+  } catch (error) {
+    log.error(F, `Error in checkBirthdays function: ${error}`);
+    throw error;
+  }
+}
+
 async function checkEvery(
   callback: () => Promise<void>,
   interval: number,
@@ -1161,7 +1220,7 @@ async function runTimer() {
   const seconds10 = 1000 * 10;
   const seconds30 = 1000 * 30;
   const seconds60 = 1000 * 60;
-  const minutes5 = 1000 * 60 * 5;
+  // const minutes5 = 1000 * 60 * 5;
   const hours24 = 1000 * 60 * 60 * 24;
   const hours48 = 1000 * 60 * 60 * 48;
 
@@ -1173,13 +1232,14 @@ async function runTimer() {
     { callback: checkRss, interval: env.NODE_ENV === 'production' ? seconds30 : seconds5 },
     { callback: checkVoice, interval: env.NODE_ENV === 'production' ? seconds60 : seconds5 },
     // { callback: changeStatus, interval: env.NODE_ENV === 'production' ? hours24 : seconds5 },
-    { callback: checkStats, interval: env.NODE_ENV === 'production' ? minutes5 : seconds5 },
+    // { callback: checkStats, interval: env.NODE_ENV === 'production' ? minutes5 : seconds5 },
     { callback: checkMoodle, interval: env.NODE_ENV === 'production' ? seconds60 : seconds5 },
     // { callback: checkLpm, interval: env.NODE_ENV === 'production' ? seconds10 : seconds5 },
     { callback: updateDb, interval: env.NODE_ENV === 'production' ? hours24 : hours48 },
     // { callback: pruneInactiveHelpers, interval: env.NODE_ENV === 'production' ? hours48 : seconds60 },
     { callback: undoExpiredBans, interval: env.NODE_ENV === 'production' ? hours24 / 2 : seconds10 },
     { callback: monthlySessionStats, interval: env.NODE_ENV === 'production' ? hours24 : hours24 / 3 }, // 8 hours on dev
+    { callback: checkBirthdays, interval: env.NODE_ENV === 'production' ? hours24 : hours24 / 3 }, // 8 hours on dev
   ];
 
   timers.forEach(timer => {

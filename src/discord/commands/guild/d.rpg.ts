@@ -3539,9 +3539,7 @@ export async function rpgArcadeGame(
 
   const rowWagers = new ActionRowBuilder<ButtonBuilder>()
     .addComponents(
-      customButton(`rpgWager1,user:${interaction.user.id}`, 'Bet 1', 'buttonBetSmall', ButtonStyle.Success),
-      customButton(`rpgWager10,user:${interaction.user.id}`, 'Bet 10', 'buttonBetMedium', ButtonStyle.Success),
-      customButton(`rpgWager100,user:${interaction.user.id}`, 'Bet 100', 'buttonBetLarge', ButtonStyle.Success),
+      customButton(`rpgWager500,user:${interaction.user.id}`, 'Bet 500', 'buttonBetLarge', ButtonStyle.Success),
       customButton(`rpgWager1000,user:${interaction.user.id}`, 'Bet 1000', 'buttonBetHuge', ButtonStyle.Success),
       customButton(`rpgArcade,user:${interaction.user.id}`, 'Arcade', 'buttonArcade', ButtonStyle.Primary),
     );
@@ -3764,10 +3762,25 @@ export async function getNewTimer(seconds: number) {
 
 export async function rpgArcadeWager(
   interaction: MessageComponentInteraction,
-):Promise<InteractionUpdateOptions> {
-  let newBet = wagers[interaction.user.id] ? wagers[interaction.user.id].tokens : 0;
+): Promise<InteractionUpdateOptions> {
+  // Check if there's already an existing wager that's at max bet (1000)
+  if (wagers[interaction.user.id] && wagers[interaction.user.id].tokens >= 1000) {
+    return rpgArcadeGame(interaction, wagers[interaction.user.id].gameName, undefined, '**Maximum bet is 1000 tokens**\n');
+  }
+
+  const currentBet = wagers[interaction.user.id] ? wagers[interaction.user.id].tokens : 0;
   const bet = parseInt(interaction.customId.slice(8), 10);
-  newBet += bet || 0;
+  let newBet = currentBet + (bet || 0);
+
+  // If new bet would exceed 1000, cap it at 1000
+  if (newBet > 1000) {
+    newBet = 1000;
+  }
+
+  // Ensure minimum bet of 500 (if betting at all)
+  if (newBet > 0 && newBet < 500) {
+    newBet = 500;
+  }
 
   const userData = await db.users.upsert({
     where: {
@@ -3778,6 +3791,7 @@ export async function rpgArcadeWager(
     },
     update: {},
   });
+
   const personaData = await db.personas.upsert({
     where: {
       user_id: userData.id,
@@ -3787,6 +3801,7 @@ export async function rpgArcadeWager(
     },
     update: {},
   });
+
   if (personaData.tokens < newBet) {
     const notEnough = '**You don\'t have enough to bet that much**\n';
     return rpgArcadeGame(interaction, wagers[interaction.user.id].gameName, undefined, notEnough);
