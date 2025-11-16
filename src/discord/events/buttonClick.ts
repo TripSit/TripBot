@@ -24,7 +24,7 @@ import {
 } from '../commands/guild/d.rpg';
 import { helperButton } from '../commands/global/d.setup';
 import { appealAccept, appealReject } from '../utils/appeal';
-import { mushroomPageOne, mushroomPageTwo } from '../commands/global/d.mushroom_info';
+// import { mushroomPageOne, mushroomPageTwo } from '../commands/global/d.mushroom_info';
 import {
   werewolfDiary,
   werewolfHow, werewolfJoin, werewolfLeave, werewolfStart,
@@ -33,6 +33,7 @@ import { acknowledgeButton, modModal, refusalButton } from '../utils/modUtils';
 import { feedbackReportModal } from '../commands/global/d.feedback';
 import { aiButton } from '../commands/global/d.ai';
 import { purgeButton } from '../commands/guild/d.purge';
+import { mushroomPageEmbed } from '../utils/hrUtils';
 // import { helpButton } from '../commands/global/d.help';
 
 const F = f(__filename);
@@ -63,12 +64,12 @@ export async function buttonClick(interaction:ButtonInteraction, discordClient:C
     // log.debug(F, 'Werewolf button clicked');
 
     if (buttonID.toLowerCase().includes('pageone')) {
-      await mushroomPageOne(interaction);
+      interaction.update(await mushroomPageEmbed(1));
       return;
     }
 
     if (buttonID.toLowerCase().includes('pagetwo')) {
-      await mushroomPageTwo(interaction);
+      interaction.update(await mushroomPageEmbed(2));
       return;
     }
   }
@@ -101,11 +102,8 @@ export async function buttonClick(interaction:ButtonInteraction, discordClient:C
     else if (interaction.customId.split(',')[0] === 'rpgBounties') await interaction.editReply(await rpgBounties(interaction, null));
     else if (interaction.customId.split(',')[0] === 'rpgArcade') await interaction.editReply(await rpgArcade(interaction));
     else if (interaction.customId.split(',')[0] === 'rpgHelp') await interaction.editReply(await rpgHelp(interaction));
-    else if (interaction.customId.split(',')[0] === 'rpgWager1') await interaction.editReply(await rpgArcadeWager(interaction));
-    else if (interaction.customId.split(',')[0] === 'rpgWager10') await interaction.editReply(await rpgArcadeWager(interaction));
-    else if (interaction.customId.split(',')[0] === 'rpgWager100') await interaction.editReply(await rpgArcadeWager(interaction));
+    else if (interaction.customId.split(',')[0] === 'rpgWager500') await interaction.editReply(await rpgArcadeWager(interaction));
     else if (interaction.customId.split(',')[0] === 'rpgWager1000') await interaction.editReply(await rpgArcadeWager(interaction));
-    else if (interaction.customId.split(',')[0] === 'rpgWager10000') await interaction.editReply(await rpgArcadeWager(interaction));
     else if (interaction.customId.split(',')[0] === 'rpgCoinFlip') await interaction.editReply(await rpgArcadeGame(interaction, 'Coinflip'));
     else if (interaction.customId.split(',')[0] === 'rpgRouletteRed') await interaction.editReply(await rpgArcadeGame(interaction, 'Roulette', 'red'));
     else if (interaction.customId.split(',')[0] === 'rpgRouletteBlack') await interaction.editReply(await rpgArcadeGame(interaction, 'Roulette', 'black'));

@@ -20,7 +20,7 @@ const F = f(__filename);
 
 const selectAPage = 'Select a Page';
 
-const publicDescription = 'Should we show this to everyone?';
+// const publicDescription = 'Should we show this to everyone?';
 
 const selectMenuOptions = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents([
   new StringSelectMenuBuilder()

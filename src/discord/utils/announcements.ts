@@ -289,7 +289,6 @@ export async function announcements(message:Message) {
   // ];
 
   const generalChatCategories = [
-    env.CATEGORY_BACKSTAGE,
     env.CATEGORY_CAMPGROUND,
   ];
 
