@@ -24,10 +24,10 @@ const app = express();
 //   next();
 // });
 
-// set up rate limiter: maximum of five requests per minute
+// set up rate limiter: maximum of 120 requests per minute
 const limiter = RateLimit({
   windowMs: 1 * 60 * 1000, // 1 minute
-  max: 60,
+  max: 120,
   handler: (req, res /* next */) => {
     res.status(429).send('Too many requests, please try again later.');
   },
@@ -42,24 +42,35 @@ app.set('trust proxy', 2);
 // Standard middleware
 app.use(morgan('tiny'));
 app.use(helmet());
-app.use(express.json()); // configure the app to parse requests with JSON payloads
+app.use(express.json({ limit: '500kb' })); // configure the app to parse requests with JSON payloads & increase input size limit
 app.use(express.urlencoded({ extended: false })); // configure the app to parse requests with urlencoded payloads
 app.use(bodyParser.text()); // configure the app to be able to read text
 
 // CORS middleware
 app.use((req, res, next) => {
-  const allowedOrigins = [`https://${env.DNS_DOMAIN}`, `https://${env.BOT_DOMAIN}`];
+  const allowedOrigins = [`https://${process.env.DNS_DOMAIN}`, `https://${process.env.BOT_DOMAIN}`, 'https://tripsit.me', 'https://tripbot.info'];
   const { origin } = req.headers;
   if (origin) {
     if (allowedOrigins.includes(origin)) {
       res.setHeader('Access-Control-Allow-Origin', origin);
+      res.setHeader('Access-Control-Allow-Credentials', 'true');
     }
     res.header(
       'Access-Control-Allow-Headers',
       'Origin, X-Requested-With, Content-Type, Accept, Authorization',
     );
+    res.header(
+      'Access-Control-Allow-Methods',
+      'GET, POST, PUT, DELETE, OPTIONS',
+    );
   }
-  next();
+
+  // Handle preflight OPTIONS requests
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200);
+  }
+
+  return next();
 });
 
 // Routes
