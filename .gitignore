@@ -28,7 +28,6 @@ src/prisma/moodle/@prisma-moodle/client/libquery_engine-linux-musl-openssl-3.0.x
 *.user
 *.userosscache
 *.sln.docstates
-.vscode
 
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
