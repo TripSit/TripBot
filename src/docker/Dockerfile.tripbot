@@ -44,10 +44,10 @@ COPY --from=build /workspaces/tripbot/src/prisma/ ./src/prisma/
 COPY ./assets ./build/assets
 
 # Copy your entrypoint script
-COPY ./src/docker/entrypoint.sh ./entrypoint.sh
-RUN chmod +x ./entrypoint.sh
+COPY ./src/docker/entrypoint.sh /workspaces/tripbot/entrypoint.sh
+RUN chmod +x /workspaces/tripbot/entrypoint.sh
 
 # Install PM2 in the final image since your entrypoint uses it
 RUN npm install -g pm2
 
-ENTRYPOINT ["./entrypoint.sh"]
+ENTRYPOINT ["/workspaces/tripbot/entrypoint.sh"]
