@@ -29,7 +29,7 @@ export async function ems(search: string): Promise<any[]> {
       };
     });
 
-    const dataPath = path.join(__dirname, '../../../../assets/data/ems_lines.json');
+    const dataPath = path.join(__dirname, '../../../assets/data/ems_lines.json');
 
     fs.writeFileSync(dataPath, JSON.stringify(updatedData, null, 2), 'utf8');
 
