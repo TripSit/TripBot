@@ -5,6 +5,7 @@ import {
   ButtonStyle,
   Colors,
   InteractionEditReplyOptions,
+  MessageFlags,
   SlashCommandBuilder,
   StringSelectMenuBuilder,
   StringSelectMenuInteraction,
@@ -93,7 +94,7 @@ const selectMenuOptions = new ActionRowBuilder<StringSelectMenuBuilder>().addCom
     ]),
 ]);
 
-async function startPage():Promise<InteractionEditReplyOptions> {
+export async function startPage():Promise<InteractionEditReplyOptions> {
   return {
     embeds: [
       embedTemplate()
@@ -120,7 +121,7 @@ async function startPage():Promise<InteractionEditReplyOptions> {
   };
 }
 
-async function hrPage():Promise<InteractionEditReplyOptions> {
+export async function hrPage():Promise<InteractionEditReplyOptions> {
   return {
     embeds: [
       embedTemplate()
@@ -244,7 +245,7 @@ async function hrPage():Promise<InteractionEditReplyOptions> {
   };
 }
 
-async function funPage():Promise<InteractionEditReplyOptions> {
+export async function funPage():Promise<InteractionEditReplyOptions> {
   return {
     embeds: [
       embedTemplate()
@@ -339,7 +340,7 @@ async function funPage():Promise<InteractionEditReplyOptions> {
   };
 }
 
-async function sessionsPage():Promise<InteractionEditReplyOptions> {
+export async function sessionsPage():Promise<InteractionEditReplyOptions> {
   return {
     embeds: [embedTemplate()
       .setColor(Colors.Purple)
@@ -351,7 +352,7 @@ async function sessionsPage():Promise<InteractionEditReplyOptions> {
   };
 }
 
-async function experiencePage():Promise<InteractionEditReplyOptions> {
+export async function experiencePage():Promise<InteractionEditReplyOptions> {
   return {
     embeds: [embedTemplate()
       .setColor(Colors.Purple)
@@ -363,7 +364,7 @@ async function experiencePage():Promise<InteractionEditReplyOptions> {
   };
 }
 
-async function systemsPage():Promise<InteractionEditReplyOptions> {
+export async function systemsPage():Promise<InteractionEditReplyOptions> {
   return {
     embeds: [embedTemplate()
       .setColor(Colors.Purple)
@@ -398,7 +399,7 @@ async function systemsPage():Promise<InteractionEditReplyOptions> {
   };
 }
 
-async function tripsitPage():Promise<InteractionEditReplyOptions> {
+export async function tripsitPage():Promise<InteractionEditReplyOptions> {
   return {
     embeds: [
       embedTemplate()
@@ -476,7 +477,7 @@ async function tripsitPage():Promise<InteractionEditReplyOptions> {
   };
 }
 
-async function donatePage():Promise<InteractionEditReplyOptions> {
+export async function donatePage():Promise<InteractionEditReplyOptions> {
   return {
     embeds: [embedTemplate()
       .setColor(Colors.Purple)
@@ -511,7 +512,7 @@ async function donatePage():Promise<InteractionEditReplyOptions> {
   };
 }
 
-async function creditsPage():Promise<InteractionEditReplyOptions> {
+export async function creditsPage():Promise<InteractionEditReplyOptions> {
   return {
     embeds: [embedTemplate()
       .setColor(Colors.Orange)
@@ -522,7 +523,7 @@ async function creditsPage():Promise<InteractionEditReplyOptions> {
   };
 }
 
-async function feedbackPage():Promise<InteractionEditReplyOptions> {
+export async function feedbackPage():Promise<InteractionEditReplyOptions> {
   return {
     embeds: [embedTemplate()
       .setColor(Colors.Green)
@@ -545,7 +546,7 @@ async function feedbackPage():Promise<InteractionEditReplyOptions> {
   };
 }
 
-async function invitePage():Promise<InteractionEditReplyOptions> {
+export async function invitePage():Promise<InteractionEditReplyOptions> {
   return {
     embeds: [embedTemplate()
       .setColor(Colors.Yellow)
@@ -612,12 +613,14 @@ export const dHelp: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('help')
     .setDescription('Information about TripBot Commands')
+    .setIntegrationTypes([0])
     .addBooleanOption(option => option.setName('ephemeral')
-      .setDescription('Set to "True" to show the response only to you')),
+      .setDescription('Set to "True" to show the response only to you')) as SlashCommandBuilder,
 
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
-    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
+    const ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined;
+    await interaction.deferReply({ flags: ephemeral });
     await interaction.editReply(await startPage());
     return true;
   },

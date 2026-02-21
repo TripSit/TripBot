@@ -1,4 +1,4 @@
-import { drug_mass_unit, drug_roa } from '@prisma/client';
+import { $Enums, drug_mass_unit, drug_roa } from '@prisma/client';
 import {
   time,
 } from 'discord.js';
@@ -9,7 +9,7 @@ type IDoseResponse = {
   value: string,
 }[];
 
-const F = f(__filename);
+// const F = f(__filename);
 
 async function iDoseGet(
   userId: string,
@@ -153,7 +153,7 @@ async function iDoseSet(
       drug_id: drugId,
       route: roa,
       dose: volume,
-      units,
+      units: units.toString() === 'µG' ? $Enums.drug_mass_unit.MICRO_G : units,
       created_at: date,
     },
   });
@@ -294,7 +294,6 @@ export async function idose(
       break;
   }
 
-  log.info(F, `response: ${JSON.stringify(response, null, 2)}`);
   return response;
 }
 

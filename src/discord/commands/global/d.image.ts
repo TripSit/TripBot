@@ -6,6 +6,8 @@ import {
   TextChannel,
   GuildMember,
   time,
+  MessageFlags,
+  EmbedBuilder,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
 import { DateTime } from 'luxon';
@@ -31,8 +33,8 @@ const imageLimits = {
 async function help(
   interaction: ChatInputCommandInteraction,
 ):Promise<void> {
-  const visible = interaction.options.getBoolean('ephemeral') !== false;
-  await interaction.deferReply({ ephemeral: !visible });
+  const ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined;
+  await interaction.deferReply({ flags: ephemeral });
   await interaction.editReply({
     embeds: [embedTemplate()
       .setTitle('Image Generation Help')
@@ -70,8 +72,8 @@ async function help(
 async function generate(
   interaction: ChatInputCommandInteraction,
 ):Promise<void> {
-  const visible = interaction.options.getBoolean('ephemeral') !== false;
-  await interaction.deferReply({ ephemeral: !visible });
+  const ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined;
+  await interaction.deferReply({ flags: ephemeral });
 
   const description = interaction.options.getString('description', true);
 
@@ -134,8 +136,21 @@ async function generate(
   }
 
   const channelAiImageLog = await discordClient.channels.fetch(env.CHANNEL_AIIMAGELOG) as TextChannel;
-  await channelAiImageLog
-    .send(`${guildMember.displayName} requested '${description}' in ${interaction.guild?.name}`);
+  const embed = new EmbedBuilder()
+    .setTitle('🖼️ AI Image Request')
+    .setDescription(
+      // eslint-disable-next-line max-len
+      `**User:** ${guildMember.displayName}\n**Prompt:** '${description}'\n**Server:** ${interaction.guild?.name ?? 'Unknown'}`,
+    )
+    .setColor(Colors.Green)
+    .setTimestamp();
+
+  await channelAiImageLog.send({
+    embeds: [embed],
+    allowedMentions: {
+      parse: [], // Prevents all pings
+    },
+  });
 
   let imageData = {} as ImagesResponse;
 
@@ -159,6 +174,11 @@ async function generate(
 
   log.debug(F, `openAi responded response: ${JSON.stringify(imageData, null, 2)}`);
   const { data } = imageData;
+
+  if (!data) {
+    await interaction.editReply('No images were generated. Please try again.');
+    return;
+  }
   const [image] = data;
   await db.ai_images.create({
     data: {
@@ -237,8 +257,8 @@ async function generate(
 async function library(
   interaction: ChatInputCommandInteraction,
 ):Promise<void> {
-  const visible = interaction.options.getBoolean('ephemeral') !== false;
-  await interaction.deferReply({ ephemeral: !visible });
+  const ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined;
+  await interaction.deferReply({ flags: ephemeral });
   if (!interaction.member) return;
 
   const guildMember = interaction.member as GuildMember;
@@ -310,6 +330,7 @@ export const image: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('image')
     .setDescription('TripBot\'s Image Generator')
+    .setIntegrationTypes([0])
     .addSubcommand(subcommand => subcommand
       .setDescription('Information on the imagen function.')
       .setName('help'))

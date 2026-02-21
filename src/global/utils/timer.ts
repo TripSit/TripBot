@@ -22,6 +22,7 @@ import { checkChannelPermissions } from '../../discord/utils/checkPermissions';
 import { embedTemplate } from '../../discord/utils/embedTemplate';
 import { experience } from './experience';
 import { profile } from '../commands/g.learn';
+import getTripSitStatistics from '../commands/g.tripsitstats';
 
 const F = f(__filename);
 
@@ -29,7 +30,7 @@ const F = f(__filename);
 //   [key: string]: DateTime;
 // };
 
-const newRecordString = '🎈🎉🎊 New Record 🎊🎉🎈';
+// const newRecordString = '🎈🎉🎊 New Record 🎊🎉🎈';
 
 type RedditItem = {
   title: string,
@@ -77,12 +78,16 @@ async function checkReminders() { // eslint-disable-line @typescript-eslint/no-u
             update: {},
           });
 
-          // Send the user a message
-          if (userData?.discord_id) {
-            const user = await global.discordClient.users.fetch(userData.discord_id);
-            if (user) {
-              await user.send(`Hey ${user.username}, you asked me to remind you: ${reminder.reminder_text}`);
+          try {
+            // Send the user a message
+            if (userData?.discord_id) {
+              const user = await global.discordClient.users.fetch(userData.discord_id);
+              if (user) {
+                await user.send(`Hey ${user.username}, you asked me to remind you: ${reminder.reminder_text}`);
+              }
             }
+          } catch (err) { // do nothing, user likely disabled DMs or not in a shared guild
+            log.error(F, `Error sending reminder DM to user ${userData?.discord_id}: ${err}`);
           }
 
           // Delete the reminder from the database
@@ -122,7 +127,7 @@ async function checkTickets() { // eslint-disable-line @typescript-eslint/no-unu
         const updatedTicket = ticket;
         updatedTicket.status = 'ARCHIVED' as ticket_status;
         updatedTicket.deleted_at = env.NODE_ENV === 'production'
-          ? DateTime.local().plus({ days: 7 }).toJSDate()
+          ? DateTime.local().plus({ days: 3 }).toJSDate()
           : DateTime.local().plus({ minutes: 1 }).toJSDate();
         if (!updatedTicket.description) {
           updatedTicket.description = 'Ticket archived';
@@ -323,7 +328,7 @@ async function checkTickets() { // eslint-disable-line @typescript-eslint/no-unu
           archived: {
             type: 'private',
             fetchAll: true,
-            before: new Date().setDate(new Date().getDate() - 7),
+            before: new Date().setDate(new Date().getDate() - 5),
           },
         });
         // const threadList = await channel.threads.fetchArchived({ type: 'private', fetchAll: true });
@@ -333,14 +338,15 @@ async function checkTickets() { // eslint-disable-line @typescript-eslint/no-unu
           try {
             await thread.fetch();
 
-            // Get the last message sent int he thread
-            const messages = await thread.messages.fetch({ limit: 1 });
-            const lastMessage = messages.first();
+            // Get messages and filter out system messages
+            const messages = await thread.messages.fetch({ limit: 10 }); // Fetch more to account for system messages
+            const userMessages = messages.filter(msg => !msg.system);
+            const lastUserMessage = userMessages.first();
 
             // Determine if this message was sent longer than a week ago
-            if (lastMessage && DateTime.fromJSDate(lastMessage.createdAt) >= DateTime.local().minus({ days: 7 })) {
+            if (lastUserMessage && DateTime.fromJSDate(lastUserMessage.createdAt) >= DateTime.local().minus({ days: 5 })) {
               thread.delete();
-              log.debug(F, `Deleted thread ${thread.name} in ${channel.name} because the last message was sent over a week ago`);
+              log.debug(F, `Deleted thread ${thread.name} in ${channel.name} because the last user message was sent over 5 days ago`);
             }
           } catch (err) {
             // Thread was likely manually deleted
@@ -642,220 +648,30 @@ async function checkVoice() {
 //   // }, delay);
 // }
 
-async function checkStats() {
-  // log.debug(F, 'Checking stats...');
-  // Determine how many people are in the tripsit guild
-  const tripsitGuild = await global.discordClient.guilds.fetch(env.DISCORD_GUILD_ID);
-  if (!tripsitGuild) return;
-
-  const { memberCount } = tripsitGuild;
-
-  // Total member count
-  // log.debug(F, `memberCount: ${memberCount}`);
-  const channelTotal = await tripsitGuild.channels.fetch(env.CHANNEL_STATS_TOTAL);
-  // log.debug(F, `channelTotal: ${channelTotal?.name}`);
-  if (channelTotal) {
-    const name = `Total: ${memberCount}`;
-    if (channelTotal.name !== name) {
-      // log.debug(F, `Updating total members to ${memberCount}!`);
-      const perms = await checkChannelPermissions(channelTotal, [
-        'ViewChannel' as PermissionResolvable,
-        'Connect' as PermissionResolvable,
-        'ManageChannels' as PermissionResolvable,
-      ]);
-
-      if (!perms.hasPermission) {
-        log.error(F, `I do not have the '${perms.permission}' permission in ${channelTotal.name}!`);
-        return;
-      }
-      channelTotal.setName(name);
-      // log.debug(F, `Updated total members to ${memberCount}!`);
-      // Check if the total members is divisible by 100
-      if (memberCount % 100 === 0) {
-        const embed = embedTemplate()
-          .setTitle(newRecordString)
-          .setDescription(`We have reached ${memberCount} total members!`);
-        const channelLounge = await tripsitGuild.channels.fetch(env.CHANNEL_LOUNGE) as TextChannel;
-        if (channelLounge) {
-          await channelLounge.send({ embeds: [embed] });
-        }
-        const channelTeamtripsit = await tripsitGuild.channels.fetch(env.CHANNEL_TEAMTRIPSIT) as TextChannel;
-        if (channelTeamtripsit) {
-          await channelTeamtripsit.send({ embeds: [embed] });
-        }
-      }
-    }
-  } else {
-    log.error(F, 'Could not find channel total!');
-  }
-
-  // Determine how many people have the Verified role
-  await tripsitGuild.members.fetch();
-  const roleVerified = await tripsitGuild.roles.fetch(env.ROLE_VERIFIED);
-  // log.debug(F, `roleVerified: ${roleVerified?.name} (${roleVerified?.id})`);
-
-  if (roleVerified) {
-    const { members } = roleVerified;
-    // log.debug(F, `Role verified members: ${members.size}`);
-    const channelVerified = await tripsitGuild.channels.fetch(env.CHANNEL_STATS_VERIFIED);
-    if (channelVerified) {
-      // log.debug(F, `${members.size} / ${memberCount} = ${(members.size / memberCount) * 10000}`);
-      const percentVerified = Math.round(((members.size / memberCount) * 10000)) / 100;
-      // log.debug(F, `percentVerified: ${percentVerified}%`);
-      const name = `Verified: ${members.size} (${percentVerified}%)`;
-      // log.debug(F, `channelVerified: ${channelVerified.name}`);
-      // log.debug(F, `name: ${name}`);
-      if (channelVerified.name !== name) {
-        // log.debug(F, `Updating verified members to ${members.size}!`);
-        const perms = await checkChannelPermissions(channelVerified, [
-          'ViewChannel' as PermissionResolvable,
-          'Connect' as PermissionResolvable,
-          'ManageChannels' as PermissionResolvable,
-        ]);
-        if (!perms.hasPermission) {
-          log.error(F, `I do not have the '${perms.permission}' permission in ${channelVerified.name}!`);
-          return;
-        }
-        // log.debug(F, `perms: ${JSON.stringify(perms)}`);
-        await channelVerified.setName(name);
-        // log.debug(F, `Updated verified members to ${members.size}!`);
-        if (members.size % 100 === 0) {
-          const embed = embedTemplate()
-            .setTitle(newRecordString)
-            .setDescription(`We have reached ${members.size} verified members!`);
-          const channelLounge = await tripsitGuild.channels.fetch(env.CHANNEL_LOUNGE) as TextChannel;
-          if (channelLounge) {
-            const channelPerms = await checkChannelPermissions(channelLounge, [
-              'SendMessages' as PermissionResolvable,
-            ]);
-            if (!channelPerms.hasPermission) {
-              log.error(F, `I do not have the '${channelPerms.permission}' permission in ${channelLounge.name}!`);
-              return;
-            }
-            await channelLounge.send({ embeds: [embed] });
-          }
-          const channelTeamtripsit = await tripsitGuild.channels.fetch(env.CHANNEL_TEAMTRIPSIT) as TextChannel;
-          if (channelTeamtripsit) {
-            const channelPerms = await checkChannelPermissions(channelTeamtripsit, [
-              'SendMessages' as PermissionResolvable,
-            ]);
-            if (!channelPerms.hasPermission) {
-              log.error(F, `I do not have the '${channelPerms.permission}' permission in ${channelLounge.name}!`);
-              return;
-            }
-            await channelTeamtripsit.send({ embeds: [embed] });
-          }
-        }
-      }
-    }
-  } else {
-    log.error(F, 'Could not find role verified!');
-  }
-
-  // Determine the number of users currently online
-  // const onlineCount = tripsitGuild.members.cache.filter(
-  //   member => member.presence?.status !== undefined && member.presence?.status !== 'offline',
-  // ).size;
-  // const channelOnline = await tripsitGuild.channels.fetch(env.CHANNEL_STATS_ONLINE);
-  // if (channelOnline) {
-  //   // log.debug(F, `onlineCount: ${onlineCount}`);
-  //   const name = `Online: ${onlineCount}`;
-  //   if (channelOnline.name !== name) {
-  //     const perms = await checkChannelPermissions(channelOnline, [
-  //       'ViewChannel' as PermissionResolvable,
-  //       'Connect' as PermissionResolvable,
-  //       'ManageChannels' as PermissionResolvable,
-  //     ]);
-  //     // log.debug(F, `perms: ${JSON.stringify(perms)}`);
-  //     if (!perms.hasPermission) {
-  //       log.error(F, `I do not have the '${perms.permission}' permission in ${channelOnline.name}!`);
-  //       return;
-  //     }
-  //     // log.debug(F, `Updating online members to ${name}!`);
-  //     channelOnline.setName(name);
-  //   }
-  // }
-
-  // // Update the database's max_online_members if it's higher than the current value
-  // // log.debug(F, `Getting guild data`);
-  // const guildData = await getGuild(env.DISCORD_GUILD_ID);
-  // if (guildData) {
-  //   // log.debug(F, `Updating guild data (max_online_members: ${guildData.max_online_members})`);
-  //   const newGuild = guildData;
-  //   if (guildData.max_online_members) {
-  //     // log.debug(F, `guildData.max_online_members: ${guildData.max_online_members}`);
-  //     let maxCount = guildData.max_online_members;
-  //     if (onlineCount > maxCount) {
-  //       // log.debug(F, `onlineCount (${onlineCount}) > maxCount (${maxCount})`);
-  //       maxCount = onlineCount;
-  //       newGuild.max_online_members = maxCount;
-  //       await guildUpdate(newGuild);
-  //       // log.debug(F, 'Test0');
-  //       const embed = embedTemplate()
-  //         .setTitle(newRecordString)
-  //         .setDescription(`We have reached ${maxCount} online members!`);
-
-  //       const channelLounge = await tripsitGuild.channels.fetch(env.CHANNEL_LOUNGE) as TextChannel;
-  //       if (channelLounge) {
-  //         // log.debug(F, `channelLounge: ${channelLounge.name}`);
-  //         const channelPerms = await checkChannelPermissions(channelLounge, [
-  //           'SendMessages' as PermissionResolvable,
-  //         ]);
-  //         if (!channelPerms.hasPermission) {
-  //           log.error(F, `I do not have the '${channelPerms.permission}' permission in ${channelLounge.name}!`);
-  //           return;
-  //         }
-  //         await channelLounge.send({ embeds: [embed] });
-  //         // log.debug(F, `Sent new record message to ${channelLounge.name}!`);
-  //       }
-  //       // log.debug(F, 'TestA');
-  //       const channelTeamtripsit = await tripsitGuild.channels.fetch(env.CHANNEL_TEAMTRIPSIT) as TextChannel;
-  //       if (channelTeamtripsit) {
-  //         // log.debug(F, `channelTeamtripsit: ${channelTeamtripsit.name}`);
-  //         const channelPerms = await checkChannelPermissions(channelTeamtripsit, [
-  //           'SendMessages' as PermissionResolvable,
-  //         ]);
-  //         if (!channelPerms.hasPermission) {
-  //           log.error(F, `I do not have the '${channelPerms.permission}' permission in ${channelTeamtripsit.name}!`);
-  //           return;
-  //         }
-  //         await channelTeamtripsit.send({ embeds: [embed] });
-  //         // log.debug(F, `Sent new record message to ${channelTeamtripsit.name}!`);
-  //       }
-  //       // log.debug(F, 'TestB');
-
-  //       const channelMax = await tripsitGuild.channels.fetch(env.CHANNEL_STATS_MAX);
-  //       if (channelMax) {
-  //         // log.debug(F, `channelMax: ${channelMax.name}`);
-  //         const currentCount = parseInt(channelMax.name.split(': ')[1], 10);
-  //         if (maxCount > currentCount) {
-  //           const name = `Max: ${maxCount}`;
-  //           if (channelMax.name !== name) {
-  //             const channelPerms = await checkChannelPermissions(channelMax, [
-  //               'ViewChannel' as PermissionResolvable,
-  //               'Connect' as PermissionResolvable,
-  //               'ManageChannels' as PermissionResolvable,
-  //             ]);
-  //             if (!channelPerms.hasPermission) {
-  //               log.error(F, `I do not have the '${channelPerms.permission}' permission in ${channelMax.name}!`);
-  //               return;
-  //             }
-  //             channelMax.setName(`Max: ${maxCount}`);
-  //           }
-  //           // log.debug(F, `Updated max online members to ${maxCount}!`);
-  //         } else {
-  //           // log.debug(F, `Max members is already ${maxCount}!`);
-  //         }
-  //       }
-  //       // log.debug(F, 'TestC');
-  //     }
-  //   } else {
-  //     // log.debug(F, `Updating guild data (max_online_members: ${onlineCount})`);
-  //     newGuild.max_online_members = onlineCount;
-  //     await guildUpdate(newGuild);
-  //   }
-  // }
-}
+// async function checkStats() {
+//   // log.debug(F, 'Checking stats...');
+//   // Determine how many people are in the tripsit guild
+//   const tripsitGuild = await global.discordClient.guilds.fetch(env.DISCORD_GUILD_ID);
+//   if (!tripsitGuild) return;
+//
+//   const { memberCount } = tripsitGuild;
+//
+//   // Total member count
+//   // Check if the total members is divisible by 100
+//   if (memberCount % 100 === 0) {
+//     const embed = embedTemplate()
+//       .setTitle(newRecordString)
+//       .setDescription(`We have reached ${memberCount} total members!`);
+//     const channelLounge = await tripsitGuild.channels.fetch(env.CHANNEL_LOUNGE) as TextChannel;
+//     if (channelLounge) {
+//       await channelLounge.send({ embeds: [embed] });
+//     }
+//     const channelTeamtripsit = await tripsitGuild.channels.fetch(env.CHANNEL_TEAMTRIPSIT) as TextChannel;
+//     if (channelTeamtripsit) {
+//       await channelTeamtripsit.send({ embeds: [embed] });
+//     }
+//   }
+// }
 
 // async function checkLpm() { // eslint-disable-line
 //   const channels = [
@@ -1038,78 +854,106 @@ async function checkMoodle() { // eslint-disable-line
   const channelContent = await guild.channels.fetch(env.CHANNEL_CONTENT);
 
   // log.debug(F, 'Starting to check each user');
-  userDataList.forEach(async user => {
+
+  // FIXED: Use reduce to process users sequentially instead of concurrent forEach
+  await userDataList.reduce(async (previousPromise, user) => {
+    await previousPromise; // Wait for the previous user to complete
+
     let member = {} as GuildMember;
     try {
       member = await guild.members.fetch(user.discord_id as string);
     } catch (error) {
       // log.debug(F, `Error fetching member: ${error}`);
-      return;
+      return; // Skip this user and continue with the next one
     }
 
-    const moodleProfile = await profile(user.discord_id as string);
+    let moodleProfile: { completedCourses?: string[] | undefined };
+    try {
+      // Add timeout protection for the profile lookup
+      moodleProfile = await Promise.race([
+        profile(user.discord_id as string),
+        new Promise((_, reject) => { setTimeout(() => reject(new Error('Profile lookup timeout')), 8000); }),
+      ]) as { completedCourses?: string[] | undefined };
+    } catch (error) {
+      log.error(F, `Error getting moodle profile for user ${user.discord_id}: ${error}`);
+      return; // Skip this user and continue with the next one
+    }
 
     // log.debug(F, `Checking ${member.user.username}...`);
     if (moodleProfile.completedCourses && moodleProfile.completedCourses.length > 0) {
-      moodleProfile.completedCourses.forEach(async course => {
-        // log.debug(F, `${member.user.username} completed ${course}...`);
-        const roleId = courseRoleMap[course as keyof typeof courseRoleMap];
-        const role = await guild.roles.fetch(roleId);
+      // FIXED: Also use reduce for sequential course processing
+      await moodleProfile.completedCourses.reduce(async (coursePrevious: Promise<void>, course: string) => {
+        await coursePrevious; // Wait for the previous course to complete
 
-        if (role) {
-          // log.debug(F, `Found role: ${JSON.stringify(role, null, 2)}`);
-          // check if the member already has the role
-          if (member.roles.cache.has(role.id)) {
-            // log.debug(F, `${member.user.username} already has the ${role.name} role`);
-            return;
+        try {
+          // log.debug(F, `${member.user.username} completed ${course}...`);
+          const roleId = courseRoleMap[course as keyof typeof courseRoleMap];
+          const role = await guild.roles.fetch(roleId);
+
+          if (role) {
+            // log.debug(F, `Found role: ${JSON.stringify(role, null, 2)}`);
+            // check if the member already has the role
+            if (member.roles.cache.has(role.id)) {
+              // log.debug(F, `${member.user.username} already has the ${role.name} role`);
+              return; // Skip to next course
+            }
+
+            if (channelContent) {
+              // log.debug(F, `Sending message to ${channelContent.name}`);
+              await (channelContent as TextChannel).send({
+                embeds: [
+                  embedTemplate()
+                    .setColor(Colors.Green)
+                    .setDescription(`Congratulate ${member} on completing "${course}"!`),
+                ],
+              }); // eslint-disable-line
+            }
+
+            if (!member.roles.cache.has(env.ROLE_NEEDS_HELP)) {
+              await member.roles.add(role);
+              log.info(F, `Gave ${member.user.username} the ${role.name} role`);
+            } else {
+              log.info(F, `Skipped giving ${member.user.username} the ${role.name} because they have the Needs Help role`);
+            }
+
+            // eslint-disable max-len
+            try {
+              await member.user.send({
+                embeds: [
+                  embedTemplate()
+                    .setColor(Colors.Green)
+                    .setTitle(`Congratulations on completing "${course}"!`)
+                    .setDescription(stripIndents`
+                    Give yourself deserved pack on the back, you deserve it!
+
+                    But your journey doesn't end here...
+
+                    You can now become a TripSit Helper!
+                    Head over to ${channelHowToVolunteer} and post your introduction.
+
+                    Show off your achievement with \`/learn profile\` in any discord guild with TripBot.
+                    Maybe you'll inspire someone else to learn too!
+
+                    No tripbot? No problem!
+                    Anyone can [verify the code on your certificate](https://learn.tripsit.me/mod/customcert/verify_certificate.php) to see you completed the course.
+
+                    Finally, if you have any feedback on the course, please let us know in the ${channelContent} channel, or on the forum in the course!
+
+                    Thanks so much for taking the time to learn with us, we hope you enjoyed it!
+                    `),
+                ],
+              });
+              // log.debug(F, `Sent ${member.user.username} a message!`);
+            } catch (error) {
+              log.info(F, `Could not send DM to ${member.user.username}: ${error}`);
+            }
           }
-
-          if (channelContent) {
-            // log.debug(F, `Sending message to ${channelContent.name}`);
-            (channelContent as TextChannel).send({
-              embeds: [
-                embedTemplate()
-                  .setColor(Colors.Green)
-                  .setDescription(`Congratulate ${member} on completing "${course}"!`),
-              ],
-            },
-              ); // eslint-disable-line
-          }
-
-          member.roles.add(role);
-          log.info(F, `Gave ${member.user.username} the ${role.name} role`);
-
-          // eslint-disable max-len
-          member.user.send({
-            embeds: [
-              embedTemplate()
-                .setColor(Colors.Green)
-                .setTitle(`Congratulations on completing "${course}"!`)
-                .setDescription(stripIndents`
-                Give yourself deserved pack on the back, you deserve it!
-                             
-                But your journey doesn't end here...
-
-                You can now become a TripSit Helper!
-                Head over to ${channelHowToVolunteer} and post your introduction.
-
-                Show off your achievement with \`/learn profile\` in any discord guild with TripBot.
-                Maybe you'll inspire someone else to learn too!
-
-                No tripbot? No problem!
-                Anyone can [verify the code on your certificate](https://learn.tripsit.me/mod/customcert/verify_certificate.php) to see you completed the course.
-
-                Finally, if you have any feedback on the course, please let us know in the ${channelContent} channel, or on the forum in the course!
-
-                Thanks so much for taking the time to learn with us, we hope you enjoyed it!
-                `),
-            ],
-          });
-          // log.debug(F, `Sent ${member.user.username} a message!`);
+        } catch (error) {
+          log.error(F, `Error processing course ${course} for user ${member.user.username}: ${error}`);
         }
-      });
+      }, Promise.resolve());
     }
-  });
+  }, Promise.resolve());
 
   // log.debug(F, 'Finished checking moodle!');
   // log.debug(F, `connection: ${JSON.stringify(global.moodleConnection, null, 2)}`);
@@ -1117,6 +961,240 @@ async function checkMoodle() { // eslint-disable-line
   // if (!global.moodleConnection.status) {
   //   log.debug(F, 'moodleConnection failed, hopefully you\'re in dev LMAO');
   // }
+}
+
+/* async function pruneInactiveHelpers() {
+  const inactiveThreshold = new Date();
+  // 2 months for production, 1 minute for dev
+  if (env.NODE_ENV === 'production') {
+    inactiveThreshold.setMonth(inactiveThreshold.getMonth() - 2);
+  } else {
+    inactiveThreshold.setMinutes(inactiveThreshold.getMinutes() - 1);
+  }
+
+  const inactiveHelpers = await db.users.findMany({
+    where: {
+      last_helper_activity: {
+        lt: inactiveThreshold,
+      },
+    },
+  });
+
+  const guild = discordClient.guilds.cache.get(env.DISCORD_GUILD_ID);
+  if (!guild) {
+    log.error(F, `Guild with ID ${env.DISCORD_GUILD_ID} not found.`);
+    return;
+  }
+
+  const guildData = await db.discord_guilds.upsert({
+    where: {
+      id: guild.id,
+    },
+    create: {
+      id: guild.id,
+    },
+    update: {},
+  });
+
+  if (!guildData.role_helper) {
+    log.error(F, `Unable to fetch helper role from db in pruneInactiveHelpers for guild ID ${env.DISCORD_GUILD_ID}`);
+    return;
+  }
+
+  const role = guild.roles.cache.get(guildData.role_helper);
+  if (!role) {
+    log.error(F, `Unable to fetch helper role from Discord in pruneInactiveHelpers for guild ID ${env.DISCORD_GUILD_ID}`);
+    return;
+  }
+
+  // Loop through the inactive helpers and check their guild membership
+  const promises = inactiveHelpers.map(async user => {
+    if (!user.discord_id) {
+      log.info(F, `Failed to fetch discord ID for db entry ${user.id}`);
+      return; // No need to continue for this user
+    }
+
+    const member = await guild.members.fetch(user.discord_id).catch(() => null);
+    if (member) {
+      await member.roles.remove(role);
+
+      try {
+        const channelHowToVolunteer = await guild.channels.fetch(env.CHANNEL_HOW_TO_VOLUNTEER);
+        await member.send(stripIndents`
+          Your helper role has been automatically removed on TripSit due to inactivity,
+          but no worries—you can easily reapply for it at any time through ${channelHowToVolunteer}
+          if you’d like to start helping out again.
+
+          Thank you for all your past contributions, and we’d love to have you back whenever you're ready!
+        `);
+      } catch (error) {
+        log.error(F, `Failed to send DM to ${member.user.username}: ${error}`);
+      }
+    } else { // If we run into a Helper who is no longer a member, then notify the Tripsitters.
+      const target = await guild.client.users.fetch(user.discord_id);
+      log.info(F, `Helper ${target.username}(${user.discord_id}) is no longer a member of the guild :(`);
+      const channelTripsitters = await guild.channels.fetch(env.CHANNEL_TRIPSITTERS) as TextChannel;
+      await channelTripsitters.send(stripIndents`Helper ${target.username}(${user.discord_id}) is no longer a member of the guild :(`);
+    }
+
+    // Reset activity to prevent looping the same user again
+    await db.users.upsert({
+      where: {
+        discord_id: user.discord_id,
+      },
+      create: {
+        discord_id: user.discord_id,
+      },
+      update: {
+        last_helper_activity: null,
+      },
+    });
+  });
+
+  await Promise.all(promises); // Wait for all promises to resolve
+  log.info(F, `${inactiveHelpers.length} inactive helpers have been pruned and notified.`);
+} */
+
+async function undoExpiredBans() {
+  const expiredBans = await db.user_actions.findMany({
+    where: {
+      expires_at: { not: null, lte: new Date() },
+      type: 'FULL_BAN',
+    },
+  });
+
+  if (expiredBans.length === 0) return;
+
+  await Promise.all(expiredBans.map(async activeBan => { // Use map + Promise.all for async handling
+    if (!activeBan.target_discord_id) return;
+
+    let targetGuild: Guild | null = null;
+
+    try {
+      const user = await global.discordClient.users.fetch(activeBan.target_discord_id);
+      if (!user) return;
+
+      targetGuild = await global.discordClient.guilds.fetch(activeBan.guild_id);
+
+      // Ensure guild exists
+      if (!targetGuild) return;
+
+      const targetGuildData = await db.discord_guilds.findUnique({ where: { id: activeBan.guild_id } });
+
+      // Unban user
+      await targetGuild.bans.remove(user, 'Temporary ban expired');
+      log.info(F, `Temporary ban for ${user.username} (${activeBan.target_discord_id}) in ${targetGuild.name} has expired and been lifted!`);
+
+      // Ensure mod log channel exists
+      if (!targetGuildData || !targetGuildData.channel_mod_log) return;
+      const modlog = await targetGuild.channels.fetch(targetGuildData.channel_mod_log) as TextChannel | null;
+
+      // Fetch mod thread & user data
+      const targetUserData = await db.users.findUnique({ where: { discord_id: activeBan.target_discord_id } });
+      const modThread = targetUserData?.mod_thread_id
+        ? await targetGuild.channels.fetch(targetUserData.mod_thread_id) as ThreadChannel | null
+        : null;
+
+      // Ensure valid dates
+      if (!activeBan.created_at || !activeBan.expires_at) return;
+
+      const durationMs = new Date(activeBan.expires_at).getTime() - new Date(activeBan.created_at).getTime();
+      const days = Math.floor(durationMs / (1000 * 60 * 60 * 24));
+
+      // Send messages
+      const embed = embedTemplate()
+        .setColor(Colors.Green)
+        .setDescription(`${user.username} (${activeBan.target_discord_id}) has been unbanned after ${days} days`);
+
+      if (modThread) await modThread.send({ embeds: [embed] });
+      if (modlog) await modlog.send({ embeds: [embed] });
+    } catch (err) {
+      log.error(F, `Failed to remove temporary ban on ${activeBan.target_discord_id} in ${targetGuild?.name}. Likely already unbanned.`);
+    } finally {
+      // Reset expires_at to null
+      await db.user_actions.update({
+        where: { id: activeBan.id },
+        data: { expires_at: null },
+      });
+    }
+  }));
+}
+
+async function monthlySessionStats() {
+  const now = new Date();
+  // Get the last day of current month (handles 28, 29, 30, or 31 days automatically)
+  const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+  const currentDay = now.getDate();
+
+  // Check if we're on the last day of the month
+  if (currentDay === lastDayOfMonth) {
+    const stats = await getTripSitStatistics('session');
+    const embed = embedTemplate()
+      .setTitle('TripSit Session Stats')
+      .setDescription(stats);
+
+    // Get the channel and send the embed
+    const channel = discordClient.channels.cache.get(env.CHANNEL_HELPERLOUNGE) as TextChannel;
+    if (channel && channel.guildId === env.DISCORD_GUILD_ID && channel.isTextBased()) {
+      await channel.send({ embeds: [embed] });
+      log.info(F, 'Sent TripSit Session Stats in Helper Lounge!');
+    }
+  }
+}
+
+async function checkBirthdays() {
+  try {
+    // Get today's date in MM-DD format for comparison
+    const today = new Date();
+    const todayMonth = String(today.getMonth() + 1).padStart(2, '0');
+    const todayDay = String(today.getDate()).padStart(2, '0');
+    const todayMMDD = `${todayMonth}-${todayDay}`;
+
+    // Find users whose birthday is today
+    // Assuming birthday is stored as a Date field, we extract month and day
+    const birthdayUsers = await db.users.findMany({
+      where: {
+        birthday: {
+          not: null,
+        },
+      },
+    });
+
+    // Filter users whose birthday is today
+    const todaysBirthdayUsers = birthdayUsers.filter((user: typeof birthdayUsers[0]) => {
+      if (!user.birthday) return false;
+
+      const birthdayDate = new Date(user.birthday);
+      const birthdayMonth = String(birthdayDate.getMonth() + 1).padStart(2, '0');
+      const birthdayDay = String(birthdayDate.getDate()).padStart(2, '0');
+      const birthdayMMDD = `${birthdayMonth}-${birthdayDay}`;
+
+      return birthdayMMDD === todayMMDD;
+    });
+
+    // Send birthday messages to the lounge channel
+    const birthdayPromises = todaysBirthdayUsers.map(async (user: typeof birthdayUsers[0]) => {
+      try {
+        if (!user.birthday) {
+          return;
+        }
+
+        // Send message to VIP lounge channel
+        const vipLounge = await discordClient.channels.fetch(env.CHANNEL_VIPLOUNGE) as TextChannel;
+        await vipLounge.send(`Happy Birthday, <@${user.discord_id}>! 🎉`);
+        log.info(F, `Birthday message sent for user: ${user.discord_id}`);
+      } catch (messageError) {
+        log.error(F, `Failed to send birthday message for user ${user.id}: ${messageError}`);
+      }
+    });
+
+    await Promise.all(birthdayPromises);
+
+    log.info(F, `Birthday check completed. Found ${todaysBirthdayUsers.length} birthday(s) today.`);
+  } catch (error) {
+    log.error(F, `Error in checkBirthdays function: ${error}`);
+    throw error;
+  }
 }
 
 async function checkEvery(
@@ -1142,7 +1220,7 @@ async function runTimer() {
   const seconds10 = 1000 * 10;
   const seconds30 = 1000 * 30;
   const seconds60 = 1000 * 60;
-  const minutes5 = 1000 * 60 * 5;
+  // const minutes5 = 1000 * 60 * 5;
   const hours24 = 1000 * 60 * 60 * 24;
   const hours48 = 1000 * 60 * 60 * 48;
 
@@ -1154,10 +1232,14 @@ async function runTimer() {
     { callback: checkRss, interval: env.NODE_ENV === 'production' ? seconds30 : seconds5 },
     { callback: checkVoice, interval: env.NODE_ENV === 'production' ? seconds60 : seconds5 },
     // { callback: changeStatus, interval: env.NODE_ENV === 'production' ? hours24 : seconds5 },
-    { callback: checkStats, interval: env.NODE_ENV === 'production' ? minutes5 : seconds5 },
+    // { callback: checkStats, interval: env.NODE_ENV === 'production' ? minutes5 : seconds5 },
     { callback: checkMoodle, interval: env.NODE_ENV === 'production' ? seconds60 : seconds5 },
     // { callback: checkLpm, interval: env.NODE_ENV === 'production' ? seconds10 : seconds5 },
     { callback: updateDb, interval: env.NODE_ENV === 'production' ? hours24 : hours48 },
+    // { callback: pruneInactiveHelpers, interval: env.NODE_ENV === 'production' ? hours48 : seconds60 },
+    { callback: undoExpiredBans, interval: env.NODE_ENV === 'production' ? hours24 / 2 : seconds10 },
+    { callback: monthlySessionStats, interval: env.NODE_ENV === 'production' ? hours24 : hours24 / 3 }, // 8 hours on dev
+    { callback: checkBirthdays, interval: env.NODE_ENV === 'production' ? hours24 : hours24 / 3 }, // 8 hours on dev
   ];
 
   timers.forEach(timer => {

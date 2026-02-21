@@ -8,6 +8,7 @@ import {
 } from 'discord.js';
 import {
   ButtonStyle,
+  MessageFlags,
 } from 'discord-api-types/v10';
 // import log from '../../global/utils/log';
 // import {parse} from 'path';
@@ -44,7 +45,7 @@ export async function paginationEmbed(
   ephemeral:boolean = false,
 ): Promise<Message> {
   if (interaction.deferred === false) {
-    await interaction.deferReply({ ephemeral });
+    await interaction.deferReply({ flags: ephemeral ? MessageFlags.Ephemeral : undefined });
   }
   // log.debug(`${PREFIX} - Paginating ${pages.length} pages.`);
 

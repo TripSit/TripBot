@@ -6,11 +6,11 @@ import {
   PermissionResolvable,
   EmbedBuilder,
   TextChannel,
+  DMChannel,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
-import { sleep } from '../commands/guild/d.bottest';
+import { sleep } from './sleep';
 import { aiMessage } from '../commands/global/d.ai';
-import { Wordle, Connections, TheMini } from './nytUtils';
 
 // import log from '../../global/utils/log';
 // import {parse} from 'path';
@@ -81,63 +81,13 @@ async function isMentioningTripbot(message: Message): Promise<boolean> {
 }
 
 async function isUploadMessage(message: Message): Promise<boolean> {
-  return message.content.toLowerCase().includes('upload')
-    || message.content.toLowerCase().includes('steal')
-    || message.content.toLowerCase().includes('fetch');
+  const content = message.content.toLowerCase().trim();
+
+  // Check for specific command patterns with !
+  const uploadCommands = ['!upload', '!steal', '!fetch'];
+
+  return uploadCommands.some(command => content.includes(command));
 }
-
-async function isWordle(message: Message): Promise<boolean> {
-  const messageContent = message.content;
-  const userId = message.author.id; // Extract userId from message
-
-  // Regular expression to check if the message possibly mentions a Wordle score
-  const wordleScorePattern = /(Wordle\s[\d,]+\s(\d|X)\/6)/;
-  const match = messageContent.match(wordleScorePattern);
-
-  // If a match is found, send the message content for further processing
-  if (match) {
-    return Wordle.process(userId, messageContent); // Pass userId and messageContent
-  }
-
-  return false;
-}
-
-async function isConnections(message: Message): Promise<boolean> {
-  const messageContent = message.content;
-  const userId = message.author.id; // Extract userId from message
-
-  // Regular expression to check if the message possibly mentions a Connections score
-  const connectionsScorePattern = /(Connections\s*Puzzle\s*#\d+)/;
-  const match = messageContent.match(connectionsScorePattern);
-
-  // TODO: If a match is found, send the message content for further processing
-
-  if (match) {
-    return Connections.process(userId, messageContent); // Pass userId and messageContent
-  }
-
-  return false;
-}
-
-async function isTheMini(message: Message): Promise<boolean> {
-  const messageContent = message.content;
-  const userId = message.author.id; // Extract userId from message
-
-  // Regular expression to check if the message possibly mentions a The Mini score
-  const theMiniScorePattern = /(https:\/\/www\.nytimes\.com\/badges\/games\/mini\.html\?d=\d{4}-\d{2}-\d{2}&t=\d+&c=[a-f0-9]+&smid=url-share)|(https:\/\/www\.nytimes\.com\/crosswords\/game\/mini)/;
-  const match = messageContent.match(theMiniScorePattern);
-
-  // If a match is found, send the message content for further processing
-  if (match) {
-    return TheMini.process(userId, messageContent); // Pass userId and messageContent
-  }
-
-  return false;
-}
-// async function isAiEnabledGuild(message:Message):Promise<boolean> {
-//   // log.debug(F, `message.guild?.id: ${message.guild?.id}`);
-//   return message.guild?.id === env.DISCORD_GUILD_ID;
-// }
 
 async function isBotOwner(message: Message): Promise<boolean> {
   return message.author.id === env.DISCORD_OWNER_ID;
@@ -161,6 +111,10 @@ export async function messageCommand(message: Message): Promise<void> {
   // Ignore messages that start with ~~, these are usually strikethrough messages
   if (message.content.startsWith('~~')) { return; }
 
+  if (!(message.channel instanceof TextChannel)) {
+    return;
+  }
+
   if (await isIrcCommand(message)) {
     // If you try to use the old tripbot command prefix while inside of the tripsit guild
     if (message.guild.id !== env.DISCORD_GUILD_ID) return;
@@ -175,9 +129,12 @@ export async function messageCommand(message: Message): Promise<void> {
       if (!tripsitChannels.includes(message.channel.id) && !(message.channel as TextChannel).name.endsWith(`${message.author.displayName}'s channel!`)) {
         const channelTripsit = await message.guild.channels.fetch(env.CHANNEL_TRIPSIT) as TextChannel;
         const channelOpenTripsit1 = await message.guild.channels.fetch(env.CHANNEL_OPENTRIPSIT1) as TextChannel;
-        await message.channel.send(
-          stripIndents`Hey ${displayName}, this command is reserved for the tripsitting channels. Head on over to ${channelTripsit} or ${channelOpenTripsit1} and try again if you need help! <3`,
-        );
+        await message.channel.send({
+          content: stripIndents`Hey ${displayName}, this command is reserved for the tripsitting channels. Head on over to ${channelTripsit} or ${channelOpenTripsit1} and try again if you need help! <3`,
+          allowedMentions: {
+            parse: [],
+          },
+        });
         return;
       }
       const now = Date.now().valueOf();
@@ -188,20 +145,30 @@ export async function messageCommand(message: Message): Promise<void> {
           return;
         }
         if (now - lastTime < 1000 * 60 * 5) {
-          await message.channel.send(stripIndents`Hey ${displayName}, you just used that command, \
-give people a chance to answer 😄 If no one answers in 5 minutes you can try again.`);
+          await message.channel.send({
+            content: stripIndents`Hey ${displayName}, you just used that command, \
+          give people a chance to answer 😄 If no one answers in 5 minutes you can try again.`,
+            allowedMentions: { parse: [] },
+          });
+
           return;
         }
       }
       const roleTripsitter = await message.guild.roles.fetch(env.ROLE_TRIPSITTER) as Role;
       const roleHelper = await message.guild.roles.fetch(env.ROLE_HELPER) as Role;
-      await message.channel.send(`Hey ${displayName}, someone from the ${roleTripsitter} and/or ${roleHelper} team will be with you as soon as they're available!
+      await message.channel.send({
+        content: `Hey ${displayName}, someone from the ${roleTripsitter} and/or ${roleHelper} team will be with you as soon as they're available!
 
-        If you’re in the right mindset please start by telling us what you took, at what dose and route, how long ago, along with any concerns you may have.
+      If you’re in the right mindset please start by telling us what you took, at what dose and route, how long ago, along with any concerns you may have.
 
-        **If this is a medical emergency** please contact your local emergency services: we do not call EMS on behalf of anyone.
-
-      `);
+      **If this is a medical emergency** please contact your local emergency services: we do not call EMS on behalf of anyone.
+      `,
+        allowedMentions: {
+          roles: [roleTripsitter.id, roleHelper.id],
+          users: [], // prevents user pings
+          parse: [], // prevents @everyone/@here
+        },
+      });
 
       const embed = new EmbedBuilder()
         .setTitle('Other Resources')
@@ -222,7 +189,12 @@ give people a chance to answer 😄 If no one answers in 5 minutes you can try a
       // Update helpCounter with the current date that the user sent this command
       helpCounter.set(message.author.id, Date.now().valueOf());
     } else {
-      await message.channel.send(`Hey ${displayName}, use /help to get a list of commands on discord!`);
+      await message.channel.send({
+        content: `Hey ${displayName}, use /help to get a list of commands on Discord!`,
+        allowedMentions: {
+          parse: [], // disables all user, role, and @everyone pings
+        },
+      });
     }
   } else if (await isPokingTripbot(message)) {
     // If you poke tripbot
@@ -251,8 +223,10 @@ give people a chance to answer 😄 If no one answers in 5 minutes you can try a
 
         const recipientMember = await message.guild?.members.fetch(recipient.id);
 
-        if (!recipientMember) {
-          await message.channel.send('The user you mentioned is not a member of this guild!');
+        if (!recipientMember && (message.channel instanceof TextChannel || message.channel instanceof DMChannel)) {
+          if (message.channel instanceof DMChannel) {
+            await message.channel.send('The user you mentioned is not a member of this guild!');
+          }
           return;
         }
 
@@ -274,11 +248,12 @@ give people a chance to answer 😄 If no one answers in 5 minutes you can try a
             },
           },
         });
-        log.debug(F, `Gave ${amount} tokens to ${recipientMember.displayName}!`);
-
-        await message.channel.send(stripIndents`Gave ${amount} tokens to ${recipientMember.displayName}!
-        
-        They now have ${personaData.tokens} tokens!`);
+        log.debug(F, `Gave ${amount} tokens to ${recipientMember ? recipientMember.displayName : recipient.username}!`);
+        if (message.channel instanceof TextChannel || message.channel instanceof DMChannel) {
+          await message.channel.send(stripIndents`Gave ${amount} tokens to ${recipientMember ? recipientMember.displayName : recipient.username}!
+          
+          They now have ${personaData.tokens} tokens!`);
+        }
       });
 
       return;
@@ -299,13 +274,15 @@ give people a chance to answer 😄 If no one answers in 5 minutes you can try a
     }
 
     if (await isUploadMessage(message)) {
-      if (message.content.toLowerCase().includes('emoji')) {
-        // Check if the user has the ManageEmojis permission
-        if (!message.member?.permissions.has('ManageEmojisAndStickers' as PermissionResolvable)) {
-          await message.channel.send(stripIndents`Hey ${displayName}, you don't have the permission to upload emojis to this guild!`); // eslint-disable-line
-          return;
-        }
+      if (!message.member?.permissions.has('ManageEmojisAndStickers' as PermissionResolvable)) {
+        await message.channel.send({
+          content: `Hey ${displayName}, you don't have permission to manage emojis and stickers!`,
+          allowedMentions: { parse: [] },
+        });
+        return;
+      }
 
+      if (message.content.toLowerCase().includes('emoji')) {
         // Upload all the emojis in the message to the guild
         let emojis = message.content.match(/<a?:\w+:\d+>/g);
 
@@ -347,11 +324,6 @@ give people a chance to answer 😄 If no one answers in 5 minutes you can try a
         }
       }
       if (message.content.toLowerCase().includes('sticker')) {
-        // Check if the user has the ManageEmojis permission
-        if (!message.member?.permissions.has('ManageEmojisAndStickers' as PermissionResolvable)) {
-          await message.channel.send(stripIndents`Hey ${displayName}, you don't have the permission to upload stickers to this guild!`); // eslint-disable-line
-          return;
-        }
         await message.channel.send(stripIndents`Hey ${displayName}, uploading emojis...`); // eslint-disable-line
 
         log.debug(F, `message.stickers: ${JSON.stringify(message.stickers, null, 2)}`);
@@ -389,26 +361,13 @@ give people a chance to answer 😄 If no one answers in 5 minutes you can try a
     if (message.author.bot) return;
     if (message.guild.id !== env.DISCORD_GUILD_ID) return;
     // log.debug(F, 'Sad/lovey stuff detected');
-    await message.react(heartEmojis[Math.floor(Math.random() * heartEmojis.length)]);
+    try {
+      await message.react(heartEmojis[Math.floor(Math.random() * heartEmojis.length)]);
+    } catch (err) {
+      log.info(F, `Failed to add heart reaction in ${message.guild.name}(${message.guild.id}).`);
+    }
   }
 
-  if (!message.author.bot) {
-    const wordleResult = await isWordle(message);
-    if (wordleResult) {
-      log.debug(F, 'Valid Wordle detected');
-      await message.react(emojiGet('nyt_wordle'));
-    }
-    const connectionsResult = await isConnections(message);
-    if (connectionsResult) {
-      log.debug(F, 'Valid Connections detected');
-      await message.react(emojiGet('nyt_connections'));
-    }
-    const theMiniResult = await isTheMini(message);
-    if (theMiniResult) {
-      log.debug(F, 'Valid The Mini detected');
-      await message.react(emojiGet('nyt_themini'));
-    }
-  }
   // else if (
   //   message.content.match(/(?:anyone|someone+there|here)\b/)
   //   && (message.channel as ThreadChannel).parent?.parentId !== env.CATEGORY_HARMREDUCTIONCENTRE

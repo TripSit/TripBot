@@ -20,15 +20,14 @@ import { techHelpClick, techHelpClose, techHelpOwn } from '../utils/techHelp';
 import { verifyButton } from '../utils/verifyButton';
 import { buttonReactionRole } from '../commands/global/d.reactionRole';
 import {
-  rpgArcade, rpgArcadeGame, rpgArcadeWager, rpgBounties, rpgHelp, rpgHome, rpgHomeAccept, rpgHomeDecline, rpgHomeSell, rpgHomeNameChange, rpgMarket, rpgMarketAccept, rpgMarketPreview, rpgTown, rpgTrivia, rpgFlairAccept, rpgFlairDecline,
+  rpgArcade, rpgArcadeGame, rpgArcadeWager, rpgBounties, rpgHelp, rpgHome, rpgHomeAccept, rpgHomeDecline, rpgHomeSell, rpgHomeNameChange, rpgMarket, rpgMarketAccept, rpgMarketPreview, rpgTown, rpgFlairAccept, rpgFlairDecline,
 } from '../commands/guild/d.rpg';
 import { helperButton } from '../commands/global/d.setup';
-import { appealAccept, appealReject } from '../utils/appeal';
-import { mushroomPageOne, mushroomPageTwo } from '../commands/global/d.mushroom_info';
-import { acknowledgeButton, modModal, refusalButton } from '../commands/guild/d.moderate';
+import { acknowledgeButton, modModal, refusalButton } from '../utils/modUtils';
 import { feedbackReportModal } from '../commands/global/d.feedback';
 import { aiButton } from '../commands/global/d.ai';
 import { purgeButton } from '../commands/guild/d.purge';
+import { mushroomPageEmbed } from '../utils/hrUtils';
 // import { helpButton } from '../commands/global/d.help';
 
 const F = f(__filename);
@@ -59,12 +58,12 @@ export async function buttonClick(interaction:ButtonInteraction, discordClient:C
     // log.debug(F, 'Werewolf button clicked');
 
     if (buttonID.toLowerCase().includes('pageone')) {
-      await mushroomPageOne(interaction);
+      interaction.update(await mushroomPageEmbed(1));
       return;
     }
 
     if (buttonID.toLowerCase().includes('pagetwo')) {
-      await mushroomPageTwo(interaction);
+      interaction.update(await mushroomPageEmbed(2));
       return;
     }
   }
@@ -97,16 +96,9 @@ export async function buttonClick(interaction:ButtonInteraction, discordClient:C
     else if (interaction.customId.split(',')[0] === 'rpgBounties') await interaction.editReply(await rpgBounties(interaction, null));
     else if (interaction.customId.split(',')[0] === 'rpgArcade') await interaction.editReply(await rpgArcade(interaction));
     else if (interaction.customId.split(',')[0] === 'rpgHelp') await interaction.editReply(await rpgHelp(interaction));
-    else if (interaction.customId.split(',')[0] === 'rpgWager1') await interaction.editReply(await rpgArcadeWager(interaction));
-    else if (interaction.customId.split(',')[0] === 'rpgWager10') await interaction.editReply(await rpgArcadeWager(interaction));
-    else if (interaction.customId.split(',')[0] === 'rpgWager100') await interaction.editReply(await rpgArcadeWager(interaction));
+    else if (interaction.customId.split(',')[0] === 'rpgWager500') await interaction.editReply(await rpgArcadeWager(interaction));
     else if (interaction.customId.split(',')[0] === 'rpgWager1000') await interaction.editReply(await rpgArcadeWager(interaction));
-    else if (interaction.customId.split(',')[0] === 'rpgWager10000') await interaction.editReply(await rpgArcadeWager(interaction));
     else if (interaction.customId.split(',')[0] === 'rpgCoinFlip') await interaction.editReply(await rpgArcadeGame(interaction, 'Coinflip'));
-    else if (interaction.customId.split(',')[0] === 'rpgTrivia') await interaction.editReply(await rpgTrivia(interaction));
-    else if (interaction.customId.split(',')[0] === 'rpgDifficulty') await interaction.editReply(await rpgTrivia(interaction));
-    else if (interaction.customId.split(',')[0] === 'rpgQuestionLimit') await interaction.editReply(await rpgTrivia(interaction));
-    else if (interaction.customId.split(',')[0] === 'rpgStart') await interaction.editReply(await rpgTrivia(interaction));
     else if (interaction.customId.split(',')[0] === 'rpgRouletteRed') await interaction.editReply(await rpgArcadeGame(interaction, 'Roulette', 'red'));
     else if (interaction.customId.split(',')[0] === 'rpgRouletteBlack') await interaction.editReply(await rpgArcadeGame(interaction, 'Roulette', 'black'));
     else if (interaction.customId.split(',')[0] === 'rpgRouletteFirst') await interaction.editReply(await rpgArcadeGame(interaction, 'Roulette', 'first'));
@@ -140,16 +132,6 @@ export async function buttonClick(interaction:ButtonInteraction, discordClient:C
     else if (interaction.customId.split(',')[0] === 'rpgQuest') await interaction.editReply(await rpgBounties(interaction, interaction.customId.split(',')[0].replace('rpg', '').toLowerCase() as 'quest' | 'dungeon' | 'raid'));
     else if (interaction.customId.split(',')[0] === 'rpgDungeon') await interaction.editReply(await rpgBounties(interaction, interaction.customId.split(',')[0].replace('rpg', '').toLowerCase() as 'quest' | 'dungeon' | 'raid'));
     else if (interaction.customId.split(',')[0] === 'rpgRaid') await interaction.editReply(await rpgBounties(interaction, interaction.customId.split(',')[0].replace('rpg', '').toLowerCase() as 'quest' | 'dungeon' | 'raid'));
-    return;
-  }
-
-  if (buttonID.startsWith('appealAccept')) {
-    await appealAccept(interaction);
-    return;
-  }
-
-  if (buttonID.startsWith('appealReject')) {
-    await appealReject(interaction);
     return;
   }
 

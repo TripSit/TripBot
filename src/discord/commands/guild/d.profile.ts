@@ -3,6 +3,7 @@ import {
   SlashCommandBuilder,
   GuildMember,
   AttachmentBuilder,
+  MessageFlags,
 } from 'discord.js';
 import Canvas from '@napi-rs/canvas';
 import { personas } from '@prisma/client';
@@ -43,16 +44,18 @@ export const dProfile: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('profile')
     .setDescription('Get someone\'s profile!')
+    .setIntegrationTypes([0])
     .addUserOption(option => option
       .setName('target')
       .setDescription('User to lookup'))
     .addBooleanOption(option => option.setName('ephemeral')
-      .setDescription('Set to "True" to show the response only to you')),
+      .setDescription('Set to "True" to show the response only to you')) as SlashCommandBuilder,
   async execute(
     interaction,
   ) {
     log.info(F, await commandContext(interaction));
-    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
+    const ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined;
+    await interaction.deferReply({ flags: ephemeral });
     const startTime = Date.now();
     if (!interaction.guild) {
       await interaction.editReply({ content: 'You can only use this command in a guild!' });
@@ -60,24 +63,34 @@ export const dProfile: SlashCommand = {
     }
 
     // Target is the option given, if none is given, it will be the user who used the command
-    const target = interaction.options.getMember('target')
-      ? interaction.options.getMember('target') as GuildMember
-      : interaction.member as GuildMember;
+    // First try to get as User (works even if not in guild)
+    const targetUser = interaction.options.getUser('target') ?? interaction.user;
+
+    // Then try to get as GuildMember (may be null if not in guild)
+    let target: GuildMember | null = null;
+    try {
+      target = await interaction.guild.members.fetch(targetUser.id);
+    } catch (error) {
+      // User is not in the guild, target will remain null
+      log.debug(F, `User ${targetUser.id} is not in the guild`);
+    }
+
+    // If target is still null (user not in guild), we'll use fallback values below
 
     // log.debug(F, `target.presence?.status: ${target.presence?.status}`);
 
     const values = await Promise.allSettled([
 
       // Get the target's profile data from the database
-      await profile(target.id),
+      await profile(targetUser.id),
       // Check get fresh persona data
-      await getPersonaInfo(target.user.id),
+      await getPersonaInfo(targetUser.id),
       // Load Icon Images
       await Canvas.loadImage(await getAsset('cardIcons')),
       // Get the status icon
       // await Canvas.loadImage(await imageGet(`icon_${target.presence?.status ?? 'offline'}`)),
       // Get the avatar image
-      await Canvas.loadImage(target.displayAvatarURL({ extension: 'jpg' })),
+      await Canvas.loadImage(targetUser.displayAvatarURL({ extension: 'jpg' })),
       // Get the birthday card overlay
       await Canvas.loadImage(await getAsset('cardBirthday')),
       await Canvas.loadImage(await getAsset('teamtripsitIcon')),
@@ -133,9 +146,12 @@ export const dProfile: SlashCommand = {
     };
 
     // Check if user has any roles that have an avatar icon. Put all of them in an array and sort them by hierarchy
-    const avatarIconRolesArray = Object.entries(avatarIconRoles)
-      .filter(([key]) => target.roles.cache.has(key))
-      .sort((a, b) => a[1].hierarchy - b[1].hierarchy);
+    // If target is null (not in guild), this will be an empty array
+    const avatarIconRolesArray = target
+      ? Object.entries(avatarIconRoles)
+        .filter(([key]) => target.roles.cache.has(key))
+        .sort((a, b) => a[1].hierarchy - b[1].hierarchy)
+      : [];
 
     // From the list, assign each one to a slot in numerical order
     if (avatarIconRolesArray.length > 0) {
@@ -166,7 +182,10 @@ export const dProfile: SlashCommand = {
     const context = canvasObj.getContext('2d');
 
     // Generate the colors for the card based on the user's role color
-    const roleColor = `#${(target.roles.color?.color || 0x99aab5).toString(16).padStart(6, '0')}`;
+    // If user is not in guild, use default gray color
+    const roleColor = target
+      ? `#${(target.roles.color?.color || 0x99aab5).toString(16).padStart(6, '0')}`
+      : '#99aab5';
     log.debug(F, `roleColor: ${roleColor}`);
 
     const cardLightColor = generateColors(roleColor, 0, -75, -67);
@@ -322,10 +341,12 @@ export const dProfile: SlashCommand = {
     // context.drawImage(CampIcon, 547, 17);
 
     // Username Text
-    let filteredDisplayName = await deFuckifyText(target.displayName);
+    // Use displayName if user is in guild, otherwise use username
+    const displayNameToUse = target?.displayName ?? targetUser.username;
+    let filteredDisplayName = deFuckifyText(displayNameToUse);
     // If the filteredDisplayName is much shorter than what was input, display their username as a fallback
-    if (filteredDisplayName.length < target.displayName.length / 2) {
-      filteredDisplayName = target.user.username.charAt(0).toUpperCase() + target.user.username.slice(1);
+    if (filteredDisplayName.length < displayNameToUse.length / 2) {
+      filteredDisplayName = targetUser.username.charAt(0).toUpperCase() + targetUser.username.slice(1);
     }
 
     context.fillStyle = textColor;
@@ -613,7 +634,7 @@ export async function getProfilePreview(target: GuildMember, option: string, ima
     userFont = fontName;
   }
   // Username Text
-  let filteredDisplayName = await deFuckifyText(target.displayName);
+  let filteredDisplayName = deFuckifyText(target.displayName);
   // If the filteredDisplayName is much shorter than what was input, display their username as a fallback
   if (filteredDisplayName.length < target.displayName.length / 2) {
     filteredDisplayName = target.user.username.charAt(0).toUpperCase() + target.user.username.slice(1);

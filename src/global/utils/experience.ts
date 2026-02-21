@@ -33,11 +33,22 @@ const announcementEmojis = [
   '🎇',
 ];
 
-export async function expForNextLevel(
-  level:number,
-):Promise<number> {
+export async function expForNextLevel(level: number): Promise<number> {
   // This is a simple formula, making sure it's standardized across the system
   return 5 * (level ** 2) + (50 * level) + 100;
+}
+
+export async function findXPfromLevel(level: number): Promise<number> {
+  let totalXP = 0;
+
+  const xpPromises = [];
+  for (let currentLevel = 1; currentLevel < level; currentLevel += 1) {
+    xpPromises.push(expForNextLevel(currentLevel));
+  }
+  const xpResults = await Promise.all(xpPromises);
+  totalXP = xpResults.reduce((acc, xp) => acc + xp, 0);
+
+  return totalXP;
 }
 
 export async function getTotalLevel(
@@ -61,7 +72,7 @@ export async function getTotalLevel(
   return { level, level_points: levelPoints };
 }
 
-async function giveMilestone(
+export async function giveMilestone(
   member:GuildMember,
 ) {
   const userData = await db.users.upsert({
@@ -185,6 +196,24 @@ async function giveMilestone(
 }
 
 /**
+ * Send milestone announcement for a specific level
+ */
+async function sendMilestoneAnnouncement(
+  member: GuildMember,
+  channelId: string,
+  level: number,
+  categoryName: string,
+  typeName: string,
+): Promise<void> {
+  const guild = await discordClient.guilds.fetch(env.DISCORD_GUILD_ID);
+  const announceChannel = await guild.channels.fetch(channelId) as TextChannel;
+  const emojis = [...announcementEmojis].sort(() => 0.5 - Math.random()).slice(0, 3);
+  await announceChannel.send(
+    `${emojis} **${member} has reached ${categoryName} ${typeName} level ${level}!** ${emojis}`,
+  );
+}
+
+/**
  * This takes a message and gives the user experience
  * @param {Message} message The message object to check
  */
@@ -292,9 +321,7 @@ export async function experience(
         id = env.CHANNEL_BOTSPAM;
       }
       // log.debug(F, `id: ${id}`);
-      const announceChannel = await channel.guild.channels.fetch(id) as TextChannel;
-      const emojis = [...announcementEmojis].sort(() => 0.5 - Math.random()).slice(0, 3); // Sort the array
-      await announceChannel.send(`${emojis} **${member} has reached ${categoryName} ${typeName} level ${experienceData.level}!** ${emojis}`);
+      sendMilestoneAnnouncement(member, id, experienceData.level, categoryName, typeName);
     }
   }
 
@@ -316,4 +343,196 @@ export async function experience(
 
   // Try to give the appropriate role
   await giveMilestone(member);
+}
+
+/**
+ * Calculate how many levels a user will gain with given XP
+ * This pre-calculates everything to avoid async issues
+ */
+async function calculateLevelUps(
+  startLevel: number,
+  totalLevelPoints: number,
+): Promise<{ finalLevel: number; remainingPoints: number; levelsGained: number }> {
+  let currentLevel = startLevel;
+  let remainingPoints = totalLevelPoints;
+  let levelsGained = 0;
+
+  // Pre-calculate level requirements up to a reasonable limit
+  const maxPossibleLevel = Math.min(startLevel + 50, 100); // Limit to prevent infinite loops
+  const levelRequirements: number[] = [];
+
+  for (let level = startLevel; level < maxPossibleLevel; level += 1) {
+    // eslint-disable-next-line no-await-in-loop
+    const requirement = await expForNextLevel(level);
+    levelRequirements.push(requirement);
+  }
+
+  // Now calculate level ups without async calls
+  let requirementIndex = 0;
+  while (
+    requirementIndex < levelRequirements.length
+    && remainingPoints >= levelRequirements[requirementIndex]
+    && currentLevel < 100
+  ) {
+    remainingPoints -= levelRequirements[requirementIndex];
+    currentLevel += 1;
+    levelsGained += 1;
+    requirementIndex += 1;
+  }
+
+  return {
+    finalLevel: currentLevel,
+    remainingPoints,
+    levelsGained,
+  };
+}
+
+/**
+ * Send all notifications for GitHub XP awards
+ */
+async function sendGitHubXPNotifications(
+  member: GuildMember,
+  channel: TextChannel | VoiceChannel,
+  xpAmount: number,
+  startLevel: number,
+  endLevel: number,
+  levelsGained: number,
+  issueType?: string,
+) {
+  const categoryName = 'Developer';
+  const typeName = 'Text';
+
+  // Send to bot log channel
+  const channelTripbotLogs = await channel.guild.channels.fetch(env.CHANNEL_BOTLOG) as TextChannel;
+
+  const issueTypeText = issueType ? ` (${issueType} issue)` : '';
+
+  if (levelsGained === 0) {
+    await channelTripbotLogs.send(
+      `${member.displayName} earned ${xpAmount.toLocaleString()} GitHub XP${issueTypeText}! Still level ${endLevel}.`,
+    );
+  } else if (levelsGained === 1) {
+    await channelTripbotLogs.send(
+      `${member.displayName} earned ${xpAmount.toLocaleString()} GitHub XP${issueTypeText} and leveled up to ${categoryName} ${typeName} level ${endLevel}!`,
+    );
+  } else {
+    await channelTripbotLogs.send(
+      `${member.displayName} earned ${xpAmount.toLocaleString()} GitHub XP${issueTypeText} and gained ${levelsGained} levels! Now ${categoryName} ${typeName} level ${endLevel}!`,
+    );
+  }
+
+  // Check for milestone announcements (every 10 levels)
+  const milestoneLevels: number[] = [];
+
+  for (let level = startLevel + 1; level <= endLevel; level += 1) {
+    if (level % 10 === 0) {
+      milestoneLevels.push(level);
+    }
+  }
+
+  // Create milestone announcement promises
+  const milestonePromises = milestoneLevels.map(level => sendMilestoneAnnouncement(member, channel.id, level, categoryName, typeName));
+
+  // Execute all milestone notifications concurrently
+  if (milestonePromises.length > 0) {
+    await Promise.all(milestonePromises);
+  }
+}
+
+/**
+ * Award XP specifically for GitHub contributions
+ * This is separate from the normal experience system to avoid any conflicts or introduction of bugs
+ * @param member The Discord member to award XP to
+ * @param xpAmount The amount of XP to award
+ * @param channel The channel to use for announcements
+ * @param issueType Optional issue type for logging (easy, medium, hard, epic)
+ */
+export async function awardGitHubXP(
+  member: GuildMember,
+  xpAmount: number,
+  channel: TextChannel,
+  issueType?: string,
+) {
+  const userData = await db.users.upsert({
+    where: {
+      discord_id: member.id,
+    },
+    create: {
+      discord_id: member.id,
+    },
+    update: {},
+  });
+
+  // Get or create developer experience record
+  let experienceData = await db.user_experience.findFirst({
+    where: {
+      user_id: userData.id,
+      category: 'DEVELOPER' as experience_category,
+      type: 'TEXT' as experience_type,
+    },
+  });
+
+  const isNewUser = !experienceData;
+
+  // If user has no developer experience, create it
+  if (!experienceData) {
+    experienceData = await db.user_experience.create({
+      data: {
+        user_id: userData.id,
+        category: 'DEVELOPER' as experience_category,
+        type: 'TEXT' as experience_type,
+        level: 0,
+        level_points: 0,
+        total_points: 0,
+        last_message_at: new Date(),
+        last_message_channel: channel.id,
+      },
+    });
+  }
+
+  // Calculate new totals
+  const newLevelPoints = experienceData.level_points + xpAmount;
+  const newTotalPoints = experienceData.total_points + xpAmount;
+
+  // Calculate level ups
+  const levelUpResult = await calculateLevelUps(
+    experienceData.level,
+    newLevelPoints,
+  );
+
+  // Update the database
+  await db.user_experience.update({
+    where: {
+      id: experienceData.id,
+    },
+    data: {
+      level: levelUpResult.finalLevel,
+      level_points: levelUpResult.remainingPoints,
+      total_points: newTotalPoints,
+      last_message_at: new Date(),
+      last_message_channel: channel.id,
+    },
+  });
+
+  // Send notifications
+  await sendGitHubXPNotifications(
+    member,
+    channel,
+    xpAmount,
+    experienceData.level,
+    levelUpResult.finalLevel,
+    levelUpResult.levelsGained,
+    issueType,
+  );
+
+  // Give milestone role if applicable
+  await giveMilestone(member);
+
+  return {
+    startLevel: experienceData.level,
+    endLevel: levelUpResult.finalLevel,
+    levelsGained: levelUpResult.levelsGained,
+    xpAwarded: xpAmount,
+    isNewUser,
+  };
 }

@@ -37,6 +37,8 @@ import {
 import {
   APIInteractionDataResolvedChannel,
   ChannelType,
+  ComponentType,
+  MessageFlags,
 } from 'discord-api-types/v10';
 import { stripIndents } from 'common-tags';
 import {
@@ -48,13 +50,22 @@ import {
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import commandContext from '../../utils/context';
-import aiChat, { aiModerate } from '../../../global/commands/g.ai';
+import { aiModerate, handleAiMessageQueue } from '../../../global/commands/g.ai';
+import { checkPremiumStatus, formatTimeUntilReset, RateLimiter } from '../../utils/commandRateLimiter';
 
 /* TODO
 * only direct @ message should trigger a response
 * If the user starts typing again, cancel the run and wait for them to either stop typing or send a message
 */
 const F = f(__filename);
+
+// Rate limiter
+const aiRateLimiter = new RateLimiter({
+  defaultLimit: 20, // 20 queries per 24 hours
+  premiumLimit: 350, // Basically unlimited
+  windowMs: 24 * 60 * 60 * 1000, // 24 hours
+  messageInterval: 10, // Show rate limit message every 10 queries (except if premium user)
+});
 
 // const maxHistoryLength = 3;
 
@@ -64,9 +75,9 @@ const tripbotUAT = '@TripBot UAT (Moonbear)';
 
 // Costs per 1k tokens
 const aiCosts = {
-  GPT_3_5_TURBO: {
-    input: 0.0005,
-    output: 0.0015,
+  GPT_3_5_TURBO: { // LAZY TEMP FIX - CHANGE NAME THESE PRICES ARE FOR 4o MINI NOW
+    input: 0.00015,
+    output: 0.00060,
   },
   // GPT_3_5_TURBO_1106: {
   //   input: 0.001,
@@ -228,12 +239,12 @@ function getComponentById(
   // log.debug(F, `getComponentById started with id: ${id}`);
   // log.debug(F, `Components: ${JSON.stringify(interaction.message.components, null, 2)}`);
 
-  if (interaction.message?.components) {
-    // eslint-disable-next-line no-restricted-syntax
-    for (const row of interaction.message.components) {
+  // eslint-disable-next-line no-restricted-syntax
+  for (const row of interaction.message.components) {
+    if (row.type === ComponentType.ActionRow && 'components' in row) {
       // eslint-disable-next-line no-restricted-syntax
       for (const component of row.components) {
-        if (component.customId?.includes(id)) {
+        if ('customId' in component && component.customId?.includes(id)) {
           return component;
         }
       }
@@ -1123,7 +1134,12 @@ async function personasPage(
 
   // If the user is a developer in the home guild, show the buttonAiModify button
   const tripsitGuild = await discordClient.guilds.fetch(env.DISCORD_GUILD_ID);
-  const tripsitMember = await tripsitGuild.members.fetch(interaction.user.id);
+  let tripsitMember = null;
+  try {
+    tripsitMember = await tripsitGuild.members.fetch(interaction.user.id);
+  } catch (err) {
+    // do nothing
+  }
 
   const components = [
     new ActionRowBuilder<ButtonBuilder>()
@@ -1149,7 +1165,7 @@ async function personasPage(
     });
 
     log.debug(F, 'Adding three buttons to personaButtons');
-    if (tripsitMember.roles.cache.has(env.ROLE_DEVELOPER)) {
+    if (tripsitMember && tripsitMember.roles.cache.has(env.ROLE_DEVELOPER)) {
       components.push(
         new ActionRowBuilder<ButtonBuilder>()
           .addComponents(buttonAiNew, buttonAiModify, buttonAiDelete),
@@ -1182,7 +1198,7 @@ async function personasPage(
       );
     }
 
-    if (tripsitMember.roles.cache.has(env.ROLE_DEVELOPER)) {
+    if (tripsitMember && tripsitMember.roles.cache.has(env.ROLE_DEVELOPER)) {
       components.push(
         new ActionRowBuilder<StringSelectMenuBuilder>().addComponents([
           menuAiPublic,
@@ -1196,7 +1212,7 @@ async function personasPage(
     };
   }
 
-  if (tripsitMember.roles.cache.has(env.ROLE_DEVELOPER)) {
+  if (tripsitMember && tripsitMember.roles.cache.has(env.ROLE_DEVELOPER)) {
     log.debug(F, 'Adding buttonAiNew to components');
     components.push(
       new ActionRowBuilder<ButtonBuilder>()
@@ -1712,14 +1728,14 @@ async function agreeToTerms(
     embeds: [embedTemplate()
       .setTitle('🤖 Welcome to TripBot\'s AI Module! 🤖')
       .setDescription(`
-        Please agree to the following. Use \`/ai help\` for more more information.
+        Please agree to the following. Use \`/ai help\` for more information.
 
         ${termsOfService}
       `)
       .setFooter(null)],
     components: [
       new ActionRowBuilder<ButtonBuilder>().addComponents(
-        buttonAiAgree.setCustomId(`AI~messageAgree~${messageData.id}`),
+        buttonAiAgree.setCustomId(`AI~messageAgree~${messageData.author.id}`),
       ),
     ],
   };
@@ -2072,6 +2088,13 @@ export async function aiMessage(
     return;
   }
 
+  if (messageData.channel.type !== ChannelType.GuildText) {
+    log.debug(F, 'Message was not in a text channel, returning');
+    return;
+  }
+
+  const channel = messageData.channel as TextChannel;
+
   // Check if the channel is linked to a persona
   const aiLinkData = await getLinkedChannel(messageData.channel);
   // log.debug(F, `aiLinkData: ${JSON.stringify(aiLinkData, null, 2)}`);
@@ -2091,6 +2114,29 @@ export async function aiMessage(
     await messageData.reply(await agreeToTerms(messageData));
     return;
   }
+
+  // Check if user is a Patreon subscriber
+  const isPatreonSubscriber = checkPremiumStatus(messageData.member, env.PATREON_SUBSCRIBER_ROLE_ID, true);
+
+  // Rate limiting check
+  const rateLimitResult = aiRateLimiter.checkRateLimit(messageData.author.id, isPatreonSubscriber);
+  if (!rateLimitResult.allowed) {
+    const timeUntilReset = formatTimeUntilReset(rateLimitResult.resetTime);
+    const userLimit = isPatreonSubscriber ? 350 : 20;
+
+    log.debug(F, `${messageData.author.displayName} has exceeded daily rate limit`);
+    await messageData.reply(
+      `You've reached your daily limit of ${userLimit} AI queries. `
+      + `Your limit will reset in approximately ${timeUntilReset}. `
+      + 'In the meantime, you can use ChatGPT directly at https://chat.openai.com',
+    );
+    return;
+  }
+
+  log.debug(F, `Rate limit check passed for ${messageData.author.displayName}. Remaining queries: ${rateLimitResult.remaining}`);
+
+  // Check if we should show rate limit message
+  const showRateLimitMessage = aiRateLimiter.shouldShowRateLimitMessage(messageData.author.id, isPatreonSubscriber);
 
   // log.debug(F, `aiLinkData: ${JSON.stringify(aiLinkData, null, 2)}`);
 
@@ -2161,10 +2207,10 @@ export async function aiMessage(
   // log.debug(F, `attachmentInfo: ${JSON.stringify(attachmentInfo, null, 2)}`);
   // log.debug(F, `Sending messages to API: ${JSON.stringify(messageList, null, 2)}`);
 
-  await messageData.channel.sendTyping();
+  await channel.sendTyping();
 
   const typingInterval = setInterval(() => {
-    messageData.channel.sendTyping();
+    channel.sendTyping();
   }, 9000); // Start typing indicator every 9 seconds
   let response = '';
   let promptTokens = 0;
@@ -2174,8 +2220,13 @@ export async function aiMessage(
     clearInterval(typingInterval); // Stop sending typing indicator
   }, 30000); // Failsafe to stop typing indicator after 30 seconds
 
+  let differenceInMs = 0;
   try {
-    const chatResponse = await aiChat(aiPersona, messageList, messageData, attachmentInfo);
+    const startTime = Date.now();
+    const chatResponse = await handleAiMessageQueue(aiPersona, messageList, messageData, attachmentInfo);
+    const endTime = Date.now();
+    differenceInMs = endTime - startTime;
+    log.debug(F, `AI response took ${differenceInMs}ms`);
     response = chatResponse.response;
     promptTokens = chatResponse.promptTokens;
     completionTokens = chatResponse.completionTokens;
@@ -2246,10 +2297,34 @@ export async function aiMessage(
     // const sleepTime = (wordCount / wpm) * 60000;
     // // log.debug(F, `Typing ${wordCount} at ${wpm} wpm will take ${sleepTime / 1000} seconds`);
     // await sleep(sleepTime > 10000 ? 5000 : sleepTime); // Don't wait more than 5 seconds
-    const replyMessage = await messageData.reply({
-      content: response.slice(0, 2000),
-      allowedMentions: { parse: [] },
-    });
+
+    // Handle error case - decrement rate limit count
+    if (response.length === 0) {
+      aiRateLimiter.decrementCount(messageData.author.id);
+      log.debug(F, `Decremented rate limit count for ${messageData.author.displayName} due to empty response error`);
+
+      response = stripIndents`This is unexpected but somehow I don't appear to have anything to say!
+      By the way, this is an error message and something went wrong. Please try again.
+      Time from query to error: ${(differenceInMs / 1000).toFixed(2)} seconds`;
+    }
+
+    // Handle response and rate limit message
+    let replyMessage: Message;
+    if (showRateLimitMessage) {
+      const rateLimitResponse = `You have ${rateLimitResult.remaining} AI queries remaining today.`;
+      const separator = ' \n\n';
+      const maxResponseLength = 2000 - (rateLimitResponse.length + separator.length);
+
+      replyMessage = await messageData.reply({
+        content: `${response.slice(0, maxResponseLength)}${separator}${rateLimitResponse}`,
+        allowedMentions: { parse: [] },
+      });
+    } else {
+      replyMessage = await messageData.reply({
+        content: response.slice(0, 2000),
+        allowedMentions: { parse: [] },
+      });
+    }
 
     // React to that message with thumbs up and thumbs down emojis
     try {
@@ -2397,11 +2472,12 @@ export async function aiButton(
 ):Promise<void> {
   const buttonID = interaction.customId;
   log.debug(F, `buttonID: ${buttonID}`);
-  const [, buttonAction] = buttonID.split('~') as [
+  const [, buttonAction, messageAuthorId] = buttonID.split('~') as [
     null,
     'help' | 'personas' | 'setup' | 'agree' | 'privacy' |
     'link' | 'unlink' | 'messageAgree' | 'modify' | 'new' |
-    'create' | 'delete' | 'deleteConfirm' | 'deleteHistory' | 'deleteHistoryConfirm'];
+    'create' | 'delete' | 'deleteConfirm' | 'deleteHistory' | 'deleteHistoryConfirm',
+    string];
 
   // eslint-disable-next-line sonarjs/no-small-switch
   switch (buttonAction) {
@@ -2427,6 +2503,12 @@ export async function aiButton(
         },
       });
 
+      // const messageData = await interaction.message.fetchReference();
+
+      if (messageAuthorId !== interaction.user.id) {
+        log.debug(F, `${interaction.user.displayName} tried to accept the AI ToS using someone else's instance of the ToS.`);
+        return;
+      }
       await aiMessage(interaction.message);
       break;
     }
@@ -2479,6 +2561,7 @@ export const aiCommand: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('ai')
     .setDescription('TripBot\'s AI')
+    .setIntegrationTypes([0])
     .addSubcommand(subcommand => subcommand
       .setDescription('Setup the TripBot AI')
       .setName('setup'))
@@ -2493,7 +2576,7 @@ export const aiCommand: SlashCommand = {
       .setName('help')),
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
     const subcommand = interaction.options.getSubcommand() as | 'setup' | 'personas' | 'privacy' | 'help';
     switch (subcommand) {
