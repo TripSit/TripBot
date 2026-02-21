@@ -5,45 +5,48 @@ FROM node:lts AS development
 ENV NODE_ENV=development
 RUN apt-get update && apt-get upgrade -y && apt-get install -y openjdk-17-jdk tmux
 WORKDIR /workspaces/tripbot
-
 COPY .devcontainer/.tmux.conf /root/.tmux.conf
-
 COPY package*.json ./
-# We need devDeps to run tsc later
 RUN npm ci --no-audit --silent
 COPY . .
 
 ###################
-# BUILD FOR PRODUCTION
+# BUILD FOR PRODUCTION (The "Kitchen Sink" stage)
 ###################
 FROM node:lts AS build
 WORKDIR /workspaces/tripbot
 
-# Copy everything from development (including node_modules with tsc)
+# 1. Get the files and devDependencies from the first stage
 COPY --from=development /workspaces/tripbot .
 
-# Use npx to ensure we find the local version of tsc
+# 2. Generate Prisma types FIRST so TSC doesn't crash
+RUN npx prisma generate --schema=./src/prisma/schema.prisma
+
+# 3. Compile TypeScript to JavaScript
 RUN npx tsc
 
-# Now prune to production dependencies only
+# 4. Wipe devDependencies and install ONLY production stuff to save space
 RUN rm -rf node_modules && npm ci --omit=dev --no-audit --silent
 
 ###################
-# BUILD FOR PRODUCTION
+# FINAL PRODUCTION (The "Lean" stage that actually runs)
 ###################
-FROM node:lts AS production
+FROM node:lts-alpine AS production
+ENV NODE_ENV=production
 WORKDIR /workspaces/tripbot
 
-# Copy everything from development (including node_modules and your prisma folder)
-COPY --from=development /workspaces/tripbot .
+# Copy ONLY the compiled code and production modules from the build stage
+COPY --from=build /workspaces/tripbot/node_modules ./node_modules
+COPY --from=build /workspaces/tripbot/build ./build
+COPY --from=build /workspaces/tripbot/package*.json ./
+COPY --from=build /workspaces/tripbot/src/prisma/ ./src/prisma/
+COPY ./assets ./build/assets
 
-# --- ADD THIS PART ---
-# Generate the Prisma client so 'tsc' knows what the database types look like
-RUN npx prisma generate --schema=./src/prisma/schema.prisma
-# ---------------------
+# Copy your entrypoint script
+COPY ./src/docker/entrypoint.sh ./entrypoint.sh
+RUN chmod +x ./entrypoint.sh
 
-# Now build the code (it will find the types now!)
-RUN npx tsc
+# Install PM2 in the final image since your entrypoint uses it
+RUN npm install -g pm2
 
-# Prune to production dependencies
-RUN rm -rf node_modules && npm ci --omit=dev --no-audit --silent
+ENTRYPOINT ["./entrypoint.sh"]
