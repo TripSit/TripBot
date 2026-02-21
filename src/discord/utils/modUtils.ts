@@ -50,6 +50,7 @@ import { embedTemplate } from './embedTemplate';
 // import { last } from '../../../global/commands/g.last';
 import { checkGuildPermissions } from './checkPermissions';
 import { last } from '../../global/commands/g.last';
+import { appealAccept, appealReject } from './appeal';
 
 /* TODO:
 add dates to bans
@@ -62,9 +63,18 @@ link accounts to transfer warnings and experience
 const F = f(__filename);
 type UndoAction = 'UN-FULL_BAN' | 'UN-TICKET_BAN' | 'UN-DISCORD_BOT_BAN' | 'UN-BAN_EVASION' | 'UN-UNDERBAN' | 'UN-TIMEOUT' | 'UN-HELPER_BAN' | 'UN-CONTRIBUTOR_BAN';
 
-type ModAction = user_action_type | UndoAction | 'INFO' | 'LINK' | 'ACKN_REPORT';
+type ModAction = user_action_type | UndoAction | 'INFO' | 'LINK' | 'ACKN_REPORT' | 'BAN_APPEAL' | 'APPEAL_ACCEPT' | 'APPEAL_REJECT';
 // type BanAction = 'FULL_BAN' | 'TICKET_BAN' | 'DISCORD_BOT_BAN' | 'BAN_EVASION' | 'UNDERBAN';
 type TargetObject = Snowflake | User | GuildMember;
+
+export interface AppealData {
+  guildId: string;
+  discordId: string;
+  reason: string;
+  solution: string;
+  future: string;
+  extra: string;
+}
 
 const disableButtonTime = env.NODE_ENV !== 'production' ? 1000 * 60 * 1 : 1000 * 60 * 5; // 1 minute in dev, 5 minute in prod
 
@@ -236,6 +246,13 @@ const embedVariables = {
     presentVerb: 'getting info on',
     emoji: 'ℹ️',
   },
+  BAN_APPEAL: {
+    embedColor: Colors.Green,
+    embedTitle: 'Ban Appeal!',
+    pastVerb: 'requested a ban appeal',
+    presentVerb: 'is requesting a ban appeal',
+    emoji: '🔨',
+  },
 };
 
 const warnButtons = new ActionRowBuilder<ButtonBuilder>().addComponents(
@@ -313,6 +330,12 @@ function isNote(command: ModAction): command is 'NOTE' { return command === 'NOT
 // function isLink(command: ModAction): command is 'LINK' { return command === 'LINK'; }
 
 function isInfo(command: ModAction): command is 'INFO' { return command === 'INFO'; }
+
+function isBanAppeal(command: ModAction): command is 'BAN_APPEAL' { return command === 'BAN_APPEAL'; }
+
+function isAcceptBanAppeal(command: ModAction): command is 'APPEAL_ACCEPT' { return command === 'APPEAL_ACCEPT'; }
+
+function isRejectBanAppeal(command: ModAction): command is 'APPEAL_REJECT' { return command === 'APPEAL_REJECT'; }
 
 function isReportAcknowledgement(command: ModAction): command is 'ACKN_REPORT' { return command === 'ACKN_REPORT'; }
 
@@ -394,6 +417,18 @@ export const modButtonUnTimeout = (discordId: string) => new ButtonBuilder()
   .setLabel('Unmute')
   .setEmoji('⏳')
   .setStyle(ButtonStyle.Success);
+
+export const modButtonApproveAppeal = (discordId: string) => new ButtonBuilder()
+  .setCustomId(`moderate~APPEAL_ACCEPT~${discordId}`)
+  .setLabel('Approve')
+  .setEmoji('✅')
+  .setStyle(ButtonStyle.Success);
+
+export const modButtonRejectAppeal = (discordId: string) => new ButtonBuilder()
+  .setCustomId(`moderate~APPEAL_REJECT~${discordId}`)
+  .setLabel('Deny')
+  .setEmoji('❌')
+  .setStyle(ButtonStyle.Secondary);
 
 export async function tripSitTrustScore(
   targetId: string,
@@ -794,13 +829,15 @@ export async function modResponse(
   interaction: ChatInputCommandInteraction
   | MessageContextMenuCommandInteraction
   | UserContextMenuCommandInteraction
-  | ButtonInteraction,
+  | ButtonInteraction
+  | null,
   command: ModAction,
   showModButtons: boolean,
+  appealData? : AppealData | null,
 ):Promise<BaseMessageOptions> {
   const startTime = Date.now();
   const actionRow = new ActionRowBuilder<ButtonBuilder>();
-  if (!interaction.guild || !interaction.member) {
+  if (interaction && (!interaction.guild || !interaction.member)) {
     return {
       embeds: [embedTemplate()
         .setColor(Colors.Red)
@@ -815,10 +852,11 @@ export async function modResponse(
   const { embedColor } = embedVariables[command as keyof typeof embedVariables];
 
   // Get the actor
-  const actor = interaction.member as GuildMember;
+  let actor = null;
 
   // Determine the target
-  if (interaction.isChatInputCommand() || interaction.isButton()) {
+  if (interaction && (interaction.isChatInputCommand() || interaction.isButton())) {
+    actor = interaction.member as GuildMember;
     if (interaction.isButton()) {
       [,, targetString] = interaction.customId.split('~');
     } else {
@@ -867,7 +905,14 @@ export async function modResponse(
 
           let userBan = {} as GuildBan;
           try {
-            userBan = await interaction.guild.bans.fetch(userId);
+            if (appealData) {
+              const guild = await discordClient.guilds.fetch(process.env.DISCORD_GUILD_ID);
+              userBan = await guild.bans.fetch(appealData.discordId);
+            } else if (interaction.guild) {
+              userBan = await interaction.guild.bans.fetch(userId);
+            } else {
+              throw new Error('Interaction is missing a valid guild.');
+            }
           } catch (err: unknown) {
             // log.debug(F, `Error fetching ban: ${err}`);
           }
@@ -907,6 +952,11 @@ export async function modResponse(
             actionRow.addComponents(
               modButtonUnBan(userId),
             );
+          } else if (isBanAppeal(command)) {
+            actionRow.addComponents(
+              modButtonApproveAppeal(userId),
+              modButtonRejectAppeal(userId),
+            );
           }
           return {
             embeds: [modlogEmbed],
@@ -931,12 +981,26 @@ export async function modResponse(
     [target] = targets;
   }
 
-  if (interaction.isUserContextMenuCommand() && (interaction.targetMember || interaction.targetUser)) {
+  if (interaction && (interaction.isUserContextMenuCommand() && (interaction.targetMember || interaction.targetUser))) {
     // log.debug(F, `User context target member: ${interaction.targetMember}`);
     target = interaction.targetMember ? interaction.targetMember as GuildMember : interaction.targetUser as User;
-  } else if (interaction.isMessageContextMenuCommand() && interaction.targetMessage) {
+    actor = interaction.member as GuildMember;
+  } else if (interaction && interaction.isMessageContextMenuCommand() && interaction.targetMessage) {
     // log.debug(F, `Message context target message member: ${interaction.targetMessage.member}`);
     target = interaction.targetMessage.member ? interaction.targetMessage.member as GuildMember : interaction.targetMessage.author as User;
+    actor = interaction.member as GuildMember;
+  }
+
+  if (!interaction && appealData) {
+    target = await discordClient.users.fetch(appealData.discordId);
+  }
+
+  if (!actor && appealData) {
+    actor = await discordClient.users.fetch(appealData.discordId);
+  }
+
+  if (!actor) {
+    throw new Error('Action must be either a ban appeal or a genuine moderation action with a valid actor!');
   }
 
   const targetData = await db.users.upsert({
@@ -951,7 +1015,14 @@ export async function modResponse(
   });
 
   // Get the guild
-  const { guild } = interaction;
+  // For ban appeals there will be no interaction, hence fetching our guild after the || operator.
+  if (!process.env.DISCORD_GUILD_ID) {
+    throw new Error('DISCORD_GUILD_ID environment variable is not set');
+  }
+  const guild = interaction?.guild || await discordClient.guilds.fetch(process.env.DISCORD_GUILD_ID);
+  if (!guild) {
+    throw new Error('Failed to fetch guild');
+  }
   const guildData = await db.discord_guilds.upsert({
     where: {
       id: guild.id,
@@ -963,7 +1034,9 @@ export async function modResponse(
   });
 
   // Determine if the actor is a mod
-  const actorIsMod = (!!guildData.role_moderator && actor.roles.cache.has(guildData.role_moderator));
+  const actorIsMod = actor instanceof GuildMember
+    ? (!!guildData.role_moderator && actor.roles.cache.has(guildData.role_moderator))
+    : false; // Users don't have guild roles
 
   let timeoutTime = null;
   if (target instanceof GuildMember) {
@@ -989,6 +1062,12 @@ export async function modResponse(
         modButtonUnBan(target.id),
         modButtonInfo(target.id),
       );
+    } else if (isBanAppeal(command)) {
+      actionRow.addComponents(
+        modButtonInfo(target.id),
+        modButtonApproveAppeal(target.id),
+        modButtonRejectAppeal(target.id),
+      );
     } else {
       actionRow.addComponents(
         modButtonInfo(target.id),
@@ -1001,9 +1080,10 @@ export async function modResponse(
   }
 
   log.debug(F, '[modResponse1] generating user info');
-  const modlogEmbed = await userInfoEmbed(actor, target, targetData, 'REPORT', showModButtons);
+  const actorForEmbed = actor instanceof GuildMember ? actor : null;
+  const modlogEmbed = await userInfoEmbed(actorForEmbed, target, targetData, 'REPORT', showModButtons);
 
-  if (interaction.isMessageContextMenuCommand() && interaction.targetMessage) {
+  if (interaction && interaction.isMessageContextMenuCommand() && interaction.targetMessage) {
     const messageContent = interaction.targetMessage.content;
     const truncatedContent = messageContent.length > 900
       ? `${messageContent.slice(0, 900)}...`
@@ -1066,11 +1146,12 @@ export async function linkThread(
   return userData.mod_thread_id;
 }
 
-async function messageModThread(
+export async function messageModThread(
   interaction: ChatInputCommandInteraction
   | MessageContextMenuCommandInteraction
   | UserContextMenuCommandInteraction
-  | ButtonInteraction,
+  | ButtonInteraction
+  | null,
   actor: GuildMember,
   target: string | GuildMember | User,
   command: ModAction,
@@ -1078,6 +1159,7 @@ async function messageModThread(
   description: string,
   extraMessage: string,
   duration: string,
+  appealData?: AppealData | null,
 ): Promise<ThreadChannel | null> {
   const actorName = actor.displayName || actor.user.username;
   const startTime = Date.now();
@@ -1090,12 +1172,15 @@ async function messageModThread(
     create: { discord_id: targetId },
     update: { },
   });
+
   log.debug(F, `targetData: ${JSON.stringify(targetData, null, 2)}`);
+
   const guildData = await db.discord_guilds.upsert({
     where: { id: actor.guild.id },
     create: { id: actor.guild.id },
     update: { },
   });
+
   log.debug(F, `guildData: ${JSON.stringify(guildData, null, 2)}`);
 
   if (!guildData.channel_moderators) return null;
@@ -1105,12 +1190,14 @@ async function messageModThread(
   log.debug(F, 'Values are set, continuing');
 
   const { pastVerb, emoji } = embedVariables[command as keyof typeof embedVariables];
-  let summary = `${actor} ${pastVerb} ${target}`;
+  let summary = `${appealData ? targetName : actor.displayName} ${pastVerb} ${appealData ? '' : targetName}`;
   let anonSummary = `${targetName} was ${pastVerb}`;
 
   if (isTimeout(command)) {
     summary = summary.concat(duration);
     anonSummary = anonSummary.concat(duration);
+  } else if (isBanAppeal(command)) {
+    anonSummary = anonSummary.replace('was', 'has');
   }
 
   // log.debug(F, `summary: ${summary}`);
@@ -1130,14 +1217,29 @@ async function messageModThread(
 
   log.debug(F, 'Sending message to mod log');
   const modLogChan = await discordClient.channels.fetch(guildData.channel_mod_log) as TextChannel;
-  await modLogChan.send({
-    content: stripIndents`
-    ${anonSummary}
-    **Reason:** ${internalNote ?? noReason}
-    **Note sent to user:** ${(description !== '' && description !== null) ? description : noMessageSent}
-    `,
-    embeds: [modlogEmbed],
-  });
+  if (!appealData) {
+    await modLogChan.send({
+      content: stripIndents`
+      ${anonSummary}
+      **Reason:** ${internalNote ?? noReason}
+      **Note sent to user:** ${(description !== '' && description !== null) ? description : noMessageSent}
+      `,
+      embeds: [modlogEmbed],
+    });
+  } else {
+    // Send summary as content (without description to avoid 2000 char limit)
+    await modLogChan.send({
+      content: anonSummary,
+      embeds: [modlogEmbed],
+    });
+
+    // Send description as a separate embed message
+    if (description && description.trim() !== '') {
+      await modLogChan.send({
+        embeds: [embedTemplate().setDescription(description)],
+      });
+    }
+  }
 
   if (extraMessage) {
     await modLogChan.send({ content: extraMessage });
@@ -1193,15 +1295,33 @@ async function messageModThread(
     }
     const roleModerator = await guild.roles.fetch(guildData.role_moderator) as Role;
 
-    await modThread.send({
-      content: stripIndents`
+    let modThreadMessage = '';
+    if (!appealData) {
+      modThreadMessage = stripIndents`
       ${summary}
       **Reason:** ${internalNote ?? noReason}
       **Note sent to user:** ${(description !== '' && description !== null) ? description : noMessageSent}
       ${command === 'NOTE' && !newModThread ? '' : roleModerator}
-      `,
-      ...await modResponse(interaction, command, true),
-    });
+      `;
+      await modThread.send({
+        content: modThreadMessage,
+        ...await modResponse(interaction, command, true, appealData),
+      });
+    } else {
+      const modResponseData = await modResponse(interaction, command, true, appealData);
+      const appealEmbed = embedTemplate().setDescription(description.trim());
+
+      await modThread.send({
+        content: stripIndents`
+        ${summary}
+        ${command === 'NOTE' && !newModThread ? '' : roleModerator}`.trim(),
+        embeds: [
+          appealEmbed,
+          ...(modResponseData.embeds || []),
+        ],
+        components: modResponseData.components,
+      });
+    }
 
     await modThread.setName(`${emoji}│${targetName}`);
 
@@ -1484,6 +1604,9 @@ export async function acknowledgeReportButton(
 }
 
 async function wasActionedRecently(actionType: string): Promise<boolean> {
+  if (actionType === 'APPROVE_APPEAL' || actionType === 'DENY_APPEAL') {
+    return false;
+  }
   const oneMinuteAgo = new Date(Date.now() - 300 * 1000);
   const recentAction = await db.user_actions.findFirst({
     where: {
@@ -1750,8 +1873,8 @@ export async function moderate(
       **Do not message a moderator to talk about this or argue about the rules in public channels!**
     `;
 
-    const appealString = '\nYou can send an email to appeals@tripsit.me to appeal this ban! Evasion bans are permanent, and underban bans are permanent until you turn 18.'; // eslint-disable-line max-len
-    const evasionString = '\nEvasion bans are permanent, you can appeal the ban on your main account by sending an email, but evading will extend the ban'; // eslint-disable-line max-len
+    const appealString = '\nYou can appeal this ban at https://tripsit.me/appeal. Evasion bans are permanent, and underban bans are permanent until you turn 18.'; // eslint-disable-line max-len
+    const evasionString = '\nEvasion bans are permanent, you can appeal the ban on your main account by creating an appeal at https://tripsit.me/appeal, but evading will extend the ban'; // eslint-disable-line max-len
 
     // if (guildData.channel_helpdesk) {
     //   // const channel = await discordClient.channels.fetch(guildData.channel_helpdesk);
@@ -2215,6 +2338,8 @@ export async function modModal(
   else if (command === 'UN-DISCORD_BOT_BAN') verb = 'removing bot ban on';
   else if (command === 'UN-BAN_EVASION') verb = 'removing ban evasion on';
   else if (command === 'UN-UNDERBAN') verb = 'removing underban on';
+  else if (command === 'APPEAL_ACCEPT') verb = 'approving the appeal for';
+  else if (command === 'APPEAL_REJECT') verb = 'rejecting the appeal for';
 
   // log.debug(F, `Verb: ${verb}`);
 
@@ -2244,8 +2369,8 @@ export async function modModal(
     .addComponents(new ActionRowBuilder<TextInputBuilder>()
       .addComponents(modalInputComponent));
 
-  // All commands except INFO, NOTE and REPORT can have a public reason sent to the user
-  if (!isNote(command) && !isReport(command)) {
+  // All commands except INFO, NOTE, REPORT, and APPEALS can have a public reason sent to the user
+  if (!isNote(command) && !isReport(command) && !isInfo(command) && !isAcceptBanAppeal(command) && !isRejectBanAppeal(command)) {
     modal.addComponents(new ActionRowBuilder<TextInputBuilder>()
       .addComponents(new TextInputBuilder()
         .setLabel('What should we tell the user?')
@@ -2283,6 +2408,23 @@ export async function modModal(
         .setCustomId('ban_duration')));
   }
 
+  // For appeal actions, always require a message to the user
+  if (command === 'APPEAL_ACCEPT' || command === 'APPEAL_REJECT') {
+    const defaultMessage = command === 'APPEAL_ACCEPT'
+      ? 'Your appeal has been accepted. Welcome back to TripSit!'
+      : 'Your appeal has been reviewed and unfortunately denied at this time.';
+
+    modal.addComponents(new ActionRowBuilder<TextInputBuilder>()
+      .addComponents(new TextInputBuilder()
+        .setLabel('Message to send to the user')
+        .setStyle(TextInputStyle.Paragraph)
+        .setPlaceholder('What should we tell the user about their appeal?')
+        .setValue(defaultMessage)
+        .setMaxLength(1000)
+        .setRequired(true)
+        .setCustomId('appealDescription')));
+  }
+
   // When the modal is opened, disable the button on the embed
 
   const buttonRows = interaction.message.components.map(row => row.toJSON()) as APIActionRowComponent<APIButtonComponentWithCustomId>[];
@@ -2294,7 +2436,7 @@ export async function modModal(
 
       const updatedButton = {
         ...buttonData,
-        disabled: true,
+        disabled: false, // Previously true, turned to false because it's annoying.
       };
 
       row.components.splice(buttonIndex, 1, updatedButton);
@@ -2330,6 +2472,92 @@ export async function modModal(
           await i.editReply({
             embeds: [reportResponseEmbed],
           });
+        }
+
+        if (command === 'APPEAL_ACCEPT' || command === 'APPEAL_REJECT') {
+          const thread = await discordClient.channels.fetch(interaction.message.channelId) as ThreadChannel;
+          const roleModerator = await interaction.guild?.roles.fetch(env.ROLE_MODERATOR) as Role;
+          const accept = command === 'APPEAL_ACCEPT';
+          const [, , targetUserId] = interaction.customId.split('~');
+          const result = accept ? await appealAccept(interaction, i) : await appealReject(interaction, i);
+
+          // Check if the appeal action succeeded
+          const succeeded = result.content?.includes('unbanned') || result.content?.includes('rejected');
+
+          // Only log action and send embeds if the appeal action actually succeeded
+          if (succeeded) {
+            const targetData = await db.users.upsert({
+              where: { discord_id: interaction.user.id },
+              create: { discord_id: interaction.user.id },
+              update: {},
+            });
+
+            const actionData = {
+              user_id: targetData.id,
+              target_discord_id: targetUserId,
+              guild_id: interaction.guild?.id,
+              type: command,
+              ban_evasion_related_user: null as string | null,
+              description: i.fields.getTextInputValue('appealDescription'),
+              internal_note: i.fields.getTextInputValue('internalNote'),
+              expires_at: null as Date | null,
+              repealed_by: null as string | null,
+              repealed_at: null as Date | null,
+              created_by: targetData.id,
+              created_at: new Date(),
+            } as user_actions;
+
+            if (actionData.id) {
+              await db.user_actions.upsert({
+                where: { id: actionData.id },
+                create: actionData,
+                update: actionData,
+              });
+            } else {
+              await db.user_actions.create({ data: actionData });
+            }
+
+            // Send message to thread with embed
+            await thread.send({
+              content: `${roleModerator}`,
+              embeds: [embedTemplate()
+                .setColor(accept ? Colors.Green : Colors.Red)
+                .setDescription(`${interaction.user} has ${accept ? 'accepted' : 'rejected'} this appeal.`)
+                .addFields(
+                  {
+                    name: 'Internal Note',
+                    value: i.fields.getTextInputValue('internalNote'),
+                  },
+                  {
+                    name: 'Reason',
+                    value: i.fields.getTextInputValue('appealDescription'),
+                  },
+                ),
+              ],
+            });
+
+            // Send message to mod-log channel
+            const modLogChannel = await discordClient.channels.fetch(env.CHANNEL_MODLOG) as TextChannel;
+            await modLogChannel.send({
+              embeds: [embedTemplate()
+                .setColor(accept ? Colors.Green : Colors.Red)
+                .setDescription(`${interaction.user} has ${accept ? 'accepted' : 'rejected'} an appeal from <@${userId}>`)
+                .addFields(
+                  {
+                    name: 'Internal Note',
+                    value: i.fields.getTextInputValue('internalNote'),
+                  },
+                  {
+                    name: 'Reason',
+                    value: i.fields.getTextInputValue('appealDescription'),
+                  },
+                ),
+              ],
+            });
+          }
+
+          await i.editReply(result);
+          return;
         }
       } catch (err) {
         log.info(F, `[modModal ModalSubmitInteraction]: ${err}`);
@@ -2425,7 +2653,7 @@ export async function modModal(
           // log.error(F, `Error: ${err}`);
         }
       }
-      if (!isNote(command) && !isReport(command)) {
+      if (!isNote(command) && !isReport(command) && command !== 'APPEAL_ACCEPT' && command !== 'APPEAL_REJECT') {
         await i.editReply(await moderate(interaction, i) as InteractionEditReplyOptions);
       }
     })
