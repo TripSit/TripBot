@@ -1,45 +1,55 @@
 import axios from 'axios';
-import fs from 'fs';
+import fs from 'node:fs';
 import EMSLINES from '../../../assets/data/ems_lines.json';
 import SUICIDELINES from '../../../assets/data/suicide_hotlines.json';
 
-export default ems;
-let lastRefresh : Date;
+let lastRefresh: Date;
 
-export async function ems(search : string):Promise<any[]> {
-  // cache whole dataset
-  const data : any[] = [];
-  if (lastRefresh === undefined || (new Date().getTime() - lastRefresh.getTime()) / (1000 * 3600 * 24) >= 5) {
-    const fetched = await axios.get('https://emergencynumberapi.com/api/data/all').then(response => response.data);
-    for (const country of Object.values(fetched)) {
-      // @ts-ignore
-      for (const line of SUICIDELINES) {
-        // @ts-ignore
-        if (line.Country.toLowerCase() === country.Country.Name.toLowerCase()) {
-          // @ts-ignore
-          country.Suicide = line.Hotline;
-          break;
-        }
-      }
-    }
-    fs.writeFile('assets/data/ems_lines.json', JSON.stringify(fetched), 'utf8', err => { if (err) throw err; });
-    lastRefresh = new Date();
-    log.debug('EMS', 'Refreshed EMS Lines');
-  }
-  const comparators : Set<string> = new Set(search.split(' ')); // tokenize for unique
-  // Search for all countries who's names match the given input. each space is considered as another token
-  for (const country of Object.values(EMSLINES)) {
-    let matches = 0;
-    const names = country.Country.Name.toLowerCase().split(' ');
-    for (const comp of comparators) {
-      if (names.some(name => name.startsWith(comp.toLowerCase()))) {
-        matches++;
-      }
-    }
-    if (matches >= comparators.size / 2) {
-      data.push(country);
-    }
+const F = f(__filename);
+
+export async function ems(search: string): Promise<any[]> {
+  const now = new Date();
+
+  // 1. Handle Cache Refresh (Every 5 days)
+  if (lastRefresh === undefined || (now.getTime() - lastRefresh.getTime()) / (1000 * 3600 * 24) >= 5) {
+    const response = await axios.get('https://emergencynumberapi.com/api/data/all');
+
+    log.debug(F, `EMS API Response: ${response.status} ${response.statusText}`);
+
+    // Transform object values into a new array with suicide lines merged in
+    const updatedData = Object.values(response.data).map((country: any) => {
+      const matchingLine = SUICIDELINES.find(
+        line => line.Country.toLowerCase() === country.Country.Name.toLowerCase(),
+      );
+
+      return {
+        ...country,
+        Suicide: matchingLine?.Hotline ?? country.Suicide,
+      };
+    });
+
+    fs.writeFileSync('assets/data/ems_lines.json', JSON.stringify(updatedData, null, 2), 'utf8');
+    lastRefresh = now;
+    console.debug('EMS: Refreshed EMS Lines');
   }
 
-  return data;
+  // 2. Search Logic (Functional Style)
+
+  // Create unique, non-empty search tokens
+  const comparators = [...new Set(search.toLowerCase().split(' ').filter(t => t.length > 0))];
+
+  if (comparators.length === 0) return [];
+
+  // Filter the dataset based on token match threshold
+  return Object.values(EMSLINES).filter((country: any) => {
+    const countryNameParts: string[] = country.Country.Name.toLowerCase().split(' ');
+
+    // Count how many search tokens match at least one part of the country name
+    const matchCount = comparators.filter(comp => countryNameParts.some(part => part.startsWith(comp))).length;
+
+    // Return true if at least half the tokens match
+    return matchCount >= comparators.length / 2;
+  });
 }
+
+export default ems;
