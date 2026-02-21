@@ -1,0 +1,306 @@
+[
+    {
+        "Country": "United States of America",
+        "Hotline": "988"
+    },
+    {
+        "Country": "Algeria",
+        "Hotline": "00213983200058"
+    },
+    {
+        "Country": "Argentina",
+        "Hotline": "135"
+    },
+    {
+        "Country": "Armenia",
+        "Hotline": "2538194"
+    },
+    {
+        "Country": "Australia",
+        "Hotline": "131114"
+    },
+    {
+        "Country": "Bahamas",
+        "Hotline": "3222763"
+    },
+    {
+        "Country": "Bolivia",
+        "Hotline": "3911270"
+    },
+    {
+        "Country": "Bosnia & Herzegovina",
+        "Hotline": "080050305"
+    },
+    {
+        "Country": "Bulgaria",
+        "Hotline": "0035924917223"
+    },
+    {
+        "Country": "Canada",
+        "Hotline": "18334564566"
+    },
+    {
+        "Country": "China",
+        "Hotline": "8008101117"
+    },
+    {
+        "Country": "Costa Rica",
+        "Hotline": "5062535439"
+    },
+    {
+        "Country": "Cyprus",
+        "Hotline": "80007773"
+    },
+    {
+        "Country": "Denmark",
+        "Hotline": "4570201201"
+    },
+    {
+        "Country": "Dominican Republic",
+        "Hotline": "8095623500"
+    },
+    {
+        "Country": "Egypt",
+        "Hotline": "131114"
+    },
+    {
+        "Country": "El Salvador",
+        "Hotline": "126"
+    },
+    {
+        "Country": "Estonia",
+        "Hotline": "3726558088"
+    },
+    {
+        "Country": "Finland",
+        "Hotline": "010195202"
+    },
+    {
+        "Country": "France",
+        "Hotline": "0145394000"
+    },
+    {
+        "Country": "Germany",
+        "Hotline": "08001110111"
+    },
+    {
+        "Country": "Ghana",
+        "Hotline": "233244471279"
+    },
+    {
+        "Country": "Guatemala",
+        "Hotline": "53925953"
+    },
+    {
+        "Country": "Guyana",
+        "Hotline": "2230001"
+    },
+    {
+        "Country": "Holland",
+        "Hotline": "09000767"
+    },
+    {
+        "Country": "Hong Kong",
+        "Hotline": "85223820000"
+    },
+    {
+        "Country": "Hungary",
+        "Hotline": "116123"
+    },
+    {
+        "Country": "India",
+        "Hotline": "8888817666"
+    },
+    {
+        "Country": "Indonesia",
+        "Hotline": "18002738255"
+    },
+    {
+        "Country": "Iran",
+        "Hotline": "1480"
+    },
+    {
+        "Country": "Ireland",
+        "Hotline": "4408457909090"
+    },
+    {
+        "Country": "Israel",
+        "Hotline": "1201"
+    },
+    {
+        "Country": "Italy",
+        "Hotline": "800860022"
+    },
+    {
+        "Country": "Jamaica",
+        "Hotline": "18884295273"
+    },
+    {
+        "Country": "Japan",
+        "Hotline": "810352869090"
+    },
+    {
+        "Country": "Jordan",
+        "Hotline": "110"
+    },
+    {
+        "Country": "Kenya",
+        "Hotline": "722178177"
+    },
+    {
+        "Country": "Kuwait",
+        "Hotline": "94069304"
+    },
+    {
+        "Country": "Latvia",
+        "Hotline": "37167222922"
+    },
+    {
+        "Country": "Lebanon",
+        "Hotline": "1564"
+    },
+    {
+        "Country": "Liberia",
+        "Hotline": "6534308"
+    },
+    {
+        "Country": "Lithuania",
+        "Hotline": "880028888"
+    },
+    {
+        "Country": "Luxembourg",
+        "Hotline": "352454545"
+    },
+    {
+        "Country": "Malaysia",
+        "Hotline": "062842500"
+    },
+    {
+        "Country": "Malta",
+        "Hotline": "179"
+    },
+    {
+        "Country": "Mauritius",
+        "Hotline": "2308009393"
+    },
+    {
+        "Country": "Mexico",
+        "Hotline": "5255102550"
+    },
+    {
+        "Country": "Netherlands",
+        "Hotline": "9000113"
+    },
+    {
+        "Country": "New Zealand",
+        "Hotline": "1737"
+    },
+    {
+        "Country": "Nigeria",
+        "Hotline": "2348092106493"
+    },
+    {
+        "Country": "Norway",
+        "Hotline": "4781533300"
+    },
+    {
+        "Country": "Peru",
+        "Hotline": "3813695"
+    },
+    {
+        "Country": "Philippines",
+        "Hotline": "028969191"
+    },
+    {
+        "Country": "Poland",
+        "Hotline": "5270000"
+    },
+    {
+        "Country": "Portugal",
+        "Hotline": "218540740"
+    },
+    {
+        "Country": "Romania",
+        "Hotline": "0800801200"
+    },
+    {
+        "Country": "Russia",
+        "Hotline": "0078202577577"
+    },
+    {
+        "Country": "Saint Vincent and the Grenadines",
+        "Hotline": "97844561044"
+    },
+    {
+        "Country": "São Tomé and Príncipe",
+        "Hotline": "2392221222"
+    },
+    {
+        "Country": "Serbia",
+        "Hotline": "381216623393"
+    },
+    {
+        "Country": "Singapore",
+        "Hotline": "18002214444"
+    },
+    {
+        "Country": "Spain",
+        "Hotline": "914590050"
+    },
+    {
+        "Country": "South Africa",
+        "Hotline": "0514445691"
+    },
+    {
+        "Country": "South Korea",
+        "Hotline": "027158600"
+    },
+    {
+        "Country": "Sri Lanka",
+        "Hotline": "0110572222662"
+    },
+    {
+        "Country": "Sudan",
+        "Hotline": "24911555253"
+    },
+    {
+        "Country": "Sweden",
+        "Hotline": "46317112400"
+    },
+    {
+        "Country": "Switzerland",
+        "Hotline": "143"
+    },
+    {
+        "Country": "Thailand",
+        "Hotline": "027136793"
+    },
+    {
+        "Country": "Tonga",
+        "Hotline": "23000"
+    },
+    {
+        "Country": "Trinidad and Tobago",
+        "Hotline": "8686452800"
+    },
+    {
+        "Country": "Uganda",
+        "Hotline": "0800212121"
+    },
+    {
+        "Country": "United Arab Emirates",
+        "Hotline": "80046342"
+    },
+    {
+        "Country": "United Kingdom",
+        "Hotline": "08006895652"
+    },
+    {
+        "Country": "Zambia",
+        "Hotline": "260960264040"
+    },
+    {
+        "Country": "Zimbabwe",
+        "Hotline": "08012333333"
+    }
+]

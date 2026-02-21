@@ -9,5 +9,5 @@ if [ "$NODE_ENV" = "development" ]; then
   tail -f /dev/null
 else
   echo "Running production"
-  pm2-runtime build/src/start.js
+  pm2-runtime /workspaces/tripbot/build/src/start.js
 fi

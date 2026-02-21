@@ -1,78 +1,57 @@
 ###################
 # BUILD FOR LOCAL DEVELOPMENT
 ###################
-# In this step we copy over everything we need and install all dependencies
-# We stop at the end of this step in development, so it also includes the deploy command
-
 FROM node:lts AS development
-
 ENV NODE_ENV=development
-
-# Update the package list and install the necessary dependencies
 RUN apt-get update && apt-get upgrade -y && apt-get install -y openjdk-17-jdk tmux
-
-# Create app directory
 WORKDIR /workspaces/tripbot
-
 COPY .devcontainer/.tmux.conf /root/.tmux.conf
-
-# Copy application dependency manifests to the container image.
-# A wildcard is used to ensure copying both package.json AND package-lock.json (when available).
-# Copying this first prevents re-running npm install on every code change.
 COPY package*.json ./
-
-# Install app dependencies using the `npm ci` command instead of `npm install`
-# Use NPM CI even though this may be your first time, cuz package-lock already thinks you installed stuff
 RUN npm ci --no-audit --silent
-
-# Bundle app source
 COPY . .
-COPY ./assets ./build/assets
 
 ###################
-# BUILD FOR PRODUCTION
+# BUILD FOR PRODUCTION (The "Kitchen Sink" stage)
 ###################
-# This stage prepares for and builds the production .js code
-# We copy over the node_modules directory from the development image to ensure that the production image has access to all the dependencies it needs
-# Then we copy over everything else that may be needed to run
-# We run the build command which creates the production bundle
-# We run npm ci --only=production to ensure that only the production dependencies are installed
-
-FROM node:lts-alpine AS build
-
-ENV NODE_ENV=production
-
+FROM node:lts AS build
 WORKDIR /workspaces/tripbot
 
-# Copy over the existing source code
-COPY --from=development . .
+# 1. Get everything from development
+COPY --from=development /workspaces/tripbot .
 
-# Build the code
-RUN tsc
+# 2. GENERATE FOR TSC: Create types so the compiler doesn't freak out
+RUN npx prisma generate --schema=./src/prisma/tripbot/schema.prisma
+RUN npx prisma generate --schema=./src/prisma/moodle/schema.prisma
 
-# Running `npm ci` removes the existing node_modules directory and passing in --only=production ensures that only the production dependencies are installed. This ensures that the node_modules directory is as optimized as possible
-RUN rm -rf node_modules && npm ci --omit=dev --no-audit --silent && npm cache clean --force
+# 3. COMPILE: Turn your TS into JS
+RUN npx tsc
 
-# At this point we have a build folder and a production node_modules folder
+# 4. PRUNE: Remove devDependencies (this deletes the clients we just made)
+RUN rm -rf node_modules && npm ci --omit=dev --no-audit --silent
+
+# 5. GENERATE FOR RUNTIME: Re-inject the clients into the clean node_modules
+RUN npx prisma generate --schema=./src/prisma/tripbot/schema.prisma
+RUN npx prisma generate --schema=./src/prisma/moodle/schema.prisma
 
 ###################
-# PRODUCTION
+# FINAL PRODUCTION (The "Lean" stage that actually runs)
 ###################
-# This stage creates the final, small-as-can-be, production image
-# We copy over the node_modules directory from the build stage
-# Then we ONLY copy over the /build folder with the js files
-
-# Use the alpine image for the smallest possible image
 FROM node:lts-alpine AS production
-
 ENV NODE_ENV=production
-
 WORKDIR /workspaces/tripbot
 
-# # Copy the bundled code from the build stage to the production image
+# Copy ONLY the compiled code and production modules from the build stage
 COPY --from=build /workspaces/tripbot/node_modules ./node_modules
 COPY --from=build /workspaces/tripbot/build ./build
-  # This needs to be in the SRC folder because that's what package.json says
-COPY ./src/prisma/ ./src/prisma
+COPY --from=build /workspaces/tripbot/package*.json ./
+COPY --from=build /workspaces/tripbot/src/prisma/ ./src/prisma/
 COPY ./assets ./build/assets
-COPY package*.json ./
+
+# Copy your entrypoint script
+COPY ./src/docker/entrypoint.sh /workspaces/tripbot/entrypoint.sh
+RUN chmod +x /workspaces/tripbot/entrypoint.sh
+
+# Install PM2 in the final image since your entrypoint uses it
+RUN npm install -g pm2
+
+ENTRYPOINT ["/workspaces/tripbot/entrypoint.sh"]
