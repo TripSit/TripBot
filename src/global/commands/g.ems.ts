@@ -1,5 +1,6 @@
 import axios from 'axios';
 import fs from 'node:fs';
+import path from 'node:path';
 import EMSLINES from '../../../assets/data/ems_lines.json';
 import SUICIDELINES from '../../../assets/data/suicide_hotlines.json';
 
@@ -28,7 +29,10 @@ export async function ems(search: string): Promise<any[]> {
       };
     });
 
-    fs.writeFileSync('assets/data/ems_lines.json', JSON.stringify(updatedData, null, 2), 'utf8');
+    const dataPath = path.join(__dirname, '../../../../assets/data/ems_lines.json');
+
+    fs.writeFileSync(dataPath, JSON.stringify(updatedData, null, 2), 'utf8');
+
     lastRefresh = now;
     console.debug('EMS: Refreshed EMS Lines');
   }
