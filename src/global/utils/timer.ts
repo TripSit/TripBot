@@ -1179,6 +1179,20 @@ async function checkBirthdays() {
           return;
         }
 
+        if (!user.discord_id) {
+          log.debug(F, `User ${user.id} has no discord_id, skipping birthday message`);
+          return;
+        }
+
+        // Check if user is in the server
+        const guild = await discordClient.guilds.fetch(env.DISCORD_GUILD_ID);
+        const member = await guild.members.fetch(user.discord_id).catch(() => null);
+
+        if (!member) {
+          log.debug(F, `User ${user.discord_id} is not in the server, skipping birthday message`);
+          return;
+        }
+
         // Send message to VIP lounge channel
         const vipLounge = await discordClient.channels.fetch(env.CHANNEL_VIPLOUNGE) as TextChannel;
         await vipLounge.send(`Happy Birthday, <@${user.discord_id}>! 🎉`);
