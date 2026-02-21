@@ -30,7 +30,7 @@ const F = f(__filename);
 //   [key: string]: DateTime;
 // };
 
-const newRecordString = '🎈🎉🎊 New Record 🎊🎉🎈';
+// const newRecordString = '🎈🎉🎊 New Record 🎊🎉🎈';
 
 type RedditItem = {
   title: string,
@@ -648,30 +648,30 @@ async function checkVoice() {
 //   // }, delay);
 // }
 
-async function checkStats() {
-  // log.debug(F, 'Checking stats...');
-  // Determine how many people are in the tripsit guild
-  const tripsitGuild = await global.discordClient.guilds.fetch(env.DISCORD_GUILD_ID);
-  if (!tripsitGuild) return;
-
-  const { memberCount } = tripsitGuild;
-
-  // Total member count
-  // Check if the total members is divisible by 100
-  if (memberCount % 100 === 0) {
-    const embed = embedTemplate()
-      .setTitle(newRecordString)
-      .setDescription(`We have reached ${memberCount} total members!`);
-    const channelLounge = await tripsitGuild.channels.fetch(env.CHANNEL_LOUNGE) as TextChannel;
-    if (channelLounge) {
-      await channelLounge.send({ embeds: [embed] });
-    }
-    const channelTeamtripsit = await tripsitGuild.channels.fetch(env.CHANNEL_TEAMTRIPSIT) as TextChannel;
-    if (channelTeamtripsit) {
-      await channelTeamtripsit.send({ embeds: [embed] });
-    }
-  }
-}
+// async function checkStats() {
+//   // log.debug(F, 'Checking stats...');
+//   // Determine how many people are in the tripsit guild
+//   const tripsitGuild = await global.discordClient.guilds.fetch(env.DISCORD_GUILD_ID);
+//   if (!tripsitGuild) return;
+//
+//   const { memberCount } = tripsitGuild;
+//
+//   // Total member count
+//   // Check if the total members is divisible by 100
+//   if (memberCount % 100 === 0) {
+//     const embed = embedTemplate()
+//       .setTitle(newRecordString)
+//       .setDescription(`We have reached ${memberCount} total members!`);
+//     const channelLounge = await tripsitGuild.channels.fetch(env.CHANNEL_LOUNGE) as TextChannel;
+//     if (channelLounge) {
+//       await channelLounge.send({ embeds: [embed] });
+//     }
+//     const channelTeamtripsit = await tripsitGuild.channels.fetch(env.CHANNEL_TEAMTRIPSIT) as TextChannel;
+//     if (channelTeamtripsit) {
+//       await channelTeamtripsit.send({ embeds: [embed] });
+//     }
+//   }
+// }
 
 // async function checkLpm() { // eslint-disable-line
 //   const channels = [
@@ -925,7 +925,7 @@ async function checkMoodle() { // eslint-disable-line
                     .setTitle(`Congratulations on completing "${course}"!`)
                     .setDescription(stripIndents`
                     Give yourself deserved pack on the back, you deserve it!
-                                 
+
                     But your journey doesn't end here...
 
                     You can now become a TripSit Helper!
@@ -1179,6 +1179,20 @@ async function checkBirthdays() {
           return;
         }
 
+        if (!user.discord_id) {
+          log.debug(F, `User ${user.id} has no discord_id, skipping birthday message`);
+          return;
+        }
+
+        // Check if user is in the server
+        const guild = await discordClient.guilds.fetch(env.DISCORD_GUILD_ID);
+        const member = await guild.members.fetch(user.discord_id).catch(() => null);
+
+        if (!member) {
+          log.debug(F, `User ${user.discord_id} is not in the server, skipping birthday message`);
+          return;
+        }
+
         // Send message to VIP lounge channel
         const vipLounge = await discordClient.channels.fetch(env.CHANNEL_VIPLOUNGE) as TextChannel;
         await vipLounge.send(`Happy Birthday, <@${user.discord_id}>! 🎉`);
@@ -1220,7 +1234,7 @@ async function runTimer() {
   const seconds10 = 1000 * 10;
   const seconds30 = 1000 * 30;
   const seconds60 = 1000 * 60;
-  const minutes5 = 1000 * 60 * 5;
+  // const minutes5 = 1000 * 60 * 5;
   const hours24 = 1000 * 60 * 60 * 24;
   const hours48 = 1000 * 60 * 60 * 48;
 
@@ -1232,7 +1246,7 @@ async function runTimer() {
     { callback: checkRss, interval: env.NODE_ENV === 'production' ? seconds30 : seconds5 },
     { callback: checkVoice, interval: env.NODE_ENV === 'production' ? seconds60 : seconds5 },
     // { callback: changeStatus, interval: env.NODE_ENV === 'production' ? hours24 : seconds5 },
-    { callback: checkStats, interval: env.NODE_ENV === 'production' ? minutes5 : seconds5 },
+    // { callback: checkStats, interval: env.NODE_ENV === 'production' ? minutes5 : seconds5 },
     { callback: checkMoodle, interval: env.NODE_ENV === 'production' ? seconds60 : seconds5 },
     // { callback: checkLpm, interval: env.NODE_ENV === 'production' ? seconds10 : seconds5 },
     { callback: updateDb, interval: env.NODE_ENV === 'production' ? hours24 : hours48 },

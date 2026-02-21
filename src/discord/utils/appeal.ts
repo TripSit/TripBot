@@ -23,20 +23,18 @@ async function updateAppeal(
     return { success: false, message: 'This command can only be used in a guild.' };
   }
 
-  const userData = await db.users.findFirst({
+  // Get or create user by discord_id
+  const userData = await db.users.upsert({
     where: { discord_id: discordId },
+    create: { discord_id: discordId },
+    update: {},
   });
 
-  if (!userData) {
-    return { success: false, message: 'User not found in database.' };
-  }
-
-  // Find the latest appeal first
+  // Find the latest appeal (any status)
   const latestAppeal = await db.appeals.findFirst({
     where: {
       user_id: userData.id,
       guild_id: interaction.guild.id,
-      status: 'RECEIVED',
     },
     orderBy: {
       created_at: 'desc',
@@ -44,8 +42,26 @@ async function updateAppeal(
   });
 
   if (!latestAppeal) {
-    return { success: false, message: 'No pending appeal found for this user.' };
+    return { success: false, message: 'No appeal found for this user.' };
   }
+
+  // Check current status and validate state transitions
+  if (latestAppeal.status === 'ACCEPTED' && appealStatus === 'ACCEPTED') {
+    return { success: false, message: 'This appeal has already been accepted.' };
+  }
+  if (latestAppeal.status === 'ACCEPTED' && appealStatus === 'DENIED') {
+    return {
+      success: false,
+      message: 'This appeal has already been accepted and cannot be changed.',
+    };
+  }
+  if (latestAppeal.status === 'DENIED' && appealStatus === 'DENIED') {
+    return {
+      success: false,
+      message: 'This appeal has already been denied. You can accept it to override the decision.',
+    };
+  }
+  // Allow: RECEIVED → any status, DENIED → ACCEPTED
 
   // Update only that specific appeal
   await db.appeals.update({

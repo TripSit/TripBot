@@ -51,22 +51,18 @@ export default {
     solution: string;
     future: string;
     extra?: string;
-  }): Promise<boolean> {
+  }): Promise<{ success: boolean; error?: string }> {
     try {
-      // First find the user by discord_id to get their UUID
-      const user = await db.users.findFirst({
+      // Get or create user by discord_id to get their UUID
+      const user = await db.users.upsert({
         where: {
           discord_id: data.discord_id,
         },
-        select: {
-          id: true, // Get the UUID
+        create: {
+          discord_id: data.discord_id,
         },
+        update: {},
       });
-
-      if (!user) {
-        log.error(F, `User not found in database for discord_id: ${data.discord_id}`);
-        return false;
-      }
 
       // Get the latest appeal within 30 seconds (dev) or 3 months (prod)
       const cooldownPeriod = process.env.NODE_ENV === 'development'
@@ -87,8 +83,8 @@ export default {
       });
 
       if (latestAppeal) {
-        log.info(F, `User ${data.discord_id} tried to create appeal before 30 day cooldown`);
-        return false;
+        log.info(F, `User ${data.discord_id} tried to create appeal before 90 day cooldown`);
+        return { success: false, error: 'COOLDOWN' };
       }
 
       // Create the new appeal
@@ -105,10 +101,10 @@ export default {
       });
 
       log.info(F, `Appeal created successfully for discord_id ${data.discord_id} (user_id: ${user.id})`);
-      return true;
+      return { success: true };
     } catch (error) {
       log.error(F, `Error creating appeal: ${error}`);
-      return false;
+      return { success: false, error: 'DATABASE_ERROR' };
     }
   },
 

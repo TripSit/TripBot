@@ -51,7 +51,11 @@ router.post('/create', async (req: AuthenticatedRequest, res) => {
     const banStatus = await users.checkBanStatus(req.user.discord_id);
 
     if (!banStatus.banned) {
-      return res.status(403).json({ error: 'You are not currently banned from TripSit' });
+      return res.status(200).json({
+        success: false,
+        error: 'NOT_BANNED',
+        message: 'You are not currently banned from TripSit',
+      });
     }
 
     const appealData = {
@@ -79,40 +83,60 @@ router.post('/create', async (req: AuthenticatedRequest, res) => {
       extra: appealData.extra,
     });
 
-    if (result) {
-      const guild = await discordClient.guilds.fetch(process.env.DISCORD_GUILD_ID);
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      const botMember = await guild.members.fetch(discordClient.user!.id);
-      if (!botMember) throw new Error('Failed to fetch bot user.');
-
-      // Fetch the target user
-      const targetUser = await discordClient.users.fetch(req.user.discord_id);
-      if (!targetUser) throw new Error('Failed to fetch target user.');
-
-      const description = `
-      **Do you know why you were banned?**: ${appealData.reason}
-
-        **Have you taken any steps to rectify the situation or make amends for the behavior that lead to the ban?**: ${appealData.solution}
-
-        **What steps will you take to ensure that you do not repeat the behavior that lead to the ban?**: ${appealData.future}
-
-        **Is there anything else you would like to add?**: ${appealData.extra}
-        `;
-
-      await messageModThread(
-        null,
-        botMember,
-        targetUser,
-        'BAN_APPEAL',
-        '',
-        description,
-        '',
-        '',
-        appealData,
-      );
-      return res.json(result);
+    if (!result.success) {
+      if (result.error === 'COOLDOWN') {
+        const cooldownPeriod = process.env.NODE_ENV === 'development' ? '30 seconds' : '3 months';
+        return res.status(200).json({
+          success: false,
+          error: 'COOLDOWN',
+          message: `You must wait ${cooldownPeriod} between appeal submissions`,
+        });
+      }
+      if (result.error === 'USER_NOT_FOUND') {
+        return res.status(200).json({
+          success: false,
+          error: 'USER_NOT_FOUND',
+          message: 'User not found in database',
+        });
+      }
+      return res.status(200).json({
+        success: false,
+        error: 'DATABASE_ERROR',
+        message: 'Failed to create appeal due to a server error',
+      });
     }
-    return res.status(500).json({ error: 'Failed to create appeal' });
+
+    const guild = await discordClient.guilds.fetch(process.env.DISCORD_GUILD_ID);
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const botMember = await guild.members.fetch(discordClient.user!.id);
+    if (!botMember) throw new Error('Failed to fetch bot user.');
+
+    // Fetch the target user
+    const targetUser = await discordClient.users.fetch(req.user.discord_id);
+    if (!targetUser) throw new Error('Failed to fetch target user.');
+
+    const description = `
+    **Do you know why you were banned?**: ${appealData.reason}
+
+      **Have you taken any steps to rectify the situation or make amends for the behavior that lead to the ban?**: ${appealData.solution}
+
+      **What steps will you take to ensure that you do not repeat the behavior that lead to the ban?**: ${appealData.future}
+
+      **Is there anything else you would like to add?**: ${appealData.extra}
+      `;
+
+    await messageModThread(
+      null,
+      botMember,
+      targetUser,
+      'BAN_APPEAL',
+      '',
+      description,
+      '',
+      '',
+      appealData,
+    );
+    return res.json({ success: true, message: 'Appeal submitted successfully' });
   } catch (error: unknown) {
     log.error(F, `Error in create route: ${error}`);
     return res.status(500).json({ error: error instanceof Error ? error.message : 'Internal server error' });
@@ -130,7 +154,7 @@ router.post('/remind', async (req: AuthenticatedRequest, res) => {
     if (result.success) {
       return res.json({ success: true, message: result.message });
     }
-    return res.status(400).json({ error: result.message });
+    return res.status(200).json({ success: false, error: 'REMIND_FAILED', message: result.message });
   } catch (error) {
     log.error(F, `Error in remind route: ${error}`);
     return res.status(500).json({ error: 'Failed to send reminder' });
@@ -152,11 +176,16 @@ router.get('/', async (req: AuthenticatedRequest, res) => {
     });
 
     if (!user) {
-      return res.status(404).json({ error: 'User not found' });
+      return res.status(200).json({
+        success: false,
+        error: 'USER_NOT_FOUND',
+        message: 'User not found',
+        appeals: [],
+      });
     }
 
     const result = await appeals.getAppeals(user.id);
-    return res.json(result);
+    return res.json({ success: true, appeals: result });
   } catch (error) {
     log.error(F, `Error getting appeals: ${error}`);
     return res.status(500).json({ error: 'Failed to get appeals' });
