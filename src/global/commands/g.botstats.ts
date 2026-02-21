@@ -10,11 +10,9 @@ import {
 import drugDataTripsit from '../../../assets/data/tripsitDB.json';
 import drugDataCombined from '../../../assets/data/combinedDB.json';
 
-export default botStats;
-
-const F = f(__filename);
-
-type BotStats = {
+// Define the comprehensive stats type
+export type BotStats = {
+  // Application Stats
   tsDbSize: number;
   tsPwDbSize: number;
   guildCount: number;
@@ -23,6 +21,17 @@ type BotStats = {
   commandCount: number;
   uptime: number;
   ping: number;
+  
+  // Database Health
+  dbTripbotStatus: 'Online' | 'Offline';
+  dbMoodleStatus: 'Online' | 'Offline';
+  
+  // Node.js Internals
+  nodeHeapUsed: number;
+  nodeHeapTotal: number;
+  activeHandles: number;
+
+  // OS & Hardware Stats
   cpuUsage: number;
   cpuCount: number;
   memUsage: number;
@@ -32,68 +41,75 @@ type BotStats = {
   hostUptime: number;
   driveUsage: number;
   driveTotal: number;
-  swapUsage: number;
-  swapTotal: number;
 };
 
-export async function botStats():Promise<BotStats> {
-  const response = {} as BotStats;
- 
-  // Get drug db stats
-  response.tsDbSize = Object.keys(drugDataTripsit).length;
-  response.tsPwDbSize = Object.keys(drugDataCombined).length;
+export async function botStats(): Promise<BotStats> {
+  // 1. Fire off all async checks in parallel for maximum speed
+  const [
+    cpuUsage, 
+    memStats, 
+    netStats, 
+    driveStats,
+    dbTripbotCheck,
+    dbMoodleCheck
+  ] = await Promise.all([
+    cpu.usage().catch(() => 0),
+    mem.used().catch(() => ({ usedMemMb: 0, totalMemMb: 0 })),
+    netstat.inOut().catch(() => null),
+    drive.info('/').catch(() => ({ usedPercentage: '0', totalGb: '0' })),
+    // Database 'Is it plugged in?' checks
+    db.$queryRaw`SELECT 1`.then(() => 'Online' as const).catch(() => 'Offline' as const),
+    db.$queryRaw`SELECT 1`.then(() => 'Online' as const).catch(() => 'Offline' as const),
+  ]);
 
-  // Get discord stats
+  // 2. Gather Discord Data
+  const guilds = discordClient.guilds.cache;
+  const userCount = guilds.reduce((acc, guild) => acc + (guild.memberCount || 0), 0);
+  
+  // 3. Node.js Process Internals
+  const nodeMem = process.memoryUsage();
+  // Active handles help track resource/connection leaks
+  const activeHandles = (process as any)._getActiveHandles ? (process as any)._getActiveHandles().length : 0;
 
-  await discordClient.guilds.fetch();
-  response.guildCount = discordClient.guilds.cache.size;
+  // 4. Network Parsing (Defensive logic for Docker environments)
+  const net = netStats as NetStatMetrics;
+  const netDown = net?.total?.inputMb ?? 0;
+  const netUp = net?.total?.outputMb ?? 0;
 
-  // Fetching member counts
-  response.userCount = discordClient.guilds.cache.reduce((acc, guild) => {
-    try {
-      return acc + guild.memberCount;
-    } catch (e) {
-      // log.error(F, `Error fetching members for guild: ${guild.name}`);
-      return acc;
-    }
-  }, 0);
+  // 5. Construct and return the result
+  return {
+    // App Data
+    tsDbSize: Object.keys(drugDataTripsit).length,
+    tsPwDbSize: Object.keys(drugDataCombined).length,
+    guildCount: guilds.size,
+    userCount,
+    channelCount: discordClient.channels.cache.size,
+    commandCount: discordClient.commands.size,
+    uptime: global.bootTime ? Date.now() - global.bootTime.getTime() : 0,
+    ping: discordClient.ws.ping,
 
-  response.channelCount = discordClient.channels.cache.size;
-  response.commandCount = discordClient.commands.size;
-  response.uptime = global.bootTime
-    ? (new Date().getTime() - global.bootTime.getTime())
-    : 0;
+    // Health Checks
+    dbTripbotStatus: dbTripbotCheck,
+    dbMoodleStatus: dbMoodleCheck,
 
-  // Get server stats
-  response.ping = discordClient.ws.ping;
+    // Node.js Internals
+    nodeHeapUsed: Math.round(nodeMem.heapUsed / 1024 / 1024),
+    nodeHeapTotal: Math.round(nodeMem.heapTotal / 1024 / 1024),
+    activeHandles,
 
-  response.cpuUsage = Math.round(await cpu.usage() * 100);
-  response.cpuCount = cpu.count();
-
-  const memStats = await mem.used();
-  response.memUsage = Math.round((memStats.usedMemMb / memStats.totalMemMb) * 100);
-  response.memTotal = Math.round(memStats.totalMemMb);
-
-  const netStats = await netstat.inOut() as NetStatMetrics;
-  response.netDown = netStats.total.inputMb;
-  response.netUp = netStats.total.outputMb;
-
-  response.hostUptime = os.uptime();
-
-  const driveStats = await drive.info('/sda');
-  // log.debug(F, `driveStats: ${JSON.stringify(driveStats, null, 2)}`);
-  response.driveUsage = parseInt(driveStats.usedPercentage, 10);
-  response.driveTotal = parseInt(driveStats.totalGb, 10);
-  // log.debug(F, `driveUsage: ${response.driveUsage}`);
-  // log.debug(F, `driveTotal: ${response.driveTotal}`);
-
-  // const swapStats = await drive.info('/sdb');
-  // // log.debug(F, `swapStats: ${JSON.stringify(swapStats, null, 2)}`);
-  // response.swapUsage = parseInt(swapStats.usedPercentage, 10);
-  // response.swapTotal = parseInt(swapStats.totalGb, 10);
-  // // log.debug(F, `swapUsage: ${response.swapUsage}`);
-  // // log.debug(F, `swapTotal: ${response.swapTotal}`);
-
-  // log.debug(F, `response: ${JSON.stringify(response, null, 2)}`);
-  return response;
+    // Hardware Stats
+    cpuUsage: Math.round(Number(cpuUsage)),
+    cpuCount: cpu.count(),
+    memUsage: memStats.totalMemMb > 0 
+      ? Math.round((memStats.usedMemMb / memStats.totalMemMb) * 100) 
+      : 0,
+    memTotal: Math.round(memStats.totalMemMb),
+    netDown,
+    netUp,
+    hostUptime: os.uptime(),
+    driveUsage: parseInt(driveStats.usedPercentage.toString(), 10) || 0,
+    driveTotal: parseInt(driveStats.totalGb.toString(), 10) || 0,
+  };
 }
+
+export default botStats;
