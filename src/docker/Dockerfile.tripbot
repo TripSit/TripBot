@@ -21,6 +21,7 @@ COPY --from=development /workspaces/tripbot .
 
 # 2. Generate Prisma types FIRST so TSC doesn't crash
 RUN npx prisma generate --schema=./src/prisma/tripbot/schema.prisma
+RUN npx prisma generate --schema=./src/prisma/moodle/schema.prisma
 
 # 3. Compile TypeScript to JavaScript
 RUN npx tsc
