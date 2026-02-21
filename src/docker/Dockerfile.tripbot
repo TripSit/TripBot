@@ -16,12 +16,20 @@ COPY . .
 FROM node:lts AS build
 WORKDIR /workspaces/tripbot
 
+# 1. Get everything from development
 COPY --from=development /workspaces/tripbot .
 
+# 2. GENERATE FOR TSC: Create types so the compiler doesn't freak out
+RUN npx prisma generate --schema=./src/prisma/tripbot/schema.prisma
+RUN npx prisma generate --schema=./src/prisma/moodle/schema.prisma
+
+# 3. COMPILE: Turn your TS into JS
 RUN npx tsc
 
+# 4. PRUNE: Remove devDependencies (this deletes the clients we just made)
 RUN rm -rf node_modules && npm ci --omit=dev --no-audit --silent
 
+# 5. GENERATE FOR RUNTIME: Re-inject the clients into the clean node_modules
 RUN npx prisma generate --schema=./src/prisma/tripbot/schema.prisma
 RUN npx prisma generate --schema=./src/prisma/moodle/schema.prisma
 
