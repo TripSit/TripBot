@@ -16,18 +16,14 @@ COPY . .
 FROM node:lts AS build
 WORKDIR /workspaces/tripbot
 
-# 1. Get the files and devDependencies from the first stage
 COPY --from=development /workspaces/tripbot .
 
-# 2. Generate Prisma types FIRST so TSC doesn't crash
-RUN npx prisma generate --schema=./src/prisma/tripbot/schema.prisma
-RUN npx prisma generate --schema=./src/prisma/moodle/schema.prisma
-
-# 3. Compile TypeScript to JavaScript
 RUN npx tsc
 
-# 4. Wipe devDependencies and install ONLY production stuff to save space
 RUN rm -rf node_modules && npm ci --omit=dev --no-audit --silent
+
+RUN npx prisma generate --schema=./src/prisma/tripbot/schema.prisma
+RUN npx prisma generate --schema=./src/prisma/moodle/schema.prisma
 
 ###################
 # FINAL PRODUCTION (The "Lean" stage that actually runs)
