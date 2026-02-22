@@ -4,12 +4,6 @@ import {
 
 import trust from '../utils/trust';
 import { giveMilestone } from '../../global/utils/experience';
-import { fileURLToPath } from 'url';
-import { dirname } from 'path';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const F = f(__filename);
 
