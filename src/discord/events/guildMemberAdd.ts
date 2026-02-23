@@ -4,7 +4,6 @@ import {
 
 import trust from '../utils/trust';
 import { giveMilestone } from '../../global/utils/experience';
-
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const F = f(__filename);
 
