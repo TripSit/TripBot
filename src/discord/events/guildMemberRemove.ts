@@ -17,8 +17,26 @@ export const guildMemberRemove: GuildMemberRemoveEvent = {
     if (member.guild.id !== env.DISCORD_GUILD_ID) return;
     log.info(F, `${member} left guild: ${member.guild.name} (id: ${member.guild.id})`);
 
-    const { joinedTimestamp } = member;
+   // const { joinedTimestamp } = member;
 
+
+   
+    const targetData = await db.users.upsert({
+      where: {
+        discord_id: member.id,
+      },
+      create: {
+        discord_id: member.id,
+        removed_at: new Date(),
+      },
+      update: {
+        removed_at: new Date(),
+      },
+    });
+
+    const joinedTimestamp = member.joinedTimestamp || targetData.joined_at.getTime();
+
+    // log.debug(F, `joinedTimestamp: ${joinedTimestamp}`);
     // log.debug(F, `joinedTimestamp: ${joinedTimestamp}`);
     const embed = embedTemplate()
       .setColor(Colors.Red);
@@ -57,19 +75,7 @@ export const guildMemberRemove: GuildMemberRemoveEvent = {
       embed.setDescription(`${member} (${member.displayName || member.user?.tag}) has left the guild`);
     }
 
-    const targetData = await db.users.upsert({
-      where: {
-        discord_id: member.id,
-      },
-      create: {
-        discord_id: member.id,
-        removed_at: new Date(),
-      },
-      update: {
-        removed_at: new Date(),
-      },
-    });
-
+   
     const guildData = await db.discord_guilds.upsert({
       where: {
         id: member.guild.id,
