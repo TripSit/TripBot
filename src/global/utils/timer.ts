@@ -16,7 +16,7 @@ import axios from 'axios'; // eslint-disable-line
 import { stripIndents } from 'common-tags';
 import {
   experience_category, experience_type, ticket_status, ticket_type,
-} from '@prisma/client';
+} from '@db/tripbot';
 import updateDb from './updateDb';
 import { checkChannelPermissions } from '../../discord/utils/checkPermissions';
 import { embedTemplate } from '../../discord/utils/embedTemplate';

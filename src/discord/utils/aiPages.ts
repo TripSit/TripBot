@@ -42,16 +42,16 @@ export default class AiPage {
   }
 
   static async personas(interaction: AiInteraction): Promise<InteractionEditReplyOptions> {
-    let selectedPersonaId: PersonaId = 'tripbot';
+    let selected: PersonaId = 'tripbot';
 
     if (interaction.customId === AiText.MenuId.PERSONA_INFO) {
       const selectedMenuValue = interaction.values?.[0];
       if (selectedMenuValue && Object.values(['tripbot', 'chill_buddy', 'wise_sage', 'hype_beast', 'sassy_bot']).includes(selectedMenuValue)) {
-        selectedPersonaId = selectedMenuValue as PersonaId;
+        selected = selectedMenuValue as PersonaId;
       }
     }
 
-    const persona = AiFunction.getPersonaById(selectedPersonaId);
+    const persona = AiFunction.getPersonaById(selected);
 
     const replyComponents: AiComponent[] = [];
 
@@ -63,7 +63,7 @@ export default class AiPage {
     );
 
     // Find the selected persona from the AiPersona class
-    const selectedPersona = await AiFunction.getPersonaById(selectedPersonaId);
+    const selectedPersona = await AiFunction.getPersonaById(selected);
 
     if (selectedPersona) {
       const personaInfoContainer = new ContainerBuilder()
@@ -158,7 +158,7 @@ export default class AiPage {
     const aiInfo = userData.ai_info;
     const primaryModel = AiFunction.getModelInfo(aiInfo?.primary_model || 'google/gemini-2.5-flash');
     const secondaryModel = AiFunction.getModelInfo(aiInfo?.secondary_model || 'google/gemini-2.0-flash-exp:free');
-    const persona = AiFunction.getPersonaById((aiInfo?.persona_name as PersonaId) || 'tripbot');
+    const persona = await AiFunction.getPersonaById(aiInfo?.persona_id as PersonaId || 'tripbot');
     const responseSize = aiInfo?.response_size || 500;
     const contextSize = aiInfo?.context_size || 10000;
 

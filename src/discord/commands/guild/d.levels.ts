@@ -7,7 +7,7 @@ import {
   MessageFlags,
 } from 'discord.js';
 import Canvas from '@napi-rs/canvas';
-import { personas } from '@prisma/client';
+import { personas } from '@db/tripbot';
 import { SlashCommand } from '../../@types/commandDef';
 import { levels } from '../../../global/commands/g.levels';
 import { profile, ProfileData } from '../../../global/commands/g.profile';

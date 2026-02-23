@@ -9,7 +9,7 @@ import {
 import { stripIndents } from 'common-tags';
 import {
   experience_category, experience_type, user_experience,
-} from '@prisma/client';
+} from '@db/tripbot';
 
 const F = f(__filename); // eslint-disable-line
 

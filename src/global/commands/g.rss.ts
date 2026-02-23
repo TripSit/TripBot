@@ -1,4 +1,4 @@
-import { rss } from '@prisma/client';
+import { rss } from '@db/tripbot';
 
 const F = f(__filename); // eslint-disable-line
 

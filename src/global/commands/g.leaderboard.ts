@@ -2,7 +2,7 @@
 /* eslint-disable no-restricted-syntax */
 /* eslint-disable no-underscore-dangle */
 /* eslint-disable sonarjs/no-identical-functions */
-import { experience_category, experience_type } from '@prisma/client';
+import { experience_category, experience_type } from '@db/tripbot';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const F = f(__filename);

@@ -19,7 +19,7 @@ import {
   ModalSubmitInteraction,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
-import { ai_moderation } from '@prisma/client';
+import { ai_moderation } from '@db/tripbot';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import commandContext from '../../utils/context';
@@ -406,9 +406,11 @@ export async function aiMessage(messageData: Message<boolean>): Promise<void> {
   }
   log.debug(F, `Using ${model} for this message`);
 
+  log.debug(F, `AI Info: ${JSON.stringify(userData.ai_info, null, 2)}`);
+
   try {
     const startTime = Date.now();
-    const prompt = await AiFunction.createPrompt(messageData, userData.ai_info?.persona_name as PersonaId || 'tripbot');
+    const prompt = await AiFunction.createPrompt(messageData, userData.ai_info?.persona_id as PersonaId || 'tripbot');
     const chatResponse = await OpenRouterClient.chat({
       model,
       max_tokens: userData.ai_info?.response_size || 1000,
@@ -432,10 +434,10 @@ export async function aiMessage(messageData: Message<boolean>): Promise<void> {
 
   const personaData = await db.ai_persona.upsert({
     where: {
-      name: userData.ai_info?.persona_name || 'Tripbot',
+      name: userData.ai_info?.persona_id || 'tripbot',
     },
     create: {
-      name: userData.ai_info?.persona_name || 'Tripbot',
+      name: userData.ai_info?.persona_id || 'tripbot',
     },
     update: {},
   });
@@ -649,9 +651,9 @@ export async function aiMenu(
         data: {
           ai_info: {
             upsert: {
-              update: { persona_name: interaction.values[0] },
+              update: { persona_id: interaction.values[0] },
               create: {
-                persona_name: interaction.values[0],
+                persona_id: interaction.values[0],
               },
             },
           },

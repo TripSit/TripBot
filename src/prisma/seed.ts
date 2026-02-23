@@ -3,7 +3,7 @@
 /* eslint-disable no-restricted-syntax */
 import {
   PrismaClient, drug_roa, drug_variants, users,
-} from '@prisma/client';
+} from '@db/tripbot';
 import argon from 'argon2';
 import { Duration as DurationCalc } from 'luxon';
 import combinedDb from '../../assets/data/combinedDB.json';

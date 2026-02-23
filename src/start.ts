@@ -13,7 +13,7 @@ import {
 } from 'discord.js';
 import * as path from 'path';
 import Canvas from '@napi-rs/canvas';
-import { PrismaClient } from '@prisma/client';
+import db from './prisma/tripbot/client';
 import { env } from './global/utils/env.config';
 import { log } from './global/utils/log';
 import validateEnv from './global/utils/env.validate'; // eslint-disable-line
@@ -46,7 +46,7 @@ async function start() {
   log.info(F, 'Initializing service!');
   if (validateEnv('SERVICES')) {
     api();
-    global.db = new PrismaClient({ log: ['error'] });
+    global.db = db;
     await updateDb();
     if (env.DISCORD_CLIENT_TOKEN && validateEnv('DISCORD')) await discordConnect();
     // if (env.MATRIX_ACCESS_TOKEN && validateEnv( 'MATRIX') && env.NODE_ENV !== 'production') await startMatrix();

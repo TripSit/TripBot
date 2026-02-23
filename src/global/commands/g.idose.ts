@@ -1,4 +1,4 @@
-import { $Enums, drug_mass_unit, drug_roa } from '@prisma/client';
+import { $Enums, drug_mass_unit, drug_roa } from '@db/tripbot';
 import {
   time,
 } from 'discord.js';

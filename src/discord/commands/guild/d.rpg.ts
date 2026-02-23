@@ -33,7 +33,7 @@ import {
   TextInputStyle,
 } from 'discord-api-types/v10';
 import { stripIndents } from 'common-tags';
-import { rpg_inventory } from '@prisma/client';
+import { rpg_inventory } from '@db/tripbot';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import commandContext from '../../utils/context';

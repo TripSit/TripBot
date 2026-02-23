@@ -1,12 +1,12 @@
 generator client {
   provider      = "prisma-client-js"
   // output          = "/usr/src/app/node_modules/@prisma-tripbot/client"
+  output          = "./generated"
   binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
 }
 
 datasource db {
   provider = "postgresql"
-  url      = env("PRISMA_DB_URL")
 }
 
 model users {
@@ -645,7 +645,7 @@ model ai_info {
   user_summary     String    @default("I am a member of the TripSit discord.")
   primary_model    String    @default("google/gemini-2.5-flash")
   secondary_model  String    @default("google/gemini-2.0-flash-exp:free")
-  persona_name     String    @default("Tripbot")
+  persona_id       String    @default("tripbot")
   context_size     Int       @default(10000)
   response_size    Int       @default(500)
 

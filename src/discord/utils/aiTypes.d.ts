@@ -8,6 +8,7 @@ export type AiInteraction =
   | ChatInputCommandInteraction
   | ButtonInteraction;
 
+export type PersonaName = 'TripBot' | 'Chill Buddy' | 'Wise Sage' | 'Hype Beast' | 'Sassy Bot';
 export type PersonaId = 'tripbot' | 'chill_buddy' | 'wise_sage' | 'hype_beast' | 'sassy_bot';
 
 export type FormalityLevel = 'very_formal' | 'formal' | 'neutral' | 'casual' | 'very_casual';
@@ -52,7 +53,7 @@ export type PersonalityConfig = {
 
 export type PersonaSpec = {
   id: PersonaId;
-  name: string;
+  name: PersonaName;
   description: string;
   emoji: string;
   config: PersonalityConfig;

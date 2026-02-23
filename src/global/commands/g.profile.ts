@@ -1,4 +1,4 @@
-import { personas } from '@prisma/client';
+import { personas } from '@db/tripbot';
 
 export default profile;
 

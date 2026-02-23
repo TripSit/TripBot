@@ -17,7 +17,9 @@ import { stripIndents } from 'common-tags';
 import { LanguageModelV2Prompt, OpenRouterUsageAccounting } from '@openrouter/ai-sdk-provider';
 import AiText from './aiTexts';
 import AiMenu from './aiMenus';
-import { AiInteraction, PersonaId, PersonaSpec } from './aiTypes';
+import {
+  AiInteraction, PersonaName, PersonaSpec, PersonaId,
+} from './aiTypes';
 import { getDrugInfo } from '../commands/global/d.drug';
 import AiPersona from './aiPersonas';
 
@@ -50,11 +52,14 @@ export default class AiFunction {
     return null;
   }
 
-  static async getPersonaByName(personaName: PersonaId): Promise<PersonaSpec | undefined> {
+  static async getPersonaByName(personaName: PersonaName): Promise<PersonaSpec | undefined> {
     return AiPersona[personaName as keyof typeof AiPersona] as PersonaSpec;
   }
 
   static getPersonaById(personaId: PersonaId): PersonaSpec | undefined {
+    log.debug(F, `Looking up persona by ID: ${personaId}`);
+
+    log.debug(F, `Properties: ${Object.getOwnPropertyNames(AiPersona)}`);
     return Object.getOwnPropertyNames(AiPersona)
       .map(key => (AiPersona as any)[key])
       .find(value => value && typeof value === 'object' && value.id === personaId) as PersonaSpec | undefined;
@@ -81,7 +86,7 @@ export default class AiFunction {
       include: { ai_info: true },
     });
 
-    const personaName = userRecord?.ai_info?.persona_name || 'Tripbot';
+    const personaName = userRecord?.ai_info?.persona_id || 'tripbot';
     const aiInfoId = userRecord?.ai_info?.id || null;
 
     let rollingUsd = 0;
@@ -212,7 +217,7 @@ export default class AiFunction {
     return pages;
   }
 
-  static async createPrompt(message: Message, personaName: PersonaId): Promise<LanguageModelV2Prompt> {
+  static async createPrompt(message: Message, personaId: PersonaId): Promise<LanguageModelV2Prompt> {
     const messageList:LanguageModelV2Prompt = [];
 
     const botNickname = message.guild?.members.me?.nickname || '';
@@ -240,9 +245,9 @@ export default class AiFunction {
       content: AiText.objectiveTruths,
     });
 
-    const selectedPersona = AiFunction.getPersonaById(personaName);
+    const selectedPersona = await AiFunction.getPersonaById(personaId);
     if (!selectedPersona) {
-      throw new Error(`Persona ${personaName} not found`);
+      throw new Error(`Persona ${personaId} not found`);
     }
     messageList.push({
       role: 'system',
