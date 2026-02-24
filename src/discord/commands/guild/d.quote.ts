@@ -8,7 +8,7 @@ import {
   TextChannel,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
-import { Prisma } from '@prisma/client';
+import { Prisma } from '@db/tripbot';
 
 import { SlashCommand } from '../../@types/commandDef';
 import commandContext from '../../utils/context';

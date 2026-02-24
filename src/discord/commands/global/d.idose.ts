@@ -9,7 +9,7 @@ import {
   ChannelType,
   MessageFlags,
 } from 'discord-api-types/v10';
-import { drug_mass_unit, drug_roa } from '@prisma/client';
+import { drug_mass_unit, drug_roa } from '@db/tripbot';
 import { idose } from '../../../global/commands/g.idose';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';

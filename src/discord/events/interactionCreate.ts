@@ -15,57 +15,24 @@ import { selectMenu } from './selectMenu';
 import { autocomplete } from './autocomplete';
 // import { Users } from '../../global/@types/database';
 import { botBannedUsers } from '../utils/populateBotBans';
+import modalSubmit from './modalSubmit';
 
 const F = f(__filename);  // eslint-disable-line
 
 export const interactionCreate: InteractionCreateEvent = {
   name: 'interactionCreate',
   async execute(interaction) {
-    // const startTime = new Date().getTime();
-    // log.info(F, `interactionCreate event started at ${startTime}`);
-
     // Don't run anything if the interaction is from a bot
     if (interaction.user.bot) return;
 
     // See if the user exists in botBannedUsers
     // log.debug(F, `botBannedUsers: ${JSON.stringify(botBannedUsers, null, 2)}`);
     if (botBannedUsers.includes(interaction.user.id)) {
-      // log.info(F, `Got user ban status in ${new Date().getTime() - startTime}ms`);
       if (interaction.isRepliable()) {
         await interaction.reply({ content: '*beeps sadly*', flags: MessageFlags.Ephemeral });
       }
       return;
     }
-    // log.info(F, `Got user ban status in ${new Date().getTime() - startTime}ms`);
-
-    // if (await db<Users>('users')
-    //   .select(db.ref('id').as('id'))
-    //   .where('discord_id', interaction.user.id)
-    //   .andWhere('discord_bot_ban', true)
-    //   .first()) {
-    //   if (interaction.isRepliable()) {
-    //     await interaction.reply({ content: '*beeps sadly*' });
-    //   }
-    //   return;
-    // }
-    // log.info(F, `Got user ban status in ${new Date().getTime() - startTime}ms`);
-
-    // const newStartTime = new Date().getTime();
-    // const userData = await getUser(interaction.user.id, null);
-    // if (userData && userData.discord_bot_ban) {
-    //   if (interaction.isRepliable()) {
-    //     await interaction.reply({ content: '*beeps sadly*' });
-    //   }
-    //   return;
-    // }
-    // log.debug(F, `(Legacy) Got user ban status in ${new Date().getTime() - newStartTime}ms`);
-
-    // Determine how long it took to get the banned status from the start time
-    // log.debug(F, `interaction: ${JSON.stringify(interaction, null, 2)}`);
-    // log.debug(F, `interaction: ${JSON.stringify(interaction)}`);
-    // log.debug(F, `interaction: ${interaction}`);
-    // log.debug(F, `typeof interaction: ${typeof interaction}`);
-    // log.debug(F, `interaction.type: ${interaction.type}`);
 
     if (interaction.isChatInputCommand()) {
       // Slash command
@@ -138,6 +105,10 @@ export const interactionCreate: InteractionCreateEvent = {
         buttonClick(interaction, discordClient);
       }
       // log.debug(F, `Unknown interaction!`);
+    }
+
+    if (interaction.type === InteractionType.ModalSubmit) {
+      modalSubmit(interaction);
     }
   },
 };

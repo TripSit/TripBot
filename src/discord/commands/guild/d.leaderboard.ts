@@ -8,7 +8,7 @@ import {
   AttachmentBuilder,
   MessageFlags,
 } from 'discord.js';
-import { experience_category, experience_type } from '@prisma/client';
+import { experience_category, experience_type } from '@db/tripbot';
 import Canvas from '@napi-rs/canvas';
 import { SlashCommand } from '../../@types/commandDef';
 import commandContext from '../../utils/context';

@@ -41,7 +41,7 @@ import {
   MessageFlags,
 } from 'discord-api-types/v10';
 import { stripIndents } from 'common-tags';
-import { user_action_type, user_actions, users } from '@prisma/client';
+import { user_action_type, user_actions, users } from '@db/tripbot';
 import moment from 'moment';
 import { parseDuration, validateDurationInput } from '../../global/utils/parseDuration';
 import { getDiscordMember } from './guildMemberLookup';
