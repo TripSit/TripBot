@@ -54,11 +54,8 @@ export async function aiFlairMod(
   let completionTokens = 0;
   if (!env.OPENAI_API_ORG || !env.OPENAI_API_KEY) return { response, promptTokens, completionTokens };
 
-  let model = 'GPT_3_5_TURBO'.toLowerCase();
-  // Convert ai models into proper names
-  if (model === 'GPT_3_5_TURBO') {
-    model = 'gpt-4.1-mini'; // LAZY TEMP FIX
-  }
+  const model = 'gpt-4.1-mini'.toLowerCase();
+
   // This message list is sent to the API
   const chatCompletionMessages = [{
     role: 'system',
