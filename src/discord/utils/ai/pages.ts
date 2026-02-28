@@ -1,26 +1,27 @@
+import { stripIndents } from 'common-tags';
 import {
   ActionRowBuilder,
   ButtonBuilder,
-  InteractionEditReplyOptions,
-  ChannelSelectMenuBuilder,
-  TextDisplayBuilder,
-  MessageFlags,
-  StringSelectMenuBuilder,
-  ContainerBuilder,
-  time,
   ButtonStyle,
+  ChannelSelectMenuBuilder,
+  ChannelSelectMenuInteraction,
+  ContainerBuilder,
+  InteractionEditReplyOptions,
+  MessageFlags,
+  ModalSubmitInteraction,
+  StringSelectMenuBuilder,
+  TextDisplayBuilder,
+  time,
 } from 'discord.js';
-import { stripIndents } from 'common-tags';
 
-import AiButton from './aiButtons';
-import AiFunction from './aiFunctions';
-import AiMenu from './aiMenus';
-import AiText from './aiTexts';
-import {
-  AiComponent, AiInteraction, PersonaId,
-} from './aiTypes';
+import { AiButton } from './buttons';
+import { AiFunction } from './functions';
+import { AiMenu } from './menus';
+import type { PersonaId } from './personas';
+import { AiText } from './texts';
+import { AiComponent, AiInteraction } from './types';
 
-export default class AiPage {
+export class AiPage {
   static async info(
     interaction: AiInteraction,
   ): Promise<InteractionEditReplyOptions> {
@@ -41,10 +42,10 @@ export default class AiPage {
     };
   }
 
-  static async personas(interaction: AiInteraction): Promise<InteractionEditReplyOptions> {
+  static async personas(interaction: AiInteraction | ChannelSelectMenuInteraction): Promise<InteractionEditReplyOptions> {
     let selected: PersonaId = 'tripbot';
 
-    if (interaction.customId === AiText.MenuId.PERSONA_INFO) {
+    if (interaction.isStringSelectMenu() && interaction.customId === AiText.MenuId.PERSONA_INFO) {
       const selectedMenuValue = interaction.values?.[0];
       if (selectedMenuValue && Object.values(['tripbot', 'chill_buddy', 'wise_sage', 'hype_beast', 'sassy_bot']).includes(selectedMenuValue)) {
         selected = selectedMenuValue as PersonaId;
@@ -104,7 +105,7 @@ export default class AiPage {
   }
 
   static async guildSettings(
-    interaction: AiInteraction,
+    interaction: AiInteraction | ChannelSelectMenuInteraction,
   ): Promise<InteractionEditReplyOptions> {
     if (!interaction.guild) return { content: AiText.aiServerError };
 
@@ -144,7 +145,7 @@ export default class AiPage {
   }
 
   static async userSettings(
-    interaction: AiInteraction,
+    interaction: AiInteraction | ModalSubmitInteraction,
   ): Promise<InteractionEditReplyOptions> {
     // Fetch user data
     const userData = await db.users.upsert({
@@ -217,11 +218,9 @@ export default class AiPage {
 
     const tokenRow = new ActionRowBuilder<ButtonBuilder>()
       .addComponents(
-        AiButton.responseSize
-          .setLabel(`📝 Response: ${responseSize} tokens`)
+        AiButton.responseSize(responseSize)
           .setStyle(ButtonStyle.Secondary),
-        AiButton.contextSize
-          .setLabel(`💭 Context: ${contextSize.toLocaleString()} tokens`)
+        AiButton.contextSize(contextSize)
           .setStyle(ButtonStyle.Secondary),
       );
 
@@ -335,3 +334,5 @@ export default class AiPage {
     };
   }
 }
+
+export default AiPage;

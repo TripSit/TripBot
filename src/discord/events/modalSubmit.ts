@@ -1,8 +1,8 @@
 import {
   ModalSubmitInteraction,
 } from 'discord.js';
-import AiModal from '../utils/aiModals';
 import { aiModal } from '../commands/global/d.ai';
+import { AiModal } from '../utils/ai/modals';
 
 const F = f(__filename); // eslint-disable-line @typescript-eslint/no-unused-vars
 

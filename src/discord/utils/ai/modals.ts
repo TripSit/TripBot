@@ -1,8 +1,10 @@
 import {
-  ActionRowBuilder, TextInputStyle, ModalBuilder, TextInputBuilder,
+  ActionRowBuilder,
+  ModalBuilder, TextInputBuilder,
+  TextInputStyle,
 } from 'discord.js';
 
-export default class AiModal {
+export class AiModal {
   static readonly ID = {
     CONTEXT_SIZE: 'AI~contextSizeModal',
     RESPONSE_SIZE: 'AI~responseSizeModal',
@@ -40,3 +42,5 @@ export default class AiModal {
       ),
     );
 }
+
+export default AiModal;

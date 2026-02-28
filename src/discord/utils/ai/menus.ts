@@ -1,11 +1,11 @@
 import {
   ChannelSelectMenuBuilder, ChannelType, StringSelectMenuBuilder,
 } from 'discord.js';
-import AiPersona from './aiPersonas';
-import { PersonaSpec } from './aiTypes';
-import AiText from './aiTexts';
+import { AiPersona } from './personas';
+import { AiText } from './texts';
+import { PersonaSpec } from './types';
 
-export default class AiMenu {
+export class AiMenu {
   static readonly guildChannels = new ChannelSelectMenuBuilder()
     .setCustomId(AiText.MenuId.GUILD_CHANNELS)
     .setPlaceholder('Select channels that will allow AI responses')
@@ -91,3 +91,5 @@ export default class AiMenu {
       );
   }
 }
+
+export default AiMenu;

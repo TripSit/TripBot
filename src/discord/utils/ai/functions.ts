@@ -1,3 +1,5 @@
+import { LanguageModelV2Prompt, OpenRouterUsageAccounting } from '@openrouter/ai-sdk-provider';
+import { stripIndents } from 'common-tags';
 import {
   ActionRowBuilder,
   ButtonInteraction,
@@ -7,25 +9,26 @@ import {
   Message,
   MessageActionRowComponent,
   MessageFlags,
+  ModalSubmitInteraction,
+  StringSelectMenuBuilder,
   StringSelectMenuInteraction,
   TextChannel,
   TextDisplayBuilder,
-  StringSelectMenuBuilder,
   User,
 } from 'discord.js';
-import { stripIndents } from 'common-tags';
-import { LanguageModelV2Prompt, OpenRouterUsageAccounting } from '@openrouter/ai-sdk-provider';
-import AiText from './aiTexts';
-import AiMenu from './aiMenus';
+import { getDrugInfo } from '../../commands/global/d.drug';
+import { AiMenu } from './menus';
+import { AiPersona, PersonaId } from './personas';
+import { AiText } from './texts';
 import {
-  AiInteraction, PersonaName, PersonaSpec, PersonaId,
-} from './aiTypes';
-import { getDrugInfo } from '../commands/global/d.drug';
-import AiPersona from './aiPersonas';
+  AiInteraction,
+  PersonaName,
+  PersonaSpec,
+} from './types';
 
 const F = f(__filename);
 
-export default class AiFunction {
+export class AiFunction {
   static getComponentById(
     interaction: ButtonInteraction | StringSelectMenuInteraction | ChannelSelectMenuInteraction,
     id: string,
@@ -158,7 +161,7 @@ export default class AiFunction {
   }
 
   static async pageMenu(
-    interaction: AiInteraction,
+    interaction: AiInteraction | ChannelSelectMenuInteraction | ModalSubmitInteraction,
   ):Promise<ActionRowBuilder<StringSelectMenuBuilder>> {
     const pages = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(AiMenu.pageSelect());
 
@@ -167,8 +170,6 @@ export default class AiFunction {
       buttonId = interaction.customId as keyof typeof AiText.ButtonId;
     } else if (interaction.isChatInputCommand()) {
       buttonId = interaction.options.getSubcommand() as keyof typeof AiText.AiSubcommand;
-    } else if (interaction.isChannelSelectMenu()) {
-      buttonId = interaction.customId as keyof typeof AiText.MenuId;
     } else if (interaction.isStringSelectMenu()) {
       buttonId = interaction.customId as keyof typeof AiText.MenuId;
     } else {
@@ -202,7 +203,7 @@ export default class AiFunction {
         pages.components[0].setPlaceholder('Terms of Service');
         break;
       case AiText.MenuId.PAGE_SELECT: {
-        const pageData = Object.values(AiText.Page).find(page => page.value === interaction.values[0]);
+        const pageData = Object.values(AiText.Page).find(page => page.value === (interaction as StringSelectMenuInteraction).values[0]);
         if (pageData) {
           pages.components[0].setPlaceholder(
             `${pageData.emoji} ${pageData.label}`,
@@ -531,3 +532,5 @@ export default class AiFunction {
     };
   }
 }
+
+export default AiFunction;

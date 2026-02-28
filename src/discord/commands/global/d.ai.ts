@@ -1,39 +1,41 @@
+import { ai_moderation } from '@db/tripbot';
+import { stripIndents } from 'common-tags';
 import {
   ActionRowBuilder,
-  Colors,
-  SlashCommandBuilder,
-  GuildMember,
-  Message,
-  TextChannel,
   ButtonBuilder,
-  ButtonStyle,
   ButtonInteraction,
-  EmbedBuilder,
-  InteractionEditReplyOptions,
+  ButtonStyle,
   ChannelSelectMenuInteraction,
-  StringSelectMenuInteraction,
-  MessageReaction,
-  User,
   ChannelType,
+  Colors,
+  EmbedBuilder,
+  GuildMember,
+  InteractionEditReplyOptions,
+  Message,
   MessageFlags,
+  MessageReaction,
   ModalSubmitInteraction,
+  SlashCommandBuilder,
+  StringSelectMenuInteraction,
+  TextChannel,
+  User,
 } from 'discord.js';
-import { stripIndents } from 'common-tags';
-import { ai_moderation } from '@db/tripbot';
-import { SlashCommand } from '../../@types/commandDef';
-import { embedTemplate } from '../../utils/embedTemplate';
-import commandContext from '../../utils/context';
 import { aiModerate } from '../../../global/commands/g.ai';
+import { SlashCommand } from '../../@types/commandDef';
 import {
   checkPremiumStatus,
 } from '../../utils/commandRateLimiter';
+import commandContext from '../../utils/context';
+import { embedTemplate } from '../../utils/embedTemplate';
 
-import AiText from '../../utils/aiTexts';
-import AiFunction from '../../utils/aiFunctions';
-import AiModal from '../../utils/aiModals';
-import AiPage from '../../utils/aiPages';
+import {
+  AiFunction,
+  AiModal,
+  AiPage,
+  AiText,
+  PersonaId,
+} from '../../utils/ai';
 import { OpenRouterClient } from '../../utils/aiClients/openrouter.client';
-import { PersonaId } from '../../utils/aiTypes';
 
 const F = f(__filename);
 
@@ -640,11 +642,11 @@ export async function aiMenu(
       // Then return the guild setup page
 
       return AiPage.guildSettings(
-        interaction as ChannelSelectMenuInteraction,
+        interaction,
       );
     }
     case AiText.MenuId.PERSONA_INFO:
-      return AiPage.personas(interaction as StringSelectMenuInteraction);
+      return AiPage.personas(interaction);
     case AiText.MenuId.PERSONA_SELECT: {
       await db.users.update({
         where: { discord_id: interaction.user.id },

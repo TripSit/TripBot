@@ -1,4 +1,4 @@
-import { WeatherData } from '../aiTypes';
+import { WeatherData } from '../ai/types';
 
 export default class WeatherClient {
   private readonly apiKey: string;

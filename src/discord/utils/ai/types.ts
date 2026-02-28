@@ -1,5 +1,20 @@
+import {
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonInteraction,
+  ChannelSelectMenuBuilder,
+  ChatInputCommandInteraction,
+  ContainerBuilder,
+  StringSelectMenuBuilder,
+  StringSelectMenuInteraction,
+  TextDisplayBuilder,
+} from 'discord.js';
+import type { PersonaId } from './personas';
+
 export type AiComponent =
   | TextDisplayBuilder
+  | ContainerBuilder
+  | ActionRowBuilder<StringSelectMenuBuilder>
   | ActionRowBuilder<ChannelSelectMenuBuilder>
   | ActionRowBuilder<ButtonBuilder>;
 
@@ -8,19 +23,64 @@ export type AiInteraction =
   | ChatInputCommandInteraction
   | ButtonInteraction;
 
-export type PersonaName = 'TripBot' | 'Chill Buddy' | 'Wise Sage' | 'Hype Beast' | 'Sassy Bot';
-export type PersonaId = 'tripbot' | 'chill_buddy' | 'wise_sage' | 'hype_beast' | 'sassy_bot';
+export type PersonaName =
+  | 'TripBot'
+  | 'Chill Buddy'
+  | 'Wise Sage'
+  | 'Hype Beast'
+  | 'Sassy Bot';
 
-export type FormalityLevel = 'very_formal' | 'formal' | 'neutral' | 'casual' | 'very_casual';
-export type VerbosityLevel = 'very_brief' | 'brief' | 'moderate' | 'detailed' | 'very_detailed';
-export type ToneType = 'serious' | 'neutral' | 'friendly' | 'playful' | 'sarcastic' | 'enthusiastic';
+export type FormalityLevel =
+  | 'very_formal'
+  | 'formal'
+  | 'neutral'
+  | 'casual'
+  | 'very_casual';
+export type VerbosityLevel =
+  | 'very_brief'
+  | 'brief'
+  | 'moderate'
+  | 'detailed'
+  | 'very_detailed';
+export type ToneType =
+  | 'serious'
+  | 'neutral'
+  | 'friendly'
+  | 'playful'
+  | 'sarcastic'
+  | 'enthusiastic';
 export type ProfanityLevel = 'none' | 'mild' | 'moderate' | 'heavy';
-export type SlangUsage = 'none' | 'minimal' | 'moderate' | 'heavy' | 'generational';
-export type EmojiFrequency = 'none' | 'rare' | 'occasional' | 'frequent' | 'excessive';
-export type EmojiStyle = 'standard' | 'cute' | 'cool' | 'random' | 'thematic' | 'kaomoji';
-export type PunctuationStyle = 'minimal' | 'standard' | 'expressive' | 'chaotic';
+export type SlangUsage =
+  | 'none'
+  | 'minimal'
+  | 'moderate'
+  | 'heavy'
+  | 'generational';
+export type EmojiFrequency =
+  | 'none'
+  | 'rare'
+  | 'occasional'
+  | 'frequent'
+  | 'excessive';
+export type EmojiStyle =
+  | 'standard'
+  | 'cute'
+  | 'cool'
+  | 'random'
+  | 'thematic'
+  | 'kaomoji';
+export type PunctuationStyle =
+  | 'minimal'
+  | 'standard'
+  | 'expressive'
+  | 'chaotic';
 export type HumorType = 'none' | 'dry' | 'witty' | 'silly' | 'dark' | 'absurd';
-export type ConfidenceLevel = 'uncertain' | 'modest' | 'balanced' | 'confident' | 'cocky';
+export type ConfidenceLevel =
+  | 'uncertain'
+  | 'modest'
+  | 'balanced'
+  | 'confident'
+  | 'cocky';
 export type EmpathyLevel = 'low' | 'moderate' | 'high' | 'excessive';
 export type SarcasmLevel = 'none' | 'subtle' | 'moderate' | 'heavy';
 

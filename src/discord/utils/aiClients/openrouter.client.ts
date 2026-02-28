@@ -1,6 +1,6 @@
 /* eslint-disable no-console */
 import { createOpenRouter, LanguageModelV2Prompt, OpenRouterUsageAccounting } from '@openrouter/ai-sdk-provider';
-import { ModelInfo } from '../aiTypes';
+import { ModelInfo } from '../ai/types';
 
 const F = f(__filename);
 

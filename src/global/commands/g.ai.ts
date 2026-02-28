@@ -3,6 +3,8 @@
 /* eslint-disable max-len */
 import OpenAI from 'openai';
 import { ModerationCreateResponse } from 'openai/resources';
+import { isString } from 'underscore';
+import { AiText } from '../../discord/utils/ai';
 
 const F = f(__filename);
 
@@ -16,14 +18,15 @@ type ModerationResult = {
   value: number,
   limit: number,
 };
+
 export async function aiModerateReport(
   message: string,
-):Promise<ModerationCreateResponse> {
+):Promise<ModerationCreateResponse | null> {
   // log.debug(F, `message: ${message}`);
 
   // log.debug(F, `results: ${JSON.stringify(results, null, 2)}`);
 
-  if (!env.OPENAI_API_ORG || !env.OPENAI_API_KEY) return {} as ModerationCreateResponse;
+  if (!env.OPENAI_API_ORG || !env.OPENAI_API_KEY) return null;
 
   return openAi.moderations
     .create({
@@ -37,7 +40,7 @@ export async function aiModerateReport(
       } else {
         throw err;
       }
-      return {} as ModerationCreateResponse;
+      return null;
     });
 }
 
@@ -49,32 +52,20 @@ export async function aiFlairMod(
     completionTokens: number,
   }> {
   let response = '';
-  // const responseData = {} as CreateChatCompletionResponse;
   let promptTokens = 0;
   let completionTokens = 0;
   if (!env.OPENAI_API_ORG || !env.OPENAI_API_KEY) return { response, promptTokens, completionTokens };
 
-  const model = 'gpt-4.1-mini'.toLowerCase();
+  const model = AiText.highEfficiencyModel;
 
   // This message list is sent to the API
-  const chatCompletionMessages = [{
+  const chatCompletionMessages: OpenAI.Chat.ChatCompletionMessageParam[] = [{
     role: 'system',
-    content: `You are acting as a moderation API. You will receive an input that a user wants to set as their user flair text.
-
-    Drug references and jokes and adult humour are allowed as long as they are not extremely vulgur or offensive. You can swap any very rude words with more PG rated family friendly ones. If there are no alternative words, reject the flair.
-    
-    After that, adjust it to correct spelling, grammar and such. Made up words are allowed unless they are obvious misspellings, but no random keyboard gibberish (EG. ALRJRBSIEIR)
-    
-    IMPORTANT! You must correct capitalisation so that the flair fits headline capitalisation rules (every word should be capitalised except short words like "i love going to the supermarket" becomes "I Love Going to the Supermarket")
-    
-    You must reply with this strict format:
-    Status: Approved, Adjusted, Rejected
-    Reason: Spelling, grammar, etc
-    Adjusted: The new edited flair, or the original flair if nothing was changed or adjusted`.concat(''),
-  }] as OpenAI.Chat.ChatCompletionMessageParam[];
+    content: AiText.modPrompt.concat(''),
+  }];
   chatCompletionMessages.push(...messages);
 
-  const payload = {
+  const payload: OpenAI.Chat.ChatCompletionCreateParamsNonStreaming = {
     temperature: 0.7,
     top_p: 1,
     presence_penalty: 0,
@@ -85,10 +76,10 @@ export async function aiFlairMod(
     messages: chatCompletionMessages,
     // functions: aiFunctions,
     // function_call: 'auto',
-  } as OpenAI.Chat.ChatCompletionCreateParamsNonStreaming;
+  };
 
   // log.debug(F, `payload: ${JSON.stringify(payload, null, 2)}`);
-  let responseMessage = {} as OpenAI.Chat.ChatCompletionMessageParam;
+  let responseMessage: OpenAI.Chat.ChatCompletionMessageParam;
 
   const chatCompletion = await openAi.chat.completions
     .create(payload)
@@ -160,19 +151,24 @@ export async function aiModerate(
 
   // Go through each key in moderation.results and check if the value is greater than the limit from guildModeration
   // If it is, set a flag with the kind of alert and the value / limit
-  const moderationAlerts = [] as ModerationResult[];
+  const moderationAlerts: ModerationResult[] = [];
   Object.entries(moderation.results[0].category_scores).forEach(([key, value]) => {
     const formattedKey = key
       .replace('/', '_')
       .replace('-', '_');
-    const guildLimit = guildModeration[formattedKey as keyof typeof guildModeration] as number;
+    const guildLimit = guildModeration[formattedKey as keyof typeof guildModeration];
 
-    if (value > guildLimit) {
+    if (isString(guildLimit)) {
+      log.error(F, `Guild ${guildId} has an invalid moderation limit for ${formattedKey}: ${guildLimit}`);
+      return;
+    }
+
+    if (guildLimit && value > guildLimit) {
       // log.debug(F, `key: ${formattedKey} value > ${value} / ${guildLimit} < guild limit`);
       moderationAlerts.push({
         category: key,
         value,
-        limit: (guildModeration[formattedKey as keyof typeof guildModeration] as number),
+        limit: guildLimit,
       });
     }
   });
@@ -195,20 +191,20 @@ export async function aiTranslate(
   let completionTokens = 0;
   if (!env.OPENAI_API_ORG || !env.OPENAI_API_KEY) return { response, promptTokens, completionTokens };
 
-  const model = 'gpt-4.1-mini';
-  const chatCompletionMessages = [{
+  const model = AiText.highEfficiencyModel;
+  const chatCompletionMessages: OpenAI.Chat.ChatCompletionMessageParam[] = [{
     role: 'system',
     content: `You will translate whatever the user sends to their desired language. Their desired language or language code is: ${target_language}.`,
-  }] as OpenAI.Chat.ChatCompletionMessageParam[];
+  }];
   chatCompletionMessages.push(...messages);
 
-  const payload = {
+  const payload: OpenAI.Chat.ChatCompletionCreateParamsNonStreaming = {
     model,
     messages: chatCompletionMessages,
-  } as OpenAI.Chat.ChatCompletionCreateParamsNonStreaming;
+  };
 
   // log.debug(F, `payload: ${JSON.stringify(payload, null, 2)}`);
-  let responseMessage = {} as OpenAI.Chat.ChatCompletionMessageParam;
+  let responseMessage: OpenAI.Chat.ChatCompletionMessageParam;
 
   const chatCompletion = await openAi.chat.completions
     .create(payload)
