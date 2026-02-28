@@ -1,5 +1,5 @@
 /* eslint-disable no-console */
-import { createOpenRouter, LanguageModelV2Prompt, OpenRouterUsageAccounting } from '@openrouter/ai-sdk-provider';
+import { createOpenRouter, LanguageModelV3Prompt, OpenRouterUsageAccounting } from '@openrouter/ai-sdk-provider';
 import { ModelInfo } from '../ai/types';
 
 const F = f(__filename);
@@ -10,7 +10,7 @@ export class OpenRouterClient {
     model = 'google/gemini-2.0-flash-001',
     max_tokens = 1000,
   }: {
-    prompt: LanguageModelV2Prompt;
+    prompt: LanguageModelV3Prompt;
     model?: string;
     temperature?: number;
     max_tokens?: number;

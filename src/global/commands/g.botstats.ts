@@ -1,14 +1,9 @@
-/* eslint-disable */
-import {
-  cpu,
-  drive,
-  mem,
-  netstat,
-  os,
-  NetStatMetrics,
-} from 'node-os-utils';
-import drugDataTripsit from '../../../assets/data/tripsitDB.json';
+import { OSUtils } from 'node-os-utils';
+import os from 'node:os'; // Added for os.uptime()
 import drugDataCombined from '../../../assets/data/combinedDB.json';
+import drugDataTripsit from '../../../assets/data/tripsitDB.json';
+
+const osutils = new OSUtils();
 
 // Define the comprehensive stats type
 export type BotStats = {
@@ -21,11 +16,11 @@ export type BotStats = {
   commandCount: number;
   uptime: number;
   ping: number;
-  
+
   // Database Health
   dbTripbotStatus: 'Online' | 'Offline';
   dbMoodleStatus: 'Online' | 'Offline';
-  
+
   // Node.js Internals
   nodeHeapUsed: number;
   nodeHeapTotal: number;
@@ -46,18 +41,19 @@ export type BotStats = {
 export async function botStats(): Promise<BotStats> {
   // 1. Fire off all async checks in parallel for maximum speed
   const [
-    cpuUsage, 
-    memStats, 
-    netStats, 
-    driveStats,
+    cpuUsageRes,
+    cpuInfoRes,
+    memInfoRes,
+    diskInfoRes,
+    netOverviewRes,
     dbTripbotCheck,
-    dbMoodleCheck
+    dbMoodleCheck,
   ] = await Promise.all([
-    cpu.usage().catch(() => 0),
-    mem.used().catch(() => ({ usedMemMb: 0, totalMemMb: 0 })),
-    netstat.inOut().catch(() => null),
-    drive.info('/').catch(() => ({ usedPercentage: '0', totalGb: '0' })),
-    // Database 'Is it plugged in?' checks
+    osutils.cpu.usage().catch(() => ({ success: false as const })),
+    osutils.cpu.info().catch(() => ({ success: false as const })),
+    osutils.memory.info().catch(() => ({ success: false as const })),
+    osutils.disk.info().catch(() => ({ success: false as const })),
+    osutils.network.overview().catch(() => ({ success: false as const })),
     db.$queryRaw`SELECT 1`.then(() => 'Online' as const).catch(() => 'Offline' as const),
     db.$queryRaw`SELECT 1`.then(() => 'Online' as const).catch(() => 'Offline' as const),
   ]);
@@ -65,16 +61,30 @@ export async function botStats(): Promise<BotStats> {
   // 2. Gather Discord Data
   const guilds = discordClient.guilds.cache;
   const userCount = guilds.reduce((acc, guild) => acc + (guild.memberCount || 0), 0);
-  
+
   // 3. Node.js Process Internals
   const nodeMem = process.memoryUsage();
   // Active handles help track resource/connection leaks
-  const activeHandles = (process as any)._getActiveHandles ? (process as any)._getActiveHandles().length : 0;
+  const activeHandles = typeof process.getActiveResourcesInfo === 'function'
+    ? process.getActiveResourcesInfo().length
+    : 0;
 
-  // 4. Network Parsing (Defensive logic for Docker environments)
-  const net = netStats as NetStatMetrics;
-  const netDown = net?.total?.inputMb ?? 0;
-  const netUp = net?.total?.outputMb ?? 0;
+  // 4. Safely unwrap v2 MonitorResults
+  const cpuUsage = cpuUsageRes.success ? cpuUsageRes.data : 0;
+  const cpuCount = cpuInfoRes.success ? cpuInfoRes.data.cores : 0;
+
+  const memTotal = memInfoRes.success ? memInfoRes.data.total.toMB() : 0;
+  const memUsage = memInfoRes.success ? memInfoRes.data.usagePercentage : 0;
+
+  // Find the root/main drive, fallback to the first available disk if exact match isn't found
+  const rootDisk = diskInfoRes.success
+    ? diskInfoRes.data.find(d => d.mountpoint === '/' || d.mountpoint === 'C:\\') || diskInfoRes.data[0]
+    : null;
+  const driveTotal = rootDisk ? rootDisk.total.toGB() : 0;
+  const driveUsage = rootDisk ? rootDisk.usagePercentage : 0;
+
+  const netDown = netOverviewRes.success ? netOverviewRes.data.totalRxBytes.toMB() : 0;
+  const netUp = netOverviewRes.success ? netOverviewRes.data.totalTxBytes.toMB() : 0;
 
   // 5. Construct and return the result
   return {
@@ -98,17 +108,15 @@ export async function botStats(): Promise<BotStats> {
     activeHandles,
 
     // Hardware Stats
-    cpuUsage: Math.round(Number(cpuUsage)),
-    cpuCount: cpu.count(),
-    memUsage: memStats.totalMemMb > 0 
-      ? Math.round((memStats.usedMemMb / memStats.totalMemMb) * 100) 
-      : 0,
-    memTotal: Math.round(memStats.totalMemMb),
-    netDown,
-    netUp,
+    cpuUsage: Math.round(cpuUsage),
+    cpuCount,
+    memUsage: Math.round(memUsage),
+    memTotal: Math.round(memTotal),
+    netDown: Math.round(netDown),
+    netUp: Math.round(netUp),
     hostUptime: os.uptime(),
-    driveUsage: parseInt(driveStats.usedPercentage.toString(), 10) || 0,
-    driveTotal: parseInt(driveStats.totalGb.toString(), 10) || 0,
+    driveUsage: Math.round(driveUsage),
+    driveTotal: Math.round(driveTotal),
   };
 }
 

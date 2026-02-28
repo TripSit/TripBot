@@ -1,4 +1,4 @@
-import { LanguageModelV2Prompt, OpenRouterUsageAccounting } from '@openrouter/ai-sdk-provider';
+import { LanguageModelV3Prompt, OpenRouterUsageAccounting } from '@openrouter/ai-sdk-provider';
 import { stripIndents } from 'common-tags';
 import {
   ActionRowBuilder,
@@ -71,7 +71,7 @@ export class AiFunction {
   static async aiAudit(
     user: User,
     message: Message,
-    prompt: LanguageModelV2Prompt,
+    prompt: LanguageModelV3Prompt,
     chatResponse: { content: string; reasoning: string | undefined; usage: OpenRouterUsageAccounting | undefined; },
     modelUsed: string,
   ) {
@@ -218,8 +218,8 @@ export class AiFunction {
     return pages;
   }
 
-  static async createPrompt(message: Message, personaId: PersonaId): Promise<LanguageModelV2Prompt> {
-    const messageList:LanguageModelV2Prompt = [];
+  static async createPrompt(message: Message, personaId: PersonaId): Promise<LanguageModelV3Prompt> {
+    const messageList:LanguageModelV3Prompt = [];
 
     const botNickname = message.guild?.members.me?.nickname || '';
 
