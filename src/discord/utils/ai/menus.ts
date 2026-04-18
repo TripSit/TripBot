@@ -1,9 +1,12 @@
 import {
-  ChannelSelectMenuBuilder, ChannelType, StringSelectMenuBuilder,
+  ChannelSelectMenuBuilder, ChannelType,
+  StringSelectMenuBuilder,
 } from 'discord.js';
 import { AiPersona } from './personas';
 import { AiText } from './texts';
 import { PersonaSpec } from './types';
+
+// const F = f(__filename);
 
 export class AiMenu {
   static readonly guildChannels = new ChannelSelectMenuBuilder()
@@ -31,12 +34,19 @@ export class AiMenu {
       );
   }
 
-  static aiPersonasSelect(): StringSelectMenuBuilder {
+  static aiPersonasSelect(isPremium: boolean): StringSelectMenuBuilder {
     // Get all static properties that are PersonaSpecs
     const personaEntries = Object.getOwnPropertyNames(AiPersona)
       .map(key => ({ key, value: (AiPersona as any)[key] }))
       .filter(({ value }) => value && typeof value === 'object' && value.id && value.name && value.config)
-      .map(({ value }) => value as PersonaSpec);
+      .map(({ value }) => value as PersonaSpec)
+      // filter out any persona except for tripbot if the user is not premium
+      .filter(persona => {
+        if (isPremium) {
+          return true;
+        }
+        return persona.id === AiPersona.TripBot.id;
+      });
     return new StringSelectMenuBuilder()
       .setCustomId(AiText.MenuId.PERSONA_SELECT)
       .setPlaceholder('Please select a persona to use.')
@@ -46,35 +56,6 @@ export class AiMenu {
           value: persona.id,
         })),
       );
-  }
-
-  static primaryModels(): StringSelectMenuBuilder {
-    return new StringSelectMenuBuilder()
-      .setCustomId(AiText.MenuId.MODEL_SELECT_PRIMARY)
-      .addOptions(
-        AiText.modelInfo.map(model => ({
-          label: model.label,
-          value: model.value,
-          description: model.description,
-          emoji: model.emoji,
-        })),
-      )
-      .setPlaceholder('Please select a model to use.');
-  }
-
-  static secondaryModels(): StringSelectMenuBuilder {
-    return new StringSelectMenuBuilder()
-      .setCustomId(AiText.MenuId.MODEL_SELECT_SECONDARY)
-      .addOptions(
-        // Only add models with :free in the model value
-        AiText.modelInfo.filter(model => model.value.includes(':free')).map(model => ({
-          label: model.label,
-          value: model.value,
-          description: model.description,
-          emoji: model.emoji,
-        })),
-      )
-      .setPlaceholder('Please select a model to use.');
   }
 
   static pageSelect(): StringSelectMenuBuilder {

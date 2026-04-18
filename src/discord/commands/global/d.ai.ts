@@ -14,7 +14,6 @@ import {
   Message,
   MessageFlags,
   MessageReaction,
-  ModalSubmitInteraction,
   SlashCommandBuilder,
   StringSelectMenuInteraction,
   TextChannel,
@@ -22,15 +21,11 @@ import {
 } from 'discord.js';
 import { aiModerate } from '../../../global/commands/g.ai';
 import { SlashCommand } from '../../@types/commandDef';
-import {
-  checkPremiumStatus,
-} from '../../utils/commandRateLimiter';
 import commandContext from '../../utils/context';
 import { embedTemplate } from '../../utils/embedTemplate';
 
 import {
   AiFunction,
-  AiModal,
   AiPage,
   AiText,
   PersonaId,
@@ -251,247 +246,117 @@ export async function discordAiModerate(messageData: Message): Promise<void> {
     );
   }
 }
-
 export async function aiMessage(messageData: Message<boolean>): Promise<void> {
-  // Get the message data, this should only be necessary if the bot has restarted, otherwise the message is cached
   await messageData.fetch();
 
-  let isAfterAgreement = false;
-  const ogMessage = messageData;
+  // Basic Filters
+  if (messageData.author.bot || messageData.cleanContent.length < 1) return;
+  if (!messageData.guild) return;
 
-  // Idk why this is here, i should comment this
-  if (messageData.reference) {
-    isAfterAgreement = true;
-    // eslint-disable-next-line no-param-reassign
-    messageData = await messageData.fetchReference();
-  }
-
-  // Various checks to filter out messages that are not relevant to the AI module
-  if (messageData.author.bot) {
-    log.debug(F, 'Message was from a bot, returning');
-    return;
-  }
-  if (messageData.cleanContent.length < 1) {
-    log.debug(F, 'Message was empty, returning');
-    return;
-  }
-  if (messageData.channel.type !== ChannelType.GuildText
-    && messageData.channel.type !== ChannelType.PublicThread
-    && messageData.channel.type !== ChannelType.PrivateThread
-    && messageData.channel.type !== ChannelType.DM
-    && messageData.channel.type !== ChannelType.GroupDM
-  ) {
-    log.debug(F, 'Message was not in a text channel, returning');
-    return;
-  }
-
-  log.debug(
-    F,
-    `${messageData.author.displayName} prompted me with: '${messageData.cleanContent}'`,
-  );
-
-  // TODO - Do PM stuff here
-  if (!messageData.guild) {
-    log.debug(F, 'Message was not in a guild, returning');
-    return;
-  }
-
-  // Determine if the guild has set up ai channels.
-  const guildData = await db.discord_guilds.upsert({
+  // 1. Permission/Guild Check
+  const guildData = await db.discord_guilds.findUnique({
     where: { id: messageData.guild.id },
-    create: {
-      id: messageData.guild.id,
-    },
-    update: {},
-    include: {
-      ai_channels: true,
-    },
+    include: { ai_channels: true },
   });
-  if (guildData.ai_channels.length === 0) {
-    log.debug(F, 'Guild has no AI channels, returning');
-    await messageData.reply({
-      content: stripIndents`
-        This server has not set up the AI module. 
-        Please contact ask someone with channel management permissions to run \`/ai setup\`.
-        You can also message me directly if you would rather not spam chat.
-      `,
-    });
+
+  const isAiEnabled = guildData?.ai_channels.some(c => c.channel_id === messageData.channelId);
+  if (!isAiEnabled) {
+    if (messageData.mentions.has(discordClient.user!)) {
+      await messageData.reply('AI is not enabled in this channel. Ask an admin to run `/ai setup`.');
+    }
     return;
   }
 
-  // Get user data, including the last 24 hours of messages
+  // 2. User Data & Agreement Check
   const userData = await db.users.upsert({
     where: { discord_id: messageData.author.id },
-    create: {
-      discord_id: messageData.author.id,
-      ai_info: { create: {} },
-    },
-    update: {
-      ai_info: {
-        update: {},
-      },
-    },
-    include: {
-      ai_info: {
-        include: {
-          ai_messages: {
-            where: {
-              created_at: {
-                gte: new Date(Date.now() - 24 * 60 * 60 * 1000),
-              },
-            },
-          },
-        },
-      },
-    },
+    create: { discord_id: messageData.author.id, ai_info: { create: {} } },
+    update: {},
+    include: { ai_info: true },
   });
 
   if (!userData.ai_info?.ai_tos_agree || !userData.ai_info?.ai_privacy_agree) {
-    if (!userData.ai_info?.ai_tos_agree && !userData.ai_info?.ai_privacy_agree) {
-      await messageData.reply('You need to agree to the /ai tos and /ai privacy');
-      return;
-    }
-    if (!userData.ai_info?.ai_tos_agree) {
-      await messageData.reply('You still need to agree to the /ai tos');
-      return;
-    }
-    if (!userData.ai_info?.ai_privacy_agree) {
-      await messageData.reply('You still need to agree to the /ai privacy');
-      return;
-    }
+    await messageData.reply('Please review and agree to `/ai tos` and `/ai privacy` before chatting.');
     return;
   }
 
-  const { channel } = messageData;
+  // 3. Cost & Model Selection
+  const isPremium = AiFunction.checkPremiumStatus(messageData.member as GuildMember);
 
-  if (channel.type === ChannelType.GuildText
-    || channel.type === ChannelType.PublicThread
-    || channel.type === ChannelType.PrivateThread) {
-    await channel.sendTyping();
+  // Use aggregate and alias to avoid ESLint dangling underscore errors
+  const rollingStats = await db.ai_message.aggregate({
+    _sum: { usd: true },
+    where: {
+      ai_info_id: userData.ai_info.id,
+      created_at: { gte: new Date(Date.now() - 24 * 60 * 60 * 1000) },
+    },
+  });
+
+  const { _sum: rollingSum } = rollingStats; // Aliasing here
+  const currentCost = rollingSum.usd || 0;
+
+  const dailyLimit = isPremium ? 0.50 : 0.05;
+  const model = currentCost < dailyLimit ? AiText.primaryModel : AiText.backupModel;
+
+  // 4. Typing Indicator Setup
+  let typingInterval: NodeJS.Timeout | undefined;
+  if (messageData.channel.isTextBased() && !messageData.channel.isDMBased()) {
+    const textChannel = messageData.channel;
+    await textChannel.sendTyping();
+    typingInterval = setInterval(() => {
+      textChannel.sendTyping().catch(() => {
+        if (typingInterval) clearInterval(typingInterval);
+      });
+    }, 9000);
   }
 
-  const typingInterval = setInterval(() => {
-    (channel as TextChannel).sendTyping();
-  }, 9000); // Start typing indicator every 9 seconds
-
-  const typingFailsafe = setInterval(() => {
-    clearInterval(typingInterval); // Stop sending typing indicator
-  }, 30000); // Failsafe to stop typing indicator after 30 seconds
-
-  let response = '';
-  let promptTokens = 0;
-  let completionTokens = 0;
-  let usd = 0;
-
-  let differenceInMs = 0;
-
-  // Check if user is a Patreon subscriber
-  const isPatreonSubscriber = checkPremiumStatus(
-    messageData.member,
-    env.PATREON_SUBSCRIBER_ROLE_ID,
-    true,
-  );
-  log.debug(F, `They are ${isPatreonSubscriber ? 'a' : 'not a'} Patreon subscriber`);
-
-  // Sum up the usd of each ai message
-  const totalRollingCost = userData.ai_info?.ai_messages.reduce((acc, message) => acc + message.usd, 0) ?? 0;
-
-  const maxCost = isPatreonSubscriber ? 0.35 : 0.10;
-
-  log.debug(F, `Has used ${totalRollingCost} of ${maxCost} USD`);
-
-  let model: string;
-  if (totalRollingCost > maxCost) {
-    model = userData.ai_info?.secondary_model || 'deepseek/deepseek-chat-v3-0324:free';
-  } else {
-    model = userData.ai_info?.primary_model || 'google/gemini-2.0-flash-001';
-  }
-  log.debug(F, `Using ${model} for this message`);
-
-  log.debug(F, `AI Info: ${JSON.stringify(userData.ai_info, null, 2)}`);
-
+  // 5. Generate and Process Response
   try {
-    const startTime = Date.now();
-    const prompt = await AiFunction.createPrompt(messageData, userData.ai_info?.persona_id as PersonaId || 'tripbot');
+    const personaId = (userData.ai_info.persona_id as PersonaId) || 'tripbot';
+    const prompt = await AiFunction.createPrompt(messageData, personaId);
+
     const chatResponse = await OpenRouterClient.chat({
       model,
-      max_tokens: userData.ai_info?.response_size || 1000,
+      max_tokens: 1000,
       prompt,
     });
-    const endTime = Date.now();
-    differenceInMs = endTime - startTime;
-    log.debug(F, `AI response took ${differenceInMs}ms`);
+
+    const { content, usage } = chatResponse;
+
+    // Audit & Database Logging
     await AiFunction.aiAudit(messageData.author, messageData, prompt, chatResponse, model);
-    response = chatResponse.content;
-    promptTokens = chatResponse.usage?.promptTokens ?? 0;
-    completionTokens = chatResponse.usage?.completionTokens ?? 0;
-    usd = chatResponse.usage?.cost ?? 0;
+
+    const personaData = await db.ai_persona.upsert({
+      where: { name: personaId },
+      create: { name: personaId },
+      update: {},
+    });
+
+    await db.ai_message.create({
+      data: {
+        prompt_tokens: usage?.promptTokens || 0,
+        completion_tokens: usage?.completionTokens || 0,
+        tokens: (usage?.promptTokens || 0) + (usage?.completionTokens || 0),
+        usd: usage?.cost || 0,
+        ai_persona_id: personaData.id,
+        ai_info_id: userData.ai_info.id,
+        message_id: messageData.id,
+      },
+    });
+
+    const reply = await messageData.reply({
+      content: content.slice(0, 2000),
+      allowedMentions: { parse: [] },
+    });
+
+    await reply.react('👍');
+    await reply.react('👎');
+  } catch (err) {
+    log.error(F, `AI Error: ${err}`);
+    await messageData.reply("I'm having trouble thinking right now. Try again in a minute.");
   } finally {
-    clearInterval(typingInterval); // Stop sending typing indicator
-    clearTimeout(typingFailsafe); // Clear the failsafe timeout to prevent  it from running
-  }
-
-  log.debug(F, `response from API: ${response}`);
-  log.debug(F, `cost: ${usd.toFixed(4)}`);
-
-  const personaData = await db.ai_persona.upsert({
-    where: {
-      name: userData.ai_info?.persona_id || 'tripbot',
-    },
-    create: {
-      name: userData.ai_info?.persona_id || 'tripbot',
-    },
-    update: {},
-  });
-
-  if (!userData.ai_info?.id) {
-    throw new Error('Missing ai_info');
-  }
-
-  // Increment the tokens used
-  await db.ai_message.create({
-    data: {
-      prompt_tokens: promptTokens,
-      completion_tokens: completionTokens,
-      tokens: completionTokens + promptTokens,
-      usd,
-      ai_persona_id: personaData.id,
-      ai_info_id: userData.ai_info.id,
-      message_id: messageData.id,
-    },
-  });
-
-  if (isAfterAgreement) {
-    ogMessage.edit({
-      content: response.slice(0, 2000),
-      embeds: [],
-      components: [],
-      allowedMentions: { parse: [] },
-    });
-  } else if (response === 'functionFinished') {
-    log.debug(F, 'Function finished, returning');
-  } else {
-    // Handle error case - decrement rate limit count
-    if (response.length === 0) {
-      response = stripIndents`This is unexpected but somehow I don't appear to have anything to say!
-      By the way, this is an error message and something went wrong. Please try again.
-      Time from query to error: ${(differenceInMs / 1000).toFixed(2)} seconds`;
-    }
-
-    // Handle response and rate limit message
-    const replyMessage = await messageData.reply({
-      content: response.slice(0, 2000),
-      allowedMentions: { parse: [] },
-    });
-
-    // React to that message with thumbs up and thumbs down emojis
-    try {
-      await replyMessage.react(env.EMOJI_THUMB_UP);
-      await replyMessage.react(env.EMOJI_THUMB_DOWN);
-    } catch (error) {
-      log.error(F, `Error reacting to message: ${messageData.url}`);
-      log.error(F, `${error}`);
-    }
+    // 6. The Failsafe: Always stop typing regardless of success or error
+    if (typingInterval) clearInterval(typingInterval);
   }
 }
 
@@ -608,123 +473,80 @@ export async function aiReaction(
 export async function aiMenu(
   interaction: ChannelSelectMenuInteraction | StringSelectMenuInteraction,
 ): Promise<InteractionEditReplyOptions> {
-  const menuId = interaction.customId as keyof typeof AiText.MenuId;
+  const {
+    customId, values, user, member,
+  } = interaction;
 
-  // eslint-disable-next-line sonarjs/no-small-switch
-  switch (menuId) {
-    case AiText.MenuId.GUILD_CHANNELS: {
-      if (!interaction.guild) {
-        log.error(F, 'No guild found');
-        return {
-          content: 'No guild found',
-        };
-      }
-      // First, save the list of channels to the database
-      await db.ai_channel.deleteMany({
-        where: {
-          guild_id: interaction.guild.id,
-        },
-      });
+  log.debug(F, `AI Menu interaction with customId: ${customId} and values: ${values}`);
 
-      await Promise.all(
-        interaction.values.map(async (channelId: string) => {
-          await db.ai_channel.create({
-            data: {
-              channel_id: channelId,
-              guild_id: interaction.guild?.id as string,
-            },
-          });
-        }),
-      );
-
-      log.debug(F, 'Channels saved to database');
-
-      // Then return the guild setup page
-
-      return AiPage.guildSettings(
-        interaction,
-      );
-    }
-    case AiText.MenuId.PERSONA_INFO:
-      return AiPage.personas(interaction);
+  switch (customId) {
     case AiText.MenuId.PERSONA_SELECT: {
-      await db.users.update({
-        where: { discord_id: interaction.user.id },
-        data: {
-          ai_info: {
-            upsert: {
-              update: { persona_id: interaction.values[0] },
-              create: {
-                persona_id: interaction.values[0],
-              },
-            },
-          },
-        },
-      });
-      return AiPage.userSettings(
-        interaction as StringSelectMenuInteraction,
-      );
-    }
-    case AiText.MenuId.MODEL_SELECT_PRIMARY: {
-      await db.users.update({
-        where: { discord_id: interaction.user.id },
-        data: {
-          ai_info: {
-            upsert: {
-              update: { primary_model: interaction.values[0] },
-              create: {
-                primary_model: interaction.values[0],
-              },
-            },
-          },
-        },
-      });
-      return AiPage.userSettings(
-        interaction as StringSelectMenuInteraction,
-      );
-    }
-    case AiText.MenuId.MODEL_SELECT_SECONDARY: {
-      await db.users.update({
-        where: {
-          discord_id: interaction.user.id,
-        },
-        data: {
-          ai_info: {
-            upsert: {
-              update: {
-                secondary_model: interaction.values[0],
-              },
-              create: {
-                secondary_model: interaction.values[0],
-              },
-            },
-          },
-        },
-      });
-      return AiPage.userSettings(
-        interaction as StringSelectMenuInteraction,
-      );
-    }
-    case AiText.MenuId.PAGE_SELECT:
-    default: {
-      // eslint-disable-next-line sonarjs/no-nested-switch
-      switch (interaction.values[0]) {
-        case AiText.Page.INFO.value:
-          return AiPage.info(interaction as StringSelectMenuInteraction);
-        case AiText.Page.PERSONAS.value:
-          return AiPage.personas(interaction as StringSelectMenuInteraction);
-        case AiText.Page.USER_SETTINGS.value:
-          return AiPage.userSettings(interaction as StringSelectMenuInteraction);
-        case AiText.Page.GUILD_SETUP.value:
-          return AiPage.guildSettings(interaction as StringSelectMenuInteraction);
-        case AiText.Page.PRIVACY.value:
-          return AiPage.privacy(interaction as StringSelectMenuInteraction);
-        case AiText.Page.TOS.value:
-          return AiPage.tos(interaction as StringSelectMenuInteraction);
-        default:
-          return AiPage.userSettings(interaction as StringSelectMenuInteraction);
+      const selectedId = values[0] as PersonaId;
+
+      // SECURITY: Re-verify roles before saving
+      const isPremium = AiFunction.checkPremiumStatus(member as GuildMember);
+
+      if (!isPremium) {
+        return { content: '🔒 This persona is for Patrons and Boosters only!' };
       }
+
+      await db.ai_info.update({
+        where: { user_id: (await db.users.findUnique({ where: { discord_id: user.id } }))?.id },
+        data: { persona_id: selectedId },
+      });
+      return AiPage.userSettings(interaction);
     }
+    case AiText.MenuId.GUILD_CHANNELS: {
+      if (!interaction.inGuild()) {
+        return { content: 'This command can only be used in a server.' };
+      }
+
+      const { guildId } = interaction;
+
+      // Run both operations in a transaction for safety and speed
+      await db.$transaction([
+        // 1. Remove channels that are NO LONGER selected
+        db.ai_channel.deleteMany({
+          where: {
+            guild_id: guildId,
+            channel_id: { notIn: values },
+          },
+        }),
+
+        // 2. Add new channels (ignoring ones that already exist)
+        // createMany is much more efficient than a forEach loop
+        db.ai_channel.createMany({
+          data: values.map(id => ({
+            channel_id: id,
+            guild_id: guildId,
+          })),
+          skipDuplicates: true, // This prevents errors if the channel is already there
+        }),
+      ]);
+
+      log.debug(F, `Synced AI channels for guild ${guildId}. Current count: ${values.length}`);
+
+      return AiPage.guildSettings(interaction);
+    }
+    default:
+      break;
+  }
+
+  switch (values[0] as string) {
+    case AiText.Page.INFO.value:
+      return AiPage.info(interaction);
+    case AiText.Page.PERSONAS.value:
+      return AiPage.personas(interaction);
+    case AiText.Page.USER_SETTINGS.value:
+      return AiPage.userSettings(interaction);
+    case AiText.Page.GUILD_SETUP.value:
+      return AiPage.guildSettings(interaction);
+    case AiText.Page.PRIVACY.value:
+      return AiPage.privacy(interaction);
+    case AiText.Page.TOS.value:
+      return AiPage.tos(interaction);
+    default:
+      return AiPage.userSettings(interaction);
   }
 }
 
@@ -768,102 +590,102 @@ export async function aiButton(interaction: ButtonInteraction): Promise<void> {
       await interaction.update(await AiPage.privacy(interaction));
       break;
     }
-    case AiText.ButtonId.RESPONSE_SIZE: {
-      log.debug(F, 'Response size button pressed');
-      const userData = await db.users.findUniqueOrThrow({
-        where: { discord_id: interaction.user.id },
-        include: {
-          ai_info: true,
-        },
-      });
-      log.debug(F, `Response size: ${userData.ai_info?.response_size}`);
-      await interaction.showModal(
-        AiModal.responseSize(userData.ai_info?.response_size || 500),
-      );
-      break;
-    }
-    case AiText.ButtonId.CONTEXT_SIZE: {
-      log.debug(F, 'Context size button pressed');
-      const userData = await db.users.findUniqueOrThrow({
-        where: { discord_id: interaction.user.id },
-        include: {
-          ai_info: true,
-        },
-      });
-      await interaction.showModal(
-        AiModal.contextSize(userData.ai_info?.context_size || 10000),
-      );
-      break;
-    }
+    // case AiText.ButtonId.RESPONSE_SIZE: {
+    //   log.debug(F, 'Response size button pressed');
+    //   const userData = await db.users.findUniqueOrThrow({
+    //     where: { discord_id: interaction.user.id },
+    //     include: {
+    //       ai_info: true,
+    //     },
+    //   });
+    //   log.debug(F, `Response size: ${userData.ai_info?.response_size}`);
+    //   await interaction.showModal(
+    //     AiModal.responseSize(userData.ai_info?.response_size || 500),
+    //   );
+    //   break;
+    // }
+    // case AiText.ButtonId.CONTEXT_SIZE: {
+    //   log.debug(F, 'Context size button pressed');
+    //   const userData = await db.users.findUniqueOrThrow({
+    //     where: { discord_id: interaction.user.id },
+    //     include: {
+    //       ai_info: true,
+    //     },
+    //   });
+    //   await interaction.showModal(
+    //     AiModal.contextSize(userData.ai_info?.context_size || 10000),
+    //   );
+    //   break;
+    // }
     default:
       await AiPage.userSettings(interaction);
       break;
   }
 }
 
-export async function aiModal(
-  interaction: ModalSubmitInteraction,
-): Promise<void> {
-  const modalId = interaction.customId as keyof typeof AiModal.ID;
-  switch (modalId) {
-    case AiModal.ID.RESPONSE_SIZE:
-      await interaction.deferUpdate();
-      await db.users.update({
-        where: {
-          discord_id: interaction.user.id,
-        },
-        data: {
-          ai_info: {
-            upsert: {
-              update: {
-                response_size: Number(
-                  interaction.fields.getTextInputValue(
-                    AiModal.ID.RESPONSE_SIZE,
-                  ),
-                ),
-              },
-              create: {
-                response_size: Number(
-                  interaction.fields.getTextInputValue(
-                    AiModal.ID.RESPONSE_SIZE,
-                  ),
-                ),
-              },
-            },
-          },
-        },
-      });
-      await interaction.editReply(await AiPage.userSettings(interaction));
-      break;
-    case AiModal.ID.CONTEXT_SIZE:
-      await interaction.deferUpdate();
-      await db.users.update({
-        where: {
-          discord_id: interaction.user.id,
-        },
-        data: {
-          ai_info: {
-            upsert: {
-              update: {
-                context_size: Number(
-                  interaction.fields.getTextInputValue(AiModal.ID.CONTEXT_SIZE),
-                ),
-              },
-              create: {
-                context_size: Number(
-                  interaction.fields.getTextInputValue(AiModal.ID.CONTEXT_SIZE),
-                ),
-              },
-            },
-          },
-        },
-      });
-      await interaction.editReply(await AiPage.userSettings(interaction));
-      break;
-    default:
-      log.debug(F, 'Unknown modal submitted');
-      break;
-  }
-}
+// export async function aiModal(
+//   interaction: ModalSubmitInteraction,
+// ): Promise<void> {
+//   const modalId = interaction.customId as keyof typeof AiModal.ID;
+//   switch (modalId) {
+//     case AiModal.ID.RESPONSE_SIZE:
+//       await interaction.deferUpdate();
+//       await db.users.update({
+//         where: {
+//           discord_id: interaction.user.id,
+//         },
+//         data: {
+//           ai_info: {
+//             upsert: {
+//               update: {
+//                 response_size: Number(
+//                   interaction.fields.getTextInputValue(
+//                     AiModal.ID.RESPONSE_SIZE,
+//                   ),
+//                 ),
+//               },
+//               create: {
+//                 response_size: Number(
+//                   interaction.fields.getTextInputValue(
+//                     AiModal.ID.RESPONSE_SIZE,
+//                   ),
+//                 ),
+//               },
+//             },
+//           },
+//         },
+//       });
+//       await interaction.editReply(await AiPage.userSettings(interaction));
+//       break;
+//     case AiModal.ID.CONTEXT_SIZE:
+//       await interaction.deferUpdate();
+//       await db.users.update({
+//         where: {
+//           discord_id: interaction.user.id,
+//         },
+//         data: {
+//           ai_info: {
+//             upsert: {
+//               update: {
+//                 context_size: Number(
+//                   interaction.fields.getTextInputValue(AiModal.ID.CONTEXT_SIZE),
+//                 ),
+//               },
+//               create: {
+//                 context_size: Number(
+//                   interaction.fields.getTextInputValue(AiModal.ID.CONTEXT_SIZE),
+//                 ),
+//               },
+//             },
+//           },
+//         },
+//       });
+//       await interaction.editReply(await AiPage.userSettings(interaction));
+//       break;
+//     default:
+//       log.debug(F, 'Unknown modal submitted');
+//       break;
+//   }
+// }
 
 export default aiCommand;

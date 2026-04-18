@@ -16,21 +16,21 @@ export class AiButton {
       .setStyle(ButtonStyle.Success);
   }
 
-  static contextSize(tokens: number | string) {
-    return new ButtonBuilder()
-      .setCustomId(AiText.ButtonId.CONTEXT_SIZE)
-      .setLabel(`💭 Context: ${tokens.toLocaleString()} tokens`)
-      .setStyle(ButtonStyle.Primary)
-      .setEmoji('🧠');
-  }
+  // static contextSize(tokens: number | string) {
+  //   return new ButtonBuilder()
+  //     .setCustomId(AiText.ButtonId.CONTEXT_SIZE)
+  //     .setLabel(`💭 Context: ${tokens.toLocaleString()} tokens`)
+  //     .setStyle(ButtonStyle.Primary)
+  //     .setEmoji('🧠');
+  // }
 
-  static responseSize(tokens: number | string) {
-    return new ButtonBuilder()
-      .setCustomId(AiText.ButtonId.RESPONSE_SIZE)
-      .setLabel(`📝 Response: ${tokens} tokens`)
-      .setStyle(ButtonStyle.Primary)
-      .setEmoji('📦');
-  }
+  // static responseSize(tokens: number | string) {
+  //   return new ButtonBuilder()
+  //     .setCustomId(AiText.ButtonId.RESPONSE_SIZE)
+  //     .setLabel(`📝 Response: ${tokens} tokens`)
+  //     .setStyle(ButtonStyle.Primary)
+  //     .setEmoji('📦');
+  // }
 }
 
 export default AiButton;

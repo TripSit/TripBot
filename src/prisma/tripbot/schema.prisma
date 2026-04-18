@@ -1,7 +1,7 @@
 generator client {
   provider      = "prisma-client-js"
   // output          = "/usr/src/app/node_modules/@prisma-tripbot/client"
-  output          = "./generated"
+  output        = "./generated"
   binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
 }
 
@@ -175,7 +175,6 @@ model rss {
 
   @@unique([guild_id, destination], map: "rss_guildid_destination_unique")
 }
-
 
 model wordle_scores {
   id      String @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
@@ -642,12 +641,7 @@ model ai_info {
   user_id          String    @unique @db.Uuid
   ai_tos_agree     DateTime?
   ai_privacy_agree DateTime?
-  user_summary     String    @default("I am a member of the TripSit discord.")
-  primary_model    String    @default("google/gemini-2.5-flash")
-  secondary_model  String    @default("google/gemini-2.0-flash-exp:free")
   persona_id       String    @default("tripbot")
-  context_size     Int       @default(10000)
-  response_size    Int       @default(500)
 
   ai_images   ai_image[]
   ai_messages ai_message[]
@@ -670,9 +664,9 @@ model ai_persona {
 }
 
 model ai_message {
-  id            String @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  ai_persona_id String @db.Uuid
-  message_id    String @unique
+  id            String  @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  ai_persona_id String  @db.Uuid
+  message_id    String  @unique
   ai_info_id    String? @db.Uuid // Optional because we can delete the ai_info record and not the messages
 
   prompt_tokens     Int   @default(0)

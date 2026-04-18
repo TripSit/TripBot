@@ -9,6 +9,7 @@ import {
   StringSelectMenuInteraction,
   TextDisplayBuilder,
 } from 'discord.js';
+import { env } from '../../../global/utils/env.config';
 import type { PersonaId } from './personas';
 
 export type AiComponent =
@@ -25,10 +26,14 @@ export type AiInteraction =
 
 export type PersonaName =
   | 'TripBot'
+  | 'Guardian'
   | 'Chill Buddy'
   | 'Wise Sage'
   | 'Hype Beast'
-  | 'Sassy Bot';
+  | 'Sassy Bot'
+  | 'Archivist'
+  | 'Psychonaut'
+  | 'IRC Veteran';
 
 export type FormalityLevel =
   | 'very_formal'
@@ -111,6 +116,8 @@ export type PersonalityConfig = {
   personality: PersonalityTraits;
 };
 
+export type PremiumRoles = typeof env.ROLE_PATRON | typeof env.ROLE_BOOSTER | typeof env.ROLE_MODERATOR;
+
 export type PersonaSpec = {
   id: PersonaId;
   name: PersonaName;
@@ -183,4 +190,49 @@ export interface WeatherData {
     name: string;
     type: string;
   };
+}
+
+export interface OpenRouterModel {
+  id: string;
+  canonical_slug: string;
+  hugging_face_id: string;
+  name: string;
+  created: number;
+  description: string;
+  context_length: number;
+  architecture: {
+    modality: string;
+    input_modalities: string[];
+    output_modalities: string[];
+    tokenizer: string;
+    instruct_type: string | null;
+  };
+  pricing: {
+    prompt: string;
+    completion: string;
+    // You might want to keep image/request here as optional
+    // depending on if you plan to use image models
+    image?: string;
+    request?: string;
+  };
+  top_provider: {
+    context_length: number;
+    max_completion_tokens: number;
+    is_moderated: boolean;
+  };
+  per_request_limits: {
+    prompt_tokens: string;
+    completion_tokens: string;
+  } | null;
+  supported_parameters: string[];
+  default_parameters: {
+    temperature: number | null;
+    top_p: number | null;
+    frequency_penalty: number | null;
+  };
+  expiration_date: string | null;
+}
+
+export interface OpenRouterModelsResponse {
+  data: OpenRouterModel[];
 }

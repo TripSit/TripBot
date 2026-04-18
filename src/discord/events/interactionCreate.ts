@@ -10,9 +10,9 @@ import {
   InteractionCreateEvent,
 } from '../@types/eventDef';
 import { commandRun } from '../utils/commandRun';
+import { autocomplete } from './autocomplete';
 import { buttonClick } from './buttonClick';
 import { selectMenu } from './selectMenu';
-import { autocomplete } from './autocomplete';
 // import { Users } from '../../global/@types/database';
 import { botBannedUsers } from '../utils/populateBotBans';
 import modalSubmit from './modalSubmit';
@@ -52,6 +52,9 @@ export const interactionCreate: InteractionCreateEvent = {
           discord_id: interaction.user.id,
         },
       });
+
+      log.debug(F, `Logging command usage: ${commandName} with options ${JSON.stringify(options)}`);
+      log.debug(F, `Command usage details - Channel ID: ${interaction.channel?.id}, Guild ID: ${interaction.guild?.id}`);
 
       const commandUsage = await db.command_usage.create({
         data: {
