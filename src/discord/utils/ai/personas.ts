@@ -151,7 +151,7 @@ export class AiPersona {
     emoji: '📠',
     config: {
       ...DEFAULT_PERSONALITY_CONFIG,
-      communicationStyle: { formality: 'casual', tone: 'serious', verbosity: 'brief' },
+      communicationStyle: { formality: 'casual', tone: 'deadpan', verbosity: 'brief' },
       language: {
         ...DEFAULT_PERSONALITY_CONFIG.language,
         slangUsage: 'generational', // Uses old internet speak

@@ -4,6 +4,7 @@ import {
   ActionRowBuilder,
   ButtonInteraction,
   ChannelSelectMenuInteraction,
+  Collection,
   ComponentType,
   ContainerBuilder,
   GuildMember,
@@ -223,8 +224,10 @@ export class AiFunction {
     const messageList: LanguageModelV3Prompt = [];
     const botNickname = message.guild?.members.me?.nickname || 'TripBot';
 
-    // RUTHLESS OPTIMIZATION: Limit history to 10 messages to save tokens
+    // Limit history to 10 messages to save tokens
     const fetchedMessages = await message.channel.messages.fetch({ limit: 10 });
+
+    log.debug(F, `Fetched ${fetchedMessages.size} messages from channel ${message.channelId} for prompt construction`);
 
     // Sort chronologically (fetch returns newest first)
     const sortedMessages = [...fetchedMessages.values()].reverse();
@@ -245,8 +248,14 @@ export class AiFunction {
       }
     });
 
+    log.debug(F, `Constructed message list with ${messageList.length} messages before adding system prompts for persona ${personaId}`);
+
+    const staffList = await this.getStaffList();
+
+    log.debug(F, `Fetched staff list for identity injection: ${staffList}`);
+
     // Identity Injection
-    messageList.unshift({ role: 'system', content: AiText.objectiveTruths });
+    messageList.unshift({ role: 'system', content: AiText.objectiveTruths(staffList) });
 
     const selectedPersona = AiPersona.List[personaId];
     if (selectedPersona) {
@@ -256,6 +265,9 @@ export class AiFunction {
         content: this.generateCompactPersonalityPrompt(selectedPersona),
       });
     }
+
+    log.debug(F, `Constructed prompt with ${messageList.length} messages for persona ${personaId}`);
+    log.debug(F, `Prompt content: ${JSON.stringify(messageList, null, 2)}`);
 
     return messageList;
   }
@@ -357,6 +369,7 @@ export class AiFunction {
       playful: 'Be fun, lighthearted, and enjoy the conversation. Don\'t be afraid to be silly.',
       sarcastic: 'Use wit, irony, and sarcasm as your primary communication style.',
       enthusiastic: 'Show genuine excitement and energy about topics and interactions!',
+      deadpan: 'Use dry, deadpan humor and a flat tone. Be serious on the surface but with subtle wit underneath.',
     };
     lines.push(`- ${toneInstructions[config.communicationStyle.tone]}`);
 
@@ -505,6 +518,43 @@ export class AiFunction {
   static checkPremiumStatus(member: GuildMember): boolean {
     const premiumRoles = [env.ROLE_PATREON, env.ROLE_BOOSTER, env.ROLE_PREMIUM, env.ROLE_TEAMTRIPSIT];
     return premiumRoles.some(role => member?.roles.cache.has(role));
+  }
+
+  static async getStaffList(): Promise<string> {
+    const staffRoles = [
+      { label: 'TRIPSITTER', id: env.ROLE_TRIPSITTER },
+      { label: 'MODERATOR', id: env.ROLE_MODERATOR },
+      { label: 'DEVELOPER', id: env.ROLE_DEVELOPER },
+    ];
+
+    // Fetch ALL members from the guild
+    const guild = await discordClient.guilds.fetch(env.DISCORD_GUILD_ID);
+    const allMembers: Collection<string, GuildMember> = await guild.members.fetch();
+
+    const categorizedStaff: {
+      label: string;
+      members: string[];
+    }[] = [];
+
+    staffRoles.forEach(roleDef => {
+      const membersWithRole: string[] = [];
+
+      allMembers.forEach(member => {
+        if (member.roles.cache.has(roleDef.id)) {
+          membersWithRole.push(member.user.username);
+        }
+      });
+
+      categorizedStaff.push({
+        label: roleDef.label,
+        members: membersWithRole.length > 0 ? membersWithRole : ['None'],
+      });
+    });
+
+    // Format categorized staff into a string
+    return categorizedStaff
+      .map(category => `**${category.label}:** ${category.members.join(', ')}`)
+      .join('\n');
   }
 }
 

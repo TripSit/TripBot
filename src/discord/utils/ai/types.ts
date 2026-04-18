@@ -53,6 +53,7 @@ export type ToneType =
   | 'friendly'
   | 'playful'
   | 'sarcastic'
+  | 'deadpan'
   | 'enthusiastic';
 export type ProfanityLevel = 'none' | 'mild' | 'moderate' | 'heavy';
 export type SlangUsage =

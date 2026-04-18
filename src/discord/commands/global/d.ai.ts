@@ -7,6 +7,7 @@ import {
   ButtonStyle,
   ChannelSelectMenuInteraction,
   ChannelType,
+  ClientUser,
   Colors,
   EmbedBuilder,
   GuildMember,
@@ -253,19 +254,25 @@ export async function aiMessage(messageData: Message<boolean>): Promise<void> {
   if (messageData.author.bot || messageData.cleanContent.length < 1) return;
   if (!messageData.guild) return;
 
+  log.debug(F, `Received message for AI processing: ${messageData.cleanContent} in #${messageData.channelId} by ${messageData.author.tag}`);
+
   // 1. Permission/Guild Check
   const guildData = await db.discord_guilds.findUnique({
     where: { id: messageData.guild.id },
     include: { ai_channels: true },
   });
 
+  log.debug(F, `Fetched guild data for ${messageData.guild.id}: ${JSON.stringify(guildData)}`);
+
   const isAiEnabled = guildData?.ai_channels.some(c => c.channel_id === messageData.channelId);
   if (!isAiEnabled) {
-    if (messageData.mentions.has(discordClient.user!)) {
+    if (messageData.mentions.has(discordClient.user as ClientUser)) {
       await messageData.reply('AI is not enabled in this channel. Ask an admin to run `/ai setup`.');
     }
     return;
   }
+
+  log.debug(F, `AI is enabled for channel ${messageData.channelId}. Continuing processing.`);
 
   // 2. User Data & Agreement Check
   const userData = await db.users.upsert({
@@ -275,13 +282,19 @@ export async function aiMessage(messageData: Message<boolean>): Promise<void> {
     include: { ai_info: true },
   });
 
+  log.debug(F, `Fetched user data for ${messageData.author.id}: ${JSON.stringify(userData)}`);
+
   if (!userData.ai_info?.ai_tos_agree || !userData.ai_info?.ai_privacy_agree) {
     await messageData.reply('Please review and agree to `/ai tos` and `/ai privacy` before chatting.');
     return;
   }
 
+  log.debug(F, `User ${messageData.author.id} has agreed to TOS and Privacy. Continuing processing.`);
+
   // 3. Cost & Model Selection
   const isPremium = AiFunction.checkPremiumStatus(messageData.member as GuildMember);
+
+  log.debug(F, `User ${messageData.author.id} premium status: ${isPremium}`);
 
   // Use aggregate and alias to avoid ESLint dangling underscore errors
   const rollingStats = await db.ai_message.aggregate({
@@ -292,28 +305,32 @@ export async function aiMessage(messageData: Message<boolean>): Promise<void> {
     },
   });
 
+  log.debug(F, `Fetched rolling stats for ${messageData.author.id}: ${JSON.stringify(rollingStats)}`);
+
   const { _sum: rollingSum } = rollingStats; // Aliasing here
   const currentCost = rollingSum.usd || 0;
 
   const dailyLimit = isPremium ? 0.50 : 0.05;
   const model = currentCost < dailyLimit ? AiText.primaryModel : AiText.backupModel;
 
+  log.debug(F, `Selected model for user ${messageData.author.id}: ${model} (Current cost: $${currentCost.toFixed(4)}, Daily limit: $${dailyLimit})`);
+
   // 4. Typing Indicator Setup
-  let typingInterval: NodeJS.Timeout | undefined;
   if (messageData.channel.isTextBased() && !messageData.channel.isDMBased()) {
-    const textChannel = messageData.channel;
-    await textChannel.sendTyping();
-    typingInterval = setInterval(() => {
-      textChannel.sendTyping().catch(() => {
-        if (typingInterval) clearInterval(typingInterval);
-      });
-    }, 9000);
+    await messageData.channel.sendTyping();
   }
+
+  log.debug(F, `Sent typing indicator in channel ${messageData.channelId}`);
 
   // 5. Generate and Process Response
   try {
     const personaId = (userData.ai_info.persona_id as PersonaId) || 'tripbot';
+
+    log.debug(F, `Using persona ${personaId} for user ${messageData.author.id}`);
+
     const prompt = await AiFunction.createPrompt(messageData, personaId);
+
+    log.debug(F, `Generated prompt for user ${messageData.author.id} with persona ${personaId}: ${prompt}`);
 
     const chatResponse = await OpenRouterClient.chat({
       model,
@@ -323,6 +340,8 @@ export async function aiMessage(messageData: Message<boolean>): Promise<void> {
 
     const { content, usage } = chatResponse;
 
+    log.debug(F, `Received response from OpenRouter for user ${messageData.author.id}: ${content} (Usage: ${JSON.stringify(usage)})`);
+
     // Audit & Database Logging
     await AiFunction.aiAudit(messageData.author, messageData, prompt, chatResponse, model);
 
@@ -331,6 +350,8 @@ export async function aiMessage(messageData: Message<boolean>): Promise<void> {
       create: { name: personaId },
       update: {},
     });
+
+    log.debug(F, `Upserted persona data for ${personaId}: ${JSON.stringify(personaData)}`);
 
     await db.ai_message.create({
       data: {
@@ -344,19 +365,20 @@ export async function aiMessage(messageData: Message<boolean>): Promise<void> {
       },
     });
 
+    log.debug(F, `Created AI message for user ${messageData.author.id}: ${JSON.stringify(messageData)}`);
+
     const reply = await messageData.reply({
       content: content.slice(0, 2000),
       allowedMentions: { parse: [] },
     });
+
+    log.debug(F, `Sent AI response to user ${messageData.author.id} in channel ${messageData.channelId}`);
 
     await reply.react('👍');
     await reply.react('👎');
   } catch (err) {
     log.error(F, `AI Error: ${err}`);
     await messageData.reply("I'm having trouble thinking right now. Try again in a minute.");
-  } finally {
-    // 6. The Failsafe: Always stop typing regardless of success or error
-    if (typingInterval) clearInterval(typingInterval);
   }
 }
 
@@ -427,9 +449,13 @@ export async function aiReaction(
       },
   });
 
-  const channelAiVoteLog = (await discordClient.channels.fetch(
+  const channelAiVoteLog = await discordClient.channels.fetch(
     env.CHANNEL_AIVOTELOG,
-  )) as TextChannel;
+  );
+  if (!channelAiVoteLog || !channelAiVoteLog.isSendable()) {
+    log.error(F, 'AI Vote Log channel not found or not text-based');
+    return;
+  }
   log.debug(F, 'Sending message to vote room');
   await channelAiVoteLog.send({
     embeds: [
@@ -455,7 +481,7 @@ export async function aiReaction(
             
         **Thank you for your feedback, I have notified Moonbear that this response was improper.**`;
 
-    // This happens before the message is edited, so we need to fetch the original message
+    // This happens before the message is edited, so we need to fetch the original message.
 
     await channelAiVoteLog.send({
       content: stripIndents`
