@@ -477,23 +477,37 @@ export async function aiMenu(
     customId, values, user, member,
   } = interaction;
 
-  log.debug(F, `AI Menu interaction with customId: ${customId} and values: ${values}`);
+  log.debug(F, `AI Menu interaction with customId: ${customId}`);
 
   switch (customId) {
     case AiText.MenuId.PERSONA_SELECT: {
       const selectedId = values[0] as PersonaId;
+      log.debug(F, `User selected a persona: ${selectedId}`);
 
       // SECURITY: Re-verify roles before saving
       const isPremium = AiFunction.checkPremiumStatus(member as GuildMember);
+
+      log.debug(F, `User premium status: ${isPremium}`);
 
       if (!isPremium) {
         return { content: '🔒 This persona is for Patrons and Boosters only!' };
       }
 
+      const userData = await db.users.upsert({
+        where: { discord_id: user.id },
+        create: { discord_id: user.id },
+        update: {},
+      });
+
+      log.debug(F, `User data ${JSON.stringify(userData)}`);
+
       await db.ai_info.update({
-        where: { user_id: (await db.users.findUnique({ where: { discord_id: user.id } }))?.id },
+        where: { user_id: userData.id },
         data: { persona_id: selectedId },
       });
+
+      log.debug(F, `Updated persona for user ${user.id} to ${selectedId} in the database`);
+
       return AiPage.userSettings(interaction);
     }
     case AiText.MenuId.GUILD_CHANNELS: {

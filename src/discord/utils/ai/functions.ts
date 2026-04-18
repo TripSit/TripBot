@@ -26,7 +26,7 @@ import {
   PersonaSpec,
 } from './types';
 
-const F = f(__filename);
+const F = f(__filename); // eslint-disable-line
 
 export class AiFunction {
   static getComponentById(
@@ -68,14 +68,20 @@ export class AiFunction {
   ) {
     const userRecord = await db.users.findUnique({
       where: { discord_id: user.id },
-      include: { ai_info: true },
+      include: {
+        ai_info: {
+          include: {
+            _count: { select: { ai_messages: true } }, // Get lifetime count here
+          },
+        },
+      },
     });
 
     const personaId = userRecord?.ai_info?.persona_id || 'tripbot';
     const aiInfoId = userRecord?.ai_info?.id || null;
 
     let rollingUsd = 0;
-    let totalMessages = 0;
+    const totalMessages = userRecord?.ai_info?._count.ai_messages || 0; // eslint-disable-line
 
     if (aiInfoId) {
       const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
@@ -86,7 +92,6 @@ export class AiFunction {
 
       const { _sum: rollingSum } = agg;
       rollingUsd = (rollingSum.usd ?? 0) + (chatResponse.usage?.cost || 0);
-      totalMessages = await db.ai_message.count({ where: { ai_info_id: aiInfoId } });
     }
 
     // 1. FIXED: Handle the 'object object' bug by extracting text parts properly
@@ -175,8 +180,6 @@ export class AiFunction {
     } else {
       buttonId = AiText.AiSubcommand.INFO as keyof typeof AiText.AiSubcommand;
     }
-
-    log.debug(F, `Determining page menu placeholder for interaction type ${interaction.type} with ID ${buttonId}`);
 
     switch (buttonId) {
       case AiText.AiSubcommand.INFO:

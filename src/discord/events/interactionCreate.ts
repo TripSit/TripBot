@@ -53,9 +53,6 @@ export const interactionCreate: InteractionCreateEvent = {
         },
       });
 
-      log.debug(F, `Logging command usage: ${commandName} with options ${JSON.stringify(options)}`);
-      log.debug(F, `Command usage details - Channel ID: ${interaction.channel?.id}, Guild ID: ${interaction.guild?.id}`);
-
       const commandUsage = await db.command_usage.create({
         data: {
           command: commandName,

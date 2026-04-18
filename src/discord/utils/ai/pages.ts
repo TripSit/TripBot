@@ -339,13 +339,15 @@ export class AiPage {
       `),
     );
 
-    // Persona Selection Menu
-    container.addActionRowComponents(
-      new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(
-        AiMenu.aiPersonasSelect(isPremium)
-          .setPlaceholder(`Switch Persona (Current: ${persona.name})`),
-      ),
-    );
+    if (isPremium) {
+      // Persona Selection Menu
+      container.addActionRowComponents(
+        new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(
+          AiMenu.aiPersonasSelect(isPremium)
+            .setPlaceholder(`Switch Persona (Current: ${persona.name})`),
+        ),
+      );
+    }
 
     container.addSeparatorComponents(s => s.setDivider(true));
 
