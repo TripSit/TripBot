@@ -1,26 +1,27 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { getVoiceConnection } from '@discordjs/voice';
+import 'module-alias/register';
 // import { stripIndents } from 'common-tags';
-import sourceMap from 'source-map-support'; // eslint-disable-line
+import Canvas from '@napi-rs/canvas';
 import {
-  ChatInputCommandInteraction,
-  UserContextMenuCommandInteraction,
-  MessageContextMenuCommandInteraction,
   ButtonInteraction,
-  StringSelectMenuInteraction,
-  ModalSubmitInteraction,
   ChannelSelectMenuInteraction,
+  ChatInputCommandInteraction,
+  MessageContextMenuCommandInteraction,
+  ModalSubmitInteraction,
+  StringSelectMenuInteraction,
+  UserContextMenuCommandInteraction,
 } from 'discord.js';
 import * as path from 'path';
-import Canvas from '@napi-rs/canvas';
-import db from './prisma/tripbot/client';
-import { env } from './global/utils/env.config';
-import { log } from './global/utils/log';
-import validateEnv from './global/utils/env.validate'; // eslint-disable-line
-import commandContext from './discord/utils/context'; // eslint-disable-line
-import discordConnect from './discord/discord';
+import sourceMap from 'source-map-support'; // eslint-disable-line
 import api from './api/api'; // eslint-disable-line
+import discordConnect from './discord/discord';
+import commandContext from './discord/utils/context'; // eslint-disable-line
+import { env } from './global/utils/env.config';
+import validateEnv from './global/utils/env.validate'; // eslint-disable-line
+import { log } from './global/utils/log';
 import updateDb from './global/utils/updateDb';
+import db from './prisma/tripbot/client';
 // import startMatrix from './matrix/matrix';
 // import ircConnect from './irc/irc';
 // import telegramConnect from './telegram/telegram';
