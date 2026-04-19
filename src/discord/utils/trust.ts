@@ -14,7 +14,7 @@ import {
   // GuildBan,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
-import { members } from '@prisma/client';
+import { members } from '@db/tripbot';
 import {
   modButtonBan,
   modButtonInfo,

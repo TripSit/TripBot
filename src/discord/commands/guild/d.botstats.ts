@@ -5,7 +5,6 @@ import {
 import ms from 'ms';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
-import commandContext from '../../utils/context';
 import { botStats } from '../../../global/commands/g.botstats';
 
 const F = f(__filename);
@@ -18,53 +17,63 @@ export const dBotstats: SlashCommand = {
     .addBooleanOption(option => option.setName('ephemeral')
       .setDescription('Set to "True" to show the response only to you')) as SlashCommandBuilder,
   async execute(interaction) {
-    log.info(F, await commandContext(interaction));
-    const startTime = new Date().getTime();
-    log.info(F, `Command started at ${startTime}`);
-    // log.info(F, await commandContext(interaction));
-    log.info(F, 'Attempting to defer reply...');
+    const startTime = Date.now();
     const ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined;
+
     await interaction.deferReply({ flags: ephemeral });
-    log.info(F, `Reply deferred in ${new Date().getTime() - startTime}ms`);
+    log.info(F, `Reply deferred in ${Date.now() - startTime}ms`);
 
-    // Check if the user is an admin
-    const actorIsAdmin = interaction.user.id === env.DISCORD_OWNER_ID;
     const statData = await botStats();
-    const drivePercentPadded = `${statData.driveUsage.toString()}%`.padEnd(3, ' ');
-    const memPercentPadded = `${statData.memUsage.toString()}%`.padEnd(3, ' ');
-    const cpuPercentPadded = `${statData.cpuUsage.toString()}%`.padEnd(3, ' ');
-    const guildStr = `Guilds:   ${statData.guildCount.toString()}`;
-    const channelStr = `Channels: ${statData.channelCount.toString()}`;
-    const userStr = `Users:    ${statData.userCount.toString()}`;
-    const commandStr = `Commands: ${statData.commandCount.toString()}`;
-    const pingStr = `Ping:     ${statData.ping.toString()}ms`;
-    const botUptimeStr = `Bot Up:   ${ms(statData.uptime)}`;
+    const actorIsAdmin = interaction.user.id === env.DISCORD_OWNER_ID;
 
-    const networkStr = actorIsAdmin ? `Network:  ${statData.netDown} down, ${statData.netUp} up` : '';
-    const cpuStr = actorIsAdmin ? `CPU:      ${cpuPercentPadded} of ${statData.cpuCount.toString()} cores` : '';
-    const memStr = actorIsAdmin ? `Memory:   ${memPercentPadded} of ${statData.memTotal.toString()} MB` : '';
-    const driveStr = actorIsAdmin ? `Drive:    ${drivePercentPadded} of ${statData.driveTotal.toString()} GB` : '';
-    const dbStr = actorIsAdmin ? `Drug DB:  ${statData.tsDbSize.toString()} TS, ${statData.tsPwDbSize.toString()} TS+PW` : ''; // eslint-disable-line
-    const hostUptimeStr = actorIsAdmin ? `Host Up:  ${ms(statData.hostUptime)}` : '';
+    // --- Column 1: Bot & Discord Stats ---
+    const guildStr = `Guilds:   ${statData.guildCount}`;
+    const userStr = `Users:    ${statData.userCount}`;
+    const commandStr = `Commands: ${statData.commandCount}`;
+    const dbSizeStr = `Drug DB:  ${statData.tsDbSize}TS / ${statData.tsPwDbSize}PW`;
+    const botUptimeStr = `Bot Up:   ${ms(statData.uptime)}`;
+    const pingStr = `Ping:     ${statData.ping}ms`;
+
+    // --- Column 2: System & Health (Admin Only) ---
+    // Using a simple indicator for DB health
+    const dbHealth = `DB Health: Tripbot:${statData.dbTripbotStatus === 'Online' ? '✔' : '✘'} Moodle:${statData.dbMoodleStatus === 'Online' ? '✔' : '✘'}`;
+    const nodeMemStr = `Node Heap: ${statData.nodeHeapUsed} / ${statData.nodeHeapTotal} MB`;
+    const cpuStr = `CPU:      ${statData.cpuUsage}% of ${statData.cpuCount} cores`;
+    const memStr = `Sys Mem:  ${statData.memUsage}% of ${statData.memTotal} MB`;
+    const driveStr = `Drive:    ${statData.driveUsage}% of ${statData.driveTotal} GB`;
+    const netStr = `Net:      ${statData.netDown}↓ ${statData.netUp}↑ MB`;
+    const hostUpStr = `Host Up:  ${ms(statData.hostUptime * 1000)}`; // os-utils returns seconds, ms() expects ms
 
     const columns = [
-      [guildStr, dbStr],
-      [channelStr, memStr],
-      [userStr, driveStr],
+      [guildStr, dbHealth],
+      [userStr, nodeMemStr],
       [commandStr, cpuStr],
-      [botUptimeStr, hostUptimeStr],
-      [pingStr, networkStr],
+      [dbSizeStr, memStr],
+      [botUptimeStr, driveStr],
+      [pingStr, netStr],
     ];
 
-    const longest = columns.reduce((long, str) => Math.max(long, str[0].length), 0);
-    const message = columns.map(col => `${col[0].padEnd(longest)}  ${col[1]}`).join('\n');
+    // Add Host Uptime as a separate row if Admin
+    if (actorIsAdmin) {
+      columns.push(['', hostUpStr]);
+    }
 
-    // Create the embed
+    // Dynamic padding logic
+    const longest = columns.reduce((long, str) => Math.max(long, str[0].length), 0);
+    const message = columns
+      .map(col => {
+        // If the user isn't an admin, we only show the first column
+        if (!actorIsAdmin) return col[0];
+        return `${col[0].padEnd(longest)}   ${col[1]}`;
+      })
+      .join('\n');
+
     const embed = embedTemplate()
       .setAuthor(null)
-      .setFooter(null)
-      .setTitle('Bot Stats')
-      .setDescription(`\`\`\`${message}\`\`\``);
+      .setFooter({ text: `Generated in ${Date.now() - startTime}ms` })
+      .setTitle('🚀 TripBot System Status')
+      .setDescription(`\`\`\`ml\n${message}\`\`\``); // 'ml' formatting adds a bit of color coding in Discord
+
     await interaction.editReply({ embeds: [embed] });
     return true;
   },

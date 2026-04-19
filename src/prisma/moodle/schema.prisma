@@ -3,13 +3,13 @@ generator client {
   previewFeatures = ["fullTextIndex"]
   // output          = "./@prisma-moodle/client"
   // output          = "/usr/src/app/node_modules/@prisma-moodle/client"
-  output          = "./../../../node_modules/@prisma-moodle/client"
+  // output          = "./../../../node_modules/@prisma-moodle/client"
+  output          = "./generated"
   binaryTargets   = ["native", "linux-musl-openssl-3.0.x"]
 }
 
 datasource db {
   provider = "mysql"
-  url      = env("MOODLE_DB_URL")
 }
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments

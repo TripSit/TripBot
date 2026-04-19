@@ -9,6 +9,8 @@ COPY .devcontainer/.tmux.conf /root/.tmux.conf
 COPY package*.json ./
 RUN npm ci --no-audit --silent
 COPY . .
+RUN npx prisma generate --schema=./src/prisma/tripbot/schema.prisma
+RUN npx prisma generate --schema=./src/prisma/moodle/schema.prisma
 
 ###################
 # BUILD FOR PRODUCTION (The "Kitchen Sink" stage)

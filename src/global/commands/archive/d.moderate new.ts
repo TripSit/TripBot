@@ -30,7 +30,7 @@ import {
   TextInputStyle,
 } from 'discord-api-types/v10';
 import { stripIndents } from 'common-tags';
-import { user_action_type, user_actions, users } from '@prisma/client';
+import { user_action_type, user_actions, users } from '@db/tripbot';
 import { SlashCommand } from '../../../discord/@types/commandDef';
 import { parseDuration } from '../../utils/parseDuration';
 import commandContext from '../../../discord/utils/context'; // eslint-disable-line

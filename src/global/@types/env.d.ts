@@ -20,6 +20,10 @@ declare global {
       IMDB_TOKEN: string | undefined;
       LOGTAIL_TOKEN: string | undefined;
       GLITCHTIP_DSN: string | undefined;
+      OPENROUTER_KEY: string | undefined;
+      OPENAI_API_ORG: string | undefined;
+      OPENAI_API_KEY: string | undefined;
+      GEMINI_KEY: string | undefined;
 
       SONAR_URL: string | undefined;
       SONAR_TOKEN: string | undefined;

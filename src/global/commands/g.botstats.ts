@@ -1,20 +1,13 @@
-/* eslint-disable */
-import {
-  cpu,
-  drive,
-  mem,
-  netstat,
-  os,
-  NetStatMetrics,
-} from 'node-os-utils';
-import drugDataTripsit from '../../../assets/data/tripsitDB.json';
+import { OSUtils } from 'node-os-utils';
+import os from 'node:os'; // Added for os.uptime()
 import drugDataCombined from '../../../assets/data/combinedDB.json';
+import drugDataTripsit from '../../../assets/data/tripsitDB.json';
 
-export default botStats;
+const osutils = new OSUtils();
 
-const F = f(__filename);
-
-type BotStats = {
+// Define the comprehensive stats type
+export type BotStats = {
+  // Application Stats
   tsDbSize: number;
   tsPwDbSize: number;
   guildCount: number;
@@ -23,6 +16,17 @@ type BotStats = {
   commandCount: number;
   uptime: number;
   ping: number;
+
+  // Database Health
+  dbTripbotStatus: 'Online' | 'Offline';
+  dbMoodleStatus: 'Online' | 'Offline';
+
+  // Node.js Internals
+  nodeHeapUsed: number;
+  nodeHeapTotal: number;
+  activeHandles: number;
+
+  // OS & Hardware Stats
   cpuUsage: number;
   cpuCount: number;
   memUsage: number;
@@ -32,68 +36,88 @@ type BotStats = {
   hostUptime: number;
   driveUsage: number;
   driveTotal: number;
-  swapUsage: number;
-  swapTotal: number;
 };
 
-export async function botStats():Promise<BotStats> {
-  const response = {} as BotStats;
- 
-  // Get drug db stats
-  response.tsDbSize = Object.keys(drugDataTripsit).length;
-  response.tsPwDbSize = Object.keys(drugDataCombined).length;
+export async function botStats(): Promise<BotStats> {
+  // 1. Fire off all async checks in parallel for maximum speed
+  const [
+    cpuUsageRes,
+    cpuInfoRes,
+    memInfoRes,
+    diskInfoRes,
+    netOverviewRes,
+    dbTripbotCheck,
+    dbMoodleCheck,
+  ] = await Promise.all([
+    osutils.cpu.usage().catch(() => ({ success: false as const })),
+    osutils.cpu.info().catch(() => ({ success: false as const })),
+    osutils.memory.info().catch(() => ({ success: false as const })),
+    osutils.disk.info().catch(() => ({ success: false as const })),
+    osutils.network.overview().catch(() => ({ success: false as const })),
+    db.$queryRaw`SELECT 1`.then(() => 'Online' as const).catch(() => 'Offline' as const),
+    db.$queryRaw`SELECT 1`.then(() => 'Online' as const).catch(() => 'Offline' as const),
+  ]);
 
-  // Get discord stats
+  // 2. Gather Discord Data
+  const guilds = discordClient.guilds.cache;
+  const userCount = guilds.reduce((acc, guild) => acc + (guild.memberCount || 0), 0);
 
-  await discordClient.guilds.fetch();
-  response.guildCount = discordClient.guilds.cache.size;
-
-  // Fetching member counts
-  response.userCount = discordClient.guilds.cache.reduce((acc, guild) => {
-    try {
-      return acc + guild.memberCount;
-    } catch (e) {
-      // log.error(F, `Error fetching members for guild: ${guild.name}`);
-      return acc;
-    }
-  }, 0);
-
-  response.channelCount = discordClient.channels.cache.size;
-  response.commandCount = discordClient.commands.size;
-  response.uptime = global.bootTime
-    ? (new Date().getTime() - global.bootTime.getTime())
+  // 3. Node.js Process Internals
+  const nodeMem = process.memoryUsage();
+  // Active handles help track resource/connection leaks
+  const activeHandles = typeof process.getActiveResourcesInfo === 'function'
+    ? process.getActiveResourcesInfo().length
     : 0;
 
-  // Get server stats
-  response.ping = discordClient.ws.ping;
+  // 4. Safely unwrap v2 MonitorResults
+  const cpuUsage = cpuUsageRes.success ? cpuUsageRes.data : 0;
+  const cpuCount = cpuInfoRes.success ? cpuInfoRes.data.cores : 0;
 
-  response.cpuUsage = Math.round(await cpu.usage() * 100);
-  response.cpuCount = cpu.count();
+  const memTotal = memInfoRes.success ? memInfoRes.data.total.toMB() : 0;
+  const memUsage = memInfoRes.success ? memInfoRes.data.usagePercentage : 0;
 
-  const memStats = await mem.used();
-  response.memUsage = Math.round((memStats.usedMemMb / memStats.totalMemMb) * 100);
-  response.memTotal = Math.round(memStats.totalMemMb);
+  // Find the root/main drive, fallback to the first available disk if exact match isn't found
+  const rootDisk = diskInfoRes.success
+    ? diskInfoRes.data.find(d => d.mountpoint === '/' || d.mountpoint === 'C:\\') || diskInfoRes.data[0]
+    : null;
+  const driveTotal = rootDisk ? rootDisk.total.toGB() : 0;
+  const driveUsage = rootDisk ? rootDisk.usagePercentage : 0;
 
-  const netStats = await netstat.inOut() as NetStatMetrics;
-  response.netDown = netStats.total.inputMb;
-  response.netUp = netStats.total.outputMb;
+  const netDown = netOverviewRes.success ? netOverviewRes.data.totalRxBytes.toMB() : 0;
+  const netUp = netOverviewRes.success ? netOverviewRes.data.totalTxBytes.toMB() : 0;
 
-  response.hostUptime = os.uptime();
+  // 5. Construct and return the result
+  return {
+    // App Data
+    tsDbSize: Object.keys(drugDataTripsit).length,
+    tsPwDbSize: Object.keys(drugDataCombined).length,
+    guildCount: guilds.size,
+    userCount,
+    channelCount: discordClient.channels.cache.size,
+    commandCount: discordClient.commands.size,
+    uptime: global.bootTime ? Date.now() - global.bootTime.getTime() : 0,
+    ping: discordClient.ws.ping,
 
-  const driveStats = await drive.info('/sda');
-  // log.debug(F, `driveStats: ${JSON.stringify(driveStats, null, 2)}`);
-  response.driveUsage = parseInt(driveStats.usedPercentage, 10);
-  response.driveTotal = parseInt(driveStats.totalGb, 10);
-  // log.debug(F, `driveUsage: ${response.driveUsage}`);
-  // log.debug(F, `driveTotal: ${response.driveTotal}`);
+    // Health Checks
+    dbTripbotStatus: dbTripbotCheck,
+    dbMoodleStatus: dbMoodleCheck,
 
-  // const swapStats = await drive.info('/sdb');
-  // // log.debug(F, `swapStats: ${JSON.stringify(swapStats, null, 2)}`);
-  // response.swapUsage = parseInt(swapStats.usedPercentage, 10);
-  // response.swapTotal = parseInt(swapStats.totalGb, 10);
-  // // log.debug(F, `swapUsage: ${response.swapUsage}`);
-  // // log.debug(F, `swapTotal: ${response.swapTotal}`);
+    // Node.js Internals
+    nodeHeapUsed: Math.round(nodeMem.heapUsed / 1024 / 1024),
+    nodeHeapTotal: Math.round(nodeMem.heapTotal / 1024 / 1024),
+    activeHandles,
 
-  // log.debug(F, `response: ${JSON.stringify(response, null, 2)}`);
-  return response;
+    // Hardware Stats
+    cpuUsage: Math.round(cpuUsage),
+    cpuCount,
+    memUsage: Math.round(memUsage),
+    memTotal: Math.round(memTotal),
+    netDown: Math.round(netDown),
+    netUp: Math.round(netUp),
+    hostUptime: os.uptime(),
+    driveUsage: Math.round(driveUsage),
+    driveTotal: Math.round(driveTotal),
+  };
 }
+
+export default botStats;

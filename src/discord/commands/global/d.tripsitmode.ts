@@ -37,7 +37,7 @@ import {
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
 import { DateTime } from 'luxon';
-import { ticket_status } from '@prisma/client';
+import { ticket_status } from '@db/tripbot';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 // import {embedTemplate} from '../../utils/embedTemplate';

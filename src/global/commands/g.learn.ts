@@ -1,12 +1,8 @@
 /* eslint-disable max-len */
 import { stripIndents } from 'common-tags';
-import { PrismaClient as PrismaClientTripbot } from '@prisma/client';
-// eslint-disable-next-line import/no-extraneous-dependencies
-import { PrismaClient as PrismaClientMoodle } from '@prisma-moodle/client';
 import { DateTime } from 'luxon';
-
-const moodleDb = new PrismaClientMoodle();
-const tripbotDb = new PrismaClientTripbot();
+import tripbotDb from '../../prisma/tripbot/client';
+import moodleDb from '../../prisma/moodle/client';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const F = f(__filename);

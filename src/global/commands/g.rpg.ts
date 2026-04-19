@@ -1,4 +1,4 @@
-import { personas } from '@prisma/client';
+import { personas } from '@db/tripbot';
 
 const F = f(__filename); // eslint-disable-line
 

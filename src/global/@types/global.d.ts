@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from '@db/tripbot';
 import { Client as DiscordClient } from 'discord.js';
 import { DateTime } from 'luxon';
 import Rollbar from 'rollbar';
