@@ -92,7 +92,7 @@ export class AiFunction {
       });
 
       const { _sum: rollingSum } = agg;
-      rollingUsd = (rollingSum.usd ?? 0) + (chatResponse.usage?.cost || 0);
+      rollingUsd = Number(rollingSum.usd ?? 0) + (chatResponse.usage?.cost || 0);
     }
 
     // 1. FIXED: Handle the 'object object' bug by extracting text parts properly

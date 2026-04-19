@@ -313,10 +313,10 @@ export class AiPage {
     const { _count: dailyCount, _sum: dailySum } = dailyStats;
 
     const totalMsgs = totalCount.id || 0;
-    const totalTokens = totalSum.tokens || 0;
-    const totalUsd = totalSum.usd || 0;
-    const todayUsd = dailySum.usd || 0;
-    const todayTokens = dailySum.tokens || 0;
+    const totalTokens = Number(totalSum.tokens || 0);
+    const totalUsd = Number(totalSum.usd || 0);
+    const todayUsd = Number(dailySum.usd || 0);
+    const todayTokens = Number(dailySum.tokens || 0);
     const avgCost = totalMsgs > 0 ? (totalUsd / totalMsgs).toFixed(5) : '0.00000';
 
     // 5. Build the Progress Bar

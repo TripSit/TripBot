@@ -308,7 +308,7 @@ export async function aiMessage(messageData: Message<boolean>): Promise<void> {
   log.debug(F, `Fetched rolling stats for ${messageData.author.id}: ${JSON.stringify(rollingStats)}`);
 
   const { _sum: rollingSum } = rollingStats; // Aliasing here
-  const currentCost = rollingSum.usd || 0;
+  const currentCost = rollingSum.usd ? rollingSum.usd.toNumber() : 0;
 
   const dailyLimit = isPremium ? 0.50 : 0.05;
   const model = currentCost < dailyLimit ? AiText.primaryModel : AiText.backupModel;
