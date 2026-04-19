@@ -29,7 +29,7 @@ RUN npx prisma generate --schema=./src/prisma/moodle/schema.prisma
 RUN npx tsc
 
 # 4. PRUNE: Remove devDependencies (this deletes the clients we just made)
-RUN rm -rf node_modules && npm ci --omit=dev --no-audit --silent
+RUN rm -rf node_modules && npm ci --omit=dev --no-audit --silent --ignore-scripts
 
 # 5. GENERATE FOR RUNTIME: Re-inject the clients into the clean node_modules
 RUN npx prisma generate --schema=./src/prisma/tripbot/schema.prisma
