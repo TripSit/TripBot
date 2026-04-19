@@ -42,40 +42,6 @@ export class AiPersona {
     },
   };
 
-  static readonly ChillBuddy: PersonaSpec = {
-    id: 'chill_buddy',
-    name: 'Chill Buddy',
-    description: 'Laid back and casual, like talking to a friend.',
-    emoji: '😎',
-    config: {
-      ...DEFAULT_PERSONALITY_CONFIG,
-      communicationStyle: { ...DEFAULT_PERSONALITY_CONFIG.communicationStyle, formality: 'casual' },
-      language: {
-        ...DEFAULT_PERSONALITY_CONFIG.language,
-        profanityLevel: 'mild',
-        slangUsage: 'moderate',
-        emojiFrequency: 'frequent',
-        punctuationStyle: 'expressive',
-      },
-      personality: { ...DEFAULT_PERSONALITY_CONFIG.personality, humor: 'silly', confidence: 'modest' },
-    },
-  };
-
-  static readonly WiseSage: PersonaSpec = {
-    id: 'wise_sage',
-    name: 'Wise Sage',
-    description: 'Thoughtful, philosophical, and calm.',
-    emoji: '🧙‍♂️',
-    config: {
-      ...DEFAULT_PERSONALITY_CONFIG,
-      communicationStyle: {
-        ...DEFAULT_PERSONALITY_CONFIG.communicationStyle, formality: 'formal', tone: 'serious',
-      },
-      language: { ...DEFAULT_PERSONALITY_CONFIG.language, emojiFrequency: 'rare', punctuationStyle: 'standard' },
-      personality: { ...DEFAULT_PERSONALITY_CONFIG.personality, humor: 'dry', confidence: 'confident' },
-    },
-  };
-
   static readonly HypeBeast: PersonaSpec = {
     id: 'hype_beast',
     name: 'Hype Beast',
@@ -165,8 +131,6 @@ export class AiPersona {
   /** Helper to get all personas as a Record for easy lookup by ID */
   static readonly List: Record<string, PersonaSpec> = {
     tripbot: AiPersona.TripBot,
-    chill_buddy: AiPersona.ChillBuddy,
-    wise_sage: AiPersona.WiseSage,
     hype_beast: AiPersona.HypeBeast,
     sassy_bot: AiPersona.SassyBot,
     archivist: AiPersona.Archivist,
