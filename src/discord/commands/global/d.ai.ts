@@ -500,7 +500,7 @@ export async function aiMenu(
   interaction: ChannelSelectMenuInteraction | StringSelectMenuInteraction,
 ): Promise<InteractionEditReplyOptions> {
   const {
-    customId, values, user, member,
+    customId, values, user,
   } = interaction;
 
   log.debug(F, `AI Menu interaction with customId: ${customId}`);
@@ -509,15 +509,6 @@ export async function aiMenu(
     case AiText.MenuId.PERSONA_SELECT: {
       const selectedId = values[0] as PersonaId;
       log.debug(F, `User selected a persona: ${selectedId}`);
-
-      // SECURITY: Re-verify roles before saving
-      const isPremium = AiFunction.checkPremiumStatus(member as GuildMember);
-
-      log.debug(F, `User premium status: ${isPremium}`);
-
-      if (!isPremium) {
-        return { content: '🔒 This persona is for Patrons and Boosters only!' };
-      }
 
       const userData = await db.users.upsert({
         where: { discord_id: user.id },

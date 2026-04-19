@@ -34,19 +34,12 @@ export class AiMenu {
       );
   }
 
-  static aiPersonasSelect(isPremium: boolean): StringSelectMenuBuilder {
+  static aiPersonasSelect(): StringSelectMenuBuilder {
     // Get all static properties that are PersonaSpecs
     const personaEntries = Object.getOwnPropertyNames(AiPersona)
       .map(key => ({ key, value: (AiPersona as any)[key] }))
       .filter(({ value }) => value && typeof value === 'object' && value.id && value.name && value.config)
-      .map(({ value }) => value as PersonaSpec)
-      // filter out any persona except for tripbot if the user is not premium
-      .filter(persona => {
-        if (isPremium) {
-          return true;
-        }
-        return persona.id === AiPersona.TripBot.id;
-      });
+      .map(({ value }) => value as PersonaSpec);
     return new StringSelectMenuBuilder()
       .setCustomId(AiText.MenuId.PERSONA_SELECT)
       .setPlaceholder('Please select a persona to use.')

@@ -102,7 +102,7 @@ export class AiPage {
   static async personas(
     interaction: AiInteraction | ChannelSelectMenuInteraction,
   ): Promise<InteractionEditReplyOptions> {
-    const { user, member } = interaction;
+    const { user } = interaction;
 
     // 1. Fetch Global Usage (Optimized GroupBy)
     // Aliasing to satisfy ESLint no-underscore-dangle
@@ -111,9 +111,18 @@ export class AiPage {
       _count: { id: true },
     });
 
+    // We need a helper to turn the DB UUID back into a string ID like 'tripbot'
+    const allDbPersonas = await db.ai_persona.findMany();
+    const dbIdToCodeId = allDbPersonas.reduce((acc, p) => {
+      acc[p.id] = p.name; // Mapping UUID -> 'tripbot', etc.
+      return acc;
+    }, {} as Record<string, string>);
+
     const statsMap = personaUsage.reduce((acc, curr) => {
-      const { ai_persona_id: id, _count: stats } = curr;
-      acc[id] = stats.id;
+      const codeId = dbIdToCodeId[curr.ai_persona_id];
+      if (codeId) {
+        acc[codeId] = curr._count.id; // eslint-disable-line
+      }
       return acc;
     }, {} as Record<string, number>);
 
@@ -131,13 +140,12 @@ export class AiPage {
     // 3. Header & Selector
     container.addTextDisplayComponents(new TextDisplayBuilder().setContent(stripIndents`
       # 🎭 Persona Gallery
-      Select your preferred "vibe" below. Personas change how TripBot thinks and speaks.
+      Personas change how TripBot thinks and speaks. Find the vibe that suits you best!
+      Personas are only available on the TripSit server. 
     `));
 
-    const isPremium = AiFunction.checkPremiumStatus(member as GuildMember);
     container.addActionRowComponents(ar => ar.addComponents(
-      AiMenu.aiPersonasSelect(isPremium)
-        .setPlaceholder(`Current: ${currentPersona.emoji} ${currentPersona.name}`),
+      AiMenu.aiPersonasSelect().setPlaceholder(`Current: ${currentPersona.emoji} ${currentPersona.name}`),
     ));
 
     container.addSeparatorComponents(sep => sep.setDivider(true));
@@ -148,18 +156,14 @@ export class AiPage {
         container.addSeparatorComponents(sep => sep.setDivider(true));
       }
 
-      const hasAccess = AiFunction.checkPremiumStatus(member as GuildMember) || persona.id === 'tripbot';
+      // Check access status
+      const usage = statsMap[persona.id] || 0; // This now pulls the dynamic count
 
-      const usage = statsMap[persona.id] || 0;
-      const statusIcon = hasAccess ? '🟢' : '🔒';
-      const lockText = hasAccess ? '' : ' *(Locked)*';
-
-      // We use a clean 3-line format to keep the "Table" feel
       container.addTextDisplayComponents(new TextDisplayBuilder().setContent(stripIndents`
-        **${persona.emoji} ${persona.name}** ${statusIcon}${lockText}
-        > ${persona.description}
-        \`Vibe: ${persona.config.communicationStyle.tone}\` | \`Usage: ${usage.toLocaleString()}\`
-      `));
+    **${persona.emoji} ${persona.name}**
+    > ${persona.description}
+    \`Vibe: ${persona.config.communicationStyle.tone}\` | \`Total Messages: ${usage.toLocaleString()}\`
+  `));
     });
 
     return {
@@ -343,7 +347,7 @@ export class AiPage {
       // Persona Selection Menu
       container.addActionRowComponents(
         new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(
-          AiMenu.aiPersonasSelect(isPremium)
+          AiMenu.aiPersonasSelect()
             .setPlaceholder(`Switch Persona (Current: ${persona.name})`),
         ),
       );
