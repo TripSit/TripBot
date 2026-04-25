@@ -47,9 +47,9 @@ COPY --from=build /workspaces/tripbot/node_modules ./node_modules
 COPY --from=build /workspaces/tripbot/build ./build
 COPY --from=build /workspaces/tripbot/package*.json ./
 
-COPY --from=build /workspaces/tripbot/src/prisma/tripbot/generated ./build/src/prisma/tripbot/generated
-COPY --from=build /workspaces/tripbot/src/prisma/moodle/generated ./build/src/prisma/moodle/generated
-COPY --from=build /workspaces/tripbot/src/prisma/ ./src/prisma/
+# COPY --from=build /workspaces/tripbot/src/prisma/tripbot/generated ./build/src/prisma/tripbot/generated
+# COPY --from=build /workspaces/tripbot/src/prisma/moodle/generated ./build/src/prisma/moodle/generated
+COPY --from=build /workspaces/tripbot/src/prisma/ ./build/src/prisma/
 COPY ./assets ./build/assets
 
 # Copy your entrypoint script
