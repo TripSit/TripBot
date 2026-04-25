@@ -27,6 +27,7 @@ RUN npx prisma generate --schema=./src/prisma/moodle/schema.prisma
 
 # 3. COMPILE: Turn your TS into JS
 RUN npx tsc
+RUN npx tsc-alias
 # remove the bunk .js file. We have a different mjs file for prisma now
 RUN rm ./build/prisma.config.js ./build/prisma.config.js.map
 RUN npx tsc --project tsconfig.prisma.json
