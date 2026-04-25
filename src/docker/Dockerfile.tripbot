@@ -27,6 +27,8 @@ RUN npx prisma generate --schema=./src/prisma/moodle/schema.prisma
 
 # 3. COMPILE: Turn your TS into JS
 RUN npx tsc
+# remove the bunk .js file. We have a different mjs file for prisma now
+RUN rm ./build/prisma.config.js ./build/prisma.config.js.map
 RUN npx tsc --project tsconfig.prisma.json
 
 # 4. PRUNE: Remove devDependencies (this deletes the clients we just made)
@@ -48,10 +50,9 @@ COPY --from=build /workspaces/tripbot/node_modules ./node_modules
 COPY --from=build /workspaces/tripbot/build ./build
 COPY --from=build /workspaces/tripbot/package*.json ./
 
-# COPY --from=build /workspaces/tripbot/src/prisma/tripbot/generated ./build/src/prisma/tripbot/generated
-# COPY --from=build /workspaces/tripbot/src/prisma/moodle/generated ./build/src/prisma/moodle/generated
 COPY --from=build /workspaces/tripbot/src/prisma/ ./build/src/prisma/
 COPY --from=build /workspaces/tripbot/prisma.config.mjs ./build/prisma.config.mjs
+COPY --from=build /workspaces/tripbot/tsconfig.json ./tsconfig.json
 COPY ./assets ./build/assets
 
 # Copy your entrypoint script
