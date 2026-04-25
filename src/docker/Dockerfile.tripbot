@@ -27,6 +27,7 @@ RUN npx prisma generate --schema=./src/prisma/moodle/schema.prisma
 
 # 3. COMPILE: Turn your TS into JS
 RUN npx tsc
+RUN npx tsc --project tsconfig.prisma.json
 
 # 4. PRUNE: Remove devDependencies (this deletes the clients we just made)
 RUN rm -rf node_modules && npm ci --omit=dev --no-audit --silent --ignore-scripts
