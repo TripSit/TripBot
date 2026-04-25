@@ -1,3 +1,4 @@
+import { log } from './global/utils/log'; // eslint-disable-line
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { getVoiceConnection } from '@discordjs/voice';
 import 'module-alias/register';
@@ -19,7 +20,6 @@ import discordConnect from './discord/discord';
 import commandContext from './discord/utils/context'; // eslint-disable-line
 import { env } from './global/utils/env.config';
 import validateEnv from './global/utils/env.validate'; // eslint-disable-line
-import { log } from './global/utils/log';
 import updateDb from './global/utils/updateDb';
 import db from './prisma/tripbot/client';
 // import startMatrix from './matrix/matrix';
