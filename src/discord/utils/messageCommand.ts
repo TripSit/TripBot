@@ -177,10 +177,10 @@ export async function messageCommand(message: Message): Promise<void> {
 
         **Want to text or voice chat with someone?**
         The wonderful people at the [Fireside Project](https://firesideproject.org) can also help you through a rough trip.
-        
+
         **Need LGBT support?**
         The [LGBT Hotline](https://www.lgbthotline.org) and [The Trevor Project](https://www.thetrevorproject.org/) are great resources.
-        
+
         **Check the pins and use </crisis:1088811157185372180> for other info!!**`);
 
       await message.channel.send({
@@ -251,7 +251,7 @@ export async function messageCommand(message: Message): Promise<void> {
         log.debug(F, `Gave ${amount} tokens to ${recipientMember ? recipientMember.displayName : recipient.username}!`);
         if (message.channel instanceof TextChannel || message.channel instanceof DMChannel) {
           await message.channel.send(stripIndents`Gave ${amount} tokens to ${recipientMember ? recipientMember.displayName : recipient.username}!
-          
+
           They now have ${personaData.tokens} tokens!`);
         }
       });
@@ -344,6 +344,7 @@ export async function messageCommand(message: Message): Promise<void> {
         }
       }
     } else if (!message.author.bot) {
+      return;
       await aiMessage(message);
     } else {
       try {
