@@ -1,0 +1,17 @@
+{
+  "commandName": "coinflip",
+  "commandDescription": "Flip a coin",
+  "ephemeralOption": "Set to \"True\" to show the response only to you",
+  "headsResult": "Heads!",
+  "tailsResult": "Tails!",
+  "subspaceResult": "The coin slipped into subspace and disappeared?!",
+  "sideResult": "The coin landed on its side?!",
+  "rolledOffResult": "The coin rolled off the table?!",
+  "diceResult": "{{number}}! Oh that's a dice...",
+  "spinningResult": "The coin kept spinning in the air?!",
+  "kidTookResult": "Some kid came and took your coin!",
+  "animalTookResult": "A {{animal}} came and took your coin!",
+  "bothResult": "You refuse to observe the coin so it is both heads and tails!",
+  "coinSaysResult": "The coin says \"{{side}}!\"",
+  "floatingResult": "Due to inflation the coin kept floating away!"
+}

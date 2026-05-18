@@ -1,0 +1,21 @@
+{
+  "commandName": "learn",
+  "commandDescription": "Commands related to TripSit's learning portal",
+  "helpSubcommand": "Information about this command",
+  "ephemeralOption": "Set to \"True\" to show the response only to you",
+  "linkSubcommand": "Link your discord with your TripSitLearn account",
+  "emailOption": "What email did you use to register on moodle?",
+  "adminOnlyOption": "Ignore this, admin use only!",
+  "unlinkSubcommand": "Unlink your discord with your TripSitLearn account",
+  "profileSubcommand": "Show someone's TripSitLearn profile, including the courses they have completed!",
+  "userOption": "Who are you looking up? Defaults to you.",
+  "notAllowedToUse": "You are not allowed to use this option!",
+  "invalidEmail": "That doesn't look like a valid email address!",
+  "foundMoreThanOne": "Found more than one user with with that value!",
+  "moreSpecific": "Be more specific:",
+  "foundNoUsers": "Found no users with that value!",
+  "memberNotFound": "Member not found!",
+  "notLinked": "{{user}} does not have a linked TSL account!\nAsk them to sign up and use `/learn link` to link their account!",
+  "completedCourses": "Completed Courses",
+  "enrolledCourses": "Enrolled Courses"
+}

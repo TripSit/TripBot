@@ -1,0 +1,19 @@
+{
+  "commandName": "",
+  "commandDescription": "",
+  "opponentOption": "",
+  "invalidOpponent": "",
+  "cannotPlaySelf": "",
+  "cannotPlayBot": "",
+  "gameTitle": "",
+  "gameVsFormat": "",
+  "capturesFormat": "",
+  "winConditions": "",
+  "captureRule": "",
+  "tieMessage": "",
+  "winMessage": "",
+  "turnIndicator": "",
+  "timeoutTitle": "",
+  "timeoutDescription": "",
+  "noChannelError": ""
+}

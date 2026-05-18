@@ -1,0 +1,18 @@
+{
+  "commandName": "remind_me",
+  "commandDescription": "Handle reminders!",
+  "setSubcommandName": "set",
+  "setSubcommandDescription": "Set a reminder",
+  "setReminderOption": "What do you want to be reminded?",
+  "setOffsetOption": "When? EG: 4 hours 32 mins",
+  "getSubcommandName": "get",
+  "getSubcommandDescription": "Get your upcoming reminders!",
+  "deleteSubcommandName": "delete",
+  "deleteSubcommandDescription": "Delete a reminder!",
+  "deleteRecordOption": "Which record? (0, 1, 2, etc)",
+  "yourReminders": "Your reminders",
+  "noReminders": "You have no reminders! You can use /remind_me to add some!",
+  "noRemindersTitle": "No reminders!",
+  "noRemindersMessage": "You have no reminders! Use /remind_me to add some!",
+  "reminderSet": "{{relative}} I will remind you: {{reminder}}"
+}

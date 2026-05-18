@@ -1,0 +1,17 @@
+{
+  "commandName": "combo",
+  "commandDescription": "Check combo information",
+  "firstDrugOption": "Pick the first drug",
+  "secondDrugOption": "Pick the second drug",
+  "ephemeralOption": "Set to \"True\" to show the response only to you",
+  "notFound": "I could not find interactions between {{drugA}} and {{drugB}} in the database!\n\nThis does not mean combining them is safe: this means we don't have information on it!",
+  "sameSubstance": "{{message}}",
+  "researchArticles": "⚗️ Research Articles",
+  "erowid": "<:erowidLogo:{{emojiId}}> Erowid Experiences",
+  "embeddedTitle": "Mixing {{drugA}} and {{drugB}}: {{emoji}} {{result}} {{emoji}}",
+  "note": "Note: {{note}}",
+  "wikiLink": "TripSit Wiki",
+  "factsheetsLink": "TripSit Factsheets",
+  "psychonautLink": "PsychonautWiki",
+  "erowiadExperiencesLink": "Erowid Experiences"
+}

@@ -1,0 +1,18 @@
+{
+  "commandName": "",
+  "commandDescription": "",
+  "setSubcommandName": "",
+  "setSubcommandDescription": "",
+  "setReminderOption": "",
+  "setOffsetOption": "",
+  "getSubcommandName": "",
+  "getSubcommandDescription": "",
+  "deleteSubcommandName": "",
+  "deleteSubcommandDescription": "",
+  "deleteRecordOption": "",
+  "yourReminders": "",
+  "noReminders": "",
+  "noRemindersTitle": "",
+  "noRemindersMessage": "",
+  "reminderSet": ""
+}

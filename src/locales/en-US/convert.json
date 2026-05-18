@@ -1,0 +1,9 @@
+{
+  "commandName": "convert",
+  "commandDescription": "Convert one unit into another",
+  "valueOption": "#",
+  "unitsOption": "What unit?",
+  "intoOption": "Convert into?",
+  "ephemeralOption": "Set to \"True\" to show the response only to you",
+  "result": "{{value}} {{units}} is {{result}} {{intoUnits}}"
+}

@@ -1,0 +1,19 @@
+{
+  "commandName": "triptacgo",
+  "commandDescription": "Start a trip-tac-go game",
+  "opponentOption": "The user you want to play against",
+  "invalidOpponent": "Please specify a valid opponent!",
+  "cannotPlaySelf": "You cannot play against yourself!",
+  "cannotPlayBot": "You cannot play against a bot!",
+  "gameTitle": "🎮 Trip-Tac-Go (4x4)",
+  "gameVsFormat": "{{player1}} (❌) vs {{player2}} (⭕)",
+  "capturesFormat": "**Captures:** ❌{{capturesX}} | ⭕{{capturesO}}",
+  "winConditions": "🎯 **Win by capturing pieces:** ❌ needs 3 | ⭕ needs 2",
+  "captureRule": "💡 **Capture:** Surround opponent on opposite sides",
+  "tieMessage": "🤝✨ **IT'S A TIE!** ✨🤝",
+  "winMessage": "🏆🎉{{symbol}} **{{winner}} WINS!** {{symbol}}🎉🏆",
+  "turnIndicator": "{{symbol}} **{{playerName}}'s turn**",
+  "timeoutTitle": "Trip-Tac-Go - Game Timeout",
+  "timeoutDescription": "The game has ended due to inactivity.",
+  "noChannelError": "This command requires the bot to be added to the server to work properly."
+}

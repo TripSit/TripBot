@@ -1,0 +1,21 @@
+{
+  "commandName": "",
+  "commandDescription": "",
+  "helpSubcommand": "",
+  "ephemeralOption": "",
+  "linkSubcommand": "",
+  "emailOption": "",
+  "adminOnlyOption": "",
+  "unlinkSubcommand": "",
+  "profileSubcommand": "",
+  "userOption": "",
+  "notAllowedToUse": "",
+  "invalidEmail": "",
+  "foundMoreThanOne": "",
+  "moreSpecific": "",
+  "foundNoUsers": "",
+  "memberNotFound": "",
+  "notLinked": "",
+  "completedCourses": "",
+  "enrolledCourses": ""
+}

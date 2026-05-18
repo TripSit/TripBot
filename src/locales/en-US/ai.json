@@ -1,0 +1,14 @@
+{
+  "commandName": "ai",
+  "commandDescription": "TripBot's AI",
+  "setupSubcommand": "Setup the TripBot AI in your server",
+  "personasSubcommand": "Get information on the various personas available for the AI module",
+  "settingsSubcommand": "Configure your settings",
+  "infoSubcommand": "Get info on the AI module",
+  "privacySubcommand": "Get the privacy policy for the AI module",
+  "tosSubcommand": "Get the terms of service for the AI module",
+  "aiNotEnabledReply": "AI is not enabled in this channel. Ask an admin to run `/ai setup`.",
+  "tosPrivacyRequiredReply": "Please review and agree to `/ai tos` and `/ai privacy` before chatting.",
+  "aiErrorReply": "I'm having trouble thinking right now. Try again in a minute.",
+  "serverOnlyReply": "This command can only be used in a server."
+}

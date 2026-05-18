@@ -1,0 +1,15 @@
+{
+  "commandName": "",
+  "commandDescription": "",
+  "opponentOption": "",
+  "invalidOpponent": "",
+  "cannotPlayYourself": "",
+  "cannotPlayBot": "",
+  "collectorError": "",
+  "gameTitle": "",
+  "tie": "",
+  "wins": "",
+  "turnSuffix": "",
+  "timeoutTitle": "",
+  "timeoutDescription": ""
+}

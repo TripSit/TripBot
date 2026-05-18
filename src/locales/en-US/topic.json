@@ -1,0 +1,5 @@
+{
+  "commandName": "topic",
+  "commandDescription": "Sends a random topic!",
+  "replyLabel": "Random New Topic: **{{topic}}**"
+}
