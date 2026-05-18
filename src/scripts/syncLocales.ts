@@ -70,7 +70,7 @@ function run(): void {
     .map(f => f.replace('.json', ''));
 
   const locales = fs.readdirSync(LOCALES_DIR)
-    .filter(d => fs.statSync(path.join(LOCALES_DIR, d)).isDirectory() && d !== DEFAULT_LOCALE);
+    .filter(d => fs.statSync(path.join(LOCALES_DIR, d)).isDirectory() && d !== DEFAULT_LOCALE && /^[a-zA-Z-]+$/.test(d));
 
   let totalChanges = 0;
 

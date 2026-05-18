@@ -1,4 +1,4 @@
-import { ChatInputCommandInteraction } from 'discord.js';
+import { BaseInteraction } from 'discord.js';
 import fs from 'fs';
 import i18next from 'i18next';
 import Backend from 'i18next-fs-backend';
@@ -44,7 +44,7 @@ export function t(locale: string, ns: string, key: string, vars?: Record<string,
  * Priority: guild DB setting → env LOCALE → en-US.
  */
 export async function getLocale(
-  interaction: ChatInputCommandInteraction,
+  interaction: BaseInteraction,
   ns?: string, // eslint-disable-line @typescript-eslint/no-unused-vars
 ): Promise<string> {
   const defaultLocale = global.env?.LOCALE ?? 'en-US';
