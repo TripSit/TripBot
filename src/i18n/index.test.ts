@@ -6,7 +6,7 @@ import {
 } from './index';
 
 beforeAll(async () => {
-  (global as NodeJS.Global & { env: { LOCALE: string } }).env = { LOCALE: 'en-US' };
+  (global as typeof globalThis & { env: { LOCALE: string } }).env = { LOCALE: 'en-US' };
   await initI18n();
 });
 
@@ -31,10 +31,8 @@ describe('t()', () => {
 describe('getLocale()', () => {
   const makeInteraction = (guildId: string | null) => ({ guildId } as unknown as ChatInputCommandInteraction);
 
-  type GlobalWithDb = NodeJS.Global & { db: { discord_guilds: { findUnique: jest.Mock } } };
-
   it('returns env locale when guild has no locale set', async () => {
-    (global as GlobalWithDb).db = {
+    (global as any).db = {
       discord_guilds: { findUnique: jest.fn().mockResolvedValue({ locale: null }) },
     };
     const locale = await getLocale(makeInteraction('guild-123'), 'drug');
@@ -42,7 +40,7 @@ describe('getLocale()', () => {
   });
 
   it('returns guild locale when set', async () => {
-    (global as GlobalWithDb).db = {
+    (global as any).db = {
       discord_guilds: { findUnique: jest.fn().mockResolvedValue({ locale: 'fi' }) },
     };
     const locale = await getLocale(makeInteraction('guild-123'), 'drug');
@@ -50,7 +48,7 @@ describe('getLocale()', () => {
   });
 
   it('falls back to env locale when DB throws', async () => {
-    (global as GlobalWithDb).db = {
+    (global as any).db = {
       discord_guilds: { findUnique: jest.fn().mockRejectedValue(new Error('DB down')) },
     };
     const locale = await getLocale(makeInteraction('guild-123'), 'drug');
