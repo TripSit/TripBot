@@ -21,6 +21,7 @@ import commandContext from './discord/utils/context'; // eslint-disable-line
 import { env } from './global/utils/env.config';
 import validateEnv from './global/utils/env.validate'; // eslint-disable-line
 import updateDb from './global/utils/updateDb';
+import { initI18n } from './i18n/index';
 import db from './prisma/tripbot/client';
 // import startMatrix from './matrix/matrix';
 // import ircConnect from './irc/irc';
@@ -49,6 +50,7 @@ async function start() {
     api();
     global.db = db;
     await updateDb();
+    await initI18n();
     if (env.DISCORD_CLIENT_TOKEN && validateEnv('DISCORD')) await discordConnect();
     // if (env.MATRIX_ACCESS_TOKEN && validateEnv( 'MATRIX') && env.NODE_ENV !== 'production') await startMatrix();
     // if (env.IRC_PASSWORD && validateEnv('IRC') && env.NODE_ENV !== 'production') ircConnect();

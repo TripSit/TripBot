@@ -13,10 +13,9 @@ const jestConfig: Config = {
     '<rootDir>/src/global/utils/env.config.ts',
   ],
   testMatch: [
-    // '<rootDir>/src/discord/**/*.test.ts',
     '<rootDir>/src/api/**/*.test.ts',
-    // '<rootDir>/src/api/apiV1/**/*.test.ts',
-    // '<rootDir>/src/global/**/*.test.ts',
+    '<rootDir>/src/i18n/**/*.test.ts',
+    '<rootDir>/scripts/**/*.test.ts',
   ],
   testPathIgnorePatterns: [
     // Paths to ignore
@@ -26,8 +25,7 @@ const jestConfig: Config = {
   collectCoverage: true,
   collectCoverageFrom: [
     './src/api/**/*',
-    // './src/discord/**/*',
-    // './src/global/**/*',
+    './src/i18n/**/*',
   ],
   coveragePathIgnorePatterns: [
     '/node_modules/',
