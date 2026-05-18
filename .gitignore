@@ -5,6 +5,7 @@
 
 
 # Project specific
+.devcontainer/devcontainer-lock.json
 !backups/
 backups/
 backups/*.json
