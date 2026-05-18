@@ -10,25 +10,30 @@ import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { invite } from '../../../global/commands/g.invite';
 import commandContext from '../../utils/context';
+import { t, getLocale, getCommandLocalizations } from '../../../i18n/index';
 
 const F = f(__filename);
 
 export const dInvite: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('invite')
+    .setNameLocalizations(getCommandLocalizations('invite', 'commandName'))
     .setDescription('Shows an invite link for this bot!')
+    .setDescriptionLocalizations(getCommandLocalizations('invite', 'commandDescription'))
     .setIntegrationTypes([0])
     .addBooleanOption(option => option.setName('ephemeral')
-      .setDescription('Set to "True" to show the response only to you')) as SlashCommandBuilder,
+      .setDescription(t('en', 'invite', 'ephemeralOption'))
+      .setDescriptionLocalizations(getCommandLocalizations('invite', 'ephemeralOption'))) as SlashCommandBuilder,
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
+    const locale = await getLocale(interaction, 'invite');
     const ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined;
     await interaction.deferReply({ flags: ephemeral });
     const inviteInfo = await invite();
     const isProd = process.env.NODE_ENV === 'production';
-    const devNotice = process.env.NODE_ENV === 'production'
+    const devNotice = isProd
       ? ''
-      : 'This is a development version of the bot. Please use the production version for the best experience.';
+      : t(locale, 'invite', 'devNotice');
     const botName = isProd
       ? 'TripBot'
       : 'TripBot Dev';
@@ -37,17 +42,16 @@ export const dInvite: SlashCommand = {
       : 'TripSit Dev';
     const embed = embedTemplate()
       .setColor(Colors.DarkBlue)
-      .setTitle(`Invite ${botName}`)
+      .setTitle(t(locale, 'invite', 'embedTitle', { botName }))
       .setURL(inviteInfo.bot)
       .setDescription(stripIndents`
         ${devNotice}
 
-        [Click here to invite TripBot to your own server](${inviteInfo.bot}).
+        [${t(locale, 'invite', 'inviteLink')}](${inviteInfo.bot}).
 
-        Note: For advanced features you will need to give the bot more permissions.
+        ${t(locale, 'invite', 'advancedNote')}
 
-        The ${isProd ? 'official support' : 'testing'} server is [${guildName} Discord](${inviteInfo.discord}).
-        If you have issues/questions, join and talk with Moonbear!
+        ${t(locale, 'invite', 'supportServer', { serverType: isProd ? 'official support' : 'testing', guildName, inviteUrl: inviteInfo.discord })}
       `);
     await interaction.editReply({ embeds: [embed] });
     return true;

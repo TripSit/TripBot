@@ -15,13 +15,16 @@ import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { parseDuration } from '../../../global/utils/parseDuration';
 import { paginationEmbed } from '../../utils/pagination';
+import { t, getLocale, getCommandLocalizations } from '../../../i18n/index';
 
 // const F = f(__filename);
 
 export const dIdose: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('idose')
+    .setNameLocalizations(getCommandLocalizations('idose', 'commandName'))
     .setDescription('Your personal dosage information!')
+    .setDescriptionLocalizations(getCommandLocalizations('idose', 'commandDescription'))
     .setContexts([0, 1, 2])
     .setIntegrationTypes([0, 1])
     .addSubcommand(subcommand => subcommand
@@ -73,6 +76,7 @@ export const dIdose: SlashCommand = {
         .setDescription('Which record? (0, 1, 2, etc)')
         .setRequired(true))),
   async execute(interaction) {
+    const locale = await getLocale(interaction, 'idose');
     const ephemeral = interaction.channel?.type !== ChannelType.DM ? MessageFlags.Ephemeral : undefined;
     await interaction.deferReply({ flags: ephemeral });
     const command = interaction.options.getSubcommand() as 'get' | 'set' | 'delete';
@@ -130,11 +134,11 @@ export const dIdose: SlashCommand = {
     if (command === 'get') {
       if (response.length > 0) {
         // Sort data based on the dose_date property
-        embed.setTitle('Your dosage history');
+        embed.setTitle(t(locale, 'idose', 'dosageHistory'));
 
         if (response.length > 24) {
           let pageEmbed = embedTemplate();
-          pageEmbed.setTitle('Your dosage history');
+          pageEmbed.setTitle(t(locale, 'idose', 'dosageHistory'));
           // Add fields to the pageEmbed until there are 24 fields
           let pageFields = [] as EmbedField[];
           let pageFieldsCount = 0;
@@ -170,8 +174,8 @@ export const dIdose: SlashCommand = {
           embed.setFields(fields);
         }
       } else {
-        embed.setTitle('No dose records!');
-        embed.setDescription('You have no dose records, use /idose to add some!');
+        embed.setTitle(t(locale, 'idose', 'noDoseRecords'));
+        embed.setDescription(t(locale, 'idose', 'noDoseRecordsDesc'));
       }
       // log.debug(F, `book.length: ${book.length}`);
       if (book.length > 1) {
@@ -194,11 +198,13 @@ export const dIdose: SlashCommand = {
       const routeStr = roa.charAt(0).toUpperCase() + roa.slice(1).toLowerCase();
 
       const embedField = {
-        name: `You dosed ${volume} ${units} of ${substance} ${routeStr}`,
+        name: t(locale, 'idose', 'doseEntryField', {
+          volume, units, substance, routeStr,
+        }),
         value: `${relative} on ${timeString}`,
       };
       embed.setColor(Colors.DarkBlue);
-      embed.setTitle('New iDose entry:');
+      embed.setTitle(t(locale, 'idose', 'doseEntryTitle'));
       embed.addFields(embedField);
 
       if (interaction.channel?.type === ChannelType.DM) {

@@ -11,35 +11,48 @@ import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { parseDuration } from '../../../global/utils/parseDuration';
 import { paginationEmbed } from '../../utils/pagination';
+import { t, getLocale, getCommandLocalizations } from '../../../i18n/index';
 // import log from '../../../global/utils/log';
 const F = f(__filename);
 
 export const dRemindme: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('remind_me')
-    .setDescription('Handle reminders!')
+    .setNameLocalizations(getCommandLocalizations('remindme', 'commandName'))
+    .setDescription(t('en', 'remindme', 'commandDescription'))
+    .setDescriptionLocalizations(getCommandLocalizations('remindme', 'commandDescription'))
     .setIntegrationTypes([0])
     .addSubcommand(subcommand => subcommand
-      .setDescription('Set a reminder')
+      .setName('set')
+      .setNameLocalizations(getCommandLocalizations('remindme', 'setSubcommandName'))
+      .setDescription(t('en', 'remindme', 'setSubcommandDescription'))
+      .setDescriptionLocalizations(getCommandLocalizations('remindme', 'setSubcommandDescription'))
       .addStringOption(option => option.setName('reminder')
-        .setDescription('What do you want to be reminded?')
+        .setDescription(t('en', 'remindme', 'setReminderOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('remindme', 'setReminderOption'))
         .setRequired(true))
       .addStringOption(option => option.setName('offset')
-        .setDescription('When? EG: 4 hours 32 mins')
-        .setRequired(true))
-      .setName('set'))
+        .setDescription(t('en', 'remindme', 'setOffsetOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('remindme', 'setOffsetOption'))
+        .setRequired(true)))
     .addSubcommand(subcommand => subcommand
-      .setDescription('Get your upcoming reminders!')
-      .setName('get'))
+      .setName('get')
+      .setNameLocalizations(getCommandLocalizations('remindme', 'getSubcommandName'))
+      .setDescription(t('en', 'remindme', 'getSubcommandDescription'))
+      .setDescriptionLocalizations(getCommandLocalizations('remindme', 'getSubcommandDescription')))
     .addSubcommand(subcommand => subcommand
-      .setDescription('Delete a reminder!')
+      .setName('delete')
+      .setNameLocalizations(getCommandLocalizations('remindme', 'deleteSubcommandName'))
+      .setDescription(t('en', 'remindme', 'deleteSubcommandDescription'))
+      .setDescriptionLocalizations(getCommandLocalizations('remindme', 'deleteSubcommandDescription'))
       .addNumberOption(option => option.setName('record')
-        .setDescription('Which record? (0, 1, 2, etc)')
-        .setRequired(true))
-      .setName('delete')),
+        .setDescription(t('en', 'remindme', 'deleteRecordOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('remindme', 'deleteRecordOption'))
+        .setRequired(true))),
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+    const locale = await getLocale(interaction, 'remindme');
     const command = interaction.options.getSubcommand() as 'get' | 'set' | 'delete';
     const offset = interaction.options.getString('offset');
     const reminder = interaction.options.getString('reminder');
@@ -68,16 +81,16 @@ export const dRemindme: SlashCommand = {
     }
     if (command === 'get') {
       if (response !== null) {
-        embed.setTitle('Your reminders');
+        embed.setTitle(t(locale, 'remindme', 'yourReminders'));
         if (typeof response === 'string') {
-          embed.setDescription('You have no reminders! You can use /remind_me to add some!');
+          embed.setDescription(t(locale, 'remindme', 'noReminders'));
           await interaction.editReply({ embeds: [embed] });
           return false;
         }
 
         if (response.length > 24) {
           let pageEmbed = embedTemplate();
-          pageEmbed.setTitle('Your reminders');
+          pageEmbed.setTitle(t(locale, 'remindme', 'yourReminders'));
           // Add fields to the pageEmbed until there are 24 fields
           let pageFields = [] as EmbedField[];
           let pageFieldsCount = 0;
@@ -125,8 +138,8 @@ export const dRemindme: SlashCommand = {
           embed.setFields(fields);
         }
       } else {
-        embed.setTitle('No reminders!');
-        embed.setDescription('You have no reminders! Use /remind_me to add some!');
+        embed.setTitle(t(locale, 'remindme', 'noRemindersTitle'));
+        embed.setDescription(t(locale, 'remindme', 'noRemindersMessage'));
       }
       // log.debug(F, `book.length: ${book.length}`);
       if (book.length > 1) {
@@ -142,7 +155,7 @@ export const dRemindme: SlashCommand = {
       const relative = time(reminderDatetime, 'R');
       // log.debug(F, `relative: ${relative}`);
 
-      embed.setDescription(`${relative} I will remind you: ${reminder}`);
+      embed.setDescription(t(locale, 'remindme', 'reminderSet', { relative, reminder }));
       await interaction.editReply({ embeds: [embed] });
     }
     // log.debug(F, `Finished!`);

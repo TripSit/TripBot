@@ -10,12 +10,14 @@ import OpenAI from 'openai';
 import { MessageCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { aiTranslate } from '../../../global/commands/g.ai';
+import { t, getLocale, getCommandLocalizations } from '../../../i18n/index';
 
 const F = f(__filename);
 
 export const mTranslate: MessageCommand = {
   data: new ContextMenuCommandBuilder()
     .setName('Translate')
+    .setNameLocalizations(getCommandLocalizations('translate', 'commandName'))
     .setType(ApplicationCommandType.Message)
     .setIntegrationTypes([0]),
   async execute(interaction) {
@@ -23,6 +25,7 @@ export const mTranslate: MessageCommand = {
     log.info(F, await commandContext(interaction));
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
+    const locale = await getLocale(interaction);
     const targetMessage = interaction.targetMessage.content;
 
     const messageList = [{
@@ -34,7 +37,7 @@ export const mTranslate: MessageCommand = {
     const { response, promptTokens, completionTokens } = await aiTranslate('English', messageList);
     await interaction.editReply({
       embeds: [embedTemplate()
-        .setTitle('Here\'s your translation!')
+        .setTitle(t(locale, 'translate', 'translationTitle'))
         .setDescription(response)
         .setColor(Colors.Blurple)],
     });

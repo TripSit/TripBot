@@ -5,16 +5,20 @@ import {
 import { SlashCommand } from '../../@types/commandDef';
 import { magick8Ball } from '../../../global/commands/g.magick8Ball';
 import commandContext from '../../utils/context';
+import { t, getCommandLocalizations } from '../../../i18n/index';
 
 const F = f(__filename);
 
 export const dMagick8ball: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('magick8ball')
+    .setNameLocalizations(getCommandLocalizations('magick8ball', 'commandName'))
     .setDescription('Ask the magick 8-ball a question!')
+    .setDescriptionLocalizations(getCommandLocalizations('magick8ball', 'commandDescription'))
     .setIntegrationTypes([0])
     .addBooleanOption(option => option.setName('ephemeral')
-      .setDescription('Set to "True" to show the response only to you')) as SlashCommandBuilder,
+      .setDescription(t('en-US', 'magick8ball', 'ephemeralOption'))
+      .setDescriptionLocalizations(getCommandLocalizations('magick8ball', 'ephemeralOption'))) as SlashCommandBuilder,
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
     const ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined;

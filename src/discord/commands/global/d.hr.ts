@@ -23,6 +23,7 @@ import { warmline } from '../../../global/commands/g.warmline';
 import { recovery } from '../../../global/commands/g.recovery';
 import { reagents } from '../../../global/commands/g.reagents';
 import getAsset from '../../utils/getAsset';
+import { t, getLocale, getCommandLocalizations } from '../../../i18n/index';
 
 async function dCombochart(interaction: ChatInputCommandInteraction): Promise<boolean> {
   const content = await combochart();
@@ -86,8 +87,9 @@ async function dReagents(interaction: ChatInputCommandInteraction): Promise<bool
 }
 
 async function dCrisis(interaction: ChatInputCommandInteraction): Promise<boolean> {
+  const locale = await getLocale(interaction, 'hr');
   const emsInfo = await crisis();
-  const embed = embedTemplate().setTitle('Crisis Information');
+  const embed = embedTemplate().setTitle(t(locale, 'hr', 'crisisTitle'));
   emsInfo.forEach(entry => {
     const country = entry.country ? `(${entry.country})` : '';
     const website = entry.website ? `\n[Website](${entry.website})` : '';
@@ -96,7 +98,7 @@ async function dCrisis(interaction: ChatInputCommandInteraction): Promise<boolea
     const text = entry.text ? `\nText: ${entry.text}` : '';
     embed.addFields({
       name: `${entry.name} ${country}`,
-      value: stripIndents`${website}${webchat}${phone}${text}` || 'No details available.',
+      value: stripIndents`${website}${webchat}${phone}${text}` || t(locale, 'hr', 'noDetailsAvailable'),
       inline: true,
     });
   });
@@ -111,13 +113,14 @@ async function dCrisis(interaction: ChatInputCommandInteraction): Promise<boolea
 }
 
 async function dGuides(interaction: ChatInputCommandInteraction): Promise<boolean> {
+  const locale = await getLocale(interaction, 'hr');
   const guides = await wikiGuides();
   const message = guides
     .map(element => `[${element.split('_').join(' ')}](https://wiki.tripsit.me/wiki/${element})`)
     .join('\n');
   const embed = embedTemplate()
-    .setTitle('Wiki Guides')
-    .setDescription(`These are the guides currently available on our [Wiki](https://wiki.tripsit.me)\n\n${message}\nYou're welcome to contribute. :heart:`);
+    .setTitle(t(locale, 'hr', 'wikiGuidesTitle'))
+    .setDescription(t(locale, 'hr', 'wikiGuidesDescription', { message }));
   try {
     await interaction.editReply({ embeds: [embed] });
     return true;
@@ -129,9 +132,10 @@ async function dGuides(interaction: ChatInputCommandInteraction): Promise<boolea
 }
 
 async function dWarmline(interaction: ChatInputCommandInteraction): Promise<boolean> {
+  const locale = await getLocale(interaction, 'hr');
   const emsInfo = await warmline();
   const embed = embedTemplate()
-    .setTitle('Warmline Information');
+    .setTitle(t(locale, 'hr', 'warmlineTitle'));
   emsInfo.forEach(entry => {
     const country = entry.country ? `(${entry.country})` : '';
     const website = entry.website ? `\n[Website](${entry.website})` : '';
@@ -140,7 +144,7 @@ async function dWarmline(interaction: ChatInputCommandInteraction): Promise<bool
     const text = entry.text ? `\nText: ${entry.text}` : '';
     embed.addFields({
       name: `${entry.name} ${country}`,
-      value: stripIndents`${website}${webchat}${phone}${text}` || 'No details available.',
+      value: stripIndents`${website}${webchat}${phone}${text}` || t(locale, 'hr', 'noDetailsAvailable'),
       inline: true,
     });
   });
@@ -155,41 +159,11 @@ async function dWarmline(interaction: ChatInputCommandInteraction): Promise<bool
 }
 
 async function dDrugChecking(interaction: ChatInputCommandInteraction): Promise<boolean> {
+  const locale = await getLocale(interaction, 'hr');
   const embed = embedTemplate()
-    .setTitle('Drug Checking Information')
+    .setTitle(t(locale, 'hr', 'drugCheckingTitle'))
     .setColor(Colors.Blurple)
-    .setDescription(stripIndents`
-          Drug-checking services allow for laboratory testing of substances to allow people who use drugs to confirm what substances are present in the drugs they are purchasing and taking. In addition, they often publish results and post alerts when there are concerning samples found so are a good resource to check in with even if you do not or cannot send in your own sample.
-
-          For a full list of resources [check out our wiki page](https://wiki.tripsit.me/wiki/Sources_for_Laboratory_Analysis).
-          ## Mail-In Services
-          ### North America
-          [DrugsData](https://drugsdata.org/send_sample.php) (United States)
-          [UNC Street Drugs Lab](https://www.streetsafe.supply/) (United States)
-          [Get Your Drugs Tested](https://getyourdrugstested.com/canada-wide-drug-checking-by-mail/) (Canada)
-          ### Europe
-          [Energy Control](https://energycontrol-international.org/drug-testing-service/) (Spain)
-          [WEDINOS](http://www.wedinos.org/sample_testing.html) (United Kingdom)
-          ## Walk-In Services
-          ### Canada
-          [British Columbia Centre on Substance Use](https://drugcheckingbc.ca/drug-checking-sites/) (BC)
-          [Toronto's Drug Checking Service](https://drugchecking.cdpe.org/about/) (Toronto)
-          [Cactus Montreal](https://cactusmontreal.org/en/services-en/drug-testing/) (Montreal)
-          [Spectrum Drug Checking](https://ourhealthyeg.ca/spectrum-drug-testing) (Edmonton)
-          [AAWEAR](https://aawear.org/events/) (Calgary)
-          ### United States
-          [OnPoint NYC](https://onpointnyc.org/) (New York City)
-          [Rapid Analysis of Drugs - RAD](https://health.maryland.gov/pha/NALOXONE/Pages/RAD.aspx) (Maryland)
-          [Street Check](https://www.info.streetcheck.org/how-to-submit-a-sample) (Massachusetts)
-          [Chicago Recovery Alliance](https://anypositivechange.org/van-timetable/) (Chicago)
-          ### Europe
-          [checkit!](https://checkit.wien/) (Vienna)
-          [Drugchecking Berlin](https://drugchecking.berlin/checking/ablauf) (Berlin)
-          [Saferparty](https://en.saferparty.ch/angebote/drug-checking) (Zurich)
-          [Drugs Information and Monitoring System](https://www.drugs-test.nl/en/testlocations/) (Netherlands)
-          ## Austrailia
-          [CanTEST](https://www.cahma.org.au/services/cantest/) (Canberra)
-        `);
+    .setDescription(t(locale, 'hr', 'drugCheckingDescription'));
   try {
     await interaction.editReply({ embeds: [embed] });
     return true;
@@ -201,9 +175,10 @@ async function dDrugChecking(interaction: ChatInputCommandInteraction): Promise<
 }
 
 async function dTestKits(interaction: ChatInputCommandInteraction): Promise<boolean> {
+  const locale = await getLocale(interaction, 'hr');
   const emsInfo = await testkits();
   const embed = embedTemplate()
-    .setTitle('Test Kit Resources and information!');
+    .setTitle(t(locale, 'hr', 'testKitResourcesTitle'));
   const fieldsPerRow = 3;
   const totalFields = emsInfo.length;
   const rows = Math.ceil(totalFields / fieldsPerRow);
@@ -231,11 +206,7 @@ async function dTestKits(interaction: ChatInputCommandInteraction): Promise<bool
       }
     }
   }
-  embed.setDescription(stripIndents`
-        [How to use a reagent test kit](https://dancesafe.org/testing-kit-instructions/)
-        [How to use fentanyl strips](https://dancesafe.org/fentanyl/)
-        [More testkit resources on the TripSit wiki!](https://wiki.tripsit.me/wiki/Test_Kits)
-      `);
+  embed.setDescription(t(locale, 'hr', 'testKitDescription'));
   try {
     await interaction.editReply({ embeds: [embed] });
     return true;
@@ -247,21 +218,25 @@ async function dTestKits(interaction: ChatInputCommandInteraction): Promise<bool
 }
 
 async function dMushroomInfo(interaction: ChatInputCommandInteraction): Promise<boolean> {
+  const locale = await getLocale(interaction, 'hr');
   const source = 'https://www.oaklandhyphae510.com/post/preliminary-tryptamine-potency-analysis-from-dried-homogenized-fruit-bodies-of-psilocybe-mushrooms';
-  const disclaimer = 'The following data is based on preliminary research and development methods, does not represent final data and requires further peer review before being taken more seriously than \'interesting\'. However, this does represent meaningful, comparable data to the cultivators, to the consumers, and to the public.';
   const article = 'https://tripsitter.com/magic-mushrooms/average-potency/';
 
   const embed = embedTemplate()
-    .setTitle('Mushroom Potency Info')
+    .setTitle(t(locale, 'hr', 'mushroomPotencyTitle'))
     .setColor(Colors.Green)
-    .setDescription(`${disclaimer}\n\nFor more information check out [the source](${source}) and [this article](${article}).`)
+    .setDescription(t(locale, 'hr', 'mushroomPotencyDescription', {
+      disclaimer: t(locale, 'hr', 'mushroomPotencyDisclaimer'),
+      source,
+      article,
+    }))
     .setImage('attachment://mushroomInfoA.png');
 
   const files = [new AttachmentBuilder(await getAsset('mushroomInfoA'))];
   const components = [new ActionRowBuilder<ButtonBuilder>().addComponents(
     new ButtonBuilder()
       .setCustomId('mushroomPageTwo')
-      .setLabel('Show Visual')
+      .setLabel(t(locale, 'hr', 'mushroomShowVisual'))
       .setStyle(ButtonStyle.Primary),
   )];
 
@@ -287,21 +262,32 @@ export const dHR = {
   data: new SlashCommandBuilder()
     .setName('hr')
     .setDescription('Access harm reduction resources')
+    .setNameLocalizations(getCommandLocalizations('hr', 'commandName'))
+    .setDescriptionLocalizations(getCommandLocalizations('hr', 'commandDescription'))
     .addSubcommand(sub => sub
       .setName('crisis')
       .setDescription('Information that may be helpful in a serious situation.')
+      .setNameLocalizations(getCommandLocalizations('hr', 'crisisName'))
+      .setDescriptionLocalizations(getCommandLocalizations('hr', 'crisisDescription'))
       .addBooleanOption(option => option.setName('ephemeral')
-        .setDescription('Set to "True" to show the response only to you')))
+        .setDescription('Set to "True" to show the response only to you')
+        .setDescriptionLocalizations(getCommandLocalizations('hr', 'ephemeralOption'))))
     .addSubcommand(sub => sub
       .setName('combochart')
       .setDescription('Display TripSit\'s Combo Chart')
+      .setNameLocalizations(getCommandLocalizations('hr', 'combochartName'))
+      .setDescriptionLocalizations(getCommandLocalizations('hr', 'combochartDescription'))
       .addBooleanOption(option => option.setName('ephemeral')
-        .setDescription('Set to "True" to show the response only to you')))
+        .setDescription('Set to "True" to show the response only to you')
+        .setDescriptionLocalizations(getCommandLocalizations('hr', 'ephemeralOption'))))
     .addSubcommand(sub => sub
       .setName('breathe')
       .setDescription('Remember to breathe')
+      .setNameLocalizations(getCommandLocalizations('hr', 'breatheName'))
+      .setDescriptionLocalizations(getCommandLocalizations('hr', 'breatheDescription'))
       .addStringOption(option => option.setName('exercise')
         .setDescription('Which exercise?')
+        .setDescriptionLocalizations(getCommandLocalizations('hr', 'exerciseOption'))
         .addChoices(
           { name: '1', value: '1' },
           { name: '2', value: '2' },
@@ -309,49 +295,75 @@ export const dHR = {
           { name: '4', value: '4' },
         ))
       .addBooleanOption(option => option.setName('ephemeral')
-        .setDescription('Set to "True" to show the response only to you')))
+        .setDescription('Set to "True" to show the response only to you')
+        .setDescriptionLocalizations(getCommandLocalizations('hr', 'ephemeralOption'))))
     .addSubcommand(sub => sub
       .setName('guides')
       .setDescription('Show wiki guides')
+      .setNameLocalizations(getCommandLocalizations('hr', 'guidesName'))
+      .setDescriptionLocalizations(getCommandLocalizations('hr', 'guidesDescription'))
       .addBooleanOption(option => option.setName('ephemeral')
-        .setDescription('Set to "True" to show the response only to you')))
+        .setDescription('Set to "True" to show the response only to you')
+        .setDescriptionLocalizations(getCommandLocalizations('hr', 'ephemeralOption'))))
     .addSubcommand(sub => sub
       .setName('grounding')
       .setDescription('Show grounding exercise')
+      .setNameLocalizations(getCommandLocalizations('hr', 'groundingName'))
+      .setDescriptionLocalizations(getCommandLocalizations('hr', 'groundingDescription'))
       .addBooleanOption(option => option.setName('ephemeral')
-        .setDescription('Set to "True" to show the response only to you')))
+        .setDescription('Set to "True" to show the response only to you')
+        .setDescriptionLocalizations(getCommandLocalizations('hr', 'ephemeralOption'))))
     .addSubcommand(sub => sub
       .setName('drug_checking')
       .setDescription('Show drug checking resources')
+      .setNameLocalizations(getCommandLocalizations('hr', 'drugCheckingName'))
+      .setDescriptionLocalizations(getCommandLocalizations('hr', 'drugCheckingDescription'))
       .addBooleanOption(option => option.setName('ephemeral')
-        .setDescription('Set to "True" to show the response only to you')))
+        .setDescription('Set to "True" to show the response only to you')
+        .setDescriptionLocalizations(getCommandLocalizations('hr', 'ephemeralOption'))))
     .addSubcommand(sub => sub
       .setName('warmline')
       .setDescription('Need someone to talk to, but don\'t need a "hotline"?')
+      .setNameLocalizations(getCommandLocalizations('hr', 'warmlineName'))
+      .setDescriptionLocalizations(getCommandLocalizations('hr', 'warmlineDescription'))
       .addBooleanOption(option => option.setName('ephemeral')
-        .setDescription('Set to "True" to show the response only to you')))
+        .setDescription('Set to "True" to show the response only to you')
+        .setDescriptionLocalizations(getCommandLocalizations('hr', 'ephemeralOption'))))
     .addSubcommand(sub => sub
       .setName('testkits')
       .setDescription('Information on how to get a test kit')
+      .setNameLocalizations(getCommandLocalizations('hr', 'testkitsName'))
+      .setDescriptionLocalizations(getCommandLocalizations('hr', 'testkitsDescription'))
       .addBooleanOption(option => option.setName('ephemeral')
-        .setDescription('Set to "True" to show the response only to you')))
+        .setDescription('Set to "True" to show the response only to you')
+        .setDescriptionLocalizations(getCommandLocalizations('hr', 'ephemeralOption'))))
     .addSubcommand(sub => sub
       .setName('recovery')
       .setDescription('Information that may be helpful in a recovery situation.')
+      .setNameLocalizations(getCommandLocalizations('hr', 'recoveryName'))
+      .setDescriptionLocalizations(getCommandLocalizations('hr', 'recoveryDescription'))
       .addBooleanOption(option => option.setName('ephemeral')
-        .setDescription('Set to "True" to show the response only to you')))
+        .setDescription('Set to "True" to show the response only to you')
+        .setDescriptionLocalizations(getCommandLocalizations('hr', 'ephemeralOption'))))
     .addSubcommand(sub => sub
       .setName('reagents')
       .setDescription('Display reagent color chart!')
+      .setNameLocalizations(getCommandLocalizations('hr', 'reagentsName'))
+      .setDescriptionLocalizations(getCommandLocalizations('hr', 'reagentsDescription'))
       .addBooleanOption(option => option.setName('ephemeral')
-        .setDescription('Set to "True" to show the response only to you')))
+        .setDescription('Set to "True" to show the response only to you')
+        .setDescriptionLocalizations(getCommandLocalizations('hr', 'ephemeralOption'))))
     .addSubcommand(sub => sub
       .setName('mushroom_info')
       .setDescription('Displays different potencies of mushroom strains.')
+      .setNameLocalizations(getCommandLocalizations('hr', 'mushroomInfoName'))
+      .setDescriptionLocalizations(getCommandLocalizations('hr', 'mushroomInfoDescription'))
       .addBooleanOption(option => option.setName('ephemeral')
-        .setDescription('Set to "True" to show the response only to you'))) as SlashCommandBuilder,
+        .setDescription('Set to "True" to show the response only to you')
+        .setDescriptionLocalizations(getCommandLocalizations('hr', 'ephemeralOption')))) as SlashCommandBuilder,
 
   async execute(interaction: ChatInputCommandInteraction) {
+    const locale = await getLocale(interaction, 'hr');
     const subcommand = interaction.options.getSubcommand();
     const ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined;
     await interaction.deferReply({ flags: ephemeral });
@@ -380,7 +392,7 @@ export const dHR = {
       case 'mushroom_info':
         return dMushroomInfo(interaction);
       default:
-        await interaction.editReply('Unknown subcommand.');
+        await interaction.editReply(t(locale, 'hr', 'unknownSubcommand'));
         return false;
     }
   },

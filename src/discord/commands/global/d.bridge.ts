@@ -16,27 +16,26 @@ import {
 } from '../../../global/commands/g.bridge';
 import commandContext from '../../utils/context';
 import { checkChannelPermissions } from '../../utils/checkPermissions';
+import { t, getLocale, getCommandLocalizations } from '../../../i18n/index';
 
 const F = f(__filename);
 
-const noBridgeError = 'Error: No bridges found for this channel.';
-
 async function create(
   interaction:ChatInputCommandInteraction,
+  locale: string,
 ):Promise<string> {
   // Check if the member doing this command has permissions to make channels
   if (!(interaction.member as GuildMember).permissions.has('ManageChannels' as PermissionResolvable)) {
-    return 'Error: You do not have the ManageChannel permission needed to create a bridge!';
+    return t(locale, 'bridge', 'noPermissionCreate');
   }
 
   if (interaction.guild?.id !== env.DISCORD_GUILD_ID) {
-    return stripIndents`Error: This command can only be used in the TripSit Discord server.
-    You likely want to use the /bridge confirm command instead!`;
+    return t(locale, 'bridge', 'notTripSit');
   }
 
   const internalChannel = interaction.channel;
   if (!(internalChannel instanceof TextChannel)) {
-    return 'Error: Internal channel is not a text channel.';
+    return t(locale, 'bridge', 'notTextChannel');
   }
 
   const internalChannelPerms = await checkChannelPermissions(internalChannel, [
@@ -45,16 +44,18 @@ async function create(
   if (!internalChannelPerms.hasPermission) {
     log.error(F, stripIndents`Missing ${internalChannelPerms.permission} permission \
 in ${internalChannel.guild.name}'s ${internalChannel}!`);
-    return stripIndents`Error: Missing ${internalChannelPerms.permission} permission \
-in ${internalChannel.guild.name}'s ${internalChannel}!
-    Manage Webhooks - Create the channel webhook`;
+    return t(locale, 'bridge', 'missingPermission', {
+      permission: internalChannelPerms.permission,
+      guild: internalChannel.guild.name,
+      channel: internalChannel.toString(),
+    });
   }
 
   const externalChannelId = interaction.options.getString('external_channel', true);
 
   // Do a check to make sure the external ID is a series of number
   if (!/^\d+$/.test(externalChannelId)) {
-    return 'Error: External channel ID is not a number!';
+    return t(locale, 'bridge', 'invalidChannelId');
   }
 
   let externalChannel = {} as Channel | null;
@@ -62,11 +63,11 @@ in ${internalChannel.guild.name}'s ${internalChannel}!
     externalChannel = await interaction.client.channels.fetch(externalChannelId);
   } catch (error) {
     log.error(F, stripIndents`Error fetching external channel: ${error}`);
-    return 'Error: This channel ID does not exist, did you enter the ID correctly?';
+    return t(locale, 'bridge', 'channelNotFound');
   }
 
   if (!(externalChannel instanceof TextChannel)) {
-    return 'Error: External channel is not a text channel.';
+    return t(locale, 'bridge', 'externalNotTextChannel');
   }
 
   const externalChannelPerms = await checkChannelPermissions(externalChannel, [
@@ -75,13 +76,11 @@ in ${internalChannel.guild.name}'s ${internalChannel}!
     'ManageWebhooks' as PermissionResolvable,
   ]);
   if (!externalChannelPerms.hasPermission) {
-    return stripIndents`Error: Missing ${externalChannelPerms.permission} permission in \
-${externalChannel.guild.name}'s ${externalChannel}!
-    
-    Ask the collaborator to make sure the bot has the right permissions:
-    View Channel - To see the channel
-    Send Messages - To send a message to the other guild
-    Manage Webhooks - To create the channel webhook`;
+    return t(locale, 'bridge', 'externalMissingPermission', {
+      permission: externalChannelPerms.permission,
+      guild: externalChannel.guild.name,
+      channel: externalChannel.toString(),
+    });
   }
 
   // Done with all checks, start doing stuff!
@@ -98,37 +97,42 @@ ${externalChannel.guild.name}'s ${externalChannel}!
   await externalChannel.send({
     embeds: [
       embedTemplate()
-        .setTitle('Bridge')
-        .setDescription(stripIndents`${(interaction.member as GuildMember).displayName} has requested a bridge between \
-${internalChannel.guild.name}'s ${internalChannel} and ${externalChannel.guild.name}'s ${externalChannel}!
-            If you want to accept this bridge, please use the **/bridge confirm** command here.
-            If this is not expected you can ignore this as it may be a mistake.
-            If this command is being abused please talk to Moonbear on TripSit's Discord guild.`),
+        .setTitle(t(locale, 'bridge', 'bridgeTitle'))
+        .setDescription(t(locale, 'bridge', 'createRequestDescription', {
+          member: (interaction.member as GuildMember).displayName,
+          internalGuild: internalChannel.guild.name,
+          internalChannel: internalChannel.toString(),
+          externalGuild: externalChannel.guild.name,
+          externalChannel: externalChannel.toString(),
+        })),
     ],
   });
 
-  return stripIndents`Initializing bridge between ${internalChannel.guild.name}'s ${internalChannel} and \
-${externalChannel.guild.name}'s ${externalChannel}!
-  I've prompted the other guild to confirm the bridge.`;
+  return t(locale, 'bridge', 'createSuccess', {
+    internalGuild: internalChannel.guild.name,
+    internalChannel: internalChannel.toString(),
+    externalGuild: externalChannel.guild.name,
+    externalChannel: externalChannel.toString(),
+  });
 }
 
 async function confirm(
   interaction:ChatInputCommandInteraction,
+  locale: string,
 ):Promise<string> {
   // Check if the member doing this command has permissions to make channels
   if (!(interaction.member as GuildMember).permissions.has('ManageChannels' as PermissionResolvable)) {
-    return 'Error: You do not have the ManageChannel permission needed to create a bridge!';
+    return t(locale, 'bridge', 'noPermissionCreate');
   }
 
   if (interaction.guild?.id === env.DISCORD_GUILD_ID) {
-    return stripIndents`Error: This command can only be used outside the TripSit Discord server.
-    You likely want to use the /bridge create command instead!`;
+    return t(locale, 'bridge', 'notTripSit');
   }
 
   // const externalChannelId = interaction.options.getString('external_channel', true);
   // const externalChannel = await interaction.client.channels.fetch(externalChannelId);
   // if (!(externalChannel instanceof TextChannel)) {
-  //   return 'Error: External channel is not a text channel.';
+  //   return t(locale, 'bridge', 'externalNotTextChannel');
   // }
 
   // const externalChannelPerms = await checkChannelPermissions(externalChannel, [
@@ -137,13 +141,11 @@ async function confirm(
   //   'ManageWebhooks' as PermissionResolvable,
   // ])
   // if (!externalChannelPerms.hasPermission) {
-  //   return stripIndents`Error: Missing ${externalChannelPerms.permission} permission in \
-  // ${externalChannel.guild.name}'s ${externalChannel}!
-
-  //   Ask the collaborator to make sure the bot has the right permissions:
-  //   View Channel - To see the channel
-  //   Send Messages - To send a message to the other guild
-  //   Manage Webhooks - To create the channel webhook`;
+  //   return t(locale, 'bridge', 'externalMissingPermission', {
+  //     permission: externalChannelPerms.permission,
+  //     guild: externalChannel.guild.name,
+  //     channel: externalChannel.toString(),
+  //   });
   // }
 
   // Checks were already done in the other script, so we can just assume it's fine
@@ -163,29 +165,33 @@ async function confirm(
   await internalChannel.send({
     embeds: [
       embedTemplate()
-        .setTitle('Bridge')
-        .setDescription(stripIndents`
-        ${(interaction.member as GuildMember).displayName} has confirmed the bridge between \
-${internalChannel.guild.name}'s ${internalChannel} and ${externalChannel.guild.name}'s ${externalChannel}!
-            Either side can */bridge pause* and */bridge resume* to temporarily pause/resume the bridge, \
-or */bridge delete* to remove the bridge.
-            This is the start of something beautiful, say hi!`),
+        .setTitle(t(locale, 'bridge', 'bridgeTitle'))
+        .setDescription(t(locale, 'bridge', 'confirmDescription', {
+          member: (interaction.member as GuildMember).displayName,
+          internalGuild: internalChannel.guild.name,
+          internalChannel: internalChannel.toString(),
+          externalGuild: externalChannel.guild.name,
+          externalChannel: externalChannel.toString(),
+        })),
     ],
   });
 
-  return stripIndents`${(interaction.member as GuildMember).displayName} has confirmed the bridge between \
-${externalChannel.guild.name}'s ${externalChannel} and ${internalChannel.guild.name}'s ${internalChannel}!
-    Either side can */bridge pause* and */bridge resume* to temporarily pause/resume the bridge, \
-    or */bridge delete* to remove the bridge.
-    This is the start of something beautiful, say hi!`;
+  return t(locale, 'bridge', 'confirmSuccess', {
+    member: (interaction.member as GuildMember).displayName,
+    externalGuild: externalChannel.guild.name,
+    externalChannel: externalChannel.toString(),
+    internalGuild: internalChannel.guild.name,
+    internalChannel: internalChannel.toString(),
+  });
 }
 
 async function pause(
   interaction:ChatInputCommandInteraction,
+  locale: string,
 ):Promise<string> {
   // Check if the member doing this command has permissions to make channels
   if (!(interaction.member as GuildMember).permissions.has('ManageChannels' as PermissionResolvable)) {
-    return 'Error: You do not have the ManageChannel permission needed to pause a bridge!';
+    return t(locale, 'bridge', 'noPermissionPause');
   }
 
   if (interaction.guild?.id === env.DISCORD_GUILD_ID) {
@@ -197,18 +203,18 @@ async function pause(
     });
 
     if (bridges.length === 0) {
-      return noBridgeError;
+      return t(locale, 'bridge', 'noBridgeError');
     }
 
     const activeBridges = bridges.filter(bridge => bridge.status === 'ACTIVE');
 
     if (activeBridges.length === 0) {
-      return 'Error: No active bridges found for this channel. Did you mean to use the /bridge resume command?';
+      return t(locale, 'bridge', 'noActiveBridges');
     }
 
     await Promise.allSettled(activeBridges.map(bridge => bridgePause(bridge.external_channel)));
 
-    return stripIndents`Paused ${bridges.length} bridge(s) connected to this room.`;
+    return t(locale, 'bridge', 'pausedMultiple', { count: bridges.length });
   }
   // Get the bridges from the database that use this external_channel
   const bridge = await db.bridges.findFirst({
@@ -218,24 +224,25 @@ async function pause(
   });
 
   if (!bridge) {
-    return noBridgeError;
+    return t(locale, 'bridge', 'noBridgeError');
   }
 
   if (bridge.status !== 'ACTIVE') {
-    return 'Error: No active bridges found for this channel. Did you mean to use the /bridge resume command?';
+    return t(locale, 'bridge', 'noActiveBridges');
   }
 
   await bridgePause((interaction.channel as TextChannel).id);
 
-  return 'Paused bridge connected to this room.';
+  return t(locale, 'bridge', 'pausedSingle');
 }
 
 async function resume(
   interaction:ChatInputCommandInteraction,
+  locale: string,
 ):Promise<string> {
   // Check if the member doing this command has permissions to make channels
   if (!(interaction.member as GuildMember).permissions.has('ManageChannels' as PermissionResolvable)) {
-    return 'Error: You do not have the ManageChannel permission needed to resume a bridge!';
+    return t(locale, 'bridge', 'noPermissionResume');
   }
 
   if (interaction.guild?.id === env.DISCORD_GUILD_ID) {
@@ -247,19 +254,19 @@ async function resume(
     });
 
     if (bridges.length === 0) {
-      return noBridgeError;
+      return t(locale, 'bridge', 'noBridgeError');
     }
 
     const activeBridges = bridges.filter(bridge => bridge.status === 'PAUSED');
 
     if (activeBridges.length === 0) {
-      return 'Error: No paused bridges found for this channel. Did you mean to use the /bridge pause command?';
+      return t(locale, 'bridge', 'noPausedBridges');
     }
 
     // Resume all bridges
     await Promise.allSettled(activeBridges.map(bridge => bridgeResume(bridge.external_channel)));
 
-    return stripIndents`Resumed ${bridges.length} bridge(s) connected to this room.`;
+    return t(locale, 'bridge', 'resumedMultiple', { count: bridges.length });
   }
   // Get the bridges from the database that use this external_channel
   const bridge = await db.bridges.findFirst({
@@ -269,24 +276,25 @@ async function resume(
   });
 
   if (!bridge) {
-    return noBridgeError;
+    return t(locale, 'bridge', 'noBridgeError');
   }
 
   if (bridge.status !== 'PAUSED') {
-    return 'Error: No paused bridges found for this channel. Did you mean to use the /bridge pause command?';
+    return t(locale, 'bridge', 'noPausedBridges');
   }
 
   await bridgeResume((interaction.channel as TextChannel).id);
 
-  return 'Resumed bridge connected to this room.';
+  return t(locale, 'bridge', 'resumedSingle');
 }
 
 async function remove(
   interaction:ChatInputCommandInteraction,
+  locale: string,
 ):Promise<string> {
   // Check if the member doing this command has permissions to make channels
   if (!(interaction.member as GuildMember).permissions.has('ManageChannels' as PermissionResolvable)) {
-    return 'Error: You do not have the ManageChannel permission needed to remove a bridge!';
+    return t(locale, 'bridge', 'noPermissionRemove');
   }
 
   // Check if the 'confirmation' option was used make sure it matches the guild ID
@@ -301,18 +309,16 @@ async function remove(
     });
 
     if (bridges.length === 0) {
-      return noBridgeError;
+      return t(locale, 'bridge', 'noBridgeError');
     }
 
     if (confirmation !== interaction.guild?.id) {
-      return stripIndents`Error: Are you sure you want to remove ${bridges.length} bridge(s) connected to this room? 
-      
-      If so, please use the confirmation option with your guild id.`;
+      return t(locale, 'bridge', 'confirmRemovalMultiple', { count: bridges.length });
     }
 
     await Promise.allSettled(bridges.map(bridge => bridgeRemove(bridge.external_channel)));
 
-    return stripIndents`Removed ${bridges.length} bridge(s) connected to this room.`;
+    return t(locale, 'bridge', 'removedMultiple', { count: bridges.length });
   }
   // Get the bridges from the database that use this external_channel
   const bridge = await db.bridges.findFirst({
@@ -322,26 +328,25 @@ async function remove(
   });
 
   if (!bridge) {
-    return noBridgeError;
+    return t(locale, 'bridge', 'noBridgeError');
   }
 
   if (confirmation !== interaction.guild?.id) {
-    return stripIndents`Error: Are you sure you want to remove this bridge?
-    
-    If so, please use the confirmation option using your guild ID as the confirmation code!`;
+    return t(locale, 'bridge', 'confirmRemovalSingle');
   }
 
   await bridgeRemove((interaction.channel as TextChannel).id);
 
-  return 'Removed bridge connected to this room.';
+  return t(locale, 'bridge', 'removedSingle');
 }
 
 async function info(
   interaction:ChatInputCommandInteraction,
+  locale: string,
 ):Promise<string> {
   // Check if the member doing this command has permissions to make channels
   if (!(interaction.member as GuildMember).permissions.has('ManageChannels' as PermissionResolvable)) {
-    return 'Error: You do not have the ManageChannel permission needed to info a bridge!';
+    return t(locale, 'bridge', 'noPermissionInfo');
   }
 
   if (interaction.guild?.id === env.DISCORD_GUILD_ID) {
@@ -353,16 +358,18 @@ async function info(
     });
 
     if (bridges.length === 0) {
-      return noBridgeError;
+      return t(locale, 'bridge', 'noBridgeError');
     }
 
-    let message = stripIndents`This room is connected to ${bridges.length} other rooms:`;
+    let message = t(locale, 'bridge', 'infoMultiple', { count: bridges.length });
 
     bridges.forEach(async bridge => {
       const channel = await discordClient.channels.fetch(bridge.external_channel) as TextChannel;
 
-      message += stripIndents`
-      - ${channel.guild.name} - ${channel.name}`;
+      message += `\n${t(locale, 'bridge', 'infoConnected', {
+        guild: channel.guild.name,
+        channel: channel.name,
+      })}`;
     });
 
     return message;
@@ -375,57 +382,79 @@ async function info(
   });
 
   if (!bridge) {
-    return noBridgeError;
+    return t(locale, 'bridge', 'noBridgeError');
   }
 
   const internalChannel = await discordClient.channels.fetch(bridge.internal_channel);
+  if (!internalChannel) return t(locale, 'bridge', 'noBridgeError');
   const { guild } = internalChannel as TextChannel;
 
-  return stripIndents`This room is connected to ${guild} - ${internalChannel}`;
+  return t(locale, 'bridge', 'infoSingle', {
+    guild: guild.toString(),
+    channel: internalChannel.toString(),
+  });
 }
 
 export const dBridge: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('bridge')
+    .setNameLocalizations(getCommandLocalizations('bridge', 'commandName'))
     .setDescription('Manage the bridge between two discord channels')
+    .setDescriptionLocalizations(getCommandLocalizations('bridge', 'commandDescription'))
     .setIntegrationTypes([0])
     .addSubcommand(subcommand => subcommand
       .setName('create')
-      .setDescription('Create a bridge between two discord channels')
+      .setNameLocalizations(getCommandLocalizations('bridge', 'createSubcommand'))
+      .setDescription(t('en', 'bridge', 'createDescription'))
+      .setDescriptionLocalizations(getCommandLocalizations('bridge', 'createDescription'))
       .addStringOption(option => option.setName('external_channel')
-        .setDescription('Channel ID on the other guild')
+        .setDescription(t('en', 'bridge', 'externalChannelOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('bridge', 'externalChannelOption'))
         .setRequired(true))
       .addBooleanOption(option => option.setName('override')
-        .setDescription('Redo an existing bridge')
+        .setDescription(t('en', 'bridge', 'overrideOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('bridge', 'overrideOption'))
         .setRequired(false)))
     .addSubcommand(subcommand => subcommand
       .setName('confirm')
-      .setDescription('Confirm a bridge creation between two discord channels'))
+      .setNameLocalizations(getCommandLocalizations('bridge', 'confirmSubcommand'))
+      .setDescription(t('en', 'bridge', 'confirmDescription'))
+      .setDescriptionLocalizations(getCommandLocalizations('bridge', 'confirmDescription')))
     .addSubcommand(subcommand => subcommand
       .setName('pause')
-      .setDescription('Pause a bridge between two discord channels'))
+      .setNameLocalizations(getCommandLocalizations('bridge', 'pauseSubcommand'))
+      .setDescription(t('en', 'bridge', 'pauseDescription'))
+      .setDescriptionLocalizations(getCommandLocalizations('bridge', 'pauseDescription')))
     .addSubcommand(subcommand => subcommand
       .setName('resume')
-      .setDescription('Resume a bridge between two discord channels'))
+      .setNameLocalizations(getCommandLocalizations('bridge', 'resumeSubcommand'))
+      .setDescription(t('en', 'bridge', 'resumeDescription'))
+      .setDescriptionLocalizations(getCommandLocalizations('bridge', 'resumeDescription')))
     .addSubcommand(subcommand => subcommand
       .setName('info')
-      .setDescription('Get info on this bridge setup'))
+      .setNameLocalizations(getCommandLocalizations('bridge', 'infoSubcommand'))
+      .setDescription(t('en', 'bridge', 'infoDescription'))
+      .setDescriptionLocalizations(getCommandLocalizations('bridge', 'infoDescription')))
     .addSubcommand(subcommand => subcommand
       .setName('remove')
-      .setDescription('Remove a bridge between two discord channels')
+      .setNameLocalizations(getCommandLocalizations('bridge', 'removeSubcommand'))
+      .setDescription(t('en', 'bridge', 'removeDescription'))
+      .setDescriptionLocalizations(getCommandLocalizations('bridge', 'removeDescription'))
       .addStringOption(option => option.setName('confirmation')
-        .setDescription('Confirmation Code'))),
+        .setDescription(t('en', 'bridge', 'confirmationOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('bridge', 'confirmationOption')))),
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+    const locale = await getLocale(interaction, 'bridge');
     const embed = embedTemplate()
-      .setTitle('Bridge')
+      .setTitle(t(locale, 'bridge', 'bridgeTitle'))
       .setColor(Colors.DarkPurple);
     if (!interaction.guild || !interaction.member) {
       await interaction.editReply({
         embeds: [
           embed
-            .setDescription('This command can only be used in a guild.')
+            .setDescription(t(locale, 'bridge', 'guildOnly'))
             .setColor(Colors.Red),
         ],
       });
@@ -449,10 +478,7 @@ export const dBridge: SlashCommand = {
       await interaction.editReply({
         embeds: [
           embed
-            .setDescription(`This command can only be used in a partner guild!
-            If you are a partner and this is an error, please contact Moonbear.
-            If you are not a partner, tell Moonbear you're interested:
-            This is a new system and we're still figuring out how it works.`)
+            .setDescription(t(locale, 'bridge', 'partnerOnly'))
             .setColor(Colors.Red),
         ],
       });
@@ -462,17 +488,17 @@ export const dBridge: SlashCommand = {
     const command = interaction.options.getSubcommand();
 
     if (command === 'create') {
-      embed.setDescription(await create(interaction));
+      embed.setDescription(await create(interaction, locale));
     } else if (command === 'confirm') {
-      embed.setDescription(await confirm(interaction));
+      embed.setDescription(await confirm(interaction, locale));
     } else if (command === 'pause') {
-      embed.setDescription(await pause(interaction));
+      embed.setDescription(await pause(interaction, locale));
     } else if (command === 'resume') {
-      embed.setDescription(await resume(interaction));
+      embed.setDescription(await resume(interaction, locale));
     } else if (command === 'remove') {
-      embed.setDescription(await remove(interaction));
+      embed.setDescription(await remove(interaction, locale));
     } else if (command === 'info') {
-      embed.setDescription(await info(interaction));
+      embed.setDescription(await info(interaction, locale));
     }
 
     await interaction.editReply({

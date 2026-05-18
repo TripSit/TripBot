@@ -19,7 +19,7 @@ export const dDonate: SlashCommand = {
     log.info(F, await commandContext(interaction));
     const ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined;
     await interaction.deferReply({ flags: ephemeral });
-    await interaction.editReply(await donatePage());
+    await interaction.editReply(await donatePage('en'));
     return true;
   },
 };
