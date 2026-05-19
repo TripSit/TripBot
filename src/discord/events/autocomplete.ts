@@ -10,6 +10,7 @@ import tsData from '../../../assets/data/tripsitDB.json';
 import timezones from '../../../assets/data/timezones.json';
 import unitsOfMeasurement from '../../../assets/data/units_of_measurement.json';
 import { CbSubstance } from '../../global/@types/combined';
+import { getAvailableLocales } from '../../i18n/index';
 
 const drugDataTripsit = tsData as {
   [key: string]: Drug;
@@ -340,11 +341,7 @@ async function autocompleteQuotes(interaction: AutocompleteInteraction) {
 }
 
 async function autocompleteLocale(interaction: AutocompleteInteraction) {
-  const fs = await import('fs');
-  const path = await import('path');
-  const localesDir = path.join(process.cwd(), 'src/locales');
-  const validLocales = fs.readdirSync(localesDir)
-    .filter((d: string) => /^[a-zA-Z-]+$/.test(d));
+  const validLocales = getAvailableLocales();
   const focused = interaction.options.getFocused().toLowerCase();
   const filtered = validLocales
     .filter(l => l.toLowerCase().includes(focused))

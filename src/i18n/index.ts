@@ -63,6 +63,20 @@ export async function getLocale(
   return defaultLocale;
 }
 
+let cachedLocales: string[] | null = null;
+
+/** Returns all valid locale directory names under src/locales (including en-US). Cached after first call. */
+export function getAvailableLocales(): string[] {
+  if (cachedLocales) return cachedLocales;
+  if (!fs.existsSync(LOCALES_DIR)) {
+    cachedLocales = ['en-US'];
+    return cachedLocales;
+  }
+  cachedLocales = fs.readdirSync(LOCALES_DIR)
+    .filter(d => /^[a-zA-Z-]+$/.test(d) && fs.statSync(path.join(LOCALES_DIR, d)).isDirectory());
+  return cachedLocales;
+}
+
 /**
  * Build a Discord command localization map for a key across all non-default locales.
  * Used when registering slash commands so Discord shows translated names/descriptions.

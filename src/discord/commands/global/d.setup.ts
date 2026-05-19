@@ -29,7 +29,9 @@ import { paginationEmbed } from '../../utils/pagination';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { profile } from '../../../global/commands/g.learn';
 import tripsitInfo from '../../../global/commands/g.about';
-import { t, getLocale, getCommandLocalizations } from '../../../i18n/index';
+import {
+  t, getLocale, getCommandLocalizations, getAvailableLocales,
+} from '../../../i18n/index';
 
 const F = f(__filename);
 
@@ -833,12 +835,7 @@ async function localeSet(
   await interaction.deferReply({ flags: MessageFlags.Ephemeral });
   const requestedLocale = interaction.options.getString('locale', true);
 
-  const fs = await import('fs');
-  const path = await import('path');
-  const localesDir = path.join(process.cwd(), 'src/locales');
-  const validLocales = fs.readdirSync(localesDir)
-    .filter((d: string) => /^[a-zA-Z-]+$/.test(d) && d !== 'en-US');
-  const allValid = ['en-US', ...validLocales];
+  const allValid = getAvailableLocales();
 
   if (!allValid.includes(requestedLocale)) {
     await interaction.editReply({
