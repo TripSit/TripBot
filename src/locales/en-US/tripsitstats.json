@@ -1,0 +1,11 @@
+{
+  "commandName": "tripsit_stats",
+  "commandDescription": "Get stats on a feature of TripSit",
+  "sessionSubcommand": "Get stats for TripSit sessions",
+  "commandSubcommand": "Get stats for commands",
+  "ephemeralOption": "Set to \"True\" to show the response only to you",
+  "targetCommandOption": "The command to get stats for",
+  "daysOption": "Number of days to look back",
+  "embedTitleSession": "TripSit Session Stats",
+  "embedTitleCommand": "TripSit Command Stats"
+}

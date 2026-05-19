@@ -7,39 +7,49 @@ import { SlashCommand } from '../../@types/commandDef';
 import commandContext from '../../utils/context';
 import { embedTemplate } from '../../utils/embedTemplate';
 import getTripSitStatistics from '../../../global/commands/g.tripsitstats';
+import { t, getLocale, getCommandLocalizations } from '../../../i18n/index';
 
 const F = f(__filename);
 
 export const dTripsitStats: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('tripsit_stats')
-    .setDescription('Get stats on a feature of TripSit')
+    .setNameLocalizations(getCommandLocalizations('tripsitstats', 'commandName'))
+    .setDescription(t('en-US', 'tripsitstats', 'commandDescription'))
+    .setDescriptionLocalizations(getCommandLocalizations('tripsitstats', 'commandDescription'))
     .setIntegrationTypes([0])
     .addSubcommand(subcommand => subcommand
       .setName('session')
-      .setDescription('Get stats for TripSit sessions')
+      .setDescription(t('en-US', 'tripsitstats', 'sessionSubcommand'))
+      .setDescriptionLocalizations(getCommandLocalizations('tripsitstats', 'sessionSubcommand'))
       .addBooleanOption(option => option
         .setName('ephemeral')
-        .setDescription('Set to "True" to show the response only to you')))
+        .setDescription(t('en-US', 'tripsitstats', 'ephemeralOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('tripsitstats', 'ephemeralOption'))))
     .addSubcommand(subcommand => subcommand
       .setName('command')
-      .setDescription('Get stats for commands')
+      .setDescription(t('en-US', 'tripsitstats', 'commandSubcommand'))
+      .setDescriptionLocalizations(getCommandLocalizations('tripsitstats', 'commandSubcommand'))
       .addStringOption(option => option
         .setName('target_command')
-        .setDescription('The command to get stats for'))
+        .setDescription(t('en-US', 'tripsitstats', 'targetCommandOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('tripsitstats', 'targetCommandOption')))
       .addIntegerOption(option => option
         .setName('days')
-        .setDescription('Number of days to look back'))
+        .setDescription(t('en-US', 'tripsitstats', 'daysOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('tripsitstats', 'daysOption')))
       .addBooleanOption(option => option
         .setName('ephemeral')
-        .setDescription('Set to "True" to show the response only to you'))),
+        .setDescription(t('en-US', 'tripsitstats', 'ephemeralOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('tripsitstats', 'ephemeralOption')))),
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
+    const locale = await getLocale(interaction, 'tripsitstats');
     const ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined;
     await interaction.deferReply({ flags: ephemeral });
 
-    let stats = null;
     const subcommand = interaction.options.getSubcommand();
+    let stats = null;
     if (subcommand === 'command') {
       const command = interaction.options.getString('target_command');
       const days = interaction.options.getInteger('days') || 0;
@@ -48,10 +58,9 @@ export const dTripsitStats: SlashCommand = {
       stats = await getTripSitStatistics(subcommand);
     }
 
-    // Record this command usage
-
+    const titleKey = subcommand === 'session' ? 'embedTitleSession' : 'embedTitleCommand';
     const embed = embedTemplate()
-      .setTitle(`TripSit ${subcommand.charAt(0).toUpperCase() + subcommand.slice(1)} Stats`)
+      .setTitle(t(locale, 'tripsitstats', titleKey))
       .setDescription(stats);
     await interaction.editReply({ embeds: [embed] });
     return true;
