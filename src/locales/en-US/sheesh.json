@@ -1,0 +1,15 @@
+{
+  "commandName": "sheesh",
+  "commandDescription": "Let's sheesh!",
+  "lightjointSubcommand": "Let's sheesh!",
+  "passjointSubcommand": "Already puffed? Pass to someone else!",
+  "lightjointUserOption": "User to sheesh with",
+  "passjointUserOption": "User to pass joint to",
+  "lightAlone": "<:ts_meditate:1350089899113578529> {{name}} decided to light up joint alone today... <:ts_meditate:1350089899113578529>",
+  "lightWithBot": "<:ts_cannabinoids:1350076845021986816> {{name}} is blazing with {{member}}! <:ts_bot:1350076410714128384> 110100100 blaze it! <:ts_cannabinoids:1350076845021986816>",
+  "lightWithUser": "<:ts_cannabinoids:1350076845021986816> {{name}} started sheeshin with {{member}} <:ts_cannabinoids:1350076845021986816>",
+  "lightedUp": "<:ts_cannabinoids:1350076845021986816> {{name}} lighted up a joint! <:ts_cannabinoids:1350076845021986816>",
+  "keptJoint": "<:ts_smile:1350089891798712403> {{name}} decided to keep joint for themselves! Shame on you! <:ts_smile:1350089891798712403>",
+  "passedToBot": "<:ts_cannabinoids:1350076845021986816> {{name}} passed joint to TripBot! <:ts_bot:1350076410714128384> Hopefully, TripBot gives it back <:ts_smile:1350089891798712403>",
+  "passedTo": "<:ts_cannabinoids:1350076845021986816> {{name}} passed joint to {{member}} <:ts_cannabinoids:1350076845021986816>"
+}

@@ -1,61 +1,70 @@
 /* eslint-disable max-len */
 /* eslint-disable eqeqeq */
-
 import {
   SlashCommandBuilder,
   GuildMember,
 } from 'discord.js';
 import { SlashCommand } from '../../@types/commandDef';
 import commandContext from '../../utils/context';
+import { t, getLocale, getCommandLocalizations } from '../../../i18n/index';
 
 const F = f(__filename);
+
+const TRIPBOT_ID = '977945272359452713';
 
 export const dSheesh: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('sheesh')
-    .setDescription('Let\'s sheesh!')
+    .setNameLocalizations(getCommandLocalizations('sheesh', 'commandName'))
+    .setDescription(t('en-US', 'sheesh', 'commandDescription'))
+    .setDescriptionLocalizations(getCommandLocalizations('sheesh', 'commandDescription'))
     .setIntegrationTypes([0])
     .addSubcommand(subcommand => subcommand
       .setName('lightjoint')
-      .setDescription('Let\'s sheesh!')
+      .setDescription(t('en-US', 'sheesh', 'lightjointSubcommand'))
+      .setDescriptionLocalizations(getCommandLocalizations('sheesh', 'lightjointSubcommand'))
       .addUserOption(option => option
         .setName('user')
-        .setDescription('User to sheesh with')
+        .setDescription(t('en-US', 'sheesh', 'lightjointUserOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('sheesh', 'lightjointUserOption'))
         .setRequired(false)))
     .addSubcommand(subcommand => subcommand
       .setName('passjoint')
-      .setDescription('Already puffed? Pass to someone else!')
+      .setDescription(t('en-US', 'sheesh', 'passjointSubcommand'))
+      .setDescriptionLocalizations(getCommandLocalizations('sheesh', 'passjointSubcommand'))
       .addUserOption(option => option
         .setName('user')
-        .setDescription('User to pass joint to')
+        .setDescription(t('en-US', 'sheesh', 'passjointUserOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('sheesh', 'passjointUserOption'))
         .setRequired(true))),
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
+    const locale = await getLocale(interaction, 'sheesh');
     await interaction.deferReply({});
 
     const command = interaction.options.getSubcommand() as 'lightjoint' | 'passjoint';
     const user = interaction.member as GuildMember;
     const member = interaction.options.getMember('user') as GuildMember;
+
     if (command === 'lightjoint') {
       if (user == member) {
-        await interaction.editReply({ content: `<:ts_meditate:1350089899113578529> ${user.displayName} decided to light up joint alone today... <:ts_meditate:1350089899113578529>` });
-      } else if (member?.id === '977945272359452713') {
-        await interaction.editReply({ content: `<:ts_cannabinoids:1350076845021986816> ${user.displayName} is blazing with ${member.displayName}! <:ts_bot:1350076410714128384> 110100100 blaze it! <:ts_cannabinoids:1350076845021986816>` }); // eslint-disable-line max-len
+        await interaction.editReply({ content: t(locale, 'sheesh', 'lightAlone', { name: user.displayName }) });
+      } else if (member?.id === TRIPBOT_ID) {
+        await interaction.editReply({ content: t(locale, 'sheesh', 'lightWithBot', { name: user.displayName, member: member.displayName }) });
       } else if (member != null) {
-        await interaction.editReply({ content: `<:ts_cannabinoids:1350076845021986816> ${user.displayName} started sheeshin with ${member.displayName} <:ts_cannabinoids:1350076845021986816>` });
+        await interaction.editReply({ content: t(locale, 'sheesh', 'lightWithUser', { name: user.displayName, member: member.displayName }) });
       } else {
-        await interaction.editReply({ content: `<:ts_cannabinoids:1350076845021986816> ${user.displayName} lighted up a joint! <:ts_cannabinoids:1350076845021986816>` });
+        await interaction.editReply({ content: t(locale, 'sheesh', 'lightedUp', { name: user.displayName }) });
       }
     } else if (command === 'passjoint') {
       if (user === member) {
-        await interaction.editReply({ content: `<:ts_smile:1350089891798712403> ${user.displayName} decided to keep joint for themselves! Shame on you! <:ts_smile:1350089891798712403>` });
-      } else if (member.id === '977945272359452713') {
-        await interaction.editReply({ content: `<:ts_cannabinoids:1350076845021986816> ${user.displayName} passed joint to TripBot! <:ts_bot:1350076410714128384> Hopefully, TripBot gives it back <:ts_smile:1350089891798712403>` }); // eslint-disable-line max-len
+        await interaction.editReply({ content: t(locale, 'sheesh', 'keptJoint', { name: user.displayName }) });
+      } else if (member.id === TRIPBOT_ID) {
+        await interaction.editReply({ content: t(locale, 'sheesh', 'passedToBot', { name: user.displayName }) });
       } else {
-        await interaction.editReply({ content: `<:ts_cannabinoids:1350076845021986816> ${user.displayName} passed joint to ${member?.displayName} <:ts_cannabinoids:1350076845021986816>` }); // eslint-disable-line max-len
+        await interaction.editReply({ content: t(locale, 'sheesh', 'passedTo', { name: user.displayName, member: member?.displayName }) });
       }
     }
-
     return true;
   },
 };
