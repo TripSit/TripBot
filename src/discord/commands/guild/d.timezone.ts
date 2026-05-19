@@ -8,33 +8,41 @@ import { SlashCommand } from '../../@types/commandDef';
 import { timezone } from '../../../global/commands/g.timezone';
 import { embedTemplate } from '../../utils/embedTemplate';
 import commandContext from '../../utils/context';
+import { t, getLocale, getCommandLocalizations } from '../../../i18n/index';
 
 const F = f(__filename);
 
 export const dTimezone: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('timezone')
-    .setDescription('Get or set timezones!')
+    .setNameLocalizations(getCommandLocalizations('timezone', 'commandName'))
+    .setDescription(t('en-US', 'timezone', 'commandDescription'))
+    .setDescriptionLocalizations(getCommandLocalizations('timezone', 'commandDescription'))
     .setIntegrationTypes([0])
     .addSubcommand(subcommand => subcommand
       .setName('get')
-      .setDescription('Get someone\'s timezone!')
+      .setDescription(t('en-US', 'timezone', 'getSubcommand'))
+      .setDescriptionLocalizations(getCommandLocalizations('timezone', 'getSubcommand'))
       .addUserOption(option => option
-        // .setRequired(true) If nothing is provided it defaults to the user who ran the command
         .setName('user')
-        .setDescription('User to lookup'))
+        .setDescription(t('en-US', 'timezone', 'userOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('timezone', 'userOption')))
       .addBooleanOption(option => option.setName('ephemeral')
-        .setDescription('Set to "True" to show the response only to you')))
+        .setDescription(t('en-US', 'timezone', 'ephemeralOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('timezone', 'ephemeralOption'))))
     .addSubcommand(subcommand => subcommand
       .setName('set')
-      .setDescription('Set your timezone!')
+      .setDescription(t('en-US', 'timezone', 'setSubcommand'))
+      .setDescriptionLocalizations(getCommandLocalizations('timezone', 'setSubcommand'))
       .addStringOption(option => option
         .setName('timezone')
-        .setDescription('Timezone value')
+        .setDescription(t('en-US', 'timezone', 'timezoneOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('timezone', 'timezoneOption'))
         .setRequired(true)
         .setAutocomplete(true))),
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
+    const locale = await getLocale(interaction, 'timezone');
     let command = interaction.options.getSubcommand() as 'get' | 'set' | undefined;
     const ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined;
     if (command === 'set') {
@@ -45,37 +53,22 @@ export const dTimezone: SlashCommand = {
     const tzValue = interaction.options.getString('timezone');
     let member = interaction.options.getMember('user') as GuildMember | null;
 
-    if (command === undefined) {
-      command = 'get';
-    }
-
-    if (member === null) {
-      member = interaction.member as GuildMember;
-    }
+    if (command === undefined) command = 'get';
+    if (member === null) member = interaction.member as GuildMember;
 
     const response = await timezone(command, member.id, tzValue);
 
-    // log.debug(F, `response: ${response}`);
-
-    if (command === 'get') {
-      const embed = embedTemplate();
-      if (response === '') {
-        embed.setTitle(`${member.displayName} is a timeless treasure <3\n(Has not set a time zone)`);
-        await interaction.editReply({ embeds: [embed] });
-      } else if (response === 'invalid') {
-        embed.setTitle('Invalid timezone!\nPlease only use the options from the autocomplete list.');
-        await interaction.editReply({ embeds: [embed] });
-      } else if (response === 'updated') {
-        embed.setTitle(`I updated your timezone to ${tzValue}`);
-        await interaction.editReply({ embeds: [embed] });
-      } else {
-        embed.setTitle(`${response} wherever ${member.displayName} is located`);
-        await interaction.editReply({ embeds: [embed] });
-        // await interaction.editReply({ content: `${response} wherever ${member.displayName} is located.` });
-      }
+    const embed = embedTemplate();
+    if (response === '') {
+      embed.setTitle(t(locale, 'timezone', 'notSet', { name: member.displayName }));
+    } else if (response === 'invalid') {
+      embed.setTitle(t(locale, 'timezone', 'invalid'));
+    } else if (response === 'updated') {
+      embed.setTitle(t(locale, 'timezone', 'updated', { tz: tzValue }));
     } else {
-      await interaction.editReply({ content: response as string });
+      embed.setTitle(t(locale, 'timezone', 'currentTime', { time: response, name: member.displayName }));
     }
+    await interaction.editReply({ embeds: [embed] });
     return true;
   },
 };
