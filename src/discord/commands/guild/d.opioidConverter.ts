@@ -6,51 +6,52 @@ import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import commandContext from '../../utils/context';
 import { mainConversion } from '../../../global/utils/opioidConverter';
+import { t, getLocale, getCommandLocalizations } from '../../../i18n/index';
 
 const F = f(__filename);
 
 export const dOpioidConverter: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('opioid')
-    .setDescription('Dosage conversion between two opioids. Note: this does not take changing the ROA into account.')
+    .setNameLocalizations(getCommandLocalizations('opioidConverter', 'commandName'))
+    .setDescription(t('en-US', 'opioidConverter', 'commandDescription'))
+    .setDescriptionLocalizations(getCommandLocalizations('opioidConverter', 'commandDescription'))
     .addSubcommand(subcommand => subcommand
       .setName('convert')
-      .setDescription('Converts one opioid dosage to another\'s equivalent.')
+      .setDescription(t('en-US', 'opioidConverter', 'convertSubcommand'))
+      .setDescriptionLocalizations(getCommandLocalizations('opioidConverter', 'convertSubcommand'))
       .addStringOption(option => option
         .setName('from')
-        .setDescription('The opioid to convert from.')
+        .setDescription(t('en-US', 'opioidConverter', 'fromOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('opioidConverter', 'fromOption'))
         .setRequired(true))
       .addNumberOption(option => option
         .setName('dosage')
-        .setDescription('The dose **in milligrams (mg)** you want to convert.')
+        .setDescription(t('en-US', 'opioidConverter', 'dosageOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('opioidConverter', 'dosageOption'))
         .setRequired(true))
       .addStringOption(option => option
         .setName('to')
-        .setDescription('The opioid to convert to.')
+        .setDescription(t('en-US', 'opioidConverter', 'toOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('opioidConverter', 'toOption'))
         .setRequired(true))),
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
+    const locale = await getLocale(interaction, 'opioidConverter');
 
     const dosage = interaction.options.getNumber('dosage', true);
-    const opi1: string = interaction.options.getString('from', true);
-    const opi2 = interaction.options.getString('to', true);
-
-    const result = mainConversion(dosage, opi1, opi2);
+    const from: string = interaction.options.getString('from', true);
+    const to = interaction.options.getString('to', true);
+    const result = mainConversion(dosage, from, to);
 
     const embed = embedTemplate()
-      .setTitle('Conversion Result')
+      .setTitle(t(locale, 'opioidConverter', 'resultTitle'))
       .setColor(Colors.Blurple)
-      .setDescription(`
-        ${dosage}mg ${opi1} ~= **${result}mg ${opi2}**
-
-        Please note that this is not perfect and does not account for ROA changes.
-      `);
+      .setDescription(t(locale, 'opioidConverter', 'resultDescription', {
+        dosage, from, result, to,
+      }));
 
     await interaction.reply({ embeds: [embed] });
-    await interaction.editReply({
-      embeds: [embed],
-    });
-
     return true;
   },
 };
