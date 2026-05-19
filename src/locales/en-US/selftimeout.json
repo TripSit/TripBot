@@ -1,0 +1,11 @@
+{
+  "commandName": "selftimeout",
+  "commandDescription": "Timeout yourself!",
+  "durationOption": "How long? Max is 2 weeks!",
+  "confirmationOption": "Are you sure? You cannot undo this!",
+  "yesChoice": "Yes, I won't ask a mod to undo.",
+  "noChoice": "No, I'm just testing.",
+  "testingReply": "This works exactly like you think it does, try again when you're sure!",
+  "seeYouIn": "We'll see you in {{duration}}!",
+  "modlogMsg": "**{{tag}}** self timed out for **{{duration}}**!"
+}
