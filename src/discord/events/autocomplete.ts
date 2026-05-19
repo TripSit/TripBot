@@ -339,6 +339,20 @@ async function autocompleteQuotes(interaction: AutocompleteInteraction) {
   }
 }
 
+async function autocompleteLocale(interaction: AutocompleteInteraction) {
+  const fs = await import('fs');
+  const path = await import('path');
+  const localesDir = path.join(process.cwd(), 'src/locales');
+  const validLocales = fs.readdirSync(localesDir)
+    .filter((d: string) => /^[a-zA-Z-]+$/.test(d));
+  const focused = interaction.options.getFocused().toLowerCase();
+  const filtered = validLocales
+    .filter(l => l.toLowerCase().includes(focused))
+    .slice(0, 25)
+    .map(l => ({ name: l, value: l }));
+  await interaction.respond(filtered);
+}
+
 export default autocomplete;
 /**
  * Handles autocomplete information
@@ -359,6 +373,8 @@ export async function autocomplete(interaction: AutocompleteInteraction): Promis
     autocompleteConvert(interaction);
   } else if (interaction.commandName === 'quote') {
     await autocompleteQuotes(interaction);
+  } else if (interaction.commandName === 'setup' && interaction.options.getSubcommandGroup(false) === 'locale') {
+    await autocompleteLocale(interaction);
   } else { // If you don't need a specific autocomplete, return a list of drug names
     await autocompleteDrugNames(interaction);
   }

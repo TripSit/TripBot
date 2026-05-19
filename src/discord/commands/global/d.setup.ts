@@ -806,6 +806,61 @@ export async function helperButton(
     });
 }
 
+async function localeGet(
+  interaction: ChatInputCommandInteraction,
+) {
+  const locale = await getLocale(interaction, 'setup');
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+  const guildData = await db.discord_guilds.findUnique({
+    where: { id: interaction.guildId! },
+    select: { locale: true },
+  });
+  if (guildData?.locale) {
+    await interaction.editReply({
+      content: t(locale, 'setup', 'localeGetReply', { locale: guildData.locale }),
+    });
+  } else {
+    await interaction.editReply({
+      content: t(locale, 'setup', 'localeGetReplyDefault'),
+    });
+  }
+}
+
+async function localeSet(
+  interaction: ChatInputCommandInteraction,
+) {
+  const locale = await getLocale(interaction, 'setup');
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+  const requestedLocale = interaction.options.getString('locale', true);
+
+  const fs = await import('fs');
+  const path = await import('path');
+  const localesDir = path.join(process.cwd(), 'src/locales');
+  const validLocales = fs.readdirSync(localesDir)
+    .filter((d: string) => /^[a-zA-Z-]+$/.test(d) && d !== 'en-US');
+  const allValid = ['en-US', ...validLocales];
+
+  if (!allValid.includes(requestedLocale)) {
+    await interaction.editReply({
+      content: t(locale, 'setup', 'localeSetInvalid', {
+        locale: requestedLocale,
+        available: allValid.join(', '),
+      }),
+    });
+    return;
+  }
+
+  await db.discord_guilds.upsert({
+    where: { id: interaction.guildId! },
+    create: { id: interaction.guildId!, locale: requestedLocale },
+    update: { locale: requestedLocale },
+  });
+
+  await interaction.editReply({
+    content: t(locale, 'setup', 'localeSetReply', { locale: requestedLocale }),
+  });
+}
+
 export const setup: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('setup')
@@ -891,7 +946,25 @@ export const setup: SlashCommand = {
       .setName('help'))
     .addSubcommand(subcommand => subcommand
       .setDescription('Info on how to become a helper')
-      .setName('helper')),
+      .setName('helper'))
+    .addSubcommandGroup(group => group
+      .setName('locale')
+      .setDescription(t('en-US', 'setup', 'localeSubgroupDescription'))
+      .setDescriptionLocalizations(getCommandLocalizations('setup', 'localeSubgroupDescription'))
+      .addSubcommand(sub => sub
+        .setName('get')
+        .setDescription(t('en-US', 'setup', 'localeGetSubcommand'))
+        .setDescriptionLocalizations(getCommandLocalizations('setup', 'localeGetSubcommand')))
+      .addSubcommand(sub => sub
+        .setName('set')
+        .setDescription(t('en-US', 'setup', 'localeSetSubcommand'))
+        .setDescriptionLocalizations(getCommandLocalizations('setup', 'localeSetSubcommand'))
+        .addStringOption(option => option
+          .setName('locale')
+          .setDescription(t('en-US', 'setup', 'localeOptionDescription'))
+          .setDescriptionLocalizations(getCommandLocalizations('setup', 'localeOptionDescription'))
+          .setRequired(true)
+          .setAutocomplete(true)))),
   async execute(interaction:ChatInputCommandInteraction) {
     const locale = await getLocale(interaction, 'setup');
     log.info(F, await commandContext(interaction));
@@ -910,7 +983,15 @@ export const setup: SlashCommand = {
       return false;
     }
 
+    const subcommandGroup = interaction.options.getSubcommandGroup(false);
     const command = interaction.options.getSubcommand();
+
+    if (subcommandGroup === 'locale') {
+      if (command === 'get') await localeGet(interaction);
+      else if (command === 'set') await localeSet(interaction);
+      return true;
+    }
+
     if (command === 'applications') {
       await applicationSetup(interaction);
     } else if (command === 'techhelp') {

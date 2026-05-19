@@ -110,5 +110,13 @@
   "helperAnimalHeader": "> Animal",
   "helperResourcesMessage": "Some important information for you {{member}}!\n### For a refresher on tripsitting please see the following resources:\n\n- [TripSit Learning Portal](https://learn.tripsit.me>)\n- [BlueLight's How To Tripsit](https://docs.google.com/document/d/1vE3jl9imdT3o62nNGn19k5HZVOkECF3jhjra8GkgvwE)\n- [TripSit's How to Tripsit](https://wiki.tripsit.me/wiki/How_To_Tripsit_Online)\n- Check the pins in this channel!\n### If you're overwhelmed, ask for backup:\n- Giving no information is better than giving the wrong information!\n### If someone is underage you can ping a Moderator and finish the session if you're comfortable:\n- Underage users can use the web-chat anonymously but are not allowed to socialize, a Moderator will take care of this.\n### We are NOT here to give medical advice, diagnose, or treat; or handle suicidal or self-harm situations:\n- We're here to give harm reduction facts and *mild* mental health support, no one here is qualified to handle suicide or self-harm.\n- If it seems like someone could use mental health services you can refer them to one of the servers below.\n**Huddle Humans** - [Mental health support](https://discord.gg/mentalhealth)\n**HealthyGamer** - [Mental health with a gaming twist](https://discord.com/invite/H3yRwc7)\n\n**If you have any questions, please reach out!**",
   "helperRejoinAnnounce": "{{member}} has re-joined as a {{roleName}}.",
-  "helperAnnounceTruly": "Hey {{roleTripsitter}}, {{member}} has joined as a {{roleName}}"
+  "helperAnnounceTruly": "Hey {{roleTripsitter}}, {{member}} has joined as a {{roleName}}",
+  "localeGetSubcommand": "Show the current locale for this guild",
+  "localeSetSubcommand": "Set the locale for this guild",
+  "localeOptionDescription": "Locale code to set (e.g. en-US, fi)",
+  "localeGetReply": "This guild's locale is set to **{{locale}}**.",
+  "localeGetReplyDefault": "This guild has no locale set — using **en-US** (default).",
+  "localeSetReply": "Locale updated to **{{locale}}**.",
+  "localeSetInvalid": "**{{locale}}** is not a valid locale. Available locales: {{available}}.",
+  "localeSubgroupDescription": "Manage the locale for this guild"
 }
