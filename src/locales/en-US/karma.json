@@ -1,0 +1,7 @@
+{
+  "commandName": "karma",
+  "commandDescription": "Get someone's karma!",
+  "targetOption": "User to lookup",
+  "ephemeralOption": "Set to \"True\" to show the response only to you",
+  "karmaMsg": "{{name}} has received {{received}} karma and given {{given}} karma"
+}
