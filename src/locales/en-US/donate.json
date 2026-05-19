@@ -1,0 +1,5 @@
+{
+  "commandName": "donate",
+  "commandDescription": "Get information on supporting TripSit",
+  "ephemeralOption": "Set to \"True\" to show the response only to you"
+}
