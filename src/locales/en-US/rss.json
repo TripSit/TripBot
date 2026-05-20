@@ -1,0 +1,19 @@
+{
+  "commandName": "rss",
+  "commandDescription": "Add or remove a subscription to an RSS feed!",
+  "addSubcommand": "Add an RSS subscription to this channel",
+  "urlOption": "URL of the RSS feed, ends with .rss",
+  "addToChannelOption": "Where to post this feed?",
+  "removeSubcommand": "Remove an RSS feed from this channel",
+  "removeFromChannelOption": "Remove RSS feed from which channel?",
+  "listSubcommand": "List all RSS feeds",
+  "guildOnlyError": "This command can only be used in a guild!",
+  "invalidRssUrlError": "You must use a URL ending with .rss!",
+  "rssParseError": "This is not a valid RSS URL, please check it and try again!",
+  "textChannelError": "You must specify a text channel!",
+  "feedAddedTitle": "RSS feed added to {{channel}}!",
+  "feedAddedDesc": "I've started watching {{url}}!",
+  "feedRemovedTitle": "RSS feed removed from {{channel}}!",
+  "feedListTitle": "{{guild}} has the following RSS feeds:!",
+  "feedListEmpty": "{{guild}} has no RSS feeds!"
+}
