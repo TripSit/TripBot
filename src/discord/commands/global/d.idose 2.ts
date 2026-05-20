@@ -23,18 +23,20 @@ export const dIdose: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('idose')
     .setNameLocalizations(getCommandLocalizations('idose', 'commandName'))
-    .setDescription('Your personal dosage information!')
+    .setDescription(t('en-US', 'idose', 'commandDescription'))
     .setDescriptionLocalizations(getCommandLocalizations('idose', 'commandDescription'))
     .setContexts([0, 1, 2])
     .setIntegrationTypes([0, 1])
     .addSubcommand(subcommand => subcommand
       .setName('set')
-      .setDescription('Record when you dosed something')
+      .setDescription(t('en-US', 'idose', 'setSubcommand'))
       .addNumberOption(option => option.setName('volume')
-        .setDescription('How much?')
+        .setDescription(t('en-US', 'idose', 'volumeOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('idose', 'volumeOption'))
         .setRequired(true))
       .addStringOption(option => option.setName('units')
-        .setDescription('What units?')
+        .setDescription(t('en-US', 'idose', 'unitsOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('idose', 'unitsOption'))
         .setRequired(true)
         .addChoices(
           { name: 'mg (milligrams)', value: 'MG' },
@@ -45,11 +47,13 @@ export const dIdose: SlashCommand = {
           { name: 'fl oz (fluid ounces)', value: 'FLOZ' },
         ))
       .addStringOption(option => option.setName('substance')
-        .setDescription('What Substance?')
+        .setDescription(t('en-US', 'idose', 'substanceOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('idose', 'substanceOption'))
         .setRequired(true)
         .setAutocomplete(true))
       .addStringOption(option => option.setName('roa')
-        .setDescription('How did you take it?')
+        .setDescription(t('en-US', 'idose', 'roaOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('idose', 'roaOption'))
         .setRequired(true)
         .addChoices(
           { name: 'Oral', value: 'ORAL' },
@@ -65,15 +69,17 @@ export const dIdose: SlashCommand = {
           { name: 'Transdermal (Past Skin)', value: 'TRANSDERMAL' },
         ))
       .addStringOption(option => option.setName('offset')
-        .setDescription('How long ago? EG: 4 hours 32 mins ago')))
+        .setDescription(t('en-US', 'idose', 'offsetOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('idose', 'offsetOption'))))
     .addSubcommand(subcommand => subcommand
       .setName('get')
-      .setDescription('Get your dosage records!'))
+      .setDescription(t('en-US', 'idose', 'getSubcommand')))
     .addSubcommand(subcommand => subcommand
       .setName('delete')
-      .setDescription('Delete a dosage record!')
+      .setDescription(t('en-US', 'idose', 'deleteSubcommand'))
       .addNumberOption(option => option.setName('record')
-        .setDescription('Which record? (0, 1, 2, etc)')
+        .setDescription(t('en-US', 'idose', 'recordOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('idose', 'recordOption'))
         .setRequired(true))),
   async execute(interaction) {
     const locale = await getLocale(interaction, 'idose');
