@@ -7,8 +7,9 @@ import {
 import { stripIndents } from 'common-tags';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
+import { t, getLocale, getCommandLocalizations } from '../../../i18n/index';
 
-async function dDefine(interaction: ChatInputCommandInteraction): Promise<boolean> {
+async function dDefine(interaction: ChatInputCommandInteraction, locale: string): Promise<boolean> {
   const word = interaction.options.getString('word', true);
   let result;
   try {
@@ -16,17 +17,17 @@ async function dDefine(interaction: ChatInputCommandInteraction): Promise<boolea
     const response = await fetch(url);
     if (!response.ok) {
       result = {
-        title: `Dictionary: ${word}`,
+        title: t(locale, 'search', 'dictTitle', { word }),
         url: `https://www.google.com/search?q=define+${encodeURIComponent(word)}`,
-        description: `No dictionary definition found for "${word}".`,
+        description: t(locale, 'search', 'dictNotFound', { word }),
       };
     } else {
       const data = await response.json();
       if (!Array.isArray(data) || !data[0]?.meanings?.length) {
         result = {
-          title: `Dictionary: ${word}`,
+          title: t(locale, 'search', 'dictTitle', { word }),
           url: `https://www.google.com/search?q=define+${encodeURIComponent(word)}`,
-          description: `No dictionary definition found for "${word}".`,
+          description: t(locale, 'search', 'dictNotFound', { word }),
         };
       } else {
         const meaning = data[0].meanings[0];
@@ -38,7 +39,7 @@ async function dDefine(interaction: ChatInputCommandInteraction): Promise<boolea
           ? `*(${meaning.partOfSpeech})* `
           : '';
         result = {
-          title: `Dictionary: ${word}`,
+          title: t(locale, 'search', 'dictTitle', { word }),
           url: `https://www.google.com/search?q=define+${encodeURIComponent(word)}`,
           description: stripIndents`
             ${partOfSpeech}${definition}${example}
@@ -48,37 +49,37 @@ async function dDefine(interaction: ChatInputCommandInteraction): Promise<boolea
     }
   } catch (err) {
     result = {
-      title: `Dictionary: ${word}`,
+      title: t(locale, 'search', 'dictTitle', { word }),
       url: `https://www.google.com/search?q=define+${encodeURIComponent(word)}`,
-      description: 'Dictionary API is currently unavailable. Please try again later.',
+      description: t(locale, 'search', 'dictUnavailable'),
     };
   }
 
-  if (result.description.startsWith('No dictionary definition found')) {
+  if (result.description.startsWith(t(locale, 'search', 'dictNotFound', { word }))) {
     try {
       const url = `https://api.urbandictionary.com/v0/define?term=${encodeURIComponent(word)}`;
       const response = await fetch(url);
       if (!response.ok) {
         result = {
-          title: `Urban Dictionary: ${word}`,
+          title: t(locale, 'search', 'urbanTitle', { word }),
           url: `https://www.urbandictionary.com/define.php?term=${encodeURIComponent(word)}`,
-          description: 'Urban Dictionary is currently unavailable. Please try again later.',
+          description: t(locale, 'search', 'urbanUnavailable'),
         };
       } else {
         const data = await response.json();
         if (!data.list || data.list.length === 0) {
           result = {
-            title: `Urban Dictionary: ${word}`,
+            title: t(locale, 'search', 'urbanTitle', { word }),
             url: `https://www.urbandictionary.com/define.php?term=${encodeURIComponent(word)}`,
-            description: `No results found for **${word}**.`,
+            description: t(locale, 'search', 'urbanNotFound', { word }),
           };
         } else {
           const entry = data.list[0];
           result = {
-            title: `Urban Dictionary: ${entry.word}`,
+            title: t(locale, 'search', 'urbanTitle', { word: entry.word }),
             url: entry.permalink,
             description: stripIndents`
-              No standard dictionary definition found for "${word}". Showing Urban Dictionary result instead:
+              ${t(locale, 'search', 'dictFallback', { word })}
 
               ${entry.definition.replace(/\[([^\]]+)\]/g, '$1')}
 
@@ -90,9 +91,9 @@ async function dDefine(interaction: ChatInputCommandInteraction): Promise<boolea
       }
     } catch (err) {
       result = {
-        title: `Urban Dictionary: ${word}`,
+        title: t(locale, 'search', 'urbanTitle', { word }),
         url: `https://www.urbandictionary.com/define.php?term=${encodeURIComponent(word)}`,
-        description: 'An error occurred while searching Urban Dictionary.',
+        description: t(locale, 'search', 'urbanError'),
       };
     }
   }
@@ -105,7 +106,7 @@ async function dDefine(interaction: ChatInputCommandInteraction): Promise<boolea
   return true;
 }
 
-async function dUrbanDefine(interaction: ChatInputCommandInteraction): Promise<boolean> {
+async function dUrbanDefine(interaction: ChatInputCommandInteraction, locale: string): Promise<boolean> {
   const word = interaction.options.getString('define');
   let result;
   try {
@@ -113,22 +114,22 @@ async function dUrbanDefine(interaction: ChatInputCommandInteraction): Promise<b
     const response = await fetch(url);
     if (!response.ok) {
       result = {
-        title: `Urban Dictionary: ${word}`,
+        title: t(locale, 'search', 'urbanTitle', { word: word ?? '' }),
         url: `https://www.urbandictionary.com/define.php?term=${encodeURIComponent(word ?? '')}`,
-        description: 'Urban Dictionary is currently unavailable. Please try again later.',
+        description: t(locale, 'search', 'urbanUnavailable'),
       };
     } else {
       const data = await response.json();
       if (!data.list || data.list.length === 0) {
         result = {
-          title: `Urban Dictionary: ${word}`,
+          title: t(locale, 'search', 'urbanTitle', { word: word ?? '' }),
           url: `https://www.urbandictionary.com/define.php?term=${encodeURIComponent(word ?? '')}`,
-          description: `No results found for **${word}**.`,
+          description: t(locale, 'search', 'urbanNotFound', { word: word ?? '' }),
         };
       } else {
         const entry = data.list[0];
         result = {
-          title: `Urban Dictionary: ${entry.word}`,
+          title: t(locale, 'search', 'urbanTitle', { word: entry.word }),
           url: entry.permalink,
           description: stripIndents`
             ${entry.definition.replace(/\[([^\]]+)\]/g, '$1')}
@@ -141,29 +142,29 @@ async function dUrbanDefine(interaction: ChatInputCommandInteraction): Promise<b
     }
   } catch (err) {
     result = {
-      title: `Urban Dictionary: ${word}`,
+      title: t(locale, 'search', 'urbanTitle', { word: word ?? '' }),
       url: `https://www.urbandictionary.com/define.php?term=${encodeURIComponent(word ?? '')}`,
-      description: 'An error occurred while searching Urban Dictionary.',
+      description: t(locale, 'search', 'urbanError'),
     };
   }
 
-  if (result.description.startsWith('No results found')) {
+  if (result.description.startsWith(t(locale, 'search', 'urbanNotFound', { word: word ?? '' }))) {
     try {
       const url = `https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(word ?? '')}`;
       const response = await fetch(url);
       if (!response.ok) {
         result = {
-          title: `Dictionary: ${word}`,
+          title: t(locale, 'search', 'dictTitle', { word: word ?? '' }),
           url: `https://www.google.com/search?q=define+${encodeURIComponent(word ?? '')}`,
-          description: `No dictionary definition found for "${word}".`,
+          description: t(locale, 'search', 'dictNotFound', { word: word ?? '' }),
         };
       } else {
         const data = await response.json();
         if (!Array.isArray(data) || !data[0]?.meanings?.length) {
           result = {
-            title: `Dictionary: ${word}`,
+            title: t(locale, 'search', 'dictTitle', { word: word ?? '' }),
             url: `https://www.google.com/search?q=define+${encodeURIComponent(word ?? '')}`,
-            description: `No dictionary definition found for "${word}".`,
+            description: t(locale, 'search', 'dictNotFound', { word: word ?? '' }),
           };
         } else {
           const meaning = data[0].meanings[0];
@@ -175,10 +176,10 @@ async function dUrbanDefine(interaction: ChatInputCommandInteraction): Promise<b
             ? `*(${meaning.partOfSpeech})* `
             : '';
           result = {
-            title: `Dictionary: ${word}`,
+            title: t(locale, 'search', 'dictTitle', { word: word ?? '' }),
             url: `https://www.google.com/search?q=define+${encodeURIComponent(word ?? '')}`,
             description: stripIndents`
-              No Urban Dictionary result found for "${word}". Showing standard dictionary result instead:
+              ${t(locale, 'search', 'urbanFallback', { word: word ?? '' })}
 
               ${partOfSpeech}${definition}${example}
             `,
@@ -187,9 +188,9 @@ async function dUrbanDefine(interaction: ChatInputCommandInteraction): Promise<b
       }
     } catch (err) {
       result = {
-        title: `Dictionary: ${word}`,
+        title: t(locale, 'search', 'dictTitle', { word: word ?? '' }),
         url: `https://www.google.com/search?q=define+${encodeURIComponent(word ?? '')}`,
-        description: 'Dictionary API is currently unavailable. Please try again later.',
+        description: t(locale, 'search', 'dictUnavailable'),
       };
     }
   }
@@ -202,16 +203,16 @@ async function dUrbanDefine(interaction: ChatInputCommandInteraction): Promise<b
   return true;
 }
 
-async function dGame(interaction: ChatInputCommandInteraction): Promise<boolean> {
+async function dGame(interaction: ChatInputCommandInteraction, locale: string): Promise<boolean> {
   const query = interaction.options.getString('game', true);
   let result;
   const url = `https://store.steampowered.com/api/storesearch/?term=${encodeURIComponent(query)}&cc=us`;
   const response = await fetch(url);
   if (!response.ok) {
     result = {
-      title: `Steam: ${query}`,
+      title: t(locale, 'search', 'steamTitle', { query }),
       url: `https://store.steampowered.com/search/?term=${encodeURIComponent(query)}`,
-      description: `No Steam results found for "${query}".`,
+      description: t(locale, 'search', 'steamNotFound', { query }),
       thumb: '',
       fields: [],
     };
@@ -219,9 +220,9 @@ async function dGame(interaction: ChatInputCommandInteraction): Promise<boolean>
     const data = await response.json();
     if (!data.items || data.items.length === 0) {
       result = {
-        title: `Steam: ${query}`,
+        title: t(locale, 'search', 'steamTitle', { query }),
         url: `https://store.steampowered.com/search/?term=${encodeURIComponent(query)}`,
-        description: `No Steam results found for "${query}".`,
+        description: t(locale, 'search', 'steamNotFound', { query }),
         thumb: '',
         fields: [],
       };
@@ -270,12 +271,12 @@ async function dGame(interaction: ChatInputCommandInteraction): Promise<boolean>
       const developer = usDetails.developers ? usDetails.developers.join(', ') : 'Unknown';
       const publisher = usDetails.publishers ? usDetails.publishers.join(', ') : 'Unknown';
 
-      let priceFieldName = 'Price';
+      let priceFieldName = t(locale, 'search', 'priceField');
       let salePercent = 0;
       const usdPriceObj = details.$?.price_overview;
       if (usdPriceObj && usdPriceObj.discount_percent && usdPriceObj.discount_percent > 0) {
         salePercent = usdPriceObj.discount_percent;
-        priceFieldName = `Price (${salePercent}% off)`;
+        priceFieldName = t(locale, 'search', 'priceDiscountField', { percent: String(salePercent) });
       }
       const prices = currencies.map(cur => {
         const priceObj = details[cur.symbol]?.price_overview;
@@ -297,11 +298,11 @@ async function dGame(interaction: ChatInputCommandInteraction): Promise<boolean>
         header,
         fields: [
           { name: priceFieldName, value: prices, inline: true },
-          { name: 'Tags', value: tags, inline: true },
-          { name: 'Release', value: releaseDate, inline: true },
-          { name: 'Platforms', value: platforms, inline: true },
-          { name: 'Developer', value: developer, inline: true },
-          { name: 'Publisher', value: publisher, inline: true },
+          { name: t(locale, 'search', 'tagsField'), value: tags, inline: true },
+          { name: t(locale, 'search', 'releaseField'), value: releaseDate, inline: true },
+          { name: t(locale, 'search', 'platformsField'), value: platforms, inline: true },
+          { name: t(locale, 'search', 'developerField'), value: developer, inline: true },
+          { name: t(locale, 'search', 'publisherField'), value: publisher, inline: true },
         ],
       };
     }
@@ -312,7 +313,6 @@ async function dGame(interaction: ChatInputCommandInteraction): Promise<boolean>
     .setURL(result.url)
     .setDescription(result.description);
 
-  // if (result.header) embed.setImage(result.header);
   if (result.thumb) embed.setThumbnail(result.thumb);
   if (result.fields) {
     result.fields.forEach(field => {
@@ -328,7 +328,7 @@ async function dGame(interaction: ChatInputCommandInteraction): Promise<boolean>
   return true;
 }
 
-async function dBook(interaction: ChatInputCommandInteraction): Promise<boolean> {
+async function dBook(interaction: ChatInputCommandInteraction, locale: string): Promise<boolean> {
   const query = interaction.options.getString('book', true);
   let result;
   try {
@@ -336,18 +336,18 @@ async function dBook(interaction: ChatInputCommandInteraction): Promise<boolean>
     const response = await fetch(url);
     if (!response.ok) {
       result = {
-        title: `Book: ${query}`,
+        title: t(locale, 'search', 'bookTitle', { query }),
         url: `https://books.google.com/books?vid=ISBN${encodeURIComponent(query)}`,
-        description: 'Google Books API is currently unavailable. Please try again later.',
+        description: t(locale, 'search', 'bookUnavailable'),
         fields: [],
       };
     } else {
       const data = await response.json();
       if (!data.items || data.items.length === 0) {
         result = {
-          title: `Book: ${query}`,
+          title: t(locale, 'search', 'bookTitle', { query }),
           url: `https://books.google.com/books?vid=ISBN${encodeURIComponent(query)}`,
-          description: `No results found for "${query}".`,
+          description: t(locale, 'search', 'bookNotFound', { query }),
           fields: [],
         };
       } else {
@@ -359,9 +359,8 @@ async function dBook(interaction: ChatInputCommandInteraction): Promise<boolean>
         const publisher = book.publisher || 'Unknown';
         const publishedDate = book.publishedDate || 'Unknown';
 
-        // Use title and author for platform search URLs
         const searchTerm = encodeURIComponent(`${book.title} ${authors !== 'Unknown' ? authors : ''}`.trim());
-        const platforms = [
+        const platformsList = [
           { name: 'Kobo', url: `https://www.kobo.com/search?query=${searchTerm}` },
           { name: 'Amazon', url: `https://www.amazon.com/s?k=${searchTerm}` },
           { name: 'Google Books', url: infoLink },
@@ -369,17 +368,17 @@ async function dBook(interaction: ChatInputCommandInteraction): Promise<boolean>
         ];
 
         result = {
-          title: `Book: ${book.title || query}`,
+          title: t(locale, 'search', 'bookTitle', { query: book.title || query }),
           url: infoLink,
           description,
           thumb: thumbnail,
           fields: [
-            { name: 'Author', value: authors, inline: true },
-            { name: 'Publisher', value: publisher, inline: true },
-            { name: 'Published Date', value: publishedDate, inline: true },
+            { name: t(locale, 'search', 'authorField'), value: authors, inline: true },
+            { name: t(locale, 'search', 'publisherField'), value: publisher, inline: true },
+            { name: t(locale, 'search', 'publishedDateField'), value: publishedDate, inline: true },
             {
-              name: 'Platforms',
-              value: platforms.map(p => `[${p.name}](${p.url})`).join(' | '),
+              name: t(locale, 'search', 'platformsField'),
+              value: platformsList.map(p => `[${p.name}](${p.url})`).join(' | '),
               inline: false,
             },
           ],
@@ -388,9 +387,9 @@ async function dBook(interaction: ChatInputCommandInteraction): Promise<boolean>
     }
   } catch (err) {
     result = {
-      title: `Book: ${query}`,
+      title: t(locale, 'search', 'bookTitle', { query }),
       url: `https://books.google.com/books?vid=ISBN${encodeURIComponent(query)}`,
-      description: 'Book search is currently unavailable. Please try again later.',
+      description: t(locale, 'search', 'bookError'),
       fields: [],
     };
   }
@@ -415,7 +414,7 @@ async function dBook(interaction: ChatInputCommandInteraction): Promise<boolean>
   return true;
 }
 
-async function dSong(interaction: ChatInputCommandInteraction): Promise<boolean> {
+async function dSong(interaction: ChatInputCommandInteraction, locale: string): Promise<boolean> {
   const query = interaction.options.getString('song', true);
   let result;
   let odesliInputUrl = '';
@@ -431,7 +430,6 @@ async function dSong(interaction: ChatInputCommandInteraction): Promise<boolean>
     if (isUrl) {
       odesliInputUrl = query;
     } else {
-      // TODO: Get YouTube API key and use that instead of iTunes for better results
       const url = `https://itunes.apple.com/search?term=${encodeURIComponent(query)}&entity=song&limit=1`;
       const response = await fetch(url);
       if (!response.ok) throw new Error('iTunes API unavailable');
@@ -484,14 +482,14 @@ async function dSong(interaction: ChatInputCommandInteraction): Promise<boolean>
     }
 
     result = {
-      title: `Song: ${title}`,
+      title: t(locale, 'search', 'songTitle', { query: title }),
       url: odesliUrl,
       description: ' ',
       thumb: artwork,
       fields: [
-        { name: 'Artist', value: artist, inline: true },
+        { name: t(locale, 'search', 'artistField'), value: artist, inline: true },
         {
-          name: 'Platforms',
+          name: t(locale, 'search', 'platformsField'),
           value: platformsField,
           inline: false,
         },
@@ -499,9 +497,9 @@ async function dSong(interaction: ChatInputCommandInteraction): Promise<boolean>
     };
   } catch (err) {
     result = {
-      title: `Song: ${query}`,
+      title: t(locale, 'search', 'songTitle', { query }),
       url: odesliUrl,
-      description: 'Song search is currently unavailable or no results found.',
+      description: t(locale, 'search', 'songUnavailable'),
       fields: [],
     };
   }
@@ -526,22 +524,22 @@ async function dSong(interaction: ChatInputCommandInteraction): Promise<boolean>
   return true;
 }
 
-async function dWikipedia(interaction: ChatInputCommandInteraction): Promise<boolean> {
+async function dWikipedia(interaction: ChatInputCommandInteraction, locale: string): Promise<boolean> {
   const query = interaction.options.getString('query', true);
   let result;
   const url = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(query)}`;
   const response = await fetch(url);
   if (!response.ok) {
     result = {
-      title: `Wikipedia: ${query}`,
+      title: t(locale, 'search', 'wikiTitle', { query }),
       url: `https://en.wikipedia.org/wiki/${encodeURIComponent(query)}`,
-      description: 'No wikipedia results found or your query was too vague, try being more specific.',
+      description: t(locale, 'search', 'wikiNotFound'),
       thumb: '',
     };
   } else {
     const data = await response.json();
     result = {
-      title: `Wikipedia: ${data.title || query}`,
+      title: t(locale, 'search', 'wikiTitle', { query: data.title || query }),
       url: data.content_urls?.desktop?.page || `https://en.wikipedia.org/wiki/${encodeURIComponent(query)}`,
       description: data.extract || '',
       thumb: data.thumbnail?.source || '',
@@ -559,7 +557,7 @@ async function dWikipedia(interaction: ChatInputCommandInteraction): Promise<boo
   return true;
 }
 
-async function dWeather(interaction: ChatInputCommandInteraction): Promise<boolean> {
+async function dWeather(interaction: ChatInputCommandInteraction, locale: string): Promise<boolean> {
   const city = interaction.options.getString('city', true);
   let result;
   try {
@@ -567,9 +565,9 @@ async function dWeather(interaction: ChatInputCommandInteraction): Promise<boole
     const geoData = await geoRes.json();
     if (!geoData[0]) {
       result = {
-        title: `Weather: ${city}`,
+        title: t(locale, 'search', 'weatherTitle', { location: city }),
         url: `https://wttr.in/${encodeURIComponent(city)}`,
-        description: 'Could not find this location. Try being more specific or try a close major city.',
+        description: t(locale, 'search', 'weatherNotFound'),
         fields: [],
       };
     } else {
@@ -591,19 +589,19 @@ async function dWeather(interaction: ChatInputCommandInteraction): Promise<boole
       const precipMM = current?.precipMM ?? 'N/A';
 
       const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${lat},${lon}`;
-      const description = `[View on Google Maps](${mapsUrl})`;
+      const description = `[${t(locale, 'search', 'viewOnMaps')}](${mapsUrl})`;
 
       const fields = [
-        { name: 'Condition', value: weatherDesc, inline: true },
-        { name: 'Temperature', value: `${tempC}°C / ${tempF}°F`, inline: true },
-        { name: 'Feels Like', value: `${feelsLikeC}°C / ${feelsLikeF}°F`, inline: true },
-        { name: 'Wind', value: `${windKph} km/h ${windDir}`, inline: true },
-        { name: 'Humidity', value: `${humidity}%`, inline: true },
-        { name: 'Precipitation', value: `${precipMM} mm`, inline: true },
+        { name: t(locale, 'search', 'conditionField'), value: weatherDesc, inline: true },
+        { name: t(locale, 'search', 'temperatureField'), value: `${tempC}°C / ${tempF}°F`, inline: true },
+        { name: t(locale, 'search', 'feelsLikeField'), value: `${feelsLikeC}°C / ${feelsLikeF}°F`, inline: true },
+        { name: t(locale, 'search', 'windField'), value: `${windKph} km/h ${windDir}`, inline: true },
+        { name: t(locale, 'search', 'humidityField'), value: `${humidity}%`, inline: true },
+        { name: t(locale, 'search', 'precipitationField'), value: `${precipMM} mm`, inline: true },
       ];
 
       result = {
-        title: `Weather: ${displayName}`,
+        title: t(locale, 'search', 'weatherTitle', { location: displayName }),
         url: wttrUrl,
         description,
         fields,
@@ -611,9 +609,9 @@ async function dWeather(interaction: ChatInputCommandInteraction): Promise<boole
     }
   } catch (err) {
     result = {
-      title: `Weather: ${city}`,
+      title: t(locale, 'search', 'weatherTitle', { location: city }),
       url: `https://wttr.in/${encodeURIComponent(city)}`,
-      description: 'Weather is currently unavailable. Please try again later.',
+      description: t(locale, 'search', 'weatherUnavailable'),
       fields: [],
     };
   }
@@ -640,67 +638,81 @@ async function dWeather(interaction: ChatInputCommandInteraction): Promise<boole
 export const dSearch: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('search')
-    .setDescription('Search various sources')
+    .setNameLocalizations(getCommandLocalizations('search', 'commandName'))
+    .setDescription(t('en-US', 'search', 'commandDescription'))
+    .setDescriptionLocalizations(getCommandLocalizations('search', 'commandDescription'))
     .addSubcommand(sub => sub
       .setName('define')
-      .setDescription('Define from a dictionary')
+      .setDescription(t('en-US', 'search', 'defineSubcommand'))
       .addStringOption(option => option
         .setName('word')
-        .setDescription('Word to define')
+        .setDescription(t('en-US', 'search', 'wordOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('search', 'wordOption'))
         .setRequired(true))
       .addBooleanOption(option => option
         .setName('ephemeral')
-        .setDescription('Set to "True" to show the response only to you')))
+        .setDescription(t('en-US', 'search', 'ephemeralOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('search', 'ephemeralOption'))))
     .addSubcommand(sub => sub
       .setName('urbandefine')
-      .setDescription('Define on Urban Dictionary')
+      .setDescription(t('en-US', 'search', 'urbandefineSubcommand'))
       .addStringOption(option => option
         .setName('define')
-        .setDescription('Word to define')
+        .setDescription(t('en-US', 'search', 'defineOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('search', 'defineOption'))
         .setRequired(true))
       .addBooleanOption(option => option
         .setName('ephemeral')
-        .setDescription('Set to "True" to show the response only to you')))
+        .setDescription(t('en-US', 'search', 'ephemeralOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('search', 'ephemeralOption'))))
     .addSubcommand(sub => sub
       .setName('game')
-      .setDescription('Find a game on Steam')
+      .setDescription(t('en-US', 'search', 'gameSubcommand'))
       .addStringOption(option => option
         .setName('game')
-        .setDescription('Game to search for')
+        .setDescription(t('en-US', 'search', 'gameOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('search', 'gameOption'))
         .setRequired(true))
       .addBooleanOption(option => option
         .setName('ephemeral')
-        .setDescription('Set to "True" to show the response only to you')))
+        .setDescription(t('en-US', 'search', 'ephemeralOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('search', 'ephemeralOption'))))
     .addSubcommand(sub => sub
       .setName('book')
-      .setDescription('Search for a book and where to buy it')
+      .setDescription(t('en-US', 'search', 'bookSubcommand'))
       .addStringOption(option => option
         .setName('book')
-        .setDescription('Book title or author')
+        .setDescription(t('en-US', 'search', 'bookOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('search', 'bookOption'))
         .setRequired(true))
       .addBooleanOption(option => option
         .setName('ephemeral')
-        .setDescription('Set to "True" to show the response only to you')))
+        .setDescription(t('en-US', 'search', 'ephemeralOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('search', 'ephemeralOption'))))
     .addSubcommand(sub => sub
       .setName('song')
-      .setDescription('Search for a song and where to listen')
+      .setDescription(t('en-US', 'search', 'songSubcommand'))
       .addStringOption(option => option
         .setName('song')
-        .setDescription('Song title or artist')
+        .setDescription(t('en-US', 'search', 'songOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('search', 'songOption'))
         .setRequired(true))
       .addBooleanOption(option => option
         .setName('ephemeral')
-        .setDescription('Set to "True" to show the response only to you')))
+        .setDescription(t('en-US', 'search', 'ephemeralOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('search', 'ephemeralOption'))))
     .addSubcommand(sub => sub
       .setName('wikipedia')
-      .setDescription('Query a topic on Wikipedia')
+      .setDescription(t('en-US', 'search', 'wikipediaSubcommand'))
       .addStringOption(option => option
         .setName('query')
-        .setDescription('Word to query')
+        .setDescription(t('en-US', 'search', 'queryOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('search', 'queryOption'))
         .setRequired(true))
       .addBooleanOption(option => option
         .setName('ephemeral')
-        .setDescription('Set to "True" to show the response only to you'))) as SlashCommandBuilder,
+        .setDescription(t('en-US', 'search', 'ephemeralOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('search', 'ephemeralOption')))) as SlashCommandBuilder,
   /* .addSubcommand(sub => sub
       .setName('weather')
       .setDescription('Get weather for a city')
@@ -713,27 +725,28 @@ export const dSearch: SlashCommand = {
         .setDescription('Set to "True" to show the response only to you'))) as SlashCommandBuilder, */
 
   async execute(interaction: ChatInputCommandInteraction) {
+    const locale = await getLocale(interaction, 'search');
     const subcommand = interaction.options.getSubcommand();
     const ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined;
     await interaction.deferReply({ flags: ephemeral });
 
     switch (subcommand) {
       case 'define':
-        return dDefine(interaction);
+        return dDefine(interaction, locale);
       case 'urbandefine':
-        return dUrbanDefine(interaction);
+        return dUrbanDefine(interaction, locale);
       case 'game':
-        return dGame(interaction);
+        return dGame(interaction, locale);
       case 'book':
-        return dBook(interaction);
+        return dBook(interaction, locale);
       case 'song':
-        return dSong(interaction);
+        return dSong(interaction, locale);
       case 'wikipedia':
-        return dWikipedia(interaction);
+        return dWikipedia(interaction, locale);
       case 'weather':
-        return dWeather(interaction);
+        return dWeather(interaction, locale);
       default:
-        await interaction.reply('Unknown subcommand.');
+        await interaction.reply(t(locale, 'search', 'unknownSubcommand'));
         return false;
     }
   },
