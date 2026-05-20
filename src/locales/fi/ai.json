@@ -1,14 +1,14 @@
 {
-  "commandName": "",
-  "commandDescription": "",
-  "setupSubcommand": "",
-  "personasSubcommand": "",
-  "settingsSubcommand": "",
-  "infoSubcommand": "",
-  "privacySubcommand": "",
-  "tosSubcommand": "",
-  "aiNotEnabledReply": "",
-  "tosPrivacyRequiredReply": "",
-  "aiErrorReply": "",
-  "serverOnlyReply": ""
+  "commandName": "ai",
+  "commandDescription": "TripBotin tekoäly",
+  "setupSubcommand": "Aseta TripBotin tekoäly palvelimellesi",
+  "personasSubcommand": "Tietoa tekoälymoduulin eri persoonista",
+  "settingsSubcommand": "Muokkaa asetuksiasi",
+  "infoSubcommand": "Tietoa tekoälymoduulista",
+  "privacySubcommand": "Tekoälymoduulin tietosuojakäytäntö",
+  "tosSubcommand": "Tekoälymoduulin käyttöehdot",
+  "aiNotEnabledReply": "Tekoäly ei ole käytössä tällä kanavalla. Pyydä ylläpitäjää käyttämään `/ai setup`.",
+  "tosPrivacyRequiredReply": "Lue ja hyväksy `/ai tos` ja `/ai privacy` ennen chatit aloittamista.",
+  "aiErrorReply": "Minulla on ajatteluvaikeuksia juuri nyt. Yritä uudelleen minuutin kuluttua.",
+  "serverOnlyReply": "Tätä komentoa voi käyttää vain palvelimella."
 }

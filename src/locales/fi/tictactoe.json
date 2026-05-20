@@ -1,15 +1,15 @@
 {
-  "commandName": "",
-  "commandDescription": "",
-  "opponentOption": "",
-  "invalidOpponent": "",
-  "cannotPlayYourself": "",
-  "cannotPlayBot": "",
-  "collectorError": "",
-  "gameTitle": "",
-  "tie": "",
-  "wins": "",
-  "turnSuffix": "",
-  "timeoutTitle": "",
-  "timeoutDescription": ""
+  "commandName": "tictactoe",
+  "commandDescription": "Aloita ristinolla-peli",
+  "opponentOption": "Käyttäjä, jota vastaan haluat pelata",
+  "invalidOpponent": "Määritä kelvollinen vastustaja!",
+  "cannotPlayYourself": "Et voi pelata itseäsi vastaan!",
+  "cannotPlayBot": "Et voi pelata bottia vastaan!",
+  "collectorError": "Virhe: Pelitunnistinta ei voitu luoda.",
+  "gameTitle": "🎮 Ristinolla",
+  "tie": "TASAPELI!",
+  "wins": "VOITTAA!",
+  "turnSuffix": "n vuoro",
+  "timeoutTitle": "Ristinolla – Peli aikakatkaistiin",
+  "timeoutDescription": "Peli päättyi passiivisuuden takia."
 }

@@ -1,5 +1,5 @@
 {
-  "commandName": "",
-  "commandDescription": "",
-  "replyLabel": ""
+  "commandName": "topic",
+  "commandDescription": "Lähettää satunnaisen aiheen!",
+  "replyLabel": "Satunnainen uusi aihe: **{{topic}}**"
 }

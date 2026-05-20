@@ -1,5 +1,5 @@
 {
-  "commandName": "",
-  "commandDescription": "",
-  "ephemeralOption": ""
+  "commandName": "magick8ball",
+  "commandDescription": "Kysy maagiselta 8-pallolta kysymys!",
+  "ephemeralOption": "Aseta \"Tosi\" näyttääksesi vastauksen vain itsellesi"
 }

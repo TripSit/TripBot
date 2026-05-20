@@ -1,5 +1,5 @@
 {
-  "commandName": "",
-  "commandDescription": "",
-  "ephemeralOption": ""
+  "commandName": "fact",
+  "commandDescription": "Satunnainen fakta",
+  "ephemeralOption": "Aseta \"Tosi\" näyttääksesi vastauksen vain itsellesi"
 }

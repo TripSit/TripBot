@@ -1,9 +1,9 @@
 {
-  "commandName": "",
-  "commandDescription": "",
-  "ephemeralOption": "",
-  "title": "",
-  "howToUseReagentKit": "",
-  "howToUseFentanylStrips": "",
-  "moreResources": ""
+  "commandName": "drug_testkits",
+  "commandDescription": "Tietoa testipakettien hankkimisesta",
+  "ephemeralOption": "Aseta \"Tosi\" näyttääksesi vastauksen vain itsellesi",
+  "title": "Testipakettien resurssit ja tiedot!",
+  "howToUseReagentKit": "Reagenssitestipaketin käyttöohje",
+  "howToUseFentanylStrips": "Fentanyylisuikaleiden käyttöohje",
+  "moreResources": "Lisää testipaketteja koskevia resursseja TripSitin wikissä!"
 }

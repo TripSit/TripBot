@@ -1,15 +1,15 @@
 {
-  "commandName": "",
-  "commandDescription": "",
-  "getSubcommandName": "",
-  "getSubcommandDescription": "",
-  "deleteSubcommandName": "",
-  "deleteSubcommandDescription": "",
-  "confirmationOption": "",
-  "yourDataTitle": "",
-  "yourDataDescription": "",
-  "deletingYourDataTitle": "",
-  "deletingYourDataDescription": "",
-  "areYouSureTitle": "",
-  "areYouSureDescription": ""
+  "commandName": "privacy",
+  "commandDescription": "Katso ja hallitse, miten TripSit käyttää tietojasi!",
+  "getSubcommandName": "get",
+  "getSubcommandDescription": "Näytä käyttäjästäsi tallennetut tiedot!",
+  "deleteSubcommandName": "delete",
+  "deleteSubcommandDescription": "Ohjeet tietojesi poistamiseen!",
+  "confirmationOption": "Syötä vahvistuskoodi tietojesi poistamiseksi!",
+  "yourDataTitle": "Tietosi",
+  "yourDataDescription": "Tässä ovat sinusta tallennetut tiedot: {{userData}}",
+  "deletingYourDataTitle": "Tietojesi poistaminen",
+  "deletingYourDataDescription": "Tietosi poistettiin:\n{{userDeleteData}}",
+  "areYouSureTitle": "Oletko varma?",
+  "areYouSureDescription": "Tämä poistaa kaikki sinusta tallentamamme tiedot, paitsi:\n1) Discord ID:täsi vastaan tehdyt moderointitoimet säilytetään tiedostossa 6 kuukauden ajan siitä, kun käyttäjätunnuksesi viimeksi nähtiin.\n2) Jos käyttäjäsi on bannit, Discord ID:si ja bannisi tila säilytetään toistaiseksi.\n\nToisin sanoen: Jos sinua ei ole bannit eikä olet ollut vuorovaikutuksessa botin kanssa 6 kuukauteen, tietosi poistetaan.\n\nTämä poistaa kaiken muun. Varmista, että haluat tehdä tämän!\n\n**Suorita sama komento uudelleen käyttämällä 'YesPlease!' vahvistuskoodina.**\n\nSeuraavat tiedot poistetaan:\n{{userData}}"
 }

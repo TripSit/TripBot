@@ -1,9 +1,9 @@
 {
-  "commandName": "",
-  "commandDescription": "",
-  "userOption": "",
-  "ephemeralOption": "",
-  "guildOnlyError": "",
-  "memberNotFoundError": "",
-  "profilePictureTitle": ""
+  "commandName": "avatar",
+  "commandDescription": "Näyttää jäsenen profiilikuvan suuressa koossa",
+  "userOption": "käyttäjä",
+  "ephemeralOption": "Aseta \"Tosi\" näyttääksesi vastauksen vain itsellesi",
+  "guildOnlyError": "Tätä komentoa voi käyttää vain Discord-palvelimella!",
+  "memberNotFoundError": "Tätä komentoa voi käyttää vain nykyisen palvelimen jäsenille.",
+  "profilePictureTitle": "{{displayName}}:n profiilikuva"
 }
