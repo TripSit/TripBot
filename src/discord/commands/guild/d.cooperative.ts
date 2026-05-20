@@ -20,70 +20,34 @@ import {
   MessageFlags,
   TextInputStyle,
 } from 'discord-api-types/v10';
-import { stripIndent, stripIndents } from 'common-tags';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { checkGuildPermissions } from '../../utils/checkPermissions';
 import commandContext from '../../utils/context';
+import { getCommandLocalizations, getLocale, t } from '../../../i18n/index';
 
 const F = f(__filename);
 
-const guildOnlyError = 'This command can only be used in a guild!';
-
-async function info(): Promise<InteractionEditReplyOptions> {
+async function info(locale: string): Promise<InteractionEditReplyOptions> {
   return {
     embeds: [
       embedTemplate({
-        title: 'TripSit Discord Cooperative Info',
-        description: stripIndent`
-        This command will set up your guild when you first join the cooperative.
-        It will perform the following tasks:
-        * Create a channel called '#moderators'
-        - This channel will be used for cooperative moderation.
-        - Ban messages will be sent here when you ban someone for the rest of the cooperative to see
-        - You can reach out to other guilds through this channel to clarify bans.
-        * Create a channel called '#modlog'
-        - This will be used to track moderation actions *by your own team* and to keep them accountable.
-        - Only ban alerts and messages are sent to #coop-mod for other guilds to see.
-        * Create a channel called '#helpdesk'
-        - This is a moderation ticketing system
-
-
-        **** TBD ****
-        * Create a channel called '#coop-gen'
-        - This channel will be used for general cooperative chat.
-        - Talk about moderation policies or whatever with other moderators.
-        * Create a channel called '#coop-announce'
-        - Announcements impacting the entire cooperative will be posted here
-        * Create a channel called '#coop-offtopic'
-        - This channel will be used for general cooperative chat, get to know others!
-
-        Once setup is complete you can modify the category and channels as you wish.
-        You can move the channels outside the category if you wish, just make sure TripBot keeps the same permissions.
-
-        If you have any questions, feel free to reach out to the TripSit team!
-        
-        Here is a list of all the regulations for the TripSit Discord Cooperative:`,
+        title: t(locale, 'cooperative', 'infoTitle'),
+        description: t(locale, 'cooperative', 'infoDescription'),
         fields: [
           {
-            name: '1. Be kind and respectful to others.',
-            value: stripIndents`This is the most important rule. We are all here to help each other and have a good time. 
-            If someone from a member organization is not kind and respectful to others, their entire guild may removed from the cooperative.
-            Harassment of any kind will not be tolerated, please don't try to find the line. If you are unsure if something is harassment, it probably is.`,
+            name: t(locale, 'cooperative', 'infoRule1Name'),
+            value: t(locale, 'cooperative', 'infoRule1Value'),
             inline: false,
           },
           {
-            name: '2. Promote harm reduction',
-            value: stripIndents`Ever guild in the cooperative is expected to promote harm reduction in their own way.
-            This can be done through education, moderation, or any other means.
-            Guilds that glorify or encourage drug use will be removed from the cooperative.`,
+            name: t(locale, 'cooperative', 'infoRule2Name'),
+            value: t(locale, 'cooperative', 'infoRule2Value'),
             inline: false,
           },
           {
-            name: '3. Keep your ban descriptions accurate and descriptive when possible.',
-            value: stripIndents`Every guild is free to set their rules and choose who to ban.
-            You can ban anyone for any reason and say as little or as much as you want in the ban reason.
-            However be prepared to explain your ban reason if asked if they are vague.`,
+            name: t(locale, 'cooperative', 'infoRule3Name'),
+            value: t(locale, 'cooperative', 'infoRule3Value'),
             inline: false,
           },
         ],
@@ -92,12 +56,12 @@ async function info(): Promise<InteractionEditReplyOptions> {
   };
 }
 
-async function apply(interaction:ChatInputCommandInteraction): Promise<InteractionEditReplyOptions> {
+async function apply(interaction:ChatInputCommandInteraction, locale: string): Promise<InteractionEditReplyOptions> {
   if (!interaction.guild) {
     return {
       embeds: [
         embedTemplate({
-          title: guildOnlyError,
+          title: t(locale, 'cooperative', 'guildOnlyError'),
         }),
       ],
     };
@@ -117,7 +81,7 @@ async function apply(interaction:ChatInputCommandInteraction): Promise<Interacti
     return {
       embeds: [
         embedTemplate({
-          title: 'You are already part of the cooperative!',
+          title: t(locale, 'cooperative', 'alreadyMemberError'),
         }),
       ],
     };
@@ -125,12 +89,8 @@ async function apply(interaction:ChatInputCommandInteraction): Promise<Interacti
   return {
     embeds: [
       embedTemplate({
-        title: 'Join the TripSit Discord Cooperative',
-        description: stripIndents`
-            Thanks for your interest! At this time (April 3rd) this is a brand-new system \
-            so there is no application process.... yet!
-            However, if you are interested in joining the cooperative, please fill out the form below and we will keep you in mind \
-            and perhaps reach out in the future!`,
+        title: t(locale, 'cooperative', 'applyTitle'),
+        description: t(locale, 'cooperative', 'applyDescription'),
       }),
     ],
     components: [
@@ -138,7 +98,7 @@ async function apply(interaction:ChatInputCommandInteraction): Promise<Interacti
         .addComponents(
           new ButtonBuilder()
             .setCustomId('cooperativeApply')
-            .setLabel('Apply')
+            .setLabel(t(locale, 'cooperative', 'applyButtonLabel'))
             .setStyle(ButtonStyle.Primary),
         ),
     ],
@@ -149,13 +109,13 @@ export async function cooperativeApplyButton(
   interaction:ButtonInteraction,
 ) {
   await interaction.showModal(new ModalBuilder()
-    .setTitle('Apply to Join the TripSit Discord Cooperative')
+    .setTitle(t('en-US', 'cooperative', 'modalTitle'))
     .setCustomId(`cooperativeApply~${interaction.id}`)
     .addComponents(
       new ActionRowBuilder<TextInputBuilder>()
         .addComponents(
           new TextInputBuilder()
-            .setLabel('Does your guild have a website?')
+            .setLabel(t('en-US', 'cooperative', 'modalWebsiteLabel'))
             .setStyle(TextInputStyle.Short)
             .setRequired(true)
             .setCustomId('desire'),
@@ -163,25 +123,25 @@ export async function cooperativeApplyButton(
       new ActionRowBuilder<TextInputBuilder>()
         .addComponents(
           new TextInputBuilder()
-            .setLabel('Why do you want to join the cooperative?')
+            .setLabel(t('en-US', 'cooperative', 'modalWhyLabel'))
             .setStyle(TextInputStyle.Paragraph)
-            .setPlaceholder('Please be descriptive!')
+            .setPlaceholder(t('en-US', 'cooperative', 'modalWhyPlaceholder'))
             .setRequired(true)
             .setCustomId('desire'),
         ),
       new ActionRowBuilder<TextInputBuilder>()
         .addComponents(
           new TextInputBuilder()
-            .setLabel('Enter your guild invite link')
+            .setLabel(t('en-US', 'cooperative', 'modalInviteLabel'))
             .setStyle(TextInputStyle.Short)
-            .setPlaceholder('People from the cooperative may join and check out your guild!')
+            .setPlaceholder(t('en-US', 'cooperative', 'modalInvitePlaceholder'))
             .setRequired(true)
             .setCustomId('link'),
         ),
       new ActionRowBuilder<TextInputBuilder>()
         .addComponents(
           new TextInputBuilder()
-            .setLabel('Have you read the regulations and agree to abide them?')
+            .setLabel(t('en-US', 'cooperative', 'modalAgreeLabel'))
             .setStyle(TextInputStyle.Short)
             .setRequired(true)
             .setCustomId('agree'),
@@ -189,7 +149,7 @@ export async function cooperativeApplyButton(
       new ActionRowBuilder<TextInputBuilder>()
         .addComponents(
           new TextInputBuilder()
-            .setLabel('Any other info you want to share?')
+            .setLabel(t('en-US', 'cooperative', 'modalInfoLabel'))
             .setStyle(TextInputStyle.Paragraph)
             .setRequired(true)
             .setCustomId('info'),
@@ -204,8 +164,8 @@ export async function cooperativeApplyButton(
       await i.editReply({
         embeds: [
           embedTemplate({
-            title: 'Thanks for your interest!',
-            description: 'We will keep you in mind and perhaps reach out in the future!',
+            title: t('en-US', 'cooperative', 'applyThanksTitle'),
+            description: t('en-US', 'cooperative', 'applyThanksDescription'),
           }),
         ],
       });
@@ -213,12 +173,12 @@ export async function cooperativeApplyButton(
   return true;
 }
 
-async function setup(interaction:ChatInputCommandInteraction):Promise<InteractionEditReplyOptions> {
+async function setup(interaction:ChatInputCommandInteraction, locale: string):Promise<InteractionEditReplyOptions> {
   if (!interaction.guild) {
     return {
       embeds: [
         embedTemplate({
-          title: guildOnlyError,
+          title: t(locale, 'cooperative', 'guildOnlyError'),
         }),
       ],
     };
@@ -238,17 +198,7 @@ async function setup(interaction:ChatInputCommandInteraction):Promise<Interactio
     return {
       embeds: [
         embedTemplate({
-          title: 'You are not part of the cooperative!',
-        }),
-      ],
-    };
-  }
-
-  if (!interaction.guild) {
-    return {
-      embeds: [
-        embedTemplate({
-          title: guildOnlyError,
+          title: t(locale, 'cooperative', 'notMemberError'),
         }),
       ],
     };
@@ -430,20 +380,19 @@ async function setup(interaction:ChatInputCommandInteraction):Promise<Interactio
   return {
     embeds: [
       embedTemplate({
-        title: 'Cooperative setup complete!',
-        description: stripIndents`
-        I will make new threads in ${modRoom.name}`,
+        title: t(locale, 'cooperative', 'setupCompleteTitle'),
+        description: t(locale, 'cooperative', 'setupCompleteDescription', { channel: modRoom.name }),
       }),
     ],
   };
 }
 
-async function leave(interaction:ChatInputCommandInteraction): Promise<InteractionEditReplyOptions> {
+async function leave(interaction:ChatInputCommandInteraction, locale: string): Promise<InteractionEditReplyOptions> {
   if (!interaction.guild) {
     return {
       embeds: [
         embedTemplate({
-          title: guildOnlyError,
+          title: t(locale, 'cooperative', 'guildOnlyError'),
         }),
       ],
     };
@@ -463,7 +412,7 @@ async function leave(interaction:ChatInputCommandInteraction): Promise<Interacti
     return {
       embeds: [
         embedTemplate({
-          title: 'You are not part of the cooperative!',
+          title: t(locale, 'cooperative', 'notMemberError'),
         }),
       ],
     };
@@ -472,12 +421,8 @@ async function leave(interaction:ChatInputCommandInteraction): Promise<Interacti
   return {
     embeds: [
       embedTemplate({
-        title: 'Leave the TripSit Discord Cooperative',
-        description: stripIndents`
-        Are you sure you want to leave the cooperative?
-        This will remove your guild from the cooperative and remove your guild from the list of cooperative members.
-        You will no longer be able to use the cooperative commands.
-        If you change your mind, you can rejoin the cooperative at any time.`,
+        title: t(locale, 'cooperative', 'leaveTitle'),
+        description: t(locale, 'cooperative', 'leaveDescription'),
       }),
     ],
     components: [
@@ -485,7 +430,7 @@ async function leave(interaction:ChatInputCommandInteraction): Promise<Interacti
         .addComponents(
           new ButtonBuilder()
             .setCustomId('cooperativeLeave')
-            .setLabel('Leave')
+            .setLabel(t(locale, 'cooperative', 'leaveButtonLabel'))
             .setStyle(ButtonStyle.Danger),
         ),
     ],
@@ -512,7 +457,7 @@ export async function cooperativeLeaveButton(
   await interaction.editReply({
     embeds: [
       embedTemplate({
-        title: 'You have left the cooperative!',
+        title: t('en-US', 'cooperative', 'leftTitle'),
       }),
     ],
   });
@@ -520,12 +465,13 @@ export async function cooperativeLeaveButton(
 
 async function add(
   interaction:ChatInputCommandInteraction,
+  locale: string,
 ):Promise<InteractionEditReplyOptions> {
   if (interaction.user.id !== env.DISCORD_OWNER_ID) {
     return {
       embeds: [
         embedTemplate({
-          title: 'This action is restricted!',
+          title: t(locale, 'cooperative', 'restrictedError'),
         }),
       ],
     };
@@ -548,7 +494,7 @@ async function add(
   return {
     embeds: [
       embedTemplate({
-        title: `I added ${guild.name} to the cooperation`,
+        title: t(locale, 'cooperative', 'addedTitle', { guild: guild.name }),
       }),
     ],
   };
@@ -556,18 +502,18 @@ async function add(
 
 async function remove(
   interaction:ChatInputCommandInteraction,
+  locale: string,
 ):Promise<InteractionEditReplyOptions> {
   if (interaction.user.id !== env.DISCORD_OWNER_ID) {
     return {
       embeds: [
         embedTemplate({
-          title: 'This action is restricted!',
+          title: t(locale, 'cooperative', 'restrictedError'),
         }),
       ],
     };
   }
 
-  // Sets the guild cooperative status to false
   const guild = await discordClient.guilds.fetch(interaction.options.getString('guild_id', true));
   await db.discord_guilds.upsert({
     where: {
@@ -584,7 +530,7 @@ async function remove(
   return {
     embeds: [
       embedTemplate({
-        title: `I removed ${guild.name} from the cooperation`,
+        title: t(locale, 'cooperative', 'removedTitle', { guild: guild.name }),
       }),
     ],
   };
@@ -645,67 +591,85 @@ export async function sendCooperativeMessage(
 
 export const dCooperative: SlashCommand = {
   data: new SlashCommandBuilder()
-    .setName('cooperative')
-    .setDescription('TripSit Discord Cooperative Commands')
+    .setName(t('en-US', 'cooperative', 'commandName'))
+    .setNameLocalizations(getCommandLocalizations('cooperative', 'commandName'))
+    .setDescription(t('en-US', 'cooperative', 'commandDescription'))
+    .setDescriptionLocalizations(getCommandLocalizations('cooperative', 'commandDescription'))
     .setIntegrationTypes([0])
     .addSubcommand(subcommand => subcommand
-      .setDescription('Help for the TripSit Discord Cooperative Commands')
-      .setName('info'))
+      .setName('info')
+      .setDescription(t('en-US', 'cooperative', 'infoSubcommand'))
+      .setDescriptionLocalizations(getCommandLocalizations('cooperative', 'infoSubcommand')))
     .addSubcommand(subcommand => subcommand
-      .setDescription('Apply to join the TripSit Discord Cooperative')
-      .setName('apply'))
+      .setName('apply')
+      .setDescription(t('en-US', 'cooperative', 'applySubcommand'))
+      .setDescriptionLocalizations(getCommandLocalizations('cooperative', 'applySubcommand')))
     .addSubcommand(subcommand => subcommand
-      .setDescription('Setup the TripSit Discord Cooperative on your guild')
+      .setName('setup')
+      .setDescription(t('en-US', 'cooperative', 'setupSubcommand'))
+      .setDescriptionLocalizations(getCommandLocalizations('cooperative', 'setupSubcommand'))
       .addChannelOption(option => option
         .setRequired(true)
-        .setDescription('The channel to use for moderation')
-        .setName('mod_channel'))
+        .setName('mod_channel')
+        .setDescription(t('en-US', 'cooperative', 'modChannelOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('cooperative', 'modChannelOption')))
       .addChannelOption(option => option
         .setRequired(true)
-        .setDescription('The channel to use for moderation logs')
-        .setName('modlog_channel'))
+        .setName('modlog_channel')
+        .setDescription(t('en-US', 'cooperative', 'modlogChannelOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('cooperative', 'modlogChannelOption')))
       .addRoleOption(option => option
         .setRequired(true)
-        .setDescription('The role to use for moderators')
-        .setName('mod_role'))
+        .setName('mod_role')
+        .setDescription(t('en-US', 'cooperative', 'modRoleOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('cooperative', 'modRoleOption')))
       .addChannelOption(option => option
         .setRequired(true)
-        .setDescription('The channel to use for moderation tickets')
-        .setName('helpdesk_channel'))
+        .setName('helpdesk_channel')
+        .setDescription(t('en-US', 'cooperative', 'helpdeskChannelOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('cooperative', 'helpdeskChannelOption')))
       .addChannelOption(option => option
         .setRequired(true)
-        .setDescription('The channel to use for trust logging')
-        .setName('trust_channel'))
+        .setName('trust_channel')
+        .setDescription(t('en-US', 'cooperative', 'trustChannelOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('cooperative', 'trustChannelOption')))
       .addIntegerOption(option => option
         .setRequired(true)
-        .setDescription('Below this number sends alerts')
-        .setName('trust_score_limit'))
-      .setName('setup'))
+        .setName('trust_score_limit')
+        .setDescription(t('en-US', 'cooperative', 'trustScoreLimitOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('cooperative', 'trustScoreLimitOption'))))
     .addSubcommand(subcommand => subcommand
-      .setDescription('Leave the TripSit Discord Cooperative')
-      .setName('leave'))
+      .setName('leave')
+      .setDescription(t('en-US', 'cooperative', 'leaveSubcommand'))
+      .setDescriptionLocalizations(getCommandLocalizations('cooperative', 'leaveSubcommand')))
     .addSubcommand(subcommand => subcommand
-      .setDescription('Add a guild to the TripSit Discord Cooperative')
+      .setName('add')
+      .setDescription(t('en-US', 'cooperative', 'addSubcommand'))
+      .setDescriptionLocalizations(getCommandLocalizations('cooperative', 'addSubcommand'))
       .addStringOption(option => option
         .setName('guild_id')
-        .setDescription('The ID of the guild to add')
-        .setRequired(true))
-      .setName('add'))
+        .setDescription(t('en-US', 'cooperative', 'addGuildIdOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('cooperative', 'addGuildIdOption'))
+        .setRequired(true)))
     .addSubcommand(subcommand => subcommand
-      .setDescription('Remove a guild from the TripSit Discord Cooperative')
       .setName('remove')
+      .setDescription(t('en-US', 'cooperative', 'removeSubcommand'))
+      .setDescriptionLocalizations(getCommandLocalizations('cooperative', 'removeSubcommand'))
       .addStringOption(option => option
         .setName('guild_id')
-        .setDescription('The ID of the guild to remove')
+        .setDescription(t('en-US', 'cooperative', 'removeGuildIdOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('cooperative', 'removeGuildIdOption'))
         .setRequired(true))),
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+    const locale = await getLocale(interaction, 'cooperative');
+
     if (!interaction.guild) {
       await interaction.editReply({
         embeds: [
           embedTemplate({
-            title: guildOnlyError,
+            title: t(locale, 'cooperative', 'guildOnlyError'),
           }),
         ],
       });
@@ -716,22 +680,22 @@ export const dCooperative: SlashCommand = {
     const command = interaction.options.getSubcommand();
     switch (command) {
       case 'info':
-        response = await info();
+        response = await info(locale);
         break;
       case 'apply':
-        response = await apply(interaction);
+        response = await apply(interaction, locale);
         break;
       case 'setup':
-        response = await setup(interaction);
+        response = await setup(interaction, locale);
         break;
       case 'leave':
-        response = await leave(interaction);
+        response = await leave(interaction, locale);
         break;
       case 'add':
-        response = await add(interaction);
+        response = await add(interaction, locale);
         break;
       case 'remove':
-        response = await remove(interaction);
+        response = await remove(interaction, locale);
         break;
       default:
         break;
