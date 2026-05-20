@@ -1,6 +1,24 @@
-# CLAUDE.md
+# Project Instructions: TripBot
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+TripSits Discord bot which provides harm reduction resources.
+
+## Main Facts
+
+- `src/start.ts`: bootstraps the app and configures `global.db`.
+- Command pattern: `src/global/commands/*` (core) and `src/discord/commands/*` (platform).
+- Database: Prisma schemas under `src/prisma/` and generated clients (`npm run db:generate`).
+- i18n: `src/i18n/index.ts` plus `src/locales/<locale>/` (use `npm run i18n:sync`).
+- Dev scripts & Docker: key scripts in `package.json` (e.g. `tripbot:start`) and `docker/Dockerfile.tripbot`.
+
+## Building
+
+### Build
+
+TypeScript compiles to `./build/` via `tsc-watch`. The dev workflow (`npm run tripbot:start`) watches `src/` and re-runs `node ./build/src/start.js` on each successful compile. Source maps are enabled; `source-map-support` is installed at startup.
+
+### Tests
+
+Jest config is at `src/jest/jest.config.ts`. Tests currently cover `src/api/**` and `src/i18n/**`. Discord command tests are not yet present. The config sets up `src/global/utils/log.ts` and `src/global/utils/env.config.ts` as `setupFilesAfterFramework` globals.
 
 ## Commands
 
@@ -16,9 +34,6 @@ npm run tripbot:lint
 # Tests (Jest, ts-jest)
 npm run tripbot:test
 
-# Run a single test file
-npx jest -c ./src/jest/jest.config.ts path/to/file.test.ts
-
 # Deploy slash commands to Discord (required after adding/modifying commands)
 npm run tripbot:deployCommands
 
@@ -32,8 +47,7 @@ npm run db:seed           # seed the database
 npm run i18n:sync         # sync all locale files against en-US (source of truth)
 npm run i18n:sync -- --dry  # preview without writing
 ```
-
-## Architecture
+## Architechture
 
 ### Platform pattern
 
@@ -58,10 +72,6 @@ Two Prisma schemas coexist:
 
 The active Prisma client is exposed as `global.db` (set in `src/start.ts`) and typed as `any` to avoid the dual-schema complexity. Import the client directly from `src/prisma/tripbot/client.ts` in non-global contexts.
 
-### i18n
-
-Translation files live in `src/locales/<locale>/<namespace>.json`. `en-US` is the source of truth; all other locales are synced from it via `npm run i18n:sync`. Each namespace corresponds to a command — one JSON file per command. The `initI18n()` function in `src/i18n/index.ts` auto-discovers namespaces from `en-US` file names, so adding a new namespace file requires no code change.
-
 ### Environment
 
 `src/global/utils/env.config.ts` is the single source of all environment variables and hardcoded channel/role IDs. IDs switch between production and development values based on `NODE_ENV`. All env vars come from `.env` (copy `.env.example` to get started). The `env` object is also set on `global.env` for global access.
@@ -70,14 +80,6 @@ Translation files live in `src/locales/<locale>/<namespace>.json`. `en-US` is th
 
 `src/global/utils/log.ts` exports a Winston logger as `log`. Every file uses `const F = f(__filename)` (a helper that extracts the filename) to tag its log output. Log destinations include console, Rollbar, and Sentry depending on env.
 
-### Build
+### i18n
 
-TypeScript compiles to `./build/` via `tsc-watch`. The dev workflow (`npm run tripbot:start`) watches `src/` and re-runs `node ./build/src/start.js` on each successful compile. Source maps are enabled; `source-map-support` is installed at startup.
-
-### Tests
-
-Jest config is at `src/jest/jest.config.ts`. Tests currently cover `src/api/**` and `src/i18n/**`. Discord command tests are not yet present. The config sets up `src/global/utils/log.ts` and `src/global/utils/env.config.ts` as `setupFilesAfterFramework` globals.
-
-### Locale directory names
-
-The `i18n:sync` script filters locale directories to names matching `/^[a-zA-Z-]+$/` — directories with spaces or digits (e.g. macOS Finder duplicates like "en-US 2") are intentionally skipped.
+Translation files live in `src/locales/<locale>/<namespace>.json`. `en-US` is the source of truth; all other locales are synced from it via `npm run i18n:sync`. Each namespace corresponds to a command — one JSON file per command. The `initI18n()` function in `src/i18n/index.ts` auto-discovers namespaces from `en-US` file names, so adding a new namespace file requires no code change.
