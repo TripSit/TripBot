@@ -195,7 +195,7 @@ export const dLearn: SlashCommand = {
     .setIntegrationTypes([0])
     .addSubcommand(subcommand => subcommand
       .setName('help')
-      .setNameLocalizations(getCommandLocalizations('learn', 'helpSubcommand'))
+      .setNameLocalizations(getCommandLocalizations('learn', 'helpName'))
       .setDescription(t('en', 'learn', 'helpSubcommand'))
       .setDescriptionLocalizations(getCommandLocalizations('learn', 'helpSubcommand'))
       .addBooleanOption(option => option.setName('ephemeral')
@@ -203,7 +203,7 @@ export const dLearn: SlashCommand = {
         .setDescriptionLocalizations(getCommandLocalizations('learn', 'ephemeralOption'))))
     .addSubcommand(subcommand => subcommand
       .setName('link')
-      .setNameLocalizations(getCommandLocalizations('learn', 'linkSubcommand'))
+      .setNameLocalizations(getCommandLocalizations('learn', 'linkName'))
       .setDescription(t('en', 'learn', 'linkSubcommand'))
       .setDescriptionLocalizations(getCommandLocalizations('learn', 'linkSubcommand'))
       .addStringOption(option => option.setName('email')
@@ -215,7 +215,7 @@ export const dLearn: SlashCommand = {
         .setDescriptionLocalizations(getCommandLocalizations('learn', 'adminOnlyOption'))))
     .addSubcommand(subcommand => subcommand
       .setName('unlink')
-      .setNameLocalizations(getCommandLocalizations('learn', 'unlinkSubcommand'))
+      .setNameLocalizations(getCommandLocalizations('learn', 'unlinkName'))
       .setDescription(t('en', 'learn', 'unlinkSubcommand'))
       .setDescriptionLocalizations(getCommandLocalizations('learn', 'unlinkSubcommand'))
       .addStringOption(option => option.setName('discord_id')
@@ -223,7 +223,7 @@ export const dLearn: SlashCommand = {
         .setDescriptionLocalizations(getCommandLocalizations('learn', 'adminOnlyOption'))))
     .addSubcommand(subcommand => subcommand
       .setName('profile')
-      .setNameLocalizations(getCommandLocalizations('learn', 'profileSubcommand'))
+      .setNameLocalizations(getCommandLocalizations('learn', 'profileName'))
       .setDescription(t('en', 'learn', 'profileSubcommand'))
       .setDescriptionLocalizations(getCommandLocalizations('learn', 'profileSubcommand'))
       .addStringOption(option => option.setName('user')

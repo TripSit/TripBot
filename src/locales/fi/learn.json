@@ -1,6 +1,10 @@
 {
   "commandName": "learn",
   "commandDescription": "Komennot TripSitin oppimisportaaliin liittyen",
+  "helpName": "help",
+  "linkName": "link",
+  "unlinkName": "unlink",
+  "profileName": "profile",
   "helpSubcommand": "Tietoa tästä komennosta",
   "ephemeralOption": "Aseta \"True\" näyttääksesi vastauksen vain itsellesi",
   "linkSubcommand": "Yhdistä Discord-tilisi TripSitLearn-tiliisi",

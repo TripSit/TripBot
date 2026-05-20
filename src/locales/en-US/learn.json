@@ -1,6 +1,10 @@
 {
   "commandName": "learn",
   "commandDescription": "Commands related to TripSit's learning portal",
+  "helpName": "help",
+  "linkName": "link",
+  "unlinkName": "unlink",
+  "profileName": "profile",
   "helpSubcommand": "Information about this command",
   "ephemeralOption": "Set to \"True\" to show the response only to you",
   "linkSubcommand": "Link your discord with your TripSitLearn account",
