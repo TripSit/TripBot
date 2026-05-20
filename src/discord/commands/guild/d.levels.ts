@@ -15,6 +15,7 @@ import { getPersonaInfo } from '../../../global/commands/g.rpg';
 import getAsset from '../../utils/getAsset';
 import commandContext from '../../utils/context';
 import { numFormatter, numFormatterVoice } from './d.profile';
+import { t, getLocale, getCommandLocalizations } from '../../../i18n/index';
 
 // import { getTotalLevel } from '../../../global/utils/experience';
 import { resizeText, deFuckifyText, generateColors } from '../../utils/canvasUtils';
@@ -79,20 +80,25 @@ type LevelData = {
 export const dLevels: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('levels')
-    .setDescription('Get someone\'s current experience levels!')
+    .setNameLocalizations(getCommandLocalizations('levels', 'commandName'))
+    .setDescription(t('en-US', 'levels', 'commandDescription'))
+    .setDescriptionLocalizations(getCommandLocalizations('levels', 'commandDescription'))
     .setIntegrationTypes([0])
     .addUserOption(option => option
       .setName('target')
-      .setDescription('User to lookup'))
+      .setDescription(t('en-US', 'levels', 'targetOption'))
+      .setDescriptionLocalizations(getCommandLocalizations('levels', 'targetOption')))
     .addBooleanOption(option => option.setName('ephemeral')
-      .setDescription('Set to "True" to show the response only to you')) as SlashCommandBuilder,
+      .setDescription(t('en-US', 'levels', 'ephemeralOption'))
+      .setDescriptionLocalizations(getCommandLocalizations('levels', 'ephemeralOption'))) as SlashCommandBuilder,
   async execute(
     interaction:ChatInputCommandInteraction,
   ) {
     log.info(F, await commandContext(interaction));
+    const locale = await getLocale(interaction, 'levels');
     const startTime = Date.now();
     if (!interaction.guild) {
-      await interaction.editReply('You can only use this command in a guild!');
+      await interaction.editReply(t(locale, 'levels', 'guildOnlyError'));
       return false;
     }
 
