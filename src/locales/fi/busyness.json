@@ -1,0 +1,13 @@
+{
+  "commandName": "busyness",
+  "commandDescription": "Hallitse #loungen vilkkauspisteitä",
+  "postSubcommand": "Julkaise vilkkauspisteupseeri",
+  "ephemeralOption": "Aseta \"Tosi\" näyttääksesi vastauksen vain itsellesi",
+  "setSubcommand": "Päivitä vilkkausmääritys",
+  "keyOption": "Päivitettävä konfiguraatioavain",
+  "valueOption": "Konfiguraatioavaimen uusi arvo",
+  "noPermissionError": "Sinulla ei ole oikeutta käyttää tätä komentoa.",
+  "embedTitle": "Näyttää #loungen vilkkauspisteen",
+  "embedCalculating": "Vilkkauspistettä lasketaan...",
+  "configUpdated": "Päivitetty `{{key}}` arvoon `{{value}}`."
+}

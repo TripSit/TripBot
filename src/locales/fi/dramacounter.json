@@ -1,0 +1,16 @@
+{
+  "commandName": "dramacounter",
+  "commandDescription": "Kuinka kauan viime dramaincidentistä?!",
+  "getSubcommand": "Näytä aika viimeisestä dramasta.",
+  "setSubcommand": "Aseta dramalaskuri >.<",
+  "ephemeralOption": "Aseta \"Tosi\" näyttääksesi vastauksen vain sinulle (yksityinen, näkyvissä vain sinulle)",
+  "dramatimeOption": "Koska drama tapahtui? Esim. \"3 tuntia (sitten)\"",
+  "dramaissueOption": "Mikä oli drama? Ole kuvaava tai arvoituksellinen.",
+  "guildOnlyError": "Tätä komentoa voi käyttää vain palvelimella.",
+  "noTimeError": "Sinun täytyy määrittää aika, jolloin drama tapahtui.",
+  "noReasonError": "Sinun täytyy kertoa, mistä drama oli kyse.",
+  "embedTitle": "Dramalaskuri",
+  "noDramaYet": "Dramaa ei ole vielä ollut!",
+  "lastDrama": "Viimeisin drama oli {{timestamp}}: {{reason}}",
+  "counterReset": "Dramalaskuri on nollattu {{timestamp}} sitten tapahtuneeseen, ja kyse oli: {{reason}}"
+}

@@ -1,0 +1,17 @@
+{
+  "commandName": "reminder",
+  "commandDescription": "Lähettää muistutuksen siitä, mihin kanava on tarkoitettu!",
+  "guildOnlyError": "Tätä komentoa voi käyttää vain palvelimella!",
+  "channelOnlyError": "Tätä komentoa voi käyttää vain kanavalla!",
+  "noReminderError": "Tätä komentoa voi käyttää vain kanavalla, jolle on asetettu muistutus!",
+  "embedTitle": "MUISTUTUS: {{title}}",
+  "reminderSent": "Muistutus lähetetty!",
+  "modhaven_title": "Pidä tiimikeskustelut kanavalla #teamtripsit!",
+  "modhaven_desc": "Vaikka rakastamme kuulla ihmisten keskustelevan organisaatiosta, haluamme varmistaa, että kaikki ovat samalla sivulla. Pidä kaikki tiimikeskustelut kanavalla #teamtripsit!",
+  "teamtripsit_title": "Pidä sosiaalinen jutustelu kanavalla #modhaven!",
+  "teamtripsit_desc": "Vaikka tykkäämme kaikki hyvästä seurasta, haluamme pitää tämän kanavan helppona seurata uutisia ja päivityksiä. Pidä sosiaalinen jutustelu kanavalla #modhaven!",
+  "sanctuary_title": "Pidä #sanctuary rauhallisena ja positiivisena!",
+  "sanctuary_desc": "#sanctuary on positiivisuuteen velvoitettu kanava ihmisille, jotka ovat tällä hetkellä aineiden vaikutuksen alaisena. Pidä keskustelu rauhallisena ja positiivisena, ja muista että olemme täällä auttamassa!",
+  "webtripsit_title": "Pidä #web-tripsit vapaana apua tarvitseville!",
+  "webtripsit_desc": "Muistutus: tämä kanava on tarkoitettu ihmisille, jotka tarvitsevat välitöntä apua tai joilla on kysymyksiä haittoja vähentävästä toiminnasta ja turvallisemmasta huumeidenkäytöstä. Sosiaalisia kanaviamme varten harkitse liittymistä Discord-palvelimellemme osoitteessa https://discord.gg/tripsit. Kiitos!,"
+}

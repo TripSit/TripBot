@@ -1,0 +1,7 @@
+{
+  "commandName": "profile",
+  "commandDescription": "Hae jonkun profiili!",
+  "targetOption": "Haettava käyttäjä",
+  "ephemeralOption": "Aseta \"Tosi\" näyttääksesi vastauksen vain itsellesi",
+  "guildOnlyError": "Tätä komentoa voi käyttää vain palvelimella!"
+}

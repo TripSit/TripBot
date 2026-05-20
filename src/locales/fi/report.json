@@ -1,0 +1,6 @@
+{
+  "commandName": "report",
+  "commandDescription": "Ilmoita käyttäjästä",
+  "targetOption": "Ilmoitettava käyttäjä!",
+  "notSetupError": "Tällä palvelimella ei ole asetettu moderointia.\n\nOta yhteyttä ylläpitäjään moderoinnin asettamiseksi.\n\nJos olet ylläpitäjä, käytä /cooperative asettaaksesi moderoinnin."
+}

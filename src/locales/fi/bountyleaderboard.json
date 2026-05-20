@@ -1,0 +1,14 @@
+{
+  "commandName": "bounty_leaderboard",
+  "commandDescription": "Näytä TripBotin palkkiotaulukot",
+  "typeOption": "Näytettävän taulukon tyyppi",
+  "selectMenuPlaceholder": "Valitse taulukon tyyppi",
+  "xpEmbedDesc": "⭐ **Parhaat palkkiometsästäjät ansaitun XP:n mukaan**\n",
+  "bountiesEmbedDesc": "🏆 **Parhaat palkkiometsästäjät lunastettujen palkkioiden mukaan**\n",
+  "noDataField": "📭 Ei tietoja saatavilla",
+  "noDataValue": "Yhtään palkkiota ei ole vielä lunastettu!",
+  "statsField": "📊 Palvelimen tilastot",
+  "statsValue": "**{{users}}** aktiivista palkkiometsästäjää\n**{{bounties}}** lunastettua palkkiota yhteensä\n**{{xp}}** ansaittua XP:tä yhteensä",
+  "onlyCommandUserError": "Vain komennon antaja voi vaihtaa taulukon tyyppiä.",
+  "errorMessage": "Taulukon luomisessa tapahtui virhe."
+}

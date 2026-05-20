@@ -1,0 +1,11 @@
+{
+  "commandName": "tripsit_stats",
+  "commandDescription": "Hae tilastoja TripSitin ominaisuuksista",
+  "sessionSubcommand": "Hae tilastoja TripSit-istunnoista",
+  "commandSubcommand": "Hae tilastoja komennoista",
+  "ephemeralOption": "Aseta \"Tosi\" näyttääksesi vastauksen vain itsellesi",
+  "targetCommandOption": "Komento, jonka tilastoja haetaan",
+  "daysOption": "Kuinka monta päivää taaksepäin katsotaan",
+  "embedTitleSession": "TripSit-istuntotilastot",
+  "embedTitleCommand": "TripSit-komentotilastot"
+}

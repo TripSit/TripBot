@@ -1,0 +1,15 @@
+{
+  "commandName": "sheesh",
+  "commandDescription": "Sheeshataan!",
+  "lightjointSubcommand": "Sheeshataan!",
+  "passjointSubcommand": "Jo poltit? Siirrä jollekin muulle!",
+  "lightjointUserOption": "Käyttäjä, jonka kanssa sheeshataan",
+  "passjointUserOption": "Käyttäjä, jolle jointti siirretään",
+  "lightAlone": "<:ts_meditate:1350089899113578529> {{name}} päätti sytyttää jointin yksinään tänään... <:ts_meditate:1350089899113578529>",
+  "lightWithBot": "<:ts_cannabinoids:1350076845021986816> {{name}} polttelee yhdessä {{member}}:n kanssa! <:ts_bot:1350076410714128384> 110100100 blaze it! <:ts_cannabinoids:1350076845021986816>",
+  "lightWithUser": "<:ts_cannabinoids:1350076845021986816> {{name}} aloitti sheeshingin yhdessä {{member}}:n kanssa <:ts_cannabinoids:1350076845021986816>",
+  "lightedUp": "<:ts_cannabinoids:1350076845021986816> {{name}} sytytti jointin! <:ts_cannabinoids:1350076845021986816>",
+  "keptJoint": "<:ts_smile:1350089891798712403> {{name}} päätti pitää jointin itsellään! Häpeä sinulle! <:ts_smile:1350089891798712403>",
+  "passedToBot": "<:ts_cannabinoids:1350076845021986816> {{name}} siirsi jointin TripBotille! <:ts_bot:1350076410714128384> Toivottavasti TripBot antaa sen takaisin <:ts_smile:1350089891798712403>",
+  "passedTo": "<:ts_cannabinoids:1350076845021986816> {{name}} siirsi jointin käyttäjälle {{member}} <:ts_cannabinoids:1350076845021986816>"
+}
