@@ -12,6 +12,7 @@ import { Prisma } from '@db/tripbot';
 
 import { SlashCommand } from '../../@types/commandDef';
 import commandContext from '../../utils/context';
+import { t, getLocale, getCommandLocalizations } from '../../../i18n/index';
 
 const F = f(__filename);
 
@@ -104,14 +105,14 @@ const failResponses = [
   "Quote redundancy alert! This one's already living a cozy life in our database.",
 ];
 
-async function get(interaction: ChatInputCommandInteraction) {
+async function get(interaction: ChatInputCommandInteraction, locale: string) {
   if (!interaction.guild) return;
   const quote = interaction.options.getString('quote', false);
   const user = interaction.options.getUser('user', false);
 
   if (!quote && !user) {
     await interaction.reply({
-      content: 'You must provide either a quote or a user to search for quotes.',
+      content: t(locale, 'quote', 'noSearchParamsError'),
       flags: MessageFlags.Ephemeral,
     });
     return;
@@ -150,7 +151,7 @@ async function get(interaction: ChatInputCommandInteraction) {
 
     if (quotes.length === 0) {
       await interaction.reply({
-        content: `No quotes found for ${user?.username}.`,
+        content: t(locale, 'quote', 'noQuotesForUserError', { user: user?.username ?? '' }),
         flags: MessageFlags.Ephemeral,
       });
       return;
@@ -171,7 +172,7 @@ async function get(interaction: ChatInputCommandInteraction) {
     }
 
     await interaction.reply({
-      content: `No ${searchType} found.`,
+      content: t(locale, 'quote', 'noQuoteFoundError', { searchType }),
       flags: MessageFlags.Ephemeral,
     });
     return;
@@ -218,16 +219,15 @@ async function get(interaction: ChatInputCommandInteraction) {
   });
 }
 
-async function random(interaction:ChatInputCommandInteraction) {
+async function random(interaction:ChatInputCommandInteraction, locale: string) {
   if (!interaction.guild) return;
   await interaction.deferReply({ });
 
-  // Get total count first
   const count = await db.quotes.count();
 
   if (count === 0) {
     await interaction.editReply({
-      content: 'No quotes found!',
+      content: t(locale, 'quote', 'noQuotesError'),
     });
     return;
   }
@@ -270,7 +270,7 @@ async function random(interaction:ChatInputCommandInteraction) {
   });
 }
 
-async function del(interaction:ChatInputCommandInteraction) {
+async function del(interaction:ChatInputCommandInteraction, locale: string) {
   if (!interaction.guild) return;
   if (!interaction.member) return;
   const quote = interaction.options.getString('quote', true);
@@ -288,7 +288,7 @@ async function del(interaction:ChatInputCommandInteraction) {
   if (!quoteData) {
     log.debug(F, 'Quote not found');
     await interaction.reply({
-      content: 'Quote not found!',
+      content: t(locale, 'quote', 'quoteNotFoundError'),
       flags: MessageFlags.Ephemeral,
     });
     return;
@@ -320,7 +320,7 @@ async function del(interaction:ChatInputCommandInteraction) {
   if (!isOwner && !isModerator) {
     log.debug(F, 'User does not own quote and is not a moderator');
     await interaction.reply({
-      content: 'You do not own this quote! You can only delete your own quotes.',
+      content: t(locale, 'quote', 'notOwnerError'),
       flags: MessageFlags.Ephemeral,
     });
     return;
@@ -366,7 +366,7 @@ async function del(interaction:ChatInputCommandInteraction) {
       - ${quoteData.url}
       `,
       footer: {
-        text: 'Deleted from the /quote database!',
+        text: t('en-US', 'quote', 'deletedFooter'),
       },
       color: Colors.Red,
     }],
@@ -391,7 +391,7 @@ export async function quoteAdd(interaction:MessageContextMenuCommandInteraction)
   if (!target) {
     log.debug(F, 'No target member found');
     await interaction.editReply({
-      content: 'You can only save messages that have an author, or from the last 2 weeks!',
+      content: t('en-US', 'quote', 'noAuthorError'),
     });
     return true;
   }
@@ -400,7 +400,7 @@ export async function quoteAdd(interaction:MessageContextMenuCommandInteraction)
   if (target.user.bot) {
     log.debug(F, 'Target is a bot');
     await interaction.editReply({
-      content: 'You can only save messages from humans!',
+      content: t('en-US', 'quote', 'noBotMessagesError'),
     });
     return true;
   }
@@ -409,7 +409,7 @@ export async function quoteAdd(interaction:MessageContextMenuCommandInteraction)
   if (target.id === actor.id && !actor.id === env.DISCORD_OWNER_ID) {
     log.debug(F, 'Target is the actor');
     await interaction.editReply({
-      content: 'You can\'t save your own messages!',
+      content: t('en-US', 'quote', 'noSelfQuoteError'),
     });
     return true;
   }
@@ -435,7 +435,7 @@ export async function quoteAdd(interaction:MessageContextMenuCommandInteraction)
   if (vipRoles.length === 0) {
     log.debug(F, 'Actor has no VIP roles');
     await interaction.editReply({
-      content: 'You need to be at least level 10 to save quotes!',
+      content: t('en-US', 'quote', 'levelTooLowError'),
     });
     return true;
   }
@@ -526,7 +526,7 @@ export async function quoteAdd(interaction:MessageContextMenuCommandInteraction)
       - ${quoteData.url}
       `,
       footer: {
-        text: 'Saved to the /quote database!',
+        text: t('en-US', 'quote', 'savedFooter'),
       },
       color: Colors.Green,
     }],
@@ -538,41 +538,47 @@ export async function quoteAdd(interaction:MessageContextMenuCommandInteraction)
 export const dQuote: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('quote')
-    .setDescription('Manage quotes')
+    .setNameLocalizations(getCommandLocalizations('quote', 'commandName'))
+    .setDescription(t('en-US', 'quote', 'commandDescription'))
+    .setDescriptionLocalizations(getCommandLocalizations('quote', 'commandDescription'))
     .setIntegrationTypes([0])
     .addSubcommand(subcommand => subcommand
-      .setDescription('Search quotes!')
+      .setDescription(t('en-US', 'quote', 'getSubcommand'))
       .addStringOption(option => option.setName('quote')
-        .setDescription('Which quote? Type to search!')
+        .setDescription(t('en-US', 'quote', 'quoteOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('quote', 'quoteOption'))
         .setAutocomplete(true))
       .addUserOption(option => option.setName('user')
-        .setDescription('Which user?'))
+        .setDescription(t('en-US', 'quote', 'userOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('quote', 'userOption')))
       .setName('get'))
     .addSubcommand(subcommand => subcommand
-      .setDescription('Get a random quote!')
+      .setDescription(t('en-US', 'quote', 'randomSubcommand'))
       .setName('random'))
     .addSubcommand(subcommand => subcommand
-      .setDescription('Delete your own quote records!')
+      .setDescription(t('en-US', 'quote', 'deleteSubcommand'))
       .addStringOption(option => option.setName('quote')
-        .setDescription('Which quote? Type to search!')
+        .setDescription(t('en-US', 'quote', 'quoteOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('quote', 'quoteOption'))
         .setAutocomplete(true)
         .setRequired(true))
       .setName('delete')),
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
+    const locale = await getLocale(interaction, 'quote');
     switch (interaction.options.getSubcommand()) {
       case 'get':
-        await get(interaction);
+        await get(interaction, locale);
         break;
       case 'random':
-        await random(interaction);
+        await random(interaction, locale);
         break;
       case 'delete':
-        await del(interaction);
+        await del(interaction, locale);
         break;
       default:
         await interaction.reply({
-          content: 'Unknown subcommand!',
+          content: t(locale, 'quote', 'unknownSubcommandError'),
           flags: MessageFlags.Ephemeral,
         });
         break;

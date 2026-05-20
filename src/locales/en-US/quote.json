@@ -1,0 +1,22 @@
+{
+  "commandName": "quote",
+  "commandDescription": "Manage quotes",
+  "getSubcommand": "Search quotes!",
+  "quoteOption": "Which quote? Type to search!",
+  "userOption": "Which user?",
+  "randomSubcommand": "Get a random quote!",
+  "deleteSubcommand": "Delete your own quote records!",
+  "noSearchParamsError": "You must provide either a quote or a user to search for quotes.",
+  "noQuotesForUserError": "No quotes found for {{user}}.",
+  "noQuoteFoundError": "No {{searchType}} found.",
+  "noQuotesError": "No quotes found!",
+  "quoteNotFoundError": "Quote not found!",
+  "notOwnerError": "You do not own this quote! You can only delete your own quotes.",
+  "deletedFooter": "Deleted from the /quote database!",
+  "savedFooter": "Saved to the /quote database!",
+  "noAuthorError": "You can only save messages that have an author, or from the last 2 weeks!",
+  "noBotMessagesError": "You can only save messages from humans!",
+  "noSelfQuoteError": "You can't save your own messages!",
+  "levelTooLowError": "You need to be at least level 10 to save quotes!",
+  "unknownSubcommandError": "Unknown subcommand!"
+}
