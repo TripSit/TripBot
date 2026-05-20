@@ -11,11 +11,11 @@ import {
   MessageFlags,
   TextInputStyle,
 } from 'discord-api-types/v10';
-import { stripIndents } from 'common-tags';
 import { SlashCommand } from '../../@types/commandDef';
 import { issue } from '../../../global/commands/g.issue';
 import commandContext from '../../utils/context';
 import { embedTemplate } from '../../utils/embedTemplate';
+import { t, getLocale, getCommandLocalizations } from '../../../i18n/index';
 // import log from '../../../global/utils/log';
 
 const F = f(__filename);
@@ -23,10 +23,13 @@ const F = f(__filename);
 export const dIssue: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('issue')
-    .setDescription('Create issue on github')
+    .setNameLocalizations(getCommandLocalizations('issue', 'commandName'))
+    .setDescription(t('en-US', 'issue', 'commandDescription'))
+    .setDescriptionLocalizations(getCommandLocalizations('issue', 'commandDescription'))
     .setIntegrationTypes([0])
     .addStringOption(option => option
-      .setDescription('What type of issue is this?')
+      .setDescription(t('en-US', 'issue', 'typeOption'))
+      .setDescriptionLocalizations(getCommandLocalizations('issue', 'typeOption'))
       .addChoices(
         { name: 'Bug/Problem', value: 'Bug' },
         { name: 'Feature Request', value: 'Feature' },
@@ -37,7 +40,8 @@ export const dIssue: SlashCommand = {
       .setRequired(true)
       .setName('type'))
     .addStringOption(option => option
-      .setDescription('How important is this?')
+      .setDescription(t('en-US', 'issue', 'priorityOption'))
+      .setDescriptionLocalizations(getCommandLocalizations('issue', 'priorityOption'))
       .addChoices(
         { name: 'Critical', value: 'P0: Critical' },
         { name: 'High', value: 'P1: High' },
@@ -46,7 +50,8 @@ export const dIssue: SlashCommand = {
       )
       .setName('priority'))
     .addStringOption(option => option
-      .setDescription('How much effort will this take?')
+      .setDescription(t('en-US', 'issue', 'effortOption'))
+      .setDescriptionLocalizations(getCommandLocalizations('issue', 'effortOption'))
       .addChoices(
         { name: 'High', value: 'E0: High' },
         { name: 'Medium', value: 'E1: Medium' },
@@ -56,27 +61,25 @@ export const dIssue: SlashCommand = {
       .setName('effort')) as SlashCommandBuilder,
   async execute(interaction:ChatInputCommandInteraction) {
     log.info(F, await commandContext(interaction));
+    const locale = await getLocale(interaction, 'issue');
     await interaction.showModal(
       new ModalBuilder()
         .setCustomId(`issueModal~${interaction.id}`)
-        .setTitle('TripBot Issue Creation')
+        .setTitle(t(locale, 'issue', 'modalTitle'))
         .addComponents(
           new ActionRowBuilder<TextInputBuilder>()
             .addComponents(new TextInputBuilder()
-              .setLabel('Issue Title')
-              .setPlaceholder('Summarize the issue here!')
+              .setLabel(t(locale, 'issue', 'issueTitleLabel'))
+              .setPlaceholder(t(locale, 'issue', 'issueTitlePlaceholder'))
               .setStyle(TextInputStyle.Short)
               .setRequired(true)
               .setCustomId('issueTitle')),
           new ActionRowBuilder<TextInputBuilder>()
             .addComponents(new TextInputBuilder()
-              .setLabel('Issue Body')
-              .setPlaceholder(
-                'Please describe the issue in detail! Include steps to reproduce, any specific circumstances, etc.',
-              )
+              .setLabel(t(locale, 'issue', 'issueBodyLabel'))
+              .setPlaceholder(t(locale, 'issue', 'issueBodyPlaceholder'))
               .setStyle(TextInputStyle.Paragraph)
               .setRequired(true)
-            // eslint-disable-next-line max-len
               .setCustomId('issueBody')),
         ),
     );
@@ -85,9 +88,7 @@ export const dIssue: SlashCommand = {
       .then(async i => {
         if (i.customId.split('~')[1] !== interaction.id) return;
         await i.deferReply({ flags: MessageFlags.Ephemeral });
-        const issueBody = `${i.fields.getTextInputValue('issueBody')}
-        
-        This issue was submitted by ${(i.member as GuildMember).displayName} in ${i.guild}`;
+        const issueBody = `${i.fields.getTextInputValue('issueBody')}\n\n${t(locale, 'issue', 'issueBodySuffix', { name: (i.member as GuildMember).displayName, guild: i.guild?.name ?? '' })}`;
 
         const labels = [
           `${interaction.options.getString('type')}`,
@@ -102,16 +103,12 @@ export const dIssue: SlashCommand = {
           labels,
         );
 
-        // log.debug(F, `results: ${JSON.stringify(results, null, 2)}`);
-
         await i.editReply({
           embeds: [
             embedTemplate()
               .setColor(0x0099ff)
-              .setTitle('Issue created!')
-              .setDescription(stripIndents`\
-                  Issue #${results.data.number} created on TripSit/TripBot!
-                  Click here to view: ${results.data.html_url}`),
+              .setTitle(t(locale, 'issue', 'embedTitle'))
+              .setDescription(t(locale, 'issue', 'embedDescription', { number: String(results.data.number), url: results.data.html_url })),
           ],
         });
       });
