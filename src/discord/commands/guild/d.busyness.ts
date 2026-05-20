@@ -9,6 +9,7 @@ import {
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import commandContext from '../../utils/context';
+import { t, getLocale, getCommandLocalizations } from '../../../i18n/index';
 
 const F = f(__filename);
 
@@ -22,8 +23,6 @@ const busynessConfig = {
 };
 
 const interval = 30 * 1000; // Check every 30 seconds
-const embedTitle = 'Shows the busyness score of #lounge';
-const header = 'Busyness score is being calculated...'; // Provide a default value
 
 let msg: Message<boolean>;
 let maxBusynessScore = 0;
@@ -156,7 +155,7 @@ async function checkBusyness() {
   const nextCheck = now + interval; // Timestamp for the next check
 
   const embed = embedTemplate()
-    .setTitle(embedTitle)
+    .setTitle(t('en-US', 'busyness', 'embedTitle'))
     .setDescription(
       `**Formula:** \`Busyness = (M * ${busynessConfig.messageWeight}) + (U * ${busynessConfig.userWeight}) + (S * ${busynessConfig.spamminessWeight}) - (D * ${busynessConfig.densityWeight})\`\n\n`
       + `**Enable Threshold:** ${busynessConfig.busynessThreshold}\n`
@@ -207,19 +206,23 @@ async function checkBusyness() {
 export const dBusyness: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('busyness')
-    .setDescription('Manage the busyness score of #lounge')
+    .setNameLocalizations(getCommandLocalizations('busyness', 'commandName'))
+    .setDescription(t('en-US', 'busyness', 'commandDescription'))
+    .setDescriptionLocalizations(getCommandLocalizations('busyness', 'commandDescription'))
     .addSubcommand(subcommand => subcommand
       .setName('post')
-      .setDescription('Post the busyness embed')
+      .setDescription(t('en-US', 'busyness', 'postSubcommand'))
       .addBooleanOption(option => option
         .setName('ephemeral')
-        .setDescription('Set to "True" to show the response only to you')))
+        .setDescription(t('en-US', 'busyness', 'ephemeralOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('busyness', 'ephemeralOption'))))
     .addSubcommand(subcommand => subcommand
       .setName('set')
-      .setDescription('Update the busyness configuration')
+      .setDescription(t('en-US', 'busyness', 'setSubcommand'))
       .addStringOption(option => option
         .setName('key')
-        .setDescription('The configuration key to update')
+        .setDescription(t('en-US', 'busyness', 'keyOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('busyness', 'keyOption'))
         .setRequired(true)
         .addChoices(
           { name: 'Message Weight', value: 'messageWeight' },
@@ -230,15 +233,17 @@ export const dBusyness: SlashCommand = {
         ))
       .addNumberOption(option => option
         .setName('value')
-        .setDescription('The new value for the configuration key')
+        .setDescription(t('en-US', 'busyness', 'valueOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('busyness', 'valueOption'))
         .setRequired(true))) as SlashCommandBuilder,
   async execute(interaction) {
     log.debug(F, await commandContext(interaction));
+    const locale = await getLocale(interaction, 'busyness');
 
     // Check if the user has admin permissions
     if (!interaction.memberPermissions?.has('Administrator')) {
       await interaction.reply({
-        content: 'You do not have permission to use this command.',
+        content: t(locale, 'busyness', 'noPermissionError'),
         ephemeral: true,
       });
       return false;
@@ -254,8 +259,8 @@ export const dBusyness: SlashCommand = {
 
       msg = await interaction.editReply({
         embeds: [embedTemplate()
-          .setTitle(embedTitle)
-          .setDescription(header)
+          .setTitle(t(locale, 'busyness', 'embedTitle'))
+          .setDescription(t(locale, 'busyness', 'embedCalculating'))
           .setColor(Colors.Blurple)
           .setFooter(null)],
       });
@@ -271,7 +276,7 @@ export const dBusyness: SlashCommand = {
       busynessConfig[key as keyof typeof busynessConfig] = value;
 
       await interaction.reply({
-        content: `Updated \`${key}\` to \`${value}\`.`,
+        content: t(locale, 'busyness', 'configUpdated', { key, value: String(value) }),
         ephemeral: true,
       });
 

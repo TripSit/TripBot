@@ -1,0 +1,13 @@
+{
+  "commandName": "busyness",
+  "commandDescription": "Manage the busyness score of #lounge",
+  "postSubcommand": "Post the busyness embed",
+  "ephemeralOption": "Set to \"True\" to show the response only to you",
+  "setSubcommand": "Update the busyness configuration",
+  "keyOption": "The configuration key to update",
+  "valueOption": "The new value for the configuration key",
+  "noPermissionError": "You do not have permission to use this command.",
+  "embedTitle": "Shows the busyness score of #lounge",
+  "embedCalculating": "Busyness score is being calculated...",
+  "configUpdated": "Updated `{{key}}` to `{{value}}`."
+}
