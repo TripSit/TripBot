@@ -6,54 +6,53 @@ import {
   TextChannel,
 } from 'discord.js';
 import { SlashCommand } from '../../@types/commandDef';
-import commandContext from '../../utils/context'; // eslint-disable-line @typescript-eslint/no-unused-vars
+import commandContext from '../../utils/context';
+import { t, getLocale, getCommandLocalizations } from '../../../i18n/index';
 
 const F = f(__filename);
 
 export const dSay: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('say')
-    .setDescription('Say something like a real person!')
+    .setNameLocalizations(getCommandLocalizations('say', 'commandName'))
+    .setDescription(t('en-US', 'say', 'commandDescription'))
+    .setDescriptionLocalizations(getCommandLocalizations('say', 'commandDescription'))
     .setIntegrationTypes([0])
     .addStringOption(option => option.setName('say')
-      .setDescription('What do you want to say?')
+      .setDescription(t('en-US', 'say', 'sayOption'))
+      .setDescriptionLocalizations(getCommandLocalizations('say', 'sayOption'))
       .setRequired(true))
     .addChannelOption(option => option
-      .setDescription('Where should I say it? (Default: \'here\')')
+      .setDescription(t('en-US', 'say', 'channelOption'))
+      .setDescriptionLocalizations(getCommandLocalizations('say', 'channelOption'))
       .setName('channel')) as SlashCommandBuilder,
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
+    const locale = await getLocale(interaction, 'say');
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
     if (!interaction.guild) {
-      await interaction.editReply({ content: 'This command can only be used in a server!' });
+      await interaction.editReply({ content: t(locale, 'say', 'guildOnlyError') });
       return false;
     }
-
     if (!interaction.member) return false;
 
     const member: GuildMember = interaction.member as GuildMember;
-
     const say = interaction.options.getString('say', true);
-
-    let channel = interaction.options.getChannel('channel')
-      ? interaction.options.getChannel('channel')
-      : interaction.channel;
+    let channel = interaction.options.getChannel('channel') ?? interaction.channel;
 
     if (!channel) {
-      await interaction.editReply({ content: 'Channel not found!' });
+      await interaction.editReply({ content: t(locale, 'say', 'channelNotFoundError') });
       return false;
     }
 
-    // Ensure only moderators can use /say in announcements
     if (
       channel.type === ChannelType.GuildAnnouncement
       && !member.roles.cache.has(env.ROLE_MODERATOR)
     ) {
-      await interaction.editReply({ content: 'Only moderators can use this command in announcement channels!' });
+      await interaction.editReply({ content: t(locale, 'say', 'announcementModOnlyError') });
       return false;
     }
 
-    // Ensure that the channel used is a text channel
     if (
       channel.type !== ChannelType.GuildText
       && channel.type !== ChannelType.GuildVoice
@@ -62,27 +61,23 @@ export const dSay: SlashCommand = {
       && channel.type !== ChannelType.GuildAnnouncement
       && channel.type !== ChannelType.GuildForum
     ) {
-      await interaction.editReply({ content: 'This command can only be used in a server!' });
+      await interaction.editReply({ content: t(locale, 'say', 'invalidChannelError') });
       return false;
     }
 
-    // Set the type so it's not an API channel
     channel = channel as TextChannel;
-
-    await channel.sendTyping(); // This method automatically stops typing after 10 seconds, or when a message is sent.
+    await channel.sendTyping();
     setTimeout(async () => (channel as TextChannel).send({
       content: say,
       allowedMentions: { parse: ['users'] },
     }), 3000);
 
-    await interaction.editReply({ content: `I said '${say}' in ${channel.name}` }); // eslint-disable-line max-len
+    await interaction.editReply({ content: t(locale, 'say', 'confirmedReply', { say, channel: (channel as TextChannel).name }) });
 
     const channelBotlog = await interaction.guild.channels.fetch(env.CHANNEL_BOTLOG) as TextChannel;
     if (channelBotlog) {
-      await channelBotlog.send(`${member.displayName} made me say '${say}' \
-        in ${channel.name}`);
+      await channelBotlog.send(t('en-US', 'say', 'botlogMsg', { name: member.displayName, say, channel: (channel as TextChannel).name }));
     }
-
     return true;
   },
 };
