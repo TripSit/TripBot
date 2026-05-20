@@ -19,6 +19,7 @@ import getAsset from '../../utils/getAsset';
 import { resizeText, deFuckifyText, generateColors } from '../../utils/canvasUtils';
 // import { paginationEmbed } from '../../utils/pagination';
 import { leaderboardV2 } from '../../../global/commands/g.leaderboard';
+import { t, getLocale, getCommandLocalizations } from '../../../i18n/index';
 
 const F = f(__filename);
 
@@ -34,10 +35,13 @@ const categoryChoices = [
 export const dLeaderboard: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('leaderboard')
-    .setDescription('Show the experience leaderboard')
+    .setNameLocalizations(getCommandLocalizations('leaderboard', 'commandName'))
+    .setDescription(t('en-US', 'leaderboard', 'commandDescription'))
+    .setDescriptionLocalizations(getCommandLocalizations('leaderboard', 'commandDescription'))
     .setIntegrationTypes([0])
     .addStringOption(option => option.setName('category')
-      .setDescription('What category of experience?')
+      .setDescription(t('en-US', 'leaderboard', 'categoryOption'))
+      .setDescriptionLocalizations(getCommandLocalizations('leaderboard', 'categoryOption'))
       .addChoices(
         { name: 'Total (Default)', value: 'TOTAL' },
         { name: 'Chat', value: 'GENERAL' },
@@ -55,14 +59,16 @@ export const dLeaderboard: SlashCommand = {
     //     { name: 'Weekly', value: 'WEEK' },
     //   ))
     .addBooleanOption(option => option.setName('ephemeral')
-      .setDescription('Set to "True" to show the response only to you')) as SlashCommandBuilder,
+      .setDescription(t('en-US', 'leaderboard', 'ephemeralOption'))
+      .setDescriptionLocalizations(getCommandLocalizations('leaderboard', 'ephemeralOption'))) as SlashCommandBuilder,
   async execute(interaction) { // eslint-disable-line
     log.info(F, await commandContext(interaction));
+    const locale = await getLocale(interaction, 'leaderboard');
     const ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined;
     await interaction.deferReply({ flags: ephemeral });
     const startTime = Date.now();
     if (!interaction.guild) {
-      await interaction.editReply('You can only use this command in a guild!');
+      await interaction.editReply(t(locale, 'leaderboard', 'guildOnlyError'));
       return false;
     }
 
