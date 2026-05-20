@@ -163,7 +163,7 @@ async function dDrugChecking(interaction: ChatInputCommandInteraction): Promise<
   const embed = embedTemplate()
     .setTitle(t(locale, 'hr', 'drugCheckingTitle'))
     .setColor(Colors.Blurple)
-    .setDescription(t(locale, 'hr', 'drugCheckingDescription'));
+    .setDescription(t(locale, 'hr', 'drugCheckingBody'));
   try {
     await interaction.editReply({ embeds: [embed] });
     return true;
