@@ -17,6 +17,7 @@ import commandContext from '../../utils/context';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { checkChannelPermissions } from '../../utils/checkPermissions';
 import { sleep } from '../../utils/sleep';
+import { t, getLocale, getCommandLocalizations } from '../../../i18n/index';
 
 const F = f(__filename);
 
@@ -36,6 +37,7 @@ export async function countingSetup(
   startingNumber:number,
   override:boolean,
   purge:boolean,
+  locale = 'en-US',
 ):Promise<InteractionEditReplyOptions> {
   const countingData = await db.counting.findFirst({
     where: {
@@ -48,46 +50,28 @@ export async function countingSetup(
 
   if (countingData && !override) {
     return {
-      embeds: [embed.setTitle('This channel is already set up for counting! Mods can /reset or /end it!')],
+      embeds: [embed.setTitle(t(locale, 'counting', 'alreadySetupError'))],
     };
   }
 
-  let description = `
-
-  The rules are simple:
-  1. You must post a number in chat that is 1 higher than the last number.
-  2. You must use numbers, I'm not smart enough to understand words can be numbers.
-  3. You can't count twice in a row.`;
+  let description = `\n\n${t(locale, 'counting', 'setupRules')}`;
 
   if (type === 'HARDCORE') {
-    description += `
-    This is a HARDCORE game which means:
-    4. If you say the wrong number the count resets and **you will be timed out for 24!**`;
+    description += `\n${t(locale, 'counting', 'hardcoreRule')}`;
   }
 
   if (type === 'TOKEN') {
-    description += `${description.slice(-1)}, **and you can only count once every hour!**
-    This is a TOKEN game which means:
-    4. Every time someone counts, tokens are added to the pot
-    5. At every multiple of 10 (10, 20, 30, etc) everyone who contributed gets a share from the pot
-    6. At any point someone can break the combo and take the pot for themselves!`;
+    description += `, **and you can only count once every hour!**\n${t(locale, 'counting', 'tokenRule')}`;
   }
 
   if (type === 'NORMAL') {
-    description += `
-    4. If you say the wrong number the count resets and everyone will be disappointed`;
+    description += `\n${t(locale, 'counting', 'normalRule')}`;
   }
 
-  description += `
-
-  Use /counting scores to see the scores for this channel
-
-  Mods can /counting reset to reset the channel if needed
-
-  I'll start us off in the next message!`;
+  description += `\n\n${t(locale, 'counting', 'setupFooter')}`;
 
   embed
-    .setTitle(`Let's play a ${type.toLowerCase()} counting game!`)
+    .setTitle(t(locale, 'counting', 'gameTitle', { type: type.toLowerCase() }))
     .setDescription(stripIndents`${description}`);
 
   const countingMessage = await channel.send({ embeds: [embed] });
@@ -189,7 +173,7 @@ export async function countingSetup(
     },
   });
 
-  return { content: 'Counting channel set up!' };
+  return { content: t(locale, 'counting', 'setupComplete') };
 }
 
 export async function countingScores(
@@ -203,12 +187,12 @@ export async function countingScores(
     },
   });
   log.debug(F, `Data: ${JSON.stringify(countingData, null, 2)}`);
-  if (!countingData) return { content: 'This channel is not set up for counting!' };
+  if (!countingData) return { content: t('en-US', 'counting', 'notSetupError') };
 
   const currentLink = `[${countingData.current_number}](https://discord.com/channels/${interaction.guildId}/${interaction.channelId}/${countingData.current_number_message_id})`; // eslint-disable-line max-len
   const currentMember = await interaction.guild?.members.fetch(countingData.current_number_message_author as string);
   let description = `
-  **Current Combo**
+  ${t('en-US', 'counting', 'currentCombo')}
   ${currentLink} - ${currentMember} ${time(countingData.current_number_message_date, 'R')}`;
 
   if (countingData.last_number) {
@@ -217,9 +201,9 @@ export async function countingScores(
     const lastBreaker = await interaction.guild?.members.fetch(countingData.last_number_broken_by as string);
     description += `
 
-    **Last Combo**
+    ${t('en-US', 'counting', 'lastCombo')}
     ${lastLink} - ${lastMember ?? 'unknown'} ${time(countingData.last_number_message_date as Date, 'R')}
-    Broken by ${lastBreaker ?? 'unknown'} ${time(countingData.last_number_broken_date as Date, 'R')}`;
+    ${t('en-US', 'counting', 'brokenBy', { user: String(lastBreaker ?? 'unknown'), time: time(countingData.last_number_broken_date as Date, 'R') })}`;
   }
 
   if (countingData.record_number) {
@@ -228,13 +212,13 @@ export async function countingScores(
     const recordBreaker = await interaction.guild?.members.fetch(countingData.record_number_broken_by as string);
     description += `
 
-    **Record Combo**
+    ${t('en-US', 'counting', 'recordCombo')}
     ${recordLink} - ${recordMember ?? 'unknown'} ${time(countingData.record_number_message_date as Date, 'R')}
-    Broken by ${recordBreaker ?? 'unknown'} ${time(countingData.record_number_broken_date as Date, 'R')}`;
+    ${t('en-US', 'counting', 'brokenBy', { user: String(recordBreaker ?? 'unknown'), time: time(countingData.record_number_broken_date as Date, 'R') })}`;
   }
 
   const embed = embedTemplate()
-    .setTitle('Counting Scores')
+    .setTitle(t('en-US', 'counting', 'scoresTitle'))
     .setDescription(stripIndents`${description}`);
   return { embeds: [embed] };
 }
@@ -249,7 +233,7 @@ export async function countingReset(
       channel_id: channel.id,
     },
   });
-  if (!countingData) return { content: 'This channel is not set up for counting!' };
+  if (!countingData) return { content: t('en-US', 'counting', 'notSetupError') };
   const number = interaction.options.getInteger('number') ?? 0;
   await countingSetup(
     channel,
@@ -258,7 +242,7 @@ export async function countingReset(
     true,
     interaction.options.getBoolean('purge') ?? false,
   );
-  return { embeds: [embedTemplate().setTitle(`Counting channel reset to ${number}!`)] };
+  return { embeds: [embedTemplate().setTitle(t('en-US', 'counting', 'resetComplete', { number: String(number) }))] };
 }
 
 export async function countMessage(message: Message): Promise<void> {
@@ -290,7 +274,7 @@ export async function countMessage(message: Message): Promise<void> {
   if (!(message.channel instanceof TextChannel)) return;
 
   if (countingData.current_number === -1) {
-    await message.reply('Please wait for the new game to start');
+    await message.reply(t('en-US', 'counting', 'waitForGame'));
     return;
   }
 
@@ -300,7 +284,7 @@ export async function countMessage(message: Message): Promise<void> {
   if (countingData.current_number_message_author === message.author.id
     && message.author.id.toString() !== env.DISCORD_OWNER_ID.toString()) { // Allow the owner to spam (for testing)
     log.debug(F, 'Deleting message because the author is the same as the current number message author');
-    await message.reply('Stop playing with yourself 😉');
+    await message.reply(t('en-US', 'counting', 'selfCountError'));
     return;
   }
 
@@ -317,7 +301,7 @@ export async function countMessage(message: Message): Promise<void> {
 
   if (lastMessage && countingData.type === 'TOKEN'
     && message.author.id.toString() !== env.DISCORD_OWNER_ID.toString()) {
-    await message.reply('You can only count once every hour in the Token game!');
+    await message.reply(t('en-US', 'counting', 'tokenCooldownError'));
     return;
   }
 
@@ -334,18 +318,16 @@ export async function countMessage(message: Message): Promise<void> {
     if (countingData.current_stakeholders
       && !countingData.current_stakeholders.split(',').includes(message.author.id)
       && !warnedUsers.includes(message.author.id)) {
-      let messageReply = `Hey ${message.member?.displayName}, welcome to the counting game!
-      
-      You may not know, but you're breaking the combo!
-
-      The current number is ${countingData.current_number}, if you want to join the game, type the next number in the series!
-      `;
+      let messageReply = t('en-US', 'counting', 'newPlayerWarningBase', {
+        name: message.member?.displayName ?? '',
+        number: String(countingData.current_number),
+      });
       if (countingData.type === 'HARDCORE') {
-        messageReply += 'If you break the combo again, you\'ll be timed out for 24 hours!';
+        messageReply += t('en-US', 'counting', 'newPlayerWarningHardcore');
       } else if (countingData.type === 'TOKEN') {
-        messageReply += `If you break the combo again, you'll steal ${totalPot} tokens and reset the counter for everyone else!`; // eslint-disable-line max-len
+        messageReply += t('en-US', 'counting', 'newPlayerWarningToken', { tokens: String(totalPot) });
       } else {
-        messageReply += 'If you break the combo again, you\'ll reset the combo!';
+        messageReply += t('en-US', 'counting', 'newPlayerWarningNormal');
       }
 
       // add the user to the stakeholders to prevent them from being warned again
@@ -394,9 +376,11 @@ export async function countMessage(message: Message): Promise<void> {
       countingData.record_number_broken_date = new Date();
 
       const recordUser = await message.guild.members.fetch(countingData.record_number_message_author);
-      // Send a message to the channel
-      recordMessage = `\n\n**A new record of ${countingData.current_number} was set by ${recordUser}**!
-      ${message.author} will go down in history as the one who broke the streak...`;
+      recordMessage = t('en-US', 'counting', 'newRecord', {
+        number: String(countingData.current_number),
+        user: String(recordUser),
+        breaker: String(message.author),
+      });
     }
 
     if (countingData.type === 'HARDCORE') {
@@ -440,11 +424,11 @@ export async function countMessage(message: Message): Promise<void> {
 
     let endingMessage = '';
     if (countingData.type === 'HARDCORE') {
-      endingMessage = '\n\nThey were timed out for 24 hours for this transgression!';
+      endingMessage = t('en-US', 'counting', 'hardcoreTimeout');
     } else if (countingData.type === 'TOKEN') {
-      endingMessage = `\n\nThey stole ${totalPot} tokens from the pot!`;
+      endingMessage = t('en-US', 'counting', 'tokenSteal', { tokens: String(totalPot) });
     } else {
-      endingMessage = '\n\nMake sure to point and laugh at them!';
+      endingMessage = t('en-US', 'counting', 'normalEnding');
     }
 
     // Set this to -1 so that people can't start a new game while the countdown is playing
@@ -462,21 +446,17 @@ export async function countMessage(message: Message): Promise<void> {
       update: countingData,
     });
 
-    // Send a message to the channel
     await message.channel.send({
       embeds: [
         embedTemplate()
-          .setTitle('Combo Broken!')
+          .setTitle(t('en-US', 'counting', 'comboTitle'))
           .setColor(Colors.Red)
-          .setDescription(stripIndents`Oh no, ${message.author} broke the combo...${recordMessage}${endingMessage}`),
+          .setDescription(stripIndents`${t('en-US', 'counting', 'comboDesc', { user: String(message.author), record: recordMessage, ending: endingMessage })}`),
       ],
     });
 
-    // Send a message to the channel that the next game will start in 10 seconds.
-    // Wait 10 seconds, and then edit the message to a line that says "Starting new game in {relative time}"
-
     const resetTime = new Date(new Date().getTime() + 10 * 1000);
-    const newMessage = await message.channel.send(`Starting new game ${time(resetTime, 'R')}`);
+    const newMessage = await message.channel.send(t('en-US', 'counting', 'startingGame', { time: time(resetTime, 'R') }));
     await sleep(10000);
 
     // Start a new counting game
@@ -521,11 +501,11 @@ export async function countMessage(message: Message): Promise<void> {
         .concat(message.author.id)
         .join(',');
       log.debug(F, `Member ${message.member?.displayName} was added as a stakeholder`);
-      let welcomeMessage = `Welcome to the counting game ${message.member?.displayName}!`;
+      let welcomeMessage = t('en-US', 'counting', 'welcomeBase', { name: message.member?.displayName ?? '' });
       if (countingData.type === 'TOKEN') {
-        welcomeMessage += '\nThis is a TOKEN game: Build the pot and get tokens every 10 levels, or break the combo and steal it all!'; // eslint-disable-line max-len
+        welcomeMessage += t('en-US', 'counting', 'welcomeToken');
       } else if (countingData.type === 'HARDCORE') {
-        welcomeMessage += '\nThis is a HARDCORE game: if you break the combo you will be timed out for 24 hours!';
+        welcomeMessage += t('en-US', 'counting', 'welcomeHardcore');
       }
 
       await message.channel.send({
@@ -589,13 +569,10 @@ export async function countMessage(message: Message): Promise<void> {
     }));
 
     const embed = embedTemplate()
-      .setTitle('Payday!')
+      .setTitle(t('en-US', 'counting', 'paydayTitle'))
       .setColor(Colors.Green)
-      .setDescription(stripIndents`The pot of ${totalPot} tokens has been claimed by ${stakeholderNumber} users!
-      Each user has been given ${potPerUser} tokens!
-
-      The pot grows bigger the higher the combo gets, and the amount of people who have contributed to the combo!`)
-      .setFooter({ text: 'totalPot = (currentNumber * 10)' });
+      .setDescription(stripIndents`${t('en-US', 'counting', 'paydayDesc', { total: String(totalPot), users: String(stakeholderNumber), perUser: String(potPerUser) })}`)
+      .setFooter({ text: t('en-US', 'counting', 'paydayFooter') });
 
     // Send a message to the channel
     await message.channel.send({
@@ -622,13 +599,16 @@ export async function countMessage(message: Message): Promise<void> {
 export const counting: SlashCommandBeta = {
   data: new SlashCommandBuilder()
     .setName('counting')
-    .setDescription('All things with counting!')
+    .setNameLocalizations(getCommandLocalizations('counting', 'commandName'))
+    .setDescription(t('en-US', 'counting', 'commandDescription'))
+    .setDescriptionLocalizations(getCommandLocalizations('counting', 'commandDescription'))
     .setIntegrationTypes([0])
     .addSubcommand(subcommand => subcommand
       .setName('setup')
-      .setDescription('Set up a Counting channel!')
+      .setDescription(t('en-US', 'counting', 'setupSubcommand'))
       .addStringOption(option => option
-        .setDescription('What kind of counting game?')
+        .setDescription(t('en-US', 'counting', 'typeOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('counting', 'typeOption'))
         .setName('type')
         .addChoices(
           { name: 'Hardcore', value: 'HARDCORE' },
@@ -637,20 +617,24 @@ export const counting: SlashCommandBeta = {
         )))
     .addSubcommand(subcommand => subcommand
       .setName('scores')
-      .setDescription('Get the scores for a Counting channel!')
+      .setDescription(t('en-US', 'counting', 'scoresSubcommand'))
       .addBooleanOption(option => option.setName('ephemeral')
-        .setDescription('Set to "True" to show the response only to you')))
+        .setDescription(t('en-US', 'counting', 'ephemeralOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('counting', 'ephemeralOption'))))
     .addSubcommand(subcommand => subcommand
       .setName('reset')
-      .setDescription('Reset the counting channel!')
+      .setDescription(t('en-US', 'counting', 'resetSubcommand'))
       .addIntegerOption(option => option
-        .setDescription('The number to set the channel to')
+        .setDescription(t('en-US', 'counting', 'numberOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('counting', 'numberOption'))
         .setName('number'))
       .addBooleanOption(option => option
         .setName('purge')
-        .setDescription('Set to "True" to start completely fresh'))
+        .setDescription(t('en-US', 'counting', 'purgeOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('counting', 'purgeOption')))
       .addStringOption(option => option
-        .setDescription('What kind of counting game?')
+        .setDescription(t('en-US', 'counting', 'typeOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('counting', 'typeOption'))
         .setName('type')
         .addChoices(
           { name: 'Hardcore', value: 'HARDCORE' },
@@ -659,25 +643,24 @@ export const counting: SlashCommandBeta = {
         )))
     .addSubcommand(subcommand => subcommand
       .setName('end')
-      .setDescription('End the counting game!')),
+      .setDescription(t('en-US', 'counting', 'endSubcommand'))),
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
+    const locale = await getLocale(interaction, 'counting');
     const ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined;
     await interaction.deferReply({ flags: ephemeral });
     const command = interaction.options.getSubcommand();
-    let response = { content: 'This command has not been setup yet!' } as InteractionEditReplyOptions;
+    let response = { content: t(locale, 'counting', 'notSetupYet') } as InteractionEditReplyOptions;
     if (command === 'setup') {
-      // Check if the user can manage the channel role
       if (!await checkChannelPermissions(
         (interaction.channel as TextChannel),
         [
           'ManageChannel' as PermissionResolvable,
         ],
       )) {
-        // log.debug(`${PREFIX} bot does NOT has permission to post in !`);
         return interaction.editReply({
           embeds: [embedTemplate()
-            .setTitle('You do not have permission to use this command!')
+            .setTitle(t(locale, 'counting', 'noPermissionError'))
             .setColor(Colors.Red)],
         });
       }
@@ -687,23 +670,22 @@ export const counting: SlashCommandBeta = {
         0,
         false,
         true,
+        locale,
       );
     }
     if (command === 'scores') {
       response = await countingScores(interaction);
     }
     if (command === 'reset') {
-      // Check if the user can manage the channel role
       if (!await checkChannelPermissions(
         (interaction.channel as TextChannel),
         [
           'ManageChannel' as PermissionResolvable,
         ],
       )) {
-        // log.debug(`${PREFIX} bot does NOT has permission to post in !`);
         return interaction.editReply({
           embeds: [embedTemplate()
-            .setTitle('You do not have permission to use this command!')
+            .setTitle(t(locale, 'counting', 'noPermissionError'))
             .setColor(Colors.Red)],
         });
       }
