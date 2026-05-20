@@ -10,11 +10,11 @@ import {
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import commandContext from '../../utils/context';
-// import log from '../../../global/utils/log'; // eslint-disable-line no-unused-vars
+import { t, getLocale, getCommandLocalizations } from '../../../i18n/index';
 
 const F = f(__filename);
 
-const reminderDict = {
+const reminderDict: Record<string, [string, string]> = {
   [`${env.CHANNEL_ANNOUNCEMENTS}`]: [
     'EmbedTitle',
     'EmbedDescription',
@@ -23,71 +23,45 @@ const reminderDict = {
     'EmbedTitle',
     'EmbedDescription',
   ],
-  [`${env.CHANNEL_MODHAVEN}`]: [
-    'Keep team talk to #teamtripsit!',
-    'While we love to see people discussing the org, we want to make sure everyone is on the same page. Please keep all team talk to #teamtripsit!',
-  ],
-  [`${env.CHANNEL_TEAMTRIPSIT}`]: [
-    'Keep social talk to #modhaven!',
-    'While we all love to have a good time, we want to keep this channel easy to scan for people to keep up with news and updates. Please keep social talk to #modhaven!',
-  ],
-  // [`${env.CHANNEL_GENERAL}`]: [
-  //   'Keep #general welcoming and move drug talk to #lounge',
-  //   '#general is the first channel new members see. To ensure we make a good impression, we ask that you move all NSFW conversation, including most drug-related talk, to #lounge or the appropriate Backstage channel to ensure a comfortable landing space for new members, thank you!',
-  // ],
-  [`${env.CHANNEL_SANCTUARY}`]: [
-    'Keep #sanctuary slow and positive!',
-    '#sanctuary is a positivity-enforced channel for people currently on substances. Please keep the conversation slow and positive, and remember that we are here to help!',
-  ],
-  // [`${env.CHANNEL_WEBTRIPSIT}`]: [
-  //   'Keep #web-tripsit clear for people who need help!',
-  //   'Reminder: this channel is for people who need immediate assistance or who have questions about harm reduction and safer drug use. To access our social chat channels, consider joining our discord at https://discord.gg/tripsit. Thank you!,',
-  // ],
-  [`${env.CHANNEL_WEBTRIPSIT1}`]: [
-    'Keep #web-tripsit clear for people who need help!',
-    'Reminder: this channel is for people who need immediate assistance or who have questions about harm reduction and safer drug use. To access our social chat channels, consider joining our discord at https://discord.gg/tripsit. Thank you!,',
-  ],
-  [`${env.CHANNEL_WEBTRIPSIT2}`]: [
-    'Keep #web-tripsit clear for people who need help!',
-    'Reminder: this channel is for people who need immediate assistance or who have questions about harm reduction and safer drug use. To access our social chat channels, consider joining our discord at https://discord.gg/tripsit. Thank you!,',
-  ],
+  [`${env.CHANNEL_MODHAVEN}`]: ['modhaven_title', 'modhaven_desc'],
+  [`${env.CHANNEL_TEAMTRIPSIT}`]: ['teamtripsit_title', 'teamtripsit_desc'],
+  [`${env.CHANNEL_SANCTUARY}`]: ['sanctuary_title', 'sanctuary_desc'],
+  [`${env.CHANNEL_WEBTRIPSIT1}`]: ['webtripsit_title', 'webtripsit_desc'],
+  [`${env.CHANNEL_WEBTRIPSIT2}`]: ['webtripsit_title', 'webtripsit_desc'],
 };
 
 export const dReminder: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('reminder')
-    .setDescription('Sends a reminder on what the channel is for!')
+    .setNameLocalizations(getCommandLocalizations('reminder', 'commandName'))
+    .setDescription(t('en-US', 'reminder', 'commandDescription'))
+    .setDescriptionLocalizations(getCommandLocalizations('reminder', 'commandDescription'))
     .setIntegrationTypes([0]),
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
+    const locale = await getLocale(interaction, 'reminder');
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
     if (!interaction.guild) {
-      await interaction.editReply({ content: 'This command can only be used in a server!' });
+      await interaction.editReply({ content: t(locale, 'reminder', 'guildOnlyError') });
       return false;
     }
     if (!interaction.channel || !(interaction.channel instanceof TextChannel)) {
-      await interaction.editReply({ content: 'This command can only be used in a channel!' });
+      await interaction.editReply({ content: t(locale, 'reminder', 'channelOnlyError') });
       return false;
     }
 
-    // const { channelId } = interaction;
-    // log.debug(F, `channelId: ${channelId}`);
     const chanId = (interaction.channel as TextBasedChannel).id;
-    // log.debug(F, `chanId: ${chanId}`);
     const reminderData = reminderDict[chanId];
-    // log.debug(F, `reminderData: ${JSON.stringify(reminderData, null, 2)}`);
     if (!reminderData) {
-      await interaction.editReply({ content: 'This command can only be used in a channel with a reminder!' });
+      await interaction.editReply({ content: t(locale, 'reminder', 'noReminderError') });
       return false;
     }
-    const reminderTitle = reminderData[0];
-    // log.debug(F, `reminderTitle: ${reminderTitle}`);
-    const reminderText = reminderData[1];
-    // log.debug(F, `reminderText: ${reminderText}`);
+    const reminderTitle = t('en-US', 'reminder', reminderData[0]);
+    const reminderText = t('en-US', 'reminder', reminderData[1]);
 
     const reminder = embedTemplate()
       .setColor(Colors.Red)
-      .setTitle(`REMINDER: ${reminderTitle}`)
+      .setTitle(t('en-US', 'reminder', 'embedTitle', { title: reminderTitle }))
       .setDescription(reminderText);
 
     await interaction.channel.send({ embeds: [reminder] });
@@ -96,7 +70,7 @@ export const dReminder: SlashCommand = {
     if (botlog) {
       await botlog.send(`${(interaction.member as GuildMember).displayName} sent a reminder to ${(interaction.channel as TextChannel).name}`);
     }
-    await interaction.editReply({ content: 'Reminder sent!' });
+    await interaction.editReply({ content: t(locale, 'reminder', 'reminderSent') });
     return true;
   },
 };
