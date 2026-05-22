@@ -35,8 +35,24 @@ export async function initI18n(): Promise<void> {
 }
 
 /** Translate a key for the given locale and namespace. Interpolation vars are optional. */
-export function t(locale: string, ns: string, key: string, vars?: Record<string, unknown>): string {
-  return i18next.t(key, { lng: locale, ns, ...vars }) as string;
+export function t(locale: string, ns: string, key: string, vars?: Record<string, unknown>): string;
+/** Translate using a single dot-namespaced reference ("<ns>.<key>", e.g. "drug.description"). */
+export function t(locale: string, ref: string, vars?: Record<string, unknown>): string;
+export function t(
+  locale: string,
+  nsOrRef: string,
+  keyOrVars?: string | Record<string, unknown>,
+  vars?: Record<string, unknown>,
+): string {
+  // Dot-namespaced form: t(locale, "ns.key", vars?)
+  if (typeof keyOrVars !== 'string') {
+    const dot = nsOrRef.indexOf('.');
+    const ns = dot === -1 ? nsOrRef : nsOrRef.slice(0, dot);
+    const key = dot === -1 ? nsOrRef : nsOrRef.slice(dot + 1);
+    return i18next.t(key, { lng: locale, ns, ...keyOrVars }) as string;
+  }
+  // Separate ns + key form: t(locale, ns, key, vars?)
+  return i18next.t(keyOrVars, { lng: locale, ns: nsOrRef, ...vars }) as string;
 }
 
 /**
@@ -81,7 +97,19 @@ export function getAvailableLocales(): string[] {
  * Build a Discord command localization map for a key across all non-default locales.
  * Used when registering slash commands so Discord shows translated names/descriptions.
  */
-export function getCommandLocalizations(ns: string, key: string): Record<string, string> {
+export function getCommandLocalizations(ns: string, key: string): Record<string, string>;
+/** Or pass a single dot-namespaced reference ("<ns>.<key>", e.g. "drug.description"). */
+export function getCommandLocalizations(ref: string): Record<string, string>;
+export function getCommandLocalizations(nsOrRef: string, key?: string): Record<string, string> {
+  // Dot-namespaced form: getCommandLocalizations("ns.key"). First dot is the separator.
+  let ns = nsOrRef;
+  if (key === undefined) {
+    const dot = nsOrRef.indexOf('.');
+    if (dot === -1) return {};
+    ns = nsOrRef.slice(0, dot);
+    key = nsOrRef.slice(dot + 1); // eslint-disable-line no-param-reassign
+  }
+
   const result: Record<string, string> = {};
   if (!fs.existsSync(LOCALES_DIR)) return result;
 
@@ -99,17 +127,4 @@ export function getCommandLocalizations(ns: string, key: string): Record<string,
     }
   });
   return result;
-}
-
-/**
- * Like getCommandLocalizations, but takes a single dot-namespaced reference
- * ("<ns>.<key>", e.g. "drug.string") instead of separate ns and key arguments.
- * Only the first dot is treated as the separator, so keys may contain dots.
- */
-export function getCommandLocalizationsNs(ref: string): Record<string, string> {
-  const dot = ref.indexOf('.');
-  if (dot === -1) return {};
-  const ns = ref.slice(0, dot);
-  const key = ref.slice(dot + 1);
-  return getCommandLocalizations(ns, key);
 }
