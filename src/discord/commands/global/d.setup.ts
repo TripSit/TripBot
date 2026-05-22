@@ -29,7 +29,7 @@ import { paginationEmbed } from '../../utils/pagination';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { profile } from '../../../global/commands/g.learn';
 import {
-  t, getLocale, getCommandLocalizations, getAvailableLocales,
+  t, getLocale, getCommandLocalizations,
 } from '../../../i18n/index';
 
 const F = f(__filename);
@@ -539,17 +539,7 @@ export async function helperButton(
   if (!interaction.member) return;
   // Check that the user has completed the course and wasnt just given the role
 
-  // Get locale from guild data
-  let locale = global.env?.LOCALE ?? 'en';
-  try {
-    const guildData = await global.db.discord_guilds.findUnique({
-      where: { id: interaction.guildId! },
-      select: { locale: true },
-    });
-    if (guildData?.locale) locale = guildData.locale;
-  } catch {
-    // Fall back to default
-  }
+  const locale = global.env?.LOCALE ?? 'en';
 
   const guildData = await db.discord_guilds.upsert({
     where: {
@@ -807,60 +797,6 @@ export async function helperButton(
     });
 }
 
-async function localeGet(
-  interaction: ChatInputCommandInteraction,
-) {
-  const locale = await getLocale(interaction, 'setup');
-  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
-  const guildData = await db.discord_guilds.findUnique({
-    where: { id: interaction.guildId! },
-    select: { locale: true },
-  });
-  if (guildData?.locale) {
-    await interaction.editReply({
-      content: t(locale, 'setup.localeGetReply', { locale: guildData.locale }),
-    });
-  } else {
-    await interaction.editReply({
-      content: t(locale, 'setup.localeGetReplyDefault'),
-    });
-  }
-}
-
-async function localeSet(
-  interaction: ChatInputCommandInteraction,
-) {
-  const locale = await getLocale(interaction, 'setup');
-  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
-  const requestedLocale = interaction.options.getString('locale', true);
-
-  const allValid = getAvailableLocales();
-
-  if (!allValid.includes(requestedLocale)) {
-    await interaction.editReply({
-      content: t(locale, 'setup.localeSetInvalid', {
-        locale: requestedLocale,
-        available: allValid.join(', '),
-      }),
-    });
-    return;
-  }
-
-  // NOTE: getLocale() in src/i18n now ignores discord_guilds.locale and uses
-  // env LOCALE only. This write is currently a no-op for actual translation
-  // resolution — kept only so the value can be re-enabled later if per-guild
-  // locale support returns.
-  await db.discord_guilds.upsert({
-    where: { id: interaction.guildId! },
-    create: { id: interaction.guildId!, locale: requestedLocale },
-    update: { locale: requestedLocale },
-  });
-
-  await interaction.editReply({
-    content: t(locale, 'setup.localeSetReply', { locale: requestedLocale }),
-  });
-}
-
 export const setup: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('setup')
@@ -946,25 +882,7 @@ export const setup: SlashCommand = {
       .setName('help'))
     .addSubcommand(subcommand => subcommand
       .setDescription('Info on how to become a helper')
-      .setName('helper'))
-    .addSubcommandGroup(group => group
-      .setName('locale')
-      .setDescription(t('en-US', 'setup.localeSubgroupDescription'))
-      .setDescriptionLocalizations(getCommandLocalizations('setup.localeSubgroupDescription'))
-      .addSubcommand(sub => sub
-        .setName('get')
-        .setDescription(t('en-US', 'setup.localeGetSubcommand'))
-        .setDescriptionLocalizations(getCommandLocalizations('setup.localeGetSubcommand')))
-      .addSubcommand(sub => sub
-        .setName('set')
-        .setDescription(t('en-US', 'setup.localeSetSubcommand'))
-        .setDescriptionLocalizations(getCommandLocalizations('setup.localeSetSubcommand'))
-        .addStringOption(option => option
-          .setName('locale')
-          .setDescription(t('en-US', 'setup.localeOptionDescription'))
-          .setDescriptionLocalizations(getCommandLocalizations('setup.localeOptionDescription'))
-          .setRequired(true)
-          .setAutocomplete(true)))),
+      .setName('helper')),
   async execute(interaction:ChatInputCommandInteraction) {
     const locale = await getLocale(interaction, 'setup');
     log.info(F, await commandContext(interaction));
@@ -983,14 +901,7 @@ export const setup: SlashCommand = {
       return false;
     }
 
-    const subcommandGroup = interaction.options.getSubcommandGroup(false);
     const command = interaction.options.getSubcommand();
-
-    if (subcommandGroup === 'locale') {
-      if (command === 'get') await localeGet(interaction);
-      else if (command === 'set') await localeSet(interaction);
-      return true;
-    }
 
     if (command === 'applications') {
       await applicationSetup(interaction);
