@@ -100,3 +100,16 @@ export function getCommandLocalizations(ns: string, key: string): Record<string,
   });
   return result;
 }
+
+/**
+ * Like getCommandLocalizations, but takes a single dot-namespaced reference
+ * ("<ns>.<key>", e.g. "drug.string") instead of separate ns and key arguments.
+ * Only the first dot is treated as the separator, so keys may contain dots.
+ */
+export function getCommandLocalizationsNs(ref: string): Record<string, string> {
+  const dot = ref.indexOf('.');
+  if (dot === -1) return {};
+  const ns = ref.slice(0, dot);
+  const key = ref.slice(dot + 1);
+  return getCommandLocalizations(ns, key);
+}
