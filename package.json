@@ -70,8 +70,8 @@
     "@global": "build/src/global",
     "@discord": "build/src/discord",
     "@database": "build/src/prisma",
-    "@db/moodle": "build/src/prisma/moodle/generated",
-    "@db/tripbot": "build/src/prisma/tripbot/generated"
+    "@db/moodle": "src/prisma/moodle/generated",
+    "@db/tripbot": "src/prisma/tripbot/generated"
   },
   "dependencies": {
     "@discordjs/voice": "^0.19.0",
