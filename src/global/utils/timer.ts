@@ -1,12 +1,8 @@
 /* eslint-disable max-len */
 import {
-  experience_category,
-  ticket_status, ticket_type,
-} from '@db/tripbot';
-import axios from 'axios'; // eslint-disable-line
-import { stripIndents } from 'common-tags';
-import {
   ActivityType,
+  CategoryChannel,
+  ChannelType,
   Colors,
   Guild,
   GuildMember,
@@ -14,13 +10,19 @@ import {
   TextChannel,
   ThreadChannel,
 } from 'discord.js';
-import { DateTime } from 'luxon';
 import Parser from 'rss-parser';
+import { DateTime } from 'luxon';
+import axios from 'axios'; // eslint-disable-line
+import { stripIndents } from 'common-tags';
+import {
+  experience_category, experience_type, ticket_status, ticket_type,
+} from '@db/tripbot';
+import updateDb from './updateDb';
 import { checkChannelPermissions } from '../../discord/utils/checkPermissions';
 import { embedTemplate } from '../../discord/utils/embedTemplate';
+import { experience } from './experience';
 import { profile } from '../commands/g.learn';
 import getTripSitStatistics from '../commands/g.tripsitstats';
-import updateDb from './updateDb';
 
 const F = f(__filename);
 
@@ -529,7 +531,6 @@ async function callUptime() { // eslint-disable-line @typescript-eslint/no-unuse
   });
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 async function checkVoice() {
   // This function will run every minute and check every voice channel on the guild
   // If someone satisfies the following conditions, they will be awarded voice exp
@@ -554,7 +555,6 @@ async function checkVoice() {
   // log.info('voiceExp', 'Checking voice channels...');
   (async () => {
     // Define each category type and the category channel id
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const categoryDefs = [
       { category: 'GENERAL' as experience_category, id: env.CATEGORY_CAMPGROUND },
       { category: 'GENERAL' as experience_category, id: env.CATEGORY_VOICE },
@@ -565,69 +565,69 @@ async function checkVoice() {
     ];
 
     // For each of the above types, check each voice channel in the category
-    //     categoryDefs.forEach(async categoryDef => {
-    //       const category = await discordClient.channels.fetch(categoryDef.id) as CategoryChannel;
-    //       category.children.cache.forEach(async channel => {
-    //         if (channel.type === ChannelType.GuildVoice
-    //         && channel.id !== env.CHANNEL_CAMPFIRE
-    //         /* && channel.members.size > 1 */) { // For testing
-    //           // Check to see if the people in the channel meet the right requirements
-    //           if (channel.members.size < 1) {
-    //             return;
-    //           }
-    //           // log.info('voiceExp', `${channel.name} has ${channel.members.size} people in it`);
-    //           const humansInChat = channel.members.filter(member => {
-    //             if (member.user.bot) {
-    //               // log.info('voiceExp', `${member.displayName} is a bot`);
-    //               return false;
-    //             }
-    //             if (member.voice.selfDeaf) {
-    //               // log.info('voiceExp', `${member.displayName} is self deafened`);
-    //               return false;
-    //             }
-    //             if (member.voice.serverDeaf) {
-    //               // log.info('voiceExp', `${member.displayName} is server deafened`);
-    //               return false;
-    //             }
-    //             if (member.voice.selfMute) {
-    //               // log.info('voiceExp', `${member.displayName} is self muted`);
-    //               return false;
-    //             }
-    //             if (member.voice.serverMute) {
-    //               // log.info('voiceExp', `${member.displayName} is server muted`);
-    //               return false;
-    //             }
-    //             // if (member.voice.streaming) {
-    //             //   // log.info('voiceExp', `${member.displayName} is streaming`);
-    //             //   return false;
-    //             // }
-    //             if (member.voice.suppress) {
-    //               // log.info('voiceExp', `${member.displayName} is suppressed`);
-    //               return false;
-    //             }
-    //             if (member.voice.channel?.type === ChannelType.GuildStageVoice) {
-    //               // log.info('voiceExp', `${member.displayName} is in a stage channel`);
-    //               return false;
-    //             }
-    //             if (member.roles.cache.has(env.ROLE_NEEDS_HELP)) {
-    //               // log.info('voiceExp', `${member.displayName} has the NeedsHelp role`);
-    //               return false;
-    //             }
-    //             return !(channel.members.size < 2 && env.NODE_ENV === 'production');
-    //           });
-    //           // log.info('voiceExp', `${channel.name} has ${humansInChat.size} people actively chatting in it`);
-    //           if ((env.NODE_ENV === 'production' && humansInChat && humansInChat.size > 1)
-    //           || (env.NODE_ENV !== 'production' && humansInChat && humansInChat.size > 0)) {
-    //             // log.info('voiceExp', `Attempting to give experience to ${humansInChat.size} people in ${channel.name}: ${humansInChat.map(member => member.displayName).join(', ')}`);
-    //             // For each human in chat, check if they have been awarded voice exp in the last 5 minutes
-    //             // If they have not, award them voice exp
-    //             humansInChat.forEach(async member => {
-    //               await experience(member, categoryDef.category, 'VOICE' as experience_type, channel);
-    //             });
-    //           }
-    //         }
-    //       });
-    //     });
+    categoryDefs.forEach(async categoryDef => {
+      const category = await discordClient.channels.fetch(categoryDef.id) as CategoryChannel;
+      category.children.cache.forEach(async channel => {
+        if (channel.type === ChannelType.GuildVoice
+        && channel.id !== env.CHANNEL_CAMPFIRE
+        /* && channel.members.size > 1 */) { // For testing
+          // Check to see if the people in the channel meet the right requirements
+          if (channel.members.size < 1) {
+            return;
+          }
+          // log.info('voiceExp', `${channel.name} has ${channel.members.size} people in it`);
+          const humansInChat = channel.members.filter(member => {
+            if (member.user.bot) {
+              // log.info('voiceExp', `${member.displayName} is a bot`);
+              return false;
+            }
+            if (member.voice.selfDeaf) {
+              // log.info('voiceExp', `${member.displayName} is self deafened`);
+              return false;
+            }
+            if (member.voice.serverDeaf) {
+              // log.info('voiceExp', `${member.displayName} is server deafened`);
+              return false;
+            }
+            if (member.voice.selfMute) {
+              // log.info('voiceExp', `${member.displayName} is self muted`);
+              return false;
+            }
+            if (member.voice.serverMute) {
+              // log.info('voiceExp', `${member.displayName} is server muted`);
+              return false;
+            }
+            // if (member.voice.streaming) {
+            //   // log.info('voiceExp', `${member.displayName} is streaming`);
+            //   return false;
+            // }
+            if (member.voice.suppress) {
+              // log.info('voiceExp', `${member.displayName} is suppressed`);
+              return false;
+            }
+            if (member.voice.channel?.type === ChannelType.GuildStageVoice) {
+              // log.info('voiceExp', `${member.displayName} is in a stage channel`);
+              return false;
+            }
+            if (member.roles.cache.has(env.ROLE_NEEDS_HELP)) {
+              // log.info('voiceExp', `${member.displayName} has the NeedsHelp role`);
+              return false;
+            }
+            return !(channel.members.size < 2 && env.NODE_ENV === 'production');
+          });
+          // log.info('voiceExp', `${channel.name} has ${humansInChat.size} people actively chatting in it`);
+          if ((env.NODE_ENV === 'production' && humansInChat && humansInChat.size > 1)
+          || (env.NODE_ENV !== 'production' && humansInChat && humansInChat.size > 0)) {
+            // log.info('voiceExp', `Attempting to give experience to ${humansInChat.size} people in ${channel.name}: ${humansInChat.map(member => member.displayName).join(', ')}`);
+            // For each human in chat, check if they have been awarded voice exp in the last 5 minutes
+            // If they have not, award them voice exp
+            humansInChat.forEach(async member => {
+              await experience(member, categoryDef.category, 'VOICE' as experience_type, channel);
+            });
+          }
+        }
+      });
+    });
   })();
 }
 
@@ -1055,7 +1055,6 @@ async function checkMoodle() { // eslint-disable-line
   log.info(F, `${inactiveHelpers.length} inactive helpers have been pruned and notified.`);
 } */
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 async function undoExpiredBans() {
   const expiredBans = await db.user_actions.findMany({
     where: {
@@ -1121,7 +1120,6 @@ async function undoExpiredBans() {
   }));
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 async function monthlySessionStats() {
   const now = new Date();
   // Get the last day of current month (handles 28, 29, 30, or 31 days automatically)
@@ -1144,7 +1142,6 @@ async function monthlySessionStats() {
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 async function checkBirthdays() {
   try {
     // Get today's date in MM-DD format for comparison
@@ -1233,34 +1230,30 @@ async function runTimer() {
    * This function uses setTimeout so that it can finish running before the next loop
    */
   discordClient.user?.setActivity('with a test kit', { type: ActivityType.Playing });
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const seconds5 = 1000 * 5;
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const seconds10 = 1000 * 10;
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const seconds30 = 1000 * 30;
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const seconds60 = 1000 * 60;
   // const minutes5 = 1000 * 60 * 5;
   const hours24 = 1000 * 60 * 60 * 24;
   const hours48 = 1000 * 60 * 60 * 48;
 
   const timers = [
-    // { callback: checkReminders, interval: env.NODE_ENV === 'production' ? seconds10 : seconds5 },
-    // { callback: checkTickets, interval: env.NODE_ENV === 'production' ? seconds60 : seconds10 },
-    // { callback: checkMindsets, interval: env.NODE_ENV === 'production' ? seconds60 : seconds5 },
-    // { callback: callUptime, interval: env.NODE_ENV === 'production' ? seconds60 : seconds5 },
-    // { callback: checkRss, interval: env.NODE_ENV === 'production' ? seconds30 : seconds5 },
-    // { callback: checkVoice, interval: env.NODE_ENV === 'production' ? seconds60 : seconds5 },
-    /// / { callback: changeStatus, interval: env.NODE_ENV === 'production' ? hours24 : seconds5 },
-    /// / { callback: checkStats, interval: env.NODE_ENV === 'production' ? minutes5 : seconds5 },
-    // { callback: checkMoodle, interval: env.NODE_ENV === 'production' ? seconds60 : seconds5 },
-    /// / { callback: checkLpm, interval: env.NODE_ENV === 'production' ? seconds10 : seconds5 },
+    { callback: checkReminders, interval: env.NODE_ENV === 'production' ? seconds10 : seconds5 },
+    { callback: checkTickets, interval: env.NODE_ENV === 'production' ? seconds60 : seconds10 },
+    { callback: checkMindsets, interval: env.NODE_ENV === 'production' ? seconds60 : seconds5 },
+    { callback: callUptime, interval: env.NODE_ENV === 'production' ? seconds60 : seconds5 },
+    { callback: checkRss, interval: env.NODE_ENV === 'production' ? seconds30 : seconds5 },
+    { callback: checkVoice, interval: env.NODE_ENV === 'production' ? seconds60 : seconds5 },
+    // { callback: changeStatus, interval: env.NODE_ENV === 'production' ? hours24 : seconds5 },
+    // { callback: checkStats, interval: env.NODE_ENV === 'production' ? minutes5 : seconds5 },
+    { callback: checkMoodle, interval: env.NODE_ENV === 'production' ? seconds60 : seconds5 },
+    // { callback: checkLpm, interval: env.NODE_ENV === 'production' ? seconds10 : seconds5 },
     { callback: updateDb, interval: env.NODE_ENV === 'production' ? hours24 : hours48 },
-    /// / { callback: pruneInactiveHelpers, interval: env.NODE_ENV === 'production' ? hours48 : seconds60 },
-    // { callback: undoExpiredBans, interval: env.NODE_ENV === 'production' ? hours24 / 2 : seconds10 },
-    // { callback: monthlySessionStats, interval: env.NODE_ENV === 'production' ? hours24 : hours24 / 3 }, // 8 hours on dev
-    // { callback: checkBirthdays, interval: env.NODE_ENV === 'production' ? hours24 : hours24 / 3 }, // 8 hours on dev
+    // { callback: pruneInactiveHelpers, interval: env.NODE_ENV === 'production' ? hours48 : seconds60 },
+    { callback: undoExpiredBans, interval: env.NODE_ENV === 'production' ? hours24 / 2 : seconds10 },
+    { callback: monthlySessionStats, interval: env.NODE_ENV === 'production' ? hours24 : hours24 / 3 }, // 8 hours on dev
+    { callback: checkBirthdays, interval: env.NODE_ENV === 'production' ? hours24 : hours24 / 3 }, // 8 hours on dev
   ];
 
   timers.forEach(timer => {
