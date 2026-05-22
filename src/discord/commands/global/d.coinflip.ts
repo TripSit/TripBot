@@ -12,13 +12,13 @@ const F = f(__filename);
 export const dCoinflip: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('coinflip')
-    .setNameLocalizations(getCommandLocalizations('coinflip', 'commandName'))
+    .setNameLocalizations(getCommandLocalizations('coinflip.commandName'))
     .setDescription('Flip a coin')
-    .setDescriptionLocalizations(getCommandLocalizations('coinflip', 'commandDescription'))
+    .setDescriptionLocalizations(getCommandLocalizations('coinflip.commandDescription'))
     .setIntegrationTypes([0])
     .addBooleanOption(option => option.setName('ephemeral')
-      .setDescription(t('en', 'coinflip', 'ephemeralOption'))
-      .setDescriptionLocalizations(getCommandLocalizations('coinflip', 'ephemeralOption'))) as SlashCommandBuilder,
+      .setDescription(t('en', 'coinflip.ephemeralOption'))
+      .setDescriptionLocalizations(getCommandLocalizations('coinflip.ephemeralOption'))) as SlashCommandBuilder,
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
     const locale = await getLocale(interaction, 'coinflip');

@@ -24,26 +24,26 @@ function createGameEmbed(
   locale: string,
 ): EmbedBuilder {
   const embed = new EmbedBuilder()
-    .setTitle(t(locale, 'tictactoe', 'gameTitle'))
+    .setTitle(t(locale, 'tictactoe.gameTitle'))
     .setColor(Colors.Green);
 
   let description = `${player1Name} (❌) vs ${player2Name} (⭕)\n\n`;
 
   if (game.isGameOver) {
     if (game.winner === 'tie') {
-      description += `\n🤝✨ **${t(locale, 'tictactoe', 'tie')}** ✨🤝\n`;
+      description += `\n🤝✨ **${t(locale, 'tictactoe.tie')}** ✨🤝\n`;
       embed.setColor(Colors.Yellow);
     } else if (game.winner !== 'tie') {
       const winnerName = game.winner === 'X' ? player1Name : player2Name;
       const winnerSymbol = game.winner === 'X' ? '❌' : '⭕';
       // eslint-disable-next-line max-len
-      description += `\n🏆🎉${winnerSymbol} **${winnerName.toUpperCase()} ${t(locale, 'tictactoe', 'wins')}** ${winnerSymbol}🎉🏆`;
+      description += `\n🏆🎉${winnerSymbol} **${winnerName.toUpperCase()} ${t(locale, 'tictactoe.wins')}** ${winnerSymbol}🎉🏆`;
       embed.setColor(Colors.Green);
     }
   } else {
     const currentPlayerName = game.currentPlayer === 'X' ? player1Name : player2Name;
     const currentSymbol = game.currentPlayer === 'X' ? '❌' : '⭕';
-    description += `\n${currentSymbol} **${currentPlayerName}${t(locale, 'tictactoe', 'turnSuffix')}**`;
+    description += `\n${currentSymbol} **${currentPlayerName}${t(locale, 'tictactoe.turnSuffix')}**`;
   }
 
   embed.setDescription(description);
@@ -81,9 +81,9 @@ function createGameButtons(game: TicTacToeGame): ActionRowBuilder<ButtonBuilder>
 export const dTicTacToe: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('tictactoe')
-    .setNameLocalizations(getCommandLocalizations('tictactoe', 'commandName'))
+    .setNameLocalizations(getCommandLocalizations('tictactoe.commandName'))
     .setDescription('Start a tic-tac-toe game')
-    .setDescriptionLocalizations(getCommandLocalizations('tictactoe', 'commandDescription'))
+    .setDescriptionLocalizations(getCommandLocalizations('tictactoe.commandDescription'))
     .setContexts([0, 1, 2])
     .setIntegrationTypes([0, 1])
     .addUserOption(option => option
@@ -97,7 +97,7 @@ export const dTicTacToe: SlashCommand = {
 
     if (!opponent) {
       await interaction.reply({
-        content: t(locale, 'tictactoe', 'invalidOpponent'),
+        content: t(locale, 'tictactoe.invalidOpponent'),
         flags: MessageFlags.Ephemeral,
       });
       return false;
@@ -105,7 +105,7 @@ export const dTicTacToe: SlashCommand = {
 
     if (opponent.id === interaction.user.id) {
       await interaction.reply({
-        content: t(locale, 'tictactoe', 'cannotPlayYourself'),
+        content: t(locale, 'tictactoe.cannotPlayYourself'),
         flags: MessageFlags.Ephemeral,
       });
       return false;
@@ -113,7 +113,7 @@ export const dTicTacToe: SlashCommand = {
 
     if (opponent.bot) {
       await interaction.reply({
-        content: t(locale, 'tictactoe', 'cannotPlayBot'),
+        content: t(locale, 'tictactoe.cannotPlayBot'),
         flags: MessageFlags.Ephemeral,
       });
       return false;
@@ -138,7 +138,7 @@ export const dTicTacToe: SlashCommand = {
 
     if (!collector) {
       await interaction.editReply({
-        content: t(locale, 'tictactoe', 'collectorError'),
+        content: t(locale, 'tictactoe.collectorError'),
         embeds: [],
         components: [],
       });
@@ -191,8 +191,8 @@ export const dTicTacToe: SlashCommand = {
       if (!game.isGameOver) {
         collector.removeAllListeners();
         const timeoutEmbed = new EmbedBuilder()
-          .setTitle(t(locale, 'tictactoe', 'timeoutTitle'))
-          .setDescription(t(locale, 'tictactoe', 'timeoutDescription'))
+          .setTitle(t(locale, 'tictactoe.timeoutTitle'))
+          .setDescription(t(locale, 'tictactoe.timeoutDescription'))
           .setColor(Colors.Red);
 
         await interaction.editReply({

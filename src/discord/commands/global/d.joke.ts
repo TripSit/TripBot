@@ -24,12 +24,12 @@ type Double = {
 export const dJoke: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('joke')
-    .setNameLocalizations(getCommandLocalizations('joke', 'commandName'))
+    .setNameLocalizations(getCommandLocalizations('joke.commandName'))
     .setDescription('Random jokes')
-    .setDescriptionLocalizations(getCommandLocalizations('joke', 'commandDescription'))
+    .setDescriptionLocalizations(getCommandLocalizations('joke.commandDescription'))
     .setIntegrationTypes([0])
     .addBooleanOption(option => option.setName('ephemeral')
-      .setDescription(t('en-US', 'joke', 'ephemeralOption'))) as SlashCommandBuilder,
+      .setDescription(t('en-US', 'joke.ephemeralOption'))) as SlashCommandBuilder,
 
   async execute(interaction) {
     log.info(F, await commandContext(interaction));

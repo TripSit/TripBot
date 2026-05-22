@@ -13,12 +13,12 @@ const F = f(__filename);
 export const dFact: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('fact')
-    .setNameLocalizations(getCommandLocalizations('fact', 'commandName'))
+    .setNameLocalizations(getCommandLocalizations('fact.commandName'))
     .setDescription('Random fact')
-    .setDescriptionLocalizations(getCommandLocalizations('fact', 'commandDescription'))
+    .setDescriptionLocalizations(getCommandLocalizations('fact.commandDescription'))
     .setIntegrationTypes([0])
     .addBooleanOption(option => option.setName('ephemeral')
-      .setDescription(t('en-US', 'fact', 'ephemeralOption'))) as SlashCommandBuilder,
+      .setDescription(t('en-US', 'fact.ephemeralOption'))) as SlashCommandBuilder,
 
   async execute(interaction) {
     log.info(F, await commandContext(interaction));

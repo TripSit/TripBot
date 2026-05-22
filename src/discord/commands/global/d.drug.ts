@@ -45,8 +45,8 @@ async function addAliases(
   locale: string,
 ):Promise<EmbedBuilder> {
   if (drugData.aliases) {
-    const aliases = `${t(locale, 'drug', 'aliases')}: ${drugData.aliases.join(', ')}\n\n`;
-    embed.addFields({ name: t(locale, 'drug', 'aliases'), value: stripIndents`${aliases}`, inline: false });
+    const aliases = `${t(locale, 'drug.aliases')}: ${drugData.aliases.join(', ')}\n\n`;
+    embed.addFields({ name: t(locale, 'drug.aliases'), value: stripIndents`${aliases}`, inline: false });
   }
   return embed;
 }
@@ -60,7 +60,7 @@ async function addInteractions(
     const dangerInt = drugData.interactions.filter(i => i.status === 'Dangerous');
     const dangerNames = dangerInt.map(i => i.name);
     if (dangerNames.length > 0) {
-      embed.addFields({ name: t(locale, 'drug', 'dangerousInteractions'), value: stripIndents`${dangerNames.join(', ')}`, inline: false }); // eslint-disable-line
+      embed.addFields({ name: t(locale, 'drug.dangerousInteractions'), value: stripIndents`${dangerNames.join(', ')}`, inline: false }); // eslint-disable-line
     }
   }
   return embed;
@@ -74,12 +74,12 @@ async function addClasses(
   let classInfo = '';
   if (drugData.classes) {
     if (drugData.classes.chemical) {
-      classInfo += `${t(locale, 'drug', 'chemical', { value: drugData.classes.chemical })}\n`;
+      classInfo += `${t(locale, 'drug.chemical', { value: drugData.classes.chemical })}\n`;
     }
     if (drugData.classes.psychoactive) {
-      classInfo += `${t(locale, 'drug', 'physical', { value: drugData.classes.psychoactive })}\n`;
+      classInfo += `${t(locale, 'drug.physical', { value: drugData.classes.psychoactive })}\n`;
     }
-    embed.addFields({ name: t(locale, 'drug', 'classHeader'), value: stripIndents`${classInfo}`, inline: true });
+    embed.addFields({ name: t(locale, 'drug.classHeader'), value: stripIndents`${classInfo}`, inline: true });
   }
   return embed;
 }
@@ -93,7 +93,7 @@ async function addCrossTolerance(
     const crossToleranceMap = drugData.crossTolerances
       .map(crossTolerance => crossTolerance[0].toUpperCase() + crossTolerance.substring(1));
 
-    embed.addFields({ name: t(locale, 'drug', 'crossTolerances'), value: stripIndents`${crossToleranceMap.join(', ')}`, inline: true }); // eslint-disable-line
+    embed.addFields({ name: t(locale, 'drug.crossTolerances'), value: stripIndents`${crossToleranceMap.join(', ')}`, inline: true }); // eslint-disable-line
   }
   return embed;
 }
@@ -106,7 +106,7 @@ async function addAddictions(
   if (drugData.addictionPotential) {
     const addPot = drugData.addictionPotential.toString();
     const capitalized = addPot[0].toUpperCase() + addPot.substring(1);
-    embed.addFields({ name: t(locale, 'drug', 'addictionPotential'), value: stripIndents`${capitalized}`, inline: true });
+    embed.addFields({ name: t(locale, 'drug.addictionPotential'), value: stripIndents`${capitalized}`, inline: true });
   }
   return embed;
 }
@@ -117,7 +117,7 @@ async function addReagents(
   locale: string,
 ):Promise<EmbedBuilder> {
   if (drugData.reagents) {
-    embed.addFields({ name: t(locale, 'drug', 'reagents'), value: stripIndents`${drugData.reagents.toString()}`, inline: false }); // eslint-disable-line max-len
+    embed.addFields({ name: t(locale, 'drug.reagents'), value: stripIndents`${drugData.reagents.toString()}`, inline: false }); // eslint-disable-line max-len
   }
   return embed;
 }
@@ -131,17 +131,17 @@ async function addTolerances(
     let toleranceString = '';
     if (drugData.tolerance.full) {
       const tolFullCap = drugData.tolerance.full[0].toUpperCase() + drugData.tolerance.full.substring(1);
-      toleranceString += `${t(locale, 'drug', 'toleranceFull', { value: tolFullCap })}\n`;
+      toleranceString += `${t(locale, 'drug.toleranceFull', { value: tolFullCap })}\n`;
     }
     if (drugData.tolerance.half) {
       const tolHalfCap = drugData.tolerance.half[0].toUpperCase() + drugData.tolerance.half.substring(1);
-      toleranceString += `${t(locale, 'drug', 'toleranceHalf', { value: tolHalfCap })}\n`;
+      toleranceString += `${t(locale, 'drug.toleranceHalf', { value: tolHalfCap })}\n`;
     }
     if (drugData.tolerance.zero) {
       const tolZeroCap = drugData.tolerance.zero[0].toUpperCase() + drugData.tolerance.zero.substring(1);
-      toleranceString += `${t(locale, 'drug', 'toleranceZero', { value: tolZeroCap })}\n`;
+      toleranceString += `${t(locale, 'drug.toleranceZero', { value: tolZeroCap })}\n`;
     }
-    embed.addFields({ name: t(locale, 'drug', 'tolerance'), value: stripIndents`${toleranceString}`, inline: true });
+    embed.addFields({ name: t(locale, 'drug.tolerance'), value: stripIndents`${toleranceString}`, inline: true });
   }
   return embed;
 }
@@ -154,7 +154,7 @@ async function addToxicities(
   if (drugData.toxicity) {
     const toxicityMap = drugData.toxicity.map(toxicity => toxicity[0].toUpperCase() + toxicity.substring(1));
     const toxicityString = toxicityMap.join(', ');
-    embed.addFields({ name: t(locale, 'drug', 'toxicity'), value: stripIndents`${toxicityString}`, inline: true });
+    embed.addFields({ name: t(locale, 'drug.toxicity'), value: stripIndents`${toxicityString}`, inline: true });
     // log.debug('Added toxicity C');
   }
   return embed;
@@ -166,7 +166,7 @@ async function addExperiences(
   locale: string,
 ):Promise<EmbedBuilder> {
   if (drugData.experiencesUrl) {
-    embed.addFields({ name: t(locale, 'drug', 'links'), value: stripIndents`[${t(locale, 'drug', 'erowid')}](${drugData.experiencesUrl.toString()})`, inline: false }); // eslint-disable-line max-len
+    embed.addFields({ name: t(locale, 'drug.links'), value: stripIndents`[${t(locale, 'drug.erowid')}](${drugData.experiencesUrl.toString()})`, inline: false }); // eslint-disable-line max-len
   }
   return embed;
 }
@@ -222,7 +222,7 @@ async function addDurations(
           durationString += `${d.name}: ${d.value}\n`;
         });
         embed.addFields({
-          name: t(locale, 'drug', 'duration', { roa: roaName }),
+          name: t(locale, 'drug.duration', { roa: roaName }),
           value: stripIndents`${durationString}`,
           inline: true,
         }); // eslint-disable-line max-len
@@ -269,7 +269,7 @@ async function addDosages(
           roaInfo.dosage.forEach(d => {
             dosageString += `${d.name}: ${d.value}\n`;
           });
-          embed.addFields({ name: t(locale, 'drug', 'dosage', { roa: roaName }), value: stripIndents`${dosageString}`, inline: true });
+          embed.addFields({ name: t(locale, 'drug.dosage', { roa: roaName }), value: stripIndents`${dosageString}`, inline: true });
           dosageColumns += 1;
         }
       }
@@ -304,8 +304,8 @@ export async function getDrugInfo(
   const drugData = await drug(drugName);
 
   if (!drugData) {
-    embed.setTitle(t(locale, 'drug', 'notFound', { name: drugName }));
-    embed.setDescription(stripIndents`${t(locale, 'drug', 'notFoundDesc')}`);
+    embed.setTitle(t(locale, 'drug.notFound', { name: drugName }));
+    embed.setDescription(stripIndents`${t(locale, 'drug.notFoundDesc')}`);
     // If this happens then something went wrong with the auto-complete
     return { embeds: [embed] };
   }
@@ -322,7 +322,7 @@ export async function getDrugInfo(
   // log.debug(F, `section: ${section} | drugName: ${drugName} | drugData: ${JSON.stringify(drugData, null, 2)}`);
 
   embed.setColor(Colors.Purple);
-  embed.setTitle(t(locale, 'drug', 'title', { name: drugData.name }));
+  embed.setTitle(t(locale, 'drug.title', { name: drugData.name }));
   // embed.setURL(`https://wiki.tripsit.me/wiki/${drugName.replaceAll(' ', '_')}`);
   embed.setURL(drugData.url);
 
@@ -409,7 +409,7 @@ export async function getDrugInfo(
           roaInfo.dosage.forEach(d => {
             dosageString += `${d.name}: ${d.value}\n`;
           });
-          embed.addFields({ name: t(locale, 'drug', 'dosage', { roa: roaName }), value: stripIndents`${dosageString}`, inline: true });
+          embed.addFields({ name: t(locale, 'drug.dosage', { roa: roaName }), value: stripIndents`${dosageString}`, inline: true });
           embedRowColumns += 1;
         }
       }
@@ -469,19 +469,19 @@ export async function getDrugInfo(
 export const dDrug: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('drug')
-    .setNameLocalizations(getCommandLocalizations('drug', 'commandName'))
+    .setNameLocalizations(getCommandLocalizations('drug.commandName'))
     .setDescription('Check substance information')
     .setDescriptionLocalizations(getCommandLocalizations('drug','commandDescription'))
     .setContexts([0, 1, 2])
     .setIntegrationTypes([0, 1])
     .addStringOption(option => option.setName('substance')
       .setDescription('Pick a substance!')
-      .setDescriptionLocalizations(getCommandLocalizations('drug', 'substanceOption'))
+      .setDescriptionLocalizations(getCommandLocalizations('drug.substanceOption'))
       .setRequired(true)
       .setAutocomplete(true))
     .addStringOption(option => option.setName('section')
       .setDescription('What section of the info to respond with? (Defaults to all)')
-      .setDescriptionLocalizations(getCommandLocalizations('drug', 'sectionOption'))
+      .setDescriptionLocalizations(getCommandLocalizations('drug.sectionOption'))
       .addChoices(
         { name: 'All', value: 'all' },
         { name: 'Dosage', value: 'dosage' },
@@ -489,7 +489,7 @@ export const dDrug: SlashCommand = {
       ))
     .addBooleanOption(option => option.setName('ephemeral')
       .setDescription('Set to "True" to show the response only to you')
-      .setDescriptionLocalizations(getCommandLocalizations('drug', 'ephemeralOption'))) as SlashCommandBuilder,
+      .setDescriptionLocalizations(getCommandLocalizations('drug.ephemeralOption'))) as SlashCommandBuilder,
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
     const ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined;

@@ -89,7 +89,7 @@ async function dReagents(interaction: ChatInputCommandInteraction): Promise<bool
 async function dCrisis(interaction: ChatInputCommandInteraction): Promise<boolean> {
   const locale = await getLocale(interaction, 'hr');
   const emsInfo = await crisis();
-  const embed = embedTemplate().setTitle(t(locale, 'hr', 'crisisTitle'));
+  const embed = embedTemplate().setTitle(t(locale, 'hr.crisisTitle'));
   emsInfo.forEach(entry => {
     const country = entry.country ? `(${entry.country})` : '';
     const website = entry.website ? `\n[Website](${entry.website})` : '';
@@ -98,7 +98,7 @@ async function dCrisis(interaction: ChatInputCommandInteraction): Promise<boolea
     const text = entry.text ? `\nText: ${entry.text}` : '';
     embed.addFields({
       name: `${entry.name} ${country}`,
-      value: stripIndents`${website}${webchat}${phone}${text}` || t(locale, 'hr', 'noDetailsAvailable'),
+      value: stripIndents`${website}${webchat}${phone}${text}` || t(locale, 'hr.noDetailsAvailable'),
       inline: true,
     });
   });
@@ -119,8 +119,8 @@ async function dGuides(interaction: ChatInputCommandInteraction): Promise<boolea
     .map(element => `[${element.split('_').join(' ')}](https://wiki.tripsit.me/wiki/${element})`)
     .join('\n');
   const embed = embedTemplate()
-    .setTitle(t(locale, 'hr', 'wikiGuidesTitle'))
-    .setDescription(t(locale, 'hr', 'wikiGuidesDescription', { message }));
+    .setTitle(t(locale, 'hr.wikiGuidesTitle'))
+    .setDescription(t(locale, 'hr.wikiGuidesDescription', { message }));
   try {
     await interaction.editReply({ embeds: [embed] });
     return true;
@@ -135,7 +135,7 @@ async function dWarmline(interaction: ChatInputCommandInteraction): Promise<bool
   const locale = await getLocale(interaction, 'hr');
   const emsInfo = await warmline();
   const embed = embedTemplate()
-    .setTitle(t(locale, 'hr', 'warmlineTitle'));
+    .setTitle(t(locale, 'hr.warmlineTitle'));
   emsInfo.forEach(entry => {
     const country = entry.country ? `(${entry.country})` : '';
     const website = entry.website ? `\n[Website](${entry.website})` : '';
@@ -144,7 +144,7 @@ async function dWarmline(interaction: ChatInputCommandInteraction): Promise<bool
     const text = entry.text ? `\nText: ${entry.text}` : '';
     embed.addFields({
       name: `${entry.name} ${country}`,
-      value: stripIndents`${website}${webchat}${phone}${text}` || t(locale, 'hr', 'noDetailsAvailable'),
+      value: stripIndents`${website}${webchat}${phone}${text}` || t(locale, 'hr.noDetailsAvailable'),
       inline: true,
     });
   });
@@ -161,9 +161,9 @@ async function dWarmline(interaction: ChatInputCommandInteraction): Promise<bool
 async function dDrugChecking(interaction: ChatInputCommandInteraction): Promise<boolean> {
   const locale = await getLocale(interaction, 'hr');
   const embed = embedTemplate()
-    .setTitle(t(locale, 'hr', 'drugCheckingTitle'))
+    .setTitle(t(locale, 'hr.drugCheckingTitle'))
     .setColor(Colors.Blurple)
-    .setDescription(t(locale, 'hr', 'drugCheckingBody'));
+    .setDescription(t(locale, 'hr.drugCheckingBody'));
   try {
     await interaction.editReply({ embeds: [embed] });
     return true;
@@ -178,7 +178,7 @@ async function dTestKits(interaction: ChatInputCommandInteraction): Promise<bool
   const locale = await getLocale(interaction, 'hr');
   const emsInfo = await testkits();
   const embed = embedTemplate()
-    .setTitle(t(locale, 'hr', 'testKitResourcesTitle'));
+    .setTitle(t(locale, 'hr.testKitResourcesTitle'));
   const fieldsPerRow = 3;
   const totalFields = emsInfo.length;
   const rows = Math.ceil(totalFields / fieldsPerRow);
@@ -206,7 +206,7 @@ async function dTestKits(interaction: ChatInputCommandInteraction): Promise<bool
       }
     }
   }
-  embed.setDescription(t(locale, 'hr', 'testKitDescription'));
+  embed.setDescription(t(locale, 'hr.testKitDescription'));
   try {
     await interaction.editReply({ embeds: [embed] });
     return true;
@@ -223,10 +223,10 @@ async function dMushroomInfo(interaction: ChatInputCommandInteraction): Promise<
   const article = 'https://tripsitter.com/magic-mushrooms/average-potency/';
 
   const embed = embedTemplate()
-    .setTitle(t(locale, 'hr', 'mushroomPotencyTitle'))
+    .setTitle(t(locale, 'hr.mushroomPotencyTitle'))
     .setColor(Colors.Green)
-    .setDescription(t(locale, 'hr', 'mushroomPotencyDescription', {
-      disclaimer: t(locale, 'hr', 'mushroomPotencyDisclaimer'),
+    .setDescription(t(locale, 'hr.mushroomPotencyDescription', {
+      disclaimer: t(locale, 'hr.mushroomPotencyDisclaimer'),
       source,
       article,
     }))
@@ -236,7 +236,7 @@ async function dMushroomInfo(interaction: ChatInputCommandInteraction): Promise<
   const components = [new ActionRowBuilder<ButtonBuilder>().addComponents(
     new ButtonBuilder()
       .setCustomId('mushroomPageTwo')
-      .setLabel(t(locale, 'hr', 'mushroomShowVisual'))
+      .setLabel(t(locale, 'hr.mushroomShowVisual'))
       .setStyle(ButtonStyle.Primary),
   )];
 
@@ -261,33 +261,33 @@ async function dMushroomInfo(interaction: ChatInputCommandInteraction): Promise<
 export const dHR = {
   data: new SlashCommandBuilder()
     .setName('hr')
-    .setDescription(t('en-US', 'hr', 'commandDescription'))
-    .setNameLocalizations(getCommandLocalizations('hr', 'commandName'))
-    .setDescriptionLocalizations(getCommandLocalizations('hr', 'commandDescription'))
+    .setDescription(t('en-US', 'hr.commandDescription'))
+    .setNameLocalizations(getCommandLocalizations('hr.commandName'))
+    .setDescriptionLocalizations(getCommandLocalizations('hr.commandDescription'))
     .addSubcommand(sub => sub
       .setName('crisis')
-      .setDescription(t('en-US', 'hr', 'crisisDescription'))
-      .setNameLocalizations(getCommandLocalizations('hr', 'crisisName'))
-      .setDescriptionLocalizations(getCommandLocalizations('hr', 'crisisDescription'))
+      .setDescription(t('en-US', 'hr.crisisDescription'))
+      .setNameLocalizations(getCommandLocalizations('hr.crisisName'))
+      .setDescriptionLocalizations(getCommandLocalizations('hr.crisisDescription'))
       .addBooleanOption(option => option.setName('ephemeral')
-        .setDescription(t('en-US', 'hr', 'ephemeralOption'))
-        .setDescriptionLocalizations(getCommandLocalizations('hr', 'ephemeralOption'))))
+        .setDescription(t('en-US', 'hr.ephemeralOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('hr.ephemeralOption'))))
     .addSubcommand(sub => sub
       .setName('combochart')
-      .setDescription(t('en-US', 'hr', 'combochartDescription'))
-      .setNameLocalizations(getCommandLocalizations('hr', 'combochartName'))
-      .setDescriptionLocalizations(getCommandLocalizations('hr', 'combochartDescription'))
+      .setDescription(t('en-US', 'hr.combochartDescription'))
+      .setNameLocalizations(getCommandLocalizations('hr.combochartName'))
+      .setDescriptionLocalizations(getCommandLocalizations('hr.combochartDescription'))
       .addBooleanOption(option => option.setName('ephemeral')
-        .setDescription(t('en-US', 'hr', 'ephemeralOption'))
-        .setDescriptionLocalizations(getCommandLocalizations('hr', 'ephemeralOption'))))
+        .setDescription(t('en-US', 'hr.ephemeralOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('hr.ephemeralOption'))))
     .addSubcommand(sub => sub
       .setName('breathe')
-      .setDescription(t('en-US', 'hr', 'breatheDescription'))
-      .setNameLocalizations(getCommandLocalizations('hr', 'breatheName'))
-      .setDescriptionLocalizations(getCommandLocalizations('hr', 'breatheDescription'))
+      .setDescription(t('en-US', 'hr.breatheDescription'))
+      .setNameLocalizations(getCommandLocalizations('hr.breatheName'))
+      .setDescriptionLocalizations(getCommandLocalizations('hr.breatheDescription'))
       .addStringOption(option => option.setName('exercise')
-        .setDescription(t('en-US', 'hr', 'exerciseOption'))
-        .setDescriptionLocalizations(getCommandLocalizations('hr', 'exerciseOption'))
+        .setDescription(t('en-US', 'hr.exerciseOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('hr.exerciseOption'))
         .addChoices(
           { name: '1', value: '1' },
           { name: '2', value: '2' },
@@ -295,72 +295,72 @@ export const dHR = {
           { name: '4', value: '4' },
         ))
       .addBooleanOption(option => option.setName('ephemeral')
-        .setDescription(t('en-US', 'hr', 'ephemeralOption'))
-        .setDescriptionLocalizations(getCommandLocalizations('hr', 'ephemeralOption'))))
+        .setDescription(t('en-US', 'hr.ephemeralOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('hr.ephemeralOption'))))
     .addSubcommand(sub => sub
       .setName('guides')
-      .setDescription(t('en-US', 'hr', 'guidesDescription'))
-      .setNameLocalizations(getCommandLocalizations('hr', 'guidesName'))
-      .setDescriptionLocalizations(getCommandLocalizations('hr', 'guidesDescription'))
+      .setDescription(t('en-US', 'hr.guidesDescription'))
+      .setNameLocalizations(getCommandLocalizations('hr.guidesName'))
+      .setDescriptionLocalizations(getCommandLocalizations('hr.guidesDescription'))
       .addBooleanOption(option => option.setName('ephemeral')
-        .setDescription(t('en-US', 'hr', 'ephemeralOption'))
-        .setDescriptionLocalizations(getCommandLocalizations('hr', 'ephemeralOption'))))
+        .setDescription(t('en-US', 'hr.ephemeralOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('hr.ephemeralOption'))))
     .addSubcommand(sub => sub
       .setName('grounding')
-      .setDescription(t('en-US', 'hr', 'groundingDescription'))
-      .setNameLocalizations(getCommandLocalizations('hr', 'groundingName'))
-      .setDescriptionLocalizations(getCommandLocalizations('hr', 'groundingDescription'))
+      .setDescription(t('en-US', 'hr.groundingDescription'))
+      .setNameLocalizations(getCommandLocalizations('hr.groundingName'))
+      .setDescriptionLocalizations(getCommandLocalizations('hr.groundingDescription'))
       .addBooleanOption(option => option.setName('ephemeral')
-        .setDescription(t('en-US', 'hr', 'ephemeralOption'))
-        .setDescriptionLocalizations(getCommandLocalizations('hr', 'ephemeralOption'))))
+        .setDescription(t('en-US', 'hr.ephemeralOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('hr.ephemeralOption'))))
     .addSubcommand(sub => sub
       .setName('drug_checking')
-      .setDescription(t('en-US', 'hr', 'drugCheckingDescription'))
-      .setNameLocalizations(getCommandLocalizations('hr', 'drugCheckingName'))
-      .setDescriptionLocalizations(getCommandLocalizations('hr', 'drugCheckingDescription'))
+      .setDescription(t('en-US', 'hr.drugCheckingDescription'))
+      .setNameLocalizations(getCommandLocalizations('hr.drugCheckingName'))
+      .setDescriptionLocalizations(getCommandLocalizations('hr.drugCheckingDescription'))
       .addBooleanOption(option => option.setName('ephemeral')
-        .setDescription(t('en-US', 'hr', 'ephemeralOption'))
-        .setDescriptionLocalizations(getCommandLocalizations('hr', 'ephemeralOption'))))
+        .setDescription(t('en-US', 'hr.ephemeralOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('hr.ephemeralOption'))))
     .addSubcommand(sub => sub
       .setName('warmline')
-      .setDescription(t('en-US', 'hr', 'warmlineDescription'))
-      .setNameLocalizations(getCommandLocalizations('hr', 'warmlineName'))
-      .setDescriptionLocalizations(getCommandLocalizations('hr', 'warmlineDescription'))
+      .setDescription(t('en-US', 'hr.warmlineDescription'))
+      .setNameLocalizations(getCommandLocalizations('hr.warmlineName'))
+      .setDescriptionLocalizations(getCommandLocalizations('hr.warmlineDescription'))
       .addBooleanOption(option => option.setName('ephemeral')
-        .setDescription(t('en-US', 'hr', 'ephemeralOption'))
-        .setDescriptionLocalizations(getCommandLocalizations('hr', 'ephemeralOption'))))
+        .setDescription(t('en-US', 'hr.ephemeralOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('hr.ephemeralOption'))))
     .addSubcommand(sub => sub
       .setName('testkits')
-      .setDescription(t('en-US', 'hr', 'testkitsDescription'))
-      .setNameLocalizations(getCommandLocalizations('hr', 'testkitsName'))
-      .setDescriptionLocalizations(getCommandLocalizations('hr', 'testkitsDescription'))
+      .setDescription(t('en-US', 'hr.testkitsDescription'))
+      .setNameLocalizations(getCommandLocalizations('hr.testkitsName'))
+      .setDescriptionLocalizations(getCommandLocalizations('hr.testkitsDescription'))
       .addBooleanOption(option => option.setName('ephemeral')
-        .setDescription(t('en-US', 'hr', 'ephemeralOption'))
-        .setDescriptionLocalizations(getCommandLocalizations('hr', 'ephemeralOption'))))
+        .setDescription(t('en-US', 'hr.ephemeralOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('hr.ephemeralOption'))))
     .addSubcommand(sub => sub
       .setName('recovery')
-      .setDescription(t('en-US', 'hr', 'recoveryDescription'))
-      .setNameLocalizations(getCommandLocalizations('hr', 'recoveryName'))
-      .setDescriptionLocalizations(getCommandLocalizations('hr', 'recoveryDescription'))
+      .setDescription(t('en-US', 'hr.recoveryDescription'))
+      .setNameLocalizations(getCommandLocalizations('hr.recoveryName'))
+      .setDescriptionLocalizations(getCommandLocalizations('hr.recoveryDescription'))
       .addBooleanOption(option => option.setName('ephemeral')
-        .setDescription(t('en-US', 'hr', 'ephemeralOption'))
-        .setDescriptionLocalizations(getCommandLocalizations('hr', 'ephemeralOption'))))
+        .setDescription(t('en-US', 'hr.ephemeralOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('hr.ephemeralOption'))))
     .addSubcommand(sub => sub
       .setName('reagents')
-      .setDescription(t('en-US', 'hr', 'reagentsDescription'))
-      .setNameLocalizations(getCommandLocalizations('hr', 'reagentsName'))
-      .setDescriptionLocalizations(getCommandLocalizations('hr', 'reagentsDescription'))
+      .setDescription(t('en-US', 'hr.reagentsDescription'))
+      .setNameLocalizations(getCommandLocalizations('hr.reagentsName'))
+      .setDescriptionLocalizations(getCommandLocalizations('hr.reagentsDescription'))
       .addBooleanOption(option => option.setName('ephemeral')
-        .setDescription(t('en-US', 'hr', 'ephemeralOption'))
-        .setDescriptionLocalizations(getCommandLocalizations('hr', 'ephemeralOption'))))
+        .setDescription(t('en-US', 'hr.ephemeralOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('hr.ephemeralOption'))))
     .addSubcommand(sub => sub
       .setName('mushroom_info')
-      .setDescription(t('en-US', 'hr', 'mushroomInfoDescription'))
-      .setNameLocalizations(getCommandLocalizations('hr', 'mushroomInfoName'))
-      .setDescriptionLocalizations(getCommandLocalizations('hr', 'mushroomInfoDescription'))
+      .setDescription(t('en-US', 'hr.mushroomInfoDescription'))
+      .setNameLocalizations(getCommandLocalizations('hr.mushroomInfoName'))
+      .setDescriptionLocalizations(getCommandLocalizations('hr.mushroomInfoDescription'))
       .addBooleanOption(option => option.setName('ephemeral')
-        .setDescription(t('en-US', 'hr', 'ephemeralOption'))
-        .setDescriptionLocalizations(getCommandLocalizations('hr', 'ephemeralOption')))) as SlashCommandBuilder,
+        .setDescription(t('en-US', 'hr.ephemeralOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('hr.ephemeralOption')))) as SlashCommandBuilder,
 
   async execute(interaction: ChatInputCommandInteraction) {
     const locale = await getLocale(interaction, 'hr');
@@ -392,7 +392,7 @@ export const dHR = {
       case 'mushroom_info':
         return dMushroomInfo(interaction);
       default:
-        await interaction.editReply(t(locale, 'hr', 'unknownSubcommand'));
+        await interaction.editReply(t(locale, 'hr.unknownSubcommand'));
         return false;
     }
   },

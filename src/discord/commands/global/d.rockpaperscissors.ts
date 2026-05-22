@@ -32,12 +32,12 @@ const rpsChoices = {
 };
 
 function createQueueEmbed(playersJoined: string[], timeLeft: number, locale: string): EmbedBuilder {
-  const playerList = playersJoined.length > 0 ? playersJoined.map(id => `<@${id}>`).join(', ') : t(locale, 'rockpaperscissors', 'noPlayersYet');
+  const playerList = playersJoined.length > 0 ? playersJoined.map(id => `<@${id}>`).join(', ') : t(locale, 'rockpaperscissors.noPlayersYet');
   return embedTemplate()
-    .setTitle(t(locale, 'rockpaperscissors', 'queueTitle'))
+    .setTitle(t(locale, 'rockpaperscissors.queueTitle'))
     .setColor(Colors.Green)
     .setDescription(
-      t(locale, 'rockpaperscissors', 'queueDescription', {
+      t(locale, 'rockpaperscissors.queueDescription', {
         playerCount: playersJoined.length,
         playerList,
         timeLeft,
@@ -50,7 +50,7 @@ function createQueueButtons(gameId: string, locale: string, disabled = false): A
     .addComponents(
       new ButtonBuilder()
         .setCustomId(`rps_${gameId}_join_queue`)
-        .setLabel(t(locale, 'rockpaperscissors', 'joinGameButton'))
+        .setLabel(t(locale, 'rockpaperscissors.joinGameButton'))
         .setEmoji('⚔️')
         .setStyle(ButtonStyle.Primary)
         .setDisabled(disabled),
@@ -61,10 +61,10 @@ function createQueueButtons(gameId: string, locale: string, disabled = false): A
 
 function create1v1GameEmbed(player1: User, player2: User, locale: string): EmbedBuilder {
   return embedTemplate()
-    .setTitle(t(locale, 'rockpaperscissors', 'oneOnOneTitle'))
+    .setTitle(t(locale, 'rockpaperscissors.oneOnOneTitle'))
     .setColor(Colors.Green)
     .setDescription(
-      t(locale, 'rockpaperscissors', 'oneOnOneDescription', {
+      t(locale, 'rockpaperscissors.oneOnOneDescription', {
         player1: player1.username,
         player2: player2.username,
       }),
@@ -72,14 +72,14 @@ function create1v1GameEmbed(player1: User, player2: User, locale: string): Embed
 }
 
 function createMultiplayerGameEmbed(players: string[], round: number, locale: string, eliminated: string[] = []): EmbedBuilder {
-  const eliminatedSection = eliminated.length > 0 ? t(locale, 'rockpaperscissors', 'eliminatedLabel', {
+  const eliminatedSection = eliminated.length > 0 ? t(locale, 'rockpaperscissors.eliminatedLabel', {
     eliminatedPlayers: eliminated.map(id => `<@${id}>`).join(', '),
   }) : '';
   return embedTemplate()
-    .setTitle(t(locale, 'rockpaperscissors', 'multiplayerRoundTitle', { round }))
+    .setTitle(t(locale, 'rockpaperscissors.multiplayerRoundTitle', { round }))
     .setColor(Colors.Green)
     .setDescription(
-      t(locale, 'rockpaperscissors', 'multiplayerDescription', {
+      t(locale, 'rockpaperscissors.multiplayerDescription', {
         activeCount: players.length,
         playerList: players.map(id => `<@${id}>`).join(', '),
         eliminatedSection,
@@ -92,19 +92,19 @@ function createChoiceButtons(game: RPSGame, locale: string, disabled = false): A
     .addComponents(
       new ButtonBuilder()
         .setCustomId(`rps_${game.gameId}_rock`)
-        .setLabel(t(locale, 'rockpaperscissors', 'rockButton'))
+        .setLabel(t(locale, 'rockpaperscissors.rockButton'))
         .setEmoji('🪨')
         .setStyle(ButtonStyle.Secondary)
         .setDisabled(disabled),
       new ButtonBuilder()
         .setCustomId(`rps_${game.gameId}_paper`)
-        .setLabel(t(locale, 'rockpaperscissors', 'paperButton'))
+        .setLabel(t(locale, 'rockpaperscissors.paperButton'))
         .setEmoji('📄')
         .setStyle(ButtonStyle.Secondary)
         .setDisabled(disabled),
       new ButtonBuilder()
         .setCustomId(`rps_${game.gameId}_scissors`)
-        .setLabel(t(locale, 'rockpaperscissors', 'scissorsButton'))
+        .setLabel(t(locale, 'rockpaperscissors.scissorsButton'))
         .setEmoji('✂️')
         .setStyle(ButtonStyle.Secondary)
         .setDisabled(disabled),
@@ -118,8 +118,8 @@ function createPlayerStatusList(game: RPSGame, interaction: ChatInputCommandInte
     const player1Status = game.choices.has(interaction.user.id) ? '✅' : '⏳';
     const player2Status = game.choices.has(opponent.id) ? '✅' : '⏳';
 
-    const player1StatusText = player1Status === '✅' ? t(locale, 'rockpaperscissors', 'playerStatusReady') : t(locale, 'rockpaperscissors', 'playerStatusChoosing');
-    const player2StatusText = player2Status === '✅' ? t(locale, 'rockpaperscissors', 'playerStatusReady') : t(locale, 'rockpaperscissors', 'playerStatusChoosing');
+    const player1StatusText = player1Status === '✅' ? t(locale, 'rockpaperscissors.playerStatusReady') : t(locale, 'rockpaperscissors.playerStatusChoosing');
+    const player2StatusText = player2Status === '✅' ? t(locale, 'rockpaperscissors.playerStatusReady') : t(locale, 'rockpaperscissors.playerStatusChoosing');
 
     return `${player1Status} ${interaction.user.username}: ${player1StatusText}\n`
            + `${player2Status} ${opponent.username}: ${player2StatusText}`;
@@ -127,7 +127,7 @@ function createPlayerStatusList(game: RPSGame, interaction: ChatInputCommandInte
   // Multiplayer
   return game.players.map(playerId => {
     const status = game.choices.has(playerId) ? '✅' : '⏳';
-    const statusText = status === '✅' ? t(locale, 'rockpaperscissors', 'playerStatusReady') : t(locale, 'rockpaperscissors', 'playerStatusChoosing');
+    const statusText = status === '✅' ? t(locale, 'rockpaperscissors.playerStatusReady') : t(locale, 'rockpaperscissors.playerStatusChoosing');
     return `${status} <@${playerId}>: ${statusText}`;
   }).join('\n');
 }
@@ -254,15 +254,15 @@ function createResultsEmbed(
   locale: string,
 ): EmbedBuilder {
   const embed = embedTemplate()
-    .setTitle(t(locale, 'rockpaperscissors', 'roundResultsTitle', { round }))
+    .setTitle(t(locale, 'rockpaperscissors.roundResultsTitle', { round }))
     .setColor(winner ? Colors.Green : Colors.Yellow);
 
-  let description = `${t(locale, 'rockpaperscissors', 'resultsHeader')}\n`;
+  let description = `${t(locale, 'rockpaperscissors.resultsHeader')}\n`;
   results.forEach(result => {
     const { emoji } = rpsChoices[result.choice as keyof typeof rpsChoices];
     const choiceLabel = result.choice.charAt(0).toUpperCase() + result.choice.slice(1);
     const plural = result.count !== 1 ? 's' : '';
-    description += `${t(locale, 'rockpaperscissors', 'resultFormat', {
+    description += `${t(locale, 'rockpaperscissors.resultFormat', {
       emoji,
       choice: choiceLabel,
       count: result.count,
@@ -271,17 +271,17 @@ function createResultsEmbed(
   });
 
   if (eliminated.length > 0) {
-    description += t(locale, 'rockpaperscissors', 'resultEliminated', {
+    description += t(locale, 'rockpaperscissors.resultEliminated', {
       eliminatedPlayers: eliminated.map(id => `<@${id}>`).join(', '),
     });
   }
 
   if (winner) {
-    description += t(locale, 'rockpaperscissors', 'resultWinner', {
+    description += t(locale, 'rockpaperscissors.resultWinner', {
       winner: `<@${winner}>`,
     });
   } else if (remaining.length > 1) {
-    description += t(locale, 'rockpaperscissors', 'resultAdvancing', {
+    description += t(locale, 'rockpaperscissors.resultAdvancing', {
       advancingPlayers: remaining.map(id => `<@${id}>`).join(', '),
     });
   }
@@ -339,7 +339,7 @@ async function startMultiplayerRound(interaction: ChatInputCommandInteraction, g
         const statusList = createPlayerStatusList(game, interaction, locale);
         const updatedEmbed = createMultiplayerGameEmbed(game.players, game.round, locale, game.eliminatedPlayers)
           .setDescription(
-            t(locale, 'rockpaperscissors', 'multiplayerDescription', {
+            t(locale, 'rockpaperscissors.multiplayerDescription', {
               activeCount: game.players.length,
               playerList: statusList,
               eliminatedSection: '',
@@ -373,9 +373,9 @@ async function startMultiplayerRound(interaction: ChatInputCommandInteraction, g
       roundCollector.removeAllListeners();
       const winner = gameObj.players[0] || null;
       const finalEmbed = embedTemplate()
-        .setTitle(t(locale, 'rockpaperscissors', 'gameOverTitle'))
+        .setTitle(t(locale, 'rockpaperscissors.gameOverTitle'))
         .setDescription(
-          winner ? t(locale, 'rockpaperscissors', 'gameOverWinner', { winner: `<@${winner}>` }) : t(locale, 'rockpaperscissors', 'gameOverNoWinner'),
+          winner ? t(locale, 'rockpaperscissors.gameOverWinner', { winner: `<@${winner}>` }) : t(locale, 'rockpaperscissors.gameOverNoWinner'),
         )
         .setColor(winner ? Colors.Green : Colors.Yellow);
 
@@ -449,7 +449,7 @@ async function handle1v1GameEnd(
 
   if (!player1Choice || !player2Choice) {
     await interaction.editReply({
-      content: t(locale, 'rockpaperscissors', 'choicePersistError'),
+      content: t(locale, 'rockpaperscissors.choicePersistError'),
       embeds: [],
       components: [],
     });
@@ -468,22 +468,22 @@ async function handle1v1GameEnd(
 
   let resultMessage: string;
   if (result === 'tie') {
-    resultMessage = t(locale, 'rockpaperscissors', 'roundTied');
+    resultMessage = t(locale, 'rockpaperscissors.roundTied');
   } else if (result === 'player1') {
-    resultMessage = t(locale, 'rockpaperscissors', 'roundWinner', { winner: interaction.user.username });
+    resultMessage = t(locale, 'rockpaperscissors.roundWinner', { winner: interaction.user.username });
   } else {
-    resultMessage = t(locale, 'rockpaperscissors', 'roundWinner', { winner: opponent.username });
+    resultMessage = t(locale, 'rockpaperscissors.roundWinner', { winner: opponent.username });
   }
 
   const player1ChoiceData = rpsChoices[player1Choice as keyof typeof rpsChoices];
   const player2ChoiceData = rpsChoices[player2Choice as keyof typeof rpsChoices];
 
-  const player1Info = t(locale, 'rockpaperscissors', 'choiceDisplay', {
+  const player1Info = t(locale, 'rockpaperscissors.choiceDisplay', {
     player: interaction.user.username,
     emoji: player1ChoiceData.emoji,
     choice: player1ChoiceData.name,
   });
-  const player2Info = t(locale, 'rockpaperscissors', 'choiceDisplay', {
+  const player2Info = t(locale, 'rockpaperscissors.choiceDisplay', {
     player: opponent.username,
     emoji: player2ChoiceData.emoji,
     choice: player2ChoiceData.name,
@@ -491,7 +491,7 @@ async function handle1v1GameEnd(
 
   // Show round results immediately
   const resultEmbed = embedTemplate()
-    .setTitle(t(locale, 'rockpaperscissors', 'roundResultsTitle', { round: game.round }))
+    .setTitle(t(locale, 'rockpaperscissors.roundResultsTitle', { round: game.round }))
     .setColor(result === 'tie' ? Colors.Yellow : Colors.Green)
     .setDescription(`${player1Info}\n${player2Info}\n\n${resultMessage}`);
 
@@ -509,10 +509,10 @@ async function handle1v1GameEnd(
       try {
         const finalWinner = gameObj.scores!.player1 >= 2 ? interaction.user.username : opponent.username;
         const finalEmbed = embedTemplate()
-          .setTitle(t(locale, 'rockpaperscissors', 'matchCompleteTitle'))
+          .setTitle(t(locale, 'rockpaperscissors.matchCompleteTitle'))
           .setColor(Colors.Green)
           .setDescription(
-            t(locale, 'rockpaperscissors', 'matchCompleteScore', {
+            t(locale, 'rockpaperscissors.matchCompleteScore', {
               player1: interaction.user.username,
               score1: gameObj.scores!.player1,
               player2: opponent.username,
@@ -539,10 +539,10 @@ async function handle1v1GameEnd(
     setTimeout(async () => {
       try {
         const nextRoundEmbed = embedTemplate()
-          .setTitle(t(locale, 'rockpaperscissors', 'nextRoundTitle', { round: gameObj.round }))
+          .setTitle(t(locale, 'rockpaperscissors.nextRoundTitle', { round: gameObj.round }))
           .setColor(Colors.Green)
           .setDescription(
-            t(locale, 'rockpaperscissors', 'nextRoundDescription', {
+            t(locale, 'rockpaperscissors.nextRoundDescription', {
               player1: interaction.user.username,
               player2: opponent.username,
               score1: gameObj.scores!.player1,
@@ -567,7 +567,7 @@ async function handle1v1GameEnd(
 async function handle1v1Game(interaction: ChatInputCommandInteraction, opponent: User, locale: string): Promise<void> {
   if (opponent.id === interaction.user.id) {
     await interaction.reply({
-      content: t(locale, 'rockpaperscissors', 'cannotPlayYourself'),
+      content: t(locale, 'rockpaperscissors.cannotPlayYourself'),
       flags: MessageFlags.Ephemeral,
     });
     return;
@@ -575,7 +575,7 @@ async function handle1v1Game(interaction: ChatInputCommandInteraction, opponent:
 
   if (opponent.bot) {
     await interaction.reply({
-      content: t(locale, 'rockpaperscissors', 'cannotPlayBot'),
+      content: t(locale, 'rockpaperscissors.cannotPlayBot'),
       flags: MessageFlags.Ephemeral,
     });
     return;
@@ -619,7 +619,7 @@ async function handle1v1Game(interaction: ChatInputCommandInteraction, opponent:
     }
   } catch (error) {
     await interaction.editReply({
-      content: t(locale, 'rockpaperscissors', 'collectorCreationFailed'),
+      content: t(locale, 'rockpaperscissors.collectorCreationFailed'),
       embeds: [],
       components: [],
     });
@@ -645,10 +645,10 @@ async function handle1v1Game(interaction: ChatInputCommandInteraction, opponent:
     if (isNewChoice && game.choices.size < 2) {
       try {
         const updatedEmbed = embedTemplate()
-          .setTitle(t(locale, 'rockpaperscissors', 'nextRoundTitle', { round: game.round }))
+          .setTitle(t(locale, 'rockpaperscissors.nextRoundTitle', { round: game.round }))
           .setColor(Colors.Orange)
           .setDescription(
-            t(locale, 'rockpaperscissors', 'oneOnOneDescription', {
+            t(locale, 'rockpaperscissors.oneOnOneDescription', {
               player1: interaction.user.username,
               player2: opponent.username,
             }),
@@ -684,8 +684,8 @@ async function handle1v1Game(interaction: ChatInputCommandInteraction, opponent:
         }
 
         const timeoutEmbed = embedTemplate()
-          .setTitle(t(locale, 'rockpaperscissors', 'timeoutTitle'))
-          .setDescription(t(locale, 'rockpaperscissors', 'timeoutDescription'))
+          .setTitle(t(locale, 'rockpaperscissors.timeoutTitle'))
+          .setDescription(t(locale, 'rockpaperscissors.timeoutDescription'))
           .setColor(Colors.Red);
 
         await interaction.editReply({
@@ -723,7 +723,7 @@ async function handleMultiplayerQueue(interaction: ChatInputCommandInteraction, 
 
   if (!queueCollector) {
     await interaction.editReply({
-      content: t(locale, 'rockpaperscissors', 'collectorError'),
+      content: t(locale, 'rockpaperscissors.collectorError'),
       embeds: [],
       components: [],
     });
@@ -752,7 +752,7 @@ async function handleMultiplayerQueue(interaction: ChatInputCommandInteraction, 
   queueCollector.on('collect', async (i: ButtonInteraction) => {
     if (playersJoined.includes(i.user.id)) {
       await i.reply({
-        content: t(locale, 'rockpaperscissors', 'alreadyInQueue'),
+        content: t(locale, 'rockpaperscissors.alreadyInQueue'),
         flags: MessageFlags.Ephemeral,
       });
       return;
@@ -760,7 +760,7 @@ async function handleMultiplayerQueue(interaction: ChatInputCommandInteraction, 
 
     if (playersJoined.length >= 10) {
       await i.reply({
-        content: t(locale, 'rockpaperscissors', 'queueFull'),
+        content: t(locale, 'rockpaperscissors.queueFull'),
         flags: MessageFlags.Ephemeral,
       });
       return;
@@ -768,7 +768,7 @@ async function handleMultiplayerQueue(interaction: ChatInputCommandInteraction, 
 
     playersJoined.push(i.user.id);
     await i.reply({
-      content: t(locale, 'rockpaperscissors', 'joinedQueue'),
+      content: t(locale, 'rockpaperscissors.joinedQueue'),
       flags: MessageFlags.Ephemeral,
     });
 
@@ -786,8 +786,8 @@ async function handleMultiplayerQueue(interaction: ChatInputCommandInteraction, 
       queueCollector.removeAllListeners();
       const plural = playersJoined.length !== 1 ? 's' : '';
       const failEmbed = embedTemplate()
-        .setTitle(t(locale, 'rockpaperscissors', 'notEnoughPlayersTitle'))
-        .setDescription(t(locale, 'rockpaperscissors', 'notEnoughPlayersDescription', {
+        .setTitle(t(locale, 'rockpaperscissors.notEnoughPlayersTitle'))
+        .setDescription(t(locale, 'rockpaperscissors.notEnoughPlayersDescription', {
           playerCount: playersJoined.length,
           plural,
         }))
@@ -821,9 +821,9 @@ async function handleMultiplayerQueue(interaction: ChatInputCommandInteraction, 
 export const dRockPaperScissors: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('rockpaperscissors')
-    .setNameLocalizations(getCommandLocalizations('rockpaperscissors', 'commandName'))
+    .setNameLocalizations(getCommandLocalizations('rockpaperscissors.commandName'))
     .setDescription('Start a Rock-Paper-Scissors game')
-    .setDescriptionLocalizations(getCommandLocalizations('rockpaperscissors', 'commandDescription'))
+    .setDescriptionLocalizations(getCommandLocalizations('rockpaperscissors.commandDescription'))
     .setContexts([0, 1, 2])
     .setIntegrationTypes([0, 1])
     .addUserOption(option => option
@@ -842,7 +842,7 @@ export const dRockPaperScissors: SlashCommand = {
     // Multiplayer queue - requires server AND bot membership
     if (!interaction.guild) {
       await interaction.reply({
-        content: t(locale, 'rockpaperscissors', 'multiplayerOnlyDescription'),
+        content: t(locale, 'rockpaperscissors.multiplayerOnlyDescription'),
         flags: MessageFlags.Ephemeral,
       });
       return false;

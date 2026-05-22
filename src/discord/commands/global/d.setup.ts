@@ -43,24 +43,24 @@ async function help(
   const locale = await getLocale(interaction, 'setup');
 
   const tripsitEmbed = embedTemplate()
-    .setTitle(t(locale, 'setup', 'setupTripsitTitle'))
-    .setDescription(t(locale, 'setup', 'tripsitSessionsBody'));
+    .setTitle(t(locale, 'setup.setupTripsitTitle'))
+    .setDescription(t(locale, 'setup.tripsitSessionsBody'));
 
   const applicationsEmbed = embedTemplate()
-    .setTitle(t(locale, 'setup', 'setupApplicationsTitle'))
-    .setDescription(t(locale, 'setup', 'applicationsBody'));
+    .setTitle(t(locale, 'setup.setupApplicationsTitle'))
+    .setDescription(t(locale, 'setup.applicationsBody'));
 
   const techHelpEmbed = embedTemplate()
-    .setTitle(t(locale, 'setup', 'setupTechhelpTitle'))
-    .setDescription(t(locale, 'setup', 'techhelpBody'));
+    .setTitle(t(locale, 'setup.setupTechhelpTitle'))
+    .setDescription(t(locale, 'setup.techhelpBody'));
 
   const rulesEmbed = embedTemplate()
-    .setTitle(t(locale, 'setup', 'setupRulesTitle'))
-    .setDescription(t(locale, 'setup', 'setupRulesDescription'));
+    .setTitle(t(locale, 'setup.setupRulesTitle'))
+    .setDescription(t(locale, 'setup.setupRulesDescription'));
 
   const ticketboothEmbed = embedTemplate()
-    .setTitle(t(locale, 'setup', 'setupTicketboothTitle'))
-    .setDescription(t(locale, 'setup', 'ticketboothBody'));
+    .setTitle(t(locale, 'setup.setupTicketboothTitle'))
+    .setDescription(t(locale, 'setup.ticketboothBody'));
 
   const book = [
     tripsitEmbed,
@@ -87,7 +87,7 @@ async function tripsit(
   if (!guildPerms.hasPermission) {
     log.error(F, `Missing guild permission ${guildPerms.permission} in ${interaction.guild}!`);
     await interaction.reply({
-      content: t(locale, 'setup', 'tripsitMissingGuildPermission', {
+      content: t(locale, 'setup.tripsitMissingGuildPermission', {
         permission: guildPerms.permission,
         guild: interaction.guild,
       }),
@@ -111,7 +111,7 @@ async function tripsit(
   if (!channelPerms.hasPermission) {
     log.error(F, `Missing TS channel permission ${channelPerms.permission} in ${interaction.channel.name}!`);
     await interaction.reply({
-      content: t(locale, 'setup', 'tripsitMissingChannelPermission', {
+      content: t(locale, 'setup.tripsitMissingChannelPermission', {
         permission: channelPerms.permission,
         channel: interaction.channel,
       }),
@@ -135,7 +135,7 @@ async function tripsit(
   if (!metaPerms.hasPermission) {
     log.error(F, `Missing TS channel permission ${channelPerms.permission} in ${metaChannel}!`);
     await interaction.reply({
-      content: t(locale, 'setup', 'tripsitMissingMetaChannelPermission', {
+      content: t(locale, 'setup.tripsitMissingMetaChannelPermission', {
         permission: metaPerms.permission,
         channel: metaChannel,
       }),
@@ -144,18 +144,18 @@ async function tripsit(
     return;
   }
 
-  const titleText = t(locale, 'setup', 'tripsitTitleDefault');
-  const footerText = t(locale, 'setup', 'tripsitFooterDefault');
-  const modalText = t(locale, 'setup', 'tripsitIntroDefault');
+  const titleText = t(locale, 'setup.tripsitTitleDefault');
+  const footerText = t(locale, 'setup.tripsitFooterDefault');
+  const modalText = t(locale, 'setup.tripsitIntroDefault');
 
   await interaction.showModal(new ModalBuilder()
     .setCustomId(`tripsitmeModal~${interaction.id}`)
-    .setTitle(t(locale, 'setup', 'tripsitModalTitle'))
+    .setTitle(t(locale, 'setup.tripsitModalTitle'))
     .addComponents(
       new ActionRowBuilder<TextInputBuilder>()
         .addComponents(
           new TextInputBuilder()
-            .setLabel(t(locale, 'setup', 'tripsitTitleLabel'))
+            .setLabel(t(locale, 'setup.tripsitTitleLabel'))
             .setValue(stripIndents`${titleText}`)
             .setStyle(TextInputStyle.Short)
             .setRequired(true)
@@ -164,7 +164,7 @@ async function tripsit(
       new ActionRowBuilder<TextInputBuilder>()
         .addComponents(
           new TextInputBuilder()
-            .setLabel(t(locale, 'setup', 'tripsitIntroLabel'))
+            .setLabel(t(locale, 'setup.tripsitIntroLabel'))
             .setValue(stripIndents`${modalText}`)
             .setStyle(TextInputStyle.Paragraph)
             .setRequired(true)
@@ -173,7 +173,7 @@ async function tripsit(
       new ActionRowBuilder<TextInputBuilder>()
         .addComponents(
           new TextInputBuilder()
-            .setLabel(t(locale, 'setup', 'tripsitFooterLabel'))
+            .setLabel(t(locale, 'setup.tripsitFooterLabel'))
             .setValue(stripIndents`${footerText}`)
             .setStyle(TextInputStyle.Short)
             .setRequired(true)
@@ -222,7 +222,7 @@ async function tripsit(
         .addComponents(
           new ButtonBuilder()
             .setCustomId('tripsitmeClick')
-            .setLabel(t(locale, 'setup', 'tripsitButtonLabel'))
+            .setLabel(t(locale, 'setup.tripsitButtonLabel'))
             .setStyle(ButtonStyle.Primary),
         );
 
@@ -235,7 +235,7 @@ async function tripsit(
 
       // We need to send the message, otherwise it has the "user used /setup tripsit" at the top
       await (i.channel as TextChannel).send({ embeds: [embed], components: [row] });
-      await i.editReply({ content: t(locale, 'setup', 'tripsitSetupComplete') });
+      await i.editReply({ content: t(locale, 'setup.tripsitSetupComplete') });
     });
 }
 
@@ -263,7 +263,7 @@ async function techhelp(
   if (!channelPerms.hasPermission) {
     log.error(F, `Missing TS channel permission ${channelPerms.permission} in ${interaction.channel}!`);
     await interaction.reply({
-      content: t(locale, 'setup', 'tripsitMissingChannelPermission', {
+      content: t(locale, 'setup.tripsitMissingChannelPermission', {
         permission: channelPerms.permission,
         channel: interaction.channel,
       }),
@@ -272,9 +272,9 @@ async function techhelp(
     return;
   }
 
-  const titleText = t(locale, 'setup', 'techhelpTitleDefault', { guildName: interaction.guild.name });
-  const footerText = t(locale, 'setup', 'techhelpFooterDefault');
-  let modalText = t(locale, 'setup', 'techhelpIntroDefault', { guildName: interaction.guild.name });
+  const titleText = t(locale, 'setup.techhelpTitleDefault', { guildName: interaction.guild.name });
+  const footerText = t(locale, 'setup.techhelpFooterDefault');
+  let modalText = t(locale, 'setup.techhelpIntroDefault', { guildName: interaction.guild.name });
 
   // const guildData = await getGuild(interaction.guild.id);
   const guildData = await db.discord_guilds.update({
@@ -288,17 +288,17 @@ async function techhelp(
 
   if (guildData.channel_tripsit) {
     const channelTripsit = interaction.guild.channels.fetch(guildData.channel_tripsit);
-    modalText += t(locale, 'setup', 'techhelpIntroTripsitAddition', { channelTripsit: channelTripsit.toString() });
+    modalText += t(locale, 'setup.techhelpIntroTripsitAddition', { channelTripsit: channelTripsit.toString() });
   }
 
   await interaction.showModal(new ModalBuilder()
     .setCustomId(`helpdeskModal~${interaction.id}`)
-    .setTitle(t(locale, 'setup', 'techhelpModalTitle'))
+    .setTitle(t(locale, 'setup.techhelpModalTitle'))
     .addComponents(
       new ActionRowBuilder<TextInputBuilder>()
         .addComponents(
           new TextInputBuilder()
-            .setLabel(t(locale, 'setup', 'techhelpTitleLabel'))
+            .setLabel(t(locale, 'setup.techhelpTitleLabel'))
             .setValue(stripIndents`${titleText}`)
             .setStyle(TextInputStyle.Short)
             .setRequired(true)
@@ -307,7 +307,7 @@ async function techhelp(
       new ActionRowBuilder<TextInputBuilder>()
         .addComponents(
           new TextInputBuilder()
-            .setLabel(t(locale, 'setup', 'techhelpIntroLabel'))
+            .setLabel(t(locale, 'setup.techhelpIntroLabel'))
             .setValue(stripIndents`${modalText}`)
             .setStyle(TextInputStyle.Paragraph)
             .setRequired(true)
@@ -316,7 +316,7 @@ async function techhelp(
       new ActionRowBuilder<TextInputBuilder>()
         .addComponents(
           new TextInputBuilder()
-            .setLabel(t(locale, 'setup', 'techhelpFooterLabel'))
+            .setLabel(t(locale, 'setup.techhelpFooterLabel'))
             .setValue(stripIndents`${footerText}`)
             .setStyle(TextInputStyle.Short)
             .setRequired(true)
@@ -340,11 +340,11 @@ async function techhelp(
         .addComponents(
           new ButtonBuilder()
             .setCustomId('techHelpClick~discord')
-            .setLabel(t(locale, 'setup', 'techhelpDiscordButton'))
+            .setLabel(t(locale, 'setup.techhelpDiscordButton'))
             .setStyle(ButtonStyle.Primary),
           new ButtonBuilder()
             .setCustomId('techHelpClick~other')
-            .setLabel(t(locale, 'setup', 'techhelpOtherButton'))
+            .setLabel(t(locale, 'setup.techhelpOtherButton'))
             .setStyle(ButtonStyle.Secondary),
         );
 
@@ -356,7 +356,7 @@ async function techhelp(
 
       // We need to send the message, otherwise it has the "user used /setup tripsit" at the top
       await (i.channel as TextChannel).send({ embeds: [embed], components: [row] });
-      await i.editReply({ content: t(locale, 'setup', 'techhelpSetupComplete') });
+      await i.editReply({ content: t(locale, 'setup.techhelpSetupComplete') });
     });
 }
 
@@ -448,7 +448,7 @@ async function ticketbooth(
 
   // **3)** I understand that every room with a :link: is bridged to IRC and there may be lower quality chat in those rooms.
 
-  const buttonText = t(locale, 'setup', 'ticketboothButtonText', {
+  const buttonText = t(locale, 'setup.ticketboothButtonText', {
     channelTripsit: channelTripsit.toString(),
     channelOpentripsit: channelOpentripsit.toString(),
     channelSanctuary: channelSanctuary.toString(),
@@ -460,7 +460,7 @@ async function ticketbooth(
     .addComponents(
       new ButtonBuilder()
         .setCustomId('memberButton')
-        .setLabel(t(locale, 'setup', 'ticketboothButton'))
+        .setLabel(t(locale, 'setup.ticketboothButton'))
         .setStyle(ButtonStyle.Success),
     );
 
@@ -487,14 +487,14 @@ async function helper(
 
   if (!guildData.channel_tripsit || !guildData.channel_tripsitmeta) {
     await interaction.editReply({
-      content: t(locale, 'setup', 'helperNotSetup'),
+      content: t(locale, 'setup.helperNotSetup'),
     });
     return;
   }
 
   if (!guildData.role_helper) {
     await interaction.editReply({
-      content: t(locale, 'setup', 'helperRoleNotSetup'),
+      content: t(locale, 'setup.helperRoleNotSetup'),
     });
     return;
   }
@@ -502,7 +502,7 @@ async function helper(
   const channelTripsit = await interaction.client.channels.fetch(guildData.channel_tripsit) as TextChannel;
   // const channelMetatripsit = await interaction.client.channels.fetch(guildData.channel_tripsitmeta) as TextChannel;
 
-  const messageText = t(locale, 'setup', 'helperEmbedDescription', {
+  const messageText = t(locale, 'setup.helperEmbedDescription', {
     guildName: interaction.guild?.name,
     moodleUrl: env.MOODLE_URL,
   });
@@ -511,16 +511,16 @@ async function helper(
     // content: messageText,
     embeds: [
       new EmbedBuilder()
-        .setTitle(t(locale, 'setup', 'helperEmbedTitle', { channelTripsit: channelTripsit.toString() }))
+        .setTitle(t(locale, 'setup.helperEmbedTitle', { channelTripsit: channelTripsit.toString() }))
         .setDescription(messageText)
-        .setFooter({ text: t(locale, 'setup', 'helperEmbedFooter') }),
+        .setFooter({ text: t(locale, 'setup.helperEmbedFooter') }),
     ],
     components: [
       new ActionRowBuilder<ButtonBuilder>()
         .addComponents(
           new ButtonBuilder()
             .setCustomId('helperButton')
-            .setLabel(t(locale, 'setup', 'helperButtonLabel'))
+            .setLabel(t(locale, 'setup.helperButtonLabel'))
             .setEmoji(emojiGet('Helper').id)
             .setStyle(ButtonStyle.Success),
         ),
@@ -528,7 +528,7 @@ async function helper(
   });
 
   await interaction.editReply({
-    content: t(locale, 'setup', 'helperSetupDone'),
+    content: t(locale, 'setup.helperSetupDone'),
   });
 }
 
@@ -574,7 +574,7 @@ export async function helperButton(
 
   if (!guildData.role_helper) {
     await interaction.reply({
-      content: t(locale, 'setup', 'helperRoleNotSetup'),
+      content: t(locale, 'setup.helperRoleNotSetup'),
       flags: MessageFlags.Ephemeral,
     });
     return;
@@ -582,7 +582,7 @@ export async function helperButton(
 
   if (!guildData.channel_tripsitmeta) {
     await interaction.reply({
-      content: t(locale, 'setup', 'helperMetaNotSetup'),
+      content: t(locale, 'setup.helperMetaNotSetup'),
       flags: MessageFlags.Ephemeral,
     });
     return;
@@ -592,7 +592,7 @@ export async function helperButton(
   log.debug(F, `Moodle Profile: ${JSON.stringify(moodleProfile, null, 2)}`);
   if (!moodleProfile.fullName) {
     await interaction.reply({
-      content: t(locale, 'setup', 'helperMoodleNotLinked', { moodleUrl: env.MOODLE_URL }),
+      content: t(locale, 'setup.helperMoodleNotLinked', { moodleUrl: env.MOODLE_URL }),
       flags: MessageFlags.Ephemeral,
     });
     return;
@@ -600,7 +600,7 @@ export async function helperButton(
 
   if (moodleProfile.completedCourses.toString().indexOf('Intro to Tripsitting') === -1) {
     await interaction.reply({
-      content: t(locale, 'setup', 'helperCourseNotCompleted', { moodleUrl: env.MOODLE_URL }),
+      content: t(locale, 'setup.helperCourseNotCompleted', { moodleUrl: env.MOODLE_URL }),
       flags: MessageFlags.Ephemeral,
     });
     return;
@@ -625,7 +625,7 @@ export async function helperButton(
 
   if (!role) {
     await interaction.reply({
-      content: t(locale, 'setup', 'helperRoleDeleted'),
+      content: t(locale, 'setup.helperRoleDeleted'),
       flags: MessageFlags.Ephemeral,
     });
     return;
@@ -633,14 +633,14 @@ export async function helperButton(
 
   // If the role being requested is the Helper or Contributor role, check if they have been banned first
   if (role.id === guildData.role_helper && userData.helper_role_ban) {
-    await interaction.editReply({ content: t(locale, 'setup', 'helperRoleBanned') });
+    await interaction.editReply({ content: t(locale, 'setup.helperRoleBanned') });
     return;
   }
 
   if (target.roles.cache.has(role.id)) {
     await target.roles.remove(role);
     await interaction.reply({
-      content: t(locale, 'setup', 'helperRoleRemoved'),
+      content: t(locale, 'setup.helperRoleRemoved'),
       flags: MessageFlags.Ephemeral,
     });
     return;
@@ -650,14 +650,14 @@ export async function helperButton(
     await target.roles.add(role);
     if (interaction.guild.id === env.DISCORD_GUILD_ID) {
       const channelTripsitters = await interaction.guild?.channels.fetch(env.CHANNEL_TRIPSITTERS) as TextChannel;
-      await channelTripsitters.send(t(locale, 'setup', 'helperRejoinAnnounce', {
+      await channelTripsitters.send(t(locale, 'setup.helperRejoinAnnounce', {
         member: target.displayName,
         roleName: role.name,
       }));
     }
     const metaChannel = await interaction.guild?.channels.fetch(guildData.channel_tripsitmeta) as TextChannel;
     await interaction.reply({
-      content: t(locale, 'setup', 'helperWelcomeBack', { metaChannel: metaChannel.toString() }),
+      content: t(locale, 'setup.helperWelcomeBack', { metaChannel: metaChannel.toString() }),
       flags: MessageFlags.Ephemeral,
     });
     return;
@@ -665,14 +665,14 @@ export async function helperButton(
 
   const modal = new ModalBuilder()
     .setCustomId(`"ID":"RR","II":"${interaction.id}"`)
-    .setTitle(t(locale, 'setup', 'helperModalTitle', { roleName: role.name }))
+    .setTitle(t(locale, 'setup.helperModalTitle', { roleName: role.name }))
     .addComponents(
       new ActionRowBuilder<TextInputBuilder>().addComponents(
         new TextInputBuilder()
           .setCustomId('introduction')
           .setRequired(true)
-          .setLabel(t(locale, 'setup', 'helperIntroductionLabel'))
-          .setPlaceholder(t(locale, 'setup', 'helperIntroductionPlaceholder', { roleName: role.name }))
+          .setLabel(t(locale, 'setup.helperIntroductionLabel'))
+          .setPlaceholder(t(locale, 'setup.helperIntroductionPlaceholder', { roleName: role.name }))
           .setMaxLength(600)
           .setStyle(TextInputStyle.Paragraph),
       ),
@@ -680,8 +680,8 @@ export async function helperButton(
         new TextInputBuilder()
           .setCustomId('strengths')
           .setRequired(true)
-          .setLabel(t(locale, 'setup', 'helperStrengthsLabel'))
-          .setPlaceholder(t(locale, 'setup', 'helperStrengthsPlaceholder'))
+          .setLabel(t(locale, 'setup.helperStrengthsLabel'))
+          .setPlaceholder(t(locale, 'setup.helperStrengthsPlaceholder'))
           .setMaxLength(500)
           .setStyle(TextInputStyle.Paragraph),
       ),
@@ -689,8 +689,8 @@ export async function helperButton(
         new TextInputBuilder()
           .setCustomId('weaknesses')
           .setRequired(true)
-          .setLabel(t(locale, 'setup', 'helperWeaknessesLabel'))
-          .setPlaceholder(t(locale, 'setup', 'helperWeaknessesPlaceholder'))
+          .setLabel(t(locale, 'setup.helperWeaknessesLabel'))
+          .setPlaceholder(t(locale, 'setup.helperWeaknessesPlaceholder'))
           .setMaxLength(500)
           .setStyle(TextInputStyle.Paragraph),
       ),
@@ -698,8 +698,8 @@ export async function helperButton(
         new TextInputBuilder()
           .setCustomId('animal')
           .setRequired(true)
-          .setLabel(t(locale, 'setup', 'helperAnimalLabel'))
-          .setPlaceholder(t(locale, 'setup', 'helperAnimalPlaceholder'))
+          .setLabel(t(locale, 'setup.helperAnimalLabel'))
+          .setPlaceholder(t(locale, 'setup.helperAnimalPlaceholder'))
           .setMaxLength(100)
           .setStyle(TextInputStyle.Paragraph),
       ),
@@ -749,7 +749,7 @@ export async function helperButton(
 
       const metaChannel = await i.guild?.channels.fetch(guildData.channel_tripsitmeta) as TextChannel;
       await i.editReply({
-        content: t(locale, 'setup', 'helperRoleAdded', {
+        content: t(locale, 'setup.helperRoleAdded', {
           roleName: role.name,
           metaChannel: metaChannel.toString(),
         }),
@@ -757,48 +757,48 @@ export async function helperButton(
 
       if (metaChannel.id === guildData.channel_tripsitmeta) {
         const introString = `
-        ${t(locale, 'setup', 'helperIntroWelcome', {
+        ${t(locale, 'setup.helperIntroWelcome', {
     memberName: target.displayName,
     roleName: role.name,
   })}
 
-        ${t(locale, 'setup', 'helperIntroHeader')}
+        ${t(locale, 'setup.helperIntroHeader')}
         \`\`\`${introMessage}\`\`\`
-        ${t(locale, 'setup', 'helperStrengthsHeader')}
+        ${t(locale, 'setup.helperStrengthsHeader')}
         \`\`\`${strengthMessage}\`\`\`
-        ${t(locale, 'setup', 'helperOpportunitiesHeader')}
+        ${t(locale, 'setup.helperOpportunitiesHeader')}
         \`\`\`${weaknessMessage}\`\`\`
-        ${t(locale, 'setup', 'helperAnimalHeader')}
+        ${t(locale, 'setup.helperAnimalHeader')}
         \`\`\`${animalMessage}\`\`\`
 
         `;
 
         log.debug(F, `introString Length: ${introString.length}`);
         const intro = stripIndents`
-          ${t(locale, 'setup', 'helperIntroWelcome', {
+          ${t(locale, 'setup.helperIntroWelcome', {
     memberName: target.displayName,
     roleName: role.name,
   })}
 
-          ${t(locale, 'setup', 'helperIntroHeader')}
+          ${t(locale, 'setup.helperIntroHeader')}
           \`\`\`${introMessage}\`\`\`
-          ${t(locale, 'setup', 'helperStrengthsHeader')}
+          ${t(locale, 'setup.helperStrengthsHeader')}
           \`\`\`${strengthMessage}\`\`\`
-          ${t(locale, 'setup', 'helperOpportunitiesHeader')}
+          ${t(locale, 'setup.helperOpportunitiesHeader')}
           \`\`\`${weaknessMessage}\`\`\`
-          ${t(locale, 'setup', 'helperAnimalHeader')}
+          ${t(locale, 'setup.helperAnimalHeader')}
           \`\`\`${animalMessage}\`\`\`
 
           `;
         await metaChannel.send(intro);
 
-        await metaChannel.send(t(locale, 'setup', 'helperResourcesMessage', { member: target.toString() }));
+        await metaChannel.send(t(locale, 'setup.helperResourcesMessage', { member: target.toString() }));
       }
       if (i.guild.id === env.DISCORD_GUILD_ID) {
         const channelTripsitters = await i.guild?.channels.fetch(env.CHANNEL_TRIPSITTERS) as TextChannel;
         const roleTripsitter = await i.guild?.roles.fetch(guildData.role_tripsitter) as Role;
 
-        await channelTripsitters.send(t(locale, 'setup', 'helperAnnounceTruly', {
+        await channelTripsitters.send(t(locale, 'setup.helperAnnounceTruly', {
           roleTripsitter: roleTripsitter.toString(),
           member: target.displayName,
           roleName: role.name,
@@ -818,11 +818,11 @@ async function localeGet(
   });
   if (guildData?.locale) {
     await interaction.editReply({
-      content: t(locale, 'setup', 'localeGetReply', { locale: guildData.locale }),
+      content: t(locale, 'setup.localeGetReply', { locale: guildData.locale }),
     });
   } else {
     await interaction.editReply({
-      content: t(locale, 'setup', 'localeGetReplyDefault'),
+      content: t(locale, 'setup.localeGetReplyDefault'),
     });
   }
 }
@@ -838,7 +838,7 @@ async function localeSet(
 
   if (!allValid.includes(requestedLocale)) {
     await interaction.editReply({
-      content: t(locale, 'setup', 'localeSetInvalid', {
+      content: t(locale, 'setup.localeSetInvalid', {
         locale: requestedLocale,
         available: allValid.join(', '),
       }),
@@ -853,7 +853,7 @@ async function localeSet(
   });
 
   await interaction.editReply({
-    content: t(locale, 'setup', 'localeSetReply', { locale: requestedLocale }),
+    content: t(locale, 'setup.localeSetReply', { locale: requestedLocale }),
   });
 }
 
@@ -861,8 +861,8 @@ export const setup: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('setup')
     .setDescription('Set up various channels and prompts!')
-    .setNameLocalizations(getCommandLocalizations('setup', 'commandName'))
-    .setDescriptionLocalizations(getCommandLocalizations('setup', 'commandDescription'))
+    .setNameLocalizations(getCommandLocalizations('setup.commandName'))
+    .setDescriptionLocalizations(getCommandLocalizations('setup.commandDescription'))
     .setIntegrationTypes([0])
     .addSubcommand(subcommand => subcommand
       .setDescription('Tripsit info!')
@@ -945,20 +945,20 @@ export const setup: SlashCommand = {
       .setName('helper'))
     .addSubcommandGroup(group => group
       .setName('locale')
-      .setDescription(t('en-US', 'setup', 'localeSubgroupDescription'))
-      .setDescriptionLocalizations(getCommandLocalizations('setup', 'localeSubgroupDescription'))
+      .setDescription(t('en-US', 'setup.localeSubgroupDescription'))
+      .setDescriptionLocalizations(getCommandLocalizations('setup.localeSubgroupDescription'))
       .addSubcommand(sub => sub
         .setName('get')
-        .setDescription(t('en-US', 'setup', 'localeGetSubcommand'))
-        .setDescriptionLocalizations(getCommandLocalizations('setup', 'localeGetSubcommand')))
+        .setDescription(t('en-US', 'setup.localeGetSubcommand'))
+        .setDescriptionLocalizations(getCommandLocalizations('setup.localeGetSubcommand')))
       .addSubcommand(sub => sub
         .setName('set')
-        .setDescription(t('en-US', 'setup', 'localeSetSubcommand'))
-        .setDescriptionLocalizations(getCommandLocalizations('setup', 'localeSetSubcommand'))
+        .setDescription(t('en-US', 'setup.localeSetSubcommand'))
+        .setDescriptionLocalizations(getCommandLocalizations('setup.localeSetSubcommand'))
         .addStringOption(option => option
           .setName('locale')
-          .setDescription(t('en-US', 'setup', 'localeOptionDescription'))
-          .setDescriptionLocalizations(getCommandLocalizations('setup', 'localeOptionDescription'))
+          .setDescription(t('en-US', 'setup.localeOptionDescription'))
+          .setDescriptionLocalizations(getCommandLocalizations('setup.localeOptionDescription'))
           .setRequired(true)
           .setAutocomplete(true)))),
   async execute(interaction:ChatInputCommandInteraction) {
@@ -968,14 +968,14 @@ export const setup: SlashCommand = {
     // await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
     if (!interaction.channel) {
-      log.error(F, t(locale, 'setup', 'noChannel'));
-      await interaction.reply(t(locale, 'setup', 'channelOnlyError'));
+      log.error(F, t(locale, 'setup.noChannel'));
+      await interaction.reply(t(locale, 'setup.channelOnlyError'));
       return false;
     }
 
     if (!interaction.guild) {
       log.error(F, 'how to tripsit: no guild');
-      await interaction.reply(t(locale, 'setup', 'guildOnlyError'));
+      await interaction.reply(t(locale, 'setup.guildOnlyError'));
       return false;
     }
 

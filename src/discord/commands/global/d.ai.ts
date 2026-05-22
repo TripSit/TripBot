@@ -39,9 +39,9 @@ const F = f(__filename);
 export const aiCommand: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('ai')
-    .setNameLocalizations(getCommandLocalizations('ai', 'commandName'))
+    .setNameLocalizations(getCommandLocalizations('ai.commandName'))
     .setDescription("TripBot's AI")
-    .setDescriptionLocalizations(getCommandLocalizations('ai', 'commandDescription'))
+    .setDescriptionLocalizations(getCommandLocalizations('ai.commandDescription'))
     .setIntegrationTypes([0])
     .addSubcommand(subcommand => subcommand
       .setDescription('Setup the TripBot AI in your server')
@@ -271,7 +271,7 @@ export async function aiMessage(messageData: Message<boolean>): Promise<void> {
   if (!isAiEnabled) {
     if (messageData.mentions.has(discordClient.user as ClientUser)) {
       const locale = await getLocale({ guildId: messageData.guild.id } as any, 'ai');
-      await messageData.reply(t(locale, 'ai', 'aiNotEnabledReply'));
+      await messageData.reply(t(locale, 'ai.aiNotEnabledReply'));
     }
     return;
   }
@@ -290,7 +290,7 @@ export async function aiMessage(messageData: Message<boolean>): Promise<void> {
 
   if (!userData.ai_info?.ai_tos_agree || !userData.ai_info?.ai_privacy_agree) {
     const locale = await getLocale({ guildId: messageData.guild.id } as any, 'ai');
-    await messageData.reply(t(locale, 'ai', 'tosPrivacyRequiredReply'));
+    await messageData.reply(t(locale, 'ai.tosPrivacyRequiredReply'));
     return;
   }
 
@@ -384,7 +384,7 @@ export async function aiMessage(messageData: Message<boolean>): Promise<void> {
   } catch (err) {
     log.error(F, `AI Error: ${err}`);
     const locale = await getLocale({ guildId: messageData.guild.id } as any, 'ai');
-    await messageData.reply(t(locale, 'ai', 'aiErrorReply'));
+    await messageData.reply(t(locale, 'ai.aiErrorReply'));
   }
 }
 
@@ -535,7 +535,7 @@ export async function aiMenu(
     }
     case AiText.MenuId.GUILD_CHANNELS: {
       if (!interaction.inGuild()) {
-        return { content: t('en', 'ai', 'serverOnlyReply') };
+        return { content: t('en', 'ai.serverOnlyReply') };
       }
 
       const { guildId } = interaction;

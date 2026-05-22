@@ -15,9 +15,9 @@ const heartEmojis = [
 export const dlovebomb: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('lovebomb')
-    .setNameLocalizations(getCommandLocalizations('lovebomb', 'commandName'))
+    .setNameLocalizations(getCommandLocalizations('lovebomb.commandName'))
     .setDescription('Spread some love')
-    .setDescriptionLocalizations(getCommandLocalizations('lovebomb', 'commandDescription'))
+    .setDescriptionLocalizations(getCommandLocalizations('lovebomb.commandDescription'))
     .setIntegrationTypes([0]),
 
   async execute(interaction) {

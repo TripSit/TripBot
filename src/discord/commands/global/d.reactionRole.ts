@@ -53,7 +53,7 @@ export async function setupCustomReactionRole(
     await interaction.reply({
       embeds: [
         embedTemplate()
-          .setDescription(t(locale, 'reactionRole', 'introMessageRequiredError'))
+          .setDescription(t(locale, 'reactionRole.introMessageRequiredError'))
           .setColor(Colors.Red),
       ],
       flags: MessageFlags.Ephemeral,
@@ -66,7 +66,7 @@ export async function setupCustomReactionRole(
     await interaction.reply({
       embeds: [
         embedTemplate()
-          .setDescription(t(locale, 'reactionRole', 'introChannelNotTextError'))
+          .setDescription(t(locale, 'reactionRole.introChannelNotTextError'))
           .setColor(Colors.Red),
       ],
       flags: MessageFlags.Ephemeral,
@@ -84,7 +84,7 @@ export async function setupCustomReactionRole(
     await interaction.reply({
       embeds: [
         embedTemplate()
-          .setDescription(t(locale, 'reactionRole', 'emojiNotValidError'))
+          .setDescription(t(locale, 'reactionRole.emojiNotValidError'))
           .setColor(Colors.Red),
       ],
       flags: MessageFlags.Ephemeral,
@@ -96,7 +96,7 @@ export async function setupCustomReactionRole(
     await interaction.reply({
       embeds: [
         embedTemplate()
-          .setDescription(t(locale, 'reactionRole', 'multipleEmojisError'))
+          .setDescription(t(locale, 'reactionRole.multipleEmojisError'))
           .setColor(Colors.Red),
       ],
       flags: MessageFlags.Ephemeral,
@@ -111,7 +111,7 @@ export async function setupCustomReactionRole(
     await interaction.reply({
       embeds: [
         embedTemplate()
-          .setDescription(t(locale, 'reactionRole', 'emojiOrLabelRequiredError'))
+          .setDescription(t(locale, 'reactionRole.emojiOrLabelRequiredError'))
           .setColor(Colors.Red),
       ],
       flags: MessageFlags.Ephemeral,
@@ -127,7 +127,7 @@ export async function setupCustomReactionRole(
     await interaction.reply({
       embeds: [
         embedTemplate()
-          .setDescription(t(locale, 'reactionRole', 'roleTooHighError', { role: role.toString() }))
+          .setDescription(t(locale, 'reactionRole.roleTooHighError', { role: role.toString() }))
           .setColor(Colors.Red),
       ],
       flags: MessageFlags.Ephemeral,
@@ -137,15 +137,15 @@ export async function setupCustomReactionRole(
 
   await interaction.showModal(new ModalBuilder()
     .setCustomId(`"ID":"RR","II":"${interaction.id}"`)
-    .setTitle(t(locale, 'reactionRole', 'modalTitle', { roleName: role.name }))
+    .setTitle(t(locale, 'reactionRole.modalTitle', { roleName: role.name }))
     .addComponents(
       new ActionRowBuilder<TextInputBuilder>()
         .addComponents(
           new TextInputBuilder()
             .setCustomId('title')
             .setRequired(true)
-            .setLabel(t(locale, 'reactionRole', 'modalTitleInput'))
-            .setPlaceholder(t(locale, 'reactionRole', 'modalTitlePlaceholder'))
+            .setLabel(t(locale, 'reactionRole.modalTitleInput'))
+            .setPlaceholder(t(locale, 'reactionRole.modalTitlePlaceholder'))
             .setMaxLength(100)
             .setStyle(TextInputStyle.Short),
         ),
@@ -154,8 +154,8 @@ export async function setupCustomReactionRole(
           new TextInputBuilder()
             .setCustomId('description')
             .setRequired(true)
-            .setLabel(t(locale, 'reactionRole', 'modalDescriptionInput'))
-            .setPlaceholder(t(locale, 'reactionRole', 'modalDescriptionPlaceholder'))
+            .setLabel(t(locale, 'reactionRole.modalDescriptionInput'))
+            .setPlaceholder(t(locale, 'reactionRole.modalDescriptionPlaceholder'))
             .setMaxLength(2000)
             .setStyle(TextInputStyle.Paragraph),
         ),
@@ -197,7 +197,7 @@ export async function setupCustomReactionRole(
       await i.editReply({
         embeds: [
           embedTemplate()
-            .setDescription(t(locale, 'reactionRole', 'createdReactionMessage', { roleName: role.name }))
+            .setDescription(t(locale, 'reactionRole.createdReactionMessage', { roleName: role.name }))
             .setColor(Colors.Blue),
         ],
       });
@@ -246,13 +246,13 @@ export async function buttonReactionRole(
       // Display modal to get intro message from the user
       await interaction.showModal(new ModalBuilder()
         .setCustomId(`"ID":"RR","II":"${interaction.id}"`)
-        .setTitle(t(locale, 'reactionRole', 'removeConfirmTitle', { roleName: role.name }))
+        .setTitle(t(locale, 'reactionRole.removeConfirmTitle', { roleName: role.name }))
         .addComponents(new ActionRowBuilder<TextInputBuilder>()
           .addComponents(new TextInputBuilder()
             .setCustomId('reason')
-            .setLabel(t(locale, 'reactionRole', 'removeReasonLabel'))
-            .setPlaceholder(t(locale, 'reactionRole', 'removeReasonPlaceholder'))
-            .setValue(t(locale, 'reactionRole', 'removeReasonDefault'))
+            .setLabel(t(locale, 'reactionRole.removeReasonLabel'))
+            .setPlaceholder(t(locale, 'reactionRole.removeReasonPlaceholder'))
+            .setValue(t(locale, 'reactionRole.removeReasonDefault'))
             .setMaxLength(2000)
             .setStyle(TextInputStyle.Paragraph))));
 
@@ -271,7 +271,7 @@ export async function buttonReactionRole(
           await channelAudit.send(
             `${(i.member as GuildMember).displayName} removed role ${role.name} because: ${reason}`,
           );
-          await i.editReply({ content: t(locale, 'reactionRole', 'removedRoleMessage', { roleName: role.name }) });
+          await i.editReply({ content: t(locale, 'reactionRole.removedRoleMessage', { roleName: role.name }) });
         });
     } else {
       const myMember = interaction.guild.members.me as GuildMember;
@@ -282,14 +282,14 @@ export async function buttonReactionRole(
         await interaction.editReply({
           embeds: [
             embedTemplate()
-              .setDescription(t(locale, 'reactionRole', 'roleRemovalError', { role: role.toString() }))
+              .setDescription(t(locale, 'reactionRole.roleRemovalError', { role: role.toString() }))
               .setColor(Colors.Red),
           ],
         });
         return;
       }
       await target.roles.remove(role);
-      await interaction.editReply({ content: t(locale, 'reactionRole', 'removedRoleMessage', { roleName: role.name }) });
+      await interaction.editReply({ content: t(locale, 'reactionRole.removedRoleMessage', { roleName: role.name }) });
     }
     return;
   }
@@ -306,12 +306,12 @@ export async function buttonReactionRole(
 
   // If the role being requested is the Helper or Contributor role, check if they have been banned first
   if (role.id === env.ROLE_HELPER && userData.helper_role_ban) {
-    await interaction.editReply({ content: t(locale, 'reactionRole', 'roleBanError') });
+    await interaction.editReply({ content: t(locale, 'reactionRole.roleBanError') });
     return;
   }
 
   if (role.id === env.ROLE_CONTRIBUTOR && userData.contributor_role_ban) {
-    await interaction.editReply({ content: t(locale, 'reactionRole', 'roleBanError') });
+    await interaction.editReply({ content: t(locale, 'reactionRole.roleBanError') });
     return;
   }
 
@@ -325,12 +325,12 @@ export async function buttonReactionRole(
     // Display modal to get intro message from the user
     const modal = new ModalBuilder()
       .setCustomId(`"ID":"RR","II":"${interaction.id}"`)
-      .setTitle(t(locale, 'reactionRole', 'introductionModalTitle', { roleName: role.name }));
+      .setTitle(t(locale, 'reactionRole.introductionModalTitle', { roleName: role.name }));
     modal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
       .setCustomId('introduction')
       .setRequired(true)
-      .setLabel(t(locale, 'reactionRole', 'introductionLabel'))
-      .setPlaceholder(t(locale, 'reactionRole', 'introductionPlaceholder', { roleName: role.name }))
+      .setLabel(t(locale, 'reactionRole.introductionLabel'))
+      .setPlaceholder(t(locale, 'reactionRole.introductionPlaceholder', { roleName: role.name }))
       .setMaxLength(1900)
       .setStyle(TextInputStyle.Paragraph)));
     await interaction.showModal(modal);
@@ -350,12 +350,12 @@ export async function buttonReactionRole(
         if (II !== interaction.id) return;
         if (!i.guild) {
           // log.debug(F, `no guild!`);
-          await i.editReply(t(locale, 'reactionRole', 'guildError'));
+          await i.editReply(t(locale, 'reactionRole.guildError'));
           return;
         }
         if (!i.member) {
         // log.debug(F, `no member!`);
-          await i.editReply(t(locale, 'reactionRole', 'memberError'));
+          await i.editReply(t(locale, 'reactionRole.memberError'));
         }
 
         introMessage = i.fields.getTextInputValue('introduction');
@@ -365,7 +365,7 @@ export async function buttonReactionRole(
         introMessage = introMessage.replace(/^(.*)$/gm, '> $1');
 
         await target.roles.add(role);
-        await i.editReply({ content: t(locale, 'reactionRole', 'addedRoleMessage', { roleName: role.name }) });
+        await i.editReply({ content: t(locale, 'reactionRole.addedRoleMessage', { roleName: role.name }) });
 
         const channel = await i.guild?.channels.fetch(channelProvided as string) as TextChannel;
 
@@ -375,14 +375,14 @@ export async function buttonReactionRole(
           const channelTripsit = await interaction.guild?.channels.fetch(env.CHANNEL_TRIPSIT) as TextChannel;
           const hrCategory = await interaction.guild?.channels.fetch(env.CATEGORY_HARMREDUCTIONCENTRE) as CategoryChannel;
 
-          const intro = t(locale, 'reactionRole', 'memberRoleIntroHeader', {
+          const intro = t(locale, 'reactionRole.memberRoleIntroHeader', {
             roleMention: roleTeamtripsit.toString(),
             memberName: target.displayName,
             roleName: role.name,
             introMessage,
           });
           await channel.send(intro);
-          const followup = t(locale, 'reactionRole', 'memberRoleIntroFollowup', {
+          const followup = t(locale, 'reactionRole.memberRoleIntroFollowup', {
             member: target.toString(),
             hrCategory: hrCategory.toString(),
             channelTripsit: channelTripsit.toString(),
@@ -393,7 +393,7 @@ export async function buttonReactionRole(
           const channelTripcord = await interaction.guild?.channels.fetch(env.CHANNEL_DISCORD) as TextChannel;
           const channelTripbot = await interaction.guild?.channels.fetch(env.CHANNEL_TRIPBOT) as TextChannel;
 
-          const intro = t(locale, 'reactionRole', 'devRoleIntroHeader', {
+          const intro = t(locale, 'reactionRole.devRoleIntroHeader', {
             roleMention: roleTeamtripsit.toString(),
             member: target.toString(),
             roleName: role.name,
@@ -402,7 +402,7 @@ export async function buttonReactionRole(
 
           channel.send(intro);
 
-          const followup = t(locale, 'reactionRole', 'devRoleIntroFollowup', {
+          const followup = t(locale, 'reactionRole.devRoleIntroFollowup', {
             member: target.toString(),
             devCategory: devCategory.toString(),
             channelTripcord: channelTripcord.toString(),
@@ -411,7 +411,7 @@ export async function buttonReactionRole(
 
           channel.send(followup);
         } else {
-          const simpleIntro = t(locale, 'reactionRole', 'simpleRoleIntro', {
+          const simpleIntro = t(locale, 'reactionRole.simpleRoleIntro', {
             member: target.toString(),
             roleName: role.name,
             introMessage,
@@ -422,9 +422,9 @@ export async function buttonReactionRole(
   } else if (channelProvided) {
     const channel = await interaction.guild.channels.fetch(channelProvided) as TextChannel;
     await target.roles.add(role);
-    await interaction.editReply({ content: t(locale, 'reactionRole', 'addedRoleMessage', { roleName: role.name }) });
+    await interaction.editReply({ content: t(locale, 'reactionRole.addedRoleMessage', { roleName: role.name }) });
     // Post intro message to the channel
-    const channelIntro = t(locale, 'reactionRole', 'simpleRoleIntro', {
+    const channelIntro = t(locale, 'reactionRole.simpleRoleIntro', {
       member: target.toString(),
       roleName: role.name,
       introMessage: '',
@@ -510,12 +510,12 @@ export async function buttonReactionRole(
     if (premiumColorIds.includes(role.id) && !isPremium && !isBooster && !isPurchaser) {
       // log.debug(F, `role.id is ${role.id} is a premium role and the user is not premium
       //       (isMod: ${isMod}, isTs: ${isTs} isBooster: ${isBooster}, isPatron: ${isPatron})`);
-      await interaction.editReply({ content: t(locale, 'reactionRole', 'rolePermissionError') });
+      await interaction.editReply({ content: t(locale, 'reactionRole.rolePermissionError') });
       return;
     }
 
     await target.roles.add(role);
-    await interaction.editReply({ content: t(locale, 'reactionRole', 'addedRoleMessage', { roleName: role.name }) });
+    await interaction.editReply({ content: t(locale, 'reactionRole.addedRoleMessage', { roleName: role.name }) });
 
     const reactionroleColorData = await db.reaction_roles.findMany({
       where: {
@@ -833,9 +833,9 @@ export async function createColorMessage(
   const roleWhite = await getGuildRole('COLOR' as reaction_role_type, 'Snowdrop', interaction);
 
   const embed = embedTemplate()
-    .setAuthor({ name: t(locale, 'reactionRole', 'colorEmbedAuthor') })
-    .setDescription(t(locale, 'reactionRole', 'colorEmbedDescription'))
-    .setFooter({ text: t(locale, 'reactionRole', 'colorEmbedFooter') })
+    .setAuthor({ name: t(locale, 'reactionRole.colorEmbedAuthor') })
+    .setDescription(t(locale, 'reactionRole.colorEmbedDescription'))
+    .setFooter({ text: t(locale, 'reactionRole.colorEmbedFooter') })
     .setColor(interaction.options.getString('embed_color') ? `#${interaction.options.getString('embed_color')}` : Colors.Blue);
 
   const row1 = new ActionRowBuilder<ButtonBuilder>().addComponents(
@@ -889,7 +889,7 @@ export async function createColorMessage(
   await interaction.editReply({
     embeds: [
       embedTemplate()
-        .setDescription(t(locale, 'reactionRole', 'colorSetupMessage'))
+        .setDescription(t(locale, 'reactionRole.colorSetupMessage'))
         .setColor(interaction.options.getString('embed_color') ? `#${interaction.options.getString('embed_color')}` : Colors.Blue),
     ],
   });
@@ -961,9 +961,9 @@ export async function createPremiumColorMessage(
   const roleDonorBlack = await getGuildRole('PREMIUM_COLOR' as reaction_role_type, 'Labradorite', interaction);
 
   const embed = embedTemplate()
-    .setDescription(t(locale, 'reactionRole', 'premiumColorEmbedDescription'))
-    .setAuthor({ name: t(locale, 'reactionRole', 'premiumColorEmbedAuthor') })
-    .setFooter({ text: t(locale, 'reactionRole', 'premiumColorEmbedFooter') })
+    .setDescription(t(locale, 'reactionRole.premiumColorEmbedDescription'))
+    .setAuthor({ name: t(locale, 'reactionRole.premiumColorEmbedAuthor') })
+    .setFooter({ text: t(locale, 'reactionRole.premiumColorEmbedFooter') })
     .setColor(interaction.options.getString('embed_color') ? `#${interaction.options.getString('embed_color')}` : Colors.Purple);
 
   const row1 = new ActionRowBuilder<ButtonBuilder>().addComponents(
@@ -1016,7 +1016,7 @@ export async function createPremiumColorMessage(
   await interaction.editReply({
     embeds: [
       embedTemplate()
-        .setDescription(t(locale, 'reactionRole', 'premiumColorSetupMessage'))
+        .setDescription(t(locale, 'reactionRole.premiumColorSetupMessage'))
         .setColor(interaction.options.getString('embed_color') ? `#${interaction.options.getString('embed_color')}` : Colors.Purple),
     ],
   });
@@ -1065,10 +1065,10 @@ export async function createMindsetMessage(
   const roleWorking = await getGuildRole('MINDSET' as reaction_role_type, 'Working', interaction);
 
   const embed = embedTemplate()
-    .setAuthor({ name: t(locale, 'reactionRole', 'mindsetEmbedAuthor') })
-    .setDescription(t(locale, 'reactionRole', 'mindsetEmbedDescription'))
+    .setAuthor({ name: t(locale, 'reactionRole.mindsetEmbedAuthor') })
+    .setDescription(t(locale, 'reactionRole.mindsetEmbedDescription'))
   // .setFooter({ text: 'These roles reset after 8 hours to (somewhat) accurately show your mindset!' })
-    .setFooter({ text: t(locale, 'reactionRole', 'mindsetEmbedFooter') })
+    .setFooter({ text: t(locale, 'reactionRole.mindsetEmbedFooter') })
     .setColor(interaction.options.getString('embed_color') ? `#${interaction.options.getString('embed_color')}` : Colors.Green);
 
   const row1 = new ActionRowBuilder<ButtonBuilder>().addComponents(
@@ -1131,7 +1131,7 @@ export async function createMindsetMessage(
   await interaction.editReply({
     embeds: [
       embedTemplate()
-        .setDescription(t(locale, 'reactionRole', 'mindsetSetupMessage'))
+        .setDescription(t(locale, 'reactionRole.mindsetSetupMessage'))
         .setColor(interaction.options.getString('embed_color') ? `#${interaction.options.getString('embed_color')}` : Colors.Green),
     ],
   });
@@ -1176,9 +1176,9 @@ export async function createPronounMessage(
   const rolePronounHe = await getGuildRole('PRONOUN' as reaction_role_type, 'HeHim', interaction);
 
   const embed = embedTemplate()
-    .setAuthor({ name: t(locale, 'reactionRole', 'pronounEmbedAuthor') })
-    .setDescription(t(locale, 'reactionRole', 'pronounEmbedDescription'))
-    .setFooter({ text: t(locale, 'reactionRole', 'pronounEmbedFooter') })
+    .setAuthor({ name: t(locale, 'reactionRole.pronounEmbedAuthor') })
+    .setDescription(t(locale, 'reactionRole.pronounEmbedDescription'))
+    .setFooter({ text: t(locale, 'reactionRole.pronounEmbedFooter') })
     .setColor(interaction.options.getString('embed_color') ? `#${interaction.options.getString('embed_color')}` : Colors.Yellow);
 
   const row1 = new ActionRowBuilder<ButtonBuilder>().addComponents(
@@ -1215,7 +1215,7 @@ export async function createPronounMessage(
   await interaction.editReply({
     embeds: [
       embedTemplate()
-        .setDescription(t(locale, 'reactionRole', 'pronounSetupMessage'))
+        .setDescription(t(locale, 'reactionRole.pronounSetupMessage'))
         .setColor(interaction.options.getString('embed_color') ? `#${interaction.options.getString('embed_color')}` : Colors.Yellow),
     ],
   });
@@ -1255,9 +1255,9 @@ export async function createNotificationMessage(
   const roleActivityCrew = await getGuildRole('NOTIFICATION' as reaction_role_type, 'Activity Crew', interaction);
 
   const embed = embedTemplate()
-    .setAuthor({ name: t(locale, 'reactionRole', 'notificationEmbedAuthor') })
+    .setAuthor({ name: t(locale, 'reactionRole.notificationEmbedAuthor') })
     .setDescription(t(locale, 'reactionRole', isHome ? 'notificationEmbedDescriptionHome' : 'notificationEmbedDescriptionOther'))
-    .setFooter({ text: t(locale, 'reactionRole', 'notificationEmbedFooter') })
+    .setFooter({ text: t(locale, 'reactionRole.notificationEmbedFooter') })
     .setColor(interaction.options.getString('embed_color') ? `#${interaction.options.getString('embed_color')}` : Colors.Red);
 
   const row1 = new ActionRowBuilder<ButtonBuilder>()
@@ -1303,7 +1303,7 @@ export async function createNotificationMessage(
   await interaction.editReply({
     embeds: [
       embedTemplate()
-        .setDescription(t(locale, 'reactionRole', 'notificationSetupMessage'))
+        .setDescription(t(locale, 'reactionRole.notificationSetupMessage'))
         .setColor(interaction.options.getString('embed_color') ? `#${interaction.options.getString('embed_color')}` : Colors.Red),
     ],
   });
@@ -1312,101 +1312,101 @@ export async function createNotificationMessage(
 export const dReactionRole: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('reaction_role')
-    .setNameLocalizations(getCommandLocalizations('reactionRole', 'commandName'))
+    .setNameLocalizations(getCommandLocalizations('reactionRole.commandName'))
     .setDescription('Create a reaction role messages')
-    .setDescriptionLocalizations(getCommandLocalizations('reactionRole', 'commandDescription'))
+    .setDescriptionLocalizations(getCommandLocalizations('reactionRole.commandDescription'))
     .setIntegrationTypes([0])
     .addSubcommand(subcommand => subcommand
       .setName('help')
-      .setNameLocalizations(getCommandLocalizations('reactionRole', 'helpSubcommandName'))
+      .setNameLocalizations(getCommandLocalizations('reactionRole.helpSubcommandName'))
       .setDescription('Displays info on this command')
-      .setDescriptionLocalizations(getCommandLocalizations('reactionRole', 'helpSubcommandDescription')))
+      .setDescriptionLocalizations(getCommandLocalizations('reactionRole.helpSubcommandDescription')))
     .addSubcommand(subcommand => subcommand
       .setName('custom')
-      .setNameLocalizations(getCommandLocalizations('reactionRole', 'customSubcommandName'))
+      .setNameLocalizations(getCommandLocalizations('reactionRole.customSubcommandName'))
       .setDescription('Create a custom reaction role message')
-      .setDescriptionLocalizations(getCommandLocalizations('reactionRole', 'customSubcommandDescription'))
+      .setDescriptionLocalizations(getCommandLocalizations('reactionRole.customSubcommandDescription'))
       .addRoleOption(option => option.setName('role')
         .setRequired(true)
         .setDescription('What role should be applied?')
-        .setDescriptionLocalizations(getCommandLocalizations('reactionRole', 'customRoleOption')))
+        .setDescriptionLocalizations(getCommandLocalizations('reactionRole.customRoleOption')))
       .addStringOption(option => option.setName('emoji')
         .setDescription('What emoji should be used?')
-        .setDescriptionLocalizations(getCommandLocalizations('reactionRole', 'customEmojiOption')))
+        .setDescriptionLocalizations(getCommandLocalizations('reactionRole.customEmojiOption')))
       .addStringOption(option => option.setName('label')
         .setDescription('What should the button label say?')
-        .setDescriptionLocalizations(getCommandLocalizations('reactionRole', 'customLabelOption')))
+        .setDescriptionLocalizations(getCommandLocalizations('reactionRole.customLabelOption')))
       .addBooleanOption(option => option.setName('intro_message')
         .setDescription('Do they need to provide an intro message?')
-        .setDescriptionLocalizations(getCommandLocalizations('reactionRole', 'customIntroMessageOption')))
+        .setDescriptionLocalizations(getCommandLocalizations('reactionRole.customIntroMessageOption')))
       .addChannelOption(option => option.setName('intro_channel')
         .setDescription('Where should the intro message be posted?')
-        .setDescriptionLocalizations(getCommandLocalizations('reactionRole', 'customIntroChannelOption')))
+        .setDescriptionLocalizations(getCommandLocalizations('reactionRole.customIntroChannelOption')))
       .addStringOption(option => option.setName('embed_color')
         .setDescription(DESC_EMBED_COLOR)
-        .setDescriptionLocalizations(getCommandLocalizations('reactionRole', 'customEmbedColorOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('reactionRole.customEmbedColorOption'))
         .setAutocomplete(true)))
     .addSubcommand(subcommand => subcommand
       .setName('color')
-      .setNameLocalizations(getCommandLocalizations('reactionRole', 'colorSubcommandName'))
+      .setNameLocalizations(getCommandLocalizations('reactionRole.colorSubcommandName'))
       .setDescription('Creates the color reaction role message in this channel')
-      .setDescriptionLocalizations(getCommandLocalizations('reactionRole', 'colorSubcommandDescription'))
+      .setDescriptionLocalizations(getCommandLocalizations('reactionRole.colorSubcommandDescription'))
       .addStringOption(option => option.setName('embed_color')
         .setDescription(DESC_EMBED_COLOR)
-        .setDescriptionLocalizations(getCommandLocalizations('reactionRole', 'customEmbedColorOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('reactionRole.customEmbedColorOption'))
         .setAutocomplete(true)))
     .addSubcommand(subcommand => subcommand
       .setName('premium_color')
-      .setNameLocalizations(getCommandLocalizations('reactionRole', 'premiumColorSubcommandName'))
+      .setNameLocalizations(getCommandLocalizations('reactionRole.premiumColorSubcommandName'))
       .setDescription('Creates the premium color reaction role message in this channel')
-      .setDescriptionLocalizations(getCommandLocalizations('reactionRole', 'premiumColorSubcommandDescription'))
+      .setDescriptionLocalizations(getCommandLocalizations('reactionRole.premiumColorSubcommandDescription'))
       .addStringOption(option => option.setName('premium_roles')
         .setDescription('@ mention other roles that should have access to premium colors')
-        .setDescriptionLocalizations(getCommandLocalizations('reactionRole', 'premiumColorRolesOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('reactionRole.premiumColorRolesOption'))
         .setRequired(true))
       .addStringOption(option => option.setName('embed_color')
         .setDescription(DESC_EMBED_COLOR)
-        .setDescriptionLocalizations(getCommandLocalizations('reactionRole', 'customEmbedColorOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('reactionRole.customEmbedColorOption'))
         .setAutocomplete(true)))
     .addSubcommand(subcommand => subcommand
       .setName('mindset')
-      .setNameLocalizations(getCommandLocalizations('reactionRole', 'mindsetSubcommandName'))
+      .setNameLocalizations(getCommandLocalizations('reactionRole.mindsetSubcommandName'))
       .setDescription('Creates the mindset reaction role message in this channel')
-      .setDescriptionLocalizations(getCommandLocalizations('reactionRole', 'mindsetSubcommandDescription'))
+      .setDescriptionLocalizations(getCommandLocalizations('reactionRole.mindsetSubcommandDescription'))
       .addStringOption(option => option.setName('embed_color')
         .setDescription(DESC_EMBED_COLOR)
-        .setDescriptionLocalizations(getCommandLocalizations('reactionRole', 'customEmbedColorOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('reactionRole.customEmbedColorOption'))
         .setAutocomplete(true)))
     .addSubcommand(subcommand => subcommand
       .setName('pronoun')
-      .setNameLocalizations(getCommandLocalizations('reactionRole', 'pronounSubcommandName'))
+      .setNameLocalizations(getCommandLocalizations('reactionRole.pronounSubcommandName'))
       .setDescription('Creates the pronoun reaction role message in this channel')
-      .setDescriptionLocalizations(getCommandLocalizations('reactionRole', 'pronounSubcommandDescription'))
+      .setDescriptionLocalizations(getCommandLocalizations('reactionRole.pronounSubcommandDescription'))
       .addStringOption(option => option.setName('embed_color')
         .setDescription(DESC_EMBED_COLOR)
-        .setDescriptionLocalizations(getCommandLocalizations('reactionRole', 'customEmbedColorOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('reactionRole.customEmbedColorOption'))
         .setAutocomplete(true)))
     .addSubcommand(subcommand => subcommand
       .setName('notification')
-      .setNameLocalizations(getCommandLocalizations('reactionRole', 'notificationSubcommandName'))
+      .setNameLocalizations(getCommandLocalizations('reactionRole.notificationSubcommandName'))
       .setDescription('Creates the notification reaction role message in this channel')
-      .setDescriptionLocalizations(getCommandLocalizations('reactionRole', 'notificationSubcommandDescription'))
+      .setDescriptionLocalizations(getCommandLocalizations('reactionRole.notificationSubcommandDescription'))
       .addBooleanOption(option => option.setName('include_voice')
         .setDescription('Include the voice chatter role?')
-        .setDescriptionLocalizations(getCommandLocalizations('reactionRole', 'notificationIncludeVoiceOption')))
+        .setDescriptionLocalizations(getCommandLocalizations('reactionRole.notificationIncludeVoiceOption')))
       .addBooleanOption(option => option.setName('include_activities')
         .setDescription('Include the activities role?')
-        .setDescriptionLocalizations(getCommandLocalizations('reactionRole', 'notificationIncludeActivitiesOption')))
+        .setDescriptionLocalizations(getCommandLocalizations('reactionRole.notificationIncludeActivitiesOption')))
       .addStringOption(option => option.setName('embed_color')
         .setDescription(DESC_EMBED_COLOR)
-        .setDescriptionLocalizations(getCommandLocalizations('reactionRole', 'customEmbedColorOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('reactionRole.customEmbedColorOption'))
         .setAutocomplete(true))),
   async execute(interaction) {
     const locale = await getLocale(interaction, 'reactionRole');
     log.info(F, await commandContext(interaction));
     if (!interaction.guild) {
       // log.debug(F, `no guild!`);
-      await interaction.reply(t(locale, 'reactionRole', 'guildError'));
+      await interaction.reply(t(locale, 'reactionRole.guildError'));
       return false;
     }
 
@@ -1426,7 +1426,7 @@ export const dReactionRole: SlashCommand = {
       await interaction.reply({
         embeds: [
           embedTemplate()
-            .setDescription(t(locale, 'reactionRole', 'partnerGuildError'))
+            .setDescription(t(locale, 'reactionRole.partnerGuildError'))
             .setColor(Colors.Red),
         ],
         flags: MessageFlags.Ephemeral,
@@ -1436,13 +1436,13 @@ export const dReactionRole: SlashCommand = {
 
     if (!interaction.member) {
       // log.debug(F, `no member!`);
-      await interaction.reply(t(locale, 'reactionRole', 'memberError'));
+      await interaction.reply(t(locale, 'reactionRole.memberError'));
     }
     if (!(interaction.member as GuildMember).permissions.has('ManageRoles' as PermissionResolvable)) {
       await interaction.reply({
         embeds: [
           embedTemplate()
-            .setDescription(t(locale, 'reactionRole', 'permissionCheckError'))
+            .setDescription(t(locale, 'reactionRole.permissionCheckError'))
             .setColor(Colors.Red),
         ],
         flags: MessageFlags.Ephemeral,
@@ -1454,7 +1454,7 @@ export const dReactionRole: SlashCommand = {
       await interaction.reply({
         embeds: [
           embedTemplate()
-            .setDescription(t(locale, 'reactionRole', 'notInGuildError'))
+            .setDescription(t(locale, 'reactionRole.notInGuildError'))
             .setColor(Colors.Red),
         ],
         flags: MessageFlags.Ephemeral,
@@ -1466,7 +1466,7 @@ export const dReactionRole: SlashCommand = {
       await interaction.reply({
         embeds: [
           embedTemplate()
-            .setDescription(t(locale, 'reactionRole', 'notInChannelError'))
+            .setDescription(t(locale, 'reactionRole.notInChannelError'))
             .setColor(Colors.Red),
         ],
         flags: MessageFlags.Ephemeral,
@@ -1478,7 +1478,7 @@ export const dReactionRole: SlashCommand = {
       await interaction.reply({
         embeds: [
           embedTemplate()
-            .setDescription(t(locale, 'reactionRole', 'notTextChannelError'))
+            .setDescription(t(locale, 'reactionRole.notTextChannelError'))
             .setColor(Colors.Red),
         ],
         flags: MessageFlags.Ephemeral,
@@ -1495,7 +1495,7 @@ export const dReactionRole: SlashCommand = {
       await interaction.reply({
         embeds: [
           embedTemplate()
-            .setDescription(t(locale, 'reactionRole', 'guildPermissionError', {
+            .setDescription(t(locale, 'reactionRole.guildPermissionError', {
               permission: guildPerms.permission,
               guild: interaction.guild.toString(),
             }))
@@ -1515,7 +1515,7 @@ export const dReactionRole: SlashCommand = {
       await interaction.reply({
         embeds: [
           embedTemplate()
-            .setDescription(t(locale, 'reactionRole', 'channelPermissionError', {
+            .setDescription(t(locale, 'reactionRole.channelPermissionError', {
               permission: channelPerms.permission,
               channel: interaction.channel.toString(),
             }))
@@ -1532,17 +1532,17 @@ export const dReactionRole: SlashCommand = {
       await interaction.reply({
         embeds: [
           embedTemplate()
-            .setTitle(t(locale, 'reactionRole', 'helpTitle'))
-            .setDescription(t(locale, 'reactionRole', 'helpDescription'))
+            .setTitle(t(locale, 'reactionRole.helpTitle'))
+            .setDescription(t(locale, 'reactionRole.helpDescription'))
             .addFields(
               {
-                name: t(locale, 'reactionRole', 'helpUsageFieldName'),
-                value: t(locale, 'reactionRole', 'helpUsageFieldValue'),
+                name: t(locale, 'reactionRole.helpUsageFieldName'),
+                value: t(locale, 'reactionRole.helpUsageFieldValue'),
                 inline: false,
               },
               {
-                name: t(locale, 'reactionRole', 'helpExamplesFieldName'),
-                value: t(locale, 'reactionRole', 'helpExamplesFieldValue'),
+                name: t(locale, 'reactionRole.helpExamplesFieldName'),
+                value: t(locale, 'reactionRole.helpExamplesFieldValue'),
                 inline: false,
               },
             )

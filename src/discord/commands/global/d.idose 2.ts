@@ -22,21 +22,21 @@ import { t, getLocale, getCommandLocalizations } from '../../../i18n/index';
 export const dIdose: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('idose')
-    .setNameLocalizations(getCommandLocalizations('idose', 'commandName'))
-    .setDescription(t('en-US', 'idose', 'commandDescription'))
-    .setDescriptionLocalizations(getCommandLocalizations('idose', 'commandDescription'))
+    .setNameLocalizations(getCommandLocalizations('idose.commandName'))
+    .setDescription(t('en-US', 'idose.commandDescription'))
+    .setDescriptionLocalizations(getCommandLocalizations('idose.commandDescription'))
     .setContexts([0, 1, 2])
     .setIntegrationTypes([0, 1])
     .addSubcommand(subcommand => subcommand
       .setName('set')
-      .setDescription(t('en-US', 'idose', 'setSubcommand'))
+      .setDescription(t('en-US', 'idose.setSubcommand'))
       .addNumberOption(option => option.setName('volume')
-        .setDescription(t('en-US', 'idose', 'volumeOption'))
-        .setDescriptionLocalizations(getCommandLocalizations('idose', 'volumeOption'))
+        .setDescription(t('en-US', 'idose.volumeOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('idose.volumeOption'))
         .setRequired(true))
       .addStringOption(option => option.setName('units')
-        .setDescription(t('en-US', 'idose', 'unitsOption'))
-        .setDescriptionLocalizations(getCommandLocalizations('idose', 'unitsOption'))
+        .setDescription(t('en-US', 'idose.unitsOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('idose.unitsOption'))
         .setRequired(true)
         .addChoices(
           { name: 'mg (milligrams)', value: 'MG' },
@@ -47,13 +47,13 @@ export const dIdose: SlashCommand = {
           { name: 'fl oz (fluid ounces)', value: 'FLOZ' },
         ))
       .addStringOption(option => option.setName('substance')
-        .setDescription(t('en-US', 'idose', 'substanceOption'))
-        .setDescriptionLocalizations(getCommandLocalizations('idose', 'substanceOption'))
+        .setDescription(t('en-US', 'idose.substanceOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('idose.substanceOption'))
         .setRequired(true)
         .setAutocomplete(true))
       .addStringOption(option => option.setName('roa')
-        .setDescription(t('en-US', 'idose', 'roaOption'))
-        .setDescriptionLocalizations(getCommandLocalizations('idose', 'roaOption'))
+        .setDescription(t('en-US', 'idose.roaOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('idose.roaOption'))
         .setRequired(true)
         .addChoices(
           { name: 'Oral', value: 'ORAL' },
@@ -69,17 +69,17 @@ export const dIdose: SlashCommand = {
           { name: 'Transdermal (Past Skin)', value: 'TRANSDERMAL' },
         ))
       .addStringOption(option => option.setName('offset')
-        .setDescription(t('en-US', 'idose', 'offsetOption'))
-        .setDescriptionLocalizations(getCommandLocalizations('idose', 'offsetOption'))))
+        .setDescription(t('en-US', 'idose.offsetOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('idose.offsetOption'))))
     .addSubcommand(subcommand => subcommand
       .setName('get')
-      .setDescription(t('en-US', 'idose', 'getSubcommand')))
+      .setDescription(t('en-US', 'idose.getSubcommand')))
     .addSubcommand(subcommand => subcommand
       .setName('delete')
-      .setDescription(t('en-US', 'idose', 'deleteSubcommand'))
+      .setDescription(t('en-US', 'idose.deleteSubcommand'))
       .addNumberOption(option => option.setName('record')
-        .setDescription(t('en-US', 'idose', 'recordOption'))
-        .setDescriptionLocalizations(getCommandLocalizations('idose', 'recordOption'))
+        .setDescription(t('en-US', 'idose.recordOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('idose.recordOption'))
         .setRequired(true))),
   async execute(interaction) {
     const locale = await getLocale(interaction, 'idose');
@@ -140,11 +140,11 @@ export const dIdose: SlashCommand = {
     if (command === 'get') {
       if (response.length > 0) {
         // Sort data based on the dose_date property
-        embed.setTitle(t(locale, 'idose', 'dosageHistory'));
+        embed.setTitle(t(locale, 'idose.dosageHistory'));
 
         if (response.length > 24) {
           let pageEmbed = embedTemplate();
-          pageEmbed.setTitle(t(locale, 'idose', 'dosageHistory'));
+          pageEmbed.setTitle(t(locale, 'idose.dosageHistory'));
           // Add fields to the pageEmbed until there are 24 fields
           let pageFields = [] as EmbedField[];
           let pageFieldsCount = 0;
@@ -180,8 +180,8 @@ export const dIdose: SlashCommand = {
           embed.setFields(fields);
         }
       } else {
-        embed.setTitle(t(locale, 'idose', 'noDoseRecords'));
-        embed.setDescription(t(locale, 'idose', 'noDoseRecordsDesc'));
+        embed.setTitle(t(locale, 'idose.noDoseRecords'));
+        embed.setDescription(t(locale, 'idose.noDoseRecordsDesc'));
       }
       // log.debug(F, `book.length: ${book.length}`);
       if (book.length > 1) {
@@ -204,13 +204,13 @@ export const dIdose: SlashCommand = {
       const routeStr = roa.charAt(0).toUpperCase() + roa.slice(1).toLowerCase();
 
       const embedField = {
-        name: t(locale, 'idose', 'doseEntryField', {
+        name: t(locale, 'idose.doseEntryField', {
           volume, units, substance, routeStr,
         }),
         value: `${relative} on ${timeString}`,
       };
       embed.setColor(Colors.DarkBlue);
-      embed.setTitle(t(locale, 'idose', 'doseEntryTitle'));
+      embed.setTitle(t(locale, 'idose.doseEntryTitle'));
       embed.addFields(embedField);
 
       if (interaction.channel?.type === ChannelType.DM) {

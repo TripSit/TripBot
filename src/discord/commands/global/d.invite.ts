@@ -17,13 +17,13 @@ const F = f(__filename);
 export const dInvite: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('invite')
-    .setNameLocalizations(getCommandLocalizations('invite', 'commandName'))
+    .setNameLocalizations(getCommandLocalizations('invite.commandName'))
     .setDescription('Shows an invite link for this bot!')
-    .setDescriptionLocalizations(getCommandLocalizations('invite', 'commandDescription'))
+    .setDescriptionLocalizations(getCommandLocalizations('invite.commandDescription'))
     .setIntegrationTypes([0])
     .addBooleanOption(option => option.setName('ephemeral')
-      .setDescription(t('en', 'invite', 'ephemeralOption'))
-      .setDescriptionLocalizations(getCommandLocalizations('invite', 'ephemeralOption'))) as SlashCommandBuilder,
+      .setDescription(t('en', 'invite.ephemeralOption'))
+      .setDescriptionLocalizations(getCommandLocalizations('invite.ephemeralOption'))) as SlashCommandBuilder,
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
     const locale = await getLocale(interaction, 'invite');
@@ -33,7 +33,7 @@ export const dInvite: SlashCommand = {
     const isProd = process.env.NODE_ENV === 'production';
     const devNotice = isProd
       ? ''
-      : t(locale, 'invite', 'devNotice');
+      : t(locale, 'invite.devNotice');
     const botName = isProd
       ? 'TripBot'
       : 'TripBot Dev';
@@ -42,16 +42,16 @@ export const dInvite: SlashCommand = {
       : 'TripSit Dev';
     const embed = embedTemplate()
       .setColor(Colors.DarkBlue)
-      .setTitle(t(locale, 'invite', 'embedTitle', { botName }))
+      .setTitle(t(locale, 'invite.embedTitle', { botName }))
       .setURL(inviteInfo.bot)
       .setDescription(stripIndents`
         ${devNotice}
 
-        [${t(locale, 'invite', 'inviteLink')}](${inviteInfo.bot}).
+        [${t(locale, 'invite.inviteLink')}](${inviteInfo.bot}).
 
-        ${t(locale, 'invite', 'advancedNote')}
+        ${t(locale, 'invite.advancedNote')}
 
-        ${t(locale, 'invite', 'supportServer', { serverType: isProd ? 'official support' : 'testing', guildName, inviteUrl: inviteInfo.discord })}
+        ${t(locale, 'invite.supportServer', { serverType: isProd ? 'official support' : 'testing', guildName, inviteUrl: inviteInfo.discord })}
       `);
     await interaction.editReply({ embeds: [embed] });
     return true;

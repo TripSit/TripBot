@@ -12,9 +12,9 @@ const F = f(__filename);
 export const dHydrate: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('hydrate')
-    .setNameLocalizations(getCommandLocalizations('hydrate', 'commandName'))
+    .setNameLocalizations(getCommandLocalizations('hydrate.commandName'))
     .setDescription('Remember to hydrate!')
-    .setDescriptionLocalizations(getCommandLocalizations('hydrate', 'commandDescription'))
+    .setDescriptionLocalizations(getCommandLocalizations('hydrate.commandDescription'))
     .setContexts([0, 1, 2])
     .setIntegrationTypes([0, 1]),
 
@@ -22,7 +22,7 @@ export const dHydrate: SlashCommand = {
     log.info(F, await commandContext(interaction));
     await interaction.deferReply({});
     const locale = await getLocale(interaction, 'hydrate');
-    const output = t(locale, 'hydrate', 'reminderMessage');
+    const output = t(locale, 'hydrate.reminderMessage');
     const embed = embedTemplate()
       .setColor(Colors.DarkBlue)
       .setDescription(output)

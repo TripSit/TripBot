@@ -26,16 +26,16 @@ async function create(
 ):Promise<string> {
   // Check if the member doing this command has permissions to make channels
   if (!(interaction.member as GuildMember).permissions.has('ManageChannels' as PermissionResolvable)) {
-    return t(locale, 'bridge', 'noPermissionCreate');
+    return t(locale, 'bridge.noPermissionCreate');
   }
 
   if (interaction.guild?.id !== env.DISCORD_GUILD_ID) {
-    return t(locale, 'bridge', 'notTripSit');
+    return t(locale, 'bridge.notTripSit');
   }
 
   const internalChannel = interaction.channel;
   if (!(internalChannel instanceof TextChannel)) {
-    return t(locale, 'bridge', 'notTextChannel');
+    return t(locale, 'bridge.notTextChannel');
   }
 
   const internalChannelPerms = await checkChannelPermissions(internalChannel, [
@@ -44,7 +44,7 @@ async function create(
   if (!internalChannelPerms.hasPermission) {
     log.error(F, stripIndents`Missing ${internalChannelPerms.permission} permission \
 in ${internalChannel.guild.name}'s ${internalChannel}!`);
-    return t(locale, 'bridge', 'missingPermission', {
+    return t(locale, 'bridge.missingPermission', {
       permission: internalChannelPerms.permission,
       guild: internalChannel.guild.name,
       channel: internalChannel.toString(),
@@ -55,7 +55,7 @@ in ${internalChannel.guild.name}'s ${internalChannel}!`);
 
   // Do a check to make sure the external ID is a series of number
   if (!/^\d+$/.test(externalChannelId)) {
-    return t(locale, 'bridge', 'invalidChannelId');
+    return t(locale, 'bridge.invalidChannelId');
   }
 
   let externalChannel = {} as Channel | null;
@@ -63,11 +63,11 @@ in ${internalChannel.guild.name}'s ${internalChannel}!`);
     externalChannel = await interaction.client.channels.fetch(externalChannelId);
   } catch (error) {
     log.error(F, stripIndents`Error fetching external channel: ${error}`);
-    return t(locale, 'bridge', 'channelNotFound');
+    return t(locale, 'bridge.channelNotFound');
   }
 
   if (!(externalChannel instanceof TextChannel)) {
-    return t(locale, 'bridge', 'externalNotTextChannel');
+    return t(locale, 'bridge.externalNotTextChannel');
   }
 
   const externalChannelPerms = await checkChannelPermissions(externalChannel, [
@@ -76,7 +76,7 @@ in ${internalChannel.guild.name}'s ${internalChannel}!`);
     'ManageWebhooks' as PermissionResolvable,
   ]);
   if (!externalChannelPerms.hasPermission) {
-    return t(locale, 'bridge', 'externalMissingPermission', {
+    return t(locale, 'bridge.externalMissingPermission', {
       permission: externalChannelPerms.permission,
       guild: externalChannel.guild.name,
       channel: externalChannel.toString(),
@@ -97,8 +97,8 @@ in ${internalChannel.guild.name}'s ${internalChannel}!`);
   await externalChannel.send({
     embeds: [
       embedTemplate()
-        .setTitle(t(locale, 'bridge', 'bridgeTitle'))
-        .setDescription(t(locale, 'bridge', 'createRequestDescription', {
+        .setTitle(t(locale, 'bridge.bridgeTitle'))
+        .setDescription(t(locale, 'bridge.createRequestDescription', {
           member: (interaction.member as GuildMember).displayName,
           internalGuild: internalChannel.guild.name,
           internalChannel: internalChannel.toString(),
@@ -108,7 +108,7 @@ in ${internalChannel.guild.name}'s ${internalChannel}!`);
     ],
   });
 
-  return t(locale, 'bridge', 'createSuccess', {
+  return t(locale, 'bridge.createSuccess', {
     internalGuild: internalChannel.guild.name,
     internalChannel: internalChannel.toString(),
     externalGuild: externalChannel.guild.name,
@@ -122,17 +122,17 @@ async function confirm(
 ):Promise<string> {
   // Check if the member doing this command has permissions to make channels
   if (!(interaction.member as GuildMember).permissions.has('ManageChannels' as PermissionResolvable)) {
-    return t(locale, 'bridge', 'noPermissionCreate');
+    return t(locale, 'bridge.noPermissionCreate');
   }
 
   if (interaction.guild?.id === env.DISCORD_GUILD_ID) {
-    return t(locale, 'bridge', 'notTripSit');
+    return t(locale, 'bridge.notTripSit');
   }
 
   // const externalChannelId = interaction.options.getString('external_channel', true);
   // const externalChannel = await interaction.client.channels.fetch(externalChannelId);
   // if (!(externalChannel instanceof TextChannel)) {
-  //   return t(locale, 'bridge', 'externalNotTextChannel');
+  //   return t(locale, 'bridge.externalNotTextChannel');
   // }
 
   // const externalChannelPerms = await checkChannelPermissions(externalChannel, [
@@ -141,7 +141,7 @@ async function confirm(
   //   'ManageWebhooks' as PermissionResolvable,
   // ])
   // if (!externalChannelPerms.hasPermission) {
-  //   return t(locale, 'bridge', 'externalMissingPermission', {
+  //   return t(locale, 'bridge.externalMissingPermission', {
   //     permission: externalChannelPerms.permission,
   //     guild: externalChannel.guild.name,
   //     channel: externalChannel.toString(),
@@ -165,8 +165,8 @@ async function confirm(
   await internalChannel.send({
     embeds: [
       embedTemplate()
-        .setTitle(t(locale, 'bridge', 'bridgeTitle'))
-        .setDescription(t(locale, 'bridge', 'confirmDescription', {
+        .setTitle(t(locale, 'bridge.bridgeTitle'))
+        .setDescription(t(locale, 'bridge.confirmDescription', {
           member: (interaction.member as GuildMember).displayName,
           internalGuild: internalChannel.guild.name,
           internalChannel: internalChannel.toString(),
@@ -176,7 +176,7 @@ async function confirm(
     ],
   });
 
-  return t(locale, 'bridge', 'confirmSuccess', {
+  return t(locale, 'bridge.confirmSuccess', {
     member: (interaction.member as GuildMember).displayName,
     externalGuild: externalChannel.guild.name,
     externalChannel: externalChannel.toString(),
@@ -191,7 +191,7 @@ async function pause(
 ):Promise<string> {
   // Check if the member doing this command has permissions to make channels
   if (!(interaction.member as GuildMember).permissions.has('ManageChannels' as PermissionResolvable)) {
-    return t(locale, 'bridge', 'noPermissionPause');
+    return t(locale, 'bridge.noPermissionPause');
   }
 
   if (interaction.guild?.id === env.DISCORD_GUILD_ID) {
@@ -203,18 +203,18 @@ async function pause(
     });
 
     if (bridges.length === 0) {
-      return t(locale, 'bridge', 'noBridgeError');
+      return t(locale, 'bridge.noBridgeError');
     }
 
     const activeBridges = bridges.filter(bridge => bridge.status === 'ACTIVE');
 
     if (activeBridges.length === 0) {
-      return t(locale, 'bridge', 'noActiveBridges');
+      return t(locale, 'bridge.noActiveBridges');
     }
 
     await Promise.allSettled(activeBridges.map(bridge => bridgePause(bridge.external_channel)));
 
-    return t(locale, 'bridge', 'pausedMultiple', { count: bridges.length });
+    return t(locale, 'bridge.pausedMultiple', { count: bridges.length });
   }
   // Get the bridges from the database that use this external_channel
   const bridge = await db.bridges.findFirst({
@@ -224,16 +224,16 @@ async function pause(
   });
 
   if (!bridge) {
-    return t(locale, 'bridge', 'noBridgeError');
+    return t(locale, 'bridge.noBridgeError');
   }
 
   if (bridge.status !== 'ACTIVE') {
-    return t(locale, 'bridge', 'noActiveBridges');
+    return t(locale, 'bridge.noActiveBridges');
   }
 
   await bridgePause((interaction.channel as TextChannel).id);
 
-  return t(locale, 'bridge', 'pausedSingle');
+  return t(locale, 'bridge.pausedSingle');
 }
 
 async function resume(
@@ -242,7 +242,7 @@ async function resume(
 ):Promise<string> {
   // Check if the member doing this command has permissions to make channels
   if (!(interaction.member as GuildMember).permissions.has('ManageChannels' as PermissionResolvable)) {
-    return t(locale, 'bridge', 'noPermissionResume');
+    return t(locale, 'bridge.noPermissionResume');
   }
 
   if (interaction.guild?.id === env.DISCORD_GUILD_ID) {
@@ -254,19 +254,19 @@ async function resume(
     });
 
     if (bridges.length === 0) {
-      return t(locale, 'bridge', 'noBridgeError');
+      return t(locale, 'bridge.noBridgeError');
     }
 
     const activeBridges = bridges.filter(bridge => bridge.status === 'PAUSED');
 
     if (activeBridges.length === 0) {
-      return t(locale, 'bridge', 'noPausedBridges');
+      return t(locale, 'bridge.noPausedBridges');
     }
 
     // Resume all bridges
     await Promise.allSettled(activeBridges.map(bridge => bridgeResume(bridge.external_channel)));
 
-    return t(locale, 'bridge', 'resumedMultiple', { count: bridges.length });
+    return t(locale, 'bridge.resumedMultiple', { count: bridges.length });
   }
   // Get the bridges from the database that use this external_channel
   const bridge = await db.bridges.findFirst({
@@ -276,16 +276,16 @@ async function resume(
   });
 
   if (!bridge) {
-    return t(locale, 'bridge', 'noBridgeError');
+    return t(locale, 'bridge.noBridgeError');
   }
 
   if (bridge.status !== 'PAUSED') {
-    return t(locale, 'bridge', 'noPausedBridges');
+    return t(locale, 'bridge.noPausedBridges');
   }
 
   await bridgeResume((interaction.channel as TextChannel).id);
 
-  return t(locale, 'bridge', 'resumedSingle');
+  return t(locale, 'bridge.resumedSingle');
 }
 
 async function remove(
@@ -294,7 +294,7 @@ async function remove(
 ):Promise<string> {
   // Check if the member doing this command has permissions to make channels
   if (!(interaction.member as GuildMember).permissions.has('ManageChannels' as PermissionResolvable)) {
-    return t(locale, 'bridge', 'noPermissionRemove');
+    return t(locale, 'bridge.noPermissionRemove');
   }
 
   // Check if the 'confirmation' option was used make sure it matches the guild ID
@@ -309,16 +309,16 @@ async function remove(
     });
 
     if (bridges.length === 0) {
-      return t(locale, 'bridge', 'noBridgeError');
+      return t(locale, 'bridge.noBridgeError');
     }
 
     if (confirmation !== interaction.guild?.id) {
-      return t(locale, 'bridge', 'confirmRemovalMultiple', { count: bridges.length });
+      return t(locale, 'bridge.confirmRemovalMultiple', { count: bridges.length });
     }
 
     await Promise.allSettled(bridges.map(bridge => bridgeRemove(bridge.external_channel)));
 
-    return t(locale, 'bridge', 'removedMultiple', { count: bridges.length });
+    return t(locale, 'bridge.removedMultiple', { count: bridges.length });
   }
   // Get the bridges from the database that use this external_channel
   const bridge = await db.bridges.findFirst({
@@ -328,16 +328,16 @@ async function remove(
   });
 
   if (!bridge) {
-    return t(locale, 'bridge', 'noBridgeError');
+    return t(locale, 'bridge.noBridgeError');
   }
 
   if (confirmation !== interaction.guild?.id) {
-    return t(locale, 'bridge', 'confirmRemovalSingle');
+    return t(locale, 'bridge.confirmRemovalSingle');
   }
 
   await bridgeRemove((interaction.channel as TextChannel).id);
 
-  return t(locale, 'bridge', 'removedSingle');
+  return t(locale, 'bridge.removedSingle');
 }
 
 async function info(
@@ -346,7 +346,7 @@ async function info(
 ):Promise<string> {
   // Check if the member doing this command has permissions to make channels
   if (!(interaction.member as GuildMember).permissions.has('ManageChannels' as PermissionResolvable)) {
-    return t(locale, 'bridge', 'noPermissionInfo');
+    return t(locale, 'bridge.noPermissionInfo');
   }
 
   if (interaction.guild?.id === env.DISCORD_GUILD_ID) {
@@ -358,15 +358,15 @@ async function info(
     });
 
     if (bridges.length === 0) {
-      return t(locale, 'bridge', 'noBridgeError');
+      return t(locale, 'bridge.noBridgeError');
     }
 
-    let message = t(locale, 'bridge', 'infoMultiple', { count: bridges.length });
+    let message = t(locale, 'bridge.infoMultiple', { count: bridges.length });
 
     bridges.forEach(async bridge => {
       const channel = await discordClient.channels.fetch(bridge.external_channel) as TextChannel;
 
-      message += `\n${t(locale, 'bridge', 'infoConnected', {
+      message += `\n${t(locale, 'bridge.infoConnected', {
         guild: channel.guild.name,
         channel: channel.name,
       })}`;
@@ -382,14 +382,14 @@ async function info(
   });
 
   if (!bridge) {
-    return t(locale, 'bridge', 'noBridgeError');
+    return t(locale, 'bridge.noBridgeError');
   }
 
   const internalChannel = await discordClient.channels.fetch(bridge.internal_channel);
-  if (!internalChannel) return t(locale, 'bridge', 'noBridgeError');
+  if (!internalChannel) return t(locale, 'bridge.noBridgeError');
   const { guild } = internalChannel as TextChannel;
 
-  return t(locale, 'bridge', 'infoSingle', {
+  return t(locale, 'bridge.infoSingle', {
     guild: guild.toString(),
     channel: internalChannel.toString(),
   });
@@ -398,63 +398,63 @@ async function info(
 export const dBridge: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('bridge')
-    .setNameLocalizations(getCommandLocalizations('bridge', 'commandName'))
+    .setNameLocalizations(getCommandLocalizations('bridge.commandName'))
     .setDescription('Manage the bridge between two discord channels')
-    .setDescriptionLocalizations(getCommandLocalizations('bridge', 'commandDescription'))
+    .setDescriptionLocalizations(getCommandLocalizations('bridge.commandDescription'))
     .setIntegrationTypes([0])
     .addSubcommand(subcommand => subcommand
       .setName('create')
-      .setNameLocalizations(getCommandLocalizations('bridge', 'createSubcommand'))
-      .setDescription(t('en', 'bridge', 'createDescription'))
-      .setDescriptionLocalizations(getCommandLocalizations('bridge', 'createDescription'))
+      .setNameLocalizations(getCommandLocalizations('bridge.createSubcommand'))
+      .setDescription(t('en', 'bridge.createDescription'))
+      .setDescriptionLocalizations(getCommandLocalizations('bridge.createDescription'))
       .addStringOption(option => option.setName('external_channel')
-        .setDescription(t('en', 'bridge', 'externalChannelOption'))
-        .setDescriptionLocalizations(getCommandLocalizations('bridge', 'externalChannelOption'))
+        .setDescription(t('en', 'bridge.externalChannelOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('bridge.externalChannelOption'))
         .setRequired(true))
       .addBooleanOption(option => option.setName('override')
-        .setDescription(t('en', 'bridge', 'overrideOption'))
-        .setDescriptionLocalizations(getCommandLocalizations('bridge', 'overrideOption'))
+        .setDescription(t('en', 'bridge.overrideOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('bridge.overrideOption'))
         .setRequired(false)))
     .addSubcommand(subcommand => subcommand
       .setName('confirm')
-      .setNameLocalizations(getCommandLocalizations('bridge', 'confirmSubcommand'))
-      .setDescription(t('en', 'bridge', 'confirmDescription'))
-      .setDescriptionLocalizations(getCommandLocalizations('bridge', 'confirmDescription')))
+      .setNameLocalizations(getCommandLocalizations('bridge.confirmSubcommand'))
+      .setDescription(t('en', 'bridge.confirmDescription'))
+      .setDescriptionLocalizations(getCommandLocalizations('bridge.confirmDescription')))
     .addSubcommand(subcommand => subcommand
       .setName('pause')
-      .setNameLocalizations(getCommandLocalizations('bridge', 'pauseSubcommand'))
-      .setDescription(t('en', 'bridge', 'pauseDescription'))
-      .setDescriptionLocalizations(getCommandLocalizations('bridge', 'pauseDescription')))
+      .setNameLocalizations(getCommandLocalizations('bridge.pauseSubcommand'))
+      .setDescription(t('en', 'bridge.pauseDescription'))
+      .setDescriptionLocalizations(getCommandLocalizations('bridge.pauseDescription')))
     .addSubcommand(subcommand => subcommand
       .setName('resume')
-      .setNameLocalizations(getCommandLocalizations('bridge', 'resumeSubcommand'))
-      .setDescription(t('en', 'bridge', 'resumeDescription'))
-      .setDescriptionLocalizations(getCommandLocalizations('bridge', 'resumeDescription')))
+      .setNameLocalizations(getCommandLocalizations('bridge.resumeSubcommand'))
+      .setDescription(t('en', 'bridge.resumeDescription'))
+      .setDescriptionLocalizations(getCommandLocalizations('bridge.resumeDescription')))
     .addSubcommand(subcommand => subcommand
       .setName('info')
-      .setNameLocalizations(getCommandLocalizations('bridge', 'infoSubcommand'))
-      .setDescription(t('en', 'bridge', 'infoDescription'))
-      .setDescriptionLocalizations(getCommandLocalizations('bridge', 'infoDescription')))
+      .setNameLocalizations(getCommandLocalizations('bridge.infoSubcommand'))
+      .setDescription(t('en', 'bridge.infoDescription'))
+      .setDescriptionLocalizations(getCommandLocalizations('bridge.infoDescription')))
     .addSubcommand(subcommand => subcommand
       .setName('remove')
-      .setNameLocalizations(getCommandLocalizations('bridge', 'removeSubcommand'))
-      .setDescription(t('en', 'bridge', 'removeDescription'))
-      .setDescriptionLocalizations(getCommandLocalizations('bridge', 'removeDescription'))
+      .setNameLocalizations(getCommandLocalizations('bridge.removeSubcommand'))
+      .setDescription(t('en', 'bridge.removeDescription'))
+      .setDescriptionLocalizations(getCommandLocalizations('bridge.removeDescription'))
       .addStringOption(option => option.setName('confirmation')
-        .setDescription(t('en', 'bridge', 'confirmationOption'))
-        .setDescriptionLocalizations(getCommandLocalizations('bridge', 'confirmationOption')))),
+        .setDescription(t('en', 'bridge.confirmationOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('bridge.confirmationOption')))),
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
     const locale = await getLocale(interaction, 'bridge');
     const embed = embedTemplate()
-      .setTitle(t(locale, 'bridge', 'bridgeTitle'))
+      .setTitle(t(locale, 'bridge.bridgeTitle'))
       .setColor(Colors.DarkPurple);
     if (!interaction.guild || !interaction.member) {
       await interaction.editReply({
         embeds: [
           embed
-            .setDescription(t(locale, 'bridge', 'guildOnly'))
+            .setDescription(t(locale, 'bridge.guildOnly'))
             .setColor(Colors.Red),
         ],
       });
@@ -478,7 +478,7 @@ export const dBridge: SlashCommand = {
       await interaction.editReply({
         embeds: [
           embed
-            .setDescription(t(locale, 'bridge', 'partnerOnly'))
+            .setDescription(t(locale, 'bridge.partnerOnly'))
             .setColor(Colors.Red),
         ],
       });

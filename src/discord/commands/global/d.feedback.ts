@@ -29,13 +29,13 @@ export async function feedbackReportModal(
   await interaction.showModal(
     new ModalBuilder()
       .setCustomId(`feedbackReportModal~${interaction.id}`)
-      .setTitle(t(locale, 'feedback', 'modalTitle'))
+      .setTitle(t(locale, 'feedback.modalTitle'))
       .addComponents(
         new ActionRowBuilder<TextInputBuilder>()
           .addComponents(
             new TextInputBuilder()
               .setCustomId('feedbackReport')
-              .setLabel(t(locale, 'feedback', 'modalLabel'))
+              .setLabel(t(locale, 'feedback.modalLabel'))
               .setStyle(TextInputStyle.Paragraph),
           ),
       ),
@@ -97,9 +97,9 @@ export async function feedbackReportModal(
 export const dFeedback: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('feedback')
-    .setNameLocalizations(getCommandLocalizations('feedback', 'commandName'))
+    .setNameLocalizations(getCommandLocalizations('feedback.commandName'))
     .setDescription('Share feedback or report a bug to the TripBot dev team!')
-    .setDescriptionLocalizations(getCommandLocalizations('feedback', 'commandDescription'))
+    .setDescriptionLocalizations(getCommandLocalizations('feedback.commandDescription'))
     .setIntegrationTypes([0]),
   async execute(interaction) {
     log.info(F, await commandContext(interaction));

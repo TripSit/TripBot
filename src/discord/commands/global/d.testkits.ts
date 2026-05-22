@@ -15,14 +15,14 @@ const F = f(__filename);
 export default {
   data: new SlashCommandBuilder()
     .setName('drug_testkits')
-    .setNameLocalizations(getCommandLocalizations('testkits', 'commandName'))
+    .setNameLocalizations(getCommandLocalizations('testkits.commandName'))
     .setDescription('Information on how to get a test kit')
-    .setDescriptionLocalizations(getCommandLocalizations('testkits', 'commandDescription'))
+    .setDescriptionLocalizations(getCommandLocalizations('testkits.commandDescription'))
     .setContexts([0, 1, 2])
     .setIntegrationTypes([0, 1])
     .addBooleanOption(option => option.setName('ephemeral')
-      .setDescription(t('en', 'testkits', 'ephemeralOption'))
-      .setDescriptionLocalizations(getCommandLocalizations('testkits', 'ephemeralOption'))) as SlashCommandBuilder,
+      .setDescription(t('en', 'testkits.ephemeralOption'))
+      .setDescriptionLocalizations(getCommandLocalizations('testkits.ephemeralOption'))) as SlashCommandBuilder,
 
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
@@ -32,7 +32,7 @@ export default {
     const emsInfo = await testkits();
     const embed = embedTemplate();
 
-    embed.setTitle(t(locale, 'testkits', 'title'));
+    embed.setTitle(t(locale, 'testkits.title'));
 
     const fieldsPerRow = 3; // Set fields per row to 3
     const totalFields = emsInfo.length;
@@ -71,9 +71,9 @@ export default {
       }
     }
     embed.setDescription(stripIndents`
-        [${t(locale, 'testkits', 'howToUseReagentKit')}](https://dancesafe.org/testing-kit-instructions/)
-        [${t(locale, 'testkits', 'howToUseFentanylStrips')}](https://dancesafe.org/fentanyl/)
-        [${t(locale, 'testkits', 'moreResources')}](https://wiki.tripsit.me/wiki/Test_Kits)
+        [${t(locale, 'testkits.howToUseReagentKit')}](https://dancesafe.org/testing-kit-instructions/)
+        [${t(locale, 'testkits.howToUseFentanylStrips')}](https://dancesafe.org/fentanyl/)
+        [${t(locale, 'testkits.moreResources')}](https://wiki.tripsit.me/wiki/Test_Kits)
         `);
     await interaction.editReply({ embeds: [embed] });
     return true;

@@ -12,9 +12,9 @@ const F = f(__filename);
 export const dKipp: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('kipp')
-    .setNameLocalizations(getCommandLocalizations('kipp', 'commandName'))
+    .setNameLocalizations(getCommandLocalizations('kipp.commandName'))
     .setDescription('Keep it positive please!')
-    .setDescriptionLocalizations(getCommandLocalizations('kipp', 'commandDescription'))
+    .setDescriptionLocalizations(getCommandLocalizations('kipp.commandDescription'))
     .setIntegrationTypes([0]),
 
   async execute(interaction) {
@@ -30,7 +30,7 @@ export const dKipp: SlashCommand = {
     const rowA = [...happyEmojis].sort(() => 0.5 - Math.random()).slice(0, 8); // Sort the array
 
     // log.debug(F, `Row A: ${rowA}`);
-    const rowB = `\n${t(locale, 'kipp', 'message')}\n`;
+    const rowB = `\n${t(locale, 'kipp.message')}\n`;
     // log.debug(F, `Row B: ${rowB}`);
     const rowC = [...happyEmojis].sort(() => 0.5 - Math.random()).slice(0, 8); // Sort the array
     // log.debug(F, `Row C: ${rowC}`);

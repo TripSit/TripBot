@@ -25,28 +25,28 @@ function createGameEmbed(
   locale: string,
 ): EmbedBuilder {
   const embed = embedTemplate()
-    .setTitle(t(locale, 'triptacgo', 'gameTitle'))
+    .setTitle(t(locale, 'triptacgo.gameTitle'))
     .setColor(Colors.Green);
 
-  let description = `${t(locale, 'triptacgo', 'gameVsFormat', { player1: player1Name, player2: player2Name })}\n`;
-  description += `${t(locale, 'triptacgo', 'capturesFormat', { capturesX: game.capturedPieces.X, capturesO: game.capturedPieces.O })}\n\n`;
-  description += `${t(locale, 'triptacgo', 'winConditions')}\n`;
-  description += `${t(locale, 'triptacgo', 'captureRule')}\n\n`;
+  let description = `${t(locale, 'triptacgo.gameVsFormat', { player1: player1Name, player2: player2Name })}\n`;
+  description += `${t(locale, 'triptacgo.capturesFormat', { capturesX: game.capturedPieces.X, capturesO: game.capturedPieces.O })}\n\n`;
+  description += `${t(locale, 'triptacgo.winConditions')}\n`;
+  description += `${t(locale, 'triptacgo.captureRule')}\n\n`;
 
   if (game.isGameOver) {
     if (game.winner === 'tie') {
-      description += `\n${t(locale, 'triptacgo', 'tieMessage')}`;
+      description += `\n${t(locale, 'triptacgo.tieMessage')}`;
       embed.setColor(Colors.Yellow);
     } else if (game.winner !== 'tie') {
       const winnerName = game.winner === 'X' ? player1Name : player2Name;
       const winnerSymbol = game.winner === 'X' ? '❌' : '⭕';
-      description += `\n${t(locale, 'triptacgo', 'winMessage', { winner: winnerName.toUpperCase(), symbol: winnerSymbol })}\n`;
+      description += `\n${t(locale, 'triptacgo.winMessage', { winner: winnerName.toUpperCase(), symbol: winnerSymbol })}\n`;
       embed.setColor(Colors.Green);
     }
   } else {
     const currentPlayerName = game.currentPlayer === 'X' ? player1Name : player2Name;
     const currentSymbol = game.currentPlayer === 'X' ? '❌' : '⭕';
-    description += `\n${t(locale, 'triptacgo', 'turnIndicator', { playerName: currentPlayerName, symbol: currentSymbol })}`;
+    description += `\n${t(locale, 'triptacgo.turnIndicator', { playerName: currentPlayerName, symbol: currentSymbol })}`;
   }
 
   embed.setDescription(description);
@@ -83,9 +83,9 @@ function createGameButtons(game: TripTacGoGame): ActionRowBuilder<ButtonBuilder>
 export const dTripTacGo: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('triptacgo')
-    .setNameLocalizations(getCommandLocalizations('triptacgo', 'commandName'))
+    .setNameLocalizations(getCommandLocalizations('triptacgo.commandName'))
     .setDescription('Start a trip-tac-go game')
-    .setDescriptionLocalizations(getCommandLocalizations('triptacgo', 'commandDescription'))
+    .setDescriptionLocalizations(getCommandLocalizations('triptacgo.commandDescription'))
     .setContexts([0, 1, 2])
     .setIntegrationTypes([0, 1])
     .addUserOption(option => option
@@ -99,7 +99,7 @@ export const dTripTacGo: SlashCommand = {
 
     if (!opponent) {
       await interaction.reply({
-        content: t(locale, 'triptacgo', 'invalidOpponent'),
+        content: t(locale, 'triptacgo.invalidOpponent'),
         flags: MessageFlags.Ephemeral,
       });
       return false;
@@ -107,7 +107,7 @@ export const dTripTacGo: SlashCommand = {
 
     if (opponent.id === interaction.user.id) {
       await interaction.reply({
-        content: t(locale, 'triptacgo', 'cannotPlaySelf'),
+        content: t(locale, 'triptacgo.cannotPlaySelf'),
         flags: MessageFlags.Ephemeral,
       });
       return false;
@@ -115,7 +115,7 @@ export const dTripTacGo: SlashCommand = {
 
     if (opponent.bot) {
       await interaction.reply({
-        content: t(locale, 'triptacgo', 'cannotPlayBot'),
+        content: t(locale, 'triptacgo.cannotPlayBot'),
         flags: MessageFlags.Ephemeral,
       });
       return false;
@@ -141,7 +141,7 @@ export const dTripTacGo: SlashCommand = {
 
     if (!collector) {
       await interaction.editReply({
-        content: t(locale, 'triptacgo', 'noChannelError'),
+        content: t(locale, 'triptacgo.noChannelError'),
         embeds: [],
         components: [],
       });
@@ -186,8 +186,8 @@ export const dTripTacGo: SlashCommand = {
       if (!game.isGameOver) {
         collector.removeAllListeners();
         const timeoutEmbed = new EmbedBuilder()
-          .setTitle(t(locale, 'triptacgo', 'timeoutTitle'))
-          .setDescription(t(locale, 'triptacgo', 'timeoutDescription'))
+          .setTitle(t(locale, 'triptacgo.timeoutTitle'))
+          .setDescription(t(locale, 'triptacgo.timeoutDescription'))
           .setColor(Colors.Red);
 
         await interaction.editReply({

@@ -13,28 +13,28 @@ const F = f(__filename);
 export const dConvert: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('convert')
-    .setNameLocalizations(getCommandLocalizations('convert', 'commandName'))
+    .setNameLocalizations(getCommandLocalizations('convert.commandName'))
     .setContexts([0, 1, 2])
     .setIntegrationTypes([0, 1])
     .setDescription('Convert one unit into another')
-    .setDescriptionLocalizations(getCommandLocalizations('convert', 'commandDescription'))
+    .setDescriptionLocalizations(getCommandLocalizations('convert.commandDescription'))
     .addNumberOption(option => option.setName('value')
-      .setDescription(t('en', 'convert', 'valueOption'))
-      .setDescriptionLocalizations(getCommandLocalizations('convert', 'valueOption'))
+      .setDescription(t('en', 'convert.valueOption'))
+      .setDescriptionLocalizations(getCommandLocalizations('convert.valueOption'))
       .setRequired(true))
     .addStringOption(option => option.setName('units')
-      .setDescription(t('en', 'convert', 'unitsOption'))
-      .setDescriptionLocalizations(getCommandLocalizations('convert', 'unitsOption'))
+      .setDescription(t('en', 'convert.unitsOption'))
+      .setDescriptionLocalizations(getCommandLocalizations('convert.unitsOption'))
       .setRequired(true)
       .setAutocomplete(true))
     .addStringOption(option => option.setName('into')
-      .setDescription(t('en', 'convert', 'intoOption'))
-      .setDescriptionLocalizations(getCommandLocalizations('convert', 'intoOption'))
+      .setDescription(t('en', 'convert.intoOption'))
+      .setDescriptionLocalizations(getCommandLocalizations('convert.intoOption'))
       .setRequired(true)
       .setAutocomplete(true))
     .addBooleanOption(option => option.setName('ephemeral')
-      .setDescription(t('en', 'convert', 'ephemeralOption'))
-      .setDescriptionLocalizations(getCommandLocalizations('convert', 'ephemeralOption'))) as SlashCommandBuilder,
+      .setDescription(t('en', 'convert.ephemeralOption'))
+      .setDescriptionLocalizations(getCommandLocalizations('convert.ephemeralOption'))) as SlashCommandBuilder,
 
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
@@ -47,7 +47,7 @@ export const dConvert: SlashCommand = {
 
     const result = convert(value).from(units as convert.Unit).to(intoUnits as convert.Unit);
 
-    const response = t(locale, 'convert', 'result', {
+    const response = t(locale, 'convert.result', {
       value, units, result: result.toFixed(4), intoUnits,
     });
 

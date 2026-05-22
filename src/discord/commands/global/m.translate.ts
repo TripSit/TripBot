@@ -17,7 +17,7 @@ const F = f(__filename);
 export const mTranslate: MessageCommand = {
   data: new ContextMenuCommandBuilder()
     .setName('Translate')
-    .setNameLocalizations(getCommandLocalizations('translate', 'commandName'))
+    .setNameLocalizations(getCommandLocalizations('translate.commandName'))
     .setType(ApplicationCommandType.Message)
     .setIntegrationTypes([0]),
   async execute(interaction) {
@@ -37,7 +37,7 @@ export const mTranslate: MessageCommand = {
     const { response, promptTokens, completionTokens } = await aiTranslate('English', messageList);
     await interaction.editReply({
       embeds: [embedTemplate()
-        .setTitle(t(locale, 'translate', 'translationTitle'))
+        .setTitle(t(locale, 'translate.translationTitle'))
         .setDescription(response)
         .setColor(Colors.Blurple)],
     });

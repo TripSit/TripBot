@@ -23,32 +23,32 @@ export async function coinflip(locale = 'en-US'):Promise<string> {
 
   // Normal, boring, coin flip
   if (random < 50) {
-    side = t(locale, 'coinflip', 'headsResult');
+    side = t(locale, 'coinflip.headsResult');
   } else {
-    side = t(locale, 'coinflip', 'tailsResult');
+    side = t(locale, 'coinflip.tailsResult');
   }
 
   // Now with /flair/!
   if (random === 0) {
-    side = t(locale, 'coinflip', 'subspaceResult');
+    side = t(locale, 'coinflip.subspaceResult');
   } else if (random === 1) {
-    side = t(locale, 'coinflip', 'sideResult');
+    side = t(locale, 'coinflip.sideResult');
   } else if (random === 2) {
-    side = t(locale, 'coinflip', 'rolledOffResult');
+    side = t(locale, 'coinflip.rolledOffResult');
   } else if (random === 3) {
-    side = t(locale, 'coinflip', 'diceResult', { number: Math.floor(Math.random() * 6) });
+    side = t(locale, 'coinflip.diceResult', { number: Math.floor(Math.random() * 6) });
   } else if (random === 4) {
-    side = t(locale, 'coinflip', 'spinningResult');
+    side = t(locale, 'coinflip.spinningResult');
   } else if (random === 96) {
-    side = t(locale, 'coinflip', 'kidTookResult');
+    side = t(locale, 'coinflip.kidTookResult');
   } else if (random === 97) {
-    side = t(locale, 'coinflip', 'animalTookResult', { animal: animals[Math.floor(Math.random() * animals.length)] });
+    side = t(locale, 'coinflip.animalTookResult', { animal: animals[Math.floor(Math.random() * animals.length)] });
   } else if (random === 98) {
-    side = t(locale, 'coinflip', 'bothResult');
+    side = t(locale, 'coinflip.bothResult');
   } else if (random === 99) {
-    side = t(locale, 'coinflip', 'coinSaysResult', { side });
+    side = t(locale, 'coinflip.coinSaysResult', { side });
   } else if (random === 100) {
-    side = t(locale, 'coinflip', 'floatingResult');
+    side = t(locale, 'coinflip.floatingResult');
   }
   log.info(F, `response: ${JSON.stringify(side, null, 2)}`);
 
