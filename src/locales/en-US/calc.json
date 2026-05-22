@@ -52,6 +52,9 @@
   "dxmWeightValidation": "The parameter 'calc_weight' cannot be less than 1.",
   "mdmaWeightValidation": "The parameter 'weight' cannot be less than 1.",
   "nasalValidation": "The parameters 'amount' and 'mlPerPush' cannot be less than 1,\nand the parameter 'desiredMgPerPush' cannot be less than 0.001.",
+  "psychedelicsLastDoseOption": "What was your last dose? (e.g 100mcg or 2g)",
+  "psychedelicsDaysOption": "How many days has it been since your last dose?",
+  "psychedelicsDesiredDoseOption": "What's your desired dose? (e.g 100mcg or 2g)",
   "psychedelicValidation": "The parameters 'last_dose_amount', 'desired_dose_amount', and 'days' cannot be less than 1.",
   "ketamineWeightKgValidation": "Please enter a weight less than 179 kg and greater than 1kg.",
   "ketamineWeightLbsValidation": "Please enter a weight less than 398 lbs and greater than 1 lb."

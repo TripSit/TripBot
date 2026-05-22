@@ -1,18 +1,18 @@
+import { stripIndents } from 'common-tags';
 import {
-  SlashCommandBuilder,
   Colors,
   EmbedBuilder,
   InteractionEditReplyOptions,
   InteractionReplyOptions,
   MessageFlags,
+  SlashCommandBuilder,
 } from 'discord.js';
-import { stripIndents } from 'common-tags';
-import { SlashCommand } from '../../@types/commandDef';
-import { embedTemplate } from '../../utils/embedTemplate';
-import { drug } from '../../../global/commands/g.drug';
-import commandContext from '../../utils/context';
 import { CbSubstance } from '../../../global/@types/combined';
-import { t, getLocale, getCommandLocalizations } from '../../../i18n/index';
+import { drug } from '../../../global/commands/g.drug';
+import { getCommandLocalizations, getLocale, t } from '../../../i18n/index';
+import { SlashCommand } from '../../@types/commandDef';
+import commandContext from '../../utils/context';
+import { embedTemplate } from '../../utils/embedTemplate';
 
 const F = f(__filename);
 
@@ -471,22 +471,25 @@ export const dDrug: SlashCommand = {
     .setName('drug')
     .setNameLocalizations(getCommandLocalizations('drug', 'commandName'))
     .setDescription('Check substance information')
-    .setDescriptionLocalizations(getCommandLocalizations('drug', 'commandDescription'))
+    .setDescriptionLocalizations(getCommandLocalizations('drug','commandDescription'))
     .setContexts([0, 1, 2])
     .setIntegrationTypes([0, 1])
     .addStringOption(option => option.setName('substance')
       .setDescription('Pick a substance!')
+      .setDescriptionLocalizations(getCommandLocalizations('drug', 'substanceOption'))
       .setRequired(true)
       .setAutocomplete(true))
     .addStringOption(option => option.setName('section')
       .setDescription('What section of the info to respond with? (Defaults to all)')
+      .setDescriptionLocalizations(getCommandLocalizations('drug', 'sectionOption'))
       .addChoices(
         { name: 'All', value: 'all' },
         { name: 'Dosage', value: 'dosage' },
         { name: 'Summary', value: 'summary' },
       ))
     .addBooleanOption(option => option.setName('ephemeral')
-      .setDescription('Set to "True" to show the response only to you')) as SlashCommandBuilder,
+      .setDescription('Set to "True" to show the response only to you')
+      .setDescriptionLocalizations(getCommandLocalizations('drug', 'ephemeralOption'))) as SlashCommandBuilder,
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
     const ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined;

@@ -52,6 +52,9 @@
   "dxmWeightValidation": "Parametri 'calc_weight' ei voi olla alle 1.",
   "mdmaWeightValidation": "Parametri 'weight' ei voi olla alle 1.",
   "nasalValidation": "Parametrit 'amount' ja 'mlPerPush' eivät voi olla alle 1,\nja parametri 'desiredMgPerPush' ei voi olla alle 0,001.",
+  "psychedelicsLastDoseOption": "Mikä oli viime annoksesi? (esim. 100mcg tai 2g)",
+  "psychedelicsDaysOption": "Kuinka monta päivää on kulunut viime annoksesta?",
+  "psychedelicsDesiredDoseOption": "Mikä on haluamasi annos? (esim. 100mcg tai 2g)",
   "psychedelicValidation": "Parametrit 'last_dose_amount', 'desired_dose_amount' ja 'days' eivät voi olla alle 1.",
   "ketamineWeightKgValidation": "Syötä paino alle 179 kg ja yli 1 kg.",
   "ketamineWeightLbsValidation": "Syötä paino alle 398 lbs ja yli 1 lbs."
