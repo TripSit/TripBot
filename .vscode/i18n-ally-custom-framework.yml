@@ -1,0 +1,3 @@
+usageMatchRegex:
+  - "getCommandLocalizationsNs\\(['\"`]({key})['\"`]"
+  - "getCommandLocalizations\\(['\"`]({key})['\"`]"
