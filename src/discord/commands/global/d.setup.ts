@@ -28,7 +28,6 @@ import { applicationSetup } from '../../utils/application';
 import { paginationEmbed } from '../../utils/pagination';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { profile } from '../../../global/commands/g.learn';
-import tripsitInfo from '../../../global/commands/g.about';
 import {
   t, getLocale, getCommandLocalizations, getAvailableLocales,
 } from '../../../i18n/index';
@@ -45,15 +44,15 @@ async function help(
 
   const tripsitEmbed = embedTemplate()
     .setTitle(t(locale, 'setup', 'setupTripsitTitle'))
-    .setDescription(tripsitInfo.tripsitSessionsDesc);
+    .setDescription(t(locale, 'setup', 'tripsitSessionsBody'));
 
   const applicationsEmbed = embedTemplate()
     .setTitle(t(locale, 'setup', 'setupApplicationsTitle'))
-    .setDescription(tripsitInfo.applicationsDesc);
+    .setDescription(t(locale, 'setup', 'applicationsBody'));
 
   const techHelpEmbed = embedTemplate()
     .setTitle(t(locale, 'setup', 'setupTechhelpTitle'))
-    .setDescription(tripsitInfo.techhelpDesc);
+    .setDescription(t(locale, 'setup', 'techhelpBody'));
 
   const rulesEmbed = embedTemplate()
     .setTitle(t(locale, 'setup', 'setupRulesTitle'))
@@ -61,7 +60,7 @@ async function help(
 
   const ticketboothEmbed = embedTemplate()
     .setTitle(t(locale, 'setup', 'setupTicketboothTitle'))
-    .setDescription(tripsitInfo.ticketboothDesc);
+    .setDescription(t(locale, 'setup', 'ticketboothBody'));
 
   const book = [
     tripsitEmbed,
