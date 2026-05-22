@@ -21,5 +21,13 @@
   "memberNotFound": "Member not found!",
   "notLinked": "{{user}} does not have a linked TSL account!\nAsk them to sign up and use `/learn link` to link their account!",
   "completedCourses": "Completed Courses",
-  "enrolledCourses": "Enrolled Courses"
+  "enrolledCourses": "Enrolled Courses",
+  "helpTitle": "TripSitLearn Info",
+  "helpDescription": "[TripSit Learn: Your Gateway to Harm Reduction Knowledge]({{moodleUrl}})\n\nJoin us on a transformative journey of learning and growth! At TripSit, we're committed to fostering a responsible understanding of drug use. With this in mind, we're excited to present our pioneering course—\"How to Be a TripSitter\", which is entirely free and open for everyone.\n\nWith the /learn profile command, you can proudly display your educational journey, featuring the courses you've triumphantly completed\n\n**As the beauty of learning knows no bounds, your learn profile is available discord-wide, wherever TripBot is present.**\n\nTherefore, you can take your learning profile anywhere on the Discord platform, showcasing your commitment to harm reduction wherever you go!\n\nSimply use the /learn command to pair your TripSit Learn account with your Discord account. Don't worry, your email is solely for account validation, guaranteeing that it won't be stored in the bot or shared anywhere else.\n\n(In fact: If you've hidden your email on the moodle, the bot won't be able to verify your account. Make sure to make your email public for the bot to be able to verify your account, and then you can make it private again!)\n\nWe heartily welcome other communities to join hands with TripSit and contribute their unique learning courses to our thriving platform. If this sounds exciting to you, we would love to hear from you. Please, don't hesitate to reach out!",
+  "helpFooter": "Thanks for your interest!",
+  "linkSuccess": "You have linked the moodle account - {{email}} ({{username}}) - with Discord account {{discordId}}\nUse the /learn profile command to see the profile!",
+  "linkNoDiscordUser": "No user found with that Discord or Matrix ID.",
+  "linkNoEmail": "No user found with that email address.",
+  "unlinkSuccess": "You have unlinked your Discord account with TripSitLearn!\nUse the /learn link command if you ever want to link your account again!",
+  "unlinkNoUser": "No user found with that Discord or Matrix ID."
 }

@@ -1,5 +1,4 @@
 /* eslint-disable max-len */
-import { stripIndents } from 'common-tags';
 import { DateTime } from 'luxon';
 import tripbotDb from '../../prisma/tripbot/client';
 import moodleDb from '../../prisma/moodle/client';
@@ -32,35 +31,22 @@ type MoodleInfo = {
 
 export async function help():Promise<MoodleInfo> {
   return {
-    title: 'TripSitLearn Info',
-    description: stripIndents`[TripSit Learn: Your Gateway to Harm Reduction Knowledge](${env.MOODLE_URL})
-
-    Join us on a transformative journey of learning and growth! At TripSit, we're committed to fostering a responsible understanding of drug use. With this in mind, we're excited to present our pioneering course—"How to Be a TripSitter", which is entirely free and open for everyone.
-
-    With the /learn profile command, you can proudly display your educational journey, featuring the courses you've triumphantly completed
-    
-    **As the beauty of learning knows no bounds, your learn profile is available discord-wide, wherever TripBot is present.**
-    
-    Therefore, you can take your learning profile anywhere on the Discord platform, showcasing your commitment to harm reduction wherever you go!
-
-    Simply use the /learn command to pair your TripSit Learn account with your Discord account. Don't worry, your email is solely for account validation, guaranteeing that it won't be stored in the bot or shared anywhere else.
-
-    (In fact: If you've hidden your email on the moodle, the bot won't be able to verify your account. Make sure to make your email public for the bot to be able to verify your account, and then you can make it private again!)
-    
-    We heartily welcome other communities to join hands with TripSit and contribute their unique learning courses to our thriving platform. If this sounds exciting to you, we would love to hear from you. Please, don't hesitate to reach out!
-    `,
+    title: '',
+    description: '',
     url: env.MOODLE_URL,
-    footer: 'Thanks for your interest!',
+    footer: '',
   };
 }
+
+type LinkResult =
+  | { type: 'noDiscordUser' }
+  | { type: 'noEmail' }
+  | { type: 'success'; email: string; username: string; discordId: string };
 
 export async function link(
   email:string,
   discordId:string,
-):Promise<string> {
-  // log.debug(F, `Link started with moodleUsername: ${moodleUsername}, \
-  // discordId: ${discordId}, matrixId: ${matrixId}`);
-
+):Promise<LinkResult> {
   const userData = await tripbotDb.users.findUnique({
     where: {
       discord_id: discordId,
@@ -70,7 +56,7 @@ export async function link(
   log.debug(F, `userData: ${JSON.stringify(userData)}`);
 
   if (!userData) {
-    return 'No user found with that Discord or Matrix ID.';
+    return { type: 'noDiscordUser' };
   }
 
   const moodleUserData = await moodleDb.mdl_user.findFirst({
@@ -80,7 +66,7 @@ export async function link(
   });
 
   if (!moodleUserData) {
-    return 'No user found with that email address.';
+    return { type: 'noEmail' };
   }
 
   log.debug(F, `moodleUserData: ${JSON.stringify(moodleUserData.username)}`);
@@ -96,16 +82,19 @@ export async function link(
 
   log.debug(F, `result: ${JSON.stringify(result)}`);
 
-  return stripIndents`You have linked the moodle account - ${email} (${moodleUserData.username}) - with Discord account ${discordId}
-  Use the /learn profile command to see the profile!`;
+  return {
+    type: 'success', email, username: moodleUserData.username, discordId,
+  };
 }
+
+type UnlinkResult =
+  | { type: 'noUser' }
+  | { type: 'success' };
 
 export async function unlink(
   discordId?:string,
   matrixId?:string,
-):Promise<string> {
-  // log.debug(F, `Unlink started with discordId: ${discordId}, matrixId: ${matrixId}`);
-
+):Promise<UnlinkResult> {
   const userData = discordId
     ? await tripbotDb.users.findUnique({
       where: {
@@ -119,7 +108,7 @@ export async function unlink(
     });
 
   if (!userData) {
-    return 'No user found with that Discord or Matrix ID.';
+    return { type: 'noUser' };
   }
 
   tripbotDb.users.update({
@@ -131,8 +120,7 @@ export async function unlink(
     },
   });
 
-  return stripIndents`You have unlinked your Discord account with TripSitLearn!
-  Use the /learn link command if you ever want to link your account again!`;
+  return { type: 'success' };
 }
 
 export async function profile(

@@ -21,13 +21,14 @@ import { t, getLocale, getCommandLocalizations } from '../../../i18n/index';
 
 const F = f(__filename);
 
-async function moodleHelp():Promise<EmbedBuilder> {
+async function moodleHelp(locale: string):Promise<EmbedBuilder> {
   const helpData = await help();
   return embedTemplate()
-    .setTitle(helpData.title)
-    .setDescription(helpData.description)
+    .setTitle(t(locale, 'learn', 'helpTitle'))
+    .setURL(helpData.url)
+    .setDescription(t(locale, 'learn', 'helpDescription', { moodleUrl: helpData.url }))
     .setFooter({
-      text: helpData.footer,
+      text: t(locale, 'learn', 'helpFooter'),
     });
 }
 
@@ -50,11 +51,21 @@ async function moodleLink(
         .setDescription(t(locale, 'learn', 'invalidEmail'));
     }
 
-    return embedTemplate()
-      .setDescription(await link(
-        interaction.options.getString('email', true),
-        interaction.options.getString('discord_id', true),
-      ));
+    const adminResult = await link(
+      interaction.options.getString('email', true),
+      interaction.options.getString('discord_id', true),
+    );
+    if (adminResult.type === 'noDiscordUser') {
+      return embedTemplate().setColor(Colors.Red).setDescription(t(locale, 'learn', 'linkNoDiscordUser'));
+    }
+    if (adminResult.type === 'noEmail') {
+      return embedTemplate().setColor(Colors.Red).setDescription(t(locale, 'learn', 'linkNoEmail'));
+    }
+    return embedTemplate().setDescription(t(locale, 'learn', 'linkSuccess', {
+      email: adminResult.email,
+      username: adminResult.username,
+      discordId: adminResult.discordId,
+    }));
   }
 
   // Check if the email given is valid
@@ -64,11 +75,21 @@ async function moodleLink(
       .setDescription(t(locale, 'learn', 'invalidEmail'));
   }
 
-  return embedTemplate()
-    .setDescription(await link(
-      interaction.options.getString('email', true),
-      interaction.user.id,
-    ));
+  const result = await link(
+    interaction.options.getString('email', true),
+    interaction.user.id,
+  );
+  if (result.type === 'noDiscordUser') {
+    return embedTemplate().setColor(Colors.Red).setDescription(t(locale, 'learn', 'linkNoDiscordUser'));
+  }
+  if (result.type === 'noEmail') {
+    return embedTemplate().setColor(Colors.Red).setDescription(t(locale, 'learn', 'linkNoEmail'));
+  }
+  return embedTemplate().setDescription(t(locale, 'learn', 'linkSuccess', {
+    email: result.email,
+    username: result.username,
+    discordId: result.discordId,
+  }));
 }
 
 async function moodleUnlink(
@@ -81,14 +102,18 @@ async function moodleUnlink(
         .setColor(Colors.Red)
         .setDescription(t(locale, 'learn', 'notAllowedToUse'));
     }
-    return embedTemplate()
-      .setDescription(await unlink(
-        interaction.options.getString('discord_id', true),
-      ));
+    const adminResult = await unlink(interaction.options.getString('discord_id', true));
+    if (adminResult.type === 'noUser') {
+      return embedTemplate().setColor(Colors.Red).setDescription(t(locale, 'learn', 'unlinkNoUser'));
+    }
+    return embedTemplate().setDescription(t(locale, 'learn', 'unlinkSuccess'));
   }
 
-  return embedTemplate()
-    .setDescription(await unlink(interaction.user.id));
+  const result = await unlink(interaction.user.id);
+  if (result.type === 'noUser') {
+    return embedTemplate().setColor(Colors.Red).setDescription(t(locale, 'learn', 'unlinkNoUser'));
+  }
+  return embedTemplate().setDescription(t(locale, 'learn', 'unlinkSuccess'));
 }
 
 async function moodleProfile(
@@ -247,7 +272,7 @@ export const dLearn: SlashCommand = {
 
     switch (subcommand) {
       case 'help':
-        embed = await moodleHelp();
+        embed = await moodleHelp(locale);
         break;
       case 'link':
         embed = await moodleLink(interaction, locale);
