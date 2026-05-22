@@ -104,15 +104,15 @@ export async function startPage(locale: string):Promise<InteractionEditReplyOpti
         .addFields(
           {
             name: t(locale, 'help', 'aboutTripSit'),
-            value: tripsit.description,
+            value: t(locale, 'help', 'aboutTripSitBody'),
           },
           {
             name: t(locale, 'help', 'aboutTripBot'),
-            value: tripsit.botInfo,
+            value: t(locale, 'help', 'aboutTripBotBody'),
           },
           {
             name: t(locale, 'help', 'disclaimer'),
-            value: tripsit.disclaimer,
+            value: t(locale, 'help', 'disclaimerBody'),
           },
         ),
     ],
@@ -341,7 +341,7 @@ export async function sessionsPage(locale: string):Promise<InteractionEditReplyO
     embeds: [embedTemplate()
       .setColor(Colors.Purple)
       .setTitle(t(locale, 'help', 'tripsitSessionsTitle'))
-      .setDescription(tripsit.tripsitSessionsDesc)],
+      .setDescription(t(locale, 'help', 'tripsitSessionsBody'))],
     components: [
       getSelectMenuOptions(locale),
     ],
@@ -353,7 +353,7 @@ export async function experiencePage(locale: string):Promise<InteractionEditRepl
     embeds: [embedTemplate()
       .setColor(Colors.Purple)
       .setTitle(t(locale, 'help', 'experienceTitle'))
-      .setDescription(tripsit.experienceDesc)],
+      .setDescription(t(locale, 'help', 'experienceBody'))],
     components: [
       getSelectMenuOptions(locale),
     ],
@@ -450,7 +450,7 @@ export async function donatePage(locale: string):Promise<InteractionEditReplyOpt
       .setColor(Colors.Purple)
       .setTitle(t(locale, 'help', 'donationTitle'))
       .setURL('https://tripsit.me/donate/')
-      .setDescription(tripsit.support)],
+      .setDescription(t(locale, 'help', 'supportBody'))],
     components: [
       getSelectMenuOptions(locale),
       new ActionRowBuilder<ButtonBuilder>().addComponents([
@@ -483,7 +483,7 @@ export async function creditsPage(locale: string):Promise<InteractionEditReplyOp
   return {
     embeds: [embedTemplate()
       .setColor(Colors.Orange)
-      .setDescription(tripsit.credits)],
+      .setDescription(t(locale, 'help', 'creditsBody'))],
     components: [
       getSelectMenuOptions(locale),
     ],
@@ -494,7 +494,7 @@ export async function feedbackPage(locale: string):Promise<InteractionEditReplyO
   return {
     embeds: [embedTemplate()
       .setColor(Colors.Green)
-      .setDescription(tripsit.feedback)],
+      .setDescription(t(locale, 'help', 'feedbackBody'))],
     components: [
       getSelectMenuOptions(locale),
       new ActionRowBuilder<ButtonBuilder>().addComponents([
@@ -517,7 +517,7 @@ export async function invitePage(locale: string):Promise<InteractionEditReplyOpt
   return {
     embeds: [embedTemplate()
       .setColor(Colors.Yellow)
-      .setDescription(tripsit.inviteInfo)],
+      .setDescription(t(locale, 'help', 'inviteInfoBody'))],
     components: [
       getSelectMenuOptions(locale),
       new ActionRowBuilder<ButtonBuilder>().addComponents([
