@@ -10,6 +10,7 @@ import tsData from '../../../assets/data/tripsitDB.json';
 import timezones from '../../../assets/data/timezones.json';
 import unitsOfMeasurement from '../../../assets/data/units_of_measurement.json';
 import { CbSubstance } from '../../global/@types/combined';
+import { getAvailableLocales } from '../../i18n/index';
 
 const drugDataTripsit = tsData as {
   [key: string]: Drug;
@@ -339,6 +340,16 @@ async function autocompleteQuotes(interaction: AutocompleteInteraction) {
   }
 }
 
+async function autocompleteLocale(interaction: AutocompleteInteraction) {
+  const validLocales = getAvailableLocales();
+  const focused = interaction.options.getFocused().toLowerCase();
+  const filtered = validLocales
+    .filter(l => l.toLowerCase().includes(focused))
+    .slice(0, 25)
+    .map(l => ({ name: l, value: l }));
+  await interaction.respond(filtered);
+}
+
 export default autocomplete;
 /**
  * Handles autocomplete information
@@ -359,6 +370,8 @@ export async function autocomplete(interaction: AutocompleteInteraction): Promis
     autocompleteConvert(interaction);
   } else if (interaction.commandName === 'quote') {
     await autocompleteQuotes(interaction);
+  } else if (interaction.commandName === 'setup' && interaction.options.getSubcommandGroup(false) === 'locale') {
+    await autocompleteLocale(interaction);
   } else { // If you don't need a specific autocomplete, return a list of drug names
     await autocompleteDrugNames(interaction);
   }

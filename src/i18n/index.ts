@@ -59,8 +59,11 @@ export function t(
  * Resolve the locale to use for an interaction.
  * Uses env LOCALE, falling back to en-US.
  *
- * The `interaction`/`ns` params are unused but kept so callers don't change if
- * per-guild or per-interaction locale resolution is reintroduced later.
+ * NOTE: per-guild locale (discord_guilds.locale) and Discord guild locale are
+ * intentionally ignored. The `/setup locale set` command still writes
+ * discord_guilds.locale, but that value is no longer read here — the write is
+ * effectively a no-op. The `interaction`/`ns` params are kept so callers don't
+ * change; remove the setup locale subcommand if per-guild locale stays unused.
  */
 export async function getLocale(
   interaction: BaseInteraction, // eslint-disable-line @typescript-eslint/no-unused-vars

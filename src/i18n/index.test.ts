@@ -31,22 +31,33 @@ describe('t()', () => {
 describe('getLocale()', () => {
   const makeInteraction = (guildId: string | null) => ({ guildId } as unknown as ChatInputCommandInteraction);
 
-  it('returns the env LOCALE for guild interactions', async () => {
+  it('returns env locale when guild has no locale set', async () => {
+    (global as any).db = {
+      discord_guilds: { findUnique: jest.fn().mockResolvedValue({ locale: null }) },
+    };
     const locale = await getLocale(makeInteraction('guild-123'), 'drug');
     expect(locale).toBe('en-US');
   });
 
-  it('returns the env LOCALE for DM interactions with no guildId', async () => {
+  it('returns guild locale when set', async () => {
+    (global as any).db = {
+      discord_guilds: { findUnique: jest.fn().mockResolvedValue({ locale: 'fi' }) },
+    };
+    const locale = await getLocale(makeInteraction('guild-123'), 'drug');
+    expect(locale).toBe('fi');
+  });
+
+  it('falls back to env locale when DB throws', async () => {
+    (global as any).db = {
+      discord_guilds: { findUnique: jest.fn().mockRejectedValue(new Error('DB down')) },
+    };
+    const locale = await getLocale(makeInteraction('guild-123'), 'drug');
+    expect(locale).toBe('en-US');
+  });
+
+  it('returns env locale for DM interactions with no guildId', async () => {
     const locale = await getLocale(makeInteraction(null), 'drug');
     expect(locale).toBe('en-US');
-  });
-
-  it('falls back to en-US when env LOCALE is unset', async () => {
-    const prev = (global as any).env;
-    (global as any).env = {};
-    const locale = await getLocale(makeInteraction('guild-123'), 'drug');
-    expect(locale).toBe('en-US');
-    (global as any).env = prev;
   });
 });
 

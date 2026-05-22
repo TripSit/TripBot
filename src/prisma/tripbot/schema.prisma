@@ -246,6 +246,7 @@ model discord_guilds {
   trust_score_limit    Int              @default(5)
   trust_score_total    Int              @default(0)
   trust_score_count    Int              @default(0)
+  locale               String?
   appeals              appeals[]
   counting             counting[]
   reaction_roles       reaction_roles[]
