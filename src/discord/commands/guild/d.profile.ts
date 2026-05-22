@@ -9,6 +9,7 @@ import Canvas from '@napi-rs/canvas';
 import { personas } from '@db/tripbot';
 import { SlashCommand } from '../../@types/commandDef';
 import { profile, ProfileData } from '../../../global/commands/g.profile';
+import { t, getLocale, getCommandLocalizations } from '../../../i18n/index';
 import commandContext from '../../utils/context';
 import { expForNextLevel, getTotalLevel } from '../../../global/utils/experience';
 import { getPersonaInfo } from '../../../global/commands/g.rpg';
@@ -43,22 +44,27 @@ export function numFormatterVoice(num:number):string {
 export const dProfile: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('profile')
-    .setDescription('Get someone\'s profile!')
+    .setNameLocalizations(getCommandLocalizations('profile', 'commandName'))
+    .setDescription(t('en-US', 'profile', 'commandDescription'))
+    .setDescriptionLocalizations(getCommandLocalizations('profile', 'commandDescription'))
     .setIntegrationTypes([0])
     .addUserOption(option => option
       .setName('target')
-      .setDescription('User to lookup'))
+      .setDescription(t('en-US', 'profile', 'targetOption'))
+      .setDescriptionLocalizations(getCommandLocalizations('profile', 'targetOption')))
     .addBooleanOption(option => option.setName('ephemeral')
-      .setDescription('Set to "True" to show the response only to you')) as SlashCommandBuilder,
+      .setDescription(t('en-US', 'profile', 'ephemeralOption'))
+      .setDescriptionLocalizations(getCommandLocalizations('profile', 'ephemeralOption'))) as SlashCommandBuilder,
   async execute(
     interaction,
   ) {
     log.info(F, await commandContext(interaction));
+    const locale = await getLocale(interaction, 'profile');
     const ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined;
     await interaction.deferReply({ flags: ephemeral });
     const startTime = Date.now();
     if (!interaction.guild) {
-      await interaction.editReply({ content: 'You can only use this command in a guild!' });
+      await interaction.editReply({ content: t(locale, 'profile', 'guildOnlyError') });
       return false;
     }
 

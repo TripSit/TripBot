@@ -1,0 +1,17 @@
+{
+  "commandName": "coinflip",
+  "commandDescription": "Heitä kolikkoa",
+  "ephemeralOption": "Aseta \"Tosi\" näyttääksesi vastauksen vain sinulle (yksityinen, näkyvissä vain sinulle)",
+  "headsResult": "Kruuna!",
+  "tailsResult": "Klaava!",
+  "subspaceResult": "Kolikko lipui aliavaruuteen ja katosi?!",
+  "sideResult": "Kolikko päätyi seisomaan reunalleen?!",
+  "rolledOffResult": "Kolikko vierähti pöydältä?!",
+  "diceResult": "{{number}}! Hei, tämähän on noppa...",
+  "spinningResult": "Kolikko jatkoi pyörimistään ilmassa?!",
+  "kidTookResult": "Joku lapsi tuli ja otti kolikkosi!",
+  "animalTookResult": "{{animal}} tuli ja otti kolikkosi!",
+  "bothResult": "Kieltäydyt katsomasta kolikkoa, joten se on yhtä aikaa kruuna ja klaava!",
+  "coinSaysResult": "Kolikko sanoo \"{{side}}!\"",
+  "floatingResult": "Inflaation takia kolikko leijui pois!"
+}

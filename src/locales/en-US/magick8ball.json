@@ -1,0 +1,5 @@
+{
+  "commandName": "magick8ball",
+  "commandDescription": "Ask the magick 8-ball a question!",
+  "ephemeralOption": "Set to \"True\" to show the response only to you"
+}

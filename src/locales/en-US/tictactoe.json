@@ -1,0 +1,15 @@
+{
+  "commandName": "tictactoe",
+  "commandDescription": "Start a tic-tac-toe game",
+  "opponentOption": "The user you want to play against",
+  "invalidOpponent": "Please specify a valid opponent!",
+  "cannotPlayYourself": "You cannot play against yourself!",
+  "cannotPlayBot": "You cannot play against a bot!",
+  "collectorError": "Error: Could not create game collector.",
+  "gameTitle": "🎮 Tic-Tac-Toe",
+  "tie": "IT'S A TIE!",
+  "wins": "WINS!",
+  "turnSuffix": "'s turn",
+  "timeoutTitle": "Tic-Tac-Toe - Game Timeout",
+  "timeoutDescription": "The game has ended due to inactivity."
+}

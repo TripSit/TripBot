@@ -1,7 +1,6 @@
 /* eslint-disable max-len */
 /* eslint-disable no-unused-vars */
 
-import { stripIndents } from 'common-tags';
 import {
   ActionRowBuilder,
   ButtonBuilder,
@@ -26,19 +25,19 @@ import { reaction_role_type, reaction_roles } from '@db/tripbot';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { checkChannelPermissions, checkGuildPermissions } from '../../utils/checkPermissions';
+import { t, getLocale, getCommandLocalizations } from '../../../i18n/index';
 
 const F = f(__filename);
 
-const guildError = 'This must be performed in a guild!';
-const memberError = 'This must be performed by a member of a guild!';
-// const loadingMessage = 'Loading please hold...';
-const embedOption = 'What color should the embed be?';
+const DESC_EMBED_COLOR = 'What color should the embed be?';
+
 const creationReason = 'Tripbot Reaction role';
 type RoleDef = { name: string; value: string };
 
 export async function setupCustomReactionRole(
   interaction:ChatInputCommandInteraction,
 ) {
+  const locale = await getLocale(interaction, 'reactionRole');
   if (!interaction.guild) return;
   if (!interaction.member) return;
   if (!interaction.channel) return;
@@ -54,7 +53,7 @@ export async function setupCustomReactionRole(
     await interaction.reply({
       embeds: [
         embedTemplate()
-          .setDescription('Error: If an intro message is required, then you must specify where you want the intro message to be posted!')
+          .setDescription(t(locale, 'reactionRole.introMessageRequiredError'))
           .setColor(Colors.Red),
       ],
       flags: MessageFlags.Ephemeral,
@@ -67,7 +66,7 @@ export async function setupCustomReactionRole(
     await interaction.reply({
       embeds: [
         embedTemplate()
-          .setDescription('Error: The intro message channel must be a text channel!')
+          .setDescription(t(locale, 'reactionRole.introChannelNotTextError'))
           .setColor(Colors.Red),
       ],
       flags: MessageFlags.Ephemeral,
@@ -85,7 +84,7 @@ export async function setupCustomReactionRole(
     await interaction.reply({
       embeds: [
         embedTemplate()
-          .setDescription('Error: That is not a valid emoji! Please try again.')
+          .setDescription(t(locale, 'reactionRole.emojiNotValidError'))
           .setColor(Colors.Red),
       ],
       flags: MessageFlags.Ephemeral,
@@ -97,7 +96,7 @@ export async function setupCustomReactionRole(
     await interaction.reply({
       embeds: [
         embedTemplate()
-          .setDescription('Error: You can only specify one emoji!')
+          .setDescription(t(locale, 'reactionRole.multipleEmojisError'))
           .setColor(Colors.Red),
       ],
       flags: MessageFlags.Ephemeral,
@@ -112,7 +111,7 @@ export async function setupCustomReactionRole(
     await interaction.reply({
       embeds: [
         embedTemplate()
-          .setDescription('Error: You must specify either an emoji or a label for the reaction role!')
+          .setDescription(t(locale, 'reactionRole.emojiOrLabelRequiredError'))
           .setColor(Colors.Red),
       ],
       flags: MessageFlags.Ephemeral,
@@ -128,8 +127,7 @@ export async function setupCustomReactionRole(
     await interaction.reply({
       embeds: [
         embedTemplate()
-          .setDescription(stripIndents`Error: My role needs to be higher than the role you want to manage!
-          Please move my role above ${role} and try again.`)
+          .setDescription(t(locale, 'reactionRole.roleTooHighError', { role: role.toString() }))
           .setColor(Colors.Red),
       ],
       flags: MessageFlags.Ephemeral,
@@ -139,15 +137,15 @@ export async function setupCustomReactionRole(
 
   await interaction.showModal(new ModalBuilder()
     .setCustomId(`"ID":"RR","II":"${interaction.id}"`)
-    .setTitle(`${role.name} Description`)
+    .setTitle(t(locale, 'reactionRole.modalTitle', { roleName: role.name }))
     .addComponents(
       new ActionRowBuilder<TextInputBuilder>()
         .addComponents(
           new TextInputBuilder()
             .setCustomId('title')
             .setRequired(true)
-            .setLabel('Title the embed')
-        .setPlaceholder(`This will go above the description to highlight what this button does`) // eslint-disable-line
+            .setLabel(t(locale, 'reactionRole.modalTitleInput'))
+            .setPlaceholder(t(locale, 'reactionRole.modalTitlePlaceholder'))
             .setMaxLength(100)
             .setStyle(TextInputStyle.Short),
         ),
@@ -156,8 +154,8 @@ export async function setupCustomReactionRole(
           new TextInputBuilder()
             .setCustomId('description')
             .setRequired(true)
-            .setLabel('Describe this role!')
-          .setPlaceholder(`This will go into the embed to let people know what they're clicking on!`) // eslint-disable-line
+            .setLabel(t(locale, 'reactionRole.modalDescriptionInput'))
+            .setPlaceholder(t(locale, 'reactionRole.modalDescriptionPlaceholder'))
             .setMaxLength(2000)
             .setStyle(TextInputStyle.Paragraph),
         ),
@@ -199,7 +197,7 @@ export async function setupCustomReactionRole(
       await i.editReply({
         embeds: [
           embedTemplate()
-            .setDescription(stripIndents`Created the ${role.name} reaction message!`)
+            .setDescription(t(locale, 'reactionRole.createdReactionMessage', { roleName: role.name }))
             .setColor(Colors.Blue),
         ],
       });
@@ -209,6 +207,7 @@ export async function setupCustomReactionRole(
 export async function buttonReactionRole(
   interaction:ButtonInteraction,
 ) {
+  const locale = await getLocale(interaction as unknown as ChatInputCommandInteraction, 'reactionRole');
   // log.debug(F, `Processing reaction role click Options: ${JSON.stringify(interaction.customId, null, 2)}`);
   const {
     RID,
@@ -247,13 +246,13 @@ export async function buttonReactionRole(
       // Display modal to get intro message from the user
       await interaction.showModal(new ModalBuilder()
         .setCustomId(`"ID":"RR","II":"${interaction.id}"`)
-        .setTitle(`Are you sure you want to remove ${role.name}?`)
+        .setTitle(t(locale, 'reactionRole.removeConfirmTitle', { roleName: role.name }))
         .addComponents(new ActionRowBuilder<TextInputBuilder>()
           .addComponents(new TextInputBuilder()
             .setCustomId('reason')
-            .setLabel('You can optionally tell us why!')
-            .setPlaceholder('We\'ll use this to try and improve our process!')
-            .setValue('I just don\'t want to anymore')
+            .setLabel(t(locale, 'reactionRole.removeReasonLabel'))
+            .setPlaceholder(t(locale, 'reactionRole.removeReasonPlaceholder'))
+            .setValue(t(locale, 'reactionRole.removeReasonDefault'))
             .setMaxLength(2000)
             .setStyle(TextInputStyle.Paragraph))));
 
@@ -272,7 +271,7 @@ export async function buttonReactionRole(
           await channelAudit.send(
             `${(i.member as GuildMember).displayName} removed role ${role.name} because: ${reason}`,
           );
-          await i.editReply({ content: `Removed role ${role.name}` });
+          await i.editReply({ content: t(locale, 'reactionRole.removedRoleMessage', { roleName: role.name }) });
         });
     } else {
       const myMember = interaction.guild.members.me as GuildMember;
@@ -283,15 +282,14 @@ export async function buttonReactionRole(
         await interaction.editReply({
           embeds: [
             embedTemplate()
-              .setDescription(stripIndents`Error: My role needs to be higher than the role you want to manage!
-              Please move my role above ${role} and try again, or re-do this reaction role`)
+              .setDescription(t(locale, 'reactionRole.roleRemovalError', { role: role.toString() }))
               .setColor(Colors.Red),
           ],
         });
         return;
       }
       await target.roles.remove(role);
-      await interaction.editReply({ content: `Removed role ${role.name}` });
+      await interaction.editReply({ content: t(locale, 'reactionRole.removedRoleMessage', { roleName: role.name }) });
     }
     return;
   }
@@ -308,12 +306,12 @@ export async function buttonReactionRole(
 
   // If the role being requested is the Helper or Contributor role, check if they have been banned first
   if (role.id === env.ROLE_HELPER && userData.helper_role_ban) {
-    await interaction.editReply({ content: 'Unable to add this role. If you feel this is an error, please talk to the team!' });
+    await interaction.editReply({ content: t(locale, 'reactionRole.roleBanError') });
     return;
   }
 
   if (role.id === env.ROLE_CONTRIBUTOR && userData.contributor_role_ban) {
-    await interaction.editReply({ content: 'Unable to add this role. If you feel this is an error, please talk to the team!' });
+    await interaction.editReply({ content: t(locale, 'reactionRole.roleBanError') });
     return;
   }
 
@@ -327,12 +325,12 @@ export async function buttonReactionRole(
     // Display modal to get intro message from the user
     const modal = new ModalBuilder()
       .setCustomId(`"ID":"RR","II":"${interaction.id}"`)
-      .setTitle(`${role.name} Introduction`);
+      .setTitle(t(locale, 'reactionRole.introductionModalTitle', { roleName: role.name }));
     modal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
       .setCustomId('introduction')
       .setRequired(true)
-      .setLabel('Tell us a bit about yourself!')
-      .setPlaceholder(`Why do you want to be a ${role.name}?  This will be sent to the channel!`) // eslint-disable-line
+      .setLabel(t(locale, 'reactionRole.introductionLabel'))
+      .setPlaceholder(t(locale, 'reactionRole.introductionPlaceholder', { roleName: role.name }))
       .setMaxLength(1900)
       .setStyle(TextInputStyle.Paragraph)));
     await interaction.showModal(modal);
@@ -352,12 +350,12 @@ export async function buttonReactionRole(
         if (II !== interaction.id) return;
         if (!i.guild) {
           // log.debug(F, `no guild!`);
-          await i.editReply(guildError);
+          await i.editReply(t(locale, 'reactionRole.guildError'));
           return;
         }
         if (!i.member) {
         // log.debug(F, `no member!`);
-          await i.editReply(memberError);
+          await i.editReply(t(locale, 'reactionRole.memberError'));
         }
 
         introMessage = i.fields.getTextInputValue('introduction');
@@ -367,7 +365,7 @@ export async function buttonReactionRole(
         introMessage = introMessage.replace(/^(.*)$/gm, '> $1');
 
         await target.roles.add(role);
-        await i.editReply({ content: `Added role ${role.name}` });
+        await i.editReply({ content: t(locale, 'reactionRole.addedRoleMessage', { roleName: role.name }) });
 
         const channel = await i.guild?.channels.fetch(channelProvided as string) as TextChannel;
 
@@ -377,93 +375,61 @@ export async function buttonReactionRole(
           const channelTripsit = await interaction.guild?.channels.fetch(env.CHANNEL_TRIPSIT) as TextChannel;
           const hrCategory = await interaction.guild?.channels.fetch(env.CATEGORY_HARMREDUCTIONCENTRE) as CategoryChannel;
 
-          const intro = stripIndents`
-          Hey ${roleTeamtripsit}, ${target.displayName} has joined as a ${role.name}, please welcome them!
-          A little about them:
-          ${introMessage}`;
+          const intro = t(locale, 'reactionRole.memberRoleIntroHeader', {
+            roleMention: roleTeamtripsit.toString(),
+            memberName: target.displayName,
+            roleName: role.name,
+            introMessage,
+          });
           await channel.send(intro);
-          const followup = stripIndents`Some important information for you ${target}!
-          1) You now have access this this channel, which is used to coordinate with others!
-          - Please use this room to ask for help if you're overwhelmed, and feel free to make a thread if it gets busy!
-          - Anyone can mark a thread as "owned" if someone is talking to the person in need, it doesn't mean "you" are helping them.
-          2) You are able to receive and respond to help requests in the ${hrCategory}!
-          - As people need help, a thread will be created in ${channelTripsit} and you will get a notification that someone needs help.
-          - Talk with the user in the thread, please don't take the user into DM or voice channels.
-          - For a full guide on how the ticket system works, check out: <https://docs.google.com/document/d/19evj7v6nx67TDTUp8DZlu1rrTT5MuwvEZnQ_vDJbfSc/edit#heading=h.3qanhkv29thb>
-          - ${channelTripsit} threads are archived after 24 hours, and deleted after 7 days.
-          3) For a refresher on tripsitting please see the following resources:
-          - <https://docs.google.com/document/d/1vE3jl9imdT3o62nNGn19k5HZVOkECF3jhjra8GkgvwE>
-          - <https://wiki.tripsit.me/wiki/How_To_Tripsit_Online>
-          - Check the pins in this channel!
-          4) If you're overwhelmed, ask for backup
-          - Giving no information is better than giving the wrong information!
-          - If someone is underage, finish the session and ping a Moderator
-          -- Underage users can use the web-chat anonymously but are not allowed to socialize.
-          - We're here to give harm reduction facts and mild mental health support.
-          - We are NOT here to give medical advice, diagnose, or treat; or handle suicidal or self-harm situations.
-          - If it seems like someone could use mental health services you can refer them to:
-          Huddle Humans - Mental health support
-          <https://discord.gg/mentalhealth>
-          HealthyGamer - Mental health with a gaming twist
-          <https://discord.com/invite/H3yRwc7>
-    
-          **If you have any questions, please reach out!**`;
+          const followup = t(locale, 'reactionRole.memberRoleIntroFollowup', {
+            member: target.toString(),
+            hrCategory: hrCategory.toString(),
+            channelTripsit: channelTripsit.toString(),
+          });
           await channel.send(followup);
         } else if (channel.id === env.CHANNEL_DEVELOPMENT) {
           const devCategory = await interaction.guild?.channels.fetch(env.CATEGORY_DEVELOPMENT) as CategoryChannel;
           const channelTripcord = await interaction.guild?.channels.fetch(env.CHANNEL_DISCORD) as TextChannel;
           const channelTripbot = await interaction.guild?.channels.fetch(env.CHANNEL_TRIPBOT) as TextChannel;
 
-          const intro = stripIndents`
-          Hey ${roleTeamtripsit} team, ${target} has joined as a ${role.name}, please welcome them!
-          
-          A little about them:
-          ${introMessage}`;
+          const intro = t(locale, 'reactionRole.devRoleIntroHeader', {
+            roleMention: roleTeamtripsit.toString(),
+            member: target.toString(),
+            roleName: role.name,
+            introMessage,
+          });
 
           channel.send(intro);
 
-          const followup = stripIndents`Some info for you ${target}: 
-      
-          Our ${devCategory} category holds the projects we're working on.
-    
-          > **We encourage you to make a new thread whenever possible!**
-          > This allows us to organize our efforts and not lose track of our thoughts!
-    
-          TripSit is run by volunteers, so things may be a bit slower than your day job.
-          Almost all the code is open source and can be found on our GitHub: <http://github.com/tripsit>
-          Discussion of changes happens mostly in the public channels in this category.
-          If you have an idea or feedback, make a new thread: we're happy to hear all sorts of input and ideas!
-    
-          ${channelTripcord}
-          > While this discord has existed for years, TS has only begun to focus on it relatively recently.
-          > It is still an ongoing WIP, and this channel is where we coordinate changes to the discord server!
-          > Ideas and suggestions are always welcome, and we're always looking to improve the experience!
-          > No coding experience is necessary to help make the discord an awesome place to be =)
-    
-          ${channelTripbot}
-          > Our homemade Tripbot has made it's way into the discord server!
-          > This is a somewhat complex bot that is continually growing to meet the needs of TripSit.
-          > It also can be added to other servers to provide a subset of harm reduction features to the public
-
-          We have a ton of other channels, take your time to explore the threads!
-
-          If you have any questions, please reach out to a moderator or the lead dev!`;
+          const followup = t(locale, 'reactionRole.devRoleIntroFollowup', {
+            member: target.toString(),
+            devCategory: devCategory.toString(),
+            channelTripcord: channelTripcord.toString(),
+            channelTripbot: channelTripbot.toString(),
+          });
 
           channel.send(followup);
         } else {
-          channel.send(stripIndents`
-          ${target} has joined as a ${role.name}, please welcome them!
-          
-          A little about them:
-          > ${introMessage}`); // eslint-disable-line
+          const simpleIntro = t(locale, 'reactionRole.simpleRoleIntro', {
+            member: target.toString(),
+            roleName: role.name,
+            introMessage,
+          });
+          channel.send(simpleIntro);
         }
       });
   } else if (channelProvided) {
     const channel = await interaction.guild.channels.fetch(channelProvided) as TextChannel;
     await target.roles.add(role);
-    await interaction.editReply({ content: `Added role ${role.name}` });
+    await interaction.editReply({ content: t(locale, 'reactionRole.addedRoleMessage', { roleName: role.name }) });
     // Post intro message to the channel
-    channel.send(`${target} has joined as a ${role.name}, please welcome them!`);
+    const channelIntro = t(locale, 'reactionRole.simpleRoleIntro', {
+      member: target.toString(),
+      roleName: role.name,
+      introMessage: '',
+    });
+    channel.send(channelIntro);
   } else {
     const guildData = await db.discord_guilds.upsert({
       where: {
@@ -544,12 +510,12 @@ export async function buttonReactionRole(
     if (premiumColorIds.includes(role.id) && !isPremium && !isBooster && !isPurchaser) {
       // log.debug(F, `role.id is ${role.id} is a premium role and the user is not premium
       //       (isMod: ${isMod}, isTs: ${isTs} isBooster: ${isBooster}, isPatron: ${isPatron})`);
-      await interaction.editReply({ content: 'You do not have permission to use that role!' });
+      await interaction.editReply({ content: t(locale, 'reactionRole.rolePermissionError') });
       return;
     }
 
     await target.roles.add(role);
-    await interaction.editReply({ content: `Added role ${role.name}` });
+    await interaction.editReply({ content: t(locale, 'reactionRole.addedRoleMessage', { roleName: role.name }) });
 
     const reactionroleColorData = await db.reaction_roles.findMany({
       where: {
@@ -830,6 +796,7 @@ async function getGuildRole(
 export async function createColorMessage(
   interaction: ChatInputCommandInteraction,
 ) {
+  const locale = await getLocale(interaction, 'reactionRole');
   await interaction.deferReply({ flags: MessageFlags.Ephemeral });
   if (!interaction.guild) return;
   if (!interaction.member) return;
@@ -866,9 +833,9 @@ export async function createColorMessage(
   const roleWhite = await getGuildRole('COLOR' as reaction_role_type, 'Snowdrop', interaction);
 
   const embed = embedTemplate()
-    .setAuthor({ name: 'Colors' })
-    .setDescription('React to this message to set the color of your nickname!')
-    .setFooter({ text: 'You can only pick one color at a time!' })
+    .setAuthor({ name: t(locale, 'reactionRole.colorEmbedAuthor') })
+    .setDescription(t(locale, 'reactionRole.colorEmbedDescription'))
+    .setFooter({ text: t(locale, 'reactionRole.colorEmbedFooter') })
     .setColor(interaction.options.getString('embed_color') ? `#${interaction.options.getString('embed_color')}` : Colors.Blue);
 
   const row1 = new ActionRowBuilder<ButtonBuilder>().addComponents(
@@ -922,9 +889,7 @@ export async function createColorMessage(
   await interaction.editReply({
     embeds: [
       embedTemplate()
-        .setDescription(stripIndents`Color roles have been set up!
-            You can modify each role's name and color code now.
-            If you change the name, re-run this command to update this message with your custom name!`)
+        .setDescription(t(locale, 'reactionRole.colorSetupMessage'))
         .setColor(interaction.options.getString('embed_color') ? `#${interaction.options.getString('embed_color')}` : Colors.Blue),
     ],
   });
@@ -933,6 +898,7 @@ export async function createColorMessage(
 export async function createPremiumColorMessage(
   interaction: ChatInputCommandInteraction,
 ) {
+  const locale = await getLocale(interaction, 'reactionRole');
   await interaction.deferReply({ flags: MessageFlags.Ephemeral });
   if (!interaction.guild) return;
   if (!interaction.member) return;
@@ -995,10 +961,9 @@ export async function createPremiumColorMessage(
   const roleDonorBlack = await getGuildRole('PREMIUM_COLOR' as reaction_role_type, 'Labradorite', interaction);
 
   const embed = embedTemplate()
-    .setDescription(stripIndents`Boosters and Patrons can access new colors!
-  React to this message to set the color of your nickname!`)
-    .setAuthor({ name: 'Premium Colors' })
-    .setFooter({ text: 'You can only pick one color at a time, choose wisely!' })
+    .setDescription(t(locale, 'reactionRole.premiumColorEmbedDescription'))
+    .setAuthor({ name: t(locale, 'reactionRole.premiumColorEmbedAuthor') })
+    .setFooter({ text: t(locale, 'reactionRole.premiumColorEmbedFooter') })
     .setColor(interaction.options.getString('embed_color') ? `#${interaction.options.getString('embed_color')}` : Colors.Purple);
 
   const row1 = new ActionRowBuilder<ButtonBuilder>().addComponents(
@@ -1051,9 +1016,7 @@ export async function createPremiumColorMessage(
   await interaction.editReply({
     embeds: [
       embedTemplate()
-        .setDescription(stripIndents`Premium Color roles have been set up!
-            You can modify each role's name and color code now.
-            If you change the name, re-run this command to update this message with your custom name!`)
+        .setDescription(t(locale, 'reactionRole.premiumColorSetupMessage'))
         .setColor(interaction.options.getString('embed_color') ? `#${interaction.options.getString('embed_color')}` : Colors.Purple),
     ],
   });
@@ -1062,6 +1025,7 @@ export async function createPremiumColorMessage(
 export async function createMindsetMessage(
   interaction: ChatInputCommandInteraction,
 ) {
+  const locale = await getLocale(interaction, 'reactionRole');
   await interaction.deferReply({ flags: MessageFlags.Ephemeral });
   if (!interaction.guild) return;
   if (!interaction.member) return;
@@ -1101,12 +1065,10 @@ export async function createMindsetMessage(
   const roleWorking = await getGuildRole('MINDSET' as reaction_role_type, 'Working', interaction);
 
   const embed = embedTemplate()
-    .setAuthor({ name: 'Mindsets' })
-    .setDescription(stripIndents`
-        **React to this message to show your mindset!**
-      `)
+    .setAuthor({ name: t(locale, 'reactionRole.mindsetEmbedAuthor') })
+    .setDescription(t(locale, 'reactionRole.mindsetEmbedDescription'))
   // .setFooter({ text: 'These roles reset after 8 hours to (somewhat) accurately show your mindset!' })
-    .setFooter({ text: 'You can only pick one mindset at a time!' })
+    .setFooter({ text: t(locale, 'reactionRole.mindsetEmbedFooter') })
     .setColor(interaction.options.getString('embed_color') ? `#${interaction.options.getString('embed_color')}` : Colors.Green);
 
   const row1 = new ActionRowBuilder<ButtonBuilder>().addComponents(
@@ -1169,9 +1131,7 @@ export async function createMindsetMessage(
   await interaction.editReply({
     embeds: [
       embedTemplate()
-        .setDescription(stripIndents`Mindset roles have been set up!
-            You can modify each role's name and color code now.
-            If you change the name, re-run this command to update this message with your custom name!`)
+        .setDescription(t(locale, 'reactionRole.mindsetSetupMessage'))
         .setColor(interaction.options.getString('embed_color') ? `#${interaction.options.getString('embed_color')}` : Colors.Green),
     ],
   });
@@ -1180,6 +1140,7 @@ export async function createMindsetMessage(
 export async function createPronounMessage(
   interaction: ChatInputCommandInteraction,
 ) {
+  const locale = await getLocale(interaction, 'reactionRole');
   await interaction.deferReply({ flags: MessageFlags.Ephemeral });
   if (!interaction.guild) return;
   if (!interaction.member) return;
@@ -1215,9 +1176,9 @@ export async function createPronounMessage(
   const rolePronounHe = await getGuildRole('PRONOUN' as reaction_role_type, 'HeHim', interaction);
 
   const embed = embedTemplate()
-    .setAuthor({ name: 'Pronouns' })
-    .setDescription(stripIndents`Click the button(s) below to pick your pronoun(s)!`)
-    .setFooter({ text: 'You may pick as many pronoun roles as you want!' })
+    .setAuthor({ name: t(locale, 'reactionRole.pronounEmbedAuthor') })
+    .setDescription(t(locale, 'reactionRole.pronounEmbedDescription'))
+    .setFooter({ text: t(locale, 'reactionRole.pronounEmbedFooter') })
     .setColor(interaction.options.getString('embed_color') ? `#${interaction.options.getString('embed_color')}` : Colors.Yellow);
 
   const row1 = new ActionRowBuilder<ButtonBuilder>().addComponents(
@@ -1254,9 +1215,7 @@ export async function createPronounMessage(
   await interaction.editReply({
     embeds: [
       embedTemplate()
-        .setDescription(stripIndents`Pronoun roles have been set up!
-            You can modify each role's name and color code now.
-            If you change the name, re-run this command to update this message with your custom name!`)
+        .setDescription(t(locale, 'reactionRole.pronounSetupMessage'))
         .setColor(interaction.options.getString('embed_color') ? `#${interaction.options.getString('embed_color')}` : Colors.Yellow),
     ],
   });
@@ -1265,6 +1224,7 @@ export async function createPronounMessage(
 export async function createNotificationMessage(
   interaction: ChatInputCommandInteraction,
 ) {
+  const locale = await getLocale(interaction, 'reactionRole');
   await interaction.deferReply({ flags: MessageFlags.Ephemeral });
   if (!interaction.guild) return;
   if (!interaction.member) return;
@@ -1295,9 +1255,9 @@ export async function createNotificationMessage(
   const roleActivityCrew = await getGuildRole('NOTIFICATION' as reaction_role_type, 'Activity Crew', interaction);
 
   const embed = embedTemplate()
-    .setAuthor({ name: 'Notifications' })
-    .setDescription(stripIndents`Click the button${isHome ? 's' : ''} below to pick your notification role${isHome ? 's' : ''}!`)
-    .setFooter({ text: 'Having one of these roles means you will receive a @ ping notification for the respective topic.' }) // eslint-disable-line max-len
+    .setAuthor({ name: t(locale, 'reactionRole.notificationEmbedAuthor') })
+    .setDescription(t(locale, 'reactionRole', isHome ? 'notificationEmbedDescriptionHome' : 'notificationEmbedDescriptionOther'))
+    .setFooter({ text: t(locale, 'reactionRole.notificationEmbedFooter') })
     .setColor(interaction.options.getString('embed_color') ? `#${interaction.options.getString('embed_color')}` : Colors.Red);
 
   const row1 = new ActionRowBuilder<ButtonBuilder>()
@@ -1343,9 +1303,7 @@ export async function createNotificationMessage(
   await interaction.editReply({
     embeds: [
       embedTemplate()
-        .setDescription(stripIndents`Notification roles have been set up!
-            You can modify each role's name and color code now.
-            If you change the name, re-run this command to update this message with your custom name!`)
+        .setDescription(t(locale, 'reactionRole.notificationSetupMessage'))
         .setColor(interaction.options.getString('embed_color') ? `#${interaction.options.getString('embed_color')}` : Colors.Red),
     ],
   });
@@ -1354,70 +1312,101 @@ export async function createNotificationMessage(
 export const dReactionRole: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('reaction_role')
+    .setNameLocalizations(getCommandLocalizations('reactionRole.commandName'))
     .setDescription('Create a reaction role messages')
+    .setDescriptionLocalizations(getCommandLocalizations('reactionRole.commandDescription'))
     .setIntegrationTypes([0])
     .addSubcommand(subcommand => subcommand
       .setName('help')
-      .setDescription('Displays info on this command'))
+      .setNameLocalizations(getCommandLocalizations('reactionRole.helpSubcommandName'))
+      .setDescription('Displays info on this command')
+      .setDescriptionLocalizations(getCommandLocalizations('reactionRole.helpSubcommandDescription')))
     .addSubcommand(subcommand => subcommand
       .setName('custom')
+      .setNameLocalizations(getCommandLocalizations('reactionRole.customSubcommandName'))
       .setDescription('Create a custom reaction role message')
+      .setDescriptionLocalizations(getCommandLocalizations('reactionRole.customSubcommandDescription'))
       .addRoleOption(option => option.setName('role')
         .setRequired(true)
-        .setDescription('What role should be applied?'))
+        .setDescription('What role should be applied?')
+        .setDescriptionLocalizations(getCommandLocalizations('reactionRole.customRoleOption')))
       .addStringOption(option => option.setName('emoji')
-        .setDescription('What emoji should be used?'))
+        .setDescription('What emoji should be used?')
+        .setDescriptionLocalizations(getCommandLocalizations('reactionRole.customEmojiOption')))
       .addStringOption(option => option.setName('label')
-        .setDescription('What should the button label say?'))
+        .setDescription('What should the button label say?')
+        .setDescriptionLocalizations(getCommandLocalizations('reactionRole.customLabelOption')))
       .addBooleanOption(option => option.setName('intro_message')
-        .setDescription('Do they need to provide an intro message?'))
+        .setDescription('Do they need to provide an intro message?')
+        .setDescriptionLocalizations(getCommandLocalizations('reactionRole.customIntroMessageOption')))
       .addChannelOption(option => option.setName('intro_channel')
-        .setDescription('Where should the intro message be posted?'))
+        .setDescription('Where should the intro message be posted?')
+        .setDescriptionLocalizations(getCommandLocalizations('reactionRole.customIntroChannelOption')))
       .addStringOption(option => option.setName('embed_color')
-        .setDescription(embedOption)
+        .setDescription(DESC_EMBED_COLOR)
+        .setDescriptionLocalizations(getCommandLocalizations('reactionRole.customEmbedColorOption'))
         .setAutocomplete(true)))
     .addSubcommand(subcommand => subcommand
       .setName('color')
+      .setNameLocalizations(getCommandLocalizations('reactionRole.colorSubcommandName'))
       .setDescription('Creates the color reaction role message in this channel')
+      .setDescriptionLocalizations(getCommandLocalizations('reactionRole.colorSubcommandDescription'))
       .addStringOption(option => option.setName('embed_color')
-        .setDescription(embedOption)
+        .setDescription(DESC_EMBED_COLOR)
+        .setDescriptionLocalizations(getCommandLocalizations('reactionRole.customEmbedColorOption'))
         .setAutocomplete(true)))
     .addSubcommand(subcommand => subcommand
       .setName('premium_color')
+      .setNameLocalizations(getCommandLocalizations('reactionRole.premiumColorSubcommandName'))
       .setDescription('Creates the premium color reaction role message in this channel')
+      .setDescriptionLocalizations(getCommandLocalizations('reactionRole.premiumColorSubcommandDescription'))
       .addStringOption(option => option.setName('premium_roles')
         .setDescription('@ mention other roles that should have access to premium colors')
+        .setDescriptionLocalizations(getCommandLocalizations('reactionRole.premiumColorRolesOption'))
         .setRequired(true))
       .addStringOption(option => option.setName('embed_color')
-        .setDescription(embedOption)
+        .setDescription(DESC_EMBED_COLOR)
+        .setDescriptionLocalizations(getCommandLocalizations('reactionRole.customEmbedColorOption'))
         .setAutocomplete(true)))
     .addSubcommand(subcommand => subcommand
       .setName('mindset')
+      .setNameLocalizations(getCommandLocalizations('reactionRole.mindsetSubcommandName'))
       .setDescription('Creates the mindset reaction role message in this channel')
+      .setDescriptionLocalizations(getCommandLocalizations('reactionRole.mindsetSubcommandDescription'))
       .addStringOption(option => option.setName('embed_color')
-        .setDescription(embedOption)
+        .setDescription(DESC_EMBED_COLOR)
+        .setDescriptionLocalizations(getCommandLocalizations('reactionRole.customEmbedColorOption'))
         .setAutocomplete(true)))
     .addSubcommand(subcommand => subcommand
       .setName('pronoun')
+      .setNameLocalizations(getCommandLocalizations('reactionRole.pronounSubcommandName'))
       .setDescription('Creates the pronoun reaction role message in this channel')
+      .setDescriptionLocalizations(getCommandLocalizations('reactionRole.pronounSubcommandDescription'))
       .addStringOption(option => option.setName('embed_color')
-        .setDescription(embedOption)
+        .setDescription(DESC_EMBED_COLOR)
+        .setDescriptionLocalizations(getCommandLocalizations('reactionRole.customEmbedColorOption'))
         .setAutocomplete(true)))
     .addSubcommand(subcommand => subcommand
       .setName('notification')
+      .setNameLocalizations(getCommandLocalizations('reactionRole.notificationSubcommandName'))
       .setDescription('Creates the notification reaction role message in this channel')
+      .setDescriptionLocalizations(getCommandLocalizations('reactionRole.notificationSubcommandDescription'))
       .addBooleanOption(option => option.setName('include_voice')
-        .setDescription('Include the voice chatter role?'))
+        .setDescription('Include the voice chatter role?')
+        .setDescriptionLocalizations(getCommandLocalizations('reactionRole.notificationIncludeVoiceOption')))
       .addBooleanOption(option => option.setName('include_activities')
-        .setDescription('Include the activities role?'))
+        .setDescription('Include the activities role?')
+        .setDescriptionLocalizations(getCommandLocalizations('reactionRole.notificationIncludeActivitiesOption')))
       .addStringOption(option => option.setName('embed_color')
-        .setDescription(embedOption)
+        .setDescription(DESC_EMBED_COLOR)
+        .setDescriptionLocalizations(getCommandLocalizations('reactionRole.customEmbedColorOption'))
         .setAutocomplete(true))),
   async execute(interaction) {
+    const locale = await getLocale(interaction, 'reactionRole');
     log.info(F, await commandContext(interaction));
     if (!interaction.guild) {
       // log.debug(F, `no guild!`);
-      await interaction.reply(guildError);
+      await interaction.reply(t(locale, 'reactionRole.guildError'));
       return false;
     }
 
@@ -1437,7 +1426,7 @@ export const dReactionRole: SlashCommand = {
       await interaction.reply({
         embeds: [
           embedTemplate()
-            .setDescription('This command can only be used in a partner or supporter guilds! Use /reaction_role help for more info.')
+            .setDescription(t(locale, 'reactionRole.partnerGuildError'))
             .setColor(Colors.Red),
         ],
         flags: MessageFlags.Ephemeral,
@@ -1447,13 +1436,13 @@ export const dReactionRole: SlashCommand = {
 
     if (!interaction.member) {
       // log.debug(F, `no member!`);
-      await interaction.reply(memberError);
+      await interaction.reply(t(locale, 'reactionRole.memberError'));
     }
     if (!(interaction.member as GuildMember).permissions.has('ManageRoles' as PermissionResolvable)) {
       await interaction.reply({
         embeds: [
           embedTemplate()
-            .setDescription('Error: You do not have the ManageRoles permission needed to create a reactionrole message!')
+            .setDescription(t(locale, 'reactionRole.permissionCheckError'))
             .setColor(Colors.Red),
         ],
         flags: MessageFlags.Ephemeral,
@@ -1465,7 +1454,7 @@ export const dReactionRole: SlashCommand = {
       await interaction.reply({
         embeds: [
           embedTemplate()
-            .setDescription('Error: This command can only be used in a guild!')
+            .setDescription(t(locale, 'reactionRole.notInGuildError'))
             .setColor(Colors.Red),
         ],
         flags: MessageFlags.Ephemeral,
@@ -1477,7 +1466,7 @@ export const dReactionRole: SlashCommand = {
       await interaction.reply({
         embeds: [
           embedTemplate()
-            .setDescription('Error: This command can only be used in a channel!')
+            .setDescription(t(locale, 'reactionRole.notInChannelError'))
             .setColor(Colors.Red),
         ],
         flags: MessageFlags.Ephemeral,
@@ -1489,7 +1478,7 @@ export const dReactionRole: SlashCommand = {
       await interaction.reply({
         embeds: [
           embedTemplate()
-            .setDescription('Error: This command can only be used in a text channel!')
+            .setDescription(t(locale, 'reactionRole.notTextChannelError'))
             .setColor(Colors.Red),
         ],
         flags: MessageFlags.Ephemeral,
@@ -1506,10 +1495,10 @@ export const dReactionRole: SlashCommand = {
       await interaction.reply({
         embeds: [
           embedTemplate()
-            .setDescription(stripIndents`Error: Missing ${guildPerms.permission} permission in ${interaction.guild}!
-            In order to setup the reaction roles feature I need:
-            Manage Roles - In order to give and take away roles from users
-            Note: My role needs to be higher than all other roles you want managed!`)
+            .setDescription(t(locale, 'reactionRole.guildPermissionError', {
+              permission: guildPerms.permission,
+              guild: interaction.guild.toString(),
+            }))
             .setColor(Colors.Red),
         ],
         flags: MessageFlags.Ephemeral,
@@ -1526,10 +1515,10 @@ export const dReactionRole: SlashCommand = {
       await interaction.reply({
         embeds: [
           embedTemplate()
-            .setDescription(stripIndents`Error: Missing ${channelPerms.permission} permission in ${interaction.channel}!
-            In order to setup the reaction roles feature I need:
-            View Channel - In order to see the channel
-            Send Messages - In order to send the reaction role message`)
+            .setDescription(t(locale, 'reactionRole.channelPermissionError', {
+              permission: channelPerms.permission,
+              channel: interaction.channel.toString(),
+            }))
             .setColor(Colors.Red),
         ],
         flags: MessageFlags.Ephemeral,
@@ -1543,52 +1532,17 @@ export const dReactionRole: SlashCommand = {
       await interaction.reply({
         embeds: [
           embedTemplate()
-            .setTitle('Reaction Role Help')
-            .setDescription(stripIndents`This command allows you to create a reaction role message in the current channel.
-              This message will allow users to react to it and get a role assigned to them.
-              
-              If this is your first time using one of the pre-defined reaction templates it will create the necessary roles for you.
-              After the first run you can modify the role name, color and icon to your liking.
-              You can then re-run the command to update the message with your new names and colors!
-
-              Premium colors are available to:
-              * Boosters and Subscribers of your guild, as defined by Discord boosts and subscriptions
-              * Premium roles you define in the setup command, eg, Patreon subscribers or team members
-              * You will need to re-define the premium list if you run the command again!
-
-              Permissions Needed:
-              Manage Roles - In order to give and take away roles from users
-              Note: My role needs to be higher than all other roles you want managed!
-
-              **This command can only be used in a partner or supporter guilds!**
-              Want to be as supporter? Join our patreon!
-              Want to be a partner? Let Moonbear know: this is a very new system and we are still working out the kinks!
-              `)
+            .setTitle(t(locale, 'reactionRole.helpTitle'))
+            .setDescription(t(locale, 'reactionRole.helpDescription'))
             .addFields(
               {
-                name: 'Usage',
-                value: stripIndents`/reaction_role [subcommand]
-                  /reaction_role help - Displays this message
-                  /reaction_role color - Creates the color reaction role message in this channel
-                  /reaction_role premium_color - Creates the premium color reaction role message in this channel
-                  /reaction_role mindset - Creates the mindset reaction role message in this channel
-                  /reaction_role pronoun - Creates the pronoun reaction role message in this channel
-                  /reaction_role notification - Creates the notification reaction role message in this channel
-                  /reaction_role custom - Creates a custom reaction role message in this channel`,
+                name: t(locale, 'reactionRole.helpUsageFieldName'),
+                value: t(locale, 'reactionRole.helpUsageFieldValue'),
                 inline: false,
               },
               {
-                name: 'Examples',
-                value: stripIndents`
-                  /reaction_role custom Role:@Helper Emoji:🤔 Label:Helper" Intro_message:true Intro_channel:#helpers
-                  This will create a reaction role message in the current channel with the role @Helper, the emoji 🤔 and the label Helper.
-                  When they click on this button they will need to put in an intro message into the modal that pops up.
-                  This intro message will be sent to the #helpers channel.
-
-                  /reaction_role custom Role:@Verified Label:I understand the rules
-                  This will create a reaction role message in the current channel with the @Verified role.
-                  When they click on this the button that says "I understand the rules" they will be given the Verified role.
-                  `,
+                name: t(locale, 'reactionRole.helpExamplesFieldName'),
+                value: t(locale, 'reactionRole.helpExamplesFieldValue'),
                 inline: false,
               },
             )

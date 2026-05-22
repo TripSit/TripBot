@@ -1,0 +1,5 @@
+{
+  "commandName": "joke",
+  "commandDescription": "Satunnaisia vitsejä",
+  "ephemeralOption": "Aseta \"Tosi\" näyttääksesi vastauksen vain itsellesi"
+}

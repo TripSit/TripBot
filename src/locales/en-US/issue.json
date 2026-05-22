@@ -1,0 +1,15 @@
+{
+  "commandName": "issue",
+  "commandDescription": "Create issue on github",
+  "typeOption": "What type of issue is this?",
+  "priorityOption": "How important is this?",
+  "effortOption": "How much effort will this take?",
+  "modalTitle": "TripBot Issue Creation",
+  "issueTitleLabel": "Issue Title",
+  "issueTitlePlaceholder": "Summarize the issue here!",
+  "issueBodyLabel": "Issue Body",
+  "issueBodyPlaceholder": "Please describe the issue in detail! Include steps to reproduce, any specific circumstances, etc.",
+  "issueBodySuffix": "This issue was submitted by {{name}} in {{guild}}",
+  "embedTitle": "Issue created!",
+  "embedDescription": "Issue #{{number}} created on TripSit/TripBot!\nClick here to view: {{url}}"
+}

@@ -1,0 +1,13 @@
+{
+  "commandName": "timezone",
+  "commandDescription": "Get or set timezones!",
+  "getSubcommand": "Get someone's timezone!",
+  "setSubcommand": "Set your timezone!",
+  "userOption": "User to lookup",
+  "ephemeralOption": "Set to \"True\" to show the response only to you",
+  "timezoneOption": "Timezone value",
+  "notSet": "{{name}} is a timeless treasure <3\n(Has not set a time zone)",
+  "invalid": "Invalid timezone!\nPlease only use the options from the autocomplete list.",
+  "updated": "I updated your timezone to {{tz}}",
+  "currentTime": "{{time}} wherever {{name}} is located"
+}

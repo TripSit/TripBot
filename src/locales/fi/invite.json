@@ -1,0 +1,10 @@
+{
+  "commandName": "invite",
+  "commandDescription": "Näyttää kutsulinkin tälle botille!",
+  "ephemeralOption": "Aseta \"Tosi\" näyttääksesi vastauksen vain itsellesi",
+  "embedTitle": "Kutsu {{botName}}",
+  "devNotice": "Tämä on botin kehitysversio. Käytä tuotantoversioita parhaan kokemuksen saamiseksi.",
+  "inviteLink": "Klikkaa tästä kutsuaksesi TripBotin omalle palvelimellesi",
+  "advancedNote": "Huom: Kehittyneet ominaisuudet vaativat botille lisäoikeuksia.",
+  "supportServer": "{{serverType}}-palvelin on [{{guildName}} Discord]({{inviteUrl}}). Jos sinulla on ongelmia tai kysymyksiä, liity ja juttele Moonbearin kanssa!"
+}

@@ -14,12 +14,9 @@ import {
   calcBenzo, calcDxm, calcKetamine, calcMDMA, calcSolvent, calcSubstance, calcPsychedelics, DxmDataType,
 } from '../../../global/commands/g.calc';
 import commandContext from '../../utils/context';
+import { t, getLocale, getCommandLocalizations } from '../../../i18n/index';
 
 const F = f(__filename);
-
-const invalidParametersErrorMsg = 'Invalid values supplied';
-const ephemeralMsg = 'Set to "True" to show the response only to you';
-const askWeightMsg = 'How much do you weigh?';
 
 /**
  * Utility function to build embeds.
@@ -27,23 +24,25 @@ const askWeightMsg = 'How much do you weigh?';
  * @param description
  * @param color
  * @param isError
+ * @param locale
  * @returns {Promise<EmbedBuilder>}
  */
-async function buildCalcEmbed(title: string, description: string, color: ColorResolvable = Colors.Purple, isError: boolean = false):Promise<EmbedBuilder> {
+async function buildCalcEmbed(title: string, description: string, locale: string, color: ColorResolvable = Colors.Purple, isError: boolean = false):Promise<EmbedBuilder> {
   return embedTemplate()
     .setColor(isError ? Colors.Red : color)
-    .setTitle(isError ? 'Error!' : title)
-    .setDescription(isError ? stripIndents`There was an error during conversion!
-      I've let the developer know, please try again with different parameters!` : description);
+    .setTitle(isError ? t(locale, 'calc.errorTitle') : title)
+    .setDescription(isError ? t(locale, 'calc.errorDescription') : description);
 }
 /**
  * Calls g.calc benzo function with user supplied input and builds an embed out of it.
  * Takes the dose of one specific benzo and uses it to figure out the equivalent dose for another benzo
  * @param interaction
+ * @param locale
  * @returns {Promise<EmbedBuilder>}
  */
 async function dCalcBenzo(
   interaction:ChatInputCommandInteraction,
+  locale: string,
 ):Promise<EmbedBuilder> {
   const dosage = interaction.options.getNumber('i_have', true);
   const drugA = interaction.options.getString('mg_of', true);
@@ -51,7 +50,7 @@ async function dCalcBenzo(
   const data = await calcBenzo(dosage, drugA, drugB);
 
   if (dosage < 0.001) {
-    return buildCalcEmbed(invalidParametersErrorMsg, 'The parameter \'i_have\' cannot be less than 0.001.', Colors.Red);
+    return buildCalcEmbed(t(locale, 'calc.invalidParameters'), t(locale, 'calc.benzoIHaveValidation'), locale, Colors.Red);
   }
 
   let isError = false;
@@ -59,27 +58,28 @@ async function dCalcBenzo(
     isError = true;
   }
 
-  const embedTitle = `${dosage} mg of ${drugA} about equal to ${data} mg of ${drugB}`;
-  const embedDescription = stripIndents`
-      **Please make sure to research the substances thoroughly before using them.**
-      It's a good idea to start with a lower dose than the calculator shows, since everybody can react differently to different substances.
-      `;
-  return buildCalcEmbed(embedTitle, embedDescription, Colors.Red, isError);
+  const embedTitle = t(locale, 'calc.benzoEmbedTitle', {
+    dosage, drugA, data, drugB,
+  });
+  const embedDescription = t(locale, 'calc.benzoEmbedDesc');
+  return buildCalcEmbed(embedTitle, embedDescription, locale, Colors.Red, isError);
 }
 
 /**
  * Calls g.calc DXM function with user supplied input and builds an embed out of it. Takes weight for calculations.
  * @param interaction
+ * @param locale
  * @returns {Promise<EmbedBuilder>}
  */
 async function dCalcDXM(
   interaction:ChatInputCommandInteraction,
+  locale: string,
 ):Promise<EmbedBuilder> {
   // Calculate each plat min/max value
   const givenWeight = interaction.options.getNumber('calc_weight', true);
 
   if (givenWeight < 1) {
-    return buildCalcEmbed(invalidParametersErrorMsg, 'The parameter \'calc_weight\' cannot be less than 1.', Colors.Red);
+    return buildCalcEmbed(t(locale, 'calc.invalidParameters'), t(locale, 'calc.dxmWeightValidation'), locale, Colors.Red);
   }
 
   const weightUnits = interaction.options.getString('units', true);
@@ -89,15 +89,15 @@ async function dCalcDXM(
   const dosageData = results.data as DxmDataType;
   const { units } = results;
 
-  const embedTitle = 'DXM Dosages';
-  const embedDescription = `For a ${givenWeight}${weightUnits} individual taking ${taking}`;
-  const embed = await buildCalcEmbed(embedTitle, embedDescription);
+  const embedTitle = t(locale, 'calc.dxmEmbedTitle');
+  const embedDescription = t(locale, 'calc.dxmEmbedDesc', { weight: givenWeight, units: weightUnits, taking });
+  const embed = await buildCalcEmbed(embedTitle, embedDescription, locale);
   let header = true;
   Object.keys(dosageData).forEach(key => {
     embed.addFields(
-      { name: `${header ? 'Plateau' : '\u200B'}`, value: `**${key}**`, inline: true },
-      { name: `${header ? 'Minimum' : '\u200B'}`, value: `${dosageData[key as keyof DxmDataType].min} ${units}`, inline: true },
-      { name: `${header ? 'Maximum' : '\u200B'}`, value: `${dosageData[key as keyof DxmDataType].max} ${units}`, inline: true },
+      { name: `${header ? t(locale, 'calc.dxmPlateauHeader') : '\u200B'}`, value: `**${key}**`, inline: true },
+      { name: `${header ? t(locale, 'calc.dxmMinimumHeader') : '\u200B'}`, value: `${dosageData[key as keyof DxmDataType].min} ${units}`, inline: true },
+      { name: `${header ? t(locale, 'calc.dxmMaximumHeader') : '\u200B'}`, value: `${dosageData[key as keyof DxmDataType].max} ${units}`, inline: true },
     );
     header = false;
   });
@@ -107,22 +107,24 @@ async function dCalcDXM(
 /**
  * Calls g.calc Ketamine function with user supplied input and build an embed out of it for insuffulation and rectal ROAs.
  * @param interaction
+ * @param locale
  * @returns {Promise<EmbedBuilder>}
  */
 async function dCalcKetamine(
   interaction:ChatInputCommandInteraction,
+  locale: string,
 ):Promise<EmbedBuilder> {
   const givenWeight = interaction.options.getNumber('weight', true);
   const weightUnits = interaction.options.getString('units', true) as 'kg' | 'lbs';
   const embed = embedTemplate();
 
   if (weightUnits === 'kg' && (givenWeight > 179 || givenWeight < 1)) {
-    embed.setTitle('Please enter a weight less than 179 kg and greater than 1kg.'); // what if a person is 200kg? =(
+    embed.setTitle(t(locale, 'calc.ketamineWeightKgValidation'));
     return embed;
   }
 
   if (weightUnits === 'lbs' && (givenWeight > 398 || givenWeight < 1)) {
-    embed.setTitle('Please enter a weight less than 398 lbs and greater than 1 lb.'); // what if a person is > 398 lbs? >.<
+    embed.setTitle(t(locale, 'calc.ketamineWeightLbsValidation'));
     return embed;
   }
 
@@ -130,7 +132,7 @@ async function dCalcKetamine(
 
   embed.addFields(
     {
-      name: 'Insufflated',
+      name: t(locale, 'calc.ketamineInsuffTitle'),
       value: stripIndents`${data.insufflated}`,
       inline: true,
     }, /* Uncomment this when we've implemented a better boofing calculation method
@@ -147,21 +149,23 @@ async function dCalcKetamine(
  * Calls g.calc MDMA function with user supplied input and build an embed out of it.
  * Takes weight for calculations and appends extra HR info at the end.
  * @param interaction
+ * @param locale
  * @returns {Promise<EmbedBuilder>}
  */
 async function dCalcMDMA(
   interaction:ChatInputCommandInteraction,
+  locale: string,
 ):Promise<EmbedBuilder> {
   const givenWeight = interaction.options.getNumber('weight', true);
 
   if (givenWeight < 1) {
-    return buildCalcEmbed(invalidParametersErrorMsg, 'The parameter \'weight\' cannot be less than 1.', Colors.Red);
+    return buildCalcEmbed(t(locale, 'calc.invalidParameters'), t(locale, 'calc.mdmaWeightValidation'), locale, Colors.Red);
   }
   const weightUnits = interaction.options.getString('units', true) as 'kg' | 'lbs';
   const embed = embedTemplate();
   const dosageData = await calcMDMA(givenWeight, weightUnits);
 
-  let description = '**MDMA Dosage Information**\n\n';
+  let description = `${t(locale, 'calc.mdmaTitlePrefix')}\n\n`;
 
   Object.keys(dosageData).forEach(key => {
     const title = key.charAt(0).toUpperCase() + key.slice(1);
@@ -169,11 +173,7 @@ async function dCalcMDMA(
   });
 
   description += '\n';
-  description += stripIndents`
-    **It is not recommended to exceed 150mg of MDMA in a single session, including any redoses.** \
-    As dosage increases, so does the likelihood of experiencing negative side effects. \
-    Keeping doses in the light to medium range can help maximize pleasurable effects while minimizing discomfort. \
-    For more information check out [RollSafe](https://rollsafe.org/mdma-dosage/).`;
+  description += t(locale, 'calc.mdmaWarning');
   embed.setDescription(description);
   return embed;
 }
@@ -182,10 +182,12 @@ async function dCalcMDMA(
  * Calls g.calc Nasal function with user supplied input and build an embed out of it.
  * It acts as the frontend for determining how to make a nasal spray solution.
  * @param interaction
+ * @param locale
  * @returns {Promise<EmbedBuilder>}
  */
 async function dCalcNasal(
   interaction:ChatInputCommandInteraction,
+  locale: string,
 ):Promise<EmbedBuilder> {
   const calculationType = interaction.options.getString('calculation_type', true);
   const amount = interaction.options.getNumber('amount', true);
@@ -194,16 +196,16 @@ async function dCalcNasal(
 
   if (amount < 1 || mlPerPush < 1 || desiredMgPerPush < 0.001) {
     return buildCalcEmbed(
-      invalidParametersErrorMsg,
-      stripIndents`The parameters \'amount\' and \'mlPerPush\' cannot be less than 1, 
-      and the parameter \'desiredMgPerPush\' cannot be less than 0.001.`,
+      t(locale, 'calc.invalidParameters'),
+      t(locale, 'calc.nasalValidation'),
+      locale,
       Colors.Red,
     );
   }
 
   const imageUrl = 'https://user-images.githubusercontent.com/1836049/218758611-c84f1e34-0f5b-43ac-90da-bd89b028f131.png';
   const embed = embedTemplate()
-    .setTitle('Nasal spray calculator')
+    .setTitle(t(locale, 'calc.nasalSprayTitle'))
     .setImage(imageUrl);
 
   if (calculationType === 'solvent') {
@@ -211,12 +213,14 @@ async function dCalcNasal(
     // log.debug(F, `amount: ${amount}`);
     // log.debug(F, `desired_mg_per_push: ${desiredMgPerPush}`);
     // log.debug(F, `ml_per_push: ${mlPerPush}`);
-    embed.setDescription(`You'll need ~${await calcSolvent(amount, desiredMgPerPush, mlPerPush)}ml of solvent (water)`);
+    const solventAmount = await calcSolvent(amount, desiredMgPerPush, mlPerPush);
+    embed.setDescription(t(locale, 'calc.nasalSolventDesc', { amount: solventAmount }));
   } else if (calculationType === 'substance') {
     // log.debug(F, `amount: ${amount}`);
     // log.debug(F, `desired_mg_per_push: ${desiredMgPerPush}`);
     // log.debug(F, `ml_per_push: ${mlPerPush}`);
-    embed.setDescription(`You'll need ~${await calcSubstance(amount, desiredMgPerPush, mlPerPush)}mg of the substance`);
+    const substanceAmount = await calcSubstance(amount, desiredMgPerPush, mlPerPush);
+    embed.setDescription(t(locale, 'calc.nasalSubstanceDesc', { amount: substanceAmount }));
   }
   return embed;
 }
@@ -225,10 +229,12 @@ async function dCalcNasal(
  * Calls g.calc Psychedelic (LSD/Mushrooms only) function with user supplied input and build an embed out of it
  * This particular one is the frontend of a tolerance calculator.
  * @param interaction
+ * @param locale
  * @returns {Promise<EmbedBuilder>}
  */
 async function dCalcPsychedelics(
   interaction:ChatInputCommandInteraction,
+  locale: string,
 ):Promise<EmbedBuilder> {
   const drugType = interaction.options.getString('drug_type', true);
   const lastDose = interaction.options.getNumber('last_dose_amount', true);
@@ -237,7 +243,7 @@ async function dCalcPsychedelics(
 
   // This and other instances of these checks in this file fix an issue where supplying 0 could cause an "Infinity g/ug" response and a negative number resulted in NaN.
   if (days < 1 || lastDose < 1 || desiredDose < 1) {
-    return buildCalcEmbed(invalidParametersErrorMsg, 'The parameters \'last_dose_amount\', \'desired_dose_amount\', and \'days\' cannot be less than 1.', Colors.Red);
+    return buildCalcEmbed(t(locale, 'calc.invalidParameters'), t(locale, 'calc.psychedelicValidation'), locale, Colors.Red);
   }
 
   // Code here inspired by https://codepen.io/cyberoxide/pen/BaNarGd
@@ -247,19 +253,19 @@ async function dCalcPsychedelics(
   const drug = (drugType === 'lsd') ? 'LSD' : 'Mushrooms';
   const units = (drugType === 'lsd') ? 'ug' : 'g';
 
-  let title = `${result} ${units} of ${drug} is needed to feel the same effects as`;
+  let title = t(locale, 'calc.psychedelicTolerance', { amount: result, units, drug });
   if (desiredDose) {
-    title = `${title} ${desiredDose} ${units} of ${drug} when ${lastDose} ${units} were taken ${days} days ago.`;
+    title = `${title} ${t(locale, 'calc.psychedelicToleranceWithDesiredDose', {
+      lastDose, units, days, drug,
+    })}`;
   } else {
     title = `${title} ${lastDose} ${units} of ${drug} taken ${days} days ago.`;
   }
 
   return buildCalcEmbed(
     title,
-    stripIndents`
-    This ESTIMATE only works for lysergamides such as LSD and tryptamines such as Magic Mushrooms.
-    As all bodies and brains are different, results may vary. 
-    [Credit to cyberoxide's Codepen](https://codepen.io/cyberoxide/pen/BaNarGd) and [AdmiralAcid's post on reddit](https://www.reddit.com/r/LSD/comments/4dzh9s/lsd_tolerance_calculator_improved/) `,
+    t(locale, 'calc.psychedelicEstimate'),
+    locale,
     Colors.Red,
   );
 }
@@ -267,44 +273,56 @@ async function dCalcPsychedelics(
 export const dCalc: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('calc')
-    .setDescription('Get drug dosage information')
+    .setNameLocalizations(getCommandLocalizations('calc.commandName'))
+    .setDescription(t('en-US', 'calc.commandDescription'))
+    .setDescriptionLocalizations(getCommandLocalizations('calc.commandDescription'))
     .setContexts([0, 1, 2])
     .setIntegrationTypes([0, 1])
     // BEGIN BENZO SUBCOMMAND
     .addSubcommand(subcommand => subcommand
       .setName('benzo')
-      .setDescription('Get benzo dosage information')
+      .setNameLocalizations(getCommandLocalizations('calc.benzoSubcommandName'))
+      .setDescription(t('en-US', 'calc.benzoSubcommandDescription'))
+      .setDescriptionLocalizations(getCommandLocalizations('calc.benzoSubcommandDescription'))
       .addNumberOption(option => option.setName('i_have')
-        .setDescription('mg')
+        .setDescription(t('en-US', 'calc.benzoIHaveOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('calc.benzoIHaveOption'))
         .setRequired(true))
       .addStringOption(option => option.setName('mg_of')
-        .setDescription('Pick the first benzo')
+        .setDescription(t('en-US', 'calc.benzoMgOfOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('calc.benzoMgOfOption'))
         .setAutocomplete(true)
         .setRequired(true))
       .addStringOption(option => option.setName('and_i_want_the_dose_of')
-        .setDescription('Pick the second drug')
+        .setDescription(t('en-US', 'calc.benzoAndIWantOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('calc.benzoAndIWantOption'))
         .setAutocomplete(true)
         .setRequired(true))
       .addBooleanOption(option => option.setName('ephemeral')
-        .setDescription(ephemeralMsg)))
+        .setDescription(t('en-US', 'calc.ephemeralOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('calc.ephemeralOption'))))
     // END BENZO SUBCOMMAND
     // BEGIN DXM SUBCOMMAND
     .addSubcommand(subcommand => subcommand
       .setName('dxm')
-      .setDescription('Get DXM dosage information')
+      .setNameLocalizations(getCommandLocalizations('calc.dxmSubcommandName'))
+      .setDescription(t('en-US', 'calc.dxmSubcommandDescription'))
+      .setDescriptionLocalizations(getCommandLocalizations('calc.dxmSubcommandDescription'))
       .addNumberOption(option => option.setName('calc_weight')
-        .setDescription(askWeightMsg)
+        .setDescription(t('en-US', 'calc.dxmWeightOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('calc.dxmWeightOption'))
         .setRequired(true))
       .addStringOption(option => option.setName('units')
-        .setDescription('In what units?')
+        .setDescription(t('en-US', 'calc.dxmUnitsOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('calc.dxmUnitsOption'))
         .addChoices(
           { name: 'kg', value: 'kg' },
           { name: 'lbs', value: 'lbs' },
         )
         .setRequired(true))
       .addStringOption(option => option.setName('taking')
-        // eslint-disable-next-line max-len
-        .setDescription('What are you taking? All products (except RoboTablets) contain DXM hBr.')
+        .setDescription(t('en-US', 'calc.dxmTakingOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('calc.dxmTakingOption'))
         .addChoices(
           { name: 'RoboTablets (30 mg freebase tablets)', value: 'RoboTablets (30 mg tablets)' },
           { name: 'RoboCough (ml HBr)', value: 'RoboCough (ml)' },
@@ -316,109 +334,135 @@ export const dCalc: SlashCommand = {
         )
         .setRequired(true))
       .addBooleanOption(option => option.setName('ephemeral')
-        .setDescription(ephemeralMsg)))
+        .setDescription(t('en-US', 'calc.ephemeralOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('calc.ephemeralOption'))))
     // END DXM SUBCOMMAND
     // BEGIN KETAMINE SUBCOMMAND
     .addSubcommand(subcommand => subcommand
       .setName('ketamine')
-      .setDescription('Get Ketamine dosage information')
+      .setNameLocalizations(getCommandLocalizations('calc.ketamineSubcommandName'))
+      .setDescription(t('en-US', 'calc.ketamineSubcommandDescription'))
+      .setDescriptionLocalizations(getCommandLocalizations('calc.ketamineSubcommandDescription'))
       .addNumberOption(option => option.setName('weight')
-        .setDescription(askWeightMsg)
+        .setDescription(t('en-US', 'calc.ketamineWeightOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('calc.ketamineWeightOption'))
         .setRequired(true))
       .addStringOption(option => option.setName('units')
-        .setDescription('In what unit?')
+        .setDescription(t('en-US', 'calc.ketamineUnitsOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('calc.ketamineUnitsOption'))
         .addChoices(
           { name: 'kg', value: 'kg' },
           { name: 'lbs', value: 'lbs' },
         )
         .setRequired(true))
       .addBooleanOption(option => option.setName('ephemeral')
-        .setDescription(ephemeralMsg)))
+        .setDescription(t('en-US', 'calc.ephemeralOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('calc.ephemeralOption'))))
     // END KETAMINE SUBCOMMAND
     // BEGIN MDMA SUBCOMMAND
     .addSubcommand(subcommand => subcommand
       .setName('mdma')
-      .setDescription('Get MDMA dosage information')
+      .setNameLocalizations(getCommandLocalizations('calc.mdmaSubcommandName'))
+      .setDescription(t('en-US', 'calc.mdmaSubcommandDescription'))
+      .setDescriptionLocalizations(getCommandLocalizations('calc.mdmaSubcommandDescription'))
       .addNumberOption(option => option.setName('weight')
-        .setDescription(askWeightMsg)
+        .setDescription(t('en-US', 'calc.mdmaWeightOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('calc.mdmaWeightOption'))
         .setRequired(true))
       .addStringOption(option => option.setName('units')
-        .setDescription('In what unit?')
+        .setDescription(t('en-US', 'calc.mdmaUnitsOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('calc.mdmaUnitsOption'))
         .addChoices(
           { name: 'kg', value: 'kg' },
           { name: 'lbs', value: 'lbs' },
         )
         .setRequired(true))
       .addBooleanOption(option => option.setName('ephemeral')
-        .setDescription(ephemeralMsg)))
+        .setDescription(t('en-US', 'calc.ephemeralOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('calc.ephemeralOption'))))
     // END MDMA SUBCOMMAND
     // BEGIN NASAL SUBCOMMAND
     .addSubcommand(subcommand => subcommand
       .setName('nasal')
-      .setDescription('Get nasal solvent/substance information')
+      .setNameLocalizations(getCommandLocalizations('calc.nasalSubcommandName'))
+      .setDescription(t('en-US', 'calc.nasalSubcommandDescription'))
+      .setDescriptionLocalizations(getCommandLocalizations('calc.nasalSubcommandDescription'))
       .addStringOption(option => option.setName('calculation_type')
-        .setDescription('Are you wanting to calculate the amount of solvent or substance?')
+        .setDescription(t('en-US', 'calc.nasalCalculationTypeOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('calc.nasalCalculationTypeOption'))
         .setRequired(true)
         .addChoices(
           { name: 'Solvent', value: 'solvent' },
           { name: 'Substance', value: 'substance' },
         ))
       .addNumberOption(option => option.setName('amount')
-        .setDescription('Amount of solvent in ml')
+        .setDescription(t('en-US', 'calc.nasalAmountOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('calc.nasalAmountOption'))
         .setRequired(true))
       .addNumberOption(option => option.setName('desired_mg_per_push')
-        .setDescription('Desired dose per push in mg')
+        .setDescription(t('en-US', 'calc.nasalDesiredMgPerPushOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('calc.nasalDesiredMgPerPushOption'))
         .setRequired(true))
       .addNumberOption(option => option.setName('ml_per_push')
-        .setDescription('Excreted ml per push (look at the packaging)')
+        .setDescription(t('en-US', 'calc.nasalMlPerPushOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('calc.nasalMlPerPushOption'))
         .setRequired(true))
       .addBooleanOption(option => option.setName('ephemeral')
-        .setDescription(ephemeralMsg)))
+        .setDescription(t('en-US', 'calc.ephemeralOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('calc.ephemeralOption'))))
     // END NASAL SUBCOMMAND
     // BEGIN PSYCHEDELIC SUBCOMMAND
     .addSubcommand(subcommand => subcommand
       .setName('psychedelics')
-      .setDescription('Get psychedelic tolerance information')
+      .setNameLocalizations(getCommandLocalizations('calc.psychedelicsSubcommandName'))
+      .setDescription(t('en-US', 'calc.psychedelicsSubcommandDescription'))
+      .setDescriptionLocalizations(getCommandLocalizations('calc.psychedelicsSubcommandDescription'))
       .addStringOption(option => option.setName('drug_type')
-        .setDescription('Are you wanting to calculate tolerance for LSD or Mushrooms?')
+        .setDescription(t('en-US', 'calc.psychedelicsDrugTypeOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('calc.psychedelicsDrugTypeOption'))
         .setRequired(true)
         .addChoices(
           { name: 'LSD', value: 'lsd' },
           { name: 'Mushrooms', value: 'mushrooms' },
         ))
       .addNumberOption(option => option.setName('last_dose_amount')
-        .setDescription('What was your last dose? (e.g 100mcg or 2g)')
+        .setDescription(t('en-US', 'calc.psychedelicsLastDoseOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('calc.psychedelicsLastDoseOption'))
         .setRequired(true))
       .addNumberOption(option => option.setName('days')
-        .setDescription('How many days has it been since your last dose?')
+        .setDescription(t('en-US', 'calc.psychedelicsDaysOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('calc.psychedelicsDaysOption'))
         .setRequired(true))
       .addNumberOption(option => option.setName('desired_dose_amount')
-        .setDescription('What\'s your desired dose?  (e.g 100mcg or 2g)')
+        .setDescription(t('en-US', 'calc.psychedelicsDesiredDoseOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('calc.psychedelicsDesiredDoseOption'))
         .setRequired(true))
       .addBooleanOption(option => option.setName('ephemeral')
-        .setDescription(ephemeralMsg))),
+        .setDescription(t('en-US', 'calc.ephemeralOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('calc.ephemeralOption')))) as SlashCommandBuilder,
   // END PSYCHEDELIC SUBCOMMAND
 
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
+    const locale = await getLocale(interaction, 'calc');
     const ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined;
     await interaction.deferReply({ flags: ephemeral });
     const subcommand = interaction.options.getSubcommand();
 
     if (subcommand === 'benzo') {
-      await interaction.editReply({ embeds: [await dCalcBenzo(interaction)] });
+      await interaction.editReply({ embeds: [await dCalcBenzo(interaction, locale)] });
     } else if (subcommand === 'dxm') {
-      await interaction.editReply({ embeds: [await dCalcDXM(interaction)] });
+      await interaction.editReply({ embeds: [await dCalcDXM(interaction, locale)] });
     } else if (subcommand === 'ketamine') {
-      await interaction.editReply({ embeds: [await dCalcKetamine(interaction)] });
+      await interaction.editReply({ embeds: [await dCalcKetamine(interaction, locale)] });
     } else if (subcommand === 'mdma') {
-      await interaction.editReply({ embeds: [await dCalcMDMA(interaction)] });
+      await interaction.editReply({ embeds: [await dCalcMDMA(interaction, locale)] });
     } else if (subcommand === 'nasal') {
-      await interaction.editReply({ embeds: [await dCalcNasal(interaction)] });
+      await interaction.editReply({ embeds: [await dCalcNasal(interaction, locale)] });
     } else if (subcommand === 'psychedelics') {
-      await interaction.editReply({ embeds: [await dCalcPsychedelics(interaction)] });
+      await interaction.editReply({ embeds: [await dCalcPsychedelics(interaction, locale)] });
     } else {
-      await interaction.editReply({ embeds: [await buildCalcEmbed('', '', Colors.Red, true)] });
+      await interaction.editReply({ embeds: [await buildCalcEmbed('', '', locale, Colors.Red, true)] });
       return false;
     }
     return true;

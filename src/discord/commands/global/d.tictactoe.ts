@@ -13,6 +13,7 @@ import {
 import { SlashCommand } from '../../@types/commandDef';
 import { createInitialGame, executeMove } from '../../../global/commands/g.tictactoe';
 import { TicTacToeGame } from '../../@types/ticTacToeDef';
+import { t, getLocale, getCommandLocalizations } from '../../../i18n/index';
 
 const F = f(__filename);
 
@@ -20,28 +21,29 @@ function createGameEmbed(
   game: TicTacToeGame,
   player1Name: string,
   player2Name: string,
+  locale: string,
 ): EmbedBuilder {
   const embed = new EmbedBuilder()
-    .setTitle('🎮 Tic-Tac-Toe')
+    .setTitle(t(locale, 'tictactoe.gameTitle'))
     .setColor(Colors.Green);
 
   let description = `${player1Name} (❌) vs ${player2Name} (⭕)\n\n`;
 
   if (game.isGameOver) {
     if (game.winner === 'tie') {
-      description += '\n🤝✨ **IT\'S A TIE!** ✨🤝\n';
+      description += `\n🤝✨ **${t(locale, 'tictactoe.tie')}** ✨🤝\n`;
       embed.setColor(Colors.Yellow);
     } else if (game.winner !== 'tie') {
       const winnerName = game.winner === 'X' ? player1Name : player2Name;
       const winnerSymbol = game.winner === 'X' ? '❌' : '⭕';
       // eslint-disable-next-line max-len
-      description += `\n🏆🎉${winnerSymbol} **${winnerName.toUpperCase()} WINS!** ${winnerSymbol}🎉🏆`;
+      description += `\n🏆🎉${winnerSymbol} **${winnerName.toUpperCase()} ${t(locale, 'tictactoe.wins')}** ${winnerSymbol}🎉🏆`;
       embed.setColor(Colors.Green);
     }
   } else {
     const currentPlayerName = game.currentPlayer === 'X' ? player1Name : player2Name;
     const currentSymbol = game.currentPlayer === 'X' ? '❌' : '⭕';
-    description += `\n${currentSymbol} **${currentPlayerName}'s turn**`;
+    description += `\n${currentSymbol} **${currentPlayerName}${t(locale, 'tictactoe.turnSuffix')}**`;
   }
 
   embed.setDescription(description);
@@ -79,7 +81,9 @@ function createGameButtons(game: TicTacToeGame): ActionRowBuilder<ButtonBuilder>
 export const dTicTacToe: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('tictactoe')
+    .setNameLocalizations(getCommandLocalizations('tictactoe.commandName'))
     .setDescription('Start a tic-tac-toe game')
+    .setDescriptionLocalizations(getCommandLocalizations('tictactoe.commandDescription'))
     .setContexts([0, 1, 2])
     .setIntegrationTypes([0, 1])
     .addUserOption(option => option
@@ -88,11 +92,12 @@ export const dTicTacToe: SlashCommand = {
       .setRequired(true)) as SlashCommandBuilder,
 
   async execute(interaction: ChatInputCommandInteraction) {
+    const locale = await getLocale(interaction, 'tictactoe');
     const opponent = interaction.options.getUser('opponent', true);
 
     if (!opponent) {
       await interaction.reply({
-        content: 'Please specify a valid opponent!',
+        content: t(locale, 'tictactoe.invalidOpponent'),
         flags: MessageFlags.Ephemeral,
       });
       return false;
@@ -100,7 +105,7 @@ export const dTicTacToe: SlashCommand = {
 
     if (opponent.id === interaction.user.id) {
       await interaction.reply({
-        content: 'You cannot play against yourself!',
+        content: t(locale, 'tictactoe.cannotPlayYourself'),
         flags: MessageFlags.Ephemeral,
       });
       return false;
@@ -108,14 +113,14 @@ export const dTicTacToe: SlashCommand = {
 
     if (opponent.bot) {
       await interaction.reply({
-        content: 'You cannot play against a bot!',
+        content: t(locale, 'tictactoe.cannotPlayBot'),
         flags: MessageFlags.Ephemeral,
       });
       return false;
     }
 
     let game = createInitialGame(interaction.user.id, opponent.id);
-    const embed = createGameEmbed(game, interaction.user.username, opponent.username);
+    const embed = createGameEmbed(game, interaction.user.username, opponent.username, locale);
     const buttons = createGameButtons(game);
 
     await interaction.reply({
@@ -133,7 +138,7 @@ export const dTicTacToe: SlashCommand = {
 
     if (!collector) {
       await interaction.editReply({
-        content: 'Error: Could not create game collector.',
+        content: t(locale, 'tictactoe.collectorError'),
         embeds: [],
         components: [],
       });
@@ -168,7 +173,7 @@ export const dTicTacToe: SlashCommand = {
       game = JSON.parse(JSON.stringify(moveResult.gameUpdated));
 
       // Update Discord UI
-      const newEmbed = createGameEmbed(game, interaction.user.username, opponent.username);
+      const newEmbed = createGameEmbed(game, interaction.user.username, opponent.username, locale);
       const newButtons = createGameButtons(game);
 
       await i.update({
@@ -186,8 +191,8 @@ export const dTicTacToe: SlashCommand = {
       if (!game.isGameOver) {
         collector.removeAllListeners();
         const timeoutEmbed = new EmbedBuilder()
-          .setTitle('Tic-Tac-Toe - Game Timeout')
-          .setDescription('The game has ended due to inactivity.')
+          .setTitle(t(locale, 'tictactoe.timeoutTitle'))
+          .setDescription(t(locale, 'tictactoe.timeoutDescription'))
           .setColor(Colors.Red);
 
         await interaction.editReply({

@@ -1,6 +1,7 @@
 /* eslint-disable max-len */
 import {
   ButtonInteraction,
+  ChatInputCommandInteraction,
   Client,
 } from 'discord.js';
 import commandContext from '../utils/context';
@@ -26,6 +27,7 @@ import { helperButton } from '../commands/global/d.setup';
 import { acknowledgeButton, modModal, refusalButton } from '../utils/modUtils';
 import { feedbackReportModal } from '../commands/global/d.feedback';
 import { aiButton } from '../commands/global/d.ai';
+import { getLocale } from '../../i18n/index';
 import { purgeButton } from '../commands/guild/d.purge';
 import { mushroomPageEmbed } from '../utils/hrUtils';
 // import { helpButton } from '../commands/global/d.help';
@@ -40,7 +42,8 @@ export async function buttonClick(interaction:ButtonInteraction, discordClient:C
   const buttonID = interaction.customId;
 
   if (buttonID.startsWith('feedbackReport')) {
-    await feedbackReportModal(interaction);
+    const locale = await getLocale(interaction as unknown as ChatInputCommandInteraction, 'feedback');
+    await feedbackReportModal(interaction, locale);
     return;
   }
 

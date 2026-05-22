@@ -14,6 +14,7 @@ import { SlashCommand } from '../../@types/commandDef';
 import { TripTacGoGame } from '../../@types/tripTacGoDef';
 import { createInitialGame, executeMove } from '../../../global/commands/g.triptacgo';
 import { embedTemplate } from '../../utils/embedTemplate';
+import { t, getLocale, getCommandLocalizations } from '../../../i18n/index';
 
 const F = f(__filename);
 
@@ -21,31 +22,31 @@ function createGameEmbed(
   game: TripTacGoGame,
   player1Name: string,
   player2Name: string,
+  locale: string,
 ): EmbedBuilder {
   const embed = embedTemplate()
-    .setTitle('🎮 Trip-Tac-Go (4x4)')
+    .setTitle(t(locale, 'triptacgo.gameTitle'))
     .setColor(Colors.Green);
 
-  let description = `${player1Name} (❌) vs ${player2Name} (⭕)\n`;
-  description += `**Captures:** ❌${game.capturedPieces.X} | ⭕${game.capturedPieces.O}\n\n`;
-  description += '🎯 **Win by capturing pieces:** ❌ needs 3 | ⭕ needs 2\n';
-  description += '💡 **Capture:** Surround opponent on opposite sides\n\n';
+  let description = `${t(locale, 'triptacgo.gameVsFormat', { player1: player1Name, player2: player2Name })}\n`;
+  description += `${t(locale, 'triptacgo.capturesFormat', { capturesX: game.capturedPieces.X, capturesO: game.capturedPieces.O })}\n\n`;
+  description += `${t(locale, 'triptacgo.winConditions')}\n`;
+  description += `${t(locale, 'triptacgo.captureRule')}\n\n`;
 
   if (game.isGameOver) {
     if (game.winner === 'tie') {
-      description += '\n🤝✨ **IT\'S A TIE!** ✨🤝';
+      description += `\n${t(locale, 'triptacgo.tieMessage')}`;
       embed.setColor(Colors.Yellow);
     } else if (game.winner !== 'tie') {
       const winnerName = game.winner === 'X' ? player1Name : player2Name;
       const winnerSymbol = game.winner === 'X' ? '❌' : '⭕';
-      // eslint-disable-next-line max-len
-      description += `\n🏆🎉${winnerSymbol} **${winnerName.toUpperCase()} WINS!** ${winnerSymbol}🎉🏆\n`;
+      description += `\n${t(locale, 'triptacgo.winMessage', { winner: winnerName.toUpperCase(), symbol: winnerSymbol })}\n`;
       embed.setColor(Colors.Green);
     }
   } else {
     const currentPlayerName = game.currentPlayer === 'X' ? player1Name : player2Name;
     const currentSymbol = game.currentPlayer === 'X' ? '❌' : '⭕';
-    description += `\n${currentSymbol} **${currentPlayerName}'s turn**`;
+    description += `\n${t(locale, 'triptacgo.turnIndicator', { playerName: currentPlayerName, symbol: currentSymbol })}`;
   }
 
   embed.setDescription(description);
@@ -82,7 +83,9 @@ function createGameButtons(game: TripTacGoGame): ActionRowBuilder<ButtonBuilder>
 export const dTripTacGo: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('triptacgo')
+    .setNameLocalizations(getCommandLocalizations('triptacgo.commandName'))
     .setDescription('Start a trip-tac-go game')
+    .setDescriptionLocalizations(getCommandLocalizations('triptacgo.commandDescription'))
     .setContexts([0, 1, 2])
     .setIntegrationTypes([0, 1])
     .addUserOption(option => option
@@ -91,11 +94,12 @@ export const dTripTacGo: SlashCommand = {
       .setRequired(true)) as SlashCommandBuilder,
 
   async execute(interaction: ChatInputCommandInteraction) {
+    const locale = await getLocale(interaction, 'triptacgo');
     const opponent = interaction.options.getUser('opponent', true);
 
     if (!opponent) {
       await interaction.reply({
-        content: 'Please specify a valid opponent!',
+        content: t(locale, 'triptacgo.invalidOpponent'),
         flags: MessageFlags.Ephemeral,
       });
       return false;
@@ -103,7 +107,7 @@ export const dTripTacGo: SlashCommand = {
 
     if (opponent.id === interaction.user.id) {
       await interaction.reply({
-        content: 'You cannot play against yourself!',
+        content: t(locale, 'triptacgo.cannotPlaySelf'),
         flags: MessageFlags.Ephemeral,
       });
       return false;
@@ -111,7 +115,7 @@ export const dTripTacGo: SlashCommand = {
 
     if (opponent.bot) {
       await interaction.reply({
-        content: 'You cannot play against a bot!',
+        content: t(locale, 'triptacgo.cannotPlayBot'),
         flags: MessageFlags.Ephemeral,
       });
       return false;
@@ -119,7 +123,7 @@ export const dTripTacGo: SlashCommand = {
 
     let game = createInitialGame(interaction.user.id, opponent.id);
 
-    const embed = createGameEmbed(game, interaction.user.username, opponent.username);
+    const embed = createGameEmbed(game, interaction.user.username, opponent.username, locale);
     const buttons = createGameButtons(game);
 
     await interaction.reply({
@@ -137,7 +141,7 @@ export const dTripTacGo: SlashCommand = {
 
     if (!collector) {
       await interaction.editReply({
-        content: 'This command requires the bot to be added to the server to work properly.',
+        content: t(locale, 'triptacgo.noChannelError'),
         embeds: [],
         components: [],
       });
@@ -164,7 +168,7 @@ export const dTripTacGo: SlashCommand = {
       log.info(F, `[${game.gameId}] AFTER move - Current player: ${game.currentPlayer}`);
 
       // Update Discord UI
-      const newEmbed = createGameEmbed(game, interaction.user.username, opponent.username);
+      const newEmbed = createGameEmbed(game, interaction.user.username, opponent.username, locale);
       const newButtons = createGameButtons(game);
 
       await i.update({
@@ -182,8 +186,8 @@ export const dTripTacGo: SlashCommand = {
       if (!game.isGameOver) {
         collector.removeAllListeners();
         const timeoutEmbed = new EmbedBuilder()
-          .setTitle('Trip-Tac-Go - Game Timeout')
-          .setDescription('The game has ended due to inactivity.')
+          .setTitle(t(locale, 'triptacgo.timeoutTitle'))
+          .setDescription(t(locale, 'triptacgo.timeoutDescription'))
           .setColor(Colors.Red);
 
         await interaction.editReply({

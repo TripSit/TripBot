@@ -1,0 +1,7 @@
+{
+  "commandName": "karma",
+  "commandDescription": "Hae jonkun karma!",
+  "targetOption": "Haettava käyttäjä",
+  "ephemeralOption": "Aseta \"Tosi\" näyttääksesi vastauksen vain itsellesi",
+  "karmaMsg": "{{name}} on saanut {{received}} karmaa ja antanut {{given}} karmaa"
+}

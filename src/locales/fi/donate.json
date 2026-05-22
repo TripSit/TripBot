@@ -1,0 +1,5 @@
+{
+  "commandName": "donate",
+  "commandDescription": "Tietoa TripSitin tukemisesta",
+  "ephemeralOption": "Aseta \"Tosi\" näyttääksesi vastauksen vain itsellesi"
+}

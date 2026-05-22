@@ -4,26 +4,30 @@ import {
   GuildMember,
   MessageFlags,
 } from 'discord.js';
-import { stripIndents } from 'common-tags';
 import { SlashCommand } from '../../@types/commandDef';
 import commandContext from '../../utils/context';
 import { modResponse } from '../../utils/modUtils';
+import { t, getLocale, getCommandLocalizations } from '../../../i18n/index';
 
 const F = f(__filename);
 
 export const dReport: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('report')
-    .setDescription('Report a user')
+    .setNameLocalizations(getCommandLocalizations('report', 'commandName'))
+    .setDescription(t('en-US', 'report', 'commandDescription'))
+    .setDescriptionLocalizations(getCommandLocalizations('report', 'commandDescription'))
     .setIntegrationTypes([0])
     .addStringOption(option => option
-      .setDescription('User to report!')
+      .setDescription(t('en-US', 'report', 'targetOption'))
+      .setDescriptionLocalizations(getCommandLocalizations('report', 'targetOption'))
       .setRequired(true)
       .setName('target')) as SlashCommandBuilder,
 
   async execute(interaction: ChatInputCommandInteraction) {
     if (!interaction.guild) return false;
     log.info(F, await commandContext(interaction));
+    const locale = await getLocale(interaction, 'report');
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
     // Get the guild
@@ -40,13 +44,7 @@ export const dReport: SlashCommand = {
     });
 
     if (!guildData.role_moderator || !guildData.channel_mod_log || !guildData.channel_moderators) {
-      await interaction.editReply(stripIndents`
-      This server has not been set up for moderation.
-      
-      Please contact an administrator to set up moderation.
-      
-      If you are the admin, please use /cooperative to set up moderation.
-      `);
+      await interaction.editReply(t(locale, 'report', 'notSetupError'));
       return false;
     }
 

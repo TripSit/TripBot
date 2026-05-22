@@ -6,6 +6,7 @@ import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { joke } from '../../../global/commands/g.joke';
 import commandContext from '../../utils/context';
+import { t, getCommandLocalizations } from '../../../i18n/index';
 // import log from '../../../global/utils/log';
 const F = f(__filename);
 
@@ -23,10 +24,12 @@ type Double = {
 export const dJoke: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('joke')
+    .setNameLocalizations(getCommandLocalizations('joke.commandName'))
     .setDescription('Random jokes')
+    .setDescriptionLocalizations(getCommandLocalizations('joke.commandDescription'))
     .setIntegrationTypes([0])
     .addBooleanOption(option => option.setName('ephemeral')
-      .setDescription('Set to "True" to show the response only to you')) as SlashCommandBuilder,
+      .setDescription(t('en-US', 'joke.ephemeralOption'))) as SlashCommandBuilder,
 
   async execute(interaction) {
     log.info(F, await commandContext(interaction));

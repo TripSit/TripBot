@@ -8,27 +8,34 @@ import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { combo } from '../../../global/commands/g.combo';
 import commandContext from '../../utils/context';
+import { t, getLocale, getCommandLocalizations } from '../../../i18n/index';
 
 const F = f(__filename);
 
 export const dCombo: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('combo')
+    .setNameLocalizations(getCommandLocalizations('combo.commandName'))
     .setDescription('Check combo information')
+    .setDescriptionLocalizations(getCommandLocalizations('combo.commandDescription'))
     .setContexts([0, 1, 2])
     .setIntegrationTypes([0, 1])
     .addStringOption(option => option.setName('first_drug')
-      .setDescription('Pick the first drug')
+      .setDescription(t('en', 'combo.firstDrugOption'))
+      .setDescriptionLocalizations(getCommandLocalizations('combo.firstDrugOption'))
       .setRequired(true)
       .setAutocomplete(true))
     .addStringOption(option => option.setName('second_drug')
-      .setDescription('Pick the second drug')
+      .setDescription(t('en', 'combo.secondDrugOption'))
+      .setDescriptionLocalizations(getCommandLocalizations('combo.secondDrugOption'))
       .setRequired(true)
       .setAutocomplete(true))
     .addBooleanOption(option => option.setName('ephemeral')
-      .setDescription('Set to "True" to show the response only to you')) as SlashCommandBuilder,
+      .setDescription(t('en', 'combo.ephemeralOption'))
+      .setDescriptionLocalizations(getCommandLocalizations('combo.ephemeralOption'))) as SlashCommandBuilder,
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
+    const locale = await getLocale(interaction, 'combo');
     const ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined;
     await interaction.deferReply({ flags: ephemeral });
     const drugA = interaction.options.getString('first_drug', true);
@@ -48,9 +55,7 @@ export const dCombo: SlashCommand = {
         options?: string[];
       };
       if (errorResults.msg.includes('not found')) {
-        await interaction.editReply(stripIndents`I could not find interactions between ${drugA} and ${drugB} in the database!
-
-        This does not mean combining them is safe: this means we don't have information on it!`);
+        await interaction.editReply(t(locale, 'combo.notFound', { drugA, drugB }));
         return false;
       }
 
@@ -61,18 +66,18 @@ export const dCombo: SlashCommand = {
             .setFields([
               {
                 name: `${drugA}`,
-                value: stripIndents`* [TripSit Wiki](https://wiki.tripsit.me/wiki/${drugA})
-              * [TripSit Factsheets](https://drugs.tripsit.me/${drugA})
-              * [PsychonautWiki](https://psychonautwiki.org/wiki/${drugA})
-              * [Erowid Experiences](https://www.erowid.org/experiences/subs/exp_${drugA}.shtml)`,
+                value: stripIndents`* [${t(locale, 'combo.wikiLink')}](https://wiki.tripsit.me/wiki/${drugA})
+              * [${t(locale, 'combo.factsheetsLink')}](https://drugs.tripsit.me/${drugA})
+              * [${t(locale, 'combo.psychonautLink')}](https://psychonautwiki.org/wiki/${drugA})
+              * [${t(locale, 'combo.erowiadExperiencesLink')}](https://www.erowid.org/experiences/subs/exp_${drugA}.shtml)`,
                 inline: true,
               },
               {
                 name: `${drugB}`,
-                value: stripIndents`* [TripSit Wiki](https://wiki.tripsit.me/wiki/${drugB})
-              * [TripSit Factsheets](https://drugs.tripsit.me/${drugB})
-              * [PsychonautWiki](https://psychonautwiki.org/wiki/${drugB})
-              * [Erowid Experiences](https://www.erowid.org/experiences/subs/exp_${drugB}.shtml)`,
+                value: stripIndents`* [${t(locale, 'combo.wikiLink')}](https://wiki.tripsit.me/wiki/${drugB})
+              * [${t(locale, 'combo.factsheetsLink')}](https://drugs.tripsit.me/${drugB})
+              * [${t(locale, 'combo.psychonautLink')}](https://psychonautwiki.org/wiki/${drugB})
+              * [${t(locale, 'combo.erowiadExperiencesLink')}](https://www.erowid.org/experiences/subs/exp_${drugB}.shtml)`,
                 inline: true,
               },
             ])],
@@ -108,10 +113,12 @@ export const dCombo: SlashCommand = {
       }[];
     };
 
-    const noteString = resultsData.note ? `\n\n**Note: ${resultsData.note}**` : '';
+    const noteString = resultsData.note ? `\n\n**${t(locale, 'combo.note', { note: resultsData.note })}**` : '';
 
     const embed = embedTemplate()
-      .setTitle(`Mixing ${drugA} and ${drugB}: ${resultsData.emoji} ${resultsData.result} ${resultsData.emoji}`)
+      .setTitle(t(locale, 'combo.embeddedTitle', {
+        drugA, drugB, emoji: resultsData.emoji, result: resultsData.result,
+      }))
       .setDescription(`${resultsData.definition}${noteString}`);
 
     if (resultsData.sources) {
@@ -133,7 +140,7 @@ export const dCombo: SlashCommand = {
 
       if (journals.length > 0) {
         embed.addFields({
-          name: '⚗️ Research Articles',
+          name: t(locale, 'combo.researchArticles'),
           value: journals.join(''),
           inline: false,
         });
@@ -141,7 +148,7 @@ export const dCombo: SlashCommand = {
 
       if (experiences.length > 0) {
         embed.addFields({
-          name: `<:erowidLogo:${env.EMOJI_EROWID}> Erowid Experiences`,
+          name: t(locale, 'combo.erowid', { emojiId: env.EMOJI_EROWID }),
           value: experiences.join(''),
           inline: false,
         });
@@ -150,18 +157,18 @@ export const dCombo: SlashCommand = {
     embed.addFields(
       {
         name: `${drugA}`,
-        value: stripIndents`* [TripSit Wiki](https://wiki.tripsit.me/wiki/${drugA})
-          * [TripSit Factsheets](https://drugs.tripsit.me/${drugA})
-          * [PsychonautWiki](https://psychonautwiki.org/wiki/${drugA})
-          * [Erowid Experiences](https://www.erowid.org/experiences/subs/exp_${drugA}.shtml)`,
+        value: stripIndents`* [${t(locale, 'combo.wikiLink')}](https://wiki.tripsit.me/wiki/${drugA})
+          * [${t(locale, 'combo.factsheetsLink')}](https://drugs.tripsit.me/${drugA})
+          * [${t(locale, 'combo.psychonautLink')}](https://psychonautwiki.org/wiki/${drugA})
+          * [${t(locale, 'combo.erowiadExperiencesLink')}](https://www.erowid.org/experiences/subs/exp_${drugA}.shtml)`,
         inline: true,
       },
       {
         name: `${drugB}`,
-        value: stripIndents`* [TripSit Wiki](https://wiki.tripsit.me/wiki/${drugB})
-          * [TripSit Factsheets](https://drugs.tripsit.me/${drugB})
-          * [PsychonautWiki](https://psychonautwiki.org/wiki/${drugB})
-          * [Erowid Experiences](https://www.erowid.org/experiences/subs/exp_${drugB}.shtml)`,
+        value: stripIndents`* [${t(locale, 'combo.wikiLink')}](https://wiki.tripsit.me/wiki/${drugB})
+          * [${t(locale, 'combo.factsheetsLink')}](https://drugs.tripsit.me/${drugB})
+          * [${t(locale, 'combo.psychonautLink')}](https://psychonautwiki.org/wiki/${drugB})
+          * [${t(locale, 'combo.erowiadExperiencesLink')}](https://www.erowid.org/experiences/subs/exp_${drugB}.shtml)`,
         inline: true,
       },
     );

@@ -7,6 +7,7 @@ import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import testkits from '../../../global/commands/g.testkits';
 import commandContext from '../../utils/context';
+import { t, getLocale, getCommandLocalizations } from '../../../i18n/index';
 // import log from '../../../global/utils/log';
 
 const F = f(__filename);
@@ -14,20 +15,24 @@ const F = f(__filename);
 export default {
   data: new SlashCommandBuilder()
     .setName('drug_testkits')
+    .setNameLocalizations(getCommandLocalizations('testkits.commandName'))
     .setDescription('Information on how to get a test kit')
+    .setDescriptionLocalizations(getCommandLocalizations('testkits.commandDescription'))
     .setContexts([0, 1, 2])
     .setIntegrationTypes([0, 1])
     .addBooleanOption(option => option.setName('ephemeral')
-      .setDescription('Set to "True" to show the response only to you')) as SlashCommandBuilder,
+      .setDescription(t('en', 'testkits.ephemeralOption'))
+      .setDescriptionLocalizations(getCommandLocalizations('testkits.ephemeralOption'))) as SlashCommandBuilder,
 
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
+    const locale = await getLocale(interaction, 'testkits');
     const ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined;
     await interaction.deferReply({ flags: ephemeral });
     const emsInfo = await testkits();
     const embed = embedTemplate();
 
-    embed.setTitle('Test Kit Resources and information!');
+    embed.setTitle(t(locale, 'testkits.title'));
 
     const fieldsPerRow = 3; // Set fields per row to 3
     const totalFields = emsInfo.length;
@@ -66,9 +71,9 @@ export default {
       }
     }
     embed.setDescription(stripIndents`
-        [How to use a reagent test kit](https://dancesafe.org/testing-kit-instructions/)
-        [How to use fentanyl strips](https://dancesafe.org/fentanyl/)
-        [More testkit resources on the TripSit wiki!](https://wiki.tripsit.me/wiki/Test_Kits)
+        [${t(locale, 'testkits.howToUseReagentKit')}](https://dancesafe.org/testing-kit-instructions/)
+        [${t(locale, 'testkits.howToUseFentanylStrips')}](https://dancesafe.org/fentanyl/)
+        [${t(locale, 'testkits.moreResources')}](https://wiki.tripsit.me/wiki/Test_Kits)
         `);
     await interaction.editReply({ embeds: [embed] });
     return true;

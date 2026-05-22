@@ -14,27 +14,28 @@ import {
   MessageFlags,
   TextInputStyle,
 } from 'discord-api-types/v10';
-import { stripIndents } from 'common-tags';
 import { SlashCommand } from '../../@types/commandDef';
 import commandContext from '../../utils/context';
 import { embedTemplate } from '../../utils/embedTemplate';
 import tripsitInfo from '../../../global/commands/g.about';
+import { t, getLocale, getCommandLocalizations } from '../../../i18n/index';
 
 const F = f(__filename);
 
 export async function feedbackReportModal(
   interaction:ChatInputCommandInteraction | ButtonInteraction,
+  locale: string,
 ) {
   await interaction.showModal(
     new ModalBuilder()
       .setCustomId(`feedbackReportModal~${interaction.id}`)
-      .setTitle('TripBot Feedback Report')
+      .setTitle(t(locale, 'feedback.modalTitle'))
       .addComponents(
         new ActionRowBuilder<TextInputBuilder>()
           .addComponents(
             new TextInputBuilder()
               .setCustomId('feedbackReport')
-              .setLabel('What would you like to tell the bot dev team?')
+              .setLabel(t(locale, 'feedback.modalLabel'))
               .setStyle(TextInputStyle.Paragraph),
           ),
       ),
@@ -71,10 +72,10 @@ export async function feedbackReportModal(
         return;
       }
       const feedbackEmbed = new EmbedBuilder()
-        .setTitle('📝 New Feedback Report')
+        .setTitle(t(i.locale, 'feedback', 'feedbackReportTitle'))
         .setDescription(feedbackReport)
         .setColor(0x00b0f4) // Choose your desired color
-        .addFields({ name: 'Mention', value: developerRole.toString(), inline: false })
+        .addFields({ name: t(i.locale, 'feedback', 'mentionFieldName'), value: developerRole.toString(), inline: false })
         .setTimestamp();
 
       await devChan.send({
@@ -86,12 +87,9 @@ export async function feedbackReportModal(
 
       const embed = embedTemplate()
         .setColor(Colors.Purple)
-        .setTitle('Thank you!')
+        .setTitle(t(i.locale, 'feedback', 'thankYouTitle'))
         // eslint-disable-next-line max-len
-        .setDescription(stripIndents`
-        Thank you! I\'ve submitted this feedback to Moonbear. 
-        
-        You\'re more than welcome to join the [TripSit server](${tripsitInfo.discord}) if you want!`);
+        .setDescription(t(i.locale, 'feedback', 'thankYouDescription', { discordUrl: tripsitInfo.discord }));
       await i.editReply({ embeds: [embed] });
     });
   // log.debug(F, 'Modal submit interaction listener set up');
@@ -99,11 +97,14 @@ export async function feedbackReportModal(
 export const dFeedback: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('feedback')
+    .setNameLocalizations(getCommandLocalizations('feedback.commandName'))
     .setDescription('Share feedback or report a bug to the TripBot dev team!')
+    .setDescriptionLocalizations(getCommandLocalizations('feedback.commandDescription'))
     .setIntegrationTypes([0]),
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
-    await feedbackReportModal(interaction);
+    const locale = await getLocale(interaction, 'feedback');
+    await feedbackReportModal(interaction, locale);
     return true;
   },
 };

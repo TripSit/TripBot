@@ -1,0 +1,7 @@
+{
+  "commandName": "leaderboard",
+  "commandDescription": "Show the experience leaderboard",
+  "categoryOption": "What category of experience?",
+  "ephemeralOption": "Set to \"True\" to show the response only to you",
+  "guildOnlyError": "You can only use this command in a guild!"
+}

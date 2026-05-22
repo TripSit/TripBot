@@ -1,0 +1,20 @@
+{
+  "commandName": "birthday",
+  "commandDescription": "Syntymäpäivätiedot!",
+  "getSubcommand": "Hae jonkun syntymäpäivä!",
+  "userOption": "Haettava käyttäjä",
+  "ephemeralOption": "Aseta \"True\" näyttääksesi vastauksen vain itsellesi",
+  "setSubcommand": "Aseta syntymäpäiväsi!",
+  "monthOption": "Kuukauden arvo",
+  "dayOption": "Päivän arvo",
+  "immortalTitle": "{{name}} on kuolematon! (Tai ei ole asettanut syntymäpäiväänsä...)",
+  "birthdayTitle": "{{name}}n syntymäpäivä on {{date}}",
+  "happyBirthday": "Hyvää syntymäpäivää!",
+  "daysLeft": "Vain {{days}} päivää jäljellä!",
+  "noMonthError": "Sinun täytyy määritellä kuukausi!",
+  "noDayError": "Sinun täytyy määritellä kelvollinen päivä!",
+  "tooManyDays30Error": "{{month}}ssa on vain 30 päivää!",
+  "tooManyDays31Error": "{{month}}ssa on vain 31 päivää!",
+  "februaryError": "Helmikuussa on vain 28 päivää!",
+  "setBirthdayTitle": "Syntymäpäiväksi asetettu {{date}}"
+}

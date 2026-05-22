@@ -1,0 +1,9 @@
+{
+  "commandName": "drug_testkits",
+  "commandDescription": "Information on how to get a test kit",
+  "ephemeralOption": "Set to \"True\" to show the response only to you",
+  "title": "Test Kit Resources and information!",
+  "howToUseReagentKit": "How to use a reagent test kit",
+  "howToUseFentanylStrips": "How to use fentanyl strips",
+  "moreResources": "More testkit resources on the TripSit wiki!"
+}

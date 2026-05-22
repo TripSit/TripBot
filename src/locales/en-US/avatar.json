@@ -1,0 +1,9 @@
+{
+  "commandName": "avatar",
+  "commandDescription": "Shows a member's profile picture in large format",
+  "userOption": "user",
+  "ephemeralOption": "Set to \"True\" to show the response only to you",
+  "guildOnlyError": "This command can only be used in a discord guild!",
+  "memberNotFoundError": "This command can only be used on a member of the current guild.",
+  "profilePictureTitle": "{{displayName}}'s Profile Picture"
+}

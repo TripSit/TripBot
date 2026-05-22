@@ -1,0 +1,10 @@
+{
+  "commandName": "feedback",
+  "commandDescription": "Jaa palautetta tai ilmoita virheestä TripBot-kehitystiimille!",
+  "modalTitle": "TripBot-palauteraportti",
+  "modalLabel": "Mitä haluat kertoa botin kehitystiimille?",
+  "feedbackReportTitle": "📝 Uusi palauteraportti",
+  "mentionFieldName": "Maininta",
+  "thankYouTitle": "Kiitos!",
+  "thankYouDescription": "Kiitos! Olen lähettänyt tämän palautteen Moonbearille. \n\nOlet enemmän kuin tervetullut liittymään [TripSit-palvelimelle]({{discordUrl}}) jos haluat!"
+}

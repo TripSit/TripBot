@@ -1,0 +1,10 @@
+{
+  "commandName": "opioid",
+  "commandDescription": "Annosten muunnos opioidien välillä. Huom: ei ota huomioon antotavan muutosta.",
+  "convertSubcommand": "Muuntaa yhden opioidin annoksen toisen vastaavaksi.",
+  "fromOption": "Opioidi, josta muunnetaan.",
+  "dosageOption": "Annos **milligrammoina (mg)**, jonka haluat muuntaa.",
+  "toOption": "Opioidi, johon muunnetaan.",
+  "resultTitle": "Muunnostulos",
+  "resultDescription": "{{dosage}}mg {{from}} ~= **{{result}}mg {{to}}**\n\nHuomioithan, että tämä ei ole täydellinen eikä ota huomioon antotavan muutoksia."
+}

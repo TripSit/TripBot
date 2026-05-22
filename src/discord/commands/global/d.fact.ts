@@ -6,16 +6,19 @@ import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { fact } from '../../../global/commands/g.fact';
 import commandContext from '../../utils/context';
+import { t, getCommandLocalizations } from '../../../i18n/index';
 // import log from '../../../global/utils/log';
 const F = f(__filename);
 
 export const dFact: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('fact')
+    .setNameLocalizations(getCommandLocalizations('fact.commandName'))
     .setDescription('Random fact')
+    .setDescriptionLocalizations(getCommandLocalizations('fact.commandDescription'))
     .setIntegrationTypes([0])
     .addBooleanOption(option => option.setName('ephemeral')
-      .setDescription('Set to "True" to show the response only to you')) as SlashCommandBuilder,
+      .setDescription(t('en-US', 'fact.ephemeralOption'))) as SlashCommandBuilder,
 
   async execute(interaction) {
     log.info(F, await commandContext(interaction));

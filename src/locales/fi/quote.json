@@ -1,0 +1,22 @@
+{
+  "commandName": "quote",
+  "commandDescription": "Hallinnoi lainauksia",
+  "getSubcommand": "Etsi lainauksia!",
+  "quoteOption": "Mikä lainaus? Kirjoita hakusana!",
+  "userOption": "Mikä käyttäjä?",
+  "randomSubcommand": "Hae satunnainen lainaus!",
+  "deleteSubcommand": "Poista omat lainausrekisterisi!",
+  "noSearchParamsError": "Sinun täytyy antaa joko lainaus tai käyttäjä lainausten hakemiseksi.",
+  "noQuotesForUserError": "Käyttäjälle {{user}} ei löytynyt lainauksia.",
+  "noQuoteFoundError": "{{searchType}}a ei löytynyt.",
+  "noQuotesError": "Lainauksia ei löytynyt!",
+  "quoteNotFoundError": "Lainausta ei löytynyt!",
+  "notOwnerError": "Et omista tätä lainausta! Voit poistaa vain omia lainauksiasi.",
+  "deletedFooter": "Poistettu /quote-tietokannasta!",
+  "savedFooter": "Tallennettu /quote-tietokantaan!",
+  "noAuthorError": "Voit tallentaa vain viestejä, joilla on tekijä, tai viimeisen 2 viikon ajalta!",
+  "noBotMessagesError": "Voit tallentaa vain ihmisten viestejä!",
+  "noSelfQuoteError": "Et voi tallentaa omia viestejäsi!",
+  "levelTooLowError": "Sinun täytyy olla vähintään tasolla 10 tallentaaksesi lainauksia!",
+  "unknownSubcommandError": "Tuntematon alikomento!"
+}

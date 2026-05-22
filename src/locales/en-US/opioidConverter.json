@@ -1,0 +1,10 @@
+{
+  "commandName": "opioid",
+  "commandDescription": "Dosage conversion between two opioids. Note: this does not take changing the ROA into account.",
+  "convertSubcommand": "Converts one opioid dosage to another's equivalent.",
+  "fromOption": "The opioid to convert from.",
+  "dosageOption": "The dose **in milligrams (mg)** you want to convert.",
+  "toOption": "The opioid to convert to.",
+  "resultTitle": "Conversion Result",
+  "resultDescription": "{{dosage}}mg {{from}} ~= **{{result}}mg {{to}}**\n\nPlease note that this is not perfect and does not account for ROA changes."
+}

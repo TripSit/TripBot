@@ -17,79 +17,108 @@ import {
 } from '../../../global/commands/g.learn';
 import commandContext from '../../utils/context';
 import { getDiscordMember } from '../../utils/guildMemberLookup';
+import { t, getLocale, getCommandLocalizations } from '../../../i18n/index';
 
 const F = f(__filename);
 
-async function moodleHelp():Promise<EmbedBuilder> {
+async function moodleHelp(locale: string):Promise<EmbedBuilder> {
   const helpData = await help();
   return embedTemplate()
-    .setTitle(helpData.title)
-    .setDescription(helpData.description)
+    .setTitle(t(locale, 'learn.helpTitle'))
+    .setURL(helpData.url)
+    .setDescription(t(locale, 'learn.helpDescription', { moodleUrl: helpData.url }))
     .setFooter({
-      text: helpData.footer,
+      text: t(locale, 'learn.helpFooter'),
     });
 }
 
 async function moodleLink(
   interaction:ChatInputCommandInteraction,
+  locale: string,
 ):Promise<EmbedBuilder> {
   // Check if the discord_id option was used
   if (interaction.options.getString('discord_id')) {
     if (interaction.user.id !== env.DISCORD_OWNER_ID) {
       return embedTemplate()
         .setColor(Colors.Red)
-        .setDescription('You are not allowed to use this option!');
+        .setDescription(t(locale, 'learn.notAllowedToUse'));
     }
 
     // Check if the email given is valid
     if (!interaction.options.getString('email', true).includes('@')) {
       return embedTemplate()
         .setColor(Colors.Red)
-        .setDescription('That doesn\'t look like a valid email address!');
+        .setDescription(t(locale, 'learn.invalidEmail'));
     }
 
-    return embedTemplate()
-      .setDescription(await link(
-        interaction.options.getString('email', true),
-        interaction.options.getString('discord_id', true),
-      ));
+    const adminResult = await link(
+      interaction.options.getString('email', true),
+      interaction.options.getString('discord_id', true),
+    );
+    if (adminResult.type === 'noDiscordUser') {
+      return embedTemplate().setColor(Colors.Red).setDescription(t(locale, 'learn.linkNoDiscordUser'));
+    }
+    if (adminResult.type === 'noEmail') {
+      return embedTemplate().setColor(Colors.Red).setDescription(t(locale, 'learn.linkNoEmail'));
+    }
+    return embedTemplate().setDescription(t(locale, 'learn.linkSuccess', {
+      email: adminResult.email,
+      username: adminResult.username,
+      discordId: adminResult.discordId,
+    }));
   }
 
   // Check if the email given is valid
   if (!interaction.options.getString('email', true).includes('@')) {
     return embedTemplate()
       .setColor(Colors.Red)
-      .setDescription('That doesn\'t look like a valid email address!');
+      .setDescription(t(locale, 'learn.invalidEmail'));
   }
 
-  return embedTemplate()
-    .setDescription(await link(
-      interaction.options.getString('email', true),
-      interaction.user.id,
-    ));
+  const result = await link(
+    interaction.options.getString('email', true),
+    interaction.user.id,
+  );
+  if (result.type === 'noDiscordUser') {
+    return embedTemplate().setColor(Colors.Red).setDescription(t(locale, 'learn.linkNoDiscordUser'));
+  }
+  if (result.type === 'noEmail') {
+    return embedTemplate().setColor(Colors.Red).setDescription(t(locale, 'learn.linkNoEmail'));
+  }
+  return embedTemplate().setDescription(t(locale, 'learn.linkSuccess', {
+    email: result.email,
+    username: result.username,
+    discordId: result.discordId,
+  }));
 }
 
 async function moodleUnlink(
   interaction:ChatInputCommandInteraction,
+  locale: string,
 ):Promise<EmbedBuilder> {
   if (interaction.options.getString('discord_id')) {
     if (interaction.user.id !== env.DISCORD_OWNER_ID) {
       return embedTemplate()
         .setColor(Colors.Red)
-        .setDescription('You are not allowed to use this option!');
+        .setDescription(t(locale, 'learn.notAllowedToUse'));
     }
-    return embedTemplate()
-      .setDescription(await unlink(
-        interaction.options.getString('discord_id', true),
-      ));
+    const adminResult = await unlink(interaction.options.getString('discord_id', true));
+    if (adminResult.type === 'noUser') {
+      return embedTemplate().setColor(Colors.Red).setDescription(t(locale, 'learn.unlinkNoUser'));
+    }
+    return embedTemplate().setDescription(t(locale, 'learn.unlinkSuccess'));
   }
 
-  return embedTemplate()
-    .setDescription(await unlink(interaction.user.id));
+  const result = await unlink(interaction.user.id);
+  if (result.type === 'noUser') {
+    return embedTemplate().setColor(Colors.Red).setDescription(t(locale, 'learn.unlinkNoUser'));
+  }
+  return embedTemplate().setDescription(t(locale, 'learn.unlinkSuccess'));
 }
 
 async function moodleProfile(
   interaction:ChatInputCommandInteraction,
+  locale: string,
 ):Promise<EmbedBuilder> {
   const targets = interaction.options.getString('user')
     ? await getDiscordMember(interaction, interaction.options.getString('user', true))
@@ -98,11 +127,11 @@ async function moodleProfile(
   if (targets.length > 1) {
     return embedTemplate()
       .setColor(Colors.Red)
-      .setTitle('Found more than one user with with that value!')
+      .setTitle(t(locale, 'learn.foundMoreThanOne'))
       .setDescription(stripIndents`
         "${interaction.options.getString('user', true)}" returned ${targets.length} results!
 
-        Be more specific:
+        ${t(locale, 'learn.moreSpecific')}:
         > **Mention:** @Moonbear
         > **Tag:** moonbear#1234
         > **ID:** 9876581237
@@ -112,11 +141,11 @@ async function moodleProfile(
   if (targets.length === 0) {
     return embedTemplate()
       .setColor(Colors.Red)
-      .setTitle('Found no users with that value!')
+      .setTitle(t(locale, 'learn.foundNoUsers'))
       .setDescription(stripIndents`
         "${interaction.options.getString('user', true)}" returned no results!
 
-        Be more specific:
+        ${t(locale, 'learn.moreSpecific')}:
         > **Mention:** @Moonbear
         > **Tag:** moonbear#1234
         > **ID:** 9876581237
@@ -129,7 +158,7 @@ async function moodleProfile(
 
   if (!discordMember) {
     return new EmbedBuilder()
-      .setDescription('Member not found!');
+      .setDescription(t(locale, 'learn.memberNotFound'));
   }
 
   const moodleProfileData = await profile(discordMember.id);
@@ -137,9 +166,7 @@ async function moodleProfile(
 
   if (!moodleProfileData.fullName) {
     return new EmbedBuilder()
-      .setDescription(`${discordMember.displayName} does not have a linked TSL account!
-      Ask them to sign up and use \`/learn link\` to link their account!
-      `);
+      .setDescription(t(locale, 'learn.notLinked', { user: discordMember.displayName }));
   }
 
   // Make a string that says 'this user has completed the following courses:
@@ -163,7 +190,7 @@ async function moodleProfile(
   if (completedCourses.length > 0) {
     profileEmbed.addFields([
       {
-        name: 'Completed Courses',
+        name: t(locale, 'learn.completedCourses'),
         value: completedCourses,
         inline: false,
       },
@@ -174,7 +201,7 @@ async function moodleProfile(
     profileEmbed.addFields([
 
       {
-        name: 'Enrolled Courses',
+        name: t(locale, 'learn.enrolledCourses'),
         value: incompleteCourses,
         inline: false,
       },
@@ -187,35 +214,52 @@ async function moodleProfile(
 export const dLearn: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('learn')
+    .setNameLocalizations(getCommandLocalizations('learn.commandName'))
     .setDescription('Commands related to TripSit\'s learning portal')
+    .setDescriptionLocalizations(getCommandLocalizations('learn.commandDescription'))
     .setIntegrationTypes([0])
     .addSubcommand(subcommand => subcommand
       .setName('help')
-      .setDescription('Information about this command')
+      .setNameLocalizations(getCommandLocalizations('learn.helpName'))
+      .setDescription(t('en', 'learn.helpSubcommand'))
+      .setDescriptionLocalizations(getCommandLocalizations('learn.helpSubcommand'))
       .addBooleanOption(option => option.setName('ephemeral')
-        .setDescription('Set to "True" to show the response only to you')))
+        .setDescription(t('en', 'learn.ephemeralOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('learn.ephemeralOption'))))
     .addSubcommand(subcommand => subcommand
       .setName('link')
-      .setDescription('Link your discord with your TripSitLearn account')
+      .setNameLocalizations(getCommandLocalizations('learn.linkName'))
+      .setDescription(t('en', 'learn.linkSubcommand'))
+      .setDescriptionLocalizations(getCommandLocalizations('learn.linkSubcommand'))
       .addStringOption(option => option.setName('email')
-        .setDescription('What email did you use to register on moodle?')
+        .setDescription(t('en', 'learn.emailOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('learn.emailOption'))
         .setRequired(true))
       .addStringOption(option => option.setName('discord_id')
-        .setDescription('Ignore this, admin use only!')))
+        .setDescription(t('en', 'learn.adminOnlyOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('learn.adminOnlyOption'))))
     .addSubcommand(subcommand => subcommand
       .setName('unlink')
-      .setDescription('Unlink your discord with your TripSitLearn account')
+      .setNameLocalizations(getCommandLocalizations('learn.unlinkName'))
+      .setDescription(t('en', 'learn.unlinkSubcommand'))
+      .setDescriptionLocalizations(getCommandLocalizations('learn.unlinkSubcommand'))
       .addStringOption(option => option.setName('discord_id')
-        .setDescription('Ignore this, admin use only!')))
+        .setDescription(t('en', 'learn.adminOnlyOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('learn.adminOnlyOption'))))
     .addSubcommand(subcommand => subcommand
       .setName('profile')
-      .setDescription('Show someone\'s TripSitLearn profile, including the courses they have completed!')
+      .setNameLocalizations(getCommandLocalizations('learn.profileName'))
+      .setDescription(t('en', 'learn.profileSubcommand'))
+      .setDescriptionLocalizations(getCommandLocalizations('learn.profileSubcommand'))
       .addStringOption(option => option.setName('user')
-        .setDescription('Who are you looking up? Defaults to you.'))
+        .setDescription(t('en', 'learn.userOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('learn.userOption')))
       .addBooleanOption(option => option.setName('ephemeral')
-        .setDescription('Set to "True" to show the response only to you'))),
+        .setDescription(t('en', 'learn.ephemeralOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('learn.ephemeralOption')))),
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
+    const locale = await getLocale(interaction, 'learn');
     // Below is if you just want a response (non-modal) command
     let ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined;
     let embed = embedTemplate();
@@ -228,16 +272,16 @@ export const dLearn: SlashCommand = {
 
     switch (subcommand) {
       case 'help':
-        embed = await moodleHelp();
+        embed = await moodleHelp(locale);
         break;
       case 'link':
-        embed = await moodleLink(interaction);
+        embed = await moodleLink(interaction, locale);
         break;
       case 'unlink':
-        embed = await moodleUnlink(interaction);
+        embed = await moodleUnlink(interaction, locale);
         break;
       case 'profile':
-        embed = await moodleProfile(interaction);
+        embed = await moodleProfile(interaction, locale);
         break;
       default:
         break;

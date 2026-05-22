@@ -1,0 +1,18 @@
+{
+  "commandName": "remind_me",
+  "commandDescription": "Hallitse muistutuksia!",
+  "setSubcommandName": "set",
+  "setSubcommandDescription": "Aseta muistutus",
+  "setReminderOption": "Mistä haluat muistutuksen?",
+  "setOffsetOption": "Milloin? Esim.: 4 tuntia 32 minuuttia",
+  "getSubcommandName": "get",
+  "getSubcommandDescription": "Näytä tulevat muistutuksesi!",
+  "deleteSubcommandName": "delete",
+  "deleteSubcommandDescription": "Poista muistutus!",
+  "deleteRecordOption": "Mikä tietue? (0, 1, 2, jne.)",
+  "yourReminders": "Muistutuksesi",
+  "noReminders": "Sinulla ei ole muistutuksia! Voit lisätä niitä komennolla /remind_me!",
+  "noRemindersTitle": "Ei muistutuksia!",
+  "noRemindersMessage": "Sinulla ei ole muistutuksia! Käytä komentoa /remind_me lisätäksesi niitä!",
+  "reminderSet": "{{relative}} muistutan sinua: {{reminder}}"
+}

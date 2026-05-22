@@ -1,0 +1,17 @@
+{
+  "commandName": "reminder",
+  "commandDescription": "Sends a reminder on what the channel is for!",
+  "guildOnlyError": "This command can only be used in a server!",
+  "channelOnlyError": "This command can only be used in a channel!",
+  "noReminderError": "This command can only be used in a channel with a reminder!",
+  "embedTitle": "REMINDER: {{title}}",
+  "reminderSent": "Reminder sent!",
+  "modhaven_title": "Keep team talk to #teamtripsit!",
+  "modhaven_desc": "While we love to see people discussing the org, we want to make sure everyone is on the same page. Please keep all team talk to #teamtripsit!",
+  "teamtripsit_title": "Keep social talk to #modhaven!",
+  "teamtripsit_desc": "While we all love to have a good time, we want to keep this channel easy to scan for people to keep up with news and updates. Please keep social talk to #modhaven!",
+  "sanctuary_title": "Keep #sanctuary slow and positive!",
+  "sanctuary_desc": "#sanctuary is a positivity-enforced channel for people currently on substances. Please keep the conversation slow and positive, and remember that we are here to help!",
+  "webtripsit_title": "Keep #web-tripsit clear for people who need help!",
+  "webtripsit_desc": "Reminder: this channel is for people who need immediate assistance or who have questions about harm reduction and safer drug use. To access our social chat channels, consider joining our discord at https://discord.gg/tripsit. Thank you!,"
+}

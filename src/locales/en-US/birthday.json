@@ -1,0 +1,20 @@
+{
+  "commandName": "birthday",
+  "commandDescription": "Birthday info!",
+  "getSubcommand": "Get someone's birthday!",
+  "userOption": "User to lookup",
+  "ephemeralOption": "Set to \"True\" to show the response only to you",
+  "setSubcommand": "Set your birthday!",
+  "monthOption": "Month value",
+  "dayOption": "Day value",
+  "immortalTitle": "{{name}} is immortal! (Or has not set their birthday...)",
+  "birthdayTitle": "{{name}}'s birthday is {{date}}",
+  "happyBirthday": "Happy birthday!",
+  "daysLeft": "Only {{days}} days left!",
+  "noMonthError": "You need to specify a month!",
+  "noDayError": "You need to specify a valid day!",
+  "tooManyDays30Error": "{{month}} only has 30 days!",
+  "tooManyDays31Error": "{{month}} only has 31 days!",
+  "februaryError": "February only has 28 days!",
+  "setBirthdayTitle": "Set your birthday to {{date}}"
+}

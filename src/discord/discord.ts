@@ -1,10 +1,10 @@
 import {
+  GatewayIntentBits,
+} from 'discord-api-types/v10';
+import {
   Client,
   Partials,
 } from 'discord.js';
-import {
-  GatewayIntentBits,
-} from 'discord-api-types/v10';
 import { registerCommands } from './commands';
 import { registerEvents } from './events';
 

@@ -1,0 +1,5 @@
+{
+  "commandName": "fact",
+  "commandDescription": "Random fact",
+  "ephemeralOption": "Set to \"True\" to show the response only to you"
+}

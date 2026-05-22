@@ -1,0 +1,19 @@
+{
+  "commandName": "rss",
+  "commandDescription": "Lisää tai poista RSS-syötetilaus!",
+  "addSubcommand": "Lisää RSS-tilaus tähän kanavaan",
+  "urlOption": "RSS-syötteen URL-osoite, päättyy .rss",
+  "addToChannelOption": "Mihin kanavaan syöte julkaistaan?",
+  "removeSubcommand": "Poista RSS-syöte tältä kanavalta",
+  "removeFromChannelOption": "Mistä kanavasta RSS-syöte poistetaan?",
+  "listSubcommand": "Listaa kaikki RSS-syötteet",
+  "guildOnlyError": "Tätä komentoa voi käyttää vain palvelimella!",
+  "invalidRssUrlError": "URL-osoitteen täytyy päättyä .rss!",
+  "rssParseError": "Tämä ei ole kelvollinen RSS-URL, tarkista se ja yritä uudelleen!",
+  "textChannelError": "Sinun täytyy valita tekstikanava!",
+  "feedAddedTitle": "RSS-syöte lisätty kanavalle {{channel}}!",
+  "feedAddedDesc": "Aloitan seuraamaan osoitetta {{url}}!",
+  "feedRemovedTitle": "RSS-syöte poistettu kanavalta {{channel}}!",
+  "feedListTitle": "{{guild}} seuraa seuraavia RSS-syötteitä:!",
+  "feedListEmpty": "{{guild}} ei seuraa yhtään RSS-syötettä!"
+}

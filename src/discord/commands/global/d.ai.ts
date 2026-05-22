@@ -24,6 +24,7 @@ import { aiModerate } from '../../../global/commands/g.ai';
 import { SlashCommand } from '../../@types/commandDef';
 import commandContext from '../../utils/context';
 import { embedTemplate } from '../../utils/embedTemplate';
+import { t, getLocale, getCommandLocalizations } from '../../../i18n/index';
 
 import {
   AiFunction,
@@ -38,7 +39,9 @@ const F = f(__filename);
 export const aiCommand: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('ai')
+    .setNameLocalizations(getCommandLocalizations('ai.commandName'))
     .setDescription("TripBot's AI")
+    .setDescriptionLocalizations(getCommandLocalizations('ai.commandDescription'))
     .setIntegrationTypes([0])
     .addSubcommand(subcommand => subcommand
       .setDescription('Setup the TripBot AI in your server')
@@ -267,7 +270,8 @@ export async function aiMessage(messageData: Message<boolean>): Promise<void> {
   const isAiEnabled = guildData?.ai_channels.some(c => c.channel_id === messageData.channelId);
   if (!isAiEnabled) {
     if (messageData.mentions.has(discordClient.user as ClientUser)) {
-      await messageData.reply('AI is not enabled in this channel. Ask an admin to run `/ai setup`.');
+      const locale = await getLocale({ guildId: messageData.guild.id } as any, 'ai');
+      await messageData.reply(t(locale, 'ai.aiNotEnabledReply'));
     }
     return;
   }
@@ -285,7 +289,8 @@ export async function aiMessage(messageData: Message<boolean>): Promise<void> {
   log.debug(F, `Fetched user data for ${messageData.author.id}: ${JSON.stringify(userData)}`);
 
   if (!userData.ai_info?.ai_tos_agree || !userData.ai_info?.ai_privacy_agree) {
-    await messageData.reply('Please review and agree to `/ai tos` and `/ai privacy` before chatting.');
+    const locale = await getLocale({ guildId: messageData.guild.id } as any, 'ai');
+    await messageData.reply(t(locale, 'ai.tosPrivacyRequiredReply'));
     return;
   }
 
@@ -378,7 +383,8 @@ export async function aiMessage(messageData: Message<boolean>): Promise<void> {
     await reply.react('👎');
   } catch (err) {
     log.error(F, `AI Error: ${err}`);
-    await messageData.reply("I'm having trouble thinking right now. Try again in a minute.");
+    const locale = await getLocale({ guildId: messageData.guild.id } as any, 'ai');
+    await messageData.reply(t(locale, 'ai.aiErrorReply'));
   }
 }
 
@@ -529,7 +535,7 @@ export async function aiMenu(
     }
     case AiText.MenuId.GUILD_CHANNELS: {
       if (!interaction.inGuild()) {
-        return { content: 'This command can only be used in a server.' };
+        return { content: t('en', 'ai.serverOnlyReply') };
       }
 
       const { guildId } = interaction;

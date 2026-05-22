@@ -13,6 +13,7 @@ import {
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { getBountyStats } from '../../../global/commands/g.bountyleaderboard';
+import { t, getLocale, getCommandLocalizations } from '../../../i18n/index';
 
 const F = f(__filename);
 
@@ -32,37 +33,32 @@ function getMedal(position: number): string {
 async function generateLeaderboardEmbed(
   type: string,
   interaction: CommandInteraction,
+  locale: string,
 ): Promise<EmbedBuilder> {
   const stats = await getBountyStats();
 
-  // Sort based on type
   const sortedStats = type === 'xp'
     ? stats.sort((a, b) => b.totalXP - a.totalXP)
     : stats.sort((a, b) => b.totalBounties - a.totalBounties);
 
-  const topUsers = sortedStats.slice(0, 10); // Top 10 users
+  const topUsers = sortedStats.slice(0, 10);
 
   const embed = embedTemplate()
-    .setColor(type === 'xp' ? Colors.Gold : Colors.Green) // Gold for XP, Green for bounties
+    .setColor(type === 'xp' ? Colors.Gold : Colors.Green)
     .setThumbnail(interaction.guild?.iconURL() || null)
     .setTimestamp();
 
-  if (type === 'xp') {
-    embed.setDescription('⭐ **Top Bounty Hunters by XP Earned**\n');
-  } else {
-    embed.setDescription('🏆 **Top Bounty Hunters by Bounties Claimed**\n');
-  }
+  embed.setDescription(t(locale, 'bountyleaderboard', type === 'xp' ? 'xpEmbedDesc' : 'bountiesEmbedDesc'));
 
   if (topUsers.length === 0) {
     embed.addFields({
-      name: '📭 No Data Available',
-      value: 'No bounties have been claimed yet!',
+      name: t(locale, 'bountyleaderboard', 'noDataField'),
+      value: t(locale, 'bountyleaderboard', 'noDataValue'),
       inline: false,
     });
     return embed;
   }
 
-  // Create leaderboard entries
   const leaderboardText = topUsers
     .map((user, index) => {
       const position = index + 1;
@@ -79,31 +75,32 @@ async function generateLeaderboardEmbed(
     .join('\n\n');
 
   embed.addFields({
-    name: '\u200B', // Invisible character for spacing
+    name: '​',
     value: leaderboardText,
     inline: false,
   });
 
-  // Add statistics summary
   const totalBounties = stats.reduce((sum, user) => sum + user.totalBounties, 0);
   const totalXP = stats.reduce((sum, user) => sum + user.totalXP, 0);
   const totalUsers = stats.length;
 
   embed.addFields({
-    name: '📊 Server Statistics',
-    value: `**${totalUsers}** active bounty hunters\n`
-           + `**${totalBounties.toLocaleString()}** total bounties claimed\n`
-           + `**${totalXP.toLocaleString()}** total XP earned`,
+    name: t(locale, 'bountyleaderboard', 'statsField'),
+    value: t(locale, 'bountyleaderboard', 'statsValue', {
+      users: String(totalUsers),
+      bounties: totalBounties.toLocaleString(),
+      xp: totalXP.toLocaleString(),
+    }),
     inline: false,
   });
 
   return embed;
 }
 
-function createSelectMenu(currentType: string): StringSelectMenuBuilder {
+function createSelectMenu(currentType: string, locale: string): StringSelectMenuBuilder {
   return new StringSelectMenuBuilder()
     .setCustomId('leaderboard_type')
-    .setPlaceholder('Choose leaderboard type')
+    .setPlaceholder(t(locale, 'bountyleaderboard', 'selectMenuPlaceholder'))
     .addOptions(
       {
         label: 'Most Bounties Claimed',
@@ -125,11 +122,14 @@ function createSelectMenu(currentType: string): StringSelectMenuBuilder {
 export const dLeaderboard: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('bounty_leaderboard')
-    .setDescription('Display bounty leaderboards for TripBot')
+    .setNameLocalizations(getCommandLocalizations('bountyleaderboard', 'commandName'))
+    .setDescription(t('en-US', 'bountyleaderboard', 'commandDescription'))
+    .setDescriptionLocalizations(getCommandLocalizations('bountyleaderboard', 'commandDescription'))
     .setIntegrationTypes([0])
     .addStringOption(option => option
       .setName('type')
-      .setDescription('Type of leaderboard to display')
+      .setDescription(t('en-US', 'bountyleaderboard', 'typeOption'))
+      .setDescriptionLocalizations(getCommandLocalizations('bountyleaderboard', 'typeOption'))
       .setRequired(false)
       .addChoices(
         { name: '🏆 Most Bounties Claimed', value: 'bounties' },
@@ -138,12 +138,13 @@ export const dLeaderboard: SlashCommand = {
 
   async execute(interaction: ChatInputCommandInteraction): Promise<boolean> {
     try {
+      const locale = await getLocale(interaction, 'bountyleaderboard');
       await interaction.deferReply();
 
       const leaderboardType = interaction.options.get('type')?.value as string || 'bounties';
 
-      const embed = await generateLeaderboardEmbed(leaderboardType, interaction);
-      const selectMenu = createSelectMenu(leaderboardType);
+      const embed = await generateLeaderboardEmbed(leaderboardType, interaction, locale);
+      const selectMenu = createSelectMenu(leaderboardType, locale);
       const row = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(selectMenu);
 
       const response = await interaction.editReply({
@@ -151,24 +152,23 @@ export const dLeaderboard: SlashCommand = {
         components: [row],
       });
 
-      // Handle select menu interactions
       const collector = response.createMessageComponentCollector({
         componentType: ComponentType.StringSelect,
-        time: 300_000, // 5 minutes
+        time: 300_000,
       });
 
       collector.on('collect', async (selectInteraction: StringSelectMenuInteraction) => {
         if (selectInteraction.user.id !== interaction.user.id) {
           await selectInteraction.reply({
-            content: 'Only the command user can change the leaderboard type.',
+            content: t(locale, 'bountyleaderboard', 'onlyCommandUserError'),
             ephemeral: true,
           });
           return;
         }
 
         const newType = selectInteraction.values[0];
-        const newEmbed = await generateLeaderboardEmbed(newType, interaction);
-        const newSelectMenu = createSelectMenu(newType);
+        const newEmbed = await generateLeaderboardEmbed(newType, interaction, locale);
+        const newSelectMenu = createSelectMenu(newType, locale);
         const newRow = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(newSelectMenu);
 
         await selectInteraction.update({
@@ -188,7 +188,7 @@ export const dLeaderboard: SlashCommand = {
       return true;
     } catch (error) {
       log.error(F, `Error in leaderboard command:, ${error}`);
-      const errorMessage = 'An error occurred while generating the leaderboard.';
+      const errorMessage = t('en-US', 'bountyleaderboard', 'errorMessage');
 
       if (interaction.deferred) {
         await interaction.editReply({ content: errorMessage });

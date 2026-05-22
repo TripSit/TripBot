@@ -1,0 +1,15 @@
+{
+  "commandName": "issue",
+  "commandDescription": "Luo ongelmaraportti GitHubissa",
+  "typeOption": "Minkä tyyppinen ongelma tämä on?",
+  "priorityOption": "Kuinka tärkeä tämä on?",
+  "effortOption": "Kuinka paljon vaivaa tämä vaatii?",
+  "modalTitle": "TripBot-ongelmaraportin luonti",
+  "issueTitleLabel": "Ongelman otsikko",
+  "issueTitlePlaceholder": "Tiivistä ongelma tähän!",
+  "issueBodyLabel": "Ongelman kuvaus",
+  "issueBodyPlaceholder": "Kuvaile ongelma yksityiskohtaisesti! Sisällytä toistamisohjeet, erityiset olosuhteet jne.",
+  "issueBodySuffix": "Tämän ongelman lähetti {{name}} palvelimella {{guild}}",
+  "embedTitle": "Ongelmaraportti luotu!",
+  "embedDescription": "Ongelmaraportti #{{number}} luotu TripSit/TripBot-repoon!\nKatso se täältä: {{url}}"
+}

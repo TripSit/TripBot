@@ -9,6 +9,7 @@ import { SlashCommand } from '../../@types/commandDef';
 import { birthday } from '../../../global/commands/g.birthday';
 import commandContext from '../../utils/context';
 import { embedTemplate } from '../../utils/embedTemplate';
+import { t, getLocale, getCommandLocalizations } from '../../../i18n/index';
 // import log from '../../../global/utils/log';
 
 const F = f(__filename);
@@ -16,21 +17,19 @@ const F = f(__filename);
 async function birthdayGet(
   interaction:ChatInputCommandInteraction,
   member:GuildMember,
+  locale: string,
 ) {
   log.info(F, await commandContext(interaction));
-  // const ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined
-  // await interaction.deferReply({ flags: ephemeral });
   const embed = embedTemplate();
 
   const response = await birthday('get', member.id, null, null);
 
   if (response === null) {
-    embed.setTitle(`${member.displayName} is immortal! (Or has not set their birthday...)`);
+    embed.setTitle(t(locale, 'birthday', 'immortalTitle', { name: member.displayName }));
     await interaction.editReply({ embeds: [embed] });
     return;
   }
-  embed.setTitle(`${member.displayName}'s birthday is ${response.toFormat('LLLL d')}`);
-  // Determine how long until the birthday, even if the year is different
+  embed.setTitle(t(locale, 'birthday', 'birthdayTitle', { name: member.displayName, date: response.toFormat('LLLL d') }));
   const now = DateTime.utc();
   const birthdayDate = response;
   const birthdayThisYear = birthdayDate.set({ year: now.year });
@@ -42,9 +41,9 @@ async function birthdayGet(
     daysUntil = daysUntilBirthdayNextYear;
   }
   if (daysUntil === 0) {
-    embed.setDescription('Happy birthday!');
+    embed.setDescription(t(locale, 'birthday', 'happyBirthday'));
   } else {
-    embed.setDescription(`Only ${daysUntil.toFixed(0)} days left!`);
+    embed.setDescription(t(locale, 'birthday', 'daysLeft', { days: daysUntil.toFixed(0) }));
   }
   await interaction.editReply({ embeds: [embed] });
 }
@@ -54,37 +53,32 @@ async function birthdaySet(
   member:GuildMember,
   monthInput:string | null,
   day:number | null,
+  locale: string,
 ) {
   let month = 0 as number;
 
   if (!monthInput) {
-    await interaction.editReply({ content: 'You need to specify a month!' });
+    await interaction.editReply({ content: t(locale, 'birthday', 'noMonthError') });
     return;
   }
 
   if (!day || day < 1) {
-    await interaction.editReply({ content: 'You need to specify a valid day!' });
+    await interaction.editReply({ content: t(locale, 'birthday', 'noDayError') });
     return;
   }
 
   const month30 = ['april', 'june', 'september', 'november'];
   const month31 = ['january', 'march', 'may', 'july', 'august', 'october', 'december'];
   if (month30.includes(monthInput.toLowerCase()) && day > 30) {
-    const response = `${monthInput} only has 30 days!`;
-    // log.info(F, `response: ${JSON.stringify(response, null, 2)}`);
-    await interaction.editReply({ content: response });
+    await interaction.editReply({ content: t(locale, 'birthday', 'tooManyDays30Error', { month: monthInput }) });
     return;
   }
   if (month31.includes(monthInput.toLowerCase()) && day > 31) {
-    const response = `${monthInput} only has 31 days!`;
-    // log.info(F, `response: ${JSON.stringify(response, null, 2)}`);
-    await interaction.editReply({ content: response });
+    await interaction.editReply({ content: t(locale, 'birthday', 'tooManyDays31Error', { month: monthInput }) });
     return;
   }
   if (monthInput.toLowerCase() === 'february' && day > 28) {
-    const response = 'February only has 28 days!';
-    // log.info(F, `response: ${JSON.stringify(response, null, 2)}`);
-    await interaction.editReply({ content: response });
+    await interaction.editReply({ content: t(locale, 'birthday', 'februaryError') });
     return;
   }
   // const monthDict = {
@@ -121,30 +115,34 @@ async function birthdaySet(
 
   const response = await birthday('set', member.id, month, day);
   const embed = embedTemplate();
-  embed.setTitle(`Set your birthday to ${(response as DateTime).toFormat('LLLL d')}`);
+  embed.setTitle(t(locale, 'birthday', 'setBirthdayTitle', { date: (response as DateTime).toFormat('LLLL d') }));
   await interaction.editReply({ embeds: [embed] });
 }
 
 export const dBirthday: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('birthday')
-    .setDescription('Birthday info!')
+    .setNameLocalizations(getCommandLocalizations('birthday', 'commandName'))
+    .setDescription(t('en-US', 'birthday', 'commandDescription'))
+    .setDescriptionLocalizations(getCommandLocalizations('birthday', 'commandDescription'))
     .setIntegrationTypes([0])
     .addSubcommand(subcommand => subcommand
       .setName('get')
-      .setDescription('Get someone\'s birthday!')
+      .setDescription(t('en-US', 'birthday', 'getSubcommand'))
       .addUserOption(option => option
-        // .setRequired(true) If nothing is provided it defaults to the user who ran the command
         .setName('user')
-        .setDescription('User to lookup'))
+        .setDescription(t('en-US', 'birthday', 'userOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('birthday', 'userOption')))
       .addBooleanOption(option => option.setName('ephemeral')
-        .setDescription('Set to "True" to show the response only to you')))
+        .setDescription(t('en-US', 'birthday', 'ephemeralOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('birthday', 'ephemeralOption'))))
     .addSubcommand(subcommand => subcommand
       .setName('set')
-      .setDescription('Set your birthday!')
+      .setDescription(t('en-US', 'birthday', 'setSubcommand'))
       .addStringOption(option => option
         .setRequired(true)
-        .setDescription('Month value')
+        .setDescription(t('en-US', 'birthday', 'monthOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('birthday', 'monthOption'))
         .addChoices(
           { name: 'January', value: 'January' },
           { name: 'February', value: 'February' },
@@ -162,10 +160,12 @@ export const dBirthday: SlashCommand = {
         .setName('month'))
       .addIntegerOption(option => option
         .setRequired(true)
-        .setDescription('Day value')
+        .setDescription(t('en-US', 'birthday', 'dayOption'))
+        .setDescriptionLocalizations(getCommandLocalizations('birthday', 'dayOption'))
         .setName('day'))),
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
+    const locale = await getLocale(interaction, 'birthday');
     let command = interaction.options.getSubcommand() as 'get' | 'set' | undefined;
     if (command === 'set') {
       await interaction.deferReply({ flags: MessageFlags.Ephemeral });
@@ -187,7 +187,7 @@ export const dBirthday: SlashCommand = {
       } else {
         member = member as GuildMember;
       }
-      await birthdaySet(interaction, member, monthInput, day);
+      await birthdaySet(interaction, member, monthInput, day, locale);
     }
 
     if (command === 'get') {
@@ -196,7 +196,7 @@ export const dBirthday: SlashCommand = {
       } else {
         member = member as GuildMember;
       }
-      await birthdayGet(interaction, member);
+      await birthdayGet(interaction, member, locale);
     }
     return true;
   },

@@ -1,0 +1,12 @@
+{
+  "commandName": "say",
+  "commandDescription": "Say something like a real person!",
+  "sayOption": "What do you want to say?",
+  "channelOption": "Where should I say it? (Default: 'here')",
+  "guildOnlyError": "This command can only be used in a server!",
+  "channelNotFoundError": "Channel not found!",
+  "announcementModOnlyError": "Only moderators can use this command in announcement channels!",
+  "invalidChannelError": "This command can only be used in a server!",
+  "confirmedReply": "I said '{{say}}' in {{channel}}",
+  "botlogMsg": "{{name}} made me say '{{say}}' in {{channel}}"
+}

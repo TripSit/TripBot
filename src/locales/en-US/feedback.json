@@ -1,0 +1,10 @@
+{
+  "commandName": "feedback",
+  "commandDescription": "Share feedback or report a bug to the TripBot dev team!",
+  "modalTitle": "TripBot Feedback Report",
+  "modalLabel": "What would you like to tell the bot dev team?",
+  "feedbackReportTitle": "📝 New Feedback Report",
+  "mentionFieldName": "Mention",
+  "thankYouTitle": "Thank you!",
+  "thankYouDescription": "Thank you! I've submitted this feedback to Moonbear. \n\nYou're more than welcome to join the [TripSit server]({{discordUrl}}) if you want!"
+}

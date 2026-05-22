@@ -1,3 +1,5 @@
+import { t } from '../../i18n/index';
+
 // Make an array of animal emojis
 const animals = [
   '🐌', '🐒', '🐔', '🐗', '🐚', '🐛', '🐜', '🐝', '🐞', '🐤', '🐦', '🐧',
@@ -13,7 +15,7 @@ export default coinflip;
  *
  * @return {string}
  */
-export async function coinflip():Promise<string> {
+export async function coinflip(locale = 'en-US'):Promise<string> {
   // Get a random number between 0 and 1000
   const random = Math.floor(Math.random() * 100);
   // log.debug(F, `random: ${random}`);
@@ -21,32 +23,32 @@ export async function coinflip():Promise<string> {
 
   // Normal, boring, coin flip
   if (random < 50) {
-    side = 'Heads!';
+    side = t(locale, 'coinflip.headsResult');
   } else {
-    side = 'Tails!';
+    side = t(locale, 'coinflip.tailsResult');
   }
 
   // Now with /flair/!
   if (random === 0) {
-    side = 'The coin slipped into subspace and disappeared?!';
+    side = t(locale, 'coinflip.subspaceResult');
   } else if (random === 1) {
-    side = 'The coin landed on its side?!';
+    side = t(locale, 'coinflip.sideResult');
   } else if (random === 2) {
-    side = 'The coin rolled off the table?!';
+    side = t(locale, 'coinflip.rolledOffResult');
   } else if (random === 3) {
-    side = `${Math.floor(Math.random() * 6)}! Oh that's a dice...`;
+    side = t(locale, 'coinflip.diceResult', { number: Math.floor(Math.random() * 6) });
   } else if (random === 4) {
-    side = 'The coin kept spinning in the air?!';
+    side = t(locale, 'coinflip.spinningResult');
   } else if (random === 96) {
-    side = 'Some kid came and took your coin!';
+    side = t(locale, 'coinflip.kidTookResult');
   } else if (random === 97) {
-    side = `A ${animals[Math.floor(Math.random() * animals.length)]} came and took your coin!`;
+    side = t(locale, 'coinflip.animalTookResult', { animal: animals[Math.floor(Math.random() * animals.length)] });
   } else if (random === 98) {
-    side = 'You refuse to observe the coin so it is both heads and tails!';
+    side = t(locale, 'coinflip.bothResult');
   } else if (random === 99) {
-    side = `The coin says "${side}!"`;
+    side = t(locale, 'coinflip.coinSaysResult', { side });
   } else if (random === 100) {
-    side = 'Due to inflation the coin kept floating away!';
+    side = t(locale, 'coinflip.floatingResult');
   }
   log.info(F, `response: ${JSON.stringify(side, null, 2)}`);
 

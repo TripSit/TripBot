@@ -1,0 +1,13 @@
+{
+  "commandName": "timezone",
+  "commandDescription": "Hae tai aseta aikavyöhykkeitä!",
+  "getSubcommand": "Hae jonkun aikavyöhyke!",
+  "setSubcommand": "Aseta oma aikavyöhykkeesi!",
+  "userOption": "Käyttäjä, jota haetaan",
+  "ephemeralOption": "Aseta \"Tosi\" näyttääksesi vastauksen vain itsellesi",
+  "timezoneOption": "Aikavyöhykkeen arvo",
+  "notSet": "{{name}} on ajaton aarre <3\n(Ei ole asettanut aikavyöhykettä)",
+  "invalid": "Virheellinen aikavyöhyke!\nKäytä vain automaattisen täydennyksen vaihtoehtoja.",
+  "updated": "Päivitin aikavyöhykkeesi arvoon {{tz}}",
+  "currentTime": "{{time}} siinä missä {{name}} sijaitsee"
+}

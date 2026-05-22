@@ -46,6 +46,7 @@ import { embedTemplate } from '../../utils/embedTemplate';
 // import log from '../../../global/utils/log';
 import { needsHelpMode, tripSitMe, tripsitmeUserClose } from '../../utils/tripsitme';
 import { checkChannelPermissions } from '../../utils/checkPermissions';
+import { t, getLocale, getCommandLocalizations } from '../../../i18n/index';
 // import { modmailDMInteraction } from '../archive/modmail';
 
 const F = f(__filename);
@@ -53,6 +54,7 @@ const F = f(__filename);
 async function tripsitmodeOn(
   interaction:ChatInputCommandInteraction,
   target:GuildMember,
+  locale:string,
 ) {
   if (!interaction.guild) return false;
   if (!interaction.member) return false;
@@ -233,7 +235,7 @@ async function tripsitmodeOn(
       // Remind the user that they have a channel open
       // const recipient = '' as string;
 
-      let helpMessage = stripIndents`Hey ${target}, the team thinks you could still use some help, lets continue talking here!`; // eslint-disable-line max-len
+      let helpMessage = stripIndents`${t(locale, 'tripsitmode.helpMessage', { target: target.toString() })}`; // eslint-disable-line max-len
 
       // If the help ticket was created < 5 mins ago, don't re-ping the team
       const createdDate = new Date(ticketData.reopened_at ?? ticketData.created_at);
@@ -242,9 +244,13 @@ async function tripsitmodeOn(
       const minutes = Math.floor(diff / 1000 / 60);
       // const seconds = Math.floor(diff / 1000); // Uncomment this for dev server
       if (minutes > 5) {
-        const helperStr = `and/or ${roleHelper}`;
         // log.debug(F, `Target has open ticket, and it was created over 5 minutes ago!`);
-        helpMessage += `\n\nSomeone from the ${roleTripsitter} ${guildData.role_helper ? helperStr : ''} team will be with you as soon as they're available!`; // eslint-disable-line max-len
+        if (guildData.role_helper) {
+          const helperStr = `and/or ${roleHelper.toString()}`;
+          helpMessage += `\n\n${t(locale, 'tripsitmode.helpMessageWithTeam', { roleTripsitter: roleTripsitter.toString(), helperStr })}`; // eslint-disable-line max-len
+        } else {
+          helpMessage += `\n\n${t(locale, 'tripsitmode.helpMessageNoHelper', { roleTripsitter: roleTripsitter.toString() })}`; // eslint-disable-line max-len
+        }
       }
       await threadHelpUser.send({
         content: helpMessage,
@@ -255,29 +261,48 @@ async function tripsitmodeOn(
       });
 
       log.debug(F, 'Pinged user in help thread');
-      threadHelpUser.setName(`🧡│${target.displayName}'s channel!`);
+      threadHelpUser.setName(t(locale, 'tripsitmode.threadName', { target: target.displayName }));
       log.debug(F, 'Updated thread name');
 
       // If the meta thread exists, update the name and ping the team
       if (ticketData.meta_thread_id) {
         let metaMessage = '';
         if (minutes > 5) { // Switch to seconds > 10 for dev server
-          const helperString = `and/or ${roleHelper}`;
           try {
-            metaMessage = `Hey ${roleTripsitter} ${guildData.role_helper ? helperString : ''} team, ${interaction.member} has indicated that ${target.displayName} needs assistance!`;
+            if (guildData.role_helper) {
+              metaMessage = t(locale, 'tripsitmode.metaMessageWithHelper', {
+                roleTripsitter: roleTripsitter.toString(),
+                helperString: `and/or ${roleHelper.toString()}`,
+                member: interaction.member?.toString(),
+                target: target.displayName,
+              });
+            } else {
+              metaMessage = t(locale, 'tripsitmode.metaMessageNoHelper', {
+                roleTripsitter: roleTripsitter.toString(),
+                member: interaction.member?.toString(),
+                target: target.displayName,
+              });
+            }
           } catch (err) {
             // If for example helper role has been deleted but the ID is still stored, do this
-            metaMessage = `Hey ${roleTripsitter} team, ${interaction.member} has indicated that ${target.displayName} needs assistance!`;
+            metaMessage = t(locale, 'tripsitmode.metaMessageNoHelper', {
+              roleTripsitter: roleTripsitter.toString(),
+              member: interaction.member?.toString(),
+              target: target.displayName,
+            });
             log.error(F, `Stored Helper ID for guild ${guildData.id} is no longer valid. Role is unfetchable or deleted.`);
           }
         } else {
-          metaMessage = `${interaction.member} has indicated that ${target.displayName} needs assistance!`;
+          metaMessage = t(locale, 'tripsitmode.metaMessageSimple', {
+            member: interaction.member?.toString(),
+            target: target.displayName,
+          });
         }
         // Get the tripsit meta channel from the guild
         let metaThread = {} as ThreadChannel;
         try {
           metaThread = await interaction.guild?.channels.fetch(ticketData.meta_thread_id) as ThreadChannel;
-          metaThread.setName(`🧡│${target.displayName}'s discussion!`);
+          metaThread.setName(t(locale, 'tripsitmode.metaThreadName', { target: target.displayName }));
           await metaThread.send({
             content: metaMessage,
             allowedMentions: {
@@ -319,9 +344,12 @@ async function tripsitmodeOn(
       // remind the user they have an open thread
       const embed = embedTemplate()
         .setColor(Colors.DarkBlue)
-        .setDescription(stripIndents`Hey ${interaction.member}, ${target.displayName} already has an open ticket!
-            I've re-applied the ${roleNeedshelp} role to them, and updated the thread.
-            Check your channel list or click '${threadHelpUser.toString()} to see!`);
+        .setDescription(t(locale, 'tripsitmode.existingTicketDescription', {
+          member: interaction.member?.toString(),
+          target: target.displayName,
+          roleNeedshelp: roleNeedshelp.toString(),
+          threadHelpUser: threadHelpUser.toString(),
+        }));
       await interaction.editReply({ embeds: [embed] });
       return true;
     }
@@ -330,20 +358,20 @@ async function tripsitmodeOn(
   // If no existing threads are available, create a new one
   await interaction.showModal(new ModalBuilder()
     .setCustomId(`tripsitmeSubmit~${interaction.id}`)
-    .setTitle('TripSit Mode Activated!')
+    .setTitle(t(locale, 'tripsitmode.modalTitle'))
     .addComponents(
       new ActionRowBuilder<TextInputBuilder>()
         .addComponents(
           new TextInputBuilder()
             .setCustomId('triageInput')
-            .setLabel('What substance did they take, etc?')
-            .setPlaceholder('This will be posted in the channel for them to see!')
+            .setLabel(t(locale, 'tripsitmode.triageLabel'))
+            .setPlaceholder(t(locale, 'tripsitmode.triagePlaceholder'))
             .setStyle(TextInputStyle.Short),
         ),
       new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
         .setCustomId('introInput')
-        .setLabel('What\'s going on with them?')
-        .setPlaceholder('This will be posted in the channel for them to see!')
+        .setLabel(t(locale, 'tripsitmode.introLabel'))
+        .setPlaceholder(t(locale, 'tripsitmode.introPlaceholder'))
         .setStyle(TextInputStyle.Paragraph)),
     ));
 
@@ -357,12 +385,11 @@ async function tripsitmodeOn(
 
       const threadHelpUser = await tripSitMe(i, target, triage, intro) as ThreadChannel;
 
-      const replyMessage = stripIndents`
-      Hey ${i.member}, you activated tripsit mode on ${target.displayName}!
-  
-      Click here to be taken to their private room: ${threadHelpUser}
-  
-      You can also click in your channel list to see your private room!`;
+      const replyMessage = t(locale, 'tripsitmode.newTicketMessage', {
+        member: i.member?.toString(),
+        target: target.displayName,
+        threadHelpUser: threadHelpUser.toString(),
+      });
       const embed = embedTemplate()
         .setColor(Colors.DarkBlue)
         .setDescription(replyMessage);
@@ -375,9 +402,11 @@ async function tripsitmodeOn(
 export const tripsitmode: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('tripsitmode')
+    .setNameLocalizations(getCommandLocalizations('tripsitmode.commandName'))
     .setDescription(
       'This command will apply the NeedsHelp role onto a user, and remove other roles!',
     )
+    .setDescriptionLocalizations(getCommandLocalizations('tripsitmode.commandDescription'))
     .setIntegrationTypes([0])
     .addSubcommand(subcommand => subcommand
       .setName('on')
@@ -395,12 +424,13 @@ export const tripsitmode: SlashCommand = {
         .setRequired(true))),
   async execute(interaction:ChatInputCommandInteraction) {
     log.info(F, await commandContext(interaction));
+    const locale = await getLocale(interaction, 'tripsitmode');
     const enable = interaction.options.getSubcommand() as 'on' | 'off';
 
     const target = interaction.options.getMember('user') as GuildMember;
 
     if (enable === 'on') {
-      tripsitmodeOn(interaction, target);
+      tripsitmodeOn(interaction, target, locale);
     }
 
     if (enable === 'off') {

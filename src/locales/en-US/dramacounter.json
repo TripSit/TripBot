@@ -1,0 +1,16 @@
+{
+  "commandName": "dramacounter",
+  "commandDescription": "How long since the last drama incident?!",
+  "getSubcommand": "Get the time since last drama.",
+  "setSubcommand": "Set the dramacounter >.<",
+  "ephemeralOption": "Set to \"True\" to show the response only to you",
+  "dramatimeOption": "When did the drama happen? \"3 hours (ago)\"",
+  "dramaissueOption": "What was the drama? Be descriptive, or cryptic.",
+  "guildOnlyError": "This command can only be used in a server.",
+  "noTimeError": "You need to specify a time for the drama to have happened.",
+  "noReasonError": "You need to specify what the drama was.",
+  "embedTitle": "Drama Counter",
+  "noDramaYet": "There has been no drama yet!",
+  "lastDrama": "The last drama was {{timestamp}}: {{reason}}",
+  "counterReset": "The drama counter has been reset to {{timestamp}} ago, and the issue was: {{reason}}"
+}

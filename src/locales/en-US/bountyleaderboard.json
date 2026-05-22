@@ -1,0 +1,14 @@
+{
+  "commandName": "bounty_leaderboard",
+  "commandDescription": "Display bounty leaderboards for TripBot",
+  "typeOption": "Type of leaderboard to display",
+  "selectMenuPlaceholder": "Choose leaderboard type",
+  "xpEmbedDesc": "⭐ **Top Bounty Hunters by XP Earned**\n",
+  "bountiesEmbedDesc": "🏆 **Top Bounty Hunters by Bounties Claimed**\n",
+  "noDataField": "📭 No Data Available",
+  "noDataValue": "No bounties have been claimed yet!",
+  "statsField": "📊 Server Statistics",
+  "statsValue": "**{{users}}** active bounty hunters\n**{{bounties}}** total bounties claimed\n**{{xp}}** total XP earned",
+  "onlyCommandUserError": "Only the command user can change the leaderboard type.",
+  "errorMessage": "An error occurred while generating the leaderboard."
+}

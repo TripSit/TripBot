@@ -1,0 +1,12 @@
+{
+  "commandName": "say",
+  "commandDescription": "Sano jotain kuin oikea ihminen!",
+  "sayOption": "Mitä haluat sanoa?",
+  "channelOption": "Missä sanon sen? (Oletus: 'tässä')",
+  "guildOnlyError": "Tätä komentoa voi käyttää vain palvelimella!",
+  "channelNotFoundError": "Kanavaa ei löydy!",
+  "announcementModOnlyError": "Vain moderaattorit voivat käyttää tätä komentoa ilmoituskanavilla!",
+  "invalidChannelError": "Tätä komentoa voi käyttää vain palvelimella!",
+  "confirmedReply": "Sanoin '{{say}}' kanavalla {{channel}}",
+  "botlogMsg": "{{name}} sai minut sanomaan '{{say}}' kanavalla {{channel}}"
+}

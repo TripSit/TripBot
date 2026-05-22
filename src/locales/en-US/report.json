@@ -1,0 +1,6 @@
+{
+  "commandName": "report",
+  "commandDescription": "Report a user",
+  "targetOption": "User to report!",
+  "notSetupError": "This server has not been set up for moderation.\n\nPlease contact an administrator to set up moderation.\n\nIf you are the admin, please use /cooperative to set up moderation."
+}

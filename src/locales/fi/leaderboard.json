@@ -1,0 +1,7 @@
+{
+  "commandName": "leaderboard",
+  "commandDescription": "Näytä kokemusten tulostaulukko",
+  "categoryOption": "Minkä kategorian kokemus?",
+  "ephemeralOption": "Aseta \"Tosi\" näyttääksesi vastauksen vain itsellesi",
+  "guildOnlyError": "Tätä komentoa voi käyttää vain palvelimella!"
+}

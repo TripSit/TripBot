@@ -1,0 +1,9 @@
+{
+  "commandName": "convert",
+  "commandDescription": "Muunna yksi yksikkö toiseksi",
+  "valueOption": "#",
+  "unitsOption": "Mikä yksikkö?",
+  "intoOption": "Muunna mihin?",
+  "ephemeralOption": "Aseta \"Tosi\" näyttääksesi vastauksen vain itsellesi",
+  "result": "{{value}} {{units}} on {{result}} {{intoUnits}}"
+}

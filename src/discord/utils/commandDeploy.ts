@@ -1,14 +1,16 @@
-import fs from 'fs/promises';
-import path from 'path';
-import {
-  REST,
-} from 'discord.js';
 import {
   Routes,
 } from 'discord-api-types/v10';
-import { log } from '../../global/utils/log';
-import { SlashCommand } from '../@types/commandDef';
+import {
+  REST,
+} from 'discord.js';
+import fs from 'fs/promises';
+import path from 'path';
+import 'tsconfig-paths/register';
 import validateEnv from '../../global/utils/env.validate';
+import { log } from '../../global/utils/log';
+import { initI18n } from '../../i18n/index';
+import { SlashCommand } from '../@types/commandDef';
 
 const F = f(__filename);
 
@@ -28,6 +30,13 @@ export default async function deployCommands():Promise<{
   globalCommands: SlashCommand[];
   guildCommands: SlashCommand[];
 }> {
+  // Ensure translations are loaded before requiring command modules
+  try {
+    await initI18n();
+  } catch (e) {
+    // If i18n fails to initialize, continue — commands may still register with literal strings
+    log.warn(F, 'i18n initialization failed for command deployment');
+  }
   const globalCommands:SlashCommand[] = [];
   const guildCommands:SlashCommand[] = [];
   if (validateEnv('DISCORD')) {

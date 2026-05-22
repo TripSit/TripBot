@@ -1,0 +1,10 @@
+{
+  "commandName": "invite",
+  "commandDescription": "Shows an invite link for this bot!",
+  "ephemeralOption": "Set to \"True\" to show the response only to you",
+  "embedTitle": "Invite {{botName}}",
+  "devNotice": "This is a development version of the bot. Please use the production version for the best experience.",
+  "inviteLink": "Click here to invite TripBot to your own server",
+  "advancedNote": "Note: For advanced features you will need to give the bot more permissions.",
+  "supportServer": "The {{serverType}} server is [{{guildName}} Discord]({{inviteUrl}}). If you have issues/questions, join and talk with Moonbear!"
+}

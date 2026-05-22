@@ -1,0 +1,5 @@
+{
+  "commandName": "joke",
+  "commandDescription": "Random jokes",
+  "ephemeralOption": "Set to \"True\" to show the response only to you"
+}

@@ -1,0 +1,15 @@
+{
+  "commandName": "privacy",
+  "commandDescription": "See and manage how TripSit uses your data!",
+  "getSubcommandName": "get",
+  "getSubcommandDescription": "Get what data is stored on your user!",
+  "deleteSubcommandName": "delete",
+  "deleteSubcommandDescription": "Instructions on deleting your data!",
+  "confirmationOption": "Enter your confirmation code to delete your data!",
+  "yourDataTitle": "Your Data",
+  "yourDataDescription": "Here is what data we store on you: {{userData}}",
+  "deletingYourDataTitle": "Deleting Your Data",
+  "deletingYourDataDescription": "Your data was deleted:\n{{userDeleteData}}",
+  "areYouSureTitle": "Are you sure?",
+  "areYouSureDescription": "This will delete all data we have on you, except:\n1) Moderation actions taken against your Discord ID will remain on file for 6 months from the last time your user ID was seen.\n2) If your user has been banned, your Discord ID and status of your ban will remain on file indefinitely.\n\nIn other words: If you're not banned and you don't interact with the bot for 6 months, your data will be deleted.\n\nThis will delete everything else. Be sure you want to do this!\n\n**Run this same command but with 'YesPlease!' as the confirmation code.**\n\nThe following data will be deleted:\n{{userData}}"
+}

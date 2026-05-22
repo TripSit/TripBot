@@ -1,0 +1,11 @@
+{
+  "commandName": "selftimeout",
+  "commandDescription": "Aseta itsellesi aikalisä!",
+  "durationOption": "Kuinka pitkäksi? Maksimi on 2 viikkoa!",
+  "confirmationOption": "Oletko varma? Tätä ei voi perua!",
+  "yesChoice": "Kyllä, en pyydä modeministä perumaan.",
+  "noChoice": "Ei, testaan vain.",
+  "testingReply": "Tämä toimii juuri niin kuin luulet, yritä uudelleen kun olet varma!",
+  "seeYouIn": "Nähdään {{duration}} kuluttua!",
+  "modlogMsg": "**{{tag}}** asetti itselleen aikalisän **{{duration}}** ajaksi!"
+}
