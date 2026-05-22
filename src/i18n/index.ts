@@ -57,19 +57,26 @@ export function t(
 
 /**
  * Resolve the locale to use for an interaction.
- * Uses env LOCALE, falling back to en-US.
- *
- * NOTE: per-guild locale (discord_guilds.locale) and Discord guild locale are
- * intentionally ignored. The `/setup locale set` command still writes
- * discord_guilds.locale, but that value is no longer read here — the write is
- * effectively a no-op. The `interaction`/`ns` params are kept so callers don't
- * change; remove the setup locale subcommand if per-guild locale stays unused.
+ * Priority: guild DB setting → env LOCALE → en-US.
  */
 export async function getLocale(
-  interaction: BaseInteraction, // eslint-disable-line @typescript-eslint/no-unused-vars
+  interaction: BaseInteraction,
   ns?: string, // eslint-disable-line @typescript-eslint/no-unused-vars
 ): Promise<string> {
-  return global.env?.LOCALE ?? 'en-US';
+  const defaultLocale = global.env?.LOCALE ?? 'en-US';
+  if (!interaction.guildId) return defaultLocale;
+
+  try {
+    const guildData = await global.db.discord_guilds.findUnique({
+      where: { id: interaction.guildId },
+      select: { locale: true },
+    });
+    if (guildData?.locale) return guildData.locale;
+  } catch {
+    // DB failure: fall through to default
+  }
+
+  return defaultLocale;
 }
 
 let cachedLocales: string[] | null = null;

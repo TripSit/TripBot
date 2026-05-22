@@ -846,10 +846,6 @@ async function localeSet(
     return;
   }
 
-  // NOTE: getLocale() in src/i18n now ignores discord_guilds.locale and uses
-  // env LOCALE only. This write is currently a no-op for actual translation
-  // resolution — kept only so the value can be re-enabled later if per-guild
-  // locale support returns.
   await db.discord_guilds.upsert({
     where: { id: interaction.guildId! },
     create: { id: interaction.guildId!, locale: requestedLocale },
