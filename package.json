@@ -20,7 +20,7 @@
     "tripbot:restart": "npm run tripbot:stop && npm run tripbot:start && npm run tripbot:logs",
     "tripbot:test": "npx jest -c ./src/jest/jest.config.ts",
     "tripbot:lint": "npx eslint --fix --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts . --cache",
-    "tripbot:deployCommands": "ts-node --transpile-only ./src/discord/utils/commandDeploy.ts -- deployCommands",
+    "tripbot:deployCommands": "ts-node -r tsconfig-paths/register --transpile-only ./src/discord/utils/commandDeploy.ts -- deployCommands",
     "## DATABASE ##": "",
     "db:start": "docker compose --project-name tripbot up -d --force-recreate --build tripbot_database",
     "db:logs": "docker container logs tripbot_database -f -n 100",

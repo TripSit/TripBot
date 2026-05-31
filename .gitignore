@@ -379,3 +379,12 @@ assets/data/combinedDB.json
 assets/data/tripsitCombos.json
 assets/data/tripsitDB.json
 .eslintcache
+src/docker/entrypoint.sh
+package.json
+CLAUDE.md
+package.json
+src/docker/entrypoint.sh
+src/docker/entrypoint.sh
+.prettierrc
+package.json
+src/docker/entrypoint.sh
