@@ -41,6 +41,7 @@ import getAsset from '../../utils/getAsset';
 import { customButton } from '../../utils/emoji';
 import { getProfilePreview } from './d.profile';
 import { aiFlairMod } from '../../../global/commands/g.ai';
+import { bigBrother } from '../../../global/utils/thoughtPolice';
 
 const tripSitProfileImage = 'tripsit-profile-image.png';
 const tripSitProfileImageAttachment = 'attachment://tripsit-profile-image.png';
@@ -2315,6 +2316,20 @@ export async function rpgFlair(interaction: ChatInputCommandInteraction) {
   // If the user does own the flair item, get the old flair and continue
   const oldFlair = flairItem.effect_value;
 
+  // Run the flair through the same keyword automod used on chat messages (bigBrother). This is a
+  // hard block that applies regardless of whether the AI moderator is enabled.
+  const flairCategory = await bigBrother(newFlair.toLowerCase());
+  if (['offensive', 'harm', 'horny', 'pg13'].includes(flairCategory)) {
+    return {
+      embeds: [embedTemplate()
+        .setAuthor(null)
+        .setTitle(`${emojiGet('itemFlair')} Flair Rejected`)
+        .setDescription(stripIndents`
+        Your flair contains language that isn't allowed here. Please try something else.`)
+        .setColor(Colors.Red)],
+    };
+  }
+
   let aiApproved = 'rejected';
   // eslint-disable-next-line sonarjs/no-duplicate-string
   let adjustmentReason = 'No reason given';
@@ -2327,6 +2342,29 @@ export async function rpgFlair(interaction: ChatInputCommandInteraction) {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { response, promptTokens, completionTokens } = await aiFlairMod(messageList);
   log.debug(F, `aiResponse: ${JSON.stringify(response, null, 2)}`);
+
+  // AI moderation is disabled (no OpenAI key / AI turned off), so aiFlairMod returns an empty
+  // response. Without it there's nothing to approve/adjust/reject, so save the flair as-is.
+  // The length (<50) and @mention checks above still apply.
+  if (!response) {
+    flairItem.effect_value = newFlair;
+    await db.rpg_inventory.upsert({
+      where: { id: flairItem.id },
+      create: flairItem,
+      update: flairItem,
+    });
+    return {
+      embeds: [embedTemplate()
+        .setAuthor(null)
+        .setTitle(`${emojiGet('itemFlair')} Flair Updated`)
+        .setDescription(stripIndents`
+        Your flair has been updated!
+
+        **Old flair:** ${oldFlair}
+        **New flair:** ${newFlair}`)
+        .setColor(Colors.Green)],
+    };
+  }
 
   // Regex to see the approval status
   if (response.match(/Status: Approved/g)) {
