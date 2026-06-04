@@ -67,6 +67,12 @@
   "[javascriptreact]": {
     "editor.defaultFormatter": "dbaeumer.vscode-eslint"
   },
+  "[typescript]": {
+    "editor.defaultFormatter": "dbaeumer.vscode-eslint"
+  },
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "dbaeumer.vscode-eslint"
+  },
   "[markdown]": {
     "editor.trimAutoWhitespace": true,
     "files.trimTrailingWhitespace": true
@@ -137,6 +143,7 @@
     "Hobbiton",
     "HOMESERVER",
     "HRRESOURCES",
+    "idose",
     "imagen",
     "IMDB",
     "IMGUR",
