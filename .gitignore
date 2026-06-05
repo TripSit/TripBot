@@ -379,3 +379,6 @@ assets/data/combinedDB.json
 assets/data/tripsitCombos.json
 assets/data/tripsitDB.json
 .eslintcache
+.prettierrc
+.gitignore
+CLAUDE.md
