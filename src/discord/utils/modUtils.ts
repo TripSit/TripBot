@@ -84,6 +84,11 @@ const noReason = 'No reason provided';
 // const descriptionPlaceholder = 'Tell the user why you\'re doing this';
 const mepWarning = 'You cannot use the word "MEP" here.';
 const noMessageSent = '*No message sent to user*';
+
+// Internal-note keywords that mark a vendor/bot ban. Full bans whose internal
+// note contains one of these (as a whole word, optionally plural) never DM the user.
+const noDmBanKeywords = ['vendor', 'bot'] as const;
+const noDmBanKeywordRegex = new RegExp(`\\b(${noDmBanKeywords.join('|')})s?\\b`, 'i');
 /*
 const cooperativeExplanation = stripIndents`This is a suite of moderation tools for guilds to use, \
 this includes the ability to ban, warn, report, and more!
@@ -1246,8 +1251,9 @@ export async function messageModThread(
   }
 
   let modThread = null as ThreadChannel | null;
-  const vendorBan = internalNote?.toLowerCase().includes('vendor') && isFullBan(command);
-  if (!vendorBan) {
+  const isVendorBotBan = isFullBan(command)
+    && noDmBanKeywordRegex.test(internalNote ?? '');
+  if (!isVendorBotBan) {
     const guild = await discordClient.guilds.fetch(guildData.id);
     if (targetData.mod_thread_id) {
       // log.debug(F, `Mod thread id exists: ${targetData.mod_thread_id}`);
@@ -1730,8 +1736,9 @@ export async function moderate(
   }
   let internalNote = modalInt.fields.getTextInputValue('internalNote');
 
-  // Check if this is a vendor ban
-  const vendorBan = internalNote?.toLowerCase().includes('vendor') && isFullBan(command);
+  // Check if this is a vendor/bot ban (none of these should DM the user)
+  const isVendorBotBan = isFullBan(command)
+    && noDmBanKeywordRegex.test(internalNote ?? '');
 
   // Don't allow people to mention MEP
   if (internalNote?.includes('MEP') || description?.includes('MEP')) {
@@ -1857,7 +1864,7 @@ export async function moderate(
   }
 
   if (sendsMessageToUser(command)
-    && !vendorBan
+    && !isVendorBotBan
     && (description !== '' && description !== null)
     && (targetMember || targetUser)) {
     log.debug(F, `[moderate] Sending message to ${targetName}`);
@@ -2177,7 +2184,7 @@ export async function moderate(
   const desc = stripIndents`
     ${anonSummary}
     **Reason:** ${internalNote ?? noReason}
-     ${(description !== '' && description !== null && !vendorBan && targetMember) ? `\n\n**Note sent to user: ${description}**` : ''}
+     ${(description !== '' && description !== null && !isVendorBotBan && targetMember) ? `\n\n**Note sent to user: ${description}**` : ''}
   `;
 
   const response = embedTemplate()
