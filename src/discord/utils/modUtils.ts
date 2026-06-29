@@ -1603,7 +1603,7 @@ export async function acknowledgeReportButton(
   }
 }
 
-async function wasActionedRecently(actionType: string): Promise<boolean> {
+async function wasActionedRecently(actionType: string, targetDiscordId: Snowflake): Promise<boolean> {
   if (actionType === 'APPROVE_APPEAL' || actionType === 'DENY_APPEAL') {
     return false;
   }
@@ -1611,6 +1611,7 @@ async function wasActionedRecently(actionType: string): Promise<boolean> {
   const recentAction = await db.user_actions.findFirst({
     where: {
       type: actionType as user_action_type,
+      target_discord_id: targetDiscordId,
       created_at: {
         gte: oneMinuteAgo,
       },
@@ -1692,7 +1693,7 @@ export async function moderate(
     && !isUnTimeout(command)
     && !isNote(command)
     && !isReport(command)
-    && !ignoreRecentActions && await wasActionedRecently(command)) {
+    && !ignoreRecentActions && await wasActionedRecently(command, targetId)) {
     await onActionedRecently(buttonInt, modalInt);
     return {
       content: 'This action was cancelled due to another taken recently. Proceed or cancel below.',
