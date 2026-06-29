@@ -69,7 +69,7 @@ const memberStatus: { [channelId: string]: string } = {};
 // echo so it isn't mistaken for a member edit (which would loop forever).
 const lastWritten: { [channelId: string]: string } = {};
 
-// Separator between the bot-owned status segments (lock / level / capacity).
+// Separator between the bot-owned status segments (lock / level).
 const STATUS_SEP = ' · ';
 
 // Separator between our icons and the member's free-text status. The pipe makes
@@ -78,11 +78,11 @@ const MEMBER_SEP = ' | ';
 
 // The glyphs our segments start with. Only used as a fallback for telling our
 // text apart from the member's when the pipe separator has gone missing.
-const TENT_ICONS = ['🔒', '🎖️', '🪑'];
+const TENT_ICONS = ['🔒', '🎖️'];
 
 /**
- * Build the icon part of a tent's status from its live state: lock, level, and
- * headcount. Each piece is dropped when it doesn't apply, then dot-separated.
+ * Build the icon part of a tent's status from its live state: lock and level.
+ * Each piece is dropped when it doesn't apply, then dot-separated.
  * @param {VoiceBasedChannel} channel The tent channel
  * @return {string} The status line
  */
@@ -98,10 +98,6 @@ export function getTentStatusLine(channel: VoiceBasedChannel): string {
   if (level > 0) {
     segments.push(`🎖️ ${level}+`);
   }
-
-  // Capacity — "full" is conveyed by the numbers (e.g. 8/8); no limit shows count only
-  const humans = channel.members.filter(member => !member.user.bot).size;
-  segments.push(channel.userLimit > 0 ? `🪑 ${humans}/${channel.userLimit}` : `🪑 ${humans}`);
 
   return segments.join(STATUS_SEP);
 }
