@@ -1160,6 +1160,7 @@ export async function messageModThread(
   extraMessage: string,
   duration: string,
   appealData?: AppealData | null,
+  dmDelivered?: boolean | null,
 ): Promise<ThreadChannel | null> {
   const actorName = actor.displayName || actor.user.username;
   const startTime = Date.now();
@@ -1202,6 +1203,12 @@ export async function messageModThread(
 
   // log.debug(F, `summary: ${summary}`);
 
+  // Note whether the DM we sent actually reached the user (DMs from unknown sources are often blocked).
+  // dmDelivered is undefined/null when no DM was attempted, so we only surface a line when one was.
+  const deliveryNote = (dmDelivered === true || dmDelivered === false)
+    ? `\n**DM delivered to user:** ${dmDelivered ? '✅ Yes' : '❌ No — the user likely has DMs disabled or has blocked the bot'}`
+    : '';
+
   log.debug(F, '[messageModThread] generating user info');
   const modlogEmbed = await userInfoEmbed(actor, target, targetData, command, true);
 
@@ -1222,7 +1229,7 @@ export async function messageModThread(
       content: stripIndents`
       ${anonSummary}
       **Reason:** ${internalNote ?? noReason}
-      **Note sent to user:** ${(description !== '' && description !== null) ? description : noMessageSent}
+      **Note sent to user:** ${(description !== '' && description !== null) ? description : noMessageSent}${deliveryNote}
       `,
       embeds: [modlogEmbed],
     });
@@ -1300,7 +1307,7 @@ export async function messageModThread(
       modThreadMessage = stripIndents`
       ${summary}
       **Reason:** ${internalNote ?? noReason}
-      **Note sent to user:** ${(description !== '' && description !== null) ? description : noMessageSent}
+      **Note sent to user:** ${(description !== '' && description !== null) ? description : noMessageSent}${deliveryNote}
       ${command === 'NOTE' && !newModThread ? '' : roleModerator}
       `;
       await modThread.send({
@@ -1340,7 +1347,7 @@ async function messageUser(
   command: ModAction,
   messageToUser: string,
   addButtons?: boolean,
-) {
+): Promise<boolean> {
   // log.debug(F, `Message user: ${target.username}`);
   const startTime = Date.now();
   const embed = embedTemplate()
@@ -1356,7 +1363,9 @@ async function messageUser(
       message = await target.send({ embeds: [embed] });
     }
   } catch (error) {
-    return;
+    // The user most likely has DMs disabled / blocked the bot, so the message never reached them.
+    log.debug(F, `[messageUser] failed to DM ${target.username}: ${error}`);
+    return false;
   }
 
   const messageFilter = (mi: MessageComponentInteraction) => mi.user.id === target.id;
@@ -1375,6 +1384,7 @@ async function messageUser(
     }
   });
   log.debug(F, `[messageUser] time: ${Date.now() - startTime}ms`);
+  return true;
 }
 
 export async function acknowledgeButton(
@@ -1856,6 +1866,8 @@ export async function moderate(
     expiration = '';
   }
 
+  // null = no DM was attempted, true = DM delivered, false = DM failed (user has DMs off / blocked the bot)
+  let dmDelivered: boolean | null = null;
   if (sendsMessageToUser(command)
     && !vendorBan
     && (description !== '' && description !== null)
@@ -1918,7 +1930,7 @@ export async function moderate(
     }
 
     log.debug(F, `Sending message to ${targetName}`);
-    await messageUser(
+    dmDelivered = await messageUser(
       targetUser ?? targetMember?.user as User,
       buttonInt.guild,
       command,
@@ -2132,6 +2144,8 @@ export async function moderate(
     description,
     extraMessage,
     modDurationStr || durationStr,
+    null,
+    dmDelivered,
   );
 
   const anonSummary = `${targetName} was ${embedVariables[command as keyof typeof embedVariables].pastVerb}${modDurationStr || durationStr}!`;
