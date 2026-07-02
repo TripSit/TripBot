@@ -84,6 +84,11 @@ const noReason = 'No reason provided';
 // const descriptionPlaceholder = 'Tell the user why you\'re doing this';
 const mepWarning = 'You cannot use the word "MEP" here.';
 const noMessageSent = '*No message sent to user*';
+
+// Internal-note keywords that mark a vendor/bot ban. Full bans whose internal
+// note contains one of these (as a whole word, optionally plural) never DM the user.
+const noDmBanKeywords = ['vendor', 'bot'] as const;
+const noDmBanKeywordRegex = new RegExp(`\\b(${noDmBanKeywords.join('|')})s?\\b`, 'i');
 /*
 const cooperativeExplanation = stripIndents`This is a suite of moderation tools for guilds to use, \
 this includes the ability to ban, warn, report, and more!
@@ -404,6 +409,21 @@ export const modButtonBan = (discordId: string) => new ButtonBuilder()
   .setCustomId(`moderate~FULL_BAN~${discordId}`)
   .setLabel('Ban')
   .setEmoji('🔨')
+  .setStyle(ButtonStyle.Danger);
+
+// Quick-ban shortcuts: open the normal full-ban modal pre-filled (reason + 7-day purge, no
+// user message). The `~vendor`/`~bot` segment is read in modModal to drive the prefill, and
+// the prefilled reason ('Vendor'/'Bot') triggers the existing isVendorBotBan no-DM behavior.
+export const modButtonBanVendor = (discordId: string) => new ButtonBuilder()
+  .setCustomId(`moderate~FULL_BAN~${discordId}~vendor`)
+  .setLabel('Vendor')
+  .setEmoji('🪧')
+  .setStyle(ButtonStyle.Danger);
+
+export const modButtonBanBot = (discordId: string) => new ButtonBuilder()
+  .setCustomId(`moderate~FULL_BAN~${discordId}~bot`)
+  .setLabel('Bot')
+  .setEmoji('🤖')
   .setStyle(ButtonStyle.Danger);
 
 export const modButtonUnBan = (discordId: string) => new ButtonBuilder()
@@ -1043,6 +1063,8 @@ export async function modResponse(
     timeoutTime = target.communicationDisabledUntilTimestamp;
   }
 
+  // Second row of mod buttons — the primary row maxes out at 5 components.
+  const quickBanRow = new ActionRowBuilder<ButtonBuilder>();
   if (showModButtons) {
     if (isInfo(command) || isReport(command)) {
       actionRow.addComponents(
@@ -1051,6 +1073,10 @@ export async function modResponse(
         modButtonTimeout(target.id),
         modButtonBan(target.id),
         modButtonInfo(target.id),
+      );
+      quickBanRow.addComponents(
+        modButtonBanVendor(target.id),
+        modButtonBanBot(target.id),
       );
     } else if (isTimeout(command) || (timeoutTime && timeoutTime > Date.now())) {
       actionRow.addComponents(
@@ -1099,18 +1125,22 @@ export async function modResponse(
 
   log.debug(F, `[modResponse] time: ${Date.now() - startTime}ms`);
 
+  const components = quickBanRow.components.length > 0
+    ? [actionRow, quickBanRow]
+    : [actionRow];
+
   if (showModButtons && !actorIsMod && isReport(command)) {
     const actionRowTwo = new ActionRowBuilder<ButtonBuilder>();
     actionRowTwo.addComponents(modButtonAcknowledgeReport(target.id, actor.id));
     return {
       embeds: [modlogEmbed],
-      components: [actionRow, actionRowTwo],
+      components: [...components, actionRowTwo],
     };
   }
 
   return {
     embeds: [modlogEmbed],
-    components: [actionRow],
+    components,
   };
 }
 
@@ -1253,8 +1283,9 @@ export async function messageModThread(
   }
 
   let modThread = null as ThreadChannel | null;
-  const vendorBan = internalNote?.toLowerCase().includes('vendor') && isFullBan(command);
-  if (!vendorBan) {
+  const isVendorBotBan = isFullBan(command)
+    && noDmBanKeywordRegex.test(internalNote ?? '');
+  if (!isVendorBotBan) {
     const guild = await discordClient.guilds.fetch(guildData.id);
     if (targetData.mod_thread_id) {
       // log.debug(F, `Mod thread id exists: ${targetData.mod_thread_id}`);
@@ -1740,8 +1771,9 @@ export async function moderate(
   }
   let internalNote = modalInt.fields.getTextInputValue('internalNote');
 
-  // Check if this is a vendor ban
-  const vendorBan = internalNote?.toLowerCase().includes('vendor') && isFullBan(command);
+  // Check if this is a vendor/bot ban (none of these should DM the user)
+  const isVendorBotBan = isFullBan(command)
+    && noDmBanKeywordRegex.test(internalNote ?? '');
 
   // Don't allow people to mention MEP
   if (internalNote?.includes('MEP') || description?.includes('MEP')) {
@@ -1869,7 +1901,7 @@ export async function moderate(
   // null = no DM was attempted, true = DM delivered, false = DM failed (user has DMs off / blocked the bot)
   let dmDelivered: boolean | null = null;
   if (sendsMessageToUser(command)
-    && !vendorBan
+    && !isVendorBotBan
     && (description !== '' && description !== null)
     && (targetMember || targetUser)) {
     log.debug(F, `[moderate] Sending message to ${targetName}`);
@@ -2191,7 +2223,7 @@ export async function moderate(
   const desc = stripIndents`
     ${anonSummary}
     **Reason:** ${internalNote ?? noReason}
-     ${(description !== '' && description !== null && !vendorBan && targetMember) ? `\n\n**Note sent to user: ${description}**` : ''}
+     ${(description !== '' && description !== null && !isVendorBotBan && targetMember) ? `\n\n**Note sent to user: ${description}**` : ''}
   `;
 
   const response = embedTemplate()
@@ -2210,7 +2242,7 @@ export async function modModal(
   interaction: ButtonInteraction,
 ): Promise<void> {
   if (!interaction.guild) return;
-  const [, cmd, userId] = interaction.customId.split('~');
+  const [, cmd, userId, variant] = interaction.customId.split('~');
   const command: ModAction = cmd.toUpperCase() as ModAction;
 
   let target: string = userId;
@@ -2280,6 +2312,7 @@ export async function modModal(
 
   let modalInternal = '';
   let modalDescription = '';
+  let modalDays = '';
   const embed = interaction.message.embeds[0].toJSON();
 
   // Try to handle AI mod stuff
@@ -2329,6 +2362,14 @@ export async function modModal(
       ${messageWithoutUrl.substring(0, 830)} \n> ${extractedUrl}`;
   } catch (err) {
     // log.error(F, `Error: ${err}`);
+  }
+
+  // Quick vendor/bot ban shortcut: prefill the reason + a 1-day message purge and leave the
+  // user-facing message blank. The 'Vendor'/'Bot' reason triggers isVendorBotBan (no DM).
+  if (isFullBan(command) && (variant === 'vendor' || variant === 'bot')) {
+    modalInternal = variant === 'vendor' ? 'Vendor' : 'Suspected bot';
+    modalDescription = '';
+    modalDays = '1 day';
   }
 
   let verb = '';
@@ -2411,6 +2452,7 @@ export async function modModal(
         .setLabel('How far back should messages be removed?')
         .setStyle(TextInputStyle.Short)
         .setPlaceholder('7 days or 1 week, etc. (Max 7 days, Default 0 days)')
+        .setValue(modalDays)
         .setRequired(false)
         .setCustomId('days')));
     modal.addComponents(new ActionRowBuilder<TextInputBuilder>()
