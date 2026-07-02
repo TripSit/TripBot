@@ -7,6 +7,7 @@ import {
 } from 'discord-api-types/v10';
 import { registerCommands } from './commands';
 import { registerEvents } from './events';
+import { registerTentStatusSync } from './utils/tents';
 
 const F = f(__filename);
 
@@ -46,6 +47,8 @@ export default async function discordConnect(): Promise<void> {
   });
 
   global.discordClient = discordClient;
+
+  registerTentStatusSync(discordClient);
 
   Promise.all([registerCommands(discordClient), registerEvents(discordClient)])
     .then(() => discordClient.login(env.DISCORD_CLIENT_TOKEN))
