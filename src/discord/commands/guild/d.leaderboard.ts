@@ -1,42 +1,44 @@
 /* eslint-disable no-await-in-loop, no-restricted-syntax, no-continue */
-import {
-  // Colors,
-  // EmbedBuilder,
-  // Interaction,
-  // GuildMember,
-  SlashCommandBuilder,
-  AttachmentBuilder,
-  MessageFlags,
-} from 'discord.js';
 import { experience_category, experience_type } from '@db/tripbot';
 import Canvas from '@napi-rs/canvas';
-import { SlashCommand } from '../../@types/commandDef';
-import commandContext from '../../utils/context';
-import { embedTemplate } from '../../utils/embedTemplate'; // eslint-disable-line @typescript-eslint/no-unused-vars
-import { getTotalLevel } from '../../../global/utils/experience';
-import { getPersonaInfo } from '../../../global/commands/g.rpg';
-import getAsset from '../../utils/getAsset';
-import { resizeText, deFuckifyText, generateColors } from '../../utils/canvasUtils';
-// import { paginationEmbed } from '../../utils/pagination';
+import {
+  AttachmentBuilder,
+  GuildMember,
+  MessageFlags,
+  SlashCommandBuilder,
+} from 'discord.js';
 import { leaderboardV2 } from '../../../global/commands/g.leaderboard';
+import { getPersonaInfo } from '../../../global/commands/g.rpg';
+import { getTotalLevel } from '../../../global/utils/experience';
+import { SlashCommand } from '../../@types/commandDef';
+import {
+  deFuckifyText,
+  generateColors,
+  resizeText,
+} from '../../utils/canvasUtils';
+import commandContext from '../../utils/context';
+import getAsset from '../../utils/getAsset';
 
 const F = f(__filename);
 
 const categoryChoices = [
-  { name: 'Total Lvl', value: 'TOTAL' },
-  { name: 'Chat Lvl', value: 'GENERAL' },
-  { name: 'Voice Lvl', value: 'VOICE' },
-  { name: 'Harm Reduction Lvl', value: 'TRIPSITTER' },
-  { name: 'Development Lvl', value: 'DEVELOPER' },
-  { name: 'Team Tripsit Lvl', value: 'TEAM' },
+  { name: 'Total Level', value: 'TOTAL' },
+  { name: 'Chat Level', value: 'GENERAL' },
+  { name: 'Voice Level', value: 'VOICE' },
+  { name: 'Harm Reduction Level', value: 'TRIPSITTER' },
+  { name: 'Development Level', value: 'DEVELOPER' },
+  { name: 'Team Tripsit Level', value: 'TEAM' },
 ];
+
+const RANK_COLORS = ['#FFD700', '#a8a9ad', '#aa7042'];
 
 export const dLeaderboard: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('leaderboard')
     .setDescription('Show the experience leaderboard')
     .setIntegrationTypes([0])
-    .addStringOption(option => option.setName('category')
+    .addStringOption(option => option
+      .setName('category')
       .setDescription('What category of experience?')
       .addChoices(
         { name: 'Total (Default)', value: 'TOTAL' },
@@ -46,19 +48,18 @@ export const dLeaderboard: SlashCommand = {
         { name: 'Development', value: 'DEVELOPER' },
         { name: 'Team Tripsit', value: 'TEAM' },
       ))
-    // .addStringOption(option => option.setName('time')
-    //   .setDescription('What time period?')
-    //   .addChoices(
-    //     { name: 'All Time (Default)', value: 'ALL' },
-    //     { name: 'Yearly', value: 'YEAR' },
-    //     { name: 'Monthly', value: 'MONTH' },
-    //     { name: 'Weekly', value: 'WEEK' },
-    //   ))
-    .addBooleanOption(option => option.setName('ephemeral')
+    .addUserOption(option => option
+      .setName('user')
+      .setDescription('Center the leaderboard around this user'))
+    .addBooleanOption(option => option
+      .setName('ephemeral')
       .setDescription('Set to "True" to show the response only to you')) as SlashCommandBuilder,
-  async execute(interaction) { // eslint-disable-line
+  async execute(interaction) {
+    // eslint-disable-line
     log.info(F, await commandContext(interaction));
-    const ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined;
+    const ephemeral = interaction.options.getBoolean('ephemeral')
+      ? MessageFlags.Ephemeral
+      : undefined;
     await interaction.deferReply({ flags: ephemeral });
     const startTime = Date.now();
     if (!interaction.guild) {
@@ -66,256 +67,258 @@ export const dLeaderboard: SlashCommand = {
       return false;
     }
 
-    // Choose color based on user's role
-    // const cardLightColor = colorDefs[target.roles.color?.id as keyof typeof colorDefs]?.cardLightColor || '#232323';
-    // const cardDarkColor = colorDefs[target.roles.color?.id as keyof typeof colorDefs]?.cardDarkColor || '#141414';
-    // const chipColor = colorDefs[target.roles.color?.id as keyof typeof colorDefs]?.chipColor || '#393939';
-    // const barColor = colorDefs[target.roles.color?.id as keyof typeof colorDefs]?.barColor || '#b3b3b3';
-    // const textColor = colorDefs[target.roles.color?.id as keyof typeof colorDefs]?.textColor || '#ffffff';
-
-    const canvasWidth = 921;
-    const canvasHeight = 447;
-    const canvasObj = Canvas.createCanvas(canvasWidth, canvasHeight);
-    const context = canvasObj.getContext('2d');
-
-    context.fillStyle = '#181818';
-    context.beginPath();
-    context.roundRect(0, 0, 921, 447, [19]);
-    context.fill();
-    context.fillStyle = '#0e0e0e';
-    context.beginPath();
-    context.roundRect(0, 0, 552, 447, [19]);
-    context.fill();
-    context.fillStyle = '#262626';
-    context.beginPath();
-    context.roundRect(18, 18, 516, 69, [19]);
-    context.roundRect(18, 94, 516, 69, [19]);
-    context.fill();
-
-    context.fillStyle = '#FFFFFF';
-    context.textBaseline = 'middle';
-    context.textAlign = 'center';
-    let categoryChoice = (interaction.options.getString('category') ?? 'TOTAL') as
-      'TOTAL' | 'GENERAL' | 'VOICE' | 'TRIPSITTER' | 'DEVELOPER' | 'TEAM' | 'IGNORED';
+    let categoryChoice = (interaction.options.getString('category')
+      ?? 'TOTAL') as
+      | 'TOTAL'
+      | 'GENERAL'
+      | 'VOICE'
+      | 'TRIPSITTER'
+      | 'DEVELOPER'
+      | 'TEAM'
+      | 'IGNORED';
     let typeChoice = 'ALL' as experience_type;
-    // if the category choice is voice, set the type choice to voice (as to treat it as a category, not a type)
     if (categoryChoice === 'VOICE') {
       typeChoice = 'VOICE';
       categoryChoice = 'TOTAL';
     }
     categoryChoice = categoryChoice as experience_category;
-    // const categoryValue = interaction.options.getString('category') ?? 'TOTAL';
-    const categoryName = categoryChoices.find(choice => choice.value === categoryChoice)?.name || 'Total';
+    const categoryName = categoryChoices.find(c => c.value === categoryChoice)?.name
+      || 'Total Level';
 
-    context.font = resizeText(canvasObj, `${categoryName.toUpperCase()}`, 40, 'futura', 498);
-    context.fillText(`${categoryName.toUpperCase()}`, 276, 54);
-
-    // UPDATE THIS WHEN TIME PERIOD IS ADDED
-    const timePeriod = 'ALL TIME';
-    context.font = resizeText(canvasObj, `TOP OF ${timePeriod}`, 40, 'futura', 498);
-    context.fillText(`TOP OF ${timePeriod}`, 276, 128);
-
-    // const chatIcon = await Canvas.loadImage('https://i.gyazo.com/0f0a85e9fb0332d42e6e36e316886d98.png');
-    // context.drawImage(chatIcon, 88, 54, 75, 75);
-
-    await interaction.guild?.members.fetch();
+    const focusTarget = interaction.options.getUser('user');
+    const focusMember = focusTarget
+      ? (interaction.guild.members.cache.get(focusTarget.id)
+        ?? (await interaction.guild.members
+          .fetch(focusTarget.id)
+          .catch(() => null)))
+      : null;
 
     const leaderboardData = await leaderboardV2();
-
-    // Directly access the selected type in the leaderboardData object
     const typeData = leaderboardData[typeChoice.toUpperCase() as keyof typeof leaderboardData];
+    const categoryData = typeData
+      ? (typeData[categoryChoice.toUpperCase() as keyof typeof typeData] ?? [])
+      : [];
 
-    // Do this before the loops
-    await interaction.guild.members.fetch();
+    // Pull more entries from Discord when a focus user is specified so we can
+    // find them further down the leaderboard. 2× the normal limit as a buffer
+    // for users who have left the server.
+    const fetchLimit = focusMember ? 100 : 50;
+    await Promise.all(
+      categoryData
+        .slice(0, fetchLimit)
+        .map(u => interaction.guild?.members.fetch(u.discord_id).catch(() => null)),
+    );
 
-    // Check if the typeData exists before proceeding
-    if (typeData) {
-      // Directly access the selected category in the typeData object
-      const categoryData = typeData[categoryChoice.toUpperCase() as keyof typeof typeData];
-
-      // Define the coordinates for the bars
-      const barCoordinates = [
-        {
-          x: 18, y: 183, width: 516, height: 76,
-        },
-        {
-          x: 18, y: 268, width: 516, height: 76,
-        },
-        {
-          x: 18, y: 353, width: 516, height: 76,
-        },
-        {
-          x: 570, y: 18, width: 333, height: 51,
-        },
-        {
-          x: 570, y: 78, width: 333, height: 51,
-        },
-        {
-          x: 570, y: 138, width: 333, height: 51,
-        },
-        {
-          x: 570, y: 198, width: 333, height: 51,
-        },
-        {
-          x: 570, y: 258, width: 333, height: 51,
-        },
-        {
-          x: 570, y: 318, width: 333, height: 51,
-        },
-        {
-          x: 570, y: 378, width: 333, height: 51,
-        },
-      ];
-
-      // Check if the categoryData exists before proceeding
-      if (categoryData) {
-        let count = 0;
-        let userCount = 0;
-        // log.debug(F, `Category: ${categoryChoice} | Type: ${typeChoice}
-        // | Count: ${count} | UserCount: ${userCount}`);
-        // log.debug(F, `CategoryData: ${JSON.stringify(categoryData.length, null, 2)}`);
-        while (count < 10) {
-          const user = userCount < categoryData.length ? categoryData[userCount] : null;
-          const avatarOffset = count > 2 ? 66 : 91;
-          const bar = barCoordinates[count % barCoordinates.length];
-          const rankFontSize = count > 2 ? (count === 9 ? 20 : 30) : 40; // eslint-disable-line no-nested-ternary
-          // log.debug(F, `User: ${user?.discord_id} | Count: ${count} | UserCount: ${userCount}`);
-          if (user) {
-            // We only need to check the cache here because we already fetched all members above
-            const member = interaction.guild?.members.cache.get(user.discord_id);
-            if (member) {
-              // log.debug(F, `Member: ${member?.displayName} | ${member?.roles.color?.id}`);
-              const userLevel = await getTotalLevel(user.total_points);
-              const roleColor = `#${(member.roles.color?.color || 0x99aab5).toString(16).padStart(6, '0')}`;
-              const userDarkBarColor = generateColors(roleColor, 0, -72, -82);
-              const userNameColor = generateColors(roleColor, 0, 0, 0);
-              const userName = deFuckifyText(member?.displayName || '');
-              const userFontSize = count > 2 ? 25 : 35;
-              const personaData = await getPersonaInfo(user.discord_id);
-
-              // Draw the under bar
-              context.fillStyle = userDarkBarColor;
-              context.beginPath();
-              context.roundRect(bar.x + avatarOffset, bar.y, bar.width - avatarOffset, bar.height, [0, 19, 19, 0]);
-              context.fill();
-
-              let userFont = 'futura';
-              let levelTextWidth = 0;
-              if (personaData) {
-              // Get the existing inventory data
-                const inventoryData = await db.rpg_inventory.findMany({
-                  where: {
-                    persona_id: personaData.id,
-                  },
-                });
-                // log.debug(F, `Persona home inventory (change): ${JSON.stringify(inventoryData, null, 2)}`);
-
-                const equippedBackground = inventoryData.find(
-                  item => item.equipped === true && item.effect === 'background',
-                );
-                const equippedFont = inventoryData.find(item => item.equipped === true && item.effect === 'font');
-                if (equippedFont) {
-                  await getAsset(equippedFont.value);
-                  userFont = equippedFont.value;
-                }
-
-                if (equippedBackground) {
-                  const imagePath = await getAsset(equippedBackground.value);
-                  const Background = await Canvas.loadImage(imagePath);
-                  context.save();
-                  context.globalCompositeOperation = 'lighter';
-                  context.globalAlpha = 0.05;
-                  context.beginPath();
-                  // Make a clip for the users bar
-                  context.roundRect(bar.x + avatarOffset, bar.y, bar.width - avatarOffset, bar.height, [19]);
-                  context.clip();
-                  // Draw the background based off the bar width
-                  context.drawImage(Background, bar.x + avatarOffset, bar.y, bar.width - avatarOffset, bar.width - avatarOffset); // eslint-disable-line max-len
-                  context.restore();
-                }
-              }
-              // Calculate the width of the level text to determine the username's font size later
-              context.font = `${userFontSize}px futura`;
-              levelTextWidth = context.measureText(`${userLevel.level}`).width;
-
-              // Draw the rank number
-              // If rank is 1-3, change the color to gold, silver, or bronze
-              if (count === 0) {
-                context.fillStyle = '#d4af37';
-              } else if (count === 1) {
-                context.fillStyle = '#a8a9ad';
-              } else if (count === 2) {
-                context.fillStyle = '#aa7042';
-              } else {
-                context.fillStyle = '#ffffff';
-              }
-              context.textBaseline = 'middle';
-              context.textAlign = 'left';
-              context.font = `${rankFontSize}px futura`;
-              context.fillText(`#${count + 1}`, bar.x - 9, bar.y + bar.height / 2);
-              context.font = `${userFontSize}px futura`;
-              // Draw the level number
-              context.fillStyle = '#ffffff';
-              context.globalAlpha = 0.60;
-              context.textAlign = 'right';
-              context.fillText(`${userLevel.level}`, bar.x + bar.width - 9, bar.y + bar.height / 2);
-              context.fillStyle = `${userNameColor}`;
-              context.globalAlpha = 1;
-
-              // Draw the user's avatar in a circle to the right of the rank number, with a radius of bar.height
-              const avatar = await Canvas.loadImage(member?.displayAvatarURL({ extension: 'jpg' }) || '');
-              context.save();
-              context.beginPath();
-              context.arc(bar.x + avatarOffset, bar.y + bar.height / 2, bar.height / 2, 0, Math.PI * 2, true);
-              context.closePath();
-              context.clip();
-              context.drawImage(avatar, bar.x + avatarOffset - bar.height / 2, bar.y, bar.height, bar.height);
-              context.restore();
-              // Draw the user's name to the right of the avatar
-              // Username Text Resize to fit
-              const fontSize = userFontSize;
-              const maxLength = (bar.width - (levelTextWidth + 18) - (18 + avatarOffset + (bar.height / 2)));
-              context.font = `${fontSize}px ${userFont}`;
-              context.fillStyle = userNameColor;
-              context.font = resizeText(canvasObj, userName, fontSize, userFont, maxLength);
-              context.textAlign = 'left';
-              context.fillText(userName, bar.x + avatarOffset + (bar.height / 2) + 9, bar.y + bar.height / 2);
-
-              count += 1;
-            }
-            userCount += 1;
-          }
-          //  else {
-          // // Draw a plain bar without any user  data
-          //   context.fillStyle = '#232323';
-          //   context.beginPath();
-          //   context.roundRect(bar.x + (avatarOffset - (bar.height / 2)),
-          //  bar.y, bar.width - (avatarOffset - (bar.height / 2)),
-          //  bar.height, [bar.height / 2, 19, 19, bar.height / 2]); // eslint-disable-line max-len
-          //   context.fill();
-          //   context.fillStyle = '#ffffff';
-          //   context.textBaseline = 'middle';
-          //   context.textAlign = 'left';
-          //   context.font = `${rankFontSize}px futura`;
-          //   if (count === 0) {
-          //     context.fillStyle = '#d4af37';
-          //   } else if (count === 1) {
-          //     context.fillStyle = '#a8a9ad';
-          //   } else if (count === 2) {
-          //     context.fillStyle = '#aa7042';
-          //   } else {
-          //     context.fillStyle = '#ffffff';
-          //   }
-          //   context.fillText(`#${count + 1}`, bar.x - 9, bar.y + bar.height / 2);
-          // }
-          // count += 1;
-        }
+    // Build a ranked list — rank is position among guild members, not DB rows
+    type ValidEntry = {
+      user: { discord_id: string; total_points: number };
+      member: GuildMember;
+      rank: number;
+    };
+    const allValidEntries: ValidEntry[] = [];
+    for (const user of categoryData.slice(0, fetchLimit)) {
+      const member = interaction.guild.members.cache.get(user.discord_id);
+      if (member) {
+        allValidEntries.push({
+          user,
+          member,
+          rank: allValidEntries.length + 1,
+        });
       }
     }
 
+    const MAX_DISPLAY = 25;
+    let displayEntries: ValidEntry[];
+    let focusDisplayIndex = -1;
+
+    if (focusMember) {
+      const focusRankIndex = allValidEntries.findIndex(
+        e => e.member.id === focusMember.id,
+      );
+      if (focusRankIndex !== -1) {
+        const half = Math.floor(MAX_DISPLAY / 2);
+        let start = Math.max(0, focusRankIndex - half);
+        const end = Math.min(allValidEntries.length, start + MAX_DISPLAY);
+        start = Math.max(0, end - MAX_DISPLAY);
+        displayEntries = allValidEntries.slice(start, end);
+        focusDisplayIndex = focusRankIndex - start;
+      } else {
+        // User has no experience data; fall back to normal top view
+        displayEntries = allValidEntries.slice(0, MAX_DISPLAY);
+      }
+    } else {
+      displayEntries = allValidEntries.slice(0, MAX_DISPLAY);
+    }
+
+    const CANVAS_W = 520;
+    const PAD = 14;
+    const ROW_H = 36;
+    const ROW_GAP = 5;
+    const ROW_PITCH = ROW_H + ROW_GAP;
+    const ROWS_TOP = 50;
+    const RANK_RIGHT = 56;
+    const AVATAR_CX = 76;
+    const AVATAR_R = 14;
+    const CONTENT_X = 98;
+    const LEVEL_X = 500;
+
+    const entryCount = displayEntries.length;
+    const canvasHeight = entryCount === 0
+      ? 200
+      : ROWS_TOP + entryCount * ROW_PITCH - ROW_GAP + PAD;
+
+    const canvasObj = Canvas.createCanvas(CANVAS_W, canvasHeight);
+    const ctx = canvasObj.getContext('2d');
+
+    ctx.fillStyle = '#0c0c0c';
+    ctx.beginPath();
+    ctx.roundRect(0, 0, CANVAS_W, canvasHeight, [16]);
+    ctx.fill();
+
+    const titleText = categoryName.toUpperCase();
+    ctx.fillStyle = '#ffffff';
+    ctx.textBaseline = 'middle';
+    ctx.textAlign = 'center';
+    ctx.font = resizeText(
+      canvasObj,
+      titleText,
+      18,
+      'futura',
+      CANVAS_W - 2 * PAD - 20,
+    );
+    ctx.fillText(titleText, CANVAS_W / 2, 22);
+
+    const titleWidth = ctx.measureText(titleText).width;
+    ctx.fillStyle = '#2dd4bf';
+    ctx.beginPath();
+    ctx.roundRect((CANVAS_W - titleWidth) / 2, 36, titleWidth, 2, [1]);
+    ctx.fill();
+
+    for (let i = 0; i < entryCount; i += 1) {
+      const { user, member, rank } = displayEntries[i];
+      const isFocused = i === focusDisplayIndex;
+      const rowY = ROWS_TOP + i * ROW_PITCH;
+      const rowCenterY = rowY + ROW_H / 2;
+      const rankColor = RANK_COLORS[rank - 1] ?? '#2dd4bf';
+
+      ctx.fillStyle = isFocused ? '#262626' : '#191919';
+      ctx.beginPath();
+      ctx.roundRect(PAD, rowY, CANVAS_W - 2 * PAD, ROW_H, [10]);
+      ctx.fill();
+
+      if (isFocused) {
+        ctx.strokeStyle = '#2dd4bf';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.roundRect(
+          PAD - 0.75,
+          rowY - 0.75,
+          CANVAS_W - 2 * PAD + 1.5,
+          ROW_H + 1.5,
+          [10.75],
+        );
+        ctx.stroke();
+      }
+
+      ctx.save();
+      ctx.beginPath();
+      ctx.roundRect(PAD, rowY, CANVAS_W - 2 * PAD, ROW_H, [10]);
+      ctx.clip();
+      ctx.fillStyle = rankColor;
+      ctx.fillRect(PAD, rowY, 4, ROW_H);
+      ctx.restore();
+
+      const personaData = await getPersonaInfo(user.discord_id);
+      let userFont = 'futura';
+      if (personaData) {
+        const inventoryData = await db.rpg_inventory.findMany({
+          where: { persona_id: personaData.id },
+        });
+        const equippedFont = inventoryData.find(
+          item => item.equipped === true && item.effect === 'font',
+        );
+        const equippedBackground = inventoryData.find(
+          item => item.equipped === true && item.effect === 'background',
+        );
+        if (equippedFont) {
+          await getAsset(equippedFont.value);
+          userFont = equippedFont.value;
+        }
+        if (equippedBackground) {
+          const imagePath = await getAsset(equippedBackground.value);
+          const bg = await Canvas.loadImage(imagePath);
+          ctx.save();
+          ctx.globalCompositeOperation = 'lighter';
+          ctx.globalAlpha = 0.05;
+          ctx.beginPath();
+          ctx.roundRect(PAD, rowY, CANVAS_W - 2 * PAD, ROW_H, [10]);
+          ctx.clip();
+          ctx.drawImage(bg, PAD, rowY, CANVAS_W - 2 * PAD, CANVAS_W - 2 * PAD);
+          ctx.restore();
+        }
+      }
+
+      const rankFontSize = rank <= 3 ? 18 : rank >= 10 ? 12 : 14; // eslint-disable-line no-nested-ternary
+      ctx.fillStyle = rankColor;
+      ctx.textBaseline = 'middle';
+      ctx.textAlign = 'right';
+      ctx.font = `${rankFontSize}px futura`;
+      ctx.fillText(`#${rank}`, RANK_RIGHT, rowCenterY);
+
+      const avatar = await Canvas.loadImage(
+        member.displayAvatarURL({ extension: 'png', size: 64 }),
+      );
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(AVATAR_CX, rowCenterY, AVATAR_R, 0, Math.PI * 2, true);
+      ctx.closePath();
+      ctx.clip();
+      ctx.drawImage(
+        avatar,
+        AVATAR_CX - AVATAR_R,
+        rowCenterY - AVATAR_R,
+        AVATAR_R * 2,
+        AVATAR_R * 2,
+      );
+      ctx.restore();
+
+      const userLevel = await getTotalLevel(user.total_points);
+      const levelText = `LV ${userLevel.level}`;
+      ctx.font = '12px futura';
+      ctx.fillStyle = isFocused ? '#94a3b8' : '#64748b';
+      ctx.textAlign = 'right';
+      ctx.fillText(levelText, LEVEL_X, rowCenterY);
+      const levelTextWidth = ctx.measureText(levelText).width;
+
+      const roleColor = `#${(member.roles.color?.color || 0x99aab5).toString(16).padStart(6, '0')}`;
+      const userNameColor = generateColors(roleColor, 0, 0, 0);
+      const userName = deFuckifyText(member.displayName || '');
+      const userFontSize = rank <= 3 ? 16 : 13;
+      const maxNameWidth = LEVEL_X - levelTextWidth - 12 - CONTENT_X;
+      ctx.font = `${userFontSize}px ${userFont}`;
+      ctx.fillStyle = userNameColor;
+      ctx.font = resizeText(
+        canvasObj,
+        userName,
+        userFontSize,
+        userFont,
+        maxNameWidth,
+      );
+      ctx.textAlign = 'left';
+      ctx.fillText(userName, CONTENT_X, rowCenterY);
+    }
+
     const date = new Date();
-    const formattedDate = date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' }).replace(/ /g, '-'); // eslint-disable-line max-len
-    const attachment = new AttachmentBuilder(await canvasObj.encode('png'), { name: `TS_Leaderboard_${categoryName}_${formattedDate}.png` }); // eslint-disable-line max-len
+    const formattedDate = date
+      .toLocaleDateString('en-GB', {
+        day: '2-digit',
+        month: 'short',
+        year: '2-digit',
+      })
+      .replace(/ /g, '-');
+    const attachment = new AttachmentBuilder(await canvasObj.encode('png'), {
+      name: `TS_Leaderboard_${categoryName}_${formattedDate}.png`,
+    });
     await interaction.editReply({ files: [attachment] });
 
     log.info(F, `Total Time: ${Date.now() - startTime}ms`);
