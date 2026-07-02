@@ -104,6 +104,8 @@ export async function paginationEmbed(
           pages[page].setFooter({ text: `Page ${page + 1} / ${pages.length}` }),
         ],
         components: [disabledRow],
+      }).catch(() => {
+        // Message was deleted before the collector timed out — nothing to disable.
       });
     }
   });
