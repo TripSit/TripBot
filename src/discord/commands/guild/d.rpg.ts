@@ -2316,20 +2316,6 @@ export async function rpgFlair(interaction: ChatInputCommandInteraction) {
   // If the user does own the flair item, get the old flair and continue
   const oldFlair = flairItem.effect_value;
 
-  // Run the flair through the same keyword automod used on chat messages (bigBrother). This is a
-  // hard block that applies regardless of whether the AI moderator is enabled.
-  const flairCategory = await bigBrother(newFlair.toLowerCase());
-  if (['offensive', 'harm', 'horny', 'pg13'].includes(flairCategory)) {
-    return {
-      embeds: [embedTemplate()
-        .setAuthor(null)
-        .setTitle(`${emojiGet('itemFlair')} Flair Rejected`)
-        .setDescription(stripIndents`
-        Your flair contains language that isn't allowed here. Please try something else.`)
-        .setColor(Colors.Red)],
-    };
-  }
-
   let aiApproved = 'rejected';
   // eslint-disable-next-line sonarjs/no-duplicate-string
   let adjustmentReason = 'No reason given';
@@ -2343,10 +2329,23 @@ export async function rpgFlair(interaction: ChatInputCommandInteraction) {
   const { response, promptTokens, completionTokens } = await aiFlairMod(messageList);
   log.debug(F, `aiResponse: ${JSON.stringify(response, null, 2)}`);
 
-  // AI moderation is disabled (no OpenAI key / AI turned off), so aiFlairMod returns an empty
-  // response. Without it there's nothing to approve/adjust/reject, so save the flair as-is.
-  // The length (<50) and @mention checks above still apply.
+  // AI moderation is unavailable (OpenAI errored, no key, or AI turned off), so aiFlairMod returns
+  // an empty response. Fall back to the same keyword automod used on chat messages (bigBrother):
+  // if it flags the flair, reject it; otherwise save it as-is. The length (<50) and @mention
+  // checks above still apply.
   if (!response) {
+    const flairCategory = await bigBrother(newFlair.toLowerCase());
+    if (['offensive', 'harm', 'horny', 'pg13'].includes(flairCategory)) {
+      return {
+        embeds: [embedTemplate()
+          .setAuthor(null)
+          .setTitle(`${emojiGet('itemFlair')} Flair Rejected`)
+          .setDescription(stripIndents`
+          Your flair contains language that isn't allowed here. Please try something else.`)
+          .setColor(Colors.Red)],
+      };
+    }
+
     flairItem.effect_value = newFlair;
     await db.rpg_inventory.upsert({
       where: { id: flairItem.id },
