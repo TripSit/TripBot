@@ -1,22 +1,84 @@
+import { drug_mass_unit, drug_roa } from '@db/tripbot';
+import { ButtonStyle, ChannelType, MessageFlags } from 'discord-api-types/v10';
 import {
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonInteraction,
+  ChatInputCommandInteraction,
+  Colors,
+  ComponentType,
+  EmbedBuilder,
   SlashCommandBuilder,
   time,
-  Colors,
-  EmbedBuilder,
-  EmbedField,
 } from 'discord.js';
-import {
-  ChannelType,
-  MessageFlags,
-} from 'discord-api-types/v10';
-import { drug_mass_unit, drug_roa } from '@db/tripbot';
 import { idose } from '../../../global/commands/g.idose';
+import { parseDuration } from '../../../global/utils/parseDuration';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
-import { parseDuration } from '../../../global/utils/parseDuration';
-import { paginationEmbed } from '../../utils/pagination';
 
 // const F = f(__filename);
+
+/**
+ * Shows iDose history one entry at a time, most recent first.
+ * The Back button is disabled on the first (most recent) entry, and the
+ * Next button is disabled on the last (oldest) entry.
+ * @param {ChatInputCommandInteraction} interaction The deferred interaction to edit
+ * @param {EmbedBuilder[]} pages One embed per dose entry, ordered most recent first
+ * @param {number} timeout How long (ms) to keep the buttons active
+ * @return {Promise<void>}
+ */
+async function idoseHistoryPagination(
+  interaction: ChatInputCommandInteraction,
+  pages: EmbedBuilder[],
+  timeout = 120000,
+): Promise<void> {
+  let page = 0;
+
+  const buildRow = (current: number) => new ActionRowBuilder<ButtonBuilder>().addComponents(
+    new ButtonBuilder()
+      .setCustomId('idoseBack')
+      .setLabel('Back')
+      .setStyle(ButtonStyle.Primary)
+      .setDisabled(current === 0),
+    new ButtonBuilder()
+      .setCustomId('idoseNext')
+      .setLabel('Next')
+      .setStyle(ButtonStyle.Primary)
+      .setDisabled(current === pages.length - 1),
+  );
+
+  const message = await interaction.editReply({
+    embeds: [pages[page]],
+    components: [buildRow(page)],
+  });
+
+  const collector = message.createMessageComponentCollector({
+    filter: i => i.user.id === interaction.user.id && (i.customId === 'idoseBack' || i.customId === 'idoseNext'),
+    componentType: ComponentType.Button,
+    time: timeout,
+  });
+
+  collector.on('collect', async (i: ButtonInteraction) => {
+    if (i.customId === 'idoseNext') {
+      page = Math.min(page + 1, pages.length - 1);
+    } else {
+      page = Math.max(page - 1, 0);
+    }
+    await i.update({
+      embeds: [pages[page]],
+      components: [buildRow(page)],
+    });
+  });
+
+  collector.on('end', async () => {
+    const disabledRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
+      ...buildRow(page).components.map(button => button.setDisabled(true)),
+    );
+    await interaction.editReply({ components: [disabledRow] }).catch(() => {
+      // Message was deleted before the collector ended — nothing to disable.
+    });
+  });
+}
 
 export const dIdose: SlashCommand = {
   data: new SlashCommandBuilder()
@@ -27,10 +89,9 @@ export const dIdose: SlashCommand = {
     .addSubcommand(subcommand => subcommand
       .setName('set')
       .setDescription('Record when you dosed something')
-      .addNumberOption(option => option.setName('volume')
-        .setDescription('How much?')
-        .setRequired(true))
-      .addStringOption(option => option.setName('units')
+      .addNumberOption(option => option.setName('volume').setDescription('How much?').setRequired(true))
+      .addStringOption(option => option
+        .setName('units')
         .setDescription('What units?')
         .setRequired(true)
         .addChoices(
@@ -41,11 +102,13 @@ export const dIdose: SlashCommand = {
           { name: 'oz (ounces)', value: 'OZ' },
           { name: 'fl oz (fluid ounces)', value: 'FLOZ' },
         ))
-      .addStringOption(option => option.setName('substance')
+      .addStringOption(option => option
+        .setName('substance')
         .setDescription('What Substance?')
         .setRequired(true)
         .setAutocomplete(true))
-      .addStringOption(option => option.setName('roa')
+      .addStringOption(option => option
+        .setName('roa')
         .setDescription('How did you take it?')
         .setRequired(true)
         .addChoices(
@@ -61,15 +124,13 @@ export const dIdose: SlashCommand = {
           { name: 'Topical (On Skin)', value: 'TOPICAL' },
           { name: 'Transdermal (Past Skin)', value: 'TRANSDERMAL' },
         ))
-      .addStringOption(option => option.setName('offset')
-        .setDescription('How long ago? EG: 4 hours 32 mins ago')))
-    .addSubcommand(subcommand => subcommand
-      .setName('get')
-      .setDescription('Get your dosage records!'))
+      .addStringOption(option => option.setName('offset').setDescription('How long ago? EG: 4 hours 32 mins ago')))
+    .addSubcommand(subcommand => subcommand.setName('get').setDescription('Get your dosage records!'))
     .addSubcommand(subcommand => subcommand
       .setName('delete')
       .setDescription('Delete a dosage record!')
-      .addNumberOption(option => option.setName('record')
+      .addNumberOption(option => option
+        .setName('record')
         .setDescription('Which record? (0, 1, 2, etc)')
         .setRequired(true))),
   async execute(interaction) {
@@ -77,7 +138,6 @@ export const dIdose: SlashCommand = {
     await interaction.deferReply({ flags: ephemeral });
     const command = interaction.options.getSubcommand() as 'get' | 'set' | 'delete';
     const embed = embedTemplate();
-    const book = [] as EmbedBuilder[];
 
     const recordNumber = interaction.options.getNumber('record');
     const userId = interaction.user.id;
@@ -102,22 +162,10 @@ export const dIdose: SlashCommand = {
     const date = new Date();
     if (offset) {
       const out = await parseDuration(offset);
-      // log.debug(F, `out: ${out}`);
       date.setTime(date.getTime() - out);
     }
 
-    const response = await idose(
-      command,
-      recordNumber,
-      userId,
-      substance,
-      volume,
-      units,
-      roa,
-      date,
-    );
-
-    // log.debug(F, `response: ${JSON.stringify(response, null, 2)}`);
+    const response = await idose(command, recordNumber, userId, substance, volume, units, roa, date);
 
     if (response[0] && response[0].name === 'Error') {
       await interaction.editReply({ content: response[0].value });
@@ -128,58 +176,13 @@ export const dIdose: SlashCommand = {
       await interaction.editReply({ content: response[0].value });
     }
     if (command === 'get') {
-      if (response.length > 0) {
-        // Sort data based on the dose_date property
-        embed.setTitle('Your dosage history');
+      // response comes back oldest-first; reverse it so the most recent entry is shown first
+      const pages = [...response].reverse().map((record, index, entries) => embedTemplate()
+        .setTitle('Your dosage history')
+        .addFields({ name: record.name, value: record.value })
+        .setFooter({ text: `Entry ${index + 1} of ${entries.length}` }));
 
-        if (response.length > 24) {
-          let pageEmbed = embedTemplate();
-          pageEmbed.setTitle('Your dosage history');
-          // Add fields to the pageEmbed until there are 24 fields
-          let pageFields = [] as EmbedField[];
-          let pageFieldsCount = 0;
-          for (const record of response) { // eslint-disable-line no-restricted-syntax
-            pageFields.push({ name: record.name, value: record.value, inline: true });
-            // log.debug(F, `Adding field ${field.name}`);
-            pageFieldsCount += 1;
-            // log.debug(F, `pageFieldsCount: ${pageFieldsCount}`);
-            if (pageFieldsCount === 24) {
-              pageEmbed.setFields(pageFields);
-              // log.debug(F, `pageEmbed: ${JSON.stringify(pageEmbed)}`);
-              book.push(pageEmbed);
-              // log.debug(F, `book.length: ${book.length}`);
-              pageFields = [];
-              pageFieldsCount = 0;
-              pageEmbed = embedTemplate();
-            }
-          }
-          // Add the last pageEmbed
-          if (pageFieldsCount > 0) {
-            pageEmbed.setFields(pageFields);
-            // log.debug(F, `pageEmbed: ${JSON.stringify(pageEmbed)}`);
-            book.push(pageEmbed);
-            // log.debug(F, `book.length: ${book.length}`);
-          }
-        }
-        if (response.length <= 24) {
-          // Add fields to the embed
-          const fields = [] as EmbedField[];
-          for (const record of response) { // eslint-disable-line no-restricted-syntax
-            fields.push({ name: record.name, value: record.value, inline: true });
-          }
-          embed.setFields(fields);
-        }
-      } else {
-        embed.setTitle('No dose records!');
-        embed.setDescription('You have no dose records, use /idose to add some!');
-      }
-      // log.debug(F, `book.length: ${book.length}`);
-      if (book.length > 1) {
-        paginationEmbed(interaction, book);
-      } else {
-        await interaction.editReply({ embeds: [embed] });
-        // interaction.user.send({embeds: [embed]});
-      }
+      await idoseHistoryPagination(interaction, pages);
     }
     if (command === 'set') {
       if (roa === null) {
@@ -187,9 +190,7 @@ export const dIdose: SlashCommand = {
       }
 
       const timeString = time(date).valueOf().toString();
-      // log.debug(F, `timeString: ${timeString}`);
       const relative = time(date, 'R');
-      // log.debug(F, `relative: ${relative}`);
 
       const routeStr = roa.charAt(0).toUpperCase() + roa.slice(1).toLowerCase();
 
