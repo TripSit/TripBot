@@ -4,6 +4,8 @@
 import {
   PrismaClient, drug_roa, drug_variants, users,
 } from '@db/tripbot';
+import { PrismaPg } from '@prisma/adapter-pg';
+import { Pool } from 'pg';
 import argon from 'argon2';
 import { Duration as DurationCalc } from 'luxon';
 import combinedDb from '../../assets/data/combinedDB.json';
@@ -19,7 +21,9 @@ const drugs = combinedDb as [CbSubstance];
 
 type DrugRecord = CbSubstance & { id: string };
 
-const prisma = new PrismaClient();
+const pool = new Pool({ connectionString: process.env.PRISMA_DB_URL });
+const adapter = new PrismaPg(pool);
+const prisma = new PrismaClient({ adapter });
 
 const routeMap = {
   vapourized: 'inhaled',

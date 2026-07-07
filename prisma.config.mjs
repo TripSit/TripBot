@@ -6,7 +6,7 @@ const isMoodle = process.env.PRISMA_SCHEMA === 'moodle';
 export default defineConfig({
   migrations: {
     path: 'src/prisma/tripbot/migrations',
-    seed: 'tsx src/prisma/seed.ts',
+    seed: 'ts-node -r tsconfig-paths/register --transpile-only src/prisma/seed.ts',
   },
   schema: isMoodle
     ? './src/prisma/moodle/schema.prisma'
