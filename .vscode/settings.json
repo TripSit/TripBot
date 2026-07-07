@@ -4,6 +4,8 @@
   // --- AUTOFIX & FORMATTING ---
   "editor.formatOnSave": true,
   "editor.defaultFormatter": "dbaeumer.vscode-eslint",
+  // Prettier is intentionally disabled on this project — ESLint is the formatter.
+  "prettier.enable": false,
   "editor.codeActionsOnSave": {
     "source.fixAll.eslint": "explicit",
     "source.addMissingImports": "explicit",
