@@ -41,6 +41,7 @@ import getAsset from '../../utils/getAsset';
 import { customButton } from '../../utils/emoji';
 import { getProfilePreview } from './d.profile';
 import { aiFlairMod } from '../../../global/commands/g.ai';
+import { bigBrother } from '../../../global/utils/thoughtPolice';
 
 const tripSitProfileImage = 'tripsit-profile-image.png';
 const tripSitProfileImageAttachment = 'attachment://tripsit-profile-image.png';
@@ -2327,6 +2328,42 @@ export async function rpgFlair(interaction: ChatInputCommandInteraction) {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { response, promptTokens, completionTokens } = await aiFlairMod(messageList);
   log.debug(F, `aiResponse: ${JSON.stringify(response, null, 2)}`);
+
+  // AI moderation is unavailable (OpenAI errored, no key, or AI turned off), so aiFlairMod returns
+  // an empty response. Fall back to the same keyword automod used on chat messages (bigBrother):
+  // if it flags the flair, reject it; otherwise save it as-is. The length (<50) and @mention
+  // checks above still apply.
+  if (!response) {
+    const flairCategory = await bigBrother(newFlair.toLowerCase());
+    if (['offensive', 'harm', 'horny', 'pg13'].includes(flairCategory)) {
+      return {
+        embeds: [embedTemplate()
+          .setAuthor(null)
+          .setTitle(`${emojiGet('itemFlair')} Flair Rejected`)
+          .setDescription(stripIndents`
+          Your flair contains language that isn't allowed here. Please try something else.`)
+          .setColor(Colors.Red)],
+      };
+    }
+
+    flairItem.effect_value = newFlair;
+    await db.rpg_inventory.upsert({
+      where: { id: flairItem.id },
+      create: flairItem,
+      update: flairItem,
+    });
+    return {
+      embeds: [embedTemplate()
+        .setAuthor(null)
+        .setTitle(`${emojiGet('itemFlair')} Flair Updated`)
+        .setDescription(stripIndents`
+        Your flair has been updated!
+
+        **Old flair:** ${oldFlair}
+        **New flair:** ${newFlair}`)
+        .setColor(Colors.Green)],
+    };
+  }
 
   // Regex to see the approval status
   if (response.match(/Status: Approved/g)) {
