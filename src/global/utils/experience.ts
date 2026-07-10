@@ -51,8 +51,18 @@ export async function findXPfromLevel(level: number): Promise<number> {
   return totalXP;
 }
 
+/**
+ * Returns the LEVEL_FREEZE level cap for a Discord user, or undefined if they aren't frozen.
+ * XP keeps accruing while frozen; only the surfaced/stored level is capped, so removing the
+ * freeze restores the true level instantly.
+ */
+export function freezeCapFor(discordId?: string): number | undefined {
+  return discordId === undefined ? undefined : env.LEVEL_FREEZE[discordId];
+}
+
 export async function getTotalLevel(
   totalExp:number,
+  discordId?:string,
 ):Promise<{ level: number, level_points: number }> {
 // ):Promise<Omit<UserExperience, 'id' | 'user_id' | 'type' | 'category' | 'total_points' | 'last_message_at' | 'last_message_channel' | 'created_at'>> {
   // log.debug('totalLevel', `totalExp: ${totalExp}`);
@@ -69,6 +79,11 @@ export async function getTotalLevel(
     expToLevel = newExpToLevel;
   }
   // log.debug(F, `END: totalLevel: ${level} | levelPoints: ${levelPoints} | expToLevel: ${expToLevel}`);
+  const cap = freezeCapFor(discordId);
+  if (cap !== undefined && level > cap) {
+    // Frozen: show the capped level with a full bar.
+    return { level: cap, level_points: await expForNextLevel(cap) };
+  }
   return { level, level_points: levelPoints };
 }
 
