@@ -2,6 +2,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import dotenv from 'dotenv';
 
+import { parseLevelFreeze } from './levelFreeze';
+
 dotenv.config();
 
 const isProd = process.env.NODE_ENV === 'production';
@@ -14,12 +16,9 @@ export const env = {
   DISCORD_OWNER_ID: process.env.DISCORD_OWNER_ID,
   DISCORD_GUILD_ID: process.env.DISCORD_GUILD_ID,
   DISCORD_BL_ID: '867876356304666635',
-  // Pin specific users at a level. Format: comma-separated "discordId:level" pairs.
+  // Pin specific users at level 0-100. Format: comma-separated "discordId:level" pairs.
   // XP keeps accruing under the hood; only the surfaced level is capped (see freezeCapFor).
-  LEVEL_FREEZE: Object.fromEntries((process.env.LEVEL_FREEZE ?? '').split(',')
-    .map(pair => pair.split(':').map(p => p.trim()))
-    .filter(([id, lvl]) => id && /^\d+$/.test(lvl))
-    .map(([id, lvl]) => [id, Number(lvl)])) as Record<string, number>,
+  LEVEL_FREEZE: parseLevelFreeze(process.env.LEVEL_FREEZE),
   DISCORD_CLIENT_SECRET: process.env.DISCORD_CLIENT_SECRET,
   DISCORD_CLIENT_REDIRECT_URI: process.env.DISCORD_CLIENT_REDIRECT_URI,
   DISCORD_CLIENT_TOKEN: process.env.DISCORD_CLIENT_TOKEN,
