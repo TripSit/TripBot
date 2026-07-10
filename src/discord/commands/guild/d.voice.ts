@@ -13,6 +13,7 @@ import {
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import commandContext from '../../utils/context';
+import { levelRoles, updateTentStatus } from '../../utils/tents';
 
 const F = f(__filename);
 
@@ -89,20 +90,6 @@ async function tentLevel(
   const level = parseInt(levelNumber, 10);
   let title = '';
   let description = '';
-
-  const levelRoles: { [key: number]: string } = {
-    0: env.ROLE_VIP_0,
-    10: env.ROLE_VIP_10,
-    20: env.ROLE_VIP_20,
-    30: env.ROLE_VIP_30,
-    40: env.ROLE_VIP_40,
-    50: env.ROLE_VIP_50,
-    60: env.ROLE_VIP_60,
-    70: env.ROLE_VIP_70,
-    80: env.ROLE_VIP_80,
-    90: env.ROLE_VIP_90,
-    100: env.ROLE_VIP_100,
-  };
 
   if (level === 0) {
     // Iterate over all the level roles and remove their overwrites
@@ -566,6 +553,11 @@ export const dVoice: SlashCommand = {
 
     if (command === 'ping') {
       embed = await tentPing(voiceChannel, member);
+    }
+
+    // Only these commands change something the status line actually shows.
+    if (['lock', 'level', 'limit'].includes(command)) {
+      updateTentStatus(voiceChannel);
     }
 
     await interaction.editReply({ embeds: [embed] });
