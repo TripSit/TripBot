@@ -185,7 +185,7 @@ export const dLeaderboard: SlashCommand = {
             const member = interaction.guild?.members.cache.get(user.discord_id);
             if (member) {
               // log.debug(F, `Member: ${member?.displayName} | ${member?.roles.color?.id}`);
-              const userLevel = await getTotalLevel(user.total_points);
+              const userLevel = await getTotalLevel(user.total_points, user.discord_id);
               const roleColor = `#${(member.roles.color?.color || 0x99aab5).toString(16).padStart(6, '0')}`;
               const userDarkBarColor = generateColors(roleColor, 0, -72, -82);
               const userNameColor = generateColors(roleColor, 0, 0, 0);

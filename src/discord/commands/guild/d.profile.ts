@@ -429,7 +429,7 @@ export const dProfile: SlashCommand = {
     context.fillText(`${numFormatter(profileData.tokens)}`, 648, 250);
 
     // Level Text
-    const totalTextData = await getTotalLevel(profileData.totalTextExp + profileData.totalVoiceExp);
+    const totalTextData = await getTotalLevel(profileData.totalTextExp + profileData.totalVoiceExp, targetUser.id);
     context.fillText(`${totalTextData.level}`, 894, 250);
 
     // Choose and Draw the Level Image
