@@ -116,8 +116,8 @@ export async function giveMilestone(
   const emojis = [...announcementEmojis].sort(() => 0.5 - Math.random()).slice(0, 3); // Sort the array
 
   // Pretend that the total exp would get the same exp as the category
-  // Get the total level
-  const totalData = await getTotalLevel(totalExp);
+  // Get the total level (capped if this user is frozen, so VIP roles never exceed the cap)
+  const totalData = await getTotalLevel(totalExp, member.id);
   // log.debug(F, `${member.displayName} is total Text level ${totalData.level}`);
 
   // Determine the first digit of the level
@@ -175,35 +175,19 @@ export async function giveMilestone(
   const role = await member.guild?.roles.fetch(roleDefs[levelTier as keyof typeof roleDefs].role) as Role;
   // log.debug(F, `Role: ${role.name} (${role.id})`);
 
-  if (levelTier >= 1) {
-    // Get a list of roleDefs below the users current tier
-    const previousRoles = Object.keys(roleDefs)
-      .filter(key => Number(key) < levelTier)
-      .map(key => roleDefs[parseInt(key, 10) as keyof typeof roleDefs].role);
+  // A level freeze can lower the effective tier, so strip tier roles ABOVE the current one too
+  // (and remember it: adding the lower role then is a downgrade, not worth celebrating).
+  const hadHigherRole = Object.entries(roleDefs)
+    .some(([key, def]) => Number(key) > levelTier && member.roles.cache.has(def.role));
+  await Promise.all(Object.entries(roleDefs)
+    .filter(([key, def]) => Number(key) !== levelTier && member.roles.cache.has(def.role))
+    .map(([, def]) => member.roles.remove(def.role)));
 
-    // Remove all previous roles
-    previousRoles.forEach(async previousRole => {
-      const removeRole = await member.guild?.roles.fetch(previousRole) as Role;
-      if (member.roles.cache.has(removeRole.id)) {
-        // log.debug(F, `Removing ${member.displayName} role ${removeRole.name} (${removeRole.id})`);
-        member.roles.remove(removeRole);
-      }
-    });
-
-    // const previousRole = await member.guild?.roles.fetch(
-    //   roleDefs[(levelTier - 1) as keyof typeof roleDefs].role,
-    // ) as Role;
-    // // log.debug(F, `Previous role: ${previousRole.name} (${previousRole.id})`);
-    // if (member?.roles.cache.has(previousRole.id)) {
-    // log.debug(F, `Removing ${member} role ${previousRole.name} (${previousRole.id})`);
-    //   member?.roles.remove(previousRole);
-    // }
-    // Check if the member already has the resulting role, and if not, add it
-  }
+  // Check if the member already has the resulting role, and if not, add it
   if (!member.roles.cache.has(role.id)) {
     // log.debug(F, `Giving ${member.displayName} role ${role.name} (${role.id})`);
     await member.roles.add(role);
-    if (levelTier >= 2) {
+    if (levelTier >= 2 && !hadHigherRole) {
       const channel = await member.guild?.channels.fetch(env.CHANNEL_VIPLOUNGE) as TextChannel;
       await channel.send(`${emojis} **${member} has reached Total level ${levelTier}0!** ${emojis}`);
     }
@@ -299,6 +283,8 @@ export async function experience(
   // Determine how many exp points are needed to level up
   const expToLevel = await expForNextLevel(experienceData.level);
 
+  const freezeCap = freezeCapFor(member.id);
+
   // If the user has been awarded voice exp in the last 5 minutes, do nothing
   if (experienceData.last_message_at.getTime() + expInterval > new Date().getTime()) {
     // log.debug(F, `[${channel.name}] ${member.displayName} has already been given experience recently!`);
@@ -313,7 +299,8 @@ export async function experience(
 
   // log.debug(F, `${member.displayName} earned ${expPoints} ${experienceData.type} exp, has ${experienceData.level_points} of ${expToLevel} to reach lvl ${experienceData.level + 1}`);
 
-  if (expToLevel <= experienceData.level_points) {
+  if (expToLevel <= experienceData.level_points
+    && (freezeCap === undefined || experienceData.level < freezeCap)) {
     experienceData.level += 1;
     const channelTripbotLogs = await channel.guild.channels.fetch(env.CHANNEL_BOTLOG) as TextChannel;
     await channelTripbotLogs.send(stripIndents`${member.displayName} has leveled up to ${categoryName} ${typeName} level ${experienceData.level}!`);
@@ -367,13 +354,14 @@ export async function experience(
 async function calculateLevelUps(
   startLevel: number,
   totalLevelPoints: number,
+  maxLevel = 100,
 ): Promise<{ finalLevel: number; remainingPoints: number; levelsGained: number }> {
   let currentLevel = startLevel;
   let remainingPoints = totalLevelPoints;
   let levelsGained = 0;
 
   // Pre-calculate level requirements up to a reasonable limit
-  const maxPossibleLevel = Math.min(startLevel + 50, 100); // Limit to prevent infinite loops
+  const maxPossibleLevel = Math.min(startLevel + 50, maxLevel); // Limit to prevent infinite loops
   const levelRequirements: number[] = [];
 
   for (let level = startLevel; level < maxPossibleLevel; level += 1) {
@@ -387,7 +375,7 @@ async function calculateLevelUps(
   while (
     requirementIndex < levelRequirements.length
     && remainingPoints >= levelRequirements[requirementIndex]
-    && currentLevel < 100
+    && currentLevel < maxLevel
   ) {
     remainingPoints -= levelRequirements[requirementIndex];
     currentLevel += 1;
@@ -510,9 +498,12 @@ export async function awardGitHubXP(
   const newTotalPoints = experienceData.total_points + xpAmount;
 
   // Calculate level ups
+  // Capping via maxLevel (instead of clamping afterwards) keeps the unspent XP banked in
+  // remainingPoints and never demotes a stored level already above the cap.
   const levelUpResult = await calculateLevelUps(
     experienceData.level,
     newLevelPoints,
+    Math.min(100, freezeCapFor(member.id) ?? 100),
   );
 
   // Update the database
