@@ -67,8 +67,8 @@ export async function levels(
 ):Promise<LevelData> {
   const leaderboardData = await leaderboardV2();
 
-  // If this user's level is frozen, every level shown here is capped to the freeze.
-  const freezeCap = await getLevelFreeze(discordId);
+  // This user's level freeze, if any. Applied to every displayed level in the pass below.
+  const frozenLevel = await getLevelFreeze(discordId);
 
   const results = {
     ALL: {
@@ -121,7 +121,7 @@ export async function levels(
       // log.debug(F, `Type: ${typeKey} Category: ${categoryKey} userRank: ${userRank}`);
       const userExperience = categoryData.find(user => user.discord_id === discordId);
       if (!userExperience) continue;
-      const levelData = await getTotalLevel(userExperience.total_points, freezeCap);
+      const levelData = await getTotalLevel(userExperience.total_points);
       // log.debug(F, `levelData: ${JSON.stringify(levelData, null, 2)}`);
       // log.debug(F, `${discordId} is rank ${userRank} ${type} ${category} \
       // level ${levelData.level} userExperience: ${JSON.stringify(userExperience, null, 2)}`);
@@ -134,6 +134,25 @@ export async function levels(
         total_exp: userExperience.total_points,
         rank: userRank + 1, // 0-based to 1-based
       };
+    }
+  }
+
+  // If this user's level is frozen, pin EVERY category's displayed level to the frozen value,
+  // including categories they have no XP in (which the loop above skips). Ranks are left as-is.
+  if (frozenLevel !== null) {
+    const frozenNextLevel = await expForNextLevel(frozenLevel);
+    for (const type of Object.keys(leaderboardData)) {
+      const typeKey = type as keyof typeof leaderboardData;
+      for (const category of Object.keys(leaderboardData[typeKey])) {
+        const existing = results[typeKey][category];
+        results[typeKey][category] = {
+          level: frozenLevel,
+          level_exp: frozenNextLevel,
+          nextLevel: frozenNextLevel,
+          total_exp: existing ? existing.total_exp : 0,
+          rank: existing ? existing.rank : 0,
+        };
+      }
     }
   }
 

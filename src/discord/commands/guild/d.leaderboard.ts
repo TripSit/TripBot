@@ -152,7 +152,7 @@ export const dLeaderboard: SlashCommand = {
     }
 
     // Fetch level freezes for just the users we're about to draw, in one query
-    const freezeCaps = await getLevelFreezes(displayEntries.map(entry => entry.user.discord_id));
+    const frozenLevels = await getLevelFreezes(displayEntries.map(entry => entry.user.discord_id));
 
     const CANVAS_W = 520;
     const PAD = 14;
@@ -286,7 +286,7 @@ export const dLeaderboard: SlashCommand = {
       );
       ctx.restore();
 
-      const userLevel = await getTotalLevel(user.total_points, freezeCaps.get(user.discord_id));
+      const userLevel = await getTotalLevel(user.total_points, frozenLevels.get(user.discord_id));
       const levelText = `LV ${userLevel.level}`;
       ctx.font = '12px futura';
       ctx.fillStyle = isFocused ? '#94a3b8' : '#64748b';

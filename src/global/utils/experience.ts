@@ -56,7 +56,7 @@ export async function findXPfromLevel(level: number): Promise<number> {
 
 export async function getTotalLevel(
   totalExp:number,
-  freezeCap?: number | null,
+  frozenLevel?: number | null,
 ):Promise<{ level: number, level_points: number }> {
 // ):Promise<Omit<UserExperience, 'id' | 'user_id' | 'type' | 'category' | 'total_points' | 'last_message_at' | 'last_message_channel' | 'created_at'>> {
   // log.debug('totalLevel', `totalExp: ${totalExp}`);
@@ -74,8 +74,10 @@ export async function getTotalLevel(
   }
   // log.debug(F, `END: totalLevel: ${level} | levelPoints: ${levelPoints} | expToLevel: ${expToLevel}`);
 
-  if (freezeCap !== undefined && freezeCap !== null && level > freezeCap) {
-    return { level: freezeCap, level_points: await expForNextLevel(freezeCap) };
+  // A level freeze pins the DISPLAYED level to this exact value, regardless of the true level.
+  // Display-only: the real level and XP are untouched, and VIP roles / tents still use the true level.
+  if (frozenLevel !== undefined && frozenLevel !== null) {
+    return { level: frozenLevel, level_points: await expForNextLevel(frozenLevel) };
   }
 
   return { level, level_points: levelPoints };

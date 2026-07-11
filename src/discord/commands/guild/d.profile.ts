@@ -430,8 +430,8 @@ export const dProfile: SlashCommand = {
     context.fillText(`${numFormatter(profileData.tokens)}`, 648, 250);
 
     // Level Text (respects a level freeze if one is set for this user)
-    const freezeCap = await getLevelFreeze(targetUser.id);
-    const totalTextData = await getTotalLevel(profileData.totalTextExp + profileData.totalVoiceExp, freezeCap);
+    const frozenLevel = await getLevelFreeze(targetUser.id);
+    const totalTextData = await getTotalLevel(profileData.totalTextExp + profileData.totalVoiceExp, frozenLevel);
     context.fillText(`${totalTextData.level}`, 894, 250);
 
     // Choose and Draw the Level Image
