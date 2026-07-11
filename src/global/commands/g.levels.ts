@@ -5,6 +5,7 @@ import {
 } from '../utils/experience';
 
 import { leaderboardV2 } from './g.leaderboard';
+import { getLevelFreeze } from './g.levelFreeze';
 
 export default levels;
 
@@ -66,6 +67,9 @@ export async function levels(
 ):Promise<LevelData> {
   const leaderboardData = await leaderboardV2();
 
+  // If this user's level is frozen, every level shown here is capped to the freeze.
+  const freezeCap = await getLevelFreeze(discordId);
+
   const results = {
     ALL: {
       TOTAL: {
@@ -117,7 +121,7 @@ export async function levels(
       // log.debug(F, `Type: ${typeKey} Category: ${categoryKey} userRank: ${userRank}`);
       const userExperience = categoryData.find(user => user.discord_id === discordId);
       if (!userExperience) continue;
-      const levelData = await getTotalLevel(userExperience.total_points);
+      const levelData = await getTotalLevel(userExperience.total_points, freezeCap);
       // log.debug(F, `levelData: ${JSON.stringify(levelData, null, 2)}`);
       // log.debug(F, `${discordId} is rank ${userRank} ${type} ${category} \
       // level ${levelData.level} userExperience: ${JSON.stringify(userExperience, null, 2)}`);
