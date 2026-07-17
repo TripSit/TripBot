@@ -11,6 +11,7 @@ import { SlashCommand } from '../../@types/commandDef';
 import { profile, ProfileData } from '../../../global/commands/g.profile';
 import commandContext from '../../utils/context';
 import { expForNextLevel, getTotalLevel } from '../../../global/utils/experience';
+import { getLevelFreeze } from '../../../global/commands/g.levelFreeze';
 import { getPersonaInfo } from '../../../global/commands/g.rpg';
 import getAsset from '../../utils/getAsset';
 import {
@@ -428,8 +429,9 @@ export const dProfile: SlashCommand = {
     // Tokens Text
     context.fillText(`${numFormatter(profileData.tokens)}`, 648, 250);
 
-    // Level Text
-    const totalTextData = await getTotalLevel(profileData.totalTextExp + profileData.totalVoiceExp);
+    // Level Text (respects a level freeze if one is set for this user)
+    const frozenLevel = await getLevelFreeze(targetUser.id);
+    const totalTextData = await getTotalLevel(profileData.totalTextExp + profileData.totalVoiceExp, frozenLevel);
     context.fillText(`${totalTextData.level}`, 894, 250);
 
     // Choose and Draw the Level Image

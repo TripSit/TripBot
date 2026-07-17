@@ -36,6 +36,7 @@ model users {
   mod_thread_id                                             String?
   helper_role_ban                                           Boolean              @default(false)
   contributor_role_ban                                      Boolean              @default(false)
+  level_freeze                                              Int?
   lastfm_username                                           String?
   partner                                                   Boolean?             @default(true)
   supporter                                                 Boolean?             @default(false)

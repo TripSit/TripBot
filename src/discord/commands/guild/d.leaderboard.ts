@@ -8,6 +8,7 @@ import {
   SlashCommandBuilder,
 } from 'discord.js';
 import { leaderboardV2 } from '../../../global/commands/g.leaderboard';
+import { getLevelFreezes } from '../../../global/commands/g.levelFreeze';
 import { getPersonaInfo } from '../../../global/commands/g.rpg';
 import { getTotalLevel } from '../../../global/utils/experience';
 import { SlashCommand } from '../../@types/commandDef';
@@ -150,6 +151,9 @@ export const dLeaderboard: SlashCommand = {
       displayEntries = allValidEntries.slice(0, MAX_DISPLAY);
     }
 
+    // Fetch level freezes for just the users we're about to draw, in one query
+    const frozenLevels = await getLevelFreezes(displayEntries.map(entry => entry.user.discord_id));
+
     const CANVAS_W = 520;
     const PAD = 14;
     const ROW_H = 36;
@@ -282,7 +286,7 @@ export const dLeaderboard: SlashCommand = {
       );
       ctx.restore();
 
-      const userLevel = await getTotalLevel(user.total_points);
+      const userLevel = await getTotalLevel(user.total_points, frozenLevels.get(user.discord_id));
       const levelText = `LV ${userLevel.level}`;
       ctx.font = '12px futura';
       ctx.fillStyle = isFocused ? '#94a3b8' : '#64748b';

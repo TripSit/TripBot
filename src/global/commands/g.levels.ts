@@ -5,6 +5,7 @@ import {
 } from '../utils/experience';
 
 import { leaderboardV2 } from './g.leaderboard';
+import { getLevelFreeze } from './g.levelFreeze';
 
 export default levels;
 
@@ -65,6 +66,9 @@ export async function levels(
   discordId: string,
 ):Promise<LevelData> {
   const leaderboardData = await leaderboardV2();
+
+  // This user's level freeze, if any. Applied to every displayed level in the pass below.
+  const frozenLevel = await getLevelFreeze(discordId);
 
   const results = {
     ALL: {
@@ -130,6 +134,25 @@ export async function levels(
         total_exp: userExperience.total_points,
         rank: userRank + 1, // 0-based to 1-based
       };
+    }
+  }
+
+  // If this user's level is frozen, pin EVERY category's displayed level to the frozen value,
+  // including categories they have no XP in (which the loop above skips). Ranks are left as-is.
+  if (frozenLevel !== null) {
+    const frozenNextLevel = await expForNextLevel(frozenLevel);
+    for (const type of Object.keys(leaderboardData)) {
+      const typeKey = type as keyof typeof leaderboardData;
+      for (const category of Object.keys(leaderboardData[typeKey])) {
+        const existing = results[typeKey][category];
+        results[typeKey][category] = {
+          level: frozenLevel,
+          level_exp: frozenNextLevel,
+          nextLevel: frozenNextLevel,
+          total_exp: existing ? existing.total_exp : 0,
+          rank: existing ? existing.rank : 0,
+        };
+      }
     }
   }
 
