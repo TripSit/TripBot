@@ -10,6 +10,7 @@ declare global {
       DISCORD_CLIENT_TOKEN: string;
       DISCORD_CLIENT_SECRET: string | undefined;
       DISCORD_CLIENT_REDIRECT_URI: string | undefined;
+      LEVEL_FREEZE: string | undefined;
 
       GITHUB_TOKEN: string | undefined;
       RAPID_TOKEN: string | undefined;

@@ -268,7 +268,7 @@ export const dLeaderboard: SlashCommand = {
       );
       ctx.restore();
 
-      const userLevel = await getTotalLevel(user.total_points);
+      const userLevel = await getTotalLevel(user.total_points, user.discord_id);
       const levelText = `LV ${userLevel.level}`;
       ctx.font = '14px futura';
       ctx.fillStyle = isFocused ? COLORS.levelFocus : COLORS.level;

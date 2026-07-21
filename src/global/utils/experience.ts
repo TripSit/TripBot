@@ -11,6 +11,8 @@ import {
   experience_category, experience_type, user_experience,
 } from '@db/tripbot';
 
+import { MAX_EXPERIENCE_LEVEL } from './levelFreeze';
+
 const F = f(__filename); // eslint-disable-line
 
 export default experience;
@@ -51,8 +53,18 @@ export async function findXPfromLevel(level: number): Promise<number> {
   return totalXP;
 }
 
+/**
+ * Returns the LEVEL_FREEZE level cap for a Discord user, or undefined if they aren't frozen.
+ * XP keeps accruing while frozen; only the surfaced/stored level is capped, so removing the
+ * freeze restores the true level instantly.
+ */
+export function freezeCapFor(discordId?: string): number | undefined {
+  return discordId === undefined ? undefined : env.LEVEL_FREEZE[discordId];
+}
+
 export async function getTotalLevel(
   totalExp:number,
+  discordId?:string,
 ):Promise<{ level: number, level_points: number }> {
 // ):Promise<Omit<UserExperience, 'id' | 'user_id' | 'type' | 'category' | 'total_points' | 'last_message_at' | 'last_message_channel' | 'created_at'>> {
   // log.debug('totalLevel', `totalExp: ${totalExp}`);
@@ -69,6 +81,11 @@ export async function getTotalLevel(
     expToLevel = newExpToLevel;
   }
   // log.debug(F, `END: totalLevel: ${level} | levelPoints: ${levelPoints} | expToLevel: ${expToLevel}`);
+  const cap = freezeCapFor(discordId);
+  if (cap !== undefined && level > cap) {
+    // Frozen: show the capped level with a full bar.
+    return { level: cap, level_points: await expForNextLevel(cap) };
+  }
   return { level, level_points: levelPoints };
 }
 
@@ -101,12 +118,15 @@ export async function giveMilestone(
   const emojis = [...announcementEmojis].sort(() => 0.5 - Math.random()).slice(0, 3); // Sort the array
 
   // Pretend that the total exp would get the same exp as the category
-  // Get the total level
-  const totalData = await getTotalLevel(totalExp);
+  // Get the total level (capped if this user is frozen, so VIP roles never exceed the cap)
+  const totalData = await getTotalLevel(totalExp, member.id);
   // log.debug(F, `${member.displayName} is total Text level ${totalData.level}`);
 
-  // Determine the first digit of the level
-  const levelTier = Math.floor(totalData.level / 10);
+  // Levels above the supported range retain the highest available VIP role.
+  const levelTier = Math.min(
+    Math.floor(totalData.level / 10),
+    MAX_EXPERIENCE_LEVEL / 10,
+  );
   // log.debug(F, `levelTier: ${levelTier}`);
 
   const roleDefs = {
@@ -160,35 +180,19 @@ export async function giveMilestone(
   const role = await member.guild?.roles.fetch(roleDefs[levelTier as keyof typeof roleDefs].role) as Role;
   // log.debug(F, `Role: ${role.name} (${role.id})`);
 
-  if (levelTier >= 1) {
-    // Get a list of roleDefs below the users current tier
-    const previousRoles = Object.keys(roleDefs)
-      .filter(key => Number(key) < levelTier)
-      .map(key => roleDefs[parseInt(key, 10) as keyof typeof roleDefs].role);
+  // A level freeze can lower the effective tier, so strip tier roles ABOVE the current one too
+  // (and remember it: adding the lower role then is a downgrade, not worth celebrating).
+  const hadHigherRole = Object.entries(roleDefs)
+    .some(([key, def]) => Number(key) > levelTier && member.roles.cache.has(def.role));
+  await Promise.all(Object.entries(roleDefs)
+    .filter(([key, def]) => Number(key) !== levelTier && member.roles.cache.has(def.role))
+    .map(([, def]) => member.roles.remove(def.role)));
 
-    // Remove all previous roles
-    previousRoles.forEach(async previousRole => {
-      const removeRole = await member.guild?.roles.fetch(previousRole) as Role;
-      if (member.roles.cache.has(removeRole.id)) {
-        // log.debug(F, `Removing ${member.displayName} role ${removeRole.name} (${removeRole.id})`);
-        member.roles.remove(removeRole);
-      }
-    });
-
-    // const previousRole = await member.guild?.roles.fetch(
-    //   roleDefs[(levelTier - 1) as keyof typeof roleDefs].role,
-    // ) as Role;
-    // // log.debug(F, `Previous role: ${previousRole.name} (${previousRole.id})`);
-    // if (member?.roles.cache.has(previousRole.id)) {
-    // log.debug(F, `Removing ${member} role ${previousRole.name} (${previousRole.id})`);
-    //   member?.roles.remove(previousRole);
-    // }
-    // Check if the member already has the resulting role, and if not, add it
-  }
+  // Check if the member already has the resulting role, and if not, add it
   if (!member.roles.cache.has(role.id)) {
     // log.debug(F, `Giving ${member.displayName} role ${role.name} (${role.id})`);
     await member.roles.add(role);
-    if (levelTier >= 2) {
+    if (levelTier >= 2 && !hadHigherRole) {
       const channel = await member.guild?.channels.fetch(env.CHANNEL_VIPLOUNGE) as TextChannel;
       await channel.send(`${emojis} **${member} has reached Total level ${levelTier}0!** ${emojis}`);
     }
@@ -211,6 +215,47 @@ async function sendMilestoneAnnouncement(
   await announceChannel.send(
     `${emojis} **${member} has reached ${categoryName} ${typeName} level ${level}!** ${emojis}`,
   );
+}
+
+/**
+ * Calculate how many levels a user will gain with given XP.
+ * Banked XP is consumed through the configured cap in one pass.
+ */
+async function calculateLevelUps(
+  startLevel: number,
+  totalLevelPoints: number,
+  maxLevel = MAX_EXPERIENCE_LEVEL,
+): Promise<{ finalLevel: number; remainingPoints: number; levelsGained: number }> {
+  let currentLevel = startLevel;
+  let remainingPoints = totalLevelPoints;
+  let levelsGained = 0;
+
+  const maxPossibleLevel = Math.min(maxLevel, MAX_EXPERIENCE_LEVEL);
+  const levelRequirements: number[] = [];
+
+  for (let level = startLevel; level < maxPossibleLevel; level += 1) {
+    // eslint-disable-next-line no-await-in-loop
+    const requirement = await expForNextLevel(level);
+    levelRequirements.push(requirement);
+  }
+
+  let requirementIndex = 0;
+  while (
+    requirementIndex < levelRequirements.length
+    && remainingPoints >= levelRequirements[requirementIndex]
+    && currentLevel < maxPossibleLevel
+  ) {
+    remainingPoints -= levelRequirements[requirementIndex];
+    currentLevel += 1;
+    levelsGained += 1;
+    requirementIndex += 1;
+  }
+
+  return {
+    finalLevel: currentLevel,
+    remainingPoints,
+    levelsGained,
+  };
 }
 
 /**
@@ -281,8 +326,7 @@ export async function experience(
 
   const expInterval = type === 'TEXT' ? textExpInterval : voiceExpInterval;
 
-  // Determine how many exp points are needed to level up
-  const expToLevel = await expForNextLevel(experienceData.level);
+  const freezeCap = freezeCapFor(member.id);
 
   // If the user has been awarded voice exp in the last 5 minutes, do nothing
   if (experienceData.last_message_at.getTime() + expInterval > new Date().getTime()) {
@@ -296,16 +340,25 @@ export async function experience(
   experienceData.level_points += expPoints;
   experienceData.total_points += expPoints;
 
-  // log.debug(F, `${member.displayName} earned ${expPoints} ${experienceData.type} exp, has ${experienceData.level_points} of ${expToLevel} to reach lvl ${experienceData.level + 1}`);
+  const levelUpResult = await calculateLevelUps(
+    experienceData.level,
+    experienceData.level_points,
+    freezeCap ?? MAX_EXPERIENCE_LEVEL,
+  );
 
-  if (expToLevel <= experienceData.level_points) {
-    experienceData.level += 1;
+  if (levelUpResult.levelsGained > 0) {
+    const startLevel = experienceData.level;
+    experienceData.level = levelUpResult.finalLevel;
+    experienceData.level_points = levelUpResult.remainingPoints;
     const channelTripbotLogs = await channel.guild.channels.fetch(env.CHANNEL_BOTLOG) as TextChannel;
-    await channelTripbotLogs.send(stripIndents`${member.displayName} has leveled up to ${categoryName} ${typeName} level ${experienceData.level}!`);
-    // log.debug(F, `${member.displayName} has leveled up to ${categoryName} ${typeName} level ${experienceData.level}!`);
-    experienceData.level_points -= expToLevel;
+    const levelMessage = levelUpResult.levelsGained === 1
+      ? `${member.displayName} has leveled up to ${categoryName} ${typeName} level ${experienceData.level}!`
+      : `${member.displayName} gained ${levelUpResult.levelsGained} ${categoryName} ${typeName} levels and reached level ${experienceData.level}!`;
+    await channelTripbotLogs.send(stripIndents`${levelMessage}`);
 
-    if (experienceData.level % 10 === 0) {
+    // Send at most one milestone announcement when banked XP restores multiple levels.
+    const highestMilestone = Math.floor(experienceData.level / 10) * 10;
+    if (highestMilestone > startLevel) {
       let id = '' as string;
       // log.debug(F, `category: ${category}`);
       // log.debug(F, `experienceCategory: ${experienceCategory}`);
@@ -321,7 +374,7 @@ export async function experience(
         id = env.CHANNEL_BOTSPAM;
       }
       // log.debug(F, `id: ${id}`);
-      sendMilestoneAnnouncement(member, id, experienceData.level, categoryName, typeName);
+      await sendMilestoneAnnouncement(member, id, highestMilestone, categoryName, typeName);
     }
   }
 
@@ -343,48 +396,6 @@ export async function experience(
 
   // Try to give the appropriate role
   await giveMilestone(member);
-}
-
-/**
- * Calculate how many levels a user will gain with given XP
- * This pre-calculates everything to avoid async issues
- */
-async function calculateLevelUps(
-  startLevel: number,
-  totalLevelPoints: number,
-): Promise<{ finalLevel: number; remainingPoints: number; levelsGained: number }> {
-  let currentLevel = startLevel;
-  let remainingPoints = totalLevelPoints;
-  let levelsGained = 0;
-
-  // Pre-calculate level requirements up to a reasonable limit
-  const maxPossibleLevel = Math.min(startLevel + 50, 100); // Limit to prevent infinite loops
-  const levelRequirements: number[] = [];
-
-  for (let level = startLevel; level < maxPossibleLevel; level += 1) {
-    // eslint-disable-next-line no-await-in-loop
-    const requirement = await expForNextLevel(level);
-    levelRequirements.push(requirement);
-  }
-
-  // Now calculate level ups without async calls
-  let requirementIndex = 0;
-  while (
-    requirementIndex < levelRequirements.length
-    && remainingPoints >= levelRequirements[requirementIndex]
-    && currentLevel < 100
-  ) {
-    remainingPoints -= levelRequirements[requirementIndex];
-    currentLevel += 1;
-    levelsGained += 1;
-    requirementIndex += 1;
-  }
-
-  return {
-    finalLevel: currentLevel,
-    remainingPoints,
-    levelsGained,
-  };
 }
 
 /**
@@ -495,9 +506,12 @@ export async function awardGitHubXP(
   const newTotalPoints = experienceData.total_points + xpAmount;
 
   // Calculate level ups
+  // Capping via maxLevel (instead of clamping afterwards) keeps the unspent XP banked in
+  // remainingPoints and never demotes a stored level already above the cap.
   const levelUpResult = await calculateLevelUps(
     experienceData.level,
     newLevelPoints,
+    Math.min(MAX_EXPERIENCE_LEVEL, freezeCapFor(member.id) ?? MAX_EXPERIENCE_LEVEL),
   );
 
   // Update the database

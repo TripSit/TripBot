@@ -117,7 +117,7 @@ export async function levels(
       // log.debug(F, `Type: ${typeKey} Category: ${categoryKey} userRank: ${userRank}`);
       const userExperience = categoryData.find(user => user.discord_id === discordId);
       if (!userExperience) continue;
-      const levelData = await getTotalLevel(userExperience.total_points);
+      const levelData = await getTotalLevel(userExperience.total_points, discordId);
       // log.debug(F, `levelData: ${JSON.stringify(levelData, null, 2)}`);
       // log.debug(F, `${discordId} is rank ${userRank} ${type} ${category} \
       // level ${levelData.level} userExperience: ${JSON.stringify(userExperience, null, 2)}`);
