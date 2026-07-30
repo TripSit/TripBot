@@ -47,6 +47,7 @@ const COLORS = {
   level: '#8f8f8f',
   levelFocus: '#dcdcdc',
   pageInfo: '#8a8a8a',
+  avatarFallback: '#3a3a3a',
 };
 
 export const dLeaderboard: SlashCommand = {
@@ -251,21 +252,27 @@ export const dLeaderboard: SlashCommand = {
       ctx.font = `${rankFontSize}px futura`;
       ctx.fillText(`#${rank}`, rankRight, rowCenterY);
 
-      const avatar = await Canvas.loadImage(
-        member.displayAvatarURL({ extension: 'png', size: 64 }),
-      );
       ctx.save();
       ctx.beginPath();
       ctx.arc(avatarCx, rowCenterY, AVATAR_R, 0, Math.PI * 2, true);
       ctx.closePath();
       ctx.clip();
-      ctx.drawImage(
-        avatar,
-        avatarCx - AVATAR_R,
-        rowCenterY - AVATAR_R,
-        AVATAR_R * 2,
-        AVATAR_R * 2,
-      );
+      try {
+        const avatar = await Canvas.loadImage(
+          member.displayAvatarURL({ extension: 'png', size: 64, forceStatic: true }),
+        );
+        ctx.drawImage(
+          avatar,
+          avatarCx - AVATAR_R,
+          rowCenterY - AVATAR_R,
+          AVATAR_R * 2,
+          AVATAR_R * 2,
+        );
+      } catch (error) {
+        log.debug(F, `Failed to load avatar for ${member.id}: ${error}`);
+        ctx.fillStyle = COLORS.avatarFallback;
+        ctx.fillRect(avatarCx - AVATAR_R, rowCenterY - AVATAR_R, AVATAR_R * 2, AVATAR_R * 2);
+      }
       ctx.restore();
 
       const userLevel = await getTotalLevel(user.total_points);
