@@ -13,6 +13,7 @@ import {
   SlashCommandBuilder,
 } from 'discord.js';
 import { leaderboardV2 } from '../../../global/commands/g.leaderboard';
+import { getLevelFreezes } from '../../../global/commands/g.levelFreeze';
 import { getPersonaInfo } from '../../../global/commands/g.rpg';
 import { getTotalLevel } from '../../../global/utils/experience';
 import { SlashCommand } from '../../@types/commandDef';
@@ -47,7 +48,6 @@ const COLORS = {
   level: '#8f8f8f',
   levelFocus: '#dcdcdc',
   pageInfo: '#8a8a8a',
-  avatarFallback: '#3a3a3a',
 };
 
 export const dLeaderboard: SlashCommand = {
@@ -159,6 +159,10 @@ export const dLeaderboard: SlashCommand = {
       }
     }
 
+    // Fetch level freezes for every ranked user in one query, so paging between
+    // pages doesn't re-query the DB
+    const frozenLevels = await getLevelFreezes(allValidEntries.map(entry => entry.user.discord_id));
+
     const PAD = 16;
     const ROW_H = 42;
     const ROW_GAP = 6;
@@ -252,30 +256,24 @@ export const dLeaderboard: SlashCommand = {
       ctx.font = `${rankFontSize}px futura`;
       ctx.fillText(`#${rank}`, rankRight, rowCenterY);
 
+      const avatar = await Canvas.loadImage(
+        member.displayAvatarURL({ extension: 'png', size: 64 }),
+      );
       ctx.save();
       ctx.beginPath();
       ctx.arc(avatarCx, rowCenterY, AVATAR_R, 0, Math.PI * 2, true);
       ctx.closePath();
       ctx.clip();
-      try {
-        const avatar = await Canvas.loadImage(
-          member.displayAvatarURL({ extension: 'png', size: 64, forceStatic: true }),
-        );
-        ctx.drawImage(
-          avatar,
-          avatarCx - AVATAR_R,
-          rowCenterY - AVATAR_R,
-          AVATAR_R * 2,
-          AVATAR_R * 2,
-        );
-      } catch (error) {
-        log.debug(F, `Failed to load avatar for ${member.id}: ${error}`);
-        ctx.fillStyle = COLORS.avatarFallback;
-        ctx.fillRect(avatarCx - AVATAR_R, rowCenterY - AVATAR_R, AVATAR_R * 2, AVATAR_R * 2);
-      }
+      ctx.drawImage(
+        avatar,
+        avatarCx - AVATAR_R,
+        rowCenterY - AVATAR_R,
+        AVATAR_R * 2,
+        AVATAR_R * 2,
+      );
       ctx.restore();
 
-      const userLevel = await getTotalLevel(user.total_points);
+      const userLevel = await getTotalLevel(user.total_points, frozenLevels.get(user.discord_id));
       const levelText = `LV ${userLevel.level}`;
       ctx.font = '14px futura';
       ctx.fillStyle = isFocused ? COLORS.levelFocus : COLORS.level;

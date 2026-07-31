@@ -1,19 +1,22 @@
 /* eslint-disable max-len */
 
 import {
-  TextChannel,
-  Role,
-  VoiceChannel,
-  GuildMember,
-} from 'discord.js';
-import { stripIndents } from 'common-tags';
-import {
   experience_category, experience_type, user_experience,
 } from '@db/tripbot';
+import { stripIndents } from 'common-tags';
+import {
+  GuildMember,
+  Role,
+  TextChannel,
+  VoiceChannel,
+} from 'discord.js';
 
 const F = f(__filename); // eslint-disable-line
 
 export default experience;
+
+export const MIN_EXPERIENCE_LEVEL = 0;
+export const MAX_EXPERIENCE_LEVEL = 100;
 
 // Get random value between 15 and 25
 const expPoints = env.NODE_ENV === 'production'
@@ -53,9 +56,16 @@ export async function findXPfromLevel(level: number): Promise<number> {
 
 export async function getTotalLevel(
   totalExp:number,
+  frozenLevel?: number | null,
 ):Promise<{ level: number, level_points: number }> {
 // ):Promise<Omit<UserExperience, 'id' | 'user_id' | 'type' | 'category' | 'total_points' | 'last_message_at' | 'last_message_channel' | 'created_at'>> {
   // log.debug('totalLevel', `totalExp: ${totalExp}`);
+
+  // Level freeze is display-only: return the pinned level without computing the true one.
+  if (frozenLevel !== undefined && frozenLevel !== null) {
+    return { level: frozenLevel, level_points: await expForNextLevel(frozenLevel) };
+  }
+
   let level = 0;
   let levelPoints = totalExp;
   let expToLevel = await expForNextLevel(level);
@@ -69,7 +79,24 @@ export async function getTotalLevel(
     expToLevel = newExpToLevel;
   }
   // log.debug(F, `END: totalLevel: ${level} | levelPoints: ${levelPoints} | expToLevel: ${expToLevel}`);
+
   return { level, level_points: levelPoints };
+}
+
+export async function getUserTotalLevel(discordId: string): Promise<number> {
+  const userData = await db.users.findUnique({
+    where: { discord_id: discordId },
+    select: { user_experience: { select: { category: true, total_points: true } } },
+  });
+  if (!userData) {
+    return 0;
+  }
+
+  const totalExp = userData.user_experience
+    .filter(exp => exp.category !== 'TOTAL' && exp.category !== 'IGNORED')
+    .reduce((acc, exp) => acc + exp.total_points, 0);
+
+  return (await getTotalLevel(totalExp)).level;
 }
 
 export async function giveMilestone(
@@ -101,7 +128,8 @@ export async function giveMilestone(
   const emojis = [...announcementEmojis].sort(() => 0.5 - Math.random()).slice(0, 3); // Sort the array
 
   // Pretend that the total exp would get the same exp as the category
-  // Get the total level
+  // Get the total level (always the TRUE level — a level freeze is display-only and must never
+  // affect VIP roles, which also gate level-locked tent access).
   const totalData = await getTotalLevel(totalExp);
   // log.debug(F, `${member.displayName} is total Text level ${totalData.level}`);
 
