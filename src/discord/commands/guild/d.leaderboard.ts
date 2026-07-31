@@ -14,7 +14,6 @@ import {
 } from 'discord.js';
 import { leaderboardV2 } from '../../../global/commands/g.leaderboard';
 import { getLevelFreezes } from '../../../global/commands/g.levelFreeze';
-import { getPersonaInfo } from '../../../global/commands/g.rpg';
 import { getTotalLevel } from '../../../global/utils/experience';
 import { SlashCommand } from '../../@types/commandDef';
 import {
@@ -48,6 +47,7 @@ const COLORS = {
   level: '#8f8f8f',
   levelFocus: '#dcdcdc',
   pageInfo: '#8a8a8a',
+  avatarFallback: '#3a3a3a',
 };
 
 export const dLeaderboard: SlashCommand = {
@@ -111,7 +111,7 @@ export const dLeaderboard: SlashCommand = {
           .catch(() => null)))
       : null;
 
-    const leaderboardData = await leaderboardV2();
+    const leaderboardData = await leaderboardV2(typeChoice, categoryChoice);
     const typeData = leaderboardData[typeChoice.toUpperCase() as keyof typeof leaderboardData];
     const categoryData = typeData
       ? (typeData[categoryChoice.toUpperCase() as keyof typeof typeData] ?? [])
@@ -121,11 +121,21 @@ export const dLeaderboard: SlashCommand = {
     // find them further down the leaderboard. 2× the normal limit as a buffer
     // for users who have left the server.
     const fetchLimit = focusMember ? 100 : 50;
-    await Promise.all(
-      categoryData
-        .slice(0, fetchLimit)
-        .map(u => interaction.guild?.members.fetch(u.discord_id).catch(() => null)),
-    );
+    const candidateIds = categoryData
+      .slice(0, fetchLimit)
+      .map(u => u.discord_id)
+      .filter(Boolean);
+    if (candidateIds.length > 0) {
+      await interaction.guild.members
+        .fetch({ user: candidateIds })
+        .catch(async () => {
+          log.debug(F, 'Bulk member fetch failed, falling back to individual fetches');
+          await Promise.all(
+            candidateIds.map(id => interaction.guild?.members.fetch(id).catch(() => null)),
+          );
+          return null;
+        });
+    }
 
     // Build a ranked list — rank is position among guild members, not DB rows
     type ValidEntry = {
@@ -159,9 +169,34 @@ export const dLeaderboard: SlashCommand = {
       }
     }
 
-    // Fetch level freezes for every ranked user in one query, so paging between
-    // pages doesn't re-query the DB
-    const frozenLevels = await getLevelFreezes(allValidEntries.map(entry => entry.user.discord_id));
+    const rankedIds = allValidEntries.map(entry => entry.user.discord_id);
+
+    const frozenLevels = await getLevelFreezes(rankedIds);
+
+    const equippedByDiscordId = new Map<string, { font?: string; background?: string }>();
+    const personaRows = await db.users.findMany({
+      where: { discord_id: { in: rankedIds } },
+      select: {
+        discord_id: true,
+        personas: {
+          select: {
+            rpg_inventory: {
+              where: { equipped: true, effect: { in: ['font', 'background'] } },
+              select: { effect: true, value: true },
+            },
+          },
+        },
+      },
+    });
+    for (const row of personaRows) {
+      if (!row.discord_id || !row.personas) continue;
+      const equipped: { font?: string; background?: string } = {};
+      for (const item of row.personas.rpg_inventory) {
+        if (item.effect === 'font') equipped.font = item.value;
+        if (item.effect === 'background') equipped.background = item.value;
+      }
+      equippedByDiscordId.set(row.discord_id, equipped);
+    }
 
     const PAD = 16;
     const ROW_H = 42;
@@ -190,6 +225,7 @@ export const dLeaderboard: SlashCommand = {
       colX: number,
       rowY: number,
       isFocused: boolean,
+      avatar: Canvas.Image | null,
     ) => {
       const { user, member, rank } = entry;
       const rowCenterY = rowY + ROW_H / 2;
@@ -219,25 +255,24 @@ export const dLeaderboard: SlashCommand = {
         ctx.stroke();
       }
 
-      const personaData = await getPersonaInfo(user.discord_id);
+      const equipped = equippedByDiscordId.get(user.discord_id);
       let userFont = 'futura';
-      if (personaData) {
-        const inventoryData = await db.rpg_inventory.findMany({
-          where: { persona_id: personaData.id },
-        });
-        const equippedFont = inventoryData.find(
-          item => item.equipped === true && item.effect === 'font',
-        );
-        const equippedBackground = inventoryData.find(
-          item => item.equipped === true && item.effect === 'background',
-        );
-        if (equippedFont) {
-          await getAsset(equippedFont.value);
-          userFont = equippedFont.value;
+      if (equipped?.font) {
+        try {
+          await getAsset(equipped.font);
+          userFont = equipped.font;
+        } catch (error) {
+          log.debug(F, `Failed to load font ${equipped.font}: ${error}`);
         }
-        if (equippedBackground) {
-          const imagePath = await getAsset(equippedBackground.value);
-          const bg = await Canvas.loadImage(imagePath);
+      }
+      if (equipped?.background) {
+        let bg = null;
+        try {
+          bg = await Canvas.loadImage(await getAsset(equipped.background));
+        } catch (error) {
+          log.debug(F, `Failed to load background ${equipped.background}: ${error}`);
+        }
+        if (bg) {
           ctx.save();
           ctx.globalCompositeOperation = 'lighter';
           ctx.globalAlpha = 0.05;
@@ -256,21 +291,23 @@ export const dLeaderboard: SlashCommand = {
       ctx.font = `${rankFontSize}px futura`;
       ctx.fillText(`#${rank}`, rankRight, rowCenterY);
 
-      const avatar = await Canvas.loadImage(
-        member.displayAvatarURL({ extension: 'png', size: 64 }),
-      );
       ctx.save();
       ctx.beginPath();
       ctx.arc(avatarCx, rowCenterY, AVATAR_R, 0, Math.PI * 2, true);
       ctx.closePath();
       ctx.clip();
-      ctx.drawImage(
-        avatar,
-        avatarCx - AVATAR_R,
-        rowCenterY - AVATAR_R,
-        AVATAR_R * 2,
-        AVATAR_R * 2,
-      );
+      if (avatar) {
+        ctx.drawImage(
+          avatar,
+          avatarCx - AVATAR_R,
+          rowCenterY - AVATAR_R,
+          AVATAR_R * 2,
+          AVATAR_R * 2,
+        );
+      } else {
+        ctx.fillStyle = COLORS.avatarFallback;
+        ctx.fillRect(avatarCx - AVATAR_R, rowCenterY - AVATAR_R, AVATAR_R * 2, AVATAR_R * 2);
+      }
       ctx.restore();
 
       const userLevel = await getTotalLevel(user.total_points, frozenLevels.get(user.discord_id));
@@ -298,7 +335,13 @@ export const dLeaderboard: SlashCommand = {
       ctx.fillText(userName, contentX, rowCenterY);
     };
 
+    const pageCache = new Map<number, Buffer>();
+
     const renderPage = async (pageIndex: number): Promise<AttachmentBuilder> => {
+      const attachmentName = `TS_Leaderboard_${categoryName}_${formattedDate}.png`;
+      const cached = pageCache.get(pageIndex);
+      if (cached) return new AttachmentBuilder(cached, { name: attachmentName });
+
       const pageEntries = allValidEntries.slice(
         pageIndex * PAGE_SIZE,
         pageIndex * PAGE_SIZE + PAGE_SIZE,
@@ -341,6 +384,13 @@ export const dLeaderboard: SlashCommand = {
         ctx.fillText(`${pageIndex + 1} / ${totalPages}`, CANVAS_W - PAD, 22);
       }
 
+      const avatars = await Promise.all(pageEntries.map(entry => Canvas.loadImage(
+        entry.member.displayAvatarURL({ extension: 'png', size: 64, forceStatic: true }),
+      ).catch(error => {
+        log.debug(F, `Failed to load avatar for ${entry.member.id}: ${error}`);
+        return null;
+      })));
+
       for (let i = 0; i < pageEntries.length; i += 1) {
         const entry = pageEntries[i];
         const isLeftColumn = i < ROWS_PER_COL;
@@ -348,12 +398,13 @@ export const dLeaderboard: SlashCommand = {
         const rowIndex = isLeftColumn ? i : i - ROWS_PER_COL;
         const rowY = ROWS_TOP + rowIndex * ROW_PITCH;
         const isFocused = focusMember ? entry.member.id === focusMember.id : false;
-        await drawEntry(ctx, canvasObj, entry, colX, rowY, isFocused); // eslint-disable-line no-await-in-loop
+        // eslint-disable-next-line no-await-in-loop
+        await drawEntry(ctx, canvasObj, entry, colX, rowY, isFocused, avatars[i]);
       }
 
-      return new AttachmentBuilder(await canvasObj.encode('png'), {
-        name: `TS_Leaderboard_${categoryName}_${formattedDate}.png`,
-      });
+      const encoded = await canvasObj.encode('png');
+      pageCache.set(pageIndex, encoded);
+      return new AttachmentBuilder(encoded, { name: attachmentName });
     };
 
     const buildRow = (current: number) => new ActionRowBuilder<ButtonBuilder>().addComponents(
