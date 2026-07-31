@@ -15,7 +15,10 @@ type LeaderboardData = {
   VOICE: Record<experience_category | 'TOTAL', LeaderboardList>;
 };
 
-export async function leaderboardV2(): Promise<LeaderboardData> {
+export async function leaderboardV2(
+  onlyType?: experience_type | 'ALL',
+  onlyCategory?: experience_category | 'TOTAL',
+): Promise<LeaderboardData> {
   // Function to initialize leaderboard data structure for each type
   const initLeaderboardData = () => ({
     TOTAL: [],
@@ -34,20 +37,22 @@ export async function leaderboardV2(): Promise<LeaderboardData> {
   };
 
   // Define categories, including 'TOTAL' as a special category
-  const categories: (experience_category | 'TOTAL')[] = [
+  const allCategories: (experience_category | 'TOTAL')[] = [
     'TOTAL',
     experience_category.TRIPSITTER,
     experience_category.GENERAL,
     experience_category.DEVELOPER,
     experience_category.TEAM,
   ];
+  const categories = allCategories.filter(category => !onlyCategory || category === onlyCategory);
 
   // Define types, including 'ALL' as a special type
-  const types: (experience_type | 'ALL')[] = [
+  const allTypes: (experience_type | 'ALL')[] = [
     'ALL',
     experience_type.TEXT,
     experience_type.VOICE,
   ];
+  const types = allTypes.filter(type => !onlyType || type === onlyType);
 
   // Create an array of promises for each type-category combination
   const queries = types.flatMap(type => categories.map(async category => {

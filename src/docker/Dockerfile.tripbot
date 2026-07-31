@@ -29,10 +29,7 @@ RUN npx prisma generate --schema=./src/prisma/moodle/schema.prisma
 RUN npx tsc
 RUN npx tsc-alias
 RUN npx tsc --project tsconfig.prisma.json
-# Remove the bunk .js file. We have a different mjs file for prisma now.
-# This has to happen *after* the tsconfig.prisma.json build: that config emits
-# CommonJS (package.json has no "type": "module"), so it re-creates
-# prisma.config.js, and Prisma picks that over prisma.config.mjs and dies on it.
+# Remove prisma.config.js emitted by tsc; Prisma prefers it over prisma.config.mjs and fails (must run after the tsconfig.prisma.json build).
 RUN rm -f ./build/prisma.config.js ./build/prisma.config.js.map
 
 # 4. PRUNE: Remove devDependencies (this deletes the clients we just made)
