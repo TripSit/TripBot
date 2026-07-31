@@ -1,14 +1,14 @@
 # TripBot 🤖 <br>*(TripSit-Discord-Bot)*
 
-## Table of contents 
+## Table of contents
 + [About](#about)
 + [How to use](#invite)
 + [Contribute](#contribute)
 + [Authors](#contributors)
 
 ## About
-TripBot is multi-platform open-source bot that is a major part of the **[TripSit](https://tripsit.me)** project. 
-It is primarily a discord bot, but has been built modularly to allow for easy expansion to other platforms such as IRC, Matrix, and Telegram. 
+TripBot is multi-platform open-source bot that is a major part of the **[TripSit](https://tripsit.me)** project.
+It is primarily a discord bot, but has been built modularly to allow for easy expansion to other platforms such as IRC, Matrix, and Telegram.
 This bot's code is open source in the interest of helping people learn code, and to encourage people to contribute to the project.
 
 The goals with this bot are:
@@ -62,7 +62,7 @@ Install the dependencies locally so that VSCode can use them for linting and int
 
 ```npm install```
 
-**Start the bot** 
+**Start the bot**
 
 This will start up the tripbot_database, build the bot, and run the bot in a container.
 The database container just basically sits there being a stable database, you don't need to check it's logs or anything.
@@ -141,15 +141,15 @@ If you wanted to do this in telegram, you would figure out how to take input val
 #### Troubleshooting Command Issues ####
 **Moderation Tools**:
 
-To use moderation commands in your TripBot instance, you must have the Moderator role on the development server. 
+To use moderation commands in your TripBot instance, you must have the Moderator role on the development server.
 
 If you need this role, please ask Moonbear.
 
 **AI Features**:
 
-To use AI features in your TripBot instance, you need to do a few things. 
+To use AI features in your TripBot instance, you need to do a few things.
 
-First, you will need the Developer role on the development server. 
+First, you will need the Developer role on the development server.
 
 Once again, if you need this role, please ask Moonbear.
 
@@ -173,22 +173,26 @@ To make changes to the database, you need to use the Prisma ORM and make changes
 
 Run the ```db:migrateDev``` to create new migration files based on the changes you made to the schema.prisma file.
 
-When these migration files are pushed to production, the database will be updated automatically.
+When these migration files are pushed to production, the database is updated automatically: the
+production branch of `src/docker/entrypoint.sh` runs `prisma migrate deploy` before starting the bot,
+and refuses to start if the migrations fail. Note that CI (`PushToMain.yml`) does not apply
+migrations - they are applied by the container on startup, so a migration only reaches production
+when the image is rebuilt and the container is recreated.
 
 Prisma documentation is excellent, check out guides like: https://www.prisma.io/docs/concepts/components/prisma-migrate/migrate-development-production
 
 ---
 #### Handling unexpected migration issues ####
-If your database changes aren't reflecting locally after editing the Prisma schema: 
+If your database changes aren't reflecting locally after editing the Prisma schema:
 
-Generate and apply migrations:  
-  ```npx prisma migrate dev --name your_migration_name```  
-  ```npx prisma generate```  
-  ```npx prisma migrate deploy```  
+Generate and apply migrations:
+  ```npx prisma migrate dev --name your_migration_name```
+  ```npx prisma generate```
+  ```npx prisma migrate deploy```
 
 If VSCode isn't recognizing the new tables when writing code for them, press ```Ctrl/CMD Shift P: Restart TypeScript Server```.
 
-if you are on Windows, you may need to run the above commands within the docker containers command execution context, after which you may need to run ```npx prisma generate``` within your VSCode IDE or otherwise 
+if you are on Windows, you may need to run the above commands within the docker containers command execution context, after which you may need to run ```npx prisma generate``` within your VSCode IDE or otherwise
 
 ---
 
