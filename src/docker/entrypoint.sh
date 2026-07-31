@@ -28,9 +28,11 @@ else
   done
   cd /workspaces/tripbot
 
-  echo "Deploying commands"
-  node /workspaces/tripbot/build/src/discord/utils/commandDeploy.js deployCommands \
-    || echo "Command deploy failed - starting the bot anyway." >&2
+  if [ "${DEPLOY_DISCORD_COMMANDS_ON_START:-}" = "true" ]; then
+    echo "Deploying commands"
+    node /workspaces/tripbot/build/src/discord/utils/commandDeploy.js deployCommands \
+      || echo "Command deploy failed - starting the bot anyway." >&2
+  fi
 
   pm2-runtime /workspaces/tripbot/build/src/start.js
 fi
