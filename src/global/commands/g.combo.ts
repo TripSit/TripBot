@@ -57,7 +57,21 @@ export async function combo(
   let drugBName = drugBInput.toLowerCase();
 
   // Because users can input whatever they want, we need to clean the input
-  function cleanDrugName(drugName: string): string {
+  function cleanDrugName(drugNameInput: string): string {
+    let drugName = drugNameInput;
+
+    // Resolve aliases (e.g. 'dxm') to their canonical drug database key,
+    // same pattern as g.drug.ts, before any of the key-based lookups below.
+    if (!Object.keys(drugData).includes(drugName.toLowerCase())) {
+      const canonicalKey = Object.keys(drugData).find(
+        key => (drugData[key] as Drug).aliases?.map(alias => alias.toLowerCase())
+          .includes(drugName.toLowerCase()),
+      );
+      if (canonicalKey) {
+        drugName = canonicalKey;
+      }
+    }
+
     // These matches need to come first because otherwise "2x-b" woould be found in the drug DB but not have any interaction info
     if (/^do.$/i.test(drugName)) {
       return 'dox';

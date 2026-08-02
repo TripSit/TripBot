@@ -12,6 +12,11 @@ const jestConfig: Config = {
     '<rootDir>/src/global/utils/log.ts',
     '<rootDir>/src/global/utils/env.config.ts',
   ],
+  moduleNameMapper: {
+    // @keycloak/keycloak-admin-client ships ESM-only; ts-jest can't parse its
+    // require()'d output, and it's only touched transitively via keycloakAuth.
+    '^@keycloak/keycloak-admin-client$': '<rootDir>/src/jest/mocks/keycloakAdminClient.mock.ts',
+  },
   testMatch: [
     // '<rootDir>/src/discord/**/*.test.ts',
     '<rootDir>/src/api/**/*.test.ts',
