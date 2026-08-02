@@ -105,7 +105,6 @@ trigger:
   branch:
   - main
   - Docker-update
-trigger:
   event:
   # - cron
   - custom
@@ -114,3 +113,116 @@ trigger:
   # - tag
   # - promote
   # - rollback
+
+---
+kind: pipeline
+type: docker
+name: Deploy TripBot UAT
+
+node:
+  env: uat
+
+steps:
+  - name: Rebuild TripBot UAT
+    image: docker
+    commands:
+      - apk update
+      - apk upgrade
+      - apk add --no-cache git
+      - cat docker-compose.host.yml
+      - docker compose -f docker-compose.host.yml --project-name tripbot up tripbot -d --force-recreate --build --no-deps
+    environment:
+      NODE_ENV:
+        from_secret: NODE_ENV
+      DOCKER_HOST:
+        from_secret: DOCKER_HOST
+      DOCKER_BUILDKIT:
+        from_secret: DOCKER_BUILDKIT
+      DISCORD_CLIENT_ID:
+        from_secret: DISCORD_CLIENT_ID
+      DISCORD_CLIENT_TOKEN:
+        from_secret: DISCORD_CLIENT_TOKEN
+      DISCORD_GUILD_ID:
+        from_secret: DISCORD_GUILD_ID
+      DISCORD_OWNER_ID:
+        from_secret: DISCORD_OWNER_ID
+      DRONE_TOKEN:
+        from_secret: DRONE_TOKEN
+      DISCORD_CLIENT_SECRET:
+        from_secret: DISCORD_CLIENT_SECRET
+      DISCORD_CLIENT_REDIRECT_URI:
+        from_secret: DISCORD_CLIENT_REDIRECT_URI
+      GITHUB_TOKEN:
+        from_secret: GITHUB_TOKEN
+      GLITCHTIP_DSN:
+        from_secret: GLITCHTIP_DSN
+      RAPID_TOKEN:
+        from_secret: RAPID_TOKEN
+      ROLLBAR_TOKEN:
+        from_secret: ROLLBAR_TOKEN
+      IMGUR_ID:
+        from_secret: IMGUR_ID
+      IMGUR_SECRET:
+        from_secret: IMGUR_SECRET
+      YOUTUBE_TOKEN:
+        from_secret: YOUTUBE_TOKEN
+      MATRIX_BOT_PASSWORD:
+        from_secret: MATRIX_BOT_PASSWORD
+      MOODLE_TOKEN:
+        from_secret: MOODLE_TOKEN
+      GEMINI_KEY:
+        from_secret: GEMINI_KEY
+      REVOLT_BOT_TOKEN:
+        from_secret: REVOLT_BOT_TOKEN
+      WOLFRAM_TOKEN:
+        from_secret: WOLFRAM_TOKEN
+      IMDB_TOKEN:
+        from_secret: IMDB_TOKEN
+      SENTRY_TOKEN:
+        from_secret: SENTRY_TOKEN
+      MODERATE_HATESPEECH_TOKEN:
+        from_secret: MODERATE_HATESPEECH_TOKEN
+      TRIPBOT_API_URL:
+        from_secret: TRIPBOT_API_URL
+      TRIPBOT_API_TOKEN:
+        from_secret: TRIPBOT_API_TOKEN
+      KEYCLOAK_BASE_URL:
+        from_secret: KEYCLOAK_BASE_URL
+      KEYCLOAK_REALM:
+        from_secret: KEYCLOAK_REALM
+      KEYCLOAK_CLIENT_ID:
+        from_secret: KEYCLOAK_CLIENT_ID
+      KEYCLOAK_CLIENT_SECRET:
+        from_secret: KEYCLOAK_CLIENT_SECRET
+
+  - name: discord notification
+    image: appleboy/drone-discord
+    settings:
+      webhook_id:
+        from_secret: WEBHOOK_ID
+      webhook_token:
+        from_secret: WEBHOOK_TOKEN
+      avatar_url: https://i.imgur.com/tnw3I34.png
+      username: 'Drone CI'
+      message: |
+        {{#success build.status}}
+        UAT build {{build.number}} succeeded.
+        {{else}}
+        UAT build {{build.number}} failed.
+        {{/success}}
+        Build time: {{build.started}}
+        Commit message: {{commit.message}}
+        Commit author: {{commit.author}}
+        Commit branch: {{commit.branch}}
+        {{#success build.status}}
+        View logs: <{{build.link}}>
+        {{else}}
+        View failed job: <{{build.link}}>
+        {{/success}}
+
+trigger:
+  branch:
+  - uat
+  event:
+  - custom
+  - push

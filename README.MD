@@ -243,6 +243,6 @@ You can access it via http://localhost:5050 (maybe idk)
 
 This is a simple API that allows you to interact with the database.
 
-V1 : legacy tripbot APi that interacts with static .json files
+V1 : legacy tripbot APi that interacts with static .json files.
 
-V2 : the new prisma api that interacts with postgres for the appeal system
+V2 : the new prisma api that interacts with postgres for the appeal system.
