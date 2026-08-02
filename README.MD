@@ -5,6 +5,7 @@
 + [How to use](#invite)
 + [Contribute](#contribute)
 + [Authors](#contributors)
++ [License](#license)
 
 ## About
 TripBot is multi-platform open-source bot that is a major part of the **[TripSit](https://tripsit.me)** project.
@@ -244,5 +245,11 @@ You can access it via http://localhost:5050 (maybe idk)
 This is a simple API that allows you to interact with the database.
 
 V1 : legacy tripbot APi that interacts with static .json files.
+
+## License
+
+TripBot is source-available under the [PolyForm Noncommercial License 1.0.0](LICENSE). You're free to use, copy,
+modify, and distribute the code (including forks) for any noncommercial purpose. Selling the software, or using it
+to provide a commercial product or service, is not permitted.
 
 V2 : the new prisma api that interacts with postgres for the appeal system.
