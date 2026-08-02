@@ -119,6 +119,9 @@ kind: pipeline
 type: docker
 name: Deploy TripBot UAT
 
+node:
+  env: uat
+
 steps:
   - name: Rebuild TripBot UAT
     image: docker
