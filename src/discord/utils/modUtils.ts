@@ -42,7 +42,7 @@ import {
 } from 'discord-api-types/v10';
 import { stripIndents } from 'common-tags';
 import { user_action_type, user_actions, users } from '@db/tripbot';
-import moment from 'moment';
+import { Duration } from 'luxon';
 import { parseDuration, validateDurationInput } from '../../global/utils/parseDuration';
 import { getDiscordMember } from './guildMemberLookup';
 import { embedTemplate } from './embedTemplate';
@@ -353,12 +353,9 @@ function isRepeatable(command: ModAction): command is 'KICK' | 'WARNING' | 'TIME
 }
 
 export function msToHuman(ms:number):string {
-  const duration = moment.duration(ms);
-
-  const days = duration.days();
-  const hours = duration.hours();
-  const minutes = duration.minutes();
-  const seconds = duration.seconds();
+  const {
+    days = 0, hours = 0, minutes = 0, seconds = 0,
+  } = Duration.fromMillis(ms).shiftTo('days', 'hours', 'minutes', 'seconds', 'milliseconds').toObject();
 
   let humanReadable = '';
   if (days > 0) humanReadable += `${days} days `;
