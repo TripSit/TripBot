@@ -346,6 +346,9 @@ failure as a source-code failure.
 - Do not include generated `build/`, coverage, `.env`, generated Prisma clients, logs, caches, or local database data.
 - For PR conflict work, inspect the actual canonical PR and its real base before resolving conflicts; do not assume a fork's
   `origin` is the authoritative upstream.
+- Before opening a pull request from a feature branch, pull the latest `uat` (the usual PR base) into it first so the
+  branch is up to date and the push won't be rejected as non-fast-forward. Prefer branching fresh from `uat` over
+  rebasing an existing shared/pushed branch, since rewriting history on a branch others may have pulled is riskier.
 
 ## Definition of done
 
