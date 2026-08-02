@@ -1,0 +1,34 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git status*)",
+      "Bash(git diff*)",
+      "Bash(git log*)",
+      "Bash(git show*)",
+      "Bash(git branch*)",
+      "Bash(npm ci)",
+      "Bash(npm run tripbot:test*)",
+      "Bash(npm run tripbot:lint*)",
+      "Bash(npm run db:formatSchema*)",
+      "Bash(npm run db:validateSchema*)",
+      "Bash(npx tsc*)",
+      "Bash(npx tsc-alias*)",
+      "Bash(npx eslint*)",
+      "Bash(npx jest*)",
+      "Bash(npx prisma validate*)",
+      "Bash(npx prisma format*)",
+      "Bash(npx prisma generate*)"
+    ],
+    "ask": [
+      "Bash(npx prisma migrate*)",
+      "Bash(npx prisma db push*)",
+      "Bash(npm run tripbot:deployCommands*)",
+      "Bash(npm run db:pushDev*)",
+      "Bash(npm run db:migrateDev*)"
+    ],
+    "deny": [
+      "Bash(npx prisma migrate reset*)",
+      "Bash(git push --force*)"
+    ]
+  }
+}
