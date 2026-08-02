@@ -7,6 +7,8 @@
 + [Authors](#contributors)
 + [License](#license)
 
+See [CONTRIBUTING.md](CONTRIBUTING.md) for branch/PR conventions and how to run checks before opening a pull request.
+
 ## About
 TripBot is multi-platform open-source bot that is a major part of the **[TripSit](https://tripsit.me)** project.
 It is primarily a discord bot, but has been built modularly to allow for easy expansion to other platforms such as IRC, Matrix, and Telegram.
