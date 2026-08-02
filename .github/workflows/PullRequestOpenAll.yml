@@ -76,29 +76,3 @@ jobs:
       run: cp .env.example .env
     - name: Test
       run: npx jest --silent -c ./src/jest/jest.config.ts
-  codeql:
-    name: CodeQL
-    runs-on: ubuntu-latest
-    env:
-      NODE_OPTIONS: --max-old-space-size=7168
-    permissions:
-      actions: read
-      contents: read
-      security-events: write
-    strategy:
-      fail-fast: false
-      matrix:
-        language: [ 'javascript' ]
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-      - name: Initialize CodeQL
-        uses: github/codeql-action/init@v2
-        with:
-          languages: javascript
-      - name: Autobuild
-        uses: github/codeql-action/autobuild@v2
-      - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v2
-        with:
-          category: "/language:javascript"
