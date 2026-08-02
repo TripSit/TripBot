@@ -97,8 +97,8 @@ export class AiFunction {
 
     // 1. FIXED: Handle the 'object object' bug by extracting text parts properly
     const conversationContext = prompt
-      .filter(p => p.role !== 'system')
-      .map(p => {
+      .filter((p: LanguageModelV3Prompt[number]) => p.role !== 'system')
+      .map((p: LanguageModelV3Prompt[number]) => {
         // Determine the label based on the SDK role
         const roleLabel = p.role === 'user' ? 'User' : 'AI';
         let textContent = '';
@@ -106,8 +106,8 @@ export class AiFunction {
         if (typeof p.content === 'string') {
           textContent = p.content;
         } else if (Array.isArray(p.content)) {
-          textContent = p.content
-            .map(part => ('text' in part ? part.text : ''))
+          textContent = (p.content as Array<{ type?: string; text?: string }>)
+            .map(part => ('text' in part ? part.text ?? '' : ''))
             .join(' ');
         }
 
