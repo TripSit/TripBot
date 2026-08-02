@@ -135,23 +135,23 @@ steps:
       NODE_ENV:
         from_secret: NODE_ENV
       DOCKER_HOST:
-        from_secret: UAT_DOCKER_HOST
+        from_secret: DOCKER_HOST
       DOCKER_BUILDKIT:
         from_secret: DOCKER_BUILDKIT
       DISCORD_CLIENT_ID:
-        from_secret: UAT_DISCORD_CLIENT_ID
+        from_secret: DISCORD_CLIENT_ID
       DISCORD_CLIENT_TOKEN:
-        from_secret: UAT_DISCORD_CLIENT_TOKEN
+        from_secret: DISCORD_CLIENT_TOKEN
       DISCORD_GUILD_ID:
-        from_secret: UAT_DISCORD_GUILD_ID
+        from_secret: DISCORD_GUILD_ID
       DISCORD_OWNER_ID:
         from_secret: DISCORD_OWNER_ID
       DRONE_TOKEN:
         from_secret: DRONE_TOKEN
       DISCORD_CLIENT_SECRET:
-        from_secret: UAT_DISCORD_CLIENT_SECRET
+        from_secret: DISCORD_CLIENT_SECRET
       DISCORD_CLIENT_REDIRECT_URI:
-        from_secret: UAT_DISCORD_CLIENT_REDIRECT_URI
+        from_secret: DISCORD_CLIENT_REDIRECT_URI
       GITHUB_TOKEN:
         from_secret: GITHUB_TOKEN
       GLITCHTIP_DSN:
@@ -183,9 +183,9 @@ steps:
       MODERATE_HATESPEECH_TOKEN:
         from_secret: MODERATE_HATESPEECH_TOKEN
       TRIPBOT_API_URL:
-        from_secret: UAT_TRIPBOT_API_URL
+        from_secret: TRIPBOT_API_URL
       TRIPBOT_API_TOKEN:
-        from_secret: UAT_TRIPBOT_API_TOKEN
+        from_secret: TRIPBOT_API_TOKEN
       KEYCLOAK_BASE_URL:
         from_secret: KEYCLOAK_BASE_URL
       KEYCLOAK_REALM:
