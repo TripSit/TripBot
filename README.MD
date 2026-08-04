@@ -37,7 +37,7 @@ Jest Testing
 SonarQube Code Quality
 Docker Containerized
 ESlint Linting
-Nodemon Hot Reloading
+tsc-watch Hot Reloading
 TSC Auto Building
 Drone Continuous Integration
 
@@ -45,13 +45,12 @@ Drone Continuous Integration
 
 **Requirements**
 1) Docker. You can get it [here](https://www.docker.com/products/docker-desktop).
-2) A discord bot application. You can get one [here](https://discord.com/developers/applications).
-
+2) VSCode with the [Dev Containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers), or [GitHub Codespaces](https://github.com/features/codespaces). Development happens inside the devcontainer defined in `.devcontainer/`.
+3) A discord bot application. You can get one [here](https://discord.com/developers/applications).
 
 **Optional**
-1) VSCode. You can get it [here](https://code.visualstudio.com/).
-2) ESLint extension for VSCode. You can get it [here](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint).
-3) Invite the discord bot to the tripsit dev guild. Ask Moonbear for an invite link. The bot will not work properly without doing this.
+1) ESLint extension for VSCode. You can get it [here](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint). It's already included in the devcontainer's recommended extensions.
+2) Invite the discord bot to the tripsit dev guild. Ask Moonbear for an invite link. The bot will not work properly without doing this.
 
 **Setup the bot**
 
@@ -59,38 +58,34 @@ Clone the repository
 
 ``` git clone https://github.com/TripSit/TripBot.git```
 
-Copy env.example to .env and fill in these fields. You only /need/ the discord stuff like the token and client ID
+Copy `.env.example` to `.env` and fill in these fields. You only /need/ the discord stuff like the token and client ID.
 
-Install the dependencies locally so that VSCode can use them for linting and intellisense.
-
-```npm install```
+Open the folder in VSCode and choose **Reopen in Container** (or open it as a GitHub Codespace). This builds the dev
+image, starts the database, and mounts the whole repo into the container so edits and commits made either on your
+host machine or inside the container show up in both places.
 
 **Start the bot**
 
-This will start up the tripbot_database, build the bot, and run the bot in a container.
-The database container just basically sits there being a stable database, you don't need to check it's logs or anything.
-
-```npm run tripbot:start```
-
-You will likely want to immediately check the logs of the container to make sure it started up correctly.
+Nothing to do here — the devcontainer's `postStartCommand` runs `npm run tripbot:dev` automatically once the
+container is up, compiling with `tsc-watch` and running the bot in a `tmux` session.
 
 **View logs**
 
 ```npm run tripbot:logs```
 
-This will show you the logs of tripbot from inside the container.
+This attaches to the `tmux` session and shows you the bot's live output. Detach without stopping it with `Ctrl+B` then `D`.
 
 **Deploy commands**
 
-This command will happen automatically when you build the TripBot container and tells discord what commands are available.
+Registering slash commands with Discord is *not* automatic — run this once after first setup, and again any time you
+add a command or change an existing command's options:
 
 ```npm run tripbot:deployCommands```
 
-**If you create a new command, or modify the options in an existing command, you'll need to deploy commands again.**
-
 **Develop**
 
-The container will watch the /src folder for changes and rebuild the bot when you save a file.
+The devcontainer watches the whole repo for changes (via polling, since native file-change events don't reliably
+cross the Windows/Mac-to-Linux bind mount) and rebuilds/restarts the bot when you save a file under `src/`.
 
 **Lint**
 
@@ -218,7 +213,7 @@ Restart the bot and you should be good to go.
 
 #### Postgres ###
 
-```npm run postgres```
+```npm run db:start```
 
 We use postgres for our database.
 
@@ -242,9 +237,7 @@ You can access it via http://localhost:5050 (maybe idk)
 
 #### API ###
 
-```npm run api```
-
-This is a simple API that allows you to interact with the database.
+The API runs as part of the same bot process (see `src/api/app.ts`) — there's no separate script to start it.
 
 V1 : legacy tripbot APi that interacts with static .json files.
 
