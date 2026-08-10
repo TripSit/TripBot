@@ -92,7 +92,7 @@ steps:
         Build {{build.number}} failed.
         {{/success}}
         Build time: {{build.started}}
-        Commit message: {{commit.message}}
+        Commit message: {{truncate commit.message 500}}
         Commit author: {{commit.author}}
         Commit branch: {{commit.branch}}
         {{#success build.status}}
@@ -211,7 +211,7 @@ steps:
         UAT build {{build.number}} failed.
         {{/success}}
         Build time: {{build.started}}
-        Commit message: {{commit.message}}
+        Commit message: {{truncate commit.message 500}}
         Commit author: {{commit.author}}
         Commit branch: {{commit.branch}}
         {{#success build.status}}
