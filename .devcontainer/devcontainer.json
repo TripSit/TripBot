@@ -4,6 +4,7 @@
 	"service": "tripbot",
 	"workspaceFolder": "/workspaces/tripbot",
 	"shutdownAction": "stopCompose",
+	"postCreateCommand": "npm ci",
   	"postStartCommand": "npm run tripbot:dev",
 	"customizations": {
 	  "vscode": {
