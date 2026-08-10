@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Ask in Discord
+    url: https://discord.gg/tripsit
+    about: For questions or discussion, please ask in our Discord guild instead of opening an issue.

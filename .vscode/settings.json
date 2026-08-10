@@ -40,7 +40,7 @@
   },
   "explorer.fileNesting.enabled": true,
   "explorer.fileNesting.patterns": {
-    "package.json": ".drone.yml, .eslintignore, .eslintrc, .gitattributes, sonar-project.properties, docker-compose.yml, docker-compose.override.yml, .dockerignore, package-lock.json, .eslintcache, .npmrc, .nvmrc, tsconfig.json, tsconfig.tsbuildinfo, .tsbuildinfo, .editorconfig, .lintstagedrc.mjs, prisma.config.ts, .env, .env.example, .gitignore, eslint.config.mjs"
+    "package.json": ".drone.yml, .eslintignore, .eslintrc, .gitattributes, sonar-project.properties, docker-compose.yml, docker-compose.override.yml, .dockerignore, package-lock.json, .eslintcache, .npmrc, .nvmrc, tsconfig.json, tsconfig.tsbuildinfo, .tsbuildinfo, .editorconfig, prisma.config.ts, .env, .env.example, .gitignore, eslint.config.mjs"
   },
   "search.exclude": {
     "**/.next": true,

@@ -17,7 +17,11 @@
       "Bash(npx jest*)",
       "Bash(npx prisma validate*)",
       "Bash(npx prisma format*)",
-      "Bash(npx prisma generate*)"
+      "Bash(npx prisma generate*)",
+      "Bash(git fetch *)",
+      "Bash(npm view *)",
+      "Bash(docker compose config *)",
+      "Bash(npm audit)"
     ],
     "ask": [
       "Bash(npx prisma migrate*)",

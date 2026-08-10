@@ -42,7 +42,8 @@ services:
       - tripbot_website-net
       - moodle_data-net
     volumes:
-      - ./src:/workspaces/tripbot/src # Needed for hot-reloading of source code
+      - .:/workspaces/tripbot # Mount the whole repo so edits/commits made in the container reach the host
+      - /workspaces/tripbot/node_modules # Anonymous volume: keep the image's Linux-built native deps (argon2, canvas) out from under the host bind mount
     labels:
       - com.centurylinklabs.watchtower.enable=false
       - traefik.enable=true
