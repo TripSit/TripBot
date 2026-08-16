@@ -8,7 +8,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends tmux && rm -rf 
 WORKDIR /workspaces/tripbot
 COPY .devcontainer/.tmux.conf /root/.tmux.conf
 COPY package*.json ./
-RUN npm ci --no-audit --silent
+RUN --mount=type=cache,target=/root/.npm npm ci --no-audit --silent
 COPY . .
 RUN npx prisma generate --schema=./src/prisma/tripbot/schema.prisma
 RUN npx prisma generate --schema=./src/prisma/moodle/schema.prisma
@@ -34,7 +34,7 @@ RUN npx tsc --project tsconfig.prisma.json
 RUN rm -f ./build/prisma.config.js ./build/prisma.config.js.map
 
 # 4. PRUNE: Remove devDependencies (this deletes the clients we just made)
-RUN rm -rf node_modules && npm ci --omit=dev --no-audit --silent --ignore-scripts
+RUN --mount=type=cache,target=/root/.npm rm -rf node_modules && npm ci --omit=dev --no-audit --silent --ignore-scripts
 
 # 5. GENERATE FOR RUNTIME: Re-inject the clients into the clean node_modules
 RUN npx prisma generate --schema=./src/prisma/tripbot/schema.prisma
@@ -62,6 +62,6 @@ COPY ./src/docker/entrypoint.sh /workspaces/tripbot/entrypoint.sh
 RUN chmod +x /workspaces/tripbot/entrypoint.sh
 
 # Install PM2 in the final image since your entrypoint uses it
-RUN npm install -g pm2
+RUN --mount=type=cache,target=/root/.npm npm install -g pm2
 
 ENTRYPOINT ["/workspaces/tripbot/entrypoint.sh"]
