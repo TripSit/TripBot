@@ -156,6 +156,6 @@ export async function privacy(
     // }
   }
 
-  log.info(F, `response: ${JSON.stringify(response, null, 2)}`);
+  log.info(F, `privacy ${command} completed for user ${userData.id}`);
   return response;
 }

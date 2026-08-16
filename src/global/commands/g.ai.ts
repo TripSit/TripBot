@@ -22,10 +22,6 @@ type ModerationResult = {
 export async function aiModerateReport(
   message: string,
 ):Promise<ModerationCreateResponse | null> {
-  // log.debug(F, `message: ${message}`);
-
-  // log.debug(F, `results: ${JSON.stringify(results, null, 2)}`);
-
   if (!env.OPENAI_API_ORG || !env.OPENAI_API_KEY) return null;
 
   return openAi.moderations
@@ -34,9 +30,7 @@ export async function aiModerateReport(
     })
     .catch(err => {
       if (err instanceof OpenAI.APIError) {
-        log.error(F, `${err.status}`); // 400
-        log.error(F, `${err.name}`); // BadRequestError
-        log.error(F, `${err.headers}`); // {server: 'nginx', ...}
+        log.error(F, `OpenAI moderation request failed: ${err.status} ${err.name} - ${err.headers}`);
       } else {
         throw err;
       }
@@ -78,7 +72,6 @@ export async function aiFlairMod(
     // function_call: 'auto',
   };
 
-  // log.debug(F, `payload: ${JSON.stringify(payload, null, 2)}`);
   let responseMessage: OpenAI.Chat.ChatCompletionMessageParam;
 
   const chatCompletion = await openAi.chat.completions
@@ -86,14 +79,11 @@ export async function aiFlairMod(
     .catch(err => {
       if (err instanceof OpenAI.APIError) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        log.error(F, `${err.name} - ${err.status} - ${err.type} - ${(err.error as any).message}  `); // 400
-        // log.error  (F, `${JSON.stringify(err.headers, null, 2)}`); // {server: 'nginx', ...}
-        // log.error(F, `${JSON.stringify(err, null, 2)}`); // {server: 'nginx', ...}
+        log.error(F, `AI flair mod request failed: ${err.name} - ${err.status} - ${err.type} - ${(err.error as any).message}`);
       } else {
         throw err;
       }
     });
-  // log.debug(F, `chatCompletion: ${JSON.stringify(chatCompletion, null, 2)}`);
 
   if (chatCompletion?.choices[0].message) {
     responseMessage = chatCompletion.choices[0].message;
@@ -104,8 +94,6 @@ export async function aiFlairMod(
 
     response = responseMessage.content?.toString() ?? 'Sorry, I\'m not sure how to respond to that.';
   }
-
-  // log.debug(F, `response: ${response}`);
 
   return { response, promptTokens, completionTokens };
 }
@@ -124,8 +112,6 @@ export async function aiModerate(
   if (!moderation?.results) {
     return [];
   }
-
-  // log.debug(F, `moderation: ${JSON.stringify(moderation, null, 2)}`);
 
   const guildData = await db.discord_guilds.upsert({
     where: {
@@ -147,8 +133,6 @@ export async function aiModerate(
     update: {},
   });
 
-  // log.debug(F, `guildModeration: ${JSON.stringify(guildModeration, null, 2)}`);
-
   // Go through each key in moderation.results and check if the value is greater than the limit from guildModeration
   // If it is, set a flag with the kind of alert and the value / limit
   const moderationAlerts: ModerationResult[] = [];
@@ -164,7 +148,6 @@ export async function aiModerate(
     }
 
     if (guildLimit && value > guildLimit) {
-      // log.debug(F, `key: ${formattedKey} value > ${value} / ${guildLimit} < guild limit`);
       moderationAlerts.push({
         category: key,
         value,
@@ -173,7 +156,9 @@ export async function aiModerate(
     }
   });
 
-  // log.debug(F, `moderationAlerts: ${JSON.stringify(moderationAlerts, null, 2)}`);
+  if (moderationAlerts.length > 0) {
+    log.info(F, `Guild ${guildId} message tripped ${moderationAlerts.length} moderation limit(s): ${moderationAlerts.map(a => a.category).join(', ')}`);
+  }
 
   return moderationAlerts;
 }
@@ -203,7 +188,6 @@ export async function aiTranslate(
     messages: chatCompletionMessages,
   };
 
-  // log.debug(F, `payload: ${JSON.stringify(payload, null, 2)}`);
   let responseMessage: OpenAI.Chat.ChatCompletionMessageParam;
 
   const chatCompletion = await openAi.chat.completions
@@ -211,14 +195,11 @@ export async function aiTranslate(
     .catch(err => {
       if (err instanceof OpenAI.APIError) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        log.error(F, `${err.name} - ${err.status} - ${err.type} - ${(err.error as any).message}  `); // 400
-        // log.error  (F, `${JSON.stringify(err.headers, null, 2)}`); // {server: 'nginx', ...}
-        // log.error(F, `${JSON.stringify(err, null, 2)}`); // {server: 'nginx', ...}
+        log.error(F, `AI translate request failed: ${err.name} - ${err.status} - ${err.type} - ${(err.error as any).message}`);
       } else {
         throw err;
       }
     });
-  // log.debug(F, `chatCompletion: ${JSON.stringify(chatCompletion, null, 2)}`);
 
   if (chatCompletion?.choices[0].message) {
     responseMessage = chatCompletion.choices[0].message;
@@ -229,8 +210,6 @@ export async function aiTranslate(
 
     response = responseMessage.content?.toString() ?? 'Sorry, I\'m not sure how to respond to that.';
   }
-
-  // log.debug(F, `response: ${response}`);
 
   return { response, promptTokens, completionTokens };
 }
