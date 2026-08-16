@@ -22,12 +22,12 @@ export async function imdb(title:string):Promise<imdbApi.Movie> {
       return response;
     }).catch((err:Error) => {
       if (!err.message.includes('Movie not found!')) {
-        log.error(F, `get err: ${JSON.stringify(err, null, 2)}`);
+        log.error(F, `IMDB get failed for '${title}': ${err.message}`);
       }
     });
   }).catch((err:Error) => {
     if (!err.message.includes('Movie not found!')) {
-      log.error(F, `search err: ${JSON.stringify(err, null, 2)}`);
+      log.error(F, `IMDB search failed for '${title}': ${err.message}`);
     }
   });
 

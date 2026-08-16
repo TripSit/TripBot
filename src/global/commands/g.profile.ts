@@ -2,8 +2,6 @@ import { personas } from '@db/tripbot';
 
 export default profile;
 
-// const F = f(__filename);
-
 /**
  * Get profile info
  * @param {string} memberId The user to either set or get the timezone!
@@ -21,7 +19,6 @@ export async function profile(
     },
     update: {},
   });
-  // log.debug(F, `userData: ${JSON.stringify(userData, null, 2)}`);
 
   const values = await Promise.allSettled([
     await db.user_experience.findMany({
@@ -36,13 +33,8 @@ export async function profile(
     }),
   ]);
 
-  // log.debug(F, `values: ${JSON.stringify(values, null, 2)} `);
-
   const expData = values[0].status === 'fulfilled' ? values[0].value : [];
   const personaData = values[1].status === 'fulfilled' ? values[1].value : {} as personas;
-
-  // log.debug(F, `expData: ${JSON.stringify(expData, null, 2)}`);
-  // log.debug(F, `personaData: ${JSON.stringify(personaData, null, 2)}`);
 
   // Sum up every experience point as long as the type isn't ignored or total
   const totalTextExp = expData
@@ -58,7 +50,6 @@ export async function profile(
     tokens = personaData.tokens;
   }
 
-  // log.info(F, `response: ${JSON.stringify(profileData, null, 2)}`);
   return {
     birthday: userData.birthday,
     timezone: userData.timezone,

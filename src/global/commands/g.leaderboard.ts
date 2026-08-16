@@ -4,7 +4,6 @@
 /* eslint-disable sonarjs/no-identical-functions */
 import { experience_category, experience_type } from '@db/tripbot';
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const F = f(__filename);
 
 type LeaderboardList = { discord_id: string; total_points: number }[];
@@ -131,7 +130,9 @@ export async function leaderboardV2(
   // Wait for all the database queries to complete
   await Promise.all(queries);
 
-  // log.debug(F, `leaderboardData: ${JSON.stringify(leaderboardData.ALL.DEVELOPER.slice(0, 20), null, 2)}`);
+  const typeLabel = onlyType ?? 'ALL';
+  const categoryLabel = onlyCategory ?? 'TOTAL';
+  log.debug(F, `leaderboardV2: built ${queries.length} leaderboards (${typeLabel}/${categoryLabel})`);
 
   // Return the populated leaderboard data
   return leaderboardData;

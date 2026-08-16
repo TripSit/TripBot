@@ -34,7 +34,7 @@ export async function ems(search: string): Promise<any[]> {
     fs.writeFileSync(dataPath, JSON.stringify(updatedData, null, 2), 'utf8');
 
     lastRefresh = now;
-    console.debug('EMS: Refreshed EMS Lines');
+    log.debug(F, 'Refreshed EMS lines');
   }
 
   // 2. Search Logic (Functional Style)

@@ -14,6 +14,8 @@ jobs:
   require-uat-source:
     name: Require uat source
     runs-on: ubuntu-latest
+    # Only run this check if the PR is targeting main
+    if: github.event.pull_request.base.ref == 'main'
     steps:
       - name: Verify pull request comes from uat
         if: github.head_ref != 'uat'

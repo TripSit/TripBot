@@ -17,7 +17,7 @@ export async function bridgeCreate(
   log.debug(F, `existingBridge: ${JSON.stringify(existingBridge, null, 2)}`);
 
   if (existingBridge && existingBridge.status === 'PENDING' && !override) {
-    log.debug(F, `bridgeCreate: ${JSON.stringify(existingBridge, null, 2)}`);
+    log.info(F, `bridgeCreate: bridge ${internalChannel} <> ${externalChannel} already pending, override not set`);
     return 'Error: Bridge already pending! Use the override if you\'re sure!';
   }
 
@@ -46,6 +46,8 @@ export async function bridgeCreate(
 export async function bridgeConfirm(
   externalChannel: string,
 ):Promise<string> {
+  log.debug(F, `bridgeConfirm: ${externalChannel}`);
+
   // To confirm the bridge, first get the existing bridge that matches the external guild and channel
   const existingBridge = await db.bridges.findFirst({
     where: {
@@ -54,6 +56,7 @@ export async function bridgeConfirm(
   });
 
   if (!existingBridge) {
+    log.warn(F, `bridgeConfirm: no bridge found for ${externalChannel}`);
     return noBridgeError;
   }
 
@@ -69,12 +72,15 @@ export async function bridgeConfirm(
     },
   });
 
+  log.info(F, `bridgeConfirm: confirmed bridge ${existingBridge.internal_channel} <> ${externalChannel}`);
   return existingBridge.internal_channel;
 }
 
 export async function bridgePause(
   channelId: string,
 ):Promise<string> {
+  log.debug(F, `bridgePause: ${channelId}`);
+
   let existingBridge = await db.bridges.findFirst({
     where: {
       external_channel: channelId,
@@ -90,6 +96,7 @@ export async function bridgePause(
   }
 
   if (!existingBridge) {
+    log.warn(F, `bridgePause: no bridge found for ${channelId}`);
     return noBridgeError;
   }
 
@@ -105,12 +112,15 @@ export async function bridgePause(
     },
   });
 
+  log.info(F, `bridgePause: paused bridge ${existingBridge.internal_channel} <> ${existingBridge.external_channel}`);
   return 'Paused bridge';
 }
 
 export async function bridgeResume(
   channelId: string,
 ):Promise<string> {
+  log.debug(F, `bridgeResume: ${channelId}`);
+
   let existingBridge = await db.bridges.findFirst({
     where: {
       external_channel: channelId,
@@ -126,6 +136,7 @@ export async function bridgeResume(
   }
 
   if (!existingBridge) {
+    log.warn(F, `bridgeResume: no bridge found for ${channelId}`);
     return noBridgeError;
   }
 
@@ -141,12 +152,16 @@ export async function bridgeResume(
     },
   });
 
+  const { internal_channel: internalChannel, external_channel: bridgedChannel } = existingBridge;
+  log.info(F, `bridgeResume: activated bridge ${internalChannel} <> ${bridgedChannel}`);
   return 'Activated bridge';
 }
 
 export async function bridgeRemove(
   channelId: string,
 ):Promise<string> {
+  log.debug(F, `bridgeRemove: ${channelId}`);
+
   let existingBridge = await db.bridges.findFirst({
     where: {
       external_channel: channelId,
@@ -162,6 +177,7 @@ export async function bridgeRemove(
   }
 
   if (!existingBridge) {
+    log.warn(F, `bridgeRemove: no bridge found for ${channelId}`);
     return noBridgeError;
   }
 
@@ -174,5 +190,6 @@ export async function bridgeRemove(
     },
   });
 
+  log.info(F, `bridgeRemove: removed bridge ${existingBridge.internal_channel} <> ${existingBridge.external_channel}`);
   return 'Removed bridge';
 }

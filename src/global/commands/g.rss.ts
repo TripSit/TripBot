@@ -1,6 +1,6 @@
 import { rss } from '@db/tripbot';
 
-const F = f(__filename); // eslint-disable-line
+const F = f(__filename);
 
 /**
  *
@@ -11,8 +11,6 @@ export async function rssCreate(
   guildId:string,
   url:string,
 ):Promise<void> {
-  // log.debug(F, `rssCreate(${channelId}, ${guildId}, ${url})`);
-
   await db.rss.upsert({
     where: {
       guild_id_destination: {
@@ -33,6 +31,8 @@ export async function rssCreate(
       destination: channelId,
     },
   });
+
+  log.debug(F, `rssCreate: subscribed guild ${guildId} channel ${channelId} to ${url}`);
 }
 
 /**
@@ -66,4 +66,6 @@ export async function rssDelete(
       },
     },
   });
+
+  log.debug(F, `rssDelete: removed RSS subscription for guild ${guildId} channel ${channelId}`);
 }

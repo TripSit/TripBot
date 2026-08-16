@@ -1,6 +1,6 @@
 import { personas } from '@db/tripbot';
 
-const F = f(__filename); // eslint-disable-line
+const F = f(__filename);
 
 export async function getPersonaInfo(
   discordId: string,
@@ -28,6 +28,7 @@ export async function getPersonaInfo(
 export async function setPersonaInfo(
   personaData: personas,
 ):Promise<personas> {
+  log.debug(F, `setPersonaInfo: updating persona ${personaData.id}`);
   return db.personas.upsert({
     where: {
       id: personaData.id,
