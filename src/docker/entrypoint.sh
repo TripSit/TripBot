@@ -4,6 +4,10 @@ set -e
 if [ "$NODE_ENV" = "development" ]; then
   echo "Waiting for DB..."
   ./src/docker/wait-for-it.sh --timeout=5 tripbot_database:5432
+  if [ ! -d node_modules/prisma ]; then
+    echo "node_modules missing or incomplete (fresh volume?) - running npm ci..."
+    npm ci --no-audit --silent
+  fi
   npm run db:deploy
   npm run db:generate
   # tsc does not emit the (non-TS) generated Prisma client into build/, so copy it
