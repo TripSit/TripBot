@@ -1,3 +1,5 @@
+const F = f(__filename);
+
 interface BountyStats {
   userId: string;
   username: string;
@@ -62,6 +64,7 @@ export async function getBountyStats(): Promise<BountyStats[]> {
 
     return stats.filter(stat => stat.totalBounties > 0);
   } catch (error) {
+    log.error(F, `Failed to get bounty stats: ${error}`);
     return [];
   }
 }

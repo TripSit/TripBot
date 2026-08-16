@@ -9,7 +9,7 @@ type IDoseResponse = {
   value: string,
 }[];
 
-// const F = f(__filename);
+const F = f(__filename);
 
 async function iDoseGet(
   userId: string,
@@ -24,8 +24,6 @@ async function iDoseGet(
     update: {},
   });
 
-  // log.debug(F, `Getting data for ${userData.id}...`);
-
   const doseData = await db.user_drug_doses.findMany({
     where: {
       user_id: userData.id,
@@ -39,8 +37,6 @@ async function iDoseGet(
     }];
   }
 
-  // log.debug(F, `Data: ${JSON.stringify(unsortedData, null, 2)}`);
-
   // Sort data based on the created_at property
   const data = [...doseData].sort((a, b) => {
     if (a.created_at < b.created_at) {
@@ -52,8 +48,6 @@ async function iDoseGet(
     return 0;
   });
 
-  // log.debug(F, `Sorted ${data.length} items!`);
-
   const doses = [] as {
     name: string,
     value: string,
@@ -63,7 +57,6 @@ async function iDoseGet(
   for (let i = 0; i < data.length; i += 1) {
     const dose = data[i];
     const doseDate = data[i].created_at.toISOString();
-    // log.debug(F, `doseDate: ${doseDate}`);
     const timeVal = DateTime.fromISO(doseDate);
     const drugId = dose.drug_id;
 
@@ -114,8 +107,6 @@ async function iDoseSet(
     }];
   }
 
-  // log.debug(F, `Substance: ${substance}`);
-
   const drugData = await db.drug_names.findMany({
     where: {
       name: {
@@ -124,10 +115,8 @@ async function iDoseSet(
     },
   });
 
-  // log.debug(F, `Data: ${JSON.stringify(data, null, 2)}`);
-
   if (drugData.length === 0) {
-    // log.debug(`name = ${substance} not found in 'drugNames'`);
+    log.debug(F, `iDoseSet: substance '${substance}' not found in drug_names`);
     return [{
       name: 'Error',
       value: 'That drug does not exist!',
@@ -136,7 +125,6 @@ async function iDoseSet(
 
   const drugId = drugData[0].drug_id;
 
-  // log.debug(F, `drugId: ${drugId}`);
   const userData = await db.users.upsert({
     where: {
       discord_id: userId,
@@ -158,6 +146,8 @@ async function iDoseSet(
     },
   });
 
+  log.debug(F, `iDoseSet: added a ${volume}${units} ${roa} dose of drug ${drugId} for user ${userData.id}`);
+
   return [{
     name: 'Success',
     value: 'I added a new value for you!',
@@ -174,7 +164,6 @@ async function iDoseDel(
       value: 'You must provide a record number to delete!',
     }];
   }
-  // log.debug(F, `Deleting record ${recordNumber}`);
 
   const userData = await db.users.upsert({
     where: {
@@ -219,7 +208,6 @@ async function iDoseDel(
   }
   const recordId = record.id;
   const doseDate = data[recordNumber].created_at.toISOString();
-  // log.debug(F, `doseDate: ${doseDate}`);
   const timeVal = DateTime.fromISO(doseDate);
   const drugId = record.drug_id;
 
@@ -238,16 +226,13 @@ async function iDoseDel(
   const drugName = drugData[0].name;
   const route = record.route.charAt(0).toUpperCase() + record.route.slice(1).toLowerCase();
 
-  // log.debug(F, `I deleted:
-  // (${recordNumber}) ${timeVal.monthShort} ${timeVal.day} ${timeVal.year} ${timeVal.hour}:${timeVal.minute}
-  // ${record.dose} ${record.units} of ${drugName} ${route}
-  // `);
-
   await db.user_drug_doses.delete({
     where: {
       id: recordId,
     },
   });
+
+  log.debug(F, `iDoseDel: deleted record ${recordId} (${drugName} ${route}) for user ${userData.id}`);
 
   return [{
     name: 'Success',

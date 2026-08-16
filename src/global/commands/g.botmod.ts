@@ -115,8 +115,6 @@ async function botmodUser(
     userData.discord_bot_ban = false;
   }
 
-  // log.debug(F, `targetUserInfo: ${JSON.stringify(targetUserInfo, null, 2)}`);
-
   await db.users.update({
     where: {
       discord_id: targetUser.id,
@@ -143,15 +141,13 @@ async function botmodUser(
   await modChan.send({ content: `Hey ${roleModerator}`, embeds: [modlogEmbed] });
   const modlog = await global.discordClient.channels.fetch(env.CHANNEL_MODLOG) as TextChannel;
   modlog.send({ embeds: [modlogEmbed] });
-  // log.debug(F, `sent a message to the moderators room`);
 
   // Return a message to the user confirming the user was acted on
-  // log.debug(F, `${target.displayName} has been ${embedVariables[command as keyof typeof embedVariables].verb}!`);
   const desc = `${targetUser.tag} has been ${embedVariables[command as keyof typeof embedVariables].verb}!`;
   const response = embedTemplate()
     .setColor(Colors.Yellow)
     .setDescription(desc);
-  log.info(F, `response: ${JSON.stringify(desc, null, 2)}`);
+  log.info(F, desc);
   return { embeds: [response] };
 }
 
@@ -218,13 +214,13 @@ async function botmodGuild(
       try {
         await targetGuildOwner.send({ embeds: [warnEmbed], components: [warnButtons] });
       } catch (error) {
-        // Ignore
+        log.debug(F, `Could not DM guild owner ${targetGuildOwner.id}, they may have DMs disabled: ${error}`);
       }
     } else {
       try {
         await targetGuildOwner.send({ embeds: [warnEmbed] });
       } catch (error) {
-        // Ignore
+        log.debug(F, `Could not DM guild owner ${targetGuildOwner.id}, they may have DMs disabled: ${error}`);
       }
     }
   }
@@ -240,8 +236,6 @@ async function botmodGuild(
   }
 
   if (command !== 'BOTINFO') {
-  // log.debug(F, `actionData: ${JSON.stringify(actionData, null, 2)}`);
-
     await db.discord_guilds.update({
       where: {
         id: targetGuild.id,
@@ -270,7 +264,6 @@ async function botmodGuild(
     await modChan.send({ content: `Hey ${roleModerator}`, embeds: [modlogEmbed] });
     const modlog = await global.discordClient.channels.fetch(env.CHANNEL_MODLOG) as TextChannel;
     modlog.send({ embeds: [modlogEmbed] });
-    // log.debug(F, `sent a message to the moderators room`);
   }
 
   // If this is the info command then return with info
@@ -302,21 +295,15 @@ async function botmodGuild(
       // { name: 'guild_region', value: `${targetGuild.guild_region}`, inline: true },
       );
 
-    try {
-      // log.info(F, `response: ${JSON.stringify(infoString, null, 2)}`);
-      return { embeds: [modlogEmbed] };
-    } catch (err) {
-      log.error(F, `Error: ${err}`);
-    }
+    return { embeds: [modlogEmbed] };
   }
 
   // Return a message to the user confirming the user was acted on
-  // log.debug(F, `${target.displayName} has been ${embedVariables[command as keyof typeof embedVariables].verb}!`);
   const desc = `${targetGuild.name} has been ${embedVariables[command as keyof typeof embedVariables].verb}!`;
   const response = embedTemplate()
     .setColor(Colors.Yellow)
     .setDescription(desc);
-  log.info(F, `response: ${JSON.stringify(desc, null, 2)}`);
+  log.info(F, desc);
   return { embeds: [response] };
 }
 

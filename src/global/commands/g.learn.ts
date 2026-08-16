@@ -4,7 +4,6 @@ import { DateTime } from 'luxon';
 import tripbotDb from '../../prisma/tripbot/client';
 import moodleDb from '../../prisma/moodle/client';
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const F = f(__filename);
 
 type MoodleProfile = {
@@ -14,14 +13,6 @@ type MoodleProfile = {
   completedCourses: string[],
   incompleteCourses: string[],
 };
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function bigIntSanitize(key: any, value: any) {
-  if (typeof value === 'bigint') {
-    return value.toString(); // or alternatively `Number(value)` if the value is within the safe integer range for JavaScript
-  }
-  return value; // return the unchanged property value.
-}
 
 type MoodleInfo = {
   title: string,
@@ -58,9 +49,6 @@ export async function link(
   email:string,
   discordId:string,
 ):Promise<string> {
-  // log.debug(F, `Link started with moodleUsername: ${moodleUsername}, \
-  // discordId: ${discordId}, matrixId: ${matrixId}`);
-
   const userData = await tripbotDb.users.findUnique({
     where: {
       discord_id: discordId,
@@ -104,8 +92,6 @@ export async function unlink(
   discordId?:string,
   matrixId?:string,
 ):Promise<string> {
-  // log.debug(F, `Unlink started with discordId: ${discordId}, matrixId: ${matrixId}`);
-
   const userData = discordId
     ? await tripbotDb.users.findUnique({
       where: {
@@ -129,6 +115,10 @@ export async function unlink(
     data: {
       moodle_id: null,
     },
+  }).then(() => {
+    log.debug(F, `unlink: unlinked moodle account for user ${userData.id}`);
+  }).catch(err => {
+    log.error(F, `unlink: failed to unlink moodle account for user ${userData.id}: ${err}`);
   });
 
   return stripIndents`You have unlinked your Discord account with TripSitLearn!
@@ -139,8 +129,6 @@ export async function profile(
   discordId?:string,
   matrixId?:string,
 ):Promise<MoodleProfile> {
-  // log.debug(F, `Profile started with discordId: ${discordId}, matrixId: ${matrixId}`);
-
   let moodleProfile = {} as MoodleProfile;
 
   const userData = discordId
@@ -155,8 +143,6 @@ export async function profile(
       },
     });
 
-  // log.debug(F, `userData: ${JSON.stringify(userData, null, 2)}`);
-
   if (!userData || !userData.moodle_id) {
     return moodleProfile;
   }
@@ -164,6 +150,7 @@ export async function profile(
   try {
     await moodleDb.mdl_user.findMany();
   } catch (err) {
+    log.warn(F, `profile: Moodle database is unreachable: ${err}`);
     global.moodleConnection = {
       status: false,
       date: DateTime.now(),
@@ -183,8 +170,6 @@ export async function profile(
   if (!moodleUserData) {
     return moodleProfile;
   }
-
-  // log.debug(F, `moodleUserData: ${JSON.stringify(moodleUserData, bigIntSanitize, 2)}`);
 
   const moodleEnrollments = await moodleDb.mdl_user_enrolments.findMany({
     where: {
@@ -210,9 +195,6 @@ export async function profile(
   let completedCourses:string[] = [];
   let incompleteCourses:string[] = [];
   if (moodleEnrollments.length > 0) {
-    // log.debug(F, `moodleEnrollments: ${JSON.stringify(moodleEnrollments, null, 2)}`);
-    // log.debug(F, `moodleCourseCompletionData: ${JSON.stringify(moodleCourseCompletionData, null, 2)}`);
-
     // Get an array of courses the user has completed
     completedCourses = moodleEnrollments
       .filter(enrollment => enrollment.enrol.course.completions.length > 0 && enrollment.enrol.course.completions[0].timecompleted !== null)
@@ -231,6 +213,5 @@ export async function profile(
     incompleteCourses,
   };
 
-  // log.debug(F, `moodleProfile: ${JSON.stringify(moodleProfile, null, 2)}`);
   return moodleProfile;
 }

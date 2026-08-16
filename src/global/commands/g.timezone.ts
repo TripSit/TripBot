@@ -18,8 +18,6 @@ export async function timezone(
   memberId: string,
   tzvalue?:string | null,
 ):Promise<string> {
-  // log.debug(F, `tzvalue: ${command} ${memberId} ${tzvalue}`);
-
   let response = '' as string;
   if (command === 'set') {
     // define offset as the value from the timezones array
@@ -27,14 +25,11 @@ export async function timezone(
     for (const zone of timezones) { // eslint-disable-line no-restricted-syntax
       if (zone.label === tzvalue) {
         tzCode = zone.tzCode;
-        // log.debug(F, `tzCode: ${tzCode}`);
       }
     }
     if (tzCode === '') {
-      // embed.setTitle('Invalid timezone!\nPlease only use the options from the autocomplete list.');
       return 'invalid';
     }
-    // log.debug(F, `actor.id: ${actor.id}`);
 
     const userData = await db.users.upsert({
       where: {
@@ -66,7 +61,6 @@ export async function timezone(
       },
     });
 
-    // embed.setTitle(`I updated your timezone to ${tzvalue}`);
     return 'updated';
   }
   let gmtValue = '';
@@ -81,14 +75,11 @@ export async function timezone(
     update: {},
   });
 
-  // log.debug(F, `userData: ${JSON.stringify(userData, null, 2)}`);
-
   if (userData.timezone !== null) {
     const tzCode = userData.timezone;
     for (const zone of timezones) { // eslint-disable-line no-restricted-syntax
       if (zone.tzCode === tzCode) {
         gmtValue = zone.offset;
-        // log.debug(F, `gmtValue: ${gmtValue}`);
       }
     }
     // get the user's timezone from the database

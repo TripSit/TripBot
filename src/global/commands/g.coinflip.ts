@@ -16,7 +16,6 @@ export default coinflip;
 export async function coinflip():Promise<string> {
   // Get a random number between 0 and 1000
   const random = Math.floor(Math.random() * 100);
-  // log.debug(F, `random: ${random}`);
   let side;
 
   // Normal, boring, coin flip

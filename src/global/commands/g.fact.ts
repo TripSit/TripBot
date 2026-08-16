@@ -1,5 +1,7 @@
 import axios from 'axios';
 
+const F = f(__filename);
+
 export default fact;
 
 export async function fact():Promise<string> {
@@ -13,5 +15,6 @@ export async function fact():Promise<string> {
     });
     response = data[0].fact;
   }
+  log.info(F, `response: ${JSON.stringify(response, null, 2)}`);
   return response;
 }

@@ -53,13 +53,6 @@ export async function calcBenzo(
   drugA:string,
   drugB:string,
 ):Promise<number> {
-  // log.debug(F, `dosage: ${dosage} | drug_a: ${drugA} | drug_b: ${drugB}`);
-
-  // if (drugDataTripsit === null || drugDataTripsit === undefined) {
-  //   log.error(F, `drugDataAll is null or undefined`);
-  //   return;
-  // }
-
   const drugDataA = drugDataTripsit[drugA as keyof typeof drugDataTripsit];
 
   if (!drugDataA) {
@@ -92,16 +85,6 @@ export async function calcBenzo(
   }
 
   const convertedDoseB = regex.exec(drugDataB.properties['dose_to_diazepam' as keyof typeof drugDataB.properties]) as RegExpExecArray; // eslint-disable-line max-len
-  // log.debug(F, `convertedDoseA: ${convertedDoseA}`);
-  // log.debug(F, `convertedDoseA: ${convertedDoseA.toString()}`);
-  // log.debug(F, `convertedDoseA: ${parseFloat(convertedDoseA.toString())}`);
-  // log.debug(F, `convertedDoseB: ${convertedDoseB}`);
-  // log.debug(F, `convertedDoseB: ${convertedDoseB.toString()}`);
-  // log.debug(F, `convertedDoseB: ${parseFloat(convertedDoseB.toString())}`);
-  // log.debug(F, `dosage: ${dosage}`);
-  // log.debug(F, `dosage1: ${dosage / parseFloat(convertedDoseA.toString())}`);
-  // log.debug(F, `dosage2: ${parseFloat(convertedDoseA.toString()) *
-  // parseFloat(convertedDoseB.toString())}`);
 
   const result = (dosage / parseFloat(convertedDoseA.toString())) * parseFloat(convertedDoseB.toString());
   const rounded = Math.round(result * 100) / 100;
@@ -142,11 +125,7 @@ export async function calcDxm(givenWeight:number, weightUnits:string, taking:str
     units = '(30 mg tablets)';
   }
 
-  // log.debug(F, `roaValue:  ${roaValue}`);
-  // log.debug(F, `units: ${units}`);
-
   calcWeight /= roaValue;
-  // log.debug(F, `calcWeight: ${calcWeight}`);
 
   Object.keys(dxmData).forEach(key => {
     const min = Math.round((dxmData[key as keyof DxmDataType].min * calcWeight) * 100) / 100;
@@ -157,7 +136,6 @@ export async function calcDxm(givenWeight:number, weightUnits:string, taking:str
     };
   });
 
-  // log.info(F, `response: ${JSON.stringify(data, null, 2)}`);
   return { data, units };
 }
 
@@ -206,16 +184,13 @@ export async function calcKetamine(weight:number, unit:'lbs' | 'kg'):Promise<Ket
     const title = key.charAt(0).toUpperCase() + key.slice(1);
     noseDoseString += `**${title}**: ${noseDose[key as keyof typeof noseDose]}\n`;
   });
-  // log.debug(F, `noseDoseString: ${noseDoseString}`);
 
   const buttDose = await generateRectalDosages(calcWeight);
   let buttDoseString = '' as string;
-  // for (const [key, value] of Object.entries(buttDose)) {
   Object.keys(buttDose).forEach(key => {
     const title = key.charAt(0).toUpperCase() + key.slice(1);
     buttDoseString += `**${title}**: ${buttDose[key as keyof typeof buttDose]}\n`;
   });
-  // log.debug(F, `buttDoseString: ${buttDoseString}`);
 
   const kData = {
     insufflated: noseDoseString,
@@ -272,16 +247,11 @@ export async function calcPsychedelics(
 ):Promise<number> {
   let estimatedDosage = (lastDose / 100) * 280.059565 * (days ** -0.412565956);
   let newAmount = 0;
-  // log.debug(F, `desiredDose: ${desiredDose}`);
   if (desiredDose) {
     estimatedDosage += (desiredDose - lastDose);
-    // log.debug(F, `estimatedDosage: ${estimatedDosage} (desiredDose: ${desiredDose})`);
     newAmount = ((estimatedDosage < desiredDose) ? desiredDose : estimatedDosage);
-    // log.debug(F, `newAmountA: ${newAmount} (desiredDose: ${desiredDose})`);
   } else {
-    // log.debug(F, `estimatedDosage: ${estimatedDosage} (desiredDose: ${desiredDose})`);
     newAmount = ((estimatedDosage < lastDose) ? lastDose : estimatedDosage);
-    // log.debug(F, `newAmountB: ${newAmount} (desiredDose: ${desiredDose})`);
   }
 
   const result = Math.round(newAmount * 10) / 10;
