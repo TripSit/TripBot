@@ -1,5 +1,7 @@
 import axios from 'axios';
 
+const F = f(__filename);
+
 export default fact;
 
 export async function fact():Promise<string> {
