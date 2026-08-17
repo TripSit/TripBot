@@ -70,6 +70,21 @@ jobs:
         run: cp .env.example .env
       - name: Test
         run: npx jest --silent -c ./src/jest/jest.config.ts
+  docker-build:
+    name: Docker Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Build tripbot image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./src/docker/Dockerfile.tripbot
+          push: false
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
   codeql:
     name: CodeQL
     runs-on: ubuntu-latest
