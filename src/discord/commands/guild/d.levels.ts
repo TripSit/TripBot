@@ -1,29 +1,34 @@
+import { personas } from '@db/tripbot';
+import Canvas from '@napi-rs/canvas';
 import {
-  SlashCommandBuilder,
+  ActionRowBuilder,
+  AttachmentBuilder,
+  ButtonBuilder,
+  ButtonStyle,
   ChatInputCommandInteraction,
   // UserContextMenuCommandInteraction,
   GuildMember,
-  AttachmentBuilder,
   MessageFlags,
+  SlashCommandBuilder,
 } from 'discord.js';
-import Canvas from '@napi-rs/canvas';
-import { personas } from '@db/tripbot';
-import { SlashCommand } from '../../@types/commandDef';
 import { levels } from '../../../global/commands/g.levels';
 import { profile, ProfileData } from '../../../global/commands/g.profile';
 import { getPersonaInfo } from '../../../global/commands/g.rpg';
-import getAsset from '../../utils/getAsset';
+import { SlashCommand } from '../../@types/commandDef';
 import commandContext from '../../utils/context';
+import getAsset from '../../utils/getAsset';
 import { numFormatter, numFormatterVoice } from './d.profile';
 
 // import { getTotalLevel } from '../../../global/utils/experience';
-import { resizeText, deFuckifyText, generateColors } from '../../utils/canvasUtils';
+import { deFuckifyText, generateColors, resizeText } from '../../utils/canvasUtils';
 // import { expForNextLevel, getTotalLevel } from '../../../global/utils/experience';
 // import { imageGet } from '../../utils/imageGet';
 
 const F = f(__filename);
 
 const fontSizeFamily = '25px futura';
+
+const levelCalculatorUrl = 'https://tripsit-levelling-calculator.netlify.app/';
 
 type LevelData = {
   ALL: {
@@ -729,7 +734,18 @@ export const dLevels: SlashCommand = {
     const attachment = new AttachmentBuilder(await canvasObj.encode('png'), {
       name: `TS_Levels_${filteredDisplayName}_${formattedDate}.png`,
     });
-    await interaction.editReply({ files: [attachment] });
+    await interaction.editReply({
+      files: [attachment],
+      components: [
+        new ActionRowBuilder<ButtonBuilder>().addComponents([
+          new ButtonBuilder()
+            .setLabel('Level Calculator')
+            .setEmoji('🧮')
+            .setStyle(ButtonStyle.Link)
+            .setURL(levelCalculatorUrl),
+        ]),
+      ],
+    });
 
     log.info(F, `Total Time: ${Date.now() - startTime}ms`);
     return true;
