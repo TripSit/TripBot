@@ -2,17 +2,18 @@
 import {
   // Guild,
   Colors,
-  SlashCommandBuilder,
-  GuildMember,
-  PermissionsBitField,
   EmbedBuilder,
-  VoiceBasedChannel,
-  TextChannel,
+  GuildMember,
   MessageFlags,
+  PermissionsBitField,
+  SlashCommandBuilder,
+  TextChannel,
+  VoiceBasedChannel,
 } from 'discord.js';
+import { bigBrother } from '../../../global/utils/thoughtPolice';
 import { SlashCommand } from '../../@types/commandDef';
-import { embedTemplate } from '../../utils/embedTemplate';
 import commandContext from '../../utils/context';
+import { embedTemplate } from '../../utils/embedTemplate';
 import { levelRoles, updateTentStatus } from '../../utils/tents';
 
 const F = f(__filename);
@@ -38,6 +39,16 @@ async function tentName(
   voiceChannel: VoiceBasedChannel,
   newName: string,
 ):Promise<EmbedBuilder> {
+  // Run the new name through the same keyword automod used on chat messages (bigBrother).
+  // If it flags the name, keep the current name and tell the user why.
+  const nameCategory = await bigBrother(newName.toLowerCase());
+  if (['offensive', 'harm', 'horny', 'pg13'].includes(nameCategory)) {
+    return embedTemplate()
+      .setTitle('Tent not renamed')
+      .setColor(Colors.Red)
+      .setDescription('That name contains banned words or phrases, so your tent was not renamed.');
+  }
+
   voiceChannel.setName(`⛺│${newName}`);
 
   // Send the tent update message
