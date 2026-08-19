@@ -100,6 +100,8 @@ export async function levels(
     },
   } as LevelData;
 
+  const participatingKeys = new Set<string>();
+
   for (const type of Object.keys(leaderboardData)) { // eslint-disable-line no-restricted-syntax
     const typeKey = type as keyof typeof leaderboardData;
     const typeData = leaderboardData[typeKey];
@@ -124,24 +126,29 @@ export async function levels(
         total_exp: userExperience.total_points,
         rank: userRank + 1, // 0-based to 1-based
       };
+      participatingKeys.add(`${typeKey}.${categoryKey}`);
     }
   }
 
-  // If this user's level is frozen, pin EVERY category's displayed level to the frozen value,
-  // including categories they have no XP in (which the loop above skips). Ranks are left as-is.
+  // If this user's level is frozen, pin the displayed level of the categories they appear in, plus
+  // the headline totals. Categories they have no XP in are left alone. Ranks are left as-is.
   if (frozenLevel !== null) {
     const frozenNextLevel = await expForNextLevel(frozenLevel);
+    const alwaysFrozenKeys = ['ALL.TOTAL', 'TEXT.TOTAL'];
     for (const type of Object.keys(leaderboardData)) {
       const typeKey = type as keyof typeof leaderboardData;
       for (const category of Object.keys(leaderboardData[typeKey])) {
-        const existing = results[typeKey][category];
-        results[typeKey][category] = {
-          level: frozenLevel,
-          level_exp: frozenNextLevel,
-          nextLevel: frozenNextLevel,
-          total_exp: existing ? existing.total_exp : 0,
-          rank: existing ? existing.rank : 0,
-        };
+        const key = `${typeKey}.${category}`;
+        if (participatingKeys.has(key) || alwaysFrozenKeys.includes(key)) {
+          const existing = results[typeKey][category];
+          results[typeKey][category] = {
+            level: frozenLevel,
+            level_exp: frozenNextLevel,
+            nextLevel: frozenNextLevel,
+            total_exp: existing ? existing.total_exp : 0,
+            rank: existing ? existing.rank : 0,
+          };
+        }
       }
     }
   }
