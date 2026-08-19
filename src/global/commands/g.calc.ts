@@ -1,3 +1,4 @@
+import { convertOpioid, OpioidCalcResult } from '../utils/opioids';
 import drugDataTripsit from '../../../assets/data/tripsitDB.json';
 
 const F = f(__filename);
@@ -259,4 +260,21 @@ export async function calcPsychedelics(
   log.info(F, `response: ${JSON.stringify(result, null, 2)}`);
 
   return result;
+}
+
+/**
+ * Convert a dose of one opioid into the equivalent dose of another.
+ * Every conversion runs through oral morphine, which is the reference point the source table is built on.
+ * @param {number} dose Dose in milligrams
+ * @param {string} from Name or alias of the opioid being converted from
+ * @param {string} to Name or alias of the opioid being converted to
+ * @return {Promise<OpioidCalcResult>} A described failure rather than null when the inputs do not resolve
+ */
+export async function calcOpioid(
+  dose:number,
+  from:string,
+  to:string,
+):Promise<OpioidCalcResult> {
+  // convertOpioid logs each failure with its reason, so there is nothing useful to add here.
+  return convertOpioid(dose, from, to);
 }
