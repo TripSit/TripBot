@@ -5,7 +5,9 @@ import {
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import commandContext from '../../utils/context';
-import { mainConversion } from '../../../global/utils/opioidConverter';
+// Archived: superseded by /calc opioid.
+// The logic now lives in src/global/utils/opioids.ts and src/global/commands/g.calc.ts (calcOpioid).
+// import { mainConversion } from '../../../global/utils/opioidConverter';
 
 const F = f(__filename);
 
@@ -35,7 +37,8 @@ export const dOpioidConverter: SlashCommand = {
     const opi1: string = interaction.options.getString('from', true);
     const opi2 = interaction.options.getString('to', true);
 
-    const result = mainConversion(dosage, opi1, opi2);
+    // const result = mainConversion(dosage, opi1, opi2);
+    const result = null;
 
     const embed = embedTemplate()
       .setTitle('Conversion Result')
