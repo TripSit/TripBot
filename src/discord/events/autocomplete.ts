@@ -10,6 +10,7 @@ import tsData from '../../../assets/data/tripsitDB.json';
 import timezones from '../../../assets/data/timezones.json';
 import unitsOfMeasurement from '../../../assets/data/units_of_measurement.json';
 import { CbSubstance } from '../../global/@types/combined';
+import { opioids, DEFAULT_OPIOID_SUGGESTIONS } from '../../global/utils/opioids';
 
 const drugDataTripsit = tsData as {
   [key: string]: Drug;
@@ -42,6 +43,11 @@ for (const shape of pillShapes) { // eslint-disable-line
 }
 const defaultShapes = pillShapeNames.slice(0, 25);
 // log.debug(F, `pill_shape_names: ${pill_shape_names}`);
+
+const opioidNames = opioids.map(opioid => ({
+  name: opioid.name,
+  aliases: opioid.aliases,
+}));
 
 // Get a list of drug names and aliases from drugDataAll
 const drugNames = drugDataAll.map(drug => ({
@@ -269,6 +275,38 @@ async function autocompleteDrugNames(interaction: AutocompleteInteraction) {
   }
 }
 
+async function autocompleteOpioids(interaction: AutocompleteInteraction) {
+  const options = {
+    shouldSort: true,
+    threshold: 0.2,
+    location: 0,
+    distance: 100,
+    maxPatternLength: 32,
+    minMatchCharLength: 1,
+    keys: [
+      'name',
+      'aliases',
+    ],
+  };
+
+  // interactionCreate does not await or wrap this, so a throw here would surface as an unhandled rejection
+  try {
+    const fuse = new Fuse(opioidNames, options);
+    const focusedValue = interaction.options.getFocused();
+    const results = fuse.search(focusedValue);
+    if (results.length > 0) {
+      // The table runs to dozens of opioids, well past the 25 choices Discord will accept
+      const top25 = results.slice(0, 25);
+      await interaction.respond(top25.map(choice => ({ name: choice.item.name, value: choice.item.name })));
+    } else {
+      const defaults = DEFAULT_OPIOID_SUGGESTIONS.slice(0, 25);
+      await interaction.respond(defaults.map(choice => ({ name: choice, value: choice })));
+    }
+  } catch (error) {
+    log.error(F, `Opioid autocomplete failed: ${error}`);
+  }
+}
+
 async function autocompleteQuotes(interaction: AutocompleteInteraction) {
   const options = {
     shouldSort: true,
@@ -357,6 +395,8 @@ export async function autocomplete(interaction: AutocompleteInteraction): Promis
     await autocompleteTimezone(interaction);
   } else if (interaction.commandName === 'convert') {
     autocompleteConvert(interaction);
+  } else if (interaction.commandName === 'calc' && interaction.options.getSubcommand() === 'opioid') {
+    await autocompleteOpioids(interaction);
   } else if (interaction.commandName === 'quote') {
     await autocompleteQuotes(interaction);
   } else { // If you don't need a specific autocomplete, return a list of drug names
