@@ -1,14 +1,18 @@
+import { Prisma } from '@db/tripbot';
+import { stripIndents } from 'common-tags';
 import {
+  APIEmbed,
+  Attachment,
   ChatInputCommandInteraction,
   Colors,
+  DiscordAPIError,
+  Guild,
   GuildMember,
   MessageContextMenuCommandInteraction,
   MessageFlags,
   SlashCommandBuilder,
   TextChannel,
 } from 'discord.js';
-import { stripIndents } from 'common-tags';
-import { Prisma } from '@db/tripbot';
 
 import { SlashCommand } from '../../@types/commandDef';
 import commandContext from '../../utils/context';
@@ -104,6 +108,112 @@ const failResponses = [
   "Quote redundancy alert! This one's already living a cozy life in our database.",
 ];
 
+const imageOnlyPlaceholder = 'No text (Image)';
+
+const jumpLinkPattern = /\/channels\/\d+\/(\d+)\/(\d+)\/?$/;
+
+const imageExtensionPattern = /\.(png|jpe?g|gif|webp|avif)$/i;
+
+// Discord renders at most ten embeds per message
+const maxQuoteEmbeds = 10;
+
+const missingSourceCodes = [10003, 10008, 50001, 50013];
+
+type QuoteMedia = {
+  images: string[],
+  files: { name: string, url: string }[],
+  sourceMissing: boolean,
+};
+
+function emptyQuoteMedia(sourceMissing = false): QuoteMedia {
+  return { images: [], files: [], sourceMissing };
+}
+
+function isImageAttachment(attachment: Attachment): boolean {
+  return attachment.contentType?.startsWith('image/') ?? imageExtensionPattern.test(attachment.name);
+}
+
+// Grab the quoted message so its images can be shown. Re-read any attachment URLs from the message
+// since they can be deleted or changed.
+async function fetchQuoteMedia(guild: Guild, quoteUrl: string | null): Promise<QuoteMedia> {
+  const jumpLink = quoteUrl?.match(jumpLinkPattern);
+  if (!jumpLink) {
+    return emptyQuoteMedia();
+  }
+
+  const [, channelId, messageId] = jumpLink;
+
+  try {
+    const channel = await guild.channels.fetch(channelId);
+    if (!channel?.isTextBased()) {
+      return emptyQuoteMedia(true);
+    }
+
+    const message = await channel.messages.fetch(messageId);
+
+    const previewImages = message.embeds
+      .map(embed => embed.image?.url ?? embed.thumbnail?.url)
+      .filter((url): url is string => Boolean(url));
+
+    return {
+      images: [
+        ...message.attachments.filter(isImageAttachment).map(attachment => attachment.url),
+        ...previewImages,
+      ],
+      files: message.attachments
+        .filter(attachment => !isImageAttachment(attachment))
+        .map(attachment => ({ name: attachment.name, url: attachment.url })),
+      sourceMissing: false,
+    };
+  } catch (err) {
+    if (!missingSourceCodes.includes((err as DiscordAPIError).code as number)) {
+      log.error(F, `Failed to fetch quoted message ${messageId}: ${err}`);
+    }
+    return emptyQuoteMedia(true);
+  }
+}
+
+function quoteMediaNote(media: QuoteMedia, quoteText: string): string | null {
+  if (!media.sourceMissing) {
+    return null;
+  }
+  return quoteText === imageOnlyPlaceholder
+    ? '*The image attached to this quote has since been deleted.*'
+    : '*The original message is no longer available.*';
+}
+
+function quoteFileLinks(media: QuoteMedia): string | null {
+  if (media.files.length === 0) {
+    return null;
+  }
+  return media.files.map(file => `[${file.name}](${file.url})`).join('\n');
+}
+
+// Embeds sharing a url are merged by the Discord client into one embed with an image gallery
+function buildQuoteEmbeds(baseEmbed: APIEmbed, media: QuoteMedia, jumpUrl: string): APIEmbed[] {
+  const [firstImage, ...extraImages] = media.images;
+  if (!firstImage) {
+    return [baseEmbed];
+  }
+
+  const embeds: APIEmbed[] = [{
+    ...baseEmbed,
+    ...(jumpUrl && { url: jumpUrl }),
+    image: { url: firstImage },
+  }];
+
+  // Without a shared url the remaining images cannot be grouped onto the first embed
+  if (!jumpUrl) {
+    return embeds;
+  }
+
+  extraImages.slice(0, maxQuoteEmbeds - 1).forEach(url => {
+    embeds.push({ url: jumpUrl, image: { url } });
+  });
+
+  return embeds;
+}
+
 async function get(interaction: ChatInputCommandInteraction) {
   if (!interaction.guild) return;
   const quote = interaction.options.getString('quote', false);
@@ -188,6 +298,8 @@ async function get(interaction: ChatInputCommandInteraction) {
 
   if (!authorData.discord_id) return; // Type safety
 
+  await interaction.deferReply();
+
   // Try to fetch the Discord member
   let target = null;
   try {
@@ -197,24 +309,41 @@ async function get(interaction: ChatInputCommandInteraction) {
     target = null;
   }
 
+  const media = await fetchQuoteMedia(interaction.guild, quoteData.url);
+
+  const descriptionParts = [
+    // eslint-disable-next-line max-len
+    `${target?.displayName || target?.user.username || 'Unknown User'} ${flavorText[Math.floor(Math.random() * flavorText.length)]}`,
+  ];
+
+  if (!(quoteData.quote === imageOnlyPlaceholder && media.images.length > 0)) {
+    descriptionParts.push(`> **${quoteData.quote}**`);
+  }
+
+  const fileLinks = quoteFileLinks(media);
+  if (fileLinks) {
+    descriptionParts.push(fileLinks);
+  }
+
+  const mediaNote = quoteMediaNote(media, quoteData.quote);
+  if (mediaNote) {
+    descriptionParts.push(mediaNote);
+  }
+
+  descriptionParts.push(`- ${quoteData.url || 'No source URL'}`);
+
   // Reply with the quote embed
-  await interaction.reply({
-    embeds: [{
+  await interaction.editReply({
+    embeds: buildQuoteEmbeds({
       ...(target && {
         thumbnail: {
           url: target.user.displayAvatarURL(),
         },
       }),
-      // eslint-disable-next-line max-len
-      description: stripIndents`${target?.displayName || target?.user.username || 'Unknown User'} ${flavorText[Math.floor(Math.random() * flavorText.length)]}
-    
-      > **${quoteData.quote}**
-      
-      - ${quoteData.url || 'No source URL'}
-      `,
+      description: descriptionParts.join('\n\n'),
       ...(target && { color: target.displayColor }),
       timestamp: quoteData.date.toISOString(),
-    }],
+    }, media, quoteData.url),
   });
 }
 
@@ -253,20 +382,36 @@ async function random(interaction:ChatInputCommandInteraction) {
     author = null;
   }
 
+  const media = await fetchQuoteMedia(interaction.guild, quote.url);
+
+  const descriptionParts: string[] = [];
+
+  if (!(quote.quote === imageOnlyPlaceholder && media.images.length > 0)) {
+    descriptionParts.push(`**${quote.quote}**`);
+  }
+
+  const fileLinks = quoteFileLinks(media);
+  if (fileLinks) {
+    descriptionParts.push(fileLinks);
+  }
+
+  const mediaNote = quoteMediaNote(media, quote.quote);
+  if (mediaNote) {
+    descriptionParts.push(mediaNote);
+  }
+
   await interaction.editReply({
-    embeds: [
-      {
-        author: {
-          name: `${author ? author.displayName : 'Unknown User'} ${
-            flavorText[Math.floor(Math.random() * flavorText.length)]
-          }`,
-          icon_url: author ? author.user.displayAvatarURL() : undefined,
-          url: quote.url,
-        },
-        description: `**${quote.quote}**`,
-        timestamp: `${quote.date.toISOString()}`,
+    embeds: buildQuoteEmbeds({
+      author: {
+        name: `${author ? author.displayName : 'Unknown User'} ${
+          flavorText[Math.floor(Math.random() * flavorText.length)]
+        }`,
+        icon_url: author ? author.user.displayAvatarURL() : undefined,
+        url: quote.url,
       },
-    ],
+      ...(descriptionParts.length > 0 && { description: descriptionParts.join('\n\n') }),
+      timestamp: `${quote.date.toISOString()}`,
+    }, media, quote.url),
   });
 }
 
@@ -469,7 +614,7 @@ export async function quoteAdd(interaction:MessageContextMenuCommandInteraction)
   });
 
   // If empty string or just whitespace, replace it.
-  const fixedQuote = interaction.targetMessage.content.trim() || 'No text (Image)';
+  const fixedQuote = interaction.targetMessage.content.trim() || imageOnlyPlaceholder;
   const quoteData = await db.quotes.create({
     data: {
       user_id: targetData.id,
