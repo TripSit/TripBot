@@ -1,22 +1,22 @@
 import {
-  TextChannel,
-  Colors,
-  PermissionResolvable,
-  User,
-  GuildAuditLogsEntry,
-  GuildMember,
-  PartialUser,
-  PartialGuildMember,
-} from 'discord.js';
-import {
-// ChannelType,
+  // ChannelType,
   AuditLogEvent, ChannelType,
 } from 'discord-api-types/v10';
 import {
+  Colors,
+  GuildAuditLogsEntry,
+  GuildMember,
+  PartialGuildMember,
+  PartialUser,
+  PermissionResolvable,
+  TextChannel,
+  User,
+} from 'discord.js';
+import {
   MessageDeleteEvent,
 } from '../@types/eventDef';
-import { embedTemplate } from '../utils/embedTemplate';
 import { checkChannelPermissions, checkGuildPermissions } from '../utils/checkPermissions'; // eslint-disable-line
+import { embedTemplate } from '../utils/embedTemplate';
 // eslint-disable-line @typescript-eslint/no-unused-vars
 const F = f(__filename); // eslint-disable-line @typescript-eslint/no-unused-vars
 
@@ -29,9 +29,16 @@ export const messageDelete: MessageDeleteEvent = {
     if (!message.guild) return;
     if (message.guild.id !== env.DISCORD_GUILD_ID) return;
     if (message.channel.type !== ChannelType.GuildText) return;
+
+    // If a message has been saved as a partial, grab it from the cache.
+    const deletedMessage = message.author
+      ? message
+      : message.channel.messages.cache.get(message.id);
+    if (!deletedMessage) {
+      return;
+    }
+
     const startTime = Date.now();
-    // log.info(F, `Message in ${message.channel.name} was deleted.`);
-    // log.debug(F, `message: ${JSON.stringify(message, null, 2)}`);
 
     // Get the channel this will be posted in
     const msglogChannel = await message.client.channels.fetch(env.CHANNEL_MSGLOG) as TextChannel;
@@ -56,57 +63,24 @@ export const messageDelete: MessageDeleteEvent = {
       return;
     }
 
-    // log.debug(F, `Message Author: ${message.author}`);
-
     const deletionLog = (await message.guild.fetchAuditLogs({
       limit: 1,
       type: AuditLogEvent.MessageDelete,
     })).entries.last() as GuildAuditLogsEntry<AuditLogEvent.MessageDelete, 'Delete', 'Message'>;
 
-    // log.debug(F, `Deletion Log: ${JSON.stringify(deletionLog, null, 2)}`);
+    const { author } = deletedMessage;
+    const content = deletedMessage.content || 'No content';
 
-    // Perform a coherence check to make sure that there's *something*
-    let executorUser: User | PartialUser | undefined;
-    let content = 'No content'; // eslint-disable-line
-    let { author } = message;
-    // log.debug(F, `Author: ${JSON.stringify(author, null, 2)}`);
-    // log.debug(F, `Target: ${JSON.stringify(deletionLog?.target, null, 2)}`);
+    // A matching audit log entry means someone other than the author removed the message. Discord
+    // batches these entries, so a missing match usually just means the author deleted it themselves.
+    let executorUser: User | PartialUser = author;
     if (deletionLog
-      && author
       && deletionLog.target
       && deletionLog.target.id === author.id
-      && deletionLog.createdTimestamp > (startTime - 1)) {
-      // log.debug(F, `Found relevant audit log: ${JSON.stringify(deletionLog, null, 2)}`);
-      if (deletionLog.executor) {
-        executorUser = deletionLog.executor;
-        if (message.content) {
-          content = message.content;
-        }
-      }
-    } else {
-      log.debug(F, 'No relevant audit logs were found. This usually means the user deleted the message themselves');
-      if (message.author) {
-        executorUser = message.author;
-        content = message.content;
-      } else {
-        const messageRecord = message.channel.messages.cache.find(m => m.id === message.id);
-        if (messageRecord) {
-          executorUser = messageRecord.author;
-          content = messageRecord.content;
-          author = messageRecord.author;
-        } else {
-          log.debug(F, 'Message not found in cache');
-        }
-      }
+      && deletionLog.createdTimestamp > (startTime - 1)
+      && deletionLog.executor) {
+      executorUser = deletionLog.executor;
     }
-
-    // log.debug(F, `Executor: ${JSON.stringify(executorUser, null, 2)}, Content: ${content}`);
-    if (!executorUser) {
-      log.error(F, 'No executor user found');
-      return;
-    }
-
-    log.debug(F, `Executor: ${JSON.stringify(executorUser, null, 2)}, Content: ${content}`);
 
     let executorMember: GuildMember | PartialGuildMember;
     try {
@@ -115,11 +89,6 @@ export const messageDelete: MessageDeleteEvent = {
       // log.error(F, `Error fetching executor member: ${err}`);
       return;
     }
-    // log.debug(F, `Executor Member: ${JSON.stringify(executorMember, null, 2)}, Content: ${content}`);
-
-    const authorName = author ? author.username : 'Unknown Author';
-    // log.debug(F, `Author Name: ${authorName}`);
-    // const channelName = message.channel ? (message.channel as TextChannel).name : 'Unknown';
 
     const embed = embedTemplate()
       .setDescription(`**${executorMember ?? 'Someone'} deleted message in ${message.channel.name}**`)
@@ -127,23 +96,14 @@ export const messageDelete: MessageDeleteEvent = {
       .setFooter(null)
       .setColor(Colors.Red);
 
-    // log.debug(F, `Author Name: ${authorName}, Content: ${content}`);
-
-    if (authorName === 'Unknown Author' && content === 'No content') {
+    if (content !== 'No content') {
       embed.addFields([
-        { name: authorName, value: 'Message not found in cache', inline: true },
+        { name: author.username, value: content.slice(0, 1023), inline: true },
       ]);
     }
 
-    // log.debug(F, `content.length: ${content.length}`);
-    if (content.length > 0 && content !== 'No content') {
-      embed.addFields([
-        { name: authorName, value: content.slice(0, 1023), inline: true },
-      ]);
-    }
-
-    if (message.attachments.size > 0) {
-      message.attachments.forEach(async attachment => {
+    if (deletedMessage.attachments.size > 0) {
+      deletedMessage.attachments.forEach(async attachment => {
         embed.setThumbnail(`${attachment.proxyURL}`);
         // const file = new AttachmentBuilder(attachment.proxyURL);
         await msglogChannel.send({ embeds: [embed] });
