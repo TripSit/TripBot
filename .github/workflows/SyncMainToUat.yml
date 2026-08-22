@@ -1,0 +1,56 @@
+name: SyncMainToUat
+
+on:
+  push:
+    branches:
+      - main
+permissions:
+  contents: write
+  pull-requests: write
+jobs:
+  sync:
+    name: Merge main into uat
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: uat
+          fetch-depth: 0
+      - name: Configure git identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+      - name: Merge main into uat
+        id: merge
+        run: |
+          git fetch origin main
+          if git merge --no-edit origin/main; then
+            if [ "$(git rev-parse HEAD)" = "$(git rev-parse origin/uat)" ]; then
+              echo "action=none" >> "$GITHUB_OUTPUT"
+            else
+              echo "action=push" >> "$GITHUB_OUTPUT"
+            fi
+          else
+            git merge --abort
+            echo "action=conflict" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Push merge commit to uat
+        if: steps.merge.outputs.action == 'push'
+        id: push
+        run: git push origin HEAD:uat || echo "blocked=true" >> "$GITHUB_OUTPUT"
+      - name: Open PR if direct push was blocked (e.g. branch protection)
+        if: steps.merge.outputs.action == 'push' && steps.push.outputs.blocked == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git push --force origin HEAD:sync/main-into-uat
+          gh pr create --base uat --head sync/main-into-uat \
+            --title "Sync main into uat" \
+            --body "Automated: brings uat up to date with main so uat stays an ancestor of main and the next uat -> main PR only shows genuinely new commits." \
+            2>/dev/null || echo "PR already exists, branch updated by the push above."
+          gh pr merge sync/main-into-uat --merge --auto || true
+      - name: Flag merge conflict for manual resolution
+        if: steps.merge.outputs.action == 'conflict'
+        run: |
+          echo "::error::main could not be merged into uat automatically (conflict). Resolve manually: git checkout uat && git merge main, fix conflicts, then push."
+          exit 1
