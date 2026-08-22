@@ -1,0 +1,33 @@
+name: PromoteUatToMain
+
+on:
+  push:
+    branches:
+      - uat
+permissions:
+  contents: read
+  pull-requests: write
+jobs:
+  promote:
+    name: Open uat -> main PR if needed
+    runs-on: ubuntu-latest
+    steps:
+      - name: Open a promotion PR when uat is ahead of main
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          existing=$(gh pr list --base main --head uat --state open --json number --jq '.[0].number')
+          if [ -n "$existing" ]; then
+            echo "PR #${existing} is already open from uat to main - it updates itself as uat moves, nothing to do."
+            exit 0
+          fi
+
+          ahead=$(gh api "repos/${GH_REPO}/compare/main...uat" --jq '.ahead_by')
+          if [ "$ahead" -gt 0 ]; then
+            gh pr create --base main --head uat \
+              --title "Promote uat to main" \
+              --body "Automated promotion PR: uat is ${ahead} commit(s) ahead of main."
+          else
+            echo "uat is not ahead of main - nothing to promote."
+          fi
