@@ -19,7 +19,32 @@ on:
       - "**/build/**"
       - "**/@prisma-moodle/**"
 
+# A PR just opened against uat may be behind uat; sync-with-uat pushes a merge
+# commit to bring it current, which fires a fresh `synchronize` run with the
+# updated code. This cancels the now-stale run from `opened` instead of
+# letting both finish (checks can't be re-run mid-workflow against a branch
+# update - the checkout ref is fixed at trigger time - so superseding the
+# whole run is the only way to actually check the synced code).
+concurrency:
+  group: pr-open-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
 jobs:
+  sync-with-uat:
+    name: Sync PR with uat
+    runs-on: ubuntu-latest
+    if: github.event.action == 'opened' && github.event.pull_request.base.ref == 'uat'
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Update this PR's branch with the latest uat
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          gh api -X PUT "repos/${GH_REPO}/pulls/${{ github.event.pull_request.number }}/update-branch" \
+            || echo "::warning::Could not auto-sync this PR with uat (likely a real conflict or a fork branch) - it may need a manual update."
   lint:
     name: Lint
     runs-on: ubuntu-latest
