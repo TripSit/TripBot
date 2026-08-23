@@ -42,6 +42,7 @@ function prButtonId(action: 'ACCEPT' | 'REJECT', prNumber: number, checksPassed:
  * @param {PrNotification} pr
  */
 export async function notifyPrOpened(pr: PrNotification): Promise<void> {
+  log.debug(F, `Notifying PR #${pr.number} "${pr.title}": checksPassed=${pr.checksPassed}, tests=${pr.testsPassed}/${pr.testsTotal}`); // eslint-disable-line max-len
   const guild = await discordClient.guilds.fetch(env.DISCORD_GUILD_ID);
   const channel = await guild.channels.fetch(env.CHANNEL_TRIPBOT) as TextChannel;
   const role = await guild.roles.fetch(env.ROLE_TRIPBOTDEV);
@@ -85,14 +86,17 @@ export async function notifyPrOpened(pr: PrNotification): Promise<void> {
 /**
  * Attempts to squash-merge the PR, returning an error message on failure
  * instead of throwing, so callers can report it without a try/catch.
+ * The underlying GitHub error (status + message) is logged by mergePr
+ * itself; this only logs that the failure reached the Discord layer.
  * @param {number} prNumber
+ * @param {string} actor Discord display name of whoever clicked accept.
  */
-async function attemptMerge(prNumber: number): Promise<string | null> {
+async function attemptMerge(prNumber: number, actor: string): Promise<string | null> {
   try {
-    await mergePr(prNumber);
+    await mergePr(prNumber, actor);
     return null;
   } catch (error) {
-    log.error(F, `Failed to merge PR #${prNumber}: ${error}`);
+    log.warn(F, `Merge of PR #${prNumber} failed, reporting back to ${actor}`);
     return error instanceof Error ? error.message : 'Unknown error';
   }
 }
@@ -120,10 +124,13 @@ export async function prReviewButton(interaction: ButtonInteraction): Promise<vo
   const prNumber = Number(prNumberString);
   const checksPassed = checksPassedString === 'true';
 
+  log.debug(F, `PR review button: action=${action} prNumber=${prNumber} checksPassed=${checksPassed} by ${interaction.user.tag} (${interaction.user.id})`); // eslint-disable-line max-len
+
   if (!interaction.guild || !interaction.member) return;
 
   const member = interaction.member as GuildMember;
   if (!member.roles.cache.has(env.ROLE_TRIPBOTDEV)) {
+    log.warn(F, `${interaction.user.tag} (${interaction.user.id}) tried to ${action} PR #${prNumber} without the TripBot dev role`); // eslint-disable-line max-len
     await interaction.reply({
       content: 'You do not have permission to review PRs.',
       flags: MessageFlags.Ephemeral,
@@ -133,8 +140,9 @@ export async function prReviewButton(interaction: ButtonInteraction): Promise<vo
 
   if (action === 'ACCEPT') {
     if (checksPassed) {
+      log.info(F, `${member.displayName} accepted PR #${prNumber} (checks passed)`);
       await interaction.deferUpdate();
-      const mergeError = await attemptMerge(prNumber);
+      const mergeError = await attemptMerge(prNumber, member.displayName);
       if (mergeError) {
         await interaction.followUp({
           content: `Failed to merge PR #${prNumber}: ${mergeError}. You may need to merge it manually on GitHub.`,
@@ -152,6 +160,7 @@ export async function prReviewButton(interaction: ButtonInteraction): Promise<vo
     }
 
     // Checks were failing: require a written justification before merging
+    log.info(F, `${member.displayName} clicked accept on PR #${prNumber} despite failing checks; prompting for justification`); // eslint-disable-line max-len
     await interaction.showModal(new ModalBuilder()
       .setCustomId(`"ID":"PR","T":"ACCEPTOVERRIDE","N":"${prNumber}","II":"${interaction.id}"`)
       .setTitle(`Override failing checks on PR #${prNumber}`)
@@ -174,7 +183,9 @@ export async function prReviewButton(interaction: ButtonInteraction): Promise<vo
         const reason = i.fields.getTextInputValue('reason');
         const modalMember = i.member as GuildMember;
 
-        const mergeError = await attemptMerge(prNumber);
+        log.info(F, `Accept-override modal submitted for PR #${prNumber} by ${modalMember.displayName}: ${reason}`); // eslint-disable-line max-len
+
+        const mergeError = await attemptMerge(prNumber, modalMember.displayName);
         if (mergeError) {
           // eslint-disable-next-line max-len
           await i.editReply({ content: `Failed to merge PR #${prNumber}: ${mergeError}. You may need to merge it manually on GitHub.` });
@@ -199,6 +210,7 @@ export async function prReviewButton(interaction: ButtonInteraction): Promise<vo
   }
 
   // REJECT: collect a comment via modal, then post it to the GitHub PR
+  log.info(F, `${member.displayName} clicked reject on PR #${prNumber}`);
   await interaction.showModal(new ModalBuilder()
     .setCustomId(`"ID":"PR","T":"REJECTMODAL","N":"${prNumber}","II":"${interaction.id}"`)
     .setTitle(`Reject PR #${prNumber}`)
@@ -221,10 +233,13 @@ export async function prReviewButton(interaction: ButtonInteraction): Promise<vo
       const comment = i.fields.getTextInputValue('comment');
       const modalMember = i.member as GuildMember;
 
+      log.info(F, `Reject modal submitted for PR #${modalPrNumberString} by ${modalMember.displayName}: ${comment}`);
+
       try {
         await postPrRejectionComment(Number(modalPrNumberString), modalMember.displayName, comment);
       } catch (error) {
-        log.error(F, `Failed to post rejection comment on PR #${modalPrNumberString}: ${error}`);
+        // Detailed GitHub error (status + message) is logged by postPrRejectionComment itself
+        log.warn(F, `Rejection comment on PR #${modalPrNumberString} failed, reporting back to ${modalMember.displayName}`); // eslint-disable-line max-len
         await i.editReply({ content: 'Failed to post your comment to GitHub. Please try again or comment manually.' });
         return;
       }
