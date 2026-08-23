@@ -1,16 +1,34 @@
-name: PromoteUatToMain
+name: UatPushPipeline
 
 on:
   push:
     branches:
       - uat
+
 permissions:
-  contents: read
+  contents: write
   pull-requests: write
+
 jobs:
-  promote:
-    name: Open uat -> main PR if needed
+  sync-open-prs:
+    name: 1. Sync open PRs with uat
     runs-on: ubuntu-latest
+    steps:
+      - name: Update every open PR targeting uat
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          for pr in $(gh pr list --base uat --state open --json number --jq '.[].number'); do
+            echo "Updating PR #$pr with latest uat..."
+            gh api -X PUT "repos/${GH_REPO}/pulls/${pr}/update-branch" \
+              || echo "::warning::Could not auto-update PR #${pr} (likely a real conflict or a fork branch) - needs manual update."
+          done
+
+  promote-to-main:
+    name: 2. Open/refresh uat -> main promotion PR
+    runs-on: ubuntu-latest
+    needs: sync-open-prs
     steps:
       - name: Open a promotion PR when uat is ahead of main
         env:
