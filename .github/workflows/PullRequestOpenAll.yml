@@ -189,7 +189,20 @@ jobs:
           TRIPBOT_API_URL: ${{ secrets.TRIPBOT_API_URL }}
           TRIPBOT_API_TOKEN: ${{ secrets.TRIPBOT_API_TOKEN }}
         run: |
-          curl -sf -X POST "$TRIPBOT_API_URL/pr/notify" \
+          echo "Payload sent to TripBot:"
+          cat pr-notify-payload.json
+          echo ""
+
+          http_status=$(curl -sS -o response.json -w '%{http_code}' -X POST "$TRIPBOT_API_URL/pr/notify" \
             -H "Content-Type: application/json" \
             -H "Authorization: Bearer $TRIPBOT_API_TOKEN" \
-            --data @pr-notify-payload.json
+            --data @pr-notify-payload.json)
+
+          echo "TripBot responded with HTTP $http_status:"
+          cat response.json
+          echo ""
+
+          if [ "$http_status" -lt 200 ] || [ "$http_status" -ge 300 ]; then
+            echo "::error::TripBot rejected the PR notification (HTTP $http_status)"
+            exit 1
+          fi

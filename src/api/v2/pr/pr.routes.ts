@@ -24,10 +24,14 @@ router.post('/notify', async (req, res, next) => {
       } = req.body;
 
       if (!number || !title || !url) {
+        log.warn(F, `PR notify request missing required fields: ${JSON.stringify(req.body)}`);
         return res.status(400).json({
           error: 'Missing required fields: number, title, or url',
         });
       }
+
+      // eslint-disable-next-line max-len
+      log.info(F, `Notifying Discord of PR #${number} "${title}" by ${author}: checksPassed=${checksPassed}, tests=${testsPassed}/${testsTotal}`);
 
       await notifyPrOpened({
         number,
@@ -41,11 +45,12 @@ router.post('/notify', async (req, res, next) => {
         checksSummary: typeof checksSummary === 'string' ? checksSummary : '',
       });
 
+      log.info(F, `Successfully notified Discord of PR #${number}`);
       return res.json({ success: true });
     }
     return next();
   } catch (error) {
-    log.error(F, `Error notifying PR opened: ${error}`);
+    log.error(F, `Error notifying PR opened (PR #${req.body?.number}): ${error}`);
     return next(error);
   }
 });
