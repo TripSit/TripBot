@@ -340,7 +340,7 @@ export function mockInteractionAndSpyReply(
   // console.log(discord);
   const interaction = discord.getInteraction() as ChatInputCommandInteraction;
   // console.log(interaction);
-  const spy = jest.spyOn(interaction, 'reply');
+  const spy = vi.spyOn(interaction, 'reply');
   return { interaction, spy };
 }
 
@@ -380,7 +380,7 @@ export function mockInteractionAndSpyShowModal(command:{
   // console.log(discord);
   const interaction = discord.getInteraction() as ChatInputCommandInteraction;
   // console.log(interaction);
-  const spy = jest.spyOn(interaction, 'showModal');
+  const spy = vi.spyOn(interaction, 'showModal');
   return { interaction, spy };
 }
 
@@ -443,7 +443,7 @@ export async function executeCommandModalAndSpyEditReply(
   // const listeners2 = interaction.client.listeners('modalSubmit');
   // log.debug(F, `listeners2: ${JSON.stringify(listeners2, null, 2)}`);
 
-  return jest.spyOn(modalInteraction, 'editReply');
+  return vi.spyOn(modalInteraction, 'editReply');
 }
 
 /* Spy 'editReply' */
@@ -463,7 +463,7 @@ export function mockInteractionAndSpyEditReply(command:{
   // console.log(discord);
   const interaction = discord.getInteraction() as ChatInputCommandInteraction;
   // console.log(interaction);
-  const spy = jest.spyOn(interaction, 'editReply');
+  const spy = vi.spyOn(interaction, 'editReply');
   return { interaction, spy };
 }
 
@@ -502,7 +502,7 @@ export function mockInteractionWithOptionsAndSpyChannelSend(command:{
   const discord = new MockDiscord({ command });
   const interaction = discord.getInteraction() as ChatInputCommandInteraction;
   if (!interaction.channel) throw new Error('Channel not found');
-  const spy = jest.spyOn(interaction.channel, 'send');
+  const spy = vi.spyOn(interaction.channel as TextChannel, 'send');
   return { interaction, spy };
 }
 
@@ -543,7 +543,7 @@ export function mockMessageWithOptionsAndSpyEdit(command:{
   const interaction = discord.getInteraction() as ChatInputCommandInteraction;
   const channel = discord.getTextChannel();
   const lastMessage = channel.messages.cache.last() as Message;
-  const spy = jest.spyOn(lastMessage, 'edit');
+  const spy = vi.spyOn(lastMessage, 'edit');
   return { interaction, spy };
 }
 

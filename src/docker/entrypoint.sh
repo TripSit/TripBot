@@ -10,16 +10,10 @@ if [ "$NODE_ENV" = "development" ]; then
   fi
   npm run db:deploy
   npm run db:generate
-  # tsc does not emit the (non-TS) generated Prisma client into build/, so copy it
-  mkdir -p /workspaces/tripbot/build/src/prisma/tripbot
-  cp -r /workspaces/tripbot/src/prisma/tripbot/generated /workspaces/tripbot/build/src/prisma/tripbot/generated
-  mkdir -p /workspaces/tripbot/build/src/prisma/moodle
-  cp -r /workspaces/tripbot/src/prisma/moodle/generated /workspaces/tripbot/build/src/prisma/moodle/generated
   tail -f /dev/null
 else
   echo "Running production"
 
-  cd /workspaces/tripbot/build
   attempt=0
   until npx prisma migrate deploy; do
     attempt=$((attempt + 1))
@@ -30,7 +24,6 @@ else
     echo "Migration attempt $attempt failed (database may still be starting); retrying in 5s..."
     sleep 5
   done
-  cd /workspaces/tripbot
 
   if [ "${DEPLOY_DISCORD_COMMANDS_ON_START:-}" = "true" ]; then
     echo "Deploying commands"

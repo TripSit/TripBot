@@ -10,7 +10,7 @@ on:
       - '**/matrix/**'
       - '**/telegram/**'
       - '**/irc/**'
-      - '**/jest/**'
+      - '**/vitest/**'
       - '**/build/**'
       - '**/@prisma-moodle/**'
 jobs:
@@ -46,7 +46,7 @@ jobs:
   #   - name: Copy env
   #     run: cp .env.example .env
   #   - name: Test
-  #     run: npx jest --silent -c ./src/jest/jest.unit.config.ts
+  #     run: npx vitest run --silent
   codeql:
     name: CodeQL
     runs-on: ubuntu-latest

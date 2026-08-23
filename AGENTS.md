@@ -35,7 +35,7 @@ TripBot is a strict TypeScript application whose primary runtime is Node.js. It 
 - a PostgreSQL TripBot database accessed through Prisma;
 - a read-oriented Moodle MariaDB integration with its own Prisma schema;
 - Docker-based local services;
-- Jest tests, with the active Jest configuration currently focused on API tests.
+- Vitest tests, covering the API, Discord command, and global business-logic layers.
 
 TripBot provides harm-reduction and community tooling. Treat changes to drug information, interactions, dosage text,
 crisis resources, moderation, privacy, and user records as high-impact. Preserve established wording and data sources;
@@ -51,7 +51,7 @@ do not invent medical claims or silently weaken safety checks.
 - Type checking: strict.
 - Style: ESLint with Airbnb TypeScript and SonarJS rules.
 - Database toolkit: Prisma 7 with PostgreSQL and MariaDB adapters.
-- Test runner: Jest with `ts-jest`.
+- Test runner: Vitest.
 - Dependency lockfile: `package-lock.json`.
 - Package scripts, Docker files, hooks, and CI workflows use npm/npx.
 
@@ -106,11 +106,14 @@ npx eslint --ext .ts,.js path/to/file.ts
 # Lint the repository without auto-fixing
 npx eslint --ext .ts,.js .
 
-# Run the active Jest suite
-npm run tripbot:test -- --runInBand
+# Run the active Vitest suite
+npm run tripbot:test
 
-# Run one existing test file even if it is outside the active testMatch
-npx jest --config ./src/jest/jest.config.ts --runTestsByPath ./path/to/file.test.ts --runInBand --coverage=false
+# Run one existing test file (also works outside the active include globs)
+npx vitest run ./path/to/file.test.ts
+
+# Run with coverage
+npx vitest run --coverage
 ```
 
 Use targeted lint and tests first. Repository-wide lint may expose unrelated pre-existing failures.
@@ -197,15 +200,18 @@ src/prisma/tripbot/client.ts          PostgreSQL Prisma client adapter
 src/prisma/moodle/schema.prisma       Moodle MariaDB schema
 src/prisma/moodle/client.ts           Moodle Prisma client adapter
 src/prisma/*/generated/               Generated clients; ignored and never edited manually
-src/jest/jest.config.ts               Active Jest configuration
+vitest.config.mts                     Active Vitest configuration
+src/vitest/                           Shared test infrastructure (Discord + Prisma mocks)
+src/discord/tests/                    Discord command tests (mirrors commands/{global,guild})
+src/global/tests/                     Global business-logic (g.*) tests
 src/docker/                           Container build, startup, and wait scripts
 assets/                               Runtime data, fonts, and images
 build/                                Generated TypeScript output; ignored
 ```
 
-Inactive or partially maintained areas such as Matrix, IRC, Telegram, archive, legacy, placeholder, and many Discord
-test directories are excluded by TypeScript, ESLint, CI, or Jest patterns. Do not assume a repository-wide command
-validates those areas.
+Inactive or partially maintained areas such as Matrix, IRC, Telegram, archive, legacy, placeholder, and any
+not-yet-migrated flat files directly under `src/discord/tests/` are excluded by TypeScript, ESLint, CI, or Vitest
+patterns. Do not assume a repository-wide command validates those areas.
 
 ## Architecture rules
 
@@ -323,15 +329,17 @@ Choose checks proportional to the change; do not claim checks you did not run.
 | TypeScript logic | Targeted ESLint, `npx tsc --noEmit --pretty false`, relevant existing test |
 | Discord command | Type-check, targeted ESLint, relevant existing test if configured, inspect interaction lifecycle |
 | Command definition/options | Discord-command checks plus note that deployment is required; do not deploy automatically |
-| API route/query | Type-check, targeted ESLint, targeted API Jest file |
+| API route/query | Type-check, targeted ESLint, targeted API Vitest file |
 | Prisma schema | `prisma format`, `prisma validate`, generate both affected clients, type-check, inspect migration SQL |
 | Migration | Schema checks plus apply to a disposable local database and verify data compatibility |
 | Dependency/tooling | `npm ci`, type-check, relevant tests, and confirm `package-lock.json` is coherent |
 | Docker/runtime | Build or start only the affected service, inspect logs, stop only containers started for the task |
 
-The active `src/jest/jest.config.ts` currently matches API tests and collects API coverage. Many Discord tests exist but
-are not part of the default suite. Use `--runTestsByPath` for a relevant existing test and report failures honestly;
-do not broaden Jest configuration unless requested.
+`vitest.config.mts` (repo root) matches and collects coverage across the API, Discord command, and global
+business-logic layers — see its `test.include`/`test.exclude` and `test.coverage` blocks for exact scope. A handful of
+legacy Discord test files directly under `src/discord/tests/` predate the current mock scaffold and are excluded until
+migrated; treat them as reference only. Run a relevant existing test with `npx vitest run <path>` and report failures
+honestly; do not broaden Vitest's scope beyond what's requested.
 
 If dependencies or generated Prisma clients are unavailable, say so clearly. Do not disguise an environment/setup
 failure as a source-code failure.

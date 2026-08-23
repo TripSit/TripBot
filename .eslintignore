@@ -4,7 +4,12 @@
 **/src/matrix/**
 **/src/telegram/**
 **/src/irc/**
-**/jest/**
 **/build/**
-**/tests/**
 **/@prisma-moodle/**
+**/placeholder/**
+**/__tests__editreply_/**
+**/__tests__integration__/**
+**/__tests__modals__/**
+**/__tests__send__/**
+**/__tests__todo__/**
+src/discord/tests/*.test.ts

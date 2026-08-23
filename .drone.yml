@@ -2,6 +2,9 @@ kind: pipeline
 type: docker
 name: Deploy TripBot
 
+node:
+  env: prod
+
 steps:
   - name: Rebuild TripBot
     image: docker
