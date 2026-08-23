@@ -20,7 +20,7 @@ router.post('/notify', async (req, res, next) => {
   try {
     if (await checkAuth(req, res)) {
       const {
-        number, title, body, url, author, testsPassed, testsTotal,
+        number, title, body, url, author, testsPassed, testsTotal, checksPassed, checksSummary,
       } = req.body;
 
       if (!number || !title || !url) {
@@ -37,6 +37,8 @@ router.post('/notify', async (req, res, next) => {
         author: author ?? 'unknown',
         testsPassed: typeof testsPassed === 'number' ? testsPassed : 0,
         testsTotal: typeof testsTotal === 'number' ? testsTotal : 0,
+        checksPassed: typeof checksPassed === 'boolean' ? checksPassed : false,
+        checksSummary: typeof checksSummary === 'string' ? checksSummary : '',
       });
 
       return res.json({ success: true });
