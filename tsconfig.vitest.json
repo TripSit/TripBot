@@ -1,0 +1,32 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "types": ["node", "vitest/globals"],
+    "noEmit": true
+  },
+  "include": [
+    "src/vitest/**/*",
+    "src/discord/tests/**/*",
+    "src/global/tests/**/*",
+    "src/api/**/*.test.ts",
+    "src/global/@types/**/*.d.ts",
+    "src/discord/utils/discordTypes.ts",
+    "vitest.config.mts"
+  ],
+  "exclude": [
+    "**/archive/**",
+    "**/legacy/**",
+    "**/matrix/**",
+    "**/irc/**",
+    "**/telegram/**",
+    "**/placeholder/**",
+    "**/__tests__editreply_/**",
+    "**/__tests__integration__/**",
+    "**/__tests__modals__/**",
+    "**/__tests__send__/**",
+    "**/__tests__todo__/**",
+    "src/discord/tests/*.test.ts"
+  ]
+}

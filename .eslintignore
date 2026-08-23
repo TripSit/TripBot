@@ -4,7 +4,5 @@
 **/src/matrix/**
 **/src/telegram/**
 **/src/irc/**
-**/jest/**
 **/build/**
-**/tests/**
 **/@prisma-moodle/**

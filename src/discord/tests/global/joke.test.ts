@@ -2,8 +2,8 @@ import {
   Colors,
 } from 'discord.js';
 import axios from 'axios';
-import { dJoke } from '../commands/global/d.joke';
-import { executeCommandAndSpyEditReply, embedContaining, getParsedCommand } from '../../jest/utils/testutils';
+import { dJoke } from '../../commands/global/d.joke';
+import { executeCommandAndSpyEditReply, embedContaining, getParsedCommand } from '../../../vitest/utils/testutils';
 
 const slashCommand = dJoke;
 
@@ -19,7 +19,7 @@ const footerInfo = {
 
 describe(slashCommand.data.name, () => {
   it(slashCommand.data.description, async () => {
-    jest.spyOn(axios, 'get').mockResolvedValue({
+    vi.spyOn(axios, 'get').mockResolvedValue({
       data: {
         type: 'single',
         joke: 'What do you call a fake noodle? An impasta.',

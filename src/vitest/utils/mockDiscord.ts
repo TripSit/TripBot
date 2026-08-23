@@ -1,5 +1,3 @@
-import fs from 'fs';
-import path from 'path';
 import {
   Client,
   Guild,
@@ -136,11 +134,11 @@ export default class MockDiscord {
   }
 
   private mockPrototypes() { // eslint-disable-line
-    TextChannel.prototype.send = jest.fn().mockImplementation(() => ({
-      react: jest.fn(),
+    TextChannel.prototype.send = vi.fn().mockImplementation(() => ({
+      react: vi.fn(),
     }));
 
-    Message.prototype.edit = jest.fn();
+    Message.prototype.edit = vi.fn();
   }
 
   private mockReaction(reactionOptions:MessageReaction, message:Message): void {
@@ -153,7 +151,7 @@ export default class MockDiscord {
 
   private mockClient(): void {
     this.client = new Client({ intents: [] });
-    this.client.login = jest.fn(() => Promise.resolve('LOGIN_TOKEN'));
+    this.client.login = vi.fn(() => Promise.resolve('LOGIN_TOKEN'));
     // My stuff
     this.client.commands = new Collection();
     // this.client.application = Reflect.construct(ClientApplication, [
@@ -201,41 +199,6 @@ export default class MockDiscord {
       this.client,
       { id: '1234567890' },
     ]);
-
-    // Register global commands
-    const globalCommands = path.join(__dirname, '../../discord/commands/global');
-    const globalFiles = fs.readdirSync(globalCommands);
-    // log.debug(F, `Global command files: ${globalFiles}`);
-    globalFiles.forEach(file => {
-      const filePath = path.join(globalCommands, file);
-      // log.debug(F, `Loading global command: ${filePath}`);
-      const command = require(filePath); // eslint-disable-line
-      // log.debug(F, `Command: ${JSON.stringify(command, null, 2)}`);
-      const commandData = command[Object.keys(command).find(
-        key => command[key].data !== undefined,
-      ) as string].data.toJSON();
-      // log.debug(F, `Command data: ${JSON.stringify(commandData, null, 2)}`);
-      // log.debug(F, `Loaded global command: ${commandData.name}`);
-      this.client.commands.set(commandData, command);
-      // this.client.application?.commands.create(commandData);
-    });
-
-    // Register guild commands
-    const guildCommands = path.join(__dirname, '../../discord/commands/guild');
-    const guildFiles = fs.readdirSync(guildCommands);
-    // log.debug(F, `Guild command files: ${guildFiles}`);
-    guildFiles.forEach(file => {
-      const filePath = path.join(guildCommands, file);
-      // log.debug(F, `Loading global command: ${filePath}`);
-      const command = require(filePath); // eslint-disable-line
-      // log.debug(F, `Command: ${JSON.stringify(command, null, 2)}`);
-      const commandData = command[Object.keys(command).find(
-        key => command[key].data !== undefined) as string].data.toJSON();  // eslint-disable-line
-      // log.debug(F, `Command data: ${JSON.stringify(commandData, null, 2)}`);
-      // log.debug(F, `Loaded global command: ${commandData.name}`);
-      this.client.commands.set(commandData, command);
-      // this.client.application?.commands.create(commandData);
-    });
   }
 
   private mockGuild(
@@ -271,7 +234,7 @@ export default class MockDiscord {
           emojis: [],
         },
       ]);
-      this.guild.members.fetch = jest.fn().mockResolvedValue(Reflect.construct(GuildMember, [
+      this.guild.members.fetch = vi.fn().mockResolvedValue(Reflect.construct(GuildMember, [
         this.client,
         {
           // id: BigInt(1),
@@ -328,7 +291,7 @@ export default class MockDiscord {
           emojis: [],
         },
       ]);
-      this.guild.members.fetch = jest.fn().mockResolvedValue(Reflect.construct(GuildMember, [
+      this.guild.members.fetch = vi.fn().mockResolvedValue(Reflect.construct(GuildMember, [
         this.client,
         {
           // id: BigInt(1),
@@ -368,7 +331,7 @@ export default class MockDiscord {
           id: mockChannelId,
         },
       ]);
-      (this.channel as TextChannel).send = jest.fn();
+      (this.channel as TextChannel).send = vi.fn();
     }
   }
 
@@ -406,7 +369,7 @@ export default class MockDiscord {
         },
         this.client,
       ]);
-      this.textChannel.messages.fetch = jest.fn().mockResolvedValue(this.textChannel.messages.cache);
+      this.textChannel.messages.fetch = vi.fn().mockResolvedValue(this.textChannel.messages.cache);
     }
   }
 
@@ -521,7 +484,7 @@ export default class MockDiscord {
       },
       this.textChannel,
     ]);
-    this.message.react = jest.fn();
+    this.message.react = vi.fn();
   }
 
   private mockInteracion(command:{
@@ -542,14 +505,17 @@ export default class MockDiscord {
         data: command,
         id: BigInt(1),
         user: this.user,
+        entitlements: [],
+        authorizing_integration_owners: {},
         // member: this.guildMember,
         // channel: this.textChannel,
       },
       // this.textChannel,
     ]);
-    this.interaction.options = Reflect.construct(CommandInteractionOptionResolver, [this.client, command.options]);
+    const chatInputInteraction = this.interaction as ChatInputCommandInteraction;
+    chatInputInteraction.options = Reflect.construct(CommandInteractionOptionResolver, [this.client, command.options]);
     // Define the 'getString' method
-    // (this.interaction.options as CommandInteractionOptionResolver).getString = jest.fn().mockImplementation(
+    // (this.interaction.options as CommandInteractionOptionResolver).getString = vi.fn().mockImplementation(
     //   (name:string) => {
     //     const options = command.options as ToAPIApplicationCommandOptions[];
     //     // log.debug(F, `getString: ${name} - ${JSON.stringify(options, null, 2)}`);
@@ -559,12 +525,12 @@ export default class MockDiscord {
     //     return (option as any).value;
     //   },
     // );
-    this.interaction.reply = jest.fn();
-    this.interaction.deferReply = jest.fn();
-    this.interaction.editReply = jest.fn();
-    // this.interaction.followUp = jest.fn();
+    this.interaction.reply = vi.fn();
+    this.interaction.deferReply = vi.fn();
+    this.interaction.editReply = vi.fn();
+    // this.interaction.followUp = vi.fn();
     this.interaction.guildId = this.guild?.id;
-    this.interaction.isCommand = jest.fn(() => true);
-    this.interaction.showModal = jest.fn();
+    this.interaction.isCommand = vi.fn(() => true) as unknown as CommandInteraction['isCommand'];
+    this.interaction.showModal = vi.fn();
   }
 }

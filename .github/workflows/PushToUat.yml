@@ -10,7 +10,7 @@ on:
       - "**/matrix/**"
       - "**/telegram/**"
       - "**/irc/**"
-      - "**/jest/**"
+      - "**/vitest/**"
       - "**/build/**"
       - "**/@prisma-moodle/**"
 jobs:
@@ -69,7 +69,7 @@ jobs:
       - name: Copy env
         run: cp .env.example .env
       - name: Test
-        run: npx jest --silent -c ./src/jest/jest.config.ts
+        run: npx vitest run --silent
   docker-build:
     name: Docker Build
     runs-on: ubuntu-latest

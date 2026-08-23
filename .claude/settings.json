@@ -14,7 +14,7 @@
       "Bash(npx tsc*)",
       "Bash(npx tsc-alias*)",
       "Bash(npx eslint*)",
-      "Bash(npx jest*)",
+      "Bash(npx vitest*)",
       "Bash(npx prisma validate*)",
       "Bash(npx prisma format*)",
       "Bash(npx prisma generate*)",

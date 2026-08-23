@@ -17,7 +17,7 @@ export async function postPrRejectionComment(
 ): Promise<void> {
   // Loaded dynamically: octokit ships ESM-only and must not be evaluated at
   // module-load time, since g.prReview.ts is pulled into the Express API's
-  // import graph (via pr.routes.ts) which ts-jest cannot transform.
+  // import graph (via pr.routes.ts).
   const { Octokit } = await import('octokit');
   const octokit = new Octokit({ auth: env.GITHUB_TOKEN });
   await octokit.rest.issues.createComment({
