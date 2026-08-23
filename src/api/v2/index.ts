@@ -5,6 +5,7 @@ import users from './users/users.routes';
 import appeals from './appeals/appeals.routes';
 import bounty from './bounty/bounty.routes';
 import keycloak from './keycloak/keycloak.routes';
+import pr from './pr/pr.routes';
 
 const router = express.Router();
 
@@ -20,6 +21,7 @@ router.get('/', (req, res) => {
       '/appeals',
       '/bounty',
       '/keycloak',
+      '/pr',
     ],
   });
 });
@@ -29,5 +31,6 @@ router.use('/users', users);
 router.use('/appeals', appeals);
 router.use('/bounty', bounty);
 router.use('/keycloak', keycloak);
+router.use('/pr', pr);
 
 export default router;

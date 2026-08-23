@@ -75,7 +75,43 @@ jobs:
       - name: Copy env
         run: cp .env.example .env
       - name: Test
-        run: npx jest --silent -c ./src/jest/jest.config.ts
+        run: npx jest --silent -c ./src/jest/jest.config.ts --json --outputFile=jest-results.json
+      - name: Notify TripBot of new PR
+        if: always() && github.event.action == 'opened'
+        env:
+          TRIPBOT_API_URL: ${{ secrets.TRIPBOT_API_URL }}
+          TRIPBOT_API_TOKEN: ${{ secrets.TRIPBOT_API_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+        run: |
+          node -e "
+            const fs = require('fs');
+            let passed = 0;
+            let total = 0;
+            try {
+              const results = JSON.parse(fs.readFileSync('jest-results.json', 'utf8'));
+              passed = results.numPassedTests;
+              total = results.numTotalTests;
+            } catch (err) {
+              console.error('Could not read jest results:', err.message);
+            }
+            fs.writeFileSync('pr-notify-payload.json', JSON.stringify({
+              number: Number(process.env.PR_NUMBER),
+              title: process.env.PR_TITLE,
+              body: process.env.PR_BODY,
+              url: process.env.PR_URL,
+              author: process.env.PR_AUTHOR,
+              testsPassed: passed,
+              testsTotal: total,
+            }));
+          "
+          curl -sf -X POST "$TRIPBOT_API_URL/pr/notify" \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer $TRIPBOT_API_TOKEN" \
+            --data @pr-notify-payload.json
   docker-build:
     name: Docker Build
     runs-on: ubuntu-latest
