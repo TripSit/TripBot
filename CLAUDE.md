@@ -14,17 +14,23 @@ before making changes. The notes below are quick-reference additions that comple
 # Install (reproducible, matches CI/Docker)
 npm ci
 
-# Type-check only
+# Type-check app code only
 npx tsc --noEmit --pretty false
+
+# Type-check test code (Vitest infra + *.test.ts files; separate scope from the app build)
+npx tsc --noEmit --pretty false --project tsconfig.vitest.json
 
 # Lint a specific file (repo-wide lint may surface unrelated pre-existing failures)
 npx eslint --ext .ts,.js path/to/file.ts
 
-# Run the active Jest suite (currently API-focused)
-npm run tripbot:test -- --runInBand
+# Run the active Vitest suite
+npm run tripbot:test
 
-# Run a single existing test file, even outside the active testMatch
-npx jest --config ./src/jest/jest.config.ts --runTestsByPath ./path/to/file.test.ts --runInBand --coverage=false
+# Run a single test file
+npx vitest run path/to/file.test.ts
+
+# Run with coverage (repository-wide target; see vitest.config.mts for scope)
+npx vitest run --coverage
 
 # Generate Prisma clients before a full type-check/build
 npx prisma generate --schema ./src/prisma/tripbot/schema.prisma
@@ -64,3 +70,8 @@ Other structural notes:
   before introducing a new pattern.
 - `src/api/app.ts` mounts `/api/tripsit`, `/api/v1` (legacy JSON), and `/api/v2` (Prisma/Postgres).
 - Generated Prisma clients under `src/prisma/*/generated/` are gitignored and must never be hand-edited.
+- Tests run under Vitest (`vitest.config.mts`, repo root). `src/vitest/` holds shared test infrastructure: a
+  hand-built Discord.js mock (`utils/mockDiscord.ts` + `utils/testutils.ts`) for exercising `d.*`/`m.*`/`u.*` command
+  `execute()` functions without a live gateway connection, and `utils/mockDb.ts` (a deep-mocked Prisma client bound
+  to the global `db`, reset before every test) for `g.*` business-logic tests. Discord command tests live under
+  `src/discord/tests/{global,guild}/`; business-logic tests live under `src/global/tests/`.

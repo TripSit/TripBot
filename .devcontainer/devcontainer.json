@@ -4,8 +4,18 @@
 	"service": "tripbot",
 	"workspaceFolder": "/workspaces/tripbot",
 	"shutdownAction": "stopCompose",
-	"postCreateCommand": "npm ci",
-  	"postStartCommand": "npm run tripbot:dev",
+	// No postCreateCommand: entrypoint.sh already runs `npm ci` itself on a
+	// fresh node_modules volume before starting the bot. Running it again here
+	// races entrypoint.sh's own install against this one on the same volume,
+	// corrupting node_modules and crash-looping the container.
+  	"postStartCommand": "npm run tripbot:start",
+	// Bind-mounts your host's SSH keys read-only so `git push`/`git pull` work
+	// inside the container with no extra setup, and survive container rebuilds.
+	// Requires an SSH key at ~/.ssh on your host, added to your GitHub account,
+	// and your git remote using an SSH URL (git@github.com:...).
+	"mounts": [
+	  "source=${localEnv:HOME}/.ssh,target=/root/.ssh,type=bind,readonly"
+	],
 	"customizations": {
 	  "vscode": {
 		"extensions": [
