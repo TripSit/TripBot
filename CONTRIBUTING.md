@@ -13,9 +13,16 @@ and local development see [README.MD](README.MD).
 
 ## Branching and pull requests
 
-- `main` is the production branch. `uat` is the staging/integration branch.
+- `main` is the production branch. `uat` is the staging/integration branch. Both run their own live bot instance,
+  which is why they're kept as separate branches rather than deploy targets off a single branch.
 - Feature branches are created from `uat` and opened as pull requests **into `uat`**, not `main`. A GitHub Action
   (`GuardMainSource`) enforces that only `uat` may open a pull request into `main`.
+- `uat` -> `main` promotion is a **fast-forward, not a merge**: `main` must never contain a commit that doesn't
+  already exist, byte-for-byte, on `uat`. The `PromoteUatToMain` workflow opens a "Promote uat to main" PR
+  automatically whenever `uat` is ahead; once one of the approvers clicks **Approve**, the workflow fast-forwards
+  `main`'s ref to that exact commit itself and GitHub marks the PR merged. Don't click `main`'s own Merge/Squash
+  button on that PR — squashing or merging there would create a new commit `uat` doesn't have, defeating the
+  fast-forward and reintroducing the branch-divergence problem this was built to avoid.
 - Before opening a pull request, pull the latest `uat` into your feature branch first so it's up to date and the
   push won't be rejected as non-fast-forward. Prefer branching fresh from `uat` over rebasing an existing
   shared/pushed branch, since rewriting history on a branch others may have pulled is riskier.
