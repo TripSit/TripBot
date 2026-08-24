@@ -368,7 +368,7 @@ async function phaseAfternoon(
   });
   await Promise.all(addButtons);
 
-  const newMessage = await message.channel.send({
+  const newMessage = await (message.channel as TextChannel).send({
     embeds: [
       new EmbedBuilder()
         .setTitle('Afternoon')
