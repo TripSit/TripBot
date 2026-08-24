@@ -1,16 +1,33 @@
 name: PromoteUatToMain
 
+# main must never gain a commit that doesn't already exist, byte-for-byte, on uat. Promotion is
+# a fast-forward of main's ref to a commit uat already reached - never a squash/rebase/merge
+# commit - so the two branches can never diverge and there is nothing to sync back afterward.
+# GuardMainSource.yml guarantees every PR into main has head uat, so once a promotion PR is
+# approved and its required checks are green, the "fast-forward" job below moves main's ref
+# forward to that exact commit via the Git Data API with force=false (fails closed if it isn't
+# a true fast-forward). GitHub then detects the head commit landed on main and marks the PR
+# merged automatically - no one needs to click main's Merge button, and doing so manually would
+# defeat this (it would create a new squash/rebase commit uat doesn't have). Reviewers should
+# just Approve.
+
 on:
   push:
     branches:
       - uat
+  pull_request_review:
+    types:
+      - submitted
+
 permissions:
   contents: read
   pull-requests: write
+
 jobs:
-  promote:
+  open-pr:
     name: Open uat -> main PR if needed
     runs-on: ubuntu-latest
+    if: github.event_name == 'push'
     steps:
       - name: Open a promotion PR when uat is ahead of main
         env:
@@ -27,7 +44,51 @@ jobs:
           if [ "$ahead" -gt 0 ]; then
             gh pr create --base main --head uat \
               --title "Promote uat to main" \
-              --body "Automated promotion PR: uat is ${ahead} commit(s) ahead of main."
+              --body "Automated promotion PR: uat is ${ahead} commit(s) ahead of main. Approving this PR fast-forwards main to uat's current commit automatically - no need to click Merge."
           else
             echo "uat is not ahead of main - nothing to promote."
           fi
+
+  fast-forward:
+    name: Fast-forward main to the approved uat commit
+    runs-on: ubuntu-latest
+    if: >
+      github.event_name == 'pull_request_review' &&
+      github.event.review.state == 'approved' &&
+      github.event.pull_request.base.ref == 'main' &&
+      github.event.pull_request.head.ref == 'uat'
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - name: Wait for the PR to be mergeable (reviews + required checks satisfied)
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          status="UNKNOWN"
+          for i in $(seq 1 20); do
+            status=$(gh pr view "$PR_NUMBER" --json mergeStateStatus --jq '.mergeStateStatus')
+            echo "mergeStateStatus=$status (attempt $i/20)"
+            if [ "$status" = "CLEAN" ] || [ "$status" = "UNSTABLE" ]; then
+              exit 0
+            fi
+            sleep 30
+          done
+          echo "::error::PR #$PR_NUMBER never reached a mergeable state (last status: $status) - required checks may still be running or failed. Not promoting; re-approve once checks are green, or re-run this job."
+          exit 1
+
+      - name: Fast-forward main to uat's approved commit
+        env:
+          GH_TOKEN: ${{ secrets.PROMOTION_BOT_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          if [ -z "$GH_TOKEN" ]; then
+            echo "::error::PROMOTION_BOT_TOKEN secret is not set. It must be a fine-grained PAT (Contents: read/write on this repo) from an account allowed to bypass main's 'require a pull request before merging' rule, so this job can push the fast-forward directly. See CONTRIBUTING.md."
+            exit 1
+          fi
+          # force=false makes this fail closed if main isn't a strict ancestor of HEAD_SHA -
+          # i.e. it can only ever fast-forward, never overwrite or rewrite history.
+          gh api -X PATCH "repos/${GH_REPO}/git/refs/heads/main" -f sha="$HEAD_SHA" -F force=false
