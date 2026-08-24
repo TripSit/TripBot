@@ -12,6 +12,12 @@ on:
 
 jobs:
   claude-review:
+    # SyncMainToUat.yml opens a diffless PR (0 changed files) purely to keep uat's git
+    # ancestry current with main; there's nothing to review, so skip it. This also covers
+    # any other empty PR generically, without hardcoding a branch name. The uat->main
+    # promotion PR always has real changes, so it isn't affected by this check.
+    if: github.event.pull_request.changed_files > 0
+
     # Optional: Filter by PR author
     # if: |
     #   github.event.pull_request.user.login == 'external-contributor' ||
@@ -36,6 +42,11 @@ jobs:
         uses: anthropics/claude-code-action@v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          # SyncMainToUat.yml and PromoteUatToMain.yml open their PRs as github-actions[bot];
+          # without this, the action's non-human-actor guard silently skips review on every
+          # automated uat<->main PR. Kept as an explicit name (not '*') per the action's own
+          # security guidance, since '*' would let any GitHub App trigger this action unchecked.
+          allowed_bots: 'github-actions[bot]'
           plugin_marketplaces: 'https://github.com/anthropics/claude-code.git'
           plugins: 'code-review@claude-code-plugins'
           prompt: '/code-review:code-review --comment ${{ github.repository }}/pull/${{ github.event.pull_request.number }}'
