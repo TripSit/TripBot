@@ -3,13 +3,15 @@
     "files": true
   },
   "include": [
-    "src/**/*",
-    "assets/**/*",
+    "**/*",
   ],
   "exclude": [
     "**/archive/**",
-    "src/jest/**/*",
+    "**/*.test.ts",
+    "vitest.config.mts",
+    "src/vitest/**/*",
     "src/discord/tests/**/*",
+    "src/global/tests/**/*",
     "**/irc/*",
     "**/legacy/**",
     "**/matrix/*",
@@ -49,13 +51,14 @@
     "module": "commonjs", /* Specify what module code is generated. */
     // "rootDir": "./src/",                                 /* Specify the root folder within your source files. */
     // "moduleResolution": "node",                          /* Specify how TypeScript looks up a file from a given module specifier. */
-    // "baseUrl": "./",                                  /* Specify the base directory to resolve non-relative module names. */
-    // "paths": {
-    //   "*": [
-    //     "./node_modules/*",
-    //     "./src/types/*"
-    //   ]
-    // },                                                   /* Specify a set of entries that re-map imports to additional lookup locations. */																															  
+    "baseUrl": ".",                                  /* Specify the base directory to resolve non-relative module names. */
+    "paths": {
+      "@global/*": ["src/global/*"],
+      "@discord/*": ["src/discord/*"],
+      "@database/*": ["src/prisma/*"],
+      "@db/moodle": ["./src/prisma/moodle/generated"],
+      "@db/tripbot": ["./src/prisma/tripbot/generated"]
+    }   ,                                            /* Specify a set of entries that re-map imports to additional lookup locations. */																															  
     // "rootDirs": [],                                   /* Allow multiple folders to be treated as one when resolving modules. */
     // "typeRoots": [
     //   "@types",
@@ -63,7 +66,6 @@
     //   "node_modules/@types"
     // ],                                                   /* Specify multiple folders that act like `./node_modules/@types`. */
     "types": [
-      "jest",
       "node"
     ], /* Specify type package names to be included without being referenced in a source file. */
     // "allowUmdGlobalAccess": true,                     /* Allow accessing UMD globals from modules. */
@@ -134,18 +136,13 @@
     // "skipDefaultLibCheck": true,                      /* Skip type checking .d.ts files that are included with TypeScript. */
     "skipLibCheck": true /* Skip type checking all .d.ts files. */
   },
-  // // NEW: Options for file/directory watching
-  // "watchOptions": {
-  //   // Use native file system events for files and directories
-  //   "watchFile": "useFsEvents",
-  //   "watchDirectory": "useFsEvents",
-  //   // Poll files for updates more frequently
-  //   // when they're updated a lot.
-  //   "fallbackPolling": "dynamicPriority",
-  //   // Don't coalesce watch notification
-  //   "synchronousWatchDirectory": true,
-  //   // Finally, two additional settings for reducing the amount of possible
-  //   // files to track  work from these directories
-  //   "excludeDirectories": ["**/node_modules", "_build", "build"],
-  // }
+  // Native fs events (inotify) generally don't propagate through a Docker Desktop bind mount from a
+  // Windows/Mac host into the Linux container, so tsc-watch never sees saved changes without polling.
+  "watchOptions": {
+    "watchFile": "priorityPollingInterval",
+    "watchDirectory": "dynamicPriorityPolling",
+    "fallbackPolling": "dynamicPriority",
+    "synchronousWatchDirectory": true,
+    "excludeDirectories": ["**/node_modules", "build"]
+  }
 }

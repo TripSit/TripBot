@@ -1,19 +1,28 @@
 /* eslint-disable max-len */
+import { stripIndents } from 'common-tags';
 import {
   ChatInputCommandInteraction,
+  ColorResolvable,
   Colors,
   EmbedBuilder,
-  SlashCommandBuilder,
-  ColorResolvable,
   MessageFlags,
+  SlashCommandBuilder,
 } from 'discord.js';
-import { stripIndents } from 'common-tags';
-import { SlashCommand } from '../../@types/commandDef';
-import { embedTemplate } from '../../utils/embedTemplate';
 import {
-  calcBenzo, calcDxm, calcKetamine, calcMDMA, calcSolvent, calcSubstance, calcPsychedelics, DxmDataType,
+  calcBenzo, calcDxm, calcKetamine, calcMDMA,
+  calcOpioid,
+  calcPsychedelics,
+  calcSolvent, calcSubstance,
+  DxmDataType,
 } from '../../../global/commands/g.calc';
+import {
+  doseUnit, formatDose, formatPotency, isMicrogramScale,
+  MORPHINE_NAME, PHARMACOLOGY_WARNINGS, ROUTE_LABELS, ROUTE_SHORT,
+  routeIsAssumed,
+} from '../../../global/utils/opioids';
+import { SlashCommand } from '../../@types/commandDef';
 import commandContext from '../../utils/context';
+import { embedTemplate } from '../../utils/embedTemplate';
 
 const F = f(__filename);
 
@@ -61,8 +70,8 @@ async function dCalcBenzo(
 
   const embedTitle = `${dosage} mg of ${drugA} about equal to ${data} mg of ${drugB}`;
   const embedDescription = stripIndents`
-      **Please make sure to research the substances thoroughly before using them.**
-      It's a good idea to start with a lower dose than the calculator shows, since everybody can react differently to different substances.
+      **Research and test your substances before using them.**
+      Start with a lower dose than the calculator shows. Everybody reacts differently.
       `;
   return buildCalcEmbed(embedTitle, embedDescription, Colors.Red, isError);
 }
@@ -264,6 +273,152 @@ async function dCalcPsychedelics(
   );
 }
 
+const OPIOID_FIELD_LIMIT = 1024;
+const OPIOID_SOURCE_URL = 'https://en.wikipedia.org/wiki/Equianalgesic';
+const OPIOID_CLOSING = '**Research and test your substances before using them.**\n'
+  + 'Start with a lower dose than the calculator shows. Everybody reacts differently. Keep naloxone '
+  + 'to hand: opioids with benzodiazepines or alcohol is the combination that kills most often.';
+const OPIOID_EMBED_BUDGET = 5500;
+const OPIOID_DETAIL_SHORT = 'short';
+const OPIOID_CROSS_TOLERANCE = 'Cross-tolerance between opioids is incomplete, so clinical '
+  + 'practice cuts a converted dose by 25-50%.';
+/** Notes are the part that bloats a reply, so only the most relevant few are shown. */
+const OPIOID_MAX_NOTES = 3;
+
+/**
+ * Discord rejects the whole embed if any one part is over length, so clip instead of trusting input.
+ */
+function fitOpioidField(text: string): string {
+  return text.length > OPIOID_FIELD_LIMIT ? `${text.slice(0, OPIOID_FIELD_LIMIT - 3)}...` : text;
+}
+
+function fitOpioidTitle(text: string): string {
+  return text.length > 256 ? `${text.slice(0, 253)}...` : text;
+}
+
+/**
+ * Renders an opioid conversion. The maths is in g.calc; this only decides how it reads.
+ * @param interaction
+ * @returns {Promise<EmbedBuilder>}
+ */
+async function dCalcOpioid(
+  interaction:ChatInputCommandInteraction,
+):Promise<EmbedBuilder> {
+  const dosage = interaction.options.getNumber('i_have', true);
+  const drugA = interaction.options.getString('mg_of', true);
+  const drugB = interaction.options.getString('and_i_want_the_dose_of', true);
+  const levelOfDetail = interaction.options.getString('level_of_detail', true);
+
+  const result = await calcOpioid(dosage, drugA, drugB);
+
+  if (!result.ok) {
+    return embedTemplate()
+      .setColor(Colors.Red)
+      .setTitle('I could not run that conversion')
+      .setDescription(stripIndents`
+        ${result.message}
+
+        Doses go in as milligrams (mg), and both opioids should be picked from the autocomplete list so they match the table exactly.`);
+  }
+
+  const {
+    from, to, fromRoute, toRoute, morphineEquivalent, equianalgesic, cautiousStart, otherRoutes, sameDrug,
+  } = result;
+
+  const fromPotency = from.potency[fromRoute];
+  const toPotency = to.potency[toRoute];
+  // Pick one unit for the whole reply, so the headline is not in mg while the reduced figure is in mcg.
+  const unit = doseUnit(equianalgesic);
+  const fromDesc = `${ROUTE_SHORT[fromRoute]} ${from.name}`;
+  const toDesc = `${ROUTE_SHORT[toRoute]} ${to.name}`;
+
+  // Saying "via oral morphine" is noise when morphine is already one of the two sides.
+  const viaMorphine = from.name !== MORPHINE_NAME && to.name !== MORPHINE_NAME;
+  const potencyLine = `Potency vs oral morphine: ${from.name} ${fromPotency ? formatPotency(fromPotency) : 'unknown'}, ${to.name} ${toPotency ? formatPotency(toPotency) : 'unknown'}.`;
+  const morphineStep = viaMorphine ? `Converted via **${formatDose(morphineEquivalent)} oral morphine**. ` : '';
+
+  const embed = embedTemplate()
+    .setColor(Colors.Red)
+    .setTitle(fitOpioidTitle(`${dosage} mg ${fromDesc} is ~${formatDose(equianalgesic, unit)} ${toDesc}`))
+    .setDescription(`${morphineStep}${potencyLine} [Source](${OPIOID_SOURCE_URL})`);
+
+  // Unnamed block so it reads as running text, the way /calc benzo presents the same advice.
+  const closing = { name: '\u200B', value: fitOpioidField(OPIOID_CLOSING) };
+
+  // Short mode: just the answer, how we got there, and the standing advice.
+  if (levelOfDetail === OPIOID_DETAIL_SHORT) return embed.addFields([closing]);
+
+  const fields: { name: string, value: string, inline?: boolean }[] = [];
+
+  if (cautiousStart) {
+    fields.push({
+      name: 'Start low',
+      value: fitOpioidField(`**${formatDose(cautiousStart, unit)}**`),
+    });
+  }
+
+  const routeLines = otherRoutes.map(route => `**${ROUTE_LABELS[route.roa]}** - ${formatDose(route.dose, unit)}${route.estimated ? ' \\*' : ''}`);
+  // One footnote beats repeating the same caveat on every line.
+  const routeFootnote = otherRoutes.some(route => route.estimated)
+    ? '\n\\* estimated from bioavailability'
+    : '';
+  // Nothing to say when the source has no other route for this drug, so the field is dropped entirely.
+  if (routeLines.length > 0) {
+    fields.push({
+      name: `Other routes for ${to.name}`,
+      value: fitOpioidField(`Roughly the same effect, delivered another way:\n${routeLines.join('\n')}${routeFootnote}`),
+    });
+  }
+
+  if (to.onset) fields.push({ name: 'Onset', value: fitOpioidField(to.onset), inline: true });
+  if (to.duration) fields.push({ name: 'Duration', value: fitOpioidField(to.duration), inline: true });
+  if (to.halfLife) fields.push({ name: 'Half-life', value: fitOpioidField(to.halfLife), inline: true });
+
+  if (isMicrogramScale(equianalgesic)) {
+    fields.push({
+      name: 'Weight Considerations',
+      value: fitOpioidField('A dose this small cannot be weighed on an ordinary milligram scale and will not mix evenly through a powder by hand, so without volumetric dosing the real dose is a guess.'),
+    });
+  }
+
+  if (routeIsAssumed(to, toRoute) && !to.bioavailability?.oral) {
+    fields.push({
+      name: 'Route not stated in the source',
+      value: fitOpioidField(`The source gives no route for ${to.name}, so its stated default of oral has been used. There is no oral bioavailability figure either, so treat that side as unconfirmed.`),
+    });
+  }
+
+  // One capped list rather than a block per drug. The target drug matters most, so it goes first.
+  const drugNotes = [
+    ...(to.pharmacology ? [PHARMACOLOGY_WARNINGS[to.pharmacology]] : []),
+    ...(to.notes ?? []),
+    ...(sameDrug ? [] : [
+      ...(from.pharmacology ? [PHARMACOLOGY_WARNINGS[from.pharmacology]] : []),
+      ...(from.notes ?? []),
+    ]),
+  ].slice(0, OPIOID_MAX_NOTES);
+
+  // This explains the Start low figure, so it leads and does not count against the cap.
+  const notes = cautiousStart ? [OPIOID_CROSS_TOLERANCE, ...drugNotes] : drugNotes;
+
+  if (notes.length > 0) {
+    fields.push({ name: 'Worth knowing', value: fitOpioidField(notes.map(note => `• ${note}`).join('\n')) });
+  }
+
+  // Reserved up front so a drug with long notes can never crowd the advice out.
+  let used = (embed.data.title?.length ?? 0) + (embed.data.description?.length ?? 0)
+    + closing.name.length + closing.value.length;
+
+  const affordable = fields.filter(field => {
+    const cost = field.name.length + field.value.length;
+    if (used + cost > OPIOID_EMBED_BUDGET) return false;
+    used += cost;
+    return true;
+  });
+
+  return embed.addFields([...affordable, closing]);
+}
+
 export const dCalc: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('calc')
@@ -375,6 +530,31 @@ export const dCalc: SlashCommand = {
       .addBooleanOption(option => option.setName('ephemeral')
         .setDescription(ephemeralMsg)))
     // END NASAL SUBCOMMAND
+    // BEGIN OPIOID SUBCOMMAND
+    .addSubcommand(subcommand => subcommand
+      .setName('opioid')
+      .setDescription('Convert a dose of one opioid into the equivalent dose of another')
+      .addNumberOption(option => option.setName('i_have')
+        .setDescription('The dose, in milligrams (mg)')
+        .setRequired(true))
+      .addStringOption(option => option.setName('mg_of')
+        .setDescription('Pick the opioid you are converting from')
+        .setAutocomplete(true)
+        .setRequired(true))
+      .addStringOption(option => option.setName('and_i_want_the_dose_of')
+        .setDescription('Pick the opioid you want the equivalent dose of')
+        .setAutocomplete(true)
+        .setRequired(true))
+      .addStringOption(option => option.setName('level_of_detail')
+        .setDescription('How much do you want back?')
+        .addChoices(
+          { name: 'Detailed', value: 'detailed' },
+          { name: 'Short', value: 'short' },
+        )
+        .setRequired(true))
+      .addBooleanOption(option => option.setName('ephemeral')
+        .setDescription(ephemeralMsg)))
+    // END OPIOID SUBCOMMAND
     // BEGIN PSYCHEDELIC SUBCOMMAND
     .addSubcommand(subcommand => subcommand
       .setName('psychedelics')
@@ -415,6 +595,8 @@ export const dCalc: SlashCommand = {
       await interaction.editReply({ embeds: [await dCalcMDMA(interaction)] });
     } else if (subcommand === 'nasal') {
       await interaction.editReply({ embeds: [await dCalcNasal(interaction)] });
+    } else if (subcommand === 'opioid') {
+      await interaction.editReply({ embeds: [await dCalcOpioid(interaction)] });
     } else if (subcommand === 'psychedelics') {
       await interaction.editReply({ embeds: [await dCalcPsychedelics(interaction)] });
     } else {

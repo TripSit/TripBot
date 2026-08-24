@@ -9,7 +9,6 @@ import comboJsonData from '../../../assets/data/tripsitCombos.json';
 import drugJsonData from '../../../assets/data/tripsitDB.json';
 import comboDefs from '../../../assets/data/combo_definitions.json';
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const F = f(__filename);
 
 type DrugData = {
@@ -57,7 +56,21 @@ export async function combo(
   let drugBName = drugBInput.toLowerCase();
 
   // Because users can input whatever they want, we need to clean the input
-  function cleanDrugName(drugName: string): string {
+  function cleanDrugName(drugNameInput: string): string {
+    let drugName = drugNameInput;
+
+    // Resolve aliases (e.g. 'dxm') to their canonical drug database key,
+    // same pattern as g.drug.ts, before any of the key-based lookups below.
+    if (!Object.keys(drugData).includes(drugName.toLowerCase())) {
+      const canonicalKey = Object.keys(drugData).find(
+        key => (drugData[key] as Drug).aliases?.map(alias => alias.toLowerCase())
+          .includes(drugName.toLowerCase()),
+      );
+      if (canonicalKey) {
+        drugName = canonicalKey;
+      }
+    }
+
     // These matches need to come first because otherwise "2x-b" woould be found in the drug DB but not have any interaction info
     if (/^do.$/i.test(drugName)) {
       return 'dox';
@@ -153,7 +166,6 @@ export async function combo(
   // If the drug is in the drugDB, we can use the combo data from there
   // If the drug is not in the drugDB, we can use the combo data from the comboDB
   // Either way, it's the same format, so they're interchangeable
-  // log.debug(F, `drugAName: ${drugAName}`);
   const drugAComboData = Object.keys(drugData).includes(drugAName.toLowerCase())
     ? (drugData[drugAName.toLowerCase()]).combos
     : comboData[drugAName.toLowerCase() as keyof typeof comboData];
@@ -171,7 +183,6 @@ export async function combo(
       options: allDrugNames,
     };
   }
-  // log.debug(F, `drugAComboData: ${JSON.stringify(drugAComboData)}`);
 
   const drugBComboData = Object.keys(drugData).includes(drugBName.toLowerCase())
     ? (drugData[drugBName.toLowerCase()]).combos
@@ -184,7 +195,6 @@ export async function combo(
       options: allDrugNames,
     };
   }
-  // log.debug(F, `drugBComboData: ${JSON.stringify(drugBComboData)}`);
 
   let comboInfo = {} as ComboData;
   // Check if drugB is in drugA's combo list
@@ -200,11 +210,7 @@ export async function combo(
     };
   }
 
-  // log.debug(F, `comboInfo: ${JSON.stringify(comboInfo)}`);
-
   const comboDef = comboDefs.find(def => def.status === comboInfo.status) as ComboDef;
-
-  // log.info(F, `response: ${JSON.stringify(response, null, 2)}`);
 
   return {
     result: comboInfo.status,

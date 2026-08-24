@@ -1,6 +1,6 @@
 /* eslint-disable sonarjs/no-duplicate-string */
 import { ButtonInteraction, InteractionEditReplyOptions, ModalSubmitInteraction } from 'discord.js';
-import { appeal_status, appeals } from '@prisma/client';
+import { appeal_status, appeals } from '@db/tripbot';
 
 const F = f(__filename);
 

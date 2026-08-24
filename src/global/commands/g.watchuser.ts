@@ -61,7 +61,7 @@ export async function dbDeleteWatchRequest(targetUserId: string, callerId: strin
   });
 
   if (!user) {
-    log.info(F, `User with ID ${targetUserId} does not exist.`);
+    log.debug(F, `User with ID ${targetUserId} does not exist.`);
     return;
   }
 
@@ -74,7 +74,7 @@ export async function dbDeleteWatchRequest(targetUserId: string, callerId: strin
       where: { id: requestToDelete.id },
     });
   } else {
-    log.info(F, `No watch request found for caller ${callerId}.`);
+    log.debug(F, `No watch request found for caller ${callerId}.`);
   }
 }
 
@@ -127,7 +127,7 @@ export async function nightsWatch(message: Message) {
             `Hey ${caller}, the user ${target} which you were watching has been active recently in ${message.channel}.`,
           );
         } catch (err) {
-          log.info(F, 'Failed to fulfill Watch Request. Likely can\'t DM user.');
+          log.debug(F, 'Failed to fulfill Watch Request. Likely can\'t DM user.');
         }
 
         await deleteWatchRequest(user.discord_id as string, caller.id);
@@ -143,7 +143,7 @@ export async function nightsWatch(message: Message) {
             `Hey ${caller}, the user ${target} which you were watching has been active recently in ${message.channel}.`,
           );
         } catch (err) {
-          log.info(F, 'Failed to fulfill Watch Request. Notification sending failed.');
+          log.debug(F, 'Failed to fulfill Watch Request. Notification sending failed.');
         }
         await deleteWatchRequest(user.discord_id as string, caller.id);
       }
@@ -169,7 +169,7 @@ export async function executeWatch(
     const duplicateRequest = watchRequests.some(watchRequestObj => watchRequestObj.caller_id === callerId);
 
     if (duplicateRequest) {
-      log.info(F, `Duplicate watch request found for callerId: ${callerId}`);
+      log.debug(F, `Duplicate watch request found for callerId: ${callerId}`);
       return false;
     }
 
@@ -188,6 +188,6 @@ export async function executeWatch(
   }
 
   // If user does not exist, return false
-  log.info(F, `User ${target.id} not found.`);
+  log.debug(F, `User ${target.id} not found.`);
   return false;
 }

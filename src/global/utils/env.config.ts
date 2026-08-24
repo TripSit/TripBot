@@ -1,6 +1,8 @@
 /* eslint-disable max-len */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-require('dotenv').config();
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const isProd = process.env.NODE_ENV === 'production';
 
@@ -27,6 +29,7 @@ export const env = {
   EMOJI_VOTE_DOWN: isProd ? '960161563849932892' : '👎',
   EMOJI_EROWID: isProd ? '1200132633519194153' : '1200136990788685956',
 
+  OPENROUTER_KEY: process.env.OPENROUTER_KEY ?? '',
   OPENAI_API_ORG: process.env.OPENAI_API_ORG ?? '',
   OPENAI_API_KEY: process.env.OPENAI_API_KEY ?? '',
   GEMINI_KEY: process.env.GEMINI_KEY ?? '',

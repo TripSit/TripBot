@@ -37,14 +37,12 @@ export async function imgurSearch(query:string):Promise<string> {
             imageLink = res.data.data[0].link;
           }
         } else {
-          // log.debug(F, `No results found!`);
           imageLink = `No results found for ${query}!`;
         }
 
-        // log.debug(F, `imageLink: ${imageLink}`);
-
         resolve(imageLink);
       }).catch((err:Error) => {
+        log.error(F, `Imgur search failed for '${query}': ${err.message}`);
         reject(err);
       });
     });

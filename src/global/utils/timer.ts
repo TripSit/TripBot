@@ -16,7 +16,7 @@ import axios from 'axios'; // eslint-disable-line
 import { stripIndents } from 'common-tags';
 import {
   experience_category, experience_type, ticket_status, ticket_type,
-} from '@prisma/client';
+} from '@db/tripbot';
 import updateDb from './updateDb';
 import { checkChannelPermissions } from '../../discord/utils/checkPermissions';
 import { embedTemplate } from '../../discord/utils/embedTemplate';
@@ -1176,6 +1176,20 @@ async function checkBirthdays() {
     const birthdayPromises = todaysBirthdayUsers.map(async (user: typeof birthdayUsers[0]) => {
       try {
         if (!user.birthday) {
+          return;
+        }
+
+        if (!user.discord_id) {
+          log.debug(F, `User ${user.id} has no discord_id, skipping birthday message`);
+          return;
+        }
+
+        // Check if user is in the server
+        const guild = await discordClient.guilds.fetch(env.DISCORD_GUILD_ID);
+        const member = await guild.members.fetch(user.discord_id).catch(() => null);
+
+        if (!member) {
+          log.debug(F, `User ${user.discord_id} is not in the server, skipping birthday message`);
           return;
         }
 

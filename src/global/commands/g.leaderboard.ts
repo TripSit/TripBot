@@ -2,20 +2,22 @@
 /* eslint-disable no-restricted-syntax */
 /* eslint-disable no-underscore-dangle */
 /* eslint-disable sonarjs/no-identical-functions */
-import { experience_category, experience_type } from '@prisma/client';
+import { experience_category, experience_type } from '@db/tripbot';
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const F = f(__filename);
 
-type LeaderboardList = { discord_id: string, total_points: number }[];
+type LeaderboardList = { discord_id: string; total_points: number }[];
 
 type LeaderboardData = {
-  ALL: Record<experience_category | 'TOTAL', LeaderboardList>,
-  TEXT: Record<experience_category | 'TOTAL', LeaderboardList>,
-  VOICE: Record<experience_category | 'TOTAL', LeaderboardList>,
+  ALL: Record<experience_category | 'TOTAL', LeaderboardList>;
+  TEXT: Record<experience_category | 'TOTAL', LeaderboardList>;
+  VOICE: Record<experience_category | 'TOTAL', LeaderboardList>;
 };
 
-export async function leaderboardV2(): Promise<LeaderboardData> {
+export async function leaderboardV2(
+  onlyType?: experience_type | 'ALL',
+  onlyCategory?: experience_category | 'TOTAL',
+): Promise<LeaderboardData> {
   // Function to initialize leaderboard data structure for each type
   const initLeaderboardData = () => ({
     TOTAL: [],
@@ -34,28 +36,30 @@ export async function leaderboardV2(): Promise<LeaderboardData> {
   };
 
   // Define categories, including 'TOTAL' as a special category
-  const categories: (experience_category | 'TOTAL')[] = [
+  const allCategories: (experience_category | 'TOTAL')[] = [
     'TOTAL',
     experience_category.TRIPSITTER,
     experience_category.GENERAL,
     experience_category.DEVELOPER,
     experience_category.TEAM,
   ];
+  const categories = allCategories.filter(category => !onlyCategory || category === onlyCategory);
 
   // Define types, including 'ALL' as a special type
-  const types: (experience_type | 'ALL')[] = [
+  const allTypes: (experience_type | 'ALL')[] = [
     'ALL',
     experience_type.TEXT,
     experience_type.VOICE,
   ];
+  const types = allTypes.filter(type => !onlyType || type === onlyType);
 
   // Create an array of promises for each type-category combination
   const queries = types.flatMap(type => categories.map(async category => {
     // Initialize whereClause for the database query
     const whereClause: {
-      type?: experience_type,
-      category?: experience_category,
-      NOT?: { category: experience_category }[],
+      type?: experience_type;
+      category?: experience_category;
+      NOT?: { category: experience_category }[];
     } = {};
     if (category !== 'TOTAL') whereClause.category = category;
     if (type !== 'ALL') whereClause.type = type;
@@ -65,17 +69,17 @@ export async function leaderboardV2(): Promise<LeaderboardData> {
 
     let userList = [] as LeaderboardList;
 
-    if (category !== 'TOTAL') {
-      // Perform the database query
-      userList = await db.user_experience.findMany({
-        where: whereClause,
-        orderBy: { total_points: 'desc' },
-        include: { users: { select: { discord_id: true } } },
-      })
+    if (category !== 'TOTAL' && type !== 'ALL') {
+      userList = (await db.user_experience
+        .findMany({
+          where: whereClause,
+          orderBy: { total_points: 'desc' },
+          include: { users: { select: { discord_id: true } } },
+        })
         .then(results => results.map(result => ({
           discord_id: result.users.discord_id,
           total_points: result.total_points,
-        }))) as LeaderboardList;
+        })))) as LeaderboardList;
     } else {
       const userExpData = await db.user_experience.groupBy({
         by: ['user_id'],
@@ -126,7 +130,9 @@ export async function leaderboardV2(): Promise<LeaderboardData> {
   // Wait for all the database queries to complete
   await Promise.all(queries);
 
-  // log.debug(F, `leaderboardData: ${JSON.stringify(leaderboardData.ALL.DEVELOPER.slice(0, 20), null, 2)}`);
+  const typeLabel = onlyType ?? 'ALL';
+  const categoryLabel = onlyCategory ?? 'TOTAL';
+  log.debug(F, `leaderboardV2: built ${queries.length} leaderboards (${typeLabel}/${categoryLabel})`);
 
   // Return the populated leaderboard data
   return leaderboardData;

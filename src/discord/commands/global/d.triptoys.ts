@@ -100,7 +100,7 @@ export const dTriptoys: SlashCommand = {
       20: { name: hopalong, value: '[A never ending orbits visualizer. Use keys and mouse to increase speed and angle](http://iacopoapps.appspot.com/hopalongwebgl/)', inline: true },
       21: { name: mynoise, value: '[Ambient noise generator with a variety of themes from rain to black holes to busy cafe to kitten purrs.](https://mynoise.net/)', inline: true },
       22: { name: mrdoobharmony, value: '[Make art by sketching with different materials and colors (many more triptoys at the top of the page)](https://mrdoob.com/#/120/harmony)', inline: true },
-      23: { name: ballsdemo, value: '[Colorful balls that follow your mouse (Enable fullscreen for best effect)](https://testdrive-archive.azurewebsites.net/Graphics/TouchEffects/Default.html)', inline: true },
+      23: { name: ballsdemo, value: '[Colorful balls that follow your mouse (Enable fullscreen for best effect)](https://web.archive.org/web/20220809011708/https://testdrive-archive.azurewebsites.net/Graphics/TouchEffects/Default.html)', inline: true },
     };
 
     const embed = embedTemplate();
@@ -142,7 +142,7 @@ export const dTriptoys: SlashCommand = {
         { name: hopalong, value: '[A never ending orbits visualizer. Use keys and mouse to increase speed and angle](http://iacopoapps.appspot.com/hopalongwebgl/)', inline: true },
         { name: mynoise, value: '[Ambient noise generator with a variety of themes from rain to black holes to busy cafe to kitten purrs.](https://mynoise.net/)', inline: true },
         { name: mrdoobharmony, value: '[Make art by sketching with different materials and colors (many more triptoys at the top of the page)](https://mrdoob.com/#/120/harmony)', inline: true },
-        { name: ballsdemo, value: '[Colorful balls that follow your mouse (Enable fullscreen for best effect)](https://testdrive-archive.azurewebsites.net/Graphics/TouchEffects/Default.html)', inline: true },
+        { name: ballsdemo, value: '[Colorful balls that follow your mouse (Enable fullscreen for best effect)](https://web.archive.org/web/20220809011708/https://testdrive-archive.azurewebsites.net/Graphics/TouchEffects/Default.html)', inline: true },
       );
     }
 

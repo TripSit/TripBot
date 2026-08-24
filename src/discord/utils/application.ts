@@ -312,7 +312,24 @@ export async function applicationStart(
     return;
   }
 
-  const channelApplications = await interaction.guild.channels.fetch(channelApplicationsId) as TextChannel;
+  const channelApplications = await interaction.guild.channels
+    .fetch(channelApplicationsId)
+    .catch(() => null) as TextChannel | null;
+
+  if (!channelApplications) {
+    // The stored channel is gone, so the saved id is dead. Clear it so an admin
+    // can re-run setup, and tell the member instead of throwing Unknown Channel.
+    log.error(F, `Applications channel ${channelApplicationsId} no longer exists in ${interaction.guild.name} (set up by ${interaction.user.username}); clearing it.`);
+    await db.discord_guilds.update({
+      where: { id: interaction.guild.id },
+      data: { channel_applications: null },
+    });
+    await interaction.reply({
+      content: 'The applications channel no longer exists — please ask an admin to run the setup again.',
+      flags: MessageFlags.Ephemeral,
+    });
+    return;
+  }
 
   if (!await applicationPermissions(
     interaction,

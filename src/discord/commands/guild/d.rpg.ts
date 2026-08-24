@@ -33,7 +33,7 @@ import {
   TextInputStyle,
 } from 'discord-api-types/v10';
 import { stripIndents } from 'common-tags';
-import { rpg_inventory } from '@prisma/client';
+import { rpg_inventory } from '@db/tripbot';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import commandContext from '../../utils/context';
@@ -41,6 +41,7 @@ import getAsset from '../../utils/getAsset';
 import { customButton } from '../../utils/emoji';
 import { getProfilePreview } from './d.profile';
 import { aiFlairMod } from '../../../global/commands/g.ai';
+import { bigBrother } from '../../../global/utils/thoughtPolice';
 
 const tripSitProfileImage = 'tripsit-profile-image.png';
 const tripSitProfileImageAttachment = 'attachment://tripsit-profile-image.png';
@@ -2319,43 +2320,50 @@ export async function rpgFlair(interaction: ChatInputCommandInteraction) {
   // eslint-disable-next-line sonarjs/no-duplicate-string
   let adjustmentReason = 'No reason given';
 
-  // Query the AI for approval
-  const aiPersona = await db.ai_personas.upsert({
-    where: {
-      name: 'FlairMod',
-    },
-    create: {
-      name: 'FlairMod',
-      public: false,
-      ai_model: 'GPT_3_5_TURBO',
-      prompt: `You are acting as a moderation API. You will receive an input that a user wants to set as their user flair text.
-
-      Drug references and jokes and adult humour are allowed as long as they are not extremely vulgur or offensive. You can swap any very rude words with more PG rated family friendly ones. If there are no alternative words, reject the flair.
-      
-      After that, adjust it to correct spelling, grammar and such. Made up words are allowed unless they are obvious misspellings, but no random keyboard gibberish (EG. ALRJRBSIEIR)
-      
-      IMPORTANT! You must correct capitalisation so that the flair fits headline capitalisation rules (every word should be capitalised except short words like "i love going to the supermarket" becomes "I Love Going to the Supermarket")
-      
-      You must reply with this strict format:
-      Status: Approved, Adjusted, Rejected
-      Reason: Spelling, grammar, etc
-      Adjusted: The new edited flair, or the original flair if nothing was changed or adjusted`,
-      presence_penalty: 0,
-      frequency_penalty: 0,
-      max_tokens: 500,
-      created_by: userData.id,
-    },
-    update: {},
-  });
-
   const messageList = [{
     role: 'user',
     content: newFlair,
   }] as OpenAI.Chat.ChatCompletionMessageParam[];
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { response, promptTokens, completionTokens } = await aiFlairMod(aiPersona, messageList);
+  const { response, promptTokens, completionTokens } = await aiFlairMod(messageList);
   log.debug(F, `aiResponse: ${JSON.stringify(response, null, 2)}`);
+
+  // AI moderation is unavailable (OpenAI errored, no key, or AI turned off), so aiFlairMod returns
+  // an empty response. Fall back to the same keyword automod used on chat messages (bigBrother):
+  // if it flags the flair, reject it; otherwise save it as-is. The length (<50) and @mention
+  // checks above still apply.
+  if (!response) {
+    const flairCategory = await bigBrother(newFlair.toLowerCase());
+    if (['offensive', 'harm', 'horny', 'pg13'].includes(flairCategory)) {
+      return {
+        embeds: [embedTemplate()
+          .setAuthor(null)
+          .setTitle(`${emojiGet('itemFlair')} Flair Rejected`)
+          .setDescription(stripIndents`
+          Your flair contains language that isn't allowed here. Please try something else.`)
+          .setColor(Colors.Red)],
+      };
+    }
+
+    flairItem.effect_value = newFlair;
+    await db.rpg_inventory.upsert({
+      where: { id: flairItem.id },
+      create: flairItem,
+      update: flairItem,
+    });
+    return {
+      embeds: [embedTemplate()
+        .setAuthor(null)
+        .setTitle(`${emojiGet('itemFlair')} Flair Updated`)
+        .setDescription(stripIndents`
+        Your flair has been updated!
+
+        **Old flair:** ${oldFlair}
+        **New flair:** ${newFlair}`)
+        .setColor(Colors.Green)],
+    };
+  }
 
   // Regex to see the approval status
   if (response.match(/Status: Approved/g)) {

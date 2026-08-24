@@ -2,7 +2,7 @@
 //   ChannelType,
 // } from 'discord-api-types/v10';
 import { TextChannel } from 'discord.js';
-import { experience_category, experience_type } from '@prisma/client';
+import { experience_category, experience_type } from '@db/tripbot';
 import {
   MessageCreateEvent,
 } from '../@types/eventDef';

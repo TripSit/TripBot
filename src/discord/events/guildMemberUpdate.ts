@@ -3,7 +3,6 @@ import { stripIndents } from 'common-tags';
 import {
   GuildMemberUpdateEvent,
 } from '../@types/eventDef';
-import { addedVerified } from '../utils/trust';
 // import { topic } from '../../global/commands/g.topic';
 
 type MindsetNames =
@@ -484,9 +483,9 @@ async function addedPatreon(
       await channelViplounge.send(stripIndents`
         ** ${donorEmoji} ${newMember} just contributed further and became a Supporter by \
         signing up via [Patreon](<https://www.patreon.com/TripSit>)! ${donorEmoji} **
-    
+
           ${thankYouPhrases[Math.floor(Math.random() * thankYouPhrases.length)]}
-    
+
           ${donationTagline}`);
     } else {
     // If added as a first time Patron and donator, give them the premium role and send the message
@@ -497,9 +496,9 @@ async function addedPatreon(
       await channelViplounge.send(stripIndents`
       ** ${donorEmoji} ${newMember} just became a Supporter and Premium Member \
       (first time donator) by signing up via [Patreon](<https://www.patreon.com/TripSit>)! ${donorEmoji} **
-  
+
         ${thankYouPhrases[Math.floor(Math.random() * thankYouPhrases.length)]}
-  
+
         ${donationTagline}`);
     }
   }
@@ -513,9 +512,9 @@ async function addedPatreon(
       await channelViplounge.send(stripIndents`
         ** ${donorEmoji} ${newMember} just made a further contribution by donating via \
         [KoFi](<https://ko-fi.com/tripsit>)! ${donorEmoji} **
-    
+
           ${thankYouPhrases[Math.floor(Math.random() * thankYouPhrases.length)]}
-    
+
           ${donationTagline}`);
     } else {
     // If donated on KoFi and for the first time, give them the premium role and send the message
@@ -525,9 +524,9 @@ async function addedPatreon(
       await channelViplounge.send(stripIndents`
       ** ${donorEmoji} ${newMember} just became a Premium Member (first time donator) by donating via \
       [KoFi](<https://ko-fi.com/tripsit>)! ${donorEmoji} **
-  
+
         ${thankYouPhrases[Math.floor(Math.random() * thankYouPhrases.length)]}
-  
+
         ${donationTagline}`);
     }
   }
@@ -549,7 +548,6 @@ async function roleAddProcess(
     await levelColorCheck(newMember, oldMember, roleId);
     await donorColorCheck(newMember, oldMember, roleId);
     await teamMindsetCheck(newMember, roleId);
-    await addedVerified(newMember, roleId);
     await addedBooster(newMember, roleId);
     await addedPatreon(newMember, roleId);
 

@@ -53,8 +53,7 @@ export function executeMove(
   position: number,
   playerId: string,
 ): TripTacGoMoveResult {
-  log.info(F, `[${game.gameId}] BEFORE move - Board: ${game.board}`);
-  log.info(F, `[${game.gameId}] BEFORE move - Current player: ${game.currentPlayer}`);
+  log.debug(F, `[${game.gameId}] BEFORE move - player: ${game.currentPlayer}, board: ${game.board}`);
 
   // Validate move
   if (game.isGameOver) {

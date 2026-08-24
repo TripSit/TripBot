@@ -146,7 +146,7 @@ describe(slashCommand.data.name, () => {
           },
           {
             name: 'Balls demo',
-            value: stripIndents`[Colorful balls that follow your mouse (Enable fullscreen for best effect)](https://testdrive-archive.azurewebsites.net/Graphics/TouchEffects/Default.html)`,
+            value: stripIndents`[Colorful balls that follow your mouse (Enable fullscreen for best effect)](https://web.archive.org/web/20220809011708/https://testdrive-archive.azurewebsites.net/Graphics/TouchEffects/Default.html)`,
             inline: true,
           },
         ],

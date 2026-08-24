@@ -1,14 +1,17 @@
 # TripBot 🤖 <br>*(TripSit-Discord-Bot)*
 
-## Table of contents 
+## Table of contents
 + [About](#about)
 + [How to use](#invite)
 + [Contribute](#contribute)
 + [Authors](#contributors)
++ [License](#license)
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for branch/PR conventions and how to run checks before opening a pull request.
 
 ## About
-TripBot is multi-platform open-source bot that is a major part of the **[TripSit](https://tripsit.me)** project. 
-It is primarily a discord bot, but has been built modularly to allow for easy expansion to other platforms such as IRC, Matrix, and Telegram. 
+TripBot is multi-platform open-source bot that is a major part of the **[TripSit](https://tripsit.me)** project.
+It is primarily a discord bot, but has been built modularly to allow for easy expansion to other platforms such as IRC, Matrix, and Telegram.
 This bot's code is open source in the interest of helping people learn code, and to encourage people to contribute to the project.
 
 The goals with this bot are:
@@ -34,7 +37,7 @@ Jest Testing
 SonarQube Code Quality
 Docker Containerized
 ESlint Linting
-Nodemon Hot Reloading
+tsc-watch Hot Reloading
 TSC Auto Building
 Drone Continuous Integration
 
@@ -42,13 +45,12 @@ Drone Continuous Integration
 
 **Requirements**
 1) Docker. You can get it [here](https://www.docker.com/products/docker-desktop).
-2) A discord bot application. You can get one [here](https://discord.com/developers/applications).
-
+2) VSCode with the [Dev Containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers), or [GitHub Codespaces](https://github.com/features/codespaces). Development happens inside the devcontainer defined in `.devcontainer/`.
+3) A discord bot application. You can get one [here](https://discord.com/developers/applications).
 
 **Optional**
-1) VSCode. You can get it [here](https://code.visualstudio.com/).
-2) ESLint extension for VSCode. You can get it [here](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint).
-3) Invite the discord bot to the tripsit dev guild. Ask Moonbear for an invite link. The bot will not work properly without doing this.
+1) ESLint extension for VSCode. You can get it [here](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint). It's already included in the devcontainer's recommended extensions.
+2) Invite the discord bot to the tripsit dev guild. Ask Moonbear for an invite link. The bot will not work properly without doing this.
 
 **Setup the bot**
 
@@ -56,38 +58,34 @@ Clone the repository
 
 ``` git clone https://github.com/TripSit/TripBot.git```
 
-Copy env.example to .env and fill in these fields. You only /need/ the discord stuff like the token and client ID
+Copy `.env.example` to `.env` and fill in these fields. You only /need/ the discord stuff like the token and client ID.
 
-Install the dependencies locally so that VSCode can use them for linting and intellisense.
+Open the folder in VSCode and choose **Reopen in Container** (or open it as a GitHub Codespace). This builds the dev
+image, starts the database, and mounts the whole repo into the container so edits and commits made either on your
+host machine or inside the container show up in both places.
 
-```npm install```
+**Start the bot**
 
-**Start the bot** 
-
-This will start up the tripbot_database, build the bot, and run the bot in a container.
-The database container just basically sits there being a stable database, you don't need to check it's logs or anything.
-
-```npm run tripbot:start```
-
-You will likely want to immediately check the logs of the container to make sure it started up correctly.
+Nothing to do here — the devcontainer's `postStartCommand` runs `npm run tripbot:dev` automatically once the
+container is up, compiling with `tsc-watch` and running the bot in a `tmux` session.
 
 **View logs**
 
 ```npm run tripbot:logs```
 
-This will show you the logs of tripbot from inside the container.
+This attaches to the `tmux` session and shows you the bot's live output. Detach without stopping it with `Ctrl+B` then `D`.
 
 **Deploy commands**
 
-This command will happen automatically when you build the TripBot container and tells discord what commands are available.
+Registering slash commands with Discord is *not* automatic — run this once after first setup, and again any time you
+add a command or change an existing command's options:
 
 ```npm run tripbot:deployCommands```
 
-**If you create a new command, or modify the options in an existing command, you'll need to deploy commands again.**
-
 **Develop**
 
-The container will watch the /src folder for changes and rebuild the bot when you save a file.
+The devcontainer watches the whole repo for changes (via polling, since native file-change events don't reliably
+cross the Windows/Mac-to-Linux bind mount) and rebuilds/restarts the bot when you save a file under `src/`.
 
 **Lint**
 
@@ -141,15 +139,15 @@ If you wanted to do this in telegram, you would figure out how to take input val
 #### Troubleshooting Command Issues ####
 **Moderation Tools**:
 
-To use moderation commands in your TripBot instance, you must have the Moderator role on the development server. 
+To use moderation commands in your TripBot instance, you must have the Moderator role on the development server.
 
 If you need this role, please ask Moonbear.
 
 **AI Features**:
 
-To use AI features in your TripBot instance, you need to do a few things. 
+To use AI features in your TripBot instance, you need to do a few things.
 
-First, you will need the Developer role on the development server. 
+First, you will need the Developer role on the development server.
 
 Once again, if you need this role, please ask Moonbear.
 
@@ -173,22 +171,26 @@ To make changes to the database, you need to use the Prisma ORM and make changes
 
 Run the ```db:migrateDev``` to create new migration files based on the changes you made to the schema.prisma file.
 
-When these migration files are pushed to production, the database will be updated automatically.
+When these migration files are pushed to production, the database is updated automatically: the
+production branch of `src/docker/entrypoint.sh` runs `prisma migrate deploy` before starting the bot,
+and refuses to start if the migrations fail. Note that CI (`PushToMain.yml`) does not apply
+migrations - they are applied by the container on startup, so a migration only reaches production
+when the image is rebuilt and the container is recreated.
 
 Prisma documentation is excellent, check out guides like: https://www.prisma.io/docs/concepts/components/prisma-migrate/migrate-development-production
 
 ---
 #### Handling unexpected migration issues ####
-If your database changes aren't reflecting locally after editing the Prisma schema: 
+If your database changes aren't reflecting locally after editing the Prisma schema:
 
-Generate and apply migrations:  
-  ```npx prisma migrate dev --name your_migration_name```  
-  ```npx prisma generate```  
-  ```npx prisma migrate deploy```  
+Generate and apply migrations:
+  ```npx prisma migrate dev --name your_migration_name```
+  ```npx prisma generate```
+  ```npx prisma migrate deploy```
 
 If VSCode isn't recognizing the new tables when writing code for them, press ```Ctrl/CMD Shift P: Restart TypeScript Server```.
 
-if you are on Windows, you may need to run the above commands within the docker containers command execution context, after which you may need to run ```npx prisma generate``` within your VSCode IDE or otherwise 
+if you are on Windows, you may need to run the above commands within the docker containers command execution context, after which you may need to run ```npx prisma generate``` within your VSCode IDE or otherwise
 
 ---
 
@@ -211,7 +213,7 @@ Restart the bot and you should be good to go.
 
 #### Postgres ###
 
-```npm run postgres```
+```npm run db:start```
 
 We use postgres for our database.
 
@@ -235,10 +237,14 @@ You can access it via http://localhost:5050 (maybe idk)
 
 #### API ###
 
-```npm run api```
+The API runs as part of the same bot process (see `src/api/app.ts`) — there's no separate script to start it.
 
-This is a simple API that allows you to interact with the database.
+V1 : legacy tripbot APi that interacts with static .json files.
 
-V1 : legacy tripbot APi that interacts with static .json files
+## License
 
-V2 : the new prisma api that interacts with postgres for the appeal system
+TripBot is source-available under the [PolyForm Noncommercial License 1.0.0](LICENSE). You're free to use, copy,
+modify, and distribute the code (including forks) for any noncommercial purpose. Selling the software, or using it
+to provide a commercial product or service, is not permitted.
+
+V2 : the new prisma api that interacts with postgres for the appeal system.

@@ -3,7 +3,9 @@ import {
   VoiceState,
 } from 'discord.js';
 import { VoiceStateUpdateEvent } from '../@types/eventDef';
-import { pitchTent, teardownTent, logTent } from '../utils/tents';
+import {
+  pitchTent, teardownTent, logTent, updateTentStatus,
+} from '../utils/tents';
 
 const F = f(__filename); // eslint-disable-line
 
@@ -36,10 +38,13 @@ export const voiceStateUpdate: VoiceStateUpdateEvent = {
 
     // Check if the user actually left or joined a channel before logging
     if (New.channel !== Old.channel) {
-      logTent(Old, New);
+      await logTent(Old, New);
+      // Someone came or went, so refresh the headcount on both tents involved.
+      if (Old.channel) updateTentStatus(Old.channel);
+      if (New.channel) updateTentStatus(New.channel);
     }
 
-    teardownTent(Old);
+    await teardownTent(Old);
   },
 };
 

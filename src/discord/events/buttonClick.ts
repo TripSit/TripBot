@@ -19,6 +19,7 @@ import { techHelpClick, techHelpClose, techHelpOwn } from '../utils/techHelp';
 // } from '../commands/archive/modmail';
 import { verifyButton } from '../utils/verifyButton';
 import { buttonReactionRole } from '../commands/global/d.reactionRole';
+import { prReviewButton } from '../commands/global/d.prReview';
 import {
   rpgArcade, rpgArcadeGame, rpgArcadeWager, rpgBounties, rpgHelp, rpgHome, rpgHomeAccept, rpgHomeDecline, rpgHomeSell, rpgHomeNameChange, rpgMarket, rpgMarketAccept, rpgMarketPreview, rpgTown, rpgFlairAccept, rpgFlairDecline,
 } from '../commands/guild/d.rpg';
@@ -183,6 +184,11 @@ export async function buttonClick(interaction:ButtonInteraction, discordClient:C
 
   if (buttonID.startsWith('"ID":"RR"')) {
     await buttonReactionRole(interaction);
+    return;
+  }
+
+  if (buttonID.startsWith('"ID":"PR"')) {
+    await prReviewButton(interaction);
     return;
   }
 

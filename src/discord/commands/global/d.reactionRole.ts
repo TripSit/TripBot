@@ -22,7 +22,7 @@ import {
   PermissionResolvable,
   MessageFlags,
 } from 'discord.js';
-import { reaction_role_type, reaction_roles } from '@prisma/client';
+import { reaction_role_type, reaction_roles } from '@db/tripbot';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { checkChannelPermissions, checkGuildPermissions } from '../../utils/checkPermissions';

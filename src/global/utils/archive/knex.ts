@@ -1,4 +1,4 @@
-import { discord_guilds, user_tickets, users } from '@prisma/client';
+import { discord_guilds, user_tickets, users } from '@db/tripbot';
 import knex from 'knex';
 
 // import {

@@ -1,16 +1,15 @@
 /* eslint-disable max-len */
 
-import {
-  Message,
-  Role,
-  PermissionResolvable,
-  EmbedBuilder,
-  TextChannel,
-  DMChannel,
-} from 'discord.js';
 import { stripIndents } from 'common-tags';
+import {
+  DMChannel,
+  EmbedBuilder,
+  Message,
+  PermissionResolvable,
+  Role,
+  TextChannel,
+} from 'discord.js';
 import { sleep } from './sleep';
-import { aiMessage } from '../commands/global/d.ai';
 
 // import log from '../../global/utils/log';
 // import {parse} from 'path';
@@ -102,7 +101,7 @@ export async function messageCommand(message: Message): Promise<void> {
   if (!message.guild) return; // If not in a guild then ignore all messages
   // if (message.guild.id !== env.DISCORD_GUILD_ID) return; // If not in tripsit ignore all messages
   const displayName = message.member ? message.member.displayName : message.author.username;
-  // log.debug(F, `message: ${JSON.stringify(message, null, 2)}`);
+  // log.debug(F, `messageCommand: ${JSON.stringify(message, null, 2)}`);
 
   // if (message.guild.id === env.DISCORD_GUILD_ID) {
   //   log.debug(F, `message: ${JSON.stringify(message, null, 2)}`);
@@ -343,8 +342,6 @@ export async function messageCommand(message: Message): Promise<void> {
           await message.channel.send(`Uploaded ${stickerList.join(' ')} to ${message.guild.name}!`); // eslint-disable-line
         }
       }
-    } else if (!message.author.bot) {
-      await aiMessage(message);
     } else {
       try {
         await message.react(emojiGet('ts_heart'));

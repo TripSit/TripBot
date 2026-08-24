@@ -1,3 +1,4 @@
+import { stripIndents } from 'common-tags';
 import {
   ChannelType,
   ChatInputCommandInteraction,
@@ -7,10 +8,13 @@ import {
   SlashCommandBuilder,
   TextChannel,
 } from 'discord.js';
-import { stripIndents } from 'common-tags';
+import {
+  getAllLevelFreezes, NICE_LEVEL, removeLevelFreeze, setLevelFreeze,
+} from '../../../global/commands/g.levelFreeze';
+import { deleteWatchRequest, executeWatch } from '../../../global/commands/g.watchuser';
+import { getUserTotalLevel, MAX_EXPERIENCE_LEVEL, MIN_EXPERIENCE_LEVEL } from '../../../global/utils/experience';
 import { SlashCommand } from '../../@types/commandDef';
 import commandContext from '../../utils/context';
-import { deleteWatchRequest, executeWatch } from '../../../global/commands/g.watchuser';
 import { linkThread } from '../../utils/modUtils';
 
 const F = f(__filename);
@@ -225,6 +229,103 @@ export async function lockdown(interaction: ChatInputCommandInteraction): Promis
   await interaction.editReply({ content: `Channel ${channel} has been locked down.` });
   return true;
 }
+// Requested by Ruubert and yes, we actually developed it
+async function freezeLevel(interaction: ChatInputCommandInteraction): Promise<boolean> {
+  if (!interaction.guild) {
+    await interaction.editReply({ content: SERVER_ONLY_TEXT });
+    return false;
+  }
+
+  const targetUser = interaction.options.getUser('target', true);
+  const level = interaction.options.getInteger('level', true);
+
+  try {
+    await setLevelFreeze(targetUser.id, level);
+  } catch (error) {
+    if (error instanceof RangeError) {
+      // eslint-disable-next-line max-len
+      await interaction.editReply({ content: `The level must be a whole number between ${MIN_EXPERIENCE_LEVEL} and ${MAX_EXPERIENCE_LEVEL}.` });
+      return false;
+    }
+    log.error(F, `Failed to freeze level for ${targetUser.id}: ${error}`);
+    await interaction.editReply({ content: 'Something went wrong setting that level freeze. Please try again.' });
+    return false;
+  }
+
+  const nice = level === NICE_LEVEL;
+  const niceBit = level === NICE_LEVEL ? ' Nice. 😏' : '';
+  // eslint-disable-next-line max-len
+  await interaction.editReply({ content: `Done! **${targetUser.username}**'s displayed level is now frozen at ${level}.${niceBit}` });
+
+  const modName = (interaction.member as GuildMember).displayName;
+  const channelBotlog = await interaction.guild.channels.fetch(env.CHANNEL_BOTLOG) as TextChannel;
+  if (channelBotlog) {
+    // eslint-disable-next-line max-len
+    const botlogMsg = `${modName} froze ${targetUser.username} (${targetUser.id}) at displayed level ${level}`;
+    await channelBotlog.send(nice ? `${botlogMsg}. Nice. 😎` : botlogMsg);
+  }
+  return true;
+}
+
+async function unfreezeLevel(interaction: ChatInputCommandInteraction): Promise<boolean> {
+  if (!interaction.guild) {
+    await interaction.editReply({ content: SERVER_ONLY_TEXT });
+    return false;
+  }
+
+  const targetUser = interaction.options.getUser('target', true);
+
+  if (!await removeLevelFreeze(targetUser.id)) {
+    // eslint-disable-next-line max-len
+    await interaction.editReply({ content: `**${targetUser.username}** doesn't have their displayed level frozen.` });
+    return false;
+  }
+
+  await interaction.editReply({ content: `Done! **${targetUser.username}**'s displayed level is no longer frozen.` });
+
+  const modName = (interaction.member as GuildMember).displayName;
+  const channelBotlog = await interaction.guild.channels.fetch(env.CHANNEL_BOTLOG) as TextChannel;
+  if (channelBotlog) {
+    await channelBotlog.send(`${modName} unfroze ${targetUser.username} (${targetUser.id})`);
+  }
+  return true;
+}
+
+async function listFrozenLevels(interaction: ChatInputCommandInteraction): Promise<boolean> {
+  const frozen = await getAllLevelFreezes();
+
+  if (frozen.length === 0) {
+    await interaction.editReply({ content: 'No users currently have their displayed level frozen. ❄️' });
+    return true;
+  }
+
+  const lines = await Promise.all(frozen.map(async ({ discordId, frozenLevel }) => {
+    const trueLevel = await getUserTotalLevel(discordId);
+    const user = await interaction.client.users.fetch(discordId).catch(() => null);
+    const name = user ? user.username : 'unknown user';
+    return `• ${name} (${discordId}): frozen at ${frozenLevel} (true level ${trueLevel})`;
+  }));
+
+  const header = `🧊 Frozen displayed levels (${frozen.length}):`;
+  const pages: string[] = [];
+  let current = header;
+  lines.forEach(line => {
+    if (`${current}\n${line}`.length > 1900) {
+      pages.push(current);
+      current = line;
+    } else {
+      current = `${current}\n${line}`;
+    }
+  });
+  pages.push(current);
+
+  await interaction.editReply({ content: pages[0] });
+  for (let i = 1; i < pages.length; i += 1) {
+    // eslint-disable-next-line no-await-in-loop
+    await interaction.followUp({ content: pages[i], flags: MessageFlags.Ephemeral });
+  }
+  return true;
+}
 
 export const dMod: SlashCommand = {
   data: new SlashCommandBuilder()
@@ -280,6 +381,26 @@ export const dMod: SlashCommand = {
       .addBooleanOption(option => option.setName('ephemeral')
         .setDescription(EPHEMERAL_TEXT)))
     .addSubcommand(subcommand => subcommand
+      .setName('freezelevel')
+      .setDescription('Freeze a user\'s displayed level (display only; does not affect roles etc)')
+      .addUserOption(option => option.setName('target')
+        .setDescription('The user whose level to freeze')
+        .setRequired(true))
+      .addIntegerOption(option => option.setName('level')
+        .setDescription('The level to pin them at')
+        .setMinValue(MIN_EXPERIENCE_LEVEL)
+        .setMaxValue(MAX_EXPERIENCE_LEVEL)
+        .setRequired(true)))
+    .addSubcommand(subcommand => subcommand
+      .setName('unfreezelevel')
+      .setDescription('Remove a user\'s level freeze, restoring their true displayed level')
+      .addUserOption(option => option.setName('target')
+        .setDescription('The user whose level freeze to remove')
+        .setRequired(true)))
+    .addSubcommand(subcommand => subcommand
+      .setName('frozenlevels')
+      .setDescription('List all users whose displayed level is frozen'))
+    .addSubcommand(subcommand => subcommand
       .setName('link')
       .setDescription('Link one user to another.')
       .addUserOption(option => option.setName('target')
@@ -292,7 +413,14 @@ export const dMod: SlashCommand = {
         .setDescription(EPHEMERAL_TEXT))),
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
-    const ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined;
+    const subcommand = interaction.options.getSubcommand();
+    // Level-freeze actions are always hidden so the target is never notified.
+    const alwaysEphemeral = subcommand === 'freezelevel'
+      || subcommand === 'unfreezelevel'
+      || subcommand === 'frozenlevels';
+    const ephemeral = (alwaysEphemeral || interaction.options.getBoolean('ephemeral'))
+      ? MessageFlags.Ephemeral
+      : undefined;
     await interaction.deferReply({ flags: ephemeral });
 
     if (!interaction.guild || interaction.guild.id !== env.DISCORD_GUILD_ID.toString()) {
@@ -304,7 +432,7 @@ export const dMod: SlashCommand = {
     const actorIsMod = actor.roles.cache.has(roleModerator.id);
 
     if (actorIsMod) {
-      switch (interaction.options.getSubcommand()) {
+      switch (subcommand) {
         case 'slowmode':
           await slowMode(interaction);
           break;
@@ -319,6 +447,15 @@ export const dMod: SlashCommand = {
           break;
         case 'link':
           await link(interaction);
+          break;
+        case 'freezelevel':
+          await freezeLevel(interaction);
+          break;
+        case 'unfreezelevel':
+          await unfreezeLevel(interaction);
+          break;
+        case 'frozenlevels':
+          await listFrozenLevels(interaction);
           break;
         default:
           break;
