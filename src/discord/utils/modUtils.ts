@@ -1,56 +1,54 @@
 /* eslint-disable sonarjs/cognitive-complexity */
 /* eslint-disable sonarjs/no-duplicate-string */
 /* eslint-disable max-len */
+import { user_action_type, user_actions, users } from '@db/tripbot';
+import { stripIndents } from 'common-tags';
 import {
-  ChatInputCommandInteraction,
-  GuildMember,
-  ModalBuilder,
-  TextInputBuilder,
-  ActionRowBuilder,
-  ModalSubmitInteraction,
-  Colors,
-  User,
-  time,
-  ButtonBuilder,
-  TextChannel,
-  Role,
-  InteractionReplyOptions,
-  EmbedBuilder,
-  ThreadChannel,
-  MessageComponentInteraction,
-  PermissionResolvable,
-  DiscordAPIError,
-  GuildBan,
-  Guild,
-  Message,
-  ButtonInteraction,
-  UserContextMenuCommandInteraction,
-  MessageContextMenuCommandInteraction,
-  APIEmbedField,
-  Snowflake,
-  BaseMessageOptions,
-  APIActionRowComponent,
-  APIButtonComponentWithCustomId,
-  DiscordErrorData,
-  InteractionEditReplyOptions,
-  AnySelectMenuInteraction,
-} from 'discord.js';
-import {
-  TextInputStyle,
   ButtonStyle,
   MessageFlags,
+  TextInputStyle,
 } from 'discord-api-types/v10';
-import { stripIndents } from 'common-tags';
-import { user_action_type, user_actions, users } from '@db/tripbot';
+import {
+  APIActionRowComponent,
+  APIButtonComponentWithCustomId,
+  APIEmbedField,
+  ActionRowBuilder,
+  AnySelectMenuInteraction,
+  BaseMessageOptions,
+  ButtonBuilder,
+  ButtonInteraction,
+  ChatInputCommandInteraction,
+  Colors,
+  DiscordAPIError,
+  DiscordErrorData,
+  EmbedBuilder,
+  Guild,
+  GuildBan,
+  GuildMember,
+  InteractionEditReplyOptions,
+  InteractionReplyOptions,
+  MessageContextMenuCommandInteraction,
+  ModalBuilder,
+  ModalSubmitInteraction,
+  PermissionResolvable,
+  Role,
+  Snowflake,
+  TextChannel,
+  TextInputBuilder,
+  ThreadChannel,
+  User,
+  UserContextMenuCommandInteraction,
+  time,
+} from 'discord.js';
 import { Duration } from 'luxon';
 import { parseDuration, validateDurationInput } from '../../global/utils/parseDuration';
-import { getDiscordMember } from './guildMemberLookup';
 import { embedTemplate } from './embedTemplate';
+import { getDiscordMember } from './guildMemberLookup';
 
 // import { last } from '../../../global/commands/g.last';
-import { checkGuildPermissions } from './checkPermissions';
 import { last } from '../../global/commands/g.last';
 import { appealAccept, appealReject } from './appeal';
+import { checkGuildPermissions } from './checkPermissions';
 
 /* TODO:
 add dates to bans
@@ -84,6 +82,10 @@ const noReason = 'No reason provided';
 // const descriptionPlaceholder = 'Tell the user why you\'re doing this';
 const mepWarning = 'You cannot use the word "MEP" here.';
 const noMessageSent = '*No message sent to user*';
+
+// Reject the warning, get 15 minutes to think about it.
+const warningRejectionTimeout = 15 * 60 * 1000; // 15 minutes
+const warningRejectionNote = 'Automatic timeout: this user rejected the warning they were given.';
 
 // Internal-note keywords that mark a vendor/bot ban. Full bans whose internal
 // note contains one of these (as a whole word, optionally plural) never DM the user.
@@ -263,10 +265,12 @@ const embedVariables = {
 const warnButtons = new ActionRowBuilder<ButtonBuilder>().addComponents(
   new ButtonBuilder()
     .setCustomId('acknowledgeButton')
+    .setEmoji('✅')
     .setLabel('I understand, it wont happen again!')
     .setStyle(ButtonStyle.Primary),
   new ButtonBuilder()
     .setCustomId('refusalButton')
+    .setEmoji('⛔')
     .setLabel('Nah, I do what I want!')
     .setStyle(ButtonStyle.Danger),
 );
@@ -851,6 +855,8 @@ export async function modResponse(
   command: ModAction,
   showModButtons: boolean,
   appealData? : AppealData | null,
+  fallbackActor?: GuildMember | null,
+  fallbackTarget?: GuildMember | User | null,
 ):Promise<BaseMessageOptions> {
   const startTime = Date.now();
   const actionRow = new ActionRowBuilder<ButtonBuilder>();
@@ -1016,6 +1022,12 @@ export async function modResponse(
     actor = await discordClient.users.fetch(appealData.discordId);
   }
 
+  // No interaction, no appeal, no idea who's involved. The caller has to tell us.
+  if (!interaction && !appealData && fallbackActor && fallbackTarget) {
+    actor = fallbackActor;
+    target = fallbackTarget;
+  }
+
   if (!actor) {
     throw new Error('Action must be either a ban appeal or a genuine moderation action with a valid actor!');
   }
@@ -1060,7 +1072,7 @@ export async function modResponse(
     timeoutTime = target.communicationDisabledUntilTimestamp;
   }
 
-  // Second row of mod buttons — the primary row maxes out at 5 components.
+  // Second row of mod buttons. The primary row caps out at 5.
   const quickBanRow = new ActionRowBuilder<ButtonBuilder>();
   if (showModButtons) {
     if (isInfo(command) || isReport(command)) {
@@ -1233,7 +1245,7 @@ export async function messageModThread(
   // Note whether the DM we sent actually reached the user (DMs from unknown sources are often blocked).
   // dmDelivered is undefined/null when no DM was attempted, so we only surface a line when one was.
   const deliveryNote = (dmDelivered === true || dmDelivered === false)
-    ? `\n**DM delivered to user:** ${dmDelivered ? '✅ Yes' : '❌ No — the user likely has DMs disabled or has blocked the bot'}`
+    ? `\n**DM delivered to user:** ${dmDelivered ? '✅ Yes' : '❌ No, the user likely has DMs disabled or has blocked the bot'}`
     : '';
 
   log.debug(F, '[messageModThread] generating user info');
@@ -1340,7 +1352,7 @@ export async function messageModThread(
       `;
       await modThread.send({
         content: modThreadMessage,
-        ...await modResponse(interaction, command, true, appealData),
+        ...await modResponse(interaction, command, true, appealData, actor, typeof target === 'string' ? null : target),
       });
     } else {
       const modResponseData = await modResponse(interaction, command, true, appealData);
@@ -1371,7 +1383,6 @@ export async function messageModThread(
 
 async function messageUser(
   target: User,
-  guild: Guild,
   command: ModAction,
   messageToUser: string,
   addButtons?: boolean,
@@ -1383,12 +1394,11 @@ async function messageUser(
     .setTitle(embedVariables[command as keyof typeof embedVariables].embedTitle)
     .setDescription(messageToUser);
 
-  let message = {} as Message;
   try {
     if (addButtons) {
-      message = await target.send({ embeds: [embed], components: [warnButtons] });
+      await target.send({ embeds: [embed], components: [warnButtons] });
     } else {
-      message = await target.send({ embeds: [embed] });
+      await target.send({ embeds: [embed] });
     }
   } catch (error) {
     // The user most likely has DMs disabled / blocked the bot, so the message never reached them.
@@ -1396,23 +1406,20 @@ async function messageUser(
     return false;
   }
 
-  const messageFilter = (mi: MessageComponentInteraction) => mi.user.id === target.id;
-  const collector = message.createMessageComponentCollector({ filter: messageFilter, time: 0 });
-
-  collector.on('collect', async (mi: MessageComponentInteraction) => {
-    if (mi.customId.startsWith('acknowledgeButton')) {
-      // remove the components from the message
-      await mi.update({ components: [] });
-      mi.user.send('Thanks for understanding! We appreciate your cooperation and will consider this in the future!');
-    } else if (mi.customId.startsWith('refusalButton')) {
-      // remove the components from the message
-      await mi.update({ components: [] });
-      mi.user.send(stripIndents`Thanks for admitting this, you\'ve been removed from the guild. You can rejoin if you ever decide to cooperate.`);
-      await guild.members.kick(target, 'Refused to acknowledge timeout');
-    }
-  });
+  // buttonClick owns these buttons
   log.debug(F, `[messageUser] time: ${Date.now() - startTime}ms`);
   return true;
+}
+
+/** Their mod thread. */
+async function getModThread(userData: users): Promise<ThreadChannel | null> {
+  if (!userData.mod_thread_id) return null;
+  try {
+    return await discordClient.channels.fetch(userData.mod_thread_id as Snowflake) as ThreadChannel;
+  } catch (error) {
+    log.info(F, 'Failed to fetch mod thread. It was likely deleted.');
+    return null;
+  }
 }
 
 export async function acknowledgeButton(
@@ -1428,27 +1435,34 @@ export async function acknowledgeButton(
     update: {
     },
   });
-  let targetChan: TextChannel | null = null;
-  try {
-    targetChan = targetData.mod_thread_id ? await discordClient.channels.fetch(targetData.mod_thread_id as Snowflake) as TextChannel : null;
-  } catch (error) {
-    log.info(F, 'Failed to fetch mod thread. It was likely deleted.');
-  }
-  if (targetChan) {
-    await targetChan.send({
+
+  const modThread = await getModThread(targetData);
+  if (modThread) {
+    await modThread.send({
       embeds: [embedTemplate()
         .setColor(Colors.Green)
-        .setDescription(`${interaction.user.username} has acknowledged their warning.`)],
+        .setDescription(`✅ ${interaction.user} (${interaction.user.username}) has **acknowledged** their warning.`)],
     });
   }
-  // remove the components from the message
+
+  // Buttons out, receipt in.
   try {
-    await interaction.update({ components: [] });
+    await interaction.update({
+      components: [],
+      embeds: [
+        ...interaction.message.embeds,
+        embedTemplate()
+          .setColor(Colors.Green)
+          .setTitle('✅ Warning acknowledged')
+          .setDescription('Thanks for understanding! We appreciate your cooperation and will consider this in the future!'),
+      ],
+    });
   } catch (err) {
     log.debug(F, 'Failed to remove warning components for moderation acknowledgement');
   }
 }
 
+/** "Nah, I do what I want!" Splendid. Fills in the timeout form for them and runs it. */
 export async function refusalButton(
   interaction:ButtonInteraction,
 ) {
@@ -1463,22 +1477,160 @@ export async function refusalButton(
     },
   });
 
-  let targetChan: TextChannel | null = null;
+  // DMs don't come with a guild attached, so go by whoever warned them last.
+  const lastWarning = await db.user_actions.findFirst({
+    where: {
+      user_id: targetData.id,
+      type: 'WARNING',
+    },
+    orderBy: {
+      created_at: 'desc',
+    },
+  });
+
+  let guild = null as Guild | null;
   try {
-    targetChan = targetData.mod_thread_id ? await discordClient.channels.fetch(targetData.mod_thread_id as Snowflake) as TextChannel : null;
-  } catch (error) {
-    log.info(F, 'Failed to fetch mod thread. It was likely deleted.');
+    guild = await discordClient.guilds.fetch((lastWarning?.guild_id ?? env.DISCORD_GUILD_ID) as Snowflake);
+  } catch (err) {
+    log.error(F, `Failed to fetch the guild for a rejected warning: ${err}`);
   }
-  if (targetChan) {
-    await targetChan.send({
-      embeds: [embedTemplate()
-        .setColor(Colors.Red)
-        .setDescription(`${interaction.user.username} has refused their warning and was kicked.`)],
+
+  let targetMember = null as GuildMember | null;
+  if (guild) {
+    try {
+      targetMember = await guild.members.fetch(interaction.user.id);
+    } catch (err) {
+      log.debug(F, `${interaction.user.username} rejected a warning but is no longer in ${guild.name}`);
+    }
+  }
+
+  const timeoutEnds = new Date(Date.now() + warningRejectionTimeout);
+  const humanDuration = msToHuman(warningRejectionTimeout);
+
+  // These buttons ride timeout DMs too. Don't turn a 7 day timeout into 15 minutes.
+  const existingTimeout = targetMember?.communicationDisabledUntilTimestamp ?? null;
+  const alreadyTimedOutLonger = existingTimeout !== null && existingTimeout > timeoutEnds.getTime();
+  const willTimeout = !!targetMember && !alreadyTimedOutLonger;
+
+  const readTheTerms = 'Please use that time to read the [TripSit Terms](https://wiki.tripsit.me/wiki/Terms_of_Service). If you still don\'t want to follow them once it expires, you\'re welcome to leave.';
+
+  // The 'description' field.
+  let noteToUser = stripIndents`
+    You rejected the warning you were given, so you've been timed out for ${humanDuration}. It will expire ${time(timeoutEnds, 'R')}.
+
+    ${readTheTerms}
+  `;
+  if (alreadyTimedOutLonger) {
+    noteToUser = stripIndents`
+      You rejected the warning you were given. Your existing timeout still expires ${time(new Date(existingTimeout as number), 'R')}, and the team has been told you rejected this.
+
+      ${readTheTerms}
+    `;
+  } else if (!targetMember) {
+    noteToUser = 'You rejected the warning you were given, and the team has been told.';
+  }
+
+  // Answer the DM first, in case everything below falls over.
+  let dmDelivered = false;
+  try {
+    await interaction.update({
+      components: [],
+      embeds: [
+        ...interaction.message.embeds,
+        embedTemplate()
+          .setColor(willTimeout ? embedVariables.TIMEOUT.embedColor : Colors.Red)
+          .setTitle(willTimeout
+            ? `${embedVariables.TIMEOUT.emoji} ${embedVariables.TIMEOUT.embedTitle}`
+            : '❌ Warning rejected')
+          .setDescription(noteToUser),
+      ],
     });
-    await targetChan.guild.members.kick(interaction.user, 'Refused to acknowledge warning');
+    dmDelivered = true;
+  } catch (err) {
+    log.debug(F, `Failed to update the warning message after a refusal: ${err}`);
   }
-  // remove the components from the message
-  await interaction.update({ components: [] });
+
+  const rejectionEmbed = embedTemplate()
+    .setColor(Colors.Red)
+    .setDescription(willTimeout
+      ? `❌ ${interaction.user} (${interaction.user.username}) has **rejected** their warning, so I'm timing them out for ${humanDuration}.`
+      : `❌ ${interaction.user} (${interaction.user.username}) has **rejected** their warning.`);
+
+  const existingModThread = await getModThread(targetData);
+  if (existingModThread) {
+    await existingModThread.send({ embeds: [rejectionEmbed] });
+  }
+
+  if (!willTimeout) {
+    // Nothing to action, but mods still need to know why.
+    let reason = `⚠️ I couldn't time ${interaction.user} out: they're no longer in ${guild ? guild.name : 'the guild'}.`;
+    if (alreadyTimedOutLonger) {
+      reason = `⏳ I left ${targetMember} alone: they're already timed out until ${time(new Date(existingTimeout as number), 'R')}, which is longer than the ${humanDuration} this would have given them.`;
+    }
+    if (existingModThread) {
+      await existingModThread.send({
+        embeds: [embedTemplate().setColor(Colors.Red).setDescription(reason)],
+      });
+    }
+    return;
+  }
+
+  const timeoutTarget = targetMember as GuildMember;
+  const timeoutGuild = guild as Guild;
+
+  try {
+    await timeoutTarget.timeout(warningRejectionTimeout, warningRejectionNote);
+  } catch (err) {
+    log.error(F, `Failed to time out ${interaction.user.username} after they rejected a warning: ${err}`);
+    if (existingModThread) {
+      await existingModThread.send({
+        embeds: [embedTemplate()
+          .setColor(Colors.Red)
+          .setDescription(`⚠️ I couldn't time ${timeoutTarget} out, someone will need to do it manually.`)],
+      });
+    }
+    return;
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  const botMember = await timeoutGuild.members.fetch(discordClient.user!.id);
+  const botData = await db.users.upsert({
+    where: { discord_id: botMember.id },
+    create: { discord_id: botMember.id },
+    update: {},
+  });
+
+  await db.user_actions.create({
+    data: {
+      user_id: targetData.id,
+      target_discord_id: targetData.discord_id,
+      guild_id: timeoutGuild.id,
+      type: 'TIMEOUT' as user_action_type,
+      description: noteToUser,
+      internal_note: warningRejectionNote,
+      expires_at: timeoutEnds,
+      created_by: botData.id,
+    },
+  });
+
+  // The full treatment: mod log, thread, un-timeout button, new icon.
+  const modThread = await messageModThread(
+    null,
+    botMember,
+    timeoutTarget,
+    'TIMEOUT',
+    warningRejectionNote,
+    noteToUser,
+    '',
+    `\n**Timeout Duration:** ${humanDuration}\n**Timeout Ends:** ${time(timeoutEnds, 'R')}`,
+    null,
+    dmDelivered,
+  );
+
+  // No thread existed earlier, so the rejection notice had nowhere to land.
+  if (!existingModThread && modThread) {
+    await modThread.send({ embeds: [rejectionEmbed] });
+  }
 }
 
 export async function acknowledgeReportButton(
@@ -1962,7 +2114,6 @@ export async function moderate(
     log.debug(F, `Sending message to ${targetName}`);
     dmDelivered = await messageUser(
       targetUser ?? targetMember?.user as User,
-      buttonInt.guild,
       command,
       body,
       isTimeout(command) || isWarning(command),
