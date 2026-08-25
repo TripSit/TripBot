@@ -19,10 +19,25 @@ async function getCommands(commandType: string): Promise<SlashCommand[]> {
   // log.debug(F, `${commandType} command files: ${files}`);
   return files
     .filter(file => (file.endsWith('.ts') || file.endsWith('.js')) && !file.startsWith('index'))
-    .map(file =>
+    .map(file => ({
+      file,
       // log.debug(F, `${commandType} command file: ${file}`);
-       require(`${commandDir}/${commandType}/${file}`)) // eslint-disable-line
-    .map(command => command[Object.keys(command).find(key => command[key].data !== undefined) as string].data.toJSON());
+      command: require(`${commandDir}/${commandType}/${file}`), // eslint-disable-line
+    }))
+    .filter(({ file, command }) => {
+      const key = Object.keys(command).find(k => command[k] && command[k].data !== undefined);
+      // log.warn() unconditionally touches global.rollbar, which isn't set up in this standalone
+      // script's execution path (only during normal bot startup) - console.warn avoids that.
+      if (!key) {
+        // eslint-disable-next-line no-console
+        console.warn(`[commandDeploy] Skipping ${commandType}/${file} - no SlashCommand .data export found.`);
+      }
+      return key !== undefined;
+    })
+    .map(({ command }) => {
+      const key = Object.keys(command).find(k => command[k] && command[k].data !== undefined) as string;
+      return command[key].data.toJSON();
+    });
 }
 
 export default async function deployCommands():Promise<{
