@@ -441,15 +441,6 @@ export const opioids: Opioid[] = [
     notes: [RESEARCH_NOTE],
   },
   {
-    name: '7-Hydroxymitragynine',
-    aliases: ['7-hydroxymitragynine', '7-oh', '7oh', '7-hydroxy'],
-    potency: { oral: [17, 17] },
-    notes: [
-      'This is one isolated alkaloid, not kratom leaf. Whole kratom contains it in small and highly '
-        + 'variable amounts, so this figure must not be used to dose plain leaf.',
-    ],
-  },
-  {
     name: 'Butyrfentanyl',
     aliases: ['butyrfentanyl', 'butyrylfentanyl'],
     potency: { oral: [25, 25] },
@@ -766,8 +757,7 @@ export const DEFAULT_OPIOID_SUGGESTIONS = [
   'Morphine', 'Codeine', 'Dihydrocodeine', 'Tramadol', 'Tapentadol', 'Hydrocodone', 'Oxycodone',
   'Oxymorphone', 'Hydromorphone', 'Methadone', 'Buprenorphine', 'Fentanyl', 'Diamorphine (heroin)',
   'Pethidine (meperidine)', 'Levorphanol', 'Nalbuphine', 'Butorphanol', 'Pentazocine',
-  '7-Hydroxymitragynine', 'U-47700', 'Isotonitazene', 'Metonitazene', 'Protonitazene', 'Carfentanil',
-  'Opium',
+  'U-47700', 'Isotonitazene', 'Metonitazene', 'Protonitazene', 'Carfentanil', 'Opium',
 ];
 
 /** Largest dose accepted, in mg. Anything above this is a typo rather than a dose. */
