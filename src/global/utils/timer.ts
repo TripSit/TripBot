@@ -19,6 +19,7 @@ import {
 } from '@db/tripbot';
 import updateDb from './updateDb';
 import { checkChannelPermissions } from '../../discord/utils/checkPermissions';
+import { werewolfAdvancePhase } from '../../discord/utils/werewolf';
 import { embedTemplate } from '../../discord/utils/embedTemplate';
 import { experience } from './experience';
 import { profile } from '../commands/g.learn';
@@ -1211,6 +1212,26 @@ async function checkBirthdays() {
   }
 }
 
+async function checkWerewolfPhase() {
+  const dueGames = await db.werewolf_games.findMany({
+    where: {
+      phase: { notIn: ['LOBBY', 'ENDED'] },
+      phase_end_time: { lte: new Date() },
+    },
+    include: { werewolf_players: true },
+  });
+  if (dueGames.length === 0) return;
+
+  await Promise.all(dueGames.map(async game => {
+    try {
+      const guild = await discordClient.guilds.fetch(game.guild_id);
+      await werewolfAdvancePhase(game, guild);
+    } catch (err) {
+      log.error(F, `Error advancing werewolf game ${game.id} in guild ${game.guild_id}: ${err}`);
+    }
+  }));
+}
+
 async function checkEvery(
   callback: () => Promise<void>,
   interval: number,
@@ -1240,6 +1261,7 @@ async function runTimer() {
 
   const timers = [
     { callback: checkReminders, interval: env.NODE_ENV === 'production' ? seconds10 : seconds5 },
+    { callback: checkWerewolfPhase, interval: env.NODE_ENV === 'production' ? seconds10 : seconds5 },
     { callback: checkTickets, interval: env.NODE_ENV === 'production' ? seconds60 : seconds10 },
     { callback: checkMindsets, interval: env.NODE_ENV === 'production' ? seconds60 : seconds5 },
     { callback: callUptime, interval: env.NODE_ENV === 'production' ? seconds60 : seconds5 },

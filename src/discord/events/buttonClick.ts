@@ -28,7 +28,7 @@ import { appealAccept, appealReject } from '../utils/appeal';
 // import { mushroomPageOne, mushroomPageTwo } from '../commands/global/d.mushroom_info';
 import {
   werewolfDiary,
-  werewolfHow, werewolfJoin, werewolfLeave, werewolfStart,
+  werewolfHow, werewolfJoin, werewolfKill, werewolfHang, werewolfLeave, werewolfStart,
 } from '../commands/guild/d.werewolf';
 import { acknowledgeButton, modModal, refusalButton } from '../utils/modUtils';
 import { feedbackReportModal } from '../commands/global/d.feedback';
@@ -144,26 +144,37 @@ export async function buttonClick(interaction:ButtonInteraction, discordClient:C
 
   if (buttonID.startsWith('werewolf')) {
     log.debug(F, 'Werewolf button clicked');
+    const werewolfAction = buttonID.split('~')[0];
 
-    if (buttonID.toLowerCase().includes('how')) {
+    if (werewolfAction === 'werewolfHow') {
       await werewolfHow(interaction);
       return;
     }
 
-    if (buttonID.toLowerCase().includes('diary')) {
+    if (werewolfAction === 'werewolfDiary') {
       await werewolfDiary(interaction);
       return;
     }
 
-    if (buttonID.toLowerCase().includes('start')) {
+    if (werewolfAction === 'werewolfStart') {
       await werewolfStart(interaction);
+      return;
+    }
+
+    if (werewolfAction === 'werewolfKill') {
+      await werewolfKill(interaction);
+      return;
+    }
+
+    if (werewolfAction === 'werewolfHang') {
+      await werewolfHang(interaction);
       return;
     }
 
     await interaction.deferUpdate();
 
-    if (buttonID.toLowerCase().includes('join')) await interaction.editReply(await werewolfJoin(interaction));
-    else if (buttonID.toLowerCase().includes('leave')) await interaction.editReply(await werewolfLeave(interaction));
+    if (werewolfAction === 'werewolfJoin') await interaction.editReply(await werewolfJoin(interaction));
+    else if (werewolfAction === 'werewolfLeave') await interaction.editReply(await werewolfLeave(interaction));
     return;
   }
 

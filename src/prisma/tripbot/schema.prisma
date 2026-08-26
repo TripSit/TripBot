@@ -637,6 +637,27 @@ enum appeal_status {
   DENIED
 }
 
+enum werewolf_phase {
+  LOBBY
+  NIGHT
+  MORNING
+  AFTERNOON
+  EVENING
+  ENDED
+}
+
+enum werewolf_team {
+  TOWN
+  WOLVES
+}
+
+enum werewolf_role {
+  VILLAGER
+  WOLF
+  SEER
+  HUNTER
+}
+
 model ai_info {
   id               String    @id @default(uuid()) @db.Uuid
   user_id          String    @unique @db.Uuid
@@ -722,4 +743,66 @@ model ai_moderation {
   discord_guilds discord_guilds? @relation(fields: [guild_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "appeals_guildid_foreign")
 
   @@unique([guild_id], map: "aimoderation_guildid_unique")
+}
+
+model werewolf_games {
+  id                 String         @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  guild_id           String
+  channel_id         String
+  wolfden_channel_id String?
+  phase              werewolf_phase @default(LOBBY)
+  phase_end_time     DateTime?      @db.Timestamptz(6)
+  day                Int            @default(0)
+  message_id         String?
+  wolf_message_id    String?
+  winning_team       werewolf_team?
+  created_at         DateTime       @default(now()) @db.Timestamptz(6)
+  updated_at         DateTime       @updatedAt @db.Timestamptz(6)
+
+  werewolf_players       werewolf_players[]
+  werewolf_votes         werewolf_votes[]
+  werewolf_diary_entries werewolf_diary_entries[]
+
+  @@unique([guild_id], map: "werewolfgames_guildid_unique")
+}
+
+model werewolf_players {
+  id            String        @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  game_id       String        @db.Uuid
+  discord_id    String
+  role          werewolf_role @default(VILLAGER)
+  team          werewolf_team @default(TOWN)
+  is_alive      Boolean       @default(true)
+  killed_on_day Int?
+  hung_on_day   Int?
+  joined_at     DateTime      @default(now()) @db.Timestamptz(6)
+
+  werewolf_games werewolf_games @relation(fields: [game_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "werewolfplayers_gameid_foreign")
+
+  @@unique([game_id, discord_id], map: "werewolfplayers_gameid_discordid_unique")
+}
+
+model werewolf_votes {
+  id         String         @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  game_id    String         @db.Uuid
+  day        Int
+  phase      werewolf_phase
+  voter_id   String
+  target_id  String
+  created_at DateTime       @default(now()) @db.Timestamptz(6)
+
+  werewolf_games werewolf_games @relation(fields: [game_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "werewolfvotes_gameid_foreign")
+
+  @@unique([game_id, day, phase, voter_id], map: "werewolfvotes_gameid_day_phase_voterid_unique")
+}
+
+model werewolf_diary_entries {
+  id         String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  game_id    String   @db.Uuid
+  discord_id String
+  day        Int
+  entry      String
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+
+  werewolf_games werewolf_games @relation(fields: [game_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "werewolfdiary_gameid_foreign")
 }
