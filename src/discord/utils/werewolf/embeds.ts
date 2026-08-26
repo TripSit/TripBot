@@ -2,7 +2,7 @@ import {
   Colors, EmbedBuilder, Guild, time,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
-import { werewolf_team } from '@db/tripbot';
+import { werewolf_role, werewolf_team } from '@db/tripbot';
 import { WerewolfGameWithPlayers } from '../../../global/utils/werewolf/types';
 
 function displayName(guild: Guild, discordId: string): string {
@@ -52,6 +52,18 @@ export function howEmbed(): EmbedBuilder {
     `);
 }
 
+export function hunterRevengeEmbed(guild: Guild, hunterDiscordId: string): EmbedBuilder {
+  return new EmbedBuilder()
+    .setTitle('The Hunter Falls')
+    .setColor(Colors.Blurple)
+    .setDescription(stripIndents`
+      🏹 ${displayName(guild, hunterDiscordId)} was the Hunter! With their last breath, they can
+      take one more player down with them.
+
+      Only ${displayName(guild, hunterDiscordId)} can use the button below.
+    `);
+}
+
 export function nightTownEmbed(game: WerewolfGameWithPlayers): EmbedBuilder {
   return new EmbedBuilder()
     .setTitle('It is now nighttime.')
@@ -88,10 +100,16 @@ export function morningEmbed(
   guild: Guild,
   victimDiscordId: string | null,
   victimDiary: string[],
+  wasProtected: boolean,
 ): EmbedBuilder {
-  const victimLine = victimDiscordId
-    ? `The town awakens to find that ${displayName(guild, victimDiscordId)} was killed in the night.`
-    : 'The town awakens to find that no one was killed in the night.';
+  let victimLine: string;
+  if (victimDiscordId) {
+    victimLine = `The town awakens to find that ${displayName(guild, victimDiscordId)} was killed in the night.`;
+  } else if (wasProtected) {
+    victimLine = 'The town awakens to find that someone was attacked in the night, but survived!';
+  } else {
+    victimLine = 'The town awakens to find that no one was killed in the night.';
+  }
 
   const diaryLine = victimDiscordId && victimDiary.length > 0
     ? stripIndents`
@@ -134,7 +152,7 @@ export function eveningEmbed(
   game: WerewolfGameWithPlayers,
   guild: Guild,
   suspectDiscordId: string | null,
-  suspectRole: 'WOLF' | 'VILLAGER' | 'SEER' | 'HUNTER' | null,
+  suspectRole: werewolf_role | null,
   suspectDiary: string[],
 ): EmbedBuilder {
   const suspectLine = suspectDiscordId

@@ -42,6 +42,15 @@ export const werewolfRoleRegistry: WerewolfRoleDef[] = [
     nightAction: { priority: 10, label: 'Peek' },
   },
   {
+    role: 'DOCTOR',
+    team: 'TOWN',
+    label: 'Doctor',
+    description: 'Each night, protect one player from the wolves\' kill.',
+    minPlayers: 7,
+    count: playerCount => (playerCount >= 7 ? 1 : 0),
+    nightAction: { priority: 5, label: 'Protect' },
+  },
+  {
     role: 'HUNTER',
     team: 'TOWN',
     label: 'Hunter',

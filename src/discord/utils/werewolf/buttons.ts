@@ -50,6 +50,31 @@ export class WerewolfButton {
       .setLabel(`Hang ${label}`)
       .setStyle(ButtonStyle.Danger);
   }
+
+  static get peek() {
+    return new ButtonBuilder()
+      .setCustomId(WerewolfButtonId.PEEK)
+      .setLabel('Peek')
+      .setEmoji('🔮')
+      .setStyle(ButtonStyle.Primary);
+  }
+
+  static get protect() {
+    return new ButtonBuilder()
+      .setCustomId(WerewolfButtonId.PROTECT)
+      .setLabel('Protect')
+      .setEmoji('💉')
+      .setStyle(ButtonStyle.Primary);
+  }
+
+  // Embeds the hunter's own id (unlike Kill/Hang, which authorize "any wolf"/"anyone alive") since
+  // revenge is only ever valid for one specific dead player.
+  static revenge(hunterDiscordId: string, targetDiscordId: string, label: string) {
+    return new ButtonBuilder()
+      .setCustomId(`${WerewolfButtonId.REVENGE}~${hunterDiscordId}~${targetDiscordId}`)
+      .setLabel(`Take ${label} with you`)
+      .setStyle(ButtonStyle.Danger);
+  }
 }
 
 export default WerewolfButton;

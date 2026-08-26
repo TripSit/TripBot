@@ -1,14 +1,19 @@
 import { werewolf_players } from '@db/tripbot';
 import {
   assignRoles,
+  castNightAction,
   castVote,
   checkWinCondition,
   gameCreate,
+  getNightActionTarget,
   playerJoin,
   playerLeave,
   Prisma,
+  protectTarget,
   resolveDayHang,
+  resolveHunterRevenge,
   resolveNightKill,
+  seerPeek,
   tallyVotes,
   werewolfRequiredPlayers,
 } from '../../commands/g.werewolf';
@@ -126,13 +131,106 @@ describe('castVote', () => {
   });
 });
 
+describe('castNightAction / getNightActionTarget', () => {
+  it('upserts keyed on game/day/action/actor, so re-selecting changes the target', async () => {
+    await castNightAction(gameId, 2, 'PROTECT', 'doctor-1', 'target-1');
+
+    expect(dbMock.werewolf_night_actions.upsert).toHaveBeenCalledWith({
+      where: {
+        game_id_day_action_actor_id: {
+          game_id: gameId, day: 2, action: 'PROTECT', actor_id: 'doctor-1',
+        },
+      },
+      create: {
+        game_id: gameId, day: 2, action: 'PROTECT', actor_id: 'doctor-1', target_id: 'target-1',
+      },
+      update: { target_id: 'target-1' },
+    });
+  });
+
+  it('returns null when the actor has not acted yet', async () => {
+    dbMock.werewolf_night_actions.findUnique.mockResolvedValueOnce(null);
+    expect(await getNightActionTarget(gameId, 1, 'PEEK', 'seer-1')).toBeNull();
+  });
+});
+
+describe('seerPeek', () => {
+  it('records the peek and returns the target team', async () => {
+    dbMock.werewolf_players.findUniqueOrThrow.mockResolvedValueOnce({ team: 'WOLVES' } as never);
+
+    const team = await seerPeek(gameId, 1, 'seer-1', 'target-1');
+
+    expect(team).toBe('WOLVES');
+    expect(dbMock.werewolf_night_actions.upsert).toHaveBeenCalledWith(expect.objectContaining({
+      create: expect.objectContaining({ action: 'PEEK', actor_id: 'seer-1', target_id: 'target-1' }),
+    }));
+  });
+});
+
+describe('protectTarget', () => {
+  it('records the protect action', async () => {
+    await protectTarget(gameId, 1, 'doctor-1', 'target-1');
+
+    expect(dbMock.werewolf_night_actions.upsert).toHaveBeenCalledWith(expect.objectContaining({
+      create: expect.objectContaining({ action: 'PROTECT', actor_id: 'doctor-1', target_id: 'target-1' }),
+    }));
+  });
+});
+
+describe('resolveHunterRevenge', () => {
+  it('kills the target when the actor is a dead Hunter and the target is alive', async () => {
+    dbMock.werewolf_players.findUnique.mockResolvedValueOnce(
+      player({ discord_id: 'hunter-1', role: 'HUNTER', is_alive: false }) as never,
+    );
+    dbMock.werewolf_players.updateMany.mockResolvedValueOnce({ count: 1 });
+
+    const resolved = await resolveHunterRevenge(gameId, 2, 'hunter-1', 'target-1');
+
+    expect(resolved).toBe(true);
+    expect(dbMock.werewolf_night_actions.create).toHaveBeenCalledWith({
+      data: {
+        game_id: gameId, day: 2, action: 'REVENGE', actor_id: 'hunter-1', target_id: 'target-1',
+      },
+    });
+    expect(dbMock.werewolf_players.updateMany).toHaveBeenCalledWith({
+      where: { game_id: gameId, discord_id: 'target-1', is_alive: true },
+      data: { is_alive: false, killed_on_day: 2 },
+    });
+  });
+
+  it('does nothing when the actor is not actually a dead Hunter', async () => {
+    dbMock.werewolf_players.findUnique.mockResolvedValueOnce(
+      player({ discord_id: 'villager-1', role: 'VILLAGER', is_alive: false }) as never,
+    );
+
+    const resolved = await resolveHunterRevenge(gameId, 2, 'villager-1', 'target-1');
+
+    expect(resolved).toBe(false);
+    expect(dbMock.werewolf_night_actions.create).not.toHaveBeenCalled();
+  });
+
+  it('does nothing when the same hunter tries to use revenge twice (unique constraint)', async () => {
+    dbMock.werewolf_players.findUnique.mockResolvedValueOnce(
+      player({ discord_id: 'hunter-1', role: 'HUNTER', is_alive: false }) as never,
+    );
+    dbMock.werewolf_night_actions.create.mockRejectedValueOnce(
+      new Prisma.PrismaClientKnownRequestError('Unique constraint failed', { code: 'P2002', clientVersion: '7.9.1' }),
+    );
+
+    const resolved = await resolveHunterRevenge(gameId, 2, 'hunter-1', 'target-1');
+
+    expect(resolved).toBe(false);
+    expect(dbMock.werewolf_players.updateMany).not.toHaveBeenCalled();
+  });
+});
+
 describe('resolveNightKill', () => {
   it('does not kill anyone when the vote is a tie or empty', async () => {
     vi.mocked(dbMock.werewolf_votes.groupBy).mockResolvedValueOnce([] as never);
 
-    const victim = await resolveNightKill(gameId, 1);
+    const result = await resolveNightKill(gameId, 1);
 
-    expect(victim).toBeNull();
+    expect(result).toEqual({ victimId: null, wasProtected: false });
     expect(dbMock.werewolf_players.updateMany).not.toHaveBeenCalled();
   });
 
@@ -140,11 +238,12 @@ describe('resolveNightKill', () => {
     vi.mocked(dbMock.werewolf_votes.groupBy).mockResolvedValueOnce([
       { target_id: 'victim-1', _count: { target_id: 2 } },
     ] as never);
+    dbMock.werewolf_night_actions.findFirst.mockResolvedValueOnce(null);
     dbMock.werewolf_players.updateMany.mockResolvedValueOnce({ count: 1 });
 
-    const victim = await resolveNightKill(gameId, 3);
+    const result = await resolveNightKill(gameId, 3);
 
-    expect(victim).toBe('victim-1');
+    expect(result).toEqual({ victimId: 'victim-1', wasProtected: false });
     expect(dbMock.werewolf_players.updateMany).toHaveBeenCalledWith({
       where: { game_id: gameId, discord_id: 'victim-1', is_alive: true },
       data: { is_alive: false, killed_on_day: 3 },
@@ -156,11 +255,24 @@ describe('resolveNightKill', () => {
     vi.mocked(dbMock.werewolf_votes.groupBy).mockResolvedValueOnce([
       { target_id: 'not-a-real-player', _count: { target_id: 1 } },
     ] as never);
+    dbMock.werewolf_night_actions.findFirst.mockResolvedValueOnce(null);
     dbMock.werewolf_players.updateMany.mockResolvedValueOnce({ count: 0 });
 
-    const victim = await resolveNightKill(gameId, 1);
+    const result = await resolveNightKill(gameId, 1);
 
-    expect(victim).toBeNull();
+    expect(result).toEqual({ victimId: null, wasProtected: false });
+  });
+
+  it('spares the target and skips the kill entirely when the Doctor protected them', async () => {
+    vi.mocked(dbMock.werewolf_votes.groupBy).mockResolvedValueOnce([
+      { target_id: 'victim-1', _count: { target_id: 1 } },
+    ] as never);
+    dbMock.werewolf_night_actions.findFirst.mockResolvedValueOnce({ target_id: 'victim-1' } as never);
+
+    const result = await resolveNightKill(gameId, 2);
+
+    expect(result).toEqual({ victimId: null, wasProtected: true });
+    expect(dbMock.werewolf_players.updateMany).not.toHaveBeenCalled();
   });
 });
 

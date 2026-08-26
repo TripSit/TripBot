@@ -8,6 +8,7 @@ import commandContext from '../utils/context';
 import { helpMenu } from '../commands/global/d.help';
 import { aiMenu } from '../commands/global/d.ai';
 import { purgeMenu } from '../commands/guild/d.purge';
+import { werewolfPeekSelect, werewolfProtectSelect } from '../commands/guild/d.werewolf';
 // import log from '../../global/utils/log';
 // import {parse} from 'path';
 const F = f(__filename);
@@ -45,6 +46,18 @@ export async function selectMenu(
     }
     if (menuID.startsWith('AI')) {
       await interaction.update(await aiMenu(interaction));
+    }
+
+    if (menuID.startsWith('werewolf')) {
+      if (!menuID.includes(interaction.user.id)) {
+        log.debug(F, 'Werewolf select menu used by someone other than the authorized player');
+        return;
+      }
+      if (menuID.startsWith('werewolfPeekSelect')) {
+        await werewolfPeekSelect(interaction);
+      } else if (menuID.startsWith('werewolfProtectSelect')) {
+        await werewolfProtectSelect(interaction);
+      }
     }
   }
 

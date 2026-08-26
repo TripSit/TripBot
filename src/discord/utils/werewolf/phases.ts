@@ -18,6 +18,7 @@ import {
   afternoonEmbed,
   endEmbed,
   eveningEmbed,
+  hunterRevengeEmbed,
   lobbyEmbed,
   morningEmbed,
   nightTownEmbed,
@@ -82,9 +83,17 @@ export async function renderNightPhase(gameId: string, guild: Guild): Promise<vo
   const aliveWolves = wolves.filter(p => p.is_alive);
   await restrictWolfden(guild, game.wolfden_channel_id, wolves);
 
+  const townButtons = new ActionRowBuilder<ButtonBuilder>().addComponents(WerewolfButton.diary);
+  if (game.werewolf_players.some(p => p.role === 'SEER' && p.is_alive)) {
+    townButtons.addComponents(WerewolfButton.peek);
+  }
+  if (game.werewolf_players.some(p => p.role === 'DOCTOR' && p.is_alive)) {
+    townButtons.addComponents(WerewolfButton.protect);
+  }
+
   await editGameMessage(guild, game, {
     embeds: [nightTownEmbed(game)],
-    components: [new ActionRowBuilder<ButtonBuilder>().addComponents(WerewolfButton.diary)],
+    components: [townButtons],
   });
 
   const aliveTownsfolk = game.werewolf_players.filter(p => p.team !== 'WOLVES' && p.is_alive);
@@ -106,7 +115,37 @@ export async function renderNightPhase(gameId: string, guild: Guild): Promise<vo
   await gameSetWolfMessageId(gameId, wolfMessage.id);
 }
 
-async function advanceToEnd(
+// Posts the revenge prompt if the player who just died was the Hunter. `game` must reflect the
+// post-death state (fetched after the kill/hang was applied) so "other living players" is accurate.
+async function maybePostHunterRevenge(
+  guild: Guild,
+  game: WerewolfGameWithPlayers,
+  deadDiscordId: string,
+): Promise<void> {
+  const deadPlayer = game.werewolf_players.find(p => p.discord_id === deadDiscordId);
+  if (!deadPlayer || deadPlayer.role !== 'HUNTER') return;
+
+  const townChannel = await getTownChannel(guild, game);
+  if (!townChannel) return;
+
+  const targets = game.werewolf_players.filter(p => p.is_alive && p.discord_id !== deadDiscordId);
+  if (targets.length === 0) return;
+
+  const revengeButtons = new ActionRowBuilder<ButtonBuilder>();
+  targets.forEach(target => {
+    const member = guild.members.cache.get(target.discord_id);
+    revengeButtons.addComponents(
+      WerewolfButton.revenge(deadDiscordId, target.discord_id, member?.displayName ?? target.discord_id),
+    );
+  });
+
+  await townChannel.send({
+    embeds: [hunterRevengeEmbed(guild, deadDiscordId)],
+    components: [revengeButtons],
+  });
+}
+
+export async function advanceToEnd(
   game: WerewolfGameWithPlayers,
   guild: Guild,
   winningTeam: 'TOWN' | 'WOLVES',
@@ -127,7 +166,7 @@ async function advanceToEnd(
 }
 
 async function advanceToMorning(game: WerewolfGameWithPlayers, guild: Guild): Promise<void> {
-  const victimId = await resolveNightKill(game.id, game.day);
+  const { victimId, wasProtected } = await resolveNightKill(game.id, game.day);
   const victimDiary = victimId ? await diaryGet(game.id, victimId, game.day) : [];
 
   // TEMPORARILY DISABLED for manual testing of the afternoon/hang/evening phases - a 2-player game
@@ -154,7 +193,7 @@ async function advanceToMorning(game: WerewolfGameWithPlayers, guild: Guild): Pr
   await unmuteTown(guild, updatedGame.channel_id, deadIds);
 
   await editGameMessage(guild, updatedGame, {
-    embeds: [morningEmbed(updatedGame, guild, victimId, victimDiary)],
+    embeds: [morningEmbed(updatedGame, guild, victimId, victimDiary, wasProtected)],
     components: [new ActionRowBuilder<ButtonBuilder>().addComponents(WerewolfButton.diary)],
   });
 
@@ -162,6 +201,10 @@ async function advanceToMorning(game: WerewolfGameWithPlayers, guild: Guild): Pr
     const wolfdenChannel = await getWolfdenChannel(guild, updatedGame);
     const wolfMessage = await wolfdenChannel?.messages.fetch(updatedGame.wolf_message_id).catch(() => null);
     await wolfMessage?.edit({ content: '', components: [] });
+  }
+
+  if (victimId) {
+    await maybePostHunterRevenge(guild, updatedGame, victimId);
   }
 }
 
@@ -196,6 +239,10 @@ async function advanceToEvening(game: WerewolfGameWithPlayers, guild: Guild): Pr
     embeds: [eveningEmbed(updatedGame, guild, suspectId, suspectPlayer?.role ?? null, suspectDiary)],
     components: [],
   });
+
+  if (suspectId) {
+    await maybePostHunterRevenge(guild, updatedGame, suspectId);
+  }
 }
 
 async function advanceFromEvening(game: WerewolfGameWithPlayers, guild: Guild): Promise<void> {

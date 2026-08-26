@@ -28,7 +28,8 @@ import { appealAccept, appealReject } from '../utils/appeal';
 // import { mushroomPageOne, mushroomPageTwo } from '../commands/global/d.mushroom_info';
 import {
   werewolfDiary,
-  werewolfHow, werewolfJoin, werewolfKill, werewolfHang, werewolfLeave, werewolfStart,
+  werewolfHow, werewolfJoin, werewolfKill, werewolfHang, werewolfLeave, werewolfPeek,
+  werewolfProtect, werewolfRevenge, werewolfStart,
 } from '../commands/guild/d.werewolf';
 import { acknowledgeButton, modModal, refusalButton } from '../utils/modUtils';
 import { feedbackReportModal } from '../commands/global/d.feedback';
@@ -168,6 +169,21 @@ export async function buttonClick(interaction:ButtonInteraction, discordClient:C
 
     if (werewolfAction === 'werewolfHang') {
       await werewolfHang(interaction);
+      return;
+    }
+
+    if (werewolfAction === 'werewolfPeek') {
+      await werewolfPeek(interaction);
+      return;
+    }
+
+    if (werewolfAction === 'werewolfProtect') {
+      await werewolfProtect(interaction);
+      return;
+    }
+
+    if (werewolfAction === 'werewolfRevenge') {
+      await werewolfRevenge(interaction);
       return;
     }
 

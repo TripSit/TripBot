@@ -1,10 +1,12 @@
 import {
-  ButtonInteraction, InteractionEditReplyOptions, MessageFlags, ModalSubmitInteraction, SlashCommandBuilder,
+  ButtonInteraction, InteractionEditReplyOptions, MessageFlags, ModalSubmitInteraction,
+  SlashCommandBuilder, StringSelectMenuInteraction,
 } from 'discord.js';
 import { SlashCommand } from '../../@types/commandDef';
 import commandContext from '../../utils/context';
 import {
   castVote,
+  checkWinCondition,
   diaryAdd,
   gameCreate,
   gameGet,
@@ -13,10 +15,21 @@ import {
   gameStart,
   playerJoin,
   playerLeave,
+  protectTarget,
+  resolveHunterRevenge,
+  seerPeek,
   werewolfRequiredPlayers,
 } from '../../../global/commands/g.werewolf';
 import {
-  howEmbed, renderLobby, renderNightPhase, diaryModal, WerewolfModalId, isWolfdenVisibleToEveryone,
+  advanceToEnd,
+  diaryModal,
+  howEmbed,
+  isWolfdenVisibleToEveryone,
+  peekSelectMenu,
+  protectSelectMenu,
+  renderLobby,
+  renderNightPhase,
+  WerewolfModalId,
 } from '../../utils/werewolf';
 
 const F = f(__filename);
@@ -113,6 +126,149 @@ export async function werewolfHang(interaction: ButtonInteraction): Promise<void
 
   await castVote(game.id, game.day, 'AFTERNOON', interaction.user.id, targetId);
   await interaction.reply({ content: 'Your vote has been recorded.', flags: MessageFlags.Ephemeral });
+}
+
+export async function werewolfPeek(interaction: ButtonInteraction): Promise<void> {
+  log.debug(F, 'werewolfPeek');
+  if (!interaction.guild) return;
+  const { guild } = interaction;
+
+  const game = await gameGet(guild.id);
+  if (!game || game.phase !== 'NIGHT') {
+    await interaction.reply({ content: 'Peeking is only available at night.', flags: MessageFlags.Ephemeral });
+    return;
+  }
+
+  const seer = game.werewolf_players.find(p => p.discord_id === interaction.user.id);
+  if (!seer || seer.role !== 'SEER' || !seer.is_alive) {
+    await interaction.reply({ content: 'Only the living Seer can do that.', flags: MessageFlags.Ephemeral });
+    return;
+  }
+
+  const targets = game.werewolf_players
+    .filter(p => p.is_alive && p.discord_id !== interaction.user.id)
+    .map(p => ({ discordId: p.discord_id, label: guild.members.cache.get(p.discord_id)?.displayName ?? p.discord_id }));
+
+  if (targets.length === 0) {
+    await interaction.reply({ content: 'There is no one left to peek at.', flags: MessageFlags.Ephemeral });
+    return;
+  }
+
+  await interaction.reply({
+    content: 'Who would you like to peek at?',
+    components: [peekSelectMenu(interaction.user.id, targets)],
+    flags: MessageFlags.Ephemeral,
+  });
+}
+
+export async function werewolfPeekSelect(interaction: StringSelectMenuInteraction): Promise<void> {
+  log.debug(F, 'werewolfPeekSelect');
+  if (!interaction.guild) return;
+
+  const game = await gameGet(interaction.guild.id);
+  if (!game || game.phase !== 'NIGHT') {
+    await interaction.update({ content: 'Peeking is no longer available.', components: [] });
+    return;
+  }
+
+  const targetId = interaction.values[0];
+  const team = await seerPeek(game.id, game.day, interaction.user.id, targetId);
+  const targetName = interaction.guild.members.cache.get(targetId)?.displayName ?? targetId;
+
+  await interaction.update({
+    content: `🔮 ${targetName} is on the **${team === 'WOLVES' ? 'Wolves' : 'Town'}** team.`,
+    components: [],
+  });
+}
+
+export async function werewolfProtect(interaction: ButtonInteraction): Promise<void> {
+  log.debug(F, 'werewolfProtect');
+  if (!interaction.guild) return;
+  const { guild } = interaction;
+
+  const game = await gameGet(guild.id);
+  if (!game || game.phase !== 'NIGHT') {
+    await interaction.reply({ content: 'Protecting is only available at night.', flags: MessageFlags.Ephemeral });
+    return;
+  }
+
+  const doctor = game.werewolf_players.find(p => p.discord_id === interaction.user.id);
+  if (!doctor || doctor.role !== 'DOCTOR' || !doctor.is_alive) {
+    await interaction.reply({ content: 'Only the living Doctor can do that.', flags: MessageFlags.Ephemeral });
+    return;
+  }
+
+  const targets = game.werewolf_players
+    .filter(p => p.is_alive)
+    .map(p => ({ discordId: p.discord_id, label: guild.members.cache.get(p.discord_id)?.displayName ?? p.discord_id }));
+
+  await interaction.reply({
+    content: 'Who would you like to protect tonight?',
+    components: [protectSelectMenu(interaction.user.id, targets)],
+    flags: MessageFlags.Ephemeral,
+  });
+}
+
+export async function werewolfProtectSelect(interaction: StringSelectMenuInteraction): Promise<void> {
+  log.debug(F, 'werewolfProtectSelect');
+  if (!interaction.guild) return;
+
+  const game = await gameGet(interaction.guild.id);
+  if (!game || game.phase !== 'NIGHT') {
+    await interaction.update({ content: 'Protecting is no longer available.', components: [] });
+    return;
+  }
+
+  const targetId = interaction.values[0];
+  await protectTarget(game.id, game.day, interaction.user.id, targetId);
+  const targetName = interaction.guild.members.cache.get(targetId)?.displayName ?? targetId;
+
+  await interaction.update({
+    content: `💉 You will protect ${targetName} tonight.`,
+    components: [],
+  });
+}
+
+export async function werewolfRevenge(interaction: ButtonInteraction): Promise<void> {
+  log.debug(F, 'werewolfRevenge');
+  if (!interaction.guild) return;
+  const { guild } = interaction;
+  const [, hunterDiscordId, targetId] = interaction.customId.split('~');
+
+  if (interaction.user.id !== hunterDiscordId) {
+    await interaction.reply({ content: 'Only the Hunter who died can use this.', flags: MessageFlags.Ephemeral });
+    return;
+  }
+
+  const game = await gameGet(guild.id);
+  if (!game) {
+    await interaction.reply({ content: 'This game has already ended.', flags: MessageFlags.Ephemeral });
+    return;
+  }
+
+  await interaction.deferUpdate();
+
+  const resolved = await resolveHunterRevenge(game.id, game.day, hunterDiscordId, targetId);
+  if (!resolved) {
+    await interaction.followUp({
+      content: "That revenge kill couldn't be resolved - it may already have been used.",
+      flags: MessageFlags.Ephemeral,
+    }).catch(() => null);
+    return;
+  }
+
+  const targetName = guild.members.cache.get(targetId)?.displayName ?? targetId;
+  await interaction.editReply({
+    content: `🏹 With their dying breath, the Hunter took ${targetName} down with them!`,
+    embeds: [],
+    components: [],
+  });
+
+  const winningTeam = await checkWinCondition(game.id);
+  if (winningTeam) {
+    const updatedGame = await gameGetById(game.id);
+    await advanceToEnd(updatedGame, guild, winningTeam);
+  }
 }
 
 export async function werewolfDiary(interaction: ButtonInteraction): Promise<void> {

@@ -1,6 +1,6 @@
 import { DateTime } from 'luxon';
 import {
-  Prisma, werewolf_games, werewolf_phase, werewolf_players, werewolf_role, werewolf_team,
+  Prisma, werewolf_games, werewolf_night_action, werewolf_phase, werewolf_players, werewolf_role, werewolf_team,
 } from '@db/tripbot';
 import { werewolfRoleDef, werewolfRoleRegistry } from '../utils/werewolf/roles';
 import { WerewolfGameWithPlayers } from '../utils/werewolf/types';
@@ -156,23 +156,95 @@ export async function tallyVotes(gameId: string, day: number, phase: werewolf_ph
   return votes[0].targetId;
 }
 
+// Seer's peek and Doctor's protect both upsert here - one action per actor per night. Hunter's
+// revenge also writes here (naturally at-most-once, since `day` pins it to the single day they died).
+export async function castNightAction(
+  gameId: string,
+  day: number,
+  action: werewolf_night_action,
+  actorId: string,
+  targetId: string,
+): Promise<void> {
+  await db.werewolf_night_actions.upsert({
+    where: {
+      game_id_day_action_actor_id: {
+        game_id: gameId, day, action, actor_id: actorId,
+      },
+    },
+    create: {
+      game_id: gameId, day, action, actor_id: actorId, target_id: targetId,
+    },
+    update: { target_id: targetId },
+  });
+}
+
+export async function getNightActionTarget(
+  gameId: string,
+  day: number,
+  action: werewolf_night_action,
+  actorId: string,
+): Promise<string | null> {
+  const row = await db.werewolf_night_actions.findUnique({
+    where: {
+      game_id_day_action_actor_id: {
+        game_id: gameId, day, action, actor_id: actorId,
+      },
+    },
+  });
+  return row?.target_id ?? null;
+}
+
+// Records the peek and returns the target's team immediately - unlike votes, this doesn't need to
+// wait for the night to end since it's a single actor's private information, not a group tally.
+export async function seerPeek(
+  gameId: string,
+  day: number,
+  seerDiscordId: string,
+  targetDiscordId: string,
+): Promise<werewolf_team> {
+  await castNightAction(gameId, day, 'PEEK', seerDiscordId, targetDiscordId);
+  const target = await db.werewolf_players.findUniqueOrThrow({
+    where: { game_id_discord_id: { game_id: gameId, discord_id: targetDiscordId } },
+  });
+  return target.team;
+}
+
+export async function protectTarget(
+  gameId: string,
+  day: number,
+  doctorDiscordId: string,
+  targetDiscordId: string,
+): Promise<void> {
+  await castNightAction(gameId, day, 'PROTECT', doctorDiscordId, targetDiscordId);
+}
+
 // updateMany (not update) on purpose: a stale Kill button from a previous, already-ended game can
 // still be clicked and cast a vote for a target that isn't a living player in the current game. A
 // plain .update() would throw "record not found" on every timer retry and permanently wedge the
 // game; updateMany just matches zero rows and we treat that the same as no valid winner.
-export async function resolveNightKill(gameId: string, day: number): Promise<string | null> {
-  const victimId = await tallyVotes(gameId, day, 'NIGHT');
-  if (!victimId) return null;
+export async function resolveNightKill(
+  gameId: string,
+  day: number,
+): Promise<{ victimId: string | null; wasProtected: boolean }> {
+  const votedTargetId = await tallyVotes(gameId, day, 'NIGHT');
+  if (!votedTargetId) return { victimId: null, wasProtected: false };
+
+  const protectedRow = await db.werewolf_night_actions.findFirst({
+    where: {
+      game_id: gameId, day, action: 'PROTECT', target_id: votedTargetId,
+    },
+  });
+  if (protectedRow) return { victimId: null, wasProtected: true };
 
   const result = await db.werewolf_players.updateMany({
     where: {
-      game_id: gameId, discord_id: victimId, is_alive: true,
+      game_id: gameId, discord_id: votedTargetId, is_alive: true,
     },
     data: { is_alive: false, killed_on_day: day },
   });
-  if (result.count === 0) return null;
+  if (result.count === 0) return { victimId: null, wasProtected: false };
 
-  return victimId;
+  return { victimId: votedTargetId, wasProtected: false };
 }
 
 export async function resolveDayHang(gameId: string, day: number): Promise<string | null> {
@@ -188,6 +260,43 @@ export async function resolveDayHang(gameId: string, day: number): Promise<strin
   if (result.count === 0) return null;
 
   return suspectId;
+}
+
+// A dead Hunter can take one other living player down with them, whenever they get around to
+// clicking - no time limit. Guarded so a double-click (or a stale button from a finished game)
+// can't fire twice: the REVENGE row is only ever created once per (game, day, actor) thanks to the
+// same unique constraint PEEK/PROTECT use, and a second attempt just fails the P2002 catch below and
+// returns false instead of throwing.
+export async function resolveHunterRevenge(
+  gameId: string,
+  day: number,
+  hunterDiscordId: string,
+  targetDiscordId: string,
+): Promise<boolean> {
+  const hunter = await db.werewolf_players.findUnique({
+    where: { game_id_discord_id: { game_id: gameId, discord_id: hunterDiscordId } },
+  });
+  if (!hunter || hunter.role !== 'HUNTER' || hunter.is_alive) return false;
+
+  try {
+    await db.werewolf_night_actions.create({
+      data: {
+        game_id: gameId, day, action: 'REVENGE', actor_id: hunterDiscordId, target_id: targetDiscordId,
+      },
+    });
+  } catch (err) {
+    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') return false;
+    throw err;
+  }
+
+  const result = await db.werewolf_players.updateMany({
+    where: {
+      game_id: gameId, discord_id: targetDiscordId, is_alive: true,
+    },
+    data: { is_alive: false, killed_on_day: day },
+  });
+
+  return result.count > 0;
 }
 
 // Only ever looks at team, so it generalizes automatically to any future role. Wolves win once they

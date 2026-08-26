@@ -8,4 +8,5 @@ export * from './embeds';
 export * from './modals';
 export * from './permissions';
 export * from './phases';
+export * from './selectMenus';
 export * from './types';
