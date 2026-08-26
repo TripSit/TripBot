@@ -168,18 +168,31 @@ export function endEmbed(
   guild: Guild,
   winningTeam: werewolf_team,
   players: WerewolfGameWithPlayers['werewolf_players'],
+  // Set when the game ends immediately off a night kill, skipping the morning reveal entirely -
+  // this keeps that context (who died, their diary) from being lost.
+  finalVictim?: { discordId: string; diary: string[] },
 ): EmbedBuilder {
   const winners = sortedNames(guild, players.filter(p => p.team === winningTeam).map(p => p.discord_id));
+
+  // Built as separate sections joined with a blank line, rather than one big template, so the
+  // gap between each part (victim/diary, result, winners) is never at the mercy of exactly how
+  // much trailing whitespace a nested stripIndents call happens to leave behind.
+  const sections: string[] = [];
+
+  if (finalVictim) {
+    let victimSection = `${displayName(guild, finalVictim.discordId)} was killed in the night.`;
+    if (finalVictim.diary.length > 0) {
+      victimSection += `\n\nTheir diary contained:\n* ${finalVictim.diary.join('\n* ')}`;
+    }
+    sections.push(victimSection);
+  }
+
+  sections.push(`The game has ended! ${winningTeam === 'WOLVES' ? 'The wolves win!' : 'The town wins!'}`);
+  sections.push(`Winning team:\n* ${winners.join('\n* ')}`);
+  sections.push('Run `/werewolf` again to start a new game.');
 
   return new EmbedBuilder()
     .setTitle('Werewolf - Game Over')
     .setColor(Colors.Blurple)
-    .setDescription(stripIndents`
-      The game has ended! ${winningTeam === 'WOLVES' ? 'The wolves win!' : 'The town wins!'}
-
-      Winning team:
-      * ${winners.join('\n* ')}
-
-      Run \`/werewolf\` again to start a new game.
-    `);
+    .setDescription(sections.join('\n\n'));
 }

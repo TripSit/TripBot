@@ -194,10 +194,17 @@ describe('checkWinCondition', () => {
     expect(await checkWinCondition(gameId)).toBe('WOLVES');
   });
 
-  it('returns null while both teams still have living players', async () => {
+  it('returns null while town still outnumbers the wolves', async () => {
     dbMock.werewolf_players.count.mockResolvedValueOnce(1);
     dbMock.werewolf_players.count.mockResolvedValueOnce(2);
     expect(await checkWinCondition(gameId)).toBeNull();
+  });
+
+  it('returns WOLVES once wolves reach parity with town, even if town is not zero', async () => {
+    // Standard Mafia/Werewolf rule: town can never win a fair vote once wolves have parity.
+    dbMock.werewolf_players.count.mockResolvedValueOnce(2); // wolves alive
+    dbMock.werewolf_players.count.mockResolvedValueOnce(2); // town alive
+    expect(await checkWinCondition(gameId)).toBe('WOLVES');
   });
 });
 

@@ -16,7 +16,7 @@ import {
   werewolfRequiredPlayers,
 } from '../../../global/commands/g.werewolf';
 import {
-  howEmbed, renderLobby, renderNightPhase, diaryModal, WerewolfModalId,
+  howEmbed, renderLobby, renderNightPhase, diaryModal, WerewolfModalId, isWolfdenVisibleToEveryone,
 } from '../../utils/werewolf';
 
 const F = f(__filename);
@@ -178,6 +178,18 @@ export const werewolf: SlashCommand = {
     await interaction.editReply(renderLobby(game, interaction.guild));
     const reply = await interaction.fetchReply();
     await gameSetMessageId(game.id, reply.id);
+
+    const wolfdenExposed = await isWolfdenVisibleToEveryone(interaction.guild, game.wolfden_channel_id);
+    if (wolfdenExposed) {
+      await interaction.followUp({
+        content: '⚠️ The wolf den channel currently appears visible to @everyone - non-wolves may be '
+          + 'able to see it. Check the bot\'s permission overwrites on that channel. (Note: this check '
+          + "can't detect the server owner or Administrator-permission members, who can always see "
+          + 'every channel regardless of overwrites.)',
+        flags: MessageFlags.Ephemeral,
+      }).catch(() => null);
+    }
+
     return true;
   },
 };

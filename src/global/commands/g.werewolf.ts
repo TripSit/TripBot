@@ -13,7 +13,7 @@ const F = f(__filename);
 export { Prisma };
 
 export const werewolfRequiredPlayers = werewolfRoleDef('WOLF').minPlayers;
-export const werewolfPhaseLengthMinutes = env.NODE_ENV === 'production' ? 5 : 1;
+export const werewolfPhaseLengthSeconds = env.NODE_ENV === 'production' ? 5 * 60 : 10;
 
 export async function gameGet(guildId: string): Promise<WerewolfGameWithPlayers | null> {
   return db.werewolf_games.findUnique({
@@ -111,7 +111,7 @@ export async function gameStart(gameId: string): Promise<werewolf_players[]> {
     data: {
       phase: 'NIGHT',
       day: 1,
-      phase_end_time: DateTime.now().plus({ minutes: werewolfPhaseLengthMinutes }).toJSDate(),
+      phase_end_time: DateTime.now().plus({ seconds: werewolfPhaseLengthSeconds }).toJSDate(),
     },
   });
 
@@ -190,7 +190,9 @@ export async function resolveDayHang(gameId: string, day: number): Promise<strin
   return suspectId;
 }
 
-// Only ever looks at team, so it generalizes automatically to any future role.
+// Only ever looks at team, so it generalizes automatically to any future role. Wolves win once they
+// reach parity with the town (not just when town hits zero) - from that point town can never win a
+// fair vote even with perfect play, so standard Mafia/Werewolf rules treat it as already decided.
 export async function checkWinCondition(gameId: string): Promise<werewolf_team | null> {
   const [wolvesAlive, townAlive] = await Promise.all([
     db.werewolf_players.count({ where: { game_id: gameId, team: 'WOLVES', is_alive: true } }),
@@ -198,7 +200,7 @@ export async function checkWinCondition(gameId: string): Promise<werewolf_team |
   ]);
 
   if (wolvesAlive === 0) return 'TOWN';
-  if (townAlive === 0) return 'WOLVES';
+  if (wolvesAlive >= townAlive) return 'WOLVES';
   return null;
 }
 
@@ -221,10 +223,10 @@ export async function diaryGet(gameId: string, discordId: string, day: number): 
 export async function gameAdvancePhase(
   gameId: string,
   nextPhase: werewolf_phase,
-  options: { incrementDay?: boolean; phaseLengthMinutes?: number; winningTeam?: werewolf_team } = {},
+  options: { incrementDay?: boolean; phaseLengthSeconds?: number; winningTeam?: werewolf_team } = {},
 ): Promise<werewolf_games> {
   const {
-    incrementDay = false, phaseLengthMinutes = werewolfPhaseLengthMinutes, winningTeam,
+    incrementDay = false, phaseLengthSeconds = werewolfPhaseLengthSeconds, winningTeam,
   } = options;
 
   log.debug(F, `Advancing werewolf game ${gameId} to ${nextPhase}`);
@@ -233,7 +235,7 @@ export async function gameAdvancePhase(
     where: { id: gameId },
     data: {
       phase: nextPhase,
-      phase_end_time: DateTime.now().plus({ minutes: phaseLengthMinutes }).toJSDate(),
+      phase_end_time: DateTime.now().plus({ seconds: phaseLengthSeconds }).toJSDate(),
       ...(incrementDay ? { day: { increment: 1 } } : {}),
       ...(winningTeam ? { winning_team: winningTeam } : {}),
     },

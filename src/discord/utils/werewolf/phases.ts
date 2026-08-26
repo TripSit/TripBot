@@ -110,9 +110,10 @@ async function advanceToEnd(
   game: WerewolfGameWithPlayers,
   guild: Guild,
   winningTeam: 'TOWN' | 'WOLVES',
+  finalVictim?: { discordId: string; diary: string[] },
 ): Promise<void> {
   await editGameMessage(guild, game, {
-    embeds: [endEmbed(guild, winningTeam, game.werewolf_players)],
+    embeds: [endEmbed(guild, winningTeam, game.werewolf_players, finalVictim)],
     components: [],
   });
 
@@ -128,9 +129,25 @@ async function advanceToEnd(
 async function advanceToMorning(game: WerewolfGameWithPlayers, guild: Guild): Promise<void> {
   const victimId = await resolveNightKill(game.id, game.day);
   const victimDiary = victimId ? await diaryGet(game.id, victimId, game.day) : [];
-  const winningTeam = await checkWinCondition(game.id);
 
-  await gameAdvancePhase(game.id, 'MORNING', { winningTeam: winningTeam ?? undefined });
+  // TEMPORARILY DISABLED for manual testing of the afternoon/hang/evening phases - a 2-player game
+  // would otherwise always end immediately here (1 wolf vs 1 villager: killing the villager already
+  // meets the win condition). Re-enable by uncommenting once that testing pass is done.
+  // const winningTeam = await checkWinCondition(game.id);
+  // if (winningTeam) {
+  //   // The night kill already decided it - skip the discussion/vote phases entirely instead of
+  //   // making everyone sit through a pointless day cycle before the bot admits the game is over.
+  //   const updatedGame = await gameGetById(game.id);
+  //   await advanceToEnd(
+  //     updatedGame,
+  //     guild,
+  //     winningTeam,
+  //     victimId ? { discordId: victimId, diary: victimDiary } : undefined,
+  //   );
+  //   return;
+  // }
+
+  await gameAdvancePhase(game.id, 'MORNING');
   const updatedGame = await gameGetById(game.id);
 
   const deadIds = updatedGame.werewolf_players.filter(p => !p.is_alive).map(p => p.discord_id);
@@ -149,13 +166,6 @@ async function advanceToMorning(game: WerewolfGameWithPlayers, guild: Guild): Pr
 }
 
 async function advanceToAfternoon(game: WerewolfGameWithPlayers, guild: Guild): Promise<void> {
-  // The night kill may have already decided the game (e.g. the last townsfolk was killed) - skip
-  // straight to the end screen instead of opening a pointless hang vote with no one left to matter.
-  if (game.winning_team) {
-    await advanceToEnd(game, guild, game.winning_team);
-    return;
-  }
-
   await gameAdvancePhase(game.id, 'AFTERNOON');
   const updatedGame = await gameGetById(game.id);
 

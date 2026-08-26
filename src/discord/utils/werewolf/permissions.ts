@@ -1,4 +1,4 @@
-import { Guild, TextChannel } from 'discord.js';
+import { Guild, PermissionFlagsBits, TextChannel } from 'discord.js';
 
 const F = f(__filename);
 
@@ -76,4 +76,15 @@ export async function resetWerewolfChannels(
       discordId => wolfdenChannel.permissionOverwrites.delete(discordId).catch(() => null),
     ));
   }
+}
+
+// Checks whether @everyone can currently see the wolf den, computed via permissionsFor() so it
+// accounts for category-level overwrites too, not just a direct channel overwrite. Does not account
+// for members who bypass channel overwrites entirely (server owner, Administrator permission) -
+// Discord itself lets those see every channel regardless of any overwrite.
+export async function isWolfdenVisibleToEveryone(guild: Guild, wolfdenChannelId: string | null): Promise<boolean> {
+  const wolfdenChannel = await getChannel(guild, wolfdenChannelId, 'wolf den');
+  if (!wolfdenChannel) return false;
+
+  return wolfdenChannel.permissionsFor(guild.roles.everyone)?.has(PermissionFlagsBits.ViewChannel) ?? false;
 }
