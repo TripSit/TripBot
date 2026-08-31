@@ -21,9 +21,9 @@ import {
   modButtonNote,
   modButtonTimeout,
   modButtonWarn,
-  tripSitTrustScore,
   userInfoEmbed,
 } from './modUtils';
+import { tripSitTrustScore } from './trustScore';
 // import { checkGuildPermissions } from './checkPermissions';
 import { topic } from '../../global/commands/g.topic';
 import { giveMilestone } from '../../global/utils/experience';

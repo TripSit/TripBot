@@ -25,6 +25,7 @@ import {
 } from '../commands/guild/d.rpg';
 import { helperButton } from '../commands/global/d.setup';
 import { acknowledgeButton, modModal, refusalButton } from '../utils/modUtils';
+import { modHistoryButton } from '../utils/modHistory';
 import { feedbackReportModal } from '../commands/global/d.feedback';
 import { aiButton } from '../commands/global/d.ai';
 import { purgeButton } from '../commands/guild/d.purge';
@@ -67,6 +68,11 @@ export async function buttonClick(interaction:ButtonInteraction, discordClient:C
       interaction.update(await mushroomPageEmbed(2));
       return;
     }
+  }
+
+  if (buttonID.startsWith('modHistory')) {
+    await modHistoryButton(interaction);
+    return;
   }
 
   if (buttonID.startsWith('moderate')) {
