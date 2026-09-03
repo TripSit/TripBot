@@ -8,11 +8,18 @@ import {
   ButtonBuilder,
   ChatInputCommandInteraction,
   ButtonInteraction,
+  AnySelectMenuInteraction,
+  ChannelSelectMenuInteraction,
+  RoleSelectMenuInteraction,
+  ChannelSelectMenuBuilder,
+  RoleSelectMenuBuilder,
   Guild,
+  GuildMember,
   EmbedBuilder,
   TextChannel,
   Role,
   PermissionResolvable,
+  PermissionFlagsBits,
   ChannelType,
 } from 'discord.js';
 import {
@@ -23,7 +30,7 @@ import {
 import { stripIndent, stripIndents } from 'common-tags';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
-import { checkGuildPermissions } from '../../utils/checkPermissions';
+import { checkGuildPermissions, checkChannelPermissions } from '../../utils/checkPermissions';
 import commandContext from '../../utils/context';
 
 const F = f(__filename);
@@ -213,24 +220,374 @@ export async function cooperativeApplyButton(
   return true;
 }
 
-async function setup(interaction:ChatInputCommandInteraction):Promise<InteractionEditReplyOptions> {
-  if (!interaction.guild) {
+type CooperativeSettings = {
+  modChannel?: string;
+  modLogChannel?: string;
+  modRole?: string;
+  helpdeskChannel?: string;
+  trustChannel?: string;
+  trustScoreLimit?: number;
+};
+
+type SetupPage = 'setupPageOne' | 'setupPageTwo';
+
+type SetupInteraction =
+  ChatInputCommandInteraction
+  | ButtonInteraction
+  | ChannelSelectMenuInteraction
+  | RoleSelectMenuInteraction;
+
+// Per-user, in-memory draft of a guild's cooperative settings while they work through the wizard.
+const tempSettings: { [userId: string]: CooperativeSettings } = {};
+
+const permissionList = {
+  modChannel: [
+    'ViewChannel', 'SendMessages', 'SendMessagesInThreads', 'CreatePrivateThreads',
+  ] as PermissionResolvable[],
+  logChannel: ['ViewChannel', 'SendMessages'] as PermissionResolvable[],
+};
+
+async function loadSettings(userId: string, guildId: string): Promise<CooperativeSettings> {
+  if (!tempSettings[userId]) {
+    const guildData = await db.discord_guilds.upsert({
+      where: { id: guildId },
+      create: { id: guildId },
+      update: {},
+    });
+    tempSettings[userId] = {
+      modChannel: guildData.channel_moderators ?? undefined,
+      modLogChannel: guildData.channel_mod_log ?? undefined,
+      modRole: guildData.role_moderator ?? undefined,
+      helpdeskChannel: guildData.channel_helpdesk ?? undefined,
+      trustChannel: guildData.channel_trust ?? undefined,
+      trustScoreLimit: guildData.trust_score_limit,
+    };
+  }
+  return tempSettings[userId];
+}
+
+async function validateChannel(
+  guild: Guild,
+  channelId: string | undefined,
+  perms: PermissionResolvable[],
+): Promise<string | null> {
+  if (!channelId) return null; // Unset is fine, it'll be auto-created on save.
+  let channel;
+  try {
+    channel = await guild.channels.fetch(channelId);
+  } catch {
+    return null; // Stale id pointing at a deleted channel, it'll be recreated on save.
+  }
+  if (!channel) return null;
+  const result = await checkChannelPermissions(channel, perms);
+  if (!result.hasPermission) return `Missing **${result.permission}** in <#${channelId}>.`;
+  return null;
+}
+
+async function validateModRole(guild: Guild, roleId: string | undefined): Promise<string | null> {
+  if (!roleId) return null;
+  let role;
+  try {
+    role = await guild.roles.fetch(roleId);
+  } catch {
+    return null;
+  }
+  if (!role) return null;
+  if (!role.mentionable) {
+    const result = await checkGuildPermissions(guild, ['MentionEveryone' as PermissionResolvable]);
+    if (!result.hasPermission) return `${role} isn't mentionable and I lack **MentionEveryone**.`;
+  }
+  return null;
+}
+
+function channelSelect(customId: string, placeholder: string, current?: string) {
+  const select = new ChannelSelectMenuBuilder()
+    .setCustomId(customId)
+    .setPlaceholder(placeholder)
+    .addChannelTypes(ChannelType.GuildText)
+    .setMinValues(0)
+    .setMaxValues(1);
+  return current ? select.setDefaultChannels(current) : select;
+}
+
+function roleSelect(customId: string, placeholder: string, current?: string) {
+  const select = new RoleSelectMenuBuilder()
+    .setCustomId(customId)
+    .setPlaceholder(placeholder)
+    .setMinValues(0)
+    .setMaxValues(1);
+  return current ? select.setDefaultRoles(current) : select;
+}
+
+function navRow(page: SetupPage, canSave: boolean) {
+  const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
+    new ButtonBuilder()
+      .setCustomId('cooperative~setupPageOne')
+      .setLabel('Channels')
+      .setEmoji('1️⃣')
+      .setStyle(page === 'setupPageOne' ? ButtonStyle.Success : ButtonStyle.Primary),
+    new ButtonBuilder()
+      .setCustomId('cooperative~setupPageTwo')
+      .setLabel('Role & Trust')
+      .setEmoji('2️⃣')
+      .setStyle(page === 'setupPageTwo' ? ButtonStyle.Success : ButtonStyle.Primary),
+  );
+  if (canSave) {
+    row.addComponents(
+      new ButtonBuilder()
+        .setCustomId('cooperative~save')
+        .setLabel('Save')
+        .setEmoji('💾')
+        .setStyle(ButtonStyle.Danger),
+    );
+  }
+  return row;
+}
+
+const notSetLabel = '*Not set — will be auto-created*';
+
+function settingsSummary(settings: CooperativeSettings): string {
+  return stripIndents`
+    ### Mod Channel
+    ${settings.modChannel ? `<#${settings.modChannel}>` : notSetLabel}
+    ### Mod Log Channel
+    ${settings.modLogChannel ? `<#${settings.modLogChannel}>` : notSetLabel}
+    ### Helpdesk Channel
+    ${settings.helpdeskChannel ? `<#${settings.helpdeskChannel}>` : notSetLabel}
+    ### Mod Role
+    ${settings.modRole ? `<@&${settings.modRole}>` : notSetLabel}
+    ### Trust Channel
+    ${settings.trustChannel ? `<#${settings.trustChannel}>` : notSetLabel}
+    ### Trust Score Limit
+    ${settings.trustScoreLimit ?? 5}
+  `;
+}
+
+async function setupWizard(
+  interaction: SetupInteraction,
+  page: SetupPage,
+): Promise<InteractionEditReplyOptions> {
+  if (!interaction.guild || !interaction.member) {
+    return { embeds: [embedTemplate({ title: guildOnlyError })] };
+  }
+  const guild = interaction.guild as Guild;
+
+  const settings = await loadSettings(interaction.user.id, guild.id);
+  const canEdit = (interaction.member as GuildMember).permissions.has(PermissionFlagsBits.ManageChannels);
+
+  if (!canEdit) {
+    const readOnlyNotice = '*You need the **Manage Channels** permission to edit these settings.*';
     return {
       embeds: [
         embedTemplate({
-          title: guildOnlyError,
+          title: 'Cooperative Setup',
+          description: `${settingsSummary(settings)}\n${readOnlyNotice}`,
         }),
       ],
+      components: [],
     };
   }
 
+  const validations = await Promise.all([
+    validateChannel(guild, settings.modChannel, permissionList.modChannel),
+    validateChannel(guild, settings.modLogChannel, permissionList.logChannel),
+    validateChannel(guild, settings.helpdeskChannel, permissionList.logChannel),
+    validateChannel(guild, settings.trustChannel, permissionList.logChannel),
+    validateModRole(guild, settings.modRole),
+  ]);
+  const warnings = validations.filter((warning): warning is string => warning !== null);
+
+  const rows: ActionRowBuilder<ButtonBuilder | ChannelSelectMenuBuilder | RoleSelectMenuBuilder>[] = [
+    navRow(page, warnings.length === 0),
+  ];
+
+  if (page === 'setupPageOne') {
+    rows.push(
+      new ActionRowBuilder<ChannelSelectMenuBuilder>().addComponents(
+        channelSelect('cooperative~modChannel', 'Mod Channel', settings.modChannel),
+      ),
+      new ActionRowBuilder<ChannelSelectMenuBuilder>().addComponents(
+        channelSelect('cooperative~modLogChannel', 'Mod Log Channel', settings.modLogChannel),
+      ),
+      new ActionRowBuilder<ChannelSelectMenuBuilder>().addComponents(
+        channelSelect('cooperative~helpdeskChannel', 'Helpdesk Channel', settings.helpdeskChannel),
+      ),
+    );
+  } else {
+    rows.push(
+      new ActionRowBuilder<RoleSelectMenuBuilder>().addComponents(
+        roleSelect('cooperative~modRole', 'Mod Role', settings.modRole),
+      ),
+      new ActionRowBuilder<ChannelSelectMenuBuilder>().addComponents(
+        channelSelect('cooperative~trustChannel', 'Trust Channel', settings.trustChannel),
+      ),
+      new ActionRowBuilder<ButtonBuilder>().addComponents(
+        new ButtonBuilder()
+          .setCustomId('cooperative~trustScoreButton')
+          .setLabel(`Trust Score Limit: ${settings.trustScoreLimit ?? 5}`)
+          .setEmoji('🔢')
+          .setStyle(ButtonStyle.Secondary),
+      ),
+    );
+  }
+
+  const readyNotice = 'Pick a channel/role for each field, or leave one unset and I\'ll create '
+    + 'a sensible default for it when you hit **Save**.';
+  const warningsList = warnings.map(warning => `- ${warning}`).join('\n');
+  const description = warnings.length > 0
+    ? `${settingsSummary(settings)}\n**⚠️ Fix these before saving:**\n${warningsList}`
+    : `${settingsSummary(settings)}\n${readyNotice}`;
+
+  return {
+    embeds: [embedTemplate({ title: 'Cooperative Setup', description })],
+    components: rows,
+  };
+}
+
+async function trustScoreModal(interaction: ButtonInteraction): Promise<void> {
+  if (!interaction.guild) return;
+  const settings = await loadSettings(interaction.user.id, interaction.guild.id);
+  const customId = `cooperative~trustScoreModal~${interaction.id}`;
+
+  await interaction.showModal(new ModalBuilder()
+    .setCustomId(customId)
+    .setTitle('Set Trust Score Limit')
+    .addComponents(
+      new ActionRowBuilder<TextInputBuilder>().addComponents(
+        new TextInputBuilder()
+          .setCustomId('trustScoreLimit')
+          .setLabel('Below this trust score, alerts fire')
+          .setStyle(TextInputStyle.Short)
+          .setValue(String(settings.trustScoreLimit ?? 5))
+          .setRequired(true),
+      ),
+    ));
+
+  const filter = (i: ModalSubmitInteraction) => i.customId === customId;
+  interaction.awaitModalSubmit({ filter, time: 0 })
+    .then(async i => {
+      await i.deferUpdate();
+      const raw = i.fields.getTextInputValue('trustScoreLimit');
+      const parsed = Number(raw);
+      if (!Number.isInteger(parsed) || parsed < 0) {
+        await i.followUp({ content: 'Please enter a whole, non-negative number.', flags: MessageFlags.Ephemeral });
+        return;
+      }
+      tempSettings[interaction.user.id] = { ...tempSettings[interaction.user.id], trustScoreLimit: parsed };
+      await i.editReply(await setupWizard(interaction, 'setupPageTwo'));
+    })
+    .catch(() => {
+      // The user closed the modal without submitting, nothing to do.
+    });
+}
+
+async function resolveOrCreateChannel(
+  guild: Guild,
+  channelId: string | undefined,
+  channelOptions: { name: string; topic: string },
+): Promise<TextChannel> {
+  if (channelId) {
+    try {
+      const existing = await guild.channels.fetch(channelId);
+      if (existing) return existing as TextChannel;
+    } catch {
+      // Stale id, fall through and create a fresh channel.
+    }
+  }
+  return guild.channels.create({
+    name: channelOptions.name,
+    type: ChannelType.GuildText,
+    topic: channelOptions.topic,
+    permissionOverwrites: [
+      {
+        id: guild.roles.everyone.id,
+        deny: ['ViewChannel'],
+      },
+    ],
+  });
+}
+
+async function resolveOrCreateModRole(guild: Guild, roleId: string | undefined): Promise<Role> {
+  if (roleId) {
+    try {
+      const existing = await guild.roles.fetch(roleId);
+      if (existing) return existing;
+    } catch {
+      // Stale id, fall through and create a fresh role.
+    }
+  }
+  return guild.roles.create({
+    name: 'Cooperative Moderator',
+    color: '#00ff00',
+    mentionable: true,
+  });
+}
+
+async function save(interaction: ButtonInteraction): Promise<InteractionEditReplyOptions> {
+  if (!interaction.guild) return { embeds: [embedTemplate({ title: guildOnlyError })] };
+  const guild = interaction.guild as Guild;
+  const settings = tempSettings[interaction.user.id] ?? {};
+
+  const [modChannel, modLogChannel, helpdeskChannel, trustChannel, modRole] = await Promise.all([
+    resolveOrCreateChannel(guild, settings.modChannel, {
+      name: 'coop-mod',
+      topic: 'This channel is used for cooperative moderation.',
+    }),
+    resolveOrCreateChannel(guild, settings.modLogChannel, {
+      name: 'modlog',
+      topic: 'This channel is used for moderation logs.',
+    }),
+    resolveOrCreateChannel(guild, settings.helpdeskChannel, {
+      name: '🙊│talk-to-mods',
+      topic: 'This channel is used to make tickets.',
+    }),
+    resolveOrCreateChannel(guild, settings.trustChannel, {
+      name: '🔒│trust-log',
+      topic: 'This channel is used to oversee the trust logging.',
+    }),
+    resolveOrCreateModRole(guild, settings.modRole),
+  ]);
+  const trustScoreLimit = settings.trustScoreLimit ?? 5;
+
+  await db.discord_guilds.update({
+    where: { id: guild.id },
+    data: {
+      channel_moderators: modChannel.id,
+      channel_mod_log: modLogChannel.id,
+      channel_helpdesk: helpdeskChannel.id,
+      channel_trust: trustChannel.id,
+      role_moderator: modRole.id,
+      trust_score_limit: trustScoreLimit,
+    },
+  });
+
+  delete tempSettings[interaction.user.id];
+
+  return {
+    embeds: [
+      embedTemplate({
+        title: 'Cooperative setup complete!',
+        description: stripIndents`
+        Mod Channel: ${modChannel}
+        Mod Log Channel: ${modLogChannel}
+        Helpdesk Channel: ${helpdeskChannel}
+        Mod Role: ${modRole}
+        Trust Channel: ${trustChannel}
+        Trust Score Limit: ${trustScoreLimit}`,
+      }),
+    ],
+    components: [],
+  };
+}
+
+async function setupEntry(interaction: ChatInputCommandInteraction): Promise<InteractionEditReplyOptions> {
+  if (!interaction.guild) {
+    return { embeds: [embedTemplate({ title: guildOnlyError })] };
+  }
+
   const guildData = await db.discord_guilds.upsert({
-    where: {
-      id: interaction.guild?.id,
-    },
-    create: {
-      id: interaction.guild?.id,
-    },
+    where: { id: interaction.guild.id },
+    create: { id: interaction.guild.id },
     update: {},
   });
 
@@ -244,198 +601,18 @@ async function setup(interaction:ChatInputCommandInteraction):Promise<Interactio
     };
   }
 
-  if (!interaction.guild) {
-    return {
-      embeds: [
-        embedTemplate({
-          title: guildOnlyError,
-        }),
-      ],
-    };
-  }
-
   const perms = await checkGuildPermissions(interaction.guild, [
-    'ViewAuditLog' as PermissionResolvable,
-  ]);
+    'ManageChannels', 'ManageRoles', 'ViewAuditLog',
+  ] as PermissionResolvable[]);
 
   if (!perms.hasPermission) {
     log.error(F, `Missing permission ${perms.permission} in ${interaction.guild}!`);
-    return { content: `Please make sure I can ${perms.permission} in ${interaction.guild} so I can run ${F}!` };
+    return { content: `Please make sure I can **${perms.permission}** in this guild so I can run cooperative setup!` };
   }
 
-  // Finished checks, lets set this up!
-
-  // Get the IDs of the channels
-
-  let helpdeskRoom = interaction.options.getChannel('helpdesk_channel');
-  if (!helpdeskRoom) {
-    // If the channel wasn't provided, create it:
-    helpdeskRoom = await interaction.guild.channels.create({
-      name: '🙊│talk-to-mods',
-      type: ChannelType.GuildText,
-      topic: 'This channel is used to make tickets.',
-      permissionOverwrites: [
-        {
-          id: interaction.guild.roles.everyone.id,
-          deny: ['ViewChannel'],
-        },
-      ],
-    });
-  }
-  await db.discord_guilds.update({
-    where: { id: interaction.guild.id },
-    data: { channel_helpdesk: helpdeskRoom.id },
-  });
-
-  let trustRoom = interaction.options.getChannel('trust_channel');
-  if (!trustRoom) {
-    // If the channel wasn't provided, create it:
-    trustRoom = await interaction.guild.channels.create({
-      name: '🔒│trust-log',
-      type: ChannelType.GuildText,
-      topic: 'This channel is used to oversee the trust logging.',
-      permissionOverwrites: [
-        {
-          id: interaction.guild.roles.everyone.id,
-          deny: ['ViewChannel'],
-        },
-      ],
-    });
-  }
-  await db.discord_guilds.update({
-    where: { id: interaction.guild.id },
-    data: { channel_trust: trustRoom.id },
-  });
-
-  const trustScoreLimit = interaction.options.getInteger('trust_score_limit', true);
-  await db.discord_guilds.update({
-    where: { id: interaction.guild.id },
-    data: { trust_score_limit: trustScoreLimit },
-  });
-
-  let modRoom = interaction.options.getChannel('mod_channel');
-  if (!modRoom) {
-    // If the channel wasn't provided, create it:
-    modRoom = await interaction.guild.channels.create({
-      name: 'coop-mod',
-      type: ChannelType.GuildText,
-      topic: 'This channel is used for cooperative moderation.',
-      permissionOverwrites: [
-        {
-          id: interaction.guild.roles.everyone.id,
-          deny: ['ViewChannel'],
-        },
-      ],
-    });
-  }
-
-  await db.discord_guilds.update({
-    where: {
-      id: interaction.guild.id,
-    },
-    data: {
-      channel_moderators: modRoom.id,
-    },
-  });
-
-  let modLog = interaction.options.getChannel('modlog_channel');
-  if (!modLog) {
-    // If the channel wasn't provided, create it:
-    modLog = await interaction.guild.channels.create({
-      name: 'modlog',
-      type: ChannelType.GuildText,
-      topic: 'This channel is used for moderation logs.',
-      permissionOverwrites: [
-        {
-          id: interaction.guild.roles.everyone.id,
-          deny: ['ViewChannel'],
-        },
-      ],
-    });
-  }
-
-  await db.discord_guilds.update({
-    where: {
-      id: interaction.guild.id,
-    },
-    data: {
-      channel_mod_log: modLog.id,
-    },
-  });
-  // const helpdesk = interaction.options.getChannel('helpdesk_channel', true);
-  // const coopGen = interaction.options.getChannel('coop_gen_channel', true);
-  // const coopAnnounce = interaction.options.getChannel('coop_announce_channel', true);
-  // const coopOfftopic = interaction.options.getChannel('coop_offtopic_channel', true);
-
-  let modRole = interaction.options.getRole('mod_role');
-  if (!modRole) {
-    // If the role wasn't provided, create it:
-    modRole = await interaction.guild.roles.create({
-      name: 'Cooperative Moderator',
-      color: '#00ff00',
-      mentionable: true,
-    });
-  }
-
-  await db.discord_guilds.update({
-    where: {
-      id: interaction.guild.id,
-    },
-    data: {
-      role_moderator: modRole.id,
-    },
-  });
-
-  log.debug(F, `modRoomId: ${modRoom.name}`);
-  log.debug(F, `modLogId: ${modLog.name}`);
-
-  async function getRoleId(
-    role:Role | undefined,
-  ):Promise<string> {
-    // This will create the role if it doesn't exist
-    // Either way it will update the database with the role ID
-    if (!interaction.guild) return '';
-    if (!role) {
-      // If the role wasn't provided, create it:
-      const newRole = await interaction.guild.roles.create({
-        name: 'Cooperative Moderator',
-        color: '#00ff00',
-        mentionable: true,
-      });
-      await db.discord_guilds.update({
-        where: {
-          id: interaction.guild.id,
-        },
-        data: {
-          role_moderator: newRole.id,
-        },
-      });
-      return newRole.id;
-    }
-    await db.discord_guilds.update({
-      where: {
-        id: interaction.guild.id,
-      },
-      data: {
-        role_moderator: role.id,
-      },
-    });
-    return role.id;
-  }
-
-  const modRoleId = await getRoleId(modRole as Role | undefined);
-
-  log.debug(F, `modRoleId: ${modRoleId}`);
-
-  return {
-    embeds: [
-      embedTemplate({
-        title: 'Cooperative setup complete!',
-        description: stripIndents`
-        I will make new threads in ${modRoom.name}`,
-      }),
-    ],
-  };
+  // Start each /cooperative setup invocation from a fresh, DB-hydrated draft.
+  delete tempSettings[interaction.user.id];
+  return setupWizard(interaction, 'setupPageOne');
 }
 
 async function leave(interaction:ChatInputCommandInteraction): Promise<InteractionEditReplyOptions> {
@@ -590,6 +767,56 @@ async function remove(
   };
 }
 
+export async function cooperativeButton(interaction: ButtonInteraction): Promise<void> {
+  const buttonID = interaction.customId;
+
+  if (buttonID === 'cooperativeApply') {
+    await cooperativeApplyButton(interaction);
+    return;
+  }
+  if (buttonID === 'cooperativeLeave') {
+    await cooperativeLeaveButton(interaction);
+    return;
+  }
+
+  if (!interaction.guild || !interaction.member) return;
+
+  const [, action] = buttonID.split('~');
+
+  switch (action) {
+    case 'setupPageOne':
+      await interaction.update(await setupWizard(interaction, 'setupPageOne'));
+      break;
+    case 'setupPageTwo':
+      await interaction.update(await setupWizard(interaction, 'setupPageTwo'));
+      break;
+    case 'trustScoreButton':
+      await trustScoreModal(interaction);
+      break;
+    case 'save':
+      await interaction.update(await save(interaction));
+      break;
+    default:
+      break;
+  }
+}
+
+export async function cooperativeSelect(interaction: AnySelectMenuInteraction): Promise<void> {
+  if (!interaction.guild) return;
+  if (!interaction.isChannelSelectMenu() && !interaction.isRoleSelectMenu()) return;
+
+  const [, field] = interaction.customId.split('~') as [string, keyof CooperativeSettings];
+  const settings = await loadSettings(interaction.user.id, interaction.guild.id);
+  const page: SetupPage = (field === 'modRole' || field === 'trustChannel') ? 'setupPageTwo' : 'setupPageOne';
+
+  tempSettings[interaction.user.id] = {
+    ...settings,
+    [field]: interaction.values[0],
+  };
+
+  await interaction.update(await setupWizard(interaction, page));
+}
+
 export async function sendCooperativeMessage(
   embed: EmbedBuilder,
   pingGuilds: string[],
@@ -656,30 +883,6 @@ export const dCooperative: SlashCommand = {
       .setName('apply'))
     .addSubcommand(subcommand => subcommand
       .setDescription('Setup the TripSit Discord Cooperative on your guild')
-      .addChannelOption(option => option
-        .setRequired(true)
-        .setDescription('The channel to use for moderation')
-        .setName('mod_channel'))
-      .addChannelOption(option => option
-        .setRequired(true)
-        .setDescription('The channel to use for moderation logs')
-        .setName('modlog_channel'))
-      .addRoleOption(option => option
-        .setRequired(true)
-        .setDescription('The role to use for moderators')
-        .setName('mod_role'))
-      .addChannelOption(option => option
-        .setRequired(true)
-        .setDescription('The channel to use for moderation tickets')
-        .setName('helpdesk_channel'))
-      .addChannelOption(option => option
-        .setRequired(true)
-        .setDescription('The channel to use for trust logging')
-        .setName('trust_channel'))
-      .addIntegerOption(option => option
-        .setRequired(true)
-        .setDescription('Below this number sends alerts')
-        .setName('trust_score_limit'))
       .setName('setup'))
     .addSubcommand(subcommand => subcommand
       .setDescription('Leave the TripSit Discord Cooperative')
@@ -722,7 +925,7 @@ export const dCooperative: SlashCommand = {
         response = await apply(interaction);
         break;
       case 'setup':
-        response = await setup(interaction);
+        response = await setupEntry(interaction);
         break;
       case 'leave':
         response = await leave(interaction);
