@@ -3,7 +3,9 @@
 /* eslint-disable no-restricted-syntax */
 import {
   PrismaClient, drug_roa, drug_variants, users,
-} from '@prisma/client';
+} from '@db/tripbot';
+import { PrismaPg } from '@prisma/adapter-pg';
+import { Pool } from 'pg';
 import argon from 'argon2';
 import { Duration as DurationCalc } from 'luxon';
 import combinedDb from '../../assets/data/combinedDB.json';
@@ -19,7 +21,9 @@ const drugs = combinedDb as [CbSubstance];
 
 type DrugRecord = CbSubstance & { id: string };
 
-const prisma = new PrismaClient();
+const pool = new Pool({ connectionString: process.env.PRISMA_DB_URL });
+const adapter = new PrismaPg(pool);
+const prisma = new PrismaClient({ adapter });
 
 const routeMap = {
   vapourized: 'inhaled',
@@ -329,7 +333,6 @@ async function seed() {
     prisma.ai_moderation.deleteMany({}), // discord_guilds
     prisma.rpg_inventory.deleteMany({}), // discord_guilds
     prisma.personas.deleteMany({}), // discord_guilds
-    prisma.ai_images.deleteMany({}), // users
     prisma.user_actions.deleteMany({}), // users
     prisma.user_drug_doses.deleteMany({}), // users
     prisma.user_experience.deleteMany({}), // users
@@ -337,7 +340,6 @@ async function seed() {
     prisma.user_tickets.deleteMany({}), // users
     prisma.appeals.deleteMany({}), // users
     prisma.user_actions.deleteMany({}), // users
-    prisma.ai_usage.deleteMany({}), // users
     prisma.drug_names.deleteMany({}), // drugs
     prisma.drug_variants.deleteMany({}), // drugs
     prisma.drug_variant_roas.deleteMany({}), // drugs

@@ -29,7 +29,7 @@ describe('GET /api/v1/getInteraction/:drugAName/:drugBName', () => {
         err: null,
         data: [{
           result: 'Dangerous',
-          interactionCategoryA: 'dxm',
+          interactionCategoryA: 'dextromethorphan',
           interactionCategoryB: 'mdma',
           definition: 'These combinations are considered extremely harmful and should always be avoided. Reactions to these drugs taken in combination are highly unpredictable and have a potential to cause death.',
           thumbnail: 'https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/samsung/320/skull-and-crossbones_2620-fe0f.png',

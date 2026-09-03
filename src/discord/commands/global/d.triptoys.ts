@@ -1,5 +1,6 @@
 /* eslint-disable max-len */
 import {
+  MessageFlags,
   SlashCommandBuilder,
 } from 'discord.js';
 import { SlashCommand } from '../../@types/commandDef';
@@ -36,6 +37,7 @@ export const dTriptoys: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('triptoys')
     .setDescription('Fun toys to play with!')
+    .setIntegrationTypes([0])
     .addStringOption(option => option.setName('toy')
       .setDescription('Which toy?')
       .addChoices(
@@ -66,10 +68,11 @@ export const dTriptoys: SlashCommand = {
         { name: ballsdemo, value: '23' },
       ))
     .addBooleanOption(option => option.setName('ephemeral')
-      .setDescription('Set to "True" to show the response only to you')),
+      .setDescription('Set to "True" to show the response only to you')) as SlashCommandBuilder,
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
-    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
+    const ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined;
+    await interaction.deferReply({ flags: ephemeral });
     const toyName = interaction.options.getString('toy') || '25';
     const toyId = parseInt(toyName, 10);
     // log.debug(F, `toy_name: ${toyName}`);
@@ -97,7 +100,7 @@ export const dTriptoys: SlashCommand = {
       20: { name: hopalong, value: '[A never ending orbits visualizer. Use keys and mouse to increase speed and angle](http://iacopoapps.appspot.com/hopalongwebgl/)', inline: true },
       21: { name: mynoise, value: '[Ambient noise generator with a variety of themes from rain to black holes to busy cafe to kitten purrs.](https://mynoise.net/)', inline: true },
       22: { name: mrdoobharmony, value: '[Make art by sketching with different materials and colors (many more triptoys at the top of the page)](https://mrdoob.com/#/120/harmony)', inline: true },
-      23: { name: ballsdemo, value: '[Colorful balls that follow your mouse (Enable fullscreen for best effect)](https://testdrive-archive.azurewebsites.net/Graphics/TouchEffects/Default.html)', inline: true },
+      23: { name: ballsdemo, value: '[Colorful balls that follow your mouse (Enable fullscreen for best effect)](https://web.archive.org/web/20220809011708/https://testdrive-archive.azurewebsites.net/Graphics/TouchEffects/Default.html)', inline: true },
     };
 
     const embed = embedTemplate();
@@ -139,7 +142,7 @@ export const dTriptoys: SlashCommand = {
         { name: hopalong, value: '[A never ending orbits visualizer. Use keys and mouse to increase speed and angle](http://iacopoapps.appspot.com/hopalongwebgl/)', inline: true },
         { name: mynoise, value: '[Ambient noise generator with a variety of themes from rain to black holes to busy cafe to kitten purrs.](https://mynoise.net/)', inline: true },
         { name: mrdoobharmony, value: '[Make art by sketching with different materials and colors (many more triptoys at the top of the page)](https://mrdoob.com/#/120/harmony)', inline: true },
-        { name: ballsdemo, value: '[Colorful balls that follow your mouse (Enable fullscreen for best effect)](https://testdrive-archive.azurewebsites.net/Graphics/TouchEffects/Default.html)', inline: true },
+        { name: ballsdemo, value: '[Colorful balls that follow your mouse (Enable fullscreen for best effect)](https://web.archive.org/web/20220809011708/https://testdrive-archive.azurewebsites.net/Graphics/TouchEffects/Default.html)', inline: true },
       );
     }
 

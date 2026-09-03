@@ -1,3 +1,4 @@
+/* eslint-disable import/prefer-default-export */
 import {
   ActionRowBuilder,
   ModalBuilder,
@@ -20,6 +21,7 @@ export const dTemplate: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('template')
     .setDescription('Example!')
+    .setIntegrationTypes([0])
     .addSubcommand(subcommand => subcommand
       .setName('subcommand')
       .setDescription('subcommand')
@@ -178,4 +180,4 @@ export const dTemplate: SlashCommand = {
   },
 };
 
-export default dTemplate;
+// export default dTemplate;

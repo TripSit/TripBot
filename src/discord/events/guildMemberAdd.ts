@@ -3,6 +3,7 @@ import {
 } from '../@types/eventDef';
 
 import trust from '../utils/trust';
+import { giveMilestone } from '../../global/utils/experience';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const F = f(__filename);
@@ -10,7 +11,17 @@ const F = f(__filename);
 export const guildMemberAdd: GuildMemberAddEvent = {
   name: 'guildMemberAdd',
   async execute(member) {
-    await member.fetch(true);
+    try {
+      await member.fetch(true);
+    } catch (fetchError) {
+      // If we can't fetch the member, then they joined and left immediately
+      if (fetchError instanceof Error && 'code' in fetchError && fetchError.code === 10007) {
+        log.debug(F, `Member ${member.id} left before we could process them`);
+        return;
+      }
+      // Re-throw other errors so we can handle them later too, or fix if needed.
+      throw fetchError;
+    }
 
     try {
       const guildData = await db.discord_guilds.upsert({
@@ -30,6 +41,8 @@ export const guildMemberAdd: GuildMemberAddEvent = {
       if (!guildData.cooperative) return;
 
       await trust(member);
+      // Run the milestone check to make sure the user gets a level role
+      await giveMilestone(member);
     } catch (err) {
       log.error(F, `Error: ${err}`);
       log.debug(F, `member: ${JSON.stringify(member)}`);

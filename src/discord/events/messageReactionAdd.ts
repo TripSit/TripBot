@@ -7,7 +7,6 @@ import {
 } from '../@types/eventDef';
 import { chitragupta } from '../utils/chitragupta';
 import { bestOf } from '../utils/bestOfTripsit';
-import { updatePollEmbed } from '../commands/global/d.poll';
 import { aiReaction } from '../commands/global/d.ai';
 // import log from '../../global/utils/log';
 // import {parse} from 'path';
@@ -47,7 +46,6 @@ export const messageReactionAdd: MessageReactionAddEvent = {
 
     chitragupta(messageReaction, user, 1);
     bestOf(messageReaction);
-    updatePollEmbed(messageReaction);
     // await communityMod(reaction, user);
   },
 };

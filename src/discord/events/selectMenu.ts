@@ -8,7 +8,6 @@ import commandContext from '../utils/context';
 import { helpMenu } from '../commands/global/d.help';
 import { aiMenu } from '../commands/global/d.ai';
 import { purgeMenu } from '../commands/guild/d.purge';
-import { templateSelect } from '../commands/guild/d.template';
 import { cooperativeSelect } from '../commands/guild/d.cooperative';
 // import log from '../../global/utils/log';
 // import {parse} from 'path';
@@ -21,20 +20,12 @@ export async function selectMenu(
 ): Promise<void> {
   log.info(F, await commandContext(interaction));
 
+  const { customId } = interaction;
   const menuID = interaction.customId;
-  const command = interaction.customId.split('~')[0];
 
-  // Need to convert the rest into a switch statement
-  // eslint-disable-next-line sonarjs/no-small-switch
-  switch (command) {
-    case 'template':
-      await templateSelect(interaction);
-      return;
-    case 'cooperative':
-      await cooperativeSelect(interaction);
-      return;
-    default:
-      break;
+  if (customId.startsWith('cooperative')) {
+    await cooperativeSelect(interaction);
+    return;
   }
 
   if (interaction.isStringSelectMenu()) {

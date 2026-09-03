@@ -1,12 +1,19 @@
+import { Prisma } from '@db/tripbot';
+import { stripIndents } from 'common-tags';
 import {
+  APIEmbed,
+  Attachment,
   ChatInputCommandInteraction,
   Colors,
+  DiscordAPIError,
+  Guild,
   GuildMember,
   MessageContextMenuCommandInteraction,
+  MessageFlags,
   SlashCommandBuilder,
   TextChannel,
 } from 'discord.js';
-import { stripIndents } from 'common-tags';
+
 import { SlashCommand } from '../../@types/commandDef';
 import commandContext from '../../utils/context';
 
@@ -101,78 +108,265 @@ const failResponses = [
   "Quote redundancy alert! This one's already living a cozy life in our database.",
 ];
 
-async function get(interaction:ChatInputCommandInteraction) {
-  if (!interaction.guild) return;
-  const quote = interaction.options.getString('quote', true);
+const imageOnlyPlaceholder = 'No text (Image)';
 
-  log.debug(F, `Searching for quote: ${quote}`);
+const jumpLinkPattern = /\/channels\/\d+\/(\d+)\/(\d+)\/?$/;
 
-  const quoteData = await db.quotes.findFirst({
-    where: {
-      quote: {
-        contains: quote,
-      },
-    },
+const imageExtensionPattern = /\.(png|jpe?g|gif|webp|avif)$/i;
+
+// Discord renders at most ten embeds per message
+const maxQuoteEmbeds = 10;
+
+const missingSourceCodes = [10003, 10008, 50001, 50013];
+
+type QuoteMedia = {
+  images: string[],
+  files: { name: string, url: string }[],
+  sourceMissing: boolean,
+};
+
+function emptyQuoteMedia(sourceMissing = false): QuoteMedia {
+  return { images: [], files: [], sourceMissing };
+}
+
+function isImageAttachment(attachment: Attachment): boolean {
+  return attachment.contentType?.startsWith('image/') ?? imageExtensionPattern.test(attachment.name);
+}
+
+// Grab the quoted message so its images can be shown. Re-read any attachment URLs from the message
+// since they can be deleted or changed.
+async function fetchQuoteMedia(guild: Guild, quoteUrl: string | null): Promise<QuoteMedia> {
+  const jumpLink = quoteUrl?.match(jumpLinkPattern);
+  if (!jumpLink) {
+    return emptyQuoteMedia();
+  }
+
+  const [, channelId, messageId] = jumpLink;
+
+  try {
+    const channel = await guild.channels.fetch(channelId);
+    if (!channel?.isTextBased()) {
+      return emptyQuoteMedia(true);
+    }
+
+    const message = await channel.messages.fetch(messageId);
+
+    const previewImages = message.embeds
+      .map(embed => embed.image?.url ?? embed.thumbnail?.url)
+      .filter((url): url is string => Boolean(url));
+
+    return {
+      images: [
+        ...message.attachments.filter(isImageAttachment).map(attachment => attachment.url),
+        ...previewImages,
+      ],
+      files: message.attachments
+        .filter(attachment => !isImageAttachment(attachment))
+        .map(attachment => ({ name: attachment.name, url: attachment.url })),
+      sourceMissing: false,
+    };
+  } catch (err) {
+    if (!missingSourceCodes.includes((err as DiscordAPIError).code as number)) {
+      log.error(F, `Failed to fetch quoted message ${messageId}: ${err}`);
+    }
+    return emptyQuoteMedia(true);
+  }
+}
+
+function quoteMediaNote(media: QuoteMedia, quoteText: string): string | null {
+  if (!media.sourceMissing) {
+    return null;
+  }
+  return quoteText === imageOnlyPlaceholder
+    ? '*The image attached to this quote has since been deleted.*'
+    : '*The original message is no longer available.*';
+}
+
+function quoteFileLinks(media: QuoteMedia): string | null {
+  if (media.files.length === 0) {
+    return null;
+  }
+  return media.files.map(file => `[${file.name}](${file.url})`).join('\n');
+}
+
+// Embeds sharing a url are merged by the Discord client into one embed with an image gallery
+function buildQuoteEmbeds(baseEmbed: APIEmbed, media: QuoteMedia, jumpUrl: string): APIEmbed[] {
+  const [firstImage, ...extraImages] = media.images;
+  if (!firstImage) {
+    return [baseEmbed];
+  }
+
+  const embeds: APIEmbed[] = [{
+    ...baseEmbed,
+    ...(jumpUrl && { url: jumpUrl }),
+    image: { url: firstImage },
+  }];
+
+  // Without a shared url the remaining images cannot be grouped onto the first embed
+  if (!jumpUrl) {
+    return embeds;
+  }
+
+  extraImages.slice(0, maxQuoteEmbeds - 1).forEach(url => {
+    embeds.push({ url: jumpUrl, image: { url } });
   });
 
-  if (!quoteData) {
-    log.debug(F, 'Quote not found');
+  return embeds;
+}
+
+async function get(interaction: ChatInputCommandInteraction) {
+  if (!interaction.guild) return;
+  const quote = interaction.options.getString('quote', false);
+  const user = interaction.options.getUser('user', false);
+
+  if (!quote && !user) {
     await interaction.reply({
-      content: 'Quote not found!',
-      ephemeral: true,
+      content: 'You must provide either a quote or a user to search for quotes.',
+      flags: MessageFlags.Ephemeral,
+    });
+    return;
+  }
+
+  log.debug(F, `Searching for quote: ${quote}, user: ${user?.username}`);
+
+  let quoteData;
+
+  // Build the search conditions
+  const whereCondition: Prisma.quotesWhereInput = {};
+
+  if (quote) {
+    whereCondition.quote = {
+      contains: quote,
+    };
+  }
+
+  if (user) {
+    whereCondition.user = {
+      discord_id: user.id,
+    };
+  }
+
+  // Search for quotes based on conditions
+  if (quote) {
+    // Quote provided (with or without user) - find first matching quote
+    quoteData = await db.quotes.findFirst({
+      where: whereCondition,
+    });
+  } else {
+    // Only user provided - find all quotes by user and pick one randomly
+    const quotes = await db.quotes.findMany({
+      where: whereCondition,
+    });
+
+    if (quotes.length === 0) {
+      await interaction.reply({
+        content: `No quotes found for ${user?.username}.`,
+        flags: MessageFlags.Ephemeral,
+      });
+      return;
+    }
+
+    // Pick a random quote from the user's quotes
+    quoteData = quotes[Math.floor(Math.random() * quotes.length)];
+  }
+
+  if (!quoteData) {
+    let searchType;
+    if (quote && user) {
+      searchType = `quote containing "${quote}" by ${user?.username}`;
+    } else if (quote) {
+      searchType = `quote containing "${quote}"`;
+    } else {
+      searchType = `quotes by ${user?.username}`;
+    }
+
+    await interaction.reply({
+      content: `No ${searchType} found.`,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
 
   log.debug(F, 'Quote found!');
 
+  // Get author data
   const authorData = await db.users.findFirstOrThrow({
     where: {
       id: quoteData.user_id,
     },
   });
 
-  if (!authorData.discord_id) return; // Just to type safe
+  if (!authorData.discord_id) return; // Type safety
 
-  const target = await interaction.guild.members.fetch(authorData.discord_id);
+  await interaction.deferReply();
 
-  await interaction.reply({
-    embeds: [{
-      thumbnail: {
-        url: target.user.displayAvatarURL(),
-      },
-      description: stripIndents`${target} ${flavorText[Math.floor(Math.random() * flavorText.length)]}
-    
-      > **${quoteData.quote}**
-      
-      - ${quoteData.url}
-      `,
-      color: target.displayColor,
-      timestamp: `${quoteData.date.toISOString()}`,
-    }],
-    ephemeral: false,
+  // Try to fetch the Discord member
+  let target = null;
+  try {
+    target = await interaction.guild.members.fetch(authorData.discord_id);
+  } catch (err) {
+    log.error(F, `Failed to fetch author: ${authorData.discord_id}`);
+    target = null;
+  }
+
+  const media = await fetchQuoteMedia(interaction.guild, quoteData.url);
+
+  const descriptionParts = [
+    // eslint-disable-next-line max-len
+    `${target?.displayName || target?.user.username || 'Unknown User'} ${flavorText[Math.floor(Math.random() * flavorText.length)]}`,
+  ];
+
+  if (!(quoteData.quote === imageOnlyPlaceholder && media.images.length > 0)) {
+    descriptionParts.push(`> **${quoteData.quote}**`);
+  }
+
+  const fileLinks = quoteFileLinks(media);
+  if (fileLinks) {
+    descriptionParts.push(fileLinks);
+  }
+
+  const mediaNote = quoteMediaNote(media, quoteData.quote);
+  if (mediaNote) {
+    descriptionParts.push(mediaNote);
+  }
+
+  descriptionParts.push(`- ${quoteData.url || 'No source URL'}`);
+
+  // Reply with the quote embed
+  await interaction.editReply({
+    embeds: buildQuoteEmbeds({
+      ...(target && {
+        thumbnail: {
+          url: target.user.displayAvatarURL(),
+        },
+      }),
+      description: descriptionParts.join('\n\n'),
+      ...(target && { color: target.displayColor }),
+      timestamp: quoteData.date.toISOString(),
+    }, media, quoteData.url),
   });
 }
 
 async function random(interaction:ChatInputCommandInteraction) {
   if (!interaction.guild) return;
-  const quotes = await db.quotes.findMany({
-    orderBy: {
-      id: 'desc',
-    },
-    take: 1,
-  });
+  await interaction.deferReply({ });
 
-  if (!quotes) {
-    await interaction.reply({
+  // Get total count first
+  const count = await db.quotes.count();
+
+  if (count === 0) {
+    await interaction.editReply({
       content: 'No quotes found!',
-      ephemeral: true,
     });
     return;
   }
 
-  // Get a random quote from the list
-  const quote = quotes[Math.floor(Math.random() * quotes.length)];
+  // Get one random quote using skip
+  const quote = await db.quotes.findFirst({
+    skip: Math.floor(Math.random() * count),
+  });
+
+  if (!quote) return; // TypeScript safety
 
   const authorData = await db.users.findFirstOrThrow({
     where: {
@@ -180,21 +374,44 @@ async function random(interaction:ChatInputCommandInteraction) {
     },
   });
 
-  const author = await interaction.guild.members.fetch(authorData.discord_id as string);
+  let author = null;
+  try {
+    author = await interaction.guild.members.fetch(authorData.discord_id as string);
+  } catch (err) {
+    log.error(F, `Failed to fetch author: ${authorData.discord_id}`);
+    author = null;
+  }
 
-  await interaction.reply({
-    embeds: [
-      {
-        author: {
-          name: `${author.displayName} ${flavorText[Math.floor(Math.random() * flavorText.length)]}`,
-          icon_url: author.user.displayAvatarURL(),
-          url: quote.url,
-        },
-        description: `**${quote.quote}**`,
-        timestamp: `${quote.date.toISOString()}`,
+  const media = await fetchQuoteMedia(interaction.guild, quote.url);
+
+  const descriptionParts: string[] = [];
+
+  if (!(quote.quote === imageOnlyPlaceholder && media.images.length > 0)) {
+    descriptionParts.push(`**${quote.quote}**`);
+  }
+
+  const fileLinks = quoteFileLinks(media);
+  if (fileLinks) {
+    descriptionParts.push(fileLinks);
+  }
+
+  const mediaNote = quoteMediaNote(media, quote.quote);
+  if (mediaNote) {
+    descriptionParts.push(mediaNote);
+  }
+
+  await interaction.editReply({
+    embeds: buildQuoteEmbeds({
+      author: {
+        name: `${author ? author.displayName : 'Unknown User'} ${
+          flavorText[Math.floor(Math.random() * flavorText.length)]
+        }`,
+        icon_url: author ? author.user.displayAvatarURL() : undefined,
+        url: quote.url,
       },
-    ],
-    ephemeral: false,
+      ...(descriptionParts.length > 0 && { description: descriptionParts.join('\n\n') }),
+      timestamp: `${quote.date.toISOString()}`,
+    }, media, quote.url),
   });
 }
 
@@ -217,7 +434,7 @@ async function del(interaction:ChatInputCommandInteraction) {
     log.debug(F, 'Quote not found');
     await interaction.reply({
       content: 'Quote not found!',
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
@@ -242,12 +459,14 @@ async function del(interaction:ChatInputCommandInteraction) {
 
   const actor = interaction.member as GuildMember;
 
-  if (target.id !== interaction.user.id
-    || (guildData.role_moderator && !actor.roles.cache.has(guildData.role_moderator))) {
-    log.debug(F, 'User does not own quote');
+  const isOwner = target.id === interaction.user.id;
+  const isModerator = guildData.role_moderator && actor.roles.cache.has(guildData.role_moderator);
+
+  if (!isOwner && !isModerator) {
+    log.debug(F, 'User does not own quote and is not a moderator');
     await interaction.reply({
       content: 'You do not own this quote! You can only delete your own quotes.',
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
@@ -296,13 +515,13 @@ async function del(interaction:ChatInputCommandInteraction) {
       },
       color: Colors.Red,
     }],
-    ephemeral: true,
+    flags: MessageFlags.Ephemeral,
   });
 }
 
 export async function quoteAdd(interaction:MessageContextMenuCommandInteraction) {
   log.info(F, await commandContext(interaction));
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
   if (!interaction.guild) return false;
   if (interaction.guild.id !== env.DISCORD_GUILD_ID) return false;
   await interaction.targetMessage.fetch(); // Fetch the message, just in case
@@ -394,10 +613,12 @@ export async function quoteAdd(interaction:MessageContextMenuCommandInteraction)
     update: {},
   });
 
+  // If empty string or just whitespace, replace it.
+  const fixedQuote = interaction.targetMessage.content.trim() || imageOnlyPlaceholder;
   const quoteData = await db.quotes.create({
     data: {
       user_id: targetData.id,
-      quote: interaction.targetMessage.content,
+      quote: fixedQuote,
       url: interaction.targetMessage.url,
       date: interaction.targetMessage.createdAt,
       created_by: actorData.id,
@@ -463,12 +684,12 @@ export const dQuote: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('quote')
     .setDescription('Manage quotes')
+    .setIntegrationTypes([0])
     .addSubcommand(subcommand => subcommand
       .setDescription('Search quotes!')
       .addStringOption(option => option.setName('quote')
         .setDescription('Which quote? Type to search!')
-        .setAutocomplete(true)
-        .setRequired(true))
+        .setAutocomplete(true))
       .addUserOption(option => option.setName('user')
         .setDescription('Which user?'))
       .setName('get'))
@@ -497,7 +718,7 @@ export const dQuote: SlashCommand = {
       default:
         await interaction.reply({
           content: 'Unknown subcommand!',
-          ephemeral: true,
+          flags: MessageFlags.Ephemeral,
         });
         break;
     }

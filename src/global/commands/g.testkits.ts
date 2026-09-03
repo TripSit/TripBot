@@ -19,12 +19,6 @@ export default async function testkits():Promise<HelpResource[]> {
       description: '[Info on the new test strips](https://dancesafe.org/fentanyl/)',
     },
     {
-      name: 'Dosetest',
-      country: 'Worldwide',
-      website: 'https://dosetest.com/tripsit',
-      description: '20% off with code TripSit (Affiliate link)',
-    },
-    {
       name: 'Protest',
       country: 'Europe',
       website: 'https://protestkit.eu/shop/?coupon_code=tripsit',
@@ -40,7 +34,7 @@ export default async function testkits():Promise<HelpResource[]> {
       name: 'EZ Test',
       country: 'Australia',
       website: 'http://ez-test.com.au/',
-      description: '10% off with TripsitAusOct\n15% off with TripsitAusNov',
+      description: '',
     },
     {
       name: 'Test Drogue',

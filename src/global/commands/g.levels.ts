@@ -5,10 +5,11 @@ import {
 } from '../utils/experience';
 
 import { leaderboardV2 } from './g.leaderboard';
+import { getLevelFreeze } from './g.levelFreeze';
 
 export default levels;
 
-const F = f(__filename); // eslint-disable-line
+const F = f(__filename);
 
 type LevelData = {
   ALL: {
@@ -66,6 +67,9 @@ export async function levels(
 ):Promise<LevelData> {
   const leaderboardData = await leaderboardV2();
 
+  // This user's level freeze, if any. Applied to every displayed level in the pass below.
+  const frozenLevel = await getLevelFreeze(discordId);
+
   const results = {
     ALL: {
       TOTAL: {
@@ -96,32 +100,25 @@ export async function levels(
     },
   } as LevelData;
 
+  const participatingKeys = new Set<string>();
+
   for (const type of Object.keys(leaderboardData)) { // eslint-disable-line no-restricted-syntax
     const typeKey = type as keyof typeof leaderboardData;
     const typeData = leaderboardData[typeKey];
-    // log.debug(F, `typeKey: ${typeKey}, typeData: ${JSON.stringify(typeData, null, 2)}`);
-    // log.debug(F, `Type: ${typeKey}`);
     for (const category of Object.keys(typeData)) {
       const categoryKey = category as keyof typeof typeData;
       const categoryData = typeData[categoryKey];
-      // log.debug(F, `categoryKey: ${categoryKey}, categoryData: ${JSON.stringify(categoryData, null, 2)}`);
-      // log.debug(F, `Category: ${categoryKey} has ${categoryData.length} entries`);
 
       if (categoryData.length === 0) {
         continue;
       }
-      // log.debug(F, `categoryKey: ${categoryKey}, categoryData: ${JSON.stringify(categoryData, null, 2)}`);
 
       const userRank = categoryData.findIndex(user => user.discord_id === discordId);
       if (userRank === -1) continue;
-      // log.debug(F, `Type: ${typeKey} Category: ${categoryKey} userRank: ${userRank}`);
       const userExperience = categoryData.find(user => user.discord_id === discordId);
       if (!userExperience) continue;
       const levelData = await getTotalLevel(userExperience.total_points);
-      // log.debug(F, `levelData: ${JSON.stringify(levelData, null, 2)}`);
-      // log.debug(F, `${discordId} is rank ${userRank} ${type} ${category} level ${levelData.level} userExperience: ${JSON.stringify(userExperience, null, 2)}`);
       const nextLevel = await expForNextLevel(levelData.level);
-      // log.debug(F, `nextLevel: ${nextLevel}`);
       results[typeKey][categoryKey] = {
         level: levelData.level,
         level_exp: levelData.level_points,
@@ -129,6 +126,30 @@ export async function levels(
         total_exp: userExperience.total_points,
         rank: userRank + 1, // 0-based to 1-based
       };
+      participatingKeys.add(`${typeKey}.${categoryKey}`);
+    }
+  }
+
+  // If this user's level is frozen, pin the displayed level of the categories they appear in, plus
+  // the headline totals. Categories they have no XP in are left alone. Ranks are left as-is.
+  if (frozenLevel !== null) {
+    const frozenNextLevel = await expForNextLevel(frozenLevel);
+    const alwaysFrozenKeys = ['ALL.TOTAL', 'TEXT.TOTAL'];
+    for (const type of Object.keys(leaderboardData)) {
+      const typeKey = type as keyof typeof leaderboardData;
+      for (const category of Object.keys(leaderboardData[typeKey])) {
+        const key = `${typeKey}.${category}`;
+        if (participatingKeys.has(key) || alwaysFrozenKeys.includes(key)) {
+          const existing = results[typeKey][category];
+          results[typeKey][category] = {
+            level: frozenLevel,
+            level_exp: frozenNextLevel,
+            nextLevel: frozenNextLevel,
+            total_exp: existing ? existing.total_exp : 0,
+            rank: existing ? existing.rank : 0,
+          };
+        }
+      }
     }
   }
 

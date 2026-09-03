@@ -4,20 +4,20 @@ on:
   pull_request:
     branches:
       - main
-      - development
+      - uat
     types:
       - opened
       - synchronize
       - reopened
     paths-ignore:
-      - '**/archive/**'
-      - '**/legacy/**'
-      - '**/matrix/**'
-      - '**/telegram/**'
-      - '**/irc/**'
-      - '**/jest/**'
-      - '**/build/**'
-      - '**/@prisma-moodle/**'
+      - "**/archive/**"
+      - "**/legacy/**"
+      - "**/matrix/**"
+      - "**/telegram/**"
+      - "**/irc/**"
+      - "**/jest/**"
+      - "**/build/**"
+      - "**/@prisma-moodle/**"
 
 jobs:
   lint:
@@ -26,41 +26,74 @@ jobs:
     env:
       NODE_OPTIONS: --max-old-space-size=7168
     steps:
-    - uses: actions/checkout@v3
-    - name: Use Node.js '21.1.0'
-      uses: actions/setup-node@v3
-      with:
-        node-version: '21.1.0'
-        cache: 'npm'
-    - name: Update npm
-      run: npm install -g npm && npm --version
-    - name: Install eslint
-      run: npm install eslint @typescript-eslint/eslint-plugin @typescript-eslint/parser eslint-config-airbnb-base eslint-config-airbnb-typescript eslint-config-google eslint-import-resolver-typescript eslint-plugin-import eslint-plugin-jest eslint-plugin-sonarjs --save-dev && npx eslint --version
-    - name: Linting
-      run: npx eslint --ext .ts,.js .
-  # test:
-  #   name: Test
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #   - uses: actions/checkout@v3
-  #   - name: Use Node.js '20.5.0'
-  #     uses: actions/setup-node@v3
-  #     with:
-  #       node-version: '20.5.0'
-  #       cache: 'npm'
-  #   - name: Update npm
-  #     run: npm install -g npm && npm --version
-  #   - name: Install dependencies
-  #     run: npm ci
-  #   - name: Copy env
-  #     run: cp .env.example .env
-  #   - name: Test
-  #     run: npx jest --silent -c ./src/jest/jest.unit.config.ts
-  codeql:    
-    name: CodeQL
+      - uses: actions/checkout@v3
+      - name: Use Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version-file: ".nvmrc"
+          cache: "npm"
+      - name: Update npm
+        run: npm install -g npm && npm --version
+      - name: Install eslint
+        run: npm install eslint @typescript-eslint/eslint-plugin @typescript-eslint/parser eslint-config-airbnb-base eslint-config-airbnb-typescript eslint-config-google eslint-import-resolver-typescript eslint-plugin-import eslint-plugin-jest eslint-plugin-sonarjs --save-dev --legacy-peer-deps && npx eslint --version
+      - name: Linting
+        run: npx eslint --ext .ts,.js .
+  build:
+    name: Build
     runs-on: ubuntu-latest
     env:
       NODE_OPTIONS: --max-old-space-size=7168
+    steps:
+      - uses: actions/checkout@v3
+      - name: Use Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version-file: ".nvmrc"
+          cache: "npm"
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps
+      - name: Generate Prisma clients
+        run: npm run db:generate
+      - name: Type check
+        run: npx tsc --noEmit
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    env:
+      NODE_OPTIONS: --max-old-space-size=7168
+    steps:
+      - uses: actions/checkout@v3
+      - name: Use Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version-file: ".nvmrc"
+          cache: "npm"
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps
+      - name: Generate Prisma clients
+        run: npm run db:generate
+      - name: Copy env
+        run: cp .env.example .env
+      - name: Test
+        run: npx jest --silent -c ./src/jest/jest.config.ts
+  docker-build:
+    name: Docker Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Build tripbot image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./src/docker/Dockerfile.tripbot
+          push: false
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+  codeql:
+    name: CodeQL
+    runs-on: ubuntu-latest
     permissions:
       actions: read
       contents: read
@@ -68,7 +101,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        language: [ 'javascript' ]
+        language: ["javascript"]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3

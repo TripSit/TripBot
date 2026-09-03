@@ -19,11 +19,9 @@ export async function wikipedia(query: string):Promise<WikiData> {
   try {
     const searchUrl = `https://en.wikipedia.org/w/api.php?action=opensearch&search=${query}&limit=1&namespace=0&format=json`; // eslint-disable-line
     const searchResult = await axios.get(searchUrl);
-    // log.debug(F, `seachResult: ${JSON.stringify(searchResult.data, null, 2)}`);
 
     const apiUrl = `https://en.wikipedia.org/api/rest_v1/page/summary/${searchResult.data[1][0]}`;
     const result = await axios.get(apiUrl);
-    log.debug(F, `result: ${JSON.stringify(result.data, null, 2)}`);
 
     if (result.data.extract === undefined) {
       return {
@@ -43,7 +41,7 @@ export async function wikipedia(query: string):Promise<WikiData> {
       };
     }
 
-    log.debug(F, `result: ${JSON.stringify(result.data.extract, null, 2)}`);
+    log.debug(F, `wikipedia query '${query}' resolved to '${result.data.title}'`);
 
     const extract = result.data.extract_html;
 
