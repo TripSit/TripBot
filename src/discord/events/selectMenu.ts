@@ -9,6 +9,7 @@ import { helpMenu } from '../commands/global/d.help';
 import { aiMenu } from '../commands/global/d.ai';
 import { purgeMenu } from '../commands/guild/d.purge';
 import { modHistoryButton } from '../utils/modHistory';
+// import { voiceSelect } from '../commands/guild/d.voice'; // see src/discord/utils/tentOverhaulReference.ts
 // import log from '../../global/utils/log';
 // import {parse} from 'path';
 const F = f(__filename);
@@ -32,6 +33,10 @@ export async function selectMenu(
       await helpMenu(interaction);
       return;
     }
+    // if (menuID.startsWith('voice')) {
+    //   await voiceSelect(interaction);
+    //   return;
+    // }
     if (menuID.startsWith('rpg')) {
       if (!menuID.includes(interaction.user.id)) {
         log.debug(F, 'Button clicked by someone other than the user who clicked it');
@@ -58,6 +63,9 @@ export async function selectMenu(
     if (menuID.startsWith('purge')) {
       await purgeMenu(interaction);
     }
+    // if (menuID.startsWith('voice')) {
+    //   await voiceSelect(interaction);
+    // }
   }
 
   if (interaction.isChannelSelectMenu() && menuID.startsWith('AI')) {

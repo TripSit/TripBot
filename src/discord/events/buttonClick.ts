@@ -31,6 +31,7 @@ import { aiButton } from '../commands/global/d.ai';
 import { purgeButton } from '../commands/guild/d.purge';
 import { mushroomPageEmbed } from '../utils/hrUtils';
 // import { helpButton } from '../commands/global/d.help';
+// import { voiceButton } from '../commands/guild/d.voice'; // see src/discord/utils/tentOverhaulReference.ts
 
 const F = f(__filename);
 
@@ -55,6 +56,11 @@ export async function buttonClick(interaction:ButtonInteraction, discordClient:C
     await purgeButton(interaction);
     return;
   }
+
+  // if (buttonID.startsWith('voice')) {
+  //   await voiceButton(interaction);
+  //   return;
+  // }
 
   if (buttonID.startsWith('mushroom')) {
     // log.debug(F, 'Werewolf button clicked');
