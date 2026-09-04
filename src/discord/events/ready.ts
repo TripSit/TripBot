@@ -1,4 +1,4 @@
-import { setTimeout } from 'timers/promises';
+import { stripIndents } from 'common-tags';
 import {
   Client,
   Collection,
@@ -7,15 +7,15 @@ import {
   PermissionResolvable,
   TextChannel,
 } from 'discord.js';
-import { stripIndents } from 'common-tags';
 import ms from 'ms';
+import { setTimeout } from 'timers/promises';
+import { botStats } from '../../global/commands/g.botstats';
+import { fact } from '../../global/commands/g.fact';
+import runTimer from '../../global/utils/timer'; // eslint-disable-line
 import { ReadyEvent } from '../@types/eventDef';
 import { checkGuildPermissions } from '../utils/checkPermissions';
-import runTimer from '../../global/utils/timer'; // eslint-disable-line
 import { emojiCache } from '../utils/emoji';
 import { populateBans } from '../utils/populateBotBans'; // eslint-disable-line
-import { fact } from '../../global/commands/g.fact';
-import { botStats } from '../../global/commands/g.botstats';
 // import { runLpm } from '../utils/lpm';
 
 const F = f(__filename);
@@ -68,7 +68,7 @@ async function getInvites(discordClient: Client) {
 // }
 
 export const ready: ReadyEvent = {
-  name: 'ready',
+  name: 'clientReady',
   once: true,
   async execute(client) {
     // log.debug(F, 'ready event fired');

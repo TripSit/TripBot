@@ -20,10 +20,7 @@ export async function birthday(
 ):Promise<DateTime | null> {
   let response = {} as DateTime | null;
   if (command === 'set') {
-    // log.debug(F, `${command} ${memberId} ${month} ${day}`);
     const birthDate = DateTime.local(2000, month as number, day as number);
-
-    // log.debug(F, `Setting birthDate for ${memberId} to ${birthDate}`);
 
     await db.users.upsert({
       where: {
@@ -51,17 +48,13 @@ export async function birthday(
     });
     if (userData.birthday !== null) {
       const birthDateRaw = userData.birthday;
-      // log.debug(F, `birthDate: ${birthDate}`);
       const birthDate = DateTime.fromJSDate(birthDateRaw);
-      // log.debug(F, `birthday: ${birthday}`);
       response = birthDate;
     } else {
-      // log.debug(F, `birthday is NULL`);
       response = null;
     }
   }
-  log.info(F, `response: ${JSON.stringify(response, null, 2)}`);
-  log.info(F, `response: ${JSON.stringify(response?.toJSDate().toString(), null, 2)}`);
+  log.debug(F, `${command} for ${memberId}: ${response?.toISODate() ?? 'null'}`);
 
   return response;
 }

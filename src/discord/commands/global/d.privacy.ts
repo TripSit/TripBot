@@ -1,4 +1,5 @@
 import {
+  MessageFlags,
   SlashCommandBuilder,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
@@ -13,6 +14,7 @@ export const dPrivacy: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('privacy')
     .setDescription('See and manage how TripSit uses your data!')
+    .setIntegrationTypes([0])
     .addSubcommand(subcommand => subcommand
       .setName('get')
       .setDescription('Get what data is stored on your user!'))
@@ -23,7 +25,7 @@ export const dPrivacy: SlashCommand = {
         .setDescription('Enter your confirmation code to delete your data!'))),
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
     const command = interaction.options.getSubcommand() as 'get' | 'delete';
     const embed = embedTemplate();
 

@@ -1,0 +1,24 @@
+name: SyncPRsWithUat
+
+on:
+  push:
+    branches:
+      - uat
+permissions:
+  contents: write
+  pull-requests: write
+jobs:
+  update-behind-prs:
+    name: Update PR branches behind uat
+    runs-on: ubuntu-latest
+    steps:
+      - name: Update every open PR targeting uat
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          for pr in $(gh pr list --base uat --state open --json number --jq '.[].number'); do
+            echo "Updating PR #$pr with latest uat..."
+            gh api -X PUT "repos/${GH_REPO}/pulls/${pr}/update-branch" \
+              || echo "::warning::Could not auto-update PR #${pr} (likely a real conflict or a fork branch) - needs manual update."
+          done

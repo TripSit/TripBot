@@ -6,8 +6,11 @@ import {
   TextInputBuilder,
   SlashCommandBuilder,
   ModalSubmitInteraction,
+  InteractionEditReplyOptions,
+  InteractionReplyOptions,
 } from 'discord.js';
 import {
+  MessageFlags,
   TextInputStyle,
 } from 'discord-api-types/v10';
 import { botmod } from '../../../global/commands/g.botmod';
@@ -23,6 +26,7 @@ export const dBotmod: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('botmod')
     .setDescription('Bot Mod Actions!')
+    .setIntegrationTypes([0])
     .addSubcommandGroup(subcommandgroup => subcommandgroup
       .setName('guild')
       .setDescription('Bot mod guilds')
@@ -106,8 +110,8 @@ export const dBotmod: SlashCommand = {
     const targetId = interaction.options.getString('target', true);
 
     if (command === 'BOTINFO') {
-      await interaction.deferReply({ ephemeral: true });
-      await interaction.editReply(await botmod(
+      await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+      const replyOptions: InteractionReplyOptions = await botmod(
         interaction,
         group,
         actor,
@@ -115,7 +119,8 @@ export const dBotmod: SlashCommand = {
         targetId,
         null,
         null,
-      ));
+      );
+      await interaction.editReply(replyOptions as InteractionEditReplyOptions);
       return true;
     }
 
@@ -155,7 +160,7 @@ export const dBotmod: SlashCommand = {
     interaction.awaitModalSubmit({ filter, time: 0 })
       .then(async i => {
         if (i.customId.split('~')[1] !== interaction.id) return;
-        await i.deferReply({ ephemeral: true });
+        await i.deferReply({ flags: MessageFlags.Ephemeral });
         const toggle = interaction.options.getString('toggle') ?? 'on' as 'on' | 'off';
 
         if (toggle === 'off' && command === 'BOTBAN') {
@@ -169,7 +174,7 @@ export const dBotmod: SlashCommand = {
         } catch (e) {
           // ignore
         }
-        await i.editReply(await botmod(interaction, group, actor, command, targetId, privReason, pubReason));
+        await i.editReply(await botmod(interaction, group, actor, command, targetId, privReason, pubReason) as InteractionEditReplyOptions);
       });
     return false;
   },

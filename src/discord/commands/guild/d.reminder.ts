@@ -5,6 +5,7 @@ import {
   GuildMember,
   Colors,
   TextBasedChannel,
+  MessageFlags,
 } from 'discord.js';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
@@ -55,15 +56,16 @@ const reminderDict = {
 export const dReminder: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('reminder')
-    .setDescription('Sends a reminder on what the channel is for!'),
+    .setDescription('Sends a reminder on what the channel is for!')
+    .setIntegrationTypes([0]),
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
     if (!interaction.guild) {
       await interaction.editReply({ content: 'This command can only be used in a server!' });
       return false;
     }
-    if (!interaction.channel) {
+    if (!interaction.channel || !(interaction.channel instanceof TextChannel)) {
       await interaction.editReply({ content: 'This command can only be used in a channel!' });
       return false;
     }

@@ -62,6 +62,38 @@
         // The following will show up as errors, just want to get this pushed for now
         "sonarjs/cognitive-complexity": ["warn", 50]
       }
+    },
+    {
+      "files": [
+        "src/vitest/**/*.ts",
+        "src/discord/tests/**/*.ts",
+        "src/global/tests/**/*.ts",
+        "**/*.test.ts",
+        "vitest.config.mts"
+      ],
+      "parserOptions": {
+        "project": "./tsconfig.vitest.json"
+      },
+      "rules": {
+        "import/no-extraneous-dependencies": ["error", { "devDependencies": true }]
+      }
+    },
+    {
+      "files": ["vitest.config.mts"],
+      "extends": [
+        "airbnb-base",
+        "airbnb-typescript/base",
+        "plugin:sonarjs/recommended"
+      ],
+      "rules": {
+        // This file is a genuine ES module (Vite/Vitest config); the CJS 'use strict'
+        // pragma this rule wants doesn't apply.
+        "strict": "off",
+        // 'vitest/config' is a subpath export the installed import resolver can't follow;
+        // Vitest itself resolves and runs this file successfully.
+        "import/no-unresolved": "off",
+        "import/no-extraneous-dependencies": ["error", { "devDependencies": true }]
+      }
     }
   ]
 }

@@ -2,7 +2,9 @@ import {
   SlashCommandBuilder,
   Colors,
   EmbedBuilder,
-  MessageReplyOptions,
+  InteractionEditReplyOptions,
+  InteractionReplyOptions,
+  MessageFlags,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
 import { SlashCommand } from '../../@types/commandDef';
@@ -278,7 +280,7 @@ async function addDosages(
 export async function getDrugInfo(
   drugName: string,
   section?: 'all' | 'dosage' | 'summary',
-):Promise<MessageReplyOptions> {
+):Promise<InteractionEditReplyOptions> {
   let embed = embedTemplate();
   log.debug(F, `drugName: ${drugName} | section: ${section}`);
 
@@ -453,6 +455,8 @@ export const dDrug: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('drug')
     .setDescription('Check substance information')
+    .setContexts([0, 1, 2])
+    .setIntegrationTypes([0, 1])
     .addStringOption(option => option.setName('substance')
       .setDescription('Pick a substance!')
       .setRequired(true)
@@ -465,13 +469,22 @@ export const dDrug: SlashCommand = {
         { name: 'Summary', value: 'summary' },
       ))
     .addBooleanOption(option => option.setName('ephemeral')
-      .setDescription('Set to "True" to show the response only to you')),
+      .setDescription('Set to "True" to show the response only to you')) as SlashCommandBuilder,
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
-    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') !== false) });
+    const ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined;
+    await interaction.deferReply({ flags: ephemeral });
     const section = interaction.options.getString('section') as 'all' | 'dosage' | 'summary' | undefined;
     const drugName = interaction.options.getString('substance', true);
-    await interaction.editReply(await getDrugInfo(drugName, section));
+    try {
+      await interaction.editReply(await getDrugInfo(drugName, section));
+    } catch (error) {
+      log.error(F, `${error}`);
+      await interaction.deleteReply();
+      const drugInfo = await getDrugInfo(drugName, section) as InteractionReplyOptions;
+      drugInfo.flags = MessageFlags.Ephemeral;
+      await interaction.followUp(drugInfo);
+    }
     return true;
   },
 };

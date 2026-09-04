@@ -25,7 +25,6 @@ export async function last(
     messageCount: number;
     totalMessages: number;
   }> {
-  // log.debug(F, `started!`);
   // This function will find all messages sent by the user in all channels
   // and return an array of messages
   let totalMessages = 0;
@@ -51,7 +50,6 @@ export async function last(
                     totalMessages += memberMessages.size;
                     // Get the info for each message and append it to messageInfo
                     memberMessages.forEach(message => {
-                    // log.debug(F, `message: ${JSON.stringify(message, null, 2)}`);
                       messageInfo.push({
                         channel: `<#${message.channelId}>`,
                         content: message.content,
@@ -66,7 +64,6 @@ export async function last(
           }),
         )
           .then(async () => {
-            // logger.debug(F, `messageInfo: ${JSON.stringify(messageInfo, null, 2)}`);
             if (messageInfo.length === 0) {
               resolve({
                 lastMessage: 'No messages found',
@@ -92,19 +89,12 @@ export async function last(
             let messageStringIndex = 0;
             messageInfo.forEach(message => {
               const messageStringTemp = `${time(message.timestamp, 'd')} ${message.channel}: ${message.content}\n`;
-              // const messageUrl = `https://discord.com/channels/${guild.id}/${message.channel.id}/${message.id}`;
-              // log.debug(F, `messageStringTemp: ${messageStringTemp}`);
-              // log.debug(F, `size: ${messageString.length + messageStringTemp.length}`);
               if (messageString.length + messageStringTemp.length < 1950) {
                 messageStringIndex += 1;
                 messageString += messageStringTemp;
               }
             });
 
-            // log.debug(F, `messageString: ${messageString}`);
-            // log.debug(F, `messageStringIndex: ${messageStringIndex}`);
-
-            // log.debug(F, `messageString: ${JSON.stringify(messageString, null, 2)}`);
             resolve({
               lastMessage: lastMessageText,
               messageList: messageString,

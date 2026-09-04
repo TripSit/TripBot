@@ -1,4 +1,5 @@
 import {
+  MessageFlags,
   SlashCommandBuilder,
 } from 'discord.js';
 import convert from 'convert-units';
@@ -11,6 +12,8 @@ const F = f(__filename);
 export const dConvert: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('convert')
+    .setContexts([0, 1, 2])
+    .setIntegrationTypes([0, 1])
     .setDescription('Convert one unit into another')
     .addNumberOption(option => option.setName('value')
       .setDescription('#')
@@ -24,11 +27,12 @@ export const dConvert: SlashCommand = {
       .setRequired(true)
       .setAutocomplete(true))
     .addBooleanOption(option => option.setName('ephemeral')
-      .setDescription('Set to "True" to show the response only to you')),
+      .setDescription('Set to "True" to show the response only to you')) as SlashCommandBuilder,
 
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
-    await interaction.deferReply({ ephemeral: (interaction.options.getBoolean('ephemeral') === true) });
+    const ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined;
+    await interaction.deferReply({ flags: ephemeral });
     const value = interaction.options.getNumber('value', true);
     const units = interaction.options.getString('units', true);
     const intoUnits = interaction.options.getString('into', true);
@@ -42,7 +46,16 @@ export const dConvert: SlashCommand = {
     const embed = embedTemplate()
       .setTitle(response);
 
-    await interaction.editReply({ embeds: [embed] });
+    try {
+      await interaction.editReply({ embeds: [embed] });
+    } catch (error) {
+      log.error(F, `${error}`);
+      await interaction.deleteReply();
+      await interaction.followUp({
+        embeds: [embed],
+        flags: MessageFlags.Ephemeral,
+      });
+    }
     return true;
   },
 };

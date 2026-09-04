@@ -5,8 +5,8 @@ const F = f(__filename);
 
 // KeyCloak admin client
 const kcAdminClient = new KeycloakAdminClient({
-  baseUrl: env.KEYCLOAK_BASE_URL,
-  realmName: env.KEYCLOAK_REALM_NAME,
+  baseUrl: env.KEYCLOAK_URL,
+  realmName: env.KEYCLOAK_REALM,
 });
 
 let authenticated = false;

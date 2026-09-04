@@ -64,9 +64,9 @@ export default function validateEnv(
   }
 
   if (service === 'SERVICES') {
-    // if (!process.env.KEYCLOAK_BASE_URL
-    //   || !process.env.KEYCLOAK_REALM_NAME
-    //   || !process.env.KEYCLOAK_CLIENT_ID
+    // if (!process.env.KEYCLOAK_URL
+    //   || !process.env.KEYCLOAK_REALM
+    //   || !process.env.KEYCLOAK_CLIENT_ID // This specific env variable is for bounties. Same for secret.
     //   || !process.env.KEYCLOAK_CLIENT_SECRET) {
     //   log.warn(F, 'Missing keycloak credentials: You won\'t be able to interact with KeyCloak.');
     // }

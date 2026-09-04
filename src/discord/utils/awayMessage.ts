@@ -1,8 +1,8 @@
 /* eslint-disable no-unused-vars */
 
-import { Message, TextChannel } from 'discord.js';
+import { DMChannel, Message, TextChannel } from 'discord.js';
 import { stripIndents } from 'common-tags';
-import { sleep } from '../commands/guild/d.bottest';
+import { sleep } from './sleep';
 
 const F = f(__filename); // eslint-disable-line
 
@@ -32,12 +32,16 @@ export async function awayMessage(message:Message): Promise<void> {
       const lastMessage = moonbearMessages.sort((a, b) => b.createdTimestamp - a.createdTimestamp).first();
       if (lastMessage && lastMessage.createdTimestamp > Date.now() - 30 * 60 * 1000) return;
 
-      await message.channel.sendTyping();
-      await sleep(1000);
-      await message.channel.send(
-        stripIndents`Hey ${message.member?.displayName}, Moonbear is probably sleeping, \
-        but they will get back to you when they can!`,
-      );
+      if (message.channel instanceof TextChannel || message.channel instanceof DMChannel) {
+        await message.channel.sendTyping();
+        await sleep(1000);
+        await message.channel.send(
+          stripIndents`Hey ${message.member?.displayName}, Moonbear is probably sleeping, \
+          but they will get back to you when they can!`,
+        );
+      } else {
+        log.error(F, 'Cannot send typing in this channel type.');
+      }
     }
   }
 }

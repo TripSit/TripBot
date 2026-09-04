@@ -1,17 +1,18 @@
 import { parse } from 'path';
 import {
+  addColors,
   createLogger,
   format,
-  transports,
-  addColors,
   Logger,
+  transports,
 } from 'winston';
 import Transport from 'winston-transport';
 // import { Logtail } from '@logtail/node'; // eslint-disable-line
 // import { LogtailTransport } from '@logtail/winston'; // eslint-disable-line
-import Rollbar, { Level } from 'rollbar';
+import Rollbar from 'rollbar';
 // import SentryTransport from 'winston-transport-sentry-node'; // eslint-disable-line
 import * as Sentry from '@sentry/node';
+import { TextChannel } from 'discord.js';
 import { ConsoleTransportInstance } from 'winston/lib/winston/transports';
 import { env } from './env.config';
 
@@ -55,9 +56,10 @@ class DiscordTransport extends Transport {
       const channel = await discordClient.channels.fetch(env.CHANNEL_BOTERRORS);
       if (!channel) return;
       if (!channel.isTextBased()) return;
+      if (!(channel instanceof TextChannel)) return;
       await channel.send(`${prefixDict[info.level]} ${info.message}`);
     } catch (error) {
-      console.error('Failed to send message to Discord:', error);
+      console.error('Failed to send message to Discord:', error); // eslint-disable-line no-console
     }
 
     if (callback) {
@@ -142,11 +144,11 @@ if (env.NODE_ENV === 'production') {
       }),
     ),
   }) as ConsoleTransportInstance);
-  const rollbarConfig = {
+  const rollbarConfig: Rollbar.Configuration = {
     accessToken: env.ROLLBAR_TOKEN,
     // captureUncaught: true,
     // captureUnhandledRejections: true,
-    logLevel: 'error' as Level,
+    logLevel: 'error',
   };
   global.rollbar = new Rollbar(rollbarConfig);
 
