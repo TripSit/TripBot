@@ -214,6 +214,11 @@ jobs:
           TRIPBOT_API_URL: ${{ secrets.TRIPBOT_API_URL }}
           TRIPBOT_API_TOKEN: ${{ secrets.TRIPBOT_API_TOKEN }}
         run: |
+          if [ -z "$TRIPBOT_API_URL" ]; then
+            echo "::notice::Skipping TripBot notification (no API URL — likely a Dependabot-triggered run without secret access)"
+            exit 0
+          fi
+
           echo "Payload sent to TripBot:"
           cat pr-notify-payload.json
           echo ""
