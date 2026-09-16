@@ -34,8 +34,19 @@ export const env = {
   OPENAI_API_KEY: process.env.OPENAI_API_KEY ?? '',
   GEMINI_KEY: process.env.GEMINI_KEY ?? '',
 
-  IRC_USERNAME: 'TripBot',
+  IRC_SERVER: process.env.IRC_SERVER ?? (isProd ? 'irc.tripsit.me' : 'irc.tripsit.io'),
+  IRC_PORT: Number(process.env.IRC_PORT ?? 6697),
+  IRC_TLS: process.env.IRC_TLS !== 'false',
+  IRC_USERNAME: process.env.IRC_USERNAME ?? 'TripBot', // NickServ account used for SASL
+  IRC_NICK: process.env.IRC_NICK ?? process.env.IRC_USERNAME ?? 'TripBot',
   IRC_PASSWORD: process.env.IRC_PASSWORD,
+  IRC_OPER_NAME: process.env.IRC_OPER_NAME, // Oper block in the server's ircd.yaml, e.g. for nofakelag/relaymsg
+  IRC_OPER_PASSWORD: process.env.IRC_OPER_PASSWORD,
+  IRC_BOTPREFIX: process.env.IRC_BOTPREFIX ?? '!',
+  IRC_CHANNELS: (process.env.IRC_CHANNELS ?? '#lounge')
+    .split(',')
+    .map(channel => channel.trim())
+    .filter(channel => channel.length > 0),
 
   MOODLE_TOKEN: process.env.MOODLE_TOKEN,
   MOODLE_URL: isProd ? 'https://learn.tripsit.me' : 'https://learn.tripsit.io',

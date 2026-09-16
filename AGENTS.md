@@ -17,9 +17,11 @@ external service, stop and ask before taking the risky action.
 
 - Use Node.js with npm for dependency installation and package command execution. Do not use Bun, Yarn, or pnpm.
 - Prefer existing `package.json` scripts when they perform the required task without creating unrelated changes.
-- Do not add new tests unless the user explicitly asks for tests. Run relevant existing tests when practical.
+- Add or update Vitest tests for new or changed behavior as part of the change, without waiting to be asked. Follow
+  the existing layout and mocks in `src/vitest/`, and run the relevant tests before handing off.
 - Do not edit generated Prisma clients under `src/prisma/*/generated/`.
-- Do not edit `archive`, `legacy`, placeholder, Matrix, IRC, or Telegram code unless the task specifically targets it.
+- Do not edit `archive`, `legacy`, placeholder, Matrix, or Telegram code (including the archived IRC bot under
+  `src/irc/archive/`) unless the task specifically targets it.
 - Never commit `.env`, tokens, passwords, private URLs, production identifiers, database dumps, or user data.
 - Never run a production migration, deploy Discord commands, push a branch, or mutate an external service unless the
   user explicitly requested that operation.
@@ -35,7 +37,7 @@ TripBot is a strict TypeScript application whose primary runtime is Node.js. It 
 - a PostgreSQL TripBot database accessed through Prisma;
 - a read-oriented Moodle MariaDB integration with its own Prisma schema;
 - Docker-based local services;
-- Vitest tests, covering the API, Discord command, and global business-logic layers.
+- Vitest tests, covering the API, Discord command, global business-logic, and IRC layers.
 
 TripBot provides harm-reduction and community tooling. Treat changes to drug information, interactions, dosage text,
 crisis resources, moderation, privacy, and user records as high-impact. Preserve established wording and data sources;
@@ -165,6 +167,15 @@ target. Do not run `prisma db push`, `prisma migrate reset`, or destructive SQL 
 
 ### Running services
 
+- The development bot runs **inside the `tripbot` devcontainer** (`.devcontainer/devcontainer.json`, the `tripbot`
+  service in `docker-compose.yml`), not on the host. Its `postStartCommand` runs `npm run tripbot:start` in a tmux
+  session. Hostnames such as `tripbot_database` only resolve on the Docker network, so starting the bot on the host
+  fails to reach the database. Run bot scripts from the devcontainer terminal, or from the host with
+  `docker exec -it tripbot npm run tripbot:restart` (likewise `tripbot:logs`, `tripbot:stop`).
+- The container keeps its own `node_modules` volume. After a dependency change, run `npm ci` inside the container
+  (`docker exec tripbot npm ci`) or rebuild the devcontainer; a host install does not reach it.
+- The dev database uses the named volume `tripbot_database_data`, so it persists across rebuilds. Removing that volume
+  (`docker volume rm tripbot_database_data`) wipes local data; only do so when the user asks.
 - Use `npm run <script>` for the scripts defined in `package.json`.
 - `tripbot:start`, `tripbot:dev`, and `tripbot:restart` assume `tmux`, so they are not native Windows development
   commands.
@@ -190,6 +201,7 @@ src/discord/commands/guild/          Guild-oriented Discord commands
 src/discord/commands/archive/        Archived commands; leave untouched unless requested
 src/discord/events/                  Discord event handlers
 src/discord/utils/                   Command deployment, context, embeds, and Discord helpers
+src/irc/irc.ts                       IRC connection to TripSit's Ergo servers (bridge work in progress)
 src/discord/@types/                  Discord command contracts and type augmentation
 src/global/commands/                 Platform-independent business logic, conventionally g.*
 src/global/utils/                    Shared utilities, environment, logging, experience, and database updates
@@ -204,14 +216,16 @@ vitest.config.mts                     Active Vitest configuration
 src/vitest/                           Shared test infrastructure (Discord + Prisma mocks)
 src/discord/tests/                    Discord command tests (mirrors commands/{global,guild})
 src/global/tests/                     Global business-logic (g.*) tests
+src/irc/tests/                        IRC connection and bridge tests
 src/docker/                           Container build, startup, and wait scripts
 assets/                               Runtime data, fonts, and images
 build/                                Generated TypeScript output; ignored
 ```
 
-Inactive or partially maintained areas such as Matrix, IRC, Telegram, archive, legacy, placeholder, and any
+Inactive or partially maintained areas such as Matrix, Telegram, archive, legacy, placeholder, and any
 not-yet-migrated flat files directly under `src/discord/tests/` are excluded by TypeScript, ESLint, CI, or Vitest
-patterns. Do not assume a repository-wide command validates those areas.
+patterns. Do not assume a repository-wide command validates those areas. `src/irc/` (outside `archive/`) is active
+code: it is type-checked, linted, tested, and covered by CI.
 
 ## Architecture rules
 
@@ -250,6 +264,32 @@ When adding or changing a command:
 
 If options, subcommands, contexts, integration types, or descriptions change, state in the handoff that Discord command
 registration must be redeployed.
+
+### IRC (Ergo)
+
+TripSit's IRC network runs **Ergo** (ergochat): `irc.tripsit.io` for development and `irc.tripsit.me` for
+production, selected by `NODE_ENV` unless `IRC_SERVER` overrides it. Ergo is a single daemon with built-in services, so
+do not give Anope, Atheme, or other separate-services instructions; confirm commands with `/msg NickServ HELP` or
+`/msg ChanServ HELP` on the server when unsure.
+
+- The bot uses `irc-framework` (`src/irc/irc.ts`), connects with TLS on 6697, and authenticates with SASL PLAIN using
+  `IRC_USERNAME`/`IRC_PASSWORD`. It only connects outside production and when `IRC_PASSWORD` is set. When
+  `IRC_OPER_NAME`/`IRC_OPER_PASSWORD` are set it sends `OPER` after registering.
+- The Ergo server config (`ircd.yaml`, `ircd.db`) lives on the IRC hosts, not in a repository; the `tripsit/irc` repo
+  only holds its `docker-compose.yml`. Give the user config snippets to apply rather than assuming file access.
+- Relevant server capabilities on `irc.tripsit.io`: `draft/message-redaction` (deletes, via `REDACT`),
+  `draft/relaymsg` with separator `/` (`RELAYMSG` lets the bridge post as `name/d`-style nicks), `message-tags`,
+  `echo-message`, `draft/multiline`, and `draft/chathistory`. There is no message-edit capability, so IRC cannot
+  receive true edits. Re-check with `CAP LS 302` before relying on a capability.
+- Ergo supports the IRCv3 capabilities the bridge relies on (`sasl`, `account-tag`, `extended-join`, `server-time`).
+  Use the NickServ account from `account-tag`/`extended-join` as the IRC identity, never the nick alone.
+- Registering an account: while using the nick, `/msg NickServ REGISTER <password> [email]`. If email verification is
+  enabled, finish with `/msg NickServ VERIFY <account> <code>`. An oper with the `accreg` capability can instead run
+  `/msg NickServ SAREGISTER <account> <password>`, which skips verification.
+- Channel privileges come from ChanServ, not from oper status: `/msg ChanServ REGISTER #channel`, then persistent modes
+  with `/msg ChanServ AMODE #channel +o <account>` (Ergo uses `AMODE`, not `FLAGS`/`ACCESS`).
+- Do not give the bot a full oper block. It uses the narrow `tripbot` oper class (`nofakelag`, `relaymsg`); add a
+  capability only when a feature needs it (for example `ban` for network bans) and have a human apply the change.
 
 ### Globals and aliases
 
@@ -326,7 +366,7 @@ Choose checks proportional to the change; do not claim checks you did not run.
 | Change | Minimum verification |
 | --- | --- |
 | Documentation only | Review rendered/plain Markdown, `git diff --check` |
-| TypeScript logic | Targeted ESLint, `npx tsc --noEmit --pretty false`, relevant existing test |
+| TypeScript logic | Targeted ESLint, `npx tsc --noEmit --pretty false`, new or updated tests for the change |
 | Discord command | Type-check, targeted ESLint, relevant existing test if configured, inspect interaction lifecycle |
 | Command definition/options | Discord-command checks plus note that deployment is required; do not deploy automatically |
 | API route/query | Type-check, targeted ESLint, targeted API Vitest file |
@@ -339,7 +379,9 @@ Choose checks proportional to the change; do not claim checks you did not run.
 business-logic layers — see its `test.include`/`test.exclude` and `test.coverage` blocks for exact scope. A handful of
 legacy Discord test files directly under `src/discord/tests/` predate the current mock scaffold and are excluded until
 migrated; treat them as reference only. Run a relevant existing test with `npx vitest run <path>` and report failures
-honestly; do not broaden Vitest's scope beyond what's requested.
+honestly. New tests go in the matching `tests/` folder so the existing include globs pick them up. Test folders
+(`src/vitest/`, `src/discord/tests/`, `src/global/tests/`, `src/irc/tests/`) each hold a small `tsconfig.json` that
+extends `tsconfig.vitest.json` so editors type-check them with Vitest globals; add one when creating a new test folder.
 
 If dependencies or generated Prisma clients are unavailable, say so clearly. Do not disguise an environment/setup
 failure as a source-code failure.
@@ -364,7 +406,8 @@ A task is complete only when:
 
 - the requested behavior or artifact is fully implemented;
 - the diff is scoped and contains no accidental edits;
-- applicable types, lint rules, existing tests, schema checks, or runtime checks pass, or limitations are reported;
+- new or changed behavior has tests, and applicable types, lint rules, tests, schema checks, or runtime checks pass, or
+  limitations are reported;
 - no secrets, generated output, local state, or unrelated lockfile changes were introduced;
 - externally visible follow-up work, such as a Discord command deployment or production migration, is called out but not
   performed without authorization;
