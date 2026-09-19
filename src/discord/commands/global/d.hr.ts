@@ -1,27 +1,28 @@
 /* eslint-disable max-len */
 /* eslint-disable sonarjs/no-duplicate-string */
+import { stripIndents } from 'common-tags';
 import {
   ActionRowBuilder,
   AttachmentBuilder,
   ButtonBuilder,
   ButtonStyle,
-  SlashCommandBuilder,
-  MessageFlags,
   ChatInputCommandInteraction,
   Colors,
   InteractionReplyOptions,
+  MessageFlags,
+  SlashCommandBuilder,
 } from 'discord.js';
-import { stripIndents } from 'common-tags';
-import { embedTemplate } from '../../utils/embedTemplate';
-import { crisis } from '../../../global/commands/g.crisis';
-import { combochart } from '../../../global/commands/g.combochart';
 import { breathe } from '../../../global/commands/g.breathe';
-import { wikiGuides } from '../../../global/commands/g.guides';
+import { combochart } from '../../../global/commands/g.combochart';
+import { crisis } from '../../../global/commands/g.crisis';
 import { grounding } from '../../../global/commands/g.grounding';
+import { wikiGuides } from '../../../global/commands/g.guides';
+import narcan from '../../../global/commands/g.narcan';
+import { reagents } from '../../../global/commands/g.reagents';
+import { recovery } from '../../../global/commands/g.recovery';
 import testkits from '../../../global/commands/g.testkits';
 import { warmline } from '../../../global/commands/g.warmline';
-import { recovery } from '../../../global/commands/g.recovery';
-import { reagents } from '../../../global/commands/g.reagents';
+import { embedTemplate } from '../../utils/embedTemplate';
 import getAsset from '../../utils/getAsset';
 
 async function dCombochart(interaction: ChatInputCommandInteraction): Promise<boolean> {
@@ -246,6 +247,47 @@ async function dTestKits(interaction: ChatInputCommandInteraction): Promise<bool
   }
 }
 
+async function dSupplies(interaction: ChatInputCommandInteraction): Promise<boolean> {
+  const narcanInfo = await narcan();
+  const embed = embedTemplate().setTitle('Naloxone sources');
+  const fieldsPerRow = 3;
+  const totalFields = narcanInfo.length;
+  const rows = Math.ceil(totalFields / fieldsPerRow);
+
+  for (let rowIndex = 0; rowIndex < rows; rowIndex += 1) {
+    const startIndex = rowIndex * fieldsPerRow;
+    const endIndex = Math.min(startIndex + fieldsPerRow, totalFields);
+    const rowFields = narcanInfo.slice(startIndex, endIndex);
+    rowFields.forEach((entry, index) => {
+      const website = entry.website ? `\n[Website](${entry.website})` : '';
+      const description = entry.description ? `\n${entry.description}` : '';
+      embed.addFields({
+        name: `${startIndex + index + 1}. ${entry.name} (${entry.country})`,
+        value: stripIndents`${website}${description}`,
+        inline: true,
+      });
+    });
+    if (rowFields.length < fieldsPerRow) {
+      const remainingSpaces = fieldsPerRow - rowFields.length;
+      for (let i = 0; i < remainingSpaces; i += 1) {
+        embed.addFields({
+          name: '\u200b',
+          value: '\u200b',
+          inline: true,
+        });
+      }
+    }
+  }
+  try {
+    await interaction.editReply({ embeds: [embed] });
+    return true;
+  } catch (error) {
+    await interaction.deleteReply();
+    await interaction.followUp({ embeds: [embed], flags: MessageFlags.Ephemeral });
+    return false;
+  }
+}
+
 async function dMushroomInfo(interaction: ChatInputCommandInteraction): Promise<boolean> {
   const source = 'https://www.oaklandhyphae510.com/post/preliminary-tryptamine-potency-analysis-from-dried-homogenized-fruit-bodies-of-psilocybe-mushrooms';
   const disclaimer = 'The following data is based on preliminary research and development methods, does not represent final data and requires further peer review before being taken more seriously than \'interesting\'. However, this does represent meaningful, comparable data to the cultivators, to the consumers, and to the public.';
@@ -336,6 +378,11 @@ export const dHR = {
       .addBooleanOption(option => option.setName('ephemeral')
         .setDescription('Set to "True" to show the response only to you')))
     .addSubcommand(sub => sub
+      .setName('supplies')
+      .setDescription('Naloxone access information')
+      .addBooleanOption(option => option.setName('ephemeral')
+        .setDescription('Set to "True" to show the response only to you')))
+    .addSubcommand(sub => sub
       .setName('recovery')
       .setDescription('Information that may be helpful in a recovery situation.')
       .addBooleanOption(option => option.setName('ephemeral')
@@ -377,6 +424,8 @@ export const dHR = {
         return dWarmline(interaction);
       case 'testkits':
         return dTestKits(interaction);
+      case 'supplies':
+        return dSupplies(interaction);
       case 'mushroom_info':
         return dMushroomInfo(interaction);
       default:
