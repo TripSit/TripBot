@@ -29,7 +29,7 @@ export default async function naloxone(): Promise<HelpResource[]> {
       name: 'Pharmacy (OTC)',
       country: 'United States',
       website: '',
-      description: 'Narcan available without a prescription',
+      description: 'Narcan available without a prescription in most states',
     },
     {
       name: 'Pharmacy (OTC)',
@@ -48,6 +48,12 @@ export default async function naloxone(): Promise<HelpResource[]> {
       country: 'Germany',
       website: '',
       description: 'distributed via DCRs and OTC in pharmacies',
+    },
+    {
+      name: 'Antidote DK',
+      country: 'Denmark',
+      website: 'https://antidote.dk/',
+      description: 'Free naloxone nasal spray and training via volunteer-run courses nationwide',
     },
     {
       name: 'Ask the community',
