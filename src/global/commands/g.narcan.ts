@@ -56,6 +56,20 @@ export default async function naloxone(): Promise<HelpResource[]> {
       description: 'Free naloxone nasal spray and training via volunteer-run courses nationwide',
     },
     {
+      name: 'Naloxone.fr',
+      country: 'France',
+      website: 'https://naloxone.fr/',
+      description:
+    'Naloxone is available without a prescription in pharmacies and free through CAARUD/CSAPA services',
+    },
+    {
+      name: 'Plan Nacional sobre Drogas',
+      country: 'Spain',
+      website: 'https://pnsd.sanidad.gob.es/',
+      description:
+      'Naloxone is distributed through overdose-prevention and harm-reduction programs.',
+    },
+    {
       name: 'Ask the community',
       country: 'Other',
       website: '',
