@@ -261,8 +261,13 @@ async function dSupplies(interaction: ChatInputCommandInteraction): Promise<bool
     rowFields.forEach((entry, index) => {
       const website = entry.website ? `\n[Website](${entry.website})` : '';
       const description = entry.description ? `\n${entry.description}` : '';
+      let name = `${startIndex + index + 1}. ${entry.name}`;
+      if (entry.country) {
+        name += ` (${entry.country})`;
+      }
+
       embed.addFields({
-        name: `${startIndex + index + 1}. ${entry.name} (${entry.country})`,
+        name,
         value: stripIndents`${website}${description}`,
         inline: true,
       });

@@ -20,16 +20,10 @@ export default async function naloxone(): Promise<HelpResource[]> {
       description: 'Free naloxone mailed nationwide; eligibility varies by state',
     },
     {
-      name: 'Naloxone Finder (NHRC)',
+      name: 'Naloxone Finder (NHRC) / Pharmacy (OTC)',
       country: 'United States',
       website: 'https://harmreduction.org/resource-center/harm-reduction-near-you/',
-      description: 'Map of local pickup sites',
-    },
-    {
-      name: 'Pharmacy (OTC)',
-      country: 'United States',
-      website: '',
-      description: 'Narcan available without a prescription in most states',
+      description: 'Map of local pickup sites; Or available OTC in most states',
     },
     {
       name: 'Pharmacy (OTC)',
@@ -53,7 +47,7 @@ export default async function naloxone(): Promise<HelpResource[]> {
       name: 'Antidote DK',
       country: 'Denmark',
       website: 'https://antidote.dk/',
-      description: 'Free naloxone nasal spray and training via volunteer-run courses nationwide',
+      description: 'Free naloxone nasal spray and training via volunteer-run courses nationwide or OTC in pharmacies',
     },
     {
       name: 'Naloxone.fr',
@@ -71,7 +65,7 @@ export default async function naloxone(): Promise<HelpResource[]> {
     },
     {
       name: 'Ask the community',
-      country: 'Other',
+      country: '',
       website: '',
       description: 'Coverage varies widely. Check #hr-resources or ask the people',
     },
