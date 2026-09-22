@@ -38,10 +38,10 @@ export default async function naloxone(): Promise<HelpResource[]> {
       description: 'Free nationally at participating pharmacies, no prescription needed',
     },
     {
-      name: 'Drug consumption rooms & pharmacies',
+      name: 'Drug consumption rooms & Online',
       country: 'Germany',
       website: '',
-      description: 'distributed via DCRs and OTC in pharmacies',
+      description: 'distributed via DCRs and can be ordered online as "Ventizolve"',
     },
     {
       name: 'Antidote DK',
