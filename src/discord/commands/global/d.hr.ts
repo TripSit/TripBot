@@ -283,6 +283,11 @@ async function dSupplies(interaction: ChatInputCommandInteraction): Promise<bool
       }
     }
   }
+  embed.addFields({
+    name: '\u200b',
+    value: '**[How to use a Naloxone spray](https://narcan.com/en/resources)**',
+    inline: false,
+  });
   try {
     await interaction.editReply({ embeds: [embed] });
     return true;
