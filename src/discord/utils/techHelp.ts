@@ -27,15 +27,16 @@ const F = f(__filename);
 const guildOnly = 'This command can only be used in a guild!';
 
 async function stripUserMentions(input: string, guild: Guild): Promise<string> {
-  const ids = [...input.matchAll(/<@(&?)(\d+)>/g)];
+  const matches = [...input.matchAll(/<@([!&]?)(\d+)>/g)];
+  const uniqueMentions = new Map(matches.map(([full, marker, id]) => [full, { isRole: marker === '&', id }]));
   let output = input;
-  await Promise.all(ids.map(async ([full, isRole, id]) => {
+  await Promise.all([...uniqueMentions].map(async ([full, { isRole, id }]) => {
     const name = isRole
       ? (await guild.roles.fetch(id).catch(() => null))?.name
       : (await guild.members.fetch(id).catch(() => null))?.displayName;
     output = output.replaceAll(full, name ? `@${name}` : 'unknown-user');
   }));
-  return output;
+  return output.replace(/@(everyone|here)/g, '@​$1');
 }
 
 export async function techHelpClick(interaction:ButtonInteraction) {
