@@ -17,7 +17,7 @@ import { combochart } from '../../../global/commands/g.combochart';
 import { crisis } from '../../../global/commands/g.crisis';
 import { grounding } from '../../../global/commands/g.grounding';
 import { wikiGuides } from '../../../global/commands/g.guides';
-import narcan from '../../../global/commands/g.narcan';
+import naloxoneSources from '../../../global/commands/g.narcan';
 import { reagents } from '../../../global/commands/g.reagents';
 import { recovery } from '../../../global/commands/g.recovery';
 import testkits from '../../../global/commands/g.testkits';
@@ -248,16 +248,16 @@ async function dTestKits(interaction: ChatInputCommandInteraction): Promise<bool
 }
 
 async function dSupplies(interaction: ChatInputCommandInteraction): Promise<boolean> {
-  const narcanInfo = await narcan();
+  const sources = await naloxoneSources();
   const embed = embedTemplate().setTitle('Naloxone sources');
   const fieldsPerRow = 3;
-  const totalFields = narcanInfo.length;
+  const totalFields = sources.length;
   const rows = Math.ceil(totalFields / fieldsPerRow);
 
   for (let rowIndex = 0; rowIndex < rows; rowIndex += 1) {
     const startIndex = rowIndex * fieldsPerRow;
     const endIndex = Math.min(startIndex + fieldsPerRow, totalFields);
-    const rowFields = narcanInfo.slice(startIndex, endIndex);
+    const rowFields = sources.slice(startIndex, endIndex);
     rowFields.forEach((entry, index) => {
       const website = entry.website ? `\n[Website](${entry.website})` : '';
       const description = entry.description ? `\n${entry.description}` : '';

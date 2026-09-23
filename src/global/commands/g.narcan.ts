@@ -1,16 +1,11 @@
-type HelpResource = {
-  name: string;
-  country: string;
-  website: string;
-  description: string;
-};
+import { HelpResource } from '../@types/helpresource';
 
 /**
  * Information about where to find naloxone (Narcan)
  * @return {any} an object with information about naloxone access
  */
 
-export default async function naloxone(): Promise<HelpResource[]> {
+export default async function naloxoneSources(): Promise<HelpResource[]> {
   return [
     {
       name: 'NEXT Distro',
