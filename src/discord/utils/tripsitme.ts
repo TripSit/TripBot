@@ -1,42 +1,42 @@
 /* eslint-disable max-len */
+import { ticket_status, user_tickets } from '@db/tripbot';
+import { stripIndents } from 'common-tags';
+import {
+  ButtonStyle,
+  ChannelType,
+  MessageFlags,
+  TextInputStyle,
+} from 'discord-api-types/v10';
 import {
   ActionRowBuilder,
-  ModalBuilder,
-  TextInputBuilder,
+  AllowedThreadTypeForTextChannel,
   ButtonBuilder,
-  ModalSubmitInteraction,
-  TextChannel,
-  Colors,
-  GuildMember,
-  Role,
-  ThreadChannel,
   ButtonInteraction,
+  ChatInputCommandInteraction,
+  Colors,
+  Guild,
+  GuildMember,
   Message,
-  MessageReaction,
-  User,
   // ChatInputCommandInteraction,
   // PermissionsBitField,
   // TextChannel,
   // MessageFlags,
   MessageMentionTypes,
-  ChatInputCommandInteraction,
+  MessageReaction,
+  ModalBuilder,
+  ModalSubmitInteraction,
   PermissionResolvable,
-  Guild,
-  AllowedThreadTypeForTextChannel,
+  Role,
+  TextChannel,
+  TextInputBuilder,
+  ThreadChannel,
+  User,
 } from 'discord.js';
-import {
-  TextInputStyle,
-  ChannelType,
-  ButtonStyle,
-  MessageFlags,
-} from 'discord-api-types/v10';
-import { stripIndents } from 'common-tags';
 import { DateTime } from 'luxon';
-import { ticket_status, user_tickets } from '@db/tripbot';
-import commandContext from './context';
-import { embedTemplate } from './embedTemplate';
 import { checkChannelPermissions, checkGuildPermissions } from './checkPermissions';
 import commandCooldown from './commandCooldown';
+import commandContext from './context';
+import { embedTemplate } from './embedTemplate';
 
 const F = f(__filename);
 
@@ -807,6 +807,7 @@ export async function tripsitmeTeamClose(
     .addComponents(
       new ButtonBuilder()
         .setCustomId(`tripsitmeUserClose~${targetId}`)
+        // eslint-disable-next-line sonarjs/no-duplicate-string
         .setLabel('I\'m good now!')
         .setStyle(ButtonStyle.Success),
     );
@@ -1738,8 +1739,16 @@ export async function tripsitmeButton(
         // log.debug(F, `Target has open ticket, and it was created over 5 minutes ago!`);
         helpMessage += `\n\nSomeone from the ${roleTripsitter} ${guildData.role_helper ? helperStr : ''} team will be with you as soon as they're available!`;
       }
+      const row = new ActionRowBuilder<ButtonBuilder>()
+        .addComponents(
+          new ButtonBuilder()
+            .setCustomId(`tripsitmeUserClose~${target.id}`)
+            .setLabel('I\'m good now!')
+            .setStyle(ButtonStyle.Success),
+        );
       await threadHelpUser.send({
         content: helpMessage,
+        components: [row],
         allowedMentions: {
           // parse: showMentions,
           parse: ['users', 'roles'] as MessageMentionTypes[],
