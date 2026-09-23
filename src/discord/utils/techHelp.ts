@@ -1,29 +1,42 @@
+import { stripIndents } from 'common-tags';
+import {
+  ButtonStyle,
+  ChannelType,
+  MessageFlags,
+  TextInputStyle,
+} from 'discord-api-types/v10';
 import {
   ActionRowBuilder,
-  TextInputBuilder,
-  ModalBuilder,
-  ButtonInteraction,
-  TextChannel,
+  AllowedThreadTypeForTextChannel,
   ButtonBuilder,
-  GuildMember,
-  User,
-  ThreadChannel,
-  ModalSubmitInteraction,
+  ButtonInteraction,
   Colors,
   EmbedBuilder,
-  AllowedThreadTypeForTextChannel,
+  Guild,
+  GuildMember,
+  ModalBuilder,
+  ModalSubmitInteraction,
+  TextChannel,
+  TextInputBuilder,
+  ThreadChannel,
+  User,
 } from 'discord.js';
-import {
-  ChannelType,
-  TextInputStyle,
-  ButtonStyle,
-  MessageFlags,
-} from 'discord-api-types/v10';
-import { stripIndents } from 'common-tags';
 
 const F = f(__filename);
 
 const guildOnly = 'This command can only be used in a guild!';
+
+async function stripUserMentions(input: string, guild: Guild): Promise<string> {
+  const ids = [...input.matchAll(/<@(&?)(\d+)>/g)];
+  let output = input;
+  await Promise.all(ids.map(async ([full, isRole, id]) => {
+    const name = isRole
+      ? (await guild.roles.fetch(id).catch(() => null))?.name
+      : (await guild.members.fetch(id).catch(() => null))?.displayName;
+    output = output.replaceAll(full, name ? `@${name}` : 'unknown-user');
+  }));
+  return output;
+}
 
 export async function techHelpClick(interaction:ButtonInteraction) {
   // log.debug(F, `Message: ${JSON.stringify(interaction, null, 2)}!`);
@@ -95,7 +108,7 @@ export async function techHelpClick(interaction:ButtonInteraction) {
       }
 
       // Get whatever they sent in the modal
-      const modalInput = i.fields.getTextInputValue(`${issueType}IssueInput`);
+      const modalInput = await stripUserMentions(i.fields.getTextInputValue(`${issueType}IssueInput`), i.guild);
       // log.debug(F, `modalInput: ${modalInput}!`);
 
       // Get the actor
