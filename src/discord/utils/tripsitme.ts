@@ -685,6 +685,16 @@ export async function tripsitmeBackup(
   await interaction.editReply({ content: 'Backup message sent!' });
 }
 
+function closeTripsitTicketButtonRowBuilder(targetId: string): ActionRowBuilder<ButtonBuilder> {
+  return new ActionRowBuilder<ButtonBuilder>()
+    .addComponents(
+      new ButtonBuilder()
+        .setCustomId(`tripsitmeUserClose~${targetId}`)
+        .setLabel('I\'m good now!')
+        .setStyle(ButtonStyle.Success),
+    );
+}
+
 /**
  * Handles removing of the NeedsHelp mode
  * @param {ButtonInteraction} interaction
@@ -803,14 +813,7 @@ export async function tripsitmeTeamClose(
     If you'd like to go back to social mode, just click the button below!
     `;
 
-  const row = new ActionRowBuilder<ButtonBuilder>()
-    .addComponents(
-      new ButtonBuilder()
-        .setCustomId(`tripsitmeUserClose~${targetId}`)
-        // eslint-disable-next-line sonarjs/no-duplicate-string
-        .setLabel('I\'m good now!')
-        .setStyle(ButtonStyle.Success),
-    );
+  const row = closeTripsitTicketButtonRowBuilder(targetId);
 
   await threadHelpUser.send({
     content: closeMessage,
@@ -1375,13 +1378,7 @@ export async function tripSitMe(
       **The wonderful people at the Fireside project can also help you through a rough trip. You can check them out: https://firesideproject.org/**
       `;
 
-  const row = new ActionRowBuilder<ButtonBuilder>()
-    .addComponents(
-      new ButtonBuilder()
-        .setCustomId(`tripsitmeUserClose~${target.id}`)
-        .setLabel('I\'m good now!')
-        .setStyle(ButtonStyle.Success),
-    );
+  const row = closeTripsitTicketButtonRowBuilder(target.id);
   await threadHelpUser.send({
     content: firstMessage,
     components: [row],
@@ -1739,13 +1736,7 @@ export async function tripsitmeButton(
         // log.debug(F, `Target has open ticket, and it was created over 5 minutes ago!`);
         helpMessage += `\n\nSomeone from the ${roleTripsitter} ${guildData.role_helper ? helperStr : ''} team will be with you as soon as they're available!`;
       }
-      const row = new ActionRowBuilder<ButtonBuilder>()
-        .addComponents(
-          new ButtonBuilder()
-            .setCustomId(`tripsitmeUserClose~${target.id}`)
-            .setLabel('I\'m good now!')
-            .setStyle(ButtonStyle.Success),
-        );
+      const row = closeTripsitTicketButtonRowBuilder(target.id);
       await threadHelpUser.send({
         content: helpMessage,
         components: [row],
