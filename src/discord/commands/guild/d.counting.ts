@@ -17,6 +17,7 @@ import commandContext from '../../utils/context';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { missingPermission } from '../../utils/checkPermissions';
 import { sleep } from '../../utils/sleep';
+import { getOrCreateUser } from '../../../global/utils/dbRecords';
 
 const F = f(__filename);
 
@@ -411,15 +412,7 @@ export async function countMessage(message: Message): Promise<void> {
       // If the channel is token then take tokens from the pot
 
       // const userData = await getUser(message.author.id, null, null);
-      const userData = await db.users.upsert({
-        where: {
-          discord_id: message.author.id,
-        },
-        create: {
-          discord_id: message.author.id,
-        },
-        update: {},
-      });
+      const userData = await getOrCreateUser(message.author.id);
 
       // const personaData = await personaGet(userData.id);
       await db.personas.upsert({
@@ -561,15 +554,7 @@ export async function countMessage(message: Message): Promise<void> {
     const stakeholderIds = countingData.current_stakeholders.split(',');
     await Promise.all(stakeholderIds.map(async discordId => {
       // const userData = await getUser(message.author.id, null, null);
-      const userData = await db.users.upsert({
-        where: {
-          discord_id: discordId,
-        },
-        create: {
-          discord_id: discordId,
-        },
-        update: {},
-      });
+      const userData = await getOrCreateUser(discordId);
 
       // const personaData = await personaGet(userData.id);
       return db.personas.upsert({

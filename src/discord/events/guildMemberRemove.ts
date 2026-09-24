@@ -7,6 +7,7 @@ import {
   GuildMemberRemoveEvent,
 } from '../@types/eventDef';
 import { embedTemplate } from '../utils/embedTemplate';
+import { getOrCreateGuild } from '../../global/utils/dbRecords';
 
 const F = f(__filename);
 
@@ -70,15 +71,7 @@ export const guildMemberRemove: GuildMemberRemoveEvent = {
       },
     });
 
-    const guildData = await db.discord_guilds.upsert({
-      where: {
-        id: member.guild.id,
-      },
-      create: {
-        id: member.guild.id,
-      },
-      update: {},
-    });
+    const guildData = await getOrCreateGuild(member.guild.id);
 
     let modThread = null as ThreadChannel | null;
     if (targetData.mod_thread_id) {

@@ -14,6 +14,7 @@ import { findXPfromLevel } from '../../../global/utils/experience';
 import { SlashCommand } from '../../@types/commandDef';
 import commandContext from '../../utils/context';
 import deployCommands from '../../utils/commandDeploy';
+import { getOrCreateUser } from '../../../global/utils/dbRecords';
 
 const F = f(__filename);
 
@@ -167,15 +168,7 @@ async function overwriteUserData(
     return;
   }
 
-  const userData = await db.users.upsert({
-    where: {
-      discord_id: member.id,
-    },
-    create: {
-      discord_id: member.id,
-    },
-    update: {},
-  });
+  const userData = await getOrCreateUser(member.id);
 
   const experienceData = await db.user_experience.findFirst({
     where: {

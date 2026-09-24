@@ -1,4 +1,5 @@
 import { personas } from '@db/tripbot';
+import { getOrCreateUser } from '../utils/dbRecords';
 
 export default profile;
 
@@ -10,15 +11,7 @@ export default profile;
 export async function profile(
   memberId: string,
 ):Promise<ProfileData> {
-  const userData = await db.users.upsert({
-    where: {
-      discord_id: memberId,
-    },
-    create: {
-      discord_id: memberId,
-    },
-    update: {},
-  });
+  const userData = await getOrCreateUser(memberId);
 
   const values = await Promise.allSettled([
     await db.user_experience.findMany({

@@ -16,6 +16,7 @@ import { getUserTotalLevel, MAX_EXPERIENCE_LEVEL, MIN_EXPERIENCE_LEVEL } from '.
 import { SlashCommand } from '../../@types/commandDef';
 import commandContext from '../../utils/context';
 import { linkThread } from '../../utils/modUtils';
+import { getOrCreateUser } from '../../../global/utils/dbRecords';
 
 const F = f(__filename);
 
@@ -110,16 +111,7 @@ async function link(interaction: ChatInputCommandInteraction): Promise<boolean> 
 
   let result: string | null;
   if (!targetUser) {
-    const userData = await db.users.upsert({
-      where: {
-        discord_id: targetUser,
-      },
-      create: {
-        discord_id: targetUser,
-      },
-      update: {
-      },
-    });
+    const userData = await getOrCreateUser(targetUser);
 
     if (!userData) {
       await interaction.editReply({

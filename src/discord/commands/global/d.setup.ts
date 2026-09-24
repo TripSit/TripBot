@@ -29,6 +29,7 @@ import { paginationEmbed } from '../../utils/pagination';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { profile } from '../../../global/commands/g.learn';
 import tripsitInfo from '../../../global/commands/g.about';
+import { getOrCreateGuild, getOrCreateUser } from '../../../global/utils/dbRecords';
 
 const F = f(__filename);
 
@@ -520,15 +521,7 @@ async function helper(
 ) {
   await interaction.deferReply({ flags: MessageFlags.Ephemeral });
   if (!interaction.guild) return;
-  const guildData = await db.discord_guilds.upsert({
-    where: {
-      id: interaction.guild?.id,
-    },
-    create: {
-      id: interaction.guild?.id,
-    },
-    update: {},
-  });
+  const guildData = await getOrCreateGuild(interaction.guild?.id);
 
   if (!guildData.channel_tripsit || !guildData.channel_tripsitmeta) {
     await interaction.editReply({
@@ -592,25 +585,9 @@ export async function helperButton(
   if (!interaction.member) return;
   // Check that the user has completed the course and wasnt just given the role
 
-  const guildData = await db.discord_guilds.upsert({
-    where: {
-      id: interaction.guild?.id,
-    },
-    create: {
-      id: interaction.guild?.id,
-    },
-    update: {},
-  });
+  const guildData = await getOrCreateGuild(interaction.guild?.id);
 
-  const userData = await db.users.upsert({
-    where: {
-      discord_id: interaction.user.id,
-    },
-    create: {
-      discord_id: interaction.user.id,
-    },
-    update: {},
-  });
+  const userData = await getOrCreateUser(interaction.user.id);
   const target = interaction.member as GuildMember;
 
   if (!guildData.role_helper) {

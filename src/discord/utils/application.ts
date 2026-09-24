@@ -35,6 +35,7 @@ import { stripIndents } from 'common-tags';
 import { embedTemplate } from './embedTemplate';
 import commandContext from './context'; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { missingPermission } from './checkPermissions';
+import { getOrCreateGuild } from '../../global/utils/dbRecords';
 
 const F = f(__filename);
 
@@ -290,15 +291,7 @@ export async function applicationStart(
   if (!interaction.channel) return;
 
   // Get the application channel from the db
-  const guildData = await db.discord_guilds.upsert({
-    where: {
-      id: interaction.guild.id,
-    },
-    create: {
-      id: interaction.guild.id,
-    },
-    update: {},
-  });
+  const guildData = await getOrCreateGuild(interaction.guild.id);
 
   const channelApplicationsId = guildData.channel_applications;
 

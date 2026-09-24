@@ -16,6 +16,7 @@ import {
 
 import { SlashCommand } from '../../@types/commandDef';
 import commandContext from '../../utils/context';
+import { getOrCreateUser } from '../../../global/utils/dbRecords';
 
 const F = f(__filename);
 
@@ -601,17 +602,9 @@ export async function quoteAdd(interaction:MessageContextMenuCommandInteraction)
 
   log.debug(F, `All checks passed, saving quote from ${target.displayName} (${target.id})`);
 
-  const actorData = await db.users.upsert({
-    where: { discord_id: actor.id },
-    create: { discord_id: actor.id },
-    update: {},
-  });
+  const actorData = await getOrCreateUser(actor.id);
 
-  const targetData = await db.users.upsert({
-    where: { discord_id: target.id },
-    create: { discord_id: target.id },
-    update: {},
-  });
+  const targetData = await getOrCreateUser(target.id);
 
   // If empty string or just whitespace, replace it.
   const fixedQuote = interaction.targetMessage.content.trim() || imageOnlyPlaceholder;

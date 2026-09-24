@@ -1,28 +1,13 @@
 import { personas } from '@db/tripbot';
+import { getOrCreatePersona, getOrCreateUser } from '../utils/dbRecords';
 
 const F = f(__filename);
 
 export async function getPersonaInfo(
   discordId: string,
 ):Promise<personas> {
-  const userData = await db.users.upsert({
-    where: {
-      discord_id: discordId,
-    },
-    create: {
-      discord_id: discordId,
-    },
-    update: {},
-  });
-  return db.personas.upsert({
-    where: {
-      user_id: userData.id,
-    },
-    create: {
-      user_id: userData.id,
-    },
-    update: {},
-  });
+  const userData = await getOrCreateUser(discordId);
+  return getOrCreatePersona(userData.id);
 }
 
 export async function setPersonaInfo(

@@ -42,6 +42,7 @@ import { customButton } from '../../utils/emoji';
 import { getProfilePreview } from './d.profile';
 import { aiFlairMod } from '../../../global/commands/g.ai';
 import { bigBrother } from '../../../global/utils/thoughtPolice';
+import { getOrCreatePersona, getOrCreateUser } from '../../../global/utils/dbRecords';
 
 const tripSitProfileImage = 'tripsit-profile-image.png';
 const tripSitProfileImageAttachment = 'attachment://tripsit-profile-image.png';
@@ -1239,24 +1240,8 @@ export async function rpgBounties(
   command: 'quest' | 'dungeon' | 'raid' | null,
 ): Promise<InteractionEditReplyOptions | InteractionUpdateOptions> {
   // Check if the user has a persona
-  const userData = await db.users.upsert({
-    where: {
-      discord_id: interaction.user.id,
-    },
-    create: {
-      discord_id: interaction.user.id,
-    },
-    update: {},
-  });
-  const personaData = await db.personas.upsert({
-    where: {
-      user_id: userData.id,
-    },
-    create: {
-      user_id: userData.id,
-    },
-    update: {},
-  });
+  const userData = await getOrCreateUser(interaction.user.id);
+  const personaData = await getOrCreatePersona(userData.id);
 
   // Get the existing inventory data
   const inventoryData = await db.rpg_inventory.findMany({
@@ -1440,24 +1425,8 @@ export async function rpgMarketInventory(
     personaDiscount:number;
   }> {
   // Check get fresh persona data
-  const userData = await db.users.upsert({
-    where: {
-      discord_id: interaction.user.id,
-    },
-    create: {
-      discord_id: interaction.user.id,
-    },
-    update: {},
-  });
-  const personaData = await db.personas.upsert({
-    where: {
-      user_id: userData.id,
-    },
-    create: {
-      user_id: userData.id,
-    },
-    update: {},
-  });
+  const userData = await getOrCreateUser(interaction.user.id);
+  const personaData = await getOrCreatePersona(userData.id);
 
   // Get the existing inventory data
   const inventoryData = await db.rpg_inventory.findMany({
@@ -1897,24 +1866,8 @@ export async function rpgMarketAccept(
   // } = await rpgMarketInventory(interaction);
 
   // Check get fresh persona data
-  const userData = await db.users.upsert({
-    where: {
-      discord_id: interaction.user.id,
-    },
-    create: {
-      discord_id: interaction.user.id,
-    },
-    update: {},
-  });
-  const personaData = await db.personas.upsert({
-    where: {
-      user_id: userData.id,
-    },
-    create: {
-      user_id: userData.id,
-    },
-    update: {},
-  });
+  const userData = await getOrCreateUser(interaction.user.id);
+  const personaData = await getOrCreatePersona(userData.id);
   // log.debug(F, `personaData (Accept): ${JSON.stringify(personaData, null, 2)}`);
 
   // If the user confirms the information, save the persona information
@@ -2163,24 +2116,8 @@ export async function rpgHomeInventory(
     personaInventory:string;
   }> {
   // Check get fresh persona data
-  const userData = await db.users.upsert({
-    where: {
-      discord_id: interaction.user.id,
-    },
-    create: {
-      discord_id: interaction.user.id,
-    },
-    update: {},
-  });
-  const personaData = await db.personas.upsert({
-    where: {
-      user_id: userData.id,
-    },
-    create: {
-      user_id: userData.id,
-    },
-    update: {},
-  });
+  const userData = await getOrCreateUser(interaction.user.id);
+  const personaData = await getOrCreatePersona(userData.id);
 
   // Get the existing inventory data
   const inventoryData = await db.rpg_inventory.findMany({
@@ -2262,24 +2199,8 @@ export async function rpgFlair(interaction: ChatInputCommandInteraction) {
   }
   // Check that the user owns the flair item
   // Check get fresh persona data
-  const userData = await db.users.upsert({
-    where: {
-      discord_id: interaction.user.id,
-    },
-    create: {
-      discord_id: interaction.user.id,
-    },
-    update: {},
-  });
-  const personaData = await db.personas.upsert({
-    where: {
-      user_id: userData.id,
-    },
-    create: {
-      user_id: userData.id,
-    },
-    update: {},
-  });
+  const userData = await getOrCreateUser(interaction.user.id);
+  const personaData = await getOrCreatePersona(userData.id);
   // Get the existing inventory data
   const inventoryData = await db.rpg_inventory.findMany({
     where: {
@@ -2499,24 +2420,8 @@ export async function rpgFlairAccept(
   overrideFlair:string,
 ):Promise<InteractionUpdateOptions> {
   // Check get fresh persona data
-  const userData = await db.users.upsert({
-    where: {
-      discord_id: interaction.user.id,
-    },
-    create: {
-      discord_id: interaction.user.id,
-    },
-    update: {},
-  });
-  const personaData = await db.personas.upsert({
-    where: {
-      user_id: userData.id,
-    },
-    create: {
-      user_id: userData.id,
-    },
-    update: {},
-  });
+  const userData = await getOrCreateUser(interaction.user.id);
+  const personaData = await getOrCreatePersona(userData.id);
 
   // Get the existing inventory data
   let inventoryData = await db.rpg_inventory.findMany({
@@ -2657,24 +2562,8 @@ export async function rpgHomeNameChange(
   interaction: MessageComponentInteraction,
 ):Promise<void> {
   // Check get fresh persona data
-  const userData = await db.users.upsert({
-    where: {
-      discord_id: interaction.user.id,
-    },
-    create: {
-      discord_id: interaction.user.id,
-    },
-    update: {},
-  });
-  const personaData = await db.personas.upsert({
-    where: {
-      user_id: userData.id,
-    },
-    create: {
-      user_id: userData.id,
-    },
-    update: {},
-  });
+  const userData = await getOrCreateUser(interaction.user.id);
+  const personaData = await getOrCreatePersona(userData.id);
   // When this button is clicked, a modal appears where the user can enter their name
   // Create the modal
   const modal = new ModalBuilder()
@@ -2794,24 +2683,8 @@ export async function rpgHome(
   } = await rpgHomeInventory(interaction);
 
   // Check get fresh persona data
-  const userData = await db.users.upsert({
-    where: {
-      discord_id: interaction.user.id,
-    },
-    create: {
-      discord_id: interaction.user.id,
-    },
-    update: {},
-  });
-  const personaData = await db.personas.upsert({
-    where: {
-      user_id: userData.id,
-    },
-    create: {
-      user_id: userData.id,
-    },
-    update: {},
-  });
+  const userData = await getOrCreateUser(interaction.user.id);
+  const personaData = await getOrCreatePersona(userData.id);
   // log.debug(F, `personaData home (Change) ${JSON.stringify(personaData, null, 2)}`);
 
   // Get the existing inventory data
@@ -3112,24 +2985,8 @@ export async function rpgHomeAccept(
   interaction: MessageComponentInteraction,
 ):Promise<InteractionUpdateOptions> {
   // Check get fresh persona data
-  const userData = await db.users.upsert({
-    where: {
-      discord_id: interaction.user.id,
-    },
-    create: {
-      discord_id: interaction.user.id,
-    },
-    update: {},
-  });
-  const personaData = await db.personas.upsert({
-    where: {
-      user_id: userData.id,
-    },
-    create: {
-      user_id: userData.id,
-    },
-    update: {},
-  });
+  const userData = await getOrCreateUser(interaction.user.id);
+  const personaData = await getOrCreatePersona(userData.id);
   // If the user confirms the information, save the persona information
   const row = interaction.message.components[0] as ActionRow<MessageActionRowComponent>;
   const backgroundComponent = row.components[0];
@@ -3226,24 +3083,8 @@ export async function rpgHomeDecline(
   interaction: MessageComponentInteraction,
 ):Promise<InteractionUpdateOptions> {
   // Check get fresh persona data
-  const userData = await db.users.upsert({
-    where: {
-      discord_id: interaction.user.id,
-    },
-    create: {
-      discord_id: interaction.user.id,
-    },
-    update: {},
-  });
-  const personaData = await db.personas.upsert({
-    where: {
-      user_id: userData.id,
-    },
-    create: {
-      user_id: userData.id,
-    },
-    update: {},
-  });
+  const userData = await getOrCreateUser(interaction.user.id);
+  const personaData = await getOrCreatePersona(userData.id);
   const row = interaction.message.components[0] as ActionRow<MessageActionRowComponent>;
   const itemComponent = row.components[0];
   const selectedItem = (itemComponent as StringSelectMenuComponent).options.find(
@@ -3278,24 +3119,8 @@ export async function rpgHomeSell(
   interaction: MessageComponentInteraction,
 ):Promise<InteractionUpdateOptions> {
   // Check get fresh persona data
-  const userData = await db.users.upsert({
-    where: {
-      discord_id: interaction.user.id,
-    },
-    create: {
-      discord_id: interaction.user.id,
-    },
-    update: {},
-  });
-  let personaData = await db.personas.upsert({
-    where: {
-      user_id: userData.id,
-    },
-    create: {
-      user_id: userData.id,
-    },
-    update: {},
-  });
+  const userData = await getOrCreateUser(interaction.user.id);
+  let personaData = await getOrCreatePersona(userData.id);
   const inventoryData = await db.rpg_inventory.findMany({
     where: {
       persona_id: personaData.id,
@@ -3620,24 +3445,8 @@ export async function rpgArcadeGame(
   }
 
   // Check get fresh persona data
-  const userData = await db.users.upsert({
-    where: {
-      discord_id: interaction.user.id,
-    },
-    create: {
-      discord_id: interaction.user.id,
-    },
-    update: {},
-  });
-  const personaData = await db.personas.upsert({
-    where: {
-      user_id: userData.id,
-    },
-    create: {
-      user_id: userData.id,
-    },
-    update: {},
-  });
+  const userData = await getOrCreateUser(interaction.user.id);
+  const personaData = await getOrCreatePersona(userData.id);
   // log.debug(F, `personaData (Coinflip): ${JSON.stringify(personaData, null, 2)}`);
 
   const currentBet = wagers[interaction.user.id].tokens;
@@ -3819,25 +3628,9 @@ export async function rpgArcadeWager(
     newBet = 500;
   }
 
-  const userData = await db.users.upsert({
-    where: {
-      discord_id: interaction.user.id,
-    },
-    create: {
-      discord_id: interaction.user.id,
-    },
-    update: {},
-  });
+  const userData = await getOrCreateUser(interaction.user.id);
 
-  const personaData = await db.personas.upsert({
-    where: {
-      user_id: userData.id,
-    },
-    create: {
-      user_id: userData.id,
-    },
-    update: {},
-  });
+  const personaData = await getOrCreatePersona(userData.id);
 
   if (personaData.tokens < newBet) {
     const notEnough = '**You don\'t have enough to bet that much**\n';
@@ -3907,45 +3700,13 @@ async function rpgGift(interaction: ChatInputCommandInteraction) {
     };
   }
 
-  const userData = await db.users.upsert({
-    where: {
-      discord_id: commandUser.id,
-    },
-    create: {
-      discord_id: commandUser.id,
-    },
-    update: {},
-  });
+  const userData = await getOrCreateUser(commandUser.id);
 
-  const userPersona = await db.personas.upsert({
-    where: {
-      user_id: userData.id,
-    },
-    create: {
-      user_id: userData.id,
-    },
-    update: {},
-  });
+  const userPersona = await getOrCreatePersona(userData.id);
 
-  const targetData = await db.users.upsert({
-    where: {
-      discord_id: targetUser.id,
-    },
-    create: {
-      discord_id: targetUser.id,
-    },
-    update: {},
-  });
+  const targetData = await getOrCreateUser(targetUser.id);
 
-  const targetPersona = await db.personas.upsert({
-    where: {
-      user_id: targetData.id,
-    },
-    create: {
-      user_id: targetData.id,
-    },
-    update: {},
-  });
+  const targetPersona = await getOrCreatePersona(targetData.id);
 
   // Get the current token amounts for the command user and the target user
   const commandUserTokens = userPersona.tokens;
@@ -4127,24 +3888,8 @@ export const dRpg: SlashCommand = {
     // ];
 
     // Get the user's persona data
-    const userData = await db.users.upsert({
-      where: {
-        discord_id: interaction.user.id,
-      },
-      create: {
-        discord_id: interaction.user.id,
-      },
-      update: {},
-    });
-    await db.personas.upsert({
-      where: {
-        user_id: userData.id,
-      },
-      create: {
-        user_id: userData.id,
-      },
-      update: {},
-    });
+    const userData = await getOrCreateUser(interaction.user.id);
+    await getOrCreatePersona(userData.id);
     // log.debug(F, `Initial Persona data: ${JSON.stringify(personaData, null, 2)}`);
 
     if (subcommand === 'town') {

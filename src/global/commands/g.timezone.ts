@@ -1,6 +1,7 @@
 /* eslint-disable max-len */
 
 import timezones from '../../../assets/data/timezones.json';
+import { getOrCreateUser } from '../utils/dbRecords';
 
 const F = f(__filename);
 
@@ -31,15 +32,7 @@ export async function timezone(
       return 'invalid';
     }
 
-    const userData = await db.users.upsert({
-      where: {
-        discord_id: memberId,
-      },
-      create: {
-        discord_id: memberId,
-      },
-      update: {},
-    });
+    const userData = await getOrCreateUser(memberId);
 
     userData.timezone = tzCode;
 
@@ -65,15 +58,7 @@ export async function timezone(
   }
   let gmtValue = '';
 
-  const userData = await db.users.upsert({
-    where: {
-      discord_id: memberId,
-    },
-    create: {
-      discord_id: memberId,
-    },
-    update: {},
-  });
+  const userData = await getOrCreateUser(memberId);
 
   if (userData.timezone !== null) {
     const tzCode = userData.timezone;

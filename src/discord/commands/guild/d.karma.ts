@@ -6,6 +6,7 @@ import {
 import { SlashCommand } from '../../@types/commandDef';
 import commandContext from '../../utils/context';
 import { embedTemplate } from '../../utils/embedTemplate';
+import { getOrCreateUser } from '../../../global/utils/dbRecords';
 // import log from '../../../global/utils/log';
 
 const F = f(__filename);
@@ -30,15 +31,7 @@ export const dKarma: SlashCommand = {
       ? interaction.options.getMember('target') as GuildMember
       : interaction.member as GuildMember;
 
-    const userData = await db.users.upsert({
-      where: {
-        discord_id: member.id,
-      },
-      create: {
-        discord_id: member.id,
-      },
-      update: {},
-    });
+    const userData = await getOrCreateUser(member.id);
 
     const message = `${member.displayName} has received ${userData.karma_received} karma and given ${userData.karma_given} karma`; // eslint-disable-line max-len
 

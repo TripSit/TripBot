@@ -16,6 +16,7 @@ import {
 } from '../../../global/commands/g.bridge';
 import commandContext from '../../utils/context';
 import { missingPermission } from '../../utils/checkPermissions';
+import { getOrCreateGuild } from '../../../global/utils/dbRecords';
 
 const F = f(__filename);
 
@@ -431,15 +432,7 @@ export const dBridge: SlashCommand = {
     }
 
     // Check if the guild is a partner (or the home guild)
-    const guildData = await db.discord_guilds.upsert({
-      where: {
-        id: interaction.guild.id,
-      },
-      create: {
-        id: interaction.guild.id,
-      },
-      update: {},
-    });
+    const guildData = await getOrCreateGuild(interaction.guild.id);
 
     if (interaction.guild.id !== env.DISCORD_GUILD_ID
       && !guildData.partner

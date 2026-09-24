@@ -32,6 +32,7 @@ import {
   PersonaId,
 } from '../../utils/ai';
 import { OpenRouterClient } from '../../utils/aiClients/openrouter.client';
+import { getOrCreateUser } from '../../../global/utils/dbRecords';
 
 const F = f(__filename);
 
@@ -510,11 +511,7 @@ export async function aiMenu(
       const selectedId = values[0] as PersonaId;
       log.debug(F, `User selected a persona: ${selectedId}`);
 
-      const userData = await db.users.upsert({
-        where: { discord_id: user.id },
-        create: { discord_id: user.id },
-        update: {},
-      });
+      const userData = await getOrCreateUser(user.id);
 
       log.debug(F, `User data ${JSON.stringify(userData)}`);
 
