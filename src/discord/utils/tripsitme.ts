@@ -39,6 +39,7 @@ import {
 import commandCooldown from './commandCooldown';
 import commandContext from './context';
 import { embedTemplate } from './embedTemplate';
+import { getOrCreateGuild, getOrCreateUser } from '../../global/utils/dbRecords';
 
 const F = f(__filename);
 
@@ -223,15 +224,7 @@ export async function needsHelpMode(
   target: GuildMember,
 ) {
   const guild = interaction.guild as Guild;
-  const guildData = await db.discord_guilds.upsert({
-    where: {
-      id: guild.id,
-    },
-    create: {
-      id: guild.id,
-    },
-    update: {},
-  });
+  const guildData = await getOrCreateGuild(guild.id);
 
   if (!await ensurePermissions(guild, ['ManageRoles' as PermissionResolvable], F)) return;
 
@@ -349,15 +342,7 @@ export async function tripsitmeOwned(
     return;
   }
 
-  const userData = await db.users.upsert({
-    where: {
-      discord_id: userId,
-    },
-    create: {
-      discord_id: userId,
-    },
-    update: {},
-  });
+  const userData = await getOrCreateUser(userId);
 
   const ticketData = await db.user_tickets.findFirst({
     where: {
@@ -370,15 +355,7 @@ export async function tripsitmeOwned(
     },
   });
 
-  const guildData = await db.discord_guilds.upsert({
-    where: {
-      id: interaction.guild?.id,
-    },
-    create: {
-      id: interaction.guild?.id,
-    },
-    update: {},
-  });
+  const guildData = await getOrCreateGuild(interaction.guild?.id);
 
   // log.debug(F, `ticketData: ${JSON.stringify(ticketData, null, 2)}`);
 
@@ -467,15 +444,7 @@ export async function tripsitmeMeta(
     return;
   }
 
-  const userData = await db.users.upsert({
-    where: {
-      discord_id: userId,
-    },
-    create: {
-      discord_id: userId,
-    },
-    update: {},
-  });
+  const userData = await getOrCreateUser(userId);
 
   const ticketData = await db.user_tickets.findFirst({
     where: {
@@ -590,15 +559,7 @@ export async function tripsitmeBackup(
   const actor = interaction.member as GuildMember;
   const target = await interaction.guild.members.fetch(userId);
 
-  const userData = await db.users.upsert({
-    where: {
-      discord_id: userId,
-    },
-    create: {
-      discord_id: userId,
-    },
-    update: {},
-  });
+  const userData = await getOrCreateUser(userId);
 
   const ticketData = await db.user_tickets.findFirst({
     where: {
@@ -620,15 +581,7 @@ export async function tripsitmeBackup(
     return;
   }
 
-  const guildData = await db.discord_guilds.upsert({
-    where: {
-      id: interaction.guild?.id,
-    },
-    create: {
-      id: interaction.guild?.id,
-    },
-    update: {},
-  });
+  const guildData = await getOrCreateGuild(interaction.guild?.id);
 
   let backupMessage = 'Hey ';
   // Get the roles we'll be referencing
@@ -713,15 +666,7 @@ export async function tripsitmeTeamClose(
     return;
   }
 
-  const userData = await db.users.upsert({
-    where: {
-      discord_id: targetId,
-    },
-    create: {
-      discord_id: targetId,
-    },
-    update: {},
-  });
+  const userData = await getOrCreateUser(targetId);
 
   const ticketData = await db.user_tickets.findFirst({
     where: {
@@ -734,15 +679,7 @@ export async function tripsitmeTeamClose(
     },
   });
 
-  const guildData = await db.discord_guilds.upsert({
-    where: {
-      id: interaction.guild?.id,
-    },
-    create: {
-      id: interaction.guild?.id,
-    },
-    update: {},
-  });
+  const guildData = await getOrCreateGuild(interaction.guild?.id);
   // log.debug(F, `guildData: ${JSON.stringify(guildData, null, 2)}`);
 
   if (!ticketData) {
@@ -894,15 +831,7 @@ export async function tripsitmeUserClose(
     return;
   }
 
-  const userData = await db.users.upsert({
-    where: {
-      discord_id: target.id,
-    },
-    create: {
-      discord_id: target.id,
-    },
-    update: {},
-  });
+  const userData = await getOrCreateUser(target.id);
 
   const ticketData = await db.user_tickets.findFirst({
     where: {
@@ -915,15 +844,7 @@ export async function tripsitmeUserClose(
     },
   });
 
-  const guildData = await db.discord_guilds.upsert({
-    where: {
-      id: interaction.guild?.id,
-    },
-    create: {
-      id: interaction.guild?.id,
-    },
-    update: {},
-  });
+  const guildData = await getOrCreateGuild(interaction.guild?.id);
 
   if (!ticketData) {
     log.debug(F, `${actor.displayName} does not have any tickets that are not closed or deleted`);
@@ -1228,15 +1149,7 @@ export async function tripSitMe(
   }
 
   // const actor = interaction.member;
-  const guildData = await db.discord_guilds.upsert({
-    where: {
-      id: interaction.guild?.id,
-    },
-    create: {
-      id: interaction.guild?.id,
-    },
-    update: {},
-  });
+  const guildData = await getOrCreateGuild(interaction.guild?.id);
 
   // let backupMessage = 'Hey ';
   // Get the roles we'll be referencing
@@ -1450,15 +1363,7 @@ export async function tripSitMe(
 
   log.debug(F, `Ticket archives on ${archiveTime.toLocaleString(DateTime.DATETIME_FULL)} deletes on ${deleteTime.toLocaleString(DateTime.DATETIME_FULL)}`);
 
-  const userData = await db.users.upsert({
-    where: {
-      discord_id: target.id,
-    },
-    create: {
-      discord_id: target.id,
-    },
-    update: {},
-  });
+  const userData = await getOrCreateUser(target.id);
 
   // Set ticket information
   const introStr = intro ? `\n${intro}` : noInfo;
@@ -1588,15 +1493,7 @@ export async function tripsitmeButton(
 
   log.debug(F, `Target: ${target.displayName} (${target.id})`);
 
-  const userData = await db.users.upsert({
-    where: {
-      discord_id: target.id,
-    },
-    create: {
-      discord_id: target.id,
-    },
-    update: {},
-  });
+  const userData = await getOrCreateUser(target.id);
   log.debug(F, `Target userData: ${userData.id}`);
 
   const ticketData = await db.user_tickets.findFirst({

@@ -27,6 +27,7 @@ import { tripSitTrustScore } from './trustScore';
 // import { checkGuildPermissions } from './checkPermissions';
 import { topic } from '../../global/commands/g.topic';
 import { giveMilestone } from '../../global/utils/experience';
+import { getOrCreateGuild, getOrCreateUser } from '../../global/utils/dbRecords';
 
 const F = f(__filename);
 
@@ -53,25 +54,9 @@ export async function addedVerified(
 ) {
   // Check if this was the verified role
 
-  const guildData = await db.discord_guilds.upsert({
-    where: {
-      id: newMember.guild.id,
-    },
-    create: {
-      id: newMember.guild.id,
-    },
-    update: {},
-  });
+  const guildData = await getOrCreateGuild(newMember.guild.id);
 
-  const userData = await db.users.upsert({
-    where: {
-      discord_id: newMember.id,
-    },
-    create: {
-      discord_id: newMember.id,
-    },
-    update: {},
-  });
+  const userData = await getOrCreateUser(newMember.id);
 
   let memberData = {} as members;
   try {

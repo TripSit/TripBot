@@ -1,6 +1,7 @@
 /* eslint-disable sonarjs/no-duplicate-string */
 import { ButtonInteraction, InteractionEditReplyOptions, ModalSubmitInteraction } from 'discord.js';
 import { appeal_status, appeals } from '@db/tripbot';
+import { getOrCreateUser } from '../../global/utils/dbRecords';
 
 const F = f(__filename);
 
@@ -24,11 +25,7 @@ async function updateAppeal(
   }
 
   // Get or create user by discord_id
-  const userData = await db.users.upsert({
-    where: { discord_id: discordId },
-    create: { discord_id: discordId },
-    update: {},
-  });
+  const userData = await getOrCreateUser(discordId);
 
   // Find the latest appeal (any status)
   const latestAppeal = await db.appeals.findFirst({

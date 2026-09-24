@@ -3,6 +3,7 @@ import { stripIndents } from 'common-tags';
 import {
   GuildMemberUpdateEvent,
 } from '../@types/eventDef';
+import { getOrCreateGuild, getOrCreateUser } from '../../global/utils/dbRecords';
 // import { topic } from '../../global/commands/g.topic';
 
 type MindsetNames =
@@ -404,15 +405,7 @@ async function removeExTeamFromThreads(
   newMember: GuildMember,
   roleId: string,
 ) {
-  const guildData = await db.discord_guilds.upsert({
-    where: {
-      id: newMember.guild?.id,
-    },
-    create: {
-      id: newMember.guild?.id,
-    },
-    update: {},
-  });
+  const guildData = await getOrCreateGuild(newMember.guild?.id);
   // If the role removed was a helper/tripsitter role, we need to remove them from threads they are in
   if (guildData.channel_tripsit
       && (roleId === guildData.role_helper
@@ -421,15 +414,7 @@ async function removeExTeamFromThreads(
   ) {
     log.debug(F, `${newMember.displayName} was a helper/tripsitter!`);
     const channelTripsit = await discordClient.channels.fetch(guildData.channel_tripsit) as TextChannel;
-    const userData = await db.users.upsert({
-      where: {
-        discord_id: newMember.user.id,
-      },
-      create: {
-        discord_id: newMember.user.id,
-      },
-      update: {},
-    });
+    const userData = await getOrCreateUser(newMember.user.id);
 
     const ticketData = await db.user_tickets.findFirst({
       where: {

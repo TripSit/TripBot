@@ -26,6 +26,7 @@ import { reaction_role_type, reaction_roles } from '@db/tripbot';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { missingPermission } from '../../utils/checkPermissions';
+import { getOrCreateGuild, getOrCreateUser } from '../../../global/utils/dbRecords';
 
 const F = f(__filename);
 
@@ -296,15 +297,7 @@ export async function buttonReactionRole(
     return;
   }
 
-  const userData = await db.users.upsert({
-    where: {
-      discord_id: target.id,
-    },
-    create: {
-      discord_id: target.id,
-    },
-    update: {},
-  });
+  const userData = await getOrCreateUser(target.id);
 
   // If the role being requested is the Helper or Contributor role, check if they have been banned first
   if (role.id === env.ROLE_HELPER && userData.helper_role_ban) {
@@ -465,15 +458,7 @@ export async function buttonReactionRole(
     // Post intro message to the channel
     channel.send(`${target} has joined as a ${role.name}, please welcome them!`);
   } else {
-    const guildData = await db.discord_guilds.upsert({
-      where: {
-        id: interaction.guild.id,
-      },
-      create: {
-        id: interaction.guild.id,
-      },
-      update: {},
-    });
+    const guildData = await getOrCreateGuild(interaction.guild.id);
 
     // const isTeam = guildData.team_role_ids !== null
     //   ? (interaction.member as GuildMember).roles.cache.some(r => (guildData.team_role_ids as string).indexOf(r.id) >= 0)
@@ -965,15 +950,7 @@ export async function createPremiumColorMessage(
       .split(' ')
       .map(role => role.replace(/[<@&>]/g, ''))
       .join(',');
-    const guildData = await db.discord_guilds.upsert({
-      where: {
-        id: interaction.guild?.id,
-      },
-      create: {
-        id: interaction.guild?.id,
-      },
-      update: {},
-    });
+    const guildData = await getOrCreateGuild(interaction.guild?.id);
     guildData.premium_role_ids = roleMentions;
     await db.discord_guilds.update({
       where: {
@@ -1422,15 +1399,7 @@ export const dReactionRole: SlashCommand = {
     }
 
     // Check if the guild is a partner (or the home guild)
-    const guildData = await db.discord_guilds.upsert({
-      where: {
-        id: interaction.guild?.id,
-      },
-      create: {
-        id: interaction.guild?.id,
-      },
-      update: {},
-    });
+    const guildData = await getOrCreateGuild(interaction.guild?.id);
     if (interaction.guild.id !== env.DISCORD_GUILD_ID
       && !guildData.partner
       && !guildData.supporter) {

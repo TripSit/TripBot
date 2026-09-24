@@ -10,6 +10,7 @@ import {
   TextChannel,
   VoiceChannel,
 } from 'discord.js';
+import { getOrCreateUser } from './dbRecords';
 
 const F = f(__filename); // eslint-disable-line
 
@@ -102,15 +103,7 @@ export async function getUserTotalLevel(discordId: string): Promise<number> {
 export async function giveMilestone(
   member:GuildMember,
 ) {
-  const userData = await db.users.upsert({
-    where: {
-      discord_id: member.id,
-    },
-    create: {
-      discord_id: member.id,
-    },
-    update: {},
-  });
+  const userData = await getOrCreateUser(member.id);
 
   const allExpData = await db.user_experience.findMany({
     where: {
@@ -251,15 +244,7 @@ export async function experience(
   type:experience_type,
   channel: TextChannel | VoiceChannel,
 ) {
-  const userData = await db.users.upsert({
-    where: {
-      discord_id: member.id,
-    },
-    create: {
-      discord_id: member.id,
-    },
-    update: {},
-  });
+  const userData = await getOrCreateUser(member.id);
 
   // log.debug(F, `userData: ${JSON.stringify(userData, null, 2)}`);
 
@@ -476,15 +461,7 @@ export async function awardGitHubXP(
   channel: TextChannel,
   issueType?: string,
 ) {
-  const userData = await db.users.upsert({
-    where: {
-      discord_id: member.id,
-    },
-    create: {
-      discord_id: member.id,
-    },
-    update: {},
-  });
+  const userData = await getOrCreateUser(member.id);
 
   // Get or create developer experience record
   let experienceData = await db.user_experience.findFirst({

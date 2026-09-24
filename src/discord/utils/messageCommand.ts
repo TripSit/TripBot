@@ -10,6 +10,7 @@ import {
   TextChannel,
 } from 'discord.js';
 import { sleep } from './sleep';
+import { getOrCreateUser } from '../../global/utils/dbRecords';
 
 // import log from '../../global/utils/log';
 // import {parse} from 'path';
@@ -229,11 +230,7 @@ export async function messageCommand(message: Message): Promise<void> {
           return;
         }
 
-        const userData = await db.users.upsert({
-          where: { discord_id: recipient.id },
-          create: { discord_id: recipient.id },
-          update: {},
-        });
+        const userData = await getOrCreateUser(recipient.id);
 
         const personaData = await db.personas.upsert({
           where: { user_id: userData.id },

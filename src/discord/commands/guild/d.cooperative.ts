@@ -25,6 +25,7 @@ import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { missingPermission } from '../../utils/checkPermissions';
 import commandContext from '../../utils/context';
+import { getOrCreateGuild } from '../../../global/utils/dbRecords';
 
 const F = f(__filename);
 
@@ -103,15 +104,7 @@ async function apply(interaction:ChatInputCommandInteraction): Promise<Interacti
     };
   }
 
-  const guildData = await db.discord_guilds.upsert({
-    where: {
-      id: interaction.guild?.id,
-    },
-    create: {
-      id: interaction.guild?.id,
-    },
-    update: {},
-  });
+  const guildData = await getOrCreateGuild(interaction.guild?.id);
 
   if (guildData.cooperative) {
     return {
@@ -224,15 +217,7 @@ async function setup(interaction:ChatInputCommandInteraction):Promise<Interactio
     };
   }
 
-  const guildData = await db.discord_guilds.upsert({
-    where: {
-      id: interaction.guild?.id,
-    },
-    create: {
-      id: interaction.guild?.id,
-    },
-    update: {},
-  });
+  const guildData = await getOrCreateGuild(interaction.guild?.id);
 
   if (!guildData.cooperative) {
     return {
@@ -447,15 +432,7 @@ async function leave(interaction:ChatInputCommandInteraction): Promise<Interacti
     };
   }
 
-  const guildData = await db.discord_guilds.upsert({
-    where: {
-      id: interaction.guild?.id,
-    },
-    create: {
-      id: interaction.guild?.id,
-    },
-    update: {},
-  });
+  const guildData = await getOrCreateGuild(interaction.guild?.id);
 
   if (!guildData.cooperative) {
     return {

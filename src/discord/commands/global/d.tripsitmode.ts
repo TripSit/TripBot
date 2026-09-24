@@ -47,6 +47,7 @@ import { needsHelpMode, tripSitMe, tripsitmeUserClose } from '../../utils/tripsi
 import {
   ensurePermissions, TRIPSIT_CHANNEL_PERMS, tripsitChannelOwnerMessage,
 } from '../../utils/checkPermissions';
+import { getOrCreateGuild, getOrCreateUser } from '../../../global/utils/dbRecords';
 // import { modmailDMInteraction } from '../archive/modmail';
 
 const F = f(__filename);
@@ -58,15 +59,7 @@ async function tripsitmodeOn(
   if (!interaction.guild) return false;
   if (!interaction.member) return false;
 
-  let guildData = await db.discord_guilds.upsert({
-    where: {
-      id: interaction.guild?.id,
-    },
-    create: {
-      id: interaction.guild?.id,
-    },
-    update: {},
-  });
+  let guildData = await getOrCreateGuild(interaction.guild?.id);
 
   // Get the tripsit channel from the guild
   let tripsitChannel = {} as TextChannel;
@@ -120,15 +113,7 @@ async function tripsitmodeOn(
   // const showMentions = actorIsAdmin ? [] : ['users', 'roles'] as MessageMentionTypes[];
 
   log.debug(F, `Target: ${target.displayName} (${target.id})`);
-  const userData = await db.users.upsert({
-    where: {
-      discord_id: target.id,
-    },
-    create: {
-      discord_id: target.id,
-    },
-    update: {},
-  });
+  const userData = await getOrCreateUser(target.id);
   log.debug(F, `Target userData: ${JSON.stringify(userData, null, 2)}`);
   let ticketData = await db.user_tickets.findFirst({
     where: {

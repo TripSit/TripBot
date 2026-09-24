@@ -21,6 +21,7 @@ import {
   ThreadChannel,
   User,
 } from 'discord.js';
+import { getOrCreateGuild } from '../../global/utils/dbRecords';
 
 const F = f(__filename);
 
@@ -51,15 +52,7 @@ export async function techHelpClick(interaction:ButtonInteraction) {
 
   const issueType = interaction.customId.split('~')[1];
 
-  const guildData = await db.discord_guilds.upsert({
-    where: {
-      id: interaction.guild?.id,
-    },
-    create: {
-      id: interaction.guild?.id,
-    },
-    update: {},
-  });
+  const guildData = await getOrCreateGuild(interaction.guild?.id);
 
   if (!guildData.role_techhelp) {
     log.error(F, `- techHelpClick] techhelp role not found: ${interaction.guild.id}`);

@@ -16,6 +16,7 @@ import { selectMenu } from './selectMenu';
 // import { Users } from '../../global/@types/database';
 import { botBannedUsers } from '../utils/populateBotBans';
 import modalSubmit from './modalSubmit';
+import { getOrCreateUser } from '../../global/utils/dbRecords';
 
 const F = f(__filename);  // eslint-disable-line
 
@@ -45,13 +46,7 @@ export const interactionCreate: InteractionCreateEvent = {
       // Get all options passed to the command
       const options = interaction.options.data;
 
-      await db.users.upsert({
-        where: { discord_id: interaction.user.id },
-        update: {},
-        create: {
-          discord_id: interaction.user.id,
-        },
-      });
+      await getOrCreateUser(interaction.user.id);
 
       const commandUsage = await db.command_usage.create({
         data: {
