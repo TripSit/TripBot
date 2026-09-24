@@ -10,6 +10,7 @@ import {
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import commandContext from '../../utils/context';
+import { replyGuildOnly } from '../../utils/guildOnly';
 // import log from '../../../global/utils/log'; // eslint-disable-line no-unused-vars
 
 const F = f(__filename);
@@ -62,7 +63,7 @@ export const dReminder: SlashCommand = {
     log.info(F, await commandContext(interaction));
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
     if (!interaction.guild) {
-      await interaction.editReply({ content: 'This command can only be used in a server!' });
+      await replyGuildOnly(interaction);
       return false;
     }
     if (!interaction.channel || !(interaction.channel instanceof TextChannel)) {

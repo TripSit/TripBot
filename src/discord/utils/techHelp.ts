@@ -22,10 +22,9 @@ import {
   User,
 } from 'discord.js';
 import { getOrCreateGuild } from '../../global/utils/dbRecords';
+import { replyGuildOnly } from './guildOnly';
 
 const F = f(__filename);
-
-const guildOnly = 'This command can only be used in a guild!';
 
 async function stripUserMentions(input: string, guild: Guild): Promise<string> {
   const matches = [...input.matchAll(/<@([!&]?)(\d+)>/g)];
@@ -43,10 +42,7 @@ async function stripUserMentions(input: string, guild: Guild): Promise<string> {
 export async function techHelpClick(interaction:ButtonInteraction) {
   // log.debug(F, `Message: ${JSON.stringify(interaction, null, 2)}!`);
   if (!interaction.guild) {
-    await interaction.reply({
-      content: guildOnly,
-      flags: MessageFlags.Ephemeral,
-    });
+    await replyGuildOnly(interaction, { ephemeral: true });
     return;
   }
 
@@ -97,7 +93,7 @@ export async function techHelpClick(interaction:ButtonInteraction) {
       await i.deferReply({ flags: MessageFlags.Ephemeral });
 
       if (!i.guild) {
-        await interaction.editReply({ content: guildOnly });
+        await replyGuildOnly(interaction);
         return;
       }
 

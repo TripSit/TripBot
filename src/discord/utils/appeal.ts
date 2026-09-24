@@ -2,6 +2,7 @@
 import { ButtonInteraction, InteractionEditReplyOptions, ModalSubmitInteraction } from 'discord.js';
 import { appeal_status, appeals } from '@db/tripbot';
 import { getOrCreateUser } from '../../global/utils/dbRecords';
+import { GUILD_ONLY_TEXT } from './guildOnly';
 
 const F = f(__filename);
 
@@ -21,7 +22,7 @@ async function updateAppeal(
   appealStatus: appeal_status,
 ): Promise<{ success: boolean; message: string }> {
   if (!interaction.guild) {
-    return { success: false, message: 'This command can only be used in a guild.' };
+    return { success: false, message: GUILD_ONLY_TEXT };
   }
 
   // Get or create user by discord_id
@@ -80,7 +81,7 @@ export async function appealAccept(
   modalInteraction?: ModalSubmitInteraction,
 ): Promise<InteractionEditReplyOptions> {
   if (!interaction.guild) {
-    return { content: 'This command can only be used in a guild.' };
+    return { content: GUILD_ONLY_TEXT };
   }
   // If no modal, something went wrong
   if (!modalInteraction) {
@@ -111,7 +112,7 @@ export async function appealReject(
   modalInteraction?: ModalSubmitInteraction,
 ): Promise<InteractionEditReplyOptions> {
   if (!interaction.guild) {
-    return { content: 'This command can only be used in a guild.' };
+    return { content: GUILD_ONLY_TEXT };
   }
   // If no modal, something went wrong
   if (!modalInteraction) {

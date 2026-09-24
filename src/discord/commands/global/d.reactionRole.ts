@@ -27,10 +27,10 @@ import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { missingPermission } from '../../utils/checkPermissions';
 import { getOrCreateGuild, getOrCreateUser } from '../../../global/utils/dbRecords';
+import { replyGuildOnly } from '../../utils/guildOnly';
 
 const F = f(__filename);
 
-const guildError = 'This must be performed in a guild!';
 const memberError = 'This must be performed by a member of a guild!';
 // const loadingMessage = 'Loading please hold...';
 const embedOption = 'What color should the embed be?';
@@ -344,8 +344,7 @@ export async function buttonReactionRole(
 
         if (II !== interaction.id) return;
         if (!i.guild) {
-          // log.debug(F, `no guild!`);
-          await i.editReply(guildError);
+          await replyGuildOnly(i);
           return;
         }
         if (!i.member) {
@@ -1393,8 +1392,7 @@ export const dReactionRole: SlashCommand = {
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
     if (!interaction.guild) {
-      // log.debug(F, `no guild!`);
-      await interaction.reply(guildError);
+      await replyGuildOnly(interaction);
       return false;
     }
 

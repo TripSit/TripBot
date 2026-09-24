@@ -5,6 +5,7 @@ import {
 } from 'discord.js';
 import { SlashCommand } from '../../@types/commandDef';
 import commandContext from '../../utils/context';
+import { GUILD_ONLY_TEXT } from '../../utils/guildOnly';
 
 const F = f(__filename);
 
@@ -26,7 +27,7 @@ export const dClearchat: SlashCommand = {
     log.info(F, await commandContext(interaction));
     await interaction.deferReply({ });
     if (!interaction.channel) {
-      await interaction.editReply({ content: 'This command can only be used in a server!' });
+      await interaction.editReply({ content: GUILD_ONLY_TEXT });
       return false;
     }
 

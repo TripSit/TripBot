@@ -11,6 +11,7 @@ import {
 import { stripIndents } from 'common-tags';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
+import { GUILD_ONLY_TEXT } from '../../utils/guildOnly';
 import {
   bridgeConfirm, bridgeCreate, bridgePause, bridgeRemove, bridgeResume,
 } from '../../../global/commands/g.bridge';
@@ -424,7 +425,7 @@ export const dBridge: SlashCommand = {
       await interaction.editReply({
         embeds: [
           embed
-            .setDescription('This command can only be used in a guild.')
+            .setDescription(GUILD_ONLY_TEXT)
             .setColor(Colors.Red),
         ],
       });

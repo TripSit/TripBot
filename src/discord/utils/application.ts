@@ -36,6 +36,7 @@ import { embedTemplate } from './embedTemplate';
 import commandContext from './context'; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { missingPermission } from './checkPermissions';
 import { getOrCreateGuild } from '../../global/utils/dbRecords';
+import { replyGuildOnly } from './guildOnly';
 
 const F = f(__filename);
 
@@ -60,7 +61,7 @@ export async function applicationPermissions(
   applicationThreadChannel: TextChannel,
 ):Promise<boolean> {
   if (!interaction.guild) {
-    await interaction.reply({ content: 'This command can only be used in a guild!', flags: MessageFlags.Ephemeral });
+    await replyGuildOnly(interaction, { ephemeral: true });
     return false;
   }
   if (!interaction.member) {
