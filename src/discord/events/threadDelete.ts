@@ -1,3 +1,5 @@
+import postAuditLog from '@discord/utils/auditLog';
+import { AuditLogEvent } from 'discord.js';
 import {
   ThreadDeleteEvent,
 } from '../@types/eventDef';
@@ -9,33 +11,14 @@ const F = f(__filename); // eslint-disable-line @typescript-eslint/no-unused-var
 export const threadDelete: ThreadDeleteEvent = {
   name: 'threadDelete',
   async execute(thread) {
-    // Only run on Tripsit, we don't want to snoop on other guilds ( ͡~ ͜ʖ ͡°)
     if (!thread.guild) return;
-    if (thread.guild.id !== env.DISCORD_GUILD_ID) return;
-    log.info(F, `Thread ${thread.name} was deleted.`);
-
-    // Find if the channel is used as a thread_id in any tickets
-    const ticketData = await db.user_tickets.findFirst({
-      where: {
-        thread_id: thread.id,
-        status: {
-          not: {
-            in: ['CLOSED', 'RESOLVED', 'DELETED'],
-          },
-        },
-      },
+    await postAuditLog({
+      guild: thread.guild,
+      type: AuditLogEvent.ThreadDelete,
+      subject: `Thread **${thread.toString}**`,
+      action: 'deleted',
+      caller: F,
     });
-
-    if (ticketData) {
-      await db.user_tickets.update({
-        where: {
-          id: ticketData.id,
-        },
-        data: {
-          status: 'DELETED',
-        },
-      });
-    }
   },
 };
 
