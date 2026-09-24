@@ -33,7 +33,9 @@ import {
   User,
 } from 'discord.js';
 import { DateTime } from 'luxon';
-import { checkChannelPermissions, checkGuildPermissions } from './checkPermissions';
+import {
+  ensurePermissions, TRIPSIT_CHANNEL_PERMS, tripsitChannelOwnerMessage,
+} from './checkPermissions';
 import commandCooldown from './commandCooldown';
 import commandContext from './context';
 import { embedTemplate } from './embedTemplate';
@@ -231,15 +233,7 @@ export async function needsHelpMode(
     update: {},
   });
 
-  const perms = await checkGuildPermissions(guild, [
-    'ManageRoles' as PermissionResolvable,
-  ]);
-  if (!perms.hasPermission) {
-    const guildOwner = await guild.fetchOwner();
-    await guildOwner.send({ content: `Please make sure I can ${perms.permission} in ${guild} so I can run ${F}!` }); // eslint-disable-line
-    log.error(F, `Missing permission ${perms.permission} in ${guild}!`);
-    return;
-  }
+  if (!await ensurePermissions(guild, ['ManageRoles' as PermissionResolvable], F)) return;
 
   let roleNeedshelp = {} as Role;
   if (guildData.role_needshelp) {
@@ -311,7 +305,7 @@ export async function needsHelpMode(
           content: stripIndents`There was an error removing ${role.name} from ${target.displayName}!
           Please make sure I have the Manage Roles permission, or put this role above mine so I don't try to remove it.
           If there's any questions please contact Moonbear#1024 on TripSit!` }); // eslint-disable-line
-        log.error(F, `Missing permission ${perms.permission} in ${interaction.guild}! Sent the guild owner a DM!`);
+        log.error(F, `Missing permission 'ManageRoles' in ${interaction.guild}! Sent the guild owner a DM!`);
       }
     });
   }
@@ -326,7 +320,7 @@ export async function needsHelpMode(
       content: stripIndents`There was an error adding the ${roleNeedshelp.name} role to ${target.displayName}!
           Please make sure I have the Manage Roles permission, or put this role below mine so I can give it to people!
           If there's any questions please contact Moonbear#1024 on TripSit!` }); // eslint-disable-line
-    log.error(F, `Missing permission ${perms.permission} in ${interaction.guild}! Sent the guild owner a DM!`);
+    log.error(F, `Missing permission 'ManageRoles' in ${interaction.guild}! Sent the guild owner a DM!`);
   }
   log.debug(F, 'Finished needshelp mode');
 }
@@ -408,15 +402,7 @@ export async function tripsitmeOwned(
     }
 
     if (metaChannel.id) {
-      const channelPerms = await checkChannelPermissions(metaChannel, [
-        'SendMessages' as PermissionResolvable,
-      ]);
-      if (!channelPerms.hasPermission) {
-        const guildOwner = await interaction.guild.fetchOwner();
-        await guildOwner.send({ content: `Please make sure I can ${channelPerms.permission} in ${metaChannel.name} so I can run ${F}!` }); // eslint-disable-line
-        log.error(F, `Missing permission ${channelPerms.permission} in ${metaChannel.name}!`);
-        return;
-      }
+      if (!await ensurePermissions(metaChannel, ['SendMessages' as PermissionResolvable], F)) return;
 
       await metaChannel.send({
         content: stripIndents`${actor.displayName} has indicated that ${target.toString()} is receiving help!`,
@@ -1570,31 +1556,9 @@ export async function tripsitmeButton(
 
   log.debug(F, `tripsitChannel: ${tripsitChannel.name} (${tripsitChannel.id})`);
 
-  const channelPerms = await checkChannelPermissions(tripsitChannel, [
-    'ViewChannel' as PermissionResolvable,
-    'SendMessages' as PermissionResolvable,
-    'SendMessagesInThreads' as PermissionResolvable,
-    // 'CreatePublicThreads' as PermissionResolvable,
-    'CreatePrivateThreads' as PermissionResolvable,
-    // 'ManageMessages' as PermissionResolvable,
-    'ManageThreads' as PermissionResolvable,
-    // 'EmbedLinks' as PermissionResolvable,
-  ]);
-  if (!channelPerms.hasPermission) {
-    log.error(F, `Missing TS channel permission ${channelPerms.permission} in ${tripsitChannel.name}!`);
-    const guildOwner = await interaction.guild?.fetchOwner() as GuildMember;
-    await guildOwner.send({
-      content: stripIndents`Missing permissions in ${tripsitChannel}!
-      In order to setup the tripsitting feature I need:
-      View Channel - to see the channel
-      Send Messages - to send messages
-      Create Private Threads - to create private threads
-      Send Messages in Threads - to send messages in threads
-      Manage Threads - to delete threads when they're done
-      `}); // eslint-disable-line
-    log.error(F, `Missing TS channel permission ${channelPerms.permission} in ${tripsitChannel.name}!`);
-    return;
-  }
+  if (!await ensurePermissions(tripsitChannel, TRIPSIT_CHANNEL_PERMS, F, {
+    ownerMessage: () => tripsitChannelOwnerMessage(tripsitChannel, false),
+  })) return;
 
   // Get the tripsit meta channel from the guild
   let channelTripsitmeta = {} as TextChannel;
@@ -1618,31 +1582,9 @@ export async function tripsitmeButton(
     });
   }
 
-  const metaPerms = await checkChannelPermissions(channelTripsitmeta, [
-    'ViewChannel' as PermissionResolvable,
-    'SendMessages' as PermissionResolvable,
-    'SendMessagesInThreads' as PermissionResolvable,
-    // 'CreatePublicThreads' as PermissionResolvable,
-    'CreatePrivateThreads' as PermissionResolvable,
-    // 'ManageMessages' as PermissionResolvable,
-    'ManageThreads' as PermissionResolvable,
-    // 'EmbedLinks' as PermissionResolvable,
-  ]);
-  if (!metaPerms.hasPermission) {
-    log.error(F, `Missing TS channel permission ${channelPerms.permission} in ${channelTripsitmeta.name}!`);
-    const guildOwner = await interaction.guild?.fetchOwner() as GuildMember;
-    await guildOwner.send({
-      content: stripIndents`Missing permissions in ${channelTripsitmeta}!
-        In order to setup the tripsitting feature I need:
-        View Channel - to see the channel
-        Send Messages - to send messages
-        Create Private Threads - to create private threads, when requested through the bot
-        Send Messages in Threads - to send messages in threads
-        Manage Threads - to delete threads when they're done
-        `}); // eslint-disable-line
-    log.error(F, `Missing permission ${metaPerms.permission} in ${tripsitChannel.name}!`);
-    return;
-  }
+  if (!await ensurePermissions(channelTripsitmeta, TRIPSIT_CHANNEL_PERMS, F, {
+    ownerMessage: () => tripsitChannelOwnerMessage(channelTripsitmeta, true),
+  })) return;
 
   log.debug(F, `Target: ${target.displayName} (${target.id})`);
 

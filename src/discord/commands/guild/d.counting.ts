@@ -15,7 +15,7 @@ import { stripIndents } from 'common-tags';
 import { SlashCommandBeta } from '../../@types/commandDef';
 import commandContext from '../../utils/context';
 import { embedTemplate } from '../../utils/embedTemplate';
-import { checkChannelPermissions } from '../../utils/checkPermissions';
+import { missingPermission } from '../../utils/checkPermissions';
 import { sleep } from '../../utils/sleep';
 
 const F = f(__filename);
@@ -668,10 +668,10 @@ export const counting: SlashCommandBeta = {
     let response = { content: 'This command has not been setup yet!' } as InteractionEditReplyOptions;
     if (command === 'setup') {
       // Check if the user can manage the channel role
-      if (!await checkChannelPermissions(
+      if (await missingPermission(
         (interaction.channel as TextChannel),
         [
-          'ManageChannel' as PermissionResolvable,
+          'ManageChannels' as PermissionResolvable,
         ],
       )) {
         // log.debug(`${PREFIX} bot does NOT has permission to post in !`);
@@ -694,10 +694,10 @@ export const counting: SlashCommandBeta = {
     }
     if (command === 'reset') {
       // Check if the user can manage the channel role
-      if (!await checkChannelPermissions(
+      if (await missingPermission(
         (interaction.channel as TextChannel),
         [
-          'ManageChannel' as PermissionResolvable,
+          'ManageChannels' as PermissionResolvable,
         ],
       )) {
         // log.debug(`${PREFIX} bot does NOT has permission to post in !`);

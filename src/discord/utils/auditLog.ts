@@ -1,9 +1,9 @@
 /* eslint-disable no-unused-vars */
 
 import {
-  AuditLogEvent, Guild, GuildAuditLogsEntry, PermissionResolvable, TextChannel,
+  AuditLogEvent, Guild, GuildAuditLogsEntry, TextChannel,
 } from 'discord.js';
-import { checkChannelPermissions, checkGuildPermissions } from './checkPermissions';
+import { ensurePermissions } from './checkPermissions';
 
 export interface AuditLogOptions {
   /** Guild the event happened in; anything outside TripSit is ignored. */
@@ -18,16 +18,6 @@ export interface AuditLogOptions {
   showChanges?: boolean;
   /** The calling file's `F`, used for logging. */
   caller: string;
-}
-async function notifyMissingPermission(
-  guild: Guild,
-  permission: PermissionResolvable | undefined,
-  where: Guild | TextChannel,
-  caller: string,
-): Promise<void> {
-  const guildOwner = await guild.fetchOwner();
-  await guildOwner.send({ content: `Please make sure I can ${permission} in ${where} so I can run ${caller}!` });
-  log.error(caller, `Missing permission ${permission} in ${where}!`);
 }
 
 function formatAuditMessage(
@@ -60,18 +50,10 @@ export async function postAuditLog({
   if (guild.id !== env.DISCORD_GUILD_ID) return;
   log.info(caller, `${subject} was ${action}.`);
 
-  const guildPerms = await checkGuildPermissions(guild, ['ViewAuditLog']);
-  if (!guildPerms.hasPermission) {
-    await notifyMissingPermission(guild, guildPerms.permission, guild, caller);
-    return;
-  }
+  if (!await ensurePermissions(guild, ['ViewAuditLog'], caller)) return;
 
   const channel = await discordClient.channels.fetch(env.CHANNEL_AUDITLOG) as TextChannel;
-  const channelPerms = await checkChannelPermissions(channel, ['ViewChannel', 'SendMessages']);
-  if (!channelPerms.hasPermission) {
-    await notifyMissingPermission(channel.guild, channelPerms.permission, channel, caller);
-    return;
-  }
+  if (!await ensurePermissions(channel, ['ViewChannel', 'SendMessages'], caller)) return;
 
   const fetchedLogs = await guild.fetchAuditLogs({ limit: 1, type });
   await channel.send(formatAuditMessage(subject, action, fetchedLogs.entries.first(), showChanges));

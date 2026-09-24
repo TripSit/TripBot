@@ -22,7 +22,6 @@ import {
   // MessageMentionTypes,
   TextInputStyle,
   TextChannel,
-  PermissionResolvable,
   MessageMentionTypes,
   InteractionDeferReplyOptions,
   APIModalInteractionResponseCallbackData,
@@ -45,7 +44,9 @@ import { embedTemplate } from '../../utils/embedTemplate';
 // import env from '../../../global/utils/env.config';
 // import log from '../../../global/utils/log';
 import { needsHelpMode, tripSitMe, tripsitmeUserClose } from '../../utils/tripsitme';
-import { checkChannelPermissions } from '../../utils/checkPermissions';
+import {
+  ensurePermissions, TRIPSIT_CHANNEL_PERMS, tripsitChannelOwnerMessage,
+} from '../../utils/checkPermissions';
 // import { modmailDMInteraction } from '../archive/modmail';
 
 const F = f(__filename);
@@ -89,31 +90,9 @@ async function tripsitmodeOn(
   // Fix tripsitmode causing errors if no channel has been set
   if (!tripsitChannel || !(tripsitChannel instanceof TextChannel)) return false;
 
-  const channelPerms = await checkChannelPermissions(tripsitChannel, [
-    'ViewChannel' as PermissionResolvable,
-    'SendMessages' as PermissionResolvable,
-    'SendMessagesInThreads' as PermissionResolvable,
-    // 'CreatePublicThreads' as PermissionResolvable,
-    'CreatePrivateThreads' as PermissionResolvable,
-    // 'ManageMessages' as PermissionResolvable,
-    'ManageThreads' as PermissionResolvable,
-    // 'EmbedLinks' as PermissionResolvable,
-  ]);
-  if (!channelPerms.hasPermission) {
-    log.error(F, `Missing TS channel permission ${channelPerms.permission} in ${tripsitChannel.name}!`);
-    const guildOwner = await interaction.guild?.fetchOwner() as GuildMember;
-    await guildOwner.send({
-      content: stripIndents`Missing permissions in ${tripsitChannel}!
-      In order to setup the tripsitting feature I need:
-      View Channel - to see the channel
-      Send Messages - to send messages
-      Create Private Threads - to create private threads
-      Send Messages in Threads - to send messages in threads
-      Manage Threads - to delete threads when they're done
-      `}); // eslint-disable-line
-    log.error(F, `Missing TS channel permission ${channelPerms.permission} in ${tripsitChannel.name}!`);
-    return false;
-  }
+  if (!await ensurePermissions(tripsitChannel, TRIPSIT_CHANNEL_PERMS, F, {
+    ownerMessage: () => tripsitChannelOwnerMessage(tripsitChannel, false),
+  })) return false;
 
   // Get the tripsit meta channel from the guild
   let channelTripsitmeta = {} as TextChannel;
@@ -135,31 +114,9 @@ async function tripsitmodeOn(
     });
   }
 
-  const metaPerms = await checkChannelPermissions(channelTripsitmeta, [
-    'ViewChannel' as PermissionResolvable,
-    'SendMessages' as PermissionResolvable,
-    'SendMessagesInThreads' as PermissionResolvable,
-    // 'CreatePublicThreads' as PermissionResolvable,
-    'CreatePrivateThreads' as PermissionResolvable,
-    // 'ManageMessages' as PermissionResolvable,
-    'ManageThreads' as PermissionResolvable,
-    // 'EmbedLinks' as PermissionResolvable,
-  ]);
-  if (!metaPerms.hasPermission) {
-    log.error(F, `Missing TS channel permission ${channelPerms.permission} in ${channelTripsitmeta.name}!`);
-    const guildOwner = await interaction.guild?.fetchOwner() as GuildMember;
-    await guildOwner.send({
-      content: stripIndents`Missing permissions in ${channelTripsitmeta}!
-    In order to setup the tripsitting feature I need:
-    View Channel - to see the channel
-    Send Messages - to send messages
-    Create Private Threads - to create private threads, when requested through the bot
-    Send Messages in Threads - to send messages in threads
-    Manage Threads - to delete threads when they're done
-    `}); // eslint-disable-line
-    log.error(F, `Missing permission ${metaPerms.permission} in ${tripsitChannel.name}!`);
-    return false;
-  }
+  if (!await ensurePermissions(channelTripsitmeta, TRIPSIT_CHANNEL_PERMS, F, {
+    ownerMessage: () => tripsitChannelOwnerMessage(channelTripsitmeta, true),
+  })) return false;
   // const showMentions = actorIsAdmin ? [] : ['users', 'roles'] as MessageMentionTypes[];
 
   log.debug(F, `Target: ${target.displayName} (${target.id})`);
