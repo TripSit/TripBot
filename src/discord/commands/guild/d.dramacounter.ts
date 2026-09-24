@@ -10,6 +10,7 @@ import commandContext from '../../utils/context';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { SlashCommand } from '../../@types/commandDef';
 import { parseDuration } from '../../../global/utils/parseDuration';
+import { replyGuildOnly } from '../../utils/guildOnly';
 
 const F = f(__filename);
 
@@ -41,7 +42,7 @@ export const dDramacounter: SlashCommand = {
     const command = interaction.options.getSubcommand() as 'get' | 'set';
 
     if (!interaction.guild) {
-      await interaction.editReply({ content: 'This command can only be used in a server.' });
+      await replyGuildOnly(interaction);
       return false;
     }
     // log.debug(F, `interaction.guild: ${JSON.stringify(interaction.guild, null, 2)}`);

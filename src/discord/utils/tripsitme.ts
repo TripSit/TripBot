@@ -40,6 +40,7 @@ import commandCooldown from './commandCooldown';
 import commandContext from './context';
 import { embedTemplate } from './embedTemplate';
 import { getOrCreateGuild, getOrCreateUser } from '../../global/utils/dbRecords';
+import { replyGuildOnly } from './guildOnly';
 
 const F = f(__filename);
 
@@ -149,7 +150,6 @@ const otherRoles = [
 
 const ignoredRoles = `${teamRoles},${colorRoles},${mindsetRoles},${otherRoles}`;
 
-const guildOnly = 'This must be performed in a guild!';
 const memberOnly = 'This must be performed by a member of a guild!';
 
 /* Testing Scripts
@@ -327,8 +327,7 @@ export async function tripsitmeOwned(
 ) {
   await interaction.deferReply({ flags: MessageFlags.Ephemeral });
   if (!interaction.guild) {
-    // log.debug(F, `no guild!`);
-    await interaction.editReply(guildOnly);
+    await replyGuildOnly(interaction);
     return;
   }
   // log.debug(F, `tripsitmeOwned`);
@@ -419,8 +418,7 @@ export async function tripsitmeMeta(
 ) {
   await interaction.deferReply({ flags: MessageFlags.Ephemeral });
   if (!interaction.guild) {
-    // log.debug(F, `no guild!`);
-    await interaction.editReply(guildOnly);
+    await replyGuildOnly(interaction);
     return;
   }
   // log.debug(F, `tripsitmeMeta`);
@@ -428,11 +426,6 @@ export async function tripsitmeMeta(
   const actor = interaction.member as GuildMember;
   const target = await interaction.guild.members.fetch(userId);
 
-  if (!interaction.guild) {
-    // log.debug(F, `no guild!`);
-    await interaction.editReply(guildOnly);
-    return;
-  }
   if (!interaction.channel) {
     // log.debug(F, `no channel!`);
     await interaction.editReply('This must be performed in a channel!');
@@ -546,8 +539,7 @@ export async function tripsitmeBackup(
   await interaction.deferReply({ flags: MessageFlags.Ephemeral });
   // log.debug(F, `tripsitmeBackup`);
   if (!interaction.guild) {
-    // log.debug(F, `no guild!`);
-    await interaction.editReply(guildOnly);
+    await replyGuildOnly(interaction);
     return;
   }
   if (!interaction.channel) {
@@ -1132,8 +1124,7 @@ export async function tripSitMe(
 
   // Lookup guild information for variables
   if (!interaction.guild) {
-    // log.debug(F, `no guild!`);
-    await interaction.editReply(guildOnly);
+    await replyGuildOnly(interaction);
     return null;
   }
   if (!interaction.member) {

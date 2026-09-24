@@ -34,7 +34,7 @@ import { getOrCreateGuild, getOrCreateUser } from '../../../global/utils/dbRecor
 const F = f(__filename);
 
 const channelOnly = 'You must run this in the channel you want the prompt to be in!';
-const guildOnly = 'You must run this in the guild you want the prompt to be in!';
+const SETUP_GUILD_ONLY = 'You must run this in the guild you want the prompt to be in!';
 const noChannel = 'how to tripsit: no channel';
 const roleQuestion = 'What role are people applying for?';
 const reviewerQuestion = 'What role reviews those applications?';
@@ -925,7 +925,7 @@ export const setup: SlashCommand = {
 
     if (!interaction.guild) {
       log.error(F, 'how to tripsit: no guild');
-      await interaction.reply(guildOnly);
+      await interaction.reply(SETUP_GUILD_ONLY);
       return false;
     }
 

@@ -51,6 +51,7 @@ import { tripSitTrustScore } from './trustScore';
 import { last } from '../../global/commands/g.last';
 import { appealAccept, appealReject } from './appeal';
 import { getOrCreateGuild, getOrCreateUser } from '../../global/utils/dbRecords';
+import { GUILD_ONLY_TEXT } from './guildOnly';
 
 /* TODO:
 add dates to bans
@@ -676,7 +677,7 @@ export async function modResponse(
     return {
       embeds: [embedTemplate()
         .setColor(Colors.Red)
-        .setTitle('This command can only be used in a guild!')],
+        .setTitle(GUILD_ONLY_TEXT)],
     };
   }
 
@@ -1636,7 +1637,7 @@ export async function moderate(
   modalInt: ModalSubmitInteraction,
   ignoreRecentActions: boolean = false,
 ): Promise<InteractionReplyOptions> {
-  if (!buttonInt.guild) return { content: 'This command can only be used in a guild!' };
+  if (!buttonInt.guild) return { content: GUILD_ONLY_TEXT };
   const actor = buttonInt.member as GuildMember;
 
   const [, command, targetId]: [string, ModAction, Snowflake] = buttonInt.customId.split('~') as [string, ModAction, Snowflake];

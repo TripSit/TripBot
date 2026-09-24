@@ -17,10 +17,10 @@ import { SlashCommand } from '../../@types/commandDef';
 import commandContext from '../../utils/context';
 import { linkThread } from '../../utils/modUtils';
 import { getOrCreateUser } from '../../../global/utils/dbRecords';
+import { replyGuildOnly, GUILD_ONLY_TEXT } from '../../utils/guildOnly';
 
 const F = f(__filename);
 
-const SERVER_ONLY_TEXT = 'This command can only be used in a server!';
 const EPHEMERAL_TEXT = 'Set to "True" to show the response only to you';
 
 export async function slowMode(interaction: ChatInputCommandInteraction): Promise<boolean> {
@@ -30,7 +30,7 @@ export async function slowMode(interaction: ChatInputCommandInteraction): Promis
   const verb = rateLimitNum ? 'enabled' : 'disabled';
 
   if (!(channel instanceof TextChannel)) {
-    await interaction.editReply({ content: SERVER_ONLY_TEXT });
+    await interaction.editReply({ content: GUILD_ONLY_TEXT });
     return false;
   }
 
@@ -53,7 +53,7 @@ export async function slowMode(interaction: ChatInputCommandInteraction): Promis
 
 async function unWatchUser(interaction: ChatInputCommandInteraction): Promise<boolean> {
   if (!interaction.guild) {
-    await interaction.editReply({ content: SERVER_ONLY_TEXT });
+    await replyGuildOnly(interaction);
     return false;
   }
 
@@ -70,7 +70,7 @@ async function unWatchUser(interaction: ChatInputCommandInteraction): Promise<bo
 
 async function watchUser(interaction: ChatInputCommandInteraction): Promise<boolean> {
   if (!interaction.guild) {
-    await interaction.editReply({ content: SERVER_ONLY_TEXT });
+    await replyGuildOnly(interaction);
     return false;
   }
 
@@ -145,7 +145,7 @@ export async function lockdown(interaction: ChatInputCommandInteraction): Promis
   }
 
   if (!interaction.guild) {
-    await interaction.editReply({ content: 'This command can only be used in a server!' });
+    await replyGuildOnly(interaction);
     return false;
   }
 
@@ -224,7 +224,7 @@ export async function lockdown(interaction: ChatInputCommandInteraction): Promis
 // Requested by Ruubert and yes, we actually developed it
 async function freezeLevel(interaction: ChatInputCommandInteraction): Promise<boolean> {
   if (!interaction.guild) {
-    await interaction.editReply({ content: SERVER_ONLY_TEXT });
+    await replyGuildOnly(interaction);
     return false;
   }
 
@@ -261,7 +261,7 @@ async function freezeLevel(interaction: ChatInputCommandInteraction): Promise<bo
 
 async function unfreezeLevel(interaction: ChatInputCommandInteraction): Promise<boolean> {
   if (!interaction.guild) {
-    await interaction.editReply({ content: SERVER_ONLY_TEXT });
+    await replyGuildOnly(interaction);
     return false;
   }
 

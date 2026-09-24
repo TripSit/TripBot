@@ -26,10 +26,9 @@ import { embedTemplate } from '../../utils/embedTemplate';
 import { missingPermission } from '../../utils/checkPermissions';
 import commandContext from '../../utils/context';
 import { getOrCreateGuild } from '../../../global/utils/dbRecords';
+import { GUILD_ONLY_TEXT } from '../../utils/guildOnly';
 
 const F = f(__filename);
-
-const guildOnlyError = 'This command can only be used in a guild!';
 
 async function info(): Promise<InteractionEditReplyOptions> {
   return {
@@ -98,7 +97,7 @@ async function apply(interaction:ChatInputCommandInteraction): Promise<Interacti
     return {
       embeds: [
         embedTemplate({
-          title: guildOnlyError,
+          title: GUILD_ONLY_TEXT,
         }),
       ],
     };
@@ -211,7 +210,7 @@ async function setup(interaction:ChatInputCommandInteraction):Promise<Interactio
     return {
       embeds: [
         embedTemplate({
-          title: guildOnlyError,
+          title: GUILD_ONLY_TEXT,
         }),
       ],
     };
@@ -233,7 +232,7 @@ async function setup(interaction:ChatInputCommandInteraction):Promise<Interactio
     return {
       embeds: [
         embedTemplate({
-          title: guildOnlyError,
+          title: GUILD_ONLY_TEXT,
         }),
       ],
     };
@@ -426,7 +425,7 @@ async function leave(interaction:ChatInputCommandInteraction): Promise<Interacti
     return {
       embeds: [
         embedTemplate({
-          title: guildOnlyError,
+          title: GUILD_ONLY_TEXT,
         }),
       ],
     };
@@ -680,7 +679,7 @@ export const dCooperative: SlashCommand = {
       await interaction.editReply({
         embeds: [
           embedTemplate({
-            title: guildOnlyError,
+            title: GUILD_ONLY_TEXT,
           }),
         ],
       });

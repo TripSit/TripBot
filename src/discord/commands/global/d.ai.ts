@@ -23,6 +23,7 @@ import {
 import { aiModerate } from '../../../global/commands/g.ai';
 import { SlashCommand } from '../../@types/commandDef';
 import commandContext from '../../utils/context';
+import { GUILD_ONLY_TEXT } from '../../utils/guildOnly';
 import { embedTemplate } from '../../utils/embedTemplate';
 
 import {
@@ -526,7 +527,7 @@ export async function aiMenu(
     }
     case AiText.MenuId.GUILD_CHANNELS: {
       if (!interaction.inGuild()) {
-        return { content: 'This command can only be used in a server.' };
+        return { content: GUILD_ONLY_TEXT };
       }
 
       const { guildId } = interaction;
