@@ -34,7 +34,7 @@ import {
 import { stripIndents } from 'common-tags';
 import { embedTemplate } from './embedTemplate';
 import commandContext from './context'; // eslint-disable-line @typescript-eslint/no-unused-vars
-import { checkChannelPermissions, checkGuildPermissions } from './checkPermissions';
+import { missingPermission } from './checkPermissions';
 
 const F = f(__filename);
 
@@ -86,13 +86,11 @@ export async function applicationPermissions(
   // await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
   // Check guild permissions
-  const guildPerms = await checkGuildPermissions(interaction.guild, [
-    'ManageRoles' as PermissionResolvable,
-  ]);
-  if (!guildPerms.hasPermission) {
-    log.error(F, `Missing TS guild permission ${guildPerms.permission} in ${interaction.guild}!`);
+  const guildMissing = await missingPermission(interaction.guild, ['ManageRoles' as PermissionResolvable]);
+  if (guildMissing) {
+    log.error(F, `Missing TS guild permission ${guildMissing} in ${interaction.guild}!`);
     await interaction.reply({
-      content: stripIndents`Missing ${guildPerms.permission} permission in ${interaction.guild}!
+      content: stripIndents`Missing ${guildMissing} permission in ${interaction.guild}!
     In order to setup the applications feature I need:
     Manage Roles - To give the role when the application is approved!`,
       flags: MessageFlags.Ephemeral,
@@ -120,14 +118,14 @@ export async function applicationPermissions(
     }
 
     // Check channel permissions for the application post
-    const channelPerms = await checkChannelPermissions(applicationPostChannel, [
+    const channelMissing = await missingPermission(applicationPostChannel, [
       'ViewChannel' as PermissionResolvable,
       'SendMessages' as PermissionResolvable,
     ]);
-    if (!channelPerms.hasPermission) {
-      log.error(F, `Missing TS channel permission ${channelPerms.permission} in ${applicationPostChannel}!`);
+    if (channelMissing) {
+      log.error(F, `Missing TS channel permission ${channelMissing} in ${applicationPostChannel}!`);
       await interaction.reply({
-        content: stripIndents`Missing ${channelPerms.permission} permission in ${applicationPostChannel}!
+        content: stripIndents`Missing ${channelMissing} permission in ${applicationPostChannel}!
     In order to setup the application feature I need:
     View Channel - to see the channel
     Send Messages - to send the application post
@@ -139,7 +137,7 @@ export async function applicationPermissions(
   }
 
   // Check channel permissions for the application threads channel
-  const metaChannelPerms = await checkChannelPermissions(applicationThreadChannel as TextChannel, [
+  const metaChannelMissing = await missingPermission(applicationThreadChannel as TextChannel, [
     'ViewChannel' as PermissionResolvable,
     'SendMessages' as PermissionResolvable,
     'SendMessagesInThreads' as PermissionResolvable,
@@ -148,10 +146,10 @@ export async function applicationPermissions(
     // 'ManageMessages' as PermissionResolvable,
     'ManageThreads' as PermissionResolvable,
   ]);
-  if (!metaChannelPerms.hasPermission) {
-    log.error(F, `Missing TS channel permission ${metaChannelPerms.permission} in ${applicationThreadChannel}!`);
+  if (metaChannelMissing) {
+    log.error(F, `Missing TS channel permission ${metaChannelMissing} in ${applicationThreadChannel}!`);
     await interaction.reply({
-      content: stripIndents`Missing ${metaChannelPerms.permission} permission in ${applicationThreadChannel}!
+      content: stripIndents`Missing ${metaChannelMissing} permission in ${applicationThreadChannel}!
       In order to setup the application feature I need:
       View Channel - to see the channel
       Send Messages - to send the application post

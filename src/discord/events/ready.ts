@@ -13,7 +13,7 @@ import { botStats } from '../../global/commands/g.botstats';
 import { fact } from '../../global/commands/g.fact';
 import runTimer from '../../global/utils/timer'; // eslint-disable-line
 import { ReadyEvent } from '../@types/eventDef';
-import { checkGuildPermissions } from '../utils/checkPermissions';
+import { checkGuildPermissions, ensurePermissions } from '../utils/checkPermissions';
 import { emojiCache } from '../utils/emoji';
 import { populateBans } from '../utils/populateBotBans'; // eslint-disable-line
 // import { runLpm } from '../utils/lpm';
@@ -33,20 +33,13 @@ async function getInvites(discordClient: Client) {
   discordClient.guilds.fetch();
   discordClient.guilds.cache.forEach(async (guild:Guild) => {
     if (guild.id !== env.DISCORD_GUILD_ID) return;
-    const perms = await checkGuildPermissions(guild, [
-      'ManageGuild' as PermissionResolvable,
-    ]);
-
-    if (perms.hasPermission) {
+    if (await ensurePermissions(guild, ['ManageGuild' as PermissionResolvable], F, { reason: 'fetch invites' })) {
       // Fetch all Guild Invites
       const firstInvites = await guild.invites.fetch();
       // Set the key as Guild ID, and create a map which has the invite code, and the number of uses
       global.guildInvites
         .set(guild.id, new Collection(firstInvites
           .map((invite:Invite) => [invite.code, invite.uses])));
-    } else {
-      const guildOwner = await guild.fetchOwner();
-      await guildOwner.send({ content: `Please make sure I can ${perms.permission} in ${guild} so I can fetch invites!` }); // eslint-disable-line
     }
   });
 }

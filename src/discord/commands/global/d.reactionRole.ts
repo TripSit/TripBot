@@ -25,7 +25,7 @@ import {
 import { reaction_role_type, reaction_roles } from '@db/tripbot';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
-import { checkChannelPermissions, checkGuildPermissions } from '../../utils/checkPermissions';
+import { missingPermission } from '../../utils/checkPermissions';
 
 const F = f(__filename);
 
@@ -1498,15 +1498,13 @@ export const dReactionRole: SlashCommand = {
     }
 
     // Check that i have permission to add roles
-    const guildPerms = await checkGuildPermissions(interaction.guild, [
-      'ManageRoles' as PermissionResolvable,
-    ]);
-    if (!guildPerms.hasPermission) {
-      log.error(F, `Missing guild permission ${guildPerms.permission} in ${interaction.guild}!`);
+    const guildMissing = await missingPermission(interaction.guild, ['ManageRoles' as PermissionResolvable]);
+    if (guildMissing) {
+      log.error(F, `Missing guild permission ${guildMissing} in ${interaction.guild}!`);
       await interaction.reply({
         embeds: [
           embedTemplate()
-            .setDescription(stripIndents`Error: Missing ${guildPerms.permission} permission in ${interaction.guild}!
+            .setDescription(stripIndents`Error: Missing ${guildMissing} permission in ${interaction.guild}!
             In order to setup the reaction roles feature I need:
             Manage Roles - In order to give and take away roles from users
             Note: My role needs to be higher than all other roles you want managed!`)
@@ -1517,16 +1515,16 @@ export const dReactionRole: SlashCommand = {
       return false;
     }
 
-    const channelPerms = await checkChannelPermissions(interaction.channel, [
+    const channelMissing = await missingPermission(interaction.channel, [
       'ViewChannel' as PermissionResolvable,
       'SendMessages' as PermissionResolvable,
     ]);
-    if (!channelPerms.hasPermission) {
-      log.error(F, `Missing channel permission ${channelPerms.permission} in ${interaction.channel}!`);
+    if (channelMissing) {
+      log.error(F, `Missing channel permission ${channelMissing} in ${interaction.channel}!`);
       await interaction.reply({
         embeds: [
           embedTemplate()
-            .setDescription(stripIndents`Error: Missing ${channelPerms.permission} permission in ${interaction.channel}!
+            .setDescription(stripIndents`Error: Missing ${channelMissing} permission in ${interaction.channel}!
             In order to setup the reaction roles feature I need:
             View Channel - In order to see the channel
             Send Messages - In order to send the reaction role message`)

@@ -15,7 +15,7 @@ import {
   bridgeConfirm, bridgeCreate, bridgePause, bridgeRemove, bridgeResume,
 } from '../../../global/commands/g.bridge';
 import commandContext from '../../utils/context';
-import { checkChannelPermissions } from '../../utils/checkPermissions';
+import { missingPermission } from '../../utils/checkPermissions';
 
 const F = f(__filename);
 
@@ -39,13 +39,11 @@ async function create(
     return 'Error: Internal channel is not a text channel.';
   }
 
-  const internalChannelPerms = await checkChannelPermissions(internalChannel, [
-    'ManageWebhooks' as PermissionResolvable,
-  ]);
-  if (!internalChannelPerms.hasPermission) {
-    log.error(F, stripIndents`Missing ${internalChannelPerms.permission} permission \
+  const internalChannelMissing = await missingPermission(internalChannel, ['ManageWebhooks' as PermissionResolvable]);
+  if (internalChannelMissing) {
+    log.error(F, stripIndents`Missing ${internalChannelMissing} permission \
 in ${internalChannel.guild.name}'s ${internalChannel}!`);
-    return stripIndents`Error: Missing ${internalChannelPerms.permission} permission \
+    return stripIndents`Error: Missing ${internalChannelMissing} permission \
 in ${internalChannel.guild.name}'s ${internalChannel}!
     Manage Webhooks - Create the channel webhook`;
   }
@@ -69,13 +67,13 @@ in ${internalChannel.guild.name}'s ${internalChannel}!
     return 'Error: External channel is not a text channel.';
   }
 
-  const externalChannelPerms = await checkChannelPermissions(externalChannel, [
+  const externalChannelMissing = await missingPermission(externalChannel, [
     'ViewChannel' as PermissionResolvable,
     'SendMessages' as PermissionResolvable,
     'ManageWebhooks' as PermissionResolvable,
   ]);
-  if (!externalChannelPerms.hasPermission) {
-    return stripIndents`Error: Missing ${externalChannelPerms.permission} permission in \
+  if (externalChannelMissing) {
+    return stripIndents`Error: Missing ${externalChannelMissing} permission in \
 ${externalChannel.guild.name}'s ${externalChannel}!
     
     Ask the collaborator to make sure the bot has the right permissions:

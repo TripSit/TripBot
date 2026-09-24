@@ -23,7 +23,7 @@ import {
 import { stripIndent, stripIndents } from 'common-tags';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
-import { checkGuildPermissions } from '../../utils/checkPermissions';
+import { missingPermission } from '../../utils/checkPermissions';
 import commandContext from '../../utils/context';
 
 const F = f(__filename);
@@ -254,13 +254,11 @@ async function setup(interaction:ChatInputCommandInteraction):Promise<Interactio
     };
   }
 
-  const perms = await checkGuildPermissions(interaction.guild, [
-    'ViewAuditLog' as PermissionResolvable,
-  ]);
+  const missing = await missingPermission(interaction.guild, ['ViewAuditLog' as PermissionResolvable]);
 
-  if (!perms.hasPermission) {
-    log.error(F, `Missing permission ${perms.permission} in ${interaction.guild}!`);
-    return { content: `Please make sure I can ${perms.permission} in ${interaction.guild} so I can run ${F}!` };
+  if (missing) {
+    log.error(F, `Missing permission ${missing} in ${interaction.guild}!`);
+    return { content: `Please make sure I can ${missing} in ${interaction.guild} so I can run ${F}!` };
   }
 
   // Finished checks, lets set this up!
