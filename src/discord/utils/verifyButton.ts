@@ -7,6 +7,7 @@ import {
   TextChannel,
 } from 'discord.js';
 import { embedTemplate } from './embedTemplate';
+import { replyGuildOnly } from './guildOnly';
 
 // import {
 //   Client,
@@ -25,7 +26,7 @@ export async function verifyButton(interaction:ButtonInteraction): Promise<void>
   await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
   if (!interaction.guild) {
-    await interaction.editReply({ content: 'This command can only be used in a server!' });
+    await replyGuildOnly(interaction);
     return;
   }
 

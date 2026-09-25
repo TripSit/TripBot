@@ -1,6 +1,7 @@
 import {
   Message, TextChannel,
 } from 'discord.js';
+import { getOrCreateGuild } from '../../global/utils/dbRecords';
 
 export default helperActivityUpdate;
 
@@ -20,15 +21,7 @@ export async function helperActivityUpdate(message: Message): Promise<void> {
 
   if (message.channel.parentId !== env.CATEGORY_HARMREDUCTIONCENTRE) return;
 
-  const guildData = await db.discord_guilds.upsert({
-    where: {
-      id: message.guild?.id,
-    },
-    create: {
-      id: message.guild?.id,
-    },
-    update: {},
-  });
+  const guildData = await getOrCreateGuild(message.guild?.id);
 
   if (!guildData.role_helper) return;
 

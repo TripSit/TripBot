@@ -23,12 +23,12 @@ import {
 import { stripIndent, stripIndents } from 'common-tags';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
-import { checkGuildPermissions } from '../../utils/checkPermissions';
+import { missingPermission } from '../../utils/checkPermissions';
 import commandContext from '../../utils/context';
+import { getOrCreateGuild } from '../../../global/utils/dbRecords';
+import { GUILD_ONLY_TEXT } from '../../utils/guildOnly';
 
 const F = f(__filename);
-
-const guildOnlyError = 'This command can only be used in a guild!';
 
 async function info(): Promise<InteractionEditReplyOptions> {
   return {
@@ -97,21 +97,13 @@ async function apply(interaction:ChatInputCommandInteraction): Promise<Interacti
     return {
       embeds: [
         embedTemplate({
-          title: guildOnlyError,
+          title: GUILD_ONLY_TEXT,
         }),
       ],
     };
   }
 
-  const guildData = await db.discord_guilds.upsert({
-    where: {
-      id: interaction.guild?.id,
-    },
-    create: {
-      id: interaction.guild?.id,
-    },
-    update: {},
-  });
+  const guildData = await getOrCreateGuild(interaction.guild?.id);
 
   if (guildData.cooperative) {
     return {
@@ -218,21 +210,13 @@ async function setup(interaction:ChatInputCommandInteraction):Promise<Interactio
     return {
       embeds: [
         embedTemplate({
-          title: guildOnlyError,
+          title: GUILD_ONLY_TEXT,
         }),
       ],
     };
   }
 
-  const guildData = await db.discord_guilds.upsert({
-    where: {
-      id: interaction.guild?.id,
-    },
-    create: {
-      id: interaction.guild?.id,
-    },
-    update: {},
-  });
+  const guildData = await getOrCreateGuild(interaction.guild?.id);
 
   if (!guildData.cooperative) {
     return {
@@ -248,19 +232,17 @@ async function setup(interaction:ChatInputCommandInteraction):Promise<Interactio
     return {
       embeds: [
         embedTemplate({
-          title: guildOnlyError,
+          title: GUILD_ONLY_TEXT,
         }),
       ],
     };
   }
 
-  const perms = await checkGuildPermissions(interaction.guild, [
-    'ViewAuditLog' as PermissionResolvable,
-  ]);
+  const missing = await missingPermission(interaction.guild, ['ViewAuditLog' as PermissionResolvable]);
 
-  if (!perms.hasPermission) {
-    log.error(F, `Missing permission ${perms.permission} in ${interaction.guild}!`);
-    return { content: `Please make sure I can ${perms.permission} in ${interaction.guild} so I can run ${F}!` };
+  if (missing) {
+    log.error(F, `Missing permission ${missing} in ${interaction.guild}!`);
+    return { content: `Please make sure I can ${missing} in ${interaction.guild} so I can run ${F}!` };
   }
 
   // Finished checks, lets set this up!
@@ -443,21 +425,13 @@ async function leave(interaction:ChatInputCommandInteraction): Promise<Interacti
     return {
       embeds: [
         embedTemplate({
-          title: guildOnlyError,
+          title: GUILD_ONLY_TEXT,
         }),
       ],
     };
   }
 
-  const guildData = await db.discord_guilds.upsert({
-    where: {
-      id: interaction.guild?.id,
-    },
-    create: {
-      id: interaction.guild?.id,
-    },
-    update: {},
-  });
+  const guildData = await getOrCreateGuild(interaction.guild?.id);
 
   if (!guildData.cooperative) {
     return {
@@ -705,7 +679,7 @@ export const dCooperative: SlashCommand = {
       await interaction.editReply({
         embeds: [
           embedTemplate({
-            title: guildOnlyError,
+            title: GUILD_ONLY_TEXT,
           }),
         ],
       });

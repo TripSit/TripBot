@@ -1,12 +1,13 @@
+import { stripIndents } from 'common-tags';
 import {
-  TextChannel,
-  GuildMember,
   Guild,
-  PermissionResolvable,
-  PublicThreadChannel,
-  PrivateThreadChannel,
-  NewsChannel,
   GuildBasedChannel,
+  GuildMember,
+  NewsChannel,
+  PermissionResolvable,
+  PrivateThreadChannel,
+  PublicThreadChannel,
+  TextChannel,
 } from 'discord.js';
 
 const F = 'check'; // eslint-disable-line
@@ -38,151 +39,6 @@ export async function checkGuildPermissions(
   return {
     hasPermission: true,
   };
-
-  // // log.debug(F, `Guild: ${guild.name}`);
-  // if (botMember.permissions.has('Administrator' as PermissionResolvable)) {
-  //   log.info(F, 'I have the \'Administrator\' permissions!');
-  //   return {
-  //     hasPermission: true,
-  //   };
-  // }
-  // // General Server Permissions
-  // if (!botMember.permissions.has('ViewChannel' as PermissionResolvable)) {
-  //   log.warn(F, 'I need the \'ViewChannel\' permissions to view all channels! This may cause problems!');
-  // }
-  // // if (!botMember.permissions.has('ManageChannels' as PermissionResolvable)) {
-  // //   log.silly(F, `I do not support the 'ManageChannels' permissions!`);
-  // // }
-  // // if (!botMember.permissions.has('ManageRoles' as PermissionResolvable)) {
-  // //   log.silly(F, `I do not support the 'ManageRoles' permissions!`);
-  // // }
-  // // if (!botMember.permissions.has('ManageEmojisAndStickers' as PermissionResolvable)) {
-  // //   log.silly(F, `I do not support the 'ManageEmojisAndStickers' permissions!`);
-  // // }
-  // if (!botMember.permissions.has('ViewAuditLog' as PermissionResolvable)) {
-  //   log.warn(F, 'I need the \'ViewAuditLog\' permissions to post the audit log!');
-  // }
-  // // if (!botMember.permissions.has('ViewGuildInsights' as PermissionResolvable)) {
-  // //   log.silly(F, `I do not support the 'ViewGuildInsights' permissions!`);
-  // // }
-  // // if (!botMember.permissions.has('ManageWebhooks' as PermissionResolvable)) {
-  // //   log.silly(F, `I do not support the 'ManageWebhooks' permissions!`);
-  // // }
-  // if (!botMember.permissions.has('ManageGuild' as PermissionResolvable)) {
-  //   log.warn(F, 'I need \'ManageGuild\' permissions to check invites!');
-  // }
-
-  // // Membership Permissions
-  // // if (!botMember.permissions.has('CreateInstantInvite' as PermissionResolvable)) {
-  // //   log.silly(F, `I do not support the 'CreateInstantInvite' permissions!`);
-  // // }
-  // if (!botMember.permissions.has('ChangeNickname' as PermissionResolvable)) {
-  //   log.warn(F, 'I need the \'ChangeNickname\' permission to change my own nickname!');
-  // }
-  // // if (!botMember.permissions.has('ManageNicknames' as PermissionResolvable)) {
-  // //   log.silly(F, `I do not support the 'ManageNicknames' permissions!`);
-  // // }
-  // if (!botMember.permissions.has('KickMembers' as PermissionResolvable)) {
-  //   log.warn(F, 'I need the \'KickMembers\' permissions to Kick members!');
-  // }
-  // if (!botMember.permissions.has('BanMembers' as PermissionResolvable)) {
-  //   log.warn(F, 'I need the \'BanMembers\' permissions to Ban members!');
-  // }
-  // if (!botMember.permissions.has('ModerateMembers' as PermissionResolvable)) {
-  //   log.warn(F, 'I need the \'ModerateMembers\' permissions to Timeout members!');
-  // }
-
-  // // Text Channel Permissions
-  // if (!botMember.permissions.has('SendMessages' as PermissionResolvable)) {
-  //   log.error(F, 'I need the \'SendMessages\' permissions to send messages in chat!');
-  // }
-  // if (!botMember.permissions.has('SendMessagesInThreads' as PermissionResolvable)) {
-  //   log.warn(F, 'I need the \'SendMessagesInThreads\' permissions to !');
-  // }
-  // if (!botMember.permissions.has('CreatePublicThreads' as PermissionResolvable)) {
-  //   log.warn(F, 'I need the \'CreatePublicThreads\' permissions to create threads!');
-  // }
-  // if (!botMember.permissions.has('CreatePrivateThreads' as PermissionResolvable)) {
-  //   log.warn(F, 'I need the \'CreatePrivateThreads\' permissions to create threads!');
-  // }
-  // if (!botMember.permissions.has('EmbedLinks' as PermissionResolvable)) {
-  //   log.warn(F, 'I need the \'EmbedLinks\' permissions to make pretty embeds!');
-  // }
-  // // if (!botMember.permissions.has('AttachFiles' as PermissionResolvable)) {
-  // //   log.silly(F, `I do not support the 'AttachFiles' permissions!`);
-  // // }
-  // if (!botMember.permissions.has('AddReactions' as PermissionResolvable)) {
-  //   log.warn(F, 'I need the \'AddReactions\' permissions to add reactions to messages!');
-  // }
-  // if (!botMember.permissions.has('UseExternalEmojis' as PermissionResolvable)) {
-  //   log.warn(F, 'I need the \'UseExternalEmojis\' permissions to !');
-  // }
-  // // if (!botMember.permissions.has('UseExternalStickers' as PermissionResolvable)) {
-  // //   log.silly(F, `I do not support the 'UseExternalStickers' permissions!`);
-  // // }
-  // // if (!botMember.permissions.has('MentionEveryone' as PermissionResolvable)) {
-  // //   log.silly(F, `I do not support the 'MentionEveryone' permissions!`);
-  // // }
-  // if (!botMember.permissions.has('ManageMessages' as PermissionResolvable)) {
-  //   log.warn(F, 'I need the \'ManageMessages\' permissions to delete msgs when someone is banned, and to pin msgs!');
-  // }
-  // if (!botMember.permissions.has('ManageThreads' as PermissionResolvable)) {
-  //   log.warn(F, 'I need the \'ManageThreads\' permissions to archive/delete threads!');
-  // }
-  // // if (!botMember.permissions.has('ReadMessageHistory' as PermissionResolvable)) {
-  // //   log.silly(F, `I do not support the 'ReadMessageHistory' permissions!`);
-  // // }
-  // // if (!botMember.permissions.has('SendTTSMessages' as PermissionResolvable)) {
-  // //   log.silly(F, `I do not support the 'SendTTSMessages' permissions!`);
-  // // }
-  // // if (!botMember.permissions.has('UseApplicationCommands' as PermissionResolvable)) {
-  // //   log.silly(F, `I do not support the 'UseApplicationCommands' permissions!`);
-  // // }
-
-  // // Voice Channel Permissions
-  // // if (!botMember.permissions.has('Connect' as PermissionResolvable)) {
-  // //   log.silly(F, `I do not support the 'Connect' permissions!`);
-  // // }
-  // // if (!botMember.permissions.has('Speak' as PermissionResolvable)) {
-  // //   log.silly(F, `I do not support the 'Speak' permissions!`);
-  // // }
-  // // if (!botMember.permissions.has('Stream' as PermissionResolvable)) {
-  // //   log.silly(F, `I do not support the 'Stream' permissions!`);
-  // // }
-  // // if (!botMember.permissions.has('UseEmbeddedActivities' as PermissionResolvable)) {
-  // //   log.silly(F, `I do not support the 'UseEmbeddedActivities' permissions!`);
-  // // }
-  // // if (!botMember.permissions.has('UseVAD' as PermissionResolvable)) {
-  // //   log.silly(F, `I do not support the 'UseVAD' permissions!`);
-  // // }
-  // // if (!botMember.permissions.has('PrioritySpeaker' as PermissionResolvable)) {
-  // //   log.silly(F, `I do not support the 'PrioritySpeaker' permissions!`);
-  // // }
-  // // if (!botMember.permissions.has('MuteMembers' as PermissionResolvable)) {
-  // //   log.silly(F, `I do not support the 'MuteMembers' permissions!`);
-  // // }
-  // // if (!botMember.permissions.has('DeafenMembers' as PermissionResolvable)) {
-  // //   log.silly(F, `I do not support the 'DeafenMembers' permissions!`);
-  // // }
-  // // if (!botMember.permissions.has('MoveMembers' as PermissionResolvable)) {
-  // //   log.silly(F, `I do not support the 'MoveMembers' permissions!`);
-  // // }
-
-  // // Stage Channels
-  // // if (!botMember.permissions.has('RequestToSpeak' as PermissionResolvable)) {
-  // //   log.silly(F, `I do not support the 'RequestToSpeak' permissions!`);
-  // // }
-
-  // // Events Permissions
-  // // if (!botMember.permissions.has('ManageEvents' as PermissionResolvable)) {
-  // //   log.silly(F, `I do not support the 'ManageEvents' permissions!`);
-  // // }
-
-  // log.info(F, 'Permissions checked!');
-
-  // return {
-  //   hasPermission: true,
-  // };
 }
 
 /**
@@ -213,6 +69,79 @@ export async function checkChannelPermissions(
   return {
     hasPermission: true,
   };
+}
+
+export type PermissionTarget =
+  Guild | TextChannel | PublicThreadChannel | PrivateThreadChannel | NewsChannel | GuildBasedChannel;
+
+/**
+ * Returns the first permission the bot is missing on the guild/channel, or null if it has them all.
+ */
+export async function missingPermission(
+  target: PermissionTarget,
+  permissions: PermissionResolvable[],
+): Promise<PermissionResolvable | null> {
+  const result = target instanceof Guild
+    ? await checkGuildPermissions(target, permissions)
+    : await checkChannelPermissions(target, permissions);
+  return result.hasPermission ? null : (result.permission ?? null);
+}
+
+export interface EnsurePermissionsOptions {
+  /** Finishes "…so I can ___!" in the owner DM. Defaults to `run ${caller}`. */
+  reason?: string;
+  /** Replaces the whole owner DM, for places with a longer explanation (tripsit setup). */
+  ownerMessage?: (missing: PermissionResolvable) => string;
+}
+
+/**
+ * Checks the bot's permissions; on failure DMs the guild owner, logs, and returns false.
+ */
+export async function ensurePermissions(
+  target: PermissionTarget,
+  permissions: PermissionResolvable[],
+  caller: string,
+  options: EnsurePermissionsOptions = {},
+): Promise<boolean> {
+  const missing = await missingPermission(target, permissions);
+  if (!missing) return true;
+
+  const guild = target instanceof Guild ? target : target.guild;
+  log.error(caller, `Missing permission ${missing} in ${target}!`);
+
+  const reason = options.reason ?? `run ${caller}`;
+  const content = options.ownerMessage
+    ? options.ownerMessage(missing)
+    : `Please make sure I can ${missing} in ${target} so I can ${reason}!`;
+  try {
+    const guildOwner = await guild.fetchOwner();
+    await guildOwner.send({ content });
+  } catch (err) {
+    // Owner has DMs closed or blocked the bot; the log line bellow is all we can do.
+    log.error(caller, `Could not DM the owner of ${guild} about missing ${missing}: ${err}`);
+  }
+  return false;
+}
+
+/** Permissions the tripsit flow needs in both the tripsit and meta channels. */
+export const TRIPSIT_CHANNEL_PERMS: PermissionResolvable[] = [
+  'ViewChannel',
+  'SendMessages',
+  'SendMessagesInThreads',
+  'CreatePrivateThreads',
+  'ManageThreads',
+];
+
+/** Shared owner-DM copy for a tripsit/meta channel missing its required permissions. */
+export function tripsitChannelOwnerMessage(channel: TextChannel, isMeta: boolean): string {
+  return stripIndents`Missing permissions in ${channel}!
+  In order to setup the tripsitting feature I need:
+  View Channel - to see the channel
+  Send Messages - to send messages
+  Create Private Threads - to create private threads${isMeta ? ', when requested through the bot' : ''}
+  Send Messages in Threads - to send messages in threads
+  Manage Threads - to delete threads when they're done
+  `;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars

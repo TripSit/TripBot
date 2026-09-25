@@ -14,8 +14,9 @@ import {
   StringSelectMenuOptionBuilder,
   time,
 } from 'discord.js';
-import { embedTemplate } from './embedTemplate';
+import { embedTemplate, errorEmbed } from './embedTemplate';
 import { tripSitTrustScore } from './trustScore';
+import { getOrCreateGuild } from '../../global/utils/dbRecords';
 
 const F = f(__filename);
 
@@ -295,18 +296,12 @@ export async function modHistoryButton(interaction: ModHistoryInteraction): Prom
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
   }
 
-  const guildData = await db.discord_guilds.upsert({
-    where: { id: interaction.guild.id },
-    create: { id: interaction.guild.id },
-    update: {},
-  });
+  const guildData = await getOrCreateGuild(interaction.guild.id);
 
   const actor = interaction.member as GuildMember | null;
   if (!guildData.role_moderator || !actor?.roles.cache.has(guildData.role_moderator)) {
     await interaction.editReply({
-      embeds: [embedTemplate()
-        .setColor(Colors.Red)
-        .setDescription('Only moderators can view mod history.')],
+      embeds: [errorEmbed('Only moderators can view mod history.')],
       components: [],
     });
     return;

@@ -16,6 +16,9 @@ import {
 
 import { SlashCommand } from '../../@types/commandDef';
 import commandContext from '../../utils/context';
+import { getOrCreateUser } from '../../../global/utils/dbRecords';
+import { randomItem } from '../../../global/utils/random';
+import { vipRolesAtOrAbove } from '../../utils/roleGroups';
 
 const F = f(__filename);
 
@@ -267,7 +270,7 @@ async function get(interaction: ChatInputCommandInteraction) {
     }
 
     // Pick a random quote from the user's quotes
-    quoteData = quotes[Math.floor(Math.random() * quotes.length)];
+    quoteData = randomItem(quotes);
   }
 
   if (!quoteData) {
@@ -313,7 +316,7 @@ async function get(interaction: ChatInputCommandInteraction) {
 
   const descriptionParts = [
     // eslint-disable-next-line max-len
-    `${target?.displayName || target?.user.username || 'Unknown User'} ${flavorText[Math.floor(Math.random() * flavorText.length)]}`,
+    `${target?.displayName || target?.user.username || 'Unknown User'} ${randomItem(flavorText)}`,
   ];
 
   if (!(quoteData.quote === imageOnlyPlaceholder && media.images.length > 0)) {
@@ -403,9 +406,7 @@ async function random(interaction:ChatInputCommandInteraction) {
   await interaction.editReply({
     embeds: buildQuoteEmbeds({
       author: {
-        name: `${author ? author.displayName : 'Unknown User'} ${
-          flavorText[Math.floor(Math.random() * flavorText.length)]
-        }`,
+        name: `${author ? author.displayName : 'Unknown User'} ${randomItem(flavorText)}`,
         icon_url: author ? author.user.displayAvatarURL() : undefined,
         url: quote.url,
       },
@@ -560,18 +561,7 @@ export async function quoteAdd(interaction:MessageContextMenuCommandInteraction)
   }
 
   // Don't allow people under level 10 to save quotes
-  const vipRoles = [
-    env.ROLE_VIP_10,
-    env.ROLE_VIP_20,
-    env.ROLE_VIP_30,
-    env.ROLE_VIP_40,
-    env.ROLE_VIP_50,
-    env.ROLE_VIP_60,
-    env.ROLE_VIP_70,
-    env.ROLE_VIP_80,
-    env.ROLE_VIP_90,
-    env.ROLE_VIP_100,
-  ]
+  const vipRoles = vipRolesAtOrAbove(10)
     .map(role => actor.roles.cache.has(role)) // Check if the actor has any of these roles
     .filter(role => role); // Filter out any non-truthy values
 
@@ -594,24 +584,16 @@ export async function quoteAdd(interaction:MessageContextMenuCommandInteraction)
   if (quoteExists) {
     log.debug(F, 'Quote already exists');
     await interaction.editReply({
-      content: failResponses[Math.floor(Math.random() * failResponses.length)],
+      content: randomItem(failResponses),
     });
     return true;
   }
 
   log.debug(F, `All checks passed, saving quote from ${target.displayName} (${target.id})`);
 
-  const actorData = await db.users.upsert({
-    where: { discord_id: actor.id },
-    create: { discord_id: actor.id },
-    update: {},
-  });
+  const actorData = await getOrCreateUser(actor.id);
 
-  const targetData = await db.users.upsert({
-    where: { discord_id: target.id },
-    create: { discord_id: target.id },
-    update: {},
-  });
+  const targetData = await getOrCreateUser(target.id);
 
   // If empty string or just whitespace, replace it.
   const fixedQuote = interaction.targetMessage.content.trim() || imageOnlyPlaceholder;
@@ -627,7 +609,7 @@ export async function quoteAdd(interaction:MessageContextMenuCommandInteraction)
 
   await interaction.targetMessage.reply({
     embeds: [{
-      description: stripIndents`${successResponses[Math.floor(Math.random() * successResponses.length)]
+      description: stripIndents`${randomItem(successResponses)
         .replace('{target.displayName}', target.displayName)}
       `,
       // footer: {
