@@ -41,112 +41,16 @@ import commandContext from './context';
 import { embedTemplate } from './embedTemplate';
 import { getOrCreateGuild, getOrCreateUser } from '../../global/utils/dbRecords';
 import { replyGuildOnly } from './guildOnly';
+import {
+  TEAM_ROLES, TRIPSITME_COLOR_ROLES, TRIPSITME_MINDSET_ROLES, TRIPSITME_OTHER_ROLES,
+} from './roleGroups';
 
 const F = f(__filename);
 
-const teamRoles = [
-  env.ROLE_DIRECTOR,
-  env.ROLE_SUCCESSOR,
-  env.ROLE_SYSADMIN,
-  env.ROLE_LEADDEV,
-  env.ROLE_IRCADMIN,
-  env.ROLE_DISCORDADMIN,
-  env.ROLE_IRCOP,
-  env.ROLE_MODERATOR,
-  env.ROLE_TRIPSITTER,
-  env.ROLE_TEAMTRIPSIT,
-  env.ROLE_TRIPBOT2,
-  env.ROLE_TRIPBOT,
-  env.ROLE_BOT,
-  env.ROLE_DEVELOPER,
-];
-
-const colorRoles = [
-  env.ROLE_TREE,
-  env.ROLE_SPROUT,
-  env.ROLE_SEEDLING,
-  env.ROLE_BOOSTER,
-  env.ROLE_RED,
-  env.ROLE_REDORANGE,
-  env.ROLE_ORANGE,
-  env.ROLE_YELLOW,
-  env.ROLE_YELLOWGREEN,
-  env.ROLE_GREEN,
-  env.ROLE_GREENBLUE,
-  env.ROLE_BLUE,
-  env.ROLE_BLUEPURPLE,
-  env.ROLE_PURPLE,
-  env.ROLE_PINK,
-  env.ROLE_PINKRED,
-  env.ROLE_WHITE,
-
-  env.ROLE_LEVEL_RED,
-  env.ROLE_LEVEL_REDORANGE,
-  env.ROLE_LEVEL_ORANGE,
-  env.ROLE_LEVEL_YELLOW,
-  env.ROLE_LEVEL_YELLOWGREEN,
-  env.ROLE_LEVEL_GREEN,
-  env.ROLE_LEVEL_GREENBLUE,
-  env.ROLE_LEVEL_BLUE,
-  env.ROLE_LEVEL_BLUEPURPLE,
-  env.ROLE_LEVEL_PURPLE,
-  env.ROLE_LEVEL_PINK,
-  env.ROLE_LEVEL_PINKRED,
-  env.ROLE_LEVEL_BLACK,
-
-  env.ROLE_GRADIENT_1,
-  env.ROLE_GRADIENT_2,
-  env.ROLE_GRADIENT_3,
-  env.ROLE_GRADIENT_4,
-  env.ROLE_GRADIENT_5,
-  env.ROLE_GRADIENT_6,
-  env.ROLE_GRADIENT_7,
-  env.ROLE_GRADIENT_8,
-  env.ROLE_GRADIENT_9,
-  env.ROLE_GRADIENT_10,
-  env.ROLE_GRADIENT_11,
-  env.ROLE_GRADIENT_12,
-  env.ROLE_GRADIENT_13,
-  env.ROLE_GRADIENT_14,
-  env.ROLE_GRADIENT_15,
-  env.ROLE_GRADIENT_16,
-  env.ROLE_GRADIENT_17,
-  env.ROLE_GRADIENT_18,
-  env.ROLE_GRADIENT_19,
-  env.ROLE_GRADIENT_20,
-  env.ROLE_GRADIENT_21,
-  env.ROLE_GRADIENT_22,
-  env.ROLE_GRADIENT_23,
-  env.ROLE_GRADIENT_24,
-];
-
-const mindsetRoles = [
-  env.ROLE_DRUNK,
-  env.ROLE_HIGH,
-  env.ROLE_ROLLING,
-  env.ROLE_TRIPPING,
-  env.ROLE_DISSOCIATING,
-  env.ROLE_STIMMING,
-  env.ROLE_SEDATED,
-  env.ROLE_SOBER,
-  env.ROLE_EVENT_1,
-  env.ROLE_EVENT_2,
-  env.ROLE_EVENT_3,
-  env.ROLE_EVENT_4,
-  env.ROLE_EVENT_5,
-  env.ROLE_EVENT_6,
-  env.ROLE_EVENT_7,
-  env.ROLE_EVENT_8,
-  env.ROLE_EVENT_9,
-  env.ROLE_EVENT_10,
-  env.ROLE_EVENT_11,
-];
-
-const otherRoles = [
-  env.ROLE_PREMIUM,
-  env.ROLE_BOOSTER,
-  env.ROLE_PATRON,
-];
+const teamRoles = TEAM_ROLES;
+const colorRoles = TRIPSITME_COLOR_ROLES;
+const mindsetRoles = TRIPSITME_MINDSET_ROLES;
+const otherRoles = TRIPSITME_OTHER_ROLES;
 
 const ignoredRoles = `${teamRoles},${colorRoles},${mindsetRoles},${otherRoles}`;
 

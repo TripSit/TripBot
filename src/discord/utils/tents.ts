@@ -16,24 +16,13 @@ import {
   ContainerBuilder,
   SeparatorSpacingSize,
 } from 'discord.js';
+import { VIP_ROLES_BY_LEVEL } from './roleGroups';
 
 const F = f(__filename); // eslint-disable-line
 
 // Shared mapping of level requirement -> VIP role id. Used by both the /tent level
 // command and the status line, so the threshold logic lives in one place.
-export const levelRoles: { [level: number]: string } = {
-  0: env.ROLE_VIP_0,
-  10: env.ROLE_VIP_10,
-  20: env.ROLE_VIP_20,
-  30: env.ROLE_VIP_30,
-  40: env.ROLE_VIP_40,
-  50: env.ROLE_VIP_50,
-  60: env.ROLE_VIP_60,
-  70: env.ROLE_VIP_70,
-  80: env.ROLE_VIP_80,
-  90: env.ROLE_VIP_90,
-  100: env.ROLE_VIP_100,
-};
+export const levelRoles = VIP_ROLES_BY_LEVEL;
 
 /**
  * Derive a tent's current level requirement from its permission overwrites.
