@@ -1,12 +1,12 @@
 import {
-  Colors,
   TextChannel,
   ThreadChannel,
 } from 'discord.js';
 import {
   GuildMemberRemoveEvent,
 } from '../@types/eventDef';
-import { embedTemplate } from '../utils/embedTemplate';
+import { errorEmbed } from '../utils/embedTemplate';
+import { getOrCreateGuild } from '../../global/utils/dbRecords';
 
 const F = f(__filename);
 
@@ -20,8 +20,7 @@ export const guildMemberRemove: GuildMemberRemoveEvent = {
     const { joinedTimestamp } = member;
 
     // log.debug(F, `joinedTimestamp: ${joinedTimestamp}`);
-    const embed = embedTemplate()
-      .setColor(Colors.Red);
+    const embed = errorEmbed();
 
     if (joinedTimestamp) {
       const diff = Math.abs(Date.now() - joinedTimestamp);
@@ -70,15 +69,7 @@ export const guildMemberRemove: GuildMemberRemoveEvent = {
       },
     });
 
-    const guildData = await db.discord_guilds.upsert({
-      where: {
-        id: member.guild.id,
-      },
-      create: {
-        id: member.guild.id,
-      },
-      update: {},
-    });
+    const guildData = await getOrCreateGuild(member.guild.id);
 
     let modThread = null as ThreadChannel | null;
     if (targetData.mod_thread_id) {

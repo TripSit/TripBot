@@ -5,6 +5,7 @@ import OpenAI from 'openai';
 import { ModerationCreateResponse } from 'openai/resources';
 import { isString } from 'underscore';
 import { AiText } from '../../discord/utils/ai';
+import { getOrCreateGuild } from '../utils/dbRecords';
 
 const F = f(__filename);
 
@@ -113,15 +114,7 @@ export async function aiModerate(
     return [];
   }
 
-  const guildData = await db.discord_guilds.upsert({
-    where: {
-      id: guildId,
-    },
-    create: {
-      id: guildId,
-    },
-    update: {},
-  });
+  const guildData = await getOrCreateGuild(guildId);
 
   const guildModeration = await db.ai_moderation.upsert({
     where: {

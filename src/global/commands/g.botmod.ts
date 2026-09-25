@@ -17,6 +17,7 @@ import {
 import { stripIndents } from 'common-tags';
 import { embedTemplate } from '../../discord/utils/embedTemplate';
 import commandContext from '../../discord/utils/context';
+import { getOrCreateGuild, getOrCreateUser } from '../utils/dbRecords';
 
 const F = f(__filename);
 
@@ -78,15 +79,7 @@ async function botmodUser(
   pubReason: string | null,
 ):Promise<InteractionReplyOptions> {
   const targetUser = await interaction.client.users.fetch(target);
-  const userData = await db.users.upsert({
-    where: {
-      discord_id: targetUser.id,
-    },
-    create: {
-      discord_id: targetUser.id,
-    },
-    update: {},
-  });
+  const userData = await getOrCreateUser(targetUser.id);
 
   if (command === 'BOTBAN' && userData.discord_bot_ban) {
     const embed = embedTemplate()
@@ -161,15 +154,7 @@ async function botmodGuild(
 ):Promise<InteractionReplyOptions> {
   const targetGuild = await interaction.client.guilds.fetch(target);
   const targetGuildOwner = await targetGuild.members.fetch(targetGuild.ownerId);
-  const guildData = await db.discord_guilds.upsert({
-    where: {
-      id: targetGuild.id,
-    },
-    create: {
-      id: targetGuild.id,
-    },
-    update: {},
-  });
+  const guildData = await getOrCreateGuild(targetGuild.id);
 
   if (command === 'BOTBAN' && guildData.is_banned) {
     const embed = embedTemplate()

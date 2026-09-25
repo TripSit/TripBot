@@ -22,8 +22,6 @@ import {
   // MessageMentionTypes,
   TextInputStyle,
   TextChannel,
-  PermissionResolvable,
-  MessageMentionTypes,
   InteractionDeferReplyOptions,
   APIModalInteractionResponseCallbackData,
   JSONEncodable,
@@ -36,16 +34,19 @@ import {
   MessageFlags,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
-import { DateTime } from 'luxon';
-import { ticket_status } from '@db/tripbot';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 // import {embedTemplate} from '../../utils/embedTemplate';
 // import {stripIndents} from 'common-tags';
 // import env from '../../../global/utils/env.config';
 // import log from '../../../global/utils/log';
-import { needsHelpMode, tripSitMe, tripsitmeUserClose } from '../../utils/tripsitme';
-import { checkChannelPermissions } from '../../utils/checkPermissions';
+import {
+  needsHelpMode, reopenTicket, tripSitMe, tripsitmeUserClose,
+} from '../../utils/tripsitme';
+import {
+  ensurePermissions, TRIPSIT_CHANNEL_PERMS, tripsitChannelOwnerMessage,
+} from '../../utils/checkPermissions';
+import { getOrCreateGuild, getOrCreateUser } from '../../../global/utils/dbRecords';
 // import { modmailDMInteraction } from '../archive/modmail';
 
 const F = f(__filename);
@@ -57,15 +58,7 @@ async function tripsitmodeOn(
   if (!interaction.guild) return false;
   if (!interaction.member) return false;
 
-  let guildData = await db.discord_guilds.upsert({
-    where: {
-      id: interaction.guild?.id,
-    },
-    create: {
-      id: interaction.guild?.id,
-    },
-    update: {},
-  });
+  let guildData = await getOrCreateGuild(interaction.guild?.id);
 
   // Get the tripsit channel from the guild
   let tripsitChannel = {} as TextChannel;
@@ -89,31 +82,9 @@ async function tripsitmodeOn(
   // Fix tripsitmode causing errors if no channel has been set
   if (!tripsitChannel || !(tripsitChannel instanceof TextChannel)) return false;
 
-  const channelPerms = await checkChannelPermissions(tripsitChannel, [
-    'ViewChannel' as PermissionResolvable,
-    'SendMessages' as PermissionResolvable,
-    'SendMessagesInThreads' as PermissionResolvable,
-    // 'CreatePublicThreads' as PermissionResolvable,
-    'CreatePrivateThreads' as PermissionResolvable,
-    // 'ManageMessages' as PermissionResolvable,
-    'ManageThreads' as PermissionResolvable,
-    // 'EmbedLinks' as PermissionResolvable,
-  ]);
-  if (!channelPerms.hasPermission) {
-    log.error(F, `Missing TS channel permission ${channelPerms.permission} in ${tripsitChannel.name}!`);
-    const guildOwner = await interaction.guild?.fetchOwner() as GuildMember;
-    await guildOwner.send({
-      content: stripIndents`Missing permissions in ${tripsitChannel}!
-      In order to setup the tripsitting feature I need:
-      View Channel - to see the channel
-      Send Messages - to send messages
-      Create Private Threads - to create private threads
-      Send Messages in Threads - to send messages in threads
-      Manage Threads - to delete threads when they're done
-      `}); // eslint-disable-line
-    log.error(F, `Missing TS channel permission ${channelPerms.permission} in ${tripsitChannel.name}!`);
-    return false;
-  }
+  if (!await ensurePermissions(tripsitChannel, TRIPSIT_CHANNEL_PERMS, F, {
+    ownerMessage: () => tripsitChannelOwnerMessage(tripsitChannel, false),
+  })) return false;
 
   // Get the tripsit meta channel from the guild
   let channelTripsitmeta = {} as TextChannel;
@@ -135,43 +106,13 @@ async function tripsitmodeOn(
     });
   }
 
-  const metaPerms = await checkChannelPermissions(channelTripsitmeta, [
-    'ViewChannel' as PermissionResolvable,
-    'SendMessages' as PermissionResolvable,
-    'SendMessagesInThreads' as PermissionResolvable,
-    // 'CreatePublicThreads' as PermissionResolvable,
-    'CreatePrivateThreads' as PermissionResolvable,
-    // 'ManageMessages' as PermissionResolvable,
-    'ManageThreads' as PermissionResolvable,
-    // 'EmbedLinks' as PermissionResolvable,
-  ]);
-  if (!metaPerms.hasPermission) {
-    log.error(F, `Missing TS channel permission ${channelPerms.permission} in ${channelTripsitmeta.name}!`);
-    const guildOwner = await interaction.guild?.fetchOwner() as GuildMember;
-    await guildOwner.send({
-      content: stripIndents`Missing permissions in ${channelTripsitmeta}!
-    In order to setup the tripsitting feature I need:
-    View Channel - to see the channel
-    Send Messages - to send messages
-    Create Private Threads - to create private threads, when requested through the bot
-    Send Messages in Threads - to send messages in threads
-    Manage Threads - to delete threads when they're done
-    `}); // eslint-disable-line
-    log.error(F, `Missing permission ${metaPerms.permission} in ${tripsitChannel.name}!`);
-    return false;
-  }
+  if (!await ensurePermissions(channelTripsitmeta, TRIPSIT_CHANNEL_PERMS, F, {
+    ownerMessage: () => tripsitChannelOwnerMessage(channelTripsitmeta, true),
+  })) return false;
   // const showMentions = actorIsAdmin ? [] : ['users', 'roles'] as MessageMentionTypes[];
 
   log.debug(F, `Target: ${target.displayName} (${target.id})`);
-  const userData = await db.users.upsert({
-    where: {
-      discord_id: target.id,
-    },
-    create: {
-      discord_id: target.id,
-    },
-    update: {},
-  });
+  const userData = await getOrCreateUser(target.id);
   log.debug(F, `Target userData: ${JSON.stringify(userData, null, 2)}`);
   let ticketData = await db.user_tickets.findFirst({
     where: {
@@ -214,106 +155,21 @@ async function tripsitmodeOn(
       await interaction.deferReply({ flags: MessageFlags.Ephemeral });
       await needsHelpMode(interaction, target);
       log.debug(F, 'Added needshelp to user');
-      let roleTripsitter = {} as Role;
-      let roleHelper = {} as Role;
+
       let roleNeedshelp = {} as Role;
-      if (guildData.role_tripsitter) {
-        roleTripsitter = await interaction.guild?.roles.fetch(guildData.role_tripsitter) as Role;
-      }
-      if (guildData.role_helper) {
-        roleHelper = await interaction.guild?.roles.fetch(guildData.role_helper) as Role;
-      }
       if (guildData.role_needshelp) {
         roleNeedshelp = await interaction.guild?.roles.fetch(guildData.role_needshelp) as Role;
       }
-      log.debug(F, `Helper Role : ${roleHelper.name}`);
-      log.debug(F, `Tripsitter Role : ${roleTripsitter.name}`);
       log.debug(F, `Needshelp Role : ${roleNeedshelp.name}`);
 
-      // Remind the user that they have a channel open
-      // const recipient = '' as string;
-
-      let helpMessage = stripIndents`Hey ${target}, the team thinks you could still use some help, lets continue talking here!`; // eslint-disable-line max-len
-
-      // If the help ticket was created < 5 mins ago, don't re-ping the team
-      const createdDate = new Date(ticketData.reopened_at ?? ticketData.created_at);
-      const now = new Date();
-      const diff = now.getTime() - createdDate.getTime();
-      const minutes = Math.floor(diff / 1000 / 60);
-      // const seconds = Math.floor(diff / 1000); // Uncomment this for dev server
-      if (minutes > 5) {
-        const helperStr = `and/or ${roleHelper}`;
-        // log.debug(F, `Target has open ticket, and it was created over 5 minutes ago!`);
-        helpMessage += `\n\nSomeone from the ${roleTripsitter} ${guildData.role_helper ? helperStr : ''} team will be with you as soon as they're available!`; // eslint-disable-line max-len
-      }
-      await threadHelpUser.send({
-        content: helpMessage,
-        allowedMentions: {
-          // parse: showMentions,
-          parse: ['users', 'roles'] as MessageMentionTypes[],
-        },
-      });
-
-      log.debug(F, 'Pinged user in help thread');
-      threadHelpUser.setName(`🧡│${target.displayName}'s channel!`);
-      log.debug(F, 'Updated thread name');
-
-      // If the meta thread exists, update the name and ping the team
-      if (ticketData.meta_thread_id) {
-        let metaMessage = '';
-        if (minutes > 5) { // Switch to seconds > 10 for dev server
-          const helperString = `and/or ${roleHelper}`;
-          try {
-            metaMessage = `Hey ${roleTripsitter} ${guildData.role_helper ? helperString : ''} team, ${interaction.member} has indicated that ${target.displayName} needs assistance!`;
-          } catch (err) {
-            // If for example helper role has been deleted but the ID is still stored, do this
-            metaMessage = `Hey ${roleTripsitter} team, ${interaction.member} has indicated that ${target.displayName} needs assistance!`;
-            log.error(F, `Stored Helper ID for guild ${guildData.id} is no longer valid. Role is unfetchable or deleted.`);
-          }
-        } else {
-          metaMessage = `${interaction.member} has indicated that ${target.displayName} needs assistance!`;
-        }
-        // Get the tripsit meta channel from the guild
-        let metaThread = {} as ThreadChannel;
-        try {
-          metaThread = await interaction.guild?.channels.fetch(ticketData.meta_thread_id) as ThreadChannel;
-          metaThread.setName(`🧡│${target.displayName}'s discussion!`);
-          await metaThread.send({
-            content: metaMessage,
-            allowedMentions: {
-              // parse: showMentions,
-              parse: ['users', 'roles'] as MessageMentionTypes[],
-            },
-          });
-          log.debug(F, 'Pinged team in meta thread!');
-        } catch (err) {
-          // log.debug(F, `There was an error fetching the tripsit channel, it was likely deleted:\n ${err}`);
-          // Update the ticket status to closed
-          ticketData = await db.user_tickets.update({
-            where: {
-              id: ticketData.id,
-            },
-            data: {
-              meta_thread_id: null,
-            },
-          });
-        }
-      }
-
-      ticketData = await db.user_tickets.update({
-        where: {
-          id: ticketData.id,
-        },
-        data: {
-          status: 'OPEN' as ticket_status,
-          reopened_at: new Date(),
-          archived_at: env.NODE_ENV === 'production'
-            ? DateTime.local().plus({ days: 3 }).toJSDate()
-            : DateTime.local().plus({ minutes: 1 }).toJSDate(),
-          deleted_at: env.NODE_ENV === 'production'
-            ? DateTime.local().plus({ days: 5 }).toJSDate()
-            : DateTime.local().plus({ minutes: 2 }).toJSDate(),
-        },
+      await reopenTicket({
+        interaction,
+        target,
+        guildData,
+        ticketData,
+        threadHelpUser,
+        helpMessage: stripIndents`Hey ${target}, the team thinks you could still use some help, lets continue talking here!`, // eslint-disable-line max-len
+        metaSubject: `${interaction.member} has indicated that ${target.displayName} needs assistance!`,
       });
 
       // remind the user they have an open thread

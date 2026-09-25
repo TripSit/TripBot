@@ -22,7 +22,7 @@ import {
 } from '../../../global/utils/opioids';
 import { SlashCommand } from '../../@types/commandDef';
 import commandContext from '../../utils/context';
-import { embedTemplate } from '../../utils/embedTemplate';
+import { embedTemplate, errorEmbed } from '../../utils/embedTemplate';
 
 const F = f(__filename);
 
@@ -312,13 +312,10 @@ async function dCalcOpioid(
   const result = await calcOpioid(dosage, drugA, drugB);
 
   if (!result.ok) {
-    return embedTemplate()
-      .setColor(Colors.Red)
-      .setTitle('I could not run that conversion')
-      .setDescription(stripIndents`
+    return errorEmbed(stripIndents`
         ${result.message}
 
-        Doses go in as milligrams (mg), and both opioids should be picked from the autocomplete list so they match the table exactly.`);
+        Doses go in as milligrams (mg), and both opioids should be picked from the autocomplete list so they match the table exactly.`).setTitle('I could not run that conversion');
   }
 
   const {
@@ -337,10 +334,8 @@ async function dCalcOpioid(
   const potencyLine = `Potency vs oral morphine: ${from.name} ${fromPotency ? formatPotency(fromPotency) : 'unknown'}, ${to.name} ${toPotency ? formatPotency(toPotency) : 'unknown'}.`;
   const morphineStep = viaMorphine ? `Converted via **${formatDose(morphineEquivalent)} oral morphine**. ` : '';
 
-  const embed = embedTemplate()
-    .setColor(Colors.Red)
-    .setTitle(fitOpioidTitle(`${dosage} mg ${fromDesc} is ~${formatDose(equianalgesic, unit)} ${toDesc}`))
-    .setDescription(`${morphineStep}${potencyLine} [Source](${OPIOID_SOURCE_URL})`);
+  const embed = errorEmbed(`${morphineStep}${potencyLine} [Source](${OPIOID_SOURCE_URL})`)
+    .setTitle(fitOpioidTitle(`${dosage} mg ${fromDesc} is ~${formatDose(equianalgesic, unit)} ${toDesc}`));
 
   // Unnamed block so it reads as running text, the way /calc benzo presents the same advice.
   const closing = { name: '\u200B', value: fitOpioidField(OPIOID_CLOSING) };

@@ -42,6 +42,9 @@ import { customButton } from '../../utils/emoji';
 import { getProfilePreview } from './d.profile';
 import { aiFlairMod } from '../../../global/commands/g.ai';
 import { bigBrother } from '../../../global/utils/thoughtPolice';
+import { getOrCreatePersona, getOrCreateUser } from '../../../global/utils/dbRecords';
+import { randomItem } from '../../../global/utils/random';
+import { sleep } from '../../utils/sleep';
 
 const tripSitProfileImage = 'tripsit-profile-image.png';
 const tripSitProfileImageAttachment = 'attachment://tripsit-profile-image.png';
@@ -1207,12 +1210,6 @@ const text = {
   ],
 };
 
-function sleep(ms:number):Promise<void> {
-  return new Promise(resolve => {
-    setTimeout(resolve, ms);
-  });
-}
-
 export type GameName = 'Coinflip' | 'Roulette' | 'Blackjack' | 'Slots';
 
 const wagers = {} as {
@@ -1221,10 +1218,6 @@ const wagers = {} as {
     tokens: number,
   },
 };
-
-function rand(array:string[]):string {
-  return array[Math.floor(Math.random() * array.length)];
-}
 
 function getLastMonday(d:Date) {
   const day = d.getDay();
@@ -1239,24 +1232,8 @@ export async function rpgBounties(
   command: 'quest' | 'dungeon' | 'raid' | null,
 ): Promise<InteractionEditReplyOptions | InteractionUpdateOptions> {
   // Check if the user has a persona
-  const userData = await db.users.upsert({
-    where: {
-      discord_id: interaction.user.id,
-    },
-    create: {
-      discord_id: interaction.user.id,
-    },
-    update: {},
-  });
-  const personaData = await db.personas.upsert({
-    where: {
-      user_id: userData.id,
-    },
-    create: {
-      user_id: userData.id,
-    },
-    update: {},
-  });
+  const userData = await getOrCreateUser(interaction.user.id);
+  const personaData = await getOrCreatePersona(userData.id);
 
   // Get the existing inventory data
   const inventoryData = await db.rpg_inventory.findMany({
@@ -1279,7 +1256,7 @@ export async function rpgBounties(
     quest: {
       success: {
         title: `${emojiGet('buttonQuest')} Quest Success (Hourly)`,
-        description: stripIndents`${rand(text.quest)}`,
+        description: stripIndents`${randomItem(text.quest)}`,
         color: Colors.Green,
       },
       fail: {
@@ -1293,7 +1270,7 @@ export async function rpgBounties(
     dungeon: {
       success: {
         title: `${emojiGet('buttonDungeon')} Dungeon Success (Daily)`,
-        description: stripIndents`${rand(text.dungeon)}`,
+        description: stripIndents`${randomItem(text.dungeon)}`,
         color: Colors.Green,
       },
       fail: {
@@ -1440,24 +1417,8 @@ export async function rpgMarketInventory(
     personaDiscount:number;
   }> {
   // Check get fresh persona data
-  const userData = await db.users.upsert({
-    where: {
-      discord_id: interaction.user.id,
-    },
-    create: {
-      discord_id: interaction.user.id,
-    },
-    update: {},
-  });
-  const personaData = await db.personas.upsert({
-    where: {
-      user_id: userData.id,
-    },
-    create: {
-      user_id: userData.id,
-    },
-    update: {},
-  });
+  const userData = await getOrCreateUser(interaction.user.id);
+  const personaData = await getOrCreatePersona(userData.id);
 
   // Get the existing inventory data
   const inventoryData = await db.rpg_inventory.findMany({
@@ -1897,24 +1858,8 @@ export async function rpgMarketAccept(
   // } = await rpgMarketInventory(interaction);
 
   // Check get fresh persona data
-  const userData = await db.users.upsert({
-    where: {
-      discord_id: interaction.user.id,
-    },
-    create: {
-      discord_id: interaction.user.id,
-    },
-    update: {},
-  });
-  const personaData = await db.personas.upsert({
-    where: {
-      user_id: userData.id,
-    },
-    create: {
-      user_id: userData.id,
-    },
-    update: {},
-  });
+  const userData = await getOrCreateUser(interaction.user.id);
+  const personaData = await getOrCreatePersona(userData.id);
   // log.debug(F, `personaData (Accept): ${JSON.stringify(personaData, null, 2)}`);
 
   // If the user confirms the information, save the persona information
@@ -2163,24 +2108,8 @@ export async function rpgHomeInventory(
     personaInventory:string;
   }> {
   // Check get fresh persona data
-  const userData = await db.users.upsert({
-    where: {
-      discord_id: interaction.user.id,
-    },
-    create: {
-      discord_id: interaction.user.id,
-    },
-    update: {},
-  });
-  const personaData = await db.personas.upsert({
-    where: {
-      user_id: userData.id,
-    },
-    create: {
-      user_id: userData.id,
-    },
-    update: {},
-  });
+  const userData = await getOrCreateUser(interaction.user.id);
+  const personaData = await getOrCreatePersona(userData.id);
 
   // Get the existing inventory data
   const inventoryData = await db.rpg_inventory.findMany({
@@ -2262,24 +2191,8 @@ export async function rpgFlair(interaction: ChatInputCommandInteraction) {
   }
   // Check that the user owns the flair item
   // Check get fresh persona data
-  const userData = await db.users.upsert({
-    where: {
-      discord_id: interaction.user.id,
-    },
-    create: {
-      discord_id: interaction.user.id,
-    },
-    update: {},
-  });
-  const personaData = await db.personas.upsert({
-    where: {
-      user_id: userData.id,
-    },
-    create: {
-      user_id: userData.id,
-    },
-    update: {},
-  });
+  const userData = await getOrCreateUser(interaction.user.id);
+  const personaData = await getOrCreatePersona(userData.id);
   // Get the existing inventory data
   const inventoryData = await db.rpg_inventory.findMany({
     where: {
@@ -2499,24 +2412,8 @@ export async function rpgFlairAccept(
   overrideFlair:string,
 ):Promise<InteractionUpdateOptions> {
   // Check get fresh persona data
-  const userData = await db.users.upsert({
-    where: {
-      discord_id: interaction.user.id,
-    },
-    create: {
-      discord_id: interaction.user.id,
-    },
-    update: {},
-  });
-  const personaData = await db.personas.upsert({
-    where: {
-      user_id: userData.id,
-    },
-    create: {
-      user_id: userData.id,
-    },
-    update: {},
-  });
+  const userData = await getOrCreateUser(interaction.user.id);
+  const personaData = await getOrCreatePersona(userData.id);
 
   // Get the existing inventory data
   let inventoryData = await db.rpg_inventory.findMany({
@@ -2657,24 +2554,8 @@ export async function rpgHomeNameChange(
   interaction: MessageComponentInteraction,
 ):Promise<void> {
   // Check get fresh persona data
-  const userData = await db.users.upsert({
-    where: {
-      discord_id: interaction.user.id,
-    },
-    create: {
-      discord_id: interaction.user.id,
-    },
-    update: {},
-  });
-  const personaData = await db.personas.upsert({
-    where: {
-      user_id: userData.id,
-    },
-    create: {
-      user_id: userData.id,
-    },
-    update: {},
-  });
+  const userData = await getOrCreateUser(interaction.user.id);
+  const personaData = await getOrCreatePersona(userData.id);
   // When this button is clicked, a modal appears where the user can enter their name
   // Create the modal
   const modal = new ModalBuilder()
@@ -2794,24 +2675,8 @@ export async function rpgHome(
   } = await rpgHomeInventory(interaction);
 
   // Check get fresh persona data
-  const userData = await db.users.upsert({
-    where: {
-      discord_id: interaction.user.id,
-    },
-    create: {
-      discord_id: interaction.user.id,
-    },
-    update: {},
-  });
-  const personaData = await db.personas.upsert({
-    where: {
-      user_id: userData.id,
-    },
-    create: {
-      user_id: userData.id,
-    },
-    update: {},
-  });
+  const userData = await getOrCreateUser(interaction.user.id);
+  const personaData = await getOrCreatePersona(userData.id);
   // log.debug(F, `personaData home (Change) ${JSON.stringify(personaData, null, 2)}`);
 
   // Get the existing inventory data
@@ -2927,7 +2792,7 @@ export async function rpgHome(
     .setTitle(`${emojiGet('buttonHome')} Home`)
     .setDescription(stripIndents`${message !== null ? message : ''}
 
-      You ${rand(text.enter)} your home.
+      You ${randomItem(text.enter)} your home.
       
       You can equip an item by selecting it from the menu below.
 
@@ -3112,24 +2977,8 @@ export async function rpgHomeAccept(
   interaction: MessageComponentInteraction,
 ):Promise<InteractionUpdateOptions> {
   // Check get fresh persona data
-  const userData = await db.users.upsert({
-    where: {
-      discord_id: interaction.user.id,
-    },
-    create: {
-      discord_id: interaction.user.id,
-    },
-    update: {},
-  });
-  const personaData = await db.personas.upsert({
-    where: {
-      user_id: userData.id,
-    },
-    create: {
-      user_id: userData.id,
-    },
-    update: {},
-  });
+  const userData = await getOrCreateUser(interaction.user.id);
+  const personaData = await getOrCreatePersona(userData.id);
   // If the user confirms the information, save the persona information
   const row = interaction.message.components[0] as ActionRow<MessageActionRowComponent>;
   const backgroundComponent = row.components[0];
@@ -3226,24 +3075,8 @@ export async function rpgHomeDecline(
   interaction: MessageComponentInteraction,
 ):Promise<InteractionUpdateOptions> {
   // Check get fresh persona data
-  const userData = await db.users.upsert({
-    where: {
-      discord_id: interaction.user.id,
-    },
-    create: {
-      discord_id: interaction.user.id,
-    },
-    update: {},
-  });
-  const personaData = await db.personas.upsert({
-    where: {
-      user_id: userData.id,
-    },
-    create: {
-      user_id: userData.id,
-    },
-    update: {},
-  });
+  const userData = await getOrCreateUser(interaction.user.id);
+  const personaData = await getOrCreatePersona(userData.id);
   const row = interaction.message.components[0] as ActionRow<MessageActionRowComponent>;
   const itemComponent = row.components[0];
   const selectedItem = (itemComponent as StringSelectMenuComponent).options.find(
@@ -3278,24 +3111,8 @@ export async function rpgHomeSell(
   interaction: MessageComponentInteraction,
 ):Promise<InteractionUpdateOptions> {
   // Check get fresh persona data
-  const userData = await db.users.upsert({
-    where: {
-      discord_id: interaction.user.id,
-    },
-    create: {
-      discord_id: interaction.user.id,
-    },
-    update: {},
-  });
-  let personaData = await db.personas.upsert({
-    where: {
-      user_id: userData.id,
-    },
-    create: {
-      user_id: userData.id,
-    },
-    update: {},
-  });
+  const userData = await getOrCreateUser(interaction.user.id);
+  let personaData = await getOrCreatePersona(userData.id);
   const inventoryData = await db.rpg_inventory.findMany({
     where: {
       persona_id: personaData.id,
@@ -3345,7 +3162,7 @@ export async function rpgArcade(
       .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).displayAvatarURL() })
       .setTitle(`${emojiGet('buttonArcade')} Arcade`)
       .setDescription(stripIndents`
-        You ${rand(text.enter)} the arcade and see a variety of games.
+        You ${randomItem(text.enter)} the arcade and see a variety of games.
 
         ***More games coming soon!***
       `)
@@ -3620,24 +3437,8 @@ export async function rpgArcadeGame(
   }
 
   // Check get fresh persona data
-  const userData = await db.users.upsert({
-    where: {
-      discord_id: interaction.user.id,
-    },
-    create: {
-      discord_id: interaction.user.id,
-    },
-    update: {},
-  });
-  const personaData = await db.personas.upsert({
-    where: {
-      user_id: userData.id,
-    },
-    create: {
-      user_id: userData.id,
-    },
-    update: {},
-  });
+  const userData = await getOrCreateUser(interaction.user.id);
+  const personaData = await getOrCreatePersona(userData.id);
   // log.debug(F, `personaData (Coinflip): ${JSON.stringify(personaData, null, 2)}`);
 
   const currentBet = wagers[interaction.user.id].tokens;
@@ -3666,7 +3467,7 @@ export async function rpgArcadeGame(
     const { object } = gameData[gameName as keyof typeof gameData];
 
     const { options } = gameData[gameName as keyof typeof gameData];
-    const result = rand(options);
+    const result = randomItem(options);
     // log.debug(F, `result: ${result}`);
 
     let payout = 0;
@@ -3691,7 +3492,7 @@ export async function rpgArcadeGame(
 
     if (payout !== 0) {
       // The user won
-      const BetOutcomeMessage = BetWinMessageList[Math.floor(Math.random() * BetWinMessageList.length)];
+      const BetOutcomeMessage = randomItem(BetWinMessageList);
       personaData.tokens += payout;
       await db.personas.upsert({
         where: {
@@ -3724,7 +3525,7 @@ export async function rpgArcadeGame(
       };
     }
     // The user lost
-    const BetOutcomeMessage = BetLossMessageList[Math.floor(Math.random() * BetLossMessageList.length)];
+    const BetOutcomeMessage = randomItem(BetLossMessageList);
     personaData.tokens -= currentBet;
     await db.personas.upsert({
       where: {
@@ -3819,25 +3620,9 @@ export async function rpgArcadeWager(
     newBet = 500;
   }
 
-  const userData = await db.users.upsert({
-    where: {
-      discord_id: interaction.user.id,
-    },
-    create: {
-      discord_id: interaction.user.id,
-    },
-    update: {},
-  });
+  const userData = await getOrCreateUser(interaction.user.id);
 
-  const personaData = await db.personas.upsert({
-    where: {
-      user_id: userData.id,
-    },
-    create: {
-      user_id: userData.id,
-    },
-    update: {},
-  });
+  const personaData = await getOrCreatePersona(userData.id);
 
   if (personaData.tokens < newBet) {
     const notEnough = '**You don\'t have enough to bet that much**\n';
@@ -3872,7 +3657,7 @@ export async function rpgTown(
       .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).displayAvatarURL() })
       .setTitle(`${emojiGet('buttonTown')} Town`)
       .setDescription(stripIndents`
-      You ${rand(text.enter)} TripTown, a new settlement on the edge of Triptopia, the TripSit Kingdom.
+      You ${randomItem(text.enter)} TripTown, a new settlement on the edge of Triptopia, the TripSit Kingdom.
 
       The town is still under construction with only a few buildings.
       
@@ -3907,45 +3692,13 @@ async function rpgGift(interaction: ChatInputCommandInteraction) {
     };
   }
 
-  const userData = await db.users.upsert({
-    where: {
-      discord_id: commandUser.id,
-    },
-    create: {
-      discord_id: commandUser.id,
-    },
-    update: {},
-  });
+  const userData = await getOrCreateUser(commandUser.id);
 
-  const userPersona = await db.personas.upsert({
-    where: {
-      user_id: userData.id,
-    },
-    create: {
-      user_id: userData.id,
-    },
-    update: {},
-  });
+  const userPersona = await getOrCreatePersona(userData.id);
 
-  const targetData = await db.users.upsert({
-    where: {
-      discord_id: targetUser.id,
-    },
-    create: {
-      discord_id: targetUser.id,
-    },
-    update: {},
-  });
+  const targetData = await getOrCreateUser(targetUser.id);
 
-  const targetPersona = await db.personas.upsert({
-    where: {
-      user_id: targetData.id,
-    },
-    create: {
-      user_id: targetData.id,
-    },
-    update: {},
-  });
+  const targetPersona = await getOrCreatePersona(targetData.id);
 
   // Get the current token amounts for the command user and the target user
   const commandUserTokens = userPersona.tokens;
@@ -4029,7 +3782,7 @@ export async function rpgHelp(
       .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).displayAvatarURL() })
       .setTitle(`${emojiGet('buttonHelp')} Help`)
       .setDescription(stripIndents`
-        You ${rand(text.enter)} the information centre and walk up to the help desk.
+        You ${randomItem(text.enter)} the information centre and walk up to the help desk.
 
         ***Welcome to TripSit's RPG!***
         TripSit's RPG is a discord based RPG that plays out using discord embeds.
@@ -4127,24 +3880,8 @@ export const dRpg: SlashCommand = {
     // ];
 
     // Get the user's persona data
-    const userData = await db.users.upsert({
-      where: {
-        discord_id: interaction.user.id,
-      },
-      create: {
-        discord_id: interaction.user.id,
-      },
-      update: {},
-    });
-    await db.personas.upsert({
-      where: {
-        user_id: userData.id,
-      },
-      create: {
-        user_id: userData.id,
-      },
-      update: {},
-    });
+    const userData = await getOrCreateUser(interaction.user.id);
+    await getOrCreatePersona(userData.id);
     // log.debug(F, `Initial Persona data: ${JSON.stringify(personaData, null, 2)}`);
 
     if (subcommand === 'town') {

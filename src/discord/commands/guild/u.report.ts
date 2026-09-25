@@ -8,6 +8,7 @@ import {
 import { UserCommand } from '../../@types/commandDef';
 import commandContext from '../../utils/context';
 import { modResponse } from '../../utils/modUtils';
+import { getOrCreateGuild } from '../../../global/utils/dbRecords';
 
 const F = f(__filename);
 
@@ -23,16 +24,7 @@ export const uReport: UserCommand = {
 
     // Get the guild
     const { guild } = interaction;
-    const guildData = await db.discord_guilds.upsert({
-      where: {
-        id: guild.id,
-      },
-      create: {
-        id: guild.id,
-      },
-      update: {
-      },
-    });
+    const guildData = await getOrCreateGuild(guild.id);
 
     // Get the actor
     const actor = interaction.member as GuildMember;
