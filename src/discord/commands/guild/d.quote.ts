@@ -17,6 +17,7 @@ import {
 import { SlashCommand } from '../../@types/commandDef';
 import commandContext from '../../utils/context';
 import { getOrCreateUser } from '../../../global/utils/dbRecords';
+import { vipRolesAtOrAbove } from '../../utils/roleGroups';
 
 const F = f(__filename);
 
@@ -561,18 +562,7 @@ export async function quoteAdd(interaction:MessageContextMenuCommandInteraction)
   }
 
   // Don't allow people under level 10 to save quotes
-  const vipRoles = [
-    env.ROLE_VIP_10,
-    env.ROLE_VIP_20,
-    env.ROLE_VIP_30,
-    env.ROLE_VIP_40,
-    env.ROLE_VIP_50,
-    env.ROLE_VIP_60,
-    env.ROLE_VIP_70,
-    env.ROLE_VIP_80,
-    env.ROLE_VIP_90,
-    env.ROLE_VIP_100,
-  ]
+  const vipRoles = vipRolesAtOrAbove(10)
     .map(role => actor.roles.cache.has(role)) // Check if the actor has any of these roles
     .filter(role => role); // Filter out any non-truthy values
 

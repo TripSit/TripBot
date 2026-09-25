@@ -4,105 +4,14 @@ import {
   GuildMemberUpdateEvent,
 } from '../@types/eventDef';
 import { getOrCreateGuild, getOrCreateUser } from '../../global/utils/dbRecords';
+import {
+  MINDSET_ROLES, TTS_MINDSET_ROLES, LEVEL_COLOR_ROLES, DONOR_COLOR_ROLES, vipRolesAtOrAbove,
+  TtsMindsetName,
+} from '../utils/roleGroups';
 // import { topic } from '../../global/commands/g.topic';
 
-type MindsetNames =
-| 'ROLE_DRUNK'
-| 'ROLE_HIGH'
-| 'ROLE_ROLLING'
-| 'ROLE_TRIPPING'
-| 'ROLE_DISSOCIATING'
-| 'ROLE_STIMMING'
-| 'ROLE_SEDATED'
-| 'ROLE_TALKATIVE'
-| 'ROLE_VOICECHATTY'
-| 'ROLE_BUSY'
-| 'ROLE_EVENT_1'
-| 'ROLE_EVENT_2'
-| 'ROLE_EVENT_3'
-| 'ROLE_EVENT_4'
-| 'ROLE_EVENT_5'
-| 'ROLE_EVENT_6'
-| 'ROLE_EVENT_7'
-| 'ROLE_EVENT_8'
-| 'ROLE_EVENT_9'
-| 'ROLE_EVENT_10'
-| 'ROLE_EVENT_11';
-
-const mindsetRoles = {
-  ROLE_DRUNK: env.ROLE_DRUNK,
-  ROLE_HIGH: env.ROLE_HIGH,
-  ROLE_ROLLING: env.ROLE_ROLLING,
-  ROLE_TRIPPING: env.ROLE_TRIPPING,
-  ROLE_DISSOCIATING: env.ROLE_DISSOCIATING,
-  ROLE_STIMMING: env.ROLE_STIMMING,
-  ROLE_SEDATED: env.ROLE_SEDATED,
-  ROLE_TALKATIVE: env.ROLE_TALKATIVE,
-  ROLE_VOICECHATTY: env.ROLE_VOICECHATTY,
-  ROLE_BUSY: env.ROLE_BUSY,
-  ROLE_EVENT_1: env.ROLE_EVENT_1,
-  ROLE_EVENT_2: env.ROLE_EVENT_2,
-  ROLE_EVENT_3: env.ROLE_EVENT_3,
-  ROLE_EVENT_4: env.ROLE_EVENT_4,
-  ROLE_EVENT_5: env.ROLE_EVENT_5,
-  ROLE_EVENT_6: env.ROLE_EVENT_6,
-  ROLE_EVENT_7: env.ROLE_EVENT_7,
-  ROLE_EVENT_8: env.ROLE_EVENT_8,
-  ROLE_EVENT_9: env.ROLE_EVENT_9,
-  ROLE_EVENT_10: env.ROLE_EVENT_10,
-  ROLE_EVENT_11: env.ROLE_EVENT_11,
-} as {
-  [key in MindsetNames]: string;
-};
-
-type TeamMindsetNames =
-| 'ROLE_TTS_DRUNK'
-| 'ROLE_TTS_HIGH'
-| 'ROLE_TTS_ROLLING'
-| 'ROLE_TTS_TRIPPING'
-| 'ROLE_TTS_DISSOCIATING'
-| 'ROLE_TTS_STIMMING'
-| 'ROLE_TTS_SEDATED'
-| 'ROLE_TTS_TALKATIVE'
-| 'ROLE_TTS_VOICECHATTY'
-| 'ROLE_TTS_BUSY'
-| 'ROLE_TTS_EVENT_1'
-| 'ROLE_TTS_EVENT_2'
-| 'ROLE_TTS_EVENT_3'
-| 'ROLE_TTS_EVENT_4'
-| 'ROLE_TTS_EVENT_5'
-| 'ROLE_TTS_EVENT_6'
-| 'ROLE_TTS_EVENT_7'
-| 'ROLE_TTS_EVENT_8'
-| 'ROLE_TTS_EVENT_9'
-| 'ROLE_TTS_EVENT_10'
-| 'ROLE_TTS_EVENT_11';
-
-const TTSMindsetRoles = {
-  ROLE_TTS_DRUNK: env.ROLE_TTS_DRUNK,
-  ROLE_TTS_HIGH: env.ROLE_TTS_HIGH,
-  ROLE_TTS_ROLLING: env.ROLE_TTS_ROLLING,
-  ROLE_TTS_TRIPPING: env.ROLE_TTS_TRIPPING,
-  ROLE_TTS_DISSOCIATING: env.ROLE_TTS_DISSOCIATING,
-  ROLE_TTS_STIMMING: env.ROLE_TTS_STIMMING,
-  ROLE_TTS_SEDATED: env.ROLE_TTS_SEDATED,
-  ROLE_TTS_TALKATIVE: env.ROLE_TTS_TALKATIVE,
-  ROLE_TTS_VOICECHATTY: env.ROLE_TTS_VOICECHATTY,
-  ROLE_TTS_BUSY: env.ROLE_TTS_BUSY,
-  ROLE_TTS_EVENT_1: env.ROLE_TTS_EVENT_1,
-  ROLE_TTS_EVENT_2: env.ROLE_TTS_EVENT_2,
-  ROLE_TTS_EVENT_3: env.ROLE_TTS_EVENT_3,
-  ROLE_TTS_EVENT_4: env.ROLE_TTS_EVENT_4,
-  ROLE_TTS_EVENT_5: env.ROLE_TTS_EVENT_5,
-  ROLE_TTS_EVENT_6: env.ROLE_TTS_EVENT_6,
-  ROLE_TTS_EVENT_7: env.ROLE_TTS_EVENT_7,
-  ROLE_TTS_EVENT_8: env.ROLE_TTS_EVENT_8,
-  ROLE_TTS_EVENT_9: env.ROLE_TTS_EVENT_9,
-  ROLE_TTS_EVENT_10: env.ROLE_TTS_EVENT_10,
-  ROLE_TTS_EVENT_11: env.ROLE_TTS_EVENT_11,
-} as {
-  [key in TeamMindsetNames]: string;
-};
+const mindsetRoles = MINDSET_ROLES;
+const TTSMindsetRoles = TTS_MINDSET_ROLES;
 
 // type ColorNames =
 // | 'ROLE_RED'
@@ -127,93 +36,8 @@ const TTSMindsetRoles = {
 //   [key in ColorNames]: string;
 // };
 
-type LevelColorNames =
-  | 'ROLE_LEVEL_RED'
-  | 'ROLE_LEVEL_REDORANGE'
-  | 'ROLE_LEVEL_ORANGE'
-  | 'ROLE_LEVEL_YELLOW'
-  | 'ROLE_LEVEL_YELLOWGREEN'
-  | 'ROLE_LEVEL_GREEN'
-  | 'ROLE_LEVEL_GREENBLUE'
-  | 'ROLE_LEVEL_BLUE'
-  | 'ROLE_LEVEL_BLUEPURPLE'
-  | 'ROLE_LEVEL_PURPLE'
-  | 'ROLE_LEVEL_PINK'
-  | 'ROLE_LEVEL_PINKRED'
-  | 'ROLE_LEVEL_BLACK';
-
-const levelColorRoles = {
-  ROLE_LEVEL_RED: env.ROLE_LEVEL_RED,
-  ROLE_LEVEL_REDORANGE: env.ROLE_LEVEL_REDORANGE,
-  ROLE_LEVEL_ORANGE: env.ROLE_LEVEL_ORANGE,
-  ROLE_LEVEL_YELLOW: env.ROLE_LEVEL_YELLOW,
-  ROLE_LEVEL_YELLOWGREEN: env.ROLE_LEVEL_YELLOWGREEN,
-  ROLE_LEVEL_GREEN: env.ROLE_LEVEL_GREEN,
-  ROLE_LEVEL_GREENBLUE: env.ROLE_LEVEL_GREENBLUE,
-  ROLE_LEVEL_BLUE: env.ROLE_LEVEL_BLUE,
-  ROLE_LEVEL_BLUEPURPLE: env.ROLE_LEVEL_BLUEPURPLE,
-  ROLE_LEVEL_PURPLE: env.ROLE_LEVEL_PURPLE,
-  ROLE_LEVEL_PINK: env.ROLE_LEVEL_PINK,
-  ROLE_LEVEL_PINKRED: env.ROLE_LEVEL_PINKRED,
-  ROLE_LEVEL_BLACK: env.ROLE_LEVEL_BLACK,
-} as {
-  [key in LevelColorNames]: string;
-};
-
-type DonorColorNames =
-  | 'ROLE_GRADIENT_1'
-  | 'ROLE_GRADIENT_2'
-  | 'ROLE_GRADIENT_3'
-  | 'ROLE_GRADIENT_4'
-  | 'ROLE_GRADIENT_5'
-  | 'ROLE_GRADIENT_6'
-  | 'ROLE_GRADIENT_7'
-  | 'ROLE_GRADIENT_8'
-  | 'ROLE_GRADIENT_9'
-  | 'ROLE_GRADIENT_10'
-  | 'ROLE_GRADIENT_11'
-  | 'ROLE_GRADIENT_12'
-  | 'ROLE_GRADIENT_13'
-  | 'ROLE_GRADIENT_14'
-  | 'ROLE_GRADIENT_15'
-  | 'ROLE_GRADIENT_16'
-  | 'ROLE_GRADIENT_17'
-  | 'ROLE_GRADIENT_18'
-  | 'ROLE_GRADIENT_19'
-  | 'ROLE_GRADIENT_20'
-  | 'ROLE_GRADIENT_21'
-  | 'ROLE_GRADIENT_22'
-  | 'ROLE_GRADIENT_23'
-  | 'ROLE_GRADIENT_24';
-
-const donorColorRoles = {
-  ROLE_GRADIENT_1: env.ROLE_GRADIENT_1,
-  ROLE_GRADIENT_2: env.ROLE_GRADIENT_2,
-  ROLE_GRADIENT_3: env.ROLE_GRADIENT_3,
-  ROLE_GRADIENT_4: env.ROLE_GRADIENT_4,
-  ROLE_GRADIENT_5: env.ROLE_GRADIENT_5,
-  ROLE_GRADIENT_6: env.ROLE_GRADIENT_6,
-  ROLE_GRADIENT_7: env.ROLE_GRADIENT_7,
-  ROLE_GRADIENT_8: env.ROLE_GRADIENT_8,
-  ROLE_GRADIENT_9: env.ROLE_GRADIENT_9,
-  ROLE_GRADIENT_10: env.ROLE_GRADIENT_10,
-  ROLE_GRADIENT_11: env.ROLE_GRADIENT_11,
-  ROLE_GRADIENT_12: env.ROLE_GRADIENT_12,
-  ROLE_GRADIENT_13: env.ROLE_GRADIENT_13,
-  ROLE_GRADIENT_14: env.ROLE_GRADIENT_14,
-  ROLE_GRADIENT_15: env.ROLE_GRADIENT_15,
-  ROLE_GRADIENT_16: env.ROLE_GRADIENT_16,
-  ROLE_GRADIENT_17: env.ROLE_GRADIENT_17,
-  ROLE_GRADIENT_18: env.ROLE_GRADIENT_18,
-  ROLE_GRADIENT_19: env.ROLE_GRADIENT_19,
-  ROLE_GRADIENT_20: env.ROLE_GRADIENT_20,
-  ROLE_GRADIENT_21: env.ROLE_GRADIENT_21,
-  ROLE_GRADIENT_22: env.ROLE_GRADIENT_22,
-  ROLE_GRADIENT_23: env.ROLE_GRADIENT_23,
-  ROLE_GRADIENT_24: env.ROLE_GRADIENT_24,
-} as {
-  [key in DonorColorNames]: string;
-};
+const levelColorRoles = LEVEL_COLOR_ROLES;
+const donorColorRoles = DONOR_COLOR_ROLES;
 
 // type DonorNames =
 // | 'ROLE_BOOSTER'
@@ -261,14 +85,7 @@ async function levelColorCheck(
   if (Object.values(levelColorRoles).includes(roleId)) {
     // If it does, check if the user also has a VIP 30+ role
     if (
-      oldMember.roles.cache.has(env.ROLE_VIP_30)
-      || oldMember.roles.cache.has(env.ROLE_VIP_40)
-      || oldMember.roles.cache.has(env.ROLE_VIP_50)
-      || oldMember.roles.cache.has(env.ROLE_VIP_60)
-      || oldMember.roles.cache.has(env.ROLE_VIP_70)
-      || oldMember.roles.cache.has(env.ROLE_VIP_80)
-      || oldMember.roles.cache.has(env.ROLE_VIP_90)
-      || oldMember.roles.cache.has(env.ROLE_VIP_100)
+      vipRolesAtOrAbove(30).some(vipRoleId => oldMember.roles.cache.has(vipRoleId))
       || oldMember.roles.cache.has(env.ROLE_TEAMTRIPSIT)
     ) {
       log.debug(F, 'VIP 30+ user added a level color role!');
@@ -356,7 +173,7 @@ async function teamMindsetCheck(
       // The target ID matches the current mindsetRole object
       log.debug(F, `User Mindset role: ${key}`);
       // Change "ROLE_" to "ROLE_TTS" in the .env name
-      const ttsMindsetName = key.replace('ROLE_', 'ROLE_TTS_') as TeamMindsetNames;
+      const ttsMindsetName = key.replace('ROLE_', 'ROLE_TTS_') as TtsMindsetName;
       log.debug(F, `TTS mindset name: ${ttsMindsetName}`);
       // Find the role in the TTSMindsetRoles object
       const ttsMindsetRoleId = TTSMindsetRoles[ttsMindsetName];
@@ -388,7 +205,7 @@ async function teamMindsetRemove(
       // The target ID matches the current mindsetRole object
       log.debug(F, `User Mindset role: ${key}`);
       // Change "ROLE_" to "ROLE_TTS" in the .env name
-      const ttsMindsetName = key.replace('ROLE_', 'ROLE_TTS_') as TeamMindsetNames;
+      const ttsMindsetName = key.replace('ROLE_', 'ROLE_TTS_') as TtsMindsetName;
       log.debug(F, `TTS mindset name: ${ttsMindsetName}`);
       // Find the role in the TTSMindsetRoles object
       const ttsMindsetRoleId = TTSMindsetRoles[ttsMindsetName];
