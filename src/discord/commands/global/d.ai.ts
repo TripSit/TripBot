@@ -619,102 +619,10 @@ export async function aiButton(interaction: ButtonInteraction): Promise<void> {
       await interaction.update(await AiPage.privacy(interaction));
       break;
     }
-    // case AiText.ButtonId.RESPONSE_SIZE: {
-    //   log.debug(F, 'Response size button pressed');
-    //   const userData = await db.users.findUniqueOrThrow({
-    //     where: { discord_id: interaction.user.id },
-    //     include: {
-    //       ai_info: true,
-    //     },
-    //   });
-    //   log.debug(F, `Response size: ${userData.ai_info?.response_size}`);
-    //   await interaction.showModal(
-    //     AiModal.responseSize(userData.ai_info?.response_size || 500),
-    //   );
-    //   break;
-    // }
-    // case AiText.ButtonId.CONTEXT_SIZE: {
-    //   log.debug(F, 'Context size button pressed');
-    //   const userData = await db.users.findUniqueOrThrow({
-    //     where: { discord_id: interaction.user.id },
-    //     include: {
-    //       ai_info: true,
-    //     },
-    //   });
-    //   await interaction.showModal(
-    //     AiModal.contextSize(userData.ai_info?.context_size || 10000),
-    //   );
-    //   break;
-    // }
     default:
       await AiPage.userSettings(interaction);
       break;
   }
 }
-
-// export async function aiModal(
-//   interaction: ModalSubmitInteraction,
-// ): Promise<void> {
-//   const modalId = interaction.customId as keyof typeof AiModal.ID;
-//   switch (modalId) {
-//     case AiModal.ID.RESPONSE_SIZE:
-//       await interaction.deferUpdate();
-//       await db.users.update({
-//         where: {
-//           discord_id: interaction.user.id,
-//         },
-//         data: {
-//           ai_info: {
-//             upsert: {
-//               update: {
-//                 response_size: Number(
-//                   interaction.fields.getTextInputValue(
-//                     AiModal.ID.RESPONSE_SIZE,
-//                   ),
-//                 ),
-//               },
-//               create: {
-//                 response_size: Number(
-//                   interaction.fields.getTextInputValue(
-//                     AiModal.ID.RESPONSE_SIZE,
-//                   ),
-//                 ),
-//               },
-//             },
-//           },
-//         },
-//       });
-//       await interaction.editReply(await AiPage.userSettings(interaction));
-//       break;
-//     case AiModal.ID.CONTEXT_SIZE:
-//       await interaction.deferUpdate();
-//       await db.users.update({
-//         where: {
-//           discord_id: interaction.user.id,
-//         },
-//         data: {
-//           ai_info: {
-//             upsert: {
-//               update: {
-//                 context_size: Number(
-//                   interaction.fields.getTextInputValue(AiModal.ID.CONTEXT_SIZE),
-//                 ),
-//               },
-//               create: {
-//                 context_size: Number(
-//                   interaction.fields.getTextInputValue(AiModal.ID.CONTEXT_SIZE),
-//                 ),
-//               },
-//             },
-//           },
-//         },
-//       });
-//       await interaction.editReply(await AiPage.userSettings(interaction));
-//       break;
-//     default:
-//       log.debug(F, 'Unknown modal submitted');
-//       break;
-//   }
-// }
 
 export default aiCommand;
