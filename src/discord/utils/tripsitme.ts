@@ -1,5 +1,5 @@
 /* eslint-disable max-len */
-import { ticket_status, user_tickets } from '@db/tripbot';
+import { discord_guilds, ticket_status, user_tickets } from '@db/tripbot';
 import { stripIndents } from 'common-tags';
 import {
   ButtonStyle,
@@ -40,6 +40,7 @@ import commandCooldown from './commandCooldown';
 import commandContext from './context';
 import { embedTemplate } from './embedTemplate';
 import { getOrCreateGuild, getOrCreateUser } from '../../global/utils/dbRecords';
+import { getOpenTicket, ticketExpiryDates } from '../../global/utils/tickets';
 import { replyGuildOnly } from './guildOnly';
 import {
   TEAM_ROLES, TRIPSITME_COLOR_ROLES, TRIPSITME_MINDSET_ROLES, TRIPSITME_OTHER_ROLES,
@@ -226,6 +227,51 @@ export async function needsHelpMode(
  * Handles the Own button
  * @param {ButtonInteraction} interaction
  * */
+function userCloseButton(targetId: string): ActionRowBuilder<ButtonBuilder> {
+  return new ActionRowBuilder<ButtonBuilder>()
+    .addComponents(
+      new ButtonBuilder()
+        .setCustomId(`tripsitmeUserClose~${targetId}`)
+        .setLabel('I\'m good now!')
+        .setStyle(ButtonStyle.Success),
+    );
+}
+
+function tripsitterButtons(
+  targetId: string,
+  { includeMeta }: { includeMeta: boolean },
+): ActionRowBuilder<ButtonBuilder> {
+  const row = new ActionRowBuilder<ButtonBuilder>()
+    .addComponents(
+      new ButtonBuilder()
+        .setCustomId(`tripsitmeOwned~${targetId}`)
+        .setLabel('Owned')
+        .setStyle(ButtonStyle.Primary),
+      new ButtonBuilder()
+        .setCustomId(`tripsitmeTeamClose~${targetId}`)
+        .setLabel('They\'re good now!')
+        .setStyle(ButtonStyle.Success),
+    );
+
+  if (includeMeta) {
+    row.addComponents(
+      new ButtonBuilder()
+        .setCustomId(`tripsitmeMeta~${targetId}`)
+        .setLabel('Create thread')
+        .setStyle(ButtonStyle.Secondary),
+    );
+  }
+
+  row.addComponents(
+    new ButtonBuilder()
+      .setCustomId(`tripsitmeBackup~${targetId}`)
+      .setLabel('I need backup')
+      .setStyle(ButtonStyle.Danger),
+  );
+
+  return row;
+}
+
 export async function tripsitmeOwned(
   interaction:ButtonInteraction,
 ) {
@@ -247,16 +293,7 @@ export async function tripsitmeOwned(
 
   const userData = await getOrCreateUser(userId);
 
-  const ticketData = await db.user_tickets.findFirst({
-    where: {
-      user_id: userData.id,
-      status: {
-        not: {
-          in: ['CLOSED', 'RESOLVED', 'DELETED'],
-        },
-      },
-    },
-  });
+  const ticketData = await getOpenTicket(userData.id);
 
   const guildData = await getOrCreateGuild(interaction.guild?.id);
 
@@ -343,16 +380,7 @@ export async function tripsitmeMeta(
 
   const userData = await getOrCreateUser(userId);
 
-  const ticketData = await db.user_tickets.findFirst({
-    where: {
-      user_id: userData.id,
-      status: {
-        not: {
-          in: ['CLOSED', 'RESOLVED', 'DELETED'],
-        },
-      },
-    },
-  });
+  const ticketData = await getOpenTicket(userData.id);
 
   if (!ticketData) {
     const rejectMessage = `Hey ${(interaction.member as GuildMember).displayName}, ${target.displayName} does not have an open session!`;
@@ -405,21 +433,7 @@ export async function tripsitmeMeta(
       `)
     .setFooter({ text: 'If you need help click the Backup button to summon Helpers and Tripsitters' });
 
-  const endSession = new ActionRowBuilder<ButtonBuilder>()
-    .addComponents(
-      new ButtonBuilder()
-        .setCustomId(`tripsitmeOwned~${target.id}`)
-        .setLabel('Owned')
-        .setStyle(ButtonStyle.Primary),
-      new ButtonBuilder()
-        .setCustomId(`tripsitmeTeamClose~${target.id}`)
-        .setLabel('They\'re good now!')
-        .setStyle(ButtonStyle.Success),
-      new ButtonBuilder()
-        .setCustomId(`tripsitmeBackup~${target.id}`)
-        .setLabel('I need backup')
-        .setStyle(ButtonStyle.Danger),
-    );
+  const endSession = tripsitterButtons(target.id, { includeMeta: false });
 
   await metaChannel.send({
     embeds: [embedTripsitter],
@@ -457,16 +471,7 @@ export async function tripsitmeBackup(
 
   const userData = await getOrCreateUser(userId);
 
-  const ticketData = await db.user_tickets.findFirst({
-    where: {
-      user_id: userData.id,
-      status: {
-        not: {
-          in: ['CLOSED', 'RESOLVED', 'DELETED'],
-        },
-      },
-    },
-  });
+  const ticketData = await getOpenTicket(userData.id);
 
   if (!ticketData) {
     const rejectMessage = `Hey ${interaction.member}, ${target.displayName} does not have an open session!`;
@@ -520,16 +525,6 @@ export async function tripsitmeBackup(
   await interaction.editReply({ content: 'Backup message sent!' });
 }
 
-function closeTripsitTicketButtonRowBuilder(targetId: string): ActionRowBuilder<ButtonBuilder> {
-  return new ActionRowBuilder<ButtonBuilder>()
-    .addComponents(
-      new ButtonBuilder()
-        .setCustomId(`tripsitmeUserClose~${targetId}`)
-        .setLabel('I\'m good now!')
-        .setStyle(ButtonStyle.Success),
-    );
-}
-
 /**
  * Handles removing of the NeedsHelp mode
  * @param {ButtonInteraction} interaction
@@ -564,16 +559,7 @@ export async function tripsitmeTeamClose(
 
   const userData = await getOrCreateUser(targetId);
 
-  const ticketData = await db.user_tickets.findFirst({
-    where: {
-      user_id: userData.id,
-      status: {
-        not: {
-          in: ['CLOSED', 'RESOLVED', 'DELETED'],
-        },
-      },
-    },
-  });
+  const ticketData = await getOpenTicket(userData.id);
 
   const guildData = await getOrCreateGuild(interaction.guild?.id);
   // log.debug(F, `guildData: ${JSON.stringify(guildData, null, 2)}`);
@@ -632,7 +618,7 @@ export async function tripsitmeTeamClose(
     If you'd like to go back to social mode, just click the button below!
     `;
 
-  const row = closeTripsitTicketButtonRowBuilder(targetId);
+  const row = userCloseButton(targetId);
 
   await threadHelpUser.send({
     content: closeMessage,
@@ -666,13 +652,9 @@ export async function tripsitmeTeamClose(
 
   // Update the ticket status to resolved
   ticketData.status = 'RESOLVED' as ticket_status;
-  ticketData.archived_at = env.NODE_ENV === 'production'
-    ? DateTime.local().plus({ days: 3 }).toJSDate()
-    : DateTime.local().plus({ minutes: 1 }).toJSDate();
-
-  ticketData.deleted_at = env.NODE_ENV === 'production'
-    ? DateTime.local().plus({ days: 5 }).toJSDate()
-    : DateTime.local().plus({ minutes: 2 }).toJSDate();
+  const teamCloseExpiry = ticketExpiryDates();
+  ticketData.archived_at = teamCloseExpiry.archivedAt;
+  ticketData.deleted_at = teamCloseExpiry.deletedAt;
 
   // await database.tickets.set(ticketData);
   await db.user_tickets.update({
@@ -989,13 +971,9 @@ export async function tripsitmeUserClose(
 
   // Update the ticket status to closed
   ticketData.status = 'CLOSED' as ticket_status;
-  ticketData.archived_at = env.NODE_ENV === 'production'
-    ? DateTime.local().plus({ days: 3 }).toJSDate()
-    : DateTime.local().plus({ minutes: 1 }).toJSDate();
-
-  ticketData.deleted_at = env.NODE_ENV === 'production'
-    ? DateTime.local().plus({ days: 5 }).toJSDate()
-    : DateTime.local().plus({ minutes: 2 }).toJSDate();
+  const userCloseExpiry = ticketExpiryDates();
+  ticketData.archived_at = userCloseExpiry.archivedAt;
+  ticketData.deleted_at = userCloseExpiry.deletedAt;
 
   await db.user_tickets.update({
     where: {
@@ -1172,7 +1150,7 @@ export async function tripSitMe(
       **The wonderful people at the Fireside project can also help you through a rough trip. You can check them out: https://firesideproject.org/**
       `;
 
-  const row = closeTripsitTicketButtonRowBuilder(target.id);
+  const row = userCloseButton(target.id);
   await threadHelpUser.send({
     content: firstMessage,
     components: [row],
@@ -1218,25 +1196,7 @@ export async function tripSitMe(
       `)
     .setFooter({ text: 'If you need help click the Backup button to summon Helpers and Tripsitters' });
 
-  const endSession = new ActionRowBuilder<ButtonBuilder>()
-    .addComponents(
-      new ButtonBuilder()
-        .setCustomId(`tripsitmeOwned~${target.id}`)
-        .setLabel('Owned')
-        .setStyle(ButtonStyle.Primary),
-      new ButtonBuilder()
-        .setCustomId(`tripsitmeTeamClose~${target.id}`)
-        .setLabel('They\'re good now!')
-        .setStyle(ButtonStyle.Success),
-      new ButtonBuilder()
-        .setCustomId(`tripsitmeMeta~${target.id}`)
-        .setLabel('Create thread')
-        .setStyle(ButtonStyle.Secondary),
-      new ButtonBuilder()
-        .setCustomId(`tripsitmeBackup~${target.id}`)
-        .setLabel('I need backup')
-        .setStyle(ButtonStyle.Danger),
-    );
+  const endSession = tripsitterButtons(target.id, { includeMeta: true });
 
   await channelTripsitmeta.send({
     embeds: [embedTripsitter],
@@ -1248,15 +1208,9 @@ export async function tripSitMe(
   });
   // log.debug(F, `Sent message to ${channelTripsitmeta.name} (${channelTripsitmeta.id})`);
 
-  const archiveTime = env.NODE_ENV === 'production'
-    ? DateTime.local().plus({ days: 3 })
-    : DateTime.local().plus({ minutes: 1 });
+  const { archivedAt: archiveTime, deletedAt: deleteTime } = ticketExpiryDates();
 
-  const deleteTime = env.NODE_ENV === 'production'
-    ? DateTime.local().plus({ days: 5 })
-    : DateTime.local().plus({ minutes: 2 });
-
-  log.debug(F, `Ticket archives on ${archiveTime.toLocaleString(DateTime.DATETIME_FULL)} deletes on ${deleteTime.toLocaleString(DateTime.DATETIME_FULL)}`);
+  log.debug(F, `Ticket archives on ${DateTime.fromJSDate(archiveTime).toLocaleString(DateTime.DATETIME_FULL)} deletes on ${DateTime.fromJSDate(deleteTime).toLocaleString(DateTime.DATETIME_FULL)}`);
 
   const userData = await getOrCreateUser(target.id);
 
@@ -1272,8 +1226,8 @@ export async function tripSitMe(
     type: 'TRIPSIT',
     status: 'OPEN',
     first_message_id: '',
-    archived_at: archiveTime.toJSDate(),
-    deleted_at: deleteTime.toJSDate(),
+    archived_at: archiveTime,
+    deleted_at: deleteTime,
   } as user_tickets;
 
   // log.debug(F, `newTicketData: ${JSON.stringify(newTicketData, null, 2)}`);
@@ -1293,6 +1247,107 @@ export async function tripSitMe(
   });
 
   return threadHelpUser;
+}
+
+interface ReopenTicketOptions {
+  interaction: ButtonInteraction | ChatInputCommandInteraction;
+  target: GuildMember;
+  guildData: discord_guilds;
+  ticketData: user_tickets;
+  threadHelpUser: ThreadChannel;
+  helpMessage: string;
+  metaSubject: string;
+}
+
+/**
+ * Shared steps for reopening an existing ticket: pings the help thread (and meta thread, if any),
+ * renames the channels, and sets the ticket back to OPEN with fresh expiry dates.
+ */
+export async function reopenTicket({
+  interaction, target, guildData, ticketData, threadHelpUser, helpMessage, metaSubject,
+}: ReopenTicketOptions): Promise<user_tickets> {
+  let roleTripsitter = {} as Role;
+  let roleHelper = {} as Role;
+  if (guildData.role_tripsitter) {
+    roleTripsitter = await interaction.guild?.roles.fetch(guildData.role_tripsitter) as Role;
+  }
+  if (guildData.role_helper) {
+    roleHelper = await interaction.guild?.roles.fetch(guildData.role_helper) as Role;
+  }
+
+  // Check if the created_by is in the last 5 minutes
+  const createdDate = new Date(ticketData.reopened_at ?? ticketData.created_at);
+  const now = new Date();
+  const diff = now.getTime() - createdDate.getTime();
+  const minutes = Math.floor(diff / 1000 / 60);
+
+  let finalHelpMessage = helpMessage;
+  if (minutes > 5) {
+    const helperStr = `and/or ${roleHelper}`;
+    finalHelpMessage += `\n\nSomeone from the ${roleTripsitter} ${guildData.role_helper ? helperStr : ''} team will be with you as soon as they're available!`;
+  }
+
+  const row = userCloseButton(target.id);
+  await threadHelpUser.send({
+    content: finalHelpMessage,
+    components: [row],
+    allowedMentions: {
+      parse: ['users', 'roles'] as MessageMentionTypes[],
+    },
+  });
+  threadHelpUser.setName(`🧡│${target.displayName}'s channel!`);
+
+  if (ticketData.meta_thread_id) {
+    let metaMessage = '';
+    if (minutes > 5) { // Switch to seconds > 10 for dev server
+      const helperString = `and/or ${roleHelper}`;
+      try {
+        metaMessage = `Hey ${roleTripsitter} ${guildData.role_helper ? helperString : ''} team, ${metaSubject}`;
+      } catch (err) {
+        // If for example helper role has been deleted but the ID is still stored, do this
+        metaMessage = `Hey ${roleTripsitter} team, ${metaSubject}`;
+        log.error(F, `Stored Helper ID for guild ${guildData.id} is no longer valid. Role is unfetchable or deleted.`);
+      }
+    } else {
+      metaMessage = metaSubject;
+    }
+    // Get the tripsit meta channel from the guild
+    try {
+      const metaThread = await interaction.guild?.channels.fetch(ticketData.meta_thread_id) as ThreadChannel;
+      metaThread.setName(`🧡│${target.displayName}'s discussion!`);
+      await metaThread.send({
+        content: metaMessage,
+        allowedMentions: {
+          parse: ['users', 'roles'] as MessageMentionTypes[],
+        },
+      });
+    } catch (err) {
+      // log.debug(F, `There was an error fetching the tripsit channel, it was likely deleted:\n ${err}`);
+      // Update the ticket status to closed
+      await db.user_tickets.update({
+        where: {
+          id: ticketData.id,
+        },
+        data: {
+          meta_thread_id: null,
+        },
+      });
+    }
+  }
+
+  const { archivedAt, deletedAt } = ticketExpiryDates();
+
+  return db.user_tickets.update({
+    where: {
+      id: ticketData.id,
+    },
+    data: {
+      status: 'OPEN' as ticket_status,
+      reopened_at: new Date(),
+      archived_at: archivedAt,
+      deleted_at: deletedAt,
+    },
+  });
 }
 
 export async function tripsitmeButton(
@@ -1433,20 +1488,8 @@ export async function tripsitmeButton(
       await interaction.deferReply({ flags: MessageFlags.Ephemeral });
       await needsHelpMode(interaction, target);
       log.debug(F, 'Added needshelp to user');
-      let roleTripsitter = {} as Role;
-      let roleHelper = {} as Role;
-      if (guildData.role_tripsitter) {
-        roleTripsitter = await interaction.guild?.roles.fetch(guildData.role_tripsitter) as Role;
-      }
-      if (guildData.role_helper) {
-        roleHelper = await interaction.guild?.roles.fetch(guildData.role_helper) as Role;
-      }
-      log.debug(F, `Helper Role : ${roleHelper.name}`);
-      log.debug(F, `Tripsitter Role : ${roleTripsitter.name}`);
 
       // Remind the user that they have a channel open
-      // const recipient = '' as string;
-
       const embed = embedTemplate()
         .setColor(Colors.DarkBlue)
         .setDescription(stripIndents`Hey ${interaction.member}, you have an open session!
@@ -1454,98 +1497,15 @@ export async function tripsitmeButton(
         Check your channel list or click '${threadHelpUser.toString()} to get help!`);
       await interaction.editReply({ embeds: [embed] });
       log.debug(F, 'Told user they already have an open channel');
-      // log.debug(F, `Rejected need for help`);
 
-      // Check if the created_by is in the last 5 minutes
-      const createdDate = new Date(ticketData.reopened_at ?? ticketData.created_at);
-      const now = new Date();
-      const diff = now.getTime() - createdDate.getTime();
-      const minutes = Math.floor(diff / 1000 / 60);
-      // const seconds = Math.floor(diff / 1000); // Uncomment this for dev server
-
-      // Send the update message to the thread
-      let helpMessage = stripIndents`Hey ${target}, thanks for asking for help, we can continue talking here! What's up?`;
-      if (minutes > 5) {
-        const helperStr = `and/or ${roleHelper}`;
-        // log.debug(F, `Target has open ticket, and it was created over 5 minutes ago!`);
-        helpMessage += `\n\nSomeone from the ${roleTripsitter} ${guildData.role_helper ? helperStr : ''} team will be with you as soon as they're available!`;
-      }
-      const row = closeTripsitTicketButtonRowBuilder(target.id);
-      await threadHelpUser.send({
-        content: helpMessage,
-        components: [row],
-        allowedMentions: {
-          // parse: showMentions,
-          parse: ['users', 'roles'] as MessageMentionTypes[],
-        },
-      });
-      log.debug(F, 'Pinged user in help thread');
-      threadHelpUser.setName(`🧡│${target.displayName}'s channel!`);
-
-      if (ticketData.meta_thread_id) {
-        let metaMessage = '';
-        if (minutes > 5) { // Switch to seconds > 10 for dev server
-          const helperString = `and/or ${roleHelper}`;
-          try {
-            metaMessage = `Hey ${roleTripsitter} ${guildData.role_helper ? helperString : ''} team, ${target.toString()} has indicated they need assistance!`;
-          } catch (err) {
-            // If for example helper role has been deleted but the ID is still stored, do this
-            metaMessage = `Hey ${roleTripsitter} team, ${target.toString()} has indicated they need assistance!`;
-            log.error(F, `Stored Helper ID for guild ${guildData.id} is no longer valid. Role is unfetchable or deleted.`);
-          }
-        } else {
-          metaMessage = `${target.toString()} has indicated they need assistance!`;
-        }
-        // Get the tripsit meta channel from the guild
-        let metaThread = {} as ThreadChannel;
-        try {
-          if (ticketData.meta_thread_id) {
-            metaThread = await interaction.guild?.channels.fetch(ticketData.meta_thread_id) as ThreadChannel;
-          }
-          metaThread.setName(`🧡│${target.displayName}'s discussion!`);
-          await metaThread.send({
-            content: metaMessage,
-            allowedMentions: {
-              // parse: showMentions,
-              parse: ['users', 'roles'] as MessageMentionTypes[],
-            },
-          });
-          log.debug(F, 'Pinged team in meta thread!');
-        } catch (err) {
-          // log.debug(F, `There was an error fetching the tripsit channel, it was likely deleted:\n ${err}`);
-          // Update the ticket status to closed
-          await db.user_tickets.update({
-            where: {
-              id: ticketData.id,
-            },
-            data: {
-              meta_thread_id: null,
-            },
-          });
-        }
-      }
-
-      ticketData.status = 'OPEN' as ticket_status;
-      ticketData.reopened_at = new Date();
-      ticketData.archived_at = env.NODE_ENV === 'production'
-        ? DateTime.local().plus({ days: 3 }).toJSDate()
-        : DateTime.local().plus({ minutes: 1 }).toJSDate();
-
-      ticketData.deleted_at = env.NODE_ENV === 'production'
-        ? DateTime.local().plus({ days: 5 }).toJSDate()
-        : DateTime.local().plus({ minutes: 2 }).toJSDate();
-      // await database.tickets.set(ticketData);
-
-      await db.user_tickets.update({
-        where: {
-          id: ticketData.id,
-        },
-        data: {
-          status: 'OPEN' as ticket_status,
-          reopened_at: ticketData.reopened_at,
-          archived_at: ticketData.archived_at,
-          deleted_at: ticketData.deleted_at,
-        },
+      await reopenTicket({
+        interaction,
+        target,
+        guildData,
+        ticketData,
+        threadHelpUser,
+        helpMessage: stripIndents`Hey ${target}, thanks for asking for help, we can continue talking here! What's up?`,
+        metaSubject: `${target.toString()} has indicated they need assistance!`,
       });
 
       return;
