@@ -17,6 +17,7 @@ import {
   SeparatorSpacingSize,
 } from 'discord.js';
 import { VIP_ROLES_BY_LEVEL } from './roleGroups';
+import { randomItem } from '../../global/utils/random';
 
 const F = f(__filename); // eslint-disable-line
 
@@ -451,7 +452,7 @@ export async function logTent(
       embed = new EmbedBuilder()
         .setColor(Colors.Red)
         .setDescription(`${Old.member} left the tent.
-          *${leaveMessages[Math.floor(Math.random() * leaveMessages.length)]}*`);
+          *${randomItem(leaveMessages)}*`);
       await Old.channel.send({ embeds: [embed] });
     }
   }
@@ -477,7 +478,7 @@ export async function logTent(
       embed = new EmbedBuilder()
         .setColor(Colors.Green)
         .setDescription(`${New.member} joined the tent.
-          *${joinMessages[Math.floor(Math.random() * joinMessages.length)]}*`);
+          *${randomItem(joinMessages)}*`);
       await New.channel.send({ embeds: [embed] });
     }
   }

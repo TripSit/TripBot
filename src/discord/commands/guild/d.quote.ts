@@ -17,6 +17,7 @@ import {
 import { SlashCommand } from '../../@types/commandDef';
 import commandContext from '../../utils/context';
 import { getOrCreateUser } from '../../../global/utils/dbRecords';
+import { randomItem } from '../../../global/utils/random';
 import { vipRolesAtOrAbove } from '../../utils/roleGroups';
 
 const F = f(__filename);
@@ -269,7 +270,7 @@ async function get(interaction: ChatInputCommandInteraction) {
     }
 
     // Pick a random quote from the user's quotes
-    quoteData = quotes[Math.floor(Math.random() * quotes.length)];
+    quoteData = randomItem(quotes);
   }
 
   if (!quoteData) {
@@ -315,7 +316,7 @@ async function get(interaction: ChatInputCommandInteraction) {
 
   const descriptionParts = [
     // eslint-disable-next-line max-len
-    `${target?.displayName || target?.user.username || 'Unknown User'} ${flavorText[Math.floor(Math.random() * flavorText.length)]}`,
+    `${target?.displayName || target?.user.username || 'Unknown User'} ${randomItem(flavorText)}`,
   ];
 
   if (!(quoteData.quote === imageOnlyPlaceholder && media.images.length > 0)) {
@@ -405,9 +406,7 @@ async function random(interaction:ChatInputCommandInteraction) {
   await interaction.editReply({
     embeds: buildQuoteEmbeds({
       author: {
-        name: `${author ? author.displayName : 'Unknown User'} ${
-          flavorText[Math.floor(Math.random() * flavorText.length)]
-        }`,
+        name: `${author ? author.displayName : 'Unknown User'} ${randomItem(flavorText)}`,
         icon_url: author ? author.user.displayAvatarURL() : undefined,
         url: quote.url,
       },
@@ -585,7 +584,7 @@ export async function quoteAdd(interaction:MessageContextMenuCommandInteraction)
   if (quoteExists) {
     log.debug(F, 'Quote already exists');
     await interaction.editReply({
-      content: failResponses[Math.floor(Math.random() * failResponses.length)],
+      content: randomItem(failResponses),
     });
     return true;
   }
@@ -610,7 +609,7 @@ export async function quoteAdd(interaction:MessageContextMenuCommandInteraction)
 
   await interaction.targetMessage.reply({
     embeds: [{
-      description: stripIndents`${successResponses[Math.floor(Math.random() * successResponses.length)]
+      description: stripIndents`${randomItem(successResponses)
         .replace('{target.displayName}', target.displayName)}
       `,
       // footer: {

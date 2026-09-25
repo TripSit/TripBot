@@ -28,6 +28,7 @@ import { tripSitTrustScore } from './trustScore';
 import { topic } from '../../global/commands/g.topic';
 import { giveMilestone } from '../../global/utils/experience';
 import { getOrCreateGuild, getOrCreateUser } from '../../global/utils/dbRecords';
+import { randomItem } from '../../global/utils/random';
 
 const F = f(__filename);
 
@@ -158,7 +159,7 @@ but they were already marked at trusted in the database, so no message was sent`
       `A big welcome to ${newMember}!`,
     ];
 
-    const greeting = greetingList[Math.floor(Math.random() * greetingList.length)];
+    const greeting = randomItem(greetingList);
 
     const channelLounge = await newMember.client.channels.fetch(env.CHANNEL_LOUNGE) as TextChannel;
     await channelLounge.send({
