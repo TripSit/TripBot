@@ -15,10 +15,33 @@ export const threadDelete: ThreadDeleteEvent = {
     await postAuditLog({
       guild: thread.guild,
       type: AuditLogEvent.ThreadDelete,
-      subject: `Thread **${thread.toString}**`,
+      subject: `Thread **${thread.toString()}**`,
       action: 'deleted',
       caller: F,
     });
+
+    // Find if the channel is used as a thread_id in any tickets
+    const ticketData = await db.user_tickets.findFirst({
+      where: {
+        thread_id: thread.id,
+        status: {
+          not: {
+            in: ['CLOSED', 'RESOLVED', 'DELETED'],
+          },
+        },
+      },
+    });
+
+    if (ticketData) {
+      await db.user_tickets.update({
+        where: {
+          id: ticketData.id,
+        },
+        data: {
+          status: 'DELETED',
+        },
+      });
+    }
   },
 };
 

@@ -93,7 +93,7 @@ export async function techHelpClick(interaction:ButtonInteraction) {
       await i.deferReply({ flags: MessageFlags.Ephemeral });
 
       if (!i.guild) {
-        await replyGuildOnly(interaction);
+        await replyGuildOnly(i);
         return;
       }
 
