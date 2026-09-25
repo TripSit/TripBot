@@ -10,7 +10,7 @@ import {
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
 import { SlashCommand } from '../../@types/commandDef';
-import { embedTemplate } from '../../utils/embedTemplate';
+import { embedTemplate, errorEmbed } from '../../utils/embedTemplate';
 import { GUILD_ONLY_TEXT } from '../../utils/guildOnly';
 import {
   bridgeConfirm, bridgeCreate, bridgePause, bridgeRemove, bridgeResume,
@@ -424,9 +424,7 @@ export const dBridge: SlashCommand = {
     if (!interaction.guild || !interaction.member) {
       await interaction.editReply({
         embeds: [
-          embed
-            .setDescription(GUILD_ONLY_TEXT)
-            .setColor(Colors.Red),
+          errorEmbed(GUILD_ONLY_TEXT).setTitle('Bridge'),
         ],
       });
       return false;
@@ -440,12 +438,10 @@ export const dBridge: SlashCommand = {
       && !guildData.supporter) {
       await interaction.editReply({
         embeds: [
-          embed
-            .setDescription(`This command can only be used in a partner guild!
+          errorEmbed(`This command can only be used in a partner guild!
             If you are a partner and this is an error, please contact Moonbear.
             If you are not a partner, tell Moonbear you're interested:
-            This is a new system and we're still figuring out how it works.`)
-            .setColor(Colors.Red),
+            This is a new system and we're still figuring out how it works.`).setTitle('Bridge'),
         ],
       });
       return false;

@@ -24,7 +24,7 @@ import {
 } from 'discord.js';
 import { reaction_role_type, reaction_roles } from '@db/tripbot';
 import { SlashCommand } from '../../@types/commandDef';
-import { embedTemplate } from '../../utils/embedTemplate';
+import { embedTemplate, errorEmbed } from '../../utils/embedTemplate';
 import { missingPermission } from '../../utils/checkPermissions';
 import { getOrCreateGuild, getOrCreateUser } from '../../../global/utils/dbRecords';
 import { replyGuildOnly } from '../../utils/guildOnly';
@@ -54,9 +54,7 @@ export async function setupCustomReactionRole(
   if (introMessageRequired && messagePostChannel === null) {
     await interaction.reply({
       embeds: [
-        embedTemplate()
-          .setDescription('Error: If an intro message is required, then you must specify where you want the intro message to be posted!')
-          .setColor(Colors.Red),
+        errorEmbed('Error: If an intro message is required, then you must specify where you want the intro message to be posted!'),
       ],
       flags: MessageFlags.Ephemeral,
     });
@@ -67,9 +65,7 @@ export async function setupCustomReactionRole(
   if (messagePostChannel && messagePostChannel.type !== ChannelType.GuildText) {
     await interaction.reply({
       embeds: [
-        embedTemplate()
-          .setDescription('Error: The intro message channel must be a text channel!')
-          .setColor(Colors.Red),
+        errorEmbed('Error: The intro message channel must be a text channel!'),
       ],
       flags: MessageFlags.Ephemeral,
     });
@@ -85,9 +81,7 @@ export async function setupCustomReactionRole(
   if (emojiInput && emojiInput.length > 0 && !emojiFound) {
     await interaction.reply({
       embeds: [
-        embedTemplate()
-          .setDescription('Error: That is not a valid emoji! Please try again.')
-          .setColor(Colors.Red),
+        errorEmbed('Error: That is not a valid emoji! Please try again.'),
       ],
       flags: MessageFlags.Ephemeral,
     });
@@ -97,9 +91,7 @@ export async function setupCustomReactionRole(
   if (emojiFound && emojiFound.length > 1) {
     await interaction.reply({
       embeds: [
-        embedTemplate()
-          .setDescription('Error: You can only specify one emoji!')
-          .setColor(Colors.Red),
+        errorEmbed('Error: You can only specify one emoji!'),
       ],
       flags: MessageFlags.Ephemeral,
     });
@@ -112,9 +104,7 @@ export async function setupCustomReactionRole(
   if (!emoji && !label) {
     await interaction.reply({
       embeds: [
-        embedTemplate()
-          .setDescription('Error: You must specify either an emoji or a label for the reaction role!')
-          .setColor(Colors.Red),
+        errorEmbed('Error: You must specify either an emoji or a label for the reaction role!'),
       ],
       flags: MessageFlags.Ephemeral,
     });
@@ -128,10 +118,8 @@ export async function setupCustomReactionRole(
   if (role.comparePositionTo(myRole) > 0) {
     await interaction.reply({
       embeds: [
-        embedTemplate()
-          .setDescription(stripIndents`Error: My role needs to be higher than the role you want to manage!
-          Please move my role above ${role} and try again.`)
-          .setColor(Colors.Red),
+        errorEmbed(stripIndents`Error: My role needs to be higher than the role you want to manage!
+          Please move my role above ${role} and try again.`),
       ],
       flags: MessageFlags.Ephemeral,
     });
@@ -283,10 +271,8 @@ export async function buttonReactionRole(
       if (role.comparePositionTo(myRole) > 0) {
         await interaction.editReply({
           embeds: [
-            embedTemplate()
-              .setDescription(stripIndents`Error: My role needs to be higher than the role you want to manage!
-              Please move my role above ${role} and try again, or re-do this reaction role`)
-              .setColor(Colors.Red),
+            errorEmbed(stripIndents`Error: My role needs to be higher than the role you want to manage!
+              Please move my role above ${role} and try again, or re-do this reaction role`),
           ],
         });
         return;
@@ -1403,9 +1389,7 @@ export const dReactionRole: SlashCommand = {
       && !guildData.supporter) {
       await interaction.reply({
         embeds: [
-          embedTemplate()
-            .setDescription('This command can only be used in a partner or supporter guilds! Use /reaction_role help for more info.')
-            .setColor(Colors.Red),
+          errorEmbed('This command can only be used in a partner or supporter guilds! Use /reaction_role help for more info.'),
         ],
         flags: MessageFlags.Ephemeral,
       });
@@ -1419,9 +1403,7 @@ export const dReactionRole: SlashCommand = {
     if (!(interaction.member as GuildMember).permissions.has('ManageRoles' as PermissionResolvable)) {
       await interaction.reply({
         embeds: [
-          embedTemplate()
-            .setDescription('Error: You do not have the ManageRoles permission needed to create a reactionrole message!')
-            .setColor(Colors.Red),
+          errorEmbed('Error: You do not have the ManageRoles permission needed to create a reactionrole message!'),
         ],
         flags: MessageFlags.Ephemeral,
       });
@@ -1431,9 +1413,7 @@ export const dReactionRole: SlashCommand = {
     if (!interaction.guild) {
       await interaction.reply({
         embeds: [
-          embedTemplate()
-            .setDescription('Error: This command can only be used in a guild!')
-            .setColor(Colors.Red),
+          errorEmbed('Error: This command can only be used in a guild!'),
         ],
         flags: MessageFlags.Ephemeral,
       });
@@ -1443,9 +1423,7 @@ export const dReactionRole: SlashCommand = {
     if (!interaction.channel) {
       await interaction.reply({
         embeds: [
-          embedTemplate()
-            .setDescription('Error: This command can only be used in a channel!')
-            .setColor(Colors.Red),
+          errorEmbed('Error: This command can only be used in a channel!'),
         ],
         flags: MessageFlags.Ephemeral,
       });
@@ -1455,9 +1433,7 @@ export const dReactionRole: SlashCommand = {
     if (interaction.channel.type !== ChannelType.GuildText) {
       await interaction.reply({
         embeds: [
-          embedTemplate()
-            .setDescription('Error: This command can only be used in a text channel!')
-            .setColor(Colors.Red),
+          errorEmbed('Error: This command can only be used in a text channel!'),
         ],
         flags: MessageFlags.Ephemeral,
       });
@@ -1470,12 +1446,10 @@ export const dReactionRole: SlashCommand = {
       log.error(F, `Missing guild permission ${guildMissing} in ${interaction.guild}!`);
       await interaction.reply({
         embeds: [
-          embedTemplate()
-            .setDescription(stripIndents`Error: Missing ${guildMissing} permission in ${interaction.guild}!
+          errorEmbed(stripIndents`Error: Missing ${guildMissing} permission in ${interaction.guild}!
             In order to setup the reaction roles feature I need:
             Manage Roles - In order to give and take away roles from users
-            Note: My role needs to be higher than all other roles you want managed!`)
-            .setColor(Colors.Red),
+            Note: My role needs to be higher than all other roles you want managed!`),
         ],
         flags: MessageFlags.Ephemeral,
       });
@@ -1490,12 +1464,10 @@ export const dReactionRole: SlashCommand = {
       log.error(F, `Missing channel permission ${channelMissing} in ${interaction.channel}!`);
       await interaction.reply({
         embeds: [
-          embedTemplate()
-            .setDescription(stripIndents`Error: Missing ${channelMissing} permission in ${interaction.channel}!
+          errorEmbed(stripIndents`Error: Missing ${channelMissing} permission in ${interaction.channel}!
             In order to setup the reaction roles feature I need:
             View Channel - In order to see the channel
-            Send Messages - In order to send the reaction role message`)
-            .setColor(Colors.Red),
+            Send Messages - In order to send the reaction role message`),
         ],
         flags: MessageFlags.Ephemeral,
       });
