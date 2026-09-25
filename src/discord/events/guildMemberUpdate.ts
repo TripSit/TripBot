@@ -4,6 +4,7 @@ import {
   GuildMemberUpdateEvent,
 } from '../@types/eventDef';
 import { getOrCreateGuild, getOrCreateUser } from '../../global/utils/dbRecords';
+import { getOpenTicket } from '../../global/utils/tickets';
 import {
   MINDSET_ROLES, TTS_MINDSET_ROLES, LEVEL_COLOR_ROLES, DONOR_COLOR_ROLES, vipRolesAtOrAbove,
   TtsMindsetName,
@@ -233,16 +234,7 @@ async function removeExTeamFromThreads(
     const channelTripsit = await discordClient.channels.fetch(guildData.channel_tripsit) as TextChannel;
     const userData = await getOrCreateUser(newMember.user.id);
 
-    const ticketData = await db.user_tickets.findFirst({
-      where: {
-        user_id: userData.id,
-        status: {
-          not: {
-            in: ['CLOSED', 'RESOLVED', 'DELETED'],
-          },
-        },
-      },
-    });
+    const ticketData = await getOpenTicket(userData.id);
 
     const fetchedThreads = await channelTripsit.threads.fetch();
     fetchedThreads.threads.forEach(async thread => {
