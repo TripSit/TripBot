@@ -5,6 +5,7 @@ import {
 } from '../@types/eventDef';
 import { getOrCreateGuild, getOrCreateUser } from '../../global/utils/dbRecords';
 import { getOpenTicket } from '../../global/utils/tickets';
+import { randomItem } from '../../global/utils/random';
 import {
   MINDSET_ROLES, TTS_MINDSET_ROLES, LEVEL_COLOR_ROLES, DONOR_COLOR_ROLES, vipRolesAtOrAbove,
   TtsMindsetName,
@@ -260,7 +261,7 @@ async function addedBooster(
     await channelViplounge.send(stripIndents`
         ** ${boostEmoji} ${newMember.toString()} just boosted the server! ${boostEmoji} **
 
-        ${thankYouPhrases[Math.floor(Math.random() * thankYouPhrases.length)]}
+        ${randomItem(thankYouPhrases)}
 
         ${donationTagline}`);
   }
@@ -278,7 +279,7 @@ async function addedPatreon(
         ** ${donorEmoji} ${newMember} just contributed further and became a Supporter by \
         signing up via [Patreon](<https://www.patreon.com/TripSit>)! ${donorEmoji} **
 
-          ${thankYouPhrases[Math.floor(Math.random() * thankYouPhrases.length)]}
+          ${randomItem(thankYouPhrases)}
 
           ${donationTagline}`);
     } else {
@@ -291,7 +292,7 @@ async function addedPatreon(
       ** ${donorEmoji} ${newMember} just became a Supporter and Premium Member \
       (first time donator) by signing up via [Patreon](<https://www.patreon.com/TripSit>)! ${donorEmoji} **
 
-        ${thankYouPhrases[Math.floor(Math.random() * thankYouPhrases.length)]}
+        ${randomItem(thankYouPhrases)}
 
         ${donationTagline}`);
     }
@@ -307,7 +308,7 @@ async function addedPatreon(
         ** ${donorEmoji} ${newMember} just made a further contribution by donating via \
         [KoFi](<https://ko-fi.com/tripsit>)! ${donorEmoji} **
 
-          ${thankYouPhrases[Math.floor(Math.random() * thankYouPhrases.length)]}
+          ${randomItem(thankYouPhrases)}
 
           ${donationTagline}`);
     } else {
@@ -319,7 +320,7 @@ async function addedPatreon(
       ** ${donorEmoji} ${newMember} just became a Premium Member (first time donator) by donating via \
       [KoFi](<https://ko-fi.com/tripsit>)! ${donorEmoji} **
 
-        ${thankYouPhrases[Math.floor(Math.random() * thankYouPhrases.length)]}
+        ${randomItem(thankYouPhrases)}
 
         ${donationTagline}`);
     }

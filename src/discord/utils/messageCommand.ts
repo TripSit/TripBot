@@ -11,6 +11,7 @@ import {
 } from 'discord.js';
 import { sleep } from './sleep';
 import { getOrCreateUser } from '../../global/utils/dbRecords';
+import { randomItem } from '../../global/utils/random';
 
 // import log from '../../global/utils/log';
 // import {parse} from 'path';
@@ -207,7 +208,7 @@ export async function messageCommand(message: Message): Promise<void> {
       '🫣',
       '🤨',
     ];
-    await message.channel.send(faces[Math.floor(Math.random() * faces.length)]);
+    await message.channel.send(randomItem(faces));
   } else if (await isMentioningTripbot(message)) {
     // If the bot was mentioned
     // log.debug(F, `Bot was mentioned in ${message.guild.name}!`); // eslint-disable-line
@@ -356,7 +357,7 @@ export async function messageCommand(message: Message): Promise<void> {
     if (message.guild.id !== env.DISCORD_GUILD_ID) return;
     // log.debug(F, 'Sad/lovey stuff detected');
     try {
-      await message.react(heartEmojis[Math.floor(Math.random() * heartEmojis.length)]);
+      await message.react(randomItem(heartEmojis));
     } catch (err) {
       log.info(F, `Failed to add heart reaction in ${message.guild.name}(${message.guild.id}).`);
     }
