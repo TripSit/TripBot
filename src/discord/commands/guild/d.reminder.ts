@@ -3,12 +3,11 @@ import {
   SlashCommandBuilder,
   TextChannel,
   GuildMember,
-  Colors,
   TextBasedChannel,
   MessageFlags,
 } from 'discord.js';
 import { SlashCommand } from '../../@types/commandDef';
-import { embedTemplate } from '../../utils/embedTemplate';
+import { errorEmbed } from '../../utils/embedTemplate';
 import commandContext from '../../utils/context';
 import { replyGuildOnly } from '../../utils/guildOnly';
 // import log from '../../../global/utils/log'; // eslint-disable-line no-unused-vars
@@ -86,10 +85,8 @@ export const dReminder: SlashCommand = {
     const reminderText = reminderData[1];
     // log.debug(F, `reminderText: ${reminderText}`);
 
-    const reminder = embedTemplate()
-      .setColor(Colors.Red)
-      .setTitle(`REMINDER: ${reminderTitle}`)
-      .setDescription(reminderText);
+    const reminder = errorEmbed(reminderText)
+      .setTitle(`REMINDER: ${reminderTitle}`);
 
     await interaction.channel.send({ embeds: [reminder] });
 

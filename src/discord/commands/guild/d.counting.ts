@@ -14,7 +14,7 @@ import {
 import { stripIndents } from 'common-tags';
 import { SlashCommandBeta } from '../../@types/commandDef';
 import commandContext from '../../utils/context';
-import { embedTemplate } from '../../utils/embedTemplate';
+import { embedTemplate, errorEmbed } from '../../utils/embedTemplate';
 import { missingPermission } from '../../utils/checkPermissions';
 import { sleep } from '../../utils/sleep';
 import { getOrCreateUser } from '../../../global/utils/dbRecords';
@@ -458,10 +458,8 @@ export async function countMessage(message: Message): Promise<void> {
     // Send a message to the channel
     await message.channel.send({
       embeds: [
-        embedTemplate()
-          .setTitle('Combo Broken!')
-          .setColor(Colors.Red)
-          .setDescription(stripIndents`Oh no, ${message.author} broke the combo...${recordMessage}${endingMessage}`),
+        errorEmbed(stripIndents`Oh no, ${message.author} broke the combo...${recordMessage}${endingMessage}`)
+          .setTitle('Combo Broken!'),
       ],
     });
 
@@ -661,9 +659,7 @@ export const counting: SlashCommandBeta = {
       )) {
         // log.debug(`${PREFIX} bot does NOT has permission to post in !`);
         return interaction.editReply({
-          embeds: [embedTemplate()
-            .setTitle('You do not have permission to use this command!')
-            .setColor(Colors.Red)],
+          embeds: [errorEmbed().setTitle('You do not have permission to use this command!')],
         });
       }
       response = await countingSetup(
@@ -687,9 +683,7 @@ export const counting: SlashCommandBeta = {
       )) {
         // log.debug(`${PREFIX} bot does NOT has permission to post in !`);
         return interaction.editReply({
-          embeds: [embedTemplate()
-            .setTitle('You do not have permission to use this command!')
-            .setColor(Colors.Red)],
+          embeds: [errorEmbed().setTitle('You do not have permission to use this command!')],
         });
       }
 

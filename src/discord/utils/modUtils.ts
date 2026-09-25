@@ -42,7 +42,7 @@ import {
 } from 'discord.js';
 import { Duration } from 'luxon';
 import { parseDuration, validateDurationInput } from '../../global/utils/parseDuration';
-import { embedTemplate } from './embedTemplate';
+import { embedTemplate, errorEmbed } from './embedTemplate';
 import { getDiscordMember } from './guildMemberLookup';
 import { modActionCounts, modHistoryRows } from './modHistory';
 import { tripSitTrustScore } from './trustScore';
@@ -675,9 +675,7 @@ export async function modResponse(
   const actionRow = new ActionRowBuilder<ButtonBuilder>();
   if (interaction && (!interaction.guild || !interaction.member)) {
     return {
-      embeds: [embedTemplate()
-        .setColor(Colors.Red)
-        .setTitle(GUILD_ONLY_TEXT)],
+      embeds: [errorEmbed().setTitle(GUILD_ONLY_TEXT)],
     };
   }
 
@@ -1311,11 +1309,9 @@ export async function refusalButton(
     log.debug(F, `Failed to update the warning message after a refusal: ${err}`);
   }
 
-  const rejectionEmbed = embedTemplate()
-    .setColor(Colors.Red)
-    .setDescription(willTimeout
-      ? `❌ ${interaction.user} (${interaction.user.username}) has **rejected** their warning, so I'm timing them out for ${humanDuration}.`
-      : `❌ ${interaction.user} (${interaction.user.username}) has **rejected** their warning.`);
+  const rejectionEmbed = errorEmbed(willTimeout
+    ? `❌ ${interaction.user} (${interaction.user.username}) has **rejected** their warning, so I'm timing them out for ${humanDuration}.`
+    : `❌ ${interaction.user} (${interaction.user.username}) has **rejected** their warning.`);
 
   const existingModThread = await getModThread(targetData);
   if (existingModThread) {
@@ -1330,7 +1326,7 @@ export async function refusalButton(
     }
     if (existingModThread) {
       await existingModThread.send({
-        embeds: [embedTemplate().setColor(Colors.Red).setDescription(reason)],
+        embeds: [errorEmbed(reason)],
       });
     }
     return;
@@ -1345,9 +1341,7 @@ export async function refusalButton(
     log.error(F, `Failed to time out ${interaction.user.username} after they rejected a warning: ${err}`);
     if (existingModThread) {
       await existingModThread.send({
-        embeds: [embedTemplate()
-          .setColor(Colors.Red)
-          .setDescription(`⚠️ I couldn't time ${timeoutTarget} out, someone will need to do it manually.`)],
+        embeds: [errorEmbed(`⚠️ I couldn't time ${timeoutTarget} out, someone will need to do it manually.`)],
       });
     }
     return;
@@ -1548,9 +1542,7 @@ export async function acknowledgeReportButton(
   } catch (error) {
     log.error(F, `Failed to send DM to ${buttonInt.user.username}: ${error}`);
     await targetChan.send({
-      embeds: [embedTemplate()
-        .setColor(Colors.Red)
-        .setDescription(`${buttonInt.user.username} tried to acknowledged ${reporteeData.username}'s report, but there was an error.`)],
+      embeds: [errorEmbed(`${buttonInt.user.username} tried to acknowledged ${reporteeData.username}'s report, but there was an error.`)],
     });
   }
 }
