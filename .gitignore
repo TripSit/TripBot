@@ -14,9 +14,6 @@ node_modules_bak
 .scannerwork/
 eslint-report.json
 coverage/
-assets/img/*/*.png
-assets/img/*/*.png
-assets/img/*.png
 src/matrix/cache/tripbot.json
 .env.example
 src/prisma/moodle/@prisma-moodle/client/libquery_engine-linux-musl-openssl-3.0.x.so.node
