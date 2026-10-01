@@ -170,6 +170,7 @@ async function tripsitmodeOn(
         threadHelpUser,
         helpMessage: stripIndents`Hey ${target}, the team thinks you could still use some help, lets continue talking here!`, // eslint-disable-line max-len
         metaSubject: `${interaction.member} has indicated that ${target.displayName} needs assistance!`,
+        status: 'OWNED',
       });
 
       // remind the user they have an open thread

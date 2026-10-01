@@ -23,6 +23,7 @@ import {
 } from 'discord.js';
 import { getOrCreateGuild } from '../../global/utils/dbRecords';
 import { replyGuildOnly } from './guildOnly';
+import { retagTicketChannelName, ticketIcons } from './ticketIcons';
 
 const F = f(__filename);
 
@@ -111,7 +112,7 @@ export async function techHelpClick(interaction:ButtonInteraction) {
 
       // Create a new thread in channel
       const ticketThread = await (i.channel as TextChannel).threads.create({
-        name: `🧡│${targetName}'s ${issueType} issue!`,
+        name: `${ticketIcons.new}│${targetName}'s ${issueType} issue!`,
         autoArchiveDuration: 1440,
         type: ChannelType.PrivateThread as AllowedThreadTypeForTextChannel,
         reason: `${targetName} submitted a(n) ${issueType} issue`,
@@ -172,7 +173,8 @@ export async function techHelpOwn(interaction:ButtonInteraction) {
     return;
   }
 
-  (interaction.channel as ThreadChannel).setName(`💛│${target.displayName}'s ${issueType} issue!`);
+  const thread = interaction.channel as ThreadChannel;
+  thread.setName(`${ticketIcons.inProgress}│${target.displayName}'s ${issueType} issue!`);
 
   await interaction.reply({
     embeds: [
@@ -205,12 +207,8 @@ export async function techHelpClose(interaction:ButtonInteraction) {
     ? stripIndents`${interaction.member.displayName} has indicated that they no longer need help!`
     : stripIndents`${(interaction.member as GuildMember).displayName} has indicated that this issue has been resolved!`;
 
-  if (interaction.member === target) {
-    // Replace the first character of the channel name with a green heart
-    (interaction.channel as ThreadChannel).setName(`💚${(interaction.channel as ThreadChannel).name.slice(1)}`);
-  } else {
-    (interaction.channel as ThreadChannel).setName(`💙${(interaction.channel as ThreadChannel).name.slice(1)}`);
-  }
+  const thread = interaction.channel as ThreadChannel;
+  thread.setName(retagTicketChannelName(thread.name, interaction.member === target ? 'closed' : 'resolved'));
 
   await interaction.reply({
     embeds: [

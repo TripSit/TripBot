@@ -129,7 +129,7 @@ async function checkTickets() { // eslint-disable-line @typescript-eslint/no-unu
         updatedTicket.status = 'ARCHIVED' as ticket_status;
         updatedTicket.deleted_at = env.NODE_ENV === 'production'
           ? DateTime.local().plus({ days: 3 }).toJSDate()
-          : DateTime.local().plus({ minutes: 1 }).toJSDate();
+          : DateTime.local().plus({ minutes: 15 }).toJSDate();
         if (!updatedTicket.description) {
           updatedTicket.description = 'Ticket archived';
         }
