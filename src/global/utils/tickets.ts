@@ -19,11 +19,11 @@ export async function getOpenTicket(userId: string): Promise<user_tickets | null
 export function ticketExpiryDates(): { archivedAt: Date; deletedAt: Date } {
   const archivedAt = env.NODE_ENV === 'production'
     ? DateTime.local().plus({ days: 3 }).toJSDate()
-    : DateTime.local().plus({ minutes: 1 }).toJSDate();
+    : DateTime.local().plus({ minutes: 15 }).toJSDate();
 
   const deletedAt = env.NODE_ENV === 'production'
     ? DateTime.local().plus({ days: 5 }).toJSDate()
-    : DateTime.local().plus({ minutes: 2 }).toJSDate();
+    : DateTime.local().plus({ minutes: 30 }).toJSDate();
 
   return { archivedAt, deletedAt };
 }

@@ -33,18 +33,23 @@ import {
   User,
 } from 'discord.js';
 import { DateTime } from 'luxon';
+import { getOrCreateGuild, getOrCreateUser } from '../../global/utils/dbRecords';
+import { getOpenTicket, ticketExpiryDates } from '../../global/utils/tickets';
 import {
   ensurePermissions, TRIPSIT_CHANNEL_PERMS, tripsitChannelOwnerMessage,
 } from './checkPermissions';
 import commandCooldown from './commandCooldown';
 import commandContext from './context';
 import { embedTemplate } from './embedTemplate';
-import { getOrCreateGuild, getOrCreateUser } from '../../global/utils/dbRecords';
-import { getOpenTicket, ticketExpiryDates } from '../../global/utils/tickets';
 import { replyGuildOnly } from './guildOnly';
 import {
   TEAM_ROLES, TRIPSITME_COLOR_ROLES, TRIPSITME_MINDSET_ROLES, TRIPSITME_OTHER_ROLES,
 } from './roleGroups';
+import {
+  retagTicketChannelName, setTicketChannelName,
+  ticketIcons,
+  TicketIconStatus,
+} from './ticketIcons';
 
 const F = f(__filename);
 
@@ -56,6 +61,14 @@ const otherRoles = TRIPSITME_OTHER_ROLES;
 const ignoredRoles = `${teamRoles},${colorRoles},${mindsetRoles},${otherRoles}`;
 
 const memberOnly = 'This must be performed by a member of a guild!';
+
+function ticketChannelName(
+  status: TicketIconStatus,
+  displayName: string,
+  thread: 'channel' | 'discussion',
+): string {
+  return `${ticketIcons[status]}│${displayName}'s ${thread}!`;
+}
 
 /* Testing Scripts
 
@@ -325,7 +338,7 @@ export async function tripsitmeOwned(
         content: stripIndents`${actor.displayName} has indicated that ${target.toString()} is receiving help!`,
       });
       if (metaChannelId !== guildData.channel_tripsitmeta) {
-        metaChannel.setName(`💛│${target.displayName}'s discussion!`);
+        setTicketChannelName(metaChannel, ticketChannelName('inProgress', target.displayName, 'discussion'));
       }
     }
   }
@@ -333,7 +346,7 @@ export async function tripsitmeOwned(
   // Update the ticket's name
   try {
     const channel = await interaction.guild.channels.fetch(ticketData.thread_id) as TextChannel;
-    channel.setName(`💛│${target.displayName}'s channel!`);
+    setTicketChannelName(channel, ticketChannelName('inProgress', target.displayName, 'channel'));
   } catch (err) {
     // Thread likely deleted
   }
@@ -394,7 +407,7 @@ export async function tripsitmeMeta(
   const channel = interaction.channel as TextChannel;
   const metaChannel = await channel.threads.create(
     {
-      name: `💛│${target.displayName}'s discussion!`,
+      name: ticketChannelName('inProgress', target.displayName, 'discussion'),
       autoArchiveDuration: 1440,
       type: ChannelType.PrivateThread as AllowedThreadTypeForTextChannel,
       reason: `${actor.displayName} created meta thread for ${target.displayName}`,
@@ -588,8 +601,8 @@ export async function tripsitmeTeamClose(
   try {
     threadHelpUser = await interaction.guild.channels.fetch(ticketData.thread_id) as ThreadChannel;
 
-    // Replace the first character of the channel name with a blue heart using slice to preserve the rest of the name
-    await threadHelpUser.setName(`💙${threadHelpUser.name.slice(1)}`);
+    // The target may have left the guild, so keep the rest of the existing name
+    await setTicketChannelName(threadHelpUser, retagTicketChannelName(threadHelpUser.name, 'resolved'));
   } catch (err) {
     // log.debug(F, `There was an error updating the help thread, it was likely deleted:\n ${err}`);
     // Update the ticket status to closed
@@ -633,7 +646,7 @@ export async function tripsitmeTeamClose(
         content: stripIndents`${actor.displayName} has indicated that ${target ? target.displayName : 'this user'} no longer needs help!`,
       });
       if (metaChannelId !== guildData.channel_tripsitmeta) {
-        await metaChannel.setName(`💙${threadHelpUser.name.slice(1)}`);
+        await setTicketChannelName(metaChannel, retagTicketChannelName(metaChannel.name, 'resolved'));
       }
     } catch (err) {
       if (metaChannelId === ticketData.meta_thread_id) {
@@ -895,7 +908,7 @@ export async function tripsitmeUserClose(
         content: stripIndents`${actor.displayName} has indicated that they no longer need help!`,
       });
       if (metaChannelId !== guildData.channel_tripsitmeta) {
-        metaChannel.setName(`💚│${target.displayName}'s discussion!`);
+        setTicketChannelName(metaChannel, ticketChannelName('closed', target.displayName, 'discussion'));
       }
     } catch (err) {
       // Meta thread likely doesn't exist
@@ -964,7 +977,7 @@ export async function tripsitmeUserClose(
     });
 
   // Do this last because it looks weird to have it happen in-between messages
-  threadHelpUser.setName(`💚│${target.displayName}'s channel!`);
+  setTicketChannelName(threadHelpUser, ticketChannelName('closed', target.displayName, 'channel'));
 
   // log.debug(F, `${target.user.tag} (${target.user.id}) is no longer being helped!`);
   // await interaction.editReply({ content: 'Done!' });
@@ -1111,7 +1124,7 @@ export async function tripSitMe(
   // Create a new thread in the channel
   // If we're not in production we need to create a public thread
   const threadHelpUser = await tripsitChannel.threads.create({
-    name: `🧡│${target.displayName}'s channel!`,
+    name: ticketChannelName('new', target.displayName, 'channel'),
     autoArchiveDuration: 1440,
     type: ChannelType.PrivateThread as AllowedThreadTypeForTextChannel,
     reason: `${target.displayName} requested help`,
@@ -1257,15 +1270,18 @@ interface ReopenTicketOptions {
   threadHelpUser: ThreadChannel;
   helpMessage: string;
   metaSubject: string;
+  /** OWNED when the team reopened it themselves, since someone's clearly already on it */
+  status?: 'OPEN' | 'OWNED';
 }
 
 /**
  * Shared steps for reopening an existing ticket: pings the help thread (and meta thread, if any),
- * renames the channels, and sets the ticket back to OPEN with fresh expiry dates.
+ * renames the channels, and sets the ticket back to OPEN (or OWNED) with fresh expiry dates.
  */
 export async function reopenTicket({
-  interaction, target, guildData, ticketData, threadHelpUser, helpMessage, metaSubject,
+  interaction, target, guildData, ticketData, threadHelpUser, helpMessage, metaSubject, status = 'OPEN',
 }: ReopenTicketOptions): Promise<user_tickets> {
+  const iconStatus: TicketIconStatus = status === 'OWNED' ? 'inProgress' : 'reopened';
   let roleTripsitter = {} as Role;
   let roleHelper = {} as Role;
   if (guildData.role_tripsitter) {
@@ -1295,7 +1311,7 @@ export async function reopenTicket({
       parse: ['users', 'roles'] as MessageMentionTypes[],
     },
   });
-  threadHelpUser.setName(`🧡│${target.displayName}'s channel!`);
+  setTicketChannelName(threadHelpUser, ticketChannelName(iconStatus, target.displayName, 'channel'));
 
   if (ticketData.meta_thread_id) {
     let metaMessage = '';
@@ -1314,7 +1330,7 @@ export async function reopenTicket({
     // Get the tripsit meta channel from the guild
     try {
       const metaThread = await interaction.guild?.channels.fetch(ticketData.meta_thread_id) as ThreadChannel;
-      metaThread.setName(`🧡│${target.displayName}'s discussion!`);
+      setTicketChannelName(metaThread, ticketChannelName(iconStatus, target.displayName, 'discussion'));
       await metaThread.send({
         content: metaMessage,
         allowedMentions: {
@@ -1342,7 +1358,7 @@ export async function reopenTicket({
       id: ticketData.id,
     },
     data: {
-      status: 'OPEN' as ticket_status,
+      status: status as ticket_status,
       reopened_at: new Date(),
       archived_at: archivedAt,
       deleted_at: deletedAt,
