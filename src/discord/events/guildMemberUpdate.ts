@@ -275,9 +275,12 @@ async function addedPatreon(
     // Check if they already have donated before, if so send a special message
     if (newMember.roles.cache.has(env.ROLE_PREMIUM)) {
       const channelViplounge = await discordClient.channels.fetch(env.CHANNEL_VIPLOUNGE) as TextChannel;
+      const announcement = [
+        `** ${donorEmoji} ${newMember} just contributed further and became a Supporter by`,
+        `signing up via [Patreon](<https://www.patreon.com/TripSit>)! ${donorEmoji} **`,
+      ].join(' ');
       await channelViplounge.send(stripIndents`
-        ** ${donorEmoji} ${newMember} just contributed further and became a Supporter by \
-        signing up via [Patreon](<https://www.patreon.com/TripSit>)! ${donorEmoji} **
+        ${announcement}
 
           ${randomItem(thankYouPhrases)}
 
@@ -288,9 +291,12 @@ async function addedPatreon(
       await newMember.roles.add(role);
 
       const channelViplounge = await discordClient.channels.fetch(env.CHANNEL_VIPLOUNGE) as TextChannel;
+      const announcement = [
+        `** ${donorEmoji} ${newMember} just became a Supporter and Premium Member`,
+        `(first time donator) by signing up via [Patreon](<https://www.patreon.com/TripSit>)! ${donorEmoji} **`,
+      ].join(' ');
       await channelViplounge.send(stripIndents`
-      ** ${donorEmoji} ${newMember} just became a Supporter and Premium Member \
-      (first time donator) by signing up via [Patreon](<https://www.patreon.com/TripSit>)! ${donorEmoji} **
+        ${announcement}
 
         ${randomItem(thankYouPhrases)}
 
@@ -304,9 +310,12 @@ async function addedPatreon(
     // Check if they already have already donated, if so send a special message
     if (newMember.roles.cache.has(env.ROLE_PREMIUM)) {
       const channelViplounge = await discordClient.channels.fetch(env.CHANNEL_VIPLOUNGE) as TextChannel;
+      const announcement = [
+        `** ${donorEmoji} ${newMember} just made a further contribution by donating via`,
+        `[KoFi](<https://ko-fi.com/tripsit>)! ${donorEmoji} **`,
+      ].join(' ');
       await channelViplounge.send(stripIndents`
-        ** ${donorEmoji} ${newMember} just made a further contribution by donating via \
-        [KoFi](<https://ko-fi.com/tripsit>)! ${donorEmoji} **
+        ${announcement}
 
           ${randomItem(thankYouPhrases)}
 
@@ -316,9 +325,12 @@ async function addedPatreon(
       const role = await newMember.guild.roles.fetch(env.ROLE_PREMIUM) as Role;
       await newMember.roles.add(role);
       const channelViplounge = await discordClient.channels.fetch(env.CHANNEL_VIPLOUNGE) as TextChannel;
+      const announcement = [
+        `** ${donorEmoji} ${newMember} just became a Premium Member (first time donator) by donating via`,
+        `[KoFi](<https://ko-fi.com/tripsit>)! ${donorEmoji} **`,
+      ].join(' ');
       await channelViplounge.send(stripIndents`
-      ** ${donorEmoji} ${newMember} just became a Premium Member (first time donator) by donating via \
-      [KoFi](<https://ko-fi.com/tripsit>)! ${donorEmoji} **
+        ${announcement}
 
         ${randomItem(thankYouPhrases)}
 
