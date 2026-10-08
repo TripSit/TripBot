@@ -23,7 +23,7 @@ import {
 } from 'discord.js';
 import { getOrCreateGuild } from '../../global/utils/dbRecords';
 import { replyGuildOnly } from './guildOnly';
-import { retagTicketChannelName, ticketIcons } from './ticketIcons';
+import { modTicketIcons, retagModTicketChannelName, setModTicketChannelName } from './ticketIcons';
 
 const F = f(__filename);
 
@@ -112,7 +112,7 @@ export async function techHelpClick(interaction:ButtonInteraction) {
 
       // Create a new thread in channel
       const ticketThread = await (i.channel as TextChannel).threads.create({
-        name: `${ticketIcons.new}│${targetName}'s ${issueType} issue!`,
+        name: `${modTicketIcons.new}│${targetName}'s ${issueType} issue!`,
         autoArchiveDuration: 1440,
         type: ChannelType.PrivateThread as AllowedThreadTypeForTextChannel,
         reason: `${targetName} submitted a(n) ${issueType} issue`,
@@ -174,7 +174,7 @@ export async function techHelpOwn(interaction:ButtonInteraction) {
   }
 
   const thread = interaction.channel as ThreadChannel;
-  thread.setName(`${ticketIcons.inProgress}│${target.displayName}'s ${issueType} issue!`);
+  setModTicketChannelName(thread, `${modTicketIcons.inProgress}│${target.displayName}'s ${issueType} issue!`);
 
   await interaction.reply({
     embeds: [
@@ -208,7 +208,8 @@ export async function techHelpClose(interaction:ButtonInteraction) {
     : stripIndents`${(interaction.member as GuildMember).displayName} has indicated that this issue has been resolved!`;
 
   const thread = interaction.channel as ThreadChannel;
-  thread.setName(retagTicketChannelName(thread.name, interaction.member === target ? 'closed' : 'resolved'));
+  const status = interaction.member === target ? 'closedByUser' : 'closedByMod';
+  setModTicketChannelName(thread, retagModTicketChannelName(thread.name, status));
 
   await interaction.reply({
     embeds: [
