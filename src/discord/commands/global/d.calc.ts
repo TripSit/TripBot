@@ -335,22 +335,21 @@ async function dCalcOpioid(
   const morphineStep = viaMorphine ? `Converted via **${formatDose(morphineEquivalent)} oral morphine**. ` : '';
 
   const embed = errorEmbed(`${morphineStep}${potencyLine} [Source](${OPIOID_SOURCE_URL})`)
-    .setTitle(fitOpioidTitle(`${dosage} mg ${fromDesc} is ~${formatDose(equianalgesic, unit)} ${toDesc}`));
+    .setTitle(fitOpioidTitle(`${dosage}mg ${fromDesc} is ~${formatDose(equianalgesic, unit)} ${toDesc}`));
 
   // Unnamed block so it reads as running text, the way /calc benzo presents the same advice.
   const closing = { name: '\u200B', value: fitOpioidField(OPIOID_CLOSING) };
 
   // Short mode: just the answer, how we got there, and the standing advice.
-  if (levelOfDetail === OPIOID_DETAIL_SHORT) return embed.addFields([closing]);
-
-  const fields: { name: string, value: string, inline?: boolean }[] = [];
+  if (levelOfDetail === OPIOID_DETAIL_SHORT) {
+    return embed.addFields([closing]);
+  }
 
   if (cautiousStart) {
-    fields.push({
-      name: 'Start low',
-      value: fitOpioidField(`**${formatDose(cautiousStart, unit)}**`),
-    });
+    embed.setDescription(`${embed.data.description}\n### Start low and check usual dosing ranges.`);
   }
+
+  const fields: { name: string, value: string, inline?: boolean }[] = [];
 
   const routeLines = otherRoutes.map(route => `**${ROUTE_LABELS[route.roa]}** - ${formatDose(route.dose, unit)}${route.estimated ? ' \\*' : ''}`);
   // One footnote beats repeating the same caveat on every line.
@@ -365,9 +364,15 @@ async function dCalcOpioid(
     });
   }
 
-  if (to.onset) fields.push({ name: 'Onset', value: fitOpioidField(to.onset), inline: true });
-  if (to.duration) fields.push({ name: 'Duration', value: fitOpioidField(to.duration), inline: true });
-  if (to.halfLife) fields.push({ name: 'Half-life', value: fitOpioidField(to.halfLife), inline: true });
+  if (to.onset) {
+    fields.push({ name: 'Onset', value: fitOpioidField(to.onset), inline: true });
+  }
+  if (to.duration) {
+    fields.push({ name: 'Duration', value: fitOpioidField(to.duration), inline: true });
+  }
+  if (to.halfLife) {
+    fields.push({ name: 'Half-life', value: fitOpioidField(to.halfLife), inline: true });
+  }
 
   if (isMicrogramScale(equianalgesic)) {
     fields.push({
@@ -393,7 +398,6 @@ async function dCalcOpioid(
     ]),
   ].slice(0, OPIOID_MAX_NOTES);
 
-  // This explains the Start low figure, so it leads and does not count against the cap.
   const notes = cautiousStart ? [OPIOID_CROSS_TOLERANCE, ...drugNotes] : drugNotes;
 
   if (notes.length > 0) {
@@ -406,7 +410,9 @@ async function dCalcOpioid(
 
   const affordable = fields.filter(field => {
     const cost = field.name.length + field.value.length;
-    if (used + cost > OPIOID_EMBED_BUDGET) return false;
+    if (used + cost > OPIOID_EMBED_BUDGET) {
+      return false;
+    }
     used += cost;
     return true;
   });

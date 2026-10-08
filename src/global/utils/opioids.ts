@@ -799,7 +799,11 @@ export type OpioidCalcResult =
 /** Case-insensitive, alias-aware lookup. */
 export function findOpioid(input: string): Opioid | undefined {
   const needle = input.trim().toLowerCase();
-  if (!needle) return undefined;
+
+  if (!needle) {
+    return undefined;
+  }
+
   return opioids.find(opioid => opioid.name.toLowerCase() === needle || opioid.aliases.includes(needle));
 }
 
@@ -814,7 +818,10 @@ export function routeIsAssumed(opioid: Opioid, route: Roa): boolean {
 }
 
 function significant(value: number, digits = 3): number {
-  if (!Number.isFinite(value) || value === 0) return 0;
+  if (!Number.isFinite(value) || value === 0) {
+    return 0;
+  }
+
   const factor = 10 ** (digits - Math.ceil(Math.log10(Math.abs(value))));
   return Math.round(value * factor) / factor;
 }
@@ -838,12 +845,15 @@ export function doseUnit(range: Range): DoseUnit {
  */
 export function formatDose(range: Range, unit?: DoseUnit): string {
   const [low, high] = range;
-  if (!Number.isFinite(low) || !Number.isFinite(high)) return 'not calculable';
+  if (!Number.isFinite(low) || !Number.isFinite(high)) {
+    return 'not calculable';
+  }
+
   const resolved = unit ?? doseUnit(range);
   const scale = resolved === 'mcg' ? 1000 : 1;
   const from = significant(low * scale);
   const to = significant(high * scale);
-  return from === to ? `${from} ${resolved}` : `${from} - ${to} ${resolved}`;
+  return from === to ? `${from}${resolved}` : `${from} - ${to}${resolved}`;
 }
 
 /** Renders a potency multiplier, for example "1x" or "3 - 4x". */
@@ -867,7 +877,9 @@ function buildRouteBreakdown(
   const referenceBa = opioid.bioavailability?.[reference];
 
   return ROUTE_ORDER.reduce((routes, roa) => {
-    if (roa === reference) return routes;
+    if (roa === reference) {
+      return routes;
+    }
 
     const potency = opioid.potency[roa];
     if (potency) {
