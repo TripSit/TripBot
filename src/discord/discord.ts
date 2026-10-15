@@ -8,6 +8,7 @@ import {
 import { registerCommands } from './commands';
 import { registerEvents } from './events';
 import { registerTentStatusSync } from './utils/tents';
+import { registerDiscordBridge } from './utils/chatBridge';
 
 const F = f(__filename);
 
@@ -49,6 +50,7 @@ export default async function discordConnect(): Promise<void> {
   global.discordClient = discordClient;
 
   registerTentStatusSync(discordClient);
+  registerDiscordBridge();
 
   Promise.all([registerCommands(discordClient), registerEvents(discordClient)])
     .then(() => discordClient.login(env.DISCORD_CLIENT_TOKEN))

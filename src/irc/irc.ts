@@ -1,4 +1,5 @@
 import { Client } from 'irc-framework';
+import { ircChannels } from './bridge';
 import registerEvents from './events';
 
 const F = f(__filename);
@@ -48,7 +49,7 @@ export default async function ircConnect(): Promise<void> {
       client.raw('OPER', env.IRC_OPER_NAME, env.IRC_OPER_PASSWORD);
     }
     // irc-framework does not rejoin on reconnect, so join on every registration
-    env.IRC_CHANNELS.forEach((channel: string) => client.join(channel));
+    ircChannels().forEach(channel => client.join(channel));
   });
 
   client.on('join', ({ nick, channel }) => {

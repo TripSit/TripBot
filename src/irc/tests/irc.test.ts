@@ -4,6 +4,9 @@ import type { Mock } from 'vitest';
 type FakeClient = EventEmitter & {
   connected: boolean;
   user: { nick: string };
+  network: { cap: { isEnabled: Mock }; supports: Mock };
+  requestCap: Mock;
+  say: Mock;
   connect: Mock;
   join: Mock;
   raw: Mock;
@@ -19,6 +22,12 @@ vi.mock('irc-framework', async () => {
     connected = false;
 
     user = { nick: '' };
+
+    network = { cap: { isEnabled: vi.fn(() => false) }, supports: vi.fn() };
+
+    requestCap = vi.fn();
+
+    say = vi.fn();
 
     connect = vi.fn();
 
@@ -95,7 +104,9 @@ describe('ircConnect', () => {
   it('registers the IRC event handlers', async () => {
     await connect();
 
-    expect(client.listenerCount('privmsg')).toBe(1);
+    // The command handler and the bridge
+    expect(client.listenerCount('privmsg')).toBe(2);
+    expect(client.requestCap).toHaveBeenCalledWith('draft/relaymsg');
   });
 
   it('connects with TLS and SASL using the configured account', async () => {

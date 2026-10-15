@@ -33,13 +33,13 @@ describe('env IRC settings', () => {
     expect(env.IRC_SERVER).toBe('irc.example.test');
   });
 
-  it('defaults to TLS on 6697 as TripBot in #lounge', async () => {
+  it('defaults to TLS on 6697 as TripBot in every bridged channel', async () => {
     const env = await loadEnv({});
     expect(env.IRC_PORT).toBe(6697);
     expect(env.IRC_TLS).toBe(true);
     expect(env.IRC_USERNAME).toBe('TripBot');
     expect(env.IRC_NICK).toBe('TripBot');
-    expect(env.IRC_CHANNELS).toEqual(['#lounge']);
+    expect(env.IRC_CHANNELS).toEqual([]);
     expect(env.IRC_BOTPREFIX).toBe('!');
   });
 

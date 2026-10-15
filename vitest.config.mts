@@ -51,6 +51,7 @@ export default defineConfig({
         'src/discord/utils/**',
         'src/global/commands/**',
         'src/global/utils/**',
+        'src/global/bridge/**',
         'src/irc/**',
         'src/api/**',
       ],

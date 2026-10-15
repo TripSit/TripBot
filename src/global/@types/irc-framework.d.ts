@@ -45,6 +45,12 @@ declare module 'irc-framework' {
     time?: number;
     /** NickServ account from the IRCv3 account-tag capability, when the server provides it. */
     account?: string;
+    /** Set when the message arrived inside an IRCv3 batch, e.g. `chathistory` replayed on join. */
+    batch?: {
+      id: string;
+      type: string;
+      params: string[];
+    };
   }
 
   export interface JoinEvent {
@@ -104,6 +110,15 @@ declare module 'irc-framework' {
     user: {
       nick: string;
     };
+
+    network: {
+      cap: {
+        isEnabled(cap: string): boolean;
+      };
+      supports(option: string): string | boolean | undefined;
+    };
+
+    requestCap(cap: string | string[]): void;
 
     connect(options?: IrcConnectOptions): void;
 

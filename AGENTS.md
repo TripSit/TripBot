@@ -201,7 +201,9 @@ src/discord/commands/guild/          Guild-oriented Discord commands
 src/discord/commands/archive/        Archived commands; leave untouched unless requested
 src/discord/events/                  Discord event handlers
 src/discord/utils/                   Command deployment, context, embeds, and Discord helpers
-src/irc/irc.ts                       IRC connection to TripSit's Ergo servers (bridge work in progress)
+src/irc/irc.ts                       IRC connection to TripSit's Ergo servers
+src/irc/bridge.ts                    IRC side of the chat bridge (RELAYMSG, send queue)
+src/global/bridge/                   Platform-independent chat bridge core and channel list
 src/discord/@types/                  Discord command contracts and type augmentation
 src/global/commands/                 Platform-independent business logic, conventionally g.*
 src/global/utils/                    Shared utilities, environment, logging, experience, and database updates
@@ -290,6 +292,23 @@ do not give Anope, Atheme, or other separate-services instructions; confirm comm
   with `/msg ChanServ AMODE #channel +o <account>` (Ergo uses `AMODE`, not `FLAGS`/`ACCESS`).
 - Do not give the bot a full oper block. It uses the narrow `tripbot` oper class (`nofakelag`, `relaymsg`); add a
   capability only when a feature needs it (for example `ban` for network bans) and have a human apply the change.
+
+### Chat bridge (Discord, IRC, Matrix)
+
+TripBot replaces Matterbridge for relaying chat between platforms.
+
+- `src/global/bridge/bridge.ts` routes a `BridgeMessage` to every other platform with a registered `BridgeTarget`
+  (`registerBridgeTarget`). Platform adapters own formatting and delivery: `src/discord/utils/chatBridge.ts`
+  (webhook named `TripSit Chat Bridge`, separate from the guild-to-guild `Tripsit Bridge` in `utils/bridge.ts`) and
+  `src/irc/bridge.ts`. Matrix has room IDs in the channel list but no adapter yet.
+- `src/global/bridge/bridge.gateways.ts` is the channel list ported from Matterbridge. Discord entries name an
+  `env.config.ts` key, never a raw ID, so production and development resolve separately; an empty key value means the
+  channel is not bridged in that environment. IRC joins every listed channel unless `IRC_CHANNELS` overrides it.
+- Behavior intentionally mirrors the old Matterbridge config: relayed IRC nicks are `name/<label>` via `RELAYMSG`
+  (falling back to `<name/label> text`), 400-byte lines sent one second apart with a 30-line queue, markdown stripped
+  for IRC, server nicknames on the Discord side, ` (edited)` appended to relayed edits, `@everyone`/`@here`
+  neutralized, and the old bot nicks ignored. Keep loop prevention intact: adapters must ignore their own output.
+- Relayed message content is user content: never log it.
 
 ### Globals and aliases
 
