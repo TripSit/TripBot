@@ -15,6 +15,7 @@ let webhookSend: Mock;
 let fetchWebhooks: Mock;
 let createWebhook: Mock;
 let channelFetch: Mock;
+let memberSearch: Mock;
 const originalDiscordClient = global.discordClient;
 const originalLounge = env.CHANNEL_LOUNGE;
 
@@ -73,6 +74,7 @@ beforeEach(async () => {
   fetchWebhooks = vi.fn().mockResolvedValue(new Collection());
   createWebhook = vi.fn().mockResolvedValue(webhook());
   channelFetch = vi.fn().mockResolvedValue({ type: ChannelType.GuildText, fetchWebhooks, createWebhook });
+  memberSearch = vi.fn().mockResolvedValue(new Collection());
   const members = new Collection([
     ['1', { displayName: 'IrcUser', user: { username: 'ircuser' }, displayAvatarURL: () => 'https://cdn/ircuser.png' }],
   ]);
@@ -80,7 +82,7 @@ beforeEach(async () => {
     user: { id: BOT_ID },
     isReady: () => true,
     channels: { fetch: channelFetch },
-    guilds: { cache: new Collection([['guild-1', { members: { cache: members } }]]) },
+    guilds: { cache: new Collection([['guild-1', { id: 'guild-1', members: { cache: members, search: memberSearch } }]]) },
   } as unknown as typeof global.discordClient;
   vi.spyOn(global.log, 'error').mockReturnValue(undefined as never);
 });
@@ -151,6 +153,32 @@ describe('discordBridgeTarget', () => {
 
   it('leaves the avatar unset when no member matches', async () => {
     await chatBridge.discordBridgeTarget.send(LOUNGE_ID, outgoing({ nick: 'Stranger' }));
+    expect(webhookSend).toHaveBeenCalledWith(expect.objectContaining({ avatarURL: undefined }));
+  });
+
+  it('searches Discord for members missing from the cache, and remembers the result', async () => {
+    const found = { displayName: 'Far', user: { username: 'far' }, displayAvatarURL: () => 'https://cdn/far.png' };
+    memberSearch.mockResolvedValue(new Collection([['2', found]]));
+
+    await chatBridge.discordBridgeTarget.send(LOUNGE_ID, outgoing({ nick: 'Far' }));
+    await chatBridge.discordBridgeTarget.send(LOUNGE_ID, outgoing({ nick: 'Far' }));
+
+    expect(memberSearch).toHaveBeenCalledTimes(1);
+    expect(memberSearch).toHaveBeenCalledWith({ query: 'far', limit: 10 });
+    expect(webhookSend).toHaveBeenLastCalledWith(expect.objectContaining({ avatarURL: 'https://cdn/far.png' }));
+  });
+
+  it('ignores search results that are not an exact name match', async () => {
+    const close = { displayName: 'Farther', user: { username: 'farther' }, displayAvatarURL: () => 'https://cdn/x.png' };
+    memberSearch.mockResolvedValue(new Collection([['2', close]]));
+    await chatBridge.discordBridgeTarget.send(LOUNGE_ID, outgoing({ nick: 'Far' }));
+    expect(webhookSend).toHaveBeenCalledWith(expect.objectContaining({ avatarURL: undefined }));
+  });
+
+  it('still relays when the member search fails', async () => {
+    vi.spyOn(global.log, 'debug').mockReturnValue(undefined as never);
+    memberSearch.mockRejectedValue(new Error('rate limited'));
+    await chatBridge.discordBridgeTarget.send(LOUNGE_ID, outgoing({ nick: 'Far' }));
     expect(webhookSend).toHaveBeenCalledWith(expect.objectContaining({ avatarURL: undefined }));
   });
 
