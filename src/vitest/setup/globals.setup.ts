@@ -1,11 +1,10 @@
 import { beforeEach, vi } from 'vitest';
-import '../../global/utils/log';
 import '../../global/utils/env.config';
+import '../../global/utils/log';
 import { dbMock, resetDbMock } from '../utils/mockDb';
 
-// global.rollbar is only assigned in production (see src/global/utils/log.ts);
-// log.warn() dereferences it unconditionally unless the message contains 'Missing',
-// so tests need a stub or any such warn path throws.
+// global.rollbar is only assigned in production (see src/global/utils/log.ts); stub it so
+// tests can assert on what log.warn() forwards to it.
 global.rollbar = {
   warn: vi.fn(),
   error: vi.fn(),

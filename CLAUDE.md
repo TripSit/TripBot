@@ -74,4 +74,5 @@ Other structural notes:
   hand-built Discord.js mock (`utils/mockDiscord.ts` + `utils/testutils.ts`) for exercising `d.*`/`m.*`/`u.*` command
   `execute()` functions without a live gateway connection, and `utils/mockDb.ts` (a deep-mocked Prisma client bound
   to the global `db`, reset before every test) for `g.*` business-logic tests. Discord command tests live under
-  `src/discord/tests/{global,guild}/`; business-logic tests live under `src/global/tests/`.
+  `src/discord/tests/{global,guild}/`; business-logic tests live under `src/global/tests/`; IRC tests live under
+  `src/irc/tests/`.

@@ -22,8 +22,8 @@ import { env } from './global/utils/env.config';
 import validateEnv from './global/utils/env.validate'; // eslint-disable-line
 import updateDb from './global/utils/updateDb';
 import db from './prisma/tripbot/client';
+import ircConnect, { ircDisconnect } from './irc/irc';
 // import startMatrix from './matrix/matrix';
-// import ircConnect from './irc/irc';
 // import telegramConnect from './telegram/telegram';
 
 sourceMap.install();
@@ -51,7 +51,10 @@ async function start() {
     await updateDb();
     if (env.DISCORD_CLIENT_TOKEN && validateEnv('DISCORD')) await discordConnect();
     // if (env.MATRIX_ACCESS_TOKEN && validateEnv( 'MATRIX') && env.NODE_ENV !== 'production') await startMatrix();
-    // if (env.IRC_PASSWORD && validateEnv('IRC') && env.NODE_ENV !== 'production') ircConnect();
+    if (env.IRC_PASSWORD && validateEnv('IRC')) {
+      // A failed IRC start must not take down the Discord bot
+      await ircConnect().catch(err => log.error(F, `Failed to start IRC: ${err}`));
+    }
     // if (env.TELEGRAM_TOKEN && validateEnv('TELEGRAM')) await telegramConnect();
   }
 }
@@ -72,6 +75,7 @@ const destroy = () => {
   if (existingConnection) {
     existingConnection.destroy();
   }
+  ircDisconnect();
   process.exit(0);
 };
 process.on('SIGINT', destroy);

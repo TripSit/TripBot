@@ -2,8 +2,8 @@ import { PrismaClient } from '@db/tripbot';
 import { Client as DiscordClient } from 'discord.js';
 import { DateTime } from 'luxon';
 import Rollbar from 'rollbar';
+import { Client as IRCClient } from 'irc-framework';
 // import { MatrixClient } from 'matrix-bot-sdk';
-// import { Client as IRCClient } from 'matrix-org-irc';
 // import { Telegraf as TelegramClient } from 'telegraf';
 // import Sentry from '@sentry/node';
 
@@ -12,7 +12,7 @@ declare global {
   var reactionRoles: { [key: string]: any };// eslint-disable-line
   var bootTime: Date; // eslint-disable-line
   var discordClient: DiscordClient; // eslint-disable-line
-  // var ircClient: IRCClient; // eslint-disable-line
+  var ircClient: IRCClient | undefined; // eslint-disable-line
   // var matrixClient: MatrixClient; // eslint-disable-line
   // var telegramClient: TelegramClient; // eslint-disable-line
   var announcements: string[]; // eslint-disable-line

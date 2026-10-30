@@ -16,6 +16,7 @@ import {
 } from '../@types/eventDef';
 import { ensurePermissions } from '../utils/checkPermissions';
 import { embedTemplate } from '../utils/embedTemplate';
+import { relayDiscordDelete } from '../utils/chatBridge';
 // eslint-disable-line @typescript-eslint/no-unused-vars
 const F = f(__filename); // eslint-disable-line @typescript-eslint/no-unused-vars
 
@@ -24,6 +25,7 @@ const F = f(__filename); // eslint-disable-line @typescript-eslint/no-unused-var
 export const messageDelete: MessageDeleteEvent = {
   name: 'messageDelete',
   async execute(message) {
+    relayDiscordDelete(message);
     // Only run on Tripsit, we don't want to snoop on other guilds ( ͡~ ͜ʖ ͡°)
     if (!message.guild) return;
     if (message.guild.id !== env.DISCORD_GUILD_ID) return;

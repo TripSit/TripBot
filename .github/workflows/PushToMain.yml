@@ -9,7 +9,6 @@ on:
       - '**/legacy/**'
       - '**/matrix/**'
       - '**/telegram/**'
-      - '**/irc/**'
       - '**/vitest/**'
       - '**/build/**'
       - '**/@prisma-moodle/**'

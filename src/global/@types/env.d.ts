@@ -78,6 +78,12 @@ declare global {
       CHANNEL_REPLICATIONS: string;
       CHANNEL_PHOTOGRAPHY: string;
       CHANNEL_RECOVERY: string;
+      CHANNEL_GENERAL: string;
+      CHANNEL_NEWS: string;
+      CHANNEL_SPORTS: string;
+      CHANNEL_WELLNESS: string;
+      CHANNEL_SPIRITUALITY: string;
+      CHANNEL_NOOTROPICS: string;
       CATEGORY_BACKSTAGE: string;
       CHANNEL_LOUNGE: string;
       CHANNEL_VIPLOUNGE: string;
@@ -125,6 +131,7 @@ declare global {
       CHANNEL_DESIGN: string;
       CHANNEL_IRC: string;
       CHANNEL_MATRIX: string;
+      CHANNEL_TELEGRAM: string;
       CHANNEL_TRIPMOBILE: string;
       CHANNEL_SANDBOX: string;
       CHANNEL_TECHHELP: string;

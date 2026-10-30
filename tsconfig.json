@@ -12,7 +12,7 @@
     "src/vitest/**/*",
     "src/discord/tests/**/*",
     "src/global/tests/**/*",
-    "**/irc/*",
+    "src/irc/tests/**/*",
     "**/legacy/**",
     "**/matrix/*",
     "**/telegram/*",

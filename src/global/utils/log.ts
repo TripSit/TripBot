@@ -183,7 +183,8 @@ export const log = {
   error: (F: string, message: string) => logger.error(`[${F}] ${message}`),
   warn: (F: string, message: string) => {
     if (!message.includes('Missing')) {
-      global.rollbar.warn(message);
+      // rollbar is only initialized in production
+      global.rollbar?.warn(message);
     }
     return logger.warn(`[${F}] ${message}`);
   },
