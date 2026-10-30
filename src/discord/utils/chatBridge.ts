@@ -1,5 +1,5 @@
 import {
-  ChannelType, Message, MessageType, PartialMessage, Webhook,
+  ChannelType, GuildMember, Message, MessageType, PartialMessage, Webhook,
 } from 'discord.js';
 import {
   EDIT_SUFFIX, findGateways, registerBridgeTarget, relayDeletion, relayMessage,
@@ -48,13 +48,42 @@ function getWebhook(channelId: string): Promise<Webhook> {
   return webhook;
 }
 
-/** Matterbridge's UseLocalAvatar: borrow the avatar of a member with the same name. */
-function guessAvatar(guildId: string | undefined, nick: string): string | undefined {
+const AVATAR_CACHE_MS = 10 * 60_000;
+const MAX_AVATAR_CACHE = 500;
+const avatarCache = new Map<string, { url: string | undefined; expires: number }>();
+
+function matchesName(member: GuildMember, name: string): boolean {
+  return member.displayName.toLowerCase() === name || member.user.username.toLowerCase() === name;
+}
+
+/**
+ * Matterbridge's UseLocalAvatar: borrow the avatar of a member with the same name.
+ * The member cache only holds members the bot has seen, so fall back to a member search.
+ */
+async function guessAvatar(guildId: string | undefined, nick: string): Promise<string | undefined> {
   const guild = guildId ? discordClient.guilds.cache.get(guildId) : undefined;
+  if (!guild) return undefined;
   const name = nick.toLowerCase();
-  return guild?.members.cache
-    .find(member => member.displayName.toLowerCase() === name || member.user.username.toLowerCase() === name)
-    ?.displayAvatarURL();
+  const key = `${guild.id}:${name}`;
+  const cached = avatarCache.get(key);
+  if (cached && cached.expires > Date.now()) return cached.url;
+
+  let member = guild.members.cache.find(candidate => matchesName(candidate, name));
+  if (!member) {
+    try {
+      const results = await guild.members.search({ query: name.slice(0, 100), limit: 10 });
+      member = results.find(candidate => matchesName(candidate, name));
+    } catch (err) {
+      // Not worth failing the relay over; the webhook falls back to its default avatar
+      log.debug(F, `Avatar lookup failed for a relayed user: ${err}`);
+      return undefined;
+    }
+  }
+
+  const url = member?.displayAvatarURL();
+  if (avatarCache.size >= MAX_AVATAR_CACHE) avatarCache.delete(avatarCache.keys().next().value as string);
+  avatarCache.set(key, { url, expires: Date.now() + AVATAR_CACHE_MS });
+  return url;
 }
 
 export const discordBridgeTarget: BridgeTarget = {
@@ -67,7 +96,7 @@ export const discordBridgeTarget: BridgeTarget = {
     const webhook = await getWebhook(channelId);
     const content = message.action ? `_${message.text}_` : message.text;
     const username = toDiscordUsername(message.nick);
-    const avatarURL = message.avatarUrl ?? guessAvatar(webhook.guildId, message.nick);
+    const avatarURL = message.avatarUrl ?? await guessAvatar(webhook.guildId, message.nick);
     // eslint-disable-next-line no-restricted-syntax
     for (const chunk of chunkText(content, DISCORD_MESSAGE_LIMIT)) {
       await webhook.send({ // eslint-disable-line no-await-in-loop
