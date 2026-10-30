@@ -51,7 +51,10 @@ async function start() {
     await updateDb();
     if (env.DISCORD_CLIENT_TOKEN && validateEnv('DISCORD')) await discordConnect();
     // if (env.MATRIX_ACCESS_TOKEN && validateEnv( 'MATRIX') && env.NODE_ENV !== 'production') await startMatrix();
-    if (env.IRC_PASSWORD && validateEnv('IRC') && env.NODE_ENV !== 'production') ircConnect();
+    if (env.IRC_PASSWORD && validateEnv('IRC') && env.NODE_ENV !== 'production') {
+      // A failed IRC start must not take down the Discord bot
+      await ircConnect().catch(err => log.error(F, `Failed to start IRC: ${err}`));
+    }
     // if (env.TELEGRAM_TOKEN && validateEnv('TELEGRAM')) await telegramConnect();
   }
 }

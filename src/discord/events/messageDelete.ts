@@ -8,14 +8,13 @@ import {
   GuildMember,
   PartialGuildMember,
   PartialUser,
-  PermissionResolvable,
   TextChannel,
   User,
 } from 'discord.js';
 import {
   MessageDeleteEvent,
 } from '../@types/eventDef';
-import { checkChannelPermissions, checkGuildPermissions } from '../utils/checkPermissions'; // eslint-disable-line
+import { ensurePermissions } from '../utils/checkPermissions';
 import { embedTemplate } from '../utils/embedTemplate';
 // eslint-disable-line @typescript-eslint/no-unused-vars
 const F = f(__filename); // eslint-disable-line @typescript-eslint/no-unused-vars
@@ -42,26 +41,9 @@ export const messageDelete: MessageDeleteEvent = {
 
     // Get the channel this will be posted in
     const msglogChannel = await message.client.channels.fetch(env.CHANNEL_MSGLOG) as TextChannel;
-    const channelPerms = await checkChannelPermissions(msglogChannel, [
-      'ViewChannel' as PermissionResolvable,
-      'SendMessages' as PermissionResolvable,
-    ]);
-    if (!channelPerms.hasPermission) {
-      const guildOwner = await msglogChannel.guild.fetchOwner();
-      await guildOwner.send({ content: `Please make sure I can ${channelPerms.permission} in ${msglogChannel.name} so I can run ${F}!` }); // eslint-disable-line
-      log.error(F, `Missing permission ${channelPerms.permission} in ${msglogChannel.name}!`);
-      return;
-    }
+    if (!await ensurePermissions(msglogChannel, ['ViewChannel', 'SendMessages'], F)) return;
 
-    const perms = await checkGuildPermissions(message.guild, [
-      'ViewAuditLog' as PermissionResolvable,
-    ]);
-    if (!perms.hasPermission) {
-      const guildOwner = await message.guild.fetchOwner();
-      await guildOwner.send({ content: `Please make sure I can ${perms.permission} in ${message.guild} so I can show to message delete logs!` }); // eslint-disable-line
-      log.error(F, `Missing permission ${perms.permission} in ${message.guild}!`);
-      return;
-    }
+    if (!await ensurePermissions(message.guild, ['ViewAuditLog'], F, { reason: 'show message delete logs' })) return;
 
     const deletionLog = (await message.guild.fetchAuditLogs({
       limit: 1,

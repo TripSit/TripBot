@@ -3,13 +3,13 @@ import {
   SlashCommandBuilder,
   TextChannel,
   GuildMember,
-  Colors,
   TextBasedChannel,
   MessageFlags,
 } from 'discord.js';
 import { SlashCommand } from '../../@types/commandDef';
-import { embedTemplate } from '../../utils/embedTemplate';
+import { errorEmbed } from '../../utils/embedTemplate';
 import commandContext from '../../utils/context';
+import { replyGuildOnly } from '../../utils/guildOnly';
 // import log from '../../../global/utils/log'; // eslint-disable-line no-unused-vars
 
 const F = f(__filename);
@@ -62,7 +62,7 @@ export const dReminder: SlashCommand = {
     log.info(F, await commandContext(interaction));
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
     if (!interaction.guild) {
-      await interaction.editReply({ content: 'This command can only be used in a server!' });
+      await replyGuildOnly(interaction);
       return false;
     }
     if (!interaction.channel || !(interaction.channel instanceof TextChannel)) {
@@ -85,10 +85,8 @@ export const dReminder: SlashCommand = {
     const reminderText = reminderData[1];
     // log.debug(F, `reminderText: ${reminderText}`);
 
-    const reminder = embedTemplate()
-      .setColor(Colors.Red)
-      .setTitle(`REMINDER: ${reminderTitle}`)
-      .setDescription(reminderText);
+    const reminder = errorEmbed(reminderText)
+      .setTitle(`REMINDER: ${reminderTitle}`);
 
     await interaction.channel.send({ embeds: [reminder] });
 

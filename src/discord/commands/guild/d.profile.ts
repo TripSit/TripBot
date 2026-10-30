@@ -461,7 +461,7 @@ export const dProfile: SlashCommand = {
     }
     // log.debug(F, `LevelImagePath: ${LevelImagePath}`);
     const LevelImage = await Canvas.loadImage(await getAsset(LevelImagePath));
-    context.drawImage(LevelImage, 758, 57);
+    context.drawImage(LevelImage, 758, 59, 88, 88);
 
     // Level Bar Circle BG
     context.strokeStyle = chipColor;

@@ -1,6 +1,5 @@
 import {
   ChatInputCommandInteraction,
-  Colors,
   EmbedBuilder,
   GuildMember,
   MessageFlags,
@@ -8,7 +7,7 @@ import {
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
 import { SlashCommand } from '../../@types/commandDef';
-import { embedTemplate } from '../../utils/embedTemplate';
+import { embedTemplate, errorEmbed } from '../../utils/embedTemplate';
 import {
   help,
   link,
@@ -36,16 +35,12 @@ async function moodleLink(
   // Check if the discord_id option was used
   if (interaction.options.getString('discord_id')) {
     if (interaction.user.id !== env.DISCORD_OWNER_ID) {
-      return embedTemplate()
-        .setColor(Colors.Red)
-        .setDescription('You are not allowed to use this option!');
+      return errorEmbed('You are not allowed to use this option!');
     }
 
     // Check if the email given is valid
     if (!interaction.options.getString('email', true).includes('@')) {
-      return embedTemplate()
-        .setColor(Colors.Red)
-        .setDescription('That doesn\'t look like a valid email address!');
+      return errorEmbed('That doesn\'t look like a valid email address!');
     }
 
     return embedTemplate()
@@ -57,9 +52,7 @@ async function moodleLink(
 
   // Check if the email given is valid
   if (!interaction.options.getString('email', true).includes('@')) {
-    return embedTemplate()
-      .setColor(Colors.Red)
-      .setDescription('That doesn\'t look like a valid email address!');
+    return errorEmbed('That doesn\'t look like a valid email address!');
   }
 
   return embedTemplate()
@@ -74,9 +67,7 @@ async function moodleUnlink(
 ):Promise<EmbedBuilder> {
   if (interaction.options.getString('discord_id')) {
     if (interaction.user.id !== env.DISCORD_OWNER_ID) {
-      return embedTemplate()
-        .setColor(Colors.Red)
-        .setDescription('You are not allowed to use this option!');
+      return errorEmbed('You are not allowed to use this option!');
     }
     return embedTemplate()
       .setDescription(await unlink(
@@ -96,31 +87,25 @@ async function moodleProfile(
     : [interaction.member as GuildMember];
 
   if (targets.length > 1) {
-    return embedTemplate()
-      .setColor(Colors.Red)
-      .setTitle('Found more than one user with with that value!')
-      .setDescription(stripIndents`
+    return errorEmbed(stripIndents`
         "${interaction.options.getString('user', true)}" returned ${targets.length} results!
 
         Be more specific:
         > **Mention:** @Moonbear
         > **Tag:** moonbear#1234
         > **ID:** 9876581237
-        > **Nickname:** MoonBear`);
+        > **Nickname:** MoonBear`).setTitle('Found more than one user with with that value!');
   }
 
   if (targets.length === 0) {
-    return embedTemplate()
-      .setColor(Colors.Red)
-      .setTitle('Found no users with that value!')
-      .setDescription(stripIndents`
+    return errorEmbed(stripIndents`
         "${interaction.options.getString('user', true)}" returned no results!
 
         Be more specific:
         > **Mention:** @Moonbear
         > **Tag:** moonbear#1234
         > **ID:** 9876581237
-        > **Nickname:** MoonBear`);
+        > **Nickname:** MoonBear`).setTitle('Found no users with that value!');
   }
 
   const [discordMember] = targets;

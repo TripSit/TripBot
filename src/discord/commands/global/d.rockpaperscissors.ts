@@ -16,7 +16,7 @@ import {
   InteractionCollector,
 } from 'discord.js';
 
-import { embedTemplate } from '../../utils/embedTemplate';
+import { embedTemplate, errorEmbed } from '../../utils/embedTemplate';
 import { SlashCommand } from '../../@types/commandDef';
 import {
   GameResult, MultiplayerResult, RoundResult, RPSGame,
@@ -641,10 +641,8 @@ async function handle1v1Game(interaction: ChatInputCommandInteraction, opponent:
           collector.removeAllListeners();
         }
 
-        const timeoutEmbed = embedTemplate()
-          .setTitle('⏰ Game Timeout')
-          .setDescription('The game has has timed out after 2 minutes.')
-          .setColor(Colors.Red);
+        const timeoutEmbed = errorEmbed('The game has has timed out after 2 minutes.')
+          .setTitle('⏰ Game Timeout');
 
         await interaction.editReply({
           embeds: [timeoutEmbed],
@@ -743,10 +741,8 @@ async function handleMultiplayerQueue(interaction: ChatInputCommandInteraction):
     if (playersJoined.length < 2) {
       queueCollector.removeAllListeners();
       const playerText = playersJoined.length !== 1 ? 's' : '';
-      const failEmbed = embedTemplate()
-        .setTitle('❌ Not Enough Players')
-        .setDescription(`Only ${playersJoined.length} player${playerText} joined. Minimum 2 players needed.`)
-        .setColor(Colors.Red);
+      const failEmbed = errorEmbed(`Only ${playersJoined.length} player${playerText} joined. Minimum 2 players needed.`)
+        .setTitle('❌ Not Enough Players');
 
       try {
         await interaction.editReply({

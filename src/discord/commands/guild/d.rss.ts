@@ -17,6 +17,7 @@ import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { rssCreate, rssList, rssDelete } from '../../../global/commands/g.rss';
 import commandContext from '../../utils/context';
+import { replyGuildOnly } from '../../utils/guildOnly';
 
 const F = f(__filename);
 
@@ -50,7 +51,7 @@ export const dRss: SlashCommand = {
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
     if (!interaction.guild) {
-      await interaction.editReply({ content: 'This command can only be used in a guild!' });
+      await replyGuildOnly(interaction);
       return false;
     }
 

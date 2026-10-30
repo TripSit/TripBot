@@ -74,7 +74,8 @@ export const discordBridgeTarget: BridgeTarget = {
         content: chunk,
         username,
         avatarURL,
-        allowedMentions: { parse: ['users'] },
+        // IRC users can type raw <@id> text, so never let relayed content ping anyone
+        allowedMentions: { parse: [] },
       });
     }
   },

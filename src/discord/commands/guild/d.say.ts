@@ -7,6 +7,7 @@ import {
 } from 'discord.js';
 import { SlashCommand } from '../../@types/commandDef';
 import commandContext from '../../utils/context'; // eslint-disable-line @typescript-eslint/no-unused-vars
+import { replyGuildOnly, GUILD_ONLY_TEXT } from '../../utils/guildOnly';
 
 const F = f(__filename);
 
@@ -25,7 +26,7 @@ export const dSay: SlashCommand = {
     log.info(F, await commandContext(interaction));
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
     if (!interaction.guild) {
-      await interaction.editReply({ content: 'This command can only be used in a server!' });
+      await replyGuildOnly(interaction);
       return false;
     }
 
@@ -62,7 +63,7 @@ export const dSay: SlashCommand = {
       && channel.type !== ChannelType.GuildAnnouncement
       && channel.type !== ChannelType.GuildForum
     ) {
-      await interaction.editReply({ content: 'This command can only be used in a server!' });
+      await interaction.editReply({ content: GUILD_ONLY_TEXT });
       return false;
     }
 

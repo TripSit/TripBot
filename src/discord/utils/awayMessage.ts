@@ -3,6 +3,7 @@
 import { DMChannel, Message, TextChannel } from 'discord.js';
 import { stripIndents } from 'common-tags';
 import { sleep } from './sleep';
+import { getOrCreateUser } from '../../global/utils/dbRecords';
 
 const F = f(__filename); // eslint-disable-line
 
@@ -12,15 +13,7 @@ export async function awayMessage(message:Message): Promise<void> {
   // Check if the message mentions the bot owner
   if (!message.mentions.users.has(env.DISCORD_OWNER_ID)) return;
 
-  const userData = await db.users.upsert({
-    where: {
-      discord_id: message.author.id,
-    },
-    create: {
-      discord_id: message.author.id,
-    },
-    update: {},
-  });
+  const userData = await getOrCreateUser(message.author.id);
   if (userData.timezone) {
     // Check if it is after 8pm, or before 7am
     const userTime = new Date().toLocaleString('en-US', { timeZone: userData.timezone });

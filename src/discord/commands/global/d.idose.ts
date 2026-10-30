@@ -1,12 +1,8 @@
 import { drug_mass_unit, drug_roa } from '@db/tripbot';
-import { ButtonStyle, ChannelType, MessageFlags } from 'discord-api-types/v10';
+import { ChannelType, MessageFlags } from 'discord-api-types/v10';
 import {
-  ActionRowBuilder,
-  ButtonBuilder,
-  ButtonInteraction,
   ChatInputCommandInteraction,
   Colors,
-  ComponentType,
   EmbedBuilder,
   SlashCommandBuilder,
   time,
@@ -15,6 +11,7 @@ import { idose } from '../../../global/commands/g.idose';
 import { parseDuration } from '../../../global/utils/parseDuration';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
+import { runPager } from '../../utils/pager';
 
 // const F = f(__filename);
 
@@ -24,59 +21,16 @@ import { embedTemplate } from '../../utils/embedTemplate';
  * Next button is disabled on the last (oldest) entry.
  * @param {ChatInputCommandInteraction} interaction The deferred interaction to edit
  * @param {EmbedBuilder[]} pages One embed per dose entry, ordered most recent first
- * @param {number} timeout How long (ms) to keep the buttons active
  * @return {Promise<void>}
  */
 async function idoseHistoryPagination(
   interaction: ChatInputCommandInteraction,
   pages: EmbedBuilder[],
-  timeout = 120000,
 ): Promise<void> {
-  let page = 0;
-
-  const buildRow = (current: number) => new ActionRowBuilder<ButtonBuilder>().addComponents(
-    new ButtonBuilder()
-      .setCustomId('idoseBack')
-      .setLabel('Back')
-      .setStyle(ButtonStyle.Primary)
-      .setDisabled(current === 0),
-    new ButtonBuilder()
-      .setCustomId('idoseNext')
-      .setLabel('Next')
-      .setStyle(ButtonStyle.Primary)
-      .setDisabled(current === pages.length - 1),
-  );
-
-  const message = await interaction.editReply({
-    embeds: [pages[page]],
-    components: [buildRow(page)],
-  });
-
-  const collector = message.createMessageComponentCollector({
-    filter: i => i.user.id === interaction.user.id && (i.customId === 'idoseBack' || i.customId === 'idoseNext'),
-    componentType: ComponentType.Button,
-    time: timeout,
-  });
-
-  collector.on('collect', async (i: ButtonInteraction) => {
-    if (i.customId === 'idoseNext') {
-      page = Math.min(page + 1, pages.length - 1);
-    } else {
-      page = Math.max(page - 1, 0);
-    }
-    await i.update({
-      embeds: [pages[page]],
-      components: [buildRow(page)],
-    });
-  });
-
-  collector.on('end', async () => {
-    const disabledRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
-      ...buildRow(page).components.map(button => button.setDisabled(true)),
-    );
-    await interaction.editReply({ components: [disabledRow] }).catch(() => {
-      // Message was deleted before the collector ended — nothing to disable.
-    });
+  await runPager(interaction, {
+    pageCount: pages.length,
+    idPrefix: 'idose',
+    renderPage: async index => ({ embeds: [pages[index]] }),
   });
 }
 

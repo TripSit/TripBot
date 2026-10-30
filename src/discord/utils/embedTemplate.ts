@@ -36,3 +36,8 @@ export function embedTemplate(
   // .setImage('https://i.imgur.com/AfFp7pu.png')
   // .setTimestamp();
 }
+
+export function errorEmbed(description?: string): EmbedBuilder {
+  const embed = embedTemplate().setColor(Colors.Red);
+  return description === undefined ? embed : embed.setDescription(description);
+}

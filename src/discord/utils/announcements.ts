@@ -72,45 +72,6 @@ type MessageCounterType = {
  * @param {Message} message
  */
 export async function announcements(message:Message) {
-  // // const channelStart = await message.client.channels.fetch(env.CHANNEL_START) as TextChannel;
-  // const channelAnnouncements = await message.client.channels.fetch(env.CHANNEL_ANNOUNCEMENTS) as TextChannel;
-  // const channelRules = await message.client.channels.fetch(env.CHANNEL_RULES) as TextChannel;
-  // const channelBotspam = await message.client.channels.fetch(env.CHANNEL_BOTSPAM) as TextChannel;
-  // const channelTechhelp = await message.client.channels.fetch(env.CHANNEL_HELPDESK) as TextChannel;
-  // // const channelHowToTripsit = await message.client.channels.fetch(env.CHANNEL_HOWTOTRIPSIT) as TextChannel;
-  // const channelTripsit = await message.client.channels.fetch(env.CHANNEL_TRIPSIT) as TextChannel;
-  // // const channelRTripsit = await message.client.channels.fetch(env.CHANNEL_TRIPSIT) as TextChannel;
-  // const channelOpenTripsit1 = await message.client.channels.fetch(env.CHANNEL_OPENTRIPSIT1) as TextChannel;
-  // const channelOpenTripsit2 = await message.client.channels.fetch(env.CHANNEL_OPENTRIPSIT2) as TextChannel;
-  // const channelSanctuary = await message.client.channels.fetch(env.CHANNEL_SANCTUARY) as TextChannel;
-  // const channelHrResources = await message.client.channels.fetch(env.CHANNEL_HRRESOURCES) as TextChannel;
-  // const channelDrugQuestions = await message.client.channels.fetch(env.CHANNEL_DRUGQUESTIONS) as TextChannel;
-  // // const channelGeneral = await message.guild.channels.fetch(env.CHANNEL_GENERAL) as TextChannel;
-  // const channelPets = await message.client.channels.fetch(env.CHANNEL_PETS) as TextChannel;
-  // const channelFood = await message.client.channels.fetch(env.CHANNEL_FOOD) as TextChannel;
-  // const channelMusic = await message.client.channels.fetch(env.CHANNEL_MUSIC) as TextChannel;
-  // const channelMovies = await message.client.channels.fetch(env.CHANNEL_MOVIES) as TextChannel;
-  // const channelGaming = await message.client.channels.fetch(env.CHANNEL_GAMING) as TextChannel;
-  // const channelScience = await message.client.channels.fetch(env.CHANNEL_SCIENCE) as TextChannel;
-  // const channelCreative = await message.client.channels.fetch(env.CHANNEL_CREATIVE) as TextChannel;
-  // const channelMemes = await message.client.channels.fetch(env.CHANNEL_MEMES) as TextChannel;
-  // const channelTrivia = await message.client.channels.fetch(env.CHANNEL_TRIVIA) as TextChannel;
-  // const channelLounge = await message.client.channels.fetch(env.CHANNEL_LOUNGE) as TextChannel;
-  // const channelStims = await message.client.channels.fetch(env.CHANNEL_STIMULANTS) as TextChannel;
-  // const channelDepressants = await message.client.channels.fetch(env.CHANNEL_DEPRESSANTS) as TextChannel;
-  // const channelDissociatives = await message.client.channels.fetch(env.CHANNEL_DISSOCIATIVES) as TextChannel;
-  // const channelPsychedelics = await message.client.channels.fetch(env.CHANNEL_PSYCHEDELICS) as TextChannel;
-  // const channelOpioids = await message.client.channels.fetch(env.CHANNEL_OPIATES) as TextChannel;
-  // const channelTrees = await message.client.channels.fetch(env.CHANNEL_TREES) as TextChannel;
-  // // const channelViplounge = await message.client.channels.fetch(env.CHANNEL_VIPLOUNGE) as TextChannel;
-  // // const channelAdultSwim = await message.client.channels.fetch(env.CHANNEL_REALTALK) as TextChannel;
-  // // const channelGoldLounge = await message.client.channels.fetch(env.CHANNEL_GOLDLOUNGE) as TextChannel;
-  // // const channelTalkToTS = await message.client.channels.fetch(env.CHANNEL_SUGGESTIONS) as TextChannel;
-  // const channelBestOf = await message.client.channels.fetch(env.CHANNEL_BESTOF) as TextChannel;
-  // const channelKudos = await message.client.channels.fetch(env.CHANNEL_KUDOS) as TextChannel;
-  // const channelCampfire = await message.client.channels.fetch(env.CHANNEL_CAMPFIRE) as TextChannel;
-  // // const channelDevWelcome = await message.client.channels.fetch(env.CHANNEL_DEVWELCOME) as TextChannel;
-
   const hrAnnouncements = [
     '**Reminder:** For the safety of everyone involved, sourcing (buying or selling anything) is against our network rules. If someone contacts you to find, buy, trade, or give you drugs, you can report it by using /report or by clicking their name > Apps > TripBot Report User. This rule also applies to private messages. Be safe, and don\'t trust random internet folk.',
     '**Reminder:** Tending to personal hygiene is an important part of self-care. Remember to brush your teeth, bathe, and wash your hands!',
@@ -192,101 +153,9 @@ export async function announcements(message:Message) {
     '[**Did you know?**](https://www.guinnessworldrecords.com/world-records/80129-loudest-burp-male) The loudest burp is 112.4 decibels!',
   ];
 
-  // const chanAnnouncements = [
-  //   // `You can change your color and mindset in the ${channelStart.toString()}`,
-  //   `Stay up to date with TripSit news in ${channelAnnouncements.toString()}`,
-  //   `Make sure to follow the ${channelRules.toString()}!`,
-  //   `Test out bot commands in ${channelBotspam.toString()}!`,
-  //   `Have an issue and need to talk with the team? Use ${channelTechhelp.toString()}`,
-  //   `Need help from a tripsitter? Use ${channelTripsit.toString()}!`,
-  //   `${channelOpenTripsit1.toString()} and ${channelOpenTripsit2.toString()} are "communal" tripsit rooms! You can get help from the community here!`,
-  //   `Slowmode is enabled in ${channelSanctuary.toString()} to let people have a chill experience!`,
-  //   `Check out harm reduction resources in ${channelHrResources.toString()}!`,
-  //   `Ask questions about drugs in ${channelDrugQuestions.toString()} to make sure they're not lost!`,
-  //   `Share pictures of your doggos, kittos and other creaturos in ${channelPets.toString()}!`,
-  //   `Compare recipes and drool over someone's latest creation in ${channelFood.toString()}!`,
-  //   `Share your favorite songs in ${channelMusic.toString()}!`,
-  //   `Talk about your favorite shows/movies in ${channelMovies.toString()}!`,
-  //   `Do you enjoy playing games? Join ${channelGaming.toString()} for gaming talk and join the TripSit Steam group!`,
-  //   `Science enthusiasts of all types are welcome in ${channelScience.toString()}!`,
-  //   `Show off your latest hobby, painting, or even song of your own making in ${channelCreative.toString()}!`,
-  //   `Post your favorite memes in ${channelMemes.toString()}!`,
-  //   `Prove your superiority in ${channelTrivia.toString()}!`,
-  //   `Enjoy a more relaxed environment in ${channelLounge.toString()}!`,
-  //   `Want to talk fast? Join ${channelStims.toString()}!`,
-  //   `Benzo/deliriant/alcohol talk is welcome in ${channelDepressants.toString()}!`,
-  //   `Opiate talk is welcome in ${channelOpioids.toString()}!`,
-  //   `Get real weird with it in ${channelDissociatives.toString()}!`,
-  //   `Open your third eye in ${channelPsychedelics.toString()}!`,
-  //   `Start a sesh in ${channelTrees.toString()}!`,
-  //   `If something gets 5 upvotes it will be posted to ${channelBestOf.toString()}!`,
-  //   `Want to recognize someone for their help? Give them a ${channelKudos.toString()}!`,
-  //   `You can start your own voice chat by joining ${channelCampfire.toString()}!`,
-  // ];
-
-  // const commandAnnouncements = [
-  //   `Learn all </about:960180702333243452> the bot!`,
-  //   `Convert between benzo dosages with </benzo_calc:1017060823279087659>!`,
-  // 'While tripsit does not give free cake, you can set your </birthday:971807342255546378>!',
-  // 'I will always love </breathe:959196740194537474> 4',
-  //   // `</bridge:>`,
-  // `Report issues with the bot with </bug:966477926763757628>!`,
-  //   `Pick between two options with </coinflip:1009840858478166037>`,
-  //   `Pull up the full </combochart:970044826970099802>!`,
-  //   `You can see how to </contact:959196740194537476> the team!`,
-  //   `</convert:999465763209490482> different measurements!`,
-  //   `Get </drug:997960179217879092> info on various substances!`,
-  //   `Use </dxm_calc:1017060823279087658> to get a DXM dosage!`,
-  //   `Get </ems:966500308048031755> information if you need it!`,
-  //   // `Get really good at </eyeballing:1019720888544935946>!`,
-  //   `Overwhelmed? Use and follow </grounding:1019720888544935947>`,
-  //   `Check your sparkle points with </h2flow:984560964051537972>`,
-  //   `Get info on every command with </help:966477926763757629>`,
-  //   `Remind others to </hydrate:959196740194537477>`,
-  //   `Track your dosages privately with </idose:1009840858478166041>`,
-  //   `Search movies/tv with </imdb:1019325689767411824>`,
-  //   `Search images with </imgur:1009840858478166039>`,
-  //   `Pull up a (hopefully) fully </joke:1009840858478166042>`,
-  //   `Check how much </karma:1020034430103982122> you've given/sent!`,
-  //   `Calculate a ketamine dosage with </ketamine_calc:1017060823279087660>`,
-  //   `Remind everyone to Keep It Positive Please! (</kipp:1009840858478166043>)`,
-  //   `Send love to the channel with </lovebomb:1009840858478166044>`,
-  //   `Ask a question, get a response from god: </magick8ball:1017060823279087662>`,
-  //   `Start your own </poll:1009840858998251601>`,
-  //   `Check out stats in your </profile:983483831925497890>`,
-  //   `Determine psychedelic dosages with </psychedelic_calc:1017060823279087661>`,
-  //   `Show a reagent chart with </reagents:969761968586100799>`,
-  //   `When necessary, lay down in the </recovery:966500308048031756> position to stay safe!`,
-  //   `Set reminders with </remind_me:1009840858998251602>`,
-  //   `Someone causing issues? </report:966403343746490504> them!`,
-  //   `Set your </timezone:1020034430103982123> to let people know when you're sleeping!`,
-  //   `Pull up a random topic with </topic:1009840858478166040>`,
-  //   `Play with various </triptoys:1009840858998251603>`,
-  //   `Check the definition of something with </urban_define:1009840858998251604>`,
-  //   `Want to talk but don't need help? Try a </warmline:1009840858998251605>`,
-  //   `Search </youtube:1017060823279087663> for a fun video`,
-  // ];
-
-  // const vipAnnouncements = [
-  //   `Help out your fellow humans by reading ${channelHowToTripsit} and pick up the helper role to help in ${channelTripsit}!`,
-  //   `You must be VIP to enter the ${channelViplounge}, it's meant to be more calm and a step away from ${channelGeneral}chat.`,
-  //   `Talk about more mature topics (but not porn) in ${channelAdultSwim}!`,
-  //   `Donate via the patreon or give our discord a boost to access the #gold-lounge ${channelGoldLounge}room, where everything is better because you paid for it!`,
-  //   `Team Tripsit is always happy to hear your feedback, join #talk-to-tripsit ${channelTalkToTS}and say hi!`,
-  //   `Upvote something 10 times to make it into the ${channelBestOf}`,
-  //   `Give thanks and positive feedback in ${channelKudos}`,
-  //   `Open a voice chat in ${channelCampfire}!`,
-  //   `Want to help out tripsit 'behind the scenes'? Review the #vip-welcome ${channelDevWelcome} room and pick up the Contributor role to access the Development category where we discuss projects and ideas! You don't need to be a coder to be Headers, all input is welcome`,
-  // ];
-
   const embed = embedTemplate();
 
   const genAnnouncements = [hrAnnouncements, tipAnnouncements, funAnnouncements].flat(1);
-
-  // const allAnnouncements = [
-  //   genAnnouncements,
-  //   vipAnnouncements,
-  // ];
 
   const generalChatCategories = [
     env.CATEGORY_CAMPGROUND,

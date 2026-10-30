@@ -102,7 +102,7 @@ describe('discordBridgeTarget', () => {
       content: 'hi from irc',
       username: 'IrcUser',
       avatarURL: 'https://cdn/ircuser.png',
-      allowedMentions: { parse: ['users'] },
+      allowedMentions: { parse: [] },
     });
   });
 

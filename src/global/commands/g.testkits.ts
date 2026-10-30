@@ -1,14 +1,9 @@
-type HelpResource = {
-  name: string;
-  country: string;
-  website: string;
-  description: string;
-};
-
 /**
  * Information about contacting the team!
  * @return {any} an object with information about the bot
  */
+
+import { HelpResource } from '@global/@types/helpresource';
 
 export default async function testkits():Promise<HelpResource[]> {
   return [

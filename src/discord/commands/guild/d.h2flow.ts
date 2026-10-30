@@ -8,6 +8,7 @@ import { stripIndents } from 'common-tags';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import commandContext from '../../utils/context';
+import { getOrCreateUser } from '../../../global/utils/dbRecords';
 
 // import log from '../../../global/utils/log';
 
@@ -25,15 +26,7 @@ export const dH2flow: SlashCommand = {
     log.info(F, await commandContext(interaction));
     const ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined;
     await interaction.deferReply({ flags: ephemeral });
-    const userData = await db.users.upsert({
-      where: {
-        discord_id: interaction.user.id,
-      },
-      create: {
-        discord_id: interaction.user.id,
-      },
-      update: {},
-    });
+    const userData = await getOrCreateUser(interaction.user.id);
 
     const sparklePoints = userData.sparkle_points;
     const movePoints = userData.move_points;

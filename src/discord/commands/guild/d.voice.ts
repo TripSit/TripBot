@@ -13,7 +13,7 @@ import {
 import { bigBrother } from '../../../global/utils/thoughtPolice';
 import { SlashCommand } from '../../@types/commandDef';
 import commandContext from '../../utils/context';
-import { embedTemplate } from '../../utils/embedTemplate';
+import { embedTemplate, errorEmbed } from '../../utils/embedTemplate';
 import { levelRoles, updateTentStatus } from '../../utils/tents';
 
 const F = f(__filename);
@@ -43,10 +43,8 @@ async function tentName(
   // If it flags the name, keep the current name and tell the user why.
   const nameCategory = await bigBrother(newName.toLowerCase());
   if (['offensive', 'harm', 'horny', 'pg13'].includes(nameCategory)) {
-    return embedTemplate()
-      .setTitle('Tent not renamed')
-      .setColor(Colors.Red)
-      .setDescription('That name contains banned words or phrases, so your tent was not renamed.');
+    return errorEmbed('That name contains banned words or phrases, so your tent was not renamed.')
+      .setTitle('Tent not renamed');
   }
 
   voiceChannel.setName(`⛺│${newName}`);
@@ -204,11 +202,9 @@ async function tentHost(
       MoveMembers: true,
     });
   } else {
-    return embedTemplate()
-      .setTitle('User not connected')
-      .setColor(Colors.Red)
-      .setDescription(`The new host must be in the tent to be set as the host.
-        Please pick a user that is currently in the tent.`);
+    return errorEmbed(`The new host must be in the tent to be set as the host.
+        Please pick a user that is currently in the tent.`)
+      .setTitle('User not connected');
   }
   // Remove the host permissions
   if (oldHost) {
@@ -255,10 +251,8 @@ async function tentAdd(
   }
   // Check if the user is a mod
   if (target.roles.cache.has(env.ROLE_MODERATOR) === true) {
-    return embedTemplate()
-      .setTitle('User is a moderator')
-      .setColor(Colors.Red)
-      .setDescription('Moderators are already able to join all tents.');
+    return errorEmbed('Moderators are already able to join all tents.')
+      .setTitle('User is a moderator');
   }
   if (hasExplicitPermission(voiceChannel, target, PermissionsBitField.Flags.Connect) === null) {
     voiceChannel.permissionOverwrites.create(target, { Connect: true, ViewChannel: true });
@@ -285,10 +279,8 @@ async function tentBan(
 
   // Check if the user is a mod
   if (target.roles.cache.has(env.ROLE_MODERATOR) === true) {
-    return embedTemplate()
-      .setTitle('User is a moderator')
-      .setColor(Colors.Red)
-      .setDescription('You cannot ban a moderator! They can join all tents.');
+    return errorEmbed('You cannot ban a moderator! They can join all tents.')
+      .setTitle('User is a moderator');
   }
 
   // Check if the user is already banned using the ViewChannel permission and the hasExplicitPermission function
@@ -334,20 +326,16 @@ async function tentPing(
 
     // Check if the user used the command less than the user cooldown
     if (userTentPingTimes[userId] && now - userTentPingTimes[userId] < userCooldown) {
-      return embedTemplate()
-        .setTitle('Cooldown')
-        .setColor(Colors.Red)
-        .setDescription(`You already used this command <t:${Math.floor(userTentPingTimes[userId] / 1000)}:R>.
-        You can use it again <t:${Math.floor((userTentPingTimes[userId] + userCooldown) / 1000)}:R>.`);
+      return errorEmbed(`You already used this command <t:${Math.floor(userTentPingTimes[userId] / 1000)}:R>.
+        You can use it again <t:${Math.floor((userTentPingTimes[userId] + userCooldown) / 1000)}:R>.`)
+        .setTitle('Cooldown');
     }
 
     // Check if the command was used less than the global cooldown
     if (now - lastTentPingTime < globalCooldown) {
-      return embedTemplate()
-        .setTitle('Cooldown')
-        .setColor(Colors.Red)
-        .setDescription(`This command is on cooldown.
-        It can next be used <t:${Math.floor((lastTentPingTime + globalCooldown) / 1000)}:R>.`);
+      return errorEmbed(`This command is on cooldown.
+        It can next be used <t:${Math.floor((lastTentPingTime + globalCooldown) / 1000)}:R>.`)
+        .setTitle('Cooldown');
     }
 
     // Update the last usage times
@@ -359,12 +347,10 @@ async function tentPing(
     const channelID = env.CHANNEL_LOUNGE;
     const channel = member.guild.channels.cache.get(channelID) as TextChannel | undefined;
     if (!channel || !(channel instanceof TextChannel)) {
-      return embedTemplate()
-        .setTitle('BAD ERROR')
-        .setColor(Colors.Red)
-        .setDescription(
-          'The lounge channel could not be found. This should not have happened, please contact a developer.',
-        );
+      return errorEmbed(
+        'The lounge channel could not be found. This should not have happened, please contact a developer.',
+      )
+        .setTitle('BAD ERROR');
     }
 
     // Send the ping
@@ -376,10 +362,8 @@ async function tentPing(
       .setDescription(`The Join VC role has been pinged in <#${env.CHANNEL_LOUNGE}>.`);
   }
 
-  return embedTemplate()
-    .setTitle('BAD ERROR')
-    .setColor(Colors.Red)
-    .setDescription('The Join VC role could not be found. This should not have happened, please contact a developer.');
+  return errorEmbed('The Join VC role could not be found. This should not have happened, please contact a developer.')
+    .setTitle('BAD ERROR');
 }
 
 export const dVoice: SlashCommand = {
@@ -461,10 +445,8 @@ export const dVoice: SlashCommand = {
     const limit = interaction.options.getInteger('limit') as number;
     const level = interaction.options.getString('level') as string;
 
-    let embed = embedTemplate()
-      .setTitle('Error')
-      .setColor(Colors.Red)
-      .setDescription('You can only use this command in a voice channel Tent that you own!');
+    let embed = errorEmbed('You can only use this command in a voice channel Tent that you own!')
+      .setTitle('Error');
 
     // Determine the voice channel
     let voiceChannel = member.voice.channel;
@@ -473,12 +455,10 @@ export const dVoice: SlashCommand = {
       if (interaction.channel?.isVoiceBased()) {
         voiceChannel = interaction.channel as VoiceBasedChannel;
       } else {
-        embed = embedTemplate()
-          .setTitle('Error')
-          .setColor(Colors.Red)
-          .setDescription(
-            'You must be in a voice channel or use this command in a voice channel\'s text chat as a moderator.',
-          );
+        embed = errorEmbed(
+          'You must be in a voice channel or use this command in a voice channel\'s text chat as a moderator.',
+        )
+          .setTitle('Error');
         await interaction.editReply({ embeds: [embed] });
         return false;
       }
@@ -486,50 +466,40 @@ export const dVoice: SlashCommand = {
 
     // If no voice channel is determined, return an error
     if (!voiceChannel) {
-      embed = embedTemplate()
-        .setTitle('Error')
-        .setColor(Colors.Red)
-        .setDescription('You must be in a voice channel to use this command.');
+      embed = errorEmbed('You must be in a voice channel to use this command.')
+        .setTitle('Error');
       await interaction.editReply({ embeds: [embed] });
       return false;
     }
 
     // Check if user is in a Tent
     if (!voiceChannel.name.includes('⛺')) {
-      embed = embedTemplate()
-        .setTitle('Error')
-        .setColor(Colors.Red)
-        .setDescription('You can only use this command in a Tent.');
+      embed = errorEmbed('You can only use this command in a Tent.')
+        .setTitle('Error');
       await interaction.editReply({ embeds: [embed] });
       return false;
     }
 
     // Check if a user is the current host or mod/admin, only users with MoveMembers permission can do this
     if (!voiceChannel.permissionsFor(member).has(PermissionsBitField.Flags.MoveMembers)) {
-      embed = embedTemplate()
-        .setTitle('Error')
-        .setColor(Colors.Red)
-        .setDescription('You must be the host or a moderator to use this command.');
+      embed = errorEmbed('You must be the host or a moderator to use this command.')
+        .setTitle('Error');
       await interaction.editReply({ embeds: [embed] });
       return false;
     }
 
     // Check the user is trying to act on themselves
     if (target === member) {
-      embed = embedTemplate()
-        .setTitle('Error')
-        .setColor(Colors.Red)
-        .setDescription('Stop playing with yourself!');
+      embed = errorEmbed('Stop playing with yourself!')
+        .setTitle('Error');
       await interaction.editReply({ embeds: [embed] });
       return false;
     }
 
     // Check if the target is a bot
     if (target && target.user.bot) {
-      embed = embedTemplate()
-        .setTitle('Error')
-        .setColor(Colors.Red)
-        .setDescription('You cannot interact with bots.');
+      embed = errorEmbed('You cannot interact with bots.')
+        .setTitle('Error');
       await interaction.editReply({ embeds: [embed] });
       return false;
     }

@@ -2,12 +2,7 @@
 import { experience_category, experience_type } from '@db/tripbot';
 import Canvas from '@napi-rs/canvas';
 import {
-  ActionRowBuilder,
   AttachmentBuilder,
-  ButtonBuilder,
-  ButtonInteraction,
-  ButtonStyle,
-  ComponentType,
   GuildMember,
   MessageFlags,
   SlashCommandBuilder,
@@ -22,6 +17,7 @@ import {
 } from '../../utils/canvasUtils';
 import commandContext from '../../utils/context';
 import getAsset from '../../utils/getAsset';
+import { runPager } from '../../utils/pager';
 
 const F = f(__filename);
 
@@ -407,54 +403,13 @@ export const dLeaderboard: SlashCommand = {
       return new AttachmentBuilder(encoded, { name: attachmentName });
     };
 
-    const buildRow = (current: number) => new ActionRowBuilder<ButtonBuilder>().addComponents(
-      new ButtonBuilder()
-        .setCustomId('leaderboardBack')
-        .setLabel('Back')
-        .setStyle(ButtonStyle.Primary)
-        .setDisabled(current === 0),
-      new ButtonBuilder()
-        .setCustomId('leaderboardNext')
-        .setLabel('Next')
-        .setStyle(ButtonStyle.Primary)
-        .setDisabled(current === totalPages - 1),
-    );
-
-    const attachment = await renderPage(page);
-    const message = await interaction.editReply({
-      files: [attachment],
-      components: totalPages > 1 ? [buildRow(page)] : [],
+    await runPager(interaction, {
+      pageCount: totalPages,
+      idPrefix: 'leaderboard',
+      showControls: totalPages > 1,
+      startIndex: page,
+      renderPage: async index => ({ files: [await renderPage(index)] }),
     });
-
-    if (totalPages > 1) {
-      const collector = message.createMessageComponentCollector({
-        filter: i => i.user.id === interaction.user.id
-          && (i.customId === 'leaderboardBack' || i.customId === 'leaderboardNext'),
-        componentType: ComponentType.Button,
-        time: 120000,
-      });
-
-      collector.on('collect', async (i: ButtonInteraction) => {
-        await i.deferUpdate();
-        if (i.customId === 'leaderboardNext') {
-          page = Math.min(page + 1, totalPages - 1);
-        } else {
-          page = Math.max(page - 1, 0);
-        }
-        const pageAttachment = await renderPage(page);
-        await interaction.editReply({
-          files: [pageAttachment],
-          components: [buildRow(page)],
-        });
-      });
-
-      collector.on('end', async () => {
-        const disabledRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
-          ...buildRow(page).components.map(button => button.setDisabled(true)),
-        );
-        await interaction.editReply({ components: [disabledRow] }).catch(() => {});
-      });
-    }
 
     log.info(F, `Total Time: ${Date.now() - startTime}ms`);
     return true;

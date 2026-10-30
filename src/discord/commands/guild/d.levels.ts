@@ -682,7 +682,16 @@ export const dLevels: SlashCommand = {
     }
 
     // Icon Images
+    // Icons sprite has static labels baked in for the Voice/Harm Reduction/Development/Team rows,
+    // but those rows are positionally compacted based on which categories a user has, so the
+    // baked labels don't line up with whichever bar actually lands there. Each xpBarSlot image
+    // already carries its own icon+label, so clip the static ones out to avoid drawing both.
+    context.save();
+    context.beginPath();
+    context.rect(0, 0, canvasWidth, 308);
+    context.clip();
     context.drawImage(Icons, 0, 0);
+    context.restore();
     if (xpBarSlot1.image) {
       context.drawImage(xpBarSlot1.image, 87, 317, 579, 51);
     }
