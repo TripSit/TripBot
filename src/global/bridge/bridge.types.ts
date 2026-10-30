@@ -20,6 +20,16 @@ export interface BridgeMessage {
   /** IRC /me or Discord-style emote. */
   action?: boolean;
   avatarUrl?: string;
+  /** The message's ID on its own platform, so a later delete can be relayed. */
+  id?: string;
+}
+
+/** A message that was deleted on one platform. */
+export interface BridgeDeletion {
+  platform: BridgePlatform;
+  channel: string;
+  /** The deleted message's ID on its own platform. */
+  id: string;
 }
 
 /** A message ready to be sent to another platform. */
@@ -30,9 +40,13 @@ export interface BridgeOutgoing {
   text: string;
   action: boolean;
   avatarUrl?: string;
+  /** The ID of the message on its source platform. */
+  sourceId?: string;
 }
 
 export interface BridgeTarget {
   platform: BridgePlatform;
   send(channel: string, message: BridgeOutgoing): Promise<void>;
+  /** Removes what was relayed for a source message. Targets that cannot delete omit it. */
+  remove?(channel: string, sourceId: string): Promise<void>;
 }

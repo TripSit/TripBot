@@ -1,7 +1,8 @@
 import type { BridgeOutgoing, BridgeTarget } from '../../bridge/bridge.types';
 import { bridgeGateways } from '../../bridge/bridge.gateways';
 import {
-  bridgedChannels, findGateways, gatewayChannel, registerBridgeTarget, relayMessage, unregisterBridgeTarget,
+  bridgedChannels, findGateways, gatewayChannel, registerBridgeTarget, relayDeletion, relayMessage,
+  unregisterBridgeTarget,
 } from '../../bridge/bridge';
 
 const LOUNGE_ID = 'discord-lounge';
@@ -179,5 +180,32 @@ describe('relayMessage', () => {
     expect(matrixSend).toHaveBeenCalled();
     expect(logError).toHaveBeenCalledWith('bridge', expect.stringContaining('webhook missing'));
     logError.mockRestore();
+  });
+});
+
+describe('relayDeletion', () => {
+  it('asks other platforms that can delete to remove the message', async () => {
+    const remove = vi.fn<(channel: string, sourceId: string) => Promise<void>>().mockResolvedValue(undefined);
+    registerBridgeTarget({ platform: 'irc', send: ircSend, remove });
+
+    await relayDeletion({ platform: 'discord', channel: LOUNGE_ID, id: 'm1' });
+
+    expect(remove).toHaveBeenCalledTimes(1);
+    expect(remove).toHaveBeenCalledWith('#lounge', 'm1');
+  });
+
+  it('skips targets that cannot delete and unbridged channels', async () => {
+    await expect(relayDeletion({ platform: 'discord', channel: LOUNGE_ID, id: 'm1' })).resolves.toBeUndefined();
+    const remove = vi.fn().mockResolvedValue(undefined);
+    registerBridgeTarget({ platform: 'irc', send: ircSend, remove });
+    await relayDeletion({ platform: 'discord', channel: 'elsewhere', id: 'm1' });
+    expect(remove).not.toHaveBeenCalled();
+  });
+
+  it('logs and survives a failing target', async () => {
+    vi.spyOn(global.log, 'error').mockReturnValue(undefined as never);
+    registerBridgeTarget({ platform: 'irc', send: ircSend, remove: vi.fn().mockRejectedValue(new Error('boom')) });
+    await expect(relayDeletion({ platform: 'discord', channel: LOUNGE_ID, id: 'm1' })).resolves.toBeUndefined();
+    expect(global.log.error).toHaveBeenCalledWith('bridge', expect.stringContaining('boom'));
   });
 });

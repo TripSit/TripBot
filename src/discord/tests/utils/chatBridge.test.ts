@@ -287,3 +287,33 @@ describe('relayDiscordEdit', () => {
     expect(ircSend).not.toHaveBeenCalled();
   });
 });
+
+describe('relayDiscordDelete', () => {
+  let remove: Mock;
+
+  beforeEach(() => {
+    remove = vi.fn().mockResolvedValue(undefined);
+    core.registerBridgeTarget({ platform: 'irc', send: ircSend, remove });
+  });
+
+  it('relays the delete by message ID', async () => {
+    await chatBridge.relayDiscordDelete(message({ guildId: 'guild-1' }));
+    expect(remove).toHaveBeenCalledWith('#lounge', 'message-1');
+  });
+
+  it('works for partial messages that only carry IDs', async () => {
+    const partial = {
+      id: 'message-2', channelId: LOUNGE_ID, guildId: 'guild-1', partial: true,
+    };
+    await chatBridge.relayDiscordDelete(partial as unknown as PartialMessage);
+    expect(remove).toHaveBeenCalledWith('#lounge', 'message-2');
+  });
+
+  it.each([
+    ['unbridged channels', { channelId: 'elsewhere' }],
+    ['direct messages', { guildId: null }],
+  ])('skips %s', async (_name, overrides) => {
+    await chatBridge.relayDiscordDelete(message({ guildId: 'guild-1', ...overrides }));
+    expect(remove).not.toHaveBeenCalled();
+  });
+});

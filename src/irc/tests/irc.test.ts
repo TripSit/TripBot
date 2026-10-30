@@ -106,7 +106,7 @@ describe('ircConnect', () => {
 
     // The command handler and the bridge
     expect(client.listenerCount('privmsg')).toBe(2);
-    expect(client.requestCap).toHaveBeenCalledWith('draft/relaymsg');
+    expect(client.requestCap).toHaveBeenCalledWith(['draft/relaymsg', 'echo-message']);
   });
 
   it('connects with TLS and SASL using the configured account', async () => {

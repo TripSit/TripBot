@@ -15,6 +15,10 @@ type FakeClient = EventEmitter & {
 const BOT = 'TripBotDev';
 const LOUNGE_ID = 'discord-lounge';
 const RELAYED_NICK = 'Moonbear/d';
+const FALLBACK_HELLO = '<Moonbear/d> hello';
+const PRIVS_NEEDED = 'PRIVS_NEEDED';
+const FAIL = 'FAIL';
+const UNKNOWN_COMMAND = 'unknown command';
 
 let bridge: typeof import('../bridge');
 let core: typeof import('../../global/bridge/bridge');
@@ -89,7 +93,7 @@ describe('IRC bridge target', () => {
   it('falls back to <nick> messages when the server lacks RELAYMSG', async () => {
     client.network.cap.isEnabled.mockReturnValue(false);
     await sendToIrc(outgoing());
-    expect(client.say).toHaveBeenCalledWith('#lounge', '<Moonbear/d> hello');
+    expect(client.say).toHaveBeenCalledWith('#lounge', FALLBACK_HELLO);
   });
 
   it('sends actions as CTCP ACTION, or as * nick in the fallback', async () => {
@@ -137,6 +141,22 @@ describe('IRC bridge target', () => {
     expect(global.log.warn).toHaveBeenCalledWith('bridge', expect.stringContaining('dropped 10 line(s)'));
   });
 
+  it('keeps a separate queue per channel', async () => {
+    await sendToIrc(outgoing({ text: '1\n2\n3' }), '#lounge');
+    await sendToIrc(outgoing({ text: 'other' }), '#movies');
+    // The second channel is not stuck behind the first channel's backlog
+    expect(client.raw).toHaveBeenCalledWith('RELAYMSG', '#movies', RELAYED_NICK, 'other');
+    expect(client.raw).toHaveBeenCalledTimes(2);
+  });
+
+  it('limits each channel separately', async () => {
+    const lines = (n: number) => Array.from({ length: n }, (_, i) => `line ${i}`).join('\n');
+    await sendToIrc(outgoing({ text: lines(bridge.IRC_MESSAGE_QUEUE + 5) }), '#lounge');
+    await sendToIrc(outgoing({ text: lines(bridge.IRC_MESSAGE_QUEUE) }), '#movies');
+    await vi.advanceTimersByTimeAsync(100 * bridge.IRC_MESSAGE_DELAY_MS);
+    expect(client.raw).toHaveBeenCalledTimes(2 * bridge.IRC_MESSAGE_QUEUE);
+  });
+
   it('drops messages while disconnected', async () => {
     client.connected = false;
     await sendToIrc(outgoing());
@@ -151,7 +171,7 @@ describe('registerIrcBridge', () => {
   });
 
   it('requests the RELAYMSG capability', () => {
-    expect(client.requestCap).toHaveBeenCalledWith('draft/relaymsg');
+    expect(client.requestCap).toHaveBeenCalledWith(['draft/relaymsg', 'echo-message']);
   });
 
   it('relays channel messages to Discord without IRC formatting', async () => {
@@ -188,10 +208,10 @@ describe('registerIrcBridge', () => {
   });
 
   it('falls back to plain messages after RELAYMSG is refused, until the next registration', async () => {
-    client.emit('unknown command', { command: 'FAIL', params: ['RELAYMSG', 'PRIVS_NEEDED', 'nope'], tags: {} });
+    client.emit(UNKNOWN_COMMAND, { command: FAIL, params: ['RELAYMSG', PRIVS_NEEDED, 'nope'], tags: {} });
     await sendToIrc(outgoing());
-    expect(client.say).toHaveBeenCalledWith('#lounge', '<Moonbear/d> hello');
-    expect(global.log.error).toHaveBeenCalledWith('bridge', expect.stringContaining('PRIVS_NEEDED'));
+    expect(client.say).toHaveBeenCalledWith('#lounge', FALLBACK_HELLO);
+    expect(global.log.error).toHaveBeenCalledWith('bridge', expect.stringContaining(PRIVS_NEEDED));
 
     client.emit('registered', { nick: BOT, tags: {} });
     await vi.advanceTimersByTimeAsync(bridge.IRC_MESSAGE_DELAY_MS);
@@ -200,9 +220,78 @@ describe('registerIrcBridge', () => {
   });
 
   it('ignores FAIL replies for other commands', async () => {
-    client.emit('unknown command', { command: 'FAIL', params: ['CHATHISTORY', 'x'], tags: {} });
+    client.emit(UNKNOWN_COMMAND, { command: FAIL, params: ['CHATHISTORY', 'x'], tags: {} });
     await sendToIrc(outgoing());
     expect(client.raw).toHaveBeenCalled();
+  });
+});
+
+describe('redacting relayed messages', () => {
+  let target: ReturnType<typeof bridge.createIrcBridgeTarget>;
+
+  beforeEach(() => {
+    bridge.registerIrcBridge(client as unknown as Client);
+    target = bridge.createIrcBridgeTarget(client as unknown as Client);
+  });
+
+  const echo = (message: string, msgid: string, overrides: Record<string, unknown> = {}) => ircMessage('privmsg', {
+    nick: RELAYED_NICK, message, tags: { 'draft/relaymsg': BOT, msgid }, ...overrides,
+  });
+
+  it('redacts every line of a deleted message', async () => {
+    await target.send('#lounge', outgoing({ sourceId: 'd1', text: 'one\ntwo' }));
+    echo('one', 'id-1');
+    await vi.advanceTimersByTimeAsync(bridge.IRC_MESSAGE_DELAY_MS);
+    echo('two', 'id-2');
+
+    await target.remove?.('#lounge', 'd1');
+    expect(client.raw).toHaveBeenCalledWith('REDACT', '#lounge', 'id-1');
+    expect(client.raw).toHaveBeenCalledWith('REDACT', '#lounge', 'id-2');
+    expect(discordSend).not.toHaveBeenCalled();
+  });
+
+  it('tracks fallback messages sent as the bot itself', async () => {
+    client.network.cap.isEnabled.mockReturnValue(false);
+    await target.send('#lounge', outgoing({ sourceId: 'd1' }));
+    ircMessage('privmsg', { nick: BOT, message: FALLBACK_HELLO, tags: { msgid: 'id-1' } });
+    await target.remove?.('#lounge', 'd1');
+    expect(client.raw).toHaveBeenCalledWith('REDACT', '#lounge', 'id-1');
+  });
+
+  it('tracks relayed actions', async () => {
+    await target.send('#lounge', outgoing({ sourceId: 'd1', action: true, text: 'waves' }));
+    echo('waves', 'id-1', {});
+    // An action echo arrives as an action event, not a privmsg
+    client.emit('action', {
+      from_server: false,
+      nick: RELAYED_NICK,
+      target: '#lounge',
+      message: 'waves',
+      tags: { 'draft/relaymsg': BOT, msgid: 'id-2' },
+    });
+    await target.remove?.('#lounge', 'd1');
+    expect(client.raw).toHaveBeenCalledWith('REDACT', '#lounge', 'id-2');
+    expect(client.raw).not.toHaveBeenCalledWith('REDACT', '#lounge', 'id-1');
+  });
+
+  it('does nothing for messages it never relayed or whose echo did not match', async () => {
+    await target.send('#lounge', outgoing({ sourceId: 'd1' }));
+    echo('something else', 'id-1');
+    await target.remove?.('#lounge', 'd1');
+    await target.remove?.('#lounge', 'unknown');
+    expect(client.raw).not.toHaveBeenCalledWith('REDACT', expect.anything(), expect.anything());
+  });
+
+  it('removes lines that are still queued', async () => {
+    await target.send('#lounge', outgoing({ sourceId: 'd1', text: 'one\ntwo' }));
+    await target.remove?.('#lounge', 'd1');
+    await vi.advanceTimersByTimeAsync(5 * bridge.IRC_MESSAGE_DELAY_MS);
+    expect(client.raw).toHaveBeenCalledTimes(1);
+  });
+
+  it('logs when the server refuses a redaction', () => {
+    client.emit(UNKNOWN_COMMAND, { command: FAIL, params: ['REDACT', 'REDACT_FORBIDDEN', 'no'], tags: {} });
+    expect(global.log.warn).toHaveBeenCalledWith('bridge', expect.stringContaining('REDACT_FORBIDDEN'));
   });
 });
 

@@ -1,6 +1,6 @@
 import { bridgeGateways } from './bridge.gateways';
 import {
-  BridgeGateway, BridgeMessage, BridgePlatform, BridgeTarget,
+  BridgeDeletion, BridgeGateway, BridgeMessage, BridgePlatform, BridgeTarget,
 } from './bridge.types';
 
 const F = f(__filename);
@@ -89,6 +89,7 @@ export async function relayMessage(message: BridgeMessage): Promise<void> {
           text,
           action: message.action ?? false,
           avatarUrl: message.avatarUrl,
+          sourceId: message.id,
         });
       } catch (err) {
         log.error(F, `Failed to relay ${message.platform} message to ${target.platform} ${channel}: ${err}`);
@@ -96,4 +97,28 @@ export async function relayMessage(message: BridgeMessage): Promise<void> {
     }));
 
   await Promise.all(deliveries);
+}
+
+/** Removes the relayed copies of a deleted message on every other platform that supports deleting. */
+export async function relayDeletion(deletion: BridgeDeletion): Promise<void> {
+  const removed = new Set<string>();
+
+  const removals = findGateways(deletion.platform, deletion.channel).flatMap(gateway => [...targets.values()]
+    .filter(target => target.platform !== deletion.platform && target.remove)
+    .map(target => ({ target, channel: gatewayChannel(gateway, target.platform) }))
+    .filter(({ target, channel }) => {
+      const key = `${target.platform}:${channel}`;
+      if (channel === undefined || removed.has(key)) return false;
+      removed.add(key);
+      return true;
+    })
+    .map(async ({ target, channel }) => {
+      try {
+        await target.remove?.(channel as string, deletion.id);
+      } catch (err) {
+        log.error(F, `Failed to relay ${deletion.platform} delete to ${target.platform} ${channel}: ${err}`);
+      }
+    }));
+
+  await Promise.all(removals);
 }

@@ -2,7 +2,7 @@ import {
   ChannelType, Message, MessageType, PartialMessage, Webhook,
 } from 'discord.js';
 import {
-  EDIT_SUFFIX, findGateways, registerBridgeTarget, relayMessage,
+  EDIT_SUFFIX, findGateways, registerBridgeTarget, relayDeletion, relayMessage,
 } from '../../global/bridge/bridge';
 import { chunkText, toDiscordUsername } from '../../global/bridge/bridge.format';
 import { BridgeOutgoing, BridgeTarget } from '../../global/bridge/bridge.types';
@@ -121,6 +121,7 @@ async function relay(message: Message, suffix: string): Promise<void> {
     nick: message.member?.displayName ?? message.author.displayName,
     text: `${text}${suffix}`,
     avatarUrl: message.author.displayAvatarURL(),
+    id: message.id,
   });
 }
 
@@ -145,5 +146,16 @@ export async function relayDiscordEdit(
     await relay(message, EDIT_SUFFIX);
   } catch (err) {
     log.error(F, `Failed to relay Discord edit ${newMessage.id}: ${err}`);
+  }
+}
+
+export async function relayDiscordDelete(message: Message | PartialMessage): Promise<void> {
+  try {
+    // Partial deletes still carry the IDs, which is all the target needs
+    if (!message.guildId || findGateways('discord', message.channelId).length === 0) return;
+    if (isBridgeWebhookMessage(message as Message)) return;
+    await relayDeletion({ platform: 'discord', channel: message.channelId, id: message.id });
+  } catch (err) {
+    log.error(F, `Failed to relay Discord delete ${message.id}: ${err}`);
   }
 }

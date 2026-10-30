@@ -275,7 +275,7 @@ do not give Anope, Atheme, or other separate-services instructions; confirm comm
 `/msg ChanServ HELP` on the server when unsure.
 
 - The bot uses `irc-framework` (`src/irc/irc.ts`), connects with TLS on 6697, and authenticates with SASL PLAIN using
-  `IRC_USERNAME`/`IRC_PASSWORD`. It only connects outside production and when `IRC_PASSWORD` is set. When
+  `IRC_USERNAME`/`IRC_PASSWORD`. It only connects when `IRC_PASSWORD` is set. When
   `IRC_OPER_NAME`/`IRC_OPER_PASSWORD` are set it sends `OPER` after registering.
 - The Ergo server config (`ircd.yaml`, `ircd.db`) lives on the IRC hosts, not in a repository; the `tripsit/irc` repo
   only holds its `docker-compose.yml`. Give the user config snippets to apply rather than assuming file access.
@@ -300,7 +300,7 @@ TripBot replaces Matterbridge for relaying chat between platforms.
 - `src/global/bridge/bridge.ts` routes a `BridgeMessage` to every other platform with a registered `BridgeTarget`
   (`registerBridgeTarget`). Platform adapters own formatting and delivery: `src/discord/utils/chatBridge.ts`
   (webhook named `TripSit Chat Bridge`, separate from the guild-to-guild `Tripsit Bridge` in `utils/bridge.ts`) and
-  `src/irc/bridge.ts`. Matrix has room IDs in the channel list but no adapter yet.
+  `src/irc/bridge.ts`. Matrix has room IDs in the channel list but is deliberately not bridged yet.
 - `src/global/bridge/bridge.gateways.ts` is the channel list ported from Matterbridge. Discord entries name an
   `env.config.ts` key, never a raw ID, so production and development resolve separately; an empty key value means the
   channel is not bridged in that environment. IRC joins every listed channel unless `IRC_CHANNELS` overrides it.
@@ -308,6 +308,8 @@ TripBot replaces Matterbridge for relaying chat between platforms.
   (falling back to `<name/label> text`), 400-byte lines sent one second apart with a 30-line queue, markdown stripped
   for IRC, server nicknames on the Discord side, ` (edited)` appended to relayed edits, `@everyone`/`@here`
   neutralized, and the old bot nicks ignored. Keep loop prevention intact: adapters must ignore their own output.
+- Discord deletes are relayed to IRC with `REDACT`, using the msgids from `echo-message` echoes of the relayed
+  lines. Each IRC channel has its own send queue.
 - Relayed message content is user content: never log it.
 
 ### Globals and aliases
