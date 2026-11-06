@@ -2,23 +2,53 @@ name: GuardMainSource
 
 on:
   pull_request:
-    branches:
-      - main
-    types:
-      - opened
-      - synchronize
-      - reopened
-      - edited
+    branches: [main, uat]
+    types: [opened, synchronize, reopened, edited, ready_for_review]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: branch-policy-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
 
 jobs:
   require-uat-source:
     name: Require uat source
     runs-on: ubuntu-latest
-    # Only run this check if the PR is targeting main
     if: github.event.pull_request.base.ref == 'main'
     steps:
-      - name: Verify pull request comes from uat
-        if: github.head_ref != 'uat'
-        run: |
-          echo "::error::Pull requests into main must come from the uat branch (this PR's source is '${{ github.head_ref }}')."
-          exit 1
+      - name: Verify canonical UAT source and fast-forward ancestry
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            if (pr.head.ref !== 'uat' || pr.head.repo?.full_name !== pr.base.repo.full_name) {
+              core.setFailed('main accepts only the uat branch in this repository.');
+              return;
+            }
+            const { data } = await github.rest.repos.compareCommitsWithBasehead({
+              ...context.repo,
+              basehead: `${pr.base.sha}...${pr.head.sha}`,
+            });
+            if (!['ahead', 'identical'].includes(data.status)) {
+              core.setFailed('main must be an ancestor of the proposed UAT commit. Reconcile through UAT.');
+            }
+  require-uat-base:
+    name: Require current uat base
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.base.ref == 'uat'
+    steps:
+      - name: Verify feature branch includes the PR base
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            const { data } = await github.rest.repos.compareCommitsWithBasehead({
+              ...context.repo,
+              basehead: `${pr.base.sha}...${pr.head.sha}`,
+            });
+            if (!['ahead', 'identical'].includes(data.status)) {
+              core.setFailed('Update the feature branch from uat, then rerun validation.');
+            }
