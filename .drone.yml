@@ -2,13 +2,17 @@ kind: pipeline
 type: docker
 name: Deploy TripBot
 
+# The signed hook delegates checkout/build to the production server.
+clone:
+  disable: true
+
 node:
   env: prod
 
 steps:
   - name: Rebuild TripBot
     # The server rebuilds and restarts this itself (docker/deploy/ on the server); this step only asks it to.
-    # The pipeline gets no Docker access and no server secrets, just DEPLOY_HOOK_SECRET to sign the request.
+    # This step requests only its hook key; runner-wide host mounts/socket access must also be removed at cutover.
     image: local/tripsit-deploy-client:1-20261104
     pull: never
     environment:
@@ -17,6 +21,8 @@ steps:
     commands:
       - |
         set -eu
+        [ "$DRONE_COMMIT_BRANCH" = main ] || { echo "Refusing non-main production deployment" >&2; exit 1; }
+        [ "$DRONE_BUILD_EVENT" = push ] || { echo "Refusing non-push production deployment" >&2; exit 1; }
         BODY=$(printf '{"target":"tripbot","build":"%s","sha":"%s","ts":"%s"}' "$DRONE_BUILD_NUMBER" "$DRONE_COMMIT_SHA" "$(date +%s)")
         SIG=$(printf '%s' "$BODY" | openssl dgst -sha256 -hmac "$DEPLOY_HOOK_SECRET" | sed 's/^.* //')
         if HTTP_STATUS=$(curl -sS --connect-timeout 10 --max-time 3000 --retry 0 \
@@ -65,7 +71,6 @@ trigger:
   - main
   event:
   # - cron
-  - custom
   - push
   # - pull_request
   # - tag
