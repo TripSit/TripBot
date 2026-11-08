@@ -1,4 +1,5 @@
 import {
+  AuditLogEvent,
   Colors,
   TextChannel,
   PermissionsBitField,
@@ -79,15 +80,49 @@ function formatValue(value: any, key?: string): string {
   return value.toString();
 }
 
+// Describe exactly which permissions were added/removed between two bitfields
+export function formatPermissionDiff(oldValue: unknown, newValue: unknown): string {
+  const toSet = (v: unknown) => {
+    try {
+      return new Set(new PermissionsBitField(BigInt((v ?? 0) as string)).toArray());
+    } catch {
+      return new Set<string>();
+    }
+  };
+
+  const before = toSet(oldValue);
+  const after = toSet(newValue);
+
+  const added = [...after].filter(p => !before.has(p));
+  const removed = [...before].filter(p => !after.has(p));
+
+  const parts: string[] = [];
+  if (added.length) parts.push(`+ ${added.join(', ')}`);
+  if (removed.length) parts.push(`- ${removed.join(', ')}`);
+
+  return parts.length ? parts.join('\n') : 'No effective change';
+}
+
+// AutoMod action entries are reported by discord.js with a 'User' target type, so match on the event instead
+const AUTOMOD_ACTIONS: AuditLogEvent[] = [
+  AuditLogEvent.AutoModerationBlockMessage,
+  AuditLogEvent.AutoModerationFlagToChannel,
+  AuditLogEvent.AutoModerationUserCommunicationDisabled,
+];
+
+export function isAutoModAction(action: AuditLogEvent): boolean {
+  return AUTOMOD_ACTIONS.includes(action);
+}
+
 // Get appropriate emoji for different actions
-function getActionEmoji(actionType: string, targetType: string): string {
+export function getActionEmoji(actionType: string, targetType: string): string {
   const action = actionType.toLowerCase();
   const target = targetType.toLowerCase();
 
   if (action === 'create') return '✅';
   if (action === 'delete') return '❌';
   if (action === 'update') {
-    if (target.includes('member')) return '👤';
+    if (target.includes('user')) return '👤';
     if (target.includes('role')) return '🏷️';
     if (target.includes('channel')) return '📝';
     if (target.includes('guild')) return '🏠';
@@ -97,7 +132,7 @@ function getActionEmoji(actionType: string, targetType: string): string {
 }
 
 // Format specific change types with human-readable descriptions
-function formatChange(change: any, targetType: string): string {
+export function formatChange(change: any, targetType: string): string {
   const { key, old: oldValue, new: newValue } = change;
   const formattedOld = formatValue(oldValue, key);
   const formattedNew = formatValue(newValue, key);
@@ -124,13 +159,13 @@ function formatChange(change: any, targetType: string): string {
       return `**Server Muted:** ${formattedOld} → ${formattedNew}`;
 
     case '$add':
-      if (targetType.toLowerCase().includes('member')) {
+      if (targetType.toLowerCase().includes('user')) {
         return `**Roles Added:** ${formattedNew}`;
       }
       return `**Added:** ${formattedNew}`;
 
     case '$remove':
-      if (targetType.toLowerCase().includes('member')) {
+      if (targetType.toLowerCase().includes('user')) {
         return `**Roles Removed:** ${formattedNew}`;
       }
       return `**Removed:** ${formattedNew}`;
@@ -154,13 +189,13 @@ function formatChange(change: any, targetType: string): string {
       return `**Mentionable:** ${formattedOld} → ${formattedNew}`;
 
     case 'permissions':
-      return '**Permissions:** Updated';
+      return `**Permissions:**\n${formatPermissionDiff(oldValue, newValue)}`;
 
     case 'allow':
-      return `**Permissions Allowed:** ${formattedNew}`;
+      return `**Permissions Allowed:**\n${formatPermissionDiff(oldValue, newValue)}`;
 
     case 'deny':
-      return `**Permissions Denied:** ${formattedNew}`;
+      return `**Permissions Denied:**\n${formatPermissionDiff(oldValue, newValue)}`;
 
     case 'nsfw':
       return `**NSFW:** ${formattedOld} → ${formattedNew}`;
@@ -187,8 +222,43 @@ function formatChange(change: any, targetType: string): string {
   }
 }
 
+// discord.js reports bans, kicks, etc. all as a 'User' target with Create/Update/Delete, so use the event
+function describeUserAction(
+  action: AuditLogEvent,
+  executorName: string,
+  targetName: string,
+): string | undefined {
+  switch (action) {
+    case AuditLogEvent.MemberBanAdd:
+      return `**${targetName}** was banned`;
+    case AuditLogEvent.MemberBanRemove:
+      return `**${targetName}** was unbanned`;
+    case AuditLogEvent.MemberKick:
+      return `**${executorName}** kicked **${targetName}**`;
+    case AuditLogEvent.MemberPrune:
+      return `**${executorName}** pruned inactive members`;
+    case AuditLogEvent.MemberUpdate:
+    case AuditLogEvent.MemberRoleUpdate:
+      return `**${executorName}** updated member **${targetName}**`;
+    case AuditLogEvent.MemberMove:
+      return `**${executorName}** moved **${targetName}** to another voice channel`;
+    case AuditLogEvent.MemberDisconnect:
+      return `**${executorName}** disconnected **${targetName}** from voice`;
+    case AuditLogEvent.BotAdd:
+      return `**${executorName}** added bot **${targetName}**`;
+    case AuditLogEvent.AutoModerationBlockMessage:
+      return `AutoMod blocked a message from **${targetName}**`;
+    case AuditLogEvent.AutoModerationFlagToChannel:
+      return `AutoMod flagged a message from **${targetName}**`;
+    case AuditLogEvent.AutoModerationUserCommunicationDisabled:
+      return `AutoMod timed out **${targetName}**`;
+    default:
+      return undefined;
+  }
+}
+
 // Create human-readable action description
-function createActionDescription(auditLogEntry: any): string {
+export function createActionDescription(auditLogEntry: any): string {
   const {
     executor, target, targetType, actionType,
   } = auditLogEntry;
@@ -201,18 +271,11 @@ function createActionDescription(auditLogEntry: any): string {
 
   // Handle different target types with appropriate descriptions
   switch (type) {
-    case 'user':
-    case 'member':
-      if (action === 'update') {
-        return `**${executorName}** updated member **${targetName}**`;
-      }
-      if (action === 'create') {
-        return `**${targetName}** was unbanned`;
-      }
-      if (action === 'delete') {
-        return `**${targetName}** was banned`;
-      }
+    case 'user': {
+      const userDescription = describeUserAction(auditLogEntry.action, executorName, targetName);
+      if (userDescription) return userDescription;
       break;
+    }
 
     case 'role':
       if (action === 'create') {
@@ -340,12 +403,12 @@ export const guildAuditLogEntryCreate: GuildAuditLogEntryCreateEvent = {
 
       // Handle reason with special formatting for AutoMod
       if (reason) {
-        if (targetType.toLowerCase().includes('automod') || targetType.toLowerCase().includes('auto_mod')) {
-          // Try to extract keyword from extra data
-          const extra = auditLogEntry.extra as any;
-          const keyword = extra.keyword || extra.content;
-          if (keyword) {
-            description += `\n\n**Triggered by:** \`${keyword}\``;
+        if (isAutoModAction(auditLogEntry.action)) {
+          // `extra` is null for some entries and carries the rule name, not the matched keyword
+          const extra = auditLogEntry.extra as Record<string, unknown> | null | undefined;
+          const ruleName = extra?.autoModerationRuleName;
+          if (typeof ruleName === 'string' && ruleName) {
+            description += `\n\n**Rule:** ${ruleName}\n**Reason:** ${reason}`;
           } else {
             description += `\n\n**Reason:** ${reason}`;
           }
@@ -385,7 +448,7 @@ export const guildAuditLogEntryCreate: GuildAuditLogEntryCreateEvent = {
           text: `Action by ${executor.tag}`,
           iconURL: executor.displayAvatarURL({ size: 32 }),
         });
-      } else if (targetType.toLowerCase().includes('automod') || targetType.toLowerCase().includes('auto_mod')) {
+      } else if (isAutoModAction(auditLogEntry.action)) {
         // For AutoMod, try to get the user who triggered it
         if (auditLogEntry.executorId && auditLogEntry.executorId !== guild.client.user?.id) {
           try {
