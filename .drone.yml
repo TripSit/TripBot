@@ -23,18 +23,32 @@ steps:
         set -eu
         [ "$DRONE_COMMIT_BRANCH" = main ] || { echo "Refusing non-main production deployment" >&2; exit 1; }
         [ "$DRONE_BUILD_EVENT" = push ] || { echo "Refusing non-push production deployment" >&2; exit 1; }
-        BODY=$(printf '{"target":"tripbot","build":"%s","sha":"%s","ts":"%s"}' "$DRONE_BUILD_NUMBER" "$DRONE_COMMIT_SHA" "$(date +%s)")
-        SIG=$(printf '%s' "$BODY" | openssl dgst -sha256 -hmac "$DEPLOY_HOOK_SECRET" | sed 's/^.* //')
-        if HTTP_STATUS=$(curl -sS --connect-timeout 10 --max-time 3000 --retry 0 \
-          -o deploy.log -w '%{http_code}' -X POST -H 'Content-Type: application/json' \
-          -H "X-Signature: sha256=$SIG" --data-binary "$BODY" http://deployer:9000/hooks/deploy-tripbot); then
-          :
-        else
-          RC=$?
-          echo "Deploy request failed (curl exit $RC); server may still be running it. No retry performed." >&2
-          exit "$RC"
-        fi
-        cat deploy.log
+        # The deployer runs one deployment at a time for every service (the website too) and waits
+        # only about a minute for the one before it. Its "busy" answer means it started nothing,
+        # so that answer alone is retried: 6 attempts, 30 s apart, outlast one ~5 min deploy.
+        # Every other failure stops here, since the server may still be running it.
+        BUSY='DEPLOY_RESULT=failure (deployer busy; no deployment started)'
+        for ATTEMPT in 1 2 3 4 5 6; do
+          BODY=$(printf '{"target":"tripbot","build":"%s","sha":"%s","ts":"%s"}' "$DRONE_BUILD_NUMBER" "$DRONE_COMMIT_SHA" "$(date +%s)")
+          SIG=$(printf '%s' "$BODY" | openssl dgst -sha256 -hmac "$DEPLOY_HOOK_SECRET" | sed 's/^.* //')
+          if HTTP_STATUS=$(curl -sS --connect-timeout 10 --max-time 3000 --retry 0 \
+            -o deploy.log -w '%{http_code}' -X POST -H 'Content-Type: application/json' \
+            -H "X-Signature: sha256=$SIG" --data-binary "$BODY" http://deployer:9000/hooks/deploy-tripbot); then
+            :
+          else
+            RC=$?
+            echo "Deploy request failed (curl exit $RC); server may still be running it. No retry performed." >&2
+            exit "$RC"
+          fi
+          cat deploy.log
+          grep -qxF "$BUSY" deploy.log || break
+          if [ "$ATTEMPT" = 6 ]; then
+            echo "Deployer still busy after 6 attempts; giving up." >&2
+            break
+          fi
+          echo "Deployer busy (attempt $ATTEMPT of 6); retrying in 30 s." >&2
+          sleep 30
+        done
         [ "$HTTP_STATUS" = 200 ] || { echo "Deploy hook HTTP $HTTP_STATUS" >&2; exit 1; }
         grep -qx 'DEPLOY_RESULT=success' deploy.log
         grep -qx "DEPLOY_COMMIT=$DRONE_COMMIT_SHA" deploy.log
