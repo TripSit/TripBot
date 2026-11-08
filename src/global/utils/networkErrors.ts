@@ -46,7 +46,7 @@ export function describeError(err: unknown, depth = 0): string {
 
 /** Strips secrets and ids' query strings from a Discord API URL so it can be logged. */
 export function redactDiscordUrl(url: string): string {
-  let path = url;
+  let path: string;
   try {
     path = new URL(url).pathname;
   } catch {
