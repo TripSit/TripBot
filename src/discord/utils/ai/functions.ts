@@ -1,4 +1,4 @@
-import { LanguageModelV3Prompt, OpenRouterUsageAccounting } from '@openrouter/ai-sdk-provider';
+import { LanguageModelV4Prompt, OpenRouterUsageAccounting } from '@openrouter/ai-sdk-provider';
 import { stripIndents } from 'common-tags';
 import {
   ActionRowBuilder,
@@ -63,7 +63,7 @@ export class AiFunction {
   static async aiAudit(
     user: User,
     message: Message,
-    prompt: LanguageModelV3Prompt,
+    prompt: LanguageModelV4Prompt,
     chatResponse: { content: string; reasoning: string | undefined; usage: OpenRouterUsageAccounting | undefined; },
     modelUsed: string,
   ) {
@@ -97,8 +97,8 @@ export class AiFunction {
 
     // 1. FIXED: Handle the 'object object' bug by extracting text parts properly
     const conversationContext = prompt
-      .filter((p: LanguageModelV3Prompt[number]) => p.role !== 'system')
-      .map((p: LanguageModelV3Prompt[number]) => {
+      .filter((p: LanguageModelV4Prompt[number]) => p.role !== 'system')
+      .map((p: LanguageModelV4Prompt[number]) => {
         // Determine the label based on the SDK role
         const roleLabel = p.role === 'user' ? 'User' : 'AI';
         let textContent = '';
@@ -220,8 +220,8 @@ export class AiFunction {
     return pages;
   }
 
-  static async createPrompt(message: Message, personaId: PersonaId): Promise<LanguageModelV3Prompt> {
-    const messageList: LanguageModelV3Prompt = [];
+  static async createPrompt(message: Message, personaId: PersonaId): Promise<LanguageModelV4Prompt> {
+    const messageList: LanguageModelV4Prompt = [];
     const botNickname = message.guild?.members.me?.nickname || 'TripBot';
 
     // Limit history to 10 messages to save tokens
