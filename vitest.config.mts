@@ -40,7 +40,6 @@ export default defineConfig({
       // v2 API tests are pre-existing failures unrelated to this migration (see git blame);
       // out of scope until the coverage gap-fill phase addresses src/api/v2.
       'src/api/v2/**',
-      'src/api/utils/**',
     ],
     coverage: {
       provider: 'v8',
@@ -69,7 +68,6 @@ export default defineConfig({
         'src/irc/archive/**',
         'src/global/@types/**',
         'src/api/v2/**',
-        'src/api/utils/**',
       ],
     },
   },

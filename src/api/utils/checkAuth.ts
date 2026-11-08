@@ -1,6 +1,16 @@
 import { Request, Response } from 'express';
+import crypto from 'crypto';
 
 const F = f(__filename);
+
+function safeCompare(a: string, b: string): boolean {
+  const bufA = Buffer.from(a);
+  const bufB = Buffer.from(b);
+  if (bufA.length !== bufB.length) {
+    return false;
+  }
+  return crypto.timingSafeEqual(bufA, bufB);
+}
 
 export default async function checkAuth(
   req: Request,
@@ -39,23 +49,27 @@ export default async function checkAuth(
 
   // Handle different authentication types
   if (authType === 'Basic') {
-    // Existing Basic auth logic
+    if (!env.API_USERNAME || !env.API_PASSWORD) {
+      log.error(F, 'API_USERNAME or API_PASSWORD not configured');
+      res.status(500).send('Server authentication misconfigured');
+      return false;
+    }
+
     const myToken = Buffer.from(`${env.API_USERNAME}:${env.API_PASSWORD}`).toString('base64');
 
-    if (authToken !== myToken) {
+    if (!safeCompare(authToken, myToken)) {
       log.error(F, 'Authorization token is not valid');
       res.status(401).send('Authorization token is not valid');
       return false;
     }
   } else if (authType === 'Bearer') {
-    // New Bearer token logic
     if (!env.TRIPBOT_API_TOKEN) {
       log.error(F, 'TRIPBOT_API_TOKEN not configured');
       res.status(500).send('Server authentication misconfigured');
       return false;
     }
 
-    if (authToken !== env.TRIPBOT_API_TOKEN) {
+    if (!safeCompare(authToken, env.TRIPBOT_API_TOKEN)) {
       log.error(F, 'Bearer token is not valid');
       res.status(401).send('Bearer token is not valid');
       return false;
