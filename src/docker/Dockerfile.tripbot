@@ -34,9 +34,7 @@ RUN npx tsc --project tsconfig.prisma.json
 RUN rm -f ./build/prisma.config.js ./build/prisma.config.js.map
 
 # 4. PRUNE: Remove devDependencies (this deletes the clients we just made)
-# This stage is Debian (glibc) but node_modules is copied into the Alpine (musl) production stage, so install the
-# musl variants of optional native packages (@snazzah/davey, @napi-rs/canvas); otherwise only the -gnu ones are installed.
-RUN rm -rf node_modules && npm ci --omit=dev --no-audit --silent --ignore-scripts --libc=musl
+RUN rm -rf node_modules && npm ci --omit=dev --no-audit --silent --ignore-scripts
 
 # 5. GENERATE FOR RUNTIME: Re-inject the clients into the clean node_modules
 RUN npx prisma generate --schema=./src/prisma/tripbot/schema.prisma
@@ -45,7 +43,9 @@ RUN npx prisma generate --schema=./src/prisma/moodle/schema.prisma
 ###################
 # FINAL PRODUCTION (The "Lean" stage that actually runs)
 ###################
-FROM node:lts-alpine AS production
+# Debian (slim), like the stages above: node_modules is installed in the build stage and copied here, so both must share
+# a libc. Alpine (musl) needs different optional native binaries (@snazzah/davey, @napi-rs/canvas) than the glibc install.
+FROM node:lts-slim AS production
 ENV NODE_ENV=production
 WORKDIR /workspaces/tripbot
 
