@@ -9,7 +9,6 @@ import {
 import Transport from 'winston-transport';
 // import { Logtail } from '@logtail/node'; // eslint-disable-line
 // import { LogtailTransport } from '@logtail/winston'; // eslint-disable-line
-import Rollbar from 'rollbar';
 // import SentryTransport from 'winston-transport-sentry-node'; // eslint-disable-line
 import * as Sentry from '@sentry/node';
 import { TextChannel } from 'discord.js';
@@ -108,7 +107,7 @@ const transportOptions = [
   }),
 ];
 
-// We only want rollbar logs in production
+// Discord error-channel logging and GlitchTip (Sentry) are production only
 if (env.NODE_ENV === 'production') {
   transportOptions.push(new DiscordTransport({
     format: combine(
@@ -144,14 +143,6 @@ if (env.NODE_ENV === 'production') {
       }),
     ),
   }) as ConsoleTransportInstance);
-  const rollbarConfig: Rollbar.Configuration = {
-    accessToken: env.ROLLBAR_TOKEN,
-    // captureUncaught: true,
-    // captureUnhandledRejections: true,
-    logLevel: 'error',
-  };
-  global.rollbar = new Rollbar(rollbarConfig);
-
   // Setup Sentry
   Sentry.init({
     dsn: env.GLITCHTIP_DSN,
@@ -181,13 +172,7 @@ declare global {
 export const log = {
   info: (F: string, message: string) => logger.info(`[${F}] ${message}`),
   error: (F: string, message: string) => logger.error(`[${F}] ${message}`),
-  warn: (F: string, message: string) => {
-    if (!message.includes('Missing')) {
-      // rollbar is only initialized in production
-      global.rollbar?.warn(message);
-    }
-    return logger.warn(`[${F}] ${message}`);
-  },
+  warn: (F: string, message: string) => logger.warn(`[${F}] ${message}`),
   debug: (F: string, message: string) => logger.debug(`[${F}] ${message}`),
   http: (F: string, message: string) => logger.http(`[${F}] ${message}`),
 };

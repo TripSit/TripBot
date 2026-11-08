@@ -72,23 +72,6 @@ export default async function handleError(
       log.debug(F, 'No interaction, sending error to Sentry');
       Sentry.captureException(errorData);
     } */
-    if (interaction) {
-      log.debug(F, 'Interaction found, sending error to rollbar');
-      global.rollbar.error(errorStack, {
-        tags: {
-          command: commandName,
-          context: await commandContext(interaction),
-        },
-        user: {
-          id: interaction.user.id,
-          username: interaction.user.username,
-        },
-      });
-    } else {
-      log.debug(F, 'No interaction, sending error to rollbar');
-      global.rollbar.error(errorStack);
-    }
-
     // Get channel we send errors to
     const channel = await discordClient.channels.fetch(env.CHANNEL_BOTERRORS) as TextChannel;
 
