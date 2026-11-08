@@ -140,47 +140,40 @@ export async function getDiscordIdFromFederatedIdentity(userId: string): Promise
   }
 }
 
-// Helper function to fetch all users in batches
+// Helper function to fetch all users in sequential parallel batches, stopping early when exhausted
 async function fetchAllUsers(): Promise<UserRepresentation[]> {
   const adminClient = await getAdminClient();
   const max = 100;
   const maxUsers = 10000; // Safety limit
-
-  // Create an array of page numbers to fetch
   const pageCount = Math.ceil(maxUsers / max);
-  const pageNumbers = Array.from({ length: pageCount }, (_, i) => i);
+  const PARALLEL_PAGES = 5;
+  const realm = process.env.KEYCLOAK_REALM || 'TripSit';
+  const collected: UserRepresentation[] = [];
 
-  // Fetch pages in parallel batches
-  const PARALLEL_PAGES = 5; // Fetch 5 pages at a time
+  for (let startPage = 0; startPage < pageCount; startPage += PARALLEL_PAGES) {
+    const batchPages = Array.from(
+      { length: Math.min(PARALLEL_PAGES, pageCount - startPage) },
+      (_, idx) => startPage + idx,
+    );
 
-  // Create all page batches
-  const pageBatches = [];
-  for (let i = 0; i < pageNumbers.length; i += PARALLEL_PAGES) {
-    pageBatches.push(pageNumbers.slice(i, i + PARALLEL_PAGES));
-  }
-
-  // Fetch all pages in parallel
-  const allPageResults = await Promise.all(
-    pageBatches.map(pageNumberBatch => Promise.all(
-      pageNumberBatch.map(pageNum => adminClient.users.find({
+    // eslint-disable-next-line no-await-in-loop
+    const batchResults = await Promise.all(
+      batchPages.map(pageNum => adminClient.users.find({
         first: pageNum * max,
         max,
-        realm: process.env.KEYCLOAK_REALM || 'TripSit',
+        realm,
       })),
-    )),
-  );
+    );
 
-  // Process results and collect users
-  return allPageResults.reduce<UserRepresentation[]>((acc, batchResults, index) => {
-    const batchUsers = batchResults.flat();
-
-    // Only include results up to and including the first incomplete batch
-    if (index === 0 || !allPageResults.slice(0, index).some(batch => batch.flat().length < batch.length * max)) {
-      acc.push(...batchUsers);
+    for (const pageUsers of batchResults) {
+      collected.push(...pageUsers);
+      if (pageUsers.length < max) {
+        return collected;
+      }
     }
+  }
 
-    return acc;
-  }, []);
+  return collected;
 }
 
 // Helper function to check user identities for GitHub and Discord accounts
