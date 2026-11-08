@@ -69,6 +69,9 @@ steps:
 trigger:
   branch:
   - main
+  # Only the production Drone server runs this pipeline; the UAT server skips it.
+  instance:
+  - drone.tripsit.me
   event:
   # - cron
   - push
@@ -186,6 +189,9 @@ steps:
 trigger:
   branch:
   - uat
+  # Only the UAT Drone server runs this pipeline; the production server skips it.
+  instance:
+  - drone.tripsit.io
   event:
   - custom
   - push
