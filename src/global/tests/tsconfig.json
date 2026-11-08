@@ -1,0 +1,4 @@
+{
+  // Lets editors type-check test files with the Vitest settings; `tsc` ignores this file.
+  "extends": "../../../tsconfig.vitest.json"
+}

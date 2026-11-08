@@ -14,9 +14,10 @@ import {
 import { stripIndents } from 'common-tags';
 import { SlashCommandBeta } from '../../@types/commandDef';
 import commandContext from '../../utils/context';
-import { embedTemplate } from '../../utils/embedTemplate';
-import { checkChannelPermissions } from '../../utils/checkPermissions';
+import { embedTemplate, errorEmbed } from '../../utils/embedTemplate';
+import { missingPermission } from '../../utils/checkPermissions';
 import { sleep } from '../../utils/sleep';
+import { getOrCreateUser } from '../../../global/utils/dbRecords';
 
 const F = f(__filename);
 
@@ -411,15 +412,7 @@ export async function countMessage(message: Message): Promise<void> {
       // If the channel is token then take tokens from the pot
 
       // const userData = await getUser(message.author.id, null, null);
-      const userData = await db.users.upsert({
-        where: {
-          discord_id: message.author.id,
-        },
-        create: {
-          discord_id: message.author.id,
-        },
-        update: {},
-      });
+      const userData = await getOrCreateUser(message.author.id);
 
       // const personaData = await personaGet(userData.id);
       await db.personas.upsert({
@@ -465,10 +458,8 @@ export async function countMessage(message: Message): Promise<void> {
     // Send a message to the channel
     await message.channel.send({
       embeds: [
-        embedTemplate()
-          .setTitle('Combo Broken!')
-          .setColor(Colors.Red)
-          .setDescription(stripIndents`Oh no, ${message.author} broke the combo...${recordMessage}${endingMessage}`),
+        errorEmbed(stripIndents`Oh no, ${message.author} broke the combo...${recordMessage}${endingMessage}`)
+          .setTitle('Combo Broken!'),
       ],
     });
 
@@ -561,15 +552,7 @@ export async function countMessage(message: Message): Promise<void> {
     const stakeholderIds = countingData.current_stakeholders.split(',');
     await Promise.all(stakeholderIds.map(async discordId => {
       // const userData = await getUser(message.author.id, null, null);
-      const userData = await db.users.upsert({
-        where: {
-          discord_id: discordId,
-        },
-        create: {
-          discord_id: discordId,
-        },
-        update: {},
-      });
+      const userData = await getOrCreateUser(discordId);
 
       // const personaData = await personaGet(userData.id);
       return db.personas.upsert({
@@ -668,17 +651,15 @@ export const counting: SlashCommandBeta = {
     let response = { content: 'This command has not been setup yet!' } as InteractionEditReplyOptions;
     if (command === 'setup') {
       // Check if the user can manage the channel role
-      if (!await checkChannelPermissions(
+      if (await missingPermission(
         (interaction.channel as TextChannel),
         [
-          'ManageChannel' as PermissionResolvable,
+          'ManageChannels' as PermissionResolvable,
         ],
       )) {
         // log.debug(`${PREFIX} bot does NOT has permission to post in !`);
         return interaction.editReply({
-          embeds: [embedTemplate()
-            .setTitle('You do not have permission to use this command!')
-            .setColor(Colors.Red)],
+          embeds: [errorEmbed().setTitle('You do not have permission to use this command!')],
         });
       }
       response = await countingSetup(
@@ -694,17 +675,15 @@ export const counting: SlashCommandBeta = {
     }
     if (command === 'reset') {
       // Check if the user can manage the channel role
-      if (!await checkChannelPermissions(
+      if (await missingPermission(
         (interaction.channel as TextChannel),
         [
-          'ManageChannel' as PermissionResolvable,
+          'ManageChannels' as PermissionResolvable,
         ],
       )) {
         // log.debug(`${PREFIX} bot does NOT has permission to post in !`);
         return interaction.editReply({
-          embeds: [embedTemplate()
-            .setTitle('You do not have permission to use this command!')
-            .setColor(Colors.Red)],
+          embeds: [errorEmbed().setTitle('You do not have permission to use this command!')],
         });
       }
 

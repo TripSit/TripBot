@@ -11,6 +11,7 @@ import timezones from '../../../assets/data/timezones.json';
 import unitsOfMeasurement from '../../../assets/data/units_of_measurement.json';
 import { CbSubstance } from '../../global/@types/combined';
 import { opioids, DEFAULT_OPIOID_SUGGESTIONS } from '../../global/utils/opioids';
+import { getOrCreateUser } from '../../global/utils/dbRecords';
 
 const drugDataTripsit = tsData as {
   [key: string]: Drug;
@@ -322,11 +323,7 @@ async function autocompleteQuotes(interaction: AutocompleteInteraction) {
   if (user) {
     // log.debug(F, `User option: ${user.value}`);
     const userValue = user.value as string;
-    const userData = await db.users.upsert({
-      where: { discord_id: userValue },
-      create: { discord_id: userValue },
-      update: {},
-    });
+    const userData = await getOrCreateUser(userValue);
     whereClause = {
       user_id: userData.id,
     };

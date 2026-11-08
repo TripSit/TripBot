@@ -16,8 +16,10 @@ import { karma } from '../utils/karma';
 import { imagesOnly } from '../utils/imagesOnly';
 import { countMessage } from '../commands/guild/d.counting';
 import { bridgeMessage } from '../utils/bridge';
+import { relayDiscordMessage } from '../utils/chatBridge';
 import { helperActivityUpdate } from '../utils/helperActivityUpdate';
 import { nightsWatch } from '../../global/commands/g.watchuser';
+import { getOrCreateUser } from '../../global/utils/dbRecords';
 // import { monitorToxicity } from '../utils/moderateHatespeech';
 // import { awayMessage } from '../utils/awayMessage';
 // import log from '../../global/utils/log';
@@ -59,21 +61,14 @@ export const messageCreate: MessageCreateEvent = {
   async execute(message) {
     messageCommand(message);
     bridgeMessage(message);
+    relayDiscordMessage(message);
     // awayMessage(message);
     // Only run on Tripsit or DM, we don't want to snoop on other guilds ( ͡~ ͜ʖ ͡°)
     if (message.guild && message.guild.id !== env.DISCORD_GUILD_ID) {
       return;
     }
 
-    const userData = await db.users.upsert({
-      where: {
-        discord_id: message.author.id,
-      },
-      create: {
-        discord_id: message.author.id,
-      },
-      update: {},
-    });
+    const userData = await getOrCreateUser(message.author.id);
 
     if (userData && userData.discord_bot_ban) {
       return;

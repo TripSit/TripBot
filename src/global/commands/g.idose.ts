@@ -3,6 +3,7 @@ import {
   time,
 } from 'discord.js';
 import { DateTime } from 'luxon';
+import { getOrCreateUser } from '../utils/dbRecords';
 
 type IDoseResponse = {
   name: string,
@@ -14,15 +15,7 @@ const F = f(__filename);
 async function iDoseGet(
   userId: string,
 ):Promise<IDoseResponse> {
-  const userData = await db.users.upsert({
-    where: {
-      discord_id: userId,
-    },
-    create: {
-      discord_id: userId,
-    },
-    update: {},
-  });
+  const userData = await getOrCreateUser(userId);
 
   const doseData = await db.user_drug_doses.findMany({
     where: {
@@ -107,13 +100,11 @@ async function iDoseSet(
     }];
   }
 
-  const drugData = await db.drug_names.findMany({
-    where: {
-      name: {
-        in: [substance, substance.toLowerCase(), substance.toUpperCase()],
-      },
-    },
-  });
+  const drugData = await db.$queryRaw<{ drug_id: string }[]>`
+    SELECT drug_id FROM drug_names
+    WHERE LOWER(name) = LOWER(${substance})
+    ORDER BY is_default DESC
+    LIMIT 1`;
 
   if (drugData.length === 0) {
     log.debug(F, `iDoseSet: substance '${substance}' not found in drug_names`);
@@ -125,15 +116,7 @@ async function iDoseSet(
 
   const drugId = drugData[0].drug_id;
 
-  const userData = await db.users.upsert({
-    where: {
-      discord_id: userId,
-    },
-    create: {
-      discord_id: userId,
-    },
-    update: {},
-  });
+  const userData = await getOrCreateUser(userId);
 
   await db.user_drug_doses.create({
     data: {
@@ -165,15 +148,7 @@ async function iDoseDel(
     }];
   }
 
-  const userData = await db.users.upsert({
-    where: {
-      discord_id: userId,
-    },
-    create: {
-      discord_id: userId,
-    },
-    update: {},
-  });
+  const userData = await getOrCreateUser(userId);
 
   const doseData = await db.user_drug_doses.findMany({
     where: {

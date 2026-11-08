@@ -10,12 +10,14 @@ import {
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
 import { SlashCommand } from '../../@types/commandDef';
-import { embedTemplate } from '../../utils/embedTemplate';
+import { embedTemplate, errorEmbed } from '../../utils/embedTemplate';
+import { GUILD_ONLY_TEXT } from '../../utils/guildOnly';
 import {
   bridgeConfirm, bridgeCreate, bridgePause, bridgeRemove, bridgeResume,
 } from '../../../global/commands/g.bridge';
 import commandContext from '../../utils/context';
-import { checkChannelPermissions } from '../../utils/checkPermissions';
+import { missingPermission } from '../../utils/checkPermissions';
+import { getOrCreateGuild } from '../../../global/utils/dbRecords';
 
 const F = f(__filename);
 
@@ -39,13 +41,11 @@ async function create(
     return 'Error: Internal channel is not a text channel.';
   }
 
-  const internalChannelPerms = await checkChannelPermissions(internalChannel, [
-    'ManageWebhooks' as PermissionResolvable,
-  ]);
-  if (!internalChannelPerms.hasPermission) {
-    log.error(F, stripIndents`Missing ${internalChannelPerms.permission} permission \
+  const internalChannelMissing = await missingPermission(internalChannel, ['ManageWebhooks' as PermissionResolvable]);
+  if (internalChannelMissing) {
+    log.error(F, stripIndents`Missing ${internalChannelMissing} permission \
 in ${internalChannel.guild.name}'s ${internalChannel}!`);
-    return stripIndents`Error: Missing ${internalChannelPerms.permission} permission \
+    return stripIndents`Error: Missing ${internalChannelMissing} permission \
 in ${internalChannel.guild.name}'s ${internalChannel}!
     Manage Webhooks - Create the channel webhook`;
   }
@@ -69,13 +69,13 @@ in ${internalChannel.guild.name}'s ${internalChannel}!
     return 'Error: External channel is not a text channel.';
   }
 
-  const externalChannelPerms = await checkChannelPermissions(externalChannel, [
+  const externalChannelMissing = await missingPermission(externalChannel, [
     'ViewChannel' as PermissionResolvable,
     'SendMessages' as PermissionResolvable,
     'ManageWebhooks' as PermissionResolvable,
   ]);
-  if (!externalChannelPerms.hasPermission) {
-    return stripIndents`Error: Missing ${externalChannelPerms.permission} permission in \
+  if (externalChannelMissing) {
+    return stripIndents`Error: Missing ${externalChannelMissing} permission in \
 ${externalChannel.guild.name}'s ${externalChannel}!
     
     Ask the collaborator to make sure the bot has the right permissions:
@@ -424,36 +424,24 @@ export const dBridge: SlashCommand = {
     if (!interaction.guild || !interaction.member) {
       await interaction.editReply({
         embeds: [
-          embed
-            .setDescription('This command can only be used in a guild.')
-            .setColor(Colors.Red),
+          errorEmbed(GUILD_ONLY_TEXT).setTitle('Bridge'),
         ],
       });
       return false;
     }
 
     // Check if the guild is a partner (or the home guild)
-    const guildData = await db.discord_guilds.upsert({
-      where: {
-        id: interaction.guild.id,
-      },
-      create: {
-        id: interaction.guild.id,
-      },
-      update: {},
-    });
+    const guildData = await getOrCreateGuild(interaction.guild.id);
 
     if (interaction.guild.id !== env.DISCORD_GUILD_ID
       && !guildData.partner
       && !guildData.supporter) {
       await interaction.editReply({
         embeds: [
-          embed
-            .setDescription(`This command can only be used in a partner guild!
+          errorEmbed(`This command can only be used in a partner guild!
             If you are a partner and this is an error, please contact Moonbear.
             If you are not a partner, tell Moonbear you're interested:
-            This is a new system and we're still figuring out how it works.`)
-            .setColor(Colors.Red),
+            This is a new system and we're still figuring out how it works.`).setTitle('Bridge'),
         ],
       });
       return false;

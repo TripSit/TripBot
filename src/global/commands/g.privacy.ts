@@ -1,5 +1,6 @@
 /* eslint-disable max-len */
 import { stripIndents } from 'common-tags';
+import { getOrCreateUser } from '../utils/dbRecords';
 
 const F = f(__filename);
 
@@ -15,15 +16,7 @@ export async function privacy(
   userId: string,
 ):Promise<string> {
   let response = '';
-  const userData = await db.users.upsert({
-    where: {
-      discord_id: userId,
-    },
-    create: {
-      discord_id: userId,
-    },
-    update: {},
-  });
+  const userData = await getOrCreateUser(userId);
   //   .where('user_id', userData.id);
   const userDrugDoses = await db.user_drug_doses.findMany({
     where: {

@@ -23,6 +23,7 @@ import { embedTemplate } from '../../discord/utils/embedTemplate';
 import { experience } from './experience';
 import { profile } from '../commands/g.learn';
 import getTripSitStatistics from '../commands/g.tripsitstats';
+import { getOrCreateGuild } from './dbRecords';
 
 const F = f(__filename);
 
@@ -128,7 +129,7 @@ async function checkTickets() { // eslint-disable-line @typescript-eslint/no-unu
         updatedTicket.status = 'ARCHIVED' as ticket_status;
         updatedTicket.deleted_at = env.NODE_ENV === 'production'
           ? DateTime.local().plus({ days: 3 }).toJSDate()
-          : DateTime.local().plus({ minutes: 1 }).toJSDate();
+          : DateTime.local().plus({ minutes: 15 }).toJSDate();
         if (!updatedTicket.description) {
           updatedTicket.description = 'Ticket archived';
         }
@@ -179,15 +180,7 @@ async function checkTickets() { // eslint-disable-line @typescript-eslint/no-unu
             try {
               threadChannel = await discordClient.channels.fetch(ticket.thread_id) as ThreadChannel;
               const guild = await discordClient.guilds.fetch(threadChannel.guild.id);
-              const guildData = await db.discord_guilds.upsert({
-                where: {
-                  id: guild.id,
-                },
-                create: {
-                  id: guild.id,
-                },
-                update: {},
-              });
+              const guildData = await getOrCreateGuild(guild.id);
               const searchResults = await guild.members.search({ query: discordUser.username });
               // log.debug(F, `searchResults: ${JSON.stringify(searchResults)}`);
               if (searchResults.size > 0) {
@@ -986,15 +979,7 @@ async function checkMoodle() { // eslint-disable-line
     return;
   }
 
-  const guildData = await db.discord_guilds.upsert({
-    where: {
-      id: guild.id,
-    },
-    create: {
-      id: guild.id,
-    },
-    update: {},
-  });
+  const guildData = await getOrCreateGuild(guild.id);
 
   if (!guildData.role_helper) {
     log.error(F, `Unable to fetch helper role from db in pruneInactiveHelpers for guild ID ${env.DISCORD_GUILD_ID}`);

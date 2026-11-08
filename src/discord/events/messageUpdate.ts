@@ -7,6 +7,7 @@ import {
   MessageUpdateEvent,
 } from '../@types/eventDef';
 import { embedTemplate } from '../utils/embedTemplate'; // eslint-disable-line @typescript-eslint/no-unused-vars
+import { relayDiscordEdit } from '../utils/chatBridge';
 // eslint-disable-line no-unused-vars
 const F = f(__filename); // eslint-disable-line @typescript-eslint/no-unused-vars
 
@@ -15,6 +16,7 @@ const F = f(__filename); // eslint-disable-line @typescript-eslint/no-unused-var
 export const messageUpdate: MessageUpdateEvent = {
   name: 'messageUpdate',
   async execute(oldMessage, newMessage) {
+    relayDiscordEdit(oldMessage, newMessage);
     // Only run on Tripsit, we don't want to snoop on other guilds ( ͡~ ͜ʖ ͡°)
     if (!newMessage.guild) return;
     if (newMessage.guild.id !== env.DISCORD_GUILD_ID) return;

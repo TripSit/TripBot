@@ -1,4 +1,5 @@
 import { DateTime } from 'luxon';
+import { getOrCreateUser } from '../utils/dbRecords';
 
 const F = f(__filename);
 
@@ -37,15 +38,7 @@ export async function birthday(
 
     response = birthDate;
   } else if (command === 'get') {
-    const userData = await db.users.upsert({
-      where: {
-        discord_id: memberId,
-      },
-      create: {
-        discord_id: memberId,
-      },
-      update: {},
-    });
+    const userData = await getOrCreateUser(memberId);
     if (userData.birthday !== null) {
       const birthDateRaw = userData.birthday;
       const birthDate = DateTime.fromJSDate(birthDateRaw);

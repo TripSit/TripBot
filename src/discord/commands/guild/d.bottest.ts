@@ -13,6 +13,7 @@ import {
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import commandContext from '../../utils/context';
+import { sleep } from '../../utils/sleep';
 // import fs from 'fs/promises'; // eslint-disable-line
 const F = f(__filename);
 // import drugDataAll from '../../../../assets/data/tripsitDB.json';
@@ -97,16 +98,6 @@ const testableCommands = [ // eslint-disable-line
   'urban_define',
   // 'youtube', // WIP
 ];
-
-/**
- * @param {number} ms
- * @return {Promise<void>}
- */
-export function sleep(ms:number):Promise<void> {
-  return new Promise(resolve => {
-    setTimeout(resolve, ms);
-  });
-}
 
 /**
  *

@@ -42,7 +42,7 @@ import {
 } from 'discord.js';
 import { Duration } from 'luxon';
 import { parseDuration, validateDurationInput } from '../../global/utils/parseDuration';
-import { embedTemplate } from './embedTemplate';
+import { embedTemplate, errorEmbed } from './embedTemplate';
 import { getDiscordMember } from './guildMemberLookup';
 import { modActionCounts, modHistoryRows } from './modHistory';
 import { tripSitTrustScore } from './trustScore';
@@ -50,6 +50,8 @@ import { tripSitTrustScore } from './trustScore';
 // import { last } from '../../../global/commands/g.last';
 import { last } from '../../global/commands/g.last';
 import { appealAccept, appealReject } from './appeal';
+import { getOrCreateGuild, getOrCreateUser } from '../../global/utils/dbRecords';
+import { GUILD_ONLY_TEXT } from './guildOnly';
 
 /* TODO:
 add dates to bans
@@ -673,9 +675,7 @@ export async function modResponse(
   const actionRow = new ActionRowBuilder<ButtonBuilder>();
   if (interaction && (!interaction.guild || !interaction.member)) {
     return {
-      embeds: [embedTemplate()
-        .setColor(Colors.Red)
-        .setTitle('This command can only be used in a guild!')],
+      embeds: [errorEmbed().setTitle(GUILD_ONLY_TEXT)],
     };
   }
 
@@ -726,11 +726,7 @@ export async function modResponse(
           }
         }
 
-        const targetData = await db.users.upsert({
-          where: { discord_id: userId },
-          create: { discord_id: userId },
-          update: {},
-        });
+        const targetData = await getOrCreateUser(userId);
         let banVerb = 'ban';
         if (showModButtons) {
           actionRow.addComponents(
@@ -843,16 +839,7 @@ export async function modResponse(
     throw new Error('Action must be either a ban appeal or a genuine moderation action with a valid actor!');
   }
 
-  const targetData = await db.users.upsert({
-    where: {
-      discord_id: target.id,
-    },
-    create: {
-      discord_id: target.id,
-    },
-    update: {
-    },
-  });
+  const targetData = await getOrCreateUser(target.id);
 
   // Get the guild
   // For ban appeals there will be no interaction, hence fetching our guild after the || operator.
@@ -863,15 +850,7 @@ export async function modResponse(
   if (!guild) {
     throw new Error('Failed to fetch guild');
   }
-  const guildData = await db.discord_guilds.upsert({
-    where: {
-      id: guild.id,
-    },
-    create: {
-      id: guild.id,
-    },
-    update: {},
-  });
+  const guildData = await getOrCreateGuild(guild.id);
 
   // Determine if the actor is a mod
   const actorIsMod = actor instanceof GuildMember
@@ -966,15 +945,7 @@ export async function linkThread(
   override: boolean | null,
 ): Promise<string | null> {
   // Get the targetData from the db
-  const userData = await db.users.upsert({
-    where: {
-      discord_id: discordId,
-    },
-    create: {
-      discord_id: discordId,
-    },
-    update: {},
-  });
+  const userData = await getOrCreateUser(discordId);
 
   if (userData.mod_thread_id === null || override) {
     // log.debug(F, `targetData.mod_thread_id is null, updating it`);
@@ -1014,19 +985,11 @@ export async function messageModThread(
   const targetName = (target as GuildMember).displayName ?? (target as User).username ?? target;
   log.debug(F, `[messageModThread] actor: ${actorName} | target: ${targetName} | command: ${command} | internalNote: ${internalNote} | description: ${description} | extraMessage: ${extraMessage} | duration: ${duration}`);
 
-  const targetData = await db.users.upsert({
-    where: { discord_id: targetId },
-    create: { discord_id: targetId },
-    update: { },
-  });
+  const targetData = await getOrCreateUser(targetId);
 
   log.debug(F, `targetData: ${JSON.stringify(targetData, null, 2)}`);
 
-  const guildData = await db.discord_guilds.upsert({
-    where: { id: actor.guild.id },
-    create: { id: actor.guild.id },
-    update: { },
-  });
+  const guildData = await getOrCreateGuild(actor.guild.id);
 
   log.debug(F, `guildData: ${JSON.stringify(guildData, null, 2)}`);
 
@@ -1239,16 +1202,7 @@ async function getModThread(userData: users): Promise<ThreadChannel | null> {
 export async function acknowledgeButton(
   interaction:ButtonInteraction,
 ) {
-  const targetData = await db.users.upsert({
-    where: {
-      discord_id: interaction.user.id,
-    },
-    create: {
-      discord_id: interaction.user.id,
-    },
-    update: {
-    },
-  });
+  const targetData = await getOrCreateUser(interaction.user.id);
 
   const modThread = await getModThread(targetData);
   if (modThread) {
@@ -1280,16 +1234,7 @@ export async function acknowledgeButton(
 export async function refusalButton(
   interaction:ButtonInteraction,
 ) {
-  const targetData = await db.users.upsert({
-    where: {
-      discord_id: interaction.user.id,
-    },
-    create: {
-      discord_id: interaction.user.id,
-    },
-    update: {
-    },
-  });
+  const targetData = await getOrCreateUser(interaction.user.id);
 
   // DMs don't come with a guild attached, so go by whoever warned them last.
   const lastWarning = await db.user_actions.findFirst({
@@ -1364,11 +1309,9 @@ export async function refusalButton(
     log.debug(F, `Failed to update the warning message after a refusal: ${err}`);
   }
 
-  const rejectionEmbed = embedTemplate()
-    .setColor(Colors.Red)
-    .setDescription(willTimeout
-      ? `❌ ${interaction.user} (${interaction.user.username}) has **rejected** their warning, so I'm timing them out for ${humanDuration}.`
-      : `❌ ${interaction.user} (${interaction.user.username}) has **rejected** their warning.`);
+  const rejectionEmbed = errorEmbed(willTimeout
+    ? `❌ ${interaction.user} (${interaction.user.username}) has **rejected** their warning, so I'm timing them out for ${humanDuration}.`
+    : `❌ ${interaction.user} (${interaction.user.username}) has **rejected** their warning.`);
 
   const existingModThread = await getModThread(targetData);
   if (existingModThread) {
@@ -1383,7 +1326,7 @@ export async function refusalButton(
     }
     if (existingModThread) {
       await existingModThread.send({
-        embeds: [embedTemplate().setColor(Colors.Red).setDescription(reason)],
+        embeds: [errorEmbed(reason)],
       });
     }
     return;
@@ -1398,9 +1341,7 @@ export async function refusalButton(
     log.error(F, `Failed to time out ${interaction.user.username} after they rejected a warning: ${err}`);
     if (existingModThread) {
       await existingModThread.send({
-        embeds: [embedTemplate()
-          .setColor(Colors.Red)
-          .setDescription(`⚠️ I couldn't time ${timeoutTarget} out, someone will need to do it manually.`)],
+        embeds: [errorEmbed(`⚠️ I couldn't time ${timeoutTarget} out, someone will need to do it manually.`)],
       });
     }
     return;
@@ -1408,11 +1349,7 @@ export async function refusalButton(
 
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const botMember = await timeoutGuild.members.fetch(discordClient.user!.id);
-  const botData = await db.users.upsert({
-    where: { discord_id: botMember.id },
-    create: { discord_id: botMember.id },
-    update: {},
-  });
+  const botData = await getOrCreateUser(botMember.id);
 
   await db.user_actions.create({
     data: {
@@ -1473,16 +1410,7 @@ export async function acknowledgeReportButton(
   const [, , targetId, reporterId]: [string, ModAction, Snowflake, Snowflake] = buttonInt.customId.split('~') as [string, ModAction, Snowflake, Snowflake];
 
   // Fetch db data for the person who was reported
-  const reporteeData = await db.users.upsert({
-    where: {
-      discord_id: targetId,
-    },
-    create: {
-      discord_id: targetId,
-    },
-    update: {
-    },
-  });
+  const reporteeData = await getOrCreateUser(targetId);
 
   let modActorMember = null as null | GuildMember;
   let targetChan: TextChannel | null = null;
@@ -1597,16 +1525,7 @@ export async function acknowledgeReportButton(
 
     await removeAcknowledgeRow(buttonInt.message);
 
-    const guildData = await db.discord_guilds.upsert({
-      where: {
-        id: buttonInt.guild.id,
-      },
-      create: {
-        id: buttonInt.guild.id,
-      },
-      update: {
-      },
-    });
+    const guildData = await getOrCreateGuild(buttonInt.guild.id);
 
     if (guildData.channel_mod_log) {
       const modLog = await buttonInt.guild.channels.fetch(guildData.channel_mod_log) as TextChannel;
@@ -1623,9 +1542,7 @@ export async function acknowledgeReportButton(
   } catch (error) {
     log.error(F, `Failed to send DM to ${buttonInt.user.username}: ${error}`);
     await targetChan.send({
-      embeds: [embedTemplate()
-        .setColor(Colors.Red)
-        .setDescription(`${buttonInt.user.username} tried to acknowledged ${reporteeData.username}'s report, but there was an error.`)],
+      embeds: [errorEmbed(`${buttonInt.user.username} tried to acknowledged ${reporteeData.username}'s report, but there was an error.`)],
     });
   }
 }
@@ -1712,7 +1629,7 @@ export async function moderate(
   modalInt: ModalSubmitInteraction,
   ignoreRecentActions: boolean = false,
 ): Promise<InteractionReplyOptions> {
-  if (!buttonInt.guild) return { content: 'This command can only be used in a guild!' };
+  if (!buttonInt.guild) return { content: GUILD_ONLY_TEXT };
   const actor = buttonInt.member as GuildMember;
 
   const [, command, targetId]: [string, ModAction, Snowflake] = buttonInt.customId.split('~') as [string, ModAction, Snowflake];
@@ -1855,21 +1772,9 @@ export async function moderate(
   `);
 
   // Get the actor and target data from the db
-  const actorData = await db.users.upsert({
-    where: { discord_id: actor.id },
-    create: { discord_id: actor.id },
-    update: {},
-  });
-  const targetData = await db.users.upsert({
-    where: { discord_id: targetId },
-    create: { discord_id: targetId },
-    update: {},
-  });
-  const guildData = await db.discord_guilds.upsert({
-    where: { id: actor.guild.id },
-    create: { id: actor.guild.id },
-    update: {},
-  });
+  const actorData = await getOrCreateUser(actor.id);
+  const targetData = await getOrCreateUser(targetId);
+  const guildData = await getOrCreateGuild(actor.guild.id);
 
   // log.debug(F, `TargetData: ${JSON.stringify(targetData, null, 2)}`);
   // If this is a Warn, ban, timeout or kick, send a message to the user
@@ -2264,15 +2169,7 @@ export async function modModal(
 
   if (isInfo(command)) {
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
-    const targetData = await db.users.upsert({
-      where: {
-        discord_id: userId,
-      },
-      create: {
-        discord_id: userId,
-      },
-      update: {},
-    });
+    const targetData = await getOrCreateUser(userId);
 
     // const guildData = await db.discord_guilds.upsert({
     //   where: {
@@ -2535,11 +2432,7 @@ export async function modModal(
 
           // Only log action and send embeds if the appeal action actually succeeded
           if (succeeded) {
-            const targetData = await db.users.upsert({
-              where: { discord_id: interaction.user.id },
-              create: { discord_id: interaction.user.id },
-              update: {},
-            });
+            const targetData = await getOrCreateUser(interaction.user.id);
 
             const actionData = {
               user_id: targetData.id,

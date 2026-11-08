@@ -21,10 +21,11 @@ import {
   ThreadChannel,
   User,
 } from 'discord.js';
+import { getOrCreateGuild } from '../../global/utils/dbRecords';
+import { replyGuildOnly } from './guildOnly';
+import { modTicketIcons, retagModTicketChannelName, setModTicketChannelName } from './ticketIcons';
 
 const F = f(__filename);
-
-const guildOnly = 'This command can only be used in a guild!';
 
 async function stripUserMentions(input: string, guild: Guild): Promise<string> {
   const matches = [...input.matchAll(/<@([!&]?)(\d+)>/g)];
@@ -42,24 +43,13 @@ async function stripUserMentions(input: string, guild: Guild): Promise<string> {
 export async function techHelpClick(interaction:ButtonInteraction) {
   // log.debug(F, `Message: ${JSON.stringify(interaction, null, 2)}!`);
   if (!interaction.guild) {
-    await interaction.reply({
-      content: guildOnly,
-      flags: MessageFlags.Ephemeral,
-    });
+    await replyGuildOnly(interaction, { ephemeral: true });
     return;
   }
 
   const issueType = interaction.customId.split('~')[1];
 
-  const guildData = await db.discord_guilds.upsert({
-    where: {
-      id: interaction.guild?.id,
-    },
-    create: {
-      id: interaction.guild?.id,
-    },
-    update: {},
-  });
+  const guildData = await getOrCreateGuild(interaction.guild?.id);
 
   if (!guildData.role_techhelp) {
     log.error(F, `- techHelpClick] techhelp role not found: ${interaction.guild.id}`);
@@ -104,7 +94,7 @@ export async function techHelpClick(interaction:ButtonInteraction) {
       await i.deferReply({ flags: MessageFlags.Ephemeral });
 
       if (!i.guild) {
-        await interaction.editReply({ content: guildOnly });
+        await replyGuildOnly(i);
         return;
       }
 
@@ -122,7 +112,7 @@ export async function techHelpClick(interaction:ButtonInteraction) {
 
       // Create a new thread in channel
       const ticketThread = await (i.channel as TextChannel).threads.create({
-        name: `🧡│${targetName}'s ${issueType} issue!`,
+        name: `${modTicketIcons.new}│${targetName}'s ${issueType} issue!`,
         autoArchiveDuration: 1440,
         type: ChannelType.PrivateThread as AllowedThreadTypeForTextChannel,
         reason: `${targetName} submitted a(n) ${issueType} issue`,
@@ -183,7 +173,8 @@ export async function techHelpOwn(interaction:ButtonInteraction) {
     return;
   }
 
-  (interaction.channel as ThreadChannel).setName(`💛│${target.displayName}'s ${issueType} issue!`);
+  const thread = interaction.channel as ThreadChannel;
+  setModTicketChannelName(thread, `${modTicketIcons.inProgress}│${target.displayName}'s ${issueType} issue!`);
 
   await interaction.reply({
     embeds: [
@@ -216,12 +207,9 @@ export async function techHelpClose(interaction:ButtonInteraction) {
     ? stripIndents`${interaction.member.displayName} has indicated that they no longer need help!`
     : stripIndents`${(interaction.member as GuildMember).displayName} has indicated that this issue has been resolved!`;
 
-  if (interaction.member === target) {
-    // Replace the first character of the channel name with a green heart
-    (interaction.channel as ThreadChannel).setName(`💚${(interaction.channel as ThreadChannel).name.slice(1)}`);
-  } else {
-    (interaction.channel as ThreadChannel).setName(`💙${(interaction.channel as ThreadChannel).name.slice(1)}`);
-  }
+  const thread = interaction.channel as ThreadChannel;
+  const status = interaction.member === target ? 'closedByUser' : 'closedByMod';
+  setModTicketChannelName(thread, retagModTicketChannelName(thread.name, status));
 
   await interaction.reply({
     embeds: [

@@ -8,6 +8,7 @@ import { stripIndents } from 'common-tags';
 import { SlashCommand } from '../../@types/commandDef';
 import commandContext from '../../utils/context';
 import { modResponse } from '../../utils/modUtils';
+import { getOrCreateGuild } from '../../../global/utils/dbRecords';
 
 const F = f(__filename);
 
@@ -28,16 +29,7 @@ export const dReport: SlashCommand = {
 
     // Get the guild
     const { guild } = interaction;
-    const guildData = await db.discord_guilds.upsert({
-      where: {
-        id: guild.id,
-      },
-      create: {
-        id: guild.id,
-      },
-      update: {
-      },
-    });
+    const guildData = await getOrCreateGuild(guild.id);
 
     if (!guildData.role_moderator || !guildData.channel_mod_log || !guildData.channel_moderators) {
       await interaction.editReply(stripIndents`

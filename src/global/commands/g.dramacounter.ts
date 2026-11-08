@@ -1,3 +1,5 @@
+import { getOrCreateGuild } from '../utils/dbRecords';
+
 const F = f(__filename);
 
 export default dramacounter;
@@ -20,15 +22,7 @@ export async function dramacounter(
     dramaReason: string;
     lastDramaAt: Date;
   };
-  const guildData = await db.discord_guilds.upsert({
-    where: {
-      id: guildId,
-    },
-    create: {
-      id: guildId,
-    },
-    update: {},
-  });
+  const guildData = await getOrCreateGuild(guildId);
 
   if (command === 'get') {
     if (guildData.last_drama_at) {

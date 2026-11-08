@@ -63,9 +63,8 @@ services:
     <<: *common-keys-apps
     image: postgres:15.4
     container_name: tripbot_database
-    # Uncomment this if you want the DB to persist between rebuilds
-    # volumes:
-    #   - ./src/docker/database/data:/var/lib/postgresql/data
+    volumes:
+      - tripbot_database_data:/var/lib/postgresql/data # Named volume so the DB persists between rebuilds
     networks:
       - tripbot_database-net
     # ports:
@@ -164,6 +163,10 @@ services:
   #     - traefik.http.routers.tripbot_api.tls.certresolver=letsencrypt
   #     - traefik.http.routers.tripbot_api.service=tripbot_api-svc
   #     - traefik.http.routers.tripbot_api.middlewares=default@file
+
+volumes:
+  tripbot_database_data:
+    name: tripbot_database_data
 
 networks:
   tripbot-net:

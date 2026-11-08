@@ -1,4 +1,5 @@
 import { DateTime } from 'luxon';
+import { getOrCreateUser } from '../utils/dbRecords';
 
 const F = f(__filename);
 
@@ -28,15 +29,7 @@ export async function remindMe(
       return response;
     }
 
-    const userData = await db.users.upsert({
-      where: {
-        discord_id: userId,
-      },
-      create: {
-        discord_id: userId,
-      },
-      update: {},
-    });
+    const userData = await getOrCreateUser(userId);
 
     const unsortedData = await db.user_reminders.findMany({
       where: {
@@ -83,15 +76,7 @@ export async function remindMe(
       `;
   }
   if (command === 'get') {
-    const userData = await db.users.upsert({
-      where: {
-        discord_id: userId,
-      },
-      create: {
-        discord_id: userId,
-      },
-      update: {},
-    });
+    const userData = await getOrCreateUser(userId);
 
     const unsortedData = await db.user_reminders.findMany({
       where: {
@@ -137,15 +122,7 @@ export async function remindMe(
       response = 'You must provide a date and time for the reminder!';
       return response;
     }
-    const userData = await db.users.upsert({
-      where: {
-        discord_id: userId,
-      },
-      create: {
-        discord_id: userId,
-      },
-      update: {},
-    });
+    const userData = await getOrCreateUser(userId);
 
     await db.user_reminders.create({
       data: {

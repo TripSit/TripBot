@@ -23,17 +23,18 @@ import {
 import { stripIndents } from 'common-tags';
 import commandContext from '../../utils/context';
 import { SlashCommand } from '../../@types/commandDef';
-import { checkChannelPermissions, checkGuildPermissions } from '../../utils/checkPermissions';
+import { missingPermission } from '../../utils/checkPermissions';
 import { applicationSetup } from '../../utils/application';
 import { paginationEmbed } from '../../utils/pagination';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { profile } from '../../../global/commands/g.learn';
 import tripsitInfo from '../../../global/commands/g.about';
+import { getOrCreateGuild, getOrCreateUser } from '../../../global/utils/dbRecords';
 
 const F = f(__filename);
 
 const channelOnly = 'You must run this in the channel you want the prompt to be in!';
-const guildOnly = 'You must run this in the guild you want the prompt to be in!';
+const SETUP_GUILD_ONLY = 'You must run this in the guild you want the prompt to be in!';
 const noChannel = 'how to tripsit: no channel';
 const roleQuestion = 'What role are people applying for?';
 const reviewerQuestion = 'What role reviews those applications?';
@@ -82,13 +83,11 @@ async function tripsit(
   if (!interaction.channel) return;
   if (interaction.channel.type !== ChannelType.GuildText) return;
 
-  const guildPerms = await checkGuildPermissions(interaction.guild, [
-    'ManageRoles' as PermissionResolvable,
-  ]);
-  if (!guildPerms.hasPermission) {
-    log.error(F, `Missing guild permission ${guildPerms.permission} in ${interaction.guild}!`);
+  const guildMissing = await missingPermission(interaction.guild, ['ManageRoles' as PermissionResolvable]);
+  if (guildMissing) {
+    log.error(F, `Missing guild permission ${guildMissing} in ${interaction.guild}!`);
     await interaction.reply({
-      content: stripIndents`Missing ${guildPerms.permission} permission in ${interaction.guild}!
+      content: stripIndents`Missing ${guildMissing} permission in ${interaction.guild}!
     In order to setup the tripsitting feature I need:
     Manage Roles - In order to take away roles and give them back
     Part of the tripsitting process is to remove all of a user's roles so they can only see the tripsitting channel.
@@ -101,7 +100,7 @@ async function tripsit(
 
   // Can't defer cuz there's a modal
   // await interaction.deferReply({ flags: MessageFlags.Ephemeral });
-  const channelPerms = await checkChannelPermissions(interaction.channel, [
+  const channelMissing = await missingPermission(interaction.channel, [
     'ViewChannel' as PermissionResolvable,
     'SendMessages' as PermissionResolvable,
     'SendMessagesInThreads' as PermissionResolvable,
@@ -111,10 +110,10 @@ async function tripsit(
     'ManageThreads' as PermissionResolvable,
     // 'EmbedLinks' as PermissionResolvable,
   ]);
-  if (!channelPerms.hasPermission) {
-    log.error(F, `Missing TS channel permission ${channelPerms.permission} in ${interaction.channel.name}!`);
+  if (channelMissing) {
+    log.error(F, `Missing TS channel permission ${channelMissing} in ${interaction.channel.name}!`);
     await interaction.reply({
-      content: stripIndents`Missing ${channelPerms.permission} permission in ${interaction.channel}!
+      content: stripIndents`Missing ${channelMissing} permission in ${interaction.channel}!
     In order to setup the tripsitting feature I need:
     View Channel - to see the channel
     Send Messages - to send messages
@@ -130,7 +129,7 @@ async function tripsit(
 
   const metaChannel = interaction.options.getChannel('metatripsit') as TextChannel;
 
-  const metaPerms = await checkChannelPermissions(metaChannel, [
+  const metaMissing = await missingPermission(metaChannel, [
     'ViewChannel' as PermissionResolvable,
     'SendMessages' as PermissionResolvable,
     'SendMessagesInThreads' as PermissionResolvable,
@@ -140,10 +139,10 @@ async function tripsit(
     'ManageThreads' as PermissionResolvable,
     // 'EmbedLinks' as PermissionResolvable,
   ]);
-  if (!metaPerms.hasPermission) {
-    log.error(F, `Missing TS channel permission ${channelPerms.permission} in ${metaChannel}!`);
+  if (metaMissing) {
+    log.error(F, `Missing TS channel permission ${metaMissing} in ${metaChannel}!`);
     await interaction.reply({
-      content: stripIndents`Missing ${metaPerms.permission} permission in ${metaChannel}!
+      content: stripIndents`Missing ${metaMissing} permission in ${metaChannel}!
     In order to setup the tripsitting feature I need:
     View Channel - to see the channel
     Send Messages - to send messages
@@ -275,7 +274,7 @@ async function techhelp(
 
   // Can't defer cuz there's a modal
   // await interaction.deferReply({ flags: MessageFlags.Ephemeral });
-  const channelPerms = await checkChannelPermissions(interaction.channel, [
+  const channelMissing = await missingPermission(interaction.channel, [
     'ViewChannel' as PermissionResolvable,
     'SendMessages' as PermissionResolvable,
     'SendMessagesInThreads' as PermissionResolvable,
@@ -285,10 +284,10 @@ async function techhelp(
     'ManageThreads' as PermissionResolvable,
     // 'EmbedLinks' as PermissionResolvable,
   ]);
-  if (!channelPerms.hasPermission) {
-    log.error(F, `Missing TS channel permission ${channelPerms.permission} in ${interaction.channel}!`);
+  if (channelMissing) {
+    log.error(F, `Missing TS channel permission ${channelMissing} in ${interaction.channel}!`);
     await interaction.reply({
-      content: stripIndents`Missing ${channelPerms.permission} permission in ${interaction.channel}!
+      content: stripIndents`Missing ${channelMissing} permission in ${interaction.channel}!
     In order to setup the tripsitting feature I need:
     View Channel - to see the channel
     Send Messages - to send messages
@@ -522,15 +521,7 @@ async function helper(
 ) {
   await interaction.deferReply({ flags: MessageFlags.Ephemeral });
   if (!interaction.guild) return;
-  const guildData = await db.discord_guilds.upsert({
-    where: {
-      id: interaction.guild?.id,
-    },
-    create: {
-      id: interaction.guild?.id,
-    },
-    update: {},
-  });
+  const guildData = await getOrCreateGuild(interaction.guild?.id);
 
   if (!guildData.channel_tripsit || !guildData.channel_tripsitmeta) {
     await interaction.editReply({
@@ -594,25 +585,9 @@ export async function helperButton(
   if (!interaction.member) return;
   // Check that the user has completed the course and wasnt just given the role
 
-  const guildData = await db.discord_guilds.upsert({
-    where: {
-      id: interaction.guild?.id,
-    },
-    create: {
-      id: interaction.guild?.id,
-    },
-    update: {},
-  });
+  const guildData = await getOrCreateGuild(interaction.guild?.id);
 
-  const userData = await db.users.upsert({
-    where: {
-      discord_id: interaction.user.id,
-    },
-    create: {
-      discord_id: interaction.user.id,
-    },
-    update: {},
-  });
+  const userData = await getOrCreateUser(interaction.user.id);
   const target = interaction.member as GuildMember;
 
   if (!guildData.role_helper) {
@@ -950,7 +925,7 @@ export const setup: SlashCommand = {
 
     if (!interaction.guild) {
       log.error(F, 'how to tripsit: no guild');
-      await interaction.reply(guildOnly);
+      await interaction.reply(SETUP_GUILD_ONLY);
       return false;
     }
 
