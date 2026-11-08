@@ -10,6 +10,7 @@ import { registerEvents } from './events';
 import { registerTentStatusSync } from './utils/tents';
 import { registerDiscordBridge } from './utils/chatBridge';
 import { isQueuedTicketRename } from './utils/ticketIcons';
+import { REST_TIMEOUT_MS, createDiscordAgent, installRestRetry } from './utils/restNetwork';
 
 const F = f(__filename);
 
@@ -47,6 +48,8 @@ export default async function discordConnect(): Promise<void> {
       repliedUser: true,
     },
     rest: {
+      agent: createDiscordAgent(),
+      timeout: REST_TIMEOUT_MS,
       rejectOnRateLimit: rateLimitData => {
         if (rateLimitData.sublimitTimeout <= 0) {
           return false;
@@ -61,6 +64,8 @@ export default async function discordConnect(): Promise<void> {
       },
     },
   });
+
+  installRestRetry(discordClient.rest);
 
   global.discordClient = discordClient;
 

@@ -38,11 +38,9 @@ Canvas.GlobalFonts.registerFromPath(
 
 const F = f(__filename);
 
-// const net = require('net');
-// work around a node v20 bug: https://github.com/nodejs/node/issues/47822#issuecomment-1564708870
-// if (net.setDefaultAutoSelectFamily) {
-//   net.setDefaultAutoSelectFamily(false);
-// }
+// Discord REST uses its own undici agent (connect timeout, DNS cache, address-family settings): see
+// src/discord/utils/restNetwork.ts. The old net.setDefaultAutoSelectFamily(false) workaround was removed because
+// the agent sets autoSelectFamily explicitly for those requests.
 
 async function start() {
   log.info(F, 'Initializing service!');
