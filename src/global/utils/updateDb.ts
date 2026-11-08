@@ -16,6 +16,7 @@ import {
   ComboData,
 } from 'tripsit_drug_db';
 import path from 'path';
+import { getOrCreateUser } from './dbRecords';
 import {
   CbSubstance,
   Strength,
@@ -721,6 +722,43 @@ async function combineTs(
   });
 }
 
+export async function syncDrugNames(combinedDb: CbSubstance[]): Promise<void> {
+  const rows = await db.drug_names.findMany({ select: { name: true } });
+  const known = new Set(rows.map(row => row.name.trim().toLowerCase()));
+  const missing = combinedDb.filter(drug => !known.has(drug.name.trim().toLowerCase()));
+  if (missing.length === 0) return;
+
+  const botUser = await getOrCreateUser(env.DISCORD_CLIENT_ID);
+
+  for (const drug of missing) { // eslint-disable-line no-restricted-syntax
+    const name = drug.name.trim();
+    known.add(name.toLowerCase());
+    const aliases = (drug.aliases ?? []).map(alias => alias.trim()).filter(alias => {
+      const isNew = !known.has(alias.toLowerCase());
+      known.add(alias.toLowerCase());
+      return isNew;
+    });
+
+    // eslint-disable-next-line no-await-in-loop
+    await db.drugs.create({
+      data: {
+        summary: drug.summary?.trim() || null,
+        psychonaut_wiki_url: drug.url?.trim() || null,
+        errowid_experiences_url: drug.experiencesUrl?.trim() || null,
+        last_updated_by: botUser.id,
+        drug_names: {
+          create: [
+            { name, type: 'COMMON', is_default: true },
+            ...aliases.map(alias => ({ name: alias, type: 'COMMON' as const, is_default: false })),
+          ],
+        },
+      },
+    });
+  }
+
+  log.info(F, `Added ${missing.length} new drugs to drug_names`);
+}
+
 export default async function updateDrugDb():Promise<void> {
   const combinedDb = [] as CbSubstance[];
   // Check if the assets folder exists and if not, create  it
@@ -745,4 +783,10 @@ export default async function updateDrugDb():Promise<void> {
   // log.debug(F, `Added ${combinedDb.length - pwDrugs} drugs to the combined DB (and merged the rest) !`);
   const filePath = await saveData(combinedDb, 'combinedDB');
   log.info(F, `Updated combinedDB of ${combinedDb.length} drugs to ${filePath}`);
+
+  try {
+    await syncDrugNames(combinedDb);
+  } catch (err) {
+    log.error(F, `Error syncing drug_names: ${err}`);
+  }
 }
