@@ -23,6 +23,7 @@ import validateEnv from './global/utils/env.validate'; // eslint-disable-line
 import updateDb from './global/utils/updateDb';
 import db from './prisma/tripbot/client';
 import ircConnect, { ircDisconnect } from './irc/irc';
+import startHeartbeat from './global/utils/heartbeat';
 // import startMatrix from './matrix/matrix';
 // import telegramConnect from './telegram/telegram';
 
@@ -56,6 +57,7 @@ async function start() {
       await ircConnect().catch(err => log.error(F, `Failed to start IRC: ${err}`));
     }
     // if (env.TELEGRAM_TOKEN && validateEnv('TELEGRAM')) await telegramConnect();
+    startHeartbeat();
   }
 }
 
