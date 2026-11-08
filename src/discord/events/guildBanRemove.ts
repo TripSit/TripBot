@@ -1,6 +1,7 @@
 import {
   Colors,
   PermissionResolvable,
+  escapeMarkdown,
   TextChannel,
 } from 'discord.js';
 import {
@@ -40,7 +41,9 @@ export const guildBanRemove: GuildBanRemoveEvent = {
     });
 
     // Since there's only 1 audit log entry in this collection, grab the first one
-    const creationLog = fetchedLogs.entries.first();
+    // limit: 1 returns the newest unban, which may belong to a different user, so match the target
+    const latestLog = fetchedLogs.entries.first();
+    const creationLog = latestLog?.targetId === ban.user.id ? latestLog : undefined;
 
     const channel = await discordClient.channels.fetch(env.CHANNEL_AUDITLOG) as TextChannel;
 
@@ -65,9 +68,10 @@ export const guildBanRemove: GuildBanRemoveEvent = {
 
     let description = `**${ban.user.tag}** was unbanned`;
 
-    if (creationLog?.executor) {
+    if (!creationLog) {
+      description += '\n\n*No matching audit log entry was found, so who unbanned them is unknown.*';
+    } else if (creationLog.executor) {
       if (creationLog.reason?.toLowerCase().includes('ban expired')) {
-        description = `**${ban.user.tag}** was unbanned`;
         embed.setFooter({ text: 'Automated action' });
       } else {
         description = `**${creationLog.executor.tag}** unbanned **${ban.user.tag}**`;
@@ -79,7 +83,7 @@ export const guildBanRemove: GuildBanRemoveEvent = {
     }
 
     if (creationLog?.reason) {
-      description += `\n\n**Reason:** ${creationLog.reason}`;
+      description += `\n\n**Reason:** ${escapeMarkdown(creationLog.reason)}`;
     }
 
     embed.setDescription(description);
