@@ -257,7 +257,7 @@ export const tripsitmode: SlashCommand = {
     const target = interaction.options.getMember('user') as GuildMember;
 
     if (enable === 'on') {
-      tripsitmodeOn(interaction, target);
+      await tripsitmodeOn(interaction, target);
     }
 
     if (enable === 'off') {
@@ -281,7 +281,7 @@ export const tripsitmode: SlashCommand = {
         showModal: (modal: APIModalInteractionResponseCallbackData | ModalComponentData | JSONEncodable<APIModalInteractionResponseCallbackData>) => interaction.showModal(modal),
         awaitModalSubmit: (params: AwaitModalSubmitOptions<ModalSubmitInteraction<CacheType>>) => interaction.awaitModalSubmit(params),
       } as unknown as ButtonInteraction;
-      tripsitmeUserClose(testInteraction);
+      await tripsitmeUserClose(testInteraction);
     }
     return true;
   },

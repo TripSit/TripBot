@@ -714,7 +714,11 @@ export async function tripsitmeUserClose(
   const target = await interaction.guild.members.fetch(targetId);
   const actor = interaction.member as GuildMember;
   await actor.fetch();
-  log.debug(F, `${actor.displayName} (${actor.id}) clicked "I'm good" in ${target.displayName}'s (${target.id}) session `);
+  if (override) {
+    log.debug(F, `${actor.displayName} (${actor.id}) turned off tripsit mode for ${target.displayName} (${target.id})`);
+  } else {
+    log.debug(F, `${actor.displayName} (${actor.id}) clicked "I'm good" in ${target.displayName}'s (${target.id}) session `);
+  }
 
   if (targetId !== actor.id && !override) {
     log.debug(F, 'They did not create the thread, so I am not doing anything!');
@@ -738,8 +742,10 @@ export async function tripsitmeUserClose(
   const guildData = await getOrCreateGuild(interaction.guild?.id);
 
   if (!ticketData) {
-    log.debug(F, `${actor.displayName} does not have any tickets that are not closed or deleted`);
-    const rejectMessage = stripIndents`Hey ${actor.displayName}, you do not have an open session!
+    log.debug(F, `${target.displayName} does not have any tickets that are not closed or deleted`);
+    const rejectMessage = override
+      ? stripIndents`Hey ${actor.displayName}, ${target.displayName} does not have an open session!`
+      : stripIndents`Hey ${actor.displayName}, you do not have an open session!
     If you need help, please click the button again!`;
     const embed = embedTemplate().setColor(Colors.DarkBlue);
     embed.setDescription(rejectMessage);
@@ -905,7 +911,9 @@ export async function tripsitmeUserClose(
     try {
       const metaChannel = await interaction.guild.channels.fetch(metaChannelId) as TextChannel;
       await metaChannel.send({
-        content: stripIndents`${actor.displayName} has indicated that they no longer need help!`,
+        content: override
+          ? stripIndents`${actor.displayName} has turned off tripsit mode for ${target.displayName}!`
+          : stripIndents`${target.displayName} has indicated that they no longer need help!`,
       });
       if (metaChannelId !== guildData.channel_tripsitmeta) {
         setTicketChannelName(metaChannel, ticketChannelName('closed', target.displayName, 'discussion'));
