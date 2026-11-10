@@ -75,11 +75,9 @@ async function handleErrorUnsafe(
     errorStack = errorData.stack ?? JSON.stringify(errorData, null, 2);
     // Network errors carry the addresses tried and the real reason in their cause chain
     if (errorData.cause) errorStack += `\nCause: ${describeError(errorData.cause)}`;
-  } else if (errorData instanceof DiscordAPIError) {
-    log.debug(F, 'Error is an instance of DiscordAPIError');
-    errorStack = JSON.stringify(errorData, null, 2);
   } else {
-    log.debug(F, 'Error is not an instance of Error or DiscordAPIError');
+    // DiscordAPIError extends Error, so it was handled above
+    log.debug(F, 'Error is not an instance of Error');
     errorStack = JSON.stringify(errorData, null, 2);
   }
 

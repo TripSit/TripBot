@@ -156,6 +156,13 @@ describe('autocomplete: quote', () => {
     expect(lastChoices(i.respond)[1].name).toHaveLength(99);
   });
 
+  it('offers an empty list when there are no quotes and nothing is typed', async () => {
+    dbMock.quotes.findMany.mockResolvedValue([] as never);
+    const i = interaction({ commandName: 'quote', focused: '' });
+    await autocomplete(i.raw);
+    expect(lastChoices(i.respond)).toEqual([]);
+  });
+
   it('reports no results for unmatched searches', async () => {
     const i = interaction({ commandName: 'quote', focused: 'qqqqzzzzxxxx' });
     await autocomplete(i.raw);
