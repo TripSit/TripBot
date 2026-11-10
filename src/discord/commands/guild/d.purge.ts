@@ -7,7 +7,6 @@ import {
   ChatInputCommandInteraction,
   GuildMember,
   InteractionEditReplyOptions,
-  InteractionReplyOptions,
   InteractionUpdateOptions,
   MessageFlags,
   PermissionFlagsBits,
@@ -225,26 +224,13 @@ export const dPurge: SlashCommand = {
     if (!interaction.channel) return false;
     if (!interaction.guild) return false;
     log.info(F, await commandContext(interaction));
-    const command = interaction.options.getSubcommand() as 'messages';
     // By default we want to make the reply private
     const ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined;
     await interaction.deferReply({ flags: ephemeral });
-    // eslint-disable-next-line sonarjs/no-small-switch
-    switch (command) {
-      case 'messages': {
-        if (interaction.deferred) {
-          await interaction.editReply(await purgeMessagesPage(interaction));
-        } else {
-          await interaction.reply(await purgeMessagesPage(interaction) as InteractionReplyOptions);
-        }
-        return true;
-      }
-      default: {
-        log.debug(F, `default ${command}`);
-        await interaction.editReply(await purgeMessagesPage(interaction));
-        return true;
-      }
-    }
+
+    // 'messages' is the only subcommand
+    await interaction.editReply(await purgeMessagesPage(interaction));
+    return true;
   },
 };
 

@@ -107,7 +107,7 @@ describe('purge', () => {
     const guild = guildOf([textChannel('c1', ['u1', 'other', 'u1']), textChannel('c2', ['other'])], [ChannelType.GuildVoice]);
     const stub = slashStub({ guild, subcommand: 'messages', extra: { isUserSelectMenu: () => false } });
     expect(await dPurge.execute(stub as never)).toBe(true);
-    const reply = stub.reply.mock.calls[0][0] as { embeds: Array<{ data: { description: string } }>; components: unknown[] };
+    const reply = stub.editReply.mock.calls[0][0] as { embeds: Array<{ data: { description: string } }>; components: unknown[] };
     expect(reply.embeds[0].data.description).toContain('2 messages in 1 channels');
     expect(reply.components).toHaveLength(2);
 
@@ -115,14 +115,14 @@ describe('purge', () => {
       guild, subcommand: 'messages', extra: { isUserSelectMenu: () => false }, member: { ...mem('u1'), permissions: { has: (p: bigint) => p !== PermissionFlagsBits.ManageMessages } },
     });
     await dPurge.execute(plain as never);
-    expect((plain.reply.mock.calls[0][0] as { components: unknown[] }).components).toHaveLength(1);
+    expect((plain.editReply.mock.calls[0][0] as { components: unknown[] }).components).toHaveLength(1);
   });
 
   it('handles a guild without channels', async () => {
     const guild = { id: 'g', channels: { fetch: vi.fn(async () => null) } };
     const stub = slashStub({ guild, subcommand: 'messages', extra: { isUserSelectMenu: () => false } });
     await dPurge.execute(stub as never);
-    expect((stub.reply.mock.calls[0][0] as { embeds: Array<{ data: { description: string } }> }).embeds[0].data.description).toContain('0 messages');
+    expect((stub.editReply.mock.calls[0][0] as { embeds: Array<{ data: { description: string } }> }).embeds[0].data.description).toContain('0 messages');
   });
 
   it('menu picks another user, ignoring unknown menus', async () => {
