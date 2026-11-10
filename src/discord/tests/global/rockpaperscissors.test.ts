@@ -190,7 +190,6 @@ describe('rock paper scissors', () => {
       await choose(rounds[0], gameId, 'a', 'rock');
       expect(embedOf(stub.editReply.mock.calls.at(-1) as never).description).toContain('Ready');
       await choose(rounds[0], gameId, 'a', 'paper'); // duplicate choice ignored
-      await choose(rounds[0], gameId, 'outsider', 'rock'); // not a player
       await choose(rounds[0], gameId, 'b', 'rock');
       await choose(rounds[0], gameId, 'c', 'scissors'); // rock+scissors -> scissors eliminated
       expect(embedOf(stub.editReply.mock.calls.at(-1) as never).description).toContain('Advancing to next round');
@@ -244,5 +243,63 @@ describe('rock paper scissors', () => {
       await choose(second.rounds[0], second.gameId, 'b', 'rock');
       await flush(3000);
     });
+  });
+});
+
+describe('rock paper scissors collector filters', () => {
+  beforeEach(() => { vi.useFakeTimers({ toFake: ['setTimeout', 'setInterval', 'clearInterval', 'Date'] }); });
+  afterEach(() => { vi.useRealTimers(); });
+
+  type ButtonFilter = (i: { user: { id: string }; customId: string }) => boolean;
+  const filterOf = (channel: { createMessageComponentCollector: { mock: { calls: unknown[][] } } }, call = 0) => (
+    (channel.createMessageComponentCollector.mock.calls[call][0] as { filter: ButtonFilter }).filter
+  );
+
+  it('1v1 only accepts clicks from the two players', async () => {
+    const channel = { createMessageComponentCollector: vi.fn(() => makeCollector()) };
+    const stub = slashStub({ channel, options: { opponent: user('u2') } });
+    await dRockPaperScissors.execute(stub as never);
+    const filter = filterOf(channel);
+    expect(filter({ user: { id: 'u1' }, customId: 'x' })).toBe(true);
+    expect(filter({ user: { id: 'u2' }, customId: 'x' })).toBe(true);
+    expect(filter({ user: { id: 'u3' }, customId: 'x' })).toBe(false);
+  });
+
+  it('the queue only accepts its own join button, and rounds only accept players', async () => {
+    const queue = makeCollector();
+    const round = makeCollector();
+    const collectors = [queue, round];
+    const channel = { createMessageComponentCollector: vi.fn(() => collectors.shift()) };
+    const stub = slashStub({ channel });
+    await dRockPaperScissors.execute(stub as never);
+    const joinId = (stub.reply.mock.calls[0][0] as { components: Array<{ components: Array<{ data: { custom_id: string } }> }> }).components[0].components[0].data.custom_id;
+    const queueFilter = filterOf(channel, 0);
+    expect(queueFilter({ user: { id: 'a' }, customId: joinId })).toBe(true);
+    expect(queueFilter({ user: { id: 'a' }, customId: 'other' })).toBe(false);
+
+    queue.emit('collect', press(joinId, 'a'));
+    queue.emit('collect', press(joinId, 'b'));
+    await vi.advanceTimersByTimeAsync(0);
+    queue.emit('end');
+    await vi.advanceTimersByTimeAsync(0);
+    const roundFilter = filterOf(channel, 1);
+    expect(roundFilter({ user: { id: 'a' }, customId: 'rps_x_rock' })).toBe(true);
+    expect(roundFilter({ user: { id: 'a' }, customId: 'other' })).toBe(false);
+    expect(roundFilter({ user: { id: 'c' }, customId: 'rps_x_rock' })).toBe(false);
+  });
+
+  it('a round without a collector ends the game setup quietly', async () => {
+    const queue = makeCollector();
+    const collectors: Array<ReturnType<typeof makeCollector> | undefined> = [queue, undefined];
+    const channel = { createMessageComponentCollector: vi.fn(() => collectors.shift()) };
+    const stub = slashStub({ channel });
+    await dRockPaperScissors.execute(stub as never);
+    const joinId = (stub.reply.mock.calls[0][0] as { components: Array<{ components: Array<{ data: { custom_id: string } }> }> }).components[0].components[0].data.custom_id;
+    queue.emit('collect', press(joinId, 'a'));
+    queue.emit('collect', press(joinId, 'b'));
+    await vi.advanceTimersByTimeAsync(0);
+    queue.emit('end');
+    await vi.advanceTimersByTimeAsync(0);
+    expect(channel.createMessageComponentCollector).toHaveBeenCalledTimes(2);
   });
 });

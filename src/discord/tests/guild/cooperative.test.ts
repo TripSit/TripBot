@@ -1,3 +1,4 @@
+import { resolvingModal } from '../../../vitest/utils/commandStubs';
 /* eslint-disable max-len, sonarjs/no-duplicate-string */
 import { EmbedBuilder } from 'discord.js';
 import {
@@ -129,11 +130,24 @@ describe('cooperative command', () => {
 });
 
 describe('cooperative buttons', () => {
-  // TripSit/TripBot#1372: a 54-character label exceeds Discord's 45 limit, so the builder throws.
-  it('apply cannot currently build its modal (#1372)', async () => {
-    const stub = { id: 'i1', showModal: vi.fn(), awaitModalSubmit: vi.fn() };
-    await expect(cooperativeApplyButton(stub as never)).rejects.toThrow();
-    expect(stub.showModal).not.toHaveBeenCalled();
+  // Regression test for TripSit/TripBot#1372: the modal used to fail validation and its submit filter never matched.
+  it('apply shows its modal and thanks the applicant when they submit', async () => {
+    const submit = { customId: 'cooperativeApply~i1', deferReply: vi.fn(), editReply: vi.fn() };
+    const other = { customId: 'cooperativeApply~zzz', deferReply: vi.fn(), editReply: vi.fn() };
+    const a = { id: 'i1', showModal: vi.fn(), awaitModalSubmit: vi.fn(resolvingModal(submit)) };
+    const b = { id: 'i1', showModal: vi.fn(), awaitModalSubmit: vi.fn(resolvingModal(other)) };
+    expect(await cooperativeApplyButton(a as never)).toBe(true);
+    await cooperativeApplyButton(b as never);
+    await new Promise(r => { setTimeout(r, 5); });
+    expect(a.showModal).toHaveBeenCalled();
+    expect(submit.editReply).toHaveBeenCalled();
+    expect(other.deferReply).not.toHaveBeenCalled();
+    const ids = (a.showModal.mock.calls[0][0] as { components: Array<{ components: Array<{ data: { custom_id: string } }> }> }).components
+      .map(row => row.components[0].data.custom_id);
+    expect(new Set(ids).size).toBe(ids.length);
+    const filter = (a.awaitModalSubmit.mock.calls[0][0] as { filter: (i: { customId: string }) => boolean }).filter;
+    expect(filter({ customId: 'cooperativeApply~i1' })).toBe(true);
+    expect(filter({ customId: 'reportModal~i1' })).toBe(false);
   });
 
   it('leave removes the guild from the cooperative', async () => {

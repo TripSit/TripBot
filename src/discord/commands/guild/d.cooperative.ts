@@ -140,7 +140,7 @@ export async function cooperativeApplyButton(
             .setLabel('Does your guild have a website?')
             .setStyle(TextInputStyle.Short)
             .setRequired(true)
-            .setCustomId('desire'),
+            .setCustomId('website'),
         ),
       new ActionRowBuilder<TextInputBuilder>()
         .addComponents(
@@ -163,7 +163,7 @@ export async function cooperativeApplyButton(
       new ActionRowBuilder<TextInputBuilder>()
         .addComponents(
           new TextInputBuilder()
-            .setLabel('Have you read the regulations and agree to abide them?')
+            .setLabel('Have you read and agree to the regulations?')
             .setStyle(TextInputStyle.Short)
             .setRequired(true)
             .setCustomId('agree'),
@@ -177,7 +177,7 @@ export async function cooperativeApplyButton(
             .setCustomId('info'),
         ),
     ));
-  const filter = (i:ModalSubmitInteraction) => i.customId.includes('reportModal');
+  const filter = (i:ModalSubmitInteraction) => i.customId.startsWith('cooperativeApply~');
   interaction.awaitModalSubmit({ filter, time: 0 })
     .then(async i => {
       if (i.customId.split('~')[1] !== interaction.id) return;

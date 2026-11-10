@@ -211,3 +211,19 @@ describe('prReview', () => {
     expect(m4.deferReply).not.toHaveBeenCalled();
   });
 });
+
+describe.each([
+  ['tictactoe', dTicTacToe, mocks.tttInit, 9],
+  ['triptacgo', dTripTacGo, mocks.ttgInit, 16],
+])('%s collector filter', (_name, cmd, init, size) => {
+  it('only accepts clicks from the two players', async () => {
+    init.mockReturnValue(newGame(size));
+    const channel = { createMessageComponentCollector: vi.fn(() => makeCollector()) };
+    const stub = slashStub({ options: { opponent: { id: 'u2', username: 'bob', bot: false } }, channel });
+    await cmd.execute(stub as never);
+    const { filter } = channel.createMessageComponentCollector.mock.calls[0][0] as unknown as { filter: (i: { user: { id: string } }) => boolean };
+    expect(filter({ user: { id: 'u1' } })).toBe(true);
+    expect(filter({ user: { id: 'u2' } })).toBe(true);
+    expect(filter({ user: { id: 'u3' } })).toBe(false);
+  });
+});
