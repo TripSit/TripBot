@@ -186,6 +186,34 @@ describe('updateDrugDb', () => {
     ]);
   });
 
+  it('copes with tripsit-only drugs that have unusual shapes', async () => {
+    Object.assign(tsDrugs, {
+      qux: {
+        name: 'Qux',
+        aliases: ['quxy', 'quxie'],
+        properties: {},
+        categories: [
+          'barbiturate', 'benzodiazepine', 'common', 'deliriant', 'depressant', 'dissociative', 'empathogen', 'habit-forming', 'inactive',
+          'nootropic', 'opioid', 'psychedelic', 'research-chemical', 'ssri', 'stimulant', 'supplement', 'tentative',
+        ],
+        formatted_dose: { Oral: { Common: '5mg' } },
+        formatted_onset: { value: '5', _unit: 'minutes' },
+      },
+      fooAgain: { name: 'foo', properties: {}, formatted_duration: { Oral: '4-6', _unit: 'hours' } },
+    });
+    try {
+      await run();
+      const db = written('combinedDB');
+      const qux = db.find((d: { name: string }) => d.name === 'Qux');
+      expect(qux.aliases).toEqual(['quxy', 'quxie']);
+      expect(qux.aliasesStr).toBe('quxy, quxie');
+      expect(qux.roas).toHaveLength(1);
+    } finally {
+      delete (tsDrugs as Record<string, unknown>).qux;
+      delete (tsDrugs as Record<string, unknown>).fooAgain;
+    }
+  });
+
   it('survives upstream failures with an empty database', async () => {
     vi.mocked(axios.get).mockImplementation(async (url: string) => {
       if (url.endsWith('combos.json')) return { data: {} };
