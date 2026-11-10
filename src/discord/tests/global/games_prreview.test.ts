@@ -221,7 +221,7 @@ describe.each([
     const channel = { createMessageComponentCollector: vi.fn(() => makeCollector()) };
     const stub = slashStub({ options: { opponent: { id: 'u2', username: 'bob', bot: false } }, channel });
     await cmd.execute(stub as never);
-    const { filter } = channel.createMessageComponentCollector.mock.calls[0][0] as unknown as { filter: (i: { user: { id: string } }) => boolean };
+    const { filter } = (channel.createMessageComponentCollector.mock.calls as unknown as unknown[][])[0][0] as unknown as { filter: (i: { user: { id: string } }) => boolean };
     expect(filter({ user: { id: 'u1' } })).toBe(true);
     expect(filter({ user: { id: 'u2' } })).toBe(true);
     expect(filter({ user: { id: 'u3' } })).toBe(false);

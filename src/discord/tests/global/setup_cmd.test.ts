@@ -1,3 +1,4 @@
+/* eslint-disable no-param-reassign */
 /* eslint-disable no-promise-executor-return, sonarjs/no-unused-collection, max-len, sonarjs/no-duplicate-string, no-restricted-syntax, no-await-in-loop */
 import { ChannelType, TextChannel } from 'discord.js';
 import { helperButton, setup } from '../../commands/global/d.setup';

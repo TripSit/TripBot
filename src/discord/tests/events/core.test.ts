@@ -1,8 +1,7 @@
 /* eslint-disable no-restricted-syntax */
-import { Collection } from 'discord.js';
 import { InteractionType } from 'discord-api-types/v10';
 import {
-  DiscordAPIError, MessageFlags, TextChannel,
+  DiscordAPIError, MessageFlags, TextChannel, Collection,
 } from 'discord.js';
 import { ready } from '../../events/ready';
 import { interactionCreate } from '../../events/interactionCreate';
@@ -225,7 +224,7 @@ describe('interactionCreate', () => {
   beforeEach(() => { botBannedUsers.length = 0; });
 
   it('hands modal submissions to the modal handler', async () => {
-    const submit = base({ type: InteractionType.ModalSubmit, customId: 'not-ai', editReply: vi.fn() });
+    const submit = base({ type: InteractionType.ModalSubmit, customId: 'not-ai', editReply: vi.fn() }) as unknown as { editReply: ReturnType<typeof vi.fn> };
     await interactionCreate.execute(submit as never);
     expect(submit.editReply).not.toHaveBeenCalled();
   });
