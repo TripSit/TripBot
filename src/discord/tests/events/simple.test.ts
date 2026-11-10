@@ -18,7 +18,6 @@ import { guildMemberAdd } from '../../events/guildMemberAdd';
 import { messageReactionAdd } from '../../events/messageReactionAdd';
 import { messageReactionRemove } from '../../events/messageReactionRemove';
 import { messageUpdate } from '../../events/messageUpdate';
-import { channelCreate as auditLogEntryCreate } from '../../events/guildAuditLogAdd';
 import { dbMock } from '../../../vitest/utils/mockDb';
 
 const e = env as unknown as Record<string, string>;
@@ -284,37 +283,5 @@ describe('messageUpdate', () => {
     await messageUpdate.execute(msg('a') as never, msg('b', { author: { bot: true } }) as never);
     expect(send).not.toHaveBeenCalled();
     expect(mocks.relayEdit).toHaveBeenCalledTimes(4);
-  });
-});
-
-describe('guildAuditLogEntryCreate', () => {
-  const entry = (over: Record<string, unknown> = {}) => ({
-    targetType: 'Channel',
-    actionType: 'Create',
-    executor: '<@mod>',
-    target: '#new',
-    changes: [{ key: 'name', old: null, new: 'x' }],
-    ...over,
-  });
-
-  it.each([
-    ['Create', 0x57F287], ['Update', 0xFEE75C], ['Delete', 0xED4245], ['All', 0],
-  ])('colours %s entries', async (actionType, color) => {
-    await auditLogEntryCreate.execute(entry({ actionType }) as never, { id: e.DISCORD_GUILD_ID } as never);
-    const [{ embeds }] = send.mock.calls[0];
-    expect(embeds[0].data.color).toBe(color);
-    expect(embeds[0].data.title).toBe(`Channel ${actionType}`);
-    expect(embeds[0].data.description).toContain('name: <none> -> x');
-  });
-
-  it('omits the target for deletions', async () => {
-    await auditLogEntryCreate.execute(entry({ actionType: 'Delete' }) as never, { id: e.DISCORD_GUILD_ID } as never);
-    expect(send.mock.calls[0][0].embeds[0].data.description).not.toContain('#new');
-  });
-
-  it('ignores other guilds and message events', async () => {
-    await auditLogEntryCreate.execute(entry() as never, { id: 'other' } as never);
-    await auditLogEntryCreate.execute(entry({ targetType: 'Message' }) as never, { id: e.DISCORD_GUILD_ID } as never);
-    expect(send).not.toHaveBeenCalled();
   });
 });

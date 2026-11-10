@@ -1,21 +1,10 @@
 import { TextChannel } from 'discord.js';
 
-const mocks = vi.hoisted(() => ({ sentryInit: vi.fn(), rollbarCtor: vi.fn() }));
+const mocks = vi.hoisted(() => ({ sentryInit: vi.fn() }));
 
 vi.mock('@sentry/node', () => ({ init: mocks.sentryInit }));
-vi.mock('rollbar', () => ({
-  default: class {
-    warn = vi.fn();
-
-    constructor(config: unknown) {
-      mocks.rollbarCtor(config);
-    }
-  },
-}));
-
 const originalEnv = process.env.NODE_ENV;
 const originalLog = global.log;
-const originalRollbar = global.rollbar;
 
 async function loadProductionLog() {
   process.env.NODE_ENV = 'production';
@@ -28,17 +17,14 @@ const textChannel = () => Object.assign(Object.create(TextChannel.prototype), { 
 afterEach(() => {
   process.env.NODE_ENV = originalEnv;
   global.log = originalLog;
-  global.rollbar = originalRollbar;
   delete (global as { discordClient?: unknown }).discordClient;
   vi.restoreAllMocks();
 });
 
 describe('production logging setup', () => {
-  it('initialises rollbar and sentry', async () => {
+  it('initialises sentry', async () => {
     await loadProductionLog();
-    expect(mocks.rollbarCtor).toHaveBeenCalledWith(expect.objectContaining({ logLevel: 'error' }));
     expect(mocks.sentryInit).toHaveBeenCalledWith(expect.objectContaining({ environment: 'production' }));
-    expect(global.rollbar).toBeDefined();
   });
 
   it('exposes the filename helper', async () => {

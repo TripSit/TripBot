@@ -158,7 +158,6 @@ describe('handleError', () => {
   });
 
   describe('in production', () => {
-    const rollbarError = vi.fn();
     const sent: string[] = [];
     const send = vi.fn(async (payload: { embeds?: Array<{ data: { description?: string } }> }) => {
       // The handler reuses one embed for the alert and the user reply, so record its text at send time.
@@ -167,8 +166,8 @@ describe('handleError', () => {
     beforeEach(() => {
       sent.length = 0;
       e.NODE_ENV = 'production';
-      (global as unknown as { rollbar: unknown }).rollbar = { error: rollbarError, warn: vi.fn(), info: vi.fn() };
       setClient({
+        isReady: () => true,
         channels: { fetch: vi.fn(async () => ({ send })) },
         guilds: { fetch: vi.fn(async () => ({ roles: { fetch: vi.fn(async () => '<@&dev>') } })) },
       });
@@ -177,7 +176,6 @@ describe('handleError', () => {
     it('alerts the developers and gives the user a friendly message', async () => {
       const i = interaction();
       await handleError(shortError('prod failure'), 'tripsit', i as never);
-      expect(rollbarError).toHaveBeenCalledWith(expect.stringContaining('prod failure'), expect.objectContaining({ user: { id: 'u', username: 'alice' } }));
       expect(send).toHaveBeenCalledWith(expect.objectContaining({ content: '<@&dev>' }));
       expect(sent[0]).toContain('Error running /tripsit ctx');
       expect(i.reply.mock.calls[0][0].embeds[0].data.description).toContain('developers have been alerted');
@@ -190,7 +188,6 @@ describe('handleError', () => {
 
     it('reports without an interaction', async () => {
       await handleError(shortError('background'));
-      expect(rollbarError).toHaveBeenCalledWith(expect.stringContaining('background'));
       expect(send).toHaveBeenCalled();
     });
 
