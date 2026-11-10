@@ -92,18 +92,8 @@ async function info(): Promise<InteractionEditReplyOptions> {
   };
 }
 
-async function apply(interaction:ChatInputCommandInteraction): Promise<InteractionEditReplyOptions> {
-  if (!interaction.guild) {
-    return {
-      embeds: [
-        embedTemplate({
-          title: GUILD_ONLY_TEXT,
-        }),
-      ],
-    };
-  }
-
-  const guildData = await getOrCreateGuild(interaction.guild?.id);
+async function apply(interaction:ChatInputCommandInteraction, guild: Guild): Promise<InteractionEditReplyOptions> {
+  const guildData = await getOrCreateGuild(guild.id);
 
   if (guildData.cooperative) {
     return {
@@ -205,18 +195,8 @@ export async function cooperativeApplyButton(
   return true;
 }
 
-async function setup(interaction:ChatInputCommandInteraction):Promise<InteractionEditReplyOptions> {
-  if (!interaction.guild) {
-    return {
-      embeds: [
-        embedTemplate({
-          title: GUILD_ONLY_TEXT,
-        }),
-      ],
-    };
-  }
-
-  const guildData = await getOrCreateGuild(interaction.guild?.id);
+async function setup(interaction:ChatInputCommandInteraction, guild: Guild):Promise<InteractionEditReplyOptions> {
+  const guildData = await getOrCreateGuild(guild.id);
 
   if (!guildData.cooperative) {
     return {
@@ -228,21 +208,11 @@ async function setup(interaction:ChatInputCommandInteraction):Promise<Interactio
     };
   }
 
-  if (!interaction.guild) {
-    return {
-      embeds: [
-        embedTemplate({
-          title: GUILD_ONLY_TEXT,
-        }),
-      ],
-    };
-  }
-
-  const missing = await missingPermission(interaction.guild, ['ViewAuditLog' as PermissionResolvable]);
+  const missing = await missingPermission(guild, ['ViewAuditLog' as PermissionResolvable]);
 
   if (missing) {
-    log.error(F, `Missing permission ${missing} in ${interaction.guild}!`);
-    return { content: `Please make sure I can ${missing} in ${interaction.guild} so I can run ${F}!` };
+    log.error(F, `Missing permission ${missing} in ${guild}!`);
+    return { content: `Please make sure I can ${missing} in ${guild} so I can run ${F}!` };
   }
 
   // Finished checks, lets set this up!
@@ -252,59 +222,59 @@ async function setup(interaction:ChatInputCommandInteraction):Promise<Interactio
   let helpdeskRoom = interaction.options.getChannel('helpdesk_channel');
   if (!helpdeskRoom) {
     // If the channel wasn't provided, create it:
-    helpdeskRoom = await interaction.guild.channels.create({
+    helpdeskRoom = await guild.channels.create({
       name: '🙊│talk-to-mods',
       type: ChannelType.GuildText,
       topic: 'This channel is used to make tickets.',
       permissionOverwrites: [
         {
-          id: interaction.guild.roles.everyone.id,
+          id: guild.roles.everyone.id,
           deny: ['ViewChannel'],
         },
       ],
     });
   }
   await db.discord_guilds.update({
-    where: { id: interaction.guild.id },
+    where: { id: guild.id },
     data: { channel_helpdesk: helpdeskRoom.id },
   });
 
   let trustRoom = interaction.options.getChannel('trust_channel');
   if (!trustRoom) {
     // If the channel wasn't provided, create it:
-    trustRoom = await interaction.guild.channels.create({
+    trustRoom = await guild.channels.create({
       name: '🔒│trust-log',
       type: ChannelType.GuildText,
       topic: 'This channel is used to oversee the trust logging.',
       permissionOverwrites: [
         {
-          id: interaction.guild.roles.everyone.id,
+          id: guild.roles.everyone.id,
           deny: ['ViewChannel'],
         },
       ],
     });
   }
   await db.discord_guilds.update({
-    where: { id: interaction.guild.id },
+    where: { id: guild.id },
     data: { channel_trust: trustRoom.id },
   });
 
   const trustScoreLimit = interaction.options.getInteger('trust_score_limit', true);
   await db.discord_guilds.update({
-    where: { id: interaction.guild.id },
+    where: { id: guild.id },
     data: { trust_score_limit: trustScoreLimit },
   });
 
   let modRoom = interaction.options.getChannel('mod_channel');
   if (!modRoom) {
     // If the channel wasn't provided, create it:
-    modRoom = await interaction.guild.channels.create({
+    modRoom = await guild.channels.create({
       name: 'coop-mod',
       type: ChannelType.GuildText,
       topic: 'This channel is used for cooperative moderation.',
       permissionOverwrites: [
         {
-          id: interaction.guild.roles.everyone.id,
+          id: guild.roles.everyone.id,
           deny: ['ViewChannel'],
         },
       ],
@@ -313,7 +283,7 @@ async function setup(interaction:ChatInputCommandInteraction):Promise<Interactio
 
   await db.discord_guilds.update({
     where: {
-      id: interaction.guild.id,
+      id: guild.id,
     },
     data: {
       channel_moderators: modRoom.id,
@@ -323,13 +293,13 @@ async function setup(interaction:ChatInputCommandInteraction):Promise<Interactio
   let modLog = interaction.options.getChannel('modlog_channel');
   if (!modLog) {
     // If the channel wasn't provided, create it:
-    modLog = await interaction.guild.channels.create({
+    modLog = await guild.channels.create({
       name: 'modlog',
       type: ChannelType.GuildText,
       topic: 'This channel is used for moderation logs.',
       permissionOverwrites: [
         {
-          id: interaction.guild.roles.everyone.id,
+          id: guild.roles.everyone.id,
           deny: ['ViewChannel'],
         },
       ],
@@ -338,7 +308,7 @@ async function setup(interaction:ChatInputCommandInteraction):Promise<Interactio
 
   await db.discord_guilds.update({
     where: {
-      id: interaction.guild.id,
+      id: guild.id,
     },
     data: {
       channel_mod_log: modLog.id,
@@ -352,7 +322,7 @@ async function setup(interaction:ChatInputCommandInteraction):Promise<Interactio
   let modRole = interaction.options.getRole('mod_role');
   if (!modRole) {
     // If the role wasn't provided, create it:
-    modRole = await interaction.guild.roles.create({
+    modRole = await guild.roles.create({
       name: 'Cooperative Moderator',
       color: '#00ff00',
       mentionable: true,
@@ -361,7 +331,7 @@ async function setup(interaction:ChatInputCommandInteraction):Promise<Interactio
 
   await db.discord_guilds.update({
     where: {
-      id: interaction.guild.id,
+      id: guild.id,
     },
     data: {
       role_moderator: modRole.id,
@@ -370,44 +340,6 @@ async function setup(interaction:ChatInputCommandInteraction):Promise<Interactio
 
   log.debug(F, `modRoomId: ${modRoom.name}`);
   log.debug(F, `modLogId: ${modLog.name}`);
-
-  async function getRoleId(
-    role:Role | undefined,
-  ):Promise<string> {
-    // This will create the role if it doesn't exist
-    // Either way it will update the database with the role ID
-    if (!interaction.guild) return '';
-    if (!role) {
-      // If the role wasn't provided, create it:
-      const newRole = await interaction.guild.roles.create({
-        name: 'Cooperative Moderator',
-        color: '#00ff00',
-        mentionable: true,
-      });
-      await db.discord_guilds.update({
-        where: {
-          id: interaction.guild.id,
-        },
-        data: {
-          role_moderator: newRole.id,
-        },
-      });
-      return newRole.id;
-    }
-    await db.discord_guilds.update({
-      where: {
-        id: interaction.guild.id,
-      },
-      data: {
-        role_moderator: role.id,
-      },
-    });
-    return role.id;
-  }
-
-  const modRoleId = await getRoleId(modRole as Role | undefined);
-
-  log.debug(F, `modRoleId: ${modRoleId}`);
 
   return {
     embeds: [
@@ -420,18 +352,8 @@ async function setup(interaction:ChatInputCommandInteraction):Promise<Interactio
   };
 }
 
-async function leave(interaction:ChatInputCommandInteraction): Promise<InteractionEditReplyOptions> {
-  if (!interaction.guild) {
-    return {
-      embeds: [
-        embedTemplate({
-          title: GUILD_ONLY_TEXT,
-        }),
-      ],
-    };
-  }
-
-  const guildData = await getOrCreateGuild(interaction.guild?.id);
+async function leave(interaction:ChatInputCommandInteraction, guild: Guild): Promise<InteractionEditReplyOptions> {
+  const guildData = await getOrCreateGuild(guild.id);
 
   if (!guildData.cooperative) {
     return {
@@ -693,13 +615,13 @@ export const dCooperative: SlashCommand = {
         response = await info();
         break;
       case 'apply':
-        response = await apply(interaction);
+        response = await apply(interaction, interaction.guild);
         break;
       case 'setup':
-        response = await setup(interaction);
+        response = await setup(interaction, interaction.guild);
         break;
       case 'leave':
-        response = await leave(interaction);
+        response = await leave(interaction, interaction.guild);
         break;
       case 'add':
         response = await add(interaction);

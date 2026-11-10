@@ -196,6 +196,27 @@ describe('buttonReactionRole', () => {
       return { b, sent, submit };
     };
 
+    it('ignores intro submissions that belong to another interaction or lack a guild or member', async () => {
+      const run = async (submitOver: Record<string, unknown>) => {
+        const guild = guildOf();
+        const submit = {
+          customId: '"ID":"RR","II":"i1"', deferReply: vi.fn(), editReply: vi.fn(), guild, member: { displayName: 'M' }, fields: { getTextInputValue: vi.fn(() => 'x') }, ...submitOver,
+        };
+        const b = button(introId('r1', 'chan'), [], guild);
+        b.awaitModalSubmit = vi.fn(resolvingModal(submit));
+        await buttonReactionRole(b as never);
+        await flushPromises();
+        return { b, submit };
+      };
+      const other = await run({ customId: '"ID":"RR","II":"zzz"' });
+      expect(other.b.member.roles.add).not.toHaveBeenCalled();
+      const dm = await run({ guild: null, reply: vi.fn() });
+      expect(dm.b.member.roles.add).not.toHaveBeenCalled();
+      const memberless = await run({ member: null });
+      expect(memberless.submit.editReply).toHaveBeenCalledWith('This must be performed by a member of a guild!');
+      expect(memberless.b.member.roles.add).not.toHaveBeenCalled();
+    });
+
     it('posts introductions to the configured channel, with team-specific follow-ups', async () => {
       const generic = await joinFlow('some-channel');
       expect(generic.b.member.roles.add).toHaveBeenCalled();
@@ -350,7 +371,11 @@ describe('message creators', () => {
   it('getGuildRole falls back to recreating Tulip when a role cannot be found', async () => {
     (global as unknown as Record<string, unknown>).emojiGet = vi.fn(() => ({ id: '1', url: 'https://e' }));
     // rows missing => `.find(...).role_id` throws inside the try and the fallback path runs
-    db.reaction_roles.findMany = vi.fn().mockResolvedValueOnce(rowsFor('PRONOUN').slice(0, 1)).mockResolvedValue([{ name: 'Tulip', role_id: 'rid-Tulip' }, ...rowsFor('PRONOUN')]) as never;
+    db.reaction_roles.findMany = vi.fn()
+      .mockResolvedValueOnce(rowsFor('PRONOUN'))
+      .mockResolvedValueOnce(rowsFor('PRONOUN').filter(row => row.name !== 'AskMe'))
+      .mockResolvedValueOnce([{ name: 'Tulip', role_id: 'rid-Tulip' }])
+      .mockResolvedValue(rowsFor('PRONOUN')) as never;
     const { stub, channel } = stubFor();
     await createPronounMessage(stub as never);
     expect(channel.send).toHaveBeenCalled();
@@ -378,6 +403,12 @@ describe('reaction_role command', () => {
   beforeEach(() => {
     db.reaction_roles.findMany = vi.fn().mockResolvedValue([]) as never;
     db.reaction_roles.upsert = vi.fn() as never;
+  });
+
+  it('stops when the interaction has no member', async () => {
+    const { stub, result } = await run('help', { member: null });
+    expect(result).toBe(false);
+    expect(stub.reply).toHaveBeenCalledWith('This must be performed by a member of a guild!');
   });
 
   it('applies guild, partner and permission gates', async () => {

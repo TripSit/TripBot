@@ -277,6 +277,33 @@ describe('helperButton', () => {
     expect(content(elsewhere)).toContain('Welcome back');
   });
 
+  it('stops quietly when the guild or member vanish between the click and the submission', async () => {
+    const meta = { id: 'meta', send: vi.fn() };
+    const guild = {
+      id: 'g1',
+      roles: { fetch: vi.fn(async (id: string) => ({ id, name: 'Helper' })) },
+      channels: { fetch: vi.fn(async () => meta) },
+    };
+    const baseSubmit = () => ({
+      customId: '"ID":"RR","II":"i1"', guild, member: {}, deferReply: vi.fn(), editReply: vi.fn(), fields: { getTextInputValue: vi.fn(() => 'answer') },
+    });
+    const attempt = async (submitOver: Record<string, unknown>, mutate?: (row: Record<string, unknown>) => void) => {
+      const row = guildRow();
+      mocks.guild.mockResolvedValue(row);
+      const submit = { ...baseSubmit(), ...submitOver };
+      const b = press({ guild });
+      b.awaitModalSubmit = vi.fn(async () => { mutate?.(row); return submit; });
+      await helperButton(b as never);
+      await flushPromises();
+      return { b, submit };
+    };
+    expect((await attempt({ guild: null })).submit.editReply).not.toHaveBeenCalled();
+    expect((await attempt({ member: null })).submit.editReply).not.toHaveBeenCalled();
+    expect((await attempt({}, row => { row.channel_tripsitmeta = null; })).submit.editReply).not.toHaveBeenCalled();
+    expect((await attempt({}, row => { row.channel_tripsit = null; })).submit.editReply).not.toHaveBeenCalled();
+    expect(db.users.upsert).not.toHaveBeenCalled();
+  });
+
   it('collects an application for new helpers and announces them', async () => {
     const sent: string[] = [];
     const meta = { id: 'meta', send: vi.fn((m: string) => { sent.push(m); }) };
@@ -308,5 +335,27 @@ describe('helperButton', () => {
     partial.awaitModalSubmit = vi.fn(resolvingModal(submit));
     await helperButton(partial as never);
     await flushPromises();
+  });
+});
+
+describe('setup modals submitted without a guild', () => {
+  it('tripsit and techhelp ignore them', async () => {
+    mocks.missing.mockResolvedValue(null);
+    db.discord_guilds.update = vi.fn().mockResolvedValue({ channel_tripsit: null }) as never;
+    const cases: Array<[string, string, Record<string, unknown>]> = [
+      ['tripsit', 'tripsitmeModal~int1', { metatripsit: { id: 'meta' } }],
+      ['techhelp', 'helpdeskModal~int1', { roletechreviewer: { id: 'rev' } }],
+    ];
+    for (const [subcommand, customId, options] of cases) {
+      const channel = textChannel();
+      const submit = { customId, guild: null, channel, deferReply: vi.fn(), editReply: vi.fn(), fields: { getTextInputValue: vi.fn(() => 'v') } };
+      const stub = slashStub({ subcommand, guild: { id: 'g1', name: 'Guild', channels: { fetch: vi.fn() } }, channel, options });
+      stub.awaitModalSubmit.mockImplementationOnce(resolvingModal(submit));
+      // eslint-disable-next-line no-await-in-loop
+      await setup.execute(stub as never);
+      // eslint-disable-next-line no-await-in-loop
+      await flushPromises();
+      expect(submit.deferReply).not.toHaveBeenCalled();
+    }
   });
 });
