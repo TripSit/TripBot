@@ -316,8 +316,13 @@ describe('quote edge cases', () => {
       fetch: vi.fn(), member: mine, content: 'self', url: 'https://discord.com/channels/1/2/3', createdAt: new Date(), reply: vi.fn(),
     };
     const interaction = {
-      id: 'i', deferReply: vi.fn(), editReply: vi.fn(), targetMessage, guild: { id: e.DISCORD_GUILD_ID.toString() },
-      member: { id: e.DISCORD_OWNER_ID, displayName: 'Owner', roles: { cache: { has: () => true } } }, user: { displayAvatarURL: () => 'https://av' },
+      id: 'i',
+      deferReply: vi.fn(),
+      editReply: vi.fn(),
+      targetMessage,
+      guild: { id: e.DISCORD_GUILD_ID.toString() },
+      member: { id: e.DISCORD_OWNER_ID, displayName: 'Owner', roles: { cache: { has: () => true } } },
+      user: { displayAvatarURL: () => 'https://av' },
     };
     await quoteAdd(interaction as never);
     expect(db.quotes.create).toHaveBeenCalled();

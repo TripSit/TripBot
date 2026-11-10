@@ -556,3 +556,88 @@ describe('rpg arcade', () => {
     expect(description(out)).toContain(multiplier ? `You won ${1000 * multiplier} tokens` : 'You lost 1000 tokens');
   });
 });
+
+describe('rpg command routing and edge cases', () => {
+  const run = async (subcommand: string, options: Record<string, unknown> = {}) => {
+    const stub = slashStub({
+      subcommand,
+      options,
+      member: member(),
+      guild: { members: { fetch: vi.fn(async () => member()) }, channels: { fetch: vi.fn(async () => ({ id: 'rpg' })) } },
+      extra: { channelId: 'rpg', isButton: () => false, isStringSelectMenu: () => false },
+    });
+    const result = await dRpg.execute(stub as never);
+    return { stub, result };
+  };
+
+  beforeEach(() => {
+    mocks.user.mockResolvedValue({ id: 'dbu' });
+    mocks.persona.mockResolvedValue(persona({ class: 'warrior', species: 'human', guild: 'gryffindor' }));
+    mocks.asset.mockResolvedValue('/path/bg.png');
+    mocks.preview.mockResolvedValue(Buffer.from('png'));
+    db.rpg_inventory.findMany = vi.fn().mockResolvedValue([]) as never;
+    db.rpg_inventory.upsert = vi.fn() as never;
+    db.personas.upsert = vi.fn() as never;
+    mocks.sleep.mockResolvedValue(undefined);
+    (global as unknown as Record<string, unknown>).emojiGet = vi.fn(() => ({ id: '1', identifier: 'e:1', toString: () => '<:e:1>' }));
+  });
+
+  it.each(['market', 'home', 'arcade', 'coinflip', 'roulette'])('%s renders its screen', async sub => {
+    const { stub, result } = await run(sub);
+    expect(result).toBe(true);
+    expect(stub.editReply).toHaveBeenCalledTimes(1);
+  });
+
+  it('flair is answered through the AI check', async () => {
+    db.rpg_inventory.findMany = vi.fn().mockResolvedValue([{
+      id: 'f', value: 'userflair', effect: 'userflair', effect_value: 'old',
+    }]) as never;
+    mocks.aiFlair.mockResolvedValue({ response: 'Status: Rejected\nReason: no', promptTokens: 1, completionTokens: 1 });
+    const { stub } = await run('flair', { flair: 'hello' });
+    expect(stub.editReply).toHaveBeenCalledTimes(1);
+  });
+
+  it('gift needs a target', async () => {
+    const stub = slashStub({
+      subcommand: 'gift', options: { amount: 5 }, member: member(), guild: { channels: { fetch: vi.fn(async () => ({ id: 'rpg' })) } }, extra: { channelId: 'rpg' },
+    });
+    await expect(dRpg.execute(stub as never)).rejects.toThrow('Target user not found');
+  });
+
+  it('wagers are capped at 1000 and raised to the 500 minimum', async () => {
+    mocks.persona.mockResolvedValue(persona({ tokens: 100000 }));
+    const mk = (id: string, bet: string) => ({
+      user: { id }, member: member(), editReply: vi.fn(), customId: `rpgWager${bet},user:${id}`,
+    });
+    const capped = mk('cap-user', '500');
+    await rpgArcadeGame(capped as never, 'Coinflip');
+    await rpgArcadeWager(capped as never);
+    capped.customId = 'rpgWager1000,user:cap-user';
+    expect(embedOf(await rpgArcadeWager(capped as never)).description).toContain('betting 1000 tokens');
+    const small = mk('min-user', '100');
+    await rpgArcadeGame(small as never, 'Coinflip');
+    expect(embedOf(await rpgArcadeWager(small as never)).description).toContain('betting 500 tokens');
+  });
+
+  it('flair accepts an empty replacement as "nothing to apply"', async () => {
+    db.rpg_inventory.findMany = vi.fn().mockResolvedValue([{
+      id: 'f', value: 'userflair', effect: 'userflair', effect_value: 'old',
+    }]) as never;
+    const interaction = {
+      user: { id: 'u1' },
+      message: { embeds: [{ description: 'x\n**TripBot Adjusted:** \nmore' }] },
+    };
+    const out = await rpgFlairAccept(interaction as never, '');
+    expect(embedOf(out).description).toContain('Something went wrong');
+  });
+
+  it('flair treats an empty request and an empty AI adjustment as equal', async () => {
+    db.rpg_inventory.findMany = vi.fn().mockResolvedValue([{
+      id: 'f', value: 'userflair', effect: 'userflair', effect_value: 'old',
+    }]) as never;
+    mocks.aiFlair.mockResolvedValue({ response: 'Status: Approved\nAdjusted: ', promptTokens: 1, completionTokens: 1 });
+    const stub = slashStub({ options: { flair: '' }, guild: { members: { fetch: vi.fn(async () => member()) } } });
+    const out = await rpgFlair(stub as never);
+    expect(embedOf(out).description).toContain('has been updated');
+  });
+});
