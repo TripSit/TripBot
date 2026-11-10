@@ -65,6 +65,7 @@ export default defineConfig({
         'src/global/commands/_g.template.ts',
         'src/global/commands/index.ts',
         'src/global/utils/archive/**',
+        'src/discord/utils/archive/**',
         'src/global/utils/_template.ts',
         'src/irc/archive/**',
         'src/global/@types/**',

@@ -8,3 +8,6 @@ global.db = dbMock as unknown as typeof global.db;
 beforeEach(() => {
   resetDbMock();
 });
+
+// start.ts publishes commandContext as a global; d.* commands call it unqualified.
+(global as unknown as { commandContext: unknown }).commandContext = vi.fn(async () => 'ctx');
