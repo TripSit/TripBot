@@ -241,8 +241,8 @@ describe('quoteAdd', () => {
     expect(text(dup)).toContain('already');
   });
 
-  // TripSit/TripBot#1328: `!actor.id === env.DISCORD_OWNER_ID` is always false, so self-quotes are never blocked.
-  it.fails('blocks saving your own messages (#1328)', async () => {
+  // Regression test for TripSit/TripBot#1328: the owner check used to be always false, so self-quotes were never blocked.
+  it('blocks saving your own messages (#1328)', async () => {
     const own = ctx(msg({ member: member('actor') }));
     await quoteAdd(own as never);
     expect(text(own)).toContain('own messages');
@@ -256,5 +256,70 @@ describe('quoteAdd', () => {
     const image = ctx(msg({ content: '   ' }));
     await quoteAdd(image as never);
     expect(db.quotes.create).toHaveBeenLastCalledWith({ data: expect.objectContaining({ quote: 'No text (Image)' }) });
+  });
+});
+
+describe('quote edge cases', () => {
+  beforeEach(() => {
+    db.users.findFirstOrThrow = vi.fn().mockResolvedValue({ id: 'dbu', discord_id: 'author' }) as never;
+    db.quotes.count = vi.fn().mockResolvedValue(1) as never;
+  });
+
+  it('random ignores DMs', async () => {
+    const stub = slashStub({ guild: null, subcommand: 'random' });
+    await dQuote.execute(stub as never);
+    expect(stub.deferReply).not.toHaveBeenCalled();
+  });
+
+  it('random lists non-image attachments and notes a missing source', async () => {
+    db.quotes.findFirst = vi.fn().mockResolvedValue(quoteRow()) as never;
+    const withFile = { attachments: collectionOf({ a: attachment('doc.pdf', 'application/pdf') }), embeds: [] };
+    const stub = slashStub({ subcommand: 'random', guild: guildWith(withFile) });
+    await dQuote.execute(stub as never);
+    expect(embeds(stub)[0].description).toContain('[doc.pdf](https://cdn/doc.pdf)');
+
+    const gone = guildWith(undefined);
+    gone.channels.fetch = vi.fn().mockRejectedValue({ code: 10008 });
+    const missing = slashStub({ subcommand: 'random', guild: gone });
+    await dQuote.execute(missing as never);
+    expect(embeds(missing)[0].description).toContain('no longer available');
+  });
+
+  it('shows a group of images and a quote with no url', async () => {
+    db.quotes.findFirst = vi.fn().mockResolvedValue(quoteRow({ quote: 'caption' })) as never;
+    const many = { attachments: collectionOf({ a: attachment('1.png', 'image/png'), b: attachment('2.png', 'image/png') }), embeds: [] };
+    const stub = slashStub({ subcommand: 'get', options: { quote: 'cap' }, guild: guildWith(many) });
+    await dQuote.execute(stub as never);
+    expect(embeds(stub)).toHaveLength(2);
+    expect(embeds(stub)[1].image.url).toBe('https://cdn/2.png');
+  });
+
+  it('get and delete quietly stop for authors without a Discord id', async () => {
+    db.users.findFirstOrThrow = vi.fn().mockResolvedValue({ id: 'dbu', discord_id: null }) as never;
+    db.quotes.findFirst = vi.fn().mockResolvedValue(quoteRow()) as never;
+    const get = slashStub({ subcommand: 'get', options: { quote: 'x' } });
+    await dQuote.execute(get as never);
+    expect(get.deferReply).not.toHaveBeenCalled();
+    const del = slashStub({ subcommand: 'delete', options: { quote: 'x' } });
+    await dQuote.execute(del as never);
+    expect(del.reply).not.toHaveBeenCalled();
+  });
+
+  it('lets the owner save their own message but not anyone else', async () => {
+    mocks.user.mockResolvedValue({ id: 'dbu' });
+    db.quotes.findFirst = vi.fn().mockResolvedValue(null) as never;
+    db.quotes.create = vi.fn().mockResolvedValue(quoteRow()) as never;
+    const log = { send: vi.fn() };
+    (global as unknown as Record<string, unknown>).discordClient = { channels: { fetch: vi.fn(async () => log) } };
+    const mine = member(e.DISCORD_OWNER_ID);
+    const targetMessage = {
+      fetch: vi.fn(), member: mine, content: 'self', url: 'https://discord.com/channels/1/2/3', createdAt: new Date(), reply: vi.fn(),
+    };
+    const interaction = {
+      id: 'i', deferReply: vi.fn(), editReply: vi.fn(), targetMessage, guild: { id: e.DISCORD_GUILD_ID.toString() },
+      member: { id: e.DISCORD_OWNER_ID, displayName: 'Owner', roles: { cache: { has: () => true } } }, user: { displayAvatarURL: () => 'https://av' },
+    };
+    await quoteAdd(interaction as never);
+    expect(db.quotes.create).toHaveBeenCalled();
   });
 });
