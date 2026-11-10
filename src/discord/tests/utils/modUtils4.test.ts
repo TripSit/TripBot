@@ -305,8 +305,8 @@ describe('moderate: bans', () => {
     await expect(moderate(fails.buttonInt, fails.modalInt)).resolves.toBeDefined();
   });
 
-  // Known bug: isBan() ignores these commands, so the flags are never set. See TripSit/TripBot#1370.
-  it.fails('applies role and bot bans to the user record', async () => {
+  // Regression test for TripSit/TripBot#1370: these commands used to be ignored, so the flags were never set.
+  it('applies role and bot bans to the user record', async () => {
     const flags: Array<[string, string]> = [['TICKET_BAN', 'ticket_ban'], ['DISCORD_BOT_BAN', 'discord_bot_ban'], ['HELPER_BAN', 'helper_role_ban'], ['CONTRIBUTOR_BAN', 'contributor_role_ban']];
     for (const [command, field] of flags) {
       const s = setup(command);
@@ -326,8 +326,8 @@ describe('moderate: bans', () => {
     expect(unban.targetRow.removed_at).toBeNull();
   });
 
-  // Known bug: isUnBan() ignores these commands. See TripSit/TripBot#1370.
-  it.fails('lifts role and bot bans', async () => {
+  // Regression test for TripSit/TripBot#1370.
+  it('lifts role and bot bans', async () => {
     const record = { id: 'ban-record', user_id: 'target-uid', type: 'FULL_BAN' };
     const flags: Array<[string, string]> = [['UN-TICKET_BAN', 'ticket_ban'], ['UN-DISCORD_BOT_BAN', 'discord_bot_ban'], ['UN-HELPER_BAN', 'helper_role_ban'], ['UN-CONTRIBUTOR_BAN', 'contributor_role_ban']];
     for (const [command, field] of flags) {

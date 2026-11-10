@@ -293,12 +293,22 @@ function isUnTimeout(command: ModAction): command is 'UN-TIMEOUT' { return comma
 
 function isWarning(command: ModAction): command is 'WARNING' { return command === 'WARNING'; }
 
-function isBan(command: ModAction): command is 'FULL_BAN' | 'BAN_EVASION' | 'UNDERBAN' | 'TICKET_BAN' | 'DISCORD_BOT_BAN' | 'HELPER_BAN' | 'CONTRIBUTOR_BAN' {
+// Bans that remove the user from the guild (and carry the appeal wording and unban button)
+function isBan(command: ModAction): command is 'FULL_BAN' | 'BAN_EVASION' | 'UNDERBAN' {
   return command === 'FULL_BAN' || command === 'BAN_EVASION' || command === 'UNDERBAN';
 }
 
-function isUnBan(command: ModAction): command is 'UN-FULL_BAN' | 'UN-BAN_EVASION' | 'UN-UNDERBAN' | 'UN-TICKET_BAN' | 'UN-DISCORD_BOT_BAN' | 'UN-HELPER_BAN' | 'UN-CONTRIBUTOR_BAN' {
+function isUnBan(command: ModAction): command is 'UN-FULL_BAN' | 'UN-BAN_EVASION' | 'UN-UNDERBAN' {
   return command === 'UN-FULL_BAN' || command === 'UN-BAN_EVASION' || command === 'UN-UNDERBAN';
+}
+
+// Bans that only set a flag on the user's record (tickets, vendor bots, helper and contributor roles)
+function isFlagBan(command: ModAction): command is 'TICKET_BAN' | 'DISCORD_BOT_BAN' | 'HELPER_BAN' | 'CONTRIBUTOR_BAN' {
+  return command === 'TICKET_BAN' || command === 'DISCORD_BOT_BAN' || command === 'HELPER_BAN' || command === 'CONTRIBUTOR_BAN';
+}
+
+function isUnFlagBan(command: ModAction): command is 'UN-TICKET_BAN' | 'UN-DISCORD_BOT_BAN' | 'UN-HELPER_BAN' | 'UN-CONTRIBUTOR_BAN' {
+  return command === 'UN-TICKET_BAN' || command === 'UN-DISCORD_BOT_BAN' || command === 'UN-HELPER_BAN' || command === 'UN-CONTRIBUTOR_BAN';
 }
 
 function sendsMessageToUser(command: ModAction): command is 'WARNING' | 'FULL_BAN' | 'TICKET_BAN' | 'DISCORD_BOT_BAN' | 'BAN_EVASION' | 'UNDERBAN' | 'TIMEOUT' | 'UN-TIMEOUT' | 'KICK' {
@@ -1884,7 +1894,7 @@ export async function moderate(
 
   log.debug(F, `[moderate] performing actions for ${targetName}`);
   let extraMessage = '';
-  if (isBan(command)) {
+  if (isBan(command) || isFlagBan(command)) {
     if (isFullBan(command) || isUnderban(command) || isBanEvasion(command)) {
       targetData.removed_at = new Date();
 
@@ -1947,7 +1957,7 @@ export async function moderate(
     } else if (isContributorBan(command)) {
       targetData.contributor_role_ban = true;
     }
-  } else if (isUnBan(command)) {
+  } else if (isUnBan(command) || isUnFlagBan(command)) {
     if (isUnFullBan(command) || isUnUnderban(command) || isUnBanEvasion(command)) {
       targetData.removed_at = null;
       try {
