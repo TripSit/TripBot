@@ -171,20 +171,20 @@ describe('botmod', () => {
     expect(content(stub)).toBe('done');
   });
 
-  it.each(['botban', 'botwarning', 'botkick'])('%s collects reasons in a modal', async sub => {
+  it.each([['botban', 'UNBOTBAN'], ['botwarn', 'BOTWARNING'], ['botkick', 'BOTKICK']])('%s collects private and public reasons in a modal', async (sub, expected) => {
     const modal = {
       customId: 'botModModal~int1',
       deferReply: vi.fn(),
       editReply: vi.fn(),
-      fields: { getTextInputValue: vi.fn((k: string) => { if (k === 'pubReason') throw new Error('none'); return 'priv'; }) },
+      fields: { getTextInputValue: vi.fn((k: string) => (k === 'pubReason' ? 'pub' : 'priv')) },
     };
     const stub = slashStub({ group: 'user', subcommand: sub, options: { target: '9', toggle: 'off' } });
     stub.awaitModalSubmit.mockImplementationOnce(resolvingModal(modal));
     expect(await dBotmod.execute(stub as never)).toBe(false);
     await flushPromises();
     expect(stub.showModal).toHaveBeenCalled();
-    const expected = sub === 'botban' ? 'UNBOTBAN' : sub.toUpperCase();
-    expect(mocks.botmod).toHaveBeenCalledWith(stub, 'user', stub.member, expected, '9', 'priv', '');
+    expect(mocks.botmod).toHaveBeenCalledWith(stub, 'user', stub.member, expected, '9', 'priv', 'pub');
+    expect((stub.showModal.mock.calls[0][0] as { components: unknown[] }).components).toHaveLength(2);
     expect(modal.editReply).toHaveBeenCalledWith({ content: 'done' });
   });
 
