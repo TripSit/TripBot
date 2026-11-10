@@ -118,6 +118,24 @@ describe('busyness', () => {
     }
   });
 
+  it('stops the loop when the lounge channel cannot be fetched', async () => {
+    vi.useFakeTimers({ toFake: ['setTimeout'] });
+    try {
+      vi.resetModules();
+      const { dBusyness: fresh } = await import('../../commands/guild/d.busyness');
+      const msg = { client: { channels: { fetch: vi.fn().mockRejectedValue(new Error('Unknown Channel')) } }, edit: vi.fn() };
+      const stub = slashStub({ subcommand: 'post', extra: { memberPermissions: { has: () => true } } });
+      stub.editReply.mockResolvedValue(msg);
+      await fresh.execute(stub as never);
+      await flushPromises();
+      expect(msg.edit).not.toHaveBeenCalled();
+      await vi.advanceTimersByTimeAsync(60000);
+      expect(msg.client.channels.fetch).toHaveBeenCalledTimes(1);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('skips quiet periods and preloads an empty cache', async () => {
     vi.useFakeTimers({ toFake: ['setTimeout'] });
     try {

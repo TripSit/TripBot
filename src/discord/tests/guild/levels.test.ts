@@ -12,7 +12,7 @@ vi.mock('../../../global/commands/g.profile', () => ({ profile: mocks.profile })
 vi.mock('../../../global/commands/g.rpg', () => ({ getPersonaInfo: mocks.persona }));
 vi.mock('../../utils/getAsset', () => ({ default: mocks.asset }));
 vi.mock('../../utils/canvasUtils', () => ({
-  deFuckifyText: (t: string) => t, generateColors: () => '#000000', resizeText: () => '14px futura',
+  deFuckifyText: (t: string) => (t.startsWith('★') ? '' : t), generateColors: () => '#000000', resizeText: () => '14px futura',
 }));
 vi.mock('@napi-rs/canvas', () => {
   const ctx = new Proxy({ measureText: () => ({ width: 10 }) } as Record<string, unknown>, {
@@ -109,5 +109,20 @@ describe('levels', () => {
     expect((await run(levelData(20))).result).toBe(true);
     mocks.profile.mockRejectedValueOnce(new Error('x'));
     await expect(run(levelData(20))).rejects.toThrow('x');
+  });
+
+  it('falls back to the username when the display name is mostly decoration', async () => {
+    const { stub } = await run(levelData(10), member([], { displayName: '★★★★★' }));
+    const attachment = (stub.editReply.mock.calls[0][0] as { files: Array<{ name: string }> }).files[0];
+    expect(attachment.name).toContain('TS_Levels_Alice_');
+  });
+
+  it('draws zero ranks for the third bar, real ranks for the fourth, and zero stats without chat activity', async () => {
+    mocks.profile.mockResolvedValue({ totalTextExp: 0, totalVoiceExp: 0 });
+    const roles = [e.ROLE_TRIPSITTER, e.ROLE_DEVELOPER, e.ROLE_TEAMTRIPSIT];
+    const data = levelData(20, { TRIPSITTER: lvl(2, 3), DEVELOPER: lvl(9, 0), TEAM: lvl(4, 6) });
+    data.VOICE = { TOTAL: lvl(6, 3) } as never;
+    const { result } = await run(data, member(roles));
+    expect(result).toBe(true);
   });
 });
