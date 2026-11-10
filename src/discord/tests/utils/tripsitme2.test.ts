@@ -225,6 +225,15 @@ describe('tripsitmeUserClose', () => {
     expect(s.metaChannel.send).toHaveBeenCalledWith({ content: expect.stringContaining('no longer need help') });
   });
 
+  it('keeps going when a previous role cannot be given back', async () => {
+    const s = setup({ roles: 'r1,r2' });
+    s.target.roles.add.mockRejectedValueOnce(new Error('Missing Permissions'));
+    await tripsitmeUserClose(s.interaction);
+    await flushPromises();
+    expect(s.target.roles.add).toHaveBeenCalledTimes(2);
+    expect(s.raw.editReply).toHaveBeenCalledWith(expect.stringContaining("we're glad you're doing better"));
+  });
+
   it('thanks survey responders, tells the team, and cleans up', async () => {
     const s = setup();
     await tripsitmeUserClose(s.interaction);

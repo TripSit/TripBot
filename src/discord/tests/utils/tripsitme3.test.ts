@@ -37,7 +37,7 @@ const guildRow = (over: Record<string, unknown> = {}) => dbMock.discord_guilds.u
 } as never);
 
 describe('tripSitMe', () => {
-  function setup(opts: { guild?: boolean; member?: boolean; tripsitChannel?: 'ok' | 'fail' | 'unset'; teamMember?: boolean; pinFails?: boolean; cooldown?: boolean; memberInput?: boolean } = {}) {
+  function setup(opts: { metaFails?: boolean; guild?: boolean; member?: boolean; tripsitChannel?: 'ok' | 'fail' | 'unset'; teamMember?: boolean; pinFails?: boolean; cooldown?: boolean; memberInput?: boolean } = {}) {
     const owner = { send: vi.fn() };
     const message = { pin: opts.pinFails ? vi.fn().mockRejectedValue(new Error('Missing Permissions')) : vi.fn() };
     const thread = {
@@ -69,6 +69,7 @@ describe('tripSitMe', () => {
         channels: {
           fetch: vi.fn(async (id: string) => {
             if (id === 'ts-chan') { if (opts.tripsitChannel === 'fail') throw new Error('Unknown Channel'); return tripsit; }
+            if (opts.metaFails) throw new Error('Unknown Channel');
             return { id: 'meta', name: 'meta', send: metaSend };
           }),
         },
@@ -97,6 +98,13 @@ describe('tripSitMe', () => {
     const stale = setup({ tripsitChannel: 'fail' });
     expect(await tripSitMe(stale.interaction, stale.target, 'x', 'y')).toBeNull();
     expect(dbMock.discord_guilds.update).toHaveBeenCalledWith({ where: { id: 'g1' }, data: { channel_tripsit: null } });
+  });
+
+  it('forgets a deleted meta channel while opening a ticket', async () => {
+    const s = setup({ metaFails: true });
+    // The cleared setting is saved, but the code carries on with an empty channel object and fails when it posts to it.
+    await expect(tripSitMe(s.interaction, s.target, 'x', 'y')).rejects.toThrow(TypeError);
+    expect(dbMock.discord_guilds.update).toHaveBeenCalledWith({ where: { id: 'g1' }, data: { channel_tripsitmeta: null } });
   });
 
   it('opens a private ticket thread, pings the team, and records the ticket', async () => {
@@ -286,11 +294,11 @@ describe('tripsitmeButton', () => {
   });
 
   it('stops when channel permissions are missing', async () => {
-    mocks.ensure.mockResolvedValueOnce(false);
+    mocks.ensure.mockImplementationOnce(async (_c: unknown, _p: unknown, _f: unknown, o: { ownerMessage: () => unknown }) => { o.ownerMessage(); return false; });
     const first = setup();
     await tripsitmeButton(first.interaction);
     expect(first.raw.showModal).not.toHaveBeenCalled();
-    mocks.ensure.mockResolvedValueOnce(true).mockResolvedValueOnce(false);
+    mocks.ensure.mockResolvedValueOnce(true).mockImplementationOnce(async (_c: unknown, _p: unknown, _f: unknown, o: { ownerMessage: () => unknown }) => { o.ownerMessage(); return false; });
     const second = setup();
     await tripsitmeButton(second.interaction);
     expect(second.raw.showModal).not.toHaveBeenCalled();
