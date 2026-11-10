@@ -2,6 +2,7 @@ import { stripIndents } from 'common-tags';
 import {
   ChannelType,
   ChatInputCommandInteraction,
+  Guild,
   GuildMember,
   MessageFlags,
   Role,
@@ -16,7 +17,6 @@ import { getUserTotalLevel, MAX_EXPERIENCE_LEVEL, MIN_EXPERIENCE_LEVEL } from '.
 import { SlashCommand } from '../../@types/commandDef';
 import commandContext from '../../utils/context';
 import { linkThread } from '../../utils/modUtils';
-import { getOrCreateUser } from '../../../global/utils/dbRecords';
 import { replyGuildOnly, GUILD_ONLY_TEXT } from '../../utils/guildOnly';
 
 const F = f(__filename);
@@ -52,11 +52,6 @@ export async function slowMode(interaction: ChatInputCommandInteraction): Promis
 }
 
 async function unWatchUser(interaction: ChatInputCommandInteraction): Promise<boolean> {
-  if (!interaction.guild) {
-    await replyGuildOnly(interaction);
-    return false;
-  }
-
   const targetUser = interaction.options.getUser('target', true);
 
   if (await deleteWatchRequest(targetUser.id, interaction.user.id)) {
@@ -68,18 +63,13 @@ async function unWatchUser(interaction: ChatInputCommandInteraction): Promise<bo
   return false;
 }
 
-async function watchUser(interaction: ChatInputCommandInteraction): Promise<boolean> {
-  if (!interaction.guild) {
-    await replyGuildOnly(interaction);
-    return false;
-  }
-
+async function watchUser(interaction: ChatInputCommandInteraction, guild: Guild): Promise<boolean> {
   const targetUser = interaction.options.getUser('target', true);
 
   let alertChannel = interaction.options.getChannel('alert_channel') as TextChannel | null;
 
   if (!alertChannel) {
-    alertChannel = interaction.guild.channels.cache.get(env.CHANNEL_MODERATORS) as TextChannel;
+    alertChannel = guild.channels.cache.get(env.CHANNEL_MODERATORS) as TextChannel;
   }
 
   // Ensure that the channel used is a text channel
@@ -93,7 +83,7 @@ async function watchUser(interaction: ChatInputCommandInteraction): Promise<bool
   if (await executeWatch(targetUser, notificationMethod, interaction.user.id, alertChannel)) {
     await interaction.editReply({ content: 'Done! You\'ll be notified when this user is next seen active.' });
 
-    const channelBotlog = await interaction.guild.channels.fetch(env.CHANNEL_BOTLOG) as TextChannel;
+    const channelBotlog = await guild.channels.fetch(env.CHANNEL_BOTLOG) as TextChannel;
     if (channelBotlog) {
       await channelBotlog.send(`${(interaction.member as GuildMember).displayName} used /watch on ${targetUser}`);
     }
@@ -109,21 +99,7 @@ async function link(interaction: ChatInputCommandInteraction): Promise<boolean> 
   const targetUser = interaction.options.getUser('target', true);
   const override = interaction.options.getBoolean('override');
 
-  let result: string | null;
-  if (!targetUser) {
-    const userData = await getOrCreateUser(targetUser);
-
-    if (!userData) {
-      await interaction.editReply({
-        content: stripIndents`Failed to link thread, I could not find this user in the guild, \
-and they do not exist in the database!`,
-      });
-      return false;
-    }
-    result = await linkThread(targetUser, interaction.channelId, override);
-  } else {
-    result = await linkThread(targetUser.id, interaction.channelId, override);
-  }
+  const result = await linkThread(targetUser.id, interaction.channelId, override);
 
   if (result === null) {
     await interaction.editReply({ content: 'Successfully linked thread!' });
@@ -144,12 +120,13 @@ export async function lockdown(interaction: ChatInputCommandInteraction): Promis
     return false;
   }
 
-  if (!interaction.guild) {
+  const { guild } = interaction;
+  if (!guild) {
     await replyGuildOnly(interaction);
     return false;
   }
 
-  const currentPermissions = channel.permissionOverwrites.cache.get(interaction.guild.roles.everyone.id);
+  const currentPermissions = channel.permissionOverwrites.cache.get(guild.roles.everyone.id);
 
   const isLocked = currentPermissions?.deny.has('SendMessages');
 
@@ -162,7 +139,7 @@ export async function lockdown(interaction: ChatInputCommandInteraction): Promis
 
   if (isLocked) {
     // Unlock the channel
-    await channel.permissionOverwrites.edit(interaction.guild.roles.everyone, {
+    await channel.permissionOverwrites.edit(guild.roles.everyone, {
       SendMessages: null,
       AddReactions: null,
       Speak: null,
@@ -174,7 +151,7 @@ export async function lockdown(interaction: ChatInputCommandInteraction): Promis
 
     // Remove exempt roles from overrides
     await Promise.all(exemptRoles.map(async roleId => {
-      const role = interaction.guild ? await interaction.guild.roles.fetch(roleId) : null;
+      const role = await guild.roles.fetch(roleId);
       if (role) {
         await channel.permissionOverwrites.edit(role, {
           SendMessages: null,
@@ -192,7 +169,7 @@ export async function lockdown(interaction: ChatInputCommandInteraction): Promis
     return true;
   }
   // Lock the channel
-  await channel.permissionOverwrites.edit(interaction.guild.roles.everyone, {
+  await channel.permissionOverwrites.edit(guild.roles.everyone, {
     SendMessages: false,
     AddReactions: false,
     Speak: false,
@@ -204,7 +181,7 @@ export async function lockdown(interaction: ChatInputCommandInteraction): Promis
 
   // Exempt team roles from lockdown
   await Promise.all(exemptRoles.map(async roleId => {
-    const role = interaction.guild ? await interaction.guild.roles.fetch(roleId) : null;
+    const role = await guild.roles.fetch(roleId);
     if (role) {
       await channel.permissionOverwrites.edit(role, {
         SendMessages: true,
@@ -222,12 +199,7 @@ export async function lockdown(interaction: ChatInputCommandInteraction): Promis
   return true;
 }
 // Requested by Ruubert and yes, we actually developed it
-async function freezeLevel(interaction: ChatInputCommandInteraction): Promise<boolean> {
-  if (!interaction.guild) {
-    await replyGuildOnly(interaction);
-    return false;
-  }
-
+async function freezeLevel(interaction: ChatInputCommandInteraction, guild: Guild): Promise<boolean> {
   const targetUser = interaction.options.getUser('target', true);
   const level = interaction.options.getInteger('level', true);
 
@@ -250,7 +222,7 @@ async function freezeLevel(interaction: ChatInputCommandInteraction): Promise<bo
   await interaction.editReply({ content: `Done! **${targetUser.username}**'s displayed level is now frozen at ${level}.${niceBit}` });
 
   const modName = (interaction.member as GuildMember).displayName;
-  const channelBotlog = await interaction.guild.channels.fetch(env.CHANNEL_BOTLOG) as TextChannel;
+  const channelBotlog = await guild.channels.fetch(env.CHANNEL_BOTLOG) as TextChannel;
   if (channelBotlog) {
     // eslint-disable-next-line max-len
     const botlogMsg = `${modName} froze ${targetUser.username} (${targetUser.id}) at displayed level ${level}`;
@@ -259,12 +231,7 @@ async function freezeLevel(interaction: ChatInputCommandInteraction): Promise<bo
   return true;
 }
 
-async function unfreezeLevel(interaction: ChatInputCommandInteraction): Promise<boolean> {
-  if (!interaction.guild) {
-    await replyGuildOnly(interaction);
-    return false;
-  }
-
+async function unfreezeLevel(interaction: ChatInputCommandInteraction, guild: Guild): Promise<boolean> {
   const targetUser = interaction.options.getUser('target', true);
 
   if (!await removeLevelFreeze(targetUser.id)) {
@@ -276,7 +243,7 @@ async function unfreezeLevel(interaction: ChatInputCommandInteraction): Promise<
   await interaction.editReply({ content: `Done! **${targetUser.username}**'s displayed level is no longer frozen.` });
 
   const modName = (interaction.member as GuildMember).displayName;
-  const channelBotlog = await interaction.guild.channels.fetch(env.CHANNEL_BOTLOG) as TextChannel;
+  const channelBotlog = await guild.channels.fetch(env.CHANNEL_BOTLOG) as TextChannel;
   if (channelBotlog) {
     await channelBotlog.send(`${modName} unfroze ${targetUser.username} (${targetUser.id})`);
   }
@@ -419,8 +386,9 @@ export const dMod: SlashCommand = {
       return false;
     }
 
+    const { guild } = interaction;
     const actor = interaction.member as GuildMember;
-    const roleModerator = await interaction.guild.roles.fetch(env.ROLE_MODERATOR) as Role;
+    const roleModerator = await guild.roles.fetch(env.ROLE_MODERATOR) as Role;
     const actorIsMod = actor.roles.cache.has(roleModerator.id);
 
     if (actorIsMod) {
@@ -432,7 +400,7 @@ export const dMod: SlashCommand = {
           await lockdown(interaction);
           break;
         case 'watchuser':
-          await watchUser(interaction);
+          await watchUser(interaction, guild);
           break;
         case 'unwatchuser':
           await unWatchUser(interaction);
@@ -441,10 +409,10 @@ export const dMod: SlashCommand = {
           await link(interaction);
           break;
         case 'freezelevel':
-          await freezeLevel(interaction);
+          await freezeLevel(interaction, guild);
           break;
         case 'unfreezelevel':
-          await unfreezeLevel(interaction);
+          await unfreezeLevel(interaction, guild);
           break;
         case 'frozenlevels':
           await listFrozenLevels(interaction);

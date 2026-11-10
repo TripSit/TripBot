@@ -50,6 +50,11 @@ describe('search', () => {
       expect(bare.embed.description).toBe('x');
     });
 
+    it('reports Urban Dictionary being down after a dictionary miss', async () => {
+      const down = await run('define', { word: 'w' }, [['dictionaryapi', { ok: false }], ['urbandictionary', { ok: false }]]);
+      expect(down.embed.description).toContain('Urban Dictionary is currently unavailable');
+    });
+
     it('falls back to Urban Dictionary, then reports failures', async () => {
       const viaUrban = await run('define', { word: 'w', ephemeral: true }, [['dictionaryapi', { ok: false }], ['urbandictionary', { json: urban }]]);
       expect(viaUrban.embed.title).toBe('Urban Dictionary: w');

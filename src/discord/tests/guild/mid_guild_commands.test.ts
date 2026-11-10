@@ -265,3 +265,13 @@ describe('botstats', () => {
     expect(embed(owner).description).toContain('Moodle:✘');
   });
 });
+
+describe('birthday defaults', () => {
+  it('treats a missing subcommand as get', async () => {
+    mocks.birthday.mockResolvedValueOnce(null);
+    const stub = slashStub({ options: {} });
+    stub.options.getSubcommand.mockReturnValue(undefined as never);
+    await dBirthday.execute(stub as never);
+    expect(embed(stub).title).toContain('immortal');
+  });
+});

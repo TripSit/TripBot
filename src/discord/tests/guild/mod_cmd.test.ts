@@ -205,3 +205,17 @@ describe('link', () => {
     expect(content(clash.stub)).toContain('existing thread');
   });
 });
+
+describe('mod dispatch to slowmode and lockdown', () => {
+  it('routes the slowmode and lockdown subcommands for moderators', async () => {
+    const channel = stubInstance<TextChannel>(TextChannel, {
+      setRateLimitPerUser: vi.fn(),
+      permissionOverwrites: { cache: { get: vi.fn(() => undefined) }, edit: vi.fn() },
+      toString: (): string => '#c',
+    });
+    const slow = await run('slowmode', { limit: '5' }, { channel });
+    expect(slow.stub.editReply).toHaveBeenCalledWith({ content: expect.stringContaining('Slowmode enabled') });
+    const lock = await run('lockdown', {}, { channel });
+    expect(content(lock.stub)).toContain('locked down');
+  });
+});
