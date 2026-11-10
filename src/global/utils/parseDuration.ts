@@ -42,6 +42,7 @@ export async function parseDuration(duration: string): Promise<number> {
         break;
 
       case 3: // Parsing the qualifier
+      default: // (stage is only ever 1, 2 or 3)
         if (c === ' ') {
           idx += 1;
           break;
@@ -54,13 +55,8 @@ export async function parseDuration(duration: string): Promise<number> {
             const nextChars = duration.slice(idx, idx + 5).toLowerCase();
             if (nextChars.startsWith('month') || c === 'M') {
               timeValue += tempNumber * 30 * 24 * 60 * 60 * 1000; // Convert months to milliseconds
-              if (c === 'M') {
-                idx += 1; // Skip 'M'
-              } else if (nextChars.startsWith('months')) {
-                idx += 6; // Skip 'months'
-              } else {
-                idx += 5; // Skip 'month'
-              }
+              // 'month' is 5 characters; a trailing 's' is ignored by stage 1 (it waits for a number)
+              idx += c === 'M' ? 1 : 5;
             } else {
               timeValue += tempNumber * 60 * 1000; // Minutes
             }
@@ -78,9 +74,6 @@ export async function parseDuration(duration: string): Promise<number> {
         } else {
           return timeValue; // Unsupported qualifier
         }
-
-      default:
-        break;
     }
   }
   return timeValue;

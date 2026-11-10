@@ -6,7 +6,7 @@ import { dPurge, purgeButton, purgeMenu } from '../../commands/guild/d.purge';
 import { dBotmod } from '../../commands/guild/d.botmod';
 import { dDramacounter } from '../../commands/guild/d.dramacounter';
 import { dBotstats } from '../../commands/guild/d.botstats';
-import { lastReply, slashStub } from '../../../vitest/utils/commandStubs';
+import { lastReply, slashStub, resolvingModal } from '../../../vitest/utils/commandStubs';
 import { collectionOf, flushPromises, stubInstance } from '../../../vitest/utils/discordStubs';
 
 const mocks = vi.hoisted(() => ({
@@ -179,7 +179,7 @@ describe('botmod', () => {
       fields: { getTextInputValue: vi.fn((k: string) => { if (k === 'pubReason') throw new Error('none'); return 'priv'; }) },
     };
     const stub = slashStub({ group: 'user', subcommand: sub, options: { target: '9', toggle: 'off' } });
-    stub.awaitModalSubmit.mockResolvedValueOnce(modal);
+    stub.awaitModalSubmit.mockImplementationOnce(resolvingModal(modal));
     expect(await dBotmod.execute(stub as never)).toBe(false);
     await flushPromises();
     expect(stub.showModal).toHaveBeenCalled();
@@ -191,7 +191,7 @@ describe('botmod', () => {
   it('ignores foreign modals', async () => {
     const modal = { customId: 'botModModal~zzz', deferReply: vi.fn() };
     const stub = slashStub({ group: 'user', subcommand: 'botban', options: { target: '9' } });
-    stub.awaitModalSubmit.mockResolvedValueOnce(modal);
+    stub.awaitModalSubmit.mockImplementationOnce(resolvingModal(modal));
     await dBotmod.execute(stub as never);
     await flushPromises();
     expect(modal.deferReply).not.toHaveBeenCalled();

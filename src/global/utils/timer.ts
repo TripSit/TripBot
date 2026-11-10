@@ -1160,10 +1160,6 @@ async function checkBirthdays() {
     // Send birthday messages to the lounge channel
     const birthdayPromises = todaysBirthdayUsers.map(async (user: typeof birthdayUsers[0]) => {
       try {
-        if (!user.birthday) {
-          return;
-        }
-
         if (!user.discord_id) {
           log.debug(F, `User ${user.id} has no discord_id, skipping birthday message`);
           return;

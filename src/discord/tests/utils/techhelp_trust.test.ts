@@ -1,5 +1,6 @@
-/* eslint-disable sonarjs/no-duplicate-string */
 import { Collection, EmbedBuilder } from 'discord.js';
+import { resolvingModal } from '../../../vitest/utils/commandStubs';
+/* eslint-disable sonarjs/no-duplicate-string */
 import { techHelpClick, techHelpClose, techHelpOwn } from '../../utils/techHelp';
 import trust, { addedVerified } from '../../utils/trust';
 import { dbMock } from '../../../vitest/utils/mockDb';
@@ -59,7 +60,7 @@ describe('techHelpClick', () => {
       showModal: vi.fn(),
       reply: vi.fn(),
       guild: opts.guild === false ? null : { id: 'g1', name: 'TripSit', roles: { fetch: vi.fn(async () => ('role' in opts ? opts.role : { toString: (): string => '<@&tech>' })) } },
-      awaitModalSubmit: vi.fn(async () => submit),
+      awaitModalSubmit: vi.fn(resolvingModal(submit)),
     };
     return {
       interaction: interaction as never, raw: interaction, submit, thread,

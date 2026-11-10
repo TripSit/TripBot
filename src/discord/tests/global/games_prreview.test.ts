@@ -3,7 +3,7 @@ import { EventEmitter } from 'events';
 import { dTicTacToe } from '../../commands/global/d.tictactoe';
 import { dTripTacGo } from '../../commands/global/d.triptacgo';
 import { notifyPrOpened, prReviewButton } from '../../commands/global/d.prReview';
-import { slashStub } from '../../../vitest/utils/commandStubs';
+import { slashStub, resolvingModal, pendingModal } from '../../../vitest/utils/commandStubs';
 
 const mocks = vi.hoisted(() => ({
   ttt: vi.fn(), ttgInit: vi.fn(), ttgMove: vi.fn(), tttInit: vi.fn(), mergePr: vi.fn(), reject: vi.fn(),
@@ -126,7 +126,7 @@ describe('prReview', () => {
     followUp: vi.fn(),
     editReply: vi.fn(),
     showModal: vi.fn(),
-    awaitModalSubmit: vi.fn(() => new Promise(() => undefined)),
+    awaitModalSubmit: vi.fn(pendingModal()),
     ...over,
   });
 
@@ -161,7 +161,7 @@ describe('prReview', () => {
   it('accept with failing checks requires a justification modal', async () => {
     const i = click('ACCEPT', false);
     const m = modal('"ID":"PR","T":"ACCEPTOVERRIDE","N":"5","II":"i1"', 'reason', 'because');
-    i.awaitModalSubmit.mockResolvedValueOnce(m as never);
+    i.awaitModalSubmit.mockImplementationOnce(resolvingModal(m as never));
     await prReviewButton(i as never);
     expect(i.showModal).toHaveBeenCalled();
     await vi.waitFor(() => expect(m.editReply).toHaveBeenCalledWith({ content: expect.stringContaining('Merged') }));
@@ -171,14 +171,14 @@ describe('prReview', () => {
     mocks.mergePr.mockRejectedValueOnce(new Error('boom'));
     const i2 = click('ACCEPT', false);
     const m2 = modal('"ID":"PR","T":"ACCEPTOVERRIDE","N":"5","II":"i1"', 'reason', 'r');
-    i2.awaitModalSubmit.mockResolvedValueOnce(m2 as never);
+    i2.awaitModalSubmit.mockImplementationOnce(resolvingModal(m2 as never));
     await prReviewButton(i2 as never);
     await vi.waitFor(() => expect(m2.editReply).toHaveBeenCalledWith({ content: expect.stringContaining('boom') }));
 
     // different interaction id and rejected await are both swallowed
     const i3 = click('ACCEPT', false);
     const m3 = modal('"ID":"PR","T":"ACCEPTOVERRIDE","N":"5","II":"other"', 'reason', 'r');
-    i3.awaitModalSubmit.mockResolvedValueOnce(m3 as never);
+    i3.awaitModalSubmit.mockImplementationOnce(resolvingModal(m3 as never));
     await prReviewButton(i3 as never);
     const i4 = click('ACCEPT', false, true, { awaitModalSubmit: vi.fn().mockRejectedValue(new Error('timeout')) });
     await prReviewButton(i4 as never);
@@ -189,7 +189,7 @@ describe('prReview', () => {
   it('reject posts the comment, handling failure', async () => {
     const i = click('REJECT', true);
     const m = modal('"ID":"PR","T":"REJECTMODAL","N":"5","II":"i1"', 'comment', 'no');
-    i.awaitModalSubmit.mockResolvedValueOnce(m as never);
+    i.awaitModalSubmit.mockImplementationOnce(resolvingModal(m as never));
     await prReviewButton(i as never);
     await vi.waitFor(() => expect(m.editReply).toHaveBeenCalledWith({ content: expect.stringContaining('Posted') }));
     expect(mocks.reject).toHaveBeenCalledWith(5, 'M', 'no');
@@ -197,7 +197,7 @@ describe('prReview', () => {
     mocks.reject.mockRejectedValueOnce(new Error('x'));
     const i2 = click('REJECT', true);
     const m2 = modal('"ID":"PR","T":"REJECTMODAL","N":"5","II":"i1"', 'comment', 'no');
-    i2.awaitModalSubmit.mockResolvedValueOnce(m2 as never);
+    i2.awaitModalSubmit.mockImplementationOnce(resolvingModal(m2 as never));
     await prReviewButton(i2 as never);
     await vi.waitFor(() => expect(m2.editReply).toHaveBeenCalledWith({ content: expect.stringContaining('Failed') }));
 
@@ -205,7 +205,7 @@ describe('prReview', () => {
     await prReviewButton(i3 as never);
     const i4 = click('REJECT', true);
     const m4 = modal('"ID":"PR","T":"REJECTMODAL","N":"5","II":"zzz"', 'comment', 'no');
-    i4.awaitModalSubmit.mockResolvedValueOnce(m4 as never);
+    i4.awaitModalSubmit.mockImplementationOnce(resolvingModal(m4 as never));
     await prReviewButton(i4 as never);
     await new Promise(r => { setTimeout(r, 5); });
     expect(m4.deferReply).not.toHaveBeenCalled();

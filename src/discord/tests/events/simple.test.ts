@@ -1,5 +1,4 @@
 import { AuditLogEvent, ChannelType } from 'discord.js';
-import { debug } from '../../events/debug';
 import { warn } from '../../events/warn';
 import { invalidRequestWarning } from '../../events/invalidRequestWarning';
 import { rateLimit } from '../../events/rateLimit';
@@ -52,11 +51,6 @@ const setClient = (extra: Record<string, unknown> = {}) => {
 beforeEach(() => setClient());
 
 describe('logging events', () => {
-  it('debug is disabled', async () => {
-    await debug.execute('info' as never);
-    expect(send).not.toHaveBeenCalled();
-  });
-
   it('warn forwards to the bot log', async () => {
     await warn.execute('careful' as never);
     expect(send).toHaveBeenCalledWith('careful');

@@ -1,5 +1,6 @@
-/* eslint-disable no-nested-ternary, no-restricted-syntax */
 import { ChannelType, DMChannel, TextChannel } from 'discord.js';
+import { resolvingModal } from '../../../vitest/utils/commandStubs';
+/* eslint-disable no-nested-ternary, no-restricted-syntax */
 import {
   applicationApprove, applicationPermissions, applicationReject, applicationSetup, applicationStart,
 } from '../../utils/application';
@@ -95,7 +96,7 @@ describe('applicationSetup', () => {
       reply: vi.fn(),
       showModal: vi.fn(),
       options: { getChannel: vi.fn(() => textChannel('threads')), getRole: vi.fn((name: string) => roles[name] ?? null) },
-      awaitModalSubmit: vi.fn(async () => submit),
+      awaitModalSubmit: vi.fn(resolvingModal(submit)),
       ...over,
     };
     return { interaction, submit };
@@ -173,7 +174,7 @@ describe('applicationStart', () => {
         channels: { fetch: vi.fn(async () => { if (opts.channelFetch === 'fail') throw new Error('Unknown Channel'); return applications; }) },
         roles: { fetch: vi.fn(async (id: string) => ({ id, name: `role-${id}`, toString: (): string => `@${id}` })) },
       },
-      awaitModalSubmit: vi.fn(async () => submit),
+      awaitModalSubmit: vi.fn(resolvingModal(submit)),
     };
     dbMock.discord_guilds.upsert.mockResolvedValue({ channel_applications: opts.appChannel === undefined ? 'apps' : opts.appChannel } as never);
     return {

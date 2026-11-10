@@ -4,7 +4,7 @@ import {
   buttonReactionRole, createColorMessage, createMindsetMessage, createNotificationMessage, createPremiumColorMessage, createPronounMessage,
   dReactionRole, setupCustomReactionRole,
 } from '../../commands/global/d.reactionRole';
-import { slashStub } from '../../../vitest/utils/commandStubs';
+import { slashStub, resolvingModal, pendingModal } from '../../../vitest/utils/commandStubs';
 import { flushPromises } from '../../../vitest/utils/discordStubs';
 
 const mocks = vi.hoisted(() => ({ missing: vi.fn(), guild: vi.fn(), user: vi.fn() }));
@@ -82,7 +82,7 @@ describe('setupCustomReactionRole', () => {
       customId: '"ID":"RR","II":"int1"', deferReply: vi.fn(), editReply: vi.fn(), fields: { getTextInputValue: vi.fn(() => 'v') },
     };
     const stub = slashStub({ options: { role: role('r1'), emoji: '😀', label: 'Click' }, guild: guildOf(), channel });
-    stub.awaitModalSubmit.mockResolvedValueOnce(submit);
+    stub.awaitModalSubmit.mockImplementationOnce(resolvingModal(submit));
     await setupCustomReactionRole(stub as never);
     await flushPromises();
     expect(stub.showModal).toHaveBeenCalled();
@@ -90,7 +90,7 @@ describe('setupCustomReactionRole', () => {
     expect(submit.editReply).toHaveBeenCalled();
     const other = slashStub({ options: { role: role('r1'), label: 'x' }, guild: guildOf(), channel });
     const foreign = { ...submit, customId: '"ID":"RR","II":"zzz"', deferReply: vi.fn() };
-    other.awaitModalSubmit.mockResolvedValueOnce(foreign);
+    other.awaitModalSubmit.mockImplementationOnce(resolvingModal(foreign));
     await setupCustomReactionRole(other as never);
     await flushPromises();
     expect(foreign.deferReply).not.toHaveBeenCalled();
@@ -122,7 +122,7 @@ describe('buttonReactionRole', () => {
     deferReply: vi.fn(),
     editReply: vi.fn(),
     showModal: vi.fn(),
-    awaitModalSubmit: vi.fn(() => new Promise(() => undefined)),
+    awaitModalSubmit: vi.fn(pendingModal()),
     ...over,
   });
 
@@ -168,7 +168,7 @@ describe('buttonReactionRole', () => {
         customId: '"ID":"RR","II":"i1"', deferReply: vi.fn(), editReply: vi.fn(), guild, member: { displayName: 'M' }, fields: { getTextInputValue: vi.fn(() => 'bored') },
       };
       const b = button(introId('r1', 'x'), ['r1'], guild);
-      b.awaitModalSubmit = vi.fn().mockResolvedValue(submit);
+      b.awaitModalSubmit = vi.fn(resolvingModal(submit));
       await buttonReactionRole(b as never);
       await flushPromises();
       expect(b.showModal).toHaveBeenCalled();
@@ -176,7 +176,7 @@ describe('buttonReactionRole', () => {
       expect(channelAudit.send).toHaveBeenCalledWith(expect.stringContaining('bored'));
       const foreign = button(introId('r1', 'x'), ['r1'], guild);
       const other = { ...submit, customId: '"ID":"RR","II":"zzz"', deferReply: vi.fn() };
-      foreign.awaitModalSubmit = vi.fn().mockResolvedValue(other);
+      foreign.awaitModalSubmit = vi.fn(resolvingModal(other));
       await buttonReactionRole(foreign as never);
       await flushPromises();
       expect(other.deferReply).not.toHaveBeenCalled();
@@ -190,7 +190,7 @@ describe('buttonReactionRole', () => {
         customId: '"ID":"RR","II":"i1"', deferReply: vi.fn(), editReply: vi.fn(), guild, member: { displayName: 'M' }, fields: { getTextInputValue: vi.fn(() => 'line1\nline2') },
       };
       const b = button(introId('r1', channelId), [], guild);
-      b.awaitModalSubmit = vi.fn().mockResolvedValue(submit);
+      b.awaitModalSubmit = vi.fn(resolvingModal(submit));
       await buttonReactionRole(b as never);
       await flushPromises();
       return { b, sent, submit };
@@ -369,7 +369,7 @@ describe('reaction_role command', () => {
       channel: text(),
       member: memberWith(true),
       ...over,
-      extra: { awaitModalSubmit: vi.fn(() => new Promise(() => undefined)) },
+      extra: { awaitModalSubmit: vi.fn(pendingModal()) },
     });
     const result = await dReactionRole.execute(stub as never);
     return { stub, result };

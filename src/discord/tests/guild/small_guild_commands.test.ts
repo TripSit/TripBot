@@ -10,7 +10,7 @@ import { dIssue } from '../../commands/guild/d.issue';
 import { dReport } from '../../commands/guild/d.report';
 import { uReport } from '../../commands/guild/u.report';
 import { mReport } from '../../commands/guild/m.report';
-import { lastReply, slashStub } from '../../../vitest/utils/commandStubs';
+import { lastReply, slashStub, resolvingModal } from '../../../vitest/utils/commandStubs';
 import { flushPromises } from '../../../vitest/utils/discordStubs';
 
 const mocks = vi.hoisted(() => ({
@@ -213,7 +213,7 @@ describe('issue', () => {
     mocks.issue.mockResolvedValue({ data: { number: 9, html_url: 'https://gh/9' } });
     const modal = submit('issueModal~int1');
     const stub = slashStub({ options: { type: 'Bug' } });
-    stub.awaitModalSubmit.mockResolvedValueOnce(modal);
+    stub.awaitModalSubmit.mockImplementationOnce(resolvingModal(modal));
     expect(await dIssue.execute(stub as never)).toBe(false);
     await flushPromises();
     expect(stub.showModal).toHaveBeenCalled();
@@ -224,7 +224,7 @@ describe('issue', () => {
   it('ignores modals for other interactions', async () => {
     const modal = submit('issueModal~other');
     const stub = slashStub();
-    stub.awaitModalSubmit.mockResolvedValueOnce(modal);
+    stub.awaitModalSubmit.mockImplementationOnce(resolvingModal(modal));
     await dIssue.execute(stub as never);
     await flushPromises();
     expect(modal.deferReply).not.toHaveBeenCalled();

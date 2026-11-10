@@ -71,3 +71,32 @@ export function lastReply(stub: { editReply: { mock: { calls: unknown[][] } } })
   const arg = stub.editReply.mock.calls.at(-1)?.[0];
   return (typeof arg === 'string' ? { content: arg } : arg) as Record<string, unknown>;
 }
+
+type FilterCarrier = { awaitModalSubmit: { mock: { calls: unknown[][] } } };
+
+/** Runs the modal-submit filter a command passed to awaitModalSubmit, for the given custom ids. */
+export function modalFilterResults(stub: FilterCarrier, ...customIds: string[]): boolean[] {
+  const options = stub.awaitModalSubmit.mock.calls.at(-1)?.[0] as { filter: (i: { customId: string }) => boolean } | undefined;
+  if (!options) throw new Error('awaitModalSubmit was never called');
+  return customIds.map(customId => options.filter({ customId }));
+}
+
+type ModalOptions = { filter?: (i: { customId: string }) => boolean } | undefined;
+
+/** An awaitModalSubmit implementation that exercises the command's filter, then resolves with `submit`. */
+export function resolvingModal<T extends { customId?: string }>(submit: T) {
+  return async (options?: ModalOptions): Promise<T> => {
+    options?.filter?.({ customId: submit.customId ?? '' });
+    options?.filter?.({ customId: 'unrelated' });
+    return submit;
+  };
+}
+
+/** An awaitModalSubmit implementation that exercises the command's filter and then never resolves. */
+export function pendingModal() {
+  return (options?: ModalOptions): Promise<unknown> => {
+    options?.filter?.({ customId: '' });
+    options?.filter?.({ customId: 'unrelated' });
+    return new Promise<unknown>(() => { /* never settles */ });
+  };
+}

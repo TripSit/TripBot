@@ -6,7 +6,7 @@ import {
   rpgHomeDecline, rpgHomeInventory, rpgHomeNameChange, rpgHomeSell, rpgMarket, rpgMarketAccept, rpgMarketChange, rpgMarketInventory,
   rpgMarketPreview, rpgTown,
 } from '../../commands/guild/d.rpg';
-import { slashStub } from '../../../vitest/utils/commandStubs';
+import { slashStub, resolvingModal } from '../../../vitest/utils/commandStubs';
 
 const mocks = vi.hoisted(() => ({
   random: vi.fn((items: unknown[]) => items[0]), user: vi.fn(), persona: vi.fn(), sleep: vi.fn(), bigBrother: vi.fn(), aiFlair: vi.fn(), asset: vi.fn(), preview: vi.fn(),
@@ -397,7 +397,7 @@ describe('rpg home and flair', () => {
       const submit = {
         customId: 'rpgNameModal~int1', guild: {}, deferReply: vi.fn(), editReply: vi.fn(), fields: { getTextInputValue: vi.fn(() => 'Bob') },
       };
-      const interaction = base({ showModal: vi.fn(), awaitModalSubmit: vi.fn().mockResolvedValue(submit) });
+      const interaction = base({ showModal: vi.fn(), awaitModalSubmit: vi.fn(resolvingModal(submit)) });
       await expect(rpgHomeNameChange(interaction as never)).rejects.toThrow(TypeError);
       expect((interaction as unknown as { showModal: ReturnType<typeof vi.fn> }).showModal).toHaveBeenCalled();
       expect(submit.editReply).not.toHaveBeenCalled();

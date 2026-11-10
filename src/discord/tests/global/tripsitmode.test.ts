@@ -1,7 +1,7 @@
 /* eslint-disable no-param-reassign */
 /* eslint-disable max-len, sonarjs/no-duplicate-string */
 import { tripsitmode } from '../../commands/global/d.tripsitmode';
-import { slashStub, SlashStub } from '../../../vitest/utils/commandStubs';
+import { slashStub, SlashStub, resolvingModal } from '../../../vitest/utils/commandStubs';
 import { flushPromises } from '../../../vitest/utils/discordStubs';
 
 const mocks = vi.hoisted(() => ({
@@ -94,14 +94,14 @@ describe('tripsitmode', () => {
       customId: id, member: 'm', deferReply: vi.fn(), editReply: vi.fn(), fields: { getTextInputValue: vi.fn(() => 'v') },
     });
     const good = submit('tripsitmeSubmit~int1');
-    stub.awaitModalSubmit.mockResolvedValueOnce(good as never);
+    stub.awaitModalSubmit.mockImplementationOnce(resolvingModal(good as never));
     await tripsitmode.execute(stub as never);
     await flushPromises();
     expect(stub.showModal).toHaveBeenCalled();
     expect(good.editReply).toHaveBeenCalled();
 
     const other = submit('tripsitmeSubmit~zzz');
-    stub.awaitModalSubmit.mockResolvedValueOnce(other as never);
+    stub.awaitModalSubmit.mockImplementationOnce(resolvingModal(other as never));
     await tripsitmode.execute(stub as never);
     await flushPromises();
     expect(other.deferReply).not.toHaveBeenCalled();

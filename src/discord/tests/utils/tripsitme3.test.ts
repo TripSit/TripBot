@@ -1,3 +1,4 @@
+import { resolvingModal } from '../../../vitest/utils/commandStubs';
 /* eslint-disable sonarjs/no-duplicate-string */
 import { reopenTicket, tripSitMe, tripsitmeButton } from '../../utils/tripsitme';
 import { dbMock } from '../../../vitest/utils/mockDb';
@@ -263,7 +264,7 @@ describe('tripsitmeButton', () => {
       editReply: vi.fn(),
       reply: vi.fn(),
       showModal: vi.fn(),
-      awaitModalSubmit: vi.fn(async () => submit),
+      awaitModalSubmit: vi.fn(resolvingModal(submit)),
     };
     mocks.cooldown.mockResolvedValue(opts.cooldown === false ? { success: false, message: 'wait' } : { success: true });
     guildRow({ channel_tripsit: opts.tripsit === 'unset' ? null : 'ts-chan', channel_tripsitmeta: opts.meta === 'unset' ? null : 'meta' });

@@ -709,6 +709,20 @@ describe('expired bans', () => {
     await run('bans');
     expect(dbMock.user_actions.update).toHaveBeenCalledTimes(2);
   });
+
+  it('only clears the expiry when the user or the guild can no longer be fetched', async () => {
+    dbMock.user_actions.findMany.mockResolvedValue([ban()] as never);
+    setup();
+    const { run } = await start();
+    client().users.fetch = vi.fn(async () => null) as never;
+    await run('bans');
+    expect(dbMock.user_actions.update).toHaveBeenCalledTimes(1);
+    client().users.fetch = vi.fn(async () => ({ id: 'd1' })) as never;
+    client().guilds.fetch = vi.fn(async () => null) as never;
+    await run('bans');
+    expect(dbMock.user_actions.update).toHaveBeenCalledTimes(2);
+    expect(dbMock.discord_guilds.findUnique).not.toHaveBeenCalled();
+  });
 });
 
 describe('monthly session stats', () => {
