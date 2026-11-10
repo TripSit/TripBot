@@ -1,7 +1,9 @@
 /* eslint-disable no-param-reassign */
 /* eslint-disable max-len, sonarjs/no-duplicate-string */
 import { tripsitmode } from '../../commands/global/d.tripsitmode';
-import { slashStub, SlashStub, resolvingModal, pendingModal } from '../../../vitest/utils/commandStubs';
+import {
+  slashStub, SlashStub, resolvingModal, pendingModal,
+} from '../../../vitest/utils/commandStubs';
 import { flushPromises } from '../../../vitest/utils/discordStubs';
 
 const mocks = vi.hoisted(() => ({

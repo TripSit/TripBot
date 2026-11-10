@@ -1,10 +1,9 @@
-import { resolvingModal } from '../../../vitest/utils/commandStubs';
-/* eslint-disable max-len, sonarjs/no-duplicate-string */
 import { EmbedBuilder } from 'discord.js';
+import { resolvingModal, lastReply, slashStub } from '../../../vitest/utils/commandStubs';
+/* eslint-disable max-len, sonarjs/no-duplicate-string */
 import {
   cooperativeApplyButton, cooperativeLeaveButton, dCooperative, sendCooperativeMessage,
 } from '../../commands/guild/d.cooperative';
-import { lastReply, slashStub } from '../../../vitest/utils/commandStubs';
 
 const mocks = vi.hoisted(() => ({ missing: vi.fn(), guild: vi.fn() }));
 
@@ -145,7 +144,7 @@ describe('cooperative buttons', () => {
     const ids = (a.showModal.mock.calls[0][0] as { components: Array<{ components: Array<{ data: { custom_id: string } }> }> }).components
       .map(row => row.components[0].data.custom_id);
     expect(new Set(ids).size).toBe(ids.length);
-    const filter = (a.awaitModalSubmit.mock.calls[0][0] as { filter: (i: { customId: string }) => boolean }).filter;
+    const { filter } = (a.awaitModalSubmit.mock.calls[0][0] as { filter: (i: { customId: string }) => boolean });
     expect(filter({ customId: 'cooperativeApply~i1' })).toBe(true);
     expect(filter({ customId: 'reportModal~i1' })).toBe(false);
   });

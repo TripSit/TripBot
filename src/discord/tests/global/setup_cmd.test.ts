@@ -348,8 +348,12 @@ describe('setup modals submitted without a guild', () => {
     ];
     for (const [subcommand, customId, options] of cases) {
       const channel = textChannel();
-      const submit = { customId, guild: null, channel, deferReply: vi.fn(), editReply: vi.fn(), fields: { getTextInputValue: vi.fn(() => 'v') } };
-      const stub = slashStub({ subcommand, guild: { id: 'g1', name: 'Guild', channels: { fetch: vi.fn() } }, channel, options });
+      const submit = {
+        customId, guild: null, channel, deferReply: vi.fn(), editReply: vi.fn(), fields: { getTextInputValue: vi.fn(() => 'v') },
+      };
+      const stub = slashStub({
+        subcommand, guild: { id: 'g1', name: 'Guild', channels: { fetch: vi.fn() } }, channel, options,
+      });
       stub.awaitModalSubmit.mockImplementationOnce(resolvingModal(submit));
       // eslint-disable-next-line no-await-in-loop
       await setup.execute(stub as never);
