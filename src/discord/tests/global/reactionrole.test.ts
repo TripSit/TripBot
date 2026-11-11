@@ -326,12 +326,43 @@ describe('message creators', () => {
     ['mindset', createMindsetMessage, 'MINDSET'],
     ['pronoun', createPronounMessage, 'PRONOUN'],
     ['notification', createNotificationMessage, 'NOTIFICATION'],
+  ] as const)('%s message uses the default embed colour when none is given', async (_n, fn, type) => {
+    db.reaction_roles.findMany = vi.fn().mockResolvedValue(rowsFor(type)) as never;
+    const { stub, channel } = stubFor({ embed_color: undefined });
+    await fn(stub as never);
+    expect(channel.send).toHaveBeenCalledTimes(1);
+  });
+
+  it.each([
+    ['color', createColorMessage, 'COLOR'],
+    ['premium', createPremiumColorMessage, 'PREMIUM_COLOR'],
+    ['mindset', createMindsetMessage, 'MINDSET'],
+    ['pronoun', createPronounMessage, 'PRONOUN'],
+    ['notification', createNotificationMessage, 'NOTIFICATION'],
   ] as const)('%s message creates missing roles first', async (_n, fn, type) => {
     (global as unknown as Record<string, unknown>).emojiGet = vi.fn(() => ({ id: '1', url: 'https://e' }));
     // first lookup: nothing stored; created rows are then returned for every later lookup
     db.reaction_roles.findMany = vi.fn().mockResolvedValueOnce([]).mockResolvedValue(rowsFor(type)) as never;
     const guild = guildOf({ premiumTier: 2, roles: { fetch: vi.fn(async (rid: string) => role(rid)), create: vi.fn(async () => ({ id: 'new' })) } });
     const { stub, channel } = stubFor({}, guild);
+    await fn(stub as never);
+    expect(guild.roles.create).toHaveBeenCalled();
+    expect(db.reaction_roles.upsert).toHaveBeenCalled();
+    expect(channel.send).toHaveBeenCalledTimes(1);
+  });
+
+  it.each([
+    ['color', createColorMessage, 'COLOR'],
+    ['premium', createPremiumColorMessage, 'PREMIUM_COLOR'],
+    ['mindset', createMindsetMessage, 'MINDSET'],
+    ['pronoun', createPronounMessage, 'PRONOUN'],
+    ['notification', createNotificationMessage, 'NOTIFICATION'],
+  ] as const)('%s message creates missing roles with the default colour', async (_n, fn, type) => {
+    (global as unknown as Record<string, unknown>).emojiGet = vi.fn(() => ({ id: '1', url: 'https://e' }));
+    // first lookup: nothing stored; created rows are then returned for every later lookup
+    db.reaction_roles.findMany = vi.fn().mockResolvedValueOnce([]).mockResolvedValue(rowsFor(type)) as never;
+    const guild = guildOf({ premiumTier: 2, roles: { fetch: vi.fn(async (rid: string) => role(rid)), create: vi.fn(async () => ({ id: 'new' })) } });
+    const { stub, channel } = stubFor({ embed_color: undefined }, guild);
     await fn(stub as never);
     expect(guild.roles.create).toHaveBeenCalled();
     expect(db.reaction_roles.upsert).toHaveBeenCalled();

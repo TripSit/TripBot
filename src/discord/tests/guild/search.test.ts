@@ -65,6 +65,25 @@ describe('search', () => {
     });
   });
 
+  describe('lookups without a word', () => {
+    it('still builds fallback links when the option is missing', async () => {
+      const udDown = await run('urbandefine', {}, [['urbandictionary', { ok: false }]]);
+      expect(udDown.embed.url).toContain('term=');
+      const udEmpty = await run('urbandefine', {}, [['urbandictionary', { json: { list: [] } }], ['dictionaryapi', { ok: false }]]);
+      expect(udEmpty.embed.url).toContain('google.com/search?q=define+');
+      const udThrows = await run('urbandefine', {}, [['urbandictionary', { throws: true }]]);
+      expect(udThrows.embed.url).toContain('term=');
+      const dictMissing = await run('urbandefine', {}, [['urbandictionary', { json: {} }], ['dictionaryapi', { ok: false }]]);
+      expect(dictMissing.embed.url).toContain('google.com/search?q=define+');
+      const dictEmpty = await run('urbandefine', {}, [['urbandictionary', { json: {} }], ['dictionaryapi', { json: [] }]]);
+      expect(dictEmpty.embed.url).toContain('google.com/search?q=define+');
+      const dictThrows = await run('urbandefine', {}, [['urbandictionary', { json: {} }], ['dictionaryapi', { throws: true }]]);
+      expect(dictThrows.embed.url).toContain('google.com/search?q=define+');
+      const dictOk = await run('urbandefine', {}, [['urbandictionary', { json: {} }], ['dictionaryapi', { json: [{ meanings: [{ definitions: [{ definition: 'd' }] }] }] }]]);
+      expect(dictOk.embed.url).toContain('google.com/search?q=define+');
+    });
+  });
+
   describe('urbandefine', () => {
     const entry = { meanings: [{ partOfSpeech: 'noun', definitions: [{ definition: 'a thing', example: 'ex' }] }] };
     const urban = {
@@ -118,6 +137,11 @@ describe('search', () => {
       expect(embed.thumbnail?.url).toBe('https://tiny');
     });
 
+    it('shows an unknown release date when neither source has one', async () => {
+      const { embed } = await run('game', { game: 'x' }, [['storesearch', { json: { items: [{ id: 7, name: 'G' }] } }], ['appdetails', { json: { 7: { data: {} } } }]]);
+      expect((embed.fields ?? []).find(f => f.name === 'Release')?.value).toBe('Unknown');
+    });
+
     it('falls back to search result data when details are missing', async () => {
       const { embed } = await run('game', { game: 'x' }, [['storesearch', { json: { items: [item] } }], ['appdetails', { json: {} }]]);
       const fields = Object.fromEntries((embed.fields ?? []).map(f => [f.name, f.value]));
@@ -164,6 +188,13 @@ describe('search', () => {
       expect((embed.fields ?? []).find(f => f.name === 'Platforms')?.value).toBe('[Spotify](https://sp)');
       const noTrackUrl = await run('song', { song: 'q' }, [['itunes', { json: { results: [{ trackName: 'N' }] } }], ['song.link', { json: {} }]]);
       expect((noTrackUrl.embed.fields ?? []).find(f => f.name === 'Platforms')?.value).toContain('Apple Music');
+    });
+
+    it('keeps the defaults when Odesli returns sparse entities', async () => {
+      const sparse = { entitiesByUniqueId: { k: {} }, linksByPlatform: { spotify: { url: 'https://sp' } } };
+      const { embed } = await run('song', { song: 'https://music.example/track' }, [['song.link', { json: sparse }]]);
+      expect(embed.title).toBe('Song: https://music.example/track');
+      expect((embed.fields ?? []).find(f => f.name === 'Platforms')?.value).toBe('[Spotify](https://sp)');
     });
 
     it('accepts links directly and degrades gracefully', async () => {
