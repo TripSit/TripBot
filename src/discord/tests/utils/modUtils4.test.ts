@@ -223,7 +223,7 @@ describe('moderate: gaps', () => {
     dbMock.user_actions.findFirst.mockResolvedValue({ id: 'recent' } as never);
     const s = setup('WARNING');
     const collector = { on: vi.fn() };
-    const createCollector = vi.fn((...args: unknown[]) => { void args; return collector; });
+    const createCollector = vi.fn((options: unknown) => { expect(options).toBeDefined(); return collector; });
     s.raw.followUp.mockResolvedValue({ createMessageComponentCollector: createCollector });
     const pending = moderate(s.buttonInt, s.modalInt);
     await vi.waitFor(() => expect(collector.on).toHaveBeenCalled());
