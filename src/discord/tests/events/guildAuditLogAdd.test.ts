@@ -59,6 +59,8 @@ describe('formatChange', () => {
     ['bitrate', 0, 64, '**Bitrate:** Default → 64kbps'],
     ['bitrate', 32, 0, '**Bitrate:** 32kbps → Default'],
     ['user_limit', 0, 5, '**User Limit:** Unlimited → 5'],
+    ['user_limit', 5, 0, '**User Limit:** 5 → Unlimited'],
+    ['nick', null, 'b', '**Nickname:** No nickname → b'],
     ['something_else', 'a', 'b', '**Something_else:** a → b'],
   ])('%s', (key, oldValue, newValue, expected) => {
     expect(change(key, oldValue, newValue)).toBe(expected);
@@ -160,6 +162,11 @@ describe('createActionDescription', () => {
     expect(createActionDescription(entry('Emoji', 'Create', { target: null }))).toBe('**mod#1** added emoji **:unknown:**');
     expect(createActionDescription(entry('Webhook', 'Update', { target: null }))).toBe('**mod#1** updated webhook **a webhook**');
     expect(createActionDescription(entry('Automod', 'Update', { target: null }))).toContain('a rule');
+    expect(createActionDescription(entry('Automod', 'Delete', { target: null }))).toContain('a rule');
+    expect(createActionDescription(entry('Emoji', 'Update', { target: null }))).toBe('**mod#1** updated emoji **:unknown:**');
+    expect(createActionDescription(entry('Emoji', 'Delete', { target: null }))).toBe('**mod#1** deleted emoji **:unknown:**');
+    expect(createActionDescription(entry('Webhook', 'Create', { target: null }))).toBe('**mod#1** created webhook **a webhook**');
+    expect(createActionDescription(entry('Webhook', 'Delete', { target: null }))).toBe('**mod#1** deleted webhook **a webhook**');
     expect(createActionDescription(entry('Role', 'Create', { executor: { username: 'u' }, target: null }))).toBe('**u** created role **Unknown Target**');
   });
 

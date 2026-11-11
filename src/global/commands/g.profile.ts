@@ -13,7 +13,7 @@ export async function profile(
 ):Promise<ProfileData> {
   const userData = await getOrCreateUser(memberId);
 
-  const values = await Promise.allSettled([
+  const values = [
     await db.user_experience.findMany({
       where: {
         user_id: userData.id,
@@ -24,10 +24,10 @@ export async function profile(
         user_id: userData.id,
       },
     }),
-  ]);
+  ] as const;
 
-  const expData = values[0].status === 'fulfilled' ? values[0].value : [];
-  const personaData = values[1].status === 'fulfilled' ? values[1].value : {} as personas;
+  const expData = values[0];
+  const personaData = values[1];
 
   // Sum up every experience point as long as the type isn't ignored or total
   const totalTextExp = expData

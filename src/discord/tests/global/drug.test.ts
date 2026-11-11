@@ -76,6 +76,53 @@ describe('getDrugInfo', () => {
   });
 });
 
+describe('getDrugInfo: absent optional data', () => {
+  const names = (data: { fields?: Fields }) => (data.fields ?? []).map(f => f.name);
+
+  it('omits sections whose data is empty', async () => {
+    mocks.drug.mockResolvedValueOnce({
+      name: 'Plain',
+      url: 'https://u',
+      interactions: [{ name: 'X', status: 'Caution' }],
+      crossTolerances: [],
+      tolerance: { half: 'a week' },
+      roas: [{ name: 'Oral' }],
+    });
+    const data = await dataOf('plain');
+    expect(names(data)).not.toContain('**💀 Dangerous 🛑 Interactions 💀**');
+    expect(names(data)).not.toContain('🔀 Cross Tolerances');
+    expect(names(data)).not.toContain('💔 Addiction Potential');
+    expect(names(data)).not.toContain('ℹ️ Class');
+    expect(data.fields?.find(f => f.name === '↗ Tolerance')?.value).toBe('Half: A week');
+  });
+
+  it('shows only the physical class when no chemical class is known', async () => {
+    mocks.drug.mockResolvedValueOnce({ name: 'Psy', url: 'https://u', classes: { psychoactive: 'psy' } });
+    expect((await dataOf('psy')).fields?.find(f => f.name === 'ℹ️ Class')).toBeDefined();
+  });
+
+  it('lists routes that are not reordered, and stops after three columns', async () => {
+    const roa = (name: string) => ({
+      name, dosage: [{ name: 'Light', value: '1mg' }], duration: [{ name: 'Total', value: '1h' }],
+    });
+    mocks.drug.mockResolvedValueOnce({
+      name: 'Many', url: 'https://u', roas: [roa('Oral'), roa('Rectal'), roa('Sublingual'), roa('Intravenous')],
+    });
+    const data = await dataOf('many');
+    expect(names(data).filter(n => n.startsWith('💊'))).toHaveLength(3);
+    expect(names(data).filter(n => n.startsWith('⏳'))).toHaveLength(3);
+    mocks.drug.mockResolvedValueOnce({
+      name: 'Many', url: 'https://u', roas: [roa('Oral'), roa('Rectal'), roa('Sublingual'), roa('Intravenous')],
+    });
+    expect(names(await dataOf('many', 'dosage'))).toHaveLength(3);
+  });
+
+  it('ignores routes without durations', async () => {
+    mocks.drug.mockResolvedValueOnce({ name: 'NoDur', url: 'https://u', roas: [{ name: 'Oral', dosage: [{ name: 'Light', value: '1' }] }] });
+    expect(names(await dataOf('nodur')).some(n => n.startsWith('⏳'))).toBe(false);
+  });
+});
+
 describe('drug command', () => {
   it('replies with the embed', async () => {
     mocks.drug.mockResolvedValue(full());

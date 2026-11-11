@@ -119,7 +119,7 @@ export const dLevels: SlashCommand = {
     // log.debug(F, `target id: ${target.id}`);
     // log.debug(F, `levelData: ${JSON.stringify(target, null, 2)}`);
     const ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined;
-    const values = await Promise.allSettled([
+    const values = [
       await interaction.deferReply({ flags: ephemeral }),
       // Get the target's profile data from the database
       await profile(targetUser.id),
@@ -138,22 +138,22 @@ export const dLevels: SlashCommand = {
       await Canvas.loadImage(await getAsset('tripsitterBar')),
       await Canvas.loadImage(await getAsset('developerBar')),
       await Canvas.loadImage(await getAsset('teamtripsitBar')),
-    ]);
+    ] as const;
 
-    const profileData = values[1].status === 'fulfilled' ? values[1].value : {} as ProfileData;
-    const personaData = values[2].status === 'fulfilled' ? values[2].value : {} as personas;
-    const levelData = values[3].status === 'fulfilled' ? values[3].value : {} as LevelData;
-    const Icons = values[4].status === 'fulfilled' ? values[4].value : {} as Canvas.Image;
-    // const StatusIcon = values[5].status === 'fulfilled' ? values[5].value : {} as Canvas.Image;
-    const avatar = values[5].status === 'fulfilled' ? values[5].value : {} as Canvas.Image;
-    const teamtripsitIcon = values[6].status === 'fulfilled' ? values[6].value : {} as Canvas.Image;
-    const premiumIcon = values[7].status === 'fulfilled' ? values[7].value : {} as Canvas.Image;
-    const boosterIcon = values[8].status === 'fulfilled' ? values[8].value : {} as Canvas.Image;
-    const legacyIcon = values[9].status === 'fulfilled' ? values[9].value : {} as Canvas.Image;
-    const voiceBar = values[10].status === 'fulfilled' ? values[10].value : {} as Canvas.Image;
-    const tripsitterBar = values[11].status === 'fulfilled' ? values[11].value : {} as Canvas.Image;
-    const developerBar = values[12].status === 'fulfilled' ? values[12].value : {} as Canvas.Image;
-    const teamtripsitBar = values[13].status === 'fulfilled' ? values[13].value : {} as Canvas.Image;
+    const profileData = values[1];
+    const personaData = values[2];
+    const levelData = values[3];
+    const Icons = values[4];
+    // const StatusIcon = values[5];
+    const avatar = values[5];
+    const teamtripsitIcon = values[6];
+    const premiumIcon = values[7];
+    const boosterIcon = values[8];
+    const legacyIcon = values[9];
+    const voiceBar = values[10];
+    const tripsitterBar = values[11];
+    const developerBar = values[12];
+    const teamtripsitBar = values[13];
 
     const avatarIconRoles = {
       [env.ROLE_TEAMTRIPSIT]: {

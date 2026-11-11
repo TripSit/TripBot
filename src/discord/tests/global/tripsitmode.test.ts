@@ -85,6 +85,28 @@ describe('tripsitmode', () => {
     expect(stub.editReply).toHaveBeenCalled();
   });
 
+  it('does nothing when no tripsit channel is configured', async () => {
+    mocks.guild.mockResolvedValue({ channel_tripsit: null, channel_tripsitmeta: null, role_needshelp: null });
+    const stub = withGuild(slashStub({ subcommand: 'on', options: { user: target } }), () => ({}));
+    await tripsitmode.execute(stub as never);
+    await flushPromises();
+    expect(stub.guild?.channels.fetch).not.toHaveBeenCalled();
+    expect(stub.showModal).not.toHaveBeenCalled();
+  });
+
+  it('reopens tickets even when the meta channel and needshelp role are not configured', async () => {
+    const { TextChannel } = await import('discord.js');
+    const { stubInstance } = await import('../../../vitest/utils/discordStubs');
+    mocks.guild.mockResolvedValue({ channel_tripsit: 'ts', channel_tripsitmeta: null, role_needshelp: null });
+    const text = stubInstance(TextChannel, {});
+    const thread = { id: 'th', name: 'thread', toString: (): string => '<#th>' };
+    const stub = withGuild(slashStub({ subcommand: 'on', options: { user: target } }), id => (id === 'th' ? thread : text));
+    db.user_tickets.findFirst = vi.fn().mockResolvedValue({ id: 'tk', thread_id: 'th' }) as never;
+    await tripsitmode.execute(stub as never);
+    await flushPromises();
+    expect(mocks.reopen).toHaveBeenCalled();
+  });
+
   it('opens a modal for a new ticket and creates the thread on submit', async () => {
     const { TextChannel } = await import('discord.js');
     const { stubInstance } = await import('../../../vitest/utils/discordStubs');
