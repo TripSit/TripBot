@@ -12,8 +12,13 @@ describe('bestOf for orphaned threads', () => {
   it('does nothing when a thread has lost its parent channel', async () => {
     dbMock.best_of.findUnique.mockResolvedValue(null);
     const reaction = {
-      count: 5, emoji: { name: 'upvote' }, partial: false, fetch: vi.fn(),
-      message: { partial: false, fetch: vi.fn(), channel: { isThread: () => true, parent: null }, author: { id: 'a1' } },
+      count: 5,
+      emoji: { name: 'upvote' },
+      partial: false,
+      fetch: vi.fn(),
+      message: {
+        partial: false, fetch: vi.fn(), channel: { isThread: () => true, parent: null }, author: { id: 'a1' },
+      },
     } as unknown as MessageReaction;
     await expect(bestOf(reaction)).resolves.toBeUndefined();
     expect(dbMock.best_of.create).not.toHaveBeenCalled();

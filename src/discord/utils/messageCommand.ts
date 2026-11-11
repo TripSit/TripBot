@@ -220,12 +220,8 @@ export async function messageCommand(message: Message): Promise<void> {
 
         const recipientMember = await message.guild?.members.fetch(recipient.id);
 
-        if (!recipientMember && (message.channel instanceof TextChannel || message.channel instanceof DMChannel)) {
-          if (message.channel instanceof DMChannel) {
-            await message.channel.send('The user you mentioned is not a member of this guild!');
-          }
-          return;
-        }
+        // Not a member (or a lookup outside a guild): there is nobody to give tokens to
+        if (!recipientMember) return;
 
         const userData = await getOrCreateUser(recipient.id);
 

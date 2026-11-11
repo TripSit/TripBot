@@ -1,5 +1,5 @@
-import { AiText } from '../../../utils/ai/texts';
 import { MessageFlags, PermissionFlagsBits } from 'discord.js';
+import { AiText } from '../../../utils/ai/texts';
 import { AiPage } from '../../../utils/ai/pages';
 import { dbMock } from '../../../../vitest/utils/mockDb';
 

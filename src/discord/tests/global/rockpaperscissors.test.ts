@@ -302,4 +302,25 @@ describe('rock paper scissors collector filters', () => {
     await vi.advanceTimersByTimeAsync(0);
     expect(channel.createMessageComponentCollector).toHaveBeenCalledTimes(2);
   });
+
+  it('multiplayer rounds ignore buttons from another game', async () => {
+    const queue = makeCollector();
+    const round = makeCollector();
+    const collectors = [queue, round];
+    const channel = { createMessageComponentCollector: vi.fn(() => collectors.shift()) };
+    const stub = slashStub({ channel });
+    await dRockPaperScissors.execute(stub as never);
+    const joinId = (stub.reply.mock.calls[0][0] as { components: Array<{ components: Array<{ data: { custom_id: string } }> }> }).components[0].components[0].data.custom_id;
+    queue.emit('collect', press(joinId, 'a'));
+    queue.emit('collect', press(joinId, 'b'));
+    await vi.advanceTimersByTimeAsync(0);
+    queue.emit('end');
+    await vi.advanceTimersByTimeAsync(0);
+    const calls = stub.editReply.mock.calls.length;
+    const stray = press('rps_some-other-game_rock', 'a');
+    round.emit('collect', stray);
+    await vi.advanceTimersByTimeAsync(0);
+    expect(stray.deferUpdate).not.toHaveBeenCalled();
+    expect(stub.editReply.mock.calls.length).toBe(calls);
+  });
 });

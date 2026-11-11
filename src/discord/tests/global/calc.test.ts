@@ -141,6 +141,29 @@ describe('calc', () => {
       expect(embed.fields?.find(f => f.name === 'Other routes for Morphine')).toBeUndefined();
     });
 
+    it('explains when the source gave no route and no oral figure', async () => {
+      mocks.opioid.mockResolvedValueOnce(result({
+        to: drug('Sourceless', { assumedRoute: true }), toRoute: 'oral', otherRoutes: [], cautiousStart: false,
+      }));
+      const { embed } = await run('opioid', opts('detailed'));
+      expect(embed.fields?.some(f => f.name === 'Route not stated in the source')).toBe(true);
+    });
+
+    it('drops fields that would push the embed over its size budget', async () => {
+      const long = 'y'.repeat(1000);
+      mocks.opioid.mockResolvedValueOnce(result({
+        to: drug('Wordy', {
+          assumedRoute: true, onset: long, duration: long, halfLife: long, notes: [long, long, long], pharmacology: 'kappa-agonist',
+        }),
+        toRoute: 'oral',
+        otherRoutes: Array.from({ length: 40 }, () => ({ roa: 'oral', dose: [1, 1], estimated: true })),
+      }));
+      const { embed } = await run('opioid', opts('detailed'));
+      const total = (embed.title?.length ?? 0) + (embed.description?.length ?? 0) + (embed.fields ?? []).reduce((n, f) => n + f.name.length + f.value.length, 0);
+      expect(total).toBeLessThanOrEqual(6000);
+      expect(embed.fields?.at(-1)?.value).toContain('naloxone');
+    });
+
     it('clips oversize titles and fields, and respects the embed budget', async () => {
       const long = 'x'.repeat(2000);
       mocks.opioid.mockResolvedValueOnce(result({

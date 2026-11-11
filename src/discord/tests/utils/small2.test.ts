@@ -29,8 +29,8 @@ describe('awayMessage', () => {
     const recent = opts.olderOwnerMessages
       ? [['m1', { author: { id: e.DISCORD_OWNER_ID }, createdTimestamp: Date.now() - 3 * 3_600_000 }], ['m2', { author: { id: e.DISCORD_OWNER_ID }, createdTimestamp: Date.now() - 5 * 3_600_000 }], ['m3', { author: { id: e.DISCORD_OWNER_ID }, createdTimestamp: Date.now() - 4 * 3_600_000 }]] as Array<[string, object]>
       : opts.recentOwnerMessage
-      ? [['m1', { author: { id: e.DISCORD_OWNER_ID }, createdTimestamp: Date.now() - 60_000 }]] as Array<[string, object]>
-      : [['m1', { author: { id: e.DISCORD_OWNER_ID }, createdTimestamp: Date.now() - 3 * 3_600_000 }], ['m2', { author: { id: 'x' }, createdTimestamp: Date.now() }]] as Array<[string, object]>;
+        ? [['m1', { author: { id: e.DISCORD_OWNER_ID }, createdTimestamp: Date.now() - 60_000 }]] as Array<[string, object]>
+        : [['m1', { author: { id: e.DISCORD_OWNER_ID }, createdTimestamp: Date.now() - 3 * 3_600_000 }], ['m2', { author: { id: 'x' }, createdTimestamp: Date.now() }]] as Array<[string, object]>;
     const props = { send: vi.fn(), sendTyping: vi.fn(), messages: { fetch: vi.fn(async () => collectionOf(recent)) } };
     const channel = opts.channel === 'other'
       ? props
