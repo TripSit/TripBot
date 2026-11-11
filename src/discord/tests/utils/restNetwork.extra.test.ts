@@ -1,3 +1,4 @@
+/* eslint-disable sonarjs/no-duplicate-string */
 import {
   createCachedLookup, createDiscordAgent, installRestRetry, withConnectRetry,
 } from '../../utils/restNetwork';

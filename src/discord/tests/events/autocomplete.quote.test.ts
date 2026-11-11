@@ -1,3 +1,4 @@
+/* eslint-disable class-methods-use-this */
 import { autocomplete } from '../../events/autocomplete';
 import { dbMock } from '../../../vitest/utils/mockDb';
 
