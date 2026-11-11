@@ -751,6 +751,7 @@ export async function modResponse(
             } else if (interaction.guild) {
               userBan = await interaction.guild.bans.fetch(userId);
             } else {
+              /* v8 ignore next -- button/slash interactions are guild-only here; kept as a type guard */
               throw new Error('Interaction is missing a valid guild.');
             }
           } catch (err: unknown) {
@@ -1096,6 +1097,7 @@ export async function messageModThread(
       // Create a new thread in the mod channel
       // log.debug(F, 'creating mod thread');
       if (guildData.channel_moderators === null) {
+        /* v8 ignore next -- guilds without a moderator channel are rejected earlier; type guard only */
         throw new Error('Moderator room id is null');
       }
       const modChan = await discordClient.channels.fetch(guildData.channel_moderators) as TextChannel;
@@ -1558,7 +1560,7 @@ export async function acknowledgeReportButton(
 }
 
 async function wasActionedRecently(actionType: string, targetDiscordId: Snowflake): Promise<boolean> {
-  if (actionType === 'APPROVE_APPEAL' || actionType === 'DENY_APPEAL') {
+  if (actionType === 'APPEAL_ACCEPT' || actionType === 'APPEAL_REJECT') {
     return false;
   }
   const oneMinuteAgo = new Date(Date.now() - 300 * 1000);
@@ -1760,9 +1762,6 @@ export async function moderate(
       }
 
       tempBanDuration = await parseDuration(durationVal);
-      if (tempBanDuration && tempBanDuration < 0) {
-        return { content: 'Ban duration must be at least 1 second!' };
-      }
 
       durationStr = `${time(new Date(Date.now() + tempBanDuration), 'R')}`;
       const currentTime = new Date();
@@ -1921,9 +1920,6 @@ export async function moderate(
         }
 
         deleteDuration = await parseDuration(deleteMessageValue);
-        if (deleteDuration && deleteDuration < 0) {
-          return { content: 'Delete duration must be at least 1 second!' };
-        }
       }
 
       try {
@@ -2306,16 +2302,9 @@ export async function modModal(
     .setRequired(true)
     .setCustomId('internalNote');
 
-  try {
-    // Ensure the label text is within the limit
-    const label = `Why are you ${verb} ${target}?`;
-    const truncatedLabelText = label.length > 45 ? `${label.substring(0, 41)}...?` : label;
-
-    modalInputComponent.setLabel(truncatedLabelText);
-  } catch (err) {
-    log.error(F, `Error: ${err}`);
-    log.error(F, `Verb: ${verb}, Target: ${target}`);
-  }
+  // Ensure the label text is within the limit
+  const label = `Why are you ${verb} ${target}?`;
+  modalInputComponent.setLabel(label.length > 45 ? `${label.substring(0, 41)}...?` : label);
 
   // log.debug(F, `Verb: ${verb}`);
   const modal = new ModalBuilder()

@@ -36,6 +36,7 @@ export async function bestOf(reaction:MessageReaction): Promise<void> {
       channelObj = channelObj.parent as TextChannel;
     } else channelObj = channelObj as TextChannel;
 
+    /* v8 ignore next -- a thread always has a parent; guard exists for the type cast */
     if (!channelObj) return;
 
     if ((channelObj.parentId && ignoredCategories.includes(channelObj.parentId))

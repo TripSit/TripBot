@@ -195,6 +195,49 @@ describe('moderate: notes, reports and warnings', () => {
   });
 });
 
+describe('moderate: gaps', () => {
+  it('links the discussion channel in timeout messages once it expires', async () => {
+    const s = setup('TIMEOUT', { duration: '1h' }, { helpdesk: 'help' });
+    await moderate(s.buttonInt, s.modalInt);
+    const { send } = (s.target as unknown as { user: { send: ReturnType<typeof vi.fn> } }).user;
+    const [{ embeds }] = send.mock.calls[0] as unknown as [{ embeds: EmbedBuilder[] }];
+    expect(embeds[0].data.description).toContain('once the timeout expires');
+  });
+
+  it('works on a user who is no longer a member', async () => {
+    const s = setup('NOTE', {}, { member: 'left-user' });
+    expect(description(await moderate(s.buttonInt, s.modalInt))).toContain('gone was noted');
+  });
+
+  it('does not look for recent duplicates of appeal decisions', async () => {
+    for (const command of ['APPEAL_ACCEPT', 'APPEAL_REJECT']) {
+      const s = setup(command);
+      // Appeal decisions are not handled by moderate() itself; only the recent-action check matters here.
+      // eslint-disable-next-line no-await-in-loop
+      await moderate(s.buttonInt, s.modalInt).catch(() => undefined);
+    }
+    expect(dbMock.user_actions.findFirst).not.toHaveBeenCalled();
+  });
+
+  it('only listens to the moderator who asked, and survives a failed button update', async () => {
+    dbMock.user_actions.findFirst.mockResolvedValue({ id: 'recent' } as never);
+    const s = setup('WARNING');
+    const collector = { on: vi.fn() };
+    const createCollector = vi.fn((_options: unknown) => collector);
+    s.raw.followUp.mockResolvedValue({ createMessageComponentCollector: createCollector });
+    const pending = moderate(s.buttonInt, s.modalInt);
+    await vi.waitFor(() => expect(collector.on).toHaveBeenCalled());
+    const { filter } = createCollector.mock.calls[0][0] as unknown as { filter: (i: unknown) => boolean };
+    expect(filter({ isButton: () => true, user: { id: 'actor1' } })).toBe(true);
+    expect(filter({ isButton: () => true, user: { id: 'someone-else' } })).toBe(false);
+    expect(filter({ isButton: () => false, user: { id: 'actor1' } })).toBe(false);
+    const handler = collector.on.mock.calls[0][1] as (i: unknown) => Promise<void>;
+    await handler({ customId: 'nahButton', update: vi.fn().mockRejectedValue(new Error('Unknown Interaction')) });
+    handler({ customId: 'nahButton', update: vi.fn() });
+    await pending.catch(() => undefined);
+  });
+});
+
 describe('moderate: timeouts', () => {
   it('times the member out for the requested duration', async () => {
     const s = setup('TIMEOUT', { duration: '1h' });
