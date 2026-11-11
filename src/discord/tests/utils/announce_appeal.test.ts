@@ -79,6 +79,27 @@ describe('announcements', () => {
     expect(dbMock.users.upsert).toHaveBeenLastCalledWith(expect.objectContaining({ update: { move_points: { increment: -1 } } }));
   });
 
+  it('only counts the reaction that matches the reminder', async () => {
+    const { announcements, freshEnv } = await load();
+    const { channel, sent } = channelFor(freshEnv as never);
+    vi.useFakeTimers({ toFake: ['setTimeout'] });
+    await run(announcements, channel, 500);
+    await vi.advanceTimersByTimeAsync(0);
+    const { filter } = (sent.createReactionCollector.mock.calls as unknown as Array<[{ filter: (r: { emoji: { name: string } }) => boolean }]>)[0][0];
+    expect(filter({ emoji: { name: '🕴' } })).toBe(true);
+    expect(filter({ emoji: { name: '💧' } })).toBe(false);
+  });
+
+  it('sometimes posts a fun fact instead of a canned tip', async () => {
+    const { announcements, freshEnv } = await load();
+    vi.useFakeTimers({ toFake: ['setTimeout'] });
+    vi.spyOn(Math, 'random').mockReturnValue(0.9999999);
+    const { channel, props } = channelFor(freshEnv as never);
+    await run(announcements, channel, 100);
+    await vi.advanceTimersByTimeAsync(3000);
+    expect(props.send).toHaveBeenCalledTimes(1);
+  });
+
   it('rotates through all three reminder types', async () => {
     const { announcements, freshEnv } = await load();
     const { channel, sent } = channelFor(freshEnv as never);
