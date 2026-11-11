@@ -214,6 +214,48 @@ describe('updateDrugDb', () => {
     }
   });
 
+  it('handles sparse psychonaut routes and tripsit durations for routes that were never added', async () => {
+    const sparse = {
+      url: 'https://psychonautwiki.org/wiki/Sparse',
+      name: 'Sparse',
+      summary: 's',
+      commonNames: null,
+      toxicity: null,
+      addictionPotential: null,
+      tolerance: null,
+      crossTolerances: null,
+      uncertainInteractions: [{ name: 'Only uncertain' }],
+      roa: {
+        oral: { dose: { units: 'mg', light: 5 }, duration: { total: range(1, undefined, 'h') }, bioavailability: {} },
+        rectal: { dose: { units: 'mg', light: 6 }, duration: { total: range(2, undefined, 'h') } },
+      },
+    };
+    Object.assign(tsDrugs, {
+      sparse: {
+        name: 'Sparse',
+        properties: {},
+        formatted_dose: { Oral: { Common: '5' } },
+        formatted_onset: { value: '5', _unit: 'minutes' },
+        formatted_duration: { Intravenous: '1', _unit: 'hours' },
+      },
+      noroute: {
+        name: 'NoRoute', properties: {}, formatted_onset: { value: '5', _unit: 'minutes' }, formatted_duration: { Oral: '1', _unit: 'hours' },
+      },
+    });
+    try {
+      mocks.request.mockResolvedValueOnce({ substances: [sparse] });
+      await run();
+      const db = written('combinedDB');
+      const found = db.find((d: { name: string }) => d.name === 'Sparse');
+      expect(found.interactions).toEqual([{ status: 'Caution', name: 'Only uncertain' }]);
+      expect(found.roas.find((r: { name: string }) => r.name === 'Oral').bioavailability).toBe('%');
+      expect(found.roas.map((r: { name: string }) => r.name)).toEqual(expect.arrayContaining(['Oral', 'Rectal']));
+    } finally {
+      delete (tsDrugs as Record<string, unknown>).sparse;
+      delete (tsDrugs as Record<string, unknown>).noroute;
+    }
+  });
+
   it('survives upstream failures with an empty database', async () => {
     vi.mocked(axios.get).mockImplementation(async (url: string) => {
       if (url.endsWith('combos.json')) return { data: {} };
