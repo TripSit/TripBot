@@ -226,9 +226,9 @@ describe('quoteAdd', () => {
   });
 
   it('rejects authorless, bot and under-level cases and duplicates', async () => {
-    const noAuthor = ctx(msg({ member: null }));
-    await quoteAdd(noAuthor as never);
-    expect(text(noAuthor)).toContain('have an author');
+    const memberless = ctx(msg({ member: null }));
+    await quoteAdd(memberless as never);
+    expect(text(memberless)).toContain('have an author');
     const bot = ctx(msg({ member: member('b', { user: { bot: true } }) }));
     await quoteAdd(bot as never);
     expect(text(bot)).toContain('humans');

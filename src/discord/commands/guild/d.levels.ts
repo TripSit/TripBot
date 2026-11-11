@@ -1,4 +1,3 @@
-import { personas } from '@db/tripbot';
 import Canvas from '@napi-rs/canvas';
 import {
   ActionRowBuilder,
@@ -12,7 +11,7 @@ import {
   SlashCommandBuilder,
 } from 'discord.js';
 import { levels } from '../../../global/commands/g.levels';
-import { profile, ProfileData } from '../../../global/commands/g.profile';
+import { profile } from '../../../global/commands/g.profile';
 import { getPersonaInfo } from '../../../global/commands/g.rpg';
 import { SlashCommand } from '../../@types/commandDef';
 import commandContext from '../../utils/context';
@@ -29,57 +28,6 @@ const F = f(__filename);
 const fontSizeFamily = '25px futura';
 
 const levelCalculatorUrl = 'https://tripsit-levelling-calculator.netlify.app/';
-
-type LevelData = {
-  ALL: {
-    TOTAL: {
-      level: number,
-      level_exp: number,
-      nextLevel: number,
-      total_exp: number,
-      rank: number,
-    },
-    [key: string]: {
-      level: number,
-      level_exp: number,
-      nextLevel: number,
-      total_exp: number,
-      rank: number,
-    },
-  },
-  TEXT: {
-    TOTAL: {
-      level: number,
-      level_exp: number,
-      nextLevel: number,
-      total_exp: number,
-      rank: number,
-    },
-    [key: string]: {
-      level: number,
-      level_exp: number,
-      nextLevel: number,
-      total_exp: number,
-      rank: number,
-    },
-  },
-  VOICE: {
-    TOTAL: {
-      level: number,
-      level_exp: number,
-      nextLevel: number,
-      total_exp: number,
-      rank: number,
-    },
-    [key: string]: {
-      level: number,
-      level_exp: number,
-      nextLevel: number,
-      total_exp: number,
-      rank: number,
-    },
-  },
-};
 
 export const dLevels: SlashCommand = {
   data: new SlashCommandBuilder()

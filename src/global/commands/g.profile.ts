@@ -1,4 +1,3 @@
-import { personas } from '@db/tripbot';
 import { getOrCreateUser } from '../utils/dbRecords';
 
 export default profile;
