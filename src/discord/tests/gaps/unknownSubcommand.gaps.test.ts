@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { dbMock } from '../../../vitest/utils/mockDb';
 import { slashStub } from '../../../vitest/utils/commandStubs';
 import { dBridge } from '../../commands/global/d.bridge';
 import { dPrivacy } from '../../commands/global/d.privacy';
@@ -30,8 +31,8 @@ describe('dispatchers ignore unknown subcommands', () => {
 
 describe('botmod', () => {
   it('leaves the ban flag alone for unknown user actions', async () => {
-    db.users.upsert.mockResolvedValue({ id: 'uid', discord_bot_ban: true } as never);
-    db.users.update.mockResolvedValue({ id: 'uid' } as never);
+    dbMock.users.upsert.mockResolvedValue({ id: 'uid', discord_bot_ban: true } as never);
+    dbMock.users.update.mockResolvedValue({ id: 'uid' } as never);
     const interaction = { client: { users: { fetch: vi.fn(async (id: string) => ({ id, tag: `${id}#1`, send: vi.fn() })) } } };
     await botmod(interaction as never, 'user', { displayName: 'Mod' } as never, 'BOTNOTE' as never, 't1', null, null).catch(() => undefined);
     expect(db.users.update).not.toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ discord_bot_ban: false }) }));

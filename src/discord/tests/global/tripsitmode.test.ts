@@ -90,7 +90,7 @@ describe('tripsitmode', () => {
     const stub = withGuild(slashStub({ subcommand: 'on', options: { user: target } }), () => ({}));
     await tripsitmode.execute(stub as never);
     await flushPromises();
-    expect(stub.guild?.channels.fetch).not.toHaveBeenCalled();
+    expect((stub.guild as { channels: { fetch: unknown } }).channels.fetch).not.toHaveBeenCalled();
     expect(stub.showModal).not.toHaveBeenCalled();
   });
 
