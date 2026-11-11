@@ -69,20 +69,20 @@ describe('modResponse: lookups from commands and buttons', () => {
     mocks.getMember.mockResolvedValue([member('1'), member('2')]);
     const { interaction } = button('moon');
     const result = await modResponse(interaction, 'INFO', true);
-    expect((result.embeds?.[0] as EmbedBuilder).data.title).toContain('returned 2 results!');
+    expect(((result.embeds as readonly unknown[])[0] as EmbedBuilder).data.title).toContain('returned 2 results!');
   });
 
   it('rejects names that match nobody', async () => {
     const { interaction } = button('nobody');
     const result = await modResponse(interaction, 'INFO', true);
-    expect((result.embeds?.[0] as EmbedBuilder).data.title).toBe('"nobody" returned no results!');
+    expect(((result.embeds as readonly unknown[])[0] as EmbedBuilder).data.title).toBe('"nobody" returned no results!');
   });
 
   it('offers note/ban/info for ids of users who left, and unban for banned ones', async () => {
     (global as unknown as { discordClient: unknown }).discordClient = { users: { fetch: vi.fn().mockRejectedValue(new Error('Unknown User')), guilds: undefined }, guilds: { fetch: vi.fn() } };
     const left = button(ID);
     const result = await modResponse(left.interaction, 'REPORT', true);
-    expect((result.embeds?.[0] as EmbedBuilder).data.description).toContain('is not in the guild, but I can still Note or ban them');
+    expect(((result.embeds as readonly unknown[])[0] as EmbedBuilder).data.description).toContain('is not in the guild, but I can still Note or ban them');
     expect(componentIds(result)).toContain(`moderate~FULL_BAN~${ID}`);
 
     const banned = button(ID);
@@ -176,7 +176,7 @@ describe('modResponse: action-specific buttons', () => {
       member: member(ID), author: { id: ID }, content: 'x'.repeat(1000), url: 'https://msg',
     };
     const result = await modResponse(ctx({ isUserContextMenuCommand: () => false, isMessageContextMenuCommand: () => true, targetMessage }), 'REPORT', true);
-    const field = (result.embeds?.[0] as EmbedBuilder).data.fields?.find(f => f.name === 'Message');
+    const field = ((result.embeds as readonly unknown[])[0] as EmbedBuilder).data.fields?.find(f => f.name === 'Message');
     expect(field?.value).toContain('...');
     expect(field?.value).toContain('https://msg');
   });
@@ -261,7 +261,7 @@ describe('messageModThread: context-menu messages', () => {
       isMessageContextMenuCommand: () => false,
     };
     const result = await modResponse(interaction as never, 'INFO', true);
-    expect((result.embeds?.[0] as EmbedBuilder).data.thumbnail?.url).toBe('https://gone-av');
+    expect(((result.embeds as readonly unknown[])[0] as EmbedBuilder).data.thumbnail?.url).toBe('https://gone-av');
   });
 
   it('reads the target from the slash command option', async () => {

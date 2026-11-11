@@ -48,7 +48,7 @@ beforeEach(() => {
   };
 });
 
-const title = (r: { embeds?: readonly unknown[] }) => (r.embeds?.[0] as { data: { title?: string; description?: string } }).data;
+const title = (r: { embeds?: readonly unknown[] }) => ((r.embeds as readonly unknown[])[0] as { data: { title?: string; description?: string } }).data;
 
 describe('botmod user', () => {
   it('refuses redundant bans and unbans', async () => {
@@ -129,7 +129,7 @@ describe('botmod guild', () => {
     const info = await botmod(interaction, 'guild', actor, 'BOTINFO', 'tg', null, null);
     expect(dbMock.discord_guilds.update).not.toHaveBeenCalled();
     expect(modSend).not.toHaveBeenCalled();
-    const fields = (info.embeds?.[0] as { data: { fields: { name: string }[] } }).data.fields.map(f => f.name);
+    const fields = ((info.embeds as readonly unknown[])[0] as { data: { fields: { name: string }[] } }).data.fields.map(f => f.name);
     expect(fields).toEqual(expect.arrayContaining(['Name', 'Members', 'Owner Name', 'Locale']));
   });
 });

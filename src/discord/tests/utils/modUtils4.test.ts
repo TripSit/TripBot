@@ -82,7 +82,7 @@ function setup(command: string, fields: Fields = {}, opts: { member?: 'ok' | 'le
   };
 }
 
-const description = (r: { embeds?: readonly unknown[] }) => (r.embeds?.[0] as EmbedBuilder).data.description as string;
+const description = (r: { embeds?: readonly unknown[] }) => ((r.embeds as readonly unknown[])[0] as EmbedBuilder).data.description as string;
 const created = () => (dbMock.user_actions.create.mock.calls[0][0] as { data: Record<string, unknown> }).data;
 
 beforeEach(() => {

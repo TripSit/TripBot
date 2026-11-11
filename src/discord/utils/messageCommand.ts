@@ -237,9 +237,9 @@ export async function messageCommand(message: Message): Promise<void> {
             },
           },
         });
-        log.debug(F, `Gave ${amount} tokens to ${recipientMember ? recipientMember.displayName : recipient.username}!`);
+        log.debug(F, `Gave ${amount} tokens to ${recipientMember.displayName}!`);
         if (message.channel instanceof TextChannel || message.channel instanceof DMChannel) {
-          await message.channel.send(stripIndents`Gave ${amount} tokens to ${recipientMember ? recipientMember.displayName : recipient.username}!
+          await message.channel.send(stripIndents`Gave ${amount} tokens to ${recipientMember.displayName}!
           
           They now have ${personaData.tokens} tokens!`);
         }

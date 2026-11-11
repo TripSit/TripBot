@@ -542,7 +542,7 @@ async function helper(
   // const channelMetatripsit = await interaction.client.channels.fetch(guildData.channel_tripsitmeta) as TextChannel;
 
   const messageText = stripIndents`
-   ${guild?.name} is run by volunteers and we're always looking for people who want to help out!
+   ${guild.name} is run by volunteers and we're always looking for people who want to help out!
   
   While we do value lived/living experience with drug use it is not required to be an effective Helper: \
 as long as you have a general understanding of how drugs work and how hey interact with mental health conditions we do not require a formal education for users interested in taking on the helper role. 

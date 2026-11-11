@@ -92,7 +92,7 @@ async function info(): Promise<InteractionEditReplyOptions> {
   };
 }
 
-async function apply(interaction:ChatInputCommandInteraction, guild: Guild): Promise<InteractionEditReplyOptions> {
+async function apply(guild: Guild): Promise<InteractionEditReplyOptions> {
   const guildData = await getOrCreateGuild(guild.id);
 
   if (guildData.cooperative) {
@@ -352,7 +352,7 @@ async function setup(interaction:ChatInputCommandInteraction, guild: Guild):Prom
   };
 }
 
-async function leave(interaction:ChatInputCommandInteraction, guild: Guild): Promise<InteractionEditReplyOptions> {
+async function leave(guild: Guild): Promise<InteractionEditReplyOptions> {
   const guildData = await getOrCreateGuild(guild.id);
 
   if (!guildData.cooperative) {
@@ -615,13 +615,13 @@ export const dCooperative: SlashCommand = {
         response = await info();
         break;
       case 'apply':
-        response = await apply(interaction, interaction.guild);
+        response = await apply(interaction.guild);
         break;
       case 'setup':
         response = await setup(interaction, interaction.guild);
         break;
       case 'leave':
-        response = await leave(interaction, interaction.guild);
+        response = await leave(interaction.guild);
         break;
       case 'add':
         response = await add(interaction);

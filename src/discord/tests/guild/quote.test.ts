@@ -212,7 +212,7 @@ describe('quoteAdd', () => {
       log,
     };
   };
-  const text = (c: ReturnType<typeof ctx>) => (c.editReply.mock.calls.at(-1)?.[0] as Embed).content;
+  const text = (c: ReturnType<typeof ctx>) => ((c.editReply.mock.calls.at(-1) as unknown[])[0] as Embed).content;
 
   beforeEach(() => {
     mocks.user.mockResolvedValue({ id: 'dbu' });
