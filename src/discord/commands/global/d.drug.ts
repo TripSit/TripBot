@@ -200,12 +200,11 @@ async function addDurations(
   roaNames: string[],
 ):Promise<[EmbedBuilder, number]> {
   let columns = 0;
+  // Only called when the drug has routes of administration
+  const roas = drugData.roas ?? [];
   roaNames.forEach(roaName => {
     if (columns < 3) {
-      if (!drugData.roas) {
-        return;
-      }
-      const roaInfo = drugData.roas.find(r => r.name === roaName);
+      const roaInfo = roas.find(r => r.name === roaName);
       if (roaInfo && roaInfo.duration) {
         let durationString = '';
         roaInfo.duration.forEach(d => {

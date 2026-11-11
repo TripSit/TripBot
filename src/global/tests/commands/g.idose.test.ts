@@ -116,3 +116,29 @@ describe('idose dispatch', () => {
     expect(await call('bogus' as never)).toEqual({});
   });
 });
+
+describe('idose ordering with already-sorted and mixed input', () => {
+  const sets = [
+    ['ascending', ['2024-01-01', '2024-01-02', '2024-01-03', '2024-01-04']],
+    ['descending', ['2024-01-04', '2024-01-03', '2024-01-02', '2024-01-01']],
+    ['mixed', ['2024-01-03', '2024-01-01', '2024-01-04', '2024-01-02', '2024-01-01']],
+  ] as const;
+
+  it.each(sets)('get lists %s input oldest first', async (_name, dates) => {
+    user();
+    dbMock.user_drug_doses.findMany.mockResolvedValueOnce(dates.map((d, i) => dose(`id${i}`, d)) as unknown as Doses);
+    dbMock.drug_names.findFirstOrThrow.mockResolvedValue({ name: 'LSD' } as never);
+    const result = await call('get');
+    expect(result).toHaveLength(dates.length);
+  });
+
+  it.each(sets)('delete picks the first record of %s input in date order', async (_name, dates) => {
+    user();
+    const rows = dates.map((d, i) => dose(`id${i}`, d));
+    dbMock.user_drug_doses.findMany.mockResolvedValueOnce(rows as unknown as Doses);
+    dbMock.drug_names.findMany.mockResolvedValueOnce([{ name: 'LSD' }] as unknown as Names);
+    await call('delete', { record: 0 });
+    const oldest = [...rows].sort((a, b) => a.created_at.getTime() - b.created_at.getTime())[0];
+    expect(dbMock.user_drug_doses.delete).toHaveBeenLastCalledWith({ where: { id: oldest.id } });
+  });
+});

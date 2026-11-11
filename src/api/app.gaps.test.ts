@@ -1,3 +1,4 @@
+/* eslint-disable sonarjs/no-duplicate-string */
 import supertest from 'supertest';
 import type { Server } from 'http';
 

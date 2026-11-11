@@ -1,3 +1,5 @@
+export {};
+
 describe('getAdminClient failures', () => {
   afterEach(() => { vi.doUnmock('@keycloak/keycloak-admin-client'); });
 
