@@ -2372,37 +2372,21 @@ export async function rpgFlair(interaction: ChatInputCommandInteraction) {
     };
   }
 
-  if (aiApproved === 'rejected') {
-    adjustmentReason = response.match(/Reason: (.*)/g)?.[0].replace('Reason: ', '') || 'No reason given';
+  // Everything else was handled above, so the verdict can only be a rejection
+  adjustmentReason = response.match(/Reason: (.*)/g)?.[0].replace('Reason: ', '') || 'No reason given';
 
-    // Send the user a rejection message
-    return {
-      embeds: [embedTemplate()
-        .setAuthor(null)
-        // .setFooter({ text: `${interaction.member?.displayName}'s TripSit RPG (BETA)`, iconURL: interaction.member?.displayAvatarURL() })
-        .setTitle(`${emojiGet('itemFlair')} Flair Rejected`)
-        .setDescription(stripIndents`
-        Your flair has been rejected by TripBot.
-        
-        **Rejection Reason:** ${adjustmentReason}
-        
-        Please try something else.`)
-        .setColor(Colors.Red)],
-    };
-  }
-
-  // If this code runs, something went wrong with TripBot's AI
+  // Send the user a rejection message
   return {
     embeds: [embedTemplate()
       .setAuthor(null)
       // .setFooter({ text: `${interaction.member?.displayName}'s TripSit RPG (BETA)`, iconURL: interaction.member?.displayAvatarURL() })
-      .setTitle(`${emojiGet('itemFlair')} Flair Error`)
+      .setTitle(`${emojiGet('itemFlair')} Flair Rejected`)
       .setDescription(stripIndents`
-      Oops!
-
-      Something went wrong with TripBot's AI.
-
-      Please try again later or contact a moderator to have your flair manually reviewed.`)
+      Your flair has been rejected by TripBot.
+      
+      **Rejection Reason:** ${adjustmentReason}
+      
+      Please try something else.`)
       .setColor(Colors.Red)],
   };
 }
@@ -2576,7 +2560,6 @@ export async function rpgHomeNameChange(
     && i.guild !== null);
   await interaction.awaitModalSubmit({ filter: modalFilter, time: 0 })
     .then(async i => {
-      if (i.customId.split('~')[1] !== interaction.id) return;
       const choice = i.fields.getTextInputValue('rpgNewName');
       await i.deferReply({ flags: MessageFlags.Ephemeral });
 
@@ -3409,16 +3392,12 @@ export async function rpgArcadeGame(
   const rowBetsC = new ActionRowBuilder<ButtonBuilder>()
     .addComponents(...bets.slice(10, 15));
 
-  const rowBetsD = new ActionRowBuilder<ButtonBuilder>()
-    .addComponents(...bets.slice(15, 20));
-
   // log.debug(F, `rowWagers: ${JSON.stringify(rowWagers, null, 2)}`);
   // log.debug(F, `rowBetsA: ${JSON.stringify(rowBetsA, null, 2)}`);
 
   const components = [rowWagers, rowBetsA];
   if (rowBetsB.components.length > 0) components.push(rowBetsB);
   if (rowBetsC.components.length > 0) components.push(rowBetsC);
-  if (rowBetsD.components.length > 0) components.push(rowBetsD);
 
   // log.debug(F, `components: ${JSON.stringify(components, null, 2)}`);
 

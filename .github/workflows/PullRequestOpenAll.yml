@@ -94,7 +94,7 @@ jobs:
       - name: Copy env
         run: cp .env.example .env
       - name: Test
-        run: npx vitest run --silent --reporter=json --outputFile=jest-results.json
+        run: npx vitest run --silent --coverage --reporter=json --outputFile=jest-results.json
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v4

@@ -299,3 +299,13 @@ describe('ircDisconnect', () => {
     expect(client.connect).toHaveBeenCalledTimes(1);
   });
 });
+
+describe('irc error events', () => {
+  it('logs server errors with and without a channel or reason', async () => {
+    await connect();
+    client.emit('irc error', { error: 'cannot_send_to_channel', channel: '#lounge', reason: 'Cannot send' });
+    client.emit('irc error', { error: 'unknown' });
+    expect(logWarn).toHaveBeenCalledWith(expect.anything(), 'IRC error: cannot_send_to_channel in #lounge (Cannot send)');
+    expect(logWarn).toHaveBeenCalledWith(expect.anything(), 'IRC error: unknown in n/a (no reason given)');
+  });
+});

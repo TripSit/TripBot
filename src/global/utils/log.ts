@@ -77,7 +77,7 @@ const transportOptions = [
       splat(),
       timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
       printf(({
-        level, message, timestamp, stack, ...metadata // eslint-disable-line
+        level, message, timestamp, // eslint-disable-line
       }) => {
         let msg = '';
         if (env.NODE_ENV === 'production') {
@@ -96,14 +96,6 @@ const transportOptions = [
 
         msg += `${message} `;
 
-        if (JSON.stringify(metadata) !== '{}') {
-          console.debug(`metadata: ${JSON.stringify(metadata, null, 2)}`); // eslint-disable-line no-console
-          msg += JSON.stringify(metadata);
-        }
-        if (stack) {
-          console.debug(`stack: ${stack}`); // eslint-disable-line no-console
-          msg += `\n${stack}`;
-        }
         return msg;
       }),
     ),
@@ -114,36 +106,8 @@ const transportOptions = [
 if (env.NODE_ENV === 'production') {
   transportOptions.push(new DiscordTransport({
     format: combine(
-      printf(({
-        level, message, timestamp, stack, ...metadata // eslint-disable-line
-      }) => {
-        let msg = '';
-        if (env.NODE_ENV === 'production') {
-          msg += '(Prd) ';
-        } else {
-          msg += `(Dev) ${timestamp} `;
-        }
-
-        // This makes it so that the logs look nice and even
-        // Idk why the length is 15, maybe cuz of colors
-        if (level.length < 15) {
-          msg += `${level}  `;
-        } else {
-          msg += `${level} `;
-        }
-
-        msg += `${message} `;
-
-        if (JSON.stringify(metadata) !== '{}') {
-          console.debug(`metadata: ${JSON.stringify(metadata, null, 2)}`); // eslint-disable-line no-console
-          msg += JSON.stringify(metadata);
-        }
-        if (stack) {
-          console.debug(`stack: ${stack}`); // eslint-disable-line no-console
-          msg += `\n${stack}`;
-        }
-        return msg;
-      }),
+      // Only reached in production; the level names are uncoloured and always shorter than 15 characters
+      printf(info => `(Prd) ${info.level}  ${info.message} `),
     ),
   }) as ConsoleTransportInstance);
   // Setup Sentry

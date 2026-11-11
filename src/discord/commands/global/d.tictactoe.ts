@@ -90,14 +90,6 @@ export const dTicTacToe: SlashCommand = {
   async execute(interaction: ChatInputCommandInteraction) {
     const opponent = interaction.options.getUser('opponent', true);
 
-    if (!opponent) {
-      await interaction.reply({
-        content: 'Please specify a valid opponent!',
-        flags: MessageFlags.Ephemeral,
-      });
-      return false;
-    }
-
     if (opponent.id === interaction.user.id) {
       await interaction.reply({
         content: 'You cannot play against yourself!',

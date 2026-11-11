@@ -60,3 +60,48 @@ describe('handleError', () => {
     expect(send).toHaveBeenCalledTimes(1);
   });
 });
+
+describe('handleError details and process listeners', () => {
+  it('includes the cause chain in the reported stack', async () => {
+    env.NODE_ENV = 'development';
+    const interaction = { replied: false, deferred: true, editReply: vi.fn().mockResolvedValue(undefined) };
+    const failure = new Error('outer failure', { cause: new Error('inner cause') });
+    await handleError(failure, 'ping', interaction as never);
+    const embed = (interaction.editReply.mock.calls[0][0] as { embeds: Array<{ data: { description: string } }> }).embeds[0].data;
+    expect(embed.description).toContain('Cause: inner cause');
+  });
+
+  it('reports non-Error values as JSON, including API errors', async () => {
+    env.NODE_ENV = 'development';
+    const interaction = { replied: false, deferred: true, editReply: vi.fn().mockResolvedValue(undefined) };
+    await handleError({ code: 1 }, 'ping', interaction as never);
+    const embed = (interaction.editReply.mock.calls[0][0] as { embeds: Array<{ data: { description: string } }> }).embeds[0].data;
+    expect(embed.description).toContain('"code": 1');
+    const api = new DiscordAPIError({ code: 50013, message: 'Missing Permissions' } as never, 50013, 403, 'GET', 'url', {} as never);
+    await expect(handleError(api, 'ping', interaction as never)).resolves.toBeUndefined();
+  });
+
+  it('routes unhandled rejections and uncaught exceptions through handleError', async () => {
+    env.NODE_ENV = 'development';
+    const before = {
+      rejection: process.listeners('unhandledRejection'),
+      exception: process.listeners('uncaughtException'),
+    };
+    vi.resetModules();
+    const { error } = await import('../../events/error');
+    const added = {
+      rejection: process.listeners('unhandledRejection').filter(l => !before.rejection.includes(l)),
+      exception: process.listeners('uncaughtException').filter(l => !before.exception.includes(l)),
+    };
+    try {
+      expect(added.rejection).toHaveLength(1);
+      expect(added.exception).toHaveLength(1);
+      await (added.rejection[0] as (e: Error) => Promise<void>)(new Error('async failure'));
+      await (added.exception[0] as (e: Error) => Promise<void>)(new Error('sync failure'));
+      await error.execute(new Error('client error') as never);
+    } finally {
+      added.rejection.forEach(l => process.removeListener('unhandledRejection', l as never));
+      added.exception.forEach(l => process.removeListener('uncaughtException', l as never));
+    }
+  });
+});

@@ -3,6 +3,7 @@
   "compilerOptions": {
     "module": "esnext",
     "moduleResolution": "bundler",
+    "lib": ["ESNext", "DOM"],
     "types": ["node", "vitest/globals"],
     "noEmit": true
   },

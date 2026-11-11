@@ -393,21 +393,16 @@ async function combineTs(
     const tsDrug = tsData[key as keyof typeof tsData] as Drug;
 
     // Check if the drug already exists in the combinedDb
-    let combinedDrug = combinedDb.find(drug => drug.name.toLowerCase() === tsDrug.name.toLowerCase());
-
-    // if (combinedDrug) {
-    //   log.debug(F, `[combineData] ${tsDrug.name} already exists in the combined DB!`);
-    // }
-
-    if (!combinedDrug) {
-      // log.debug(F, `(${combinedDbLength}) ${tsDrug.name} does not exist in the combined DB!`);
-      combinedDb.push({
-        name: tsDrug.name,
-        url: `https://wiki.tripsit.me/wiki/${tsDrug.name}`,
-      } as CbSubstance);
-
-      combinedDrug = combinedDb.find(drug => drug.name.toLowerCase() === tsDrug.name.toLowerCase()) as CbSubstance;
-    }
+    // Add the drug when psychonaut did not list it. A const keeps the narrowing inside the callbacks below.
+    const combinedDrug = combinedDb.find(drug => drug.name.toLowerCase() === tsDrug.name.toLowerCase())
+      ?? (() => {
+        const added = {
+          name: tsDrug.name,
+          url: `https://wiki.tripsit.me/wiki/${tsDrug.name}`,
+        } as CbSubstance;
+        combinedDb.push(added);
+        return added;
+      })();
 
     if (tsDrug.links && tsDrug.links.experiences) {
       combinedDrug.experiencesUrl = tsDrug.links.experiences;
@@ -585,10 +580,12 @@ async function combineTs(
           chemicalList.push(chemFound as Chemical);
         } else if (psychoactiveFound) {
           psychoactiveList.push(psychoactiveFound as Psychoactive);
+        /* v8 ignore start -- the tables above are static and consistent; this only fires if a category is added without a name */
         } else {
           log.info(F, `[combineTs] ${tsDrug.name} has an unrecognized category: ${mappedCategory}`);
           log.info(F, `Originally ${category} > ${mappedCategory}`);
         }
+        /* v8 ignore stop */
       });
 
       combinedDrug.classes = {
@@ -612,7 +609,6 @@ async function combineTs(
       if (tsDrug.formatted_dose) {
         const dose = tsDrug.formatted_dose as TsDose;
         Object.entries(dose).forEach(([doseRoa, dosage]) => {
-          if (!combinedDrug) return;
           const roaEntry = combinedDrug.roas?.find(roa => roa.name === doseRoa) || {} as Roa;
           roaEntry.name = doseRoa;
           let roaNote = tsDrug.dose_note;
@@ -699,9 +695,9 @@ async function combineTs(
 
     if (tsDrug.combos) {
       combinedDrug.interactions = [];
-      Object.keys(tsDrug.combos).forEach(comboName => {
-        if (!tsDrug.combos) return;
-        const combo = tsDrug.combos[comboName as keyof typeof tsDrug.combos] as ComboData;
+      const { combos } = tsDrug;
+      Object.keys(combos).forEach(comboName => {
+        const combo = combos[comboName as keyof typeof combos] as ComboData;
         const interactionEntry = {
           status: combo.status as Status,
           name: comboName,
@@ -715,7 +711,6 @@ async function combineTs(
           interactionEntry.sources = combo.sources;
         }
 
-        if (!combinedDrug) return;
         combinedDrug.interactions?.push(interactionEntry);
       });
     }

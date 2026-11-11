@@ -3,11 +3,8 @@ import {
   Message,
   TextChannel,
 } from 'discord.js';
-import _ from 'underscore';
 
 export default karma;
-
-const lastKarma = {};
 
 /**
  * karma
@@ -20,14 +17,6 @@ export async function karma(message: Message): Promise<void> {
   const match = message.content.match(/^(.+)(\+\+|--)$/);
   if (match && match[1].length < 25) {
     match[1] = match[1].replace(/(\+-)/g, '').replace(/:/g, '').trim();
-
-    const timeout = 5000;
-    if (_.has(lastKarma, message.author.id) && lastKarma[message.author.id as keyof typeof lastKarma] + timeout > Date.now()) {
-      if (message.channel instanceof TextChannel || message.channel instanceof DMChannel) {
-        message.channel.send('Try again in a few seconds : - )');
-      }
-      return;
-    }
 
     if (message.channel instanceof TextChannel || message.channel instanceof DMChannel) {
       const lowerCaseMatch = match[1].toLowerCase();

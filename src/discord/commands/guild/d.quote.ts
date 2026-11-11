@@ -201,15 +201,11 @@ function buildQuoteEmbeds(baseEmbed: APIEmbed, media: QuoteMedia, jumpUrl: strin
 
   const embeds: APIEmbed[] = [{
     ...baseEmbed,
-    ...(jumpUrl && { url: jumpUrl }),
+    url: jumpUrl,
     image: { url: firstImage },
   }];
 
-  // Without a shared url the remaining images cannot be grouped onto the first embed
-  if (!jumpUrl) {
-    return embeds;
-  }
-
+  // Images only exist when the quote has a jump link to fetch the message from, so jumpUrl is always set here
   extraImages.slice(0, maxQuoteEmbeds - 1).forEach(url => {
     embeds.push({ url: jumpUrl, image: { url } });
   });
@@ -274,14 +270,10 @@ async function get(interaction: ChatInputCommandInteraction) {
   }
 
   if (!quoteData) {
-    let searchType;
-    if (quote && user) {
-      searchType = `quote containing "${quote}" by ${user?.username}`;
-    } else if (quote) {
-      searchType = `quote containing "${quote}"`;
-    } else {
-      searchType = `quotes by ${user?.username}`;
-    }
+    // Searching by user alone is answered above, so a quote text is always present here
+    const searchType = user
+      ? `quote containing "${quote}" by ${user.username}`
+      : `quote containing "${quote}"`;
 
     await interaction.reply({
       content: `No ${searchType} found.`,
@@ -552,7 +544,7 @@ export async function quoteAdd(interaction:MessageContextMenuCommandInteraction)
   }
 
   // Don't allow saving your own messages
-  if (target.id === actor.id && !actor.id === env.DISCORD_OWNER_ID) {
+  if (target.id === actor.id && actor.id !== env.DISCORD_OWNER_ID) {
     log.debug(F, 'Target is the actor');
     await interaction.editReply({
       content: 'You can\'t save your own messages!',

@@ -833,12 +833,10 @@ export async function tripsitmeUserClose(
 
     // readd each role to the target
     if (targetRoles.length > 0) {
+      // Read once so the narrowing from the guild check above carries into the async callback
+      const roleGuild = interaction.guild;
       targetRoles.forEach(async roleId => {
-        if (!interaction.guild) {
-          log.error(F, 'no guild!');
-          return;
-        }
-        const roleObj = await interaction.guild.roles.fetch(roleId) as Role;
+        const roleObj = await roleGuild.roles.fetch(roleId) as Role;
 
         if (ignoredRoles.includes(roleObj.id)) {
           log.debug(F, `${roleObj.name} (${roleObj.id}) is a team role or vanity role, skipping!`);
@@ -865,7 +863,7 @@ export async function tripsitmeUserClose(
           log.debug(F, `${roleObj.name} (${roleObj.id}) added to ${target.displayName} (${target.id})`);
         } catch (err) {
           log.error(F, `Error adding role to target: ${err}`);
-          log.error(F, `${roleObj.name} could not be added to ${target.displayName} (${target.id}) in ${interaction.guild}!`);
+          log.error(F, `${roleObj.name} could not be added to ${target.displayName} (${target.id}) in ${roleGuild}!`);
         }
       });
     }
@@ -1317,13 +1315,7 @@ export async function reopenTicket({
     let metaMessage = '';
     if (minutes > 5) { // Switch to seconds > 10 for dev server
       const helperString = `and/or ${roleHelper}`;
-      try {
-        metaMessage = `Hey ${roleTripsitter} ${guildData.role_helper ? helperString : ''} team, ${metaSubject}`;
-      } catch (err) {
-        // If for example helper role has been deleted but the ID is still stored, do this
-        metaMessage = `Hey ${roleTripsitter} team, ${metaSubject}`;
-        log.error(F, `Stored Helper ID for guild ${guildData.id} is no longer valid. Role is unfetchable or deleted.`);
-      }
+      metaMessage = `Hey ${roleTripsitter} ${guildData.role_helper ? helperString : ''} team, ${metaSubject}`;
     } else {
       metaMessage = metaSubject;
     }

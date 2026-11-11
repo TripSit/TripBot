@@ -171,17 +171,7 @@ function determineMultiplayerWinner(choices: Map<string, string>): MultiplayerRe
     const choice1 = choices.get(player1Id)!;
     const choice2 = choices.get(player2Id)!;
 
-    if (choice1 === choice2) {
-    // Tie - no elimination
-      return {
-        winner: null,
-        eliminated: [],
-        remaining: [player1Id, player2Id],
-        results,
-      };
-    }
-
-    // Determine winner using standard RPS
+    // choice1 !== choice2 here: identical choices leave a single active choice, which returned above
     const rpsResult = determineWinner(choice1, choice2);
     const winnerId = rpsResult === 'player1' ? player1Id : player2Id;
     const loserId = rpsResult === 'player1' ? player2Id : player1Id;
@@ -297,12 +287,6 @@ async function startMultiplayerRound(interaction: ChatInputCommandInteraction, g
     if (gameIdFromButton !== game.gameId) {
       return;
     }
-    // Extra safety check to prevent eliminated players from participating in case of race conditions
-    if (!game.players.includes(i.user.id)) {
-      await i.deferUpdate();
-      return;
-    }
-
     if (game.choices.has(i.user.id)) {
       await i.deferUpdate();
       return;
@@ -413,30 +397,18 @@ async function handle1v1GameEnd(
   const gameObj = game;
   gameObj.isActive = false;
 
-  // Ensure scores are initialized (TypeScript safety)
-  if (!gameObj.scores) {
-    gameObj.scores = { player1: 0, player2: 0 };
-  }
-
-  const player1Choice = gameObj.choices.get(interaction.user.id);
-  const player2Choice = gameObj.choices.get(opponent.id);
-
-  if (!player1Choice || !player2Choice) {
-    await interaction.editReply({
-      content: 'Error: Could not retrieve player choices.',
-      embeds: [],
-      components: [],
-    });
-    return true;
-  }
+  // 1v1 games are created with scores, and this only runs once both players' choices are in
+  const scores = gameObj.scores!;
+  const player1Choice = gameObj.choices.get(interaction.user.id)!;
+  const player2Choice = gameObj.choices.get(opponent.id)!;
 
   const result = determineWinner(player1Choice, player2Choice);
 
   // Update scores based on round result
   if (result === 'player1') {
-    gameObj.scores.player1 += 1;
+    scores.player1 += 1;
   } else if (result === 'player2') {
-    gameObj.scores.player2 += 1;
+    scores.player2 += 1;
   }
   // Ties don't change scores
 
@@ -467,18 +439,18 @@ async function handle1v1GameEnd(
   });
 
   // Check if game is over (best of 3)
-  const gameOver = gameObj.scores.player1 >= 2 || gameObj.scores.player2 >= 2;
+  const gameOver = scores.player1 >= 2 || scores.player2 >= 2;
 
   if (gameOver) {
     // Wait 2 seconds, then show final results
     setTimeout(async () => {
       try {
-        const finalWinner = gameObj.scores!.player1 >= 2 ? interaction.user.username : opponent.username;
+        const finalWinner = scores.player1 >= 2 ? interaction.user.username : opponent.username;
         const finalEmbed = embedTemplate()
           .setTitle('🏆 Match Complete!')
           .setColor(Colors.Green)
           .setDescription(
-            `**Final Score:**\n${interaction.user.username}: ${gameObj.scores!.player1} | ${opponent.username}: ${gameObj.scores!.player2}\n\n`
+            `**Final Score:**\n${interaction.user.username}: ${scores.player1} | ${opponent.username}: ${scores.player2}\n\n`
             + `🎉 **GAME OVER! ${finalWinner} wins the match!** 🎉`,
           );
 
@@ -504,7 +476,7 @@ async function handle1v1GameEnd(
           .setColor(Colors.Green)
           .setDescription(
             `**${interaction.user.username}** vs **${opponent.username}**\n\n`
-            + `**Current Score:**\n${interaction.user.username}: ${gameObj.scores!.player1} | ${opponent.username}: ${gameObj.scores!.player2}\n\n`
+            + `**Current Score:**\n${interaction.user.username}: ${scores.player1} | ${opponent.username}: ${scores.player2}\n\n`
             + 'Both players, make your choice!\n⏰ You have 2 minutes for the entire match!',
           );
 

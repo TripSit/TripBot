@@ -256,12 +256,9 @@ async function dCalcPsychedelics(
   const drug = (drugType === 'lsd') ? 'LSD' : 'Mushrooms';
   const units = (drugType === 'lsd') ? 'ug' : 'g';
 
-  let title = `${result} ${units} of ${drug} is needed to feel the same effects as`;
-  if (desiredDose) {
-    title = `${title} ${desiredDose} ${units} of ${drug} when ${lastDose} ${units} were taken ${days} days ago.`;
-  } else {
-    title = `${title} ${lastDose} ${units} of ${drug} taken ${days} days ago.`;
-  }
+  // desiredDose is at least 1 here (smaller values were rejected above)
+  const title = `${result} ${units} of ${drug} is needed to feel the same effects as `
+    + `${desiredDose} ${units} of ${drug} when ${lastDose} ${units} were taken ${days} days ago.`;
 
   return buildCalcEmbed(
     title,

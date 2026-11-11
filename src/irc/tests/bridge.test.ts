@@ -306,3 +306,50 @@ describe('ircChannels', () => {
     expect(bridge.ircChannels()).toEqual(['#lounge']);
   });
 });
+
+describe('bridge bookkeeping limits', () => {
+  it('forgets the oldest pending echo and the oldest relayed message beyond their limits', async () => {
+    bridge.registerIrcBridge(client as unknown as Client);
+    const target = bridge.createIrcBridgeTarget(client as unknown as Client);
+    const echoed = (index: number) => ({
+      nick: RELAYED_NICK, message: `m${index}`, tags: { 'draft/relaymsg': BOT, msgid: `id-${index}` },
+    });
+
+    // More than the 1000 tracked messages, each sent and then echoed back by the server
+    for (let i = 0; i < 1005; i += 1) {
+      // eslint-disable-next-line no-await-in-loop
+      await target.send('#lounge', outgoing({ sourceId: `d${i}`, text: `m${i}` }));
+      // eslint-disable-next-line no-await-in-loop
+      await vi.advanceTimersByTimeAsync(bridge.IRC_MESSAGE_DELAY_MS);
+      ircMessage('privmsg', echoed(i));
+    }
+    await target.remove?.('#lounge', 'd0'); // forgotten
+    await target.remove?.('#lounge', 'd1004'); // still tracked
+    const redactions = client.raw.mock.calls.filter(call => call[0] === 'REDACT');
+    expect(redactions).toEqual([['REDACT', '#lounge', 'id-1004']]);
+  });
+
+  it('keeps at most 200 unmatched echoes', async () => {
+    const target = bridge.createIrcBridgeTarget(client as unknown as Client);
+    for (let i = 0; i < 205; i += 1) {
+      // eslint-disable-next-line no-await-in-loop
+      await target.send('#lounge', outgoing({ sourceId: `p${i}`, text: `pending ${i}` }));
+      // eslint-disable-next-line no-await-in-loop
+      await vi.advanceTimersByTimeAsync(bridge.IRC_MESSAGE_DELAY_MS);
+    }
+    expect(client.raw).toHaveBeenCalled();
+  });
+
+  it('logs a failure to relay an IRC message instead of throwing', async () => {
+    vi.resetModules();
+    vi.doMock('../../global/bridge/bridge', async importOriginal => ({
+      ...(await importOriginal<typeof import('../../global/bridge/bridge')>()),
+      relayMessage: vi.fn().mockRejectedValue(new Error('relay exploded')),
+    }));
+    const mocked = await import('../bridge');
+    mocked.registerIrcBridge(client as unknown as Client);
+    ircMessage('privmsg', { message: 'hello' });
+    await vi.waitFor(() => expect(global.log.error).toHaveBeenCalledWith(expect.anything(), expect.stringContaining('relay exploded')));
+    vi.doUnmock('../../global/bridge/bridge');
+  });
+});

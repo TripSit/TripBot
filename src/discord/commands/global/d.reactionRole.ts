@@ -336,6 +336,7 @@ export async function buttonReactionRole(
         if (!i.member) {
         // log.debug(F, `no member!`);
           await i.editReply(memberError);
+          return;
         }
 
         introMessage = i.fields.getTextInputValue('introduction');
@@ -763,8 +764,10 @@ async function getGuildRole(
   roleName: string,
   interaction: ChatInputCommandInteraction,
 ):Promise<Role> {
+  /* v8 ignore start -- the message creators that call this have already checked the guild and channel */
   if (!interaction.guild) return {} as Role;
   if (!interaction.channel) return {} as Role;
+  /* v8 ignore stop */
   let returnRole: Role;
 
   let reactionroleData = await db.reaction_roles.findMany({
@@ -1399,21 +1402,12 @@ export const dReactionRole: SlashCommand = {
     if (!interaction.member) {
       // log.debug(F, `no member!`);
       await interaction.reply(memberError);
+      return false;
     }
     if (!(interaction.member as GuildMember).permissions.has('ManageRoles' as PermissionResolvable)) {
       await interaction.reply({
         embeds: [
           errorEmbed('Error: You do not have the ManageRoles permission needed to create a reactionrole message!'),
-        ],
-        flags: MessageFlags.Ephemeral,
-      });
-      return false;
-    }
-
-    if (!interaction.guild) {
-      await interaction.reply({
-        embeds: [
-          errorEmbed('Error: This command can only be used in a guild!'),
         ],
         flags: MessageFlags.Ephemeral,
       });

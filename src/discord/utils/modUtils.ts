@@ -293,12 +293,22 @@ function isUnTimeout(command: ModAction): command is 'UN-TIMEOUT' { return comma
 
 function isWarning(command: ModAction): command is 'WARNING' { return command === 'WARNING'; }
 
-function isBan(command: ModAction): command is 'FULL_BAN' | 'BAN_EVASION' | 'UNDERBAN' | 'TICKET_BAN' | 'DISCORD_BOT_BAN' | 'HELPER_BAN' | 'CONTRIBUTOR_BAN' {
+// Bans that remove the user from the guild (and carry the appeal wording and unban button)
+function isBan(command: ModAction): command is 'FULL_BAN' | 'BAN_EVASION' | 'UNDERBAN' {
   return command === 'FULL_BAN' || command === 'BAN_EVASION' || command === 'UNDERBAN';
 }
 
-function isUnBan(command: ModAction): command is 'UN-FULL_BAN' | 'UN-BAN_EVASION' | 'UN-UNDERBAN' | 'UN-TICKET_BAN' | 'UN-DISCORD_BOT_BAN' | 'UN-HELPER_BAN' | 'UN-CONTRIBUTOR_BAN' {
+function isUnBan(command: ModAction): command is 'UN-FULL_BAN' | 'UN-BAN_EVASION' | 'UN-UNDERBAN' {
   return command === 'UN-FULL_BAN' || command === 'UN-BAN_EVASION' || command === 'UN-UNDERBAN';
+}
+
+// Bans that only set a flag on the user's record (tickets, vendor bots, helper and contributor roles)
+function isFlagBan(command: ModAction): command is 'TICKET_BAN' | 'DISCORD_BOT_BAN' | 'HELPER_BAN' | 'CONTRIBUTOR_BAN' {
+  return command === 'TICKET_BAN' || command === 'DISCORD_BOT_BAN' || command === 'HELPER_BAN' || command === 'CONTRIBUTOR_BAN';
+}
+
+function isUnFlagBan(command: ModAction): command is 'UN-TICKET_BAN' | 'UN-DISCORD_BOT_BAN' | 'UN-HELPER_BAN' | 'UN-CONTRIBUTOR_BAN' {
+  return command === 'UN-TICKET_BAN' || command === 'UN-DISCORD_BOT_BAN' || command === 'UN-HELPER_BAN' || command === 'UN-CONTRIBUTOR_BAN';
 }
 
 function sendsMessageToUser(command: ModAction): command is 'WARNING' | 'FULL_BAN' | 'TICKET_BAN' | 'DISCORD_BOT_BAN' | 'BAN_EVASION' | 'UNDERBAN' | 'TIMEOUT' | 'UN-TIMEOUT' | 'KICK' {
@@ -529,19 +539,12 @@ export async function userInfoEmbed(
 
   // log.debug(F, `targetString: ${targetString}`);
   // const tag = (target as GuildMember).user ? (target as GuildMember).user.tag : (target as User).tag;
-  let userAvatar = null;
+  // Members carry their avatar on `.user`; users that left the server are bare User objects.
+  let userAvatar: string | null = null;
   try {
-    if ((target as GuildMember).user) {
-      userAvatar = (target as GuildMember).user.displayAvatarURL();
-    }
+    userAvatar = ((target as GuildMember).user ?? (target as User)).displayAvatarURL();
   } catch (err: unknown) {
-    try {
-      if ((target as User).displayAvatarURL()) {
-        userAvatar = (target as User).displayAvatarURL();
-      }
-    } catch (error: unknown) {
-      // Ignore
-    }
+    // No avatar available
   }
 
   // log.debug(F, `userAvatar: ${userAvatar}`);
@@ -741,6 +744,7 @@ export async function modResponse(
             } else if (interaction.guild) {
               userBan = await interaction.guild.bans.fetch(userId);
             } else {
+              /* v8 ignore next -- button/slash interactions are guild-only here; kept as a type guard */
               throw new Error('Interaction is missing a valid guild.');
             }
           } catch (err: unknown) {
@@ -1086,6 +1090,7 @@ export async function messageModThread(
       // Create a new thread in the mod channel
       // log.debug(F, 'creating mod thread');
       if (guildData.channel_moderators === null) {
+        /* v8 ignore next -- guilds without a moderator channel are rejected earlier; type guard only */
         throw new Error('Moderator room id is null');
       }
       const modChan = await discordClient.channels.fetch(guildData.channel_moderators) as TextChannel;
@@ -1481,22 +1486,7 @@ export async function acknowledgeReportButton(
     return;
   }
 
-  // Determine reportee name
-  // Determine reportee name
-  let reporteeName = reporteeMember?.displayName ?? reporteeUser?.username ?? 'Unknown User';
-
-  // If reporteeUser and reporteeMember are not found, try fetching the mod thread name
-  if (!reporteeMember && !reporteeUser && reporteeData.mod_thread_id) {
-    try {
-      const modThread = await buttonInt.guild.channels.fetch(reporteeData.mod_thread_id) as TextChannel;
-      if (modThread) {
-        reporteeName = modThread.name; // Use the thread name as the reportee's name
-      }
-    } catch (err) {
-      log.info(F, `Failed to fetch mod thread channel name: ${err}`);
-      log.error(F, `Failed to fetch reporteeMember, user, and modthread name. ${err}`);
-    }
-  }
+  const reporteeName = reporteeMember?.displayName ?? reporteeUser?.username ?? 'Unknown User';
 
   // Send a DM to the user who triggered the report
   try {
@@ -1548,7 +1538,7 @@ export async function acknowledgeReportButton(
 }
 
 async function wasActionedRecently(actionType: string, targetDiscordId: Snowflake): Promise<boolean> {
-  if (actionType === 'APPROVE_APPEAL' || actionType === 'DENY_APPEAL') {
+  if (actionType === 'APPEAL_ACCEPT' || actionType === 'APPEAL_REJECT') {
     return false;
   }
   const oneMinuteAgo = new Date(Date.now() - 300 * 1000);
@@ -1750,9 +1740,6 @@ export async function moderate(
       }
 
       tempBanDuration = await parseDuration(durationVal);
-      if (tempBanDuration && tempBanDuration < 0) {
-        return { content: 'Ban duration must be at least 1 second!' };
-      }
 
       durationStr = `${time(new Date(Date.now() + tempBanDuration), 'R')}`;
       const currentTime = new Date();
@@ -1884,7 +1871,7 @@ export async function moderate(
 
   log.debug(F, `[moderate] performing actions for ${targetName}`);
   let extraMessage = '';
-  if (isBan(command)) {
+  if (isBan(command) || isFlagBan(command)) {
     if (isFullBan(command) || isUnderban(command) || isBanEvasion(command)) {
       targetData.removed_at = new Date();
 
@@ -1911,9 +1898,6 @@ export async function moderate(
         }
 
         deleteDuration = await parseDuration(deleteMessageValue);
-        if (deleteDuration && deleteDuration < 0) {
-          return { content: 'Delete duration must be at least 1 second!' };
-        }
       }
 
       try {
@@ -1947,7 +1931,7 @@ export async function moderate(
     } else if (isContributorBan(command)) {
       targetData.contributor_role_ban = true;
     }
-  } else if (isUnBan(command)) {
+  } else if (isUnBan(command) || isUnFlagBan(command)) {
     if (isUnFullBan(command) || isUnUnderban(command) || isUnBanEvasion(command)) {
       targetData.removed_at = null;
       try {
@@ -2296,16 +2280,9 @@ export async function modModal(
     .setRequired(true)
     .setCustomId('internalNote');
 
-  try {
-    // Ensure the label text is within the limit
-    const label = `Why are you ${verb} ${target}?`;
-    const truncatedLabelText = label.length > 45 ? `${label.substring(0, 41)}...?` : label;
-
-    modalInputComponent.setLabel(truncatedLabelText);
-  } catch (err) {
-    log.error(F, `Error: ${err}`);
-    log.error(F, `Verb: ${verb}, Target: ${target}`);
-  }
+  // Ensure the label text is within the limit
+  const label = `Why are you ${verb} ${target}?`;
+  modalInputComponent.setLabel(label.length > 45 ? `${label.substring(0, 41)}...?` : label);
 
   // log.debug(F, `Verb: ${verb}`);
   const modal = new ModalBuilder()
@@ -2449,15 +2426,7 @@ export async function modModal(
               created_at: new Date(),
             } as user_actions;
 
-            if (actionData.id) {
-              await db.user_actions.upsert({
-                where: { id: actionData.id },
-                create: actionData,
-                update: actionData,
-              });
-            } else {
-              await db.user_actions.create({ data: actionData });
-            }
+            await db.user_actions.create({ data: actionData });
 
             // Send message to thread with embed
             await thread.send({

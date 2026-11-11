@@ -44,6 +44,10 @@ export default defineConfig({
     ],
     coverage: {
       provider: 'v8',
+      // Statements and lines must stay at 100%. Branches and functions are ratcheted floors; raise them as gaps close.
+      thresholds: {
+        statements: 100, lines: 100, branches: 97, functions: 100,
+      },
       reporter: ['text', 'lcov', 'json-summary'],
       include: [
         'src/discord/commands/**',
@@ -65,7 +69,9 @@ export default defineConfig({
         'src/global/commands/_g.template.ts',
         'src/global/commands/index.ts',
         'src/global/utils/archive/**',
+        'src/discord/utils/archive/**',
         'src/global/utils/_template.ts',
+        'src/discord/utils/_template.ts',
         'src/irc/archive/**',
         'src/global/@types/**',
         'src/api/v2/**',
