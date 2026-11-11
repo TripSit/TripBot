@@ -216,6 +216,71 @@ describe('modResponse: no interaction', () => {
   });
 });
 
+describe('messageModThread: context-menu messages', () => {
+  it('does not duplicate the Message field already present on the thread embed', async () => {
+    const modLog = { send: vi.fn() };
+    const thread = { id: 'thread1', send: vi.fn(), setName: vi.fn() };
+    (global as unknown as { discordClient: unknown }).discordClient = {
+      users: { fetch: vi.fn() },
+      channels: { fetch: vi.fn(async (id: string) => (id === 'modlog' ? modLog : { threads: { create: vi.fn(async () => thread) } })) },
+      guilds: { fetch: vi.fn(async () => ({ roles: { fetch: vi.fn(async () => ({ toString: (): string => '<@&mods>' })) } })) },
+    };
+    dbMock.discord_guilds.upsert.mockResolvedValue({
+      id: 'g1', role_moderator: 'mod-role', channel_moderators: 'modchan', channel_mod_log: 'modlog',
+    } as never);
+    dbMock.users.upsert.mockResolvedValue({ id: 'uid', mod_thread_id: null } as never);
+    const embed = { toJSON: () => ({ fields: [{ name: 'Message', value: 'quoted' }] }) };
+    const interaction = {
+      message: { embeds: [embed] },
+      guild: { id: 'g1' },
+      member: member('999999999999999999', { roles: { cache: new Set(['mod-role']) } }),
+      targetMember: member(ID),
+      targetUser: { id: ID },
+      targetMessage: { content: 'quoted', url: 'https://discord.com/channels/1/2/3', member: member(ID) },
+      isButton: () => false,
+      isChatInputCommand: () => false,
+      isUserContextMenuCommand: () => false,
+      isMessageContextMenuCommand: () => true,
+    };
+    await messageModThread(interaction as never, member('999999999999999999'), member(ID) as never, 'WARNING', 'n', 'd', '', '', undefined, null);
+    const [{ embeds }] = thread.send.mock.calls[0] as unknown as [{ embeds: EmbedBuilder[] }];
+    expect(embeds[0].data.fields?.filter(f => f.name === 'Message')).toHaveLength(1);
+  });
+
+  it('shows a departed user\'s avatar and tolerates avatar lookups that throw', async () => {
+    (global as unknown as { discordClient: unknown }).discordClient = {
+      users: { fetch: vi.fn(async () => ({ id: ID, username: 'gone', displayAvatarURL: () => 'https://gone-av' })) },
+    };
+    const interaction = {
+      guild: { id: 'g1', bans: { fetch: vi.fn().mockRejectedValue(new Error('x')) }, members: { fetch: vi.fn().mockRejectedValue(new Error('x')) } },
+      member: member('999999999999999999', { roles: { cache: new Set(['mod-role']) } }),
+      customId: `moderate~INFO~${ID}`,
+      isChatInputCommand: () => false,
+      isButton: () => true,
+      isUserContextMenuCommand: () => false,
+      isMessageContextMenuCommand: () => false,
+    };
+    const result = await modResponse(interaction as never, 'INFO', true);
+    expect((result.embeds?.[0] as EmbedBuilder).data.thumbnail?.url).toBe('https://gone-av');
+  });
+
+  it('reads the target from the slash command option', async () => {
+    mocks.getMember.mockResolvedValue([member(ID)]);
+    const interaction = {
+      guild: { id: 'g1' },
+      member: member('999999999999999999', { roles: { cache: new Set(['mod-role']) } }),
+      options: { getString: vi.fn(() => 'someone') },
+      isChatInputCommand: () => true,
+      isButton: () => false,
+      isUserContextMenuCommand: () => false,
+      isMessageContextMenuCommand: () => false,
+    };
+    await modResponse(interaction as never, 'INFO', true);
+    expect(interaction.options.getString).toHaveBeenCalledWith('target', true);
+    expect(mocks.getMember).toHaveBeenCalledWith(interaction, 'someone');
+  });
+});
+
 describe('linkThread', () => {
   it('links threads for users without one, or when overriding', async () => {
     expect(await linkThread(ID, 'thread1', false)).toBeNull();

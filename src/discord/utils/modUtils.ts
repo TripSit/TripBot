@@ -539,19 +539,12 @@ export async function userInfoEmbed(
 
   // log.debug(F, `targetString: ${targetString}`);
   // const tag = (target as GuildMember).user ? (target as GuildMember).user.tag : (target as User).tag;
-  let userAvatar = null;
+  // Members carry their avatar on `.user`; users that left the server are bare User objects.
+  let userAvatar: string | null = null;
   try {
-    if ((target as GuildMember).user) {
-      userAvatar = (target as GuildMember).user.displayAvatarURL();
-    }
+    userAvatar = ((target as GuildMember).user ?? (target as User)).displayAvatarURL();
   } catch (err: unknown) {
-    try {
-      if ((target as User).displayAvatarURL()) {
-        userAvatar = (target as User).displayAvatarURL();
-      }
-    } catch (error: unknown) {
-      // Ignore
-    }
+    // No avatar available
   }
 
   // log.debug(F, `userAvatar: ${userAvatar}`);
@@ -1493,22 +1486,7 @@ export async function acknowledgeReportButton(
     return;
   }
 
-  // Determine reportee name
-  // Determine reportee name
-  let reporteeName = reporteeMember?.displayName ?? reporteeUser?.username ?? 'Unknown User';
-
-  // If reporteeUser and reporteeMember are not found, try fetching the mod thread name
-  if (!reporteeMember && !reporteeUser && reporteeData.mod_thread_id) {
-    try {
-      const modThread = await buttonInt.guild.channels.fetch(reporteeData.mod_thread_id) as TextChannel;
-      if (modThread) {
-        reporteeName = modThread.name; // Use the thread name as the reportee's name
-      }
-    } catch (err) {
-      log.info(F, `Failed to fetch mod thread channel name: ${err}`);
-      log.error(F, `Failed to fetch reporteeMember, user, and modthread name. ${err}`);
-    }
-  }
+  const reporteeName = reporteeMember?.displayName ?? reporteeUser?.username ?? 'Unknown User';
 
   // Send a DM to the user who triggered the report
   try {
@@ -2448,15 +2426,7 @@ export async function modModal(
               created_at: new Date(),
             } as user_actions;
 
-            if (actionData.id) {
-              await db.user_actions.upsert({
-                where: { id: actionData.id },
-                create: actionData,
-                update: actionData,
-              });
-            } else {
-              await db.user_actions.create({ data: actionData });
-            }
+            await db.user_actions.create({ data: actionData });
 
             // Send message to thread with embed
             await thread.send({

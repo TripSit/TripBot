@@ -136,8 +136,24 @@ describe('modModal: non-modal actions', () => {
     await modModal(already.interaction);
     expect(JSON.stringify(already.raw.editReply.mock.calls[0][0])).toContain('already been acknowledged');
     const first = setup('ACKN_REPORT', { ackRow: true });
-    first.raw.guild = null as never;
-    await expect(modModal(first.interaction)).resolves.toBeUndefined();
+    await modModal(first.interaction);
+    expect(JSON.stringify(first.raw.editReply.mock.calls.at(-1)?.[0])).toContain('You have acknowledged the report');
+  });
+});
+
+describe('modModal: submit handling', () => {
+  it('only accepts modal submits from the modal families', async () => {
+    const s = setup('NOTE');
+    await modModal(s.interaction);
+    const [{ filter }] = s.raw.awaitModalSubmit.mock.calls[0] as unknown as [{ filter: (i: { customId: string }) => boolean }];
+    expect(filter({ customId: 'modModal~NOTE~int1' })).toBe(true);
+    expect(filter({ customId: 'somethingElse' })).toBe(false);
+  });
+
+  it('logs and swallows failures while answering a submitted modal', async () => {
+    const s = setup('NOTE');
+    s.submit.editReply.mockRejectedValue(new Error('Unknown Interaction'));
+    await expect(modModal(s.interaction)).resolves.toBeUndefined();
   });
 });
 
