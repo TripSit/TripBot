@@ -346,6 +346,25 @@ describe('applicationApprove', () => {
     expect(high.interaction.editReply).toHaveBeenCalledWith({ content: expect.stringContaining('I do not have permission to add') });
   });
 
+  // Regression test for TripSit/TripBot#1369: a reviewer without Manage Roles used to be told no and then approved anyway.
+  it('does not grant the role to reviewers without Manage Roles', async () => {
+    const weak = setup({ manageRoles: false });
+    await applicationApprove(weak.interaction as never);
+    expect(weak.interaction.editReply).toHaveBeenCalledWith({ content: 'You do not have permission to modify roles!' });
+    expect(weak.target.roles.add).not.toHaveBeenCalled();
+  });
+
+  it('ignores clicks without a channel or a member', async () => {
+    const noChannel = setup();
+    (noChannel.interaction as { channel: unknown }).channel = null;
+    await applicationApprove(noChannel.interaction as never);
+    expect(noChannel.interaction.deferReply).not.toHaveBeenCalled();
+    const noMember = setup();
+    (noMember.interaction as { member: unknown }).member = null;
+    await applicationApprove(noMember.interaction as never);
+    expect(noMember.interaction.deferReply).not.toHaveBeenCalled();
+  });
+
   it('grants the role and announces it', async () => {
     const { interaction, target, channel } = setup();
     await applicationApprove(interaction as never);

@@ -6,13 +6,13 @@ const interactionCategoryA = async (a: string, b = 'mdma') => ((await combo(a, b
 
 describe('combo name normalisation', () => {
   it.each([
-    ['doz', 'dox'], ['2c-q', '2c-x'], ['5-meo-abt', '5-meo-xxt'], ['gbl', 'ghb/gbl'], ['snri', 'ssris'], ['snris', 'ssris'], ['maoi', 'maois'],
+    ['doz', 'dox'], ['2c-q', '2c-x'], ['2c-t-9', '2c-t-x'], ['5-meo-abt', '5-meo-xxt'], ['gbl', 'ghb/gbl'], ['snri', 'ssris'], ['snris', 'ssris'], ['maoi', 'maois'],
   ])('maps %s to %s', async (input, key) => {
     expect(await interactionCategoryA(input)).toBe(key);
   });
 
-  // TripSit/TripBot#1329: the NBOMe regex is duplicated, so these resolve to 2c-t-x instead of nbomes.
-  it.fails('maps 25x-NBOMe substances to the nbomes interaction data', async () => {
+  // Regression test for TripSit/TripBot#1329: the NBOMe regex used to be duplicated, so these resolved to 2c-t-x.
+  it('maps 25x-NBOMe substances to the nbomes interaction data', async () => {
     expect(await interactionCategoryA('25q-nbome')).toBe('nbomes');
   });
 

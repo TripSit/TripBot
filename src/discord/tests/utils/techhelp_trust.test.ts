@@ -49,7 +49,7 @@ describe('techHelpClick', () => {
         members: { fetch: vi.fn(async (id: string) => { const m = members.get(id); if (!m) throw new Error('Unknown'); return m; }) },
         roles: { fetch: vi.fn(async (id: string) => { const r = roles.get(id); if (!r) throw new Error('Unknown'); return r; }) },
       },
-      fields: { getTextInputValue: vi.fn(() => 'It broke <@111> and <@&222> and <@999> @everyone') },
+      fields: { getTextInputValue: vi.fn(() => 'It broke <@111> and <@&222> and <@999> and <@&999> @everyone') },
       member: opts.actor === 'user' || opts.actor === 'none' ? null : { id: 'a1', displayName: 'Ally', toString: (): string => '<@a1>' },
       user: opts.actor === 'none' ? null : { id: 'a1', username: 'ally_user', toString: (): string => '<@a1>' },
       channel: { threads: { create: vi.fn(async () => thread) } },
@@ -102,7 +102,7 @@ describe('techHelpClick', () => {
     expect(created.name).toContain("Ally's discord issue!");
     expect(created.invitable).toBe(false);
     const [{ content, components }] = thread.send.mock.calls[0] as unknown as [{ content: string; components: unknown[] }];
-    expect(content).toContain('@Ally and @Mods and unknown-user @​everyone');
+    expect(content).toContain('@Ally and @Mods and unknown-user and unknown-user @​everyone');
     expect(JSON.stringify(components)).toContain('techHelpOwn~discord~a1');
     expect(submit.editReply).toHaveBeenCalled();
   });

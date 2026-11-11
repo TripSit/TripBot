@@ -140,11 +140,7 @@ export async function messageCommand(message: Message): Promise<void> {
       }
       const now = Date.now().valueOf();
       if (helpCounter.has(message.author.id)) {
-        const lastTime = helpCounter.get(message.author.id);
-        if (!lastTime) {
-          // log.debug(F, `lastTime is undefined!`);
-          return;
-        }
+        const lastTime = helpCounter.get(message.author.id) as number;
         if (now - lastTime < 1000 * 60 * 5) {
           await message.channel.send({
             content: stripIndents`Hey ${displayName}, you just used that command, \

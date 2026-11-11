@@ -764,9 +764,10 @@ async function getGuildRole(
   roleName: string,
   interaction: ChatInputCommandInteraction,
 ):Promise<Role> {
-  /* v8 ignore next 2 -- the message creators that call this have already checked the guild and channel */
+  /* v8 ignore start -- the message creators that call this have already checked the guild and channel */
   if (!interaction.guild) return {} as Role;
   if (!interaction.channel) return {} as Role;
+  /* v8 ignore stop */
   let returnRole: Role;
 
   let reactionroleData = await db.reaction_roles.findMany({

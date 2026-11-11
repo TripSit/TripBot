@@ -22,11 +22,13 @@ type Upsert = Awaited<ReturnType<typeof dbMock.users.upsert>>;
 describe('awayMessage', () => {
   afterEach(() => vi.useRealTimers());
 
-  function setup(opts: { mentions?: boolean; timezone?: string | null; hourUtc?: number; recentOwnerMessage?: boolean; channel?: 'text' | 'dm' | 'other' }) {
+  function setup(opts: { mentions?: boolean; timezone?: string | null; hourUtc?: number; recentOwnerMessage?: boolean; olderOwnerMessages?: boolean; channel?: 'text' | 'dm' | 'other' }) {
     vi.useFakeTimers({ toFake: ['Date'] });
     vi.setSystemTime(new Date(Date.UTC(2024, 0, 1, opts.hourUtc ?? 23, 0, 0)));
     dbMock.users.upsert.mockResolvedValue({ timezone: opts.timezone === undefined ? 'UTC' : opts.timezone } as unknown as Upsert);
-    const recent = opts.recentOwnerMessage
+    const recent = opts.olderOwnerMessages
+      ? [['m1', { author: { id: e.DISCORD_OWNER_ID }, createdTimestamp: Date.now() - 3 * 3_600_000 }], ['m2', { author: { id: e.DISCORD_OWNER_ID }, createdTimestamp: Date.now() - 5 * 3_600_000 }], ['m3', { author: { id: e.DISCORD_OWNER_ID }, createdTimestamp: Date.now() - 4 * 3_600_000 }]] as Array<[string, object]>
+      : opts.recentOwnerMessage
       ? [['m1', { author: { id: e.DISCORD_OWNER_ID }, createdTimestamp: Date.now() - 60_000 }]] as Array<[string, object]>
       : [['m1', { author: { id: e.DISCORD_OWNER_ID }, createdTimestamp: Date.now() - 3 * 3_600_000 }], ['m2', { author: { id: 'x' }, createdTimestamp: Date.now() }]] as Array<[string, object]>;
     const props = { send: vi.fn(), sendTyping: vi.fn(), messages: { fetch: vi.fn(async () => collectionOf(recent)) } };
@@ -47,6 +49,12 @@ describe('awayMessage', () => {
     await awayMessage(message);
     expect(channel.sendTyping).toHaveBeenCalled();
     expect(channel.send).toHaveBeenCalledWith(expect.stringContaining('Ally'));
+  });
+
+  it('looks at the owner\'s newest message when several are older than half an hour', async () => {
+    const { message, channel } = setup({ olderOwnerMessages: true });
+    await awayMessage(message);
+    expect(channel.send).toHaveBeenCalled();
   });
 
   it('works in DMs too', async () => {

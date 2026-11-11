@@ -627,6 +627,7 @@ export async function applicationApprove(
     await interaction.editReply({
       content: 'You do not have permission to modify roles!',
     });
+    return;
   }
 
   const threadCreated = interaction.channel?.createdAt;

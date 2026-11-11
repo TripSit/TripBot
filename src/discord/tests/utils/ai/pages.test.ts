@@ -1,3 +1,4 @@
+import { AiText } from '../../../utils/ai/texts';
 import { MessageFlags, PermissionFlagsBits } from 'discord.js';
 import { AiPage } from '../../../utils/ai/pages';
 import { dbMock } from '../../../../vitest/utils/mockDb';
@@ -178,6 +179,19 @@ describe.each([
     const body = text(await AiPage[page](interaction()));
     expect(body).toContain(buttonId);
     expect(body).toContain('You have not agreed');
+  });
+
+  it('separates multi-part documents with dividers', async () => {
+    const parts = page === 'tos' ? AiText.aiTermsOfService : AiText.aiPrivacyPolicy;
+    (parts as string[]).push('A second section');
+    try {
+      dbMock.users.upsert.mockResolvedValue({ ai_info: null } as never);
+      const body = text(await AiPage[page](interaction()));
+      expect(body).toContain('A second section');
+      expect(body).toContain('"divider":true');
+    } finally {
+      (parts as string[]).pop();
+    }
   });
 
   it('shows the agreement date without the button for users who agreed', async () => {
