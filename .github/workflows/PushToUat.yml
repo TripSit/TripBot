@@ -68,7 +68,7 @@ jobs:
       - name: Copy env
         run: cp .env.example .env
       - name: Test
-        run: npx vitest run --silent
+        run: npx vitest run --silent --coverage
   docker-build:
     name: Docker Build
     runs-on: ubuntu-latest
