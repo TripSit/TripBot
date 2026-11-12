@@ -261,8 +261,20 @@ When adding or changing a command:
 - log command context using the established `commandContext` pattern where adjacent commands do so;
 - defer or reply exactly once, then use `editReply`/`followUp` consistently;
 - use `MessageFlags.Ephemeral` where the surrounding code does, especially for private or sensitive responses;
+- give every slash command (or each subcommand that replies) a boolean option named exactly `ephemeral`, and make
+  replies ephemeral by default: read it as `interaction.options.getBoolean('ephemeral') ?? true`, so only an explicit
+  `ephemeral:False` makes the reply public. Describe it as "Set to False to show the response to everyone". Read the
+  same name you registered (a mismatch makes `getBoolean` return `null` silently);
+- the default may be public only for commands whose purpose is to post to the channel (for example `/say`, `/joke`,
+  `/coinflip`, game and bridge output). Say why in a short comment beside the option, and add a test for the flag;
 - return the boolean required by the command type;
-- redeploy command definitions only when the user explicitly requests it.
+- do not deploy command definitions yourself unless the user explicitly requests it. The bot also registers its
+  commands automatically on every start (`deployCommands({ skipIfUnchanged: true })` in `src/start.ts`), skipping the
+  Discord call when the definitions are unchanged since the last deploy, so a restart picks up command changes.
+
+Many existing commands predate this rule and use an opt-in `ephemeral` option (public by default). Apply the rule to
+new commands and to commands you are already changing; do not sweep the rest in an unrelated change, since flipping a
+default alters behavior for every user and the option change requires a command redeploy.
 
 If options, subcommands, contexts, integration types, or descriptions change, state in the handoff that Discord command
 registration must be redeployed.

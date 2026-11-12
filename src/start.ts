@@ -17,6 +17,7 @@ import * as path from 'path';
 import sourceMap from 'source-map-support'; // eslint-disable-line
 import api from './api/api'; // eslint-disable-line
 import discordConnect from './discord/discord';
+import deployCommands from './discord/utils/commandDeploy';
 import commandContext from './discord/utils/context'; // eslint-disable-line
 import { env } from './global/utils/env.config';
 import validateEnv from './global/utils/env.validate'; // eslint-disable-line
@@ -48,7 +49,11 @@ async function start() {
     api();
     global.db = db;
     await updateDb();
-    if (env.DISCORD_CLIENT_TOKEN && validateEnv('DISCORD')) await discordConnect();
+    if (env.DISCORD_CLIENT_TOKEN && validateEnv('DISCORD')) {
+      await discordConnect();
+      // Register slash commands on every start; a failure must not stop the bot
+      await deployCommands({ skipIfUnchanged: true, exitOnError: false });
+    }
     // if (env.MATRIX_ACCESS_TOKEN && validateEnv( 'MATRIX') && env.NODE_ENV !== 'production') await startMatrix();
     if (env.IRC_PASSWORD && validateEnv('IRC')) {
       // A failed IRC start must not take down the Discord bot

@@ -1,5 +1,7 @@
 import 'module-alias/register';
+import crypto from 'crypto';
 import fs from 'fs/promises';
+import os from 'os';
 import path from 'path';
 import {
   REST,
@@ -40,46 +42,54 @@ async function getCommands(commandType: string): Promise<SlashCommand[]> {
     });
 }
 
-export default async function deployCommands():Promise<{
+type DeployOptions = {
+  /** Skip the Discord calls when the command definitions match the last successful deploy. */
+  skipIfUnchanged?: boolean;
+  /** Exit the process when registration fails (CLI use); the bot itself should keep running. */
+  exitOnError?: boolean;
+};
+
+// Remembers the last deployed definitions so routine restarts (tsc-watch restarts on every save) don't hit
+// Discord's registration rate limits. Losing the file only causes one redundant deploy.
+function hashFilePath(): string {
+  return path.join(os.tmpdir(), `tripbot-command-hash-${env.DISCORD_CLIENT_ID}-${env.DISCORD_GUILD_ID}`);
+}
+
+export default async function deployCommands(options: DeployOptions = {}):Promise<{
   globalCommands: SlashCommand[];
   guildCommands: SlashCommand[];
 }> {
+  const { skipIfUnchanged = false, exitOnError = true } = options;
   const globalCommands:SlashCommand[] = [];
   const guildCommands:SlashCommand[] = [];
   if (validateEnv('DISCORD')) {
-    // log.debug(F, `discordClientId: ${env.DISCORD_CLIENT_ID}`);
-    // log.debug(F, `discordGuildId: ${env.DISCORD_GUILD_ID}`);
-
     const rest = new REST({ version: '9' }).setToken(env.DISCORD_CLIENT_TOKEN);
 
-    await Promise.all([
-      getCommands('global').then(commands => {
-        globalCommands.push(...commands);
-        // log.debug(F, `Global commands: ${JSON.stringify(globalCommands.length, null, 2)}`);
-        return rest.put(
-          Routes.applicationCommands(env.DISCORD_CLIENT_ID.toString()),
-          { body: commands },
-        );
-      }),
-      getCommands('guild').then(commands => {
-        guildCommands.push(...commands);
-        // log.debug(F, `Guild commands: ${JSON.stringify(guildCommands.length, null, 2)}`);
-        return rest.put(
-          Routes.applicationGuildCommands(env.DISCORD_CLIENT_ID.toString(), env.DISCORD_GUILD_ID),
-          { body: commands },
-        );
-      }),
-    ])
-      .then(() => {
-        log.info(F, 'Commands successfully registered!');
+    try {
+      globalCommands.push(...await getCommands('global'));
+      guildCommands.push(...await getCommands('guild'));
+
+      const hash = crypto.createHash('sha256').update(JSON.stringify({ globalCommands, guildCommands })).digest('hex');
+      if (skipIfUnchanged && await fs.readFile(hashFilePath(), 'utf8').catch(() => '') === hash) {
+        log.info(F, 'Command definitions unchanged, skipping registration.');
         return { globalCommands, guildCommands };
-      })
-      .catch(ex => {
-        log.error(F, 'Error in registering commands');
-        // eslint-disable-next-line no-console
-        console.log(ex);
-        process.exit(1);
-      });
+      }
+
+      await Promise.all([
+        rest.put(Routes.applicationCommands(env.DISCORD_CLIENT_ID.toString()), { body: globalCommands }),
+        rest.put(
+          Routes.applicationGuildCommands(env.DISCORD_CLIENT_ID.toString(), env.DISCORD_GUILD_ID),
+          { body: guildCommands },
+        ),
+      ]);
+      if (skipIfUnchanged) await fs.writeFile(hashFilePath(), hash).catch(() => undefined);
+      log.info(F, 'Commands successfully registered!');
+    } catch (ex) {
+      log.error(F, 'Error in registering commands');
+      // eslint-disable-next-line no-console
+      console.log(ex);
+      if (exitOnError) process.exit(1);
+    }
   }
   return { globalCommands, guildCommands };
 }

@@ -1,5 +1,7 @@
 /* eslint-disable max-len, sonarjs/no-duplicate-string, no-restricted-syntax, no-await-in-loop */
-import { ChannelType, PermissionFlagsBits, TextChannel } from 'discord.js';
+import {
+  ChannelType, MessageFlags, PermissionFlagsBits, TextChannel,
+} from 'discord.js';
 import { DateTime } from 'luxon';
 import { dBirthday } from '../../commands/guild/d.birthday';
 import { dPurge, purgeButton, purgeMenu } from '../../commands/guild/d.purge';
@@ -116,6 +118,19 @@ describe('purge', () => {
     });
     await dPurge.execute(plain as never);
     expect((plain.editReply.mock.calls[0][0] as { components: unknown[] }).components).toHaveLength(1);
+  });
+
+  // TripSit/TripBot#1382: the reply is ephemeral by default, public only when `ephemeral` is false.
+  it('defers ephemerally unless ephemeral is false', async () => {
+    const guild = guildOf([textChannel('c1', ['u1'])]);
+    const run = async (options: Record<string, unknown>) => {
+      const stub = slashStub({ guild, subcommand: 'messages', options, extra: { isUserSelectMenu: () => false } });
+      await dPurge.execute(stub as never);
+      return stub;
+    };
+    expect((await run({})).deferReply).toHaveBeenCalledWith({ flags: MessageFlags.Ephemeral });
+    expect((await run({ ephemeral: true })).deferReply).toHaveBeenCalledWith({ flags: MessageFlags.Ephemeral });
+    expect((await run({ ephemeral: false })).deferReply).toHaveBeenCalledWith({ flags: undefined });
   });
 
   it('handles a guild without channels', async () => {

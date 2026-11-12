@@ -218,14 +218,13 @@ export const dPurge: SlashCommand = {
     .addSubcommand(subcommand => subcommand
       .setName('messages')
       .setDescription('Purge messages from the server')
-      .addBooleanOption(option => option.setName('private')
-        .setDescription('Set to "True" to show the response only to you'))),
+      .addBooleanOption(option => option.setName('ephemeral')
+        .setDescription('Set to "False" to show the response to everyone'))),
   async execute(interaction) {
     if (!interaction.channel) return false;
     if (!interaction.guild) return false;
     log.info(F, await commandContext(interaction));
-    // By default we want to make the reply private
-    const ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined;
+    const ephemeral = (interaction.options.getBoolean('ephemeral') ?? true) ? MessageFlags.Ephemeral : undefined;
     await interaction.deferReply({ flags: ephemeral });
 
     // 'messages' is the only subcommand
