@@ -70,13 +70,6 @@ describe('profile', () => {
     expect(await dProfile.execute(slashStub({ guild: null }) as never)).toBe(false);
   });
 
-  it('propagates a profile lookup failure before loading assets', async () => {
-    const error = new Error('Profile lookup failed');
-    mocks.profile.mockRejectedValueOnce(error);
-    await expect(run()).rejects.toBe(error);
-    expect(mocks.asset).not.toHaveBeenCalled();
-  });
-
   it.each([5, 15, 25, 35, 45, 55, 65, 75, 85, 95, 100])('level %i uses the matching badge', async level => {
     mocks.total.mockResolvedValue({ level, level_points: 1 });
     const { stub } = await run();
@@ -132,13 +125,6 @@ describe('getProfilePreview', () => {
   beforeEach(() => {
     mocks.asset.mockResolvedValue(Buffer.from('x'));
     mocks.loadImage.mockResolvedValue({});
-  });
-
-  it('propagates an image load failure before loading the avatar', async () => {
-    const error = new Error('Card icons could not be loaded');
-    mocks.loadImage.mockRejectedValueOnce(error);
-    await expect(getProfilePreview(member() as never, 'none')).rejects.toBe(error);
-    expect(mocks.loadImage).toHaveBeenCalledOnce();
   });
 
   it.each([

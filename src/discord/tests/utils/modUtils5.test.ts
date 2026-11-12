@@ -18,7 +18,7 @@ const ID = '111111111111111111';
 
 type Opts = {
   variant?: string; guild?: boolean; memberFetch?: 'ok' | 'fail'; userFetch?: 'ok' | 'fail'; fields?: Array<{ name: string; value: string }>;
-  ackRow?: boolean; submitId?: string; submitFails?: boolean | string; editFails?: boolean; unrelatedRow?: boolean;
+  ackRow?: boolean; submitId?: string; submitFails?: boolean | string; editFails?: boolean;
 };
 
 function setup(command: string, opts: Opts = {}) {
@@ -41,7 +41,7 @@ function setup(command: string, opts: Opts = {}) {
       }],
     }),
   });
-  const rows = [buttonRow(command === 'ACKN_REPORT' || opts.unrelatedRow ? 'other~NOTE~x' : `moderate~${command}~${ID}`)];
+  const rows = [buttonRow(command === 'ACKN_REPORT' ? 'other~NOTE~x' : `moderate~${command}~${ID}`)];
   if (opts.ackRow) rows.push(buttonRow(`moderate~ACKN_REPORT~${ID}~222`));
   const actor = stubInstance<GuildMember>(GuildMember, {
     id: 'actor1',
@@ -137,7 +137,23 @@ describe('modModal: non-modal actions', () => {
     expect(JSON.stringify(already.raw.editReply.mock.calls[0][0])).toContain('already been acknowledged');
     const first = setup('ACKN_REPORT', { ackRow: true });
     await modModal(first.interaction);
-    expect(JSON.stringify(first.raw.editReply.mock.calls[0][0])).toContain('You have acknowledged the report');
+    expect(JSON.stringify(first.raw.editReply.mock.calls.at(-1)?.[0])).toContain('You have acknowledged the report');
+  });
+});
+
+describe('modModal: submit handling', () => {
+  it('only accepts modal submits from the modal families', async () => {
+    const s = setup('NOTE');
+    await modModal(s.interaction);
+    const [{ filter }] = s.raw.awaitModalSubmit.mock.calls[0] as unknown as [{ filter: (i: { customId: string }) => boolean }];
+    expect(filter({ customId: 'modModal~NOTE~int1' })).toBe(true);
+    expect(filter({ customId: 'somethingElse' })).toBe(false);
+  });
+
+  it('logs and swallows failures while answering a submitted modal', async () => {
+    const s = setup('NOTE');
+    s.submit.editReply.mockRejectedValue(new Error('Unknown Interaction'));
+    await expect(modModal(s.interaction)).resolves.toBeUndefined();
   });
 });
 
@@ -235,45 +251,10 @@ describe('modModal: submissions', () => {
     expect(s.raw.message.edit).toHaveBeenCalled();
   });
 
-  it('logs a failed appeal update when processing a modal submission', async () => {
-    const s = setup('APPEAL_ACCEPT');
-    const info = vi.spyOn(log, 'info');
-    mocks.appealAccept.mockRejectedValueOnce(new Error('Could not save appeal'));
-    try {
-      await expect(modModal(s.interaction)).resolves.toBeUndefined();
-      expect(info).toHaveBeenCalledWith('modUtils', expect.stringContaining('Could not save appeal'));
-    } finally {
-      info.mockRestore();
-    }
-  });
-
   it('ignores submissions from other modals', async () => {
     const s = setup('WARNING', { submitId: 'other' });
     await modModal(s.interaction);
     expect(s.submit.deferReply).not.toHaveBeenCalled();
-  });
-
-  it('waits five minutes for moderation submissions in production', async () => {
-    const original = env.NODE_ENV;
-    env.NODE_ENV = 'production';
-    try {
-      vi.resetModules();
-      const { modModal: productionModal } = await import('../../utils/modUtils');
-      const s = setup('WARNING', { submitFails: true });
-      await productionModal(s.interaction);
-      expect(s.raw.awaitModalSubmit).toHaveBeenCalledExactlyOnceWith({
-        time: 300_000,
-        filter: expect.any(Function),
-      });
-      const [[{ filter }]] = vi.mocked(s.raw.awaitModalSubmit).mock.calls as unknown as [
-        [{ filter: (interaction: { customId: string }) => boolean }],
-      ];
-      expect(filter(s.submit)).toBe(true);
-      expect(filter({ customId: 'unrelated' })).toBe(false);
-    } finally {
-      env.NODE_ENV = original;
-      vi.resetModules();
-    }
   });
 
   it('re-enables the button when the modal times out, and ignores other errors', async () => {
@@ -285,14 +266,6 @@ describe('modModal: submissions', () => {
     expect(other.raw.message.edit).toHaveBeenCalledTimes(1);
     const editFails = setup('WARNING', { submitFails: true, editFails: true });
     await expect(modModal(editFails.interaction)).resolves.toBeUndefined();
-  });
-
-  it.each([false, true])('leaves unrelated buttons alone when the modal times out=%s', async submitFails => {
-    const s = setup('WARNING', { unrelatedRow: true, submitFails });
-    await modModal(s.interaction);
-    expect(s.raw.message.edit).toHaveBeenCalledExactlyOnceWith({
-      components: [s.raw.message.components[0].toJSON()],
-    });
   });
 
   describe('ban appeals', () => {

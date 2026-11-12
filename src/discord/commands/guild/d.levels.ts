@@ -67,20 +67,41 @@ export const dLevels: SlashCommand = {
     // log.debug(F, `target id: ${target.id}`);
     // log.debug(F, `levelData: ${JSON.stringify(target, null, 2)}`);
     const ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined;
-    await interaction.deferReply({ flags: ephemeral });
-    const profileData = await profile(targetUser.id);
-    const personaData = await getPersonaInfo(targetUser.id);
-    const levelData = await levels(targetUser.id);
-    const Icons = await Canvas.loadImage(await getAsset('cardLevelIcons'));
-    const avatar = await Canvas.loadImage(targetUser.displayAvatarURL({ extension: 'jpg' }));
-    const teamtripsitIcon = await Canvas.loadImage(await getAsset('teamtripsitIcon'));
-    const premiumIcon = await Canvas.loadImage(await getAsset('premiumIcon'));
-    const boosterIcon = await Canvas.loadImage(await getAsset('boosterIcon'));
-    const legacyIcon = await Canvas.loadImage(await getAsset('legacyIcon'));
-    const voiceBar = await Canvas.loadImage(await getAsset('voiceBar'));
-    const tripsitterBar = await Canvas.loadImage(await getAsset('tripsitterBar'));
-    const developerBar = await Canvas.loadImage(await getAsset('developerBar'));
-    const teamtripsitBar = await Canvas.loadImage(await getAsset('teamtripsitBar'));
+    const values = [
+      await interaction.deferReply({ flags: ephemeral }),
+      // Get the target's profile data from the database
+      await profile(targetUser.id),
+      // Check get fresh persona data
+      await getPersonaInfo(targetUser.id),
+      // Get the levels of the user
+      await levels(targetUser.id),
+      // Load Images
+      await Canvas.loadImage(await getAsset('cardLevelIcons')),
+      await Canvas.loadImage(targetUser.displayAvatarURL({ extension: 'jpg' })),
+      await Canvas.loadImage(await getAsset('teamtripsitIcon')),
+      await Canvas.loadImage(await getAsset('premiumIcon')),
+      await Canvas.loadImage(await getAsset('boosterIcon')),
+      await Canvas.loadImage(await getAsset('legacyIcon')),
+      await Canvas.loadImage(await getAsset('voiceBar')),
+      await Canvas.loadImage(await getAsset('tripsitterBar')),
+      await Canvas.loadImage(await getAsset('developerBar')),
+      await Canvas.loadImage(await getAsset('teamtripsitBar')),
+    ] as const;
+
+    const profileData = values[1];
+    const personaData = values[2];
+    const levelData = values[3];
+    const Icons = values[4];
+    // const StatusIcon = values[5];
+    const avatar = values[5];
+    const teamtripsitIcon = values[6];
+    const premiumIcon = values[7];
+    const boosterIcon = values[8];
+    const legacyIcon = values[9];
+    const voiceBar = values[10];
+    const tripsitterBar = values[11];
+    const developerBar = values[12];
+    const teamtripsitBar = values[13];
 
     const avatarIconRoles = {
       [env.ROLE_TEAMTRIPSIT]: {

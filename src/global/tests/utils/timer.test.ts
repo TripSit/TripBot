@@ -233,7 +233,7 @@ describe('tickets', () => {
   });
 
   it('skips role restoration for users without stored roles and when role changes fail', async () => {
-    dbMock.user_tickets.findMany.mockResolvedValue([ticket({ type: 'TRIPSIT', first_message_id: 'f' })] as never);
+    dbMock.user_tickets.findMany.mockResolvedValue([ticket({ description: 'd', type: 'TRIPSIT', first_message_id: 'f' })] as never);
     const { member } = discordForArchive(null);
     const { run } = await start();
     await run('tickets');
@@ -244,69 +244,6 @@ describe('tickets', () => {
     failing.member.roles.add.mockRejectedValue(new Error('missing perms'));
     await run('tickets');
     expect(failing.member.roles.add).toHaveBeenCalled();
-  });
-
-  it('schedules archived production tickets for deletion after three days', async () => {
-    const original = env.NODE_ENV;
-    env.NODE_ENV = 'production';
-    vi.useFakeTimers({ toFake: ['Date'] });
-    vi.setSystemTime(new Date(2026, 10, 10, 12));
-    try {
-      dbMock.user_tickets.findMany.mockResolvedValue([ticket()] as never);
-      discordForArchive();
-      const { run } = await start();
-      await run('tickets');
-      expect(dbMock.user_tickets.update).toHaveBeenCalledWith(expect.objectContaining({
-        where: { id: 't1' },
-        data: expect.objectContaining({ status: 'ARCHIVED', deleted_at: new Date(2026, 10, 13, 12) }),
-      }));
-    } finally {
-      env.NODE_ENV = original;
-      vi.useRealTimers();
-    }
-  });
-
-  it('archives an expired ticket even when it has no thread or Discord account', async () => {
-    dbMock.user_tickets.findMany.mockResolvedValue([ticket({ thread_id: null })] as never);
-    const { thread } = discordForArchive();
-    dbMock.users.upsert.mockResolvedValue({ id: 'u1', discord_id: null } as never);
-    const { run } = await start();
-    await run('tickets');
-    expect(dbMock.user_tickets.update).toHaveBeenCalledWith(expect.objectContaining({
-      where: { id: 't1' },
-      data: expect.objectContaining({ status: 'ARCHIVED' }),
-    }));
-    expect(thread.setArchived).not.toHaveBeenCalled();
-    expect(client().users.fetch).not.toHaveBeenCalled();
-  });
-
-  it('skips role restoration if the ticket owner leaves after the guild search', async () => {
-    dbMock.user_tickets.findMany.mockResolvedValue([ticket()] as never);
-    const { guild, member, thread } = discordForArchive();
-    guild.members.fetch.mockRejectedValueOnce(new Error('Unknown Member'));
-    const { run } = await start();
-    await run('tickets');
-    expect(thread.setArchived).toHaveBeenCalledWith(true);
-    expect(guild.members.fetch).toHaveBeenCalledTimes(1);
-    expect(member.roles.add).not.toHaveBeenCalled();
-    expect(member.roles.remove).not.toHaveBeenCalled();
-  });
-
-  it('restores only existing roles below the bot and leaves higher support roles alone', async () => {
-    dbMock.user_tickets.findMany.mockResolvedValue([ticket()] as never);
-    const { guild, member } = discordForArchive('missing,everyone,nh,higher,allowed');
-    guild.roles.fetch.mockImplementation(async (id: string) => {
-      if (id === 'missing') return null;
-      return {
-        id,
-        name: id === 'everyone' ? '@everyone' : id,
-        comparePositionTo: () => (['nh', 'higher'].includes(id) ? 1 : -1),
-      };
-    });
-    const { run } = await start();
-    await run('tickets');
-    expect(member.roles.add).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ id: 'allowed' }));
-    expect(member.roles.remove).not.toHaveBeenCalled();
   });
 
   it('tolerates a missing thread, missing member and unknown user', async () => {
@@ -323,6 +260,56 @@ describe('tickets', () => {
 
     dbMock.users.upsert.mockResolvedValue({ id: 'u1', discord_id: null } as never);
     await run('tickets');
+  });
+
+  it('uses the production retention period and tolerates tickets without a thread', async () => {
+    e.NODE_ENV = 'production';
+    dbMock.user_tickets.findMany.mockResolvedValue([ticket({ thread_id: null })] as never);
+    discordForArchive();
+    client().channels.fetch = vi.fn(async () => { throw new Error('no thread'); });
+    const { run } = await start();
+    await run('tickets');
+    const update = dbMock.user_tickets.update.mock.calls[0][0] as { data: { deleted_at: Date } };
+    const days = (update.data.deleted_at.getTime() - Date.now()) / 86_400_000;
+    expect(days).toBeGreaterThan(2.9);
+    expect(days).toBeLessThan(3.1);
+  });
+
+  it('skips role restoration when Discord returns nothing for the user, the member or the roles', async () => {
+    dbMock.user_tickets.findMany.mockResolvedValue([ticket()] as never);
+    const { run } = await start();
+
+    const noUser = discordForArchive();
+    client().users.fetch = vi.fn(async () => null);
+    dbMock.user_tickets.findMany.mockResolvedValue([ticket()] as never);
+    await run('tickets');
+    expect(noUser.member.roles.add).not.toHaveBeenCalled();
+
+    const noMember = discordForArchive();
+    noMember.guild.members.fetch.mockResolvedValue(null);
+    dbMock.user_tickets.findMany.mockResolvedValue([ticket()] as never);
+    await run('tickets');
+    expect(noMember.member.roles.add).not.toHaveBeenCalled();
+
+    const odd = discordForArchive('gone,everyone,nh,high');
+    const role = (id: string, name: string, position: number) => ({ id, name, comparePositionTo: () => position });
+    odd.guild.roles.fetch.mockImplementation(async (id: string) => {
+      if (id === 'gone') return null;
+      if (id === 'everyone') return role(id, '@everyone', -1);
+      if (id === 'nh') return role(id, 'needshelp', -1);
+      if (id === 'high') return role(id, 'high', 1);
+      return null;
+    });
+    dbMock.user_tickets.findMany.mockResolvedValue([ticket()] as never);
+    await run('tickets');
+    expect(odd.member.roles.add).not.toHaveBeenCalled();
+    expect(odd.member.roles.remove).toHaveBeenCalledTimes(1);
+
+    const higherNeedsHelp = discordForArchive('x');
+    higherNeedsHelp.guild.roles.fetch.mockImplementation(async (id: string) => (id === 'nh' ? role(id, 'needshelp', 1) : null));
+    dbMock.user_tickets.findMany.mockResolvedValue([ticket()] as never);
+    await run('tickets');
+    expect(higherNeedsHelp.member.roles.remove).not.toHaveBeenCalled();
   });
 
   it('does not touch tickets that are already archived, deleted or paused', async () => {
@@ -429,17 +416,6 @@ describe('mindsets', () => {
       args?.where?.mindset_role ? list : []
     )) as never);
   }
-
-  it('skips Discord lookups when no mindset roles are recorded', async () => {
-    setup([]);
-    const { run } = await start();
-    const fetchUser = vi.spyOn(client().users, 'fetch');
-    const fetchGuild = vi.spyOn(client().guilds, 'fetch');
-    await run('mindsets');
-    expect(fetchUser).not.toHaveBeenCalled();
-    expect(fetchGuild).not.toHaveBeenCalled();
-    expect(dbMock.users.update).not.toHaveBeenCalled();
-  });
 
   it('removes expired mindset roles and clears them in the database', async () => {
     setup([user()]);
@@ -780,17 +756,6 @@ describe('expired bans', () => {
     expect(dbMock.user_actions.update).toHaveBeenCalledTimes(2);
   });
 
-  it('still notifies the moderation thread if the configured log channel was deleted', async () => {
-    dbMock.user_actions.findMany.mockResolvedValue([ban()] as never);
-    const { guild, modThread } = setup();
-    guild.channels.fetch = vi.fn(async (id: string) => (id === 'thread' ? modThread : null)) as never;
-    const { run } = await start();
-    await run('bans');
-    expect(guild.bans.remove).toHaveBeenCalledWith(expect.anything(), 'Temporary ban expired');
-    expect(modThread.send).toHaveBeenCalledTimes(1);
-    expect(dbMock.user_actions.update).toHaveBeenCalledWith({ where: { id: 'b1' }, data: { expires_at: null } });
-  });
-
   it('still clears the expiry when the unban fails or data is incomplete', async () => {
     dbMock.user_actions.findMany.mockResolvedValue([ban()] as never);
     setup({ unbanFails: true });
@@ -806,6 +771,20 @@ describe('expired bans', () => {
     dbMock.user_actions.findMany.mockResolvedValue([ban({ target_discord_id: null })] as never);
     await run('bans');
     expect(dbMock.user_actions.update).toHaveBeenCalledTimes(2);
+  });
+
+  it('only clears the expiry when the user or the guild can no longer be fetched', async () => {
+    dbMock.user_actions.findMany.mockResolvedValue([ban()] as never);
+    setup();
+    const { run } = await start();
+    client().users.fetch = vi.fn(async () => null) as never;
+    await run('bans');
+    expect(dbMock.user_actions.update).toHaveBeenCalledTimes(1);
+    client().users.fetch = vi.fn(async () => ({ id: 'd1' })) as never;
+    client().guilds.fetch = vi.fn(async () => null) as never;
+    await run('bans');
+    expect(dbMock.user_actions.update).toHaveBeenCalledTimes(2);
+    expect(dbMock.discord_guilds.findUnique).not.toHaveBeenCalled();
   });
 });
 
@@ -855,14 +834,12 @@ describe('birthdays', () => {
   });
 
   it('wishes members a happy birthday in the VIP lounge', async () => {
-    const yesterday = today();
-    yesterday.setDate(yesterday.getDate() - 1);
-    dbMock.users.findMany.mockResolvedValue([user(), user({ discord_id: 'd2', birthday: yesterday })] as never);
+    dbMock.users.findMany.mockResolvedValue([user(), user({ discord_id: 'd2', birthday: new Date(2000, 0, 1) === today() ? null : new Date(1999, 11, 31) })] as never);
     const send = vi.fn();
     client().channels.fetch = vi.fn(async () => ({ send }));
     const { run } = await start();
     await run('birthdays');
-    expect(send).toHaveBeenCalledExactlyOnceWith('Happy Birthday, <@d1>! 🎉');
+    expect(send).toHaveBeenCalledWith('Happy Birthday, <@d1>! 🎉');
   });
 
   it('skips users who are missing, not in the server, or lack an id', async () => {

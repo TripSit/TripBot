@@ -196,13 +196,15 @@ async function fillInColumns(
 
 async function addDurations(
   embed: EmbedBuilder,
-  routes: NonNullable<CbSubstance['roas']>,
+  drugData: CbSubstance,
   roaNames: string[],
 ):Promise<[EmbedBuilder, number]> {
   let columns = 0;
+  // Only called when the drug has routes of administration
+  const roas = drugData.roas ?? [];
   roaNames.forEach(roaName => {
     if (columns < 3) {
-      const roaInfo = routes.find(r => r.name === roaName);
+      const roaInfo = roas.find(r => r.name === roaName);
       if (roaInfo && roaInfo.duration) {
         let durationString = '';
         roaInfo.duration.forEach(d => {
@@ -412,7 +414,7 @@ export async function getDrugInfo(
     );
 
     // DURATION
-    [embed, embedRowColumns] = await addDurations(embed, drugData.roas, roaNames);
+    [embed, embedRowColumns] = await addDurations(embed, drugData, roaNames);
 
     [
       embed,

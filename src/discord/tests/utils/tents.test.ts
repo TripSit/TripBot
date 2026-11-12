@@ -264,7 +264,7 @@ describe('transferTent', () => {
 
 describe('logTent', () => {
   const user = (id: string) => ({ id, displayName: id, toString: (): string => `<@${id}>` });
-  const description = (send: ReturnType<typeof vi.fn>) => (send.mock.calls.at(-1)?.[0] as { embeds: Array<{ data: { description: string } }> }).embeds[0].data.description;
+  const description = (send: ReturnType<typeof vi.fn>) => ((send.mock.calls.at(-1) as unknown[])[0] as { embeds: Array<{ data: { description: string } }> }).embeds[0].data.description;
 
   it('announces non-host members leaving and joining', async () => {
     const { logTent } = await load();

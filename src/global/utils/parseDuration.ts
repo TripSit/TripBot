@@ -22,45 +22,58 @@ export async function parseDuration(duration: string): Promise<number> {
 
   while (idx < duration.length) {
     const c = duration[idx]; // Normalize to lowercase for easier comparison
-    if (stage === 1) {
-      if (numbers.includes(c)) {
-        tempString = c;
-        stage = 2;
-      }
-      idx += 1;
-    } else if (stage === 2) {
-      if (numbers.includes(c)) {
-        tempString += c;
-        idx += 1;
-      } else {
-        tempNumber = Number.parseInt(tempString, 10);
-        stage = 3;
-      }
-    } else if (c === ' ') {
-      idx += 1;
-    } else if (supported.includes(c)) {
-      if (c === 'h') {
-        timeValue += tempNumber * 60 * 60 * 1000; // Hours
-      } else if (c === 'M' || c === 'm') {
-        const monthWord = duration.slice(idx, idx + 5).toLowerCase() === 'month';
-        if (monthWord || c === 'M') {
-          timeValue += tempNumber * 30 * 24 * 60 * 60 * 1000;
-          idx += c === 'M' ? 1 : 5;
-        } else {
-          timeValue += tempNumber * 60 * 1000; // Minutes
+    switch (stage) {
+      case 1: // Waiting for number
+        if (numbers.includes(c)) {
+          tempString = c;
+          stage = 2;
         }
-      } else if (c === 's') {
-        timeValue += tempNumber * 1000; // Seconds
-      } else if (c === 'd') {
-        timeValue += tempNumber * 24 * 60 * 60 * 1000; // Days
-      } else if (c === 'w') {
-        timeValue += tempNumber * 7 * 24 * 60 * 60 * 1000; // Weeks
-      } else if (c === 'y') {
-        timeValue += tempNumber * 365 * 24 * 60 * 60 * 1000; // Years
-      }
-      stage = 1;
-    } else {
-      return timeValue; // Unsupported qualifier
+        idx += 1;
+        break;
+
+      case 2: // Parsing the number
+        if (numbers.includes(c)) {
+          tempString += c;
+          idx += 1;
+        } else {
+          tempNumber = Number.parseInt(tempString, 10);
+          stage = 3;
+        }
+        break;
+
+      case 3: // Parsing the qualifier
+      default: // (stage is only ever 1, 2 or 3)
+        if (c === ' ') {
+          idx += 1;
+          break;
+        } else if (supported.includes(c)) {
+          // Handle single-letter qualifiers
+          if (c === 'h') {
+            timeValue += tempNumber * 60 * 60 * 1000; // Hours
+          } else if (c === 'M' || c === 'm') {
+            // Check if the next characters spell "month" or "months"
+            const nextChars = duration.slice(idx, idx + 5).toLowerCase();
+            if (nextChars.startsWith('month') || c === 'M') {
+              timeValue += tempNumber * 30 * 24 * 60 * 60 * 1000; // Convert months to milliseconds
+              // 'month' is 5 characters; a trailing 's' is ignored by stage 1 (it waits for a number)
+              idx += c === 'M' ? 1 : 5;
+            } else {
+              timeValue += tempNumber * 60 * 1000; // Minutes
+            }
+          } else if (c === 's') {
+            timeValue += tempNumber * 1000; // Seconds
+          } else if (c === 'd') {
+            timeValue += tempNumber * 24 * 60 * 60 * 1000; // Days
+          } else if (c === 'w') {
+            timeValue += tempNumber * 7 * 24 * 60 * 60 * 1000; // Weeks
+          } else if (c === 'y') {
+            timeValue += tempNumber * 365 * 24 * 60 * 60 * 1000; // Years
+          }
+          stage = 1;
+          break;
+        } else {
+          return timeValue; // Unsupported qualifier
+        }
     }
   }
   return timeValue;
@@ -114,7 +127,10 @@ export async function makeValid(duration: string): Promise<string> {
     const value = match[1]; // The number (e.g., "1")
     const unit = match[2].toLowerCase(); // The unit (e.g., "year" or "years")
 
-    parts.push(`${value}${unitMap[unit]}`);
+    // Map the unit to its short form and combine with the value
+    if (unit in unitMap) {
+      parts.push(`${value}${unitMap[unit]}`);
+    }
   }
 
   // Join the parts with a space to form the final result

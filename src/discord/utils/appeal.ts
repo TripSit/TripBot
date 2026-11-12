@@ -1,5 +1,7 @@
 /* eslint-disable sonarjs/no-duplicate-string */
-import { ButtonInteraction, InteractionEditReplyOptions, ModalSubmitInteraction } from 'discord.js';
+import {
+  ButtonInteraction, Guild, InteractionEditReplyOptions, ModalSubmitInteraction,
+} from 'discord.js';
 import { appeal_status, appeals } from '@db/tripbot';
 import { getOrCreateUser } from '../../global/utils/dbRecords';
 import { GUILD_ONLY_TEXT } from './guildOnly';
@@ -16,15 +18,11 @@ function sanitizeAppealMessage(message: string): string {
 }
 
 async function updateAppeal(
-  interaction: ButtonInteraction,
+  guild: Guild,
   discordId: string,
   userMessage: string,
   appealStatus: appeal_status,
 ): Promise<{ success: boolean; message: string }> {
-  if (!interaction.guild) {
-    return { success: false, message: GUILD_ONLY_TEXT };
-  }
-
   // Get or create user by discord_id
   const userData = await getOrCreateUser(discordId);
 
@@ -32,7 +30,7 @@ async function updateAppeal(
   const latestAppeal = await db.appeals.findFirst({
     where: {
       user_id: userData.id,
-      guild_id: interaction.guild.id,
+      guild_id: guild.id,
     },
     orderBy: {
       created_at: 'desc',
@@ -93,7 +91,7 @@ export async function appealAccept(
   // Sanitize moderator input to prevent XSS (Yes, I know. This will never be necessary, but good practice)
   const userMessage = sanitizeAppealMessage(rawUserMessage);
 
-  const result = await updateAppeal(interaction, userId, userMessage, 'ACCEPTED' as appeal_status);
+  const result = await updateAppeal(interaction.guild, userId, userMessage, 'ACCEPTED' as appeal_status);
 
   if (!result.success) {
     return { content: result.message };
@@ -124,7 +122,7 @@ export async function appealReject(
   // Sanitize moderator input to prevent XSS (Yes, I know. This will never be necessary, but good practice)
   const userMessage = sanitizeAppealMessage(rawUserMessage);
 
-  const result = await updateAppeal(interaction, userId, userMessage, 'DENIED' as appeal_status);
+  const result = await updateAppeal(interaction.guild, userId, userMessage, 'DENIED' as appeal_status);
 
   if (!result.success) {
     return { content: result.message };

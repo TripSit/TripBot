@@ -78,8 +78,11 @@ export async function combo(
     if (/^2c-.$/i.test(drugName)) {
       return '2c-x';
     }
-    if (/^25.-nbome/i.test(drugName)) {
+    if (/^2c-t-.$/i.test(drugName)) {
       return '2c-t-x';
+    }
+    if (/^25.-nbome/i.test(drugName)) {
+      return 'nbomes';
     }
     if (/^5-meo-..t$/i.test(drugName)) {
       return '5-meo-xxt';
@@ -92,16 +95,6 @@ export async function combo(
     }
     if (drugName === 'maoi') {
       return 'maois';
-    }
-
-    // First, check if the given name exists in the drug database, if so, we should try to use that info
-    if (Object.keys(drugData).includes(drugName.toLowerCase())) {
-      const drug = (drugData as DrugData)[drugName.toLowerCase()] as Drug;
-
-      // If the drug has combo data, try to use that first
-      if (drug.combos && Object.keys(drug.combos).includes(drugName.toLowerCase())) {
-        return drugName.toLowerCase();
-      }
     }
 
     // If the drug is not in the drug database, check the combo database

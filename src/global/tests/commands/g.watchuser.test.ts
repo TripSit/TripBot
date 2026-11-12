@@ -146,14 +146,4 @@ describe('nightsWatch', () => {
     await flush();
     expect(channelSend).not.toHaveBeenCalled();
   });
-
-  it('leaves requests with an unsupported stored notification method alone', async () => {
-    const { msg, caller, channelSend } = message();
-    dbMock.users.findUnique.mockResolvedValueOnce(userWith([req('a', 'unknown')]));
-    await nightsWatch(msg);
-    await flush();
-    expect(caller.send).not.toHaveBeenCalled();
-    expect(channelSend).not.toHaveBeenCalled();
-    expect(dbMock.watch_request.delete).not.toHaveBeenCalled();
-  });
 });

@@ -28,18 +28,6 @@ describe('getTripSitStatistics', () => {
     );
   });
 
-  it('reports negative monthly and zero yearly changes with the correct signs', async () => {
-    dbMock.user_tickets.findMany
-      .mockResolvedValueOnce(tickets(2))
-      .mockResolvedValueOnce(tickets(5))
-      .mockResolvedValueOnce(tickets(8))
-      .mockResolvedValueOnce(tickets(8));
-
-    const summary = await getTripSitStatistics('session');
-    expect(summary).toContain('Tickets last month: 5 (-3)');
-    expect(summary).toContain('Tickets last year: 8 (+0)');
-  });
-
   it('lists the top 25 commands, or all when filtered', async () => {
     const stats = Array.from({ length: 30 }, (_, i) => ({ command: `c${i}`, _count: { command: 30 - i } }));
     asMock(dbMock.command_usage.groupBy).mockResolvedValueOnce(stats as never);

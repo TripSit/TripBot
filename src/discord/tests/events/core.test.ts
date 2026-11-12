@@ -1,7 +1,7 @@
 /* eslint-disable no-restricted-syntax */
 import { InteractionType } from 'discord-api-types/v10';
 import {
-  DiscordAPIError, MessageFlags, TextChannel,
+  DiscordAPIError, MessageFlags, TextChannel, Collection,
 } from 'discord.js';
 import { ready } from '../../events/ready';
 import { interactionCreate } from '../../events/interactionCreate';
@@ -165,6 +165,7 @@ describe('handleError', () => {
       sent.length = 0;
       e.NODE_ENV = 'production';
       setClient({
+        isReady: () => true,
         channels: { fetch: vi.fn(async () => ({ send })) },
         guilds: { fetch: vi.fn(async () => ({ roles: { fetch: vi.fn(async () => '<@&dev>') } })) },
       });
@@ -223,6 +224,12 @@ describe('interactionCreate', () => {
     dbMock.users.upsert.mockResolvedValue({ id: 'uid', last_seen_at: new Date(0) } as never);
   });
 
+  it('hands modal submissions to the modal handler', async () => {
+    const submit = base({ type: InteractionType.ModalSubmit, customId: 'not-ai', editReply: vi.fn() }) as unknown as { editReply: ReturnType<typeof vi.fn> };
+    await interactionCreate.execute(submit as never);
+    expect(submit.editReply).not.toHaveBeenCalled();
+  });
+
   it('ignores bots and turns away bot-banned users', async () => {
     await interactionCreate.execute(base({ user: { id: 'b', bot: true } }) as never);
     botBannedUsers.push('u');
@@ -242,6 +249,7 @@ describe('interactionCreate', () => {
       commandName: 'drug',
       channel: { id: 'c' },
       guild: { id: 'g' },
+      guildId: 'g',
       options: {
         getSubcommand: () => 'info',
         data: [{
@@ -257,10 +265,10 @@ describe('interactionCreate', () => {
     });
     await interactionCreate.execute(i as never);
     expect(mocks.commandRun).toHaveBeenCalled();
+    expect(dbMock.command_usage.create).toHaveBeenCalledWith({ data: expect.objectContaining({ command: 'drug info', channel_id: 'c', guild_id: 'g' }) });
     // 'g' is not the TripSit guild, so the user gets no record
     expect(dbMock.users.upsert).not.toHaveBeenCalled();
     expect(dbMock.users.update).not.toHaveBeenCalled();
-    expect(dbMock.command_usage.create).toHaveBeenCalledWith({ data: expect.objectContaining({ command: 'drug info', channel_id: 'c', guild_id: 'g' }) });
     expect(dbMock.command_usage_parameter.createMany).toHaveBeenCalledWith({
       data: [
         { name: 'substance', value: 'lsd', usage_id: 'usage1' },
@@ -500,7 +508,7 @@ describe('ready', () => {
     hostUptime: 3_600_000,
   };
 
-  async function boot(env: string, permitted = true, guilds = new Map<string, unknown>()) {
+  async function boot(env: string, permitted = true) {
     vi.useFakeTimers({ toFake: ['Date'] });
     e.NODE_ENV = env;
     const exit = vi.spyOn(process, 'exit').mockImplementation((() => undefined) as never);
@@ -514,7 +522,7 @@ describe('ready', () => {
     mocks.checkGuild.mockResolvedValue(permitted ? { hasPermission: true } : { hasPermission: false, permission: 'ViewChannel' });
     mocks.botStats.mockResolvedValue(stats);
     mocks.fact.mockResolvedValue('a fun fact');
-    await ready.execute({ guilds: { fetch: vi.fn(), cache: guilds } } as never);
+    await ready.execute({ guilds: { fetch: vi.fn(), cache: new Map() } } as never);
     await flushPromises();
     vi.useRealTimers();
     return { send, exit };
@@ -536,27 +544,45 @@ describe('ready', () => {
     expect(send).not.toHaveBeenCalled();
   });
 
-  it('caches invite usage from the home guild only', async () => {
-    const home = {
-      id: e.DISCORD_GUILD_ID,
-      invites: { fetch: vi.fn().mockResolvedValue([{ code: 'example', uses: 3 }]) },
-    };
-    const other = { id: 'other-guild', invites: { fetch: vi.fn() } };
-    const previous = global.guildInvites;
-    global.guildInvites = new Map() as typeof global.guildInvites;
-    mocks.ensure.mockResolvedValueOnce(true);
-    try {
-      await boot('development', true, new Map([[other.id, other], [home.id, home]]));
-      expect(global.guildInvites.get(home.id)?.get('example')).toBe(3);
-      expect(other.invites.fetch).not.toHaveBeenCalled();
-    } finally {
-      global.guildInvites = previous;
-    }
-  });
-
   it('exits when the bot lacks required permissions', async () => {
     const { exit } = await boot('development', false);
     expect(exit).toHaveBeenCalledWith(1);
+  });
+
+  it('caches invite uses for the home guild only, when permitted', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    e.NODE_ENV = 'development';
+    setClient({
+      guilds: { fetch: vi.fn(async () => ({ name: 'Host' })), cache: new Map() },
+      channels: { fetch: vi.fn() },
+      users: { fetch: vi.fn() },
+    });
+    (global as unknown as { bootTime: Date }).bootTime = new Date();
+    mocks.checkGuild.mockResolvedValue({ hasPermission: true });
+    mocks.ensure.mockResolvedValueOnce(true).mockResolvedValueOnce(false);
+    const invites = new Collection([['abc', { code: 'abc', uses: 3 }]]);
+    const home = { id: e.DISCORD_GUILD_ID, invites: { fetch: vi.fn(async () => invites) } };
+    const other = { id: 'other', invites: { fetch: vi.fn() } };
+    const client = { guilds: { fetch: vi.fn(), cache: new Collection([[home.id, home], ['other', other]]) } };
+    await ready.execute(client as never);
+    await flushPromises();
+    vi.useRealTimers();
+    expect((global as unknown as { guildInvites: Collection<string, Collection<string, number>> }).guildInvites.get(home.id)?.get('abc')).toBe(3);
+    expect(other.invites.fetch).not.toHaveBeenCalled();
+  });
+
+  it('skips invites when the bot cannot manage the guild', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    e.NODE_ENV = 'development';
+    setClient({ guilds: { fetch: vi.fn(async () => ({ name: 'Host' })), cache: new Map() }, channels: { fetch: vi.fn() }, users: { fetch: vi.fn() } });
+    (global as unknown as { bootTime: Date }).bootTime = new Date();
+    mocks.checkGuild.mockResolvedValue({ hasPermission: true });
+    mocks.ensure.mockResolvedValue(false);
+    const home = { id: e.DISCORD_GUILD_ID, invites: { fetch: vi.fn() } };
+    await ready.execute({ guilds: { fetch: vi.fn(), cache: new Collection([[home.id, home]]) } } as never);
+    await flushPromises();
+    vi.useRealTimers();
+    expect(home.invites.fetch).not.toHaveBeenCalled();
   });
 
   it('exposes the once-only clientReady event', () => {

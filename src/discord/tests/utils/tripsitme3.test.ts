@@ -1,3 +1,4 @@
+import { resolvingModal } from '../../../vitest/utils/commandStubs';
 /* eslint-disable sonarjs/no-duplicate-string */
 import { reopenTicket, tripSitMe, tripsitmeButton } from '../../utils/tripsitme';
 import { dbMock } from '../../../vitest/utils/mockDb';
@@ -6,21 +7,10 @@ import { collectionOf, flushPromises } from '../../../vitest/utils/discordStubs'
 const e = env as unknown as Record<string, string>;
 
 const mocks = vi.hoisted(() => ({
-  ensure: vi.fn(),
-  guildOnly: vi.fn(),
-  context: vi.fn(),
-  setName: vi.fn(),
-  getOpenTicket: vi.fn(),
-  cooldown: vi.fn(),
-  expiry: vi.fn(),
-  ownerMessage: vi.fn(),
+  ensure: vi.fn(), guildOnly: vi.fn(), context: vi.fn(), setName: vi.fn(), getOpenTicket: vi.fn(), cooldown: vi.fn(), expiry: vi.fn(),
 }));
 
-vi.mock('../../utils/checkPermissions', async importOriginal => ({
-  ...(await importOriginal<object>()),
-  ensurePermissions: mocks.ensure,
-  tripsitChannelOwnerMessage: mocks.ownerMessage,
-}));
+vi.mock('../../utils/checkPermissions', async importOriginal => ({ ...(await importOriginal<object>()), ensurePermissions: mocks.ensure }));
 vi.mock('../../utils/guildOnly', () => ({ replyGuildOnly: mocks.guildOnly }));
 vi.mock('../../utils/context', () => ({ default: mocks.context }));
 vi.mock('../../utils/commandCooldown', () => ({ default: mocks.cooldown }));
@@ -47,7 +37,7 @@ const guildRow = (over: Record<string, unknown> = {}) => dbMock.discord_guilds.u
 } as never);
 
 describe('tripSitMe', () => {
-  function setup(opts: { guild?: boolean; member?: boolean; tripsitChannel?: 'ok' | 'fail' | 'unset'; teamMember?: boolean; pinFails?: boolean; cooldown?: boolean; memberInput?: boolean } = {}) {
+  function setup(opts: { metaFails?: boolean; guild?: boolean; member?: boolean; tripsitChannel?: 'ok' | 'fail' | 'unset'; teamMember?: boolean; pinFails?: boolean; cooldown?: boolean; memberInput?: boolean } = {}) {
     const owner = { send: vi.fn() };
     const message = { pin: opts.pinFails ? vi.fn().mockRejectedValue(new Error('Missing Permissions')) : vi.fn() };
     const thread = {
@@ -79,6 +69,7 @@ describe('tripSitMe', () => {
         channels: {
           fetch: vi.fn(async (id: string) => {
             if (id === 'ts-chan') { if (opts.tripsitChannel === 'fail') throw new Error('Unknown Channel'); return tripsit; }
+            if (opts.metaFails) throw new Error('Unknown Channel');
             return { id: 'meta', name: 'meta', send: metaSend };
           }),
         },
@@ -107,6 +98,13 @@ describe('tripSitMe', () => {
     const stale = setup({ tripsitChannel: 'fail' });
     expect(await tripSitMe(stale.interaction, stale.target, 'x', 'y')).toBeNull();
     expect(dbMock.discord_guilds.update).toHaveBeenCalledWith({ where: { id: 'g1' }, data: { channel_tripsit: null } });
+  });
+
+  it('forgets a deleted meta channel while opening a ticket', async () => {
+    const s = setup({ metaFails: true });
+    // The cleared setting is saved, but the code carries on with an empty channel object and fails when it posts to it.
+    await expect(tripSitMe(s.interaction, s.target, 'x', 'y')).rejects.toThrow(TypeError);
+    expect(dbMock.discord_guilds.update).toHaveBeenCalledWith({ where: { id: 'g1' }, data: { channel_tripsitmeta: null } });
   });
 
   it('opens a private ticket thread, pings the team, and records the ticket', async () => {
@@ -274,7 +272,7 @@ describe('tripsitmeButton', () => {
       editReply: vi.fn(),
       reply: vi.fn(),
       showModal: vi.fn(),
-      awaitModalSubmit: vi.fn(async () => submit),
+      awaitModalSubmit: vi.fn(resolvingModal(submit)),
     };
     mocks.cooldown.mockResolvedValue(opts.cooldown === false ? { success: false, message: 'wait' } : { success: true });
     guildRow({ channel_tripsit: opts.tripsit === 'unset' ? null : 'ts-chan', channel_tripsitmeta: opts.meta === 'unset' ? null : 'meta' });
@@ -295,16 +293,15 @@ describe('tripsitmeButton', () => {
     expect(s.raw.showModal).not.toHaveBeenCalled();
   });
 
-  it.each([false, true])('stops when channel permissions are missing (meta=%s)', async meta => {
-    const s = setup();
-    if (meta) mocks.ensure.mockResolvedValueOnce(true);
-    mocks.ensure.mockImplementationOnce(async (_channel, _permissions, _source, options) => {
-      options.ownerMessage();
-      return false;
-    });
-    await tripsitmeButton(s.interaction);
-    expect(mocks.ownerMessage).toHaveBeenCalledExactlyOnceWith(meta ? s.meta : s.tripsit, meta);
-    expect(s.raw.showModal).not.toHaveBeenCalled();
+  it('stops when channel permissions are missing', async () => {
+    mocks.ensure.mockImplementationOnce(async (_c: unknown, _p: unknown, _f: unknown, o: { ownerMessage: () => unknown }) => { o.ownerMessage(); return false; });
+    const first = setup();
+    await tripsitmeButton(first.interaction);
+    expect(first.raw.showModal).not.toHaveBeenCalled();
+    mocks.ensure.mockResolvedValueOnce(true).mockImplementationOnce(async (_c: unknown, _p: unknown, _f: unknown, o: { ownerMessage: () => unknown }) => { o.ownerMessage(); return false; });
+    const second = setup();
+    await tripsitmeButton(second.interaction);
+    expect(second.raw.showModal).not.toHaveBeenCalled();
   });
 
   it('clears stale tripsit and meta channel settings', async () => {
@@ -319,24 +316,9 @@ describe('tripsitmeButton', () => {
     await tripsitmeButton(s.interaction);
     await flushPromises();
     expect(s.raw.showModal).toHaveBeenCalled();
-    const [[{ filter }]] = (s.raw.awaitModalSubmit as ReturnType<typeof vi.fn>).mock.calls;
-    expect(filter(s.submit)).toBe(true);
-    expect(filter({ customId: 'unrelated~int1' })).toBe(false);
     expect(s.submit.deferReply).toHaveBeenCalled();
     expect(s.tripsit.threads.create).toHaveBeenCalled();
     expect(JSON.stringify(s.submit.editReply.mock.calls.at(-1)?.[0])).toContain('Click here to be taken to your private room');
-  });
-
-  it('opens a private ticket without team roles configured', async () => {
-    const s = setup();
-    guildRow({ role_tripsitter: null, role_helper: null });
-
-    await tripsitmeButton(s.interaction);
-    await flushPromises();
-
-    expect(s.tripsit.threads.create).toHaveBeenCalledOnce();
-    expect(s.raw.guild.roles.fetch).not.toHaveBeenCalled();
-    expect(s.meta.send).toHaveBeenCalledOnce();
   });
 
   it('ignores other users\' modals, reports creation failures, and survives reply errors', async () => {

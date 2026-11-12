@@ -10,6 +10,7 @@ import {
   ModalSubmitInteraction,
   PermissionResolvable,
   Guild,
+  TextBasedChannel,
   Colors,
   EmbedBuilder,
   ButtonInteraction,
@@ -78,16 +79,16 @@ async function help(
 
 async function tripsit(
   interaction:ChatInputCommandInteraction,
+  guild: Guild,
+  channel: TextBasedChannel,
 ) {
-  if (!interaction.guild) return;
-  if (!interaction.channel) return;
-  if (interaction.channel.type !== ChannelType.GuildText) return;
+  if (channel.type !== ChannelType.GuildText) return;
 
-  const guildMissing = await missingPermission(interaction.guild, ['ManageRoles' as PermissionResolvable]);
+  const guildMissing = await missingPermission(guild, ['ManageRoles' as PermissionResolvable]);
   if (guildMissing) {
-    log.error(F, `Missing guild permission ${guildMissing} in ${interaction.guild}!`);
+    log.error(F, `Missing guild permission ${guildMissing} in ${guild}!`);
     await interaction.reply({
-      content: stripIndents`Missing ${guildMissing} permission in ${interaction.guild}!
+      content: stripIndents`Missing ${guildMissing} permission in ${guild}!
     In order to setup the tripsitting feature I need:
     Manage Roles - In order to take away roles and give them back
     Part of the tripsitting process is to remove all of a user's roles so they can only see the tripsitting channel.
@@ -100,7 +101,7 @@ async function tripsit(
 
   // Can't defer cuz there's a modal
   // await interaction.deferReply({ flags: MessageFlags.Ephemeral });
-  const channelMissing = await missingPermission(interaction.channel, [
+  const channelMissing = await missingPermission(channel, [
     'ViewChannel' as PermissionResolvable,
     'SendMessages' as PermissionResolvable,
     'SendMessagesInThreads' as PermissionResolvable,
@@ -111,9 +112,9 @@ async function tripsit(
     // 'EmbedLinks' as PermissionResolvable,
   ]);
   if (channelMissing) {
-    log.error(F, `Missing TS channel permission ${channelMissing} in ${interaction.channel.name}!`);
+    log.error(F, `Missing TS channel permission ${channelMissing} in ${channel.name}!`);
     await interaction.reply({
-      content: stripIndents`Missing ${channelMissing} permission in ${interaction.channel}!
+      content: stripIndents`Missing ${channelMissing} permission in ${channel}!
     In order to setup the tripsitting feature I need:
     View Channel - to see the channel
     Send Messages - to send messages
@@ -218,7 +219,7 @@ async function tripsit(
       const roleTripsitter = interaction.options.getRole('tripsitter');
       const roleHelper = interaction.options.getRole('helper');
       const channelTripsitmeta = interaction.options.getChannel('metatripsit');
-      const channelTripsit = interaction.channel as TextChannel;
+      const channelTripsit = channel as TextChannel;
 
       const channelSanctuary = interaction.options.getChannel('sanctuary');
       const channelGeneral = interaction.options.getChannel('general');
@@ -226,7 +227,7 @@ async function tripsit(
       // Save this info to the DB
       await db.discord_guilds.update({
         where: {
-          id: (interaction.guild as Guild).id,
+          id: (guild as Guild).id,
         },
         data: {
           channel_sanctuary: channelSanctuary ? channelSanctuary.id : null,
@@ -267,14 +268,14 @@ async function tripsit(
 
 async function techhelp(
   interaction:ChatInputCommandInteraction,
+  guild: Guild,
+  channel: TextBasedChannel,
 ) {
-  if (!interaction.guild) return;
-  if (!interaction.channel) return;
-  if (interaction.channel.type !== ChannelType.GuildText) return;
+  if (channel.type !== ChannelType.GuildText) return;
 
   // Can't defer cuz there's a modal
   // await interaction.deferReply({ flags: MessageFlags.Ephemeral });
-  const channelMissing = await missingPermission(interaction.channel, [
+  const channelMissing = await missingPermission(channel, [
     'ViewChannel' as PermissionResolvable,
     'SendMessages' as PermissionResolvable,
     'SendMessagesInThreads' as PermissionResolvable,
@@ -285,9 +286,9 @@ async function techhelp(
     // 'EmbedLinks' as PermissionResolvable,
   ]);
   if (channelMissing) {
-    log.error(F, `Missing TS channel permission ${channelMissing} in ${interaction.channel}!`);
+    log.error(F, `Missing TS channel permission ${channelMissing} in ${channel}!`);
     await interaction.reply({
-      content: stripIndents`Missing ${channelMissing} permission in ${interaction.channel}!
+      content: stripIndents`Missing ${channelMissing} permission in ${channel}!
     In order to setup the tripsitting feature I need:
     View Channel - to see the channel
     Send Messages - to send messages
@@ -301,10 +302,10 @@ async function techhelp(
     return;
   }
 
-  const titleText = `**Welcome to ${interaction.guild.name}'s technical help channel!**`;
+  const titleText = `**Welcome to ${guild.name}'s technical help channel!**`;
   const footerText = '🛑 Please do not message anyone directly! 🛑';
   let modalText = stripIndents`
-      This channel can be used to get in contact with the ${interaction.guild.name}'s team for **technical** assistance/feedback!
+      This channel can be used to get in contact with the ${guild.name}'s team for **technical** assistance/feedback!
 
       **Discord-specific issues, feedback or questions** can be discussed with the team via the **blue🟦button**.
 
@@ -315,10 +316,10 @@ async function techhelp(
       Thanks for reading, stay safe!
     `;
 
-  // const guildData = await getGuild(interaction.guild.id);
+  // const guildData = await getGuild(guild.id);
   const guildData = await db.discord_guilds.update({
     where: {
-      id: interaction.guild.id,
+      id: guild.id,
     },
     data: {
       role_techhelp: interaction.options.getRole('roletechreviewer', true).id,
@@ -326,7 +327,7 @@ async function techhelp(
   });
 
   if (guildData.channel_tripsit) {
-    const channelTripsit = interaction.guild.channels.fetch(guildData.channel_tripsit);
+    const channelTripsit = guild.channels.fetch(guildData.channel_tripsit);
     modalText += `\n\n**If you need psychological help try ${channelTripsit.toString()}!**`;
   }
 
@@ -518,10 +519,10 @@ async function ticketbooth(
 
 async function helper(
   interaction:ChatInputCommandInteraction,
+  guild: Guild,
 ) {
   await interaction.deferReply({ flags: MessageFlags.Ephemeral });
-  if (!interaction.guild) return;
-  const guildData = await getOrCreateGuild(interaction.guild?.id);
+  const guildData = await getOrCreateGuild(guild.id);
 
   if (!guildData.channel_tripsit || !guildData.channel_tripsitmeta) {
     await interaction.editReply({
@@ -541,7 +542,7 @@ async function helper(
   // const channelMetatripsit = await interaction.client.channels.fetch(guildData.channel_tripsitmeta) as TextChannel;
 
   const messageText = stripIndents`
-   ${interaction.guild?.name} is run by volunteers and we're always looking for people who want to help out!
+   ${guild.name} is run by volunteers and we're always looking for people who want to help out!
   
   While we do value lived/living experience with drug use it is not required to be an effective Helper: \
 as long as you have a general understanding of how drugs work and how hey interact with mental health conditions we do not require a formal education for users interested in taking on the helper role. 
@@ -933,17 +934,17 @@ export const setup: SlashCommand = {
     if (command === 'applications') {
       await applicationSetup(interaction);
     } else if (command === 'techhelp') {
-      await techhelp(interaction);
+      await techhelp(interaction, interaction.guild, interaction.channel);
     } else if (command === 'rules') {
       await rules(interaction);
     } else if (command === 'tripsit') {
-      await tripsit(interaction);
+      await tripsit(interaction, interaction.guild, interaction.channel);
     } else if (command === 'ticketbooth') {
       await ticketbooth(interaction);
     } else if (command === 'help') {
       await help(interaction);
     } else if (command === 'helper') {
-      await helper(interaction);
+      await helper(interaction, interaction.guild);
     }
     return true;
   },

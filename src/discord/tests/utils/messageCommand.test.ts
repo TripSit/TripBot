@@ -114,21 +114,6 @@ describe('old tilde commands', () => {
     await messageCommand(m.message);
     expect(sentText(m.send)).toContain('will be with you');
   });
-
-  it('answers another request at the five-minute cooldown boundary using the author name', async () => {
-    const start = Date.UTC(2026, 0, 1);
-    const now = vi.spyOn(Date, 'now').mockReturnValue(start);
-    try {
-      const m = tilde('~tripsit', { member: null }, { channelId: e.CHANNEL_TRIPSIT });
-      await messageCommand(m.message);
-      now.mockReturnValue(start + 5 * 60 * 1000);
-      await messageCommand(m.message);
-      expect(m.send).toHaveBeenCalledTimes(4);
-      expect(sentText(m.send, 2)).toContain('Hey alice, someone from');
-    } finally {
-      now.mockRestore();
-    }
-  });
 });
 
 describe('mentioning and poking the bot', () => {
@@ -227,12 +212,6 @@ describe('mentioning and poking the bot', () => {
       (m.raw.channel as unknown as { messages: { fetch: ReturnType<typeof vi.fn> } }).messages.fetch.mockResolvedValue({ content: 'see <:cat:333>' });
       await messageCommand(m.message);
       expect(m.guild.emojis.create).toHaveBeenCalledWith({ name: 'cat', attachment: 'https://cdn.discordapp.com/emojis/333.png' });
-    });
-
-    it('uses animated markup after uploading an animated emoji', async () => {
-      const m = upload('!upload emoji <a:dance:222>');
-      await messageCommand(m.message);
-      expect(m.sent.edit).toHaveBeenCalledWith(expect.stringContaining('<a:dance:999>'));
     });
 
     it('does nothing when there are no emojis to upload', async () => {

@@ -1,7 +1,7 @@
 import { dFeedback, feedbackReportModal } from '../../commands/global/d.feedback';
 import { mTranslate } from '../../commands/global/m.translate';
 import { dRemindme } from '../../commands/global/d.remindme';
-import { lastReply, slashStub } from '../../../vitest/utils/commandStubs';
+import { lastReply, slashStub, resolvingModal } from '../../../vitest/utils/commandStubs';
 import { flushPromises } from '../../../vitest/utils/discordStubs';
 
 const mocks = vi.hoisted(() => ({ aiTranslate: vi.fn(), remindMe: vi.fn(), paginate: vi.fn() }));
@@ -30,7 +30,7 @@ describe('feedback', () => {
         channels: { fetch: vi.fn(async () => devChan) },
       },
     };
-    const stub = slashStub({ extra: { awaitModalSubmit: vi.fn(async () => submit) } });
+    const stub = slashStub({ extra: { awaitModalSubmit: vi.fn(resolvingModal(submit)) } });
     return {
       stub, submit, owner, devChan,
     };

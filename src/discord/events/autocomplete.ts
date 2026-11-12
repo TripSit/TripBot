@@ -106,11 +106,6 @@ async function autocompleteBenzos(interaction: AutocompleteInteraction) {
     ],
   };
 
-  if (drugDataTripsit === null || drugDataTripsit === undefined) {
-    // log.error(F, 'drugDataAll is null or undefined');
-    return;
-  }
-
   const tsDrugNames = Object.keys(drugDataTripsit);
   const benzoNames = tsDrugNames.filter(drugName => {
     const props = drugDataTripsit[drugName as keyof typeof drugDataTripsit].properties;

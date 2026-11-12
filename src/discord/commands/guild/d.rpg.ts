@@ -2291,9 +2291,14 @@ export async function rpgFlair(interaction: ChatInputCommandInteraction) {
 
   // If the flair is approved or the same as what the user entered, update the flair and send the user a confirmation message
   // Also regex to see if the flair is the same as what the user entered but ignoring capitalization
-  if (aiAdjusted !== undefined && newFlair.toLowerCase() === aiAdjusted.toLowerCase()) {
-    flairItem.effect_value = aiAdjusted;
-    newFlair = aiAdjusted;
+  if (newFlair.toLowerCase() === aiAdjusted?.toLowerCase()) {
+    // Update the flair
+    if (aiAdjusted) {
+      flairItem.effect_value = aiAdjusted;
+      newFlair = aiAdjusted;
+    } else {
+      flairItem.effect_value = newFlair;
+    }
     await db.rpg_inventory.upsert({
       where: {
         id: flairItem.id,
@@ -2366,37 +2371,21 @@ export async function rpgFlair(interaction: ChatInputCommandInteraction) {
     };
   }
 
-  if (aiApproved === 'rejected') {
-    adjustmentReason = response.match(/Reason: (.*)/g)?.[0].replace('Reason: ', '') || 'No reason given';
+  // Everything else was handled above, so the verdict can only be a rejection
+  adjustmentReason = response.match(/Reason: (.*)/g)?.[0].replace('Reason: ', '') || 'No reason given';
 
-    // Send the user a rejection message
-    return {
-      embeds: [embedTemplate()
-        .setAuthor(null)
-        // .setFooter({ text: `${interaction.member?.displayName}'s TripSit RPG (BETA)`, iconURL: interaction.member?.displayAvatarURL() })
-        .setTitle(`${emojiGet('itemFlair')} Flair Rejected`)
-        .setDescription(stripIndents`
-        Your flair has been rejected by TripBot.
-        
-        **Rejection Reason:** ${adjustmentReason}
-        
-        Please try something else.`)
-        .setColor(Colors.Red)],
-    };
-  }
-
-  // If this code runs, something went wrong with TripBot's AI
+  // Send the user a rejection message
   return {
     embeds: [embedTemplate()
       .setAuthor(null)
       // .setFooter({ text: `${interaction.member?.displayName}'s TripSit RPG (BETA)`, iconURL: interaction.member?.displayAvatarURL() })
-      .setTitle(`${emojiGet('itemFlair')} Flair Error`)
+      .setTitle(`${emojiGet('itemFlair')} Flair Rejected`)
       .setDescription(stripIndents`
-      Oops!
-
-      Something went wrong with TripBot's AI.
-
-      Please try again later or contact a moderator to have your flair manually reviewed.`)
+      Your flair has been rejected by TripBot.
+      
+      **Rejection Reason:** ${adjustmentReason}
+      
+      Please try something else.`)
       .setColor(Colors.Red)],
   };
 }
@@ -2570,7 +2559,6 @@ export async function rpgHomeNameChange(
     && i.guild !== null);
   await interaction.awaitModalSubmit({ filter: modalFilter, time: 0 })
     .then(async i => {
-      if (i.customId.split('~')[1] !== interaction.id) return;
       const choice = i.fields.getTextInputValue('rpgNewName');
       await i.deferReply({ flags: MessageFlags.Ephemeral });
 
@@ -3394,10 +3382,21 @@ export async function rpgArcadeGame(
 
   const { bets } = gameData[gameName as keyof typeof gameData];
 
-  const components = [rowWagers];
-  for (let offset = 0; offset < bets.length; offset += 5) {
-    components.push(new ActionRowBuilder<ButtonBuilder>().addComponents(...bets.slice(offset, offset + 5)));
-  }
+  const rowBetsA = new ActionRowBuilder<ButtonBuilder>()
+    .addComponents(...bets.slice(0, 5));
+
+  const rowBetsB = new ActionRowBuilder<ButtonBuilder>()
+    .addComponents(...bets.slice(5, 10));
+
+  const rowBetsC = new ActionRowBuilder<ButtonBuilder>()
+    .addComponents(...bets.slice(10, 15));
+
+  // log.debug(F, `rowWagers: ${JSON.stringify(rowWagers, null, 2)}`);
+  // log.debug(F, `rowBetsA: ${JSON.stringify(rowBetsA, null, 2)}`);
+
+  const components = [rowWagers, rowBetsA];
+  if (rowBetsB.components.length > 0) components.push(rowBetsB);
+  if (rowBetsC.components.length > 0) components.push(rowBetsC);
 
   // log.debug(F, `components: ${JSON.stringify(components, null, 2)}`);
 

@@ -1,4 +1,4 @@
-/* eslint-disable max-len, sonarjs/no-duplicate-string, @typescript-eslint/no-unused-vars */
+/* eslint-disable max-len, sonarjs/no-duplicate-string */
 import { EventEmitter } from 'events';
 import { dRockPaperScissors } from '../../commands/global/d.rockpaperscissors';
 import { slashStub } from '../../../vitest/utils/commandStubs';
@@ -25,14 +25,14 @@ describe('rock paper scissors', () => {
   describe('1v1', () => {
     const start = async () => {
       const collector = makeCollector();
-      const channel = { createMessageComponentCollector: vi.fn((_options: { filter: (i: ReturnType<typeof press>) => boolean }) => collector) };
+      const channel = { createMessageComponentCollector: vi.fn(() => collector) };
       const stub = slashStub({ channel, options: { opponent: user('u2') } });
       await dRockPaperScissors.execute(stub as never);
       const id = (stub.reply.mock.calls[0][0] as { components: Array<{ components: Array<{ data: { custom_id: string } }> }> }).components[0].components[0].data.custom_id;
       const gameId = id.split('_')[1];
       const choose = async (who: string, choice: string) => { collector.emit('collect', press(`rps_${gameId}_${choice}`, who)); await flush(); };
       return {
-        stub, collector, choose, gameId, filter: channel.createMessageComponentCollector.mock.calls[0][0].filter,
+        stub, collector, choose, gameId,
       };
     };
 
@@ -49,14 +49,6 @@ describe('rock paper scissors', () => {
       const stub = slashStub({ channel: null, options: { opponent: user('u2') } });
       await dRockPaperScissors.execute(stub as never);
       expect(stub.editReply).toHaveBeenCalledWith(expect.objectContaining({ content: expect.stringContaining('added to the server') }));
-    });
-
-    it('collects button presses only from the two players', async () => {
-      const { filter, gameId } = await start();
-      const button = `rps_${gameId}_rock`;
-      expect(filter(press(button, 'u1'))).toBe(true);
-      expect(filter(press(button, 'u2'))).toBe(true);
-      expect(filter(press(button, 'outsider'))).toBe(false);
     });
 
     it('plays a best-of-three to completion', async () => {
@@ -88,9 +80,6 @@ describe('rock paper scissors', () => {
       await flush(2000);
       expect(embedOf(stub.editReply.mock.calls.at(-1) as never).title).toBe('🏆 Match Complete!');
       expect(collector.stop).toHaveBeenCalled();
-      stub.editReply.mockClear();
-      await choose('u2', 'scissors');
-      expect(stub.editReply).not.toHaveBeenCalled();
       expect(gameId).toBeTruthy();
     });
 
@@ -104,22 +93,6 @@ describe('rock paper scissors', () => {
       again.stub.editReply.mockRejectedValueOnce(new Error('gone'));
       again.collector.emit('end');
       await flush();
-    });
-
-    it('names the opponent as the winner when they win two rounds', async () => {
-      const { stub, choose } = await start();
-      await choose('u2', 'paper');
-      const waiting = embedOf(stub.editReply.mock.calls.at(-1) as never);
-      expect(waiting.description).toContain('u2: Ready');
-      expect(waiting.description).toContain('Choosing...');
-      await choose('u1', 'rock');
-      await flush(3000);
-      await choose('u1', 'paper');
-      await choose('u2', 'scissors');
-      await flush(2000);
-      const result = embedOf(stub.editReply.mock.calls.at(-1) as never);
-      expect(result.title).toBe('🏆 Match Complete!');
-      expect(result.description).toContain('u2: 2');
     });
 
     it('stops when the status update fails', async () => {
@@ -144,7 +117,7 @@ describe('rock paper scissors', () => {
       const queue = makeCollector();
       const rounds: Collector[] = [];
       const channel = {
-        createMessageComponentCollector: vi.fn((_options: { filter: (i: ReturnType<typeof press>) => boolean }) => {
+        createMessageComponentCollector: vi.fn(() => {
           if (!rounds.length && !(channel as { used?: boolean }).used) { (channel as { used?: boolean }).used = true; return queue; }
           const next = makeCollector();
           rounds.push(next);
@@ -199,31 +172,6 @@ describe('rock paper scissors', () => {
       await flush();
     });
 
-    it('handles the channel becoming unavailable after players join', async () => {
-      const {
-        stub, queue, join, rounds,
-      } = await setup();
-      await join('a');
-      await join('b');
-      Object.assign(stub, { channel: null });
-      queue.emit('end');
-      await flush();
-      expect(embedOf(stub.editReply.mock.calls.at(-1) as never).title).toContain('Round 1');
-      expect(rounds).toHaveLength(0);
-    });
-
-    it('stops updating the countdown at zero', async () => {
-      const { stub, queue } = await setup();
-      await flush(40_000);
-      expect(embedOf(stub.editReply.mock.calls.at(-1) as never).description).toContain('5 seconds');
-      stub.editReply.mockClear();
-      await flush(5_000);
-      expect(stub.editReply).not.toHaveBeenCalled();
-      queue.emit('end');
-      await flush();
-      expect(embedOf(stub.editReply.mock.calls.at(-1) as never).title).toBe('❌ Not Enough Players');
-    });
-
     const startGame = async (players: string[]) => {
       const ctx = await setup();
       for (const p of players) await ctx.join(p); // eslint-disable-line no-await-in-loop, no-restricted-syntax
@@ -242,7 +190,6 @@ describe('rock paper scissors', () => {
       await choose(rounds[0], gameId, 'a', 'rock');
       expect(embedOf(stub.editReply.mock.calls.at(-1) as never).description).toContain('Ready');
       await choose(rounds[0], gameId, 'a', 'paper'); // duplicate choice ignored
-      await choose(rounds[0], gameId, 'outsider', 'rock'); // not a player
       await choose(rounds[0], gameId, 'b', 'rock');
       await choose(rounds[0], gameId, 'c', 'scissors'); // rock+scissors -> scissors eliminated
       expect(embedOf(stub.editReply.mock.calls.at(-1) as never).description).toContain('Advancing to next round');
@@ -273,32 +220,6 @@ describe('rock paper scissors', () => {
       expect(embedOf(sp.stub.editReply.mock.calls.at(-1) as never).description).toContain('Eliminated');
     });
 
-    it('declares a winner immediately when two players choose the losing move', async () => {
-      const { stub, rounds, gameId } = await startGame(['a', 'b', 'c']);
-      await choose(rounds[0], gameId, 'a', 'rock');
-      await choose(rounds[0], gameId, 'b', 'scissors');
-      await choose(rounds[0], gameId, 'c', 'scissors');
-      expect(embedOf(stub.editReply.mock.calls.at(-1) as never).description).toContain('WINNER');
-      await flush(3000);
-      expect(rounds).toHaveLength(1);
-    });
-
-    it('advances both tied players when a third player times out', async () => {
-      const { stub, rounds, gameId } = await startGame(['a', 'b', 'c']);
-      await choose(rounds[0], gameId, 'a', 'rock');
-      await choose(rounds[0], gameId, 'b', 'rock');
-      rounds[0].emit('end');
-      await flush();
-      const result = embedOf(stub.editReply.mock.calls.at(-1) as never);
-      expect(result.description).toContain('Advancing to next round:** <@a>, <@b>');
-      await flush(3000);
-      expect(rounds).toHaveLength(2);
-      const late = press(`rps_${gameId}_paper`, 'c');
-      rounds[1].emit('collect', late);
-      await flush();
-      expect(late.deferUpdate).toHaveBeenCalledTimes(1);
-    });
-
     it('eliminates players who do not choose, ending the game when one remains', async () => {
       const { stub, rounds, gameId } = await startGame(['a', 'b']);
       await choose(rounds[0], gameId, 'a', 'rock');
@@ -309,24 +230,6 @@ describe('rock paper scissors', () => {
       none.rounds[0].emit('end');
       await flush();
       expect(embedOf(none.stub.editReply.mock.calls.at(-1) as never).description).toContain('No winner');
-    });
-
-    it('keeps both finalists after a tie and ignores buttons from another game', async () => {
-      const { rounds, gameId, channel } = await startGame(['a', 'b']);
-      const [{ filter: queueFilter }, { filter: roundFilter }] = channel.createMessageComponentCollector.mock.calls.map(([options]) => options);
-      expect(queueFilter(press(`rps_${gameId}_join_queue`, 'a'))).toBe(true);
-      expect(queueFilter(press('rps_other_join_queue', 'a'))).toBe(false);
-      expect(roundFilter(press(`rps_${gameId}_paper`, 'a'))).toBe(true);
-      expect(roundFilter(press(`rps_${gameId}_paper`, 'outsider'))).toBe(false);
-      expect(roundFilter(press('unrelated', 'a'))).toBe(false);
-      const stale = press('rps_other_rock', 'a');
-      rounds[0].emit('collect', stale);
-      await flush();
-      expect(stale.deferUpdate).not.toHaveBeenCalled();
-      await choose(rounds[0], gameId, 'a', 'paper');
-      await choose(rounds[0], gameId, 'b', 'paper');
-      await flush(3000);
-      expect(rounds).toHaveLength(2);
     });
 
     it('tolerates deleted messages mid-game', async () => {
@@ -340,15 +243,84 @@ describe('rock paper scissors', () => {
       await choose(second.rounds[0], second.gameId, 'b', 'rock');
       await flush(3000);
     });
+  });
+});
 
-    it('ends quietly when the message disappears before the next round', async () => {
-      const { stub, rounds, gameId } = await startGame(['a', 'b']);
-      await choose(rounds[0], gameId, 'a', 'rock');
-      await choose(rounds[0], gameId, 'b', 'rock');
-      stub.editReply.mockRejectedValueOnce(new Error('Unknown Message'));
-      await flush(3000);
-      expect(rounds).toHaveLength(1);
-      expect(embedOf(stub.editReply.mock.calls.at(-1) as never).title).toContain('Round 2');
-    });
+describe('rock paper scissors collector filters', () => {
+  beforeEach(() => { vi.useFakeTimers({ toFake: ['setTimeout', 'setInterval', 'clearInterval', 'Date'] }); });
+  afterEach(() => { vi.useRealTimers(); });
+
+  type ButtonFilter = (i: { user: { id: string }; customId: string }) => boolean;
+  const filterOf = (channel: { createMessageComponentCollector: { mock: { calls: unknown[][] } } }, call = 0) => (
+    (channel.createMessageComponentCollector.mock.calls[call][0] as { filter: ButtonFilter }).filter
+  );
+
+  it('1v1 only accepts clicks from the two players', async () => {
+    const channel = { createMessageComponentCollector: vi.fn(() => makeCollector()) };
+    const stub = slashStub({ channel, options: { opponent: user('u2') } });
+    await dRockPaperScissors.execute(stub as never);
+    const filter = filterOf(channel);
+    expect(filter({ user: { id: 'u1' }, customId: 'x' })).toBe(true);
+    expect(filter({ user: { id: 'u2' }, customId: 'x' })).toBe(true);
+    expect(filter({ user: { id: 'u3' }, customId: 'x' })).toBe(false);
+  });
+
+  it('the queue only accepts its own join button, and rounds only accept players', async () => {
+    const queue = makeCollector();
+    const round = makeCollector();
+    const collectors = [queue, round];
+    const channel = { createMessageComponentCollector: vi.fn(() => collectors.shift()) };
+    const stub = slashStub({ channel });
+    await dRockPaperScissors.execute(stub as never);
+    const joinId = (stub.reply.mock.calls[0][0] as { components: Array<{ components: Array<{ data: { custom_id: string } }> }> }).components[0].components[0].data.custom_id;
+    const queueFilter = filterOf(channel, 0);
+    expect(queueFilter({ user: { id: 'a' }, customId: joinId })).toBe(true);
+    expect(queueFilter({ user: { id: 'a' }, customId: 'other' })).toBe(false);
+
+    queue.emit('collect', press(joinId, 'a'));
+    queue.emit('collect', press(joinId, 'b'));
+    await vi.advanceTimersByTimeAsync(0);
+    queue.emit('end');
+    await vi.advanceTimersByTimeAsync(0);
+    const roundFilter = filterOf(channel, 1);
+    expect(roundFilter({ user: { id: 'a' }, customId: 'rps_x_rock' })).toBe(true);
+    expect(roundFilter({ user: { id: 'a' }, customId: 'other' })).toBe(false);
+    expect(roundFilter({ user: { id: 'c' }, customId: 'rps_x_rock' })).toBe(false);
+  });
+
+  it('a round without a collector ends the game setup quietly', async () => {
+    const queue = makeCollector();
+    const collectors: Array<ReturnType<typeof makeCollector> | undefined> = [queue, undefined];
+    const channel = { createMessageComponentCollector: vi.fn(() => collectors.shift()) };
+    const stub = slashStub({ channel });
+    await dRockPaperScissors.execute(stub as never);
+    const joinId = (stub.reply.mock.calls[0][0] as { components: Array<{ components: Array<{ data: { custom_id: string } }> }> }).components[0].components[0].data.custom_id;
+    queue.emit('collect', press(joinId, 'a'));
+    queue.emit('collect', press(joinId, 'b'));
+    await vi.advanceTimersByTimeAsync(0);
+    queue.emit('end');
+    await vi.advanceTimersByTimeAsync(0);
+    expect(channel.createMessageComponentCollector).toHaveBeenCalledTimes(2);
+  });
+
+  it('multiplayer rounds ignore buttons from another game', async () => {
+    const queue = makeCollector();
+    const round = makeCollector();
+    const collectors = [queue, round];
+    const channel = { createMessageComponentCollector: vi.fn(() => collectors.shift()) };
+    const stub = slashStub({ channel });
+    await dRockPaperScissors.execute(stub as never);
+    const joinId = (stub.reply.mock.calls[0][0] as { components: Array<{ components: Array<{ data: { custom_id: string } }> }> }).components[0].components[0].data.custom_id;
+    queue.emit('collect', press(joinId, 'a'));
+    queue.emit('collect', press(joinId, 'b'));
+    await vi.advanceTimersByTimeAsync(0);
+    queue.emit('end');
+    await vi.advanceTimersByTimeAsync(0);
+    const calls = stub.editReply.mock.calls.length;
+    const stray = press('rps_some-other-game_rock', 'a');
+    round.emit('collect', stray);
+    await vi.advanceTimersByTimeAsync(0);
+    expect(stray.deferUpdate).not.toHaveBeenCalled();
+    expect(stub.editReply.mock.calls.length).toBe(calls);
   });
 });

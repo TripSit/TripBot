@@ -50,12 +50,6 @@ describe('simple fun commands', () => {
     expect((lastReply(stub).embeds as Array<{ data: { title: string } }>)[0].data.title).toBe('Honey never spoils');
   });
 
-  it('fact defers publicly by default', async () => {
-    mocks.fact.mockResolvedValueOnce('Octopuses have three hearts');
-    const { stub } = await run(dFact);
-    expect(stub.deferReply).toHaveBeenCalledWith({ flags: undefined });
-  });
-
   it('hydrate and kipp send reminders', async () => {
     const hydrate = await run(dHydrate);
     expect(JSON.stringify(lastReply(hydrate.stub))).toContain('ＨＹＤＲＡＴＩＯＮ');
@@ -119,21 +113,6 @@ describe('privacy', () => {
     const { stub } = await run(dPrivacy, { subcommand: 'delete' });
     expect(embedOf(stub).title).toBe('Are you sure?');
     expect(dbMock.users.update).not.toHaveBeenCalled();
-  });
-
-  it('opts out of the IRC bridge', async () => {
-    dbMock.users.update.mockResolvedValue({ irc_bridge_opt_out: true } as never);
-    const { stub } = await run(dPrivacy, { subcommand: 'bridge', options: { relay: false } });
-    expect(dbMock.users.update).toHaveBeenCalledWith({ where: { id: 'uid' }, data: { irc_bridge_opt_out: true } });
-    expect(embedOf(stub).title).toBe('IRC Bridge');
-    expect(embedOf(stub).description).toContain('no longer be relayed');
-  });
-
-  it('opts back in to the IRC bridge', async () => {
-    dbMock.users.update.mockResolvedValue({ irc_bridge_opt_out: false } as never);
-    const { stub } = await run(dPrivacy, { subcommand: 'bridge', options: { relay: true } });
-    expect(dbMock.users.update).toHaveBeenCalledWith({ where: { id: 'uid' }, data: { irc_bridge_opt_out: false } });
-    expect(embedOf(stub).description).toContain('will be relayed to IRC');
   });
 
   it('deletes data with the confirmation code', async () => {

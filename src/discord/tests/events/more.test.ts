@@ -305,6 +305,27 @@ describe('guildMemberRemove', () => {
     expect(description).not.toContain('hour');
   });
 
+  it('pluralises every unit and skips the ones that are zero', async () => {
+    const plural = setup(2 * 30 * DAY + 2 * 7 * DAY + 2 * DAY + 2 * 3_600_000 + 2 * 60_000 + 2000, { modLog: 'log' });
+    await guildMemberRemove.execute(plural.member as never);
+    expect(plural.modLogSend.mock.calls[0][0].embeds[0].data.description)
+      .toContain('2 months, 2 weeks, 2 days, 2 hours, 2 minutes, 2 seconds');
+    const single = setup(30 * DAY + 7 * DAY + 3_600_000 + 60_000 + 1000, { modLog: 'log' });
+    await guildMemberRemove.execute(single.member as never);
+    expect(single.modLogSend.mock.calls[0][0].embeds[0].data.description).toContain('1 month, 1 week, 1 hour, 1 minute, 1 second');
+  });
+
+  it('falls back to the account tag when the member has no display name', async () => {
+    const withJoin = setup(DAY, { modLog: 'log' });
+    withJoin.member.displayName = '';
+    await guildMemberRemove.execute(withJoin.member as never);
+    expect(withJoin.modLogSend.mock.calls[0][0].embeds[0].data.description).toContain('(ally#1)');
+    const noJoin = setup(null, { modLog: 'log' });
+    noJoin.member.displayName = '';
+    await guildMemberRemove.execute(noJoin.member as never);
+    expect(noJoin.modLogSend.mock.calls[0][0].embeds[0].data.description).toContain('(ally#1)');
+  });
+
   it('handles members with no join date', async () => {
     const { member, modLogSend } = setup(null, { modLog: 'log' });
     await guildMemberRemove.execute(member as never);

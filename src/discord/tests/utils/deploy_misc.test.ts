@@ -1,4 +1,3 @@
-import { debug } from '../../events/debug';
 import { registerEvents } from '../../events/index';
 
 const mocks = vi.hoisted(() => ({
@@ -76,11 +75,5 @@ describe('registerEvents', () => {
     await registerEvents(client as never);
     expect(client.on).not.toHaveBeenCalled();
     expect(client.once).not.toHaveBeenCalled();
-  });
-});
-
-describe('debug event', () => {
-  it('is a disabled no-op', async () => {
-    await expect(debug.execute('x' as never)).resolves.toBeUndefined();
   });
 });

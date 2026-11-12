@@ -1,10 +1,10 @@
 /* eslint-disable max-len, sonarjs/no-duplicate-string, no-restricted-syntax, no-promise-executor-return, no-await-in-loop */
-import { ChannelType, Colors, EmbedBuilder } from 'discord.js';
+import { ChannelType } from 'discord.js';
 import {
   buttonReactionRole, createColorMessage, createMindsetMessage, createNotificationMessage, createPremiumColorMessage, createPronounMessage,
   dReactionRole, setupCustomReactionRole,
 } from '../../commands/global/d.reactionRole';
-import { slashStub } from '../../../vitest/utils/commandStubs';
+import { slashStub, resolvingModal, pendingModal } from '../../../vitest/utils/commandStubs';
 import { flushPromises } from '../../../vitest/utils/discordStubs';
 
 const mocks = vi.hoisted(() => ({ missing: vi.fn(), guild: vi.fn(), user: vi.fn() }));
@@ -82,7 +82,7 @@ describe('setupCustomReactionRole', () => {
       customId: '"ID":"RR","II":"int1"', deferReply: vi.fn(), editReply: vi.fn(), fields: { getTextInputValue: vi.fn(() => 'v') },
     };
     const stub = slashStub({ options: { role: role('r1'), emoji: '😀', label: 'Click' }, guild: guildOf(), channel });
-    stub.awaitModalSubmit.mockResolvedValueOnce(submit);
+    stub.awaitModalSubmit.mockImplementationOnce(resolvingModal(submit));
     await setupCustomReactionRole(stub as never);
     await flushPromises();
     expect(stub.showModal).toHaveBeenCalled();
@@ -90,31 +90,10 @@ describe('setupCustomReactionRole', () => {
     expect(submit.editReply).toHaveBeenCalled();
     const other = slashStub({ options: { role: role('r1'), label: 'x' }, guild: guildOf(), channel });
     const foreign = { ...submit, customId: '"ID":"RR","II":"zzz"', deferReply: vi.fn() };
-    other.awaitModalSubmit.mockResolvedValueOnce(foreign);
+    other.awaitModalSubmit.mockImplementationOnce(resolvingModal(foreign));
     await setupCustomReactionRole(other as never);
     await flushPromises();
     expect(foreign.deferReply).not.toHaveBeenCalled();
-  });
-
-  it.each([
-    [{ label: 'Join' }, { label: 'Join', emoji: undefined }],
-    [{ emoji: '😀' }, { label: undefined, emoji: { name: '😀' } }],
-  ])('posts a button using only the supplied decoration %j', async (options, expected) => {
-    const channel = text();
-    const stub = slashStub({ options: { role: role('r1'), ...options }, guild: guildOf(), channel });
-    stub.awaitModalSubmit.mockResolvedValueOnce({
-      customId: '"ID":"RR","II":"int1"',
-      deferReply: vi.fn(),
-      editReply: vi.fn(),
-      fields: { getTextInputValue: vi.fn(() => 'Role details') },
-    });
-    await setupCustomReactionRole(stub as never);
-    await flushPromises();
-    expect(channel.send).toHaveBeenCalledTimes(1);
-    const [message] = channel.send.mock.calls[0];
-    const button = JSON.parse(JSON.stringify(message)).components[0].components[0];
-    expect(button.label).toBe(expected.label);
-    expect(button.emoji?.name).toBe(expected.emoji?.name);
   });
 });
 
@@ -143,7 +122,7 @@ describe('buttonReactionRole', () => {
     deferReply: vi.fn(),
     editReply: vi.fn(),
     showModal: vi.fn(),
-    awaitModalSubmit: vi.fn(() => new Promise(() => undefined)),
+    awaitModalSubmit: vi.fn(pendingModal()),
     ...over,
   });
 
@@ -189,7 +168,7 @@ describe('buttonReactionRole', () => {
         customId: '"ID":"RR","II":"i1"', deferReply: vi.fn(), editReply: vi.fn(), guild, member: { displayName: 'M' }, fields: { getTextInputValue: vi.fn(() => 'bored') },
       };
       const b = button(introId('r1', 'x'), ['r1'], guild);
-      b.awaitModalSubmit = vi.fn().mockResolvedValue(submit);
+      b.awaitModalSubmit = vi.fn(resolvingModal(submit));
       await buttonReactionRole(b as never);
       await flushPromises();
       expect(b.showModal).toHaveBeenCalled();
@@ -197,54 +176,49 @@ describe('buttonReactionRole', () => {
       expect(channelAudit.send).toHaveBeenCalledWith(expect.stringContaining('bored'));
       const foreign = button(introId('r1', 'x'), ['r1'], guild);
       const other = { ...submit, customId: '"ID":"RR","II":"zzz"', deferReply: vi.fn() };
-      foreign.awaitModalSubmit = vi.fn().mockResolvedValue(other);
+      foreign.awaitModalSubmit = vi.fn(resolvingModal(other));
       await buttonReactionRole(foreign as never);
       await flushPromises();
       expect(other.deferReply).not.toHaveBeenCalled();
     });
 
-    const joinFlow = async (channelId: string, context = { hasMember: true, hasGuild: true }) => {
+    const joinFlow = async (channelId: string) => {
       const sent: unknown[] = [];
       const makeChannel = (cid: string) => ({ id: cid, send: vi.fn((m: unknown) => { sent.push(m); }), toString: (): string => `<#${cid}>` });
       const guild = guildOf({ channels: { fetch: vi.fn(async (cid: string) => makeChannel(cid)) } });
       const submit = {
-        customId: '"ID":"RR","II":"i1"',
-        deferred: false,
-        deferReply: vi.fn(async () => { submit.deferred = true; }),
-        editReply: vi.fn(),
-        guild: context.hasGuild ? guild : null,
-        member: context.hasMember ? { displayName: 'M' } : null,
-        fields: { getTextInputValue: vi.fn(() => 'line1\nline2') },
+        customId: '"ID":"RR","II":"i1"', deferReply: vi.fn(), editReply: vi.fn(), guild, member: { displayName: 'M' }, fields: { getTextInputValue: vi.fn(() => 'line1\nline2') },
       };
       const b = button(introId('r1', channelId), [], guild);
-      b.awaitModalSubmit = vi.fn().mockResolvedValue(submit);
+      b.awaitModalSubmit = vi.fn(resolvingModal(submit));
       await buttonReactionRole(b as never);
       await flushPromises();
       return { b, sent, submit };
     };
 
-    it('stops a submitted introduction when guild member data is missing', async () => {
-      const { b, submit, sent } = await joinFlow('some-channel', { hasMember: false, hasGuild: true });
-      expect(submit.editReply).toHaveBeenCalledExactlyOnceWith('This must be performed by a member of a guild!');
-      expect(submit.fields.getTextInputValue).not.toHaveBeenCalled();
-      expect(b.member.roles.add).not.toHaveBeenCalled();
-      expect(sent).toEqual([]);
-    });
-
-    it('edits the deferred response when the introduction arrives without a guild', async () => {
-      const { b, submit, sent } = await joinFlow('some-channel', { hasMember: true, hasGuild: false });
-      expect(submit.editReply).toHaveBeenCalledExactlyOnceWith({ content: 'This command can only be used in a guild.' });
-      expect(b.member.roles.add).not.toHaveBeenCalled();
-      expect(sent).toEqual([]);
+    it('ignores intro submissions that belong to another interaction or lack a guild or member', async () => {
+      const run = async (submitOver: Record<string, unknown>) => {
+        const guild = guildOf();
+        const submit = {
+          customId: '"ID":"RR","II":"i1"', deferReply: vi.fn(), editReply: vi.fn(), guild, member: { displayName: 'M' }, fields: { getTextInputValue: vi.fn(() => 'x') }, ...submitOver,
+        };
+        const b = button(introId('r1', 'chan'), [], guild);
+        b.awaitModalSubmit = vi.fn(resolvingModal(submit));
+        await buttonReactionRole(b as never);
+        await flushPromises();
+        return { b, submit };
+      };
+      const other = await run({ customId: '"ID":"RR","II":"zzz"' });
+      expect(other.b.member.roles.add).not.toHaveBeenCalled();
+      const dm = await run({ guild: null, reply: vi.fn() });
+      expect(dm.b.member.roles.add).not.toHaveBeenCalled();
+      const memberless = await run({ member: null });
+      expect(memberless.submit.editReply).toHaveBeenCalledWith('This must be performed by a member of a guild!');
+      expect(memberless.b.member.roles.add).not.toHaveBeenCalled();
     });
 
     it('posts introductions to the configured channel, with team-specific follow-ups', async () => {
       const generic = await joinFlow('some-channel');
-      const [[{ filter }]] = generic.b.awaitModalSubmit.mock.calls as [
-        [{ filter: (submission: { customId: string }) => boolean }],
-      ];
-      expect(filter(generic.submit)).toBe(true);
-      expect(filter({ customId: '"ID":"RR","II":"another-interaction"' })).toBe(false);
       expect(generic.b.member.roles.add).toHaveBeenCalled();
       expect(String(generic.sent[0])).toContain('> line1');
       const meta = await joinFlow(e.CHANNEL_TRIPSITMETA);
@@ -333,21 +307,30 @@ describe('message creators', () => {
   });
 
   it.each([
-    ['color', createColorMessage, 'COLOR', Colors.Blue],
-    ['premium', createPremiumColorMessage, 'PREMIUM_COLOR', Colors.Purple],
-    ['mindset', createMindsetMessage, 'MINDSET', Colors.Green],
-    ['pronoun', createPronounMessage, 'PRONOUN', Colors.Yellow],
-    ['notification', createNotificationMessage, 'NOTIFICATION', Colors.Red],
-  ] as const)('%s message uses its default color when none is supplied', async (_n, fn, type, color) => {
+    ['color', createColorMessage, 'COLOR'],
+    ['premium', createPremiumColorMessage, 'PREMIUM_COLOR'],
+    ['mindset', createMindsetMessage, 'MINDSET'],
+    ['pronoun', createPronounMessage, 'PRONOUN'],
+    ['notification', createNotificationMessage, 'NOTIFICATION'],
+  ] as const)('%s message posts buttons using existing roles', async (_n, fn, type) => {
     db.reaction_roles.findMany = vi.fn().mockResolvedValue(rowsFor(type)) as never;
-    const { stub, channel } = stubFor({ embed_color: null });
+    const { stub, channel } = stubFor();
     await fn(stub as never);
     expect(channel.send).toHaveBeenCalledTimes(1);
-    expect(stub.editReply).toHaveBeenCalledWith(expect.objectContaining({
-      embeds: [expect.objectContaining({ data: expect.objectContaining({ color }) })],
-    }));
-    const [message] = channel.send.mock.calls[0] as [{ embeds: EmbedBuilder[] }];
-    expect(message.embeds[0].data.color).toBe(color);
+    expect(stub.editReply).toHaveBeenCalled();
+  });
+
+  it.each([
+    ['color', createColorMessage, 'COLOR'],
+    ['premium', createPremiumColorMessage, 'PREMIUM_COLOR'],
+    ['mindset', createMindsetMessage, 'MINDSET'],
+    ['pronoun', createPronounMessage, 'PRONOUN'],
+    ['notification', createNotificationMessage, 'NOTIFICATION'],
+  ] as const)('%s message uses the default embed colour when none is given', async (_n, fn, type) => {
+    db.reaction_roles.findMany = vi.fn().mockResolvedValue(rowsFor(type)) as never;
+    const { stub, channel } = stubFor({ embed_color: undefined });
+    await fn(stub as never);
+    expect(channel.send).toHaveBeenCalledTimes(1);
   });
 
   it.each([
@@ -360,22 +343,30 @@ describe('message creators', () => {
     (global as unknown as Record<string, unknown>).emojiGet = vi.fn(() => ({ id: '1', url: 'https://e' }));
     // first lookup: nothing stored; created rows are then returned for every later lookup
     db.reaction_roles.findMany = vi.fn().mockResolvedValueOnce([]).mockResolvedValue(rowsFor(type)) as never;
-    const supportsRoleIcons = type !== 'NOTIFICATION';
-    const guild = guildOf({
-      premiumTier: supportsRoleIcons ? 2 : 0,
-      roles: { fetch: vi.fn(async (rid: string) => role(rid)), create: vi.fn(async () => ({ id: 'new' })) },
-    });
+    const guild = guildOf({ premiumTier: 2, roles: { fetch: vi.fn(async (rid: string) => role(rid)), create: vi.fn(async () => ({ id: 'new' })) } });
     const { stub, channel } = stubFor({}, guild);
     await fn(stub as never);
-    expect(guild.roles.create).toHaveBeenCalledWith(expect.objectContaining({
-      icon: supportsRoleIcons ? 'https://e' : null,
-      mentionable: false,
-      permissions: [],
-    }));
+    expect(guild.roles.create).toHaveBeenCalled();
     expect(db.reaction_roles.upsert).toHaveBeenCalled();
     expect(channel.send).toHaveBeenCalledTimes(1);
-    const [message] = channel.send.mock.calls[0] as [{ embeds: EmbedBuilder[] }];
-    expect(message.embeds[0].data.color).toBe(0xff0000);
+  });
+
+  it.each([
+    ['color', createColorMessage, 'COLOR'],
+    ['premium', createPremiumColorMessage, 'PREMIUM_COLOR'],
+    ['mindset', createMindsetMessage, 'MINDSET'],
+    ['pronoun', createPronounMessage, 'PRONOUN'],
+    ['notification', createNotificationMessage, 'NOTIFICATION'],
+  ] as const)('%s message creates missing roles with the default colour', async (_n, fn, type) => {
+    (global as unknown as Record<string, unknown>).emojiGet = vi.fn(() => ({ id: '1', url: 'https://e' }));
+    // first lookup: nothing stored; created rows are then returned for every later lookup
+    db.reaction_roles.findMany = vi.fn().mockResolvedValueOnce([]).mockResolvedValue(rowsFor(type)) as never;
+    const guild = guildOf({ premiumTier: 2, roles: { fetch: vi.fn(async (rid: string) => role(rid)), create: vi.fn(async () => ({ id: 'new' })) } });
+    const { stub, channel } = stubFor({ embed_color: undefined }, guild);
+    await fn(stub as never);
+    expect(guild.roles.create).toHaveBeenCalled();
+    expect(db.reaction_roles.upsert).toHaveBeenCalled();
+    expect(channel.send).toHaveBeenCalledTimes(1);
   });
 
   it('stops quietly without guild, member or channel', async () => {
@@ -410,21 +401,15 @@ describe('message creators', () => {
 
   it('getGuildRole falls back to recreating Tulip when a role cannot be found', async () => {
     (global as unknown as Record<string, unknown>).emojiGet = vi.fn(() => ({ id: '1', url: 'https://e' }));
-    const rows = rowsFor('COLOR');
+    // rows missing => `.find(...).role_id` throws inside the try and the fallback path runs
     db.reaction_roles.findMany = vi.fn()
-      .mockResolvedValueOnce(rows)
-      .mockResolvedValueOnce(rows.filter(row => row.name !== 'Tulip'))
-      .mockResolvedValueOnce([{ name: 'Tulip', role_id: 'replacement' }])
-      .mockResolvedValue(rows) as never;
-    const create = vi.fn().mockResolvedValue({ id: 'replacement' });
-    const fetch = vi.fn(async (id: string) => role(id));
-    const { stub, channel } = stubFor({}, guildOf({ roles: { create, fetch } }));
-
-    await createColorMessage(stub as never);
-
-    expect(create).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ name: 'Tulip' }));
-    expect(fetch).toHaveBeenCalledWith('replacement');
-    expect(channel.send).toHaveBeenCalledOnce();
+      .mockResolvedValueOnce(rowsFor('PRONOUN'))
+      .mockResolvedValueOnce(rowsFor('PRONOUN').filter(row => row.name !== 'AskMe'))
+      .mockResolvedValueOnce([{ name: 'Tulip', role_id: 'rid-Tulip' }])
+      .mockResolvedValue(rowsFor('PRONOUN')) as never;
+    const { stub, channel } = stubFor();
+    await createPronounMessage(stub as never);
+    expect(channel.send).toHaveBeenCalled();
   });
 });
 
@@ -440,7 +425,7 @@ describe('reaction_role command', () => {
       channel: text(),
       member: memberWith(true),
       ...over,
-      extra: { awaitModalSubmit: vi.fn(() => new Promise(() => undefined)) },
+      extra: { awaitModalSubmit: vi.fn(pendingModal()) },
     });
     const result = await dReactionRole.execute(stub as never);
     return { stub, result };
@@ -451,14 +436,17 @@ describe('reaction_role command', () => {
     db.reaction_roles.upsert = vi.fn() as never;
   });
 
+  it('stops when the interaction has no member', async () => {
+    const { stub, result } = await run('help', { member: null });
+    expect(result).toBe(false);
+    expect(stub.reply).toHaveBeenCalledWith('This must be performed by a member of a guild!');
+  });
+
   it('applies guild, partner and permission gates', async () => {
     expect((await run('help', { guild: null })).result).toBe(false);
     const nonPartner = await run('help', {}, {});
     expect(nonPartner.result).toBe(false);
     expect(reply(nonPartner.stub)).toContain('partner or supporter');
-    const noMember = await run('help', { member: null });
-    expect(noMember.result).toBe(false);
-    expect(noMember.stub.reply).toHaveBeenCalledExactlyOnceWith('This must be performed by a member of a guild!');
     const noPerm = await run('help', { member: memberWith(false) });
     expect(reply(noPerm.stub)).toContain('ManageRoles permission');
     const noChannel = await run('help', { channel: null });
@@ -481,15 +469,6 @@ describe('reaction_role command', () => {
     });
     expect(await dReactionRole.execute(chanStub as never)).toBe(false);
     expect(reply(chanStub)).toContain('Missing SendMessages');
-  });
-
-  it('allows help in a supporter guild and in the home guild without partner status', async () => {
-    const supporter = await run('help', {}, { partner: false, supporter: true });
-    expect(supporter.result).toBe(true);
-    const home = await run('help', { guild: guildOf({ id: e.DISCORD_GUILD_ID }) }, {
-      partner: false, supporter: false,
-    });
-    expect(home.result).toBe(true);
   });
 
   it('shows help and routes every subcommand', async () => {

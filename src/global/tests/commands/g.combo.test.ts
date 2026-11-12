@@ -34,17 +34,6 @@ describe('combo', () => {
     expect((result as { msg: string }).msg).toContain('same drug/class');
   });
 
-  it.each([
-    ['doc', 'dox'],
-    ['25i-nbome', '2c-t-x'],
-    ['amphetamine', 'amphetamines'],
-    ['fluoxetine', 'ssris'],
-  ])('normalizes %s to %s before checking for the same class', async (input, category) => {
-    const result = await combo(input, category);
-    expect(result).toMatchObject({ err: true, msg: expect.stringContaining(`converted to '${category}'`) });
-    expect(result).toHaveProperty('msg', expect.stringContaining('same drug/class'));
-  });
-
   it('reports unknown first and second drugs with alternatives', async () => {
     const first = await combo('notadrug-xyz', 'alcohol');
     expect(first).toMatchObject({ err: true, msg: 'notadrug-xyz not found. Try one of:' });

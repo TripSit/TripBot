@@ -304,9 +304,8 @@ export async function buttonReactionRole(
   let introMessage = '' as string;
   if (introMessageRequired) {
     // Display modal to get intro message from the user
-    const modalId = `"ID":"RR","II":"${interaction.id}"`;
     const modal = new ModalBuilder()
-      .setCustomId(modalId)
+      .setCustomId(`"ID":"RR","II":"${interaction.id}"`)
       .setTitle(`${role.name} Introduction`);
     modal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
       .setCustomId('introduction')
@@ -318,16 +317,24 @@ export async function buttonReactionRole(
     await interaction.showModal(modal);
 
     // Collect a modal submit interaction
-    const filter = (i:ModalSubmitInteraction) => i.customId === modalId;
+    const filter = (i:ModalSubmitInteraction) => i.customId.startsWith('"ID":"RR"');
     interaction.awaitModalSubmit({ filter, time: 0 })
       .then(async i => {
+        // log.debug(F, `${JSON.stringify(i.customId)}`);
+        const {
+          II,
+        } = JSON.parse(`{${i.customId}}`);
         await i.deferReply({ flags: MessageFlags.Ephemeral });
 
+        // log.debug(F, `II: ${II}`);
+
+        if (II !== interaction.id) return;
         if (!i.guild) {
           await replyGuildOnly(i);
           return;
         }
         if (!i.member) {
+        // log.debug(F, `no member!`);
           await i.editReply(memberError);
           return;
         }
@@ -757,8 +764,10 @@ async function getGuildRole(
   roleName: string,
   interaction: ChatInputCommandInteraction,
 ):Promise<Role> {
+  /* v8 ignore start -- the message creators that call this have already checked the guild and channel */
   if (!interaction.guild) return {} as Role;
   if (!interaction.channel) return {} as Role;
+  /* v8 ignore stop */
   let returnRole: Role;
 
   let reactionroleData = await db.reaction_roles.findMany({
@@ -1391,6 +1400,7 @@ export const dReactionRole: SlashCommand = {
     }
 
     if (!interaction.member) {
+      // log.debug(F, `no member!`);
       await interaction.reply(memberError);
       return false;
     }

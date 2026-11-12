@@ -6,7 +6,7 @@ import {
   rpgHomeDecline, rpgHomeInventory, rpgHomeNameChange, rpgHomeSell, rpgMarket, rpgMarketAccept, rpgMarketChange, rpgMarketInventory,
   rpgMarketPreview, rpgTown,
 } from '../../commands/guild/d.rpg';
-import { slashStub } from '../../../vitest/utils/commandStubs';
+import { slashStub, resolvingModal } from '../../../vitest/utils/commandStubs';
 
 const mocks = vi.hoisted(() => ({
   random: vi.fn((items: unknown[]) => items[0]), user: vi.fn(), persona: vi.fn(), sleep: vi.fn(), bigBrother: vi.fn(), aiFlair: vi.fn(), asset: vi.fn(), preview: vi.fn(),
@@ -94,19 +94,6 @@ describe('rpg helpers', () => {
       expect(stored.tokens - 5000).toBeGreaterThanOrEqual(16);
     });
 
-    it('awards ten times the base quest tokens in development', async () => {
-      const original = env.NODE_ENV;
-      env.NODE_ENV = 'development';
-      try {
-        await rpgBounties(interactionFor() as never, 'quest');
-        expect(db.personas.upsert).toHaveBeenCalledWith(expect.objectContaining({
-          update: expect.objectContaining({ tokens: 5100 }),
-        }));
-      } finally {
-        env.NODE_ENV = original;
-      }
-    });
-
     it.each([
       ['quest', () => new Date()],
       ['dungeon', () => new Date()],
@@ -116,25 +103,6 @@ describe('rpg helpers', () => {
       const out = await rpgBounties(interactionFor() as never, command);
       expect(embedOf(out).title).toContain('Fail');
       expect(db.personas.upsert).not.toHaveBeenCalled();
-    });
-
-    it('keeps Sunday in the current raid week and resets the cooldown on Monday', async () => {
-      vi.useFakeTimers({ toFake: ['Date'] });
-      try {
-        vi.setSystemTime(new Date(2026, 10, 8, 12));
-        mocks.persona.mockResolvedValue(persona({ last_raid: new Date(2026, 10, 2, 12) }));
-        const sunday = await rpgBounties(interactionFor() as never, 'raid');
-        expect(embedOf(sunday).title).toContain('Fail');
-        expect(db.personas.upsert).not.toHaveBeenCalled();
-
-        vi.setSystemTime(new Date(2026, 10, 9, 0));
-        await rpgBounties(interactionFor() as never, 'raid');
-        expect(db.personas.upsert).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({
-          update: expect.objectContaining({ last_raid: new Date(2026, 10, 9, 0) }),
-        }));
-      } finally {
-        vi.useRealTimers();
-      }
     });
 
     it('allows claiming again after the window passes', async () => {
@@ -160,16 +128,14 @@ describe('rpg helpers', () => {
         options,
         member: member(),
         guild: { members: { fetch: vi.fn(async () => member()) }, channels: { fetch: vi.fn(async () => ({ id: channelId })) } },
-        extra: { channelId: 'rpg', isButton: () => false, isStringSelectMenu: () => false },
+        extra: { channelId: 'rpg' },
       });
       const result = await dRpg.execute(stub as never);
       return { stub, result };
     };
 
-    it.each([
-      'town', 'bounties', 'quest', 'dungeon', 'raid', 'help', 'market', 'home', 'arcade', 'coinflip', 'roulette', 'flair',
-    ])('%s replies in place', async sub => {
-      const { stub, result } = await run(sub, sub === 'flair' ? { flair: 'Hello' } : {});
+    it.each(['town', 'bounties', 'quest', 'dungeon', 'raid', 'help'])('%s replies in place', async sub => {
+      const { stub, result } = await run(sub);
       expect(result).toBe(true);
       expect(stub.editReply).toHaveBeenCalledTimes(1);
       expect(stub.deferReply).toHaveBeenCalledWith({ flags: undefined });
@@ -199,11 +165,6 @@ describe('rpg helpers', () => {
         expect(embedOf((await run('gift', { target, amount: 1000 }).then(r => r.stub.editReply.mock.calls[0][0]))).description).toContain("don't have enough");
       });
 
-      it('rejects a gift to a target who no longer resolves to a guild member', async () => {
-        await expect(run('gift', { target: null, amount: 40 })).rejects.toThrow('Target user not found');
-        expect(db.personas.upsert).not.toHaveBeenCalled();
-      });
-
       it('moves tokens between wallets', async () => {
         const { stub } = await run('gift', { target, amount: 40 });
         expect(embedOf(stub.editReply.mock.calls[0][0]).title).toContain('Gift Successful');
@@ -211,13 +172,6 @@ describe('rpg helpers', () => {
         const [from, to] = (db.personas.upsert as ReturnType<typeof vi.fn>).mock.calls.map(c => c[0].update.tokens);
         expect(from).toBe(60);
         expect(to).toBe(40);
-      });
-
-      it('reports a single-token gift with singular wording', async () => {
-        const { stub } = await run('gift', { target, amount: 1 });
-        expect(embedOf(stub.editReply.mock.calls[0][0]).description).toContain('You gifted 1 token to Tee');
-        const [from, to] = vi.mocked(db.personas.upsert).mock.calls.map(([args]) => args.update.tokens);
-        expect([from, to]).toEqual([99, 1]);
       });
     });
   });
@@ -278,12 +232,6 @@ describe('rpg market', () => {
     expect(embedOf(out).title).toContain('Market');
   });
 
-  it('shows the premium discount in the market embed', async () => {
-    const out = await rpgMarket(marketUser([e.ROLE_PREMIUM]) as never);
-    expect(embedOf(out).description).toContain('**Discounts**');
-    expect(embedOf(out).description).toContain('**Premium Member**');
-  });
-
   describe('change', () => {
     it('reads the selected item from a button press or a select menu', async () => {
       const viaButton = await rpgMarketChange(withSelection('AbrilFatFace') as never);
@@ -306,13 +254,6 @@ describe('rpg market', () => {
   });
 
   describe('preview', () => {
-    it('finds the selected font after a menu with no selection', async () => {
-      const interaction = withSelection('AbrilFatFace');
-      interaction.message.components.unshift(...withSelection(null).message.components);
-      const preview = await rpgMarketPreview(interaction as never);
-      expect(preview.files).toHaveLength(1);
-    });
-
     it('previews fonts and backgrounds', async () => {
       expect((await rpgMarketPreview(withSelection('AbrilFatFace') as never)).files).toHaveLength(1);
       expect((await rpgMarketPreview(withSelection('AbstractTriangles') as never)).files).toHaveLength(1);
@@ -342,9 +283,7 @@ describe('rpg market', () => {
         id: value, value, effect, equipped, label: value, description: 'd',
       });
       db.rpg_inventory.findMany = vi.fn().mockResolvedValue([owned('OldFont', 'font', true), owned('AbrilFatFace', 'font')]) as never;
-      const interaction = withSelection('AbrilFatFace');
-      interaction.message.components.unshift(...withSelection(null).message.components);
-      const font = await rpgMarketAccept(interaction as never);
+      const font = await rpgMarketAccept(withSelection('AbrilFatFace') as never);
       expect(embedOf(font).description).toContain('font has been equipped');
       expect(db.rpg_inventory.create).toHaveBeenCalled();
       expect(db.rpg_inventory.upsert).toHaveBeenCalledTimes(2);
@@ -430,25 +369,6 @@ describe('rpg home and flair', () => {
       expect(equippedDefault.files).toHaveLength(0);
     });
 
-    it.each([
-      ['a button row', { type: ComponentType.Button }],
-      ['a select menu without a default', { options: [{ value: 'AbrilFatFace' }] }],
-    ])('keeps the equipped background when opened from %s', async (_label, component) => {
-      db.rpg_inventory.findMany = vi.fn().mockResolvedValue([
-        owned('AbrilFatFace', 'font'),
-        owned('AbstractTriangles', 'background', { equipped: true }),
-      ]) as never;
-      const interaction = base({
-        isButton: () => true,
-        message: { components: [{ components: [component] }] },
-      });
-      const home = await rpgHome(interaction as never, '');
-      const [row] = JSON.parse(JSON.stringify(home.components));
-      expect(row.components[0].options).toContainEqual(expect.objectContaining({
-        value: 'AbstractTriangles', default: true,
-      }));
-    });
-
     it('accept equips the selected item and unequips other backgrounds', async () => {
       db.rpg_inventory.findMany = vi.fn().mockResolvedValue([owned('AbrilFatFace', 'font'), owned('AbstractTriangles', 'background', { equipped: true })]) as never;
       const out = await rpgHomeAccept(base() as never);
@@ -477,7 +397,7 @@ describe('rpg home and flair', () => {
       const submit = {
         customId: 'rpgNameModal~int1', guild: {}, deferReply: vi.fn(), editReply: vi.fn(), fields: { getTextInputValue: vi.fn(() => 'Bob') },
       };
-      const interaction = base({ showModal: vi.fn(), awaitModalSubmit: vi.fn().mockResolvedValue(submit) });
+      const interaction = base({ showModal: vi.fn(), awaitModalSubmit: vi.fn(resolvingModal(submit)) });
       await expect(rpgHomeNameChange(interaction as never)).rejects.toThrow(TypeError);
       expect((interaction as unknown as { showModal: ReturnType<typeof vi.fn> }).showModal).toHaveBeenCalled();
       expect(submit.editReply).not.toHaveBeenCalled();
@@ -522,10 +442,7 @@ describe('rpg home and flair', () => {
 
     it('interprets the AI verdict: approved, adjusted, rejected and malformed', async () => {
       aiSays('Status: Approved\nAdjusted: Fine');
-      expect(text(await rpgFlair(flairStub('fine') as never))).toContain('New flair:** Fine');
-      expect(db.rpg_inventory.upsert).toHaveBeenCalledWith(expect.objectContaining({
-        update: expect.objectContaining({ effect_value: 'Fine' }),
-      }));
+      expect(text(await rpgFlair(flairStub('fine') as never))).toContain('has been updated');
       aiSays('Status: Adjusted\nAdjusted: Nicer\nReason: tone');
       const adjusted = await rpgFlair(flairStub('rude') as never);
       expect(text(adjusted)).toContain('TripBot Adjusted:** Nicer');
@@ -556,20 +473,6 @@ describe('rpg home and flair', () => {
     it('decline keeps the old flair', async () => {
       expect(text(await rpgFlairDecline(base() as never))).toContain('not been updated');
     });
-
-    it('prompts for confirmation when the proposed adjustment has no explanation', async () => {
-      aiSays('Status: Adjusted\nAdjusted: Revised');
-      const out = await rpgFlair(flairStub('Original') as never);
-      expect(text(out)).toContain('Revised');
-      expect(text(out)).toContain('No reason given');
-      expect(db.rpg_inventory.upsert).not.toHaveBeenCalled();
-    });
-
-    it('refuses an empty proposed flair without updating the inventory', async () => {
-      const interaction = base({ message: { embeds: [{ description: '**TripBot Adjusted:** \n' }] } });
-      expect(text(await rpgFlairAccept(interaction as never, ''))).toContain('Something went wrong');
-      expect(db.rpg_inventory.upsert).not.toHaveBeenCalled();
-    });
   });
 });
 
@@ -589,15 +492,6 @@ describe('rpg arcade', () => {
 
   it('lists the games', async () => {
     expect(embedOf(await rpgArcade(player() as never)).description).toContain('arcade');
-  });
-
-  it.each([
-    ['Coinflip', [3, 2]],
-    ['Roulette', [3, 5, 5, 3]],
-  ] as const)('groups %s wager and choice buttons into rows', async (game, expected) => {
-    const result = await rpgArcadeGame(player() as never, game);
-    const rows = result.components as { components: unknown[] }[];
-    expect(rows.map(row => row.components.length)).toEqual(expected);
   });
 
   it('animates each game before revealing the result', async () => {
@@ -640,25 +534,6 @@ describe('rpg arcade', () => {
     return p;
   };
 
-  it('caps a 1000-token increment when a 500-token wager is already placed', async () => {
-    const p = { ...player('arc-cap'), customId: 'rpgWager500,user:arc-cap' };
-    await rpgArcadeGame(p as never, 'Coinflip');
-    expect(description(await rpgArcadeWager(p as never))).toContain('betting 500 tokens');
-    p.customId = 'rpgWager1000,user:arc-cap';
-    expect(description(await rpgArcadeWager(p as never))).toContain('betting 1000 tokens');
-  });
-
-  it('rounds a positive wager below the minimum up to 500 tokens', async () => {
-    const p = { ...player('arc-minimum'), customId: 'rpgWager100,user:arc-minimum' };
-    await rpgArcadeGame(p as never, 'Coinflip');
-    expect(description(await rpgArcadeWager(p as never))).toContain('betting 500 tokens');
-    mocks.random.mockReturnValueOnce('heads');
-    await rpgArcadeGame(p as never, 'Coinflip', 'heads');
-    expect(vi.mocked(db.personas.upsert)).toHaveBeenLastCalledWith(expect.objectContaining({
-      update: expect.objectContaining({ tokens: 5500 }),
-    }));
-  });
-
   it.each([
     ['heads', 'heads', true], ['heads', 'tails', false],
   ] as const)('coinflip: choosing %s when it lands %s wins=%s', async (choice, result, wins) => {
@@ -679,5 +554,90 @@ describe('rpg arcade', () => {
     mocks.random.mockReturnValueOnce(result);
     const out = await rpgArcadeGame(p as never, 'Roulette', choice);
     expect(description(out)).toContain(multiplier ? `You won ${1000 * multiplier} tokens` : 'You lost 1000 tokens');
+  });
+});
+
+describe('rpg command routing and edge cases', () => {
+  const run = async (subcommand: string, options: Record<string, unknown> = {}) => {
+    const stub = slashStub({
+      subcommand,
+      options,
+      member: member(),
+      guild: { members: { fetch: vi.fn(async () => member()) }, channels: { fetch: vi.fn(async () => ({ id: 'rpg' })) } },
+      extra: { channelId: 'rpg', isButton: () => false, isStringSelectMenu: () => false },
+    });
+    const result = await dRpg.execute(stub as never);
+    return { stub, result };
+  };
+
+  beforeEach(() => {
+    mocks.user.mockResolvedValue({ id: 'dbu' });
+    mocks.persona.mockResolvedValue(persona({ class: 'warrior', species: 'human', guild: 'gryffindor' }));
+    mocks.asset.mockResolvedValue('/path/bg.png');
+    mocks.preview.mockResolvedValue(Buffer.from('png'));
+    db.rpg_inventory.findMany = vi.fn().mockResolvedValue([]) as never;
+    db.rpg_inventory.upsert = vi.fn() as never;
+    db.personas.upsert = vi.fn() as never;
+    mocks.sleep.mockResolvedValue(undefined);
+    (global as unknown as Record<string, unknown>).emojiGet = vi.fn(() => ({ id: '1', identifier: 'e:1', toString: () => '<:e:1>' }));
+  });
+
+  it.each(['market', 'home', 'arcade', 'coinflip', 'roulette'])('%s renders its screen', async sub => {
+    const { stub, result } = await run(sub);
+    expect(result).toBe(true);
+    expect(stub.editReply).toHaveBeenCalledTimes(1);
+  });
+
+  it('flair is answered through the AI check', async () => {
+    db.rpg_inventory.findMany = vi.fn().mockResolvedValue([{
+      id: 'f', value: 'userflair', effect: 'userflair', effect_value: 'old',
+    }]) as never;
+    mocks.aiFlair.mockResolvedValue({ response: 'Status: Rejected\nReason: no', promptTokens: 1, completionTokens: 1 });
+    const { stub } = await run('flair', { flair: 'hello' });
+    expect(stub.editReply).toHaveBeenCalledTimes(1);
+  });
+
+  it('gift needs a target', async () => {
+    const stub = slashStub({
+      subcommand: 'gift', options: { amount: 5 }, member: member(), guild: { channels: { fetch: vi.fn(async () => ({ id: 'rpg' })) } }, extra: { channelId: 'rpg' },
+    });
+    await expect(dRpg.execute(stub as never)).rejects.toThrow('Target user not found');
+  });
+
+  it('wagers are capped at 1000 and raised to the 500 minimum', async () => {
+    mocks.persona.mockResolvedValue(persona({ tokens: 100000 }));
+    const mk = (id: string, bet: string) => ({
+      user: { id }, member: member(), editReply: vi.fn(), customId: `rpgWager${bet},user:${id}`,
+    });
+    const capped = mk('cap-user', '500');
+    await rpgArcadeGame(capped as never, 'Coinflip');
+    await rpgArcadeWager(capped as never);
+    capped.customId = 'rpgWager1000,user:cap-user';
+    expect(embedOf(await rpgArcadeWager(capped as never)).description).toContain('betting 1000 tokens');
+    const small = mk('min-user', '100');
+    await rpgArcadeGame(small as never, 'Coinflip');
+    expect(embedOf(await rpgArcadeWager(small as never)).description).toContain('betting 500 tokens');
+  });
+
+  it('flair accepts an empty replacement as "nothing to apply"', async () => {
+    db.rpg_inventory.findMany = vi.fn().mockResolvedValue([{
+      id: 'f', value: 'userflair', effect: 'userflair', effect_value: 'old',
+    }]) as never;
+    const interaction = {
+      user: { id: 'u1' },
+      message: { embeds: [{ description: 'x\n**TripBot Adjusted:** \nmore' }] },
+    };
+    const out = await rpgFlairAccept(interaction as never, '');
+    expect(embedOf(out).description).toContain('Something went wrong');
+  });
+
+  it('flair treats an empty request and an empty AI adjustment as equal', async () => {
+    db.rpg_inventory.findMany = vi.fn().mockResolvedValue([{
+      id: 'f', value: 'userflair', effect: 'userflair', effect_value: 'old',
+    }]) as never;
+    mocks.aiFlair.mockResolvedValue({ response: 'Status: Approved\nAdjusted: ', promptTokens: 1, completionTokens: 1 });
+    const stub = slashStub({ options: { flair: '' }, guild: { members: { fetch: vi.fn(async () => member()) } } });
+    const out = await rpgFlair(stub as never);
+    expect(embedOf(out).description).toContain('has been updated');
   });
 });

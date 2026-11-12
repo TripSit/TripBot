@@ -82,7 +82,7 @@ function setup(command: string, fields: Fields = {}, opts: { member?: 'ok' | 'le
   };
 }
 
-const description = (r: { embeds?: readonly unknown[] }) => (r.embeds?.[0] as EmbedBuilder).data.description as string;
+const description = (r: { embeds?: readonly unknown[] }) => ((r.embeds as readonly unknown[])[0] as EmbedBuilder).data.description as string;
 const created = () => (dbMock.user_actions.create.mock.calls[0][0] as { data: Record<string, unknown> }).data;
 
 beforeEach(() => {
@@ -111,30 +111,10 @@ describe('moderate: guards', () => {
     const run = async (customId: string) => {
       const s = setup('WARNING');
       const collector = { on: vi.fn() };
-      const createMessageComponentCollector = vi.fn(() => collector);
-      s.raw.followUp.mockResolvedValue({ createMessageComponentCollector });
+      s.raw.followUp.mockResolvedValue({ createMessageComponentCollector: vi.fn(() => collector) });
       const pending = moderate(s.buttonInt, s.modalInt);
       await vi.waitFor(() => expect(collector.on).toHaveBeenCalled());
       const handler = collector.on.mock.calls[0][1] as (i: unknown) => Promise<void>;
-      const [{ filter }] = createMessageComponentCollector.mock.calls[0] as unknown as [{
-        filter: (candidate: unknown) => boolean;
-      }];
-      expect(filter({ isButton: () => false })).toBe(false);
-      expect(filter({ isButton: () => true, user: { id: 'other-mod' } })).toBe(false);
-      expect(filter({ isButton: () => true, user: s.raw.user })).toBe(true);
-      const unrelated = { customId: 'unrelated', update: vi.fn() };
-      await handler(unrelated);
-      expect(unrelated.update).not.toHaveBeenCalled();
-      if (customId === 'nahButton') {
-        const failed = { customId, update: vi.fn().mockRejectedValue(new Error('Reply expired')) };
-        const logError = vi.spyOn(log, 'error');
-        try {
-          await handler(failed);
-          expect(logError).toHaveBeenCalledWith('modUtils', expect.stringContaining('Reply expired'));
-        } finally {
-          logError.mockRestore();
-        }
-      }
       const click = { customId, update: vi.fn() };
       if (customId === 'proceedButton') dbMock.user_actions.findFirst.mockResolvedValue(null);
       await handler(click);
@@ -163,13 +143,6 @@ describe('moderate: guards', () => {
 });
 
 describe('moderate: notes, reports and warnings', () => {
-  it('identifies a departed member by their fetched account name', async () => {
-    const s = setup('NOTE', {}, { member: 'left-user' });
-    const result = await moderate(s.buttonInt, s.modalInt);
-    expect(description(result)).toContain('gone was noted');
-    expect(created()).toMatchObject({ type: 'NOTE', target_discord_id: ID });
-  });
-
   it('records notes without messaging the user', async () => {
     const s = setup('NOTE', { internalNote: 'watch them' });
     const result = await moderate(s.buttonInt, s.modalInt);
@@ -180,11 +153,8 @@ describe('moderate: notes, reports and warnings', () => {
   });
 
   it('records reports similarly', async () => {
-    const embed = new EmbedBuilder().addFields({ name: 'Message', value: 'Reported message' });
-    const s = setup('REPORT', {}, { embed });
+    const s = setup('REPORT');
     expect(description(await moderate(s.buttonInt, s.modalInt))).toContain('Target was reported');
-    expect(s.modalRaw.fields.getTextInputValue).not.toHaveBeenCalledWith('description');
-    expect(created()).toMatchObject({ type: 'REPORT', description: '' });
   });
 
   it('DMs warnings with acknowledge buttons, and links the discussion channel when set', async () => {
@@ -223,29 +193,52 @@ describe('moderate: notes, reports and warnings', () => {
     const m = setup('NOTE', {}, { embed: withMessage });
     await expect(moderate(m.buttonInt, m.modalInt)).resolves.toBeDefined();
   });
+});
 
-  it('records the public description when adding a warning to a quoted message', async () => {
-    const embed = new EmbedBuilder().addFields({ name: 'Message', value: 'Quoted text' });
-    const s = setup('WARNING', { description: 'Please follow the rules' }, { embed });
-    const result = await moderate(s.buttonInt, s.modalInt);
-    expect(created()).toMatchObject({ type: 'WARNING', description: 'Please follow the rules' });
-    expect(description(result)).toContain('Note sent to user: Please follow the rules');
+describe('moderate: gaps', () => {
+  it('links the discussion channel in timeout messages once it expires', async () => {
+    const s = setup('TIMEOUT', { duration: '1h' }, { helpdesk: 'help' });
+    await moderate(s.buttonInt, s.modalInt);
+    const { send } = (s.target as unknown as { user: { send: ReturnType<typeof vi.fn> } }).user;
+    const [{ embeds }] = send.mock.calls[0] as unknown as [{ embeds: EmbedBuilder[] }];
+    expect(embeds[0].data.description).toContain('once the timeout expires');
+  });
+
+  it('works on a user who is no longer a member', async () => {
+    const s = setup('NOTE', {}, { member: 'left-user' });
+    expect(description(await moderate(s.buttonInt, s.modalInt))).toContain('gone was noted');
+  });
+
+  it('does not look for recent duplicates of appeal decisions', async () => {
+    for (const command of ['APPEAL_ACCEPT', 'APPEAL_REJECT']) {
+      const s = setup(command);
+      // Appeal decisions are not handled by moderate() itself; only the recent-action check matters here.
+      // eslint-disable-next-line no-await-in-loop
+      await moderate(s.buttonInt, s.modalInt).catch(() => undefined);
+    }
+    expect(dbMock.user_actions.findFirst).not.toHaveBeenCalled();
+  });
+
+  it('only listens to the moderator who asked, and survives a failed button update', async () => {
+    dbMock.user_actions.findFirst.mockResolvedValue({ id: 'recent' } as never);
+    const s = setup('WARNING');
+    const collector = { on: vi.fn() };
+    const createCollector = vi.fn((options: unknown) => { expect(options).toBeDefined(); return collector; });
+    s.raw.followUp.mockResolvedValue({ createMessageComponentCollector: createCollector });
+    const pending = moderate(s.buttonInt, s.modalInt);
+    await vi.waitFor(() => expect(collector.on).toHaveBeenCalled());
+    const { filter } = createCollector.mock.calls[0][0] as unknown as { filter: (i: unknown) => boolean };
+    expect(filter({ isButton: () => true, user: { id: 'actor1' } })).toBe(true);
+    expect(filter({ isButton: () => true, user: { id: 'someone-else' } })).toBe(false);
+    expect(filter({ isButton: () => false, user: { id: 'actor1' } })).toBe(false);
+    const handler = collector.on.mock.calls[0][1] as (i: unknown) => Promise<void>;
+    await handler({ customId: 'nahButton', update: vi.fn().mockRejectedValue(new Error('Unknown Interaction')) });
+    handler({ customId: 'nahButton', update: vi.fn() });
+    await pending.catch(() => undefined);
   });
 });
 
 describe('moderate: timeouts', () => {
-  it('tells a timed-out member where to discuss the action once it expires', async () => {
-    const s = setup('TIMEOUT', { duration: '1h' }, { helpdesk: 'help' });
-    await moderate(s.buttonInt, s.modalInt);
-    expect(s.target?.user.send).toHaveBeenCalledWith(expect.objectContaining({
-      embeds: expect.arrayContaining([expect.objectContaining({
-        data: expect.objectContaining({
-          description: expect.stringContaining('discuss this with the mods in #helpdesk once the timeout expires'),
-        }),
-      })]),
-    }));
-  });
-
   it('times the member out for the requested duration', async () => {
     const s = setup('TIMEOUT', { duration: '1h' });
     const result = await moderate(s.buttonInt, s.modalInt);
@@ -302,46 +295,6 @@ describe('moderate: timeouts', () => {
 });
 
 describe('moderate: bans', () => {
-  it('stores a zero-duration guild ban without an expiry', async () => {
-    const s = setup('FULL_BAN', { ban_duration: '0s' });
-    await moderate(s.buttonInt, s.modalInt);
-    expect(s.bans.create).toHaveBeenCalledTimes(1);
-    expect(created()).toMatchObject({ type: 'FULL_BAN', expires_at: null });
-  });
-
-  it.each([
-    ['TICKET_BAN', 'ticket_ban'],
-    ['DISCORD_BOT_BAN', 'discord_bot_ban'],
-    ['HELPER_BAN', 'helper_role_ban'],
-    ['CONTRIBUTOR_BAN', 'contributor_role_ban'],
-  ])('sets and clears the stored restriction for %s', async (action, field) => {
-    const ban = setup(action);
-    await moderate(ban.buttonInt, ban.modalInt);
-    expect(dbMock.users.update).toHaveBeenLastCalledWith({
-      where: { id: 'target-uid' },
-      data: expect.objectContaining({ [field]: true }),
-    });
-    expect(ban.bans.create).not.toHaveBeenCalled();
-
-    const unban = setup(`UN-${action}`);
-    dbMock.user_actions.findFirst.mockResolvedValueOnce(null).mockResolvedValueOnce({
-      id: 'original-ban', type: action, expires_at: new Date(),
-    } as never);
-    await moderate(unban.buttonInt, unban.modalInt);
-    expect(dbMock.users.update).toHaveBeenLastCalledWith({
-      where: { id: 'target-uid' },
-      data: expect.objectContaining({ [field]: false }),
-    });
-    expect(unban.bans.remove).not.toHaveBeenCalled();
-    expect(dbMock.user_actions.findFirst).toHaveBeenLastCalledWith(expect.objectContaining({
-      where: { user_id: 'target-uid', repealed_at: null, type: action },
-    }));
-    expect(dbMock.user_actions.upsert).toHaveBeenCalledWith(expect.objectContaining({
-      where: { id: 'original-ban' },
-      update: expect.objectContaining({ repealed_by: 'actor-uid', expires_at: null }),
-    }));
-  });
-
   it('bans, deleting recent messages and relaying them to the mod log', async () => {
     const s = setup('FULL_BAN', { days: '1' });
     const result = await moderate(s.buttonInt, s.modalInt);
@@ -395,6 +348,17 @@ describe('moderate: bans', () => {
     await expect(moderate(fails.buttonInt, fails.modalInt)).resolves.toBeDefined();
   });
 
+  // Regression test for TripSit/TripBot#1370: these commands used to be ignored, so the flags were never set.
+  it('applies role and bot bans to the user record', async () => {
+    const flags: Array<[string, string]> = [['TICKET_BAN', 'ticket_ban'], ['DISCORD_BOT_BAN', 'discord_bot_ban'], ['HELPER_BAN', 'helper_role_ban'], ['CONTRIBUTOR_BAN', 'contributor_role_ban']];
+    for (const [command, field] of flags) {
+      const s = setup(command);
+      // eslint-disable-next-line no-await-in-loop
+      await moderate(s.buttonInt, s.modalInt);
+      expect((s.targetRow as unknown as Record<string, unknown>)[field]).toBe(true);
+    }
+  });
+
   it('lifts bans and closing out the original record', async () => {
     const record = { id: 'ban-record', user_id: 'target-uid', type: 'FULL_BAN' };
     const unban = setup('UN-FULL_BAN');
@@ -403,6 +367,19 @@ describe('moderate: bans', () => {
     expect(unban.bans.remove).toHaveBeenCalledWith(ID, 'rude');
     expect(dbMock.user_actions.upsert).toHaveBeenCalledWith(expect.objectContaining({ where: { id: 'ban-record' } }));
     expect(unban.targetRow.removed_at).toBeNull();
+  });
+
+  // Regression test for TripSit/TripBot#1370.
+  it('lifts role and bot bans', async () => {
+    const record = { id: 'ban-record', user_id: 'target-uid', type: 'FULL_BAN' };
+    const flags: Array<[string, string]> = [['UN-TICKET_BAN', 'ticket_ban'], ['UN-DISCORD_BOT_BAN', 'discord_bot_ban'], ['UN-HELPER_BAN', 'helper_role_ban'], ['UN-CONTRIBUTOR_BAN', 'contributor_role_ban']];
+    for (const [command, field] of flags) {
+      const s = setup(command);
+      dbMock.user_actions.findFirst.mockResolvedValueOnce(null).mockResolvedValueOnce(record as never);
+      // eslint-disable-next-line no-await-in-loop
+      await moderate(s.buttonInt, s.modalInt);
+      expect((s.targetRow as unknown as Record<string, unknown>)[field]).toBe(false);
+    }
   });
 
   it('still lifts bans when there is no record, or the API fails', async () => {

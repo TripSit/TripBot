@@ -12,6 +12,7 @@ import Transport from 'winston-transport';
 import { TextChannel } from 'discord.js';
 import { ConsoleTransportInstance } from 'winston/lib/winston/transports';
 import { env } from './env.config';
+import { ReportLimiter, withTimeout } from './errorReporter';
 
 const {
   combine,
@@ -28,39 +29,41 @@ addColors({
   debug: 'blue',
 });
 
-class DiscordTransport extends Transport {
+const TRANSPORT_SEND_TIMEOUT_MS = 10_000;
+const transportLimiter = new ReportLimiter(30, 60_000, 60_000);
+
+export class DiscordTransport extends Transport {
   async log(info: any, callback: () => void) {
     setImmediate(() => {
       this.emit('logged', info);
     });
 
-    if (!global.discordClient || !discordClient.isReady()) {
-      if (callback) callback();
-      return;
-    }
-
-    const prefixDict = {
-      error: '❌',
-      warn: '⚠️',
-      info: 'ℹ️',
-      debug: '🐛',
-      http: '🌐',
-    } as {
-      [key: string]: string;
-    };
-
     try {
-      const channel = await discordClient.channels.fetch(env.CHANNEL_BOTERRORS);
-      if (!channel) return;
-      if (!channel.isTextBased()) return;
-      if (!(channel instanceof TextChannel)) return;
-      await channel.send(`${prefixDict[info.level]} ${info.message}`);
-    } catch (error) {
-      console.error('Failed to send message to Discord:', error); // eslint-disable-line no-console
-    }
+      // Skip while Discord is down: the send would only time out and add more errors
+      if (global.discordClient?.isReady() && transportLimiter.allow(String(info.message))) {
+        const prefixDict = {
+          error: '❌',
+          warn: '⚠️',
+          info: 'ℹ️',
+          debug: '🐛',
+          http: '🌐',
+        } as {
+          [key: string]: string;
+        };
 
-    if (callback) {
-      callback();
+        await withTimeout((async () => {
+          const channel = await discordClient.channels.fetch(env.CHANNEL_BOTERRORS);
+          if (channel?.isTextBased() && channel instanceof TextChannel) {
+            await channel.send(`${prefixDict[info.level]} ${info.message}`);
+          }
+        })(), TRANSPORT_SEND_TIMEOUT_MS, 'Sending a log line to Discord');
+      }
+    } catch (error) {
+      // Not log.*: that would come straight back into this transport
+      console.error('Failed to send message to Discord:', error); // eslint-disable-line no-console
+    } finally {
+      // Always release winston, or its stream stalls behind a log line that could not be delivered
+      if (callback) callback();
     }
   }
 }
@@ -72,7 +75,7 @@ const transportOptions = [
       splat(),
       timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
       printf(({
-        level, message, timestamp, stack, ...metadata // eslint-disable-line
+        level, message, timestamp, // eslint-disable-line
       }) => {
         let msg = '';
         if (env.NODE_ENV === 'production') {
@@ -91,54 +94,18 @@ const transportOptions = [
 
         msg += `${message} `;
 
-        if (JSON.stringify(metadata) !== '{}') {
-          console.debug(`metadata: ${JSON.stringify(metadata, null, 2)}`); // eslint-disable-line no-console
-          msg += JSON.stringify(metadata);
-        }
-        if (stack) {
-          console.debug(`stack: ${stack}`); // eslint-disable-line no-console
-          msg += `\n${stack}`;
-        }
         return msg;
       }),
     ),
   }),
 ];
 
-// We only want Discord logs in production
+// Discord error-channel logging is production only
 if (env.NODE_ENV === 'production') {
   transportOptions.push(new DiscordTransport({
     format: combine(
-      printf(({
-        level, message, timestamp, stack, ...metadata // eslint-disable-line
-      }) => {
-        let msg = '';
-        if (env.NODE_ENV === 'production') {
-          msg += '(Prd) ';
-        } else {
-          msg += `(Dev) ${timestamp} `;
-        }
-
-        // This makes it so that the logs look nice and even
-        // Idk why the length is 15, maybe cuz of colors
-        if (level.length < 15) {
-          msg += `${level}  `;
-        } else {
-          msg += `${level} `;
-        }
-
-        msg += `${message} `;
-
-        if (JSON.stringify(metadata) !== '{}') {
-          console.debug(`metadata: ${JSON.stringify(metadata, null, 2)}`); // eslint-disable-line no-console
-          msg += JSON.stringify(metadata);
-        }
-        if (stack) {
-          console.debug(`stack: ${stack}`); // eslint-disable-line no-console
-          msg += `\n${stack}`;
-        }
-        return msg;
-      }),
+      // Only reached in production; the level names are uncoloured and always shorter than 15 characters
+      printf(info => `(Prd) ${info.level}  ${info.message} `),
     ),
   }) as ConsoleTransportInstance);
 }

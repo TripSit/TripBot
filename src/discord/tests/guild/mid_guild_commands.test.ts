@@ -1,14 +1,12 @@
 /* eslint-disable max-len, sonarjs/no-duplicate-string, no-restricted-syntax, no-await-in-loop */
-import {
-  ChannelType, MessageFlags, PermissionFlagsBits, TextChannel,
-} from 'discord.js';
+import { ChannelType, PermissionFlagsBits, TextChannel } from 'discord.js';
 import { DateTime } from 'luxon';
 import { dBirthday } from '../../commands/guild/d.birthday';
 import { dPurge, purgeButton, purgeMenu } from '../../commands/guild/d.purge';
 import { dBotmod } from '../../commands/guild/d.botmod';
 import { dDramacounter } from '../../commands/guild/d.dramacounter';
 import { dBotstats } from '../../commands/guild/d.botstats';
-import { lastReply, slashStub } from '../../../vitest/utils/commandStubs';
+import { lastReply, slashStub, resolvingModal } from '../../../vitest/utils/commandStubs';
 import { collectionOf, flushPromises, stubInstance } from '../../../vitest/utils/discordStubs';
 
 const mocks = vi.hoisted(() => ({
@@ -109,7 +107,7 @@ describe('purge', () => {
     const guild = guildOf([textChannel('c1', ['u1', 'other', 'u1']), textChannel('c2', ['other'])], [ChannelType.GuildVoice]);
     const stub = slashStub({ guild, subcommand: 'messages', extra: { isUserSelectMenu: () => false } });
     expect(await dPurge.execute(stub as never)).toBe(true);
-    const reply = stub.reply.mock.calls[0][0] as { embeds: Array<{ data: { description: string } }>; components: unknown[] };
+    const reply = stub.editReply.mock.calls[0][0] as { embeds: Array<{ data: { description: string } }>; components: unknown[] };
     expect(reply.embeds[0].data.description).toContain('2 messages in 1 channels');
     expect(reply.components).toHaveLength(2);
 
@@ -117,29 +115,14 @@ describe('purge', () => {
       guild, subcommand: 'messages', extra: { isUserSelectMenu: () => false }, member: { ...mem('u1'), permissions: { has: (p: bigint) => p !== PermissionFlagsBits.ManageMessages } },
     });
     await dPurge.execute(plain as never);
-    expect((plain.reply.mock.calls[0][0] as { components: unknown[] }).components).toHaveLength(1);
-  });
-
-  // TripSit/TripBot#1382: the reply is ephemeral by default, public only when `ephemeral` is false.
-  it('defers ephemerally unless ephemeral is false', async () => {
-    const guild = guildOf([textChannel('c1', ['u1'])]);
-    const run = async (options: Record<string, unknown>) => {
-      const stub = slashStub({
-        guild, subcommand: 'messages', options, extra: { isUserSelectMenu: () => false },
-      });
-      await dPurge.execute(stub as never);
-      return stub;
-    };
-    expect((await run({})).deferReply).toHaveBeenCalledWith({ flags: MessageFlags.Ephemeral });
-    expect((await run({ ephemeral: true })).deferReply).toHaveBeenCalledWith({ flags: MessageFlags.Ephemeral });
-    expect((await run({ ephemeral: false })).deferReply).toHaveBeenCalledWith({ flags: undefined });
+    expect((plain.editReply.mock.calls[0][0] as { components: unknown[] }).components).toHaveLength(1);
   });
 
   it('handles a guild without channels', async () => {
     const guild = { id: 'g', channels: { fetch: vi.fn(async () => null) } };
     const stub = slashStub({ guild, subcommand: 'messages', extra: { isUserSelectMenu: () => false } });
     await dPurge.execute(stub as never);
-    expect((stub.reply.mock.calls[0][0] as { embeds: Array<{ data: { description: string } }> }).embeds[0].data.description).toContain('0 messages');
+    expect((stub.editReply.mock.calls[0][0] as { embeds: Array<{ data: { description: string } }> }).embeds[0].data.description).toContain('0 messages');
   });
 
   it('menu picks another user, ignoring unknown menus', async () => {
@@ -188,27 +171,27 @@ describe('botmod', () => {
     expect(content(stub)).toBe('done');
   });
 
-  it.each(['botban', 'botwarning', 'botkick'])('%s collects reasons in a modal', async sub => {
+  it.each([['botban', 'UNBOTBAN'], ['botwarn', 'BOTWARNING'], ['botkick', 'BOTKICK']])('%s collects private and public reasons in a modal', async (sub, expected) => {
     const modal = {
       customId: 'botModModal~int1',
       deferReply: vi.fn(),
       editReply: vi.fn(),
-      fields: { getTextInputValue: vi.fn((k: string) => { if (k === 'pubReason') throw new Error('none'); return 'priv'; }) },
+      fields: { getTextInputValue: vi.fn((k: string) => (k === 'pubReason' ? 'pub' : 'priv')) },
     };
     const stub = slashStub({ group: 'user', subcommand: sub, options: { target: '9', toggle: 'off' } });
-    stub.awaitModalSubmit.mockResolvedValueOnce(modal);
+    stub.awaitModalSubmit.mockImplementationOnce(resolvingModal(modal));
     expect(await dBotmod.execute(stub as never)).toBe(false);
     await flushPromises();
     expect(stub.showModal).toHaveBeenCalled();
-    const expected = sub === 'botban' ? 'UNBOTBAN' : sub.toUpperCase();
-    expect(mocks.botmod).toHaveBeenCalledWith(stub, 'user', stub.member, expected, '9', 'priv', '');
+    expect(mocks.botmod).toHaveBeenCalledWith(stub, 'user', stub.member, expected, '9', 'priv', 'pub');
+    expect((stub.showModal.mock.calls[0][0] as { components: unknown[] }).components).toHaveLength(2);
     expect(modal.editReply).toHaveBeenCalledWith({ content: 'done' });
   });
 
   it('ignores foreign modals', async () => {
     const modal = { customId: 'botModModal~zzz', deferReply: vi.fn() };
     const stub = slashStub({ group: 'user', subcommand: 'botban', options: { target: '9' } });
-    stub.awaitModalSubmit.mockResolvedValueOnce(modal);
+    stub.awaitModalSubmit.mockImplementationOnce(resolvingModal(modal));
     await dBotmod.execute(stub as never);
     await flushPromises();
     expect(modal.deferReply).not.toHaveBeenCalled();
@@ -280,5 +263,15 @@ describe('botstats', () => {
     await dBotstats.execute(owner as never);
     expect(embed(owner).description).toContain('Host Up');
     expect(embed(owner).description).toContain('Moodle:✘');
+  });
+});
+
+describe('birthday defaults', () => {
+  it('treats a missing subcommand as get', async () => {
+    mocks.birthday.mockResolvedValueOnce(null);
+    const stub = slashStub({ options: {} });
+    stub.options.getSubcommand.mockReturnValue(undefined as never);
+    await dBirthday.execute(stub as never);
+    expect(embed(stub).title).toContain('immortal');
   });
 });

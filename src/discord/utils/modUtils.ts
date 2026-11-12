@@ -53,7 +53,7 @@ import { appealAccept, appealReject } from './appeal';
 import { getOrCreateGuild, getOrCreateUser } from '../../global/utils/dbRecords';
 import { GUILD_ONLY_TEXT } from './guildOnly';
 
-/* TODO(#1288):
+/* TODO:
 add dates to bans
 - Need to start recording when bans happened
 
@@ -293,12 +293,22 @@ function isUnTimeout(command: ModAction): command is 'UN-TIMEOUT' { return comma
 
 function isWarning(command: ModAction): command is 'WARNING' { return command === 'WARNING'; }
 
+// Bans that remove the user from the guild (and carry the appeal wording and unban button)
 function isBan(command: ModAction): command is 'FULL_BAN' | 'BAN_EVASION' | 'UNDERBAN' {
   return command === 'FULL_BAN' || command === 'BAN_EVASION' || command === 'UNDERBAN';
 }
 
 function isUnBan(command: ModAction): command is 'UN-FULL_BAN' | 'UN-BAN_EVASION' | 'UN-UNDERBAN' {
   return command === 'UN-FULL_BAN' || command === 'UN-BAN_EVASION' || command === 'UN-UNDERBAN';
+}
+
+// Bans that only set a flag on the user's record (tickets, vendor bots, helper and contributor roles)
+function isFlagBan(command: ModAction): command is 'TICKET_BAN' | 'DISCORD_BOT_BAN' | 'HELPER_BAN' | 'CONTRIBUTOR_BAN' {
+  return command === 'TICKET_BAN' || command === 'DISCORD_BOT_BAN' || command === 'HELPER_BAN' || command === 'CONTRIBUTOR_BAN';
+}
+
+function isUnFlagBan(command: ModAction): command is 'UN-TICKET_BAN' | 'UN-DISCORD_BOT_BAN' | 'UN-HELPER_BAN' | 'UN-CONTRIBUTOR_BAN' {
+  return command === 'UN-TICKET_BAN' || command === 'UN-DISCORD_BOT_BAN' || command === 'UN-HELPER_BAN' || command === 'UN-CONTRIBUTOR_BAN';
 }
 
 function sendsMessageToUser(command: ModAction): command is 'WARNING' | 'FULL_BAN' | 'TICKET_BAN' | 'DISCORD_BOT_BAN' | 'BAN_EVASION' | 'UNDERBAN' | 'TIMEOUT' | 'UN-TIMEOUT' | 'KICK' {
@@ -308,6 +318,10 @@ function sendsMessageToUser(command: ModAction): command is 'WARNING' | 'FULL_BA
 function isFullBan(command: ModAction): command is 'FULL_BAN' { return command === 'FULL_BAN'; }
 
 function isUnFullBan(command: ModAction): command is 'UN-FULL_BAN' { return command === 'UN-FULL_BAN'; }
+
+function isUnderban(command: ModAction): command is 'UNDERBAN' { return command === 'UNDERBAN'; }
+
+function isUnUnderban(command: ModAction): command is 'UN-UNDERBAN' { return command === 'UN-UNDERBAN'; }
 
 function isTicketBan(command: ModAction): command is 'TICKET_BAN' { return command === 'TICKET_BAN'; }
 
@@ -326,6 +340,8 @@ function isContributorBan(command: ModAction): command is 'CONTRIBUTOR_BAN' { re
 function isUnContributorBan(command: ModAction): command is 'UN-CONTRIBUTOR_BAN' { return command === 'UN-CONTRIBUTOR_BAN'; }
 
 function isBanEvasion(command: ModAction): command is 'BAN_EVASION' { return command === 'BAN_EVASION'; }
+
+function isUnBanEvasion(command: ModAction): command is 'UN-BAN_EVASION' { return command === 'UN-BAN_EVASION'; }
 
 function isKick(command: ModAction): command is 'KICK' { return command === 'KICK'; }
 
@@ -523,19 +539,12 @@ export async function userInfoEmbed(
 
   // log.debug(F, `targetString: ${targetString}`);
   // const tag = (target as GuildMember).user ? (target as GuildMember).user.tag : (target as User).tag;
-  let userAvatar = null;
+  // Members carry their avatar on `.user`; users that left the server are bare User objects.
+  let userAvatar: string | null = null;
   try {
-    if ((target as GuildMember).user) {
-      userAvatar = (target as GuildMember).user.displayAvatarURL();
-    }
+    userAvatar = ((target as GuildMember).user ?? (target as User)).displayAvatarURL();
   } catch (err: unknown) {
-    try {
-      if ((target as User).displayAvatarURL()) {
-        userAvatar = (target as User).displayAvatarURL();
-      }
-    } catch (error: unknown) {
-      // Ignore
-    }
+    // No avatar available
   }
 
   // log.debug(F, `userAvatar: ${userAvatar}`);
@@ -735,6 +744,7 @@ export async function modResponse(
             } else if (interaction.guild) {
               userBan = await interaction.guild.bans.fetch(userId);
             } else {
+              /* v8 ignore next -- button/slash interactions are guild-only here; kept as a type guard */
               throw new Error('Interaction is missing a valid guild.');
             }
           } catch (err: unknown) {
@@ -1079,6 +1089,10 @@ export async function messageModThread(
       // If the user we're banning is a vendor, don't make a new one
       // Create a new thread in the mod channel
       // log.debug(F, 'creating mod thread');
+      if (guildData.channel_moderators === null) {
+        /* v8 ignore next -- guilds without a moderator channel are rejected earlier; type guard only */
+        throw new Error('Moderator room id is null');
+      }
       const modChan = await discordClient.channels.fetch(guildData.channel_moderators) as TextChannel;
       modThread = await modChan.threads.create({
         name: `${emoji}│${targetName}`,
@@ -1124,14 +1138,14 @@ export async function messageModThread(
       });
     } else {
       const modResponseData = await modResponse(interaction, command, true, appealData);
-      const appealDescription = description.trim();
+      const appealEmbed = embedTemplate().setDescription(description.trim());
 
       await modThread.send({
         content: stripIndents`
         ${summary}
         ${command === 'NOTE' && !newModThread ? '' : roleModerator}`.trim(),
         embeds: [
-          ...(appealDescription ? [embedTemplate().setDescription(appealDescription)] : []),
+          appealEmbed,
           ...(modResponseData.embeds || []),
         ],
         components: modResponseData.components,
@@ -1505,6 +1519,9 @@ export async function acknowledgeReportButton(
 
     if (guildData.channel_mod_log) {
       const modLog = await buttonInt.guild.channels.fetch(guildData.channel_mod_log) as TextChannel;
+      successEmbed.setDescription(
+        `${modActorMember.displayName} has acknowledged the report on ${reporteeMember ?? reporteeUser?.username ?? reporteeName}.`,
+      );
       await modLog.send({
         embeds: [successEmbed],
       });
@@ -1521,6 +1538,9 @@ export async function acknowledgeReportButton(
 }
 
 async function wasActionedRecently(actionType: string, targetDiscordId: Snowflake): Promise<boolean> {
+  if (actionType === 'APPEAL_ACCEPT' || actionType === 'APPEAL_REJECT') {
+    return false;
+  }
   const oneMinuteAgo = new Date(Date.now() - 300 * 1000);
   const recentAction = await db.user_actions.findFirst({
     where: {
@@ -1647,10 +1667,10 @@ export async function moderate(
 
   // Check if this is a vendor/bot ban (none of these should DM the user)
   const isVendorBotBan = isFullBan(command)
-    && noDmBanKeywordRegex.test(internalNote);
+    && noDmBanKeywordRegex.test(internalNote ?? '');
 
   // Don't allow people to mention MEP
-  if (internalNote.includes('MEP') || description?.includes('MEP')) {
+  if (internalNote?.includes('MEP') || description?.includes('MEP')) {
     return {
       content: mepWarning,
     };
@@ -1851,9 +1871,8 @@ export async function moderate(
 
   log.debug(F, `[moderate] performing actions for ${targetName}`);
   let extraMessage = '';
-  if (isBan(command) || isTicketBan(command) || isDiscordBotBan(command)
-    || isHelperBan(command) || isContributorBan(command)) {
-    if (isBan(command)) {
+  if (isBan(command) || isFlagBan(command)) {
+    if (isFullBan(command) || isUnderban(command) || isBanEvasion(command)) {
       targetData.removed_at = new Date();
 
       let deleteMessageValue = modalInt.fields.getTextInputValue('days');
@@ -1891,11 +1910,11 @@ export async function moderate(
       } catch (err) {
         log.error(F, `Error: ${err}`);
       }
-      log.info(F, `target: ${targetId} | deleteMessageValue: ${deleteMessageValue} | internalNote: ${internalNote}`);
+      log.info(F, `target: ${targetId} | deleteMessageValue: ${deleteMessageValue} | internalNote: ${internalNote ?? noReason}`);
 
       try {
         log.info(F, `Message delete duration in milliseconds: ${deleteDuration}`);
-        targetObj = await buttonInt.guild.bans.create(targetId, { deleteMessageSeconds: deleteDuration / 1000, reason: internalNote });
+        targetObj = await buttonInt.guild.bans.create(targetId, { deleteMessageSeconds: deleteDuration / 1000, reason: internalNote ?? noReason });
         // Set ban duration if present
         if (banEndTime !== null) {
           actionData.expires_at = banEndTime;
@@ -1909,16 +1928,15 @@ export async function moderate(
       targetData.discord_bot_ban = true;
     } else if (isHelperBan(command)) {
       targetData.helper_role_ban = true;
-    } else {
+    } else if (isContributorBan(command)) {
       targetData.contributor_role_ban = true;
     }
-  } else if (isUnBan(command) || isUnTicketBan(command) || isUnDiscordBotBan(command)
-    || isUnHelperBan(command) || isUnContributorBan(command)) {
-    if (isUnBan(command)) {
+  } else if (isUnBan(command) || isUnFlagBan(command)) {
+    if (isUnFullBan(command) || isUnUnderban(command) || isUnBanEvasion(command)) {
       targetData.removed_at = null;
       try {
         await buttonInt.guild.bans.fetch();
-        await buttonInt.guild.bans.remove(targetId, internalNote);
+        await buttonInt.guild.bans.remove(targetId, internalNote ?? noReason);
       } catch (err) {
         log.error(F, `Error: ${err}`);
       }
@@ -1928,7 +1946,7 @@ export async function moderate(
       targetData.discord_bot_ban = false;
     } else if (isUnHelperBan(command)) {
       targetData.helper_role_ban = false;
-    } else {
+    } else if (isUnContributorBan(command)) {
       targetData.contributor_role_ban = false;
     }
 
@@ -1936,7 +1954,7 @@ export async function moderate(
       where: {
         user_id: targetData.id,
         repealed_at: null,
-        type: command.slice(3) as user_action_type,
+        type: (command.includes('UN-') ? command.slice(3) : command) as user_action_type,
       },
       orderBy: {
         created_at: 'desc',
@@ -1955,7 +1973,7 @@ export async function moderate(
     if (targetMember) {
       actionData.expires_at = new Date(Date.now() + (actionDuration as number));
       try {
-        await targetMember.timeout(actionDuration, internalNote);
+        await targetMember.timeout(actionDuration, internalNote ?? noReason);
       } catch (err) {
         log.error(F, `Error: ${err}`);
       }
@@ -1983,7 +2001,7 @@ export async function moderate(
       actionData.repealed_by = actorData.id;
 
       try {
-        await targetMember.timeout(null, internalNote);
+        await targetMember.timeout(null, internalNote ?? noReason);
         // log.debug(F, `I untimeout ${target.displayName} because\n '${internalNote}'!`);
       } catch (err) {
         log.error(F, `Error: ${err}`);
@@ -2079,7 +2097,7 @@ export async function moderate(
   // Take the existing description from response and add to it:'
   const desc = stripIndents`
     ${anonSummary}
-    **Reason:** ${internalNote}
+    **Reason:** ${internalNote ?? noReason}
      ${(description !== '' && description !== null && !isVendorBotBan && targetMember) ? `\n\n**Note sent to user: ${description}**` : ''}
   `;
 
@@ -2262,6 +2280,7 @@ export async function modModal(
     .setRequired(true)
     .setCustomId('internalNote');
 
+  // Ensure the label text is within the limit
   const label = `Why are you ${verb} ${target}?`;
   modalInputComponent.setLabel(label.length > 45 ? `${label.substring(0, 41)}...?` : label);
 

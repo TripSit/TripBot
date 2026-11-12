@@ -1,6 +1,5 @@
 /* eslint-disable max-len */
 import {
-  DMChannel,
   Message,
   MessageReaction,
   TextChannel,
@@ -277,7 +276,8 @@ export async function announcements(message:Message) {
 
       // log.debug(F, `genAnnouncements.length: ${genAnnouncements.length}`);
 
-      const randomGenNumber = Math.floor(Math.random() * (genAnnouncements.length));
+      // One extra slot: landing on it posts a fun fact instead of a canned tip
+      const randomGenNumber = Math.floor(Math.random() * (genAnnouncements.length + 1));
 
       // log.debug(F, `randomGenNumber: ${randomGenNumber}`);
 
@@ -288,11 +288,11 @@ export async function announcements(message:Message) {
         // log.debug(F, `randomGenAnnouncement: ${randomGenAnnouncement}`);
         embed.setDescription(randomGenAnnouncement);
       }
-      await message.channel.sendTyping(); // This method automatically stops typing after 10 seconds, or when a message is sent.
+      // Only text channels reach this point (see the check above), so keep that narrowing for the timer callback
+      const textChannel = message.channel;
+      await textChannel.sendTyping(); // This method automatically stops typing after 10 seconds, or when a message is sent.
       setTimeout(async () => {
-        if (message.channel instanceof TextChannel || message.channel instanceof DMChannel) {
-          await (message.channel.send({ embeds: [embed] }));
-        } else log.error(F, 'Cannot send typing in this channel type.');
+        await textChannel.send({ embeds: [embed] });
       }, 3000);
     }
   }

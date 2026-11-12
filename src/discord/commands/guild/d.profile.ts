@@ -79,15 +79,36 @@ export const dProfile: SlashCommand = {
 
     // log.debug(F, `target.presence?.status: ${target.presence?.status}`);
 
-    const profileData = await profile(targetUser.id);
-    const personaData = await getPersonaInfo(targetUser.id);
-    const Icons = await Canvas.loadImage(await getAsset('cardIcons'));
-    const avatar = await Canvas.loadImage(targetUser.displayAvatarURL({ extension: 'jpg' }));
-    const birthdayOverlay = await Canvas.loadImage(await getAsset('cardBirthday'));
-    const teamtripsitIcon = await Canvas.loadImage(await getAsset('teamtripsitIcon'));
-    const premiumIcon = await Canvas.loadImage(await getAsset('premiumIcon'));
-    const boosterIcon = await Canvas.loadImage(await getAsset('boosterIcon'));
-    const legacyIcon = await Canvas.loadImage(await getAsset('legacyIcon'));
+    const values = [
+
+      // Get the target's profile data from the database
+      await profile(targetUser.id),
+      // Check get fresh persona data
+      await getPersonaInfo(targetUser.id),
+      // Load Icon Images
+      await Canvas.loadImage(await getAsset('cardIcons')),
+      // Get the status icon
+      // await Canvas.loadImage(await imageGet(`icon_${target.presence?.status ?? 'offline'}`)),
+      // Get the avatar image
+      await Canvas.loadImage(targetUser.displayAvatarURL({ extension: 'jpg' })),
+      // Get the birthday card overlay
+      await Canvas.loadImage(await getAsset('cardBirthday')),
+      await Canvas.loadImage(await getAsset('teamtripsitIcon')),
+      await Canvas.loadImage(await getAsset('premiumIcon')),
+      await Canvas.loadImage(await getAsset('boosterIcon')),
+      await Canvas.loadImage(await getAsset('legacyIcon')),
+    ] as const;
+
+    const profileData = values[0];
+    const personaData = values[1];
+    const Icons = values[2];
+    // const StatusIcon = values[3];
+    const avatar = values[3];
+    const birthdayOverlay = values[4];
+    const teamtripsitIcon = values[5];
+    const premiumIcon = values[6];
+    const boosterIcon = values[7];
+    const legacyIcon = values[8];
 
     const avatarIconRoles = {
       [env.ROLE_TEAMTRIPSIT]: {
@@ -498,8 +519,28 @@ export const dProfile: SlashCommand = {
 };
 
 export async function getProfilePreview(target: GuildMember, option: string, imagePath?: string, fontName?: string): Promise<Buffer> {
-  const Icons = await Canvas.loadImage(await getAsset('cardIcons'));
-  const avatar = await Canvas.loadImage(target.user.displayAvatarURL({ extension: 'jpg' }));
+  const values = [
+
+    // Get the target's profile data from the database
+    // await profile(target.id),
+    // Check get fresh persona data
+    // await getPersonaInfo(target.user.id),
+    // Load Icon Images
+
+    await Canvas.loadImage(await getAsset('cardIcons')),
+    // Get the status icon
+    // await Canvas.loadImage(await imageGet(`icon_${target.presence?.status ?? 'offline'}`)),
+    // Get the avatar image
+    await Canvas.loadImage(target.user.displayAvatarURL({ extension: 'jpg' })),
+    // Get the birthday card overlay
+    // await Canvas.loadImage(await imageGet('cardBirthday')),
+  ] as const;
+  // const profileData = values[0];
+  // const [personaData] = values[1];
+  const Icons = values[0];
+  // const StatusIcon = values[3];
+  const avatar = values[1];
+  // const birthdayOverlay = values[4];
 
   // Create Canvas and Context
   const canvasWidth = 921;

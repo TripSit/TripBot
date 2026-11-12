@@ -115,8 +115,7 @@ export async function levels(
 
       const userRank = categoryData.findIndex(user => user.discord_id === discordId);
       if (userRank === -1) continue;
-      const userExperience = categoryData.find(user => user.discord_id === discordId);
-      if (!userExperience) continue;
+      const userExperience = categoryData[userRank];
       const levelData = await getTotalLevel(userExperience.total_points);
       const nextLevel = await expForNextLevel(levelData.level);
       results[typeKey][categoryKey] = {

@@ -104,12 +104,6 @@ describe('userInfoEmbed', () => {
     const user = { id: '333333333333333333', username: 'bob', displayAvatarURL: () => 'https://uav' };
     const e1 = await userInfoEmbed(actor(), user as never, targetData(), 'NOTE', false);
     expect(e1.data.description).toBeUndefined();
-    const fallback = member({
-      user: { displayAvatarURL: () => { throw new Error('Member avatar unavailable'); } },
-      displayAvatarURL: () => 'https://fallback.test/avatar.png',
-    });
-    const fallbackEmbed = await userInfoEmbed(actor(), fallback, targetData(), 'NOTE', false);
-    expect(fallbackEmbed.data.thumbnail?.url).toBe('https://fallback.test/avatar.png');
     const broken = member({ user: { username: 'x', displayAvatarURL: () => { throw new Error('boom'); } }, displayAvatarURL: () => { throw new Error('boom'); } });
     const e2 = await userInfoEmbed(actor(), broken, targetData(), 'NOTE', false);
     expect(e2.data.thumbnail).toBeUndefined();

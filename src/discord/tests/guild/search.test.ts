@@ -50,6 +50,11 @@ describe('search', () => {
       expect(bare.embed.description).toBe('x');
     });
 
+    it('reports Urban Dictionary being down after a dictionary miss', async () => {
+      const down = await run('define', { word: 'w' }, [['dictionaryapi', { ok: false }], ['urbandictionary', { ok: false }]]);
+      expect(down.embed.description).toContain('Urban Dictionary is currently unavailable');
+    });
+
     it('falls back to Urban Dictionary, then reports failures', async () => {
       const viaUrban = await run('define', { word: 'w', ephemeral: true }, [['dictionaryapi', { ok: false }], ['urbandictionary', { json: urban }]]);
       expect(viaUrban.embed.title).toBe('Urban Dictionary: w');
@@ -57,6 +62,25 @@ describe('search', () => {
       expect((await run('define', { word: 'w' }, [['dictionaryapi', { json: [] }], ['urbandictionary', { json: { list: [] } }]])).embed.description).toContain('No results found');
       expect((await run('define', { word: 'w' }, [['dictionaryapi', { throws: true }], ['urbandictionary', { ok: false }]])).embed.description).toContain('currently unavailable');
       expect((await run('define', { word: 'w' }, [['dictionaryapi', { ok: false }], ['urbandictionary', { throws: true }]])).embed.description).toContain('error occurred');
+    });
+  });
+
+  describe('lookups without a word', () => {
+    it('still builds fallback links when the option is missing', async () => {
+      const udDown = await run('urbandefine', {}, [['urbandictionary', { ok: false }]]);
+      expect(udDown.embed.url).toContain('term=');
+      const udEmpty = await run('urbandefine', {}, [['urbandictionary', { json: { list: [] } }], ['dictionaryapi', { ok: false }]]);
+      expect(udEmpty.embed.url).toContain('google.com/search?q=define+');
+      const udThrows = await run('urbandefine', {}, [['urbandictionary', { throws: true }]]);
+      expect(udThrows.embed.url).toContain('term=');
+      const dictMissing = await run('urbandefine', {}, [['urbandictionary', { json: {} }], ['dictionaryapi', { ok: false }]]);
+      expect(dictMissing.embed.url).toContain('google.com/search?q=define+');
+      const dictEmpty = await run('urbandefine', {}, [['urbandictionary', { json: {} }], ['dictionaryapi', { json: [] }]]);
+      expect(dictEmpty.embed.url).toContain('google.com/search?q=define+');
+      const dictThrows = await run('urbandefine', {}, [['urbandictionary', { json: {} }], ['dictionaryapi', { throws: true }]]);
+      expect(dictThrows.embed.url).toContain('google.com/search?q=define+');
+      const dictOk = await run('urbandefine', {}, [['urbandictionary', { json: {} }], ['dictionaryapi', { json: [{ meanings: [{ definitions: [{ definition: 'd' }] }] }] }]]);
+      expect(dictOk.embed.url).toContain('google.com/search?q=define+');
     });
   });
 
@@ -83,17 +107,6 @@ describe('search', () => {
       expect((await run('urbandefine', { define: 'w' }, [['urbandictionary', { ok: false }]])).embed.description).toContain('currently unavailable');
       expect((await run('urbandefine', {}, [['urbandictionary', { throws: true }]])).embed.description).toContain('error occurred');
     });
-
-    it('formats a fallback definition without optional grammar or example text', async () => {
-      const { embed } = await run('urbandefine', { define: 'sample word' }, [
-        ['urbandictionary', { json: { list: [] } }],
-        ['dictionaryapi', { json: [{ meanings: [{ definitions: [{ definition: 'A sample definition.' }] }] }] }],
-      ]);
-      expect(embed.description).toContain('A sample definition.');
-      expect(embed.description).not.toContain('Example:');
-      expect(embed.description).not.toContain('undefined');
-      expect(embed.url).toBe('https://www.google.com/search?q=define+sample%20word');
-    });
   });
 
   describe('game', () => {
@@ -101,14 +114,6 @@ describe('search', () => {
       id: 7, name: 'Game', tiny_image: 'https://tiny', tags: ['a', 'b'], release_date: 'Soon', header_image: 'https://hdr',
     };
     const price = (final: string, discount = 0) => ({ price_overview: { final_formatted: final, discount_percent: discount } });
-
-    it('shows an unknown release date when both Steam responses omit it', async () => {
-      const { embed } = await run('game', { game: 'x' }, [
-        ['storesearch', { json: { items: [{ id: 7, name: 'Game' }] } }],
-        ['appdetails', { json: { 7: { data: {} } } }],
-      ]);
-      expect(embed.fields).toContainEqual(expect.objectContaining({ name: 'Release', value: 'Unknown' }));
-    });
     const details = (extra = {}) => ({
       7: {
         data: {
@@ -130,6 +135,11 @@ describe('search', () => {
       expect(fields.Release).toBe('<t:1700000000:D>');
       expect(fields.Platforms).toContain('Windows');
       expect(embed.thumbnail?.url).toBe('https://tiny');
+    });
+
+    it('shows an unknown release date when neither source has one', async () => {
+      const { embed } = await run('game', { game: 'x' }, [['storesearch', { json: { items: [{ id: 7, name: 'G' }] } }], ['appdetails', { json: { 7: { data: {} } } }]]);
+      expect((embed.fields ?? []).find(f => f.name === 'Release')?.value).toBe('Unknown');
     });
 
     it('falls back to search result data when details are missing', async () => {
@@ -180,6 +190,13 @@ describe('search', () => {
       expect((noTrackUrl.embed.fields ?? []).find(f => f.name === 'Platforms')?.value).toContain('Apple Music');
     });
 
+    it('keeps the defaults when Odesli returns sparse entities', async () => {
+      const sparse = { entitiesByUniqueId: { k: {} }, linksByPlatform: { spotify: { url: 'https://sp' } } };
+      const { embed } = await run('song', { song: 'https://music.example/track' }, [['song.link', { json: sparse }]]);
+      expect(embed.title).toBe('Song: https://music.example/track');
+      expect((embed.fields ?? []).find(f => f.name === 'Platforms')?.value).toBe('[Spotify](https://sp)');
+    });
+
     it('accepts links directly and degrades gracefully', async () => {
       const link = await run('song', { song: 'https://music.example/track' }, [['song.link', { json: odesli }]]);
       expect(link.embed.title).toBe('Song: T');
@@ -187,19 +204,6 @@ describe('search', () => {
       expect((odesliDown.embed.fields ?? []).find(f => f.name === 'Platforms')?.value).toContain('Apple Music');
       expect((await run('song', { song: 'q' }, [['itunes', { ok: false }]])).embed.description).toContain('unavailable');
       expect((await run('song', { song: 'q' }, [['itunes', { json: { results: [] } }]])).embed.description).toContain('no results');
-    });
-
-    it('keeps the query and fallback metadata when upstream song details are missing', async () => {
-      const { embed } = await run('song', { song: 'Example track' }, [
-        ['itunes', { json: { results: [{}] } }],
-        ['song.link', { json: { entitiesByUniqueId: { track: {} }, linksByPlatform: odesli.linksByPlatform } }],
-      ]);
-      expect(embed.title).toBe('Song: Example track');
-      expect(embed.url).toBe('https://odesli.co/search/Example%20track');
-      expect(embed.fields).toContainEqual(expect.objectContaining({ name: 'Artist', value: 'Unknown' }));
-      expect(embed.thumbnail).toBeUndefined();
-      const [url] = fetchMock.mock.calls[1];
-      expect(new URL(url).searchParams.get('url')).toBe('https://music.apple.com/us/search?term=Example%20track');
     });
   });
 

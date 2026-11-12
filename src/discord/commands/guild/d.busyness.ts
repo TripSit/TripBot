@@ -64,7 +64,7 @@ async function calculateBusyness(
   const userCount = uniqueUsers.size;
 
   // Calculate the Spamminess (S)
-  const messageCounts = Object.values(userMessageCounts);
+  const messageCounts = [...userMessageCounts.values()];
   const n = messageCounts.length;
   const totalMessages = messageCounts.reduce((sum, count) => sum + count, 0);
 

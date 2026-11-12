@@ -52,9 +52,6 @@ export function deFuckifyText(text: string): string {
         return normalAlphabetArray[index];
       }
     }
-    if (normalAlphabet.includes(char)) {
-      return char;
-    }
     return '';
   }).join('');
 }
@@ -85,8 +82,7 @@ function hexToHSL(H: string): [number, number, number] {
     switch (max) {
       case r: h = (g - b) / d + (g < b ? 6 : 0); break;
       case g: h = (b - r) / d + 2; break;
-      case b: h = (r - g) / d + 4; break;
-      default: h = 0; break; // Add a default case to handle any other value of max
+      default: h = (r - g) / d + 4; break; // max is always one of r, g or b, so this is the b case
     }
     h /= 6;
   }

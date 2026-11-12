@@ -314,7 +314,15 @@ async function dGame(interaction: ChatInputCommandInteraction): Promise<boolean>
 
   // if (result.header) embed.setImage(result.header);
   if (result.thumb) embed.setThumbnail(result.thumb);
-  result.fields.forEach(field => { embed.addFields(field); });
+  if (result.fields) {
+    result.fields.forEach(field => {
+      embed.addFields({
+        name: field.name,
+        value: field.value,
+        inline: field.inline ?? false,
+      });
+    });
+  }
 
   await interaction.editReply({ embeds: [embed] });
   return true;
@@ -393,7 +401,15 @@ async function dBook(interaction: ChatInputCommandInteraction): Promise<boolean>
     .setDescription(result.description);
 
   if (result.thumb) embed.setThumbnail(result.thumb);
-  result.fields.forEach(field => { embed.addFields(field); });
+  if (result.fields) {
+    result.fields.forEach(field => {
+      embed.addFields({
+        name: field.name,
+        value: field.value,
+        inline: field.inline ?? false,
+      });
+    });
+  }
 
   await interaction.editReply({ embeds: [embed] });
   return true;
@@ -415,7 +431,7 @@ async function dSong(interaction: ChatInputCommandInteraction): Promise<boolean>
     if (isUrl) {
       odesliInputUrl = query;
     } else {
-      // TODO(#1287): Get YouTube API key and use that instead of iTunes for better results
+      // TODO: Get YouTube API key and use that instead of iTunes for better results
       const url = `https://itunes.apple.com/search?term=${encodeURIComponent(query)}&entity=song&limit=1`;
       const response = await fetch(url);
       if (!response.ok) throw new Error('iTunes API unavailable');
@@ -445,7 +461,7 @@ async function dSong(interaction: ChatInputCommandInteraction): Promise<boolean>
           'youtubeMusic',
           'appleMusic',
           'amazonMusic',
-        ] as const;
+        ];
         platformsField = platformsToShow
           .filter(platform => odesliData.linksByPlatform[platform])
           .map(platform => {
@@ -455,7 +471,7 @@ async function dSong(interaction: ChatInputCommandInteraction): Promise<boolean>
               youtubeMusic: 'YouTube',
               soundcloud: 'SoundCloud',
               amazonMusic: 'Amazon',
-            }[platform];
+            }[platform] || platform;
             const { url } = odesliData.linksByPlatform[platform];
             return `[${platformName}](${url})`;
           })
@@ -496,7 +512,15 @@ async function dSong(interaction: ChatInputCommandInteraction): Promise<boolean>
     .setDescription(result.description);
 
   if (result.thumb) embed.setThumbnail(result.thumb);
-  result.fields.forEach(field => { embed.addFields(field); });
+  if (result.fields) {
+    result.fields.forEach(field => {
+      embed.addFields({
+        name: field.name,
+        value: field.value,
+        inline: field.inline ?? false,
+      });
+    });
+  }
 
   await interaction.editReply({ embeds: [embed] });
   return true;
@@ -599,7 +623,15 @@ async function dWeather(interaction: ChatInputCommandInteraction): Promise<boole
     .setURL(result.url)
     .setDescription(result.description);
 
-  result.fields.forEach(field => { embed.addFields(field); });
+  if (result.fields) {
+    result.fields.forEach(field => {
+      embed.addFields({
+        name: field.name,
+        value: field.value,
+        inline: field.inline ?? false,
+      });
+    });
+  }
 
   await interaction.editReply({ embeds: [embed] });
   return true;

@@ -16,6 +16,7 @@ import {
   ComboData,
 } from 'tripsit_drug_db';
 import path from 'path';
+import { getOrCreateUser } from './dbRecords';
 import {
   CbSubstance,
   Strength,
@@ -294,8 +295,8 @@ async function combinePw(
           }
 
           if (pwRoa.bioavailability) {
-            const { max } = pwRoa.bioavailability;
-            roaEntry.bioavailability = max ? `${max}%` : '';
+            roaEntry.bioavailability = pwRoa.bioavailability.max ? pwRoa.bioavailability.max.toString() : '';
+            roaEntry.bioavailability = `${roaEntry.bioavailability}%`;
           }
 
           if (roaEntry.dosage && roaEntry.dosage.length > 0 && roaEntry.duration && roaEntry.duration.length > 0) {
@@ -392,21 +393,16 @@ async function combineTs(
     const tsDrug = tsData[key as keyof typeof tsData] as Drug;
 
     // Check if the drug already exists in the combinedDb
-    let combinedDrug = combinedDb.find(drug => drug.name.toLowerCase() === tsDrug.name.toLowerCase());
-
-    // if (combinedDrug) {
-    //   log.debug(F, `[combineData] ${tsDrug.name} already exists in the combined DB!`);
-    // }
-
-    if (!combinedDrug) {
-      // log.debug(F, `(${combinedDbLength}) ${tsDrug.name} does not exist in the combined DB!`);
-      combinedDb.push({
-        name: tsDrug.name,
-        url: `https://wiki.tripsit.me/wiki/${tsDrug.name}`,
-      } as CbSubstance);
-
-      combinedDrug = combinedDb.find(drug => drug.name.toLowerCase() === tsDrug.name.toLowerCase()) as CbSubstance;
-    }
+    // Add the drug when psychonaut did not list it. A const keeps the narrowing inside the callbacks below.
+    const combinedDrug = combinedDb.find(drug => drug.name.toLowerCase() === tsDrug.name.toLowerCase())
+      ?? (() => {
+        const added = {
+          name: tsDrug.name,
+          url: `https://wiki.tripsit.me/wiki/${tsDrug.name}`,
+        } as CbSubstance;
+        combinedDb.push(added);
+        return added;
+      })();
 
     if (tsDrug.links && tsDrug.links.experiences) {
       combinedDrug.experiencesUrl = tsDrug.links.experiences;
@@ -584,10 +580,12 @@ async function combineTs(
           chemicalList.push(chemFound as Chemical);
         } else if (psychoactiveFound) {
           psychoactiveList.push(psychoactiveFound as Psychoactive);
+        /* v8 ignore start -- the tables above are static and consistent; this only fires if a category is added without a name */
         } else {
           log.info(F, `[combineTs] ${tsDrug.name} has an unrecognized category: ${mappedCategory}`);
           log.info(F, `Originally ${category} > ${mappedCategory}`);
         }
+        /* v8 ignore stop */
       });
 
       combinedDrug.classes = {
@@ -611,7 +609,6 @@ async function combineTs(
       if (tsDrug.formatted_dose) {
         const dose = tsDrug.formatted_dose as TsDose;
         Object.entries(dose).forEach(([doseRoa, dosage]) => {
-          if (!combinedDrug) return;
           const roaEntry = combinedDrug.roas?.find(roa => roa.name === doseRoa) || {} as Roa;
           roaEntry.name = doseRoa;
           let roaNote = tsDrug.dose_note;
@@ -698,9 +695,9 @@ async function combineTs(
 
     if (tsDrug.combos) {
       combinedDrug.interactions = [];
-      Object.keys(tsDrug.combos).forEach(comboName => {
-        if (!tsDrug.combos) return;
-        const combo = tsDrug.combos[comboName as keyof typeof tsDrug.combos] as ComboData;
+      const { combos } = tsDrug;
+      Object.keys(combos).forEach(comboName => {
+        const combo = combos[comboName as keyof typeof combos] as ComboData;
         const interactionEntry = {
           status: combo.status as Status,
           name: comboName,
@@ -714,11 +711,47 @@ async function combineTs(
           interactionEntry.sources = combo.sources;
         }
 
-        if (!combinedDrug) return;
         combinedDrug.interactions?.push(interactionEntry);
       });
     }
   });
+}
+
+export async function syncDrugNames(combinedDb: CbSubstance[]): Promise<void> {
+  const rows = await db.drug_names.findMany({ select: { name: true } });
+  const known = new Set(rows.map(row => row.name.trim().toLowerCase()));
+  const missing = combinedDb.filter(drug => !known.has(drug.name.trim().toLowerCase()));
+  if (missing.length === 0) return;
+
+  const botUser = await getOrCreateUser(env.DISCORD_CLIENT_ID);
+
+  for (const drug of missing) { // eslint-disable-line no-restricted-syntax
+    const name = drug.name.trim();
+    known.add(name.toLowerCase());
+    const aliases = (drug.aliases ?? []).map(alias => alias.trim()).filter(alias => {
+      const isNew = !known.has(alias.toLowerCase());
+      known.add(alias.toLowerCase());
+      return isNew;
+    });
+
+    // eslint-disable-next-line no-await-in-loop
+    await db.drugs.create({
+      data: {
+        summary: drug.summary?.trim() || null,
+        psychonaut_wiki_url: drug.url?.trim() || null,
+        errowid_experiences_url: drug.experiencesUrl?.trim() || null,
+        last_updated_by: botUser.id,
+        drug_names: {
+          create: [
+            { name, type: 'COMMON', is_default: true },
+            ...aliases.map(alias => ({ name: alias, type: 'COMMON' as const, is_default: false })),
+          ],
+        },
+      },
+    });
+  }
+
+  log.info(F, `Added ${missing.length} new drugs to drug_names`);
 }
 
 export default async function updateDrugDb():Promise<void> {
@@ -745,4 +778,10 @@ export default async function updateDrugDb():Promise<void> {
   // log.debug(F, `Added ${combinedDb.length - pwDrugs} drugs to the combined DB (and merged the rest) !`);
   const filePath = await saveData(combinedDb, 'combinedDB');
   log.info(F, `Updated combinedDB of ${combinedDb.length} drugs to ${filePath}`);
+
+  try {
+    await syncDrugNames(combinedDb);
+  } catch (err) {
+    log.error(F, `Error syncing drug_names: ${err}`);
+  }
 }

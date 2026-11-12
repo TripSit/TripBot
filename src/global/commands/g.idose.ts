@@ -100,13 +100,11 @@ async function iDoseSet(
     }];
   }
 
-  const drugData = await db.drug_names.findMany({
-    where: {
-      name: {
-        in: [substance, substance.toLowerCase(), substance.toUpperCase()],
-      },
-    },
-  });
+  const drugData = await db.$queryRaw<{ drug_id: string }[]>`
+    SELECT drug_id FROM drug_names
+    WHERE LOWER(name) = LOWER(${substance})
+    ORDER BY is_default DESC
+    LIMIT 1`;
 
   if (drugData.length === 0) {
     log.debug(F, `iDoseSet: substance '${substance}' not found in drug_names`);

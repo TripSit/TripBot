@@ -1,5 +1,6 @@
-/* eslint-disable no-nested-ternary, no-restricted-syntax */
 import { ChannelType, DMChannel, TextChannel } from 'discord.js';
+import { resolvingModal } from '../../../vitest/utils/commandStubs';
+/* eslint-disable no-nested-ternary, no-restricted-syntax */
 import {
   applicationApprove, applicationPermissions, applicationReject, applicationSetup, applicationStart,
 } from '../../utils/application';
@@ -95,7 +96,7 @@ describe('applicationSetup', () => {
       reply: vi.fn(),
       showModal: vi.fn(),
       options: { getChannel: vi.fn(() => textChannel('threads')), getRole: vi.fn((name: string) => roles[name] ?? null) },
-      awaitModalSubmit: vi.fn(async () => submit),
+      awaitModalSubmit: vi.fn(resolvingModal(submit)),
       ...over,
     };
     return { interaction, submit };
@@ -173,7 +174,7 @@ describe('applicationStart', () => {
         channels: { fetch: vi.fn(async () => { if (opts.channelFetch === 'fail') throw new Error('Unknown Channel'); return applications; }) },
         roles: { fetch: vi.fn(async (id: string) => ({ id, name: `role-${id}`, toString: (): string => `@${id}` })) },
       },
-      awaitModalSubmit: vi.fn(async () => submit),
+      awaitModalSubmit: vi.fn(resolvingModal(submit)),
     };
     dbMock.discord_guilds.upsert.mockResolvedValue({ channel_applications: opts.appChannel === undefined ? 'apps' : opts.appChannel } as never);
     return {
@@ -343,6 +344,25 @@ describe('applicationApprove', () => {
     const high = setup({ higher: true });
     await applicationApprove(high.interaction as never);
     expect(high.interaction.editReply).toHaveBeenCalledWith({ content: expect.stringContaining('I do not have permission to add') });
+  });
+
+  // Regression test for TripSit/TripBot#1369: a reviewer without Manage Roles used to be told no and then approved anyway.
+  it('does not grant the role to reviewers without Manage Roles', async () => {
+    const weak = setup({ manageRoles: false });
+    await applicationApprove(weak.interaction as never);
+    expect(weak.interaction.editReply).toHaveBeenCalledWith({ content: 'You do not have permission to modify roles!' });
+    expect(weak.target.roles.add).not.toHaveBeenCalled();
+  });
+
+  it('ignores clicks without a channel or a member', async () => {
+    const noChannel = setup();
+    (noChannel.interaction as { channel: unknown }).channel = null;
+    await applicationApprove(noChannel.interaction as never);
+    expect(noChannel.interaction.deferReply).not.toHaveBeenCalled();
+    const noMember = setup();
+    (noMember.interaction as { member: unknown }).member = null;
+    await applicationApprove(noMember.interaction as never);
+    expect(noMember.interaction.deferReply).not.toHaveBeenCalled();
   });
 
   it('grants the role and announces it', async () => {

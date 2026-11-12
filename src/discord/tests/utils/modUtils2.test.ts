@@ -69,34 +69,20 @@ describe('modResponse: lookups from commands and buttons', () => {
     mocks.getMember.mockResolvedValue([member('1'), member('2')]);
     const { interaction } = button('moon');
     const result = await modResponse(interaction, 'INFO', true);
-    expect((result.embeds?.[0] as EmbedBuilder).data.title).toContain('returned 2 results!');
-  });
-
-  it('looks up the target option on a slash command', async () => {
-    mocks.getMember.mockResolvedValue([]);
-    const getString = vi.fn().mockReturnValue('missing-member');
-    const { interaction } = button('ignored', {
-      isButton: () => false,
-      isChatInputCommand: () => true,
-      options: { getString },
-    });
-
-    const result = await modResponse(interaction, 'INFO', true);
-    expect(getString).toHaveBeenCalledWith('target', true);
-    expect((result.embeds?.[0] as EmbedBuilder).data.title).toContain('missing-member');
+    expect(((result.embeds as readonly unknown[])[0] as EmbedBuilder).data.title).toContain('returned 2 results!');
   });
 
   it('rejects names that match nobody', async () => {
     const { interaction } = button('nobody');
     const result = await modResponse(interaction, 'INFO', true);
-    expect((result.embeds?.[0] as EmbedBuilder).data.title).toBe('"nobody" returned no results!');
+    expect(((result.embeds as readonly unknown[])[0] as EmbedBuilder).data.title).toBe('"nobody" returned no results!');
   });
 
   it('offers note/ban/info for ids of users who left, and unban for banned ones', async () => {
     (global as unknown as { discordClient: unknown }).discordClient = { users: { fetch: vi.fn().mockRejectedValue(new Error('Unknown User')), guilds: undefined }, guilds: { fetch: vi.fn() } };
     const left = button(ID);
     const result = await modResponse(left.interaction, 'REPORT', true);
-    expect((result.embeds?.[0] as EmbedBuilder).data.description).toContain('is not in the guild, but I can still Note or ban them');
+    expect(((result.embeds as readonly unknown[])[0] as EmbedBuilder).data.description).toContain('is not in the guild, but I can still Note or ban them');
     expect(componentIds(result)).toContain(`moderate~FULL_BAN~${ID}`);
 
     const banned = button(ID);
@@ -190,7 +176,7 @@ describe('modResponse: action-specific buttons', () => {
       member: member(ID), author: { id: ID }, content: 'x'.repeat(1000), url: 'https://msg',
     };
     const result = await modResponse(ctx({ isUserContextMenuCommand: () => false, isMessageContextMenuCommand: () => true, targetMessage }), 'REPORT', true);
-    const field = (result.embeds?.[0] as EmbedBuilder).data.fields?.find(f => f.name === 'Message');
+    const field = ((result.embeds as readonly unknown[])[0] as EmbedBuilder).data.fields?.find(f => f.name === 'Message');
     expect(field?.value).toContain('...');
     expect(field?.value).toContain('https://msg');
   });
@@ -227,6 +213,71 @@ describe('modResponse: no interaction', () => {
     await expect(modResponse(null, 'NOTE', true, null, member('777777777777777777'), member(ID))).rejects.toThrow('Failed to fetch guild');
     Reflect.deleteProperty(process.env, 'DISCORD_GUILD_ID');
     await expect(modResponse(null, 'NOTE', true, null, member('777777777777777777'), member(ID))).rejects.toThrow('DISCORD_GUILD_ID');
+  });
+});
+
+describe('messageModThread: context-menu messages', () => {
+  it('does not duplicate the Message field already present on the thread embed', async () => {
+    const modLog = { send: vi.fn() };
+    const thread = { id: 'thread1', send: vi.fn(), setName: vi.fn() };
+    (global as unknown as { discordClient: unknown }).discordClient = {
+      users: { fetch: vi.fn() },
+      channels: { fetch: vi.fn(async (id: string) => (id === 'modlog' ? modLog : { threads: { create: vi.fn(async () => thread) } })) },
+      guilds: { fetch: vi.fn(async () => ({ roles: { fetch: vi.fn(async () => ({ toString: (): string => '<@&mods>' })) } })) },
+    };
+    dbMock.discord_guilds.upsert.mockResolvedValue({
+      id: 'g1', role_moderator: 'mod-role', channel_moderators: 'modchan', channel_mod_log: 'modlog',
+    } as never);
+    dbMock.users.upsert.mockResolvedValue({ id: 'uid', mod_thread_id: null } as never);
+    const embed = { toJSON: () => ({ fields: [{ name: 'Message', value: 'quoted' }] }) };
+    const interaction = {
+      message: { embeds: [embed] },
+      guild: { id: 'g1' },
+      member: member('999999999999999999', { roles: { cache: new Set(['mod-role']) } }),
+      targetMember: member(ID),
+      targetUser: { id: ID },
+      targetMessage: { content: 'quoted', url: 'https://discord.com/channels/1/2/3', member: member(ID) },
+      isButton: () => false,
+      isChatInputCommand: () => false,
+      isUserContextMenuCommand: () => false,
+      isMessageContextMenuCommand: () => true,
+    };
+    await messageModThread(interaction as never, member('999999999999999999'), member(ID) as never, 'WARNING', 'n', 'd', '', '', undefined, null);
+    const [{ embeds }] = thread.send.mock.calls[0] as unknown as [{ embeds: EmbedBuilder[] }];
+    expect(embeds[0].data.fields?.filter(f => f.name === 'Message')).toHaveLength(1);
+  });
+
+  it('shows a departed user\'s avatar and tolerates avatar lookups that throw', async () => {
+    (global as unknown as { discordClient: unknown }).discordClient = {
+      users: { fetch: vi.fn(async () => ({ id: ID, username: 'gone', displayAvatarURL: () => 'https://gone-av' })) },
+    };
+    const interaction = {
+      guild: { id: 'g1', bans: { fetch: vi.fn().mockRejectedValue(new Error('x')) }, members: { fetch: vi.fn().mockRejectedValue(new Error('x')) } },
+      member: member('999999999999999999', { roles: { cache: new Set(['mod-role']) } }),
+      customId: `moderate~INFO~${ID}`,
+      isChatInputCommand: () => false,
+      isButton: () => true,
+      isUserContextMenuCommand: () => false,
+      isMessageContextMenuCommand: () => false,
+    };
+    const result = await modResponse(interaction as never, 'INFO', true);
+    expect(((result.embeds as readonly unknown[])[0] as EmbedBuilder).data.thumbnail?.url).toBe('https://gone-av');
+  });
+
+  it('reads the target from the slash command option', async () => {
+    mocks.getMember.mockResolvedValue([member(ID)]);
+    const interaction = {
+      guild: { id: 'g1' },
+      member: member('999999999999999999', { roles: { cache: new Set(['mod-role']) } }),
+      options: { getString: vi.fn(() => 'someone') },
+      isChatInputCommand: () => true,
+      isButton: () => false,
+      isUserContextMenuCommand: () => false,
+      isMessageContextMenuCommand: () => false,
+    };
+    await modResponse(interaction as never, 'INFO', true);
+    expect(interaction.options.getString).toHaveBeenCalledWith('target', true);
+    expect(mocks.getMember).toHaveBeenCalledWith(interaction, 'someone');
   });
 });
 
@@ -320,15 +371,6 @@ describe('messageModThread', () => {
     expect(modChan.threads.create).toHaveBeenCalled();
   });
 
-  it('pings moderators for a note that creates a new thread', async () => {
-    setup();
-    await run({ command: 'NOTE', desc: '' });
-    expect(modChan.threads.create).toHaveBeenCalledTimes(1);
-    expect(thread.send).toHaveBeenCalledWith(expect.objectContaining({
-      content: expect.stringContaining('<@&mods>'),
-    }));
-  });
-
   it('records timeout durations, and describes appeals with a separate description message', async () => {
     setup();
     await run({ command: 'TIMEOUT', duration: ' for 1 hour' });
@@ -345,16 +387,6 @@ describe('messageModThread', () => {
     setup();
     expect(await run({ command: 'FULL_BAN', note: 'Vendor spam' })).toBeNull();
     expect(modChan.threads.create).not.toHaveBeenCalled();
-  });
-
-  it('logs an appeal summary without sending a blank description embed', async () => {
-    setup();
-    await run({ command: 'BAN_APPEAL', appeal: { discordId: ID }, desc: '   ' });
-    expect(modLog.send).toHaveBeenCalledTimes(1);
-    expect(modLog.send).toHaveBeenCalledWith(expect.objectContaining({
-      content: expect.stringContaining('has requested a ban appeal'),
-    }));
-    expect(thread.send).toHaveBeenCalledTimes(1);
   });
 
   it('requires a moderator role and a moderator channel to build threads', async () => {

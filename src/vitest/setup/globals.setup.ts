@@ -1,4 +1,4 @@
-import { beforeEach, vi } from 'vitest';
+import { beforeEach } from 'vitest';
 import '../../global/utils/env.config';
 import '../../global/utils/log';
 import { dbMock, resetDbMock } from '../utils/mockDb';

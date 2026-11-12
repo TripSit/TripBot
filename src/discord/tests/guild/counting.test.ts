@@ -193,6 +193,15 @@ describe('countMessage', () => {
     expect(m.reply).toHaveBeenCalledWith(expect.stringContaining('once every hour'));
   });
 
+  it('looks at a user\'s most recent numeric message when several are in the last hour', async () => {
+    data({ type: 'TOKEN' });
+    const m = message('6');
+    const mine = (ts: number) => ({ author: { id: 'me' }, cleanContent: '4', createdTimestamp: ts });
+    (m.channel.messages.fetch as ReturnType<typeof vi.fn>).mockResolvedValue(collectionOf({ old: mine(Date.now() - 20000), newer: mine(Date.now() - 1000), other: { author: { id: 'x' }, cleanContent: '1', createdTimestamp: Date.now() } }));
+    await countMessage(m as never);
+    expect(m.reply).toHaveBeenCalledWith(expect.stringContaining('once every hour'));
+  });
+
   it('accepts the next number and welcomes new stakeholders', async () => {
     data();
     const first = message('6');

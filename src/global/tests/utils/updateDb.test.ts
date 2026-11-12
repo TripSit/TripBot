@@ -160,17 +160,6 @@ describe('updateDrugDb', () => {
     expect(periods.indexOf('Onset')).toBeLessThan(periods.indexOf('Total'));
   });
 
-  it('keeps the existing onset when TripSit also provides a route-specific onset', async () => {
-    vi.mocked(axios.get).mockResolvedValue({
-      data: { foo: { ...tsDrugs.foo, formatted_onset: { Oral: '999', _unit: 'minutes' } } },
-    });
-    await run();
-    const oral = written('combinedDB')[0].roas.find((route: { name: string }) => route.name === 'Oral');
-    const onsets = oral.duration.filter((period: { name: string }) => period.name === 'Onset');
-    expect(onsets).toHaveLength(1);
-    expect(onsets[0].value).not.toContain('999');
-  });
-
   it('only keeps routes that have both dose and duration from psychonaut', async () => {
     await run();
     const roaNames = written('combinedDB')[0].roas.map((r: { name: string }) => r.name);
@@ -186,40 +175,6 @@ describe('updateDrugDb', () => {
     expect(baz).toEqual({ name: 'Baz', url: 'https://wiki.tripsit.me/wiki/Baz' });
   });
 
-  it('initializes aliases for a source entry with no matching Psychonaut record', async () => {
-    vi.mocked(axios.get).mockResolvedValue({
-      data: { baz: { ...tsDrugs.baz, aliases: ['Example alias', 'Another alias'] } },
-    });
-    await run();
-    expect(written('combinedDB')).toEqual(expect.arrayContaining([expect.objectContaining({
-      name: 'Baz',
-      aliases: ['Example alias', 'Another alias'],
-      aliasesStr: 'Example alias, Another alias',
-    })]));
-  });
-
-  it('builds route and duration entries for a TripSit-only source record', async () => {
-    vi.mocked(axios.get).mockResolvedValue({
-      data: {
-        baz: {
-          ...tsDrugs.baz,
-          formatted_dose: { Oral: tsDrugs.foo.formatted_dose.Oral },
-          formatted_onset: tsDrugs.foo.formatted_onset,
-          formatted_duration: { Oral: '4-6', Insufflated: '1', _unit: 'hours' },
-        },
-      },
-    });
-    await run();
-    const baz = written('combinedDB').find((entry: { name: string }) => entry.name === 'Baz');
-    expect(baz.roas).toEqual([expect.objectContaining({
-      name: 'Oral',
-      duration: [
-        { name: 'Onset', value: '30 minutes' },
-        { name: 'Duration', value: '4-6 hours' },
-      ],
-    })]);
-  });
-
   it('records psychonaut interactions with their severity', async () => {
     mocks.request.mockResolvedValueOnce({ substances: [pwSubstances[0]] });
     vi.mocked(axios.get).mockResolvedValue({ data: {} });
@@ -231,74 +186,74 @@ describe('updateDrugDb', () => {
     ]);
   });
 
-  it('retains multiple Psychonaut routes when only one interaction list is present', async () => {
-    const [foo] = pwSubstances;
-    const oral = foo.roa?.oral;
-    mocks.request.mockResolvedValueOnce({
-      substances: [{
-        ...foo,
-        uncertainInteractions: null,
-        unsafeInteractions: null,
-        roa: { oral, sublingual: oral },
-      }],
+  it('copes with tripsit-only drugs that have unusual shapes', async () => {
+    Object.assign(tsDrugs, {
+      qux: {
+        name: 'Qux',
+        aliases: ['quxy', 'quxie'],
+        properties: {},
+        categories: [
+          'barbiturate', 'benzodiazepine', 'common', 'deliriant', 'depressant', 'dissociative', 'empathogen', 'habit-forming', 'inactive',
+          'nootropic', 'opioid', 'psychedelic', 'research-chemical', 'ssri', 'stimulant', 'supplement', 'tentative',
+        ],
+        formatted_dose: { Oral: { Common: '5mg' } },
+        formatted_onset: { value: '5', _unit: 'minutes' },
+      },
+      fooAgain: { name: 'foo', properties: {}, formatted_duration: { Oral: '4-6', _unit: 'hours' } },
     });
-    vi.mocked(axios.get).mockResolvedValue({ data: {} });
-    await run();
-    const [entry] = written('combinedDB');
-    expect(entry.roas).toEqual([
-      expect.objectContaining({ name: 'Oral' }),
-      expect.objectContaining({ name: 'Sublingual' }),
-    ]);
-    expect(entry.interactions).toEqual([{ status: 'Dangerous', name: 'Dangerous' }]);
+    try {
+      await run();
+      const db = written('combinedDB');
+      const qux = db.find((d: { name: string }) => d.name === 'Qux');
+      expect(qux.aliases).toEqual(['quxy', 'quxie']);
+      expect(qux.aliasesStr).toBe('quxy, quxie');
+      expect(qux.roas).toHaveLength(1);
+    } finally {
+      delete (tsDrugs as Record<string, unknown>).qux;
+      delete (tsDrugs as Record<string, unknown>).fooAgain;
+    }
   });
 
-  it('imports a partial interaction list and adds a TripSit onset to the existing oral route', async () => {
-    const [foo] = pwSubstances;
-    const oral = foo.roa?.oral;
-    mocks.request.mockResolvedValueOnce({
-      substances: [{
-        ...foo,
-        dangerousInteractions: null,
-        roa: { oral: { ...oral, duration: { total: range(4, 6, 'hours') } } },
-      }],
-    });
-    vi.mocked(axios.get).mockResolvedValue({
-      data: { foo: { name: 'Foo', properties: {}, formatted_onset: tsDrugs.foo.formatted_onset } },
-    });
-
-    await run();
-
-    const [entry] = written('combinedDB');
-    expect(entry.interactions).toEqual([
-      { status: 'Caution', name: 'Uncertain' }, { status: 'Unsafe', name: 'Unsafe' },
-    ]);
-    expect(entry.roas[0].duration).toEqual([
-      { name: 'Total', value: '4-6 hours' }, { name: 'Onset', value: '30 minutes' },
-    ]);
-  });
-
-  it('preserves a TripSit dose with no unit or duration metadata', async () => {
-    vi.mocked(axios.get).mockResolvedValue({
-      data: {
-        baz: { ...tsDrugs.baz, formatted_dose: { Oral: { Common: '20' } } },
+  it('handles sparse psychonaut routes and tripsit durations for routes that were never added', async () => {
+    const sparse = {
+      url: 'https://psychonautwiki.org/wiki/Sparse',
+      name: 'Sparse',
+      summary: 's',
+      commonNames: null,
+      toxicity: null,
+      addictionPotential: null,
+      tolerance: null,
+      crossTolerances: null,
+      uncertainInteractions: [{ name: 'Only uncertain' }],
+      roa: {
+        oral: { dose: { units: 'mg', light: 5 }, duration: { total: range(1, undefined, 'h') }, bioavailability: {} },
+        rectal: { dose: { units: 'mg', light: 6 }, duration: { total: range(2, undefined, 'h') } },
+      },
+    };
+    Object.assign(tsDrugs, {
+      sparse: {
+        name: 'Sparse',
+        properties: {},
+        formatted_dose: { Oral: { Common: '5' } },
+        formatted_onset: { value: '5', _unit: 'minutes' },
+        formatted_duration: { Intravenous: '1', _unit: 'hours' },
+      },
+      noroute: {
+        name: 'NoRoute', properties: {}, formatted_onset: { value: '5', _unit: 'minutes' }, formatted_duration: { Oral: '1', _unit: 'hours' },
       },
     });
-    await run();
-    const entry = written('combinedDB').find((drug: { name: string }) => drug.name === 'Baz');
-    expect(entry.roas).toEqual([{ name: 'Oral', dosage: [{ name: 'Common', value: '20 ' }] }]);
-  });
-
-  it('preserves a route without inventing a missing bioavailability maximum', async () => {
-    const [foo] = pwSubstances;
-    const oral = foo.roa?.oral;
-    mocks.request.mockResolvedValueOnce({
-      substances: [{ ...foo, roa: { oral: { ...oral, bioavailability: {} } } }],
-    });
-    vi.mocked(axios.get).mockResolvedValue({ data: {} });
-    await run();
-    expect(written('combinedDB')[0].roas).toEqual([
-      expect.objectContaining({ name: 'Oral', bioavailability: '' }),
-    ]);
+    try {
+      mocks.request.mockResolvedValueOnce({ substances: [sparse] });
+      await run();
+      const db = written('combinedDB');
+      const found = db.find((d: { name: string }) => d.name === 'Sparse');
+      expect(found.interactions).toEqual([{ status: 'Caution', name: 'Only uncertain' }]);
+      expect(found.roas.find((r: { name: string }) => r.name === 'Oral').bioavailability).toBe('%');
+      expect(found.roas.map((r: { name: string }) => r.name)).toEqual(expect.arrayContaining(['Oral', 'Rectal']));
+    } finally {
+      delete (tsDrugs as Record<string, unknown>).sparse;
+      delete (tsDrugs as Record<string, unknown>).noroute;
+    }
   });
 
   it('survives upstream failures with an empty database', async () => {

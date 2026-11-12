@@ -66,9 +66,9 @@ describe('levelFreeze', () => {
 describe('leaderboardV2', () => {
   it('builds every type/category combination by default', async () => {
     asMock(dbMock.user_experience.groupBy).mockResolvedValue([
-      { user_id: 'u3', _sum: { total_points: null } },
       { user_id: 'u1', _sum: { total_points: 5 } },
       { user_id: 'u2', _sum: { total_points: 50 } },
+      { user_id: 'u3', _sum: { total_points: null } },
     ] as unknown as Rows<typeof dbMock.user_experience.groupBy>);
     dbMock.users.findMany.mockResolvedValue([
       { id: 'u1', discord_id: 'd1' }, { id: 'u2', discord_id: 'd2' }, { id: 'u3', discord_id: null },

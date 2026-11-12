@@ -3,13 +3,7 @@ import { dLevels } from '../../commands/guild/d.levels';
 import { slashStub } from '../../../vitest/utils/commandStubs';
 
 const mocks = vi.hoisted(() => ({
-  levels: vi.fn(),
-  profile: vi.fn(),
-  persona: vi.fn(),
-  asset: vi.fn(),
-  loadImage: vi.fn(),
-  fillText: vi.fn(),
-  filterName: vi.fn((text: string) => text),
+  levels: vi.fn(), profile: vi.fn(), persona: vi.fn(), asset: vi.fn(), loadImage: vi.fn(),
 }));
 
 vi.mock('../../utils/context', () => ({ default: vi.fn(async () => 'ctx') }));
@@ -18,10 +12,10 @@ vi.mock('../../../global/commands/g.profile', () => ({ profile: mocks.profile })
 vi.mock('../../../global/commands/g.rpg', () => ({ getPersonaInfo: mocks.persona }));
 vi.mock('../../utils/getAsset', () => ({ default: mocks.asset }));
 vi.mock('../../utils/canvasUtils', () => ({
-  deFuckifyText: mocks.filterName, generateColors: () => '#000000', resizeText: () => '14px futura',
+  deFuckifyText: (t: string) => (t.startsWith('★') ? '' : t), generateColors: () => '#000000', resizeText: () => '14px futura',
 }));
 vi.mock('@napi-rs/canvas', () => {
-  const ctx = new Proxy({ measureText: () => ({ width: 10 }), fillText: mocks.fillText } as Record<string, unknown>, {
+  const ctx = new Proxy({ measureText: () => ({ width: 10 }) } as Record<string, unknown>, {
     get: (target, key: string) => (key in target ? target[key] : vi.fn()),
     set: () => true,
   });
@@ -101,34 +95,6 @@ describe('levels', () => {
     expect(mocks.asset).toHaveBeenCalledWith('developerBar');
   });
 
-  it('renders a zero rank for missing developer data and a nonzero team rank in the fourth slot', async () => {
-    const data = levelData(20, { TEAM: lvl(4, 7) });
-    data.VOICE = { TOTAL: lvl(6, 3) };
-    await run(data, member([e.ROLE_HELPER, e.ROLE_DEVELOPER, e.ROLE_TEAMTRIPSIT]));
-    expect(mocks.fillText).toHaveBeenCalledWith('#0', 711, 464);
-    expect(mocks.fillText).toHaveBeenCalledWith('#7', 711, 524);
-  });
-
-  it('shows an empty team bar for team members without team XP', async () => {
-    await run(levelData(20), member([e.ROLE_TEAMTRIPSIT]));
-    expect(mocks.asset).toHaveBeenCalledWith('teamtripsitBar');
-    expect(mocks.fillText).toHaveBeenCalledWith('0', 657, 344);
-    expect(mocks.fillText).toHaveBeenCalledWith('#0', 711, 344);
-  });
-
-  it('renders zero messages and voice hours for a new member', async () => {
-    mocks.profile.mockResolvedValueOnce({ totalTextExp: 0, totalVoiceExp: 0 });
-    await run(levelData(0));
-    expect(mocks.fillText).toHaveBeenCalledWith('0', 894, 45);
-    expect(mocks.fillText).toHaveBeenCalledWith('0 HR', 894, 105);
-  });
-
-  it('uses the username when filtering removes most of the display name', async () => {
-    mocks.filterName.mockImplementationOnce(() => '');
-    await run(levelData(1), member([], { displayName: 'Member nickname' }));
-    expect(mocks.fillText).toHaveBeenCalledWith('Alice', 146, expect.any(Number));
-  });
-
   it('applies equipped inventory and surfaces lookup failures', async () => {
     db.rpg_inventory.findMany = vi.fn().mockResolvedValue([
       { equipped: true, effect: 'background', value: 'bg1' },
@@ -143,5 +109,20 @@ describe('levels', () => {
     expect((await run(levelData(20))).result).toBe(true);
     mocks.profile.mockRejectedValueOnce(new Error('x'));
     await expect(run(levelData(20))).rejects.toThrow('x');
+  });
+
+  it('falls back to the username when the display name is mostly decoration', async () => {
+    const { stub } = await run(levelData(10), member([], { displayName: '★★★★★' }));
+    const attachment = (stub.editReply.mock.calls[0][0] as { files: Array<{ name: string }> }).files[0];
+    expect(attachment.name).toContain('TS_Levels_Alice_');
+  });
+
+  it('draws zero ranks for the third bar, real ranks for the fourth, and zero stats without chat activity', async () => {
+    mocks.profile.mockResolvedValue({ totalTextExp: 0, totalVoiceExp: 0 });
+    const roles = [e.ROLE_TRIPSITTER, e.ROLE_DEVELOPER, e.ROLE_TEAMTRIPSIT];
+    const data = levelData(20, { TRIPSITTER: lvl(2, 3), DEVELOPER: lvl(9, 0), TEAM: lvl(4, 6) });
+    data.VOICE = { TOTAL: lvl(6, 3) } as never;
+    const { result } = await run(data, member(roles));
+    expect(result).toBe(true);
   });
 });

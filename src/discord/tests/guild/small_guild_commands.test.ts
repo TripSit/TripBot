@@ -1,5 +1,7 @@
 /* eslint-disable max-len, sonarjs/no-duplicate-string, no-restricted-syntax, no-await-in-loop */
 import { ChannelType } from 'discord.js';
+import { dDonate } from '../../commands/guild/d.donate';
+import { mQuote } from '../../commands/guild/m.quote';
 import { dSheesh } from '../../commands/guild/d.sheesh';
 import { dSay } from '../../commands/guild/d.say';
 import { dTimezone } from '../../commands/guild/d.timezone';
@@ -10,7 +12,7 @@ import { dIssue } from '../../commands/guild/d.issue';
 import { dReport } from '../../commands/guild/d.report';
 import { uReport } from '../../commands/guild/u.report';
 import { mReport } from '../../commands/guild/m.report';
-import { lastReply, slashStub } from '../../../vitest/utils/commandStubs';
+import { lastReply, slashStub, resolvingModal } from '../../../vitest/utils/commandStubs';
 import { flushPromises } from '../../../vitest/utils/discordStubs';
 
 const mocks = vi.hoisted(() => ({
@@ -213,7 +215,7 @@ describe('issue', () => {
     mocks.issue.mockResolvedValue({ data: { number: 9, html_url: 'https://gh/9' } });
     const modal = submit('issueModal~int1');
     const stub = slashStub({ options: { type: 'Bug' } });
-    stub.awaitModalSubmit.mockResolvedValueOnce(modal);
+    stub.awaitModalSubmit.mockImplementationOnce(resolvingModal(modal));
     expect(await dIssue.execute(stub as never)).toBe(false);
     await flushPromises();
     expect(stub.showModal).toHaveBeenCalled();
@@ -224,7 +226,7 @@ describe('issue', () => {
   it('ignores modals for other interactions', async () => {
     const modal = submit('issueModal~other');
     const stub = slashStub();
-    stub.awaitModalSubmit.mockResolvedValueOnce(modal);
+    stub.awaitModalSubmit.mockImplementationOnce(resolvingModal(modal));
     await dIssue.execute(stub as never);
     await flushPromises();
     expect(modal.deferReply).not.toHaveBeenCalled();
@@ -261,5 +263,45 @@ describe('report setup check', () => {
     const stub = slashStub({ options: { target: 'x' } });
     expect(await dReport.execute(stub as never)).toBe(false);
     expect(stub.editReply).toHaveBeenCalledWith(expect.stringContaining('not been set up'));
+  });
+});
+
+describe('donate and quote context menu', () => {
+  it('donate shows the support page', async () => {
+    const stub = slashStub({ options: { ephemeral: true } });
+    expect(await dDonate.execute(stub as never)).toBe(true);
+    expect(stub.editReply).toHaveBeenCalledWith(expect.objectContaining({ embeds: expect.any(Array) }));
+  });
+
+  it('Save Quote hands the message to quoteAdd (which ignores DMs)', async () => {
+    const stub = slashStub({ guild: null, extra: { targetMessage: {} } });
+    expect(await mQuote.execute(stub as never)).toBe(true);
+    expect(stub.deferReply).toHaveBeenCalled();
+  });
+});
+
+describe('subcommand defaults and thread cleanup failures', () => {
+  it('timezone treats a missing subcommand as get', async () => {
+    mocks.timezone.mockResolvedValueOnce('9am');
+    const stub = slashStub({ options: {} });
+    stub.options.getSubcommand.mockReturnValue(undefined as never);
+    await dTimezone.execute(stub as never);
+    expect(mocks.timezone).toHaveBeenLastCalledWith('get', 'u1', null);
+  });
+
+  it('clear-chat survives threads that throw when deleted', async () => {
+    const boom = { delete: vi.fn(() => { throw new Error('Missing Permissions'); }) };
+    const chan = {
+      bulkDelete: vi.fn(),
+      threads: {
+        fetch: vi.fn(async () => ({ threads: new Map([['a', boom]]) })),
+        fetchArchived: vi.fn(async () => ({ threads: new Map([['b', boom]]) })),
+      },
+    };
+    const stub = slashStub({ options: { 'delete-threads': true, 'delete-archived-threads': true }, channel: chan });
+    stub.editReply.mockResolvedValue({ delete: vi.fn() });
+    expect(await dClearchat.execute(stub as never)).toBe(true);
+    await flushPromises();
+    expect(boom.delete).toHaveBeenCalledTimes(2);
   });
 });

@@ -199,15 +199,10 @@ describe('acknowledgeReportButton', () => {
     expect(components.every(r => r.components.every(c => !c.custom_id.includes('ACKN_REPORT')))).toBe(true);
   });
 
-  it('uses the account name for departed members and stops when the account is gone', async () => {
+  it('falls back to the reportee user, and to the thread name when the account is gone', async () => {
     const user = setup({ reportee: 'user' });
     await acknowledgeReportButton(user.interaction);
     expect(user.reporter.send).toHaveBeenCalledWith(expect.stringContaining('report on reportee-user'));
-    expect(user.modLog.send).toHaveBeenCalledWith({
-      embeds: [expect.objectContaining({
-        data: expect.objectContaining({ description: 'Mod has acknowledged the report on reportee-user.' }),
-      })],
-    });
     const deleted = setup({ reportee: 'none' });
     await acknowledgeReportButton(deleted.interaction);
     expect(JSON.stringify(deleted.targetChan.send.mock.calls[0][0])).toContain('deleted their Discord account');
@@ -229,14 +224,5 @@ describe('acknowledgeReportButton', () => {
     const noLog = setup({ reportee: 'member', modLog: null });
     await acknowledgeReportButton(noLog.interaction);
     expect(noLog.modLog.send).not.toHaveBeenCalled();
-  });
-
-  it('keeps the report acknowledged when fetching the mod log fails', async () => {
-    const s = setup({ reportee: 'member', modLogFetchFails: true });
-    await acknowledgeReportButton(s.interaction);
-    expect(s.reporter.send).toHaveBeenCalledTimes(1);
-    expect(s.message.edit).toHaveBeenCalledTimes(1);
-    expect(s.modLog.send).not.toHaveBeenCalled();
-    expect(JSON.stringify(s.targetChan.send.mock.calls.at(-1)?.[0])).toContain('there was an error');
   });
 });

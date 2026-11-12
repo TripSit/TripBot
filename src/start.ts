@@ -25,6 +25,7 @@ import updateDb from './global/utils/updateDb';
 import db from './prisma/tripbot/client';
 import { initBridgeMappings } from './global/bridge/bridge.mappings';
 import ircConnect, { ircDisconnect } from './irc/irc';
+import startHeartbeat from './global/utils/heartbeat';
 // import startMatrix from './matrix/matrix';
 // import telegramConnect from './telegram/telegram';
 
@@ -39,11 +40,9 @@ Canvas.GlobalFonts.registerFromPath(
 
 const F = f(__filename);
 
-// const net = require('net');
-// work around a node v20 bug: https://github.com/nodejs/node/issues/47822#issuecomment-1564708870
-// if (net.setDefaultAutoSelectFamily) {
-//   net.setDefaultAutoSelectFamily(false);
-// }
+// Discord REST uses its own undici agent (connect timeout, DNS cache, address-family settings): see
+// src/discord/utils/restNetwork.ts. The old net.setDefaultAutoSelectFamily(false) workaround was removed because
+// the agent sets autoSelectFamily explicitly for those requests.
 
 async function start() {
   log.info(F, 'Initializing service!');
@@ -63,6 +62,7 @@ async function start() {
       await ircConnect().catch(err => log.error(F, `Failed to start IRC: ${err}`));
     }
     // if (env.TELEGRAM_TOKEN && validateEnv('TELEGRAM')) await telegramConnect();
+    startHeartbeat();
   }
 }
 

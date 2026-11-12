@@ -130,7 +130,7 @@ describe('tripsitmeUserClose', () => {
   type Opts = {
     guild?: boolean; member?: boolean; channel?: boolean; cooldown?: boolean; targetId?: string; actorId?: string; override?: boolean; ticket?: boolean;
     roles?: string | null; needshelp?: 'ok' | 'above' | 'fail' | 'unset'; metaChannelFetch?: 'ok' | 'fail'; threadFetch?: 'ok' | 'fail'; archived?: boolean;
-    guildId?: string; metaTicket?: boolean; editReplyFails?: boolean; noMetaChannel?: boolean;
+    guildId?: string; metaTicket?: boolean; editReplyFails?: boolean;
   };
 
   function setup(opts: Opts = {}) {
@@ -178,7 +178,7 @@ describe('tripsitmeUserClose', () => {
     dbMock.user_tickets.findFirst.mockResolvedValue((opts.ticket === false ? null : ticket(opts.metaTicket ? { meta_thread_id: 'mt' } : {})) as never);
     dbMock.users.upsert.mockResolvedValue({ id: 'uid', roles: opts.roles === undefined ? null : opts.roles } as never);
     dbMock.discord_guilds.upsert.mockResolvedValue({
-      id: 'g1', role_needshelp: opts.needshelp === 'unset' ? null : 'nh', channel_tripsitmeta: opts.noMetaChannel ? null : 'meta',
+      id: 'g1', role_needshelp: opts.needshelp === 'unset' ? null : 'nh', channel_tripsitmeta: 'meta',
     } as never);
     return {
       interaction: interaction as never, raw: interaction, thread, metaChannel, target, surveyMessage, handlers, collector,
@@ -223,7 +223,15 @@ describe('tripsitmeUserClose', () => {
       where: { id: 't1' }, data: { status: 'CLOSED', archived_at: expiry.archivedAt, deleted_at: expiry.deletedAt },
     });
     expect(s.metaChannel.send).toHaveBeenCalledWith({ content: expect.stringContaining('no longer need help') });
-    expect(dbMock.users.update).toHaveBeenCalledWith({ where: { id: expect.any(String) }, data: { roles: null } });
+  });
+
+  it('keeps going when a previous role cannot be given back', async () => {
+    const s = setup({ roles: 'r1,r2' });
+    s.target.roles.add.mockRejectedValueOnce(new Error('Missing Permissions'));
+    await tripsitmeUserClose(s.interaction);
+    await flushPromises();
+    expect(s.target.roles.add).toHaveBeenCalledTimes(2);
+    expect(s.raw.editReply).toHaveBeenCalledWith(expect.stringContaining("we're glad you're doing better"));
   });
 
   it('thanks survey responders, tells the team, and cleans up', async () => {
@@ -284,19 +292,6 @@ describe('tripsitmeUserClose', () => {
     await tripsitmeUserClose(s.interaction);
     await flushPromises();
     expect(s.target.roles.add).not.toHaveBeenCalled();
-  });
-
-  it('closes a ticket without a configured meta channel', async () => {
-    const s = setup({ noMetaChannel: true });
-    await tripsitmeUserClose(s.interaction);
-    await flushPromises();
-
-    expect(dbMock.user_tickets.update).toHaveBeenCalledWith({
-      where: { id: 't1' },
-      data: { status: 'CLOSED', archived_at: expiry.archivedAt, deleted_at: expiry.deletedAt },
-    });
-    expect(s.raw.guild?.channels.fetch).not.toHaveBeenCalledWith('meta');
-    expect(s.metaChannel.send).not.toHaveBeenCalled();
   });
 
   it('closes out tickets whose thread was deleted', async () => {

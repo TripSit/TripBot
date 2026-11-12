@@ -1,6 +1,4 @@
-import {
-  privacy, pruneCommandParameters, purgeInactiveUsers, setIrcBridgeOptOut, SCRUBBED_LAST_SEEN,
-} from '../../commands/g.privacy';
+import { privacy } from '../../commands/g.privacy';
 import { dbMock } from '../../../vitest/utils/mockDb';
 
 type Upsert = Awaited<ReturnType<typeof dbMock.users.upsert>>;
@@ -68,60 +66,5 @@ describe('privacy delete', () => {
   it('omits record summaries when there were none', async () => {
     seed({ id: 'u', discord_id: '1' });
     expect(await privacy('delete', '1')).not.toContain('I deleted 0');
-  });
-});
-
-describe('setIrcBridgeOptOut', () => {
-  it('stores the opt-out on the user and returns it', async () => {
-    dbMock.users.upsert.mockResolvedValueOnce({ id: 'u', discord_id: '1' } as unknown as Upsert);
-    dbMock.users.update.mockResolvedValueOnce({ irc_bridge_opt_out: true } as never);
-    expect(await setIrcBridgeOptOut('1', true)).toBe(true);
-    expect(dbMock.users.update).toHaveBeenCalledWith({ where: { id: 'u' }, data: { irc_bridge_opt_out: true } });
-  });
-});
-
-describe('purgeInactiveUsers', () => {
-  const now = new Date('2026-11-12T00:00:00Z');
-
-  it('looks for unbanned users unseen for six months, skipping already-scrubbed ones', async () => {
-    dbMock.users.findMany.mockResolvedValueOnce([]);
-    expect(await purgeInactiveUsers(now)).toBe(0);
-    const { where } = dbMock.users.findMany.mock.calls[0][0] as { where: Record<string, unknown> };
-    expect(where.last_seen_at).toEqual({ lt: new Date('2026-05-12T00:00:00Z'), gt: SCRUBBED_LAST_SEEN });
-    expect(where.user_actions_user_actions_user_idTousers).toEqual({ none: { type: 'FULL_BAN', repealed_at: null } });
-    expect(dbMock.user_actions.deleteMany).not.toHaveBeenCalled();
-  });
-
-  it('scrubs each inactive user and removes moderation actions against them', async () => {
-    dbMock.users.findMany.mockResolvedValueOnce([
-      { id: 'u1', discord_id: 'd1' }, { id: 'u2', discord_id: null },
-    ] as never);
-    seed({ id: 'u1', discord_id: 'd1', email: 'a@b.c' });
-    expect(await purgeInactiveUsers(now)).toBe(1);
-    expect(dbMock.users.update).toHaveBeenCalledWith(expect.objectContaining({
-      where: { id: 'u1' }, data: expect.objectContaining({ email: null, last_seen_at: SCRUBBED_LAST_SEEN }),
-    }));
-    expect(dbMock.user_actions.deleteMany).toHaveBeenCalledWith({ where: { user_id: 'u1' } });
-  });
-
-  it('keeps going when one user fails', async () => {
-    dbMock.users.findMany.mockResolvedValueOnce([
-      { id: 'u1', discord_id: 'd1' }, { id: 'u2', discord_id: 'd2' },
-    ] as never);
-    dbMock.users.upsert.mockRejectedValueOnce(new Error('boom'));
-    seed({ id: 'u2', discord_id: 'd2' });
-    vi.spyOn(global.log, 'error').mockReturnValue(undefined as never);
-    expect(await purgeInactiveUsers()).toBe(1);
-    expect(global.log.error).toHaveBeenCalledWith('g.privacy', expect.stringContaining('boom'));
-  });
-});
-
-describe('pruneCommandParameters', () => {
-  it('deletes parameters of usages older than 90 days and reports the count', async () => {
-    dbMock.command_usage_parameter.deleteMany.mockResolvedValueOnce({ count: 7 });
-    expect(await pruneCommandParameters(new Date('2026-11-12T00:00:00Z'))).toBe(7);
-    expect(dbMock.command_usage_parameter.deleteMany).toHaveBeenCalledWith({
-      where: { usage: { created_at: { lt: new Date('2026-08-14T00:00:00Z') } } },
-    });
   });
 });

@@ -43,7 +43,9 @@ RUN npx prisma generate --schema=./src/prisma/moodle/schema.prisma
 ###################
 # FINAL PRODUCTION (The "Lean" stage that actually runs)
 ###################
-FROM node:lts-alpine AS production
+# Debian (slim), like the stages above: node_modules is installed in the build stage and copied here, so both must share
+# a libc. Alpine (musl) needs different optional native binaries (@snazzah/davey, @napi-rs/canvas) than the glibc install.
+FROM node:lts-slim AS production
 ENV NODE_ENV=production
 WORKDIR /workspaces/tripbot
 

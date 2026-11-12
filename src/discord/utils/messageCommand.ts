@@ -140,11 +140,7 @@ export async function messageCommand(message: Message): Promise<void> {
       }
       const now = Date.now().valueOf();
       if (helpCounter.has(message.author.id)) {
-        const lastTime = helpCounter.get(message.author.id);
-        if (!lastTime) {
-          // log.debug(F, `lastTime is undefined!`);
-          return;
-        }
+        const lastTime = helpCounter.get(message.author.id) as number;
         if (now - lastTime < 1000 * 60 * 5) {
           await message.channel.send({
             content: stripIndents`Hey ${displayName}, you just used that command, \
@@ -224,12 +220,8 @@ export async function messageCommand(message: Message): Promise<void> {
 
         const recipientMember = await message.guild?.members.fetch(recipient.id);
 
-        if (!recipientMember && (message.channel instanceof TextChannel || message.channel instanceof DMChannel)) {
-          if (message.channel instanceof DMChannel) {
-            await message.channel.send('The user you mentioned is not a member of this guild!');
-          }
-          return;
-        }
+        // Not a member (or a lookup outside a guild): there is nobody to give tokens to
+        if (!recipientMember) return;
 
         const userData = await getOrCreateUser(recipient.id);
 
@@ -245,9 +237,9 @@ export async function messageCommand(message: Message): Promise<void> {
             },
           },
         });
-        log.debug(F, `Gave ${amount} tokens to ${recipientMember ? recipientMember.displayName : recipient.username}!`);
+        log.debug(F, `Gave ${amount} tokens to ${recipientMember.displayName}!`);
         if (message.channel instanceof TextChannel || message.channel instanceof DMChannel) {
-          await message.channel.send(stripIndents`Gave ${amount} tokens to ${recipientMember ? recipientMember.displayName : recipient.username}!
+          await message.channel.send(stripIndents`Gave ${amount} tokens to ${recipientMember.displayName}!
           
           They now have ${personaData.tokens} tokens!`);
         }

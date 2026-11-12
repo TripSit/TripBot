@@ -106,7 +106,9 @@ export const dBotmod: SlashCommand = {
 
     const group = interaction.options.getSubcommandGroup() as 'user' | 'guild';
     const actor = interaction.member as GuildMember;
-    let command = interaction.options.getSubcommand().toUpperCase() as GuildActionType | UserActionType;
+    // The subcommand is named botwarn, but g.botmod calls that action BOTWARNING
+    const subcommand = interaction.options.getSubcommand().toUpperCase();
+    let command = (subcommand === 'BOTWARN' ? 'BOTWARNING' : subcommand) as GuildActionType | UserActionType;
     const targetId = interaction.options.getString('target', true);
 
     if (command === 'BOTINFO') {
@@ -124,16 +126,9 @@ export const dBotmod: SlashCommand = {
       return true;
     }
 
-    let verb = '';
-    if (command === 'BOTBAN') {
-      verb = 'banning';
-    } else if (command === 'UNBOTBAN') {
-      verb = 'unbanning';
-    } else if (command === 'BOTWARNING') {
-      verb = 'warning';
-    } else if (command === 'BOTKICK') {
-      verb = 'kicking';
-    }
+    // BOTINFO returned above, so the remaining subcommands are exactly these three
+    const verbs: Record<string, string> = { BOTBAN: 'banning', BOTWARNING: 'warning', BOTKICK: 'kicking' };
+    const verb = verbs[command];
 
     const modal = new ModalBuilder()
       .setCustomId(`botModModal~${interaction.id}`)
@@ -145,14 +140,12 @@ export const dBotmod: SlashCommand = {
         .setRequired(true)
         .setCustomId('privReason')));
 
-    if (['WARN', 'KICK', 'BAN', 'UNBAN'].includes(command)) {
-      modal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
-        .setLabel(`What should we tell the ${group}?`)
-        .setStyle(TextInputStyle.Paragraph)
-        .setPlaceholder(`Tell ${group} why you're doing this`)
-        .setRequired(true)
-        .setCustomId('pubReason')));
-    }
+    modal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
+      .setLabel(`What should we tell the ${group}?`)
+      .setStyle(TextInputStyle.Paragraph)
+      .setPlaceholder(`Tell ${group} why you're doing this`)
+      .setRequired(true)
+      .setCustomId('pubReason')));
 
     await interaction.showModal(modal);
 

@@ -1,4 +1,3 @@
-/* eslint-disable sonarjs/no-duplicate-string */
 import { dDrug, getDrugInfo } from '../../commands/global/d.drug';
 import { slashStub } from '../../../vitest/utils/commandStubs';
 
@@ -75,40 +74,52 @@ describe('getDrugInfo', () => {
     mocks.drug.mockResolvedValueOnce({ name: 'Dose', url: 'https://u' });
     expect((await dataOf('dose', 'dosage')).fields).toBeUndefined();
   });
+});
 
-  it('includes tolerance once when it shares a partially filled row', async () => {
-    const { tolerance } = full();
-    mocks.drug.mockResolvedValueOnce({
-      name: 'Example', url: 'https://example.test', classes: { chemical: 'example' }, tolerance,
-    });
-    const { fields } = await dataOf('example');
-    expect(fields?.filter(field => field.name === '↗ Tolerance')).toHaveLength(1);
-    expect(fields?.slice(0, 2).map(field => field.name)).toEqual(['ℹ️ Class', '↗ Tolerance']);
-  });
+describe('getDrugInfo: absent optional data', () => {
+  const names = (data: { fields?: Fields }) => (data.fields ?? []).map(f => f.name);
 
-  it('renders partial tolerance without empty labels or a dangerous interaction warning', async () => {
+  it('omits sections whose data is empty', async () => {
     mocks.drug.mockResolvedValueOnce({
-      name: 'Example',
-      url: 'https://example.test',
+      name: 'Plain',
+      url: 'https://u',
+      interactions: [{ name: 'X', status: 'Caution' }],
       crossTolerances: [],
       tolerance: { half: 'a week' },
-      interactions: [{ name: 'Y', status: 'Caution' }],
-      roas: [{ name: 'Oral', dosage: full().roas[0].dosage }],
+      roas: [{ name: 'Oral' }],
     });
-    const { fields } = await dataOf('example');
-    expect(fields?.find(field => field.name === '↗ Tolerance')?.value).toBe('Half: A week');
-    expect(fields?.map(field => field.name)).toContain('💊 Dosage (Oral)');
-    expect(fields?.some(field => /Dangerous|Cross Tolerances|Duration/.test(field.name))).toBe(false);
+    const data = await dataOf('plain');
+    expect(names(data)).not.toContain('**💀 Dangerous 🛑 Interactions 💀**');
+    expect(names(data)).not.toContain('🔀 Cross Tolerances');
+    expect(names(data)).not.toContain('💔 Addiction Potential');
+    expect(names(data)).not.toContain('ℹ️ Class');
+    expect(data.fields?.find(f => f.name === '↗ Tolerance')?.value).toBe('Half: A week');
   });
 
-  it.each(['all', 'dosage'] as const)('limits %s dosage fields to three preferred routes', async section => {
-    const record = full();
-    record.roas[3].dosage = record.roas[0].dosage;
-    mocks.drug.mockResolvedValueOnce(record);
-    const { fields } = await dataOf('foo', section);
-    expect(fields?.filter(field => field.name.startsWith('💊')).map(field => field.name)).toEqual([
-      '💊 Dosage (Smoked)', '💊 Dosage (Vapourised)', '💊 Dosage (Insufflated)',
-    ]);
+  it('shows only the physical class when no chemical class is known', async () => {
+    mocks.drug.mockResolvedValueOnce({ name: 'Psy', url: 'https://u', classes: { psychoactive: 'psy' } });
+    expect((await dataOf('psy')).fields?.find(f => f.name === 'ℹ️ Class')).toBeDefined();
+  });
+
+  it('lists routes that are not reordered, and stops after three columns', async () => {
+    const roa = (name: string) => ({
+      name, dosage: [{ name: 'Light', value: '1mg' }], duration: [{ name: 'Total', value: '1h' }],
+    });
+    mocks.drug.mockResolvedValueOnce({
+      name: 'Many', url: 'https://u', roas: [roa('Oral'), roa('Rectal'), roa('Sublingual'), roa('Intravenous')],
+    });
+    const data = await dataOf('many');
+    expect(names(data).filter(n => n.startsWith('💊'))).toHaveLength(3);
+    expect(names(data).filter(n => n.startsWith('⏳'))).toHaveLength(3);
+    mocks.drug.mockResolvedValueOnce({
+      name: 'Many', url: 'https://u', roas: [roa('Oral'), roa('Rectal'), roa('Sublingual'), roa('Intravenous')],
+    });
+    expect(names(await dataOf('many', 'dosage'))).toHaveLength(3);
+  });
+
+  it('ignores routes without durations', async () => {
+    mocks.drug.mockResolvedValueOnce({ name: 'NoDur', url: 'https://u', roas: [{ name: 'Oral', dosage: [{ name: 'Light', value: '1' }] }] });
+    expect(names(await dataOf('nodur')).some(n => n.startsWith('⏳'))).toBe(false);
   });
 });
 
