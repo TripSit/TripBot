@@ -24,7 +24,7 @@ import { experience } from './experience';
 import { profile } from '../commands/g.learn';
 import getTripSitStatistics from '../commands/g.tripsitstats';
 import { getOrCreateGuild } from './dbRecords';
-import { pruneCommandParameters, purgeInactiveUsers } from '../commands/g.privacy';
+import { pruneCommandParameters, pruneModerationActions, purgeInactiveUsers } from '../commands/g.privacy';
 
 const F = f(__filename);
 
@@ -1237,7 +1237,14 @@ async function runTimer() {
     { callback: undoExpiredBans, interval: env.NODE_ENV === 'production' ? hours24 / 2 : seconds10 },
     { callback: monthlySessionStats, interval: env.NODE_ENV === 'production' ? hours24 : hours24 / 3 }, // 8 hours on dev
     { callback: checkBirthdays, interval: env.NODE_ENV === 'production' ? hours24 : hours24 / 3 }, // 8 hours on dev
-    { callback: async () => { await purgeInactiveUsers(); await pruneCommandParameters(); }, interval: env.NODE_ENV === 'production' ? hours24 : hours48 },
+    {
+      callback: async () => {
+        await purgeInactiveUsers();
+        await pruneModerationActions();
+        await pruneCommandParameters();
+      },
+      interval: env.NODE_ENV === 'production' ? hours24 : hours48,
+    },
   ];
 
   timers.forEach(timer => {

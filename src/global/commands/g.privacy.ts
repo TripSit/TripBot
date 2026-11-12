@@ -12,6 +12,9 @@ export const RETENTION_MONTHS = 6;
 /** Command parameter values are kept this many days for usage stats, then deleted. */
 export const COMMAND_PARAMETER_RETENTION_DAYS = 90;
 
+/** Moderation actions other than permanent bans are kept this long, counted from the date of the action. */
+export const MODERATION_ACTION_RETENTION_YEARS = 2;
+
 /** The last_seen_at that privacy('delete') writes; scrubbed users are skipped by the purge. */
 export const SCRUBBED_LAST_SEEN = new Date(1970);
 
@@ -175,7 +178,8 @@ export async function privacy(
 
 /**
  * Enforces the retention promised by /privacy delete: users who haven't been seen for RETENTION_MONTHS and have
- * no unrepealed full ban are scrubbed like a manual delete, and moderation actions against them are removed.
+ * no unrepealed full ban are scrubbed like a manual delete. Moderation actions are not removed here; they follow
+ * their own retention (see pruneModerationActions) so a returning user's history is still available.
  * Banned users stay on file. Returns how many users were purged.
  */
 export async function purgeInactiveUsers(now: Date = new Date()): Promise<number> {
@@ -196,7 +200,6 @@ export async function purgeInactiveUsers(now: Date = new Date()): Promise<number
     if (!user.discord_id) continue; // eslint-disable-line no-continue
     try {
       await privacy('delete', user.discord_id); // eslint-disable-line no-await-in-loop
-      await db.user_actions.deleteMany({ where: { user_id: user.id } }); // eslint-disable-line no-await-in-loop
       purged += 1;
     } catch (err) {
       log.error(F, `Retention purge failed for user ${user.id}: ${err}`);
@@ -205,6 +208,26 @@ export async function purgeInactiveUsers(now: Date = new Date()): Promise<number
 
   log.info(F, `Retention purge removed data for ${purged} of ${inactive.length} inactive users`);
   return purged;
+}
+
+/**
+ * Deletes moderation actions older than MODERATION_ACTION_RETENTION_YEARS. Permanent bans (full bans and ban
+ * evasion) and every action against a user who is currently fully banned are kept.
+ */
+export async function pruneModerationActions(now: Date = new Date()): Promise<number> {
+  const cutoff = new Date(now);
+  cutoff.setUTCFullYear(cutoff.getUTCFullYear() - MODERATION_ACTION_RETENTION_YEARS);
+  const { count } = await db.user_actions.deleteMany({
+    where: {
+      created_at: { lt: cutoff },
+      type: { notIn: ['FULL_BAN', 'BAN_EVASION'] },
+      users_user_actions_user_idTousers: {
+        is: { user_actions_user_actions_user_idTousers: { none: { type: 'FULL_BAN', repealed_at: null } } },
+      },
+    },
+  });
+  log.info(F, `Pruned ${count} moderation actions older than ${MODERATION_ACTION_RETENTION_YEARS} years`);
+  return count;
 }
 
 /** Deletes command parameters older than COMMAND_PARAMETER_RETENTION_DAYS; the command counts themselves stay. */

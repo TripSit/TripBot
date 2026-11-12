@@ -120,6 +120,21 @@ describe('privacy', () => {
     expect(embedOf(stub).title).toBe('Deleting Your Data');
     expect(dbMock.users.update).toHaveBeenCalled();
   });
+
+  it('opts out of the IRC bridge', async () => {
+    dbMock.users.update.mockResolvedValue({ irc_bridge_opt_out: true } as never);
+    const { stub } = await run(dPrivacy, { subcommand: 'bridge', options: { relay: false } });
+    expect(dbMock.users.update).toHaveBeenCalledWith({ where: { id: 'uid' }, data: { irc_bridge_opt_out: true } });
+    expect(embedOf(stub).title).toBe('IRC Bridge');
+    expect(embedOf(stub).description).toContain('no longer be relayed');
+  });
+
+  it('opts back in to the IRC bridge', async () => {
+    dbMock.users.update.mockResolvedValue({ irc_bridge_opt_out: false } as never);
+    const { stub } = await run(dPrivacy, { subcommand: 'bridge', options: { relay: true } });
+    expect(dbMock.users.update).toHaveBeenCalledWith({ where: { id: 'uid' }, data: { irc_bridge_opt_out: false } });
+    expect(embedOf(stub).description).toContain('will be relayed to IRC');
+  });
 });
 
 describe('testkits', () => {

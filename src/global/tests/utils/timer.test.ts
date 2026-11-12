@@ -133,12 +133,14 @@ describe('runTimer', () => {
 
   it('runs the retention purge on its schedule', async () => {
     dbMock.users.findMany.mockResolvedValue([]);
+    dbMock.user_actions.deleteMany.mockResolvedValue({ count: 0 });
     dbMock.command_usage_parameter.deleteMany.mockResolvedValue({ count: 0 });
     const { run } = await start();
     await run('retention');
     expect(dbMock.users.findMany).toHaveBeenCalledWith(expect.objectContaining({
       where: expect.objectContaining({ last_seen_at: expect.objectContaining({ lt: expect.any(Date) }) }),
     }));
+    expect(dbMock.user_actions.deleteMany).toHaveBeenCalled();
     expect(dbMock.command_usage_parameter.deleteMany).toHaveBeenCalledWith({
       where: { usage: { created_at: { lt: expect.any(Date) } } },
     });
