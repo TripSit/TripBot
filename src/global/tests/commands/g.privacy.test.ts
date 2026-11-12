@@ -66,6 +66,33 @@ describe('privacy delete', () => {
     expect(out).not.toContain('a@b.c');
   });
 
+  it('deletes quotes, scores, the RPG character, AI data and linked accounts, but not moderation records', async () => {
+    seed({
+      id: 'u', discord_id: '1', lastfm_username: 'fm', irc_id: 'i', matrix_id: 'm', moodle_id: '7', password_hash: 'h',
+    });
+    const out = await privacy('delete', '1');
+    expect(dbMock.users.update).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({
+        lastfm_username: null, irc_id: null, matrix_id: null, moodle_id: null, password_hash: null,
+      }),
+    }));
+    [dbMock.quotes, dbMock.wordle_scores, dbMock.connections_scores, dbMock.mini_scores, dbMock.personas, dbMock.ai_info]
+      .forEach(table => expect(table.deleteMany).toHaveBeenCalledWith({ where: { user_id: 'u' } }));
+    expect(dbMock.rpg_inventory.deleteMany).toHaveBeenCalledWith({ where: { personas: { user_id: 'u' } } });
+    expect(dbMock.best_of.deleteMany).toHaveBeenCalledWith({ where: { user_id: '1' } });
+    expect(dbMock.claimed_bounties.deleteMany).toHaveBeenCalledWith({ where: { user_id: '1' } });
+    expect(dbMock.members.deleteMany).toHaveBeenCalledWith({ where: { id: '1' } });
+    expect(dbMock.user_actions.deleteMany).not.toHaveBeenCalled();
+    expect(dbMock.appeals.deleteMany).not.toHaveBeenCalled();
+    expect(out).toContain('quotes, game scores');
+  });
+
+  it('skips the Discord-ID tables for a user without a Discord ID', async () => {
+    seed({ id: 'u', discord_id: null });
+    await privacy('delete', 'x');
+    expect(dbMock.best_of.deleteMany).not.toHaveBeenCalled();
+  });
+
   it('omits record summaries when there were none', async () => {
     seed({ id: 'u', discord_id: '1' });
     expect(await privacy('delete', '1')).not.toContain('I deleted 0');

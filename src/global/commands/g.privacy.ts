@@ -108,6 +108,14 @@ export async function privacy(
     userData.roles = '';
     userData.mindset_role = null;
     userData.mindset_role_expires_at = null;
+    userData.lastfm_username = null;
+    userData.irc_id = null;
+    userData.matrix_id = null;
+    userData.moodle_id = null;
+    userData.password_hash = null;
+    userData.level_freeze = null;
+    userData.last_helper_activity = null;
+    userData.last_was_helper = null;
     userData.karma_given = 0;
     userData.karma_received = 0;
     userData.sparkle_points = 0;
@@ -140,6 +148,22 @@ export async function privacy(
       },
     });
 
+    // Everything else tied to the user goes too. Only moderation records (actions, appeals, bans), tickets (which
+    // delete themselves shortly after archiving) and the bridge opt-out choice are kept.
+    await db.quotes.deleteMany({ where: { user_id: userData.id } });
+    await db.wordle_scores.deleteMany({ where: { user_id: userData.id } });
+    await db.connections_scores.deleteMany({ where: { user_id: userData.id } });
+    await db.mini_scores.deleteMany({ where: { user_id: userData.id } });
+    await db.rpg_inventory.deleteMany({ where: { personas: { user_id: userData.id } } });
+    await db.personas.deleteMany({ where: { user_id: userData.id } });
+    // Deleting the AI record also removes its generated images and message usage records
+    await db.ai_info.deleteMany({ where: { user_id: userData.id } });
+    if (userData.discord_id) {
+      await db.best_of.deleteMany({ where: { user_id: userData.discord_id } });
+      await db.claimed_bounties.deleteMany({ where: { user_id: userData.discord_id } });
+      await db.members.deleteMany({ where: { id: userData.discord_id } });
+    }
+
     response = 'I deleted your User Data:\n';
       for (const [key, value] of Object.entries(userData)) { // eslint-disable-line
       if (value !== null && value !== undefined && value !== '') {
@@ -167,6 +191,7 @@ export async function privacy(
     if (userReminders.length > 0) {
       response += `\n\nI deleted ${userReminders.length} reminders!`;
     }
+    response += '\n\nI also deleted your quotes, game scores, RPG character, AI data and linked accounts.';
     // if (userTickets.length > 0) {
     //   response += `\n\nI deleted ${userTickets.length} tickets!`;
     // }
