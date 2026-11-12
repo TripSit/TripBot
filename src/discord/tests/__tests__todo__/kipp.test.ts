@@ -11,7 +11,7 @@ const PREFIX = parse(__filename).name; // eslint-disable-line
 
 const slashCommand = dKipp;
 
-// TODO: This test doesnt work because it will return a random selection of emojis and idk how to get that to work
+// TODO(#1289): This test doesnt work because it will return a random selection of emojis and idk how to get that to work
 
 describe(slashCommand.data.name, () => {
   it(slashCommand.data.description, async () => {

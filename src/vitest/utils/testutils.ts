@@ -63,7 +63,7 @@ function getNestedOptions(
   ) => { // @ts-ignore
     // log.debug(F, `allOptions: ${JSON.stringify(allOptions, null, 2)}`);
     // log.debug(F, `option: ${JSON.stringify(option, null, 2)}`); // @ts-ignore
-    if (option.options) return [...allOptions, option, ...option.options]; // @ts-ignore TODO
+    if (option.options) return [...allOptions, option, ...option.options]; // @ts-ignore TODO(#1292)
     // log.debug(F, 'option.options passed'); // @ts-ignore
     if (!option.toJSON().options) return [...allOptions, option]; // @ts-ignore
     // log.debug(F, 'option.toJSON().options passed'); // @ts-ignore

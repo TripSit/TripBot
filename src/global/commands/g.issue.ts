@@ -30,7 +30,7 @@ export async function issue(
         title,
         body,
       })
-        .then(async (response:OctokitResponse<Issue>) => {
+        .then(async (response: { data: { number: number } }) => {
           const issueNumber = response.data.number;
           octokit.rest.issues.addLabels({
             owner: 'TripSit',
@@ -40,7 +40,7 @@ export async function issue(
           }).catch((error:Error) => {
             log.error(F, `Failed to add labels to issue #${issueNumber}: ${error.message}`);
           });
-          resolve(response as OctokitResponse<Issue>);
+          resolve(response as unknown as OctokitResponse<Issue>);
         })
         .catch((error:Error) => {
           log.error(F, `Failed to create GitHub issue '${title}': ${error.message}`);

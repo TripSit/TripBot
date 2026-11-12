@@ -24,6 +24,7 @@ import { experience } from './experience';
 import { profile } from '../commands/g.learn';
 import getTripSitStatistics from '../commands/g.tripsitstats';
 import { getOrCreateGuild } from './dbRecords';
+import { pruneCommandParameters, purgeInactiveUsers } from '../commands/g.privacy';
 
 const F = f(__filename);
 
@@ -130,9 +131,6 @@ async function checkTickets() { // eslint-disable-line @typescript-eslint/no-unu
         updatedTicket.deleted_at = env.NODE_ENV === 'production'
           ? DateTime.local().plus({ days: 3 }).toJSDate()
           : DateTime.local().plus({ minutes: 15 }).toJSDate();
-        if (!updatedTicket.description) {
-          updatedTicket.description = 'Ticket archived';
-        }
         if (!updatedTicket.type) {
           updatedTicket.type = 'TRIPSIT' as ticket_type;
         }
@@ -148,7 +146,6 @@ async function checkTickets() { // eslint-disable-line @typescript-eslint/no-unu
           data: {
             status: updatedTicket.status,
             deleted_at: updatedTicket.deleted_at,
-            description: updatedTicket.description,
             type: updatedTicket.type,
             first_message_id: updatedTicket.first_message_id,
           },
@@ -225,6 +222,11 @@ async function checkTickets() { // eslint-disable-line @typescript-eslint/no-unu
               // Thread was likely manually deleted
             }
           }
+        }
+
+        // Roles are only kept while a ticket is open
+        if (userData.roles) {
+          await db.users.update({ where: { id: userData.id }, data: { roles: null } });
         }
       }
 
@@ -1160,10 +1162,6 @@ async function checkBirthdays() {
     // Send birthday messages to the lounge channel
     const birthdayPromises = todaysBirthdayUsers.map(async (user: typeof birthdayUsers[0]) => {
       try {
-        if (!user.birthday) {
-          return;
-        }
-
         if (!user.discord_id) {
           log.debug(F, `User ${user.id} has no discord_id, skipping birthday message`);
           return;
@@ -1239,6 +1237,7 @@ async function runTimer() {
     { callback: undoExpiredBans, interval: env.NODE_ENV === 'production' ? hours24 / 2 : seconds10 },
     { callback: monthlySessionStats, interval: env.NODE_ENV === 'production' ? hours24 : hours24 / 3 }, // 8 hours on dev
     { callback: checkBirthdays, interval: env.NODE_ENV === 'production' ? hours24 : hours24 / 3 }, // 8 hours on dev
+    { callback: async () => { await purgeInactiveUsers(); await pruneCommandParameters(); }, interval: env.NODE_ENV === 'production' ? hours24 : hours48 },
   ];
 
   timers.forEach(timer => {

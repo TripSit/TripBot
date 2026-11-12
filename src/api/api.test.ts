@@ -1,5 +1,6 @@
 /* eslint-disable max-len */
 import supertest from 'supertest';
+import { once } from 'node:events';
 import { Server } from 'http';
 
 import app from './app';
@@ -9,7 +10,12 @@ describe('API Server', () => {
   let server: Server;
 
   beforeAll(async () => {
-    server = await api();
+    vi.stubEnv('DNS_DOMAIN', 'example.test');
+    try {
+      server = await api();
+    } finally {
+      vi.unstubAllEnvs();
+    }
   });
 
   afterAll(() => {
@@ -17,11 +23,50 @@ describe('API Server', () => {
   });
 
   it('should start and listen on the given port', async () => {
-    const response = await supertest(app).get('/api');
+    const response = await supertest(server).get('/api');
     expect(response.statusCode).toBe(200);
   });
+});
 
-  // Add more tests as needed
+const IP_ENDPOINT = '/api/ip';
+const FORWARDED_FOR = 'X-Forwarded-For';
+
+describe('API middleware', () => {
+  it('returns the requesting IP address', async () => {
+    const ip = '192.0.2.10';
+    await supertest(app).get(IP_ENDPOINT).set(FORWARDED_FOR, ip).expect(200, ip);
+  });
+
+  it('allows preflight requests from the TripSit website', async () => {
+    const origin = 'https://tripsit.me';
+    await supertest(app).options('/api/v2')
+      .set('Origin', origin)
+      .expect('Access-Control-Allow-Origin', origin)
+      .expect('Access-Control-Allow-Credentials', 'true')
+      .expect('Access-Control-Allow-Methods', /GET/)
+      .expect(200);
+  });
+
+  it('omits the allow-origin header for an unlisted origin', async () => {
+    const response = await supertest(app).get('/api').set('Origin', 'https://example.test').expect(200);
+    expect(response.headers).not.toHaveProperty('access-control-allow-origin');
+  });
+
+  it('returns 429 after the per-client request limit', async () => {
+    const ip = '192.0.2.11';
+    const server = app.listen(0, '127.0.0.1');
+    await once(server, 'listening');
+    try {
+      const client = supertest(server);
+      await Promise.all(Array.from({ length: 120 }, () => client
+        .get(IP_ENDPOINT).set(FORWARDED_FOR, ip).expect(200)));
+      await client.get(IP_ENDPOINT).set(FORWARDED_FOR, ip)
+        .expect(429, 'Too many requests, please try again later.');
+    } finally {
+      server.close();
+      await once(server, 'close');
+    }
+  });
 });
 
 describe('GET /api', () => {

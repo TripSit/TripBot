@@ -1,10 +1,17 @@
 /* eslint-disable max-len */
 import { dCoinflip } from '../../commands/global/d.coinflip';
 import { executeCommandAndSpyEditReply, getParsedCommand } from '../../../vitest/utils/testutils';
+import { slashStub } from '../../../vitest/utils/commandStubs';
 
 const slashCommand = dCoinflip;
 
 describe(slashCommand.data.name, () => {
+  it('defers privately when the user requests an ephemeral result', async () => {
+    const interaction = slashStub({ options: { ephemeral: true } });
+    await slashCommand.execute(interaction as never);
+    expect(interaction.deferReply).toHaveBeenCalledWith({ flags: 64 });
+  });
+
   it(slashCommand.data.description, async () => {
     vi.spyOn(global.Math, 'random').mockReturnValue(0.00);
     expect(await executeCommandAndSpyEditReply(

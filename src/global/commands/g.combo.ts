@@ -81,9 +81,6 @@ export async function combo(
     if (/^25.-nbome/i.test(drugName)) {
       return '2c-t-x';
     }
-    if (/^25.-nbome/i.test(drugName)) {
-      return 'nbomes';
-    }
     if (/^5-meo-..t$/i.test(drugName)) {
       return '5-meo-xxt';
     }

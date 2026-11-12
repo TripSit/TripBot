@@ -8,6 +8,7 @@ import {
   AnySelectMenuInteraction,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
+import { statParameters } from './commandStats';
 
 export default async function commandContext(
   interaction: ChatInputCommandInteraction
@@ -18,19 +19,17 @@ export default async function commandContext(
   | ModalSubmitInteraction,
 ) {
   const source = interaction.guild ? `${interaction.guild.name}` : 'DM';
-  let message = `via ${interaction.user.username} in ${source}`;
+  let message = `via ${interaction.user.id} in ${source}`;
   if (Object.hasOwn(interaction, 'options')) {
     const interactionOptions = (interaction as ChatInputCommandInteraction).options;
     if (interactionOptions.data && interactionOptions.data.length > 0) {
-      // log.debug(F, `${JSON.stringify(interactionOptions.data[0].options, null, 2)}`);
       if (interactionOptions.data[0].options !== undefined) {
         message += ` subCommand: ${interactionOptions.getSubcommand()}`;
-        if (interactionOptions.data[0].options.length > 0) {
-          const paramStr = interactionOptions.data[0].options.map(o => `${o.name}: ${o.value}`);
-          message += ` with params: ${paramStr.join(', ')}`;
-        }
-      } else {
-        const paramStr = interactionOptions.data.map(o => `${o.name}: ${o.value}`);
+      }
+      // Values are logged only for non-sensitive options; what people typed stays out of the logs.
+      const params = statParameters(interactionOptions.data);
+      if (params.length > 0) {
+        const paramStr = params.map(o => (o.value ? o.name.concat(': ', o.value) : o.name));
         message += ` with params: ${paramStr.join(', ')}`;
       }
     }

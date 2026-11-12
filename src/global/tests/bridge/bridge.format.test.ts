@@ -28,6 +28,10 @@ describe('splitMessage', () => {
 });
 
 describe('chunkText', () => {
+  it('returns no chunks for empty text', () => {
+    expect(chunkText('', 2000)).toEqual([]);
+  });
+
   it('keeps short text as one chunk', () => {
     expect(chunkText('hello\nworld', 2000)).toEqual(['hello\nworld']);
   });

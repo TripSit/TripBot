@@ -15,11 +15,11 @@ import { youAre } from '../utils/youAre';
 import { karma } from '../utils/karma';
 import { imagesOnly } from '../utils/imagesOnly';
 import { countMessage } from '../commands/guild/d.counting';
-import { bridgeMessage } from '../utils/bridge';
 import { relayDiscordMessage } from '../utils/chatBridge';
 import { helperActivityUpdate } from '../utils/helperActivityUpdate';
 import { nightsWatch } from '../../global/commands/g.watchuser';
 import { getOrCreateUser } from '../../global/utils/dbRecords';
+import { touchLastSeen } from '../../global/utils/lastSeen';
 // import { monitorToxicity } from '../utils/moderateHatespeech';
 // import { awayMessage } from '../utils/awayMessage';
 // import log from '../../global/utils/log';
@@ -60,7 +60,6 @@ export const messageCreate: MessageCreateEvent = {
   name: 'messageCreate',
   async execute(message) {
     messageCommand(message);
-    bridgeMessage(message);
     relayDiscordMessage(message);
     // awayMessage(message);
     // Only run on Tripsit or DM, we don't want to snoop on other guilds ( ͡~ ͜ʖ ͡°)
@@ -69,6 +68,7 @@ export const messageCreate: MessageCreateEvent = {
     }
 
     const userData = await getOrCreateUser(message.author.id);
+    if (!message.author.bot) touchLastSeen(userData);
 
     if (userData && userData.discord_bot_ban) {
       return;

@@ -16,7 +16,6 @@ import { getUserTotalLevel, MAX_EXPERIENCE_LEVEL, MIN_EXPERIENCE_LEVEL } from '.
 import { SlashCommand } from '../../@types/commandDef';
 import commandContext from '../../utils/context';
 import { linkThread } from '../../utils/modUtils';
-import { getOrCreateUser } from '../../../global/utils/dbRecords';
 import { replyGuildOnly, GUILD_ONLY_TEXT } from '../../utils/guildOnly';
 
 const F = f(__filename);
@@ -109,21 +108,7 @@ async function link(interaction: ChatInputCommandInteraction): Promise<boolean> 
   const targetUser = interaction.options.getUser('target', true);
   const override = interaction.options.getBoolean('override');
 
-  let result: string | null;
-  if (!targetUser) {
-    const userData = await getOrCreateUser(targetUser);
-
-    if (!userData) {
-      await interaction.editReply({
-        content: stripIndents`Failed to link thread, I could not find this user in the guild, \
-and they do not exist in the database!`,
-      });
-      return false;
-    }
-    result = await linkThread(targetUser, interaction.channelId, override);
-  } else {
-    result = await linkThread(targetUser.id, interaction.channelId, override);
-  }
+  const result = await linkThread(targetUser.id, interaction.channelId, override);
 
   if (result === null) {
     await interaction.editReply({ content: 'Successfully linked thread!' });
@@ -138,18 +123,18 @@ and they do not exist in the database!`,
 }
 
 export async function lockdown(interaction: ChatInputCommandInteraction): Promise<boolean> {
-  const { channel } = interaction;
+  const { channel, guild } = interaction;
   if (!(channel instanceof TextChannel)) {
     await interaction.editReply({ content: 'This command can only be used in a text channel' });
     return false;
   }
 
-  if (!interaction.guild) {
+  if (!guild) {
     await replyGuildOnly(interaction);
     return false;
   }
 
-  const currentPermissions = channel.permissionOverwrites.cache.get(interaction.guild.roles.everyone.id);
+  const currentPermissions = channel.permissionOverwrites.cache.get(guild.roles.everyone.id);
 
   const isLocked = currentPermissions?.deny.has('SendMessages');
 
@@ -162,7 +147,7 @@ export async function lockdown(interaction: ChatInputCommandInteraction): Promis
 
   if (isLocked) {
     // Unlock the channel
-    await channel.permissionOverwrites.edit(interaction.guild.roles.everyone, {
+    await channel.permissionOverwrites.edit(guild.roles.everyone, {
       SendMessages: null,
       AddReactions: null,
       Speak: null,
@@ -174,7 +159,7 @@ export async function lockdown(interaction: ChatInputCommandInteraction): Promis
 
     // Remove exempt roles from overrides
     await Promise.all(exemptRoles.map(async roleId => {
-      const role = interaction.guild ? await interaction.guild.roles.fetch(roleId) : null;
+      const role = await guild.roles.fetch(roleId);
       if (role) {
         await channel.permissionOverwrites.edit(role, {
           SendMessages: null,
@@ -192,7 +177,7 @@ export async function lockdown(interaction: ChatInputCommandInteraction): Promis
     return true;
   }
   // Lock the channel
-  await channel.permissionOverwrites.edit(interaction.guild.roles.everyone, {
+  await channel.permissionOverwrites.edit(guild.roles.everyone, {
     SendMessages: false,
     AddReactions: false,
     Speak: false,
@@ -204,7 +189,7 @@ export async function lockdown(interaction: ChatInputCommandInteraction): Promis
 
   // Exempt team roles from lockdown
   await Promise.all(exemptRoles.map(async roleId => {
-    const role = interaction.guild ? await interaction.guild.roles.fetch(roleId) : null;
+    const role = await guild.roles.fetch(roleId);
     if (role) {
       await channel.permissionOverwrites.edit(role, {
         SendMessages: true,

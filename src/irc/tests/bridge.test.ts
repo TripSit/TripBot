@@ -2,6 +2,7 @@ import { EventEmitter } from 'events';
 import type { Client } from 'irc-framework';
 import type { Mock } from 'vitest';
 import type { BridgeOutgoing } from '../../global/bridge/bridge.types';
+import { bridgeRows, LOUNGE_ID } from '../../vitest/utils/bridgeMappings';
 
 type FakeClient = EventEmitter & {
   connected: boolean;
@@ -13,7 +14,6 @@ type FakeClient = EventEmitter & {
 };
 
 const BOT = 'TripBotDev';
-const LOUNGE_ID = 'discord-lounge';
 const RELAYED_NICK = 'Moonbear/d';
 const FALLBACK_HELLO = '<Moonbear/d> hello';
 const PRIVS_NEEDED = 'PRIVS_NEEDED';
@@ -24,7 +24,7 @@ let bridge: typeof import('../bridge');
 let core: typeof import('../../global/bridge/bridge');
 let client: FakeClient;
 let discordSend: Mock;
-const originalEnv = { CHANNEL_LOUNGE: env.CHANNEL_LOUNGE, IRC_CHANNELS: env.IRC_CHANNELS };
+const originalEnv = { IRC_CHANNELS: env.IRC_CHANNELS };
 
 function outgoing(overrides: Partial<BridgeOutgoing> = {}): BridgeOutgoing {
   return {
@@ -53,10 +53,10 @@ function ircMessage(event: string, overrides: Record<string, unknown> = {}) {
 beforeEach(async () => {
   vi.resetModules();
   vi.useFakeTimers();
-  env.CHANNEL_LOUNGE = LOUNGE_ID;
   env.IRC_CHANNELS = [];
   bridge = await import('../bridge');
   core = await import('../../global/bridge/bridge');
+  (await import('../../global/bridge/bridge.mappings')).setMappings(bridgeRows());
   client = Object.assign(new EventEmitter(), {
     connected: true,
     user: { nick: BOT },
@@ -287,6 +287,41 @@ describe('redacting relayed messages', () => {
     await target.remove?.('#lounge', 'd1');
     await vi.advanceTimersByTimeAsync(5 * bridge.IRC_MESSAGE_DELAY_MS);
     expect(client.raw).toHaveBeenCalledTimes(1);
+  });
+
+  it('drops a queued line when disconnected before it is sent', async () => {
+    await target.send('#lounge', outgoing({ text: 'one\ntwo' }));
+    client.connected = false;
+    await vi.advanceTimersByTimeAsync(bridge.IRC_MESSAGE_DELAY_MS);
+    expect(client.raw).toHaveBeenCalledExactlyOnceWith('RELAYMSG', '#lounge', RELAYED_NICK, 'one');
+  });
+
+  it('forgets the oldest pending echo when the pending limit is reached', async () => {
+    await Promise.all(Array.from({ length: 201 }, (_, index) => (
+      target.send(`#test${index}`, outgoing({ sourceId: String(index) }))
+    )));
+
+    echo('hello', 'oldest', { target: '#test0' });
+    echo('hello', 'newest', { target: '#test200' });
+    await target.remove?.('#test0', '0');
+    await target.remove?.('#test200', '200');
+
+    expect(client.raw).not.toHaveBeenCalledWith('REDACT', '#test0', 'oldest');
+    expect(client.raw).toHaveBeenCalledWith('REDACT', '#test200', 'newest');
+  });
+
+  it('forgets the oldest tracked message when the redaction history fills up', async () => {
+    await Promise.all(Array.from({ length: 1001 }, (_, index) => {
+      const channel = `#echo${index}`;
+      const send = target.send(channel, outgoing({ sourceId: String(index) }));
+      echo('hello', `id-${index}`, { target: channel });
+      return send;
+    }));
+
+    await target.remove?.('#echo0', '0');
+    await target.remove?.('#echo1000', '1000');
+    expect(client.raw).not.toHaveBeenCalledWith('REDACT', '#echo0', 'id-0');
+    expect(client.raw).toHaveBeenCalledWith('REDACT', '#echo1000', 'id-1000');
   });
 
   it('logs when the server refuses a redaction', () => {

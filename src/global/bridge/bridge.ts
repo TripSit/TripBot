@@ -1,4 +1,4 @@
-import { bridgeGateways } from './bridge.gateways';
+import { getGateways } from './bridge.mappings';
 import {
   BridgeDeletion, BridgeGateway, BridgeMessage, BridgePlatform, BridgeTarget,
 } from './bridge.types';
@@ -29,12 +29,8 @@ export function unregisterBridgeTarget(platform: BridgePlatform): void {
   targets.delete(platform);
 }
 
-/** The platform's channel for a gateway in the current environment, if it has one. */
+/** The platform's channel for a gateway, if it has one. */
 export function gatewayChannel(gateway: BridgeGateway, platform: BridgePlatform): string | undefined {
-  if (platform === 'discord') {
-    const channelId = gateway.discord ? env[gateway.discord] : undefined;
-    return typeof channelId === 'string' && channelId.length > 0 ? channelId : undefined;
-  }
   return gateway[platform];
 }
 
@@ -44,7 +40,7 @@ function sameChannel(platform: BridgePlatform, a: string, b: string): boolean {
 }
 
 export function findGateways(platform: BridgePlatform, channel: string): BridgeGateway[] {
-  return bridgeGateways.filter(gateway => {
+  return getGateways().filter(gateway => {
     const gatewayChannelName = gatewayChannel(gateway, platform);
     return gatewayChannelName !== undefined && sameChannel(platform, gatewayChannelName, channel);
   });
@@ -52,7 +48,7 @@ export function findGateways(platform: BridgePlatform, channel: string): BridgeG
 
 /** Every channel bridged on a platform in the current environment. */
 export function bridgedChannels(platform: BridgePlatform): string[] {
-  const channels = bridgeGateways
+  const channels = getGateways()
     .map(gateway => gatewayChannel(gateway, platform))
     .filter((channel): channel is string => channel !== undefined);
   return [...new Set(channels)];

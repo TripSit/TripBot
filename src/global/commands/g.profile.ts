@@ -1,4 +1,3 @@
-import { personas } from '@db/tripbot';
 import { getOrCreateUser } from '../utils/dbRecords';
 
 export default profile;
@@ -13,21 +12,8 @@ export async function profile(
 ):Promise<ProfileData> {
   const userData = await getOrCreateUser(memberId);
 
-  const values = await Promise.allSettled([
-    await db.user_experience.findMany({
-      where: {
-        user_id: userData.id,
-      },
-    }),
-    await db.personas.findFirst({
-      where: {
-        user_id: userData.id,
-      },
-    }),
-  ]);
-
-  const expData = values[0].status === 'fulfilled' ? values[0].value : [];
-  const personaData = values[1].status === 'fulfilled' ? values[1].value : {} as personas;
+  const expData = await db.user_experience.findMany({ where: { user_id: userData.id } });
+  const personaData = await db.personas.findFirst({ where: { user_id: userData.id } });
 
   // Sum up every experience point as long as the type isn't ignored or total
   const totalTextExp = expData

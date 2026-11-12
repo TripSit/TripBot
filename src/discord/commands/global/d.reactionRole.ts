@@ -304,8 +304,9 @@ export async function buttonReactionRole(
   let introMessage = '' as string;
   if (introMessageRequired) {
     // Display modal to get intro message from the user
+    const modalId = `"ID":"RR","II":"${interaction.id}"`;
     const modal = new ModalBuilder()
-      .setCustomId(`"ID":"RR","II":"${interaction.id}"`)
+      .setCustomId(modalId)
       .setTitle(`${role.name} Introduction`);
     modal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
       .setCustomId('introduction')
@@ -317,25 +318,18 @@ export async function buttonReactionRole(
     await interaction.showModal(modal);
 
     // Collect a modal submit interaction
-    const filter = (i:ModalSubmitInteraction) => i.customId.startsWith('"ID":"RR"');
+    const filter = (i:ModalSubmitInteraction) => i.customId === modalId;
     interaction.awaitModalSubmit({ filter, time: 0 })
       .then(async i => {
-        // log.debug(F, `${JSON.stringify(i.customId)}`);
-        const {
-          II,
-        } = JSON.parse(`{${i.customId}}`);
         await i.deferReply({ flags: MessageFlags.Ephemeral });
 
-        // log.debug(F, `II: ${II}`);
-
-        if (II !== interaction.id) return;
         if (!i.guild) {
           await replyGuildOnly(i);
           return;
         }
         if (!i.member) {
-        // log.debug(F, `no member!`);
           await i.editReply(memberError);
+          return;
         }
 
         introMessage = i.fields.getTextInputValue('introduction');
@@ -1397,23 +1391,13 @@ export const dReactionRole: SlashCommand = {
     }
 
     if (!interaction.member) {
-      // log.debug(F, `no member!`);
       await interaction.reply(memberError);
+      return false;
     }
     if (!(interaction.member as GuildMember).permissions.has('ManageRoles' as PermissionResolvable)) {
       await interaction.reply({
         embeds: [
           errorEmbed('Error: You do not have the ManageRoles permission needed to create a reactionrole message!'),
-        ],
-        flags: MessageFlags.Ephemeral,
-      });
-      return false;
-    }
-
-    if (!interaction.guild) {
-      await interaction.reply({
-        embeds: [
-          errorEmbed('Error: This command can only be used in a guild!'),
         ],
         flags: MessageFlags.Ephemeral,
       });

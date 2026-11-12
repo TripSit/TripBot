@@ -155,8 +155,7 @@ function determineMultiplayerWinner(choices: Map<string, string>): MultiplayerRe
   })).filter(r => r.count > 0);
 
   // If only one choice was made, no elimination
-  const activeChoices = results.filter(r => r.count > 0);
-  if (activeChoices.length === 1) {
+  if (results.length === 1) {
     return {
       winner: null,
       eliminated: [],
@@ -170,16 +169,6 @@ function determineMultiplayerWinner(choices: Map<string, string>): MultiplayerRe
     const [player1Id, player2Id] = Array.from(choices.keys());
     const choice1 = choices.get(player1Id)!;
     const choice2 = choices.get(player2Id)!;
-
-    if (choice1 === choice2) {
-    // Tie - no elimination
-      return {
-        winner: null,
-        eliminated: [],
-        remaining: [player1Id, player2Id],
-        results,
-      };
-    }
 
     // Determine winner using standard RPS
     const rpsResult = determineWinner(choice1, choice2);
@@ -198,7 +187,7 @@ function determineMultiplayerWinner(choices: Map<string, string>): MultiplayerRe
   let eliminatedChoice: string | null = null;
 
   // Check all possible RPS matchups among active choices
-  const activeChoiceNames = activeChoices.map(c => c.choice);
+  const activeChoiceNames = results.map(c => c.choice);
 
   if (activeChoiceNames.includes('rock') && activeChoiceNames.includes('scissors')) {
     // Rock beats scissors
@@ -408,15 +397,10 @@ async function startMultiplayerRound(interaction: ChatInputCommandInteraction, g
 async function handle1v1GameEnd(
   interaction: ChatInputCommandInteraction,
   opponent: User,
-  game: RPSGame,
+  game: RPSGame & Required<Pick<RPSGame, 'scores'>>,
 ): Promise<boolean> {
   const gameObj = game;
   gameObj.isActive = false;
-
-  // Ensure scores are initialized (TypeScript safety)
-  if (!gameObj.scores) {
-    gameObj.scores = { player1: 0, player2: 0 };
-  }
 
   const player1Choice = gameObj.choices.get(interaction.user.id);
   const player2Choice = gameObj.choices.get(opponent.id);
@@ -542,7 +526,7 @@ async function handle1v1Game(interaction: ChatInputCommandInteraction, opponent:
   const player1Id = interaction.user.id;
   const player2Id = opponent.id;
 
-  const game: RPSGame = {
+  const game: RPSGame & Required<Pick<RPSGame, 'scores'>> = {
     gameId: `${player1Id}-${player2Id}-${Date.now()}`,
     players: [player1Id, player2Id],
     choices: new Map(),
@@ -619,16 +603,14 @@ async function handle1v1Game(interaction: ChatInputCommandInteraction, opponent:
       } catch (error) {
         // Message was likely deleted, stop the collector
         game.isActive = false;
-        if (collector) {
-          collector.stop();
-        }
+        collector.stop();
       }
     }
 
     if (game.choices.size === 2 && !game.roundProcessed) {
       game.roundProcessed = true;
       const gameEnded = await handle1v1GameEnd(interaction, opponent, game);
-      if (gameEnded && collector) {
+      if (gameEnded) {
         collector.stop();
       }
     }
@@ -637,9 +619,7 @@ async function handle1v1Game(interaction: ChatInputCommandInteraction, opponent:
   collector.on('end', async () => {
     if (game.isActive) {
       try {
-        if (collector) {
-          collector.removeAllListeners();
-        }
+        collector.removeAllListeners();
 
         const timeoutEmbed = errorEmbed('The game has has timed out after 2 minutes.')
           .setTitle('⏰ Game Timeout');
@@ -698,9 +678,7 @@ async function handleMultiplayerQueue(interaction: ChatInputCommandInteraction):
       } catch (error) {
         // Message was likely deleted, stop the timer and collector
         clearInterval(timerInterval);
-        if (queueCollector) {
-          queueCollector.stop();
-        }
+        queueCollector.stop();
       }
     }
   }, 5000);

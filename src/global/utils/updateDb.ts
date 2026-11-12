@@ -294,8 +294,8 @@ async function combinePw(
           }
 
           if (pwRoa.bioavailability) {
-            roaEntry.bioavailability = pwRoa.bioavailability.max ? pwRoa.bioavailability.max.toString() : '';
-            roaEntry.bioavailability = `${roaEntry.bioavailability}%`;
+            const { max } = pwRoa.bioavailability;
+            roaEntry.bioavailability = max ? `${max}%` : '';
           }
 
           if (roaEntry.dosage && roaEntry.dosage.length > 0 && roaEntry.duration && roaEntry.duration.length > 0) {

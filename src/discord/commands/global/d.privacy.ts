@@ -4,7 +4,7 @@ import {
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
 import { SlashCommand } from '../../@types/commandDef';
-import { privacy } from '../../../global/commands/g.privacy';
+import { privacy, setIrcBridgeOptOut } from '../../../global/commands/g.privacy';
 import { embedTemplate } from '../../utils/embedTemplate';
 import commandContext from '../../utils/context';
 
@@ -22,12 +22,30 @@ export const dPrivacy: SlashCommand = {
       .setName('delete')
       .setDescription('Instructions on deleting your data!')
       .addStringOption(option => option.setName('confirmation')
-        .setDescription('Enter your confirmation code to delete your data!'))),
+        .setDescription('Enter your confirmation code to delete your data!')))
+    .addSubcommand(subcommand => subcommand
+      .setName('bridge')
+      .setDescription('Choose whether your messages are relayed to IRC by the chat bridge')
+      .addBooleanOption(option => option.setName('relay')
+        .setDescription('True to relay your messages to IRC, False to stop relaying them')
+        .setRequired(true))),
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
-    const command = interaction.options.getSubcommand() as 'get' | 'delete';
+    const command = interaction.options.getSubcommand() as 'get' | 'delete' | 'bridge';
     const embed = embedTemplate();
+
+    if (command === 'bridge') {
+      const relay = interaction.options.getBoolean('relay', true);
+      const optedOut = await setIrcBridgeOptOut(interaction.user.id, !relay);
+      embed.setTitle('IRC Bridge')
+        .setDescription(optedOut
+          ? stripIndents`Your messages will no longer be relayed to IRC.
+          Messages already relayed stay on IRC. Run this again with relay set to True to turn relaying back on.`
+          : 'Your messages in bridged channels will be relayed to IRC.');
+      await interaction.editReply({ embeds: [embed] });
+      return true;
+    }
 
     const userData = await privacy('get', interaction.user.id);
 

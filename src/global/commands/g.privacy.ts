@@ -6,6 +6,26 @@ const F = f(__filename);
 
 export default privacy;
 
+/** Users not seen for this long, and not banned, have their data purged (see /privacy delete). */
+export const RETENTION_MONTHS = 6;
+
+/** Command parameter values are kept this many days for usage stats, then deleted. */
+export const COMMAND_PARAMETER_RETENTION_DAYS = 90;
+
+/** The last_seen_at that privacy('delete') writes; scrubbed users are skipped by the purge. */
+export const SCRUBBED_LAST_SEEN = new Date(1970);
+
+/** Turns relaying of a user's Discord messages to IRC off (or back on). Returns the stored value. */
+export async function setIrcBridgeOptOut(discordId: string, optOut: boolean): Promise<boolean> {
+  const userData = await getOrCreateUser(discordId);
+  const updated = await db.users.update({
+    where: { id: userData.id },
+    data: { irc_bridge_opt_out: optOut },
+  });
+  log.info(F, `irc bridge opt-out set to ${updated.irc_bridge_opt_out} for user ${userData.id}`);
+  return updated.irc_bridge_opt_out;
+}
+
 /**
  *
  * @param {'get' | 'delete'} command
@@ -90,7 +110,7 @@ export async function privacy(
     userData.sparkle_points = 0;
     userData.move_points = 0;
     userData.empathy_points = 0;
-    userData.last_seen_at = new Date(1970);
+    userData.last_seen_at = SCRUBBED_LAST_SEEN;
     userData.last_seen_in = null;
     userData.joined_at = new Date(1970);
     userData.removed_at = null;
@@ -151,4 +171,48 @@ export async function privacy(
 
   log.info(F, `privacy ${command} completed for user ${userData.id}`);
   return response;
+}
+
+/**
+ * Enforces the retention promised by /privacy delete: users who haven't been seen for RETENTION_MONTHS and have
+ * no unrepealed full ban are scrubbed like a manual delete, and moderation actions against them are removed.
+ * Banned users stay on file. Returns how many users were purged.
+ */
+export async function purgeInactiveUsers(now: Date = new Date()): Promise<number> {
+  const cutoff = new Date(now);
+  cutoff.setUTCMonth(cutoff.getUTCMonth() - RETENTION_MONTHS);
+
+  const inactive = await db.users.findMany({
+    where: {
+      discord_id: { not: null },
+      last_seen_at: { lt: cutoff, gt: SCRUBBED_LAST_SEEN },
+      user_actions_user_actions_user_idTousers: { none: { type: 'FULL_BAN', repealed_at: null } },
+    },
+    select: { id: true, discord_id: true },
+  });
+
+  let purged = 0;
+  for (const user of inactive) { // eslint-disable-line no-restricted-syntax
+    if (!user.discord_id) continue; // eslint-disable-line no-continue
+    try {
+      await privacy('delete', user.discord_id); // eslint-disable-line no-await-in-loop
+      await db.user_actions.deleteMany({ where: { user_id: user.id } }); // eslint-disable-line no-await-in-loop
+      purged += 1;
+    } catch (err) {
+      log.error(F, `Retention purge failed for user ${user.id}: ${err}`);
+    }
+  }
+
+  log.info(F, `Retention purge removed data for ${purged} of ${inactive.length} inactive users`);
+  return purged;
+}
+
+/** Deletes command parameters older than COMMAND_PARAMETER_RETENTION_DAYS; the command counts themselves stay. */
+export async function pruneCommandParameters(now: Date = new Date()): Promise<number> {
+  const cutoff = new Date(now.getTime() - COMMAND_PARAMETER_RETENTION_DAYS * 24 * 60 * 60 * 1000);
+  const { count } = await db.command_usage_parameter.deleteMany({
+    where: { usage: { created_at: { lt: cutoff } } },
+  });
+  log.info(F, `Pruned ${count} command parameters older than ${COMMAND_PARAMETER_RETENTION_DAYS} days`);
+  return count;
 }

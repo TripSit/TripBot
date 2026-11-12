@@ -37,10 +37,8 @@ export default defineConfig({
       // Not yet ported to the src/discord/tests/{global,guild}/ Vitest layout - see the
       // migration plan. Tracked as stale-scaffold reference until rewritten batch by batch.
       'src/discord/tests/*.test.ts',
-      // v2 API tests are pre-existing failures unrelated to this migration (see git blame);
-      // out of scope until the coverage gap-fill phase addresses src/api/v2.
-      'src/api/v2/**',
-      'src/api/utils/**',
+      // Nested v2 route suites still use the old test scaffold.
+      'src/api/v2/*/**',
     ],
     coverage: {
       provider: 'v8',
@@ -65,11 +63,12 @@ export default defineConfig({
         'src/global/commands/_g.template.ts',
         'src/global/commands/index.ts',
         'src/global/utils/archive/**',
+        'src/discord/utils/archive/**',
+        'src/discord/utils/_template.ts',
         'src/global/utils/_template.ts',
         'src/irc/archive/**',
         'src/global/@types/**',
-        'src/api/v2/**',
-        'src/api/utils/**',
+        'src/api/v2/*/**',
       ],
     },
   },

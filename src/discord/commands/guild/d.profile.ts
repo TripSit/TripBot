@@ -6,9 +6,8 @@ import {
   MessageFlags,
 } from 'discord.js';
 import Canvas from '@napi-rs/canvas';
-import { personas } from '@db/tripbot';
 import { SlashCommand } from '../../@types/commandDef';
-import { profile, ProfileData } from '../../../global/commands/g.profile';
+import { profile } from '../../../global/commands/g.profile';
 import commandContext from '../../utils/context';
 import { expForNextLevel, getTotalLevel } from '../../../global/utils/experience';
 import { getLevelFreeze } from '../../../global/commands/g.levelFreeze';
@@ -80,36 +79,15 @@ export const dProfile: SlashCommand = {
 
     // log.debug(F, `target.presence?.status: ${target.presence?.status}`);
 
-    const values = await Promise.allSettled([
-
-      // Get the target's profile data from the database
-      await profile(targetUser.id),
-      // Check get fresh persona data
-      await getPersonaInfo(targetUser.id),
-      // Load Icon Images
-      await Canvas.loadImage(await getAsset('cardIcons')),
-      // Get the status icon
-      // await Canvas.loadImage(await imageGet(`icon_${target.presence?.status ?? 'offline'}`)),
-      // Get the avatar image
-      await Canvas.loadImage(targetUser.displayAvatarURL({ extension: 'jpg' })),
-      // Get the birthday card overlay
-      await Canvas.loadImage(await getAsset('cardBirthday')),
-      await Canvas.loadImage(await getAsset('teamtripsitIcon')),
-      await Canvas.loadImage(await getAsset('premiumIcon')),
-      await Canvas.loadImage(await getAsset('boosterIcon')),
-      await Canvas.loadImage(await getAsset('legacyIcon')),
-    ]);
-
-    const profileData = values[0].status === 'fulfilled' ? values[0].value : {} as ProfileData;
-    const personaData = values[1].status === 'fulfilled' ? values[1].value : {} as personas;
-    const Icons = values[2].status === 'fulfilled' ? values[2].value : {} as Canvas.Image;
-    // const StatusIcon = values[3].status === 'fulfilled' ? values[3].value : {} as Canvas.Image;
-    const avatar = values[3].status === 'fulfilled' ? values[3].value : {} as Canvas.Image;
-    const birthdayOverlay = values[4].status === 'fulfilled' ? values[4].value : {} as Canvas.Image;
-    const teamtripsitIcon = values[5].status === 'fulfilled' ? values[5].value : {} as Canvas.Image;
-    const premiumIcon = values[6].status === 'fulfilled' ? values[6].value : {} as Canvas.Image;
-    const boosterIcon = values[7].status === 'fulfilled' ? values[7].value : {} as Canvas.Image;
-    const legacyIcon = values[8].status === 'fulfilled' ? values[8].value : {} as Canvas.Image;
+    const profileData = await profile(targetUser.id);
+    const personaData = await getPersonaInfo(targetUser.id);
+    const Icons = await Canvas.loadImage(await getAsset('cardIcons'));
+    const avatar = await Canvas.loadImage(targetUser.displayAvatarURL({ extension: 'jpg' }));
+    const birthdayOverlay = await Canvas.loadImage(await getAsset('cardBirthday'));
+    const teamtripsitIcon = await Canvas.loadImage(await getAsset('teamtripsitIcon'));
+    const premiumIcon = await Canvas.loadImage(await getAsset('premiumIcon'));
+    const boosterIcon = await Canvas.loadImage(await getAsset('boosterIcon'));
+    const legacyIcon = await Canvas.loadImage(await getAsset('legacyIcon'));
 
     const avatarIconRoles = {
       [env.ROLE_TEAMTRIPSIT]: {
@@ -520,28 +498,8 @@ export const dProfile: SlashCommand = {
 };
 
 export async function getProfilePreview(target: GuildMember, option: string, imagePath?: string, fontName?: string): Promise<Buffer> {
-  const values = await Promise.allSettled([
-
-    // Get the target's profile data from the database
-    // await profile(target.id),
-    // Check get fresh persona data
-    // await getPersonaInfo(target.user.id),
-    // Load Icon Images
-
-    await Canvas.loadImage(await getAsset('cardIcons')),
-    // Get the status icon
-    // await Canvas.loadImage(await imageGet(`icon_${target.presence?.status ?? 'offline'}`)),
-    // Get the avatar image
-    await Canvas.loadImage(target.user.displayAvatarURL({ extension: 'jpg' })),
-    // Get the birthday card overlay
-    // await Canvas.loadImage(await imageGet('cardBirthday')),
-  ]);
-  // const profileData = values[0].status === 'fulfilled' ? values[0].value : {} as ProfileData;
-  // const [personaData] = values[1].status === 'fulfilled' ? values[1].value : [];
-  const Icons = values[0].status === 'fulfilled' ? values[0].value : {} as Canvas.Image;
-  // const StatusIcon = values[3].status === 'fulfilled' ? values[3].value : {} as Canvas.Image;
-  const avatar = values[1].status === 'fulfilled' ? values[1].value : {} as Canvas.Image;
-  // const birthdayOverlay = values[4].status === 'fulfilled' ? values[4].value : {} as Canvas.Image;
+  const Icons = await Canvas.loadImage(await getAsset('cardIcons'));
+  const avatar = await Canvas.loadImage(target.user.displayAvatarURL({ extension: 'jpg' }));
 
   // Create Canvas and Context
   const canvasWidth = 921;

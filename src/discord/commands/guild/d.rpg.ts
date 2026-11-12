@@ -2240,7 +2240,6 @@ export async function rpgFlair(interaction: ChatInputCommandInteraction) {
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { response, promptTokens, completionTokens } = await aiFlairMod(messageList);
-  log.debug(F, `aiResponse: ${JSON.stringify(response, null, 2)}`);
 
   // AI moderation is unavailable (OpenAI errored, no key, or AI turned off), so aiFlairMod returns
   // an empty response. Fall back to the same keyword automod used on chat messages (bigBrother):
@@ -2292,14 +2291,9 @@ export async function rpgFlair(interaction: ChatInputCommandInteraction) {
 
   // If the flair is approved or the same as what the user entered, update the flair and send the user a confirmation message
   // Also regex to see if the flair is the same as what the user entered but ignoring capitalization
-  if (newFlair.toLowerCase() === aiAdjusted?.toLowerCase()) {
-    // Update the flair
-    if (aiAdjusted) {
-      flairItem.effect_value = aiAdjusted;
-      newFlair = aiAdjusted;
-    } else {
-      flairItem.effect_value = newFlair;
-    }
+  if (aiAdjusted !== undefined && newFlair.toLowerCase() === aiAdjusted.toLowerCase()) {
+    flairItem.effect_value = aiAdjusted;
+    newFlair = aiAdjusted;
     await db.rpg_inventory.upsert({
       where: {
         id: flairItem.id,
@@ -3400,25 +3394,10 @@ export async function rpgArcadeGame(
 
   const { bets } = gameData[gameName as keyof typeof gameData];
 
-  const rowBetsA = new ActionRowBuilder<ButtonBuilder>()
-    .addComponents(...bets.slice(0, 5));
-
-  const rowBetsB = new ActionRowBuilder<ButtonBuilder>()
-    .addComponents(...bets.slice(5, 10));
-
-  const rowBetsC = new ActionRowBuilder<ButtonBuilder>()
-    .addComponents(...bets.slice(10, 15));
-
-  const rowBetsD = new ActionRowBuilder<ButtonBuilder>()
-    .addComponents(...bets.slice(15, 20));
-
-  // log.debug(F, `rowWagers: ${JSON.stringify(rowWagers, null, 2)}`);
-  // log.debug(F, `rowBetsA: ${JSON.stringify(rowBetsA, null, 2)}`);
-
-  const components = [rowWagers, rowBetsA];
-  if (rowBetsB.components.length > 0) components.push(rowBetsB);
-  if (rowBetsC.components.length > 0) components.push(rowBetsC);
-  if (rowBetsD.components.length > 0) components.push(rowBetsD);
+  const components = [rowWagers];
+  for (let offset = 0; offset < bets.length; offset += 5) {
+    components.push(new ActionRowBuilder<ButtonBuilder>().addComponents(...bets.slice(offset, offset + 5)));
+  }
 
   // log.debug(F, `components: ${JSON.stringify(components, null, 2)}`);
 
