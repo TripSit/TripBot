@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import { Request, Response } from 'express';
 
 const F = f(__filename);
@@ -39,10 +40,16 @@ export default async function checkAuth(
 
   // Handle different authentication types
   if (authType === 'Basic') {
-    // Existing Basic auth logic
+    if (!env.API_USERNAME || !env.API_PASSWORD) {
+      log.error(F, 'API_USERNAME or API_PASSWORD not configured on server');
+      res.status(500).send('Server authentication misconfigured');
+      return false;
+    }
     const myToken = Buffer.from(`${env.API_USERNAME}:${env.API_PASSWORD}`).toString('base64');
+    const authBuf = Buffer.from(authToken);
+    const expectedBuf = Buffer.from(myToken);
 
-    if (authToken !== myToken) {
+    if (authBuf.length !== expectedBuf.length || !crypto.timingSafeEqual(authBuf, expectedBuf)) {
       log.error(F, 'Authorization token is not valid');
       res.status(401).send('Authorization token is not valid');
       return false;
