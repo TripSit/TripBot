@@ -120,6 +120,12 @@ describe('deploy on bot start', () => {
     expect(mocks.put).toHaveBeenCalledTimes(2);
   });
 
+  it('still finishes when the definition hash cannot be saved', async () => {
+    mocks.writeFile.mockRejectedValueOnce(new Error('read-only filesystem'));
+    await expect(deployCommands({ skipIfUnchanged: true, exitOnError: false })).resolves.toBeDefined();
+    expect(mocks.put).toHaveBeenCalledTimes(2);
+  });
+
   it('does not exit the process or save the hash when registration fails', async () => {
     mocks.put.mockRejectedValue(new Error('Registration rejected'));
     const exit = vi.spyOn(process, 'exit').mockImplementation(() => undefined as never);

@@ -59,6 +59,13 @@ afterEach(() => {
   Object.assign(env, originalEnv);
 });
 
+describe('normalizeTopic', () => {
+  it('collapses whitespace and cuts to the default length when none is given', () => {
+    expect(channels.normalizeTopic('  hello\n  world  ')).toBe('hello world');
+    expect(channels.normalizeTopic('x'.repeat(5000)).length).toBeLessThan(5000);
+  });
+});
+
 describe('batchChannels', () => {
   it('limits a batch by count and by bytes', () => {
     const many = Array.from({ length: 25 }, (_, i) => `#c${i}`);
@@ -84,6 +91,15 @@ describe('joining', () => {
     mappings.setMappings(Array.from({ length: 11 }, (_, i) => row(`#room${i}`)));
     register();
     client.connected = false;
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(joins()).toHaveLength(1);
+  });
+
+  it('ignores a batch timer that fires after re-registration emptied the queue', async () => {
+    mappings.setMappings(Array.from({ length: 11 }, (_, i) => row(`#room${i}`)));
+    register();
+    mappings.setMappings([]);
+    register();
     await vi.advanceTimersByTimeAsync(1000);
     expect(joins()).toHaveLength(1);
   });

@@ -40,6 +40,23 @@ describe('initBridgeMappings', () => {
     expect(getGateways().map(gateway => gateway.irc)).toEqual(['#opiates']);
   });
 
+  it('warns about seeds it has to leave alone', async () => {
+    env.CHANNEL_LOUNGE = 'lounge-id';
+    dbMock.bridge_channels.findMany.mockResolvedValue([
+      mappingRow({ discord_channel_id: 'someone-else', irc_channel: '#lounge' }),
+    ] as never);
+    await initBridgeMappings();
+    expect(global.log.warn).toHaveBeenCalledWith(expect.anything(), expect.stringContaining('leaving it'));
+  });
+
+  it('compares the new table with the old one when it changes', () => {
+    const listener = vi.fn();
+    onMappingChange(listener);
+    setMappings([mappingRow()]);
+    setMappings([mappingRow(), mappingRow({ discord_channel_id: 'other', irc_channel: '#other' })]);
+    expect(listener).toHaveBeenLastCalledWith(expect.objectContaining({ added: ['#other'], removed: [] }));
+  });
+
   it('does not write anything when everything is already seeded', async () => {
     env.CHANNEL_LOUNGE = 'lounge-id';
     dbMock.bridge_channels.findMany.mockResolvedValue([
