@@ -96,6 +96,10 @@ describe('convert', () => {
 
 describe('privacy', () => {
   beforeEach(() => {
+    dbMock.$transaction.mockImplementation(async callback => {
+      if (typeof callback !== 'function') throw new Error('Expected an interactive transaction');
+      return callback(dbMock);
+    });
     dbMock.users.upsert.mockResolvedValue({ id: 'uid', discord_id: 'u1', email: 'a@b.c' } as never);
     dbMock.user_drug_doses.findMany.mockResolvedValue([]);
     dbMock.user_experience.findMany.mockResolvedValue([]);
@@ -113,12 +117,15 @@ describe('privacy', () => {
     const { stub } = await run(dPrivacy, { subcommand: 'delete' });
     expect(embedOf(stub).title).toBe('Are you sure?');
     expect(dbMock.users.update).not.toHaveBeenCalled();
+    expect(dbMock.$transaction).not.toHaveBeenCalled();
   });
 
   it('deletes data with the confirmation code', async () => {
     const { stub } = await run(dPrivacy, { subcommand: 'delete', options: { confirmation: 'YesPlease!' } });
     expect(embedOf(stub).title).toBe('Deleting Your Data');
+    expect(dbMock.$transaction).toHaveBeenCalledOnce();
     expect(dbMock.users.update).toHaveBeenCalled();
+    expect(dbMock.user_drug_doses.deleteMany).toHaveBeenCalledWith({ where: { user_id: 'uid' } });
   });
 
   it('opts out of the IRC bridge', async () => {
