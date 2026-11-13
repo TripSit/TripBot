@@ -1,4 +1,4 @@
-import { ChannelType, PermissionFlagsBits } from 'discord.js';
+import { ChannelType, PermissionFlagsBits, PermissionsBitField } from 'discord.js';
 import type { Client, Guild } from 'discord.js';
 import { candidateChannels, isPrivateChannel, registerBridgeSync } from '../../utils/bridgeSync';
 import { collectionOf } from '../../../vitest/utils/discordStubs';
@@ -24,8 +24,15 @@ const channel = (id: string, over: Record<string, unknown> = {}) => ({
   parentId: 'cat',
   type: ChannelType.GuildText,
   guildId: 'main',
-  guild: { id: 'main' },
-  permissionOverwrites: { cache: new Map<string, { deny: { has:(flag: bigint) => boolean } }>() },
+  guild: {
+    id: 'main',
+    roles: { everyone: { id: 'main', permissions: new PermissionsBitField(PermissionFlagsBits.ViewChannel) } },
+  },
+  permissionsFor(role: { permissions: PermissionsBitField }) {
+    const overwrite = this.permissionOverwrites.cache.get('main');
+    return new PermissionsBitField(role.permissions).remove(overwrite?.deny ?? 0n).add(overwrite?.allow ?? 0n);
+  },
+  permissionOverwrites: { cache: new Map<string, { deny: PermissionsBitField; allow: PermissionsBitField }>() },
   ...over,
 });
 
@@ -38,14 +45,33 @@ const flush = () => new Promise<void>(resolve => { setImmediate(resolve); });
 describe('isPrivateChannel', () => {
   it('is private when @everyone is denied ViewChannel', () => {
     const hidden = channel('a');
-    hidden.permissionOverwrites.cache.set('main', { deny: { has: flag => flag === PermissionFlagsBits.ViewChannel } });
+    hidden.permissionOverwrites.cache.set('main', {
+      deny: new PermissionsBitField(PermissionFlagsBits.ViewChannel), allow: new PermissionsBitField(),
+    });
     expect(isPrivateChannel(hidden as never)).toBe(true);
+  });
+
+  it('is private when the base everyone role cannot view it, even without a channel denial', () => {
+    const hidden = channel('a');
+    hidden.guild.roles.everyone.permissions = new PermissionsBitField();
+    expect(isPrivateChannel(hidden as never)).toBe(true);
+  });
+
+  it('is public when a channel overwrite grants visibility missing from the base role', () => {
+    const visible = channel('a');
+    visible.guild.roles.everyone.permissions = new PermissionsBitField();
+    visible.permissionOverwrites.cache.set('main', {
+      deny: new PermissionsBitField(), allow: new PermissionsBitField(PermissionFlagsBits.ViewChannel),
+    });
+    expect(isPrivateChannel(visible as never)).toBe(false);
   });
 
   it('is public with no overwrite or a different denial', () => {
     expect(isPrivateChannel(channel('a') as never)).toBe(false);
     const other = channel('b');
-    other.permissionOverwrites.cache.set('main', { deny: { has: () => false } });
+    other.permissionOverwrites.cache.set('main', {
+      deny: new PermissionsBitField(PermissionFlagsBits.SendMessages), allow: new PermissionsBitField(),
+    });
     expect(isPrivateChannel(other as never)).toBe(false);
   });
 });

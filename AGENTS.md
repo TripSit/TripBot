@@ -23,8 +23,8 @@ external service, stop and ask before taking the risky action.
 - Do not edit `archive`, `legacy`, placeholder, Matrix, or Telegram code (including the archived IRC bot under
   `src/irc/archive/`) unless the task specifically targets it.
 - Never commit `.env`, tokens, passwords, private URLs, production identifiers, database dumps, or user data.
-- Never run a production migration, deploy Discord commands, push a branch, or mutate an external service unless the
-  user explicitly requested that operation.
+- Never run a production migration, push a branch, or mutate an external service unless the user explicitly
+  requested that operation. Discord command registration on bot startup is authorized as described below.
 - Preserve unrelated user changes. Never discard, reset, overwrite, or reformat files outside the requested scope.
 - Do not use broad auto-fix commands against the whole repository. They can create large unrelated diffs.
 
@@ -183,8 +183,10 @@ target. Do not run `prisma db push`, `prisma migrate reset`, or destructive SQL 
   `npx prisma` commands and `$env:PRISMA_SCHEMA` as shown above.
 - Docker Compose is the preferred portable way to start the database service.
 
-Deploying Discord commands changes the registered commands for a real application. Only when explicitly requested and
-the target environment is confirmed, use:
+Discord command registration runs automatically on bot startup and skips unchanged definitions. This behavior is
+authorized and should be preserved; no separate approval or manual deployment step is needed for startup registration.
+Do not start or restart the bot solely to register commands unless requested. For a standalone manual deployment,
+confirm the target environment and use only when explicitly requested:
 
 ```powershell
 npm run tripbot:deployCommands
@@ -268,14 +270,14 @@ When adding or changing a command:
 - the default may be public only for commands whose purpose is to post to the channel (for example `/say`, `/joke`,
   `/coinflip`, game and bridge output). Say why in a short comment beside the option, and add a test for the flag;
 - return the boolean required by the command type;
-- redeploy command definitions only when the user explicitly requests it.
+- preserve automatic command registration on startup; standalone manual deployments require an explicit request.
 
 Many existing commands predate this rule and use an opt-in `ephemeral` option (public by default). Apply the rule to
 new commands and to commands you are already changing; do not sweep the rest in an unrelated change, since flipping a
 default alters behavior for every user and the option change requires a command redeploy.
 
 If options, subcommands, contexts, integration types, or descriptions change, state in the handoff that Discord command
-registration must be redeployed.
+registration will update automatically on the next bot startup.
 
 ### IRC (Ergo)
 
@@ -399,7 +401,7 @@ Choose checks proportional to the change; do not claim checks you did not run.
 | Documentation only | Review rendered/plain Markdown, `git diff --check` |
 | TypeScript logic | Targeted ESLint, `npx tsc --noEmit --pretty false`, new or updated tests for the change |
 | Discord command | Type-check, targeted ESLint, relevant existing test if configured, inspect interaction lifecycle |
-| Command definition/options | Discord-command checks plus note that deployment is required; do not deploy automatically |
+| Command definition/options | Discord-command checks plus note that registration updates on the next bot startup |
 | API route/query | Type-check, targeted ESLint, targeted API Vitest file |
 | Prisma schema | `prisma format`, `prisma validate`, generate both affected clients, type-check, inspect migration SQL |
 | Migration | Schema checks plus apply to a disposable local database and verify data compatibility |
@@ -462,6 +464,6 @@ A task is complete only when:
 - new or changed behavior has tests, and applicable types, lint rules, tests, schema checks, or runtime checks pass, or
   limitations are reported;
 - no secrets, generated output, local state, or unrelated lockfile changes were introduced;
-- externally visible follow-up work, such as a Discord command deployment or production migration, is called out but not
-  performed without authorization;
+- externally visible follow-up work is called out; command registration on startup is authorized, while production
+  migrations and standalone manual command deployments require an explicit request;
 - the final handoff states the changed files, verification performed, and any remaining risk or blocker.

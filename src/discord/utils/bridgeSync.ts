@@ -14,9 +14,9 @@ function isBridgeable(channel: GuildBasedChannel): channel is BridgeableChannel 
   return channel.type === ChannelType.GuildText || channel.type === ChannelType.GuildAnnouncement;
 }
 
-/** A channel is private when its @everyone overwrite (whose ID is the guild's) denies ViewChannel. */
+/** Only channels visible to the guild's @everyone role qualify for automatic bridging. */
 export function isPrivateChannel(channel: BridgeableChannel): boolean {
-  return channel.permissionOverwrites.cache.get(channel.guild.id)?.deny.has(PermissionFlagsBits.ViewChannel) ?? false;
+  return !channel.permissionsFor(channel.guild.roles.everyone).has(PermissionFlagsBits.ViewChannel);
 }
 
 export function candidateChannels(guild: Guild): CandidateChannel[] {

@@ -1,4 +1,5 @@
 /* eslint-disable sonarjs/no-duplicate-string */
+import type { Prisma } from '@db/tripbot';
 import {
   privacy, pruneCommandParameters, pruneModerationActions, purgeInactiveUsers, setIrcBridgeOptOut, SCRUBBED_LAST_SEEN,
 } from '../../commands/g.privacy';
@@ -13,6 +14,13 @@ function seed(user: object, doses = 0, exp = 0, reminders = 0) {
   dbMock.user_experience.findMany.mockResolvedValueOnce(rows(exp));
   dbMock.user_reminders.findMany.mockResolvedValueOnce(rows(reminders));
 }
+
+beforeEach(() => {
+  dbMock.$transaction.mockImplementation(async callback => {
+    if (typeof callback !== 'function') throw new Error('Expected an interactive transaction');
+    return callback(dbMock);
+  });
+});
 
 describe('privacy get', () => {
   it('lists stored fields while hiding ids and bans', async () => {
@@ -85,6 +93,28 @@ describe('privacy delete', () => {
     expect(dbMock.user_actions.deleteMany).not.toHaveBeenCalled();
     expect(dbMock.appeals.deleteMany).not.toHaveBeenCalled();
     expect(out).toContain('quotes, game scores');
+  });
+
+  it('propagates a mid-delete failure from the transaction without writing through the root client', async () => {
+    seed({ id: 'u', discord_id: '1' });
+    const tx = {
+      users: { update: vi.fn() },
+      user_drug_doses: { deleteMany: vi.fn() },
+      user_experience: { deleteMany: vi.fn().mockRejectedValue(new Error('delete failed')) },
+    };
+    dbMock.$transaction.mockImplementationOnce(async callback => {
+      if (typeof callback !== 'function') throw new Error('Expected an interactive transaction');
+      return callback(tx as unknown as Prisma.TransactionClient);
+    });
+
+    await expect(privacy('delete', '1')).rejects.toThrow('delete failed');
+    expect(tx.users.update).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({ last_seen_at: SCRUBBED_LAST_SEEN }),
+    }));
+    expect(tx.user_drug_doses.deleteMany).toHaveBeenCalled();
+    expect(dbMock.users.update).not.toHaveBeenCalled();
+    expect(dbMock.user_drug_doses.deleteMany).not.toHaveBeenCalled();
+    expect(dbMock.quotes.deleteMany).not.toHaveBeenCalled();
   });
 
   it('skips the Discord-ID tables for a user without a Discord ID', async () => {

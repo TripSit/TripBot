@@ -33,7 +33,7 @@ export interface CandidateChannel {
   name: string;
   topic: string | null;
   parentId: string | null;
-  /** The @everyone overwrite denies ViewChannel. */
+  /** The @everyone role cannot view the channel after applying channel overwrites. */
   isPrivate: boolean;
 }
 

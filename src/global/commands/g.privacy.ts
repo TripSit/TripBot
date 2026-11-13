@@ -126,43 +126,46 @@ export async function privacy(
     userData.joined_at = new Date(1970);
     userData.removed_at = null;
 
-    await db.users.update({
-      where: {
-        id: userData.id,
-      },
-      data: userData,
-    });
-    await db.user_drug_doses.deleteMany({
-      where: {
-        user_id: userData.id,
-      },
-    });
-    await db.user_experience.deleteMany({
-      where: {
-        user_id: userData.id,
-      },
-    });
-    await db.user_reminders.deleteMany({
-      where: {
-        user_id: userData.id,
-      },
-    });
+    // Keep the scrub marker and related deletions atomic so failed purges remain retryable.
+    await db.$transaction(async tx => {
+      await tx.users.update({
+        where: {
+          id: userData.id,
+        },
+        data: userData,
+      });
+      await tx.user_drug_doses.deleteMany({
+        where: {
+          user_id: userData.id,
+        },
+      });
+      await tx.user_experience.deleteMany({
+        where: {
+          user_id: userData.id,
+        },
+      });
+      await tx.user_reminders.deleteMany({
+        where: {
+          user_id: userData.id,
+        },
+      });
 
-    // Everything else tied to the user goes too. Only moderation records (actions, appeals, bans), tickets (which
-    // delete themselves shortly after archiving) and the bridge opt-out choice are kept.
-    await db.quotes.deleteMany({ where: { user_id: userData.id } });
-    await db.wordle_scores.deleteMany({ where: { user_id: userData.id } });
-    await db.connections_scores.deleteMany({ where: { user_id: userData.id } });
-    await db.mini_scores.deleteMany({ where: { user_id: userData.id } });
-    await db.rpg_inventory.deleteMany({ where: { personas: { user_id: userData.id } } });
-    await db.personas.deleteMany({ where: { user_id: userData.id } });
-    // Deleting the AI record also removes its generated images and message usage records
-    await db.ai_info.deleteMany({ where: { user_id: userData.id } });
-    if (userData.discord_id) {
-      await db.best_of.deleteMany({ where: { user_id: userData.discord_id } });
-      await db.claimed_bounties.deleteMany({ where: { user_id: userData.discord_id } });
-      await db.members.deleteMany({ where: { id: userData.discord_id } });
-    }
+      // Everything else tied to the user goes too. Only moderation records (actions, appeals, bans), tickets (which
+      // delete themselves shortly after archiving) and the bridge opt-out choice are kept.
+      await tx.quotes.deleteMany({ where: { user_id: userData.id } });
+      await tx.wordle_scores.deleteMany({ where: { user_id: userData.id } });
+      await tx.connections_scores.deleteMany({ where: { user_id: userData.id } });
+      await tx.mini_scores.deleteMany({ where: { user_id: userData.id } });
+      await tx.rpg_inventory.deleteMany({ where: { personas: { user_id: userData.id } } });
+      await tx.personas.deleteMany({ where: { user_id: userData.id } });
+      // Deleting the AI record also removes its generated images and message usage records
+      await tx.ai_info.deleteMany({ where: { user_id: userData.id } });
+      if (userData.discord_id) {
+        await tx.best_of.deleteMany({ where: { user_id: userData.discord_id } });
+        await tx.claimed_bounties.deleteMany({ where: { user_id: userData.discord_id } });
+        await tx.members.deleteMany({ where: { id: userData.discord_id } });
+      }
+    });
 
     response = 'I deleted your User Data:\n';
       for (const [key, value] of Object.entries(userData)) { // eslint-disable-line
