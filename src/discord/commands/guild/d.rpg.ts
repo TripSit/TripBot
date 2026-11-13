@@ -2240,7 +2240,6 @@ export async function rpgFlair(interaction: ChatInputCommandInteraction) {
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { response, promptTokens, completionTokens } = await aiFlairMod(messageList);
-  log.debug(F, `aiResponse: ${JSON.stringify(response, null, 2)}`);
 
   // AI moderation is unavailable (OpenAI errored, no key, or AI turned off), so aiFlairMod returns
   // an empty response. Fall back to the same keyword automod used on chat messages (bigBrother):

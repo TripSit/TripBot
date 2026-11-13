@@ -23,8 +23,8 @@ external service, stop and ask before taking the risky action.
 - Do not edit `archive`, `legacy`, placeholder, Matrix, or Telegram code (including the archived IRC bot under
   `src/irc/archive/`) unless the task specifically targets it.
 - Never commit `.env`, tokens, passwords, private URLs, production identifiers, database dumps, or user data.
-- Never run a production migration, deploy Discord commands, push a branch, or mutate an external service unless the
-  user explicitly requested that operation.
+- Never run a production migration, push a branch, or mutate an external service unless the user explicitly
+  requested that operation. Discord command registration on bot startup is authorized as described below.
 - Preserve unrelated user changes. Never discard, reset, overwrite, or reformat files outside the requested scope.
 - Do not use broad auto-fix commands against the whole repository. They can create large unrelated diffs.
 
@@ -183,8 +183,10 @@ target. Do not run `prisma db push`, `prisma migrate reset`, or destructive SQL 
   `npx prisma` commands and `$env:PRISMA_SCHEMA` as shown above.
 - Docker Compose is the preferred portable way to start the database service.
 
-Deploying Discord commands changes the registered commands for a real application. Only when explicitly requested and
-the target environment is confirmed, use:
+Discord command registration runs automatically on bot startup and skips unchanged definitions. This behavior is
+authorized and should be preserved; no separate approval or manual deployment step is needed for startup registration.
+Do not start or restart the bot solely to register commands unless requested. For a standalone manual deployment,
+confirm the target environment and use only when explicitly requested:
 
 ```powershell
 npm run tripbot:deployCommands
@@ -261,11 +263,21 @@ When adding or changing a command:
 - log command context using the established `commandContext` pattern where adjacent commands do so;
 - defer or reply exactly once, then use `editReply`/`followUp` consistently;
 - use `MessageFlags.Ephemeral` where the surrounding code does, especially for private or sensitive responses;
+- give every slash command (or each subcommand that replies) a boolean option named exactly `ephemeral`, and make
+  replies ephemeral by default: read it as `interaction.options.getBoolean('ephemeral') ?? true`, so only an explicit
+  `ephemeral:False` makes the reply public. Describe it as "Set to False to show the response to everyone". Read the
+  same name you registered (a mismatch makes `getBoolean` return `null` silently);
+- the default may be public only for commands whose purpose is to post to the channel (for example `/say`, `/joke`,
+  `/coinflip`, game and bridge output). Say why in a short comment beside the option, and add a test for the flag;
 - return the boolean required by the command type;
-- redeploy command definitions only when the user explicitly requests it.
+- preserve automatic command registration on startup; standalone manual deployments require an explicit request.
+
+Many existing commands predate this rule and use an opt-in `ephemeral` option (public by default). Apply the rule to
+new commands and to commands you are already changing; do not sweep the rest in an unrelated change, since flipping a
+default alters behavior for every user and the option change requires a command redeploy.
 
 If options, subcommands, contexts, integration types, or descriptions change, state in the handoff that Discord command
-registration must be redeployed.
+registration will update automatically on the next bot startup.
 
 ### IRC (Ergo)
 
@@ -299,7 +311,7 @@ TripBot replaces Matterbridge for relaying chat between platforms.
 
 - `src/global/bridge/bridge.ts` routes a `BridgeMessage` to every other platform with a registered `BridgeTarget`
   (`registerBridgeTarget`). Platform adapters own formatting and delivery: `src/discord/utils/chatBridge.ts`
-  (webhook named `TripSit Chat Bridge`, separate from the guild-to-guild `Tripsit Bridge` in `utils/bridge.ts`) and
+  (webhook named `TripSit Chat Bridge`) and
   `src/irc/bridge.ts`. Matrix has room IDs in the channel list but is deliberately not bridged yet.
 - `src/global/bridge/bridge.gateways.ts` is the channel list ported from Matterbridge. Discord entries name an
   `env.config.ts` key, never a raw ID, so production and development resolve separately; an empty key value means the
@@ -389,7 +401,7 @@ Choose checks proportional to the change; do not claim checks you did not run.
 | Documentation only | Review rendered/plain Markdown, `git diff --check` |
 | TypeScript logic | Targeted ESLint, `npx tsc --noEmit --pretty false`, new or updated tests for the change |
 | Discord command | Type-check, targeted ESLint, relevant existing test if configured, inspect interaction lifecycle |
-| Command definition/options | Discord-command checks plus note that deployment is required; do not deploy automatically |
+| Command definition/options | Discord-command checks plus note that registration updates on the next bot startup |
 | API route/query | Type-check, targeted ESLint, targeted API Vitest file |
 | Prisma schema | `prisma format`, `prisma validate`, generate both affected clients, type-check, inspect migration SQL |
 | Migration | Schema checks plus apply to a disposable local database and verify data compatibility |
@@ -421,6 +433,28 @@ failure as a source-code failure.
   branch is up to date and the push won't be rejected as non-fast-forward. Prefer branching fresh from `uat` over
   rebasing an existing shared/pushed branch, since rewriting history on a branch others may have pulled is riskier.
 
+## Tracking issues found along the way
+
+When you find a real problem in this repository that is outside the current task's scope (a bug, a race condition, a
+safety or privacy gap, broken or dead code, missing test coverage, a stale TODO), file a GitHub issue for it instead of
+fixing it silently or dropping it. This is the standing, explicit authorization to create issues on `TripSit/TripBot`
+with `gh issue create`; it does not authorize any other external mutation.
+
+- Search first (`gh issue list --state open --search "<keywords>"`). Comment on an existing issue rather than filing a
+  duplicate.
+- Only file issues you have confirmed by reading the code or reproducing the problem. Do not file hunches or style
+  nitpicks. Fix trivial in-scope problems directly rather than filing them.
+- Write a short, specific title; then the file paths and line numbers, what is wrong, how to reproduce or observe it,
+  and a suggested fix if one is obvious.
+- Label every issue using the repository's scheme: one type (`T: Bug`, `T: Enhancement`, `T: Feature`, `T: Idea`), one
+  priority (`P0` to `P3`), one effort (`E0` to `E3`), and `S0: Review Needed` so a lead dev triages it. Use `P0`/`P1`
+  only for production breakage, data loss, or harm-reduction, moderation, or privacy defects; when unsure, use `P3`.
+- Never put secrets, tokens, `.env` values, production identifiers, or user data or message content in an issue.
+- Mention each issue you filed (number and title) in the final handoff. Do not start work on it unless asked.
+- Every TODO lives in a GitHub issue. Do not keep task lists in repository files (such as `TODO.md`), and write code
+  markers as `TODO(#123)` pointing at an open issue; never add a bare `TODO`/`FIXME`. Leave markers in archived,
+  Matrix, and Telegram code as they are unless the task targets them, but file an issue for them.
+
 ## Definition of done
 
 A task is complete only when:
@@ -430,6 +464,6 @@ A task is complete only when:
 - new or changed behavior has tests, and applicable types, lint rules, tests, schema checks, or runtime checks pass, or
   limitations are reported;
 - no secrets, generated output, local state, or unrelated lockfile changes were introduced;
-- externally visible follow-up work, such as a Discord command deployment or production migration, is called out but not
-  performed without authorization;
+- externally visible follow-up work is called out; command registration on startup is authorized, while production
+  migrations and standalone manual command deployments require an explicit request;
 - the final handoff states the changed files, verification performed, and any remaining risk or blocker.

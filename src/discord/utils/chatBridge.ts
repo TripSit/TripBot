@@ -143,6 +143,15 @@ async function relay(message: Message, suffix: string): Promise<void> {
   const text = discordMessageText(message);
   if (!text) return;
 
+  // Users can opt out with /privacy bridge. A failed lookup throws, so we fail closed and don't relay.
+  if (!message.author.bot) {
+    const author = await db.users.findUnique({
+      where: { discord_id: message.author.id },
+      select: { irc_bridge_opt_out: true },
+    });
+    if (author?.irc_bridge_opt_out) return;
+  }
+
   await relayMessage({
     platform: 'discord',
     channel: message.channelId,

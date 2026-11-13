@@ -17,11 +17,13 @@ import * as path from 'path';
 import sourceMap from 'source-map-support'; // eslint-disable-line
 import api from './api/api'; // eslint-disable-line
 import discordConnect from './discord/discord';
+import deployCommands from './discord/utils/commandDeploy';
 import commandContext from './discord/utils/context'; // eslint-disable-line
 import { env } from './global/utils/env.config';
 import validateEnv from './global/utils/env.validate'; // eslint-disable-line
 import updateDb from './global/utils/updateDb';
 import db from './prisma/tripbot/client';
+import { initBridgeMappings } from './global/bridge/bridge.mappings';
 import ircConnect, { ircDisconnect } from './irc/irc';
 import startHeartbeat from './global/utils/heartbeat';
 // import startMatrix from './matrix/matrix';
@@ -48,7 +50,12 @@ async function start() {
     api();
     global.db = db;
     await updateDb();
-    if (env.DISCORD_CLIENT_TOKEN && validateEnv('DISCORD')) await discordConnect();
+    await initBridgeMappings().catch(err => log.error(F, `Failed to load the chat bridge channels: ${err}`));
+    if (env.DISCORD_CLIENT_TOKEN && validateEnv('DISCORD')) {
+      await discordConnect();
+      // Register slash commands on every start; a failure must not stop the bot
+      await deployCommands({ skipIfUnchanged: true, exitOnError: false });
+    }
     // if (env.MATRIX_ACCESS_TOKEN && validateEnv( 'MATRIX') && env.NODE_ENV !== 'production') await startMatrix();
     if (env.IRC_PASSWORD && validateEnv('IRC')) {
       // A failed IRC start must not take down the Discord bot

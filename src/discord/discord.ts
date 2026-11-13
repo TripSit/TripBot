@@ -8,6 +8,7 @@ import {
 import { registerCommands } from './commands';
 import { registerEvents } from './events';
 import { registerTentStatusSync } from './utils/tents';
+import { registerBridgeSync } from './utils/bridgeSync';
 import { registerDiscordBridge } from './utils/chatBridge';
 import { isQueuedTicketRename } from './utils/ticketIcons';
 import { REST_TIMEOUT_MS, createDiscordAgent, installRestRetry } from './utils/restNetwork';
@@ -71,6 +72,7 @@ export default async function discordConnect(): Promise<void> {
 
   registerTentStatusSync(discordClient);
   registerDiscordBridge();
+  registerBridgeSync(discordClient);
 
   Promise.all([registerCommands(discordClient), registerEvents(discordClient)])
     .then(() => discordClient.login(env.DISCORD_CLIENT_TOKEN))

@@ -114,6 +114,27 @@ describe('AiPage.userSettings', () => {
   };
   const user = (over: Record<string, unknown> = {}) => dbMock.users.upsert.mockResolvedValue({ id: 'uid', ai_info: { id: 'ai1', persona_id: 'tripbot' }, ...over } as never);
 
+  it.each([
+    ['2024-06-15T03:00:00Z', '2024-06-14T06:00:00.000Z', '3h 0m'],
+    ['2024-06-15T09:00:00Z', '2024-06-15T06:00:00.000Z', '21h 0m'],
+  ])('computes the daily usage window and next reset at %s', async (now, dayStart, remaining) => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date(now));
+    try {
+      stubGuildMember([]);
+      user();
+      dbMock.ai_message.aggregate.mockResolvedValue(agg(0, 0, 0) as never);
+      dbMock.ai_image.count.mockResolvedValue(0);
+      const body = text(await AiPage.userSettings(interaction()));
+      expect(dbMock.ai_message.aggregate).toHaveBeenNthCalledWith(2, expect.objectContaining({
+        where: { ai_info_id: 'ai1', created_at: { gte: new Date(dayStart) } },
+      }));
+      expect(body).toContain(`Reset In: \`${remaining}\``);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('shows usage and remaining credits for standard users', async () => {
     stubGuildMember([]);
     user();

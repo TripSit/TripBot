@@ -52,8 +52,6 @@ export const messageUpdate: MessageUpdateEvent = {
       ]);
     } catch (err) {
       log.error(F, `Error creating embed: ${err}`);
-      log.error(F, `oldContent: ${oldContent}`);
-      log.error(F, `newContent: ${newContent}`);
       log.error(F, `newMessage: ${newMessage.url}`);
     }
 

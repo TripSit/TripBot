@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { dbMock } from '../../../vitest/utils/mockDb';
 import { slashStub } from '../../../vitest/utils/commandStubs';
-import { dBridge } from '../../commands/global/d.bridge';
 import { dPrivacy } from '../../commands/global/d.privacy';
 import { dRss } from '../../commands/guild/d.rss';
 import { dSheesh } from '../../commands/guild/d.sheesh';
@@ -14,7 +13,7 @@ import { botmod } from '../../../global/commands/g.botmod';
 // without doing anything, rather than being treated as the last known one.
 describe('dispatchers ignore unknown subcommands', () => {
   it.each([
-    ['bridge', dBridge], ['privacy', dPrivacy], ['rss', dRss], ['sheesh', dSheesh], ['tripsitstats', dTripsitStats],
+    ['privacy', dPrivacy], ['rss', dRss], ['sheesh', dSheesh], ['tripsitstats', dTripsitStats],
   ])('%s', async (_name, command) => {
     const stub = slashStub({ subcommand: 'bogus', guild: { id: env.DISCORD_GUILD_ID, name: 'Home' } });
     await (command as any).execute(stub).catch(() => undefined);

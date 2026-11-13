@@ -1,8 +1,5 @@
 import { TextChannel } from 'discord.js';
 
-const mocks = vi.hoisted(() => ({ sentryInit: vi.fn() }));
-
-vi.mock('@sentry/node', () => ({ init: mocks.sentryInit }));
 const originalEnv = process.env.NODE_ENV;
 const originalLog = global.log;
 
@@ -22,11 +19,6 @@ afterEach(() => {
 });
 
 describe('production logging setup', () => {
-  it('initialises sentry', async () => {
-    await loadProductionLog();
-    expect(mocks.sentryInit).toHaveBeenCalledWith(expect.objectContaining({ environment: 'production' }));
-  });
-
   it('exposes the filename helper', async () => {
     await loadProductionLog();
     expect(global.f('/some/dir/file.name.ts')).toBe('file.name');

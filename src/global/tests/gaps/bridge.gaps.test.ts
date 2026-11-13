@@ -1,19 +1,22 @@
 import {
   registerBridgeTarget, relayDeletion, relayMessage, unregisterBridgeTarget,
 } from '../../bridge/bridge';
+import { setMappings } from '../../bridge/bridge.mappings';
+import { mappingRow } from '../../../vitest/utils/bridgeMappings';
 
 const GENERAL_ID = 'discord-general';
-const originalGeneral = env.CHANNEL_GENERAL;
 
 afterEach(() => {
-  env.CHANNEL_GENERAL = originalGeneral;
+  setMappings([]);
   unregisterBridgeTarget('matrix');
   unregisterBridgeTarget('irc');
 });
 
 describe('bridge targets without a matching channel', () => {
   it('skips platforms that have no channel for the gateway', async () => {
-    env.CHANNEL_GENERAL = GENERAL_ID;
+    setMappings([mappingRow({
+      discord_channel_id: GENERAL_ID, irc_channel: '#general', gateway_name: 'General', matrix_room_id: null,
+    })]);
     const matrixSend = vi.fn().mockResolvedValue(undefined);
     const matrixRemove = vi.fn().mockResolvedValue(undefined);
     const ircSend = vi.fn().mockResolvedValue(undefined);

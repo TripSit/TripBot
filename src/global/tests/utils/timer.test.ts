@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any, sonarjs/no-duplicate-string */
 import axios from 'axios';
 import { ChannelType, Collection } from 'discord.js';
 import runTimer from '../../utils/timer';
@@ -29,7 +29,7 @@ let scheduled: Scheduled[] = [];
 
 // Timer order inside runTimer
 const T = {
-  reminders: 0, tickets: 1, mindsets: 2, uptime: 3, rss: 4, voice: 5, moodle: 6, updateDb: 7, bans: 8, monthly: 9, birthdays: 10,
+  reminders: 0, tickets: 1, mindsets: 2, uptime: 3, rss: 4, voice: 5, moodle: 6, updateDb: 7, bans: 8, monthly: 9, birthdays: 10, retention: 11,
 };
 
 const flush = async () => {
@@ -109,9 +109,9 @@ describe('runTimer', () => {
   it('sets presence and schedules every job', async () => {
     await runTimer();
     expect(client().user.setActivity).toHaveBeenCalled();
-    expect(scheduled).toHaveLength(11);
+    expect(scheduled).toHaveLength(12);
     expect(scheduled.map(s => s.ms)).toEqual([
-      5000, 10000, 5000, 5000, 5000, 5000, 5000, 48 * 3600000, 10000, 8 * 3600000, 8 * 3600000,
+      5000, 10000, 5000, 5000, 5000, 5000, 5000, 48 * 3600000, 10000, 8 * 3600000, 8 * 3600000, 48 * 3600000,
     ]);
   });
 
@@ -119,7 +119,7 @@ describe('runTimer', () => {
     e.NODE_ENV = 'production';
     await runTimer();
     expect(scheduled.map(s => s.ms)).toEqual([
-      10000, 60000, 60000, 60000, 30000, 60000, 60000, 24 * 3600000, 12 * 3600000, 24 * 3600000, 24 * 3600000,
+      10000, 60000, 60000, 60000, 30000, 60000, 60000, 24 * 3600000, 12 * 3600000, 24 * 3600000, 24 * 3600000, 24 * 3600000,
     ]);
   });
 
@@ -127,8 +127,23 @@ describe('runTimer', () => {
     dbMock.user_reminders.findMany.mockResolvedValue([]);
     const { initial } = await (async () => { await runTimer(); return { initial: scheduled.slice() }; })();
     await initial[T.reminders].fn();
-    expect(scheduled).toHaveLength(12);
-    expect(scheduled[11].ms).toBe(5000);
+    expect(scheduled).toHaveLength(13);
+    expect(scheduled[12].ms).toBe(5000);
+  });
+
+  it('runs the retention purge on its schedule', async () => {
+    dbMock.users.findMany.mockResolvedValue([]);
+    dbMock.user_actions.deleteMany.mockResolvedValue({ count: 0 });
+    dbMock.command_usage_parameter.deleteMany.mockResolvedValue({ count: 0 });
+    const { run } = await start();
+    await run('retention');
+    expect(dbMock.users.findMany).toHaveBeenCalledWith(expect.objectContaining({
+      where: expect.objectContaining({ last_seen_at: expect.objectContaining({ lt: expect.any(Date) }) }),
+    }));
+    expect(dbMock.user_actions.deleteMany).toHaveBeenCalled();
+    expect(dbMock.command_usage_parameter.deleteMany).toHaveBeenCalledWith({
+      where: { usage: { created_at: { lt: expect.any(Date) } } },
+    });
   });
 
   it('runs the database updater on its schedule', async () => {
@@ -211,7 +226,7 @@ describe('tickets', () => {
     expect(dbMock.user_tickets.update).toHaveBeenCalledWith(expect.objectContaining({
       where: { id: 't1' },
       data: expect.objectContaining({
-        status: 'ARCHIVED', description: 'Ticket archived', type: 'TRIPSIT', first_message_id: '123',
+        status: 'ARCHIVED', type: 'TRIPSIT', first_message_id: '123',
       }),
     }));
     expect(thread.setArchived).toHaveBeenCalledWith(true);

@@ -183,7 +183,7 @@ export async function prReviewButton(interaction: ButtonInteraction): Promise<vo
         const reason = i.fields.getTextInputValue('reason');
         const modalMember = i.member as GuildMember;
 
-        log.info(F, `Accept-override modal submitted for PR #${prNumber} by ${modalMember.displayName}: ${reason}`); // eslint-disable-line max-len
+        log.info(F, `Accept-override modal submitted for PR #${prNumber} by ${modalMember.displayName}`);
 
         const mergeError = await attemptMerge(prNumber, modalMember.displayName);
         if (mergeError) {

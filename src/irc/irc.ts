@@ -1,5 +1,6 @@
+import { readFileSync } from 'fs';
 import { Client } from 'irc-framework';
-import { ircChannels } from './bridge';
+import { registerIrcChannels } from './channels';
 import registerEvents from './events';
 
 const F = f(__filename);
@@ -15,6 +16,31 @@ let stopping = false;
 let saslFailed = false;
 let reconnectAttempts = 0;
 let reconnectTimer: NodeJS.Timeout | undefined;
+
+/**
+ * The TLS client certificate for certfp, or undefined when none is configured or it cannot be read.
+ * Only the paths are ever logged, never the key.
+ */
+export function readClientCertificate(): { certificate: string; private_key: string } | undefined {
+  const certPath = env.IRC_CLIENT_CERT;
+  const keyPath = env.IRC_CLIENT_KEY;
+  if (!certPath && !keyPath) return undefined;
+  if (!certPath || !keyPath) {
+    log.error(F, 'IRC_CLIENT_CERT and IRC_CLIENT_KEY must both be set; connecting without a client certificate');
+    return undefined;
+  }
+  try {
+    return {
+      certificate: readFileSync(certPath, 'utf8'),
+      private_key: readFileSync(keyPath, 'utf8'),
+    };
+  } catch (err) {
+    const code = (err as NodeJS.ErrnoException).code ?? 'unknown error';
+    log.error(F, `Could not read the IRC client certificate (${certPath}, ${keyPath}): ${code}; `
+      + 'connecting without one');
+    return undefined;
+  }
+}
 
 function scheduleReconnect(client: Client): void {
   if (stopping || reconnectTimer) return;
@@ -40,6 +66,7 @@ export default async function ircConnect(): Promise<void> {
   const client = new Client();
   global.ircClient = client;
   registerEvents(client);
+  registerIrcChannels(client);
 
   client.on('registered', ({ nick }) => {
     registered = true;
@@ -48,8 +75,6 @@ export default async function ircConnect(): Promise<void> {
     if (env.IRC_OPER_NAME && env.IRC_OPER_PASSWORD) {
       client.raw('OPER', env.IRC_OPER_NAME, env.IRC_OPER_PASSWORD);
     }
-    // irc-framework does not rejoin on reconnect, so join on every registration
-    ircChannels().forEach(channel => client.join(channel));
   });
 
   client.on('join', ({ nick, channel }) => {
@@ -92,6 +117,8 @@ export default async function ircConnect(): Promise<void> {
   });
 
   log.info(F, `Connecting to IRC ${env.IRC_SERVER}:${env.IRC_PORT}${env.IRC_TLS ? ' (TLS)' : ''}`);
+  const clientCertificate = readClientCertificate();
+  if (clientCertificate) log.info(F, 'Presenting a TLS client certificate to IRC');
   client.connect({
     host: env.IRC_SERVER,
     port: env.IRC_PORT,
@@ -106,5 +133,6 @@ export default async function ircConnect(): Promise<void> {
     // Reconnects are handled by scheduleReconnect so that initial connection failures are retried too
     auto_reconnect: false,
     sasl_disconnect_on_fail: true,
+    ...(clientCertificate && { client_certificate: clientCertificate }),
   });
 }

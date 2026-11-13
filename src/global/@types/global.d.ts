@@ -4,7 +4,6 @@ import { DateTime } from 'luxon';
 import { Client as IRCClient } from 'irc-framework';
 // import { MatrixClient } from 'matrix-bot-sdk';
 // import { Telegraf as TelegramClient } from 'telegraf';
-// import Sentry from '@sentry/node';
 
 declare global {
   var guildInvites: Collection; // eslint-disable-line
@@ -17,7 +16,6 @@ declare global {
   var announcements: string[]; // eslint-disable-line
   var lpmDict: LpmDict; // eslint-disable-line
   var lpmTime: number[]; // eslint-disable-line
-  // var sentry: Sentry; // eslint-disable-line
   var emojiGet: (name:string) => Emoji; // eslint-disable-line
   var moodleConnection: { // eslint-disable-line
     status: Boolean,

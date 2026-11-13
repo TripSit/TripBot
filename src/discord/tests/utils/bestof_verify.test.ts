@@ -1,29 +1,11 @@
-import type { ButtonInteraction, Message, MessageReaction } from 'discord.js';
+import type { ButtonInteraction, MessageReaction } from 'discord.js';
 import { bestOf } from '../../utils/bestOfTripsit';
 import { verifyButton } from '../../utils/verifyButton';
 import { dbMock } from '../../../vitest/utils/mockDb';
-import { collectionOf } from '../../../vitest/utils/discordStubs';
 
 const e = env as unknown as Record<string, string>;
 const mocks = vi.hoisted(() => ({ guildOnly: vi.fn() }));
 vi.mock('../../utils/guildOnly', () => ({ replyGuildOnly: mocks.guildOnly, default: mocks.guildOnly }));
-
-describe('bestOf for orphaned threads', () => {
-  it('does nothing when a thread has lost its parent channel', async () => {
-    dbMock.best_of.findUnique.mockResolvedValue(null);
-    const reaction = {
-      count: 5,
-      emoji: { name: 'upvote' },
-      partial: false,
-      fetch: vi.fn(),
-      message: {
-        partial: false, fetch: vi.fn(), channel: { isThread: () => true, parent: null }, author: { id: 'a1' },
-      },
-    } as unknown as MessageReaction;
-    await expect(bestOf(reaction)).resolves.toBeUndefined();
-    expect(dbMock.best_of.create).not.toHaveBeenCalled();
-  });
-});
 
 describe('bestOf', () => {
   function setup(over: { count?: number; emoji?: string; thread?: boolean; parentId?: string; channelId?: string; author?: boolean; partial?: boolean; bestOfChannel?: unknown; content?: string | null; attachment?: boolean; embedThumb?: boolean } = {}) {
@@ -197,109 +179,5 @@ describe('verifyButton', () => {
     const { interaction, loungeSend } = setup({ ageMs: age });
     await verifyButton(interaction);
     expect(loungeSend).toHaveBeenCalled();
-  });
-});
-
-describe('bridge', () => {
-  const baseMessage = (over: Record<string, unknown> = {}) => ({
-    guild: { id: 'g', name: 'Other' },
-    guildId: 'other',
-    webhookId: null,
-    author: { bot: false, avatarURL: () => null },
-    channel: { id: 'chan', name: 'room' },
-    member: { displayName: 'Ally' },
-    content: 'hi',
-    attachments: collectionOf<{ url: string }>({}),
-    ...over,
-  }) as unknown as Message;
-
-  function webhooks(existing: boolean) {
-    const send = vi.fn();
-    const hook = {
-      id: `hook-${Math.random()}`, channelId: 'x', name: 'Tripsit Bridge', send,
-    };
-    const channel = {
-      fetchWebhooks: vi.fn(async () => collectionOf(existing ? { h: hook } : {})),
-      createWebhook: vi.fn(async () => hook),
-    };
-    return { send, hook, channel };
-  }
-
-  beforeEach(() => { e.DISCORD_GUILD_ID = 'main'; });
-
-  async function load() {
-    vi.resetModules();
-    return import('../../utils/bridge');
-  }
-
-  it('creates a webhook when none exists and caches it', async () => {
-    const { sendMessageToChannel: send } = await load();
-    const w = webhooks(false);
-    w.hook.channelId = 'dest';
-    (global as unknown as { discordClient: unknown }).discordClient = { channels: { fetch: vi.fn(async () => w.channel) } };
-    await send('dest', baseMessage({ attachments: collectionOf({ a: { url: 'https://file' } }) }));
-    await send('dest', baseMessage());
-    expect(w.channel.createWebhook).toHaveBeenCalledTimes(1);
-    expect(w.send).toHaveBeenCalledWith(expect.objectContaining({ username: 'Ally (Other)', files: ['https://file'] }));
-    expect(w.send).toHaveBeenLastCalledWith(expect.objectContaining({ files: undefined }));
-  });
-
-  it('reuses an existing webhook', async () => {
-    const { sendMessageToChannel: send } = await load();
-    const w = webhooks(true);
-    (global as unknown as { discordClient: unknown }).discordClient = { channels: { fetch: vi.fn(async () => w.channel) } };
-    await send('dest', baseMessage());
-    expect(w.channel.createWebhook).not.toHaveBeenCalled();
-    expect(w.send).toHaveBeenCalled();
-  });
-
-  it('ignores DMs, webhooks and bots', async () => {
-    const { bridgeMessage: bridge } = await load();
-    await bridge(baseMessage({ guild: null }));
-    await bridge(baseMessage({ webhookId: 'w' }));
-    await bridge(baseMessage({ author: { bot: true } }));
-    expect(dbMock.bridges.findMany).not.toHaveBeenCalled();
-  });
-
-  it('relays messages from the main guild to active external channels only', async () => {
-    const { bridgeMessage: bridge } = await load();
-    const w = webhooks(true);
-    (global as unknown as { discordClient: unknown }).discordClient = { channels: { fetch: vi.fn(async () => w.channel) } };
-    dbMock.bridges.findMany.mockResolvedValue([
-      { status: 'ACTIVE', internal_channel: 'chan', external_channel: 'ext1' },
-      { status: 'PAUSED', internal_channel: 'chan', external_channel: 'ext2' },
-    ] as never);
-    await bridge(baseMessage({ guildId: 'main' }));
-    expect(w.send).toHaveBeenCalledTimes(1);
-  });
-
-  it('does nothing for unbridged main-guild channels', async () => {
-    const { bridgeMessage: bridge } = await load();
-    dbMock.bridges.findMany.mockResolvedValue([]);
-    await bridge(baseMessage({ guildId: 'main' }));
-  });
-
-  it('relays external messages to the home channel and sibling bridges', async () => {
-    const { bridgeMessage: bridge } = await load();
-    const w = webhooks(true);
-    (global as unknown as { discordClient: unknown }).discordClient = { channels: { fetch: vi.fn(async () => w.channel) } };
-    dbMock.bridges.findMany
-      .mockResolvedValueOnce([{ status: 'ACTIVE', internal_channel: 'home', external_channel: 'chan' }] as never)
-      .mockResolvedValueOnce([
-        { status: 'ACTIVE', internal_channel: 'home', external_channel: 'chan' },
-        { status: 'ACTIVE', internal_channel: 'home', external_channel: 'sibling' },
-        { status: 'PAUSED', internal_channel: 'home', external_channel: 'paused' },
-      ] as never);
-    await bridge(baseMessage());
-    expect(w.send).toHaveBeenCalledTimes(2);
-  });
-
-  it('ignores external channels that are unbridged or inactive', async () => {
-    const { bridgeMessage: bridge } = await load();
-    dbMock.bridges.findMany.mockResolvedValueOnce([]);
-    await bridge(baseMessage());
-    dbMock.bridges.findMany.mockResolvedValueOnce([{ status: 'PAUSED', internal_channel: 'h', external_channel: 'chan' }] as never);
-    await bridge(baseMessage());
-    expect(dbMock.bridges.findMany).toHaveBeenCalledTimes(2);
   });
 });

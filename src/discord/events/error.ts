@@ -8,7 +8,6 @@ import {
   UserContextMenuCommandInteraction,
   MessageFlags,
 } from 'discord.js';
-// import * as Sentry from '@sentry/node';
 import { ErrorEvent } from '../@types/eventDef';
 import commandContext from '../utils/context';
 import { describeError } from '../../global/utils/networkErrors';
@@ -90,24 +89,6 @@ async function handleErrorUnsafe(
 
   // If this is production, send a message to the channel and alert the developers
   if (env.NODE_ENV === 'production') {
-    /* Uncomment this if you want to use Sentry
-
-    if (interaction) {
-      log.debug(F, 'Interaction found, sending error to Sentry');
-      Sentry.captureException(errorData, {
-        tags: {
-          command: commandName,
-          context: await commandContext(interaction),
-        },
-        user: {
-          id: interaction.user.id,
-          username: interaction.user.username,
-        },
-      });
-    } else {
-      log.debug(F, 'No interaction, sending error to Sentry');
-      Sentry.captureException(errorData);
-    } */
     if (!global.discordClient?.isReady()) {
       log.warn(F, 'Discord is not ready, not reporting the error to the bot-errors channel');
     } else if (!reportLimiter.allow(errorStack)) {
