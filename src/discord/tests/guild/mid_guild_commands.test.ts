@@ -124,7 +124,9 @@ describe('purge', () => {
   it('defers ephemerally unless ephemeral is false', async () => {
     const guild = guildOf([textChannel('c1', ['u1'])]);
     const run = async (options: Record<string, unknown>) => {
-      const stub = slashStub({ guild, subcommand: 'messages', options, extra: { isUserSelectMenu: () => false } });
+      const stub = slashStub({
+        guild, subcommand: 'messages', options, extra: { isUserSelectMenu: () => false },
+      });
       await dPurge.execute(stub as never);
       return stub;
     };
