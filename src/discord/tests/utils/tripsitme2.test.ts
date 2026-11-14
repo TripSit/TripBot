@@ -163,7 +163,7 @@ describe('tripsitmeUserClose', () => {
         id: 'g1',
         name: 'Guild',
         members: { fetch: vi.fn(async (id: string) => (id === 'bot' ? { roles: { highest: { id: 'bot', name: 'bot', comparePositionTo: (r: { id: string }) => (r.id === 'r-above' ? -1 : 0) } } } : target)) },
-        roles: { fetch: vi.fn(async (id: string) => { if (opts.needshelp === 'fail' && id === 'nh') throw new Error('Unknown Role'); return guildRoles.get(id) ?? role(id); }) },
+        roles: { fetch: vi.fn(async (id: string) => { if ((opts.needshelp === 'fail' && id === 'nh') || id.startsWith('gone-')) throw new Error('Unknown Role'); return guildRoles.get(id) ?? role(id); }) },
         channels: {
           fetch: vi.fn(async (id: string) => {
             if (id === 'th') { if (opts.threadFetch === 'fail') throw new Error('Unknown Channel'); return thread; }
@@ -223,6 +223,14 @@ describe('tripsitmeUserClose', () => {
       where: { id: 't1' }, data: { status: 'CLOSED', archived_at: expiry.archivedAt, deleted_at: expiry.deletedAt },
     });
     expect(s.metaChannel.send).toHaveBeenCalledWith({ content: expect.stringContaining('no longer need help') });
+  });
+
+  it('skips saved roles that no longer exist in the guild', async () => {
+    const s = setup({ roles: 'r1,gone-1' });
+    await tripsitmeUserClose(s.interaction);
+    await flushPromises();
+    expect(s.target.roles.add).toHaveBeenCalledTimes(1);
+    expect(s.raw.editReply).toHaveBeenCalledWith(expect.stringContaining("we're glad you're doing better"));
   });
 
   it('keeps going when a previous role cannot be given back', async () => {

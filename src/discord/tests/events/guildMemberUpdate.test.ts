@@ -161,7 +161,7 @@ describe('guildMemberUpdate', () => {
 
     function setup(threads: ReturnType<typeof thread>[], ticketThread: string | null = null) {
       dbMock.discord_guilds.upsert.mockResolvedValue({ channel_tripsit: 'ct', role_helper: 'helper', role_tripsitter: 'tripsitter' } as never);
-      dbMock.users.upsert.mockResolvedValue({ id: 'uid' } as never);
+      dbMock.users.findUnique.mockResolvedValue({ id: 'uid' } as never);
       getOpenTicket.mockResolvedValue(ticketThread ? { thread_id: ticketThread } : null);
       (global as unknown as { discordClient: unknown }).discordClient = {
         channels: {
@@ -183,6 +183,16 @@ describe('guildMemberUpdate', () => {
       expect(own.members.remove).not.toHaveBeenCalled();
       expect(archived.members.remove).not.toHaveBeenCalled();
       expect(elsewhere.members.remove).not.toHaveBeenCalled();
+    });
+
+    it('does not create a user record for the ex-helper, and still removes them from threads', async () => {
+      const t = thread();
+      setup([t]);
+      dbMock.users.findUnique.mockResolvedValue(null);
+      await change(['helper'], []);
+      expect(dbMock.users.upsert).not.toHaveBeenCalled();
+      expect(getOpenTicket).not.toHaveBeenCalled();
+      expect(t.members.remove).toHaveBeenCalledWith('m1');
     });
 
     it('also handles the tripsitter role, even in other guilds', async () => {

@@ -3,7 +3,7 @@ export type BridgePlatform = 'discord' | 'irc' | 'matrix';
 /** One bridged conversation: the same channel on each platform. */
 export interface BridgeGateway {
   name: string;
-  /** Name of the env.config channel key, so production and development resolve to their own IDs. */
+  /** Discord channel ID. */
   discord?: string;
   irc?: string;
   /** Matrix room ID. */

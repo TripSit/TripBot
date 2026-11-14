@@ -17,6 +17,8 @@ import { selectMenu } from './selectMenu';
 import { botBannedUsers } from '../utils/populateBotBans';
 import modalSubmit from './modalSubmit';
 import { getOrCreateUser } from '../../global/utils/dbRecords';
+import { touchLastSeen } from '../../global/utils/lastSeen';
+import { statParameters } from '../utils/commandStats';
 
 const F = f(__filename);  // eslint-disable-line
 
@@ -43,10 +45,10 @@ export const interactionCreate: InteractionCreateEvent = {
       const subcommand = interaction.options.getSubcommand(false);
       const commandName = subcommand ? `${interaction.commandName} ${subcommand}` : interaction.commandName;
 
-      // Get all options passed to the command
-      const options = interaction.options.data;
-
-      await getOrCreateUser(interaction.user.id);
+      // Only TripSit guild members get a user record just for using the bot; other guilds' users aren't tracked
+      if (interaction.guildId === env.DISCORD_GUILD_ID) {
+        touchLastSeen(await getOrCreateUser(interaction.user.id));
+      }
 
       const commandUsage = await db.command_usage.create({
         data: {
@@ -57,14 +59,9 @@ export const interactionCreate: InteractionCreateEvent = {
         },
       });
 
-      // Now create the parameters linked to the command_usage entry
-      const parameterEntries = options
-        .filter(opt => opt.name !== subcommand) // optional: skip subcommand if already part of the command name
-        .map(opt => ({
-          name: opt.name,
-          value: String(opt.value ?? ''), // Prisma expects string
-          usage_id: commandUsage.id, // Use the command_usage ID to link to command_parameters
-        }));
+      // Now create the parameters linked to the command_usage entry. Values are stripped to what stats need.
+      const parameterEntries = statParameters(interaction.options.data)
+        .map(param => ({ ...param, usage_id: commandUsage.id }));
 
       // Create the parameters in the database
       await db.command_usage_parameter.createMany({

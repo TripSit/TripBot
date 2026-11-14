@@ -2,10 +2,10 @@ import { ChannelType, Collection, MessageType } from 'discord.js';
 import type { Message } from 'discord.js';
 import type { Mock } from 'vitest';
 
-const LOUNGE_ID = 'discord-lounge';
+import { bridgeRows, LOUNGE_ID } from '../../../vitest/utils/bridgeMappings';
+
 const BOT_ID = 'bot-user';
 const originalClient = global.discordClient;
-const originalLounge = env.CHANNEL_LOUNGE;
 
 let chatBridge: typeof import('../../utils/chatBridge');
 let core: typeof import('../../../global/bridge/bridge');
@@ -54,9 +54,9 @@ const install = (guilds: Collection<string, unknown>) => {
 
 beforeEach(async () => {
   vi.resetModules();
-  env.CHANNEL_LOUNGE = LOUNGE_ID;
   chatBridge = await import('../../utils/chatBridge');
   core = await import('../../../global/bridge/bridge');
+  (await import('../../../global/bridge/bridge.mappings')).setMappings(bridgeRows());
   ircSend = vi.fn().mockResolvedValue(undefined);
   core.registerBridgeTarget({ platform: 'irc', send: ircSend });
   vi.spyOn(global.log, 'error').mockReturnValue(undefined as never);
@@ -65,7 +65,6 @@ beforeEach(async () => {
 
 afterEach(() => {
   global.discordClient = originalClient;
-  env.CHANNEL_LOUNGE = originalLounge;
   vi.restoreAllMocks();
 });
 

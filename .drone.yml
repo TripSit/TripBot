@@ -134,12 +134,8 @@ steps:
         from_secret: DISCORD_CLIENT_REDIRECT_URI
       GITHUB_TOKEN:
         from_secret: GITHUB_TOKEN
-      GLITCHTIP_DSN:
-        from_secret: GLITCHTIP_DSN
       RAPID_TOKEN:
         from_secret: RAPID_TOKEN
-      ROLLBAR_TOKEN:
-        from_secret: ROLLBAR_TOKEN
       IMGUR_ID:
         from_secret: IMGUR_ID
       IMGUR_SECRET:
@@ -158,8 +154,6 @@ steps:
         from_secret: WOLFRAM_TOKEN
       IMDB_TOKEN:
         from_secret: IMDB_TOKEN
-      SENTRY_TOKEN:
-        from_secret: SENTRY_TOKEN
       MODERATE_HATESPEECH_TOKEN:
         from_secret: MODERATE_HATESPEECH_TOKEN
       TRIPBOT_API_URL:
