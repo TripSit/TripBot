@@ -1,7 +1,6 @@
 import { Message } from "discord.js";
 
 const F = f(__filename);
-const logger = require('../../global/utils/logger');
 
 export default async function(message:Message) {
     log.debug(F, `started!`);
