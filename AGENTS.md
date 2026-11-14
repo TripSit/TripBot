@@ -270,7 +270,9 @@ When adding or changing a command:
 - the default may be public only for commands whose purpose is to post to the channel (for example `/say`, `/joke`,
   `/coinflip`, game and bridge output). Say why in a short comment beside the option, and add a test for the flag;
 - return the boolean required by the command type;
-- preserve automatic command registration on startup; standalone manual deployments require an explicit request.
+- do not deploy command definitions yourself unless the user explicitly requests it. The bot also registers its
+  commands automatically on every start (`deployCommands({ skipIfUnchanged: true })` in `src/start.ts`), skipping the
+  Discord call when the definitions are unchanged since the last deploy, so a restart picks up command changes.
 
 Many existing commands predate this rule and use an opt-in `ephemeral` option (public by default). Apply the rule to
 new commands and to commands you are already changing; do not sweep the rest in an unrelated change, since flipping a
