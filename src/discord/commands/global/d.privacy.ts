@@ -4,7 +4,7 @@ import {
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
 import { SlashCommand } from '../../@types/commandDef';
-import { privacy } from '../../../global/commands/g.privacy';
+import { privacy, setIrcBridgeOptOut } from '../../../global/commands/g.privacy';
 import { embedTemplate } from '../../utils/embedTemplate';
 import commandContext from '../../utils/context';
 
@@ -22,12 +22,30 @@ export const dPrivacy: SlashCommand = {
       .setName('delete')
       .setDescription('Instructions on deleting your data!')
       .addStringOption(option => option.setName('confirmation')
-        .setDescription('Enter your confirmation code to delete your data!'))),
+        .setDescription('Enter your confirmation code to delete your data!')))
+    .addSubcommand(subcommand => subcommand
+      .setName('bridge')
+      .setDescription('Choose whether your messages are relayed to IRC by the chat bridge')
+      .addBooleanOption(option => option.setName('relay')
+        .setDescription('True to relay your messages to IRC, False to stop relaying them')
+        .setRequired(true))),
   async execute(interaction) {
     log.info(F, await commandContext(interaction));
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
-    const command = interaction.options.getSubcommand() as 'get' | 'delete';
+    const command = interaction.options.getSubcommand() as 'get' | 'delete' | 'bridge';
     const embed = embedTemplate();
+
+    if (command === 'bridge') {
+      const relay = interaction.options.getBoolean('relay', true);
+      const optedOut = await setIrcBridgeOptOut(interaction.user.id, !relay);
+      embed.setTitle('IRC Bridge')
+        .setDescription(optedOut
+          ? stripIndents`Your messages will no longer be relayed to IRC.
+          Messages already relayed stay on IRC. Run this again with relay set to True to turn relaying back on.`
+          : 'Your messages in bridged channels will be relayed to IRC.');
+      await interaction.editReply({ embeds: [embed] });
+      return true;
+    }
 
     const userData = await privacy('get', interaction.user.id);
 
@@ -44,10 +62,10 @@ export const dPrivacy: SlashCommand = {
       } else {
         embed.setTitle('Are you sure?') /* eslint-disable max-len */
           .setDescription(stripIndents`This will delete all data we have on you, except:
-          1) Moderation actions taken against your Discord ID will remain on file for 6 months from the last time your user ID was seen.
-          2) If your user has been banned, your Discord ID and status of your ban will remain on file indefinitely.
+          1) Moderation actions taken against your Discord ID (warnings, timeouts, kicks, notes) will remain on file for 2 years from the date of the action, so we can keep the community safe if you return.
+          2) If your user has been banned, your Discord ID and the record of your ban will remain on file indefinitely.
           
-          In other words: If you're not banned and you don't interact with the bot for 6 months, your data will be deleted.
+          In other words: If you're not banned and you don't interact with the bot for 6 months, your personal data will be deleted. Moderation actions are removed 2 years after they were taken.
           
           This will delete everything else. Be sure you want to do this! 
           

@@ -28,8 +28,7 @@ async function getCommands(commandType: string): Promise<SlashCommand[]> {
     }))
     .filter(({ file, command }) => {
       const key = Object.keys(command).find(k => command[k] && command[k].data !== undefined);
-      // log.warn() unconditionally touches global.rollbar, which isn't set up in this standalone
-      // script's execution path (only during normal bot startup) - console.warn avoids that.
+      // console.warn is used because log isn't set up in this standalone script's execution path.
       if (!key) {
         // eslint-disable-next-line no-console
         console.warn(`[commandDeploy] Skipping ${commandType}/${file} - no SlashCommand .data export found.`);

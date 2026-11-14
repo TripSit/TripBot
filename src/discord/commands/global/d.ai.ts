@@ -256,7 +256,7 @@ export async function aiMessage(messageData: Message<boolean>): Promise<void> {
   if (messageData.author.bot || messageData.cleanContent.length < 1) return;
   if (!messageData.guild) return;
 
-  log.debug(F, `Received message for AI processing: ${messageData.cleanContent} in #${messageData.channelId} by ${messageData.author.tag}`);
+  log.debug(F, `Received message for AI processing in #${messageData.channelId}`);
 
   // 1. Permission/Guild Check
   const guildData = await db.discord_guilds.findUnique({
@@ -332,7 +332,7 @@ export async function aiMessage(messageData: Message<boolean>): Promise<void> {
 
     const prompt = await AiFunction.createPrompt(messageData, personaId);
 
-    log.debug(F, `Generated prompt for user ${messageData.author.id} with persona ${personaId}: ${prompt}`);
+    log.debug(F, `Generated prompt with persona ${personaId}`);
 
     const chatResponse = await OpenRouterClient.chat({
       model,
@@ -342,7 +342,7 @@ export async function aiMessage(messageData: Message<boolean>): Promise<void> {
 
     const { content, usage } = chatResponse;
 
-    log.debug(F, `Received response from OpenRouter for user ${messageData.author.id}: ${content} (Usage: ${JSON.stringify(usage)})`);
+    log.debug(F, `Received response from OpenRouter (Usage: ${JSON.stringify(usage)})`);
 
     // Audit & Database Logging
     await AiFunction.aiAudit(messageData.author, messageData, prompt, chatResponse, model);
@@ -367,7 +367,7 @@ export async function aiMessage(messageData: Message<boolean>): Promise<void> {
       },
     });
 
-    log.debug(F, `Created AI message for user ${messageData.author.id}: ${JSON.stringify(messageData)}`);
+    log.debug(F, `Created AI message in #${messageData.channelId}`);
 
     const reply = await messageData.reply({
       content: content.slice(0, 2000),
@@ -405,7 +405,6 @@ export async function aiReaction(
     originalMessage = await messageReaction.message.fetchReference();
   } catch (error) {
     log.error(F, `Error fetching reference: ${error}`);
-    log.error(F, `Reaction: ${JSON.stringify(messageReaction, null, 2)}`);
     log.error(
       F,
       `Message: ${JSON.stringify(messageReaction.message, null, 2)}`,

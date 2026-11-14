@@ -1,7 +1,15 @@
-import { BridgeGateway } from './bridge.types';
+/** A hand-written mapping; `discord` names an env.config channel key, so each environment resolves its own ID. */
+export interface BridgeGatewaySeed {
+  name: string;
+  discord: string;
+  irc: string;
+  /** Matrix room ID. */
+  matrix?: string;
+}
 
-// Ported from the Matterbridge config. Telegram and Slack endpoints are not bridged yet.
-export const bridgeGateways: BridgeGateway[] = [
+// Ported from the Matterbridge config. These seed the bridge_channels table as explicit overrides (see
+// bridge.mappings.ts); after that the database is the source of truth. Telegram and Slack are not bridged.
+export const bridgeGatewaySeeds: BridgeGatewaySeed[] = [
   { name: 'Botspam', irc: '#bot-spam', discord: 'CHANNEL_BOTSPAM' },
   { name: 'Techhelp', irc: '##tech-help', discord: 'CHANNEL_TECHHELP' },
   { name: 'Talk To Tripsit', irc: '##talk-to-tripsit', discord: 'CHANNEL_SUGGESTIONS' },
@@ -283,4 +291,4 @@ export const bridgeGateways: BridgeGateway[] = [
   },
 ];
 
-export default bridgeGateways;
+export default bridgeGatewaySeeds;

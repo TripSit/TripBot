@@ -133,7 +133,7 @@ describe('tripSitMe', () => {
     const [{ content }] = s.thread.send.mock.calls[0] as unknown as [{ content: string }];
     expect(content).toContain('*No info given*');
     expect(content).not.toContain('and/or');
-    expect((dbMock.user_tickets.create.mock.calls[0][0] as { data: { description: string } }).data.description).toContain('No info given');
+    expect((dbMock.user_tickets.create.mock.calls[0][0] as { data: object }).data).not.toHaveProperty('description');
   });
 
   it('warns the owner when the intro message cannot be pinned, and surfaces cooldown messages', async () => {

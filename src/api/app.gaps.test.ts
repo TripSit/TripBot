@@ -33,14 +33,21 @@ describe('API app middleware', () => {
 
   it('rate limits callers after 120 requests a minute', async () => {
     const { default: app } = await import('./app');
-    const agent = supertest(app);
-    const statuses: number[] = [];
-    for (let i = 0; i < 125; i += 1) {
-      // eslint-disable-next-line no-await-in-loop
-      statuses.push((await agent.get('/api/ip')).status);
+    const server = app.listen(0);
+    const agent = supertest(server);
+    const caller = '192.0.2.120';
+    try {
+      const responses = await Promise.all(Array.from({ length: 120 }, () => agent.get('/api/ip')
+        .set('X-Forwarded-For', caller)));
+      expect(responses.every(response => response.status === 200)).toBe(true);
+      const limited = await agent.get('/api/ip').set('X-Forwarded-For', caller);
+      expect(limited.status).toBe(429);
+      expect(limited.text).toContain('Too many requests');
+    } finally {
+      await new Promise<void>((resolve, reject) => {
+        server.close(err => (err ? reject(err) : resolve()));
+      });
     }
-    expect(statuses.at(-1)).toBe(429);
-    expect((await agent.get('/api/ip')).text).toContain('Too many requests');
   });
 });
 

@@ -22,7 +22,6 @@ const mocks = vi.hoisted(() => ({
   buttonClick: vi.fn(),
   selectMenuHandlers: {} as Record<string, ReturnType<typeof vi.fn>>,
   messageCommand: vi.fn(),
-  bridgeMessage: vi.fn(),
   relayDiscordMessage: vi.fn(),
   countMessage: vi.fn(),
   youAre: vi.fn(),
@@ -59,7 +58,6 @@ vi.mock('../../utils/commandRun', () => ({ commandRun: mocks.commandRun }));
 vi.mock('../../events/autocomplete', () => ({ autocomplete: mocks.autocomplete }));
 vi.mock('../../events/buttonClick', () => ({ buttonClick: mocks.buttonClick }));
 vi.mock('../../utils/messageCommand', () => ({ messageCommand: mocks.messageCommand }));
-vi.mock('../../utils/bridge', () => ({ bridgeMessage: mocks.bridgeMessage }));
 vi.mock('../../utils/chatBridge', () => ({ relayDiscordMessage: mocks.relayDiscordMessage }));
 vi.mock('../../commands/guild/d.counting', () => ({ countMessage: mocks.countMessage }));
 vi.mock('../../utils/youAre', () => ({ youAre: mocks.youAre }));
@@ -221,7 +219,10 @@ describe('interactionCreate', () => {
     ...over,
   });
 
-  beforeEach(() => { botBannedUsers.length = 0; });
+  beforeEach(() => {
+    botBannedUsers.length = 0;
+    dbMock.users.upsert.mockResolvedValue({ id: 'uid', last_seen_at: new Date(0) } as never);
+  });
 
   it('hands modal submissions to the modal handler', async () => {
     const submit = base({ type: InteractionType.ModalSubmit, customId: 'not-ai', editReply: vi.fn() }) as unknown as { editReply: ReturnType<typeof vi.fn> };
@@ -248,14 +249,46 @@ describe('interactionCreate', () => {
       commandName: 'drug',
       channel: { id: 'c' },
       guild: { id: 'g' },
-      options: { getSubcommand: () => 'info', data: [{ name: 'info', value: undefined }, { name: 'name', value: 'lsd' }, { name: 'n', value: undefined }] },
+      guildId: 'g',
+      options: {
+        getSubcommand: () => 'info',
+        data: [{
+          name: 'info',
+          type: 1,
+          options: [
+            { name: 'substance', type: 3, value: 'lsd' },
+            { name: 'user', type: 6, value: '123456' },
+            { name: 'ephemeral', type: 5, value: true },
+          ],
+        }],
+      },
     });
     await interactionCreate.execute(i as never);
     expect(mocks.commandRun).toHaveBeenCalled();
     expect(dbMock.command_usage.create).toHaveBeenCalledWith({ data: expect.objectContaining({ command: 'drug info', channel_id: 'c', guild_id: 'g' }) });
+    // 'g' is not the TripSit guild, so the user gets no record
+    expect(dbMock.users.upsert).not.toHaveBeenCalled();
+    expect(dbMock.users.update).not.toHaveBeenCalled();
     expect(dbMock.command_usage_parameter.createMany).toHaveBeenCalledWith({
-      data: [{ name: 'name', value: 'lsd', usage_id: 'usage1' }, { name: 'n', value: '', usage_id: 'usage1' }],
+      data: [
+        { name: 'substance', value: 'lsd', usage_id: 'usage1' },
+        { name: 'user', value: '', usage_id: 'usage1' },
+        { name: 'ephemeral', value: 'true', usage_id: 'usage1' },
+      ],
     });
+  });
+
+  it('records and touches the user only for slash commands in the TripSit guild', async () => {
+    dbMock.command_usage.create.mockResolvedValue({ id: 'u3' } as never);
+    const i = base({
+      isChatInputCommand: () => true,
+      commandName: 'ping',
+      guildId: e.DISCORD_GUILD_ID,
+      options: { getSubcommand: () => null, data: [] },
+    });
+    await interactionCreate.execute(i as never);
+    expect(dbMock.users.upsert).toHaveBeenCalledTimes(1);
+    expect(dbMock.users.update).toHaveBeenCalledWith({ where: { id: 'uid' }, data: { last_seen_at: expect.any(Date) } });
   });
 
   it('handles slash commands without subcommand, channel or guild', async () => {
@@ -297,12 +330,14 @@ describe('messageCreate', () => {
     ...over,
   });
 
-  beforeEach(() => { dbMock.users.upsert.mockResolvedValue({ discord_bot_ban: false } as never); });
+  beforeEach(() => {
+    dbMock.users.upsert.mockResolvedValue({ id: 'uid', discord_bot_ban: false, last_seen_at: new Date() } as never);
+  });
 
   it('runs every handler for human messages in tripsit', async () => {
     const m = msg();
     await messageCreate.execute(m as never);
-    [mocks.messageCommand, mocks.bridgeMessage, mocks.relayDiscordMessage, mocks.countMessage, mocks.youAre, mocks.karma,
+    [mocks.messageCommand, mocks.relayDiscordMessage, mocks.countMessage, mocks.youAre, mocks.karma,
       mocks.helperActivity, mocks.nightsWatch, mocks.announcements].forEach(fn => expect(fn).toHaveBeenCalledWith(m));
     expect(mocks.experience).toHaveBeenCalledWith(m.member, 'GENERAL', 'TEXT', m.channel);
   });

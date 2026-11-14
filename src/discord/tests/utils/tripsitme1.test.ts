@@ -117,7 +117,7 @@ describe('needsHelpMode', () => {
 
 describe('ticket buttons', () => {
   const ticket = (over: Record<string, unknown> = {}) => ({
-    id: 't1', thread_id: 'th', meta_thread_id: null, description: 'a description', ...over,
+    id: 't1', thread_id: 'th', meta_thread_id: null, ...over,
   });
 
   function setup(opts: { guild?: boolean; self?: boolean; channel?: boolean; member?: boolean; metaFetch?: 'ok' | 'fail'; threadFetch?: 'ok' | 'fail'; textChannel?: boolean } = {}) {
@@ -237,7 +237,7 @@ describe('ticket buttons', () => {
       expect(s.channelProps.threads.create).toHaveBeenCalledWith(expect.objectContaining({ invitable: false }));
       expect(dbMock.user_tickets.update).toHaveBeenCalledWith({ where: { id: 't1' }, data: { meta_thread_id: 'new-meta' } });
       const [{ embeds, components }] = s.created.send.mock.calls[0] as unknown as [{ embeds: Array<{ data: { description: string } }>; components: unknown[] }];
-      expect(embeds[0].data.description).toContain('a description');
+      expect(embeds[0].data.description).not.toContain('a description');
       expect(JSON.stringify(components)).toContain('tripsitmeBackup~target');
       expect(JSON.stringify(components)).not.toContain('tripsitmeMeta~');
       expect(s.raw.editReply).toHaveBeenLastCalledWith({ content: 'Donezo!' });

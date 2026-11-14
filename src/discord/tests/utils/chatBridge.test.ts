@@ -2,14 +2,16 @@ import { ChannelType, Collection, MessageType } from 'discord.js';
 import type { Message, PartialMessage } from 'discord.js';
 import type { Mock } from 'vitest';
 import type { BridgeOutgoing } from '../../../global/bridge/bridge.types';
+import { bridgeRows, LOUNGE_ID } from '../../../vitest/utils/bridgeMappings';
+import { dbMock } from '../../../vitest/utils/mockDb';
 
-const LOUNGE_ID = 'discord-lounge';
 const BOT_ID = 'bot-user';
 const WEBHOOK_ID = 'webhook-1';
 const WEBHOOK_NAME = 'TripSit Chat Bridge';
 
 let chatBridge: typeof import('../../utils/chatBridge');
 let core: typeof import('../../../global/bridge/bridge');
+let mappings: typeof import('../../../global/bridge/bridge.mappings');
 let ircSend: Mock;
 let webhookSend: Mock;
 let fetchWebhooks: Mock;
@@ -17,7 +19,6 @@ let createWebhook: Mock;
 let channelFetch: Mock;
 let memberSearch: Mock;
 const originalDiscordClient = global.discordClient;
-const originalLounge = env.CHANNEL_LOUNGE;
 
 function webhook(overrides: Record<string, unknown> = {}) {
   return {
@@ -64,9 +65,10 @@ function outgoing(overrides: Partial<BridgeOutgoing> = {}): BridgeOutgoing {
 
 beforeEach(async () => {
   vi.resetModules();
-  env.CHANNEL_LOUNGE = LOUNGE_ID;
   chatBridge = await import('../../utils/chatBridge');
   core = await import('../../../global/bridge/bridge');
+  mappings = await import('../../../global/bridge/bridge.mappings');
+  mappings.setMappings(bridgeRows());
   ircSend = vi.fn().mockResolvedValue(undefined);
   core.registerBridgeTarget({ platform: 'irc', send: ircSend });
 
@@ -89,7 +91,7 @@ beforeEach(async () => {
 
 afterEach(() => {
   global.discordClient = originalDiscordClient;
-  env.CHANNEL_LOUNGE = originalLounge;
+  mappings.setMappings([]);
   vi.restoreAllMocks();
 });
 
@@ -266,6 +268,30 @@ describe('relayDiscordMessage', () => {
   ])('ignores %s', async (_name, overrides) => {
     await chatBridge.relayDiscordMessage(message(overrides));
     expect(ircSend).not.toHaveBeenCalled();
+  });
+
+  it('does not relay users who opted out with /privacy bridge', async () => {
+    dbMock.users.findUnique.mockResolvedValueOnce({ irc_bridge_opt_out: true } as never);
+    await chatBridge.relayDiscordMessage(message({ author: { ...message().author, id: 'opted-out' } }));
+    expect(dbMock.users.findUnique).toHaveBeenCalledWith({
+      where: { discord_id: 'opted-out' }, select: { irc_bridge_opt_out: true },
+    });
+    expect(ircSend).not.toHaveBeenCalled();
+  });
+
+  it('relays users who have not opted out, or have no record yet', async () => {
+    dbMock.users.findUnique.mockResolvedValueOnce({ irc_bridge_opt_out: false } as never);
+    await chatBridge.relayDiscordMessage(message());
+    dbMock.users.findUnique.mockResolvedValueOnce(null);
+    await chatBridge.relayDiscordMessage(message());
+    expect(ircSend).toHaveBeenCalledTimes(2);
+  });
+
+  it('fails closed when the opt-out lookup fails', async () => {
+    dbMock.users.findUnique.mockRejectedValueOnce(new Error('db down'));
+    await chatBridge.relayDiscordMessage(message());
+    expect(ircSend).not.toHaveBeenCalled();
+    expect(global.log.error).toHaveBeenCalledWith('chatBridge', expect.stringContaining('db down'));
   });
 
   it('relays other bots and slash command replies', async () => {

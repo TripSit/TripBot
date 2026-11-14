@@ -3,7 +3,7 @@ import { stripIndents } from 'common-tags';
 import {
   GuildMemberUpdateEvent,
 } from '../@types/eventDef';
-import { getOrCreateGuild, getOrCreateUser } from '../../global/utils/dbRecords';
+import { getOrCreateGuild } from '../../global/utils/dbRecords';
 import { getOpenTicket } from '../../global/utils/tickets';
 import { randomItem } from '../../global/utils/random';
 import {
@@ -233,9 +233,10 @@ async function removeExTeamFromThreads(
   ) {
     log.debug(F, `${newMember.displayName} was a helper/tripsitter!`);
     const channelTripsit = await discordClient.channels.fetch(guildData.channel_tripsit) as TextChannel;
-    const userData = await getOrCreateUser(newMember.user.id);
+    // Only look the user up; a helper leaving a role shouldn't create a record
+    const userData = await db.users.findUnique({ where: { discord_id: newMember.user.id }, select: { id: true } });
 
-    const ticketData = await getOpenTicket(userData.id);
+    const ticketData = userData ? await getOpenTicket(userData.id) : null;
 
     const fetchedThreads = await channelTripsit.threads.fetch();
     fetchedThreads.threads.forEach(async thread => {

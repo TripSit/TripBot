@@ -9,8 +9,6 @@ import {
 import Transport from 'winston-transport';
 // import { Logtail } from '@logtail/node'; // eslint-disable-line
 // import { LogtailTransport } from '@logtail/winston'; // eslint-disable-line
-// import SentryTransport from 'winston-transport-sentry-node'; // eslint-disable-line
-import * as Sentry from '@sentry/node';
 import { TextChannel } from 'discord.js';
 import { ConsoleTransportInstance } from 'winston/lib/winston/transports';
 import { env } from './env.config';
@@ -102,7 +100,7 @@ const transportOptions = [
   }),
 ];
 
-// Discord error-channel logging and GlitchTip (Sentry) are production only
+// Discord error-channel logging is production only
 if (env.NODE_ENV === 'production') {
   transportOptions.push(new DiscordTransport({
     format: combine(
@@ -110,12 +108,6 @@ if (env.NODE_ENV === 'production') {
       printf(info => `(Prd) ${info.level}  ${info.message} `),
     ),
   }) as ConsoleTransportInstance);
-  // Setup Sentry
-  Sentry.init({
-    dsn: env.GLITCHTIP_DSN,
-    // debug: true,
-    environment: env.NODE_ENV,
-  });
 }
 
 const logger = createLogger({

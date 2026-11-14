@@ -433,8 +433,6 @@ export async function tripsitmeMeta(
     .setDescription(stripIndents`
       ${actor.toString()} has created a meta thread for ${target.toString()}!
 
-      ${ticketData.description}
-
       **Read the log before interacting**
       Use this channel coordinate efforts.
 
@@ -835,8 +833,13 @@ export async function tripsitmeUserClose(
     if (targetRoles.length > 0) {
       // Read once so the narrowing from the guild check above carries into the async callback
       const roleGuild = interaction.guild;
-      targetRoles.forEach(async roleId => {
-        const roleObj = await roleGuild.roles.fetch(roleId) as Role;
+      await Promise.all(targetRoles.map(async roleId => {
+        // Roles saved from another guild, or since deleted, are skipped
+        const roleObj = await roleGuild.roles.fetch(roleId).catch(() => null);
+        if (!roleObj) {
+          log.debug(F, `Role ${roleId} does not exist in this guild, skipping!`);
+          return;
+        }
 
         if (ignoredRoles.includes(roleObj.id)) {
           log.debug(F, `${roleObj.name} (${roleObj.id}) is a team role or vanity role, skipping!`);
@@ -865,8 +868,13 @@ export async function tripsitmeUserClose(
           log.error(F, `Error adding role to target: ${err}`);
           log.error(F, `${roleObj.name} could not be added to ${target.displayName} (${target.id}) in ${roleGuild}!`);
         }
-      });
+      }));
     }
+  }
+
+  // Roles are only kept in the database while a ticket is open
+  if (userData.roles) {
+    await db.users.update({ where: { id: userData.id }, data: { roles: null } });
   }
 
   // Change the channel icon
@@ -1225,14 +1233,9 @@ export async function tripSitMe(
 
   const userData = await getOrCreateUser(target.id);
 
-  // Set ticket information
-  const introStr = intro ? `\n${intro}` : noInfo;
+  // Set ticket information. What the user took and their issue stay in the Discord thread, not the database.
   const newTicketData = {
     user_id: userData.id,
-    description: `
-    They've taken: ${triage ? `\n${triage}` : noInfo}
-
-    Their issue: ${introStr}`,
     thread_id: threadHelpUser.id,
     type: 'TRIPSIT',
     status: 'OPEN',
@@ -1247,7 +1250,6 @@ export async function tripSitMe(
   await db.user_tickets.create({
     data: {
       user_id: newTicketData.user_id,
-      description: newTicketData.description,
       thread_id: newTicketData.thread_id,
       type: newTicketData.type,
       status: newTicketData.status,

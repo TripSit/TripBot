@@ -1,4 +1,8 @@
-import { privacy } from '../../commands/g.privacy';
+/* eslint-disable sonarjs/no-duplicate-string */
+import type { Prisma } from '@db/tripbot';
+import {
+  privacy, pruneCommandParameters, pruneModerationActions, purgeInactiveUsers, setIrcBridgeOptOut, SCRUBBED_LAST_SEEN,
+} from '../../commands/g.privacy';
 import { dbMock } from '../../../vitest/utils/mockDb';
 
 type Upsert = Awaited<ReturnType<typeof dbMock.users.upsert>>;
@@ -10,6 +14,13 @@ function seed(user: object, doses = 0, exp = 0, reminders = 0) {
   dbMock.user_experience.findMany.mockResolvedValueOnce(rows(exp));
   dbMock.user_reminders.findMany.mockResolvedValueOnce(rows(reminders));
 }
+
+beforeEach(() => {
+  dbMock.$transaction.mockImplementation(async callback => {
+    if (typeof callback !== 'function') throw new Error('Expected an interactive transaction');
+    return callback(dbMock);
+  });
+});
 
 describe('privacy get', () => {
   it('lists stored fields while hiding ids and bans', async () => {
@@ -63,8 +74,128 @@ describe('privacy delete', () => {
     expect(out).not.toContain('a@b.c');
   });
 
+  it('deletes quotes, scores, the RPG character, AI data and linked accounts, but not moderation records', async () => {
+    seed({
+      id: 'u', discord_id: '1', lastfm_username: 'fm', irc_id: 'i', matrix_id: 'm', moodle_id: '7', password_hash: 'h',
+    });
+    const out = await privacy('delete', '1');
+    expect(dbMock.users.update).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({
+        lastfm_username: null, irc_id: null, matrix_id: null, moodle_id: null, password_hash: null,
+      }),
+    }));
+    [dbMock.quotes, dbMock.wordle_scores, dbMock.connections_scores, dbMock.mini_scores, dbMock.personas, dbMock.ai_info]
+      .forEach(table => expect(table.deleteMany).toHaveBeenCalledWith({ where: { user_id: 'u' } }));
+    expect(dbMock.rpg_inventory.deleteMany).toHaveBeenCalledWith({ where: { personas: { user_id: 'u' } } });
+    expect(dbMock.best_of.deleteMany).toHaveBeenCalledWith({ where: { user_id: '1' } });
+    expect(dbMock.claimed_bounties.deleteMany).toHaveBeenCalledWith({ where: { user_id: '1' } });
+    expect(dbMock.members.deleteMany).toHaveBeenCalledWith({ where: { id: '1' } });
+    expect(dbMock.user_actions.deleteMany).not.toHaveBeenCalled();
+    expect(dbMock.appeals.deleteMany).not.toHaveBeenCalled();
+    expect(out).toContain('quotes, game scores');
+  });
+
+  it('propagates a mid-delete failure from the transaction without writing through the root client', async () => {
+    seed({ id: 'u', discord_id: '1' });
+    const tx = {
+      users: { update: vi.fn() },
+      user_drug_doses: { deleteMany: vi.fn() },
+      user_experience: { deleteMany: vi.fn().mockRejectedValue(new Error('delete failed')) },
+    };
+    dbMock.$transaction.mockImplementationOnce(async callback => {
+      if (typeof callback !== 'function') throw new Error('Expected an interactive transaction');
+      return callback(tx as unknown as Prisma.TransactionClient);
+    });
+
+    await expect(privacy('delete', '1')).rejects.toThrow('delete failed');
+    expect(tx.users.update).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({ last_seen_at: SCRUBBED_LAST_SEEN }),
+    }));
+    expect(tx.user_drug_doses.deleteMany).toHaveBeenCalled();
+    expect(dbMock.users.update).not.toHaveBeenCalled();
+    expect(dbMock.user_drug_doses.deleteMany).not.toHaveBeenCalled();
+    expect(dbMock.quotes.deleteMany).not.toHaveBeenCalled();
+  });
+
+  it('skips the Discord-ID tables for a user without a Discord ID', async () => {
+    seed({ id: 'u', discord_id: null });
+    await privacy('delete', 'x');
+    expect(dbMock.best_of.deleteMany).not.toHaveBeenCalled();
+  });
+
   it('omits record summaries when there were none', async () => {
     seed({ id: 'u', discord_id: '1' });
     expect(await privacy('delete', '1')).not.toContain('I deleted 0');
+  });
+});
+
+describe('setIrcBridgeOptOut', () => {
+  it('stores the opt-out on the user and returns it', async () => {
+    dbMock.users.upsert.mockResolvedValueOnce({ id: 'u', discord_id: '1' } as unknown as Upsert);
+    dbMock.users.update.mockResolvedValueOnce({ irc_bridge_opt_out: true } as never);
+    expect(await setIrcBridgeOptOut('1', true)).toBe(true);
+    expect(dbMock.users.update).toHaveBeenCalledWith({ where: { id: 'u' }, data: { irc_bridge_opt_out: true } });
+  });
+});
+
+describe('purgeInactiveUsers', () => {
+  const now = new Date('2026-11-12T00:00:00Z');
+
+  it('looks for unbanned users unseen for six months, skipping already-scrubbed ones', async () => {
+    dbMock.users.findMany.mockResolvedValueOnce([]);
+    expect(await purgeInactiveUsers(now)).toBe(0);
+    const { where } = dbMock.users.findMany.mock.calls[0][0] as { where: Record<string, unknown> };
+    expect(where.last_seen_at).toEqual({ lt: new Date('2026-05-12T00:00:00Z'), gt: SCRUBBED_LAST_SEEN });
+    expect(where.user_actions_user_actions_user_idTousers).toEqual({ none: { type: 'FULL_BAN', repealed_at: null } });
+    expect(dbMock.user_actions.deleteMany).not.toHaveBeenCalled();
+  });
+
+  it('scrubs each inactive user but leaves their moderation actions to their own retention', async () => {
+    dbMock.users.findMany.mockResolvedValueOnce([
+      { id: 'u1', discord_id: 'd1' }, { id: 'u2', discord_id: null },
+    ] as never);
+    seed({ id: 'u1', discord_id: 'd1', email: 'a@b.c' });
+    expect(await purgeInactiveUsers(now)).toBe(1);
+    expect(dbMock.users.update).toHaveBeenCalledWith(expect.objectContaining({
+      where: { id: 'u1' }, data: expect.objectContaining({ email: null, last_seen_at: SCRUBBED_LAST_SEEN }),
+    }));
+    expect(dbMock.user_actions.deleteMany).not.toHaveBeenCalled();
+  });
+
+  it('keeps going when one user fails', async () => {
+    dbMock.users.findMany.mockResolvedValueOnce([
+      { id: 'u1', discord_id: 'd1' }, { id: 'u2', discord_id: 'd2' },
+    ] as never);
+    dbMock.users.upsert.mockRejectedValueOnce(new Error('boom'));
+    seed({ id: 'u2', discord_id: 'd2' });
+    vi.spyOn(global.log, 'error').mockReturnValue(undefined as never);
+    expect(await purgeInactiveUsers()).toBe(1);
+    expect(global.log.error).toHaveBeenCalledWith('g.privacy', expect.stringContaining('boom'));
+  });
+});
+
+describe('pruneModerationActions', () => {
+  it('deletes actions older than two years, keeping permanent bans and the actions of banned users', async () => {
+    dbMock.user_actions.deleteMany.mockResolvedValueOnce({ count: 4 });
+    expect(await pruneModerationActions(new Date('2026-11-12T00:00:00Z'))).toBe(4);
+    expect(dbMock.user_actions.deleteMany).toHaveBeenCalledWith({
+      where: {
+        created_at: { lt: new Date('2024-11-12T00:00:00Z') },
+        type: { notIn: ['FULL_BAN', 'BAN_EVASION'] },
+        users_user_actions_user_idTousers: {
+          is: { user_actions_user_actions_user_idTousers: { none: { type: 'FULL_BAN', repealed_at: null } } },
+        },
+      },
+    });
+  });
+});
+
+describe('pruneCommandParameters', () => {
+  it('deletes parameters of usages older than 90 days and reports the count', async () => {
+    dbMock.command_usage_parameter.deleteMany.mockResolvedValueOnce({ count: 7 });
+    expect(await pruneCommandParameters(new Date('2026-11-12T00:00:00Z'))).toBe(7);
+    expect(dbMock.command_usage_parameter.deleteMany).toHaveBeenCalledWith({
+      where: { usage: { created_at: { lt: new Date('2026-08-14T00:00:00Z') } } },
+    });
   });
 });

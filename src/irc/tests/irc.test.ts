@@ -1,4 +1,7 @@
 import type { EventEmitter } from 'events';
+import fs from 'fs';
+import os from 'os';
+import path from 'path';
 import type { Mock } from 'vitest';
 
 type FakeClient = EventEmitter & {
@@ -48,6 +51,9 @@ vi.mock('irc-framework', async () => {
 });
 
 const NICK = 'TripBotDev';
+const JOIN_ALL = '#lounge,#sandbox';
+const OPER_PASSWORD = 'oper-password';
+const RPL_YOUREOPER = '381';
 const ircEnv = {
   IRC_SERVER: 'irc.example.test',
   IRC_PORT: 6697,
@@ -58,6 +64,8 @@ const ircEnv = {
   IRC_CHANNELS: ['#lounge', '#sandbox'],
   IRC_OPER_NAME: undefined as string | undefined,
   IRC_OPER_PASSWORD: undefined as string | undefined,
+  IRC_CLIENT_CERT: undefined as string | undefined,
+  IRC_CLIENT_KEY: undefined as string | undefined,
 };
 const originalEnv: Record<string, unknown> = {};
 
@@ -73,8 +81,13 @@ async function connect() {
   [client] = clients;
 }
 
+function emitOper(command: string) {
+  client.emit('unknown command', { command, params: [], tags: {} });
+}
+
 function register() {
   client.user.nick = NICK;
+  client.connected = true;
   client.emit('registered', { nick: NICK, tags: {} });
 }
 
@@ -129,11 +142,11 @@ describe('ircConnect', () => {
     await connect();
 
     register();
-    expect(client.join.mock.calls).toEqual([['#lounge'], ['#sandbox']]);
+    expect(client.raw.mock.calls).toEqual([['JOIN', JOIN_ALL]]);
 
     client.emit('close', false);
     register();
-    expect(client.join).toHaveBeenCalledTimes(4);
+    expect(client.raw).toHaveBeenCalledTimes(2);
   });
 
   it('logs only its own channel joins', async () => {
@@ -147,29 +160,108 @@ describe('ircConnect', () => {
     expect(logInfo.mock.calls.filter(([, message]) => String(message).startsWith('Joined'))).toHaveLength(1);
   });
 
+  describe('client certificate', () => {
+    const CERT = '-----BEGIN CERTIFICATE-----\nfake\n-----END CERTIFICATE-----\n';
+    const KEY = '-----BEGIN PRIVATE KEY-----\nsecret-key-material\n-----END PRIVATE KEY-----\n';
+    const CERT_FILE = 'client.crt.pem';
+    const KEY_FILE = 'client.key.pem';
+    let dir: string;
+
+    beforeEach(() => {
+      dir = fs.mkdtempSync(path.join(os.tmpdir(), 'irc-cert-'));
+      fs.writeFileSync(path.join(dir, CERT_FILE), CERT);
+      fs.writeFileSync(path.join(dir, KEY_FILE), KEY);
+    });
+
+    afterEach(() => fs.rmSync(dir, { recursive: true, force: true }));
+
+    const connectOptions = () => client.connect.mock.calls[0][0] as Record<string, unknown>;
+
+    it('connects exactly as before when no certificate is configured', async () => {
+      await connect();
+      expect(connectOptions()).not.toHaveProperty('client_certificate');
+    });
+
+    it('presents the certificate and key from the configured paths', async () => {
+      env.IRC_CLIENT_CERT = path.join(dir, CERT_FILE);
+      env.IRC_CLIENT_KEY = path.join(dir, KEY_FILE);
+      await connect();
+      expect(connectOptions().client_certificate).toEqual({ certificate: CERT, private_key: KEY });
+    });
+
+    it('logs an error and still connects when a file cannot be read, without leaking the key', async () => {
+      env.IRC_CLIENT_CERT = path.join(dir, CERT_FILE);
+      env.IRC_CLIENT_KEY = path.join(dir, 'missing.key.pem');
+      await connect();
+      expect(connectOptions()).not.toHaveProperty('client_certificate');
+      expect(logError).toHaveBeenCalledWith('irc', expect.stringContaining('ENOENT'));
+      expect(JSON.stringify(logError.mock.calls)).not.toContain('secret-key-material');
+    });
+
+    it('requires both paths', async () => {
+      env.IRC_CLIENT_CERT = path.join(dir, CERT_FILE);
+      await connect();
+      expect(connectOptions()).not.toHaveProperty('client_certificate');
+      expect(logError).toHaveBeenCalledWith('irc', expect.stringContaining('must both be set'));
+    });
+
+    it('honors an explicit non-TLS configuration', async () => {
+      env.IRC_TLS = false;
+      await connect();
+      expect(connectOptions()).toMatchObject({ tls: false });
+      expect(logInfo).toHaveBeenCalledWith('irc', 'Connecting to IRC irc.example.test:6697');
+    });
+  });
+
   describe('oper', () => {
     it('does not send OPER without oper credentials', async () => {
       await connect();
       register();
 
-      expect(client.raw).not.toHaveBeenCalled();
+      expect(client.raw).not.toHaveBeenCalledWith('OPER', expect.anything(), expect.anything());
     });
 
     it('sends OPER after registering when oper credentials are set', async () => {
       env.IRC_OPER_NAME = 'tripbot';
-      env.IRC_OPER_PASSWORD = 'oper-password';
+      env.IRC_OPER_PASSWORD = OPER_PASSWORD;
       await connect();
       register();
 
-      expect(client.raw).toHaveBeenCalledWith('OPER', 'tripbot', 'oper-password');
+      expect(client.raw).toHaveBeenCalledWith('OPER', 'tripbot', OPER_PASSWORD);
+    });
+
+    it('joins channels only once OPER has answered', async () => {
+      env.IRC_OPER_NAME = 'tripbot';
+      env.IRC_OPER_PASSWORD = OPER_PASSWORD;
+      await connect();
+      register();
+      expect(client.raw).not.toHaveBeenCalledWith('JOIN', expect.anything());
+
+      emitOper(RPL_YOUREOPER);
+      expect(client.raw).toHaveBeenCalledWith('JOIN', JOIN_ALL);
+    });
+
+    it('still joins when OPER is refused or never answered', async () => {
+      env.IRC_OPER_NAME = 'tripbot';
+      env.IRC_OPER_PASSWORD = OPER_PASSWORD;
+      await connect();
+      register();
+      emitOper('491');
+      expect(client.raw).toHaveBeenCalledWith('JOIN', JOIN_ALL);
+
+      client.emit('close', false);
+      client.raw.mockClear();
+      register();
+      await vi.advanceTimersByTimeAsync(5_000);
+      expect(client.raw).toHaveBeenCalledWith('JOIN', JOIN_ALL);
     });
 
     it('logs the result of the OPER attempt', async () => {
       env.IRC_OPER_NAME = 'tripbot';
       await connect();
 
-      client.emit('unknown command', { command: '381', params: [], tags: {} });
-      client.emit('unknown command', { command: '491', params: [], tags: {} });
+      emitOper(RPL_YOUREOPER);
+      emitOper('491');
 
       expect(logInfo).toHaveBeenCalledWith('irc', 'Opered up on IRC as tripbot');
       expect(logError).toHaveBeenCalledWith('irc', 'IRC OPER failed: no matching oper block for this host');
@@ -258,6 +350,12 @@ describe('ircConnect', () => {
       expect(logError).toHaveBeenCalledWith('irc', 'Not reconnecting to IRC until the SASL credentials are fixed');
     });
 
+    it('uses a fallback when SASL failure has no message', async () => {
+      await connect();
+      client.emit('sasl failed', { reason: 'fail' });
+      expect(logError).toHaveBeenCalledWith('irc', 'IRC SASL authentication failed (fail): no reason given');
+    });
+
     it('logs socket errors but not clean socket closes', async () => {
       await connect();
 
@@ -266,6 +364,18 @@ describe('ircConnect', () => {
 
       expect(logError).toHaveBeenCalledTimes(1);
       expect(logError).toHaveBeenCalledWith('irc', 'IRC connection error: certificate has expired');
+    });
+
+    it('reports IRC errors when the server omits the channel and reason', async () => {
+      await connect();
+      client.emit('irc error', { error: 'unavailable' });
+      expect(logWarn).toHaveBeenCalledWith('irc', 'IRC error: unavailable in n/a (no reason given)');
+    });
+
+    it('includes the channel and reason when the server provides them', async () => {
+      await connect();
+      client.emit('irc error', { error: 'unavailable', channel: '#lounge', reason: 'Try again' });
+      expect(logWarn).toHaveBeenCalledWith('irc', 'IRC error: unavailable in #lounge (Try again)');
     });
   });
 });

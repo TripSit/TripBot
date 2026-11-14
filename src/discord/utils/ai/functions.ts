@@ -267,7 +267,6 @@ export class AiFunction {
     }
 
     log.debug(F, `Constructed prompt with ${messageList.length} messages for persona ${personaId}`);
-    log.debug(F, `Prompt content: ${JSON.stringify(messageList, null, 2)}`);
 
     return messageList;
   }

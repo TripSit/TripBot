@@ -41,6 +41,8 @@ model users {
   partner                                                   Boolean?             @default(true)
   supporter                                                 Boolean?             @default(false)
   moodle_id                                                 String?
+  /// When true, the chat bridge never relays this user's Discord messages to IRC (set with /privacy bridge)
+  irc_bridge_opt_out                                        Boolean              @default(false)
   ai_info                                                   ai_info?
   appeals                                                   appeals[]
   drug_articles_drug_articles_last_modified_byTousers       drug_articles[]      @relation("drug_articles_last_modified_byTousers")
@@ -421,7 +423,6 @@ model user_reminders {
 model user_tickets {
   id                                    String        @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
   user_id                               String        @db.Uuid
-  description                           String
   thread_id                             String
   meta_thread_id                        String?
   first_message_id                      String
@@ -722,4 +723,26 @@ model ai_moderation {
   discord_guilds discord_guilds? @relation(fields: [guild_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "appeals_guildid_foreign")
 
   @@unique([guild_id], map: "aimoderation_guildid_unique")
+}
+
+/// Maps a Discord channel to the IRC channel (and Matrix room) it is bridged with.
+/// A Discord channel can have several rows (Movies and TV-Movies share one); each IRC channel has one.
+model bridge_channels {
+  discord_channel_id String
+  irc_channel        String   @unique @db.VarChar(200) // stored lowercase; IRC names are case-insensitive
+  gateway_name       String
+  matrix_room_id     String?
+  topic              String?
+  /// 'override' (seeded or hand-edited, bridges regardless of category/privacy) or 'auto' (discovered)
+  source             String   @default("auto")
+  /// Whether the Discord channel currently qualifies; maintained by the sync
+  active             Boolean  @default(true)
+  /// Manual kill switch: false rows are never activated and never touched by seeding
+  enabled            Boolean  @default(true)
+  irc_registered     Boolean  @default(false)
+  created_at         DateTime @default(now()) @db.Timestamptz(6)
+  updated_at         DateTime @default(now()) @updatedAt @db.Timestamptz(6)
+
+  @@id([discord_channel_id, irc_channel])
+  @@index([discord_channel_id])
 }
