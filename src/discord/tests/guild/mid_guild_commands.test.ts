@@ -176,6 +176,18 @@ describe('purge', () => {
     await purgeButton(other as never);
     expect(other.editReply).not.toHaveBeenCalled();
   });
+
+  it('button skips channels that are missing from the cache instead of throwing', async () => {
+    const c1 = textChannel('c1', ['target', 'x']);
+    const guild = guildOf([c1]);
+    const stub = {
+      guild, id: 'i', customId: 'purge~confirm~target', update: vi.fn(), editReply: vi.fn(), user: { id: 'u1' }, member: mem('u1'),
+    };
+    // Cache has no entry for c1, so deleteMessages must skip it
+    (guild.channels.cache as unknown as Map<string, unknown>).delete('c1');
+    await expect(purgeButton(stub as never)).resolves.not.toThrow();
+    expect(c1.messages.delete).not.toHaveBeenCalled();
+  });
 });
 
 describe('botmod', () => {

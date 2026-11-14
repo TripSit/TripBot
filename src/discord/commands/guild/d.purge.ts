@@ -75,7 +75,12 @@ async function deleteMessages(
       await Promise.all(
         Object.values(messages).map(async message => {
           log.debug(F, `Deleting message ${message} in channel ${channel}`);
-          await (interaction.guild?.channels.cache.get(channel) as TextChannel).messages.delete(message);
+          const targetChannel = interaction.guild?.channels.cache.get(channel) as TextChannel | undefined;
+          if (!targetChannel) {
+            log.warn(F, `Channel ${channel} not found in cache, skipping message ${message}`);
+            return;
+          }
+          await targetChannel.messages.delete(message);
         }),
       );
     }),

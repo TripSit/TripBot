@@ -1,5 +1,4 @@
 const F = f(__filename);
-const logger = require('../../global/utils/logger');
 const {verifyLink} = require('../../discord/commands/guild/link-accounts');
 
 export default async function(

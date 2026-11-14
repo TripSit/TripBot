@@ -45,7 +45,7 @@ export const dReport: SlashCommand = {
     // Get the actor
     const actor = interaction.member as GuildMember;
     // Determine if the actor is a mod
-    const actorIsMod = (!!guildData.role_moderator && actor.roles.cache.has(guildData.role_moderator));
+    const actorIsMod = actor.roles.cache.has(guildData.role_moderator);
     await interaction.editReply(await modResponse(interaction, 'REPORT', actorIsMod));
     return true;
   },

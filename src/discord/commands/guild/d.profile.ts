@@ -353,7 +353,7 @@ export const dProfile: SlashCommand = {
     context.font = `50px ${userFont}`;
     context.textAlign = 'left';
     let usernameHeight = 76;
-    let fontSize = 50;
+    let fontSize: number;
     const maxLength = 508;
     context.textBaseline = 'middle';
 
@@ -645,7 +645,7 @@ export async function getProfilePreview(target: GuildMember, option: string, ima
   context.font = `50px ${userFont}`;
   context.textAlign = 'left';
   let usernameHeight = 76;
-  let fontSize = 50;
+  let fontSize: number;
   const maxLength = 508;
   const userFlair = 'Your Custom Flair Here';
   context.textBaseline = 'middle';
