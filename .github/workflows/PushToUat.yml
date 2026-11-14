@@ -69,6 +69,13 @@ jobs:
         run: cp .env.example .env
       - name: Test
         run: npx vitest run --silent --coverage
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: coverage/lcov.info
+          if-no-files-found: error
+          retention-days: 1
   docker-build:
     name: Docker Build
     runs-on: ubuntu-latest
@@ -109,12 +116,20 @@ jobs:
         with:
           category: "/language:javascript"
   sonar:
+    needs: test
     name: SonarScan
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0 # Shallow clones should be disabled for a better relevancy of analysis
+      - name: Download coverage report
+        uses: actions/download-artifact@v4
+        with:
+          name: coverage
+          path: coverage
+      - name: Verify coverage report
+        run: test -s coverage/lcov.info
       - uses: sonarsource/sonarqube-scan-action@master
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

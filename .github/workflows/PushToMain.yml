@@ -28,24 +28,33 @@ jobs:
           push: false
           cache-from: type=gha
           cache-to: type=gha,mode=max
-  # test:
-  #   name: Test
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #   - uses: actions/checkout@v3
-  #   - name: Use Node.js '22.9.0'
-  #     uses: actions/setup-node@v3
-  #     with:
-  #       node-version: '22.9.0'
-  #       cache: 'npm'
-  #   - name: Update npm
-  #     run: npm install -g npm && npm --version
-  #   - name: Install dependencies
-  #     run: npm ci
-  #   - name: Copy env
-  #     run: cp .env.example .env
-  #   - name: Test
-  #     run: npx vitest run --silent
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    env:
+      NODE_OPTIONS: --max-old-space-size=7168
+    steps:
+      - uses: actions/checkout@v3
+      - name: Use Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version-file: ".nvmrc"
+          cache: "npm"
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps
+      - name: Generate Prisma clients
+        run: npm run db:generate
+      - name: Copy env
+        run: cp .env.example .env
+      - name: Test
+        run: npx vitest run --silent --coverage
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: coverage/lcov.info
+          if-no-files-found: error
+          retention-days: 1
   codeql:
     name: CodeQL
     runs-on: ubuntu-latest
@@ -71,12 +80,20 @@ jobs:
         with:
           category: "/language:javascript"
   sonar:
+    needs: test
     name: SonarScan
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+      - name: Download coverage report
+        uses: actions/download-artifact@v4
+        with:
+          name: coverage
+          path: coverage
+      - name: Verify coverage report
+        run: test -s coverage/lcov.info
       - uses: sonarsource/sonarqube-scan-action@master
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
