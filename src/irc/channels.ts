@@ -84,6 +84,7 @@ export function registerIrcChannels(client: Client): void {
       log.info(F, `Leaving IRC channel ${name}: no longer bridged`);
       client.raw('PART', name, 'No longer bridged');
       joined.delete(name);
+      requested.delete(name);
     });
     if (toJoin.length === 0) return;
     toJoin.forEach(([name]) => requested.add(name));

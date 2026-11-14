@@ -175,6 +175,24 @@ describe('joining', () => {
     expect(joins()).toEqual(['#c']);
   });
 
+  it('rejoins a disabled mapping when it is enabled again without reconnecting', () => {
+    mappings.setMappings([row('#a')]);
+    register();
+    client.emit('join', { nick: BOT, channel: '#a' });
+    client.raw.mockClear();
+
+    mappings.setMappings([row('#a', { enabled: false })]);
+    expect(client.raw).toHaveBeenCalledWith(PART, '#a', expect.any(String));
+    client.emit('part', { nick: BOT, channel: '#a' });
+    client.raw.mockClear();
+
+    mappings.setMappings([row('#a')]);
+    expect(joins()).toEqual(['#a']);
+    client.emit('join', { nick: BOT, channel: '#a' });
+    mappings.setMappings([row('#a')]);
+    expect(joins()).toEqual(['#a']);
+  });
+
   it('does not rejoin channels it is already in or has requested', () => {
     mappings.setMappings([row('#a')]);
     register();

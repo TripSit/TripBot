@@ -157,6 +157,49 @@ describe('registerBridgeSync', () => {
     expect(mocks.syncChannels).toHaveBeenCalledTimes(2);
   });
 
+  it('resyncs visibility when the main guild everyone role changes', async () => {
+    const visible = channel('1');
+    const handlers: Record<string, (...args: unknown[]) => void> = {};
+    const client = {
+      once: (event: string, fn: () => void) => { handlers[event] = fn; },
+      on: (event: string, fn: () => void) => { handlers[event] = fn; },
+      guilds: { cache: new Map([['main', guildOf([visible])]]) },
+    } as unknown as Client;
+    registerBridgeSync(client);
+    handlers.clientReady();
+    await flush();
+    expect(mocks.syncChannels).toHaveBeenLastCalledWith(
+      [expect.objectContaining({ id: '1', isPrivate: false })],
+      { dryRun: false },
+    );
+
+    visible.guild.roles.everyone.permissions = new PermissionsBitField();
+    handlers.roleUpdate({}, { id: 'main', guild: { id: 'main' } });
+    await flush();
+    expect(mocks.syncChannels).toHaveBeenCalledTimes(2);
+    expect(mocks.syncChannels).toHaveBeenLastCalledWith(
+      [expect.objectContaining({ id: '1', isPrivate: true })],
+      { dryRun: false },
+    );
+
+    visible.guild.roles.everyone.permissions = new PermissionsBitField(PermissionFlagsBits.ViewChannel);
+    handlers.roleUpdate({}, { id: 'main', guild: { id: 'main' } });
+    await flush();
+    expect(mocks.syncChannels).toHaveBeenCalledTimes(3);
+    expect(mocks.syncChannels).toHaveBeenLastCalledWith(
+      [expect.objectContaining({ id: '1', isPrivate: false })],
+      { dryRun: false },
+    );
+  });
+
+  it('ignores updates to other roles and other guilds', async () => {
+    const handlers = setup();
+    handlers.roleUpdate({}, { id: 'other-role', guild: { id: 'main' } });
+    handlers.roleUpdate({}, { id: 'other', guild: { id: 'other' } });
+    await flush();
+    expect(mocks.syncChannels).not.toHaveBeenCalled();
+  });
+
   it('reacts to channel changes only in the main guild', async () => {
     const handlers = setup();
     mocks.syncChannels.mockClear();

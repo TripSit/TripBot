@@ -66,6 +66,9 @@ export function registerBridgeSync(client: Client): void {
   client.on('channelUpdate', (_old, channel) => {
     if ('guildId' in channel && inMainGuild(channel)) syncBridgeChannels(client);
   });
+  client.on('roleUpdate', (_old, role) => {
+    if (role.guild.id === env.DISCORD_GUILD_ID && role.id === role.guild.id) syncBridgeChannels(client);
+  });
   client.on('channelDelete', channel => {
     if ('guildId' in channel && inMainGuild(channel)) syncBridgeChannels(client);
   });
