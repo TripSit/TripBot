@@ -53,6 +53,10 @@ describe('sheesh', () => {
     expect(await run('passjoint', member('977945272359452713'))).toContain('TripBot');
     expect(await run('passjoint', member('x', 'Pal'))).toContain('passed joint to Pal');
   });
+
+  it('passjoint without a resolved member does not throw', async () => {
+    expect(await run('passjoint', null)).toContain('passed joint to');
+  });
 });
 
 describe('say', () => {

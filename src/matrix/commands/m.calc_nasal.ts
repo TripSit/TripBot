@@ -21,7 +21,7 @@ async function mCalcNasal(roomId:string, event:any, func:string = '', x:string =
   const cMlpp = Number(mlpp.replace(/[^\d.-]/g, ''));
   const cMgpp = Number(mgpp.replace(/[^\d.-]/g, ''));
   const cSubstanceOrSolvent = Number(x.replace(/[^\d.-]/g, ''));
-  if ((func.toLowerCase() === 'substance' || 'solvent') && cMlpp !== null && cMgpp !== null) {
+  if (['substance', 'solvent'].includes(func.toLowerCase()) && !Number.isNaN(cMlpp) && !Number.isNaN(cMgpp)) {
     if (func.toLowerCase() === 'substance') {
       const result = await calcSubstance(cSubstanceOrSolvent, cMgpp, cMlpp);
       const text = `To excreed ${cMgpp} mg of whatever substance you want to use with your nasal spray that excreeds ${cMlpp} ml of mixture per push, you'll need to add ${result} mg of that substance to the ${cSubstanceOrSolvent} ml solvent.\n\nPlease note that this information may not be 100% accurate. Do not use this as your only information source.`;

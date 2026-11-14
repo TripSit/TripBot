@@ -471,7 +471,7 @@ export const dLevels: SlashCommand = {
     context.font = `50px ${userFont}`;
     context.textAlign = 'left';
     let usernameHeight = 76;
-    let fontSize = 50;
+    let fontSize: number;
     const maxLength = 508;
     context.textBaseline = 'middle';
 

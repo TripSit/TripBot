@@ -1,6 +1,5 @@
 import { WhoisResponse } from 'matrix-org-irc';
 import env from '../../../global/utils/env.config';
-import logger from '../../global/utils/logger';
 import { IRCMessage } from '../../@types/irc';
 
 const F = f(__filename);

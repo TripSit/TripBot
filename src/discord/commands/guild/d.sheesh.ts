@@ -49,7 +49,7 @@ export const dSheesh: SlashCommand = {
     } else if (command === 'passjoint') {
       if (user === member) {
         await interaction.editReply({ content: `<:ts_smile:1350089891798712403> ${user.displayName} decided to keep joint for themselves! Shame on you! <:ts_smile:1350089891798712403>` });
-      } else if (member.id === '977945272359452713') {
+      } else if (member?.id === '977945272359452713') {
         await interaction.editReply({ content: `<:ts_cannabinoids:1350076845021986816> ${user.displayName} passed joint to TripBot! <:ts_bot:1350076410714128384> Hopefully, TripBot gives it back <:ts_smile:1350089891798712403>` }); // eslint-disable-line max-len
       } else {
         await interaction.editReply({ content: `<:ts_cannabinoids:1350076845021986816> ${user.displayName} passed joint to ${member?.displayName} <:ts_cannabinoids:1350076845021986816>` }); // eslint-disable-line max-len

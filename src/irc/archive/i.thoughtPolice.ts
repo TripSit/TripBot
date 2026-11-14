@@ -1,14 +1,7 @@
 import { Message } from "discord.js";
 
 const F = f(__filename);
-const {stripIndents} = require('common-tags');
 const logger = require('../../global/utils/logger');
-const {bigBrother} = require('../../global/utils/thoughtPolice');
-const {moderate} = require('../../global/utils/moderate');
-
-const {
-  NODE_ENV,
-} = require('../../../env');
 
 export default async function(message:Message) {
     log.debug(F, `started!`);

@@ -2231,7 +2231,7 @@ export async function rpgFlair(interaction: ChatInputCommandInteraction) {
 
   let aiApproved = 'rejected';
   // eslint-disable-next-line sonarjs/no-duplicate-string
-  let adjustmentReason = 'No reason given';
+  let adjustmentReason: string;
 
   const messageList = [{
     role: 'user',
@@ -3094,7 +3094,7 @@ export async function rpgHomeSell(
 ):Promise<InteractionUpdateOptions> {
   // Check get fresh persona data
   const userData = await getOrCreateUser(interaction.user.id);
-  let personaData = await getOrCreatePersona(userData.id);
+  const personaData = await getOrCreatePersona(userData.id);
   const inventoryData = await db.rpg_inventory.findMany({
     where: {
       persona_id: personaData.id,
@@ -3119,7 +3119,7 @@ export async function rpgHomeSell(
 
   personaData.tokens += sellPrice;
 
-  personaData = await db.personas.upsert({
+  await db.personas.upsert({
     where: {
       user_id: userData.id,
     },
