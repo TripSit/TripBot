@@ -35,8 +35,6 @@ export async function isToxic(text: string): Promise<ModerateHatespeechResponse>
       { headers: { 'Content-Type': 'application/json' } },
     );
 
-    // log.info(F, `ModerateHatespeech API response: ${JSON.stringify(data)}`);
-
     const isNormalWithLowConfidence = data.class === 'normal' && data.confidence < minNormalConfidence;
     const isFlagged = data.class === 'flag' && data.confidence >= minFlagConfidence;
 
@@ -51,31 +49,43 @@ export async function isToxic(text: string): Promise<ModerateHatespeechResponse>
   }
 }
 
+async function fetchRepliedMessage(message: Message): Promise<Message | null> {
+  if (!message.reference?.messageId) return null;
+  try {
+    return await message.channel.messages.fetch(message.reference.messageId);
+  } catch (error) {
+    log.error(F, `Failed to fetch replied message: ${error}`);
+    return null;
+  }
+}
+
+// Choose the appropriate log channel based on the class
+function logChannelFor(toxicityClass: string | null): string {
+  if (toxicityClass === 'flag') {
+    return env.NODE_ENV === 'production' ? env.CHANNEL_AIMOD_LOG : env.CHANNEL_BOTSPAM;
+  }
+  return env.CHANNEL_BOTERRORS;
+}
+
+function describeReply(repliedMessage: Message | null): string[] {
+  if (!repliedMessage) return [];
+  return [
+    `\n**Replying to**: ${repliedMessage.content}`,
+    `**Referenced User**: ${repliedMessage.author}`,
+    `**Referenced Message**: ${repliedMessage.url}`,
+  ];
+}
+
 export async function monitorToxicity(message: Message): Promise<void> {
   // Get reference message if this is a reply
-  let repliedMessage = null;
-  if (message.reference && message.reference.messageId) {
-    try {
-      repliedMessage = await message.channel.messages.fetch(message.reference.messageId);
-    } catch (error) {
-      log.error(F, `Failed to fetch replied message: ${error}`);
-    }
-  }
+  const repliedMessage = await fetchRepliedMessage(message);
 
   const result = await isToxic(message.content);
 
   if (result.isFlaggedOrLowConfidence) {
     log.info(F, `Message ${message.id} flagged by ModerateHatespeech`);
 
-    // Choose the appropriate log channel based on result.class
-    let logChannelId: string;
-    if (result.class === 'flag') {
-      logChannelId = env.NODE_ENV === 'production' ? env.CHANNEL_AIMOD_LOG : env.CHANNEL_BOTSPAM;
-    } else {
-      logChannelId = env.CHANNEL_BOTERRORS;
-    }
-
-    const aiModLogChannel = await discordClient.channels.fetch(logChannelId) as TextChannel;
+    const aiModLogChannel = await discordClient.channels.fetch(logChannelFor(result.class)) as TextChannel;
     await aiModLogChannel.send({
       embeds: [{
         title: 'Flagged by ModerateHatespeech',
@@ -85,9 +95,7 @@ export async function monitorToxicity(message: Message): Promise<void> {
           `**Link:** ${message.url}`,
           `**Class:** ${result.class}`,
           `**Confidence:** ${result.confidence}`,
-          repliedMessage ? `\n**Replying to**: ${repliedMessage.content}` : '',
-          repliedMessage ? `**Referenced User**: ${repliedMessage.author}` : '',
-          repliedMessage ? `**Referenced Message**: ${repliedMessage.url}` : '',
+          ...describeReply(repliedMessage),
         ].filter(Boolean).join('\n'),
         color: Colors.Yellow,
       }],

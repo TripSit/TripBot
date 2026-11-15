@@ -38,30 +38,6 @@ export const channelDelete: ChannelDeleteEvent = {
     }
 
     await channelAuditlog.send(`Channel ${channel.name} was deleted.`);
-
-    // const fetchedLogs = await channel.guild.fetchAuditLogs({
-    //   limit: 1,
-    //   type: AuditLogEvent.ChannelDelete,
-    // });
-
-    // log.debug(F, `Fetched ${fetchedLogs.entries.size} audit logs.`);
-
-    // // Since there's only 1 audit log entry in this collection, grab the first one
-    // const deletionLog = fetchedLogs.entries.first();
-
-    // log.debug(F, `Fetched ${fetchedLogs.entries.size} audit logs.`);
-
-    // // Perform a coherence check to make sure that there's *something*
-    // if (!deletionLog) {
-    //   await channelAuditlog.send(`Channel ${channel.name} was created, but no relevant audit logs were found.`);
-    //   return;
-    // }
-
-    // const response = deletionLog.executor
-    //   ? `Channel ${channel.name} was deleted by ${deletionLog.executor.tag}.`
-    //   : `Channel ${channel.name} was deleted, but the audit log was inconclusive.`;
-
-    // await channelAuditlog.send(response);
   },
 };
 

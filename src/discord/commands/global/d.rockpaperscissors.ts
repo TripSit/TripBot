@@ -138,6 +138,20 @@ function determineWinner(choice1: string, choice2: string): GameResult {
   return 'player2';
 }
 
+/** With three or more players, one choice is knocked out: the one that loses to another choice in play. */
+function choiceToEliminate(activeChoiceNames: string[]): string | null {
+  const has = (choice: string) => activeChoiceNames.includes(choice);
+  if (has('rock') && has('scissors')) {
+    // Rock beats scissors; but if paper is also present, paper wins and rock gets eliminated
+    return has('paper') ? 'rock' : 'scissors';
+  }
+  // Paper beats rock (no scissors present)
+  if (has('paper') && has('rock')) return 'rock';
+  // Scissors beats paper (no rock present)
+  if (has('scissors') && has('paper')) return 'paper';
+  return null;
+}
+
 function determineMultiplayerWinner(choices: Map<string, string>): MultiplayerResult {
   // Count choices
   const choiceCounts = { rock: 0, paper: 0, scissors: 0 };
@@ -184,38 +198,11 @@ function determineMultiplayerWinner(choices: Map<string, string>): MultiplayerRe
     };
   }
 
-  // Multiplayer logic: find the choice that gets eliminated
-  let eliminatedChoice: string | null = null;
+  // Multiplayer logic: find the choice that gets eliminated among the active choices
+  const eliminatedChoice = choiceToEliminate(activeChoices.map(c => c.choice));
 
-  // Check all possible RPS matchups among active choices
-  const activeChoiceNames = activeChoices.map(c => c.choice);
-
-  if (activeChoiceNames.includes('rock') && activeChoiceNames.includes('scissors')) {
-    // Rock beats scissors
-    if (!activeChoiceNames.includes('paper')) {
-      // Only rock vs scissors
-      eliminatedChoice = 'scissors';
-    } else {
-      // Rock, paper, scissors all present - paper wins, rock gets eliminated
-      eliminatedChoice = 'rock';
-    }
-  } else if (activeChoiceNames.includes('paper') && activeChoiceNames.includes('rock')) {
-    // Paper beats rock (no scissors present)
-    eliminatedChoice = 'rock';
-  } else if (activeChoiceNames.includes('scissors') && activeChoiceNames.includes('paper')) {
-    // Scissors beats paper (no rock present)
-    eliminatedChoice = 'paper';
-  }
-
-  let eliminated: string[] = [];
-
-  if (eliminatedChoice) {
-    // Eliminate players who chose the losing choice
-    const eliminatedResult = results.find(r => r.choice === eliminatedChoice);
-    if (eliminatedResult) {
-      eliminated = eliminatedResult.players;
-    }
-  }
+  // Eliminate players who chose the losing choice
+  const eliminated = results.find(r => r.choice === eliminatedChoice)?.players ?? [];
 
   const remaining = Array.from(choices.keys()).filter(id => !eliminated.includes(id));
 
@@ -310,7 +297,7 @@ async function startMultiplayerRound(interaction: ChatInputCommandInteraction, g
           embeds: [updatedEmbed],
           components: createChoiceButtons(gameObj),
         });
-      } catch (error) {
+      } catch {
         // Message was likely deleted, stop the collector
         roundCollector.stop();
       }
@@ -367,7 +354,7 @@ async function startMultiplayerRound(interaction: ChatInputCommandInteraction, g
         embeds: [resultsEmbed],
         components: [],
       });
-    } catch (error) {
+    } catch {
       // Message was likely deleted, game is over
       return;
     }
@@ -381,7 +368,7 @@ async function startMultiplayerRound(interaction: ChatInputCommandInteraction, g
       setTimeout(async () => {
         try {
           await startMultiplayerRound(interaction, gameObj);
-        } catch (error) {
+        } catch {
           // Message was likely deleted, game is over
         }
       }, 3000);
@@ -458,7 +445,7 @@ async function handle1v1GameEnd(
           embeds: [finalEmbed],
           components: [],
         });
-      } catch (error) {
+      } catch {
         // Message was likely deleted, game is over
       }
     }, 2000);
@@ -484,7 +471,7 @@ async function handle1v1GameEnd(
           embeds: [nextRoundEmbed],
           components: createChoiceButtons(gameObj),
         });
-      } catch (error) {
+      } catch {
         // Message was likely deleted, game is over
         gameObj.isActive = false;
       }
@@ -547,7 +534,7 @@ async function handle1v1Game(interaction: ChatInputCommandInteraction, opponent:
     if (!collector) {
       throw new Error('Collector creation failed');
     }
-  } catch (error) {
+  } catch {
     await interaction.editReply({
       content: 'This command requires the bot to be added to the server to work properly.',
       embeds: [],
@@ -588,7 +575,7 @@ async function handle1v1Game(interaction: ChatInputCommandInteraction, opponent:
           embeds: [updatedEmbed],
           components: createChoiceButtons(game),
         });
-      } catch (error) {
+      } catch {
         // Message was likely deleted, stop the collector
         game.isActive = false;
         if (collector) {
@@ -667,7 +654,7 @@ async function handleMultiplayerQueue(interaction: ChatInputCommandInteraction):
           embeds: [updatedEmbed],
           components: queueButtons,
         });
-      } catch (error) {
+      } catch {
         // Message was likely deleted, stop the timer and collector
         clearInterval(timerInterval);
         if (queueCollector) {
@@ -721,7 +708,7 @@ async function handleMultiplayerQueue(interaction: ChatInputCommandInteraction):
           embeds: [failEmbed],
           components: [],
         });
-      } catch (error) {
+      } catch {
         // Message was likely deleted, game is over
       }
       return;

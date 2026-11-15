@@ -164,7 +164,7 @@ export const dBotmod: SlashCommand = {
         let pubReason = '';
         try {
           pubReason = i.fields.getTextInputValue('pubReason');
-        } catch (e) {
+        } catch {
           // ignore
         }
         await i.editReply(await botmod(interaction, group, actor, command, targetId, privReason, pubReason) as InteractionEditReplyOptions);

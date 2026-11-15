@@ -61,6 +61,7 @@ describe('api() startup failure', () => {
     try {
       first = await api();
       await expect(api()).rejects.toThrow(/EADDRINUSE|address already in use/);
+      expect(first).toBeDefined();
     } finally {
       first?.close();
       env.API_PORT = original;

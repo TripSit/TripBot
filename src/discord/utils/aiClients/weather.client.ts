@@ -3,11 +3,11 @@ import { WeatherData } from '../ai/types';
 export default class WeatherClient {
   private readonly apiKey: string;
 
-  private apiUrl = 'https://api.tomorrow.io/v4/weather/realtime';
+  private readonly apiUrl = 'https://api.tomorrow.io/v4/weather/realtime';
 
-  private latitude: string;
+  private readonly latitude: string;
 
-  private longitude: string;
+  private readonly longitude: string;
 
   constructor(apiKey?: string) {
     this.apiKey = apiKey ?? env.WEATHER_TOKEN ?? '';

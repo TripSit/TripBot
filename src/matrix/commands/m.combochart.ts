@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { MatrixClient } from 'matrix-bot-sdk';
 import { combochart } from '../../global/commands/g.combochart';
 
 export default mCommand;

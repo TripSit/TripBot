@@ -1,7 +1,4 @@
-// import {
-//   Client,
-//   Interaction,
-// } from 'discord.js';
+import { ChatInputCommandInteraction, MessageComponentInteraction } from 'discord.js';
 import {
   InteractionType,
   MessageFlags,
@@ -13,7 +10,6 @@ import { commandRun } from '../utils/commandRun';
 import { autocomplete } from './autocomplete';
 import { buttonClick } from './buttonClick';
 import { selectMenu } from './selectMenu';
-// import { Users } from '../../global/@types/database';
 import { botBannedUsers } from '../utils/populateBotBans';
 import modalSubmit from './modalSubmit';
 import { getOrCreateUser } from '../../global/utils/dbRecords';
@@ -21,6 +17,44 @@ import { touchLastSeen } from '../../global/utils/lastSeen';
 import { statParameters } from '../utils/commandStats';
 
 const F = f(__filename);  // eslint-disable-line
+
+async function recordCommandUsage(interaction: ChatInputCommandInteraction): Promise<void> {
+  const subcommand = interaction.options.getSubcommand(false);
+  const commandName = subcommand ? `${interaction.commandName} ${subcommand}` : interaction.commandName;
+
+  // Only TripSit guild members get a user record just for using the bot; other guilds' users aren't tracked
+  if (interaction.guildId === env.DISCORD_GUILD_ID) {
+    touchLastSeen(await getOrCreateUser(interaction.user.id));
+  }
+
+  const commandUsage = await db.command_usage.create({
+    data: {
+      command: commandName,
+      created_at: new Date(),
+      channel_id: interaction.channel?.id ?? '0',
+      guild_id: interaction.guild?.id ?? null,
+    },
+  });
+
+  // Now create the parameters linked to the command_usage entry. Values are stripped to what stats need.
+  const parameterEntries = statParameters(interaction.options.data)
+    .map(param => ({ ...param, usage_id: commandUsage.id }));
+
+  // Create the parameters in the database
+  await db.command_usage_parameter.createMany({
+    data: parameterEntries,
+  });
+}
+
+function routeComponent(interaction: MessageComponentInteraction): void {
+  if (interaction.isContextMenuCommand()) {
+    commandRun(interaction, discordClient);
+  } else if (interaction.isAnySelectMenu()) {
+    selectMenu(interaction);
+  } else if (interaction.isButton()) {
+    buttonClick(interaction, discordClient);
+  }
+}
 
 export const interactionCreate: InteractionCreateEvent = {
   name: 'interactionCreate',
@@ -42,31 +76,7 @@ export const interactionCreate: InteractionCreateEvent = {
       // log.debug(F, `Interaction isChatInputCommand!`);
       // log.info(F, `Decided to run slash command in ${new Date().getTime() - startTime}ms`);
       commandRun(interaction, discordClient);
-      const subcommand = interaction.options.getSubcommand(false);
-      const commandName = subcommand ? `${interaction.commandName} ${subcommand}` : interaction.commandName;
-
-      // Only TripSit guild members get a user record just for using the bot; other guilds' users aren't tracked
-      if (interaction.guildId === env.DISCORD_GUILD_ID) {
-        touchLastSeen(await getOrCreateUser(interaction.user.id));
-      }
-
-      const commandUsage = await db.command_usage.create({
-        data: {
-          command: commandName,
-          created_at: new Date(),
-          channel_id: interaction.channel?.id ?? '0',
-          guild_id: interaction.guild?.id ?? null,
-        },
-      });
-
-      // Now create the parameters linked to the command_usage entry. Values are stripped to what stats need.
-      const parameterEntries = statParameters(interaction.options.data)
-        .map(param => ({ ...param, usage_id: commandUsage.id }));
-
-      // Create the parameters in the database
-      await db.command_usage_parameter.createMany({
-        data: parameterEntries,
-      });
+      await recordCommandUsage(interaction);
 
       return;
     }
@@ -74,7 +84,6 @@ export const interactionCreate: InteractionCreateEvent = {
     if (interaction.type === InteractionType.ApplicationCommand
       // Right click command
       && interaction.isContextMenuCommand()) {
-      // log.debug(F, `interaction.isContextMenuCommand(): ${interaction.isContextMenuCommand()}`);
       commandRun(interaction, discordClient);
       return;
     }
@@ -85,18 +94,7 @@ export const interactionCreate: InteractionCreateEvent = {
     }
 
     if (interaction.type === InteractionType.MessageComponent) {
-      if (interaction.isContextMenuCommand()) {
-        commandRun(interaction, discordClient);
-        return;
-      }
-      if (interaction.isAnySelectMenu()) {
-        selectMenu(interaction);
-        return;
-      }
-      if (interaction.isButton()) {
-        buttonClick(interaction, discordClient);
-      }
-      // log.debug(F, `Unknown interaction!`);
+      routeComponent(interaction);
     }
 
     if (interaction.type === InteractionType.ModalSubmit) {

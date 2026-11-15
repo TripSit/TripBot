@@ -1,7 +1,12 @@
-import { SlashCommandBuilder, APIEmbedField } from 'discord.js';
+import { SlashCommandBuilder, APIEmbedField, ChatInputCommandInteraction } from 'discord.js';
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { ems } from '../../../global/commands/g.ems';
+
+async function replyNoCountries(interaction: ChatInputCommandInteraction): Promise<boolean> {
+  await interaction.editReply(':x: No Countries Found');
+  return true;
+}
 
 export const emsCommand: SlashCommand = {
   data: new SlashCommandBuilder()
@@ -17,12 +22,11 @@ export const emsCommand: SlashCommand = {
     const ephemeral = interaction.options.getBoolean('ephemeral') === true;
     await interaction.deferReply({ ephemeral });
 
-    const countrySearch = interaction.options.getString('country_search') || '';
+    const countrySearch = interaction.options.getString('country_search') ?? '';
     const data = await ems(countrySearch);
 
     if (!data || data.length === 0) {
-      await interaction.editReply(':x: No Countries Found');
-      return true;
+      return replyNoCountries(interaction);
     }
 
     // Process up to 24 entries to stay within Discord's field limits

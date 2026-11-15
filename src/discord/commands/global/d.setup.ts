@@ -39,7 +39,6 @@ const SETUP_GUILD_ONLY = 'You must run this in the guild you want the prompt to 
 const noChannel = 'how to tripsit: no channel';
 const roleQuestion = 'What role are people applying for?';
 const reviewerQuestion = 'What role reviews those applications?';
-// const memberError = 'This must be performed by a member of a guild!';
 
 async function help(
   interaction:ChatInputCommandInteraction,
@@ -219,7 +218,7 @@ async function tripsit(
       const roleTripsitter = interaction.options.getRole('tripsitter');
       const roleHelper = interaction.options.getRole('helper');
       const channelTripsitmeta = interaction.options.getChannel('metatripsit');
-      const channelTripsit = channel as TextChannel;
+      const channelTripsit = channel;
 
       const channelSanctuary = interaction.options.getChannel('sanctuary');
       const channelGeneral = interaction.options.getChannel('general');
@@ -227,7 +226,7 @@ async function tripsit(
       // Save this info to the DB
       await db.discord_guilds.update({
         where: {
-          id: (guild as Guild).id,
+          id: guild.id,
         },
         data: {
           channel_sanctuary: channelSanctuary ? channelSanctuary.id : null,
@@ -316,7 +315,6 @@ async function techhelp(
       Thanks for reading, stay safe!
     `;
 
-  // const guildData = await getGuild(guild.id);
   const guildData = await db.discord_guilds.update({
     where: {
       id: guild.id,
@@ -539,7 +537,6 @@ async function helper(
   }
 
   const channelTripsit = await interaction.client.channels.fetch(guildData.channel_tripsit) as TextChannel;
-  // const channelMetatripsit = await interaction.client.channels.fetch(guildData.channel_tripsitmeta) as TextChannel;
 
   const messageText = stripIndents`
    ${guild.name} is run by volunteers and we're always looking for people who want to help out!
@@ -728,14 +725,11 @@ export async function helperButton(
   const filter = (i:ModalSubmitInteraction) => i.customId.startsWith('"ID":"RR"');
   interaction.awaitModalSubmit({ filter, time: 0 })
     .then(async i => {
-      // log.debug(F, `${JSON.stringify(i.customId)}`);
       await i.deferReply({ flags: MessageFlags.Ephemeral });
       const {
         II,
       } = JSON.parse(`{${i.customId}}`);
       await (interaction.member as GuildMember).roles.add(role);
-
-      // log.debug(F, `II: ${II}`);
 
       if (II !== interaction.id) return;
       if (!i.guild) return;
@@ -748,7 +742,6 @@ export async function helperButton(
       const strengthMessage = i.fields.getTextInputValue('strengths');
       const weaknessMessage = i.fields.getTextInputValue('weaknesses');
       const animalMessage = i.fields.getTextInputValue('animal');
-      // log.debug(F, `introMessage: ${introMessage}`);
 
       await target.roles.add(role);
 

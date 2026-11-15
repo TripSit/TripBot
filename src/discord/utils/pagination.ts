@@ -10,9 +10,6 @@ import {
   ButtonStyle,
   MessageFlags,
 } from 'discord-api-types/v10';
-// import log from '../../global/utils/log';
-// import {parse} from 'path';
-// const F = f(__filename);
 
 export default paginationEmbed;
 
@@ -47,7 +44,6 @@ export async function paginationEmbed(
   if (interaction.deferred === false) {
     await interaction.deferReply({ flags: ephemeral ? MessageFlags.Ephemeral : undefined });
   }
-  // log.debug(`${PREFIX} - Paginating ${pages.length} pages.`);
 
   let page = 0;
 

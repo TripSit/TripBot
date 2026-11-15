@@ -30,8 +30,7 @@ export const mTranslate: MessageCommand = {
       content: targetMessage,
     }] as OpenAI.Chat.ChatCompletionMessageParam[];
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { response, promptTokens, completionTokens } = await aiTranslate('English', messageList);
+    const { response } = await aiTranslate('English', messageList);
     await interaction.editReply({
       embeds: [embedTemplate()
         .setTitle('Here\'s your translation!')

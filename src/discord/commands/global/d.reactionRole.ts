@@ -6,6 +6,9 @@ import {
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
+  Guild,
+  InteractionReplyOptions,
+  TextBasedChannel,
   GuildMember,
   Role,
   SlashCommandBuilder,
@@ -32,10 +35,45 @@ import { replyGuildOnly } from '../../utils/guildOnly';
 const F = f(__filename);
 
 const memberError = 'This must be performed by a member of a guild!';
-// const loadingMessage = 'Loading please hold...';
 const embedOption = 'What color should the embed be?';
 const creationReason = 'Tripbot Reaction role';
 type RoleDef = { name: string; value: string };
+const EMOJI_REGEX = /<a?:.+?:\d{18}>|\p{Extended_Pictographic}/gu;
+
+/** Returns why the options given to a custom reaction role are unusable, or undefined when they are fine. */
+function reactionRoleInputProblem(interaction: ChatInputCommandInteraction): string | undefined {
+  const introMessageRequired = interaction.options.getBoolean('intro_message');
+  const messagePostChannel = interaction.options.getChannel('intro_channel');
+
+  // If an intro message is required, make sure they specified a channel
+  if (introMessageRequired && messagePostChannel === null) {
+    return 'Error: If an intro message is required, then you must specify where you want the intro message to be posted!';
+  }
+
+  // Make sure the message channel is a text channel
+  if (messagePostChannel && messagePostChannel.type !== ChannelType.GuildText) {
+    return 'Error: The intro message channel must be a text channel!';
+  }
+
+  // Double check this is actually an emoji character and not a string
+  const emojiInput = interaction.options.getString('emoji');
+  const emojiFound = emojiInput ? emojiInput.match(EMOJI_REGEX) : null;
+  log.debug(F, `emojiFound: ${emojiFound}`);
+
+  if (emojiInput && emojiInput.length > 0 && !emojiFound) {
+    return 'Error: That is not a valid emoji! Please try again.';
+  }
+
+  if (emojiFound && emojiFound.length > 1) {
+    return 'Error: You can only specify one emoji!';
+  }
+
+  // Check that at least either emoji or label is specified
+  if (!emojiFound && !interaction.options.getString('label')) {
+    return 'Error: You must specify either an emoji or a label for the reaction role!';
+  }
+  return undefined;
+}
 
 export async function setupCustomReactionRole(
   interaction:ChatInputCommandInteraction,
@@ -43,73 +81,19 @@ export async function setupCustomReactionRole(
   if (!interaction.guild) return;
   if (!interaction.member) return;
   if (!interaction.channel) return;
-  const introMessageRequired = interaction.options.getBoolean('intro_message')
-    ? interaction.options.getBoolean('intro_message')
-    : null;
-  const messagePostChannel = interaction.options.getChannel('intro_channel')
-    ? interaction.options.getChannel('intro_channel')
-    : null;
-
-  // If an intro message is required, make sure they specified a channel
-  if (introMessageRequired && messagePostChannel === null) {
+  const problem = reactionRoleInputProblem(interaction);
+  if (problem) {
     await interaction.reply({
-      embeds: [
-        errorEmbed('Error: If an intro message is required, then you must specify where you want the intro message to be posted!'),
-      ],
+      embeds: [errorEmbed(problem)],
       flags: MessageFlags.Ephemeral,
     });
     return;
   }
 
-  // Make sure the message channel is a text channel
-  if (messagePostChannel && messagePostChannel.type !== ChannelType.GuildText) {
-    await interaction.reply({
-      embeds: [
-        errorEmbed('Error: The intro message channel must be a text channel!'),
-      ],
-      flags: MessageFlags.Ephemeral,
-    });
-    return;
-  }
-
-  // Double check this is actually an emoji character and not a string
-  const emojiInput = interaction.options.getString('emoji');
-  const regex = /<a?:.+?:\d{18}>|\p{Extended_Pictographic}/gu;
-  const emojiFound = emojiInput ? emojiInput.match(regex) : null;
-  log.debug(F, `emojiFound: ${emojiFound}`);
-
-  if (emojiInput && emojiInput.length > 0 && !emojiFound) {
-    await interaction.reply({
-      embeds: [
-        errorEmbed('Error: That is not a valid emoji! Please try again.'),
-      ],
-      flags: MessageFlags.Ephemeral,
-    });
-    return;
-  }
-
-  if (emojiFound && emojiFound.length > 1) {
-    await interaction.reply({
-      embeds: [
-        errorEmbed('Error: You can only specify one emoji!'),
-      ],
-      flags: MessageFlags.Ephemeral,
-    });
-    return;
-  }
-
-  const emoji = emojiFound ? emojiFound[0] : null;
-  const label = interaction.options.getString('label') ? interaction.options.getString('label') : null;
-  // Check that at least either emoji or label is specified
-  if (!emoji && !label) {
-    await interaction.reply({
-      embeds: [
-        errorEmbed('Error: You must specify either an emoji or a label for the reaction role!'),
-      ],
-      flags: MessageFlags.Ephemeral,
-    });
-    return;
-  }
+  const introMessageRequired = interaction.options.getBoolean('intro_message') ? true : null;
+  const messagePostChannel = interaction.options.getChannel('intro_channel') ?? null;
+  const emoji = interaction.options.getString('emoji')?.match(EMOJI_REGEX)?.[0] ?? null;
+  const label = interaction.options.getString('label') ?? null;
 
   const role = interaction.options.getRole('role', true) as Role;
   const myMember = interaction.guild.members.me as GuildMember;
@@ -181,10 +165,6 @@ export async function setupCustomReactionRole(
         ],
       });
 
-      // const channelBotlog = await i.guild?.channels.fetch(env.CHANNEL_BOTLOG) as TextChannel;
-      // await channelBotlog.send(
-      //   `${(interaction.member as GuildMember).displayName} created a new reaction role message`,
-      // );
       await i.editReply({
         embeds: [
           embedTemplate()
@@ -195,10 +175,359 @@ export async function setupCustomReactionRole(
     });
 }
 
+/** Removes a reaction role from a member, optionally asking them why first. */
+async function removeReactionRole(
+  interaction: ButtonInteraction,
+  guild: Guild,
+  role: Role,
+  target: GuildMember,
+  introMessageRequired: boolean,
+): Promise<void> {
+  if (introMessageRequired) {
+    // Display modal to get intro message from the user
+    await interaction.showModal(new ModalBuilder()
+      .setCustomId(`"ID":"RR","II":"${interaction.id}"`)
+      .setTitle(`Are you sure you want to remove ${role.name}?`)
+      .addComponents(new ActionRowBuilder<TextInputBuilder>()
+        .addComponents(new TextInputBuilder()
+          .setCustomId('reason')
+          .setLabel('You can optionally tell us why!')
+          .setPlaceholder('We\'ll use this to try and improve our process!')
+          .setValue('I just don\'t want to anymore')
+          .setMaxLength(2000)
+          .setStyle(TextInputStyle.Paragraph))));
+
+    // Collect a modal submit interaction
+    const filter = (i:ModalSubmitInteraction) => i.customId.startsWith('"ID":"RR"');
+    interaction.awaitModalSubmit({ filter, time: 0 })
+      .then(async i => {
+        const { II } = JSON.parse(`{${i.customId}}`);
+        if (II !== interaction.id) return;
+        await i.deferReply({ flags: MessageFlags.Ephemeral });
+
+        await target.roles.remove(role);
+        const channelAudit = await i.guild?.channels.fetch(env.CHANNEL_AUDITLOG) as TextChannel;
+        const reason = i.fields.getTextInputValue('reason');
+        await channelAudit.send(
+          `${(i.member as GuildMember).displayName} removed role ${role.name} because: ${reason}`,
+        );
+        await i.editReply({ content: `Removed role ${role.name}` });
+      });
+  } else {
+    const myMember = guild.members.me as GuildMember;
+    const myRole = myMember.roles.highest;
+    log.debug(F, `My role: ${myRole.name} (${myRole.position}) vs ${role.name} (${role.position})`);
+    log.debug(F, `My role position: ${role.comparePositionTo(myRole)}`);
+    if (role.comparePositionTo(myRole) > 0) {
+      await interaction.editReply({
+        embeds: [
+          errorEmbed(stripIndents`Error: My role needs to be higher than the role you want to manage!
+            Please move my role above ${role} and try again, or re-do this reaction role`),
+        ],
+      });
+      return;
+    }
+    await target.roles.remove(role);
+    await interaction.editReply({ content: `Removed role ${role.name}` });
+  }
+}
+
+/** Announces a new member with the role in the channel, with extra information for some channels. */
+async function postIntroduction(
+  guild: Guild,
+  channel: TextChannel,
+  roleTeamtripsit: Role,
+  target: GuildMember,
+  role: Role,
+  introMessage: string,
+): Promise<void> {
+  if (channel.id === env.CHANNEL_TRIPSITMETA) {
+    const channelTripsit = await guild.channels.fetch(env.CHANNEL_TRIPSIT) as TextChannel;
+    const hrCategory = await guild.channels.fetch(env.CATEGORY_HARMREDUCTIONCENTRE) as CategoryChannel;
+
+    const intro = stripIndents`
+  Hey ${roleTeamtripsit}, ${target.displayName} has joined as a ${role.name}, please welcome them!
+  A little about them:
+  ${introMessage}`;
+    await channel.send(intro);
+    const followup = stripIndents`Some important information for you ${target}!
+  1) You now have access this this channel, which is used to coordinate with others!
+  - Please use this room to ask for help if you're overwhelmed, and feel free to make a thread if it gets busy!
+  - Anyone can mark a thread as "owned" if someone is talking to the person in need, it doesn't mean "you" are helping them.
+  2) You are able to receive and respond to help requests in the ${hrCategory}!
+  - As people need help, a thread will be created in ${channelTripsit} and you will get a notification that someone needs help.
+  - Talk with the user in the thread, please don't take the user into DM or voice channels.
+  - For a full guide on how the ticket system works, check out: <https://docs.google.com/document/d/19evj7v6nx67TDTUp8DZlu1rrTT5MuwvEZnQ_vDJbfSc/edit#heading=h.3qanhkv29thb>
+  - ${channelTripsit} threads are archived after 24 hours, and deleted after 7 days.
+  3) For a refresher on tripsitting please see the following resources:
+  - <https://docs.google.com/document/d/1vE3jl9imdT3o62nNGn19k5HZVOkECF3jhjra8GkgvwE>
+  - <https://wiki.tripsit.me/wiki/How_To_Tripsit_Online>
+  - Check the pins in this channel!
+  4) If you're overwhelmed, ask for backup
+  - Giving no information is better than giving the wrong information!
+  - If someone is underage, finish the session and ping a Moderator
+  -- Underage users can use the web-chat anonymously but are not allowed to socialize.
+  - We're here to give harm reduction facts and mild mental health support.
+  - We are NOT here to give medical advice, diagnose, or treat; or handle suicidal or self-harm situations.
+  - If it seems like someone could use mental health services you can refer them to:
+  Huddle Humans - Mental health support
+  <https://discord.gg/mentalhealth>
+  HealthyGamer - Mental health with a gaming twist
+  <https://discord.com/invite/H3yRwc7>
+
+  **If you have any questions, please reach out!**`;
+    await channel.send(followup);
+  } else if (channel.id === env.CHANNEL_DEVELOPMENT) {
+    const devCategory = await guild.channels.fetch(env.CATEGORY_DEVELOPMENT) as CategoryChannel;
+    const channelTripcord = await guild.channels.fetch(env.CHANNEL_DISCORD) as TextChannel;
+    const channelTripbot = await guild.channels.fetch(env.CHANNEL_TRIPBOT) as TextChannel;
+
+    const intro = stripIndents`
+  Hey ${roleTeamtripsit} team, ${target} has joined as a ${role.name}, please welcome them!
+
+  A little about them:
+  ${introMessage}`;
+
+    channel.send(intro);
+
+    const followup = stripIndents`Some info for you ${target}:
+
+  Our ${devCategory} category holds the projects we're working on.
+
+  > **We encourage you to make a new thread whenever possible!**
+  > This allows us to organize our efforts and not lose track of our thoughts!
+
+  TripSit is run by volunteers, so things may be a bit slower than your day job.
+  Almost all the code is open source and can be found on our GitHub: <http://github.com/tripsit>
+  Discussion of changes happens mostly in the public channels in this category.
+  If you have an idea or feedback, make a new thread: we're happy to hear all sorts of input and ideas!
+
+  ${channelTripcord}
+  > While this discord has existed for years, TS has only begun to focus on it relatively recently.
+  > It is still an ongoing WIP, and this channel is where we coordinate changes to the discord server!
+  > Ideas and suggestions are always welcome, and we're always looking to improve the experience!
+  > No coding experience is necessary to help make the discord an awesome place to be =)
+
+  ${channelTripbot}
+  > Our homemade Tripbot has made it's way into the discord server!
+  > This is a somewhat complex bot that is continually growing to meet the needs of TripSit.
+  > It also can be added to other servers to provide a subset of harm reduction features to the public
+
+  We have a ton of other channels, take your time to explore the threads!
+
+  If you have any questions, please reach out to a moderator or the lead dev!`;
+
+    channel.send(followup);
+  } else {
+    channel.send(stripIndents`
+  ${target} has joined as a ${role.name}, please welcome them!
+
+  A little about them:
+  > ${introMessage}`); // eslint-disable-line
+  }
+}
+
+/** Adds a role that isn't tied to an intro message, enforcing the rules of the colour and mindset groups. */
+async function addRoleWithGroupRules(
+  interaction: ButtonInteraction,
+  guild: Guild,
+  channelId: string,
+  role: Role,
+  target: GuildMember,
+): Promise<void> {
+  const guildData = await getOrCreateGuild(guild.id);
+
+  const isPremium = guildData.premium_role_ids
+    ? target.roles.cache.some(r => (guildData.premium_role_ids as string).indexOf(r.id) >= 0)
+    : false;
+
+  const isBooster = target.roles.cache.find(
+    roleData => roleData.tags?.premiumSubscriberRole === true,
+  ) !== undefined;
+
+  const isPurchaser = target.roles.cache.find(
+    roleData => roleData.tags?.availableForPurchase === true,
+  ) !== undefined;
+
+  const reactionrolePremiumColorData = await db.reaction_roles.findMany({
+    where: {
+      guild_id: guild.id,
+      channel_id: channelId,
+      type: 'PREMIUM_COLOR',
+    },
+  });
+
+  const premiumColorRoles = [];
+  if (reactionrolePremiumColorData.length > 0) {
+    const roleDonorRed = await guild.roles.fetch(
+      (reactionrolePremiumColorData.find(roleData => roleData.name === 'Ruby') as reaction_roles).role_id,
+    ) as Role;
+    const roleDonorOrange = await guild.roles.fetch(
+      (reactionrolePremiumColorData.find(roleData => roleData.name === 'Sunstone') as reaction_roles).role_id,
+    ) as Role;
+    const roleDonorYellow = await guild.roles.fetch(
+      (reactionrolePremiumColorData.find(roleData => roleData.name === 'Citrine') as reaction_roles).role_id,
+    ) as Role;
+    const roleDonorGreen = await guild.roles.fetch(
+      (reactionrolePremiumColorData.find(roleData => roleData.name === 'Jade') as reaction_roles).role_id,
+    ) as Role;
+    const roleDonorBlue = await guild.roles.fetch(
+      (reactionrolePremiumColorData.find(roleData => roleData.name === 'Sapphire') as reaction_roles).role_id,
+    ) as Role;
+    const roleDonorPurple = await guild.roles.fetch(
+      (reactionrolePremiumColorData.find(roleData => roleData.name === 'Amethyst') as reaction_roles).role_id,
+    ) as Role;
+    const roleDonorPink = await guild.roles.fetch(
+      (reactionrolePremiumColorData.find(roleData => roleData.name === 'Pezzottaite') as reaction_roles).role_id,
+    ) as Role;
+    const roleDonorBlack = await guild.roles.fetch(
+      (reactionrolePremiumColorData.find(roleData => roleData.name === 'Labradorite') as reaction_roles).role_id,
+    ) as Role;
+
+    premiumColorRoles.push({ name: `💖 ${roleDonorRed.name}`, value: roleDonorRed.id });
+    premiumColorRoles.push({ name: `🧡 ${roleDonorOrange.name}`, value: roleDonorOrange.id });
+    premiumColorRoles.push({ name: `💛 ${roleDonorYellow.name}`, value: roleDonorYellow.id });
+    premiumColorRoles.push({ name: `💚 ${roleDonorGreen.name}`, value: roleDonorGreen.id });
+    premiumColorRoles.push({ name: `💙 ${roleDonorBlue.name}`, value: roleDonorBlue.id });
+    premiumColorRoles.push({ name: `💜 ${roleDonorPurple.name}`, value: roleDonorPurple.id });
+    premiumColorRoles.push({ name: `💗 ${roleDonorPink.name}`, value: roleDonorPink.id });
+    premiumColorRoles.push({ name: `🖤 ${roleDonorBlack.name}`, value: roleDonorBlack.id });
+  }
+
+  const premiumColorIds = premiumColorRoles.map(roleData => roleData.value);
+
+  // You cant add a premium color if you're not a team member or a donor
+  if (premiumColorIds.includes(role.id) && !isPremium && !isBooster && !isPurchaser) {
+    await interaction.editReply({ content: 'You do not have permission to use that role!' });
+    return;
+  }
+
+  await target.roles.add(role);
+  await interaction.editReply({ content: `Added role ${role.name}` });
+
+  const reactionroleColorData = await db.reaction_roles.findMany({
+    where: {
+      guild_id: guild.id,
+      channel_id: channelId,
+      type: 'COLOR',
+    },
+  });
+
+  const colorRoles = [];
+  if (reactionroleColorData.length > 0) {
+    const roleRed = await guild.roles.fetch(
+      (reactionroleColorData.find(roleData => roleData.name === 'Tulip') as reaction_roles).role_id,
+    ) as Role;
+    const roleOrange = await guild.roles.fetch(
+      (reactionroleColorData.find(roleData => roleData.name === 'Marigold') as reaction_roles).role_id,
+    ) as Role;
+    const roleYellow = await guild.roles.fetch(
+      (reactionroleColorData.find(roleData => roleData.name === 'Daffodil') as reaction_roles).role_id,
+    ) as Role;
+    const roleGreen = await guild.roles.fetch(
+      (reactionroleColorData.find(roleData => roleData.name === 'Waterlily') as reaction_roles).role_id,
+    ) as Role;
+    const roleBlue = await guild.roles.fetch(
+      (reactionroleColorData.find(roleData => roleData.name === 'Bluebell') as reaction_roles).role_id,
+    ) as Role;
+    const rolePurple = await guild.roles.fetch(
+      (reactionroleColorData.find(roleData => roleData.name === 'Hyacinth') as reaction_roles).role_id,
+    ) as Role;
+    const rolePink = await guild.roles.fetch(
+      (reactionroleColorData.find(roleData => roleData.name === 'Azalea') as reaction_roles).role_id,
+    ) as Role;
+    const roleWhite = await guild.roles.fetch(
+      (reactionroleColorData.find(roleData => roleData.name === 'Snowdrop') as reaction_roles).role_id,
+    ) as Role;
+
+    colorRoles.push({ name: `💖 ${roleRed.name}`, value: roleRed.id });
+    colorRoles.push({ name: `🧡 ${roleOrange.name}`, value: roleOrange.id });
+    colorRoles.push({ name: `💛 ${roleYellow.name}`, value: roleYellow.id });
+    colorRoles.push({ name: `💚 ${roleGreen.name}`, value: roleGreen.id });
+    colorRoles.push({ name: `💙 ${roleBlue.name}`, value: roleBlue.id });
+    colorRoles.push({ name: `💜 ${rolePurple.name}`, value: rolePurple.id });
+    colorRoles.push({ name: `💗 ${rolePink.name}`, value: rolePink.id });
+    colorRoles.push({ name: `🤍 ${roleWhite.name}`, value: roleWhite.id });
+  }
+
+  log.debug(F, `Color roles: ${JSON.stringify(colorRoles, null, 2)}`);
+  const colorIds = colorRoles.map(roleData => roleData.value);
+
+  // Remove the other color roles if you're adding a color role
+  if (colorIds.includes(role.id)) {
+    const otherColorRoles = colorIds.filter(r => r !== role.id);
+    await target.roles.remove([...otherColorRoles, ...premiumColorIds]);
+  }
+
+  // Remove the other premium color roles if you're adding a color role
+  if (premiumColorIds.includes(role.id)) {
+    const otherPremiumColorRoles = premiumColorIds.filter(r => r !== role.id);
+    await target.roles.remove([...otherPremiumColorRoles, ...colorIds]);
+  }
+
+  const reactionroleData = await db.reaction_roles.findMany({
+    where: {
+      guild_id: guild.id,
+      channel_id: channelId,
+      type: 'MINDSET',
+    },
+  });
+
+  if (reactionroleData.length > 0) {
+    const roleDrunk = await guild.roles.fetch(
+      (reactionroleData.find(roleData => roleData.name === 'Drunk') as reaction_roles).role_id,
+    ) as Role;
+    const roleHigh = await guild.roles.fetch(
+      (reactionroleData.find(roleData => roleData.name === 'High') as reaction_roles).role_id,
+    ) as Role;
+    const roleRolling = await guild.roles.fetch(
+      (reactionroleData.find(roleData => roleData.name === 'Rolling') as reaction_roles).role_id,
+    ) as Role;
+    const roleTripping = await guild.roles.fetch(
+      (reactionroleData.find(roleData => roleData.name === 'Tripping') as reaction_roles).role_id,
+    ) as Role;
+    const roleDissociating = await guild.roles.fetch(
+      (reactionroleData.find(roleData => roleData.name === 'Dissociated') as reaction_roles).role_id,
+    ) as Role;
+    const roleStimming = await guild.roles.fetch(
+      (reactionroleData.find(roleData => roleData.name === 'Stimming') as reaction_roles).role_id,
+    ) as Role;
+    const roleSedated = await guild.roles.fetch(
+      (reactionroleData.find(roleData => roleData.name === 'Sedated') as reaction_roles).role_id,
+    ) as Role;
+    const roleTalkative = await guild.roles.fetch(
+      (reactionroleData.find(roleData => roleData.name === 'Talkative') as reaction_roles).role_id,
+    ) as Role;
+    const roleWorking = await guild.roles.fetch(
+      (reactionroleData.find(roleData => roleData.name === 'Working') as reaction_roles).role_id,
+    ) as Role;
+
+    const mindsetRoles = [
+      { name: roleDrunk.name, value: roleDrunk.id },
+      { name: roleHigh.name, value: roleHigh.id },
+      { name: roleRolling.name, value: roleRolling.id },
+      { name: roleTripping.name, value: roleTripping.id },
+      { name: roleDissociating.name, value: roleDissociating.id },
+      { name: roleStimming.name, value: roleStimming.id },
+      { name: roleSedated.name, value: roleSedated.id },
+      { name: roleTalkative.name, value: roleTalkative.id },
+      { name: roleWorking.name, value: roleWorking.id },
+    ] as RoleDef[];
+
+    log.debug(F, `Mindset roles: ${JSON.stringify(mindsetRoles, null, 2)}`);
+    const mindsetIds = mindsetRoles.map(roleData => roleData.value);
+
+    // Remove the other mindset roles if you're adding a mindset role
+    if (mindsetIds.includes(role.id)) {
+      const otherMindsetRoles = mindsetIds.filter(r => r !== role.id);
+      await target.roles.remove([...otherMindsetRoles]);
+    }
+  }
+}
+
 export async function buttonReactionRole(
   interaction:ButtonInteraction,
 ) {
-  // log.debug(F, `Processing reaction role click Options: ${JSON.stringify(interaction.customId, null, 2)}`);
   const {
     RID,
     IM,
@@ -212,14 +541,12 @@ export async function buttonReactionRole(
   if (!interaction.member) return;
   if (!interaction.channel) return;
 
-  // log.debug(F, ` RID: ${RID} IM: ${IM} typeof IM: ${typeof IM} IC: ${IC} `);
   const introMessageRequired = IM === 'true';
 
   // If the intro message isn't required, then there is no modal, so defer
   if (!introMessageRequired) {
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
   }
-  // log.debug(F, `introMessageRequired: ${introMessageRequired} `);
 
   const role = await interaction.guild.roles.fetch(RID);
   if (!role) {
@@ -232,54 +559,7 @@ export async function buttonReactionRole(
   const target = interaction.member as GuildMember;
   // If the user already has the role, remove it
   if (target.roles.cache.has(role.id)) {
-    if (introMessageRequired) {
-      // Display modal to get intro message from the user
-      await interaction.showModal(new ModalBuilder()
-        .setCustomId(`"ID":"RR","II":"${interaction.id}"`)
-        .setTitle(`Are you sure you want to remove ${role.name}?`)
-        .addComponents(new ActionRowBuilder<TextInputBuilder>()
-          .addComponents(new TextInputBuilder()
-            .setCustomId('reason')
-            .setLabel('You can optionally tell us why!')
-            .setPlaceholder('We\'ll use this to try and improve our process!')
-            .setValue('I just don\'t want to anymore')
-            .setMaxLength(2000)
-            .setStyle(TextInputStyle.Paragraph))));
-
-      // Collect a modal submit interaction
-      const filter = (i:ModalSubmitInteraction) => i.customId.startsWith('"ID":"RR"');
-      interaction.awaitModalSubmit({ filter, time: 0 })
-        .then(async i => {
-          // log.debug(F, `${JSON.stringify(i.customId)}`);
-          const { II } = JSON.parse(`{${i.customId}}`);
-          if (II !== interaction.id) return;
-          await i.deferReply({ flags: MessageFlags.Ephemeral });
-
-          await target.roles.remove(role);
-          const channelAudit = await i.guild?.channels.fetch(env.CHANNEL_AUDITLOG) as TextChannel;
-          const reason = i.fields.getTextInputValue('reason');
-          await channelAudit.send(
-            `${(i.member as GuildMember).displayName} removed role ${role.name} because: ${reason}`,
-          );
-          await i.editReply({ content: `Removed role ${role.name}` });
-        });
-    } else {
-      const myMember = interaction.guild.members.me as GuildMember;
-      const myRole = myMember.roles.highest;
-      log.debug(F, `My role: ${myRole.name} (${myRole.position}) vs ${role.name} (${role.position})`);
-      log.debug(F, `My role position: ${role.comparePositionTo(myRole)}`);
-      if (role.comparePositionTo(myRole) > 0) {
-        await interaction.editReply({
-          embeds: [
-            errorEmbed(stripIndents`Error: My role needs to be higher than the role you want to manage!
-              Please move my role above ${role} and try again, or re-do this reaction role`),
-          ],
-        });
-        return;
-      }
-      await target.roles.remove(role);
-      await interaction.editReply({ content: `Removed role ${role.name}` });
-    }
+    await removeReactionRole(interaction, interaction.guild, role, target, introMessageRequired);
     return;
   }
 
@@ -295,11 +575,6 @@ export async function buttonReactionRole(
     await interaction.editReply({ content: 'Unable to add this role. If you feel this is an error, please talk to the team!' });
     return;
   }
-
-  // const channelTripsitmeta = await guild.channels.fetch(env.CHANNEL_TRIPSITMETA) as TextChannel;
-  // const channelTripmobile = await guild.channels.fetch(env.CHANNEL_TRIPMOBILE) as TextChannel;
-  // const channelContent = await guild.channels.fetch(env.CHANNEL_WIKICONTENT) as TextChannel;
-  // const channelDevelopment = await guild.channels.fetch(env.CHANNEL_DEVELOPMENT) as TextChannel;
 
   let introMessage = '' as string;
   if (introMessageRequired) {
@@ -320,13 +595,10 @@ export async function buttonReactionRole(
     const filter = (i:ModalSubmitInteraction) => i.customId.startsWith('"ID":"RR"');
     interaction.awaitModalSubmit({ filter, time: 0 })
       .then(async i => {
-        // log.debug(F, `${JSON.stringify(i.customId)}`);
         const {
           II,
         } = JSON.parse(`{${i.customId}}`);
         await i.deferReply({ flags: MessageFlags.Ephemeral });
-
-        // log.debug(F, `II: ${II}`);
 
         if (II !== interaction.id) return;
         if (!i.guild) {
@@ -334,13 +606,11 @@ export async function buttonReactionRole(
           return;
         }
         if (!i.member) {
-        // log.debug(F, `no member!`);
           await i.editReply(memberError);
           return;
         }
 
         introMessage = i.fields.getTextInputValue('introduction');
-        // log.debug(F, `introMessage: ${introMessage}`);
 
         // Put a > in front of each line on introMessage
         introMessage = introMessage.replace(/^(.*)$/gm, '> $1');
@@ -352,90 +622,7 @@ export async function buttonReactionRole(
 
         const roleTeamtripsit = await i.guild?.roles.fetch(env.ROLE_TEAMTRIPSIT) as Role;
 
-        if (channel.id === env.CHANNEL_TRIPSITMETA) {
-          const channelTripsit = await interaction.guild?.channels.fetch(env.CHANNEL_TRIPSIT) as TextChannel;
-          const hrCategory = await interaction.guild?.channels.fetch(env.CATEGORY_HARMREDUCTIONCENTRE) as CategoryChannel;
-
-          const intro = stripIndents`
-          Hey ${roleTeamtripsit}, ${target.displayName} has joined as a ${role.name}, please welcome them!
-          A little about them:
-          ${introMessage}`;
-          await channel.send(intro);
-          const followup = stripIndents`Some important information for you ${target}!
-          1) You now have access this this channel, which is used to coordinate with others!
-          - Please use this room to ask for help if you're overwhelmed, and feel free to make a thread if it gets busy!
-          - Anyone can mark a thread as "owned" if someone is talking to the person in need, it doesn't mean "you" are helping them.
-          2) You are able to receive and respond to help requests in the ${hrCategory}!
-          - As people need help, a thread will be created in ${channelTripsit} and you will get a notification that someone needs help.
-          - Talk with the user in the thread, please don't take the user into DM or voice channels.
-          - For a full guide on how the ticket system works, check out: <https://docs.google.com/document/d/19evj7v6nx67TDTUp8DZlu1rrTT5MuwvEZnQ_vDJbfSc/edit#heading=h.3qanhkv29thb>
-          - ${channelTripsit} threads are archived after 24 hours, and deleted after 7 days.
-          3) For a refresher on tripsitting please see the following resources:
-          - <https://docs.google.com/document/d/1vE3jl9imdT3o62nNGn19k5HZVOkECF3jhjra8GkgvwE>
-          - <https://wiki.tripsit.me/wiki/How_To_Tripsit_Online>
-          - Check the pins in this channel!
-          4) If you're overwhelmed, ask for backup
-          - Giving no information is better than giving the wrong information!
-          - If someone is underage, finish the session and ping a Moderator
-          -- Underage users can use the web-chat anonymously but are not allowed to socialize.
-          - We're here to give harm reduction facts and mild mental health support.
-          - We are NOT here to give medical advice, diagnose, or treat; or handle suicidal or self-harm situations.
-          - If it seems like someone could use mental health services you can refer them to:
-          Huddle Humans - Mental health support
-          <https://discord.gg/mentalhealth>
-          HealthyGamer - Mental health with a gaming twist
-          <https://discord.com/invite/H3yRwc7>
-    
-          **If you have any questions, please reach out!**`;
-          await channel.send(followup);
-        } else if (channel.id === env.CHANNEL_DEVELOPMENT) {
-          const devCategory = await interaction.guild?.channels.fetch(env.CATEGORY_DEVELOPMENT) as CategoryChannel;
-          const channelTripcord = await interaction.guild?.channels.fetch(env.CHANNEL_DISCORD) as TextChannel;
-          const channelTripbot = await interaction.guild?.channels.fetch(env.CHANNEL_TRIPBOT) as TextChannel;
-
-          const intro = stripIndents`
-          Hey ${roleTeamtripsit} team, ${target} has joined as a ${role.name}, please welcome them!
-          
-          A little about them:
-          ${introMessage}`;
-
-          channel.send(intro);
-
-          const followup = stripIndents`Some info for you ${target}: 
-      
-          Our ${devCategory} category holds the projects we're working on.
-    
-          > **We encourage you to make a new thread whenever possible!**
-          > This allows us to organize our efforts and not lose track of our thoughts!
-    
-          TripSit is run by volunteers, so things may be a bit slower than your day job.
-          Almost all the code is open source and can be found on our GitHub: <http://github.com/tripsit>
-          Discussion of changes happens mostly in the public channels in this category.
-          If you have an idea or feedback, make a new thread: we're happy to hear all sorts of input and ideas!
-    
-          ${channelTripcord}
-          > While this discord has existed for years, TS has only begun to focus on it relatively recently.
-          > It is still an ongoing WIP, and this channel is where we coordinate changes to the discord server!
-          > Ideas and suggestions are always welcome, and we're always looking to improve the experience!
-          > No coding experience is necessary to help make the discord an awesome place to be =)
-    
-          ${channelTripbot}
-          > Our homemade Tripbot has made it's way into the discord server!
-          > This is a somewhat complex bot that is continually growing to meet the needs of TripSit.
-          > It also can be added to other servers to provide a subset of harm reduction features to the public
-
-          We have a ton of other channels, take your time to explore the threads!
-
-          If you have any questions, please reach out to a moderator or the lead dev!`;
-
-          channel.send(followup);
-        } else {
-          channel.send(stripIndents`
-          ${target} has joined as a ${role.name}, please welcome them!
-          
-          A little about them:
-          > ${introMessage}`); // eslint-disable-line
-        }
+        await postIntroduction(interaction.guild as Guild, channel, roleTeamtripsit, target, role, introMessage);
       });
   } else if (channelProvided) {
     const channel = await interaction.guild.channels.fetch(channelProvided) as TextChannel;
@@ -444,214 +631,7 @@ export async function buttonReactionRole(
     // Post intro message to the channel
     channel.send(`${target} has joined as a ${role.name}, please welcome them!`);
   } else {
-    const guildData = await getOrCreateGuild(interaction.guild.id);
-
-    // const isTeam = guildData.team_role_ids !== null
-    //   ? (interaction.member as GuildMember).roles.cache.some(r => (guildData.team_role_ids as string).indexOf(r.id) >= 0)
-    //   : false;
-
-    const isPremium = guildData.premium_role_ids
-      ? (interaction.member as GuildMember).roles.cache.some(r => (guildData.premium_role_ids as string).indexOf(r.id) >= 0)
-      : false;
-
-    const isBooster = (interaction.member as GuildMember).roles.cache.find(
-      roleData => roleData.tags?.premiumSubscriberRole === true,
-    ) !== undefined;
-
-    const isPurchaser = (interaction.member as GuildMember).roles.cache.find(
-      roleData => roleData.tags?.availableForPurchase === true,
-    ) !== undefined;
-
-    const reactionrolePremiumColorData = await db.reaction_roles.findMany({
-      where: {
-        guild_id: interaction.guild.id,
-        channel_id: interaction.channel.id,
-        type: 'PREMIUM_COLOR',
-      },
-    });
-
-    const premiumColorRoles = [];
-    if (reactionrolePremiumColorData.length > 0) {
-      const roleDonorRed = await interaction.guild.roles.fetch(
-        (reactionrolePremiumColorData.find(roleData => roleData.name === 'Ruby') as reaction_roles).role_id,
-      ) as Role;
-      const roleDonorOrange = await interaction.guild.roles.fetch(
-        (reactionrolePremiumColorData.find(roleData => roleData.name === 'Sunstone') as reaction_roles).role_id,
-      ) as Role;
-      const roleDonorYellow = await interaction.guild.roles.fetch(
-        (reactionrolePremiumColorData.find(roleData => roleData.name === 'Citrine') as reaction_roles).role_id,
-      ) as Role;
-      const roleDonorGreen = await interaction.guild.roles.fetch(
-        (reactionrolePremiumColorData.find(roleData => roleData.name === 'Jade') as reaction_roles).role_id,
-      ) as Role;
-      const roleDonorBlue = await interaction.guild.roles.fetch(
-        (reactionrolePremiumColorData.find(roleData => roleData.name === 'Sapphire') as reaction_roles).role_id,
-      ) as Role;
-      const roleDonorPurple = await interaction.guild.roles.fetch(
-        (reactionrolePremiumColorData.find(roleData => roleData.name === 'Amethyst') as reaction_roles).role_id,
-      ) as Role;
-      const roleDonorPink = await interaction.guild.roles.fetch(
-        (reactionrolePremiumColorData.find(roleData => roleData.name === 'Pezzottaite') as reaction_roles).role_id,
-      ) as Role;
-      const roleDonorBlack = await interaction.guild.roles.fetch(
-        (reactionrolePremiumColorData.find(roleData => roleData.name === 'Labradorite') as reaction_roles).role_id,
-      ) as Role;
-
-      premiumColorRoles.push({ name: `💖 ${roleDonorRed.name}`, value: roleDonorRed.id });
-      premiumColorRoles.push({ name: `🧡 ${roleDonorOrange.name}`, value: roleDonorOrange.id });
-      premiumColorRoles.push({ name: `💛 ${roleDonorYellow.name}`, value: roleDonorYellow.id });
-      premiumColorRoles.push({ name: `💚 ${roleDonorGreen.name}`, value: roleDonorGreen.id });
-      premiumColorRoles.push({ name: `💙 ${roleDonorBlue.name}`, value: roleDonorBlue.id });
-      premiumColorRoles.push({ name: `💜 ${roleDonorPurple.name}`, value: roleDonorPurple.id });
-      premiumColorRoles.push({ name: `💗 ${roleDonorPink.name}`, value: roleDonorPink.id });
-      premiumColorRoles.push({ name: `🖤 ${roleDonorBlack.name}`, value: roleDonorBlack.id });
-    }
-
-    // log.debug(F, `Premium Color roles: ${JSON.stringify(premiumColorRoles, null, 2)}`);
-    // const premiumColorNames = premiumColorRoles.map(role => role.name);
-    const premiumColorIds = premiumColorRoles.map(roleData => roleData.value);
-
-    // You cant add a premium color if you're not a team member or a donor
-    if (premiumColorIds.includes(role.id) && !isPremium && !isBooster && !isPurchaser) {
-      // log.debug(F, `role.id is ${role.id} is a premium role and the user is not premium
-      //       (isMod: ${isMod}, isTs: ${isTs} isBooster: ${isBooster}, isPatron: ${isPatron})`);
-      await interaction.editReply({ content: 'You do not have permission to use that role!' });
-      return;
-    }
-
-    await target.roles.add(role);
-    await interaction.editReply({ content: `Added role ${role.name}` });
-
-    const reactionroleColorData = await db.reaction_roles.findMany({
-      where: {
-        guild_id: interaction.guild.id,
-        channel_id: interaction.channel.id,
-        type: 'COLOR',
-      },
-    });
-
-    const colorRoles = [];
-    if (reactionroleColorData.length > 0) {
-      const roleRed = await interaction.guild.roles.fetch(
-        (reactionroleColorData.find(roleData => roleData.name === 'Tulip') as reaction_roles).role_id,
-      ) as Role;
-      const roleOrange = await interaction.guild.roles.fetch(
-        (reactionroleColorData.find(roleData => roleData.name === 'Marigold') as reaction_roles).role_id,
-      ) as Role;
-      const roleYellow = await interaction.guild.roles.fetch(
-        (reactionroleColorData.find(roleData => roleData.name === 'Daffodil') as reaction_roles).role_id,
-      ) as Role;
-      const roleGreen = await interaction.guild.roles.fetch(
-        (reactionroleColorData.find(roleData => roleData.name === 'Waterlily') as reaction_roles).role_id,
-      ) as Role;
-      const roleBlue = await interaction.guild.roles.fetch(
-        (reactionroleColorData.find(roleData => roleData.name === 'Bluebell') as reaction_roles).role_id,
-      ) as Role;
-      const rolePurple = await interaction.guild.roles.fetch(
-        (reactionroleColorData.find(roleData => roleData.name === 'Hyacinth') as reaction_roles).role_id,
-      ) as Role;
-      const rolePink = await interaction.guild.roles.fetch(
-        (reactionroleColorData.find(roleData => roleData.name === 'Azalea') as reaction_roles).role_id,
-      ) as Role;
-      const roleWhite = await interaction.guild.roles.fetch(
-        (reactionroleColorData.find(roleData => roleData.name === 'Snowdrop') as reaction_roles).role_id,
-      ) as Role;
-
-      colorRoles.push({ name: `💖 ${roleRed.name}`, value: roleRed.id });
-      colorRoles.push({ name: `🧡 ${roleOrange.name}`, value: roleOrange.id });
-      colorRoles.push({ name: `💛 ${roleYellow.name}`, value: roleYellow.id });
-      colorRoles.push({ name: `💚 ${roleGreen.name}`, value: roleGreen.id });
-      colorRoles.push({ name: `💙 ${roleBlue.name}`, value: roleBlue.id });
-      colorRoles.push({ name: `💜 ${rolePurple.name}`, value: rolePurple.id });
-      colorRoles.push({ name: `💗 ${rolePink.name}`, value: rolePink.id });
-      colorRoles.push({ name: `🤍 ${roleWhite.name}`, value: roleWhite.id });
-    }
-
-    log.debug(F, `Color roles: ${JSON.stringify(colorRoles, null, 2)}`);
-    // const colorNames = colorRoles.map(roleData => roleData.name);
-    const colorIds = colorRoles.map(roleData => roleData.value);
-
-    // Remove the other color roles if you're adding a color role
-    if (colorIds.includes(role.id)) {
-      // log.debug(F, 'Removing other color roles');
-      const otherColorRoles = colorIds.filter(r => r !== role.id);
-      await target.roles.remove([...otherColorRoles, ...premiumColorIds]);
-    }
-
-    // Remove the other premium color roles if you're adding a color role
-    if (premiumColorIds.includes(role.id)) {
-      // log.debug(F, 'Removing other premium color roles');
-      const otherPremiumColorRoles = premiumColorIds.filter(r => r !== role.id);
-      await target.roles.remove([...otherPremiumColorRoles, ...colorIds]);
-    }
-
-    const reactionroleData = await db.reaction_roles.findMany({
-      where: {
-        guild_id: interaction.guild.id,
-        channel_id: interaction.channel.id,
-        type: 'MINDSET',
-      },
-    });
-
-    if (reactionroleData.length > 0) {
-      const roleDrunk = await interaction.guild.roles.fetch(
-        (reactionroleData.find(roleData => roleData.name === 'Drunk') as reaction_roles).role_id,
-      ) as Role;
-      const roleHigh = await interaction.guild.roles.fetch(
-        (reactionroleData.find(roleData => roleData.name === 'High') as reaction_roles).role_id,
-      ) as Role;
-      const roleRolling = await interaction.guild.roles.fetch(
-        (reactionroleData.find(roleData => roleData.name === 'Rolling') as reaction_roles).role_id,
-      ) as Role;
-      const roleTripping = await interaction.guild.roles.fetch(
-        (reactionroleData.find(roleData => roleData.name === 'Tripping') as reaction_roles).role_id,
-      ) as Role;
-      const roleDissociating = await interaction.guild.roles.fetch(
-        (reactionroleData.find(roleData => roleData.name === 'Dissociated') as reaction_roles).role_id,
-      ) as Role;
-      const roleStimming = await interaction.guild.roles.fetch(
-        (reactionroleData.find(roleData => roleData.name === 'Stimming') as reaction_roles).role_id,
-      ) as Role;
-      const roleSedated = await interaction.guild.roles.fetch(
-        (reactionroleData.find(roleData => roleData.name === 'Sedated') as reaction_roles).role_id,
-      ) as Role;
-      const roleTalkative = await interaction.guild.roles.fetch(
-        (reactionroleData.find(roleData => roleData.name === 'Talkative') as reaction_roles).role_id,
-      ) as Role;
-      const roleWorking = await interaction.guild.roles.fetch(
-        (reactionroleData.find(roleData => roleData.name === 'Working') as reaction_roles).role_id,
-      ) as Role;
-
-      const mindsetRoles = [
-        { name: roleDrunk.name, value: roleDrunk.id },
-        { name: roleHigh.name, value: roleHigh.id },
-        { name: roleRolling.name, value: roleRolling.id },
-        { name: roleTripping.name, value: roleTripping.id },
-        { name: roleDissociating.name, value: roleDissociating.id },
-        { name: roleStimming.name, value: roleStimming.id },
-        { name: roleSedated.name, value: roleSedated.id },
-        { name: roleTalkative.name, value: roleTalkative.id },
-        { name: roleWorking.name, value: roleWorking.id },
-      ] as RoleDef[];
-
-      log.debug(F, `Mindset roles: ${JSON.stringify(mindsetRoles, null, 2)}`);
-      // const mindsetNames = mindsetRoles.map(role => role.name);
-      const mindsetIds = mindsetRoles.map(roleData => roleData.value);
-
-      // Remove the other mindset roles if you're adding a mindset role
-      if (mindsetIds.includes(role.id)) {
-        // log.debug(F, 'Removing other mindset roles');
-        const otherMindsetRoles = mindsetIds.filter(r => r !== role.id);
-        await target.roles.remove([...otherMindsetRoles]);
-      }
-    }
-
-    // // Remove the other pronoun roles if you're adding a pronoun role
-    // if (pronounIds.includes(role.id)) {
-    // log.debug(F, 'Removing other pronoun roles');
-    //   const otherPronounRoles = pronounIds.filter(r => r !== role.id);
-    //   await target.roles.remove([...otherPronounRoles]);
-    // }
+    await addRoleWithGroupRules(interaction, interaction.guild, interaction.channel.id, role, target);
   }
 }
 
@@ -783,7 +763,7 @@ async function getGuildRole(
       (reactionroleData.find(role => role.name === roleName) as reaction_roles).role_id,
     ) as Role;
     log.debug(F, `Role ${returnRole} found in guild`);
-  } catch (err) {
+  } catch {
     log.debug(F, `Role ${roleName} not found in database`);
     reactionroleData = reactionroleData.filter(role => role.name !== roleName);
     reactionroleData.push(...await createRoles(
@@ -791,7 +771,6 @@ async function getGuildRole(
       [{ name: 'Tulip', emoji: 'TulipCircle', color: 'ff5f60' }],
       interaction,
     ));
-    // log.debug(F, `RoleData: ${JSON.stringify(reactionroleData, null, 2)}`);
     returnRole = await interaction.guild.roles.fetch(
       (reactionroleData.find(role => role.name === 'Tulip') as reaction_roles).role_id,
     ) as Role;
@@ -807,8 +786,6 @@ export async function createColorMessage(
   if (!interaction.guild) return;
   if (!interaction.member) return;
   if (!interaction.channel) return;
-
-  // const reactionMessage = await (interaction.channel as TextChannel).send({ content: loadingMessage });
 
   let reactionroleData = await db.reaction_roles.findMany({
     where: {
@@ -910,8 +887,6 @@ export async function createPremiumColorMessage(
   if (!interaction.guild) return;
   if (!interaction.member) return;
   if (!interaction.channel) return;
-
-  // const reactionMessage = await (interaction.channel as TextChannel).send({ content: loadingMessage });
 
   let reactionroleData = await db.reaction_roles.findMany({
     where: {
@@ -1032,8 +1007,6 @@ export async function createMindsetMessage(
   if (!interaction.member) return;
   if (!interaction.channel) return;
 
-  // const reactionMessage = await (interaction.channel as TextChannel).send({ content: loadingMessage });
-
   let reactionroleData = await db.reaction_roles.findMany({
     where: {
       guild_id: interaction.guild.id,
@@ -1128,7 +1101,6 @@ export async function createMindsetMessage(
       .setStyle(ButtonStyle.Primary),
   );
 
-  // await reactionMessage.edit({ content: null, embeds: [embed], components: [row1, row2, row3] });
   await (interaction.channel as TextChannel).send({ embeds: [embed], components: [row1, row2, row3] });
 
   await interaction.editReply({
@@ -1149,8 +1121,6 @@ export async function createPronounMessage(
   if (!interaction.guild) return;
   if (!interaction.member) return;
   if (!interaction.channel) return;
-
-  // const reactionMessage = await (interaction.channel as TextChannel).send({ content: loadingMessage });
 
   let reactionroleData = await db.reaction_roles.findMany({
     where: {
@@ -1213,7 +1183,6 @@ export async function createPronounMessage(
       .setStyle(ButtonStyle.Primary),
   );
 
-  // await reactionMessage.edit({ content: null, embeds: [embed], components: [row1, row2] });
   await (interaction.channel as TextChannel).send({ embeds: [embed], components: [row1] });
 
   await interaction.editReply({
@@ -1235,10 +1204,9 @@ export async function createNotificationMessage(
   if (!interaction.member) return;
   if (!interaction.channel) return;
 
-  // const reactionMessage = await (interaction.channel as TextChannel).send({ content: loadingMessage });
   const isHome = interaction.guild.id === env.DISCORD_GUILD_ID;
 
-  let reactionroleData = await db.reaction_roles.findMany({
+  const reactionroleData = await db.reaction_roles.findMany({
     where: {
       guild_id: interaction.guild.id,
       channel_id: interaction.channel.id,
@@ -1248,7 +1216,7 @@ export async function createNotificationMessage(
 
   if (reactionroleData.length === 0) {
     // Create the roles and store them in the db
-    reactionroleData = await createRoles(
+    await createRoles(
       'NOTIFICATION' as reaction_role_type,
       roleDefinitions.NOTIFICATION,
       interaction,
@@ -1302,7 +1270,6 @@ export async function createNotificationMessage(
       );
   }
 
-  // await reactionMessage.edit({ content: null, embeds: [embed], components: [row1] });
   await (interaction.channel as TextChannel).send({ embeds: [embed], components: [row1] });
 
   await interaction.editReply({
@@ -1314,6 +1281,89 @@ export async function createNotificationMessage(
         .setColor(interaction.options.getString('embed_color') ? `#${interaction.options.getString('embed_color')}` : Colors.Red),
     ],
   });
+}
+
+/** Returns the reply explaining why reaction roles can't be set up here, or undefined when they can. */
+async function reactionRolePrecondition(
+  interaction: ChatInputCommandInteraction,
+  guild: Guild,
+  channel: TextBasedChannel | null,
+): Promise<InteractionReplyOptions | string | undefined> {
+  // Check if the guild is a partner (or the home guild)
+  const guildData = await getOrCreateGuild(guild.id);
+  if (guild.id !== env.DISCORD_GUILD_ID
+    && !guildData.partner
+    && !guildData.supporter) {
+    return {
+      embeds: [
+        errorEmbed('This command can only be used in a partner or supporter guilds! Use /reaction_role help for more info.'),
+      ],
+      flags: MessageFlags.Ephemeral,
+    };
+  }
+
+  if (!interaction.member) {
+    return memberError;
+  }
+  if (!(interaction.member as GuildMember).permissions.has('ManageRoles' as PermissionResolvable)) {
+    return {
+      embeds: [
+        errorEmbed('Error: You do not have the ManageRoles permission needed to create a reactionrole message!'),
+      ],
+      flags: MessageFlags.Ephemeral,
+    };
+  }
+
+  if (!channel) {
+    return {
+      embeds: [
+        errorEmbed('Error: This command can only be used in a channel!'),
+      ],
+      flags: MessageFlags.Ephemeral,
+    };
+  }
+
+  if (channel.type !== ChannelType.GuildText) {
+    return {
+      embeds: [
+        errorEmbed('Error: This command can only be used in a text channel!'),
+      ],
+      flags: MessageFlags.Ephemeral,
+    };
+  }
+
+  // Check that i have permission to add roles
+  const guildMissing = await missingPermission(guild, ['ManageRoles' as PermissionResolvable]);
+  if (guildMissing) {
+    log.error(F, `Missing guild permission ${guildMissing} in ${guild}!`);
+    return {
+      embeds: [
+        errorEmbed(stripIndents`Error: Missing ${guildMissing} permission in ${guild}!
+          In order to setup the reaction roles feature I need:
+          Manage Roles - In order to give and take away roles from users
+          Note: My role needs to be higher than all other roles you want managed!`),
+      ],
+      flags: MessageFlags.Ephemeral,
+    };
+  }
+
+  const channelMissing = await missingPermission(channel, [
+    'ViewChannel' as PermissionResolvable,
+    'SendMessages' as PermissionResolvable,
+  ]);
+  if (channelMissing) {
+    log.error(F, `Missing channel permission ${channelMissing} in ${channel}!`);
+    return {
+      embeds: [
+        errorEmbed(stripIndents`Error: Missing ${channelMissing} permission in ${channel}!
+          In order to setup the reaction roles feature I need:
+          View Channel - In order to see the channel
+          Send Messages - In order to send the reaction role message`),
+      ],
+      flags: MessageFlags.Ephemeral,
+    };
+  }
+  return undefined;
 }
 
 export const dReactionRole: SlashCommand = {
@@ -1385,86 +1435,9 @@ export const dReactionRole: SlashCommand = {
       return false;
     }
 
-    // Check if the guild is a partner (or the home guild)
-    const guildData = await getOrCreateGuild(interaction.guild?.id);
-    if (interaction.guild.id !== env.DISCORD_GUILD_ID
-      && !guildData.partner
-      && !guildData.supporter) {
-      await interaction.reply({
-        embeds: [
-          errorEmbed('This command can only be used in a partner or supporter guilds! Use /reaction_role help for more info.'),
-        ],
-        flags: MessageFlags.Ephemeral,
-      });
-      return false;
-    }
-
-    if (!interaction.member) {
-      // log.debug(F, `no member!`);
-      await interaction.reply(memberError);
-      return false;
-    }
-    if (!(interaction.member as GuildMember).permissions.has('ManageRoles' as PermissionResolvable)) {
-      await interaction.reply({
-        embeds: [
-          errorEmbed('Error: You do not have the ManageRoles permission needed to create a reactionrole message!'),
-        ],
-        flags: MessageFlags.Ephemeral,
-      });
-      return false;
-    }
-
-    if (!interaction.channel) {
-      await interaction.reply({
-        embeds: [
-          errorEmbed('Error: This command can only be used in a channel!'),
-        ],
-        flags: MessageFlags.Ephemeral,
-      });
-      return false;
-    }
-
-    if (interaction.channel.type !== ChannelType.GuildText) {
-      await interaction.reply({
-        embeds: [
-          errorEmbed('Error: This command can only be used in a text channel!'),
-        ],
-        flags: MessageFlags.Ephemeral,
-      });
-      return false;
-    }
-
-    // Check that i have permission to add roles
-    const guildMissing = await missingPermission(interaction.guild, ['ManageRoles' as PermissionResolvable]);
-    if (guildMissing) {
-      log.error(F, `Missing guild permission ${guildMissing} in ${interaction.guild}!`);
-      await interaction.reply({
-        embeds: [
-          errorEmbed(stripIndents`Error: Missing ${guildMissing} permission in ${interaction.guild}!
-            In order to setup the reaction roles feature I need:
-            Manage Roles - In order to give and take away roles from users
-            Note: My role needs to be higher than all other roles you want managed!`),
-        ],
-        flags: MessageFlags.Ephemeral,
-      });
-      return false;
-    }
-
-    const channelMissing = await missingPermission(interaction.channel, [
-      'ViewChannel' as PermissionResolvable,
-      'SendMessages' as PermissionResolvable,
-    ]);
-    if (channelMissing) {
-      log.error(F, `Missing channel permission ${channelMissing} in ${interaction.channel}!`);
-      await interaction.reply({
-        embeds: [
-          errorEmbed(stripIndents`Error: Missing ${channelMissing} permission in ${interaction.channel}!
-            In order to setup the reaction roles feature I need:
-            View Channel - In order to see the channel
-            Send Messages - In order to send the reaction role message`),
-        ],
-        flags: MessageFlags.Ephemeral,
-      });
+    const precondition = await reactionRolePrecondition(interaction, interaction.guild, interaction.channel);
+    if (precondition) {
+      await interaction.reply(precondition);
       return false;
     }
 
@@ -1545,43 +1518,6 @@ export const dReactionRole: SlashCommand = {
 //   const messageId = reaction.message.id;
 //   const reactionId = reaction.emoji.id ?? `${reaction.emoji.name}`;
 //   // log.debug(F, `messageId: ${messageId} | reactionId: ${reactionId}`);
-
-//   if (!reaction.message.guild) return;
-
-//   const ReactionRole = await reactionroleGet(messageId, reactionId);
-
-//   if (!ReactionRole) {
-//     // log.debug(F, `No reaction role found!`);
-//     return;
-//   }
-
-//   const member = await reaction.message.guild.members.fetch(user.id);
-//   const role = await reaction.message.guild.roles.fetch(ReactionRole.role_id);
-//   if (role && member) {
-//     // log.debug(F, `role: ${role.name}`);
-//     if (add) {
-//       // Add the role
-//       await member.roles.add(role);
-
-//       // Remove other reactions
-//       reaction.message.fetch();
-//       reaction.message.reactions.cache.each(r => {
-//         if (r.emoji.name !== reaction.emoji.name) {
-//           r.users.remove(user);
-//         }
-//       });
-
-//       // If this is a mindset emoji, set the end date
-//       if (mindsetEmojis.includes(`${reaction.emoji.name}`)) {
-//         // Update the database
-//         const userData = await getUser(user.id, null, null);
-
-//         userData.discord_id = user.id;
-//         userData.mindset_role = role.id;
-//         userData.mindset_role_expires_at = new Date(Date.now() + mindsetRemovalTime);
-
-//         await usersUpdate(userData);
-//       }
 
 //       // If this is the contributor role, send a message to the contributor room
 //       if (role.id === env.ROLE_CONTRIBUTOR) {

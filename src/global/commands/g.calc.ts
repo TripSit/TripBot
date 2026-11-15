@@ -40,7 +40,7 @@ const data = {
   Second: { min: 0, max: 0 },
   Third: { min: 0, max: 0 },
   Fourth: { min: 0, max: 0 },
-} as DxmDataType;
+};
 
 /**
  * Calculate benzo dosages
@@ -62,7 +62,7 @@ export async function calcBenzo(
     return -1;
   }
 
-  if (!Object.prototype.hasOwnProperty.call(drugDataA.properties, 'dose_to_diazepam')) {
+  if (!Object.hasOwn(drugDataA.properties, 'dose_to_diazepam')) {
     const response = `${drugA} does not have a conversion property, you should not have been able to select this!`;
     log.error(F, `${response}`);
     return -1;
@@ -79,7 +79,7 @@ export async function calcBenzo(
     return -1;
   }
 
-  if (!Object.prototype.hasOwnProperty.call(drugDataB.properties, 'dose_to_diazepam')) {
+  if (!Object.hasOwn(drugDataB.properties, 'dose_to_diazepam')) {
     const response = `${drugB} does not have a conversion property, you should not have been able to select this!`;
     log.error(F, `${response}`);
     return -1;

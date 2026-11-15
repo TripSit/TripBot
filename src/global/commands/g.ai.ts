@@ -80,7 +80,7 @@ export async function aiFlairMod(
     .catch(err => {
       if (err instanceof OpenAI.APIError) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        log.error(F, `AI flair mod request failed: ${err.name} - ${err.status} - ${err.type} - ${(err.error as any).message}`);
+        log.error(F, `AI flair mod request failed: ${err.name} - ${err.status} - ${err.type} - ${err.error.message}`);
       } else {
         throw err;
       }
@@ -188,7 +188,7 @@ export async function aiTranslate(
     .catch(err => {
       if (err instanceof OpenAI.APIError) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        log.error(F, `AI translate request failed: ${err.name} - ${err.status} - ${err.type} - ${(err.error as any).message}`);
+        log.error(F, `AI translate request failed: ${err.name} - ${err.status} - ${err.type} - ${err.error.message}`);
       } else {
         throw err;
       }

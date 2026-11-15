@@ -1,9 +1,6 @@
-// import { stripIndents } from 'common-tags';
 import {
   Category, ComboData, Drug, Combos, Interactions,
 } from 'tripsit_drug_db';
-// import { CbSubstance, Interaction } from '../@types/combined';
-// import drugDataAll from '../../../assets/data/combine dDB.json';
 import { stripIndents } from 'common-tags';
 import comboJsonData from '../../../assets/data/tripsitCombos.json';
 import drugJsonData from '../../../assets/data/tripsitDB.json';
@@ -26,9 +23,87 @@ type ComboDef = {
 const drugData = drugJsonData as DrugData;
 const comboData = comboJsonData as Combos;
 
-// const devMsg = '...this shouldn\'t have happened, please tell the developer!';
-
 export default combo;
+
+// Drug names that are really a family of drugs. These matches need to come first because otherwise "2x-b"
+// would be found in the drug DB but not have any interaction info
+const PATTERN_CATEGORIES: [RegExp, string][] = [
+  [/^do.$/i, 'dox'],
+  [/^2c-.$/i, '2c-x'],
+  [/^2c-t-.$/i, '2c-t-x'],
+  [/^25.-nbome/i, 'nbomes'],
+  [/^5-meo-..t$/i, '5-meo-xxt'],
+];
+
+const NAME_CATEGORIES: Record<string, string> = {
+  ghb: 'ghb/gbl',
+  gbl: 'ghb/gbl',
+  ssri: 'ssris',
+  snri: 'ssris',
+  snris: 'ssris',
+  maoi: 'maois',
+};
+
+// Drug categories that have their own interaction class
+const DRUG_CATEGORY_CLASSES: [string, string][] = [
+  ['benzodiazepine', 'benzodiazepines'],
+  ['opioid', 'opioids'],
+  ['ssri', 'ssris'],
+];
+
+/** Resolves aliases (e.g. 'dxm') to their canonical drug database key, same pattern as g.drug.ts. */
+function resolveAlias(drugName: string): string {
+  if (Object.keys(drugData).includes(drugName.toLowerCase())) return drugName;
+  const canonicalKey = Object.keys(drugData).find(
+    key => drugData[key].aliases?.map(alias => alias.toLowerCase())
+      .includes(drugName.toLowerCase()),
+  );
+  return canonicalKey ?? drugName;
+}
+
+/** Looks at a known drug's aliases and categories to find the interaction class it belongs to. */
+function classOfKnownDrug(drugName: string): string | undefined {
+  if (!Object.keys(drugData).includes(drugName.toLowerCase())) return undefined;
+  const drug = drugData[drugName.toLowerCase()];
+  if (drug.aliases?.join().includes('amphetamine')) {
+    return 'amphetamines';
+  }
+  // Otherwise, check the categories
+  const categoryClass = DRUG_CATEGORY_CLASSES.find(([category]) => drug.categories?.includes(category as Category));
+  return categoryClass?.[1];
+}
+
+// Because users can input whatever they want, we need to clean the input
+function cleanDrugName(drugNameInput: string): string {
+  const drugName = resolveAlias(drugNameInput);
+
+  const patternCategory = PATTERN_CATEGORIES.find(([pattern]) => pattern.test(drugName));
+  if (patternCategory) return patternCategory[1];
+  if (Object.hasOwn(NAME_CATEGORIES, drugName)) return NAME_CATEGORIES[drugName];
+
+  // If the drug is not in the drug database, check the combo database
+  if (Object.keys(comboData).includes(drugName.toLowerCase())) {
+    return drugName.toLowerCase();
+  }
+
+  // Convert any of the following to their respective categories
+  if (drugName.includes('amphetamine' as Category)) {
+    return 'amphetamines';
+  }
+
+  return classOfKnownDrug(drugName) ?? drugName;
+}
+
+/**
+ * If the drug is in the drugDB, we can use the combo data from there
+ * If the drug is not in the drugDB, we can use the combo data from the comboDB
+ * Either way, it's the same format, so they're interchangeable
+ */
+function getComboData(drugName: string) {
+  return Object.keys(drugData).includes(drugName.toLowerCase())
+    ? drugData[drugName.toLowerCase()].combos
+    : comboData[drugName.toLowerCase() as keyof typeof comboData];
+}
 
 export async function combo(
   drugAInput: string,
@@ -55,85 +130,6 @@ export async function combo(
   let drugAName = drugAInput.toLowerCase();
   let drugBName = drugBInput.toLowerCase();
 
-  // Because users can input whatever they want, we need to clean the input
-  function cleanDrugName(drugNameInput: string): string {
-    let drugName = drugNameInput;
-
-    // Resolve aliases (e.g. 'dxm') to their canonical drug database key,
-    // same pattern as g.drug.ts, before any of the key-based lookups below.
-    if (!Object.keys(drugData).includes(drugName.toLowerCase())) {
-      const canonicalKey = Object.keys(drugData).find(
-        key => (drugData[key] as Drug).aliases?.map(alias => alias.toLowerCase())
-          .includes(drugName.toLowerCase()),
-      );
-      if (canonicalKey) {
-        drugName = canonicalKey;
-      }
-    }
-
-    // These matches need to come first because otherwise "2x-b" woould be found in the drug DB but not have any interaction info
-    if (/^do.$/i.test(drugName)) {
-      return 'dox';
-    }
-    if (/^2c-.$/i.test(drugName)) {
-      return '2c-x';
-    }
-    if (/^2c-t-.$/i.test(drugName)) {
-      return '2c-t-x';
-    }
-    if (/^25.-nbome/i.test(drugName)) {
-      return 'nbomes';
-    }
-    if (/^5-meo-..t$/i.test(drugName)) {
-      return '5-meo-xxt';
-    }
-    if (drugName === 'ghb' || drugName === 'gbl') {
-      return 'ghb/gbl';
-    }
-    if (drugName === 'ssri' || drugName === 'snri' || drugName === 'snris') {
-      return 'ssris';
-    }
-    if (drugName === 'maoi') {
-      return 'maois';
-    }
-
-    // If the drug is not in the drug database, check the combo database
-    if (Object.keys(comboData).includes(drugName.toLowerCase())) {
-      return drugName.toLowerCase();
-    }
-
-    // Convert any of the following to their respective categories
-    if (drugName.includes('amphetamine' as Category)) {
-      return 'amphetamines';
-    }
-
-    if (Object.keys(drugData).includes(drugName.toLowerCase())) {
-      const drug = (drugData as DrugData)[drugName.toLowerCase()] as Drug;
-      if (drug.aliases?.join().includes('amphetamine')) {
-        return 'amphetamines';
-      }
-    }
-
-    if (Object.keys(drugData).includes(drugName.toLowerCase())) {
-      const drug = (drugData as DrugData)[drugName.toLowerCase()] as Drug;
-
-      // Otherwise, check the categories
-      if (drug.categories) {
-        if (drug.categories.includes('benzodiazepine' as Category)) {
-          return 'benzodiazepines';
-        }
-        if (drug.categories.includes('opioid' as Category)) {
-          return 'opioids';
-        }
-        if (drug.categories.includes('ssri' as Category)) {
-          return 'ssris';
-        }
-      }
-    }
-
-    return drugName;
-  }
-
   drugAName = cleanDrugName(drugAName);
   drugBName = cleanDrugName(drugBName);
 
@@ -152,16 +148,11 @@ export async function combo(
     };
   }
 
-  // This part is the fun part:
-  // If the drug is in the drugDB, we can use the combo data from there
-  // If the drug is not in the drugDB, we can use the combo data from the comboDB
-  // Either way, it's the same format, so they're interchangeable
-  const drugAComboData = Object.keys(drugData).includes(drugAName.toLowerCase())
-    ? (drugData[drugAName.toLowerCase()]).combos
-    : comboData[drugAName.toLowerCase() as keyof typeof comboData];
+  // This part is the fun part
+  const drugAComboData = getComboData(drugAName);
 
   // We use this to show the user all the drugs they can use
-  const allDrugNames = Object.values(drugData as DrugData)
+  const allDrugNames = Object.values(drugData)
     .filter((drug: Drug) => drug.aliases) // Filter drugs without aliases
     .map((drug: Drug) => drug.aliases) // Get aliases
     .flat() as string[]; // Flatten array, define as string[]
@@ -174,9 +165,7 @@ export async function combo(
     };
   }
 
-  const drugBComboData = Object.keys(drugData).includes(drugBName.toLowerCase())
-    ? (drugData[drugBName.toLowerCase()]).combos
-    : comboData[drugBName.toLowerCase() as keyof typeof comboData];
+  const drugBComboData = getComboData(drugBName);
 
   if (!drugBComboData) {
     return {

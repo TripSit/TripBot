@@ -27,7 +27,7 @@ export async function dramacounter(
   if (command === 'get') {
     if (guildData.last_drama_at) {
       const lastDramaDate = guildData.last_drama_at;
-      const lastDramaReason = guildData.drama_reason || 'No reason given';
+      const lastDramaReason = guildData.drama_reason ?? 'No reason given';
       response = {
         dramaReason: lastDramaReason,
         lastDramaAt: lastDramaDate,
@@ -38,7 +38,6 @@ export async function dramacounter(
   } else if (command === 'set') {
     guildData.last_drama_at = lastDramaAt;
     guildData.drama_reason = dramaReason;
-    // await guildUpdate(guildData);
     await db.discord_guilds.update({
       where: {
         id: guildId,

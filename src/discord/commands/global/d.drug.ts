@@ -148,7 +148,6 @@ async function addToxicities(
     const toxicityMap = drugData.toxicity.map(toxicity => toxicity[0].toUpperCase() + toxicity.substring(1));
     const toxicityString = toxicityMap.join(', ');
     embed.addFields({ name: toxicityHeader, value: stripIndents`${toxicityString}`, inline: true });
-    // log.debug('Added toxicity C');
   }
   return embed;
 }
@@ -179,7 +178,6 @@ async function fillInColumns(
       tolAdded = true;
       cols += 1;
     }
-    // log.debug(F, `toxicityAdded: ${toxicityAdded}`);
     if (!toxicityAdded && cols < 3) {
       await addToxicities(embed, drugData);
       toxAdded = true;
@@ -205,7 +203,7 @@ async function addDurations(
   roaNames.forEach(roaName => {
     if (columns < 3) {
       const roaInfo = roas.find(r => r.name === roaName);
-      if (roaInfo && roaInfo.duration) {
+      if (roaInfo?.duration) {
         let durationString = '';
         roaInfo.duration.forEach(d => {
           durationString += `${d.name}: ${d.value}\n`;
@@ -266,15 +264,63 @@ async function addDosages(
   return embed;
 }
 
-// async function addSummary(
-//   embed: EmbedBuilder,
-//   drugData: CbSubstance,
-// ) {
-//   if (drugData.summary) {
-//     embed.setDescription(stripIndents`${drugData.summary}\n\n`);
-//   }
-//   return embed;
-// }
+// For HR reasons we prefer non-invasive methods, so smoked, vapourised and insufflated go first (in that order)
+function orderRoaNames(roaNames: string[]): string[] {
+  const ordered = [...roaNames];
+  ['Insufflated', 'Vapourised', 'Smoked'].forEach(preferred => {
+    const index = ordered.indexOf(preferred);
+    if (index !== -1) {
+      ordered.splice(index, 1);
+      ordered.unshift(preferred);
+    }
+  });
+  return ordered;
+}
+
+async function addRoaSections(
+  embed: EmbedBuilder,
+  drugData: CbSubstance,
+  added: { toleranceAdded: boolean; toxicityAdded: boolean },
+): Promise<{ toleranceAdded: boolean; toxicityAdded: boolean }> {
+  // Get a list of drug ROA names
+  const roaNames = orderRoaNames((drugData.roas as RoaType[]).map(roa => roa.name));
+
+  // For each roaName, get the dosage and duration
+  let embedRowColumns = 0;
+  roaNames.forEach(roaName => {
+    if (embedRowColumns < 3) {
+      const roaInfo = (drugData.roas as RoaType[]).find((r:RoaType) => r.name === roaName) as RoaType;
+      if (roaInfo.dosage) {
+        let dosageString = '';
+        roaInfo.dosage.forEach(d => {
+          dosageString += `${d.name}: ${d.value}\n`;
+        });
+        embed.addFields({ name: `💊 Dosage (${roaName})`, value: stripIndents`${dosageString}`, inline: true });
+        embedRowColumns += 1;
+      }
+    }
+  });
+
+  let [, toleranceAdded, toxicityAdded] = await fillInColumns(
+    embed,
+    drugData,
+    embedRowColumns,
+    added.toleranceAdded,
+    added.toxicityAdded,
+  );
+
+  // DURATION
+  [, embedRowColumns] = await addDurations(embed, drugData, roaNames);
+
+  [, toleranceAdded, toxicityAdded] = await fillInColumns(
+    embed,
+    drugData,
+    embedRowColumns,
+    toleranceAdded,
+    toxicityAdded,
+  );
+  return { toleranceAdded, toxicityAdded };
+}
 
 export async function getDrugInfo(
   drugName: string,
@@ -283,11 +329,6 @@ export async function getDrugInfo(
   let embed = embedTemplate();
   log.debug(F, `drugName: ${drugName} | section: ${section}`);
 
-  // if (!drugName) {
-  //   embed.setTitle('No drug name was provided');
-  //   await interaction.editReply({ embeds: [embed] });
-  //   return false;
-  // }
   const drugData = await drug(drugName);
 
   if (!drugData) {
@@ -296,21 +337,9 @@ export async function getDrugInfo(
     // If this happens then something went wrong with the auto-complete
     return { embeds: [embed] };
   }
-  // log.debug(F, `drugData: ${JSON.stringify(drugData, null, 2)}`);
-
-  // if (drugData === null) {
-  //   embed.setTitle(`${drugName} was not found`);
-  //   embed.setDescription(stripIndents`...this shouldn\'t have happened, please tell the developer!`);
-  //   // If this happens then something went wrong with the auto-complete
-  //   await interaction.editReply({ embeds: [embed] });
-  //   return false;
-  // }
-
-  // log.debug(F, `section: ${section} | drugName: ${drugName} | drugData: ${JSON.stringify(drugData, null, 2)}`);
 
   embed.setColor(Colors.Purple);
   embed.setTitle(`🌐 ${drugData.name} Information`);
-  // embed.setURL(`https://wiki.tripsit.me/wiki/${drugName.replaceAll(' ', '_')}`);
   embed.setURL(drugData.url);
 
   if (section === 'dosage') {
@@ -363,70 +392,9 @@ export async function getDrugInfo(
     toxicityAdded,
   );
 
-  // Dosage
+  // Dosage and duration
   if (drugData.roas) {
-    // Get a list of drug ROA names
-    const roaNames = drugData.roas.map(roa => roa.name);
-
-    // For HR reasons we prefer non-invasive methods
-    if (roaNames.includes('Insufflated')) {
-      roaNames.splice(roaNames.indexOf('Insufflated'), 1);
-      roaNames.unshift('Insufflated');
-    }
-
-    if (roaNames.includes('Vapourised')) {
-      roaNames.splice(roaNames.indexOf('Vapourised'), 1);
-      roaNames.unshift('Vapourised');
-    }
-    if (roaNames.includes('Smoked')) {
-      roaNames.splice(roaNames.indexOf('Smoked'), 1);
-      roaNames.unshift('Smoked');
-    }
-
-    // For each roaName, get the dosage and duration
-    // log.debug(F, `roaNames: ${roaNames}`);
-
-    embedRowColumns = 0;
-    roaNames.forEach(roaName => {
-      if (embedRowColumns < 3) {
-        const roaInfo = (drugData.roas as RoaType[]).find((r:RoaType) => r.name === roaName) as RoaType;
-        if (roaInfo.dosage) {
-          let dosageString = '';
-          roaInfo.dosage.forEach(d => {
-            dosageString += `${d.name}: ${d.value}\n`;
-          });
-          embed.addFields({ name: `💊 Dosage (${roaName})`, value: stripIndents`${dosageString}`, inline: true });
-          embedRowColumns += 1;
-        }
-      }
-    });
-
-    [
-      embed,
-      toleranceAdded,
-      toxicityAdded,
-    ] = await fillInColumns(
-      embed,
-      drugData,
-      embedRowColumns,
-      toleranceAdded,
-      toxicityAdded,
-    );
-
-    // DURATION
-    [embed, embedRowColumns] = await addDurations(embed, drugData, roaNames);
-
-    [
-      embed,
-      toleranceAdded,
-      toxicityAdded,
-    ] = await fillInColumns(
-      embed,
-      drugData,
-      embedRowColumns,
-      toleranceAdded,
-      toxicityAdded,
-    );
+    ({ toleranceAdded, toxicityAdded } = await addRoaSections(embed, drugData, { toleranceAdded, toxicityAdded }));
   }
 
   // Reagents
@@ -444,8 +412,6 @@ export async function getDrugInfo(
 
   // Experiences
   await addExperiences(embed, drugData);
-
-  // log.debug(F, `Embed: ${JSON.stringify(embed, null, 2)}`);
 
   return { embeds: [embed] };
 }

@@ -67,19 +67,18 @@ export async function leaderboardV2(
 
     // Perform the database query
 
-    let userList = [] as LeaderboardList;
+    let userList: LeaderboardList;
 
     if (category !== 'TOTAL' && type !== 'ALL') {
-      userList = (await db.user_experience
-        .findMany({
-          where: whereClause,
-          orderBy: { total_points: 'desc' },
-          include: { users: { select: { discord_id: true } } },
-        })
-        .then(results => results.map(result => ({
-          discord_id: result.users.discord_id,
-          total_points: result.total_points,
-        })))) as LeaderboardList;
+      const experienceRows = await db.user_experience.findMany({
+        where: whereClause,
+        orderBy: { total_points: 'desc' },
+        include: { users: { select: { discord_id: true } } },
+      });
+      userList = experienceRows.map(result => ({
+        discord_id: result.users.discord_id,
+        total_points: result.total_points,
+      })) as LeaderboardList;
     } else {
       const userExpData = await db.user_experience.groupBy({
         by: ['user_id'],
@@ -114,12 +113,12 @@ export async function leaderboardV2(
 
       // Create a map of user IDs to discord IDs
       const userIdMap = new Map<string, string>();
-      users.forEach(user => userIdMap.set(user.id, user.discord_id || ''));
+      users.forEach(user => userIdMap.set(user.id, user.discord_id ?? ''));
 
       // Populate the user list with the discord IDs
       userList = userExpData.map(user => ({
-        discord_id: userIdMap.get(user.user_id) || '',
-        total_points: user._sum.total_points || 0,
+        discord_id: userIdMap.get(user.user_id) ?? '',
+        total_points: user._sum.total_points ?? 0,
       }));
     }
 

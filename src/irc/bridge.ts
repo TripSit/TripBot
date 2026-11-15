@@ -58,25 +58,25 @@ function canRelayMsg(client: Client): boolean {
   return !relayMsgDenied && client.network.cap.isEnabled(RELAYMSG_CAP);
 }
 
-function fallbackText(nick: string, text: string, action: boolean): string {
-  return action ? `* ${nick} ${text}` : `<${nick}> ${text}`;
-}
+const fallbackAction = (nick: string, text: string): string => `* ${nick} ${text}`;
+const fallbackMessage = (nick: string, text: string): string => `<${nick}> ${text}`;
 
 function sendLine(client: Client, line: QueuedLine): void {
   const {
     channel, nick, text, action, sourceId,
   } = line;
   const relayMsg = canRelayMsg(client);
+  const fallback = action ? fallbackAction(nick, text) : fallbackMessage(nick, text);
   if (relayMsg) {
     client.raw('RELAYMSG', channel, nick, action ? `\x01ACTION ${text}\x01` : text);
   } else {
-    client.say(channel, fallbackText(nick, text, action));
+    client.say(channel, fallback);
   }
   if (!sourceId) return;
   // The echo reports exactly what the server delivered, so record what to look for
   pendingEchoes.push({
     channel: channelKey(channel),
-    message: relayMsg ? text : fallbackText(nick, text, action),
+    message: relayMsg ? text : fallback,
     action: relayMsg && action,
     sourceId,
   });

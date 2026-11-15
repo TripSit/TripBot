@@ -4,6 +4,8 @@ import {
   Colors,
   ActionRowBuilder,
   ButtonBuilder,
+  EmbedBuilder,
+  Guild,
   GuildMember,
   TextChannel,
   Role,
@@ -144,6 +146,98 @@ async function botmodUser(
   return { embeds: [response] };
 }
 
+type GuildRecord = Awaited<ReturnType<typeof getOrCreateGuild>>;
+
+/** A no-op request (banning a banned guild, unbanning a guild that isn't banned) is answered without acting. */
+function guildStateReply(command: GuildActionType, guildData: GuildRecord, target: string): InteractionReplyOptions | undefined {
+  let title: string | undefined;
+  if (command === 'BOTBAN' && guildData.is_banned) title = 'Guild Already Banned';
+  if (command === 'UNBOTBAN' && !guildData.is_banned) title = 'Guild Not Banned';
+  if (!title) return undefined;
+  const embed = embedTemplate()
+    .setColor(Colors.Green)
+    .setTitle(title)
+    .addFields(
+      { name: 'Guild ID', value: target },
+    );
+  return { embeds: [embed] };
+}
+
+async function notifyGuildOwner(
+  command: GuildActionType,
+  targetGuildOwner: GuildMember,
+  pubReason: string | null,
+): Promise<void> {
+  const variables = embedVariables[command as keyof typeof embedVariables];
+  const warnEmbed = embedTemplate()
+    .setColor(variables.embedColor)
+    .setTitle(variables.embedTitle)
+    .setDescription(stripIndents`
+    Hey ${targetGuildOwner}, your guild has been ${variables.verb} by Team TripSit:
+
+    ${pubReason}
+
+    **Do not message a moderator to talk about this!**
+
+    ${command !== 'BOTBAN' && command !== 'BOTKICK'
+    ? 'You can respond to this bot and it will allow you to talk to the team privately!'
+    : 'You can send an email to appeals@tripsit.me to appeal this ban!'}
+    Please read the rules and be respectful of them.
+
+    https://tripsit.me/rules
+    `);
+  try {
+    await targetGuildOwner.send(command === 'BOTWARNING'
+      ? { embeds: [warnEmbed], components: [warnButtons] }
+      : { embeds: [warnEmbed] });
+  } catch (error) {
+    log.debug(F, `Could not DM guild owner ${targetGuildOwner.id}, they may have DMs disabled: ${error}`);
+  }
+}
+
+async function alertModerators(modlogEmbed: EmbedBuilder): Promise<void> {
+  const modChan = await global.discordClient.channels.fetch(env.CHANNEL_MODERATORS) as TextChannel;
+  // We must send the mention outside of the embed, cuz mentions don't work in embeds
+  const tripsitGuild = await global.discordClient.guilds.fetch(env.DISCORD_GUILD_ID);
+  const roleModerator = await tripsitGuild.roles.fetch(env.ROLE_MODERATOR) as Role;
+  await modChan.send({ content: `Hey ${roleModerator}`, embeds: [modlogEmbed] });
+  const modlog = await global.discordClient.channels.fetch(env.CHANNEL_MODLOG) as TextChannel;
+  modlog.send({ embeds: [modlogEmbed] });
+}
+
+function addGuildInfoFields(
+  modlogEmbed: EmbedBuilder,
+  targetGuild: Guild,
+  targetGuildOwner: GuildMember,
+  guildData: GuildRecord,
+): EmbedBuilder {
+  return modlogEmbed
+    .addFields(
+      { name: 'Name', value: `${targetGuild.name}`, inline: true },
+      { name: 'Acronym', value: `${targetGuild.nameAcronym}`, inline: true },
+      { name: 'ID', value: `${targetGuild.id}`, inline: true },
+    )
+    .addFields(
+      { name: 'Created', value: `${time(targetGuild.createdAt, 'R')}`, inline: true },
+      { name: 'Joined', value: `${time(targetGuild.joinedAt, 'R')}`, inline: true },
+      { name: 'Description', value: `${targetGuild.description}`, inline: true },
+    )
+    .addFields(
+      { name: 'Members', value: `${targetGuild.memberCount}`, inline: true },
+      { name: 'Owner ID', value: `${targetGuild.ownerId}`, inline: true },
+      { name: 'Owner Name', value: `${targetGuildOwner.user.tag}`, inline: true },
+    )
+    .addFields(
+      { name: 'Banned', value: `${guildData.is_banned}`, inline: true },
+      { name: 'Large', value: `${targetGuild.large}`, inline: true },
+      { name: 'NSFW', value: `${targetGuild.nsfwLevel}`, inline: true },
+    )
+    .addFields(
+      { name: 'Partner', value: `${targetGuild.partnered}`, inline: true },
+      { name: 'Locale', value: `${targetGuild.preferredLocale}`, inline: true },
+    );
+}
+
 async function botmodGuild(
   interaction:ChatInputCommandInteraction,
   actor: GuildMember,
@@ -156,58 +250,12 @@ async function botmodGuild(
   const targetGuildOwner = await targetGuild.members.fetch(targetGuild.ownerId);
   const guildData = await getOrCreateGuild(targetGuild.id);
 
-  if (command === 'BOTBAN' && guildData.is_banned) {
-    const embed = embedTemplate()
-      .setColor(Colors.Green)
-      .setTitle('Guild Already Banned')
-      .addFields(
-        { name: 'Guild ID', value: target },
-      );
-    return { embeds: [embed] };
-  }
-
-  if (command === 'UNBOTBAN' && !guildData.is_banned) {
-    const embed = embedTemplate()
-      .setColor(Colors.Green)
-      .setTitle('Guild Not Banned')
-      .addFields(
-        { name: 'Guild ID', value: target },
-      );
-    return { embeds: [embed] };
-  }
+  const stateReply = guildStateReply(command, guildData, target);
+  if (stateReply) return stateReply;
 
   // Send a message to the user
   if (command !== 'BOTNOTE' && command !== 'BOTINFO') {
-    const warnEmbed = embedTemplate()
-      .setColor(embedVariables[command as keyof typeof embedVariables].embedColor)
-      .setTitle(embedVariables[command as keyof typeof embedVariables].embedTitle)
-      .setDescription(stripIndents`
-    Hey ${targetGuildOwner}, your guild has been ${embedVariables[command as keyof typeof embedVariables].verb} by Team TripSit:
-
-    ${pubReason}
-
-    **Do not message a moderator to talk about this!**
-    
-    ${command !== 'BOTBAN' && command !== 'BOTKICK'
-    ? 'You can respond to this bot and it will allow you to talk to the team privately!'
-    : 'You can send an email to appeals@tripsit.me to appeal this ban!'}
-    Please read the rules and be respectful of them.
-
-    https://tripsit.me/rules
-    `);
-    if (command === 'BOTWARNING') {
-      try {
-        await targetGuildOwner.send({ embeds: [warnEmbed], components: [warnButtons] });
-      } catch (error) {
-        log.debug(F, `Could not DM guild owner ${targetGuildOwner.id}, they may have DMs disabled: ${error}`);
-      }
-    } else {
-      try {
-        await targetGuildOwner.send({ embeds: [warnEmbed] });
-      } catch (error) {
-        log.debug(F, `Could not DM guild owner ${targetGuildOwner.id}, they may have DMs disabled: ${error}`);
-      }
-    }
+    await notifyGuildOwner(command, targetGuildOwner, pubReason);
   }
 
   // Perform actions
@@ -233,55 +281,20 @@ async function botmodGuild(
 
   const noReason = 'No reason provided';
   const modlogEmbed = embedTemplate()
-    .setColor(embedVariables[command as keyof typeof embedVariables].embedColor)
-    .setTitle(`${actor.displayName} ${embedVariables[command as keyof typeof embedVariables].verb} ${targetGuild.name}`)
+    .setColor(embedVariables[command].embedColor)
+    .setTitle(`${actor.displayName} ${embedVariables[command].verb} ${targetGuild.name}`)
     .setDescription(stripIndents`
     **PrivReason:** ${privReason ?? noReason}
     ${pubReason ? `**PubReason:** ${pubReason}` : ''}
     `);
 
-  // Send the message to the mod channel
-  if (command !== 'BOTINFO') {
-    const modChan = await global.discordClient.channels.fetch(env.CHANNEL_MODERATORS) as TextChannel;
-    // We must send the mention outside of the embed, cuz mentions don't work in embeds
-    const tripsitGuild = await global.discordClient.guilds.fetch(env.DISCORD_GUILD_ID);
-    const roleModerator = await tripsitGuild.roles.fetch(env.ROLE_MODERATOR) as Role;
-    await modChan.send({ content: `Hey ${roleModerator}`, embeds: [modlogEmbed] });
-    const modlog = await global.discordClient.channels.fetch(env.CHANNEL_MODLOG) as TextChannel;
-    modlog.send({ embeds: [modlogEmbed] });
-  }
-
   // If this is the info command then return with info
   if (command === 'BOTINFO') {
-    modlogEmbed
-      .addFields(
-        { name: 'Name', value: `${targetGuild.name}`, inline: true },
-        { name: 'Acronym', value: `${targetGuild.nameAcronym}`, inline: true },
-        { name: 'ID', value: `${targetGuild.id}`, inline: true },
-      )
-      .addFields(
-        { name: 'Created', value: `${time(targetGuild.createdAt, 'R')}`, inline: true },
-        { name: 'Joined', value: `${time(targetGuild.joinedAt, 'R')}`, inline: true },
-        { name: 'Description', value: `${targetGuild.description}`, inline: true },
-      )
-      .addFields(
-        { name: 'Members', value: `${targetGuild.memberCount}`, inline: true },
-        { name: 'Owner ID', value: `${targetGuild.ownerId}`, inline: true },
-        { name: 'Owner Name', value: `${targetGuildOwner.user.tag}`, inline: true },
-      )
-      .addFields(
-        { name: 'Banned', value: `${guildData.is_banned}`, inline: true },
-        { name: 'Large', value: `${targetGuild.large}`, inline: true },
-        { name: 'NSFW', value: `${targetGuild.nsfwLevel}`, inline: true },
-      )
-      .addFields(
-        { name: 'Partner', value: `${targetGuild.partnered}`, inline: true },
-        { name: 'Locale', value: `${targetGuild.preferredLocale}`, inline: true },
-      // { name: 'guild_region', value: `${targetGuild.guild_region}`, inline: true },
-      );
-
-    return { embeds: [modlogEmbed] };
+    return { embeds: [addGuildInfoFields(modlogEmbed, targetGuild, targetGuildOwner, guildData)] };
   }
+
+  // Send the message to the mod channel
+  await alertModerators(modlogEmbed);
 
   // Return a message to the user confirming the user was acted on
   const desc = `${targetGuild.name} has been ${embedVariables[command as keyof typeof embedVariables].verb}!`;
@@ -316,7 +329,7 @@ export async function botmod(
     response = await botmodUser(interaction, actor, (command as UserActionType), target, privReason, pubReason);
   }
   if (group === 'guild') {
-    response = await botmodGuild(interaction, actor, (command as GuildActionType), target, privReason, pubReason);
+    response = await botmodGuild(interaction, actor, (command), target, privReason, pubReason);
   }
   return response;
 }

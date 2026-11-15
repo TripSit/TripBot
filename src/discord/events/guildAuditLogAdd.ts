@@ -1,6 +1,8 @@
 import {
   AuditLogEvent,
   Colors,
+  EmbedBuilder,
+  Guild,
   TextChannel,
   PermissionsBitField,
 } from 'discord.js';
@@ -11,23 +13,63 @@ import { embedTemplate } from '../utils/embedTemplate';
 
 const F = f(__filename);
 
+const NULL_LABELS: Record<string, string> = {
+  nick: 'No nickname',
+  nickname: 'No nickname',
+  avatar: 'No avatar',
+  banner: 'No banner',
+  timeout: 'No timeout',
+  communication_disabled_until: 'Not timed out',
+};
+
+function formatObjectValue(value: any, key?: string): string {
+  try {
+    if (Array.isArray(value)) {
+      if (value.length === 0) return 'None';
+      return value.map(v => formatValue(v, key)).join(', '); // eslint-disable-line @typescript-eslint/no-use-before-define
+    }
+
+    // Handle specific Discord objects
+    if (value.id && value.username) {
+      return `@${value.username}`;
+    }
+    if (value.id && value.name && value.color !== undefined) {
+      return `@${value.name}`;
+    }
+    if (value.id && value.name) {
+      return `#${value.name}`;
+    }
+
+    return JSON.stringify(value, null, 2);
+  } catch {
+    return '[Complex object]';
+  }
+}
+
+/** Returns the special formatting for a string value, or undefined when it should be printed as-is. */
+function formatStringValue(value: string, key?: string): string | undefined {
+  // Handle timestamps
+  if (key === 'communication_disabled_until' && value) {
+    const date = new Date(value);
+    return `Until ${date.toLocaleString()}`;
+  }
+
+  // Handle permission bitfields
+  if (key?.includes('permission') && !Number.isNaN(Number(value))) {
+    try {
+      const perms = new PermissionsBitField(BigInt(value));
+      const permArray = perms.toArray();
+      return permArray.length > 0 ? permArray.join(', ') : 'No permissions';
+    } catch {
+      return value;
+    }
+  }
+  return undefined;
+}
+
 function formatValue(value: any, key?: string): string {
   if (value === null || value === undefined) {
-    switch (key) {
-      case 'nick':
-      case 'nickname':
-        return 'No nickname';
-      case 'avatar':
-        return 'No avatar';
-      case 'banner':
-        return 'No banner';
-      case 'timeout':
-        return 'No timeout';
-      case 'communication_disabled_until':
-        return 'Not timed out';
-      default:
-        return 'None';
-    }
+    return (key !== undefined && Object.hasOwn(NULL_LABELS, key)) ? NULL_LABELS[key] : 'None';
   }
 
   if (typeof value === 'boolean') {
@@ -35,46 +77,12 @@ function formatValue(value: any, key?: string): string {
   }
 
   if (typeof value === 'object') {
-    try {
-      if (Array.isArray(value)) {
-        if (value.length === 0) return 'None';
-        return value.map(v => formatValue(v, key)).join(', ');
-      }
-
-      // Handle specific Discord objects
-      if (value.id && value.username) {
-        return `@${value.username}`;
-      }
-      if (value.id && value.name && value.color !== undefined) {
-        return `@${value.name}`;
-      }
-      if (value.id && value.name) {
-        return `#${value.name}`;
-      }
-
-      return JSON.stringify(value, null, 2);
-    } catch {
-      return '[Complex object]';
-    }
+    return formatObjectValue(value, key);
   }
 
   if (typeof value === 'string') {
-    // Handle timestamps
-    if (key === 'communication_disabled_until' && value) {
-      const date = new Date(value);
-      return `Until ${date.toLocaleString()}`;
-    }
-
-    // Handle permission bitfields
-    if (key?.includes('permission') && !Number.isNaN(Number(value))) {
-      try {
-        const perms = new PermissionsBitField(BigInt(value));
-        const permArray = perms.toArray();
-        return permArray.length > 0 ? permArray.join(', ') : 'No permissions';
-      } catch {
-        return value;
-      }
-    }
+    const special = formatStringValue(value, key);
+    if (special !== undefined) return special;
   }
 
   return value.toString();
@@ -131,95 +139,80 @@ export function getActionEmoji(actionType: string, targetType: string): string {
   return '📋';
 }
 
+// Changes shown as "Label: old → new"
+const CHANGE_LABELS: Record<string, string> = {
+  nick: 'Nickname',
+  nickname: 'Nickname',
+  deaf: 'Server Deafened',
+  mute: 'Server Muted',
+  name: 'Name',
+  topic: 'Topic',
+  position: 'Position',
+  color: 'Color',
+  hoist: 'Display Separately',
+  mentionable: 'Mentionable',
+  nsfw: 'NSFW',
+};
+
+// Changes that are bitfields of permissions
+const PERMISSION_CHANGE_LABELS: Record<string, string> = {
+  permissions: 'Permissions',
+  allow: 'Permissions Allowed',
+  deny: 'Permissions Denied',
+};
+
+// Numeric changes shown with a unit; a falsy value (0 or unset) is described by `empty` instead
+const NUMERIC_CHANGES: Record<string, { label: string; unit: string; empty: string }> = {
+  slowmode: { label: 'Slowmode', unit: 's', empty: 'Off' },
+  rate_limit_per_user: { label: 'Slowmode', unit: 's', empty: 'Off' },
+  bitrate: { label: 'Bitrate', unit: 'kbps', empty: 'Default' },
+  // A limit of 0 (or no limit) means unlimited, so falsy values must not be shown as-is
+  user_limit: { label: 'User Limit', unit: '', empty: 'Unlimited' },
+};
+
+const withUnit = (value: unknown, unit: string, empty: string): string => (value ? `${String(value)}${unit}` : empty);
+
+function formatSpecialChange(
+  key: string,
+  oldValue: any,
+  newValue: any,
+  formattedNew: string,
+  targetType: string,
+): string | undefined {
+  if (Object.hasOwn(NUMERIC_CHANGES, key)) {
+    const { label, unit, empty } = NUMERIC_CHANGES[key];
+    return `**${label}:** ${withUnit(oldValue, unit, empty)} → ${withUnit(newValue, unit, empty)}`;
+  }
+  const isUser = targetType.toLowerCase().includes('user');
+  switch (key) {
+    case 'avatar':
+      return '**Avatar:** Changed';
+    case 'communication_disabled_until':
+      return newValue ? `**Timeout:** ${formattedNew}` : '**Timeout:** Removed';
+    case '$add':
+      return isUser ? `**Roles Added:** ${formattedNew}` : `**Added:** ${formattedNew}`;
+    case '$remove':
+      return isUser ? `**Roles Removed:** ${formattedNew}` : `**Removed:** ${formattedNew}`;
+    default:
+      return undefined;
+  }
+}
+
 // Format specific change types with human-readable descriptions
 export function formatChange(change: any, targetType: string): string {
   const { key, old: oldValue, new: newValue } = change;
   const formattedOld = formatValue(oldValue, key);
   const formattedNew = formatValue(newValue, key);
 
-  // Handle specific change types
-  switch (key) {
-    case 'nick':
-    case 'nickname':
-      return `**Nickname:** ${formattedOld} → ${formattedNew}`;
-
-    case 'avatar':
-      return '**Avatar:** Changed';
-
-    case 'communication_disabled_until':
-      if (newValue) {
-        return `**Timeout:** ${formattedNew}`;
-      }
-      return '**Timeout:** Removed';
-
-    case 'deaf':
-      return `**Server Deafened:** ${formattedOld} → ${formattedNew}`;
-
-    case 'mute':
-      return `**Server Muted:** ${formattedOld} → ${formattedNew}`;
-
-    case '$add':
-      if (targetType.toLowerCase().includes('user')) {
-        return `**Roles Added:** ${formattedNew}`;
-      }
-      return `**Added:** ${formattedNew}`;
-
-    case '$remove':
-      if (targetType.toLowerCase().includes('user')) {
-        return `**Roles Removed:** ${formattedNew}`;
-      }
-      return `**Removed:** ${formattedNew}`;
-
-    case 'name':
-      return `**Name:** ${formattedOld} → ${formattedNew}`;
-
-    case 'topic':
-      return `**Topic:** ${formattedOld} → ${formattedNew}`;
-
-    case 'position':
-      return `**Position:** ${formattedOld} → ${formattedNew}`;
-
-    case 'color':
-      return `**Color:** ${formattedOld} → ${formattedNew}`;
-
-    case 'hoist':
-      return `**Display Separately:** ${formattedOld} → ${formattedNew}`;
-
-    case 'mentionable':
-      return `**Mentionable:** ${formattedOld} → ${formattedNew}`;
-
-    case 'permissions':
-      return `**Permissions:**\n${formatPermissionDiff(oldValue, newValue)}`;
-
-    case 'allow':
-      return `**Permissions Allowed:**\n${formatPermissionDiff(oldValue, newValue)}`;
-
-    case 'deny':
-      return `**Permissions Denied:**\n${formatPermissionDiff(oldValue, newValue)}`;
-
-    case 'nsfw':
-      return `**NSFW:** ${formattedOld} → ${formattedNew}`;
-
-    case 'slowmode':
-    case 'rate_limit_per_user': {
-      const oldSeconds = oldValue ? `${oldValue}s` : 'Off';
-      const newSeconds = newValue ? `${newValue}s` : 'Off';
-      return `**Slowmode:** ${oldSeconds} → ${newSeconds}`;
-    }
-
-    case 'bitrate': {
-      const oldBitrate = oldValue ? `${oldValue}kbps` : 'Default';
-      const newBitrate = newValue ? `${newValue}kbps` : 'Default';
-      return `**Bitrate:** ${oldBitrate} → ${newBitrate}`;
-    }
-
-    case 'user_limit': {
-      return `**User Limit:** ${oldValue || 'Unlimited'} → ${newValue || 'Unlimited'}`;
-    }
-
-    default:
-      return `**${key.charAt(0).toUpperCase() + key.slice(1)}:** ${formattedOld} → ${formattedNew}`;
+  if (Object.hasOwn(CHANGE_LABELS, key)) {
+    return `**${CHANGE_LABELS[key]}:** ${formattedOld} → ${formattedNew}`;
   }
+  if (Object.hasOwn(PERMISSION_CHANGE_LABELS, key)) {
+    return `**${PERMISSION_CHANGE_LABELS[key]}:**\n${formatPermissionDiff(oldValue, newValue)}`;
+  }
+
+  return formatSpecialChange(key, oldValue, newValue, formattedNew, targetType)
+    ?? `**${key.charAt(0).toUpperCase() + key.slice(1)}:** ${formattedOld} → ${formattedNew}`;
 }
 
 // discord.js reports bans, kicks, etc. all as a 'User' target with Create/Update/Delete, so use the event
@@ -257,6 +250,43 @@ function describeUserAction(
   }
 }
 
+type EntityDescriber = (executor: string, targetName: string, rawName: string | undefined) => string;
+
+// Descriptions for entities that have create/update/delete audit entries, keyed by target type then action
+const ENTITY_DESCRIPTIONS: Record<string, Record<string, EntityDescriber>> = {
+  role: {
+    create: (executor, targetName) => `**${executor}** created role **${targetName}**`,
+    update: (executor, targetName) => `**${executor}** updated role **${targetName}**`,
+    delete: (executor, _targetName, rawName) => `**${executor}** deleted role **${rawName ?? 'a role'}**`,
+  },
+  channel: {
+    create: (executor, targetName) => `**${executor}** created channel **#${targetName}**`,
+    update: (executor, targetName) => `**${executor}** updated channel **#${targetName}**`,
+    delete: (executor, _targetName, rawName) => `**${executor}** deleted channel **#${rawName ?? 'a channel'}**`,
+  },
+  emoji: {
+    create: (executor, _targetName, rawName) => `**${executor}** added emoji **:${rawName ?? 'unknown'}:**`,
+    update: (executor, _targetName, rawName) => `**${executor}** updated emoji **:${rawName ?? 'unknown'}:**`,
+    delete: (executor, _targetName, rawName) => `**${executor}** deleted emoji **:${rawName ?? 'unknown'}:**`,
+  },
+  webhook: {
+    create: (executor, _targetName, rawName) => `**${executor}** created webhook **${rawName ?? 'a webhook'}**`,
+    update: (executor, _targetName, rawName) => `**${executor}** updated webhook **${rawName ?? 'a webhook'}**`,
+    delete: (executor, _targetName, rawName) => `**${executor}** deleted webhook **${rawName ?? 'a webhook'}**`,
+  },
+  automod: {
+    create: () => 'AutoMod took action',
+    update: (executor, _targetName, rawName) => `**${executor}** updated AutoMod rule **${rawName ?? 'a rule'}**`,
+    delete: (executor, _targetName, rawName) => `**${executor}** deleted AutoMod rule **${rawName ?? 'a rule'}**`,
+  },
+  invite: {
+    create: executor => `**${executor}** created invite`,
+    delete: executor => `**${executor}** deleted invite`,
+  },
+};
+
+const AUTOMOD_TYPES = ['automoderation', 'auto_moderation', 'automod'];
+
 // Create human-readable action description
 export function createActionDescription(auditLogEntry: any): string {
   const {
@@ -266,102 +296,68 @@ export function createActionDescription(auditLogEntry: any): string {
   const type = targetType.toLowerCase();
 
   // Get safe display names (no pings)
-  const executorName = executor?.tag || executor?.username || 'System';
-  const targetName = target?.tag || target?.username || target?.name || 'Unknown Target';
+  const executorName = executor?.tag ?? executor?.username ?? 'System';
+  const targetName = target?.tag ?? target?.username ?? target?.name ?? 'Unknown Target';
 
   // Handle different target types with appropriate descriptions
-  switch (type) {
-    case 'user': {
-      const userDescription = describeUserAction(auditLogEntry.action, executorName, targetName);
-      if (userDescription) return userDescription;
-      break;
-    }
-
-    case 'role':
-      if (action === 'create') {
-        return `**${executorName}** created role **${targetName}**`;
-      }
-      if (action === 'update') {
-        return `**${executorName}** updated role **${targetName}**`;
-      }
-      if (action === 'delete') {
-        return `**${executorName}** deleted role **${target?.name || 'a role'}**`;
-      }
-      break;
-
-    case 'channel':
-      if (action === 'create') {
-        return `**${executorName}** created channel **#${targetName}**`;
-      }
-      if (action === 'update') {
-        return `**${executorName}** updated channel **#${targetName}**`;
-      }
-      if (action === 'delete') {
-        return `**${executorName}** deleted channel **#${target?.name || 'a channel'}**`;
-      }
-      break;
-
-    case 'guild':
-      return `**${executorName}** updated server settings`;
-
-    case 'emoji':
-      if (action === 'create') {
-        return `**${executorName}** added emoji **:${target?.name || 'unknown'}:**`;
-      }
-      if (action === 'update') {
-        return `**${executorName}** updated emoji **:${target?.name || 'unknown'}:**`;
-      }
-      if (action === 'delete') {
-        return `**${executorName}** deleted emoji **:${target?.name || 'unknown'}:**`;
-      }
-      break;
-
-    case 'webhook':
-      if (action === 'create') {
-        return `**${executorName}** created webhook **${target?.name || 'a webhook'}**`;
-      }
-      if (action === 'update') {
-        return `**${executorName}** updated webhook **${target?.name || 'a webhook'}**`;
-      }
-      if (action === 'delete') {
-        return `**${executorName}** deleted webhook **${target?.name || 'a webhook'}**`;
-      }
-      break;
-
-    case 'automoderation':
-    case 'auto_moderation':
-    case 'automod':
-      if (action === 'create') {
-        return 'AutoMod took action';
-      }
-      if (action === 'update') {
-        return `**${executorName}** updated AutoMod rule **${target?.name || 'a rule'}**`;
-      }
-      if (action === 'delete') {
-        return `**${executorName}** deleted AutoMod rule **${target?.name || 'a rule'}**`;
-      }
-      return 'AutoMod action triggered';
-
-    case 'invite':
-      if (action === 'create') {
-        return `**${executorName}** created invite`;
-      }
-      if (action === 'delete') {
-        return `**${executorName}** deleted invite`;
-      }
-      break;
-
-    default: {
-      const actionSuffix = action.endsWith('e') ? 'd' : 'ed';
-      const targetDisplay = action !== 'delete' ? `**${targetName}**` : '';
-      return `**${executorName}** ${action}${actionSuffix} ${type} ${targetDisplay}`;
-    }
+  if (type === 'user') {
+    const userDescription = describeUserAction(auditLogEntry.action, executorName, targetName);
+    if (userDescription) return userDescription;
+  } else if (type === 'guild') {
+    return `**${executorName}** updated server settings`;
+  } else {
+    const entityType = AUTOMOD_TYPES.includes(type) ? 'automod' : type;
+    const describe = Object.hasOwn(ENTITY_DESCRIPTIONS, entityType)
+      ? ENTITY_DESCRIPTIONS[entityType][action]
+      : undefined;
+    if (describe) return describe(executorName, targetName, target?.name);
+    if (entityType === 'automod') return 'AutoMod action triggered';
   }
 
   // Fallback for any unhandled cases
   const actionSuffix = action.endsWith('e') ? 'd' : 'ed';
   const targetDisplay = action !== 'delete' ? `**${targetName}**` : '';
   return `**${executorName}** ${action}${actionSuffix} ${type} ${targetDisplay}`;
+}
+
+const ACTION_COLORS: Record<string, number> = {
+  Create: Colors.Green,
+  Update: Colors.Yellow,
+  Delete: Colors.Red,
+};
+
+// Handle reason with special formatting for AutoMod
+function describeReason(auditLogEntry: any, reason: string): string {
+  if (isAutoModAction(auditLogEntry.action)) {
+    // `extra` is null for some entries and carries the rule name, not the matched keyword
+    const extra = auditLogEntry.extra as Record<string, unknown> | null | undefined;
+    const ruleName = extra?.autoModerationRuleName;
+    if (typeof ruleName === 'string' && ruleName) {
+      return `\n\n**Rule:** ${ruleName}\n**Reason:** ${reason}`;
+    }
+  }
+  return `\n\n**Reason:** ${reason}`;
+}
+
+// For AutoMod, try to get the user who triggered it
+async function setAutoModFooter(embed: EmbedBuilder, auditLogEntry: any, guild: Guild): Promise<void> {
+  if (!auditLogEntry.executorId || auditLogEntry.executorId === guild.client.user?.id) {
+    embed.setFooter({
+      text: 'Automated action',
+    });
+    return;
+  }
+  try {
+    const triggerUser = await guild.members.fetch(auditLogEntry.executorId);
+    embed.setFooter({
+      text: `Triggered by ${triggerUser.user.tag}`,
+      iconURL: triggerUser.user.displayAvatarURL({ size: 32 }),
+    });
+  } catch {
+    embed.setFooter({
+      text: `Triggered by user ${auditLogEntry.executorId}`,
+    });
+  }
 }
 
 export const guildAuditLogEntryCreate: GuildAuditLogEntryCreateEvent = {
@@ -394,27 +390,12 @@ export const guildAuditLogEntryCreate: GuildAuditLogEntryCreateEvent = {
           .join('\n')
         : '';
 
-      const mainDescription = createActionDescription(auditLogEntry);
-
-      let description = mainDescription;
+      let description = createActionDescription(auditLogEntry);
       if (changesText) {
         description += `\n\n${changesText}`;
       }
-
-      // Handle reason with special formatting for AutoMod
       if (reason) {
-        if (isAutoModAction(auditLogEntry.action)) {
-          // `extra` is null for some entries and carries the rule name, not the matched keyword
-          const extra = auditLogEntry.extra as Record<string, unknown> | null | undefined;
-          const ruleName = extra?.autoModerationRuleName;
-          if (typeof ruleName === 'string' && ruleName) {
-            description += `\n\n**Rule:** ${ruleName}\n**Reason:** ${reason}`;
-          } else {
-            description += `\n\n**Reason:** ${reason}`;
-          }
-        } else {
-          description += `\n\n**Reason:** ${reason}`;
-        }
+        description += describeReason(auditLogEntry, reason);
       }
 
       // Get appropriate emoji and title
@@ -425,48 +406,18 @@ export const guildAuditLogEntryCreate: GuildAuditLogEntryCreateEvent = {
         .setFooter(null)
         .setTitle(`${emoji} ${targetType} ${actionType}`)
         .setDescription(description)
-        .setTimestamp();
-
-      // Set color based on action type
-      switch (actionType) {
-        case 'Create':
-          embed.setColor(Colors.Green);
-          break;
-        case 'Update':
-          embed.setColor(Colors.Yellow);
-          break;
-        case 'Delete':
-          embed.setColor(Colors.Red);
-          break;
-        default:
-          embed.setColor(Colors.Blue);
-      }
+        .setTimestamp()
+        // Set color based on action type
+        .setColor(ACTION_COLORS[actionType] ?? Colors.Blue);
 
       // Add executor info if available
-      if (executor && executor.tag && executor.id !== guild.client.user?.id) {
+      if (executor?.tag && executor.id !== guild.client.user?.id) {
         embed.setFooter({
           text: `Action by ${executor.tag}`,
           iconURL: executor.displayAvatarURL({ size: 32 }),
         });
       } else if (isAutoModAction(auditLogEntry.action)) {
-        // For AutoMod, try to get the user who triggered it
-        if (auditLogEntry.executorId && auditLogEntry.executorId !== guild.client.user?.id) {
-          try {
-            const triggerUser = await guild.members.fetch(auditLogEntry.executorId);
-            embed.setFooter({
-              text: `Triggered by ${triggerUser.user.tag}`,
-              iconURL: triggerUser.user.displayAvatarURL({ size: 32 }),
-            });
-          } catch {
-            embed.setFooter({
-              text: `Triggered by user ${auditLogEntry.executorId}`,
-            });
-          }
-        } else {
-          embed.setFooter({
-            text: 'Automated action',
-          });
-        }
+        await setAutoModFooter(embed, auditLogEntry, guild);
       }
 
       await channelAuditlog.send({ embeds: [embed] });

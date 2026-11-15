@@ -17,39 +17,31 @@ export async function issue(
   body: string,
   labels: string[],
 ):Promise<OctokitResponse<Issue>> {
-  /**
-   * This needs to be in a separate function cuz it's not async
-   */
-  async function getResults():Promise<OctokitResponse<Issue>> {
-    return new Promise(async (resolve, reject) => { // eslint-disable-line no-async-promise-executor
-      // Use octokit to create an issue
-      const octokit = new Octokit({ auth: env.GITHUB_TOKEN });
-      await octokit.rest.issues.create({
-        owner: 'TripSit',
-        repo: 'TripBot',
-        title,
-        body,
-      })
-        .then(async (response: { data: { number: number } }) => {
-          const issueNumber = response.data.number;
-          octokit.rest.issues.addLabels({
-            owner: 'TripSit',
-            repo: 'TripBot',
-            issue_number: issueNumber,
-            labels,
-          }).catch((error:Error) => {
-            log.error(F, `Failed to add labels to issue #${issueNumber}: ${error.message}`);
-          });
-          resolve(response as unknown as OctokitResponse<Issue>);
-        })
-        .catch((error:Error) => {
-          log.error(F, `Failed to create GitHub issue '${title}': ${error.message}`);
-          reject(error);
-        });
-    });
+  const octokit = new Octokit({ auth: env.GITHUB_TOKEN });
+  let results: OctokitResponse<Issue>;
+  try {
+    // Use octokit to create an issue
+    results = await octokit.rest.issues.create({
+      owner: 'TripSit',
+      repo: 'TripBot',
+      title,
+      body,
+    }) as unknown as OctokitResponse<Issue>;
+  } catch (error) {
+    log.error(F, `Failed to create GitHub issue '${title}': ${(error as Error).message}`);
+    throw error;
   }
 
-  const results = await getResults();
+  const issueNumber = results.data.number;
+  octokit.rest.issues.addLabels({
+    owner: 'TripSit',
+    repo: 'TripBot',
+    issue_number: issueNumber,
+    labels,
+  }).catch((error: Error) => {
+    log.error(F, `Failed to add labels to issue #${issueNumber}: ${error.message}`);
+  });
+
   log.info(F, `response: ${JSON.stringify(results, null, 2)}`);
 
   return results;

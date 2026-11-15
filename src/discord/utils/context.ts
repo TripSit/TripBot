@@ -40,6 +40,5 @@ export default async function commandContext(
   if ((interaction as StringSelectMenuInteraction).customId) {
     message += ` with customId: ${(interaction as ButtonInteraction).customId}`;
   }
-  // logger.info(stripIndents`[${prefix}] ${message}`);
   return stripIndents`${message}`;
 }

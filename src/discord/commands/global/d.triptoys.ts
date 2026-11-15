@@ -6,7 +6,7 @@ import {
 import { SlashCommand } from '../../@types/commandDef';
 import commandContext from '../../utils/context';
 import { embedTemplate } from '../../utils/embedTemplate';
-// import log from '../../../global/utils/log';
+
 const F = f(__filename);
 
 const weavesilk = 'Weavesilk';
@@ -16,7 +16,6 @@ const plink = 'Plink';
 const puddle = 'Puddle';
 const helloenjoy = 'Hello Enjoy';
 const softmurmur = 'Soft Murmur';
-// const mandala = 'Draw A 3D Mandala';
 const waytogo = 'A Way To Go';
 const waterphysics = 'Water physics';
 const patterns = 'Patterns';
@@ -73,9 +72,8 @@ export const dTriptoys: SlashCommand = {
     log.info(F, await commandContext(interaction));
     const ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined;
     await interaction.deferReply({ flags: ephemeral });
-    const toyName = interaction.options.getString('toy') || '25';
+    const toyName = interaction.options.getString('toy') ?? '25';
     const toyId = parseInt(toyName, 10);
-    // log.debug(F, `toy_name: ${toyName}`);
 
     const toys = {
       1: { name: weavesilk, value: '[Generate art](http://weavesilk.com/)', inline: true },
@@ -114,7 +112,6 @@ export const dTriptoys: SlashCommand = {
       const randomIndex = Math.floor(Math.random() * Object.keys(toys).length);
       // Get a random toy
       const randomToy = toys[randomIndex as keyof typeof toys];
-      // log.debug(F, `random_toy: ${JSON.stringify(randomToy, null, 2)}`);
       embed.addFields(randomToy);
     }
 

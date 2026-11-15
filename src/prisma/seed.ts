@@ -21,6 +21,11 @@ const drugs = combinedDb as [CbSubstance];
 
 type DrugRecord = CbSubstance & { id: string };
 
+const emptyToNull = (value?: string | null): string | null => {
+  const trimmed = value?.trim();
+  return trimmed === undefined || trimmed === '' ? null : trimmed;
+};
+
 const pool = new Pool({ connectionString: process.env.PRISMA_DB_URL });
 const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
@@ -52,8 +57,7 @@ function parseDuration(
 
   // Return null if no matching duration is found, or if the value is uncertain or rapid
   if (
-    !duration
-    || !duration.value
+    !duration?.value
     || duration.value.includes('?')
     || duration.value.toLowerCase().includes('rapid')
   ) {
@@ -162,9 +166,9 @@ async function seedDrugs(userId: string): Promise<DrugRecord[]> {
     drugs.map(async drug => {
       const createdDrug = await prisma.drugs.create({
         data: {
-          summary: (drug.summary || '').trim() || null,
-          psychonaut_wiki_url: (drug.url || '').trim() || null,
-          errowid_experiences_url: (drug.experiencesUrl || '').trim() || null,
+          summary: emptyToNull(drug.summary),
+          psychonaut_wiki_url: emptyToNull(drug.url),
+          errowid_experiences_url: emptyToNull(drug.experiencesUrl),
           last_updated_by: userId,
         },
         select: {

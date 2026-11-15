@@ -58,9 +58,7 @@ export const messageDelete: MessageDeleteEvent = {
     // A matching audit log entry means someone other than the author removed the message. Discord
     // batches these entries, so a missing match usually just means the author deleted it themselves.
     let executorUser: User | PartialUser = author;
-    if (deletionLog
-      && deletionLog.target
-      && deletionLog.target.id === author.id
+    if (deletionLog?.target?.id === author.id
       && deletionLog.createdTimestamp > (startTime - 1)
       && deletionLog.executor) {
       executorUser = deletionLog.executor;
@@ -69,8 +67,7 @@ export const messageDelete: MessageDeleteEvent = {
     let executorMember: GuildMember | PartialGuildMember;
     try {
       executorMember = await message.guild.members.fetch(executorUser.id);
-    } catch (err) {
-      // log.error(F, `Error fetching executor member: ${err}`);
+    } catch {
       return;
     }
 
@@ -89,7 +86,6 @@ export const messageDelete: MessageDeleteEvent = {
     if (deletedMessage.attachments.size > 0) {
       deletedMessage.attachments.forEach(async attachment => {
         embed.setThumbnail(`${attachment.proxyURL}`);
-        // const file = new AttachmentBuilder(attachment.proxyURL);
         await msglogChannel.send({ embeds: [embed] });
       });
       return;

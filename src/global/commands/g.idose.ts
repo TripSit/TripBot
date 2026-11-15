@@ -218,16 +218,23 @@ async function iDoseDel(
   }];
 }
 
+export interface IDoseInput {
+  substance: string | null;
+  volume: number | null;
+  units: drug_mass_unit | null;
+  roa: drug_roa | null;
+  date: Date | null;
+}
+
 export async function idose(
   command: 'get' | 'set' | 'delete',
   recordNumber: number | null,
   userId: string,
-  substance: string | null,
-  volume: number | null,
-  units: drug_mass_unit | null,
-  roa: drug_roa | null,
-  date: Date | null,
+  doseInput: IDoseInput,
 ):Promise<IDoseResponse> {
+  const {
+    substance, volume, units, roa, date,
+  } = doseInput;
   let response = {} as IDoseResponse;
 
   switch (command) {

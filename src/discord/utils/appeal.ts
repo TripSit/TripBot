@@ -65,7 +65,7 @@ async function updateAppeal(
       id: latestAppeal.id,
     },
     data: {
-      status: appealStatus as appeal_status,
+      status: appealStatus,
       decided_at: new Date(),
       response_message: userMessage,
     },
@@ -152,7 +152,7 @@ export async function appealReminder(
     // Get the mod thread channel
     const modThread = await discordClient.channels.fetch(userData.mod_thread_id);
 
-    if (!modThread || !modThread.isThread()) {
+    if (!modThread?.isThread()) {
       log.error(F, `Mod thread not found or invalid: ${userData.mod_thread_id}`);
       return { success: false, message: 'Mod thread not found or invalid' };
     }

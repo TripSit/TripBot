@@ -7,8 +7,6 @@ import {
   transports,
 } from 'winston';
 import Transport from 'winston-transport';
-// import { Logtail } from '@logtail/node'; // eslint-disable-line
-// import { LogtailTransport } from '@logtail/winston'; // eslint-disable-line
 import { TextChannel } from 'discord.js';
 import { ConsoleTransportInstance } from 'winston/lib/winston/transports';
 import { env } from './env.config';

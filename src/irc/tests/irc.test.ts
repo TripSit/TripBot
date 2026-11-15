@@ -179,7 +179,7 @@ describe('ircConnect', () => {
 
     it('connects exactly as before when no certificate is configured', async () => {
       await connect();
-      expect(connectOptions()).not.toHaveProperty('client_certificate');
+      expect('client_certificate' in connectOptions()).toBe(false);
     });
 
     it('presents the certificate and key from the configured paths', async () => {
@@ -218,7 +218,7 @@ describe('ircConnect', () => {
       await connect();
       register();
 
-      expect(client.raw).not.toHaveBeenCalledWith('OPER', expect.anything(), expect.anything());
+      expect(client.raw.mock.calls.some(call => call[0] === 'OPER')).toBe(false);
     });
 
     it('sends OPER after registering when oper credentials are set', async () => {
@@ -283,7 +283,7 @@ describe('ircConnect', () => {
 
       client.emit('nick in use', { nick: 'Other', reason: 'Nickname is already in use' });
 
-      expect(client.changeNick).not.toHaveBeenCalled();
+      expect(client.changeNick).toHaveBeenCalledTimes(0);
     });
   });
 
@@ -395,7 +395,7 @@ describe('ircDisconnect', () => {
 
     irc.ircDisconnect();
 
-    expect(client.quit).not.toHaveBeenCalled();
+    expect(client.quit).toHaveBeenCalledTimes(0);
   });
 
   it('cancels a pending reconnect and stops reconnecting', async () => {

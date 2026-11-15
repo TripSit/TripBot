@@ -56,12 +56,12 @@ export class AiPage {
 
     // Calculations
     const totalMsgs = lifeCount.id || 0;
-    const totalTokens = lifeSum.tokens || 0;
-    const totalUsd = lifeSum.usd || 0;
+    const totalTokens = lifeSum.tokens ?? 0;
+    const totalUsd = lifeSum.usd ?? 0;
 
     const todayMsgs = dailyCount.id || 0;
-    const todayTokens = dailySum.tokens || 0;
-    const todayUsd = dailySum.usd || 0;
+    const todayTokens = dailySum.tokens ?? 0;
+    const todayUsd = dailySum.usd ?? 0;
 
     // 3. Add General Info Text
     AiText.aiInfo.forEach((text, index) => {
@@ -313,10 +313,10 @@ export class AiPage {
     const { _count: dailyCount, _sum: dailySum } = dailyStats;
 
     const totalMsgs = totalCount.id || 0;
-    const totalTokens = Number(totalSum.tokens || 0);
-    const totalUsd = Number(totalSum.usd || 0);
-    const todayUsd = Number(dailySum.usd || 0);
-    const todayTokens = Number(dailySum.tokens || 0);
+    const totalTokens = Number(totalSum.tokens ?? 0);
+    const totalUsd = Number(totalSum.usd ?? 0);
+    const todayUsd = Number(dailySum.usd ?? 0);
+    const todayTokens = Number(dailySum.tokens ?? 0);
     const avgCost = totalMsgs > 0 ? (totalUsd / totalMsgs).toFixed(5) : '0.00000';
 
     // 5. Build the Progress Bar
@@ -326,7 +326,7 @@ export class AiPage {
     const progressBar = '🟩'.repeat(filledSegments) + '⬜'.repeat(barSegments - filledSegments);
 
     // 6. UI Construction
-    const personaId = (aiInfo.persona_id as PersonaId) || 'tripbot';
+    const personaId = (aiInfo.persona_id) || 'tripbot';
     const persona = AiPersona.List[personaId] || AiPersona.TripBot;
 
     const container = new ContainerBuilder()

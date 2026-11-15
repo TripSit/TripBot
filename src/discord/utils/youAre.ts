@@ -1,11 +1,8 @@
 import {
   Message, TextChannel,
 } from 'discord.js';
-// import { isToxic } from './moderateHatespeech';
 
 export default youAre;
-
-// const F = f(__filename);
 
 export function valMatch(
   input:string,
@@ -34,21 +31,13 @@ export async function youAre(message: Message): Promise<void> {
 
   if (message.channel.parentId === env.CATEGORY_HARMREDUCTIONCENTRE) return;
 
-  const key = valMatch(content, /(\bis\b|\bare\b)\s+([\w\s\d]*?)(\s+)?(,|\.|\band\b|$)/, 5);
+  const key = valMatch(content, /(\bis\b|\bare\b)\s+([\w\s]*?)(\s+)?(,|\.|\band\b|$)/, 5);
   if (!key || !key[2]) return;
 
   const chance = env.NODE_ENV === 'production' ? 1 : 100;
 
   // 1% chance to trigger on prod otherwise 100% chance to trigger on dev
   if (Math.floor(Math.random() * 101) >= chance) return;
-  // const phrase = key[2];
-  // log.info(F, `Phrase: ${phrase}`);
-  // const response = await isToxic(`You're ${phrase}`);
-  // if (response.isFlaggedOrLowConfidence) {
-  //   // eslint-disable-next-line max-len
-  //   log.info(F, `Message flagged by ModerateHatespeech API: "You're ${phrase}\n ${response.class} (${response.confidence})"`);
-  //   return;
-  // }
 
   await message.channel.send({
     content: `${message.member?.displayName}: You're ${key[2]}.`,

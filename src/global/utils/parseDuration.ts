@@ -1,8 +1,36 @@
-// import log from './logger';
-// import {parse} from 'path';
-// const F = f(__filename);
-
 export default parseDuration;
+
+const SECOND = 1000;
+const MINUTE = 60 * SECOND;
+const HOUR = 60 * MINUTE;
+const DAY = 24 * HOUR;
+
+// Milliseconds per single-letter qualifier (months are handled separately because of the "month" spelling)
+const QUALIFIER_MS: Record<string, number> = {
+  h: HOUR,
+  s: SECOND,
+  d: DAY,
+  w: 7 * DAY,
+  y: 365 * DAY,
+};
+
+/**
+ * Converts a number followed by the qualifier at `duration[idx]` into milliseconds.
+ * `skip` is how many extra characters the qualifier consumed (the "onth" of "month").
+ */
+function qualifierValue(duration: string, idx: number, count: number): { ms: number; skip: number } {
+  const c = duration[idx];
+  if (c === 'M' || c === 'm') {
+    // Check if the next characters spell "month" or "months"
+    const spellsMonth = duration.slice(idx, idx + 5).toLowerCase().startsWith('month');
+    if (spellsMonth || c === 'M') {
+      // 'month' is 5 characters; a trailing 's' is ignored by stage 1 (it waits for a number)
+      return { ms: count * 30 * DAY, skip: c === 'M' ? 1 : 5 };
+    }
+    return { ms: count * MINUTE, skip: 0 };
+  }
+  return { ms: count * (QUALIFIER_MS[c] ?? 0), skip: 0 };
+}
 
 /**
  * This takes a string and converts it into time
@@ -21,59 +49,30 @@ export async function parseDuration(duration: string): Promise<number> {
   let timeValue = 0;
 
   while (idx < duration.length) {
-    const c = duration[idx]; // Normalize to lowercase for easier comparison
-    switch (stage) {
-      case 1: // Waiting for number
-        if (numbers.includes(c)) {
-          tempString = c;
-          stage = 2;
-        }
+    const c = duration[idx];
+    if (stage === 1) { // Waiting for number
+      if (numbers.includes(c)) {
+        tempString = c;
+        stage = 2;
+      }
+      idx += 1;
+    } else if (stage === 2) { // Parsing the number
+      if (numbers.includes(c)) {
+        tempString += c;
         idx += 1;
-        break;
-
-      case 2: // Parsing the number
-        if (numbers.includes(c)) {
-          tempString += c;
-          idx += 1;
-        } else {
-          tempNumber = Number.parseInt(tempString, 10);
-          stage = 3;
-        }
-        break;
-
-      case 3: // Parsing the qualifier
-      default: // (stage is only ever 1, 2 or 3)
-        if (c === ' ') {
-          idx += 1;
-          break;
-        } else if (supported.includes(c)) {
-          // Handle single-letter qualifiers
-          if (c === 'h') {
-            timeValue += tempNumber * 60 * 60 * 1000; // Hours
-          } else if (c === 'M' || c === 'm') {
-            // Check if the next characters spell "month" or "months"
-            const nextChars = duration.slice(idx, idx + 5).toLowerCase();
-            if (nextChars.startsWith('month') || c === 'M') {
-              timeValue += tempNumber * 30 * 24 * 60 * 60 * 1000; // Convert months to milliseconds
-              // 'month' is 5 characters; a trailing 's' is ignored by stage 1 (it waits for a number)
-              idx += c === 'M' ? 1 : 5;
-            } else {
-              timeValue += tempNumber * 60 * 1000; // Minutes
-            }
-          } else if (c === 's') {
-            timeValue += tempNumber * 1000; // Seconds
-          } else if (c === 'd') {
-            timeValue += tempNumber * 24 * 60 * 60 * 1000; // Days
-          } else if (c === 'w') {
-            timeValue += tempNumber * 7 * 24 * 60 * 60 * 1000; // Weeks
-          } else if (c === 'y') {
-            timeValue += tempNumber * 365 * 24 * 60 * 60 * 1000; // Years
-          }
-          stage = 1;
-          break;
-        } else {
-          return timeValue; // Unsupported qualifier
-        }
+      } else {
+        tempNumber = Number.parseInt(tempString, 10);
+        stage = 3;
+      }
+    } else if (c === ' ') { // Parsing the qualifier
+      idx += 1;
+    } else if (supported.includes(c)) {
+      const { ms, skip } = qualifierValue(duration, idx, tempNumber);
+      timeValue += ms;
+      idx += skip;
+      stage = 1;
+    } else {
+      return timeValue; // Unsupported qualifier
     }
   }
   return timeValue;
@@ -84,8 +83,8 @@ export async function parseDuration(duration: string): Promise<number> {
  Huge thank you to /u/gumnos on Reddit for the regex!
 */
 export const validateDurationInput = (input: string): boolean => {
-  // eslint-disable-next-line max-len
-  const regex = /^(?: *(?:\d+ *(?:y(?:ears?)?|M|mon(ths?)?|w(?:eeks?)?|d(?:ays?)?|h(?:ours?)?|m(?:in(?:ute)?s?)?|s(?:ec(?:ond)?s?)?)))+$/;
+  const units = 'y(?:ears?)?|M|mon(?:ths?)?|w(?:eeks?)?|d(?:ays?)?|h(?:ours?)?|m(?:in(?:ute)?s?)?|s(?:ec(?:ond)?s?)?';
+  const regex = new RegExp(`^(?: *(?:\\d+ *(?:${units})))+$`);
 
   return regex.test(input.trim());
 };
@@ -115,7 +114,7 @@ export async function makeValid(duration: string): Promise<string> {
   };
 
   // Regular expression to match the input format
-  const regex = /\b(\d+)\s*(years?|months?|weeks?|days?|hours?|minutes?|seconds?)\b/gi;
+  const regex = new RegExp(`\\b(\\d+)\\s*(${Object.keys(unitMap).join('|')})\\b`, 'gi');
 
   // Array to store the parsed results
   const parts: string[] = [];

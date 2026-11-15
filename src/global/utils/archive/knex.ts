@@ -1,30 +1,6 @@
 import { discord_guilds, user_tickets, users } from '@db/tripbot';
 import knex from 'knex';
 
-// import {
-//   Bridges,
-//   Counting,
-//   discord_guilds,
-//   DrugNames,
-//   ExperienceCategory,
-//   ExperienceType,
-//   Personas,
-//   ReactionRoles,
-//   RpgInventory,
-//   Rss,
-//   UserActions,
-//   UserDrugDoses,
-//   UserExperience,
-//   UserReminders,
-//   users,
-//   user_tickets,
-//   // TicketStatus,
-//   // discord_guilds,
-//   ReactionRoleType,
-//   Appeals,
-// } from '../@types/database';
- // eslint-disable-line
-
 const F = f(__filename); // eslint-disable-line
 
 type LeaderboardList = { discord_id: string, total_points: number }[];
@@ -39,7 +15,6 @@ export async function getUser(
   matrixId: string | null,
   userId:string | null,
 ):Promise<users> {
-  // log.debug(F, `getUser started with: discordId: ${discordId} | userId: ${userId}`);
   let data = {} as users | undefined;
 
   if (env.POSTGRES_DB_URL === undefined) {
@@ -72,7 +47,6 @@ export async function getUser(
       log.error(F, `discordId: ${discordId} | matrixId: ${matrixId} userId: ${userId}`);
     }
   }
-  // log.debug(F, `data1: ${JSON.stringify(data, null, 2)}`);
   if (data === undefined) {
     try {
       if (discordId) {
@@ -85,8 +59,6 @@ export async function getUser(
           .insert({ matrix_id: matrixId })
           .returning('*'));
       }
-
-      // log.debug(F, `data2: ${JSON.stringify(data, null, 2)}`);
     } catch (err) {
       log.error(F, `Error inserting user: ${err}`);
       log.error(F, `discordId: ${discordId} | userId: ${userId}`);
@@ -98,20 +70,16 @@ export async function getUser(
         .select('*')
         .where('id', userId)
         .first();
-    // log.debug(F, `data3: ${JSON.stringify(data, null, 2)}`);
     } catch (err) {
       log.error(F, `Error getting user: ${err}`);
       log.error(F, `discordId: ${discordId} | userId: ${userId}`);
     }
   }
 
-  // log.debug(F, `data4: ${JSON.stringify(data, null, 2)}`);
-
   return data as users;
 }
 
 export async function getMoodleUsers():Promise<users[]> {
-  // log.debug(F, `getAllUsers started`);
   let data = [] as users[];
 
   if (env.POSTGRES_DB_URL === undefined) return data;
@@ -138,8 +106,6 @@ export async function userExists(
 export async function getGuild(
   guildId:string,
 ):Promise<discord_guilds> {
-  // log.debug(F, `getGuild started with: guildId: ${guildId}`);
-
   if (env.POSTGRES_DB_URL === undefined) {
     return {
       id: 'abc-123-xyz',
@@ -250,7 +216,6 @@ export async function getOpenTicket(
 export async function reminderGet(
   userId?: string,
 ):Promise<UserReminders[]> {
-// log.debug(F, `reminderGet started with: userId: ${userId}`);
   if (env.POSTGRES_DB_URL === undefined) {
     return [] as UserReminders[];
   }
@@ -279,7 +244,6 @@ export async function reminderGet(
 export async function reminderSet(
   reminder: UserReminders,
 ):Promise<void> {
-// log.debug(F, 'reminderSet started');
   if (env.POSTGRES_DB_URL === undefined) return;
   try {
     await db<UserReminders>('userReminders')
@@ -294,7 +258,6 @@ export async function reminderDel(
   id?:string,
   userId?:string,
 ):Promise<void> {
-// log.debug(F, `reminderDel started with: id: ${id}`);
   if (env.POSTGRES_DB_URL === undefined) return;
   if (userId) {
     try {
@@ -320,7 +283,6 @@ export async function ticketGet(
   user_id?:string,
   status?:string,
 ):Promise<user_tickets[]> {
-  // log.debug(F, `ticketGet started with user_id: ${user_id}, status: ${status}`);
   if (env.POSTGRES_DB_URL === undefined) {
     return [] as user_tickets[];
   }
@@ -381,7 +343,6 @@ export async function ticketGet(
 export async function ticketDel(
   id:string,
 ):Promise<void> {
-// log.debug(F, `ticketDel started with: id: ${id}`);
   if (env.POSTGRES_DB_URL === undefined) return;
   try {
     await db<user_tickets>('user_reminders')
@@ -396,7 +357,6 @@ export async function ticketDel(
 export async function ticketUpdate(
   value:user_tickets,
 ):Promise<void> {
-  // log.debug(F, `ticketUpdate started with: value: ${JSON.stringify(value)}`);
   if (env.POSTGRES_DB_URL === undefined) return;
   try {
     await db<user_tickets>('user_tickets')
@@ -410,7 +370,6 @@ export async function ticketUpdate(
 }
 
 export async function usersGetMindsets():Promise<users[]> {
-// log.debug(F, 'usersGetMindsets started');
   if (env.POSTGRES_DB_URL === undefined) {
     return [] as users[];
   }
@@ -428,7 +387,6 @@ export async function usersGetMindsets():Promise<users[]> {
 export async function usersUpdate(
   value:users,
 ):Promise<void> {
-// log.debug(F, `usersUpdate started with: value: ${value}`);
   if (env.POSTGRES_DB_URL === undefined) return;
   try {
     await db<users>('users')
@@ -444,7 +402,6 @@ export async function usersUpdate(
 export async function guildUpdate(
   value:discord_guilds,
 ):Promise<void> {
-// log.debug(F, `guildUpdate started with: value: ${value}`);
   if (env.POSTGRES_DB_URL === undefined) return;
   try {
     await db<discord_guilds>('discord_guilds')
@@ -460,7 +417,6 @@ export async function guildUpdate(
 export async function rssGet(
   guildId:string,
 ):Promise<Rss[]> {
-// log.debug(F, 'rssGet started');
   if (env.POSTGRES_DB_URL === undefined) {
     return [] as Rss[];
   }
@@ -479,7 +435,6 @@ export async function rssGet(
 export async function rssSet(
   value:Rss,
 ):Promise<void> {
-// log.debug(F, 'rssSet started');
   if (env.POSTGRES_DB_URL === undefined) return;
   try {
     await db<Rss>('rss')
@@ -496,7 +451,6 @@ export async function rssDel(
   guild_id:string,
   destination:string,
 ):Promise<void> {
-// log.debug(F, 'rssDel started');
   if (env.POSTGRES_DB_URL === undefined) return;
   try {
     await db<Rss>('rss')
@@ -514,7 +468,6 @@ export async function incrementPoint(
   userId:string,
   value:number,
 ):Promise<void> {
-// log.debug(F, 'incrementPoint started');
   if (env.POSTGRES_DB_URL === undefined) return;
   try {
     await db<users>('users')
@@ -532,7 +485,6 @@ export async function incrementKarma(
   userId:string,
   value:1 | -1,
 ):Promise<string[]> {
-// log.debug(F, 'incrementKarma started');
   if (env.POSTGRES_DB_URL === undefined) return [];
   let karma = [] as string[];
   try {
@@ -553,9 +505,6 @@ export async function experienceGet(
   type?:ExperienceType,
   userId?:string,
 ):Promise<UserExperience[]> {
-  // log.debug(F,
-  // `experienceGet started with: limit: ${limit}, category: ${category}, type: ${type}, userId: ${userId}`);
-
   const limit = limitInput ?? 1000000;
   if (env.POSTGRES_DB_URL === undefined) return [];
   if (category) {
@@ -634,15 +583,6 @@ export async function experienceGet(
     }
   }
   if (type) {
-    // return (await db<UserExperience>('user_experience')
-    //   .select(db.ref('user_id'))
-    //   .where('type', type)
-    //   .andWhereNot('category', 'TOTAL')
-    //   .andWhereNot('category', 'IGNORED')
-    //   .groupBy(['user_id'])
-    //   .sum({ total_points: 'total_points' })
-    //   .orderBy('total_points', 'desc')
-    //   .limit(limit)) as UserExperience[];
     try {
       return await db<UserExperience>('user_experience')
         .select('*')
@@ -665,14 +605,6 @@ export async function experienceGet(
     log.error(F, `userId: ${userId} | category: ${category} | type: ${type} | limit: ${limit}`);
   }
   return total;
-  // return (await db<UserExperience>('user_experience')
-  //   .select(db.ref('user_id'))
-  //   .whereNot('category', 'TOTAL')
-  //   .andWhereNot('category', 'IGNORED')
-  //   .groupBy(['user_id'])
-  //   .sum({ total_points: 'total_points' })
-  //   .orderBy('total_points', 'desc')
-  //   .limit(limit)) as UserExperience[];
 }
 
 export async function experienceGetTop(
@@ -680,7 +612,6 @@ export async function experienceGetTop(
   category?:ExperienceCategory,
   type?:ExperienceType,
 ):Promise<LeaderboardList> {
-// log.debug(F, 'experienceGetTop started');
   if (env.POSTGRES_DB_URL === undefined) return [] as LeaderboardList;
   const limit = limitInput ?? 1000000;
   if (category) {
@@ -756,7 +687,6 @@ export async function experienceGetTop(
 export async function experienceDel(
   userId:string,
 ):Promise<UserExperience[]> {
-// log.debug(F, 'experienceDel started');
   if (env.POSTGRES_DB_URL === undefined) return [];
   let total = [] as UserExperience[];
   try {
@@ -773,7 +703,6 @@ export async function experienceDel(
 export async function experienceUpdate(
   data:UserExperience,
 ):Promise<void> {
-// log.debug(F, 'experienceUpdate started');
   if (env.POSTGRES_DB_URL === undefined) return;
   try {
     await db<UserExperience>('user_experience')
@@ -789,7 +718,6 @@ export async function experienceUpdate(
 export async function idoseGet(
   userId:string,
 ):Promise<UserDrugDoses[]> {
-// log.debug(F, 'idoseGet started');
   if (env.POSTGRES_DB_URL === undefined) return [];
   const response = [] as UserDrugDoses[];
   try {
@@ -806,7 +734,6 @@ export async function idoseGet(
 export async function idoseSet(
   data:UserDrugDoses,
 ):Promise<void> {
-// log.debug(F, 'idoseSet started');
   if (env.POSTGRES_DB_URL === undefined) return;
   try {
     await db<UserDrugDoses>('user_drug_doses')
@@ -821,7 +748,6 @@ export async function idoseDel(
   id?:string,
   userId?:string,
 ):Promise<UserDrugDoses[]> {
-// log.debug(F, 'idoseDel started');
   if (env.POSTGRES_DB_URL === undefined) return [];
   if (userId) {
     try {
@@ -849,7 +775,6 @@ export async function drugGet(
   drugId?:string,
   drugName?:string,
 ):Promise<DrugNames[]> {
-  // log.debug(F, 'drugGet started');
   if (env.POSTGRES_DB_URL === undefined) return [];
   let response = [] as DrugNames[];
   if (drugName) {
@@ -885,7 +810,6 @@ export async function useractionsGet(
   userId:string,
   type?:string,
 ):Promise<UserActions[]> {
-// log.debug(F, 'useractionsGet started');
   if (env.POSTGRES_DB_URL === undefined) return [];
 
   let response = [] as UserActions[];
@@ -919,7 +843,6 @@ export async function useractionsGet(
 export async function useractionsSet(
   data:UserActions,
 ):Promise<void> {
-// log.debug(F, 'useractionsGet started');
   if (env.POSTGRES_DB_URL === undefined) return;
   try {
     await db<UserActions>('user_actions')
@@ -935,7 +858,6 @@ export async function useractionsSet(
 export async function personaGet(
   userId:string,
 ):Promise<Personas> {
-// log.debug(F, 'useractionsGet started');
   if (env.POSTGRES_DB_URL === undefined) {
     return {
       id: 'string',
@@ -965,7 +887,6 @@ export async function personaGet(
     log.error(F, `userId: ${userId}`);
   }
 
-  // log.debug(F, `data1: ${JSON.stringify(data, null, 2)}`);
   if (data === undefined) {
     try {
       [data] = (await db<Personas>('personas')
@@ -974,7 +895,6 @@ export async function personaGet(
           tokens: 0,
         })
         .returning('*'));
-    // log.debug(F, `data2: ${JSON.stringify(data, null, 2)}`);
     } catch (err) {
       log.error(F, `Error getting user: ${err}`);
       log.error(F, `userId: ${userId}`);
@@ -986,7 +906,6 @@ export async function personaGet(
 export async function personaSet(
   data:Personas,
 ):Promise<void> {
-// log.debug(F, 'useractionsGet started');
   if (env.POSTGRES_DB_URL === undefined) return;
   try {
     await db<Personas>('personas')
@@ -1002,7 +921,6 @@ export async function personaSet(
 export async function inventoryGet(
   personaId:string,
 ):Promise<RpgInventory[]> {
-// log.debug(F, 'useractionsGet started');
   if (env.POSTGRES_DB_URL === undefined) return [];
   let response = [] as RpgInventory[];
   try {
@@ -1019,7 +937,6 @@ export async function inventoryGet(
 export async function inventorySet(
   data:RpgInventory,
 ):Promise<void> {
-// log.debug(F, 'useractionsGet started');
   if (env.POSTGRES_DB_URL === undefined) return;
   try {
     await db<RpgInventory>('rpg_inventory')
@@ -1036,7 +953,6 @@ export async function inventoryDel(
   personaId:string,
   value:string,
 ):Promise<void> {
-// log.debug(F, 'useractionsGet started');
   if (env.POSTGRES_DB_URL === undefined) return;
   try {
     await db<RpgInventory>('rpg_inventory')
@@ -1052,7 +968,6 @@ export async function inventoryDel(
 export async function countingGet(
   channelID:string,
 ):Promise<Counting | undefined> {
-// log.debug(F, 'useractionsGet started');
   if (env.POSTGRES_DB_URL === undefined) return undefined;
   let response = {} as Counting | undefined;
   try {
@@ -1129,12 +1044,6 @@ export async function reactionroleGet(
   type:ReactionRoleType,
 ):Promise<ReactionRoles[]> {
   if (env.POSTGRES_DB_URL === undefined) return [] as ReactionRoles[];
-  // log.debug(F, `
-  //   guildId: ${guildId}
-  //   channelId: ${channelId}
-  //   messageId: ${messageId}
-  //   type: ${type}
-  // `);
   if (guildId !== null) {
     if (channelId !== null) {
       if (messageId !== null) {

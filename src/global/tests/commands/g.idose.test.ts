@@ -17,11 +17,13 @@ const call = (command: 'get' | 'set' | 'delete', over: Partial<{
   command,
   over.record ?? null,
   '1',
-  'substance' in over ? over.substance! : 'LSD',
-  'volume' in over ? over.volume! : 100,
-  ('units' in over ? over.units : 'MICRO_G') as never,
-  ('roa' in over ? over.roa : 'ORAL') as never,
-  'date' in over ? over.date! : new Date('2024-01-01'),
+  {
+    substance: 'substance' in over ? over.substance! : 'LSD',
+    volume: 'volume' in over ? over.volume! : 100,
+    units: ('units' in over ? over.units : 'MICRO_G') as never,
+    roa: ('roa' in over ? over.roa : 'ORAL') as never,
+    date: 'date' in over ? over.date! : new Date('2024-01-01'),
+  },
 );
 
 describe('idose get', () => {

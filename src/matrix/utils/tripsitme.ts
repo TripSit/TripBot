@@ -2,10 +2,11 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable no-case-declarations */
 /* eslint-disable max-len */
-import { MatrixClient, RichReply } from 'matrix-bot-sdk';
+import { RichReply } from 'matrix-bot-sdk';
 import { TicketStatus, Users, UserTickets } from '../../global/@types/database';
 import {
-  getRoleMembers, getUserAttribute, getUserRoleMappings, hasRole,
+  getRoleMembers,
+  hasRole,
 } from '../../global/utils/keycloak';
 
 const F = f(__filename);
@@ -74,8 +75,6 @@ async function ownTicket(event:any, roomId:string, tripsitee:string | null):Prom
   let text;
   let html;
   if (tripsitee === null) {
-    text = 'Please mention a user in your command!';
-    html = '❌ Please mention a user in your command! ❌ ';
     return;
   }
   const localpart = tripsitee.split(':')[0].substring(1);

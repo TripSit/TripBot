@@ -84,7 +84,7 @@ export async function getUserRoleMappings(identifier:string):Promise<any | false
  * @param {String} identifier can be a username, email or UUID.
  * @param  {String} roleName human-readable name of the role (case sensitive!)
  */
-export async function hasRole(identifier:string, roleName:string):Promise<Boolean> {
+export async function hasRole(identifier:string, roleName:string):Promise<boolean> {
   await ensureAuthentication();
   const userRoleMappings = await getUserRoleMappings(identifier);
   if (!userRoleMappings) return false;
@@ -126,7 +126,7 @@ export async function setUserAttribute(
   identifier:string,
   attributeName:string,
   attributeValue:string,
-):Promise<Boolean> {
+):Promise<boolean> {
   await ensureAuthentication();
   try {
     await kcAdminClient.users.update(

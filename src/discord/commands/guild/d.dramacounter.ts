@@ -45,28 +45,23 @@ export const dDramacounter: SlashCommand = {
       await replyGuildOnly(interaction);
       return false;
     }
-    // log.debug(F, `interaction.guild: ${JSON.stringify(interaction.guild, null, 2)}`);
 
     let lastDramaAt = {} as Date;
     let dramaReason = '';
     if (command === 'set') {
       const dramaVal = interaction.options.getString('dramatime');
-      // log.debug(F, `dramaVal: ${JSON.stringify(dramaVal, null, 2)}`);
       if (!dramaVal) {
         await interaction.editReply({ content: 'You need to specify a time for the drama to have happened.' });
         return false;
       }
       const dramatimeValue = await parseDuration(dramaVal);
-      // log.debug(F, `dramatimeValue: ${JSON.stringify(dramatimeValue, null, 2)}`);
       const dramaIssue = interaction.options.getString('dramaissue');
-      // log.debug(F, `dramaIssue: ${JSON.stringify(dramaIssue, null, 2)}`);
       if (!dramaIssue) {
         await interaction.editReply({ content: 'You need to specify what the drama was.' });
         return false;
       }
       dramaReason = dramaIssue;
       lastDramaAt = DateTime.now().minus(dramatimeValue).toJSDate();
-      // log.debug(F, `dramaTime: ${JSON.stringify(lastDramaAt, null, 2)}`);
     }
 
     const response = await dramacounter(command, interaction.guild.id, lastDramaAt, dramaReason);

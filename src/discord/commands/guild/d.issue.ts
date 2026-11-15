@@ -16,7 +16,6 @@ import { SlashCommand } from '../../@types/commandDef';
 import { issue } from '../../../global/commands/g.issue';
 import commandContext from '../../utils/context';
 import { embedTemplate } from '../../utils/embedTemplate';
-// import log from '../../../global/utils/log';
 
 const F = f(__filename);
 
@@ -101,8 +100,6 @@ export const dIssue: SlashCommand = {
           issueBody,
           labels,
         );
-
-        // log.debug(F, `results: ${JSON.stringify(results, null, 2)}`);
 
         await i.editReply({
           embeds: [

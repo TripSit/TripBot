@@ -7,11 +7,8 @@ import { SlashCommand } from '../../@types/commandDef';
 import commandContext from '../../utils/context';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { getOrCreateUser } from '../../../global/utils/dbRecords';
-// import log from '../../../global/utils/log';
 
 const F = f(__filename);
-
-// const karmaQuotes = require('../../../global/assets/data/karma_quotes.json');
 
 export const dKarma: SlashCommand = {
   data: new SlashCommandBuilder()
@@ -35,7 +32,6 @@ export const dKarma: SlashCommand = {
 
     const message = `${member.displayName} has received ${userData.karma_received} karma and given ${userData.karma_given} karma`; // eslint-disable-line max-len
 
-    // const quote = karmaQuotes[Math.floor(Math.random() * karmaQuotes.length)];
     const embed = embedTemplate()
       .setTitle(message);
       // .setFooter({text: `${quote}`});

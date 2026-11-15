@@ -36,7 +36,6 @@ async function handleCommand(roomId: string, event: any) {
 
   if (await userExists(null, event.sender, null)) {
     log.debug(F, 'I know this guy!');
-    // console.log(await getUser(null, event.sender, null));
   } else {
     log.debug(F, 'dunno this guy, just created');
     const userData = await getUser(null, event.sender, null);
@@ -66,7 +65,6 @@ async function handleCommand(roomId: string, event: any) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await (commands as any)[command].default.apply(null, args); // run the command
     return;
-    // await matrixClient.replyNotice(roomId, event, resp); // send the message in response to the user
   } catch (e) {
     console.log(e);
   }

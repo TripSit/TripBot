@@ -9,13 +9,24 @@ import {
 import { embedTemplate } from './embedTemplate';
 import { replyGuildOnly } from './guildOnly';
 
-// import {
-//   Client,
-// } from 'discord.js';
-
 const F = f(__filename);
 
 export default verifyButton;
+
+// The embed colour gets warmer the newer the account is: the first unit that the account is old enough for wins
+const ACCOUNT_AGE_COLORS: [number, number][] = [
+  [1000 * 60 * 60 * 24 * 365, Colors.White],
+  [1000 * 60 * 60 * 24 * 30, Colors.Purple],
+  [1000 * 60 * 60 * 24 * 7, Colors.Blue],
+  [1000 * 60 * 60 * 24, Colors.Green],
+  [1000 * 60 * 60, Colors.Yellow],
+  [1000 * 60, Colors.Orange],
+  [1000, Colors.Red],
+];
+
+function accountAgeColor(accountAgeMs: number): number {
+  return ACCOUNT_AGE_COLORS.find(([unitMs]) => accountAgeMs >= unitMs)?.[1] ?? 1;
+}
 
 /**
  * Template
@@ -36,9 +47,6 @@ export async function verifyButton(interaction:ButtonInteraction): Promise<void>
     const memberRole = await interaction.guild.roles.fetch(env.ROLE_VERIFIED);
     let colorValue = 1;
 
-    // log.debug(F, `member: ${member.roles.cache}`);
-
-    // log.debug(`Verified button clicked by ${interaction.user.username}#${interaction.user.discriminator}`);
     const channelTripbotlogs = await global.discordClient.channels.fetch(env.CHANNEL_BOTLOG) as TextChannel;
     await channelTripbotlogs.send({
       content: `Verified button clicked by ${interaction.user.username}#${interaction.user.discriminator}`,
@@ -47,44 +55,11 @@ export async function verifyButton(interaction:ButtonInteraction): Promise<void>
     if (memberRole) {
       member.roles.add(memberRole);
 
-      // NOTE: Can be simplified with luxon
-      const diff = Math.abs(Date.now() - Date.parse(member.user.createdAt.toString()));
-      const years = Math.floor(diff / (1000 * 60 * 60 * 24 * 365));
-      const months = Math.floor(diff / (1000 * 60 * 60 * 24 * 30));
-      const weeks = Math.floor(diff / (1000 * 60 * 60 * 24 * 7));
-      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-      // log.debug(F, `diff: ${diff}`);
-      // log.debug(F, `years: ${years}`);
-      // log.debug(F, `months: ${months}`);
-      // log.debug(F, `weeks: ${weeks}`);
-      // log.debug(F, `days: ${days}`);
-      // log.debug(F, `hours: ${hours}`);
-      // log.debug(F, `minutes: ${minutes}`);
-      // log.debug(F, `seconds: ${seconds}`);
-      if (years > 0) {
-        colorValue = Colors.White;
-      } else if (years === 0 && months > 0) {
-        colorValue = Colors.Purple;
-      } else if (months === 0 && weeks > 0) {
-        colorValue = Colors.Blue;
-      } else if (weeks === 0 && days > 0) {
-        colorValue = Colors.Green;
-      } else if (days === 0 && hours > 0) {
-        colorValue = Colors.Yellow;
-      } else if (hours === 0 && minutes > 0) {
-        colorValue = Colors.Orange;
-      } else if (minutes === 0 && seconds > 0) {
-        colorValue = Colors.Red;
-      }
-      // log.debug(F, `coloValue: ${colorValue}`);
+      colorValue = accountAgeColor(Math.abs(Date.now() - Date.parse(member.user.createdAt.toString())));
       const channelStart = await interaction.client.channels.fetch(env.CHANNEL_START);
       const channelTechhelp = await interaction.client.channels.fetch(env.CHANNEL_HELPDESK);
       const channelBotspam = await interaction.client.channels.fetch(env.CHANNEL_BOTSPAM);
       const channelRules = await interaction.client.channels.fetch(env.CHANNEL_RULES);
-      // const channelTripsit = await member.client.channels.fetch(CHANNEL_TRIPSIT);
       const embed = embedTemplate()
         .setAuthor(null)
         .setColor(colorValue)
@@ -108,7 +83,6 @@ export async function verifyButton(interaction:ButtonInteraction): Promise<void>
         `,
       });
       if (member.roles.cache.has(memberRole.id)) {
-        // log.debug(F, `Member already has role!`);
         return;
       }
       await channelLounge.send({ embeds: [embed] });

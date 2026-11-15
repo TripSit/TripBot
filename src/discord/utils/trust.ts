@@ -24,7 +24,6 @@ import {
   userInfoEmbed,
 } from './modUtils';
 import { tripSitTrustScore } from './trustScore';
-// import { checkGuildPermissions } from './checkPermissions';
 import { topic } from '../../global/commands/g.topic';
 import { giveMilestone } from '../../global/utils/experience';
 import { getOrCreateGuild, getOrCreateUser } from '../../global/utils/dbRecords';
@@ -42,7 +41,6 @@ async function getInvite(member:GuildMember) {
     const inviter = await member.guild.members.fetch(invite.inviter);
     inviteInfo = `Joined via ${inviter.displayName}'s invite (${invite.code}-${invite.uses})`;
   }
-  // log.debug(F, `inviteInfo:   ${inviteInfo}`);
   global.guildInvites.set(
     member.guild.id,
     new Collection(newInvites.map(inviteEntry => [inviteEntry.code, inviteEntry.uses])),
@@ -90,12 +88,6 @@ but they were already marked at trusted in the database, so no message was sent`
   }
   if (newMember.joinedAt
       && newMember.joinedAt > new Date(Date.now() - 1000 * 60 * 60 * 24)) {
-    // log.debug(F, `${newMember.displayName} verified!`);
-    // let colorValue = 1;
-
-    // log.debug(F, `member: ${member.roles.cache}`);
-
-    // log.debug(`Verified button clicked by ${interaction.user.username}#${interaction.user.discriminator}`);
     const channelTripbotLogs = await global.discordClient.channels.fetch(env.CHANNEL_TRUST_LOG) as TextChannel;
     await channelTripbotLogs.send({
       content: `${newMember.user.username}#${newMember.user.discriminator} was verified!`,
@@ -110,36 +102,6 @@ but they were already marked at trusted in the database, so no message was sent`
     // const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
     // const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
     // const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-
-    // if (years > 0) {
-    //   colorValue = Colors.White;
-    // } else if (years === 0 && months > 0) {
-    //   colorValue = Colors.Purple;
-    // } else if (months === 0 && weeks > 0) {
-    //   colorValue = Colors.Blue;
-    // } else if (weeks === 0 && days > 0) {
-    //   colorValue = Colors.Green;
-    // } else if (days === 0 && hours > 0) {
-    //   colorValue = Colors.Yellow;
-    // } else if (hours === 0 && minutes > 0) {
-    //   colorValue = Colors.Orange;
-    // } else if (minutes === 0 && seconds > 0) {
-    //   colorValue = Colors.Red;
-    // }
-    // log.debug(F, `coloValue: ${colorValue}`);
-    // const channelStart = await newMember.client.channels.fetch(env.CHANNEL_START);
-    // const channelTechhelp = await newMember.client.channels.fetch(env.CHANNEL_HELPDESK);
-    // const channelBotspam = await newMember.client.channels.fetch(env.CHANNEL_BOTSPAM);
-    // const channelRules = await newMember.client.channels.fetch(env.CHANNEL_RULES);
-    // const channelTripsit = await member.client.channels.fetch(CHANNEL_TRIPSIT);
-    // const embed = embedTemplate()
-    //   .setAuthor(null)
-    //   .setColor(colorValue)
-    //   .setThumbnail(newMember.user.displayAvatarURL())
-    //   .setFooter(null)
-    //   .setDescription(stripIndents`
-    //             **Please welcome ${newMember.toString()} to the guild!**
-    //             Be safe, have fun, /report any issues!`);
 
     const greetingList = [
       `Welcome to the guild, ${newMember}!`,
@@ -246,18 +208,6 @@ export default async function trust(
 
   log.debug(F, `trustScoreData: ${JSON.stringify(trustScoreData)}`);
 
-  /*
-  const trustScoreColors = {
-    0: Colors.Purple,
-    1: Colors.Blue,
-    2: Colors.Green,
-    3: Colors.Yellow,
-    4: Colors.Orange,
-    5: Colors.Red,
-    6: Colors.Red,
-  };
-  */
-
   embed
     // .setColor(trustScoreColors[trustScoreData.trustScore as keyof typeof trustScoreColors])
     .setDescription(stripIndents`**${member} has joined**
@@ -267,41 +217,6 @@ export default async function trust(
     `);
 
   embed.setFooter({ text: inviteString });
-  /*
-  if (trustScoreData.trustScore > 3) {
-    await sendCooperativeMessage(
-      embed,
-      [`${member.guild.id}`],
-    );
-  }
-
-  const bannedTest = await Promise.all(discordClient.guilds.cache.map(async guild => {
-    // log.debug(F, `Checking guild: ${guild.name}`);
-    const guildPerms = await checkGuildPermissions(guild, [
-      'BanMembers' as PermissionResolvable,
-    ]);
-
-    if (!guildPerms) {
-      return null;
-    }
-
-    try {
-      return await guild.bans.fetch(member.id);
-      log.debug(F, `User is banned in guild: ${guild.name}`);
-      return guild.name;
-    } catch (err: unknown) {
-      if ((err as DiscordErrorData).code === 10026) {
-        log.debug(F, `User is not banned in guild: ${guild.name}`);
-        return null;
-      }
-      log.debug(F, `Error checking guild: ${guild.name}`);
-      return null;
-    }
-  }));
-
-  // count how many 'banned' appear in the array
-  // const bannedGuilds = bannedTest.filter(item => item) as GuildBan[];
-  */
 
   let modThread = null as ThreadChannel | null;
   const modThreadMessage = `**${member.displayName} has joined the guild!**`;
@@ -330,22 +245,14 @@ ${guildData.trust_score_limit}, I removed the Unverified role and added Verified
 
     await addedVerified(member);
   }
-  /*
-  if (bannedGuilds.length > 0) {
-    modThreadMessage = stripIndents`**${member.displayName} has joined the guild, \
-  they are banned on ${bannedGuilds.length} other guilds!** <@&${guildData.role_moderator}>`;
-    emoji = '👀';
-  }
-  */
 
-  // if (targetData.mod_thread_id || bannedGuilds.length > 0) {
   if (targetData.mod_thread_id) {
     log.debug(F, `Mod thread id exists: ${targetData.mod_thread_id}`);
     // If the mod thread already exists, then they have previous reports, so we should try to update that thread
     try {
       modThread = await member.guild.channels.fetch(targetData.mod_thread_id) as ThreadChannel | null;
       log.debug(F, 'Mod thread exists');
-    } catch (err) {
+    } catch {
       log.debug(F, 'Mod thread does not exist');
     }
 

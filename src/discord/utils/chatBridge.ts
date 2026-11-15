@@ -128,7 +128,7 @@ export function discordMessageText(message: Message): string {
   // Matterbridge's ShowEmbeds; limited to bots so user link previews don't duplicate the link
   if (message.author.bot) {
     message.embeds
-      .filter(embed => embed.title || embed.description || embed.url)
+      .filter(embed => Boolean(embed.title) || Boolean(embed.description) || Boolean(embed.url))
       .forEach(embed => parts.push(`embed: ${embed.title ?? ''} - ${embed.description ?? ''} - ${embed.url ?? ''}`));
   }
   return parts.join('\n');

@@ -17,7 +17,7 @@ const drugData = drugJsonData as DrugData;
 // We will work on a new API with standardized data
 export default {
   async getAllDrugs():Promise<DrugData> {
-    return drugData as DrugData;
+    return drugData;
   },
 
   async getAllDrugNames():Promise<string[]> {
@@ -25,18 +25,18 @@ export default {
   },
 
   async getAllDrugAliases():Promise<string[]> {
-    return Object.values(drugData as DrugData)
+    return Object.values(drugData)
       .filter((drug:Drug) => drug.aliases) // Filter drugs without aliases
       .map((drug:Drug) => drug.aliases) // Get aliases
       .flat() as string[]; // Flatten array, define as string[]
   },
 
   async getAllCategories():Promise<string[]> {
-    return Array.from(new Set(Object.values(drugData as DrugData)
+    return Array.from(new Set(Object.values(drugData)
       .filter((drug:Drug) => drug.categories) // Filter drugs without categories
       .map((drug:Drug) => drug.categories) // Get categories
       .flat() // Flatten array
-      .sort())) as string[]; // Sort and define as string[]
+      .sort((a, b) => String(a).localeCompare(String(b))))) as string[]; // Sort and define as string[]
   },
 
   async getAllDrugNamesByCategory(category:string):Promise<string[] | {
@@ -44,14 +44,14 @@ export default {
     msg: string;
     options: string[];
   }> {
-    const results = Object.values(drugData as DrugData)
+    const results = Object.values(drugData)
       .filter((drug: Drug) => drug.categories && (
         drug.categories.includes(category as Category)
       || drug.categories.includes(category.toLowerCase() as Category)
       || drug.categories.includes(category.slice(0, -1) as Category)
       ))
       .map((drug: Drug) => drug.name)
-      .sort() as string[];
+      .sort((a, b) => a.localeCompare(b));
 
     if (results.length > 0) {
       return results;
@@ -69,7 +69,7 @@ export default {
     msg: string;
     options?: string[];
   }> {
-    const drug = (drugData as DrugData)[drugName.toLowerCase()] as Drug;
+    const drug = drugData[drugName.toLowerCase()];
 
     if (drug) {
       return drug;

@@ -18,16 +18,14 @@ const F = f(__filename);
 async function getCommands(commandType: string): Promise<SlashCommand[]> {
   const commandDir = path.join(__dirname, '../commands');
   const files = await fs.readdir(path.join(commandDir, commandType));
-  // log.debug(F, `${commandType} command files: ${files}`);
   return files
     .filter(file => (file.endsWith('.ts') || file.endsWith('.js')) && !file.startsWith('index'))
     .map(file => ({
       file,
-      // log.debug(F, `${commandType} command file: ${file}`);
       command: require(`${commandDir}/${commandType}/${file}`), // eslint-disable-line
     }))
     .filter(({ file, command }) => {
-      const key = Object.keys(command).find(k => command[k] && command[k].data !== undefined);
+      const key = Object.keys(command).find(k => command[k]?.data !== undefined);
       // console.warn is used because log isn't set up in this standalone script's execution path.
       if (!key) {
         // eslint-disable-next-line no-console
@@ -36,7 +34,7 @@ async function getCommands(commandType: string): Promise<SlashCommand[]> {
       return key !== undefined;
     })
     .map(({ command }) => {
-      const key = Object.keys(command).find(k => command[k] && command[k].data !== undefined) as string;
+      const key = Object.keys(command).find(k => command[k]?.data !== undefined) as string;
       return command[key].data.toJSON();
     });
 }

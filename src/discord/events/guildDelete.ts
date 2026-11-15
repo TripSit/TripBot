@@ -32,7 +32,7 @@ export const guildDelete: GuildDeleteEvent = {
     await auditlog.send(`I just left a guild! I am now in ${discordClient.guilds.cache.size} guilds!
       ${guild.name} (id: ${guild.id})
       Member count: ${guild.memberCount}
-      Description: ${guild.description ? guild.description : 'No description'}
+      Description: ${guild.description ?? 'No description'}
     `);
   },
 };

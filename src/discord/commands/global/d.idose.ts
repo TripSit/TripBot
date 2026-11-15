@@ -13,8 +13,6 @@ import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { runPager } from '../../utils/pager';
 
-// const F = f(__filename);
-
 /**
  * Shows iDose history one entry at a time, most recent first.
  * The Back button is disabled on the first (most recent) entry, and the
@@ -119,9 +117,11 @@ export const dIdose: SlashCommand = {
       date.setTime(date.getTime() - out);
     }
 
-    const response = await idose(command, recordNumber, userId, substance, volume, units, roa, date);
+    const response = await idose(command, recordNumber, userId, {
+      substance, volume, units, roa, date,
+    });
 
-    if (response[0] && response[0].name === 'Error') {
+    if (response[0]?.name === 'Error') {
       await interaction.editReply({ content: response[0].value });
       return false;
     }

@@ -7,15 +7,8 @@ import {
   // Role,
 } from 'discord.js';
 
-// import { stripIndents } from 'common-tags';
 import { stripIndents } from 'common-tags';
 import { getUser, reactionroleGet, usersUpdate } from '../../../global/utils/knex';
-// import {
-//   Users,
-// } from '../../global/@types/database';
-// import log from '../../global/utils/log';
-
-// const F = f(__filename);
 
 const mindsetRemovalTime = env.NODE_ENV === 'production' ? 1000 * 60 * 60 * 8 : 1000 * 5;
 
@@ -47,21 +40,18 @@ export async function handleReactionRoles(
 ): Promise<void> {
   const messageId = reaction.message.id;
   const reactionId = reaction.emoji.id ?? `${reaction.emoji.name}`;
-  // log.debug(F, `messageId: ${messageId} | reactionId: ${reactionId}`);
 
   if (!reaction.message.guild) return;
 
   const ReactionRole = await reactionroleGet(messageId, reactionId);
 
   if (!ReactionRole) {
-    // log.debug(F, `No reaction role found!`);
     return;
   }
 
   const member = await reaction.message.guild.members.fetch(user.id);
   const role = await reaction.message.guild.roles.fetch(ReactionRole.role_id);
   if (role && member) {
-    // log.debug(F, `role: ${role.name}`);
     if (add) {
       // Add the role
       await member.roles.add(role);
@@ -89,12 +79,7 @@ export async function handleReactionRoles(
       // If this is the contributor role, send a message to the contributor room
       if (role.id === env.ROLE_CONTRIBUTOR) {
         const devCategory = await reaction.message.guild?.channels.fetch(env.CATEGORY_DEVELOPMENT) as CategoryChannel;
-        // const channelTripcord = await reaction.message.guild?.channels.fetch(env.CHANNEL_DISCORD) as TextChannel;
-        // const channelTripbot = await reaction.message.guild?.channels.fetch(env.CHANNEL_TRIPBOT) as TextChannel;
-        // const channelContent = await reaction.message.guild?.channels.fetch(env.CHANNEL_CONTENT) as TextChannel;
         const channelDevelopment = await reaction.message.guild?.channels.fetch(env.CHANNEL_DEVELOPMENT) as TextChannel;
-        // const channelIrc = await reaction.message.guild?.channels.fetch(env.CHANNEL_IRC) as TextChannel;
-        // const channelMatrix = await reaction.message.guild?.channels.fetch(env.CHANNEL_MATRIX) as TextChannel;
 
         await channelDevelopment.send(stripIndents`
           Please welcome our newest ${role.name}, ${member}! We're excited to have you here! 
@@ -135,7 +120,6 @@ export async function handleReactionRoles(
     } else {
       // Remove the role
       await member.roles.remove(role);
-      // log.debug(F, `Removed role ${role.name} from ${user.username}`);
     }
   }
 }

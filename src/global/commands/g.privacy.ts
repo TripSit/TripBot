@@ -18,6 +18,14 @@ export const MODERATION_ACTION_RETENTION_YEARS = 2;
 /** The last_seen_at that privacy('delete') writes; scrubbed users are skipped by the purge. */
 export const SCRUBBED_LAST_SEEN = new Date(1970);
 
+/** Plain values keep their usual text; structured values are serialized instead of printing "[object Object]". */
+function formatValue(value: unknown): string {
+  if (typeof value === 'object' && value !== null && !(value instanceof Date)) {
+    return JSON.stringify(value);
+  }
+  return String(value);
+}
+
 /** Turns relaying of a user's Discord messages to IRC off (or back on). Returns the stored value. */
 export async function setIrcBridgeOptOut(discordId: string, optOut: boolean): Promise<boolean> {
   const userData = await getOrCreateUser(discordId);
@@ -27,6 +35,133 @@ export async function setIrcBridgeOptOut(discordId: string, optOut: boolean): Pr
   });
   log.info(F, `irc bridge opt-out set to ${updated.irc_bridge_opt_out} for user ${userData.id}`);
   return updated.irc_bridge_opt_out;
+}
+
+// Fields that are never listed back to the user
+const HIDDEN_FIELDS = ['id', 'discord_id', 'discord_bot_ban', 'ticket_ban'];
+
+const FIELD_NOTES: Record<string, string> = {
+  roles: stripIndents`\n(Note: Roles are only stored if you click the "needshelp" button so we can restore them later!)`,
+  mindset_role: stripIndents`\nNote: Mindset role is only stored if you click a mindset role in the #start-here room.
+          This is removed 8 hours after you click it automatically, same with Mindset Expires`,
+  mindset_role_expires_at: stripIndents`\nNote: Mindset role is only stored if you click a mindset role in the #start-here room.
+          This is removed 8 hours after you click it automatically, same with Mindset Role`,
+};
+
+type UserRecord = Awaited<ReturnType<typeof getOrCreateUser>>;
+type TransactionClient = Parameters<Parameters<typeof db.$transaction>[0]>[0];
+type RecordCounts = { doses: number; experience: number; reminders: number };
+
+/** Lists the stored (non-empty, non-hidden) fields of a user, optionally with an explanatory note per field. */
+function describeUserData(userData: UserRecord, includeNotes: boolean): string {
+  let text = '';
+  Object.entries(userData).forEach(([key, value]) => {
+    if (value === null || value === undefined || value === '') return;
+    if (HIDDEN_FIELDS.includes(key)) return;
+    text += `**${key}**: ${formatValue(value)}\n`;
+    if (includeNotes && key in FIELD_NOTES) {
+      text += FIELD_NOTES[key];
+    }
+  });
+  return text;
+}
+
+function scrubUserData(userData: UserRecord): void {
+  Object.assign(userData, {
+    email: null,
+    username: null,
+    timezone: null,
+    birthday: null,
+    roles: '',
+    mindset_role: null,
+    mindset_role_expires_at: null,
+    lastfm_username: null,
+    irc_id: null,
+    matrix_id: null,
+    moodle_id: null,
+    password_hash: null,
+    level_freeze: null,
+    last_helper_activity: null,
+    last_was_helper: null,
+    karma_given: 0,
+    karma_received: 0,
+    sparkle_points: 0,
+    move_points: 0,
+    empathy_points: 0,
+    last_seen_at: SCRUBBED_LAST_SEEN,
+    last_seen_in: null,
+    joined_at: new Date(1970),
+    removed_at: null,
+  });
+}
+
+async function deleteUserRecords(tx: TransactionClient, userData: UserRecord): Promise<void> {
+  await tx.users.update({
+    where: {
+      id: userData.id,
+    },
+    data: userData,
+  });
+  await tx.user_drug_doses.deleteMany({
+    where: {
+      user_id: userData.id,
+    },
+  });
+  await tx.user_experience.deleteMany({
+    where: {
+      user_id: userData.id,
+    },
+  });
+  await tx.user_reminders.deleteMany({
+    where: {
+      user_id: userData.id,
+    },
+  });
+
+  // Everything else tied to the user goes too. Only moderation records (actions, appeals, bans), tickets (which
+  // delete themselves shortly after archiving) and the bridge opt-out choice are kept.
+  await tx.quotes.deleteMany({ where: { user_id: userData.id } });
+  await tx.wordle_scores.deleteMany({ where: { user_id: userData.id } });
+  await tx.connections_scores.deleteMany({ where: { user_id: userData.id } });
+  await tx.mini_scores.deleteMany({ where: { user_id: userData.id } });
+  await tx.rpg_inventory.deleteMany({ where: { personas: { user_id: userData.id } } });
+  await tx.personas.deleteMany({ where: { user_id: userData.id } });
+  // Deleting the AI record also removes its generated images and message usage records
+  await tx.ai_info.deleteMany({ where: { user_id: userData.id } });
+  if (userData.discord_id) {
+    await tx.best_of.deleteMany({ where: { user_id: userData.discord_id } });
+    await tx.claimed_bounties.deleteMany({ where: { user_id: userData.discord_id } });
+    await tx.members.deleteMany({ where: { id: userData.discord_id } });
+  }
+}
+
+function describeStoredData(userData: UserRecord, counts: RecordCounts): string {
+  let response = describeUserData(userData, true);
+  if (counts.doses > 0) {
+    response += `\n\nYou have ${counts.doses} Idose records. Use /idose get to see specifics!`;
+  }
+  if (counts.experience > 0) {
+    response += `\n\nYou have ${counts.experience} experience records. Use /experience get to see specifics!`;
+  }
+  if (counts.reminders > 0) {
+    response += `\n\nYou have ${counts.reminders} reminders. Use /reminders get to see specifics!`;
+  }
+  return response;
+}
+
+function describeDeletedData(userData: UserRecord, counts: RecordCounts): string {
+  let response = `I deleted your User Data:\n${describeUserData(userData, false)}`;
+  if (counts.doses > 0) {
+    response += `\n\nI deleted ${counts.doses} Idose records!`;
+  }
+  if (counts.experience > 0) {
+    response += `\n\nI deleted ${counts.experience} experience records!`;
+  }
+  if (counts.reminders > 0) {
+    response += `\n\nI deleted ${counts.reminders} reminders!`;
+  }
+  response += '\n\nI also deleted your quotes, game scores, RPG character, AI data and linked accounts.';
+  return response;
 }
 
 /**
@@ -40,7 +175,6 @@ export async function privacy(
 ):Promise<string> {
   let response = '';
   const userData = await getOrCreateUser(userId);
-  //   .where('user_id', userData.id);
   const userDrugDoses = await db.user_drug_doses.findMany({
     where: {
       user_id: userData.id,
@@ -57,147 +191,24 @@ export async function privacy(
       user_id: userData.id,
     },
   });
+  const counts = {
+    doses: userDrugDoses.length,
+    experience: userExperience.length,
+    reminders: userReminders.length,
+  };
 
   if (command === 'get') {
-    for (const [key, value] of Object.entries(userData)) { // eslint-disable-line
-      if (value !== null && value !== undefined && value !== '') {
-        if (
-          key === 'id'
-        || key === 'discord_id'
-        || key === 'discord_bot_ban'
-        || key === 'ticket_ban'
-        ) {
-          continue; // eslint-disable-line
-        }
-        response += `**${key}**: ${value}\n`;
-        if (key === 'roles') {
-          response += stripIndents`\n(Note: Roles are only stored if you click the "needshelp" button so we can restore them later!)`;
-        }
-        if (key === 'mindset_role') {
-          response += stripIndents`\nNote: Mindset role is only stored if you click a mindset role in the #start-here room.
-          This is removed 8 hours after you click it automatically, same with Mindset Expires`;
-        }
-        if (key === 'mindset_role_expires_at') {
-          response += stripIndents`\nNote: Mindset role is only stored if you click a mindset role in the #start-here room.
-          This is removed 8 hours after you click it automatically, same with Mindset Role`;
-        }
-      }
-    }
-
-    // if (userActions.length > 0) {
-    //   response += `User Actions: ${JSON.stringify(userActions)}`;
-    // }
-    if (userDrugDoses.length > 0) {
-      response += `\n\nYou have ${userDrugDoses.length} Idose records. Use /idose get to see specifics!`;
-    }
-    if (userExperience.length > 0) {
-      response += `\n\nYou have ${userExperience.length} experience records. Use /experience get to see specifics!`;
-    }
-    if (userReminders.length > 0) {
-      response += `\n\nYou have ${userReminders.length} reminders. Use /reminders get to see specifics!`;
-    }
-    // if (userTickets.length > 0) {
-    //   response += `\n\nYou have ${userTickets.length} tickets. Use /tickets get to see specifics!`;
-    // }
+    response = describeStoredData(userData, counts);
   }
   if (command === 'delete') {
-    userData.email = null;
-    userData.username = null;
-    userData.timezone = null;
-    userData.birthday = null;
-    userData.roles = '';
-    userData.mindset_role = null;
-    userData.mindset_role_expires_at = null;
-    userData.lastfm_username = null;
-    userData.irc_id = null;
-    userData.matrix_id = null;
-    userData.moodle_id = null;
-    userData.password_hash = null;
-    userData.level_freeze = null;
-    userData.last_helper_activity = null;
-    userData.last_was_helper = null;
-    userData.karma_given = 0;
-    userData.karma_received = 0;
-    userData.sparkle_points = 0;
-    userData.move_points = 0;
-    userData.empathy_points = 0;
-    userData.last_seen_at = SCRUBBED_LAST_SEEN;
-    userData.last_seen_in = null;
-    userData.joined_at = new Date(1970);
-    userData.removed_at = null;
+    scrubUserData(userData);
 
     // Keep the scrub marker and related deletions atomic so failed purges remain retryable.
     await db.$transaction(async tx => {
-      await tx.users.update({
-        where: {
-          id: userData.id,
-        },
-        data: userData,
-      });
-      await tx.user_drug_doses.deleteMany({
-        where: {
-          user_id: userData.id,
-        },
-      });
-      await tx.user_experience.deleteMany({
-        where: {
-          user_id: userData.id,
-        },
-      });
-      await tx.user_reminders.deleteMany({
-        where: {
-          user_id: userData.id,
-        },
-      });
-
-      // Everything else tied to the user goes too. Only moderation records (actions, appeals, bans), tickets (which
-      // delete themselves shortly after archiving) and the bridge opt-out choice are kept.
-      await tx.quotes.deleteMany({ where: { user_id: userData.id } });
-      await tx.wordle_scores.deleteMany({ where: { user_id: userData.id } });
-      await tx.connections_scores.deleteMany({ where: { user_id: userData.id } });
-      await tx.mini_scores.deleteMany({ where: { user_id: userData.id } });
-      await tx.rpg_inventory.deleteMany({ where: { personas: { user_id: userData.id } } });
-      await tx.personas.deleteMany({ where: { user_id: userData.id } });
-      // Deleting the AI record also removes its generated images and message usage records
-      await tx.ai_info.deleteMany({ where: { user_id: userData.id } });
-      if (userData.discord_id) {
-        await tx.best_of.deleteMany({ where: { user_id: userData.discord_id } });
-        await tx.claimed_bounties.deleteMany({ where: { user_id: userData.discord_id } });
-        await tx.members.deleteMany({ where: { id: userData.discord_id } });
-      }
+      await deleteUserRecords(tx, userData);
     });
 
-    response = 'I deleted your User Data:\n';
-      for (const [key, value] of Object.entries(userData)) { // eslint-disable-line
-      if (value !== null && value !== undefined && value !== '') {
-        if (
-          key === 'id'
-        || key === 'discord_id'
-        || key === 'discord_bot_ban'
-        || key === 'ticket_ban'
-        ) {
-          continue; // eslint-disable-line
-        }
-        response += `**${key}**: ${value}\n`;
-      }
-    }
-
-    // if (userActions.length > 0) {
-    //   response += `User Actions: ${JSON.stringify(userActions)}`;
-    // }
-    if (userDrugDoses.length > 0) {
-      response += `\n\nI deleted ${userDrugDoses.length} Idose records!`;
-    }
-    if (userExperience.length > 0) {
-      response += `\n\nI deleted ${userExperience.length} experience records!`;
-    }
-    if (userReminders.length > 0) {
-      response += `\n\nI deleted ${userReminders.length} reminders!`;
-    }
-    response += '\n\nI also deleted your quotes, game scores, RPG character, AI data and linked accounts.';
-    // if (userTickets.length > 0) {
-    //   response += `\n\nI deleted ${userTickets.length} tickets!`;
-    // }
+    response = describeDeletedData(userData, counts);
   }
 
   log.info(F, `privacy ${command} completed for user ${userData.id}`);

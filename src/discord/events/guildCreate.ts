@@ -37,10 +37,8 @@ export const guildCreate: GuildCreateEvent = {
     ${guild.name} (id: ${guild.id})
     Created at: ${guild.createdAt}
     Member count: ${guild.memberCount}
-    Description: ${guild.description ? guild.description : 'No description'}
+    Description: ${guild.description ?? 'No description'}
     `);
-
-  // log.debug(F, `finished!`);
   },
 };
 

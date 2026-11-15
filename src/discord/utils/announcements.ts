@@ -19,11 +19,6 @@ let bigFrequencyCounter = 0;
  * @param {number} ms
  * @return {Promise<void>}
  */
-// function sleep(ms:number):Promise<void> {
-//   return new Promise(resolve => {
-//     setTimeout(resolve, ms);
-//   });
-// }
 
 const waterAndTeaEmojis = [
   // '🏊', '🏊🏻', '🏊🏼', '🏊🏽', '🏊🏾', '🏊🏿',
@@ -165,22 +160,13 @@ export async function announcements(message:Message) {
     return;
   }
 
-  // log.debug(F, `instance of TextChannel: ${message.channel instanceof TextChannel}`);
   if (message.channel instanceof TextChannel
     && message.channel.parentId
     && generalChatCategories.includes(message.channel.parentId)) {
-    // log.debug(F, `message.channel.parentId: ${message.channel.parentId}`);
-    // log.debug(F, `generalChatCategories: ${generalChatCategories}`);
-    // log.debug(F, `generalChatCategories.includes(message.channel.parentId): ${generalChatCategories.includes(message.channel.parentId)}`);
     messageCounter[message.channel.id] = messageCounter[message.channel.id]
       ? messageCounter[message.channel.id] + 1
       : 1;
 
-    // log.debug(F, `messageCounter[message.channel.id]: ${messageCounter[message.channel.id]}`);
-    // log.debug(F, `bigFrequency: ${bigFrequency}`);
-    // log.debug(F, `${messageCounter[message.channel.id] % bigFrequency === 0}`);
-    // log.debug(F, `frequency: ${frequency}`);
-    // log.debug(F, `${messageCounter[message.channel.id] % frequency === 0}`);
     if (messageCounter[message.channel.id] % bigFrequency === 0) {
       const bigAnnouncementDict = {
         0: {
@@ -268,24 +254,18 @@ export async function announcements(message:Message) {
                 },
               },
             });
-            // log.debug(F, `${user.tag} ${pointType} decremented to ${value[0][pointType as keyof typeof value[0]]}`);
           });
         });
     } else if (messageCounter[message.channel.id] % frequency === 0) {
       // If the number of messages sent in the channel / by (frequency) has no remainder..
 
-      // log.debug(F, `genAnnouncements.length: ${genAnnouncements.length}`);
-
       // One extra slot: landing on it posts a fun fact instead of a canned tip
       const randomGenNumber = Math.floor(Math.random() * (genAnnouncements.length + 1));
-
-      // log.debug(F, `randomGenNumber: ${randomGenNumber}`);
 
       if (randomGenNumber === genAnnouncements.length) {
         embed.setDescription(await fact());
       } else {
         const randomGenAnnouncement = genAnnouncements[randomGenNumber];
-        // log.debug(F, `randomGenAnnouncement: ${randomGenAnnouncement}`);
         embed.setDescription(randomGenAnnouncement);
       }
       // Only text channels reach this point (see the check above), so keep that narrowing for the timer callback

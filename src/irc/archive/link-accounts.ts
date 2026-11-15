@@ -12,7 +12,6 @@ export default async function(
       if (info && !info.account) {
         global.ircClient.say(from, `${from} is not registered on IRC, please go ~register on IRC!`);
       }
-      // log.debug(F, `PM info: ${JSON.stringify(info, null, 2)}`);
       verifyLink('irc', info, token);
     });
 };

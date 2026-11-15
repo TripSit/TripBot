@@ -4,17 +4,12 @@ import fs from 'fs';
 import path from 'path';
 import axios from 'axios';
 import Canvas from '@napi-rs/canvas';
-// import {
-//   Client,
-// } from 'discord.js';
 
 const F = f(__filename);
 
 // "get the path to this folder, and then join with /assets"
 
 const assetsDirectory = path.join(__dirname, '../../../assets');
-
-// const assetsDirectory = fp.join(fp.dirname(__dirname), 'assets');
 
 const assetDef = {
   nasal_spray_dosage: { filePath: `${assetsDirectory}/img/nasal_spray_dosage.png`, url: 'https://user-images.githubusercontent.com/1836049/218758611-c84f1e34-0f5b-43ac-90da-bd89b028f131.png' },
@@ -163,9 +158,7 @@ export default async function getAsset(
     throw new Error(`Asset not found: ${assetName}`);
   }
   const { filePath, url } = assetDef[assetName];
-  // log.debug(F, `Checking ${path}`);
   if (!fs.existsSync(filePath)) {
-    // log.debug(F, `Downloading ${url} to ${path}`);
     await downloadAsset(url, filePath);
 
     // If it's a font, register it to canvas

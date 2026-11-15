@@ -27,7 +27,6 @@ async function getOpenRouterModels() {
     const acceptsText = arch.input_modalities?.includes('text');
     const acceptsImage = arch.input_modalities?.includes('image');
     const outputsText = arch.output_modalities?.includes('text');
-    // const outputsImage = arch.output_modalities?.includes('image');
 
     // Only return true if it meets all three criteria
     return acceptsText && acceptsImage && outputsText;
@@ -55,8 +54,6 @@ async function getOpenRouterModels() {
     console.log(`  Modality string: ${model.architecture?.modality}\n`);
     console.log(`  Prompt cost: $${model.pricing.prompt} per 1K tokens`);
   });
-
-  // log.debug(F, `Response: ${JSON.stringify(result, null, 2)}`);
 
   if (!response.ok) {
     throw new Error(`HTTP error! status: ${response.status}`);

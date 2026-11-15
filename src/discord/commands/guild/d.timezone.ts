@@ -45,17 +45,11 @@ export const dTimezone: SlashCommand = {
     const tzValue = interaction.options.getString('timezone');
     let member = interaction.options.getMember('user') as GuildMember | null;
 
-    if (command === undefined) {
-      command = 'get';
-    }
+    command ??= 'get';
 
-    if (member === null) {
-      member = interaction.member as GuildMember;
-    }
+    member ??= interaction.member as GuildMember;
 
     const response = await timezone(command, member.id, tzValue);
-
-    // log.debug(F, `response: ${response}`);
 
     if (command === 'get') {
       const embed = embedTemplate();
@@ -71,10 +65,9 @@ export const dTimezone: SlashCommand = {
       } else {
         embed.setTitle(`${response} wherever ${member.displayName} is located`);
         await interaction.editReply({ embeds: [embed] });
-        // await interaction.editReply({ content: `${response} wherever ${member.displayName} is located.` });
       }
     } else {
-      await interaction.editReply({ content: response as string });
+      await interaction.editReply({ content: response });
     }
     return true;
   },

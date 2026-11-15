@@ -26,19 +26,15 @@ const F = f(__filename);
 async function getCommands(commandType: 'global' | 'guild' | 'partner'): Promise<SlashCommand[]> {
   const commandDir = path.join(__dirname, '../commands');
   const files = await fs.readdir(path.join(commandDir, commandType));
-  // log.debug(F, `${commandType} command files: ${files}`);
   return files
     .filter(file => (file.endsWith('.ts') || file.endsWith('.js')) && !file.startsWith('index'))
     .map(file =>
-      // log.debug(F, `${commandType} command file: ${file}`);
        require(`${commandDir}/${commandType}/${file}`)) // eslint-disable-line
     .map(command => command[Object.keys(command).find(key => command[key].data !== undefined) as string].data.toJSON());
 }
 
 async function deployCommands() {
   const startTime = Date.now();
-  // log.debug(F, `discordClientId: ${env.DISCORD_CLIENT_ID}`);
-  // log.debug(F, `discordGuildId: ${env.DISCORD_GUILD_ID}`);
 
   const rest = new REST({ version: '9' }).setToken(env.DISCORD_CLIENT_TOKEN);
 
@@ -51,25 +47,6 @@ async function deployCommands() {
   const globalCommands = values[0].status === 'fulfilled' ? values[0].value : {} as SlashCommand[];
   const guildCommands = values[1].status === 'fulfilled' ? values[1].value : {} as SlashCommand[];
   const partnerCommands = values[2].status === 'fulfilled' ? values[2].value : {} as SlashCommand[];
-
-  // const registerCommands = [
-  //   () => {
-  //     log.debug(F, ` Registering ${globalCommands.length} global commands...`);
-  //     rest.put(
-  //       Routes.applicationCommands(env.DISCORD_CLIENT_ID.toString()),
-  //       { body: globalCommands },
-  //     );
-  //     log.debug(F, ` Registered global commands in ${Date.now() - startTime}ms`);
-  //   },
-  //   () => {
-  //     log.debug(F, ` Registering ${guildCommands.length} guild commands...`);
-  //     rest.put(
-  //       Routes.applicationGuildCommands(env.DISCORD_CLIENT_ID.toString(), env.DISCORD_GUILD_ID),
-  //       { body: guildCommands },
-  //     );
-  //     log.debug(F, ` Registered guild commands in ${Date.now() - startTime}ms`);
-  //   },
-  // ];
 
   const registerCommands = [
     rest.put(
@@ -86,17 +63,6 @@ async function deployCommands() {
     '960606557622657026', // home guild
     '1088437051134857336', // mb's guild
   ];
-
-  // partnerGuilds.forEach(guildId => {
-  //   registerCommands.push(() => {
-  //     log.debug(F, ` Registering ${partnerCommands.length} partner commands for guild ${guildId}...`);
-  //     rest.put(
-  //       Routes.applicationGuildCommands(env.DISCORD_CLIENT_ID.toString(), guildId),
-  //       { body: partnerCommands },
-  //     );
-  //     log.debug(F, ` Registered partner commands for guild ${guildId} in ${Date.now() - startTime}ms`);
-  //   });
-  // });
 
   partnerGuilds.forEach(guildId => {
     registerCommands.push(

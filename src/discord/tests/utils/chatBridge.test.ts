@@ -114,8 +114,8 @@ describe('discordBridgeTarget', () => {
     vi.spyOn(global.log, 'debug').mockReturnValue(undefined as never);
     global.discordClient.isReady = (() => false) as typeof global.discordClient.isReady;
     await chatBridge.discordBridgeTarget.send(LOUNGE_ID, outgoing());
-    expect(channelFetch).not.toHaveBeenCalled();
-    expect(webhookSend).not.toHaveBeenCalled();
+    expect(channelFetch).toHaveBeenCalledTimes(0);
+    expect(webhookSend).toHaveBeenCalledTimes(0);
   });
 
   it('reuses an existing bridge webhook owned by the bot', async () => {
@@ -146,6 +146,7 @@ describe('discordBridgeTarget', () => {
   it('refuses channels that cannot hold webhooks', async () => {
     channelFetch.mockResolvedValue({ type: ChannelType.GuildVoice });
     await expect(chatBridge.discordBridgeTarget.send(LOUNGE_ID, outgoing())).rejects.toThrow('cannot hold webhooks');
+    expect(webhookSend).toHaveBeenCalledTimes(0);
   });
 
   it('prefers the avatar from the source platform', async () => {

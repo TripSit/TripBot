@@ -37,14 +37,14 @@ async function generateLeaderboardEmbed(
 
   // Sort based on type
   const sortedStats = type === 'xp'
-    ? stats.sort((a, b) => b.totalXP - a.totalXP)
-    : stats.sort((a, b) => b.totalBounties - a.totalBounties);
+    ? [...stats].sort((a, b) => b.totalXP - a.totalXP)
+    : [...stats].sort((a, b) => b.totalBounties - a.totalBounties);
 
   const topUsers = sortedStats.slice(0, 10); // Top 10 users
 
   const embed = embedTemplate()
     .setColor(type === 'xp' ? Colors.Gold : Colors.Green) // Gold for XP, Green for bounties
-    .setThumbnail(interaction.guild?.iconURL() || null)
+    .setThumbnail(interaction.guild?.iconURL() ?? null)
     .setTimestamp();
 
   if (type === 'xp') {
@@ -180,7 +180,7 @@ export const dLeaderboard: SlashCommand = {
       collector.on('end', async () => {
         try {
           await interaction.editReply({ components: [] });
-        } catch (error) {
+        } catch {
           // Ignore errors when removing components (message might be deleted)
         }
       });

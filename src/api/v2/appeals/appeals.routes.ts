@@ -42,6 +42,30 @@ router.get('/latest', async (req: AuthenticatedRequest, res) => {
   }
 });
 
+/** The response body for an appeal that could not be created. */
+function createFailureBody(error: string | undefined) {
+  if (error === 'COOLDOWN') {
+    const cooldownPeriod = process.env.NODE_ENV === 'development' ? '30 seconds' : '3 months';
+    return {
+      success: false,
+      error: 'COOLDOWN',
+      message: `You must wait ${cooldownPeriod} between appeal submissions`,
+    };
+  }
+  if (error === 'USER_NOT_FOUND') {
+    return {
+      success: false,
+      error: 'USER_NOT_FOUND',
+      message: 'User not found in database',
+    };
+  }
+  return {
+    success: false,
+    error: 'DATABASE_ERROR',
+    message: 'Failed to create appeal due to a server error',
+  };
+}
+
 router.post('/create', async (req: AuthenticatedRequest, res) => {
   try {
     if (!req.user?.discord_id) {
@@ -84,26 +108,7 @@ router.post('/create', async (req: AuthenticatedRequest, res) => {
     });
 
     if (!result.success) {
-      if (result.error === 'COOLDOWN') {
-        const cooldownPeriod = process.env.NODE_ENV === 'development' ? '30 seconds' : '3 months';
-        return res.status(200).json({
-          success: false,
-          error: 'COOLDOWN',
-          message: `You must wait ${cooldownPeriod} between appeal submissions`,
-        });
-      }
-      if (result.error === 'USER_NOT_FOUND') {
-        return res.status(200).json({
-          success: false,
-          error: 'USER_NOT_FOUND',
-          message: 'User not found in database',
-        });
-      }
-      return res.status(200).json({
-        success: false,
-        error: 'DATABASE_ERROR',
-        message: 'Failed to create appeal due to a server error',
-      });
+      return res.status(200).json(createFailureBody(result.error));
     }
 
     const guild = await discordClient.guilds.fetch(process.env.DISCORD_GUILD_ID);
@@ -130,11 +135,13 @@ router.post('/create', async (req: AuthenticatedRequest, res) => {
       botMember,
       targetUser,
       'BAN_APPEAL',
-      '',
-      description,
-      '',
-      '',
-      appealData,
+      {
+        internalNote: '',
+        description,
+        extraMessage: '',
+        duration: '',
+        appealData,
+      },
     );
     return res.json({ success: true, message: 'Appeal submitted successfully' });
   } catch (error: unknown) {

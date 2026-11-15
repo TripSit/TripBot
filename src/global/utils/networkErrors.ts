@@ -38,7 +38,7 @@ export function describeError(err: unknown, depth = 0): string {
   const e = err as ErrorLike;
   const code = typeof e.code === 'string' ? ` [${e.code}]` : '';
   const address = typeof e.address === 'string' ? ` (${e.address})` : '';
-  const head = `${typeof e.message === 'string' ? e.message : String(err)}${code}${address}`;
+  const head = `${typeof e.message === 'string' ? e.message : 'Unknown error'}${code}${address}`;
   if (depth >= MAX_DEPTH) return head;
   const inner = children(e).map(c => describeError(c, depth + 1));
   return inner.length ? `${head} <- ${inner.join('; ')}` : head;

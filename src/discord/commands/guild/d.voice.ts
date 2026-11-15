@@ -85,7 +85,6 @@ async function tentLimit(
       ? 'There is now no user limit.'
       : `The tent now has a max user limit of ${limit}.`);
   await voiceChannel.send({ embeds: [embed] });
-  // log.debug(F, `Channel limit set to ${limit}`);
   return embedTemplate()
     .setTitle(title)
     .setColor(Colors.Green)
@@ -196,7 +195,7 @@ async function tentHost(
   let title = '';
   let description = '';
   // Add new host permissions
-  if (newHost && newHost.voice.channel === voiceChannel) {
+  if (newHost?.voice.channel === voiceChannel) {
     voiceChannel.permissionOverwrites.edit(newHost.id, {
       Connect: true,
       MoveMembers: true,
@@ -215,7 +214,6 @@ async function tentHost(
   }
   title = 'Host transferred';
   description = `The new host is ${newHost}.`;
-  // log.debug(F, `${oldHost.displayName} is now ${verb}`);
   const embed = new EmbedBuilder()
     .setTitle('Tent updated')
     .setColor(Colors.Blue)
@@ -263,7 +261,6 @@ async function tentAdd(
     title = 'User un-added';
     description = `${target}'s permissions are reset to default.`;
   }
-  // log.debug(F, `${target.displayName} is now ${verb}`);
   return embedTemplate()
     .setTitle(title)
     .setColor(Colors.Green)
@@ -300,8 +297,6 @@ async function tentBan(
     title = 'User banned';
     description = `${target} has been banned from the tent. They can no longer view or join this channel.`;
   }
-
-  // log.debug(F, `${target.displayName} is now ${verb}`);
 
   return embedTemplate()
     .setTitle(title)
@@ -364,6 +359,29 @@ async function tentPing(
 
   return errorEmbed('The Join VC role could not be found. This should not have happened, please contact a developer.')
     .setTitle('BAD ERROR');
+}
+
+const tentError = (message: string): EmbedBuilder => errorEmbed(message).setTitle('Error');
+
+/** Returns why the command cannot run for this member/target in this channel, or undefined when it can. */
+function tentProblem(
+  voiceChannel: VoiceBasedChannel | null,
+  member: GuildMember,
+  target: GuildMember | null,
+): string | undefined {
+  // If no voice channel is determined, return an error
+  if (!voiceChannel) return 'You must be in a voice channel to use this command.';
+  // Check if user is in a Tent
+  if (!voiceChannel.name.includes('⛺')) return 'You can only use this command in a Tent.';
+  // Check if a user is the current host or mod/admin, only users with MoveMembers permission can do this
+  if (!voiceChannel.permissionsFor(member).has(PermissionsBitField.Flags.MoveMembers)) {
+    return 'You must be the host or a moderator to use this command.';
+  }
+  // Check the user is trying to act on themselves
+  if (target === member) return 'Stop playing with yourself!';
+  // Check if the target is a bot
+  if (target?.user.bot) return 'You cannot interact with bots.';
+  return undefined;
 }
 
 export const dVoice: SlashCommand = {
@@ -445,96 +463,37 @@ export const dVoice: SlashCommand = {
     const limit = interaction.options.getInteger('limit') as number;
     const level = interaction.options.getString('level') as string;
 
-    let embed = errorEmbed('You can only use this command in a voice channel Tent that you own!')
-      .setTitle('Error');
-
     // Determine the voice channel
     let voiceChannel = member.voice.channel;
     if (!voiceChannel && member.roles.cache.has(env.ROLE_MODERATOR)) {
       // If the user is a moderator and not in a voice channel, use the channel where the command was executed
-      if (interaction.channel?.isVoiceBased()) {
-        voiceChannel = interaction.channel as VoiceBasedChannel;
-      } else {
-        embed = errorEmbed(
-          'You must be in a voice channel or use this command in a voice channel\'s text chat as a moderator.',
-        )
-          .setTitle('Error');
-        await interaction.editReply({ embeds: [embed] });
+      if (!interaction.channel?.isVoiceBased()) {
+        await interaction.editReply({
+          embeds: [tentError('You must be in a voice channel or use this command in a voice channel\'s text chat as a moderator.')],
+        });
         return false;
       }
+      voiceChannel = interaction.channel;
     }
 
-    // If no voice channel is determined, return an error
-    if (!voiceChannel) {
-      embed = errorEmbed('You must be in a voice channel to use this command.')
-        .setTitle('Error');
-      await interaction.editReply({ embeds: [embed] });
+    const problem = tentProblem(voiceChannel, member, target);
+    if (problem || !voiceChannel) {
+      await interaction.editReply({ embeds: [tentError(problem as string)] });
       return false;
     }
 
-    // Check if user is in a Tent
-    if (!voiceChannel.name.includes('⛺')) {
-      embed = errorEmbed('You can only use this command in a Tent.')
-        .setTitle('Error');
-      await interaction.editReply({ embeds: [embed] });
-      return false;
-    }
-
-    // Check if a user is the current host or mod/admin, only users with MoveMembers permission can do this
-    if (!voiceChannel.permissionsFor(member).has(PermissionsBitField.Flags.MoveMembers)) {
-      embed = errorEmbed('You must be the host or a moderator to use this command.')
-        .setTitle('Error');
-      await interaction.editReply({ embeds: [embed] });
-      return false;
-    }
-
-    // Check the user is trying to act on themselves
-    if (target === member) {
-      embed = errorEmbed('Stop playing with yourself!')
-        .setTitle('Error');
-      await interaction.editReply({ embeds: [embed] });
-      return false;
-    }
-
-    // Check if the target is a bot
-    if (target && target.user.bot) {
-      embed = errorEmbed('You cannot interact with bots.')
-        .setTitle('Error');
-      await interaction.editReply({ embeds: [embed] });
-      return false;
-    }
-
-    if (command === 'name') {
-      embed = await tentName(voiceChannel, newName);
-    }
-
-    if (command === 'lock') {
-      embed = await tentLock(voiceChannel);
-    }
-
-    if (command === 'limit') {
-      embed = await tentLimit(voiceChannel, limit);
-    }
-
-    if (command === 'host') {
-      embed = await tentHost(voiceChannel, target, member);
-    }
-
-    if (command === 'level') {
-      embed = await tentLevel(voiceChannel, level);
-    }
-
-    if (command === 'add') {
-      embed = await tentAdd(voiceChannel, target);
-    }
-
-    if (command === 'ban') {
-      embed = await tentBan(voiceChannel, target);
-    }
-
-    if (command === 'ping') {
-      embed = await tentPing(voiceChannel, member);
-    }
+    const actions: Record<string, () => Promise<EmbedBuilder>> = {
+      name: () => tentName(voiceChannel, newName),
+      lock: () => tentLock(voiceChannel),
+      limit: () => tentLimit(voiceChannel, limit),
+      host: () => tentHost(voiceChannel, target, member),
+      level: () => tentLevel(voiceChannel, level),
+      add: () => tentAdd(voiceChannel, target),
+      ban: () => tentBan(voiceChannel, target),
+      ping: () => tentPing(voiceChannel, member),
+    };
+    const embed = await (actions[command]
+      ?? (async () => tentError('You can only use this command in a voice channel Tent that you own!')))();
 
     // Only these commands change something the status line actually shows.
     if (['lock', 'level', 'limit'].includes(command)) {

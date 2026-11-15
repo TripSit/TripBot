@@ -95,7 +95,7 @@ async function dCalcDXM(
   const taking = interaction.options.getString('taking', true);
 
   const results = await calcDxm(givenWeight, weightUnits, taking);
-  const dosageData = results.data as DxmDataType;
+  const dosageData = results.data;
   const { units } = results;
 
   const embedTitle = 'DXM Dosages';
@@ -222,9 +222,6 @@ async function dCalcNasal(
     // log.debug(F, `ml_per_push: ${mlPerPush}`);
     embed.setDescription(`You'll need ~${await calcSolvent(amount, desiredMgPerPush, mlPerPush)}ml of solvent (water)`);
   } else if (calculationType === 'substance') {
-    // log.debug(F, `amount: ${amount}`);
-    // log.debug(F, `desired_mg_per_push: ${desiredMgPerPush}`);
-    // log.debug(F, `ml_per_push: ${mlPerPush}`);
     embed.setDescription(`You'll need ~${await calcSubstance(amount, desiredMgPerPush, mlPerPush)}mg of the substance`);
   }
   return embed;
@@ -293,60 +290,15 @@ function fitOpioidTitle(text: string): string {
   return text.length > 256 ? `${text.slice(0, 253)}...` : text;
 }
 
-/**
- * Renders an opioid conversion. The maths is in g.calc; this only decides how it reads.
- * @param interaction
- * @returns {Promise<EmbedBuilder>}
- */
-async function dCalcOpioid(
-  interaction:ChatInputCommandInteraction,
-):Promise<EmbedBuilder> {
-  const dosage = interaction.options.getNumber('i_have', true);
-  const drugA = interaction.options.getString('mg_of', true);
-  const drugB = interaction.options.getString('and_i_want_the_dose_of', true);
-  const levelOfDetail = interaction.options.getString('level_of_detail', true);
+type OpioidField = { name: string, value: string, inline?: boolean };
+type OpioidConversion = Extract<Awaited<ReturnType<typeof calcOpioid>>, { ok: true }>;
 
-  const result = await calcOpioid(dosage, drugA, drugB);
-
-  if (!result.ok) {
-    return errorEmbed(stripIndents`
-        ${result.message}
-
-        Doses go in as milligrams (mg), and both opioids should be picked from the autocomplete list so they match the table exactly.`).setTitle('I could not run that conversion');
-  }
-
+function buildOpioidFields(result: OpioidConversion, unit: ReturnType<typeof doseUnit>): OpioidField[] {
   const {
-    from, to, fromRoute, toRoute, morphineEquivalent, equianalgesic, cautiousStart, otherRoutes, sameDrug,
+    from, to, toRoute, equianalgesic, cautiousStart, otherRoutes, sameDrug,
   } = result;
 
-  const fromPotency = from.potency[fromRoute];
-  const toPotency = to.potency[toRoute];
-  // Pick one unit for the whole reply, so the headline is not in mg while the reduced figure is in mcg.
-  const unit = doseUnit(equianalgesic);
-  const fromDesc = `${ROUTE_SHORT[fromRoute]} ${from.name}`;
-  const toDesc = `${ROUTE_SHORT[toRoute]} ${to.name}`;
-
-  // Saying "via oral morphine" is noise when morphine is already one of the two sides.
-  const viaMorphine = from.name !== MORPHINE_NAME && to.name !== MORPHINE_NAME;
-  const potencyLine = `Potency vs oral morphine: ${from.name} ${fromPotency ? formatPotency(fromPotency) : 'unknown'}, ${to.name} ${toPotency ? formatPotency(toPotency) : 'unknown'}.`;
-  const morphineStep = viaMorphine ? `Converted via **${formatDose(morphineEquivalent)} oral morphine**. ` : '';
-
-  const embed = errorEmbed(`${morphineStep}${potencyLine} [Source](${OPIOID_SOURCE_URL})`)
-    .setTitle(fitOpioidTitle(`${dosage}mg ${fromDesc} is ~${formatDose(equianalgesic, unit)} ${toDesc}`));
-
-  // Unnamed block so it reads as running text, the way /calc benzo presents the same advice.
-  const closing = { name: '\u200B', value: fitOpioidField(OPIOID_CLOSING) };
-
-  // Short mode: just the answer, how we got there, and the standing advice.
-  if (levelOfDetail === OPIOID_DETAIL_SHORT) {
-    return embed.addFields([closing]);
-  }
-
-  if (cautiousStart) {
-    embed.setDescription(`${embed.data.description}\n### Start low and check usual dosing ranges.`);
-  }
-
-  const fields: { name: string, value: string, inline?: boolean }[] = [];
+  const fields: OpioidField[] = [];
 
   const routeLines = otherRoutes.map(route => `**${ROUTE_LABELS[route.roa]}** - ${formatDose(route.dose, unit)}${route.estimated ? ' \\*' : ''}`);
   // One footnote beats repeating the same caveat on every line.
@@ -400,6 +352,64 @@ async function dCalcOpioid(
   if (notes.length > 0) {
     fields.push({ name: 'Worth knowing', value: fitOpioidField(notes.map(note => `• ${note}`).join('\n')) });
   }
+
+  return fields;
+}
+
+/**
+ * Renders an opioid conversion. The maths is in g.calc; this only decides how it reads.
+ * @param interaction
+ * @returns {Promise<EmbedBuilder>}
+ */
+async function dCalcOpioid(
+  interaction:ChatInputCommandInteraction,
+):Promise<EmbedBuilder> {
+  const dosage = interaction.options.getNumber('i_have', true);
+  const drugA = interaction.options.getString('mg_of', true);
+  const drugB = interaction.options.getString('and_i_want_the_dose_of', true);
+  const levelOfDetail = interaction.options.getString('level_of_detail', true);
+
+  const result = await calcOpioid(dosage, drugA, drugB);
+
+  if (!result.ok) {
+    return errorEmbed(stripIndents`
+        ${result.message}
+
+        Doses go in as milligrams (mg), and both opioids should be picked from the autocomplete list so they match the table exactly.`).setTitle('I could not run that conversion');
+  }
+
+  const {
+    from, to, fromRoute, toRoute, morphineEquivalent, equianalgesic, cautiousStart,
+  } = result;
+
+  const fromPotency = from.potency[fromRoute];
+  const toPotency = to.potency[toRoute];
+  // Pick one unit for the whole reply, so the headline is not in mg while the reduced figure is in mcg.
+  const unit = doseUnit(equianalgesic);
+  const fromDesc = `${ROUTE_SHORT[fromRoute]} ${from.name}`;
+  const toDesc = `${ROUTE_SHORT[toRoute]} ${to.name}`;
+
+  // Saying "via oral morphine" is noise when morphine is already one of the two sides.
+  const viaMorphine = from.name !== MORPHINE_NAME && to.name !== MORPHINE_NAME;
+  const potencyLine = `Potency vs oral morphine: ${from.name} ${fromPotency ? formatPotency(fromPotency) : 'unknown'}, ${to.name} ${toPotency ? formatPotency(toPotency) : 'unknown'}.`;
+  const morphineStep = viaMorphine ? `Converted via **${formatDose(morphineEquivalent)} oral morphine**. ` : '';
+
+  const embed = errorEmbed(`${morphineStep}${potencyLine} [Source](${OPIOID_SOURCE_URL})`)
+    .setTitle(fitOpioidTitle(`${dosage}mg ${fromDesc} is ~${formatDose(equianalgesic, unit)} ${toDesc}`));
+
+  // Unnamed block so it reads as running text, the way /calc benzo presents the same advice.
+  const closing = { name: '\u200B', value: fitOpioidField(OPIOID_CLOSING) };
+
+  // Short mode: just the answer, how we got there, and the standing advice.
+  if (levelOfDetail === OPIOID_DETAIL_SHORT) {
+    return embed.addFields([closing]);
+  }
+
+  if (cautiousStart) {
+    embed.setDescription(`${embed.data.description}\n### Start low and check usual dosing ranges.`);
+  }
+
+  const fields = buildOpioidFields(result, unit);
 
   // Reserved up front so a drug with long notes can never crowd the advice out.
   let used = (embed.data.title?.length ?? 0) + (embed.data.description?.length ?? 0)

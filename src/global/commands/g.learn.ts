@@ -143,7 +143,7 @@ export async function profile(
       },
     });
 
-  if (!userData || !userData.moodle_id) {
+  if (!userData?.moodle_id) {
     return moodleProfile;
   }
 

@@ -30,7 +30,7 @@ async function dCombochart(interaction: ChatInputCommandInteraction): Promise<bo
   try {
     await interaction.editReply({ content });
     return true;
-  } catch (error) {
+  } catch {
     await interaction.deleteReply();
     await interaction.followUp({ content, flags: MessageFlags.Ephemeral });
     return false;
@@ -43,7 +43,7 @@ async function dBreathe(interaction: ChatInputCommandInteraction): Promise<boole
   try {
     await interaction.editReply({ content });
     return true;
-  } catch (error) {
+  } catch {
     await interaction.deleteReply();
     await interaction.followUp({ content, flags: MessageFlags.Ephemeral });
     return false;
@@ -55,7 +55,7 @@ async function dGrounding(interaction: ChatInputCommandInteraction): Promise<boo
   try {
     await interaction.editReply({ content });
     return true;
-  } catch (error) {
+  } catch {
     await interaction.deleteReply();
     await interaction.followUp({ content, flags: MessageFlags.Ephemeral });
     return false;
@@ -67,7 +67,7 @@ async function dRecovery(interaction: ChatInputCommandInteraction): Promise<bool
   try {
     await interaction.editReply({ content });
     return true;
-  } catch (error) {
+  } catch {
     await interaction.deleteReply();
     await interaction.followUp({ content, flags: MessageFlags.Ephemeral });
     return false;
@@ -79,7 +79,7 @@ async function dReagents(interaction: ChatInputCommandInteraction): Promise<bool
   try {
     await interaction.editReply({ content });
     return true;
-  } catch (error) {
+  } catch {
     await interaction.deleteReply();
     await interaction.followUp({ content, flags: MessageFlags.Ephemeral });
     return false;
@@ -104,7 +104,7 @@ async function dCrisis(interaction: ChatInputCommandInteraction): Promise<boolea
   try {
     await interaction.editReply({ embeds: [embed] });
     return true;
-  } catch (error) {
+  } catch {
     await interaction.deleteReply();
     await interaction.followUp({ embeds: [embed], flags: MessageFlags.Ephemeral });
     return false;
@@ -122,7 +122,7 @@ async function dGuides(interaction: ChatInputCommandInteraction): Promise<boolea
   try {
     await interaction.editReply({ embeds: [embed] });
     return true;
-  } catch (error) {
+  } catch {
     await interaction.deleteReply();
     await interaction.followUp({ embeds: [embed], flags: MessageFlags.Ephemeral });
     return false;
@@ -148,7 +148,7 @@ async function dWarmline(interaction: ChatInputCommandInteraction): Promise<bool
   try {
     await interaction.editReply({ embeds: [embed] });
     return true;
-  } catch (error) {
+  } catch {
     await interaction.deleteReply();
     await interaction.followUp({ embeds: [embed], flags: MessageFlags.Ephemeral });
     return false;
@@ -194,7 +194,7 @@ async function dDrugChecking(interaction: ChatInputCommandInteraction): Promise<
   try {
     await interaction.editReply({ embeds: [embed] });
     return true;
-  } catch (error) {
+  } catch {
     await interaction.deleteReply();
     await interaction.followUp({ embeds: [embed], flags: MessageFlags.Ephemeral });
     return false;
@@ -240,7 +240,7 @@ async function dTestKits(interaction: ChatInputCommandInteraction): Promise<bool
   try {
     await interaction.editReply({ embeds: [embed] });
     return true;
-  } catch (error) {
+  } catch {
     await interaction.deleteReply();
     await interaction.followUp({ embeds: [embed], flags: MessageFlags.Ephemeral });
     return false;
@@ -291,7 +291,7 @@ async function dSupplies(interaction: ChatInputCommandInteraction): Promise<bool
   try {
     await interaction.editReply({ embeds: [embed] });
     return true;
-  } catch (error) {
+  } catch {
     await interaction.deleteReply();
     await interaction.followUp({ embeds: [embed], flags: MessageFlags.Ephemeral });
     return false;
@@ -327,7 +327,7 @@ async function dMushroomInfo(interaction: ChatInputCommandInteraction): Promise<
     const { flags, ...editReplyOptions } = reply;
     await interaction.editReply(editReplyOptions);
     return true;
-  } catch (error) {
+  } catch {
     await interaction.deleteReply();
     reply.flags = MessageFlags.Ephemeral;
     await interaction.followUp(reply);

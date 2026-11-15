@@ -56,7 +56,7 @@ async function calculateBusyness(
   recentMessages.forEach(message => {
     userMessageCounts.set(
       message.author.id,
-      (userMessageCounts.get(message.author.id) || 0) + 1,
+      (userMessageCounts.get(message.author.id) ?? 0) + 1,
     );
   });
 
@@ -111,7 +111,7 @@ async function checkBusyness() {
     try {
       loungeChannel = (await msg.client.channels.fetch(env.CHANNEL_LOUNGE)) as TextChannel;
       log.debug(F, 'Fetched lounge channel.');
-    } catch (error) {
+    } catch {
       log.error(F, 'Failed to fetch lounge channel');
       return;
     }
@@ -196,7 +196,7 @@ async function checkBusyness() {
 
   try {
     await msg.edit({ embeds: [embed] });
-  } catch (error) {
+  } catch {
     log.debug(F, 'Failed to update embed. Embed might have been deleted.');
     return; // Stop the process if the embed cannot be updated
   }

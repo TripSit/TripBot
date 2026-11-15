@@ -289,10 +289,10 @@ describe('describeChannels', () => {
     ], categories);
     expect(lines).toEqual([
       `bridged: opioids (1) <-> IRC ${OPIATES} | Matrix ${MATRIX_A} | override`,
+      expect.stringContaining('not bridged: 🎉 (5), no usable or unique IRC name'),
       expect.stringContaining('not bridged: logs (4), category'),
       expect.stringContaining('not bridged: old (2), mapped to #gone but inactive or disabled'),
       expect.stringContaining('not bridged: staff (3), private'),
-      expect.stringContaining('not bridged: 🎉 (5), no usable or unique IRC name'),
     ]);
   });
 

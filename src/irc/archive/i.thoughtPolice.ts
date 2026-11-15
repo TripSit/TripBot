@@ -18,36 +18,4 @@ export default async function(message:Message) {
     //     "lkasjdl;kfj;alksdjfl;kajsl;dkfjal;ksdjfl;kajs;ldfjl;kj;lkj"
     //   ]
     // }
-
-    // const result = await bigBrother(message.args[1]);
-
-    // log.debug(F, `result: ${result}`);
-
-    // if (result) {
-    //   switch (result[0]) {
-    //     case 'offensive':
-    //       global.ircClient.say(message.args[0], result[1]);
-    //       await moderate('TripBot', 'timeout', message.nick, null, 'on', 'Said offensive word', null);
-    //       break;
-    //     case 'harm':
-    //       global.ircClient.say(NODE_ENV === 'production' ? '#moderators' : '#sandbox-dev', stripIndents`
-    //         ${message.nick} is talking about something harmful in ${message.args[0]}!
-    //       `);
-    //       break;
-    //     case 'horny':
-    //       global.ircClient.say(message.args[0], result[1]);
-    //       break;
-    //     case 'meme':
-    //       global.ircClient.say(message.args[0], result[1]);
-    //       break;
-    //     case 'pg13':
-    //       global.ircClient.say(NODE_ENV === 'production' ? '#moderators' : '#sandbox-dev', stripIndents`
-    //         ${message.nick} is talking about something PG13 in ${message.args[0]}!
-    //       `);
-    //       break;
-    //     default:
-    //       break;
-    //   }
-    // }
-    // log.debug(F, `finished!`);
   }

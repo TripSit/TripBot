@@ -10,7 +10,6 @@ import { SlashCommand } from '../../@types/commandDef';
 import { errorEmbed } from '../../utils/embedTemplate';
 import commandContext from '../../utils/context';
 import { replyGuildOnly } from '../../utils/guildOnly';
-// import log from '../../../global/utils/log'; // eslint-disable-line no-unused-vars
 
 const F = f(__filename);
 
@@ -70,20 +69,14 @@ export const dReminder: SlashCommand = {
       return false;
     }
 
-    // const { channelId } = interaction;
-    // log.debug(F, `channelId: ${channelId}`);
     const chanId = (interaction.channel as TextBasedChannel).id;
-    // log.debug(F, `chanId: ${chanId}`);
     const reminderData = reminderDict[chanId];
-    // log.debug(F, `reminderData: ${JSON.stringify(reminderData, null, 2)}`);
     if (!reminderData) {
       await interaction.editReply({ content: 'This command can only be used in a channel with a reminder!' });
       return false;
     }
     const reminderTitle = reminderData[0];
-    // log.debug(F, `reminderTitle: ${reminderTitle}`);
     const reminderText = reminderData[1];
-    // log.debug(F, `reminderText: ${reminderText}`);
 
     const reminder = errorEmbed(reminderText)
       .setTitle(`REMINDER: ${reminderTitle}`);
@@ -92,7 +85,7 @@ export const dReminder: SlashCommand = {
 
     const botlog = await interaction.guild.channels.fetch(env.CHANNEL_BOTLOG) as TextChannel;
     if (botlog) {
-      await botlog.send(`${(interaction.member as GuildMember).displayName} sent a reminder to ${(interaction.channel as TextChannel).name}`);
+      await botlog.send(`${(interaction.member as GuildMember).displayName} sent a reminder to ${(interaction.channel).name}`);
     }
     await interaction.editReply({ content: 'Reminder sent!' });
     return true;
