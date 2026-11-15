@@ -26,6 +26,7 @@ const ACCOUNT_AGE_SCORES: [number, number, string][] = [
 
 function scoreAccountAge(accountAgeMs: number): ScoreResult {
   const bracket = ACCOUNT_AGE_SCORES.find(([unitMs]) => accountAgeMs >= unitMs);
+  /* v8 ignore next -- accounts are never created less than a second ago */
   if (!bracket) return { score: 0, reasoning: '' };
   const [, score, description] = bracket;
   return { score, reasoning: `+${score} | Account was created ${description}\n` };

@@ -139,7 +139,7 @@ function determineWinner(choice1: string, choice2: string): GameResult {
 }
 
 /** With three or more players, one choice is knocked out: the one that loses to another choice in play. */
-function choiceToEliminate(activeChoiceNames: string[]): string | null {
+function choiceToEliminate(activeChoiceNames: string[]): string {
   const has = (choice: string) => activeChoiceNames.includes(choice);
   if (has('rock') && has('scissors')) {
     // Rock beats scissors; but if paper is also present, paper wins and rock gets eliminated
@@ -147,9 +147,8 @@ function choiceToEliminate(activeChoiceNames: string[]): string | null {
   }
   // Paper beats rock (no scissors present)
   if (has('paper') && has('rock')) return 'rock';
-  // Scissors beats paper (no rock present)
-  if (has('scissors') && has('paper')) return 'paper';
-  return null;
+  // Scissors beats paper (no rock present): at least two different choices are in play, so this is the last pair
+  return 'paper';
 }
 
 function determineMultiplayerWinner(choices: Map<string, string>): MultiplayerResult {

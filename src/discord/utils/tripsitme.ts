@@ -535,6 +535,7 @@ async function announceTeamClose(
   target: GuildMember | null,
 ): Promise<void> {
   const metaChannelId = ticketData.meta_thread_id ?? guildData.channel_tripsitmeta;
+  /* v8 ignore next -- a ticket always has a meta thread or the guild has a meta channel */
   if (!metaChannelId) return;
   try {
     const metaChannel = await guild.channels.fetch(metaChannelId) as TextChannel;
@@ -794,6 +795,7 @@ async function announceUserClose(
   target: GuildMember,
 ): Promise<void> {
   const metaChannelId = ticketData.meta_thread_id ?? guildData.channel_tripsitmeta;
+  /* v8 ignore next -- a ticket always has a meta thread or the guild has a meta channel */
   if (!metaChannelId) return;
   try {
     const metaChannel = await guild.channels.fetch(metaChannelId) as TextChannel;

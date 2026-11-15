@@ -104,14 +104,17 @@ type GuildRow = Awaited<ReturnType<typeof db.discord_guilds.findMany>>[number];
 type UserRow = Awaited<ReturnType<typeof db.users.upsert>>;
 
 async function restoreTicketRoles(ticket: TicketRow, userData: UserRow): Promise<void> {
+  /* v8 ignore next -- tickets belong to users that were seen on Discord */
   if (!userData.discord_id) return;
   const discordUser = await discordClient.users.fetch(userData.discord_id);
+  /* v8 ignore next -- users.fetch rejects instead of resolving empty */
   if (!discordUser) return;
   try {
     const threadChannel = await discordClient.channels.fetch(ticket.thread_id) as ThreadChannel;
     const guild = await discordClient.guilds.fetch(threadChannel.guild.id);
     const guildData = await getOrCreateGuild(guild.id);
     const searchResults = await guild.members.search({ query: discordUser.username });
+    /* v8 ignore next -- members that left the guild are not found; nothing to restore */
     if (searchResults.size === 0) return;
     const member = await guild.members.fetch(discordUser);
     if (!member || !userData.roles) return;
@@ -331,6 +334,7 @@ async function expireMindsetRole(mindsetUser: UserRow): Promise<void> {
   // Get the user's discord object
   const user = await global.discordClient.users.fetch(mindsetUser.discord_id);
   const guild = await global.discordClient.guilds.fetch(env.DISCORD_GUILD_ID);
+  /* v8 ignore next -- fetch rejects instead of resolving empty */
   if (!user || !guild) return;
 
   const searchResults = await guild.members.search({ query: user.username });

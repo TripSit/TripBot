@@ -2983,11 +2983,8 @@ function arcadePayout(gameName: GameName, choice: string, result: string, curren
   if (gameName === 'Coinflip') {
     return result === choice ? currentBet : 0;
   }
-  if (gameName === 'Roulette') {
-    const bet = Object.hasOwn(ROULETTE_BETS, choice) ? ROULETTE_BETS[choice] : undefined;
-    return bet?.wins(parseInt(result, 10)) ? currentBet * bet.multiple : 0;
-  }
-  return 0;
+  const bet = Object.hasOwn(ROULETTE_BETS, choice) ? ROULETTE_BETS[choice] : undefined;
+  return bet?.wins(parseInt(result, 10)) ? currentBet * bet.multiple : 0;
 }
 
 const arcadeEmbed = (

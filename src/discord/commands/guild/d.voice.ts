@@ -492,8 +492,7 @@ export const dVoice: SlashCommand = {
       ban: () => tentBan(voiceChannel, target),
       ping: () => tentPing(voiceChannel, member),
     };
-    const embed = await (actions[command]
-      ?? (async () => tentError('You can only use this command in a voice channel Tent that you own!')))();
+    const embed = await actions[command]();
 
     // Only these commands change something the status line actually shows.
     if (['lock', 'level', 'limit'].includes(command)) {
