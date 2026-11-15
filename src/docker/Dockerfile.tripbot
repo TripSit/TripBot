@@ -4,7 +4,7 @@
 FROM node:22-bookworm AS dependencies
 WORKDIR /workspaces/tripbot
 COPY package.json package-lock.json ./
-RUN --mount=type=cache,target=/root/.npm HUSKY=0 npm ci --no-audit --no-fund
+RUN HUSKY=0 npm ci --no-audit --no-fund
 
 FROM dependencies AS development
 ENV NODE_ENV=development
@@ -51,6 +51,7 @@ COPY prisma.config.mjs ./prisma.config.mjs
 COPY tsconfig.json ./tsconfig.json
 # Runtime data refreshes write to build/assets/data.
 COPY --chown=node:node assets ./build/assets
-COPY --chmod=755 src/docker/entrypoint.sh ./entrypoint.sh
+COPY src/docker/entrypoint.sh ./entrypoint.sh
+RUN chmod 755 ./entrypoint.sh
 USER node
 ENTRYPOINT ["/workspaces/tripbot/entrypoint.sh"]
