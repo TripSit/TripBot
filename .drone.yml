@@ -116,8 +116,7 @@ steps:
         from_secret: NODE_ENV
       DOCKER_HOST:
         from_secret: DOCKER_HOST
-      DOCKER_BUILDKIT:
-        from_secret: DOCKER_BUILDKIT
+      DOCKER_BUILDKIT: "1" # Dockerfile.tripbot uses RUN --mount, which requires BuildKit
       DISCORD_CLIENT_ID:
         from_secret: DISCORD_CLIENT_ID
       DISCORD_CLIENT_TOKEN:
