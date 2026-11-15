@@ -14,8 +14,6 @@ const F = f(__filename);
 
 // https://discordjs.guide/popular-topics/audit-logs.html#who-deleted-a-message
 
-export default roleDelete;
-
 export const roleDelete: RoleDeleteEvent = {
   name: 'roleDelete',
   async execute(role) {
@@ -67,3 +65,5 @@ export const roleDelete: RoleDeleteEvent = {
     await channel.send(response);
   },
 };
+
+export default roleDelete;

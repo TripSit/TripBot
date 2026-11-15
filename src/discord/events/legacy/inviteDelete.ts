@@ -14,8 +14,6 @@ const F = f(__filename);
 
 // https://discordjs.guide/popular-topics/audit-logs.html#who-deleted-a-message
 
-export default inviteDelete;
-
 export const inviteDelete: InviteDeleteEvent = {
   name: 'inviteDelete',
   async execute(invite) {
@@ -50,3 +48,5 @@ export const inviteDelete: InviteDeleteEvent = {
     global.guildInvites.get(invite.guild.id).delete(invite.code);
   },
 };
+
+export default inviteDelete;

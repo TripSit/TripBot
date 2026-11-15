@@ -14,8 +14,6 @@ const F = f(__filename);
 
 // https://discordjs.guide/popular-topics/audit-logs.html#who-deleted-a-message
 
-export default emojiDelete;
-
 export const emojiDelete: EmojiDeleteEvent = {
   name: 'emojiDelete',
   async execute(emoji) {
@@ -67,3 +65,5 @@ export const emojiDelete: EmojiDeleteEvent = {
     await channel.send(response);
   },
 };
+
+export default emojiDelete;

@@ -74,7 +74,7 @@ export const dRadio: SlashCommand = {
       log.debug(F, 'The connection has entered the Connecting state - permission granted, joining voice channel!');
     });
 
-    connection.on(VoiceConnectionStatus.Ready, () => {
+    connection.on(VoiceConnectionStatus.Ready, async () => {
       log.debug(F, 'The connection has entered the Ready state - ready to play audio!');
 
       await interaction.reply({ content: `I have joined ${channel.name} and would start to play ${url}` });
