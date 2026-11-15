@@ -15,12 +15,12 @@ export function embedTemplate(
 ):EmbedBuilder {
   if (data) {
     return new EmbedBuilder(data)
-      .setAuthor({ name: 'TripSit.Me', iconURL: env.TS_ICON_URL, url: 'http://www.tripsit.me' })
+      .setAuthor({ name: 'TripSit.Me', iconURL: env.TS_ICON_URL, url: 'https://www.tripsit.me' })
       .setColor(Colors.Purple)
       .setFooter({ text: env.DISCLAIMER, iconURL: env.FLAME_ICON_URL });
   }
   return new EmbedBuilder()
-    .setAuthor({ name: 'TripSit.Me', iconURL: env.TS_ICON_URL, url: 'http://www.tripsit.me' })
+    .setAuthor({ name: 'TripSit.Me', iconURL: env.TS_ICON_URL, url: 'https://www.tripsit.me' })
     .setColor(Colors.Purple)
     .setFooter({ text: env.DISCLAIMER, iconURL: env.FLAME_ICON_URL });
   // .setThumbnail(tsIconUrl)

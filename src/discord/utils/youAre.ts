@@ -31,7 +31,7 @@ export async function youAre(message: Message): Promise<void> {
 
   if (message.channel.parentId === env.CATEGORY_HARMREDUCTIONCENTRE) return;
 
-  const key = valMatch(content, /(\bis\b|\bare\b)\s+([\w\s]*?)(\s+)?(,|\.|\band\b|$)/, 5);
+  const key = valMatch(content, /(\bis\b|\bare\b)\s+([\w\s]{0,200}?)(\s+)?(,|\.|\band\b|$)/, 5);
   if (!key || !key[2]) return;
 
   const chance = env.NODE_ENV === 'production' ? 1 : 100;

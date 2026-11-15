@@ -73,7 +73,11 @@ vi.mock('../../utils/tents', () => ({
 vi.mock('../../../global/commands/g.botstats', () => ({ botStats: mocks.botStats }));
 vi.mock('../../../global/commands/g.fact', () => ({ fact: mocks.fact }));
 vi.mock('../../../global/utils/timer', () => ({ default: mocks.runTimer }));
-vi.mock('../../utils/checkPermissions', () => ({ checkGuildPermissions: mocks.checkGuild, ensurePermissions: mocks.ensure }));
+vi.mock('../../utils/checkPermissions', () => ({
+  checkGuildPermissions: mocks.checkGuild,
+  ensurePermissions: mocks.ensure,
+  permissionName: (permission: unknown) => String(permission),
+}));
 vi.mock('../../utils/emoji', () => ({ emojiCache: mocks.emojiCache }));
 vi.mock('../../utils/modHistory', () => ({ modHistoryButton: mocks.modHistoryButton }));
 vi.mock('../../commands/global/d.help', () => ({ helpMenu: mocks.helpMenu }));

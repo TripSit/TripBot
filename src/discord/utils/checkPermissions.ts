@@ -79,7 +79,7 @@ export type PermissionTarget =
 export function permissionName(permission: PermissionResolvable): string {
   if (Array.isArray(permission)) return permission.map(permissionName).join(', ');
   if (permission instanceof PermissionsBitField) return permission.toArray().join(', ');
-  return String(permission);
+  return typeof permission === 'string' ? permission : permission.toString();
 }
 
 /**
