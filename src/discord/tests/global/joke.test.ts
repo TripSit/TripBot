@@ -10,7 +10,7 @@ const slashCommand = dJoke;
 const authorInfo = {
   iconURL: 'https://i.gyazo.com/b48b08a853fefaafb6393837eec1a501.png',
   name: 'TripSit.Me',
-  url: 'http://www.tripsit.me',
+  url: 'https://www.tripsit.me',
 };
 const footerInfo = {
   iconURL: 'https://i.gyazo.com/19276c297cca0761dc9689ac7c320b8e.png',

@@ -16,7 +16,7 @@ export default class About {
 
   public static readonly learnUrl: string = 'https://learn.tripsit.me';
 
-  public static readonly webchat: string = 'http://chat.tripsit.me';
+  public static readonly webchat: string = 'https://chat.tripsit.me';
 
   public static readonly botEmail: string = 'discord@tripsit.me';
 

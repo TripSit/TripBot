@@ -13,7 +13,7 @@ import { botStats } from '../../global/commands/g.botstats';
 import { fact } from '../../global/commands/g.fact';
 import runTimer from '../../global/utils/timer'; // eslint-disable-line
 import { ReadyEvent } from '../@types/eventDef';
-import { checkGuildPermissions, ensurePermissions } from '../utils/checkPermissions';
+import { checkGuildPermissions, ensurePermissions, permissionName } from '../utils/checkPermissions';
 import { emojiCache } from '../utils/emoji';
 import { populateBans } from '../utils/populateBotBans'; // eslint-disable-line
 // import { runLpm } from '../utils/lpm';
@@ -54,7 +54,7 @@ export const ready: ReadyEvent = {
       // 'Administrator' as PermissionResolvable,
     ]).then(async result => {
       if (!result.hasPermission) {
-        log.error(F, `I do not have the '${result.permission}' permission in ${hostGuild.name}!`);
+        log.error(F, `I do not have the '${permissionName(result.permission ?? [])}' permission in ${hostGuild.name}!`);
         process.exit(1);
       }
       Promise.all([

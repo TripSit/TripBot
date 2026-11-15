@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import {
   GuildMember,
-  ActionRowBuilder,
   ModalBuilder,
   TextInputBuilder,
   SlashCommandBuilder,
