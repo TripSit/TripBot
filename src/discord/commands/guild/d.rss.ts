@@ -53,12 +53,12 @@ async function addFeed(interaction: ChatInputCommandInteraction, guild: Guild, e
   return true;
 }
 
-async function listFeeds(guild: Guild, embed: EmbedBuilder): Promise<boolean> {
+async function listFeeds(guild: Guild, embed: EmbedBuilder): Promise<void> {
   const results = await rssList(guild.id);
   embed.setColor(Colors.Purple);
   if (results.length === 0) {
     embed.setTitle(`${guild.name} has no RSS feeds!`);
-    return true;
+    return;
   }
   embed.setTitle(`${guild.name} has the following RSS feeds:!`);
   let description = '';
@@ -66,7 +66,6 @@ async function listFeeds(guild: Guild, embed: EmbedBuilder): Promise<boolean> {
     description += `${element.url} -> <#${element.destination}>`;
   });
   embed.setDescription(description);
-  return true;
 }
 
 async function removeFeed(interaction: ChatInputCommandInteraction, embed: EmbedBuilder): Promise<boolean> {
@@ -120,7 +119,10 @@ export const dRss: SlashCommand = {
 
     const handlers: Record<string, () => Promise<boolean>> = {
       add: () => addFeed(interaction, interaction.guild as Guild, embed),
-      list: () => listFeeds(interaction.guild as Guild, embed),
+      list: async () => {
+        await listFeeds(interaction.guild as Guild, embed);
+        return true;
+      },
       remove: () => removeFeed(interaction, embed),
     };
     if (subcommand in handlers && !await handlers[subcommand]()) {

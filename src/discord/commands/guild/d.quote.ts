@@ -18,6 +18,7 @@ import {
 import { SlashCommand } from '../../@types/commandDef';
 import commandContext from '../../utils/context';
 import { getOrCreateUser } from '../../../global/utils/dbRecords';
+import orDefault from '../../../global/utils/orDefault';
 import { randomItem } from '../../../global/utils/random';
 import { vipRolesAtOrAbove } from '../../utils/roleGroups';
 
@@ -287,7 +288,7 @@ function buildQuoteDescription(
     descriptionParts.push(mediaNote);
   }
 
-  descriptionParts.push(`- ${quoteData.url || 'No source URL'}`);
+  descriptionParts.push(`- ${orDefault(quoteData.url, 'No source URL')}`);
   return descriptionParts.join('\n\n');
 }
 
@@ -599,7 +600,8 @@ export async function quoteAdd(interaction:MessageContextMenuCommandInteraction)
   const targetData = await getOrCreateUser(target.id);
 
   // If empty string or just whitespace, replace it.
-  const fixedQuote = interaction.targetMessage.content.trim() || imageOnlyPlaceholder;
+  const trimmedQuote = interaction.targetMessage.content.trim();
+  const fixedQuote = trimmedQuote.length > 0 ? trimmedQuote : imageOnlyPlaceholder;
   const quoteData = await db.quotes.create({
     data: {
       user_id: targetData.id,

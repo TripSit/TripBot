@@ -303,8 +303,8 @@ async function autocompleteQuotes(interaction: AutocompleteInteraction) {
   if (results.length > 0) {
     const top25 = results.slice(0, 20);
     const listResults = top25.map(choice => ({
-      name: (choice.item as any).quote.slice(0, 99),
-      value: (choice.item as any).quote.slice(0, 99),
+      name: choice.item.quote.slice(0, 99),
+      value: choice.item.quote.slice(0, 99),
     }));
     await interaction.respond(listResults);
   } else if (focusedValue !== '') {

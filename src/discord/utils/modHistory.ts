@@ -129,6 +129,7 @@ async function historyPageEmbed(
   total: number,
   action: user_actions,
 ): Promise<EmbedBuilder> {
+  const reasonText = action.internal_note.slice(0, 1024);
   const [creator, repealer] = await Promise.all([
     db.users.findUnique({ where: { id: action.created_by } }),
     action.repealed_by
@@ -150,7 +151,7 @@ async function historyPageEmbed(
         value: `${time(action.created_at, 'f')}\n${time(action.created_at, 'R')}`,
         inline: true,
       },
-      { name: 'Reason', value: action.internal_note.slice(0, 1024) || 'No reason provided' },
+      { name: 'Reason', value: reasonText.length > 0 ? reasonText : 'No reason provided' },
       {
         name: 'Note sent to user',
         value: action.description ? action.description.slice(0, 1024) : '*No message sent to user*',

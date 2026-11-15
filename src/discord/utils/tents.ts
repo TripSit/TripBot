@@ -37,7 +37,7 @@ export function getTentLevel(channel: VoiceBasedChannel): number {
   Object.entries(levelRoles).forEach(([key, roleId]) => {
     const level = parseInt(key, 10);
     const overwrite = channel.permissionOverwrites.cache.get(roleId);
-    if (overwrite && overwrite.deny.has(PermissionsBitField.Flags.ViewChannel) && level > highestDenied) {
+    if (overwrite?.deny.has(PermissionsBitField.Flags.ViewChannel) && level > highestDenied) {
       highestDenied = level;
     }
   });
@@ -429,7 +429,7 @@ export async function logTent(
   }
 
   // If the user left a tent and wasn't the last one
-  if (Old.channel && Old.channel.name.includes('⛺') && Old.member && Old.channel && Old.channel.members.size >= 1) {
+  if (Old.channel?.name.includes('⛺') && Old.member && Old.channel.members.size >= 1) {
     log.debug(F, `Old.channel: ${Old.channel}`);
     // Check if the user that left was the host by checking explicit permissions
     if (hasExplicitPermission(Old.channel, Old.member, PermissionsBitField.Flags.MoveMembers)) {
@@ -455,7 +455,7 @@ export async function logTent(
   }
 
   // If the user joined a tent
-  if (New.channel && New.channel.name.includes('⛺') && New.member) {
+  if (New.channel?.name.includes('⛺') && New.member) {
     log.debug(F, `New.channel: ${New.channel}`);
     log.debug(F, `List of members: ${New.channel.members.map(member => member.displayName)}`);
 

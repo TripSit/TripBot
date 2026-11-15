@@ -170,7 +170,7 @@ const NUMERIC_CHANGES: Record<string, { label: string; unit: string; empty: stri
   user_limit: { label: 'User Limit', unit: '', empty: 'Unlimited' },
 };
 
-const withUnit = (value: unknown, unit: string, empty: string): string => (value ? `${String(value)}${unit}` : empty);
+const withUnit = (value: string | number | null | undefined, unit: string, empty: string): string => (value ? `${value}${unit}` : empty);
 
 function formatSpecialChange(
   key: string,

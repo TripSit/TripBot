@@ -739,7 +739,7 @@ async function restoreOldRoles(
 
   const myMember = await guild.members.fetch(botUserId);
   const myRole = myMember.roles.highest;
-  const targetRoles:string[] = userData.roles.split(',') || [];
+  const targetRoles:string[] = userData.roles.split(',');
 
   log.debug(F, `Adding ${targetRoles.length} old roles to ${target.displayName} (${target.id})`);
 

@@ -449,13 +449,13 @@ export async function userInfoEmbed(
   command: ModAction,
   showModInfo: boolean,
 ): Promise<EmbedBuilder> {
-  const actorName = actor ? (actor.displayName || actor.user.username) : 'null';
+  const actorName = actor ? (actor.displayName ?? actor.user.username) : 'null';
   let targetName: string;
 
   if (typeof target === 'string') {
     targetName = target;
   } else if (target instanceof GuildMember) {
-    targetName = target.displayName || target.user.username;
+    targetName = target.displayName ?? target.user.username;
   } else {
     targetName = target.username;
   }
@@ -492,7 +492,7 @@ export async function userInfoEmbed(
 
   log.debug(F, `Target: ${JSON.stringify(target, null, 2)}`);
 
-  const targetId = (target as User | GuildMember).id ?? target;
+  const targetId = typeof target === 'string' ? target : target.id;
 
   // log.debug(F, `targetString: ${targetString}`);
   // const tag = (target as GuildMember).user ? (target as GuildMember).user.tag : (target as User).tag;
@@ -752,11 +752,11 @@ export async function modResponse(
     [target] = targets;
   }
 
-  if (interaction && (interaction.isUserContextMenuCommand() && (interaction.targetMember || interaction.targetUser))) {
-    target = interaction.targetMember ? interaction.targetMember as GuildMember : interaction.targetUser;
+  if (interaction?.isUserContextMenuCommand() && (interaction.targetMember || interaction.targetUser)) {
+    target = (interaction.targetMember as GuildMember | null) ?? interaction.targetUser;
     actor = interaction.member as GuildMember;
-  } else if (interaction && interaction.isMessageContextMenuCommand() && interaction.targetMessage) {
-    target = interaction.targetMessage.member ? interaction.targetMessage.member : interaction.targetMessage.author;
+  } else if (interaction?.isMessageContextMenuCommand() && interaction.targetMessage) {
+    target = interaction.targetMessage.member ?? interaction.targetMessage.author;
     actor = interaction.member as GuildMember;
   }
 
@@ -841,7 +841,7 @@ export async function modResponse(
   const actorForEmbed = actor instanceof GuildMember ? actor : null;
   const modlogEmbed = await userInfoEmbed(actorForEmbed, target, targetData, 'REPORT', showModButtons);
 
-  if (interaction && interaction.isMessageContextMenuCommand() && interaction.targetMessage) {
+  if (interaction?.isMessageContextMenuCommand() && interaction.targetMessage) {
     const messageContent = interaction.targetMessage.content;
     const truncatedContent = messageContent.length > 900
       ? `${messageContent.slice(0, 900)}...`
@@ -923,9 +923,9 @@ export async function messageModThread(
   const {
     internalNote, description, extraMessage, duration, appealData, dmDelivered,
   } = details;
-  const actorName = actor.displayName || actor.user.username;
+  const actorName = actor.displayName ?? actor.user.username;
   const startTime = Date.now();
-  const targetId = (target as User | GuildMember).id ?? target;
+  const targetId = typeof target === 'string' ? target : target.id;
   const targetName = (target as GuildMember).displayName ?? (target as User).username ?? target;
   log.debug(F, `[messageModThread] actor: ${actorName} | target: ${targetName} | command: ${command} | internalNote: ${internalNote} | description: ${description} | extraMessage: ${extraMessage} | duration: ${duration}`);
 
@@ -1670,7 +1670,7 @@ export async function moderate(
 
   // Display all properties we're going to use
   log.info(F, `[moderate]
-  actor: ${actor.displayName || actor.user.username}
+  actor: ${actor.displayName ?? actor.user.username}
   command: ${command}
   targetId: ${targetId}
   internalNote: ${internalNote}

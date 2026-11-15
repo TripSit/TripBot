@@ -68,7 +68,7 @@ export async function botStats(): Promise<BotStats> {
 
   // 2. Gather Discord Data
   const guilds = discordClient.guilds.cache;
-  const userCount = guilds.reduce((acc, guild) => acc + (guild.memberCount || 0), 0);
+  const userCount = guilds.reduce((acc, guild) => acc + (guild.memberCount ?? 0), 0);
 
   // 3. Node.js Process Internals
   const nodeMem = process.memoryUsage();

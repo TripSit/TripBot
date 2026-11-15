@@ -39,7 +39,7 @@ export async function getBountyStats(): Promise<BountyStats[]> {
         const existing = userStats.get(record.user_id) ?? { count: 0, totalXP: 0 };
         userStats.set(record.user_id, {
           count: existing.count + 1,
-          totalXP: existing.totalXP + (record.amount || 0),
+          totalXP: existing.totalXP + (record.amount ?? 0),
         });
       });
 

@@ -340,7 +340,7 @@ async function tentPing(
     // Ping the role
     // Get the lounge channel
     const channelID = env.CHANNEL_LOUNGE;
-    const channel = member.guild.channels.cache.get(channelID) as TextChannel | undefined;
+    const channel = member.guild.channels.cache.get(channelID);
     if (!channel || !(channel instanceof TextChannel)) {
       return errorEmbed(
         'The lounge channel could not be found. This should not have happened, please contact a developer.',
