@@ -17,8 +17,6 @@ const F = f(__filename);
 
 // https://discordjs.guide/popular-topics/audit-logs.html#who-deleted-a-message
 
-export default channelUpdate;
-
 export const channelUpdate: ChannelUpdateEvent = {
   name: 'channelUpdate',
   async execute(oldChannel, newChannel) {
@@ -89,3 +87,5 @@ export const channelUpdate: ChannelUpdateEvent = {
     await channel.send(response);
   },
 };
+
+export default channelUpdate;

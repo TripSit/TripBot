@@ -13,8 +13,6 @@ const F = f(__filename);
 
 // https://discordjs.guide/popular-topics/audit-logs.html#who-deleted-a-message
 
-export default inviteCreate;
-
 export const inviteCreate: InviteCreateEvent = {
   name: 'inviteCreate',
   async execute(invite) {
@@ -53,3 +51,5 @@ export const inviteCreate: InviteCreateEvent = {
     global.guildInvites.get(invite.guild.id).set(invite.code, invite.uses);
   },
 };
+
+export default inviteCreate;

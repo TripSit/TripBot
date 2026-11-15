@@ -29,8 +29,6 @@ import commandContext from '../../utils/context';
 
 const F = f(__filename);
 
-export default dRadio;
-
 export const dRadio: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('radio')
@@ -49,7 +47,7 @@ export const dRadio: SlashCommand = {
     const { channel } = interaction;
 
     // Check if the channel is not a VoiceChannel
-    if (!(channel instanceof VoiceChannel) || channel === null) {
+    if (!(channel instanceof VoiceChannel)) {
       await interaction.reply({ content: 'You must play in a voice channel!', ephemeral: true });
       return false;
     }
@@ -74,7 +72,7 @@ export const dRadio: SlashCommand = {
       log.debug(F, 'The connection has entered the Connecting state - permission granted, joining voice channel!');
     });
 
-    connection.on(VoiceConnectionStatus.Ready, () => {
+    connection.on(VoiceConnectionStatus.Ready, async () => {
       log.debug(F, 'The connection has entered the Ready state - ready to play audio!');
 
       await interaction.reply({ content: `I have joined ${channel.name} and would start to play ${url}` });
@@ -138,3 +136,5 @@ export const dRadio: SlashCommand = {
     return true;
   },
 };
+
+export default dRadio;

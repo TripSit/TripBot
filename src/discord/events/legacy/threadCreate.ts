@@ -14,8 +14,6 @@ const F = f(__filename);
 
 // https://discordjs.guide/popular-topics/audit-logs.html#who-deleted-a-message
 
-export default threadCreate;
-
 export const threadCreate: ThreadCreateEvent = {
   name: 'threadCreate',
   async execute(thread) {
@@ -68,3 +66,5 @@ export const threadCreate: ThreadCreateEvent = {
     await channel.send(response);
   },
 };
+
+export default threadCreate;

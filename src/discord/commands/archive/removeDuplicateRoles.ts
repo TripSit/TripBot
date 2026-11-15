@@ -3,8 +3,6 @@ import {
   User,
 } from 'discord.js';
 
-const F = f(__filename);
-
 /**
  * This function removes duplicate roles from the role pickers
  * @param {MessageReaction} reaction The reaction that was added
