@@ -15,8 +15,6 @@ import {
 import { stripIndents } from 'common-tags';
 import { embedTemplate } from '../../utils/embedTemplate';
 
-const F = f(__filename);
-
 const teamRoles = [
   env.ROLE_DIRECTOR,
   env.ROLE_SUCCESSOR,
@@ -202,42 +200,40 @@ export async function tripsat(
     return;
   }
 
-  if (targetLastHelpedDate) {
-    const lastHour = Date.now() - (1000 * 60 * 60);
-  // log.debug(F, `lastHelp: ${targetLastHelpedDate.valueOf() * 1000}`);
-  // log.debug(F, `lastHour: ${lastHour.valueOf()}`);
-    if (targetLastHelpedDate.valueOf() * 1000 > lastHour.valueOf()) {
-      let message = stripIndents`Hey ${interaction.member} you just asked for help recently!
-        Take a moment to breathe and wait for someone to respond =)
-        Maybe try listening to some lofi music while you wait?`;
+  const lastHour = Date.now() - (1000 * 60 * 60);
+// log.debug(F, `lastHelp: ${targetLastHelpedDate.valueOf() * 1000}`);
+// log.debug(F, `lastHour: ${lastHour.valueOf()}`);
+  if (targetLastHelpedDate.valueOf() * 1000 > lastHour.valueOf()) {
+    let message = stripIndents`Hey ${interaction.member} you just asked for help recently!
+      Take a moment to breathe and wait for someone to respond =)
+      Maybe try listening to some lofi music while you wait?`;
 
-      if (actorHasRoleDeveloper && targetHasRoleDeveloper) {
-        message = testNotice + message;
-      }
+    if (actorHasRoleDeveloper && targetHasRoleDeveloper) {
+      message = testNotice + message;
+    }
 
-      const embed = embedTemplate()
-        .setColor(Colors.DarkBlue)
-        .setDescription(message);
-      await interaction.editReply({ embeds: [embed] });
+    const embed = embedTemplate()
+      .setColor(Colors.DarkBlue)
+      .setDescription(message);
+    await interaction.editReply({ embeds: [embed] });
 
-      if (threadDiscussUser) {
-        let metaUpdate = stripIndents`Hey team, ${target.nickname || target.user.username} said they're good \
+    if (threadDiscussUser) {
+      let metaUpdate = stripIndents`Hey team, ${target.nickname || target.user.username} said they're good \
 but it's been less than an hour since they asked for help.
 
 If they still need help it's okay to leave them with that role.`;
-        if (actorHasRoleDeveloper && targetHasRoleDeveloper) {
-          metaUpdate = testNotice + metaUpdate;
-        }
-        await threadDiscussUser.send(metaUpdate);
+      if (actorHasRoleDeveloper && targetHasRoleDeveloper) {
+        metaUpdate = testNotice + metaUpdate;
       }
-
-    // log.debug(F, `Rejected the "im good" button`);
-      return;
+      await threadDiscussUser.send(metaUpdate);
     }
+
+  // log.debug(F, `Rejected the "im good" button`);
+    return;
   }
 
   // For each role in targetRoles2, add it to the target
-  if (targetRoles) {
+  if (targetRoles.length > 0) {
     targetRoles.forEach(async roleId => {
     // log.debug(F, `Re-adding roleId: ${roleId}`);
       const roleObj = interaction.guild!.roles.cache.find(r => r.id === roleId) as Role;

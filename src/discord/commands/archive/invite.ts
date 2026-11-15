@@ -5,8 +5,6 @@ import {
 import { stripIndents } from 'common-tags';
 import { SlashCommand } from '../../@types/commandDef';
 
-const F = f(__filename);
-
 const bridgeMap = {
   [env.CATEGORY_GATEWAY]: null,
   [env.CHANNEL_TICKETBOOTH]: null,
