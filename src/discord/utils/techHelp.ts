@@ -20,6 +20,7 @@ import {
   TextInputBuilder,
   ThreadChannel,
   User,
+  LabelBuilder,
 } from 'discord.js';
 import { getOrCreateGuild } from '../../global/utils/dbRecords';
 import { replyGuildOnly } from './guildOnly';
@@ -74,8 +75,8 @@ export async function techHelpClick(interaction:ButtonInteraction) {
   await interaction.showModal(new ModalBuilder()
     .setCustomId(`techHelpSubmit~${interaction.id}`)
     .setTitle(`${interaction.guild.name} Feedback`)
-    .addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
-      .setLabel('What is your issue? Be super detailed!')
+    .addLabelComponents(new LabelBuilder().setLabel('What is your issue? Be super detailed!').setTextInputComponent(new TextInputBuilder()
+
       .setStyle(TextInputStyle.Paragraph)
       .setPlaceholder(placeholder)
       .setCustomId(`${issueType}IssueInput`)

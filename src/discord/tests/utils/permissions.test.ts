@@ -1,6 +1,6 @@
-import { Guild, RateLimitError } from 'discord.js';
+import { Guild, PermissionsBitField, RateLimitError } from 'discord.js';
 import {
-  checkChannelPermissions, checkGuildPermissions, ensurePermissions, missingPermission,
+  checkChannelPermissions, checkGuildPermissions, ensurePermissions, missingPermission, permissionName,
   TRIPSIT_CHANNEL_PERMS, tripsitChannelOwnerMessage,
 } from '../../utils/checkPermissions';
 import {
@@ -204,5 +204,14 @@ describe('ticket channel renames', () => {
     release();
     await first;
     expect(live.setName).toHaveBeenLastCalledWith('second');
+  });
+});
+
+describe('permissionName', () => {
+  it('names flags, bit values, bitfields and lists of them', () => {
+    expect(permissionName('ManageRoles')).toBe('ManageRoles');
+    expect(permissionName(8n)).toBe('8');
+    expect(permissionName(new PermissionsBitField(['ManageRoles', 'ViewChannel']))).toBe('ViewChannel, ManageRoles');
+    expect(permissionName(['ManageRoles', 'ViewChannel'])).toBe('ManageRoles, ViewChannel');
   });
 });

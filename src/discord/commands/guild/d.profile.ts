@@ -252,7 +252,7 @@ export const dProfile: SlashCommand = {
     // Generate the colors for the card based on the user's role color
     // If user is not in guild, use default gray color
     const roleColor = target
-      ? `#${(target.roles.color?.color ?? 0x99aab5).toString(16).padStart(6, '0')}`
+      ? `#${(target.roles.color?.colors.primaryColor ?? 0x99aab5).toString(16).padStart(6, '0')}`
       : '#99aab5';
     log.debug(F, `roleColor: ${roleColor}`);
 
@@ -344,7 +344,7 @@ export async function getProfilePreview(target: GuildMember, option: string, ima
   const context = canvasObj.getContext('2d');
 
   // Generate the colors for the card based on the user's role color
-  const roleColor = `#${(target.roles.color?.color ?? 0x99aab5).toString(16).padStart(6, '0')}`;
+  const roleColor = `#${(target.roles.color?.colors.primaryColor ?? 0x99aab5).toString(16).padStart(6, '0')}`;
 
   const cardLightColor = generateColors(roleColor, 0, -75, -67);
   const cardDarkColor = generateColors(roleColor, 0, -75, -80);

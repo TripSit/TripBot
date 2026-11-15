@@ -31,7 +31,7 @@ vi.mock('@napi-rs/canvas', () => {
 
 const e = env as unknown as Record<string, string>;
 const member = (roleIds: string[] = [], over: Record<string, unknown> = {}) => ({
-  displayName: 'Mem', roles: { cache: new Set(roleIds), color: { color: 0xff0000 } }, user: { username: 'mem', displayAvatarURL: () => 'https://av' }, ...over,
+  displayName: 'Mem', roles: { cache: new Set(roleIds), color: { colors: { primaryColor: 0xff0000 } } }, user: { username: 'mem', displayAvatarURL: () => 'https://av' }, ...over,
 });
 
 describe('number formatters', () => {

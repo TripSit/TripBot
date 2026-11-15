@@ -23,6 +23,7 @@ import {
   TextChannel,
   ActionRow,
   MessageActionRowComponent,
+  LabelBuilder,
 } from 'discord.js';
 import {
   APIEmbed,
@@ -1578,7 +1579,7 @@ interface MarketItem extends SelectMenuComponentOptionData {
 function defaultMenuOption(interaction: MessageComponentInteraction): APISelectMenuOption | undefined {
   return interaction.message.components
     .flatMap(component => (component.type === ComponentType.ActionRow && 'components' in component ? component.components : []))
-    .flatMap(subComponent => (subComponent.type === ComponentType.SelectMenu ? subComponent.options : []))
+    .flatMap(subComponent => (subComponent.type === ComponentType.StringSelect ? subComponent.options : []))
     .find((o:APISelectMenuOption) => o.default === true);
 }
 
@@ -1975,7 +1976,7 @@ export async function rpgMarketAccept(
 
   if (itemData.value === 'PremiumMembership') {
     try {
-      (interaction.member as GuildMember)?.roles.add(env.ROLE_PREMIUM);
+      await (interaction.member as GuildMember)?.roles.add(env.ROLE_PREMIUM);
     } catch {
       personaData.tokens += itemCost;
 
@@ -2408,12 +2409,12 @@ export async function rpgHomeNameChange(
     .setCustomId(`rpgNameModal~${interaction.id}`)
     .setTitle('Setup your TripSit room!');
 
-  const body = new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
-    .setLabel('What do you want to name your persona?')
+  const body = new LabelBuilder().setLabel('What do you want to name your persona?').setTextInputComponent(new TextInputBuilder()
+
     .setStyle(TextInputStyle.Short)
     .setRequired(true)
     .setCustomId(`rpgNewName,user:${interaction.user.id}`));
-  modal.addComponents([body]);
+  modal.addLabelComponents(body);
   await interaction.showModal(modal);
 
   // Collect a modal submit interaction

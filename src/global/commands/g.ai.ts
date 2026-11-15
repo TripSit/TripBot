@@ -93,7 +93,7 @@ export async function aiFlairMod(
     promptTokens = chatCompletion.usage?.prompt_tokens ?? 0;
     completionTokens = chatCompletion.usage?.completion_tokens ?? 0;
 
-    response = responseMessage.content?.toString() ?? 'Sorry, I\'m not sure how to respond to that.';
+    response = (typeof responseMessage.content === 'string' ? responseMessage.content : null) ?? 'Sorry, I\'m not sure how to respond to that.';
   }
 
   return { response, promptTokens, completionTokens };
@@ -201,7 +201,7 @@ export async function aiTranslate(
     promptTokens = chatCompletion.usage?.prompt_tokens ?? 0;
     completionTokens = chatCompletion.usage?.completion_tokens ?? 0;
 
-    response = responseMessage.content?.toString() ?? 'Sorry, I\'m not sure how to respond to that.';
+    response = (typeof responseMessage.content === 'string' ? responseMessage.content : null) ?? 'Sorry, I\'m not sure how to respond to that.';
   }
 
   return { response, promptTokens, completionTokens };

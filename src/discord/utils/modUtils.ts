@@ -39,6 +39,7 @@ import {
   User,
   UserContextMenuCommandInteraction,
   time,
+  LabelBuilder,
 } from 'discord.js';
 import { Duration } from 'luxon';
 import { parseDuration, validateDurationInput } from '../../global/utils/parseDuration';
@@ -2121,7 +2122,7 @@ export async function modModal(
   try {
     const messageField = (embed.fields as APIEmbedField[]).find(field => field.name === 'Message') as APIEmbedField;
     const messageContent = messageField.value;
-    const urlMatch = messageContent.match(/- (https:\/\/discord\.com\/channels\/\d+\/\d+\/\d+)$/);
+    const urlMatch = /- (https:\/\/discord\.com\/channels\/\d+\/\d+\/\d+)$/.exec(messageContent);
     const extractedUrl = urlMatch ? urlMatch[1] : null;
     const messageWithoutUrl = extractedUrl
       ? messageContent.replace(/\n- https:\/\/discord\.com\/channels\/\d+\/\d+\/\d+$/, '')
@@ -2181,52 +2182,47 @@ export async function modModal(
 
   // Ensure the label text is within the limit
   const label = `Why are you ${verb} ${target}?`;
-  modalInputComponent.setLabel(label.length > 45 ? `${label.substring(0, 41)}...?` : label);
+  const modalLabel = label.length > 45 ? `${label.substring(0, 41)}...?` : label;
 
   const modal = new ModalBuilder()
     .setCustomId(`modModal~${command}~${interaction.id}`)
     .setTitle(`${interaction.guild.name} member ${command.toLowerCase()}`)
-    .addComponents(new ActionRowBuilder<TextInputBuilder>()
-      .addComponents(modalInputComponent));
+    .addLabelComponents(new LabelBuilder().setLabel(modalLabel).setTextInputComponent(modalInputComponent));
 
   // All commands except INFO, NOTE, REPORT, and APPEALS can have a public reason sent to the user
   if (!isNote(command) && !isReport(command) && !isInfo(command) && !isAcceptBanAppeal(command) && !isRejectBanAppeal(command)) {
-    modal.addComponents(new ActionRowBuilder<TextInputBuilder>()
-      .addComponents(new TextInputBuilder()
-        .setLabel('What should we tell the user?')
-        .setStyle(TextInputStyle.Paragraph)
-        .setPlaceholder('Tell the user why you\'re doing this')
-        .setValue(modalDescription)
-        .setMaxLength(1000)
-        .setRequired(command === 'WARNING')
-        .setCustomId('description')));
+    modal.addLabelComponents(new LabelBuilder().setLabel('What should we tell the user?').setTextInputComponent(new TextInputBuilder()
+
+      .setStyle(TextInputStyle.Paragraph)
+      .setPlaceholder('Tell the user why you\'re doing this')
+      .setValue(modalDescription)
+      .setMaxLength(1000)
+      .setRequired(command === 'WARNING')
+      .setCustomId('description')));
   }
   // Only timeout and full ban can have a duration, but they're different, so separate.
   if (isTimeout(command)) {
-    modal.addComponents(new ActionRowBuilder<TextInputBuilder>()
-      .addComponents(new TextInputBuilder()
-        .setLabel('Timeout for how long?')
-        .setStyle(TextInputStyle.Short)
-        .setPlaceholder('7 days or 1 week, etc. (Max 7 days, Default 7 days)')
-        .setRequired(false)
-        .setCustomId('duration')));
+    modal.addLabelComponents(new LabelBuilder().setLabel('Timeout for how long?').setTextInputComponent(new TextInputBuilder()
+
+      .setStyle(TextInputStyle.Short)
+      .setPlaceholder('7 days or 1 week, etc. (Max 7 days, Default 7 days)')
+      .setRequired(false)
+      .setCustomId('duration')));
   }
   if (isFullBan(command)) {
-    modal.addComponents(new ActionRowBuilder<TextInputBuilder>()
-      .addComponents(new TextInputBuilder()
-        .setLabel('How far back should messages be removed?')
-        .setStyle(TextInputStyle.Short)
-        .setPlaceholder('7 days or 1 week, etc. (Max 7 days, Default 0 days)')
-        .setValue(modalDays)
-        .setRequired(false)
-        .setCustomId('days')));
-    modal.addComponents(new ActionRowBuilder<TextInputBuilder>()
-      .addComponents(new TextInputBuilder()
-        .setLabel('How long should they be banned for?')
-        .setStyle(TextInputStyle.Short)
-        .setPlaceholder('1 year or 365 days, etc. (Empty = Permanent)')
-        .setRequired(false)
-        .setCustomId('ban_duration')));
+    modal.addLabelComponents(new LabelBuilder().setLabel('How far back should messages be removed?').setTextInputComponent(new TextInputBuilder()
+
+      .setStyle(TextInputStyle.Short)
+      .setPlaceholder('7 days or 1 week, etc. (Max 7 days, Default 0 days)')
+      .setValue(modalDays)
+      .setRequired(false)
+      .setCustomId('days')));
+    modal.addLabelComponents(new LabelBuilder().setLabel('How long should they be banned for?').setTextInputComponent(new TextInputBuilder()
+
+      .setStyle(TextInputStyle.Short)
+      .setPlaceholder('1 year or 365 days, etc. (Empty = Permanent)')
+      .setRequired(false)
+      .setCustomId('ban_duration')));
   }
 
   // For appeal actions, always require a message to the user
@@ -2235,15 +2231,14 @@ export async function modModal(
       ? 'Your appeal has been accepted. Welcome back to TripSit!'
       : 'Your appeal has been reviewed and unfortunately denied at this time.';
 
-    modal.addComponents(new ActionRowBuilder<TextInputBuilder>()
-      .addComponents(new TextInputBuilder()
-        .setLabel('Message to send to the user')
-        .setStyle(TextInputStyle.Paragraph)
-        .setPlaceholder('What should we tell the user about their appeal?')
-        .setValue(defaultMessage)
-        .setMaxLength(1000)
-        .setRequired(true)
-        .setCustomId('appealDescription')));
+    modal.addLabelComponents(new LabelBuilder().setLabel('Message to send to the user').setTextInputComponent(new TextInputBuilder()
+
+      .setStyle(TextInputStyle.Paragraph)
+      .setPlaceholder('What should we tell the user about their appeal?')
+      .setValue(defaultMessage)
+      .setMaxLength(1000)
+      .setRequired(true)
+      .setCustomId('appealDescription')));
   }
 
   // When the modal is opened, disable the button on the embed

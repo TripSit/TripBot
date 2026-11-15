@@ -9,6 +9,7 @@ import {
   Guild,
   InteractionReplyOptions,
   TextBasedChannel,
+  GuildBasedChannel,
   GuildMember,
   Role,
   SlashCommandBuilder,
@@ -24,6 +25,7 @@ import {
   ChannelType,
   PermissionResolvable,
   MessageFlags,
+  LabelBuilder,
 } from 'discord.js';
 import { reaction_role_type, reaction_roles } from '@db/tripbot';
 import { SlashCommand } from '../../@types/commandDef';
@@ -113,27 +115,21 @@ export async function setupCustomReactionRole(
   await interaction.showModal(new ModalBuilder()
     .setCustomId(`"ID":"RR","II":"${interaction.id}"`)
     .setTitle(`${role.name} Description`)
-    .addComponents(
-      new ActionRowBuilder<TextInputBuilder>()
-        .addComponents(
-          new TextInputBuilder()
-            .setCustomId('title')
-            .setRequired(true)
-            .setLabel('Title the embed')
+    .addLabelComponents(
+      new LabelBuilder().setLabel('Title the embed').setTextInputComponent(new TextInputBuilder()
+        .setCustomId('title')
+        .setRequired(true)
+
         .setPlaceholder(`This will go above the description to highlight what this button does`) // eslint-disable-line
-            .setMaxLength(100)
-            .setStyle(TextInputStyle.Short),
-        ),
-      new ActionRowBuilder<TextInputBuilder>()
-        .addComponents(
-          new TextInputBuilder()
-            .setCustomId('description')
-            .setRequired(true)
-            .setLabel('Describe this role!')
+        .setMaxLength(100)
+        .setStyle(TextInputStyle.Short)),
+      new LabelBuilder().setLabel('Describe this role!').setTextInputComponent(new TextInputBuilder()
+        .setCustomId('description')
+        .setRequired(true)
+
           .setPlaceholder(`This will go into the embed to let people know what they're clicking on!`) // eslint-disable-line
-            .setMaxLength(2000)
-            .setStyle(TextInputStyle.Paragraph),
-        ),
+        .setMaxLength(2000)
+        .setStyle(TextInputStyle.Paragraph)),
     ));
 
   // Collect a modal submit interaction
@@ -144,7 +140,7 @@ export async function setupCustomReactionRole(
       if (II !== interaction.id) return;
       await i.deferReply({ flags: MessageFlags.Ephemeral });
       const button = new ButtonBuilder()
-        .setCustomId(`"ID":"RR","RID":"${role.id}","IM":${introMessageRequired},"IC":${messagePostChannel}`)
+        .setCustomId(`"ID":"RR","RID":"${role.id}","IM":${introMessageRequired},"IC":${messagePostChannel as GuildBasedChannel | null}`)
         .setStyle(ButtonStyle.Primary);
       if (emoji) button.setEmoji(emoji);
       if (label) button.setLabel(label);
@@ -185,14 +181,13 @@ async function removeReactionRoleWithReason(
   await interaction.showModal(new ModalBuilder()
     .setCustomId(`"ID":"RR","II":"${interaction.id}"`)
     .setTitle(`Are you sure you want to remove ${role.name}?`)
-    .addComponents(new ActionRowBuilder<TextInputBuilder>()
-      .addComponents(new TextInputBuilder()
-        .setCustomId('reason')
-        .setLabel('You can optionally tell us why!')
-        .setPlaceholder('We\'ll use this to try and improve our process!')
-        .setValue('I just don\'t want to anymore')
-        .setMaxLength(2000)
-        .setStyle(TextInputStyle.Paragraph))));
+    .addLabelComponents(new LabelBuilder().setLabel('You can optionally tell us why!').setTextInputComponent(new TextInputBuilder()
+      .setCustomId('reason')
+
+      .setPlaceholder('We\'ll use this to try and improve our process!')
+      .setValue('I just don\'t want to anymore')
+      .setMaxLength(2000)
+      .setStyle(TextInputStyle.Paragraph))));
 
   // Collect a modal submit interaction
   const filter = (i:ModalSubmitInteraction) => i.customId.startsWith('"ID":"RR"');
@@ -592,10 +587,10 @@ export async function buttonReactionRole(
     const modal = new ModalBuilder()
       .setCustomId(`"ID":"RR","II":"${interaction.id}"`)
       .setTitle(`${role.name} Introduction`);
-    modal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
+    modal.addLabelComponents(new LabelBuilder().setLabel('Tell us a bit about yourself!').setTextInputComponent(new TextInputBuilder()
       .setCustomId('introduction')
       .setRequired(true)
-      .setLabel('Tell us a bit about yourself!')
+
       .setPlaceholder(`Why do you want to be a ${role.name}?  This will be sent to the channel!`) // eslint-disable-line
       .setMaxLength(1900)
       .setStyle(TextInputStyle.Paragraph)));

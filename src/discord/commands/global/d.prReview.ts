@@ -11,6 +11,7 @@ import {
   TextChannel,
   TextInputBuilder,
   TextInputStyle,
+  LabelBuilder,
 } from 'discord.js';
 import { mergePr, postPrRejectionComment } from '../../../global/commands/g.prReview';
 import { embedTemplate } from '../../utils/embedTemplate';
@@ -164,13 +165,12 @@ export async function prReviewButton(interaction: ButtonInteraction): Promise<vo
     await interaction.showModal(new ModalBuilder()
       .setCustomId(`"ID":"PR","T":"ACCEPTOVERRIDE","N":"${prNumber}","II":"${interaction.id}"`)
       .setTitle(`Override failing checks on PR #${prNumber}`)
-      .addComponents(new ActionRowBuilder<TextInputBuilder>()
-        .addComponents(new TextInputBuilder()
-          .setCustomId('reason')
-          .setLabel('Are you sure? Why is this okay to merge?')
-          .setRequired(true)
-          .setMaxLength(1900)
-          .setStyle(TextInputStyle.Paragraph))));
+      .addLabelComponents(new LabelBuilder().setLabel('Are you sure? Why is this okay to merge?').setTextInputComponent(new TextInputBuilder()
+        .setCustomId('reason')
+
+        .setRequired(true)
+        .setMaxLength(1900)
+        .setStyle(TextInputStyle.Paragraph))));
 
     const overrideFilter = (i: ModalSubmitInteraction) => i.customId.startsWith('"ID":"PR","T":"ACCEPTOVERRIDE"');
     interaction.awaitModalSubmit({ filter: overrideFilter, time: 0 })
@@ -214,13 +214,12 @@ export async function prReviewButton(interaction: ButtonInteraction): Promise<vo
   await interaction.showModal(new ModalBuilder()
     .setCustomId(`"ID":"PR","T":"REJECTMODAL","N":"${prNumber}","II":"${interaction.id}"`)
     .setTitle(`Reject PR #${prNumber}`)
-    .addComponents(new ActionRowBuilder<TextInputBuilder>()
-      .addComponents(new TextInputBuilder()
-        .setCustomId('comment')
-        .setLabel('Why are you rejecting this PR?')
-        .setRequired(true)
-        .setMaxLength(1900)
-        .setStyle(TextInputStyle.Paragraph))));
+    .addLabelComponents(new LabelBuilder().setLabel('Why are you rejecting this PR?').setTextInputComponent(new TextInputBuilder()
+      .setCustomId('comment')
+
+      .setRequired(true)
+      .setMaxLength(1900)
+      .setStyle(TextInputStyle.Paragraph))));
 
   const filter = (i: ModalSubmitInteraction) => i.customId.startsWith('"ID":"PR","T":"REJECTMODAL"');
   interaction.awaitModalSubmit({ filter, time: 0 })

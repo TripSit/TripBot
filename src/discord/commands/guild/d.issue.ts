@@ -3,9 +3,9 @@ import {
   ChatInputCommandInteraction,
   ModalBuilder,
   TextInputBuilder,
-  ActionRowBuilder,
   ModalSubmitInteraction,
   GuildMember,
+  LabelBuilder,
 } from 'discord.js';
 import {
   MessageFlags,
@@ -59,24 +59,22 @@ export const dIssue: SlashCommand = {
       new ModalBuilder()
         .setCustomId(`issueModal~${interaction.id}`)
         .setTitle('TripBot Issue Creation')
-        .addComponents(
-          new ActionRowBuilder<TextInputBuilder>()
-            .addComponents(new TextInputBuilder()
-              .setLabel('Issue Title')
-              .setPlaceholder('Summarize the issue here!')
-              .setStyle(TextInputStyle.Short)
-              .setRequired(true)
-              .setCustomId('issueTitle')),
-          new ActionRowBuilder<TextInputBuilder>()
-            .addComponents(new TextInputBuilder()
-              .setLabel('Issue Body')
-              .setPlaceholder(
-                'Please describe the issue in detail! Include steps to reproduce, any specific circumstances, etc.',
-              )
-              .setStyle(TextInputStyle.Paragraph)
-              .setRequired(true)
+        .addLabelComponents(
+          new LabelBuilder().setLabel('Issue Title').setTextInputComponent(new TextInputBuilder()
+
+            .setPlaceholder('Summarize the issue here!')
+            .setStyle(TextInputStyle.Short)
+            .setRequired(true)
+            .setCustomId('issueTitle')),
+          new LabelBuilder().setLabel('Issue Body').setTextInputComponent(new TextInputBuilder()
+
+            .setPlaceholder(
+              'Please describe the issue in detail! Include steps to reproduce, any specific circumstances, etc.',
+            )
+            .setStyle(TextInputStyle.Paragraph)
+            .setRequired(true)
             // eslint-disable-next-line max-len
-              .setCustomId('issueBody')),
+            .setCustomId('issueBody')),
         ),
     );
     const filter = (i:ModalSubmitInteraction) => i.customId.startsWith('issueModal');

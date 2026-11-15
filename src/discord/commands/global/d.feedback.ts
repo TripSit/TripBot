@@ -1,5 +1,4 @@
 import {
-  ActionRowBuilder,
   ModalBuilder,
   TextInputBuilder,
   Colors,
@@ -9,6 +8,7 @@ import {
   ChatInputCommandInteraction,
   ButtonInteraction,
   EmbedBuilder,
+  LabelBuilder,
 } from 'discord.js';
 import {
   MessageFlags,
@@ -29,14 +29,11 @@ export async function feedbackReportModal(
     new ModalBuilder()
       .setCustomId(`feedbackReportModal~${interaction.id}`)
       .setTitle('TripBot Feedback Report')
-      .addComponents(
-        new ActionRowBuilder<TextInputBuilder>()
-          .addComponents(
-            new TextInputBuilder()
-              .setCustomId('feedbackReport')
-              .setLabel('What would you like to tell the bot dev team?')
-              .setStyle(TextInputStyle.Paragraph),
-          ),
+      .addLabelComponents(
+        new LabelBuilder().setLabel('What would you like to tell the bot dev team?').setTextInputComponent(new TextInputBuilder()
+          .setCustomId('feedbackReport')
+
+          .setStyle(TextInputStyle.Paragraph)),
       ),
   );
 

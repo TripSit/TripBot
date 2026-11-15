@@ -141,8 +141,8 @@ describe('cooperative buttons', () => {
     expect(a.showModal).toHaveBeenCalled();
     expect(submit.editReply).toHaveBeenCalled();
     expect(other.deferReply).not.toHaveBeenCalled();
-    const ids = (a.showModal.mock.calls[0][0] as { components: Array<{ components: Array<{ data: { custom_id: string } }> }> }).components
-      .map(row => row.components[0].data.custom_id);
+    const ids = (a.showModal.mock.calls[0][0] as { components: Array<{ data: { component: { data: { custom_id: string } } } }> }).components
+      .map(label => label.data.component.data.custom_id);
     expect(new Set(ids).size).toBe(ids.length);
     const { filter } = (a.awaitModalSubmit.mock.calls[0][0] as { filter: (i: { customId: string }) => boolean });
     expect(filter({ customId: 'cooperativeApply~i1' })).toBe(true);

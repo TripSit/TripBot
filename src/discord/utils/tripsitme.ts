@@ -31,6 +31,7 @@ import {
   TextInputBuilder,
   ThreadChannel,
   User,
+  LabelBuilder,
 } from 'discord.js';
 import { DateTime } from 'luxon';
 import { getOrCreateGuild, getOrCreateUser } from '../../global/utils/dbRecords';
@@ -309,7 +310,7 @@ export async function tripsitmeOwned(
   const guildData = await getOrCreateGuild(interaction.guild?.id);
 
   if (!ticketData) {
-    const rejectMessage = `Hey ${interaction.member}, ${target.displayName} does not have an open session!`;
+    const rejectMessage = `Hey ${interaction.member as GuildMember}, ${target.displayName} does not have an open session!`;
     const embed = embedTemplate().setColor(Colors.DarkBlue);
     embed.setDescription(rejectMessage);
     await interaction.editReply({ embeds: [embed] });
@@ -472,7 +473,7 @@ export async function tripsitmeBackup(
   const ticketData = await getOpenTicket(userData.id);
 
   if (!ticketData) {
-    const rejectMessage = `Hey ${interaction.member}, ${target.displayName} does not have an open session!`;
+    const rejectMessage = `Hey ${interaction.member as GuildMember}, ${target.displayName} does not have an open session!`;
     const embed = embedTemplate().setColor(Colors.DarkBlue);
     embed.setDescription(rejectMessage);
     await interaction.editReply({ embeds: [embed] });
@@ -1449,7 +1450,7 @@ export async function tripsitmeButton(
       // Remind the user that they have a channel open
       const embed = embedTemplate()
         .setColor(Colors.DarkBlue)
-        .setDescription(stripIndents`Hey ${interaction.member}, you have an open session!
+        .setDescription(stripIndents`Hey ${interaction.member as GuildMember}, you have an open session!
 
         Check your channel list or click '${threadHelpUser.toString()} to get help!`);
       await interaction.editReply({ embeds: [embed] });
@@ -1472,19 +1473,17 @@ export async function tripsitmeButton(
   await interaction.showModal(new ModalBuilder()
     .setCustomId(`tripsitmeSubmit~${interaction.id}`)
     .setTitle('Tripsitter Help Request')
-    .addComponents(
-      new ActionRowBuilder<TextInputBuilder>()
-        .addComponents(new TextInputBuilder()
-          .setCustomId('triageInput')
-          .setLabel('What substance? How much taken? How long ago?')
-          .setMaxLength(120)
-          .setStyle(TextInputStyle.Short)),
-      new ActionRowBuilder<TextInputBuilder>()
-        .addComponents(new TextInputBuilder()
-          .setCustomId('introInput')
-          .setLabel('What\'s going on? Give us the details!')
-          .setMaxLength(1100)
-          .setStyle(TextInputStyle.Paragraph)),
+    .addLabelComponents(
+      new LabelBuilder().setLabel('What substance? How much taken? How long ago?').setTextInputComponent(new TextInputBuilder()
+        .setCustomId('triageInput')
+
+        .setMaxLength(120)
+        .setStyle(TextInputStyle.Short)),
+      new LabelBuilder().setLabel('What\'s going on? Give us the details!').setTextInputComponent(new TextInputBuilder()
+        .setCustomId('introInput')
+
+        .setMaxLength(1100)
+        .setStyle(TextInputStyle.Paragraph)),
     ));
 
   const filter = (i:ModalSubmitInteraction) => i.customId.startsWith('tripsitmeSubmit');
@@ -1500,7 +1499,7 @@ export async function tripsitmeButton(
       if (!threadHelpUser) {
         const embed = embedTemplate()
           .setColor(Colors.DarkBlue)
-          .setDescription(stripIndents`Hey ${interaction.member}, there was an error creating your help thread! The Guild owner should get a message with specifics!`);
+          .setDescription(stripIndents`Hey ${interaction.member as GuildMember}, there was an error creating your help thread! The Guild owner should get a message with specifics!`);
         await i.editReply({ embeds: [embed] });
         return;
       }
