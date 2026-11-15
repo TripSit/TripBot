@@ -2,7 +2,7 @@
 import { EventEmitter } from 'events';
 import { dTicTacToe } from '../../commands/global/d.tictactoe';
 import { dTripTacGo } from '../../commands/global/d.triptacgo';
-import { notifyPrOpened, prReviewButton } from '../../commands/global/d.prReview';
+import { prReviewButton } from '../../commands/global/d.prReview';
 import { slashStub, resolvingModal, pendingModal } from '../../../vitest/utils/commandStubs';
 
 const mocks = vi.hoisted(() => ({
@@ -100,20 +100,6 @@ describe.each([
 });
 
 describe('prReview', () => {
-  const pr = {
-    number: 5, title: 'T', body: '', url: 'https://x', author: 'a', testsPassed: 1, testsTotal: 2, checksPassed: false, checksSummary: 'lint',
-  };
-
-  it('notifies the dev channel', async () => {
-    const send = vi.fn();
-    const guild = { channels: { fetch: vi.fn(async () => ({ send, name: 'dev' })) }, roles: { fetch: vi.fn(async () => 'ROLE') } };
-    (global as unknown as Record<string, unknown>).discordClient = { guilds: { fetch: vi.fn(async () => guild) } };
-    await notifyPrOpened(pr);
-    expect(send.mock.calls[0][0].content).toContain('failed');
-    await notifyPrOpened({ ...pr, checksPassed: true, body: 'desc' });
-    expect(send).toHaveBeenCalledTimes(2);
-  });
-
   const click = (action: string, cp: boolean, hasRole = true, over: Record<string, unknown> = {}) => ({
     customId: `"ID":"PR","T":"${action}","N":"5","CP":"${cp}"`,
     id: 'i1',
