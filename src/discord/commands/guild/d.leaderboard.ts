@@ -253,7 +253,7 @@ async function drawNameAndLevel(
   const levelTextWidth = ctx.measureText(levelText).width;
 
   const userNameColor = member.displayColor ? member.displayHexColor : COLORS.name;
-  const userName = deFuckifyText(member.displayName || '');
+  const userName = deFuckifyText(member.displayName);
   const userFontSize = rank <= 3 ? 17 : 14;
   const maxNameWidth = levelX - levelTextWidth - 12 - contentX;
   ctx.font = `${userFontSize}px ${userFont}`;

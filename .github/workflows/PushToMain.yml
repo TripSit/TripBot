@@ -87,6 +87,16 @@ jobs:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+      - name: Set up Node
+        uses: actions/setup-node@v3
+        with:
+          node-version-file: ".nvmrc"
+          cache: "npm"
+      # The scanner needs the dependency and generated Prisma types to resolve types in the analysis
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps
+      - name: Generate Prisma clients
+        run: npm run db:generate
       - name: Download coverage report
         uses: actions/download-artifact@v4
         with:

@@ -56,7 +56,8 @@ function createRenameQueue(label: string) {
       }
     } catch (err) {
       if (err instanceof RateLimitError) {
-        const wait = err.sublimitTimeout || err.retryAfter;
+        // A sublimit of 0 means there isn't one, so the general retry delay applies
+        const wait = err.sublimitTimeout > 0 ? err.sublimitTimeout : err.retryAfter;
         log.debug(F, `Renaming ${label} ${channelId} to ${name} in ${Math.ceil(wait / 1000)}s, Discord says so`);
         setTimeout(() => { applyWantedName(client, channelId); }, wait);
         return;

@@ -95,9 +95,10 @@ async function dCrisis(interaction: ChatInputCommandInteraction): Promise<boolea
     const webchat = entry.webchat ? `\n[Webchat](${entry.webchat})` : '';
     const phone = entry.phone ? `\nCall: ${entry.phone}` : '';
     const text = entry.text ? `\nText: ${entry.text}` : '';
+    const details = stripIndents`${website}${webchat}${phone}${text}`;
     embed.addFields({
       name: `${entry.name} ${country}`,
-      value: stripIndents`${website}${webchat}${phone}${text}` || 'No details available.',
+      value: details.length > 0 ? details : 'No details available.',
       inline: true,
     });
   });
@@ -139,9 +140,10 @@ async function dWarmline(interaction: ChatInputCommandInteraction): Promise<bool
     const webchat = entry.webchat ? `\n[Webchat](${entry.webchat})` : '';
     const phone = entry.phone ? `\nCall: ${entry.phone}` : '';
     const text = entry.text ? `\nText: ${entry.text}` : '';
+    const details = stripIndents`${website}${webchat}${phone}${text}`;
     embed.addFields({
       name: `${entry.name} ${country}`,
-      value: stripIndents`${website}${webchat}${phone}${text}` || 'No details available.',
+      value: details.length > 0 ? details : 'No details available.',
       inline: true,
     });
   });

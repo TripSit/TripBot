@@ -467,14 +467,16 @@ async function callUptime() { // eslint-disable-line @typescript-eslint/no-unuse
 /** A member only earns voice exp when they are actually participating in the voice channel. */
 function isEligibleForVoiceExp(member: GuildMember, channelMemberCount: number): boolean {
   const { voice } = member;
-  const ineligible = member.user.bot
-    || voice.selfDeaf
-    || voice.serverDeaf
-    || voice.selfMute
-    || voice.serverMute
-    || voice.suppress
-    || voice.channel?.type === ChannelType.GuildStageVoice
-    || member.roles.cache.has(env.ROLE_NEEDS_HELP);
+  const ineligible = [
+    member.user.bot,
+    voice.selfDeaf,
+    voice.serverDeaf,
+    voice.selfMute,
+    voice.serverMute,
+    voice.suppress,
+    voice.channel?.type === ChannelType.GuildStageVoice,
+    member.roles.cache.has(env.ROLE_NEEDS_HELP),
+  ].some(Boolean);
   if (ineligible) {
     return false;
   }

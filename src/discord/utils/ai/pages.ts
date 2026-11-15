@@ -55,11 +55,11 @@ export class AiPage {
     const { _count: dailyCount, _sum: dailySum } = globalDaily;
 
     // Calculations
-    const totalMsgs = lifeCount.id || 0;
+    const totalMsgs = lifeCount.id ?? 0;
     const totalTokens = lifeSum.tokens ?? 0;
     const totalUsd = lifeSum.usd ?? 0;
 
-    const todayMsgs = dailyCount.id || 0;
+    const todayMsgs = dailyCount.id ?? 0;
     const todayTokens = dailySum.tokens ?? 0;
     const todayUsd = dailySum.usd ?? 0;
 
@@ -157,7 +157,7 @@ export class AiPage {
       }
 
       // Check access status
-      const usage = statsMap[persona.id] || 0; // This now pulls the dynamic count
+      const usage = statsMap[persona.id] ?? 0; // This now pulls the dynamic count
 
       container.addTextDisplayComponents(new TextDisplayBuilder().setContent(stripIndents`
     **${persona.emoji} ${persona.name}**
@@ -312,7 +312,7 @@ export class AiPage {
     const { _count: totalCount, _sum: totalSum } = lifetimeStats;
     const { _count: dailyCount, _sum: dailySum } = dailyStats;
 
-    const totalMsgs = totalCount.id || 0;
+    const totalMsgs = totalCount.id ?? 0;
     const totalTokens = Number(totalSum.tokens ?? 0);
     const totalUsd = Number(totalSum.usd ?? 0);
     const todayUsd = Number(dailySum.usd ?? 0);
@@ -326,7 +326,7 @@ export class AiPage {
     const progressBar = '🟩'.repeat(filledSegments) + '⬜'.repeat(barSegments - filledSegments);
 
     // 6. UI Construction
-    const personaId = (aiInfo.persona_id) || 'tripbot';
+    const personaId = aiInfo.persona_id ?? 'tripbot';
     const persona = AiPersona.List[personaId] || AiPersona.TripBot;
 
     const container = new ContainerBuilder()
@@ -364,7 +364,7 @@ export class AiPage {
         ${todayUsd >= dailyLimit ? '⚠️ *Limit reached. Running on Free Tier.*' : `✅ *$${(dailyLimit - todayUsd).toFixed(4)} credits remaining.*`}
 
         **Rolling Stats (24h)**
-        • Messages Today: \`${dailyCount.id || 0}\`
+        • Messages Today: \`${dailyCount.id ?? 0}\`
         • Tokens Today: \`${todayTokens.toLocaleString()}\`
         • Cost Today: \`$${todayUsd.toFixed(4)}\`
         • Reset In: \`${hours}h ${minutes}m\` (Midnight CST)

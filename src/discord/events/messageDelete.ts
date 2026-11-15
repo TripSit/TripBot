@@ -53,7 +53,8 @@ export const messageDelete: MessageDeleteEvent = {
     })).entries.last() as GuildAuditLogsEntry<AuditLogEvent.MessageDelete, 'Delete', 'Message'>;
 
     const { author } = deletedMessage;
-    const content = deletedMessage.content || 'No content';
+    const deletedText = deletedMessage.content ?? '';
+    const content = deletedText.length > 0 ? deletedText : 'No content';
 
     // A matching audit log entry means someone other than the author removed the message. Discord
     // batches these entries, so a missing match usually just means the author deleted it themselves.

@@ -325,7 +325,7 @@ export async function aiMessage(messageData: Message<boolean>): Promise<void> {
 
   // 5. Generate and Process Response
   try {
-    const personaId = (userData.ai_info.persona_id) || 'tripbot';
+    const personaId = userData.ai_info.persona_id ?? 'tripbot';
 
     log.debug(F, `Using persona ${personaId} for user ${messageData.author.id}`);
 

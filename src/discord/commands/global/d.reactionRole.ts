@@ -175,61 +175,65 @@ export async function setupCustomReactionRole(
     });
 }
 
-/** Removes a reaction role from a member, optionally asking them why first. */
-async function removeReactionRole(
+/** Removes a reaction role after asking the member (in a modal) why they want it gone. */
+async function removeReactionRoleWithReason(
+  interaction: ButtonInteraction,
+  role: Role,
+  target: GuildMember,
+): Promise<void> {
+  // Display modal to get intro message from the user
+  await interaction.showModal(new ModalBuilder()
+    .setCustomId(`"ID":"RR","II":"${interaction.id}"`)
+    .setTitle(`Are you sure you want to remove ${role.name}?`)
+    .addComponents(new ActionRowBuilder<TextInputBuilder>()
+      .addComponents(new TextInputBuilder()
+        .setCustomId('reason')
+        .setLabel('You can optionally tell us why!')
+        .setPlaceholder('We\'ll use this to try and improve our process!')
+        .setValue('I just don\'t want to anymore')
+        .setMaxLength(2000)
+        .setStyle(TextInputStyle.Paragraph))));
+
+  // Collect a modal submit interaction
+  const filter = (i:ModalSubmitInteraction) => i.customId.startsWith('"ID":"RR"');
+  interaction.awaitModalSubmit({ filter, time: 0 })
+    .then(async i => {
+      const { II } = JSON.parse(`{${i.customId}}`);
+      if (II !== interaction.id) return;
+      await i.deferReply({ flags: MessageFlags.Ephemeral });
+
+      await target.roles.remove(role);
+      const channelAudit = await i.guild?.channels.fetch(env.CHANNEL_AUDITLOG) as TextChannel;
+      const reason = i.fields.getTextInputValue('reason');
+      await channelAudit.send(
+        `${(i.member as GuildMember).displayName} removed role ${role.name} because: ${reason}`,
+      );
+      await i.editReply({ content: `Removed role ${role.name}` });
+    });
+}
+
+/** Removes a reaction role straight away, as long as my role is high enough to do it. */
+async function removeReactionRoleDirectly(
   interaction: ButtonInteraction,
   guild: Guild,
   role: Role,
   target: GuildMember,
-  introMessageRequired: boolean,
 ): Promise<void> {
-  if (introMessageRequired) {
-    // Display modal to get intro message from the user
-    await interaction.showModal(new ModalBuilder()
-      .setCustomId(`"ID":"RR","II":"${interaction.id}"`)
-      .setTitle(`Are you sure you want to remove ${role.name}?`)
-      .addComponents(new ActionRowBuilder<TextInputBuilder>()
-        .addComponents(new TextInputBuilder()
-          .setCustomId('reason')
-          .setLabel('You can optionally tell us why!')
-          .setPlaceholder('We\'ll use this to try and improve our process!')
-          .setValue('I just don\'t want to anymore')
-          .setMaxLength(2000)
-          .setStyle(TextInputStyle.Paragraph))));
-
-    // Collect a modal submit interaction
-    const filter = (i:ModalSubmitInteraction) => i.customId.startsWith('"ID":"RR"');
-    interaction.awaitModalSubmit({ filter, time: 0 })
-      .then(async i => {
-        const { II } = JSON.parse(`{${i.customId}}`);
-        if (II !== interaction.id) return;
-        await i.deferReply({ flags: MessageFlags.Ephemeral });
-
-        await target.roles.remove(role);
-        const channelAudit = await i.guild?.channels.fetch(env.CHANNEL_AUDITLOG) as TextChannel;
-        const reason = i.fields.getTextInputValue('reason');
-        await channelAudit.send(
-          `${(i.member as GuildMember).displayName} removed role ${role.name} because: ${reason}`,
-        );
-        await i.editReply({ content: `Removed role ${role.name}` });
-      });
-  } else {
-    const myMember = guild.members.me as GuildMember;
-    const myRole = myMember.roles.highest;
-    log.debug(F, `My role: ${myRole.name} (${myRole.position}) vs ${role.name} (${role.position})`);
-    log.debug(F, `My role position: ${role.comparePositionTo(myRole)}`);
-    if (role.comparePositionTo(myRole) > 0) {
-      await interaction.editReply({
-        embeds: [
-          errorEmbed(stripIndents`Error: My role needs to be higher than the role you want to manage!
-            Please move my role above ${role} and try again, or re-do this reaction role`),
-        ],
-      });
-      return;
-    }
-    await target.roles.remove(role);
-    await interaction.editReply({ content: `Removed role ${role.name}` });
+  const myMember = guild.members.me as GuildMember;
+  const myRole = myMember.roles.highest;
+  log.debug(F, `My role: ${myRole.name} (${myRole.position}) vs ${role.name} (${role.position})`);
+  log.debug(F, `My role position: ${role.comparePositionTo(myRole)}`);
+  if (role.comparePositionTo(myRole) > 0) {
+    await interaction.editReply({
+      embeds: [
+        errorEmbed(stripIndents`Error: My role needs to be higher than the role you want to manage!
+          Please move my role above ${role} and try again, or re-do this reaction role`),
+      ],
+    });
+    return;
   }
+  await target.roles.remove(role);
+  await interaction.editReply({ content: `Removed role ${role.name}` });
 }
 
 /** Announces a new member with the role in the channel, with extra information for some channels. */
@@ -525,6 +529,13 @@ async function addRoleWithGroupRules(
   }
 }
 
+/** Members banned from the Helper or Contributor role can't pick it up again. */
+const isBannedFromRole = (
+  role: Role,
+  userData: { helper_role_ban: boolean; contributor_role_ban: boolean },
+): boolean => (role.id === env.ROLE_HELPER && userData.helper_role_ban)
+  || (role.id === env.ROLE_CONTRIBUTOR && userData.contributor_role_ban);
+
 export async function buttonReactionRole(
   interaction:ButtonInteraction,
 ) {
@@ -559,19 +570,18 @@ export async function buttonReactionRole(
   const target = interaction.member as GuildMember;
   // If the user already has the role, remove it
   if (target.roles.cache.has(role.id)) {
-    await removeReactionRole(interaction, interaction.guild, role, target, introMessageRequired);
+    if (introMessageRequired) {
+      await removeReactionRoleWithReason(interaction, role, target);
+    } else {
+      await removeReactionRoleDirectly(interaction, interaction.guild, role, target);
+    }
     return;
   }
 
   const userData = await getOrCreateUser(target.id);
 
   // If the role being requested is the Helper or Contributor role, check if they have been banned first
-  if (role.id === env.ROLE_HELPER && userData.helper_role_ban) {
-    await interaction.editReply({ content: 'Unable to add this role. If you feel this is an error, please talk to the team!' });
-    return;
-  }
-
-  if (role.id === env.ROLE_CONTRIBUTOR && userData.contributor_role_ban) {
+  if (isBannedFromRole(role, userData)) {
     await interaction.editReply({ content: 'Unable to add this role. If you feel this is an error, please talk to the team!' });
     return;
   }
