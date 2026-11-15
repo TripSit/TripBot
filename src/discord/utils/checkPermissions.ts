@@ -77,9 +77,10 @@ export type PermissionTarget =
 
 /** A readable name for a permission, which can be a flag name, a bit value or a list of them. */
 export function permissionName(permission: PermissionResolvable): string {
-  if (Array.isArray(permission)) return permission.map(permissionName).join(', ');
-  if (permission instanceof PermissionsBitField) return permission.toArray().join(', ');
-  return typeof permission === 'string' ? permission : permission.toString();
+  if (typeof permission === 'string') return permission;
+  if (typeof permission === 'bigint') return permission.toString();
+  // Bit fields and lists of flags are resolved to the names of the flags they contain
+  return new PermissionsBitField(permission).toArray().join(', ');
 }
 
 /**

@@ -212,6 +212,6 @@ describe('permissionName', () => {
     expect(permissionName('ManageRoles')).toBe('ManageRoles');
     expect(permissionName(8n)).toBe('8');
     expect(permissionName(new PermissionsBitField(['ManageRoles', 'ViewChannel']))).toBe('ViewChannel, ManageRoles');
-    expect(permissionName(['ManageRoles', 'ViewChannel'])).toBe('ManageRoles, ViewChannel');
+    expect(permissionName(['ManageRoles', 'ViewChannel'])).toBe('ViewChannel, ManageRoles');
   });
 });
