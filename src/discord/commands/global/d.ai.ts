@@ -30,7 +30,6 @@ import {
   AiFunction,
   AiPage,
   AiText,
-  PersonaId,
 } from '../../utils/ai';
 import { OpenRouterClient } from '../../utils/aiClients/openrouter.client';
 import { getOrCreateUser } from '../../../global/utils/dbRecords';
@@ -326,7 +325,7 @@ export async function aiMessage(messageData: Message<boolean>): Promise<void> {
 
   // 5. Generate and Process Response
   try {
-    const personaId = (userData.ai_info.persona_id as PersonaId) || 'tripbot';
+    const personaId = (userData.ai_info.persona_id) || 'tripbot';
 
     log.debug(F, `Using persona ${personaId} for user ${messageData.author.id}`);
 
@@ -357,10 +356,10 @@ export async function aiMessage(messageData: Message<boolean>): Promise<void> {
 
     await db.ai_message.create({
       data: {
-        prompt_tokens: usage?.promptTokens || 0,
-        completion_tokens: usage?.completionTokens || 0,
-        tokens: (usage?.promptTokens || 0) + (usage?.completionTokens || 0),
-        usd: usage?.cost || 0,
+        prompt_tokens: usage?.promptTokens ?? 0,
+        completion_tokens: usage?.completionTokens ?? 0,
+        tokens: (usage?.promptTokens ?? 0) + (usage?.completionTokens ?? 0),
+        usd: usage?.cost ?? 0,
         ai_persona_id: personaData.id,
         ai_info_id: userData.ai_info.id,
         message_id: messageData.id,
@@ -384,21 +383,25 @@ export async function aiMessage(messageData: Message<boolean>): Promise<void> {
   }
 }
 
+// We want to collect every message tripbot sends that gets three thumbs downs
+const THUMBS_UP_EMOJIS = ['👍', '👍🏻', '👍🏼', '👍🏽', '👍🏾', '👍🏿', 'ts_thumbup'];
+const THUMBS_DOWN_EMOJIS = ['👎', '👎🏻', '👎🏼', '👎🏽', '👎🏾', '👎🏿', 'ts_thumbdown'];
+
+/** Only thumbs reactions from real users on tripbot's replies (in a guild) are audited. */
+function isAuditReaction(messageReaction: MessageReaction, user: User): boolean {
+  const emojiName = messageReaction.emoji.name as string;
+  return Boolean(messageReaction.message.guild) // Ignore DMs
+    && messageReaction.message.reference !== null
+    && Boolean(messageReaction.message.author?.bot) // Ignore non-bot messages
+    && !user.bot // Ignore bot users
+    && (THUMBS_UP_EMOJIS.includes(emojiName) || THUMBS_DOWN_EMOJIS.includes(emojiName)); // Ignore non-audit emojis
+}
+
 export async function aiReaction(
   messageReaction: MessageReaction,
   user: User, // Discord user
 ) {
-  // We want to collect every message tripbot sends that gets three thumbs downs
-  const thumbsUpEmojis = ['👍', '👍🏻', '👍🏼', '👍🏽', '👍🏾', '👍🏿', 'ts_thumbup'];
-  const thumbsDownEmojis = ['👎', '👎🏻', '👎🏼', '👎🏽', '👎🏾', '👎🏿', 'ts_thumbdown'];
-  if (!messageReaction.message.guild) return; // Ignore DMs
-  if (messageReaction.message.reference === null) return;
-  if (!messageReaction.message.author?.bot) return; // Ignore non-bot messages
-  if (user.bot) return; // Ignore bot users
-  if (
-    !thumbsUpEmojis.includes(messageReaction.emoji.name as string)
-    && !thumbsDownEmojis.includes(messageReaction.emoji.name as string)
-  ) return; // Ignore non-audit emojis
+  if (!isAuditReaction(messageReaction, user)) return;
 
   let originalMessage: Message;
   try {
@@ -428,16 +431,15 @@ export async function aiReaction(
     },
   });
 
-  const action = thumbsUpEmojis.includes(messageReaction.emoji.name as string)
-    ? 'approve'
-    : 'reject';
+  const isUpvote = THUMBS_UP_EMOJIS.includes(messageReaction.emoji.name as string);
+  const action = isUpvote ? 'approve' : 'reject';
   log.debug(F, `Updating  ${messageData.ai_persona.name} with ${action} vote`);
 
   await db.ai_persona.update({
     where: {
       name: messageData.ai_persona.name,
     },
-    data: thumbsUpEmojis.includes(messageReaction.emoji.name as string)
+    data: isUpvote
       ? {
         upvotes: {
           increment: 1,
@@ -453,7 +455,7 @@ export async function aiReaction(
   const channelAiVoteLog = await discordClient.channels.fetch(
     env.CHANNEL_AIVOTELOG,
   );
-  if (!channelAiVoteLog || !channelAiVoteLog.isSendable()) {
+  if (!channelAiVoteLog?.isSendable()) {
     log.error(F, 'AI Vote Log channel not found or not text-based');
     return;
   }
@@ -472,9 +474,7 @@ export async function aiReaction(
 
   const auditLimit = env.NODE_ENV === 'production' ? 4 : 3;
   if (messageReaction.count === auditLimit) {
-    const message = thumbsUpEmojis.includes(
-      messageReaction.emoji.name as string,
-    )
+    const message = isUpvote
       ? stripIndents`${messageReaction.message.cleanContent}
             
         **Thank you for your feedback, I have notified Moonbear that this response was excellent.**`
@@ -487,7 +487,7 @@ export async function aiReaction(
     await channelAiVoteLog.send({
       content: stripIndents`
             The following AI response was deemed ${action === 'reject' ? 'improper' : 'excellent'} by \
-            ${messageReaction.message.guild.name} <@${env.DISCORD_OWNER_ID}>`,
+            ${messageReaction.message.guild?.name} <@${env.DISCORD_OWNER_ID}>`,
     });
 
     await messageReaction.message.edit(message);
@@ -508,7 +508,7 @@ export async function aiMenu(
 
   switch (customId) {
     case AiText.MenuId.PERSONA_SELECT: {
-      const selectedId = values[0] as PersonaId;
+      const selectedId = values[0];
       log.debug(F, `User selected a persona: ${selectedId}`);
 
       const userData = await getOrCreateUser(user.id);
@@ -560,7 +560,7 @@ export async function aiMenu(
       break;
   }
 
-  switch (values[0] as string) {
+  switch (values[0]) {
     case AiText.Page.INFO.value:
       return AiPage.info(interaction);
     case AiText.Page.PERSONAS.value:

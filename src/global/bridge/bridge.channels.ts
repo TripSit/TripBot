@@ -61,7 +61,7 @@ export function deriveIrcName(
     .replace(/[^a-z0-9_-]/g, '')
     .replace(/-{2,}/g, '-');
   const room = Math.max(maxLength - prefix.length, 0);
-  const core = cleaned.slice(0, room).replace(/^[-_]+|[-_]+$/g, '');
+  const core = cleaned.slice(0, room).replace(/(?:^[-_]+)|(?:[-_]+$)/g, '');
   return core.length > 0 ? `${prefix}${core}` : undefined;
 }
 
@@ -250,5 +250,5 @@ export function describeChannels(
     const reason = eligibility === 'ok' ? 'no usable or unique IRC name' : eligibility;
     return `not bridged: ${channel.name} (${channel.id}), ${reason}`;
   });
-  return lines.sort();
+  return lines.sort((a, b) => a.localeCompare(b));
 }

@@ -49,6 +49,11 @@ describe('privacy get', () => {
     expect(dbMock.users.update).not.toHaveBeenCalled();
   });
 
+  it('serializes structured values instead of printing [object Object]', async () => {
+    seed({ id: 'u', discord_id: '1', preferences: { theme: 'dark' } });
+    expect(await privacy('get', '1')).toContain('**preferences**: {"theme":"dark"}');
+  });
+
   it('is empty for a user with nothing stored', async () => {
     seed({ id: 'u', discord_id: '1' });
     expect(await privacy('get', '1')).toBe('');

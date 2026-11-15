@@ -6,7 +6,7 @@ import {
 import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import commandContext from '../../utils/context';
-// import log from '../../../global/utils/log';
+
 const F = f(__filename);
 
 export const dHydrate: SlashCommand = {

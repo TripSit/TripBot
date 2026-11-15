@@ -86,7 +86,7 @@ export async function botStats(): Promise<BotStats> {
 
   // Find the root/main drive, fallback to the first available disk if exact match isn't found
   const rootDisk = diskInfoRes.success
-    ? diskInfoRes.data.find(d => d.mountpoint === '/' || d.mountpoint === 'C:\\') || diskInfoRes.data[0]
+    ? diskInfoRes.data.find(d => d.mountpoint === '/' || d.mountpoint === 'C:\\') ?? diskInfoRes.data[0]
     : null;
   const driveTotal = rootDisk ? rootDisk.total.toGB() : 0;
   const driveUsage = rootDisk ? rootDisk.usagePercentage : 0;

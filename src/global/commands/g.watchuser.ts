@@ -117,7 +117,7 @@ export async function nightsWatch(message: Message) {
   }
 
   watchRequests.forEach(async watchRequestObj => {
-    const target = await message.client.users.fetch(user.discord_id as string) as User;
+    const target = await message.client.users.fetch(user.discord_id as string);
 
     if (watchRequestObj.notification_method === 'dm') {
       const caller = await message.client.users.fetch(watchRequestObj.caller_id);
@@ -126,7 +126,7 @@ export async function nightsWatch(message: Message) {
           await caller.send(
             `Hey ${caller}, the user ${target} which you were watching has been active recently in ${message.channel}.`,
           );
-        } catch (err) {
+        } catch {
           log.debug(F, 'Failed to fulfill Watch Request. Likely can\'t DM user.');
         }
 
@@ -136,13 +136,13 @@ export async function nightsWatch(message: Message) {
       const tripsitGuild = await message.client.guilds.fetch(env.DISCORD_GUILD_ID);
       if (watchRequestObj.channel_id) {
         // eslint-disable-next-line max-len
-        const notificationChannel = await tripsitGuild.channels.fetch(watchRequestObj.channel_id as string) as TextChannel;
-        const caller = await message.client.users.fetch(watchRequestObj.caller_id) as User;
+        const notificationChannel = await tripsitGuild.channels.fetch(watchRequestObj.channel_id) as TextChannel;
+        const caller = await message.client.users.fetch(watchRequestObj.caller_id);
         try {
           await notificationChannel.send(
             `Hey ${caller}, the user ${target} which you were watching has been active recently in ${message.channel}.`,
           );
-        } catch (err) {
+        } catch {
           log.debug(F, 'Failed to fulfill Watch Request. Notification sending failed.');
         }
         await deleteWatchRequest(user.discord_id as string, caller.id);

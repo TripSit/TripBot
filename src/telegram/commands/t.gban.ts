@@ -32,7 +32,7 @@ export default Composer.command('gban', async ctx => {
     if (moderatedChats.includes(ctx.update.message.chat.id)) {
       // let originalMessage;
       // check if command was executed in response to a message
-      // TODO: originalMessage is never populated, figure out what this is supposed to do
+      // Note: originalMessage is never populated, figure out what this is supposed to do
       // if (originalMessage === ctx.update.message || ctx.update.message.reply_to_message) {
       //   // This needs to happen syncronysly to ensure the user is banned from each channel
       //   // eslint-disable-next-line no-restricted-syntax

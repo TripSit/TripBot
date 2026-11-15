@@ -198,7 +198,7 @@ describe('joining', () => {
     register();
     client.raw.mockClear();
     mappings.setMappings([row('#a'), row('#a', { gateway_name: 'renamed' })]);
-    expect(client.raw).not.toHaveBeenCalled();
+    expect(client.raw).toHaveBeenCalledTimes(0);
   });
 
   it('only parts channels it manages', () => {
@@ -208,7 +208,7 @@ describe('joining', () => {
     client.raw.mockClear();
     mappings.setMappings([row('#a', { gateway_name: 'x' })]);
     mappings.setMappings([row('#a'), row('#z')]);
-    expect(client.raw).not.toHaveBeenCalledWith(PART, '#manual', expect.anything());
+    expect(client.raw.mock.calls.some(call => call[0] === PART && call[1] === '#manual')).toBe(false);
   });
 
   it('leaves the IRC_CHANNELS override in charge', () => {
@@ -235,7 +235,7 @@ describe('blocked joins', () => {
 
   it('ignores other join errors', () => {
     client.emit('irc error', { error: 'channel_is_full', channel: '#a' });
-    expect(client.raw).not.toHaveBeenCalled();
+    expect(client.raw).toHaveBeenCalledTimes(0);
   });
 
   it('logs and carries on when privileges are missing', () => {
@@ -249,7 +249,7 @@ describe('blocked joins', () => {
   it('ignores no-such-channel replies unrelated to pending joins', () => {
     register();
     client.emit(UNKNOWN_COMMAND, { command: '403', params: [BOT] });
-    expect(logWarn).not.toHaveBeenCalled();
+    expect(logWarn).toHaveBeenCalledTimes(0);
   });
 });
 
@@ -271,7 +271,7 @@ describe('creating channels', () => {
     mappings.setMappings([fresh()]);
     register();
     client.emit('userlist', { channel: '#new', users: [{ nick: BOT }, { nick: 'someone' }] });
-    expect(client.raw).not.toHaveBeenCalledWith('CS', 'REGISTER', '#new');
+    expect(client.raw.mock.calls.some(call => call[0] === 'CS' && call[2] === '#new')).toBe(false);
   });
 
   it('also registers a known channel that turns out not to exist on the network', () => {
@@ -284,7 +284,7 @@ describe('creating channels', () => {
   it('does nothing for channels that are not in the mapping', () => {
     register();
     client.emit('userlist', { channel: '#unmapped', users: [{ nick: BOT }] });
-    expect(client.raw).not.toHaveBeenCalledWith('CS', 'REGISTER', '#unmapped');
+    expect(client.raw.mock.calls.some(call => call[0] === 'CS' && call[2] === '#unmapped')).toBe(false);
   });
 
   it('records the registration when ChanServ confirms it', () => {
@@ -300,7 +300,7 @@ describe('creating channels', () => {
     mappings.setMappings([fresh(), row('#old', { irc_registered: true })]);
     client.emit('notice', { nick: 'other', message: REGISTRATION_NOTICE });
     client.emit('notice', { nick: 'ChanServ', message: 'Channel #old already registered' });
-    expect(db.bridge_channels.updateMany).not.toHaveBeenCalled();
+    expect(db.bridge_channels.updateMany).toHaveBeenCalledTimes(0);
   });
 
   it('logs a failed attempt to persist channel registration', async () => {
@@ -342,7 +342,7 @@ describe('topics', () => {
     join('#a');
     client.emit('topic', { channel: '#a', topic: 'Same' });
     client.emit('userlist', { channel: '#a', users: [{ nick: BOT }, { nick: 'x' }] });
-    expect(client.raw).not.toHaveBeenCalledWith('TOPIC', '#a', expect.anything());
+    expect(client.raw.mock.calls.some(call => call[0] === 'TOPIC' && call[1] === '#a')).toBe(false);
   });
 
   it('flattens multi-line topics and respects the server topic length', () => {
@@ -370,6 +370,6 @@ describe('topics', () => {
     register();
     join('#a');
     client.emit('userlist', { channel: '#a', users: [{ nick: BOT }, { nick: 'x' }] });
-    expect(client.raw).not.toHaveBeenCalledWith('TOPIC', '#a', expect.anything());
+    expect(client.raw.mock.calls.some(call => call[0] === 'TOPIC' && call[1] === '#a')).toBe(false);
   });
 });

@@ -20,10 +20,6 @@ export const messageUpdate: MessageUpdateEvent = {
     // Only run on Tripsit, we don't want to snoop on other guilds ( ͡~ ͜ʖ ͡°)
     if (!newMessage.guild) return;
     if (newMessage.guild.id !== env.DISCORD_GUILD_ID) return;
-    // log.info(F, `Message in ${newMessage.channel} was updated.`);
-
-    // log.debug(F, `oldMessage: ${JSON.stringify(oldMessage, null, 2)}`);
-    // log.debug(F, `newMessage: ${JSON.stringify(newMessage, null, 2)}`);
 
     // Don't run when bots update messages
     if (!newMessage.author) return;
@@ -32,11 +28,9 @@ export const messageUpdate: MessageUpdateEvent = {
     const oldContent = oldMessage.content !== undefined && oldMessage.content !== null && oldMessage.content !== ''
       ? oldMessage.content
       : '(Not found)';
-    // log.debug(F, `oldContent: ${oldContent}`);
     const newContent = newMessage.content !== undefined && newMessage.content !== null && newMessage.content !== ''
       ? newMessage.content
       : '(Not found)';
-    // log.debug(F, `newContent: ${newContent}`);
 
     const embed = embedTemplate()
       .setAuthor(null)
@@ -55,8 +49,6 @@ export const messageUpdate: MessageUpdateEvent = {
       log.error(F, `newMessage: ${newMessage.url}`);
     }
 
-    // const response = `Message ${newMessage.id} was edited by ${newMessage.author.tag} in
-    // ${(newMessage.channel as TextChannel).name} from ${oldMessage.content} to ${newMessage.content}.`;
     const msglog = await newMessage.client.channels.fetch(env.CHANNEL_MSGLOG) as TextChannel;
     await msglog.send({ embeds: [embed] });
   },

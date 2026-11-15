@@ -47,31 +47,6 @@ const botNicknames = [
   'TSModRelay1_',
 ];
 
-// const channels = {
-//   sandbox: env.CHANNEL_SANDBOX,
-//   sandboxdev: env.CHANNEL_SANDBOX_DEV,
-//   sanctuary: env.CHANNEL_SANCTUARY,
-//   tripsitters: env.CHANNEL_TRIPSITTERS,
-//   tripsit: env.CHANNEL_OPENTRIPSIT,
-//   tripsit1: env.CHANNEL_OPENTRIPSIT1,
-//   tripsit2: env.CHANNEL_OPENTRIPSIT2,
-//   tripsit3: env.CHANNEL_CLOSEDTRIPSIT,
-//   tripsitdev: env.CHANNEL_DEVELOPMENT,
-//   meetingroom: env.CHANNEL_MEETINGROOM,
-//   content: env.CHANNEL_WIKICONTENT,
-//   moderators: env.CHANNEL_MODERATORS,
-//   teamtripsit: env.CHANNEL_TEAMTRIPSIT,
-//   operations: env.CHANNEL_OPERATORS,
-//   modhaven: env.CHANNEL_MODHAVEN,
-//   tripsitme: env.CHANNEL_TRIPSITME,
-//   lounge: env.CHANNEL_LOUNGE,
-//   opiates: env.CHANNEL_OPIATES,
-//   stims: env.CHANNEL_STIMULANTS,
-//   depressants: env.CHANNEL_DEPRESSANTS,
-//   dissociatives: env.CHANNEL_DISSOCIATIVES,
-//   psychedelics: env.CHANNEL_PSYCHEDELICS,
-// };
-
 /**
  * @param {IRCMessage} message
  * @param {any} newNick
@@ -81,9 +56,7 @@ export default async function watcher(
   message:IRCMessage,
   newNick?:string,
 ): Promise<void> {
-  // log.debug(F, `message: ${JSON.stringify(message, null, 2)}`);
   if (botNicknames.includes(message.nick)) {
-    // log.debug(F, `${message.nick} is a bot!`);
     return;
   }
 
@@ -91,9 +64,7 @@ export default async function watcher(
 
   let user = {} as WhoisResponse;
   if (message.command === 'KICK') {
-    // log.debug(F, `Whoising ${message.args[1]}`);
     await global.ircClient.whois(message.args[1], async resp => {
-      // log.debug(F, `Whoised ${JSON.stringify(resp, null, 2)}`);
       if (resp) {
         user = resp;
       }
@@ -105,7 +76,7 @@ export default async function watcher(
     user = message;
   }
 
-  const accountName = message.host.split('/')[2] ?? message.host.replace(/(\.|\$|#|\[|\]|\/)/g, '-');
+  const accountName = message.host.split('/')[2] ?? message.host.replace(/[.$#[\]/]/g, '-');
 
   let lastTalkGeneral = 0;
   const generalRef = `${env.FIREBASE_DB_USERS}/${accountName}/experience/general/lastMessageDate`;
@@ -185,18 +156,6 @@ export default async function watcher(
     global.ircClient.say(`#${lastMessageChan}`, verbage);
 
     // Idk why past-me did this so im commenting it out in case the above goes wrong
-
-    // const channelId = channels[actorData.experience.general.lastMessageChannel];
-    // log.debug(F, `channelId: ${channelId} (${typeof channelId})`);
-    // log.debug(F, `channelId: ${JSON.stringify(channelId, null, 2)}`);
-
-    // if (global.client) {
-    //   const lastMessageChannel = await global.discordClient.channels.fetch(channelId);
-    //   log.debug(F, `lastMessageChannel: ${lastMessageChannel}`);
-    //   lastMessageChannel.send(verbage);
-    // } else {
-    //   log.debug(F, `No discord client found!`);
-    // }
   }
   log.debug(F, 'finished!');
 }

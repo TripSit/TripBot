@@ -28,8 +28,9 @@ function formatAuditMessage(
 ): string {
   if (!entry) return `${subject} was ${action}, but no relevant audit logs were found.`;
 
+  const punctuation = showChanges ? ':' : '.';
   const headline = entry.executor
-    ? `${subject} was ${action} by ${entry.executor.tag}${showChanges ? ':' : '.'}`
+    ? `${subject} was ${action} by ${entry.executor.tag}${punctuation}`
     : `${subject} was ${action}, but the audit log was inconclusive.`;
   if (!showChanges) return headline;
 

@@ -161,7 +161,7 @@ describe('IRC bridge target', () => {
     client.connected = false;
     await sendToIrc(outgoing());
     await vi.advanceTimersByTimeAsync(bridge.IRC_MESSAGE_DELAY_MS);
-    expect(client.raw).not.toHaveBeenCalled();
+    expect(client.raw).toHaveBeenCalledTimes(0);
   });
 });
 
@@ -279,7 +279,7 @@ describe('redacting relayed messages', () => {
     echo('something else', 'id-1');
     await target.remove?.('#lounge', 'd1');
     await target.remove?.('#lounge', 'unknown');
-    expect(client.raw).not.toHaveBeenCalledWith('REDACT', expect.anything(), expect.anything());
+    expect(client.raw.mock.calls.some(call => call[0] === 'REDACT')).toBe(false);
   });
 
   it('removes lines that are still queued', async () => {

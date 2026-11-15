@@ -27,6 +27,19 @@ type RoaType = {
   }[],
 };
 
+// For HR reasons we prefer non-invasive methods, so smoked, vapourised and insufflated go first (in that order)
+function orderRoaNames(roaNames: string[]): string[] {
+  const ordered = [...roaNames];
+  ['Insufflated', 'Vapourised', 'Smoked'].forEach(preferred => {
+    const index = ordered.indexOf(preferred);
+    if (index !== -1) {
+      ordered.splice(index, 1);
+      ordered.unshift(preferred);
+    }
+  });
+  return ordered;
+}
+
 async function mDrug(roomId: string, event:any, substance:string, section:string = '') {
   let reply:any;
 
@@ -43,22 +56,7 @@ async function mDrug(roomId: string, event:any, substance:string, section:string
     let text = '';
     if (!drugData!.roas) return false;
     // Get a list of drug ROA names
-    const roaNames = drugData!.roas.map(roa => roa.name);
-
-    // For HR reasons we prefer non-invasive methods
-    if (roaNames.includes('Insufflated')) {
-      roaNames.splice(roaNames.indexOf('Insufflated'), 1);
-      roaNames.unshift('Insufflated');
-    }
-
-    if (roaNames.includes('Vapourised')) {
-      roaNames.splice(roaNames.indexOf('Vapourised'), 1);
-      roaNames.unshift('Vapourised');
-    }
-    if (roaNames.includes('Smoked')) {
-      roaNames.splice(roaNames.indexOf('Smoked'), 1);
-      roaNames.unshift('Smoked');
-    }
+    const roaNames = orderRoaNames(drugData!.roas.map(roa => roa.name));
 
     let dosageColumns = 0;
     roaNames.forEach(roaName => {
@@ -173,16 +171,29 @@ async function mDrug(roomId: string, event:any, substance:string, section:string
     return [text, html];
   }
 
-  if (section === 'summary') {
-    const summary = getSummary();
-    reply = RichReply.createFor(roomId, event, summary[0], summary[1]);
-    matrixClient.sendMessage(roomId, reply);
-    return true;
-  }
-  if (section === 'dosage') {
-    const dosage = getDosage();
-    if (dosage === false) { matrixClient.replyNotice(roomId, event, `Sorry, i could not provide dosage information on ${drugData.name}`); return false; }
-    reply = RichReply.createFor(roomId, event, dosage[0], dosage[1]);
+  // Sections that just render one block of information, with the notice to give when there is none
+  const simpleSections: Record<string, { get: () => string[] | false; failure?: string; returnNotice?: boolean }> = {
+    summary: { get: getSummary },
+    dosage: { get: getDosage, failure: `Sorry, i could not provide dosage information on ${drugData.name}` },
+    addiction: {
+      get: getAddictionPotential,
+      failure: `Sorry, i could not provide information on the addiction potential of ${drugData.name}`,
+      returnNotice: true,
+    },
+    crosstolerances: {
+      get: getCrossTolerances,
+      failure: `Sorry, i could not get information on cross tolerances from ${drugData.name}`,
+    },
+    toxicity: { get: getToxicity, failure: `Sorry, i was unable to get toxicity information on ${drugData.name}` },
+  };
+  const simple = Object.hasOwn(simpleSections, section) ? simpleSections[section] : undefined;
+  if (simple) {
+    const content = simple.get();
+    if (content === false) {
+      const notice = matrixClient.replyNotice(roomId, event, simple.failure as string);
+      return simple.returnNotice ? notice : false;
+    }
+    reply = RichReply.createFor(roomId, event, content[0], content[1]);
     matrixClient.sendMessage(roomId, reply);
     return true;
   }
@@ -199,27 +210,6 @@ async function mDrug(roomId: string, event:any, substance:string, section:string
     reply = RichReply.createFor(roomId, event, text, html);
     matrixClient.sendMessage(roomId, reply);
     return false;
-  }
-  if (section === 'addiction') {
-    const addiction = getAddictionPotential();
-    if (addiction === false) return matrixClient.replyNotice(roomId, event, `Sorry, i could not provide information on the addiction potential of ${drugData.name}`);
-    reply = RichReply.createFor(roomId, event, addiction[0], addiction[1]);
-    matrixClient.sendMessage(roomId, reply);
-    return true;
-  }
-  if (section === 'crosstolerances') {
-    const crossTolerances = getCrossTolerances();
-    if (crossTolerances === false) { matrixClient.replyNotice(roomId, event, `Sorry, i could not get information on cross tolerances from ${drugData.name}`); return false; }
-    reply = RichReply.createFor(roomId, event, crossTolerances[0], crossTolerances[1]);
-    matrixClient.sendMessage(roomId, reply);
-    return true;
-  }
-  if (section === 'toxicity') {
-    const toxicity = getToxicity();
-    if (toxicity === false) { matrixClient.replyNotice(roomId, event, `Sorry, i was unable to get toxicity information on ${drugData.name}`); return false; }
-    reply = RichReply.createFor(roomId, event, toxicity[0], toxicity[1]);
-    matrixClient.sendMessage(roomId, reply);
-    return true;
   }
 
   if (section === 'all' || section === '') {

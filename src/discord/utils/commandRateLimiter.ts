@@ -25,11 +25,11 @@ export interface RateLimitConfig {
  */
 
 export class RateLimiter {
-  private userRateLimits = new Map<string, { count: number; resetTime: number }>();
+  private readonly userRateLimits = new Map<string, { count: number; resetTime: number }>();
 
-  private userLastRateLimitMessage = new Map<string, number>();
+  private readonly userLastRateLimitMessage = new Map<string, number>();
 
-  constructor(private config: RateLimitConfig) {}
+  constructor(private readonly config: RateLimitConfig) {}
 
   checkRateLimit(userId: string, isPremiumUser: boolean): RateLimitResult {
     const now = Date.now();
@@ -66,8 +66,8 @@ export class RateLimiter {
     }
 
     // Show every X queries for non-premium users
-    const currentCount = this.userRateLimits.get(userId)?.count || 0;
-    const lastMessageCount = this.userLastRateLimitMessage.get(userId) || 0;
+    const currentCount = this.userRateLimits.get(userId)?.count ?? 0;
+    const lastMessageCount = this.userLastRateLimitMessage.get(userId) ?? 0;
     const shouldShow = currentCount - lastMessageCount >= this.config.messageInterval;
 
     if (shouldShow) {
@@ -88,7 +88,7 @@ export class RateLimiter {
 
   // Method to get current usage info
   getUserUsage(userId: string): { count: number; resetTime: number } | null {
-    return this.userRateLimits.get(userId) || null;
+    return this.userRateLimits.get(userId) ?? null;
   }
 
   // Method to reset a user's limit (admin function)

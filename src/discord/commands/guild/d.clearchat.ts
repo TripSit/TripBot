@@ -31,11 +31,10 @@ export const dClearchat: SlashCommand = {
       return false;
     }
 
-    const count = interaction.options.getInteger('count') || 99;
+    const count = interaction.options.getInteger('count') ?? 99;
     const deleteThreads = interaction.options.getBoolean('delete-threads') === true;
     const deleteArchived = interaction.options.getBoolean('delete-archived-threads') === true;
 
-    // const count = interaction.options.getInteger('count');
     await interaction.editReply({ content: 'Clearing chat...' })
       .then(async msg => {
         await msg.delete();
@@ -57,7 +56,6 @@ export const dClearchat: SlashCommand = {
     if (deleteThreads) {
       // Delete every thread in the channel
       const fetchedThreads = await (interaction.channel as TextChannel).threads.fetch();
-      // log.debug(F, `fetchedThreads: ${JSON.stringify(fetchedThreads, null, 2)}`);
       fetchedThreads.threads.forEach(async thread => {
         try {
           thread.delete();
@@ -70,7 +68,6 @@ export const dClearchat: SlashCommand = {
     if (deleteArchived) {
       // Delete every archived thread in the channel
       const archivedThreads = await (interaction.channel as TextChannel).threads.fetchArchived();
-      // log.debug(F, `fetchedThreads: ${JSON.stringify(archivedThreads, null, 2)}`);
       archivedThreads.threads.forEach(async thread => {
         try {
           thread.delete();

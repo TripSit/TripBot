@@ -1,17 +1,12 @@
-// import {
-//   ChannelType,
-// } from 'discord-api-types/v10';
 import { TextChannel } from 'discord.js';
 import { experience_category, experience_type } from '@db/tripbot';
 import {
   MessageCreateEvent,
 } from '../@types/eventDef';
-// import {thoughtPolice} from '../utils/d.thoughtPolice';
 import { experience } from '../../global/utils/experience';
 import { announcements } from '../utils/announcements';
 import { messageCommand } from '../utils/messageCommand';
 import { youAre } from '../utils/youAre';
-// import { modmailDMInteraction, modmailThreadInteraction } from '../commands/guild/modmail';
 import { karma } from '../utils/karma';
 import { imagesOnly } from '../utils/imagesOnly';
 import { countMessage } from '../commands/guild/d.counting';
@@ -20,10 +15,6 @@ import { helperActivityUpdate } from '../utils/helperActivityUpdate';
 import { nightsWatch } from '../../global/commands/g.watchuser';
 import { getOrCreateUser } from '../../global/utils/dbRecords';
 import { touchLastSeen } from '../../global/utils/lastSeen';
-// import { monitorToxicity } from '../utils/moderateHatespeech';
-// import { awayMessage } from '../utils/awayMessage';
-// import log from '../../global/utils/log';
-// import {parse} from 'path';
 
 const F = f(__filename); // eslint-disable-line
 
@@ -38,7 +29,6 @@ const ignoredRoles = Object.values({
 async function getCategory(channel:TextChannel):Promise<experience_category> {
   let experienceCategory = '';
   if (channel.parent) {
-    // log.debug(F, `parent: ${channel.parent.name} ${channel.parent.id}`);
     if (channel.parent.id === env.CATEGORY_TEAMTRIPSIT) {
       experienceCategory = 'TEAM' as experience_category;
     } else if (channel.parent.id === env.CATEGORY_DEVELOPMENT) {
@@ -70,11 +60,9 @@ export const messageCreate: MessageCreateEvent = {
     const userData = await getOrCreateUser(message.author.id);
     if (!message.author.bot) touchLastSeen(userData);
 
-    if (userData && userData.discord_bot_ban) {
+    if (userData?.discord_bot_ban) {
       return;
     }
-
-    // log.debug(F, `Message: ${JSON.stringify(message, null, 2)}`);
 
     // This needs to run here because the widget bot peeps will use this and they are "bot users"
     // This handles ~ commands
@@ -86,20 +74,10 @@ export const messageCreate: MessageCreateEvent = {
     karma(message);
     imagesOnly(message);
     helperActivityUpdate(message);
-    // discordAiModerate(message);
     nightsWatch(message);
-    /*
-    if ('parentId' in message.channel && message.channel.parentId !== env.CATEGORY_TEAMTRIPSIT) {
-      monitorToxicity(message);
-    } */
 
     // Disabled for testing
     // thoughtPolice(message);
-
-    // // If this is a DM, run the modmail function.
-    // if (message.channel.type === ChannelType.DM) {
-    //   await modmailDMInteraction(message);
-    // }
 
     // Determine if the bot should give exp
     if (
@@ -116,10 +94,6 @@ export const messageCreate: MessageCreateEvent = {
     }
 
     // Check if the message came in a thread in the helpdesk channel
-
-    // if (message.channel.isThread()) {
-    //   modmailThreadInteraction(message);
-    // }
 
     announcements(message);
   },

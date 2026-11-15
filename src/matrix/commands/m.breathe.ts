@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { MatrixClient } from 'matrix-bot-sdk';
 import { breathe } from '../../global/commands/g.breathe';
 
 export default mBreathe;

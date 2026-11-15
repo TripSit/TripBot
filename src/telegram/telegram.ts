@@ -24,5 +24,5 @@ export default async function telegramConnect() {
 }
 
 declare global {
-  var telegramClient: Telegraf;
+  var telegramClient: Telegraf; // NOSONAR - `declare global` requires `var`
 }

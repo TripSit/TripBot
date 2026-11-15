@@ -46,8 +46,8 @@ export function deFuckifyText(text: string): string {
     if (/^[\x20-\x7E]$/g.test(char)) {
       return char;
     }
-    for (let i = 0; i < fancyAlphabets.length; i += 1) {
-      const index = fancyAlphabets[i].indexOf(char);
+    for (const fancyAlphabet of fancyAlphabets) { // eslint-disable-line no-restricted-syntax
+      const index = fancyAlphabet.indexOf(char);
       if (index !== -1) {
         return normalAlphabetArray[index];
       }

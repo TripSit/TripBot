@@ -42,7 +42,6 @@ export async function rssCreate(
 export async function rssList(
   guildId:string,
 ):Promise<rss[]> {
-  // return rssGet(guildId);
   return db.rss.findMany({
     where: {
       guild_id: guildId,

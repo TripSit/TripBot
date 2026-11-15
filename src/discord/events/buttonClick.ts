@@ -14,9 +14,6 @@ import {
   tripsitmeUserClose,
 } from '../utils/tripsitme';
 import { techHelpClick, techHelpClose, techHelpOwn } from '../utils/techHelp';
-// import {
-//   modmailCreate, modmailActions,
-// } from '../commands/archive/modmail';
 import { verifyButton } from '../utils/verifyButton';
 import { buttonReactionRole } from '../commands/global/d.reactionRole';
 import { prReviewButton } from '../commands/global/d.prReview';
@@ -30,200 +27,134 @@ import { feedbackReportModal } from '../commands/global/d.feedback';
 import { aiButton } from '../commands/global/d.ai';
 import { purgeButton } from '../commands/guild/d.purge';
 import { mushroomPageEmbed } from '../utils/hrUtils';
-// import { helpButton } from '../commands/global/d.help';
 
 const F = f(__filename);
 
+type BountyType = 'quest' | 'dungeon' | 'raid';
+type ReplyPayload = Parameters<ButtonInteraction['editReply']>[0];
+type ArcadeGame = Parameters<typeof rpgArcadeGame>[1];
+type ArcadeBet = Parameters<typeof rpgArcadeGame>[2];
+type RpgReply = (interaction: ButtonInteraction) => Promise<ReplyPayload>;
+
 export default buttonClick;
+
+const arcadeGame = (game: ArcadeGame, bet?: ArcadeBet): RpgReply => interaction => (
+  bet === undefined ? rpgArcadeGame(interaction, game) : rpgArcadeGame(interaction, game, bet)
+);
+const bounties = (type: BountyType): RpgReply => interaction => rpgBounties(interaction, type);
+const home: RpgReply = interaction => rpgHome(interaction, '');
+
+// Each rpg button, keyed by the first part of its custom id, produces the reply to show
+const rpgReplies: Record<string, RpgReply> = {
+  rpgTown,
+  rpgBounties: interaction => rpgBounties(interaction, null),
+  rpgArcade,
+  rpgHelp,
+  rpgWager500: rpgArcadeWager,
+  rpgWager1000: rpgArcadeWager,
+  rpgCoinFlip: arcadeGame('Coinflip'),
+  rpgRouletteRed: arcadeGame('Roulette', 'red'),
+  rpgRouletteBlack: arcadeGame('Roulette', 'black'),
+  rpgRouletteFirst: arcadeGame('Roulette', 'first'),
+  rpgRouletteSecond: arcadeGame('Roulette', 'second'),
+  rpgRouletteThird: arcadeGame('Roulette', 'third'),
+  rpgRouletteOdd: arcadeGame('Roulette', 'odds'),
+  rpgRouletteEven: arcadeGame('Roulette', 'evens'),
+  rpgRoulette1to12: arcadeGame('Roulette', '1-12'),
+  rpgRoulette13to24: arcadeGame('Roulette', '13-24'),
+  rpgRoulette25to36: arcadeGame('Roulette', '25-36'),
+  rpgRouletteHigh: arcadeGame('Roulette', 'high'),
+  rpgRouletteLow: arcadeGame('Roulette', 'low'),
+  rpgRouletteZero: arcadeGame('Roulette', '0'),
+  rpgRoulette: arcadeGame('Roulette'),
+  rpgCoinflipHeads: arcadeGame('Coinflip', 'heads'),
+  rpgCoinflipTails: arcadeGame('Coinflip', 'tails'),
+  rpgHome: home,
+  rpgHomePreview: home,
+  rpgSpecies: home,
+  rpgClass: home,
+  rpgGuild: home,
+  rpgAccept: rpgHomeAccept,
+  rpgDecline: rpgHomeDecline,
+  rpgSell: rpgHomeSell,
+  rpgFlairAccept: interaction => rpgFlairAccept(interaction, ''),
+  rpgFlairDecline,
+  rpgMarketBuy: rpgMarketAccept,
+  rpgMarketPreview,
+  rpgMarket,
+  rpgQuest: bounties('quest'),
+  rpgDungeon: bounties('dungeon'),
+  rpgRaid: bounties('raid'),
+};
+
+async function handleRpgButton(interaction: ButtonInteraction): Promise<void> {
+  if (!interaction.customId.includes(interaction.user.id)) {
+    log.debug(F, 'Button clicked by someone other than the user who clicked it');
+    return;
+  }
+  await interaction.deferUpdate();
+  const key = interaction.customId.split(',')[0];
+  if (key === 'rpgName') {
+    await rpgHomeNameChange(interaction);
+    return;
+  }
+  const reply = rpgReplies[key];
+  if (reply) await interaction.editReply(await reply(interaction)); // The reply to this interaction has not been sent or deferred.
+}
+
+async function handleMushroomButton(interaction: ButtonInteraction): Promise<boolean> {
+  const lowerId = interaction.customId.toLowerCase();
+  if (lowerId.includes('pageone')) {
+    interaction.update(await mushroomPageEmbed(1));
+    return true;
+  }
+  if (lowerId.includes('pagetwo')) {
+    interaction.update(await mushroomPageEmbed(2));
+    return true;
+  }
+  return false;
+}
+
+// Buttons are routed by the start of their custom id; the first matching prefix wins.
+// Handlers that were never awaited are wrapped so they stay fire-and-forget.
+const buttonRoutes: [string, (interaction: ButtonInteraction) => Promise<unknown>][] = [
+  ['feedbackReport', feedbackReportModal],
+  ['AI', aiButton],
+  ['purge', purgeButton],
+  ['modHistory', modHistoryButton],
+  ['moderate', modModal],
+  ['acknowledgeButton', acknowledgeButton],
+  ['refusalButton', refusalButton],
+  ['rpg', handleRpgButton],
+  ['helperButton', helperButton],
+  ['"ID":"RR"', buttonReactionRole],
+  ['"ID":"PR"', prReviewButton],
+  ['tripsitmeClick', tripsitmeButton],
+  ['tripsitmeOwned', tripsitmeOwned],
+  ['tripsitmeTeamClose', async interaction => { tripsitmeTeamClose(interaction); }],
+  ['tripsitmeUserClose', async interaction => { tripsitmeUserClose(interaction); }],
+  ['tripsitmeMeta', async interaction => { tripsitmeMeta(interaction); }],
+  ['tripsitmeBackup', async interaction => { tripsitmeBackup(interaction); }],
+  ['applicationApprove', async interaction => { applicationApprove(interaction); }],
+  ['techHelpOwn', async interaction => { techHelpOwn(interaction); }],
+  ['techHelpClose', async interaction => { techHelpClose(interaction); }],
+  ['techHelpClick', async interaction => { techHelpClick(interaction); }],
+];
 
 export async function buttonClick(interaction:ButtonInteraction, discordClient:Client) {
   log.info(F, await commandContext(interaction));
-  // log.debug(F, 'Interaction deferred!');
   const buttonID = interaction.customId;
 
-  if (buttonID.startsWith('feedbackReport')) {
-    await feedbackReportModal(interaction);
+  if (buttonID.startsWith('mushroom') && await handleMushroomButton(interaction)) {
     return;
   }
 
-  if (buttonID.startsWith('AI')) {
-    await aiButton(interaction);
+  const route = buttonRoutes.find(([prefix]) => buttonID.startsWith(prefix));
+  if (route) {
+    await route[1](interaction);
     return;
   }
 
-  if (buttonID.startsWith('purge')) {
-    await purgeButton(interaction);
-    return;
-  }
-
-  if (buttonID.startsWith('mushroom')) {
-    // log.debug(F, 'Werewolf button clicked');
-
-    if (buttonID.toLowerCase().includes('pageone')) {
-      interaction.update(await mushroomPageEmbed(1));
-      return;
-    }
-
-    if (buttonID.toLowerCase().includes('pagetwo')) {
-      interaction.update(await mushroomPageEmbed(2));
-      return;
-    }
-  }
-
-  if (buttonID.startsWith('modHistory')) {
-    await modHistoryButton(interaction);
-    return;
-  }
-
-  if (buttonID.startsWith('moderate')) {
-    // log.debug(F, 'aiMod button clicked');
-    await modModal(interaction);
-    return;
-  }
-
-  if (buttonID.startsWith('acknowledgeButton')) {
-    // log.debug(F, 'aiMod button clicked');
-    await acknowledgeButton(interaction);
-    return;
-  }
-
-  if (buttonID.startsWith('refusalButton')) {
-    // log.debug(F, 'aiMod button clicked');
-    await refusalButton(interaction);
-    return;
-  }
-
-  if (buttonID.startsWith('rpg')) {
-    if (!buttonID.includes(interaction.user.id)) {
-      log.debug(F, 'Button clicked by someone other than the user who clicked it');
-      return;
-    }
-    await interaction.deferUpdate();
-    if (interaction.customId.split(',')[0] === 'rpgTown') await interaction.editReply(await rpgTown(interaction)); // The reply to this interaction has not been sent or deferred.
-    else if (interaction.customId.split(',')[0] === 'rpgBounties') await interaction.editReply(await rpgBounties(interaction, null));
-    else if (interaction.customId.split(',')[0] === 'rpgArcade') await interaction.editReply(await rpgArcade(interaction));
-    else if (interaction.customId.split(',')[0] === 'rpgHelp') await interaction.editReply(await rpgHelp(interaction));
-    else if (interaction.customId.split(',')[0] === 'rpgWager500') await interaction.editReply(await rpgArcadeWager(interaction));
-    else if (interaction.customId.split(',')[0] === 'rpgWager1000') await interaction.editReply(await rpgArcadeWager(interaction));
-    else if (interaction.customId.split(',')[0] === 'rpgCoinFlip') await interaction.editReply(await rpgArcadeGame(interaction, 'Coinflip'));
-    else if (interaction.customId.split(',')[0] === 'rpgRouletteRed') await interaction.editReply(await rpgArcadeGame(interaction, 'Roulette', 'red'));
-    else if (interaction.customId.split(',')[0] === 'rpgRouletteBlack') await interaction.editReply(await rpgArcadeGame(interaction, 'Roulette', 'black'));
-    else if (interaction.customId.split(',')[0] === 'rpgRouletteFirst') await interaction.editReply(await rpgArcadeGame(interaction, 'Roulette', 'first'));
-    else if (interaction.customId.split(',')[0] === 'rpgRouletteSecond') await interaction.editReply(await rpgArcadeGame(interaction, 'Roulette', 'second'));
-    else if (interaction.customId.split(',')[0] === 'rpgRouletteThird') await interaction.editReply(await rpgArcadeGame(interaction, 'Roulette', 'third'));
-    else if (interaction.customId.split(',')[0] === 'rpgRouletteOdd') await interaction.editReply(await rpgArcadeGame(interaction, 'Roulette', 'odds'));
-    else if (interaction.customId.split(',')[0] === 'rpgRouletteEven') await interaction.editReply(await rpgArcadeGame(interaction, 'Roulette', 'evens'));
-    else if (interaction.customId.split(',')[0] === 'rpgRoulette1to12') await interaction.editReply(await rpgArcadeGame(interaction, 'Roulette', '1-12'));
-    else if (interaction.customId.split(',')[0] === 'rpgRoulette13to24') await interaction.editReply(await rpgArcadeGame(interaction, 'Roulette', '13-24'));
-    else if (interaction.customId.split(',')[0] === 'rpgRoulette25to36') await interaction.editReply(await rpgArcadeGame(interaction, 'Roulette', '25-36'));
-    else if (interaction.customId.split(',')[0] === 'rpgRouletteHigh') await interaction.editReply(await rpgArcadeGame(interaction, 'Roulette', 'high'));
-    else if (interaction.customId.split(',')[0] === 'rpgRouletteLow') await interaction.editReply(await rpgArcadeGame(interaction, 'Roulette', 'low'));
-    else if (interaction.customId.split(',')[0] === 'rpgRouletteZero') await interaction.editReply(await rpgArcadeGame(interaction, 'Roulette', '0'));
-    else if (interaction.customId.split(',')[0] === 'rpgRoulette') await interaction.editReply(await rpgArcadeGame(interaction, 'Roulette'));
-    else if (interaction.customId.split(',')[0] === 'rpgCoinflipHeads') await interaction.editReply(await rpgArcadeGame(interaction, 'Coinflip', 'heads'));
-    else if (interaction.customId.split(',')[0] === 'rpgCoinflipTails') await interaction.editReply(await rpgArcadeGame(interaction, 'Coinflip', 'tails'));
-    else if (interaction.customId.split(',')[0] === 'rpgHome') await interaction.editReply(await rpgHome(interaction, ''));
-    else if (interaction.customId.split(',')[0] === 'rpgHomePreview') await interaction.editReply(await rpgHome(interaction, ''));
-    else if (interaction.customId.split(',')[0] === 'rpgSpecies') await interaction.editReply(await rpgHome(interaction, ''));
-    else if (interaction.customId.split(',')[0] === 'rpgClass') await interaction.editReply(await rpgHome(interaction, ''));
-    else if (interaction.customId.split(',')[0] === 'rpgGuild') await interaction.editReply(await rpgHome(interaction, ''));
-    else if (interaction.customId.split(',')[0] === 'rpgName') await rpgHomeNameChange(interaction);
-    else if (interaction.customId.split(',')[0] === 'rpgAccept') await interaction.editReply(await rpgHomeAccept(interaction));
-    else if (interaction.customId.split(',')[0] === 'rpgDecline') await interaction.editReply(await rpgHomeDecline(interaction));
-    else if (interaction.customId.split(',')[0] === 'rpgSell') await interaction.editReply(await rpgHomeSell(interaction));
-    else if (interaction.customId.split(',')[0] === 'rpgFlairAccept') await interaction.editReply(await rpgFlairAccept(interaction, ''));
-    else if (interaction.customId.split(',')[0] === 'rpgFlairDecline') await interaction.editReply(await rpgFlairDecline(interaction));
-    else if (interaction.customId.split(',')[0] === 'rpgMarketBuy') await interaction.editReply(await rpgMarketAccept(interaction));
-    else if (interaction.customId.split(',')[0] === 'rpgMarketPreview') await interaction.editReply(await rpgMarketPreview(interaction));
-    else if (interaction.customId.split(',')[0] === 'rpgMarket') await interaction.editReply(await rpgMarket(interaction));
-    else if (interaction.customId.split(',')[0] === 'rpgQuest') await interaction.editReply(await rpgBounties(interaction, interaction.customId.split(',')[0].replace('rpg', '').toLowerCase() as 'quest' | 'dungeon' | 'raid'));
-    else if (interaction.customId.split(',')[0] === 'rpgDungeon') await interaction.editReply(await rpgBounties(interaction, interaction.customId.split(',')[0].replace('rpg', '').toLowerCase() as 'quest' | 'dungeon' | 'raid'));
-    else if (interaction.customId.split(',')[0] === 'rpgRaid') await interaction.editReply(await rpgBounties(interaction, interaction.customId.split(',')[0].replace('rpg', '').toLowerCase() as 'quest' | 'dungeon' | 'raid'));
-    return;
-  }
-
-  if (buttonID.startsWith('helperButton')) {
-    await helperButton(interaction);
-    return;
-  }
-
-  if (buttonID.startsWith('"ID":"RR"')) {
-    await buttonReactionRole(interaction);
-    return;
-  }
-
-  if (buttonID.startsWith('"ID":"PR"')) {
-    await prReviewButton(interaction);
-    return;
-  }
-
-  if (buttonID.startsWith('tripsitmeClick')) {
-    await tripsitmeButton(interaction);
-    return;
-  }
-
-  if (buttonID.startsWith('tripsitmeOwned')) {
-    await tripsitmeOwned(interaction);
-    return;
-  }
-
-  if (buttonID.startsWith('tripsitmeTeamClose')) {
-    tripsitmeTeamClose(interaction);
-    return;
-  }
-
-  if (buttonID.startsWith('tripsitmeUserClose')) {
-    tripsitmeUserClose(interaction);
-    return;
-  }
-
-  if (buttonID.startsWith('tripsitmeMeta')) {
-    tripsitmeMeta(interaction);
-    return;
-  }
-
-  if (buttonID.startsWith('tripsitmeBackup')) {
-    tripsitmeBackup(interaction);
-    return;
-  }
-
-  // if (buttonID.startsWith('modmailIssue')) {
-  //   await modmailActions(interaction);
-  //   return;
-  // }
-
-  if (buttonID.startsWith('applicationApprove')) {
-    applicationApprove(interaction);
-    return;
-  }
-  if (buttonID.startsWith('techHelpOwn')) {
-    techHelpOwn(interaction);
-    return;
-  }
-  if (buttonID.startsWith('techHelpClose')) {
-    techHelpClose(interaction);
-    return;
-  }
-  if (buttonID.startsWith('techHelpClick')) {
-    techHelpClick(interaction);
-    return;
-  }
-  // if (buttonID === 'modmailTripsitter') {
-  //   modmailCreate(interaction, 'TRIPSIT');
-  //   return;
-  // }
-  // if (buttonID === 'modmailFeedback') {
-  //   modmailCreate(interaction, 'FEEDBACK');
-  //   return;
-  // }
-  // if (buttonID === 'modmailTechIssue') {
-  //   modmailCreate(interaction, 'TECH');
-  //   return;
-  // }
-  // if (buttonID === 'modmailBanAppeal') {
-  //   modmailCreate(interaction, 'APPEAL');
-  //   return;
-  // }
   if (buttonID === 'memberButton') {
     verifyButton(interaction);
     return;
@@ -234,7 +165,6 @@ export async function buttonClick(interaction:ButtonInteraction, discordClient:C
   if (!command) return;
 
   try {
-    // log.debug(F, `Executing command: ${command.name}`);
     command.execute(interaction);
   } catch (error) {
     log.error(F, error as string);

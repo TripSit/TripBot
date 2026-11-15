@@ -5,8 +5,8 @@ const F = f(__filename);
 
 // Initialize Keycloak Admin Client
 const kcAdminClient = new KcAdminClient({
-  baseUrl: process.env.KEYCLOAK_URL || 'http://localhost:8080',
-  realmName: process.env.KEYCLOAK_REALM || 'TripSit',
+  baseUrl: process.env.KEYCLOAK_URL ?? 'http://localhost:8080',
+  realmName: process.env.KEYCLOAK_REALM ?? 'TripSit',
 });
 
 let isAuthenticated = false;
@@ -57,6 +57,36 @@ export async function getAdminClient(): Promise<KcAdminClient> {
   return kcAdminClient;
 }
 
+/** Looks up (and caches) the Discord ID linked to a Keycloak user. `suffix` describes the attempt in the logs. */
+async function lookupDiscordId(userId: string, suffix = ''): Promise<string | null> {
+  const adminClient = await getAdminClient();
+
+  const federatedIdentities = await adminClient.users.listFederatedIdentities({
+    id: userId,
+    realm: process.env.KEYCLOAK_REALM ?? 'TripSit',
+  });
+
+  const discordProvider = federatedIdentities.find(
+    (provider: any) => provider.identityProvider === 'discord',
+  );
+
+  const discordId = discordProvider ? discordProvider.userId as string : null;
+
+  // Cache the result
+  discordIdCache.set(userId, {
+    discordId,
+    timestamp: Date.now(),
+  });
+
+  if (discordId) {
+    log.debug(F, `Found Discord provider for user ${userId}${suffix}: ${discordId}`);
+  } else {
+    log.debug(F, `No Discord provider found for user ${userId}${suffix}`);
+  }
+
+  return discordId;
+}
+
 // Helper function to get Discord ID from user's federated identities
 export async function getDiscordIdFromFederatedIdentity(userId: string): Promise<string | null> {
   // Check cache first
@@ -67,76 +97,27 @@ export async function getDiscordIdFromFederatedIdentity(userId: string): Promise
   }
 
   try {
-    const adminClient = await getAdminClient();
-
-    const federatedIdentities = await adminClient.users.listFederatedIdentities({
-      id: userId,
-      realm: process.env.KEYCLOAK_REALM || 'TripSit',
-    });
-
-    const discordProvider = federatedIdentities.find(
-      (provider: any) => provider.identityProvider === 'discord',
-    );
-
-    const discordId = discordProvider ? discordProvider.userId as string : null;
-
-    // Cache the result
-    discordIdCache.set(userId, {
-      discordId,
-      timestamp: Date.now(),
-    });
-
-    if (discordId) {
-      log.debug(F, `Found Discord provider for user ${userId}: ${discordId}`);
-    } else {
-      log.debug(F, `No Discord provider found for user ${userId}`);
-    }
-
-    return discordId;
+    return await lookupDiscordId(userId);
   } catch (error) {
     // If we get a 401, the admin token expired - reset authentication and try once more
-    if (error instanceof Error && error.message.includes('401')) {
-      log.error(F, `Admin token expired, re-authenticating and retrying for user ${userId}`);
-
-      // Reset authentication state
-      isAuthenticated = false;
-      authPromise = null;
-
-      try {
-        // Try once more with fresh authentication
-        const adminClient = await getAdminClient();
-        const federatedIdentities = await adminClient.users.listFederatedIdentities({
-          id: userId,
-          realm: process.env.KEYCLOAK_REALM || 'TripSit',
-        });
-
-        const discordProvider = federatedIdentities.find(
-          (provider: any) => provider.identityProvider === 'discord',
-        );
-
-        const discordId = discordProvider ? discordProvider.userId as string : null;
-
-        // Cache the result
-        discordIdCache.set(userId, {
-          discordId,
-          timestamp: Date.now(),
-        });
-
-        if (discordId) {
-          log.debug(F, `Found Discord provider for user ${userId} after re-auth: ${discordId}`);
-        } else {
-          log.debug(F, `No Discord provider found for user ${userId} after re-auth`);
-        }
-
-        return discordId;
-      } catch (retryError) {
-        log.error(F, `Error getting Discord ID for user ${userId} after re-auth: ${retryError}`);
-        throw retryError;
-      }
+    if (!(error instanceof Error && error.message.includes('401'))) {
+      log.error(F, `Error getting Discord ID for user ${userId}: ${error}`);
+      throw error;
     }
 
-    log.error(F, `Error getting Discord ID for user ${userId}: ${error}`);
-    throw error;
+    log.error(F, `Admin token expired, re-authenticating and retrying for user ${userId}`);
+
+    // Reset authentication state
+    isAuthenticated = false;
+    authPromise = null;
+
+    try {
+      // Try once more with fresh authentication
+      return await lookupDiscordId(userId, ' after re-auth');
+    } catch (retryError) {
+      log.error(F, `Error getting Discord ID for user ${userId} after re-auth: ${retryError}`);
+      throw retryError;
+    }
   }
 }
 
@@ -165,7 +146,7 @@ async function fetchAllUsers(): Promise<UserRepresentation[]> {
       pageNumberBatch.map(pageNum => adminClient.users.find({
         first: pageNum * max,
         max,
-        realm: process.env.KEYCLOAK_REALM || 'TripSit',
+        realm: process.env.KEYCLOAK_REALM ?? 'TripSit',
       })),
     )),
   );
@@ -197,14 +178,13 @@ async function checkUserIdentities(user: UserRepresentation, githubUsername: str
     // Get federated identities for this user
     const federatedIdentities = await adminClient.users.listFederatedIdentities({
       id: user.id as string,
-      realm: process.env.KEYCLOAK_REALM || 'TripSit',
+      realm: process.env.KEYCLOAK_REALM ?? 'TripSit',
     });
 
     // Look for GitHub identity
     const githubIdentity = federatedIdentities.find(
       identity => identity.identityProvider === 'github'
-      && identity.userName
-      && identity.userName.toLowerCase() === githubUsername.toLowerCase(),
+      && identity.userName?.toLowerCase() === githubUsername.toLowerCase(),
     );
 
     if (!githubIdentity) {
@@ -226,7 +206,7 @@ async function checkUserIdentities(user: UserRepresentation, githubUsername: str
         username: discordIdentity.userName as string, // Discord username
         keycloakUserId: user.id, // Keycloak user ID
         githubUsername: githubIdentity.userName as string, // GitHub username
-        email: user.email || null, // Email from Keycloak user
+        email: user.email ?? null, // Email from Keycloak user
       };
     }
 

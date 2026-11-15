@@ -1,7 +1,7 @@
 /* eslint-disable max-len */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { MatrixClient, RichReply } from 'matrix-bot-sdk';
+import { RichReply } from 'matrix-bot-sdk';
 import { calcKetamine } from '../../global/commands/g.calcKetamine';
 
 export default mCalcKet;

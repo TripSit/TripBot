@@ -71,15 +71,11 @@ export async function getTotalLevel(
   let levelPoints = totalExp;
   let expToLevel = await expForNextLevel(level);
   while (levelPoints >= expToLevel) {
-    // log.debug(F, `Level ${level} with ${levelPoints} experience points has ${expToLevel} points to level up`);
     level += 1;
-    // log.debug(F, `Incremented level to ${level}`);
     const newExpToLevel = await expForNextLevel(level); // eslint-disable-line no-await-in-loop
     levelPoints -= expToLevel;
-    // log.debug(F, `Now needs ${newExpToLevel} to get level ${level} and has ${levelPoints} experience points`);
     expToLevel = newExpToLevel;
   }
-  // log.debug(F, `END: totalLevel: ${level} | levelPoints: ${levelPoints} | expToLevel: ${expToLevel}`);
 
   return { level, level_points: levelPoints };
 }
@@ -124,11 +120,9 @@ export async function giveMilestone(
   // Get the total level (always the TRUE level — a level freeze is display-only and must never
   // affect VIP roles, which also gate level-locked tent access).
   const totalData = await getTotalLevel(totalExp);
-  // log.debug(F, `${member.displayName} is total Text level ${totalData.level}`);
 
   // Determine the first digit of the level
   const levelTier = Math.floor(totalData.level / 10);
-  // log.debug(F, `levelTier: ${levelTier}`);
 
   const roleDefs = {
     0: {
@@ -177,9 +171,7 @@ export async function giveMilestone(
     },
   };
 
-  // log.debug(F, `LevelTier: ${levelTier}`);
   const role = await member.guild?.roles.fetch(roleDefs[levelTier as keyof typeof roleDefs].role) as Role;
-  // log.debug(F, `Role: ${role.name} (${role.id})`);
 
   if (levelTier >= 1) {
     // Get a list of roleDefs below the users current tier
@@ -191,7 +183,6 @@ export async function giveMilestone(
     previousRoles.forEach(async previousRole => {
       const removeRole = await member.guild?.roles.fetch(previousRole) as Role;
       if (member.roles.cache.has(removeRole.id)) {
-        // log.debug(F, `Removing ${member.displayName} role ${removeRole.name} (${removeRole.id})`);
         member.roles.remove(removeRole);
       }
     });
@@ -207,7 +198,6 @@ export async function giveMilestone(
     // Check if the member already has the resulting role, and if not, add it
   }
   if (!member.roles.cache.has(role.id)) {
-    // log.debug(F, `Giving ${member.displayName} role ${role.name} (${role.id})`);
     await member.roles.add(role);
     if (levelTier >= 2) {
       const channel = await member.guild?.channels.fetch(env.CHANNEL_VIPLOUNGE) as TextChannel;
@@ -246,8 +236,6 @@ export async function experience(
 ) {
   const userData = await getOrCreateUser(member.id);
 
-  // log.debug(F, `userData: ${JSON.stringify(userData, null, 2)}`);
-
   const experienceData = await db.user_experience.findFirst({
     where: {
       user_id: userData.id,
@@ -258,10 +246,6 @@ export async function experience(
 
   // If the user has no experience, insert it, and we're done here
   if (!experienceData) {
-    // const expToLevel = await expForNextLevel(0);
-
-    // log.debug(F, 'Inserting new experience');
-    // log.debug(F, `experienceDataInsert: ${JSON.stringify(experienceData, null, 2)}`);
     const newUser = {
       user_id: userData.id,
       category,
@@ -272,12 +256,6 @@ export async function experience(
       last_message_at: new Date(),
       last_message_channel: channel.id,
     } as user_experience;
-    // log.debug(F, `Adding new user to voice exp table: ${JSON.stringify(newUser)}`);
-    // log.debug(
-    //   F,
-    //   `[${channel.name}] ${member.displayName}: 0 + ${expPoints} = ${expPoints} / ${expToLevel} > 1`, // eslint-disable-line max-len
-    // );
-    // await experienceUpdate(newUser);
     await db.user_experience.create({
       data: newUser,
     });
@@ -294,7 +272,6 @@ export async function experience(
 
   // If the user has been awarded voice exp in the last 5 minutes, do nothing
   if (experienceData.last_message_at.getTime() + expInterval > new Date().getTime()) {
-    // log.debug(F, `[${channel.name}] ${member.displayName} has already been given experience recently!`);
     return;
   }
   const categoryName = category.charAt(0).toUpperCase() + category.slice(1).toLowerCase(); // eslint-disable-line max-len
@@ -304,19 +281,14 @@ export async function experience(
   experienceData.level_points += expPoints;
   experienceData.total_points += expPoints;
 
-  // log.debug(F, `${member.displayName} earned ${expPoints} ${experienceData.type} exp, has ${experienceData.level_points} of ${expToLevel} to reach lvl ${experienceData.level + 1}`);
-
   if (expToLevel <= experienceData.level_points) {
     experienceData.level += 1;
     const channelTripbotLogs = await channel.guild.channels.fetch(env.CHANNEL_BOTLOG) as TextChannel;
     await channelTripbotLogs.send(stripIndents`${member.displayName} has leveled up to ${categoryName} ${typeName} level ${experienceData.level}!`);
-    // log.debug(F, `${member.displayName} has leveled up to ${categoryName} ${typeName} level ${experienceData.level}!`);
     experienceData.level_points -= expToLevel;
 
     if (experienceData.level % 10 === 0) {
       let id = '' as string;
-      // log.debug(F, `category: ${category}`);
-      // log.debug(F, `experienceCategory: ${experienceCategory}`);
       if (category === 'GENERAL' as experience_category) {
         id = env.CHANNEL_LOUNGE;
       } else if (category === 'TRIPSITTER' as experience_category) {
@@ -328,7 +300,6 @@ export async function experience(
       } else if (category === 'IGNORED' as experience_category) {
         id = env.CHANNEL_BOTSPAM;
       }
-      // log.debug(F, `id: ${id}`);
       sendMilestoneAnnouncement(member, id, experienceData.level, categoryName, typeName);
     }
   }
@@ -475,20 +446,18 @@ export async function awardGitHubXP(
   const isNewUser = !experienceData;
 
   // If user has no developer experience, create it
-  if (!experienceData) {
-    experienceData = await db.user_experience.create({
-      data: {
-        user_id: userData.id,
-        category: 'DEVELOPER' as experience_category,
-        type: 'TEXT' as experience_type,
-        level: 0,
-        level_points: 0,
-        total_points: 0,
-        last_message_at: new Date(),
-        last_message_channel: channel.id,
-      },
-    });
-  }
+  experienceData ??= await db.user_experience.create({
+    data: {
+      user_id: userData.id,
+      category: 'DEVELOPER' as experience_category,
+      type: 'TEXT' as experience_type,
+      level: 0,
+      level_points: 0,
+      total_points: 0,
+      last_message_at: new Date(),
+      last_message_channel: channel.id,
+    },
+  });
 
   // Calculate new totals
   const newLevelPoints = experienceData.level_points + xpAmount;

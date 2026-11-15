@@ -1,7 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { Category, Drug, Combos } from 'tripsit_drug_db';
-import fs from 'fs';
-import path from 'path';
 import drugs from '../assets/data/tripsitDB.json';
 import combos from '../assets/data/tripsitCombos.json';
 
@@ -38,15 +36,6 @@ const comboData = combos as Combos;
 //   //   }
 //   // }
 
-//   const mergedCombos: {
-//     [key: string]: {
-//       [key: string]: {
-//         status: string;
-//         note?: string;
-//       }
-//     }
-//   } = {};
-
 //   Object.entries(combov0).forEach(([comboV0Key, comboV0Obj]) => {
 //     // console.log(`comboV0Key: ${comboV0Key}`);
 //     Object.entries(comboV0Obj).forEach(([interactionV0Key, interactionV0Obj]) => {
@@ -78,13 +67,6 @@ const comboData = combos as Combos;
 //       }
 //     });
 //   });
-
-//   fs.writeFile(path.join(__dirname, 'newShit.json'), JSON.stringify(mergedCombos, null, 2), err => {
-//     if (err) {
-//       // console.log(err);
-//     }
-//   });
-// }
 
 // Object.entries(drugData).forEach(([drugName, drugObj]) => {
 //   if (drugObj.combos) {
@@ -168,8 +150,6 @@ function expandCategories() {
       categoryData.maois.push(drugName);
     }
   });
-
-  // console.log(`${JSON.stringify(categoryData, null, 2)}`);
 }
 
 expandCategories();

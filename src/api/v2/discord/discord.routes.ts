@@ -17,13 +17,6 @@ const limiter = RateLimit({
 // apply rate limiter to all requests
 router.use(limiter);
 
-// router.get('/', async (req, res) => {
-//   if (await checkAuth(req, res)) {
-//     const result = await appeals.getAllAppeals();
-//     res.json(result);
-//   }
-// });
-
 router.get('/bans/:userId', async (req, res, next) => {
   if (await checkAuth(req, res)) {
     const { userId } = req.params;

@@ -5,8 +5,6 @@ import { getOrCreateGuild } from '../../global/utils/dbRecords';
 
 export default helperActivityUpdate;
 
-// const F = f(__filename);
-
 /**
  * helperActivityUpdate
  * @param {Message} message The message that was sent

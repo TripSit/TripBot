@@ -186,9 +186,6 @@ export async function pitchTent(
   Old:VoiceState,
   New:VoiceState,
 ): Promise<void> {
-  // const categoryVoice = await New.guild.channels.fetch(env.CATEGORY_VOICE) as VoiceBasedChannel;
-  // const permissions = categoryVoice.permissionOverwrites.cache;
-
   function getMaxBitrate(guild: Guild): number {
     switch (guild.premiumTier) {
       case GuildPremiumTier.None:
@@ -339,7 +336,7 @@ export async function teardownTent(
         await Old.guild.channels.fetch(channel.id);
         // If fetch succeeds, delete the channel
         await channel.delete('Removing temporary voice chan!');
-      } catch (err) {
+      } catch {
         // Channel was likely already deleted or doesn't exist
       }
     }
@@ -435,7 +432,7 @@ export async function logTent(
   if (Old.channel && Old.channel.name.includes('⛺') && Old.member && Old.channel && Old.channel.members.size >= 1) {
     log.debug(F, `Old.channel: ${Old.channel}`);
     // Check if the user that left was the host by checking explicit permissions
-    if (hasExplicitPermission(Old.channel, Old.member as GuildMember, PermissionsBitField.Flags.MoveMembers)) {
+    if (hasExplicitPermission(Old.channel, Old.member, PermissionsBitField.Flags.MoveMembers)) {
       embed = new EmbedBuilder()
         .setColor(Colors.Red)
         .setDescription(`The host, ${Old.member} left!
@@ -463,7 +460,7 @@ export async function logTent(
     log.debug(F, `List of members: ${New.channel.members.map(member => member.displayName)}`);
 
     // Check if the user that joined is the host by checking explicit permissions
-    if (hasExplicitPermission(New.channel, New.member as GuildMember, PermissionsBitField.Flags.MoveMembers)) {
+    if (hasExplicitPermission(New.channel, New.member, PermissionsBitField.Flags.MoveMembers)) {
       // Clear the timeout if the host rejoined
       if (hostTimeouts[New.channel.id]) {
         clearTimeout(hostTimeouts[New.channel.id]);

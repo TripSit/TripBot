@@ -1,7 +1,3 @@
-// import {
-//   MessageReaction,
-//   User,
-// } from 'discord.js';
 import {
   MessageReactionRemoveEvent,
 } from '../@types/eventDef';
@@ -16,16 +12,9 @@ export const messageReactionRemove: MessageReactionRemoveEvent = {
     if (reaction.message.guild?.id !== env.DISCORD_GUILD_ID) return;
     log.info(F, `${user.displayName}(${user.id}) removed a reaction`);
 
-    // log.debug(F, `reaction: ${JSON.stringify(reaction.emoji.name, null, 2)}`);
-    // log.debug(F, `user: ${JSON.stringify(user, null, 2)}`);
-
     if (user.bot) {
       return;
     }
-    // log.debug(F, `Reaction added`);
-    // log.debug(F, `Reaction: ${JSON.stringify(reaction, null, 2)}`);
-    // log.debug(F, `User: ${JSON.stringify(user, null, 2)}`);
-    // log.debug(F, `Client: ${JSON.stringify(client, null, 2)}`);
 
     // log.debug(F, `reaction1: ${JSON.stringify(reaction, null, 4)}`);
     // When a reaction is received, check if the structure is partial
@@ -38,12 +27,6 @@ export const messageReactionRemove: MessageReactionRemoveEvent = {
       });
     }
 
-    // log.info(F, `${user.username} (${user.id}) removed ${reaction.emoji.name}`);
-
-    // if (reaction.message.author?.bot) {
-    //   // log.debug(F, `Ignoring bot interaction`);
-    //   return;
-    // }
     chitragupta(reaction, user, -1);
   },
 };

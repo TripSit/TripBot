@@ -71,7 +71,7 @@ export const dSay: SlashCommand = {
     channel = channel as TextChannel;
 
     await channel.sendTyping(); // This method automatically stops typing after 10 seconds, or when a message is sent.
-    setTimeout(async () => (channel as TextChannel).send({
+    setTimeout(async () => channel.send({
       content: say,
       allowedMentions: { parse: ['users'] },
     }), 3000);

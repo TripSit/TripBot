@@ -6,7 +6,7 @@ import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { fact } from '../../../global/commands/g.fact';
 import commandContext from '../../utils/context';
-// import log from '../../../global/utils/log';
+
 const F = f(__filename);
 
 export const dFact: SlashCommand = {
@@ -22,8 +22,6 @@ export const dFact: SlashCommand = {
     const ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined;
     await interaction.deferReply({ flags: ephemeral });
     const data = await fact();
-
-    // log.debug(F, `data: ${JSON.stringify(data, null, 2)}`);
 
     const embed = embedTemplate();
     embed.setTitle(data);

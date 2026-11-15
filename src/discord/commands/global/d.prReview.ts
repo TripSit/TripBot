@@ -237,7 +237,7 @@ export async function prReviewButton(interaction: ButtonInteraction): Promise<vo
 
       try {
         await postPrRejectionComment(Number(modalPrNumberString), modalMember.displayName, comment);
-      } catch (error) {
+      } catch {
         // Detailed GitHub error (status + message) is logged by postPrRejectionComment itself
         log.warn(F, `Rejection comment on PR #${modalPrNumberString} failed, reporting back to ${modalMember.displayName}`); // eslint-disable-line max-len
         await i.editReply({ content: 'Failed to post your comment to GitHub. Please try again or comment manually.' });

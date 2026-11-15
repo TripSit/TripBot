@@ -9,7 +9,6 @@ import { SlashCommand } from '../../@types/commandDef';
 import { birthday } from '../../../global/commands/g.birthday';
 import commandContext from '../../utils/context';
 import { embedTemplate } from '../../utils/embedTemplate';
-// import log from '../../../global/utils/log';
 
 const F = f(__filename);
 
@@ -18,8 +17,6 @@ async function birthdayGet(
   member:GuildMember,
 ) {
   log.info(F, await commandContext(interaction));
-  // const ephemeral = interaction.options.getBoolean('ephemeral') ? MessageFlags.Ephemeral : undefined
-  // await interaction.deferReply({ flags: ephemeral });
   const embed = embedTemplate();
 
   const response = await birthday('get', member.id, null, null);
@@ -71,36 +68,19 @@ async function birthdaySet(
   const month31 = ['january', 'march', 'may', 'july', 'august', 'october', 'december'];
   if (month30.includes(monthInput.toLowerCase()) && day > 30) {
     const response = `${monthInput} only has 30 days!`;
-    // log.info(F, `response: ${JSON.stringify(response, null, 2)}`);
     await interaction.editReply({ content: response });
     return;
   }
   if (month31.includes(monthInput.toLowerCase()) && day > 31) {
     const response = `${monthInput} only has 31 days!`;
-    // log.info(F, `response: ${JSON.stringify(response, null, 2)}`);
     await interaction.editReply({ content: response });
     return;
   }
   if (monthInput.toLowerCase() === 'february' && day > 28) {
     const response = 'February only has 28 days!';
-    // log.info(F, `response: ${JSON.stringify(response, null, 2)}`);
     await interaction.editReply({ content: response });
     return;
   }
-  // const monthDict = {
-  //   'january': 0,
-  //   'february': 1,
-  //   'march': 2,
-  //   'april': 3,
-  //   'may': 4,
-  //   'june': 5,
-  //   'july': 6,
-  //   'august': 7,
-  //   'september': 8,
-  //   'october': 9,
-  //   'november': 10,
-  //   'december': 11,
-  // };
 
   const monthDict = {
     january: 1,
@@ -177,9 +157,7 @@ export const dBirthday: SlashCommand = {
     const monthInput = interaction.options.getString('month');
     const day = interaction.options.getInteger('day');
 
-    if (command === undefined) {
-      command = 'get';
-    }
+    command ??= 'get';
 
     if (command === 'set') {
       if (member === null) {

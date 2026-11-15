@@ -78,8 +78,8 @@ export class AiFunction {
       },
     });
 
-    const personaId = userRecord?.ai_info?.persona_id || 'tripbot';
-    const aiInfoId = userRecord?.ai_info?.id || null;
+    const personaId = userRecord?.ai_info?.persona_id ?? 'tripbot';
+    const aiInfoId = userRecord?.ai_info?.id ?? null;
 
     let rollingUsd = 0;
     const totalMessages = userRecord?.ai_info?._count.ai_messages || 0; // eslint-disable-line
@@ -92,7 +92,7 @@ export class AiFunction {
       });
 
       const { _sum: rollingSum } = agg;
-      rollingUsd = Number(rollingSum.usd ?? 0) + (chatResponse.usage?.cost || 0);
+      rollingUsd = Number(rollingSum.usd ?? 0) + (chatResponse.usage?.cost ?? 0);
     }
 
     // 1. FIXED: Handle the 'object object' bug by extracting text parts properly
@@ -125,12 +125,12 @@ export class AiFunction {
     // 2. High-Value Metadata Header (Now with Guild Info)
     container.addTextDisplayComponents(new TextDisplayBuilder().setContent(stripIndents`
       # 🛡️ AI Audit: ${user.tag}
-      **Guild:** \`${message.guild?.name || 'DMs'}\` (\`${message.guildId || 'N/A'}\`)
+      **Guild:** \`${message.guild?.name ?? 'DMs'}\` (\`${message.guildId ?? 'N/A'}\`)
       **Channel:** <#${message.channelId}> | **User ID:** \`${user.id}\`
       **Model:** \`${modelUsed}\` | **Persona:** \`${personaId}\`
       
-      **Tokens:** \`${chatResponse.usage?.promptTokens || 0}\` in / \`${chatResponse.usage?.completionTokens || 0}\` out
-      **Cost:** \`$${(chatResponse.usage?.cost || 0).toFixed(5)}\` (${aiInfoId ? `$${rollingUsd.toFixed(4)} last 24h` : 'N/A'} )
+      **Tokens:** \`${chatResponse.usage?.promptTokens ?? 0}\` in / \`${chatResponse.usage?.completionTokens ?? 0}\` out
+      **Cost:** \`$${(chatResponse.usage?.cost ?? 0).toFixed(5)}\` (${aiInfoId ? `$${rollingUsd.toFixed(4)} last 24h` : 'N/A'} )
       **Lifetime Msgs:** \`${aiInfoId ? totalMessages.toLocaleString() : 'N/A'}\`
     `));
 
@@ -157,7 +157,7 @@ export class AiFunction {
 
     // Log to Discord
     const channelAiLog = await discordClient.channels.fetch(env.CHANNEL_AILOG);
-    if (!channelAiLog || !channelAiLog.isSendable()) throw new Error('AI log channel is not a text channel');
+    if (!channelAiLog?.isSendable()) throw new Error('AI log channel is not a text channel');
     await channelAiLog.send({
       components: [container],
       flags: MessageFlags.IsComponentsV2,
@@ -222,7 +222,7 @@ export class AiFunction {
 
   static async createPrompt(message: Message, personaId: PersonaId): Promise<LanguageModelV4Prompt> {
     const messageList: LanguageModelV4Prompt = [];
-    const botNickname = message.guild?.members.me?.nickname || 'TripBot';
+    const botNickname = message.guild?.members.me?.nickname ?? 'TripBot';
 
     // Limit history to 10 messages to save tokens
     const fetchedMessages = await message.channel.messages.fetch({ limit: 10 });

@@ -140,7 +140,7 @@ export const dTripTacGo: SlashCommand = {
       const [, gameIdFromButton, positionStr] = i.customId.split('_');
       const position = parseInt(positionStr, 10);
       const moveResult = executeMove(game, position, i.user.id);
-      log.info(F, `[${game.gameId}] Move result: ${moveResult}`);
+      log.info(F, `[${game.gameId}] Move result: success=${moveResult.success}`);
 
       log.info(F, `[${game.gameId}] Button clicked by ${i.user.username} (${i.user.id})`);
       log.info(F, `[${game.gameId}] CustomId: ${i.customId}`);

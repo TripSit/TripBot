@@ -45,7 +45,7 @@ export async function slowMode(interaction: ChatInputCommandInteraction): Promis
     });
 
     return true;
-  } catch (error) {
+  } catch {
     await interaction.editReply({ content: 'Failed to set slowmode.' });
     return false;
   }
@@ -66,11 +66,9 @@ async function unWatchUser(interaction: ChatInputCommandInteraction): Promise<bo
 async function watchUser(interaction: ChatInputCommandInteraction, guild: Guild): Promise<boolean> {
   const targetUser = interaction.options.getUser('target', true);
 
-  let alertChannel = interaction.options.getChannel('alert_channel') as TextChannel | null;
+  let alertChannel: TextChannel | null = interaction.options.getChannel<ChannelType.GuildText>('alert_channel');
 
-  if (!alertChannel) {
-    alertChannel = guild.channels.cache.get(env.CHANNEL_MODERATORS) as TextChannel;
-  }
+  alertChannel ??= guild.channels.cache.get(env.CHANNEL_MODERATORS) as TextChannel;
 
   // Ensure that the channel used is a text channel
   if (alertChannel.type !== ChannelType.GuildText) {
@@ -250,12 +248,16 @@ async function unfreezeLevel(interaction: ChatInputCommandInteraction, guild: Gu
   return true;
 }
 
+async function replyNoFrozenLevels(interaction: ChatInputCommandInteraction): Promise<boolean> {
+  await interaction.editReply({ content: 'No users currently have their displayed level frozen. ❄️' });
+  return true;
+}
+
 async function listFrozenLevels(interaction: ChatInputCommandInteraction): Promise<boolean> {
   const frozen = await getAllLevelFreezes();
 
   if (frozen.length === 0) {
-    await interaction.editReply({ content: 'No users currently have their displayed level frozen. ❄️' });
-    return true;
+    return replyNoFrozenLevels(interaction);
   }
 
   const lines = await Promise.all(frozen.map(async ({ discordId, frozenLevel }) => {

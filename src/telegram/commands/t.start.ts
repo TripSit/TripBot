@@ -5,7 +5,6 @@ const F = f(__filename);
 
 export default Composer.command('start', async ctx => {
   log.debug(F, 'started!');
-  // log.log(ctx.update.message.text.split(' '));
   ctx.replyWithHTML(stripIndents`<b>Welcome to TripBot</b>!👋
 
   This bot is created by https://tripsit.me, an online harm reduction community offering 24/7 life chat assistance and information about various substances and safer use practices.

@@ -182,10 +182,6 @@ export class AiText {
     **AI Enabled channels:**
   `;
 
-  // const maxHistoryLength = 3;
-
-  // const ephemeralExplanation = 'Set to "True" to show the response only to you';
-  // const personaDoesNotExist = 'This persona does not exist. Please create it first.';
   static readonly tripbotUAT = '@TripBot UAT (Moonbear)';
 
   static readonly aiChannelId = 'AI~channel';

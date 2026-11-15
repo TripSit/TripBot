@@ -41,10 +41,8 @@ export async function feedbackReportModal(
   );
 
   const filter = (i:ModalSubmitInteraction) => i.customId.includes('feedbackReportModal');
-  // log.debug(F, 'Showing the modal');
   interaction.awaitModalSubmit({ filter, time: 0 })
     .then(async i => {
-      // log.debug(F, 'Modal submit interaction received');
       if (i.customId.split('~')[1] !== interaction.id) return;
       await i.deferReply({ flags: MessageFlags.Ephemeral });
       const guildName = ` in ${i.guild?.name}`;
@@ -94,7 +92,6 @@ export async function feedbackReportModal(
         You\'re more than welcome to join the [TripSit server](${tripsitInfo.discord}) if you want!`);
       await i.editReply({ embeds: [embed] });
     });
-  // log.debug(F, 'Modal submit interaction listener set up');
 }
 export const dFeedback: SlashCommand = {
   data: new SlashCommandBuilder()

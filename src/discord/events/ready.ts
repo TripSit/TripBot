@@ -44,27 +44,10 @@ async function getInvites(discordClient: Client) {
   });
 }
 
-// async function refreshCache() {
-//   // Loop over all the guilds
-//   await discordClient.guilds.fetch();
-//   discordClient.guilds.cache.forEach(async (guild:Guild) => {
-//     await guild.members.fetch();
-//     await guild.roles.fetch();
-//     await guild.channels.fetch();
-//     try {
-//       await guild.bans.fetch();
-//     } catch (e) {
-//       // log.error(F, `Error fetching bans for guild ${guild.name} (${guild.id}): ${e}`);
-//     }
-//     await guild.emojis.fetch();
-//   });
-// }
-
 export const ready: ReadyEvent = {
   name: 'clientReady',
   once: true,
   async execute(client) {
-    // log.debug(F, 'ready event fired');
     await setTimeout(1000);
     const hostGuild = await discordClient.guilds.fetch(env.DISCORD_GUILD_ID);
     await checkGuildPermissions(hostGuild, [
@@ -87,11 +70,7 @@ export const ready: ReadyEvent = {
         log.info(F, `Discord finished booting in ${bootDuration}s!`);
         if (env.NODE_ENV !== 'development') {
           const channelTripbot = await discordClient.channels.fetch(env.CHANNEL_TRIPBOT) as TextChannel;
-          // log.debug(F, `channelTripbot: ${JSON.stringify(channelTripbot, null, 2)}`);
           const botOwner = await discordClient.users.fetch(env.DISCORD_OWNER_ID);
-          // log.debug(F, `botOwner: ${JSON.stringify(botOwner, null, 2)}`);
-          // const guild = await discordClient.guilds.fetch(env.DISCORD_GUILD_ID);
-          // const tripbotDevRole = await guild.roles.fetch(env.ROLE_TRIPBOTDEV);
           const newFact = await fact();
           const statData = await botStats();
           const drivePercentPadded = `${statData.driveUsage.toString()}%`.padEnd(3, ' ');

@@ -27,8 +27,6 @@ export const guildMemberAdd: GuildMemberAddEvent = {
     try {
       const guildData = await getOrCreateGuild(member.guild.id);
 
-      // log.debug(F, `guildData: ${JSON.stringify(guildData)}`);
-
       if (!guildData) return;
 
       if (!guildData.cooperative) return;

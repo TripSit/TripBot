@@ -1,4 +1,5 @@
 import {
+  ChatInputCommandInteraction,
   SlashCommandBuilder,
   time,
   EmbedBuilder,
@@ -11,8 +12,56 @@ import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { parseDuration } from '../../../global/utils/parseDuration';
 import { paginationEmbed } from '../../utils/pagination';
-// import log from '../../../global/utils/log';
+
 const F = f(__filename);
+
+const REMINDERS_PER_PAGE = 24;
+
+type ReminderResponse = Awaited<ReturnType<typeof remindMe>>;
+
+async function showReminders(
+  interaction: ChatInputCommandInteraction,
+  response: ReminderResponse,
+): Promise<boolean> {
+  const embed = embedTemplate();
+  if (response === null) {
+    embed.setTitle('No reminders!');
+    embed.setDescription('You have no reminders! Use /remind_me to add some!');
+    await interaction.editReply({ embeds: [embed] });
+    return true;
+  }
+
+  embed.setTitle('Your reminders');
+  if (typeof response === 'string') {
+    embed.setDescription('You have no reminders! You can use /remind_me to add some!');
+    await interaction.editReply({ embeds: [embed] });
+    return false;
+  }
+
+  const fields: EmbedField[] = response.map(record => ({
+    name: `(${record.index}) ${time(record.date, 'R')}`,
+    value: record.value,
+    inline: true,
+  }));
+
+  if (fields.length > REMINDERS_PER_PAGE) {
+    // Add fields to a page until there are 24 fields; only the first page carries the title
+    const book: EmbedBuilder[] = [];
+    for (let start = 0; start < fields.length; start += REMINDERS_PER_PAGE) {
+      const pageEmbed = embedTemplate();
+      if (start === 0) pageEmbed.setTitle('Your reminders');
+      pageEmbed.setFields(fields.slice(start, start + REMINDERS_PER_PAGE));
+      book.push(pageEmbed);
+    }
+    paginationEmbed(interaction, book);
+    return true;
+  }
+
+  // Add fields to the embed
+  embed.setFields(fields);
+  await interaction.editReply({ embeds: [embed] });
+  return true;
+}
 
 export const dRemindme: SlashCommand = {
   data: new SlashCommandBuilder()
@@ -48,10 +97,8 @@ export const dRemindme: SlashCommand = {
     const reminderDatetime = new Date();
     if (offset) {
       const out = await parseDuration(offset);
-      // log.debug(F, `out: ${out}`);
       reminderDatetime.setTime(reminderDatetime.getTime() + out);
     }
-    // log.debug(F, `reminderDatetime: ${reminderDatetime}`);
 
     const response = await remindMe(
       command,
@@ -61,91 +108,17 @@ export const dRemindme: SlashCommand = {
       reminderDatetime,
     );
 
-    const embed = embedTemplate();
-    const book = [] as EmbedBuilder[];
     if (command === 'delete') {
       await interaction.editReply({ content: response as string });
     }
     if (command === 'get') {
-      if (response !== null) {
-        embed.setTitle('Your reminders');
-        if (typeof response === 'string') {
-          embed.setDescription('You have no reminders! You can use /remind_me to add some!');
-          await interaction.editReply({ embeds: [embed] });
-          return false;
-        }
-
-        if (response.length > 24) {
-          let pageEmbed = embedTemplate();
-          pageEmbed.setTitle('Your reminders');
-          // Add fields to the pageEmbed until there are 24 fields
-          let pageFields = [] as EmbedField[];
-          let pageFieldsCount = 0;
-          for (const record of response) { // eslint-disable-line
-            pageFields.push({
-              name: `(${record.index}) ${time(record.date, 'R')}`,
-              value: record.value,
-              inline: true,
-            });
-            // log.debug(F, `Adding field ${field.name}`);
-            pageFieldsCount += 1;
-            // log.debug(F, `pageFieldsCount: ${pageFieldsCount}`);
-            if (pageFieldsCount === 24) {
-              pageEmbed.setFields(pageFields);
-              // log.debug(F, `pageEmbed: ${JSON.stringify(pageEmbed)}`);
-              book.push(pageEmbed);
-              // log.debug(F, `book.length: ${book.length}`);
-              pageFields = [];
-              pageFieldsCount = 0;
-              pageEmbed = embedTemplate();
-            }
-          }
-          // Add the last pageEmbed
-          if (pageFieldsCount > 0) {
-            pageEmbed.setFields(pageFields);
-            // log.debug(F, `pageEmbed: ${JSON.stringify(pageEmbed)}`);
-            book.push(pageEmbed);
-            // log.debug(F, `book.length: ${book.length}`);
-          }
-        }
-        if (response.length <= 24) {
-          // Add fields to the embed
-          const fields = [] as {
-            name: string;
-            value: string;
-            inline: boolean;
-          }[];
-          for (const record of response) { // eslint-disable-line
-            fields.push({
-              name: `(${record.index}) ${time(record.date, 'R')}`,
-              value: record.value,
-              inline: true,
-            });
-          }
-          embed.setFields(fields);
-        }
-      } else {
-        embed.setTitle('No reminders!');
-        embed.setDescription('You have no reminders! Use /remind_me to add some!');
-      }
-      // log.debug(F, `book.length: ${book.length}`);
-      if (book.length > 1) {
-        paginationEmbed(interaction, book);
-      } else {
-        await interaction.editReply({ embeds: [embed] });
-        // interaction.user.send({embeds: [embed]});
-      }
+      return showReminders(interaction, response);
     }
     if (command === 'set') {
-      // const timeString = time(reminderDatetime).valueOf().toString();
-      // log.debug(F, `timeString: ${timeString}`);
       const relative = time(reminderDatetime, 'R');
-      // log.debug(F, `relative: ${relative}`);
 
-      embed.setDescription(`${relative} I will remind you: ${reminder}`);
-      await interaction.editReply({ embeds: [embed] });
+      await interaction.editReply({ embeds: [embedTemplate().setDescription(`${relative} I will remind you: ${reminder}`)] });
     }
-    // log.debug(F, `Finished!`);
     return true;
   },
 };

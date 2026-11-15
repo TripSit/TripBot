@@ -41,7 +41,6 @@ async function stripUserMentions(input: string, guild: Guild): Promise<string> {
 }
 
 export async function techHelpClick(interaction:ButtonInteraction) {
-  // log.debug(F, `Message: ${JSON.stringify(interaction, null, 2)}!`);
   if (!interaction.guild) {
     await replyGuildOnly(interaction, { ephemeral: true });
     return;
@@ -64,9 +63,6 @@ export async function techHelpClick(interaction:ButtonInteraction) {
     await interaction.reply({ content: 'The role provided could not be found!' });
     return;
   }
-
-  // log.debug(`[${PREFIX} - techHelpClick] issueType: ${issueType}`);
-  // log.debug(`[${PREFIX} - techHelpClick] role: ${role.id}`);
 
   let placeholder = '';
   if (issueType === 'discord') {
@@ -100,7 +96,6 @@ export async function techHelpClick(interaction:ButtonInteraction) {
 
       // Get whatever they sent in the modal
       const modalInput = await stripUserMentions(i.fields.getTextInputValue(`${issueType}IssueInput`), i.guild);
-      // log.debug(F, `modalInput: ${modalInput}!`);
 
       // Get the actor
       const actor = (i.member ?? i.user) as GuildMember | User;
@@ -118,7 +113,6 @@ export async function techHelpClick(interaction:ButtonInteraction) {
         reason: `${targetName} submitted a(n) ${issueType} issue`,
         invitable: false,
       });
-      // log.debug(F, `Created meta-thread ${ticketThread.id}`);
 
       const message = stripIndents`
         Hey ${roleTechReview}! ${actor} has submitted a new issue:
@@ -146,8 +140,6 @@ export async function techHelpClick(interaction:ButtonInteraction) {
         stripIndents`Thank you, check out ${ticketThread} to talk with a team member about your issue!`,
       );
       await i.editReply({ embeds: [embed] });
-
-    // log.debug(F, `Sent intro message to meta-thread ${ticketThread.id}`);
     });
 }
 
@@ -199,7 +191,7 @@ export async function techHelpClose(interaction:ButtonInteraction) {
   let target = {} as GuildMember;
   try {
     target = await interaction.guild.members.fetch(targetId);
-  } catch (e) {
+  } catch {
     log.debug(F, `Failed to fetch member ${targetId}! They probably left the guild.`);
   }
 

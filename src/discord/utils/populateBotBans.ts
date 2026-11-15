@@ -17,7 +17,6 @@ export async function populateBans():Promise<void> {
 
   bannedUsers.forEach(user => {
     if (user.discord_id) {
-      // log.debug(F, `user: ${user.discord_id} is banned`);
       botBannedUsers.push(user.discord_id);
     }
   });

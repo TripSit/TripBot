@@ -42,7 +42,7 @@ export const dTripsitStats: SlashCommand = {
     const subcommand = interaction.options.getSubcommand();
     if (subcommand === 'command') {
       const command = interaction.options.getString('target_command');
-      const days = interaction.options.getInteger('days') || 0;
+      const days = interaction.options.getInteger('days') ?? 0;
       stats = await getTripSitStatistics(subcommand, command, days);
     } else if (subcommand === 'session') {
       stats = await getTripSitStatistics(subcommand);

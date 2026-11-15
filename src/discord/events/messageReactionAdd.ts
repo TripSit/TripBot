@@ -1,15 +1,10 @@
-// import {
-//   MessageReaction,
-//   User,
-// } from 'discord.js';
 import {
   MessageReactionAddEvent,
 } from '../@types/eventDef';
 import { chitragupta } from '../utils/chitragupta';
 import { bestOf } from '../utils/bestOfTripsit';
 import { aiReaction } from '../commands/global/d.ai';
-// import log from '../../global/utils/log';
-// import {parse} from 'path';
+
 const F = f(__filename); // eslint-disable-line @typescript-eslint/no-unused-vars
 
 export const messageReactionAdd: MessageReactionAddEvent = {
@@ -17,16 +12,14 @@ export const messageReactionAdd: MessageReactionAddEvent = {
   async execute(messageReaction, user) {
     try {
       await messageReaction.fetch();
-    } catch (e) {
-      // log.error(F, 'Failed to fetch messageReaction');
-      // return;
+    } catch {
+      // The reaction may have been removed before it could be fetched.
     }
 
     try {
       await messageReaction.message.fetch(); // Get the message object so that we can do stuff between restarts
-    } catch (e) {
-      // log.error(F, 'Failed to fetch message data');
-      // return;
+    } catch {
+      // The message may have been deleted before it could be fetched.
     }
 
     if (!messageReaction.message.guild) return; // Ignore DMs
@@ -40,13 +33,11 @@ export const messageReactionAdd: MessageReactionAddEvent = {
 
     // Don't run on bots
     if (user.bot) {
-      // log.debug(F, `Ignoring bot interaction`);
       return;
     }
 
     chitragupta(messageReaction, user, 1);
     bestOf(messageReaction);
-    // await communityMod(reaction, user);
   },
 };
 

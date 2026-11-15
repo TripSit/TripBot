@@ -21,7 +21,6 @@ router.get('/', async (req, res) => {
 
 router.get('/:name', async (req, res, next) => {
   const { name } = req.params;
-  // console.log('name', name);
   try {
     if (name === 'error') throw new Error('error');
     const result = await queries.getDrug(name);

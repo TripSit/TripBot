@@ -48,7 +48,7 @@ router.post('/award-xp', async (req, res, next) => {
 
       // Step 2: Fetch the Discord guild and member
       const guild = await discordClient.guilds.fetch(env.DISCORD_GUILD_ID);
-      const guildMember = await guild.members.fetch(discordUserData.id as string);
+      const guildMember = await guild.members.fetch(discordUserData.id);
       if (!guildMember) {
         return res.status(404).json({
           error: `Guild Member with ID ${discordUserData.id} could not be found in TripSit Guild.`,

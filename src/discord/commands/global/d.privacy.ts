@@ -1,4 +1,6 @@
 import {
+  ChatInputCommandInteraction,
+  EmbedBuilder,
   MessageFlags,
   SlashCommandBuilder,
 } from 'discord.js';
@@ -9,6 +11,18 @@ import { embedTemplate } from '../../utils/embedTemplate';
 import commandContext from '../../utils/context';
 
 const F = f(__filename);
+
+async function handleBridgeOptOut(interaction: ChatInputCommandInteraction, embed: EmbedBuilder): Promise<boolean> {
+  const relay = interaction.options.getBoolean('relay', true);
+  const optedOut = await setIrcBridgeOptOut(interaction.user.id, !relay);
+  embed.setTitle('IRC Bridge')
+    .setDescription(optedOut
+      ? stripIndents`Your messages will no longer be relayed to IRC.
+      Messages already relayed stay on IRC. Run this again with relay set to True to turn relaying back on.`
+      : 'Your messages in bridged channels will be relayed to IRC.');
+  await interaction.editReply({ embeds: [embed] });
+  return true;
+}
 
 export const dPrivacy: SlashCommand = {
   data: new SlashCommandBuilder()
@@ -36,15 +50,7 @@ export const dPrivacy: SlashCommand = {
     const embed = embedTemplate();
 
     if (command === 'bridge') {
-      const relay = interaction.options.getBoolean('relay', true);
-      const optedOut = await setIrcBridgeOptOut(interaction.user.id, !relay);
-      embed.setTitle('IRC Bridge')
-        .setDescription(optedOut
-          ? stripIndents`Your messages will no longer be relayed to IRC.
-          Messages already relayed stay on IRC. Run this again with relay set to True to turn relaying back on.`
-          : 'Your messages in bridged channels will be relayed to IRC.');
-      await interaction.editReply({ embeds: [embed] });
-      return true;
+      return handleBridgeOptOut(interaction, embed);
     }
 
     const userData = await privacy('get', interaction.user.id);

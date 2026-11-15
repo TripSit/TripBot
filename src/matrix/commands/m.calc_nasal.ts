@@ -1,13 +1,13 @@
 /* eslint-disable max-len */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { MatrixClient, RichReply } from 'matrix-bot-sdk';
+import { RichReply } from 'matrix-bot-sdk';
 import { calcSolvent, calcSubstance } from '../../global/commands/g.calcNasal';
 
 export default mCalcNasal;
 
 /**
- * --- TODO ----
+ * --- Future work ----
  * I think usability of this command can be heavily improved.
  */
 

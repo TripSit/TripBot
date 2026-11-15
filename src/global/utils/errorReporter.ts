@@ -5,7 +5,7 @@
 export class ReportLimiter {
   private sent: number[] = [];
 
-  private lastByKey = new Map<string, number>();
+  private readonly lastByKey = new Map<string, number>();
 
   constructor(
     private readonly maxPerWindow = 5,

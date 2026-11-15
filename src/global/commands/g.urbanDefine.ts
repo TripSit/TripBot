@@ -47,8 +47,8 @@ export async function urbanDefine(term:string) {
 
   const definition = `${data.list[0].definition.length > 1024
     ? `${data.list[0].definition.slice(0, 1020)}...`
-    : data.list[0].definition}`.replace(/\[|\]/g, '');
-  const example = `${data.list[0].example}`.replace(/\[|\]/g, '');
+    : data.list[0].definition}`.replace(/[[\]]/g, '');
+  const example = `${data.list[0].example}`.replace(/[[\]]/g, '');
   const upvotes = `${data.list[0].thumbs_up}`;
   const downvotes = `${data.list[0].thumbs_down}`;
 

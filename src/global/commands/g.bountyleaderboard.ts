@@ -36,7 +36,7 @@ export async function getBountyStats(): Promise<BountyStats[]> {
       const userStats = new Map<string, { count: number; totalXP: number }>();
 
       rawData.forEach(record => {
-        const existing = userStats.get(record.user_id) || { count: 0, totalXP: 0 };
+        const existing = userStats.get(record.user_id) ?? { count: 0, totalXP: 0 };
         userStats.set(record.user_id, {
           count: existing.count + 1,
           totalXP: existing.totalXP + (record.amount || 0),
@@ -59,7 +59,7 @@ export async function getBountyStats(): Promise<BountyStats[]> {
       // eslint-disable-next-line no-underscore-dangle
       totalBounties: data._count.id,
       // eslint-disable-next-line no-underscore-dangle
-      totalXP: data._sum.amount || 0,
+      totalXP: data._sum.amount ?? 0,
     }));
 
     return stats.filter(stat => stat.totalBounties > 0);

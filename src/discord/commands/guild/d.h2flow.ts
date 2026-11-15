@@ -10,9 +10,30 @@ import { embedTemplate } from '../../utils/embedTemplate';
 import commandContext from '../../utils/context';
 import { getOrCreateUser } from '../../../global/utils/dbRecords';
 
-// import log from '../../../global/utils/log';
-
 const F = f(__filename);
+
+// Club by total points: the highest threshold reached wins
+const CLUBS: [number, string][] = [
+  [1000, 'Diamond Club'],
+  [900, 'Ruby Club'],
+  [800, 'Sapphire Club'],
+  [700, 'Emerald Club'],
+  [600, 'Platinum Club'],
+  [500, 'Gold Club'],
+  [400, 'Silver Club'],
+  [300, 'Bronze Club'],
+  [200, 'Copper Club'],
+  [100, 'Tin Club'],
+  [50, 'Aluminum Club'],
+  [25, 'Steel Club'],
+  [10, 'Iron Club'],
+  [5, 'Bronze Club'],
+  [1, 'Copper Club'],
+];
+
+const clubForPoints = (totalPoints: number): string => (
+  CLUBS.find(([threshold]) => totalPoints >= threshold)?.[1] ?? 'Non-member =('
+);
 
 export const dH2flow: SlashCommand = {
   data: new SlashCommandBuilder()
@@ -32,22 +53,7 @@ export const dH2flow: SlashCommand = {
     const movePoints = userData.move_points;
     const lovePoints = userData.empathy_points;
     const totalPoints = sparklePoints + movePoints + lovePoints;
-    let platinumClub = 'Non-member =(';
-    if (totalPoints >= 1000) platinumClub = 'Diamond Club';
-    else if (totalPoints >= 900) platinumClub = 'Ruby Club';
-    else if (totalPoints >= 800) platinumClub = 'Sapphire Club';
-    else if (totalPoints >= 700) platinumClub = 'Emerald Club';
-    else if (totalPoints >= 600) platinumClub = 'Platinum Club';
-    else if (totalPoints >= 500) platinumClub = 'Gold Club';
-    else if (totalPoints >= 400) platinumClub = 'Silver Club';
-    else if (totalPoints >= 300) platinumClub = 'Bronze Club';
-    else if (totalPoints >= 200) platinumClub = 'Copper Club';
-    else if (totalPoints >= 100) platinumClub = 'Tin Club';
-    else if (totalPoints >= 50) platinumClub = 'Aluminum Club';
-    else if (totalPoints >= 25) platinumClub = 'Steel Club';
-    else if (totalPoints >= 10) platinumClub = 'Iron Club';
-    else if (totalPoints >= 5) platinumClub = 'Bronze Club';
-    else if (totalPoints >= 1) platinumClub = 'Copper Club';
+    const platinumClub = clubForPoints(totalPoints);
 
     const embed = embedTemplate()
       .setAuthor({

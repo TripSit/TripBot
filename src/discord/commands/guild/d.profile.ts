@@ -13,9 +13,10 @@ import { expForNextLevel, getTotalLevel } from '../../../global/utils/experience
 import { getLevelFreeze } from '../../../global/commands/g.levelFreeze';
 import { getPersonaInfo } from '../../../global/commands/g.rpg';
 import getAsset from '../../utils/getAsset';
+import { deFuckifyText, generateColors, resizeText } from '../../utils/canvasUtils';
 import {
-  resizeText, deFuckifyText, generateColors,
-} from '../../utils/canvasUtils';
+  Ctx, cardDisplayName, drawAvatar, drawPurchasedExtras, drawUsername, getAvatarIcons, levelBadgeName,
+} from '../../utils/cardHelpers';
 
 const F = f(__filename);
 
@@ -38,6 +39,125 @@ export function numFormatterVoice(num:number):string {
     return `${(num / 1000000).toFixed(1)}M`;
   }
   return num.toFixed(1);
+}
+
+type ProfileData = Awaited<ReturnType<typeof profile>>;
+type TotalLevel = Awaited<ReturnType<typeof getTotalLevel>>;
+
+function drawProfileShape(context: Ctx, colors: { light: string; dark: string }): void {
+  context.fillStyle = colors.light;
+  context.beginPath();
+  context.roundRect(0, 20, 675, 272, [19]);
+  context.roundRect(684, 20, 237, 272, [19]);
+  context.fill();
+  context.fillStyle = colors.dark;
+  context.beginPath();
+  context.roundRect(0, 0, 675, 145, [19]);
+  context.roundRect(684, 0, 237, 205, [19]);
+  context.fill();
+}
+
+function drawProfileChips(context: Ctx, chipColor: string): void {
+  context.fillStyle = chipColor;
+  context.beginPath();
+  context.roundRect(18, 163, 201, 51, [19]);
+  context.roundRect(18, 223, 201, 51, [19]);
+  context.roundRect(237, 163, 201, 51, [19]);
+  context.roundRect(237, 223, 201, 51, [19]);
+  context.roundRect(456, 163, 201, 51, [19]);
+  context.roundRect(456, 223, 201, 51, [19]);
+  context.roundRect(702, 223, 201, 51, [19]);
+  context.fill();
+}
+
+function drawTimezone(context: Ctx, timezone: string | null): void {
+  if (timezone) {
+    const timestring = new Date().toLocaleTimeString('en-US', {
+      timeZone: timezone,
+      hour12: true,
+      hour: 'numeric',
+      minute: 'numeric',
+    });
+    context.fillText(timestring, 210, 190);
+  } else {
+    context.fillText('NOT SET!', 210, 190);
+  }
+}
+
+/** Draws the birthday and returns whether today is the birthday. */
+function drawBirthday(context: Ctx, birthday: Date | null): boolean {
+  if (!birthday) {
+    context.fillText('NOT SET!', 210, 250);
+    return false;
+  }
+  const today = new Date();
+  const itIsYourBirthday = today.getMonth() === birthday.getMonth() && today.getDate() === birthday.getDate();
+  const day = birthday.getDate() < 10 ? `0${birthday.getDate()}` : `${birthday.getDate()}`;
+  context.fillText(`${day} ${birthday.toLocaleString('en-GB', { month: 'short' }).toUpperCase()}`, 210, 250);
+  return itIsYourBirthday;
+}
+
+function drawActivityStats(context: Ctx, profileData: ProfileData): void {
+  // Messages Sent Text
+  if (profileData.totalTextExp) {
+    const MessagesSent = profileData.totalTextExp / 20;
+    context.fillText(`${numFormatter(MessagesSent)}`, 429, 190);
+  } else {
+    context.fillText('0', 429, 190);
+  }
+
+  // Voice Hours Text
+  if (profileData.totalTextExp) {
+    const hoursInChat = (profileData.totalVoiceExp / 10 / 60);
+    context.fillText(`${numFormatterVoice(hoursInChat)} HR`, 429, 250);
+  } else {
+    context.fillText('0 HR', 429, 250);
+  }
+
+  // Karma Text
+  context.fillText(`${numFormatter(profileData.karma_received)}`, 648, 190);
+
+  // Tokens Text
+  context.fillText(`${numFormatter(profileData.tokens)}`, 648, 250);
+}
+
+async function drawLevelCircle(
+  context: Ctx,
+  totalTextData: TotalLevel,
+  colors: { chipColor: string; barColor: string },
+): Promise<void> {
+  // Choose and Draw the Level Image
+  const LevelImage = await Canvas.loadImage(await getAsset(levelBadgeName(totalTextData.level)));
+  context.drawImage(LevelImage, 758, 59, 88, 88);
+
+  // Level Bar Circle BG
+  context.strokeStyle = colors.chipColor;
+  context.lineWidth = 18;
+  context.beginPath();
+  context.arc(802, 103, 76, 0, 2 * Math.PI);
+  context.stroke();
+
+  // Level Bar Math
+  const expToLevel = await expForNextLevel(totalTextData.level);
+  const percentageOfLevel = (totalTextData.level_points / expToLevel);
+
+  // Start at the 0 degrees position, in human terms, the 12 o'clock position
+  const startDegrees = 0;
+  // End degrees is the percentage of the level * 360 degrees, or a full circle
+  const endDegrees = 360 * percentageOfLevel;
+
+  // Canvas thinks that the "start" of a circle is the 3 o'clock position,
+  // so we need to subtract 90 degrees from the start and end degrees to "rotate" the circle
+  const startRadians = ((startDegrees - 90) * Math.PI) / 180;
+  const endRadians = ((endDegrees - 90) * Math.PI) / 180;
+
+  // Circular Level Bar
+  context.strokeStyle = colors.barColor;
+  context.lineCap = 'round';
+  context.lineWidth = 18;
+  context.beginPath();
+  context.arc(802, 103, 76, startRadians, endRadians);
+  context.stroke();
 }
 
 export const dProfile: SlashCommand = {
@@ -70,14 +190,12 @@ export const dProfile: SlashCommand = {
     let target: GuildMember | null = null;
     try {
       target = await interaction.guild.members.fetch(targetUser.id);
-    } catch (error) {
+    } catch {
       // User is not in the guild, target will remain null
       log.debug(F, `User ${targetUser.id} is not in the guild`);
     }
 
     // If target is still null (user not in guild), we'll use fallback values below
-
-    // log.debug(F, `target.presence?.status: ${target.presence?.status}`);
 
     const values = [
 
@@ -87,8 +205,6 @@ export const dProfile: SlashCommand = {
       await getPersonaInfo(targetUser.id),
       // Load Icon Images
       await Canvas.loadImage(await getAsset('cardIcons')),
-      // Get the status icon
-      // await Canvas.loadImage(await imageGet(`icon_${target.presence?.status ?? 'offline'}`)),
       // Get the avatar image
       await Canvas.loadImage(targetUser.displayAvatarURL({ extension: 'jpg' })),
       // Get the birthday card overlay
@@ -102,78 +218,30 @@ export const dProfile: SlashCommand = {
     const profileData = values[0];
     const personaData = values[1];
     const Icons = values[2];
-    // const StatusIcon = values[3];
     const avatar = values[3];
     const birthdayOverlay = values[4];
-    const teamtripsitIcon = values[5];
-    const premiumIcon = values[6];
-    const boosterIcon = values[7];
-    const legacyIcon = values[8];
 
     const avatarIconRoles = {
       [env.ROLE_TEAMTRIPSIT]: {
-        image: teamtripsitIcon,
+        image: values[5],
         hierarchy: 1,
       },
       [env.ROLE_PREMIUM]: {
-        image: premiumIcon,
+        image: values[6],
         hierarchy: 2,
       },
       [env.ROLE_BOOSTER]: {
-        image: boosterIcon,
+        image: values[7],
         hierarchy: 3,
       },
       [env.ROLE_LEGACY]: {
-        image: legacyIcon,
+        image: values[8],
         hierarchy: 4,
       },
     };
 
-    let avatarIconSlot1 = {} as {
-      image: Canvas.Image;
-    };
-
-    let avatarIconSlot2 = {} as {
-      image: Canvas.Image;
-    };
-
-    let avatarIconSlot3 = {} as {
-      image: Canvas.Image;
-    };
-
-    let avatarIconSlot4 = {} as {
-      image: Canvas.Image;
-    };
-
-    // Check if user has any roles that have an avatar icon. Put all of them in an array and sort them by hierarchy
-    // If target is null (not in guild), this will be an empty array
-    const avatarIconRolesArray = target
-      ? Object.entries(avatarIconRoles)
-        .filter(([key]) => target.roles.cache.has(key))
-        .sort((a, b) => a[1].hierarchy - b[1].hierarchy)
-      : [];
-
-    // From the list, assign each one to a slot in numerical order
-    if (avatarIconRolesArray.length > 0) {
-      avatarIconSlot1 = {
-        image: avatarIconRolesArray[0][1].image,
-      };
-    }
-    if (avatarIconRolesArray.length > 1) {
-      avatarIconSlot2 = {
-        image: avatarIconRolesArray[1][1].image,
-      };
-    }
-    if (avatarIconRolesArray.length > 2) {
-      avatarIconSlot3 = {
-        image: avatarIconRolesArray[2][1].image,
-      };
-    }
-    if (avatarIconRolesArray.length > 3) {
-      avatarIconSlot4 = {
-        image: avatarIconRolesArray[3][1].image,
-      };
-    }
+    // Check if user has any roles that have an avatar icon, sorted by hierarchy and assigned to slots in order
+    const avatarIcons = getAvatarIcons(target, avatarIconRoles);
 
     // Create Canvas and Context
     const canvasWidth = 921;
@@ -184,322 +252,53 @@ export const dProfile: SlashCommand = {
     // Generate the colors for the card based on the user's role color
     // If user is not in guild, use default gray color
     const roleColor = target
-      ? `#${(target.roles.color?.color || 0x99aab5).toString(16).padStart(6, '0')}`
+      ? `#${(target.roles.color?.color ?? 0x99aab5).toString(16).padStart(6, '0')}`
       : '#99aab5';
     log.debug(F, `roleColor: ${roleColor}`);
 
-    const cardLightColor = generateColors(roleColor, 0, -75, -67);
-    const cardDarkColor = generateColors(roleColor, 0, -75, -80);
     const chipColor = generateColors(roleColor, 0, -50, -50);
     const barColor = generateColors(roleColor, 0, -20, -10);
     const textColor = generateColors(roleColor, 0, 0, 0);
 
-    // Draw the card shape
-    context.fillStyle = cardLightColor;
-    context.beginPath();
-    context.roundRect(0, 20, 675, 272, [19]);
-    context.roundRect(684, 20, 237, 272, [19]);
-    context.fill();
-    context.fillStyle = cardDarkColor;
-    context.beginPath();
-    context.roundRect(0, 0, 675, 145, [19]);
-    context.roundRect(684, 0, 237, 205, [19]);
-    context.fill();
+    drawProfileShape(context, {
+      light: generateColors(roleColor, 0, -75, -67),
+      dark: generateColors(roleColor, 0, -75, -80),
+    });
 
     // WIP: Purchased Background
+    const { userFont, userFlair } = await drawPurchasedExtras(context, personaData, [
+      [0, 0, 675, 292],
+      [684, 0, 237, 292],
+    ]);
 
-    // log.debug(F, `personaData home (Change) ${JSON.stringify(personaData, null, 2)}`);
-    let userFont = 'futura';
-    let userFlair = '';
-    if (personaData) {
-      // Get the existing inventory data
-      const inventoryData = await db.rpg_inventory.findMany({
-        where: {
-          persona_id: personaData.id,
-        },
-      });
-      // log.debug(F, `Persona home inventory (change): ${JSON.stringify(inventoryData, null, 2)}`);
-
-      const equippedBackground = inventoryData.find(item => item.equipped === true && item.effect === 'background');
-      const equippedFont = inventoryData.find(item => item.equipped === true && item.effect === 'font');
-      const equippedFlair = inventoryData.find(item => item.equipped === true && item.effect === 'userflair');
-      // log.debug(F, `equippedBackground: ${JSON.stringify(equippedBackground, null, 2)} `);
-      if (equippedBackground) {
-        const imagePath = await getAsset(equippedBackground.value);
-        const Background = await Canvas.loadImage(imagePath);
-        context.save();
-        context.globalCompositeOperation = 'lighter';
-        context.globalAlpha = 0.04;
-        context.beginPath();
-        context.roundRect(0, 0, 675, 292, [19]);
-        context.roundRect(684, 0, 237, 292, [19]);
-        context.clip();
-        context.drawImage(Background, 0, 0);
-        context.restore();
-      }
-      if (equippedFont) {
-        await getAsset(equippedFont.value);
-        userFont = equippedFont.value;
-      }
-      if (equippedFlair) {
-        userFlair = equippedFlair.effect_value;
-      }
-    }
-
-    // Draw the chips
-    context.fillStyle = chipColor;
-    context.beginPath();
-    context.roundRect(18, 163, 201, 51, [19]);
-    context.roundRect(18, 223, 201, 51, [19]);
-    context.roundRect(237, 163, 201, 51, [19]);
-    context.roundRect(237, 223, 201, 51, [19]);
-    context.roundRect(456, 163, 201, 51, [19]);
-    context.roundRect(456, 223, 201, 51, [19]);
-    context.roundRect(702, 223, 201, 51, [19]);
-    // context.arc(603, 73, 54, 0, Math.PI * 2, true); // CAMP ICON CHIP
-    context.fill();
-
+    drawProfileChips(context, chipColor);
     context.drawImage(Icons, 0, 0);
-
-    /* TEST: Border item
-    context.save();
-    context.beginPath();
-    context.roundRect(0, 0, 675, 292, [19]);
-    context.roundRect(684, 0, 237, 292, [19]);
-    context.clip();
-    context.globalAlpha = 1;
-    context.strokeStyle = '#000000';
-    context.lineWidth = 16;
-    context.stroke();
-    context.globalCompositeOperation = 'lighten';
-    context.strokeStyle = '#3a5760';
-    context.stroke();
-    context.restore(); */
-
-    // Overly complicated avatar clip
-    context.save();
-    // If avatarIconSlot1 has an image, draw the hole for the icon
-    if (avatarIconSlot1.image) {
-      context.beginPath();
-      context.arc(115, 117, 21, 0, Math.PI * 2);
-      context.arc(73, 73, 55, 0, Math.PI * 2, true);
-      context.closePath();
-      context.clip();
-    }
-    // If avatarIconSlot2 has an image, draw the hole for the icon
-    if (avatarIconSlot2.image) {
-      context.beginPath();
-      context.arc(31, 117, 21, 0, Math.PI * 2);
-      context.arc(73, 73, 55, 0, Math.PI * 2, true);
-      context.closePath();
-      context.clip();
-    }
-    // If avatarIconSlot3 has an image, draw the hole for the icon
-    if (avatarIconSlot3.image) {
-      context.beginPath();
-      context.arc(115, 28, 21, 0, Math.PI * 2);
-      context.arc(73, 73, 55, 0, Math.PI * 2, true);
-      context.closePath();
-      context.clip();
-    }
-    // If avatarIconSlot4 has an image, draw the hole for the icon
-    if (avatarIconSlot4.image) {
-      context.beginPath();
-      context.arc(31, 28, 21, 0, Math.PI * 2);
-      context.arc(73, 73, 55, 0, Math.PI * 2, true);
-      context.closePath();
-      context.clip();
-    }
-    context.beginPath();
-    context.arc(73, 73, 54, 0, Math.PI * 2, true);
-    // context.closePath();
-    context.clip();
-
-    context.drawImage(avatar, 18, 18, 109, 109);
-    context.restore();
-
-    // Draw the avatar icons
-    // If avatarIconSlot1 has an image, draw it
-    if (avatarIconSlot1.image) {
-      context.drawImage(avatarIconSlot1.image, 99, 102, 32, 32);
-    }
-    // If avatarIconSlot2 has an image, draw it
-    if (avatarIconSlot2.image) {
-      context.drawImage(avatarIconSlot2.image, 15, 102, 32, 32);
-    }
-    // If avatarIconSlot3 has an image, draw it
-    if (avatarIconSlot3.image) {
-      context.drawImage(avatarIconSlot3.image, 99, 12, 32, 32);
-    }
-    // If avatarIconSlot4 has an image, draw it
-    if (avatarIconSlot4.image) {
-      context.drawImage(avatarIconSlot4.image, 15, 12, 32, 32);
-    }
-
-    // WIP: Camp Icon
-    // const CampIcon = await Canvas.loadImage(await imageGet('campIconA'));
-    // context.drawImage(CampIcon, 547, 17);
+    drawAvatar(context, avatar, avatarIcons);
 
     // Username Text
-    // Use displayName if user is in guild, otherwise use username
-    const displayNameToUse = target?.displayName ?? targetUser.username;
-    let filteredDisplayName = deFuckifyText(displayNameToUse);
-    // If the filteredDisplayName is much shorter than what was input, display their username as a fallback
-    if (filteredDisplayName.length < displayNameToUse.length / 2) {
-      filteredDisplayName = targetUser.username.charAt(0).toUpperCase() + targetUser.username.slice(1);
-    }
-
-    context.fillStyle = textColor;
-    context.font = `50px ${userFont}`;
-    context.textAlign = 'left';
-    let usernameHeight = 76;
-    let fontSize: number;
-    const maxLength = 508;
-    context.textBaseline = 'middle';
-
-    if (userFlair) {
-      usernameHeight = 78;
-      fontSize = 30;
-      context.textBaseline = 'top';
-      context.font = resizeText(canvasObj, userFlair, fontSize, 'futura', maxLength);
-      context.fillText(`${userFlair}`, 146, 100);
-      context.textBaseline = 'bottom';
-    }
-
-    fontSize = 50;
-    context.font = resizeText(canvasObj, filteredDisplayName, fontSize, userFont, maxLength);
-    context.fillText(`${filteredDisplayName}`, 146, usernameHeight);
-    context.textBaseline = 'middle';
+    const filteredDisplayName = cardDisplayName(target, targetUser);
+    drawUsername(context, canvasObj, filteredDisplayName, { textColor, userFont, userFlair });
 
     // User Timezone
     context.font = '25px futura';
     context.textAlign = 'right';
     context.fillStyle = '#ffffff';
-    if (profileData.timezone) {
-      const timestring = new Date().toLocaleTimeString('en-US', {
-        timeZone: profileData.timezone,
-        hour12: true,
-        hour: 'numeric',
-        minute: 'numeric',
-      });
-      context.fillText(timestring, 210, 190);
-    } else {
-      context.fillText('NOT SET!', 210, 190);
-    }
+    drawTimezone(context, profileData.timezone);
 
     // User Birthday
-    let targetBirthday = {} as Date;
-    let itIsYourBirthday = false;
-    if (profileData.birthday) {
-      targetBirthday = profileData.birthday;
-      const today = new Date();
-      if (today.getMonth() === targetBirthday.getMonth() && today.getDate() === targetBirthday.getDate()) {
-        // log.debug(F, 'Birthday Match!');
-        itIsYourBirthday = true;
-      }
-      if (targetBirthday.getDate() < 10) {
-        context.fillText(`0${targetBirthday.getDate()} ${targetBirthday.toLocaleString('en-GB', { month: 'short' }).toUpperCase()}`, 210, 250);
-      } else {
-        context.fillText(`${targetBirthday.getDate()} ${targetBirthday.toLocaleString('en-GB', { month: 'short' }).toUpperCase()}`, 210, 250);
-      }
-    } else {
-      context.fillText('NOT SET!', 210, 250);
-    }
+    const itIsYourBirthday = drawBirthday(context, profileData.birthday);
 
-    // Messages Sent Text
-    if (profileData.totalTextExp) {
-      const MessagesSent = profileData.totalTextExp / 20;
-      context.fillText(`${numFormatter(MessagesSent)}`, 429, 190);
-    } else {
-      context.fillText('0', 429, 190);
-    }
-
-    // Voice Hours Text
-    if (profileData.totalTextExp) {
-      const hoursInChat = (profileData.totalVoiceExp / 10 / 60);
-      context.fillText(`${numFormatterVoice(hoursInChat)} HR`, 429, 250);
-    } else {
-      context.fillText('0 HR', 429, 250);
-    }
-
-    // Karma Text
-    context.fillText(`${numFormatter(profileData.karma_received)}`, 648, 190);
-
-    // Tokens Text
-    context.fillText(`${numFormatter(profileData.tokens)}`, 648, 250);
+    drawActivityStats(context, profileData);
 
     // Level Text (respects a level freeze if one is set for this user)
     const frozenLevel = await getLevelFreeze(targetUser.id);
     const totalTextData = await getTotalLevel(profileData.totalTextExp + profileData.totalVoiceExp, frozenLevel);
     context.fillText(`${totalTextData.level}`, 894, 250);
 
-    // Choose and Draw the Level Image
-    let LevelImagePath = '' as string;
-    if (totalTextData.level <= 9) {
-      LevelImagePath = 'badgeVip0';
-    } else if (totalTextData.level <= 19) {
-      LevelImagePath = 'badgeVip1';
-    } else if (totalTextData.level <= 29) {
-      LevelImagePath = 'badgeVip2';
-    } else if (totalTextData.level <= 39) {
-      LevelImagePath = 'badgeVip3';
-    } else if (totalTextData.level <= 49) {
-      LevelImagePath = 'badgeVip4';
-    } else if (totalTextData.level <= 59) {
-      LevelImagePath = 'badgeVip5';
-    } else if (totalTextData.level <= 69) {
-      LevelImagePath = 'badgeVip6';
-    } else if (totalTextData.level <= 79) {
-      LevelImagePath = 'badgeVip7';
-    } else if (totalTextData.level <= 89) {
-      LevelImagePath = 'badgeVip8';
-    } else if (totalTextData.level <= 99) {
-      LevelImagePath = 'badgeVip9';
-    } else if (totalTextData.level >= 100) {
-      LevelImagePath = 'badgeVip10';
-    }
-    // log.debug(F, `LevelImagePath: ${LevelImagePath}`);
-    const LevelImage = await Canvas.loadImage(await getAsset(LevelImagePath));
-    context.drawImage(LevelImage, 758, 59, 88, 88);
-
-    // Level Bar Circle BG
-    context.strokeStyle = chipColor;
-    context.lineWidth = 18;
-    context.beginPath();
-    context.arc(802, 103, 76, 0, 2 * Math.PI);
-    context.stroke();
-
-    // Level Bar Math
-    let percentageOfLevel = 0;
-    const expToLevel = await expForNextLevel(totalTextData.level);
-    percentageOfLevel = (totalTextData.level_points / expToLevel);
-    // log.debug(F, `percentageOfLevel: ${percentageOfLevel}`);
-
-    // Start at the 0 degrees position, in human terms, the 12 o'clock position
-    const startDegrees = 0;
-    // End degrees is the percentage of the level * 360 degrees, or a full circle
-    const endDegrees = 360 * percentageOfLevel;
-    // log.debug(F, `startDegrees: ${startDegrees}`);
-    // log.debug(F, `endDegrees: ${endDegrees}`);
-
-    // Canvas thinks that the "start" of a circle is the 3 o'clock position,
-    // so we need to subtract 90 degrees from the start and end degrees to "rotate" the circle
-    const startRadians = ((startDegrees - 90) * Math.PI) / 180;
-    const endRadians = ((endDegrees - 90) * Math.PI) / 180;
-    // log.debug(F, `startRadians: ${startRadians}`);
-    // log.debug(F, `endRadians: ${endRadians}`);
-
-    // Circular Level Bar
-    context.strokeStyle = barColor;
-    context.lineCap = 'round';
-    context.lineWidth = 18;
-    context.beginPath();
-    context.arc(802, 103, 76, startRadians, endRadians);
-    context.stroke();
+    await drawLevelCircle(context, totalTextData, { chipColor, barColor });
 
     // Birthday Mode
     if (itIsYourBirthday) {
-      // log.debug(F, 'Birthday Match!');
       context.font = '40px futura';
       context.textAlign = 'left';
       context.fillStyle = textColor;
@@ -535,12 +334,8 @@ export async function getProfilePreview(target: GuildMember, option: string, ima
     // Get the birthday card overlay
     // await Canvas.loadImage(await imageGet('cardBirthday')),
   ] as const;
-  // const profileData = values[0];
-  // const [personaData] = values[1];
   const Icons = values[0];
-  // const StatusIcon = values[3];
   const avatar = values[1];
-  // const birthdayOverlay = values[4];
 
   // Create Canvas and Context
   const canvasWidth = 921;
@@ -549,7 +344,7 @@ export async function getProfilePreview(target: GuildMember, option: string, ima
   const context = canvasObj.getContext('2d');
 
   // Generate the colors for the card based on the user's role color
-  const roleColor = `#${(target.roles.color?.color || 0x99aab5).toString(16).padStart(6, '0')}`;
+  const roleColor = `#${(target.roles.color?.color ?? 0x99aab5).toString(16).padStart(6, '0')}`;
 
   const cardLightColor = generateColors(roleColor, 0, -75, -67);
   const cardDarkColor = generateColors(roleColor, 0, -75, -80);
@@ -571,13 +366,9 @@ export async function getProfilePreview(target: GuildMember, option: string, ima
 
   // WIP: Purchased Background
 
-  // log.debug(F, `personaData home (Change) ${JSON.stringify(personaData, null, 2)}`);
-
   // Get the existing inventory data
   // const inventoryData = await inventoryGet(personaData.id);
   // log.debug(F, `Persona home inventory (change): ${JSON.stringify(inventoryData, null, 2)}`);
-
-  // const equippedBackground = inventoryData.find(item => item.equipped === true && item.effect === 'background');
 
   if (option === 'background' && imagePath) {
     const Background = await Canvas.loadImage(imagePath.toString());
@@ -602,26 +393,18 @@ export async function getProfilePreview(target: GuildMember, option: string, ima
   context.roundRect(456, 163, 201, 51, [19]);
   context.roundRect(456, 223, 201, 51, [19]);
   context.roundRect(702, 223, 201, 51, [19]);
-  // context.arc(603, 73, 54, 0, Math.PI * 2, true); // CAMP ICON CHIP
   context.fill();
 
   context.drawImage(Icons, 0, 0);
 
   // Overly complicated avatar clip (STATUS CLIP COMMENTED OUT)
   context.save();
-  // context.beginPath();
-  // context.arc(110, 112, 21, 0, Math.PI * 2);
-  // context.arc(73, 73, 55, 0, Math.PI * 2, true);
-  // context.closePath();
-  // context.clip();
   context.beginPath();
   context.arc(73, 73, 54, 0, Math.PI * 2, true);
-  // context.closePath();
   context.clip();
   // Avatar Image
   context.drawImage(avatar, 18, 18, 109, 109);
   context.restore();
-  // context.drawImage(StatusIcon, 90, 92);
 
   // WIP: Camp Icon
   // const CampIcon = await Canvas.loadImage(await imageGet('campIconA'));
@@ -760,25 +543,15 @@ export async function getProfilePreview(target: GuildMember, option: string, ima
   context.arc(802, 103, 76, 0, 2 * Math.PI);
   context.stroke();
 
-  /* // Level Bar Math
-    let percentageOfLevel = 0;
-    const expToLevel = await expForNextLevel(totalTextData.level);
-    percentageOfLevel = (totalTextData.level_points / expToLevel);
-    // log.debug(F, `percentageOfLevel: ${percentageOfLevel}`); */
-
   // Start at the 0 degrees position, in human terms, the 12 o'clock position
   const startDegrees = 0;
   // End degrees is the percentage of the level * 360 degrees, or a full circle
   const endDegrees = 180;
-  // log.debug(F, `startDegrees: ${startDegrees}`);
-  // log.debug(F, `endDegrees: ${endDegrees}`);
 
   // Canvas thinks that the "start" of a circle is the 3 o'clock position,
   // so we need to subtract 90 degrees from the start and end degrees to "rotate" the circle
   const startRadians = ((startDegrees - 90) * Math.PI) / 180;
   const endRadians = ((endDegrees - 90) * Math.PI) / 180;
-  // log.debug(F, `startRadians: ${startRadians}`);
-  // log.debug(F, `endRadians: ${endRadians}`);
 
   // Circular Level Bar
   context.strokeStyle = barColor;

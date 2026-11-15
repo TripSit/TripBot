@@ -1,8 +1,3 @@
-//
-// import log from './logger';
-// import {parse} from 'path';
-// const F = f(__filename);
-
 const _ = { // eslint-disable-line
   A: '[a|A|🅰|4|@]+',
   B: '[b|B|🅱]+',
@@ -41,8 +36,6 @@ const _ = { // eslint-disable-line
   nin: '[9|9️⃣|q]+',
   zer: '[0|0️⃣|O|o]+',
 };
-
-// const s = env.NODE_ENV === 'production' ? '\\\\W*' : '\\W*';
 
 const s = '\\W*';
 
@@ -141,8 +134,6 @@ export default bigBrother;
  * @return {Promise<void>}
  */
 export async function bigBrother(messageContent:string): Promise<string> {
-  // log.debug(F, `messageContent: ${JSON.stringify(messageContent, null, 2)}!`);
-
   // Check for most offensive stuff first
   if (offensive.filter(pattern => new RegExp(pattern).test(messageContent)).length > 0) {
     return 'offensive';

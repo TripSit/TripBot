@@ -220,40 +220,36 @@ async function setup(interaction:ChatInputCommandInteraction, guild: Guild):Prom
   // Get the IDs of the channels
 
   let helpdeskRoom = interaction.options.getChannel('helpdesk_channel');
-  if (!helpdeskRoom) {
-    // If the channel wasn't provided, create it:
-    helpdeskRoom = await guild.channels.create({
-      name: '🙊│talk-to-mods',
-      type: ChannelType.GuildText,
-      topic: 'This channel is used to make tickets.',
-      permissionOverwrites: [
-        {
-          id: guild.roles.everyone.id,
-          deny: ['ViewChannel'],
-        },
-      ],
-    });
-  }
+  // If the channel wasn't provided, create it:
+  helpdeskRoom ??= await guild.channels.create({
+    name: '🙊│talk-to-mods',
+    type: ChannelType.GuildText,
+    topic: 'This channel is used to make tickets.',
+    permissionOverwrites: [
+      {
+        id: guild.roles.everyone.id,
+        deny: ['ViewChannel'],
+      },
+    ],
+  });
   await db.discord_guilds.update({
     where: { id: guild.id },
     data: { channel_helpdesk: helpdeskRoom.id },
   });
 
   let trustRoom = interaction.options.getChannel('trust_channel');
-  if (!trustRoom) {
-    // If the channel wasn't provided, create it:
-    trustRoom = await guild.channels.create({
-      name: '🔒│trust-log',
-      type: ChannelType.GuildText,
-      topic: 'This channel is used to oversee the trust logging.',
-      permissionOverwrites: [
-        {
-          id: guild.roles.everyone.id,
-          deny: ['ViewChannel'],
-        },
-      ],
-    });
-  }
+  // If the channel wasn't provided, create it:
+  trustRoom ??= await guild.channels.create({
+    name: '🔒│trust-log',
+    type: ChannelType.GuildText,
+    topic: 'This channel is used to oversee the trust logging.',
+    permissionOverwrites: [
+      {
+        id: guild.roles.everyone.id,
+        deny: ['ViewChannel'],
+      },
+    ],
+  });
   await db.discord_guilds.update({
     where: { id: guild.id },
     data: { channel_trust: trustRoom.id },
@@ -266,20 +262,18 @@ async function setup(interaction:ChatInputCommandInteraction, guild: Guild):Prom
   });
 
   let modRoom = interaction.options.getChannel('mod_channel');
-  if (!modRoom) {
-    // If the channel wasn't provided, create it:
-    modRoom = await guild.channels.create({
-      name: 'coop-mod',
-      type: ChannelType.GuildText,
-      topic: 'This channel is used for cooperative moderation.',
-      permissionOverwrites: [
-        {
-          id: guild.roles.everyone.id,
-          deny: ['ViewChannel'],
-        },
-      ],
-    });
-  }
+  // If the channel wasn't provided, create it:
+  modRoom ??= await guild.channels.create({
+    name: 'coop-mod',
+    type: ChannelType.GuildText,
+    topic: 'This channel is used for cooperative moderation.',
+    permissionOverwrites: [
+      {
+        id: guild.roles.everyone.id,
+        deny: ['ViewChannel'],
+      },
+    ],
+  });
 
   await db.discord_guilds.update({
     where: {
@@ -291,20 +285,18 @@ async function setup(interaction:ChatInputCommandInteraction, guild: Guild):Prom
   });
 
   let modLog = interaction.options.getChannel('modlog_channel');
-  if (!modLog) {
-    // If the channel wasn't provided, create it:
-    modLog = await guild.channels.create({
-      name: 'modlog',
-      type: ChannelType.GuildText,
-      topic: 'This channel is used for moderation logs.',
-      permissionOverwrites: [
-        {
-          id: guild.roles.everyone.id,
-          deny: ['ViewChannel'],
-        },
-      ],
-    });
-  }
+  // If the channel wasn't provided, create it:
+  modLog ??= await guild.channels.create({
+    name: 'modlog',
+    type: ChannelType.GuildText,
+    topic: 'This channel is used for moderation logs.',
+    permissionOverwrites: [
+      {
+        id: guild.roles.everyone.id,
+        deny: ['ViewChannel'],
+      },
+    ],
+  });
 
   await db.discord_guilds.update({
     where: {
@@ -314,20 +306,14 @@ async function setup(interaction:ChatInputCommandInteraction, guild: Guild):Prom
       channel_mod_log: modLog.id,
     },
   });
-  // const helpdesk = interaction.options.getChannel('helpdesk_channel', true);
-  // const coopGen = interaction.options.getChannel('coop_gen_channel', true);
-  // const coopAnnounce = interaction.options.getChannel('coop_announce_channel', true);
-  // const coopOfftopic = interaction.options.getChannel('coop_offtopic_channel', true);
 
   let modRole = interaction.options.getRole('mod_role');
-  if (!modRole) {
-    // If the role wasn't provided, create it:
-    modRole = await guild.roles.create({
-      name: 'Cooperative Moderator',
-      color: '#00ff00',
-      mentionable: true,
-    });
-  }
+  // If the role wasn't provided, create it:
+  modRole ??= await guild.roles.create({
+    name: 'Cooperative Moderator',
+    color: '#00ff00',
+    mentionable: true,
+  });
 
   await db.discord_guilds.update({
     where: {
@@ -508,7 +494,7 @@ export async function sendCooperativeMessage(
       let channelCoopMod = {} as TextChannel;
       try {
         channelCoopMod = await discordClient.channels.fetch(guildData.channel_moderators) as TextChannel;
-      } catch (e) {
+      } catch {
         guildData.channel_moderators = null;
         await db.discord_guilds.update({
           where: {
@@ -521,7 +507,7 @@ export async function sendCooperativeMessage(
       let roleMod = {} as Role;
       try {
         roleMod = await guild.roles.fetch(guildData.role_moderator) as Role;
-      } catch (e) {
+      } catch {
         guildData.role_moderator = null;
         await db.discord_guilds.update({
           where: {

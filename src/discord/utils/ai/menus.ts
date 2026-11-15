@@ -6,8 +6,6 @@ import { AiPersona } from './personas';
 import { AiText } from './texts';
 import { PersonaSpec } from './types';
 
-// const F = f(__filename);
-
 export class AiMenu {
   static readonly guildChannels = new ChannelSelectMenuBuilder()
     .setCustomId(AiText.MenuId.GUILD_CHANNELS)

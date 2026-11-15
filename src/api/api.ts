@@ -3,7 +3,7 @@ import app from './app';
 
 const F = f(__filename);
 
-const port = env.API_PORT || 1337;
+const port = env.API_PORT ?? 1337;
 
 export default async function api(): Promise<Server> {
   return new Promise((resolve, reject) => {

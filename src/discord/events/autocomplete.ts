@@ -36,14 +36,12 @@ for (const color of pillColors) { // eslint-disable-line
   pillColorNames.push(Object.keys(color)[0]);
 }
 const defaultPillColors = pillColorNames.slice(0, 25);
-// log.debug(F, `pill_color_names: ${pill_color_names}`);
 
 const pillShapeNames: string[] = [];
 for (const shape of pillShapes) { // eslint-disable-line
   pillShapeNames.push(Object.keys(shape)[0]);
 }
 const defaultShapes = pillShapeNames.slice(0, 25);
-// log.debug(F, `pill_shape_names: ${pill_shape_names}`);
 
 const opioidNames = opioids.map(opioid => ({
   name: opioid.name,
@@ -92,7 +90,6 @@ async function autocompletePills(interaction: AutocompleteInteraction) {
 }
 
 async function autocompleteBenzos(interaction: AutocompleteInteraction) {
-  // log.debug(F, `Autocomplete requested for: ${interaction.commandName}`);
   const options = {
     shouldSort: true,
     threshold: 0.2,
@@ -112,8 +109,6 @@ async function autocompleteBenzos(interaction: AutocompleteInteraction) {
     return Object.hasOwn(props, 'dose_to_diazepam');
   });
 
-  // log.debug(F, `benzoNames: ${benzoNames}`);
-
   const benzoCache = benzoNames.map(drugName => {
     const drugObj = {
       name: drugName,
@@ -126,13 +121,9 @@ async function autocompleteBenzos(interaction: AutocompleteInteraction) {
     return drugObj;
   });
 
-  // log.debug(F, `benzoCache: ${JSON.stringify(benzoCache, null, 2)}`);
-
   const fuse = new Fuse(benzoCache, options);
   const focusedValue = interaction.options.getFocused();
-  // log.debug(F, `focusedValue: ${focusedValue}`);
   const results = fuse.search(focusedValue);
-  // log.debug(F, `results: ${JSON.stringify(results, null, 2)}`);
   if (results.length > 0) {
     const top25 = results.slice(0, 25);
     interaction.respond(top25.map(choice => ({ name: choice.item.name, value: choice.item.name })));
@@ -152,21 +143,17 @@ async function autocompleteTimezone(interaction: AutocompleteInteraction) {
 
   const fuse = new Fuse(timezones, options);
   const focusedValue = interaction.options.getFocused();
-  // log.debug(F, `focusedValue: ${focusedValue}`);
   const results = fuse.search(focusedValue);
-  // log.debug(F, `Autocomplete results: ${results}`);
   if (results.length > 0) {
     const top25 = results.slice(0, 25);
     const listResults = top25.map(choice => ({
       name: choice.item.label,
       value: choice.item.label,
     }));
-    // log.debug(F, `list_results: ${listResults}`);
     interaction.respond(listResults);
   } else {
     const defaultTimezones = timezoneNames.slice(0, 25);
     const listResults = defaultTimezones.map(choice => ({ name: choice, value: choice }));
-    // log.debug(F, `list_results: ${listResults}`);
     interaction.respond(listResults);
   }
 }
@@ -179,26 +166,14 @@ async function autocompleteConvert(interaction: AutocompleteInteraction) {
     focusedOption = interaction.options.data[1].focused as boolean;
   }
 
-  let displayUnits = [];
+  // When the first unit is already chosen, only offer units of the same kind of measurement
+  let displayUnits = unitsOfMeasurement;
   let measure = '';
   if (firstUnit !== '' && !focusedOption) {
-    // log.debug(F, `firstUnit: ${firstUnit}`);
-    // eslint-disable-next-line
-    for (const i in unitsOfMeasurement) {
-      if (unitsOfMeasurement[i].abbr.toLowerCase() === (firstUnit as string).toLowerCase()) {
-        measure = unitsOfMeasurement[i].measure;
-        // log.debug(F, `First unit measure: ${measure}`);
-      }
-    }
-    // eslint-disable-next-line
-    for (const i in unitsOfMeasurement) {
-      if (unitsOfMeasurement[i].measure.toLowerCase() === measure.toLowerCase()) {
-        displayUnits.push(unitsOfMeasurement[i]);
-        // log.debug(F, `Added: ${unitsOfMeasurement[i].plural}`);
-      }
-    }
-  } else {
-    displayUnits = unitsOfMeasurement;
+    // The last unit matching the abbreviation decides the measurement
+    measure = unitsOfMeasurement.filter(unit => unit.abbr.toLowerCase() === firstUnit.toLowerCase())
+      .pop()?.measure ?? '';
+    displayUnits = unitsOfMeasurement.filter(unit => unit.measure.toLowerCase() === measure.toLowerCase());
   }
 
   const options = {
@@ -212,29 +187,18 @@ async function autocompleteConvert(interaction: AutocompleteInteraction) {
 
   const fuse = new Fuse(displayUnits, options);
   const focusedValue = interaction.options.getFocused();
-  // log.debug(F, `focusedValue: ${focusedValue}`);
   const results = fuse.search(focusedValue);
-  // log.debug(F, `Autocomplete results: ${results}`);
+  const abbrChoices = (units: { abbr: string }[]) => units.slice(0, 25).map(unit => ({
+    name: unit.abbr,
+    value: unit.abbr,
+  }));
   if (results.length > 0) {
-    const top25 = results.slice(0, 25);
-    const listResults = top25.map(choice => ({
-      name: choice.item.abbr,
-      value: choice.item.abbr,
-    }));
-    // log.debug(F, `list_results: ${listResults}`);
-    interaction.respond(listResults);
+    interaction.respond(abbrChoices(results.map(choice => choice.item)));
   } else if (measure !== '') {
-    const top25 = displayUnits.slice(0, 25);
-    const listResults = top25.map(choice => ({
-      name: choice.abbr,
-      value: choice.abbr,
-    }));
-    // log.debug(F, `list_results: ${listResults}`);
-    interaction.respond(listResults);
+    interaction.respond(abbrChoices(displayUnits));
   } else {
     const defaultMeasurements = measurementNames.slice(0, 25);
     const listResults = defaultMeasurements.map(choice => ({ name: choice, value: choice }));
-    // log.debug(F, `list_results: ${listResults}`);
     interaction.respond(listResults);
   }
 }
@@ -316,7 +280,6 @@ async function autocompleteQuotes(interaction: AutocompleteInteraction) {
   // If the user option is filled in, find the user's ID and use that to filter the quotes
   const user = interaction.options.get('user');
   if (user) {
-    // log.debug(F, `User option: ${user.value}`);
     const userValue = user.value as string;
     const userData = await getOrCreateUser(userValue);
     whereClause = {
@@ -324,7 +287,6 @@ async function autocompleteQuotes(interaction: AutocompleteInteraction) {
     };
   }
 
-  // log.debug(F, `whereClause: ${JSON.stringify(whereClause, null, 2)}`);
   const quoteList = await db.quotes.findMany({
     select: {
       quote: true,
@@ -335,21 +297,15 @@ async function autocompleteQuotes(interaction: AutocompleteInteraction) {
     where: whereClause,
   });
 
-  // log.debug(F, `quoteList: ${quoteList.length}`);
-
   const fuse = new Fuse(quoteList, options);
   const focusedValue = interaction.options.getFocused();
-  // log.debug(F, `focusedValue: ${focusedValue}`);
   const results = fuse.search(focusedValue);
-  // log.debug(F, `Autocomplete results: ${results.length}`);
-  // log.debug(F, `Autocomplete results: ${JSON.stringify(results, null, 2)}`);
   if (results.length > 0) {
     const top25 = results.slice(0, 20);
     const listResults = top25.map(choice => ({
       name: (choice.item as any).quote.slice(0, 99),
       value: (choice.item as any).quote.slice(0, 99),
     }));
-    // log.debug(F, `list_results: ${listResults}`);
     await interaction.respond(listResults);
   } else if (focusedValue !== '') {
     await interaction.respond([
@@ -363,8 +319,6 @@ async function autocompleteQuotes(interaction: AutocompleteInteraction) {
       name: choice.quote.slice(0, 99),
       value: choice.quote.slice(0, 99),
     }));
-    // log.debug(F, `list_results: ${listResults}`);
-    // log.debug(F, `Returing ${listResults.length} quotes`);
     await interaction.respond(listResults);
   }
 }
@@ -378,7 +332,6 @@ export default autocomplete;
  */
 
 export async function autocomplete(interaction: AutocompleteInteraction): Promise<void> {
-  // log.debug(F, `Autocomplete requested for: ${interaction.commandName}`);
   if (interaction.commandName === 'pill-id') {
     await autocompletePills(interaction);
   } else if (interaction.commandName === 'calc' && interaction.options.getSubcommand() === 'benzo') {

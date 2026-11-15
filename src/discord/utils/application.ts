@@ -65,17 +65,14 @@ export async function applicationPermissions(
     return false;
   }
   if (!interaction.member) {
-    // log.debug(F, `no member!`);
     await interaction.reply({ content: 'This must be performed by a member of a guild!', flags: MessageFlags.Ephemeral });
     return false;
   }
   if (!interaction.channel) {
-    // log.debug(F, `no member!`);
     await interaction.reply({ content: 'This must be performed inside of a channel!', flags: MessageFlags.Ephemeral });
     return false;
   }
   if (interaction.channel.type !== ChannelType.GuildText) {
-    // log.debug(F, `no member!`);
     await interaction.reply({ content: 'This must be performed inside of a text channel!', flags: MessageFlags.Ephemeral });
     return false;
   }
@@ -139,14 +136,14 @@ export async function applicationPermissions(
   }
 
   // Check channel permissions for the application threads channel
-  const metaChannelMissing = await missingPermission(applicationThreadChannel as TextChannel, [
-    'ViewChannel' as PermissionResolvable,
-    'SendMessages' as PermissionResolvable,
-    'SendMessagesInThreads' as PermissionResolvable,
+  const metaChannelMissing = await missingPermission(applicationThreadChannel, [
+    'ViewChannel',
+    'SendMessages',
+    'SendMessagesInThreads',
     // 'CreatePublicThreads' as PermissionResolvable,
-    'CreatePrivateThreads' as PermissionResolvable,
+    'CreatePrivateThreads',
     // 'ManageMessages' as PermissionResolvable,
-    'ManageThreads' as PermissionResolvable,
+    'ManageThreads',
   ]);
   if (metaChannelMissing) {
     log.error(F, `Missing TS channel permission ${metaChannelMissing} in ${applicationThreadChannel}!`);
@@ -253,7 +250,6 @@ export async function applicationSetup(
       roleArray.forEach(async role => {
         if (role[0]) {
           if (role[1]) {
-          // log.debug(F, `role: ${role[0].name}`);
             selectMenu.addOptions(
               {
                 label: role[0].name,
@@ -509,9 +505,6 @@ export async function applicationStart(
           ),
       );
 
-      // const actorHasRoleDeveloper = actor.permissions.has(PermissionsBitField.Flags.Administrator);
-      // log.debug(F, `actorHasRoleDeveloper: ${actorHasRoleDeveloper}`);
-
       await applicationThread.send(`Hey ${roleReviewer} there is a new ${roleRequested.name} application from ${actor.displayName}!`);
       await applicationThread.send({
         embeds: [appEmbed],
@@ -555,7 +548,6 @@ export async function applicationReject(
   const threadCreated = interaction.channel.createdAt;
   // Check if the thread was created in the last 24 hours
   if (threadCreated && threadCreated.getTime() > Date.now() - 86400000) {
-    // log.debug(F, `Thread created in the last 24 hours!`);
     await interaction.editReply({ content: 'Whoa there, please give the team at least 24 until the next day to act on this application!' });
     return;
   }
@@ -573,7 +565,7 @@ export async function applicationReject(
   let target: GuildMember;
   try {
     target = await interaction.guild.members.fetch(memberId);
-  } catch (e) {
+  } catch {
     await interaction.editReply({ content: 'Could not find target, are the still in the guild?' });
     return;
   }
@@ -581,7 +573,7 @@ export async function applicationReject(
   let role: Role | null;
   try {
     role = await interaction.guild?.roles.fetch(roleId);
-  } catch (e) {
+  } catch {
     await interaction.editReply({ content: 'Could not find role, has it been deleted?' });
     return;
   }
@@ -593,7 +585,6 @@ export async function applicationReject(
 
   const rejectionReason = interaction.values[0];
   const rejectionWording = rejectionMessages[rejectionReason as keyof typeof rejectionMessages];
-  // interaction.channel!.send(`${(interaction.member as GuildMember).displayName} rejected this application with reason code '${rejectionReason}'`);
   await interaction.editReply(`${actor.displayName} rejected this application with reason code '${rejectionReason}'`);
 
   const message = stripIndents`Thank you so much for your interest in helping out here at ${interaction.guild.name}. We review all applications with rigor and deep consideration, and the same was true for yours.
@@ -602,7 +593,6 @@ export async function applicationReject(
   As we feel you have a right to know, your application was denied because ${rejectionWording}`;
 
   await target.send(stripIndents`${message}`);
-  // log.debug(`[${PREFIX} - applicationReject] rejectionReason: ${rejectionWording}`);
   (interaction.channel as ThreadChannel).setName(`🖤│${target.displayName}'s ${role.name} application!`);
 }
 
@@ -633,7 +623,6 @@ export async function applicationApprove(
   const threadCreated = interaction.channel?.createdAt;
   // Check if the thread was created in the last 24 hours
   if (threadCreated && threadCreated.getTime() > Date.now() - 86400000) {
-    // log.debug(F, `Thread created in the last 24 hours!`);
     await interaction.editReply({
       content: 'Whoa there, please give the team at least 24 until the next day to act on this application!',
     });
@@ -654,7 +643,6 @@ export async function applicationApprove(
       content: `I do not have permission to add the ${role.name} role to ${target.displayName}!`,
     });
     return;
-    // log.debug(F, `Adding role ${role.name} to ${target.displayName}`);
   }
 
   // Give the user the role
@@ -707,8 +695,6 @@ export async function applicationApprove(
     const channelTripmobile = await interaction.guild?.channels.fetch(env.CHANNEL_TRIPMOBILE) as TextChannel;
     const channelContent = await interaction.guild?.channels.fetch(env.CHANNEL_WIKICONTENT) as TextChannel;
     const channelDevelopment = await interaction.guild?.channels.fetch(env.CHANNEL_DEVELOPMENT) as TextChannel;
-    // const channelIrc = await interaction.guild?.channels.fetch(env.CHANNEL_IRC) as TextChannel;
-    // const channelMatrix = await interaction.guild?.channels.fetch(env.CHANNEL_MATRIX) as TextChannel;
 
     await channelDevelopment.send(stripIndents`
       Please welcome our newest ${role.name}, ${target}! We're excited to have you here! 

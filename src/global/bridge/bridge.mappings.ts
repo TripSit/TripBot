@@ -70,11 +70,11 @@ export function getGateways(): BridgeGateway[] {
       irc: row.irc_channel,
       matrix: row.matrix_room_id ?? undefined,
     }))
-    .sort((a, b) => (a.irc as string).localeCompare(b.irc as string));
+    .sort((a, b) => a.irc.localeCompare(b.irc));
 }
 
 export async function loadMappings(): Promise<void> {
-  setMappings(await db.bridge_channels.findMany() as MappingRow[]);
+  setMappings(await db.bridge_channels.findMany());
 }
 
 const seedChannelId = (key: string): string | undefined => {

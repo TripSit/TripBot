@@ -63,7 +63,6 @@ async function deploy(
     await channelTripbot.send(`${interaction.member} triggered a command deploy <@${env.DISCORD_OWNER_ID}>.`);
   }
   const commandData = await deployCommands();
-  // log.debug(F, `CommandData: ${JSON.stringify(commandData, null, 2)}`);
   log.info(F, stripIndents`
     I deployed ${commandData.globalCommands.length + commandData.guildCommands.length} commands!
     ${commandData.globalCommands.length} global commands and ${commandData.guildCommands.length} guild commands`);

@@ -2,13 +2,13 @@
 import {
   SlashCommandBuilder,
   ChatInputCommandInteraction,
+  Guild,
   Message,
   TextChannel,
   InteractionEditReplyOptions,
   time,
   Colors,
   PermissionResolvable,
-  Collection,
   MessageFlags,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
@@ -20,6 +20,8 @@ import { sleep } from '../../utils/sleep';
 import { getOrCreateUser } from '../../../global/utils/dbRecords';
 
 const F = f(__filename);
+
+type CountingType = 'HARDCORE' | 'TOKEN' | 'NORMAL';
 
 function calcTotalPot(
   number:number,
@@ -33,7 +35,7 @@ const warnedUsers = [] as string[];
 
 export async function countingSetup(
   channel:TextChannel,
-  type: 'HARDCORE' | 'TOKEN' | 'NORMAL',
+  type: CountingType,
   startingNumber:number,
   override:boolean,
   purge:boolean,
@@ -169,24 +171,12 @@ export async function countingSetup(
       current_number_message_author: countingMessage.author.id,
       current_stakeholders: currentStakeholders,
 
-      last_number: countingData?.last_number
-        ? countingData.last_number
-        : null,
-      last_number_message_id: countingData?.last_number_message_id
-        ? countingData.last_number_message_id
-        : null,
-      last_number_message_date: countingData?.last_number_broken_date
-        ? countingData.last_number_broken_date
-        : null,
-      last_number_message_author: countingData?.last_number_message_author
-        ? countingData.last_number_message_author
-        : null,
-      last_number_broken_by: countingData?.last_number_broken_by
-        ? countingData.last_number_broken_by
-        : null,
-      last_number_broken_date: countingData?.last_number_broken_date
-        ? countingData.last_number_broken_date
-        : null,
+      last_number: countingData?.last_number ?? null,
+      last_number_message_id: countingData?.last_number_message_id ?? null,
+      last_number_message_date: countingData?.last_number_broken_date ?? null,
+      last_number_message_author: countingData?.last_number_message_author ?? null,
+      last_number_broken_by: countingData?.last_number_broken_by ?? null,
+      last_number_broken_date: countingData?.last_number_broken_date ?? null,
     },
   });
 
@@ -207,7 +197,7 @@ export async function countingScores(
   if (!countingData) return { content: 'This channel is not set up for counting!' };
 
   const currentLink = `[${countingData.current_number}](https://discord.com/channels/${interaction.guildId}/${interaction.channelId}/${countingData.current_number_message_id})`; // eslint-disable-line max-len
-  const currentMember = await interaction.guild?.members.fetch(countingData.current_number_message_author as string);
+  const currentMember = await interaction.guild?.members.fetch(countingData.current_number_message_author);
   let description = `
   **Current Combo**
   ${currentLink} - ${currentMember} ${time(countingData.current_number_message_date, 'R')}`;
@@ -254,12 +244,324 @@ export async function countingReset(
   const number = interaction.options.getInteger('number') ?? 0;
   await countingSetup(
     channel,
-    (interaction.options.getString('type') ?? 'NORMAL') as 'HARDCORE' | 'TOKEN' | 'NORMAL',
+    (interaction.options.getString('type') ?? 'NORMAL') as CountingType,
     number,
     true,
     interaction.options.getBoolean('purge') ?? false,
   );
   return { embeds: [embedTemplate().setTitle(`Counting channel reset to ${number}!`)] };
+}
+
+type CountingData = NonNullable<Awaited<ReturnType<typeof db.counting.findFirst>>>;
+type CountingContext = {
+  message: Message;
+  channel: TextChannel;
+  guild: Guild;
+  countingData: CountingData;
+};
+
+async function saveCountingData({ guild, channel, countingData }: CountingContext): Promise<void> {
+  await db.counting.upsert({
+    where: {
+      guild_id_channel_id: {
+        guild_id: guild.id,
+        channel_id: channel.id,
+      },
+    },
+    create: countingData,
+    update: countingData,
+  });
+}
+
+const addStakeholder = (stakeholders: string, userId: string): string => stakeholders
+  .split(',')
+  .concat(userId)
+  .join(',');
+
+const warningForType = (type: string, totalPot: number): string => {
+  if (type === 'HARDCORE') return 'If you break the combo again, you\'ll be timed out for 24 hours!';
+  if (type === 'TOKEN') {
+    return `If you break the combo again, you'll steal ${totalPot} tokens and reset the counter for everyone else!`;
+  }
+  return 'If you break the combo again, you\'ll reset the combo!';
+};
+
+const endingForType = (type: string, totalPot: number): string => {
+  if (type === 'HARDCORE') return '\n\nThey were timed out for 24 hours for this transgression!';
+  if (type === 'TOKEN') return `\n\nThey stole ${totalPot} tokens from the pot!`;
+  return '\n\nMake sure to point and laugh at them!';
+};
+
+const welcomeForType = (type: string): string => {
+  if (type === 'TOKEN') {
+    return '\nThis is a TOKEN game: Build the pot and get tokens every 10 levels, or break the combo and steal it all!';
+  }
+  if (type === 'HARDCORE') {
+    return '\nThis is a HARDCORE game: if you break the combo you will be timed out for 24 hours!';
+  }
+  return '';
+};
+
+/**
+ * If the user does not exist in the stakeholders and has not been warned before,
+ * warn them that they're breaking the combo and add them to the warned users list.
+ * Returns true when a warning was sent (the message is then not counted as a break).
+ */
+async function warnNewcomer(context: CountingContext, totalPot: number): Promise<boolean> {
+  const {
+    message, channel, countingData,
+  } = context;
+  if (!countingData.current_stakeholders
+    || countingData.current_stakeholders.split(',').includes(message.author.id)
+    || warnedUsers.includes(message.author.id)) {
+    return false;
+  }
+  const messageReply = `Hey ${message.member?.displayName}, welcome to the counting game!
+      
+      You may not know, but you're breaking the combo!
+
+      The current number is ${countingData.current_number}, if you want to join the game, type the next number in the series!
+      ${warningForType(countingData.type, totalPot)}`;
+
+  // add the user to the stakeholders to prevent them from being warned again
+  countingData.current_stakeholders = addStakeholder(countingData.current_stakeholders, message.author.id);
+  await saveCountingData(context);
+
+  warnedUsers.push(message.author.id);
+
+  await channel.send({
+    content: messageReply,
+    allowedMentions: { parse: [] },
+  });
+  return true;
+}
+
+/** Records the broken combo (and a new record if one was set), returning any record announcement. */
+async function recordBrokenCombo(context: CountingContext): Promise<string> {
+  const { message, guild, countingData } = context;
+  countingData.last_number = countingData.current_number;
+  countingData.last_number_message_id = countingData.current_number_message_id;
+  countingData.last_number_message_date = countingData.current_number_message_date;
+  countingData.last_number_message_author = countingData.current_number_message_author;
+  countingData.last_number_broken_by = message.author.id;
+  countingData.last_number_broken_date = new Date();
+
+  // Check if a new record was set
+  if (countingData.current_number <= countingData.record_number) return '';
+
+  // If a new record was set then update the DB
+  countingData.record_number = countingData.current_number;
+  countingData.record_number_message_id = countingData.current_number_message_id;
+  countingData.record_number_message_date = countingData.current_number_message_date;
+  countingData.record_number_message_author = countingData.current_number_message_author;
+  countingData.record_number_broken_by = message.author.id;
+  countingData.record_number_broken_date = new Date();
+
+  const recordUser = await guild.members.fetch(countingData.record_number_message_author);
+  // Send a message to the channel
+  return `\n\n**A new record of ${countingData.current_number} was set by ${recordUser}**!
+      ${message.author} will go down in history as the one who broke the streak...`;
+}
+
+async function punishBreaker({ message, guild, countingData }: CountingContext, totalPot: number): Promise<void> {
+  if (countingData.type === 'HARDCORE') {
+    // If the channel is hardcore then timeout the user
+    const member = await guild.members.fetch(message.author.id);
+    // TImeout the user for 24 hours
+    await member.timeout(24 * 60 * 60 * 1000, 'Counting channel timeout');
+  }
+
+  // If it's token, take tokens from the pot
+  if (countingData.type === 'TOKEN') {
+    const userData = await getOrCreateUser(message.author.id);
+
+    await db.personas.upsert({
+      where: {
+        user_id: userData.id,
+      },
+      create: {
+        user_id: userData.id,
+        tokens: totalPot,
+      },
+      update: {
+        tokens: {
+          increment: totalPot,
+        },
+      },
+    });
+  }
+}
+
+async function breakCombo(context: CountingContext): Promise<void> {
+  const {
+    message, channel, countingData,
+  } = context;
+  await channel.messages.fetch(countingData.current_number_message_id);
+
+  const stakeholderNumber = countingData.current_stakeholders
+    ? countingData.current_stakeholders.split(',').length
+    : 1;
+  const totalPot = calcTotalPot(countingData.current_number, stakeholderNumber);
+
+  if (await warnNewcomer(context, totalPot)) return;
+
+  // If the number is not the next number in the sequence...
+  const recordMessage = await recordBrokenCombo(context);
+  await punishBreaker(context, totalPot);
+  const endingMessage = endingForType(countingData.type, totalPot);
+
+  // Set this to -1 so that people can't start a new game while the countdown is playing
+  countingData.current_number = -1;
+
+  // Then update the DB with the user who broke the combo
+  await saveCountingData(context);
+
+  // Send a message to the channel
+  await channel.send({
+    embeds: [
+      errorEmbed(stripIndents`Oh no, ${message.author} broke the combo...${recordMessage}${endingMessage}`)
+        .setTitle('Combo Broken!'),
+    ],
+  });
+
+  // Send a message to the channel that the next game will start in 10 seconds.
+  // Wait 10 seconds, and then edit the message to a line that says "Starting new game in {relative time}"
+  const resetTime = new Date(new Date().getTime() + 10 * 1000);
+  const newMessage = await channel.send(`Starting new game ${time(resetTime, 'R')}`);
+  await sleep(10000);
+
+  // Start a new counting game
+  await countingSetup(
+    channel,
+    countingData.type,
+    0,
+    true,
+    true,
+  );
+
+  await newMessage.delete();
+}
+
+async function joinStakeholders(context: CountingContext): Promise<void> {
+  const {
+    message, channel, countingData,
+  } = context;
+  if (!countingData.current_stakeholders) {
+    countingData.current_stakeholders = message.author.id;
+    log.debug(F, `Created new stakeholders: ${countingData.current_stakeholders}`);
+    return;
+  }
+  if (countingData.current_stakeholders.includes(message.author.id)) {
+    log.debug(F, `Member ${message.member?.displayName} was already a stakeholder`);
+    return;
+  }
+  // Take countingData.current_stakeholders, turn it into an array, add the user, turn it back into a string
+  log.debug(F, `current_stakeholders: ${countingData.current_stakeholders}`);
+
+  countingData.current_stakeholders = addStakeholder(countingData.current_stakeholders, message.author.id);
+  log.debug(F, `Member ${message.member?.displayName} was added as a stakeholder`);
+  const welcomeMessage = `Welcome to the counting game ${message.member?.displayName}!${welcomeForType(countingData.type)}`;
+
+  await channel.send({
+    content: welcomeMessage,
+    allowedMentions: { parse: [] },
+  });
+}
+
+/** Every 10 numbers in a TOKEN game, the pot is shared between all the stakeholders. */
+async function payOutPot({ channel, countingData }: CountingContext): Promise<void> {
+  // If the number is a multiple of 10
+  // Give each user a fraction of the pot
+  const stakeholderIds = (countingData.current_stakeholders as string).split(',');
+  const stakeholderNumber = stakeholderIds.length;
+  const totalPot = calcTotalPot(countingData.current_number + 1, stakeholderNumber);
+  const potPerUser = totalPot / stakeholderNumber;
+
+  // Look up the persona of every user in the currentData.current_stakeholders string
+  // Give each of those personas a fraction of the pot: (totalPot / currentData.current_stakeholders.length)
+  await Promise.all(stakeholderIds.map(async discordId => {
+    const userData = await getOrCreateUser(discordId);
+
+    return db.personas.upsert({
+      where: {
+        user_id: userData.id,
+      },
+      create: {
+        user_id: userData.id,
+        tokens: potPerUser,
+      },
+      update: {
+        tokens: {
+          increment: potPerUser,
+        },
+      },
+    });
+  }));
+
+  const embed = embedTemplate()
+    .setTitle('Payday!')
+    .setColor(Colors.Green)
+    .setDescription(stripIndents`The pot of ${totalPot} tokens has been claimed by ${stakeholderNumber} users!
+      Each user has been given ${potPerUser} tokens!
+
+      The pot grows bigger the higher the combo gets, and the amount of people who have contributed to the combo!`)
+    .setFooter({ text: 'totalPot = (currentNumber * 10)' });
+
+  // Send a message to the channel
+  await channel.send({
+    embeds: [embed],
+  });
+}
+
+async function acceptNumber(context: CountingContext, number: number): Promise<void> {
+  const { message, countingData } = context;
+  // If the number is the next number in the sequence
+  // Then update the DB with the user who got the number right
+  countingData.current_number = number;
+  countingData.current_number_message_id = message.id;
+  countingData.current_number_message_date = new Date();
+  countingData.current_number_message_author = message.author.id;
+  await saveCountingData(context);
+
+  await joinStakeholders(context);
+
+  // If the number is the next number in the sequence and a multiple of 10 in a token game, pay out the pot
+  if (number % 10 === 0 && countingData.type === 'TOKEN') {
+    await payOutPot(context);
+  }
+
+  await saveCountingData(context);
+
+  await message.react('👍');
+}
+
+/** Returns why a counting message must be rejected (the reply to send), or undefined when it may count. */
+async function rejectionReason(message: Message, channel: TextChannel, countingData: CountingData): Promise<string | undefined> {
+  if (countingData.current_number === -1) {
+    return 'Please wait for the new game to start';
+  }
+
+  const isOwner = message.author.id.toString() === env.DISCORD_OWNER_ID.toString();
+  if (countingData.current_number_message_author === message.author.id && !isOwner) { // Allow the owner to spam (for testing)
+    log.debug(F, 'Deleting message because the author is the same as the current number message author');
+    return 'Stop playing with yourself 😉';
+  }
+
+  // Determine if the user has said a number in the last {timeout} period
+  const channelMessages = await channel.messages.fetch(
+    { before: message.id },
+  );
+  const lastMessage = channelMessages
+    .filter(m => m.author.id === message.author.id) // Messages sent by the user
+    .filter(m => !Number.isNaN(parseInt(m.cleanContent, 10))) // That are numbers
+    .filter(m => m.createdTimestamp > Date.now() - (1000 * 60 * 60)) // That are within one hour
+    .sort((a, b) => b.createdTimestamp - a.createdTimestamp) // Sorted by most recent
+    .first(); // Get the first one
+
+  if (lastMessage && countingData.type === 'TOKEN' && !isOwner) {
+    return 'You can only count once every hour in the Token game!';
+  }
+  return undefined;
 }
 
 export async function countMessage(message: Message): Promise<void> {
@@ -277,329 +579,29 @@ export async function countMessage(message: Message): Promise<void> {
   // Process the new message. If it's the next number after current_number, then update the DB
   // If it's not the next number, then still update the db with the user who broke the combo
 
-  // log.debug(F, `Message: ${message.cleanContent}`);
   const number = parseInt(message.cleanContent, 10);
-  // log.debug(F, `number: ${number}`);
-
-  // log.debug(F, `isnan: ${Number.isNaN(number)}`);
 
   if (Number.isNaN(number)) {
-    // await message.delete();
     return;
   }
 
   if (!(message.channel instanceof TextChannel)) return;
 
-  if (countingData.current_number === -1) {
-    await message.reply('Please wait for the new game to start');
+  const reason = await rejectionReason(message, message.channel, countingData);
+  if (reason) {
+    await message.reply(reason);
     return;
   }
 
-  // log.debug(F, `Message.author.id: ${message.author.id}`);
-  // log.debug(F, `countingData.current_number_message_author: ${countingData.current_number_message_author}`);
-  // log.debug(F, `env.DISCORD_OWNER_ID: ${env.DISCORD_OWNER_ID}`);
-  if (countingData.current_number_message_author === message.author.id
-    && message.author.id.toString() !== env.DISCORD_OWNER_ID.toString()) { // Allow the owner to spam (for testing)
-    log.debug(F, 'Deleting message because the author is the same as the current number message author');
-    await message.reply('Stop playing with yourself 😉');
-    return;
-  }
-
-  // Determine if the user has said a number in the last {timeout} period
-  const channelMessages = await message.channel.messages.fetch(
-    { before: message.id },
-  ) as Collection<string, Message<true>>;
-  const lastMessage = channelMessages
-    .filter(m => m.author.id === message.author.id) // Messages sent by the user
-    .filter(m => !Number.isNaN(parseInt(m.cleanContent, 10))) // That are numbers
-    .filter(m => m.createdTimestamp > Date.now() - (1000 * 60 * 60)) // That are within one hour
-    .sort((a, b) => b.createdTimestamp - a.createdTimestamp) // Sorted by most recent
-    .first(); // Get the first one
-
-  if (lastMessage && countingData.type === 'TOKEN'
-    && message.author.id.toString() !== env.DISCORD_OWNER_ID.toString()) {
-    await message.reply('You can only count once every hour in the Token game!');
-    return;
-  }
-
+  const context: CountingContext = {
+    message, channel: message.channel, guild: message.guild, countingData,
+  };
   if (number !== countingData.current_number + 1) {
-    await message.channel.messages.fetch(countingData.current_number_message_id);
-
-    const stakeholderNumber = countingData.current_stakeholders
-      ? countingData.current_stakeholders.split(',').length
-      : 1;
-    const totalPot = calcTotalPot(countingData.current_number, stakeholderNumber);
-
-    // If the user does not exist in the stakeholders and has not been warned before
-    // warn them that they're breaking the combo and add them to the warned users list
-    if (countingData.current_stakeholders
-      && !countingData.current_stakeholders.split(',').includes(message.author.id)
-      && !warnedUsers.includes(message.author.id)) {
-      let messageReply = `Hey ${message.member?.displayName}, welcome to the counting game!
-      
-      You may not know, but you're breaking the combo!
-
-      The current number is ${countingData.current_number}, if you want to join the game, type the next number in the series!
-      `;
-      if (countingData.type === 'HARDCORE') {
-        messageReply += 'If you break the combo again, you\'ll be timed out for 24 hours!';
-      } else if (countingData.type === 'TOKEN') {
-        messageReply += `If you break the combo again, you'll steal ${totalPot} tokens and reset the counter for everyone else!`; // eslint-disable-line max-len
-      } else {
-        messageReply += 'If you break the combo again, you\'ll reset the combo!';
-      }
-
-      // add the user to the stakeholders to prevent them from being warned again
-      countingData.current_stakeholders = countingData.current_stakeholders
-        .split(',')
-        .concat(message.author.id)
-        .join(',');
-      // await countingSetG(countingData);
-      await db.counting.upsert({
-        where: {
-          guild_id_channel_id: {
-            guild_id: message.guild.id,
-            channel_id: message.channel.id,
-          },
-        },
-        create: countingData,
-        update: countingData,
-      });
-
-      warnedUsers.push(message.author.id);
-
-      await message.channel.send({
-        content: messageReply,
-        allowedMentions: { parse: [] },
-      });
-      return;
-    }
-
-    countingData.last_number = countingData.current_number;
-    countingData.last_number_message_id = countingData.current_number_message_id;
-    countingData.last_number_message_date = countingData.current_number_message_date;
-    countingData.last_number_message_author = countingData.current_number_message_author;
-    countingData.last_number_broken_by = message.author.id;
-    countingData.last_number_broken_date = new Date();
-
-    // If the number is not the next number in the sequence...
-    let recordMessage = '';
-    // Check if a new record was set
-    if (countingData.current_number > countingData.record_number) {
-      // If a new record was set then update the DB
-      countingData.record_number = countingData.current_number;
-      countingData.record_number_message_id = countingData.current_number_message_id;
-      countingData.record_number_message_date = countingData.current_number_message_date;
-      countingData.record_number_message_author = countingData.current_number_message_author;
-      countingData.record_number_broken_by = message.author.id;
-      countingData.record_number_broken_date = new Date();
-
-      const recordUser = await message.guild.members.fetch(countingData.record_number_message_author);
-      // Send a message to the channel
-      recordMessage = `\n\n**A new record of ${countingData.current_number} was set by ${recordUser}**!
-      ${message.author} will go down in history as the one who broke the streak...`;
-    }
-
-    if (countingData.type === 'HARDCORE') {
-      // If the channel is hardcore then timeout the user
-      const member = await message.guild.members.fetch(message.author.id);
-      // TImeout the user for 24 hours
-      await member.timeout(24 * 60 * 60 * 1000, 'Counting channel timeout');
-    }
-
-    // If it's token, take tokens from the pot
-    if (countingData.type === 'TOKEN') {
-      // If the channel is token then take tokens from the pot
-
-      // const userData = await getUser(message.author.id, null, null);
-      const userData = await getOrCreateUser(message.author.id);
-
-      // const personaData = await personaGet(userData.id);
-      await db.personas.upsert({
-        where: {
-          user_id: userData.id,
-        },
-        create: {
-          user_id: userData.id,
-          tokens: totalPot,
-        },
-        update: {
-          tokens: {
-            increment: totalPot,
-          },
-        },
-      });
-    }
-
-    let endingMessage = '';
-    if (countingData.type === 'HARDCORE') {
-      endingMessage = '\n\nThey were timed out for 24 hours for this transgression!';
-    } else if (countingData.type === 'TOKEN') {
-      endingMessage = `\n\nThey stole ${totalPot} tokens from the pot!`;
-    } else {
-      endingMessage = '\n\nMake sure to point and laugh at them!';
-    }
-
-    // Set this to -1 so that people can't start a new game while the countdown is playing
-    countingData.current_number = -1;
-
-    // Then update the DB with the user who broke the combo
-    await db.counting.upsert({
-      where: {
-        guild_id_channel_id: {
-          guild_id: message.guild.id,
-          channel_id: message.channel.id,
-        },
-      },
-      create: countingData,
-      update: countingData,
-    });
-
-    // Send a message to the channel
-    await message.channel.send({
-      embeds: [
-        errorEmbed(stripIndents`Oh no, ${message.author} broke the combo...${recordMessage}${endingMessage}`)
-          .setTitle('Combo Broken!'),
-      ],
-    });
-
-    // Send a message to the channel that the next game will start in 10 seconds.
-    // Wait 10 seconds, and then edit the message to a line that says "Starting new game in {relative time}"
-
-    const resetTime = new Date(new Date().getTime() + 10 * 1000);
-    const newMessage = await message.channel.send(`Starting new game ${time(resetTime, 'R')}`);
-    await sleep(10000);
-
-    // Start a new counting game
-    await countingSetup(
-      message.channel as TextChannel,
-      countingData.type,
-      0,
-      true,
-      true,
-    );
-
-    await newMessage.delete();
-
+    await breakCombo(context);
     return;
   }
 
-  // If the number is the next number in the sequence
-  // Then update the DB with the user who got the number right
-
-  countingData.current_number = number;
-  countingData.current_number_message_id = message.id;
-  countingData.current_number_message_date = new Date();
-  countingData.current_number_message_author = message.author.id;
-  await db.counting.upsert({
-    where: {
-      guild_id_channel_id: {
-        guild_id: message.guild.id,
-        channel_id: message.channel.id,
-      },
-    },
-    create: countingData,
-    update: countingData,
-  });
-
-  if (countingData.current_stakeholders) {
-    if (!countingData.current_stakeholders.includes(message.author.id)) {
-    // Take countingData.current_stakeholders, turn it into an array, add the user, turn it back into a string
-      log.debug(F, `current_stakeholders: ${countingData.current_stakeholders}`);
-
-      countingData.current_stakeholders = countingData.current_stakeholders
-        .split(',')
-        .concat(message.author.id)
-        .join(',');
-      log.debug(F, `Member ${message.member?.displayName} was added as a stakeholder`);
-      let welcomeMessage = `Welcome to the counting game ${message.member?.displayName}!`;
-      if (countingData.type === 'TOKEN') {
-        welcomeMessage += '\nThis is a TOKEN game: Build the pot and get tokens every 10 levels, or break the combo and steal it all!'; // eslint-disable-line max-len
-      } else if (countingData.type === 'HARDCORE') {
-        welcomeMessage += '\nThis is a HARDCORE game: if you break the combo you will be timed out for 24 hours!';
-      }
-
-      await message.channel.send({
-        content: welcomeMessage,
-        allowedMentions: { parse: [] },
-      });
-    } else {
-      log.debug(F, `Member ${message.member?.displayName} was already a stakeholder`);
-    }
-  } else {
-    countingData.current_stakeholders = message.author.id;
-    log.debug(F, `Created new stakeholders: ${countingData.current_stakeholders}`);
-  }
-
-  // If the number is the next number in the sequence and a multiple of 10
-  // Look up the persona of every user in the currentData.current_stakeholders string
-  // Give each of those personas a fraction of the pot: (totalPot / currentData.current_stakeholders.length)
-  // EG: (10 * 10) * (10 / 10) = 100
-  // EG: (20 * 10) * (20 / 10) = 400
-  // EG: (30 * 10) * (30 / 10) = 900
-  // EG: (40 * 10) * (40 / 10) = 1600
-  // EG: (50 * 10) * (50 / 10) = 2500
-
-  if (number % 10 === 0 && countingData.type === 'TOKEN') {
-    // If the number is a multiple of 10
-    // Give each user a fraction of the pot
-    const stakeholderNumber = countingData.current_stakeholders.split(',').length;
-    const totalPot = calcTotalPot(countingData.current_number + 1, stakeholderNumber);
-    const potPerUser = totalPot / stakeholderNumber;
-
-    // Look up the persona of every user in the currentData.current_stakeholders string
-    // Give each of those personas a fraction of the pot: (totalPot / currentData.current_stakeholders.length)
-    const stakeholderIds = countingData.current_stakeholders.split(',');
-    await Promise.all(stakeholderIds.map(async discordId => {
-      // const userData = await getUser(message.author.id, null, null);
-      const userData = await getOrCreateUser(discordId);
-
-      // const personaData = await personaGet(userData.id);
-      return db.personas.upsert({
-        where: {
-          user_id: userData.id,
-        },
-        create: {
-          user_id: userData.id,
-          tokens: potPerUser,
-        },
-        update: {
-          tokens: {
-            increment: potPerUser,
-          },
-        },
-      });
-    }));
-
-    const embed = embedTemplate()
-      .setTitle('Payday!')
-      .setColor(Colors.Green)
-      .setDescription(stripIndents`The pot of ${totalPot} tokens has been claimed by ${stakeholderNumber} users!
-      Each user has been given ${potPerUser} tokens!
-
-      The pot grows bigger the higher the combo gets, and the amount of people who have contributed to the combo!`)
-      .setFooter({ text: 'totalPot = (currentNumber * 10)' });
-
-    // Send a message to the channel
-    await message.channel.send({
-      embeds: [embed],
-    });
-  }
-
-  await db.counting.upsert({
-    where: {
-      guild_id_channel_id: {
-        guild_id: message.guild.id,
-        channel_id: message.channel.id,
-      },
-    },
-    create: countingData,
-    update: countingData,
-  });
-
-  await message.react('👍');
-
-  // log.debug(F, `countingData: ${JSON.stringify(countingData, null, 2)}`);
+  await acceptNumber(context, number);
 }
 
 export const counting: SlashCommandBeta = {
@@ -657,14 +659,13 @@ export const counting: SlashCommandBeta = {
           'ManageChannels' as PermissionResolvable,
         ],
       )) {
-        // log.debug(`${PREFIX} bot does NOT has permission to post in !`);
         return interaction.editReply({
           embeds: [errorEmbed().setTitle('You do not have permission to use this command!')],
         });
       }
       response = await countingSetup(
         interaction.channel as TextChannel,
-        (interaction.options.getString('type') ?? 'NORMAL') as 'HARDCORE' | 'TOKEN' | 'NORMAL',
+        (interaction.options.getString('type') ?? 'NORMAL') as CountingType,
         0,
         false,
         true,
@@ -681,7 +682,6 @@ export const counting: SlashCommandBeta = {
           'ManageChannels' as PermissionResolvable,
         ],
       )) {
-        // log.debug(`${PREFIX} bot does NOT has permission to post in !`);
         return interaction.editReply({
           embeds: [errorEmbed().setTitle('You do not have permission to use this command!')],
         });

@@ -1,8 +1,7 @@
 /* eslint-disable max-len */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { trimResultTransformer } from 'common-tags';
-import { MatrixClient, RichReply } from 'matrix-bot-sdk';
+import { RichReply } from 'matrix-bot-sdk';
 import { calcPsychedelics } from '../../global/commands/g.calcPsychedelics';
 
 export default mCalcPsychedelics;
@@ -26,7 +25,8 @@ async function mCalcPsychedelics(roomId:string, event:any, substance:string = ''
   let reply;
 
   switch (substance.toLowerCase()) {
-    case 'lsd' || 'acid':
+    case 'lsd':
+    case 'acid':
       html = `&#127915;&#127889; <b>Result for LSD:</b> &#127915;&#127889;<br>When you had <b>${cLDose} μg</b> and want to feel the effects of </b>${cDDose} μg</b> ${cDays} days after that, you'd need to take <b>~${neededDose} μg</b> following our static calculation.<br>Please note, that this information might not be 100% accurate and should not be your only source of information.`;
       text = `When you had ${cLDose} μg and want to feel the effects of ${cDDose} μg ${cDays} days after that, you'd need to take ~${neededDose} μg following our static calculation.\nPlease note, that this information might not be 100% accurate and should not be your only source of information.`;
       reply = RichReply.createFor(roomId, event, text, html);

@@ -1242,8 +1242,6 @@ export async function rpgBounties(
     },
   });
 
-  // log.debug(F, `Persona inventory: ${JSON.stringify(inventoryData, null, 2)}`);
-
   const rowBounties = new ActionRowBuilder<ButtonBuilder>()
     .addComponents(
       customButton(`rpgQuest,user:${interaction.user.id}`, 'Quest', 'buttonQuest', ButtonStyle.Secondary),
@@ -1321,7 +1319,7 @@ export async function rpgBounties(
         raid: () => lastBounties.getTime() > getLastMonday(currentDate).getTime(),
       };
 
-      if (timeComparison[command] && timeComparison[command]()) {
+      if (timeComparison[command]?.()) {
         timeout = true;
       }
     }
@@ -1426,7 +1424,6 @@ export async function rpgMarketInventory(
       persona_id: personaData.id,
     },
   });
-  // log.debug(F, `Persona inventory: ${JSON.stringify(inventoryData, null, 2)}`);
 
   // Get a string display of the user's discounts
   // Check if they have the Premium Member role
@@ -1573,6 +1570,99 @@ export async function rpgMarket(
   };
 }
 
+interface MarketItem extends SelectMenuComponentOptionData {
+  category: string;
+}
+
+/** The option marked as default in any select menu of the message, if there is one. */
+function defaultMenuOption(interaction: MessageComponentInteraction): APISelectMenuOption | undefined {
+  return interaction.message.components
+    .flatMap(component => (component.type === ComponentType.ActionRow && 'components' in component ? component.components : []))
+    .flatMap(subComponent => (subComponent.type === ComponentType.SelectMenu ? subComponent.options : []))
+    .find((o:APISelectMenuOption) => o.default === true);
+}
+
+type MarketItemData = {
+  label: string;
+  value: string;
+  description: string;
+  quantity: number;
+  weight: number;
+  cost: number;
+  equipped: boolean;
+  consumable: boolean;
+  effect: string;
+  effect_value: string;
+  emoji: string;
+};
+
+const findMarketItemData = (value: string | undefined): MarketItemData => (
+  [...Object.values(items.general), ...Object.values(items.fonts), ...Object.values(items.backgrounds)]
+    .find(item => item.value === value) as MarketItemData
+);
+
+/** Finds the item selected in the market: the default option of the menu on a button click, or the chosen value. */
+function selectedMarketChoice(interaction: MessageComponentInteraction): string {
+  if (interaction.isButton()) {
+    return defaultMenuOption(interaction)?.value ?? '';
+  }
+  if (interaction.isStringSelectMenu()) {
+    return interaction.values[0];
+  }
+  return '';
+}
+
+/** One select menu per group of items, split into chunks of 25 (the most a menu holds). */
+function marketSelectRows(marketInventory: MarketItem[], userId: string): ActionRowBuilder<StringSelectMenuBuilder>[] {
+  const groups = marketInventory.reduce((groupData: Record<string, MarketItem[]>, item) => {
+    const { category } = item;
+    const newGroupData = { ...groupData };
+    newGroupData[category] = newGroupData[category] ? [...newGroupData[category], item] : [item];
+    return newGroupData;
+  }, {});
+
+  const rows: ActionRowBuilder<StringSelectMenuBuilder>[] = [];
+  // For each group, split the group into chunks of 25 items each and create a new rowItems for each chunk
+  for (const [group, itemsData] of Object.entries(groups)) { // eslint-disable-line no-restricted-syntax
+    // Create chunks of 25 items each
+    const chunks = [];
+    for (let i = 0; i < itemsData.length; i += 25) {
+      chunks.push(itemsData.slice(i, i + 25));
+    }
+
+    // Create a new rowItems for each chunk
+    const groupName = group.charAt(0).toUpperCase() + group.slice(1);
+    for (const [index, chunk] of chunks.entries()) { // eslint-disable-line no-restricted-syntax
+      rows.push(new ActionRowBuilder<StringSelectMenuBuilder>()
+        .addComponents(
+          new StringSelectMenuBuilder()
+            .setCustomId(`rpgGeneralSelect,user:${userId},group:${group},chunk:${index}`)
+            .setPlaceholder(chunks.length === 1 ? groupName : `${groupName} ${index + 1}`)
+            .addOptions(chunk),
+        ));
+    }
+  }
+  return rows;
+}
+
+/** Renders what the profile would look like with the chosen item, for items that change it. */
+async function marketPreviewImage(
+  itemData: { effect: string; effect_value: string } | undefined,
+  target: GuildMember,
+): Promise<Buffer | null> {
+  if (itemData?.effect === 'background') {
+    const imagePath = await getAsset(itemData.effect_value);
+    return getProfilePreview(target, 'background', imagePath);
+  }
+  if (itemData?.effect === 'font') {
+    return getProfilePreview(target, 'font', undefined, itemData.effect_value);
+  }
+  if (itemData?.effect === 'userflair') {
+    return getProfilePreview(target, 'userflair');
+  }
+  return null;
+}
+
 export async function rpgMarketChange(
   interaction:MessageComponentInteraction,
 ):Promise<InteractionUpdateOptions> {
@@ -1585,33 +1675,7 @@ export async function rpgMarketChange(
   } = await rpgMarketInventory(interaction);
 
   // Get the item the user selected
-  let choice = '' as string;
-  if (interaction.isButton()) {
-    // const itemComponent = interaction.message.components[0].components[0];
-    let selectedItem: APISelectMenuOption | undefined;
-    for (const component of interaction.message.components) {
-      if (component.type === ComponentType.ActionRow && 'components' in component) {
-        for (const subComponent of component.components) {
-          if (subComponent.type === ComponentType.SelectMenu) {
-            selectedItem = (subComponent as StringSelectMenuComponent).options.find(
-              (o:APISelectMenuOption) => o.default === true,
-            );
-            if (selectedItem) {
-              break;
-            }
-          }
-        }
-      }
-      if (selectedItem) {
-        break;
-      }
-    }
-    choice = selectedItem?.value ?? '';
-  } else if (interaction.isStringSelectMenu()) {
-    [choice] = interaction.values;
-  }
-
-  // log.debug(F, `choice: ${choice}`);
+  const choice = selectedMarketChoice(interaction);
 
   // Get a list of marketInventory where the value does not equal the choice
   // const filteredItems = Object.values(marketInventory).filter(item => item.value !== choice);
@@ -1652,7 +1716,6 @@ export async function rpgMarketChange(
       effect_value: string;
       emoji: string;
     };
-  // log.debug(F, `itemData (change): ${JSON.stringify(itemData, null, 2)}`);
   }
 
   const rowMarket = new ActionRowBuilder<ButtonBuilder>()
@@ -1668,37 +1731,7 @@ export async function rpgMarketChange(
 
   const components = [rowMarket] as ActionRowBuilder<ButtonBuilder | StringSelectMenuBuilder>[];
 
-  interface MarketItem extends SelectMenuComponentOptionData {
-    category: string;
-  }
-
-  const groups = (marketInventory as MarketItem[]).reduce((groupData: Record<string, MarketItem[]>, item) => {
-    const { category } = item;
-    const newGroupData = { ...groupData };
-    newGroupData[category] = newGroupData[category] ? [...newGroupData[category], item] : [item];
-    return newGroupData;
-  }, {});
-
-  // For each group, split the group into chunks of 25 items each and create a new rowItems for each chunk
-  for (const [group, itemsData] of Object.entries(groups)) {
-    // Create chunks of 25 items each
-    const chunks = [];
-    for (let i = 0; i < itemsData.length; i += 25) {
-      chunks.push(itemsData.slice(i, i + 25));
-    }
-
-    // Create a new rowItems for each chunk
-    for (const [index, chunk] of chunks.entries()) {
-      const rowItems = new ActionRowBuilder<StringSelectMenuBuilder>()
-        .addComponents(
-          new StringSelectMenuBuilder()
-            .setCustomId(`rpgGeneralSelect,user:${interaction.user.id},group:${group},chunk:${index}`)
-            .setPlaceholder(chunks.length === 1 ? `${group.charAt(0).toUpperCase() + group.slice(1)}` : `${group.charAt(0).toUpperCase() + group.slice(1)} ${index + 1}`)
-            .addOptions(chunk),
-        );
-      components.push(rowItems);
-    }
-  }
+  components.push(...marketSelectRows(marketInventory as MarketItem[], interaction.user.id));
 
   const embed = embedTemplate()
     .setAuthor(null)
@@ -1718,33 +1751,10 @@ export async function rpgMarketChange(
     .setColor(Colors.Gold);
 
   const imageFiles = [] as AttachmentBuilder[];
-  // if the option is a background, run profile preview as the embed image
-  if (itemData && itemData.effect === 'background') {
-    const imagePath = await getAsset(itemData.effect_value);
-    const target = interaction.member as GuildMember;
-    const option = 'background';
-    const previewImage = await getProfilePreview(target, option, imagePath);
-    const attachment = new AttachmentBuilder(previewImage, { name: tripSitProfileImage });
-    imageFiles.push(attachment);
-    embed.setImage(tripSitProfileImageAttachment);
-  }
-  // if the option is a font, run profile preview as the embed image
-  if (itemData && itemData.effect === 'font') {
-    const target = interaction.member as GuildMember;
-    const fontName = itemData.effect_value;
-    const option = 'font';
-    const previewImage = await getProfilePreview(target, option, undefined, fontName);
-    const attachment = new AttachmentBuilder(previewImage, { name: tripSitProfileImage });
-    imageFiles.push(attachment);
-    embed.setImage(tripSitProfileImageAttachment);
-  }
-  // if the option is a userflair, run profile preview as the embed image
-  if (itemData && itemData.effect === 'userflair') {
-    const target = interaction.member as GuildMember;
-    const option = 'userflair';
-    const previewImage = await getProfilePreview(target, option);
-    const attachment = new AttachmentBuilder(previewImage, { name: tripSitProfileImage });
-    imageFiles.push(attachment);
+  // if the option is a background, font or userflair, run profile preview as the embed image
+  const previewImage = await marketPreviewImage(itemData, interaction.member as GuildMember);
+  if (previewImage) {
+    imageFiles.push(new AttachmentBuilder(previewImage, { name: tripSitProfileImage }));
     embed.setImage(tripSitProfileImageAttachment);
   }
 
@@ -1770,41 +1780,9 @@ export async function rpgMarketPreview(
   // log.debug(F, `personaData (Accept): ${JSON.stringify(personaData, null, 2)}`);
 
   // If the user confirms the information, save the persona information
-  let selectedItem: APISelectMenuOption | undefined;
-  for (const component of interaction.message.components) {
-    if (component.type === ComponentType.ActionRow && 'components' in component) {
-      for (const subComponent of component.components) {
-        if (subComponent.type === ComponentType.SelectMenu) {
-          selectedItem = (subComponent as StringSelectMenuComponent).options.find(
-            (o:APISelectMenuOption) => o.default === true,
-          );
-          if (selectedItem) {
-            break;
-          }
-        }
-      }
-    }
-    if (selectedItem) {
-      break;
-    }
-  }
-  // log.debug(F, `selectedItem (accept): ${JSON.stringify(selectedItem, null, 2)}`);
+  const selectedItem = defaultMenuOption(interaction);
 
-  const allItems = [...Object.values(items.general), ...Object.values(items.fonts), ...Object.values(items.backgrounds)];
-  const itemData = allItems.find(item => item.value === selectedItem?.value) as {
-    label: string;
-    value: string;
-    description: string;
-    quantity: number;
-    weight: number;
-    cost: number;
-    equipped: boolean;
-    consumable: boolean;
-    effect: string;
-    effect_value: string;
-    emoji: string;
-  };
-  // log.debug(F, `itemData (accept): ${JSON.stringify(itemData, null, 2)}`);
+  const itemData = findMarketItemData(selectedItem?.value);
 
   const { embeds, components } = await rpgMarketChange(interaction);
 
@@ -1821,7 +1799,7 @@ export async function rpgMarketPreview(
     .setColor(Colors.Gold);
 
   const imageFiles = [] as AttachmentBuilder[];
-  if (itemData && itemData.effect === 'background') {
+  if (itemData?.effect === 'background') {
     const imagePath = await getAsset(itemData.effect_value);
     const target = interaction.member as GuildMember;
     const option = 'background';
@@ -1829,7 +1807,7 @@ export async function rpgMarketPreview(
     const attachment = new AttachmentBuilder(previewImage, { name: tripSitProfileImage });
     imageFiles.push(attachment);
     embed.setImage(tripSitProfileImageAttachment);
-  } else if (itemData && itemData.effect === 'font') {
+  } else if (itemData?.effect === 'font') {
     const target = interaction.member as GuildMember;
     const fontName = itemData.effect_value;
     const option = 'font';
@@ -1847,57 +1825,93 @@ export async function rpgMarketPreview(
   };
 }
 
+/** The market with a message above it, used when a purchase can't go ahead. */
+async function marketBlockedReply(
+  interaction: MessageComponentInteraction,
+  headline: string,
+  previewItem?: MarketItemData,
+): Promise<InteractionUpdateOptions> {
+  const { embeds, components } = await rpgMarketChange(interaction);
+
+  // This grossness takes the APIEmbed object, turns it into a JSON object, and pulls the description
+  const { description } = JSON.parse(JSON.stringify((embeds as APIEmbed[])[0]));
+
+  const embed = embedTemplate()
+    .setAuthor(null)
+    .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).displayAvatarURL() })
+    .setTitle(`${emojiGet('buttonMarket')} Market`)
+    .setDescription(stripIndents`${headline}
+
+    ${description}`)
+    .setColor(Colors.Red);
+  const imageFiles = [] as AttachmentBuilder[];
+  if (previewItem?.effect === 'background') {
+    const imagePath = await getAsset(previewItem.effect_value);
+    imageFiles.push(new AttachmentBuilder(imagePath));
+    embed.setImage(`attachment://${previewItem.effect_value}.png`);
+  }
+
+  return {
+    embeds: [embed],
+    components,
+    files: imageFiles,
+  };
+}
+
+/** Marks a bought item as equipped (unequipping others of its type) and returns the note to show the buyer. */
+async function equipBoughtItem(personaId: string, itemData: MarketItemData): Promise<string> {
+  const isBackgroundOrFont = itemData.effect === 'background' || itemData.effect === 'font';
+  if (!isBackgroundOrFont && itemData.effect !== 'userflair') return '';
+
+  const inventory = await db.rpg_inventory.findMany({
+    where: {
+      persona_id: personaId,
+    },
+  });
+  const itemIndex = inventory.findIndex(i => i.value === itemData.value);
+
+  // Unequip all items of the same type (flair is only ever one item, so nothing to unequip)
+  if (isBackgroundOrFont) {
+    const unequipItems = inventory.filter(i => i.effect === itemData.effect && i.equipped === true);
+    for (const item of unequipItems) { // eslint-disable-line no-restricted-syntax
+      item.equipped = false;
+      await db.rpg_inventory.upsert({ // eslint-disable-line no-await-in-loop
+        where: {
+          id: item.id,
+        },
+        create: item,
+        update: item,
+      });
+    }
+  }
+
+  // Equip the new item
+  const equipItem = inventory[itemIndex];
+  equipItem.equipped = true;
+  await db.rpg_inventory.upsert({
+    where: {
+      id: equipItem.id,
+    },
+    create: equipItem,
+    update: equipItem,
+  });
+  return isBackgroundOrFont
+    ? `Your ${itemData.effect} has been equipped! Head home to unequip it or change ${itemData.effect}s.`
+    : 'Your flair has been equipped! Use `/rpg flair` to change your flair, or head Home to unequip it.';
+}
+
 export async function rpgMarketAccept(
   interaction:MessageComponentInteraction,
 ):Promise<InteractionUpdateOptions> {
-  // Get the info used in the market
-  // const {
-  //   marketInventory,
-  //   personaTokens,
-  //   personaInventory,
-  // } = await rpgMarketInventory(interaction);
-
   // Check get fresh persona data
   const userData = await getOrCreateUser(interaction.user.id);
   const personaData = await getOrCreatePersona(userData.id);
-  // log.debug(F, `personaData (Accept): ${JSON.stringify(personaData, null, 2)}`);
 
   // If the user confirms the information, save the persona information
-  let selectedItem: APISelectMenuOption | undefined;
-  for (const component of interaction.message.components) {
-    if (component.type === ComponentType.ActionRow && 'components' in component) {
-      for (const subComponent of component.components) {
-        if (subComponent.type === ComponentType.SelectMenu) {
-          selectedItem = (subComponent as StringSelectMenuComponent).options.find(
-            (o:APISelectMenuOption) => o.default === true,
-          );
-          if (selectedItem) {
-            break;
-          }
-        }
-      }
-    }
-    if (selectedItem) {
-      break;
-    }
-  }
+  const selectedItem = defaultMenuOption(interaction);
   log.debug(F, `selectedItem (accept): ${JSON.stringify(selectedItem, null, 2)}`);
 
-  const allItems = [...Object.values(items.general), ...Object.values(items.fonts), ...Object.values(items.backgrounds)];
-  const itemData = allItems.find(item => item.value === selectedItem?.value) as {
-    label: string;
-    value: string;
-    description: string;
-    quantity: number;
-    weight: number;
-    cost: number;
-    equipped: boolean;
-    consumable: boolean;
-    effect: string;
-    effect_value: string;
-    emoji: string;
-  };
-  // log.debug(F, `itemData (accept): ${JSON.stringify(itemData, null, 2)}`);
+  const itemData = findMarketItemData(selectedItem?.value);
 
   // Check that the user has less than 25 items in their inventory
   const inventoryData = await db.rpg_inventory.findMany({
@@ -1907,26 +1921,10 @@ export async function rpgMarketAccept(
   });
 
   if (inventoryData.length >= 20 && (itemData.value !== 'PremiumMembership')) {
-    const { embeds, components } = await rpgMarketChange(interaction);
-
-    // This grossness takes the APIEmbed object, turns it into a JSON object, and pulls the description
-    const { description } = JSON.parse(JSON.stringify((embeds as APIEmbed[])[0]));
-
-    const embed = embedTemplate()
-      .setAuthor(null)
-      .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).displayAvatarURL() })
-      .setTitle(`${emojiGet('buttonMarket')} Market`)
-      .setDescription(stripIndents`**You cannot buy this item because your inventory is full. Sell some items from your home inventory to make room!**
-    
-    ${description}`)
-      .setColor(Colors.Red);
-    const imageFiles = [] as AttachmentBuilder[];
-
-    return {
-      embeds: [embed],
-      components,
-      files: imageFiles,
-    };
+    return marketBlockedReply(
+      interaction,
+      '**You cannot buy this item because your inventory is full. Sell some items from your home inventory to make room!**',
+    );
   }
 
   const {
@@ -1934,38 +1932,10 @@ export async function rpgMarketAccept(
   } = await rpgMarketInventory(interaction);
 
   const itemCost = (itemData.cost - (itemData.cost * personaDiscount));
-  let embedInfoText = '';
 
   // Check if the user has enough tokens to buy the item
   if (personaData.tokens < itemCost) {
-  // log.debug(F, 'Not enough tokens to buy item');
-
-    const { embeds, components } = await rpgMarketChange(interaction);
-
-    // This grossness takes the APIEmbed object, turns it into a JSON object, and pulls the description
-    const { description } = JSON.parse(JSON.stringify((embeds as APIEmbed[])[0]));
-
-    const embed = embedTemplate()
-      .setAuthor(null)
-      .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).displayAvatarURL() })
-      .setTitle(`${emojiGet('buttonMarket')} Market`)
-      .setDescription(stripIndents`**You do not have enough tokens to buy this item.**
-    
-    ${description}`)
-      .setColor(Colors.Red);
-    const imageFiles = [] as AttachmentBuilder[];
-    if (itemData.effect === 'background') {
-      const imagePath = await getAsset(itemData.effect_value);
-      // log.debug(F, `imagePath: ${imagePath}`);
-      imageFiles.push(new AttachmentBuilder(imagePath));
-      embed.setImage(`attachment://${itemData.effect_value}.png`);
-    }
-
-    return {
-      embeds: [embed],
-      components,
-      files: imageFiles,
-    };
+    return marketBlockedReply(interaction, '**You do not have enough tokens to buy this item.**', itemData);
   }
 
   personaData.tokens -= itemCost;
@@ -1993,80 +1963,20 @@ export async function rpgMarketAccept(
       effect_value: itemData.effect_value,
       emoji: itemData.emoji,
     } as rpg_inventory;
-    // log.debug(F, `personaInventory: ${JSON.stringify(newItem, null, 2)}`);
 
-    // await inventorySet(newItem);
     await db.rpg_inventory.create({
       data: newItem,
     });
   }
 
   // if the item is a background or font, automatically equip it and unequip the other items of the same type
-  if (itemData.effect === 'background' || itemData.effect === 'font') {
-    const inventory = await db.rpg_inventory.findMany({
-      where: {
-        persona_id: personaData.id,
-      },
-    });
-    const itemIndex = inventory.findIndex(i => i.value === itemData.value);
-    // log.debug(F, `itemIndex: ${itemIndex}`);
-
-    // Unequip all items of the same type
-    const unequipItems = inventory.filter(i => i.effect === itemData.effect && i.equipped === true);
-    // log.debug(F, `unequipItems: ${JSON.stringify(unequipItems, null, 2)}`);
-    for (const item of unequipItems) {
-      // log.debug(F, `item: ${JSON.stringify(item, null, 2)}`);
-      item.equipped = false;
-      await db.rpg_inventory.upsert({
-        where: {
-          id: item.id,
-        },
-        create: item,
-        update: item,
-      });
-    }
-
-    // Equip the new item
-    const equipItem = inventory[itemIndex];
-    // log.debug(F, `equipItem: ${JSON.stringify(equipItem, null, 2)}`);
-    equipItem.equipped = true;
-    await db.rpg_inventory.upsert({
-      where: {
-        id: equipItem.id,
-      },
-      create: equipItem,
-      update: equipItem,
-    });
-    embedInfoText = `Your ${itemData.effect} has been equipped! Head home to unequip it or change ${itemData.effect}s.`;
-  }
   // If the item is the flair item, equip it and tell them about /rpg flair
-  if (itemData.effect === 'userflair') {
-    const inventory = await db.rpg_inventory.findMany({
-      where: {
-        persona_id: personaData.id,
-      },
-    });
-    const itemIndex = inventory.findIndex(i => i.value === itemData.value);
-    // log.debug(F, `itemIndex: ${itemIndex}`);
-
-    // Equip the new item
-    const equipItem = inventory[itemIndex];
-    // log.debug(F, `equipItem: ${JSON.stringify(equipItem, null, 2)}`);
-    equipItem.equipped = true;
-    await db.rpg_inventory.upsert({
-      where: {
-        id: equipItem.id,
-      },
-      create: equipItem,
-      update: equipItem,
-    });
-    embedInfoText = 'Your flair has been equipped! Use `/rpg flair` to change your flair, or head Home to unequip it.';
-  }
+  const embedInfoText = await equipBoughtItem(personaData.id, itemData);
 
   if (itemData.value === 'PremiumMembership') {
     try {
       (interaction.member as GuildMember)?.roles.add(env.ROLE_PREMIUM);
-    } catch (err) {
+    } catch {
       personaData.tokens += itemCost;
 
       await db.personas.upsert({
@@ -2118,8 +2028,6 @@ export async function rpgHomeInventory(
     },
   });
 
-  // log.debug(F, `Persona home inventory: ${JSON.stringify(inventoryData, null, 2)}`);
-
   // Get a string display of the user's inventory
   const inventoryList = inventoryData.map(item => `**${item.label}** - ${item.description}`).join('\n');
   const inventoryString = inventoryData.length > 0
@@ -2145,7 +2053,6 @@ export async function rpgHomeInventory(
       return null;
     })
     .filter(item => item !== null) as SelectMenuComponentOptionData[];
-  // log.debug(F, `generalOptions: ${JSON.stringify(homeInventory, null, 2)}`);
   return {
     homeInventory,
     personaTokens: personaData.tokens,
@@ -2153,80 +2060,27 @@ export async function rpgHomeInventory(
   };
 }
 
-export async function rpgFlair(interaction: ChatInputCommandInteraction) {
-  // First check if the flair contains a @mention
-  let newFlair = interaction.options.getString('flair') as string;
-  // log.debug(F, `newFlair: ${newFlair}`);
-  const mentionRegex = /<@!?\d{18,}>/g;
-  const mentions = newFlair.match(mentionRegex);
-  log.debug(F, `mentions: ${mentions}`);
-  // If the flair contains a mention, check if the user has mod permissions
-  const member = await interaction.guild?.members.fetch(interaction.user.id);
+const FLAIR_ERROR_TITLE = 'Flair Error';
 
-  // If they are a mod, update the user mentioned's flair
-  if (mentions && member?.roles.cache.has(env.ROLE_MODERATOR)) {
-    const targetId = mentions[0].replace(/[^0-9]/g, '');
-    // log.debug(F, `targetId: ${targetId}`);
-    const targetMember = await interaction.guild?.members.fetch(targetId);
-    // Remove the mention from the flair and the space after the mention
-    newFlair = newFlair.replace(mentionRegex, '').replace(' ', '');
-    // log.debug(F, `targetMember: ${JSON.stringify(targetMember, null, 2)}`);
-    if (targetMember) {
-    // Run rpgFlairAccept for the target member
-      const targetInteraction = interaction as unknown as MessageComponentInteraction;
-      targetInteraction.user = targetMember?.user;
-      // eslint-disable-next-line @typescript-eslint/no-use-before-define
-      return rpgFlairAccept(targetInteraction, newFlair);
-    }
-  } else if (mentions) {
-    // If they are not a mod, send an error message
-    return {
-      embeds: [embedTemplate()
-        .setAuthor(null)
-        .setTitle(`${emojiGet('itemFlair')} Flair Error`)
-        .setDescription(stripIndents`
-        You cannot use a mention in your flair!`)
-        .setColor(Colors.Red)],
-    };
-  }
-  // Check that the user owns the flair item
-  // Check get fresh persona data
-  const userData = await getOrCreateUser(interaction.user.id);
-  const personaData = await getOrCreatePersona(userData.id);
-  // Get the existing inventory data
-  const inventoryData = await db.rpg_inventory.findMany({
-    where: {
-      persona_id: personaData.id,
-    },
-  });
-  // Get the flair item
-  const flairItem = inventoryData.find(i => i.effect === 'userflair');
+/** A single-embed reply for the flair command. */
+function flairReply(title: string, description: string, color: number) {
+  return {
+    embeds: [embedTemplate()
+      .setAuthor(null)
+      .setTitle(`${emojiGet('itemFlair')} ${title}`)
+      .setDescription(stripIndents`${description}`)
+      .setColor(color)],
+  };
+}
 
-  // If the user does not own the flair item, send them an error message
-  if (!flairItem) {
-    return {
-      embeds: [embedTemplate()
-        .setAuthor(null)
-        // .setFooter({ text: `${interaction.member?.displayName}'s TripSit RPG (BETA)`, iconURL: interaction.member?.displayAvatarURL() })
-        .setTitle(`${emojiGet('itemFlair')} Flair Error`)
-        .setDescription(stripIndents`
-        You don't own the flair item! You can buy it in the \`/rpg market\`.`)
-        .setColor(Colors.Red)],
-    };
-  }
-  // If the chosen flair is too long, send an error message
-  if (newFlair.length > 50) {
-    return {
-      embeds: [embedTemplate()
-        .setAuthor(null)
-        // .setFooter({ text: `${interaction.member?.displayName}'s TripSit RPG (BETA)`, iconURL: interaction.member?.displayAvatarURL() })
-        .setTitle(`${emojiGet('itemFlair')} Flair Rejected`)
-        .setDescription(stripIndents`
-        Your flair is too long! Please keep it under 50 characters.`)
-        .setColor(Colors.Red)],
-    };
-  }
-  // If the user does own the flair item, get the old flair and continue
+/** Has the AI (or keyword automod, when the AI is unavailable) review a new flair, and saves or answers accordingly. */
+async function reviewFlair(
+  interaction: ChatInputCommandInteraction,
+  flairInventoryItem: rpg_inventory,
+  flairInput: string,
+) {
+  const flairItem = flairInventoryItem;
+  let newFlair = flairInput;
   const oldFlair = flairItem.effect_value;
 
   let aiApproved = 'rejected';
@@ -2238,8 +2092,7 @@ export async function rpgFlair(interaction: ChatInputCommandInteraction) {
     content: newFlair,
   }] as OpenAI.Chat.ChatCompletionMessageParam[];
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { response, promptTokens, completionTokens } = await aiFlairMod(messageList);
+  const { response } = await aiFlairMod(messageList);
 
   // AI moderation is unavailable (OpenAI errored, no key, or AI turned off), so aiFlairMod returns
   // an empty response. Fall back to the same keyword automod used on chat messages (bigBrother):
@@ -2248,14 +2101,7 @@ export async function rpgFlair(interaction: ChatInputCommandInteraction) {
   if (!response) {
     const flairCategory = await bigBrother(newFlair.toLowerCase());
     if (['offensive', 'harm', 'horny', 'pg13'].includes(flairCategory)) {
-      return {
-        embeds: [embedTemplate()
-          .setAuthor(null)
-          .setTitle(`${emojiGet('itemFlair')} Flair Rejected`)
-          .setDescription(stripIndents`
-          Your flair contains language that isn't allowed here. Please try something else.`)
-          .setColor(Colors.Red)],
-      };
+      return flairReply('Flair Rejected', 'Your flair contains language that isn\'t allowed here. Please try something else.', Colors.Red);
     }
 
     flairItem.effect_value = newFlair;
@@ -2264,17 +2110,7 @@ export async function rpgFlair(interaction: ChatInputCommandInteraction) {
       create: flairItem,
       update: flairItem,
     });
-    return {
-      embeds: [embedTemplate()
-        .setAuthor(null)
-        .setTitle(`${emojiGet('itemFlair')} Flair Updated`)
-        .setDescription(stripIndents`
-        Your flair has been updated!
-
-        **Old flair:** ${oldFlair}
-        **New flair:** ${newFlair}`)
-        .setColor(Colors.Green)],
-    };
+    return flairReply('Flair Updated', `Your flair has been updated!\n\n**Old flair:** ${oldFlair}\n**New flair:** ${newFlair}`, Colors.Green);
   }
 
   // Regex to see the approval status
@@ -2282,8 +2118,6 @@ export async function rpgFlair(interaction: ChatInputCommandInteraction) {
     aiApproved = 'approved';
   } else if (response.match(/Status: Adjusted/g)) {
     aiApproved = 'adjusted';
-  } else if (response.match(/Status: Rejected/g)) {
-    aiApproved = 'rejected';
   }
 
   const aiAdjusted = response.match(/Adjusted: (.*)/g)?.[0].replace('Adjusted: ', '');
@@ -2307,18 +2141,7 @@ export async function rpgFlair(interaction: ChatInputCommandInteraction) {
       update: flairItem,
     });
     // Send the user a confirmation message
-    return {
-      embeds: [embedTemplate()
-        .setAuthor(null)
-        // .setFooter({ text: `${interaction.member?.displayName}'s TripSit RPG (BETA)`, iconURL: interaction.member?.displayAvatarURL() })
-        .setTitle(`${emojiGet('itemFlair')} Flair Updated`)
-        .setDescription(stripIndents`
-        Your flair has been updated!
-
-        **Old flair:** ${oldFlair}
-        **New flair:** ${newFlair}`)
-        .setColor(Colors.Green)],
-    };
+    return flairReply('Flair Updated', `Your flair has been updated!\n\n**Old flair:** ${oldFlair}\n**New flair:** ${newFlair}`, Colors.Green);
   }
 
   // If the flair needed to be adjusted, ask the user if they want to use the adjusted flair
@@ -2326,24 +2149,15 @@ export async function rpgFlair(interaction: ChatInputCommandInteraction) {
   if ((aiApproved === 'adjusted' || newFlair.toLowerCase() !== aiAdjusted?.toLowerCase()) && aiApproved !== 'rejected') {
   // If the flair is null, send an error message
     if (!aiAdjusted) {
-      return {
-        embeds: [embedTemplate()
-          .setAuthor(null)
-        // .setFooter({ text: `${interaction.member?.displayName}'s TripSit RPG (BETA)`, iconURL: interaction.member?.displayAvatarURL() })
-          .setTitle(`${emojiGet('itemFlair')} Flair Error`)
-          .setDescription(stripIndents`
-        Oops!
-
-        Something went wrong with TripBot's AI.
-
-        Please try again later or contact a moderator to have your flair manually reviewed.`)
-          .setColor(Colors.Red)],
-      };
+      return flairReply(
+        FLAIR_ERROR_TITLE,
+        'Oops!\n\nSomething went wrong with TripBot\'s AI.\n\nPlease try again later or contact a moderator to have your flair manually reviewed.',
+        Colors.Red,
+      );
     }
     // Regex to get the reason for adjustment from the AI response where it says "Reason: "
     // If it doesn't exist, set it to "No reason given"
-    adjustmentReason = response.match(/Reason: (.*)/g)?.[0].replace('Reason: ', '') || 'No reason given';
-    // log.debug(F, `adjustmentReason: ${adjustmentReason}`);
+    adjustmentReason = response.match(/Reason: (.*)/g)?.[0].replace('Reason: ', '') ?? 'No reason given';
 
     return {
       embeds: [embedTemplate()
@@ -2372,7 +2186,7 @@ export async function rpgFlair(interaction: ChatInputCommandInteraction) {
   }
 
   // Everything else was handled above, so the verdict can only be a rejection
-  adjustmentReason = response.match(/Reason: (.*)/g)?.[0].replace('Reason: ', '') || 'No reason given';
+  adjustmentReason = response.match(/Reason: (.*)/g)?.[0].replace('Reason: ', '') ?? 'No reason given';
 
   // Send the user a rejection message
   return {
@@ -2388,6 +2202,57 @@ export async function rpgFlair(interaction: ChatInputCommandInteraction) {
       Please try something else.`)
       .setColor(Colors.Red)],
   };
+}
+
+export async function rpgFlair(interaction: ChatInputCommandInteraction) {
+  // First check if the flair contains a @mention
+  let newFlair = interaction.options.getString('flair') as string;
+  const mentionRegex = /<@!?\d{18,}>/g;
+  const mentions = newFlair.match(mentionRegex);
+  log.debug(F, `mentions: ${mentions}`);
+  // If the flair contains a mention, check if the user has mod permissions
+  const member = await interaction.guild?.members.fetch(interaction.user.id);
+
+  // If they are a mod, update the user mentioned's flair
+  if (mentions && member?.roles.cache.has(env.ROLE_MODERATOR)) {
+    const targetId = mentions[0].replace(/\D/g, '');
+    const targetMember = await interaction.guild?.members.fetch(targetId);
+    // Remove the mention from the flair and the space after the mention
+    newFlair = newFlair.replace(mentionRegex, '').replace(' ', '');
+    if (targetMember) {
+    // Run rpgFlairAccept for the target member
+      const targetInteraction = interaction as unknown as MessageComponentInteraction;
+      targetInteraction.user = targetMember?.user;
+      // eslint-disable-next-line @typescript-eslint/no-use-before-define
+      return rpgFlairAccept(targetInteraction, newFlair);
+    }
+  } else if (mentions) {
+    // If they are not a mod, send an error message
+    return flairReply(FLAIR_ERROR_TITLE, 'You cannot use a mention in your flair!', Colors.Red);
+  }
+  // Check that the user owns the flair item
+  // Check get fresh persona data
+  const userData = await getOrCreateUser(interaction.user.id);
+  const personaData = await getOrCreatePersona(userData.id);
+  // Get the existing inventory data
+  const inventoryData = await db.rpg_inventory.findMany({
+    where: {
+      persona_id: personaData.id,
+    },
+  });
+  // Get the flair item
+  const flairItem = inventoryData.find(i => i.effect === 'userflair');
+
+  // If the user does not own the flair item, send them an error message
+  if (!flairItem) {
+    return flairReply(FLAIR_ERROR_TITLE, 'You don\'t own the flair item! You can buy it in the `/rpg market`.', Colors.Red);
+  }
+  // If the chosen flair is too long, send an error message
+  if (newFlair.length > 50) {
+    return flairReply('Flair Rejected', 'Your flair is too long! Please keep it under 50 characters.', Colors.Red);
+  }
+  // If the user does own the flair item, get the old flair and continue
+  return reviewFlair(interaction, flairItem, newFlair);
 }
 
 export async function rpgFlairAccept(
@@ -2422,9 +2287,7 @@ export async function rpgFlairAccept(
       effect_value: 'Use /rpg flair to set',
       emoji: 'itemFlair',
     } as rpg_inventory;
-    // log.debug(F, `personaInventory: ${JSON.stringify(newItem, null, 2)}`);
 
-    // await inventorySet(newItem);
     await db.rpg_inventory.create({
       data: newItem,
     });
@@ -2562,8 +2425,6 @@ export async function rpgHomeNameChange(
       const choice = i.fields.getTextInputValue('rpgNewName');
       await i.deferReply({ flags: MessageFlags.Ephemeral });
 
-      // log.debug(F, `name: ${choice}`);
-
       new StringSelectMenuBuilder()
         .setCustomId(`rpgNameDisplay,user:${interaction.user.id}`)
         .setPlaceholder('No Name!')
@@ -2646,6 +2507,25 @@ export async function rpgHomeNameChange(
     });
 }
 
+/** The item selected in the home menu: the menu's default on a button click, the chosen value on a menu change. */
+function homeSelectedOption(
+  interaction: MessageComponentInteraction | ChatInputCommandInteraction,
+  equippedValue: string,
+): string {
+  if (interaction.isButton()) {
+    const row = interaction.message.components[0] as ActionRow<MessageActionRowComponent>;
+    const backgroundComponent = row.components[0] as StringSelectMenuComponent;
+    const selectedItem = backgroundComponent.options?.find(
+      (o:APISelectMenuOption) => o.default === true,
+    );
+    return selectedItem ? selectedItem.value : equippedValue;
+  }
+  if (interaction.isStringSelectMenu() && interaction.values) {
+    return interaction.values[0];
+  }
+  return equippedValue;
+}
+
 export async function rpgHome(
   interaction: MessageComponentInteraction | ChatInputCommandInteraction,
   message: string,
@@ -2659,7 +2539,6 @@ export async function rpgHome(
   // Check get fresh persona data
   const userData = await getOrCreateUser(interaction.user.id);
   const personaData = await getOrCreatePersona(userData.id);
-  // log.debug(F, `personaData home (Change) ${JSON.stringify(personaData, null, 2)}`);
 
   // Get the existing inventory data
   // const inventoryData = await inventoryGet(personaData.id);
@@ -2669,34 +2548,9 @@ export async function rpgHome(
     },
   });
 
-  // log.debug(F, `Persona home inventory (change): ${JSON.stringify(inventoryData, null, 2)}`);
-
-  let defaultOption = '' as string;
-  // Get the equipped background
+  // Get the equipped background, then the item the user selected
   const equippedBackground = inventoryData.find(item => item.equipped === true && item.effect === 'background');
-  // log.debug(F, `equippedBackground: ${JSON.stringify(equippedBackground, null, 2)} `);
-  if (equippedBackground) {
-    defaultOption = equippedBackground.value;
-  }
-  // log.debug(F, `defaultOption1: ${defaultOption} `);
-
-  // Get the item the user selected
-  if (interaction.isButton()) {
-    const row = interaction.message.components[0] as ActionRow<MessageActionRowComponent>;
-    const backgroundComponent = row.components[0];
-    if ((backgroundComponent as StringSelectMenuComponent).options) {
-      const selectedItem = (backgroundComponent as StringSelectMenuComponent).options.find(
-        (o:APISelectMenuOption) => o.default === true,
-      );
-      if (selectedItem) {
-        defaultOption = selectedItem.value;
-      }
-    }
-  } else if (interaction.isStringSelectMenu() && interaction.values) {
-    [defaultOption] = interaction.values;
-  }
-
-  // log.debug(F, `defaultOption2: ${defaultOption}`);
+  const defaultOption = homeSelectedOption(interaction, equippedBackground?.value ?? '');
 
   // Get a list of marketInventory where the value does not equal the choice
   // If there is no choice, it will return all items the user has
@@ -2740,7 +2594,6 @@ export async function rpgHome(
       newItem.emoji = `<:${emojiGet('itemBackground').identifier}>`;
       return item;
     });
-    // log.debug(F, `allItems: ${JSON.stringify(allItems, null, 2)}`);
     backgroundData = allItems.find(item => item.value === chosenItem?.value) as {
       label: string;
       value: string;
@@ -2757,7 +2610,6 @@ export async function rpgHome(
     sellPrice = (allItems.find(item => item.value === chosenItem?.value)?.cost as number) / 4;
     log.debug(F, `equipped: ${equipped}`);
     log.debug(F, `sellPrice: ${sellPrice}`);
-  // log.debug(F, `backgroundData (home change): ${JSON.stringify(backgroundData, null, 2)}`);
   }
   log.debug(F, `chosenItem: ${JSON.stringify(chosenItem, null, 2)}`);
 
@@ -2772,7 +2624,7 @@ export async function rpgHome(
     .setAuthor(null)
     .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).displayAvatarURL() })
     .setTitle(`${emojiGet('buttonHome')} Home`)
-    .setDescription(stripIndents`${message !== null ? message : ''}
+    .setDescription(stripIndents`${message ?? ''}
 
       You ${randomItem(text.enter)} your home.
       
@@ -2787,7 +2639,7 @@ export async function rpgHome(
   // If the select item has the 'background' effect, add the image to the embed
   const files = [] as AttachmentBuilder[];
 
-  if (interaction.isStringSelectMenu() && backgroundData && backgroundData.effect === 'background') {
+  if (interaction.isStringSelectMenu() && backgroundData?.effect === 'background') {
     const imagePath = await getAsset(backgroundData.effect_value);
     const target = interaction.member as GuildMember;
     const option = 'background';
@@ -2795,11 +2647,10 @@ export async function rpgHome(
     const attachment = new AttachmentBuilder(previewImage, { name: tripSitProfileImage });
     files.push(attachment);
     embed.setImage(tripSitProfileImageAttachment);
-  // log.debug(F, 'Set image!');
   }
 
   // If the select item has the 'font' effect, add the image to the embed
-  if (interaction.isStringSelectMenu() && backgroundData && backgroundData.effect === 'font') {
+  if (interaction.isStringSelectMenu() && backgroundData?.effect === 'font') {
     const target = interaction.member as GuildMember;
     const fontName = backgroundData.effect_value;
     const option = 'font';
@@ -2811,7 +2662,7 @@ export async function rpgHome(
   }
 
   // If the select item has the 'userflair' effect, add the image to the embed
-  if (interaction.isStringSelectMenu() && backgroundData && backgroundData.effect === 'userflair') {
+  if (interaction.isStringSelectMenu() && backgroundData?.effect === 'userflair') {
     const target = interaction.member as GuildMember;
     const option = 'userflair';
     const previewImage = await getProfilePreview(target, option);
@@ -2853,30 +2704,6 @@ export async function rpgHome(
     components,
     files,
   };
-  // const filteredItems = Object.values(genome.species).filter(item => item.value !== choice);
-
-  // // Reset the options menu to be empty
-  // new StringSelectMenuBuilder()
-  // .setCustomId('rpgSpecies,user:${interaction.user.id}')
-  // .setPlaceholder('Pick a species').setOptions();
-
-  // new StringSelectMenuBuilder()
-  // .setCustomId('rpgSpecies,user:${interaction.user.id}')
-  // .setPlaceholder('Pick a species').addOptions(filteredItems);
-
-  // new StringSelectMenuBuilder()
-  // .setCustomId('rpgSpecies,user:${interaction.user.id}')
-  // .setPlaceholder('Pick a species').addOptions([
-  //   {
-  //     label: { ...genome.species }[choice as keyof typeof genome.species].label,
-  //     value: { ...genome.species }[choice as keyof typeof genome.species].value,
-  //     description: { ...genome.species }[choice as keyof typeof genome.species].description,
-  //     emoji: { ...genome.species }[choice as keyof typeof genome.species].emoji,
-  //     default: true,
-  //   },
-  // ]);
-
-  // selectSpecies.addOptions(Object.values(speciesDef).filter(s => s.value !== choice));
 
   //       new StringSelectMenuBuilder()
   // .setCustomId('rpgNameDisplay,user:${interaction.user.id}')
@@ -2904,27 +2731,10 @@ export async function rpgHome(
   //   default: true,
   // }]););
 
-  // log.debug(F, `classDef: ${JSON.stringify(classDef, null, 2)}`);
-  // const selectedClassList = { ...genome.classes };
-  // log.debug(F, `selectedClassList1: ${JSON.stringify(selectedClassList, null, 2)}`);
-  // selectedClassList[personaData.class as keyof typeof selectedClassList].default = true;
-  // log.debug(F, `selectedClassList2: ${JSON.stringify(selectedClassList, null, 2)}`);
-
-  // new StringSelectMenuBuilder()
-  // .setCustomId('rpgClass,user:${interaction.user.id}')
-  // .setPlaceholder('Select a class').setOptions(Object.values({ ...selectedClassList }));
-
   // const rowChangeClass = new ActionRowBuilder<StringSelectMenuBuilder>()
   // //   .setComponents(new StringSelectMenuBuilder()
   // .setCustomId('rpgClass,user:${interaction.user.id}')
   // .setPlaceholder('Select a class'));
-
-  // log.debug(F, `speciesDef: ${JSON.stringify(genome.species, null, 2)}`);
-  // const selectedSpeciesList = { ...genome.species };
-  // log.debug(F, `selectedSpeciesList1: ${JSON.stringify(selectedSpeciesList, null, 2)}`);
-  // selectedSpeciesList[personaData.species as keyof typeof selectedSpeciesList].default = true;
-  // log.debug(F, `selectedSpeciesList2: ${JSON.stringify(selectedSpeciesList, null, 2)}`);
-  // log.debug(F, `speciesDef2: ${JSON.stringify(genome.species, null, 2)}`);
 
   // new StringSelectMenuBuilder()
   //   .setCustomId('rpgSpecies,user:${interaction.user.id}')
@@ -2934,10 +2744,6 @@ export async function rpgHome(
   // .setCustomId('rpgSpecies,user:${interaction.user.id}')
   // .setPlaceholder('Pick a species'));
 
-  // const selectedGuildList = { ...genome.guilds };
-  // selectedGuildList[personaData.guild as keyof typeof selectedGuildList].default = true;
-  // log.debug(F, `Selected guild list: ${JSON.stringify(selectedGuildList, null, 2)}`);
-
   // new StringSelectMenuBuilder()
   //   .setCustomId('rpgGuild,user:${interaction.user.id}')
   //   .setPlaceholder('Select a guild').setOptions(Object.values(selectedGuildList));
@@ -2945,14 +2751,6 @@ export async function rpgHome(
   // //   .addComponents(new StringSelectMenuBuilder()
   //   .setCustomId('rpgGuild,user:${interaction.user.id}')
   //   .setPlaceholder('Select a guild'));
-
-  // const { embeds, components } = await rpgHomeChange(interaction);
-
-  // // The user has clicked the home button, send them the home embed
-  // return {
-  //   embeds,
-  //   components,
-  // };
 }
 
 export async function rpgHomeAccept(
@@ -2968,30 +2766,6 @@ export async function rpgHomeAccept(
     (o:APISelectMenuOption) => o.default === true,
   );
 
-  // // If the user confirms the information, save the persona information
-  // const nameComponent = interaction.message.components[0].components[0];
-  // const selectedName = (nameComponent as StringSelectMenuComponent).options.find(
-  //   (o:APISelectMenuOption) => o.default === true,
-  // );
-  // const speciesComponent = interaction.message.components[1].components[0];
-  // const selectedSpecies = (speciesComponent as StringSelectMenuComponent).options.find(
-  //   (o:APISelectMenuOption) => o.default === true,
-  // );
-  // const classComponent = interaction.message.components[2].components[0];
-  // const selectedClass = (classComponent as StringSelectMenuComponent).options.find(
-  //   (o:APISelectMenuOption) => o.default === true,
-  // );
-  // const guildComponent = interaction.message.components[3].components[0];
-  // const selectedGuild = (guildComponent as StringSelectMenuComponent).options.find(
-  //   (o:APISelectMenuOption) => o.default === true,
-  // );
-
-  // log.debug(F, `selectedItem (accept home): ${JSON.stringify(selectedItem, null, 2)}`);
-  // log.debug(F, `selectedName: ${JSON.stringify(selectedName, null, 2)}`);
-  // log.debug(F, `selectedSpecies: ${JSON.stringify(selectedSpecies, null, 2)}`);
-  // log.debug(F, `selectedClass: ${JSON.stringify(selectedClass, null, 2)}`);
-  // log.debug(F, `selectedGuild: ${JSON.stringify(selectedGuild, null, 2)}`);
-
   // Get the existing inventory data
   // const inventoryData = await inventoryGet(personaData.id);
   const inventoryData = await db.rpg_inventory.findMany({
@@ -2999,7 +2773,6 @@ export async function rpgHomeAccept(
       persona_id: personaData.id,
     },
   });
-  // log.debug(F, `Persona home inventory (accept): ${JSON.stringify(inventoryData, null, 2)}`);
 
   // Find the selectedItem in the inventoryData
   const chosenItem = inventoryData.find(item => item.value === selectedItem?.value);
@@ -3009,7 +2782,6 @@ export async function rpgHomeAccept(
   // Equip the item
   if (chosenItem) {
     chosenItem.equipped = true;
-    // await inventorySet(chosenItem);
     await db.rpg_inventory.upsert({
       where: {
         id: chosenItem.id,
@@ -3042,9 +2814,6 @@ export async function rpgHomeAccept(
   // personaData.guild = selectedGuild?.value ?? 'guildless';
   // personaData.tokens = 0;
 
-  // log.debug(F, `Setting Persona data: ${JSON.stringify(personaData, null, 2)}`);
-
-  // await personaSet(personaData);
   const { embeds, components, files } = await rpgHome(interaction, `**You have equipped ${chosenItem?.label}!**\n`);
   return {
     embeds,
@@ -3164,17 +2933,6 @@ export async function rpgArcadeAnimate(
   interaction: MessageComponentInteraction | ChatInputCommandInteraction,
   gameName: GameName,
 ) {
-  // if (env.NODE_ENV === 'development') {
-  //   await (interaction as MessageComponentInteraction).editReply({
-  //     embeds: [embedTemplate()
-  //       .setAuthor(null)
-  //       .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).displayAvatarURL() })
-  //       .setTitle(gameName),
-  //     ],
-  //   });
-  //   return;
-  // }
-
   if (gameName === 'Coinflip') {
     await (interaction as MessageComponentInteraction).editReply({ // eslint-disable-line no-await-in-loop
       embeds: [],
@@ -3183,76 +2941,6 @@ export async function rpgArcadeAnimate(
     });
 
     await sleep(4 * 1000);
-
-    // const spaceField = { name: '\u200B', value: '\u200B' };
-    // const embed = embedTemplate()
-    //   .setAuthor(null)
-    //   .setFooter(null)
-    //   .setFields([
-    //     { name: '🪙', value: '🫱' },
-    //   ]);
-
-    // await (interaction as MessageComponentInteraction).editReply({ // eslint-disable-line no-await-in-loop
-    //   embeds: [embed],
-    //   components: [],
-    // });
-
-    // await sleep(1 * 1000);
-
-    // await (interaction as MessageComponentInteraction).editReply({ // eslint-disable-line no-await-in-loop
-    //   embeds: [embed.setFields([
-    //     { name: '🪙', value: '👍' },
-    //   ])],
-    // });
-
-    // await sleep(0.5 * 1000);
-
-    // let height = 1;
-    // const ceiling = 3;
-    // while (height < ceiling) {
-    //   await sleep(0.25 * 1000); // eslint-disable-line no-await-in-loop
-    //   embed.setFields([{ name: '\u200B', value: '🪙' }]);
-    //   const spaceArray = Array(height).fill(spaceField);
-    //   if (spaceArray && spaceArray.length > 0) {
-    //     embed.addFields(spaceArray);
-    //   }
-    //   embed.addFields([{ name: '\u200B', value: '🫴' }]);
-
-    //   await (interaction as MessageComponentInteraction).editReply({ // eslint-disable-line no-await-in-loop
-    //     embeds: [embed],
-    //   });
-    //   height += 1;
-    //   // log.debug(F, `height up: ${height}`);
-    // }
-    // while (height > 0) {
-    //   await sleep(0.25 * 1000); // eslint-disable-line no-await-in-loop
-    //   embed.setFields([{ name: '\u200B', value: '🪙' }]);
-    //   const spaceArray = Array(height).fill({ name: '\u200B', value: '\u200B' });
-    //   if (spaceArray && spaceArray.length > 0) {
-    //     embed.addFields(spaceArray);
-    //   }
-    //   embed.addFields([{ name: '\u200B', value: '🫴' }]);
-
-    //   await (interaction as MessageComponentInteraction).editReply({ // eslint-disable-line no-await-in-loop
-    //     embeds: [embed],
-    //   });
-    //   height -= 1;
-    //   // log.debug(F, `height down: ${height}`);
-    // }
-
-    // await (interaction as MessageComponentInteraction).editReply({ // eslint-disable-line no-await-in-loop
-    //   embeds: [embed.setFields([
-    //     { name: '🪙', value: '🫴' },
-    //   ])],
-    // });
-    // await sleep(0.5 * 1000);
-
-    // await (interaction as MessageComponentInteraction).editReply({ // eslint-disable-line no-await-in-loop
-    //   embeds: [embed.setFields([
-    //     { name: '🪙', value: '🫴', inline: true },
-    //   ])],
-    // });
-    // await sleep(1 * 1000);
   }
 
   if (gameName === 'Roulette') {
@@ -3264,45 +2952,52 @@ export async function rpgArcadeAnimate(
 
     await sleep(4 * 1000);
     //   // Make an animation out of embeds that shows an arrow spinning
-
-    //   const wheelTop = [
-    //     { name: '\u200B', value: '⬛', inline: true },
-    //     { name: '\u200B', value: '🟥', inline: true },
-    //     { name: '\u200B', value: '⬛', inline: true },
-    //     { name: '🟥', value: '⬛', inline: true },
-    //   ];
-    //   const wheelBottom = [
-    //     { name: '🟥', value: '⬛', inline: true },
-    //     // { name: '🟥', value: '\u200B', inline: true },
-    //     // { name: '⬛', value: '\u200B', inline: true },
-    //     // { name: '🟥', value: '\u200B', inline: true },
-    //   ];
-
-    //   const embed = embedTemplate()
-    //     .setAuthor(null)
-    //     .setFooter(null)
-    //     .setFields(
-    //       ...wheelTop,
-    //       { name: '⬆️', value: '🟥', inline: true },
-    //       ...wheelBottom,
-    //     );
-    //   await (interaction as MessageComponentInteraction).editReply({ embeds: [embed] }); // eslint-disable-line no-await-in-loop
-    //   await sleep(0.5 * 1000); // eslint-disable-line no-await-in-loop
-
-    //   const arrows = ['↗️', '➡️', '↘️', '⬇️', '↙️', '⬅️', '↖️', '⬆️', '↗️', '➡️', '↘️'];
-    //   for (const arrow of arrows) { // eslint-disable-line no-restricted-syntax
-    //     embed.setFields(
-    //       ...wheelTop,
-    //       { name: arrow, value: '🟥', inline: true },
-    //       ...wheelBottom,
-    //     );
-    //     await (interaction as MessageComponentInteraction).editReply({ embeds: [embed], components: [] }); // eslint-disable-line no-await-in-loop
-    //     // await sleep(0.1 * 1000); // eslint-disable-line no-await-in-loop
-    //   }
-
-  //   await sleep(2 * 1000);
   }
 }
+
+const ROULETTE_ROWS = {
+  first: [1, 4, 7, 10, 13, 16, 19, 22, 25, 28, 31, 34],
+  second: [2, 5, 8, 11, 14, 17, 20, 23, 26, 29, 32, 35],
+  third: [3, 6, 9, 12, 15, 18, 21, 24, 27, 30, 33, 36],
+};
+
+// How a roulette bet wins, and what multiple of the bet it pays
+const ROULETTE_BETS: Record<string, { wins: (number: number) => boolean; multiple: number }> = {
+  0: { wins: number => number === 0, multiple: 17 },
+  red: { wins: number => number % 2 === 0, multiple: 1 },
+  evens: { wins: number => number % 2 === 0, multiple: 1 },
+  black: { wins: number => number % 2 !== 0, multiple: 1 },
+  odds: { wins: number => number % 2 !== 0, multiple: 1 },
+  high: { wins: number => number > 18, multiple: 1 },
+  low: { wins: number => number < 18, multiple: 1 },
+  '1-12': { wins: number => number < 13, multiple: 2 },
+  '13-24': { wins: number => number > 12 && number < 25, multiple: 2 },
+  '25-36': { wins: number => number > 24, multiple: 2 },
+  first: { wins: number => ROULETTE_ROWS.first.includes(number), multiple: 2 },
+  second: { wins: number => ROULETTE_ROWS.second.includes(number), multiple: 2 },
+  third: { wins: number => ROULETTE_ROWS.third.includes(number), multiple: 2 },
+};
+
+/** How many tokens the bet pays out (0 when it lost) for the result of a game. */
+function arcadePayout(gameName: GameName, choice: string, result: string, currentBet: number): number {
+  if (gameName === 'Coinflip') {
+    return result === choice ? currentBet : 0;
+  }
+  const bet = Object.hasOwn(ROULETTE_BETS, choice) ? ROULETTE_BETS[choice] : undefined;
+  return bet?.wins(parseInt(result, 10)) ? currentBet * bet.multiple : 0;
+}
+
+const arcadeEmbed = (
+  interaction: MessageComponentInteraction | ChatInputCommandInteraction,
+  title: string,
+  description: string,
+  color: number,
+) => embedTemplate()
+  .setAuthor(null)
+  .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).displayAvatarURL() })
+  .setTitle(title)
+  .setDescription(stripIndents`${description}`)
+  .setColor(color);
 
 export async function rpgArcadeGame(
   interaction: MessageComponentInteraction | ChatInputCommandInteraction,
@@ -3313,7 +3008,6 @@ export async function rpgArcadeGame(
   | '1-12' | '13-24' | '25-36',
   message?: string,
 ):Promise<InteractionEditReplyOptions | InteractionUpdateOptions> {
-  // log.debug(F, `Started rpgArcadeGame(${gameName}, ${choice}, ${message})`);
   const gameData = {
     Coinflip: {
       gameName: 'Coinflip' as GameName,
@@ -3391,23 +3085,11 @@ export async function rpgArcadeGame(
   const rowBetsC = new ActionRowBuilder<ButtonBuilder>()
     .addComponents(...bets.slice(10, 15));
 
-  // log.debug(F, `rowWagers: ${JSON.stringify(rowWagers, null, 2)}`);
-  // log.debug(F, `rowBetsA: ${JSON.stringify(rowBetsA, null, 2)}`);
-
   const components = [rowWagers, rowBetsA];
   if (rowBetsB.components.length > 0) components.push(rowBetsB);
   if (rowBetsC.components.length > 0) components.push(rowBetsC);
 
-  // log.debug(F, `components: ${JSON.stringify(components, null, 2)}`);
-
-  if (!wagers[interaction.user.id]) {
-    wagers[interaction.user.id] = {
-      tokens: 0,
-      gameName,
-    };
-  }
-
-  if (wagers[interaction.user.id].gameName !== gameName) {
+  if (wagers[interaction.user.id]?.gameName !== gameName) {
     wagers[interaction.user.id] = {
       tokens: 0,
       gameName,
@@ -3417,94 +3099,29 @@ export async function rpgArcadeGame(
   // Check get fresh persona data
   const userData = await getOrCreateUser(interaction.user.id);
   const personaData = await getOrCreatePersona(userData.id);
-  // log.debug(F, `personaData (Coinflip): ${JSON.stringify(personaData, null, 2)}`);
 
   const currentBet = wagers[interaction.user.id].tokens;
-  // log.debug(F, `currentBet: ${currentBet}`);
+  const wallet = `${emojiGet('buttonBetSmall')} **Wallet:** ${personaData.tokens}`;
+  const gameTitle = `${emojiGet(emojiName)} ${gameName}`;
 
-  // log.debug(F, `choice: ${choice}`);
   if (choice && currentBet === 0) {
-    // await (interaction as MessageComponentInteraction).editReply(noBetError);
     return {
-      embeds: [embedTemplate()
-        .setAuthor(null)
-        .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).displayAvatarURL() })
-        .setTitle(gameName)
-        .setDescription(stripIndents`
-          **You can't start a game without first placing a bet!**
-
-          ${emojiGet('buttonBetSmall')} **Wallet:** ${personaData.tokens}
-        `)
-        .setColor(Colors.Gold)],
+      embeds: [arcadeEmbed(interaction, gameName, `**You can't start a game without first placing a bet!**\n\n${wallet}`, Colors.Gold)],
       components,
     };
   }
 
   if (choice) {
     await rpgArcadeAnimate(interaction, gameName);
-    const { object } = gameData[gameName as keyof typeof gameData];
-
-    const { options } = gameData[gameName as keyof typeof gameData];
+    const { object, options } = gameData[gameName as keyof typeof gameData];
     const result = randomItem(options);
-    // log.debug(F, `result: ${result}`);
 
-    let payout = 0;
-    if (gameName === 'Coinflip') {
-      if (result === choice) payout = currentBet;
-    } else if (gameName === 'Roulette') {
-      const number = parseInt(result, 10);
-      if (choice === '0' && number === 0) payout = currentBet * 17;
-      else if ((choice === 'red' || choice === 'evens') && (number % 2 === 0)) payout = currentBet;
-      else if ((choice === 'black' || choice === 'odds') && (number % 2 !== 0)) payout = currentBet;
-      else if ((choice === 'high') && (number > 18)) payout = currentBet;
-      else if ((choice === 'low') && (number < 18)) payout = currentBet;
-      else if ((choice === '1-12') && (number < 13)) payout = currentBet * 2;
-      else if ((choice === '13-24') && (number > 12 && number < 25)) payout = currentBet * 2;
-      else if ((choice === '25-36') && (number > 24)) payout = currentBet * 2;
-      else if ((choice === 'first') && ([1, 4, 7, 10, 13, 16, 19, 22, 25, 28, 31, 34].includes(number))) payout = currentBet * 2;
-      else if ((choice === 'second') && ([2, 5, 8, 11, 14, 17, 20, 23, 26, 29, 32, 35].includes(number))) payout = currentBet * 2;
-      else if ((choice === 'third') && ([3, 6, 9, 12, 15, 18, 21, 24, 27, 30, 33, 36].includes(number))) payout = currentBet * 2;
-    }
+    const payout = arcadePayout(gameName, choice, result, currentBet);
 
-    // log.debug(F, `result: ${result}`);
-
-    if (payout !== 0) {
-      // The user won
-      const BetOutcomeMessage = randomItem(BetWinMessageList);
-      personaData.tokens += payout;
-      await db.personas.upsert({
-        where: {
-          user_id: userData.id,
-        },
-        create: personaData,
-        update: personaData,
-      });
-
-      wagers[interaction.user.id] = {
-        tokens: 0,
-        gameName,
-      };
-      return {
-        content: null,
-        embeds: [embedTemplate()
-          .setAuthor(null)
-          .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).displayAvatarURL() })
-          .setTitle(`${emojiGet(emojiName)} ${gameName}`)
-          .setDescription(stripIndents`
-            The ${object} came up **${result}** and you chose **${choice}**!
-
-            **You won ${payout} tokens!**
-            *${BetOutcomeMessage}*
-
-            ${emojiGet('buttonBetSmall')} **Wallet:** ${personaData.tokens}
-          `)
-          .setColor(Colors.Gold)],
-        components,
-      };
-    }
-    // The user lost
-    const BetOutcomeMessage = randomItem(BetLossMessageList);
-    personaData.tokens -= currentBet;
+    // The user won or lost
+    const won = payout !== 0;
+    const BetOutcomeMessage = randomItem(won ? BetWinMessageList : BetLossMessageList);
+    personaData.tokens += won ? payout : -currentBet;
     await db.personas.upsert({
       where: {
         user_id: userData.id,
@@ -3512,61 +3129,47 @@ export async function rpgArcadeGame(
       create: personaData,
       update: personaData,
     });
+
     wagers[interaction.user.id] = {
       tokens: 0,
       gameName,
     };
+    const outcome = won ? `**You won ${payout} tokens!**` : `**You lost ${currentBet} tokens!**`;
+    // The wallet shown is the one after the payout, so it is rebuilt from the updated persona
     return {
       content: null,
-      embeds: [embedTemplate()
-        .setAuthor(null)
-        .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).displayAvatarURL() })
-        .setTitle(`${emojiGet(emojiName)} ${gameName}`)
-        .setDescription(stripIndents`
-            The ${object} came up **${result}** and you chose **${choice}**!
-
-            **You lost ${currentBet} tokens!**
-            *${BetOutcomeMessage}*
-
-            ${emojiGet('buttonBetSmall')} **Wallet:** ${personaData.tokens}
-          `)
-        .setColor(Colors.Grey)],
+      embeds: [arcadeEmbed(
+        interaction,
+        gameTitle,
+        `The ${object} came up **${result}** and you chose **${choice}**!\n\n${outcome}\n*${BetOutcomeMessage}*\n\n${emojiGet('buttonBetSmall')} **Wallet:** ${personaData.tokens}`,
+        won ? Colors.Gold : Colors.Grey,
+      )],
       components,
     };
   }
 
   // The user has clicked the market button, send them the market embed
   if (currentBet !== 0) {
-  // log.debug(F, 'No choice made, but a bet was made, return the bet screen');
     return {
       content: null,
-      embeds: [embedTemplate()
-        .setAuthor(null)
-        .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).displayAvatarURL() })
-        .setTitle(`${emojiGet(emojiName)} ${gameName}`)
-        .setDescription(stripIndents`${message ?? ''}
-          You are betting ${currentBet} tokens.
-
-          ${emojiGet('buttonBetSmall')} **Wallet:** ${personaData.tokens}
-        `)
-        .setColor(Colors.Green)],
+      embeds: [arcadeEmbed(
+        interaction,
+        gameTitle,
+        `${message ?? ''}\nYou are betting ${currentBet} tokens.\n\n${wallet}`,
+        Colors.Green,
+      )],
       components,
     };
   }
 
   return {
     content: null,
-    embeds: [embedTemplate()
-      .setAuthor(null)
-      .setFooter({ text: `${(interaction.member as GuildMember).displayName}'s TripSit RPG (BETA)`, iconURL: (interaction.member as GuildMember).displayAvatarURL() })
-      .setTitle(`${emojiGet(emojiName)} ${gameName}`)
-      .setDescription(stripIndents`You start a game of ${gameName}.
-
-        ${instructions}
-
-        ${emojiGet('buttonBetSmall')} **Wallet:** ${personaData.tokens}
-      `)
-      .setColor(Colors.Green)],
+    embeds: [arcadeEmbed(
+      interaction,
+      gameTitle,
+      `You start a game of ${gameName}.\n\n${instructions}\n\n${wallet}`,
+      Colors.Green,
+    )],
     components,
   };
 }
@@ -3627,8 +3230,6 @@ export async function rpgTown(
       customButton(`rpgHelp,user:${interaction.user.id}`, 'Help', 'buttonHelp', ButtonStyle.Primary),
     );
 
-  // log.debug(F, `RPG Town End: ${JSON.stringify(rowTown)}`);
-
   return {
     embeds: [embedTemplate()
       .setAuthor(null)
@@ -3680,7 +3281,6 @@ async function rpgGift(interaction: ChatInputCommandInteraction) {
 
   // Get the current token amounts for the command user and the target user
   const commandUserTokens = userPersona.tokens;
-  // const targetUserTokens = targetData.tokens;
 
   // Check if the amount is negative
   if (giftAmount < 0) {
@@ -3849,18 +3449,9 @@ export const dRpg: SlashCommand = {
     await interaction.deferReply({ flags: ephemeral });
     const subcommand = interaction.options.getSubcommand();
 
-    // const quietCommands = [
-    //   'quest',
-    //   'dungeon',
-    //   'raid',
-    //   'coinflip',
-    //   'roulette',
-    // ];
-
     // Get the user's persona data
     const userData = await getOrCreateUser(interaction.user.id);
     await getOrCreatePersona(userData.id);
-    // log.debug(F, `Initial Persona data: ${JSON.stringify(personaData, null, 2)}`);
 
     if (subcommand === 'town') {
       await interaction.editReply(await rpgTown(interaction));
@@ -3896,12 +3487,6 @@ export const dRpg: SlashCommand = {
       await interaction.editReply(await rpgGift(interaction));
     }
 
-    // if (subcommand === 'blackjack') {
-    //   await interaction.editReply(await rpgArcade(interaction));
-    // }
-    // if (subcommand === 'slots') {
-    //   await interaction.editReply(await rpgArcade(interaction));
-    // }
     return true;
   },
 };

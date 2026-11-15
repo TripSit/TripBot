@@ -18,10 +18,8 @@ import {
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
 import { SlashCommand } from '../../@types/commandDef';
-// import { stats } from '../../../global/commands/g.stats';
 import commandContext from '../../utils/context';
 import { embedTemplate } from '../../utils/embedTemplate';
-// import log from '../../../global/utils/log';
 
 const F = f(__filename);
 
@@ -57,7 +55,6 @@ async function getMessages(
     }),
   );
 
-  // log.debug(F, `messageData: ${JSON.stringify(messageData, null, 2)}`);
   return messageData;
 }
 

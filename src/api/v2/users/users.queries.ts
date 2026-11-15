@@ -16,7 +16,7 @@ export default {
       try {
         const ban = await guild.bans.fetch(discordId);
         return { success: true, banned: true, reason: ban.reason };
-      } catch (error) {
+      } catch {
         // User is not banned (Discord throws error if user isn't banned)
         return { success: true, banned: false };
       }

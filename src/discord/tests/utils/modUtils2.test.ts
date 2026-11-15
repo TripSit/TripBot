@@ -242,7 +242,9 @@ describe('messageModThread: context-menu messages', () => {
       isUserContextMenuCommand: () => false,
       isMessageContextMenuCommand: () => true,
     };
-    await messageModThread(interaction as never, member('999999999999999999'), member(ID) as never, 'WARNING', 'n', 'd', '', '', undefined, null);
+    await messageModThread(interaction as never, member('999999999999999999'), member(ID) as never, 'WARNING', {
+      internalNote: 'n', description: 'd', extraMessage: '', duration: '', appealData: undefined, dmDelivered: null,
+    });
     const [{ embeds }] = thread.send.mock.calls[0] as unknown as [{ embeds: EmbedBuilder[] }];
     expect(embeds[0].data.fields?.filter(f => f.name === 'Message')).toHaveLength(1);
   });
@@ -323,12 +325,14 @@ describe('messageModThread', () => {
     actor(),
     (over.target ?? member(ID, { displayName: 'Target' })) as never,
     (over.command ?? 'WARNING') as never,
-    over.note ?? 'internal',
-    over.desc ?? 'public',
-    over.extra ?? '',
-    over.duration ?? '',
-    over.appeal as never,
-    over.dm,
+    {
+      internalNote: over.note ?? 'internal',
+      description: over.desc ?? 'public',
+      extraMessage: over.extra ?? '',
+      duration: over.duration ?? '',
+      appealData: over.appeal as never,
+      dmDelivered: over.dm,
+    },
   );
 
   it('does nothing when the mod channels are not configured', async () => {

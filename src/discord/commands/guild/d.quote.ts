@@ -8,6 +8,7 @@ import {
   DiscordAPIError,
   Guild,
   GuildMember,
+  User,
   MessageContextMenuCommandInteraction,
   MessageFlags,
   SlashCommandBuilder,
@@ -213,23 +214,13 @@ function buildQuoteEmbeds(baseEmbed: APIEmbed, media: QuoteMedia, jumpUrl: strin
   return embeds;
 }
 
-async function get(interaction: ChatInputCommandInteraction) {
-  if (!interaction.guild) return;
-  const quote = interaction.options.getString('quote', false);
-  const user = interaction.options.getUser('user', false);
+type QuoteRow = NonNullable<Awaited<ReturnType<typeof db.quotes.findFirst>>>;
 
-  if (!quote && !user) {
-    await interaction.reply({
-      content: 'You must provide either a quote or a user to search for quotes.',
-      flags: MessageFlags.Ephemeral,
-    });
-    return;
-  }
-
-  log.debug(F, `Searching for quote: ${quote}, user: ${user?.username}`);
-
-  let quoteData;
-
+/** Finds the quote to show, or the message explaining why there isn't one. */
+async function searchQuote(
+  quote: string | null,
+  user: User | null,
+): Promise<{ quoteData: QuoteRow } | { notFound: string }> {
   // Build the search conditions
   const whereCondition: Prisma.quotesWhereInput = {};
 
@@ -248,67 +239,38 @@ async function get(interaction: ChatInputCommandInteraction) {
   // Search for quotes based on conditions
   if (quote) {
     // Quote provided (with or without user) - find first matching quote
-    quoteData = await db.quotes.findFirst({
+    const quoteData = await db.quotes.findFirst({
       where: whereCondition,
     });
-  } else {
-    // Only user provided - find all quotes by user and pick one randomly
-    const quotes = await db.quotes.findMany({
-      where: whereCondition,
-    });
-
-    if (quotes.length === 0) {
-      await interaction.reply({
-        content: `No quotes found for ${user?.username}.`,
-        flags: MessageFlags.Ephemeral,
-      });
-      return;
-    }
-
-    // Pick a random quote from the user's quotes
-    quoteData = randomItem(quotes);
-  }
-
-  if (!quoteData) {
-    // Searching by user alone is answered above, so a quote text is always present here
+    if (quoteData) return { quoteData };
+    // Searching by user alone is answered below, so a quote text is always present here
     const searchType = user
       ? `quote containing "${quote}" by ${user.username}`
       : `quote containing "${quote}"`;
-
-    await interaction.reply({
-      content: `No ${searchType} found.`,
-      flags: MessageFlags.Ephemeral,
-    });
-    return;
+    return { notFound: `No ${searchType} found.` };
   }
 
-  log.debug(F, 'Quote found!');
-
-  // Get author data
-  const authorData = await db.users.findFirstOrThrow({
-    where: {
-      id: quoteData.user_id,
-    },
+  // Only user provided - find all quotes by user and pick one randomly
+  const quotes = await db.quotes.findMany({
+    where: whereCondition,
   });
 
-  if (!authorData.discord_id) return; // Type safety
-
-  await interaction.deferReply();
-
-  // Try to fetch the Discord member
-  let target = null;
-  try {
-    target = await interaction.guild.members.fetch(authorData.discord_id);
-  } catch (err) {
-    log.error(F, `Failed to fetch author: ${authorData.discord_id}`);
-    target = null;
+  if (quotes.length === 0) {
+    return { notFound: `No quotes found for ${user?.username}.` };
   }
 
-  const media = await fetchQuoteMedia(interaction.guild, quoteData.url);
+  // Pick a random quote from the user's quotes
+  return { quoteData: randomItem(quotes) };
+}
 
+function buildQuoteDescription(
+  target: GuildMember | null,
+  quoteData: QuoteRow,
+  media: Awaited<ReturnType<typeof fetchQuoteMedia>>,
+): string {
   const descriptionParts = [
     // eslint-disable-next-line max-len
-    `${target?.displayName || target?.user.username || 'Unknown User'} ${randomItem(flavorText)}`,
+    `${target?.displayName ?? target?.user.username ?? 'Unknown User'} ${randomItem(flavorText)}`,
   ];
 
   if (!(quoteData.quote === imageOnlyPlaceholder && media.images.length > 0)) {
@@ -326,6 +288,57 @@ async function get(interaction: ChatInputCommandInteraction) {
   }
 
   descriptionParts.push(`- ${quoteData.url || 'No source URL'}`);
+  return descriptionParts.join('\n\n');
+}
+
+async function get(interaction: ChatInputCommandInteraction) {
+  if (!interaction.guild) return;
+  const quote = interaction.options.getString('quote', false);
+  const user = interaction.options.getUser('user', false);
+
+  if (!quote && !user) {
+    await interaction.reply({
+      content: 'You must provide either a quote or a user to search for quotes.',
+      flags: MessageFlags.Ephemeral,
+    });
+    return;
+  }
+
+  log.debug(F, `Searching for quote: ${quote}, user: ${user?.username}`);
+
+  const found = await searchQuote(quote, user);
+  if ('notFound' in found) {
+    await interaction.reply({
+      content: found.notFound,
+      flags: MessageFlags.Ephemeral,
+    });
+    return;
+  }
+  const { quoteData } = found;
+
+  log.debug(F, 'Quote found!');
+
+  // Get author data
+  const authorData = await db.users.findFirstOrThrow({
+    where: {
+      id: quoteData.user_id,
+    },
+  });
+
+  if (!authorData.discord_id) return; // Type safety
+
+  await interaction.deferReply();
+
+  // Try to fetch the Discord member
+  let target: GuildMember | null = null;
+  try {
+    target = await interaction.guild.members.fetch(authorData.discord_id);
+  } catch {
+    log.error(F, `Failed to fetch author: ${authorData.discord_id}`);
+    target = null;
+  }
+
+  const media = await fetchQuoteMedia(interaction.guild, quoteData.url);
 
   // Reply with the quote embed
   await interaction.editReply({
@@ -335,7 +348,7 @@ async function get(interaction: ChatInputCommandInteraction) {
           url: target.user.displayAvatarURL(),
         },
       }),
-      description: descriptionParts.join('\n\n'),
+      description: buildQuoteDescription(target, quoteData, media),
       ...(target && { color: target.displayColor }),
       timestamp: quoteData.date.toISOString(),
     }, media, quoteData.url),
@@ -372,7 +385,7 @@ async function random(interaction:ChatInputCommandInteraction) {
   let author = null;
   try {
     author = await interaction.guild.members.fetch(authorData.discord_id as string);
-  } catch (err) {
+  } catch {
     log.error(F, `Failed to fetch author: ${authorData.discord_id}`);
     author = null;
   }
@@ -556,8 +569,6 @@ export async function quoteAdd(interaction:MessageContextMenuCommandInteraction)
   const vipRoles = vipRolesAtOrAbove(10)
     .map(role => actor.roles.cache.has(role)) // Check if the actor has any of these roles
     .filter(role => role); // Filter out any non-truthy values
-
-  // log.debug(F, `VIP Roles: ${vipRoles}`);
 
   if (vipRoles.length === 0) {
     log.debug(F, 'Actor has no VIP roles');

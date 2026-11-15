@@ -6,7 +6,7 @@ import { SlashCommand } from '../../@types/commandDef';
 import { embedTemplate } from '../../utils/embedTemplate';
 import { joke } from '../../../global/commands/g.joke';
 import commandContext from '../../utils/context';
-// import log from '../../../global/utils/log';
+
 const F = f(__filename);
 
 type Single = {

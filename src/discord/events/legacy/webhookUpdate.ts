@@ -7,8 +7,6 @@ import {
 } from 'discord-api-types/v10';
 import { WebhookUpdateEvent } from '../../@types/eventDef';
 import { checkChannelPermissions, checkGuildPermissions } from '../../utils/checkPermissions';
-// import log from '../../global/utils/log';
-// import {parse} from 'path';
 const F = f(__filename);
 
 export const webhookUpdate: WebhookUpdateEvent = {
