@@ -12,6 +12,7 @@
     "src/discord/tests/**/*",
     "src/global/tests/**/*",
     "src/irc/tests/**/*",
+    "src/docker/tests/**/*",
     "src/api/**/*.test.ts",
     "src/global/@types/**/*.d.ts",
     "src/discord/utils/discordTypes.ts",

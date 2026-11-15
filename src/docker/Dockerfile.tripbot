@@ -1,69 +1,56 @@
 # syntax=docker/dockerfile:1
-###################
-# BUILD FOR LOCAL DEVELOPMENT
-###################
-FROM node:lts AS development
+
+# Keep native dependencies on the same Node major, Debian release, and libc in every stage.
+FROM node:22-bookworm AS dependencies
+WORKDIR /workspaces/tripbot
+COPY package.json package-lock.json ./
+RUN --mount=type=cache,target=/root/.npm HUSKY=0 npm ci --no-audit --no-fund
+
+FROM dependencies AS development
 ENV NODE_ENV=development
-RUN apt-get update && apt-get install -y --no-install-recommends tmux && rm -rf /var/lib/apt/lists/*
-WORKDIR /workspaces/tripbot
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends tmux \
+    && rm -rf /var/lib/apt/lists/*
 COPY .devcontainer/.tmux.conf /root/.tmux.conf
-COPY package*.json ./
-RUN npm ci --no-audit --silent
 COPY . .
-RUN npx prisma generate --schema=./src/prisma/tripbot/schema.prisma
-RUN npx prisma generate --schema=./src/prisma/moodle/schema.prisma
+RUN npm run db:generate
 
-###################
-# BUILD FOR PRODUCTION (The "Kitchen Sink" stage)
-###################
-FROM node:lts AS build
-WORKDIR /workspaces/tripbot
+# Production does not depend on the development image or its tools.
+FROM dependencies AS build
+COPY . .
+RUN npm run db:generate \
+    && npx tsc \
+    && npx tsc-alias \
+    && npx tsc --project tsconfig.prisma.json \
+    && rm -f build/prisma.config.js build/prisma.config.js.map
 
-# 1. Get everything from development
-COPY --from=development /workspaces/tripbot .
+# Prune the installed tree, preserving native install artifacts and the lockfile's versions.
+FROM dependencies AS production-dependencies
+RUN npm prune --omit=dev --ignore-scripts --no-audit --no-fund
 
-# 2. GENERATE FOR TSC: Create types so the compiler doesn't freak out
-RUN npx prisma generate --schema=./src/prisma/tripbot/schema.prisma
-RUN npx prisma generate --schema=./src/prisma/moodle/schema.prisma
-
-# 3. COMPILE: Turn your TS into JS
-RUN npx tsc
-RUN npx tsc-alias
-RUN npx tsc --project tsconfig.prisma.json
-# Remove prisma.config.js emitted by tsc; Prisma prefers it over prisma.config.mjs and fails (must run after the tsconfig.prisma.json build).
-RUN rm -f ./build/prisma.config.js ./build/prisma.config.js.map
-
-# 4. PRUNE: Remove devDependencies (this deletes the clients we just made)
-RUN rm -rf node_modules && npm ci --omit=dev --no-audit --silent --ignore-scripts
-
-# 5. GENERATE FOR RUNTIME: Re-inject the clients into the clean node_modules
-RUN npx prisma generate --schema=./src/prisma/tripbot/schema.prisma
-RUN npx prisma generate --schema=./src/prisma/moodle/schema.prisma
-
-###################
-# FINAL PRODUCTION (The "Lean" stage that actually runs)
-###################
-# Debian (slim), like the stages above: node_modules is installed in the build stage and copied here, so both must share
-# a libc. Alpine (musl) needs different optional native binaries (@snazzah/davey, @napi-rs/canvas) than the glibc install.
-FROM node:lts-slim AS production
+FROM node:22-bookworm-slim AS production
 ENV NODE_ENV=production
 WORKDIR /workspaces/tripbot
+# Prisma requires OpenSSL; keep package metadata and npm's cache out of the image.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends openssl \
+    && rm -rf /var/lib/apt/lists/* \
+    && npm install -g pm2@7.1.2 --no-audit --no-fund \
+    && npm cache clean --force
 
-# Copy ONLY the compiled code and production modules from the build stage
-COPY --from=build /workspaces/tripbot/node_modules ./node_modules
+COPY --from=production-dependencies /workspaces/tripbot/node_modules ./node_modules
 COPY --from=build /workspaces/tripbot/build ./build
-COPY --from=build /workspaces/tripbot/package*.json ./
-
-COPY --from=build /workspaces/tripbot/src/prisma/ ./src/prisma/
-COPY --from=build /workspaces/tripbot/prisma.config.mjs ./prisma.config.mjs
-COPY --from=build /workspaces/tripbot/tsconfig.json ./tsconfig.json
-COPY ./assets ./build/assets
-
-# Copy your entrypoint script
-COPY ./src/docker/entrypoint.sh /workspaces/tripbot/entrypoint.sh
-RUN chmod +x /workspaces/tripbot/entrypoint.sh
-
-# Install PM2 in the final image since your entrypoint uses it
-RUN npm install -g pm2
-
+COPY --from=build /workspaces/tripbot/package.json /workspaces/tripbot/package-lock.json ./
+# Clients are generated outside node_modules. Only schemas and migrations need source paths at runtime.
+COPY --from=build /workspaces/tripbot/src/prisma/tripbot/generated ./src/prisma/tripbot/generated
+COPY --from=build /workspaces/tripbot/src/prisma/moodle/generated ./src/prisma/moodle/generated
+COPY src/prisma/tripbot/schema.prisma ./src/prisma/tripbot/schema.prisma
+COPY src/prisma/moodle/schema.prisma ./src/prisma/moodle/schema.prisma
+COPY src/prisma/tripbot/migrations ./src/prisma/tripbot/migrations
+COPY prisma.config.mjs ./prisma.config.mjs
+COPY tsconfig.json ./tsconfig.json
+# Runtime data refreshes write to build/assets/data.
+COPY --chown=node:node assets ./build/assets
+COPY --chmod=755 src/docker/entrypoint.sh ./entrypoint.sh
+USER node
 ENTRYPOINT ["/workspaces/tripbot/entrypoint.sh"]
