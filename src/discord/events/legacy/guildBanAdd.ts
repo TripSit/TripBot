@@ -14,8 +14,6 @@ const F = f(__filename);
 
 // https://discordjs.guide/popular-topics/audit-logs.html#who-deleted-a-message
 
-export default guildBanAdd;
-
 export const guildBanAdd: GuildBanAddEvent = {
   name: 'guildBanAdd',
   async execute(ban) {
@@ -67,3 +65,5 @@ export const guildBanAdd: GuildBanAddEvent = {
     await channel.send(response);
   },
 };
+
+export default guildBanAdd;

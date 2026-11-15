@@ -16,8 +16,6 @@ const F = f(__filename);
 
 // https://discordjs.guide/popular-topics/audit-logs.html#who-deleted-a-message
 
-export default channelPinsUpdate;
-
 export const channelPinsUpdate: ChannelPinsUpdateEvent = {
   name: 'channelPinsUpdate',
   async execute(channel) {
@@ -82,3 +80,5 @@ export const channelPinsUpdate: ChannelPinsUpdateEvent = {
     await channelAuditlog.send(response);
   },
 };
+
+export default channelPinsUpdate;
