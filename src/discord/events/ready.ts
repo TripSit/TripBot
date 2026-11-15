@@ -69,7 +69,7 @@ export const ready: ReadyEvent = {
         const bootDuration = (new Date().getTime() - global.bootTime.getTime()) / 1000;
         log.info(F, `Discord finished booting in ${bootDuration}s!`);
         if (env.NODE_ENV !== 'development') {
-          const channelTripbot = await discordClient.channels.fetch(env.CHANNEL_TRIPBOT) as TextChannel;
+          const channelTripbot = await discordClient.channels.fetch(env.CHANNEL_TRIPBOT_BOOT) as TextChannel;
           const botOwner = await discordClient.users.fetch(env.DISCORD_OWNER_ID);
           const newFact = await fact();
           const statData = await botStats();

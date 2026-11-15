@@ -124,6 +124,7 @@ declare global {
       CHANNEL_DEVELOPMENT: string;
       CHANNEL_DISCORD: string;
       CHANNEL_TRIPBOT: string;
+      CHANNEL_TRIPBOT_BOOT: string;
       CHANNEL_DBAPI: string;
       CHANNEL_WEBSITE: string;
       CHANNEL_CONTENT: string;
