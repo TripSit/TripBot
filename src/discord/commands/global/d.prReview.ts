@@ -1,88 +1,19 @@
 import {
-  ActionRowBuilder,
-  ButtonBuilder,
   ButtonInteraction,
-  ButtonStyle,
   Colors,
   GuildMember,
   MessageFlags,
   ModalBuilder,
   ModalSubmitInteraction,
-  TextChannel,
   TextInputBuilder,
   TextInputStyle,
   LabelBuilder,
 } from 'discord.js';
 import { mergePr, postPrRejectionComment } from '../../../global/commands/g.prReview';
-import { embedTemplate } from '../../utils/embedTemplate';
 
 const F = f(__filename);
 
 export default prReviewButton;
-
-export type PrNotification = {
-  number: number,
-  title: string,
-  body: string,
-  url: string,
-  author: string,
-  testsPassed: number,
-  testsTotal: number,
-  checksPassed: boolean,
-  checksSummary: string,
-};
-
-function prButtonId(action: 'ACCEPT' | 'REJECT', prNumber: number, checksPassed: boolean): string {
-  return `"ID":"PR","T":"${action}","N":"${prNumber}","CP":"${checksPassed}"`;
-}
-
-/**
- * Sends a message to the TripBot dev channel announcing a newly opened PR,
- * pinging the TripBot dev role, with Accept/Reject buttons. Only called once
- * all CI checks have finished, so the message reflects their final result.
- * @param {PrNotification} pr
- */
-export async function notifyPrOpened(pr: PrNotification): Promise<void> {
-  log.debug(F, `Notifying PR #${pr.number} "${pr.title}": checksPassed=${pr.checksPassed}, tests=${pr.testsPassed}/${pr.testsTotal}`); // eslint-disable-line max-len
-  const guild = await discordClient.guilds.fetch(env.DISCORD_GUILD_ID);
-  const channel = await guild.channels.fetch(env.CHANNEL_TRIPBOT) as TextChannel;
-  const role = await guild.roles.fetch(env.ROLE_TRIPBOTDEV);
-
-  const embed = embedTemplate()
-    .setColor(pr.checksPassed ? Colors.Blue : Colors.Yellow)
-    .setTitle(pr.title)
-    .setURL(pr.url)
-    .setDescription(pr.body.slice(0, 4000) || '*No description provided.*')
-    .addFields(
-      { name: 'Author', value: pr.author, inline: true },
-      { name: 'Tests', value: `${pr.testsPassed}/${pr.testsTotal} passed`, inline: true },
-      {
-        name: 'Checks',
-        value: pr.checksPassed ? '✅ All checks passed' : `⚠️ Some checks failed\n${pr.checksSummary}`,
-      },
-    );
-
-  const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
-    new ButtonBuilder()
-      .setCustomId(prButtonId('ACCEPT', pr.number, pr.checksPassed))
-      .setLabel('Accept')
-      .setStyle(ButtonStyle.Success),
-    new ButtonBuilder()
-      .setCustomId(prButtonId('REJECT', pr.number, pr.checksPassed))
-      .setLabel('Reject')
-      .setStyle(ButtonStyle.Danger),
-  );
-
-  const warning = pr.checksPassed ? '' : '\n\n⚠️ **Some CI checks failed.** Accepting will require a written justification.'; // eslint-disable-line max-len
-
-  await channel.send({
-    content: `Hey ${role} (tripbot devs), there's a new PR on GitHub: ${pr.url}${warning}`,
-    embeds: [embed],
-    components: [row],
-  });
-
-  log.info(F, `Posted PR notification for #${pr.number} to ${channel.name}`);
-}
 
 /**
  * Attempts to squash-merge the PR, returning an error message on failure
@@ -165,12 +96,13 @@ export async function prReviewButton(interaction: ButtonInteraction): Promise<vo
     await interaction.showModal(new ModalBuilder()
       .setCustomId(`"ID":"PR","T":"ACCEPTOVERRIDE","N":"${prNumber}","II":"${interaction.id}"`)
       .setTitle(`Override failing checks on PR #${prNumber}`)
-      .addLabelComponents(new LabelBuilder().setLabel('Are you sure? Why is this okay to merge?').setTextInputComponent(new TextInputBuilder()
-        .setCustomId('reason')
-
-        .setRequired(true)
-        .setMaxLength(1900)
-        .setStyle(TextInputStyle.Paragraph))));
+      .addLabelComponents(new LabelBuilder()
+        .setLabel('Are you sure? Why is this okay to merge?')
+        .setTextInputComponent(new TextInputBuilder()
+          .setCustomId('reason')
+          .setRequired(true)
+          .setMaxLength(1900)
+          .setStyle(TextInputStyle.Paragraph))));
 
     const overrideFilter = (i: ModalSubmitInteraction) => i.customId.startsWith('"ID":"PR","T":"ACCEPTOVERRIDE"');
     interaction.awaitModalSubmit({ filter: overrideFilter, time: 0 })
@@ -214,12 +146,13 @@ export async function prReviewButton(interaction: ButtonInteraction): Promise<vo
   await interaction.showModal(new ModalBuilder()
     .setCustomId(`"ID":"PR","T":"REJECTMODAL","N":"${prNumber}","II":"${interaction.id}"`)
     .setTitle(`Reject PR #${prNumber}`)
-    .addLabelComponents(new LabelBuilder().setLabel('Why are you rejecting this PR?').setTextInputComponent(new TextInputBuilder()
-      .setCustomId('comment')
-
-      .setRequired(true)
-      .setMaxLength(1900)
-      .setStyle(TextInputStyle.Paragraph))));
+    .addLabelComponents(new LabelBuilder()
+      .setLabel('Why are you rejecting this PR?')
+      .setTextInputComponent(new TextInputBuilder()
+        .setCustomId('comment')
+        .setRequired(true)
+        .setMaxLength(1900)
+        .setStyle(TextInputStyle.Paragraph))));
 
   const filter = (i: ModalSubmitInteraction) => i.customId.startsWith('"ID":"PR","T":"REJECTMODAL"');
   interaction.awaitModalSubmit({ filter, time: 0 })
