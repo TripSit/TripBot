@@ -20,10 +20,10 @@ export const SCRUBBED_LAST_SEEN = new Date(1970);
 
 /** Plain values keep their usual text; structured values are serialized instead of printing "[object Object]". */
 function formatValue(value: unknown): string {
-  if (typeof value === 'object' && value !== null && !(value instanceof Date)) {
-    return JSON.stringify(value);
+  if (value === null || value instanceof Date || typeof value !== 'object') {
+    return String(value);
   }
-  return String(value);
+  return JSON.stringify(value);
 }
 
 /** Turns relaying of a user's Discord messages to IRC off (or back on). Returns the stored value. */
