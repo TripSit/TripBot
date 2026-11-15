@@ -1,11 +1,11 @@
 /* eslint-disable import/prefer-default-export */
 import {
-  ActionRowBuilder,
   ModalBuilder,
   TextInputBuilder,
   Colors,
   SlashCommandBuilder,
   ModalSubmitInteraction,
+  LabelBuilder,
 } from 'discord.js';
 import {
   MessageFlags,
@@ -79,8 +79,8 @@ export const dTemplate: SlashCommand = {
     //   integer: ${integer}
     //   boolean: ${boolean}
     //   user: ${user}
-    //   channel: ${channel}
-    //   role: ${role}
+    //   channel: ${channel?.id}
+    //   role: ${role?.id}
     //   mentionable: ${mentionable}
     //   input: ${input}
     // `)
@@ -89,22 +89,20 @@ export const dTemplate: SlashCommand = {
     //   embeds: [embed],
     // });
 
-    const firstRowOfFive = new ActionRowBuilder<TextInputBuilder>()
-      .addComponents(new TextInputBuilder()
-        .setCustomId('modalInput')
-        .setLabel('Input')
-        .setStyle(TextInputStyle.Paragraph));
+    const firstRowOfFive = new LabelBuilder().setLabel('Input').setTextInputComponent(new TextInputBuilder()
+      .setCustomId('modalInput')
 
-    const secondRowOfFive = new ActionRowBuilder<TextInputBuilder>()
-      .addComponents(new TextInputBuilder()
-        .setCustomId('modalInput')
-        .setLabel('Input')
-        .setStyle(TextInputStyle.Short));
+      .setStyle(TextInputStyle.Paragraph));
+
+    const secondRowOfFive = new LabelBuilder().setLabel('Input').setTextInputComponent(new TextInputBuilder()
+      .setCustomId('modalInput')
+
+      .setStyle(TextInputStyle.Short));
 
     const modal = new ModalBuilder()
       .setCustomId(`modal~${interaction.id}`)
       .setTitle('Modal')
-      .addComponents(firstRowOfFive, secondRowOfFive);
+      .addLabelComponents(firstRowOfFive, secondRowOfFive);
 
     await interaction.showModal(modal);
 
@@ -146,8 +144,8 @@ export const dTemplate: SlashCommand = {
           integer: ${integer}
           boolean: ${boolean}
           user: ${user}
-          channel: ${channel}
-          role: ${role}
+          channel: ${channel?.id}
+          role: ${role?.id}
           mentionable: ${mentionable}
           input: ${input}
         `);

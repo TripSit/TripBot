@@ -5,6 +5,7 @@ import {
   GuildMember,
   NewsChannel,
   PermissionResolvable,
+  PermissionsBitField,
   PrivateThreadChannel,
   PublicThreadChannel,
   TextChannel,
@@ -74,24 +75,31 @@ export async function checkChannelPermissions(
 export type PermissionTarget =
   Guild | TextChannel | PublicThreadChannel | PrivateThreadChannel | NewsChannel | GuildBasedChannel;
 
+/** A readable name for a permission, which can be a flag name, a bit value or a list of them. */
+export function permissionName(permission: PermissionResolvable): string {
+  if (Array.isArray(permission)) return permission.map(permissionName).join(', ');
+  if (permission instanceof PermissionsBitField) return permission.toArray().join(', ');
+  return String(permission);
+}
+
 /**
  * Returns the first permission the bot is missing on the guild/channel, or null if it has them all.
  */
 export async function missingPermission(
   target: PermissionTarget,
   permissions: PermissionResolvable[],
-): Promise<PermissionResolvable | null> {
+): Promise<string | null> {
   const result = target instanceof Guild
     ? await checkGuildPermissions(target, permissions)
     : await checkChannelPermissions(target, permissions);
-  return result.hasPermission ? null : (result.permission ?? null);
+  return result.hasPermission || result.permission === undefined ? null : permissionName(result.permission);
 }
 
 export interface EnsurePermissionsOptions {
   /** Finishes "…so I can ___!" in the owner DM. Defaults to `run ${caller}`. */
   reason?: string;
   /** Replaces the whole owner DM, for places with a longer explanation (tripsit setup). */
-  ownerMessage?: (missing: PermissionResolvable) => string;
+  ownerMessage?: (missing: string) => string;
 }
 
 /**

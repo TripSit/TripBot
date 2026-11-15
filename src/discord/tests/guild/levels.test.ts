@@ -38,7 +38,7 @@ const levelData = (total: number, extra: Record<string, unknown> = {}) => ({
 });
 
 const member = (roleIds: string[] = [], over: Record<string, unknown> = {}) => ({
-  displayName: 'Mem', roles: { cache: new Set(roleIds), color: { color: 0xff0000 } }, ...over,
+  displayName: 'Mem', roles: { cache: new Set(roleIds), color: { colors: { primaryColor: 0xff0000 } } }, ...over,
 });
 
 const run = async (data: unknown, memberValue: unknown = member(), options: Record<string, unknown> = {}) => {

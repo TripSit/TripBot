@@ -14,15 +14,15 @@ import {
   time,
   User,
   ButtonBuilder,
-  SelectMenuBuilder,
-  SelectMenuInteraction,
+  StringSelectMenuBuilder,
+  StringSelectMenuInteraction,
   Role,
   CategoryChannel,
   PermissionResolvable,
-  StringSelectMenuBuilder,
   ChatInputCommandInteraction,
   MessageMentionTypes,
   DMChannel,
+  LabelBuilder,
 } from 'discord.js';
 import {
   TextInputStyle,
@@ -56,7 +56,7 @@ const rejectionMessages = {
 };
 
 export async function applicationPermissions(
-  interaction:ChatInputCommandInteraction | SelectMenuInteraction | ButtonInteraction,
+  interaction:ChatInputCommandInteraction | StringSelectMenuInteraction | ButtonInteraction,
   applicationPostChannel: TextChannel | null,
   applicationThreadChannel: TextChannel,
 ):Promise<boolean> {
@@ -183,14 +183,12 @@ export async function applicationSetup(
   await interaction.showModal(new ModalBuilder()
     .setCustomId(`appModal~${interaction.id}`)
     .setTitle('Tripsitter Help Request')
-    .addComponents(
-      new ActionRowBuilder<TextInputBuilder>()
-        .addComponents(
-          new TextInputBuilder()
-            .setCustomId('applicationText')
-            .setLabel('What wording do you want to appear?')
-            .setStyle(TextInputStyle.Paragraph)
-            .setValue(stripIndents`
+    .addLabelComponents(
+      new LabelBuilder().setLabel('What wording do you want to appear?').setTextInputComponent(new TextInputBuilder()
+        .setCustomId('applicationText')
+
+        .setStyle(TextInputStyle.Paragraph)
+        .setValue(stripIndents`
               **Interested in helping out?**
 
               This channel allows you to apply for positions here at ${interaction.guild.name}!
@@ -198,8 +196,7 @@ export async function applicationSetup(
               We want people who love ${interaction.guild.name}, want to contribute to its growth, and be part of our success!
 
               Click the button below, fill in the application, give us at least 24 hours to review, and we'll get back to you as soon as possible!
-            `),
-        ),
+            `)),
     ));
 
   const filter = (i:ModalSubmitInteraction) => i.customId.startsWith('appModal');
@@ -274,7 +271,7 @@ export async function applicationSetup(
 }
 
 export async function applicationStart(
-  interaction: SelectMenuInteraction,
+  interaction: StringSelectMenuInteraction,
 ): Promise<void> {
   log.info(F, await commandContext(interaction));
   if (interaction.values[0] === 'none') {
@@ -335,23 +332,21 @@ export async function applicationStart(
   await interaction.showModal(new ModalBuilder()
     .setCustomId(`applicationSubmit~${interaction.id}`)
     .setTitle(`${roleRequested.name} Application`)
-    .addComponents(
-      new ActionRowBuilder<TextInputBuilder>()
-        .addComponents(new TextInputBuilder()
-          .setCustomId('reason')
-          .setRequired(true)
-          .setLabel('Why do you want to help out?')
-          .setPlaceholder('This helps us get to know you a bit before you join the team!')
-          .setMaxLength(2000)
-          .setStyle(TextInputStyle.Paragraph)),
-      new ActionRowBuilder<TextInputBuilder>()
-        .addComponents(new TextInputBuilder()
-          .setCustomId('skills')
-          .setRequired(true)
-          .setLabel('What skills can you bring to the team?')
-          .setPlaceholder(`What makes you qualified to be a ${roleRequested.name}? What can you bring to the team?`)
-          .setMaxLength(2000)
-          .setStyle(TextInputStyle.Paragraph)),
+    .addLabelComponents(
+      new LabelBuilder().setLabel('Why do you want to help out?').setTextInputComponent(new TextInputBuilder()
+        .setCustomId('reason')
+        .setRequired(true)
+
+        .setPlaceholder('This helps us get to know you a bit before you join the team!')
+        .setMaxLength(2000)
+        .setStyle(TextInputStyle.Paragraph)),
+      new LabelBuilder().setLabel('What skills can you bring to the team?').setTextInputComponent(new TextInputBuilder()
+        .setCustomId('skills')
+        .setRequired(true)
+
+        .setPlaceholder(`What makes you qualified to be a ${roleRequested.name}? What can you bring to the team?`)
+        .setMaxLength(2000)
+        .setStyle(TextInputStyle.Paragraph)),
     ));
 
   // Collect a modal submit interaction
@@ -437,7 +432,7 @@ export async function applicationStart(
           .setStyle(ButtonStyle.Primary),
       );
 
-      const rejectMenu = new ActionRowBuilder<SelectMenuBuilder>().addComponents(
+      const rejectMenu = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(
         new StringSelectMenuBuilder()
           .setCustomId(`applicationReject~${actor.id}~${roleRequestedId}`)
           .setPlaceholder('Select rejection reason')
@@ -530,7 +525,7 @@ export async function applicationStart(
 }
 
 export async function applicationReject(
-  interaction: SelectMenuInteraction,
+  interaction: StringSelectMenuInteraction,
 ): Promise<void> {
   log.info(F, await commandContext(interaction));
   if (!interaction.guild) return;

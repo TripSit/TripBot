@@ -22,7 +22,7 @@ export default async function discordConnect(): Promise<void> {
       GatewayIntentBits.Guilds,
       GatewayIntentBits.GuildMembers,
       GatewayIntentBits.GuildModeration,
-      GatewayIntentBits.GuildEmojisAndStickers,
+      GatewayIntentBits.GuildExpressions,
       // GatewayIntentBits.GuildIntegrations,
       // GatewayIntentBits.GuildWebhooks,
       GatewayIntentBits.GuildInvites,

@@ -355,7 +355,7 @@ export const dLevels: SlashCommand = {
     // Generate the colors for the card based on the user's role color
     // If user is not in guild, use default gray color
     const roleColor = target
-      ? `#${(target.roles.color?.color ?? 0x99aab5).toString(16).padStart(6, '0')}`
+      ? `#${(target.roles.color?.colors.primaryColor ?? 0x99aab5).toString(16).padStart(6, '0')}`
       : '#99aab5';
 
     // Draw the card shape and chips

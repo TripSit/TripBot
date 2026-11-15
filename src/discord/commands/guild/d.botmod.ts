@@ -8,6 +8,7 @@ import {
   ModalSubmitInteraction,
   InteractionEditReplyOptions,
   InteractionReplyOptions,
+  LabelBuilder,
 } from 'discord.js';
 import {
   MessageFlags,
@@ -133,15 +134,15 @@ export const dBotmod: SlashCommand = {
     const modal = new ModalBuilder()
       .setCustomId(`botModModal~${interaction.id}`)
       .setTitle(`Tripbot bot ${command}`)
-      .addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
-        .setLabel(`Why are you ${verb} this ${group}?`)
+      .addLabelComponents(new LabelBuilder().setLabel(`Why are you ${verb} this ${group}?`).setTextInputComponent(new TextInputBuilder()
+
         .setStyle(TextInputStyle.Paragraph)
         .setPlaceholder('Tell the team why you\'re doing this')
         .setRequired(true)
         .setCustomId('privReason')));
 
-    modal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
-      .setLabel(`What should we tell the ${group}?`)
+    modal.addLabelComponents(new LabelBuilder().setLabel(`What should we tell the ${group}?`).setTextInputComponent(new TextInputBuilder()
+
       .setStyle(TextInputStyle.Paragraph)
       .setPlaceholder(`Tell ${group} why you're doing this`)
       .setRequired(true)

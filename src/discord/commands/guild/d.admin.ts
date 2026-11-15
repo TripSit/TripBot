@@ -1,5 +1,6 @@
 import {
   ChatInputCommandInteraction,
+  GuildMember,
   SlashCommandBuilder,
   TextChannel,
   ActivityType,
@@ -25,7 +26,7 @@ async function restart(
   await interaction.editReply('Restarting');
   const channelTripbot = interaction.guild?.channels.cache.get(env.CHANNEL_BOTLOG) as TextChannel;
   if (channelTripbot) {
-    await channelTripbot.send(`${interaction.member} restarted the bot <@${env.DISCORD_OWNER_ID}>.`);
+    await channelTripbot.send(`${interaction.member as GuildMember} restarted the bot <@${env.DISCORD_OWNER_ID}>.`);
   }
   // This doesn't work for some reason
   // Process.exit() doesn't work in a lambda function
@@ -39,7 +40,7 @@ async function rebuild(
   await interaction.editReply('Rebuilding');
   const channelTripbot = interaction.guild?.channels.cache.get(env.CHANNEL_BOTLOG) as TextChannel;
   if (channelTripbot) {
-    await channelTripbot.send(`${interaction.member} triggered a rebuild <@${env.DISCORD_OWNER_ID}>.`);
+    await channelTripbot.send(`${interaction.member as GuildMember} triggered a rebuild <@${env.DISCORD_OWNER_ID}>.`);
   }
 
   axios.post('https://drone.tripsit.me/api/repos/TripSit/TripBot/builds', {}, {
@@ -60,7 +61,7 @@ async function deploy(
   await interaction.editReply('Deploying commands!!');
   const channelTripbot = interaction.guild?.channels.cache.get(env.CHANNEL_BOTLOG) as TextChannel;
   if (channelTripbot) {
-    await channelTripbot.send(`${interaction.member} triggered a command deploy <@${env.DISCORD_OWNER_ID}>.`);
+    await channelTripbot.send(`${interaction.member as GuildMember} triggered a command deploy <@${env.DISCORD_OWNER_ID}>.`);
   }
   const commandData = await deployCommands();
   log.info(F, stripIndents`
@@ -145,7 +146,7 @@ async function setStatus(
     default:
       statusType = ActivityType.Playing;
   }
-  await interaction.client.user?.setActivity(status, { type: statusType });
+  interaction.client.user?.setActivity(status, { type: statusType });
   await interaction.editReply(`Status set to ${statusType} ${status}`);
 }
 

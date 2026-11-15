@@ -420,7 +420,7 @@ export async function logTent(
 ): Promise<void> {
   let embed;
 
-  log.debug(F, `${Old} ${New}`);
+  log.debug(F, `${Old.channelId} ${New.channelId}`);
 
   // Helper function to check if a user has an explicit permission overwrite
   function hasExplicitPermission(channel: VoiceBasedChannel, member: GuildMember, permission: bigint): boolean {

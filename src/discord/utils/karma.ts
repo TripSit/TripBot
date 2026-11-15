@@ -14,7 +14,7 @@ export default karma;
 export async function karma(message: Message): Promise<void> {
   if (!message.guild || message.guild.id !== env.DISCORD_GUILD_ID || message.author.bot) return; // If not in tripsit or a bot message, ignore
 
-  const match = message.content.match(/^(.+)(\+\+|--)$/);
+  const match = /^(.+)(\+\+|--)$/.exec(message.content);
   if (match && match[1].length < 25) {
     match[1] = match[1].replace(/(\+-)/g, '').replace(/:/g, '').trim();
 

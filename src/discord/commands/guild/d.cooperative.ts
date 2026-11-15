@@ -14,6 +14,7 @@ import {
   Role,
   PermissionResolvable,
   ChannelType,
+  LabelBuilder,
 } from 'discord.js';
 import {
   ButtonStyle,
@@ -133,49 +134,34 @@ export async function cooperativeApplyButton(
   await interaction.showModal(new ModalBuilder()
     .setTitle('Apply to Join the TripSit Discord Cooperative')
     .setCustomId(`cooperativeApply~${interaction.id}`)
-    .addComponents(
-      new ActionRowBuilder<TextInputBuilder>()
-        .addComponents(
-          new TextInputBuilder()
-            .setLabel('Does your guild have a website?')
-            .setStyle(TextInputStyle.Short)
-            .setRequired(true)
-            .setCustomId('website'),
-        ),
-      new ActionRowBuilder<TextInputBuilder>()
-        .addComponents(
-          new TextInputBuilder()
-            .setLabel('Why do you want to join the cooperative?')
-            .setStyle(TextInputStyle.Paragraph)
-            .setPlaceholder('Please be descriptive!')
-            .setRequired(true)
-            .setCustomId('desire'),
-        ),
-      new ActionRowBuilder<TextInputBuilder>()
-        .addComponents(
-          new TextInputBuilder()
-            .setLabel('Enter your guild invite link')
-            .setStyle(TextInputStyle.Short)
-            .setPlaceholder('People from the cooperative may join and check out your guild!')
-            .setRequired(true)
-            .setCustomId('link'),
-        ),
-      new ActionRowBuilder<TextInputBuilder>()
-        .addComponents(
-          new TextInputBuilder()
-            .setLabel('Have you read and agree to the regulations?')
-            .setStyle(TextInputStyle.Short)
-            .setRequired(true)
-            .setCustomId('agree'),
-        ),
-      new ActionRowBuilder<TextInputBuilder>()
-        .addComponents(
-          new TextInputBuilder()
-            .setLabel('Any other info you want to share?')
-            .setStyle(TextInputStyle.Paragraph)
-            .setRequired(true)
-            .setCustomId('info'),
-        ),
+    .addLabelComponents(
+      new LabelBuilder().setLabel('Does your guild have a website?').setTextInputComponent(new TextInputBuilder()
+
+        .setStyle(TextInputStyle.Short)
+        .setRequired(true)
+        .setCustomId('website')),
+      new LabelBuilder().setLabel('Why do you want to join the cooperative?').setTextInputComponent(new TextInputBuilder()
+
+        .setStyle(TextInputStyle.Paragraph)
+        .setPlaceholder('Please be descriptive!')
+        .setRequired(true)
+        .setCustomId('desire')),
+      new LabelBuilder().setLabel('Enter your guild invite link').setTextInputComponent(new TextInputBuilder()
+
+        .setStyle(TextInputStyle.Short)
+        .setPlaceholder('People from the cooperative may join and check out your guild!')
+        .setRequired(true)
+        .setCustomId('link')),
+      new LabelBuilder().setLabel('Have you read and agree to the regulations?').setTextInputComponent(new TextInputBuilder()
+
+        .setStyle(TextInputStyle.Short)
+        .setRequired(true)
+        .setCustomId('agree')),
+      new LabelBuilder().setLabel('Any other info you want to share?').setTextInputComponent(new TextInputBuilder()
+
+        .setStyle(TextInputStyle.Paragraph)
+        .setRequired(true)
+        .setCustomId('info')),
     ));
   const filter = (i:ModalSubmitInteraction) => i.customId.startsWith('cooperativeApply~');
   interaction.awaitModalSubmit({ filter, time: 0 })

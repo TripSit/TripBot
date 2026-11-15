@@ -1,7 +1,6 @@
 import {
   SlashCommandBuilder,
   ChatInputCommandInteraction,
-  ActionRowBuilder,
   ModalBuilder,
   TextInputBuilder,
   // ButtonBuilder,
@@ -33,6 +32,7 @@ import {
   InteractionReplyOptions,
   MessagePayload,
   MessageFlags,
+  LabelBuilder,
 } from 'discord.js';
 import { stripIndents } from 'common-tags';
 import { SlashCommand } from '../../@types/commandDef';
@@ -62,7 +62,7 @@ async function fetchGuildChannel(
   let channel = {} as TextChannel;
   try {
     if (guildData[field]) {
-      channel = await guild.channels.fetch(guildData[field] as string) as TextChannel;
+      channel = await guild.channels.fetch(guildData[field]) as TextChannel;
     }
   } catch {
     // The channel was likely deleted, so forget about it
@@ -130,14 +130,14 @@ async function reopenExistingTicket(
     ticketData,
     threadHelpUser,
     helpMessage: stripIndents`Hey ${target}, the team thinks you could still use some help, lets continue talking here!`, // eslint-disable-line max-len
-    metaSubject: `${interaction.member} has indicated that ${target.displayName} needs assistance!`,
+    metaSubject: `${interaction.member as GuildMember} has indicated that ${target.displayName} needs assistance!`,
     status: 'OWNED',
   });
 
   // remind the user they have an open thread
   const embed = embedTemplate()
     .setColor(Colors.DarkBlue)
-    .setDescription(stripIndents`Hey ${interaction.member}, ${target.displayName} already has an open ticket!
+    .setDescription(stripIndents`Hey ${interaction.member as GuildMember}, ${target.displayName} already has an open ticket!
             I've re-applied the ${roleNeedshelp} role to them, and updated the thread.
             Check your channel list or click '${threadHelpUser.toString()} to see!`);
   await interaction.editReply({ embeds: [embed] });
@@ -197,18 +197,15 @@ async function tripsitmodeOn(
   await interaction.showModal(new ModalBuilder()
     .setCustomId(`tripsitmeSubmit~${interaction.id}`)
     .setTitle('TripSit Mode Activated!')
-    .addComponents(
-      new ActionRowBuilder<TextInputBuilder>()
-        .addComponents(
-          new TextInputBuilder()
-            .setCustomId('triageInput')
-            .setLabel('What substance did they take, etc?')
-            .setPlaceholder('This will be posted in the channel for them to see!')
-            .setStyle(TextInputStyle.Short),
-        ),
-      new ActionRowBuilder<TextInputBuilder>().addComponents(new TextInputBuilder()
+    .addLabelComponents(
+      new LabelBuilder().setLabel('What substance did they take, etc?').setTextInputComponent(new TextInputBuilder()
+        .setCustomId('triageInput')
+
+        .setPlaceholder('This will be posted in the channel for them to see!')
+        .setStyle(TextInputStyle.Short)),
+      new LabelBuilder().setLabel('What\'s going on with them?').setTextInputComponent(new TextInputBuilder()
         .setCustomId('introInput')
-        .setLabel('What\'s going on with them?')
+
         .setPlaceholder('This will be posted in the channel for them to see!')
         .setStyle(TextInputStyle.Paragraph)),
     ));

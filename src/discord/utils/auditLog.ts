@@ -20,6 +20,9 @@ export interface AuditLogOptions {
   caller: string;
 }
 
+/** Audit-log change values can be any JSON value; objects are serialized instead of printing [object Object]. */
+const describeValue = (value: unknown): string => (typeof value === 'object' && value !== null ? JSON.stringify(value) : String(value));
+
 function formatAuditMessage(
   subject: string,
   action: string,
@@ -34,7 +37,7 @@ function formatAuditMessage(
     : `${subject} was ${action}, but the audit log was inconclusive.`;
   if (!showChanges) return headline;
 
-  const changes = entry.changes.map(change => `**[${change.key}]** '**${change.old}**' > '**${change.new}**'`);
+  const changes = entry.changes.map(change => `**[${change.key}]** '**${describeValue(change.old)}**' > '**${describeValue(change.new)}**'`);
   return [headline, ...changes].join('\n');
 }
 

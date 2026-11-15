@@ -17,6 +17,7 @@ import {
   GuildMember,
   Role,
   // CategoryChannel,
+  LabelBuilder,
 } from 'discord.js';
 import {
   ButtonStyle, ChannelType, MessageFlags, TextInputStyle,
@@ -177,34 +178,25 @@ async function tripsit(
   await interaction.showModal(new ModalBuilder()
     .setCustomId(`tripsitmeModal~${interaction.id}`)
     .setTitle('Setup your TripSit room!')
-    .addComponents(
-      new ActionRowBuilder<TextInputBuilder>()
-        .addComponents(
-          new TextInputBuilder()
-            .setLabel('Title')
-            .setValue(stripIndents`${titleText}`)
-            .setStyle(TextInputStyle.Short)
-            .setRequired(true)
-            .setCustomId('titleMessage'),
-        ),
-      new ActionRowBuilder<TextInputBuilder>()
-        .addComponents(
-          new TextInputBuilder()
-            .setLabel('Intro Message')
-            .setValue(stripIndents`${modalText}`)
-            .setStyle(TextInputStyle.Paragraph)
-            .setRequired(true)
-            .setCustomId('introMessage'),
-        ),
-      new ActionRowBuilder<TextInputBuilder>()
-        .addComponents(
-          new TextInputBuilder()
-            .setLabel('Footer')
-            .setValue(stripIndents`${footerText}`)
-            .setStyle(TextInputStyle.Short)
-            .setRequired(true)
-            .setCustomId('footerMessage'),
-        ),
+    .addLabelComponents(
+      new LabelBuilder().setLabel('Title').setTextInputComponent(new TextInputBuilder()
+
+        .setValue(stripIndents`${titleText}`)
+        .setStyle(TextInputStyle.Short)
+        .setRequired(true)
+        .setCustomId('titleMessage')),
+      new LabelBuilder().setLabel('Intro Message').setTextInputComponent(new TextInputBuilder()
+
+        .setValue(stripIndents`${modalText}`)
+        .setStyle(TextInputStyle.Paragraph)
+        .setRequired(true)
+        .setCustomId('introMessage')),
+      new LabelBuilder().setLabel('Footer').setTextInputComponent(new TextInputBuilder()
+
+        .setValue(stripIndents`${footerText}`)
+        .setStyle(TextInputStyle.Short)
+        .setRequired(true)
+        .setCustomId('footerMessage')),
     ));
 
   const filter = (i:ModalSubmitInteraction) => i.customId.startsWith('tripsitmeModal');
@@ -325,41 +317,32 @@ async function techhelp(
   });
 
   if (guildData.channel_tripsit) {
-    const channelTripsit = guild.channels.fetch(guildData.channel_tripsit);
-    modalText += `\n\n**If you need psychological help try ${channelTripsit.toString()}!**`;
+    const channelTripsit = await guild.channels.fetch(guildData.channel_tripsit);
+    modalText += `\n\n**If you need psychological help try ${channelTripsit}!**`;
   }
 
   await interaction.showModal(new ModalBuilder()
     .setCustomId(`helpdeskModal~${interaction.id}`)
     .setTitle('Setup your HelpDesk room!')
-    .addComponents(
-      new ActionRowBuilder<TextInputBuilder>()
-        .addComponents(
-          new TextInputBuilder()
-            .setLabel('Title')
-            .setValue(stripIndents`${titleText}`)
-            .setStyle(TextInputStyle.Short)
-            .setRequired(true)
-            .setCustomId('titleMessage'),
-        ),
-      new ActionRowBuilder<TextInputBuilder>()
-        .addComponents(
-          new TextInputBuilder()
-            .setLabel('Intro Message')
-            .setValue(stripIndents`${modalText}`)
-            .setStyle(TextInputStyle.Paragraph)
-            .setRequired(true)
-            .setCustomId('introMessage'),
-        ),
-      new ActionRowBuilder<TextInputBuilder>()
-        .addComponents(
-          new TextInputBuilder()
-            .setLabel('Footer')
-            .setValue(stripIndents`${footerText}`)
-            .setStyle(TextInputStyle.Short)
-            .setRequired(true)
-            .setCustomId('footerMessage'),
-        ),
+    .addLabelComponents(
+      new LabelBuilder().setLabel('Title').setTextInputComponent(new TextInputBuilder()
+
+        .setValue(stripIndents`${titleText}`)
+        .setStyle(TextInputStyle.Short)
+        .setRequired(true)
+        .setCustomId('titleMessage')),
+      new LabelBuilder().setLabel('Intro Message').setTextInputComponent(new TextInputBuilder()
+
+        .setValue(stripIndents`${modalText}`)
+        .setStyle(TextInputStyle.Paragraph)
+        .setRequired(true)
+        .setCustomId('introMessage')),
+      new LabelBuilder().setLabel('Footer').setTextInputComponent(new TextInputBuilder()
+
+        .setValue(stripIndents`${footerText}`)
+        .setStyle(TextInputStyle.Short)
+        .setRequired(true)
+        .setCustomId('footerMessage')),
     ));
 
   const filter = (i:ModalSubmitInteraction) => i.customId.startsWith('helpdeskModal');
@@ -681,43 +664,35 @@ export async function helperButton(
   const modal = new ModalBuilder()
     .setCustomId(`"ID":"RR","II":"${interaction.id}"`)
     .setTitle(`${role.name} Introduction`)
-    .addComponents(
-      new ActionRowBuilder<TextInputBuilder>().addComponents(
-        new TextInputBuilder()
-          .setCustomId('introduction')
-          .setRequired(true)
-          .setLabel('Tell us a bit about yourself!')
-          .setPlaceholder(`Why do you want to be a ${role.name}? All responses will be sent to the channel!`)
-          .setMaxLength(600)
-          .setStyle(TextInputStyle.Paragraph),
-      ),
-      new ActionRowBuilder<TextInputBuilder>().addComponents(
-        new TextInputBuilder()
-          .setCustomId('strengths')
-          .setRequired(true)
-          .setLabel('What are you good at?')
-          .setPlaceholder('What makes you awesome?')
-          .setMaxLength(500)
-          .setStyle(TextInputStyle.Paragraph),
-      ),
-      new ActionRowBuilder<TextInputBuilder>().addComponents(
-        new TextInputBuilder()
-          .setCustomId('weaknesses')
-          .setRequired(true)
-          .setLabel('What about you could be better?')
-          .setPlaceholder('No one is perfect <3')
-          .setMaxLength(500)
-          .setStyle(TextInputStyle.Paragraph),
-      ),
-      new ActionRowBuilder<TextInputBuilder>().addComponents(
-        new TextInputBuilder()
-          .setCustomId('animal')
-          .setRequired(true)
-          .setLabel('What is your favorite animal?')
-          .setPlaceholder('This is the only question that anyone really cares about, pick carefully!')
-          .setMaxLength(100)
-          .setStyle(TextInputStyle.Paragraph),
-      ),
+    .addLabelComponents(
+      new LabelBuilder().setLabel('Tell us a bit about yourself!').setTextInputComponent(new TextInputBuilder()
+        .setCustomId('introduction')
+        .setRequired(true)
+
+        .setPlaceholder(`Why do you want to be a ${role.name}? All responses will be sent to the channel!`)
+        .setMaxLength(600)
+        .setStyle(TextInputStyle.Paragraph)),
+      new LabelBuilder().setLabel('What are you good at?').setTextInputComponent(new TextInputBuilder()
+        .setCustomId('strengths')
+        .setRequired(true)
+
+        .setPlaceholder('What makes you awesome?')
+        .setMaxLength(500)
+        .setStyle(TextInputStyle.Paragraph)),
+      new LabelBuilder().setLabel('What about you could be better?').setTextInputComponent(new TextInputBuilder()
+        .setCustomId('weaknesses')
+        .setRequired(true)
+
+        .setPlaceholder('No one is perfect <3')
+        .setMaxLength(500)
+        .setStyle(TextInputStyle.Paragraph)),
+      new LabelBuilder().setLabel('What is your favorite animal?').setTextInputComponent(new TextInputBuilder()
+        .setCustomId('animal')
+        .setRequired(true)
+
+        .setPlaceholder('This is the only question that anyone really cares about, pick carefully!')
+        .setMaxLength(100)
+        .setStyle(TextInputStyle.Paragraph)),
     );
   await interaction.showModal(modal);
 
