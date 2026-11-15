@@ -3,7 +3,6 @@ import {
   ChatInputCommandInteraction,
 } from 'discord.js';
 import { SlashCommand } from '../../@types/commandDef';
-import { embedTemplate } from '../../utils/embedTemplate';
 import commandContext from '../../utils/context';
 // import {whoisIRC} from '../../../global/commands/archive/g.whois';
 
