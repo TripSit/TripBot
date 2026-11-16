@@ -18,6 +18,11 @@ describe('parseDuration', () => {
     ['1h 30m', 90 * MIN],
     ['1d2h', DAY + 2 * HOUR],
     ['1 month 2d', 32 * DAY],
+    ['1mon', 30 * DAY],
+    ['2 mons', 60 * DAY],
+    ['1mon 5m', 30 * DAY + 5 * MIN],
+    ['3 Months 1h', 90 * DAY + HOUR],
+    ['5min', 5 * MIN],
     ['abc', 0],
     ['', 0],
     ['5x', 0],
@@ -28,7 +33,9 @@ describe('parseDuration', () => {
 });
 
 describe('validateDurationInput', () => {
-  it.each(['1h 30m', '5 minutes', '2 weeks', '1y', ' 3 days ', '10 seconds'])('accepts %j', input => {
+  it.each([
+    '1h 30m', '5 minutes', '2 weeks', '1y', ' 3 days ', '10 seconds', '1mon', '2 months', '1M',
+  ])('accepts %j', input => {
     expect(validateDurationInput(input)).toBe(true);
   });
   it.each(['abc', '', '5', 'h5', '1 fortnight'])('rejects %j', input => {
