@@ -5,6 +5,18 @@ const F = f(__filename);
 
 export default remindMe;
 
+type ReminderRow = { id: string, trigger_at: Date, created_at: Date };
+
+/**
+ * The one order shared by `get` and `delete`, so the number shown in the list is the number that gets deleted.
+ * Soonest trigger first, with creation time and then id breaking ties so the order is deterministic.
+ */
+function sortByTrigger<T extends ReminderRow>(reminders: T[]): T[] {
+  return [...reminders].sort((a, b) => a.trigger_at.getTime() - b.trigger_at.getTime()
+    || a.created_at.getTime() - b.created_at.getTime()
+    || a.id.localeCompare(b.id));
+}
+
 /**
  *
  * @param {'get' | 'set' | 'delete'} command
@@ -42,16 +54,8 @@ export async function remindMe(
       return response;
     }
 
-    // Sort data based on the created_at property
-    const data = [...unsortedData].sort((a, b) => {
-      if (a.created_at < b.created_at) {
-        return -1;
-      }
-      if (a.created_at > b.created_at) {
-        return 1;
-      }
-      return 0;
-    });
+    // Same order as `get`, so the number the user saw in the list is the one that gets deleted
+    const data = sortByTrigger(unsortedData);
 
     const record = data[recordNumber];
     if (record === undefined || record === null) {
@@ -59,7 +63,7 @@ export async function remindMe(
       return response;
     }
     const recordId = record.id;
-    const reminderDate = data[recordNumber].created_at.toISOString();
+    const reminderDate = record.trigger_at.toISOString();
     const timeVal = DateTime.fromISO(reminderDate);
 
     await db.user_reminders.delete({
@@ -89,16 +93,7 @@ export async function remindMe(
       return response;
     }
 
-    // Sort data based on the trigger_at property
-    const data = [...unsortedData].sort((a, b) => {
-      if (a.trigger_at < b.trigger_at) {
-        return -1;
-      }
-      if (a.trigger_at > b.trigger_at) {
-        return 1;
-      }
-      return 0;
-    });
+    const data = sortByTrigger(unsortedData);
 
     const reminders = [] as Reminder[];
 
