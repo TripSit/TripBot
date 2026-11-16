@@ -1,3 +1,4 @@
+import { DateTime } from 'luxon';
 import {
   help, link, profile, unlink,
 } from '../../commands/g.learn';
@@ -81,23 +82,45 @@ describe('learn profile', () => {
     expect(await profile(undefined, '@m:x')).toEqual({});
   });
 
-  it('marks moodle as unreachable when the connection fails', async () => {
+  it('marks moodle as unreachable when the lookup fails', async () => {
     mocks.tripbot.users.findUnique.mockResolvedValueOnce({ id: 'u', moodle_id: 'mu' });
-    mocks.moodle.mdl_user.findMany.mockRejectedValueOnce(new Error('down'));
+    mocks.moodle.mdl_user.findUnique.mockRejectedValueOnce(new Error('down'));
     expect(await profile('1')).toEqual({});
     expect(global.moodleConnection.status).toBe(false);
   });
 
+  it('marks moodle as unreachable when the enrolment lookup fails', async () => {
+    mocks.tripbot.users.findUnique.mockResolvedValueOnce({ id: 'u', moodle_id: 'mu' });
+    mocks.moodle.mdl_user.findUnique.mockResolvedValueOnce({ id: 5, firstname: 'A', lastname: 'B' });
+    mocks.moodle.mdl_user_enrolments.findMany.mockRejectedValueOnce(new Error('down'));
+    global.moodleConnection = { status: true, date: DateTime.now() };
+    expect(await profile('1')).toEqual({});
+    expect(global.moodleConnection.status).toBe(false);
+  });
+
+  // Regression test for TripSit/TripBot#1337: no unrestricted read of the whole Moodle user table
+  it('looks up only the linked account and selects only the profile fields', async () => {
+    mocks.tripbot.users.findUnique.mockResolvedValueOnce({ id: 'u', moodle_id: 'mu' });
+    mocks.moodle.mdl_user.findUnique.mockResolvedValueOnce({ id: 5, firstname: 'A', lastname: 'B' });
+    mocks.moodle.mdl_user_enrolments.findMany.mockResolvedValueOnce([]);
+    await profile('1');
+    expect(mocks.moodle.mdl_user.findMany).not.toHaveBeenCalled();
+    expect(mocks.moodle.mdl_user.findUnique).toHaveBeenCalledWith(expect.objectContaining({
+      where: { mnethostid_username: { username: 'mu', mnethostid: 1 } },
+      select: {
+        id: true, firstname: true, lastname: true, institution: true, department: true,
+      },
+    }));
+  });
+
   it('is empty when the moodle account is gone', async () => {
     mocks.tripbot.users.findUnique.mockResolvedValueOnce({ id: 'u', moodle_id: 'mu' });
-    mocks.moodle.mdl_user.findMany.mockResolvedValueOnce([]);
     mocks.moodle.mdl_user.findUnique.mockResolvedValueOnce(null);
     expect(await profile('1')).toEqual({});
   });
 
   it('splits completed and incomplete courses', async () => {
     mocks.tripbot.users.findUnique.mockResolvedValueOnce({ id: 'u', moodle_id: 'mu' });
-    mocks.moodle.mdl_user.findMany.mockResolvedValueOnce([]);
     mocks.moodle.mdl_user.findUnique.mockResolvedValueOnce({
       id: 5, firstname: 'A', lastname: 'B', institution: 'Inst', department: null,
     });
@@ -118,7 +141,6 @@ describe('learn profile', () => {
 
   it('handles users with no enrolments', async () => {
     mocks.tripbot.users.findUnique.mockResolvedValueOnce({ id: 'u', moodle_id: 'mu' });
-    mocks.moodle.mdl_user.findMany.mockResolvedValueOnce([]);
     mocks.moodle.mdl_user.findUnique.mockResolvedValueOnce({ id: 5, firstname: 'A', lastname: 'B' });
     mocks.moodle.mdl_user_enrolments.findMany.mockResolvedValueOnce([]);
     expect(await profile('1')).toMatchObject({ completedCourses: [], incompleteCourses: [] });
