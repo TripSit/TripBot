@@ -22,16 +22,16 @@ describe('notFound / errorHandler', () => {
 
   it('keeps an existing error status, defaults 200 to 500, and hides the stack in production', () => {
     const kept = makeRes(404);
-    errorHandler(new Error('x'), {} as Request, kept);
+    errorHandler(new Error('x'), {} as Request, kept, vi.fn());
     expect(kept.json).toHaveBeenCalledWith(expect.objectContaining({ status: 404, message: 'x' }));
     const defaulted = makeRes(200);
-    errorHandler(new Error('y'), {} as Request, defaulted);
+    errorHandler(new Error('y'), {} as Request, defaulted, vi.fn());
     expect(defaulted.json).toHaveBeenCalledWith(expect.objectContaining({ status: 500, stack: expect.stringContaining('Error') }));
     const previous = process.env.NODE_ENV;
     process.env.NODE_ENV = 'production';
     try {
       const prod = makeRes();
-      errorHandler(new Error('z'), {} as Request, prod);
+      errorHandler(new Error('z'), {} as Request, prod, vi.fn());
       expect(prod.json).toHaveBeenCalledWith(expect.objectContaining({ stack: '🥞' }));
     } finally {
       process.env.NODE_ENV = previous;
