@@ -16,12 +16,15 @@ import { lastReply, slashStub, resolvingModal } from '../../../vitest/utils/comm
 import { flushPromises } from '../../../vitest/utils/discordStubs';
 
 const mocks = vi.hoisted(() => ({
-  timezone: vi.fn(), parse: vi.fn(), user: vi.fn(), guild: vi.fn(), issue: vi.fn(), modResponse: vi.fn(),
+  timezone: vi.fn(), parse: vi.fn(), validate: vi.fn(), user: vi.fn(), guild: vi.fn(), issue: vi.fn(), modResponse: vi.fn(),
 }));
 
 vi.mock('../../utils/context', () => ({ default: vi.fn(async () => 'ctx') }));
 vi.mock('../../../global/commands/g.timezone', () => ({ timezone: mocks.timezone }));
-vi.mock('../../../global/utils/parseDuration', () => ({ parseDuration: mocks.parse }));
+vi.mock('../../../global/utils/parseDuration', () => ({
+  parseDuration: mocks.parse,
+  validateDurationInput: (input: string) => mocks.validate(input),
+}));
 vi.mock('../../../global/utils/dbRecords', () => ({ getOrCreateUser: mocks.user, getOrCreateGuild: mocks.guild }));
 vi.mock('../../../global/commands/g.issue', () => ({ issue: mocks.issue }));
 vi.mock('../../utils/modUtils', () => ({ modResponse: mocks.modResponse }));
@@ -247,7 +250,35 @@ describe('selftimeout', () => {
     expect(content(no)).toContain('try again');
   });
 
+  // Regression tests for TripSit/TripBot#1360: malformed or out-of-range durations reached Discord unchecked.
+  it.each([
+    ['malformed input', '1 fortnight', false, 0],
+    ['zero length', '0s', true, 0],
+    ['over two weeks', '3w', true, 21 * 86_400_000],
+    ['just over two weeks', '14d 1s', true, 14 * 86_400_000 + 1000],
+  ])('refuses %s without calling Discord', async (_label, input, valid, parsed) => {
+    mocks.validate.mockReturnValue(valid);
+    mocks.parse.mockResolvedValue(parsed);
+    const timeout = vi.fn();
+    const stub = slashStub({ member: { ...member('me'), timeout, user: { tag: 'me#0' } }, options: { confirmation: 'yes', duration: input } });
+    expect(await selfTimeout.execute(stub as never)).toBe(false);
+    expect(content(stub)).toContain('between 1 second and 2 weeks');
+    expect(timeout).not.toHaveBeenCalled();
+  });
+
+  it('allows exactly two weeks', async () => {
+    mocks.validate.mockReturnValue(true);
+    mocks.parse.mockResolvedValue(14 * 86_400_000);
+    const modLog = { send: vi.fn() };
+    const client = { guilds: { fetch: vi.fn(async () => ({ channels: { fetch: vi.fn(async () => modLog) } })) } };
+    const timeout = vi.fn();
+    const stub = slashStub({ client, member: { ...member('me'), timeout, user: { tag: 'me#0' } }, options: { confirmation: 'yes', duration: '2w' } });
+    expect(await selfTimeout.execute(stub as never)).toBe(true);
+    expect(timeout).toHaveBeenCalledWith(14 * 86_400_000, 'Self timeout');
+  });
+
   it('times out the member and logs it', async () => {
+    mocks.validate.mockReturnValue(true);
     mocks.parse.mockResolvedValue(3600000);
     const modLog = { send: vi.fn() };
     const client = { guilds: { fetch: vi.fn(async () => ({ channels: { fetch: vi.fn(async () => modLog) } })) } };
