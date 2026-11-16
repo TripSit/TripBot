@@ -71,6 +71,17 @@ describe('levels', () => {
     expect(mocks.asset).toHaveBeenCalledWith(`badgeVip${badge}`);
   });
 
+  it('links the calculator button to the TripSit website', async () => {
+    const { stub } = await run(levelData(10));
+    const reply = stub.editReply.mock.calls[0][0] as {
+      components: Array<{ toJSON: () => { components: Array<{ url?: string }> } }>;
+    };
+    const buttons = reply.components.flatMap(row => row.toJSON().components);
+    expect(buttons).toEqual(expect.arrayContaining([
+      expect.objectContaining({ url: 'https://tripsit.me/levels' }),
+    ]));
+  });
+
   it('lays out every extra XP bar and avatar icon for a stacked member', async () => {
     const roles = [e.ROLE_TEAMTRIPSIT, e.ROLE_PREMIUM, e.ROLE_BOOSTER, e.ROLE_LEGACY, e.ROLE_TRIPSITTER, e.ROLE_DEVELOPER];
     const data = levelData(50, { TRIPSITTER: lvl(8, 0), DEVELOPER: lvl(9), TEAM: lvl(0, 0) });
