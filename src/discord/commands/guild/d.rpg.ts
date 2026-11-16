@@ -2457,14 +2457,18 @@ export async function rpgHomeNameChange(
             }]),
         );
 
+      // A stale class, species or guild value on the persona must not stop the editor from rendering
       const selectedClassList = { ...genome.classes };
-      selectedClassList[personaData.class as keyof typeof selectedClassList].default = true;
+      const selectedClass = selectedClassList[personaData.class as keyof typeof selectedClassList];
+      if (selectedClass) selectedClass.default = true;
 
       const selectedSpeciesList = { ...genome.species };
-      selectedSpeciesList[personaData.species as keyof typeof selectedSpeciesList].default = true;
+      const selectedSpecies = selectedSpeciesList[personaData.species as keyof typeof selectedSpeciesList];
+      if (selectedSpecies) selectedSpecies.default = true;
 
-      const selectedGuildList = { ...genome.guild };
-      selectedGuildList[personaData.guild as keyof typeof selectedGuildList].default = true;
+      const selectedGuildList = { ...genome.guilds };
+      const selectedGuild = selectedGuildList[personaData.guild as keyof typeof selectedGuildList];
+      if (selectedGuild) selectedGuild.default = true;
 
       const rowChangeClass = new ActionRowBuilder<StringSelectMenuBuilder>()
         .addComponents(
