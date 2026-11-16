@@ -18,6 +18,7 @@ export const guildBanRemove: GuildBanRemoveEvent = {
       type: AuditLogEvent.MemberBanRemove,
       subject: `${ban.user}`,
       action: 'unbanned',
+      targetId: ban.user.id,
       caller: F,
     });
   },

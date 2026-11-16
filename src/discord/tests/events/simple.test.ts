@@ -73,12 +73,52 @@ describe('audit log events', () => {
   const guild = { id: 'g' };
   const cases: Array<[string, { execute: (...args: never[]) => Promise<void> }, unknown[], Record<string, unknown>]> = [
     ['webhookUpdate', webhookUpdate, [{ guild, toString: (): string => '#hook' }], { type: AuditLogEvent.WebhookUpdate, action: 'updated', showChanges: true }],
-    ['emojiUpdate', emojiUpdate, [{}, { guild, toString: (): string => ':e:' }], { type: AuditLogEvent.EmojiUpdate, action: 'updated', showChanges: true }],
-    ['guildBanRemove', guildBanRemove, [{ guild, user: 'bob' }], { type: AuditLogEvent.MemberBanRemove, action: 'unbanned', subject: 'bob' }],
-    ['stickerDelete', stickerDelete, [{ guild, name: 'wave' }], { type: AuditLogEvent.StickerDelete, subject: 'Sticker wave', action: 'deleted' }],
-    ['threadCreate', threadCreate, [{ guild, toString: (): string => '#t' }], { type: AuditLogEvent.ThreadCreate, action: 'created' }],
-    ['threadUpdate', threadUpdate, [{}, { guild, toString: (): string => '#t' }], { type: AuditLogEvent.ThreadUpdate, action: 'updated', showChanges: true }],
-    ['channelDelete', channelDelete, [{ guild, name: 'chat', type: ChannelType.GuildText }], { type: AuditLogEvent.ChannelDelete, subject: 'Channel chat', action: 'deleted' }],
+    ['emojiUpdate', emojiUpdate, [{}, { guild, id: 'e1', toString: (): string => ':e:' }],
+      {
+        type: AuditLogEvent.EmojiUpdate,
+        action: 'updated',
+        showChanges: true,
+        targetId: 'e1',
+      }],
+    ['guildBanRemove', guildBanRemove, [{ guild, user: { id: 'u9', toString: (): string => 'bob' } }],
+      {
+        type: AuditLogEvent.MemberBanRemove,
+        action: 'unbanned',
+        subject: 'bob',
+        targetId: 'u9',
+      }],
+    ['stickerDelete', stickerDelete, [{ guild, id: 's1', name: 'wave' }],
+      {
+        type: AuditLogEvent.StickerDelete,
+        subject: 'Sticker wave',
+        action: 'deleted',
+        targetId: 's1',
+      }],
+    ['threadCreate', threadCreate, [{ guild, id: 'th1', toString: (): string => '#t' }],
+      {
+        type: AuditLogEvent.ThreadCreate,
+        action: 'created',
+        targetId: 'th1',
+      }],
+    ['threadUpdate', threadUpdate, [{}, { guild, id: 'th2', toString: (): string => '#t' }],
+      {
+        type: AuditLogEvent.ThreadUpdate,
+        action: 'updated',
+        showChanges: true,
+        targetId: 'th2',
+      }],
+    ['channelDelete', channelDelete, [{
+      guild,
+      id: 'c7',
+      name: 'chat',
+      type: ChannelType.GuildText,
+    }],
+    {
+      type: AuditLogEvent.ChannelDelete,
+      subject: 'Channel chat',
+      action: 'deleted',
+      targetId: 'c7',
+    }],
   ];
 
   it.each(cases)('%s posts an audit log entry', async (_name, event, args, expected) => {
@@ -102,7 +142,7 @@ describe('threadDelete', () => {
   it('logs the deletion and marks the matching ticket deleted', async () => {
     dbMock.user_tickets.findFirst.mockResolvedValue({ id: 'ticket1' } as never);
     await threadDelete.execute(thread as never);
-    expect(mocks.postAuditLog).toHaveBeenCalledWith(expect.objectContaining({ action: 'deleted' }));
+    expect(mocks.postAuditLog).toHaveBeenCalledWith(expect.objectContaining({ action: 'deleted', targetId: 't1' }));
     expect(dbMock.user_tickets.update).toHaveBeenCalledWith({ where: { id: 'ticket1' }, data: { status: 'DELETED' } });
   });
 

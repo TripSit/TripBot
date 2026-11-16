@@ -19,6 +19,7 @@ export const stickerDelete: StickerDeleteEvent = {
       type: AuditLogEvent.StickerDelete,
       subject: `Sticker ${sticker.name}`,
       action: 'deleted',
+      targetId: sticker.id,
       caller: F,
     });
   },

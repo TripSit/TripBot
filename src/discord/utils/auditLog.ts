@@ -14,11 +14,16 @@ export interface AuditLogOptions {
   subject: string;
   /** e.g. 'created', 'updated'. */
   action: string;
+  /** ID of the thing the event is about. Only an audit entry for this target is credited. */
+  targetId?: string;
   /** Append the entry's key/old/new change list. */
   showChanges?: boolean;
   /** The calling file's `F`, used for logging. */
   caller: string;
 }
+
+/** How old an audit entry may be and still be credited with the event that just happened. */
+const MAX_ENTRY_AGE_MS = 15_000;
 
 /** Audit-log change values can be any JSON value; objects are serialized instead of printing [object Object]. */
 const describeValue = (value: unknown): string => (typeof value === 'object' && value !== null ? JSON.stringify(value) : String(value));
@@ -46,6 +51,7 @@ export async function postAuditLog({
   type,
   subject,
   action,
+  targetId,
   showChanges = false,
   caller,
 }: AuditLogOptions): Promise<void> {
@@ -59,8 +65,13 @@ export async function postAuditLog({
   const channel = await discordClient.channels.fetch(env.CHANNEL_AUDITLOG) as TextChannel;
   if (!await ensurePermissions(channel, ['ViewChannel', 'SendMessages'], caller)) return;
 
-  const fetchedLogs = await guild.fetchAuditLogs({ limit: 1, type });
-  await channel.send(formatAuditMessage(subject, action, fetchedLogs.entries.first(), showChanges));
+  // The newest entry of a type is not necessarily this event's: overlapping events or a delayed entry would credit
+  // an unrelated actor. Only credit a recent entry for the same target, otherwise report the result as unknown.
+  const fetchedLogs = await guild.fetchAuditLogs({ limit: 10, type });
+  const now = Date.now();
+  const entry = fetchedLogs.entries.find(candidate => (targetId === undefined || candidate.targetId === targetId)
+    && now - candidate.createdTimestamp <= MAX_ENTRY_AGE_MS);
+  await channel.send(formatAuditMessage(subject, action, entry, showChanges));
 }
 
 export default postAuditLog;

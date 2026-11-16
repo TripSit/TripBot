@@ -19,6 +19,7 @@ export const threadUpdate: ThreadUpdateEvent = {
       type: AuditLogEvent.ThreadUpdate,
       subject: `Thread **${newThread.toString()}**`,
       action: 'updated',
+      targetId: newThread.id,
       showChanges: true,
       caller: F,
     });

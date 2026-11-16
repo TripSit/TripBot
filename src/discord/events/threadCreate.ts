@@ -18,6 +18,7 @@ export const threadCreate: ThreadCreateEvent = {
       type: AuditLogEvent.ThreadCreate,
       subject: `Thread **${thread.toString()}**`,
       action: 'created',
+      targetId: thread.id,
       caller: F,
     });
   },

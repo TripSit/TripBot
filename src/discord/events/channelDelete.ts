@@ -21,6 +21,7 @@ export const channelDelete: ChannelDeleteEvent = {
       type: AuditLogEvent.ChannelDelete,
       subject: `Channel ${channel.name}`,
       action: 'deleted',
+      targetId: channel.id,
       caller: F,
     });
   },

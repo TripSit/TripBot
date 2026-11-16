@@ -170,17 +170,21 @@ describe('mushroomPageEmbed', () => {
 });
 
 describe('postAuditLog', () => {
+  const NO_LOGS = 'Thread x was created, but no relevant audit logs were found.';
+  const BY_MOD = 'Thread x was created by mod#1.';
   const entry = (over: object = {}) => ({
-    executor: { tag: 'mod#1' }, changes: [{ key: 'name', old: 'a', new: 'b' }], ...over,
+    executor: { tag: 'mod#1' }, changes: [{ key: 'name', old: 'a', new: 'b' }], targetId: 't1', createdTimestamp: Date.now(), ...over,
   });
-  function setup(first: unknown) {
+  function setup(entries: unknown) {
+    const list = (Array.isArray(entries) ? entries : [entries]).filter(Boolean) as Array<Record<string, unknown>>;
     const send = vi.fn();
     (global as unknown as { discordClient: unknown }).discordClient = { channels: { fetch: vi.fn(async () => ({ send })) } };
-    const guild = { id: e.DISCORD_GUILD_ID, fetchAuditLogs: vi.fn(async () => ({ entries: { first: () => first } })) };
-    return { send, guild };
+    const fetchAuditLogs = vi.fn(async () => ({ entries: { find: (fn: (e: unknown) => boolean) => list.find(fn) } }));
+    const guild = { id: e.DISCORD_GUILD_ID, fetchAuditLogs };
+    return { send, guild, fetchAuditLogs };
   }
   const run = (guild: unknown, extra: object = {}) => postAuditLog({
-    guild: guild as never, type: 1 as never, subject: 'Thread x', action: 'created', caller: 'F', ...extra,
+    guild: guild as never, type: 1 as never, subject: 'Thread x', action: 'created', caller: 'F', targetId: 't1', ...extra,
   });
 
   beforeEach(() => { mocks.ensure.mockResolvedValue(true); });
@@ -188,7 +192,7 @@ describe('postAuditLog', () => {
   it('credits the executor', async () => {
     const { send, guild } = setup(entry());
     await run(guild);
-    expect(send).toHaveBeenCalledWith('Thread x was created by mod#1.');
+    expect(send).toHaveBeenCalledWith(BY_MOD);
   });
 
   it('lists the changes when asked', async () => {
@@ -200,10 +204,39 @@ describe('postAuditLog', () => {
   it('handles missing entries and executors', async () => {
     let s = setup(undefined);
     await run(s.guild);
-    expect(s.send).toHaveBeenCalledWith('Thread x was created, but no relevant audit logs were found.');
+    expect(s.send).toHaveBeenCalledWith(NO_LOGS);
     s = setup(entry({ executor: null }));
     await run(s.guild, { showChanges: true });
     expect(s.send).toHaveBeenCalledWith(expect.stringContaining('the audit log was inconclusive'));
+  });
+
+  // Regression tests for TripSit/TripBot#1362: the newest entry of a type was credited whatever it was about.
+  it('credits the entry for this target, not a newer one for another target', async () => {
+    const { send, guild, fetchAuditLogs } = setup([
+      entry({ targetId: 'other', executor: { tag: 'stranger#9' } }),
+      entry({ targetId: 't1', executor: { tag: 'mod#1' } }),
+    ]);
+    await run(guild);
+    expect(fetchAuditLogs).toHaveBeenCalledWith(expect.objectContaining({ limit: 10 }));
+    expect(send).toHaveBeenCalledWith(BY_MOD);
+  });
+
+  it('does not credit an entry for another target or one that is too old', async () => {
+    const wrongTarget = setup(entry({ targetId: 'other' }));
+    await run(wrongTarget.guild);
+    expect(wrongTarget.send).toHaveBeenCalledWith(NO_LOGS);
+    const stale = setup(entry({ createdTimestamp: Date.now() - 60_000 }));
+    await run(stale.guild);
+    expect(stale.send).toHaveBeenCalledWith(NO_LOGS);
+  });
+
+  it('still requires a recent entry when the caller has no target id', async () => {
+    const fresh = setup(entry({ targetId: 'anything' }));
+    await run(fresh.guild, { targetId: undefined });
+    expect(fresh.send).toHaveBeenCalledWith(BY_MOD);
+    const stale = setup(entry({ createdTimestamp: Date.now() - 60_000 }));
+    await run(stale.guild, { targetId: undefined });
+    expect(stale.send).toHaveBeenCalledWith(NO_LOGS);
   });
 
   it('does nothing in other guilds, without a guild, or without permissions', async () => {

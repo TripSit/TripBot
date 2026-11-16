@@ -18,6 +18,7 @@ export const emojiUpdate: EmojiUpdateEvent = {
       type: AuditLogEvent.EmojiUpdate,
       subject: `Emoji **${newEmoji.toString()}**`,
       action: 'updated',
+      targetId: newEmoji.id,
       showChanges: true,
       caller: F,
     });
