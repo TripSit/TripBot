@@ -405,6 +405,20 @@ describe('rpg home and flair', () => {
       expect((interaction as unknown as { showModal: ReturnType<typeof vi.fn> }).showModal).toHaveBeenCalled();
       expect(submit.editReply).toHaveBeenCalled();
     });
+
+    it('still renders the persona editor when the stored class, species and guild are unknown', async () => {
+      mocks.persona.mockResolvedValue(persona({ class: 'retired', species: 'retired', guild: 'retired' }));
+      const submit = {
+        customId: 'rpgNameModal~int1', guild: {}, deferReply: vi.fn(), editReply: vi.fn(), fields: { getTextInputValue: vi.fn(() => 'Bob') },
+      };
+      const interaction = base({
+        member: { ...member(), user: { displayAvatarURL: vi.fn(() => 'https://example.com/a.png') } },
+        showModal: vi.fn(),
+        awaitModalSubmit: vi.fn(resolvingModal(submit)),
+      });
+      await rpgHomeNameChange(interaction as never);
+      expect(submit.editReply).toHaveBeenCalled();
+    });
   });
 
   describe('flair', () => {
