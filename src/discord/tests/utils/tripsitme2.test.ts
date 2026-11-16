@@ -202,6 +202,10 @@ describe('tripsitmeUserClose', () => {
     const override = setup({ targetId: 'someone', actorId: 'actor', override: true });
     await tripsitmeUserClose(override.interaction);
     expect(override.thread.send).toHaveBeenCalled();
+    // Regression test for TripSit/TripBot#1366: the meta message names the target and says who turned it off
+    const metaText = (override.metaChannel.send.mock.calls[0][0] as { content: string }).content;
+    expect(metaText).toContain('has turned off tripsit mode for');
+    expect(metaText).not.toContain('no longer need help');
   });
 
   it('explains when there is no open session', async () => {
