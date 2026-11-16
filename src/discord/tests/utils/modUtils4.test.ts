@@ -1,5 +1,7 @@
 /* eslint-disable no-restricted-syntax, sonarjs/no-duplicate-string */
-import { EmbedBuilder, GuildMember } from 'discord.js';
+import {
+  DiscordAPIError, EmbedBuilder, GuildMember, RESTJSONErrorCodes,
+} from 'discord.js';
 import { moderate } from '../../utils/modUtils';
 import { dbMock } from '../../../vitest/utils/mockDb';
 import { stubInstance } from '../../../vitest/utils/discordStubs';
@@ -92,6 +94,17 @@ beforeEach(() => {
   mocks.counts.mockResolvedValue({});
   mocks.rows.mockReturnValue([]);
 });
+
+function clearRecorded() {
+  [dbMock.user_actions.create, dbMock.user_actions.upsert, dbMock.users.update].forEach(fn => fn.mockClear());
+}
+
+// A refused Discord action must leave no action row and no user update behind
+function expectNothingRecorded() {
+  expect(dbMock.user_actions.create).not.toHaveBeenCalled();
+  expect(dbMock.user_actions.upsert).not.toHaveBeenCalled();
+  expect(dbMock.users.update).not.toHaveBeenCalled();
+}
 
 describe('moderate: guards', () => {
   it('requires a guild', async () => {
@@ -264,7 +277,13 @@ describe('moderate: timeouts', () => {
     expect((await moderate(gone.buttonInt, gone.modalInt)).content).toBe('User is not in the guild!');
     const fails = setup('TIMEOUT', { duration: '1h' });
     (fails.target as unknown as { timeout: ReturnType<typeof vi.fn> }).timeout.mockRejectedValue(new Error('Missing Permissions'));
-    await expect(moderate(fails.buttonInt, fails.modalInt)).resolves.toBeDefined();
+    clearRecorded();
+    const result = await moderate(fails.buttonInt, fails.modalInt);
+    expect(result.content).toContain('Discord refused the action');
+    expect(result.content).toContain('Missing Permissions');
+    expectNothingRecorded();
+    // A timeout is only announced once Discord has accepted it
+    expect((fails.target as unknown as { user: { send: ReturnType<typeof vi.fn> } }).user.send).not.toHaveBeenCalled();
   });
 
   it('removes timeouts and closes the original record', async () => {
@@ -278,17 +297,24 @@ describe('moderate: timeouts', () => {
     dbMock.user_actions.findMany.mockResolvedValue([]);
     const noRecord = setup('UN-TIMEOUT');
     (noRecord.target as unknown as { timeout: ReturnType<typeof vi.fn> }).timeout.mockRejectedValue(new Error('x'));
-    await expect(moderate(noRecord.buttonInt, noRecord.modalInt)).resolves.toBeDefined();
+    clearRecorded();
+    expect((await moderate(noRecord.buttonInt, noRecord.modalInt)).content).toContain('Discord refused the action');
+    expectNothingRecorded();
   });
 
-  it('kicks members, tolerating failures, and requires membership', async () => {
+  it('kicks members, reports failures, and requires membership', async () => {
     const s = setup('KICK');
     await moderate(s.buttonInt, s.modalInt);
     expect((s.target as unknown as { kick: ReturnType<typeof vi.fn> }).kick).toHaveBeenCalled();
     expect((s.target as unknown as { user: { send: ReturnType<typeof vi.fn> } }).user.send.mock.calls[0][0].embeds[0].data.description).toContain('rejoin here');
     const fails = setup('KICK');
     (fails.target as unknown as { kick: ReturnType<typeof vi.fn> }).kick.mockRejectedValue(new Error('x'));
-    await expect(moderate(fails.buttonInt, fails.modalInt)).resolves.toBeDefined();
+    clearRecorded();
+    const failed = await moderate(fails.buttonInt, fails.modalInt);
+    // Kicks message the user first, so the moderator is told they were already messaged
+    expect(failed.content).toContain('Discord refused the action');
+    expect(failed.content).toContain('already been sent your message');
+    expectNothingRecorded();
     const gone = setup('KICK', {}, { member: 'left' });
     expect((await moderate(gone.buttonInt, gone.modalInt)).content).toBe('User is not in the guild!');
   });
@@ -345,7 +371,10 @@ describe('moderate: bans', () => {
     const fails = setup('FULL_BAN', { days: '1' });
     fails.bans.create.mockRejectedValue(new Error('Missing Permissions'));
     mocks.last.mockResolvedValueOnce({ messageCount: 0, totalMessages: 0, messageList: '' }).mockRejectedValueOnce(new Error('fetch failed'));
-    await expect(moderate(fails.buttonInt, fails.modalInt)).resolves.toBeDefined();
+    clearRecorded();
+    const failed = await moderate(fails.buttonInt, fails.modalInt);
+    expect(failed.content).toContain('Missing Permissions');
+    expectNothingRecorded();
   });
 
   // Regression test for TripSit/TripBot#1370: these commands used to be ignored, so the flags were never set.
@@ -382,13 +411,24 @@ describe('moderate: bans', () => {
     }
   });
 
-  it('still lifts bans when there is no record, or the API fails', async () => {
+  it('still lifts bans when there is no record, or Discord says the user is not banned', async () => {
     const s = setup('UN-UNDERBAN');
-    s.bans.remove.mockRejectedValue(new Error('Unknown Ban'));
+    s.bans.remove.mockRejectedValue(
+      new DiscordAPIError({ code: RESTJSONErrorCodes.UnknownBan, message: 'Unknown Ban' }, RESTJSONErrorCodes.UnknownBan, 404, 'DELETE', '', {}),
+    );
     await moderate(s.buttonInt, s.modalInt);
     expect(dbMock.user_actions.create).toHaveBeenCalled();
     const evasion = setup('UN-BAN_EVASION');
     await expect(moderate(evasion.buttonInt, evasion.modalInt)).resolves.toBeDefined();
+  });
+
+  it('does not mark a ban repealed when the unban fails', async () => {
+    const s = setup('UN-FULL_BAN');
+    s.bans.remove.mockRejectedValue(new Error('Missing Permissions'));
+    clearRecorded();
+    const result = await moderate(s.buttonInt, s.modalInt);
+    expect(result.content).toContain('Missing Permissions');
+    expectNothingRecorded();
   });
 
   it('includes the mod thread link in the response when one was created', async () => {

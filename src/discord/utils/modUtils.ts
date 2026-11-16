@@ -40,6 +40,8 @@ import {
   UserContextMenuCommandInteraction,
   time,
   LabelBuilder,
+  DiscordAPIError,
+  RESTJSONErrorCodes,
 } from 'discord.js';
 import { Duration } from 'luxon';
 import { parseDuration, validateDurationInput } from '../../global/utils/parseDuration';
@@ -1538,12 +1540,31 @@ async function onActionedRecently(
   });
 }
 
+/** Runs a Discord moderation call and returns why it failed, or null when it worked (or failed with `okCode`). */
+async function attemptDiscordAction(action: () => Promise<unknown>, okCode?: number): Promise<string | null> {
+  try {
+    await action();
+    return null;
+  } catch (err) {
+    if (okCode !== undefined && err instanceof DiscordAPIError && err.code === okCode) return null;
+    log.error(F, `Error: ${err}`);
+    return err instanceof Error ? err.message : 'unknown error';
+  }
+}
+
+/** The moderator-facing reply when Discord refused the action, so nothing is recorded as done. */
+function actionFailed(targetName: string, reason: string, dmDelivered: boolean | null): InteractionReplyOptions {
+  const dmNote = dmDelivered ? ' The user had already been sent your message.' : '';
+  return { content: `Discord refused the action on ${targetName} (${reason}), so nothing was recorded.${dmNote}` };
+}
+
 export async function moderate(
   buttonInt: ButtonInteraction,
   modalInt: ModalSubmitInteraction,
   ignoreRecentActions: boolean = false,
 ): Promise<InteractionReplyOptions> {
   if (!buttonInt.guild) return { content: GUILD_ONLY_TEXT };
+  const { guild } = buttonInt;
   const actor = buttonInt.member as GuildMember;
 
   const [, command, targetId]: [string, ModAction, Snowflake] = buttonInt.customId.split('~') as [string, ModAction, Snowflake];
@@ -1699,68 +1720,76 @@ export async function moderate(
 
   // null = no DM was attempted, true = DM delivered, false = DM failed (user has DMs off / blocked the bot)
   let dmDelivered: boolean | null = null;
-  if (sendsMessageToUser(command)
-    && !isVendorBotBan
-    && (description !== '' && description !== null)
-    && (targetMember || targetUser)) {
-    log.debug(F, `[moderate] Sending message to ${targetName}`);
-    const openingMessage = isUnTimeout(command)
-      ? `Good news! You've been ${embedVariables[command as keyof typeof embedVariables].pastVerb} by Team TripSit.`
-      : `I regret to inform you that you've been ${embedVariables[command as keyof typeof embedVariables].pastVerb} by Team TripSit.`;
+  const sendUserMessage = async (): Promise<void> => {
+    if (sendsMessageToUser(command)
+      && !isVendorBotBan
+      && (description !== '' && description !== null)
+      && (targetMember || targetUser)) {
+      log.debug(F, `[moderate] Sending message to ${targetName}`);
+      const openingMessage = isUnTimeout(command)
+        ? `Good news! You've been ${embedVariables[command as keyof typeof embedVariables].pastVerb} by Team TripSit.`
+        : `I regret to inform you that you've been ${embedVariables[command as keyof typeof embedVariables].pastVerb} by Team TripSit.`;
 
-    let body = stripIndents`${openingMessage}
+      let body = stripIndents`${openingMessage}
 
-        ${expiration}
-      > ${description}
+          ${expiration}
+        > ${description}
 
-      **Do not message a moderator to talk about this or argue about the rules in public channels!**
-    `;
+        **Do not message a moderator to talk about this or argue about the rules in public channels!**
+      `;
 
-    const appealString = '\nYou can appeal this ban at https://tripsit.me/appeal. Evasion bans are permanent, and underban bans are permanent until you turn 18.'; // eslint-disable-line max-len
-    const evasionString = '\nEvasion bans are permanent, you can appeal the ban on your main account by creating an appeal at https://tripsit.me/appeal, but evading will extend the ban'; // eslint-disable-line max-len
+      const appealString = '\nYou can appeal this ban at https://tripsit.me/appeal. Evasion bans are permanent, and underban bans are permanent until you turn 18.'; // eslint-disable-line max-len
+      const evasionString = '\nEvasion bans are permanent, you can appeal the ban on your main account by creating an appeal at https://tripsit.me/appeal, but evading will extend the ban'; // eslint-disable-line max-len
 
-    if (isBan(command)) {
-      body = stripIndents`${body}\n\n${appealString}`;
-      if (isBanEvasion(command)) {
-        body = stripIndents`${body}\n\n${evasionString}`;
+      if (isBan(command)) {
+        body = stripIndents`${body}\n\n${appealString}`;
+        if (isBanEvasion(command)) {
+          body = stripIndents`${body}\n\n${evasionString}`;
+        }
+        if (isFullBan(command)) {
+          const response = await last(
+            targetUser ?? targetMember?.user as User,
+            guild,
+          );
+          const extraMessage = `${targetName}'s last ${response.messageCount} (out of ${response.totalMessages}) messages before being banned :\n${response.messageList}`; // eslint-disable-line max-len
+          body = stripIndents`${body}\n\n${extraMessage}`;
+        }
       }
-      if (isFullBan(command)) {
-        const response = await last(
-          targetUser ?? targetMember?.user as User,
-          buttonInt.guild,
-        );
-        const extraMessage = `${targetName}'s last ${response.messageCount} (out of ${response.totalMessages}) messages before being banned :\n${response.messageList}`; // eslint-disable-line max-len
-        body = stripIndents`${body}\n\n${extraMessage}`;
+
+      if (isDiscussable(command) && guildData.channel_helpdesk) {
+        const channel = await discordClient.channels.fetch(guildData.channel_helpdesk);
+        const discussString = `\nYou can discuss this with the mods in ${channel}.`; // eslint-disable-line max-len
+        body = stripIndents`${body}\n\n${discussString}`;
       }
-    }
 
-    if (isDiscussable(command) && guildData.channel_helpdesk) {
-      const channel = await discordClient.channels.fetch(guildData.channel_helpdesk);
-      const discussString = `\nYou can discuss this with the mods in ${channel}.`; // eslint-disable-line max-len
-      body = stripIndents`${body}\n\n${discussString}`;
-    }
+      if (isTimeout(command) && guildData.channel_helpdesk) {
+        const channel = await discordClient.channels.fetch(guildData.channel_helpdesk);
+        const timeoutDiscussString = `\nYou can discuss this with the mods in ${channel} once the timeout expires.`; // eslint-disable-line max-len
+        body = stripIndents`${body}\n\n${timeoutDiscussString}`;
+      }
 
-    if (isTimeout(command) && guildData.channel_helpdesk) {
-      const channel = await discordClient.channels.fetch(guildData.channel_helpdesk);
-      const timeoutDiscussString = `\nYou can discuss this with the mods in ${channel} once the timeout expires.`; // eslint-disable-line max-len
-      body = stripIndents`${body}\n\n${timeoutDiscussString}`;
-    }
+      if (isRepeatable(command)) {
+        body = stripIndents`${body}\n\nPlease review the [TripSit Terms](https://wiki.tripsit.me/wiki/Terms_of_Service) so this doesn't happen again!\n`;
+      }
 
-    if (isRepeatable(command)) {
-      body = stripIndents`${body}\n\nPlease review the [TripSit Terms](https://wiki.tripsit.me/wiki/Terms_of_Service) so this doesn't happen again!\n`;
-    }
+      if (isKick(command)) {
+        body = stripIndents`${body}\n\nIf you feel you can follow the rules you can rejoin here: https://discord.gg/tripsit`;
+      }
 
-    if (isKick(command)) {
-      body = stripIndents`${body}\n\nIf you feel you can follow the rules you can rejoin here: https://discord.gg/tripsit`;
+      log.debug(F, `Sending message to ${targetName}`);
+      dmDelivered = await messageUser(
+        targetUser ?? targetMember?.user as User,
+        command,
+        body,
+        isTimeout(command) || isWarning(command),
+      );
     }
-
-    log.debug(F, `Sending message to ${targetName}`);
-    dmDelivered = await messageUser(
-      targetUser ?? targetMember?.user as User,
-      command,
-      body,
-      isTimeout(command) || isWarning(command),
-    );
+  };
+  // Bans and kicks end the user's access, so they are messaged first. Every other action is only announced once
+  // Discord has accepted it, so the user is never told about something that did not happen.
+  const messageBeforeAction = isBan(command) || isFlagBan(command) || isKick(command);
+  if (messageBeforeAction) {
+    await sendUserMessage();
   }
 
   if (command === 'FULL_BAN') {
@@ -1824,15 +1853,14 @@ export async function moderate(
       }
       log.info(F, `target: ${targetId} | deleteMessageValue: ${deleteMessageValue} | internalNote: ${internalNote ?? noReason}`);
 
-      try {
-        log.info(F, `Message delete duration in milliseconds: ${deleteDuration}`);
-        targetObj = await buttonInt.guild.bans.create(targetId, { deleteMessageSeconds: deleteDuration / 1000, reason: internalNote ?? noReason });
-        // Set ban duration if present
-        if (banEndTime !== null) {
-          actionData.expires_at = banEndTime;
-        }
-      } catch (err) {
-        log.error(F, `Error: ${err}`);
+      log.info(F, `Message delete duration in milliseconds: ${deleteDuration}`);
+      const banError = await attemptDiscordAction(async () => {
+        targetObj = await guild.bans.create(targetId, { deleteMessageSeconds: deleteDuration / 1000, reason: internalNote ?? noReason });
+      });
+      if (banError) return actionFailed(targetName, banError, dmDelivered);
+      // Set ban duration if present
+      if (banEndTime !== null) {
+        actionData.expires_at = banEndTime;
       }
     } else if (isTicketBan(command)) {
       targetData.ticket_ban = true;
@@ -1846,12 +1874,11 @@ export async function moderate(
   } else if (isUnBan(command) || isUnFlagBan(command)) {
     if (isUnFullBan(command) || isUnUnderban(command) || isUnBanEvasion(command)) {
       targetData.removed_at = null;
-      try {
-        await buttonInt.guild.bans.fetch();
-        await buttonInt.guild.bans.remove(targetId, internalNote ?? noReason);
-      } catch (err) {
-        log.error(F, `Error: ${err}`);
-      }
+      // Unknown Ban means they are already unbanned, which is the outcome we want
+      const unbanError = await attemptDiscordAction(async () => {
+        await guild.bans.remove(targetId, internalNote ?? noReason);
+      }, RESTJSONErrorCodes.UnknownBan);
+      if (unbanError) return actionFailed(targetName, unbanError, dmDelivered);
     } else if (isUnTicketBan(command)) {
       targetData.ticket_ban = false;
     } else if (isUnDiscordBotBan(command)) {
@@ -1884,11 +1911,11 @@ export async function moderate(
   } else if (isTimeout(command)) {
     if (targetMember) {
       actionData.expires_at = new Date(Date.now() + (actionDuration as number));
-      try {
-        await targetMember.timeout(actionDuration, internalNote ?? noReason);
-      } catch (err) {
-        log.error(F, `Error: ${err}`);
-      }
+      const member = targetMember;
+      const timeoutError = await attemptDiscordAction(async () => {
+        await member.timeout(actionDuration, internalNote ?? noReason);
+      });
+      if (timeoutError) return actionFailed(targetName, timeoutError, dmDelivered);
     } else {
       return { content: 'User is not in the guild!' };
     }
@@ -1912,25 +1939,29 @@ export async function moderate(
       actionData.repealed_at = new Date();
       actionData.repealed_by = actorData.id;
 
-      try {
-        await targetMember.timeout(null, internalNote ?? noReason);
-      } catch (err) {
-        log.error(F, `Error: ${err}`);
-      }
+      const member = targetMember;
+      const untimeoutError = await attemptDiscordAction(async () => {
+        await member.timeout(null, internalNote ?? noReason);
+      });
+      if (untimeoutError) return actionFailed(targetName, untimeoutError, dmDelivered);
     } else {
       return { content: 'User is not in the guild!' };
     }
   } else if (isKick(command)) {
     if (targetMember) {
       actionData.type = 'KICK' as user_action_type;
-      try {
-        await targetMember.kick();
-      } catch (err) {
-        log.error(F, `Error: ${err}`);
-      }
+      const member = targetMember;
+      const kickError = await attemptDiscordAction(async () => {
+        await member.kick();
+      });
+      if (kickError) return actionFailed(targetName, kickError, dmDelivered);
     } else {
       return { content: 'User is not in the guild!' };
     }
+  }
+
+  if (!messageBeforeAction) {
+    await sendUserMessage();
   }
 
   // This needs to happen before creating the modlog embed
