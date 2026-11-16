@@ -161,14 +161,14 @@ describe('purge', () => {
     const base = {
       guild, user: { id: 'u1' }, member: mem('u1'), id: 'i', update: vi.fn(), isUserSelectMenu: () => true, values: ['target'],
     };
-    await purgeMenu({ ...base, customId: 'purge~user' } as never);
+    await purgeMenu({ ...base, customId: 'purge~user~u1' } as never);
     expect(base.update).toHaveBeenCalledTimes(1);
     expect((base.update.mock.calls[0][0] as { embeds: Array<{ data: { description: string } }> }).embeds[0].data.description).toContain('2 messages');
     const other = { ...base, update: vi.fn(), customId: 'purge~zzz' };
     await purgeMenu(other as never);
     expect(other.update).not.toHaveBeenCalled();
     // a select menu with a different id keeps the invoking user
-    const wrongId = { ...base, update: vi.fn(), customId: 'purge~user' };
+    const wrongId = { ...base, update: vi.fn(), customId: 'purge~user~u1' };
     wrongId.isUserSelectMenu = () => true;
     await purgeMenu(wrongId as never);
     expect(wrongId.update).toHaveBeenCalled();
@@ -178,7 +178,7 @@ describe('purge', () => {
     const c1 = textChannel('c1', ['target', 'x']);
     const guild = guildOf([c1]);
     const stub = {
-      guild, id: 'i', customId: 'purge~confirm~target', update: vi.fn(), editReply: vi.fn(), user: { id: 'u1' }, member: mem('u1'),
+      guild, id: 'i', customId: 'purge~confirm~target~u1', update: vi.fn(), editReply: vi.fn(), user: { id: 'u1' }, member: mem('u1'),
     };
     // deleteMessages reads cache.get(channel).messages.delete
     (guild.channels.cache as unknown as Map<string, unknown>).set('c1', stubInstance(TextChannel, { messages: c1.messages }));
@@ -191,11 +191,68 @@ describe('purge', () => {
     expect(other.editReply).not.toHaveBeenCalled();
   });
 
+  // Regression tests for TripSit/TripBot#1359: confirmation used to trust the target in the button, whoever clicked it.
+  describe('authorization', () => {
+    const noPerms = { id: 'u2', displayName: 'u2', permissions: { has: () => false } };
+    const click = (over: Record<string, unknown>) => {
+      const c1 = textChannel('c1', ['target', 'x']);
+      const guild = guildOf([c1]);
+      (guild.channels.cache as unknown as Map<string, unknown>).set('c1', stubInstance(TextChannel, { messages: c1.messages }));
+      return {
+        c1,
+        stub: {
+          guild, id: 'i', customId: 'purge~confirm~target~u1', update: vi.fn(), editReply: vi.fn(), reply: vi.fn(), user: { id: 'u1' }, member: mem('u1'), ...over,
+        },
+      };
+    };
+
+    it('refuses a confirm click from someone other than the initiator', async () => {
+      const { c1, stub } = click({ user: { id: 'u2' }, member: mem('u2') });
+      await purgeButton(stub as never);
+      expect(stub.reply).toHaveBeenCalledWith(expect.objectContaining({ content: expect.stringContaining('started by someone else') }));
+      expect(stub.update).not.toHaveBeenCalled();
+      expect(c1.messages.delete).not.toHaveBeenCalled();
+    });
+
+    it('refuses an old confirm button with no recorded initiator', async () => {
+      const { c1, stub } = click({ customId: 'purge~confirm~target' });
+      await purgeButton(stub as never);
+      expect(stub.reply).toHaveBeenCalled();
+      expect(c1.messages.delete).not.toHaveBeenCalled();
+    });
+
+    it('refuses purging another user without Manage Messages', async () => {
+      const { c1, stub } = click({ customId: 'purge~confirm~target~u2', user: { id: 'u2' }, member: noPerms });
+      await purgeButton(stub as never);
+      expect(stub.reply).toHaveBeenCalledWith(expect.objectContaining({ content: expect.stringContaining('Manage Messages') }));
+      expect(c1.messages.delete).not.toHaveBeenCalled();
+    });
+
+    it('lets users without Manage Messages purge their own messages', async () => {
+      const { c1, stub } = click({ customId: 'purge~confirm~u2~u2', user: { id: 'u2' }, member: noPerms });
+      (c1.messages as { fetch: ReturnType<typeof vi.fn> }).fetch = vi.fn(async () => collectionOf<unknown>([]));
+      await purgeButton(stub as never);
+      expect(stub.reply).not.toHaveBeenCalled();
+      expect(stub.update).toHaveBeenCalled();
+    });
+
+    it('refuses the user menu for another initiator or without Manage Messages', async () => {
+      const guild = guildOf([textChannel('c1', ['target'])]);
+      const base = {
+        guild, user: { id: 'u2' }, member: noPerms, id: 'i', update: vi.fn(), reply: vi.fn(), isUserSelectMenu: () => true, values: ['target'],
+      };
+      await purgeMenu({ ...base, customId: 'purge~user~u1' } as never);
+      await purgeMenu({ ...base, customId: 'purge~user~u2' } as never);
+      expect(base.reply).toHaveBeenCalledTimes(2);
+      expect(base.update).not.toHaveBeenCalled();
+    });
+  });
+
   it('button skips channels that are missing from the cache instead of throwing', async () => {
     const c1 = textChannel('c1', ['target', 'x']);
     const guild = guildOf([c1]);
     const stub = {
-      guild, id: 'i', customId: 'purge~confirm~target', update: vi.fn(), editReply: vi.fn(), user: { id: 'u1' }, member: mem('u1'),
+      guild, id: 'i', customId: 'purge~confirm~target~u1', update: vi.fn(), editReply: vi.fn(), user: { id: 'u1' }, member: mem('u1'),
     };
     // Cache has no entry for c1, so deleteMessages must skip it
     (guild.channels.cache as unknown as Map<string, unknown>).delete('c1');
