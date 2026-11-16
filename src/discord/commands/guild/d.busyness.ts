@@ -34,6 +34,22 @@ let maxBusynessDetails = {
   density: 0,
 };
 
+/**
+ * Spamminess is the Gini coefficient of the per-user message counts: 0 when everyone sent the same number of
+ * messages, approaching 1 when one person sent nearly all of them.
+ */
+export function calculateSpamminess(messageCounts: number[]): number {
+  const n = messageCounts.length;
+  const total = messageCounts.reduce((sum, count) => sum + count, 0);
+  if (n === 0 || total === 0) return 0;
+
+  // The rank-weighted sum only measures inequality when the counts are in ascending order
+  const sorted = [...messageCounts].sort((a, b) => a - b);
+  const rankWeighted = sorted.reduce((sum, count, index) => sum + (index + 1) * count, 0);
+  const gini = (2 * rankWeighted) / (n * total) - (n + 1) / n;
+  return Math.min(Math.max(gini, 0), 1);
+}
+
 async function calculateBusyness(
   channel: TextChannel,
 ): Promise<{
@@ -64,23 +80,7 @@ async function calculateBusyness(
   const userCount = uniqueUsers.size;
 
   // Calculate the Spamminess (S)
-  const messageCounts = [...userMessageCounts.values()];
-  const n = messageCounts.length;
-  const totalMessages = messageCounts.reduce((sum, count) => sum + count, 0);
-
-  let spamminess = 0;
-  if (n > 0 && totalMessages > 0) {
-    let cumulativeSum = 0;
-    let magicNumerator = 0;
-
-    messageCounts.forEach((count, index) => {
-      cumulativeSum += count;
-      magicNumerator += (index + 1) * count; // Adjust index logic if needed
-    });
-
-    spamminess = 1 - (2 * magicNumerator) / (n * cumulativeSum);
-    spamminess = Math.min(Math.max(spamminess, 0), 1);
-  }
+  const spamminess = calculateSpamminess([...userMessageCounts.values()]);
 
   // Calculate the Density (D)
   const density = userCount > 0 ? messageCount / userCount : 0;
