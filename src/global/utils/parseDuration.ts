@@ -21,11 +21,11 @@ const QUALIFIER_MS: Record<string, number> = {
 function qualifierValue(duration: string, idx: number, count: number): { ms: number; skip: number } {
   const c = duration[idx];
   if (c === 'M' || c === 'm') {
-    // Check if the next characters spell "month" or "months"
-    const spellsMonth = duration.slice(idx, idx + 5).toLowerCase().startsWith('month');
-    if (spellsMonth || c === 'M') {
-      // 'month' is 5 characters; a trailing 's' is ignored by stage 1 (it waits for a number)
-      return { ms: count * 30 * DAY, skip: c === 'M' ? 1 : 5 };
+    // 'mon', 'month' and 'months' (any case) mean months, as validateDurationInput accepts; a bare 'm' is minutes
+    const monthWord = /^mon(?:th)?/i.exec(duration.slice(idx, idx + 5))?.[0];
+    if (monthWord || c === 'M') {
+      // A trailing 's' is ignored by stage 1 (it waits for a number)
+      return { ms: count * 30 * DAY, skip: c === 'M' && !monthWord ? 1 : (monthWord?.length ?? 1) };
     }
     return { ms: count * MINUTE, skip: 0 };
   }
