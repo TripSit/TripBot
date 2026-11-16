@@ -108,18 +108,21 @@ export async function unlink(
     return 'No user found with that Discord or Matrix ID.';
   }
 
-  tripbotDb.users.update({
-    where: {
-      id: userData.id,
-    },
-    data: {
-      moodle_id: null,
-    },
-  }).then(() => {
+  // Only report success once the link is really cleared
+  try {
+    await tripbotDb.users.update({
+      where: {
+        id: userData.id,
+      },
+      data: {
+        moodle_id: null,
+      },
+    });
     log.debug(F, `unlink: unlinked moodle account for user ${userData.id}`);
-  }).catch(err => {
+  } catch (err) {
     log.error(F, `unlink: failed to unlink moodle account for user ${userData.id}: ${err}`);
-  });
+    return 'Something went wrong, so the TripSitLearn account is still linked. Please try again later!';
+  }
 
   return stripIndents`You have unlinked your Discord account with TripSitLearn!
   Use the /learn link command if you ever want to link your account again!`;

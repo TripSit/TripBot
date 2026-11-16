@@ -57,11 +57,19 @@ describe('learn unlink', () => {
     expect(mocks.tripbot.users.update).toHaveBeenCalledWith({ where: { id: 'u' }, data: { moodle_id: null } });
   });
 
-  it('unlinks by matrix id and survives update failures', async () => {
+  it('unlinks by matrix id', async () => {
+    mocks.tripbot.users.findFirst.mockResolvedValueOnce({ id: 'u' });
+    mocks.tripbot.users.update.mockResolvedValueOnce({});
+    expect(await unlink(undefined, '@m:x')).toContain('unlinked');
+  });
+
+  // Regression test for TripSit/TripBot#1336: a failed write must not be reported as an unlink
+  it('says the account is still linked when the database update fails', async () => {
     mocks.tripbot.users.findFirst.mockResolvedValueOnce({ id: 'u' });
     mocks.tripbot.users.update.mockRejectedValueOnce(new Error('db'));
-    expect(await unlink(undefined, '@m:x')).toContain('unlinked');
-    await new Promise(resolve => { setImmediate(resolve); });
+    const reply = await unlink(undefined, '@m:x');
+    expect(reply).toContain('still linked');
+    expect(reply).not.toContain('You have unlinked');
   });
 });
 
