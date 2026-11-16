@@ -13,20 +13,24 @@ import {
 
 export default paginationEmbed;
 
-const previousButton = new ButtonBuilder()
-  .setCustomId('previousButton')
-  .setLabel('Previous')
-  .setStyle(ButtonStyle.Danger);
+const PREVIOUS_ID = 'previousButton';
+const NEXT_ID = 'nextButton';
 
-const nextButton = new ButtonBuilder()
-  .setCustomId('nextButton')
-  .setLabel('Next')
-  .setStyle(ButtonStyle.Success);
-
-const buttonList = [
-  previousButton,
-  nextButton,
-];
+/** Builds a fresh pair of buttons for one pagination session, so ending one session cannot disable another's. */
+function buildButtons(disabled = false): ButtonBuilder[] {
+  return [
+    new ButtonBuilder()
+      .setCustomId(PREVIOUS_ID)
+      .setLabel('Previous')
+      .setStyle(ButtonStyle.Danger)
+      .setDisabled(disabled),
+    new ButtonBuilder()
+      .setCustomId(NEXT_ID)
+      .setLabel('Next')
+      .setStyle(ButtonStyle.Success)
+      .setDisabled(disabled),
+  ];
+}
 
 /**
  * Creates a pagination embed
@@ -47,7 +51,7 @@ export async function paginationEmbed(
 
   let page = 0;
 
-  const row = new ActionRowBuilder<ButtonBuilder>().addComponents(buttonList);
+  const row = new ActionRowBuilder<ButtonBuilder>().addComponents(buildButtons());
 
   const curPage = await interaction.editReply({
     embeds: [
@@ -56,10 +60,7 @@ export async function paginationEmbed(
     components: [row],
   });
 
-  // There is a bug in the typescript definition of the buttonList[x].data.customId
-  // @ts-ignore https://discord.com/channels/222078108977594368/824411059443204127/1013418391584899202
-  const filter = (i:Interaction) => i.customId === buttonList[1].data.custom_id // @ts-ignore
-    || i.customId === buttonList[0].data.custom_id;
+  const filter = (i:{ customId: string }) => i.customId === PREVIOUS_ID || i.customId === NEXT_ID;
 
   const collector = curPage.createMessageComponentCollector({
     filter,
@@ -68,12 +69,10 @@ export async function paginationEmbed(
 
   collector.on('collect', async (i:ButtonInteraction) => {
     switch (i.customId) {
-      // @ts-ignore
-      case buttonList[0].data.custom_id:
+      case PREVIOUS_ID:
         page = page > 0 ? page - 1 : pages.length - 1;
         break;
-      // @ts-ignore
-      case buttonList[1].data.custom_id:
+      case NEXT_ID:
         page = page + 1 < pages.length ? page + 1 : 0;
         break;
       default:
@@ -91,10 +90,7 @@ export async function paginationEmbed(
 
   collector.on('end', (_, reason) => {
     if (reason !== 'messageDelete') {
-      const disabledRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
-        buttonList[0].setDisabled(true),
-        buttonList[1].setDisabled(true),
-      );
+      const disabledRow = new ActionRowBuilder<ButtonBuilder>().addComponents(buildButtons(true));
       curPage.edit({
         embeds: [
           pages[page].setFooter({ text: `Page ${page + 1} / ${pages.length}` }),

@@ -78,6 +78,28 @@ describe('paginationEmbed', () => {
     handlers.end(null, 'messageDelete');
     expect(message.edit).toHaveBeenCalledTimes(2);
   });
+
+  // Regression test for TripSit/TripBot#1361: the buttons used to be shared, so one session ending disabled the next
+  it('starts every session with active buttons, even after an earlier session ended', async () => {
+    const buttonStates = (interaction: { editReply: { mock: { calls: unknown[][] } } }) => {
+      const [{ components }] = interaction.editReply.mock.calls[0] as unknown as [
+        { components: Array<{ toJSON: () => { components: Array<{ disabled?: boolean }> } }> },
+      ];
+      return components[0].toJSON().components.map(button => button.disabled === true);
+    };
+    const first = setup();
+    await paginationEmbed(first.interaction as never, pages());
+    expect(buttonStates(first.interaction)).toEqual([false, false]);
+    first.handlers.end(null, 'time');
+    const [{ components }] = first.message.edit.mock.calls[0] as unknown as [
+      { components: Array<{ toJSON: () => { components: Array<{ disabled?: boolean }> } }> },
+    ];
+    expect(components[0].toJSON().components.map(button => button.disabled)).toEqual([true, true]);
+
+    const second = setup();
+    await paginationEmbed(second.interaction as never, pages());
+    expect(buttonStates(second.interaction)).toEqual([false, false]);
+  });
 });
 
 describe('thoughtPolice', () => {
