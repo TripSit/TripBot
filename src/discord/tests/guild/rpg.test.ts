@@ -391,16 +391,19 @@ describe('rpg home and flair', () => {
   });
 
   describe('name change', () => {
-    // The persona editor reads `genome.guild`, but the table is named `genome.guilds`, so spreading it yields {} and
-    // `selectedGuildList[personaData.guild].default = true` throws for every persona.
-    it('currently throws while building the persona editor (guild table is misnamed)', async () => {
+    // Regression test for TripSit/TripBot#1375: the editor read the misnamed `genome.guild` table and threw for every persona.
+    it('builds the persona editor and replies after the name modal is submitted', async () => {
       const submit = {
         customId: 'rpgNameModal~int1', guild: {}, deferReply: vi.fn(), editReply: vi.fn(), fields: { getTextInputValue: vi.fn(() => 'Bob') },
       };
-      const interaction = base({ showModal: vi.fn(), awaitModalSubmit: vi.fn(resolvingModal(submit)) });
-      await expect(rpgHomeNameChange(interaction as never)).rejects.toThrow(TypeError);
+      const interaction = base({
+        member: { ...member(), user: { displayAvatarURL: vi.fn(() => 'https://example.com/a.png') } },
+        showModal: vi.fn(),
+        awaitModalSubmit: vi.fn(resolvingModal(submit)),
+      });
+      await rpgHomeNameChange(interaction as never);
       expect((interaction as unknown as { showModal: ReturnType<typeof vi.fn> }).showModal).toHaveBeenCalled();
-      expect(submit.editReply).not.toHaveBeenCalled();
+      expect(submit.editReply).toHaveBeenCalled();
     });
   });
 
