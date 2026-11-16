@@ -2,6 +2,7 @@ import {
   ChannelType,
   GuildMember,
   MessageFlags,
+  PermissionFlagsBits,
   SlashCommandBuilder,
   TextChannel,
 } from 'discord.js';
@@ -36,7 +37,7 @@ export const dSay: SlashCommand = {
 
     const say = interaction.options.getString('say', true);
 
-    let channel = interaction.options.getChannel('channel')
+    const channel = interaction.options.getChannel('channel')
       ? interaction.options.getChannel('channel')
       : interaction.channel;
 
@@ -67,21 +68,36 @@ export const dSay: SlashCommand = {
       return false;
     }
 
-    // Set the type so it's not an API channel
-    channel = channel as TextChannel;
+    // The bot may be allowed to send where the caller is not, so check the caller's own permissions in the destination.
+    // A channel picked through the option can be a partial API object, so resolve the full channel first.
+    const destination = 'permissionsFor' in channel
+      ? channel as TextChannel
+      : await interaction.guild.channels.fetch(channel.id).catch(() => null);
+    const isThread = channel.type === ChannelType.PublicThread || channel.type === ChannelType.PrivateThread;
+    const callerPermissions = destination?.permissionsFor(member);
+    if (
+      !callerPermissions?.has(PermissionFlagsBits.ViewChannel)
+      || !callerPermissions.has(isThread ? PermissionFlagsBits.SendMessagesInThreads : PermissionFlagsBits.SendMessages)
+    ) {
+      await interaction.editReply({ content: 'You do not have permission to send messages there!' });
+      return false;
+    }
 
-    await channel.sendTyping(); // This method automatically stops typing after 10 seconds, or when a message is sent.
-    setTimeout(async () => channel.send({
+    // Send through the resolved channel, which (unlike a partial API channel) can actually send
+    const target = destination as TextChannel;
+
+    await target.sendTyping(); // This method automatically stops typing after 10 seconds, or when a message is sent.
+    setTimeout(async () => target.send({
       content: say,
       allowedMentions: { parse: ['users'] },
     }), 3000);
 
-    await interaction.editReply({ content: `I said '${say}' in ${channel.name}` }); // eslint-disable-line max-len
+    await interaction.editReply({ content: `I said '${say}' in ${target.name}` }); // eslint-disable-line max-len
 
     const channelBotlog = await interaction.guild.channels.fetch(env.CHANNEL_BOTLOG) as TextChannel;
     if (channelBotlog) {
       await channelBotlog.send(`${member.displayName} made me say '${say}' \
-        in ${channel.name}`);
+        in ${target.name}`);
     }
 
     return true;
