@@ -794,15 +794,18 @@ async function announceUserClose(
   guildData: GuildData,
   actor: GuildMember,
   target: GuildMember,
+  override: boolean,
 ): Promise<void> {
   const metaChannelId = ticketData.meta_thread_id ?? guildData.channel_tripsitmeta;
   /* v8 ignore next -- a ticket always has a meta thread or the guild has a meta channel */
   if (!metaChannelId) return;
   try {
     const metaChannel = await guild.channels.fetch(metaChannelId) as TextChannel;
-    await metaChannel.send({
-      content: stripIndents`${actor.displayName} has indicated that they no longer need help!`,
-    });
+    // When a helper turns tripsit mode off for someone, the person who needed help is not the one acting
+    const content = override
+      ? `${actor.displayName} has turned off tripsit mode for ${target.displayName}!`
+      : `${actor.displayName} has indicated that they no longer need help!`;
+    await metaChannel.send({ content: stripIndents`${content}` });
     if (metaChannelId !== guildData.channel_tripsitmeta) {
       setTicketChannelName(metaChannel, ticketChannelName('closed', target.displayName, 'discussion'));
     }
@@ -927,7 +930,7 @@ export async function tripsitmeUserClose(
   }
 
   // Let the meta channel know the user has been helped
-  await announceUserClose(interaction.guild, ticketData, guildData, actor, target);
+  await announceUserClose(interaction.guild, ticketData, guildData, actor, target, override);
 
   // Send the end message to the user
   try {
