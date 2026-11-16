@@ -321,6 +321,18 @@ describe('moderate: timeouts', () => {
 });
 
 describe('moderate: bans', () => {
+  // Regression test for TripSit/TripBot#1348: a failing message-history lookup must not stall or abort the ban
+  it('still bans and messages the user when the message history cannot be collected', async () => {
+    mocks.last.mockRejectedValue(new Error('channel fetch failed'));
+    const s = setup('FULL_BAN', { days: '1' });
+    const result = await moderate(s.buttonInt, s.modalInt);
+    expect(s.bans.create).toHaveBeenCalled();
+    expect(description(result)).toContain('Target was banned');
+    const dm = (s.target as unknown as { user: { send: ReturnType<typeof vi.fn> } }).user.send.mock.calls[0][0] as { embeds: EmbedBuilder[] };
+    expect(dm.embeds[0].data.description).toContain('tripsit.me/appeal');
+    expect(dm.embeds[0].data.description).not.toContain('msg list');
+  });
+
   it('bans, deleting recent messages and relaying them to the mod log', async () => {
     const s = setup('FULL_BAN', { days: '1' });
     const result = await moderate(s.buttonInt, s.modalInt);

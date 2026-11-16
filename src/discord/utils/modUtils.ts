@@ -1747,12 +1747,17 @@ export async function moderate(
           body = stripIndents`${body}\n\n${evasionString}`;
         }
         if (isFullBan(command)) {
-          const response = await last(
-            targetUser ?? targetMember?.user as User,
-            guild,
-          );
-          const extraMessage = `${targetName}'s last ${response.messageCount} (out of ${response.totalMessages}) messages before being banned :\n${response.messageList}`; // eslint-disable-line max-len
-          body = stripIndents`${body}\n\n${extraMessage}`;
+          // The message history is only extra evidence: if it can't be collected, the ban and the DM still go ahead
+          try {
+            const response = await last(
+              targetUser ?? targetMember?.user as User,
+              guild,
+            );
+            const extraMessage = `${targetName}'s last ${response.messageCount} (out of ${response.totalMessages}) messages before being banned :\n${response.messageList}`; // eslint-disable-line max-len
+            body = stripIndents`${body}\n\n${extraMessage}`;
+          } catch (err) {
+            log.error(F, `Could not collect the message history for the ban message: ${err}`);
+          }
         }
       }
 
@@ -1850,6 +1855,7 @@ export async function moderate(
         log.debug(F, `Days to delete: ${deleteMessageValue}`);
       } catch (err) {
         log.error(F, `Error: ${err}`);
+        extraMessage = `Could not collect ${targetName}'s message history before the ban.`;
       }
       log.info(F, `target: ${targetId} | deleteMessageValue: ${deleteMessageValue} | internalNote: ${internalNote ?? noReason}`);
 
