@@ -26,10 +26,24 @@ describe('coinflip', () => {
     [0.97, /came and took your coin/],
     [0.98, /both heads and tails/],
     [0.99, /The coin says/],
+    // Regression test for TripSit/TripBot#1346: 100 is a reachable roll, so inflation can happen
+    [0.995, /inflation/],
+    [0.9999999, /inflation/],
   ];
   it.each(cases)('roll %s', async (value, pattern) => {
     vi.spyOn(Math, 'random').mockReturnValue(value);
     expect(await coinflip()).toMatch(pattern);
+    vi.restoreAllMocks();
+  });
+
+  // The bonus die is six-sided: 1 to 6, never 0
+  it.each([
+    [0, '1'],
+    [0.5, '4'],
+    [0.9999999, '6'],
+  ])('rolls a six-sided die for a die value of %s', async (die, shown) => {
+    vi.spyOn(Math, 'random').mockReturnValueOnce(0.03).mockReturnValueOnce(die);
+    expect(await coinflip()).toBe(`${shown}! Oh that's a dice...`);
     vi.restoreAllMocks();
   });
 });

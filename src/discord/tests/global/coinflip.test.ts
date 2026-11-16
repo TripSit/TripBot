@@ -96,7 +96,8 @@ describe(slashCommand.data.name, () => {
       ),
     )).toHaveBeenCalledWith({ content: expect.any(String) });
 
-    vi.spyOn(global.Math, 'random').mockReturnValue(1);
+    // Math.random() never returns 1, so the highest real roll (100) comes from just below it
+    vi.spyOn(global.Math, 'random').mockReturnValue(0.999);
     expect(await executeCommandAndSpyEditReply(
       slashCommand,
       getParsedCommand(
