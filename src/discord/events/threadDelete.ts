@@ -17,6 +17,7 @@ export const threadDelete: ThreadDeleteEvent = {
       type: AuditLogEvent.ThreadDelete,
       subject: `Thread **${thread.toString()}**`,
       action: 'deleted',
+      targetId: thread.id,
       caller: F,
     });
 
