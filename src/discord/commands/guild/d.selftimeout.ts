@@ -6,10 +6,11 @@ import {
   MessageFlags,
 } from 'discord.js';
 import { SlashCommand } from '../../@types/commandDef';
-import { parseDuration } from '../../../global/utils/parseDuration';
+import { parseDuration, validateDurationInput } from '../../../global/utils/parseDuration';
 import commandContext from '../../utils/context'; // eslint-disable-line
 
 const F = f(__filename);
+const MAX_SELF_TIMEOUT_MS = 14 * 24 * 60 * 60 * 1000;
 export const selfTimeout: SlashCommand = {
   data: new SlashCommandBuilder()
     .setName('selftimeout')
@@ -42,9 +43,17 @@ export const selfTimeout: SlashCommand = {
     }
 
     const target = interaction.member as GuildMember;
-    const duration = interaction.options.getString('duration');
+    const duration = interaction.options.getString('duration', true);
 
-    const durationValue = await parseDuration(`${duration}`);
+    // Validate the whole input first: the parser silently ignores what it does not understand, so a typo would
+    // otherwise become a shorter (or zero-length) timeout.
+    const durationValue = validateDurationInput(duration) ? await parseDuration(duration) : 0;
+    if (durationValue <= 0 || durationValue > MAX_SELF_TIMEOUT_MS) {
+      await interaction.editReply({
+        content: 'Please give a duration between 1 second and 2 weeks, like `30m`, `2 hours` or `1w 2d`!',
+      });
+      return false;
+    }
 
     await target.timeout(durationValue, 'Self timeout');
 
