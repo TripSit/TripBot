@@ -1,3 +1,4 @@
+/* eslint-disable sonarjs/no-duplicate-string */
 import { remindMe } from '../../commands/g.remindme';
 import { dbMock } from '../../../vitest/utils/mockDb';
 
@@ -59,6 +60,42 @@ describe('remindMe', () => {
       });
       expect(response).toContain('I deleted:');
       expect(response).toContain(DRINK_WATER);
+    });
+
+    // Regression test for TripSit/TripBot#1341: `get` lists by trigger time, so `delete` must use the same order
+    it('deletes the reminder shown at that number in the list, not the one created at that position', async () => {
+      const createdFirstTriggersLater = reminder({
+        id: 'first', reminder_text: 'created first', created_at: new Date('2024-01-01'), trigger_at: new Date('2024-06-01'),
+      });
+      const createdSecondTriggersSooner = reminder({
+        id: 'second', reminder_text: 'created second', created_at: new Date('2024-01-02'), trigger_at: new Date('2024-03-01'),
+      });
+      dbMock.users.upsert.mockResolvedValue(userRecord);
+      dbMock.user_reminders.findMany.mockResolvedValue([createdFirstTriggersLater, createdSecondTriggersSooner]);
+
+      const listed = await remindMe('get', userId, null, null, null) as Array<{ index: number, value: string }>;
+      expect(listed[0].value).toBe('created second');
+
+      const response = await remindMe('delete', userId, listed[0].index, null, null);
+      expect(dbMock.user_reminders.delete).toHaveBeenCalledWith({ where: { id: 'second' } });
+      expect(response).toContain('created second');
+    });
+
+    it('orders reminders with the same trigger time by creation time, then id', async () => {
+      const same = new Date('2024-05-05');
+      const later = reminder({
+        id: 'b', reminder_text: 'later', created_at: new Date('2024-01-02'), trigger_at: same,
+      });
+      const earlierHigherId = reminder({
+        id: 'z', reminder_text: 'earlier', created_at: new Date('2024-01-01'), trigger_at: same,
+      });
+      const sameTimeLowerId = reminder({
+        id: 'a', reminder_text: 'tie', created_at: new Date('2024-01-02'), trigger_at: same,
+      });
+      dbMock.users.upsert.mockResolvedValue(userRecord);
+      dbMock.user_reminders.findMany.mockResolvedValue([later, sameTimeLowerId, earlierHigherId]);
+      const listed = await remindMe('get', userId, null, null, null) as Array<{ value: string }>;
+      expect(listed.map(r => r.value)).toEqual(['earlier', 'tie', 'later']);
     });
   });
 
