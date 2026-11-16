@@ -116,8 +116,9 @@ describe('rpg helpers', () => {
 
   describe('arcade wager', () => {
     it('is capped and requires affordable bets', async () => {
-      // an existing wager record is created by the game screen; without one the lookup fails
-      await expect(rpgArcadeWager({ user: { id: 'nobody' }, customId: 'rpgBet,500' } as never)).rejects.toThrow();
+      // an existing wager record is created by the game screen; without one the user is told the game expired
+      const expired = await rpgArcadeWager({ user: { id: 'nobody' }, customId: 'rpgBet,500' } as never);
+      expect(expired).toEqual({ content: 'That game has expired, please open the arcade again.', embeds: [], components: [] });
     });
   });
 
@@ -536,8 +537,10 @@ describe('rpg arcade', () => {
     const poor = { ...player('arc-poor'), customId: 'rpgWager500,user:arc-poor' };
     mocks.persona.mockResolvedValue(persona({ tokens: 100 }));
     await rpgArcadeGame(poor as never, 'Coinflip');
-    // The "not enough" message is only rendered on the "you are betting" screen, so a first bet shows the plain intro.
-    expect(description(await rpgArcadeWager(poor as never))).toContain('How to play');
+    // Regression test for TripSit/TripBot#1376: a first bet the player can't afford explains why, above the intro.
+    const refused = description(await rpgArcadeWager(poor as never));
+    expect(refused).toContain("You don't have enough to bet that much");
+    expect(refused).toContain('How to play');
     const small = { ...player('arc-small'), customId: 'rpgWager0,user:arc-small' };
     mocks.persona.mockResolvedValue(persona({ tokens: 5000 }));
     await rpgArcadeGame(small as never, 'Coinflip');

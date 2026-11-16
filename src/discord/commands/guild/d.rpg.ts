@@ -3172,7 +3172,7 @@ export async function rpgArcadeGame(
     embeds: [arcadeEmbed(
       interaction,
       gameTitle,
-      `You start a game of ${gameName}.\n\n${instructions}\n\n${wallet}`,
+      `${message ?? ''}You start a game of ${gameName}.\n\n${instructions}\n\n${wallet}`,
       Colors.Green,
     )],
     components,
@@ -3187,12 +3187,17 @@ export async function getNewTimer(seconds: number) {
 export async function rpgArcadeWager(
   interaction: MessageComponentInteraction,
 ): Promise<InteractionUpdateOptions> {
+  // Wagers live in memory, so there is none after a restart or when the buttons are from an old game screen
+  if (!wagers[interaction.user.id]) {
+    return { content: 'That game has expired, please open the arcade again.', embeds: [], components: [] };
+  }
+
   // Check if there's already an existing wager that's at max bet (1000)
-  if (wagers[interaction.user.id] && wagers[interaction.user.id].tokens >= 1000) {
+  if (wagers[interaction.user.id].tokens >= 1000) {
     return rpgArcadeGame(interaction, wagers[interaction.user.id].gameName, undefined, '**Maximum bet is 1000 tokens**\n');
   }
 
-  const currentBet = wagers[interaction.user.id] ? wagers[interaction.user.id].tokens : 0;
+  const currentBet = wagers[interaction.user.id].tokens;
   const bet = parseInt(interaction.customId.slice(8), 10);
   let newBet = currentBet + (bet || 0);
 
