@@ -1,3 +1,5 @@
+import { DiscordAPIError, RESTJSONErrorCodes } from 'discord.js';
+
 const F = f(__filename);
 
 export default {
@@ -16,9 +18,13 @@ export default {
       try {
         const ban = await guild.bans.fetch(discordId);
         return { success: true, banned: true, reason: ban.reason };
-      } catch {
-        // User is not banned (Discord throws error if user isn't banned)
-        return { success: true, banned: false };
+      } catch (error) {
+        // Only Discord's explicit "Unknown Ban" answer confirms the user is not banned. Network failures or missing
+        // permissions must not read as "not banned", so everything else goes to the caller's failure handling.
+        if (error instanceof DiscordAPIError && error.code === RESTJSONErrorCodes.UnknownBan) {
+          return { success: true, banned: false };
+        }
+        throw error;
       }
     } catch (error) {
       log.error(F, `Error checking ban status: ${error}`);
