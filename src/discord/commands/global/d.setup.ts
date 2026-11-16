@@ -387,7 +387,7 @@ async function rules(
   await interaction.deferReply({ flags: MessageFlags.Ephemeral });
   await (interaction.channel as TextChannel).send({
     content: stripIndents`
-**By using and remaining connected to this discord you signify your agreement of TripSit's full terms and conditions: https://github.com/TripSit/rules/blob/main/termsofservice.md **
+**By using and remaining connected to this discord you signify your agreement of TripSit's full terms and conditions: https://tripsit.me/terms **
 If you do not agree to this policy, do not use this site.
 \u200B
  `,

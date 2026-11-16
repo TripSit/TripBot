@@ -51,6 +51,9 @@ describe('setup command', () => {
     const stub = slashStub({ subcommand: 'rules', channel });
     await setup.execute(stub as never);
     expect(channel.send.mock.calls.length).toBeGreaterThanOrEqual(3);
+    expect(channel.send).toHaveBeenNthCalledWith(1, expect.objectContaining({
+      content: expect.stringContaining('https://tripsit.me/terms'),
+    }));
   });
 
   it('ticketbooth posts the welcome button', async () => {

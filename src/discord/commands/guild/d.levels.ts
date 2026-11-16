@@ -27,7 +27,7 @@ const F = f(__filename);
 
 const fontSizeFamily = '25px futura';
 
-const levelCalculatorUrl = 'https://tripsit-levelling-calculator.netlify.app/';
+const levelCalculatorUrl = 'https://tripsit.me/levels';
 
 type LevelData = Awaited<ReturnType<typeof levels>>;
 type ProfileData = Awaited<ReturnType<typeof profile>>;
