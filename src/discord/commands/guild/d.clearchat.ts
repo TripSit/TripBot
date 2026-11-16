@@ -1,6 +1,8 @@
 import {
   SlashCommandBuilder,
   ChatInputCommandInteraction,
+  MessageFlags,
+  PermissionFlagsBits,
   TextChannel,
 } from 'discord.js';
 import { SlashCommand } from '../../@types/commandDef';
@@ -14,6 +16,7 @@ export const dClearchat: SlashCommand = {
     .setName('clear-chat')
     .setDescription('This will delete the last 100 messages!')
     .setIntegrationTypes([0])
+    .setDefaultMemberPermissions(PermissionFlagsBits.ManageMessages)
     .addIntegerOption(option => option
       .setDescription('Number of messages to delete (default/max: 99)')
       .setName('count'))
@@ -25,15 +28,30 @@ export const dClearchat: SlashCommand = {
       .setName('delete-archived-threads')) as SlashCommandBuilder,
   async execute(interaction:ChatInputCommandInteraction) {
     log.info(F, await commandContext(interaction));
+    const count = interaction.options.getInteger('count') ?? 99;
+    const deleteThreads = interaction.options.getBoolean('delete-threads') === true;
+    const deleteArchived = interaction.options.getBoolean('delete-archived-threads') === true;
+
+    // Deletion runs with the bot's permissions, so the caller must hold the matching permissions themselves.
+    // Default member permissions only hide the command; servers can change who may run it.
+    const caller = interaction.memberPermissions;
+    const missing = [
+      !caller?.has(PermissionFlagsBits.ManageMessages) && 'Manage Messages',
+      (deleteThreads || deleteArchived) && !caller?.has(PermissionFlagsBits.ManageThreads) && 'Manage Threads',
+    ].filter(Boolean);
+    if (missing.length > 0) {
+      await interaction.reply({
+        content: `You need the ${missing.join(' and ')} permission to do that!`,
+        flags: MessageFlags.Ephemeral,
+      });
+      return false;
+    }
+
     await interaction.deferReply({ });
     if (!interaction.channel) {
       await interaction.editReply({ content: GUILD_ONLY_TEXT });
       return false;
     }
-
-    const count = interaction.options.getInteger('count') ?? 99;
-    const deleteThreads = interaction.options.getBoolean('delete-threads') === true;
-    const deleteArchived = interaction.options.getBoolean('delete-archived-threads') === true;
 
     await interaction.editReply({ content: 'Clearing chat...' })
       .then(async msg => {
