@@ -27,6 +27,12 @@ const guildOf = (channels: unknown[]) => ({
 }) as unknown as Guild;
 
 describe('last', () => {
+  // Regression test for TripSit/TripBot#1348: a failing channel list must reject instead of leaving the caller hanging
+  it('rejects when the guild channels cannot be fetched', async () => {
+    const guild = { channels: { fetch: vi.fn().mockRejectedValue(new Error('no channels')) } } as unknown as Guild;
+    await expect(last(target, guild)).rejects.toThrow('no channels');
+  });
+
   it('reports when the user has no messages', async () => {
     const result = await last(target, guildOf([textChannel('c1', [message('other', 'hi', '2024-01-01')])]));
     expect(result).toEqual({
