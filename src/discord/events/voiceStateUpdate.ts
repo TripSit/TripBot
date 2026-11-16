@@ -18,17 +18,20 @@ export const voiceStateUpdate: VoiceStateUpdateEvent = {
     log.info(F, `${New.member?.displayName} changed voice state`);
     const channelAuditlog = await New.guild.channels.fetch(env.CHANNEL_AUDITLOG) as TextChannel;
 
-    let modMessage = '';
-    if (Old.channel) {
-      if (New.channel) {
-        modMessage = `${Old.member?.displayName} left ${Old.channel.name} and joined ${New.channel.name}`;
+    // Mute, deafen and stream changes keep the same channel, so only a changed channel is a join, leave or move
+    if (Old.channelId !== New.channelId) {
+      let modMessage = '';
+      if (Old.channel) {
+        if (New.channel) {
+          modMessage = `${Old.member?.displayName} left ${Old.channel.name} and joined ${New.channel.name}`;
+        } else {
+          modMessage = `${Old.member?.displayName} left ${Old.channel.name}`;
+        }
       } else {
-        modMessage = `${Old.member?.displayName} left ${Old.channel.name}`;
+        modMessage = `${New.member?.displayName} joined ${New.channel?.name}`;
       }
-    } else {
-      modMessage = `${New.member?.displayName} joined ${New.channel?.name}`;
+      channelAuditlog.send(modMessage);
     }
-    channelAuditlog.send(modMessage);
 
     if (New.channelId === env.CHANNEL_CAMPFIRE) {
       // If the user joined the campfire channel, pitch a new tent
