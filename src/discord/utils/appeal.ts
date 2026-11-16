@@ -1,6 +1,7 @@
 /* eslint-disable sonarjs/no-duplicate-string */
 import {
-  ButtonInteraction, Guild, InteractionEditReplyOptions, ModalSubmitInteraction,
+  ButtonInteraction, DiscordAPIError, Guild, InteractionEditReplyOptions, ModalSubmitInteraction,
+  RESTJSONErrorCodes,
 } from 'discord.js';
 import { appeal_status, appeals } from '@db/tripbot';
 import { getOrCreateUser } from '../../global/utils/dbRecords';
@@ -22,6 +23,8 @@ async function updateAppeal(
   discordId: string,
   userMessage: string,
   appealStatus: appeal_status,
+  // Runs after the transition is validated and before the decision is saved; a returned string aborts the update.
+  beforeSave?: () => Promise<string | undefined>,
 ): Promise<{ success: boolean; message: string }> {
   // Get or create user by discord_id
   const userData = await getOrCreateUser(discordId);
@@ -59,6 +62,11 @@ async function updateAppeal(
   }
   // Allow: RECEIVED → any status, DENIED → ACCEPTED
 
+  const abortMessage = await beforeSave?.();
+  if (abortMessage) {
+    return { success: false, message: abortMessage };
+  }
+
   // Update only that specific appeal
   await db.appeals.update({
     where: {
@@ -91,17 +99,30 @@ export async function appealAccept(
   // Sanitize moderator input to prevent XSS (Yes, I know. This will never be necessary, but good practice)
   const userMessage = sanitizeAppealMessage(rawUserMessage);
 
-  const result = await updateAppeal(interaction.guild, userId, userMessage, 'ACCEPTED' as appeal_status);
+  const { guild } = interaction;
+  // Lift the ban before saving the decision, so a failed unban leaves the appeal open for a retry
+  // instead of recording an accepted appeal for a user who is still banned.
+  const unban = async (): Promise<string | undefined> => {
+    try {
+      await guild.bans.remove(userId, 'Ban appeal accepted by moderator');
+    } catch (err) {
+      // Unknown Ban means the user is already not banned, which is the outcome we want
+      if (err instanceof DiscordAPIError && err.code === RESTJSONErrorCodes.UnknownBan) {
+        return undefined;
+      }
+      log.error(F, `Error unbanning user: ${err}`);
+      return `I could not remove <@${userId}>'s ban, so the appeal was not marked accepted. `
+        + 'Check my permissions and try again.';
+    }
+    return undefined;
+  };
+
+  const result = await updateAppeal(guild, userId, userMessage, 'ACCEPTED' as appeal_status, unban);
 
   if (!result.success) {
     return { content: result.message };
   }
 
-  try {
-    await interaction.guild.bans.remove(userId, 'Ban appeal accepted by moderator');
-  } catch (err) {
-    log.error(F, `Error unbanning user: ${err}`);
-  }
   return { content: `<@${userId}> has been unbanned and their appeal approved.` };
 }
 
