@@ -254,7 +254,7 @@ async function deleteStaleThread(thread: ThreadChannel, channel: TextChannel): P
     const lastUserMessage = userMessages.first();
 
     // Determine if this message was sent longer than a week ago
-    if (lastUserMessage && DateTime.fromJSDate(lastUserMessage.createdAt) >= DateTime.local().minus({ days: 5 })) {
+    if (lastUserMessage && DateTime.fromJSDate(lastUserMessage.createdAt) <= DateTime.local().minus({ days: 5 })) {
       thread.delete();
       log.debug(F, `Deleted thread ${thread.name} in ${channel.name} because the last user message was sent over 5 days ago`);
     }

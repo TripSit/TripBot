@@ -387,21 +387,28 @@ describe('tickets', () => {
 
     it('inspects archived threads and tolerates failures', async () => {
       const recent = { createdAt: new Date(), system: false };
+      const stale = { createdAt: new Date(Date.now() - 6 * 86_400_000), system: false };
       const system = { createdAt: new Date(), system: true };
       const good = {
         name: 'a', fetch: vi.fn(), delete: vi.fn(), messages: { fetch: vi.fn(async () => messages([system, recent])) },
+      };
+      const idle = {
+        name: 'd', fetch: vi.fn(), delete: vi.fn(), messages: { fetch: vi.fn(async () => messages([system, stale])) },
       };
       const empty = {
         name: 'b', fetch: vi.fn(), delete: vi.fn(), messages: { fetch: vi.fn(async () => messages([system])) },
       };
       const broken = { name: 'c', fetch: vi.fn(async () => { throw new Error('gone'); }), delete: vi.fn() };
-      const threads = new Map<string, any>([['1', good], ['2', empty], ['3', broken]]);
+      const threads = new Map<string, any>([['1', good], ['2', empty], ['3', broken], ['4', idle]]);
       const { guild } = makeGuild();
       guild.channels.fetch = vi.fn(async () => ({ name: 'tripsit', threads: { fetch: vi.fn(async () => ({ threads })) } }));
       client().guilds.fetch = vi.fn(async () => guild);
       const { run } = await start();
       await run('tickets');
       expect(good.messages.fetch).toHaveBeenCalledWith({ limit: 10 });
+      // Regression test for TripSit/TripBot#1368: only threads idle for over 5 days are pruned, not recently active ones
+      expect(idle.delete).toHaveBeenCalled();
+      expect(good.delete).not.toHaveBeenCalled();
       expect(empty.delete).not.toHaveBeenCalled();
       expect(broken.delete).not.toHaveBeenCalled();
     });
