@@ -6,6 +6,15 @@
 **/.npmrc
 **/*.pem
 **/*.key
+**/*.p12
+**/*.pfx
+**/*.crt
+**/*.cer
+**/*.der
+**/*.jks
+**/*.keystore
+**/id_rsa*
+**/id_ed25519*
 **/node_modules
 **/generated
 build
@@ -17,3 +26,4 @@ npm-debug.log*
 *.tsbuildinfo
 .vscode
 .idea
+.claude
