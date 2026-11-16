@@ -27,16 +27,16 @@ async function birthdayGet(
     return;
   }
   embed.setTitle(`${member.displayName}'s birthday is ${response.toFormat('LLLL d')}`);
-  // Determine how long until the birthday, even if the year is different
-  const now = DateTime.utc();
-  const birthdayDate = response;
-  const birthdayThisYear = birthdayDate.set({ year: now.year });
-  const birthdayNextYear = birthdayDate.set({ year: now.year + 1 });
-  const daysUntilBirthday = birthdayThisYear.diff(now, 'days').toObject().days as number;
-  const daysUntilBirthdayNextYear = birthdayNextYear.diff(now, 'days').toObject().days as number;
-  let daysUntil = daysUntilBirthday;
-  if (daysUntilBirthday < 0) {
-    daysUntil = daysUntilBirthdayNextYear;
+  // Compare whole calendar days (UTC) so the birthday itself counts as zero days left, not 365
+  const today = DateTime.utc().startOf('day');
+  const birthdayIn = (year: number) => DateTime.utc(
+    year,
+    response.month,
+    Math.min(response.day, DateTime.utc(year, response.month).daysInMonth as number),
+  );
+  let daysUntil = Math.round(birthdayIn(today.year).diff(today, 'days').days);
+  if (daysUntil < 0) {
+    daysUntil = Math.round(birthdayIn(today.year + 1).diff(today, 'days').days);
   }
   if (daysUntil === 0) {
     embed.setDescription('Happy birthday!');

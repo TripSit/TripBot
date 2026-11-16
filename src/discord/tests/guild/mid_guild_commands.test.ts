@@ -47,13 +47,27 @@ describe('birthday', () => {
     expect(embed(await run('get')).description).toMatch(/Only \d+ days left/);
   });
 
-  // TripSit/TripBot#1371: on the birthday itself the diff is slightly negative, so it reports 365 days.
-  it.fails('get greets the user on their birthday', async () => {
+  // Regression test for TripSit/TripBot#1371: the birthday itself used to report 365 days left.
+  it('get greets the user on their birthday', async () => {
     vi.useFakeTimers({ toFake: ['Date'] });
     try {
       vi.setSystemTime(new Date('2026-05-04T12:00:00Z'));
       mocks.birthday.mockResolvedValueOnce(DateTime.utc(2000, 5, 4));
       expect(embed(await run('get')).description).toBe('Happy birthday!');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('get counts a leap-day birthday in a non-leap year and rolls past birthdays to next year', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    try {
+      vi.setSystemTime(new Date('2026-02-27T12:00:00Z'));
+      mocks.birthday.mockResolvedValueOnce(DateTime.utc(2000, 2, 29));
+      expect(embed(await run('get')).description).toBe('Only 1 days left!');
+      vi.setSystemTime(new Date('2026-05-05T12:00:00Z'));
+      mocks.birthday.mockResolvedValueOnce(DateTime.utc(2000, 5, 4));
+      expect(embed(await run('get')).description).toBe('Only 364 days left!');
     } finally {
       vi.useRealTimers();
     }
