@@ -14,8 +14,8 @@ export default coinflip;
  * @return {string}
  */
 export async function coinflip():Promise<string> {
-  // Get a random number between 0 and 1000
-  const random = Math.floor(Math.random() * 100);
+  // Get a random number from 0 to 100 inclusive (101 outcomes, so the inflation result at 100 is reachable)
+  const random = Math.floor(Math.random() * 101);
   let side;
 
   // Normal, boring, coin flip
@@ -33,7 +33,7 @@ export async function coinflip():Promise<string> {
   } else if (random === 2) {
     side = 'The coin rolled off the table?!';
   } else if (random === 3) {
-    side = `${Math.floor(Math.random() * 6)}! Oh that's a dice...`;
+    side = `${Math.floor(Math.random() * 6) + 1}! Oh that's a dice...`;
   } else if (random === 4) {
     side = 'The coin kept spinning in the air?!';
   } else if (random === 96) {
