@@ -1,5 +1,5 @@
 /* eslint-disable max-len, sonarjs/no-duplicate-string, no-restricted-syntax, no-await-in-loop */
-import { ChannelType } from 'discord.js';
+import { ChannelType, PermissionFlagsBits } from 'discord.js';
 import { dDonate } from '../../commands/guild/d.donate';
 import { mQuote } from '../../commands/guild/m.quote';
 import { dSheesh } from '../../commands/guild/d.sheesh';
@@ -140,6 +140,9 @@ describe('timezone', () => {
   });
 });
 
+const MANAGE_MESSAGES = String(PermissionFlagsBits.ManageMessages);
+const MANAGE_THREADS = String(PermissionFlagsBits.ManageThreads);
+
 describe('clear-chat', () => {
   const channel = () => ({
     bulkDelete: vi.fn(),
@@ -148,8 +151,9 @@ describe('clear-chat', () => {
       fetchArchived: vi.fn(async () => ({ threads: new Map([['b', { delete: vi.fn() }]]) })),
     },
   });
-  const run = async (options: Record<string, unknown>, chan: unknown = channel()) => {
-    const stub = slashStub({ options, channel: chan });
+  const allowed = (...names: string[]) => ({ has: (flag: bigint) => names.includes(String(flag)) });
+  const run = async (options: Record<string, unknown>, chan: unknown = channel(), granted = [MANAGE_MESSAGES, MANAGE_THREADS]) => {
+    const stub = slashStub({ options, channel: chan, extra: { memberPermissions: allowed(...granted) } });
     stub.editReply.mockResolvedValue({ delete: vi.fn() });
     const result = await dClearchat.execute(stub as never);
     await flushPromises();
@@ -169,6 +173,27 @@ describe('clear-chat', () => {
     expect(all.chan.bulkDelete).toHaveBeenCalledWith(10, true);
     expect(all.chan.threads.fetch).toHaveBeenCalled();
     expect(all.chan.threads.fetchArchived).toHaveBeenCalled();
+  });
+
+  // Regression test for TripSit/TripBot#1358: the command used to delete with the bot's permissions for anyone.
+  it('refuses callers without Manage Messages before deleting anything', async () => {
+    const none = await run({ 'delete-threads': true }, channel(), []);
+    expect(none.result).toBe(false);
+    expect(none.stub.reply).toHaveBeenCalledWith(expect.objectContaining({ content: expect.stringContaining('Manage Messages') }));
+    expect(none.stub.deferReply).not.toHaveBeenCalled();
+    expect(none.chan.bulkDelete).not.toHaveBeenCalled();
+    expect(none.chan.threads.fetch).not.toHaveBeenCalled();
+  });
+
+  it('needs Manage Threads on top of Manage Messages to delete threads', async () => {
+    const noThreads = await run({ 'delete-archived-threads': true }, channel(), [MANAGE_MESSAGES]);
+    expect(noThreads.result).toBe(false);
+    expect(noThreads.stub.reply).toHaveBeenCalledWith(expect.objectContaining({ content: expect.stringContaining('Manage Threads') }));
+    expect(noThreads.chan.bulkDelete).not.toHaveBeenCalled();
+    expect(noThreads.chan.threads.fetchArchived).not.toHaveBeenCalled();
+    // Plain message clearing only needs Manage Messages
+    const plain = await run({}, channel(), [MANAGE_MESSAGES]);
+    expect(plain.chan.bulkDelete).toHaveBeenCalledWith(99, true);
   });
 });
 
@@ -302,7 +327,11 @@ describe('subcommand defaults and thread cleanup failures', () => {
         fetchArchived: vi.fn(async () => ({ threads: new Map([['b', boom]]) })),
       },
     };
-    const stub = slashStub({ options: { 'delete-threads': true, 'delete-archived-threads': true }, channel: chan });
+    const stub = slashStub({
+      options: { 'delete-threads': true, 'delete-archived-threads': true },
+      channel: chan,
+      extra: { memberPermissions: { has: () => true } },
+    });
     stub.editReply.mockResolvedValue({ delete: vi.fn() });
     expect(await dClearchat.execute(stub as never)).toBe(true);
     await flushPromises();
