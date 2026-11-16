@@ -33,6 +33,7 @@ const role = (id: string, over: Record<string, unknown> = {}) => ({
 
 const guildOf = (over: Record<string, unknown> = {}) => ({
   id: 'g1',
+  ownerId: 'owner',
   premiumTier: 0,
   members: { me: { roles: { highest: role('bot') } } },
   roles: { fetch: vi.fn(async (id: string) => role(id)), create: vi.fn(async () => ({ id: 'new' })) },
@@ -47,7 +48,11 @@ const text = () => ({
 describe('setupCustomReactionRole', () => {
   const run = async (options: Record<string, unknown>, over: Record<string, unknown> = {}) => {
     const stub = slashStub({
-      options: { role: role('r1'), ...options }, guild: guildOf(), channel: text(), ...over,
+      options: { role: role('r1'), ...options },
+      guild: guildOf(),
+      channel: text(),
+      member: { id: 'm1', roles: { highest: role('invoker') } },
+      ...over,
     });
     await setupCustomReactionRole(stub as never);
     return stub;
@@ -76,19 +81,40 @@ describe('setupCustomReactionRole', () => {
     expect(reply(stub)).toContain('My role needs to be higher');
   });
 
+  it('refuses roles at or above the invoker\'s own highest role, unless they own the server', async () => {
+    const high = role('r1', { comparePositionTo: () => 0 });
+    const refused = await run({ label: 'x', role: high });
+    expect(reply(refused)).toContain('Your highest role must be above');
+    expect(refused.showModal).not.toHaveBeenCalled();
+    const owner = slashStub({
+      options: { role: high, label: 'x' },
+      guild: guildOf({ ownerId: 'm1' }),
+      channel: text(),
+      member: { id: 'm1', roles: { highest: role('invoker') } },
+    });
+    owner.awaitModalSubmit.mockReturnValue(new Promise(() => {}));
+    await setupCustomReactionRole(owner as never);
+    expect(owner.showModal).toHaveBeenCalled();
+  });
+
   it('collects a description and posts the button', async () => {
     const channel = text();
     const submit = {
       customId: '"ID":"RR","II":"int1"', deferReply: vi.fn(), editReply: vi.fn(), fields: { getTextInputValue: vi.fn(() => 'v') },
     };
-    const stub = slashStub({ options: { role: role('r1'), emoji: '😀', label: 'Click' }, guild: guildOf(), channel });
+    const member = { id: 'm1', roles: { highest: role('invoker') } };
+    const stub = slashStub({
+      options: { role: role('r1'), emoji: '😀', label: 'Click' }, guild: guildOf(), channel, member,
+    });
     stub.awaitModalSubmit.mockImplementationOnce(resolvingModal(submit));
     await setupCustomReactionRole(stub as never);
     await flushPromises();
     expect(stub.showModal).toHaveBeenCalled();
     expect(channel.send).toHaveBeenCalledTimes(1);
     expect(submit.editReply).toHaveBeenCalled();
-    const other = slashStub({ options: { role: role('r1'), label: 'x' }, guild: guildOf(), channel });
+    const other = slashStub({
+      options: { role: role('r1'), label: 'x' }, guild: guildOf(), channel, member,
+    });
     const foreign = { ...submit, customId: '"ID":"RR","II":"zzz"', deferReply: vi.fn() };
     other.awaitModalSubmit.mockImplementationOnce(resolvingModal(foreign));
     await setupCustomReactionRole(other as never);
@@ -150,12 +176,43 @@ describe('buttonReactionRole', () => {
     expect(high.member.roles.remove).not.toHaveBeenCalled();
   });
 
-  // TripSit/TripBot#1324: IM is serialised as a JSON boolean but compared to the string 'true', so the intro flow is never reached.
-  it('treats a boolean intro flag as "no intro" (current behaviour, #1324)', async () => {
+  // TripSit/TripBot#1324: the intro channel must be stored as a quoted id so the button id stays valid JSON.
+  it('stores the intro settings in a button id that buttonReactionRole can read back', async () => {
+    const channel = text();
+    const submit = {
+      customId: '"ID":"RR","II":"int1"', deferReply: vi.fn(), editReply: vi.fn(), fields: { getTextInputValue: vi.fn(() => 'v') },
+    };
+    const member = { id: 'm1', roles: { highest: role('invoker') } };
+    const stub = slashStub({
+      options: {
+        role: role('r1'), label: 'Click', intro_message: true, intro_channel: { id: 'intro1', type: ChannelType.GuildText },
+      },
+      guild: guildOf(),
+      channel,
+      member,
+    });
+    stub.awaitModalSubmit.mockImplementationOnce(resolvingModal(submit));
+    await setupCustomReactionRole(stub as never);
+    await flushPromises();
+    const sent = channel.send.mock.calls[0][0] as { components: Array<{ components: Array<{ data: { custom_id: string } }> }> };
+    const customId = sent.components[0].components[0].data.custom_id;
+    expect(JSON.parse(`{${customId}}`)).toEqual({
+      ID: 'RR', RID: 'r1', IM: true, IC: 'intro1',
+    });
+    const click = button(customId, []);
+    await buttonReactionRole(click as never);
+    expect(click.showModal).toHaveBeenCalled();
+  });
+
+  // TripSit/TripBot#1324: the intro flag is stored as a JSON boolean, and older buttons used the string 'true'.
+  it('starts the intro flow when the intro flag is a JSON boolean', async () => {
     const b = button(id('r1', true, '123'), ['r1']);
     await buttonReactionRole(b as never);
-    expect(b.showModal).not.toHaveBeenCalled();
-    expect(b.member.roles.remove).toHaveBeenCalled();
+    expect(b.showModal).toHaveBeenCalled();
+    const none = button(id('r1', null, null), ['r1']);
+    await buttonReactionRole(none as never);
+    expect(none.showModal).not.toHaveBeenCalled();
+    expect(none.member.roles.remove).toHaveBeenCalled();
   });
 
   describe('intro flow (string flag)', () => {
@@ -184,7 +241,7 @@ describe('buttonReactionRole', () => {
 
     const joinFlow = async (channelId: string) => {
       const sent: unknown[] = [];
-      const makeChannel = (cid: string) => ({ id: cid, send: vi.fn((m: unknown) => { sent.push(m); }), toString: (): string => `<#${cid}>` });
+      const makeChannel = (cid: string) => ({ id: cid, send: vi.fn((m: unknown) => { sent.push(typeof m === 'string' ? m : (m as { content: string }).content); }), toString: (): string => `<#${cid}>` });
       const guild = guildOf({ channels: { fetch: vi.fn(async (cid: string) => makeChannel(cid)) } });
       const submit = {
         customId: '"ID":"RR","II":"i1"', deferReply: vi.fn(), editReply: vi.fn(), guild, member: { displayName: 'M' }, fields: { getTextInputValue: vi.fn(() => 'line1\nline2') },
@@ -245,7 +302,10 @@ describe('buttonReactionRole', () => {
     const b = button(id('r1', false, 'chan'), [], guild);
     await buttonReactionRole(b as never);
     expect(b.member.roles.add).toHaveBeenCalled();
-    expect(send).toHaveBeenCalledWith(expect.stringContaining('has joined'));
+    expect(send).toHaveBeenCalledWith({
+      content: expect.stringContaining('has joined'),
+      allowedMentions: { users: [expect.anything()] },
+    });
   });
 
   describe('colour / mindset groups', () => {
@@ -414,7 +474,7 @@ describe('message creators', () => {
 });
 
 describe('reaction_role command', () => {
-  const memberWith = (perm: boolean) => ({ id: 'u1', permissions: { has: () => perm } });
+  const memberWith = (perm: boolean) => ({ id: 'u1', permissions: { has: () => perm }, roles: { highest: role('invoker') } });
   const run = async (subcommand: string, over: Record<string, unknown> = {}, guildData: Record<string, unknown> = { partner: true }) => {
     mocks.guild.mockResolvedValue(guildData);
     mocks.missing.mockResolvedValue(null);

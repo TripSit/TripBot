@@ -9,7 +9,6 @@ import {
   Guild,
   InteractionReplyOptions,
   TextBasedChannel,
-  GuildBasedChannel,
   GuildMember,
   Role,
   SlashCommandBuilder,
@@ -112,6 +111,16 @@ export async function setupCustomReactionRole(
     return;
   }
 
+  // Don't let someone hand out a role that sits at or above their own
+  const invoker = interaction.member as GuildMember;
+  if (interaction.guild.ownerId !== invoker.id && role.comparePositionTo(invoker.roles.highest) >= 0) {
+    await interaction.reply({
+      embeds: [errorEmbed(`Error: Your highest role must be above ${role} to create a reaction role for it.`)],
+      flags: MessageFlags.Ephemeral,
+    });
+    return;
+  }
+
   await interaction.showModal(new ModalBuilder()
     .setCustomId(`"ID":"RR","II":"${interaction.id}"`)
     .setTitle(`${role.name} Description`)
@@ -140,7 +149,7 @@ export async function setupCustomReactionRole(
       if (II !== interaction.id) return;
       await i.deferReply({ flags: MessageFlags.Ephemeral });
       const button = new ButtonBuilder()
-        .setCustomId(`"ID":"RR","RID":"${role.id}","IM":${introMessageRequired},"IC":${messagePostChannel as GuildBasedChannel | null}`)
+        .setCustomId(`"ID":"RR","RID":"${role.id}","IM":${introMessageRequired === true},"IC":${JSON.stringify(messagePostChannel?.id ?? null)}`)
         .setStyle(ButtonStyle.Primary);
       if (emoji) button.setEmoji(emoji);
       if (label) button.setLabel(label);
@@ -240,6 +249,11 @@ async function postIntroduction(
   role: Role,
   introMessage: string,
 ): Promise<void> {
+  // The typed introduction is user text, so only the pings this announcement intends can go out
+  const send = (content: string) => channel.send({
+    content,
+    allowedMentions: { users: [target.id], roles: [roleTeamtripsit.id] },
+  });
   if (channel.id === env.CHANNEL_TRIPSITMETA) {
     const channelTripsit = await guild.channels.fetch(env.CHANNEL_TRIPSIT) as TextChannel;
     const hrCategory = await guild.channels.fetch(env.CATEGORY_HARMREDUCTIONCENTRE) as CategoryChannel;
@@ -248,7 +262,7 @@ async function postIntroduction(
   Hey ${roleTeamtripsit}, ${target.displayName} has joined as a ${role.name}, please welcome them!
   A little about them:
   ${introMessage}`;
-    await channel.send(intro);
+    await send(intro);
     const followup = stripIndents`Some important information for you ${target}!
   1) You now have access this this channel, which is used to coordinate with others!
   - Please use this room to ask for help if you're overwhelmed, and feel free to make a thread if it gets busy!
@@ -275,7 +289,7 @@ async function postIntroduction(
   <https://discord.com/invite/H3yRwc7>
 
   **If you have any questions, please reach out!**`;
-    await channel.send(followup);
+    await send(followup);
   } else if (channel.id === env.CHANNEL_DEVELOPMENT) {
     const devCategory = await guild.channels.fetch(env.CATEGORY_DEVELOPMENT) as CategoryChannel;
     const channelTripcord = await guild.channels.fetch(env.CHANNEL_DISCORD) as TextChannel;
@@ -287,7 +301,7 @@ async function postIntroduction(
   A little about them:
   ${introMessage}`;
 
-    channel.send(intro);
+    send(intro);
 
     const followup = stripIndents`Some info for you ${target}:
 
@@ -316,9 +330,9 @@ async function postIntroduction(
 
   If you have any questions, please reach out to a moderator or the lead dev!`;
 
-    channel.send(followup);
+    send(followup);
   } else {
-    channel.send(stripIndents`
+    send(stripIndents`
   ${target} has joined as a ${role.name}, please welcome them!
 
   A little about them:
@@ -540,14 +554,15 @@ export async function buttonReactionRole(
     IC,
   } = JSON.parse(`{${interaction.customId}}`) as {
     RID:string,
-    IM?:string,
-    IC?:string,
+    IM?:boolean | string | null,
+    IC?:string | null,
   };
   if (!interaction.guild) return;
   if (!interaction.member) return;
   if (!interaction.channel) return;
 
-  const introMessageRequired = IM === 'true';
+  // Older buttons stored IM as the string 'true'; new ones store a JSON boolean
+  const introMessageRequired = IM === true || IM === 'true';
 
   // If the intro message isn't required, then there is no modal, so defer
   if (!introMessageRequired) {
@@ -560,7 +575,7 @@ export async function buttonReactionRole(
     return;
   }
 
-  const channelProvided = IC;
+  const channelProvided = IC ?? undefined;
 
   const target = interaction.member as GuildMember;
   // If the user already has the role, remove it
@@ -634,7 +649,10 @@ export async function buttonReactionRole(
     await target.roles.add(role);
     await interaction.editReply({ content: `Added role ${role.name}` });
     // Post intro message to the channel
-    channel.send(`${target} has joined as a ${role.name}, please welcome them!`);
+    channel.send({
+      content: `${target} has joined as a ${role.name}, please welcome them!`,
+      allowedMentions: { users: [target.id] },
+    });
   } else {
     await addRoleWithGroupRules(interaction, interaction.guild, interaction.channel.id, role, target);
   }
