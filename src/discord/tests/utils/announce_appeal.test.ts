@@ -1,5 +1,7 @@
 /* eslint-disable no-restricted-syntax */
-import { DMChannel, TextChannel } from 'discord.js';
+import {
+  DMChannel, DiscordAPIError, RESTJSONErrorCodes, TextChannel,
+} from 'discord.js';
 import { appealAccept, appealReject, appealReminder } from '../../utils/appeal';
 import { dbMock } from '../../../vitest/utils/mockDb';
 import { stubInstance } from '../../../vitest/utils/discordStubs';
@@ -127,6 +129,7 @@ describe('announcements', () => {
 });
 
 describe('appeals', () => {
+  const UNBANNED = 'has been unbanned';
   const user = { id: 'uid', mod_thread_id: 'thread' };
   const interaction = (over: Record<string, unknown> = {}) => ({
     guild: { id: 'g1', bans: { remove: vi.fn() } }, customId: 'appeal~accept~user123', ...over,
@@ -160,14 +163,32 @@ describe('appeals', () => {
     });
   });
 
-  it('unbans on acceptance, tolerating unban failures', async () => {
+  it('unbans on acceptance before saving the decision', async () => {
     latest('RECEIVED');
     const i = interaction();
+    const { remove } = (i as { guild: { bans: { remove: ReturnType<typeof vi.fn> } } }).guild.bans;
     expect(await appealAccept(i, modal())).toEqual({ content: '<@user123> has been unbanned and their appeal approved.' });
-    expect((i as { guild: { bans: { remove: ReturnType<typeof vi.fn> } } }).guild.bans.remove).toHaveBeenCalledWith('user123', expect.any(String));
+    expect(remove).toHaveBeenCalledWith('user123', expect.any(String));
+    expect(remove.mock.invocationCallOrder[0]).toBeLessThan(dbMock.appeals.update.mock.invocationCallOrder[0]);
+  });
+
+  it('does not save the acceptance or claim success when the unban fails', async () => {
+    latest('RECEIVED');
     const failing = interaction();
-    (failing as { guild: { bans: { remove: ReturnType<typeof vi.fn> } } }).guild.bans.remove.mockRejectedValue(new Error('Unknown Ban'));
-    expect((await appealAccept(failing, modal())).content).toContain('has been unbanned');
+    (failing as { guild: { bans: { remove: ReturnType<typeof vi.fn> } } }).guild.bans.remove.mockRejectedValue(new Error('Missing Permissions'));
+    const { content } = await appealAccept(failing, modal());
+    expect(content).toContain('could not remove');
+    expect(content).not.toContain(UNBANNED);
+    expect(dbMock.appeals.update).not.toHaveBeenCalled();
+  });
+
+  it('treats Unknown Ban as already unbanned and still records the acceptance', async () => {
+    latest('RECEIVED');
+    const gone = interaction();
+    const err = new DiscordAPIError({ code: RESTJSONErrorCodes.UnknownBan, message: 'Unknown Ban' }, RESTJSONErrorCodes.UnknownBan, 404, 'DELETE', '', {});
+    (gone as { guild: { bans: { remove: ReturnType<typeof vi.fn> } } }).guild.bans.remove.mockRejectedValue(err);
+    expect((await appealAccept(gone, modal())).content).toContain(UNBANNED);
+    expect(dbMock.appeals.update).toHaveBeenCalledTimes(1);
   });
 
   it('confirms rejections', async () => {
@@ -181,7 +202,7 @@ describe('appeals', () => {
     expect((await appealReject(interaction(), modal())).content).toContain('cannot be changed');
     latest('DENIED');
     expect((await appealReject(interaction(), modal())).content).toContain('already been denied');
-    expect((await appealAccept(interaction(), modal())).content).toContain('has been unbanned');
+    expect((await appealAccept(interaction(), modal())).content).toContain(UNBANNED);
     expect(dbMock.appeals.update).toHaveBeenCalledTimes(1);
   });
 
