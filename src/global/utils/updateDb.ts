@@ -381,26 +381,21 @@ const TS_STRENGTHS = [
   'Fatal',
 ];
 
-/** Turns text like "10-20mg" into "10-20 mg", or null when it doesn't contain a number. */
-function parseDoseValue(strengthData: string): string | null {
-  // This essentially looks for "(any digit) (optional dash) (any digit) (optional unit)"
-  const regex = /(\d+(?:\.\d+)?)(?:-(\d+(?:\.\d+)?))?([a-zA-Z]+)?/;
-  const match = RegExp(regex).exec(strengthData);
+/**
+ * Turns plain doses like "10-20mg" into "10-20 mg". Anything that does not fit that exact shape ("200mg+",
+ * "50mg-70mg", "100+mg", "7.5-15mg/kg") keeps the TripSit wording, because rebuilding it would drop the "or more",
+ * the unit or the upper bound. Returns null when the text has no number.
+ */
+export function parseDoseValue(strengthData: string): string | null {
+  const text = strengthData.trim().replace(/\.+$/, '');
+  if (!/\d/.test(text)) return null;
 
-  // This is mostly for type-safety
-  if (!match) return null;
+  const plain = /^(\d+(?:\.\d+)?)(?:-(\d+(?:\.\d+)?))?([a-zA-Z]+)?$/.exec(text);
+  if (!plain) return text;
 
-  // The minimum number is the first number to appear
-  const strengthMinNumber = parseFloat(match[1]);
-
-  // The max number may not appear at all
-  const strengthMaxNumber = match[2]
-    ? parseFloat(match[2])
-    : null;
-
-  const roaUnit = match[3] ? match[3] : '';
-  const maxString = strengthMaxNumber ? `-${strengthMaxNumber}` : '';
-  return `${strengthMinNumber}${maxString} ${roaUnit}`;
+  const [, min, max, unit = ''] = plain;
+  const maxString = max ? `-${parseFloat(max)}` : '';
+  return `${parseFloat(min)}${maxString} ${unit}`;
 }
 
 /** Adds the dosage of one route of administration from the TripSit data to the combined drug. */
