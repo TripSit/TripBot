@@ -1087,6 +1087,12 @@ export async function tripSitMe(
     return null;
   }
 
+  // The team announcement below needs the meta channel, so stop before creating a thread that would be orphaned
+  if (!channelTripsitmeta.id) {
+    await interaction.editReply({ content: 'No tripsit meta channel found! Make sure to run /setup tripsit' });
+    return null;
+  }
+
   // Create a new thread in the channel
   // If we're not in production we need to create a public thread
   const threadHelpUser = await tripsitChannel.threads.create({
