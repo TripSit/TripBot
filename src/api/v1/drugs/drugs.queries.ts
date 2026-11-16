@@ -69,10 +69,10 @@ export default {
     msg: string;
     options?: string[];
   }> {
-    const drug = drugData[drugName.toLowerCase()];
-
-    if (drug) {
-      return drug;
+    // Only own properties are drugs: inherited keys such as 'constructor' would otherwise be returned as a "drug"
+    const key = drugName.toLowerCase();
+    if (Object.hasOwn(drugData, key)) {
+      return drugData[key];
     }
     return {
       err: true,

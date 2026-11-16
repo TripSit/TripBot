@@ -30,6 +30,11 @@ describe('drug queries (legacy v1)', () => {
     const [name] = await queries.getAllDrugNames();
     expect(await queries.getDrug(name.toUpperCase())).toMatchObject({ name: expect.any(String) });
     expect(await queries.getDrug('definitely-not-a-drug')).toMatchObject({ err: true, options: expect.any(Array) });
+    // Regression test for TripSit/TripBot#1345: inherited object properties are not drugs
+    const missing = { err: true, msg: 'Drug with that name not found, please try again.', options: expect.any(Array) };
+    await expect(queries.getDrug('constructor')).resolves.toMatchObject(missing);
+    await expect(queries.getDrug('__proto__')).resolves.toMatchObject(missing);
+    await expect(queries.getDrug('toString')).resolves.toMatchObject(missing);
   });
 
   it('delegates interactions to the combo command', async () => {
