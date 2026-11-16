@@ -390,10 +390,10 @@ describe('voiceStateUpdate', () => {
     const join = state({ channel: chan('Lounge'), channelId: 'l' });
     await voiceStateUpdate.execute(state() as never, join as never);
     expect(auditSend.send).toHaveBeenLastCalledWith('Ally joined Lounge');
-    const left = state({ channel: chan('Lounge') });
+    const left = state({ channel: chan('Lounge'), channelId: 'l' });
     await voiceStateUpdate.execute(left as never, state() as never);
     expect(auditSend.send).toHaveBeenLastCalledWith('Ally left Lounge');
-    await voiceStateUpdate.execute(state({ channel: chan('A') }) as never, state({ channel: chan('B'), channelId: 'b' }) as never);
+    await voiceStateUpdate.execute(state({ channel: chan('A'), channelId: 'a' }) as never, state({ channel: chan('B'), channelId: 'b' }) as never);
     expect(auditSend.send).toHaveBeenLastCalledWith('Ally left A and joined B');
     expect(mocks.updateTentStatus).toHaveBeenCalledTimes(3 + 1);
     expect(mocks.teardownTent).toHaveBeenCalled();
@@ -409,9 +409,21 @@ describe('voiceStateUpdate', () => {
 
   it('does not log when the channel did not change', async () => {
     const same = chan('Lounge');
-    await voiceStateUpdate.execute(state({ channel: same }) as never, state({ channel: same }) as never);
+    await voiceStateUpdate.execute(state({ channel: same, channelId: 'l' }) as never, state({ channel: same, channelId: 'l' }) as never);
     expect(mocks.logTent).not.toHaveBeenCalled();
     expect(mocks.teardownTent).toHaveBeenCalled();
+  });
+
+  // Regression test for TripSit/TripBot#1350: a mute or deafen used to be logged as leaving and rejoining the channel.
+  it('does not post a channel move to the audit log when only the mute state changed', async () => {
+    auditSend.send.mockClear();
+    const before = state({ channel: chan('Lounge'), channelId: 'l', selfMute: false });
+    const after = state({ channel: chan('Lounge'), channelId: 'l', selfMute: true });
+    await voiceStateUpdate.execute(before as never, after as never);
+    expect(auditSend.send).not.toHaveBeenCalled();
+    // A real move to another channel still is
+    await voiceStateUpdate.execute(before as never, state({ channel: chan('Other'), channelId: 'o' }) as never);
+    expect(auditSend.send).toHaveBeenCalledWith('Ally left Lounge and joined Other');
   });
 
   it('ignores other guilds and bots', async () => {
