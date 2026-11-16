@@ -23,6 +23,26 @@ import { embedTemplate } from '../../utils/embedTemplate';
 
 const F = f(__filename);
 
+/**
+ * Checks that whoever clicked a purge control is the person who started the purge, and that they may purge the
+ * target's messages. Purging someone else's messages needs Manage Messages, checked against the clicker's current
+ * permissions. Returns the refusal to show, or null when the click is allowed.
+ */
+function purgeRefusal(
+  interaction: ButtonInteraction | UserSelectMenuInteraction,
+  initiatorId: string | undefined,
+  targetId: string,
+): string | null {
+  if (initiatorId !== interaction.user.id) {
+    return 'This purge was started by someone else, or has expired. Run `/purge messages` to start your own.';
+  }
+  if (targetId !== interaction.user.id
+    && !(interaction.member as GuildMember | null)?.permissions.has(PermissionFlagsBits.ManageMessages)) {
+    return 'You need the Manage Messages permission to purge someone else\'s messages!';
+  }
+  return null;
+}
+
 // A dictionary using channelIDs as the key, and an array of messageIDs as the value
 type MessageDict = {
   [key: string]: string[];
@@ -95,7 +115,7 @@ async function purgeMessagesPage(
     // Get the ID of the select menu
     log.debug(F, `interaction.customId: ${interaction.customId}`);
 
-    if (interaction.customId === 'purge~user') {
+    if (interaction.customId.startsWith('purge~user')) {
       [selectedUser] = interaction.values;
       log.debug(F, `selectedUser: ${selectedUser}`);
     }
@@ -123,7 +143,7 @@ async function purgeMessagesPage(
         .setLabel('Start the purge!')
         .setStyle(ButtonStyle.Danger)
         .setEmoji('🗑️')
-        .setCustomId(`purge~confirm~${selectedUser}`),
+        .setCustomId(`purge~confirm~${selectedUser}~${interaction.user.id}`),
     ]),
   ];
 
@@ -132,7 +152,7 @@ async function purgeMessagesPage(
     components.push(
       new ActionRowBuilder<UserSelectMenuBuilder>().addComponents([
         new UserSelectMenuBuilder()
-          .setCustomId('purge~user')
+          .setCustomId(`purge~user~${interaction.user.id}`)
           .setDefaultUsers([interaction.user.id]),
       ]),
     );
@@ -186,6 +206,12 @@ export async function purgeButton(
   // eslint-disable-next-line sonarjs/no-small-switch
   switch (button) {
     case 'confirm': {
+      const [, , targetId, initiatorId] = interaction.customId.split('~');
+      const refusal = purgeRefusal(interaction, initiatorId, targetId);
+      if (refusal) {
+        await interaction.reply({ content: refusal, flags: MessageFlags.Ephemeral });
+        break;
+      }
       await interaction.editReply(await purgeConfirmedPage(interaction));
       break;
     }
@@ -203,6 +229,11 @@ export async function purgeMenu(
   // eslint-disable-next-line sonarjs/no-small-switch
   switch (menu) {
     case 'user': {
+      const refusal = purgeRefusal(interaction, interaction.customId.split('~')[2], interaction.values[0]);
+      if (refusal) {
+        await interaction.reply({ content: refusal, flags: MessageFlags.Ephemeral });
+        break;
+      }
       await interaction.update(await purgeMessagesPage(interaction));
       break;
     }
