@@ -60,8 +60,8 @@ describe('sheesh', () => {
 });
 
 describe('say', () => {
-  const text = () => ({
-    type: ChannelType.GuildText, name: 'gen', sendTyping: vi.fn(), send: vi.fn(),
+  const text = (granted: bigint[] = [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages]) => ({
+    type: ChannelType.GuildText, name: 'gen', sendTyping: vi.fn(), send: vi.fn(), permissionsFor: vi.fn(() => ({ has: (flag: bigint) => granted.includes(flag) })),
   });
   const guildWith = (botlog: unknown) => ({ id: 'g', channels: { fetch: vi.fn(async () => botlog) } });
 
@@ -96,6 +96,48 @@ describe('say', () => {
       // no bot log channel
       const quiet = slashStub({ guild: guildWith(null), options: { say: 'x', channel: text() } });
       expect(await dSay.execute(quiet as never)).toBe(true);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  // Regression tests for TripSit/TripBot#1357: the bot used to send wherever it could, whatever the caller could do.
+  it('refuses destinations where the caller cannot view or send', async () => {
+    const run = async (chan: ReturnType<typeof text> & Record<string, unknown>) => {
+      const stub = slashStub({ guild: guildWith(null), options: { say: 'hi', channel: chan } });
+      const result = await dSay.execute(stub as never);
+      return { result, stub };
+    };
+    const noView = await run(text([PermissionFlagsBits.SendMessages]));
+    const noSend = await run(text([PermissionFlagsBits.ViewChannel]));
+    for (const { result, stub } of [noView, noSend]) {
+      expect(result).toBe(false);
+      expect(content(stub)).toContain('do not have permission');
+    }
+    expect(noView.stub.options.getChannel).toHaveBeenCalled();
+    const thread = { ...text([PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages]), type: ChannelType.PublicThread };
+    const threadRefused = await run(thread);
+    expect(threadRefused.result).toBe(false);
+    expect(thread.sendTyping).not.toHaveBeenCalled();
+  });
+
+  it('uses the thread send permission for threads, and resolves partial channels', async () => {
+    vi.useFakeTimers({ toFake: ['setTimeout'] });
+    try {
+      const thread = { ...text([PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessagesInThreads]), type: ChannelType.PublicThread };
+      const ok = slashStub({ guild: guildWith(null), options: { say: 'hi', channel: thread } });
+      expect(await dSay.execute(ok as never)).toBe(true);
+      // A partial API channel is fetched from the guild before the permissions are read
+      const full = text();
+      const partial = { id: 'p1', type: ChannelType.GuildText, name: 'partial' };
+      const guild = { id: 'g', channels: { fetch: vi.fn(async (id: string) => (id === 'p1' ? full : null)) } };
+      const viaFetch = slashStub({ guild, options: { say: 'hi', channel: partial } });
+      expect(await dSay.execute(viaFetch as never)).toBe(true);
+      expect(guild.channels.fetch).toHaveBeenCalledWith('p1');
+      // A channel that cannot be resolved is refused
+      const gone = slashStub({ guild: { id: 'g', channels: { fetch: vi.fn(async () => { throw new Error('Unknown Channel'); }) } }, options: { say: 'hi', channel: partial } });
+      expect(await dSay.execute(gone as never)).toBe(false);
+      expect(content(gone)).toContain('do not have permission');
     } finally {
       vi.useRealTimers();
     }
