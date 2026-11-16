@@ -150,8 +150,55 @@ export async function profile(
     return moodleProfile;
   }
 
+  // No separate connectivity probe: a Moodle outage shows up as an error from the lookups themselves, and only
+  // the fields the profile uses are fetched.
+  let moodleUserData;
+  let moodleEnrollments;
   try {
-    await moodleDb.mdl_user.findMany();
+    moodleUserData = await moodleDb.mdl_user.findUnique({
+      where: {
+        mnethostid_username: {
+          username: userData.moodle_id,
+          mnethostid: 1,
+        },
+      },
+      select: {
+        id: true,
+        firstname: true,
+        lastname: true,
+        institution: true,
+        department: true,
+      },
+    });
+
+    if (!moodleUserData) {
+      return moodleProfile;
+    }
+
+    moodleEnrollments = await moodleDb.mdl_user_enrolments.findMany({
+      where: {
+        userid: moodleUserData.id,
+      },
+      select: {
+        enrol: {
+          select: {
+            course: {
+              select: {
+                fullname: true,
+                completions: {
+                  where: {
+                    userid: moodleUserData.id,
+                  },
+                  select: {
+                    timecompleted: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
   } catch (err) {
     log.warn(F, `profile: Moodle database is unreachable: ${err}`);
     global.moodleConnection = {
@@ -160,40 +207,6 @@ export async function profile(
     };
     return moodleProfile;
   }
-
-  const moodleUserData = await moodleDb.mdl_user.findUnique({
-    where: {
-      mnethostid_username: {
-        username: userData.moodle_id,
-        mnethostid: 1,
-      },
-    },
-  });
-
-  if (!moodleUserData) {
-    return moodleProfile;
-  }
-
-  const moodleEnrollments = await moodleDb.mdl_user_enrolments.findMany({
-    where: {
-      userid: moodleUserData.id,
-    },
-    include: {
-      enrol: {
-        include: {
-          course: {
-            include: {
-              completions: {
-                where: {
-                  userid: moodleUserData.id,
-                },
-              },
-            },
-          },
-        },
-      },
-    },
-  });
 
   let completedCourses:string[] = [];
   let incompleteCourses:string[] = [];
