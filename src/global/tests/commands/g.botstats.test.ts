@@ -5,6 +5,9 @@ const fail = () => Promise.reject(new Error('unsupported'));
 const bytes = (n: number) => ({ toMB: () => n, toGB: () => n });
 
 const osMock = vi.hoisted(() => ({ healthy: true }));
+const moodleMock = vi.hoisted(() => ({ $queryRaw: vi.fn() }));
+
+vi.mock('../../../prisma/moodle/client', () => ({ default: moodleMock }));
 
 vi.mock('node-os-utils', () => ({
   OSUtils: class {
@@ -50,6 +53,7 @@ describe('botStats', () => {
   it('collects stats when every probe succeeds', async () => {
     osMock.healthy = true;
     (dbMock.$queryRaw as unknown as ReturnType<typeof vi.fn>).mockResolvedValue([]);
+    moodleMock.$queryRaw.mockResolvedValue([]);
     const { botStats } = await import('../../commands/g.botstats');
     const stats = await botStats();
     expect(stats).toMatchObject({
@@ -72,9 +76,22 @@ describe('botStats', () => {
     expect(stats.uptime).toBeGreaterThanOrEqual(5000);
   });
 
+  // Regression test for TripSit/TripBot#1347: both probes used the TripBot client, so Moodle always mirrored it.
+  it('reports the TripBot and Moodle databases independently', async () => {
+    osMock.healthy = true;
+    const { botStats } = await import('../../commands/g.botstats');
+    (dbMock.$queryRaw as unknown as ReturnType<typeof vi.fn>).mockResolvedValue([]);
+    moodleMock.$queryRaw.mockRejectedValue(new Error('mariadb down'));
+    expect(await botStats()).toMatchObject({ dbTripbotStatus: 'Online', dbMoodleStatus: 'Offline' });
+    (dbMock.$queryRaw as unknown as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('postgres down'));
+    moodleMock.$queryRaw.mockResolvedValue([]);
+    expect(await botStats()).toMatchObject({ dbTripbotStatus: 'Offline', dbMoodleStatus: 'Online' });
+  });
+
   it('degrades to zeros and Offline when probes fail', async () => {
     osMock.healthy = false;
     (dbMock.$queryRaw as unknown as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('down'));
+    moodleMock.$queryRaw.mockRejectedValue(new Error('down'));
     global.bootTime = undefined as unknown as Date;
     const { botStats } = await import('../../commands/g.botstats');
     const stats = await botStats();

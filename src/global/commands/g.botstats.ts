@@ -2,6 +2,7 @@ import { OSUtils } from 'node-os-utils';
 import os from 'node:os'; // Added for os.uptime()
 import drugDataCombined from '../../../assets/data/combinedDB.json';
 import drugDataTripsit from '../../../assets/data/tripsitDB.json';
+import moodleDb from '../../prisma/moodle/client';
 
 const F = f(__filename);
 
@@ -60,7 +61,7 @@ export async function botStats(): Promise<BotStats> {
       log.warn(F, `TripBot database health check failed: ${err}`);
       return 'Offline' as const;
     }),
-    db.$queryRaw`SELECT 1`.then(() => 'Online' as const).catch(err => {
+    moodleDb.$queryRaw`SELECT 1`.then(() => 'Online' as const).catch(err => {
       log.warn(F, `Moodle database health check failed: ${err}`);
       return 'Offline' as const;
     }),
