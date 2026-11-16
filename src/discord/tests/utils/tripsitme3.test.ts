@@ -37,7 +37,7 @@ const guildRow = (over: Record<string, unknown> = {}) => dbMock.discord_guilds.u
 } as never);
 
 describe('tripSitMe', () => {
-  function setup(opts: { metaFails?: boolean; guild?: boolean; member?: boolean; tripsitChannel?: 'ok' | 'fail' | 'unset'; teamMember?: boolean; pinFails?: boolean; cooldown?: boolean; memberInput?: boolean } = {}) {
+  function setup(opts: { metaFails?: boolean; metaUnset?: boolean; guild?: boolean; member?: boolean; tripsitChannel?: 'ok' | 'fail' | 'unset'; teamMember?: boolean; pinFails?: boolean; cooldown?: boolean; memberInput?: boolean } = {}) {
     const owner = { send: vi.fn() };
     const message = { pin: opts.pinFails ? vi.fn().mockRejectedValue(new Error('Missing Permissions')) : vi.fn() };
     const thread = {
@@ -76,7 +76,10 @@ describe('tripSitMe', () => {
       },
     };
     mocks.cooldown.mockResolvedValue(opts.cooldown === false ? { success: false, message: 'cooling down' } : { success: true });
-    guildRow(opts.tripsitChannel === 'unset' ? { channel_tripsit: null } : {});
+    guildRow({
+      ...(opts.tripsitChannel === 'unset' ? { channel_tripsit: null } : {}),
+      ...(opts.metaUnset ? { channel_tripsitmeta: null } : {}),
+    });
     return {
       interaction: interaction as never, raw: interaction, target: target as never, thread, metaSend, owner, tripsit,
     };
@@ -100,11 +103,21 @@ describe('tripSitMe', () => {
     expect(dbMock.discord_guilds.update).toHaveBeenCalledWith({ where: { id: 'g1' }, data: { channel_tripsit: null } });
   });
 
-  it('forgets a deleted meta channel while opening a ticket', async () => {
+  it('forgets a deleted meta channel and stops before creating a thread', async () => {
     const s = setup({ metaFails: true });
-    // The cleared setting is saved, but the code carries on with an empty channel object and fails when it posts to it.
-    await expect(tripSitMe(s.interaction, s.target, 'x', 'y')).rejects.toThrow(TypeError);
+    expect(await tripSitMe(s.interaction, s.target, 'x', 'y')).toBeNull();
     expect(dbMock.discord_guilds.update).toHaveBeenCalledWith({ where: { id: 'g1' }, data: { channel_tripsitmeta: null } });
+    expect(s.raw.editReply).toHaveBeenCalledWith({ content: expect.stringContaining('No tripsit meta channel found') });
+    expect(s.tripsit.threads.create).not.toHaveBeenCalled();
+  });
+
+  // Regression test for TripSit/TripBot#1380: an unset meta channel used to throw after the thread was created.
+  it('tells the user when no meta channel is configured instead of throwing', async () => {
+    const s = setup({ metaUnset: true });
+    expect(await tripSitMe(s.interaction, s.target, 'x', 'y')).toBeNull();
+    expect(s.raw.editReply).toHaveBeenCalledWith({ content: expect.stringContaining('No tripsit meta channel found') });
+    expect(s.tripsit.threads.create).not.toHaveBeenCalled();
+    expect(dbMock.user_tickets.create).not.toHaveBeenCalled();
   });
 
   it('opens a private ticket thread, pings the team, and records the ticket', async () => {
