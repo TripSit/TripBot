@@ -230,6 +230,27 @@ describe('countMessage', () => {
     expect((m.channel.send as ReturnType<typeof vi.fn>).mock.calls.some(c => c[0].embeds?.[0]?.data?.title === 'Payday!')).toBe(true);
   });
 
+  // Regression test for TripSit/TripBot#1325: the pot is number * 10 and each share must be a whole number
+  it.each([
+    [10, 'a,me', 50],
+    [10, 'a,b,me', 33],
+    [30, 'a,b,c,d,e,me', 50],
+    [30, 'a,b,c,d,e,f,me', 42],
+    [20, 'me', 200],
+  ])('pays whole-token shares of number * 10 at %i for stakeholders %s', async (number, stakeholders, share) => {
+    data({ type: 'TOKEN', current_number: number - 1, current_stakeholders: stakeholders });
+    const m = message(String(number));
+    await countMessage(m as never);
+    const calls = vi.mocked(db.personas.upsert).mock.calls.map(c => c[0]);
+    const payouts = calls.map(c => (c.update.tokens as { increment: number }).increment);
+    expect(payouts).toHaveLength(stakeholders.split(',').length);
+    payouts.forEach(p => {
+      expect(Number.isInteger(p)).toBe(true);
+      expect(p).toBe(share);
+    });
+    expect(m.react).toHaveBeenCalledWith('👍');
+  });
+
   describe('wrong numbers', () => {
     it('first warns an unknown newcomer instead of breaking the combo', async () => {
       for (const type of ['NORMAL', 'TOKEN', 'HARDCORE']) {

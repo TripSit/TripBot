@@ -474,29 +474,28 @@ async function payOutPot({ channel, countingData }: CountingContext): Promise<vo
   // Give each user a fraction of the pot
   const stakeholderIds = (countingData.current_stakeholders as string).split(',');
   const stakeholderNumber = stakeholderIds.length;
-  const totalPot = calcTotalPot(countingData.current_number + 1, stakeholderNumber);
-  const potPerUser = totalPot / stakeholderNumber;
+  // current_number is already the number that was just counted, so the pot is number * 10 (100 at 10, 400 at 20)
+  const totalPot = calcTotalPot(countingData.current_number, stakeholderNumber);
+  // Tokens are whole numbers, so everyone gets the same rounded-down share and any remainder is not paid out
+  const potPerUser = Math.floor(totalPot / stakeholderNumber);
 
   // Look up the persona of every user in the currentData.current_stakeholders string
-  // Give each of those personas a fraction of the pot: (totalPot / currentData.current_stakeholders.length)
-  await Promise.all(stakeholderIds.map(async discordId => {
-    const userData = await getOrCreateUser(discordId);
-
-    return db.personas.upsert({
-      where: {
-        user_id: userData.id,
+  // Give each of those personas a share of the pot, all in one transaction so nobody is paid half a payday
+  const userRows = await Promise.all(stakeholderIds.map(discordId => getOrCreateUser(discordId)));
+  await db.$transaction(userRows.map(userData => db.personas.upsert({
+    where: {
+      user_id: userData.id,
+    },
+    create: {
+      user_id: userData.id,
+      tokens: potPerUser,
+    },
+    update: {
+      tokens: {
+        increment: potPerUser,
       },
-      create: {
-        user_id: userData.id,
-        tokens: potPerUser,
-      },
-      update: {
-        tokens: {
-          increment: potPerUser,
-        },
-      },
-    });
-  }));
+    },
+  })));
 
   const embed = embedTemplate()
     .setTitle('Payday!')
