@@ -68,9 +68,10 @@ async function updateAppeal(
   }
 
   // Update only that specific appeal
-  await db.appeals.update({
+  const updated = await db.appeals.updateMany({
     where: {
       id: latestAppeal.id,
+      status: latestAppeal.status,
     },
     data: {
       status: appealStatus,
@@ -78,6 +79,10 @@ async function updateAppeal(
       response_message: userMessage,
     },
   });
+
+  if (updated.count !== 1) {
+    return { success: false, message: 'This appeal changed while you were reviewing it. Please try again.' };
+  }
 
   return { success: true, message: 'Appeal updated successfully' };
 }

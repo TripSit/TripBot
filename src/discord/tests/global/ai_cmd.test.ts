@@ -13,6 +13,9 @@ const mocks = vi.hoisted(() => ({
   prompt: vi.fn(),
   premium: vi.fn(),
   getUser: vi.fn(),
+  consent: vi.fn(),
+  allowed: vi.fn(),
+  codeAgent: vi.fn(),
   page: {
     info: vi.fn(), personas: vi.fn(), userSettings: vi.fn(), guildSettings: vi.fn(), privacy: vi.fn(), tos: vi.fn(),
   },
@@ -21,6 +24,8 @@ const mocks = vi.hoisted(() => ({
 vi.mock('../../utils/context', () => ({ default: vi.fn(async () => 'ctx') }));
 vi.mock('../../../global/commands/g.ai', () => ({ aiModerate: mocks.moderate }));
 vi.mock('../../utils/aiClients/openrouter.client', () => ({ OpenRouterClient: { chat: mocks.chat } }));
+vi.mock('../../../global/utils/aiConsent', () => ({ hasAiConsent: mocks.consent, isAiChatAllowed: mocks.allowed }));
+vi.mock('../../utils/codeAgentRequest', () => ({ isCodeAgentRequest: mocks.codeAgent }));
 vi.mock('../../../global/utils/dbRecords', () => ({ getOrCreateUser: mocks.getUser }));
 vi.mock('../../utils/ai', async () => {
   const texts = await import('../../utils/ai/texts');
@@ -50,6 +55,8 @@ describe('ai command', () => {
 });
 
 describe('discordAiModerate', () => {
+  beforeEach(() => { mocks.consent.mockResolvedValue(true); });
+
   const message = (over: Record<string, unknown> = {}) => ({
     author: { bot: false, id: 'a1' },
     cleanContent: 'hello tripbot',
@@ -73,6 +80,13 @@ describe('discordAiModerate', () => {
     mocks.moderate.mockResolvedValueOnce([]);
     await discordAiModerate(message() as never);
     expect(mocks.moderate).toHaveBeenCalledWith('hello ', 'g1');
+  });
+
+  it('never sends messages from users who have not agreed to the AI terms', async () => {
+    mocks.consent.mockResolvedValueOnce(false);
+    await discordAiModerate(message() as never);
+    expect(mocks.consent).toHaveBeenCalledWith('a1');
+    expect(mocks.moderate).not.toHaveBeenCalled();
   });
 
   it('posts a flag report with adjustment buttons', async () => {
@@ -101,7 +115,7 @@ describe('aiMessage', () => {
     cleanContent: 'hi',
     guild: { id: 'g1' },
     member: {},
-    mentions: { has: vi.fn(() => false) },
+    mentions: { has: vi.fn(() => true) },
     channel: { isTextBased: () => true, isDMBased: () => false, sendTyping: vi.fn() },
     reply: vi.fn(),
     ...over,
@@ -117,6 +131,8 @@ describe('aiMessage', () => {
 
   beforeEach(() => {
     mocks.chat.mockReset();
+    mocks.allowed.mockReturnValue(true);
+    mocks.codeAgent.mockReturnValue(false);
     (global as unknown as Record<string, unknown>).discordClient = { user: { id: 'bot' } };
     db.ai_message.aggregate = vi.fn().mockResolvedValue({ _sum: { usd: null } }) as never;
     db.ai_persona.upsert = vi.fn().mockResolvedValue({ id: 'p1' }) as never;
@@ -133,14 +149,40 @@ describe('aiMessage', () => {
     expect(noGuild.reply).not.toHaveBeenCalled();
   });
 
-  it('says AI is disabled only when mentioned', async () => {
+  it('says AI is disabled in channels that are not set up', async () => {
     db.discord_guilds.findUnique = vi.fn().mockResolvedValue(null) as never;
-    const quiet = msg();
-    await aiMessage(quiet as never);
-    expect(quiet.reply).not.toHaveBeenCalled();
-    const mentioned = msg({ mentions: { has: () => true } });
+    const mentioned = msg();
     await aiMessage(mentioned as never);
     expect(mentioned.reply).toHaveBeenCalledWith(expect.stringContaining('/ai setup'));
+  });
+
+  it('does nothing at all for users outside the rollout gate', async () => {
+    mocks.allowed.mockReturnValue(false);
+    enabled();
+    const m = msg();
+    await aiMessage(m as never);
+    expect(mocks.allowed).toHaveBeenCalledWith('u1');
+    expect(m.fetch).not.toHaveBeenCalled();
+    expect(m.reply).not.toHaveBeenCalled();
+    expect(db.users.upsert).not.toHaveBeenCalled?.();
+    expect(mocks.chat).not.toHaveBeenCalled();
+  });
+
+  it('only answers when the bot is addressed', async () => {
+    enabled();
+    const m = msg({ mentions: { has: vi.fn(() => false) } });
+    await aiMessage(m as never);
+    expect(m.reply).not.toHaveBeenCalled();
+    expect(mocks.chat).not.toHaveBeenCalled();
+  });
+
+  it('leaves developer fix requests to the code agent', async () => {
+    enabled();
+    mocks.codeAgent.mockReturnValue(true);
+    const m = msg();
+    await aiMessage(m as never);
+    expect(m.reply).not.toHaveBeenCalled();
+    expect(mocks.chat).not.toHaveBeenCalled();
   });
 
   it('requires TOS and privacy agreement', async () => {

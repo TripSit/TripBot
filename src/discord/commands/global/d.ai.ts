@@ -33,6 +33,8 @@ import {
 } from '../../utils/ai';
 import { OpenRouterClient } from '../../utils/aiClients/openrouter.client';
 import { getOrCreateUser } from '../../../global/utils/dbRecords';
+import { hasAiConsent, isAiChatAllowed } from '../../../global/utils/aiConsent';
+import { isCodeAgentRequest } from '../../utils/codeAgentRequest';
 
 const F = f(__filename);
 
@@ -102,6 +104,8 @@ export async function discordAiModerate(messageData: Message): Promise<void> {
   if (messageData.cleanContent.length < 1) return;
   if (messageData.channel.type === ChannelType.DM) return;
   if (!messageData.guild) return;
+  // Message text goes to OpenAI's moderation endpoint, so only users who agreed to the AI terms are scanned.
+  if (!await hasAiConsent(messageData.author.id)) return;
 
   const modResults = await aiModerate(
     messageData.cleanContent
@@ -249,11 +253,18 @@ export async function discordAiModerate(messageData: Message): Promise<void> {
   }
 }
 export async function aiMessage(messageData: Message<boolean>): Promise<void> {
-  await messageData.fetch();
-
   // Basic Filters
   if (messageData.author.bot || messageData.cleanContent.length < 1) return;
   if (!messageData.guild) return;
+
+  // Rollout gate first: nothing below (DB writes, nag replies, API calls) happens for anyone else.
+  if (!isAiChatAllowed(messageData.author.id)) return;
+  // Only talk when addressed (mention or a reply to the bot), never to every message in the channel.
+  if (!messageData.mentions.has(discordClient.user as ClientUser)) return;
+  // "@tripbot ... fix it" from a developer is handled by the code agent.
+  if (isCodeAgentRequest(messageData)) return;
+
+  await messageData.fetch();
 
   log.debug(F, `Received message for AI processing in #${messageData.channelId}`);
 

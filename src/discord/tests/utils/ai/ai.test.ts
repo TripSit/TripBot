@@ -12,9 +12,10 @@ import { dbMock } from '../../../../vitest/utils/mockDb';
 import { collectionOf } from '../../../../vitest/utils/discordStubs';
 
 const mocks = vi.hoisted(() => ({
-  embeddings: vi.fn(), doGenerate: vi.fn(), chatFactory: vi.fn(), createOpenRouter: vi.fn(),
+  consented: vi.fn(), embeddings: vi.fn(), doGenerate: vi.fn(), chatFactory: vi.fn(), createOpenRouter: vi.fn(),
 }));
 
+vi.mock('../../../../global/utils/aiConsent', () => ({ getAiChatUserIds: mocks.consented }));
 vi.mock('../../../commands/global/d.drug', () => ({ getDrugInfo: vi.fn() }));
 vi.mock('openai', () => ({ default: class { embeddings = { create: mocks.embeddings }; } }));
 vi.mock('@openrouter/ai-sdk-provider', () => ({
@@ -174,13 +175,17 @@ describe('AiFunction.pageMenu', () => {
 describe('AiFunction.createPrompt', () => {
   const botId = 'bot';
 
-  function setup(messages: Array<{ id: string; author: string; text: string; mentions?: boolean }>) {
+  beforeEach(() => { mocks.consented.mockImplementation(async (ids: string[]) => new Set(ids)); });
+
+  function setup(messages: Array<{
+    id: string; author: string; text: string; mentions?: boolean; replyTo?: string;
+  }>) {
     (global as unknown as { discordClient: unknown }).discordClient = {
       user: { id: botId },
       guilds: { fetch: vi.fn(async () => ({ members: { fetch: vi.fn(async () => collectionOf({})) } })) },
     };
     const fetched = collectionOf(messages.map(m => [m.id, {
-      author: { id: m.author }, cleanContent: m.text, mentions: { has: () => !!m.mentions },
+      id: m.id, author: { id: m.author }, cleanContent: m.text, mentions: { has: () => !!m.mentions }, reference: m.replyTo ? { messageId: m.replyTo } : null,
     }] as [string, object]));
     return {
       guild: { members: { me: { nickname: 'TripBot' } } },
@@ -192,7 +197,9 @@ describe('AiFunction.createPrompt', () => {
   it('builds a chronological prompt of the bot\'s replies and user messages addressed to it', async () => {
     // Discord returns newest first
     const message = setup([
-      { id: '3', author: botId, text: 'Here is the answer' },
+      {
+        id: '3', author: botId, text: 'Here is the answer', replyTo: '1',
+      },
       { id: '2', author: 'u', text: 'ignored chatter' },
       {
         id: '1', author: 'u', text: '@TripBot what is LSD?', mentions: true,
@@ -202,6 +209,31 @@ describe('AiFunction.createPrompt', () => {
     expect(prompt.map(p => p.role)).toEqual(['system', 'system', 'user', 'assistant']);
     expect(JSON.stringify(prompt[2])).toContain('what is LSD?');
     expect(JSON.stringify(prompt[2])).not.toContain('@TripBot');
+  });
+
+  it('drops messages from users without AI consent, and the bot replies to them', async () => {
+    mocks.consented.mockResolvedValue(new Set(['yes']));
+    const message = setup([
+      {
+        id: '4', author: botId, text: 'reply to nope', replyTo: '2',
+      },
+      {
+        id: '3', author: botId, text: 'reply to yes', replyTo: '1',
+      },
+      {
+        id: '2', author: 'nope', text: 'tripbot secret', mentions: true,
+      },
+      {
+        id: '1', author: 'yes', text: 'tripbot hello', mentions: true,
+      },
+    ]);
+    const prompt = await AiFunction.createPrompt(message, 'tripbot');
+    const text = JSON.stringify(prompt);
+    expect(text).toContain('hello');
+    expect(text).toContain('reply to yes');
+    expect(text).not.toContain('secret');
+    expect(text).not.toContain('reply to nope');
+    expect(mocks.consented).toHaveBeenCalledWith(expect.arrayContaining(['yes', 'nope']));
   });
 
   it('matches users who simply say tripbot, and skips unknown personas', async () => {
