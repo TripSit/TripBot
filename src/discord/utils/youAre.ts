@@ -37,7 +37,7 @@ export async function youAre(message: Message): Promise<void> {
   const chance = env.NODE_ENV === 'production' ? 1 : 100;
 
   // 1% chance to trigger on prod otherwise 100% chance to trigger on dev
-  if (Math.floor(Math.random() * 101) >= chance) return;
+  if (Math.random() * 100 >= chance) return;
 
   await message.channel.send({
     content: `${message.member?.displayName}: You're ${key[2]}.`,
