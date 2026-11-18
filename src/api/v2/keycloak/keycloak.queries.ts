@@ -7,7 +7,7 @@ const DNS_DOMAIN = process.env.DNS_DOMAIN ?? 'tripsit.me';
 const REDIRECT_URI = `https://${DNS_DOMAIN}/appeal`;
 
 export default {
-  async exchangeCodeForToken(code: string) {
+  async exchangeCodeForToken(code: string, codeVerifier: string) {
     const KEYCLOAK_URL = `${process.env.KEYCLOAK_URL}/realms/TripSit/protocol/openid-connect/token`;
 
     if (!CLIENT_ID) {
@@ -23,6 +23,7 @@ export default {
         body: new URLSearchParams({
           grant_type: 'authorization_code',
           code,
+          code_verifier: codeVerifier,
           client_id: CLIENT_ID,
           redirect_uri: REDIRECT_URI,
         }),
