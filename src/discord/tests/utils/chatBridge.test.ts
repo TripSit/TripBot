@@ -1,4 +1,6 @@
-import { ChannelType, Collection, MessageType } from 'discord.js';
+import {
+  ChannelType, Collection, MessageType, PermissionFlagsBits, PermissionsBitField,
+} from 'discord.js';
 import type { Message, PartialMessage } from 'discord.js';
 import type { Mock } from 'vitest';
 import type { BridgeOutgoing } from '../../../global/bridge/bridge.types';
@@ -253,6 +255,63 @@ describe('relayDiscordMessage', () => {
       sourcePlatform: 'discord',
       avatarUrl: 'https://cdn/avatar.png',
     }));
+  });
+
+  it.each([ChannelType.GuildText, ChannelType.GuildAnnouncement])(
+    'checks current visibility for automatic channel type %s before relaying',
+    async type => {
+      mappings.setMappings(bridgeRows().map(row => ({ ...row, source: 'auto' })));
+      const permissions = new PermissionsBitField(PermissionFlagsBits.ViewChannel);
+      const everyone = { id: 'everyone' };
+      const permissionsFor = vi.fn(() => permissions);
+      const current = message({ channel: { type, guild: { roles: { everyone } }, permissionsFor } });
+      await chatBridge.relayDiscordMessage(current);
+      expect(ircSend).toHaveBeenCalledTimes(1);
+      expect(permissionsFor).toHaveBeenCalledWith(everyone);
+
+      permissions.remove(PermissionFlagsBits.ViewChannel);
+      await chatBridge.relayDiscordMessage(current);
+      expect(ircSend).toHaveBeenCalledTimes(1);
+
+      await chatBridge.relayDiscordEdit(current, message({
+        channel: current.channel, content: 'updated', cleanContent: 'updated', editedTimestamp: 1,
+      }));
+      expect(ircSend).toHaveBeenCalledTimes(1);
+    },
+  );
+
+  it('checks visibility after the asynchronous privacy lookup', async () => {
+    mappings.setMappings(bridgeRows().map(row => ({ ...row, source: 'auto' })));
+    const permissions = new PermissionsBitField(PermissionFlagsBits.ViewChannel);
+    dbMock.users.findUnique.mockImplementationOnce(async () => {
+      permissions.remove(PermissionFlagsBits.ViewChannel);
+      return null;
+    });
+    await chatBridge.relayDiscordMessage(message({
+      channel: {
+        type: ChannelType.GuildText,
+        guild: { roles: { everyone: { id: 'everyone' } } },
+        permissionsFor: () => permissions,
+      },
+    }));
+    expect(ircSend).not.toHaveBeenCalled();
+  });
+
+  it('fails closed when an automatic mapping no longer has a supported channel type', async () => {
+    mappings.setMappings(bridgeRows().map(row => ({ ...row, source: 'auto' })));
+    await chatBridge.relayDiscordMessage(message({ channel: { type: ChannelType.PublicThread } }));
+    expect(ircSend).not.toHaveBeenCalled();
+  });
+
+  it('keeps explicit override mappings eligible for private channels', async () => {
+    await chatBridge.relayDiscordMessage(message({
+      channel: {
+        type: ChannelType.GuildText,
+        guild: { roles: { everyone: { id: 'everyone' } } },
+        permissionsFor: () => new PermissionsBitField(),
+      },
+    }));
+    expect(ircSend).toHaveBeenCalledTimes(1);
   });
 
   it('falls back to the display name without a member', async () => {
