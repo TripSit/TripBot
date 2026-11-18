@@ -6,6 +6,8 @@ import {
 } from '../../global/bridge/bridge';
 import { chunkText, toDiscordUsername } from '../../global/bridge/bridge.format';
 import { BridgeOutgoing, BridgeTarget } from '../../global/bridge/bridge.types';
+import { getMappingRows } from '../../global/bridge/bridge.mappings';
+import { isPrivateChannel } from './bridgeSync';
 
 const F = f(__filename);
 
@@ -151,6 +153,14 @@ async function relay(message: Message, suffix: string): Promise<void> {
     });
     if (author?.irc_bridge_opt_out) return;
   }
+
+  // Recheck live permissions after async lookups: mapping sync may still be queued.
+  const automatic = getMappingRows().some(row => row.discord_channel_id === message.channelId
+    && row.active && row.enabled && row.source === 'auto');
+  if (automatic && (
+    (message.channel.type !== ChannelType.GuildText && message.channel.type !== ChannelType.GuildAnnouncement)
+    || isPrivateChannel(message.channel)
+  )) return;
 
   await relayMessage({
     platform: 'discord',
