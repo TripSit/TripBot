@@ -4,7 +4,7 @@ import { ComponentType } from 'discord-api-types/v10';
 import {
   dRpg, getNewTimer, rpgArcade, rpgArcadeAnimate, rpgArcadeGame, rpgArcadeWager, rpgBounties, rpgFlair, rpgFlairAccept, rpgFlairDecline, rpgHelp, rpgHome, rpgHomeAccept,
   rpgHomeDecline, rpgHomeInventory, rpgHomeNameChange, rpgHomeSell, rpgMarket, rpgMarketAccept, rpgMarketChange, rpgMarketInventory,
-  rpgMarketPreview, rpgTown,
+  ROULETTE_BETS, rpgMarketPreview, rpgTown,
 } from '../../commands/guild/d.rpg';
 import { slashStub, resolvingModal } from '../../../vitest/utils/commandStubs';
 
@@ -569,11 +569,22 @@ describe('rpg arcade', () => {
     ['0', '0', 17], ['red', '2', 1], ['evens', '4', 1], ['black', '3', 1], ['odds', '5', 1], ['high', '20', 1], ['low', '5', 1],
     ['1-12', '7', 2], ['13-24', '14', 2], ['25-36', '30', 2], ['first', '13', 2], ['second', '14', 2], ['third', '15', 2],
     ['red', '3', 0], ['0', '5', 0], ['high', '5', 0], ['first', '2', 0],
+    ['low', '18', 1], ['low', '0', 0], ['red', '0', 0], ['evens', '0', 0], ['1-12', '0', 0], ['low', '00', 0],
   ] as const)('roulette: %s on %s pays x%s', async (choice, result, multiplier) => {
     const p = await bet(`roulette-${choice}-${result}`, 'Roulette');
     mocks.random.mockReturnValueOnce(result);
     const out = await rpgArcadeGame(p as never, 'Roulette', choice);
     expect(description(out)).toContain(multiplier ? `You won ${1000 * multiplier} tokens` : 'You lost 1000 tokens');
+  });
+});
+
+describe('roulette house edge', () => {
+  const wheel = ['00', '0', ...Array.from({ length: 36 }, (_unused, i) => String(i + 1))];
+
+  it.each(Object.keys(ROULETTE_BETS))('%s never has a positive expected value', choice => {
+    const bet = ROULETTE_BETS[choice];
+    const expected = wheel.reduce((sum, result) => sum + (bet.wins(parseInt(result, 10)) ? bet.multiple : -1), 0) / wheel.length;
+    expect(expected).toBeLessThanOrEqual(0);
   });
 });
 
