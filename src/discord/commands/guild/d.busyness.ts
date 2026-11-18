@@ -1,5 +1,7 @@
 import {
   Colors,
+  DiscordAPIError,
+  RESTJSONErrorCodes,
   SlashCommandBuilder,
   TextChannel,
   MessageFlags,
@@ -102,19 +104,14 @@ async function calculateBusyness(
 
 let loungeChannel: TextChannel | null = null; // Cache the channel object
 
-async function checkBusyness() {
+async function updateBusyness() {
   const startTime = Date.now(); // Start timing
   const now = startTime; // Use a single `now` variable for consistency
 
   // Fetch the channel only once and reuse it
   if (!loungeChannel) {
-    try {
-      loungeChannel = (await msg.client.channels.fetch(env.CHANNEL_LOUNGE)) as TextChannel;
-      log.debug(F, 'Fetched lounge channel.');
-    } catch {
-      log.error(F, 'Failed to fetch lounge channel');
-      return;
-    }
+    loungeChannel = (await msg.client.channels.fetch(env.CHANNEL_LOUNGE)) as TextChannel;
+    log.debug(F, 'Fetched lounge channel.');
   }
 
   const fetchStart = now;
@@ -133,7 +130,6 @@ async function checkBusyness() {
 
   if (recentMessages.size === 0) {
     log.debug(F, 'No new messages in the last minute. Skipping busyness check.');
-    setTimeout(checkBusyness, interval); // Schedule the next check
     return;
   }
 
@@ -194,14 +190,23 @@ async function checkBusyness() {
     )
     .setColor(Colors.Blurple);
 
-  try {
-    await msg.edit({ embeds: [embed] });
-  } catch {
-    log.debug(F, 'Failed to update embed. Embed might have been deleted.');
-    return; // Stop the process if the embed cannot be updated
-  }
+  await msg.edit({ embeds: [embed] });
+}
 
-  setTimeout(checkBusyness, interval);
+async function checkBusyness() {
+  let keepChecking = true;
+  try {
+    await updateBusyness();
+  } catch (error) {
+    if (error instanceof DiscordAPIError && error.code === RESTJSONErrorCodes.UnknownMessage) {
+      keepChecking = false;
+      log.debug(F, 'Busyness embed was deleted; stopping its updates.');
+    } else {
+      log.error(F, 'Busyness check failed; retrying on the next interval.');
+    }
+  } finally {
+    if (keepChecking) setTimeout(checkBusyness, interval);
+  }
 }
 
 export const dBusyness: SlashCommand = {
@@ -211,9 +216,10 @@ export const dBusyness: SlashCommand = {
     .addSubcommand(subcommand => subcommand
       .setName('post')
       .setDescription('Post the busyness embed')
+      // Posting the live busyness display is public by default.
       .addBooleanOption(option => option
         .setName('ephemeral')
-        .setDescription('Set to "True" to show the response only to you')))
+        .setDescription('Set to False to show the response to everyone')))
     .addSubcommand(subcommand => subcommand
       .setName('set')
       .setDescription('Update the busyness configuration')
@@ -231,7 +237,10 @@ export const dBusyness: SlashCommand = {
       .addNumberOption(option => option
         .setName('value')
         .setDescription('The new value for the configuration key')
-        .setRequired(true))) as SlashCommandBuilder,
+        .setRequired(true))
+      .addBooleanOption(option => option
+        .setName('ephemeral')
+        .setDescription('Set to False to show the response to everyone'))) as SlashCommandBuilder,
   async execute(interaction) {
     log.debug(F, await commandContext(interaction));
 
@@ -261,7 +270,7 @@ export const dBusyness: SlashCommand = {
       });
 
       // Start the busyness check loop
-      checkBusyness();
+      await checkBusyness();
     } else if (subcommand === 'set') {
       // Handle the "set" subcommand
       const key = interaction.options.getString('key', true);
@@ -272,7 +281,7 @@ export const dBusyness: SlashCommand = {
 
       await interaction.reply({
         content: `Updated \`${key}\` to \`${value}\`.`,
-        ephemeral: true,
+        flags: (interaction.options.getBoolean('ephemeral') ?? true) ? MessageFlags.Ephemeral : undefined,
       });
 
       log.debug(F, `Updated busynessConfig: ${key} = ${value}`);

@@ -50,6 +50,13 @@ type RedditFeed = {
 
 export default runTimer;
 
+async function waitForTimerTasks(tasks: Promise<unknown>[]): Promise<void> {
+  const results = await Promise.allSettled(tasks);
+  results.forEach(result => {
+    if (result.status === 'rejected') log.error(F, `Timer task failed: ${result.reason}`);
+  });
+}
+
 async function checkReminders() { // eslint-disable-line @typescript-eslint/no-unused-vars
   // log.debug(F, 'Checking reminders...');
   // Process reminders
@@ -58,7 +65,7 @@ async function checkReminders() { // eslint-disable-line @typescript-eslint/no-u
   if (reminderData.length > 0) {
     // Loop through each reminder
     // for (const reminder of reminderData) {
-    reminderData.forEach(async reminder => {
+    await waitForTimerTasks(reminderData.map(async reminder => {
       // Check if the reminder is ready to be triggered
       if (reminder.trigger_at) {
         if (DateTime.fromJSDate(reminder.trigger_at) <= DateTime.local()) {
@@ -95,7 +102,7 @@ async function checkReminders() { // eslint-disable-line @typescript-eslint/no-u
       } else {
         log.error(F, `Reminder ${reminder.id} has no trigger date!`);
       }
-    });
+    }));
   }
 }
 
@@ -123,7 +130,7 @@ async function restoreTicketRoles(ticket: TicketRow, userData: UserRow): Promise
     const myRole = myMember.roles.highest;
 
     // Restore the old roles
-    userData.roles.split(',').forEach(async role => {
+    await waitForTimerTasks(userData.roles.split(',').map(async role => {
       const roleObj = await guild.roles.fetch(role);
       if (roleObj && roleObj.name !== '@everyone'
           && roleObj.id !== guildData.role_needshelp
@@ -139,7 +146,7 @@ async function restoreTicketRoles(ticket: TicketRow, userData: UserRow): Promise
            role in ${member.guild.name}: ${err}`);
         }
       }
-    });
+    }));
 
     // Remove the needshelp role
     const needshelpRole = await guild.roles.fetch(guildData.role_needshelp as string);
@@ -307,18 +314,18 @@ async function cleanTripsitThreads(guildData: GuildRow): Promise<void> {
       before: new Date().setDate(new Date().getDate() - 5),
     },
   });
-  threadList.threads.forEach(thread => deleteStaleThread(thread, channel));
+  await waitForTimerTasks(threadList.threads.map(thread => deleteStaleThread(thread, channel)));
 }
 
 async function checkTickets() { // eslint-disable-line @typescript-eslint/no-unused-vars
   // Process tickets
   const ticketData = await db.user_tickets.findMany();
   // Loop through each ticket
-  ticketData.forEach(ticket => processTicket(ticket));
+  await waitForTimerTasks(ticketData.map(ticket => processTicket(ticket)));
 
   // As a failsafe, loop through the Tripsit room and delete any threads that are older than 7 days and are archived
   const guildDataList = await db.discord_guilds.findMany();
-  guildDataList.forEach(guildData => cleanTripsitThreads(guildData));
+  await waitForTimerTasks(guildDataList.map(guildData => cleanTripsitThreads(guildData)));
 }
 
 async function expireMindsetRole(mindsetUser: UserRow): Promise<void> {
@@ -376,13 +383,13 @@ async function checkMindsets() { // eslint-disable-line @typescript-eslint/no-un
     },
   });
   // Loop through each user
-  mindsetRoleData.forEach(mindsetUser => expireMindsetRole(mindsetUser));
+  await waitForTimerTasks(mindsetRoleData.map(mindsetUser => expireMindsetRole(mindsetUser)));
 }
 
 async function checkRss() { // eslint-disable-line @typescript-eslint/no-unused-vars
   // log.debug(F, 'Checking rss...');
   const parser: Parser<RedditFeed, RedditItem> = new Parser();
-  (async () => {
+  await (async () => {
     const guild = await global.discordClient.guilds.fetch(env.DISCORD_GUILD_ID);
 
     const rssData = await db.rss.findMany({
@@ -391,7 +398,7 @@ async function checkRss() { // eslint-disable-line @typescript-eslint/no-unused-
       },
     });
 
-    rssData.forEach(async feed => {
+    await waitForTimerTasks(rssData.map(async feed => {
       let mostRecentPost: RedditItem & Parser.Item;
       try {
         [mostRecentPost] = (await parser.parseURL(feed.url)).items;
@@ -440,7 +447,7 @@ async function checkRss() { // eslint-disable-line @typescript-eslint/no-unused-
         `);
       }
 
-      channelBotlog.send({ embeds: [embed] });
+      await channelBotlog.send({ embeds: [embed] });
 
       const newFeed = feed;
       newFeed.last_post_id = mostRecentPost.id;
@@ -453,7 +460,7 @@ async function checkRss() { // eslint-disable-line @typescript-eslint/no-unused-
           last_post_id: newFeed.last_post_id,
         },
       });
-    });
+    }));
   })();
 }
 
@@ -496,9 +503,7 @@ async function awardVoiceExpInChannel(channel: GuildBasedChannel, category: expe
   if (humansInChat.size > minimumHumans) {
     // For each human in chat, check if they have been awarded voice exp in the last 5 minutes
     // If they have not, award them voice exp
-    humansInChat.forEach(async member => {
-      await experience(member, category, 'VOICE' as experience_type, channel);
-    });
+    await waitForTimerTasks(humansInChat.map(member => experience(member, category, 'VOICE' as experience_type, channel)));
   }
 }
 
@@ -523,7 +528,7 @@ async function checkVoice() {
 
   // The amount of of voice gained is ((A random value between 15 and 25) / 2)
 
-  (async () => {
+  await (async () => {
     // Define each category type and the category channel id
     const categoryDefs = [
       { category: 'GENERAL' as experience_category, id: env.CATEGORY_CAMPGROUND },
@@ -535,10 +540,10 @@ async function checkVoice() {
     ];
 
     // For each of the above types, check each voice channel in the category
-    categoryDefs.forEach(async categoryDef => {
+    await waitForTimerTasks(categoryDefs.map(async categoryDef => {
       const category = await discordClient.channels.fetch(categoryDef.id) as CategoryChannel;
-      category.children.cache.forEach(channel => awardVoiceExpInChannel(channel, categoryDef.category));
-    });
+      await waitForTimerTasks(category.children.cache.map(channel => awardVoiceExpInChannel(channel, categoryDef.category)));
+    }));
   })();
 }
 
@@ -832,8 +837,13 @@ async function checkEvery(
 ) {
   setTimeout(
     async () => {
-      await callback();
-      checkEvery(callback, interval);
+      try {
+        await callback();
+      } catch (error) {
+        log.error(F, `Timer job ${callback.name} failed: ${error}`);
+      } finally {
+        checkEvery(callback, interval);
+      }
     },
     interval,
   );
