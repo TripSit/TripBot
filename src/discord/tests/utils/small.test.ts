@@ -221,6 +221,7 @@ describe('youAre', () => {
   });
 
   it('echoes the predicate back without pinging anyone', async () => {
+    vi.spyOn(Math, 'random').mockReturnValue(1 - Number.EPSILON);
     const m = msg('the sky is very blue.');
     await youAre(m);
     expect((m.channel as TextChannel).send).toHaveBeenCalledWith({
@@ -245,15 +246,17 @@ describe('youAre', () => {
     expect((m.channel as TextChannel).send).not.toHaveBeenCalled();
   });
 
-  it('only fires about 1% of the time in production', async () => {
+  it.each([
+    [0, true],
+    [0.00995, true],
+    [0.01, false],
+    [0.5, false],
+    [1 - Number.EPSILON, false],
+  ])('applies the production threshold for random value %s', async (random, shouldSend) => {
     e.NODE_ENV = 'production';
-    vi.spyOn(Math, 'random').mockReturnValue(0.5);
-    const quiet = msg('it is cold.');
-    await youAre(quiet);
-    expect((quiet.channel as TextChannel).send).not.toHaveBeenCalled();
-    vi.spyOn(Math, 'random').mockReturnValue(0);
-    const loud = msg('it is cold.');
-    await youAre(loud);
-    expect((loud.channel as TextChannel).send).toHaveBeenCalled();
+    vi.spyOn(Math, 'random').mockReturnValue(random);
+    const m = msg('it is cold.');
+    await youAre(m);
+    expect((m.channel as TextChannel).send).toHaveBeenCalledTimes(shouldSend ? 1 : 0);
   });
 });
