@@ -9,6 +9,11 @@ describe('calcBenzo', () => {
     expect(await calcBenzo(1, 'alprazolam', 'clobazam')).toBe(40);
   });
 
+  it.each(['brotizolam', 'flubromazolam'])('preserves the full decimal equivalence for %s', async drug => {
+    expect(await calcBenzo(0.25, drug, 'diazepam')).toBe(10);
+    expect(await calcBenzo(10, 'diazepam', drug)).toBe(0.25);
+  });
+
   it('returns -1 for unknown or non-convertible drugs', async () => {
     expect(await calcBenzo(1, 'notadrug', 'clobazam')).toBe(-1);
     expect(await calcBenzo(1, 'alprazolam', 'notadrug')).toBe(-1);

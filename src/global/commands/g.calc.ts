@@ -68,7 +68,7 @@ export async function calcBenzo(
     return -1;
   }
 
-  const regex = /\d+\.?\d?/;
+  const regex = /\d+(?:\.\d+)?/;
   const convertedDoseA = regex.exec(drugDataA.properties['dose_to_diazepam' as keyof typeof drugDataA.properties]) as RegExpExecArray; // eslint-disable-line max-len
 
   const drugDataB = drugDataTripsit[drugB as keyof typeof drugDataTripsit];
