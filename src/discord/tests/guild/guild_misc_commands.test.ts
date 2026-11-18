@@ -1,5 +1,7 @@
 /* eslint-disable max-len, sonarjs/no-duplicate-string, no-restricted-syntax, no-await-in-loop */
-import { TextChannel } from 'discord.js';
+import {
+  DiscordAPIError, MessageFlags, RESTJSONErrorCodes, TextChannel,
+} from 'discord.js';
 import { dReminder } from '../../commands/guild/d.reminder';
 import { dH2flow } from '../../commands/guild/d.h2flow';
 import { dTripsitStats } from '../../commands/guild/d.tripsitstats';
@@ -94,6 +96,66 @@ describe('busyness', () => {
     expect(stub.reply).toHaveBeenCalledWith(expect.objectContaining({ content: 'Updated `messageWeight` to `4`.' }));
   });
 
+  it.each([undefined, true, false])('uses private configuration replies by default (ephemeral=%s)', async ephemeral => {
+    const stub = slashStub({
+      subcommand: 'set',
+      options: { key: 'messageWeight', value: 4, ephemeral },
+      extra: { memberPermissions: { has: () => true } },
+    });
+    await dBusyness.execute(stub as never);
+    expect(stub.reply).toHaveBeenCalledWith(expect.objectContaining({
+      flags: ephemeral === false ? undefined : MessageFlags.Ephemeral,
+    }));
+  });
+
+  it.each([undefined, true, false])('posts publicly by default (ephemeral=%s)', async ephemeral => {
+    vi.useFakeTimers({ toFake: ['setTimeout'] });
+    try {
+      vi.resetModules();
+      const { dBusyness: fresh } = await import('../../commands/guild/d.busyness');
+      const lounge = channelWith([]);
+      const msg = { client: { channels: { fetch: vi.fn(async () => lounge) } }, edit: vi.fn() };
+      const stub = slashStub({
+        subcommand: 'post', options: { ephemeral }, extra: { memberPermissions: { has: () => true } },
+      });
+      stub.editReply.mockResolvedValue(msg);
+      await fresh.execute(stub as never);
+      expect(stub.deferReply).toHaveBeenCalledWith({
+        flags: ephemeral ? MessageFlags.Ephemeral : undefined,
+      });
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('recovers from a transient Discord edit failure', async () => {
+    vi.useFakeTimers({ toFake: ['setTimeout'] });
+    try {
+      vi.resetModules();
+      const { dBusyness: fresh } = await import('../../commands/guild/d.busyness');
+      const lounge = channelWith([message()]);
+      const msg = {
+        client: { channels: { fetch: vi.fn(async () => lounge) } },
+        edit: vi.fn().mockRejectedValueOnce(new DiscordAPIError(
+          { code: RESTJSONErrorCodes.MissingPermissions, message: 'temporary permission failure' },
+          RESTJSONErrorCodes.MissingPermissions,
+          403,
+          'PATCH',
+          '/messages/test',
+          {},
+        )),
+      };
+      const stub = slashStub({ subcommand: 'post', extra: { memberPermissions: { has: () => true } } });
+      stub.editReply.mockResolvedValue(msg);
+      await fresh.execute(stub as never);
+      expect(msg.edit).toHaveBeenCalledTimes(1);
+      await vi.advanceTimersByTimeAsync(30000);
+      expect(msg.edit).toHaveBeenCalledTimes(2);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('posts a live score, reschedules, and stops when the embed is deleted', async () => {
     vi.useFakeTimers({ toFake: ['setTimeout'] });
     try {
@@ -107,7 +169,14 @@ describe('busyness', () => {
       const { fields } = (msg.edit.mock.calls[0][0] as { embeds: Array<{ data: { fields: Array<{ name: string }> } }> }).embeds[0].data;
       expect(fields[0].name).toContain('Current Busyness Score');
       // next tick: the embed vanished so the loop ends
-      msg.edit.mockRejectedValueOnce(new Error('deleted'));
+      msg.edit.mockRejectedValueOnce(new DiscordAPIError(
+        { code: RESTJSONErrorCodes.UnknownMessage, message: 'deleted' },
+        RESTJSONErrorCodes.UnknownMessage,
+        404,
+        'PATCH',
+        '/messages/test',
+        {},
+      ));
       await vi.advanceTimersByTimeAsync(30000);
       await flushPromises();
       expect(msg.edit).toHaveBeenCalledTimes(2);
@@ -118,7 +187,7 @@ describe('busyness', () => {
     }
   });
 
-  it('stops the loop when the lounge channel cannot be fetched', async () => {
+  it('retries when the lounge channel cannot be fetched', async () => {
     vi.useFakeTimers({ toFake: ['setTimeout'] });
     try {
       vi.resetModules();
@@ -130,7 +199,7 @@ describe('busyness', () => {
       await flushPromises();
       expect(msg.edit).not.toHaveBeenCalled();
       await vi.advanceTimersByTimeAsync(60000);
-      expect(msg.client.channels.fetch).toHaveBeenCalledTimes(1);
+      expect(msg.client.channels.fetch).toHaveBeenCalledTimes(3);
     } finally {
       vi.useRealTimers();
     }
