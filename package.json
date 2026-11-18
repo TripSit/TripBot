@@ -146,6 +146,7 @@
     "tsc-alias": "^1.8.16",
     "tsc-watch": "^7.2.0",
     "typescript": "^5.9.3",
+    "vite": "^8.3.6",
     "vitest": "^5.1.0",
     "vitest-mock-extended": "^5.1.1"
   }
