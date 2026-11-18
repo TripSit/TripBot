@@ -63,6 +63,17 @@ describe('keycloakAuth', () => {
     expect(res.json).toHaveBeenCalledWith({ error: 'Invalid or expired token' });
   });
 
+  it('does not log the resolved Discord id', async () => {
+    const info = vi.spyOn(log, 'info');
+    (fetch as ReturnType<typeof vi.fn>).mockResolvedValue({ ok: true, json: async () => ({ sub: 'kc-secret' }) });
+    mocks.discordId.mockResolvedValueOnce('d-secret-9001');
+    await keycloakAuth(request('Bearer abc'), makeRes(), vi.fn());
+    const logged = info.mock.calls.map(call => String(call[1])).join('\n');
+    info.mockRestore();
+    expect(logged).not.toMatch(/d-secret-9001|kc-secret/);
+    expect(logged).toContain('Found Discord ID');
+  });
+
   it('attaches the user and their Discord id', async () => {
     (fetch as ReturnType<typeof vi.fn>).mockResolvedValue({ ok: true, json: async () => ({ sub: 'kc1' }) });
     mocks.discordId.mockResolvedValueOnce('d1');

@@ -137,3 +137,41 @@ describe('getDiscordUserByGitHub', () => {
     expect(mod.default).toBe(mod.getDiscordUserByGitHub);
   });
 });
+
+describe('log privacy', () => {
+  it('never logs Keycloak ids, linked Discord ids or Discord usernames on lookup, cache, retry and failure paths', async () => {
+    const spies = (['debug', 'info', 'warn', 'error'] as const).map(level => vi.spyOn(log, level));
+    try {
+      const { mod, users } = await load();
+      users.listFederatedIdentities
+        .mockResolvedValueOnce([discord('d-secret-9001', 'secret-discord-name')])
+        .mockRejectedValueOnce(new Error('Request failed with status code 401'))
+        .mockResolvedValueOnce([github('gh')])
+        .mockRejectedValueOnce(new Error('401'))
+        .mockRejectedValueOnce(new Error('boom'))
+        .mockRejectedValueOnce(new Error('500'));
+      await mod.getDiscordIdFromFederatedIdentity('kc-secret-1');
+      await mod.getDiscordIdFromFederatedIdentity('kc-secret-1'); // cached
+      await mod.getDiscordIdFromFederatedIdentity('kc-secret-2'); // 401 then retry without a Discord link
+      await expect(mod.getDiscordIdFromFederatedIdentity('kc-secret-3')).rejects.toThrow();
+      await expect(mod.getDiscordIdFromFederatedIdentity('kc-secret-4')).rejects.toThrow();
+
+      users.find.mockResolvedValueOnce([{ id: 'kc-secret-5' }, { id: 'kc-secret-6' }]).mockResolvedValue([]);
+      users.listFederatedIdentities.mockReset();
+      users.listFederatedIdentities.mockImplementation(async ({ id }: { id: string }) => {
+        if (id === 'kc-secret-6') throw new Error('no identities');
+        return [github('gh'), { identityProvider: 'discord', userId: 'd-secret-9002', userName: 'secret-discord-name' }];
+      });
+      await mod.getDiscordUserByGitHub('gh');
+      users.find.mockResolvedValueOnce([{ id: 'kc-secret-7' }]).mockResolvedValue([]);
+      users.listFederatedIdentities.mockResolvedValue([github('gh')]);
+      await mod.getDiscordUserByGitHub('gh');
+
+      const logged = spies.flatMap(spy => spy.mock.calls.map(call => String(call[1]))).join('\n');
+      expect(logged).not.toMatch(/kc-secret|d-secret|secret-discord-name/);
+      expect(logged).toContain('Found Discord provider');
+    } finally {
+      spies.forEach(spy => spy.mockRestore());
+    }
+  });
+});

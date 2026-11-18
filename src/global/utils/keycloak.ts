@@ -79,9 +79,9 @@ async function lookupDiscordId(userId: string, suffix = ''): Promise<string | nu
   });
 
   if (discordId) {
-    log.debug(F, `Found Discord provider for user ${userId}${suffix}: ${discordId}`);
+    log.debug(F, `Found Discord provider${suffix}`);
   } else {
-    log.debug(F, `No Discord provider found for user ${userId}${suffix}`);
+    log.debug(F, `No Discord provider found${suffix}`);
   }
 
   return discordId;
@@ -92,7 +92,7 @@ export async function getDiscordIdFromFederatedIdentity(userId: string): Promise
   // Check cache first
   const cached = discordIdCache.get(userId);
   if (cached && isCacheValid(cached.timestamp)) {
-    log.debug(F, `Using cached Discord ID for user ${userId}: ${cached.discordId}`);
+    log.debug(F, 'Using cached Discord ID');
     return cached.discordId;
   }
 
@@ -101,11 +101,11 @@ export async function getDiscordIdFromFederatedIdentity(userId: string): Promise
   } catch (error) {
     // If we get a 401, the admin token expired - reset authentication and try once more
     if (!(error instanceof Error && error.message.includes('401'))) {
-      log.error(F, `Error getting Discord ID for user ${userId}: ${error}`);
+      log.error(F, `Error getting Discord ID: ${error}`);
       throw error;
     }
 
-    log.error(F, `Admin token expired, re-authenticating and retrying for user ${userId}`);
+    log.error(F, 'Admin token expired, re-authenticating and retrying');
 
     // Reset authentication state
     isAuthenticated = false;
@@ -115,7 +115,7 @@ export async function getDiscordIdFromFederatedIdentity(userId: string): Promise
       // Try once more with fresh authentication
       return await lookupDiscordId(userId, ' after re-auth');
     } catch (retryError) {
-      log.error(F, `Error getting Discord ID for user ${userId} after re-auth: ${retryError}`);
+      log.error(F, `Error getting Discord ID after re-auth: ${retryError}`);
       throw retryError;
     }
   }
@@ -191,7 +191,7 @@ async function checkUserIdentities(user: UserRepresentation, githubUsername: str
       return null;
     }
 
-    log.debug(F, `Found user ${user.id} with GitHub username ${githubUsername}`);
+    log.debug(F, `Found user with GitHub username ${githubUsername}`);
 
     // Look for Discord identity for the same user
     const discordIdentity = federatedIdentities.find(
@@ -199,7 +199,7 @@ async function checkUserIdentities(user: UserRepresentation, githubUsername: str
     );
 
     if (discordIdentity) {
-      log.debug(F, `Found Discord identity for user: ${discordIdentity.userName}`);
+      log.debug(F, 'Found Discord identity for user');
 
       return {
         id: discordIdentity.userId as string, // Discord user ID
@@ -210,12 +210,12 @@ async function checkUserIdentities(user: UserRepresentation, githubUsername: str
       };
     }
 
-    log.info(F, `User ${user.id} has GitHub account but no Discord account linked`);
+    log.info(F, 'User has GitHub account but no Discord account linked');
     return null;
   } catch (error) {
     // Some users might not have federated identities, that's okay
     const errorMsg = error instanceof Error ? error.message : String(error);
-    log.debug(F, `No federated identities for user ${user.id}: ${errorMsg}`);
+    log.debug(F, `No federated identities for user: ${errorMsg}`);
     return null;
   }
 }
