@@ -96,9 +96,16 @@ describe('getDrugInfo: absent optional data', () => {
     expect(data.fields?.find(f => f.name === '↗ Tolerance')?.value).toBe('Half: A week');
   });
 
-  it('shows only the physical class when no chemical class is known', async () => {
+  it('shows only the psychoactive class when no chemical class is known', async () => {
     mocks.drug.mockResolvedValueOnce({ name: 'Psy', url: 'https://u', classes: { psychoactive: 'psy' } });
-    expect((await dataOf('psy')).fields?.find(f => f.name === 'ℹ️ Class')).toBeDefined();
+    const field = (await dataOf('psy')).fields?.find(f => f.name === 'ℹ️ Class');
+    expect(field?.value).toBe('**Psychoactive**: psy');
+  });
+
+  it('shows the chemical and psychoactive classes as separate values', async () => {
+    mocks.drug.mockResolvedValueOnce({ name: 'Both', url: 'https://u', classes: { chemical: 'chem', psychoactive: 'psy' } });
+    const field = (await dataOf('both')).fields?.find(f => f.name === 'ℹ️ Class');
+    expect(field?.value).toBe('**Chemical**: chem\n**Psychoactive**: psy');
   });
 
   it('lists routes that are not reordered, and stops after three columns', async () => {
