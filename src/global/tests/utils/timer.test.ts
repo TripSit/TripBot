@@ -131,6 +131,17 @@ describe('runTimer', () => {
     expect(scheduled[12].ms).toBe(5000);
   });
 
+  it('re-arms a failed job and succeeds on its next run', async () => {
+    dbMock.user_reminders.findMany.mockRejectedValueOnce(new Error('temporary database failure'))
+      .mockResolvedValue([]);
+    const { initial } = await start();
+    await expect(initial[T.reminders].fn()).resolves.toBeUndefined();
+    expect(scheduled).toHaveLength(13);
+    await scheduled[12].fn();
+    expect(dbMock.user_reminders.findMany).toHaveBeenCalledTimes(2);
+    expect(scheduled).toHaveLength(14);
+  });
+
   it('runs the retention purge on its schedule', async () => {
     dbMock.users.findMany.mockResolvedValue([]);
     dbMock.user_actions.deleteMany.mockResolvedValue({ count: 0 });
@@ -165,6 +176,25 @@ describe('reminders', () => {
     await run('reminders');
     expect(sendBot).toHaveBeenCalledWith(expect.stringContaining('drink water'));
     expect(dbMock.user_reminders.delete).toHaveBeenCalledWith({ where: { id: 'r1' } });
+  });
+
+  it('waits for every reminder even when another fails before scheduling again', async () => {
+    let finishSend = () => {};
+    sendBot.mockReturnValue(new Promise<void>(resolve => { finishSend = resolve; }));
+    dbMock.user_reminders.findMany.mockResolvedValue([reminder(), reminder({ id: 'r2' })] as never);
+    dbMock.users.upsert.mockRejectedValueOnce(new Error('temporary user lookup failure'))
+      .mockResolvedValue({ discord_id: 'd1' } as never);
+    const { initial } = await start();
+    const pending = initial[T.reminders].fn();
+    await flush();
+    expect(sendBot).toHaveBeenCalledTimes(1);
+    expect(scheduled).toHaveLength(12);
+    expect(dbMock.user_reminders.delete).not.toHaveBeenCalled();
+
+    finishSend();
+    await pending;
+    expect(scheduled).toHaveLength(13);
+    expect(dbMock.user_reminders.delete).toHaveBeenCalledWith({ where: { id: 'r2' } });
   });
 
   it('still deletes when the DM fails or the user has no discord id', async () => {
@@ -232,6 +262,25 @@ describe('tickets', () => {
     expect(thread.setArchived).toHaveBeenCalledWith(true);
     expect(member.roles.add).toHaveBeenCalledTimes(2);
     expect(member.roles.remove).toHaveBeenCalledTimes(1);
+  });
+
+  it('waits for ticket role restoration before scheduling another ticket run', async () => {
+    let finishRoles = () => {};
+    const pendingRoles = new Promise<void>(resolve => { finishRoles = resolve; });
+    dbMock.user_tickets.findMany.mockResolvedValue([ticket()] as never);
+    const { member } = discordForArchive();
+    member.roles.add.mockReturnValue(pendingRoles);
+    const { initial } = await start();
+    const pending = initial[T.tickets].fn();
+    await flush();
+    expect(member.roles.add).toHaveBeenCalledTimes(2);
+    expect(scheduled).toHaveLength(12);
+    expect(dbMock.users.update).not.toHaveBeenCalled();
+
+    finishRoles();
+    await pending;
+    expect(scheduled).toHaveLength(13);
+    expect(dbMock.users.update).toHaveBeenCalled();
   });
 
   it('skips role restoration for users without stored roles and when role changes fail', async () => {
@@ -399,7 +448,7 @@ describe('tickets', () => {
         name: 'b', fetch: vi.fn(), delete: vi.fn(), messages: { fetch: vi.fn(async () => messages([system])) },
       };
       const broken = { name: 'c', fetch: vi.fn(async () => { throw new Error('gone'); }), delete: vi.fn() };
-      const threads = new Map<string, any>([['1', good], ['2', empty], ['3', broken], ['4', idle]]);
+      const threads = new Collection<string, any>([['1', good], ['2', empty], ['3', broken], ['4', idle]]);
       const { guild } = makeGuild();
       guild.channels.fetch = vi.fn(async () => ({ name: 'tripsit', threads: { fetch: vi.fn(async () => ({ threads })) } }));
       client().guilds.fetch = vi.fn(async () => guild);
@@ -889,7 +938,7 @@ describe('birthdays', () => {
     expect(send).not.toHaveBeenCalled();
   });
 
-  it('keeps going when one message fails and rethrows lookup failures', async () => {
+  it('keeps going when one message fails and reschedules after lookup failures', async () => {
     dbMock.users.findMany.mockResolvedValue([user()] as never);
     client().channels.fetch = vi.fn(async () => { throw new Error('Missing Access'); });
     const { run } = await start();
@@ -897,6 +946,7 @@ describe('birthdays', () => {
 
     dbMock.users.findMany.mockRejectedValue(new Error('db down'));
     const { initial } = await start();
-    await expect(initial[T.birthdays].fn()).rejects.toThrow('db down');
+    await expect(initial[T.birthdays].fn()).resolves.toBeUndefined();
+    expect(scheduled).toHaveLength(13);
   });
 });
