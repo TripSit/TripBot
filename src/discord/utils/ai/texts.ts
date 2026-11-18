@@ -1,4 +1,5 @@
 import { stripIndents } from 'common-tags';
+import { RETENTION_MONTHS } from '../../../global/commands/g.privacy';
 
 export class AiText {
   static readonly maxTokens = 100000;
@@ -102,7 +103,8 @@ export class AiText {
       - **Database Storage:** We do **not** store your prompts or AI-generated replies in our permanent database.
       - **Ephemeral Context:** To maintain a conversation, a short history of recent messages is temporarily held in the AI's "short-term memory." This is cleared when the session ends or context limits are reached.
       - **Moderation Logs:** For safety and abuse prevention, prompts are echoed to a private, internal moderation room. 
-        - These logs are **automatically purged after 30 days**.
+        - TripBot does **not automatically delete these Discord messages**.
+          They remain until manually deleted.
         - Access is restricted to the core TripSit development team for debugging and security audits.
 
       ### 📊 Metadata Collection
@@ -117,8 +119,13 @@ export class AiText {
       - You can review their commitment to privacy at [openrouter.ai/privacy](https://openrouter.ai/privacy).
 
       ### 🗑️ Your Right to be Forgotten
-      - **Auto-Deletion:** If you are inactive for **90 days**, all AI-related metadata (stats, settings, and history) is automatically wiped from our systems.
-      - **Manual Purge:** You can request an immediate data wipe at any time by contacting a TripSit Moderator or Developer.
+      - **Account Retention:** AI database records follow TripBot's general inactive-account cleanup.
+        Accounts not seen by TripBot for **${RETENTION_MONTHS} months** are eligible for the next scheduled purge;
+        accounts with an unrepealed full ban are excluded.
+      - **Manual Purge:** Use \`/privacy delete\` to remove your TripBot AI account metadata,
+        usage records, and generated-image records, along with the other data covered by that command.
+      - **Discord & Providers:** Database deletion does not delete Discord messages, including moderation-room logs,
+        or data held by external AI providers. Contact a TripSit Moderator or Developer about Discord message removal.
 
       > **We do not sell data. We do not serve ads. We do not track you across the web.**
       > *TripSit is community-funded. Support us via \`/donate\` to keep this service independent.*

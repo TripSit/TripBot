@@ -1,4 +1,5 @@
 import { MessageFlags, PermissionFlagsBits } from 'discord.js';
+import { RETENTION_MONTHS } from '../../../../global/commands/g.privacy';
 import { AiText } from '../../../utils/ai/texts';
 import { AiPage } from '../../../utils/ai/pages';
 import { dbMock } from '../../../../vitest/utils/mockDb';
@@ -188,6 +189,25 @@ describe('AiPage.userSettings', () => {
       guilds: { cache: new Map([[e.DISCORD_GUILD_ID, { members: { fetch: vi.fn().mockRejectedValue(new Error('Unknown Member')) } }]]) },
     };
     expect(text(await AiPage.userSettings(interaction()))).toContain('Resource Usage');
+  });
+});
+
+describe('AI privacy retention disclosure', () => {
+  it('describes implemented account cleanup and the absence of Discord log cleanup', () => {
+    const policy = AiText.aiPrivacyPolicy.join('\n');
+    expect(policy).toContain(`**${RETENTION_MONTHS} months**`);
+    expect(policy).toContain('unrepealed full ban');
+    expect(policy).toContain('not automatically delete these Discord messages');
+    expect(policy).not.toContain('automatically purged after 30 days');
+    expect(policy).not.toContain('inactive for **90 days**');
+  });
+
+  it('explains manual deletion and its Discord/provider limits on the privacy page', async () => {
+    dbMock.users.upsert.mockResolvedValue({ ai_info: null } as never);
+    const body = text(await AiPage.privacy(interaction()));
+    expect(body).toContain('/privacy delete');
+    expect(body).toContain('Database deletion does not delete Discord messages');
+    expect(body).toContain('external AI providers');
   });
 });
 
