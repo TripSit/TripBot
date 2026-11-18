@@ -91,6 +91,8 @@ export const env = {
   DNS_DOMAIN: process.env.DNS_DOMAIN,
   BOT_DOMAIN: process.env.BOT_DOMAIN,
   GITHUB_TOKEN: process.env.GITHUB_TOKEN,
+  CLAUDE_CODE_OAUTH_TOKEN: process.env.CLAUDE_CODE_OAUTH_TOKEN,
+  CODE_AGENT_REPO: process.env.CODE_AGENT_REPO,
   RAPID_TOKEN: process.env.RAPID_TOKEN,
   WOLFRAM_TOKEN: process.env.WOLFRAM_TOKEN,
   IMGUR_ID: process.env.IMGUR_ID,

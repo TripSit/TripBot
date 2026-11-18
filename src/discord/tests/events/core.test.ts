@@ -17,6 +17,7 @@ import { flushPromises, stubInstance } from '../../../vitest/utils/discordStubs'
 const e = env as unknown as Record<string, string>;
 
 const mocks = vi.hoisted(() => ({
+  aiMessage: vi.fn(),
   commandRun: vi.fn(),
   autocomplete: vi.fn(),
   buttonClick: vi.fn(),
@@ -83,7 +84,7 @@ vi.mock('../../utils/modHistory', () => ({ modHistoryButton: mocks.modHistoryBut
 vi.mock('../../commands/global/d.help', () => ({ helpMenu: mocks.helpMenu }));
 vi.mock('../../commands/guild/d.rpg', () => ({ rpgHome: mocks.rpgHome, rpgMarketChange: mocks.rpgMarketChange }));
 vi.mock('../../utils/application', () => ({ applicationStart: mocks.applicationStart, applicationReject: mocks.applicationReject }));
-vi.mock('../../commands/global/d.ai', () => ({ aiMenu: mocks.aiMenu, aiReaction: vi.fn() }));
+vi.mock('../../commands/global/d.ai', () => ({ aiMenu: mocks.aiMenu, aiReaction: vi.fn(), aiMessage: mocks.aiMessage }));
 vi.mock('../../commands/guild/d.purge', () => ({ purgeMenu: mocks.purgeMenu }));
 vi.mock('../../utils/ai', () => ({ AiPage: { userSettings: mocks.userSettings }, AiText: {} }));
 vi.mock('../../utils/ai/modals', () => ({ AiModal: { ID: {} } }));
@@ -335,13 +336,14 @@ describe('messageCreate', () => {
   });
 
   beforeEach(() => {
+    mocks.aiMessage.mockResolvedValue(undefined);
     dbMock.users.upsert.mockResolvedValue({ id: 'uid', discord_bot_ban: false, last_seen_at: new Date() } as never);
   });
 
   it('runs every handler for human messages in tripsit', async () => {
     const m = msg();
     await messageCreate.execute(m as never);
-    [mocks.messageCommand, mocks.relayDiscordMessage, mocks.countMessage, mocks.youAre, mocks.karma,
+    [mocks.messageCommand, mocks.relayDiscordMessage, mocks.aiMessage, mocks.countMessage, mocks.youAre, mocks.karma,
       mocks.helperActivity, mocks.nightsWatch, mocks.announcements].forEach(fn => expect(fn).toHaveBeenCalledWith(m));
     expect(mocks.experience).toHaveBeenCalledWith(m.member, 'GENERAL', 'TEXT', m.channel);
   });
@@ -363,6 +365,11 @@ describe('messageCreate', () => {
     expect(mocks.announcements).toHaveBeenCalledTimes(4);
   });
 
+  it('logs instead of crashing when AI handling rejects', async () => {
+    mocks.aiMessage.mockRejectedValue(new Error('boom'));
+    await expect(messageCreate.execute(msg() as never)).resolves.toBeUndefined();
+  });
+
   it('stops early for other guilds, banned users and bots', async () => {
     await messageCreate.execute(msg({ guild: { id: 'other' } }) as never);
     expect(mocks.countMessage).not.toHaveBeenCalled();
@@ -371,6 +378,7 @@ describe('messageCreate', () => {
     dbMock.users.upsert.mockResolvedValue({ discord_bot_ban: false } as never);
     await messageCreate.execute(msg({ author: { id: 'b', bot: true } }) as never);
     expect(mocks.countMessage).not.toHaveBeenCalled();
+    expect(mocks.aiMessage).not.toHaveBeenCalled();
     expect(mocks.messageCommand).toHaveBeenCalledTimes(3);
   });
 });

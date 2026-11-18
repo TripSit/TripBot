@@ -7,6 +7,7 @@ import { messageModThread, AppealData } from '../../../discord/utils/modUtils';
 
 import appeals from './appeals.queries';
 import users from '../users/users.queries';
+import staff from './staff.routes';
 
 const F = f(__filename);
 
@@ -18,7 +19,8 @@ const limiter = RateLimit({
   max: process.env.NODE_ENV === 'production' ? 20 : 1000,
 });
 
-// apply rate limiter to all requests
+// Staff routes have separate per-reviewer limits; keep the public appeal limiter below.
+router.use('/staff', staff);
 router.use(limiter);
 router.use(keycloakAuth);
 

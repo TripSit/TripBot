@@ -137,7 +137,10 @@ describe('appeals', () => {
   const modal = (text = '<b>"hi" & \'bye\'</b>') => ({ fields: { getTextInputValue: vi.fn(() => text) } }) as never;
   const latest = (status: string) => dbMock.appeals.findFirst.mockResolvedValue({ id: 'a1', status } as never);
 
-  beforeEach(() => { dbMock.users.upsert.mockResolvedValue(user as never); });
+  beforeEach(() => {
+    dbMock.users.upsert.mockResolvedValue(user as never);
+    dbMock.appeals.updateMany.mockResolvedValue({ count: 1 });
+  });
 
   describe.each([
     ['appealAccept', appealAccept, 'ACCEPTED'],
@@ -156,8 +159,8 @@ describe('appeals', () => {
     it('records the decision with a sanitised moderator message', async () => {
       latest('RECEIVED');
       await fn(interaction(), modal());
-      expect(dbMock.appeals.update).toHaveBeenCalledWith({
-        where: { id: 'a1' },
+      expect(dbMock.appeals.updateMany).toHaveBeenCalledWith({
+        where: { id: 'a1', status: 'RECEIVED' },
         data: expect.objectContaining({ status, response_message: 'b&quot;hi&quot; &amp; &#x27;bye&#x27;/b' }),
       });
     });
@@ -169,7 +172,7 @@ describe('appeals', () => {
     const { remove } = (i as { guild: { bans: { remove: ReturnType<typeof vi.fn> } } }).guild.bans;
     expect(await appealAccept(i, modal())).toEqual({ content: '<@user123> has been unbanned and their appeal approved.' });
     expect(remove).toHaveBeenCalledWith('user123', expect.any(String));
-    expect(remove.mock.invocationCallOrder[0]).toBeLessThan(dbMock.appeals.update.mock.invocationCallOrder[0]);
+    expect(remove.mock.invocationCallOrder[0]).toBeLessThan(dbMock.appeals.updateMany.mock.invocationCallOrder[0]);
   });
 
   it('does not save the acceptance or claim success when the unban fails', async () => {
@@ -179,7 +182,7 @@ describe('appeals', () => {
     const { content } = await appealAccept(failing, modal());
     expect(content).toContain('could not remove');
     expect(content).not.toContain(UNBANNED);
-    expect(dbMock.appeals.update).not.toHaveBeenCalled();
+    expect(dbMock.appeals.updateMany).not.toHaveBeenCalled();
   });
 
   it('treats Unknown Ban as already unbanned and still records the acceptance', async () => {
@@ -188,7 +191,13 @@ describe('appeals', () => {
     const err = new DiscordAPIError({ code: RESTJSONErrorCodes.UnknownBan, message: 'Unknown Ban' }, RESTJSONErrorCodes.UnknownBan, 404, 'DELETE', '', {});
     (gone as { guild: { bans: { remove: ReturnType<typeof vi.fn> } } }).guild.bans.remove.mockRejectedValue(err);
     expect((await appealAccept(gone, modal())).content).toContain(UNBANNED);
-    expect(dbMock.appeals.update).toHaveBeenCalledTimes(1);
+    expect(dbMock.appeals.updateMany).toHaveBeenCalledTimes(1);
+  });
+
+  it('reports a concurrent decision instead of overwriting it', async () => {
+    latest('RECEIVED');
+    dbMock.appeals.updateMany.mockResolvedValue({ count: 0 });
+    expect((await appealAccept(interaction(), modal())).content).toContain('changed while you were reviewing');
   });
 
   it('confirms rejections', async () => {
@@ -203,7 +212,7 @@ describe('appeals', () => {
     latest('DENIED');
     expect((await appealReject(interaction(), modal())).content).toContain('already been denied');
     expect((await appealAccept(interaction(), modal())).content).toContain(UNBANNED);
-    expect(dbMock.appeals.update).toHaveBeenCalledTimes(1);
+    expect(dbMock.appeals.updateMany).toHaveBeenCalledTimes(1);
   });
 
   describe('appealReminder', () => {

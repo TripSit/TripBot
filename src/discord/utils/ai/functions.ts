@@ -17,6 +17,7 @@ import {
   TextDisplayBuilder,
   User,
 } from 'discord.js';
+import { getAiChatUserIds } from '../../../global/utils/aiConsent';
 import { getDrugInfo } from '../../commands/global/d.drug';
 import { AiMenu } from './menus';
 import { AiPersona, PersonaId } from './personas';
@@ -232,13 +233,26 @@ export class AiFunction {
     // Sort chronologically (fetch returns newest first)
     const sortedMessages = [...fetchedMessages.values()].reverse();
 
+    // Only people who agreed to the AI TOS and privacy policy may have their words sent to the model,
+    // including as history. Everyone else's messages are dropped, as are the bot's replies to them.
+    const consented = await getAiChatUserIds(
+      sortedMessages.filter(msg => msg.author.id !== discordClient.user?.id).map(msg => msg.author.id),
+    );
+    const includedIds = new Set<string>();
+
     sortedMessages.forEach(msg => {
       if (msg.author.id === discordClient.user?.id) {
+        const repliedTo = msg.reference?.messageId;
+        if (!repliedTo || !includedIds.has(repliedTo)) return;
         messageList.push({
           role: 'assistant',
           content: [{ type: 'text', text: msg.cleanContent }],
         });
-      } else if (msg.mentions.has(discordClient.user!) || msg.cleanContent.toLowerCase().includes('tripbot')) {
+      } else if (
+        consented.has(msg.author.id)
+        && (msg.mentions.has(discordClient.user!) || msg.cleanContent.toLowerCase().includes('tripbot'))
+      ) {
+        includedIds.add(msg.id);
         // Strip the mention/name to keep the prompt clean
         const content = msg.cleanContent.replace(new RegExp(`@?${botNickname}`, 'gi'), '').trim();
         messageList.push({
