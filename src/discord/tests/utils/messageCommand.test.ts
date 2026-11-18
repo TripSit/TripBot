@@ -4,8 +4,12 @@ import { dbMock } from '../../../vitest/utils/mockDb';
 import { collectionOf, flushPromises, stubInstance } from '../../../vitest/utils/discordStubs';
 
 const e = env as unknown as Record<string, string>;
-const mocks = vi.hoisted(() => ({ sleep: vi.fn() }));
+const mocks = vi.hoisted(() => ({ sleep: vi.fn(), codeAgent: vi.fn() }));
 vi.mock('../../utils/sleep', () => ({ sleep: mocks.sleep }));
+vi.mock('../../utils/codeAgentRequest', async () => ({
+  ...(await vi.importActual<object>('../../utils/codeAgentRequest')),
+  handleCodeAgentRequest: mocks.codeAgent,
+}));
 
 let userCounter = 0;
 
@@ -117,6 +121,16 @@ describe('old tilde commands', () => {
 });
 
 describe('mentioning and poking the bot', () => {
+  beforeEach(() => { mocks.codeAgent.mockReset(); mocks.codeAgent.mockResolvedValue(false); });
+
+  it('stops handling a mention the code agent took', async () => {
+    mocks.codeAgent.mockResolvedValue(true);
+    const m = build({}, { mentionBot: true });
+    await messageCommand(m.message);
+    expect(mocks.codeAgent).toHaveBeenCalledWith(m.message);
+    expect(m.raw.react).not.toHaveBeenCalled();
+  });
+
   it('reacts to pokes with a face', async () => {
     const m = build({ content: `_pokes <@${e.DISCORD_CLIENT_ID}>_`, cleanContent: 'poke' });
     await messageCommand(m.message);
