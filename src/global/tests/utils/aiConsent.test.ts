@@ -16,6 +16,11 @@ describe('aiConsent', () => {
     });
   });
 
+  it('ignores rows without a discord id', async () => {
+    dbMock.users.findMany.mockResolvedValue([{ discord_id: null }, { discord_id: 'a' }] as never);
+    expect(await getAiConsentedIds(['a'])).toEqual(new Set(['a']));
+  });
+
   it('skips the query when there is nobody to check', async () => {
     expect(await getAiConsentedIds([])).toEqual(new Set());
     expect(dbMock.users.findMany).not.toHaveBeenCalled();

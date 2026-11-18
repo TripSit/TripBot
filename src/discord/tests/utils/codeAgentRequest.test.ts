@@ -1,4 +1,4 @@
-import { canUseCodeAgent, handleCodeAgentRequest } from '../../utils/codeAgentRequest';
+import { canUseCodeAgent, handleCodeAgentRequest, isCodeAgentRequest } from '../../utils/codeAgentRequest';
 
 const mocks = vi.hoisted(() => ({ run: vi.fn(), configured: vi.fn() }));
 
@@ -83,5 +83,13 @@ describe('handleCodeAgentRequest', () => {
     expect(mocks.run).toHaveBeenCalledWith(expect.stringContaining('fix it'));
     expect(m.status.edit.mock.calls[0][0].content).toContain(expected);
     expect(m.status.edit.mock.calls[0][0].allowedMentions).toEqual({ parse: [] });
+  });
+});
+
+describe('isCodeAgentRequest', () => {
+  it('needs both an authorized developer and a fix request', () => {
+    expect(isCodeAgentRequest(message() as never)).toBe(true);
+    expect(isCodeAgentRequest(message({ cleanContent: '@TripBot hi' }) as never)).toBe(false);
+    expect(isCodeAgentRequest(message({ member: { roles: { cache: { has: () => false } } } }) as never)).toBe(false);
   });
 });

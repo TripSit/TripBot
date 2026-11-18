@@ -171,7 +171,7 @@ async function publish(repo: string, worktree: string, branch: string, summary: 
   const out = await run('gh', [
     'pr', 'create', '--base', BASE_BRANCH, '--head', branch, '--title', summary.title, '--body', body,
   ], { cwd: repo, env: ghEnv });
-  return out.trim().split('\n').pop() ?? '';
+  return out.trim().split('\n').slice(-1)[0];
 }
 
 export async function runCodeAgent(request: string): Promise<CodeAgentResult> {
