@@ -1,5 +1,7 @@
 /* eslint-disable sonarjs/no-nested-template-literals */
-import { EmbedBuilder, GuildMember } from 'discord.js';
+import {
+  ActionRowBuilder, EmbedBuilder, GuildMember, StringSelectMenuBuilder,
+} from 'discord.js';
 import { modModal } from '../../utils/modUtils';
 import { dbMock } from '../../../vitest/utils/mockDb';
 import { stubInstance } from '../../../vitest/utils/discordStubs';
@@ -129,6 +131,26 @@ describe('modModal: non-modal actions', () => {
     const nobody = setup('INFO', { memberFetch: 'fail', userFetch: 'fail' });
     await modModal(nobody.interaction);
     expect(nobody.raw.editReply).toHaveBeenCalled();
+  });
+
+  it('connects the private Info response to the existing paginated history menu', async () => {
+    const counts = { NOTE: 100000 };
+    const rows = [new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(
+      new StringSelectMenuBuilder()
+        .setCustomId(`modHistory~select~${ID}`)
+        .addOptions({ label: 'View Notes (100000)', value: 'NOTE' }),
+    )];
+    mocks.counts.mockResolvedValue(counts);
+    mocks.rows.mockReturnValue(rows);
+    const s = setup('INFO');
+    await modModal(s.interaction);
+
+    expect(s.raw.deferReply).toHaveBeenCalledWith({ flags: 64 });
+    expect(mocks.rows).toHaveBeenCalledWith(ID, counts);
+    expect(s.raw.editReply).toHaveBeenCalledWith({
+      embeds: [expect.any(EmbedBuilder)], components: rows,
+    });
+    expect(rows[0].toJSON().components[0].custom_id).toBe(`modHistory~select~${ID}`);
   });
 
   it('acknowledges reports once, then reports they were already acknowledged', async () => {
