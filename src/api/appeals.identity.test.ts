@@ -67,4 +67,18 @@ describe('appeals authenticated identity', () => {
       }),
     );
   });
+
+  it.each([
+    ['creating the appeal', () => mocks.createAppeal.mockRejectedValue(new Error('prisma: relation "appeals" secret detail'))],
+    ['notifying the mod thread', () => mocks.messageModThread.mockRejectedValue(new Error('discord token abc123 failed'))],
+  ])('returns a stable message and hides internal errors when %s fails', async (_name, fail) => {
+    fail();
+    const response = await supertest(app).post('/create').send({
+      reason: 'Reason', solution: 'Solution', future: 'Future', extra: 'Extra',
+    });
+
+    expect(response.status).toBe(500);
+    expect(response.body).toEqual({ error: 'Failed to submit appeal' });
+    expect(JSON.stringify(response.body)).not.toMatch(/prisma|secret|token|abc123/);
+  });
 });

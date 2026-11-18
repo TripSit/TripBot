@@ -148,7 +148,7 @@ router.post('/create', async (req: AuthenticatedRequest, res) => {
     return res.json({ success: true, message: 'Appeal submitted successfully' });
   } catch (error: unknown) {
     log.error(F, `Error in create route: ${error}`);
-    return res.status(500).json({ error: error instanceof Error ? error.message : 'Internal server error' });
+    return res.status(500).json({ error: 'Failed to submit appeal' });
   }
 });
 
