@@ -2967,15 +2967,16 @@ const ROULETTE_ROWS = {
 };
 
 // How a roulette bet wins, and what multiple of the bet it pays
-const ROULETTE_BETS: Record<string, { wins: (number: number) => boolean; multiple: number }> = {
+export const ROULETTE_BETS: Record<string, { wins: (number: number) => boolean; multiple: number }> = {
   0: { wins: number => number === 0, multiple: 17 },
-  red: { wins: number => number % 2 === 0, multiple: 1 },
-  evens: { wins: number => number % 2 === 0, multiple: 1 },
+  // The zero outcomes ('0' and '00') lose every bet below, as on a real wheel.
+  red: { wins: number => number >= 1 && number % 2 === 0, multiple: 1 },
+  evens: { wins: number => number >= 1 && number % 2 === 0, multiple: 1 },
   black: { wins: number => number % 2 !== 0, multiple: 1 },
   odds: { wins: number => number % 2 !== 0, multiple: 1 },
   high: { wins: number => number > 18, multiple: 1 },
-  low: { wins: number => number < 18, multiple: 1 },
-  '1-12': { wins: number => number < 13, multiple: 2 },
+  low: { wins: number => number >= 1 && number <= 18, multiple: 1 },
+  '1-12': { wins: number => number >= 1 && number < 13, multiple: 2 },
   '13-24': { wins: number => number > 12 && number < 25, multiple: 2 },
   '25-36': { wins: number => number > 24, multiple: 2 },
   first: { wins: number => ROULETTE_ROWS.first.includes(number), multiple: 2 },
@@ -3045,8 +3046,8 @@ export async function rpgArcadeGame(
       **Odds**
       Red / Black / Even / Odd / High / Low - 1:1
       First / Second / Third - 2:1
-      1-2 / 3-4 / 5-6 / 7-8 - 3:1
-      0 -  8:1
+      1-12 / 13-24 / 25-36 - 2:1
+      0 / 00 - 17:1
     `,
       object: 'wheel',
       bets: [
