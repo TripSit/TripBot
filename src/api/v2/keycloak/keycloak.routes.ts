@@ -18,13 +18,23 @@ router.use(limiter);
 
 router.post('/token', async (req, res) => {
   try {
-    const { code } = req.body;
+    const { code, code_verifier: codeVerifier } = req.body;
 
     if (!code || typeof code !== 'string') {
       return res.status(400).json({ error: 'Missing code' });
     }
 
-    const tokenData = await keycloak.exchangeCodeForToken(code);
+    // RFC 7636 permits 43-128 unreserved characters; never trim or transform the proof.
+    if (
+      typeof codeVerifier !== 'string'
+      || codeVerifier.length < 43
+      || codeVerifier.length > 128
+      || /[^A-Za-z0-9._~-]/.test(codeVerifier)
+    ) {
+      return res.status(400).json({ error: 'Missing or invalid code verifier' });
+    }
+
+    const tokenData = await keycloak.exchangeCodeForToken(code, codeVerifier);
     return res.status(200).json(tokenData);
   } catch (error) {
     log.error(F, `Error in /token route: ${error}`);

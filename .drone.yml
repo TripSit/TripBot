@@ -162,6 +162,10 @@ steps:
         from_secret: TRIPBOT_API_TOKEN
       KEYCLOAK_BASE_URL:
         from_secret: KEYCLOAK_BASE_URL
+      KEYCLOAK_URL:
+        from_secret: KEYCLOAK_URL
+      KEYCLOAK_BAN_APPEALS_CLIENT_ID:
+        from_secret: KEYCLOAK_BAN_APPEALS_CLIENT_ID
       KEYCLOAK_REALM:
         from_secret: KEYCLOAK_REALM
       KEYCLOAK_CLIENT_ID:
