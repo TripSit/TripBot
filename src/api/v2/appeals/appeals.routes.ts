@@ -83,9 +83,9 @@ router.post('/create', async (req: AuthenticatedRequest, res) => {
     }
 
     const appealData = {
+      ...req.body,
       guildId: process.env.DISCORD_GUILD_ID,
       discordId: req.user.discord_id,
-      ...req.body,
     } as AppealData;
 
     const totalLength = (appealData.reason?.length || 0)
