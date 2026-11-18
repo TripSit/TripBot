@@ -699,11 +699,16 @@ async function undoExpiredBans() {
       // Ensure guild exists
       if (!targetGuild) return;
 
-      const targetGuildData = await db.discord_guilds.findUnique({ where: { id: activeBan.guild_id } });
-
       // Unban user
       await targetGuild.bans.remove(user, 'Temporary ban expired');
+      // Only stop retrying once Discord confirms the unban, independently of notifications.
+      await db.user_actions.update({
+        where: { id: activeBan.id },
+        data: { expires_at: null },
+      });
       log.info(F, `Temporary ban for ${user.username} (${activeBan.target_discord_id}) in ${targetGuild.name} has expired and been lifted!`);
+
+      const targetGuildData = await db.discord_guilds.findUnique({ where: { id: activeBan.guild_id } });
 
       // Ensure mod log channel exists
       if (!targetGuildData?.channel_mod_log) return;
@@ -729,13 +734,7 @@ async function undoExpiredBans() {
       if (modThread) await modThread.send({ embeds: [embed] });
       if (modlog) await modlog.send({ embeds: [embed] });
     } catch {
-      log.error(F, `Failed to remove temporary ban on ${activeBan.target_discord_id} in ${targetGuild?.name}. Likely already unbanned.`);
-    } finally {
-      // Reset expires_at to null
-      await db.user_actions.update({
-        where: { id: activeBan.id },
-        data: { expires_at: null },
-      });
+      log.error(F, `Failed to process expired temporary ban on ${activeBan.target_discord_id} in ${targetGuild?.name}.`);
     }
   }));
 }
