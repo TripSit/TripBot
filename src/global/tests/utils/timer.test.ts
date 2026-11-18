@@ -725,7 +725,7 @@ describe('expired bans', () => {
     const modThread = { send: vi.fn() };
     const modLog = { send: vi.fn() };
     guild.channels.fetch = vi.fn(async (id: string) => (id === 'thread' ? modThread : modLog)) as never;
-    if (opts.unbanFails) guild.bans.remove.mockRejectedValue(new Error('Unknown Ban'));
+    if (opts.unbanFails) guild.bans.remove.mockRejectedValue(new Error('Missing Permissions'));
     client().guilds.fetch = vi.fn(async () => guild);
     dbMock.discord_guilds.findUnique.mockResolvedValue(
       { channel_mod_log: opts.modlog === undefined ? 'log' : opts.modlog } as never,
@@ -765,15 +765,19 @@ describe('expired bans', () => {
     expect(dbMock.user_actions.update).toHaveBeenCalledTimes(2);
   });
 
-  it('still clears the expiry when the unban fails or data is incomplete', async () => {
+  it('retries a failed unban and clears the expiry only after success', async () => {
     dbMock.user_actions.findMany.mockResolvedValue([ban()] as never);
-    setup({ unbanFails: true });
+    const { guild } = setup({ unbanFails: true });
     const { run } = await start();
     await run('bans');
+    expect(dbMock.user_actions.update).not.toHaveBeenCalled();
+
+    guild.bans.remove.mockResolvedValue(undefined);
+    await run('bans');
+    expect(guild.bans.remove).toHaveBeenCalledTimes(2);
     expect(dbMock.user_actions.update).toHaveBeenCalledTimes(1);
 
     dbMock.user_actions.findMany.mockResolvedValue([ban({ created_at: null })] as never);
-    setup();
     await run('bans');
     expect(dbMock.user_actions.update).toHaveBeenCalledTimes(2);
 
@@ -782,17 +786,39 @@ describe('expired bans', () => {
     expect(dbMock.user_actions.update).toHaveBeenCalledTimes(2);
   });
 
-  it('only clears the expiry when the user or the guild can no longer be fetched', async () => {
+  it('clears the expiry even if the notification fails after a successful unban', async () => {
+    dbMock.user_actions.findMany.mockResolvedValue([ban()] as never);
+    const { guild, modThread } = setup();
+    modThread.send.mockRejectedValue(new Error('Notification unavailable'));
+    const { run } = await start();
+    await run('bans');
+    expect(guild.bans.remove).toHaveBeenCalledTimes(1);
+    expect(dbMock.user_actions.update).toHaveBeenCalledWith({
+      where: { id: 'b1' }, data: { expires_at: null },
+    });
+  });
+
+  it('preserves the expiry when a Discord lookup rejects', async () => {
+    dbMock.user_actions.findMany.mockResolvedValue([ban()] as never);
+    const { guild } = setup();
+    client().users.fetch.mockRejectedValue(new Error('Discord unavailable'));
+    const { run } = await start();
+    await run('bans');
+    expect(guild.bans.remove).not.toHaveBeenCalled();
+    expect(dbMock.user_actions.update).not.toHaveBeenCalled();
+  });
+
+  it('preserves the expiry when the user or the guild cannot be fetched', async () => {
     dbMock.user_actions.findMany.mockResolvedValue([ban()] as never);
     setup();
     const { run } = await start();
     client().users.fetch = vi.fn(async () => null) as never;
     await run('bans');
-    expect(dbMock.user_actions.update).toHaveBeenCalledTimes(1);
+    expect(dbMock.user_actions.update).not.toHaveBeenCalled();
     client().users.fetch = vi.fn(async () => ({ id: 'd1' })) as never;
     client().guilds.fetch = vi.fn(async () => null) as never;
     await run('bans');
-    expect(dbMock.user_actions.update).toHaveBeenCalledTimes(2);
+    expect(dbMock.user_actions.update).not.toHaveBeenCalled();
     expect(dbMock.discord_guilds.findUnique).not.toHaveBeenCalled();
   });
 });
