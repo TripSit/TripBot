@@ -464,34 +464,7 @@ export async function userInfoEmbed(
   }
 
   log.debug(F, `[userInfoEmbed] actor: ${actorName} | target: ${targetName} | targetData: ${JSON.stringify(targetData, null, 2)} | command: ${command}`);
-  const targetActionList = {
-    NOTE: [] as string[],
-    WARNING: [] as string[],
-    REPORT: [] as string[],
-    TIMEOUT: [] as string[],
-    KICK: [] as string[],
-    FULL_BAN: [] as string[],
-    UNDERBAN: [] as string[],
-    BAN_EVASION: [] as string[],
-    APPEAL_ACCEPT: [] as string[],
-    APPEAL_REJECT: [] as string[],
-    TICKET_BAN: [] as string[],
-    DISCORD_BOT_BAN: [] as string[],
-    HELPER_BAN: [] as string[],
-    CONTRIBUTOR_BAN: [] as string[],
-  };
-  // Populate targetActionList from the db
-
-  const targetActionListRaw = await db.user_actions.findMany({
-    where: {
-      user_id: targetData.id,
-    },
-  });
-
-  targetActionListRaw.forEach(action => {
-    const actionString = `${time(action.created_at, 'R')}: ${action.internal_note ?? 'No note provided'}`;
-    targetActionList[action.type].push(actionString);
-  });
+  const targetActionCounts = showModInfo ? await modActionCounts(targetData.id) : {};
 
   log.debug(F, `Target: ${JSON.stringify(target, null, 2)}`);
 
@@ -550,38 +523,29 @@ export async function userInfoEmbed(
       `);
   }
   if (showModInfo) {
-    let infoString = stripIndents`
-        ${targetActionList.FULL_BAN.length > 0 ? `**Bans**\n${targetActionList.FULL_BAN.join('\n')}` : ''}
-        ${targetActionList.UNDERBAN.length > 0 ? `**Underbans**\n${targetActionList.UNDERBAN.join('\n')}` : ''}
-        ${targetActionList.KICK.length > 0 ? `**Kicks**\n${targetActionList.KICK.join('\n')}` : ''}
-        ${targetActionList.TIMEOUT.length > 0 ? `**Timeouts**\n${targetActionList.TIMEOUT.join('\n')}` : ''}
-        ${targetActionList.WARNING.length > 0 ? `**Warns**\n${targetActionList.WARNING.join('\n')}` : ''}
-        ${targetActionList.REPORT.length > 0 ? `**Reports**\n${targetActionList.REPORT.join('\n')}` : ''}
-        ${targetActionList.NOTE.length > 0 ? `**Notes**\n${targetActionList.NOTE.join('\n')}` : ''}
-        `;
-    if (infoString.length === 0) {
-      infoString = 'Squeaky clean!';
+    const infoString = Object.values(targetActionCounts).some(count => count > 0)
+      ? 'Use the history menu below to view individual moderation actions.'
+      : 'Squeaky clean!';
+    if ((targetActionCounts.NOTE ?? 0) > 0) {
+      modlogEmbed.addFields({ name: '# of Notes', value: `${(targetActionCounts.NOTE ?? 0)}`, inline: true });
     }
-    if (targetActionList.NOTE.length > 0) {
-      modlogEmbed.addFields({ name: '# of Notes', value: `${targetActionList.NOTE.length}`, inline: true });
+    if ((targetActionCounts.WARNING ?? 0) > 0) {
+      modlogEmbed.addFields({ name: '# of Warns', value: `${(targetActionCounts.WARNING ?? 0)}`, inline: true });
     }
-    if (targetActionList.WARNING.length > 0) {
-      modlogEmbed.addFields({ name: '# of Warns', value: `${targetActionList.WARNING.length}`, inline: true });
+    if ((targetActionCounts.REPORT ?? 0) > 0) {
+      modlogEmbed.addFields({ name: '# of Reports', value: `${(targetActionCounts.REPORT ?? 0)}`, inline: true });
     }
-    if (targetActionList.REPORT.length > 0) {
-      modlogEmbed.addFields({ name: '# of Reports', value: `${targetActionList.REPORT.length}`, inline: true });
+    if ((targetActionCounts.TIMEOUT ?? 0) > 0) {
+      modlogEmbed.addFields({ name: '# of Timeouts', value: `${(targetActionCounts.TIMEOUT ?? 0)}`, inline: true });
     }
-    if (targetActionList.TIMEOUT.length > 0) {
-      modlogEmbed.addFields({ name: '# of Timeouts', value: `${targetActionList.TIMEOUT.length}`, inline: true });
+    if ((targetActionCounts.KICK ?? 0) > 0) {
+      modlogEmbed.addFields({ name: '# of Kicks', value: `${(targetActionCounts.KICK ?? 0)}`, inline: true });
     }
-    if (targetActionList.KICK.length > 0) {
-      modlogEmbed.addFields({ name: '# of Kicks', value: `${targetActionList.KICK.length}`, inline: true });
+    if ((targetActionCounts.FULL_BAN ?? 0) > 0) {
+      modlogEmbed.addFields({ name: '# of Bans', value: `${(targetActionCounts.FULL_BAN ?? 0)}`, inline: true });
     }
-    if (targetActionList.FULL_BAN.length > 0) {
-      modlogEmbed.addFields({ name: '# of Bans', value: `${targetActionList.FULL_BAN.length}`, inline: true });
-    }
-    if (targetActionList.UNDERBAN.length > 0) {
-      modlogEmbed.addFields({ name: '# of Underbans', value: `${targetActionList.UNDERBAN.length}`, inline: true });
+    if ((targetActionCounts.UNDERBAN ?? 0) > 0) {
+      modlogEmbed.addFields({ name: '# of Underbans', value: `${(targetActionCounts.UNDERBAN ?? 0)}`, inline: true });
     }
     modlogEmbed.setDescription(`${description}${threadLink}`);
     // modlogEmbed.setDescription(`${description}
@@ -591,12 +555,15 @@ export async function userInfoEmbed(
     if (isInfo(command)) {
       log.debug(F, 'Generating trust score');
       const trustScore = await tripSitTrustScore(targetId);
+      const reasoning = trustScore.tsReasoning.length > 3000
+        ? `${trustScore.tsReasoning.slice(0, 2999)}…`
+        : trustScore.tsReasoning;
       modlogEmbed.setDescription(`${description}${threadLink}
 
       ${infoString}
       
       **TripSit TrustScore: ${trustScore.trustScore}**
-      \`\`\`${trustScore.tsReasoning}\`\`\`
+      \`\`\`${reasoning}\`\`\`
       `);
     }
   }
@@ -2120,6 +2087,7 @@ export async function modModal(
 
     await interaction.editReply({
       embeds: [modlogEmbed],
+      components: modHistoryRows(userId, await modActionCounts(targetData.id)),
     });
     return;
   }

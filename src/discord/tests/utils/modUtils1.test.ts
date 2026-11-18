@@ -46,6 +46,7 @@ describe('moderation buttons', () => {
 });
 
 describe('userInfoEmbed', () => {
+  const notesField = '# of Notes';
   const targetData = (over: Record<string, unknown> = {}) => ({ id: 'uid', mod_thread_id: null, ...over }) as never;
   const actions = [
     { type: 'NOTE', created_at: new Date('2024-01-01'), internal_note: 'a note' },
@@ -63,30 +64,52 @@ describe('userInfoEmbed', () => {
   const actor = () => ({ displayName: 'Mod', user: { username: 'mod' }, guild: { id: 'g1' } }) as never;
 
   beforeEach(() => {
-    dbMock.user_actions.findMany.mockResolvedValue(actions as never);
+    dbMock.user_actions.groupBy.mockResolvedValue(
+      [...new Set(actions.map(action => action.type))].map(type => ({
+        type, _count: { _all: actions.filter(action => action.type === type).length },
+      })) as never,
+    );
     mocks.trustScore.mockResolvedValue({ trustScore: 4, tsReasoning: 'reasons' });
   });
 
   it('summarises action counts and the mod thread link for moderators', async () => {
     const embed = await userInfoEmbed(actor(), member(), targetData({ mod_thread_id: 'thread9' }), 'NOTE', true);
     const names = (embed.data.fields ?? []).map(f => f.name);
-    expect(names).toEqual(['# of Notes', '# of Warns', '# of Reports', '# of Timeouts', '# of Kicks', '# of Bans', '# of Underbans']);
+    expect(names).toEqual([notesField, '# of Warns', '# of Reports', '# of Timeouts', '# of Kicks', '# of Bans', '# of Underbans']);
     expect(embed.data.description).toContain('Report <@111111111111111111>');
     expect(embed.data.description).toContain('https://discord.com/channels/g1/thread9');
     expect(embed.data.thumbnail?.url).toBe('https://av');
   });
 
-  it('adds the history and trust score for INFO requests', async () => {
+  it('adds a bounded history summary and trust score for INFO requests', async () => {
     const embed = await userInfoEmbed(actor(), member(), targetData(), 'INFO', true);
-    expect(embed.data.description).toContain('**Bans**');
-    expect(embed.data.description).toContain('a note');
-    expect(embed.data.description).toContain('No note provided');
+    expect(embed.data.description).toContain('Use the history menu');
+    expect(embed.data.description).not.toContain('a note');
+    expect(embed.data.fields).toContainEqual({ name: notesField, value: '2', inline: true });
     expect(embed.data.description).toContain('**TripSit TrustScore: 4**');
     expect(mocks.trustScore).toHaveBeenCalledWith('111111111111111111');
   });
 
+  it('keeps large moderation histories and long trust explanations within Discord limits', async () => {
+    dbMock.user_actions.groupBy.mockResolvedValue([
+      { type: 'NOTE', _count: { _all: 100000 } },
+      { type: 'WARNING', _count: { _all: 5000 } },
+    ] as never);
+    mocks.trustScore.mockResolvedValue({ trustScore: 4, tsReasoning: 'Reasoning '.repeat(1000) });
+    const embed = await userInfoEmbed(actor(), member(), targetData(), 'INFO', true);
+
+    expect(embed.toJSON().description?.length).toBeLessThanOrEqual(4096);
+    expect(embed.length).toBeLessThanOrEqual(6000);
+    expect(embed.data.description).toContain('…');
+    expect(embed.data.fields).toContainEqual({ name: notesField, value: '100000', inline: true });
+    expect(dbMock.user_actions.findMany).not.toHaveBeenCalled();
+    expect(dbMock.user_actions.groupBy).toHaveBeenCalledWith({
+      by: ['type'], where: { user_id: 'uid' }, _count: { _all: true },
+    });
+  });
+
   it('shows a clean record message and a plain thread mention without an actor guild', async () => {
-    dbMock.user_actions.findMany.mockResolvedValue([]);
+    dbMock.user_actions.groupBy.mockResolvedValue([]);
     const clean = await userInfoEmbed({ displayName: '', user: { username: 'mod' } } as never, 'someid', targetData({ mod_thread_id: 't1' }), 'INFO', true);
     expect(clean.data.description).toContain('<#t1>');
     expect(clean.data.description).toContain('Squeaky clean!');
